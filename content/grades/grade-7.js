@@ -7,8 +7,12 @@
    （七上变 6 章、七下变 7–12 章），但主题顺序基本一致；本书按 A 版旧章
    节顺序写。共 10 个教学单元、16 条知识点。每条知识点：怎么做、为什么、
    容易错、看图学、动手试一试、讲回来、先考一考、练一练（基础 → 提高）、
-   奥数挑战。演示关联：一元一次方程、二元一次方程组用天平演示（balance），
-   其余为 null。 */
+   奥数挑战。演示关联：7.1/7.2 共用数轴演示（numline：标点看相反数与绝对值、走路算加减）、
+   7.3 乘方与科学记数法（powerup）、7.4 单项式与多项式拆零件（monomial）、7.5 合并同类项与
+   去括号（liketerms）、7.6/7.14 复用天平演示（balance）、7.7 相向而行（meetline）、7.8 直线
+   射线线段（lineseg）、7.9 余角补角与角平分线（anglepair）、7.10 对顶角与垂线段（vertangle）、
+   7.11 平行线截角与平移（parangles）、7.12 开方与 √2 定位（roots）、7.13 坐标平面（coordplane）、
+   7.15 不等式数轴（ineqline）、7.16 直方图（histogram）。 */
 const GRADE7_CONTENT = {
   grade: 7,
   edition: "A",
@@ -29,7 +33,7 @@ const GRADE7_CONTENT = {
           method: "数轴排队法",
           explainBack: "“正数在原点右边，负数在原点左边；右边的数比左边的数大。”",
           tryIt: "在数轴上标出-3、-1、0、2、4，再从小到大排一排；说一说-3和-5谁大，为什么。",
-          demo: null,
+          demo: 'numline',
           recall: { q: "-3和-5，哪个大？是-3大，还是-5大？", answer: "-3大", hint: "数轴上-3在-5的右边，右边的数大。" },
           practice: [
             { q: "在数轴上，-2.5在原点的哪一边？它到原点的距离是几个单位？", answer: "左边，2.5个单位", hint: "负数在原点左边；到原点的距离就是绝对值。", level: "基础" },
@@ -49,7 +53,7 @@ const GRADE7_CONTENT = {
           method: "数轴走路法",
           explainBack: "“同号取号绝对值加，异号取大绝对值减；减法就是加相反数。”",
           tryIt: "在数轴上算一算：-4+7、5-(-3)、-2-5，每道题都让小人走一走，再写出答案。",
-          demo: null,
+          demo: 'numline',
           recall: { q: "-7+4等于几？是-3，还是-11？", answer: "-3", hint: "异号相加，绝对值大的7是负的，7-4=3，取负号。" },
           practice: [
             { q: "计算：(-8)+(+5)。", answer: "-3", hint: "异号相加：8-5=3，取绝对值大的数的符号。", level: "基础" },
@@ -69,7 +73,7 @@ const GRADE7_CONTENT = {
           method: "欠款账本法",
           explainBack: "“同号得正，异号得负；乘方是几个相同因数相乘。”",
           tryIt: "算一算(-3)×(-4)、(-2)³、(1/2)÷(-2)，再把360000000写成科学记数法。",
-          demo: null,
+          demo: 'powerup',
           recall: { q: "(-3)×(-4)等于几？是12，还是-12？", answer: "12", hint: "负负得正，3×4=12。" },
           practice: [
             { q: "计算：(-2)³。", answer: "-8", hint: "3个-2相乘：(-2)×(-2)×(-2)=-8。", level: "基础" },
@@ -95,7 +99,7 @@ const GRADE7_CONTENT = {
           method: "拆零件法",
           explainBack: "“系数是数字因数，次数是字母指数加起来。”",
           tryIt: "写出-5a²b的系数和次数；再写出多项式2x³-x+4的次数和项数。",
-          demo: null,
+          demo: 'monomial',
           recall: { q: "单项式-3a²b的系数和次数各是多少？", answer: "系数是-3，次数是3", hint: "系数是-3；次数是a的2次加b的1次。" },
           practice: [
             { q: "写出单项式5xy²的系数和次数。", answer: "系数是5，次数是3", hint: "系数是5；次数是x的1次加y的2次。", level: "基础" },
@@ -115,7 +119,7 @@ const GRADE7_CONTENT = {
           method: "同筐合并法",
           explainBack: "“同类项才能合；括号前是减号，里面全变号。”",
           tryIt: "化简3x²+5x-2x²+x，再化简5-(3a-2b)，看看括号里的符号怎么变。",
-          demo: null,
+          demo: 'liketerms',
           recall: { q: "5x-(3x-2)等于几？是2x+2，还是2x-2？", answer: "2x+2", hint: "括号前是减号，括号里的-2变+2。" },
           practice: [
             { q: "合并同类项：3a+5a-2a。", answer: "6a", hint: "系数相加：3+5-2=6，字母不变。", level: "基础" },
@@ -168,7 +172,7 @@ const GRADE7_CONTENT = {
           method: "等量关系拼图",
           explainBack: "“设未知数，找等量关系，列方程，解完检验再回答。”",
           tryIt: "小明买3支笔花了12元，设每支笔x元，列方程并解；再算一算甲乙相向而行几小时相遇。",
-          demo: null,
+          demo: 'meetline',
           recall: { q: "甲比乙多5个，乙有x个，甲有几个？", answer: "x+5个", hint: "多5就是加5。" },
           practice: [
             { q: "小明买3支笔花了12元，每支笔几元？（列方程并解）", answer: "4元", hint: "设每支笔x元，3x=12。", level: "基础" },
@@ -198,7 +202,7 @@ const GRADE7_CONTENT = {
           method: "点线面体动画",
           explainBack: "“直线没端点，射线一个端点，线段两个端点；两点之间线段最短。”",
           tryIt: "在纸上点两个点，过它们画一条直线；再画一条曲线连起来，量一量哪条更短。",
-          demo: null,
+          demo: 'lineseg',
           recall: { q: "经过两点可以画几条直线？", answer: "1条", hint: "两点确定一条直线。" },
           practice: [
             { q: "线段AB=5厘米，点C在AB上，AC=2厘米，BC长几厘米？", answer: "3厘米", hint: "AC+BC=AB，2+BC=5。", level: "基础" },
@@ -218,7 +222,7 @@ const GRADE7_CONTENT = {
           method: "张开程度法",
           explainBack: "“余角凑满90°，补角凑满180°；1°=60′。”",
           tryIt: "用量角器量一量∠A=35°，算出它的余角和补角；再画一个角，用叠合法比一比两个角谁大。",
-          demo: null,
+          demo: 'anglepair',
           recall: { q: "∠A=35°，它的余角是多少度？", answer: "55°", hint: "35°+55°=90°。" },
           practice: [
             { q: "1.5°等于多少分？", answer: "90′", hint: "1°=60′，0.5°=30′。", level: "基础" },
@@ -244,7 +248,7 @@ const GRADE7_CONTENT = {
           method: "对顶角亮灯法",
           explainBack: "“对顶角相等，邻补角互补；点到直线的距离是垂线段。”",
           tryIt: "画两条相交直线，量一量四个角，看看对顶角是不是真的相等；再从直线外一点向直线画垂线段和几条斜线段，比一比谁最短。",
-          demo: null,
+          demo: 'vertangle',
           recall: { q: "两条直线相交，∠1=50°，它的对顶角∠3是多少度？", answer: "50°", hint: "对顶角相等。" },
           practice: [
             { q: "直线AB、CD相交于O，∠AOC=120°，∠BOD是多少度？", answer: "120°", hint: "∠AOC和∠BOD是对顶角。", level: "基础" },
@@ -264,7 +268,7 @@ const GRADE7_CONTENT = {
           method: "亮灯辨角法",
           explainBack: "“同位角相等、内错角相等、同旁内角互补，都能判定平行；平行了，这些角就都相等。”",
           tryIt: "画两条平行线，再画一条截线，标出所有的同位角、内错角、同旁内角，量一量它们的度数；再把一个三角形平移一次，看看形状变了没有。",
-          demo: null,
+          demo: 'parangles',
           recall: { q: "∠1和∠2是同位角，∠1=∠2，能说明这两条直线平行吗？", answer: "能", hint: "同位角相等，两直线平行。" },
           practice: [
             { q: "两条平行线被第三条直线所截，一个同位角是70°，另一个同位角是多少度？", answer: "70°", hint: "两直线平行，同位角相等。", level: "基础" },
@@ -290,7 +294,7 @@ const GRADE7_CONTENT = {
           method: "对角线定位法",
           explainBack: "“正数有两个平方根，0只有一个，负数没有；√2是无理数。”",
           tryIt: "算一算√25、√16、³√8、³√(-27)，再在数轴上大约标出√2的位置。",
-          demo: null,
+          demo: 'roots',
           recall: { q: "√16的算术平方根是多少？是4，还是±4？", answer: "4", hint: "算术平方根是正的那一个。" },
           practice: [
             { q: "求9的平方根。", answer: "±3", hint: "正数有两个平方根，互为相反数。", level: "基础" },
@@ -316,7 +320,7 @@ const GRADE7_CONTENT = {
           method: "编地址法",
           explainBack: "“先横后纵；第一象限两个都是正，第二象限x负y正，第三象限两个都是负，第四象限x正y负。”",
           tryIt: "在坐标纸上标出(2,3)、(-1,2)、(-2,-1)、(3,-2)，看看它们各在第几象限；再写出(2,3)关于x轴、y轴、原点的对称点。",
-          demo: null,
+          demo: 'coordplane',
           recall: { q: "点P(2,-3)在第几象限？", answer: "第四象限", hint: "x是正的，y是负的，是第四象限。" },
           practice: [
             { q: "写出点A(3,4)关于x轴的对称点坐标。", answer: "(3,-4)", hint: "关于x轴对称，横坐标不变，纵坐标变号。", level: "基础" },
@@ -373,7 +377,7 @@ const GRADE7_CONTENT = {
           method: "数轴画段法",
           explainBack: "“乘除负数，不等号反向；不等式组取公共部分。”",
           tryIt: "在数轴上画一画-2x>6的解集；再解不等式组{x+2>0,2x-1≤5}，看看公共部分是哪一段。",
-          demo: null,
+          demo: 'ineqline',
           recall: { q: "解-3x>9，x是大于-3，还是小于-3？", answer: "x<-3", hint: "除以负数，不等号反向。" },
           practice: [
             { q: "解不等式：2x-3<5。", answer: "x<4", hint: "先移项：2x<8，再把系数化为1。", level: "基础" },
@@ -403,7 +407,7 @@ const GRADE7_CONTENT = {
           method: "随机抽样法",
           explainBack: "“全面调查问所有人，抽样调查抽一部分；样本要随机，不然结论会偏。”",
           tryIt: "调查班里同学最喜欢的运动：设计一个抽样方案（怎么抽才随机？）；再把全班身高数据画成直方图。",
-          demo: null,
+          demo: 'histogram',
           recall: { q: "调查全校学生的午餐喜好，只抽10个自己班的同学，样本有代表性吗？", answer: "没有", hint: "只抽一个班，别的班没机会被抽到。" },
           practice: [
             { q: "某班40名学生，身高在150~160厘米的有12人，这组的频数是多少？频率是多少？", answer: "频数12，频率0.3", hint: "频数就是这组的人数；频率=12÷40。", level: "基础" },

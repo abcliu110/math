@@ -95,6 +95,11 @@ body[data-view="demo-radar"] #demos, body[data-view="demo-ratio"] #demos, body[d
 body[data-view="demo-percent"] #demos, body[data-view="demo-fan"] #demos, body[data-view="demo-lsquare"] #demos,
 body[data-view="demo-thermo"] #demos, body[data-view="demo-negmul"] #demos, body[data-view="demo-discount"] #demos,
 body[data-view="demo-cylinder"] #demos, body[data-view="demo-pigeon"] #demos, body[data-view="demo-conceptmap"] #demos,
+body[data-view="demo-numline"] #demos, body[data-view="demo-powerup"] #demos, body[data-view="demo-monomial"] #demos,
+body[data-view="demo-liketerms"] #demos, body[data-view="demo-meetline"] #demos, body[data-view="demo-lineseg"] #demos,
+body[data-view="demo-anglepair"] #demos, body[data-view="demo-vertangle"] #demos, body[data-view="demo-parangles"] #demos,
+body[data-view="demo-roots"] #demos, body[data-view="demo-coordplane"] #demos, body[data-view="demo-ineqline"] #demos,
+body[data-view="demo-histogram"] #demos,
 body[data-view="why"] #why, body[data-view="review"] #review,
 body[data-view="progress"] #review, body[data-view="lab"] #lab{display:block}
 .path-detail{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-top:16px}
@@ -771,6 +776,22 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid{gr
 .pg-bird { font-size: 22px; color: #f97316; line-height: 1; }
 .cm-card { border: 2px solid var(--line); border-radius: 12px; padding: 12px 14px; margin: 12px 0; background: #fff; }
 .cm-q { font-weight: 700; font-size: 17px; }
+
+/* 7 年级实验：通用小组件（g7- 前缀，避免和已有演示重名） */
+.chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.g7-chip { display: inline-flex; align-items: center; justify-content: center; min-width: 52px; min-height: 52px; padding: 8px 14px; border-radius: 10px; background: #eef2f7; font-weight: 700; font-size: 17px; }
+.g7-chip-hot { background: #ffedd5; border: 2px solid var(--orange); }
+.g7-ab-bar { display: flex; height: 52px; border: 2px solid var(--ink); border-radius: 10px; overflow: hidden; margin: 12px 0; }
+.g7-ab-bar div { display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 16px; white-space: nowrap; overflow: hidden; }
+#apBarA { background: #2563eb; }
+#apBarB { background: #15803d; }
+.g7-vbar { position: relative; width: 140px; height: 200px; margin: 12px 0; border: 3px solid var(--ink); border-top: none; border-radius: 0 0 12px 12px; overflow: hidden; }
+.g7-vfill { position: absolute; left: 0; right: 0; bottom: 0; background: #bfdbfe; }
+.g7-hg-bars { display: flex; align-items: flex-end; gap: 6px; height: 220px; margin: 12px 0; padding: 0 4px; border-bottom: 3px solid var(--ink); }
+.g7-hg-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; min-width: 0; }
+.g7-hg-bar { width: 100%; background: #2563eb; border-radius: 6px 6px 0 0; }
+.g7-hg-cnt { font-size: 13px; font-weight: 700; white-space: nowrap; }
+.g7-hg-lab { font-size: 12px; color: var(--muted); margin-top: 4px; white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -784,7 +805,7 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid{gr
       <span class="brand-text"><strong>数学小宇宙</strong><small>小学 1–6 · 初中 7–9 · 动手玩懂数学</small></span>
     </button>
     <h1 class="crumb-title" id="crumbTitle" aria-label="当前位置">数学</h1>
-    <div class="progress-chip" id="progressChip" title="已体验的演示">已体验 <b id="progressCount">0 / 85</b> 个演示</div>
+    <div class="progress-chip" id="progressChip" title="已体验的演示">已体验 <b id="progressCount">0 / 98</b> 个演示</div>
   </div>
 </header>
 
@@ -848,10 +869,10 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid{gr
     </div>
     <h3 class="panel-group-label">工具箱</h3>
     <div class="panels four">
-      <button class="panel" type="button" data-nav-key="demos"><span class="panel-icon" aria-hidden="true">✦</span><b>互动演示</b><span class="panel-sub">分数、天平、函数、十格阵，还有一、二、三、四、五、六年级实验都能玩</span><span class="panel-prog"><i id="panelDemoProg" style="width:0%"></i></span><span class="panel-tx" id="panelDemoTx">85 个演示 · 0 已体验</span></button>
+      <button class="panel" type="button" data-nav-key="demos"><span class="panel-icon" aria-hidden="true">✦</span><b>互动演示</b><span class="panel-sub">分数、天平、函数、十格阵，还有一到七年级实验都能玩</span><span class="panel-prog"><i id="panelDemoProg" style="width:0%"></i></span><span class="panel-tx" id="panelDemoTx">98 个演示 · 0 已体验</span></button>
       <button class="panel" type="button" data-nav-key="lab"><span class="panel-icon" aria-hidden="true">🧪</span><b>数学实验室</b><span class="panel-sub">没有题目，随便玩：分数、十格阵、天平、函数</span><span class="panel-tx">4 个自由玩小站 · 不评分</span></button>
       <button class="panel" type="button" data-nav-key="review"><span class="panel-icon" aria-hidden="true">✎</span><b>错题本</b><span class="panel-sub">错题连当时的图一起存</span><span class="panel-tx">还没有错题</span></button>
-      <button class="panel" type="button" data-nav-key="progress"><span class="panel-icon" aria-hidden="true">●</span><b>我的进度</b><span class="panel-sub">玩过的演示点亮一格</span><span class="panel-prog"><i id="panelProgFill" style="width:0%"></i></span><span class="panel-tx" id="panelProgTx">0 / 85 个演示</span></button>
+      <button class="panel" type="button" data-nav-key="progress"><span class="panel-icon" aria-hidden="true">●</span><b>我的进度</b><span class="panel-sub">玩过的演示点亮一格</span><span class="panel-prog"><i id="panelProgFill" style="width:0%"></i></span><span class="panel-tx" id="panelProgTx">0 / 98 个演示</span></button>
     </div>
   </section>
 
@@ -889,7 +910,7 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid{gr
   <!-- Featured demos -->
   <section id="demos" class="section wrap">
     <h2>互动演示</h2>
-    <p class="section-sub">点一块面板进一个演示，都是我们自己画的图、自己写的例子。能点的都请点一点、拖一拖。一、二、三、四年级的新实验也都在里面。</p>
+    <p class="section-sub">点一块面板进一个演示，都是我们自己画的图、自己写的例子。能点的都请点一点、拖一拖。一到七年级的新实验也都在里面。</p>
     <div class="panels" id="demoPanels" aria-label="互动演示面板">
       <button class="panel" type="button" data-nav-key="demo-tenframe"><span class="panel-icon" aria-hidden="true">▦</span><b>十格阵凑十</b><span class="panel-sub">点 1 个凑成 10，9+4 就好算了</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1–2 年级 · 加减法</span></button>
       <button class="panel" type="button" data-nav-key="demo-fraction"><span class="panel-icon" aria-hidden="true">3/4</span><b>分数切一切</b><span class="panel-sub">切饼、落数轴，3/4 = 6/8</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">3–5 年级 · 分数</span></button>
@@ -976,6 +997,19 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid{gr
       <button class="panel" type="button" data-nav-key="demo-cylinder"><span class="panel-icon" aria-hidden="true">🥤</span><b>圆柱与圆锥：倒沙</b><span class="panel-sub">3 个圆锥的沙正好倒满 1 个圆柱</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">6 年级 · 圆柱与圆锥</span></button>
       <button class="panel" type="button" data-nav-key="demo-pigeon"><span class="panel-icon" aria-hidden="true">🕊</span><b>鸽巢问题：先每洞一只</b><span class="panel-sub">5 只鸽子 4 个洞，一定有个洞有 2 只</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">6 年级 · 数学广角——鸽巢问题</span></button>
       <button class="panel" type="button" data-nav-key="demo-conceptmap"><span class="panel-icon" aria-hidden="true">🗺</span><b>整理和复习：认出老办法</b><span class="panel-sub">这道题是条形图？是 ×1？还是切一切？</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">6 年级 · 整理和复习</span></button>
+      <button class="panel" type="button" data-nav-key="demo-numline"><span class="panel-icon" aria-hidden="true">↔</span><b>数轴：标一点、走一走</b><span class="panel-sub">−3 的相反数是 3，到原点的距离是 3</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">7 年级 · 有理数</span></button>
+      <button class="panel" type="button" data-nav-key="demo-powerup"><span class="panel-icon" aria-hidden="true">2ⁿ</span><b>乘方：对折纸和科学记数法</b><span class="panel-sub">对折 10 次，纸厚 102.4 毫米</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">7 年级 · 有理数</span></button>
+      <button class="panel" type="button" data-nav-key="demo-monomial"><span class="panel-icon" aria-hidden="true">▦</span><b>整式：拆零件看系数次数</b><span class="panel-sub">−5a²b 的系数是 −5，次数是 3</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">7 年级 · 整式的加减</span></button>
+      <button class="panel" type="button" data-nav-key="demo-liketerms"><span class="panel-icon" aria-hidden="true">＋</span><b>整式的加减：合并同类项</b><span class="panel-sub">3a 和 2b 不是同类项，合不了</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">7 年级 · 整式的加减</span></button>
+      <button class="panel" type="button" data-nav-key="demo-meetline"><span class="panel-icon" aria-hidden="true">→←</span><b>相向而行：几小时相遇</b><span class="panel-sub">15t+25t=120，3 小时相遇</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">7 年级 · 一元一次方程</span></button>
+      <button class="panel" type="button" data-nav-key="demo-lineseg"><span class="panel-icon" aria-hidden="true">—</span><b>直线、射线、线段</b><span class="panel-sub">线段 AB 能量出 5 厘米，直线量不出</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">7 年级 · 几何图形初步</span></button>
+      <button class="panel" type="button" data-nav-key="demo-anglepair"><span class="panel-icon" aria-hidden="true">∠</span><b>角：余角、补角、角平分线</b><span class="panel-sub">35° 的余角是 55°，补角是 145°</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">7 年级 · 几何图形初步</span></button>
+      <button class="panel" type="button" data-nav-key="demo-vertangle"><span class="panel-icon" aria-hidden="true">✕</span><b>相交线：对顶角和垂线段</b><span class="panel-sub">∠1=50°，对顶角 ∠3 也是 50°</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">7 年级 · 相交线与平行线</span></button>
+      <button class="panel" type="button" data-nav-key="demo-parangles"><span class="panel-icon" aria-hidden="true">∥</span><b>平行线：截角和平移</b><span class="panel-sub">平行了同位角才相等，转 15° 就不等了</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">7 年级 · 相交线与平行线</span></button>
+      <button class="panel" type="button" data-nav-key="demo-roots"><span class="panel-icon" aria-hidden="true">√</span><b>实数：开方机器和 √2</b><span class="panel-sub">√2 ≈ 1.414，落在 1 和 2 之间</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">7 年级 · 实数</span></button>
+      <button class="panel" type="button" data-nav-key="demo-coordplane"><span class="panel-icon" aria-hidden="true">◎</span><b>平面直角坐标系：点一点</b><span class="panel-sub">(2,3) 在第一象限，关于 x 轴对称是 (2,−3)</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">7 年级 · 平面直角坐标系</span></button>
+      <button class="panel" type="button" data-nav-key="demo-ineqline"><span class="panel-icon" aria-hidden="true">≤</span><b>不等式：数轴上画解集</b><span class="panel-sub">除以负数，不等号要变方向</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">7 年级 · 不等式与不等式组</span></button>
+      <button class="panel" type="button" data-nav-key="demo-histogram"><span class="panel-icon" aria-hidden="true">▮</span><b>直方图：分组数频数</b><span class="panel-sub">140~145 厘米有 3 人，频率是 0.075</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">7 年级 · 数据的收集、整理与描述</span></button>
       <button class="panel" type="button" data-nav-key="why"><span class="panel-icon" aria-hidden="true">？</span><b>为什么小实验</b><span class="panel-sub">进位、分数除法、面积公式</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">3 个小实验</span></button>
     </div>
 
@@ -2702,6 +2736,326 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid{gr
         <p id="cmMsg">步骤会忘，想法会迁移：同一张条形图出现在加法、倍、比、方程里；同一个 ×1 出现在约分、通分、比的基本性质里。认出老办法，就是“理解”。</p>
         <p class="demo-foot">成功标准：说出“这题又是条形图，我先找整体和部分”。</p>
         <p class="why"><b>为什么？</b>步骤背下来，换个题就不会了；认出背后的办法，换什么题都能想。复习是连线，不是重抄。</p>
+      </article>
+
+      <!-- 7.1/7.2 有理数与数轴 -->
+      <article class="demo-card" id="demo-numline">
+        <p class="demo-tag">7 年级 · 有理数</p>
+        <h3>数轴：标一点、走一走</h3>
+        <p>数轴上的点从左往右越来越大。标一标：点一个数，看它的相反数和绝对值；走一走：加法向右走，减法向左走，停在哪答案就是哪。</p>
+        <div class="control-row"><span>玩什么</span><div class="seg" id="nlModeSeg"></div></div>
+        <div id="nlMarkBox">
+          <div class="control-row"><span>这个数</span><div class="seg"><button type="button" id="nlValMinus">−</button><span class="arr-tx" id="nlValTx">这个数是 −3</span><button type="button" id="nlValPlus">＋</button></div></div>
+        </div>
+        <div id="nlWalkBox" hidden>
+          <div class="control-row"><span>起点</span><div class="seg"><button type="button" id="nlAMinus">−</button><span class="arr-tx" id="nlATx">从 −4 出发</span><button type="button" id="nlAPlus">＋</button></div></div>
+          <div class="control-row"><span>走几步</span><div class="seg"><button type="button" id="nlBMinus">−</button><span class="arr-tx" id="nlBTx">向右走 7 步</span><button type="button" id="nlBPlus">＋</button></div></div>
+        </div>
+        <svg viewBox="0 0 640 120" role="img" aria-label="数轴">
+          <defs><marker id="nlArrowHead" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#ff8a3d"></path></marker></defs>
+          <line x1="20" y1="70" x2="620" y2="70" stroke="#1e293b" stroke-width="3"></line>
+          <polygon points="620,70 606,63 606,77" fill="#1e293b"></polygon>
+          <g id="nlTicks"></g>
+          <path id="nlArrow" d="" stroke="#ff8a3d" stroke-width="3" fill="none" marker-end="url(#nlArrowHead)" style="display:none"></path>
+          <circle id="nlStartDot" r="10" cy="70" fill="#fff" stroke="#2563eb" stroke-width="3" style="display:none"></circle>
+          <circle id="nlOppDot" r="10" cy="70" fill="#fff" stroke="#94a3b8" stroke-width="3"></circle>
+          <circle id="nlDot" r="11" cy="70" fill="#ff8a3d" stroke="#c2410c" stroke-width="2"></circle>
+        </svg>
+        <p class="func-eq" id="nlRead">−3 在原点左边 3 个单位：它的相反数是 3，到原点的距离是 3，所以 |−3| = 3。</p>
+        <p id="nlMsg">数轴上的点从左往右越来越大；右边的数总比左边的数大。0 既不是正数，也不是负数。</p>
+        <p class="demo-foot">成功标准：说出“−3 的相反数是 3，|−3| = 3；−4+7 是从 −4 向右走 7 步，停在 3”。</p>
+        <p class="why"><b>为什么？</b>负数是“欠”的数：零下 3℃、亏了 5 元，都得用负数写。数轴把所有的数排成一条线，大小一目了然：右边的数总比左边的数大；一个数到原点的距离，就是它的绝对值。</p>
+      </article>
+
+      <!-- 7.3 乘方与科学记数法 -->
+      <article class="demo-card" id="demo-powerup">
+        <p class="demo-tag">7 年级 · 有理数</p>
+        <h3>乘方：对折纸和科学记数法</h3>
+        <p>一张纸厚 0.1 毫米，对折一次厚度翻一倍：对折 10 次就是 2¹⁰ = 1024 倍。科学记数法是把一个数写成 a×10ⁿ：小数点移几位，10 的指数就是几。</p>
+        <div class="control-row"><span>玩什么</span><div class="seg" id="puModeSeg"></div></div>
+        <div id="puFoldBox">
+          <div class="control-row"><span>对折几次</span><div class="seg"><button type="button" id="puFoldMinus">−</button><span class="arr-tx" id="puFoldTx">对折 10 次</span><button type="button" id="puFoldPlus">＋</button></div></div>
+          <div class="g7-vbar"><div class="g7-vfill" id="puBar" style="height:100%"></div></div>
+        </div>
+        <div id="puSciBox" hidden>
+          <div class="control-row"><span>选一个数</span><div class="seg" id="puNumSeg"></div></div>
+          <div class="control-row"><span>移动小数点</span><div class="seg"><button type="button" id="puShiftMinus">−</button><span class="arr-tx" id="puShiftTx">小数点移动了 8 位</span><button type="button" id="puShiftPlus">＋</button></div></div>
+        </div>
+        <p class="func-eq" id="puRead">对折 10 次：厚度是原来的 2¹⁰ = 1024 倍：0.1 毫米 × 1024 = 102.4 毫米，大约 10 厘米。</p>
+        <p id="puMsg">乘方是翻倍的增长：每多对折一次，厚度就再翻一倍——不是加 0.1 毫米，是乘 2。</p>
+        <p class="demo-foot">成功标准：说出“对折 10 次是 1024 倍，102.4 毫米；360000000 = 3.6×10⁸”。</p>
+        <p class="why"><b>为什么？</b>乘方是几个相同因数相乘：2¹⁰ 是 10 个 2 相乘，不是 10 个 2 相加。科学记数法里 a 必须在 1 和 10 之间：小数点向左移，指数是正的；向右移，指数是负的。</p>
+      </article>
+
+      <!-- 7.4 整式 -->
+      <article class="demo-card" id="demo-monomial">
+        <p class="demo-tag">7 年级 · 整式的加减</p>
+        <h3>整式：拆零件看系数次数</h3>
+        <p>单项式拆成“数字 × 字母 × 字母”：系数是数字因数，次数是所有字母的指数加起来。多项式拆成一排单项式：次数是最高次项的次数，项数是单项式的个数。</p>
+        <div class="control-row"><span>看什么</span><div class="seg" id="mnModeSeg"></div></div>
+        <div class="control-row"><span>选一个</span><div class="seg" id="mnItemSeg"></div></div>
+        <div class="chip-row" id="mnChips"></div>
+        <p class="func-eq" id="mnRead">单项式 −5a²b：系数是 −5（数字因数），次数是 3（a 的 2 次 + b 的 1 次）。</p>
+        <p id="mnMsg">次数告诉你这个式子“长得有多快”：x² 比 x 长得快，因为它是两个 x 相乘。</p>
+        <p class="demo-foot">成功标准：说出“−5a²b 的系数是 −5，次数是 3；3x²−2x+1 是二次三项式”。</p>
+        <p class="why"><b>为什么？</b>代数式是“用字母打包数量关系”：买 3 本书，每本 x 元，就是 3x。系数是数字因数，次数是字母指数加起来；多项式的次数看最高的那一项。</p>
+      </article>
+
+      <!-- 7.5 整式的加减 -->
+      <article class="demo-card" id="demo-liketerms">
+        <p class="demo-tag">7 年级 · 整式的加减</p>
+        <h3>整式的加减：合并同类项</h3>
+        <p>同类项才能合并：字母相同、相同字母的指数也相同，系数相加，字母和指数不变。去括号：括号前面是“+”照抄，是“−”里面每一项都变号。</p>
+        <div class="control-row"><span>玩什么</span><div class="seg" id="ltModeSeg"></div></div>
+        <div class="control-row"><span>选一道</span><div class="seg" id="ltExprSeg"></div></div>
+        <div class="chip-row" id="ltChips"></div>
+        <div class="btn-row"><button class="btn small primary" id="ltGo" type="button">合并同类项</button></div>
+        <p class="func-eq" id="ltRead">点“合并同类项”，看看哪些能合到一起：同一种颜色的是一类。</p>
+        <p id="ltMsg">同类项才能合并，就像苹果和梨不能直接加成“8 个苹果梨”；去括号变号，是因为减去一整组，就是把组里的每一项都减掉。</p>
+        <p class="demo-foot">成功标准：说出“3x²+5x−2x²+x = x²+6x；5−(2a−3b) = 5−2a+3b”。</p>
+        <p class="why"><b>为什么？</b>合并同类项是数一数有几个：3 个 x² 减 2 个 x²，剩 1 个 x²。去括号变号，是因为减去一整组，就是把组里的每一项都减掉——减去 −3b，就是加上 3b。</p>
+      </article>
+
+      <!-- 7.7 实际问题与一元一次方程 -->
+      <article class="demo-card" id="demo-meetline">
+        <p class="demo-tag">7 年级 · 一元一次方程</p>
+        <h3>相向而行：几小时相遇</h3>
+        <p>甲、乙两地相距 120 千米，甲骑车每小时行 15 千米，乙骑车每小时行 25 千米，两人同时出发相向而行。甲走的路程加乙走的路程就是全程。</p>
+        <div class="control-row"><span>走了几小时</span><div class="seg"><button type="button" id="mtTMinus">−</button><span class="arr-tx" id="mtTx">走了 3 小时</span><button type="button" id="mtTPlus">＋</button></div></div>
+        <svg viewBox="0 0 640 130" role="img" aria-label="相向而行线段图">
+          <line x1="40" y1="70" x2="592" y2="70" stroke="#1e293b" stroke-width="3"></line>
+          <text x="40" y="125" font-size="14">甲地 0 千米</text>
+          <text x="592" y="125" font-size="14" text-anchor="end">乙地 120 千米</text>
+          <text id="mtTxA" x="247" y="42" font-size="15" text-anchor="middle" fill="#c2410c" font-weight="bold">甲 45 千米</text>
+          <text id="mtTxB" x="247" y="100" font-size="15" text-anchor="middle" fill="#2563eb" font-weight="bold">乙 75 千米</text>
+          <circle id="mtDotA" r="11" cy="70" fill="#ff8a3d" stroke="#c2410c" stroke-width="2"></circle>
+          <circle id="mtDotB" r="11" cy="70" fill="#60a5fa" stroke="#2563eb" stroke-width="2"></circle>
+        </svg>
+        <p class="func-eq" id="mtEq">15×3 + 25×3 = 120（千米）</p>
+        <p class="func-eq" id="mtRead">t = 3 小时：甲走了 45 千米，乙走了 75 千米，合起来 120 千米，正好相遇！15t + 25t = 120，t = 3。</p>
+        <p id="mtMsg">列方程就是把“不知道的数”当成已知数写进等量关系：甲走的路程 + 乙走的路程 = 120 千米。</p>
+        <p class="demo-foot">成功标准：说出“15t+25t=120，t=3 小时相遇，相遇点离甲 45 千米”。</p>
+        <p class="why"><b>为什么？</b>设未知数不是猜，是给未知数起个名字，好让它进等式里干活。等量关系一成立，方程就自己算出答案。</p>
+      </article>
+
+      <!-- 7.8 直线、射线、线段 -->
+      <article class="demo-card" id="demo-lineseg">
+        <p class="demo-tag">7 年级 · 几何图形初步</p>
+        <h3>直线、射线、线段</h3>
+        <p>直线没有端点，向两边无限长；射线有一个端点，向一方无限长；线段有两个端点，能量出长度。两点确定一条直线；两点之间，线段最短。</p>
+        <div class="control-row"><span>看哪一种</span><div class="seg" id="sgModeSeg"></div></div>
+        <div class="btn-row"><button class="btn small ghost" id="sgCurveBtn" type="button" aria-pressed="false">画一条弯路比一比</button></div>
+        <svg viewBox="0 0 640 200" role="img" aria-label="直线射线线段">
+          <g id="sgLine" style="display:none"><line x1="20" y1="100" x2="620" y2="100" stroke="#1e293b" stroke-width="3"></line><polygon points="620,100 606,93 606,107" fill="#1e293b"></polygon><polygon points="20,100 34,93 34,107" fill="#1e293b"></polygon></g>
+          <g id="sgRayA" style="display:none"><line x1="120" y1="100" x2="620" y2="100" stroke="#2563eb" stroke-width="3"></line><polygon points="620,100 606,93 606,107" fill="#2563eb"></polygon></g>
+          <g id="sgRayB" style="display:none"><line x1="20" y1="100" x2="480" y2="100" stroke="#2563eb" stroke-width="3"></line><polygon points="20,100 34,93 34,107" fill="#2563eb"></polygon></g>
+          <line id="sgSeg" x1="120" y1="100" x2="480" y2="100" stroke="#ff8a3d" stroke-width="5"></line>
+          <path id="sgCurve" d="M120,100 Q300,20 480,100" stroke="#ef4444" stroke-width="3" fill="none" stroke-dasharray="8 6" style="display:none"></path>
+          <circle cx="120" cy="100" r="8" fill="#fff" stroke="#1e293b" stroke-width="2"></circle>
+          <circle cx="480" cy="100" r="8" fill="#fff" stroke="#1e293b" stroke-width="2"></circle>
+          <text x="120" y="80" font-size="16" text-anchor="middle" font-weight="bold">A</text>
+          <text x="480" y="80" font-size="16" text-anchor="middle" font-weight="bold">B</text>
+          <text x="300" y="140" font-size="15" text-anchor="middle">AB = 5 厘米</text>
+        </svg>
+        <p class="func-eq" id="sgRead">线段 AB：有两个端点 A 和 B，能量出长度：AB = 5 厘米。</p>
+        <p id="sgMsg">点动成线，线动成面，面动成体。直线和射线量不出长度，因为它们没有尽头；线段最短，是因为“抄近路”——绳子拉直了就是线段。</p>
+        <p class="demo-foot">成功标准：说出“直线没端点，射线一个端点，线段两个端点；两点之间线段最短”。</p>
+        <p class="why"><b>为什么？</b>直线和射线量不出长度，因为它们没有尽头；线段最短，是因为“抄近路”——走直线比绕弯近，绳子拉直了就是线段。</p>
+      </article>
+
+      <!-- 7.9 角 -->
+      <article class="demo-card" id="demo-anglepair">
+        <p class="demo-tag">7 年级 · 几何图形初步</p>
+        <h3>角：余角、补角、角平分线</h3>
+        <p>角是两条射线从同一点出发张开的大小。余角凑满 90°，补角凑满 180°，角平分线把一个角分成两个相等的角。1° = 60′。</p>
+        <div class="control-row"><span>玩什么</span><div class="seg" id="apModeSeg"></div></div>
+        <div class="control-row"><span>∠A 是多少度</span><div class="seg"><button type="button" id="apAngleMinus">−</button><span class="arr-tx" id="apAngleTx">∠A = 35°</span><button type="button" id="apAnglePlus">＋</button></div></div>
+        <div class="g7-ab-bar"><div id="apBarA" style="width:38.9%">∠A 35°</div><div id="apBarB" style="width:61.1%">余角 55°</div></div>
+        <p class="func-eq" id="apRead">∠A = 35°，它的余角是 55°：35°+55° = 90°，正好凑满一个直角。</p>
+        <p id="apMsg">角是“张开的程度”：张得越大，角越大。余角和补角是“凑满”：一个角加上它的余角正好凑满一个直角，加上补角正好凑满一个平角——像拼图缺的那一块。</p>
+        <p class="demo-foot">成功标准：说出“35° 的余角是 55°，补角是 145°；角平分线把 35° 分成两个 17.5°”。</p>
+        <p class="why"><b>为什么？</b>度、分、秒是六十进制：1° = 60′，1′ = 60″。余角不是随便剩下的角，它和原来的角加起来必须是 90°；补角加起来必须是 180°。</p>
+      </article>
+
+      <!-- 7.10 相交线 -->
+      <article class="demo-card" id="demo-vertangle">
+        <p class="demo-tag">7 年级 · 相交线与平行线</p>
+        <h3>相交线：对顶角和垂线段</h3>
+        <p>两条直线相交形成 4 个角：相对的两个角叫对顶角，对顶角相等；相邻的两个角叫邻补角，邻补角互补。点到直线的距离，是过这一点向直线作的垂线段的长度。</p>
+        <div class="control-row"><span>玩什么</span><div class="seg" id="vaModeSeg"></div></div>
+        <div id="vaCrossBox">
+          <div class="control-row"><span>∠1 是多少度</span><div class="seg"><button type="button" id="vaAngleMinus">−</button><span class="arr-tx" id="vaAngleTx">∠1 = 50°</span><button type="button" id="vaAnglePlus">＋</button></div></div>
+          <svg viewBox="0 0 640 260" role="img" aria-label="两条直线相交">
+            <line x1="60" y1="130" x2="580" y2="130" stroke="#1e293b" stroke-width="3"></line>
+            <line id="vaLine2" x1="217" y1="253" x2="423" y2="7" stroke="#2563eb" stroke-width="3"></line>
+            <text id="vaL1" x="430" y="70" font-size="16" text-anchor="middle">∠1 = 50°</text>
+            <text id="vaL2" x="210" y="70" font-size="16" text-anchor="middle">∠2 = 130°</text>
+            <text id="vaL3" x="210" y="195" font-size="16" text-anchor="middle">∠3 = 50°</text>
+            <text id="vaL4" x="430" y="195" font-size="16" text-anchor="middle">∠4 = 130°</text>
+          </svg>
+        </div>
+        <div id="vaPerpBox" hidden>
+          <div class="control-row"><span>选一条线段</span><div class="seg" id="vaSegSeg"></div></div>
+          <svg viewBox="0 0 640 260" role="img" aria-label="点到直线的距离">
+            <line x1="40" y1="200" x2="600" y2="200" stroke="#1e293b" stroke-width="3"></line>
+            <line id="vaSeg0" x1="320" y1="60" x2="320" y2="200" stroke="#ff8a3d" stroke-width="5"></line>
+            <line id="vaSeg1" x1="320" y1="60" x2="460" y2="200" stroke="#94a3b8" stroke-width="3"></line>
+            <line id="vaSeg2" x1="320" y1="60" x2="140" y2="200" stroke="#94a3b8" stroke-width="3"></line>
+            <circle cx="320" cy="60" r="8" fill="#ff8a3d" stroke="#c2410c" stroke-width="2"></circle>
+            <text x="320" y="45" font-size="16" text-anchor="middle" font-weight="bold">P</text>
+            <text x="335" y="130" font-size="15">5 厘米</text>
+            <text x="400" y="140" font-size="15">7 厘米</text>
+            <text x="205" y="150" font-size="15">9 厘米</text>
+          </svg>
+        </div>
+        <p class="func-eq" id="vaRead">∠1 = 50°，∠2 = 130°，∠3 = 50°，∠4 = 130°：对顶角相等（∠1 = ∠3），邻补角互补（∠1+∠2 = 180°）。</p>
+        <p id="vaMsg">对顶角相等，是因为它们都和同一个邻角互补——“同一个角的补角只有一个”。垂线段最短：从直线外一点到直线上各点，垂线段是最近的路。（图是示意图，看数字比长短。）</p>
+        <p class="demo-foot">成功标准：说出“对顶角相等，邻补角互补；点到直线的距离是垂线段，5 厘米”。</p>
+        <p class="why"><b>为什么？</b>对顶角不是“对着的角”就行，它必须是两条直线相交形成的、相对的两个角。点到直线的距离只能是垂线段的长度，斜线段都比它长。</p>
+      </article>
+
+      <!-- 7.11 平行线与平移 -->
+      <article class="demo-card" id="demo-parangles">
+        <p class="demo-tag">7 年级 · 相交线与平行线</p>
+        <h3>平行线：截角和平移</h3>
+        <p>两条平行线被第三条直线所截：同位角相等、内错角相等、同旁内角互补。把下面那条线转一转，不平行了，角就不相等了。平移是整个图形一起搬家。</p>
+        <div class="control-row"><span>看哪一对角</span><div class="seg" id="plPairSeg"></div></div>
+        <div class="control-row"><span>两条线</span><div class="seg" id="plParSeg"></div></div>
+        <div id="plAngleBox">
+          <div class="control-row"><span>截线夹角</span><div class="seg"><button type="button" id="plAngleMinus">−</button><span class="arr-tx" id="plAngleTx">截线夹角 70°</span><button type="button" id="plAnglePlus">＋</button></div></div>
+          <svg viewBox="0 0 640 300" role="img" aria-label="平行线被截线所截">
+            <line x1="60" y1="90" x2="580" y2="90" stroke="#1e293b" stroke-width="3"></line>
+            <line id="plLine2" x1="60" y1="210" x2="580" y2="210" stroke="#1e293b" stroke-width="3"></line>
+            <line id="plTrans" x1="275.5" y1="27.8" x2="364.5" y2="272.2" stroke="#2563eb" stroke-width="3"></line>
+            <text id="plT1" x="332" y="64" font-size="15" text-anchor="middle">∠1 110°</text>
+            <text id="plT2" x="264" y="64" font-size="15" text-anchor="middle">∠2 70°</text>
+            <text id="plT3" x="264" y="122" font-size="15" text-anchor="middle">∠3 110°</text>
+            <text id="plT4" x="332" y="122" font-size="15" text-anchor="middle">∠4 70°</text>
+            <text id="plT5" x="376" y="184" font-size="15" text-anchor="middle">∠5 110°</text>
+            <text id="plT6" x="308" y="184" font-size="15" text-anchor="middle">∠6 70°</text>
+            <text id="plT7" x="308" y="242" font-size="15" text-anchor="middle">∠7 110°</text>
+            <text id="plT8" x="376" y="242" font-size="15" text-anchor="middle">∠8 70°</text>
+          </svg>
+        </div>
+        <div id="plTransBox" hidden>
+          <div class="control-row"><span>平移几格</span><div class="seg"><button type="button" id="plDxMinus">−</button><span class="arr-tx" id="plDxTx">向右平移 3 格</span><button type="button" id="plDxPlus">＋</button></div></div>
+          <svg viewBox="0 0 640 300" role="img" aria-label="图形平移">
+            <defs><marker id="plArrowHead" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#ff8a3d"></path></marker></defs>
+            <polygon id="plTri" points="230,220 290,120 350,220" fill="#dbeafe" stroke="#2563eb" stroke-width="2"></polygon>
+            <line id="plTransArrow" x1="140" y1="260" x2="230" y2="260" stroke="#ff8a3d" stroke-width="3" marker-end="url(#plArrowHead)"></line>
+            <text x="140" y="285" font-size="14">平移方向</text>
+          </svg>
+        </div>
+        <p class="func-eq" id="plRead">同位角：∠4 = 70°，∠8 = 70°，它们相等——两直线平行，同位角相等。</p>
+        <p id="plMsg">判定和性质是一对“反话”：判定是“角相等，所以线平行”；性质是“线平行，所以角相等”。平移是“整个图形一起搬家”：每个点都朝同一个方向、走同样的距离。</p>
+        <p class="demo-foot">成功标准：说出“平行时同位角相等、内错角相等、同旁内角互补；转 15° 就不等了”。</p>
+        <p class="why"><b>为什么？</b>内错角相等能判定平行，前提是这两条直线被第三条直线所截——截的不是同一组直线，角再相等也没用。判定是原因、性质是结果，方向不能反。</p>
+      </article>
+
+      <!-- 7.12 实数 -->
+      <article class="demo-card" id="demo-roots">
+        <p class="demo-tag">7 年级 · 实数</p>
+        <h3>实数：开方机器和 √2</h3>
+        <p>平方根：x² = a，x 就是 a 的平方根；正数有两个平方根，互为相反数；0 的平方根是 0；负数没有平方根。立方根：任何数都有一个。边长是 1 的正方形，对角线长就是 √2。</p>
+        <div class="control-row"><span>玩什么</span><div class="seg" id="sqModeSeg"></div></div>
+        <div class="control-row"><span>选一个数</span><div class="seg" id="sqASeg"></div></div>
+        <div id="sqLineBox" hidden>
+          <svg viewBox="0 0 640 220" role="img" aria-label="根号2在数轴上的位置">
+            <rect x="60" y="20" width="90" height="90" fill="#dbeafe" stroke="#2563eb" stroke-width="2"></rect>
+            <line x1="60" y1="110" x2="150" y2="20" stroke="#c2410c" stroke-width="3"></line>
+            <text x="60" y="140" font-size="14">边长 1 的正方形</text>
+            <text x="165" y="50" font-size="14">对角线长 √2</text>
+            <line x1="40" y1="180" x2="580" y2="180" stroke="#1e293b" stroke-width="3"></line>
+            <polygon points="580,180 566,173 566,187" fill="#1e293b"></polygon>
+            <line x1="40" y1="174" x2="40" y2="186" stroke="#1e293b" stroke-width="2"></line>
+            <line x1="220" y1="174" x2="220" y2="186" stroke="#1e293b" stroke-width="2"></line>
+            <line x1="400" y1="174" x2="400" y2="186" stroke="#1e293b" stroke-width="2"></line>
+            <line x1="580" y1="174" x2="580" y2="186" stroke="#1e293b" stroke-width="2"></line>
+            <text x="40" y="208" font-size="14" text-anchor="middle">0</text>
+            <text x="220" y="208" font-size="14" text-anchor="middle">1</text>
+            <text x="400" y="208" font-size="14" text-anchor="middle">2</text>
+            <text x="580" y="208" font-size="14" text-anchor="middle">3</text>
+            <circle id="sqDot" r="11" cy="180" fill="#ff8a3d" stroke="#c2410c" stroke-width="2"></circle>
+          </svg>
+        </div>
+        <p class="func-eq" id="sqRead">√16 = 4，因为 4² = 16；16 的平方根是 ±4。</p>
+        <p id="sqMsg">√2 不是有理数：它在数轴上有个确定的点，但永远写不成分数。实数和数轴上的点是一一对应的——数轴上的每个点都有一个实数。</p>
+        <p class="demo-foot">成功标准：说出“√16 = 4，16 的平方根是 ±4；−4 没有平方根；√2 ≈ 1.414 是无理数”。</p>
+        <p class="why"><b>为什么？</b>√9 是 9 的算术平方根，只有一个正的 3；±3 是“9 的平方根”。1.414 只是 √2 的近似值，√2 是无限不循环小数，写不成分数。</p>
+      </article>
+
+      <!-- 7.13 平面直角坐标系 -->
+      <article class="demo-card" id="demo-coordplane">
+        <p class="demo-tag">7 年级 · 平面直角坐标系</p>
+        <h3>平面直角坐标系：点一点</h3>
+        <p>横轴叫 x 轴，竖轴叫 y 轴，交点是原点 O。点的位置用一对有序数对 (x, y) 表示：先横后纵。第一象限 (+,+)，第二象限 (−,+)，第三象限 (−,−)，第四象限 (+,−)。</p>
+        <div class="control-row"><span>选一个点</span><div class="seg" id="xyPtSeg"></div></div>
+        <div class="control-row"><span>当前点</span><span class="arr-tx" id="xyPtTx">点 (2,3)</span></div>
+        <div class="control-row"><span>对称点</span><div class="seg" id="xySymSeg"></div></div>
+        <svg viewBox="0 0 520 520" role="img" aria-label="平面直角坐标系">
+          <g id="xyGrid"></g>
+          <text x="400" y="120" font-size="16" fill="#94a3b8">第一象限</text>
+          <text x="120" y="120" font-size="16" fill="#94a3b8">第二象限</text>
+          <text x="120" y="400" font-size="16" fill="#94a3b8">第三象限</text>
+          <text x="400" y="400" font-size="16" fill="#94a3b8">第四象限</text>
+          <text x="505" y="250" font-size="16" font-weight="bold">x</text>
+          <text x="270" y="20" font-size="16" font-weight="bold">y</text>
+          <text x="246" y="278" font-size="14">O</text>
+          <circle id="xyGhost" r="11" fill="#fff" stroke="#2563eb" stroke-width="3" style="display:none"></circle>
+          <circle id="xyDot" r="11" fill="#ff8a3d" stroke="#c2410c" stroke-width="2"></circle>
+        </svg>
+        <p class="func-eq" id="xyRead">点 (2,3) 在第一象限：横坐标是 2，纵坐标是 3。</p>
+        <p id="xyMsg">坐标是给平面上的点“编地址”：横着走几格、竖着走几格，地址唯一。象限是“东南西北”的数学版：x、y 的正负号一组合，就知道点在哪个区域。</p>
+        <p class="demo-foot">成功标准：说出“(2,3) 在第一象限；关于 x 轴对称是 (2,−3)，关于 y 轴对称是 (−2,3)”。</p>
+        <p class="why"><b>为什么？</b>有序数对先横后纵，(3,2) 和 (2,3) 是两个不同的点。点在 y 轴上是横坐标 x = 0，点在 x 轴上才是纵坐标 y = 0。</p>
+      </article>
+
+      <!-- 7.15 不等式与不等式组 -->
+      <article class="demo-card" id="demo-ineqline">
+        <p class="demo-tag">7 年级 · 不等式与不等式组</p>
+        <h3>不等式：数轴上画解集</h3>
+        <p>解不等式和解方程差不多：移项、合并；但两边同乘（或除以）一个负数时，不等号要变方向！空心圈是不包括这个点，实心点是包括。不等式组取公共部分。</p>
+        <div class="control-row"><span>玩什么</span><div class="seg" id="iqModeSeg"></div></div>
+        <div class="control-row"><span>选一道</span><div class="seg" id="iqExprSeg"></div></div>
+        <div id="iqOneBox">
+          <svg viewBox="0 0 640 120" role="img" aria-label="不等式的解集在数轴上">
+            <line x1="20" y1="60" x2="620" y2="60" stroke="#1e293b" stroke-width="3"></line>
+            <polygon points="620,60 606,53 606,67" fill="#1e293b"></polygon>
+            <g id="iqTicks"></g>
+            <line id="iqRay" y1="60" y2="60" stroke="#ff8a3d" stroke-width="6"></line>
+            <circle id="iqDot" r="10" cy="60" fill="#fff" stroke="#c2410c" stroke-width="2"></circle>
+          </svg>
+        </div>
+        <div id="iqSysBox" hidden>
+          <svg viewBox="0 0 640 120" role="img" aria-label="不等式组的公共部分在数轴上">
+            <line x1="20" y1="60" x2="620" y2="60" stroke="#1e293b" stroke-width="3"></line>
+            <polygon points="620,60 606,53 606,67" fill="#1e293b"></polygon>
+            <g id="iqTicksB"></g>
+            <line id="iqRayA" y1="60" y2="60" stroke="#94a3b8" stroke-width="4"></line>
+            <line id="iqRayB" y1="60" y2="60" stroke="#94a3b8" stroke-width="4"></line>
+            <line id="iqOverlap" y1="60" y2="60" stroke="#15803d" stroke-width="8"></line>
+            <circle id="iqDotA" r="10" cy="60" fill="#fff" stroke="#c2410c" stroke-width="2"></circle>
+            <circle id="iqDotB" r="10" cy="60" fill="#ff8a3d" stroke="#c2410c" stroke-width="2"></circle>
+          </svg>
+        </div>
+        <p class="func-eq" id="iqRead">−2x &gt; 6：两边同时除以 −2，不等号要变方向，得 x &lt; −3。数轴上 −3 是空心圈（不包括它），往左画。</p>
+        <p id="iqMsg">不等号变方向，是因为“翻过来”：3&lt;5，两边同乘 −1 变成 −3 和 −5，−3&gt;−5 了——数轴上 −3 在 −5 右边。不等式组的解是公共部分，因为 x 要同时满足两个条件。</p>
+        <p class="demo-foot">成功标准：说出“除以负数，不等号反向；不等式组取公共部分，−2 &lt; x ≤ 3”。</p>
+        <p class="why"><b>为什么？</b>解 −2x &gt; 6 得 x &gt; 3 是错的：两边除以 −2，不等号要变方向，得 x &lt; −3。不等式组的解是两个解集的交集，不是拼起来——x 既要大于 −2，又要小于等于 3。</p>
+      </article>
+
+      <!-- 7.16 统计调查与直方图 -->
+      <article class="demo-card" id="demo-histogram">
+        <p class="demo-tag">7 年级 · 数据的收集、整理与描述</p>
+        <h3>直方图：分组数频数</h3>
+        <p>全面调查是把所有人都问一遍；抽样调查是抽一部分人来问，样本要随机、有代表性。直方图：把数据分组，数一数每组有几个（频数），画成长方形；频率 = 频数 ÷ 总数。</p>
+        <div class="control-row"><span>分组</span><div class="seg" id="hgGroupSeg"></div></div>
+        <div class="control-row"><span>数据</span><div class="seg" id="hgSetSeg"></div></div>
+        <div class="g7-hg-bars" id="hgBars"></div>
+        <p class="func-eq" id="hgRead">全班 40 人，每 5 厘米一组：140~145：3 人；145~150：4 人；150~155：5 人；155~160：5 人；160~165：5 人；165~170：5 人；170~175：5 人；175~180：4 人；180~185：3 人；185~190：1 人。140~145 这组的频率是 3÷40 = 0.075。</p>
+        <p id="hgMsg">直方图的长方形之间没有空隙：身高是连续的数据；条形图的长方形之间有空隙。</p>
+        <p class="demo-foot">成功标准：说出“140~145 厘米有 3 人，频率是 0.075；样本要随机，不然结论会偏”。</p>
+        <p class="why"><b>为什么？</b>抽样调查省时间，但样本偏了结论就偏了——只问自己班的人，不能代表全校。直方图把数据“排队”：哪一组人多、哪一组人少，一眼就看出来。</p>
       </article>
 
     </div>
@@ -5430,8 +5784,12 @@ const GRADE6_CONTENT = {
    （七上变 6 章、七下变 7–12 章），但主题顺序基本一致；本书按 A 版旧章
    节顺序写。共 10 个教学单元、16 条知识点。每条知识点：怎么做、为什么、
    容易错、看图学、动手试一试、讲回来、先考一考、练一练（基础 → 提高）、
-   奥数挑战。演示关联：一元一次方程、二元一次方程组用天平演示（balance），
-   其余为 null。 */
+   奥数挑战。演示关联：7.1/7.2 共用数轴演示（numline：标点看相反数与绝对值、走路算加减）、
+   7.3 乘方与科学记数法（powerup）、7.4 单项式与多项式拆零件（monomial）、7.5 合并同类项与
+   去括号（liketerms）、7.6/7.14 复用天平演示（balance）、7.7 相向而行（meetline）、7.8 直线
+   射线线段（lineseg）、7.9 余角补角与角平分线（anglepair）、7.10 对顶角与垂线段（vertangle）、
+   7.11 平行线截角与平移（parangles）、7.12 开方与 √2 定位（roots）、7.13 坐标平面（coordplane）、
+   7.15 不等式数轴（ineqline）、7.16 直方图（histogram）。 */
 const GRADE7_CONTENT = {
   grade: 7,
   edition: "A",
@@ -5452,7 +5810,7 @@ const GRADE7_CONTENT = {
           method: "数轴排队法",
           explainBack: "“正数在原点右边，负数在原点左边；右边的数比左边的数大。”",
           tryIt: "在数轴上标出-3、-1、0、2、4，再从小到大排一排；说一说-3和-5谁大，为什么。",
-          demo: null,
+          demo: 'numline',
           recall: { q: "-3和-5，哪个大？是-3大，还是-5大？", answer: "-3大", hint: "数轴上-3在-5的右边，右边的数大。" },
           practice: [
             { q: "在数轴上，-2.5在原点的哪一边？它到原点的距离是几个单位？", answer: "左边，2.5个单位", hint: "负数在原点左边；到原点的距离就是绝对值。", level: "基础" },
@@ -5472,7 +5830,7 @@ const GRADE7_CONTENT = {
           method: "数轴走路法",
           explainBack: "“同号取号绝对值加，异号取大绝对值减；减法就是加相反数。”",
           tryIt: "在数轴上算一算：-4+7、5-(-3)、-2-5，每道题都让小人走一走，再写出答案。",
-          demo: null,
+          demo: 'numline',
           recall: { q: "-7+4等于几？是-3，还是-11？", answer: "-3", hint: "异号相加，绝对值大的7是负的，7-4=3，取负号。" },
           practice: [
             { q: "计算：(-8)+(+5)。", answer: "-3", hint: "异号相加：8-5=3，取绝对值大的数的符号。", level: "基础" },
@@ -5492,7 +5850,7 @@ const GRADE7_CONTENT = {
           method: "欠款账本法",
           explainBack: "“同号得正，异号得负；乘方是几个相同因数相乘。”",
           tryIt: "算一算(-3)×(-4)、(-2)³、(1/2)÷(-2)，再把360000000写成科学记数法。",
-          demo: null,
+          demo: 'powerup',
           recall: { q: "(-3)×(-4)等于几？是12，还是-12？", answer: "12", hint: "负负得正，3×4=12。" },
           practice: [
             { q: "计算：(-2)³。", answer: "-8", hint: "3个-2相乘：(-2)×(-2)×(-2)=-8。", level: "基础" },
@@ -5518,7 +5876,7 @@ const GRADE7_CONTENT = {
           method: "拆零件法",
           explainBack: "“系数是数字因数，次数是字母指数加起来。”",
           tryIt: "写出-5a²b的系数和次数；再写出多项式2x³-x+4的次数和项数。",
-          demo: null,
+          demo: 'monomial',
           recall: { q: "单项式-3a²b的系数和次数各是多少？", answer: "系数是-3，次数是3", hint: "系数是-3；次数是a的2次加b的1次。" },
           practice: [
             { q: "写出单项式5xy²的系数和次数。", answer: "系数是5，次数是3", hint: "系数是5；次数是x的1次加y的2次。", level: "基础" },
@@ -5538,7 +5896,7 @@ const GRADE7_CONTENT = {
           method: "同筐合并法",
           explainBack: "“同类项才能合；括号前是减号，里面全变号。”",
           tryIt: "化简3x²+5x-2x²+x，再化简5-(3a-2b)，看看括号里的符号怎么变。",
-          demo: null,
+          demo: 'liketerms',
           recall: { q: "5x-(3x-2)等于几？是2x+2，还是2x-2？", answer: "2x+2", hint: "括号前是减号，括号里的-2变+2。" },
           practice: [
             { q: "合并同类项：3a+5a-2a。", answer: "6a", hint: "系数相加：3+5-2=6，字母不变。", level: "基础" },
@@ -5591,7 +5949,7 @@ const GRADE7_CONTENT = {
           method: "等量关系拼图",
           explainBack: "“设未知数，找等量关系，列方程，解完检验再回答。”",
           tryIt: "小明买3支笔花了12元，设每支笔x元，列方程并解；再算一算甲乙相向而行几小时相遇。",
-          demo: null,
+          demo: 'meetline',
           recall: { q: "甲比乙多5个，乙有x个，甲有几个？", answer: "x+5个", hint: "多5就是加5。" },
           practice: [
             { q: "小明买3支笔花了12元，每支笔几元？（列方程并解）", answer: "4元", hint: "设每支笔x元，3x=12。", level: "基础" },
@@ -5621,7 +5979,7 @@ const GRADE7_CONTENT = {
           method: "点线面体动画",
           explainBack: "“直线没端点，射线一个端点，线段两个端点；两点之间线段最短。”",
           tryIt: "在纸上点两个点，过它们画一条直线；再画一条曲线连起来，量一量哪条更短。",
-          demo: null,
+          demo: 'lineseg',
           recall: { q: "经过两点可以画几条直线？", answer: "1条", hint: "两点确定一条直线。" },
           practice: [
             { q: "线段AB=5厘米，点C在AB上，AC=2厘米，BC长几厘米？", answer: "3厘米", hint: "AC+BC=AB，2+BC=5。", level: "基础" },
@@ -5641,7 +5999,7 @@ const GRADE7_CONTENT = {
           method: "张开程度法",
           explainBack: "“余角凑满90°，补角凑满180°；1°=60′。”",
           tryIt: "用量角器量一量∠A=35°，算出它的余角和补角；再画一个角，用叠合法比一比两个角谁大。",
-          demo: null,
+          demo: 'anglepair',
           recall: { q: "∠A=35°，它的余角是多少度？", answer: "55°", hint: "35°+55°=90°。" },
           practice: [
             { q: "1.5°等于多少分？", answer: "90′", hint: "1°=60′，0.5°=30′。", level: "基础" },
@@ -5667,7 +6025,7 @@ const GRADE7_CONTENT = {
           method: "对顶角亮灯法",
           explainBack: "“对顶角相等，邻补角互补；点到直线的距离是垂线段。”",
           tryIt: "画两条相交直线，量一量四个角，看看对顶角是不是真的相等；再从直线外一点向直线画垂线段和几条斜线段，比一比谁最短。",
-          demo: null,
+          demo: 'vertangle',
           recall: { q: "两条直线相交，∠1=50°，它的对顶角∠3是多少度？", answer: "50°", hint: "对顶角相等。" },
           practice: [
             { q: "直线AB、CD相交于O，∠AOC=120°，∠BOD是多少度？", answer: "120°", hint: "∠AOC和∠BOD是对顶角。", level: "基础" },
@@ -5687,7 +6045,7 @@ const GRADE7_CONTENT = {
           method: "亮灯辨角法",
           explainBack: "“同位角相等、内错角相等、同旁内角互补，都能判定平行；平行了，这些角就都相等。”",
           tryIt: "画两条平行线，再画一条截线，标出所有的同位角、内错角、同旁内角，量一量它们的度数；再把一个三角形平移一次，看看形状变了没有。",
-          demo: null,
+          demo: 'parangles',
           recall: { q: "∠1和∠2是同位角，∠1=∠2，能说明这两条直线平行吗？", answer: "能", hint: "同位角相等，两直线平行。" },
           practice: [
             { q: "两条平行线被第三条直线所截，一个同位角是70°，另一个同位角是多少度？", answer: "70°", hint: "两直线平行，同位角相等。", level: "基础" },
@@ -5713,7 +6071,7 @@ const GRADE7_CONTENT = {
           method: "对角线定位法",
           explainBack: "“正数有两个平方根，0只有一个，负数没有；√2是无理数。”",
           tryIt: "算一算√25、√16、³√8、³√(-27)，再在数轴上大约标出√2的位置。",
-          demo: null,
+          demo: 'roots',
           recall: { q: "√16的算术平方根是多少？是4，还是±4？", answer: "4", hint: "算术平方根是正的那一个。" },
           practice: [
             { q: "求9的平方根。", answer: "±3", hint: "正数有两个平方根，互为相反数。", level: "基础" },
@@ -5739,7 +6097,7 @@ const GRADE7_CONTENT = {
           method: "编地址法",
           explainBack: "“先横后纵；第一象限两个都是正，第二象限x负y正，第三象限两个都是负，第四象限x正y负。”",
           tryIt: "在坐标纸上标出(2,3)、(-1,2)、(-2,-1)、(3,-2)，看看它们各在第几象限；再写出(2,3)关于x轴、y轴、原点的对称点。",
-          demo: null,
+          demo: 'coordplane',
           recall: { q: "点P(2,-3)在第几象限？", answer: "第四象限", hint: "x是正的，y是负的，是第四象限。" },
           practice: [
             { q: "写出点A(3,4)关于x轴的对称点坐标。", answer: "(3,-4)", hint: "关于x轴对称，横坐标不变，纵坐标变号。", level: "基础" },
@@ -5796,7 +6154,7 @@ const GRADE7_CONTENT = {
           method: "数轴画段法",
           explainBack: "“乘除负数，不等号反向；不等式组取公共部分。”",
           tryIt: "在数轴上画一画-2x>6的解集；再解不等式组{x+2>0,2x-1≤5}，看看公共部分是哪一段。",
-          demo: null,
+          demo: 'ineqline',
           recall: { q: "解-3x>9，x是大于-3，还是小于-3？", answer: "x<-3", hint: "除以负数，不等号反向。" },
           practice: [
             { q: "解不等式：2x-3<5。", answer: "x<4", hint: "先移项：2x<8，再把系数化为1。", level: "基础" },
@@ -5826,7 +6184,7 @@ const GRADE7_CONTENT = {
           method: "随机抽样法",
           explainBack: "“全面调查问所有人，抽样调查抽一部分；样本要随机，不然结论会偏。”",
           tryIt: "调查班里同学最喜欢的运动：设计一个抽样方案（怎么抽才随机？）；再把全班身高数据画成直方图。",
-          demo: null,
+          demo: 'histogram',
           recall: { q: "调查全校学生的午餐喜好，只抽10个自己班的同学，样本有代表性吗？", answer: "没有", hint: "只抽一个班，别的班没机会被抽到。" },
           practice: [
             { q: "某班40名学生，身高在150~160厘米的有12人，这组的频数是多少？频率是多少？", answer: "频数12，频率0.3", hint: "频数就是这组的人数；频率=12÷40。", level: "基础" },
@@ -6698,7 +7056,7 @@ const GRADES = {
 };
 
 /* ---------- 进度（原型：记演示是否玩过） ----------
-   85 个演示全都计入：4 个经典演示 + 13 个一年级实验 + 15 个二年级实验 + 14 个三年级实验 + 16 个四年级实验 + 11 个五年级实验 + 12 个六年级实验。以前只记 4 个经典，
+   98 个演示全都计入：4 个经典演示 + 13 个一年级实验 + 15 个二年级实验 + 14 个三年级实验 + 16 个四年级实验 + 11 个五年级实验 + 12 个六年级实验 + 13 个七年级实验。以前只记 4 个经典，
    首页却写着“4 个演示”，演示页上却是 17 张卡，数字对不上
    （2026-11-06 真机审计第 6 条）。 */
 const tried = new Set();
@@ -6716,7 +7074,9 @@ const ALL_DEMOS = ['tenframe', 'fraction', 'balance', 'function',
   'decmul', 'gridpos', 'decdiv', 'prob', 'polyarea', 'planttree',
   'factor', 'cuboid', 'fracadd', 'rotate', 'findbad',
   'radar', 'ratio', 'circle', 'percent', 'fan', 'lsquare', 'thermo', 'negmul',
-  'discount', 'cylinder', 'pigeon', 'conceptmap'];
+  'discount', 'cylinder', 'pigeon', 'conceptmap',
+  'numline', 'powerup', 'monomial', 'liketerms', 'meetline', 'lineseg', 'anglepair',
+  'vertangle', 'parangles', 'roots', 'coordplane', 'ineqline', 'histogram'];
 // 刷新后进度还在：已体验的演示存在本地（只存本机，不上传）。
 try { JSON.parse(lsGet('math-tried-demos-v1') || '[]').forEach(k => tried.add(k)); } catch (e) {}
 function renderTried() {
@@ -6878,7 +7238,7 @@ function renderUnit(g, ui) {
   pointDetail.querySelectorAll('[data-point]').forEach(btn =>
     btn.addEventListener('click', () => navGo('point-' + btn.dataset.point)));
 }
-const DEMO_LABEL = { fraction: '去玩分数演示', tenframe: '去玩十格阵', balance: '去玩天平演示', function: '去玩函数演示', count: '去玩数一数', position: '去玩转身找左右', split: '去玩分一分', addsub: '去玩合起来拿走', solids: '去玩立体图形', bundle: '去玩捆小棒', clock: '去玩拨时钟', tangram: '去玩七巧板', sort: '去玩分类分一分', hundred: '去玩百数表', shop: '去玩开小店', place: '去玩数位块', pattern: '去玩找规律', ruler: '去玩尺子量一量', estimate: '去玩先估后算', angle: '去玩转一转角', array: '去玩点阵乘法', observe: '去玩换个方向看', time: '去玩拨时钟（时和分）', share: '去玩轮流分一分', motion: '去玩折一折转一转', mixop: '去玩先算哪一堆', remain: '去玩装一包装不满', thousand: '去玩数轴找近似数', weight: '去玩天平称一称', chart: '去玩投票变条形图', logic: '去玩排除格推理', pair: '去玩搭配连一连', elapsed: '去玩时间轴走一走', verify: '去玩算回去验算', units: '去玩单位楼梯', times: '去玩条形复制', splitmul: '去玩面积切一切', rectsq: '去玩拉一拉变正方形', venn: '去玩韦恩图拖人', compass: '去玩指南针转一转', divplace: '去玩按数位分一分', stattable: '去玩复式统计表', fourgrid: '去玩四格面积模型', area: '去玩铺方砖数面积', calendar: '去玩日历翻一翻', decimal: '去玩十分条比大小', bignum: '去玩大数数轴', field: '去玩足球场拼一拼', protractor: '去玩量角器', areamodel: '去玩面积模型', parallelogram: '去玩平行四边形', trialdiv: '去玩试商调商', baraxis: '去玩条形图轴', teatime: '去玩沏茶排一排', zerodiv: '去玩除以0', laws: '去玩运算定律', placeslider: '去玩数位滑块', tearangle: '去玩撕角拼平角', decadd: '去玩小数加减对齐', moveshape: '去玩图形平移', average: '去玩削峰填谷', chickenrabbit: '去玩鸡兔同笼', decmul: '去玩单位正方形', gridpos: '去玩数对点一点', decdiv: '去玩两数同乘', prob: '去玩摸球模拟', polyarea: '去玩切一刀变长方形', planttree: '去玩种树数间隔', factor: '去玩拼长方形', cuboid: '去玩分层装块', fracadd: '去玩先重切再数', rotate: '去玩绕钉旋转', findbad: '去玩三组称找次品', radar: '去玩雷达找地方', ratio: '去玩比条分一分', circle: '去玩绕绳量圆', percent: '去玩百分条', fan: '去玩扇形转一转', lsquare: '去玩一层层包正方形', thermo: '去玩温度计比一比', negmul: '去玩负数乘法规律', discount: '去玩打折算一算', cylinder: '去玩倒沙装满圆柱', pigeon: '去玩鸽子找洞', conceptmap: '去玩认出老办法' };
+const DEMO_LABEL = { fraction: '去玩分数演示', tenframe: '去玩十格阵', balance: '去玩天平演示', function: '去玩函数演示', count: '去玩数一数', position: '去玩转身找左右', split: '去玩分一分', addsub: '去玩合起来拿走', solids: '去玩立体图形', bundle: '去玩捆小棒', clock: '去玩拨时钟', tangram: '去玩七巧板', sort: '去玩分类分一分', hundred: '去玩百数表', shop: '去玩开小店', place: '去玩数位块', pattern: '去玩找规律', ruler: '去玩尺子量一量', estimate: '去玩先估后算', angle: '去玩转一转角', array: '去玩点阵乘法', observe: '去玩换个方向看', time: '去玩拨时钟（时和分）', share: '去玩轮流分一分', motion: '去玩折一折转一转', mixop: '去玩先算哪一堆', remain: '去玩装一包装不满', thousand: '去玩数轴找近似数', weight: '去玩天平称一称', chart: '去玩投票变条形图', logic: '去玩排除格推理', pair: '去玩搭配连一连', elapsed: '去玩时间轴走一走', verify: '去玩算回去验算', units: '去玩单位楼梯', times: '去玩条形复制', splitmul: '去玩面积切一切', rectsq: '去玩拉一拉变正方形', venn: '去玩韦恩图拖人', compass: '去玩指南针转一转', divplace: '去玩按数位分一分', stattable: '去玩复式统计表', fourgrid: '去玩四格面积模型', area: '去玩铺方砖数面积', calendar: '去玩日历翻一翻', decimal: '去玩十分条比大小', bignum: '去玩大数数轴', field: '去玩足球场拼一拼', protractor: '去玩量角器', areamodel: '去玩面积模型', parallelogram: '去玩平行四边形', trialdiv: '去玩试商调商', baraxis: '去玩条形图轴', teatime: '去玩沏茶排一排', zerodiv: '去玩除以0', laws: '去玩运算定律', placeslider: '去玩数位滑块', tearangle: '去玩撕角拼平角', decadd: '去玩小数加减对齐', moveshape: '去玩图形平移', average: '去玩削峰填谷', chickenrabbit: '去玩鸡兔同笼', decmul: '去玩单位正方形', gridpos: '去玩数对点一点', decdiv: '去玩两数同乘', prob: '去玩摸球模拟', polyarea: '去玩切一刀变长方形', planttree: '去玩种树数间隔', factor: '去玩拼长方形', cuboid: '去玩分层装块', fracadd: '去玩先重切再数', rotate: '去玩绕钉旋转', findbad: '去玩三组称找次品', radar: '去玩雷达找地方', ratio: '去玩比条分一分', circle: '去玩绕绳量圆', percent: '去玩百分条', fan: '去玩扇形转一转', lsquare: '去玩一层层包正方形', thermo: '去玩温度计比一比', negmul: '去玩负数乘法规律', discount: '去玩打折算一算', cylinder: '去玩倒沙装满圆柱', pigeon: '去玩鸽子找洞', conceptmap: '去玩认出老办法', numline: '去玩数轴标一点', powerup: '去玩对折纸和科学记数法', monomial: '去玩拆零件看系数次数', liketerms: '去玩合并同类项', meetline: '去玩相向而行', lineseg: '去玩直线射线线段', anglepair: '去玩余角补角拼一拼', vertangle: '去玩对顶角转一转', parangles: '去玩平行线截角', roots: '去玩开方机器', coordplane: '去玩坐标平面点一点', ineqline: '去玩不等式画数轴', histogram: '去玩直方图分组' };
 /* 分步评分：多步骤题拆成一步一步对。steps 是可选字段，没有 steps 的题照旧渲染。
    自评不是机器判题：每一步的对错都是学生自己标的，丢分报告只是把你标错的步骤列出来。 */
 function practiceStepsHtml(q, i, pointId) {
@@ -7124,7 +7484,9 @@ const DEMO_GRADES = { tenframe: [1, 2], fraction: [3, 4, 5, 6], balance: [5, 6, 
   decmul: [5], gridpos: [5], decdiv: [5], prob: [5], polyarea: [5], planttree: [5],
   factor: [5], cuboid: [5], fracadd: [5], rotate: [5], findbad: [5],
   radar: [6], ratio: [6], circle: [6], percent: [6], fan: [6], lsquare: [6],
-  thermo: [6], negmul: [6], discount: [6], cylinder: [6], pigeon: [6], conceptmap: [6] };
+  thermo: [6], negmul: [6], discount: [6], cylinder: [6], pigeon: [6], conceptmap: [6],
+  numline: [7], powerup: [7], monomial: [7], liketerms: [7], meetline: [7], lineseg: [7], anglepair: [7],
+  vertangle: [7], parangles: [7], roots: [7], coordplane: [7], ineqline: [7], histogram: [7] };
 function renderProgress() {
   const card = document.getElementById('progressCard');
   if (!card) return;
@@ -7598,6 +7960,19 @@ const NAV_DEFS = {
   'demo-cylinder': { crumbs: ['数学', '互动演示', '圆柱与圆锥：倒沙'], target: 'demo-cylinder' },
   'demo-pigeon': { crumbs: ['数学', '互动演示', '鸽巢问题：先每洞一只'], target: 'demo-pigeon' },
   'demo-conceptmap': { crumbs: ['数学', '互动演示', '整理和复习：认出老办法'], target: 'demo-conceptmap' },
+  'demo-numline': { crumbs: ['数学', '互动演示', '数轴：标一点、走一走'], target: 'demo-numline' },
+  'demo-powerup': { crumbs: ['数学', '互动演示', '乘方：对折纸和科学记数法'], target: 'demo-powerup' },
+  'demo-monomial': { crumbs: ['数学', '互动演示', '整式：拆零件看系数次数'], target: 'demo-monomial' },
+  'demo-liketerms': { crumbs: ['数学', '互动演示', '整式的加减：合并同类项'], target: 'demo-liketerms' },
+  'demo-meetline': { crumbs: ['数学', '互动演示', '相向而行：几小时相遇'], target: 'demo-meetline' },
+  'demo-lineseg': { crumbs: ['数学', '互动演示', '直线、射线、线段'], target: 'demo-lineseg' },
+  'demo-anglepair': { crumbs: ['数学', '互动演示', '角：余角、补角、角平分线'], target: 'demo-anglepair' },
+  'demo-vertangle': { crumbs: ['数学', '互动演示', '相交线：对顶角和垂线段'], target: 'demo-vertangle' },
+  'demo-parangles': { crumbs: ['数学', '互动演示', '平行线：截角和平移'], target: 'demo-parangles' },
+  'demo-roots': { crumbs: ['数学', '互动演示', '实数：开方机器和 √2'], target: 'demo-roots' },
+  'demo-coordplane': { crumbs: ['数学', '互动演示', '平面直角坐标系：点一点'], target: 'demo-coordplane' },
+  'demo-ineqline': { crumbs: ['数学', '互动演示', '不等式：数轴上画解集'], target: 'demo-ineqline' },
+  'demo-histogram': { crumbs: ['数学', '互动演示', '直方图：分组数频数'], target: 'demo-histogram' },
   why:        { crumbs: ['数学', '互动演示', '为什么小实验'], target: 'why' },
   lab:        { crumbs: ['数学', '数学实验室'], target: 'lab' },
   review:     { crumbs: ['数学', '错题本'], target: 'review', action: renderWrongBook },
@@ -7674,7 +8049,7 @@ function viewForKey(key) {
   if (key === 'path') return 'path';
   if (key.startsWith('path-step-')) return 'path-step';
   if (key === 'demos') return 'demos';
-  if (key === 'demo-tenframe' || key === 'demo-fraction' || key === 'demo-balance' || key === 'demo-function' || key === 'demo-count' || key === 'demo-position' || key === 'demo-split' || key === 'demo-addsub' || key === 'demo-solids' || key === 'demo-bundle' || key === 'demo-clock' || key === 'demo-tangram' || key === 'demo-sort' || key === 'demo-hundred' || key === 'demo-shop' || key === 'demo-place' || key === 'demo-pattern' || key === 'demo-ruler' || key === 'demo-estimate' || key === 'demo-angle' || key === 'demo-array' || key === 'demo-observe' || key === 'demo-time' || key === 'demo-share' || key === 'demo-motion' || key === 'demo-mixop' || key === 'demo-remain' || key === 'demo-thousand' || key === 'demo-weight' || key === 'demo-chart' || key === 'demo-logic' || key === 'demo-pair' || key === 'demo-elapsed' || key === 'demo-verify' || key === 'demo-units' || key === 'demo-times' || key === 'demo-splitmul' || key === 'demo-rectsq' || key === 'demo-venn' || key === 'demo-compass' || key === 'demo-divplace' || key === 'demo-stattable' || key === 'demo-fourgrid' || key === 'demo-area' || key === 'demo-calendar' || key === 'demo-decimal' || key === 'demo-bignum' || key === 'demo-field' || key === 'demo-protractor' || key === 'demo-areamodel' || key === 'demo-parallelogram' || key === 'demo-trialdiv' || key === 'demo-baraxis' || key === 'demo-teatime' || key === 'demo-zerodiv' || key === 'demo-laws' || key === 'demo-placeslider' || key === 'demo-tearangle' || key === 'demo-decadd' || key === 'demo-moveshape' || key === 'demo-average' || key === 'demo-chickenrabbit' || key === 'demo-decmul' || key === 'demo-gridpos' || key === 'demo-decdiv' || key === 'demo-prob' || key === 'demo-polyarea' || key === 'demo-planttree' || key === 'demo-factor' || key === 'demo-cuboid' || key === 'demo-fracadd' || key === 'demo-rotate' || key === 'demo-findbad' || key === 'demo-radar' || key === 'demo-ratio' || key === 'demo-circle' || key === 'demo-percent' || key === 'demo-fan' || key === 'demo-lsquare' || key === 'demo-thermo' || key === 'demo-negmul' || key === 'demo-discount' || key === 'demo-cylinder' || key === 'demo-pigeon' || key === 'demo-conceptmap') return key;
+  if (key === 'demo-tenframe' || key === 'demo-fraction' || key === 'demo-balance' || key === 'demo-function' || key === 'demo-count' || key === 'demo-position' || key === 'demo-split' || key === 'demo-addsub' || key === 'demo-solids' || key === 'demo-bundle' || key === 'demo-clock' || key === 'demo-tangram' || key === 'demo-sort' || key === 'demo-hundred' || key === 'demo-shop' || key === 'demo-place' || key === 'demo-pattern' || key === 'demo-ruler' || key === 'demo-estimate' || key === 'demo-angle' || key === 'demo-array' || key === 'demo-observe' || key === 'demo-time' || key === 'demo-share' || key === 'demo-motion' || key === 'demo-mixop' || key === 'demo-remain' || key === 'demo-thousand' || key === 'demo-weight' || key === 'demo-chart' || key === 'demo-logic' || key === 'demo-pair' || key === 'demo-elapsed' || key === 'demo-verify' || key === 'demo-units' || key === 'demo-times' || key === 'demo-splitmul' || key === 'demo-rectsq' || key === 'demo-venn' || key === 'demo-compass' || key === 'demo-divplace' || key === 'demo-stattable' || key === 'demo-fourgrid' || key === 'demo-area' || key === 'demo-calendar' || key === 'demo-decimal' || key === 'demo-bignum' || key === 'demo-field' || key === 'demo-protractor' || key === 'demo-areamodel' || key === 'demo-parallelogram' || key === 'demo-trialdiv' || key === 'demo-baraxis' || key === 'demo-teatime' || key === 'demo-zerodiv' || key === 'demo-laws' || key === 'demo-placeslider' || key === 'demo-tearangle' || key === 'demo-decadd' || key === 'demo-moveshape' || key === 'demo-average' || key === 'demo-chickenrabbit' || key === 'demo-decmul' || key === 'demo-gridpos' || key === 'demo-decdiv' || key === 'demo-prob' || key === 'demo-polyarea' || key === 'demo-planttree' || key === 'demo-factor' || key === 'demo-cuboid' || key === 'demo-fracadd' || key === 'demo-rotate' || key === 'demo-findbad' || key === 'demo-radar' || key === 'demo-ratio' || key === 'demo-circle' || key === 'demo-percent' || key === 'demo-fan' || key === 'demo-lsquare' || key === 'demo-thermo' || key === 'demo-negmul' || key === 'demo-discount' || key === 'demo-cylinder' || key === 'demo-pigeon' || key === 'demo-numline' || key === 'demo-powerup' || key === 'demo-monomial' || key === 'demo-liketerms' || key === 'demo-meetline' || key === 'demo-lineseg' || key === 'demo-anglepair' || key === 'demo-vertangle' || key === 'demo-parangles' || key === 'demo-roots' || key === 'demo-coordplane' || key === 'demo-ineqline' || key === 'demo-histogram') return key;
   if (key === 'why') return 'why';
   if (key === 'lab') return 'lab';
   if (key === 'review') return 'review';
@@ -7718,7 +8093,7 @@ function applyView() {
   const stepN = view === 'path-step' ? key.slice('path-step-'.length) : null;
   [...pathPanelsEl.children].forEach(el => { el.hidden = !!(stepN && el.id !== 'step-' + stepN); });
   // 互动演示：列表留演示面板；叶子只留该演示卡片；为什么小实验只留 #why 区
-  const demoLeaf = view === 'demo-tenframe' || view === 'demo-fraction' || view === 'demo-balance' || view === 'demo-function' || view === 'demo-count' || view === 'demo-position' || view === 'demo-split' || view === 'demo-addsub' || view === 'demo-solids' || view === 'demo-bundle' || view === 'demo-clock' || view === 'demo-tangram' || view === 'demo-sort' || view === 'demo-hundred' || view === 'demo-shop' || view === 'demo-place' || view === 'demo-pattern' || view === 'demo-ruler' || view === 'demo-estimate' || view === 'demo-angle' || view === 'demo-array' || view === 'demo-observe' || view === 'demo-time' || view === 'demo-share' || view === 'demo-motion' || view === 'demo-mixop' || view === 'demo-remain' || view === 'demo-thousand' || view === 'demo-weight' || view === 'demo-chart' || view === 'demo-logic' || view === 'demo-pair' || view === 'demo-elapsed' || view === 'demo-verify' || view === 'demo-units' || view === 'demo-times' || view === 'demo-splitmul' || view === 'demo-rectsq' || view === 'demo-venn' || view === 'demo-compass' || view === 'demo-divplace' || view === 'demo-stattable' || view === 'demo-fourgrid' || view === 'demo-area' || view === 'demo-calendar' || view === 'demo-decimal' || view === 'demo-bignum' || view === 'demo-field' || view === 'demo-protractor' || view === 'demo-areamodel' || view === 'demo-parallelogram' || view === 'demo-trialdiv' || view === 'demo-baraxis' || view === 'demo-teatime' || view === 'demo-zerodiv' || view === 'demo-laws' || view === 'demo-placeslider' || view === 'demo-tearangle' || view === 'demo-decadd' || view === 'demo-moveshape' || view === 'demo-average' || view === 'demo-chickenrabbit' || view === 'demo-decmul' || view === 'demo-gridpos' || view === 'demo-decdiv' || view === 'demo-prob' || view === 'demo-polyarea' || view === 'demo-planttree' || view === 'demo-factor' || view === 'demo-cuboid' || view === 'demo-fracadd' || view === 'demo-rotate' || view === 'demo-findbad' || view === 'demo-radar' || view === 'demo-ratio' || view === 'demo-circle' || view === 'demo-percent' || view === 'demo-fan' || view === 'demo-lsquare' || view === 'demo-thermo' || view === 'demo-negmul' || view === 'demo-discount' || view === 'demo-cylinder' || view === 'demo-pigeon' || view === 'demo-conceptmap';
+  const demoLeaf = view === 'demo-tenframe' || view === 'demo-fraction' || view === 'demo-balance' || view === 'demo-function' || view === 'demo-count' || view === 'demo-position' || view === 'demo-split' || view === 'demo-addsub' || view === 'demo-solids' || view === 'demo-bundle' || view === 'demo-clock' || view === 'demo-tangram' || view === 'demo-sort' || view === 'demo-hundred' || view === 'demo-shop' || view === 'demo-place' || view === 'demo-pattern' || view === 'demo-ruler' || view === 'demo-estimate' || view === 'demo-angle' || view === 'demo-array' || view === 'demo-observe' || view === 'demo-time' || view === 'demo-share' || view === 'demo-motion' || view === 'demo-mixop' || view === 'demo-remain' || view === 'demo-thousand' || view === 'demo-weight' || view === 'demo-chart' || view === 'demo-logic' || view === 'demo-pair' || view === 'demo-elapsed' || view === 'demo-verify' || view === 'demo-units' || view === 'demo-times' || view === 'demo-splitmul' || view === 'demo-rectsq' || view === 'demo-venn' || view === 'demo-compass' || view === 'demo-divplace' || view === 'demo-stattable' || view === 'demo-fourgrid' || view === 'demo-area' || view === 'demo-calendar' || view === 'demo-decimal' || view === 'demo-bignum' || view === 'demo-field' || view === 'demo-protractor' || view === 'demo-areamodel' || view === 'demo-parallelogram' || view === 'demo-trialdiv' || view === 'demo-baraxis' || view === 'demo-teatime' || view === 'demo-zerodiv' || view === 'demo-laws' || view === 'demo-placeslider' || view === 'demo-tearangle' || view === 'demo-decadd' || view === 'demo-moveshape' || view === 'demo-average' || view === 'demo-chickenrabbit' || view === 'demo-decmul' || view === 'demo-gridpos' || view === 'demo-decdiv' || view === 'demo-prob' || view === 'demo-polyarea' || view === 'demo-planttree' || view === 'demo-factor' || view === 'demo-cuboid' || view === 'demo-fracadd' || view === 'demo-rotate' || view === 'demo-findbad' || view === 'demo-radar' || view === 'demo-ratio' || view === 'demo-circle' || view === 'demo-percent' || view === 'demo-fan' || view === 'demo-lsquare' || view === 'demo-thermo' || view === 'demo-negmul' || view === 'demo-discount' || view === 'demo-cylinder' || view === 'demo-pigeon' || view === 'demo-numline' || view === 'demo-powerup' || view === 'demo-monomial' || view === 'demo-liketerms' || view === 'demo-meetline' || view === 'demo-lineseg' || view === 'demo-anglepair' || view === 'demo-vertangle' || view === 'demo-parangles' || view === 'demo-roots' || view === 'demo-coordplane' || view === 'demo-ineqline' || view === 'demo-histogram';
   setHidden(demosSec, !(view === 'demos' || demoLeaf));
   setHidden(demoPanelsEl, view !== 'demos');
   setHidden(demoGridEl, !demoLeaf); // 演示卡片网格只在某一个演示的叶子视图里出现，列表视图只留演示面板
@@ -13884,6 +14259,814 @@ const CM_ITEMS = [
     card.appendChild(b);
     list.appendChild(card);
   });
+})();
+
+/* ---------- 7 年级实验：共用小工具 ----------
+   g7sup：把指数写成上标（10⁸、2¹⁰、10⁻⁴）；g7sgn：负数写成 −3 的样子。 */
+function g7sup(n) { var m = {'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'}; return String(n).split('').map(function (c) { return m[c]; }).join(''); }
+function g7sgn(n) { return n < 0 ? '−' + (-n) : String(n); }
+
+/* ---------- demo-numline · 7.1/7.2 有理数与数轴（方法：数轴排队 + 走路） ----------
+   标一标：点一个数，看它在数轴上的位置、相反数（关于原点对称的点）和绝对值
+   （到原点的距离）。走一走：从起点出发，加法向右走、减法向左走，停在哪答案就是哪。
+   默认 −4+7：从 −4 向右走 7 步，停在 3。 */
+let nlMode = 'mark', nlVal = -3, nlA = -4, nlB = 7;
+function nlX(v) { return 320 + v * 30; }
+function nlRender() {
+  document.getElementById('nlMarkBox').hidden = nlMode !== 'mark';
+  document.getElementById('nlWalkBox').hidden = nlMode !== 'walk';
+  document.getElementById('nlValTx').textContent = '这个数是 ' + g7sgn(nlVal);
+  document.getElementById('nlATx').textContent = '从 ' + g7sgn(nlA) + ' 出发';
+  document.getElementById('nlBTx').textContent = (nlB >= 0 ? '向右走 ' + nlB + ' 步' : '向左走 ' + (-nlB) + ' 步');
+  document.querySelectorAll('#nlModeSeg [data-nl-mode]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(btn.dataset.nlMode === nlMode));
+  });
+  const dot = document.getElementById('nlDot'), opp = document.getElementById('nlOppDot');
+  const start = document.getElementById('nlStartDot'), arrow = document.getElementById('nlArrow');
+  const read = document.getElementById('nlRead');
+  if (nlMode === 'mark') {
+    dot.setAttribute('cx', nlX(nlVal)); dot.setAttribute('cy', 70);
+    opp.setAttribute('cx', nlX(-nlVal)); opp.setAttribute('cy', 70);
+    opp.style.display = ''; start.style.display = 'none'; arrow.style.display = 'none';
+    read.textContent = nlVal === 0
+      ? '0 在原点上：它的相反数还是 0，|0| = 0。'
+      : g7sgn(nlVal) + ' 在原点' + (nlVal < 0 ? '左边' : '右边') + ' ' + Math.abs(nlVal) + ' 个单位：它的相反数是 ' + g7sgn(-nlVal) + '，到原点的距离是 ' + Math.abs(nlVal) + '，所以 |' + g7sgn(nlVal) + '| = ' + Math.abs(nlVal) + '。';
+  } else {
+    const end = nlA + nlB;
+    start.setAttribute('cx', nlX(nlA)); start.setAttribute('cy', 70);
+    dot.setAttribute('cx', nlX(end)); dot.setAttribute('cy', 70);
+    opp.style.display = 'none'; start.style.display = '';
+    arrow.style.display = '';
+    const x1 = nlX(nlA), x2 = nlX(end);
+    arrow.setAttribute('d', nlB === 0 ? '' : 'M ' + x1 + ' 62 Q ' + ((x1 + x2) / 2) + ' 18 ' + x2 + ' 62');
+    read.textContent = g7sgn(nlA) + (nlB >= 0 ? ' + ' : ' − ') + Math.abs(nlB) + '：从 ' + g7sgn(nlA) + ' 出发，' +
+      (nlB === 0 ? '原地不动' : (nlB > 0 ? '向右走 ' + nlB + ' 步' : '向左走 ' + (-nlB) + ' 步')) + '，停在 ' + g7sgn(end) + '。';
+  }
+}
+(function nlInit() {
+  const ticks = document.getElementById('nlTicks');
+  for (let v = -10; v <= 10; v++) {
+    const t = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    t.setAttribute('x1', nlX(v)); t.setAttribute('x2', nlX(v));
+    t.setAttribute('y1', 64); t.setAttribute('y2', 76);
+    t.setAttribute('stroke', '#1e293b'); t.setAttribute('stroke-width', 2);
+    ticks.appendChild(t);
+    const lab = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    lab.setAttribute('x', nlX(v)); lab.setAttribute('y', 96);
+    lab.setAttribute('text-anchor', 'middle'); lab.setAttribute('font-size', 13);
+    lab.textContent = String(v);
+    ticks.appendChild(lab);
+  }
+  const modeSeg = document.getElementById('nlModeSeg');
+  [['mark', '标一标：相反数和绝对值'], ['walk', '走一走：加减法']].forEach(function (m) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = m[1]; b.dataset.nlMode = m[0];
+    b.addEventListener('click', function () { nlMode = m[0]; markTried('numline'); nlRender(); });
+    modeSeg.appendChild(b);
+  });
+  document.getElementById('nlValMinus').addEventListener('click', function () { if (nlVal > -5) nlVal--; markTried('numline'); nlRender(); });
+  document.getElementById('nlValPlus').addEventListener('click', function () { if (nlVal < 5) nlVal++; markTried('numline'); nlRender(); });
+  document.getElementById('nlAMinus').addEventListener('click', function () { if (nlA > -5) nlA--; if (nlA + nlB > 10) nlB = 10 - nlA; if (nlA + nlB < -10) nlB = -10 - nlA; markTried('numline'); nlRender(); });
+  document.getElementById('nlAPlus').addEventListener('click', function () { if (nlA < 5) nlA++; if (nlA + nlB > 10) nlB = 10 - nlA; if (nlA + nlB < -10) nlB = -10 - nlA; markTried('numline'); nlRender(); });
+  document.getElementById('nlBMinus').addEventListener('click', function () { if (nlB > -9) nlB--; if (nlA + nlB < -10) nlB = -10 - nlA; markTried('numline'); nlRender(); });
+  document.getElementById('nlBPlus').addEventListener('click', function () { if (nlB < 9) nlB++; if (nlA + nlB > 10) nlB = 10 - nlA; markTried('numline'); nlRender(); });
+  nlRender();
+})();
+
+/* ---------- demo-powerup · 7.3 乘方与科学记数法（方法：对折纸 + 移小数点） ----------
+   对折：纸厚 0.1 毫米，对折一次厚度翻一倍，n 次就是 2ⁿ 倍。10 次是 1024 倍，
+   0.1×1024 = 102.4 毫米，大约 10 厘米。科学记数法：小数点移几位，10 的指数就是几；
+   大数指数是正的，小数指数是负的，a 必须在 1 和 10 之间。 */
+let puMode = 'fold', puFolds = 10, puNum = 'big', puShift = 8;
+function puRender() {
+  document.getElementById('puFoldBox').hidden = puMode !== 'fold';
+  document.getElementById('puSciBox').hidden = puMode !== 'sci';
+  document.getElementById('puFoldTx').textContent = '对折 ' + puFolds + ' 次';
+  document.getElementById('puShiftTx').textContent = '小数点移动了 ' + puShift + ' 位';
+  document.querySelectorAll('#puModeSeg [data-pu-mode]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(btn.dataset.puMode === puMode));
+  });
+  document.querySelectorAll('#puNumSeg [data-pu-num]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(btn.dataset.puNum === puNum));
+  });
+  const read = document.getElementById('puRead');
+  if (puMode === 'fold') {
+    const times = Math.pow(2, puFolds), mm = 0.1 * times;
+    document.getElementById('puBar').style.height = Math.max(2, Math.min(100, mm / 102.4 * 100)) + '%';
+    read.textContent = '对折 ' + puFolds + ' 次：厚度是原来的 2' + g7sup(puFolds) + ' = ' + times + ' 倍：0.1 毫米 × ' + times + ' = ' + g6fmt(mm) + ' 毫米' +
+      (mm >= 10 ? '，大约 ' + g6fmt(mm / 10) + ' 厘米' : '') + '。';
+    document.getElementById('puMsg').textContent = '乘方是翻倍的增长：每多对折一次，厚度就再翻一倍——不是加 0.1 毫米，是乘 2。';
+  } else {
+    let a, ok, note;
+    if (puNum === 'big') {
+      a = 360000000 / Math.pow(10, puShift);
+      ok = a >= 1 && a < 10;
+      note = ok ? 'a = ' + g6fmt(a) + '，在 1 和 10 之间，写对了。' : (a >= 10 ? 'a = ' + g6fmt(a) + '，太大了：小数点还要往左移。' : 'a = ' + g6fmt(a) + '，太小了（要 ≥1）：移过头了，往右移一位。');
+      read.textContent = '360000000 = ' + g6fmt(a) + '×10' + g7sup(puShift) + '：' + note;
+    } else {
+      a = 0.00012 * Math.pow(10, puShift);
+      ok = a >= 1 && a < 10;
+      note = ok ? 'a = ' + g6fmt(a) + '，在 1 和 10 之间，写对了。' : (a < 1 ? 'a = ' + g6fmt(a) + '，太小了：小数点还要往右移。' : 'a = ' + g6fmt(a) + '，太大了：移过头了，往左移一位。');
+      read.textContent = '0.00012 = ' + g6fmt(a) + '×10' + g7sup(-puShift) + '：' + note;
+    }
+    document.getElementById('puMsg').textContent = '小数点向左移，指数是正的；向右移，指数是负的——数本身没变，只是换了个写法。';
+  }
+}
+(function puInit() {
+  const modeSeg = document.getElementById('puModeSeg');
+  [['fold', '对折纸：2ⁿ'], ['sci', '科学记数法']].forEach(function (m) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = m[1]; b.dataset.puMode = m[0];
+    b.addEventListener('click', function () { puMode = m[0]; markTried('powerup'); puRender(); });
+    modeSeg.appendChild(b);
+  });
+  const numSeg = document.getElementById('puNumSeg');
+  [['big', '360000000'], ['small', '0.00012']].forEach(function (m) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = m[1]; b.dataset.puNum = m[0];
+    b.addEventListener('click', function () { puNum = m[0]; puShift = m[0] === 'big' ? 8 : 4; markTried('powerup'); puRender(); });
+    numSeg.appendChild(b);
+  });
+  document.getElementById('puFoldMinus').addEventListener('click', function () { if (puFolds > 0) puFolds--; markTried('powerup'); puRender(); });
+  document.getElementById('puFoldPlus').addEventListener('click', function () { if (puFolds < 10) puFolds++; markTried('powerup'); puRender(); });
+  document.getElementById('puShiftMinus').addEventListener('click', function () { if (puShift > 0) puShift--; markTried('powerup'); puRender(); });
+  document.getElementById('puShiftPlus').addEventListener('click', function () { if (puShift < (puNum === 'big' ? 9 : 5)) puShift++; markTried('powerup'); puRender(); });
+  puRender();
+})();
+
+/* ---------- demo-monomial · 7.4 整式（方法：拆零件） ----------
+   单项式拆成“数字 × 字母 × 字母”：系数是数字因数，次数是所有字母的指数加起来。
+   多项式拆成一排单项式：次数是最高次项的次数，项数是单项式的个数。
+   −5a²b：系数 −5，次数 3（a 的 2 次 + b 的 1 次）。 */
+const MN_MONO = [
+  { label: '−5a²b', coeff: '−5', deg: 3, parts: ['−5', 'a²', 'b'], note: 'a 的 2 次 + b 的 1 次' },
+  { label: '3x²', coeff: '3', deg: 2, parts: ['3', 'x²'], note: 'x 的 2 次' },
+  { label: '2x²y', coeff: '2', deg: 3, parts: ['2', 'x²', 'y'], note: 'x 的 2 次 + y 的 1 次' },
+  { label: '−xy', coeff: '−1', deg: 2, parts: ['−1', 'x', 'y'], note: '系数是 −1（1 不写出来），x 的 1 次 + y 的 1 次' },
+  { label: '7', coeff: '7', deg: 0, parts: ['7'], note: '常数项，没有字母，次数是 0' },
+  { label: '4a³b²', coeff: '4', deg: 5, parts: ['4', 'a³', 'b²'], note: 'a 的 3 次 + b 的 2 次' }
+];
+const MN_POLY = [
+  { label: '3x²−2x+1', terms: ['3x²', '−2x', '+1'], deg: 2, count: 3, name: '二次三项式', top: 0 },
+  { label: '4x³−3x²+2x−5', terms: ['4x³', '−3x²', '+2x', '−5'], deg: 3, count: 4, name: '三次四项式', top: 0 },
+  { label: '2x³−x+4', terms: ['2x³', '−x', '+4'], deg: 3, count: 3, name: '三次三项式', top: 0 }
+];
+let mnMode = 'mono', mnIdx = 0;
+function mnRender() {
+  const items = mnMode === 'mono' ? MN_MONO : MN_POLY;
+  if (mnIdx >= items.length) mnIdx = 0;
+  const item = items[mnIdx];
+  document.querySelectorAll('#mnModeSeg [data-mn-mode]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(btn.dataset.mnMode === mnMode));
+  });
+  const seg = document.getElementById('mnItemSeg');
+  while (seg.firstChild) seg.removeChild(seg.firstChild);
+  items.forEach(function (it, i) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = it.label; b.dataset.mnItem = String(i);
+    b.setAttribute('aria-pressed', String(i === mnIdx));
+    b.addEventListener('click', function () { mnIdx = i; markTried('monomial'); mnRender(); });
+    seg.appendChild(b);
+  });
+  const chips = document.getElementById('mnChips');
+  while (chips.firstChild) chips.removeChild(chips.firstChild);
+  const read = document.getElementById('mnRead');
+  if (mnMode === 'mono') {
+    item.parts.forEach(function (p, i) {
+      const c = document.createElement('span');
+      c.className = 'g7-chip' + (i === 0 ? ' g7-chip-hot' : '');
+      c.textContent = p;
+      chips.appendChild(c);
+    });
+    read.textContent = '单项式 ' + item.label + '：系数是 ' + item.coeff + '（数字因数），次数是 ' + item.deg + '（' + item.note + '）。';
+  } else {
+    item.terms.forEach(function (t, i) {
+      const c = document.createElement('span');
+      c.className = 'g7-chip' + (i === item.top ? ' g7-chip-hot' : '');
+      c.textContent = t;
+      chips.appendChild(c);
+    });
+    read.textContent = '多项式 ' + item.label + '：一共 ' + item.count + ' 项，最高次项是 ' + item.terms[item.top] + '，次数是 ' + item.deg + '，是' + item.name + '。';
+  }
+}
+(function mnInit() {
+  const modeSeg = document.getElementById('mnModeSeg');
+  [['mono', '单项式'], ['poly', '多项式']].forEach(function (m) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = m[1]; b.dataset.mnMode = m[0];
+    b.addEventListener('click', function () { mnMode = m[0]; mnIdx = 0; markTried('monomial'); mnRender(); });
+    modeSeg.appendChild(b);
+  });
+  mnRender();
+})();
+
+/* ---------- demo-liketerms · 7.5 整式的加减（方法：同筐合并 + 减号翻面） ----------
+   同类项才能合并：字母相同、相同字母的指数也相同，系数相加，字母和指数不变。
+   3a 和 2b 不是同类项，合不了。去括号：括号前面是“+”照抄，是“−”里面每一项都变号。
+   5−(2a−3b) = 5−2a+3b；3x²+5x−2x²+x = x²+6x。 */
+const LT_MERGE = [
+  { expr: '3x²+5x−2x²+x', chips: [['3x²', '#fed7aa'], ['5x', '#bfdbfe'], ['−2x²', '#fed7aa'], ['+x', '#bfdbfe']], result: '3x²+5x−2x²+x = x²+6x', why: 'x² 和 x² 是一类，x 和 x 是一类：3−2 = 1 个 x²，5+1 = 6 个 x。' },
+  { expr: '3a+5a−2a', chips: [['3a', '#bbf7d0'], ['5a', '#bbf7d0'], ['−2a', '#bbf7d0']], result: '3a+5a−2a = 6a', why: '都是 a：3+5−2 = 6 个 a。' },
+  { expr: '3a+2b', chips: [['3a', '#bbf7d0'], ['2b', '#e9d5ff']], result: '3a+2b：合不了', why: '3a 和 2b 不是同类项：字母不一样，各是一类，谁也合不到谁身上，只能写成 3a+2b。' },
+  { expr: '4y−2y+3y', chips: [['4y', '#99f6e4'], ['−2y', '#99f6e4'], ['3y', '#99f6e4']], result: '4y−2y+3y = 5y', why: '都是 y：4−2+3 = 5 个 y。' }
+];
+const LT_BRACKET = [
+  { expr: '5−(2a−3b)', result: '5−(2a−3b) = 5−2a+3b', why: '括号前面是减号，里面的每一项都要变号：2a 变 −2a，−3b 变 +3b。' },
+  { expr: '3x+(2x−1)', result: '3x+(2x−1) = 5x−1', why: '括号前面是加号，照抄就行：3x+2x−1 = 5x−1。' },
+  { expr: '4−(a+2b)', result: '4−(a+2b) = 4−a−2b', why: '括号前面是减号：a 变 −a，+2b 变 −2b。' }
+];
+let ltMode = 'merge', ltIdx = 0, ltDone = false;
+function ltRender() {
+  const items = ltMode === 'merge' ? LT_MERGE : LT_BRACKET;
+  if (ltIdx >= items.length) ltIdx = 0;
+  const item = items[ltIdx];
+  document.querySelectorAll('#ltModeSeg [data-lt-mode]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(btn.dataset.ltMode === ltMode));
+  });
+  const seg = document.getElementById('ltExprSeg');
+  while (seg.firstChild) seg.removeChild(seg.firstChild);
+  items.forEach(function (it, i) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = it.expr; b.dataset.ltExpr = String(i);
+    b.setAttribute('aria-pressed', String(i === ltIdx));
+    b.addEventListener('click', function () { ltIdx = i; ltDone = false; markTried('liketerms'); ltRender(); });
+    seg.appendChild(b);
+  });
+  const chips = document.getElementById('ltChips');
+  while (chips.firstChild) chips.removeChild(chips.firstChild);
+  const go = document.getElementById('ltGo');
+  const read = document.getElementById('ltRead');
+  if (ltMode === 'merge') {
+    item.chips.forEach(function (ch) {
+      const c = document.createElement('span');
+      c.className = 'g7-chip';
+      c.style.background = ch[1];
+      c.textContent = ch[0];
+      chips.appendChild(c);
+    });
+    go.textContent = '合并同类项';
+    read.textContent = ltDone ? item.result + '。' + item.why
+      : '点“合并同类项”，看看哪些能合到一起：同一种颜色的是一类。';
+  } else {
+    const c = document.createElement('span');
+    c.className = 'g7-chip';
+    c.textContent = item.expr;
+    chips.appendChild(c);
+    go.textContent = '去掉括号';
+    read.textContent = ltDone ? item.result + '。' + item.why
+      : '点“去掉括号”，看看括号里的符号怎么变。';
+  }
+}
+(function ltInit() {
+  const modeSeg = document.getElementById('ltModeSeg');
+  [['merge', '合并同类项'], ['bracket', '去括号']].forEach(function (m) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = m[1]; b.dataset.ltMode = m[0];
+    b.addEventListener('click', function () { ltMode = m[0]; ltIdx = 0; ltDone = false; markTried('liketerms'); ltRender(); });
+    modeSeg.appendChild(b);
+  });
+  document.getElementById('ltGo').addEventListener('click', function () { ltDone = true; markTried('liketerms'); ltRender(); });
+  ltRender();
+})();
+
+/* ---------- demo-meetline · 7.7 实际问题与一元一次方程（方法：等量关系拼图） ----------
+   甲乙相向而行：甲每小时 15 千米，乙每小时 25 千米，两地相距 120 千米。
+   甲走的路程 + 乙走的路程 = 全程：15t + 25t = 120，t = 3 小时相遇，相遇点离甲 45 千米。
+   t = 2 时：甲 30 千米，乙 50 千米，合起来 80 千米，还差 40 千米。 */
+let mtT = 3;
+function mtRender() {
+  document.getElementById('mtTx').textContent = '走了 ' + g6fmt(mtT) + ' 小时';
+  const aKm = 15 * mtT, bKm = 25 * mtT, sum = aKm + bKm;
+  document.getElementById('mtDotA').setAttribute('cx', 40 + aKm * 4.6);
+  document.getElementById('mtDotB').setAttribute('cx', 592 - bKm * 4.6);
+  document.getElementById('mtTxA').setAttribute('x', 40 + aKm * 4.6);
+  document.getElementById('mtTxB').setAttribute('x', 592 - bKm * 4.6);
+  document.getElementById('mtTxA').textContent = '甲 ' + g6fmt(aKm) + ' 千米';
+  document.getElementById('mtTxB').textContent = '乙 ' + g6fmt(bKm) + ' 千米';
+  document.getElementById('mtEq').textContent = '15×' + g6fmt(mtT) + ' + 25×' + g6fmt(mtT) + ' = ' + g6fmt(sum) + '（千米）';
+  document.getElementById('mtRead').textContent = mtT === 0
+    ? '还没出发：甲在 0 千米处，乙在 120 千米处。方程是 15t + 25t = 120。'
+    : sum < 120
+      ? 't = ' + g6fmt(mtT) + ' 小时：甲走了 15×' + g6fmt(mtT) + ' = ' + g6fmt(aKm) + ' 千米，乙走了 25×' + g6fmt(mtT) + ' = ' + g6fmt(bKm) + ' 千米，合起来 ' + g6fmt(sum) + ' 千米，还差 ' + g6fmt(120 - sum) + ' 千米。'
+      : 't = 3 小时：甲走了 45 千米，乙走了 75 千米，合起来 120 千米，正好相遇！15t + 25t = 120，t = 3。';
+}
+(function mtInit() {
+  document.getElementById('mtTMinus').addEventListener('click', function () { if (mtT > 0) mtT = Math.round((mtT - 0.5) * 10) / 10; markTried('meetline'); mtRender(); });
+  document.getElementById('mtTPlus').addEventListener('click', function () { if (mtT < 3) mtT = Math.round((mtT + 0.5) * 10) / 10; markTried('meetline'); mtRender(); });
+  mtRender();
+})();
+
+/* ---------- demo-lineseg · 7.8 直线、射线、线段（方法：点线面体动画） ----------
+   直线没有端点，向两边无限长；射线有一个端点，向一方无限长；线段有两个端点，
+   能量出长度：AB = 5 厘米。两点确定一条直线；两点之间，线段最短。 */
+let sgMode = 'seg', sgCurve = false;
+function sgRender() {
+  document.querySelectorAll('#sgModeSeg [data-sg-mode]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(btn.dataset.sgMode === sgMode));
+  });
+  document.getElementById('sgLine').style.display = sgMode === 'line' ? '' : 'none';
+  document.getElementById('sgRayA').style.display = sgMode === 'rayab' ? '' : 'none';
+  document.getElementById('sgRayB').style.display = sgMode === 'rayba' ? '' : 'none';
+  document.getElementById('sgSeg').style.display = sgMode === 'seg' ? '' : 'none';
+  document.getElementById('sgCurve').style.display = sgCurve ? '' : 'none';
+  document.getElementById('sgCurveBtn').setAttribute('aria-pressed', String(sgCurve));
+  const base = {
+    line: '直线 AB：没有端点，向两边无限长，量不出长度。经过 A、B 两点只能画 1 条直线。',
+    rayab: '射线 AB：只有 A 这一个端点，从 A 出发经过 B，向右无限长，量不出长度。',
+    rayba: '射线 BA：只有 B 这一个端点，从 B 出发经过 A，向左无限长。',
+    seg: '线段 AB：有两个端点 A 和 B，能量出长度：AB = 5 厘米。'
+  }[sgMode];
+  document.getElementById('sgRead').textContent = base + (sgCurve ? '弯路比直路长：走线段 AB 是 5 厘米，走弯路更长——两点之间，线段最短。' : '');
+}
+(function sgInit() {
+  const modeSeg = document.getElementById('sgModeSeg');
+  [['line', '直线'], ['rayab', '射线 AB'], ['rayba', '射线 BA'], ['seg', '线段 AB']].forEach(function (m) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = m[1]; b.dataset.sgMode = m[0];
+    b.addEventListener('click', function () { sgMode = m[0]; markTried('lineseg'); sgRender(); });
+    modeSeg.appendChild(b);
+  });
+  document.getElementById('sgCurveBtn').addEventListener('click', function () { sgCurve = !sgCurve; markTried('lineseg'); sgRender(); });
+  sgRender();
+})();
+
+/* ---------- demo-anglepair · 7.9 角（方法：张开程度 + 凑满拼图） ----------
+   余角凑满 90°，补角凑满 180°，角平分线把一个角分成两个相等的角。
+   ∠A = 35°：余角 55°（35+55 = 90），补角 145°（35+145 = 180），平分后每个 17.5°。
+   1° = 60′。 */
+let apMode = 'comp', apAngle = 35;
+function apRender() {
+  if (apMode === 'comp' && apAngle > 85) apAngle = 85;
+  document.getElementById('apAngleTx').textContent = '∠A = ' + apAngle + '°';
+  document.querySelectorAll('#apModeSeg [data-ap-mode]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(btn.dataset.apMode === apMode));
+  });
+  const barA = document.getElementById('apBarA'), barB = document.getElementById('apBarB');
+  const read = document.getElementById('apRead');
+  if (apMode === 'comp') {
+    const c = 90 - apAngle;
+    barA.style.width = (apAngle / 90 * 100) + '%'; barB.style.width = (c / 90 * 100) + '%';
+    barA.textContent = '∠A ' + apAngle + '°'; barB.textContent = '余角 ' + c + '°';
+    read.textContent = '∠A = ' + apAngle + '°，它的余角是 ' + c + '°：' + apAngle + '°+' + c + '° = 90°，正好凑满一个直角。';
+  } else if (apMode === 'supp') {
+    const s = 180 - apAngle;
+    barA.style.width = (apAngle / 180 * 100) + '%'; barB.style.width = (s / 180 * 100) + '%';
+    barA.textContent = '∠A ' + apAngle + '°'; barB.textContent = '补角 ' + s + '°';
+    read.textContent = '∠A = ' + apAngle + '°，它的补角是 ' + s + '°：' + apAngle + '°+' + s + '° = 180°，正好凑满一个平角。';
+  } else {
+    const h = apAngle / 2;
+    barA.style.width = '50%'; barB.style.width = '50%';
+    barA.textContent = g6fmt(h) + '°'; barB.textContent = g6fmt(h) + '°';
+    read.textContent = '∠A = ' + apAngle + '°，角平分线把它分成两个相等的角，每个是 ' + g6fmt(h) + '°：' + g6fmt(h) + '°+' + g6fmt(h) + '° = ' + apAngle + '°。';
+  }
+}
+(function apInit() {
+  const modeSeg = document.getElementById('apModeSeg');
+  [['comp', '余角：凑满 90°'], ['supp', '补角：凑满 180°'], ['bisect', '角平分线']].forEach(function (m) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = m[1]; b.dataset.apMode = m[0];
+    b.addEventListener('click', function () { apMode = m[0]; markTried('anglepair'); apRender(); });
+    modeSeg.appendChild(b);
+  });
+  document.getElementById('apAngleMinus').addEventListener('click', function () { if (apAngle > 5) apAngle -= 5; markTried('anglepair'); apRender(); });
+  document.getElementById('apAnglePlus').addEventListener('click', function () { if (apAngle < (apMode === 'comp' ? 85 : 175)) apAngle += 5; markTried('anglepair'); apRender(); });
+  apRender();
+})();
+
+/* ---------- demo-vertangle · 7.10 相交线（方法：对顶角亮灯 + 垂线段最短） ----------
+   两条直线相交：对顶角相等，邻补角互补。∠1 = 50° 时 ∠2 = 130°、∠3 = 50°、∠4 = 130°。
+   点到直线的距离是垂线段的长度：垂线段 5 厘米，斜线段 7 厘米、9 厘米，垂线段最短。 */
+let vaMode = 'vert', vaAngle = 50, vaSeg = 0;
+function vaRender() {
+  document.getElementById('vaCrossBox').hidden = vaMode !== 'vert';
+  document.getElementById('vaPerpBox').hidden = vaMode !== 'perp';
+  document.getElementById('vaAngleTx').textContent = '∠1 = ' + vaAngle + '°';
+  document.querySelectorAll('#vaModeSeg [data-va-mode]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(btn.dataset.vaMode === vaMode));
+  });
+  if (vaMode === 'vert') {
+    const th = vaAngle * Math.PI / 180, L = 160, cx = 320, cy = 130;
+    const dx = L * Math.cos(th), dy = L * Math.sin(th);
+    const l2 = document.getElementById('vaLine2');
+    l2.setAttribute('x1', cx - dx); l2.setAttribute('y1', cy + dy);
+    l2.setAttribute('x2', cx + dx); l2.setAttribute('y2', cy - dy);
+    const vals = [vaAngle, 180 - vaAngle, vaAngle, 180 - vaAngle];
+    for (let i = 0; i < 4; i++) {
+      document.getElementById('vaL' + (i + 1)).textContent = '∠' + (i + 1) + ' = ' + vals[i] + '°';
+    }
+    document.getElementById('vaRead').textContent =
+      '∠1 = ' + vaAngle + '°，∠2 = ' + (180 - vaAngle) + '°，∠3 = ' + vaAngle + '°，∠4 = ' + (180 - vaAngle) + '°：对顶角相等（∠1 = ∠3），邻补角互补（∠1+∠2 = 180°）。';
+  } else {
+    const lens = [5, 7, 9], names = ['垂线段', '斜线段 1', '斜线段 2'];
+    for (let i = 0; i < 3; i++) {
+      const el = document.getElementById('vaSeg' + i);
+      el.setAttribute('stroke', i === vaSeg ? '#ff8a3d' : '#94a3b8');
+      el.setAttribute('stroke-width', i === vaSeg ? 5 : 3);
+    }
+    document.querySelectorAll('#vaSegSeg [data-va-seg]').forEach(function (btn) {
+      btn.setAttribute('aria-pressed', String(+btn.dataset.vaSeg === vaSeg));
+    });
+    document.getElementById('vaRead').textContent =
+      names[vaSeg] + '长 ' + lens[vaSeg] + ' 厘米：垂线段 5 厘米最短，斜线段 7 厘米、9 厘米都比它长——点 P 到直线的距离是 5 厘米。';
+  }
+}
+(function vaInit() {
+  const modeSeg = document.getElementById('vaModeSeg');
+  [['vert', '对顶角'], ['perp', '垂线段最短']].forEach(function (m) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = m[1]; b.dataset.vaMode = m[0];
+    b.addEventListener('click', function () { vaMode = m[0]; markTried('vertangle'); vaRender(); });
+    modeSeg.appendChild(b);
+  });
+  const segSeg = document.getElementById('vaSegSeg');
+  ['垂线段 5 厘米', '斜线段 7 厘米', '斜线段 9 厘米'].forEach(function (label, i) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = label; b.dataset.vaSeg = String(i);
+    b.addEventListener('click', function () { vaSeg = i; markTried('vertangle'); vaRender(); });
+    segSeg.appendChild(b);
+  });
+  document.getElementById('vaAngleMinus').addEventListener('click', function () { if (vaAngle > 20) vaAngle -= 10; markTried('vertangle'); vaRender(); });
+  document.getElementById('vaAnglePlus').addEventListener('click', function () { if (vaAngle < 160) vaAngle += 10; markTried('vertangle'); vaRender(); });
+  vaRender();
+})();
+
+/* ---------- demo-parangles · 7.11 平行线与平移（方法：亮灯辨角法） ----------
+   两条平行线被第三条直线所截：同位角相等、内错角相等、同旁内角互补。
+   截线和水平线夹 70° 时：同位角 ∠4 = ∠8 = 70°；内错角 ∠3 = ∠5 = 110°；
+   同旁内角 ∠4+∠5 = 70°+110° = 180°。把下面那条线转 15°，不平行了，角就不相等了。
+   平移：图形整体向右滑，形状大小不变，每个点都走了同样的距离。 */
+let plMode = 'corr', plAngle = 70, plPar = true, plDx = 3;
+function plRender() {
+  document.getElementById('plAngleBox').hidden = plMode === 'trans';
+  document.getElementById('plTransBox').hidden = plMode !== 'trans';
+  document.getElementById('plAngleTx').textContent = '截线夹角 ' + plAngle + '°';
+  document.getElementById('plDxTx').textContent = '向右平移 ' + plDx + ' 格';
+  document.querySelectorAll('#plPairSeg [data-pl-pair]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(btn.dataset.plPair === plMode));
+  });
+  document.querySelectorAll('#plParSeg [data-pl-par]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String((btn.dataset.plPar === 'yes') === plPar));
+  });
+  const read = document.getElementById('plRead');
+  if (plMode === 'trans') {
+    const pts = [[140, 220], [200, 120], [260, 220]].map(function (p) { return (p[0] + plDx * 30) + ',' + p[1]; }).join(' ');
+    document.getElementById('plTri').setAttribute('points', pts);
+    document.getElementById('plTransArrow').setAttribute('x2', 140 + plDx * 30);
+    read.textContent = '向右平移 ' + plDx + ' 格：三角形的形状、大小都没变，每个点都向右走了 ' + plDx + ' 格，对应点连线平行且相等。';
+    return;
+  }
+  const a = plAngle, b = plPar ? a : a - 15;
+  const rad = a * Math.PI / 180, dx = Math.cos(rad), dy = Math.sin(rad);
+  const trans = document.getElementById('plTrans');
+  trans.setAttribute('x1', 320 - 130 * dx); trans.setAttribute('y1', 150 - 130 * dy);
+  trans.setAttribute('x2', 320 + 130 * dx); trans.setAttribute('y2', 150 + 130 * dy);
+  const l2 = document.getElementById('plLine2');
+  if (plPar) { l2.setAttribute('x1', 60); l2.setAttribute('y1', 210); l2.setAttribute('x2', 580); l2.setAttribute('y2', 210); }
+  else { l2.setAttribute('x1', 68.8); l2.setAttribute('y1', 142.7); l2.setAttribute('x2', 571.2); l2.setAttribute('y2', 277.3); }
+  // 两个交点：I1 在 y=90 的线上，I2 在 y=210 的线（平行时）或转了 15° 的线上。
+  const i1x = 320 - 60 * dx / dy, i1y = 90;
+  let i2x, i2y;
+  if (plPar) { i2x = 320 + 60 * dx / dy; i2y = 210; }
+  else {
+    const ex = Math.cos(15 * Math.PI / 180), ey = Math.sin(15 * Math.PI / 180);
+    const t = 60 * dx / (ex * dy - ey * dx);
+    i2x = 320 + t * ex; i2y = 210 + t * ey;
+  }
+  const vals1 = [180 - a, a, 180 - a, a];
+  const vals2 = [180 - b, b, 180 - b, b];
+  const offs = [[34, -26], [-34, -26], [-34, 32], [34, 32]];
+  for (let i = 0; i < 4; i++) {
+    const t1 = document.getElementById('plT' + (i + 1));
+    t1.setAttribute('x', i1x + offs[i][0]); t1.setAttribute('y', i1y + offs[i][1]);
+    t1.textContent = '∠' + (i + 1) + ' ' + vals1[i] + '°';
+    const t2 = document.getElementById('plT' + (i + 5));
+    t2.setAttribute('x', i2x + offs[i][0]); t2.setAttribute('y', i2y + offs[i][1]);
+    t2.textContent = '∠' + (i + 5) + ' ' + vals2[i] + '°';
+  }
+  const pair = { corr: [4, 8], alt: [3, 5], same: [4, 5] }[plMode];
+  for (let i = 1; i <= 8; i++) {
+    const t = document.getElementById('plT' + i);
+    const on = pair.indexOf(i) >= 0;
+    t.setAttribute('fill', on ? '#c2410c' : '#1e293b');
+    t.setAttribute('font-weight', on ? 'bold' : 'normal');
+  }
+  if (plMode === 'corr') {
+    read.textContent = plPar
+      ? '同位角：∠4 = ' + a + '°，∠8 = ' + b + '°，它们相等——两直线平行，同位角相等。'
+      : '同位角：∠4 = ' + a + '°，∠8 = ' + b + '°，不再相等——下面那条线转了 15°，不平行了，同位角就不相等了。';
+  } else if (plMode === 'alt') {
+    read.textContent = plPar
+      ? '内错角：∠3 = ' + (180 - a) + '°，∠5 = ' + (180 - b) + '°，它们相等——两直线平行，内错角相等。'
+      : '内错角：∠3 = ' + (180 - a) + '°，∠5 = ' + (180 - b) + '°，不再相等——不平行，内错角就不相等。';
+  } else {
+    read.textContent = plPar
+      ? '同旁内角：∠4 = ' + a + '°，∠5 = ' + (180 - b) + '°，' + a + '°+' + (180 - b) + '° = 180°，互补——两直线平行，同旁内角互补。'
+      : '同旁内角：∠4 = ' + a + '°，∠5 = ' + (180 - b) + '°，' + a + '°+' + (180 - b) + '° = ' + (a + 180 - b) + '°，不再互补。';
+  }
+}
+(function plInit() {
+  const pairSeg = document.getElementById('plPairSeg');
+  [['corr', '同位角'], ['alt', '内错角'], ['same', '同旁内角'], ['trans', '平移']].forEach(function (m) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = m[1]; b.dataset.plPair = m[0];
+    b.addEventListener('click', function () { plMode = m[0]; markTried('parangles'); plRender(); });
+    pairSeg.appendChild(b);
+  });
+  const parSeg = document.getElementById('plParSeg');
+  [['yes', '两条线平行'], ['no', '下面那条转 15°']].forEach(function (m) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = m[1]; b.dataset.plPar = m[0];
+    b.addEventListener('click', function () { plPar = m[0] === 'yes'; markTried('parangles'); plRender(); });
+    parSeg.appendChild(b);
+  });
+  document.getElementById('plAngleMinus').addEventListener('click', function () { if (plAngle > 40) plAngle -= 10; markTried('parangles'); plRender(); });
+  document.getElementById('plAnglePlus').addEventListener('click', function () { if (plAngle < 80) plAngle += 10; markTried('parangles'); plRender(); });
+  document.getElementById('plDxMinus').addEventListener('click', function () { if (plDx > 0) plDx--; markTried('parangles'); plRender(); });
+  document.getElementById('plDxPlus').addEventListener('click', function () { if (plDx < 6) plDx++; markTried('parangles'); plRender(); });
+  plRender();
+})();
+
+/* ---------- demo-roots · 7.12 实数（方法：对角线定位 + 开方机器） ----------
+   正数有两个平方根，互为相反数；0 的平方根是 0；负数没有平方根。
+   √16 = 4，16 的平方根是 ±4；³√27 = 3，³√(−8) = −2。
+   边长是 1 的正方形，对角线长 √2 ≈ 1.414，落在 1 和 2 之间，是无限不循环小数。 */
+const SQ_SETS = {
+  sqrt: { vals: [4, 9, 16, 25, 36, -4], labels: ['4', '9', '16', '25', '36', '−4'] },
+  cbrt: { vals: [8, 27, 64, -8, -27], labels: ['8', '27', '64', '−8', '−27'] },
+  line: { vals: [2, 3, 5], labels: ['√2', '√3', '√5'] }
+};
+let sqMode = 'sqrt', sqA = 16;
+function sqRender() {
+  document.getElementById('sqLineBox').hidden = sqMode !== 'line';
+  document.querySelectorAll('#sqModeSeg [data-sq-mode]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(btn.dataset.sqMode === sqMode));
+  });
+  const set = SQ_SETS[sqMode];
+  if (set.vals.indexOf(sqA) < 0) sqA = set.vals[0];
+  const seg = document.getElementById('sqASeg');
+  while (seg.firstChild) seg.removeChild(seg.firstChild);
+  set.vals.forEach(function (v, i) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = set.labels[i]; b.dataset.sqA = String(v);
+    b.setAttribute('aria-pressed', String(v === sqA));
+    b.addEventListener('click', function () { sqA = v; markTried('roots'); sqRender(); });
+    seg.appendChild(b);
+  });
+  const read = document.getElementById('sqRead');
+  if (sqMode === 'sqrt') {
+    if (sqA < 0) {
+      read.textContent = '−4 没有平方根：任何数的平方都不会是负数。';
+    } else {
+      const r = Math.sqrt(sqA);
+      read.textContent = '√' + sqA + ' = ' + r + '，因为 ' + r + '² = ' + sqA + '；' + sqA + ' 的平方根是 ±' + r + '。';
+    }
+  } else if (sqMode === 'cbrt') {
+    const r = Math.round(Math.cbrt(sqA));
+    read.textContent = '³√(' + g7sgn(sqA) + ') = ' + g7sgn(r) + '，因为 (' + g7sgn(r) + ')³ = ' + g7sgn(sqA) + '。任何数都有一个立方根。';
+  } else {
+    const v = Math.sqrt(sqA), lo = Math.floor(v), hi = lo + 1;
+    document.getElementById('sqDot').setAttribute('cx', 40 + v * 180);
+    read.textContent = '边长是 1 的正方形，对角线长 √' + sqA + ' ≈ ' + v.toFixed(3) + '，落在 ' + lo + ' 和 ' + hi + ' 之间：√' + sqA + ' 是无限不循环小数，是无理数。';
+  }
+}
+(function sqInit() {
+  const modeSeg = document.getElementById('sqModeSeg');
+  [['sqrt', '平方根'], ['cbrt', '立方根'], ['line', '√2 在数轴上哪']].forEach(function (m) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = m[1]; b.dataset.sqMode = m[0];
+    b.addEventListener('click', function () { sqMode = m[0]; markTried('roots'); sqRender(); });
+    modeSeg.appendChild(b);
+  });
+  sqRender();
+})();
+
+/* ---------- demo-coordplane · 7.13 平面直角坐标系（方法：编地址法） ----------
+   点的位置用一对有序数对 (x, y) 表示：先横后纵。第一象限 (+,+)，第二象限 (−,+)，第
+   三象限 (−,−)，第四象限 (+,−)；x 轴上的点纵坐标是 0，y 轴上的点横坐标是 0。
+   (2,3) 关于 x 轴的对称点是 (2,−3)，关于 y 轴是 (−2,3)，关于原点是 (−2,−3)。 */
+const XY_POINTS = [[2, 3], [-1, 2], [-2, -1], [3, -2], [0, 4], [3, 0]];
+let xyIdx = 0, xySym = 'none';
+function xyQuad(x, y) {
+  if (y === 0) return '在 x 轴上';
+  if (x === 0) return '在 y 轴上';
+  return x > 0 ? (y > 0 ? '在第一象限' : '在第四象限') : (y > 0 ? '在第二象限' : '在第三象限');
+}
+function xyRender() {
+  const p = XY_POINTS[xyIdx], x = p[0], y = p[1];
+  document.getElementById('xyDot').setAttribute('cx', 260 + x * 52);
+  document.getElementById('xyDot').setAttribute('cy', 260 - y * 52);
+  document.getElementById('xyPtTx').textContent = '点 (' + g7sgn(x) + ',' + g7sgn(y) + ')';
+  document.querySelectorAll('#xyPtSeg [data-xy-pt]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(+btn.dataset.xyPt === xyIdx));
+  });
+  document.querySelectorAll('#xySymSeg [data-xy-sym]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(btn.dataset.xySym === xySym));
+  });
+  const ghost = document.getElementById('xyGhost');
+  let read = '点 (' + g7sgn(x) + ',' + g7sgn(y) + ') ' + xyQuad(x, y) + '：横坐标是 ' + g7sgn(x) + '，纵坐标是 ' + g7sgn(y) + '。';
+  if (xySym === 'none') {
+    ghost.style.display = 'none';
+  } else {
+    const sp = xySym === 'x' ? [x, -y] : xySym === 'y' ? [-x, y] : [-x, -y];
+    ghost.style.display = '';
+    ghost.setAttribute('cx', 260 + sp[0] * 52);
+    ghost.setAttribute('cy', 260 - sp[1] * 52);
+    const name = xySym === 'x' ? 'x轴' : xySym === 'y' ? 'y轴' : '原点';
+    const rule = xySym === 'x' ? '横坐标不变，纵坐标变号' : xySym === 'y' ? '纵坐标不变，横坐标变号' : '横、纵坐标都变号';
+    read += sp[0] === x && sp[1] === y
+      ? '关于' + name + '的对称点还是 (' + g7sgn(sp[0]) + ',' + g7sgn(sp[1]) + ')：它就在' + name + '上。'
+      : '关于' + name + '的对称点是 (' + g7sgn(sp[0]) + ',' + g7sgn(sp[1]) + ')：' + rule + '。';
+  }
+  document.getElementById('xyRead').textContent = read;
+}
+(function xyInit() {
+  const grid = document.getElementById('xyGrid');
+  for (let v = -5; v <= 5; v++) {
+    [['x1', 260 + v * 52, 'y1', 0, 'x2', 260 + v * 52, 'y2', 520],
+     ['x1', 0, 'y1', 260 - v * 52, 'x2', 520, 'y2', 260 - v * 52]].forEach(function (a) {
+      const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      l.setAttribute('x1', a[1]); l.setAttribute('y1', a[3]);
+      l.setAttribute('x2', a[5]); l.setAttribute('y2', a[7]);
+      l.setAttribute('stroke', v === 0 ? '#1e293b' : '#e2e8f0');
+      l.setAttribute('stroke-width', v === 0 ? 2 : 1);
+      grid.appendChild(l);
+    });
+  }
+  const ptSeg = document.getElementById('xyPtSeg');
+  XY_POINTS.forEach(function (p, i) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = '(' + g7sgn(p[0]) + ',' + g7sgn(p[1]) + ')'; b.dataset.xyPt = String(i);
+    b.addEventListener('click', function () { xyIdx = i; markTried('coordplane'); xyRender(); });
+    ptSeg.appendChild(b);
+  });
+  const symSeg = document.getElementById('xySymSeg');
+  [['none', '不画对称点'], ['x', '关于 x 轴对称'], ['y', '关于 y 轴对称'], ['o', '关于原点对称']].forEach(function (m) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = m[1]; b.dataset.xySym = m[0];
+    b.addEventListener('click', function () { xySym = m[0]; markTried('coordplane'); xyRender(); });
+    symSeg.appendChild(b);
+  });
+  xyRender();
+})();
+
+/* ---------- demo-ineqline · 7.15 不等式与不等式组（方法：数轴画段法） ----------
+   解不等式和解方程差不多，但两边同乘（或除以）一个负数时，不等号要变方向：
+   −2x > 6，两边除以 −2，得 x < −3。空心圈是不包括这个点，实心点是包括。
+   不等式组取公共部分：{x+2>0, 2x−1≤5} 的解是 −2 < x ≤ 3；{x>5, x<3} 无解。 */
+const IQ_ONE = [
+  { expr: '−2x > 6', steps: '两边同时除以 −2，不等号要变方向', sol: 'x < −3', open: true, dir: 'left', val: -3 },
+  { expr: '2x − 3 < 5', steps: '先移项：2x < 8，再把系数化为 1', sol: 'x < 4', open: true, dir: 'left', val: 4 },
+  { expr: '3x + 1 ≥ 7', steps: '先移项：3x ≥ 6，再把系数化为 1', sol: 'x ≥ 2', open: false, dir: 'right', val: 2 },
+  { expr: 'x + 2 > 0', steps: '移项：x > −2', sol: 'x > −2', open: true, dir: 'right', val: -2 }
+];
+const IQ_SYS = [
+  { a: 'x + 2 > 0', b: '2x − 1 ≤ 5', sa: 'x > −2', sb: 'x ≤ 3', sol: '−2 < x ≤ 3', lo: -2, loClosed: false, hi: 3, hiClosed: true, empty: false },
+  { a: 'x − 1 > 2', b: '3x < 12', sa: 'x > 3', sb: 'x < 4', sol: '3 < x < 4', lo: 3, loClosed: false, hi: 4, hiClosed: false, empty: false },
+  { a: 'x > 5', b: 'x < 3', sa: 'x > 5', sb: 'x < 3', sol: '无解', lo: 5, loClosed: false, hi: 3, hiClosed: false, empty: true }
+];
+let iqMode = 'one', iqIdx = 0;
+function iqX(v) { return 320 + v * 50; }
+function iqRender() {
+  document.getElementById('iqOneBox').hidden = iqMode !== 'one';
+  document.getElementById('iqSysBox').hidden = iqMode !== 'sys';
+  document.querySelectorAll('#iqModeSeg [data-iq-mode]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(btn.dataset.iqMode === iqMode));
+  });
+  const items = iqMode === 'one' ? IQ_ONE : IQ_SYS;
+  if (iqIdx >= items.length) iqIdx = 0;
+  const seg = document.getElementById('iqExprSeg');
+  while (seg.firstChild) seg.removeChild(seg.firstChild);
+  items.forEach(function (it, i) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = iqMode === 'one' ? it.expr : '{' + it.a + '，' + it.b + '}';
+    b.dataset.iqExpr = String(i);
+    b.setAttribute('aria-pressed', String(i === iqIdx));
+    b.addEventListener('click', function () { iqIdx = i; markTried('ineqline'); iqRender(); });
+    seg.appendChild(b);
+  });
+  const read = document.getElementById('iqRead');
+  if (iqMode === 'one') {
+    const it = items[iqIdx];
+    const ray = document.getElementById('iqRay'), dot = document.getElementById('iqDot');
+    if (it.dir === 'left') { ray.setAttribute('x1', 20); ray.setAttribute('x2', iqX(it.val)); }
+    else { ray.setAttribute('x1', iqX(it.val)); ray.setAttribute('x2', 620); }
+    dot.setAttribute('cx', iqX(it.val));
+    dot.setAttribute('fill', it.open ? '#fff' : '#ff8a3d');
+    read.textContent = it.expr + '：' + it.steps + '，得 ' + it.sol + '。数轴上 ' + g7sgn(it.val) + ' 是' + (it.open ? '空心圈（不包括它）' : '实心点（包括它）') + '，往' + (it.dir === 'left' ? '左' : '右') + '画。';
+  } else {
+    const it = items[iqIdx];
+    const rayA = document.getElementById('iqRayA'), rayB = document.getElementById('iqRayB');
+    const dotA = document.getElementById('iqDotA'), dotB = document.getElementById('iqDotB');
+    const over = document.getElementById('iqOverlap');
+    rayA.setAttribute('x1', iqX(it.lo)); rayA.setAttribute('x2', 620);
+    rayB.setAttribute('x1', 20); rayB.setAttribute('x2', iqX(it.hi));
+    dotA.setAttribute('cx', iqX(it.lo)); dotA.setAttribute('fill', it.loClosed ? '#ff8a3d' : '#fff');
+    dotB.setAttribute('cx', iqX(it.hi)); dotB.setAttribute('fill', it.hiClosed ? '#ff8a3d' : '#fff');
+    if (it.empty) {
+      over.style.display = 'none';
+      read.textContent = it.a + ' 得 ' + it.sa + '；' + it.b + ' 得 ' + it.sb + '：两个没有公共部分，这个不等式组无解。';
+    } else {
+      over.style.display = '';
+      over.setAttribute('x1', iqX(it.lo)); over.setAttribute('x2', iqX(it.hi));
+      read.textContent = it.a + ' 得 ' + it.sa + '；' + it.b + ' 得 ' + it.sb + '：公共部分是 ' + it.sol + '，数轴上 ' + g7sgn(it.lo) + ' 是' + (it.loClosed ? '实心点' : '空心圈') + '、' + g7sgn(it.hi) + ' 是' + (it.hiClosed ? '实心点' : '空心圈') + '，中间那一段亮起来。';
+    }
+  }
+}
+(function iqInit() {
+  ['iqTicks', 'iqTicksB'].forEach(function (gid) {
+    const ticks = document.getElementById(gid);
+    for (let v = -6; v <= 6; v++) {
+      const t = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      t.setAttribute('x1', iqX(v)); t.setAttribute('x2', iqX(v));
+      t.setAttribute('y1', 54); t.setAttribute('y2', 66);
+      t.setAttribute('stroke', '#1e293b'); t.setAttribute('stroke-width', 2);
+      ticks.appendChild(t);
+      const lab = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      lab.setAttribute('x', iqX(v)); lab.setAttribute('y', 86);
+      lab.setAttribute('text-anchor', 'middle'); lab.setAttribute('font-size', 13);
+      lab.textContent = String(v);
+      ticks.appendChild(lab);
+    }
+  });
+  const modeSeg = document.getElementById('iqModeSeg');
+  [['one', '解一个不等式'], ['sys', '解不等式组']].forEach(function (m) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = m[1]; b.dataset.iqMode = m[0];
+    b.addEventListener('click', function () { iqMode = m[0]; iqIdx = 0; markTried('ineqline'); iqRender(); });
+    modeSeg.appendChild(b);
+  });
+  iqRender();
+})();
+
+/* ---------- demo-histogram · 7.16 统计调查与直方图（方法：随机抽样 + 分组数频数） ----------
+   全班 40 人的身高（厘米）：140~145 有 3 人，145~150 有 4 人，150~155、155~160、
+   160~165、165~170、170~175 各 5 人，175~180 有 4 人，180~185 有 3 人，185~190 有 1 人。
+   10 厘米一组：140~150 有 7 人，150~160 有 10 人，160~170 有 10 人，170~180 有 9 人，
+   180~190 有 4 人。频率 = 频数 ÷ 总数：140~145 这组是 3÷40 = 0.075。
+   抽样 10 人（每 4 人抽 1 个）：每组人数变少，但形状差不多——样本要随机才有代表性。 */
+const HG_ALL = [141, 143, 144, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 180, 182, 184, 186];
+const HG_SAMPLE = [141, 147, 151, 155, 160, 164, 168, 172, 176, 182];
+let hgGroup = 5, hgSet = 'all';
+function hgRender() {
+  document.querySelectorAll('#hgGroupSeg [data-hg-group]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(+btn.dataset.hgGroup === hgGroup));
+  });
+  document.querySelectorAll('#hgSetSeg [data-hg-set]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(btn.dataset.hgSet === hgSet));
+  });
+  const data = hgSet === 'all' ? HG_ALL : HG_SAMPLE;
+  const n = data.length;
+  const bins = [];
+  for (let lo = 140; lo < 190; lo += hgGroup) {
+    const hi = lo + hgGroup;
+    const c = data.filter(function (h) { return h >= lo && h < hi; }).length;
+    bins.push({ lo: lo, hi: hi, c: c });
+  }
+  const bars = document.getElementById('hgBars');
+  while (bars.firstChild) bars.removeChild(bars.firstChild);
+  bins.forEach(function (bin) {
+    const col = document.createElement('div');
+    col.className = 'g7-hg-col';
+    const bar = document.createElement('div');
+    bar.className = 'g7-hg-bar';
+    bar.style.height = Math.max(2, bin.c * 16) + 'px';
+    const cnt = document.createElement('span');
+    cnt.className = 'g7-hg-cnt';
+    cnt.textContent = bin.c + ' 人';
+    const lab = document.createElement('span');
+    lab.className = 'g7-hg-lab';
+    lab.textContent = bin.lo + '~' + bin.hi;
+    col.appendChild(cnt);
+    col.appendChild(bar);
+    col.appendChild(lab);
+    bars.appendChild(col);
+  });
+  const parts = bins.map(function (bin) { return bin.lo + '~' + bin.hi + '：' + bin.c + ' 人'; }).join('；');
+  const first = bins[0];
+  document.getElementById('hgRead').textContent =
+    (hgSet === 'all' ? '全班 40 人' : '抽样 10 人') + '，每 ' + hgGroup + ' 厘米一组：' + parts + '。' +
+    first.lo + '~' + first.hi + ' 这组的频率是 ' + first.c + '÷' + n + ' = ' + (Math.round(first.c / n * 1000) / 1000) + '。';
+  document.getElementById('hgMsg').textContent = hgSet === 'all'
+    ? '直方图的长方形之间没有空隙：身高是连续的数据；条形图的长方形之间有空隙。'
+    : '只抽 10 人：每组的人数变少了，但形状和全班差不多——样本要随机、有代表性，结论才靠得住。';
+}
+(function hgInit() {
+  const groupSeg = document.getElementById('hgGroupSeg');
+  [[5, '5 厘米一组'], [10, '10 厘米一组']].forEach(function (m) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = m[1]; b.dataset.hgGroup = String(m[0]);
+    b.addEventListener('click', function () { hgGroup = m[0]; markTried('histogram'); hgRender(); });
+    groupSeg.appendChild(b);
+  });
+  const setSeg = document.getElementById('hgSetSeg');
+  [['all', '全班 40 人'], ['sample', '抽样 10 人']].forEach(function (m) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = m[1]; b.dataset.hgSet = m[0];
+    b.addEventListener('click', function () { hgSet = m[0]; markTried('histogram'); hgRender(); });
+    setSeg.appendChild(b);
+  });
+  hgRender();
 })();
 
 </script>

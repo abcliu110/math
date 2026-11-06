@@ -17,7 +17,7 @@
       <span class="brand-text"><strong>数学小宇宙</strong><small>小学 1–6 · 初中 7–9 · 动手玩懂数学</small></span>
     </button>
     <h1 class="crumb-title" id="crumbTitle" aria-label="当前位置">数学</h1>
-    <div class="progress-chip" id="progressChip" title="已体验的演示">已体验 <b id="progressCount">0 / 85</b> 个演示</div>
+    <div class="progress-chip" id="progressChip" title="已体验的演示">已体验 <b id="progressCount">0 / 98</b> 个演示</div>
   </div>
 </header>
 
@@ -81,10 +81,10 @@
     </div>
     <h3 class="panel-group-label">工具箱</h3>
     <div class="panels four">
-      <button class="panel" type="button" data-nav-key="demos"><span class="panel-icon" aria-hidden="true">✦</span><b>互动演示</b><span class="panel-sub">分数、天平、函数、十格阵，还有一、二、三、四、五、六年级实验都能玩</span><span class="panel-prog"><i id="panelDemoProg" style="width:0%"></i></span><span class="panel-tx" id="panelDemoTx">85 个演示 · 0 已体验</span></button>
+      <button class="panel" type="button" data-nav-key="demos"><span class="panel-icon" aria-hidden="true">✦</span><b>互动演示</b><span class="panel-sub">分数、天平、函数、十格阵，还有一到七年级实验都能玩</span><span class="panel-prog"><i id="panelDemoProg" style="width:0%"></i></span><span class="panel-tx" id="panelDemoTx">98 个演示 · 0 已体验</span></button>
       <button class="panel" type="button" data-nav-key="lab"><span class="panel-icon" aria-hidden="true">🧪</span><b>数学实验室</b><span class="panel-sub">没有题目，随便玩：分数、十格阵、天平、函数</span><span class="panel-tx">4 个自由玩小站 · 不评分</span></button>
       <button class="panel" type="button" data-nav-key="review"><span class="panel-icon" aria-hidden="true">✎</span><b>错题本</b><span class="panel-sub">错题连当时的图一起存</span><span class="panel-tx">还没有错题</span></button>
-      <button class="panel" type="button" data-nav-key="progress"><span class="panel-icon" aria-hidden="true">●</span><b>我的进度</b><span class="panel-sub">玩过的演示点亮一格</span><span class="panel-prog"><i id="panelProgFill" style="width:0%"></i></span><span class="panel-tx" id="panelProgTx">0 / 85 个演示</span></button>
+      <button class="panel" type="button" data-nav-key="progress"><span class="panel-icon" aria-hidden="true">●</span><b>我的进度</b><span class="panel-sub">玩过的演示点亮一格</span><span class="panel-prog"><i id="panelProgFill" style="width:0%"></i></span><span class="panel-tx" id="panelProgTx">0 / 98 个演示</span></button>
     </div>
   </section>
 
@@ -122,7 +122,7 @@
   <!-- Featured demos -->
   <section id="demos" class="section wrap">
     <h2>互动演示</h2>
-    <p class="section-sub">点一块面板进一个演示，都是我们自己画的图、自己写的例子。能点的都请点一点、拖一拖。一、二、三、四年级的新实验也都在里面。</p>
+    <p class="section-sub">点一块面板进一个演示，都是我们自己画的图、自己写的例子。能点的都请点一点、拖一拖。一到七年级的新实验也都在里面。</p>
     <div class="panels" id="demoPanels" aria-label="互动演示面板">
       <button class="panel" type="button" data-nav-key="demo-tenframe"><span class="panel-icon" aria-hidden="true">▦</span><b>十格阵凑十</b><span class="panel-sub">点 1 个凑成 10，9+4 就好算了</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1–2 年级 · 加减法</span></button>
       <button class="panel" type="button" data-nav-key="demo-fraction"><span class="panel-icon" aria-hidden="true">3/4</span><b>分数切一切</b><span class="panel-sub">切饼、落数轴，3/4 = 6/8</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">3–5 年级 · 分数</span></button>
@@ -209,6 +209,19 @@
       <button class="panel" type="button" data-nav-key="demo-cylinder"><span class="panel-icon" aria-hidden="true">🥤</span><b>圆柱与圆锥：倒沙</b><span class="panel-sub">3 个圆锥的沙正好倒满 1 个圆柱</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">6 年级 · 圆柱与圆锥</span></button>
       <button class="panel" type="button" data-nav-key="demo-pigeon"><span class="panel-icon" aria-hidden="true">🕊</span><b>鸽巢问题：先每洞一只</b><span class="panel-sub">5 只鸽子 4 个洞，一定有个洞有 2 只</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">6 年级 · 数学广角——鸽巢问题</span></button>
       <button class="panel" type="button" data-nav-key="demo-conceptmap"><span class="panel-icon" aria-hidden="true">🗺</span><b>整理和复习：认出老办法</b><span class="panel-sub">这道题是条形图？是 ×1？还是切一切？</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">6 年级 · 整理和复习</span></button>
+      <button class="panel" type="button" data-nav-key="demo-numline"><span class="panel-icon" aria-hidden="true">↔</span><b>数轴：标一点、走一走</b><span class="panel-sub">−3 的相反数是 3，到原点的距离是 3</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">7 年级 · 有理数</span></button>
+      <button class="panel" type="button" data-nav-key="demo-powerup"><span class="panel-icon" aria-hidden="true">2ⁿ</span><b>乘方：对折纸和科学记数法</b><span class="panel-sub">对折 10 次，纸厚 102.4 毫米</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">7 年级 · 有理数</span></button>
+      <button class="panel" type="button" data-nav-key="demo-monomial"><span class="panel-icon" aria-hidden="true">▦</span><b>整式：拆零件看系数次数</b><span class="panel-sub">−5a²b 的系数是 −5，次数是 3</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">7 年级 · 整式的加减</span></button>
+      <button class="panel" type="button" data-nav-key="demo-liketerms"><span class="panel-icon" aria-hidden="true">＋</span><b>整式的加减：合并同类项</b><span class="panel-sub">3a 和 2b 不是同类项，合不了</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">7 年级 · 整式的加减</span></button>
+      <button class="panel" type="button" data-nav-key="demo-meetline"><span class="panel-icon" aria-hidden="true">→←</span><b>相向而行：几小时相遇</b><span class="panel-sub">15t+25t=120，3 小时相遇</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">7 年级 · 一元一次方程</span></button>
+      <button class="panel" type="button" data-nav-key="demo-lineseg"><span class="panel-icon" aria-hidden="true">—</span><b>直线、射线、线段</b><span class="panel-sub">线段 AB 能量出 5 厘米，直线量不出</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">7 年级 · 几何图形初步</span></button>
+      <button class="panel" type="button" data-nav-key="demo-anglepair"><span class="panel-icon" aria-hidden="true">∠</span><b>角：余角、补角、角平分线</b><span class="panel-sub">35° 的余角是 55°，补角是 145°</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">7 年级 · 几何图形初步</span></button>
+      <button class="panel" type="button" data-nav-key="demo-vertangle"><span class="panel-icon" aria-hidden="true">✕</span><b>相交线：对顶角和垂线段</b><span class="panel-sub">∠1=50°，对顶角 ∠3 也是 50°</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">7 年级 · 相交线与平行线</span></button>
+      <button class="panel" type="button" data-nav-key="demo-parangles"><span class="panel-icon" aria-hidden="true">∥</span><b>平行线：截角和平移</b><span class="panel-sub">平行了同位角才相等，转 15° 就不等了</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">7 年级 · 相交线与平行线</span></button>
+      <button class="panel" type="button" data-nav-key="demo-roots"><span class="panel-icon" aria-hidden="true">√</span><b>实数：开方机器和 √2</b><span class="panel-sub">√2 ≈ 1.414，落在 1 和 2 之间</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">7 年级 · 实数</span></button>
+      <button class="panel" type="button" data-nav-key="demo-coordplane"><span class="panel-icon" aria-hidden="true">◎</span><b>平面直角坐标系：点一点</b><span class="panel-sub">(2,3) 在第一象限，关于 x 轴对称是 (2,−3)</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">7 年级 · 平面直角坐标系</span></button>
+      <button class="panel" type="button" data-nav-key="demo-ineqline"><span class="panel-icon" aria-hidden="true">≤</span><b>不等式：数轴上画解集</b><span class="panel-sub">除以负数，不等号要变方向</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">7 年级 · 不等式与不等式组</span></button>
+      <button class="panel" type="button" data-nav-key="demo-histogram"><span class="panel-icon" aria-hidden="true">▮</span><b>直方图：分组数频数</b><span class="panel-sub">140~145 厘米有 3 人，频率是 0.075</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">7 年级 · 数据的收集、整理与描述</span></button>
       <button class="panel" type="button" data-nav-key="why"><span class="panel-icon" aria-hidden="true">？</span><b>为什么小实验</b><span class="panel-sub">进位、分数除法、面积公式</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">3 个小实验</span></button>
     </div>
 
@@ -1935,6 +1948,326 @@
         <p id="cmMsg">步骤会忘，想法会迁移：同一张条形图出现在加法、倍、比、方程里；同一个 ×1 出现在约分、通分、比的基本性质里。认出老办法，就是“理解”。</p>
         <p class="demo-foot">成功标准：说出“这题又是条形图，我先找整体和部分”。</p>
         <p class="why"><b>为什么？</b>步骤背下来，换个题就不会了；认出背后的办法，换什么题都能想。复习是连线，不是重抄。</p>
+      </article>
+
+      <!-- 7.1/7.2 有理数与数轴 -->
+      <article class="demo-card" id="demo-numline">
+        <p class="demo-tag">7 年级 · 有理数</p>
+        <h3>数轴：标一点、走一走</h3>
+        <p>数轴上的点从左往右越来越大。标一标：点一个数，看它的相反数和绝对值；走一走：加法向右走，减法向左走，停在哪答案就是哪。</p>
+        <div class="control-row"><span>玩什么</span><div class="seg" id="nlModeSeg"></div></div>
+        <div id="nlMarkBox">
+          <div class="control-row"><span>这个数</span><div class="seg"><button type="button" id="nlValMinus">−</button><span class="arr-tx" id="nlValTx">这个数是 −3</span><button type="button" id="nlValPlus">＋</button></div></div>
+        </div>
+        <div id="nlWalkBox" hidden>
+          <div class="control-row"><span>起点</span><div class="seg"><button type="button" id="nlAMinus">−</button><span class="arr-tx" id="nlATx">从 −4 出发</span><button type="button" id="nlAPlus">＋</button></div></div>
+          <div class="control-row"><span>走几步</span><div class="seg"><button type="button" id="nlBMinus">−</button><span class="arr-tx" id="nlBTx">向右走 7 步</span><button type="button" id="nlBPlus">＋</button></div></div>
+        </div>
+        <svg viewBox="0 0 640 120" role="img" aria-label="数轴">
+          <defs><marker id="nlArrowHead" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#ff8a3d"></path></marker></defs>
+          <line x1="20" y1="70" x2="620" y2="70" stroke="#1e293b" stroke-width="3"></line>
+          <polygon points="620,70 606,63 606,77" fill="#1e293b"></polygon>
+          <g id="nlTicks"></g>
+          <path id="nlArrow" d="" stroke="#ff8a3d" stroke-width="3" fill="none" marker-end="url(#nlArrowHead)" style="display:none"></path>
+          <circle id="nlStartDot" r="10" cy="70" fill="#fff" stroke="#2563eb" stroke-width="3" style="display:none"></circle>
+          <circle id="nlOppDot" r="10" cy="70" fill="#fff" stroke="#94a3b8" stroke-width="3"></circle>
+          <circle id="nlDot" r="11" cy="70" fill="#ff8a3d" stroke="#c2410c" stroke-width="2"></circle>
+        </svg>
+        <p class="func-eq" id="nlRead">−3 在原点左边 3 个单位：它的相反数是 3，到原点的距离是 3，所以 |−3| = 3。</p>
+        <p id="nlMsg">数轴上的点从左往右越来越大；右边的数总比左边的数大。0 既不是正数，也不是负数。</p>
+        <p class="demo-foot">成功标准：说出“−3 的相反数是 3，|−3| = 3；−4+7 是从 −4 向右走 7 步，停在 3”。</p>
+        <p class="why"><b>为什么？</b>负数是“欠”的数：零下 3℃、亏了 5 元，都得用负数写。数轴把所有的数排成一条线，大小一目了然：右边的数总比左边的数大；一个数到原点的距离，就是它的绝对值。</p>
+      </article>
+
+      <!-- 7.3 乘方与科学记数法 -->
+      <article class="demo-card" id="demo-powerup">
+        <p class="demo-tag">7 年级 · 有理数</p>
+        <h3>乘方：对折纸和科学记数法</h3>
+        <p>一张纸厚 0.1 毫米，对折一次厚度翻一倍：对折 10 次就是 2¹⁰ = 1024 倍。科学记数法是把一个数写成 a×10ⁿ：小数点移几位，10 的指数就是几。</p>
+        <div class="control-row"><span>玩什么</span><div class="seg" id="puModeSeg"></div></div>
+        <div id="puFoldBox">
+          <div class="control-row"><span>对折几次</span><div class="seg"><button type="button" id="puFoldMinus">−</button><span class="arr-tx" id="puFoldTx">对折 10 次</span><button type="button" id="puFoldPlus">＋</button></div></div>
+          <div class="g7-vbar"><div class="g7-vfill" id="puBar" style="height:100%"></div></div>
+        </div>
+        <div id="puSciBox" hidden>
+          <div class="control-row"><span>选一个数</span><div class="seg" id="puNumSeg"></div></div>
+          <div class="control-row"><span>移动小数点</span><div class="seg"><button type="button" id="puShiftMinus">−</button><span class="arr-tx" id="puShiftTx">小数点移动了 8 位</span><button type="button" id="puShiftPlus">＋</button></div></div>
+        </div>
+        <p class="func-eq" id="puRead">对折 10 次：厚度是原来的 2¹⁰ = 1024 倍：0.1 毫米 × 1024 = 102.4 毫米，大约 10 厘米。</p>
+        <p id="puMsg">乘方是翻倍的增长：每多对折一次，厚度就再翻一倍——不是加 0.1 毫米，是乘 2。</p>
+        <p class="demo-foot">成功标准：说出“对折 10 次是 1024 倍，102.4 毫米；360000000 = 3.6×10⁸”。</p>
+        <p class="why"><b>为什么？</b>乘方是几个相同因数相乘：2¹⁰ 是 10 个 2 相乘，不是 10 个 2 相加。科学记数法里 a 必须在 1 和 10 之间：小数点向左移，指数是正的；向右移，指数是负的。</p>
+      </article>
+
+      <!-- 7.4 整式 -->
+      <article class="demo-card" id="demo-monomial">
+        <p class="demo-tag">7 年级 · 整式的加减</p>
+        <h3>整式：拆零件看系数次数</h3>
+        <p>单项式拆成“数字 × 字母 × 字母”：系数是数字因数，次数是所有字母的指数加起来。多项式拆成一排单项式：次数是最高次项的次数，项数是单项式的个数。</p>
+        <div class="control-row"><span>看什么</span><div class="seg" id="mnModeSeg"></div></div>
+        <div class="control-row"><span>选一个</span><div class="seg" id="mnItemSeg"></div></div>
+        <div class="chip-row" id="mnChips"></div>
+        <p class="func-eq" id="mnRead">单项式 −5a²b：系数是 −5（数字因数），次数是 3（a 的 2 次 + b 的 1 次）。</p>
+        <p id="mnMsg">次数告诉你这个式子“长得有多快”：x² 比 x 长得快，因为它是两个 x 相乘。</p>
+        <p class="demo-foot">成功标准：说出“−5a²b 的系数是 −5，次数是 3；3x²−2x+1 是二次三项式”。</p>
+        <p class="why"><b>为什么？</b>代数式是“用字母打包数量关系”：买 3 本书，每本 x 元，就是 3x。系数是数字因数，次数是字母指数加起来；多项式的次数看最高的那一项。</p>
+      </article>
+
+      <!-- 7.5 整式的加减 -->
+      <article class="demo-card" id="demo-liketerms">
+        <p class="demo-tag">7 年级 · 整式的加减</p>
+        <h3>整式的加减：合并同类项</h3>
+        <p>同类项才能合并：字母相同、相同字母的指数也相同，系数相加，字母和指数不变。去括号：括号前面是“+”照抄，是“−”里面每一项都变号。</p>
+        <div class="control-row"><span>玩什么</span><div class="seg" id="ltModeSeg"></div></div>
+        <div class="control-row"><span>选一道</span><div class="seg" id="ltExprSeg"></div></div>
+        <div class="chip-row" id="ltChips"></div>
+        <div class="btn-row"><button class="btn small primary" id="ltGo" type="button">合并同类项</button></div>
+        <p class="func-eq" id="ltRead">点“合并同类项”，看看哪些能合到一起：同一种颜色的是一类。</p>
+        <p id="ltMsg">同类项才能合并，就像苹果和梨不能直接加成“8 个苹果梨”；去括号变号，是因为减去一整组，就是把组里的每一项都减掉。</p>
+        <p class="demo-foot">成功标准：说出“3x²+5x−2x²+x = x²+6x；5−(2a−3b) = 5−2a+3b”。</p>
+        <p class="why"><b>为什么？</b>合并同类项是数一数有几个：3 个 x² 减 2 个 x²，剩 1 个 x²。去括号变号，是因为减去一整组，就是把组里的每一项都减掉——减去 −3b，就是加上 3b。</p>
+      </article>
+
+      <!-- 7.7 实际问题与一元一次方程 -->
+      <article class="demo-card" id="demo-meetline">
+        <p class="demo-tag">7 年级 · 一元一次方程</p>
+        <h3>相向而行：几小时相遇</h3>
+        <p>甲、乙两地相距 120 千米，甲骑车每小时行 15 千米，乙骑车每小时行 25 千米，两人同时出发相向而行。甲走的路程加乙走的路程就是全程。</p>
+        <div class="control-row"><span>走了几小时</span><div class="seg"><button type="button" id="mtTMinus">−</button><span class="arr-tx" id="mtTx">走了 3 小时</span><button type="button" id="mtTPlus">＋</button></div></div>
+        <svg viewBox="0 0 640 130" role="img" aria-label="相向而行线段图">
+          <line x1="40" y1="70" x2="592" y2="70" stroke="#1e293b" stroke-width="3"></line>
+          <text x="40" y="125" font-size="14">甲地 0 千米</text>
+          <text x="592" y="125" font-size="14" text-anchor="end">乙地 120 千米</text>
+          <text id="mtTxA" x="247" y="42" font-size="15" text-anchor="middle" fill="#c2410c" font-weight="bold">甲 45 千米</text>
+          <text id="mtTxB" x="247" y="100" font-size="15" text-anchor="middle" fill="#2563eb" font-weight="bold">乙 75 千米</text>
+          <circle id="mtDotA" r="11" cy="70" fill="#ff8a3d" stroke="#c2410c" stroke-width="2"></circle>
+          <circle id="mtDotB" r="11" cy="70" fill="#60a5fa" stroke="#2563eb" stroke-width="2"></circle>
+        </svg>
+        <p class="func-eq" id="mtEq">15×3 + 25×3 = 120（千米）</p>
+        <p class="func-eq" id="mtRead">t = 3 小时：甲走了 45 千米，乙走了 75 千米，合起来 120 千米，正好相遇！15t + 25t = 120，t = 3。</p>
+        <p id="mtMsg">列方程就是把“不知道的数”当成已知数写进等量关系：甲走的路程 + 乙走的路程 = 120 千米。</p>
+        <p class="demo-foot">成功标准：说出“15t+25t=120，t=3 小时相遇，相遇点离甲 45 千米”。</p>
+        <p class="why"><b>为什么？</b>设未知数不是猜，是给未知数起个名字，好让它进等式里干活。等量关系一成立，方程就自己算出答案。</p>
+      </article>
+
+      <!-- 7.8 直线、射线、线段 -->
+      <article class="demo-card" id="demo-lineseg">
+        <p class="demo-tag">7 年级 · 几何图形初步</p>
+        <h3>直线、射线、线段</h3>
+        <p>直线没有端点，向两边无限长；射线有一个端点，向一方无限长；线段有两个端点，能量出长度。两点确定一条直线；两点之间，线段最短。</p>
+        <div class="control-row"><span>看哪一种</span><div class="seg" id="sgModeSeg"></div></div>
+        <div class="btn-row"><button class="btn small ghost" id="sgCurveBtn" type="button" aria-pressed="false">画一条弯路比一比</button></div>
+        <svg viewBox="0 0 640 200" role="img" aria-label="直线射线线段">
+          <g id="sgLine" style="display:none"><line x1="20" y1="100" x2="620" y2="100" stroke="#1e293b" stroke-width="3"></line><polygon points="620,100 606,93 606,107" fill="#1e293b"></polygon><polygon points="20,100 34,93 34,107" fill="#1e293b"></polygon></g>
+          <g id="sgRayA" style="display:none"><line x1="120" y1="100" x2="620" y2="100" stroke="#2563eb" stroke-width="3"></line><polygon points="620,100 606,93 606,107" fill="#2563eb"></polygon></g>
+          <g id="sgRayB" style="display:none"><line x1="20" y1="100" x2="480" y2="100" stroke="#2563eb" stroke-width="3"></line><polygon points="20,100 34,93 34,107" fill="#2563eb"></polygon></g>
+          <line id="sgSeg" x1="120" y1="100" x2="480" y2="100" stroke="#ff8a3d" stroke-width="5"></line>
+          <path id="sgCurve" d="M120,100 Q300,20 480,100" stroke="#ef4444" stroke-width="3" fill="none" stroke-dasharray="8 6" style="display:none"></path>
+          <circle cx="120" cy="100" r="8" fill="#fff" stroke="#1e293b" stroke-width="2"></circle>
+          <circle cx="480" cy="100" r="8" fill="#fff" stroke="#1e293b" stroke-width="2"></circle>
+          <text x="120" y="80" font-size="16" text-anchor="middle" font-weight="bold">A</text>
+          <text x="480" y="80" font-size="16" text-anchor="middle" font-weight="bold">B</text>
+          <text x="300" y="140" font-size="15" text-anchor="middle">AB = 5 厘米</text>
+        </svg>
+        <p class="func-eq" id="sgRead">线段 AB：有两个端点 A 和 B，能量出长度：AB = 5 厘米。</p>
+        <p id="sgMsg">点动成线，线动成面，面动成体。直线和射线量不出长度，因为它们没有尽头；线段最短，是因为“抄近路”——绳子拉直了就是线段。</p>
+        <p class="demo-foot">成功标准：说出“直线没端点，射线一个端点，线段两个端点；两点之间线段最短”。</p>
+        <p class="why"><b>为什么？</b>直线和射线量不出长度，因为它们没有尽头；线段最短，是因为“抄近路”——走直线比绕弯近，绳子拉直了就是线段。</p>
+      </article>
+
+      <!-- 7.9 角 -->
+      <article class="demo-card" id="demo-anglepair">
+        <p class="demo-tag">7 年级 · 几何图形初步</p>
+        <h3>角：余角、补角、角平分线</h3>
+        <p>角是两条射线从同一点出发张开的大小。余角凑满 90°，补角凑满 180°，角平分线把一个角分成两个相等的角。1° = 60′。</p>
+        <div class="control-row"><span>玩什么</span><div class="seg" id="apModeSeg"></div></div>
+        <div class="control-row"><span>∠A 是多少度</span><div class="seg"><button type="button" id="apAngleMinus">−</button><span class="arr-tx" id="apAngleTx">∠A = 35°</span><button type="button" id="apAnglePlus">＋</button></div></div>
+        <div class="g7-ab-bar"><div id="apBarA" style="width:38.9%">∠A 35°</div><div id="apBarB" style="width:61.1%">余角 55°</div></div>
+        <p class="func-eq" id="apRead">∠A = 35°，它的余角是 55°：35°+55° = 90°，正好凑满一个直角。</p>
+        <p id="apMsg">角是“张开的程度”：张得越大，角越大。余角和补角是“凑满”：一个角加上它的余角正好凑满一个直角，加上补角正好凑满一个平角——像拼图缺的那一块。</p>
+        <p class="demo-foot">成功标准：说出“35° 的余角是 55°，补角是 145°；角平分线把 35° 分成两个 17.5°”。</p>
+        <p class="why"><b>为什么？</b>度、分、秒是六十进制：1° = 60′，1′ = 60″。余角不是随便剩下的角，它和原来的角加起来必须是 90°；补角加起来必须是 180°。</p>
+      </article>
+
+      <!-- 7.10 相交线 -->
+      <article class="demo-card" id="demo-vertangle">
+        <p class="demo-tag">7 年级 · 相交线与平行线</p>
+        <h3>相交线：对顶角和垂线段</h3>
+        <p>两条直线相交形成 4 个角：相对的两个角叫对顶角，对顶角相等；相邻的两个角叫邻补角，邻补角互补。点到直线的距离，是过这一点向直线作的垂线段的长度。</p>
+        <div class="control-row"><span>玩什么</span><div class="seg" id="vaModeSeg"></div></div>
+        <div id="vaCrossBox">
+          <div class="control-row"><span>∠1 是多少度</span><div class="seg"><button type="button" id="vaAngleMinus">−</button><span class="arr-tx" id="vaAngleTx">∠1 = 50°</span><button type="button" id="vaAnglePlus">＋</button></div></div>
+          <svg viewBox="0 0 640 260" role="img" aria-label="两条直线相交">
+            <line x1="60" y1="130" x2="580" y2="130" stroke="#1e293b" stroke-width="3"></line>
+            <line id="vaLine2" x1="217" y1="253" x2="423" y2="7" stroke="#2563eb" stroke-width="3"></line>
+            <text id="vaL1" x="430" y="70" font-size="16" text-anchor="middle">∠1 = 50°</text>
+            <text id="vaL2" x="210" y="70" font-size="16" text-anchor="middle">∠2 = 130°</text>
+            <text id="vaL3" x="210" y="195" font-size="16" text-anchor="middle">∠3 = 50°</text>
+            <text id="vaL4" x="430" y="195" font-size="16" text-anchor="middle">∠4 = 130°</text>
+          </svg>
+        </div>
+        <div id="vaPerpBox" hidden>
+          <div class="control-row"><span>选一条线段</span><div class="seg" id="vaSegSeg"></div></div>
+          <svg viewBox="0 0 640 260" role="img" aria-label="点到直线的距离">
+            <line x1="40" y1="200" x2="600" y2="200" stroke="#1e293b" stroke-width="3"></line>
+            <line id="vaSeg0" x1="320" y1="60" x2="320" y2="200" stroke="#ff8a3d" stroke-width="5"></line>
+            <line id="vaSeg1" x1="320" y1="60" x2="460" y2="200" stroke="#94a3b8" stroke-width="3"></line>
+            <line id="vaSeg2" x1="320" y1="60" x2="140" y2="200" stroke="#94a3b8" stroke-width="3"></line>
+            <circle cx="320" cy="60" r="8" fill="#ff8a3d" stroke="#c2410c" stroke-width="2"></circle>
+            <text x="320" y="45" font-size="16" text-anchor="middle" font-weight="bold">P</text>
+            <text x="335" y="130" font-size="15">5 厘米</text>
+            <text x="400" y="140" font-size="15">7 厘米</text>
+            <text x="205" y="150" font-size="15">9 厘米</text>
+          </svg>
+        </div>
+        <p class="func-eq" id="vaRead">∠1 = 50°，∠2 = 130°，∠3 = 50°，∠4 = 130°：对顶角相等（∠1 = ∠3），邻补角互补（∠1+∠2 = 180°）。</p>
+        <p id="vaMsg">对顶角相等，是因为它们都和同一个邻角互补——“同一个角的补角只有一个”。垂线段最短：从直线外一点到直线上各点，垂线段是最近的路。（图是示意图，看数字比长短。）</p>
+        <p class="demo-foot">成功标准：说出“对顶角相等，邻补角互补；点到直线的距离是垂线段，5 厘米”。</p>
+        <p class="why"><b>为什么？</b>对顶角不是“对着的角”就行，它必须是两条直线相交形成的、相对的两个角。点到直线的距离只能是垂线段的长度，斜线段都比它长。</p>
+      </article>
+
+      <!-- 7.11 平行线与平移 -->
+      <article class="demo-card" id="demo-parangles">
+        <p class="demo-tag">7 年级 · 相交线与平行线</p>
+        <h3>平行线：截角和平移</h3>
+        <p>两条平行线被第三条直线所截：同位角相等、内错角相等、同旁内角互补。把下面那条线转一转，不平行了，角就不相等了。平移是整个图形一起搬家。</p>
+        <div class="control-row"><span>看哪一对角</span><div class="seg" id="plPairSeg"></div></div>
+        <div class="control-row"><span>两条线</span><div class="seg" id="plParSeg"></div></div>
+        <div id="plAngleBox">
+          <div class="control-row"><span>截线夹角</span><div class="seg"><button type="button" id="plAngleMinus">−</button><span class="arr-tx" id="plAngleTx">截线夹角 70°</span><button type="button" id="plAnglePlus">＋</button></div></div>
+          <svg viewBox="0 0 640 300" role="img" aria-label="平行线被截线所截">
+            <line x1="60" y1="90" x2="580" y2="90" stroke="#1e293b" stroke-width="3"></line>
+            <line id="plLine2" x1="60" y1="210" x2="580" y2="210" stroke="#1e293b" stroke-width="3"></line>
+            <line id="plTrans" x1="275.5" y1="27.8" x2="364.5" y2="272.2" stroke="#2563eb" stroke-width="3"></line>
+            <text id="plT1" x="332" y="64" font-size="15" text-anchor="middle">∠1 110°</text>
+            <text id="plT2" x="264" y="64" font-size="15" text-anchor="middle">∠2 70°</text>
+            <text id="plT3" x="264" y="122" font-size="15" text-anchor="middle">∠3 110°</text>
+            <text id="plT4" x="332" y="122" font-size="15" text-anchor="middle">∠4 70°</text>
+            <text id="plT5" x="376" y="184" font-size="15" text-anchor="middle">∠5 110°</text>
+            <text id="plT6" x="308" y="184" font-size="15" text-anchor="middle">∠6 70°</text>
+            <text id="plT7" x="308" y="242" font-size="15" text-anchor="middle">∠7 110°</text>
+            <text id="plT8" x="376" y="242" font-size="15" text-anchor="middle">∠8 70°</text>
+          </svg>
+        </div>
+        <div id="plTransBox" hidden>
+          <div class="control-row"><span>平移几格</span><div class="seg"><button type="button" id="plDxMinus">−</button><span class="arr-tx" id="plDxTx">向右平移 3 格</span><button type="button" id="plDxPlus">＋</button></div></div>
+          <svg viewBox="0 0 640 300" role="img" aria-label="图形平移">
+            <defs><marker id="plArrowHead" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#ff8a3d"></path></marker></defs>
+            <polygon id="plTri" points="230,220 290,120 350,220" fill="#dbeafe" stroke="#2563eb" stroke-width="2"></polygon>
+            <line id="plTransArrow" x1="140" y1="260" x2="230" y2="260" stroke="#ff8a3d" stroke-width="3" marker-end="url(#plArrowHead)"></line>
+            <text x="140" y="285" font-size="14">平移方向</text>
+          </svg>
+        </div>
+        <p class="func-eq" id="plRead">同位角：∠4 = 70°，∠8 = 70°，它们相等——两直线平行，同位角相等。</p>
+        <p id="plMsg">判定和性质是一对“反话”：判定是“角相等，所以线平行”；性质是“线平行，所以角相等”。平移是“整个图形一起搬家”：每个点都朝同一个方向、走同样的距离。</p>
+        <p class="demo-foot">成功标准：说出“平行时同位角相等、内错角相等、同旁内角互补；转 15° 就不等了”。</p>
+        <p class="why"><b>为什么？</b>内错角相等能判定平行，前提是这两条直线被第三条直线所截——截的不是同一组直线，角再相等也没用。判定是原因、性质是结果，方向不能反。</p>
+      </article>
+
+      <!-- 7.12 实数 -->
+      <article class="demo-card" id="demo-roots">
+        <p class="demo-tag">7 年级 · 实数</p>
+        <h3>实数：开方机器和 √2</h3>
+        <p>平方根：x² = a，x 就是 a 的平方根；正数有两个平方根，互为相反数；0 的平方根是 0；负数没有平方根。立方根：任何数都有一个。边长是 1 的正方形，对角线长就是 √2。</p>
+        <div class="control-row"><span>玩什么</span><div class="seg" id="sqModeSeg"></div></div>
+        <div class="control-row"><span>选一个数</span><div class="seg" id="sqASeg"></div></div>
+        <div id="sqLineBox" hidden>
+          <svg viewBox="0 0 640 220" role="img" aria-label="根号2在数轴上的位置">
+            <rect x="60" y="20" width="90" height="90" fill="#dbeafe" stroke="#2563eb" stroke-width="2"></rect>
+            <line x1="60" y1="110" x2="150" y2="20" stroke="#c2410c" stroke-width="3"></line>
+            <text x="60" y="140" font-size="14">边长 1 的正方形</text>
+            <text x="165" y="50" font-size="14">对角线长 √2</text>
+            <line x1="40" y1="180" x2="580" y2="180" stroke="#1e293b" stroke-width="3"></line>
+            <polygon points="580,180 566,173 566,187" fill="#1e293b"></polygon>
+            <line x1="40" y1="174" x2="40" y2="186" stroke="#1e293b" stroke-width="2"></line>
+            <line x1="220" y1="174" x2="220" y2="186" stroke="#1e293b" stroke-width="2"></line>
+            <line x1="400" y1="174" x2="400" y2="186" stroke="#1e293b" stroke-width="2"></line>
+            <line x1="580" y1="174" x2="580" y2="186" stroke="#1e293b" stroke-width="2"></line>
+            <text x="40" y="208" font-size="14" text-anchor="middle">0</text>
+            <text x="220" y="208" font-size="14" text-anchor="middle">1</text>
+            <text x="400" y="208" font-size="14" text-anchor="middle">2</text>
+            <text x="580" y="208" font-size="14" text-anchor="middle">3</text>
+            <circle id="sqDot" r="11" cy="180" fill="#ff8a3d" stroke="#c2410c" stroke-width="2"></circle>
+          </svg>
+        </div>
+        <p class="func-eq" id="sqRead">√16 = 4，因为 4² = 16；16 的平方根是 ±4。</p>
+        <p id="sqMsg">√2 不是有理数：它在数轴上有个确定的点，但永远写不成分数。实数和数轴上的点是一一对应的——数轴上的每个点都有一个实数。</p>
+        <p class="demo-foot">成功标准：说出“√16 = 4，16 的平方根是 ±4；−4 没有平方根；√2 ≈ 1.414 是无理数”。</p>
+        <p class="why"><b>为什么？</b>√9 是 9 的算术平方根，只有一个正的 3；±3 是“9 的平方根”。1.414 只是 √2 的近似值，√2 是无限不循环小数，写不成分数。</p>
+      </article>
+
+      <!-- 7.13 平面直角坐标系 -->
+      <article class="demo-card" id="demo-coordplane">
+        <p class="demo-tag">7 年级 · 平面直角坐标系</p>
+        <h3>平面直角坐标系：点一点</h3>
+        <p>横轴叫 x 轴，竖轴叫 y 轴，交点是原点 O。点的位置用一对有序数对 (x, y) 表示：先横后纵。第一象限 (+,+)，第二象限 (−,+)，第三象限 (−,−)，第四象限 (+,−)。</p>
+        <div class="control-row"><span>选一个点</span><div class="seg" id="xyPtSeg"></div></div>
+        <div class="control-row"><span>当前点</span><span class="arr-tx" id="xyPtTx">点 (2,3)</span></div>
+        <div class="control-row"><span>对称点</span><div class="seg" id="xySymSeg"></div></div>
+        <svg viewBox="0 0 520 520" role="img" aria-label="平面直角坐标系">
+          <g id="xyGrid"></g>
+          <text x="400" y="120" font-size="16" fill="#94a3b8">第一象限</text>
+          <text x="120" y="120" font-size="16" fill="#94a3b8">第二象限</text>
+          <text x="120" y="400" font-size="16" fill="#94a3b8">第三象限</text>
+          <text x="400" y="400" font-size="16" fill="#94a3b8">第四象限</text>
+          <text x="505" y="250" font-size="16" font-weight="bold">x</text>
+          <text x="270" y="20" font-size="16" font-weight="bold">y</text>
+          <text x="246" y="278" font-size="14">O</text>
+          <circle id="xyGhost" r="11" fill="#fff" stroke="#2563eb" stroke-width="3" style="display:none"></circle>
+          <circle id="xyDot" r="11" fill="#ff8a3d" stroke="#c2410c" stroke-width="2"></circle>
+        </svg>
+        <p class="func-eq" id="xyRead">点 (2,3) 在第一象限：横坐标是 2，纵坐标是 3。</p>
+        <p id="xyMsg">坐标是给平面上的点“编地址”：横着走几格、竖着走几格，地址唯一。象限是“东南西北”的数学版：x、y 的正负号一组合，就知道点在哪个区域。</p>
+        <p class="demo-foot">成功标准：说出“(2,3) 在第一象限；关于 x 轴对称是 (2,−3)，关于 y 轴对称是 (−2,3)”。</p>
+        <p class="why"><b>为什么？</b>有序数对先横后纵，(3,2) 和 (2,3) 是两个不同的点。点在 y 轴上是横坐标 x = 0，点在 x 轴上才是纵坐标 y = 0。</p>
+      </article>
+
+      <!-- 7.15 不等式与不等式组 -->
+      <article class="demo-card" id="demo-ineqline">
+        <p class="demo-tag">7 年级 · 不等式与不等式组</p>
+        <h3>不等式：数轴上画解集</h3>
+        <p>解不等式和解方程差不多：移项、合并；但两边同乘（或除以）一个负数时，不等号要变方向！空心圈是不包括这个点，实心点是包括。不等式组取公共部分。</p>
+        <div class="control-row"><span>玩什么</span><div class="seg" id="iqModeSeg"></div></div>
+        <div class="control-row"><span>选一道</span><div class="seg" id="iqExprSeg"></div></div>
+        <div id="iqOneBox">
+          <svg viewBox="0 0 640 120" role="img" aria-label="不等式的解集在数轴上">
+            <line x1="20" y1="60" x2="620" y2="60" stroke="#1e293b" stroke-width="3"></line>
+            <polygon points="620,60 606,53 606,67" fill="#1e293b"></polygon>
+            <g id="iqTicks"></g>
+            <line id="iqRay" y1="60" y2="60" stroke="#ff8a3d" stroke-width="6"></line>
+            <circle id="iqDot" r="10" cy="60" fill="#fff" stroke="#c2410c" stroke-width="2"></circle>
+          </svg>
+        </div>
+        <div id="iqSysBox" hidden>
+          <svg viewBox="0 0 640 120" role="img" aria-label="不等式组的公共部分在数轴上">
+            <line x1="20" y1="60" x2="620" y2="60" stroke="#1e293b" stroke-width="3"></line>
+            <polygon points="620,60 606,53 606,67" fill="#1e293b"></polygon>
+            <g id="iqTicksB"></g>
+            <line id="iqRayA" y1="60" y2="60" stroke="#94a3b8" stroke-width="4"></line>
+            <line id="iqRayB" y1="60" y2="60" stroke="#94a3b8" stroke-width="4"></line>
+            <line id="iqOverlap" y1="60" y2="60" stroke="#15803d" stroke-width="8"></line>
+            <circle id="iqDotA" r="10" cy="60" fill="#fff" stroke="#c2410c" stroke-width="2"></circle>
+            <circle id="iqDotB" r="10" cy="60" fill="#ff8a3d" stroke="#c2410c" stroke-width="2"></circle>
+          </svg>
+        </div>
+        <p class="func-eq" id="iqRead">−2x &gt; 6：两边同时除以 −2，不等号要变方向，得 x &lt; −3。数轴上 −3 是空心圈（不包括它），往左画。</p>
+        <p id="iqMsg">不等号变方向，是因为“翻过来”：3&lt;5，两边同乘 −1 变成 −3 和 −5，−3&gt;−5 了——数轴上 −3 在 −5 右边。不等式组的解是公共部分，因为 x 要同时满足两个条件。</p>
+        <p class="demo-foot">成功标准：说出“除以负数，不等号反向；不等式组取公共部分，−2 &lt; x ≤ 3”。</p>
+        <p class="why"><b>为什么？</b>解 −2x &gt; 6 得 x &gt; 3 是错的：两边除以 −2，不等号要变方向，得 x &lt; −3。不等式组的解是两个解集的交集，不是拼起来——x 既要大于 −2，又要小于等于 3。</p>
+      </article>
+
+      <!-- 7.16 统计调查与直方图 -->
+      <article class="demo-card" id="demo-histogram">
+        <p class="demo-tag">7 年级 · 数据的收集、整理与描述</p>
+        <h3>直方图：分组数频数</h3>
+        <p>全面调查是把所有人都问一遍；抽样调查是抽一部分人来问，样本要随机、有代表性。直方图：把数据分组，数一数每组有几个（频数），画成长方形；频率 = 频数 ÷ 总数。</p>
+        <div class="control-row"><span>分组</span><div class="seg" id="hgGroupSeg"></div></div>
+        <div class="control-row"><span>数据</span><div class="seg" id="hgSetSeg"></div></div>
+        <div class="g7-hg-bars" id="hgBars"></div>
+        <p class="func-eq" id="hgRead">全班 40 人，每 5 厘米一组：140~145：3 人；145~150：4 人；150~155：5 人；155~160：5 人；160~165：5 人；165~170：5 人；170~175：5 人；175~180：4 人；180~185：3 人；185~190：1 人。140~145 这组的频率是 3÷40 = 0.075。</p>
+        <p id="hgMsg">直方图的长方形之间没有空隙：身高是连续的数据；条形图的长方形之间有空隙。</p>
+        <p class="demo-foot">成功标准：说出“140~145 厘米有 3 人，频率是 0.075；样本要随机，不然结论会偏”。</p>
+        <p class="why"><b>为什么？</b>抽样调查省时间，但样本偏了结论就偏了——只问自己班的人，不能代表全校。直方图把数据“排队”：哪一组人多、哪一组人少，一眼就看出来。</p>
       </article>
 
     </div>
