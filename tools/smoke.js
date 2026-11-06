@@ -133,6 +133,18 @@ const GRADE2_CONTENT = { grade: 2, edition: 'A', units: [
     { id: '2.3', title: '进位加法、退位减法', subtitle: '进位加法、退位减法、满十进一', how: '10个一换成1个十。', why: '进位是换，总数不变。', wrong: '借1以后要还', wrongWhy: '借来的十已经用掉了。', visual: '数位块换一换。', method: '数位块“换”动画', explainBack: '10个一换成1个十，总数不变。', tryIt: '摆一摆27+15。', demo: 'tenframe', recall: { q: '52-17，个位不够减怎么办？', answer: '从十位借1个十', hint: '12-7=5' }, practice: [{ q: '27+15 = ?', answer: '42', hint: '个位7+5=12', level: '基础' }, { q: '64-28 = ?', answer: '36', hint: '个位借1个十', level: '提高' }] },
   ] },
 ] };
+// 桩里的四年级内容：只留点进实验要用的三个点（4.4 新演示、4.17 复用 observe、4.11 新演示）。
+const GRADE4_CONTENT = { grade: 4, edition: 'A', units: [
+  { unit: '三位数乘两位数', term: '上', points: [
+    { id: '4.4', title: '三位数乘两位数', subtitle: '竖式、积的变化规律、速度×时间=路程', how: '123×45，先拆45=40+5。', why: '乘法是面积。', wrong: '123×45=123×4+123×5', wrongWhy: '45里的4是40。', visual: '面积模型。', method: '面积模型拆两边', explainBack: '45是40和5。', tryIt: '在面积图上算一算125×16。', demo: 'areamodel', recall: { q: '算123×45时，123×4这一步对吗？', answer: '不对；4是40', hint: '45的4在十位上' }, practice: [{ q: '一辆汽车每小时行65千米，4小时行多少千米？', answer: '260千米', hint: '路程=速度×时间', level: '基础' }, { q: '算一算138×24。', answer: '3312', hint: '138×20=2760，138×4=552', level: '提高' }] },
+  ] },
+  { unit: '观察物体（二）', term: '下', points: [
+    { id: '4.17', title: '观察物体（二）', subtitle: '从三个方向看组合体', how: '从前面、左面、上面三个方向看。', why: '一个方向只能看到一面。', wrong: '从前面看有3个正方形，就以为一共只有3个', wrongWhy: '后面可能还藏着。', visual: '搭一搭再转一转。', method: '三视图+逐层数', explainBack: '从前面看是3个，不等于一共3个。', tryIt: '用4个小正方体摆一个图形。', demo: 'observe', recall: { q: '从上面看是2个正方形，从前面看也是2个正方形，最少用几个小正方体？', answer: '2个', hint: '并排摆2个' }, practice: [{ q: '3个小正方体排成一排，从左面看是几个正方形？', answer: '1个', hint: '后面的都被第一个挡住了', level: '基础' }, { q: '从前面看是2个正方形，从上面看是3个正方形，最少用几个小正方体？', answer: '3个', hint: '上面3个格子，每个格子至少1个', level: '提高' }] },
+  ] },
+  { unit: '小数的意义和性质', term: '下', points: [
+    { id: '4.11', title: '小数的意义和性质', subtitle: '小数的意义、小数点移动、化简', how: '小数就是分母是10、100、1000的分数。', why: '0.5=0.50，是因为把每个十分之一再切成10个百分之一。', wrong: '0.5比0.50小', wrongWhy: '5个十分之一就是50个百分之一。', visual: '数位滑块。', method: '数位滑块', explainBack: '0.5和0.50一样。', tryIt: '在数位表上滑一滑：2.4乘10。', demo: 'placeslider', recall: { q: '0.5和0.50，哪个大？', answer: '一样大', hint: '把每个十分之一切成10个百分之一' }, practice: [{ q: '3.5×10是多少？3.5÷10呢？', answer: '35；0.35', hint: '乘10数字向左移一位', level: '基础' }, { q: '一个小数的小数点向右移动两位后是36，原来的小数是多少？', answer: '0.36', hint: '小数点向右移两位是乘100', level: '提高' }] },
+  ] },
+] };
 const lsData = {};
 const localStorageStub = { getItem(k) { return lsData[k] || null; }, setItem(k, v) { lsData[k] = String(v); } };
 
@@ -155,7 +167,7 @@ seedSeg('sortRuleSeg', 'sort-rule', ['color', 'shape']);
 // ---------- load the real app.js ----------
 const root = require('path').resolve(__dirname, '..');
 const src = fs.readFileSync(root + '/apps/web/app.js', 'utf8');
-const sandbox = { document: documentStub, window: windowStub, console, setTimeout, Math, JSON, Object, Array, String, Number, parseInt, parseFloat, isNaN, GRADE3_CONTENT, GRADE1_CONTENT, GRADE2_CONTENT, localStorage: localStorageStub };
+const sandbox = { document: documentStub, window: windowStub, console, setTimeout, Math, JSON, Object, Array, String, Number, parseInt, parseFloat, isNaN, GRADE3_CONTENT, GRADE1_CONTENT, GRADE2_CONTENT, GRADE4_CONTENT, localStorage: localStorageStub };
 vm.createContext(sandbox);
 try {
   vm.runInContext(src, sandbox, { filename: 'app.js' });
@@ -278,7 +290,7 @@ const bCell0 = byId.tfB.children[0];
 click(bCell0);
 check('tenframe: click B cell moves one to fill ten', byId.tfEq.textContent === '9 + 4 = 13');
 check('tenframe note explains 10+3', byId.tfNote.textContent.includes('10 + 3 = 13'));
-check('demo counter counts a played demo', byId.progressCount.textContent === '1 / 46' &&
+check('demo counter counts a played demo', byId.progressCount.textContent === '1 / 62' &&
   JSON.parse(lsData['math-tried-demos-v1'] || '[]').includes('tenframe'));
 sandbox.tfSetProblem('sub', 0);
 check('tenframe sub initial equation', byId.tfEq.textContent === '13 − 5 = ?');
@@ -507,7 +519,7 @@ click(byId.countRowA.children[0]);
 check('count: click a dot counts it', byId.countCount.textContent.includes('数到了第 1 个'));
 click(byId.countCompare);
 check('count: 5 vs 7 -> below has 2 more', byId.countResult.textContent.includes('下面多 2 个'));
-check('G1 demos count toward the 46-demo progress', g1ProgBefore === '4 / 46' && byId.progressCount.textContent === '5 / 46');
+check('G1 demos count toward the 62-demo progress', g1ProgBefore === '4 / 62' && byId.progressCount.textContent === '5 / 62');
 click(byId.countAMinus); click(byId.countAMinus);
 check('count: minus twice -> 3', byId.countReadA.textContent === '3 个');
 
@@ -683,7 +695,7 @@ check('ruler: eraser is 3 cm', byId.rulReadout.textContent.includes('3 厘米'))
 click(byId.rulFromBtn);
 check('ruler: measuring from 1 over-reads by 1', byId.rulMsg.textContent.includes('多算1厘米'));
 check('ruler: meter strip is 100 cm squares', byId.rulMeter.children.length === 100);
-check('G2 demos count toward the 46-demo progress', g2ProgBefore === '17 / 46' && byId.progressCount.textContent === '18 / 46');
+check('G2 demos count toward the 62-demo progress', g2ProgBefore === '17 / 62' && byId.progressCount.textContent === '18 / 62');
 
 // 2.2 先估后算
 click(byId.estProbSeg.children[1]); // 26+38
@@ -701,8 +713,17 @@ check('angle: longer arm, angle unchanged at 90', byId.angReadout.textContent.in
 // 2.5 点阵乘法
 click(byId.arrRowsMinus);
 check('array: 2 x 4 = 8, koujue er-si-de-ba', byId.arrEq.textContent === '2 × 4 = 8' && byId.arrKoujue.textContent.includes('二四得八'));
+// 2026-11-06 真机复测：改行数后标题还停在“3 行 4 列是 12 个点”——标题必须跟着行/列/总数一起变。
+check('array: heading follows rows/cols after a change',
+  !!(byId.arrTitle && byId.arrTitle.textContent.includes('2 行 4 列是 8 个点')));
 click(byId.arrRotate);
 check('array: rotate -> 4 x 2 = 8, same dots', byId.arrEq.textContent === '4 × 2 = 8' && byId.arrMsg.textContent.includes('点还是 8 个'));
+// 2026-11-06 真机复测：正方形转一圈还是正方形，“4×4 和 4×4 可以互换”是同义反复。
+click(byId.arrColsPlus); click(byId.arrColsPlus); // 4 x 4 = 16
+check('array: 4 x 4 is 16', byId.arrEq.textContent === '4 × 4 = 16');
+click(byId.arrRotate);
+check('array: rotating a square does not repeat "4×4 和 4×4"',
+  !byId.arrMsg.textContent.includes('4×4 和 4×4') && byId.arrMsg.textContent.includes('正方形'));
 
 // 2.6 换个方向看
 click(byId.obsViewSeg.children[1]); // 左面
@@ -814,7 +835,7 @@ check('grade-2.js: all 16 points map to the right experiment',
 const labelSrc2 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
 check('DEMO_LABEL covers all 15 new demos',
   G2_DEMOS.every(k => labelSrc2.includes(k + ':')));
-check('G2: all 15 new demos tried by now', byId.progressCount.textContent === '32 / 46');
+check('G2: all 15 new demos tried by now', byId.progressCount.textContent === '32 / 62');
 
 // ---------- 12. 全站布局改版（2026-11-06 真机审计） ----------
 // CSS：顶栏实底不透光，模式栏不吸顶，演示单列，知识点页窄栏
@@ -867,7 +888,7 @@ navGo('progress');
 check('progress: per-grade rows with real numbers',
   byId.progressCard.innerHTML.includes('1 年级') && byId.progressCard.innerHTML.includes('3 年级') &&
   byId.progressCard.innerHTML.includes('演示') && byId.progressCard.innerHTML.includes('已练'));
-check('progress: 32 of 46 demos tried by now', byId.progressCount.textContent === '32 / 46');
+check('progress: 32 of 62 demos tried by now', byId.progressCount.textContent === '32 / 62');
 // 首页不显示孤零零的“数学”面包屑，子页面显示完整面包屑
 navGo('home');
 check('home hides the lone crumb title', byId.crumbTitle.hidden === true);
@@ -904,7 +925,7 @@ check('elapsed: jump to the whole hour lands on 8:00', byId.elReadout.textConten
 for (let i = 0; i < 6; i++) click(byId.elPlus10);
 click(byId.elPlus5);
 check('elapsed: 7:30 -> 9:05 is 1 hour 35 minutes', byId.elMsg.textContent.includes('1 小时 35 分'));
-check('G3 demos count toward the 46-demo progress', g3ProgBefore === '32 / 46' && byId.progressCount.textContent === '33 / 46');
+check('G3 demos count toward the 62-demo progress', g3ProgBefore === '32 / 62' && byId.progressCount.textContent === '33 / 62');
 
 // 3.2 算一算，再算回去
 for (let i = 0; i < 4; i++) click(byId.vfNext);
@@ -1028,7 +1049,188 @@ check('grade-3.js: all 16 points map to the right experiment',
 const labelSrc3 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
 check('DEMO_LABEL covers all 14 new demos',
   G3_DEMOS.every(k => labelSrc3.includes(k + ':')));
-check('G3: all 14 new demos tried by now', byId.progressCount.textContent === '46 / 46');
+check('G3: all 14 new demos tried by now', byId.progressCount.textContent === '46 / 62');
+
+
+// ---------- 11d. 四年级实验（16 个新演示 + 4.17 复用换个方向看） ----------
+const G4_DEMOS = ['bignum', 'field', 'protractor', 'areamodel', 'parallelogram',
+  'trialdiv', 'baraxis', 'teatime', 'zerodiv', 'laws', 'placeslider', 'tearangle',
+  'decadd', 'moveshape', 'average', 'chickenrabbit'];
+check('G4: viewForKey covers all 16 new demos',
+  G4_DEMOS.every(k => sandbox.viewForKey('demo-' + k) === 'demo-' + k));
+navGo('demos');
+let g4ViewsOk = true;
+G4_DEMOS.forEach(k => {
+  navGo('demo-' + k);
+  if (!(byId.demos.hidden === false && documentStub.body.dataset.view === 'demo-' + k)) g4ViewsOk = false;
+});
+check('G4: all 16 demo views render (demos section visible)', g4ViewsOk);
+navGo('demos');
+navGo('demo-bignum');
+sandbox.navBackFn();
+check('G4: back from a demo returns to the demos list',
+  byId.demos.hidden === false && byId.demoPanels.hidden === false);
+const g4ProgBefore = byId.progressCount.textContent;
+
+// 4.1 大数数轴
+check('bignum: 48932 is nearer 5 wan', byId.bnNear.textContent.includes('离 5万更近'));
+click(byId.bnRound);
+check('bignum: 48932 rounds to 5 wan', byId.bnMsg.textContent.includes('约是 5万'));
+click(byId.bnProbSeg.children[1]); // 62850
+check('bignum: 62850 is nearer 6 wan', byId.bnNear.textContent.includes('离 6万更近'));
+click(byId.bnRound);
+check('bignum: 62850 rounds to 6 wan', byId.bnMsg.textContent.includes('约是 6万'));
+click(byId.bnProbSeg.children[2]); // 75000
+check('bignum: 75000 sits on the halfway mark', byId.bnNear.textContent.includes('正好在半点上'));
+check('G4 demos count toward the 62-demo progress', g4ProgBefore === '46 / 62' && byId.progressCount.textContent === '47 / 62');
+
+// 4.2 足球场拼一拼
+check('field: 1 field is 1 hectare, 10000 square meters', byId.fdReadout.textContent.includes('1 公顷') && byId.fdReadout.textContent.includes('10000 平方米'));
+for (let i = 0; i < 9; i++) click(byId.fdPlus);
+check('field: 10 fields are 10 hectares', byId.fdReadout.textContent.includes('10 公顷'));
+check('field: grid shows 10 filled cells', byId.fdGrid.children.filter(c => c.classList.contains('fd-on')).length === 10);
+
+// 4.3 量角器
+check('protractor: starts at 30 degrees, acute', byId.prRead.textContent.includes('30°') && byId.prRead.textContent.includes('锐角'));
+click(byId.prSeg.children[2]); // 65°
+check('protractor: 65 degrees is acute', byId.prRead.textContent.includes('65°') && byId.prRead.textContent.includes('锐角'));
+for (let i = 0; i < 5; i++) click(byId.prPlus);
+check('protractor: 65+25 = 90 degrees, a right angle', byId.prRead.textContent.includes('90°') && byId.prRead.textContent.includes('直角'));
+click(byId.prLen);
+check('protractor: longer arm, angle still 90', byId.prRead.textContent.includes('90°'));
+
+// 4.4 面积模型
+click(byId.amB0); click(byId.amB1);
+check('areamodel: 123x45 = 4920+615 = 5535', byId.amMsg.textContent.includes('5535'));
+click(byId.amProbSeg.children[1]); // 138x24
+click(byId.amB0); click(byId.amB1);
+check('areamodel: 138x24 = 2760+552 = 3312', byId.amMsg.textContent.includes('3312'));
+
+// 4.5 平行四边形
+check('parallelogram: starts with 2 pairs of parallel sides', byId.pgMsg.textContent.includes('2 组'));
+click(byId.pgSlantPlus);
+check('parallelogram: pushing keeps opposite sides parallel', byId.pgRead.textContent.includes('对边还是平行的'));
+click(byId.pgShapeSeg.children[3]); // 梯形
+check('parallelogram: trapezoid has only 1 pair of parallel sides', byId.pgMsg.textContent.includes('1 组') && byId.pgMsg.textContent.includes('不是平行四边形'));
+
+// 4.6 试商调商
+click(byId.tdCheck);
+check('trialdiv: guessing 7 for 150/26 is too big', byId.tdMsg.textContent.includes('大了'));
+click(byId.tdMinus); click(byId.tdMinus); // 7 -> 5
+click(byId.tdCheck);
+check('trialdiv: 150/26 is 5 remainder 20', byId.tdMsg.textContent.includes('商是 5，余 20'));
+click(byId.tdProbSeg.children[1]); // 161/23
+click(byId.tdCheck);
+check('trialdiv: 161/23 starts too small', byId.tdMsg.textContent.includes('商小了'));
+for (let i = 0; i < 2; i++) click(byId.tdPlus); // 5 -> 7
+click(byId.tdCheck);
+check('trialdiv: 161/23 is exactly 7', byId.tdMsg.textContent.includes('商是 7，正好除尽'));
+
+// 4.7 条形图会说谎
+click(byId.baStartSeg.children[2]); // 从 20 开始
+check('baraxis: axis from 20 lies about the gap', byId.baMsg.textContent.includes('说谎'));
+click(byId.baStartSeg.children[0]); // 从 0 开始
+check('baraxis: axis from 0 tells the truth', byId.baMsg.textContent.includes('说的是实话'));
+
+// 4.8 沏茶排一排
+check('teatime: one by one takes 14 minutes', byId.ttTotal.textContent.includes('14 分钟'));
+click(byId.ttWashBtn); click(byId.ttTeaBtn);
+check('teatime: doing chores while the water boils takes 11 minutes', byId.ttTotal.textContent.includes('11 分钟'));
+click(byId.ttCakeSeg.children[3]); // 9 张饼
+check('teatime: 9 cakes take 9 minutes', byId.ttCakeMsg.textContent.includes('9 分钟'));
+click(byId.ttCakeSeg.children[0]); // 1 张饼
+check('teatime: 1 cake still takes 2 minutes', byId.ttCakeMsg.textContent.includes('2 分钟'));
+
+// 4.9 除以 0
+click(byId.zdNumSeg.children[3]); // 3
+check('zerodiv: 3 x 0 = 0, not 5', byId.zdMsg.textContent.includes('3 × 0 = 0'));
+click(byId.zdDivFive);
+check('zerodiv: 0/5 is 0', byId.zdMsg.textContent.includes('0÷5=0'));
+for (let i = 0; i < 10; i++) click(byId.zdNumSeg.children[i]);
+check('zerodiv: all 10 numbers tried, 5/0 has no answer', byId.zdMsg.textContent.includes('没有答案'));
+
+// 4.10 运算定律
+click(byId.lwRotate);
+check('laws: 3x4 rotated is 4x3, still 12 dots', byId.lwEq.textContent === '4 × 3 = 12' && byId.lwMsg.textContent.includes('12 个'));
+click(byId.lwModeSeg.children[1]); // 结合律
+click(byId.lwAssocA);
+check('laws: 25x7x4 by 25x4 first is 700', byId.lwAssocMsg.textContent.includes('700'));
+click(byId.lwModeSeg.children[2]); // 分配律
+click(byId.lwDistA); click(byId.lwDistB);
+check('laws: 102x36 = 3600+72 = 3672', byId.lwDistMsg.textContent.includes('3672'));
+
+// 4.11 数位滑块
+check('placeslider: starts at 2.4', byId.psRead.textContent.includes('2.4'));
+click(byId.psMul);
+check('placeslider: 2.4 x 10 = 24', byId.psRead.textContent.includes('24'));
+click(byId.psDiv); click(byId.psDiv);
+check('placeslider: 24 / 100 = 0.24', byId.psRead.textContent.includes('0.24'));
+click(byId.psSplit);
+check('placeslider: 0.5 is 50 hundredths', byId.psSplitMsg.textContent.includes('50 个百分之一'));
+
+// 4.12 撕角拼平角
+click(byId.taTear0); click(byId.taTear1); click(byId.taTear2);
+check('tearangle: 60+70+50 = 180', byId.taMsg.textContent.includes('180°'));
+click(byId.taProbSeg.children[1]); // 90/45/45
+click(byId.taTear0); click(byId.taTear1); click(byId.taTear2);
+check('tearangle: 90+45+45 = 180', byId.taMsg.textContent.includes('180°'));
+check('tearangle: 2, 3, 10 cannot make a triangle', byId.taStickMsg.textContent.includes('围不成'));
+for (let i = 0; i < 3; i++) click(byId.taStick0Plus); // 2 -> 5
+for (let i = 0; i < 5; i++) click(byId.taStick1Plus); // 3 -> 8
+check('tearangle: 5, 8, 10 can make a triangle', byId.taStickMsg.textContent.includes('能围成三角形'));
+
+// 4.13 小数加减对齐
+click(byId.daAlignSeg.children[1]); // 末尾对齐
+click(byId.daCalc);
+check('decadd: 2.5+0.25 right-aligned gives the wrong 2.30', byId.daMsg.textContent.includes('2.30'));
+click(byId.daAlignSeg.children[0]); // 小数点对齐
+click(byId.daCalc);
+check('decadd: 2.5+0.25 point-aligned gives 2.75', byId.daMsg.textContent.includes('2.75'));
+
+// 4.14 图形平移和对称
+for (let i = 0; i < 3; i++) click(byId.mvRight);
+check('moveshape: 3 steps right', byId.mvRead.textContent.includes('向右移了 3 格'));
+for (let i = 0; i < 2; i++) click(byId.mvUp);
+check('moveshape: 2 steps up, shape unchanged', byId.mvRead.textContent.includes('向上移了 2 格') && byId.mvRead.textContent.includes('形状一点没变'));
+click(byId.mvModeSeg.children[1]); // 轴对称
+click(byId.mvGrid.children[9]); // row 1, col 1
+check('moveshape: mirror of column 1 is 2 cells from the axis', byId.mvMsg.textContent.includes('2 格') && byId.mvMsg.textContent.includes('对称点'));
+
+// 4.15 平均数
+click(byId.avLevel);
+check('average: 80, 90, 100, 90 levels to 90', byId.avRead.textContent.includes('平均数是 90'));
+click(byId.avDataSeg.children[1]); // 看书
+click(byId.avLevel);
+check('average: 60, 80, 100 levels to 80', byId.avRead.textContent.includes('平均数是 80'));
+
+// 4.16 鸡兔同笼
+check('chickenrabbit: all chickens is 70 legs', byId.crRead.textContent.includes('70 条腿'));
+for (let i = 0; i < 12; i++) click(byId.crPlus);
+check('chickenrabbit: 12 rabbits reach 94 legs', byId.crRead.textContent.includes('94 条腿') && byId.crMsg.textContent.includes('对了'));
+click(byId.crProbSeg.children[1]); // 头 10 脚 28
+for (let i = 0; i < 4; i++) click(byId.crPlus);
+check('chickenrabbit: 4 rabbits reach 28 legs', byId.crRead.textContent.includes('28 条腿') && byId.crMsg.textContent.includes('对了'));
+
+// 知识点页 → 实验的链接（桩里的 grade-4.js）+ 真实 grade-4.js 的映射
+navGo('point-4.4');
+check('point 4.4 links the area-model experiment', pointDetail.innerHTML.includes('去玩面积模型') && pointDetail.innerHTML.includes('data-demo-link="demo-areamodel"'));
+navGo('point-4.17');
+check('point 4.17 reuses the observe experiment', pointDetail.innerHTML.includes('去玩换个方向看') && pointDetail.innerHTML.includes('data-demo-link="demo-observe"'));
+navGo('point-4.11');
+sandbox.goDemoFromHere('demo-placeslider');
+check('G4 demo from point keeps point as parent', byId.crumbTitle.innerHTML.includes('小数的意义和性质'));
+sandbox.navBackFn();
+check('G4 back from demo returns to point page', pointDetail.innerHTML.includes('小数的意义和性质'));
+const g4src = fs.readFileSync(root + '/content/grades/grade-4.js', 'utf8');
+const g4ids = [...g4src.matchAll(/id: "([0-9.]+)"/g)].map(m => m[1]);
+const g4demos = [...g4src.matchAll(/demo: (?:"([a-z]+)"|null)/g)].map(m => m[1] || null);
+const g4expected = {'4.1':'bignum','4.2':'field','4.3':'protractor','4.4':'areamodel','4.5':'parallelogram','4.6':'trialdiv','4.7':'baraxis','4.8':'teatime','4.9':'zerodiv','4.17':'observe','4.10':'laws','4.11':'placeslider','4.12':'tearangle','4.13':'decadd','4.14':'moveshape','4.15':'average','4.16':'chickenrabbit'};
+check('grade-4.js: all 17 points map to the right experiment',
+  g4ids.length === 17 && g4ids.every((id, i) => g4demos[i] === g4expected[id]));
+const labelSrc4 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
+check('DEMO_LABEL covers all 16 new demos',
+  G4_DEMOS.every(k => labelSrc4.includes(k + ':')));
+check('G4: all 16 new demos tried by now', byId.progressCount.textContent === '62 / 62');
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

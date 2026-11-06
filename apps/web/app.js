@@ -52,7 +52,7 @@ const GRADES = {
 };
 
 /* ---------- 进度（原型：记演示是否玩过） ----------
-   46 个演示全都计入：4 个经典演示 + 13 个一年级实验 + 15 个二年级实验 + 14 个三年级实验。以前只记 4 个经典，
+   62 个演示全都计入：4 个经典演示 + 13 个一年级实验 + 15 个二年级实验 + 14 个三年级实验 + 16 个四年级实验。以前只记 4 个经典，
    首页却写着“4 个演示”，演示页上却是 17 张卡，数字对不上
    （2026-11-06 真机审计第 6 条）。 */
 const tried = new Set();
@@ -63,7 +63,10 @@ const ALL_DEMOS = ['tenframe', 'fraction', 'balance', 'function',
   'ruler', 'estimate', 'angle', 'array', 'observe', 'time', 'share',
   'motion', 'mixop', 'remain', 'thousand', 'weight', 'chart', 'logic', 'pair',
   'elapsed', 'verify', 'units', 'times', 'splitmul', 'rectsq', 'venn',
-  'compass', 'divplace', 'stattable', 'fourgrid', 'area', 'calendar', 'decimal'];
+  'compass', 'divplace', 'stattable', 'fourgrid', 'area', 'calendar', 'decimal',
+  'bignum', 'field', 'protractor', 'areamodel', 'parallelogram', 'trialdiv',
+  'baraxis', 'teatime', 'zerodiv', 'laws', 'placeslider', 'tearangle',
+  'decadd', 'moveshape', 'average', 'chickenrabbit'];
 // 刷新后进度还在：已体验的演示存在本地（只存本机，不上传）。
 try { JSON.parse(lsGet('math-tried-demos-v1') || '[]').forEach(k => tried.add(k)); } catch (e) {}
 function renderTried() {
@@ -225,7 +228,7 @@ function renderUnit(g, ui) {
   pointDetail.querySelectorAll('[data-point]').forEach(btn =>
     btn.addEventListener('click', () => navGo('point-' + btn.dataset.point)));
 }
-const DEMO_LABEL = { fraction: '去玩分数演示', tenframe: '去玩十格阵', balance: '去玩天平演示', function: '去玩函数演示', count: '去玩数一数', position: '去玩转身找左右', split: '去玩分一分', addsub: '去玩合起来拿走', solids: '去玩立体图形', bundle: '去玩捆小棒', clock: '去玩拨时钟', tangram: '去玩七巧板', sort: '去玩分类分一分', hundred: '去玩百数表', shop: '去玩开小店', place: '去玩数位块', pattern: '去玩找规律', ruler: '去玩尺子量一量', estimate: '去玩先估后算', angle: '去玩转一转角', array: '去玩点阵乘法', observe: '去玩换个方向看', time: '去玩拨时钟（时和分）', share: '去玩轮流分一分', motion: '去玩折一折转一转', mixop: '去玩先算哪一堆', remain: '去玩装一包装不满', thousand: '去玩数轴找近似数', weight: '去玩天平称一称', chart: '去玩投票变条形图', logic: '去玩排除格推理', pair: '去玩搭配连一连', elapsed: '去玩时间轴走一走', verify: '去玩算回去验算', units: '去玩单位楼梯', times: '去玩条形复制', splitmul: '去玩面积切一切', rectsq: '去玩拉一拉变正方形', venn: '去玩韦恩图拖人', compass: '去玩指南针转一转', divplace: '去玩按数位分一分', stattable: '去玩复式统计表', fourgrid: '去玩四格面积模型', area: '去玩铺方砖数面积', calendar: '去玩日历翻一翻', decimal: '去玩十分条比大小' };
+const DEMO_LABEL = { fraction: '去玩分数演示', tenframe: '去玩十格阵', balance: '去玩天平演示', function: '去玩函数演示', count: '去玩数一数', position: '去玩转身找左右', split: '去玩分一分', addsub: '去玩合起来拿走', solids: '去玩立体图形', bundle: '去玩捆小棒', clock: '去玩拨时钟', tangram: '去玩七巧板', sort: '去玩分类分一分', hundred: '去玩百数表', shop: '去玩开小店', place: '去玩数位块', pattern: '去玩找规律', ruler: '去玩尺子量一量', estimate: '去玩先估后算', angle: '去玩转一转角', array: '去玩点阵乘法', observe: '去玩换个方向看', time: '去玩拨时钟（时和分）', share: '去玩轮流分一分', motion: '去玩折一折转一转', mixop: '去玩先算哪一堆', remain: '去玩装一包装不满', thousand: '去玩数轴找近似数', weight: '去玩天平称一称', chart: '去玩投票变条形图', logic: '去玩排除格推理', pair: '去玩搭配连一连', elapsed: '去玩时间轴走一走', verify: '去玩算回去验算', units: '去玩单位楼梯', times: '去玩条形复制', splitmul: '去玩面积切一切', rectsq: '去玩拉一拉变正方形', venn: '去玩韦恩图拖人', compass: '去玩指南针转一转', divplace: '去玩按数位分一分', stattable: '去玩复式统计表', fourgrid: '去玩四格面积模型', area: '去玩铺方砖数面积', calendar: '去玩日历翻一翻', decimal: '去玩十分条比大小', bignum: '去玩大数数轴', field: '去玩足球场拼一拼', protractor: '去玩量角器', areamodel: '去玩面积模型', parallelogram: '去玩平行四边形', trialdiv: '去玩试商调商', baraxis: '去玩条形图轴', teatime: '去玩沏茶排一排', zerodiv: '去玩除以0', laws: '去玩运算定律', placeslider: '去玩数位滑块', tearangle: '去玩撕角拼平角', decadd: '去玩小数加减对齐', moveshape: '去玩图形平移', average: '去玩削峰填谷', chickenrabbit: '去玩鸡兔同笼' };
 /* 分步评分：多步骤题拆成一步一步对。steps 是可选字段，没有 steps 的题照旧渲染。
    自评不是机器判题：每一步的对错都是学生自己标的，丢分报告只是把你标错的步骤列出来。 */
 function practiceStepsHtml(q, i, pointId) {
@@ -461,10 +464,13 @@ function updateHomeReviewTx() {
 const DEMO_GRADES = { tenframe: [1, 2], fraction: [3, 4, 5], balance: [5, 6, 7], function: [7, 8],
   count: [1], position: [1], split: [1], addsub: [1], solids: [1], bundle: [1], clock: [1],
   tangram: [1], sort: [1], hundred: [1], shop: [1], place: [1], pattern: [1],
-  ruler: [2], estimate: [2], angle: [2], array: [2], observe: [2], time: [2], share: [2],
+  ruler: [2], estimate: [2], angle: [2], array: [2], observe: [2, 4], time: [2], share: [2],
   motion: [2], mixop: [2], remain: [2], thousand: [2], weight: [2], chart: [2], logic: [2], pair: [2, 3],
   elapsed: [3], verify: [3], units: [3], times: [3], splitmul: [3], rectsq: [3], venn: [3],
-  compass: [3], divplace: [3], stattable: [3], fourgrid: [3], area: [3], calendar: [3], decimal: [3] };
+  compass: [3], divplace: [3], stattable: [3], fourgrid: [3], area: [3], calendar: [3], decimal: [3],
+  bignum: [4], field: [4], protractor: [4], areamodel: [4], parallelogram: [4], trialdiv: [4],
+  baraxis: [4], teatime: [4], zerodiv: [4], laws: [4], placeslider: [4], tearangle: [4],
+  decadd: [4], moveshape: [4], average: [4], chickenrabbit: [4] };
 function renderProgress() {
   const card = document.getElementById('progressCard');
   if (!card) return;
@@ -899,6 +905,22 @@ const NAV_DEFS = {
   'demo-area': { crumbs: ['数学', '互动演示', '铺方砖数面积'], target: 'demo-area' },
   'demo-calendar': { crumbs: ['数学', '互动演示', '日历翻一翻'], target: 'demo-calendar' },
   'demo-decimal': { crumbs: ['数学', '互动演示', '十分条比大小'], target: 'demo-decimal' },
+  'demo-bignum': { crumbs: ['数学', '互动演示', '大数数轴'], target: 'demo-bignum' },
+  'demo-field': { crumbs: ['数学', '互动演示', '足球场拼平方千米'], target: 'demo-field' },
+  'demo-protractor': { crumbs: ['数学', '互动演示', '量角器量一量'], target: 'demo-protractor' },
+  'demo-areamodel': { crumbs: ['数学', '互动演示', '面积模型乘三位数'], target: 'demo-areamodel' },
+  'demo-parallelogram': { crumbs: ['数学', '互动演示', '平行四边形推一推'], target: 'demo-parallelogram' },
+  'demo-trialdiv': { crumbs: ['数学', '互动演示', '试商调商'], target: 'demo-trialdiv' },
+  'demo-baraxis': { crumbs: ['数学', '互动演示', '条形图会说谎'], target: 'demo-baraxis' },
+  'demo-teatime': { crumbs: ['数学', '互动演示', '沏茶排一排'], target: 'demo-teatime' },
+  'demo-zerodiv': { crumbs: ['数学', '互动演示', '除以0没有答案'], target: 'demo-zerodiv' },
+  'demo-laws': { crumbs: ['数学', '互动演示', '运算定律'], target: 'demo-laws' },
+  'demo-placeslider': { crumbs: ['数学', '互动演示', '数位滑块'], target: 'demo-placeslider' },
+  'demo-tearangle': { crumbs: ['数学', '互动演示', '撕角拼平角'], target: 'demo-tearangle' },
+  'demo-decadd': { crumbs: ['数学', '互动演示', '小数加减对齐'], target: 'demo-decadd' },
+  'demo-moveshape': { crumbs: ['数学', '互动演示', '图形平移和对称'], target: 'demo-moveshape' },
+  'demo-average': { crumbs: ['数学', '互动演示', '削峰填谷求平均数'], target: 'demo-average' },
+  'demo-chickenrabbit': { crumbs: ['数学', '互动演示', '鸡兔同笼腿数滑杆'], target: 'demo-chickenrabbit' },
   why:        { crumbs: ['数学', '互动演示', '为什么小实验'], target: 'why' },
   lab:        { crumbs: ['数学', '数学实验室'], target: 'lab' },
   review:     { crumbs: ['数学', '错题本'], target: 'review', action: renderWrongBook },
@@ -975,7 +997,7 @@ function viewForKey(key) {
   if (key === 'path') return 'path';
   if (key.startsWith('path-step-')) return 'path-step';
   if (key === 'demos') return 'demos';
-  if (key === 'demo-tenframe' || key === 'demo-fraction' || key === 'demo-balance' || key === 'demo-function' || key === 'demo-count' || key === 'demo-position' || key === 'demo-split' || key === 'demo-addsub' || key === 'demo-solids' || key === 'demo-bundle' || key === 'demo-clock' || key === 'demo-tangram' || key === 'demo-sort' || key === 'demo-hundred' || key === 'demo-shop' || key === 'demo-place' || key === 'demo-pattern' || key === 'demo-ruler' || key === 'demo-estimate' || key === 'demo-angle' || key === 'demo-array' || key === 'demo-observe' || key === 'demo-time' || key === 'demo-share' || key === 'demo-motion' || key === 'demo-mixop' || key === 'demo-remain' || key === 'demo-thousand' || key === 'demo-weight' || key === 'demo-chart' || key === 'demo-logic' || key === 'demo-pair' || key === 'demo-elapsed' || key === 'demo-verify' || key === 'demo-units' || key === 'demo-times' || key === 'demo-splitmul' || key === 'demo-rectsq' || key === 'demo-venn' || key === 'demo-compass' || key === 'demo-divplace' || key === 'demo-stattable' || key === 'demo-fourgrid' || key === 'demo-area' || key === 'demo-calendar' || key === 'demo-decimal') return key;
+  if (key === 'demo-tenframe' || key === 'demo-fraction' || key === 'demo-balance' || key === 'demo-function' || key === 'demo-count' || key === 'demo-position' || key === 'demo-split' || key === 'demo-addsub' || key === 'demo-solids' || key === 'demo-bundle' || key === 'demo-clock' || key === 'demo-tangram' || key === 'demo-sort' || key === 'demo-hundred' || key === 'demo-shop' || key === 'demo-place' || key === 'demo-pattern' || key === 'demo-ruler' || key === 'demo-estimate' || key === 'demo-angle' || key === 'demo-array' || key === 'demo-observe' || key === 'demo-time' || key === 'demo-share' || key === 'demo-motion' || key === 'demo-mixop' || key === 'demo-remain' || key === 'demo-thousand' || key === 'demo-weight' || key === 'demo-chart' || key === 'demo-logic' || key === 'demo-pair' || key === 'demo-elapsed' || key === 'demo-verify' || key === 'demo-units' || key === 'demo-times' || key === 'demo-splitmul' || key === 'demo-rectsq' || key === 'demo-venn' || key === 'demo-compass' || key === 'demo-divplace' || key === 'demo-stattable' || key === 'demo-fourgrid' || key === 'demo-area' || key === 'demo-calendar' || key === 'demo-decimal' || key === 'demo-bignum' || key === 'demo-field' || key === 'demo-protractor' || key === 'demo-areamodel' || key === 'demo-parallelogram' || key === 'demo-trialdiv' || key === 'demo-baraxis' || key === 'demo-teatime' || key === 'demo-zerodiv' || key === 'demo-laws' || key === 'demo-placeslider' || key === 'demo-tearangle' || key === 'demo-decadd' || key === 'demo-moveshape' || key === 'demo-average' || key === 'demo-chickenrabbit') return key;
   if (key === 'why') return 'why';
   if (key === 'lab') return 'lab';
   if (key === 'review') return 'review';
@@ -1019,7 +1041,7 @@ function applyView() {
   const stepN = view === 'path-step' ? key.slice('path-step-'.length) : null;
   [...pathPanelsEl.children].forEach(el => { el.hidden = !!(stepN && el.id !== 'step-' + stepN); });
   // 互动演示：列表留演示面板；叶子只留该演示卡片；为什么小实验只留 #why 区
-  const demoLeaf = view === 'demo-tenframe' || view === 'demo-fraction' || view === 'demo-balance' || view === 'demo-function' || view === 'demo-count' || view === 'demo-position' || view === 'demo-split' || view === 'demo-addsub' || view === 'demo-solids' || view === 'demo-bundle' || view === 'demo-clock' || view === 'demo-tangram' || view === 'demo-sort' || view === 'demo-hundred' || view === 'demo-shop' || view === 'demo-place' || view === 'demo-pattern' || view === 'demo-ruler' || view === 'demo-estimate' || view === 'demo-angle' || view === 'demo-array' || view === 'demo-observe' || view === 'demo-time' || view === 'demo-share' || view === 'demo-motion' || view === 'demo-mixop' || view === 'demo-remain' || view === 'demo-thousand' || view === 'demo-weight' || view === 'demo-chart' || view === 'demo-logic' || view === 'demo-pair' || view === 'demo-elapsed' || view === 'demo-verify' || view === 'demo-units' || view === 'demo-times' || view === 'demo-splitmul' || view === 'demo-rectsq' || view === 'demo-venn' || view === 'demo-compass' || view === 'demo-divplace' || view === 'demo-stattable' || view === 'demo-fourgrid' || view === 'demo-area' || view === 'demo-calendar' || view === 'demo-decimal';
+  const demoLeaf = view === 'demo-tenframe' || view === 'demo-fraction' || view === 'demo-balance' || view === 'demo-function' || view === 'demo-count' || view === 'demo-position' || view === 'demo-split' || view === 'demo-addsub' || view === 'demo-solids' || view === 'demo-bundle' || view === 'demo-clock' || view === 'demo-tangram' || view === 'demo-sort' || view === 'demo-hundred' || view === 'demo-shop' || view === 'demo-place' || view === 'demo-pattern' || view === 'demo-ruler' || view === 'demo-estimate' || view === 'demo-angle' || view === 'demo-array' || view === 'demo-observe' || view === 'demo-time' || view === 'demo-share' || view === 'demo-motion' || view === 'demo-mixop' || view === 'demo-remain' || view === 'demo-thousand' || view === 'demo-weight' || view === 'demo-chart' || view === 'demo-logic' || view === 'demo-pair' || view === 'demo-elapsed' || view === 'demo-verify' || view === 'demo-units' || view === 'demo-times' || view === 'demo-splitmul' || view === 'demo-rectsq' || view === 'demo-venn' || view === 'demo-compass' || view === 'demo-divplace' || view === 'demo-stattable' || view === 'demo-fourgrid' || view === 'demo-area' || view === 'demo-calendar' || view === 'demo-decimal' || view === 'demo-bignum' || view === 'demo-field' || view === 'demo-protractor' || view === 'demo-areamodel' || view === 'demo-parallelogram' || view === 'demo-trialdiv' || view === 'demo-baraxis' || view === 'demo-teatime' || view === 'demo-zerodiv' || view === 'demo-laws' || view === 'demo-placeslider' || view === 'demo-tearangle' || view === 'demo-decadd' || view === 'demo-moveshape' || view === 'demo-average' || view === 'demo-chickenrabbit';
   setHidden(demosSec, !(view === 'demos' || demoLeaf));
   setHidden(demoPanelsEl, view !== 'demos');
   setHidden(demoGridEl, !demoLeaf); // 演示卡片网格只在某一个演示的叶子视图里出现，列表视图只留演示面板
@@ -3730,6 +3752,7 @@ function arrRender() {
     grid.children[i].style.visibility = on ? 'visible' : 'hidden';
   }
   document.getElementById('arrEq').textContent = arrRows + ' × ' + arrCols + ' = ' + (arrRows * arrCols);
+  document.getElementById('arrTitle').textContent = '点阵乘法：' + arrRows + ' 行 ' + arrCols + ' 列是 ' + (arrRows * arrCols) + ' 个点';
   document.getElementById('arrKoujue').textContent = '口诀：' + arrKoujue(arrRows, arrCols);
   document.getElementById('arrRowsTx').textContent = arrRows + ' 行';
   document.getElementById('arrColsTx').textContent = arrCols + ' 列';
@@ -3749,7 +3772,10 @@ function arrRender() {
     const t = arrRows; arrRows = arrCols; arrCols = t;
     markTried('array');
     arrRender();
-    document.getElementById('arrMsg').textContent = '转个方向：' + arrRows + ' × ' + arrCols + ' = ' + (arrRows * arrCols) + '，点还是 ' + (arrRows * arrCols) + ' 个——所以 ' + arrCols + '×' + arrRows + ' 和 ' + arrRows + '×' + arrCols + ' 是一道题。';
+    // 正方形转一圈还是正方形：行列本来就一样，“互换”没说什么新东西，别写同义反复。
+    document.getElementById('arrMsg').textContent = arrRows === arrCols
+      ? '转个方向：' + arrRows + ' × ' + arrCols + ' = ' + (arrRows * arrCols) + '，点还是 ' + (arrRows * arrCols) + ' 个——正方形转一圈还是正方形，样子一点没变。'
+      : '转个方向：' + arrRows + ' × ' + arrCols + ' = ' + (arrRows * arrCols) + '，点还是 ' + (arrRows * arrCols) + ' 个——所以 ' + arrCols + '×' + arrRows + ' 和 ' + arrRows + '×' + arrCols + ' 是一道题。';
   });
   arrRender();
 })();
@@ -5187,4 +5213,872 @@ function dcCompare() {
   document.getElementById('dcCompare').addEventListener('click', function () { markTried('decimal'); dcCompare(); });
   dcRender();
   dcCompare();
+})();
+
+/* ---------- demo-bignum · 4.1 大数的认识、近似数（方法：万分组数位表 + 数轴半点） ----------
+   48932 离 5万近（差 1068）离 4万远（差 8932），约是 5万；
+   62850 离 6万近（差 2850），约是 6万；75000 正好在半点上，满 5 进 1，约是 8万。 */
+const BN_PROBS = [
+  { n: 48932, low: 40000, high: 50000, ans: '5万', read: '四万八千九百三十二',
+    why: '要舍掉 8932，第一位是 8，满 5 进 1' },
+  { n: 62850, low: 60000, high: 70000, ans: '6万', read: '六万二千八百五十',
+    why: '要舍掉 2850，第一位是 2，不到 5，舍掉' },
+  { n: 75000, low: 70000, high: 80000, ans: '8万', read: '七万五千',
+    why: '要舍掉 5000，第一位是 5，正好是半点，满 5 进 1' }
+];
+let bnProbIdx = 0;
+let bnVal = 48932;
+function bnRender() {
+  const p = BN_PROBS[bnProbIdx];
+  const pct = Math.max(0, Math.min(100, (bnVal - p.low) / (p.high - p.low) * 100));
+  document.getElementById('bnMarker').style.left = pct + '%';
+  const dLow = bnVal - p.low, dHigh = p.high - bnVal;
+  const lowWan = p.low / 10000, highWan = p.high / 10000;
+  document.getElementById('bnNear').textContent = dLow === dHigh
+    ? bnVal + ' 正好在半点上，离 ' + lowWan + '万和 ' + highWan + '万一样远。'
+    : dLow < dHigh
+      ? bnVal + ' 离 ' + lowWan + '万更近（差 ' + dLow + '），离 ' + highWan + '万差 ' + dHigh + '。'
+      : bnVal + ' 离 ' + highWan + '万更近（差 ' + dHigh + '），离 ' + lowWan + '万差 ' + dLow + '。';
+  document.getElementById('bnRead').textContent = '读作：' + p.read + '。万级是 ' + Math.floor(p.n / 10000) + '，个级是 ' + (p.n % 10000) + '。';
+  document.getElementById('bnTicks').textContent = p.low + '　' + ((p.low + p.high) / 2) + '（半点）　' + p.high;
+  document.querySelectorAll('#bnProbSeg [data-bn-prob]').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(+b.dataset.bnProb === bnProbIdx));
+  });
+}
+(function bnInit() {
+  const seg = document.getElementById('bnProbSeg');
+  BN_PROBS.forEach(function (p, i) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = String(p.n);
+    b.dataset.bnProb = String(i);
+    b.addEventListener('click', function () {
+      bnProbIdx = i; bnVal = p.n;
+      const sl = document.getElementById('bnSlider');
+      sl.min = String(p.low); sl.max = String(p.high); sl.value = String(p.n);
+      markTried('bignum');
+      bnRender();
+    });
+    seg.appendChild(b);
+  });
+  document.getElementById('bnSlider').addEventListener('input', function (e) {
+    bnVal = +e.target.value;
+    bnRender();
+  });
+  document.getElementById('bnRound').addEventListener('click', function () {
+    const p = BN_PROBS[bnProbIdx];
+    markTried('bignum');
+    document.getElementById('bnMsg').textContent = p.n + ' 省略万后面的尾数，约是 ' + p.ans + '：' + p.why + '。';
+  });
+  bnRender();
+})();
+
+/* ---------- demo-field · 4.2 公顷和平方千米（方法：操场基准——足球场叠加） ----------
+   1 个足球场约 1 公顷 = 10000 平方米；100 个足球场 = 100 公顷 = 1 平方千米。 */
+let fdCount = 1;
+function fdRender() {
+  const grid = document.getElementById('fdGrid');
+  for (let i = 0; i < grid.children.length; i++) {
+    grid.children[i].classList.toggle('fd-on', i < fdCount);
+  }
+  document.getElementById('fdCountTx').textContent = fdCount + ' 个足球场';
+  document.getElementById('fdReadout').textContent = fdCount + ' 个足球场 = ' + fdCount + ' 公顷 = ' + (fdCount * 10000) + ' 平方米' +
+    (fdCount === 100 ? '——100 公顷就是 1 平方千米！' : '；100 个足球场拼起来才是 1 平方千米。');
+}
+(function fdInit() {
+  const grid = document.getElementById('fdGrid');
+  for (let i = 0; i < 100; i++) {
+    const d = document.createElement('span');
+    d.className = 'fd-cell';
+    grid.appendChild(d);
+  }
+  document.getElementById('fdMinus').addEventListener('click', function () { if (fdCount > 1) fdCount--; markTried('field'); fdRender(); });
+  document.getElementById('fdPlus').addEventListener('click', function () { if (fdCount < 100) fdCount++; markTried('field'); fdRender(); });
+  fdRender();
+})();
+
+/* ---------- demo-protractor · 4.3 角的度量（方法：角即旋转——量角器） ----------
+   中心对顶点，0 对一边，读数从 0 开始的那一圈；边画长画短，角度数一点不变。 */
+let prDeg = 30;
+let prLong = true;
+function prKind(d) { return d < 90 ? '锐角' : d === 90 ? '直角' : d < 180 ? '钝角' : '平角'; }
+function prRender() {
+  const cx = 150, cy = 160, len = prLong ? 120 : 70;
+  const rad = prDeg * Math.PI / 180;
+  const ex = cx + len * Math.cos(rad), ey = cy - len * Math.sin(rad);
+  const arm = document.getElementById('prArm');
+  arm.setAttribute('x2', String(Math.round(ex)));
+  arm.setAttribute('y2', String(Math.round(ey)));
+  // 扇形用取样多边形画，不用 arc（省得记 sweep 方向）：从 0° 到当前角，每 5° 取一个点。
+  const pts = [cx + ',' + cy];
+  for (let a = 0; a <= prDeg; a += 5) {
+    const r = a * Math.PI / 180;
+    pts.push(Math.round(cx + len * Math.cos(r)) + ',' + Math.round(cy - len * Math.sin(r)));
+  }
+  document.getElementById('prWedge').setAttribute('points', pts.join(' '));
+  document.getElementById('prRead').textContent = prDeg + '°，是' + prKind(prDeg) + '。';
+  document.querySelectorAll('#prSeg [data-pr-deg]').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(+b.dataset.prDeg === prDeg));
+  });
+}
+(function prInit() {
+  const seg = document.getElementById('prSeg');
+  [30, 45, 65, 90, 130, 180].forEach(function (d) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = d + '°';
+    b.dataset.prDeg = String(d);
+    b.addEventListener('click', function () { prDeg = d; markTried('protractor'); prRender(); });
+    seg.appendChild(b);
+  });
+  document.getElementById('prMinus').addEventListener('click', function () { if (prDeg > 5) prDeg -= 5; markTried('protractor'); prRender(); });
+  document.getElementById('prPlus').addEventListener('click', function () { if (prDeg < 180) prDeg += 5; markTried('protractor'); prRender(); });
+  document.getElementById('prLen').addEventListener('click', function () {
+    prLong = !prLong;
+    markTried('protractor');
+    prRender();
+    document.getElementById('prMsg').textContent = '边' + (prLong ? '画长了' : '画短了') + '，角度还是 ' + prDeg + '°——角的大小只看张开多少，不看边长。';
+  });
+  prRender();
+})();
+
+/* ---------- demo-areamodel · 4.4 三位数乘两位数（方法：面积模型拆两边） ----------
+   123×45：45=40+5，123×40=4920，123×5=615，4920+615=5535。
+   138×24：138×20=2760，138×4=552，和 3312。125×16：125×10=1250，125×6=750，和 2000。 */
+const AM_PROBS = [
+  { a: 123, b: 45, s: 40, r: 5, blocks: ['123×40=4920', '123×5=615'], total: '4920+615=5535',
+    note: '竖式第二行是 123×40=4920——那个 0 就是乘 40 的意思。' },
+  { a: 138, b: 24, s: 20, r: 4, blocks: ['138×20=2760', '138×4=552'], total: '2760+552=3312',
+    note: '竖式第二行是 138×20=2760。' },
+  { a: 125, b: 16, s: 10, r: 6, blocks: ['125×10=1250', '125×6=750'], total: '1250+750=2000',
+    note: '125×16 拆成 125×10 和 125×6。' }
+];
+let amProbIdx = 0;
+const amRev = [false, false];
+function amRender() {
+  const p = AM_PROBS[amProbIdx];
+  for (let i = 0; i < 2; i++) {
+    const b = document.getElementById('amB' + i);
+    b.textContent = amRev[i] ? p.blocks[i] : (i === 0 ? p.a + '×' + p.s : p.a + '×' + p.r);
+  }
+  document.getElementById('amEq').textContent = p.a + ' × ' + p.b + ' = ?';
+  document.getElementById('amSplit0').style.width = (p.s / p.b * 100) + '%';
+  document.getElementById('amSplit1').style.width = (p.r / p.b * 100) + '%';
+  document.getElementById('amSplit0').textContent = String(p.s);
+  document.getElementById('amSplit1').textContent = String(p.r);
+  document.getElementById('amMsg').textContent = amRev[0] && amRev[1]
+    ? p.total + '。' + p.note
+    : '点一块，看它是多少；两块都点开，就能加出答案。';
+  document.querySelectorAll('#amProbSeg [data-am-prob]').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(+b.dataset.amProb === amProbIdx));
+  });
+}
+(function amInit() {
+  const seg = document.getElementById('amProbSeg');
+  AM_PROBS.forEach(function (p, i) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = p.a + ' × ' + p.b;
+    b.dataset.amProb = String(i);
+    b.addEventListener('click', function () { amProbIdx = i; amRev[0] = amRev[1] = false; markTried('areamodel'); amRender(); });
+    seg.appendChild(b);
+  });
+  for (let i = 0; i < 2; i++) {
+    document.getElementById('amB' + i).addEventListener('click', function () { amRev[i] = true; markTried('areamodel'); amRender(); });
+  }
+  amRender();
+})();
+
+/* ---------- demo-parallelogram · 4.5 平行四边形和梯形（方法：拖顶点看不变性） ----------
+   平行四边形两组对边分别平行；长方形、正方形是特殊的平行四边形；梯形只有一组对边平行。 */
+const PG_SHAPES = {
+  par: { label: '平行四边形', pairs: 2, text: '平行四边形：两组对边分别平行，对边一样长。推一推，形状变了，对边还是平行的。' },
+  rect: { label: '长方形', pairs: 2, text: '长方形：两组对边分别平行，四个角都是直角——长方形是特殊的平行四边形。' },
+  square: { label: '正方形', pairs: 2, text: '正方形：两组对边分别平行，四条边一样长——正方形也是特殊的平行四边形。' },
+  trap: { label: '梯形', pairs: 1, text: '梯形：只有一组对边平行——所以梯形不是平行四边形。' }
+};
+let pgShape = 'par';
+let pgSlant = 30;
+function pgPoints() {
+  if (pgShape === 'rect') return '60,30 260,30 260,140 60,140';
+  if (pgShape === 'square') return '110,30 220,30 220,140 110,140';
+  if (pgShape === 'trap') return '100,30 220,30 270,140 50,140';
+  const s = pgSlant;
+  return (60 + s) + ',30 ' + (260 + s) + ',30 260,140 60,140';
+}
+function pgRender() {
+  document.getElementById('pgPoly').setAttribute('points', pgPoints());
+  const sh = PG_SHAPES[pgShape];
+  document.getElementById('pgRead').textContent = sh.text;
+  document.getElementById('pgMsg').textContent = '对边平行的组数：' + sh.pairs + ' 组。' +
+    (sh.pairs === 2 ? '两组对边都平行，所以是平行四边形。' : '只有一组对边平行，所以不是平行四边形。');
+  document.querySelectorAll('#pgShapeSeg [data-pg-shape]').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(b.dataset.pgShape === pgShape));
+  });
+}
+(function pgInit() {
+  const seg = document.getElementById('pgShapeSeg');
+  Object.keys(PG_SHAPES).forEach(function (k) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = PG_SHAPES[k].label;
+    b.dataset.pgShape = k;
+    b.addEventListener('click', function () { pgShape = k; markTried('parallelogram'); pgRender(); });
+    seg.appendChild(b);
+  });
+  document.getElementById('pgSlantMinus').addEventListener('click', function () { if (pgShape === 'par' && pgSlant > 0) pgSlant -= 10; markTried('parallelogram'); pgRender(); });
+  document.getElementById('pgSlantPlus').addEventListener('click', function () { if (pgShape === 'par' && pgSlant < 50) pgSlant += 10; markTried('parallelogram'); pgRender(); });
+  pgRender();
+})();
+
+/* ---------- demo-trialdiv · 4.6 除数是两位数的除法（方法：试商面板） ----------
+   150÷26 试 7：7×26=182 比 150 大，调小试 5：5×26=130，余 20，商是 5 余 20。
+   161÷23=7；312÷39=8；96÷12=8。 */
+const TD_PROBS = [
+  { d: 150, v: 26, g: 7 },
+  { d: 161, v: 23, g: 5 },
+  { d: 312, v: 39, g: 6 },
+  { d: 96, v: 12, g: 6 }
+];
+let tdProbIdx = 0;
+let tdGuess = 7;
+function tdRender() {
+  const p = TD_PROBS[tdProbIdx];
+  document.getElementById('tdEq').textContent = p.d + ' ÷ ' + p.v + ' = ?';
+  document.getElementById('tdGuessTx').textContent = '试商：' + tdGuess;
+  document.querySelectorAll('#tdProbSeg [data-td-prob]').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(+b.dataset.tdProb === tdProbIdx));
+  });
+}
+function tdCheck() {
+  const p = TD_PROBS[tdProbIdx];
+  const prod = tdGuess * p.v;
+  let msg;
+  if (prod > p.d) {
+    msg = tdGuess + '×' + p.v + '=' + prod + '，比 ' + p.d + ' 大——商大了，调小一点再试。';
+  } else {
+    const rem = p.d - prod;
+    msg = rem >= p.v
+      ? tdGuess + '×' + p.v + '=' + prod + '，余 ' + rem + '，余数比除数 ' + p.v + ' 还大——商小了，调大一点再试。'
+      : '商是 ' + tdGuess + (rem === 0 ? '，正好除尽：' + tdGuess + '×' + p.v + '=' + p.d + '。' : '，余 ' + rem + '：' + tdGuess + '×' + p.v + '=' + prod + '，' + p.d + '−' + prod + '=' + rem + '。');
+  }
+  document.getElementById('tdMsg').textContent = msg;
+}
+(function tdInit() {
+  const seg = document.getElementById('tdProbSeg');
+  TD_PROBS.forEach(function (p, i) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = p.d + ' ÷ ' + p.v;
+    b.dataset.tdProb = String(i);
+    b.addEventListener('click', function () { tdProbIdx = i; tdGuess = p.g; markTried('trialdiv'); tdRender(); });
+    seg.appendChild(b);
+  });
+  document.getElementById('tdMinus').addEventListener('click', function () { if (tdGuess > 1) tdGuess--; markTried('trialdiv'); tdRender(); });
+  document.getElementById('tdPlus').addEventListener('click', function () { if (tdGuess < 20) tdGuess++; markTried('trialdiv'); tdRender(); });
+  document.getElementById('tdCheck').addEventListener('click', function () { markTried('trialdiv'); tdCheck(); });
+  tdRender();
+})();
+
+/* ---------- demo-baraxis · 4.7 条形统计图（方法：可拖坐标轴起点） ----------
+   男生 28 人，女生 24 人，只少 4 个人；纵轴从 20 开始，女生条看着只有男生条一半高——轴在说谎。 */
+let baStart = 0;
+function baRender() {
+  const max = 30;
+  const hM = (28 - baStart) / (max - baStart) * 200;
+  const hF = (24 - baStart) / (max - baStart) * 200;
+  document.getElementById('baBarM').style.height = Math.round(hM) + 'px';
+  document.getElementById('baBarF').style.height = Math.round(hF) + 'px';
+  document.getElementById('baMsg').textContent = baStart === 0
+    ? '轴从 0 开始：女生条比男生条矮一点，矮的正好是 4 个人——图说的是实话。'
+    : baStart === 10
+      ? '轴从 10 开始：女生条看着比男生条矮不少——其实只少 4 个人，轴已经开始“说谎”了。'
+      : '轴从 20 开始：女生条只有男生条的一半高，看着像少了一半——其实只少 4 个人，轴在说谎！';
+  document.querySelectorAll('#baStartSeg [data-ba-start]').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(+b.dataset.baStart === baStart));
+  });
+}
+(function baInit() {
+  const seg = document.getElementById('baStartSeg');
+  [0, 10, 20].forEach(function (s) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = '从 ' + s + ' 开始';
+    b.dataset.baStart = String(s);
+    b.addEventListener('click', function () { baStart = s; markTried('baraxis'); baRender(); });
+    seg.appendChild(b);
+  });
+  baRender();
+})();
+
+/* ---------- demo-teatime · 4.8 优化（方法：并行时间轴） ----------
+   沏茶一件一件做要 14 分钟；烧水的 8 分钟里洗茶杯、找茶叶，总共只要 11 分钟。
+   烙饼：1 张 2 分钟，3 张 3 分钟，5 张 5 分钟，9 张 9 分钟。 */
+let ttWash = false;
+let ttTea = false;
+let ttCakes = 3;
+function ttTotal() { return 11 + (ttWash ? 0 : 2) + (ttTea ? 0 : 1); }
+function ttRenderLane(laneId, tasks) {
+  const lane = document.getElementById(laneId);
+  while (lane.firstChild) lane.removeChild(lane.firstChild);
+  tasks.forEach(function (t) {
+    const s = document.createElement('span');
+    s.className = 'tt-task';
+    s.style.width = (t.min * 22) + 'px';
+    s.style.background = t.color;
+    s.textContent = t.name + ' ' + t.min + '分';
+    lane.appendChild(s);
+  });
+}
+function ttRender() {
+  ttRenderLane('ttLaneA', [
+    { name: '洗水壶', min: 1, color: '#dbeafe' }, { name: '接水', min: 1, color: '#dbeafe' },
+    { name: '烧水', min: 8, color: '#fed7aa' }, { name: '沏茶', min: 1, color: '#dcfce7' }
+  ]);
+  ttRenderLane('ttLaneB', ttWash || ttTea
+    ? (ttWash ? [{ name: '洗茶杯', min: 2, color: '#fce7f3' }] : []).concat(ttTea ? [{ name: '找茶叶', min: 1, color: '#fce7f3' }] : [])
+    : [{ name: '（烧水时空闲着）', min: 8, color: '#f1f5f9' }]);
+  document.getElementById('ttTotal').textContent = '一共 ' + ttTotal() + ' 分钟';
+  document.getElementById('ttMsg').textContent = ttWash && ttTea
+    ? '11 分钟！烧水的 8 分钟里，洗茶杯和找茶叶都做完了——同时做的事只算一次时间。'
+    : ttWash || ttTea
+      ? ttTotal() + ' 分钟：还有一件小事没挪进烧水的时间里，再挪进来还能省。'
+      : '一件一件做要 14 分钟：洗水壶 1 + 接水 1 + 烧水 8 + 洗茶杯 2 + 找茶叶 1 + 沏茶 1。';
+  document.getElementById('ttWashBtn').setAttribute('aria-pressed', String(ttWash));
+  document.getElementById('ttTeaBtn').setAttribute('aria-pressed', String(ttTea));
+  const mins = ttCakes === 1 ? 2 : ttCakes;
+  document.getElementById('ttCakeMsg').textContent = ttCakes === 1
+    ? '1 张饼要 2 分钟：两面各烙 1 分钟，不能只算 1 分钟。'
+    : ttCakes + ' 张饼要 ' + mins + ' 分钟：' + ttCakes + '×2=' + (ttCakes * 2) + ' 面次，每次烙 2 面，' + (ttCakes * 2) + '÷2=' + mins + ' 分钟。';
+  document.querySelectorAll('#ttCakeSeg [data-tt-cakes]').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(+b.dataset.ttCakes === ttCakes));
+  });
+}
+(function ttInit() {
+  document.getElementById('ttWashBtn').addEventListener('click', function () { ttWash = !ttWash; markTried('teatime'); ttRender(); });
+  document.getElementById('ttTeaBtn').addEventListener('click', function () { ttTea = !ttTea; markTried('teatime'); ttRender(); });
+  const seg = document.getElementById('ttCakeSeg');
+  [1, 3, 5, 9].forEach(function (n) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = n + ' 张饼';
+    b.dataset.ttCakes = String(n);
+    b.addEventListener('click', function () { ttCakes = n; markTried('teatime'); ttRender(); });
+    seg.appendChild(b);
+  });
+  ttRender();
+})();
+
+/* ---------- demo-zerodiv · 4.9 四则运算（方法：逆运算证伪） ----------
+   5÷0 在问“什么数乘 0 等于 5”：0 到 9 都试一遍，没有一个乘 0 等于 5，所以没有答案。
+   0÷5=0；0÷0 没法确定，任何数乘 0 都是 0。 */
+const zdTried = new Set();
+function zdRender() {
+  document.querySelectorAll('#zdNumSeg [data-zd-num]').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(zdTried.has(+b.dataset.zdNum)));
+  });
+}
+(function zdInit() {
+  const seg = document.getElementById('zdNumSeg');
+  for (let n = 0; n <= 9; n++) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = String(n);
+    b.dataset.zdNum = String(n);
+    b.addEventListener('click', function () {
+      zdTried.add(n);
+      markTried('zerodiv');
+      document.getElementById('zdMsg').textContent = n + ' × 0 = 0，不等于 5。' +
+        (zdTried.size === 10
+          ? '10 个数都试过了，没有一个乘 0 等于 5——所以 5÷0 没有答案。'
+          : '已经试了 ' + zdTried.size + ' 个数。');
+      zdRender();
+    });
+    seg.appendChild(b);
+  }
+  document.getElementById('zdDivFive').addEventListener('click', function () {
+    markTried('zerodiv');
+    document.getElementById('zdMsg').textContent = '0÷5=0：因为 0×5=0，0 除以 5 就是 0。';
+  });
+  document.getElementById('zdDivZero').addEventListener('click', function () {
+    markTried('zerodiv');
+    document.getElementById('zdMsg').textContent = '0÷0 没法确定：任何数乘 0 都是 0，答案有无数个。';
+  });
+  zdRender();
+})();
+
+/* ---------- demo-laws · 4.10 运算定律（方法：每条定律一个动画） ----------
+   交换律：3×4 的点阵转个方向是 4×3，点还是 12 个。
+   结合律：25×7×4，先算 25×4=100 再乘 7 是 700，先算 7×4=28 再乘 25 也是 700。
+   分配律：102×36=(100+2)×36=3600+72=3672。 */
+let lwMode = 'mul';
+let lwRows = 3, lwCols = 4;
+const LW_PANELS = { mul: 'lwPanelmul', assoc: 'lwPanelassoc', dist: 'lwPaneldist' };
+function lwRender() {
+  Object.keys(LW_PANELS).forEach(function (m) {
+    document.getElementById(LW_PANELS[m]).hidden = lwMode !== m;
+  });
+  document.querySelectorAll('#lwModeSeg [data-lw-mode]').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(b.dataset.lwMode === lwMode));
+  });
+  const grid = document.getElementById('lwDots');
+  for (let i = 0; i < grid.children.length; i++) {
+    const r = Math.floor(i / 4), c = i % 4;
+    grid.children[i].classList.toggle('off', !(r < lwRows && c < lwCols));
+  }
+  document.getElementById('lwEq').textContent = lwRows + ' × ' + lwCols + ' = ' + (lwRows * lwCols);
+}
+(function lwInit() {
+  const seg = document.getElementById('lwModeSeg');
+  [['mul', '交换律'], ['assoc', '结合律'], ['dist', '分配律']].forEach(function (m) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = m[1];
+    b.dataset.lwMode = m[0];
+    b.addEventListener('click', function () { lwMode = m[0]; markTried('laws'); lwRender(); });
+    seg.appendChild(b);
+  });
+  const grid = document.getElementById('lwDots');
+  for (let i = 0; i < 16; i++) {
+    const d = document.createElement('span');
+    d.className = 'lw-dot';
+    grid.appendChild(d);
+  }
+  document.getElementById('lwRotate').addEventListener('click', function () {
+    const t = lwRows; lwRows = lwCols; lwCols = t;
+    markTried('laws');
+    lwRender();
+    document.getElementById('lwMsg').textContent = '转个方向：' + lwRows + '×' + lwCols + '，点还是 ' + (lwRows * lwCols) + ' 个——所以 3×4 和 4×3 是一道题。';
+  });
+  document.getElementById('lwAssocA').addEventListener('click', function () {
+    markTried('laws');
+    document.getElementById('lwAssocMsg').textContent = '先算 25×4=100，再算 100×7=700。25 和 4 先凑成整百，算起来最快。';
+  });
+  document.getElementById('lwAssocB').addEventListener('click', function () {
+    markTried('laws');
+    document.getElementById('lwAssocMsg').textContent = '先算 7×4=28，再算 25×28=700。两种算法都是 700——先算哪一堆，结果都一样。';
+  });
+  const lwDistRev = [false, false];
+  function lwDistRender() {
+    document.getElementById('lwDistA').textContent = lwDistRev[0] ? '100×36=3600' : '100×36';
+    document.getElementById('lwDistB').textContent = lwDistRev[1] ? '2×36=72' : '2×36';
+    document.getElementById('lwDistMsg').textContent = lwDistRev[0] && lwDistRev[1]
+      ? '3600+72=3672，所以 102×36=3672。102 拆成 100+2，每一块都要乘 36。'
+      : '点一块，看它是多少；两块都点开，就能加出答案。';
+  }
+  document.getElementById('lwDistA').addEventListener('click', function () { lwDistRev[0] = true; markTried('laws'); lwDistRender(); });
+  document.getElementById('lwDistB').addEventListener('click', function () { lwDistRev[1] = true; markTried('laws'); lwDistRender(); });
+  lwRender();
+  lwDistRender();
+})();
+
+/* ---------- demo-placeslider · 4.11 小数的意义和性质（方法：数位滑块） ----------
+   乘 10：每位数字向左移一位，2.4→24→240；除以 10：向右移一位，2.4→0.24→0.024。
+   0.5=0.50：5 个十分之一就是 50 个百分之一。 */
+let psDecPos = 1; // 小数点在第几位数字后面：2.4 是 1
+const PS_DIGITS = ['2', '4'];
+let psLastOp = '';
+function psValueStr() {
+  const d = PS_DIGITS.join('');
+  if (psDecPos >= d.length) return d + '0'.repeat(psDecPos - d.length);
+  if (psDecPos <= 0) return '0.' + '0'.repeat(-psDecPos) + d;
+  return d.slice(0, psDecPos) + '.' + d.slice(psDecPos);
+}
+function psRender() {
+  const v = psValueStr();
+  const parts = v.split('.');
+  const intP = parts[0], fracP = parts[1] || '';
+  const intCells = [document.getElementById('psC0'), document.getElementById('psC1'), document.getElementById('psC2')];
+  const fracCells = [document.getElementById('psC3'), document.getElementById('psC4'), document.getElementById('psC5')];
+  const intPad = intP.padStart(3, ' ');
+  for (let i = 0; i < 3; i++) intCells[i].textContent = intPad[i] === ' ' ? '' : intPad[i];
+  for (let i = 0; i < 3; i++) fracCells[i].textContent = fracP[i] || '';
+  document.getElementById('psRead').textContent = '现在是 ' + v + '。' +
+    (psLastOp === 'mul' ? '乘 10：每位数字向左移一位，小数点不用动。'
+      : psLastOp === 'div' ? '除以 10：每位数字向右移一位，小数点不用动。'
+      : '滑一滑：2.4 乘 10 是 24，除以 10 是 0.24。');
+}
+(function psInit() {
+  document.getElementById('psMul').addEventListener('click', function () { if (psDecPos < 3) psDecPos++; psLastOp = 'mul'; markTried('placeslider'); psRender(); });
+  document.getElementById('psDiv').addEventListener('click', function () { if (psDecPos > -1) psDecPos--; psLastOp = 'div'; markTried('placeslider'); psRender(); });
+  const bar = document.getElementById('psBar');
+  for (let i = 0; i < 10; i++) {
+    const d = document.createElement('span');
+    d.className = 'ps-tiny' + (i < 5 ? ' on' : '');
+    bar.appendChild(d);
+  }
+  const mini = document.getElementById('psMini');
+  for (let i = 0; i < 100; i++) {
+    const d = document.createElement('span');
+    d.className = 'ps-mini-cell' + (i < 50 ? ' on' : '');
+    mini.appendChild(d);
+  }
+  mini.hidden = true;
+  document.getElementById('psSplit').addEventListener('click', function () {
+    mini.hidden = !mini.hidden;
+    markTried('placeslider');
+    document.getElementById('psSplitMsg').textContent = mini.hidden ? '' : '5 个十分之一就是 50 个百分之一——0.5 和 0.50 一样大，涂色的地方一点没变。';
+  });
+  psRender();
+})();
+
+/* ---------- demo-tearangle · 4.12 三角形（方法：撕角拼直线 + 棍长测试） ----------
+   60°+70°+50°=180°，90°+45°+45°=180°：三个角拼成一条直线，就是平角 180°。
+   2 厘米、3 厘米、10 厘米围不成三角形：2+3=5，比 10 短。
+   三角形的三个顶点按角度算出来（正弦定理），不是随手画的：底边 180，
+   顶点 = 底边左端 + 第三边 × (cos B, −sin B)，第三边 = 底边 × sin C / sin A。 */
+const TA_PROBS = [
+  { a: 60, b: 70, c: 50, kind: '锐角三角形' },
+  { a: 90, b: 45, c: 45, kind: '直角三角形' }
+];
+let taProbIdx = 0;
+const taTorn = [false, false, false];
+function taSectorPoints(cx, cy, r, deg1, deg2) {
+  const pts = [cx + ',' + cy];
+  for (let d = deg1; d >= deg2; d -= 5) {
+    const rad = d * Math.PI / 180;
+    pts.push(Math.round(cx + r * Math.cos(rad)) + ',' + Math.round(cy - r * Math.sin(rad)));
+  }
+  return pts.join(' ');
+}
+function taTriPoints() {
+  const p = TA_PROBS[taProbIdx];
+  const rad = function (d) { return d * Math.PI / 180; };
+  const base = 180, bx = 35, by = 175;
+  const cSide = base * Math.sin(rad(p.c)) / Math.sin(rad(p.a));
+  const ax = bx + cSide * Math.cos(rad(p.b));
+  const ay = by - cSide * Math.sin(rad(p.b));
+  return { A: [Math.round(ax), Math.round(ay)], B: [bx, by], C: [bx + base, by] };
+}
+function taRender() {
+  const p = TA_PROBS[taProbIdx];
+  const angs = [p.a, p.b, p.c];
+  const tri = taTriPoints();
+  const pts = [tri.A, tri.B, tri.C];
+  document.getElementById('taTri').setAttribute('points', pts.map(function (q) { return q[0] + ',' + q[1]; }).join(' '));
+  const labels = [[tri.A[0], tri.A[1] - 13], [tri.B[0] - 8, tri.B[1] + 22], [tri.C[0] + 8, tri.C[1] + 22]];
+  for (let i = 0; i < 3; i++) {
+    const corner = document.getElementById('taCorner' + i);
+    corner.setAttribute('cx', String(pts[i][0]));
+    corner.setAttribute('cy', String(pts[i][1]));
+    corner.setAttribute('opacity', taTorn[i] ? '0.3' : '1');
+    const label = document.getElementById('taLabel' + i);
+    label.setAttribute('x', String(labels[i][0]));
+    label.setAttribute('y', String(labels[i][1]));
+    label.textContent = '∠' + 'ABC'[i] + ' ' + angs[i] + '°';
+    document.getElementById('taTear' + i).textContent = '撕下 ∠' + 'ABC'[i] + '（' + angs[i] + '°）';
+  }
+  let start = 180;
+  for (let i = 0; i < 3; i++) {
+    const el = document.getElementById('taWedge' + i);
+    if (taTorn[i]) {
+      el.setAttribute('points', taSectorPoints(160, 70, 55, start, start - angs[i]));
+      el.style.display = '';
+    } else {
+      el.style.display = 'none';
+    }
+    start -= angs[i];
+  }
+  const tornN = taTorn.filter(Boolean).length;
+  document.getElementById('taMsg').textContent = tornN === 3
+    ? angs[0] + '° + ' + angs[1] + '° + ' + angs[2] + '° = 180°——三个角拼成一条直线，就是一个平角 180°！'
+    : '已经撕下 ' + tornN + ' 个角，拼到下面的直线上去；三个都拼上，就能看见 180°。';
+  document.querySelectorAll('#taProbSeg [data-ta-prob]').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(+b.dataset.taProb === taProbIdx));
+  });
+}
+const taSticks = [2, 3, 10];
+function taStickRender() {
+  const a = taSticks[0], b = taSticks[1], c = taSticks[2];
+  document.getElementById('taStickRead').textContent = a + ' 厘米、' + b + ' 厘米、' + c + ' 厘米';
+  for (let i = 0; i < 3; i++) document.getElementById('taStick' + i + 'Tx').textContent = taSticks[i] + ' 厘米';
+  const ok = a + b > c && a + c > b && b + c > a;
+  document.getElementById('taStickMsg').textContent = ok
+    ? '能围成三角形：' + a + '+' + b + '=' + (a + b) + '>' + c + '，两边之和大于第三边。'
+    : '围不成三角形：' + (a + b <= c ? a + '+' + b + '=' + (a + b) + '，比 ' + c + ' 短，两根短棒够不到一起。' : a + c <= b ? a + '+' + c + '=' + (a + c) + '，比 ' + b + ' 短。' : b + '+' + c + '=' + (b + c) + '，比 ' + a + ' 短。');
+}
+(function taInit() {
+  const seg = document.getElementById('taProbSeg');
+  TA_PROBS.forEach(function (p, i) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = p.a + '°、' + p.b + '°、' + p.c + '°';
+    b.dataset.taProb = String(i);
+    b.addEventListener('click', function () {
+      taProbIdx = i;
+      taTorn[0] = taTorn[1] = taTorn[2] = false;
+      markTried('tearangle');
+      taRender();
+    });
+    seg.appendChild(b);
+  });
+  for (let i = 0; i < 3; i++) {
+    document.getElementById('taTear' + i).addEventListener('click', function () { taTorn[i] = true; markTried('tearangle'); taRender(); });
+  }
+  for (let i = 0; i < 3; i++) {
+    document.getElementById('taStick' + i + 'Minus').addEventListener('click', function () { if (taSticks[i] > 2) taSticks[i]--; markTried('tearangle'); taStickRender(); });
+    document.getElementById('taStick' + i + 'Plus').addEventListener('click', function () { if (taSticks[i] < 12) taSticks[i]++; markTried('tearangle'); taStickRender(); });
+  }
+  taRender();
+  taStickRender();
+})();
+
+/* ---------- demo-decadd · 4.13 小数的加法和减法（方法：对齐小数点） ----------
+   2.5+0.25：小数点对齐是 2.75；末尾对齐是 2.30——5 个十分之一加到了 5 个百分之一上。
+   1.5+2.3=3.8；3.6−1.25=2.35；5−2.4=2.6（5 写成 5.0）。 */
+const DA_PROBS = [
+  { a: '2.5', b: '0.25', op: '+', correct: '2.75', wrong: '2.30',
+    wrongNote: '末尾对齐：5 个十分之一加到了 5 个百分之一上，结果是 2.30——错的。' },
+  { a: '1.5', b: '2.3', op: '+', correct: '3.8', wrong: '3.8',
+    wrongNote: '这两个数都是一位小数，末尾对齐和小数点对齐是一样的，都是 3.8。' },
+  { a: '3.6', b: '1.25', op: '−', correct: '2.35', wrong: '',
+    wrongNote: '末尾对齐时数位全错位了：3 的下面是 2，6 的下面是 5——竖式没法算。' },
+  { a: '5', b: '2.4', op: '−', correct: '2.6', wrong: '',
+    wrongNote: '末尾对齐时 5 的下面是 4，数位错了——先把 5 写成 5.0，再对齐小数点。' }
+];
+let daProbIdx = 0;
+let daAlign = 'point'; // 'point' 小数点对齐 | 'end' 末尾对齐
+let daShown = false;
+function daMap(num, align) {
+  // 列：0 十位，1 个位，2 小数点，3 十分位，4 百分位
+  const parts = num.split('.');
+  const map = {};
+  if (align === 'point') {
+    const intP = parts[0];
+    for (let i = 0; i < intP.length; i++) map[1 - (intP.length - 1 - i)] = intP[i];
+    map[2] = '.';
+    const fracP = parts[1] || '';
+    for (let i = 0; i < fracP.length; i++) map[3 + i] = fracP[i];
+  } else {
+    const digits = num.replace('.', '');
+    for (let i = 0; i < digits.length; i++) map[4 - (digits.length - 1 - i)] = digits[i];
+  }
+  return map;
+}
+function daFill(rowId, num, align) {
+  const row = document.getElementById(rowId);
+  const map = num ? daMap(num, align) : {};
+  for (let i = 0; i < 5; i++) row.children[i].textContent = map[i] || '';
+}
+function daRender() {
+  const p = DA_PROBS[daProbIdx];
+  document.getElementById('daOpB').textContent = p.op;
+  daFill('daRowA', p.a, daAlign);
+  daFill('daRowB', p.b, daAlign);
+  daFill('daRowR', daShown ? (daAlign === 'point' ? p.correct : p.wrong) : '', daAlign);
+  document.getElementById('daMsg').textContent = daShown
+    ? (daAlign === 'point' ? p.a + p.op + p.b + '=' + p.correct + '：小数点对齐，十分位才能加十分位。' : p.wrongNote)
+    : '先选对齐方式，再点“算一算”。';
+  document.querySelectorAll('#daAlignSeg [data-da-align]').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(b.dataset.daAlign === daAlign));
+  });
+  document.querySelectorAll('#daProbSeg [data-da-prob]').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(+b.dataset.daProb === daProbIdx));
+  });
+}
+(function daInit() {
+  ['daRowA', 'daRowB', 'daRowR'].forEach(function (rowId) {
+    const row = document.getElementById(rowId);
+    for (let i = 0; i < 5; i++) {
+      const d = document.createElement('span');
+      d.className = 'da-cell';
+      row.appendChild(d);
+    }
+  });
+  const pseg = document.getElementById('daProbSeg');
+  DA_PROBS.forEach(function (p, i) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = p.a + p.op + p.b;
+    b.dataset.daProb = String(i);
+    b.addEventListener('click', function () { daProbIdx = i; daShown = false; markTried('decadd'); daRender(); });
+    pseg.appendChild(b);
+  });
+  const aseg = document.getElementById('daAlignSeg');
+  [['point', '小数点对齐'], ['end', '末尾对齐（错）']].forEach(function (m) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = m[1];
+    b.dataset.daAlign = m[0];
+    b.addEventListener('click', function () { daAlign = m[0]; markTried('decadd'); daRender(); });
+    aseg.appendChild(b);
+  });
+  document.getElementById('daCalc').addEventListener('click', function () { daShown = true; markTried('decadd'); daRender(); });
+  daRender();
+})();
+
+/* ---------- demo-moveshape · 4.14 图形的运动（二）（方法：网格整体拖） ----------
+   平移：每个点都向同一个方向移动相同的格数，形状、大小一点不变。
+   轴对称：对称点到对称轴的距离相等；对称轴穿过第 3 列的正中间，左边的第 c 列照镜子是第 6−c 列。 */
+let mvMode = 'move';
+let mvOx = 2, mvOy = 2;
+let mvDx = 0, mvDy = 0;
+let mvMirror = -1;
+const MV_SHAPE = [[0, 0], [1, 0], [2, 0], [1, 1]];
+function mvCells() { return MV_SHAPE.map(function (c) { return [c[0] + mvOx, c[1] + mvOy]; }); }
+function mvRender() {
+  const grid = document.getElementById('mvGrid');
+  const shapeSet = {};
+  mvCells().forEach(function (c) { shapeSet[c[1] * 8 + c[0]] = true; });
+  for (let i = 0; i < grid.children.length; i++) {
+    const cell = grid.children[i];
+    cell.classList.toggle('mv-on', !!shapeSet[i]);
+    cell.classList.toggle('mv-axis', (i % 8) === 3);
+    cell.classList.toggle('mv-mirror', i === mvMirror);
+  }
+  const parts = [];
+  if (mvDx > 0) parts.push('向右移了 ' + mvDx + ' 格');
+  if (mvDx < 0) parts.push('向左移了 ' + (-mvDx) + ' 格');
+  if (mvDy > 0) parts.push('向下移了 ' + mvDy + ' 格');
+  if (mvDy < 0) parts.push('向上移了 ' + (-mvDy) + ' 格');
+  document.getElementById('mvRead').textContent = parts.length
+    ? '小船' + parts.join('，') + '——每个点都走了同样的格数，形状一点没变。'
+    : '小船还没有动：点方向按钮，把它平移几格。';
+  document.querySelectorAll('#mvModeSeg [data-mv-mode]').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(b.dataset.mvMode === mvMode));
+  });
+}
+function mvMove(dx, dy) {
+  const nx = mvOx + dx, ny = mvOy + dy;
+  const ok = MV_SHAPE.every(function (c) {
+    const x = c[0] + nx, y = c[1] + ny;
+    return x >= 0 && x < 8 && y >= 0 && y < 6;
+  });
+  if (!ok) { document.getElementById('mvRead').textContent = '到边了，再移就出格子了。'; return; }
+  mvOx = nx; mvOy = ny; mvDx += dx; mvDy += dy; mvMirror = -1;
+  markTried('moveshape');
+  mvRender();
+}
+(function mvInit() {
+  const seg = document.getElementById('mvModeSeg');
+  [['move', '平移'], ['mirror', '轴对称']].forEach(function (m) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = m[1];
+    b.dataset.mvMode = m[0];
+    b.addEventListener('click', function () { mvMode = m[0]; mvMirror = -1; markTried('moveshape'); mvRender(); });
+    seg.appendChild(b);
+  });
+  const grid = document.getElementById('mvGrid');
+  for (let i = 0; i < 48; i++) {
+    const d = document.createElement('button');
+    d.type = 'button';
+    d.className = 'mv-cell';
+    d.dataset.mvCell = String(i);
+    d.addEventListener('click', function () {
+      if (mvMode !== 'mirror') return;
+      const col = i % 8, row = Math.floor(i / 8);
+      if (col > 3) {
+        document.getElementById('mvMsg').textContent = '先在对称轴左边点一个点——右边的点照镜子会跑出格子。';
+        return;
+      }
+      const mirCol = 6 - col;
+      const dist = 3 - col;
+      mvMirror = row * 8 + mirCol;
+      markTried('moveshape');
+      document.getElementById('mvMsg').textContent = dist === 0
+        ? '这个点就在对称轴上，对称点就是它自己。'
+        : '这个点到对称轴是 ' + dist + ' 格，对称点到对称轴也是 ' + dist + ' 格——两边一样远。';
+      mvRender();
+    });
+    grid.appendChild(d);
+  }
+  document.getElementById('mvLeft').addEventListener('click', function () { mvMove(-1, 0); });
+  document.getElementById('mvRight').addEventListener('click', function () { mvMove(1, 0); });
+  document.getElementById('mvUp').addEventListener('click', function () { mvMove(0, -1); });
+  document.getElementById('mvDown').addEventListener('click', function () { mvMove(0, 1); });
+  mvRender();
+})();
+
+/* ---------- demo-average · 4.15 平均数（方法：削峰填谷） ----------
+   80、90、100、90：总数 360，360÷4=90。60、80、100：总数 240，240÷3=80。
+   平均数是削峰填谷以后的高度，不一定是原来的某个数。 */
+const AV_DATA = [
+  { label: '跳绳', vals: [80, 90, 100, 90],
+    level: '把 100 的 10 分给 80：80 变 90，100 变 90，4 条一样高了。' },
+  { label: '看书', vals: [60, 80, 100],
+    level: '把 100 的 20 分给 60：60 变 80，100 变 80，3 条一样高了。' }
+];
+let avIdx = 0;
+let avLeveled = false;
+function avRender() {
+  const d = AV_DATA[avIdx];
+  const total = d.vals.reduce(function (s, x) { return s + x; }, 0);
+  const avg = total / d.vals.length;
+  const bars = document.getElementById('avBars');
+  while (bars.firstChild) bars.removeChild(bars.firstChild);
+  d.vals.forEach(function (v) {
+    const col = document.createElement('div');
+    col.className = 'av-col';
+    const t = document.createElement('div');
+    t.className = 'av-val';
+    t.textContent = String(avLeveled ? avg : v);
+    const b = document.createElement('div');
+    b.className = 'av-bar' + (avLeveled ? ' av-flat' : '');
+    b.style.height = (avLeveled ? avg : v) * 2 + 'px';
+    col.appendChild(t);
+    col.appendChild(b);
+    bars.appendChild(col);
+  });
+  document.getElementById('avRead').textContent = avLeveled
+    ? '总数是 ' + total + '，' + total + '÷' + d.vals.length + '=' + avg + '——平均数是 ' + avg + '。' + d.level
+    : d.label + '：' + d.vals.join('、') + '。点“削一削”，把高的削下来补给矮的。';
+  document.querySelectorAll('#avDataSeg [data-av-data]').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(+b.dataset.avData === avIdx));
+  });
+}
+(function avInit() {
+  const seg = document.getElementById('avDataSeg');
+  AV_DATA.forEach(function (d, i) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = d.label;
+    b.dataset.avData = String(i);
+    b.addEventListener('click', function () { avIdx = i; avLeveled = false; markTried('average'); avRender(); });
+    seg.appendChild(b);
+  });
+  document.getElementById('avLevel').addEventListener('click', function () { avLeveled = true; markTried('average'); avRender(); });
+  avRender();
+})();
+
+/* ---------- demo-chickenrabbit · 4.16 鸡兔同笼（方法：腿数滑杆） ----------
+   头 35 个，脚 94 只：全当鸡是 70 条腿，每换一只兔多 2 条腿，差 24 条，换 12 只兔。
+   头 10 个，脚 28 只：全当鸡 20 条腿，差 8 条，换 4 只兔。 */
+const CR_PROBS = [
+  { heads: 35, legs: 94 },
+  { heads: 10, legs: 28 }
+];
+let crProbIdx = 0;
+let crRabbits = 0;
+function crRender() {
+  const p = CR_PROBS[crProbIdx];
+  const chickens = p.heads - crRabbits;
+  const legs = chickens * 2 + crRabbits * 4;
+  document.getElementById('crRead').textContent = '鸡 ' + chickens + ' 只，兔 ' + crRabbits + ' 只，一共 ' + legs + ' 条腿（目标 ' + p.legs + ' 条）。';
+  document.getElementById('crRabbitTx').textContent = '兔 ' + crRabbits + ' 只';
+  document.getElementById('crFill').style.width = Math.round(legs / (p.heads * 4) * 100) + '%';
+  const diff = p.legs - legs;
+  document.getElementById('crMsg').textContent = diff === 0
+    ? '对了！兔 ' + crRabbits + ' 只，鸡 ' + chickens + ' 只——验算：' + chickens + '×2+' + crRabbits + '×4=' + legs + '。'
+    : diff > 0
+      ? '还差 ' + diff + ' 条腿：每换一只兔多 2 条腿，还要换 ' + (diff / 2) + ' 只兔。'
+      : '多了 ' + (-diff) + ' 条腿：换回去 ' + (-diff / 2) + ' 只鸡。';
+  document.querySelectorAll('#crProbSeg [data-cr-prob]').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(+b.dataset.crProb === crProbIdx));
+  });
+}
+(function crInit() {
+  const seg = document.getElementById('crProbSeg');
+  CR_PROBS.forEach(function (p, i) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = '头 ' + p.heads + ' 个，脚 ' + p.legs + ' 只';
+    b.dataset.crProb = String(i);
+    b.addEventListener('click', function () { crProbIdx = i; crRabbits = 0; markTried('chickenrabbit'); crRender(); });
+    seg.appendChild(b);
+  });
+  document.getElementById('crMinus').addEventListener('click', function () { if (crRabbits > 0) crRabbits--; markTried('chickenrabbit'); crRender(); });
+  document.getElementById('crPlus').addEventListener('click', function () { if (crRabbits < CR_PROBS[crProbIdx].heads) crRabbits++; markTried('chickenrabbit'); crRender(); });
+  document.getElementById('crAllChicken').addEventListener('click', function () { crRabbits = 0; markTried('chickenrabbit'); crRender(); });
+  crRender();
 })();
