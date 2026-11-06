@@ -2688,6 +2688,8 @@ check('L checkpoint: unit lights up only when all its tasks are done',
   checkpointDetail.innerHTML.includes('分数的初步认识小达人') && checkpointDetail.innerHTML.includes('已点亮 1 个'));
 check('L checkpoint: lit unit shows task counts matching storage',
   checkpointDetail.innerHTML.includes('动画 1 / 1') && checkpointDetail.innerHTML.includes('已练 1 / 1 条') && checkpointDetail.innerHTML.includes('任务 2 / 2'));
+check('L checkpoint: per-grade header labels the count as units (15 units, not 16 points)',
+  /已点亮 \d+ \/ \d+ 个单元）/.test(checkpointDetail.innerHTML));
 // 只玩演示、没练过 → 1/2，不点亮、不给徽章。
 lsData['math-review-v1'] = JSON.stringify({});
 navGo('checkpoint');
@@ -2965,6 +2967,43 @@ navGo('point-3.12');
 check('N qgen: after clearing, the point shows a fresh variant again',
   sandbox.qgenShown && sandbox.qgenShown['3.12'] && sandbox.qgenShown['3.12'].q !== q1 &&
   !pointDetail.innerHTML.includes('上次做错的那道题'));
+// 错题原数重做（只点对错）：只点“答错了”不点“有没有把握”，也要记下当初那组数字——
+// 改前存错题的逻辑在“对错和把握都点了”里面，只点对错就什么都不存，下次回来还是新题
+// （真机复测：66×31 答错后重开变 61×26）。
+// 注意：不用 3.12 测这条——它在本节前面已经被点过“答对+有把握”，qaState 里还留着
+// confident=true，改前代码也会顺着这条漏网的把握把错题存下来，检查就测不出问题。
+// 9.1 在本轮之前从没被点过自评，状态是干净的。
+navGo('point-9.1');
+const q1w = sandbox.qgenShown && sandbox.qgenShown['9.1'] && sandbox.qgenShown['9.1'].q;
+const gAnsW = pointDetail.querySelector('[data-qa-a="g"]'); gAnsW.hidden = true;
+const gBtnW = makeEl('button'); gBtnW.dataset.qa = 'g';
+clickPD(gBtnW);
+const gRowW = pointDetail.querySelector('[data-qa-mark="g"]');
+gRowW.dataset.point = '9.1'; gRowW.dataset.qaMark = 'g';
+const gMarkW2 = makeEl('button'); gMarkW2.dataset.mark = 'wrong';
+gMarkW2.closest = (sel) => sel === '[data-mark]' ? gMarkW2 : (sel === '[data-qa-mark]' ? gRowW : null);
+clickPD(gMarkW2); // 注意：不点 confidence
+check('N qgen: marking wrong WITHOUT confidence still stores the exact numbers',
+  JSON.parse(lsData['math-qgen-failed-v1'] || '{}')['9.1'] &&
+  JSON.parse(lsData['math-qgen-failed-v1'] || '{}')['9.1'].q === q1w);
+navGo('home');
+navGo('point-9.1');
+check('N qgen: wrong-only miss replays from the point page with the note',
+  sandbox.qgenShown && sandbox.qgenShown['9.1'] && sandbox.qgenShown['9.1'].q === q1w &&
+  pointDetail.innerHTML.includes('上次做错的那道题'));
+// 清掉，免得污染后面的检查。
+const gAnsW2 = pointDetail.querySelector('[data-qa-a="g"]'); gAnsW2.hidden = true;
+const gBtnW2 = makeEl('button'); gBtnW2.dataset.qa = 'g';
+clickPD(gBtnW2);
+const gRowW2 = pointDetail.querySelector('[data-qa-mark="g"]');
+gRowW2.dataset.point = '9.1'; gRowW2.dataset.qaMark = 'g';
+const gMarkRW = makeEl('button'); gMarkRW.dataset.mark = 'right';
+const gConfYW = makeEl('button'); gConfYW.dataset.conf = 'yes';
+gMarkRW.closest = (sel) => sel === '[data-mark]' ? gMarkRW : (sel === '[data-qa-mark]' ? gRowW2 : null);
+gConfYW.closest = (sel) => sel === '[data-conf]' ? gConfYW : (sel === '[data-qa-mark]' ? gRowW2 : null);
+clickPD(gMarkRW); clickPD(gConfYW);
+check('N qgen: wrong-only miss cleared after answering it right',
+  !JSON.parse(lsData['math-qgen-failed-v1'] || '{}')['9.1']);
 // 混着练里的换数字题答错了，也要记下当初那组数字——改前混着练的自评行 data-qa-mark 是题号
 // （不是 'g'），又没记 mixShown，答错只进了复习库、数字丢了；重开知识点页总是新题
 // （真机复测 7edb765：3.11 的 47×29 答错后重开变 35×68、48×74，全无“上次做错”提示）。
@@ -3029,11 +3068,35 @@ const wbCur = JSON.parse(lsData['math-review-v1'] || '{}');
 const wbFreshId = ['1.13', '1.8', '3.3', '1.2'].find(id => !wbCur[id]) || '1.13';
 wbCur[wbFreshId] = { last: Date.now(), correct: false, confident: false, streak: 0, due: Date.now() + 86400000 };
 lsData['math-review-v1'] = JSON.stringify(wbCur);
-if (typeof sandbox.syncReviewFromStorage === 'function') sandbox.syncReviewFromStorage();
+// 注意：这里故意不调 syncReviewFromStorage()——错题本打开时自己就要重读存储；
+// 改前 renderWrongBook 只读内存里的旧份，数就对不上。
 navGo('review');
 check('wrongbook: sync from another tab updates the wrong-book count',
   byId.reviewCard.innerHTML.includes('共 ' + (wbN + 1) + ' 条错题'));
 lsData['math-review-v1'] = wbBefore;
+if (typeof sandbox.syncReviewFromStorage === 'function') sandbox.syncReviewFromStorage();
+// 跨标签页写：别的窗口记了一笔，这边再记一笔时不能盖掉别人的——
+// 改前 recordAttempt 只写内存里的那份，后写盖掉先写。
+const raBefore = lsData['math-review-v1'];
+const raCur = JSON.parse(raBefore || '{}');
+const raOtherId = ['1.13', '1.8', '3.3', '1.2'].find(id => !raCur[id]) || '1.13';
+raCur[raOtherId] = { last: Date.now(), correct: false, confident: false, streak: 0, due: Date.now() + 86400000 };
+lsData['math-review-v1'] = JSON.stringify(raCur);
+navGo('point-3.12');
+const raAns = pointDetail.querySelector('[data-qa-a="g"]'); raAns.hidden = true;
+const raBtn = makeEl('button'); raBtn.dataset.qa = 'g';
+clickPD(raBtn);
+const raRow = pointDetail.querySelector('[data-qa-mark="g"]');
+raRow.dataset.point = '3.12'; raRow.dataset.qaMark = 'g';
+const raMark = makeEl('button'); raMark.dataset.mark = 'right';
+const raConf = makeEl('button'); raConf.dataset.conf = 'yes';
+raMark.closest = (sel) => sel === '[data-mark]' ? raMark : (sel === '[data-qa-mark]' ? raRow : null);
+raConf.closest = (sel) => sel === '[data-conf]' ? raConf : (sel === '[data-qa-mark]' ? raRow : null);
+clickPD(raMark); clickPD(raConf);
+const raAfter = JSON.parse(lsData['math-review-v1'] || '{}');
+check('review: recordAttempt syncs first, another tab\'s entry survives',
+  raAfter[raOtherId] && raAfter[raOtherId].correct === false && raAfter['3.12'] && raAfter['3.12'].correct === true);
+lsData['math-review-v1'] = raBefore;
 if (typeof sandbox.syncReviewFromStorage === 'function') sandbox.syncReviewFromStorage();
 
 // ---------- 11. 创意实验（8 个新演示，145 个动画） ----------
@@ -3070,6 +3133,9 @@ function findIn(container, sel, key, val) {
 // 13有几种凑法：先猜 4 种，再摆 9+4 和 4+9（换位置也算一种），找全 8 种。
 let c13 = triedCount();
 navGo('demo-thirteen');
+// 桩 DOM 只在 getElementById 时才建元素：改前代码不认 thMsg13/thIntro/thCrit，
+// 直接读 byId 会抛错而不是干净失败，先把这几个 id 建出来。
+documentStub.getElementById('thMsg13'); documentStub.getElementById('thIntro'); documentStub.getElementById('thCrit');
 click(byId.thGuessSet);
 check('thirteen: guess recorded before play, total revealed only as / 8',
   byId.thGuessTx.textContent.includes('你猜的是 4 种') && byId.thCount.textContent.includes('/ 8 种'));
@@ -3082,16 +3148,16 @@ thFill(9, 4);
 check('thirteen: 9+4 shows the equation', byId.thEq.textContent.includes('9 + 4 = 13'));
 click(byId.thRecord);
 check('thirteen: 9+4 recorded with the make-ten note and counts toward progress',
-  byId.thMsg.textContent.includes('记下了：9+4 = 13') && byId.thMsg.textContent.includes('9 再凑 1 个就是 10') &&
+  byId.thMsg13.textContent.includes('记下了：9+4 = 13') && byId.thMsg13.textContent.includes('9 再凑 1 个就是 10') &&
   byId.thFound.textContent.includes('9+4') && triedCount() === c13 + 1);
 thFill(4, 9);
 click(byId.thRecord);
 check('thirteen: 4+9 counts as a different way and notes the swap',
-  byId.thMsg.textContent.includes('记下了：4+9 = 13') && byId.thMsg.textContent.includes('换了位置') &&
+  byId.thMsg13.textContent.includes('记下了：4+9 = 13') && byId.thMsg13.textContent.includes('换了位置') &&
   byId.thCount.textContent.includes('找到了 2 / 8 种'));
 thFill(5, 5);
 click(byId.thRecord);
-check('thirteen: 5+5 is not 13 and is refused', byId.thMsg.textContent.includes('不是 13'));
+check('thirteen: 5+5 is not 13 and is refused', byId.thMsg13.textContent.includes('不是 13'));
 [[3, 10], [10, 3], [5, 8], [8, 5], [6, 7], [7, 6]].forEach(function (pr) { thFill(pr[0], pr[1]); click(byId.thRecord); });
 check('thirteen: all 8 ordered ways found, why revealed',
   byId.thCount.textContent.includes('找到了 8 / 8 种') && byId.thCount.textContent.includes('找全了') &&
@@ -3102,7 +3168,17 @@ click(byId.thGuessSet);
 check('thirteen: guess for 14 reveals / 7', byId.thCount.textContent.includes('/ 7 种'));
 thFill(10, 4); click(byId.thRecord);
 check('thirteen: 10+4 on target 14 uses the 10-already-ten note',
-  byId.thMsg.textContent.includes('记下了：10+4 = 14') && byId.thMsg.textContent.includes('10 已经是 10 了'));
+  byId.thMsg13.textContent.includes('记下了：10+4 = 14') && byId.thMsg13.textContent.includes('10 已经是 10 了'));
+// 换目标后，提示、成功条件、三档都要跟当前目标走——改前提示还写 13（其实写到了温度计的
+// thMsg 上，十三自己的消息从来没变过），成功条件还是 13，三档全局一个，换到 14 后
+// 提高 ✓ 还亮着。
+check('thirteen: message id is thMsg13 (no longer collides with the thermometer thMsg)',
+  html.includes('id="thMsg13"') && html.split('id="thMsg"').length - 1 === 1 &&
+  src.includes("getElementById('thMsg13')"));
+check('thirteen: after switching to 14, the intro and criteria follow the target',
+  byId.thIntro.innerHTML.includes('14 能拆成几种') && byId.thCrit.textContent.includes('把 14 的凑法找全'));
+check('thirteen: tiers are per-target — on 14 with 1 way found, only 基础 is lit',
+  tierLit(byId.thTiers, '基础') && !tierLit(byId.thTiers, '提高') && !tierLit(byId.thTiers, '挑战'));
 byId.thFind.value = '13 能拆成好多对';
 click(byId.thFindSave);
 check('thirteen: discovery saved into math-inquiry-v1',
@@ -3113,13 +3189,124 @@ check('thirteen: discovery renders as 我的发现 in the inquiry list, not as h
   sandbox.inquiryListHtml([{ kind: 'discovery', taskId: 'thirteen', text: '13 能拆成好多对', demo: 'thirteen', ts: Date.now() }], '空').includes('13有几种凑法') &&
   !sandbox.inquiryListHtml([{ kind: 'discovery', taskId: 'thirteen', text: '13 能拆成好多对', demo: 'thirteen', ts: Date.now() }], '空').includes('探究作业'));
 
-// 24点：先拼 8÷(3−8÷3)=24（浮点是 23.99999999999999，靠 1e-6 容差认出来）。
+// 24点：每组数的不同拼法数是穷举验算过的（精确分数算术，规范形式判重）——
+// 默认第一组 (3,4,5,6) 有 5 种，(3,3,8,8) 只有 1 种真正解法，所以排在最后当挑战。
+// 判重按表达式结构：只加括号重写不算第二种（改前只比文本，加括号也算第 2 个）。
+function tf24CountSolutions(nums) {
+  // 精确分数 + 规范形式的小穷举：和 app.js 的 canonTree 同一个思路，独立实现。
+  function gcdT(a, b) { a = Math.abs(a); b = Math.abs(b); while (b) { const t = a % b; a = b; b = t; } return a || 1; }
+  function fr(n, d) { if (d === 0) return null; if (d < 0) { n = -n; d = -d; } const g = gcdT(n, d); return { n: n / g, d: d / g }; }
+  function ev(t) {
+    if (t.n !== undefined) return fr(t.n, 1);
+    const a = ev(t.l), b = ev(t.r);
+    if (!a || !b) return null;
+    if (t.op === '+') return fr(a.n * b.d + b.n * a.d, a.d * b.d);
+    if (t.op === '-') return fr(a.n * b.d - b.n * a.d, a.d * b.d);
+    if (t.op === '*') return fr(a.n * b.n, a.d * b.d);
+    return fr(a.n * b.d, a.d * b.n);
+  }
+  function canon(t) {
+    if (t.n !== undefined) return 'n' + t.n;
+    const cl = canon(t.l), cr = canon(t.r);
+    if (t.op === '+' || t.op === '*') { const s = [cl, cr].sort(); return '(' + s[0] + t.op + s[1] + ')'; }
+    return '(' + cl + t.op + cr + ')';
+  }
+  function perms(arr) {
+    if (arr.length <= 1) return [arr.slice()];
+    const out = [];
+    for (let i = 0; i < arr.length; i++) {
+      const rest = arr.slice(0, i).concat(arr.slice(i + 1));
+      perms(rest).forEach(p => out.push([arr[i]].concat(p)));
+    }
+    return out;
+  }
+  function shapes(a, b, c, d) {
+    return [
+      { op: 'X', l: { op: 'X', l: { op: 'X', l: a, r: b }, r: c }, r: d },
+      { op: 'X', l: { op: 'X', l: a, r: { op: 'X', l: b, r: c } }, r: d },
+      { op: 'X', l: { op: 'X', l: a, r: b }, r: { op: 'X', l: c, r: d } },
+      { op: 'X', l: a, r: { op: 'X', l: { op: 'X', l: b, r: c }, r: d } },
+      { op: 'X', l: a, r: { op: 'X', l: b, r: { op: 'X', l: c, r: d } } },
+    ];
+  }
+  const found = new Set();
+  perms([0, 1, 2, 3]).forEach(p => {
+    const leaves = p.map(i => ({ n: nums[i] }));
+    shapes(leaves[0], leaves[1], leaves[2], leaves[3]).forEach(shape => {
+      const nodes = [];
+      (function walk(t) { if (t.op === 'X') { nodes.push(t); walk(t.l); walk(t.r); } })(shape);
+      ['+', '-', '*', '/'].forEach(o1 => ['+', '-', '*', '/'].forEach(o2 => ['+', '-', '*', '/'].forEach(o3 => {
+        nodes[0].op = o1; nodes[1].op = o2; nodes[2].op = o3;
+        const v = ev(shape);
+        if (v && v.n === 24 * v.d) found.add(canon(shape));
+      })));
+    });
+  });
+  return found.size;
+}
+const tf24Sets = [...src.matchAll(/nums: \[([\d, ]+)\]/g)].map(m => m[1].split(',').map(Number));
+const tf24Hard = tf24Sets.find(s => s.join(',') === '3,3,8,8') || [0, 0, 0, 0];
+check('twentyfour: 6 sets in the source, each has a solution, default has 2+, 3 3 8 8 has exactly 1',
+  tf24Sets.length === 6 && tf24Sets.every(s => tf24CountSolutions(s) >= 1) &&
+  tf24CountSolutions(tf24Sets[0]) >= 2 && tf24CountSolutions(tf24Hard) === 1);
 let c0 = triedCount();
 navGo('demo-twentyfour');
-check('twentyfour: first set is 3 3 8 8', byId.tf24Nums.textContent.includes('3') && byId.tf24Nums.textContent.includes('8') &&
+check('twentyfour: first set is 3 4 5 6', byId.tf24Nums.textContent === '3　4　5　6' &&
   byId.tf24NumRow.children.length === 4);
 click(byId.tf24PredNo);
 check('twentyfour: prediction recorded', byId.tf24PredTx.textContent.includes('拼不出 24'));
+// 默认组第一种拼法：(3+5−4)×6 = 24。
+click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', '('));
+click(findIn(byId.tf24NumRow, '#tf24NumRow [data-tf24-num]', 'tf24Num', 0));
+click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', '+'));
+click(findIn(byId.tf24NumRow, '#tf24NumRow [data-tf24-num]', 'tf24Num', 2));
+click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', '−'));
+click(findIn(byId.tf24NumRow, '#tf24NumRow [data-tf24-num]', 'tf24Num', 1));
+click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', ')'));
+click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', '×'));
+click(findIn(byId.tf24NumRow, '#tf24NumRow [data-tf24-num]', 'tf24Num', 3));
+click(byId.tf24Calc);
+check('twentyfour: (3+5-4)x6 counts as 24, wrong prediction called out, tiers lit',
+  byId.tf24Msg.textContent.includes('拼出来了') && byId.tf24Found.textContent.includes('1 种') &&
+  byId.tf24Msg.textContent.includes('你猜错了') &&
+  tierLit(byId.tf24Tiers, '基础') && triedCount() === c0 + 1);
+// 同一组第二种真正不同的拼法：(5−(4−3))×6 = 24。
+click(byId.tf24Clear);
+click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', '('));
+click(findIn(byId.tf24NumRow, '#tf24NumRow [data-tf24-num]', 'tf24Num', 2));
+click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', '−'));
+click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', '('));
+click(findIn(byId.tf24NumRow, '#tf24NumRow [data-tf24-num]', 'tf24Num', 1));
+click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', '−'));
+click(findIn(byId.tf24NumRow, '#tf24NumRow [data-tf24-num]', 'tf24Num', 0));
+click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', ')'));
+click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', ')'));
+click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', '×'));
+click(findIn(byId.tf24NumRow, '#tf24NumRow [data-tf24-num]', 'tf24Num', 3));
+click(byId.tf24Calc);
+check('twentyfour: a second, structurally different solution (5-(4-3))x6 is accepted',
+  byId.tf24Msg.textContent.includes('拼出来了') && byId.tf24Found.textContent.includes('2 种') &&
+  byId.tf24Found.textContent.includes('够两种了') && tierLit(byId.tf24Tiers, '提高'));
+// 只加括号重写第一种拼法：((3+5)−4)×6 和 (3+5−4)×6 是同一棵树，不算第二种。
+click(byId.tf24Clear);
+click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', '('));
+click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', '('));
+click(findIn(byId.tf24NumRow, '#tf24NumRow [data-tf24-num]', 'tf24Num', 0));
+click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', '+'));
+click(findIn(byId.tf24NumRow, '#tf24NumRow [data-tf24-num]', 'tf24Num', 2));
+click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', ')'));
+click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', '−'));
+click(findIn(byId.tf24NumRow, '#tf24NumRow [data-tf24-num]', 'tf24Num', 1));
+click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', ')'));
+click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', '×'));
+click(findIn(byId.tf24NumRow, '#tf24NumRow [data-tf24-num]', 'tf24Num', 3));
+click(byId.tf24Calc);
+check('twentyfour: a parenthesised rewrite of the first solution is rejected as a duplicate',
+  byId.tf24Msg.textContent.includes('这个拼法已经记下了') && byId.tf24Found.textContent.includes('2 种'));
+// 挑战：换到 3 3 8 8（第 6 组），不用提示拼出 8÷(3−8÷3)=24
+// （浮点是 23.99999999999999，靠 1e-6 容差认出来）。
+for (let i = 0; i < 5; i++) click(byId.tf24New);
+check('twentyfour: 5 switches reach 3 3 8 8', byId.tf24Nums.textContent === '3　3　8　8');
 click(findIn(byId.tf24NumRow, '#tf24NumRow [data-tf24-num]', 'tf24Num', 2));
 click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', '÷'));
 click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', '('));
@@ -3130,39 +3317,9 @@ click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', '÷'));
 click(findIn(byId.tf24NumRow, '#tf24NumRow [data-tf24-num]', 'tf24Num', 1));
 click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', ')'));
 click(byId.tf24Calc);
-check('twentyfour: 8÷(3−8÷3) counts as 24, wrong prediction called out, tiers lit',
+check('twentyfour: 8÷(3−8÷3) counts as 24 with no hint, challenge tier lit',
   byId.tf24Msg.textContent.includes('拼出来了') && byId.tf24Found.textContent.includes('1 种') &&
-  byId.tf24Msg.textContent.includes('你猜错了') &&
-  tierLit(byId.tf24Tiers, '基础') && tierLit(byId.tf24Tiers, '挑战') &&
-  triedCount() === c0 + 1);
-// 同一组数换个拼法要能再算对：先换到 (1,2,3,4)，(1+3)×(4+2) 和 4×3×2×1 都是 24。
-click(byId.tf24New); click(byId.tf24New); click(byId.tf24New); click(byId.tf24New);
-check('twentyfour: 换一组数字 4 次到 1 2 3 4', byId.tf24Nums.textContent.includes('1') && byId.tf24Nums.textContent.includes('4'));
-click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', '('));
-click(findIn(byId.tf24NumRow, '#tf24NumRow [data-tf24-num]', 'tf24Num', 0));
-click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', '+'));
-click(findIn(byId.tf24NumRow, '#tf24NumRow [data-tf24-num]', 'tf24Num', 2));
-click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', ')'));
-click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', '×'));
-click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', '('));
-click(findIn(byId.tf24NumRow, '#tf24NumRow [data-tf24-num]', 'tf24Num', 3));
-click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', '+'));
-click(findIn(byId.tf24NumRow, '#tf24NumRow [data-tf24-num]', 'tf24Num', 1));
-click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', ')'));
-click(byId.tf24Calc);
-check('twentyfour: (1+3)×(4+2)=24 accepted', byId.tf24Msg.textContent.includes('拼出来了'));
-click(byId.tf24Clear);
-click(findIn(byId.tf24NumRow, '#tf24NumRow [data-tf24-num]', 'tf24Num', 3));
-click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', '×'));
-click(findIn(byId.tf24NumRow, '#tf24NumRow [data-tf24-num]', 'tf24Num', 2));
-click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', '×'));
-click(findIn(byId.tf24NumRow, '#tf24NumRow [data-tf24-num]', 'tf24Num', 1));
-click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', '×'));
-click(findIn(byId.tf24NumRow, '#tf24NumRow [data-tf24-num]', 'tf24Num', 0));
-click(byId.tf24Calc);
-check('twentyfour: a second, different solution 4×3×2×1 is also accepted',
-  byId.tf24Msg.textContent.includes('拼出来了') && byId.tf24Found.textContent.includes('2 种') &&
-  byId.tf24Found.textContent.includes('够两种了') && tierLit(byId.tf24Tiers, '提高'));
+  tierLit(byId.tf24Tiers, '挑战'));
 byId.tf24Find.value = '24 点没有标准答案，顺序最重要';
 click(byId.tf24FindSave);
 check('twentyfour: discovery saved', byId.tf24FindSaved.textContent.includes('记下来了'));
@@ -3170,14 +3327,15 @@ check('twentyfour: discovery saved', byId.tf24FindSaved.textContent.includes('�
 // 三门问题：固定种子模拟换门赢 68 次、不换赢 36 次；预测“不换更好”会被打脸。
 c0 = triedCount();
 navGo('demo-monty');
+documentStub.getElementById('moCrit'); // 改前代码不认这个 id，直接读 byId 会抛错而不是干净失败
 check('monty: three doors', byId.moDoors.children.length === 3);
-check('monty: why is hidden in the markup until the sim runs (no spoiler before predicting)',
-  html.includes('id="moWhyStatic" hidden'));
+check('monty: why + success criteria are hidden in the markup until the sim runs (no spoiler before predicting)',
+  html.includes('id="moWhyStatic" hidden') && html.includes('id="moCrit" hidden'));
 click(byId.moPredStay);
 click(byId.moSim);
 check('monty: seeded 100-round sim says switch wins 68, stay wins 36',
   byId.moSimOut.textContent.includes('换门赢了 68 次') && byId.moSimOut.textContent.includes('不换赢了 36 次') &&
-  byId.moWhy.textContent.includes('你的预测错了') && byId.moWhyStatic.hidden === false && triedCount() === c0 + 1);
+  byId.moWhy.textContent.includes('你的预测错了') && byId.moWhyStatic.hidden === false && byId.moCrit.hidden === false && triedCount() === c0 + 1);
 click(findIn(byId.moDoors, '#moDoors [data-mo-door]', 'moDoor', 0));
 check('monty: host opens a goat door after the first pick', byId.moRound.textContent.includes('主持人打开了'));
 click(byId.moStay);
@@ -3287,18 +3445,29 @@ click(byId.swOpen);
 check('shopweek: day 1 at price 12 draws 23 customers and sells 20',
   byId.swDayOut.textContent.includes('来了 23 个顾客') && byId.swDayOut.textContent.includes('收入 240 元'));
 for (let d = 0; d < 6; d++) click(byId.swOpen);
-check('shopweek: a week at 12/20 ends with revenue 1680 and cash profit 560',
-  byId.swReport.textContent.includes('总收入 1680 元') && byId.swReport.textContent.includes('现金利润：560 元') &&
-  byId.swReport.textContent.includes('你猜一周能赚 500 元，实际现金利润是 560 元') &&
+check('shopweek: a week at 12/20 ends with revenue 1680 and profit 560',
+  byId.swReport.textContent.includes('总收入 1680 元') && byId.swReport.textContent.includes('利润：560 元') &&
+  byId.swReport.textContent.includes('你猜一周能赚 500 元，实际利润是 560 元') &&
   byId.swReport.textContent.includes('猜得很准') &&
   byId.swStatus.textContent.includes('760 元') && triedCount() === c0 + 1);
-// 换个策略再来一周：14 元进 20 个，收入 1960 元、现金利润 840 元，比上周多赚 280 元。
+// 利润是收入减已卖出商品的成本，不是现金变化：定价 20 元一周只卖 65 件，收入 1300 元、
+// 成本 520 元，利润是 780 元（现金只从 200 变成 380 元，那 180 元是现金变化，不是利润）；
+// 剩 75 件（成本 600 元）另列。改前 headline 写 180 元，挑战档永远打不着。
+click(byId.swReplay);
+for (let i = 0; i < 8; i++) click(byId.swPricePlus);
+for (let d = 0; d < 7; d++) click(byId.swOpen);
+check('shopweek: a week at 20/20 sells 65, profit is 780 (not the 180 cash change)',
+  byId.swReport.textContent.includes('总收入 1300 元') && byId.swReport.textContent.includes('利润：780 元') &&
+  byId.swReport.textContent.includes('还剩 75 个文具盒') && byId.swReport.textContent.includes('600 元') &&
+  byId.swReport.textContent.includes('手里的钱从 200 元变成 380 元') &&
+  byId.swReport.textContent.includes('比上周多赚了 220 元') && tierLit(byId.swTiers, '挑战'));
+// 换个策略再来一周：14 元进 20 个，收入 1960 元、利润 840 元，比上周（780 元）多赚 60 元。
 click(byId.swReplay);
 click(byId.swPricePlus); click(byId.swPricePlus);
 for (let d = 0; d < 7; d++) click(byId.swOpen);
-check('shopweek: replay at 14/20 beats last week (cash profit 840)',
-  byId.swReport.textContent.includes('总收入 1960 元') && byId.swReport.textContent.includes('现金利润：840 元') &&
-  byId.swReport.textContent.includes('比上周多赚了 280 元') && tierLit(byId.swTiers, '挑战'));
+check('shopweek: replay at 14/20 beats last week (profit 840)',
+  byId.swReport.textContent.includes('总收入 1960 元') && byId.swReport.textContent.includes('利润：840 元') &&
+  byId.swReport.textContent.includes('比上周多赚了 60 元') && tierLit(byId.swTiers, '挑战'));
 byId.swFind.value = '卖贵一点，顾客少了但赚得更多';
 click(byId.swFindSave);
 check('shopweek: discovery saved', byId.swFindSaved.textContent.includes('记下来了'));
@@ -3339,6 +3508,7 @@ check('fairgame: discovery saved', byId.fgFindSaved.textContent.includes('记下
 // 造规律：单元 ●▲■，第 10 个是 ●，第 20 个是 ▲；错答只给提示不给答案。
 c0 = triedCount();
 navGo('demo-makerule');
+documentStub.getElementById('mrWhy'); // 改前代码不认这个 id，直接读 byId 会抛错而不是干净失败
 click(findIn(byId.mrPalette, '#mrPalette [data-mr-shape]', 'mrShape', '●'));
 click(findIn(byId.mrPalette, '#mrPalette [data-mr-shape]', 'mrShape', '▲'));
 click(findIn(byId.mrPalette, '#mrPalette [data-mr-shape]', 'mrShape', '■'));
@@ -3363,6 +3533,15 @@ click(byId.mrChallenge);
 check('makerule: unit ●★ makes the 10th a ★',
   byId.mrChallengeOut.textContent.includes('做到了') && byId.mrChallengeOut.textContent.includes('第 10 个正好是第 5 个单元的第 2 个') &&
   tierLit(byId.mrTiers, '挑战'));
+// 为什么要跟实际拼出的单元走：4 个一单元时还说“10 除以 3 余 1”就错了。
+click(byId.mrClear);
+click(findIn(byId.mrPalette, '#mrPalette [data-mr-shape]', 'mrShape', '●'));
+click(findIn(byId.mrPalette, '#mrPalette [data-mr-shape]', 'mrShape', '▲'));
+click(findIn(byId.mrPalette, '#mrPalette [data-mr-shape]', 'mrShape', '■'));
+click(findIn(byId.mrPalette, '#mrPalette [data-mr-shape]', 'mrShape', '★'));
+check('makerule: why follows the actual unit (4 shapes: 10÷4, 3rd unit 2nd item)',
+  byId.mrWhy.innerHTML.includes('一个单元有 4 个') && byId.mrWhy.innerHTML.includes('第 3 个单元的第 2 个') &&
+  byId.mrWhy.innerHTML.includes('10 除以 4 商 2 余 2'));
 byId.mrFind.value = '第几个不用数，数第几个单元就行';
 click(byId.mrFindSave);
 check('makerule: discovery saved', byId.mrFindSaved.textContent.includes('记下来了'));
@@ -3392,6 +3571,11 @@ if (typeof sandbox.labSetMode === 'function') {
   sandbox.labSubmitChallenge();
   check('lab2: empty challenge report says no attempts yet',
     byId.labChallengeReport.innerHTML.includes('还没在挑战模式里做过题'));
+  // 做题过程中就实时列出已做的尝试，不用等交卷——改前点交卷之前列表一直是空的。
+  click(byId['labQ-fracadd']);
+  check('lab2: challenge attempts list live as questions are entered, before submitting',
+    byId.labChallengeReport.innerHTML.includes('分母不一样') &&
+    !byId.labChallengeReport.innerHTML.includes('还没在挑战模式里做过题'));
   // 分数加法台：默认 1/2+1/3，错拼 2/5、正确 5/6，错拼的条比正确的短。
   click(byId.labFaAdd);
   check('lab2: fraction bench shows naive 2/5 vs correct 5/6 and the gap',
@@ -3562,6 +3746,11 @@ check('sims: areamul partial products add up to 120',
 click(byId.amChallenge);
 check('sims: areamul challenge hides the width and shows the target area',
   byId.amBLabel.textContent === '?' && byId.amProd.textContent.includes('目标是 120'));
+// 挑战模式里“数一数”也要打基础档，但不能把宽亮出来——只报面积和还差多少。
+click(byId.amCalc);
+check('sims: areamul counting in challenge mode ticks 基础 without revealing the width',
+  byId.amuMsg.textContent.includes('还差 40') && !byId.amProd.textContent.includes('8 × 10') &&
+  byId.amProd.textContent.includes('目标是 120'));
 sandbox.amSetB(15);
 check('sims: areamul inverse challenge finds width 15',
   byId.amuMsg.textContent.includes('找到了！宽是 15') && tierLit(byId.amTiers, '挑战'));
@@ -3615,6 +3804,12 @@ click(findIn(byId.bfPieces, '#bfPieces [data-i]', 'i', 2));
 click(byId.bfCheck);
 check('sims: buildfrac 3/4 built correctly',
   byId.bfMsg.textContent.includes('造对了！3/4 = 3/4') && tierLit(byId.bfTiers, '基础'));
+// 等值分数按值接受：目标 3/4，拼出 6/8 也算对（改前认了“量对了”却不接受）。
+for (let i = 0; i < 4; i++) click(byId.bfDPlus);
+for (let i = 0; i < 6; i++) click(findIn(byId.bfPieces, '#bfPieces [data-i]', 'i', i));
+click(byId.bfCheck);
+check('sims: buildfrac 6/8 equals 3/4 and is accepted by value',
+  byId.bfMsg.textContent.includes('造对了！6/8 = 3/4') && byId.bfMsg.textContent.includes('一样大，照样算对'));
 click(byId.bfNext);
 for (let i = 0; i < 4; i++) click(byId.bfGuessPlus);
 click(byId.bfGuessSet);
@@ -3674,6 +3869,12 @@ check('sims: quadmorph functions exist',
   typeof sandbox.qmClassify === 'function' && typeof sandbox.qmNudge === 'function');
 check('sims: quadmorph starts as a rectangle',
   byId.qmNow.textContent.includes('现在是：长方形'));
+// 选目标“正方形”时形状直接重置成正方形，提高档就该打勾，不用再拖一下才认。
+sandbox.qmSetType('正方形');
+check('sims: quadmorph picking the square target ticks 提高 at once',
+  byId.qmNow.textContent.includes('现在是：正方形') && byId.qmMsg.textContent.includes('已经是正方形') &&
+  tierLit(byId.qmTiers, '提高'));
+sandbox.qmSetType('长方形');
 click(byId.qmPredNo);
 click(byId.qmV1);
 click(byId.qmRight);
@@ -3716,6 +3917,12 @@ click(byId.npGuessSet);
 click(byId.npReveal);
 check('sims: numplay building 20 lights the 挑战 tier',
   byId.npMsg.textContent.includes('是 20') && tierLit(byId.npTiers, '挑战'));
+// 为什么要跟实际揭示的数走：揭示 14 之后还拿 7 举例，学生会对不上号。
+sandbox.npSetN(14, true);
+click(byId.npReveal);
+check('sims: numplay why follows the revealed number (14, not 7)',
+  byId.npWhy.innerHTML.includes('14 个圆点') && byId.npWhy.innerHTML.includes('十四') &&
+  !byId.npWhy.innerHTML.includes('7 个圆点'));
 byId.npFind.value = '同一个数，有五种样子';
 click(byId.npFindSave);
 check('sims: numplay discovery saved', byId.npFindSaved.textContent.includes('记下来了'));
@@ -3729,6 +3936,17 @@ sandbox.fnlSetGuess(0.5);
 click(byId.fnlUnfurl);
 check('sims: fracnumline 1/2 lands at 0.5',
   byId.fnlMsg.textContent.includes('猜对了') && tierLit(byId.fnlTiers, '基础'));
+// 容差：0.45 猜 0.5 差了一整档，不能算对（改前 |差| <= 0.05 就认）。
+sandbox.fnlSetGuess(0.45);
+click(byId.fnlUnfurl);
+check('sims: fracnumline 0.45 is not accepted for 0.5',
+  byId.fnlMsg.textContent.includes('猜短了') && !byId.fnlMsg.textContent.includes('猜对了'));
+// 点数轴：点的可能是刻度、圆点等子元素，位置必须按整条线算，不能按被点的子元素算——
+// 改前用 e.target 的包围盒，点到刻度上位置就跳。
+const fnlFakeChild = { getBoundingClientRect: function () { return { left: 100, width: 10 }; } };
+(byId.fnlLine._handlers.click || []).forEach(function (f) { f({ target: fnlFakeChild, clientX: 90 }); });
+check('sims: fracnumline clicking the line uses the line, not the clicked child',
+  byId.fnlGuessLabel.textContent === '0.50');
 click(byId.fnlNext);
 sandbox.fnlSetGuess(1.0);
 click(byId.fnlUnfurl);
@@ -3746,6 +3964,18 @@ check('sims: fracnumline 5/4 lands past 1 at 1.25',
 byId.fnlFind.value = '分数在数轴上有自己的位置';
 click(byId.fnlFindSave);
 check('sims: fracnumline discovery saved', byId.fnlFindSaved.textContent.includes('记下来了'));
+
+// 8 个模拟的三档 ✓ 要进 localStorage（math-sim-tiers-v1），刷新页面不丢——
+// 改前 makeTiers 只在内存里，刷新就全灭。
+const simTiersSaved = JSON.parse(lsData['math-sim-tiers-v1'] || '{}');
+check('sims: tiers persist to math-sim-tiers-v1 (numplay all three lit)',
+  simTiersSaved.numplay && simTiersSaved.numplay[0] === true && simTiersSaved.numplay[1] === true && simTiersSaved.numplay[2] === true &&
+  simTiersSaved.areamul && simTiersSaved.areamul[0] === true);
+// 模拟一次刷新：新 makeTiers 从同一个键恢复，三档还是亮的。
+const freshTiersEl = makeEl('div');
+sandbox.makeTiers(freshTiersEl, ['基础：揭开一个数', '提高：只看圆点就猜对', '挑战：造出 20 的五种样子'], 'numplay');
+check('sims: a fresh makeTiers restores the saved tiers from storage',
+  tierLit(freshTiersEl, '基础') && tierLit(freshTiersEl, '提高') && tierLit(freshTiersEl, '挑战'));
 
 const triedAtEnd13 = JSON.parse(lsData['math-tried-demos-v1'] || '[]');
 check('sims: all 8 sims are in the tried list',
@@ -3766,6 +3996,8 @@ check('anims: 3.12 has area + areabuild + maxarea from the lab question',
   hasAnims && JSON.stringify(sandbox.animsForPoint('3.12')) === JSON.stringify(['area', 'areabuild', 'maxarea']));
 check('anims: 1.1 has count + numplay',
   hasAnims && JSON.stringify(sandbox.animsForPoint('1.1')) === JSON.stringify(['count', 'numplay']));
+check('checkpoint: 1.1 counts 2 animations from the registry (count + numplay), not 1 from p.demo',
+  hasAnims && sandbox.unitCheckpoint(1, 2).demosTotal === 2);
 check('anims: unknown point has none', hasAnims && sandbox.animsForPoint('9.99').length === 0);
 check('anims: stub unit 1-0 （进位加法） has 2', hasAnims && sandbox.animsForUnit(1, 0).length === 2);
 check('anims: stub unit 1-2 （准备课） has 2', hasAnims && sandbox.animsForUnit(1, 2).length === 2);
@@ -3875,6 +4107,9 @@ check('cr4: crslider second correct guess in a row lights 挑战 tier (35/94)',
 byId.csFind.value = '差几条腿就换几次，每次多 2 条';
 click(byId.csFindSave);
 check('cr4: crslider discovery saved', byId.csFindSaved.textContent.includes('记下来了'));
+// 假设法文案：滑杆不会硬停，文案不能写“正好停住”。
+check('cr4: crslider intro no longer promises a hard stop at 94 legs',
+  html.includes('滑到 94 条就对了') && !html.includes('滑到 94 条正好停住'));
 
 // 画图补腿：补 2 次到 20 条，再补 1 次到 22 条；点 4 条腿的头被拒绝。
 sandbox.navGo('demo-crdraw');

@@ -152,7 +152,19 @@ function syncReviewFromStorage() {
     if (a && typeof a === 'object') reviewStore = a;
   } catch (e) {}
 }
+/* 8 个模拟的三档 ✓ 存在这里（demoKey -> [三档是否打勾]），刷新页面后恢复。
+   复用不了已有的键：math-tried-demos-v1 只记“玩过没有”，review/inquiry 各有自己的结构。 */
+const SIM_TIERS_KEY = 'math-sim-tiers-v1';
+function loadSimTiers() {
+  try { const o = JSON.parse(lsGet(SIM_TIERS_KEY) || '{}'); return o && typeof o === 'object' ? o : {}; }
+  catch (e) { return {}; }
+}
+function saveSimTiers(o) { lsSet(SIM_TIERS_KEY, JSON.stringify(o)); }
 function recordAttempt(pointId, correct, confident) {
+  // 先从存储重读一份再写：两个标签页同时记题，后写的会盖掉先写的
+  // （真机复测：一个标签页 5 条、新开的标签页 4 条）。storeFailedQgen 本来就每次现读，
+  // 复习库这里以前只读内存里的那份。
+  syncReviewFromStorage();
   const prev = reviewStore[pointId] || { streak: 0 };
   const streak = correct ? (prev.streak || 0) + 1 : 0;
   const days = !correct ? 1 : (!confident ? 1 : (streak >= 2 ? 7 : 3));
@@ -683,6 +695,7 @@ function renderMix(g) {
 }
 /* 今天复习（间隔重复）：到期的知识点列出来，点一条回去重练。 */
 function renderReview() {
+  syncReviewFromStorage(); // 打开就重读：别的标签页记的题，这边也要立刻看到
   const due = duePointIds();
   const practiced = Object.keys(reviewStore).length;
   const mastered = Object.keys(reviewStore).filter(id => reviewStore[id].streak >= 2).length;
@@ -1009,6 +1022,7 @@ function reviewItemHtml(id, pill) {
   return '<button class="unit unit-btn" type="button" data-point="' + esc(id) + '"><b>' + esc(id) + ' · ' + esc(title) + '</b><p>' + (st.correct ? '上次答对' : '上次答错') + ' · ' + (st.confident ? '有把握' : '没把握') + '</p><span class="pill">' + pill + '</span></button>';
 }
 function renderWrongBook() {
+  syncReviewFromStorage(); // 打开就重读：别的标签页记的题，这边也要立刻看到
   const wrong = Object.keys(reviewStore).filter(id => reviewStore[id] && reviewStore[id].correct === false);
   let html = '<h3>错题本</h3>';
   if (!wrong.length) {
@@ -1086,6 +1100,7 @@ const DEMO_GRADES = { tenframe: [1, 2], fraction: [3, 4, 5, 6], balance: [5, 6, 
   maketen: [1, 2], areamul: [3, 4], fraceq: [3, 4, 5], buildfrac: [3, 4, 5],
   areabuild: [3, 4, 5], quadmorph: [4, 7, 8], numplay: [1], fracnumline: [3, 4, 5] };
 function renderProgress() {
+  syncReviewFromStorage(); // 打开就重读：别的标签页记的题，这边也要立刻看到
   const card = document.getElementById('progressCard');
   if (!card) return;
   const practiced = Object.keys(reviewStore).length;
@@ -1363,8 +1378,7 @@ function unitCheckpoint(g, ui) {
   const u = gd.units[ui];
   const store = loadStoredReview();
   const triedKeys = loadTriedKeys();
-  const demos = [];
-  u.points.forEach(p => { if (p.demo && demos.indexOf(p.demo) < 0) demos.push(p.demo); });
+  const demos = animsForUnit(g, ui);
   const demosDone = demos.filter(k => triedKeys.indexOf(k) >= 0).length;
   const practiced = u.points.filter(p => store[p.id]).length;
   const inq = inquiryTaskForUnit(g, ui);
@@ -1407,7 +1421,7 @@ function renderCheckpoint() {
     const units = all.filter(cp => cp.grade === g);
     if (!units.length) continue;
     const gl = units.filter(cp => cp.lit).length;
-    html += '<div class="point-sec"><h4>' + g + ' 年级 · ' + esc(GRADES[g].title.split('· ')[1] || '') + '（已点亮 ' + gl + ' / ' + units.length + '）</h4><div class="unit-list">' +
+    html += '<div class="point-sec"><h4>' + g + ' 年级 · ' + esc(GRADES[g].title.split('· ')[1] || '') + '（已点亮 ' + gl + ' / ' + units.length + ' 个单元）</h4><div class="unit-list">' +
       units.map(cp => {
         n++;
         return '<button class="unit unit-btn' + (cp.lit ? ' cp-lit' : '') + '" type="button" data-cp-unit="' + cp.grade + '-' + cp.unitIndex + '"><b>第 ' + n + ' 站 · ' + esc(cp.unit) + '</b><p>' + esc(cp.term) + ' · ' + cp.pointsTotal + ' 个知识点</p>' + cpTaskListHtml(cp) +
@@ -1538,16 +1552,16 @@ if (pointDetail) pointDetail.addEventListener('click', e => {
     if (markBtn) row.querySelectorAll('[data-mark]').forEach(b => b.setAttribute('aria-pressed', String(b === markBtn)));
     if (confBtn) row.querySelectorAll('[data-conf]').forEach(b => b.setAttribute('aria-pressed', String(b === confBtn)));
     const st = qaState[key];
+    // 换数字题：只点“答错了/答对了”也要记下当初那组数字——不能等“有没有把握”也点了才记，
+    // 不然只点对错的学生下次回来还是新题（真机复测：66×31 答错后重开变 61×26）。
+    // 练一练里是 data-qa-mark="g" + qgenShown；混着练里是序号 + data-qgen + mixShown。
+    if (markBtn && (row.dataset.qaMark === 'g' || row.dataset.qgen)) {
+      const gq = row.dataset.qaMark === 'g' ? qgenShown[pid] : mixShown[pid];
+      if (st.correct) clearFailedQgen(pid);
+      else storeFailedQgen(pid, gq);
+    }
     if (st.correct !== undefined && st.confident !== undefined) {
       const days = recordAttempt(pid, st.correct, st.confident);
-      // 换数字题：答错了记下当初那组数字，下次回来先重做它；答对了就清掉。
-      // 练一练里是 data-qa-mark="g" + qgenShown；混着练里是序号 + data-qgen + mixShown——
-      // 以前混着练没记，答错的换数字题进了复习库却丢了当初的数字（真机复测 7edb765：重开 3.11 总是新题）。
-      if (row.dataset.qaMark === 'g' || row.dataset.qgen) {
-        const gq = row.dataset.qaMark === 'g' ? qgenShown[pid] : mixShown[pid];
-        if (st.correct) clearFailedQgen(pid);
-        else storeFailedQgen(pid, gq);
-      }
       const saved = pointDetail.querySelector('[data-qa-saved="' + row.dataset.qaMark + '"]');
       if (saved) {
         saved.hidden = false;
@@ -3388,13 +3402,32 @@ var LAB_QUESTIONS = [
 var labMode = 'free'; // 自由玩 | 挑战（本节课有效，不存档）
 var labChallengeAttempts = []; // 挑战模式里点开过的问题 id（去重）
 var labChallengeMarks = {}; // qid -> true 答对 / false 答错
+var labChallengeSubmitted = false; // 交过卷之后盒子里是打分界面，实时列表不再覆盖它；新开一道题算新一轮
+/* 挑战模式里做过的题：不用等点“交卷”才看到——做一道，这里就实时列一道。
+   交卷之后是打分界面（有“提交报告”按钮），那时不再用这个列表覆盖它。 */
+function labChallengeRenderLive() {
+  const box = document.getElementById('labChallengeReport');
+  if (!box) return;
+  if (labChallengeSubmitted) return; // 已经交过卷，正在打分
+  if (!labChallengeAttempts.length) {
+    box.innerHTML = '<p>还没在挑战模式里做过题，先选一个问题。</p>';
+    return;
+  }
+  box.innerHTML = '<p>已经做了 ' + labChallengeAttempts.length + ' 道：' +
+    labChallengeAttempts.map(function (qid) {
+      const q = LAB_QUESTIONS.find(function (x) { return x.qid === qid; });
+      return esc(q ? q.title : qid);
+    }).join('、') + '。做完点“交卷”，再给每一道打分。</p>';
+}
 function labEnterQuestion(qid) {
   const q = LAB_QUESTIONS.find(x => x.qid === qid);
   if (!q) return;
   if (labMode === 'challenge' && labChallengeAttempts.indexOf(qid) === -1) {
     labChallengeAttempts.push(qid);
+    labChallengeSubmitted = false; // 新开一道题，算新一轮，实时列表重新接管盒子
     labTrace('挑战：开始做「' + q.title + '」', true);
   }
+  labChallengeRenderLive();
   if (q.demo) { goDemoFromHere('demo-' + q.demo); return; } // 演示压在实验室上面，返回回实验室（以前走 navGo，返回落到演示总站）
   // 工作间问题：留在实验室，摆好这道题的架势（给的是题面，不是答案）。
   if (q.bench === 'fracadd') {
@@ -3418,12 +3451,14 @@ function labSetMode(m) {
   document.getElementById('labModeFree').setAttribute('aria-pressed', String(m === 'free'));
   document.getElementById('labModeChallenge').setAttribute('aria-pressed', String(m === 'challenge'));
   document.getElementById('labChallengeBox').hidden = (m !== 'challenge');
+  if (m === 'challenge') labChallengeRenderLive(); // 进挑战模式就把已做的题列出来，不用等交卷
   document.getElementById('labModeTx').textContent = m === 'challenge'
     ? '挑战模式：没有提示，做完点“交卷”，答错的进今天复习。'
     : '自由玩：随便试，提示都在。';
 }
 function labSubmitChallenge() {
   const box = document.getElementById('labChallengeReport');
+  labChallengeSubmitted = true; // 从这里起盒子里是打分界面，实时列表不再覆盖它
   if (!labChallengeAttempts.length) {
     box.innerHTML = '<p>还没在挑战模式里做过题，先选一个问题。</p>';
     return;
@@ -3580,7 +3615,7 @@ function mtNewProblem() {
 }
 (function () {
   const g = document.getElementById('mtGuessSet'); if (!g) return;
-  mtTiers = makeTiers(document.getElementById('mtTiers'), ['基础：装满一次', '提高：猜对要拿几个', '挑战：连续两道都猜对']);
+  mtTiers = makeTiers(document.getElementById('mtTiers'), ['基础：装满一次', '提高：猜对要拿几个', '挑战：连续两道都猜对'], 'maketen');
   wireDiscovery('maketen', 'mtFind', 'mtFindSave', 'mtFindSaved');
   document.getElementById('mtGuessMinus').addEventListener('click', function () { mtGuess = Math.max(0, mtGuess - 1); document.getElementById('mtGuessLabel').textContent = mtGuess + ' 个'; });
   document.getElementById('mtGuessPlus').addEventListener('click', function () { mtGuess = Math.min(mtTarget()[1], mtGuess + 1); document.getElementById('mtGuessLabel').textContent = mtGuess + ' 个'; });
@@ -3650,12 +3685,28 @@ function amSetB(v) {
 }
 function amCalc() {
   const prod = amA * amB;
-  amRevealed = true;
-  document.getElementById('amProd').textContent = amA + ' × ' + amB + ' = ' + prod;
-  if (amGuess !== null) {
-    document.getElementById('amuMsg').textContent = amGuess === prod ? '你猜 ' + amGuess + '，猜对了！长方形里的方块数就是积。' : '你猜 ' + amGuess + '，实际是 ' + prod + '——' + (amGuess < prod ? '少猜了 ' + (prod - amGuess) : '多猜了 ' + (amGuess - prod)) + '。数一数长方形里的方块，就知道了。';
+  if (amChal) {
+    // 挑战模式：宽藏着，不能把“8 × 15”直接亮出来；只报面积，让学生自己调宽。
+    // 面积本来就写在图上，不算剧透；基础档两种模式都要打勾（真机复测：挑战模式不打勾）。
+    if (prod === 120) {
+      document.getElementById('amProd').textContent = '面积是 120，目标达到了！';
+      document.getElementById('amuMsg').textContent = '面积正好是 120，宽就是 ' + amB + '。8×' + amB + '=120。';
+      if (amTiers) amTiers.done(2);
+    } else if (prod < 120) {
+      document.getElementById('amProd').textContent = '面积是 ' + prod + '，目标是 120。宽是几？';
+      document.getElementById('amuMsg').textContent = '现在面积是 ' + prod + '，还差 ' + (120 - prod) + ' 才到 120——宽再调一调。';
+    } else {
+      document.getElementById('amProd').textContent = '面积是 ' + prod + '，目标是 120。宽是几？';
+      document.getElementById('amuMsg').textContent = '现在面积是 ' + prod + '，超过 120 了 ' + (prod - 120) + '——宽调小一点。';
+    }
   } else {
-    document.getElementById('amuMsg').textContent = '一共 ' + prod + ' 个小方块。下次先猜一个再数。';
+    amRevealed = true;
+    document.getElementById('amProd').textContent = amA + ' × ' + amB + ' = ' + prod;
+    if (amGuess !== null) {
+      document.getElementById('amuMsg').textContent = amGuess === prod ? '你猜 ' + amGuess + '，猜对了！长方形里的方块数就是积。' : '你猜 ' + amGuess + '，实际是 ' + prod + '——' + (amGuess < prod ? '少猜了 ' + (prod - amGuess) : '多猜了 ' + (amGuess - prod)) + '。数一数长方形里的方块，就知道了。';
+    } else {
+      document.getElementById('amuMsg').textContent = '一共 ' + prod + ' 个小方块。下次先猜一个再数。';
+    }
   }
   if (amTiers) amTiers.done(0);
   markTried('areamul');
@@ -3663,7 +3714,7 @@ function amCalc() {
 }
 (function () {
   const g = document.getElementById('amGuessSet'); if (!g) return;
-  amTiers = makeTiers(document.getElementById('amTiers'), ['基础：数出一个积', '提高：看懂分步乘积', '挑战：反过来找到宽']);
+  amTiers = makeTiers(document.getElementById('amTiers'), ['基础：数出一个积', '提高：看懂分步乘积', '挑战：反过来找到宽'], 'areamul');
   wireDiscovery('areamul', 'amFind', 'amFindSave', 'amFindSaved');
   g.addEventListener('click', function () {
     const v = parseInt(document.getElementById('amGuess').value, 10);
@@ -3687,7 +3738,7 @@ function amCalc() {
       document.getElementById('amuMsg').textContent = '四块加起来就是总数：分着算，加起来，和直接数是一样的。';
     }
   });
-  document.getElementById('amCalc').addEventListener('click', function () { if (!amChal) amCalc(); });
+  document.getElementById('amCalc').addEventListener('click', function () { amCalc(); });
   document.getElementById('amChallenge').addEventListener('click', function () {
     amChal = !amChal;
     if (amChal) {
@@ -3772,7 +3823,7 @@ function feNextTask() {
 }
 (function () {
   const g = document.getElementById('feGuessSet'); if (!g) return;
-  feTiers = makeTiers(document.getElementById('feTiers'), ['基础：找到一个相等分数', '提高：猜对分子', '挑战：三个目标都找到']);
+  feTiers = makeTiers(document.getElementById('feTiers'), ['基础：找到一个相等分数', '提高：猜对分子', '挑战：三个目标都找到'], 'fraceq');
   wireDiscovery('fraceq', 'feFind', 'feFindSave', 'feFindSaved');
   document.getElementById('feGuessMinus').addEventListener('click', function () { feGuess = Math.max(0, feGuess - 1); feDraw(); });
   document.getElementById('feGuessPlus').addEventListener('click', function () { feGuess = Math.min(feTask().need, feGuess + 1); feDraw(); });
@@ -3794,7 +3845,7 @@ function bfTask() { return BF_TASKS[bfIdx]; }
 function bfRender() {
   const t = bfTask();
   document.getElementById('bfDLabel').textContent = bfD;
-  document.getElementById('bfTargetTx').textContent = t.n + '/' + t.d + '（切成 ' + t.need + ' 份来造）';
+  document.getElementById('bfTargetTx').textContent = t.n + '/' + t.d + '（先试试切成 ' + t.need + ' 份来造）';
   document.getElementById('bfGuessTx').textContent = '目标 ' + t.n + '/' + t.d + '。切成 ' + t.need + ' 份的话，要涂几份？先猜。';
   document.getElementById('bfGuessLabel').textContent = bfGuess + ' 份';
   let tb = '';
@@ -3818,10 +3869,20 @@ function bfRender() {
 function bfCheck() {
   const t = bfTask();
   const n = bfShaded.filter(Boolean).length;
+  // 按值接受：量对了就算对（和分数挑战模式一致）。“切成 N 份”只是基础档的提示，
+  // 不是拒绝理由——6/8 和 3/4 是一样大的量。
   const equal = n * t.d === t.n * bfD;
-  if (equal && bfD === t.need) {
-    const ok = bfGuessed && bfGuess === n;
-    document.getElementById('bfMsg').textContent = '造对了！' + n + '/' + bfD + ' = ' + t.n + '/' + t.d + '。' + (bfGuessed ? (ok ? '你猜要涂 ' + n + ' 份，猜对了！' : '你猜要涂 ' + bfGuess + ' 份，实际是 ' + n + ' 份。') : '');
+  if (equal) {
+    // 猜的是“切成 need 份时涂几份”，只有按 need 切的时候猜的数才对得上。
+    const sameCut = bfD === t.need;
+    const ok = sameCut && bfGuessed && bfGuess === n;
+    let msg = '造对了！' + n + '/' + bfD + ' = ' + t.n + '/' + t.d + '。';
+    if (sameCut) {
+      msg += bfGuessed ? (ok ? '你猜要涂 ' + n + ' 份，猜对了！' : '你猜要涂 ' + bfGuess + ' 份，实际是 ' + n + ' 份。') : '';
+    } else {
+      msg += '题目建议切成 ' + t.need + ' 份，你切成了 ' + bfD + ' 份——一样大，照样算对。';
+    }
+    document.getElementById('bfMsg').textContent = msg;
     if (bfDoneIdx.indexOf(bfIdx) < 0) bfDoneIdx.push(bfIdx);
     if (bfTiers) bfTiers.done(0);
     if (ok && bfTiers) bfTiers.done(1);
@@ -3829,8 +3890,6 @@ function bfCheck() {
     document.getElementById('bfWhy').hidden = false;
     markTried('buildfrac');
     labTrace('造分数：造出了 ' + t.n + '/' + t.d + ' = ' + n + '/' + bfD, true);
-  } else if (equal) {
-    document.getElementById('bfMsg').textContent = '量对了（' + n + '/' + bfD + ' = ' + t.n + '/' + t.d + '），但不是切成 ' + t.need + ' 份的那个——题目要 ' + t.need + ' 份。';
   } else {
     const diff = feFracDiff(n, bfD, t.n, t.d);
     document.getElementById('bfMsg').textContent = '还不对：你涂了 ' + n + '/' + bfD + '，目标是 ' + t.n + '/' + t.d + '——阴影' + (diff.more ? '多了 ' : '少了 ') + diff.text + '。看上面的目标条，再调一调。';
@@ -3840,12 +3899,12 @@ function bfNextTask() {
   bfIdx = (bfIdx + 1) % BF_TASKS.length;
   const t = bfTask();
   bfD = t.d; bfShaded = []; bfGuessed = false; bfGuess = Math.floor(t.need / 2);
-  document.getElementById('bfMsg').textContent = '新目标：' + t.n + '/' + t.d + '，切成 ' + t.need + ' 份来造。';
+  document.getElementById('bfMsg').textContent = '新目标：' + t.n + '/' + t.d + '，先试试切成 ' + t.need + ' 份来造。';
   bfRender();
 }
 (function () {
   const g = document.getElementById('bfGuessSet'); if (!g) return;
-  bfTiers = makeTiers(document.getElementById('bfTiers'), ['基础：造出一个目标分数', '提高：猜对要涂几份', '挑战：三个目标都造出来']);
+  bfTiers = makeTiers(document.getElementById('bfTiers'), ['基础：造出一个目标分数', '提高：猜对要涂几份', '挑战：三个目标都造出来'], 'buildfrac');
   wireDiscovery('buildfrac', 'bfFind', 'bfFindSave', 'bfFindSaved');
   document.getElementById('bfGuessMinus').addEventListener('click', function () { bfGuess = Math.max(0, bfGuess - 1); bfRender(); });
   document.getElementById('bfGuessPlus').addEventListener('click', function () { bfGuess = Math.min(bfTask().need, bfGuess + 1); bfRender(); });
@@ -3913,7 +3972,7 @@ function abCheck() {
 function abSetCells(list) { abCells = []; for (let i = 0; i < 36; i++) abCells.push(false); list.forEach(function (i) { abCells[i] = true; }); abRender(); }
 (function () {
   const g = document.getElementById('abCheck'); if (!g) return;
-  abTiers = makeTiers(document.getElementById('abTiers'), ['基础：造出一个面积 12 的图形', '提高：同样面积造出两种周长', '挑战：面积 12、周长 18 也造出来']);
+  abTiers = makeTiers(document.getElementById('abTiers'), ['基础：造出一个面积 12 的图形', '提高：同样面积造出两种周长', '挑战：面积 12、周长 18 也造出来'], 'areabuild');
   wireDiscovery('areabuild', 'abFind', 'abFindSave', 'abFindSaved');
   document.getElementById('abPredYes').addEventListener('click', function () { abPred = 'yes'; document.getElementById('abPredTx').textContent = '你猜“一定是 14”。动手造一造，看能不能造出周长不是 14 的。'; });
   document.getElementById('abPredNo').addEventListener('click', function () { abPred = 'no'; document.getElementById('abPredTx').textContent = '你猜“不一定”。动手造一造：面积 12 的图形，周长能不能不是 14？'; });
@@ -4030,12 +4089,23 @@ function qmSetType(t) {
   qmType = t;
   qmPts = QM_SHAPES[t].map(function (p) { return [p[0], p[1]]; });
   qmPredChecked = false; qmMoved = false;
-  document.getElementById('qmMsg').textContent = '目标换成' + t + '了。拖顶点，看看什么时候是' + t + '、什么时候不是。';
   qmRender();
+  // 选目标时形状直接重置成目标图形：已经是正方形/梯形了，就该打勾，
+  // 不能等学生再拖一下才认（真机复测：选“正方形”后 提高 ✓ 不亮）。
+  const now = qmClassify();
+  if (now === '正方形' && qmTiers) {
+    qmTiers.done(1);
+    document.getElementById('qmMsg').textContent = '目标换成正方形了——它已经是正方形：四条边相等，四个角都是直角。';
+  } else if (now === '梯形' && qmTiers) {
+    qmTiers.done(2);
+    document.getElementById('qmMsg').textContent = '目标换成梯形了——它已经是梯形：只有一组对边平行。';
+  } else {
+    document.getElementById('qmMsg').textContent = '目标换成' + t + '了。拖顶点，看看什么时候是' + t + '、什么时候不是。';
+  }
 }
 (function () {
   const g = document.getElementById('qmPredYes'); if (!g) return;
-  qmTiers = makeTiers(document.getElementById('qmTiers'), ['基础：把长方形拖成不是长方形', '提高：拼出一个正方形', '挑战：拼出一个梯形']);
+  qmTiers = makeTiers(document.getElementById('qmTiers'), ['基础：把长方形拖成不是长方形', '提高：拼出一个正方形', '挑战：拼出一个梯形'], 'quadmorph');
   wireDiscovery('quadmorph', 'qmFind', 'qmFindSave', 'qmFindSaved');
   g.addEventListener('click', function () { qmPred = 'yes'; document.getElementById('qmPredTx').textContent = '你猜“还是长方形”。动手拖一个顶点验证。'; });
   document.getElementById('qmPredNo').addEventListener('click', function () { qmPred = 'no'; document.getElementById('qmPredTx').textContent = '你猜“不是了”。动手拖一个顶点验证。'; });
@@ -4107,6 +4177,8 @@ function npReveal() {
   npRender();
   const ok = npGuessed && npGuess === npN;
   document.getElementById('npMsg').textContent = '是 ' + npN + '（' + NP_WORDS[npN] + '）。' + (npGuessed ? (ok ? '你猜 ' + npGuess + '，猜对了！' : '你猜 ' + npGuess + '，猜错了——数一数圆点，一共 ' + npN + ' 个。') : '（下次先猜一个再揭开。）');
+  // 为什么要跟实际揭示的数走：揭示 14 之后还拿 7 举例，学生会对不上号。
+  document.getElementById('npWhy').innerHTML = '<b>为什么？</b>数不是符号，是“多少”：' + npN + ' 个圆点、十格阵里的 ' + npN + ' 格、数轴上 ' + npN + ' 的位置、汉字“' + NP_WORDS[npN] + '”，说的都是同一个“' + npN + '”。会数数，就是能在这些样子之间来回换。';
   if (npTiers) npTiers.done(0);
   if (ok && npTiers) npTiers.done(1);
   document.getElementById('npWhy').hidden = false;
@@ -4115,7 +4187,7 @@ function npReveal() {
 }
 (function () {
   const g = document.getElementById('npGuessSet'); if (!g) return;
-  npTiers = makeTiers(document.getElementById('npTiers'), ['基础：揭开一个数', '提高：只看圆点就猜对', '挑战：造出 20 的五种样子']);
+  npTiers = makeTiers(document.getElementById('npTiers'), ['基础：揭开一个数', '提高：只看圆点就猜对', '挑战：造出 20 的五种样子'], 'numplay');
   wireDiscovery('numplay', 'npFind', 'npFindSave', 'npFindSaved');
   document.getElementById('npGuessMinus').addEventListener('click', function () { npGuess = Math.max(0, npGuess - 1); document.getElementById('npGuessLabel').textContent = npGuess; });
   document.getElementById('npGuessPlus').addEventListener('click', function () { npGuess = Math.min(20, npGuess + 1); document.getElementById('npGuessLabel').textContent = npGuess; });
@@ -4160,10 +4232,12 @@ function fnlUnfurl() {
   const t = fnlTarget(), tv = fnlTrue();
   fnlShown = true;
   fnlRender();
+  // 猜的位置按 0.05 一档走：只有落在和目标同一档才算对。以前用 |差| <= 0.05，
+  // 0.45 猜 0.5 也算对——差了一整档，不能算对。用整数档比较，不怕浮点抖动。
+  const hit = Math.round(fnlGuess * 20) === Math.round(tv * 20);
   const diff = fnlGuess - tv;
-  const ad = Math.abs(diff);
   let verdict;
-  if (ad <= 0.05) {
+  if (hit) {
     verdict = '猜对了！' + t.n + '/' + t.d + ' 正好落在 ' + tv + ' 那里。';
   } else {
     const g20 = Math.round(fnlGuess * 20);
@@ -4171,7 +4245,7 @@ function fnlUnfurl() {
     verdict = (diff < 0 ? '猜短了：' : '猜长了：') + '你猜 ' + fnlGuess.toFixed(2) + '，实际是 ' + tv + '，差了 ' + (num / g) + '/' + (den / g) + '——圆饼展开比你想的' + (diff < 0 ? '长' : '短') + '。';
   }
   document.getElementById('fnlMsg').textContent = verdict + '一个圆饼（1）展开就是数轴上 0 到 1 的距离；' + t.n + '/' + t.d + ' 个圆饼就是 ' + tv + ' 的距离。';
-  if (ad <= 0.05) {
+  if (hit) {
     if (fnlDoneIdx.indexOf(fnlIdx) < 0) fnlDoneIdx.push(fnlIdx);
     if (fnlTiers) fnlTiers.done(0);
     if (fnlIdx >= 1 && fnlTiers) fnlTiers.done(1);
@@ -4183,11 +4257,14 @@ function fnlUnfurl() {
 }
 (function () {
   const g = document.getElementById('fnlUnfurl'); if (!g) return;
-  fnlTiers = makeTiers(document.getElementById('fnlTiers'), ['基础：把 1/2 放对位置', '提高：把 3/4 放对位置', '挑战：把 5/4（超过 1）放对位置']);
+  fnlTiers = makeTiers(document.getElementById('fnlTiers'), ['基础：把 1/2 放对位置', '提高：把 3/4 放对位置', '挑战：把 5/4（超过 1）放对位置'], 'fracnumline');
   wireDiscovery('fracnumline', 'fnlFind', 'fnlFindSave', 'fnlFindSaved');
   document.getElementById('fnlGuessRange').addEventListener('input', function (e) { fnlSetGuess(parseFloat(e.target.value)); });
   document.getElementById('fnlLine').addEventListener('click', function (e) {
-    const rect = e.target.getBoundingClientRect ? e.target.getBoundingClientRect() : { left: 0, width: 320 };
+    // 点的是数轴这条线：e.target 可能是里面的刻度、圆点等子元素，它们的包围盒
+    // 不是整条线，算出来的位置会跳。一定要用 svg 自己的包围盒。
+    const svgEl = document.getElementById('fnlLine');
+    const rect = svgEl.getBoundingClientRect ? svgEl.getBoundingClientRect() : { left: 0, width: 320 };
     const x = (e.clientX - rect.left) / rect.width * 320;
     fnlSetGuess((x - 20) / 140);
   });
@@ -8327,7 +8404,7 @@ function crSolve(h, l) { const r = (l - 2 * h) / 2; return { r: r, c: h - r }; }
 
 /* ---- 方法一：假设法——猜了再滑 ----
    和旧演示的区别：旧的是 +/− 步进、直接给答案；这里先猜兔的只数，再拖一条真正的滑杆，
-   笼子里的鸡一只一只变成兔，滑到目标腿数正好停住才亮答案，猜错了能看到差几条腿。 */
+   笼子里的鸡一只一只变成兔，滑到目标腿数就对了（滑过头会提示多几条腿，不会硬停），猜错了能看到差几条腿。 */
 const CS_PROBS = [
   { heads: 10, legs: 28 },
   { heads: 35, legs: 94 },
@@ -13181,7 +13258,11 @@ function mulberry32(a) {
 function clearChildren(el) { while (el.firstChild) el.removeChild(el.firstChild); }
 /* ---------- 创意实验的通用件（设计原则：猜→玩→说；三档；我的发现） ---------- */
 /* 三档：基础 / 提高 / 挑战。每个实验自己决定三档是什么，done(i) 点亮第 i 档。 */
-function makeTiers(el, labels) {
+/* 三档 ✓：默认只记在内存里；传了 persistKey（演示 key）就同时存进 math-sim-tiers-v1，
+   刷新页面后恢复——8 个模拟的三档是“做到过”的徽章，刷新不该丢（真机复测）。
+   创意实验不传：它们的状态（找到几种拼法、拼出几个解）本身只在内存里，
+   只存三档会和实际状态对不上；十三的三档由 render() 按当前目标重算，也不走这里。 */
+function makeTiers(el, labels, persistKey) {
   clearChildren(el);
   const chips = labels.map(function (label) {
     const s = document.createElement('span');
@@ -13190,10 +13271,24 @@ function makeTiers(el, labels) {
     el.appendChild(s);
     return s;
   });
+  function paint(i, on) {
+    if (!chips[i]) return;
+    if (on) { chips[i].classList.add('done'); chips[i].textContent = '✓ ' + labels[i]; }
+    else { chips[i].classList.remove('done'); chips[i].textContent = '○ ' + labels[i]; }
+  }
+  function persist() {
+    if (!persistKey) return;
+    const all = loadSimTiers();
+    all[persistKey] = labels.map(function (_, i) { return chips[i].classList.contains('done'); });
+    saveSimTiers(all);
+  }
+  if (persistKey) {
+    const saved = loadSimTiers()[persistKey];
+    if (saved) saved.forEach(function (on, i) { if (on) paint(i, true); });
+  }
   return {
-    done: function (i) {
-      if (chips[i]) { chips[i].classList.add('done'); chips[i].textContent = '✓ ' + labels[i]; }
-    }
+    done: function (i) { paint(i, true); persist(); },
+    set: function (i, on) { paint(i, !!on); persist(); }
   };
 }
 /* “我的发现”：存在已有的探究作业键里（kind 'discovery'），不在这里新开键；
@@ -13222,16 +13317,18 @@ function labTrace(text, ok) {
 }
 
 /* ---------- 创意实验 1：24点（4–5 年级，自由组合） ----------
-   6 组数都验算过（见 tools/smoke.js 的断言）：每组至少一种拼法；(3,3,8,8) 的解是 8÷(3−8÷3)，
-   浮点算出来是 23.99999999999999，所以判等用 1e-6 的容差。 */
+   6 组数都用穷举验算过（精确分数算术，见 tools/smoke.js 的断言）：
+   每组至少一种拼法；默认第一组 (3,4,5,6) 有 5 种不同拼法，提高档“找到两种”一上来就能拿到；
+   (3,3,8,8) 只有一种真正解法 8÷(3−8÷3)，所以排在最后当挑战。
+   8÷(3−8÷3) 浮点算出来是 23.99999999999999，判等用 1e-6 的容差。 */
 (function () {
   const SETS = [
-    { nums: [3, 3, 8, 8], hint: '8÷3 不是整数——但 3 减去它之后，再用 8 去除，试试？' },
-    { nums: [1, 5, 5, 5], hint: '1÷5 是 0.2，5 减去 0.2 是 4.8……' },
     { nums: [3, 4, 5, 6], hint: '先凑出 4，再乘 6。' },
+    { nums: [2, 3, 4, 5], hint: '先凑出 12，再乘 2；或者先凑出 6，再乘 4。' },
     { nums: [2, 4, 6, 8], hint: '6×8 是 48，48 除以几是 24？' },
     { nums: [1, 2, 3, 4], hint: '1+3 是 4，4+2 是 6，4×6 是……' },
-    { nums: [3, 6, 6, 9], hint: '6÷6 是 1，9 减去 1 是 8……' }
+    { nums: [3, 6, 6, 9], hint: '6÷6 是 1，9 减去 1 是 8……' },
+    { nums: [3, 3, 8, 8], hint: '8÷3 不是整数——但 3 减去它之后，再用 8 去除，试试？' }
   ];
   let si = 0, tokens = [], found = [], pred = null, hintUsed = false;
   const tiers = makeTiers(document.getElementById('tf24Tiers'),
@@ -13275,20 +13372,43 @@ function labTrace(text, ok) {
       return t.k === 'n' ? String(t.v) : t.v === '*' ? '×' : t.v === '/' ? '÷' : t.v === '-' ? '−' : t.v;
     }).join(' ') : '（点下面的数字和符号）';
   }
-  function parseExpr(tk) {
+  // 算式先解析成树（括号只决定树的形状），再按树算值、按树判重：
+  // 只加括号重写（比如 ((3+5)−4)×6 和 (3+5−4)×6）是同一棵树，不算第二种拼法。
+  // 规范形式：加法和乘法的两个孩子按规范串排好序，减法和除法保持顺序。
+  function parseTree(tk) {
     let p = 0;
-    function expr() { let v = term(); while (p < tk.length && (tk[p].v === '+' || tk[p].v === '-')) { const op = tk[p++].v; const w = term(); v = op === '+' ? v + w : v - w; } return v; }
-    function term() { let v = fact(); while (p < tk.length && (tk[p].v === '*' || tk[p].v === '/')) { const op = tk[p++].v; const w = fact(); v = op === '*' ? v * w : v / w; } return v; }
+    function expr() { let v = term(); while (p < tk.length && (tk[p].v === '+' || tk[p].v === '-')) { const op = tk[p++].v; const w = term(); v = { op: op, l: v, r: w }; } return v; }
+    function term() { let v = fact(); while (p < tk.length && (tk[p].v === '*' || tk[p].v === '/')) { const op = tk[p++].v; const w = fact(); v = { op: op, l: v, r: w }; } return v; }
     function fact() {
-      if (p >= tk.length) return NaN;
+      if (p >= tk.length) return null;
       const t = tk[p];
       if (t.v === '(') { p++; const v = expr(); if (tk[p] && tk[p].v === ')') p++; return v; }
-      if (t.v === '-') { p++; return -fact(); }
-      if (t.k === 'n') { p++; return t.v; }
-      return NaN;
+      if (t.v === '-') { p++; const w = fact(); return w ? { op: 'neg', x: w } : null; }
+      if (t.k === 'n') { p++; return { n: t.v }; }
+      return null;
     }
     const v = expr();
-    return (p === tk.length) ? v : NaN;
+    return (p === tk.length) ? v : null;
+  }
+  function evalTree(t) {
+    if (!t) return NaN;
+    if (t.n !== undefined) return t.n;
+    if (t.op === 'neg') return -evalTree(t.x);
+    const a = evalTree(t.l), b = evalTree(t.r);
+    if (t.op === '+') return a + b;
+    if (t.op === '-') return a - b;
+    if (t.op === '*') return a * b;
+    return a / b;
+  }
+  function canonTree(t) {
+    if (t.n !== undefined) return 'n' + t.n;
+    if (t.op === 'neg') return '(-' + canonTree(t.x) + ')';
+    const cl = canonTree(t.l), cr = canonTree(t.r);
+    if (t.op === '+' || t.op === '*') {
+      const s = [cl, cr].sort();
+      return '(' + s[0] + t.op + s[1] + ')';
+    }
+    return '(' + cl + t.op + cr + ')';
   }
   document.getElementById('tf24Back').addEventListener('click', function () {
     const t = tokens.pop();
@@ -13325,9 +13445,10 @@ function labTrace(text, ok) {
     if (!tokens.length) { msgEl.textContent = '先拼一个算式。'; return; }
     const used = tokens.filter(function (t) { return t.k === 'n'; }).map(function (t) { return t.chip; });
     if (used.length < 4) { msgEl.textContent = '还有数字没用上：每个数都要恰好用一次。'; labTrace('24点：算式里少了数字', false); return; }
-    const v = parseExpr(tokens);
-    if (isNaN(v) || !isFinite(v)) { msgEl.textContent = '这个算式算不出来（可能是分母为 0，或者符号没拼对）。'; labTrace('24点：算式拼错了，算不出来', false); return; }
-    const key = tokens.map(function (t) { return t.k === 'n' ? String(t.v) : t.v; }).join('');
+    const tree = parseTree(tokens);
+    const v = evalTree(tree);
+    if (!tree || isNaN(v) || !isFinite(v)) { msgEl.textContent = '这个算式算不出来（可能是分母为 0，或者符号没拼对）。'; labTrace('24点：算式拼错了，算不出来', false); return; }
+    const key = canonTree(tree);
     if (Math.abs(v - 24) < 1e-6) {
       if (found.indexOf(key) >= 0) { msgEl.textContent = '这个拼法已经记下了，换个拼法试试——同一组数不止一种。'; return; }
       found.push(key);
@@ -13336,7 +13457,7 @@ function labTrace(text, ok) {
         (pred === 'yes' ? '你猜对了：这组数能拼出来。' : pred === 'no' ? '你猜错了——这组数其实能拼出来！' : '下次先猜再拼。');
       if (found.length >= 1) tiers.done(0);
       if (found.length >= 2) tiers.done(1);
-      if (si === 0 && !hintUsed) tiers.done(2);
+      if (SETS[si].nums.join(',') === '3,3,8,8' && !hintUsed) tiers.done(2);
       markTried('twentyfour');
       labTrace('24点：拼出 ' + exprEl.textContent + ' = 24', true);
     } else {
@@ -13431,6 +13552,7 @@ function labTrace(text, ok) {
       : pred ? '你的预测错了——换门赢 ' + sw + ' 次，不换只赢 ' + st + ' 次。这正是三门问题出名的原因：直觉说“换不换都一样”，数学说“换”。'
       : '换门赢 ' + sw + ' 次，不换只赢 ' + st + ' 次——换门赢的可能大约是 2/3。';
     document.getElementById('moWhyStatic').hidden = false; // 为什么只在看过模拟结果之后出现，猜之前不剧透
+    document.getElementById('moCrit').hidden = false; // 成功标准里写着 2/3 的答案，同样看过模拟之后才出现
     tiers.done(1);
     labTrace('三门问题：100 次模拟，换门赢 ' + sw + ' 次，不换赢 ' + st + ' 次', sw > st);
     markTried('monty');
@@ -13756,7 +13878,8 @@ function labTrace(text, ok) {
 /* ---------- 创意实验 6：开店一周（5–6 年级，现实使命） ----------
    进价 8 元，本钱 200 元；需求 = 50 − 2×售价 + 噪声（噪声按天固定：mulberry32(1000+天)，
    第 1–7 天依次是 −3、0、−1、−2、−1、−1、+3）。策略“每天 12 元进 20 个”验算过：
-   总收入 1680 元，总成本 1120 元，总利润 560 元。 */
+   总收入 1680 元，已卖成本 1120 元，总利润 560 元。定价 20 元一周：卖 65 件，
+   收入 1300 元，已卖成本 520 元，利润 780 元；剩 75 件（成本 600 元）另列，手里的钱 200→380 元。 */
 (function () {
   const COST = 8, START_CASH = 200;
   let day = 1, cash = START_CASH, stock = 0, price = 12, qty = 20;
@@ -13801,21 +13924,22 @@ function labTrace(text, ok) {
     day++;
     if (day > 7) {
       weeks++;
-      // 现金利润 = 手里的钱实打实多了多少（总收入 − 总进货成本）；压在剩货里的钱不算利润，另列。
-      const cashProfit = cash - START_CASH;
+      // 利润 = 总收入 − 已卖出商品的成本（卖了几个 × 进价）；压在剩货里的进货钱既不是
+      // 这周的成本，也不算利润，另列。手里的钱变化 = 利润 − 剩货成本，所以现金变少也可能是在赚钱。
+      const profit = totalRev - totalSold * COST;
       const leftoverValue = stock * COST;
-      reportEl.textContent = '一周总账：总收入 ' + totalRev + ' 元，总进货成本 ' + totalCost + ' 元。现金利润：' + cashProfit + ' 元（手里的钱从 200 元变成 ' + cash + ' 元）。' +
-        (stock > 0 ? '还剩 ' + stock + ' 个文具盒，值 ' + leftoverValue + ' 元成本——下次能接着卖，不算进这周的利润里。' : '货全卖完了。') +
-        (guess != null ? '你猜一周能赚 ' + guess + ' 元，实际现金利润是 ' + cashProfit + ' 元' + (Math.abs(guess - cashProfit) <= 100 ? '——猜得很准！' : '——差了 ' + Math.abs(guess - cashProfit) + ' 元，下次再猜准一点。') : '') +
-        (lastProfit != null ? (cashProfit > lastProfit ? '比上周多赚了 ' + (cashProfit - lastProfit) + ' 元！' : '比上周少赚了 ' + (lastProfit - cashProfit) + ' 元。') : '') +
+      reportEl.textContent = '一周总账：总收入 ' + totalRev + ' 元，卖了 ' + totalSold + ' 个，已卖出商品的成本 ' + (totalSold * COST) + ' 元。利润：' + profit + ' 元。' +
+        (stock > 0 ? '还剩 ' + stock + ' 个文具盒，值 ' + leftoverValue + ' 元成本——下次能接着卖，不算进这周的利润里。手里的钱从 200 元变成 ' + cash + ' 元（进货一共花了 ' + totalCost + ' 元）。' : '货全卖完了，手里的钱从 200 元变成 ' + cash + ' 元。') +
+        (guess != null ? '你猜一周能赚 ' + guess + ' 元，实际利润是 ' + profit + ' 元' + (Math.abs(guess - profit) <= 100 ? '——猜得很准！' : '——差了 ' + Math.abs(guess - profit) + ' 元，下次再猜准一点。') : '') +
+        (lastProfit != null ? (profit > lastProfit ? '比上周多赚了 ' + (profit - lastProfit) + ' 元！' : '比上周少赚了 ' + (lastProfit - profit) + ' 元。') : '') +
         (totalLost > 0 ? '一共有 ' + totalLost + ' 个顾客因为没货白跑了——下次多进点，或者别定太贵。' : '');
       statusEl.textContent = '一周开完了 · 手里 ' + cash + ' 元 · 库存 ' + stock + ' 个';
       tiers.done(0);
-      if (guess != null && Math.abs(guess - cashProfit) <= 100) tiers.done(1);
-      if (lastProfit != null && cashProfit > lastProfit) tiers.done(2);
-      lastProfit = cashProfit;
+      if (guess != null && Math.abs(guess - profit) <= 100) tiers.done(1);
+      if (lastProfit != null && profit > lastProfit) tiers.done(2);
+      lastProfit = profit;
       markTried('shopweek');
-      labTrace('开店：一周现金利润 ' + cashProfit + ' 元', cashProfit > 0);
+      labTrace('开店：一周利润 ' + profit + ' 元', profit > 0);
     }
     render();
   });
@@ -14002,6 +14126,17 @@ function labTrace(text, ok) {
     let row = '';
     if (unit.length) { for (let i = 0; i < 15; i++) row += unit[i % unit.length] + ' '; }
     rowEl.textContent = unit.length ? '这样重复下去：' + row + '……' : '';
+    // 为什么要跟实际拼出的单元走：4 个一单元时还说“10 除以 3 余 1”就错了。
+    const whyEl = document.getElementById('mrWhy');
+    if (whyEl) {
+      if (unit.length >= 2) {
+        const n = unit.length, full = Math.floor(10 / n), rem = 10 % n;
+        const unitNo = full + (rem ? 1 : 0), pos = rem || n;
+        whyEl.innerHTML = '<b>为什么？</b>一个单元有 ' + n + ' 个，第 10 个就是第 ' + unitNo + ' 个单元的第 ' + pos + ' 个——10 除以 ' + n + ' 商 ' + full + ' 余 ' + rem + '。规律题不用数到 20，数“第几个单元、单元里第几个”就行。';
+      } else {
+        whyEl.innerHTML = '<b>为什么？</b>规律题不用数到 20，数“第几个单元、单元里第几个”就行：先看一个单元有几个，再算第 10 个落在哪一个单元的第几个。';
+      }
+    }
   }
   document.getElementById('mrDel').addEventListener('click', function () {
     unit.pop(); a10El.textContent = ''; a20El.textContent = ''; q10ok = false; q20ok = false; render();
@@ -14059,6 +14194,9 @@ function labTrace(text, ok) {
     const t = target(), L = count('A'), R = count('B');
     const list = found[t] || [];
     document.getElementById('thTargetTx').textContent = '' + t;
+    // 开头介绍和成功标准都跟随当前目标：换到 14，里面就不能还写 13。
+    document.getElementById('thIntro').innerHTML = '1 年级的加法也能做实验：<b>' + t + ' 能拆成几种？</b>十格阵演示是算 9+4 等于几；这里反过来——和是 ' + t + '，加数能有几种拆法？左边的十格阵和右边的十格阵不一样，两个加数换位置是两种摆法。';
+    document.getElementById('thCrit').textContent = '成功标准：把 ' + t + ' 的凑法找全，并且换个目标数也找全。';
     document.getElementById('thLabelA').textContent = '左边 · ' + L + ' 个';
     document.getElementById('thLabelB').textContent = '右边 · ' + R + ' 个';
     document.getElementById('thEq').textContent = L + ' + ' + R + ' = ' + (L + R);
@@ -14073,9 +14211,11 @@ function labTrace(text, ok) {
       ? '找到了 ' + list.length + ' / ' + totalWays(t) + ' 种。你猜的是 ' + guessedMap[t] + ' 种。' +
         (list.length === totalWays(t) ? '——找全了！' : '')
       : '找到了 ' + list.length + ' 种（先猜一共有几种，再告诉你目标）。';
-    if (list.length >= 1) tiers.done(0);
-    if (list.length === totalWays(t)) tiers.done(1);
-    if (completedCount() >= 2) tiers.done(2);
+    // 三档按当前目标分别记：换个目标，三档要跟着变，不能全局一个
+    // （真机复测：13 找全后换到 14，提高 ✓ 还亮着）。
+    tiers.set(0, list.length >= 1);
+    tiers.set(1, list.length === totalWays(t));
+    tiers.set(2, completedCount() >= 2);
     document.getElementById('thWhy').hidden = completedCount() < 1;
   }
   function buildFrame(frameId, f) {
@@ -14105,7 +14245,7 @@ function labTrace(text, ok) {
   });
   document.getElementById('thGuessSet').addEventListener('click', function () {
     guessedMap[target()] = guess;
-    document.getElementById('thMsg').textContent =
+    document.getElementById('thMsg13').textContent =
       '记下了：你猜 ' + target() + ' 有 ' + guess + ' 种凑法。现在开始找。';
     render();
   });
@@ -14117,20 +14257,20 @@ function labTrace(text, ok) {
     ti = (ti + 1) % TARGETS.length;
     guess = guessedMap[target()] != null ? guessedMap[target()] : 4;
     cells.A.concat(cells.B).forEach(function (c) { c.classList.remove('filled'); });
-    document.getElementById('thMsg').textContent = '目标换成 ' + target() + ' 了。先猜，再找。';
+    document.getElementById('thMsg13').textContent = '目标换成 ' + target() + ' 了。先猜，再找。';
     render();
   });
   document.getElementById('thRecord').addEventListener('click', function () {
     const t = target(), L = count('A'), R = count('B'), sum = L + R;
     if (sum !== t) {
-      document.getElementById('thMsg').textContent =
+      document.getElementById('thMsg13').textContent =
         '现在摆的是 ' + L + ' + ' + R + ' = ' + sum + '，不是 ' + t + '。再添几个或拿掉几个。';
       return;
     }
     const list = found[t] || (found[t] = []);
     const key = L + '+' + R;
     if (list.indexOf(key) >= 0) {
-      document.getElementById('thMsg').textContent = '这个凑法已经记过了——换个摆法试试。';
+      document.getElementById('thMsg13').textContent = '这个凑法已经记过了——换个摆法试试。';
       return;
     }
     const swap = list.indexOf(R + '+' + L) >= 0; // 一定要在 push 之前算
@@ -14143,7 +14283,7 @@ function labTrace(text, ok) {
     if (swap) msg += R + '+' + L + ' 是它换了位置——加法里，两个加数换位置，和不变。';
     if (list.length === 1) markTried('thirteen');
     if (list.length === totalWays(t)) { completed[t] = true; msg += '——' + t + ' 的凑法找全了！'; }
-    document.getElementById('thMsg').textContent = msg;
+    document.getElementById('thMsg13').textContent = msg;
     cells.A.concat(cells.B).forEach(function (c) { c.classList.remove('filled'); });
     render();
   });
