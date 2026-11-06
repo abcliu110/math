@@ -91,6 +91,10 @@ body[data-view="demo-decmul"] #demos, body[data-view="demo-gridpos"] #demos, bod
 body[data-view="demo-prob"] #demos, body[data-view="demo-polyarea"] #demos, body[data-view="demo-planttree"] #demos,
 body[data-view="demo-factor"] #demos, body[data-view="demo-cuboid"] #demos, body[data-view="demo-fracadd"] #demos,
 body[data-view="demo-rotate"] #demos, body[data-view="demo-findbad"] #demos,
+body[data-view="demo-radar"] #demos, body[data-view="demo-ratio"] #demos, body[data-view="demo-circle"] #demos,
+body[data-view="demo-percent"] #demos, body[data-view="demo-fan"] #demos, body[data-view="demo-lsquare"] #demos,
+body[data-view="demo-thermo"] #demos, body[data-view="demo-negmul"] #demos, body[data-view="demo-discount"] #demos,
+body[data-view="demo-cylinder"] #demos, body[data-view="demo-pigeon"] #demos, body[data-view="demo-conceptmap"] #demos,
 body[data-view="why"] #why, body[data-view="review"] #review,
 body[data-view="progress"] #review, body[data-view="lab"] #lab{display:block}
 .path-detail{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-top:16px}
@@ -725,6 +729,48 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid{gr
 .fb-coin { width: 52px; height: 52px; border-radius: 50%; background: #fde68a; border: 2px solid #d97706; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; }
 .fb-coin.fb-suspect { outline: 3px solid #2563eb; outline-offset: 2px; }
 .fb-coin.fb-found { background: #4ade80; border-color: #15803d; }
+
+/* --- Grade 6 demos --- */
+.rd-map { position: relative; width: 320px; height: 320px; max-width: 100%; margin: 12px auto; border: 2px solid var(--line); border-radius: 12px; background: #f8fafc; overflow: hidden; }
+.rd-ray { position: absolute; left: 160px; top: 158px; height: 4px; background: #dc2626; transform-origin: left center; border-radius: 2px; }
+.rd-dot { position: absolute; width: 28px; height: 28px; font-size: 22px; line-height: 28px; text-align: center; }
+.rd-ghost { position: absolute; width: 16px; height: 16px; border-radius: 50%; background: #fca5a5; border: 2px solid #dc2626; }
+.rd-center { position: absolute; left: 132px; top: 146px; width: 56px; height: 28px; line-height: 28px; text-align: center; font-weight: 800; background: #fff; border: 2px solid var(--ink); border-radius: 8px; }
+.rd-compass { position: absolute; font-weight: 800; color: var(--muted); }
+.rd-n { top: 6px; left: 152px; } .rd-s { bottom: 6px; left: 152px; }
+.rd-e { right: 10px; top: 146px; } .rd-w { left: 10px; top: 146px; }
+.rt-bar { display: flex; height: 56px; margin: 12px 0; border-radius: 10px; overflow: hidden; border: 2px solid var(--line); }
+.rt-seg { display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; transition: width .2s; }
+.rt-a { background: #38bdf8; } .rt-b { background: #f97316; }
+.cc-bar { height: 22px; border-radius: 11px; }
+.cc-rope { background: #f97316; } .cc-diam { background: #38bdf8; }
+.cc-rect { background: #dbeafe; border: 2px solid #2563eb; border-radius: 6px; margin: 12px 0 6px; }
+.fn-pie { width: 220px; height: 220px; border-radius: 50%; margin: 12px auto; border: 2px solid var(--line); }
+.fn-legend { text-align: center; }
+.fn-dot { display: inline-block; width: 14px; height: 14px; border-radius: 4px; margin: 0 4px 0 12px; vertical-align: -2px; }
+.fn-a { background: #f97316; } .fn-b { background: #38bdf8; } .fn-c { background: #4ade80; }
+.ls-grid { display: grid; gap: 4px; max-width: 320px; margin: 12px 0; }
+.ls-cell { aspect-ratio: 1; min-height: 44px; border-radius: 6px; border: 2px solid var(--line); }
+.th-cols { display: flex; gap: 32px; margin: 12px 0; }
+.th-col { position: relative; width: 90px; height: 260px; border: 2px solid var(--line); border-radius: 12px; background: #fff; overflow: hidden; }
+.th-fill { position: absolute; left: 0; right: 0; bottom: 0; background: #38bdf8; transition: height .2s; }
+.th-zero { position: absolute; left: 0; right: 0; top: 50%; border-top: 3px solid #dc2626; }
+.th-cap { position: absolute; left: 0; right: 0; bottom: 6px; text-align: center; font-weight: 800; }
+.nm-row { display: flex; align-items: center; gap: 12px; margin: 6px 0; font-size: 18px; font-weight: 700; }
+.nm-label { min-width: 110px; }
+.nm-out { min-width: 48px; font-size: 20px; font-weight: 800; color: #dc2626; }
+.nm-track { position: relative; height: 44px; margin: 16px 0 8px; border-bottom: 3px solid var(--ink); }
+.nm-marker { position: absolute; top: 2px; width: 40px; margin-left: -20px; height: 36px; line-height: 36px; text-align: center; font-weight: 800; background: var(--orange); border: 2px solid #c2410c; border-radius: 50%; }
+.cy-tank { position: relative; width: 160px; height: 200px; margin: 12px 0; border: 3px solid var(--ink); border-top: none; border-radius: 0 0 12px 12px; overflow: hidden; }
+.cy-fill { position: absolute; left: 0; right: 0; bottom: 0; background: #fbbf24; transition: height .3s; }
+.cy-cap { position: absolute; left: 0; right: 0; bottom: 6px; text-align: center; font-weight: 800; }
+.pg-nests { display: flex; flex-wrap: wrap; gap: 12px; margin: 12px 0; }
+.pg-nest { border: 2px solid var(--line); border-radius: 10px; padding: 10px 12px; min-width: 110px; background: #fff; }
+.pg-label { font-weight: 800; margin-bottom: 6px; }
+.pg-dots { display: flex; flex-wrap: wrap; gap: 4px; min-height: 26px; }
+.pg-bird { font-size: 22px; color: #f97316; line-height: 1; }
+.cm-card { border: 2px solid var(--line); border-radius: 12px; padding: 12px 14px; margin: 12px 0; background: #fff; }
+.cm-q { font-weight: 700; font-size: 17px; }
 </style>
 </head>
 <body>
@@ -738,7 +784,7 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid{gr
       <span class="brand-text"><strong>数学小宇宙</strong><small>小学 1–6 · 初中 7–9 · 动手玩懂数学</small></span>
     </button>
     <h1 class="crumb-title" id="crumbTitle" aria-label="当前位置">数学</h1>
-    <div class="progress-chip" id="progressChip" title="已体验的演示">已体验 <b id="progressCount">0 / 73</b> 个演示</div>
+    <div class="progress-chip" id="progressChip" title="已体验的演示">已体验 <b id="progressCount">0 / 85</b> 个演示</div>
   </div>
 </header>
 
@@ -802,10 +848,10 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid{gr
     </div>
     <h3 class="panel-group-label">工具箱</h3>
     <div class="panels four">
-      <button class="panel" type="button" data-nav-key="demos"><span class="panel-icon" aria-hidden="true">✦</span><b>互动演示</b><span class="panel-sub">分数、天平、函数、十格阵，还有一、二、三、四、五年级实验都能玩</span><span class="panel-prog"><i id="panelDemoProg" style="width:0%"></i></span><span class="panel-tx" id="panelDemoTx">73 个演示 · 0 已体验</span></button>
+      <button class="panel" type="button" data-nav-key="demos"><span class="panel-icon" aria-hidden="true">✦</span><b>互动演示</b><span class="panel-sub">分数、天平、函数、十格阵，还有一、二、三、四、五、六年级实验都能玩</span><span class="panel-prog"><i id="panelDemoProg" style="width:0%"></i></span><span class="panel-tx" id="panelDemoTx">85 个演示 · 0 已体验</span></button>
       <button class="panel" type="button" data-nav-key="lab"><span class="panel-icon" aria-hidden="true">🧪</span><b>数学实验室</b><span class="panel-sub">没有题目，随便玩：分数、十格阵、天平、函数</span><span class="panel-tx">4 个自由玩小站 · 不评分</span></button>
       <button class="panel" type="button" data-nav-key="review"><span class="panel-icon" aria-hidden="true">✎</span><b>错题本</b><span class="panel-sub">错题连当时的图一起存</span><span class="panel-tx">还没有错题</span></button>
-      <button class="panel" type="button" data-nav-key="progress"><span class="panel-icon" aria-hidden="true">●</span><b>我的进度</b><span class="panel-sub">玩过的演示点亮一格</span><span class="panel-prog"><i id="panelProgFill" style="width:0%"></i></span><span class="panel-tx" id="panelProgTx">0 / 73 个演示</span></button>
+      <button class="panel" type="button" data-nav-key="progress"><span class="panel-icon" aria-hidden="true">●</span><b>我的进度</b><span class="panel-sub">玩过的演示点亮一格</span><span class="panel-prog"><i id="panelProgFill" style="width:0%"></i></span><span class="panel-tx" id="panelProgTx">0 / 85 个演示</span></button>
     </div>
   </section>
 
@@ -918,6 +964,18 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid{gr
       <button class="panel" type="button" data-nav-key="demo-fracadd"><span class="panel-icon" aria-hidden="true">＋</span><b>分数加减法：先重切再数</b><span class="panel-sub">1/2+1/3，先都切成 1/6</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">5 年级 · 分数的加法和减法</span></button>
       <button class="panel" type="button" data-nav-key="demo-rotate"><span class="panel-icon" aria-hidden="true">↻</span><b>图形的运动：绕钉旋转</b><span class="panel-sub">转 90°，还是原来的三角形</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">5 年级 · 图形的运动（三）</span></button>
       <button class="panel" type="button" data-nav-key="demo-findbad"><span class="panel-icon" aria-hidden="true">⚖</span><b>找次品：三组称</b><span class="panel-sub">9 个零件，称 2 次就找出来</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">5 年级 · 折线统计图、找次品</span></button>
+      <button class="panel" type="button" data-nav-key="demo-radar"><span class="panel-icon" aria-hidden="true">◎</span><b>位置与方向：雷达找地方</b><span class="panel-sub">只说方向是一条射线，加上距离才定住一个点</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">6 年级 · 位置与方向（二）</span></button>
+      <button class="panel" type="button" data-nav-key="demo-ratio"><span class="panel-icon" aria-hidden="true">▦</span><b>比：比条分一分</b><span class="panel-sub">2:3 是 2 份对 3 份，一共 5 份</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">6 年级 · 比</span></button>
+      <button class="panel" type="button" data-nav-key="demo-circle"><span class="panel-icon" aria-hidden="true">○</span><b>圆：绕绳量一量</b><span class="panel-sub">每个圆周长除以直径都是约 3.14</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">6 年级 · 圆</span></button>
+      <button class="panel" type="button" data-nav-key="demo-percent"><span class="panel-icon" aria-hidden="true">%</span><b>百分数：百分条</b><span class="panel-sub">降 20% 再涨 20%，回不到 100 元</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">6 年级 · 百分数（一）</span></button>
+      <button class="panel" type="button" data-nav-key="demo-fan"><span class="panel-icon" aria-hidden="true">◔</span><b>扇形统计图：转一转</b><span class="panel-sub">每 1% 是 3.6°，25% 正好是直角</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">6 年级 · 扇形统计图</span></button>
+      <button class="panel" type="button" data-nav-key="demo-lsquare"><span class="panel-icon" aria-hidden="true">⊞</span><b>数与形：一层层包正方形</b><span class="panel-sub">奇数是 L 形，包一层正方形变大一号</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">6 年级 · 数学广角——数与形</span></button>
+      <button class="panel" type="button" data-nav-key="demo-thermo"><span class="panel-icon" aria-hidden="true">🌡</span><b>负数：温度计比一比</b><span class="panel-sub">−5 在 −2 下面，更冷，所以更小</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">6 年级 · 负数</span></button>
+      <button class="panel" type="button" data-nav-key="demo-negmul"><span class="panel-icon" aria-hidden="true">⇄</span><b>负数运算：翻一翻</b><span class="panel-sub">乘 −1 翻到对面，翻两次就回来了</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">6 年级 · 负数</span></button>
+      <button class="panel" type="button" data-nav-key="demo-discount"><span class="panel-icon" aria-hidden="true">🏷</span><b>百分数（二）：打折和利息</b><span class="panel-sub">八折是付标价的 80%；利息要乘时间</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">6 年级 · 百分数（二）</span></button>
+      <button class="panel" type="button" data-nav-key="demo-cylinder"><span class="panel-icon" aria-hidden="true">🥤</span><b>圆柱与圆锥：倒沙</b><span class="panel-sub">3 个圆锥的沙正好倒满 1 个圆柱</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">6 年级 · 圆柱与圆锥</span></button>
+      <button class="panel" type="button" data-nav-key="demo-pigeon"><span class="panel-icon" aria-hidden="true">🕊</span><b>鸽巢问题：先每洞一只</b><span class="panel-sub">5 只鸽子 4 个洞，一定有个洞有 2 只</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">6 年级 · 数学广角——鸽巢问题</span></button>
+      <button class="panel" type="button" data-nav-key="demo-conceptmap"><span class="panel-icon" aria-hidden="true">🗺</span><b>整理和复习：认出老办法</b><span class="panel-sub">这道题是条形图？是 ×1？还是切一切？</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">6 年级 · 整理和复习</span></button>
       <button class="panel" type="button" data-nav-key="why"><span class="panel-icon" aria-hidden="true">？</span><b>为什么小实验</b><span class="panel-sub">进位、分数除法、面积公式</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">3 个小实验</span></button>
     </div>
 
@@ -2429,6 +2487,223 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid{gr
         <p class="demo-foot">成功标准：说出“线陡说明长得快；我三组一起称，不是一个一个称”。</p>
         <p class="why"><b>为什么？</b>一个一个称浪费了天平的信息：一次称能同时排除两组。27 个里找 1 个也只要 3 次：27→9→3→1，每次都把范围缩小到三分之一。</p>
       </article>
+      <!-- 6.3 位置与方向（二） -->
+      <article class="demo-card" id="demo-radar">
+        <p class="demo-tag">6 年级 · 位置与方向（二）</p>
+        <h3>位置与方向：雷达找地方</h3>
+        <p>说一个地方在哪，要说两件事：方向（从北往哪个方向偏多少度）和距离（多远）。只说方向，是一条射线，上面有无数个点；只说距离，是一个圆，圆上也有无数个点。</p>
+        <div class="control-row"><span>方向</span><div class="seg" id="rdDirSeg"></div></div>
+        <div class="control-row"><span>偏多少度</span><div class="seg"><button type="button" id="rdAngMinus">−</button><span class="arr-tx" id="rdAngTx">偏 30°</span><button type="button" id="rdAngPlus">＋</button></div></div>
+        <div class="control-row"><span>多远</span><div class="seg"><button type="button" id="rdDistMinus">−</button><span class="arr-tx" id="rdDistTx">200 米</span><button type="button" id="rdDistPlus">＋</button></div></div>
+        <div class="control-row"><span>玩什么</span><div class="seg" id="rdModeSeg"></div></div>
+        <div class="rd-map" id="rdMap">
+          <span class="rd-compass rd-n">北</span><span class="rd-compass rd-s">南</span><span class="rd-compass rd-e">东</span><span class="rd-compass rd-w">西</span>
+          <div class="rd-ray" id="rdRay"></div>
+          <div class="rd-ghost" id="rdGhost1"></div>
+          <div class="rd-ghost" id="rdGhost2"></div>
+          <div class="rd-ghost" id="rdGhost3"></div>
+          <div class="rd-center">学校</div>
+          <div class="rd-dot" id="rdDot">🏠</div>
+        </div>
+        <p class="func-eq" id="rdRead">小明家在学校北偏东 30°、200 米处。</p>
+        <p id="rdMsg">方向加距离，才能定住一个点——这就是极坐标的想法。</p>
+        <p class="demo-foot">成功标准：说出“北偏东 30 度、200 米远，才是一个确切的地方”。</p>
+        <p class="why"><b>为什么？</b>只说方向，是一条射线，上面有无数个点；只说距离，是一个圆，圆上也有无数个点。方向加距离，才能定住一个点。</p>
+      </article>
+
+      <!-- 6.4 比 -->
+      <article class="demo-card" id="demo-ratio">
+        <p class="demo-tag">6 年级 · 比</p>
+        <h3>比：比条分一分</h3>
+        <p>比是两个数相除：a:b = a÷b。按比分配，先算一共几份，再算每份是多少，最后分到每个人头上。</p>
+        <div class="control-row"><span>前项</span><div class="seg"><button type="button" id="raAMinus">−</button><span class="arr-tx" id="raATx">前项 2 份</span><button type="button" id="raAPlus">＋</button></div></div>
+        <div class="control-row"><span>后项</span><div class="seg"><button type="button" id="raBMinus">−</button><span class="arr-tx" id="raBTx">后项 3 份</span><button type="button" id="raBPlus">＋</button></div></div>
+        <div class="control-row"><span>一共分多少钱</span><div class="seg" id="raTotalSeg"></div></div>
+        <div class="rt-bar"><div class="rt-seg rt-a" id="raBarA">2 份</div><div class="rt-seg rt-b" id="raBarB">3 份</div></div>
+        <p class="func-eq" id="raRead">2:3，一共 5 份，每份 10 元：一个人分 20 元，另一个人分 30 元。</p>
+        <p id="raMsg">2 份是整体的 2/5：2:3 是部分比部分，2/5 是部分比整体，别弄混。</p>
+        <p class="demo-foot">成功标准：说出“2:3 是 2 份对 3 份，一共 5 份，每份是整体的五分之一”。</p>
+        <p class="why"><b>为什么？</b>比是“部分比部分”，分数是“部分比整体”：2:3 里一共 5 份，2 份占整体的 2/5。比的基本性质就是分数的 ×1。</p>
+      </article>
+
+      <!-- 6.5 圆 -->
+      <article class="demo-card" id="demo-circle">
+        <p class="demo-tag">6 年级 · 圆</p>
+        <h3>圆：绕绳量一量</h3>
+        <p>圆是到圆心距离都相等的点的集合。周长 C=πd=2πr，面积 S=πr²。π 是量出来的：绕绳子量每个圆的周长，再除以直径，永远约等于 3.14。</p>
+        <div class="control-row"><span>玩什么</span><div class="seg" id="ccModeSeg"></div></div>
+        <div class="control-row"><span>半径</span><div class="seg"><button type="button" id="ccRMinus">−</button><span class="arr-tx" id="ccRTx">半径 3 厘米</span><button type="button" id="ccRPlus">＋</button></div></div>
+        <div id="ccCircBox">
+          <div class="control-row"><span id="ccRopeTx">绳子（周长）18.84 厘米</span><div class="cc-bar cc-rope" id="ccRopeBar"></div></div>
+          <div class="control-row"><span id="ccDiamTx">直径 6 厘米</span><div class="cc-bar cc-diam" id="ccDiamBar"></div></div>
+          <p>绳子大约是直径的 3.14 倍——这条绳子绕哪个圆都一样。</p>
+        </div>
+        <div id="ccAreaBox" hidden>
+          <div class="cc-rect" id="ccRect"></div>
+          <p id="ccRectTx">长 9.42 厘米、宽 3 厘米的长方形</p>
+        </div>
+        <div class="control-row" id="ccSliceRow" hidden><span>切成几片</span><div class="seg" id="ccSliceSeg"></div></div>
+        <p class="func-eq" id="ccRead">半径 3 厘米，直径 6 厘米：绳子绕一圈是 18.84 厘米；18.84 ÷ 6 = 3.14。</p>
+        <p id="ccMsg">周长是 π×直径，不是 π×半径；π 是比值，所有圆都一样大——这正是 π 的发现。</p>
+        <p class="demo-foot">成功标准：说出“每个圆周长除以直径都是约 3.14，这个数就是圆周率”。</p>
+        <p class="why"><b>为什么？</b>面积是把圆切成很多小扇形拼成长方形：长是 πr、宽是 r，所以是 πr×r=πr²。片数越多，拼得越像长方形。</p>
+      </article>
+
+      <!-- 6.6 百分数（一） -->
+      <article class="demo-card" id="demo-percent">
+        <p class="demo-tag">6 年级 · 百分数（一）</p>
+        <h3>百分数：百分条</h3>
+        <p>百分数就是分母是 100 的分数：25% = 25/100 = 1/4 = 0.25。百分数好用，是因为 100 是个方便的公共分母：所有比都能换成“每 100 里有几”，直接比大小。</p>
+        <div class="control-row"><span>涂出百分之几</span><div class="seg"><button type="button" id="pcMinus">−</button><span class="arr-tx" id="pcTx">25%</span><button type="button" id="pcPlus">＋</button></div></div>
+        <div class="cr-track"><div class="cr-fill" id="pcFill" style="width:25%"></div></div>
+        <p class="func-eq" id="pcRead">25% = 25/100 = 1/4 = 0.25：每 100 里有 25。</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="pcDown" type="button">第 1 步：降价 20%</button>
+          <button class="btn small primary" id="pcUp" type="button">第 2 步：再涨价 20%</button>
+          <button class="btn small ghost" id="pcReset" type="button">重新开始</button>
+        </div>
+        <p id="pcStepRead">100 元的衣服，先降价 20%，再涨价 20%，能回到 100 元吗？点“第 1 步”试试。</p>
+        <p id="pcMsg">“多 20%”是整体加整体的 20%，底数是原来的数——底数变了，百分数就变了。</p>
+        <p class="demo-foot">成功标准：说出“百分数就是每一百里有几；多 20% 是整体加整体的 20%”。</p>
+        <p class="why"><b>为什么？</b>第二次涨价的底数是降价后的价，比原来小了，所以涨不回原价。0.25% 是每 100 里有 0.25，不是 25。</p>
+      </article>
+
+      <!-- 6.7a 扇形统计图 -->
+      <article class="demo-card" id="demo-fan">
+        <p class="demo-tag">6 年级 · 扇形统计图</p>
+        <h3>扇形统计图：转一转</h3>
+        <p>扇形统计图用整个圆表示整体，每个扇形占整体的百分之几，圆心角就是百分之几×360°。1% 是 3.6°，25% 就是 90°（直角）。</p>
+        <div class="control-row"><span>苹果</span><div class="seg"><button type="button" id="fnAMinus">−</button><span class="arr-tx" id="fnATx">苹果 40%</span><button type="button" id="fnAPlus">＋</button></div></div>
+        <div class="control-row"><span>香蕉</span><div class="seg"><button type="button" id="fnBMinus">−</button><span class="arr-tx" id="fnBTx">香蕉 35%</span><button type="button" id="fnBPlus">＋</button></div></div>
+        <div class="control-row"><span>橙子</span><span class="arr-tx" id="fnCTx">橙子 25%</span></div>
+        <div class="fn-pie" id="fnPie"></div>
+        <p class="fn-legend"><span class="fn-dot fn-a"></span>苹果 <span class="fn-dot fn-b"></span>香蕉 <span class="fn-dot fn-c"></span>橙子</p>
+        <p class="func-eq" id="fnRead">苹果 40%，圆心角 144°；香蕉 35%，126°；橙子 25%，90°。</p>
+        <p id="fnMsg">橙子 25% 的扇形正好是直角：25×3.6° = 90°。每 1% 是 3.6°。</p>
+        <p class="demo-foot">成功标准：说出“每 1% 是 3.6 度，25% 就是直角”。</p>
+        <p class="why"><b>为什么？</b>整个圆是 360°，也是 100%，所以 1% = 3.6°。扇形的角和它的份额成正比：份额越大，角越大。扇形图是一张“某一时刻的整体快照”，想看变化要用折线图。</p>
+      </article>
+
+      <!-- 6.7b 数与形 -->
+      <article class="demo-card" id="demo-lsquare">
+        <p class="demo-tag">6 年级 · 数学广角——数与形</p>
+        <h3>数与形：一层层包正方形</h3>
+        <p>1+3+5+…+（2n−1）= n²。奇数一个一个加上去，拼出来的就是正方形：每个奇数都是一个 L 形（拐角），每加一个奇数，就是给正方形包上一层。</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="lsMore" type="button">再包一层</button>
+          <button class="btn small ghost" id="lsLess" type="button">少一层</button>
+        </div>
+        <div class="ls-grid" id="lsGrid"></div>
+        <p class="func-eq" id="lsRead">1 = 1，是 1²：1 个奇数加起来是 1 的平方。</p>
+        <p id="lsMsg">第 2 层要包 3 块：每层比上一层多 2 块，拼成 2×2 = 4。</p>
+        <p class="demo-foot">成功标准：说出“奇数一层层包出正方形：1+3=4，1+3+5=9”。</p>
+        <p class="why"><b>为什么？</b>1 是 1 个小正方形，3 是包住它的 L 形，5 是再包一层。每加一个奇数，就是给正方形包上一层，正方形变大一号。</p>
+      </article>
+
+      <!-- 6.8 负数 -->
+      <article class="demo-card" id="demo-thermo">
+        <p class="demo-tag">6 年级 · 负数</p>
+        <h3>负数：温度计比一比</h3>
+        <p>负数是正数的反面：零上 5℃ 记作 +5℃，零下 5℃ 记作 −5℃。−a 是加上 a 等于 0 的数：−3+3=0。比大小看数轴：越往左越小，所以 −5 &lt; −2。</p>
+        <div class="control-row"><span>今天</span><div class="seg"><button type="button" id="thAMinus">−</button><span class="arr-tx" id="thATx">今天 −3℃</span><button type="button" id="thAPlus">＋</button></div></div>
+        <div class="control-row"><span>明天</span><div class="seg"><button type="button" id="thBMinus">−</button><span class="arr-tx" id="thBTx">明天 −8℃</span><button type="button" id="thBPlus">＋</button></div></div>
+        <div class="th-cols">
+          <div class="th-col"><div class="th-fill" id="thFillA" style="height:35%"></div><div class="th-zero"></div><span class="th-cap">今天</span></div>
+          <div class="th-col"><div class="th-fill" id="thFillB" style="height:10%"></div><div class="th-zero"></div><span class="th-cap">明天</span></div>
+        </div>
+        <p class="func-eq" id="thRead">今天 −3℃，明天 −8℃：−8℃ 在 −3℃ 下面，更冷，所以 −8 &lt; −3——明天更冷。</p>
+        <p id="thMsg">数轴上越往左越小，温度计上越往下越小。−5 是一个数（一个位置），5−2 是一道算式，别把它们混在一起。</p>
+        <p class="demo-foot">成功标准：说出“−5 在 −2 左边，所以更小，天更冷”。</p>
+        <p class="why"><b>为什么？</b>−3 的意思是“从 0 往反方向走 3 步”。温度计上 −5 在 −2 下面，更冷，所以更小。数字的大小由它在数轴上的位置决定，不是由数字本身决定。</p>
+      </article>
+
+      <!-- 6.9 负数运算 -->
+      <article class="demo-card" id="demo-negmul">
+        <p class="demo-tag">6 年级 · 负数</p>
+        <h3>负数运算：翻一翻</h3>
+        <p>负数乘负数是正数：(−2)×(−3)=+6。看规律：第一个数每减 1，答案就加 2。乘 −1 是“翻到数轴的对面”：翻一次到对面，翻两次就回来了。</p>
+        <div id="nmRows"></div>
+        <p class="func-eq" id="nmRead">第一个数每减 1，答案就加 2：3×(−2) = −6，2×(−2) = −4，1×(−2) = −2，0×(−2) = 0，所以 (−1)×(−2) 只能是 +2。</p>
+        <div class="nm-track"><div class="nm-marker" id="nmMarker" style="left:80%">+3</div></div>
+        <div class="btn-row"><button class="btn small primary" id="nmFlip" type="button">乘 −1，翻到对面</button></div>
+        <p id="nmFlipRead">数轴上的 3 是 +3。点“乘 −1”，看看它翻到哪。</p>
+        <p id="nmMsg">加法不一样：−2+(−3) 是欠 2 元再欠 3 元，一共欠 5 元，是 −5。“两个负号就是正”只对乘法说。</p>
+        <p class="demo-foot">成功标准：说出“乘 −1 是翻到对面，翻两次就回来了，所以负乘负是正”。</p>
+        <p class="why"><b>为什么？</b>乘法的符号是规律逼出来的：3×(−2)、2×(−2)、1×(−2)、0×(−2) 一路走下来，(−1)×(−2) 只能是 +2。</p>
+      </article>
+
+      <!-- 6.10 百分数（二） -->
+      <article class="demo-card" id="demo-discount">
+        <p class="demo-tag">6 年级 · 百分数（二）</p>
+        <h3>百分数（二）：打折和利息</h3>
+        <p>折扣、成数、税率、利率都是“部分 = 比率 × 底数”。打八折是付标价的 80%；利息 = 本金 × 利率 × 时间。先问“底数是谁”，再算。</p>
+        <div class="control-row"><span>玩什么</span><div class="seg" id="dcModeSeg"></div></div>
+        <div id="dcSaleBox">
+          <div class="control-row"><span>标价</span><div class="seg"><button type="button" id="dcPriceMinus">−</button><span class="arr-tx" id="dcPriceTx">标价 200 元</span><button type="button" id="dcPricePlus">＋</button></div></div>
+          <div class="control-row"><span>折扣</span><div class="seg" id="dcRateSeg"></div></div>
+        </div>
+        <div id="dcIntBox" hidden>
+          <div class="control-row"><span>本金</span><div class="seg" id="dcPrinSeg"></div></div>
+          <div class="control-row"><span>年利率</span><div class="seg" id="dcIRateSeg"></div></div>
+          <div class="control-row"><span>存几年</span><div class="seg"><button type="button" id="dcYearsMinus">−</button><span class="arr-tx" id="dcYearsTx">存 3 年</span><button type="button" id="dcYearsPlus">＋</button></div></div>
+          <p><span class="arr-tx" id="dcPrinTx">本金 5000 元</span></p>
+        </div>
+        <p class="func-eq" id="dcRead">标价 200 元，打八折：付 200×80% = 160 元，省了 40 元。</p>
+        <p id="diMsg">八折是付标价的 80%，不是 20%——条上 80% 的部分才是要付的。</p>
+        <p class="demo-foot">成功标准：说出“八折是付标价的 80%；百分数永远是对标价说的”。</p>
+        <p class="why"><b>为什么？</b>它们是同一个数学、不同的底数：折扣的底数是标价，税的底数是应纳税的钱，利息的底数是本金。利息要乘时间，是因为利息一年一年攒：每一年都产生一份。</p>
+      </article>
+
+      <!-- 6.11 圆柱与圆锥 -->
+      <article class="demo-card" id="demo-cylinder">
+        <p class="demo-tag">6 年级 · 圆柱与圆锥</p>
+        <h3>圆柱与圆锥：倒沙</h3>
+        <p>圆柱的侧面展开是一个长方形：长是底面周长 2πr，宽是高 h。体积 = 底面积 × 高 = πr²h。圆锥是同底等高圆柱的 1/3：3 锥沙倒满 1 圆柱。</p>
+        <div class="control-row"><span>底面半径</span><div class="seg"><button type="button" id="cyRMinus">−</button><span class="arr-tx" id="cyRTx">底面半径 3 厘米</span><button type="button" id="cyRPlus">＋</button></div></div>
+        <div class="control-row"><span>高</span><div class="seg"><button type="button" id="cyHMinus">−</button><span class="arr-tx" id="cyHTx">高 4 厘米</span><button type="button" id="cyHPlus">＋</button></div></div>
+        <div class="cy-tank"><div class="cy-fill" id="cyFill" style="height:0%"></div><span class="cy-cap">圆柱</span></div>
+        <div class="btn-row">
+          <button class="btn small primary" id="cyPour" type="button">倒一锥沙</button>
+          <button class="btn small ghost" id="cyReset" type="button">倒掉重来</button>
+        </div>
+        <p class="func-eq" id="cyPourRead">圆锥里装满沙，点“倒一锥沙”，看看圆柱装了多少。</p>
+        <p class="func-eq" id="cyRead">底面半径 3 厘米，高 4 厘米：圆柱的体积 = 3.14×3×3×4 = 113.04 立方厘米；圆锥的体积是它的 1/3，是 37.68 立方厘米。</p>
+        <p id="cyMsg">侧面展开是长方形：长是底面周长 18.84 厘米，宽是高 4 厘米，侧面积 75.36 平方厘米；表面积再加两个底面 56.52，一共 131.88 平方厘米。</p>
+        <p class="demo-foot">成功标准：说出“侧面展开是长方形，长是圆的周长；3 个圆锥装满 1 个圆柱”。</p>
+        <p class="why"><b>为什么？</b>侧面展开是长方形，是因为卷一个长方形就成了筒——长就是圆的一圈。体积是底面积乘高，和长方体一样。圆锥的 1/3 是倒出来的：3 个圆锥的沙正好倒满 1 个圆柱。</p>
+      </article>
+
+      <!-- 6.13 鸽巢问题 -->
+      <article class="demo-card" id="demo-pigeon">
+        <p class="demo-tag">6 年级 · 数学广角——鸽巢问题</p>
+        <h3>鸽巢问题：先每洞一只</h3>
+        <p>鸽巢问题是数出来的必然：n+1 只鸽子飞进 n 个鸽巢，一定有一个巢里至少有 2 只。先每个巢放 1 只，第 n+1 只没地方去，只能合住。</p>
+        <div class="control-row"><span>几只鸽子</span><div class="seg" id="pgNSeg"></div></div>
+        <div class="control-row"><span>几个鸽巢</span><div class="seg" id="pgMSeg"></div></div>
+        <div class="pg-nests" id="pgNests"></div>
+        <p id="pgLeft">一共 5 只鸽子。</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="pgStep1" type="button">每个洞先放一只</button>
+          <button class="btn small primary" id="pgStep2" type="button">剩下的只能合住</button>
+          <button class="btn small ghost" id="pgReset" type="button">重新开始</button>
+        </div>
+        <p class="func-eq" id="piRead">5 只鸽子，4 个鸽巢：点“每个洞先放一只”。</p>
+        <p id="piMsg">这不是“可能”，是数出来的：每个巢先占 1 只，n 个巢占了 n 只，剩下的 1 只只能进已经有鸽子的巢。没有别的地方可去。</p>
+        <p class="demo-foot">成功标准：说出“每个洞先放一只，下一只只能合住，所以一定有个洞有两只”。</p>
+        <p class="why"><b>为什么？</b>这不是猜——巢的个数数完了，第 n+1 只鸽子没地方可去，只能合住。这是计数证明，不是运气。</p>
+      </article>
+
+      <!-- 6.14 整理和复习 -->
+      <article class="demo-card" id="demo-conceptmap">
+        <p class="demo-tag">6 年级 · 整理和复习</p>
+        <h3>整理和复习：认出老办法</h3>
+        <p>整理和复习不是重背步骤，是认出老办法：这道题是条形图？是 ×1？是切一切？先问“这是哪个老办法”，再动手。</p>
+        <div id="cmList"></div>
+        <p id="cmMsg">步骤会忘，想法会迁移：同一张条形图出现在加法、倍、比、方程里；同一个 ×1 出现在约分、通分、比的基本性质里。认出老办法，就是“理解”。</p>
+        <p class="demo-foot">成功标准：说出“这题又是条形图，我先找整体和部分”。</p>
+        <p class="why"><b>为什么？</b>步骤背下来，换个题就不会了；认出背后的办法，换什么题都能想。复习是连线，不是重抄。</p>
+      </article>
+
     </div>
   </section>
 
@@ -4799,7 +5074,7 @@ const GRADE6_CONTENT = {
           method: "雷达扫",
           explainBack: "“北偏东 30 度、200 米远，才是一个确切的地方。”",
           tryIt: "在操场上定一个点当观测点，量一量：旗杆在你的什么方向、多远？只说方向够吗？再和同学互相说一说彼此家的位置。",
-          demo: null,
+          demo: "radar",
           recall: { q: "小红家在学校东偏北 40°、300 米处。如果只说“东偏北 40°”，能找到小红家吗？", answer: "不能；那是一条射线，上面有无数个点", hint: "方向定了一条线，还要距离才知道是线上哪个点。" },
           olympiad: { q: "小明家在学校北偏东 30°、200 米处，小刚家在学校北偏西 30°、200 米处。小明家离小刚家多少米？", answer: "200 米", hint: "画图：两家和学校组成一个三角形，两条边都是 200 米，夹角是 60°，所以是个等边三角形。" },
           practice: [
@@ -4851,7 +5126,7 @@ const GRADE6_CONTENT = {
           method: "比条 + 双数轴",
           explainBack: "“2:3 是 2 份对 3 份，一共 5 份，每份是整体的五分之一。”",
           tryIt: "拿 50 颗糖按 2:3 分给两个人：先算一共几份、每份几颗，再算每人几颗；再试一试按 3:2 分，结果有什么不同？",
-          demo: null,
+          demo: "ratio",
           recall: { q: "把 50 元按 2:3 分给两个人，每份是几元？是 10 元，还是 25 元？", answer: "10 元；一共 5 份，每份 10 元", hint: "2+3=5 份，50÷5=10。" },
           olympiad: { q: "甲、乙两数的比是 3:5，甲数比乙数少 20，甲、乙两数各是多少？", answer: "甲 30，乙 50", hint: "一份是 20÷(5−3)=10，甲是 3 份，乙是 5 份。" },
           practice: [
@@ -4877,7 +5152,7 @@ const GRADE6_CONTENT = {
           method: "绕绳量 + 切扇形拼长方形",
           explainBack: "“每个圆周长除以直径都是约 3.14，这个数就是圆周率。”",
           tryIt: "找三个大小不同的圆杯子，用绳子绕一圈量周长，再量直径，算一算周长÷直径，看看是不是都约等于 3.14。",
-          demo: null,
+          demo: "circle",
           recall: { q: "一个圆的半径是 3 厘米，它的周长是 3.14×3，还是 3.14×6？", answer: "3.14×6=18.84 厘米；周长是 π×直径，直径是 6 厘米", hint: "直径是半径的 2 倍，周长要用直径乘 π。" },
           olympiad: { q: "一个圆的半径增加 1 厘米，它的周长增加多少厘米？面积增加多少平方厘米？（原来的半径是 5 厘米，π 取 3.14）", answer: "周长增加 6.28 厘米；面积增加 34.54 平方厘米", hint: "周长增加 2π×1=6.28；面积增加 3.14×(6²−5²)=3.14×11=34.54。" },
           practice: [
@@ -4903,7 +5178,7 @@ const GRADE6_CONTENT = {
           method: "百分条（0–100）",
           explainBack: "“百分数就是每一百里有几；多 20% 是整体加整体的 20%。”",
           tryIt: "拿一条 100 格的纸条，涂出 25%，再涂出 40%，比一比；算一算：100 元先降 20% 再涨 20%，是多少钱？",
-          demo: null,
+          demo: "percent",
           recall: { q: "一件衣服 100 元，先降价 20%，再涨价 20%，现在是多少元？是 100 元，还是 96 元？", answer: "96 元", hint: "降价后是 80 元，涨 20% 是涨 80 元的 20%，也就是 16 元，80+16=96。" },
           olympiad: { q: "甲数是乙数的 120%，乙数是甲数的百分之几？（提示：先设乙数是 100）", answer: "约 83.3%", hint: "乙数是 100，甲数是 120；100÷120≈83.3%。" },
           practice: [
@@ -4929,7 +5204,7 @@ const GRADE6_CONTENT = {
           method: "角度=百分数×3.6°",
           explainBack: "“每 1% 是 3.6 度，25% 就是直角。”",
           tryIt: "画一个圆，把全班最喜欢的水果画成扇形图：喜欢苹果的占 40%，它的圆心角是多少度？",
-          demo: null,
+          demo: "fan",
           recall: { q: "扇形统计图里，喜欢足球的占 30%，它的扇形圆心角是多少度？是 30°，还是 108°？", answer: "108°", hint: "30×3.6°=108°。" },
           olympiad: { q: "一幅扇形统计图里，甲类比乙类多 10%，甲类和乙类一共占 70%，甲类和乙类各占百分之几？（提示：和差问题）", answer: "甲 40%，乙 30%", hint: "甲 = (70%+10%)÷2 = 40%，乙 = 40%−10% = 30%。" },
           practice: [
@@ -4955,7 +5230,7 @@ const GRADE6_CONTENT = {
           method: "L 形拼正方形",
           explainBack: "“奇数一层层包出正方形：1+3=4，1+3+5=9。”",
           tryIt: "用小方块拼一拼：先放 1 块，再在外面包 3 块成 2×2，再包 5 块成 3×3；第 4 层要包几块？",
-          demo: null,
+          demo: "lsquare",
           recall: { q: "1+3+5+7+9 等于几？是 25，还是 24？", answer: "25；5 个奇数加起来是 5²", hint: "1+3=4，1+3+5=9，1+3+5+7=16，再加 9 是 25。" },
           olympiad: { q: "1+2+3+…+99+100 = ？（提示：首尾配对）", answer: "5050", hint: "1+100=101，2+99=101，一共 50 对，50×101=5050。" },
           practice: [
@@ -4981,7 +5256,7 @@ const GRADE6_CONTENT = {
           method: "竖直温度计",
           explainBack: "“−5 在 −2 左边，所以更小，天更冷。”",
           tryIt: "看一看天气预报：今天 −3℃，明天 −8℃，哪天更冷？在温度计上指一指 −3 和 −8 的位置。",
-          demo: null,
+          demo: "thermo",
           recall: { q: "−5 和 −2，哪个更小？是 −5，还是 −2？", answer: "−5 更小", hint: "−5 在数轴上更靠左，温度计上更靠下，更冷。" },
           olympiad: { q: "在数轴上，点 A 表示 −3，点 B 表示 +5。点 C 到 A 和 B 的距离相等，点 C 表示几？", answer: "1", hint: "C 是 A、B 的中点：(−3+5)÷2=1；C 到两边的距离都是 4。" },
           practice: [
@@ -5001,7 +5276,7 @@ const GRADE6_CONTENT = {
           method: "数列规律 + 翻面动画",
           explainBack: "“乘 −1 是翻到对面，翻两次就回来了，所以负乘负是正。”",
           tryIt: "写一写 3×(−2)、2×(−2)、1×(−2)、0×(−2) 的答案，看看每次变了多少，再猜 (−1)×(−2) 是几。",
-          demo: null,
+          demo: "negmul",
           recall: { q: "−2+(−3) 等于几？是 +5，还是 −5？", answer: "−5", hint: "这是加法：欠 2 元再欠 3 元，一共欠 5 元。“两个负号就是正”只对乘法说。" },
           olympiad: { q: "四个数相乘：(−2)×(−3)×(−4)×(−5)，积是正数还是负数？是多少？（提示：数一数有几个负号）", answer: "正数，120", hint: "4 个负号，偶数个，积是正数；2×3×4×5=120。" },
           practice: [
@@ -5027,7 +5302,7 @@ const GRADE6_CONTENT = {
           method: "百分条标底数",
           explainBack: "“八折是付标价的 80%；百分数永远是对标价说的。”",
           tryIt: "一件标价 100 元的衣服打八折，要付多少钱？再算一算：存 1000 元，年利率 2%，存 2 年利息是多少？",
-          demo: null,
+          demo: "discount",
           recall: { q: "一件标价 200 元的衣服打八折，要付多少钱？是 40 元，还是 160 元？", answer: "160 元", hint: "八折是付标价的 80%：200×80%=160。" },
           olympiad: { q: "一件商品先打八折，再在折后价的基础上打九折，一共相当于打几折？（提示：先设原价 100 元）", answer: "相当于打七二折（72%）", hint: "100×80%=80，80×90%=72，72÷100=72%。" },
           practice: [
@@ -5053,7 +5328,7 @@ const GRADE6_CONTENT = {
           method: "展开标签 + 倒沙实验",
           explainBack: "“侧面展开是长方形，长是圆的周长；3 个圆锥装满 1 个圆柱。”",
           tryIt: "找一个圆柱形的纸筒，把侧面的标签小心撕下来铺平，量一量它的长和宽；再找一个圆锥形漏斗，装满沙倒进同底等高的圆柱里，倒几次能满？",
-          demo: null,
+          demo: "cylinder",
           recall: { q: "一个圆锥和一个圆柱等底等高，圆锥的体积是圆柱的几分之几？是 1/2，还是 1/3？", answer: "1/3", hint: "3 个圆锥的沙正好倒满 1 个圆柱。" },
           olympiad: { q: "一个圆锥的底面半径是 3 厘米，高是 6 厘米，它的体积是多少？如果把它熔铸成一个和它等底的圆柱，圆柱的高是多少厘米？（π 取 3.14）", answer: "体积 56.52 立方厘米；圆柱高 2 厘米", hint: "圆锥体积 = 1/3×3.14×9×6 = 56.52；熔铸后体积不变，圆柱高 = 56.52÷(3.14×9) = 2。" },
           practice: [
@@ -5105,7 +5380,7 @@ const GRADE6_CONTENT = {
           method: "先每洞一只",
           explainBack: "“每个洞先放一只，下一只只能合住，所以一定有个洞有两只。”",
           tryIt: "拿 5 支笔放进 4 个笔筒，先每个筒放 1 支，看看第 5 支只能去哪；再试 7 支笔放进 3 个笔筒，至少有一个筒里有几支？",
-          demo: null,
+          demo: "pigeon",
           recall: { q: "5 只鸽子飞进 4 个鸽巢，一定有一个巢里至少有几只鸽子？是 1 只，还是 2 只？", answer: "2 只", hint: "每个巢先放 1 只，第 5 只只能进已经有鸽子的巢。" },
           olympiad: { q: "一个袋子里有 5 个红球、5 个蓝球、5 个绿球（大小相同）。至少摸出几个球，才能保证有 2 个同色的球？至少摸出几个，才能保证有 3 个同色的球？", answer: "4 个保证 2 个同色；7 个保证 3 个同色", hint: "最坏的情况是每种颜色各摸 1 个：摸 3 个可能 3 色各 1 个，第 4 个一定和其中一个同色；要保证 3 个同色，最坏是每种 2 个（6 个），第 7 个一定凑出 3 个。" },
           practice: [
@@ -5131,7 +5406,7 @@ const GRADE6_CONTENT = {
           method: "概念地图 + 一题多解",
           explainBack: "“这题又是条形图，我先找整体和部分。”",
           tryIt: "挑一道以前做过的题，不看答案，先说一说：它用了哪个老办法？再用另一个办法做一做，看看答案一样吗？",
-          demo: null,
+          demo: "conceptmap",
           recall: { q: "1/2 = 2/4 = 3/6，约分、比的基本性质、分数的基本性质，背后是同一个什么办法？", answer: "×1：分子分母同时乘或除以同一个数，值不变", hint: "2/4 是 1/2 的分子分母同时乘 2；乘 2/2 就是乘 1。" },
           olympiad: { q: "1+2+3+…+9+10+9+…+3+2+1 = ？（提示：这是两个三角形数拼成的正方形）", answer: "100", hint: "1+…+10=55，9+…+1=45，55+45=100；也可以想：这是 10×10 的正方形。" },
           practice: [
@@ -6423,7 +6698,7 @@ const GRADES = {
 };
 
 /* ---------- 进度（原型：记演示是否玩过） ----------
-   73 个演示全都计入：4 个经典演示 + 13 个一年级实验 + 15 个二年级实验 + 14 个三年级实验 + 16 个四年级实验 + 11 个五年级实验。以前只记 4 个经典，
+   85 个演示全都计入：4 个经典演示 + 13 个一年级实验 + 15 个二年级实验 + 14 个三年级实验 + 16 个四年级实验 + 11 个五年级实验 + 12 个六年级实验。以前只记 4 个经典，
    首页却写着“4 个演示”，演示页上却是 17 张卡，数字对不上
    （2026-11-06 真机审计第 6 条）。 */
 const tried = new Set();
@@ -6439,7 +6714,9 @@ const ALL_DEMOS = ['tenframe', 'fraction', 'balance', 'function',
   'baraxis', 'teatime', 'zerodiv', 'laws', 'placeslider', 'tearangle',
   'decadd', 'moveshape', 'average', 'chickenrabbit',
   'decmul', 'gridpos', 'decdiv', 'prob', 'polyarea', 'planttree',
-  'factor', 'cuboid', 'fracadd', 'rotate', 'findbad'];
+  'factor', 'cuboid', 'fracadd', 'rotate', 'findbad',
+  'radar', 'ratio', 'circle', 'percent', 'fan', 'lsquare', 'thermo', 'negmul',
+  'discount', 'cylinder', 'pigeon', 'conceptmap'];
 // 刷新后进度还在：已体验的演示存在本地（只存本机，不上传）。
 try { JSON.parse(lsGet('math-tried-demos-v1') || '[]').forEach(k => tried.add(k)); } catch (e) {}
 function renderTried() {
@@ -6601,7 +6878,7 @@ function renderUnit(g, ui) {
   pointDetail.querySelectorAll('[data-point]').forEach(btn =>
     btn.addEventListener('click', () => navGo('point-' + btn.dataset.point)));
 }
-const DEMO_LABEL = { fraction: '去玩分数演示', tenframe: '去玩十格阵', balance: '去玩天平演示', function: '去玩函数演示', count: '去玩数一数', position: '去玩转身找左右', split: '去玩分一分', addsub: '去玩合起来拿走', solids: '去玩立体图形', bundle: '去玩捆小棒', clock: '去玩拨时钟', tangram: '去玩七巧板', sort: '去玩分类分一分', hundred: '去玩百数表', shop: '去玩开小店', place: '去玩数位块', pattern: '去玩找规律', ruler: '去玩尺子量一量', estimate: '去玩先估后算', angle: '去玩转一转角', array: '去玩点阵乘法', observe: '去玩换个方向看', time: '去玩拨时钟（时和分）', share: '去玩轮流分一分', motion: '去玩折一折转一转', mixop: '去玩先算哪一堆', remain: '去玩装一包装不满', thousand: '去玩数轴找近似数', weight: '去玩天平称一称', chart: '去玩投票变条形图', logic: '去玩排除格推理', pair: '去玩搭配连一连', elapsed: '去玩时间轴走一走', verify: '去玩算回去验算', units: '去玩单位楼梯', times: '去玩条形复制', splitmul: '去玩面积切一切', rectsq: '去玩拉一拉变正方形', venn: '去玩韦恩图拖人', compass: '去玩指南针转一转', divplace: '去玩按数位分一分', stattable: '去玩复式统计表', fourgrid: '去玩四格面积模型', area: '去玩铺方砖数面积', calendar: '去玩日历翻一翻', decimal: '去玩十分条比大小', bignum: '去玩大数数轴', field: '去玩足球场拼一拼', protractor: '去玩量角器', areamodel: '去玩面积模型', parallelogram: '去玩平行四边形', trialdiv: '去玩试商调商', baraxis: '去玩条形图轴', teatime: '去玩沏茶排一排', zerodiv: '去玩除以0', laws: '去玩运算定律', placeslider: '去玩数位滑块', tearangle: '去玩撕角拼平角', decadd: '去玩小数加减对齐', moveshape: '去玩图形平移', average: '去玩削峰填谷', chickenrabbit: '去玩鸡兔同笼', decmul: '去玩单位正方形', gridpos: '去玩数对点一点', decdiv: '去玩两数同乘', prob: '去玩摸球模拟', polyarea: '去玩切一刀变长方形', planttree: '去玩种树数间隔', factor: '去玩拼长方形', cuboid: '去玩分层装块', fracadd: '去玩先重切再数', rotate: '去玩绕钉旋转', findbad: '去玩三组称找次品' };
+const DEMO_LABEL = { fraction: '去玩分数演示', tenframe: '去玩十格阵', balance: '去玩天平演示', function: '去玩函数演示', count: '去玩数一数', position: '去玩转身找左右', split: '去玩分一分', addsub: '去玩合起来拿走', solids: '去玩立体图形', bundle: '去玩捆小棒', clock: '去玩拨时钟', tangram: '去玩七巧板', sort: '去玩分类分一分', hundred: '去玩百数表', shop: '去玩开小店', place: '去玩数位块', pattern: '去玩找规律', ruler: '去玩尺子量一量', estimate: '去玩先估后算', angle: '去玩转一转角', array: '去玩点阵乘法', observe: '去玩换个方向看', time: '去玩拨时钟（时和分）', share: '去玩轮流分一分', motion: '去玩折一折转一转', mixop: '去玩先算哪一堆', remain: '去玩装一包装不满', thousand: '去玩数轴找近似数', weight: '去玩天平称一称', chart: '去玩投票变条形图', logic: '去玩排除格推理', pair: '去玩搭配连一连', elapsed: '去玩时间轴走一走', verify: '去玩算回去验算', units: '去玩单位楼梯', times: '去玩条形复制', splitmul: '去玩面积切一切', rectsq: '去玩拉一拉变正方形', venn: '去玩韦恩图拖人', compass: '去玩指南针转一转', divplace: '去玩按数位分一分', stattable: '去玩复式统计表', fourgrid: '去玩四格面积模型', area: '去玩铺方砖数面积', calendar: '去玩日历翻一翻', decimal: '去玩十分条比大小', bignum: '去玩大数数轴', field: '去玩足球场拼一拼', protractor: '去玩量角器', areamodel: '去玩面积模型', parallelogram: '去玩平行四边形', trialdiv: '去玩试商调商', baraxis: '去玩条形图轴', teatime: '去玩沏茶排一排', zerodiv: '去玩除以0', laws: '去玩运算定律', placeslider: '去玩数位滑块', tearangle: '去玩撕角拼平角', decadd: '去玩小数加减对齐', moveshape: '去玩图形平移', average: '去玩削峰填谷', chickenrabbit: '去玩鸡兔同笼', decmul: '去玩单位正方形', gridpos: '去玩数对点一点', decdiv: '去玩两数同乘', prob: '去玩摸球模拟', polyarea: '去玩切一刀变长方形', planttree: '去玩种树数间隔', factor: '去玩拼长方形', cuboid: '去玩分层装块', fracadd: '去玩先重切再数', rotate: '去玩绕钉旋转', findbad: '去玩三组称找次品', radar: '去玩雷达找地方', ratio: '去玩比条分一分', circle: '去玩绕绳量圆', percent: '去玩百分条', fan: '去玩扇形转一转', lsquare: '去玩一层层包正方形', thermo: '去玩温度计比一比', negmul: '去玩负数乘法规律', discount: '去玩打折算一算', cylinder: '去玩倒沙装满圆柱', pigeon: '去玩鸽子找洞', conceptmap: '去玩认出老办法' };
 /* 分步评分：多步骤题拆成一步一步对。steps 是可选字段，没有 steps 的题照旧渲染。
    自评不是机器判题：每一步的对错都是学生自己标的，丢分报告只是把你标错的步骤列出来。 */
 function practiceStepsHtml(q, i, pointId) {
@@ -6834,7 +7111,7 @@ function updateHomeReviewTx() {
 /* 我的进度：每年级一行真数字——演示玩过几个 / 练过几条 / 掌握几条。
    只用本机已有的数据（tried 演示集合 + reviewStore），不编假数据。
    条的宽度 = 练过知识点 / 该年级全部知识点。 */
-const DEMO_GRADES = { tenframe: [1, 2], fraction: [3, 4, 5], balance: [5, 6, 7], function: [7, 8],
+const DEMO_GRADES = { tenframe: [1, 2], fraction: [3, 4, 5, 6], balance: [5, 6, 7], function: [6, 7, 8],
   count: [1], position: [1], split: [1], addsub: [1], solids: [1], bundle: [1], clock: [1],
   tangram: [1], sort: [1], hundred: [1], shop: [1], place: [1], pattern: [1],
   ruler: [2], estimate: [2], angle: [2], array: [2], observe: [2, 4, 5], time: [2], share: [2],
@@ -6845,7 +7122,9 @@ const DEMO_GRADES = { tenframe: [1, 2], fraction: [3, 4, 5], balance: [5, 6, 7],
   baraxis: [4], teatime: [4], zerodiv: [4], laws: [4], placeslider: [4], tearangle: [4],
   decadd: [4], moveshape: [4], average: [4], chickenrabbit: [4],
   decmul: [5], gridpos: [5], decdiv: [5], prob: [5], polyarea: [5], planttree: [5],
-  factor: [5], cuboid: [5], fracadd: [5], rotate: [5], findbad: [5] };
+  factor: [5], cuboid: [5], fracadd: [5], rotate: [5], findbad: [5],
+  radar: [6], ratio: [6], circle: [6], percent: [6], fan: [6], lsquare: [6],
+  thermo: [6], negmul: [6], discount: [6], cylinder: [6], pigeon: [6], conceptmap: [6] };
 function renderProgress() {
   const card = document.getElementById('progressCard');
   if (!card) return;
@@ -7307,6 +7586,18 @@ const NAV_DEFS = {
   'demo-fracadd': { crumbs: ['数学', '互动演示', '分数加减法：先重切再数'], target: 'demo-fracadd' },
   'demo-rotate': { crumbs: ['数学', '互动演示', '图形的运动：绕钉旋转'], target: 'demo-rotate' },
   'demo-findbad': { crumbs: ['数学', '互动演示', '找次品：三组称'], target: 'demo-findbad' },
+  'demo-radar': { crumbs: ['数学', '互动演示', '位置与方向：雷达找地方'], target: 'demo-radar' },
+  'demo-ratio': { crumbs: ['数学', '互动演示', '比：比条分一分'], target: 'demo-ratio' },
+  'demo-circle': { crumbs: ['数学', '互动演示', '圆：绕绳量一量'], target: 'demo-circle' },
+  'demo-percent': { crumbs: ['数学', '互动演示', '百分数：百分条'], target: 'demo-percent' },
+  'demo-fan': { crumbs: ['数学', '互动演示', '扇形统计图：转一转'], target: 'demo-fan' },
+  'demo-lsquare': { crumbs: ['数学', '互动演示', '数与形：一层层包正方形'], target: 'demo-lsquare' },
+  'demo-thermo': { crumbs: ['数学', '互动演示', '负数：温度计'], target: 'demo-thermo' },
+  'demo-negmul': { crumbs: ['数学', '互动演示', '负数运算：翻一翻'], target: 'demo-negmul' },
+  'demo-discount': { crumbs: ['数学', '互动演示', '百分数（二）：打折和利息'], target: 'demo-discount' },
+  'demo-cylinder': { crumbs: ['数学', '互动演示', '圆柱与圆锥：倒沙'], target: 'demo-cylinder' },
+  'demo-pigeon': { crumbs: ['数学', '互动演示', '鸽巢问题：先每洞一只'], target: 'demo-pigeon' },
+  'demo-conceptmap': { crumbs: ['数学', '互动演示', '整理和复习：认出老办法'], target: 'demo-conceptmap' },
   why:        { crumbs: ['数学', '互动演示', '为什么小实验'], target: 'why' },
   lab:        { crumbs: ['数学', '数学实验室'], target: 'lab' },
   review:     { crumbs: ['数学', '错题本'], target: 'review', action: renderWrongBook },
@@ -7383,7 +7674,7 @@ function viewForKey(key) {
   if (key === 'path') return 'path';
   if (key.startsWith('path-step-')) return 'path-step';
   if (key === 'demos') return 'demos';
-  if (key === 'demo-tenframe' || key === 'demo-fraction' || key === 'demo-balance' || key === 'demo-function' || key === 'demo-count' || key === 'demo-position' || key === 'demo-split' || key === 'demo-addsub' || key === 'demo-solids' || key === 'demo-bundle' || key === 'demo-clock' || key === 'demo-tangram' || key === 'demo-sort' || key === 'demo-hundred' || key === 'demo-shop' || key === 'demo-place' || key === 'demo-pattern' || key === 'demo-ruler' || key === 'demo-estimate' || key === 'demo-angle' || key === 'demo-array' || key === 'demo-observe' || key === 'demo-time' || key === 'demo-share' || key === 'demo-motion' || key === 'demo-mixop' || key === 'demo-remain' || key === 'demo-thousand' || key === 'demo-weight' || key === 'demo-chart' || key === 'demo-logic' || key === 'demo-pair' || key === 'demo-elapsed' || key === 'demo-verify' || key === 'demo-units' || key === 'demo-times' || key === 'demo-splitmul' || key === 'demo-rectsq' || key === 'demo-venn' || key === 'demo-compass' || key === 'demo-divplace' || key === 'demo-stattable' || key === 'demo-fourgrid' || key === 'demo-area' || key === 'demo-calendar' || key === 'demo-decimal' || key === 'demo-bignum' || key === 'demo-field' || key === 'demo-protractor' || key === 'demo-areamodel' || key === 'demo-parallelogram' || key === 'demo-trialdiv' || key === 'demo-baraxis' || key === 'demo-teatime' || key === 'demo-zerodiv' || key === 'demo-laws' || key === 'demo-placeslider' || key === 'demo-tearangle' || key === 'demo-decadd' || key === 'demo-moveshape' || key === 'demo-average' || key === 'demo-chickenrabbit' || key === 'demo-decmul' || key === 'demo-gridpos' || key === 'demo-decdiv' || key === 'demo-prob' || key === 'demo-polyarea' || key === 'demo-planttree' || key === 'demo-factor' || key === 'demo-cuboid' || key === 'demo-fracadd' || key === 'demo-rotate' || key === 'demo-findbad') return key;
+  if (key === 'demo-tenframe' || key === 'demo-fraction' || key === 'demo-balance' || key === 'demo-function' || key === 'demo-count' || key === 'demo-position' || key === 'demo-split' || key === 'demo-addsub' || key === 'demo-solids' || key === 'demo-bundle' || key === 'demo-clock' || key === 'demo-tangram' || key === 'demo-sort' || key === 'demo-hundred' || key === 'demo-shop' || key === 'demo-place' || key === 'demo-pattern' || key === 'demo-ruler' || key === 'demo-estimate' || key === 'demo-angle' || key === 'demo-array' || key === 'demo-observe' || key === 'demo-time' || key === 'demo-share' || key === 'demo-motion' || key === 'demo-mixop' || key === 'demo-remain' || key === 'demo-thousand' || key === 'demo-weight' || key === 'demo-chart' || key === 'demo-logic' || key === 'demo-pair' || key === 'demo-elapsed' || key === 'demo-verify' || key === 'demo-units' || key === 'demo-times' || key === 'demo-splitmul' || key === 'demo-rectsq' || key === 'demo-venn' || key === 'demo-compass' || key === 'demo-divplace' || key === 'demo-stattable' || key === 'demo-fourgrid' || key === 'demo-area' || key === 'demo-calendar' || key === 'demo-decimal' || key === 'demo-bignum' || key === 'demo-field' || key === 'demo-protractor' || key === 'demo-areamodel' || key === 'demo-parallelogram' || key === 'demo-trialdiv' || key === 'demo-baraxis' || key === 'demo-teatime' || key === 'demo-zerodiv' || key === 'demo-laws' || key === 'demo-placeslider' || key === 'demo-tearangle' || key === 'demo-decadd' || key === 'demo-moveshape' || key === 'demo-average' || key === 'demo-chickenrabbit' || key === 'demo-decmul' || key === 'demo-gridpos' || key === 'demo-decdiv' || key === 'demo-prob' || key === 'demo-polyarea' || key === 'demo-planttree' || key === 'demo-factor' || key === 'demo-cuboid' || key === 'demo-fracadd' || key === 'demo-rotate' || key === 'demo-findbad' || key === 'demo-radar' || key === 'demo-ratio' || key === 'demo-circle' || key === 'demo-percent' || key === 'demo-fan' || key === 'demo-lsquare' || key === 'demo-thermo' || key === 'demo-negmul' || key === 'demo-discount' || key === 'demo-cylinder' || key === 'demo-pigeon' || key === 'demo-conceptmap') return key;
   if (key === 'why') return 'why';
   if (key === 'lab') return 'lab';
   if (key === 'review') return 'review';
@@ -7427,7 +7718,7 @@ function applyView() {
   const stepN = view === 'path-step' ? key.slice('path-step-'.length) : null;
   [...pathPanelsEl.children].forEach(el => { el.hidden = !!(stepN && el.id !== 'step-' + stepN); });
   // 互动演示：列表留演示面板；叶子只留该演示卡片；为什么小实验只留 #why 区
-  const demoLeaf = view === 'demo-tenframe' || view === 'demo-fraction' || view === 'demo-balance' || view === 'demo-function' || view === 'demo-count' || view === 'demo-position' || view === 'demo-split' || view === 'demo-addsub' || view === 'demo-solids' || view === 'demo-bundle' || view === 'demo-clock' || view === 'demo-tangram' || view === 'demo-sort' || view === 'demo-hundred' || view === 'demo-shop' || view === 'demo-place' || view === 'demo-pattern' || view === 'demo-ruler' || view === 'demo-estimate' || view === 'demo-angle' || view === 'demo-array' || view === 'demo-observe' || view === 'demo-time' || view === 'demo-share' || view === 'demo-motion' || view === 'demo-mixop' || view === 'demo-remain' || view === 'demo-thousand' || view === 'demo-weight' || view === 'demo-chart' || view === 'demo-logic' || view === 'demo-pair' || view === 'demo-elapsed' || view === 'demo-verify' || view === 'demo-units' || view === 'demo-times' || view === 'demo-splitmul' || view === 'demo-rectsq' || view === 'demo-venn' || view === 'demo-compass' || view === 'demo-divplace' || view === 'demo-stattable' || view === 'demo-fourgrid' || view === 'demo-area' || view === 'demo-calendar' || view === 'demo-decimal' || view === 'demo-bignum' || view === 'demo-field' || view === 'demo-protractor' || view === 'demo-areamodel' || view === 'demo-parallelogram' || view === 'demo-trialdiv' || view === 'demo-baraxis' || view === 'demo-teatime' || view === 'demo-zerodiv' || view === 'demo-laws' || view === 'demo-placeslider' || view === 'demo-tearangle' || view === 'demo-decadd' || view === 'demo-moveshape' || view === 'demo-average' || view === 'demo-chickenrabbit' || view === 'demo-decmul' || view === 'demo-gridpos' || view === 'demo-decdiv' || view === 'demo-prob' || view === 'demo-polyarea' || view === 'demo-planttree' || view === 'demo-factor' || view === 'demo-cuboid' || view === 'demo-fracadd' || view === 'demo-rotate' || view === 'demo-findbad';
+  const demoLeaf = view === 'demo-tenframe' || view === 'demo-fraction' || view === 'demo-balance' || view === 'demo-function' || view === 'demo-count' || view === 'demo-position' || view === 'demo-split' || view === 'demo-addsub' || view === 'demo-solids' || view === 'demo-bundle' || view === 'demo-clock' || view === 'demo-tangram' || view === 'demo-sort' || view === 'demo-hundred' || view === 'demo-shop' || view === 'demo-place' || view === 'demo-pattern' || view === 'demo-ruler' || view === 'demo-estimate' || view === 'demo-angle' || view === 'demo-array' || view === 'demo-observe' || view === 'demo-time' || view === 'demo-share' || view === 'demo-motion' || view === 'demo-mixop' || view === 'demo-remain' || view === 'demo-thousand' || view === 'demo-weight' || view === 'demo-chart' || view === 'demo-logic' || view === 'demo-pair' || view === 'demo-elapsed' || view === 'demo-verify' || view === 'demo-units' || view === 'demo-times' || view === 'demo-splitmul' || view === 'demo-rectsq' || view === 'demo-venn' || view === 'demo-compass' || view === 'demo-divplace' || view === 'demo-stattable' || view === 'demo-fourgrid' || view === 'demo-area' || view === 'demo-calendar' || view === 'demo-decimal' || view === 'demo-bignum' || view === 'demo-field' || view === 'demo-protractor' || view === 'demo-areamodel' || view === 'demo-parallelogram' || view === 'demo-trialdiv' || view === 'demo-baraxis' || view === 'demo-teatime' || view === 'demo-zerodiv' || view === 'demo-laws' || view === 'demo-placeslider' || view === 'demo-tearangle' || view === 'demo-decadd' || view === 'demo-moveshape' || view === 'demo-average' || view === 'demo-chickenrabbit' || view === 'demo-decmul' || view === 'demo-gridpos' || view === 'demo-decdiv' || view === 'demo-prob' || view === 'demo-polyarea' || view === 'demo-planttree' || view === 'demo-factor' || view === 'demo-cuboid' || view === 'demo-fracadd' || view === 'demo-rotate' || view === 'demo-findbad' || view === 'demo-radar' || view === 'demo-ratio' || view === 'demo-circle' || view === 'demo-percent' || view === 'demo-fan' || view === 'demo-lsquare' || view === 'demo-thermo' || view === 'demo-negmul' || view === 'demo-discount' || view === 'demo-cylinder' || view === 'demo-pigeon' || view === 'demo-conceptmap';
   setHidden(demosSec, !(view === 'demos' || demoLeaf));
   setHidden(demoPanelsEl, view !== 'demos');
   setHidden(demoGridEl, !demoLeaf); // 演示卡片网格只在某一个演示的叶子视图里出现，列表视图只留演示面板
@@ -13058,6 +13349,541 @@ function fbRead0() {
   });
   fbRead0();
   fbRender();
+})();
+
+/* ---------- 六年级实验 ---------- */
+function g6fmt(x) { return String(Math.round(x * 100) / 100); }
+
+/* ---------- demo-radar · 6.3 位置与方向（二）（方法：雷达扫） ----------
+   方向 + 距离才能定住一个点：只说方向是一条射线，射线上有无数个点。
+   北偏东 30°、200 米：从北往东偏 30°，再走 200 米。 */
+const RD_DIRS = [
+  { name: '北偏东', sx: 1, sy: -1, rot: -90 },
+  { name: '北偏西', sx: -1, sy: -1, rot: -90 },
+  { name: '南偏东', sx: 1, sy: 1, rot: 90 },
+  { name: '南偏西', sx: -1, sy: 1, rot: 90 }
+];
+let rdDir = 0, rdAng = 30, rdDist = 200, rdMode = 'both';
+function rdRender() {
+  const d = RD_DIRS[rdDir];
+  const rad = rdAng * Math.PI / 180;
+  const px = rdDist / 500 * 140;
+  const dx = d.sx * Math.sin(rad) * px, dy = d.sy * Math.cos(rad) * px;
+  const dot = document.getElementById('rdDot');
+  dot.style.left = (160 + dx - 14) + 'px';
+  dot.style.top = (160 + dy - 14) + 'px';
+  dot.hidden = rdMode !== 'both';
+  const ray = document.getElementById('rdRay');
+  ray.style.width = (rdMode === 'both' ? px : 140) + 'px';
+  ray.style.transform = 'rotate(' + (d.rot + d.sx * rdAng) + 'deg)';
+  [170, 330, 500].forEach(function (dist, i) {
+    const g = document.getElementById('rdGhost' + (i + 1));
+    const gp = dist / 500 * 140;
+    g.style.left = (160 + d.sx * Math.sin(rad) * gp - 8) + 'px';
+    g.style.top = (160 + d.sy * Math.cos(rad) * gp - 8) + 'px';
+    g.hidden = rdMode !== 'dir';
+  });
+  document.getElementById('rdRead').textContent = rdMode === 'both'
+    ? '小明家在学校' + d.name + ' ' + rdAng + '°、' + rdDist + ' 米处。方向定了一条线，距离定了线上哪一个点——两个都有，才是一个确切的地方。'
+    : '只说“' + d.name + ' ' + rdAng + '°”，是一条射线：100 米处是这个方向，300 米处也是这个方向——射线上有无数个点，找不到小明家。';
+  document.getElementById('rdAngTx').textContent = '偏 ' + rdAng + '°';
+  document.getElementById('rdDistTx').textContent = rdDist + ' 米';
+  document.querySelectorAll('#rdDirSeg [data-rd-dir]').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(+b.dataset.rdDir === rdDir));
+  });
+  document.querySelectorAll('#rdModeSeg [data-rd-mode]').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(b.dataset.rdMode === rdMode));
+  });
+}
+(function rdInit() {
+  const dirSeg = document.getElementById('rdDirSeg');
+  RD_DIRS.forEach(function (d, i) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = d.name; b.dataset.rdDir = String(i);
+    b.addEventListener('click', function () { rdDir = i; markTried('radar'); rdRender(); });
+    dirSeg.appendChild(b);
+  });
+  const modeSeg = document.getElementById('rdModeSeg');
+  [['both', '方向 + 距离'], ['dir', '只说方向']].forEach(function (m) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = m[1]; b.dataset.rdMode = m[0];
+    b.addEventListener('click', function () { rdMode = m[0]; markTried('radar'); rdRender(); });
+    modeSeg.appendChild(b);
+  });
+  document.getElementById('rdAngMinus').addEventListener('click', function () { if (rdAng > 0) rdAng -= 10; markTried('radar'); rdRender(); });
+  document.getElementById('rdAngPlus').addEventListener('click', function () { if (rdAng < 90) rdAng += 10; markTried('radar'); rdRender(); });
+  document.getElementById('rdDistMinus').addEventListener('click', function () { if (rdDist > 50) rdDist -= 50; markTried('radar'); rdRender(); });
+  document.getElementById('rdDistPlus').addEventListener('click', function () { if (rdDist < 500) rdDist += 50; markTried('radar'); rdRender(); });
+  rdRender();
+})();
+
+/* ---------- demo-ratio · 6.4 比（方法：比条 + 双数轴） ----------
+   比是“部分比部分”：2:3 一共 5 份，每份是整体的五分之一。
+   50 元按 2:3 分：每份 10 元，20 元和 30 元。 */
+let raA = 2, raB = 3, raTotal = 50;
+function raRender() {
+  const tot = raA + raB, per = raTotal / tot;
+  const a = document.getElementById('raBarA'), b = document.getElementById('raBarB');
+  a.style.width = (raA / tot * 100) + '%';
+  b.style.width = (raB / tot * 100) + '%';
+  a.textContent = raA + ' 份';
+  b.textContent = raB + ' 份';
+  document.getElementById('raRead').textContent =
+    raA + ':' + raB + '，一共 ' + tot + ' 份，每份 ' + g6fmt(per) + ' 元：一个人分 ' + g6fmt(per * raA) + ' 元，另一个人分 ' + g6fmt(per * raB) + ' 元。';
+  document.getElementById('raMsg').textContent =
+    raA + ' 份是整体的 ' + raA + '/' + tot + '：' + raA + ':' + raB + ' 是部分比部分，' + raA + '/' + tot + ' 是部分比整体，别弄混。';
+  document.getElementById('raATx').textContent = '前项 ' + raA + ' 份';
+  document.getElementById('raBTx').textContent = '后项 ' + raB + ' 份';
+  document.querySelectorAll('#raTotalSeg [data-ra-total]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(+btn.dataset.raTotal === raTotal));
+  });
+}
+(function raInit() {
+  const seg = document.getElementById('raTotalSeg');
+  [50, 60, 100].forEach(function (t) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = t + ' 元'; b.dataset.raTotal = String(t);
+    b.addEventListener('click', function () { raTotal = t; markTried('ratio'); raRender(); });
+    seg.appendChild(b);
+  });
+  document.getElementById('raAMinus').addEventListener('click', function () { if (raA > 1) raA--; markTried('ratio'); raRender(); });
+  document.getElementById('raAPlus').addEventListener('click', function () { if (raA < 9) raA++; markTried('ratio'); raRender(); });
+  document.getElementById('raBMinus').addEventListener('click', function () { if (raB > 1) raB--; markTried('ratio'); raRender(); });
+  document.getElementById('raBPlus').addEventListener('click', function () { if (raB < 9) raB++; markTried('ratio'); raRender(); });
+  raRender();
+})();
+
+/* ---------- demo-circle · 6.5 圆（方法：绕绳量 + 切扇形拼长方形） ----------
+   周长是绳子绕一圈：半径 3 厘米，直径 6 厘米，周长 18.84 厘米，18.84÷6=3.14。
+   面积是切扇形拼长方形：长是 πr，宽是 r，所以是 πr×r=πr²。 */
+let ccR = 3, ccMode = 'c', ccSlices = 8;
+function ccRender() {
+  const d = 2 * ccR, c = 2 * 3.14 * ccR, s = 3.14 * ccR * ccR;
+  document.getElementById('ccRTx').textContent = '半径 ' + ccR + ' 厘米';
+  document.getElementById('ccRopeBar').style.width = Math.round(c * 8) + 'px';
+  document.getElementById('ccDiamBar').style.width = Math.round(d * 8) + 'px';
+  document.getElementById('ccRopeTx').textContent = '绳子（周长）' + g6fmt(c) + ' 厘米';
+  document.getElementById('ccDiamTx').textContent = '直径 ' + d + ' 厘米';
+  const rect = document.getElementById('ccRect');
+  rect.style.width = Math.round(3.14 * ccR * 14) + 'px';
+  rect.style.height = Math.round(ccR * 14) + 'px';
+  document.getElementById('ccRectTx').textContent = '长 ' + g6fmt(3.14 * ccR) + ' 厘米、宽 ' + ccR + ' 厘米的长方形';
+  document.getElementById('ccCircBox').hidden = ccMode !== 'c';
+  document.getElementById('ccAreaBox').hidden = ccMode !== 'a';
+  document.getElementById('ccSliceRow').hidden = ccMode !== 'a';
+  document.getElementById('ccRead').textContent = ccMode === 'c'
+    ? '半径 ' + ccR + ' 厘米，直径 ' + d + ' 厘米：绳子绕一圈是 ' + g6fmt(c) + ' 厘米；' + g6fmt(c) + ' ÷ ' + d + ' = 3.14。'
+    : '切成 ' + ccSlices + ' 个小扇形，拼成长方形：长是 πr = ' + g6fmt(3.14 * ccR) + ' 厘米，宽是 r = ' + ccR + ' 厘米，面积 = ' + g6fmt(3.14 * ccR) + ' × ' + ccR + ' = ' + g6fmt(s) + ' 平方厘米。';
+  document.getElementById('ccMsg').textContent = ccMode === 'c'
+    ? '周长是 π×直径，不是 π×半径；π 是比值，所有圆都一样大——这正是 π 的发现。'
+    : '片越多，拼得越像长方形：4 片还是锯齿，16 片已经很像长方形了。';
+  document.querySelectorAll('#ccModeSeg [data-cc-mode]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(btn.dataset.ccMode === ccMode));
+  });
+  document.querySelectorAll('#ccSliceSeg [data-cc-slices]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(+btn.dataset.ccSlices === ccSlices));
+  });
+}
+(function ccInit() {
+  const modeSeg = document.getElementById('ccModeSeg');
+  [['c', '周长：绕绳量'], ['a', '面积：切扇形拼长方形']].forEach(function (m) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = m[1]; b.dataset.ccMode = m[0];
+    b.addEventListener('click', function () { ccMode = m[0]; markTried('circle'); ccRender(); });
+    modeSeg.appendChild(b);
+  });
+  const sliceSeg = document.getElementById('ccSliceSeg');
+  [4, 8, 16].forEach(function (n) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = n + ' 片'; b.dataset.ccSlices = String(n);
+    b.addEventListener('click', function () { ccSlices = n; markTried('circle'); ccRender(); });
+    sliceSeg.appendChild(b);
+  });
+  document.getElementById('ccRMinus').addEventListener('click', function () { if (ccR > 1) ccR--; markTried('circle'); ccRender(); });
+  document.getElementById('ccRPlus').addEventListener('click', function () { if (ccR < 10) ccR++; markTried('circle'); ccRender(); });
+  ccRender();
+})();
+
+/* ---------- demo-percent · 6.6 百分数（一）（方法：百分条 0–100） ----------
+   百分数就是每 100 里有几：25% = 25/100 = 1/4 = 0.25。
+   100 元先降 20% 再涨 20% 是 96 元：第二次的底数是 80 元，不是 100 元。 */
+let pcP = 25, pcStep = 0;
+function pcGcd(a, b) { return b ? pcGcd(b, a % b) : a; }
+function pcRender() {
+  document.getElementById('pcFill').style.width = pcP + '%';
+  document.getElementById('pcTx').textContent = pcP + '%';
+  const g = pcGcd(pcP, 100);
+  const frac = pcP === 0 ? '0' : pcP === 100 ? '1' : (pcP / g) + '/' + (100 / g);
+  document.getElementById('pcRead').textContent =
+    pcP + '% = ' + pcP + '/100 = ' + frac + ' = ' + g6fmt(pcP / 100) + '：每 100 里有 ' + pcP + '。';
+  document.getElementById('pcStepRead').textContent = pcStep === 0
+    ? '100 元的衣服，先降价 20%，再涨价 20%，能回到 100 元吗？点“第 1 步”试试。'
+    : pcStep === 1
+      ? '第 1 步：100 元降价 20%，便宜了 100×20% = 20 元，现在是 80 元。'
+      : '第 2 步：在 80 元的基础上涨 20%，涨了 80×20% = 16 元，现在是 96 元——没有回到 100 元！第二次的底数是 80 元，不是 100 元。';
+}
+(function pcInit() {
+  document.getElementById('pcMinus').addEventListener('click', function () { if (pcP > 0) pcP -= 5; markTried('percent'); pcRender(); });
+  document.getElementById('pcPlus').addEventListener('click', function () { if (pcP < 100) pcP += 5; markTried('percent'); pcRender(); });
+  document.getElementById('pcDown').addEventListener('click', function () { pcStep = 1; markTried('percent'); pcRender(); });
+  document.getElementById('pcUp').addEventListener('click', function () {
+    if (pcStep === 0) { document.getElementById('pcStepRead').textContent = '先降价，再涨价：点“第 1 步：降价 20%”。'; return; }
+    pcStep = 2; markTried('percent'); pcRender();
+  });
+  document.getElementById('pcReset').addEventListener('click', function () { pcStep = 0; markTried('percent'); pcRender(); });
+  pcRender();
+})();
+
+/* ---------- demo-fan · 6.7a 扇形统计图（方法：角度 = 百分数 × 3.6°） ----------
+   整个圆是 360°，也是 100%，所以 1% 是 3.6°：40% 是 144°，25% 是 90°（直角）。 */
+let fnA = 40, fnB = 35;
+function fnRender() {
+  const c = 100 - fnA - fnB;
+  const pie = document.getElementById('fnPie');
+  pie.style.background = 'conic-gradient(#f97316 0 ' + fnA + '%, #38bdf8 ' + fnA + '% ' + (fnA + fnB) + '%, #4ade80 ' + (fnA + fnB) + '% 100%)';
+  document.getElementById('fnRead').textContent =
+    '苹果 ' + fnA + '%，圆心角 ' + g6fmt(fnA * 3.6) + '°；香蕉 ' + fnB + '%，' + g6fmt(fnB * 3.6) + '°；橙子 ' + c + '%，' + g6fmt(c * 3.6) + '°。';
+  document.getElementById('fnMsg').textContent = c === 25
+    ? '橙子 25% 的扇形正好是直角：25×3.6° = 90°。每 1% 是 3.6°。'
+    : '每 1% 是 3.6°：' + fnA + '% 就是 ' + fnA + '×3.6° = ' + g6fmt(fnA * 3.6) + '°。';
+  document.getElementById('fnATx').textContent = '苹果 ' + fnA + '%';
+  document.getElementById('fnBTx').textContent = '香蕉 ' + fnB + '%';
+  document.getElementById('fnCTx').textContent = '橙子 ' + c + '%';
+}
+(function fnInit() {
+  document.getElementById('fnAMinus').addEventListener('click', function () { if (fnA > 5) fnA -= 5; markTried('fan'); fnRender(); });
+  document.getElementById('fnAPlus').addEventListener('click', function () { if (fnA < 90 && fnA + fnB < 95) fnA += 5; markTried('fan'); fnRender(); });
+  document.getElementById('fnBMinus').addEventListener('click', function () { if (fnB > 5) fnB -= 5; markTried('fan'); fnRender(); });
+  document.getElementById('fnBPlus').addEventListener('click', function () { if (fnB < 90 && fnA + fnB < 95) fnB += 5; markTried('fan'); fnRender(); });
+  fnRender();
+})();
+
+/* ---------- demo-lsquare · 6.7b 数与形（方法：L 形拼正方形） ----------
+   奇数一个一个加上去，拼出来的就是正方形：1 是 1×1，1+3 是 2×2，1+3+5 是 3×3。
+   每个奇数都是一个 L 形（拐角）：每加一个奇数，就是给正方形包上一层。 */
+let lsN = 1;
+const LS_COLORS = ['#f97316', '#38bdf8', '#4ade80', '#c084fc', '#f472b6', '#facc15'];
+function lsRender() {
+  const grid = document.getElementById('lsGrid');
+  grid.style.gridTemplateColumns = 'repeat(' + lsN + ', 1fr)';
+  for (let i = 0; i < grid.children.length; i++) {
+    const r = Math.floor(i / 6), c = i % 6;
+    const cell = grid.children[i];
+    const on = r < lsN && c < lsN;
+    cell.hidden = !on;
+    if (on) cell.style.background = LS_COLORS[Math.max(r, c)];
+  }
+  const odds = [];
+  for (let k = 1; k <= lsN; k++) odds.push(2 * k - 1);
+  document.getElementById('lsRead').textContent =
+    odds.join('+') + ' = ' + (lsN * lsN) + '，是 ' + lsN + '²：' + lsN + ' 个奇数加起来是 ' + lsN + ' 的平方。';
+  document.getElementById('lsMsg').textContent = lsN < 6
+    ? '第 ' + (lsN + 1) + ' 层要包 ' + (2 * lsN + 1) + ' 块：每层比上一层多 2 块，拼成 ' + (lsN + 1) + '×' + (lsN + 1) + ' = ' + ((lsN + 1) * (lsN + 1)) + '。'
+    : '已经包到 6 层了：1+3+5+7+9+11 = 36，是 6²。';
+}
+(function lsInit() {
+  const grid = document.getElementById('lsGrid');
+  for (let i = 0; i < 36; i++) {
+    const d = document.createElement('div');
+    d.className = 'ls-cell';
+    grid.appendChild(d);
+  }
+  document.getElementById('lsMore').addEventListener('click', function () { if (lsN < 6) lsN++; markTried('lsquare'); lsRender(); });
+  document.getElementById('lsLess').addEventListener('click', function () { if (lsN > 1) lsN--; markTried('lsquare'); lsRender(); });
+  lsRender();
+})();
+
+/* ---------- demo-thermo · 6.8 负数（方法：竖直温度计） ----------
+   负数是正数的反面：零上是正、零下是负。−5 在 −2 下面，更冷，所以更小。 */
+let tpA = -3, tpB = -8;
+function tpT(n) { return n < 0 ? '−' + (-n) : String(n); }
+function tpRender() {
+  document.getElementById('thFillA').style.height = ((tpA + 10) / 20 * 100) + '%';
+  document.getElementById('thFillB').style.height = ((tpB + 10) / 20 * 100) + '%';
+  document.getElementById('thATx').textContent = '今天 ' + tpT(tpA) + '℃';
+  document.getElementById('thBTx').textContent = '明天 ' + tpT(tpB) + '℃';
+  const read = document.getElementById('thRead');
+  if (tpA === tpB) {
+    read.textContent = '今天和明天一样冷：' + tpT(tpA) + '℃ = ' + tpT(tpB) + '℃。';
+  } else {
+    const cold = Math.min(tpA, tpB), warm = Math.max(tpA, tpB);
+    const coldDay = tpA < tpB ? '今天' : '明天';
+    read.textContent = '今天 ' + tpT(tpA) + '℃，明天 ' + tpT(tpB) + '℃：' + tpT(cold) + '℃ 在 ' + tpT(warm) + '℃ 下面，更冷，所以 ' + tpT(cold) + ' < ' + tpT(warm) + '——' + coldDay + '更冷。';
+  }
+}
+(function tpInit() {
+  document.getElementById('thAMinus').addEventListener('click', function () { if (tpA > -10) tpA--; markTried('thermo'); tpRender(); });
+  document.getElementById('thAPlus').addEventListener('click', function () { if (tpA < 10) tpA++; markTried('thermo'); tpRender(); });
+  document.getElementById('thBMinus').addEventListener('click', function () { if (tpB > -10) tpB--; markTried('thermo'); tpRender(); });
+  document.getElementById('thBPlus').addEventListener('click', function () { if (tpB < 10) tpB++; markTried('thermo'); tpRender(); });
+  tpRender();
+})();
+
+/* ---------- demo-negmul · 6.9 负数运算（方法：数列规律 + 翻面动画） ----------
+   乘 −1 是“翻到数轴的对面”：翻一次到对面，翻两次就回来了，所以负乘负是正。
+   数列：3×(−2)=−6，2×(−2)=−4，1×(−2)=−2，0×(−2)=0，(−1)×(−2)=+2。 */
+const NM_ROWS = [[3, -6], [2, -4], [1, -2], [0, 0], [-1, 2], [-2, 4]];
+let nmFlip = 0;
+function nmRender() {
+  const v = nmFlip === 0 ? 3 : -3;
+  const m = document.getElementById('nmMarker');
+  m.style.left = ((v + 5) / 10 * 100) + '%';
+  m.textContent = (v > 0 ? '+' : '−') + Math.abs(v);
+  document.getElementById('nmFlipRead').textContent = nmFlip === 0
+    ? '数轴上的 3 是 +3。点“乘 −1”，看看它翻到哪。'
+    : '3 乘 −1，翻到对面，是 −3。再点一次，又翻回 +3。所以负乘负是正。';
+}
+(function nmInit() {
+  const box = document.getElementById('nmRows');
+  NM_ROWS.forEach(function (row) {
+    const a = row[0], ans = row[1];
+    const div = document.createElement('div');
+    div.className = 'nm-row';
+    const label = document.createElement('span');
+    label.className = 'nm-label';
+    label.textContent = a + '×(−2) = ';
+    const out = document.createElement('span');
+    out.className = 'nm-out';
+    out.textContent = '？';
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'btn small';
+    b.textContent = '看答案';
+    b.addEventListener('click', function () {
+      out.textContent = (ans >= 0 ? '+' : '−') + Math.abs(ans);
+      markTried('negmul');
+    });
+    div.appendChild(label);
+    div.appendChild(out);
+    div.appendChild(b);
+    box.appendChild(div);
+  });
+  document.getElementById('nmFlip').addEventListener('click', function () { nmFlip = 1 - nmFlip; markTried('negmul'); nmRender(); });
+  nmRender();
+})();
+
+/* ---------- demo-discount · 6.10 百分数（二）（方法：百分条标底数） ----------
+   折扣、成数、税率、利率都是“部分 = 比率 × 底数”：先问“底数是谁”，再算。
+   200 元打八折付 160 元；5000 元、年利率 2.5%、存 3 年，利息 375 元，一共取回 5375 元。 */
+let diMode = 'sale', diPrice = 200, diRate = 80, diPrin = 5000, diIRate = 2.5, diYears = 3;
+const DI_RATES = [[80, '八折'], [90, '九折'], [75, '七五折']];
+function diRender() {
+  document.getElementById('dcSaleBox').hidden = diMode !== 'sale';
+  document.getElementById('dcIntBox').hidden = diMode !== 'interest';
+  document.getElementById('dcPriceTx').textContent = '标价 ' + diPrice + ' 元';
+  document.getElementById('dcPrinTx').textContent = '本金 ' + diPrin + ' 元';
+  document.getElementById('dcYearsTx').textContent = '存 ' + diYears + ' 年';
+  const rateName = DI_RATES.filter(function (r) { return r[0] === diRate; })[0][1];
+  if (diMode === 'sale') {
+    const pay = diPrice * diRate / 100;
+    document.getElementById('dcRead').textContent =
+      '标价 ' + diPrice + ' 元，打' + rateName + '：付 ' + diPrice + '×' + diRate + '% = ' + g6fmt(pay) + ' 元，省了 ' + g6fmt(diPrice - pay) + ' 元。';
+    document.getElementById('diMsg').textContent =
+      rateName + '是付标价的 ' + diRate + '%，不是 ' + (100 - diRate) + '%——条上 ' + diRate + '% 的部分才是要付的。';
+  } else {
+    const interest = diPrin * diIRate / 100 * diYears;
+    document.getElementById('dcRead').textContent =
+      '本金 ' + diPrin + ' 元，年利率 ' + diIRate + '%，存 ' + diYears + ' 年：利息 = ' + diPrin + '×' + diIRate + '%×' + diYears + ' = ' + g6fmt(interest) + ' 元，到期一共取回 ' + g6fmt(diPrin + interest) + ' 元。';
+    document.getElementById('diMsg').textContent =
+      '利息要乘时间：每一年都产生一份，存 ' + diYears + ' 年是 ' + diYears + ' 份。';
+  }
+  document.querySelectorAll('#dcModeSeg [data-dc-mode]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(btn.dataset.dcMode === diMode));
+  });
+  document.querySelectorAll('#dcRateSeg [data-dc-rate]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(+btn.dataset.dcRate === diRate));
+  });
+  document.querySelectorAll('#dcPrinSeg [data-dc-prin]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(+btn.dataset.dcPrin === diPrin));
+  });
+  document.querySelectorAll('#dcIRateSeg [data-dc-irate]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(+btn.dataset.dcIrate === diIRate));
+  });
+}
+(function diInit() {
+  const modeSeg = document.getElementById('dcModeSeg');
+  [['sale', '打折'], ['interest', '利息']].forEach(function (m) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = m[1]; b.dataset.dcMode = m[0];
+    b.addEventListener('click', function () { diMode = m[0]; markTried('discount'); diRender(); });
+    modeSeg.appendChild(b);
+  });
+  const rateSeg = document.getElementById('dcRateSeg');
+  DI_RATES.forEach(function (r) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = r[1]; b.dataset.dcRate = String(r[0]);
+    b.addEventListener('click', function () { diRate = r[0]; markTried('discount'); diRender(); });
+    rateSeg.appendChild(b);
+  });
+  const prinSeg = document.getElementById('dcPrinSeg');
+  [1000, 5000].forEach(function (p) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = p + ' 元'; b.dataset.dcPrin = String(p);
+    b.addEventListener('click', function () { diPrin = p; markTried('discount'); diRender(); });
+    prinSeg.appendChild(b);
+  });
+  const irateSeg = document.getElementById('dcIRateSeg');
+  [2, 2.5].forEach(function (r) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = r + '%'; b.dataset.dcIrate = String(r);
+    b.addEventListener('click', function () { diIRate = r; markTried('discount'); diRender(); });
+    irateSeg.appendChild(b);
+  });
+  document.getElementById('dcPriceMinus').addEventListener('click', function () { if (diPrice > 50) diPrice -= 50; markTried('discount'); diRender(); });
+  document.getElementById('dcPricePlus').addEventListener('click', function () { if (diPrice < 500) diPrice += 50; markTried('discount'); diRender(); });
+  document.getElementById('dcYearsMinus').addEventListener('click', function () { if (diYears > 1) diYears--; markTried('discount'); diRender(); });
+  document.getElementById('dcYearsPlus').addEventListener('click', function () { if (diYears < 5) diYears++; markTried('discount'); diRender(); });
+  diRender();
+})();
+
+/* ---------- demo-cylinder · 6.11 圆柱与圆锥（方法：展开标签 + 倒沙实验） ----------
+   侧面展开是长方形：长是底面周长 2πr，宽是高 h。体积 = 底面积 × 高。
+   圆锥是同底等高圆柱的 1/3：3 锥沙倒满 1 圆柱。半径 3、高 4：圆柱 113.04，圆锥 37.68。 */
+let cyR = 3, cyH = 4, cyPour = 0;
+function cyRender() {
+  const v = 3.14 * cyR * cyR * cyH, cone = v / 3;
+  const side = 2 * 3.14 * cyR * cyH, bases = 2 * 3.14 * cyR * cyR;
+  document.getElementById('cyRTx').textContent = '底面半径 ' + cyR + ' 厘米';
+  document.getElementById('cyHTx').textContent = '高 ' + cyH + ' 厘米';
+  document.getElementById('cyRead').textContent =
+    '底面半径 ' + cyR + ' 厘米，高 ' + cyH + ' 厘米：圆柱的体积 = 3.14×' + cyR + '×' + cyR + '×' + cyH + ' = ' + g6fmt(v) + ' 立方厘米；圆锥的体积是它的 1/3，是 ' + g6fmt(cone) + ' 立方厘米。';
+  document.getElementById('cyMsg').textContent =
+    '侧面展开是长方形：长是底面周长 ' + g6fmt(2 * 3.14 * cyR) + ' 厘米，宽是高 ' + cyH + ' 厘米，侧面积 ' + g6fmt(side) + ' 平方厘米；表面积再加两个底面 ' + g6fmt(bases) + '，一共 ' + g6fmt(side + bases) + ' 平方厘米。';
+  document.getElementById('cyFill').style.height = (cyPour / 3 * 100) + '%';
+  document.getElementById('cyPourRead').textContent = cyPour === 0
+    ? '圆锥里装满沙，点“倒一锥沙”，看看圆柱装了多少。'
+    : cyPour < 3
+      ? '倒了 ' + cyPour + ' 锥沙：圆柱装了 ' + cyPour + '/3，还没满。'
+      : '倒了 3 锥沙：圆柱正好满了！3 个圆锥 = 1 个圆柱，圆锥的体积是圆柱的 1/3。';
+}
+(function cyInit() {
+  document.getElementById('cyRMinus').addEventListener('click', function () { if (cyR > 1) cyR--; markTried('cylinder'); cyRender(); });
+  document.getElementById('cyRPlus').addEventListener('click', function () { if (cyR < 5) cyR++; markTried('cylinder'); cyRender(); });
+  document.getElementById('cyHMinus').addEventListener('click', function () { if (cyH > 2) cyH--; markTried('cylinder'); cyRender(); });
+  document.getElementById('cyHPlus').addEventListener('click', function () { if (cyH < 10) cyH++; markTried('cylinder'); cyRender(); });
+  document.getElementById('cyPour').addEventListener('click', function () { if (cyPour < 3) cyPour++; markTried('cylinder'); cyRender(); });
+  document.getElementById('cyReset').addEventListener('click', function () { cyPour = 0; markTried('cylinder'); cyRender(); });
+  cyRender();
+})();
+
+/* ---------- demo-pigeon · 6.13 鸽巢问题（方法：先每洞一只） ----------
+   n+1 只鸽子飞进 n 个鸽巢，一定有一个巢里至少有 2 只：先每个巢放 1 只，
+   第 n+1 只没地方去，只能合住。13 支铅笔放进 4 个盒，至少一个盒里有 4 支。 */
+let piN = 5, piM = 4, piStage = 0;
+function piCounts() {
+  const base = Math.floor(piN / piM), rem = piN % piM;
+  const a = [];
+  for (let i = 0; i < piM; i++) a.push(base + (i < rem ? 1 : 0));
+  return a;
+}
+function piRender() {
+  const nests = document.getElementById('pgNests');
+  const counts = piCounts();
+  for (let i = 0; i < nests.children.length; i++) {
+    const nest = nests.children[i];
+    nest.hidden = i >= piM;
+    if (i < piM) {
+      const dots = nest.children[1].children;
+      const show = piStage === 0 ? 0 : piStage === 1 ? 1 : counts[i];
+      for (let j = 0; j < dots.length; j++) dots[j].hidden = j >= show;
+      nest.children[0].textContent = '洞 ' + (i + 1) + '：' + show + ' 只';
+    }
+  }
+  const left = document.getElementById('pgLeft');
+  left.textContent = piStage === 0
+    ? '一共 ' + piN + ' 只鸽子。'
+    : piStage === 1
+      ? '每个洞先放 1 只，放了 ' + piM + ' 只，还剩 ' + (piN - piM) + ' 只没地方去。'
+      : '分完了：' + counts.join('、') + ' 只。';
+  const read = document.getElementById('piRead');
+  if (piStage === 0) {
+    read.textContent = piN + ' 只鸽子，' + piM + ' 个鸽巢：点“每个洞先放一只”。';
+  } else if (piStage === 1) {
+    read.textContent = '每个洞先放 1 只，还剩 ' + (piN - piM) + ' 只——它们只能进已经有鸽子的洞。点“剩下的只能合住”。';
+  } else {
+    read.textContent = '一定有一个洞里至少有 ' + Math.ceil(piN / piM) + ' 只鸽子：' + piN + '÷' + piM + ' = ' + Math.floor(piN / piM) + ' 余 ' + (piN % piM) + '，多出来的只能合住。';
+  }
+  document.querySelectorAll('#pgNSeg [data-pg-n]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(+btn.dataset.pgN === piN));
+  });
+  document.querySelectorAll('#pgMSeg [data-pg-m]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(+btn.dataset.pgM === piM));
+  });
+}
+(function piInit() {
+  const nests = document.getElementById('pgNests');
+  for (let i = 0; i < 9; i++) {
+    const nest = document.createElement('div');
+    nest.className = 'pg-nest';
+    const label = document.createElement('div');
+    label.className = 'pg-label';
+    const dots = document.createElement('div');
+    dots.className = 'pg-dots';
+    for (let j = 0; j < 5; j++) {
+      const d = document.createElement('span');
+      d.className = 'pg-bird';
+      d.textContent = '●';
+      dots.appendChild(d);
+    }
+    nest.appendChild(label);
+    nest.appendChild(dots);
+    nests.appendChild(nest);
+  }
+  const nSeg = document.getElementById('pgNSeg');
+  [5, 7, 10, 13].forEach(function (n) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = n + ' 只'; b.dataset.pgN = String(n);
+    b.addEventListener('click', function () { piN = n; piStage = 0; markTried('pigeon'); piRender(); });
+    nSeg.appendChild(b);
+  });
+  const mSeg = document.getElementById('pgMSeg');
+  [3, 4, 9].forEach(function (m) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = m + ' 个'; b.dataset.pgM = String(m);
+    b.addEventListener('click', function () { piM = m; piStage = 0; markTried('pigeon'); piRender(); });
+    mSeg.appendChild(b);
+  });
+  document.getElementById('pgStep1').addEventListener('click', function () { piStage = 1; markTried('pigeon'); piRender(); });
+  document.getElementById('pgStep2').addEventListener('click', function () {
+    if (piStage === 0) { document.getElementById('piRead').textContent = '先点“每个洞先放一只”。'; return; }
+    piStage = 2; markTried('pigeon'); piRender();
+  });
+  document.getElementById('pgReset').addEventListener('click', function () { piStage = 0; markTried('pigeon'); piRender(); });
+  piRender();
+})();
+
+/* ---------- demo-conceptmap · 6.14 整理和复习（方法：概念地图 + 一题多解） ----------
+   复习不是重背步骤，是认出老办法：这道题是条形图？是 ×1？是切一切？
+   先问“这是哪个老办法”，再动手。 */
+const CM_ITEMS = [
+  { q: '甲、乙两数的和是 48，甲数是乙数的 3 倍，甲、乙两数各是多少？', m: '条形图', a: '乙是 1 份，甲是 3 份，一共 4 份，每份 12：甲 36，乙 12。' },
+  { q: '1/2 = 2/4 = 3/6，约分、比的基本性质，背后是同一个什么办法？', m: '×1', a: '分子分母同时乘同一个数，值不变：2/4 是 1/2 的分子分母同时乘 2，乘 2/2 就是乘 1。' },
+  { q: '一根绳子长 12 米，先用去它的 1/3，再用去剩下的 1/4，还剩多少米？', m: '找整体和部分', a: '第一次用去 12 的 1/3 是 4 米，剩 8 米；第二次用去 8 的 1/4 是 2 米，还剩 6 米。' }
+];
+(function cmInit() {
+  const list = document.getElementById('cmList');
+  CM_ITEMS.forEach(function (item, i) {
+    const card = document.createElement('div');
+    card.className = 'cm-card';
+    const q = document.createElement('p');
+    q.className = 'cm-q';
+    q.textContent = (i + 1) + '. ' + item.q;
+    const ans = document.createElement('p');
+    ans.className = 'func-eq';
+    ans.textContent = '点按钮，看看它用了哪个老办法。';
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'btn small primary';
+    b.textContent = '这是哪个老办法？';
+    b.addEventListener('click', function () {
+      ans.textContent = '老办法：' + item.m + '——' + item.a;
+      markTried('conceptmap');
+    });
+    card.appendChild(q);
+    card.appendChild(ans);
+    card.appendChild(b);
+    list.appendChild(card);
+  });
 })();
 
 </script>

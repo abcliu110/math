@@ -158,6 +158,21 @@ const GRADE5_CONTENT = { grade: 5, edition: 'A', units: [
     { id: '5.5', title: '简易方程', subtitle: '用字母表示数、解方程', how: '字母 x 是一个还不知道的数。', why: '等式是一架天平。', wrong: 'x+5=x5', wrongWhy: 'x+5 是那个数加 5。', visual: '天平。', method: '天平解方程', explainBack: '两边都拿走 5。', tryIt: '在天平上摆一摆。', demo: 'balance', recall: { q: 'x+5 是什么意思？', answer: '一个不知道的数加 5', hint: 'x 是一个数' }, practice: [{ q: 'x+5=12，x 是几？', answer: '7', hint: '两边同时减 5', level: '基础' }, { q: '2x+3=11，x 是几？', answer: '4', hint: '先减 3 再除以 2', level: '提高' }] },
   ] },
 ] };
+// 桩里的六年级内容：只留点进实验要用的四个点（6.3 新演示、6.1 复用 fraction、6.12 复用 function、6.13 新演示）。
+const GRADE6_CONTENT = { grade: 6, edition: 'A', units: [
+  { unit: '分数乘法', term: '上', points: [
+    { id: '6.1', title: '分数乘法', subtitle: '分数乘分数', how: '分子乘分子、分母乘分母。', why: '重叠的小格数就是分子乘分子。', wrong: '2/3 × 4/5 = 6/8', wrongWhy: '图里一共 15 小格，重叠了 8 格。', visual: '双色重叠网格。', method: '双色重叠面积', explainBack: '重叠是 15 格里的 8 格。', tryIt: '在方格纸上画一画。', demo: 'fraction', recall: { q: '2/3 × 4/5 是 8/15 还是 6/8？', answer: '8/15', hint: '分子乘分子' }, practice: [{ q: '3/4 × 2/5 = ?', answer: '6/20 = 3/10', hint: '3×2=6', level: '基础' }, { q: '一根绳子长 5/6 米，用去它的 3/5，用去多少米？', answer: '用去 1/2 米', hint: '5/6 × 3/5', level: '提高' }] },
+  ] },
+  { unit: '位置与方向（二）', term: '上', points: [
+    { id: '6.3', title: '位置与方向（二）', subtitle: '方向+距离确定位置', how: '方向加距离才能定住一个点。', why: '只说方向是一条射线。', wrong: '说“它在东北方向”就够了', wrongWhy: '没说多远，不知道是射线上的哪个点。', visual: '雷达扫。', method: '雷达扫', explainBack: '北偏东 30 度、200 米远，才是一个确切的地方。', tryIt: '在操场上量一量。', demo: 'radar', recall: { q: '只说“东偏北 40°”，能找到小红家吗？', answer: '不能', hint: '那是一条射线' }, practice: [{ q: '图书馆在学校北偏西 30°、400 米处，能到吗？', answer: '能', hint: '方向和距离都对了', level: '基础' }, { q: 'A 地在 B 地南偏东 60°、500 米处，B 地在 A 地什么方向？', answer: '北偏西 60°、500 米', hint: '方向反过来', level: '提高' }] },
+  ] },
+  { unit: '比例', term: '下', points: [
+    { id: '6.12', title: '比例', subtitle: '正比例、反比例、比例尺', how: '正比例比值一定，反比例乘积一定。', why: '交叉相乘是因为两边同时乘分母。', wrong: 'x 变大，y 一定变大', wrongWhy: '只对正比例说。', visual: '双数轴。', method: '双数轴 + 定积长方形', explainBack: 'x 变大一倍，y 变小一半，乘积不变。', tryIt: '买 3 支铅笔花 6 元，买 5 支要多少钱？', demo: 'function', recall: { q: 'x 和 y 成正比例，x 是 2 时 y 是 6，x 是 5 时 y 是几？', answer: '15', hint: '比值是 3' }, practice: [{ q: '解比例：x:6 = 4:3，求 x。', answer: '8', hint: '内项积 = 外项积', level: '基础' }, { q: '比例尺 1:50000，图上 4 厘米是实际多少千米？', answer: '2 千米', hint: '4×50000 厘米', level: '提高' }] },
+  ] },
+  { unit: '数学广角——鸽巢问题', term: '下', points: [
+    { id: '6.13', title: '鸽巢问题', subtitle: '鸽巢原理', how: '先每个巢放 1 只，第 n+1 只没地方去，只能合住。', why: '这是数出来的，不是运气。', wrong: '可能发生，但不一定', wrongWhy: '这是计数证明。', visual: '鸽洞动画。', method: '先每洞一只', explainBack: '每个洞先放一只，下一只只能合住。', tryIt: '拿 5 支笔放进 4 个笔筒。', demo: 'pigeon', recall: { q: '5 只鸽子飞进 4 个鸽巢，一定有一个巢里至少有几只？', answer: '2 只', hint: '每个巢先放 1 只' }, practice: [{ q: '把 10 个苹果放进 9 个抽屉，至少有一个抽屉里有几个？', answer: '2 个', hint: '每个抽屉先放 1 个', level: '基础' }, { q: '把 13 支铅笔放进 4 个文具盒，至少有一个盒里有几支？', answer: '4 支', hint: '每个盒先放 3 支', level: '提高' }] },
+  ] },
+] };
 const lsData = {};
 const localStorageStub = { getItem(k) { return lsData[k] || null; }, setItem(k, v) { lsData[k] = String(v); } };
 
@@ -180,7 +195,7 @@ seedSeg('sortRuleSeg', 'sort-rule', ['color', 'shape']);
 // ---------- load the real app.js ----------
 const root = require('path').resolve(__dirname, '..');
 const src = fs.readFileSync(root + '/apps/web/app.js', 'utf8');
-const sandbox = { document: documentStub, window: windowStub, console, setTimeout, Math, JSON, Object, Array, String, Number, parseInt, parseFloat, isNaN, GRADE3_CONTENT, GRADE1_CONTENT, GRADE2_CONTENT, GRADE4_CONTENT, GRADE5_CONTENT, localStorage: localStorageStub };
+const sandbox = { document: documentStub, window: windowStub, console, setTimeout, Math, JSON, Object, Array, String, Number, parseInt, parseFloat, isNaN, GRADE3_CONTENT, GRADE1_CONTENT, GRADE2_CONTENT, GRADE4_CONTENT, GRADE5_CONTENT, GRADE6_CONTENT, localStorage: localStorageStub };
 vm.createContext(sandbox);
 try {
   vm.runInContext(src, sandbox, { filename: 'app.js' });
@@ -303,7 +318,7 @@ const bCell0 = byId.tfB.children[0];
 click(bCell0);
 check('tenframe: click B cell moves one to fill ten', byId.tfEq.textContent === '9 + 4 = 13');
 check('tenframe note explains 10+3', byId.tfNote.textContent.includes('10 + 3 = 13'));
-check('demo counter counts a played demo', byId.progressCount.textContent === '1 / 73' &&
+check('demo counter counts a played demo', byId.progressCount.textContent === '1 / 85' &&
   JSON.parse(lsData['math-tried-demos-v1'] || '[]').includes('tenframe'));
 sandbox.tfSetProblem('sub', 0);
 check('tenframe sub initial equation', byId.tfEq.textContent === '13 − 5 = ?');
@@ -532,7 +547,7 @@ click(byId.countRowA.children[0]);
 check('count: click a dot counts it', byId.countCount.textContent.includes('数到了第 1 个'));
 click(byId.countCompare);
 check('count: 5 vs 7 -> below has 2 more', byId.countResult.textContent.includes('下面多 2 个'));
-check('G1 demos count toward the 73-demo progress', g1ProgBefore === '4 / 73' && byId.progressCount.textContent === '5 / 73');
+check('G1 demos count toward the 85-demo progress', g1ProgBefore === '4 / 85' && byId.progressCount.textContent === '5 / 85');
 click(byId.countAMinus); click(byId.countAMinus);
 check('count: minus twice -> 3', byId.countReadA.textContent === '3 个');
 
@@ -708,7 +723,7 @@ check('ruler: eraser is 3 cm', byId.rulReadout.textContent.includes('3 厘米'))
 click(byId.rulFromBtn);
 check('ruler: measuring from 1 over-reads by 1', byId.rulMsg.textContent.includes('多算1厘米'));
 check('ruler: meter strip is 100 cm squares', byId.rulMeter.children.length === 100);
-check('G2 demos count toward the 73-demo progress', g2ProgBefore === '17 / 73' && byId.progressCount.textContent === '18 / 73');
+check('G2 demos count toward the 85-demo progress', g2ProgBefore === '17 / 85' && byId.progressCount.textContent === '18 / 85');
 
 // 2.2 先估后算
 click(byId.estProbSeg.children[1]); // 26+38
@@ -848,7 +863,7 @@ check('grade-2.js: all 16 points map to the right experiment',
 const labelSrc2 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
 check('DEMO_LABEL covers all 15 new demos',
   G2_DEMOS.every(k => labelSrc2.includes(k + ':')));
-check('G2: all 15 new demos tried by now', byId.progressCount.textContent === '32 / 73');
+check('G2: all 15 new demos tried by now', byId.progressCount.textContent === '32 / 85');
 
 // ---------- 12. 全站布局改版（2026-11-06 真机审计） ----------
 // CSS：顶栏实底不透光，模式栏不吸顶，演示单列，知识点页窄栏
@@ -901,7 +916,7 @@ navGo('progress');
 check('progress: per-grade rows with real numbers',
   byId.progressCard.innerHTML.includes('1 年级') && byId.progressCard.innerHTML.includes('3 年级') &&
   byId.progressCard.innerHTML.includes('演示') && byId.progressCard.innerHTML.includes('已练'));
-check('progress: 32 of 73 demos tried by now', byId.progressCount.textContent === '32 / 73');
+check('progress: 32 of 85 demos tried by now', byId.progressCount.textContent === '32 / 85');
 // 首页不显示孤零零的“数学”面包屑，子页面显示完整面包屑
 navGo('home');
 check('home hides the lone crumb title', byId.crumbTitle.hidden === true);
@@ -938,7 +953,7 @@ check('elapsed: jump to the whole hour lands on 8:00', byId.elReadout.textConten
 for (let i = 0; i < 6; i++) click(byId.elPlus10);
 click(byId.elPlus5);
 check('elapsed: 7:30 -> 9:05 is 1 hour 35 minutes', byId.elMsg.textContent.includes('1 小时 35 分'));
-check('G3 demos count toward the 73-demo progress', g3ProgBefore === '32 / 73' && byId.progressCount.textContent === '33 / 73');
+check('G3 demos count toward the 85-demo progress', g3ProgBefore === '32 / 85' && byId.progressCount.textContent === '33 / 85');
 
 // 3.2 算一算，再算回去
 for (let i = 0; i < 4; i++) click(byId.vfNext);
@@ -1062,7 +1077,7 @@ check('grade-3.js: all 16 points map to the right experiment',
 const labelSrc3 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
 check('DEMO_LABEL covers all 14 new demos',
   G3_DEMOS.every(k => labelSrc3.includes(k + ':')));
-check('G3: all 14 new demos tried by now', byId.progressCount.textContent === '46 / 73');
+check('G3: all 14 new demos tried by now', byId.progressCount.textContent === '46 / 85');
 
 
 // ---------- 11d. 四年级实验（16 个新演示 + 4.17 复用换个方向看） ----------
@@ -1095,7 +1110,7 @@ click(byId.bnRound);
 check('bignum: 62850 rounds to 6 wan', byId.bnMsg.textContent.includes('约是 6万'));
 click(byId.bnProbSeg.children[2]); // 75000
 check('bignum: 75000 sits on the halfway mark', byId.bnNear.textContent.includes('正好在半点上'));
-check('G4 demos count toward the 73-demo progress', g4ProgBefore === '46 / 73' && byId.progressCount.textContent === '47 / 73');
+check('G4 demos count toward the 85-demo progress', g4ProgBefore === '46 / 85' && byId.progressCount.textContent === '47 / 85');
 
 // 4.2 足球场拼一拼
 check('field: 1 field is 1 hectare, 10000 square meters', byId.fdReadout.textContent.includes('1 公顷') && byId.fdReadout.textContent.includes('10000 平方米'));
@@ -1243,7 +1258,7 @@ check('grade-4.js: all 17 points map to the right experiment',
 const labelSrc4 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
 check('DEMO_LABEL covers all 16 new demos',
   G4_DEMOS.every(k => labelSrc4.includes(k + ':')));
-check('G4: all 16 new demos tried by now', byId.progressCount.textContent === '62 / 73');
+check('G4: all 16 new demos tried by now', byId.progressCount.textContent === '62 / 85');
 
 
 // ---------- 6. grade 5 ----------
@@ -1257,7 +1272,7 @@ click(byId.dmProbSeg.children[1]); // 0.2x0.5
 check('decmul: 0.2x0.5 is 0.10, that is 0.1', byId.dmRead.textContent.includes('0.10') && byId.dmRead.textContent.includes('0.1'));
 click(byId.dmProbSeg.children[2]); // 0.6x0.7
 check('decmul: 0.6x0.7 is 0.42', byId.dmRead.textContent.includes('0.42'));
-check('G5 demos count toward the 73-demo progress', g5ProgBefore === '62 / 73' && byId.progressCount.textContent === '63 / 73');
+check('G5 demos count toward the 85-demo progress', g5ProgBefore === '62 / 85' && byId.progressCount.textContent === '63 / 85');
 
 // 5.2 位置：数对
 click(byId.gpGrid.children[8]); // row 1, col 2 -> (3,2)
@@ -1378,7 +1393,133 @@ const G5_DEMOS = ['decmul', 'gridpos', 'decdiv', 'prob', 'polyarea', 'planttree'
 const labelSrc5 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
 check('DEMO_LABEL covers all 11 new demos',
   G5_DEMOS.every(k => labelSrc5.includes(k + ':')));
-check('G5: all 11 new demos tried by now', byId.progressCount.textContent === '73 / 73');
+check('G5: all 11 new demos tried by now', byId.progressCount.textContent === '73 / 85');
+
+
+// ---------- 7. grade 6 ----------
+const g6ProgBefore = byId.progressCount.textContent;
+
+// 6.3 位置与方向（二）：雷达
+check('radar: north-east 30 degrees, 200m', byId.rdRead.textContent.includes('北偏东 30°、200 米'));
+click(byId.rdAngPlus); // 40°
+check('radar: 40 degrees', byId.rdRead.textContent.includes('40°'));
+click(byId.rdModeSeg.children[1]); // 只说方向
+check('radar: direction only is a ray with countless points', byId.rdRead.textContent.includes('无数个点'));
+click(byId.rdModeSeg.children[0]); // 方向+距离
+click(byId.rdDirSeg.children[1]); // 北偏西
+check('radar: north-west 40 degrees', byId.rdRead.textContent.includes('北偏西 40°'));
+check('G6 demos count toward the 85-demo progress', g6ProgBefore === '73 / 85' && byId.progressCount.textContent === '74 / 85');
+
+// 6.4 比：比条
+check('ratio: 2:3 of 50 is 20 and 30', byId.raRead.textContent.includes('20 元') && byId.raRead.textContent.includes('30 元'));
+click(byId.raTotalSeg.children[1]); // 60 元
+check('ratio: 2:3 of 60 is 24 and 36', byId.raRead.textContent.includes('24 元') && byId.raRead.textContent.includes('36 元'));
+click(byId.raAPlus); // 3:3 of 60
+check('ratio: 3:3 of 60 is 30 and 30', byId.raRead.textContent.includes('30 元'));
+
+// 6.5 圆：绕绳量 + 切扇形拼长方形
+check('circle: r=3 circumference is 18.84', byId.ccRead.textContent.includes('18.84'));
+click(byId.ccRPlus); // r=4
+check('circle: r=4 circumference is 25.12', byId.ccRead.textContent.includes('25.12'));
+click(byId.ccModeSeg.children[1]); // 面积
+check('circle: r=4 area is 50.24', byId.ccRead.textContent.includes('50.24'));
+check('circle: slices row shows for area', byId.ccSliceRow.hidden === false);
+click(byId.ccSliceSeg.children[2]); // 16 片
+check('circle: 16 slices', byId.ccRead.textContent.includes('16 个小扇形'));
+
+// 6.6 百分数（一）：百分条
+check('percent: 25% is 1/4 and 0.25', byId.pcRead.textContent.includes('1/4') && byId.pcRead.textContent.includes('0.25'));
+click(byId.pcPlus); // 30%
+check('percent: 30% is 3/10 and 0.3', byId.pcRead.textContent.includes('3/10') && byId.pcRead.textContent.includes('0.3'));
+click(byId.pcDown);
+check('percent: down 20% from 100 is 80', byId.pcStepRead.textContent.includes('80 元'));
+click(byId.pcUp);
+check('percent: up 20% from 80 is 96, not back to 100', byId.pcStepRead.textContent.includes('96 元'));
+
+// 6.7a 扇形统计图
+check('fan: 40% is 144 degrees, 25% is 90', byId.fnRead.textContent.includes('144°') && byId.fnRead.textContent.includes('90°'));
+click(byId.fnAMinus); // 35%
+check('fan: 35% is 126 degrees', byId.fnRead.textContent.includes('126°'));
+
+// 6.7b 数与形：L 形拼正方形
+check('lsquare: 1 is 1 squared', byId.lsRead.textContent.includes('1 = 1') && byId.lsRead.textContent.includes('1²'));
+click(byId.lsMore); click(byId.lsMore); // n=3
+check('lsquare: 1+3+5 is 9, 3 squared', byId.lsRead.textContent.includes('1+3+5 = 9') && byId.lsRead.textContent.includes('3²'));
+check('lsquare: 9 cells shown', byId.lsGrid.children.filter(c => !c.hidden).length === 9);
+
+// 6.8 负数：温度计
+check('thermo: -8 is colder than -3', byId.thRead.textContent.includes('−8') && byId.thRead.textContent.includes('−3') && byId.thRead.textContent.includes('更冷'));
+click(byId.thBPlus); // -7
+check('thermo: -7 is still colder than -3', byId.thRead.textContent.includes('−7 < −3'));
+click(byId.thAMinus); // -4
+check('thermo: -7 colder than -4', byId.thRead.textContent.includes('−7 < −4'));
+
+// 6.9 负数运算：数列 + 翻面
+click(byId.nmRows.children[4].children[2]); // (-1)x(-2) 看答案
+check('negmul: (-1)x(-2) is +2', byId.nmRows.children[4].children[1].textContent.includes('+2'));
+click(byId.nmFlip);
+check('negmul: flip +3 to -3', byId.nmMarker.textContent.includes('−3'));
+click(byId.nmFlip);
+check('negmul: flip back to +3', byId.nmMarker.textContent.includes('+3'));
+
+// 6.10 百分数（二）：打折和利息
+check('discount: 200 at 80% is 160', byId.dcRead.textContent.includes('160 元'));
+click(byId.dcRateSeg.children[1]); // 九折
+check('discount: 200 at 90% is 180', byId.dcRead.textContent.includes('180 元'));
+click(byId.dcModeSeg.children[1]); // 利息
+check('discount: 5000 at 2.5% for 3 years is 375, total 5375', byId.dcRead.textContent.includes('375 元') && byId.dcRead.textContent.includes('5375 元'));
+click(byId.dcYearsMinus); // 2 年
+check('discount: 2 years is 250 interest', byId.dcRead.textContent.includes('250 元'));
+
+// 6.11 圆柱与圆锥：倒沙
+check('cylinder: r=3 h=4 volume is 113.04, cone 37.68', byId.cyRead.textContent.includes('113.04') && byId.cyRead.textContent.includes('37.68'));
+check('cylinder: surface area is 131.88', byId.cyMsg.textContent.includes('131.88'));
+click(byId.cyPour); click(byId.cyPour); click(byId.cyPour);
+check('cylinder: 3 cones fill the cylinder', byId.cyPourRead.textContent.includes('正好满了') && byId.cyPourRead.textContent.includes('1/3'));
+click(byId.cyRPlus); // r=4 h=4
+check('cylinder: r=4 h=4 volume is 200.96', byId.cyRead.textContent.includes('200.96'));
+
+// 6.13 鸽巢问题
+check('pigeon: 5 pigeons, 4 nests', byId.piRead.textContent.includes('5 只鸽子'));
+click(byId.pgStep1);
+check('pigeon: one per nest first, 1 left over', byId.piRead.textContent.includes('还剩 1 只'));
+click(byId.pgStep2);
+check('pigeon: at least 2 in one nest', byId.piRead.textContent.includes('至少有 2 只'));
+click(byId.pgNSeg.children[3]); // 13 只
+click(byId.pgStep1); click(byId.pgStep2);
+check('pigeon: 13 pigeons in 4 nests, at least 4', byId.piRead.textContent.includes('至少有 4 只'));
+
+// 6.14 整理和复习：认出老办法
+click(byId.cmList.children[0].children[2]);
+check('conceptmap: first problem uses bar chart', byId.cmList.children[0].children[1].textContent.includes('条形图'));
+click(byId.cmList.children[1].children[2]);
+check('conceptmap: second problem uses times-one', byId.cmList.children[1].children[1].textContent.includes('×1'));
+click(byId.cmList.children[2].children[2]);
+check('conceptmap: third problem leaves 6 meters', byId.cmList.children[2].children[1].textContent.includes('6 米'));
+
+// 知识点页 → 实验的链接（桩里的 grade-6.js）+ 真实 grade-6.js 的映射
+navGo('point-6.3');
+check('point 6.3 links the radar experiment', pointDetail.innerHTML.includes('去玩雷达找地方') && pointDetail.innerHTML.includes('data-demo-link="demo-radar"'));
+navGo('point-6.1');
+check('point 6.1 reuses the fraction experiment', pointDetail.innerHTML.includes('去玩分数演示') && pointDetail.innerHTML.includes('data-demo-link="demo-fraction"'));
+navGo('point-6.12');
+check('point 6.12 reuses the function experiment', pointDetail.innerHTML.includes('去玩函数演示') && pointDetail.innerHTML.includes('data-demo-link="demo-function"'));
+navGo('point-6.13');
+sandbox.goDemoFromHere('demo-pigeon');
+check('G6 demo from point keeps point as parent', byId.crumbTitle.innerHTML.includes('鸽巢问题'));
+sandbox.navBackFn();
+check('G6 back from demo returns to point page', pointDetail.innerHTML.includes('鸽巢问题'));
+const g6src = fs.readFileSync(root + '/content/grades/grade-6.js', 'utf8');
+const g6ids = [...g6src.matchAll(/id: "([0-9.ab]+)"/g)].map(m => m[1]);
+const g6demos = [...g6src.matchAll(/demo: (?:"([a-z]+)"|null)/g)].map(m => m[1] || null);
+const g6expected = {'6.1':'fraction','6.3':'radar','6.2':'fraction','6.4':'ratio','6.5':'circle','6.6':'percent','6.7a':'fan','6.7b':'lsquare','6.8':'thermo','6.9':'negmul','6.10':'discount','6.11':'cylinder','6.12':'function','6.13':'pigeon','6.14':'conceptmap'};
+check('grade-6.js: all 15 points map to the right experiment',
+  g6ids.length === 15 && g6ids.every((id, i) => g6demos[i] === g6expected[id]));
+const G6_DEMOS = ['radar', 'ratio', 'circle', 'percent', 'fan', 'lsquare', 'thermo', 'negmul', 'discount', 'cylinder', 'pigeon', 'conceptmap'];
+const labelSrc6 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
+check('DEMO_LABEL covers all 12 new demos',
+  G6_DEMOS.every(k => labelSrc6.includes(k + ':')));
+check('G6: all 12 new demos tried by now', byId.progressCount.textContent === '85 / 85');
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
