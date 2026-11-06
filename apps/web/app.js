@@ -51,15 +51,21 @@ const GRADES = {
     { name: '相似与概率', topics: '相似三角形、概率初步', visual: '缩放对比、模拟实验' } ] },
 };
 
-/* ---------- 进度（原型：只记招牌演示是否玩过） ---------- */
+/* ---------- 进度（原型：记演示是否玩过） ----------
+   17 个演示全都计入：4 个经典演示 + 13 个一年级实验。以前只记 4 个经典，
+   首页却写着“4 个演示”，演示页上却是 17 张卡，数字对不上
+   （2026-11-06 真机审计第 6 条）。 */
 const tried = new Set();
 const FLAGSHIP = ['tenframe', 'fraction', 'balance', 'function'];
+const ALL_DEMOS = ['tenframe', 'fraction', 'balance', 'function',
+  'count', 'position', 'split', 'addsub', 'solids', 'bundle', 'clock',
+  'tangram', 'sort', 'hundred', 'shop', 'place', 'pattern'];
 // 刷新后进度还在：已体验的演示存在本地（只存本机，不上传）。
 try { JSON.parse(lsGet('math-tried-demos-v1') || '[]').forEach(k => tried.add(k)); } catch (e) {}
 function renderTried() {
-  const n = FLAGSHIP.length;
-  document.getElementById('progressCount').textContent = tried.size + ' / ' + n;
-  document.getElementById('progressFill').style.width = (tried.size / n * 100) + '%';
+  const n = ALL_DEMOS.length;
+  const pc = document.getElementById('progressCount');
+  if (pc) pc.textContent = tried.size + ' / ' + n;
   const pf = document.getElementById('panelProgFill');
   if (pf) pf.style.width = (tried.size / n * 100) + '%';
   const pt = document.getElementById('panelProgTx');
@@ -68,19 +74,24 @@ function renderTried() {
   if (dp) dp.style.width = (tried.size / n * 100) + '%';
   const dt = document.getElementById('panelDemoTx');
   if (dt) dt.textContent = n + ' 个演示 · ' + tried.size + ' 已体验';
-  document.getElementById('progressText').textContent =
+  const pFill = document.getElementById('progressFill');
+  if (pFill) pFill.style.width = (tried.size / n * 100) + '%';
+  const pText = document.getElementById('progressText');
+  if (pText) pText.textContent =
     tried.size === n ? '演示都玩过了！下一步可以选一个年级做完整单元。'
     : '已体验 ' + tried.size + ' / ' + n + ' 个演示，继续玩剩下的吧。';
+  renderProgress();
 }
 function markTried(key) {
-  if (!FLAGSHIP.includes(key)) return; // “为什么”小实验不计入 3 个招牌演示的进度
+  if (!ALL_DEMOS.includes(key)) return; // “为什么”小实验不计入演示进度
   if (!tried.has(key)) {
     tried.add(key);
     lsSet('math-tried-demos-v1', JSON.stringify([...tried]));
     renderTried();
   }
 }
-renderTried();
+// 注意：首次 renderTried() 不在这里调——它会调 renderProgress()，而 reviewStore
+// 和 progressCardEl 在文件后面才初始化；首次调用放在文件末尾的初始化里。
 
 /* ---------- 第 3 轮学习技巧落到内容里（提取、间隔、交叉、渐撤、反馈、校准） ----------
    只记在本地（localStorage；打不开就只记在内存里，不上传、不建账号）。
@@ -98,6 +109,7 @@ function recordAttempt(pointId, correct, confident) {
   const days = !correct ? 1 : (!confident ? 1 : (streak >= 2 ? 7 : 3));
   reviewStore[pointId] = { last: Date.now(), correct: !!correct, confident: !!confident, streak: streak, due: Date.now() + days * 86400000 };
   saveReview();
+  updateHomeReviewTx();
   return days;
 }
 function duePointIds() {
@@ -118,14 +130,13 @@ let stepQuestions = {}; // key: pointId + ':' + qIdx -> steps array (set at rend
 /* 年级菜单层级是面板：9 块年级面板，点一块进该年级（走 navGo，不是直接调 selectGrade）。 */
 const gradePanels = document.getElementById('gradePanels');
 const gradeDetail = document.getElementById('gradeDetail');
-let currentGrade = 3;
+let currentGrade = null; // 首次加载不预选任何年级：以前默认选中 3 年级，没道理（2026-11-06 真机审计第 10 条）
 Object.keys(GRADES).forEach(g => {
   const b = document.createElement('button');
   b.className = 'panel'; b.type = 'button'; b.dataset.navKey = 'grade-' + g;
-  b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', String(+g === currentGrade));
+  b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', 'false');
   b.innerHTML = '<span class="panel-icon" aria-hidden="true">' + g + '</span><b>' + g + ' 年级</b>' +
     '<span class="panel-sub">' + GRADES[g].stage + ' · ' + GRADES[g].title.split('· ')[1] + '</span>' +
-    '<span class="panel-prog"><i style="width:0%"></i></span>' +
     '<span class="panel-tx">' + GRADES[g].units.length + ' 个单元</span>';
   gradePanels.appendChild(b);
 });
@@ -162,7 +173,6 @@ function selectGrade(g) {
       '<span class="pill">可视化：' + u.visual + '</span><span class="pill">状态：待制作</span></div>'
     ).join('') + '</div>';
 }
-selectGrade(currentGrade);
 
 /* ---------- 真实内容（content/grades/grade-N.js 提供 GRADE1_CONTENT … GRADE9_CONTENT） ----------
    内容与原型逻辑分开：知识点文字只活在 content/ 里，app.js 只负责渲染。
@@ -245,36 +255,67 @@ function updateStepReport(pid, qi) {
       '。再对一遍' + (wrong.length > 1 ? '这些步' : '这一步') + '：' + wrong.map(x => x.s.text).join('；') + '。';
   }
 }
+/* 上一篇 / 下一篇：按年级 → 单元 → 知识点顺序，找相邻的两条。 */
+function adjacentPoints(id) {
+  const order = [];
+  for (const g of [1, 2, 3, 4, 5, 6, 7, 8, 9]) {
+    const gd = gradeData(g);
+    if (!gd) continue;
+    gd.units.forEach(u => u.points.forEach(p => order.push(p)));
+  }
+  const i = order.findIndex(p => p.id === id);
+  if (i < 0) return { prev: null, next: null };
+  return { prev: order[i - 1] || null, next: order[i + 1] || null };
+}
 function renderPoint(id) {
   const f = findPoint(id);
   if (!f) return;
   const p = f.point;
   currentPointId = id;
   const recallHtml = p.recall
-    ? '<div class="point-sec recall"><h4>先考一考（先想，再往下看）</h4><p>' + esc(p.recall.q) + '</p>' +
+    ? '<div class="point-sec recall" id="sec-recall"><h4>先考一考（先想，再往下看）</h4><p>' + esc(p.recall.q) + '</p>' +
       '<button class="btn ghost small qa-btn" type="button" data-recall="1">想好了，看答案</button>' +
       '<p class="qa-a" data-recall-a hidden>答案：' + esc(p.recall.answer) + '（提示：' + esc(p.recall.hint) + '）</p></div>'
     : '';
   // 由浅入深：练一练两道题是 基础 → 提高；有奥数题的知识点再加一道挑战（没有就不显示，不硬凑）。
   const olympiadHtml = p.olympiad
-    ? '<div class="point-sec olympiad"><h4>挑战 · 奥数</h4><p>' + esc(p.olympiad.q) + '</p>' +
+    ? '<div class="point-sec olympiad" id="sec-olympiad"><h4>挑战 · 奥数</h4><p>' + esc(p.olympiad.q) + '</p>' +
       '<button class="btn ghost small qa-btn" type="button" data-olympiad="1">想好了，看答案</button>' +
       '<p class="qa-a" data-olympiad-a hidden>答案：' + esc(p.olympiad.answer) + '（提示：' + esc(p.olympiad.hint) + '）</p></div>'
     : '';
+  // 章节导航：一行小药丸，点一个跳到那一节（scrollIntoView，不走锚点 href）。
+  const secs = [];
+  if (p.recall) secs.push(['sec-recall', '先考一考']);
+  secs.push(['sec-how', '怎么做'], ['sec-why', '为什么'], ['sec-wrong', '容易错'],
+    ['sec-visual', '看图学'], ['sec-try', '动手试一试'], ['sec-talk', '讲回来'], ['sec-practice', '练一练']);
+  if (p.olympiad) secs.push(['sec-olympiad', '挑战 · 奥数']);
+  const navHtml = '<div class="point-nav">' + secs.map(s =>
+    '<button type="button" data-sec="' + s[0] + '">' + s[1] + '</button>').join('') + '</div>';
+  // 上一篇 / 下一篇：按年级 → 单元 → 知识点顺序接着学。
+  const adj = adjacentPoints(id);
+  const pagerHtml = '<div class="point-pager">' +
+    (adj.prev ? '<button type="button" data-pager="point-' + esc(adj.prev.id) + '">← 上一篇 · ' + esc(adj.prev.id) + ' ' + esc(adj.prev.title) + '</button>'
+      : '<button type="button" disabled>← 没有上一篇了</button>') +
+    (adj.next ? '<button type="button" class="pager-next" data-pager="point-' + esc(adj.next.id) + '">下一篇 · ' + esc(adj.next.id) + ' ' + esc(adj.next.title) + ' →</button>'
+      : '<button type="button" class="pager-next" disabled>没有下一篇了 →</button>') +
+    '</div>';
   let html = '<h3>' + esc(p.id) + ' · ' + esc(p.title) + '</h3>' +
     '<p class="muted">' + esc(f.unit.unit) + '（' + esc(f.unit.term) + '）· 最佳方法：' + esc(p.method) + '</p>' +
-    '<p class="muted">' + esc(p.subtitle) + '</p>' + recallHtml +
-    '<div class="point-sec"><h4>怎么做</h4><p>' + esc(p.how) + '</p></div>' +
-    '<div class="point-sec"><h4>为什么</h4><p>' + esc(p.why) + '</p></div>' +
-    '<div class="point-sec warn"><h4>容易错</h4><p>错法：' + esc(p.wrong) + '</p><p>为什么错：' + esc(p.wrongWhy) + '</p></div>' +
-    '<div class="point-sec"><h4>看图学</h4><p>' + esc(p.visual) + '</p></div>' +
-    '<div class="point-sec"><h4>动手试一试</h4><p>' + esc(p.tryIt) + '</p>' +
+    '<p class="muted">' + esc(p.subtitle) + '</p>' + navHtml + recallHtml +
+    '<div class="point-sec" id="sec-how"><h4>怎么做</h4><p>' + esc(p.how) + '</p></div>' +
+    '<div class="point-sec" id="sec-why"><h4>为什么</h4><p>' + esc(p.why) + '</p></div>' +
+    '<div class="point-sec warn" id="sec-wrong"><h4>容易错</h4><p>错法：' + esc(p.wrong) + '</p><p>为什么错：' + esc(p.wrongWhy) + '</p></div>' +
+    '<div class="point-sec" id="sec-visual"><h4>看图学</h4><p>' + esc(p.visual) + '</p></div>' +
+    '<div class="point-sec" id="sec-try"><h4>动手试一试</h4><p>' + esc(p.tryIt) + '</p>' +
     (p.demo ? '<div class="btn-row"><button class="btn primary" type="button" data-demo-link="demo-' + esc(p.demo) + '">' + (DEMO_LABEL[p.demo] || '去玩演示') + '</button></div>' : '') + '</div>' +
-    '<div class="point-sec talk"><h4>讲回来</h4><p>“' + esc(p.explainBack) + '”</p></div>' +
-    '<div class="point-sec"><h4>练一练</h4><p class="muted">两道题由浅入深：第一道基础（提示直接给），第二道提高（先自己做，卡住了再点“要提示”）。答完先对答案，再告诉我你答对没、有把握没——答错的和没把握的，明天会回来找你。' + (p.olympiad ? '做完还有一道奥数挑战。' : '') + '</p>' + p.practice.map((q, i) =>
+    // 讲回来只包一层引号：内容文件里的 explainBack 本身已经带了 “ ”，
+    // 以前这里又包了一层，全站 142 条都显示成 ““… ””（2026-11-06 真机审计第 10 条）。
+    '<div class="point-sec talk" id="sec-talk"><h4>讲回来</h4><p>' + esc(p.explainBack) + '</p></div>' +
+    '<div class="point-sec" id="sec-practice"><h4>练一练</h4><p class="muted">两道题由浅入深：基础 → 提高。卡住了点“要提示”，再点“看答案”对一对。答完告诉我你答对没、有把握没——答错的和没把握的，明天会回来找你。' + (p.olympiad ? '做完还有一道奥数挑战。' : '') + '</p>' + p.practice.map((q, i) =>
       '<div class="qa"><p>' + (i + 1) + '. ' + (q.level ? '<span class="pill">' + esc(q.level) + '</span> ' : '') + esc(q.q) + '</p>' +
-      (i === 0 ? '<p class="hint">提示：' + esc(q.hint) + '</p>' : '') +
-      (i === 1 ? '<button class="btn ghost small qa-btn" type="button" data-hint="' + i + '">要提示</button><p class="hint" data-hint-t="' + i + '" hidden>提示：' + esc(q.hint) + '</p>' : '') +
+      // 提示一律收在“要提示”按钮后面：以前 Q1 的提示直接露在题下面，
+      // Q2 的提示却要先点按钮，两道题不一致（2026-11-06 真机审计第 4 条）。
+      '<button class="btn ghost small qa-btn" type="button" data-hint="' + i + '">要提示</button><p class="hint" data-hint-t="' + i + '" hidden>提示：' + esc(q.hint) + '</p>' +
       '<button class="btn ghost small qa-btn" type="button" data-qa="' + i + '">看答案</button>' +
       '<p class="qa-a" data-qa-a="' + i + '" hidden>答案：' + esc(q.answer) + '</p>' +
       practiceStepsHtml(q, i, id) +
@@ -282,7 +323,7 @@ function renderPoint(id) {
       '<p>你答对了吗？ <button class="btn small" type="button" data-mark="right">答对了</button> <button class="btn small" type="button" data-mark="wrong">答错了</button></p>' +
       '<p>答之前有把握吗？ <button class="btn small" type="button" data-conf="yes">有把握</button> <button class="btn small" type="button" data-conf="no">没把握</button></p>' +
       '<p class="qa-a" data-qa-saved="' + i + '" hidden></p></div></div>'
-    ).join('') + '</div>' + olympiadHtml;
+    ).join('') + '</div>' + olympiadHtml + pagerHtml;
   pointDetail.innerHTML = html;
   pointDetail.querySelectorAll('[data-demo-link]').forEach(el =>
     el.addEventListener('click', () => goDemoFromHere(el.dataset.demoLink)));
@@ -359,7 +400,14 @@ function renderReview() {
 }
 /* 错题本（首页面板）：真实错题列表——最近一次答错的知识点，点一条回知识点页重练。
    之前这里只有 2 条占位示例，而且因为它和各年级的今天复习共用 view 'review'，
-   点进来还会把上一个知识点页的旧内容留在屏幕上（2026-11-06 真机测出）。 */
+   点进来还会把上一个知识点页的旧内容留在屏幕上（2026-11-06 真机测出）。
+   现在错题本一屏里还有今天复习和明天回来：错了的题今天练、明天练，都在这里找得到。 */
+function reviewItemHtml(id, pill) {
+  const f = findPoint(id);
+  const title = f ? f.point.title : id;
+  const st = reviewStore[id];
+  return '<button class="unit unit-btn" type="button" data-point="' + esc(id) + '"><b>' + esc(id) + ' · ' + esc(title) + '</b><p>' + (st.correct ? '上次答对' : '上次答错') + ' · ' + (st.confident ? '有把握' : '没把握') + '</p><span class="pill">' + pill + '</span></button>';
+}
 function renderWrongBook() {
   const wrong = Object.keys(reviewStore).filter(id => reviewStore[id] && reviewStore[id].correct === false);
   let html = '<h3>错题本</h3>';
@@ -374,14 +422,74 @@ function renderWrongBook() {
       return '<li><button class="unit unit-btn" type="button" data-point="' + esc(id) + '"><b>' + esc(id) + ' · ' + esc(title) + '</b><small>上次答错 · ' + when + '</small></button></li>';
     }).join('') + '</ul>';
   }
+  const due = duePointIds();
+  if (due.length) {
+    html += '<div class="point-sec"><h4>今天复习</h4><p>这些今天到期，点一条回去重练。</p><div class="unit-list">' + due.map(id => reviewItemHtml(id, '今天复习')).join('') + '</div></div>';
+  } else {
+    html += '<div class="point-sec"><h4>今天复习</h4><p>今天没有到期的复习。去练一练新的，或者点“混着练”。</p></div>';
+  }
+  const now = Date.now();
+  const tomorrow = Object.keys(reviewStore).filter(id => {
+    const st = reviewStore[id];
+    return st && st.due > now && st.due <= now + 86400000;
+  });
+  if (tomorrow.length) {
+    html += '<div class="point-sec"><h4>明天回来</h4><p>这些明天到期，到时候再练。</p><div class="unit-list">' + tomorrow.map(id => reviewItemHtml(id, '明天')).join('') + '</div></div>';
+  }
   reviewCardEl.innerHTML = html;
   reviewCardEl.querySelectorAll('[data-point]').forEach(btn =>
     btn.addEventListener('click', () => navGo('point-' + btn.dataset.point)));
   // 首页错题本面板的小字也改成真实条数，别再写“2 条示例”。
   const tx = document.querySelector('[data-nav-key="review"] .panel-tx');
   if (tx) tx.textContent = wrong.length ? wrong.length + ' 条错题' : '还没有错题';
+  updateHomeReviewTx();
+}
+/* 首页“今天复习”面板的小字：今天到期的条数。记一次答题就刷新一次。 */
+function updateHomeReviewTx() {
+  const tx = document.getElementById('todayReviewTx');
+  if (!tx) return;
+  const n = duePointIds().length;
+  tx.textContent = n ? '今天有 ' + n + ' 条到期' : '今天没有到期的';
+}
+/* 我的进度：每年级一行真数字——演示玩过几个 / 练过几条 / 掌握几条。
+   只用本机已有的数据（tried 演示集合 + reviewStore），不编假数据。
+   条的宽度 = 练过知识点 / 该年级全部知识点。 */
+const DEMO_GRADES = { tenframe: [1, 2], fraction: [3, 4, 5], balance: [5, 6, 7], function: [7, 8],
+  count: [1], position: [1], split: [1], addsub: [1], solids: [1], bundle: [1], clock: [1],
+  tangram: [1], sort: [1], hundred: [1], shop: [1], place: [1], pattern: [1] };
+function renderProgress() {
+  const card = document.getElementById('progressCard');
+  if (!card) return;
+  const practiced = Object.keys(reviewStore).length;
+  const mastered = Object.keys(reviewStore).filter(id => reviewStore[id].streak >= 2).length;
+  let html = '<h3>我的进度</h3><p class="muted">一共玩过 ' + tried.size + ' / ' + ALL_DEMOS.length + ' 个演示 · 练过 ' + practiced + ' 条知识点 · 已掌握 ' + mastered + ' 条（连续答对两次算掌握）。进度只存在本机浏览器里。</p>';
+  for (let g = 1; g <= 9; g++) {
+    const gd = gradeData(g);
+    if (!gd) continue;
+    const total = gd.units.reduce((n, u) => n + u.points.length, 0);
+    const ids = [];
+    gd.units.forEach(u => u.points.forEach(p => ids.push(p.id)));
+    const done = ids.filter(id => reviewStore[id]).length;
+    const mast = ids.filter(id => reviewStore[id] && reviewStore[id].streak >= 2).length;
+    const demosInGrade = ALL_DEMOS.filter(k => (DEMO_GRADES[k] || []).includes(g));
+    const demosDone = demosInGrade.filter(k => tried.has(k)).length;
+    const pct = total ? Math.round(done / total * 100) : 0;
+    html += '<div class="prog-row"><b>' + g + ' 年级 · ' + esc(GRADES[g].title.split('· ')[1] || '') + '</b>' +
+      '<p class="prog-nums">演示 ' + demosDone + ' / ' + demosInGrade.length + ' · 已练 ' + done + ' / ' + total + ' 条 · 已掌握 ' + mast + ' 条</p>' +
+      '<div class="prog-track"><i style="width:' + pct + '%"></i></div></div>';
+  }
+  card.innerHTML = html;
 }
 if (pointDetail) pointDetail.addEventListener('click', e => {
+  const secBtn = e.target.closest('[data-sec]');
+  if (secBtn) {
+    // 章节导航：跳到那一节的顶部，顶栏吸顶的高度由 .point-sec 的 scroll-margin-top 留出来。
+    const t = pointDetail.querySelector('#' + secBtn.dataset.sec);
+    if (t && t.scrollIntoView) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+  const pagerBtn = e.target.closest('[data-pager]');
+  if (pagerBtn) { navGo(pagerBtn.dataset.pager); return; }
   const recallBtn = e.target.closest('[data-recall]');
   if (recallBtn) {
     const ans = pointDetail.querySelector('[data-recall-a]');
@@ -625,9 +733,10 @@ let currentDim = 'domain';
 function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
 function topicListHTML(topics) {
   return '<ul class="dim-topics">' + topics.map(t =>
-    '<li><b>' + t.g + ' 年级 · ' + esc(t.t) + '</b><p class="why-line">为什么：' + esc(t.why) + '</p></li>'
+    '<li><button class="dim-topic" type="button" data-grade="' + t.g + '"><span><b>' + t.g + ' 年级 · ' + esc(t.t) + '</b><p class="why-line">为什么：' + esc(t.why) + '</p></span><span class="dim-chev" aria-hidden="true">›</span></button></li>'
   ).join('') + '</ul>';
 }
+let dimGradeFilter = null; // 维度详情里的年级筛选：null = 全部年级
 function renderDimension(id) {
   currentDim = id;
   [...dimBar.children].forEach(el => el.setAttribute('aria-selected', String(el.dataset.dim === id)));
@@ -641,11 +750,21 @@ function renderDimension(id) {
       return '<div class="prereq-chain"><b>' + esc(c.name) + '</b><p class="muted">' + esc(c.desc) + '</p><div class="prereq-steps">' + steps + '</div><div class="prereq-detail" id="prereqDetail-' + ci + '">点上面任意一步，看它前面需要什么、后面通向哪里。</div></div>';
     }).join('');
   } else {
-    html += d.cats.map(c =>
-      '<div class="dim-cat"><h3>' + esc(c.name) + '</h3><p>' + esc(c.desc) + '</p>' + topicListHTML(c.topics) + '</div>'
-    ).join('');
+    // 按年级筛选：39 条塞在一个长列里没法找（2026-11-06 真机审计第 5 条）。
+    html += '<div class="dim-filter" role="group" aria-label="按年级筛选"><button type="button" data-gfilter="0" aria-pressed="' + (dimGradeFilter === null) + '">全部年级</button>' +
+      [1, 2, 3, 4, 5, 6].map(g => '<button type="button" data-gfilter="' + g + '" aria-pressed="' + (dimGradeFilter === g) + '">' + g + ' 年级</button>').join('') + '</div>';
+    html += d.cats.map(c => {
+      const topics = dimGradeFilter ? c.topics.filter(t => t.g === dimGradeFilter) : c.topics;
+      if (!topics.length) return '';
+      return '<div class="dim-cat"><h3>' + esc(c.name) + '</h3><p>' + esc(c.desc) + '</p>' + topicListHTML(topics) + '</div>';
+    }).join('');
   }
   dimDetail.innerHTML = html;
+  dimDetail.querySelectorAll('.dim-topic').forEach(btn => btn.addEventListener('click', () => navGo('grade-' + btn.dataset.grade)));
+  dimDetail.querySelectorAll('[data-gfilter]').forEach(btn => btn.addEventListener('click', () => {
+    dimGradeFilter = +btn.dataset.gfilter === 0 ? null : +btn.dataset.gfilter;
+    renderDimension(currentDim);
+  }));
   if (d.id === 'prereq') {
     dimDetail.querySelectorAll('.prereq-step').forEach(btn => btn.addEventListener('click', () => {
       const ci = +btn.dataset.chain, si = +btn.dataset.step;
@@ -675,7 +794,7 @@ DIMENSIONS.forEach(d => {
   const count = d.cats ? d.cats.length + ' 个分类' : d.chains.length + ' 条链';
   b.innerHTML = '<span class="panel-icon" aria-hidden="true">' + (DIM_ICONS[d.id] || '◇') + '</span><b>' + d.name + '</b>' +
     '<span class="panel-sub">' + d.short + '</span>' +
-    '<span class="panel-prog"><i style="width:20%"></i></span><span class="panel-tx">' + count + '</span>';
+    '<span class="panel-tx">' + count + '</span>';
   dimPanels.appendChild(b);
 });
 renderDimension(currentDim);
@@ -746,7 +865,8 @@ const NAV_DEFS = {
   why:        { crumbs: ['数学', '互动演示', '为什么小实验'], target: 'why' },
   lab:        { crumbs: ['数学', '数学实验室'], target: 'lab' },
   review:     { crumbs: ['数学', '错题本'], target: 'review', action: renderWrongBook },
-  progress:   { crumbs: ['数学', '我的进度'], target: 'progressCard' },
+  'today-review': { crumbs: ['数学', '今天复习'], target: 'grades', action: renderReview },
+  progress:   { crumbs: ['数学', '我的进度'], target: 'progressCard', action: renderProgress },
 };
 Object.keys(GRADES).forEach(g => {
   NAV_DEFS['grade-' + g] = { crumbs: ['数学', '选年级', g + ' 年级'], target: 'grades', action: () => selectGrade(+g) };
@@ -804,6 +924,8 @@ const footerEl = document.getElementById('pageFooter');
 function viewForKey(key) {
   if (key === 'home') return 'home';
   if (key === 'grades') return 'grades';
+  // 首页“今天复习”和各年级的“今天复习”都映射到 view 'review'（到期列表画进 pointDetail）。
+  if (key === 'today-review') return 'review';
   // 注意顺序：'grade-3-mix' / 'grade-3-review' 也以 'grade-' 开头，必须先精确匹配，
   // 否则会被下面的 startsWith('grade-') 吞掉，混着练和今天复习就会显示成年级详情（2026-11-06 真机测出）。
   if (/^grade-\d+-mix$/.test(key)) return 'mix';
@@ -832,15 +954,17 @@ function applyView() {
   setHidden(heroEl, view !== 'home');
   setHidden(panelsSec, view !== 'home');
   // 选年级：列表只留 9 块年级面板；叶子只留该年级详情；3 年级再往下是单元和知识点
-  // 注意：首页错题本（key 'review'）和各年级的今天复习（key 'grade-N-review'）都映射到
-  // view 'review'，但内容不一样——今天复习把到期列表画进 pointDetail，首页错题本画进
-  // reviewCard。首页错题本绝不能把 pointDetail 的旧内容留在屏幕上（2026-11-06 真机测出）。
-  const isHomeReview = key === 'review';
-  const inGrades = view === 'grades' || view === 'grade-detail' || view === 'unit-detail' || view === 'point-detail' || view === 'mix' || (view === 'review' && !isHomeReview);
+  // 注意：view 'review' 有三种入口，内容不一样——
+  //   首页错题本（key 'review'）画进 reviewCard；
+  //   今天复习（key 'today-review' / 'grade-N-review'）把到期列表画进 pointDetail。
+  // 三种绝不能互相把旧内容留在屏幕上（2026-11-06 真机测出）。
+  const isWrongBook = key === 'review';
+  const isReviewList = view === 'review' && !isWrongBook;
+  const inGrades = view === 'grades' || view === 'grade-detail' || view === 'unit-detail' || view === 'point-detail' || view === 'mix' || isReviewList;
   setHidden(gradesSec, !inGrades);
   setHidden(gradePanels, view !== 'grades');
   setHidden(gradeDetail, view !== 'grade-detail');
-  setHidden(pointDetail, !(view === 'unit-detail' || view === 'point-detail' || view === 'mix' || (view === 'review' && !isHomeReview)));
+  setHidden(pointDetail, !(view === 'unit-detail' || view === 'point-detail' || view === 'mix' || isReviewList));
   setHidden(gradesSec.querySelector('h2'), inGrades && view !== 'grades');
   setHidden(gradesSec.querySelector('.section-sub'), inGrades && view !== 'grades');
   // 换维度：列表只留 5 块维度面板；叶子只留该维度的分组内容
@@ -868,10 +992,15 @@ function applyView() {
   setHidden(whySec, view !== 'why');
   // 数学实验室：只有进实验室才显示整个 #lab 区
   setHidden(labSec, view !== 'lab');
-  // 复习与进度：错题本只留错题卡片，我的进度只留进度卡片
-  setHidden(reviewSec, !(view === 'review' || view === 'progress'));
+  // 复习与进度：错题本只留错题卡片，我的进度只留进度卡片；
+  // 今天复习不留 #review 区（它的列表在 pointDetail 里）。
+  setHidden(reviewSec, !(isWrongBook || view === 'progress'));
   setHidden(progressCardEl, view !== 'progress');
-  setHidden(reviewCardEl, view !== 'review');
+  setHidden(reviewCardEl, !isWrongBook);
+  setHidden(reviewSec.querySelector('h2'), true); // 卡片自带 h3 标题，区标题“进度与错题本”不再出现
+  // 维度切换 pills 只在某个维度的详情页出现：维度卡片列表页上，
+  // 模式栏的 5 个 pills 和下面 5 张卡片是同一批内容，重复了（2026-11-06 真机审计第 5 条）。
+  if (dimBar) dimBar.hidden = view !== 'dim-detail';
   // 下一步与页脚：视图隔离后不再出现（首页不露出任何模块内容，模块视图只显示本面板内容）
   setHidden(nextStepsEl, true);
   setHidden(footerEl, true);
@@ -1012,6 +1141,7 @@ document.querySelectorAll('[data-nav-key]').forEach(el =>
 document.getElementById('modeGrade').addEventListener('click', () => setModeView('grade'));
 document.getElementById('modeDim').addEventListener('click', () => setModeView('dimension'));
 renderNav();
+renderTried(); // 首次刷新进度：这时 reviewStore 和 progressCardEl 都已初始化
 renderWrongBook(); // 首页错题本卡片和面板条数一进页面就是真实的，不是占位示例。
 
 function gcd(a, b) { a = Math.abs(a); b = Math.abs(b); return b ? gcd(b, a % b) : a; }
@@ -1321,8 +1451,8 @@ function drawFunc() {
   document.getElementById('funcK').textContent = k;
   document.getElementById('funcB').textContent = b;
   const gap = drawFuncGraph(ctx, canvas, k, b, funcChallenge ? FUNC_CH[funcChIdx] : null);
-  // table
-  [0, 1, 2, 3, 5].forEach(x => { document.getElementById('y' + x).textContent = (k * x + b); });
+  // table: x = 0..5 连续，4 不能跳过（以前是 0,1,2,3,5，4 莫名缺席）。
+  [0, 1, 2, 3, 4, 5].forEach(x => { document.getElementById('y' + x).textContent = (k * x + b); });
   document.getElementById('funcChallenge').textContent =
     '小挑战：x = 2 公里时要付 ' + (k * 2 + b) + ' 元。试试把起步价调到 10 元，2 公里又是多少？';
   const gapEl = document.getElementById('funcGapMsg');
@@ -1798,7 +1928,7 @@ function drawLabFunc() {
   document.getElementById('labFuncK').textContent = k;
   document.getElementById('labFuncB').textContent = b;
   drawFuncGraph(labFuncCtx, labFuncCanvas, k, b);
-  [0, 1, 2, 3, 5].forEach(x => { document.getElementById('labY' + x).textContent = (k * x + b); });
+  [0, 1, 2, 3, 4, 5].forEach(x => { document.getElementById('labY' + x).textContent = (k * x + b); });
 }
 document.getElementById('labFuncKRange').addEventListener('input', drawLabFunc);
 document.getElementById('labFuncBRange').addEventListener('input', drawLabFunc);
@@ -1859,6 +1989,7 @@ function countDotClick(which, i) {
   if (which === 'A') countCountedA[i] = !countCountedA[i];
   else countCountedB[i] = !countCountedB[i];
   countRender();
+  markTried('count');
   const counted = which === 'A'
     ? countCountedA.filter(Boolean).length
     : countCountedB.filter(Boolean).length;
@@ -1995,6 +2126,7 @@ function posRelative(dr, dc) {
 function posPlaceStar(r, c) {
   posStar = { r, c };
   posRender();
+  markTried('position');
 }
 
 function posRender() {
@@ -2073,6 +2205,7 @@ function splitMove(side) {
   if (side === 'L' && splitLeft > 0) splitLeft--;
   else if (side === 'R' && splitLeft < splitTotal) splitLeft++;
   splitRender();
+  markTried('split');
 }
 
 function splitPick(i) {
@@ -2206,6 +2339,7 @@ function addsubChange(which, d) {
     }
   }
   addsubRender();
+  markTried('addsub');
 }
 
 function addsubSetMode(m) {
@@ -2309,6 +2443,7 @@ function solidBuildCards() {
     b.addEventListener('click', function () {
       solidSelected = s.key;
       solidRender();
+      markTried('solids');
     });
     box.appendChild(b);
     solidCardBtns[s.key] = b;
@@ -2430,6 +2565,7 @@ function tangBuildPieces() {
       tangAngles[p.key] = (tangAngles[p.key] + 45) % 360;
       tangSelected = p.key;
       tangRender();
+      markTried('tangram');
     });
     poly.addEventListener('keydown', function (e) {
       if (e.key === 'Enter' || e.key === ' ') {
@@ -2578,6 +2714,7 @@ function sortPlace(item) {
   item.placed = true;
   document.getElementById(sortTrayIdFor(item)).appendChild(item.el);
   sortRender();
+  markTried('sort');
 }
 
 function sortCounts() {
@@ -2721,6 +2858,7 @@ function bundleAddOne() {
   while (bundleLoose >= 10) { bundleLoose -= 10; bundleBundles++; bundled = true; }
   bundleRender();
   bundleNoteSet(bundled ? '10根捆成1捆！现在一共' + bundleTotal() + '根。' : '加了1根，现在一共' + bundleTotal() + '根。');
+  markTried('bundle');
 }
 
 function bundleMinusOne() {
@@ -2785,6 +2923,7 @@ function hundPick(n) {
   else if (hundFirst === null) { hundFirst = n; }
   else if (n !== hundFirst) { hundSecond = n; }
   hundRender();
+  markTried('hundred');
 }
 
 function hundRenderBundles(el, n) {
@@ -2942,6 +3081,7 @@ function placeApply() {
   }
   placeDone = true;
   placeRender();
+  markTried('place');
 }
 
 function placeRender() {
@@ -3071,7 +3211,7 @@ placeSetProblem(0);
         ? '对了，就是' + t.label + '！'
         : '目标是' + t.label + '，再拨一拨。';
   }
-  document.getElementById('clockHourPlus').addEventListener('click', function () { clockHourStep(); clockRender(); });
+  document.getElementById('clockHourPlus').addEventListener('click', function () { clockHourStep(); clockRender(); markTried('clock'); });
   document.getElementById('clockMinPlus').addEventListener('click', function () {
     clockMin += 5;
     if (clockMin >= 60) { clockMin -= 60; clockHourStep(); }
@@ -3149,6 +3289,7 @@ placeSetProblem(0);
   function shopPay(key, value) {
     if (shopItemIdx < 0 || shopBought) return;
     if (shopWallet[key] <= 0) return;
+    markTried('shop');
     shopWallet[key]--;
     shopPaidCoins[key]++;
     shopPaid += value;
@@ -3306,6 +3447,7 @@ placeSetProblem(0);
   }
   function patChoose(o) {
     const p = PATTERNS[patIdx];
+    markTried('pattern');
     const idx = patFilled.length;
     if (idx >= 3) return;
     const val = p.kind === 'number' ? o : o.k;

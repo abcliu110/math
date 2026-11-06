@@ -163,6 +163,9 @@ function click(el) { (el._handlers.click || []).forEach(f => f({ target: el }));
 function clickPD(el) { (pointDetail._handlers.click || []).forEach(f => f({ target: el })); }
 
 // ---------- 1. view isolation (gate) ----------
+// 首次加载不再预选 3 年级：加载完、还没点过任何年级时，9 块年级面板都不该被选中。
+check('no grade pre-selected on first load',
+  [...gradePanels.children].every(el => el.getAttribute('aria-selected') === 'false'));
 check('home: hero + panels visible, modules hidden',
   byId.hero.hidden === false && byId.panels.hidden === false &&
   byId.grades.hidden === true && byId.dimensions.hidden === true &&
@@ -203,7 +206,7 @@ recallAns.hidden = true;
 const recallBtn = makeEl('button'); recallBtn.dataset.recall = '1';
 clickPD(recallBtn);
 check('recall toggle reveals answer', recallAns.hidden === false);
-check('fading: Q2 hint hidden behind button', pointDetail.innerHTML.includes('要提示') && pointDetail.innerHTML.includes('data-hint-t="1" hidden'));
+check('hints: Q1 and Q2 hints both hidden behind buttons', pointDetail.innerHTML.includes('要提示') && pointDetail.innerHTML.includes('data-hint-t="0" hidden') && pointDetail.innerHTML.includes('data-hint-t="1" hidden') && !pointDetail.innerHTML.includes('<p class="hint">提示：'));
 check('qa reveal unhides mark row', pointDetail.querySelector('[data-qa-mark="0"]').hidden === false);
 const row = pointDetail.querySelector('[data-qa-mark="0"]');
 row.dataset.point = '3.7'; row.dataset.qaMark = '0';
@@ -267,7 +270,7 @@ const bCell0 = byId.tfB.children[0];
 click(bCell0);
 check('tenframe: click B cell moves one to fill ten', byId.tfEq.textContent === '9 + 4 = 13');
 check('tenframe note explains 10+3', byId.tfNote.textContent.includes('10 + 3 = 13'));
-check('demo counter counts a played demo', byId.progressCount.textContent === '1 / 4' &&
+check('demo counter counts a played demo', byId.progressCount.textContent === '1 / 17' &&
   JSON.parse(lsData['math-tried-demos-v1'] || '[]').includes('tenframe'));
 sandbox.tfSetProblem('sub', 0);
 check('tenframe sub initial equation', byId.tfEq.textContent === '13 − 5 = ?');
@@ -496,7 +499,7 @@ click(byId.countRowA.children[0]);
 check('count: click a dot counts it', byId.countCount.textContent.includes('数到了第 1 个'));
 click(byId.countCompare);
 check('count: 5 vs 7 -> below has 2 more', byId.countResult.textContent.includes('下面多 2 个'));
-check('G1 demos do not count toward the 4-demo progress', byId.progressCount.textContent === g1ProgBefore && g1ProgBefore.includes('/ 4'));
+check('G1 demos count toward the 17-demo progress', g1ProgBefore === '4 / 17' && byId.progressCount.textContent === '5 / 17');
 click(byId.countAMinus); click(byId.countAMinus);
 check('count: minus twice -> 3', byId.countReadA.textContent === '3 个');
 
@@ -644,6 +647,59 @@ check('DEMO_LABEL covers all 13 new demos',
 // ---------- 8. grade 3 still works ----------
 navGo('grade-3-mix');
 check('grade-3 mix still renders', pointDetail.innerHTML.includes('混着练') && pointDetail.hidden === false);
+
+// ---------- 12. 全站布局改版（2026-11-06 真机审计） ----------
+// CSS：顶栏实底不透光，模式栏不吸顶，演示单列，知识点页窄栏
+check('layout CSS: topbar is solid opaque, no backdrop blur',
+  !cssText.includes('backdrop-filter') && /\.topbar\{[^}]*background:#fff/.test(cssText));
+check('layout CSS: mode bar is not sticky', cssText.includes('.mode-bar{position:static'));
+check('layout CSS: open demo renders single-column full-width',
+  cssText.includes('.demo-grid{display:grid;grid-template-columns:minmax(0,1fr)'));
+check('layout CSS: point page is a narrow centered column',
+  cssText.includes('.point-detail{scroll-margin-top:88px;max-width:760px;margin:0 auto'));
+// index.html：首页 8 块面板分两组，含今天复习入口；函数表有 x=4
+const htmlText = fs.readFileSync(root + '/apps/web/index.html', 'utf8');
+const panelsSec = htmlText.split('id="panels"')[1].split('</section>')[0];
+check('home: 8 panels in two groups incl. 今天复习',
+  (panelsSec.match(/data-nav-key="/g) || []).length === 8 && panelsSec.includes('data-nav-key="today-review"') &&
+  panelsSec.includes('开始学') && panelsSec.includes('工具箱'));
+check('function tables include x=4', htmlText.includes('<td id="y4">') && htmlText.includes('<td id="labY4">'));
+// 今天复习首页入口
+check("viewForKey('today-review') is review", sandbox.viewForKey('today-review') === 'review');
+navGo('today-review');
+check('home today-review renders the due list, not the wrong-book card',
+  pointDetail.innerHTML.includes('今天复习') && byId.grades.hidden === false && byId.review.hidden === true);
+// 知识点页：章节导航 + 上一篇/下一篇
+navGo('point-3.7');
+check('point page: section nav + prev/next pager',
+  pointDetail.innerHTML.includes('point-nav') && pointDetail.innerHTML.includes('point-pager') &&
+  pointDetail.innerHTML.includes('下一篇') && pointDetail.innerHTML.includes('3.12'));
+check('point page: explain-back has one pair of quotes, not two',
+  !pointDetail.innerHTML.includes('““') && pointDetail.innerHTML.includes('讲回来'));
+// 1.1 题目不再漏答案（真实内容文件）
+const g1real = fs.readFileSync(root + '/content/grades/grade-1.js', 'utf8');
+check('content: 1.1 Q1 no longer leaks the answer in the question',
+  !g1real.includes('从3往后数：4、5。'));
+// 维度详情：条目可点 + 年级筛选
+navGo('dim-domain');
+check('dimension detail: topic rows are tappable buttons with a chevron',
+  byId.dimDetail.innerHTML.includes('dim-topic') && byId.dimDetail.innerHTML.includes('›'));
+check('dimension detail: grade filter offers all + 1-6',
+  (byId.dimDetail.innerHTML.match(/data-gfilter="/g) || []).length === 7);
+// 错题本一屏里有今天复习 + 明天回来
+navGo('review');
+check('wrong-book includes today-review and tomorrow sections',
+  byId.reviewCard.innerHTML.includes('今天复习') && byId.reviewCard.innerHTML.includes('明天回来'));
+// 各年级今天复习不再留 #review 区的旧卡片
+navGo('grade-3-review');
+check('per-grade review hides the wrong-book section',
+  byId.review.hidden === true && byId.reviewCard.hidden === true);
+// 我的进度：分年级真数字；到这里 17 个演示都玩过了
+navGo('progress');
+check('progress: per-grade rows with real numbers',
+  byId.progressCard.innerHTML.includes('1 年级') && byId.progressCard.innerHTML.includes('3 年级') &&
+  byId.progressCard.innerHTML.includes('演示') && byId.progressCard.innerHTML.includes('已练'));
+check('progress: all 17 demos tried by now', byId.progressCount.textContent === '17 / 17');
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

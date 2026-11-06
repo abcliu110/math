@@ -72,14 +72,19 @@
   <section class="section wrap" id="panels" aria-label="模块面板">
     <h2>从这里开始</h2>
     <p class="section-sub">点一块面板进一个模块；顶栏的「← 返回」回上一级，面包屑点哪级回哪级。</p>
-    <div class="panels">
-      <button class="panel" type="button" data-nav-key="grades"><span class="panel-icon" aria-hidden="true">1–9</span><b>选年级</b><span class="panel-sub">1–9 年级 · 按学期走</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">9 个年级</span></button>
-      <button class="panel" type="button" data-nav-key="dimensions"><span class="panel-icon" aria-hidden="true">◇</span><b>换维度</b><span class="panel-sub">同一批内容换个分法</span><span class="panel-prog"><i style="width:20%"></i></span><span class="panel-tx">5 个维度</span></button>
-      <button class="panel" type="button" data-nav-key="path"><span class="panel-icon" aria-hidden="true">→</span><b>学习路径</b><span class="panel-sub">动手 → 说一说 → 练 → 测</span><span class="panel-prog"><i style="width:25%"></i></span><span class="panel-tx">每课四步</span></button>
-      <button class="panel" type="button" data-nav-key="demos"><span class="panel-icon" aria-hidden="true">✦</span><b>互动演示</b><span class="panel-sub">分数、天平、函数、十格阵，还有一年级实验都能玩</span><span class="panel-prog"><i id="panelDemoProg" style="width:0%"></i></span><span class="panel-tx" id="panelDemoTx">4 个演示 · 0 已体验</span></button>
-      <button class="panel" type="button" data-nav-key="lab"><span class="panel-icon" aria-hidden="true">🧪</span><b>数学实验室</b><span class="panel-sub">没有题目，随便玩：分数、十格阵、天平、函数</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">4 个自由玩小站 · 不评分</span></button>
-      <button class="panel" type="button" data-nav-key="review"><span class="panel-icon" aria-hidden="true">✎</span><b>错题本</b><span class="panel-sub">错题连当时的图一起存</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">2 条示例</span></button>
-      <button class="panel" type="button" data-nav-key="progress"><span class="panel-icon" aria-hidden="true">●</span><b>我的进度</b><span class="panel-sub">玩过的演示点亮一格</span><span class="panel-prog"><i id="panelProgFill" style="width:0%"></i></span><span class="panel-tx" id="panelProgTx">0 / 4 个演示</span></button>
+    <h3 class="panel-group-label">开始学</h3>
+    <div class="panels four">
+      <button class="panel" type="button" data-nav-key="grades"><span class="panel-icon" aria-hidden="true">1–9</span><b>选年级</b><span class="panel-sub">1–9 年级 · 按学期走</span><span class="panel-tx">9 个年级</span></button>
+      <button class="panel" type="button" data-nav-key="dimensions"><span class="panel-icon" aria-hidden="true">◇</span><b>换维度</b><span class="panel-sub">同一批内容换个分法</span><span class="panel-tx">5 个维度</span></button>
+      <button class="panel" type="button" data-nav-key="path"><span class="panel-icon" aria-hidden="true">→</span><b>学习路径</b><span class="panel-sub">动手 → 说一说 → 练 → 测</span><span class="panel-tx">每课四步</span></button>
+      <button class="panel" type="button" data-nav-key="today-review"><span class="panel-icon" aria-hidden="true">↻</span><b>今天复习</b><span class="panel-sub">到期的题回来练，错了明天再来</span><span class="panel-tx" id="todayReviewTx">今天没有到期的</span></button>
+    </div>
+    <h3 class="panel-group-label">工具箱</h3>
+    <div class="panels four">
+      <button class="panel" type="button" data-nav-key="demos"><span class="panel-icon" aria-hidden="true">✦</span><b>互动演示</b><span class="panel-sub">分数、天平、函数、十格阵，还有一年级实验都能玩</span><span class="panel-prog"><i id="panelDemoProg" style="width:0%"></i></span><span class="panel-tx" id="panelDemoTx">17 个演示 · 0 已体验</span></button>
+      <button class="panel" type="button" data-nav-key="lab"><span class="panel-icon" aria-hidden="true">🧪</span><b>数学实验室</b><span class="panel-sub">没有题目，随便玩：分数、十格阵、天平、函数</span><span class="panel-tx">4 个自由玩小站 · 不评分</span></button>
+      <button class="panel" type="button" data-nav-key="review"><span class="panel-icon" aria-hidden="true">✎</span><b>错题本</b><span class="panel-sub">错题连当时的图一起存</span><span class="panel-tx">还没有错题</span></button>
+      <button class="panel" type="button" data-nav-key="progress"><span class="panel-icon" aria-hidden="true">●</span><b>我的进度</b><span class="panel-sub">玩过的演示点亮一格</span><span class="panel-prog"><i id="panelProgFill" style="width:0%"></i></span><span class="panel-tx" id="panelProgTx">0 / 17 个演示</span></button>
     </div>
   </section>
 
@@ -248,8 +253,8 @@
         <p class="func-eq">y = <span id="funcK">2</span>x + <span id="funcB">8</span>　·　x = 公里，y = 总价（元）</p>
         <canvas id="funcCanvas" width="640" height="360" aria-label="一次函数图像"></canvas>
         <table class="func-table" id="funcTable">
-          <thead><tr><th>x（公里）</th><th>0</th><th>1</th><th>2</th><th>3</th><th>5</th></tr></thead>
-          <tbody><tr><th>y（元）</th><td id="y0"></td><td id="y1"></td><td id="y2"></td><td id="y3"></td><td id="y5"></td></tr></tbody>
+          <thead><tr><th>x（公里）</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr></thead>
+          <tbody><tr><th>y（元）</th><td id="y0"></td><td id="y1"></td><td id="y2"></td><td id="y3"></td><td id="y4"></td><td id="y5"></td></tr></tbody>
         </table>
         <div class="btn-row"><button class="btn small ghost" id="funcChallengeBtn" type="button">挑战一下</button></div>
         <div class="challenge-box" id="funcChallengeBox" hidden>
@@ -657,8 +662,8 @@
         <p class="func-eq">y = <span id="labFuncK">2</span>x + <span id="labFuncB">8</span></p>
         <canvas id="labFuncCanvas" width="640" height="360" aria-label="一次函数图像"></canvas>
         <table class="func-table">
-          <thead><tr><th>x</th><th>0</th><th>1</th><th>2</th><th>3</th><th>5</th></tr></thead>
-          <tbody><tr><th>y</th><td id="labY0"></td><td id="labY1"></td><td id="labY2"></td><td id="labY3"></td><td id="labY5"></td></tr></tbody>
+          <thead><tr><th>x</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr></thead>
+          <tbody><tr><th>y</th><td id="labY0"></td><td id="labY1"></td><td id="labY2"></td><td id="labY3"></td><td id="labY4"></td><td id="labY5"></td></tr></tbody>
         </table>
         <p class="hint">试试：把 k 调成负数，直线往哪边倒？把 b 调到 0，直线从哪里出发？</p>
       </article>
