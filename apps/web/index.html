@@ -3170,8 +3170,165 @@
        没有题目、没有对错、不评分——四个小站都复用已有演示的组件和画法，
        只是去掉了固定题目：随便摆、随便拖，看图会发生什么。 -->
   <section id="lab" class="section wrap">
-    <h2>数学实验室 · 自由玩</h2>
-    <p class="section-sub">没有题目，没有对错，也不评分。四个小站随便玩：分数随便切，十格阵随便放，天平随便压，函数随便拖——图会立刻告诉你发生了什么。</p>
+    <h2>数学实验室 · 一间工作间</h2>
+    <p class="section-sub">一间工作间，不是四个小房间。先选一个“如果……会怎样？”的问题，带着它去工作间里摆弄：数字、分数块、十格阵、天平、数轴、函数图都在一张桌子上，可以互相组合。做错了也没关系——图会立刻告诉你为什么不对。</p>
+    <div class="lab-mode-row">
+      <span>模式：</span>
+      <div class="seg" id="labModeSeg">
+        <button class="btn small primary" id="labModeFree" type="button" aria-pressed="true">自由玩</button>
+        <button class="btn small ghost" id="labModeChallenge" type="button" aria-pressed="false">挑战模式</button>
+      </div>
+      <span id="labModeTx">自由玩：随便试，提示都在。</span>
+    </div>
+    <h3>先选一个问题</h3>
+    <p class="muted">每个问题都是一次实验：先猜，再动手，最后说出你发现了什么。标了“用到”的知识点，是这个问题背后真正用到的数学。</p>
+    <div class="lab-questions" id="labQuestions">
+      <div class="lab-q">
+        <p><b>13 有几种凑法？</b>9+4 有几种凑法？先猜一个数，再在十格阵里找齐所有凑法。</p>
+        <p class="muted">用到：1.6 6–10的认识、连加连减 · 1.9 20以内进位加法、凑十法 · 1.11 20以内退位减法、破十法</p>
+        <div class="btn-row"><button class="btn small primary" id="labQ-thirteen" type="button">去做这个实验</button></div>
+      </div>
+      <div class="lab-q">
+        <p><b>24 点：这 4 个数能拼出 24 吗？</b>给你 4 个数和加减乘除，能拼出 24 吗？先猜，再拼——拼法不止一种。</p>
+        <p class="muted">用到：4.9 四则运算</p>
+        <div class="btn-row"><button class="btn small primary" id="labQ-twentyfour" type="button">去做这个实验</button></div>
+      </div>
+      <div class="lab-q">
+        <p><b>换一扇门，赢的可能真的会变吗？</b>三扇门后一辆车两只羊。你选了一扇，主持人打开一扇羊门——换，还是不换？先猜，再玩 100 次看看。</p>
+        <p class="muted">用到：9.9 随机事件与概率</p>
+        <div class="btn-row"><button class="btn small primary" id="labQ-monty" type="button">去做这个实验</button></div>
+      </div>
+      <div class="lab-q">
+        <p><b>周长一定，怎样围面积最大？</b>一根 20 厘米的绳子围长方形，长和宽随便调。先猜哪种围法面积最大，再一张表记下来找规律。</p>
+        <p class="muted">用到：3.12 面积</p>
+        <div class="btn-row"><button class="btn small primary" id="labQ-maxarea" type="button">去做这个实验</button></div>
+      </div>
+      <div class="lab-q">
+        <p><b>动 1 根火柴，等式就成立？</b>6+4=4 是错的。只动 1 根火柴，能把它变成对的吗？不止一种动法。</p>
+        <p class="muted">用到：4.9 四则运算</p>
+        <div class="btn-row"><button class="btn small primary" id="labQ-matches" type="button">去做这个实验</button></div>
+      </div>
+      <div class="lab-q">
+        <p><b>把纸带剪开，会变成几个圈？</b>纸带拧一下粘成圈，从中间剪开——先猜：1 个圈、2 个圈，还是一个结？剪了再看。</p>
+        <p class="muted">用到：6.5 圆（莫比乌斯带本身是拓扑，1–9 年级没有对应的知识点，圆是离得最近的）</p>
+        <div class="btn-row"><button class="btn small primary" id="labQ-mobius" type="button">去做这个实验</button></div>
+      </div>
+      <div class="lab-q">
+        <p><b>开店一周，能赚多少？</b>进价 8 元，卖价和进货量你定，顾客多少看天。先猜一周能赚多少，再开一周看看。</p>
+        <p class="muted">用到：6.6 百分数（一）</p>
+        <div class="btn-row"><button class="btn small primary" id="labQ-shopweek" type="button">去做这个实验</button></div>
+      </div>
+      <div class="lab-q">
+        <p><b>怎样分骰子的点数，游戏才公平？</b>把 2–12 分给甲和乙，怎么分才公平？先猜，再模拟 100 次验证。</p>
+        <p class="muted">用到：5.4 可能性</p>
+        <div class="btn-row"><button class="btn small primary" id="labQ-fairgame" type="button">去做这个实验</button></div>
+      </div>
+      <div class="lab-q">
+        <p><b>你能造一个规律，考住别人吗？</b>排几个图形当一个单元，第 10 个、第 20 个是什么？造好之后，出一道题考考别人。</p>
+        <p class="muted">用到：1.16 找规律</p>
+        <div class="btn-row"><button class="btn small primary" id="labQ-makerule" type="button">去做这个实验</button></div>
+      </div>
+      <div class="lab-q">
+        <p><b>分母不一样，分数能直接加吗？1/2 + 1/3 到底是多少？</b>先猜一个答案，再到下面的分数加法台拼一拼：错拼为什么拼不上？</p>
+        <p class="muted">用到：5.11 分数的加法和减法</p>
+        <div class="btn-row"><button class="btn small primary" id="labQ-fracadd" type="button">去做这个实验</button></div>
+      </div>
+      <div class="lab-q">
+        <p><b>天平一边放 1/2，另一边要放多少才平？</b>先猜，再到下面的天平组合台试：整数砝码一次加 1，凑得出 1/2 吗？</p>
+        <p class="muted">用到：5.5 简易方程</p>
+        <div class="btn-row"><button class="btn small primary" id="labQ-balfrac" type="button">去做这个实验</button></div>
+      </div>
+      <div class="lab-q">
+        <p><b>十格阵里的 7 个，放在这条 0 到 2 的数轴上是哪里？再加 5 呢？</b>先猜：放得下吗？再把 7 从托盘送到数轴上看看。</p>
+        <p class="muted">用到：1.9 20以内进位加法、凑十法</p>
+        <div class="btn-row"><button class="btn small primary" id="labQ-numline" type="button">去做这个实验</button></div>
+      </div>
+      <div class="lab-q">
+        <p><b>k 变成负数，直线往哪倒？b 变成 0 呢？</b>先猜，再去函数站拖一拖 k 和 b，看直线和表格怎么变。</p>
+        <p class="muted">用到：8.15 一次函数</p>
+        <div class="btn-row"><button class="btn small primary" id="labQ-funcline" type="button">去做这个实验</button></div>
+      </div>
+    </div>
+    <h3>工作间</h3>
+    <p class="muted">托盘是这张桌子的共用零件盒：四个小站做出来的数和分数可以先放到托盘里，再送到下面的组合台上用。托盘最多放 3 个。</p>
+    <div class="lab-workbench" id="labWorkbench">
+      <p><b>托盘</b> <span class="muted">（点一个数块下面的“加 / 平 / 线”，把它送到对应的组合台）</span></p>
+      <div class="lab-tray" id="labTray"></div>
+      <p id="labTrayMsg">托盘是空的。去下面的四个小站玩一玩，点“放到托盘”，就能把数带上来。</p>
+      <p id="labCurrentQ">当前问题：还没选。先在上面选一个问题，再动手。</p>
+      <article class="demo-card" id="lab-fracadd">
+        <p class="demo-tag">组合台 · 5 年级 · 分数加法</p>
+        <h3>分数加法台：分母不一样，能直接加吗？</h3>
+        <p>先猜：1/2 + 1/3 等于多少？再按“拼一拼”，看两种拼法哪一种拼得上。</p>
+        <div class="control-row"><span>第一个分数</span>
+          <div class="btn-row"><button class="btn small ghost" id="labFaANMinus" type="button">分子 −1</button><b id="labFaAN">1</b><button class="btn small ghost" id="labFaANPlus" type="button">分子 +1</button><span>分母</span><b id="labFaAD">2</b><button class="btn small ghost" id="labFaADMinus" type="button">分母 −1</button><button class="btn small ghost" id="labFaADPlus" type="button">分母 +1</button></div>
+        </div>
+        <div class="control-row"><span>第二个分数</span>
+          <div class="btn-row"><button class="btn small ghost" id="labFaBNMinus" type="button">分子 −1</button><b id="labFaBN">1</b><button class="btn small ghost" id="labFaBNPlus" type="button">分子 +1</button><span>分母</span><b id="labFaBD">3</b><button class="btn small ghost" id="labFaBDMinus" type="button">分母 −1</button><button class="btn small ghost" id="labFaBDPlus" type="button">分母 +1</button></div>
+        </div>
+        <div class="btn-row"><button class="btn small primary" id="labFaAdd" type="button">拼一拼</button></div>
+        <div class="lab-bars" id="labFracBars">
+          <div class="lab-bar-row"><span>错拼（分子加分子、分母加分母）</span><div class="lab-bar-track"><div class="lab-bar naive" id="labFracNaiveBar"></div><div class="lab-bar-one" id="labFracOneMarkA"></div></div></div>
+          <div class="lab-bar-row"><span>正确（先切成一样大再加）</span><div class="lab-bar-track"><div class="lab-bar correct" id="labFracCorrectBar"></div><div class="lab-bar-one" id="labFracOneMarkB"></div></div></div>
+        </div>
+        <p id="labFracAddOut">还没拼。先调两个分数，再点“拼一拼”。</p>
+      </article>
+      <article class="demo-card" id="lab-balance2">
+        <p class="demo-tag">组合台 · 5 年级 · 方程</p>
+        <h3>天平组合台：分数砝码和整数砝码一起上</h3>
+        <p>先选放到哪个盘，再点砝码往上加。分数砝码一次加 1/2、1/3、1/4 或 1/6；整数砝码一次加 1。</p>
+        <div class="control-row"><span>放到：</span>
+          <div class="seg" id="labWbPanSeg">
+            <button class="btn small primary" id="labWbPanL" type="button" aria-pressed="true">左盘</button>
+            <button class="btn small ghost" id="labWbPanR" type="button" aria-pressed="false">右盘</button>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn small primary" id="labWbF2" type="button">+ 1/2</button>
+          <button class="btn small primary" id="labWbF3" type="button">+ 1/3</button>
+          <button class="btn small primary" id="labWbF4" type="button">+ 1/4</button>
+          <button class="btn small primary" id="labWbF6" type="button">+ 1/6</button>
+          <button class="btn small ghost" id="labWbIntPlus" type="button">整数 +1</button>
+          <button class="btn small ghost" id="labWbIntMinus" type="button">整数 −1</button>
+          <button class="btn small ghost" id="labWbClear" type="button">清空两边</button>
+        </div>
+        <div class="balance-visual">
+          <svg id="labWbSvg" viewBox="0 0 320 190" role="img" aria-label="组合天平">
+            <line x1="20" y1="170" x2="300" y2="170" stroke="#94a3b8" stroke-width="4"/>
+            <line x1="160" y1="170" x2="160" y2="70" stroke="#334155" stroke-width="5"/>
+            <g id="labWbBeam">
+              <line x1="50" y1="70" x2="270" y2="70" stroke="#334155" stroke-width="5" stroke-linecap="round"/>
+              <g id="labWbLeftPan"><line x1="60" y1="70" x2="60" y2="105" stroke="#64748b" stroke-width="3"/><path d="M30 105 Q60 135 90 105 Z" fill="#e2e8f0" stroke="#64748b" stroke-width="2"/><g id="labWbLeftWeights"></g></g>
+              <g id="labWbRightPan"><line x1="260" y1="70" x2="260" y2="105" stroke="#64748b" stroke-width="3"/><path d="M230 105 Q260 135 290 105 Z" fill="#e2e8f0" stroke="#64748b" stroke-width="2"/><g id="labWbRightWeights"></g></g>
+            </g>
+          </svg>
+          <p class="balance-eq" id="labWbEq">左 0 ＝ 右 0</p>
+          <p id="labWbList">左盘：空　右盘：空</p>
+          <p id="labWbMsg">两边都是空的，天平平着。先往一边放点砝码。</p>
+        </div>
+      </article>
+      <article class="demo-card" id="lab-numline">
+        <p class="demo-tag">组合台 · 1–5 年级 · 数轴</p>
+        <h3>数轴组合台：托盘里的数，落在数轴哪里？</h3>
+        <p>把托盘里的数块点“线”送到这里。两个点之间有多远，就是减法。数轴只到 2——太大的数放不下。</p>
+        <svg id="labLineSvg" viewBox="0 0 320 90" class="number-line" role="img" aria-label="组合数轴"></svg>
+        <p id="labLineMsg">数轴上还没有点。点托盘里的数块下面的“线”，把它放到数轴上（0 到 2 之间才放得下）。</p>
+        <div class="btn-row"><button class="btn small ghost" id="labLineClear" type="button">拿掉所有点</button></div>
+      </article>
+    </div>
+    <div id="labChallengeBox" hidden>
+      <h3>挑战交卷</h3>
+      <p class="muted">挑战模式里做过的问题都在这里。给每一道打个分（答对 / 答错），再点“提交报告”——答错的会进今天复习。</p>
+      <div class="btn-row"><button class="btn small primary" id="labChallengeSubmit" type="button">交卷</button></div>
+      <div id="labChallengeReport"></div>
+    </div>
+    <div class="lab-traces">
+      <h3>实验记录</h3>
+      <p class="muted">这节课试过的方法和错过的地方都在这里（只记在本机，不上传）。错题本身会进错题本。</p>
+      <ul id="labTraceList"></ul>
+      <div class="btn-row"><button class="btn small ghost" id="labTraceClear" type="button">清空记录</button></div>
+    </div>
+    <h3>四个工具小站</h3>
     <div class="lab-grid">
       <!-- 分数自由玩：复用分数演示的切饼 + 数轴画法，没有目标分数 -->
       <article class="demo-card" id="lab-fraction">
@@ -3195,7 +3352,7 @@
           <text x="292" y="60" font-size="13" fill="#64748b">1</text>
         </svg>
         <p class="hint">试试：切成 8 份只取 1 份，它在数轴上的哪里？切成 6 份取 3 份，和切成 2 份取 1 份是一回事吗？</p>
-        <div class="btn-row"><button class="btn small ghost" id="labFracReset" type="button">重置</button></div>
+        <div class="btn-row"><button class="btn small ghost" id="labFracReset" type="button">重置</button><button class="btn small primary" id="labFracToTray" type="button">把这个分数放到托盘</button></div>
       </article>
 
       <!-- 十格阵自由玩：复用十格阵的格子样式，没有 9+4 这类题目 -->
@@ -3209,7 +3366,7 @@
         </div>
         <p class="func-eq" id="labTfEq">0 + 0 = 0</p>
         <p id="labTfNote">试试：两边都放满 10 个，是多少？只放一边 10 个、另一边 0 个呢？</p>
-        <div class="btn-row"><button class="btn small ghost" id="labTfReset" type="button">清空</button></div>
+        <div class="btn-row"><button class="btn small ghost" id="labTfReset" type="button">清空</button><button class="btn small primary" id="labTfToTray" type="button">把个数放到托盘</button></div>
       </article>
 
       <!-- 天平自由玩：复用天平演示的横梁 SVG，没有 3x+5=20 这类目标方程 -->
@@ -3236,6 +3393,7 @@
           <button class="btn small primary" id="labBalAddR" type="button">右边 +1</button>
           <button class="btn small ghost" id="labBalSubR" type="button">右边 −1</button>
           <button class="btn small ghost" id="labBalReset" type="button">清空</button>
+          <button class="btn small primary" id="labBalToTray" type="button">把左边的数放到托盘</button>
         </div>
         <p class="hint">试试把天平弄歪，再想办法把它弄平——要加几个、拿几个？</p>
       </article>
@@ -3254,9 +3412,9 @@
           <tbody><tr><th>y</th><td id="labY0"></td><td id="labY1"></td><td id="labY2"></td><td id="labY3"></td><td id="labY4"></td><td id="labY5"></td></tr></tbody>
         </table>
         <p class="hint">试试：把 k 调成负数，直线往哪边倒？把 b 调到 0，直线从哪里出发？</p>
+        <div class="btn-row"><button class="btn small primary" id="labFuncToTray" type="button">把 y（当 x=2）放到托盘</button></div>
       </article>
     </div>
-  </section>
 
   <!-- Why, not just how -->
   <section id="why" class="section wrap">

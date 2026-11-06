@@ -3371,5 +3371,128 @@ const triedAtEnd = JSON.parse(lsData['math-tried-demos-v1'] || '[]');
 check('creative: all 8 creative demos are in the tried list',
   CREATIVE.every(k => triedAtEnd.includes(k)) && triedAtEnd.length === triedAtStart.length + 9);
 
+// ---------- 12. 数学实验室 · 一间工作间（第二阶段） ----------
+// 改前没有 labSetMode / 托盘 / 组合台 / 问题入口，相关函数不存在、按钮没有绑定——
+// 每个检查都先确认函数存在（不存在就只记一条失败，不让整轮崩掉），再断言行为。
+check('lab2: mode toggle + workbench functions exist',
+  typeof sandbox.labSetMode === 'function' && typeof sandbox.labTrayAdd === 'function' &&
+  typeof sandbox.labFracAdd === 'function' && typeof sandbox.labEnterQuestion === 'function' &&
+  typeof sandbox.labSubmitChallenge === 'function');
+if (typeof sandbox.labSetMode === 'function') {
+  // 模式切换：挑战模式给 #lab 加 lab-challenge（提示藏起来），交卷盒出现；切回自由玩还原。
+  sandbox.labSetMode('challenge');
+  check('lab2: challenge mode adds the class and shows the submit box',
+    byId.lab.classList.contains('lab-challenge') && byId.labChallengeBox.hidden === false &&
+    byId.labModeTx.textContent.includes('挑战模式'));
+  sandbox.labSetMode('free');
+  check('lab2: back to free mode removes the class and hides the submit box',
+    !byId.lab.classList.contains('lab-challenge') && byId.labChallengeBox.hidden === true);
+  // 交卷空报告：挑战模式里一道题都没做过。
+  sandbox.labSetMode('challenge');
+  sandbox.labSubmitChallenge();
+  check('lab2: empty challenge report says no attempts yet',
+    byId.labChallengeReport.innerHTML.includes('还没在挑战模式里做过题'));
+  // 分数加法台：默认 1/2+1/3，错拼 2/5、正确 5/6，错拼的条比正确的短。
+  click(byId.labFaAdd);
+  check('lab2: fraction bench shows naive 2/5 vs correct 5/6 and the gap',
+    byId.labFracAddOut.textContent.includes('2/5') && byId.labFracAddOut.textContent.includes('5/6') &&
+    byId.labFracAddOut.textContent.includes('少了') &&
+    parseFloat(byId.labFracNaiveBar.style.width) < parseFloat(byId.labFracCorrectBar.style.width));
+  // 和超过 1：3/4+2/3=17/12，正确的条越过 1 的刻度线。
+  sandbox.labFaSet('A', 2, 2); sandbox.labFaSet('B', 1, 0);
+  click(byId.labFaAdd);
+  check('lab2: fraction bench overflow past 1 (3/4+2/3=17/12)',
+    byId.labFracAddOut.textContent.includes('17/12') && byId.labFracAddOut.textContent.includes('5/7') &&
+    parseFloat(byId.labFracCorrectBar.style.width) > parseFloat(byId.labFracOneMarkA.style.left));
+  sandbox.labFaA = { n: 1, d: 2 }; sandbox.labFaB = { n: 1, d: 3 };
+  sandbox.labFaTouched = { A: false, B: false }; sandbox.labFaRender();
+  // 天平组合台：左盘 1/2，右边空——差 1/2，整数砝码凑不出；右盘再加 1/2 就平了。
+  click(byId.labWbF2);
+  check('lab2: balance bench names the 1/2 gap and says integers cannot make it',
+    byId.labWbEq.textContent.includes('1/2') && byId.labWbMsg.textContent.includes('重 1/2') &&
+    byId.labWbMsg.textContent.includes('凑不出 1/2') &&
+    byId.labWbMsg.textContent.includes('分数砝码'));
+  click(byId.labWbPanR); click(byId.labWbF2);
+  check('lab2: balance bench balances when both pans are 1/2',
+    byId.labWbMsg.textContent.includes('平了'));
+  click(byId.labWbIntPlus);
+  check('lab2: balance bench tilts by an integer difference',
+    byId.labWbMsg.textContent.includes('右边重 1'));
+  click(byId.labWbClear);
+  check('lab2: balance bench clears both pans',
+    byId.labWbEq.textContent.includes('左 0') && byId.labWbEq.textContent.includes('右 0'));
+  // 托盘 + 数轴：1/2 上数轴，再放 1，两点差 1/2；7 放不下，留在托盘里；托盘最多 3 个。
+  sandbox.labTrayAdd({ kind: 'frac', n: 1, d: 2, src: 'test' });
+  check('lab2: tray holds a fraction chip',
+    sandbox.labTray.length === 1 && byId.labTray.children.length === 1 &&
+    byId.labTray.children[0].textContent.includes('1/2'));
+  sandbox.labTraySend(0, 'line');
+  check('lab2: tray chip lands on the number line',
+    sandbox.labLinePts.length === 1 && sandbox.labTray.length === 0 &&
+    byId.labLineMsg.textContent.includes('1/2'));
+  sandbox.labTrayAdd({ kind: 'num', v: 1, src: 'test' });
+  sandbox.labTraySend(0, 'line');
+  check('lab2: two points on the line show their distance 1/2',
+    sandbox.labLinePts.length === 2 && byId.labLineMsg.textContent.includes('差 1/2'));
+  sandbox.labTrayAdd({ kind: 'num', v: 7, src: 'test' });
+  sandbox.labTraySend(0, 'line');
+  check('lab2: 7 does not fit on the 0-2 line and stays in the tray',
+    sandbox.labLinePts.length === 2 && sandbox.labTray.length === 1 &&
+    byId.labLineMsg.textContent.includes('放不下'));
+  sandbox.labTrayAdd({ kind: 'frac', n: 1, d: 3, src: 'test' });
+  sandbox.labTrayAdd({ kind: 'num', v: 2, src: 'test' });
+  check('lab2: tray caps at 3, the 4th value is refused',
+    sandbox.labTray.length === 3 &&
+    sandbox.labTrayAdd({ kind: 'frac', n: 1, d: 4, src: 'test' }) === false &&
+    byId.labTrayMsg.textContent.includes('托盘满了'));
+  sandbox.labTray = []; sandbox.labTrayRender();
+  sandbox.labLinePts = []; sandbox.labLineRender();
+  // 小站往托盘送数：十格阵放 7 个点，点“放到托盘”，托盘里就是 7。
+  for (let i = 0; i < 7; i++) sandbox.labTfToggle('A', i);
+  click(byId.labTfToTray);
+  check('lab2: ten-frame station sends its total 7 to the tray',
+    sandbox.labTray.length === 1 && sandbox.labTray[0].v === 7);
+  sandbox.labTray = []; sandbox.labTrayRender();
+  for (let i = 0; i < 7; i++) sandbox.labTfToggle('A', i);
+  // 挑战交卷：先进两道工作间问题（分数加法 + 天平），自由玩里进问题不记；打分交卷后，
+  // 答错的 5.11 进复习库，报告点名 5.11；5.5 答对了，不在丢分报告里。
+  const chReviewBefore = lsData['math-review-v1'];
+  click(byId['labQ-fracadd']);
+  click(byId['labQ-balfrac']);
+  check('lab2: entering workbench questions in challenge mode records attempts',
+    sandbox.labChallengeAttempts.includes('q-fracadd') && sandbox.labChallengeAttempts.includes('q-balfrac') &&
+    byId.labCurrentQ.textContent.includes('天平一边放 1/2') &&
+    sandbox.labWbL.length === 1 && sandbox.labWbL[0].n === 1 && sandbox.labWbL[0].d === 2);
+  sandbox.labSetMode('free');
+  click(byId['labQ-numline']);
+  check('lab2: entering a question in free mode records no attempt',
+    sandbox.labChallengeAttempts.length === 2);
+  sandbox.labSetMode('challenge');
+  sandbox.labSubmitChallenge();
+  check('lab2: challenge report lists the attempted questions',
+    byId.labChallengeReport.innerHTML.includes('5.11') && byId.labChallengeReport.innerHTML.includes('5.5'));
+  sandbox.labChallengeMark('q-fracadd', false);
+  sandbox.labChallengeMark('q-balfrac', true);
+  sandbox.labFinishChallenge();
+  const chStored = JSON.parse(lsData['math-review-v1'] || '{}');
+  check('lab2: challenge report names the lost point and files the miss',
+    byId.labChallengeDone.textContent.includes('丢分报告') &&
+    byId.labChallengeDone.textContent.includes('5.11') &&
+    !byId.labChallengeDone.textContent.includes('5.5') &&
+    chStored['5.11'] && chStored['5.11'].correct === false);
+  lsData['math-review-v1'] = chReviewBefore;
+  sandbox.syncReviewFromStorage();
+  sandbox.labChallengeAttempts = []; sandbox.labChallengeMarks = {};
+  sandbox.labSetMode('free');
+  sandbox.labWbL = []; sandbox.labWbR = []; sandbox.labWbRender();
+  // 实验记录：记一条，再点“清空记录”，记录就没了（改前没有清空按钮）。
+  sandbox.labTrace('测试记录：1/2+1/3', true);
+  check('lab2: trace list shows a logged attempt',
+    byId.labTraceList.innerHTML.includes('测试记录'));
+  click(byId.labTraceClear);
+  check('lab2: clear-trace button empties the trace list',
+    !byId.labTraceList.innerHTML.includes('测试记录'));
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

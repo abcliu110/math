@@ -837,3 +837,26 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
 .find-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
 .find-row label{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .demo-card input[type=text]{min-height:48px;border:2px solid var(--line);border-radius:10px;padding:8px 12px;font-size:15px;font-family:inherit;max-width:100%}
+
+/* ---------- 数学实验室 · 一间工作间（第二阶段） ---------- */
+.lab-mode-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}
+.lab-questions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
+.lab-q{border:2px solid var(--line);border-radius:14px;padding:12px 14px;background:#fff}
+.lab-q p{margin:6px 0}
+.lab-workbench{margin:12px 0}
+.lab-tray{display:flex;gap:8px;flex-wrap:wrap;min-height:56px;border:2px dashed var(--line);border-radius:12px;padding:10px;align-items:center;background:#f8fafc}
+.lab-chip{display:inline-flex;gap:6px;align-items:center;border:2px solid #2563eb;border-radius:999px;padding:6px 8px;background:#eff6ff;font-weight:700;font-size:15px}
+.lab-chip .btn{min-height:36px;padding:4px 10px}
+.lab-bars{margin:12px 0}
+.lab-bar-row{margin:8px 0}
+.lab-bar-row>span{font-size:13px;color:var(--muted)}
+.lab-bar-track{position:relative;height:20px;background:#e2e8f0;border-radius:999px;margin-top:4px}
+.lab-bar{position:absolute;left:0;top:0;height:100%;border-radius:999px;width:0}
+.lab-bar.naive{background:#f87171}
+.lab-bar.correct{background:#22c55e}
+.lab-bar-one{position:absolute;top:-3px;bottom:-3px;width:3px;background:#334155;left:80%}
+.lab-traces ul{margin:8px 0;padding-left:20px}
+.lab-traces li{margin:4px 0}
+/* 挑战模式：提示藏起来，学生自己想 */
+#lab.lab-challenge .hint,#lab.lab-challenge .lab-hint{display:none}
+@media (max-width:1024px){.lab-questions{grid-template-columns:1fr}}

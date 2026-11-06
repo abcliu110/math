@@ -2989,6 +2989,423 @@ document.getElementById('labFuncKRange').addEventListener('input', drawLabFunc);
 document.getElementById('labFuncBRange').addEventListener('input', drawLabFunc);
 drawLabFunc();
 
+/* ================= 数学实验室 · 一间工作间（第二阶段） =================
+   一张桌子：托盘（共用零件盒）+ 3 个组合台（分数加法 / 天平 / 数轴）
+   + 13 个问题入口（9 个创意实验 + 4 个工作间问题）+ 自由玩/挑战两种模式 + 实验记录。
+   技术只用三件小东西（按“数学应该更简单”的要求）：
+   (1) 数字引擎——分数全按 [分子, 分母] 对算，绝不用 0.333 这类浮点近似；
+   (2) 几何引擎——SVG 按坐标画（天平横梁旋转、数轴落点都是坐标算出来的）；
+   (3) 规则引擎——放不下的数放不下（数轴只到 2、托盘最多 3 个、负数不能上天平），
+   规则是撞出来的，不是念出来的。四个小站原样保留，只是多了“放到托盘”的口子。 */
+
+/* ---------- 小值：分数按 [n, d] 对算，整数就是分母为 1 的分数 ---------- */
+function labFracReduce(n, d) { const g = gcd(Math.abs(n), d); return { n: n / g, d: d / g }; }
+function labFracStr(n, d) { const r = labFracReduce(n, d); return r.d === 1 ? String(r.n) : r.n + '/' + r.d; }
+function labFracAddF(a, b) {
+  const l = a.d * b.d / gcd(a.d, b.d);
+  return labFracReduce(a.n * (l / a.d) + b.n * (l / b.d), l);
+}
+function labValFrac(v) { return v.kind === 'frac' ? labFracReduce(v.n, v.d) : { n: v.v, d: 1 }; }
+function labValNum(v) { return v.kind === 'frac' ? v.n / v.d : v.v; }
+function labValLabel(v) { return v.kind === 'frac' ? labFracStr(v.n, v.d) : String(v.v); }
+
+/* ---------- 托盘：最多 3 个值，四个小站往里放，组合台往外拿 ---------- */
+var labTray = []; // {kind:'frac', n, d, src} 或 {kind:'num', v, src}
+function labTrayRender() {
+  const box = document.getElementById('labTray');
+  clearChildren(box);
+  labTray.forEach((v, i) => {
+    const chip = document.createElement('span');
+    chip.className = 'lab-chip';
+    chip.textContent = labValLabel(v) + ' ';
+    [['加', 'frac', '加法台'], ['平', 'bal', '天平'], ['线', 'line', '数轴']].forEach(([t, bench, name]) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'btn small ghost'; b.textContent = t;
+      b.setAttribute('aria-label', '把 ' + labValLabel(v) + ' 送到' + name);
+      b.addEventListener('click', () => labTraySend(i, bench));
+      chip.appendChild(b);
+    });
+    const x = document.createElement('button');
+    x.type = 'button'; x.className = 'btn small ghost'; x.textContent = '×';
+    x.setAttribute('aria-label', '拿掉 ' + labValLabel(v));
+    x.addEventListener('click', () => { labTray.splice(i, 1); labTrayRender(); });
+    chip.appendChild(x);
+    box.appendChild(chip);
+  });
+  document.getElementById('labTrayMsg').textContent = labTray.length
+    ? '托盘里有 ' + labTray.length + ' 个。点“加 / 平 / 线”把它送到对应的组合台。'
+    : '托盘是空的。去下面的四个小站玩一玩，点“放到托盘”，就能把数带上来。';
+}
+function labTrayAdd(v) {
+  if (labTray.length >= 3) {
+    document.getElementById('labTrayMsg').textContent = '托盘满了（最多 3 个），先用掉一个再放。';
+    labTrace('托盘满了，放不下 ' + labValLabel(v), false);
+    return false;
+  }
+  labTray.push(v);
+  labTrayRender();
+  labTrace('放到托盘：' + labValLabel(v) + '（来自' + v.src + '）', true);
+  return true;
+}
+function labTraySend(i, bench) {
+  const v = labTray[i];
+  if (!v) return;
+  if (bench === 'frac') {
+    if (v.kind !== 'frac') {
+      document.getElementById('labTrayMsg').textContent = '只有分数能送到加法台，' + labValLabel(v) + ' 不是分数。';
+      labTrace('加法台不要 ' + labValLabel(v) + '（不是分数）', false);
+      return;
+    }
+    if (!labFaTouched.A) { labFaA = { n: v.n, d: v.d }; labFaTouched.A = true; }
+    else if (!labFaTouched.B) { labFaB = { n: v.n, d: v.d }; labFaTouched.B = true; }
+    else { labFaA = { n: v.n, d: v.d }; labFaTouched.A = true; }
+    labFaRender();
+    labTray.splice(i, 1); labTrayRender();
+    labTrace('把 ' + labValLabel(v) + ' 送到加法台', true);
+  } else if (bench === 'bal') {
+    if (labValNum(v) < 0) {
+      document.getElementById('labTrayMsg').textContent = '负数不能当地平砝码——天平上只放正的数。';
+      labTrace('天平不要负数 ' + labValLabel(v), false);
+      return;
+    }
+    labWbAdd(v, labWbPan);
+    labTray.splice(i, 1); labTrayRender();
+  } else if (bench === 'line') {
+    if (labLinePlace(v)) { labTray.splice(i, 1); labTrayRender(); }
+  }
+}
+/* 四个小站往托盘里送数：分数站送当前分数，十格阵送两边总数，
+   天平站送左边的总数，函数站送 x=2 时的 y（2k+b）。0 不送（什么都没放）。 */
+function labSendFrac() {
+  if (labNumer === 0) { document.getElementById('labTrayMsg').textContent = '分数站现在是 0，送过去也是 0——先取几份再送。'; return; }
+  labTrayAdd({ kind: 'frac', n: labNumer, d: labDenom, src: '分数站' });
+}
+function labSendTf() {
+  const t = labTfA + labTfB;
+  if (t === 0) { document.getElementById('labTrayMsg').textContent = '十格阵现在是 0 个，送过去也是 0——先放几个圆点再送。'; return; }
+  labTrayAdd({ kind: 'num', v: t, src: '十格阵' });
+}
+function labSendBal() {
+  if (labBalL === 0) { document.getElementById('labTrayMsg').textContent = '天平左边现在是 0，送过去也是 0——先往左边加几个砝码再送。'; return; }
+  labTrayAdd({ kind: 'num', v: labBalL, src: '天平站' });
+}
+function labSendFunc() {
+  const k = parseFloat(document.getElementById('labFuncKRange').value);
+  const b = parseFloat(document.getElementById('labFuncBRange').value);
+  labTrayAdd({ kind: 'num', v: 2 * k + b, src: '函数站' });
+}
+document.getElementById('labFracToTray').addEventListener('click', labSendFrac);
+document.getElementById('labTfToTray').addEventListener('click', labSendTf);
+document.getElementById('labBalToTray').addEventListener('click', labSendBal);
+document.getElementById('labFuncToTray').addEventListener('click', labSendFunc);
+
+/* ---------- 分数加法台：错拼（分子加分子）画出来，看它为什么拼不上 ---------- */
+var labFaA = { n: 1, d: 2 }, labFaB = { n: 1, d: 3 };
+var labFaTouched = { A: false, B: false };
+function labFaSet(which, dn, dd) {
+  const f = which === 'A' ? labFaA : labFaB;
+  if (dd) f.d = Math.max(2, Math.min(8, f.d + dd));
+  if (dn) f.n = Math.max(0, Math.min(f.d, f.n + dn));
+  if (f.n > f.d) f.n = f.d;
+  labFaTouched[which] = true;
+  labFaRender();
+}
+function labFaRender() {
+  document.getElementById('labFaAN').textContent = labFaA.n;
+  document.getElementById('labFaAD').textContent = labFaA.d;
+  document.getElementById('labFaBN').textContent = labFaB.n;
+  document.getElementById('labFaBD').textContent = labFaB.d;
+  document.getElementById('labFracNaiveBar').style.width = '0%';
+  document.getElementById('labFracCorrectBar').style.width = '0%';
+  document.getElementById('labFracAddOut').textContent = '还没拼。先调两个分数，再点“拼一拼”。';
+}
+function labFracAdd() {
+  const aL = labFracStr(labFaA.n, labFaA.d), bL = labFracStr(labFaB.n, labFaB.d);
+  const naive = labFracReduce(labFaA.n + labFaB.n, labFaA.d + labFaB.d);
+  const l = labFaA.d * labFaB.d / gcd(labFaA.d, labFaB.d);
+  const aN = labFaA.n * (l / labFaA.d), bN = labFaB.n * (l / labFaB.d);
+  const sum = labFracReduce(aN + bN, l);
+  const naiveL = labFracStr(naive.n, naive.d), sumL = labFracStr(sum.n, sum.d);
+  const gap = labFracReduce(sum.n * naive.d - naive.n * sum.d, sum.d * naive.d);
+  const gapL = labFracStr(gap.n, gap.d);
+  const correctNum = sum.n / sum.d, naiveNum = naive.n / naive.d;
+  const scale = Math.max(1.25, correctNum * 1.05);
+  document.getElementById('labFracNaiveBar').style.width = (naiveNum / scale * 100) + '%';
+  document.getElementById('labFracCorrectBar').style.width = (correctNum / scale * 100) + '%';
+  document.getElementById('labFracOneMarkA').style.left = (1 / scale * 100) + '%';
+  document.getElementById('labFracOneMarkB').style.left = (1 / scale * 100) + '%';
+  let out;
+  if (gap.n === 0) {
+    out = '两个分数都是 0，加起来还是 0。';
+  } else if (labFaA.d === labFaB.d) {
+    out = '按分子加分子、分母加分母拼出来 ' + naiveL + '——分母本来就一样大，不用切：' + aL + ' + ' + bL + ' = ' + sumL + '，这才是对的。错拼比正确少了 ' + gapL + '。';
+  } else {
+    out = '按分子加分子、分母加分母拼出来 ' + naiveL + '——可是 ' + aL + ' 的格子和 ' + bL + ' 的格子大小不一样，拼不到一块，少了 ' + gapL + '。把 ' + aL + ' 切成 ' + labFracStr(aN, l) + '，' + bL + ' 切成 ' + labFracStr(bN, l) + '，' + labFracStr(aN, l) + ' + ' + labFracStr(bN, l) + ' = ' + sumL + '，这才是对的。';
+  }
+  document.getElementById('labFracAddOut').textContent = out;
+  labTrace('分数加法台：' + aL + ' + ' + bL + ' = ' + sumL + '（错拼 ' + naiveL + ' 拼不上）', true);
+}
+[['labFaANMinus', 'A', -1, 0], ['labFaANPlus', 'A', 1, 0], ['labFaADMinus', 'A', 0, -1], ['labFaADPlus', 'A', 0, 1],
+ ['labFaBNMinus', 'B', -1, 0], ['labFaBNPlus', 'B', 1, 0], ['labFaBDMinus', 'B', 0, -1], ['labFaBDPlus', 'B', 0, 1]
+].forEach(([id, w, dn, dd]) => document.getElementById(id).addEventListener('click', () => labFaSet(w, dn, dd)));
+document.getElementById('labFaAdd').addEventListener('click', labFracAdd);
+
+/* ---------- 天平组合台：分数砝码 + 整数砝码，横梁按重量差实时倾斜 ---------- */
+var labWbL = [], labWbR = []; // 每边一串小值 {kind:'frac',n,d} 或 {kind:'num',v}
+var labWbPan = 'L';
+function labWbSum(pan) {
+  let s = { n: 0, d: 1 };
+  (pan === 'L' ? labWbL : labWbR).forEach(v => { s = labFracAddF(s, labValFrac(v)); });
+  return s;
+}
+function labWbWeightsHtml(arr, x0) {
+  let h = '';
+  arr.forEach((v, i) => {
+    const x = x0 + (i % 4) * 14, y = 76 + Math.floor(i / 4) * 14;
+    h += '<rect x="' + x + '" y="' + y + '" width="12" height="12" rx="2" fill="' + (v.kind === 'frac' ? '#ff8a3d' : '#2563eb') + '" data-lab-wb="' + x0 + ':' + i + '" style="cursor:pointer"/>';
+  });
+  return h;
+}
+function labWbListText(arr) {
+  return arr.length ? arr.map(labValLabel).join(' + ') : '空';
+}
+function labWbRender() {
+  const L = labWbSum('L'), R = labWbSum('R');
+  const lNum = L.n / L.d, rNum = R.n / R.d;
+  const tilt = Math.max(-15, Math.min(15, (rNum - lNum) * 3));
+  document.getElementById('labWbBeam').setAttribute('transform', 'rotate(' + tilt + ' 160 70)');
+  document.getElementById('labWbLeftWeights').innerHTML = labWbWeightsHtml(labWbL, 33);
+  document.getElementById('labWbRightWeights').innerHTML = labWbWeightsHtml(labWbR, 233);
+  document.getElementById('labWbEq').textContent = '左 ' + labFracStr(L.n, L.d) + ' ＝ 右 ' + labFracStr(R.n, R.d);
+  document.getElementById('labWbList').textContent = '左盘：' + labWbListText(labWbL) + '　右盘：' + labWbListText(labWbR);
+  let msg;
+  if (L.n * R.d === R.n * L.d) {
+    msg = '平了！左盘和右盘都是 ' + labFracStr(L.n, L.d) + '。';
+  } else {
+    const diff = labFracReduce(Math.abs(L.n * R.d - R.n * L.d), L.d * R.d);
+    const diffL = labFracStr(diff.n, diff.d);
+    msg = (lNum > rNum ? '左边重 ' : '右边重 ') + diffL + '。';
+    if (diff.d !== 1) msg += '整数砝码一次加 1，凑不出 ' + diffL + '，试试下面的分数砝码。';
+  }
+  document.getElementById('labWbMsg').textContent = msg;
+}
+function labWbAdd(v, pan) {
+  (pan === 'L' ? labWbL : labWbR).push(v);
+  labWbRender();
+  labTrace('天平组合台：' + (pan === 'L' ? '左盘' : '右盘') + '加了 ' + labValLabel(v), true);
+}
+function labWbSetPan(pan) {
+  labWbPan = pan;
+  document.getElementById('labWbPanL').setAttribute('aria-pressed', String(pan === 'L'));
+  document.getElementById('labWbPanR').setAttribute('aria-pressed', String(pan === 'R'));
+}
+function labWbIntMinus() {
+  const arr = labWbPan === 'L' ? labWbL : labWbR;
+  for (let i = arr.length - 1; i >= 0; i--) {
+    if (arr[i].kind === 'num') { arr.splice(i, 1); labWbRender(); return; }
+  }
+  document.getElementById('labWbMsg').textContent = '这个盘里没有整数砝码可拿——先放一个整数砝码，或者点盘子里的砝码拿掉它。';
+}
+document.getElementById('labWbPanL').addEventListener('click', () => labWbSetPan('L'));
+document.getElementById('labWbPanR').addEventListener('click', () => labWbSetPan('R'));
+[['labWbF2', 2], ['labWbF3', 3], ['labWbF4', 4], ['labWbF6', 6]].forEach(([id, d]) =>
+  document.getElementById(id).addEventListener('click', () => labWbAdd({ kind: 'frac', n: 1, d: d }, labWbPan)));
+document.getElementById('labWbIntPlus').addEventListener('click', () => labWbAdd({ kind: 'num', v: 1 }, labWbPan));
+document.getElementById('labWbIntMinus').addEventListener('click', labWbIntMinus);
+document.getElementById('labWbClear').addEventListener('click', () => { labWbL = []; labWbR = []; labWbRender(); });
+document.getElementById('labWbSvg').addEventListener('click', e => {
+  const t = e.target && e.target.dataset ? e.target.dataset.labWb : null;
+  if (!t) return;
+  const [x0, i] = t.split(':');
+  const arr = x0 === '33' ? labWbL : labWbR;
+  arr.splice(+i, 1);
+  labWbRender();
+});
+
+/* ---------- 数轴组合台：0 到 2，托盘里的数落在哪，两点之间差多少 ---------- */
+var labLinePts = []; // 最多 2 个 {n, d}
+function labLinePlace(v) {
+  const f = labValFrac(v);
+  const num = f.n / f.d;
+  if (num < 0 || num > 2) {
+    document.getElementById('labLineMsg').textContent = labValLabel(v) + ' 放不下：这条数轴只到 2，' + labValLabel(v) + ' 在 2 外面。';
+    labTrace('数轴放不下 ' + labValLabel(v) + '（只到 2）', false);
+    return false;
+  }
+  if (labLinePts.length >= 2) {
+    document.getElementById('labLineMsg').textContent = '数轴上已经有 2 个点了，点一个点可以拿掉它。';
+    return false;
+  }
+  labLinePts.push(f);
+  labLineRender();
+  labTrace('数轴上放了 ' + labValLabel(v), true);
+  return true;
+}
+function labLineRemove(i) { labLinePts.splice(i, 1); labLineRender(); }
+function labLineRender() {
+  let s = '<line x1="20" y1="40" x2="300" y2="40" stroke="#334155" stroke-width="3" stroke-linecap="round"/>';
+  [[0, '0'], [0.5, '1/2'], [1, '1'], [1.5, '3/2'], [2, '2']].forEach(([t, label]) => {
+    const x = 20 + t / 2 * 280;
+    s += '<line x1="' + x + '" y1="34" x2="' + x + '" y2="46" stroke="#334155" stroke-width="2"/>';
+    s += '<text x="' + x + '" y="68" font-size="13" fill="#64748b" text-anchor="middle">' + label + '</text>';
+  });
+  labLinePts.forEach((p, i) => {
+    const x = 20 + (p.n / p.d) / 2 * 280;
+    s += '<circle cx="' + x + '" cy="40" r="10" fill="' + (i === 0 ? '#ff8a3d' : '#2563eb') + '" stroke="#fff" stroke-width="3" data-lab-pt="' + i + '" style="cursor:pointer"/>';
+    s += '<text x="' + x + '" y="22" font-size="13" fill="#334155" text-anchor="middle">' + labFracStr(p.n, p.d) + '</text>';
+  });
+  if (labLinePts.length === 2) {
+    const a = labLinePts[0], b = labLinePts[1];
+    const x1 = 20 + (a.n / a.d) / 2 * 280, x2 = 20 + (b.n / b.d) / 2 * 280;
+    s += '<line x1="' + Math.min(x1, x2) + '" y1="56" x2="' + Math.max(x1, x2) + '" y2="56" stroke="#16a34a" stroke-width="3"/>';
+  }
+  document.getElementById('labLineSvg').innerHTML = s;
+  const msg = document.getElementById('labLineMsg');
+  if (labLinePts.length === 0) {
+    msg.textContent = '数轴上还没有点。点托盘里的数块下面的“线”，把它放到数轴上（0 到 2 之间才放得下）。';
+  } else if (labLinePts.length === 1) {
+    msg.textContent = labFracStr(labLinePts[0].n, labLinePts[0].d) + ' 落在这里。再放一个点，就能看出两个数差多少。';
+  } else {
+    const a = labLinePts[0], b = labLinePts[1];
+    const diff = labFracReduce(Math.abs(a.n * b.d - b.n * a.d), a.d * b.d);
+    const hi = (a.n / a.d) >= (b.n / b.d) ? a : b, lo = hi === a ? b : a;
+    msg.textContent = labFracStr(hi.n, hi.d) + ' − ' + labFracStr(lo.n, lo.d) + ' = ' + labFracStr(diff.n, diff.d) + '：两点之间差 ' + labFracStr(diff.n, diff.d) + '。';
+  }
+}
+document.getElementById('labLineSvg').addEventListener('click', e => {
+  const t = e.target && e.target.dataset ? e.target.dataset.labPt : null;
+  if (t !== null && t !== undefined) labLineRemove(+t);
+});
+document.getElementById('labLineClear').addEventListener('click', () => { labLinePts = []; labLineRender(); });
+
+/* ---------- 13 个问题入口 + 自由玩 / 挑战两种模式 + 交卷报告 ---------- */
+var LAB_QUESTIONS = [
+  { qid: 'q-thirteen', title: '13 有几种凑法？', demo: 'thirteen', points: ['1.6', '1.9', '1.11'], primary: '1.9' },
+  { qid: 'q-twentyfour', title: '24 点', demo: 'twentyfour', points: ['4.9'], primary: '4.9' },
+  { qid: 'q-monty', title: '换一扇门', demo: 'monty', points: ['9.9'], primary: '9.9' },
+  { qid: 'q-maxarea', title: '周长一定面积最大', demo: 'maxarea', points: ['3.12'], primary: '3.12' },
+  { qid: 'q-matches', title: '动 1 根火柴', demo: 'matches', points: ['4.9'], primary: '4.9' },
+  { qid: 'q-mobius', title: '莫比乌斯带', demo: 'mobius', points: ['6.5'], primary: '6.5' },
+  { qid: 'q-shopweek', title: '开店一周', demo: 'shopweek', points: ['6.6'], primary: '6.6' },
+  { qid: 'q-fairgame', title: '公平游戏', demo: 'fairgame', points: ['5.4'], primary: '5.4' },
+  { qid: 'q-makerule', title: '造规律', demo: 'makerule', points: ['1.16'], primary: '1.16' },
+  { qid: 'q-fracadd', title: '分母不一样，分数能直接加吗？', bench: 'fracadd', points: ['5.11'], primary: '5.11' },
+  { qid: 'q-balfrac', title: '天平一边放 1/2', bench: 'balfrac', points: ['5.5'], primary: '5.5' },
+  { qid: 'q-numline', title: '7 在数轴上是哪里？', bench: 'numline', points: ['1.9'], primary: '1.9' },
+  { qid: 'q-funcline', title: 'k 变成负数，直线往哪倒？', bench: 'funcline', points: ['8.15'], primary: '8.15' },
+];
+var labMode = 'free'; // 自由玩 | 挑战（本节课有效，不存档）
+var labChallengeAttempts = []; // 挑战模式里点开过的问题 id（去重）
+var labChallengeMarks = {}; // qid -> true 答对 / false 答错
+function labEnterQuestion(qid) {
+  const q = LAB_QUESTIONS.find(x => x.qid === qid);
+  if (!q) return;
+  if (labMode === 'challenge' && labChallengeAttempts.indexOf(qid) === -1) {
+    labChallengeAttempts.push(qid);
+    labTrace('挑战：开始做「' + q.title + '」', true);
+  }
+  if (q.demo) { navGo('demo-' + q.demo); return; }
+  // 工作间问题：留在实验室，摆好这道题的架势（给的是题面，不是答案）。
+  if (q.bench === 'fracadd') {
+    labFaA = { n: 1, d: 2 }; labFaB = { n: 1, d: 3 }; labFaTouched = { A: false, B: false }; labFaRender();
+    document.getElementById('labCurrentQ').textContent = '当前问题：分母不一样，分数能直接加吗？——先猜 1/2+1/3 是多少，再点“拼一拼”。';
+  } else if (q.bench === 'balfrac') {
+    labWbL = [{ kind: 'frac', n: 1, d: 2 }]; labWbR = []; labWbRender();
+    document.getElementById('labCurrentQ').textContent = '当前问题：天平一边放 1/2，另一边要放多少才平？——左盘已经放了 1/2，右边你来配。';
+  } else if (q.bench === 'numline') {
+    document.getElementById('labCurrentQ').textContent = '当前问题：十格阵里的 7 个，放在这条 0 到 2 的数轴上是哪里？——先猜放不放得下，再去十格阵站放 7 个点、送到托盘、放到数轴上。';
+  } else if (q.bench === 'funcline') {
+    document.getElementById('labCurrentQ').textContent = '当前问题：k 变成负数，直线往哪倒？b 变成 0 呢？——去函数站拖一拖 k 和 b。';
+  }
+  labTrace('开始做「' + q.title + '」', true);
+}
+function labSetMode(m) {
+  labMode = m;
+  const lab = document.getElementById('lab');
+  if (m === 'challenge') lab.classList.add('lab-challenge');
+  else lab.classList.remove('lab-challenge');
+  document.getElementById('labModeFree').setAttribute('aria-pressed', String(m === 'free'));
+  document.getElementById('labModeChallenge').setAttribute('aria-pressed', String(m === 'challenge'));
+  document.getElementById('labChallengeBox').hidden = (m !== 'challenge');
+  document.getElementById('labModeTx').textContent = m === 'challenge'
+    ? '挑战模式：没有提示，做完点“交卷”，答错的进今天复习。'
+    : '自由玩：随便试，提示都在。';
+}
+function labSubmitChallenge() {
+  const box = document.getElementById('labChallengeReport');
+  if (!labChallengeAttempts.length) {
+    box.innerHTML = '<p>还没在挑战模式里做过题，先选一个问题。</p>';
+    return;
+  }
+  let html = '<p>挑战里做过的题（' + labChallengeAttempts.length + ' 道）：给每一道打个分，再点“提交报告”。</p>';
+  labChallengeAttempts.forEach(qid => {
+    const q = LAB_QUESTIONS.find(x => x.qid === qid);
+    const f = findPoint(q.primary);
+    const title = f ? f.point.title : q.primary;
+    const mk = labChallengeMarks[qid];
+    html += '<div class="point-sec"><h4>' + esc(q.title) + '</h4><p class="muted">用到：' + esc(q.primary) + ' ' + esc(title) + '</p>' +
+      '<p>你答对了吗？ <button class="btn small" type="button" data-lab-mark="right" data-lab-q="' + qid + '"' + (mk === true ? ' aria-pressed="true"' : '') + '>答对了</button> ' +
+      '<button class="btn small" type="button" data-lab-mark="wrong" data-lab-q="' + qid + '"' + (mk === false ? ' aria-pressed="true"' : '') + '>答错了</button></p>' +
+      (mk === undefined ? '<p class="muted">还没打分。</p>' : '<p>记下了：' + (mk ? '答对了。' : '答错了。') + '</p>') + '</div>';
+  });
+  html += '<div class="btn-row"><button class="btn small primary" id="labChallengeFinish" type="button">提交报告</button></div><p id="labChallengeDone"></p>';
+  box.innerHTML = html;
+  box.querySelectorAll('[data-lab-mark]').forEach(b => b.addEventListener('click', () => {
+    labChallengeMark(b.dataset.labQ, b.dataset.labMark === 'right');
+  }));
+  const fin = document.getElementById('labChallengeFinish');
+  if (fin) fin.addEventListener('click', labFinishChallenge);
+}
+function labChallengeMark(qid, correct) {
+  labChallengeMarks[qid] = correct;
+  labSubmitChallenge();
+}
+function labFinishChallenge() {
+  const unmarked = labChallengeAttempts.filter(qid => labChallengeMarks[qid] === undefined);
+  const done = document.getElementById('labChallengeDone');
+  if (unmarked.length) {
+    if (done) done.textContent = '还有 ' + unmarked.length + ' 道没打分，先打分再交卷。';
+    return;
+  }
+  const wrong = labChallengeAttempts.filter(qid => labChallengeMarks[qid] === false);
+  wrong.forEach(qid => {
+    const q = LAB_QUESTIONS.find(x => x.qid === qid);
+    recordAttempt(q.primary, false, false);
+  });
+  labChallengeAttempts.filter(qid => labChallengeMarks[qid] === true).forEach(qid => {
+    const q = LAB_QUESTIONS.find(x => x.qid === qid);
+    recordAttempt(q.primary, true, true);
+  });
+  let summary;
+  if (!wrong.length) {
+    summary = '全对，思路很稳。';
+  } else {
+    summary = '丢分报告：你卡在 ' + wrong.map(qid => {
+      const q = LAB_QUESTIONS.find(x => x.qid === qid);
+      const f = findPoint(q.primary);
+      return q.primary + ' ' + (f ? f.point.title : '');
+    }).join('、') + '——回去把这几条再练一遍。';
+  }
+  if (done) done.textContent = summary;
+  labTrace('挑战交卷：' + summary, !wrong.length);
+}
+document.getElementById('labModeFree').addEventListener('click', () => labSetMode('free'));
+document.getElementById('labModeChallenge').addEventListener('click', () => labSetMode('challenge'));
+LAB_QUESTIONS.forEach(q => {
+  const btn = document.getElementById('labQ-' + q.qid.slice(2));
+  if (btn) btn.addEventListener('click', () => labEnterQuestion(q.qid));
+});
+document.getElementById('labChallengeSubmit').addEventListener('click', labSubmitChallenge);
+document.getElementById('labTraceClear').addEventListener('click', () => {
+  labTraceLog.length = 0;
+  const ul = document.getElementById('labTraceList');
+  if (ul) ul.innerHTML = '';
+});
+labTrayRender();
+labFaRender();
+labWbRender();
+labLineRender();
+
 
 /* ================= 一年级实验（1.1–1.16，2026-11-06） =================
    13 个新实验：1.6/1.9/1.11 继续用十格阵，其余 13 条各一个小实验。
