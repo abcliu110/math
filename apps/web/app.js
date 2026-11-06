@@ -1054,11 +1054,21 @@ function tfCellUp(f) {
     b.setAttribute('aria-label', (f === 'A' ? '第一个格子第 ' : '第二个格子第 ') + (i + 1) + ' 格');
     b.addEventListener('click', () => tfCellClick(f, i));
     b.addEventListener('pointerdown', () => tfCellDown(f, i));
-    b.addEventListener('pointerup', () => tfCellUp(f));
+    b.addEventListener('pointercancel', () => tfCellCancel());
     box.appendChild(b);
     tfCells[f].push(b);
   }
 });
+// 松手落在整副格子上都算（不只落在圆点上）：快拖时手指常落在格子缝里，
+// 只绑在圆点上的 pointerup 会丢。框的 pointerup 先跑，wrap 的随后只做清理。
+tfAEl.addEventListener('pointerup', () => tfCellUp('A'));
+tfBEl.addEventListener('pointerup', () => tfCellUp('B'));
+document.getElementById('tfWrap').addEventListener('pointerup', () => tfCellCancel());
+function tfCellCancel() {
+  if (!tfDrag) return;
+  tfCells[tfDrag.f][tfDrag.i].classList.remove('dragging');
+  tfDrag = null;
+}
 function tfMoveOne() {
   if (tfA >= 10 || tfB <= 0) return;
   tfA++; tfB--;
