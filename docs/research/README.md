@@ -2,6 +2,14 @@
 
 三次调研的报告，放在 math 仓库里，方便以后写内容时查。
 
+## 0. 全世界最好的数学教程
+
+`best-math-tutorials-worldwide-20261106/report.md`
+
+- 12 家来源排行榜：新加坡 CPA + 条形图第一，Mathigon、ST Math、GeoGebra、Desmos、Zearn、Khan、Brilliant、Illustrative Mathematics、DragonBox、3Blue1Brown、DreamBox/IXL。
+- 每个来源分三层写：能学的原理、不能抄的表达、我们自己重写版；附 4 个可玩演示的设计思路。
+- 授权注意：Khan 授权说法冲突（只借鉴）；Brilliant、Desmos、ST Math、Zearn、DreamBox、IXL、DragonBox 均为专有，只借鉴；Manim、Mathigon JS 库是 MIT（只用工具，不抄教材内容）。
+
 ## 1. 小学 1–6 年级全部知识点
 
 `grades-1-6-complete/report.md`

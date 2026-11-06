@@ -464,7 +464,8 @@ function enterNavEntry(entry) {
   const def = NAV_DEFS[entry.key] || {};
   if (def.action) def.action();
   // 一次只显示一个视图，内容都在页顶，不再按目标滚动。
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  // 直接跳到顶（不用平滑滚动）：平滑滚动中标题会从吸顶栏底下滑过，看着像被栏遮住。
+  window.scrollTo({ top: 0, behavior: 'auto' });
   if (def.flash) {
     const el = document.getElementById(def.flash);
     if (el) { el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 1600); }

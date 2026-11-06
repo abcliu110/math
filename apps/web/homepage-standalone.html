@@ -13,7 +13,7 @@
   --green:#15803d; --radius:16px;
 }
 *{box-sizing:border-box}
-html{scroll-behavior:smooth}
+html{scroll-behavior:smooth;scroll-padding-top:150px}
 body{margin:0;font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink);background:var(--bg);line-height:1.6;font-size:17px}
 .wrap{max-width:1120px;margin:0 auto;padding:0 20px}
 a{color:var(--blue)}
@@ -27,7 +27,7 @@ code{background:#eef2ff;padding:2px 6px;border-radius:6px}
 
 /* Topbar — 逻辑导航：顶栏最左只有一个返回，标题是面包屑 */
 .topbar{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.95);border-bottom:1px solid var(--line);backdrop-filter:blur(6px)}
-.topbar-inner{display:flex;align-items:center;gap:14px;min-height:64px}
+.topbar-inner{display:flex;align-items:center;gap:14px;height:64px;min-height:64px}
 .back-btn{min-height:48px;padding:8px 16px;border:2px solid var(--orange-dark);border-radius:12px;background:var(--orange);color:#fff;font-size:16px;font-weight:700;cursor:pointer}
 .back-btn:hover{background:var(--orange-dark)}
 .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);background:none;border:0;padding:0;cursor:pointer;font-family:inherit;text-align:left}
@@ -84,6 +84,15 @@ main{min-width:0}
 .panel-tx{font-size:12px;color:var(--muted)}
 .progress-chip{margin-left:auto;background:#fff7ed;border:1px solid #fed7aa;border-radius:999px;padding:6px 12px;font-size:14px;white-space:nowrap}
 
+/* 年级详情：单元卡片（之前漏了这组样式，详情页是没卡片的纯文本，
+   「可视化：…」「状态：待制作」两个标签还挤在一起） */
+.unit-list{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.unit{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px}
+.unit b{font-size:17px}
+.unit p{margin:6px 0 12px;color:#334155;font-size:15px}
+.pill{display:inline-block;background:#fff7ed;border:1px solid #fed7aa;border-radius:999px;padding:4px 12px;font-size:14px;margin:0 8px 4px 0}
+.pill:last-child{margin-right:0}
+
 /* Buttons */
 .btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:10px 20px;border-radius:12px;border:2px solid transparent;font-size:16px;font-weight:700;text-decoration:none;cursor:pointer}
 .btn.primary{background:var(--orange);color:#fff}
@@ -93,7 +102,9 @@ main{min-width:0}
 .btn:focus-visible,input:focus-visible,button:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
 
 /* Hero */
-.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:32px;align-items:center;padding:48px 20px 20px}
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:32px;align-items:center;padding:48px 20px 20px;scroll-margin-top:150px}
+.section{scroll-margin-top:150px}
+#gradeDetail,.dim-detail{scroll-margin-top:150px}
 .eyebrow{color:var(--orange-dark);font-weight:700;margin:0}
 .lead{font-size:18px;color:#334155}
 .hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin:20px 0}
@@ -196,7 +207,6 @@ main{min-width:0}
   .dim-btn{flex:none}
   .mode-dims{flex:1 1 100%}
 }
-
 </style>
 </head>
 <body>
@@ -932,7 +942,8 @@ function enterNavEntry(entry) {
   const def = NAV_DEFS[entry.key] || {};
   if (def.action) def.action();
   // 一次只显示一个视图，内容都在页顶，不再按目标滚动。
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  // 直接跳到顶（不用平滑滚动）：平滑滚动中标题会从吸顶栏底下滑过，看着像被栏遮住。
+  window.scrollTo({ top: 0, behavior: 'auto' });
   if (def.flash) {
     const el = document.getElementById(def.flash);
     if (el) { el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 1600); }
