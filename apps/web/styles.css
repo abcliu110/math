@@ -49,6 +49,7 @@ body[data-view] #grades, body[data-view] #dimensions, body[data-view] #path,
 body[data-view] #demos, body[data-view] #why, body[data-view] #review,
 body[data-view] .next-steps, body[data-view] footer.footer{display:none}
 body[data-view="grades"] #grades, body[data-view="grade-detail"] #grades,
+body[data-view="unit-detail"] #grades, body[data-view="point-detail"] #grades,
 body[data-view="dimensions"] #dimensions, body[data-view="dim-detail"] #dimensions,
 body[data-view="path"] #path, body[data-view="path-step"] #path,
 body[data-view="demos"] #demos, body[data-view="demo-fraction"] #demos,
