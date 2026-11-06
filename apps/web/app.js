@@ -244,8 +244,9 @@ function renderUnit(g, ui) {
   const cpBox = cp ? '<div class="point-sec"><h4>闯关任务' + (cp.lit ? ' · 已点亮' : '') + '</h4>' + cpTaskListHtml(cp) +
     '<p class="muted">顺序只是建议：这一站做完就点亮，想先去别的站也可以直接点。</p>' +
     '<div class="btn-row"><button class="btn ghost" type="button" data-cp-link="1">去闯关路看看</button></div></div>' : '';
+  const storyBox = u.story ? '<div class="point-sec story"><h4>发现时刻</h4><p>' + esc(u.story) + '</p></div>' : '';
   pointDetail.innerHTML =
-    '<h3>' + esc(u.unit) + '</h3><p class="muted">' + esc(u.term) + ' · ' + u.points.length + ' 个知识点 · 点一条进内容。</p>' + cpBox +
+    '<h3>' + esc(u.unit) + '</h3><p class="muted">' + esc(u.term) + ' · ' + u.points.length + ' 个知识点 · 点一条进内容。</p>' + storyBox + cpBox +
     '<div class="unit-list">' + u.points.map(p =>
       '<button class="unit unit-btn" type="button" data-point="' + esc(p.id) + '"><b>' + esc(p.id) + ' · ' + esc(p.title) + '</b><p>' + esc(p.subtitle) + '</p>' +
       '<span class="pill">' + esc(p.method) + '</span></button>'
@@ -320,7 +321,9 @@ function renderPoint(id) {
   // 章节导航：一行小药丸，点一个跳到那一节（scrollIntoView，不走锚点 href）。
   const secs = [];
   if (p.recall) secs.push(['sec-recall', '先考一考']);
-  secs.push(['sec-how', '怎么做'], ['sec-why', '为什么'], ['sec-wrong', '容易错'],
+  secs.push(['sec-how', '怎么做'], ['sec-why', '为什么']);
+  if (f.unit.story) secs.push(['sec-story', '发现时刻']);
+  secs.push(['sec-wrong', '容易错'],
     ['sec-visual', '看图学'], ['sec-try', '动手试一试'], ['sec-talk', '讲回来'], ['sec-practice', '练一练']);
   if (p.olympiad) secs.push(['sec-olympiad', '挑战 · 奥数']);
   const navHtml = '<div class="point-nav">' + secs.map(s =>
@@ -338,6 +341,8 @@ function renderPoint(id) {
     '<p class="muted">' + esc(p.subtitle) + '</p>' + navHtml + recallHtml +
     '<div class="point-sec" id="sec-how"><h4>怎么做</h4><p>' + esc(p.how) + '</p></div>' +
     '<div class="point-sec" id="sec-why"><h4>为什么</h4><p>' + esc(p.why) + '</p></div>' +
+    // 发现时刻：单元故事，放在“为什么”之后（内容文件里 unit.story，可选字段，老单元没有也不报错）。
+    (f.unit.story ? '<div class="point-sec story" id="sec-story"><h4>发现时刻</h4><p>' + esc(f.unit.story) + '</p></div>' : '') +
     '<div class="point-sec warn" id="sec-wrong"><h4>容易错</h4><p>错法：' + esc(p.wrong) + '</p><p>为什么错：' + esc(p.wrongWhy) + '</p></div>' +
     '<div class="point-sec" id="sec-visual"><h4>看图学</h4><p>' + esc(p.visual) + '</p></div>' +
     '<div class="point-sec" id="sec-try"><h4>动手试一试</h4><p>' + esc(p.tryIt) + '</p>' +

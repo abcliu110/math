@@ -101,7 +101,7 @@ const windowStub = { scrollTo() {}, setTimeout, document: documentStub };
 
 // ---------- stub grade content (small but schema-faithful) ----------
 const GRADE3_CONTENT = { grade: 3, edition: 'A', units: [
-  { unit: '分数的初步认识', term: '上', points: [
+  { unit: '分数的初步认识', term: '上', story: '几千年前，古埃及人分面包：7 个面包分给 10 个人，每人分不到一个整的。他们把面包切成小份分，这就是分数最早的样子。', points: [
     { id: '3.7', title: '分数的初步认识', subtitle: '几分之一、几分之几', how: '把一个整体平均分。', why: '分母是切了几份。', wrong: '1/4 比 1/3 大', wrongWhy: '分母是大小不是个数。', visual: '分数条。', method: '分数条 + 数轴', explainBack: '1/4 是一份。', tryIt: '把纸对折两次。', demo: 'fraction', recall: { q: '一个饼切成 4 等份，吃了 1 份，吃了几分之几？', answer: '1/4', hint: '一共 4 份，吃了 1 份' }, practice: [{ q: '1/2 和 1/4 谁大？', answer: '1/2 大', hint: '份数少，每份大', steps: [{ label: '看分母', text: '1/2 是切 2 份，1/4 是切 4 份' }, { label: '比一比', text: '切的份数越少，每份越大，所以 1/2 大' }] }, { q: '2/7 + 3/7 = ?', answer: '5/7', hint: '分母不变，分子相加', steps: [{ label: '分母不变', text: '分母还是 7' }, { label: '分子相加', text: '2 + 3 = 5，所以是 5/7' }] }] },
   ] },
   { unit: '面积', term: '下', points: [
@@ -2673,6 +2673,46 @@ lsData['math-review-v1'] = JSON.stringify({ '1.9': { last: Date.now(), correct: 
 navGo('progress');
 check('L checkpoint: progress page shows lit-unit counts and a badge-wall link',
   byId.progressCard.innerHTML.includes('已点亮 1 / 4 个单元') && byId.progressCard.innerHTML.includes('已拿到 2 个徽章'));
+
+// ---------- M. 发现时刻（Phase 5）：120 个单元全有 story，知识点页在“为什么”之后渲染 ----------
+// 文件级：每个年级的 story 字段数 = 单元数，且每则非空（≥20 字）。
+const STORY_EXPECTED = { 1: 15, 2: 15, 3: 16, 4: 17, 5: 14, 6: 14, 7: 10, 8: 10, 9: 9 };
+let storyTotal = 0, storyOk = true;
+for (const g of [1, 2, 3, 4, 5, 6, 7, 8, 9]) {
+  const fsrc = fs.readFileSync(root + '/content/grades/grade-' + g + '.js', 'utf8');
+  const units = (fsrc.match(/^\s*unit: "/gm) || []).length;
+  const stories = [...fsrc.matchAll(/story: "([^"]*)"/g)].map(m => m[1]);
+  storyTotal += stories.length;
+  if (units !== STORY_EXPECTED[g] || stories.length !== units || stories.some(s => s.length < 20)) storyOk = false;
+}
+check('M story: all 120 units have a non-empty story (15/15/16/17/14/14/10/10/9)',
+  storyOk && storyTotal === 120);
+// 抽查著名故事的关键事实词（改前文件里一个 story 都没有，这些检查必然失败）。
+function storyHas(g, word) {
+  const fsrc = fs.readFileSync(root + '/content/grades/grade-' + g + '.js', 'utf8');
+  return fsrc.includes(word);
+}
+check('M story: Gauss 1+…+100=5050 in grade 4', storyHas(4, '高斯') && storyHas(4, '5050'));
+check('M story: Zu Chongzhi pi to 7 decimals + Pythagoras in grade 6',
+  storyHas(6, '祖冲之') && storyHas(6, '3.1415926') && storyHas(6, '毕达哥拉斯'));
+check('M story: Venn + Stevin 1585 decimals in grade 3', storyHas(3, '韦恩') && storyHas(3, '斯蒂文'));
+check('M story: Cao Chong weighing the elephant in grade 5', storyHas(5, '曹冲'));
+check('M story: Buffon needle + Thales shadow in grade 9', storyHas(9, '蒲丰') && storyHas(9, '泰勒斯'));
+check('M story: Harriot > < in grade 7', storyHas(7, '哈里奥特'));
+// 渲染：知识点页“为什么”之后出现“发现时刻”，且在“容易错”之前；章节导航里也有。
+navGo('point-3.7');
+const whyIdx = pointDetail.innerHTML.indexOf('为什么');
+const storyIdx = pointDetail.innerHTML.indexOf('发现时刻');
+const wrongIdx = pointDetail.innerHTML.indexOf('容易错');
+check('M story: point page renders 发现时刻 after 为什么 and before 容易错',
+  storyIdx > whyIdx && whyIdx >= 0 && storyIdx > 0 && storyIdx < wrongIdx &&
+  pointDetail.innerHTML.includes('古埃及人分面包'));
+check('M story: point nav chip links to 发现时刻',
+  pointDetail.innerHTML.includes('data-sec="sec-story"') && pointDetail.innerHTML.includes('id="sec-story"'));
+// 单元页也展示本单元的故事。
+navGo('unit-3-0');
+check('M story: unit page shows its own story',
+  pointDetail.innerHTML.includes('发现时刻') && pointDetail.innerHTML.includes('古埃及人分面包'));
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
