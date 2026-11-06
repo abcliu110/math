@@ -18,7 +18,7 @@ assert '</style>' not in css and '</script>' not in js
 html = html.replace('<link rel="stylesheet" href="styles.css">',
                     '<style>\n' + css + '</style>', 1)
 # Grade content files are inlined before app.js when present; otherwise drop the tag.
-for gfile in ['grade-1.js', 'grade-3.js']:
+for gfile in sorted(p.name for p in (ROOT / 'content' / 'grades').glob('grade-*.js')):
     g = ROOT / 'content' / 'grades' / gfile
     tag = '<script src="../../content/grades/' + gfile + '"></script>'
     if g.exists():

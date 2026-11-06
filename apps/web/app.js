@@ -162,19 +162,31 @@ function selectGrade(g) {
 }
 selectGrade(currentGrade);
 
-/* ---------- 真实内容（content/grades/grade-N.js 提供 GRADE1_CONTENT / GRADE3_CONTENT） ----------
+/* ---------- 真实内容（content/grades/grade-N.js 提供 GRADE1_CONTENT … GRADE9_CONTENT） ----------
    内容与原型逻辑分开：知识点文字只活在 content/ 里，app.js 只负责渲染。
    层级：年级 → 单元 → 知识点，每条知识点一页：怎么做、为什么、容易错、
    看图学、动手试一试、讲回来、练一练（由浅入深：基础 → 提高 → 奥数挑战）。文件没加载到时，该年级退回旧的占位。 */
 const pointDetail = document.getElementById('pointDetail');
+// 每个年级文件都是顶层 const；typeof 守卫让没加载到的年级安全地返回 null。
+// map 建在函数里（不在顶层建 const）：加载时 selectGrade() 在它之前就跑，
+// 顶层 const 会撞上暂时性死区。
 function gradeData(g) {
-  if (g === 1) return (typeof GRADE1_CONTENT !== 'undefined' && GRADE1_CONTENT) || null;
-  if (g === 3) return (typeof GRADE3_CONTENT !== 'undefined' && GRADE3_CONTENT) || null;
-  return null;
+  const map = {
+    1: (typeof GRADE1_CONTENT !== 'undefined' && GRADE1_CONTENT) || null,
+    2: (typeof GRADE2_CONTENT !== 'undefined' && GRADE2_CONTENT) || null,
+    3: (typeof GRADE3_CONTENT !== 'undefined' && GRADE3_CONTENT) || null,
+    4: (typeof GRADE4_CONTENT !== 'undefined' && GRADE4_CONTENT) || null,
+    5: (typeof GRADE5_CONTENT !== 'undefined' && GRADE5_CONTENT) || null,
+    6: (typeof GRADE6_CONTENT !== 'undefined' && GRADE6_CONTENT) || null,
+    7: (typeof GRADE7_CONTENT !== 'undefined' && GRADE7_CONTENT) || null,
+    8: (typeof GRADE8_CONTENT !== 'undefined' && GRADE8_CONTENT) || null,
+    9: (typeof GRADE9_CONTENT !== 'undefined' && GRADE9_CONTENT) || null,
+  };
+  return map[g] || null;
 }
 function grade3Data() { return gradeData(3); }
 function findPoint(id) {
-  for (const g of [1, 3]) {
+  for (const g of [1, 2, 3, 4, 5, 6, 7, 8, 9]) {
     const gd = gradeData(g);
     if (!gd) continue;
     for (let ui = 0; ui < gd.units.length; ui++) {
@@ -197,7 +209,7 @@ function renderUnit(g, ui) {
   pointDetail.querySelectorAll('[data-point]').forEach(btn =>
     btn.addEventListener('click', () => navGo('point-' + btn.dataset.point)));
 }
-const DEMO_LABEL = { fraction: '去玩分数演示', tenframe: '去玩十格阵' };
+const DEMO_LABEL = { fraction: '去玩分数演示', tenframe: '去玩十格阵', balance: '去玩天平演示', function: '去玩函数演示' };
 function renderPoint(id) {
   const f = findPoint(id);
   if (!f) return;
@@ -632,8 +644,7 @@ function registerGradeNav(g) {
   const panel = document.querySelector('[data-nav-key="grade-' + g + '"] .panel-tx');
   if (panel) panel.textContent = gd.units.reduce((n, u) => n + u.points.length, 0) + ' 个知识点 · 已完成';
 }
-registerGradeNav(1);
-registerGradeNav(3);
+for (let g = 1; g <= 9; g++) registerGradeNav(g);
 
 const navBack = document.getElementById('navBack');
 const crumbTitle = document.getElementById('crumbTitle');
