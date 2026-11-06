@@ -37,7 +37,7 @@ function makeEl(tag) {
     getContext() {
       // canvas 2d stub: function demo draws on it at load.
       return { clearRect() {}, beginPath() {}, moveTo() {}, lineTo() {}, stroke() {},
-        fillText() {}, arc() {}, fill() {}, fillRect() {},
+        fillText() {}, arc() {}, fill() {}, fillRect() {}, setLineDash() {},
         strokeStyle: '', lineWidth: 1, fillStyle: '', font: '' };
     },
     addEventListener(t, fn) { (this._handlers[t] = this._handlers[t] || []).push(fn); },
@@ -243,6 +243,73 @@ navGo('point-1.9');
 sandbox.goDemoFromHere('demo-tenframe');
 sandbox.navBackFn();
 check('back from ten-frame demo returns to point page', pointDetail.innerHTML.includes('挑战 · 奥数'));
+
+// ---------- 6. challenge mode (visible error feedback) ----------
+// fraction: target 3/4, wrong build shows the numeric gap + marks slices
+navGo('demo-fraction');
+click(byId.fracChallengeBtn);
+check('frac challenge: target shown', byId.fracChallengeTarget.textContent.includes('3/4'));
+check('frac challenge: empty build reports missing', byId.fracChallengeMsg.textContent.includes('少了 3/4'));
+check('frac challenge: target dot shown on number line', byId.lineTargetDot.hidden === false);
+const numRange = byId.numRange; numRange.value = '3';
+(numRange._handlers.input || []).forEach(f => f({ target: numRange }));
+check('frac challenge: 3/4 is correct', byId.fracChallengeMsg.textContent.includes('拼对了'));
+numRange.value = '2';
+(numRange._handlers.input || []).forEach(f => f({ target: numRange }));
+check('frac challenge: 2/4 reports missing + marks missing slice green', byId.fracChallengeMsg.textContent.includes('少了') && byId.pieSvg.innerHTML.includes('#bbf7d0'));
+numRange.value = '4';
+(numRange._handlers.input || []).forEach(f => f({ target: numRange }));
+check('frac challenge: 4/4 reports extra + marks extra slice red', byId.fracChallengeMsg.textContent.includes('多了') && byId.pieSvg.innerHTML.includes('#ef4444'));
+click(byId.fracChallengeBtn);
+check('frac challenge: exit hides box + target dot', byId.fracChallengeBox.hidden === true && byId.lineTargetDot.hidden === true);
+
+// ten-frame: target total 13, free placement, extra cell marked red
+sandbox.tfSetProblem('add', 0);
+navGo('demo-tenframe');
+click(byId.tfChallengeBtn);
+check('tf challenge: target shown', byId.tfChallengeTarget.textContent.includes('拼出 13'));
+check('tf challenge: starts empty', byId.tfEq.textContent === '0 + 0 = 0');
+for (let i = 0; i < 9; i++) click(byId.tfA.children[i]);
+for (let i = 0; i < 5; i++) click(byId.tfB.children[i]);
+check('tf challenge: 9+5=14 reports one extra', byId.tfNote.textContent.includes('多了 1 个'));
+check('tf challenge: extra cell marked red', byId.tfB.children[4].classList.contains('extra'));
+click(byId.tfB.children[4]);
+check('tf challenge: removing the extra completes it', byId.tfNote.textContent.includes('拼对了'));
+click(byId.tfChallengeBtn);
+check('tf challenge: exit restores the 9+4 problem', byId.tfEq.textContent === '9 + 4 = ?');
+
+// balance: target 3x+5=20, wrong move shows the numeric gap
+navGo('demo-balance');
+click(byId.balChallengeBtn);
+check('bal challenge: target shown', byId.balChallengeTarget.textContent.includes('3x + 5 = 20'));
+check('bal challenge: gap line shows balanced state', byId.balGap.textContent.includes('平的'));
+click(byId.balWrong);
+check('bal challenge: wrong move shows numeric gap', byId.balGap.textContent.includes('轻 5') && byId.balGap.textContent.includes('还差 5'));
+click(byId.balReset);
+check('bal challenge: reset re-balances', byId.balGap.textContent.includes('平的'));
+click(byId.balMinus5);
+check('bal challenge: minus-5 step shows 3x = 15', byId.balGap.textContent.includes('3x = 15'));
+click(byId.balDiv3);
+check('bal challenge: solved shows x = 5', byId.balGap.textContent.includes('x = 5') && byId.balGap.textContent.includes('拼对了'));
+click(byId.balChallengeNext);
+check('bal challenge: next problem is 2x+6=16', byId.balChallengeTarget.textContent.includes('2x + 6 = 16'));
+click(byId.balChallengeBtn);
+check('bal challenge: exit restores 3x+5=20', byId.balanceEq.textContent === '3x + 5 = 20' && byId.balChallengeBox.hidden === true);
+
+// function: target y=2x+1, wrong line shows the gap at a sample point
+const kRange = byId.kRange; kRange.value = '2';
+const bRange = byId.bRange; bRange.value = '8';
+(kRange._handlers.input || []).forEach(f => f({ target: kRange }));
+(bRange._handlers.input || []).forEach(f => f({ target: bRange }));
+navGo('demo-function');
+click(byId.funcChallengeBtn);
+check('func challenge: target shown', byId.funcChallengeTarget.textContent.includes('y = 2x + 1'));
+check('func challenge: gap reported at a sample point', byId.funcGapMsg.textContent.includes('大了 7') && byId.funcGapMsg.textContent.includes('截距还差 7'));
+bRange.value = '1';
+(bRange._handlers.input || []).forEach(f => f({ target: bRange }));
+check('func challenge: matching the target line wins', byId.funcGapMsg.textContent.includes('画对了'));
+click(byId.funcChallengeBtn);
+check('func challenge: exit restores k=2, b=8', byId.kRange.value === '2' && byId.bRange.value === '8' && byId.funcChallengeBox.hidden === true);
 
 // ---------- 7. math lab (free play) ----------
 navGo('home');

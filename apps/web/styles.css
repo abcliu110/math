@@ -158,6 +158,15 @@ main{min-width:0}
 
 /* 数学实验室：四个自由玩小站，两列排布（十格阵两副格子并排要 540px 左右，
    三列放不下）；小屏改一列。 */
+/* 挑战模式：错了图会标出来（NB实验室“错了看得见”的做法），不是只打红叉。
+   每个演示里的“挑战一下”开关，不进新视图、不改正常玩法。 */
+.challenge-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:14px 16px;margin-top:12px}
+.challenge-target{font-weight:700;margin:0 0 6px}
+.challenge-msg{margin:6px 0 0;color:#334155}
+.challenge-msg.ok{color:var(--green);font-weight:700}
+.demo-card.challenge-on #tfModeSeg,.demo-card.challenge-on #tfProbSeg{opacity:.45;pointer-events:none}
+.tf-cell.extra{background:#fecaca;border-color:#dc2626}
+
 .lab-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
 
 /* Review */

@@ -883,8 +883,26 @@ document.getElementById('modeGrade').addEventListener('click', () => setModeView
 document.getElementById('modeDim').addEventListener('click', () => setModeView('dimension'));
 renderNav();
 
+function gcd(a, b) { a = Math.abs(a); b = Math.abs(b); return b ? gcd(b, a % b) : a; }
+
 /* ---------- P1 分数 ---------- */
 let denom = 4, numer = 3;
+/* 分数挑战：目标分数（分母只用演示里有的 2/3/4/6/8），拼错了图会标出来——
+   多出来的块变红，还差的块描绿框，数轴上绿点是目标位置；拼对了也包括等值分数（6/8 = 3/4）。 */
+const FRAC_CH = [{ n: 3, d: 4 }, { n: 1, d: 2 }, { n: 5, d: 6 }, { n: 2, d: 3 }, { n: 5, d: 8 }, { n: 1, d: 3 }];
+let fracChallenge = false, fracChIdx = 0, fracPrev = null;
+const lineTargetDot = document.getElementById('lineTargetDot');
+function fracVerdict() {
+  const t = FRAC_CH[fracChIdx];
+  const diff = numer * t.d - t.n * denom, cd = denom * t.d, g = gcd(diff, cd);
+  const dTxt = Math.abs(diff) / g + '/' + cd / g;
+  if (diff === 0) return { ok: true, text: '拼对了！' + (denom === t.d ? '你拼的 ' + numer + '/' + denom + ' 就是目标。' : '你拼的 ' + numer + '/' + denom + ' 和 ' + t.n + '/' + t.d + ' 一样大，都落在数轴的同一个点上。') };
+  const dir = diff > 0 ? '多了 ' + dTxt + '。' : '少了 ' + dTxt + '。';
+  const where = denom === t.d
+    ? (diff > 0 ? '红块是多出来的，点一下拿掉。' : '绿框是还差的，点饼或拖滑杆来拼。')
+    : '绿点是目标位置，你的点在它' + (diff > 0 ? '右边。' : '左边。');
+  return { ok: false, text: '你拼的是 ' + numer + '/' + denom + '，目标是 ' + t.n + '/' + t.d + '，' + dir + where };
+}
 const pieSvg = document.getElementById('pieSvg');
 const lineTicks = document.getElementById('lineTicks');
 const lineDot = document.getElementById('lineDot');
@@ -907,11 +925,17 @@ function renderFraction() {
   document.getElementById('numRange').value = numer;
   document.getElementById('numLabel').textContent = numer;
   let svg = '';
+  const t = FRAC_CH[fracChIdx];
   for (let i = 0; i < denom; i++) {
     const a0 = i * 360 / denom, a1 = (i + 1) * 360 / denom;
     const filled = i < numer;
-    svg += '<path d="' + sector(100, 100, 88, a0, a1) + '" fill="' + (filled ? '#ff8a3d' : '#fff3e6') +
-      '" stroke="#c2410c" stroke-width="2" data-slice="' + i + '" style="cursor:pointer"/>';
+    let fill = filled ? '#ff8a3d' : '#fff3e6', stroke = '#c2410c', dash = '';
+    if (fracChallenge && denom === t.d) {
+      if (filled && i >= t.n) fill = '#ef4444'; // 多出来的块：变红
+      if (!filled && i < t.n) { fill = '#bbf7d0'; stroke = '#15803d'; dash = ' stroke-dasharray="5 4"'; } // 还差的块：绿框
+    }
+    svg += '<path d="' + sector(100, 100, 88, a0, a1) + '" fill="' + fill +
+      '" stroke="' + stroke + '" stroke-width="2"' + dash + ' data-slice="' + i + '" style="cursor:pointer"/>';
   }
   pieSvg.innerHTML = svg;
   pieSvg.querySelectorAll('[data-slice]').forEach(p => p.addEventListener('click', () => {
@@ -933,6 +957,19 @@ function renderFraction() {
   }
   lineTicks.innerHTML = ticks;
   lineDot.setAttribute('cx', 20 + dec * 280);
+  // 挑战模式：数轴上再放一个绿点标目标位置；拼对了消息变绿。
+  if (lineTargetDot) {
+    lineTargetDot.hidden = !fracChallenge;
+    if (fracChallenge) lineTargetDot.setAttribute('cx', 20 + (FRAC_CH[fracChIdx].n / FRAC_CH[fracChIdx].d) * 280);
+  }
+  const fracMsgEl = document.getElementById('fracChallengeMsg');
+  if (fracMsgEl) {
+    if (fracChallenge) {
+      const m = fracVerdict();
+      fracMsgEl.textContent = m.text;
+      fracMsgEl.classList.toggle('ok', m.ok);
+    } else { fracMsgEl.textContent = ''; fracMsgEl.classList.remove('ok'); }
+  }
 }
 document.getElementById('numRange').addEventListener('input', e => { numer = +e.target.value; renderFraction(); markTried('fraction'); });
 // 拖数轴上的点（Pointer Events，触屏 + 鼠标同一套）
@@ -951,52 +988,148 @@ document.getElementById('numRange').addEventListener('input', e => { numer = +e.
   lineDot.addEventListener('pointerup', () => { dragging = false; });
 })();
 renderFraction();
+/* 分数挑战开关：进挑战先把分子清 0（分母不动，拼出一样大的也算对），出挑战恢复进挑战前的样子。 */
+function fracSetChallenge(on) {
+  fracChallenge = on;
+  const box = document.getElementById('fracChallengeBox');
+  const btn = document.getElementById('fracChallengeBtn');
+  if (on) {
+    fracPrev = { denom, numer };
+    fracChIdx = 0; numer = 0;
+    document.getElementById('fracChallengeTarget').textContent =
+      '挑战：拼出 ' + FRAC_CH[0].n + '/' + FRAC_CH[0].d + '（拼出一样大的分数也算对）';
+    btn.textContent = '退出挑战';
+  } else {
+    if (fracPrev) { denom = fracPrev.denom; numer = fracPrev.numer; }
+    btn.textContent = '挑战一下';
+  }
+  box.hidden = !on;
+  renderFraction();
+  if (on) markTried('fraction');
+}
+document.getElementById('fracChallengeBtn').addEventListener('click', () => fracSetChallenge(!fracChallenge));
+document.getElementById('fracChallengeNext').addEventListener('click', () => {
+  fracChIdx = (fracChIdx + 1) % FRAC_CH.length;
+  numer = 0;
+  const t = FRAC_CH[fracChIdx];
+  document.getElementById('fracChallengeTarget').textContent =
+    '挑战：拼出 ' + t.n + '/' + t.d + '（拼出一样大的分数也算对）';
+  renderFraction();
+});
 
 /* ---------- P2 天平 ---------- */
-let balStage = 0; // 0: 3x+5=20, 1: 3x=15, 2: x=5
+/* 天平挑战：目标方程轮着来（3x+5=20、2x+6=16、4x+3=19，x 都是整数）。
+   只动一边天平会歪——挑战模式多一行数字：左边比右边轻几、还差几才能平衡。 */
+const BAL_CH = [{ a: 3, b: 5, c: 20 }, { a: 2, b: 6, c: 16 }, { a: 4, b: 3, c: 19 }];
+let balEq = { a: 3, b: 5, c: 20 };
+let balChallenge = false, balChIdx = 0, balPrev = null;
+let balStage = 0; // 0: ax+b=c, 1: ax=c-b, 2: x=(c-b)/a
 let balTilt = 0;
 function renderBalance() {
   const eq = document.getElementById('balanceEq');
   const msg = document.getElementById('balanceMsg');
   const beam = document.getElementById('beamGroup');
   beam.setAttribute('transform', 'rotate(' + balTilt + ' 160 70)');
+  const a = balEq.a, b = balEq.b, c = balEq.c, x = (c - b) / a;
+  const x0 = 38 - (a - 3) * 10; // x 方块居中摆（a=3 时和原来一模一样）
   let left = '', right = '';
+  const xBox = i => '<rect x="' + (x0 + i * 20) + '" y="78" width="18" height="18" rx="3" fill="#2563eb"/><text x="' + (x0 + 9 + i * 20) + '" y="92" font-size="11" fill="#fff" text-anchor="middle">x</text>';
   if (balStage === 0) {
-    eq.textContent = '3x + 5 = 20';
-    for (let i = 0; i < 3; i++) left += '<rect x="' + (38 + i * 20) + '" y="78" width="18" height="18" rx="3" fill="#2563eb"/><text x="' + (47 + i * 20) + '" y="92" font-size="11" fill="#fff" text-anchor="middle">x</text>';
-    left += '<rect x="48" y="58" width="24" height="16" rx="3" fill="#ff8a3d"/><text x="60" y="70" font-size="11" fill="#fff" text-anchor="middle">5</text>';
-    right += '<rect x="248" y="58" width="24" height="16" rx="3" fill="#ff8a3d"/><text x="260" y="70" font-size="11" fill="#fff" text-anchor="middle">20</text>';
+    eq.textContent = a + 'x + ' + b + ' = ' + c;
+    for (let i = 0; i < a; i++) left += xBox(i);
+    left += '<rect x="48" y="58" width="24" height="16" rx="3" fill="#ff8a3d"/><text x="60" y="70" font-size="11" fill="#fff" text-anchor="middle">' + b + '</text>';
+    right += '<rect x="248" y="58" width="24" height="16" rx="3" fill="#ff8a3d"/><text x="260" y="70" font-size="11" fill="#fff" text-anchor="middle">' + c + '</text>';
     if (balTilt !== 0) msg.textContent = '天平歪了！只动一边不行，两边要一起动。点“重置”再试。';
-    else msg.textContent = '天平是平的。先试试两边同时 −5。';
+    else msg.textContent = '天平是平的。先试试两边同时 −' + b + '。';
   } else if (balStage === 1) {
-    eq.textContent = '3x = 15';
-    for (let i = 0; i < 3; i++) left += '<rect x="' + (38 + i * 20) + '" y="78" width="18" height="18" rx="3" fill="#2563eb"/><text x="' + (47 + i * 20) + '" y="92" font-size="11" fill="#fff" text-anchor="middle">x</text>';
-    right += '<rect x="248" y="58" width="24" height="16" rx="3" fill="#ff8a3d"/><text x="260" y="70" font-size="11" fill="#fff" text-anchor="middle">15</text>';
-    msg.textContent = '两边都拿掉 5，天平还是平的。现在两边同时 ÷3。';
+    eq.textContent = a + 'x = ' + (c - b);
+    for (let i = 0; i < a; i++) left += xBox(i);
+    right += '<rect x="248" y="58" width="24" height="16" rx="3" fill="#ff8a3d"/><text x="260" y="70" font-size="11" fill="#fff" text-anchor="middle">' + (c - b) + '</text>';
+    msg.textContent = '两边都拿掉 ' + b + '，天平还是平的。现在两边同时 ÷' + a + '。';
   } else {
-    eq.textContent = 'x = 5';
+    eq.textContent = 'x = ' + x;
     left += '<rect x="48" y="78" width="18" height="18" rx="3" fill="#2563eb"/><text x="57" y="92" font-size="11" fill="#fff" text-anchor="middle">x</text>';
-    right += '<rect x="248" y="58" width="24" height="16" rx="3" fill="#ff8a3d"/><text x="260" y="70" font-size="11" fill="#fff" text-anchor="middle">5</text>';
-    msg.textContent = '解出来了：x = 5。验算：3×5 + 5 = 20 ✓';
+    right += '<rect x="248" y="58" width="24" height="16" rx="3" fill="#ff8a3d"/><text x="260" y="70" font-size="11" fill="#fff" text-anchor="middle">' + x + '</text>';
+    msg.textContent = '解出来了：x = ' + x + '。验算：' + a + '×' + x + ' + ' + b + ' = ' + c + ' ✓';
   }
   document.getElementById('leftWeights').innerHTML = left;
   document.getElementById('rightWeights').innerHTML = right;
   document.getElementById('balMinus5').disabled = balStage !== 0 || balTilt !== 0;
   document.getElementById('balDiv3').disabled = balStage !== 1;
   document.getElementById('balWrong').disabled = balStage !== 0 || balTilt !== 0;
+  // 按钮文案跟着当前方程走（默认 3x+5=20 时和原来一字不差）。
+  document.getElementById('balMinus5').textContent = '两边同时 −' + b;
+  document.getElementById('balDiv3').textContent = '两边同时 ÷' + a;
+  document.getElementById('balWrong').textContent = '只左边 −' + b + '（试试）';
+  // 挑战模式的数字缺口：歪了就报轻几、还差几；平了就报下一步。
+  const gapEl = document.getElementById('balGap');
+  if (gapEl) {
+    if (!balChallenge) { gapEl.textContent = ''; gapEl.classList.remove('ok'); }
+    else if (balStage === 2) {
+      gapEl.textContent = 'x = ' + x + '：验算 ' + a + '×' + x + ' + ' + b + ' = ' + c + '，拼对了！';
+      gapEl.classList.add('ok');
+    } else if (balStage === 1) {
+      gapEl.textContent = '左边 ' + a + 'x = ' + (c - b) + '，右边 ' + (c - b) + '：平了。下一步：两边同时 ÷' + a + '。';
+      gapEl.classList.remove('ok');
+    } else if (balTilt !== 0) {
+      gapEl.textContent = '只动了左边：左边 ' + a + 'x = ' + (c - b) + '，右边 ' + c + '：左边轻 ' + b + '，还差 ' + b + ' 才能平衡。点“重置”再试。';
+      gapEl.classList.remove('ok');
+    } else {
+      gapEl.textContent = '左边 ' + a + 'x+' + b + '，右边 ' + c + '：平的。下一步：两边同时 −' + b + '。';
+      gapEl.classList.remove('ok');
+    }
+  }
 }
 document.getElementById('balMinus5').addEventListener('click', () => { balStage = 1; balTilt = 0; renderBalance(); markTried('balance'); });
 document.getElementById('balDiv3').addEventListener('click', () => { balStage = 2; renderBalance(); markTried('balance'); });
 document.getElementById('balWrong').addEventListener('click', () => { balTilt = -12; renderBalance(); markTried('balance'); });
 document.getElementById('balReset').addEventListener('click', () => { balStage = 0; balTilt = 0; renderBalance(); });
 renderBalance();
+/* 天平挑战开关：进挑战从第一道题、第一步开始，出挑战恢复进挑战前的方程和进度。 */
+function balSetChallenge(on) {
+  balChallenge = on;
+  const box = document.getElementById('balChallengeBox');
+  const btn = document.getElementById('balChallengeBtn');
+  if (on) {
+    balPrev = { eq: { ...balEq }, stage: balStage, tilt: balTilt };
+    balChIdx = 0; balEq = { ...BAL_CH[0] }; balStage = 0; balTilt = 0;
+    document.getElementById('balChallengeTarget').textContent =
+      '挑战：解 ' + balEq.a + 'x + ' + balEq.b + ' = ' + balEq.c + '，x 是几？';
+    btn.textContent = '退出挑战';
+  } else {
+    if (balPrev) { balEq = balPrev.eq; balStage = balPrev.stage; balTilt = balPrev.tilt; }
+    btn.textContent = '挑战一下';
+  }
+  box.hidden = !on;
+  renderBalance();
+  if (on) markTried('balance');
+}
+document.getElementById('balChallengeBtn').addEventListener('click', () => balSetChallenge(!balChallenge));
+document.getElementById('balChallengeNext').addEventListener('click', () => {
+  balChIdx = (balChIdx + 1) % BAL_CH.length;
+  balEq = { ...BAL_CH[balChIdx] }; balStage = 0; balTilt = 0;
+  document.getElementById('balChallengeTarget').textContent =
+    '挑战：解 ' + balEq.a + 'x + ' + balEq.b + ' = ' + balEq.c + '，x 是几？';
+  renderBalance();
+});
 
 /* ---------- P3 函数 ---------- */
 const canvas = document.getElementById('funcCanvas');
 const ctx = canvas.getContext('2d');
+function fmtNum(v) { return String(Math.round(v * 100) / 100); }
+function fmtFunc(t) {
+  const ks = t.k === 1 ? 'x' : t.k === -1 ? '-x' : fmtNum(t.k) + 'x';
+  return 'y = ' + ks + (t.b >= 0 ? ' + ' + fmtNum(t.b) : ' − ' + fmtNum(-t.b));
+}
+/* 函数挑战：目标直线（蓝色虚线），k、b 都在滑杆范围内；错了不只说错，
+   图上把两条线在取样点的落差连起来，文案报出差几、斜率还是截距不对。 */
+const FUNC_CH = [{ k: 2, b: 1 }, { k: 1, b: 10 }, { k: -1, b: 12 }, { k: 3, b: 0 }, { k: 0.5, b: 5 }];
+let funcChallenge = false, funcChIdx = 0, funcPrev = null;
 /* 画一次函数图像（主演示和数学实验室共用）：给 k、b 和一块画布，就画网格、坐标轴、
-   直线 y = kx + b 和 (0, b) 截距点。标签和表格各由调用方自己管。 */
-function drawFuncGraph(c2, cv, k, b) {
+   直线 y = kx + b 和 (0, b) 截距点。标签和表格各由调用方自己管。
+   挑战模式多传一个 target {k, b}：目标直线画成蓝色虚线，并在取样点把两条线的
+   落差连起来标出差几；返回取样点的落差数据（没传 target 时返回 null）。 */
+function drawFuncGraph(c2, cv, k, b, target) {
   const W = cv.width, H = cv.height;
   const xMin = -5, xMax = 6, yMin = -10, yMax = 24;
   const X = x => 50 + (x - xMin) / (xMax - xMin) * (W - 70);
@@ -1017,6 +1150,30 @@ function drawFuncGraph(c2, cv, k, b) {
   c2.fillStyle = '#2563eb'; c2.beginPath(); c2.arc(X(0), Y(b), 7, 0, Math.PI * 2); c2.fill();
   c2.fillStyle = '#1d4ed8'; c2.font = 'bold 14px system-ui';
   c2.fillText('(0, ' + b + ')', X(0) + 12, Y(b) - 8);
+  if (!target) return null;
+  const tk = target.k, tb = target.b;
+  c2.strokeStyle = '#2563eb'; c2.lineWidth = 3;
+  c2.setLineDash([8, 6]);
+  c2.beginPath(); c2.moveTo(X(xMin), Y(tk * xMin + tb)); c2.lineTo(X(xMax), Y(tk * xMax + tb)); c2.stroke();
+  c2.setLineDash([]);
+  c2.fillStyle = '#1d4ed8'; c2.font = 'bold 14px system-ui';
+  c2.fillText('目标 ' + fmtFunc(target), 12, 24);
+  // 取样点：从大到小找一个两条线的 y 都在图里的 x，落差画出来。
+  let sx = 0, uy = b, ty = tb;
+  for (const x of [5, 3, 2, 1, 0]) {
+    const a = k * x + b, c = tk * x + tb;
+    if (a >= yMin && a <= yMax && c >= yMin && c <= yMax) { sx = x; uy = a; ty = c; break; }
+  }
+  if (Math.abs(uy - ty) > 0.001) {
+    c2.strokeStyle = '#dc2626'; c2.lineWidth = 2; c2.setLineDash([4, 4]);
+    c2.beginPath(); c2.moveTo(X(sx), Y(uy)); c2.lineTo(X(sx), Y(ty)); c2.stroke();
+    c2.setLineDash([]);
+    c2.fillStyle = '#ff8a3d'; c2.beginPath(); c2.arc(X(sx), Y(uy), 6, 0, Math.PI * 2); c2.fill();
+    c2.fillStyle = '#2563eb'; c2.beginPath(); c2.arc(X(sx), Y(ty), 6, 0, Math.PI * 2); c2.fill();
+    c2.fillStyle = '#dc2626'; c2.font = 'bold 14px system-ui';
+    c2.fillText('差 ' + fmtNum(Math.abs(uy - ty)), X(sx) + 10, (Y(uy) + Y(ty)) / 2);
+  }
+  return { sampleX: sx, userY: uy, targetY: ty };
 }
 function drawFunc() {
   const k = parseFloat(document.getElementById('kRange').value);
@@ -1025,21 +1182,77 @@ function drawFunc() {
   document.getElementById('bLabel').textContent = b;
   document.getElementById('funcK').textContent = k;
   document.getElementById('funcB').textContent = b;
-  drawFuncGraph(ctx, canvas, k, b);
+  const gap = drawFuncGraph(ctx, canvas, k, b, funcChallenge ? FUNC_CH[funcChIdx] : null);
   // table
   [0, 1, 2, 3, 5].forEach(x => { document.getElementById('y' + x).textContent = (k * x + b); });
   document.getElementById('funcChallenge').textContent =
     '小挑战：x = 2 公里时要付 ' + (k * 2 + b) + ' 元。试试把起步价调到 10 元，2 公里又是多少？';
+  const gapEl = document.getElementById('funcGapMsg');
+  if (gapEl) {
+    if (!funcChallenge) { gapEl.textContent = ''; gapEl.classList.remove('ok'); }
+    else {
+      const t = FUNC_CH[funcChIdx];
+      if (k === t.k && b === t.b) {
+        gapEl.textContent = '画对了！你的直线和目标完全重合：' + fmtFunc(t) + '。';
+        gapEl.classList.add('ok');
+      } else {
+        const diff = gap ? gap.userY - gap.targetY : 0;
+        const sx = gap ? gap.sampleX : 0;
+        const uy = gap ? gap.userY : k * sx + b;
+        const ty = gap ? gap.targetY : t.k * sx + t.b;
+        let hint;
+        if (k === t.k) hint = '斜率对了，截距还差 ' + fmtNum(Math.abs(b - t.b)) + '：b 应该是 ' + fmtNum(t.b) + '。';
+        else if (b === t.b) hint = '截距对了，斜率还差 ' + fmtNum(Math.abs(k - t.k)) + '：k 应该是 ' + fmtNum(t.k) + '。';
+        else hint = '再调调 k 和 b，让两条线重合。';
+        gapEl.textContent = '在 x = ' + sx + ' 处，你的 y 是 ' + fmtNum(uy) + '，目标是 ' + fmtNum(ty) + '，' +
+          (diff > 0 ? '大了 ' + fmtNum(diff) : diff < 0 ? '小了 ' + fmtNum(-diff) : '正好对上') + '。' + hint;
+        gapEl.classList.remove('ok');
+      }
+    }
+  }
 }
 document.getElementById('kRange').addEventListener('input', () => { drawFunc(); markTried('function'); });
 document.getElementById('bRange').addEventListener('input', () => { drawFunc(); markTried('function'); });
 drawFunc();
+/* 函数挑战开关：进挑战不改滑杆（从当前直线出发调），出挑战恢复进挑战前的 k、b。 */
+function funcSetChallenge(on) {
+  funcChallenge = on;
+  const box = document.getElementById('funcChallengeBox');
+  const btn = document.getElementById('funcChallengeBtn');
+  if (on) {
+    funcPrev = { k: document.getElementById('kRange').value, b: document.getElementById('bRange').value };
+    funcChIdx = 0;
+    document.getElementById('funcChallengeTarget').textContent =
+      '挑战：画出 ' + fmtFunc(FUNC_CH[0]) + '（蓝色虚线是目标）';
+    btn.textContent = '退出挑战';
+  } else {
+    if (funcPrev) {
+      document.getElementById('kRange').value = funcPrev.k;
+      document.getElementById('bRange').value = funcPrev.b;
+    }
+    btn.textContent = '挑战一下';
+  }
+  box.hidden = !on;
+  drawFunc();
+  if (on) markTried('function');
+}
+document.getElementById('funcChallengeBtn').addEventListener('click', () => funcSetChallenge(!funcChallenge));
+document.getElementById('funcChallengeNext').addEventListener('click', () => {
+  funcChIdx = (funcChIdx + 1) % FUNC_CH.length;
+  document.getElementById('funcChallengeTarget').textContent =
+    '挑战：画出 ' + fmtFunc(FUNC_CH[funcChIdx]) + '（蓝色虚线是目标）';
+  drawFunc();
+});
 
 /* ---------- P0 十格阵：凑十 / 破十（1 年级招牌教法） ----------
    加法：点右边一个圆点，把它搬到左边凑成 10（也可以拖过去）；减法：点满 10 的格子
    里的圆点拿走。凑十和破十是同一招的两面：都是围着 10 重捆。 */
 const TF_ADD = [[9, 4], [8, 5], [7, 6], [9, 7], [8, 8]];
 const TF_SUB = [[13, 5], [12, 4], [15, 8], [14, 6], [11, 7]];
+/* 十格阵挑战：目标总数（比如 13），格子随便点、随便拿；拼错了图会标出来——
+   多出来的圆点描红框，还差几个文案直接报数。凑十/破十照常用（只换位置，不改总数）。 */
+const TF_CH = [{ t: 13, hint: '9 + 4' }, { t: 12, hint: '8 + 4' }, { t: 14, hint: '7 + 7' }, { t: 15, hint: '9 + 6' }, { t: 11, hint: '5 + 6' }];
+let tfChallenge = false, tfChIdx = 0, tfPrev = null;
 let tfMode = 'add';
 let tfProb = 0;
 let tfA = 9, tfB = 4; // 加法：A 框个数，B 框个数；减法：A 框是满 10 框里剩的，B 是零散个数
@@ -1049,10 +1262,20 @@ const tfBEl = document.getElementById('tfB');
 const tfCells = { A: [], B: [] };
 let tfDrag = null;
 function tfCellClick(f, i) {
+  if (tfChallenge) {
+    // 挑战模式：格子随便点、随便拿，点一下放一个、再点拿走。
+    const cell = tfCells[f][i];
+    cell.classList.toggle('filled');
+    tfA = tfCells.A.filter(c => c.classList.contains('filled')).length;
+    tfB = tfCells.B.filter(c => c.classList.contains('filled')).length;
+    tfRender(); markTried('tenframe');
+    return;
+  }
   if (tfMode === 'add' && f === 'B' && i < tfB) tfMoveOne();
   else if (tfMode === 'sub' && f === 'A' && i < tfA) tfTakeOne();
 }
 function tfCellDown(f, i) {
+  if (tfChallenge) return; // 挑战模式只点不拖
   // 只支持加法从 B 框拖到 A 框；减法拿走直接点。
   if (tfMode === 'add' && f === 'B' && i < tfB) {
     tfDrag = { f, i };
@@ -1107,6 +1330,7 @@ function tfAuto() {
   tfRender(); markTried('tenframe');
 }
 function tfSetProblem(mode, idx) {
+  if (tfChallenge) return; // 挑战进行中不换题（玩法和题目段都已灰掉），免得把拼了一半的清掉
   tfMode = mode; tfProb = idx; tfTaken = 0;
   const list = mode === 'add' ? TF_ADD : TF_SUB;
   tfA = mode === 'add' ? list[idx][0] : 10;
@@ -1129,8 +1353,31 @@ function tfSetProblem(mode, idx) {
 function tfRender() {
   tfCells.A.forEach((c, i) => c.classList.toggle('filled', i < tfA));
   tfCells.B.forEach((c, i) => c.classList.toggle('filled', i < tfB));
+  tfCells.A.concat(tfCells.B).forEach(c => c.classList.remove('extra'));
   const eq = document.getElementById('tfEq');
   const note = document.getElementById('tfNote');
+  if (tfChallenge) {
+    const target = TF_CH[tfChIdx].t;
+    const total = tfA + tfB;
+    document.getElementById('tfLabelA').textContent = '第一个格子 · ' + tfA + ' 个';
+    document.getElementById('tfLabelB').textContent = '第二个格子 · ' + tfB + ' 个';
+    eq.textContent = tfA + ' + ' + tfB + ' = ' + total;
+    if (total === target) {
+      note.textContent = '拼对了！' + tfA + ' + ' + tfB + ' = ' + total + '。' + (tfA === 10 ? '你凑成了 10 再加 ' + tfB + '，不用一个一个数了。' : '换个拼法试试：凑成 10 再加，行不行？');
+    } else if (total > target) {
+      note.textContent = '你拼出的是 ' + tfA + ' + ' + tfB + ' = ' + total + '，不是 ' + target + '：多了 ' + (total - target) + ' 个，红框的是多出来的，点一下拿掉。';
+      // 多出来的圆点描红框：按 A 再 B 的顺序，目标之外的已填格子就是多出来的。
+      let seen = 0;
+      tfCells.A.concat(tfCells.B).forEach(c => {
+        if (!c.classList.contains('filled')) return;
+        seen++;
+        if (seen > target) c.classList.add('extra');
+      });
+    } else {
+      note.textContent = '你拼出的是 ' + tfA + ' + ' + tfB + ' = ' + total + '，不是 ' + target + '：还差 ' + (target - total) + ' 个，再放 ' + (target - total) + ' 个圆点。';
+    }
+    return;
+  }
   document.getElementById('tfLabelA').textContent =
     tfMode === 'add' ? '第一个格子 · ' + tfA + ' 个' : '满 10 的格子 · 还剩 ' + tfA + ' 个';
   document.getElementById('tfLabelB').textContent =
@@ -1159,8 +1406,46 @@ function tfRender() {
 document.querySelectorAll('#tfModeSeg [data-tf-mode]').forEach(b =>
   b.addEventListener('click', () => tfSetProblem(b.dataset.tfMode, 0)));
 document.getElementById('tfAuto').addEventListener('click', tfAuto);
-document.getElementById('tfReset').addEventListener('click', () => tfSetProblem(tfMode, tfProb));
+document.getElementById('tfReset').addEventListener('click', () => {
+  if (tfChallenge) { tfA = 0; tfB = 0; tfRender(); return; } // 挑战里的“重来”是清空重拼
+  tfSetProblem(tfMode, tfProb);
+});
 tfSetProblem('add', 0);
+/* 十格阵挑战开关：进挑战先切回加法、清空重拼，出挑战恢复进挑战前的玩法和题目。 */
+function tfSetChallenge(on) {
+  const card = document.getElementById('demo-tenframe');
+  const btn = document.getElementById('tfChallengeBtn');
+  const box = document.getElementById('tfChallengeBox');
+  if (on) {
+    tfPrev = { mode: tfMode, prob: tfProb };
+    tfChIdx = 0;
+    tfSetProblem('add', 0); // tfChallenge 还是 false，能正常切题
+    tfChallenge = true;
+    tfA = 0; tfB = 0; tfTaken = 0;
+    document.getElementById('tfChallengeTarget').textContent =
+      '挑战：拼出 ' + TF_CH[0].t + '（比如 ' + TF_CH[0].hint + '，也可以凑成 10 再加）';
+    card.classList.add('challenge-on');
+    btn.textContent = '退出挑战';
+    box.hidden = false;
+    tfRender();
+    markTried('tenframe');
+  } else {
+    tfChallenge = false;
+    card.classList.remove('challenge-on');
+    btn.textContent = '挑战一下';
+    box.hidden = true;
+    tfSetProblem(tfPrev ? tfPrev.mode : 'add', tfPrev ? tfPrev.prob : 0);
+  }
+}
+document.getElementById('tfChallengeBtn').addEventListener('click', () => tfSetChallenge(!tfChallenge));
+document.getElementById('tfChallengeNext').addEventListener('click', () => {
+  tfChIdx = (tfChIdx + 1) % TF_CH.length;
+  tfA = 0; tfB = 0;
+  const t = TF_CH[tfChIdx];
+  document.getElementById('tfChallengeTarget').textContent =
+    '挑战：拼出 ' + t.t + '（比如 ' + t.hint + '，也可以凑成 10 再加）';
+  tfRender();
+});
 
 /* ---------- 为什么小实验 ---------- */
 // 进位：从 8 个一开始，+1 到 10 就打包成 1 个十

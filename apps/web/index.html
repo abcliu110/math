@@ -146,6 +146,11 @@
         <div class="btn-row">
           <button class="btn small primary" id="tfAuto" type="button">凑十！</button>
           <button class="btn small ghost" id="tfReset" type="button">重来</button>
+          <button class="btn small ghost" id="tfChallengeBtn" type="button">挑战一下</button>
+        </div>
+        <div class="challenge-box" id="tfChallengeBox" hidden>
+          <p class="challenge-target" id="tfChallengeTarget"></p>
+          <div class="btn-row"><button class="btn small ghost" id="tfChallengeNext" type="button">换一题</button></div>
         </div>
         <p class="demo-foot">成功标准：不用数手指，说出 9 + 4 为什么是 13，13 − 5 为什么是 8。</p>
         <p class="why"><b>为什么？</b>10 是整捆，凑成 10 之后就不用一个一个数了。加法是“拿 1 个给 9 凑成 10”，减法反过来，是“从 10 里拿走，再加剩下的 3”。凑十和破十是同一招的两面。</p>
@@ -172,9 +177,16 @@
           <line x1="20" y1="30" x2="300" y2="30" stroke="#334155" stroke-width="3" stroke-linecap="round"/>
           <g id="lineTicks"></g>
           <circle id="lineDot" cx="230" cy="30" r="11" fill="#ff8a3d" stroke="#fff" stroke-width="3" style="cursor:grab; touch-action:none"/>
+          <circle id="lineTargetDot" cx="230" cy="30" r="11" fill="none" stroke="#15803d" stroke-width="3" stroke-dasharray="4 3" hidden/>
           <text x="20" y="60" font-size="13" fill="#64748b">0</text>
           <text x="292" y="60" font-size="13" fill="#64748b">1</text>
         </svg>
+        <div class="btn-row"><button class="btn small ghost" id="fracChallengeBtn" type="button">挑战一下</button></div>
+        <div class="challenge-box" id="fracChallengeBox" hidden>
+          <p class="challenge-target" id="fracChallengeTarget"></p>
+          <p class="challenge-msg" id="fracChallengeMsg"></p>
+          <div class="btn-row"><button class="btn small ghost" id="fracChallengeNext" type="button">换一题</button></div>
+        </div>
         <p class="demo-foot">成功标准：能把 3/4 和 6/8 放到同一个点，并说出为什么。</p>
         <p class="why"><b>为什么？</b>一块饼切成 4 份取 3 份，和切成 8 份取 6 份，吃的量一样多——份数变多了，每份变小了，总量没变。所以它们在数轴上是同一个点。</p>
       </article>
@@ -202,6 +214,12 @@
           <button class="btn small primary" id="balDiv3">两边同时 ÷3</button>
           <button class="btn small ghost" id="balWrong">只左边 −5（试试）</button>
           <button class="btn small ghost" id="balReset">重置</button>
+          <button class="btn small ghost" id="balChallengeBtn" type="button">挑战一下</button>
+        </div>
+        <div class="challenge-box" id="balChallengeBox" hidden>
+          <p class="challenge-target" id="balChallengeTarget"></p>
+          <p class="challenge-msg" id="balGap"></p>
+          <div class="btn-row"><button class="btn small ghost" id="balChallengeNext" type="button">换一题</button></div>
         </div>
         <p class="demo-foot">成功标准：用天平的动作解出 x = 5，再写出每一步。</p>
         <p class="why"><b>为什么？</b>“=”不是“算出答案”，而是“两边一样重”。两边一起拿掉 5，天平还是平的；两边一起除以 3，天平还是平的。所以每一步不是背口诀，是保持平衡。</p>
@@ -220,6 +238,12 @@
           <thead><tr><th>x（公里）</th><th>0</th><th>1</th><th>2</th><th>3</th><th>5</th></tr></thead>
           <tbody><tr><th>y（元）</th><td id="y0"></td><td id="y1"></td><td id="y2"></td><td id="y3"></td><td id="y5"></td></tr></tbody>
         </table>
+        <div class="btn-row"><button class="btn small ghost" id="funcChallengeBtn" type="button">挑战一下</button></div>
+        <div class="challenge-box" id="funcChallengeBox" hidden>
+          <p class="challenge-target" id="funcChallengeTarget"></p>
+          <p class="challenge-msg" id="funcGapMsg"></p>
+          <div class="btn-row"><button class="btn small ghost" id="funcChallengeNext" type="button">换一题</button></div>
+        </div>
         <p class="demo-foot" id="funcChallenge">小挑战：x = 2 公里时要付多少钱？拖动 k 和 b，看表格里的答案怎么变。</p>
         <p class="why"><b>为什么？</b>k 是“每多走 1 公里多付多少钱”，所以直线越陡，每公里越贵；b 是“还没走就先付的起步价”，所以直线从 y 轴的 b 那里出发。直线不是公式，是这趟车费的故事。</p>
       </article>
