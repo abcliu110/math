@@ -55,6 +55,11 @@ body[data-view="dimensions"] #dimensions, body[data-view="dim-detail"] #dimensio
 body[data-view="path"] #path, body[data-view="path-step"] #path,
 body[data-view="demos"] #demos, body[data-view="demo-tenframe"] #demos, body[data-view="demo-fraction"] #demos,
 body[data-view="demo-balance"] #demos, body[data-view="demo-function"] #demos,
+body[data-view="demo-count"] #demos, body[data-view="demo-position"] #demos, body[data-view="demo-split"] #demos,
+body[data-view="demo-addsub"] #demos, body[data-view="demo-solids"] #demos, body[data-view="demo-bundle"] #demos,
+body[data-view="demo-clock"] #demos, body[data-view="demo-tangram"] #demos, body[data-view="demo-sort"] #demos,
+body[data-view="demo-hundred"] #demos, body[data-view="demo-shop"] #demos, body[data-view="demo-place"] #demos,
+body[data-view="demo-pattern"] #demos,
 body[data-view="why"] #why, body[data-view="review"] #review,
 body[data-view="progress"] #review, body[data-view="lab"] #lab{display:block}
 .path-detail{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-top:16px}
@@ -251,3 +256,160 @@ main{min-width:0}
   .dim-btn{flex:none}
   .mode-dims{flex:1 1 100%}
 }
+
+
+/* ================= 一年级实验样式（1.1–1.16，2026-11-06） ================= */
+
+/* 一年级 A 组演示样式（1.1 数数 / 1.2 位置 / 1.3 分与合 / 1.4 加减法与 0）
+   只用 styles.css 的 :root 变量；所有选择器都以本组前缀开头；最小触控目标 44px。 */
+
+/* 1.1 数数 */
+.count-row{display:flex;flex-wrap:wrap;gap:8px;min-height:52px;align-items:center}
+.count-dot{width:48px;height:48px;min-width:48px;min-height:48px;border-radius:50%;border:2px solid var(--blue);background:var(--blue-light);color:var(--ink);font-size:18px;font-weight:700;cursor:pointer;padding:0}
+.count-dot.count-counted{background:var(--orange);border-color:var(--orange-dark);color:#fff}
+.count-dot.count-paired{outline:3px solid var(--blue);outline-offset:2px}
+.count-dot.count-extra{background:#fee2e2;border-color:#dc2626;outline:3px solid #dc2626}
+.count-zero{color:var(--muted);font-weight:700}
+
+/* 1.2 位置 */
+.pos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:360px;margin:12px auto}
+.pos-cell{min-height:76px;border:2px solid var(--line);border-radius:14px;background:var(--card);cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center}
+.pos-cell.pos-center{background:#fff7ed;border-color:var(--orange);cursor:default}
+.pos-person{position:relative;width:60px;height:72px;transition:transform .3s ease}
+.pos-head{position:relative;width:30px;height:30px;border-radius:50%;background:var(--orange);margin:0 auto}
+.pos-nose{position:absolute;top:-4px;left:50%;width:0;height:0;margin-left:-6px;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:10px solid var(--orange-dark)}
+.pos-body{width:34px;height:34px;margin:2px auto 0;border-radius:10px 10px 14px 14px;background:var(--blue)}
+.pos-hand{position:absolute;left:2px;top:40px;width:26px;height:26px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center}
+.pos-hand-label{color:#fff;font-size:15px;font-weight:700;line-height:1}
+.pos-star{font-size:36px;color:var(--orange-dark);line-height:1}
+
+/* 1.3 分与合 */
+.split-plates{display:flex;gap:16px}
+.split-plate-wrap{flex:1;min-width:0}
+.split-label{font-weight:700;margin:0 0 6px}
+.split-plate{display:flex;flex-wrap:wrap;gap:8px;align-content:center;justify-content:center;min-height:120px;border:2px dashed var(--line);border-radius:var(--radius);background:var(--bg);padding:10px}
+.split-block{width:48px;height:48px;min-width:48px;min-height:48px;border-radius:12px;border:2px solid var(--orange-dark);background:var(--orange);cursor:pointer;padding:0}
+.split-list{display:flex;flex-wrap:wrap;gap:8px}
+.split-opt{min-height:48px;padding:8px 16px;border:2px solid var(--line);border-radius:999px;background:#fff;font-size:16px;font-weight:700;cursor:pointer}
+.split-opt.split-cur{border-color:var(--orange);background:var(--orange);color:#fff}
+.split-kids{display:flex;flex-wrap:wrap;gap:8px}
+.split-kid{width:48px;height:48px;min-width:48px;min-height:48px;border-radius:50%;border:2px solid var(--blue);background:var(--blue-light);font-size:18px;font-weight:700;cursor:pointer;padding:0}
+.split-kid.split-picked{background:var(--orange);border-color:var(--orange-dark);color:#fff}
+.split-kid.split-taken{outline:3px solid var(--green);outline-offset:2px;background:#dcfce7}
+.split-kid.split-taken.split-picked{background:var(--orange)}
+
+/* 1.4 加减法 */
+.addsub-plates{display:flex;gap:16px}
+.addsub-plate-wrap{flex:1;min-width:0}
+.addsub-label{font-weight:700;margin:0 0 6px}
+.addsub-plate{display:flex;flex-wrap:wrap;gap:8px;align-content:center;justify-content:center;min-height:110px;border:2px solid var(--line);border-radius:var(--radius);background:var(--bg);padding:10px}
+.addsub-dot{width:48px;height:48px;min-width:48px;min-height:48px;border-radius:50%;border:2px solid var(--orange-dark);background:var(--orange);color:#fff;font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.addsub-empty{color:var(--muted);font-weight:700}
+
+/* group-b.css — 1 年级形状/分类演示样式（1.5 / 1.10 / 1.12）
+   类名全部以 solid- / tang- / sort- 开头，不用全局选择器，只用 :root 里已有的变量。
+   最小触摸目标 44px。 */
+
+/* ---- 演示 1：立体图形 ---- */
+.solid-cards{display:flex;flex-wrap:wrap;gap:12px;margin:12px 0}
+.solid-card{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:88px;min-height:120px;padding:12px 10px;border:2px solid var(--line);border-radius:var(--radius);background:var(--card);cursor:pointer;font-family:inherit;color:var(--ink)}
+.solid-card:hover{border-color:var(--orange)}
+.solid-selected{border-color:var(--orange);background:#fff7ed}
+.solid-shape{display:flex;align-items:center;justify-content:center;width:76px;height:76px}
+.solid-name{font-size:17px;font-weight:700}
+.solid-cubes{display:flex;flex-wrap:wrap;gap:8px;min-height:52px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px;margin:10px 0}
+.solid-mini-cube{width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:#fef3c7;border:2px solid var(--orange-dark);border-radius:8px;font-weight:700;font-size:17px;color:var(--ink)}
+.solid-cube-done{border-color:var(--green);background:#f0fdf4}
+.solid-anim-roll{animation:solid-roll 0.9s ease}
+.solid-anim-stack{animation:solid-stack 0.9s ease}
+.solid-anim-shake{animation:solid-shake 0.6s ease}
+@keyframes solid-roll{0%{transform:translateX(0) rotate(0deg)}50%{transform:translateX(14px) rotate(180deg)}100%{transform:translateX(0) rotate(360deg)}}
+@keyframes solid-stack{0%{transform:translateY(0)}40%{transform:translateY(-18px)}100%{transform:translateY(0)}}
+@keyframes solid-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+/* ---- 演示 2：七巧板 ---- */
+.tang-board{width:100%;max-width:280px;height:auto;display:block;margin:12px auto;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+.tang-piece{cursor:pointer;min-height:44px}
+.tang-piece:hover{opacity:0.85}
+.tang-selected{stroke:var(--orange-dark);stroke-width:4}
+.tang-pair{width:100%;max-width:220px;height:auto;display:block;margin:12px auto;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+.tang-pair-pop{animation:tang-pop 0.5s ease}
+@keyframes tang-pop{0%{transform:scale(0.96)}100%{transform:scale(1)}}
+
+/* ---- 演示 3：分类与整理 ---- */
+.sort-pool{display:flex;flex-wrap:wrap;gap:10px;min-height:56px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px;margin:10px 0}
+.sort-item{width:48px;height:48px;border-radius:12px;border:2px solid var(--line);background:var(--card);font-size:26px;line-height:1;cursor:pointer;font-family:inherit}
+.sort-item:hover{border-color:var(--orange)}
+.sort-red{color:#dc2626}
+.sort-blue{color:var(--blue)}
+.sort-trays{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:10px 0}
+.sort-tray{min-height:120px;border:2px dashed var(--line);border-radius:12px;padding:10px;background:var(--card);display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start;align-items:center}
+.sort-tray-title{width:100%;margin:0 0 4px;font-weight:700;font-size:15px;color:var(--muted)}
+.sort-total{font-size:19px;font-weight:700;text-align:center}
+
+/* Group C — Grade 1 place-value demos. Class selectors only, :root vars only.
+   Orange bundle box = 1个十, blue stick = 1个一. Min touch target 44px. */
+
+/* --- demo-bundle --- */
+.bundle-cap { margin: 10px 0 0; color: var(--muted); font-size: 14px; font-weight: 700; }
+.bundle-area { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; min-height: 64px; padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); margin-top: 8px; }
+.bundle-bundle { display: inline-flex; align-items: flex-end; gap: 2px; padding: 8px 10px 6px; border: 2px solid var(--orange-dark); border-radius: 10px; background: #fff7ed; }
+.bundle-mini { width: 8px; height: 44px; background: var(--orange); border-radius: 4px; }
+.bundle-bundle-label { font-size: 14px; font-weight: 700; color: var(--orange-dark); margin-left: 4px; }
+.bundle-stick { width: 12px; height: 48px; background: var(--blue); border-radius: 6px; }
+.bundle-empty { color: var(--muted); font-size: 15px; }
+.bundle-count { text-align: center; color: var(--muted); font-size: 15px; }
+.bundle-place-table { border-collapse: collapse; margin: 12px auto 0; }
+.bundle-pt-h { border: 1px solid var(--line); padding: 8px 20px; font-size: 15px; color: var(--muted); background: var(--bg); font-weight: 700; }
+.bundle-pt-c { border: 1px solid var(--line); padding: 8px 20px; font-size: 24px; font-weight: 800; text-align: center; }
+
+/* --- demo-hundred --- */
+.hund-grid { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 6px; margin-top: 10px; }
+.hund-cell { min-width: 44px; min-height: 44px; border: 2px solid var(--line); background: var(--card); border-radius: 10px; font-size: 16px; font-weight: 700; color: var(--ink); cursor: pointer; padding: 0; font-family: inherit; }
+.hund-cell.hund-first { background: var(--orange); border-color: var(--orange-dark); color: #fff; }
+.hund-cell.hund-second { background: var(--blue); border-color: var(--blue); color: #fff; }
+.hund-compare-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+.hund-num-box { border: 1px solid var(--line); border-radius: 12px; padding: 10px; background: var(--bg); }
+.hund-num-label { margin: 0 0 6px; font-weight: 700; font-size: 16px; }
+.hund-bundles { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; min-height: 56px; }
+.hund-bundle { display: inline-flex; align-items: flex-end; gap: 2px; padding: 6px 8px 4px; border: 2px solid var(--orange-dark); border-radius: 10px; background: #fff7ed; }
+.hund-mini { width: 7px; height: 40px; background: var(--orange); border-radius: 4px; }
+.hund-bundle-label { font-size: 13px; font-weight: 700; color: var(--orange-dark); margin-left: 3px; }
+.hund-stick { width: 11px; height: 44px; background: var(--blue); border-radius: 6px; }
+.hund-readout { margin: 8px 0 0; font-weight: 700; font-size: 17px; }
+.hund-tens-only .hund-stick { opacity: 0.2; }
+
+/* --- demo-place --- */
+.place-blocks { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; min-height: 64px; padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); margin-top: 8px; }
+.place-bundle { display: inline-flex; align-items: flex-end; gap: 2px; padding: 8px 10px 6px; border: 2px solid var(--orange-dark); border-radius: 10px; background: #fff7ed; }
+.place-mini { width: 8px; height: 44px; background: var(--orange); border-radius: 4px; }
+.place-bundle-label { font-size: 14px; font-weight: 700; color: var(--orange-dark); margin-left: 4px; }
+.place-stick { width: 12px; height: 48px; background: var(--blue); border-radius: 6px; }
+.place-now { text-align: center; font-weight: 700; font-size: 18px; }
+.place-vert-wrap { text-align: center; margin-top: 12px; }
+.place-vert { display: inline-block; white-space: pre; font-size: 20px; font-weight: 700; line-height: 1.5; text-align: left; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 12px 20px; }
+.place-mark { text-align: center; color: var(--orange-dark); font-weight: 700; min-height: 24px; }
+
+/* group-d · 1 年级演示样式：时钟 / 开小店 / 找规律。
+   只用 :root 里的变量，不用全局选择器；最小触摸目标 44px（沿用 .btn 的 48px）。 */
+.clock-face { display: block; width: 240px; max-width: 100%; height: auto; margin: 8px auto; }
+.clock-target { font-weight: 700; margin: 8px 0; }
+.clock-msg { min-height: 28px; color: var(--green); font-weight: 700; margin: 8px 0; }
+.shop-item { min-width: 96px; }
+.shop-coin { min-width: 96px; }
+.shop-wallet-total { font-size: 19px; font-weight: 700; margin: 8px 0; }
+.shop-msg { min-height: 28px; margin: 8px 0; }
+.shop-note { color: var(--muted); font-size: 14px; margin: 8px 0; }
+.pat-seq { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 12px 0; }
+.pat-cell { width: 52px; height: 52px; min-width: 52px; min-height: 52px; border: 2px solid var(--line); border-radius: 12px; display: flex; align-items: center; justify-content: center; background: var(--card); font-size: 20px; font-weight: 800; }
+.pat-cell.pat-blank { border-style: dashed; color: var(--muted); }
+.pat-cell.pat-filled { border-color: var(--green); }
+.pat-cell.pat-in-unit { border-color: var(--orange); background: var(--blue-light); outline: 3px solid var(--orange); outline-offset: 1px; }
+.pat-shape { width: 30px; height: 30px; display: inline-block; flex: none; }
+.pat-red { background: var(--orange-dark); border-radius: 50%; }
+.pat-blue { background: var(--blue); border-radius: 50%; }
+.pat-dot { background: var(--ink); border-radius: 50%; }
+.pat-ring { border: 4px solid var(--ink); border-radius: 50%; background: var(--card); box-sizing: border-box; }
+.pat-tri { background: var(--orange); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.pat-choice { display: inline-flex; align-items: center; gap: 8px; }
+.pat-msg { min-height: 28px; font-weight: 700; margin: 8px 0; }

@@ -42,7 +42,7 @@
       <p class="lead">先动手摆一摆，再看图想一想，最后才写算式。分数是切出来的，方程是天平称出来的，函数是拖出来的——不是背出来的。</p>
       <div class="hero-actions">
         <button class="btn primary" type="button" data-nav-key="grades">选一个年级开始</button>
-        <button class="btn ghost" type="button" data-nav-key="demos">先玩四个演示</button>
+        <button class="btn ghost" type="button" data-nav-key="demos">先玩互动演示</button>
       </div>
       <ul class="hero-points">
         <li>实物 → 图像 → 符号（CPA）</li>
@@ -76,7 +76,7 @@
       <button class="panel" type="button" data-nav-key="grades"><span class="panel-icon" aria-hidden="true">1–9</span><b>选年级</b><span class="panel-sub">1–9 年级 · 按学期走</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">9 个年级</span></button>
       <button class="panel" type="button" data-nav-key="dimensions"><span class="panel-icon" aria-hidden="true">◇</span><b>换维度</b><span class="panel-sub">同一批内容换个分法</span><span class="panel-prog"><i style="width:20%"></i></span><span class="panel-tx">5 个维度</span></button>
       <button class="panel" type="button" data-nav-key="path"><span class="panel-icon" aria-hidden="true">→</span><b>学习路径</b><span class="panel-sub">动手 → 说一说 → 练 → 测</span><span class="panel-prog"><i style="width:25%"></i></span><span class="panel-tx">每课四步</span></button>
-      <button class="panel" type="button" data-nav-key="demos"><span class="panel-icon" aria-hidden="true">✦</span><b>互动演示</b><span class="panel-sub">分数、天平、函数、十格阵都能玩</span><span class="panel-prog"><i id="panelDemoProg" style="width:0%"></i></span><span class="panel-tx" id="panelDemoTx">4 个演示 · 0 已体验</span></button>
+      <button class="panel" type="button" data-nav-key="demos"><span class="panel-icon" aria-hidden="true">✦</span><b>互动演示</b><span class="panel-sub">分数、天平、函数、十格阵，还有一年级实验都能玩</span><span class="panel-prog"><i id="panelDemoProg" style="width:0%"></i></span><span class="panel-tx" id="panelDemoTx">4 个演示 · 0 已体验</span></button>
       <button class="panel" type="button" data-nav-key="lab"><span class="panel-icon" aria-hidden="true">🧪</span><b>数学实验室</b><span class="panel-sub">没有题目，随便玩：分数、十格阵、天平、函数</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">4 个自由玩小站 · 不评分</span></button>
       <button class="panel" type="button" data-nav-key="review"><span class="panel-icon" aria-hidden="true">✎</span><b>错题本</b><span class="panel-sub">错题连当时的图一起存</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">2 条示例</span></button>
       <button class="panel" type="button" data-nav-key="progress"><span class="panel-icon" aria-hidden="true">●</span><b>我的进度</b><span class="panel-sub">玩过的演示点亮一格</span><span class="panel-prog"><i id="panelProgFill" style="width:0%"></i></span><span class="panel-tx" id="panelProgTx">0 / 4 个演示</span></button>
@@ -116,13 +116,26 @@
 
   <!-- Featured demos -->
   <section id="demos" class="section wrap">
-    <h2>互动演示 · 先玩这四个</h2>
-    <p class="section-sub">点一块面板进一个演示，都是我们自己画的图、自己写的例子。能点的都请点一点、拖一拖。</p>
+    <h2>互动演示</h2>
+    <p class="section-sub">点一块面板进一个演示，都是我们自己画的图、自己写的例子。能点的都请点一点、拖一拖。一年级的 13 个新实验也在里面。</p>
     <div class="panels" id="demoPanels" aria-label="互动演示面板">
       <button class="panel" type="button" data-nav-key="demo-tenframe"><span class="panel-icon" aria-hidden="true">▦</span><b>十格阵凑十</b><span class="panel-sub">点 1 个凑成 10，9+4 就好算了</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1–2 年级 · 加减法</span></button>
       <button class="panel" type="button" data-nav-key="demo-fraction"><span class="panel-icon" aria-hidden="true">3/4</span><b>分数切一切</b><span class="panel-sub">切饼、落数轴，3/4 = 6/8</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">3–5 年级 · 分数</span></button>
       <button class="panel" type="button" data-nav-key="demo-balance"><span class="panel-icon" aria-hidden="true">＝</span><b>天平解方程</b><span class="panel-sub">两边一起动，才保持平衡</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">5–7 年级 · 方程</span></button>
       <button class="panel" type="button" data-nav-key="demo-function"><span class="panel-icon" aria-hidden="true">k·x</span><b>函数 k / b 滑杆</b><span class="panel-sub">拖滑杆，直线、表格一起变</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">7–8 年级 · 函数</span></button>
+      <button class="panel" type="button" data-nav-key="demo-count"><span class="panel-icon" aria-hidden="true">●</span><b>数一数，比一比</b><span class="panel-sub">点一点数数，一个对一个比多少</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1 年级 · 数数</span></button>
+      <button class="panel" type="button" data-nav-key="demo-position"><span class="panel-icon" aria-hidden="true">↻</span><b>转身找左右</b><span class="panel-sub">小人转个身，星星在他的哪一边</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1 年级 · 位置</span></button>
+      <button class="panel" type="button" data-nav-key="demo-split"><span class="panel-icon" aria-hidden="true">◐</span><b>分一分：第几个和几个</b><span class="panel-sub">5 可以分成几和几，第 3 个是几个</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1 年级 · 分与合</span></button>
+      <button class="panel" type="button" data-nav-key="demo-addsub"><span class="panel-icon" aria-hidden="true">＋</span><b>合起来，拿走</b><span class="panel-sub">两盘并一盘、拿走几块，空盘子是 0</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1 年级 · 加减法</span></button>
+      <button class="panel" type="button" data-nav-key="demo-solids"><span class="panel-icon" aria-hidden="true">●</span><b>立体图形滚一滚</b><span class="panel-sub">球、圆柱、长方体、正方体：哪个会滚、哪个能叠</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1 年级 · 认识图形（一）</span></button>
+      <button class="panel" type="button" data-nav-key="demo-bundle"><span class="panel-icon" aria-hidden="true">10</span><b>捆小棒认数</b><span class="panel-sub">10根捆成1捆，13是1个十和3个一</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1 年级 · 11–20的认识</span></button>
+      <button class="panel" type="button" data-nav-key="demo-clock"><span class="panel-icon" aria-hidden="true">◷</span><b>认识钟表</b><span class="panel-sub">拨表针，整时和半点</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1 年级 · 认识钟表</span></button>
+      <button class="panel" type="button" data-nav-key="demo-tangram"><span class="panel-icon" aria-hidden="true">▲</span><b>七巧板转一转</b><span class="panel-sub">7 块板转一转，数边数角；两块小三角形拼一拼</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1 年级 · 认识图形（二）</span></button>
+      <button class="panel" type="button" data-nav-key="demo-sort"><span class="panel-icon" aria-hidden="true">▦</span><b>分类分一分</b><span class="panel-sub">10 个图形按一条规则分，加起来要等于 10</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1 年级 · 分类与整理</span></button>
+      <button class="panel" type="button" data-nav-key="demo-hundred"><span class="panel-icon" aria-hidden="true">100</span><b>百数表比大小</b><span class="panel-sub">先比十位，再比个位，46比38大</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1 年级 · 100以内数的认识</span></button>
+      <button class="panel" type="button" data-nav-key="demo-shop"><span class="panel-icon" aria-hidden="true">￥</span><b>开小店</b><span class="panel-sub">付钱、找零、换钱</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1 年级 · 认识人民币</span></button>
+      <button class="panel" type="button" data-nav-key="demo-place"><span class="panel-icon" aria-hidden="true">＋</span><b>数位块加减法</b><span class="panel-sub">满10进1，不够减借1，块和竖式一起变</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1 年级 · 100以内加减法（一）</span></button>
+      <button class="panel" type="button" data-nav-key="demo-pattern"><span class="panel-icon" aria-hidden="true">▲</span><b>找规律</b><span class="panel-sub">框出重复的单元</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1 年级 · 找规律</span></button>
       <button class="panel" type="button" data-nav-key="why"><span class="panel-icon" aria-hidden="true">？</span><b>为什么小实验</b><span class="panel-sub">进位、分数除法、面积公式</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">3 个小实验</span></button>
     </div>
 
@@ -246,6 +259,316 @@
         </div>
         <p class="demo-foot" id="funcChallenge">小挑战：x = 2 公里时要付多少钱？拖动 k 和 b，看表格里的答案怎么变。</p>
         <p class="why"><b>为什么？</b>k 是“每多走 1 公里多付多少钱”，所以直线越陡，每公里越贵；b 是“还没走就先付的起步价”，所以直线从 y 轴的 b 那里出发。直线不是公式，是这趟车费的故事。</p>
+      </article>
+      <article class="demo-card" id="demo-count">
+        <p class="demo-tag">1 年级 · 准备课 · 数数、比多少</p>
+        <h3>数一数，比一比</h3>
+        <p>点一个圆点，就数一个数；点“连一连比多少”，两排一个对一个连起来，多出来的圆点会变红。</p>
+        <div class="control-row"><span>上面一排：<b id="countReadA">5 个</b></span>
+          <div class="btn-row">
+            <button class="btn small ghost" id="countAMinus" type="button">上面 −1</button>
+            <button class="btn small ghost" id="countAPlus" type="button">上面 +1</button>
+          </div>
+          <div class="count-row" id="countRowA"></div>
+        </div>
+        <div class="control-row"><span>下面一排：<b id="countReadB">7 个</b></span>
+          <div class="btn-row">
+            <button class="btn small ghost" id="countBMinus" type="button">下面 −1</button>
+            <button class="btn small ghost" id="countBPlus" type="button">下面 +1</button>
+          </div>
+          <div class="count-row" id="countRowB"></div>
+        </div>
+        <p class="func-eq" id="countCount">点一个圆点，数一数</p>
+        <p id="countResult">还没比。点“连一连比多少”看看哪排多。</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="countCompare" type="button">连一连比多少</button>
+          <button class="btn small ghost" id="countReset" type="button">重新数</button>
+        </div>
+        <p class="demo-foot">成功标准：点着数不漏数、不重数；不用数就说出哪排多、多几个。</p>
+        <p class="why"><b>为什么？</b>数数是给每个东西贴一张号码牌，最后一张牌就是总数；一个对一个连起来，剩下的就是多出来的，不用数也知道谁多。</p>
+      </article>
+
+      <article class="demo-card" id="demo-position">
+        <p class="demo-tag">1 年级 · 位置 · 上下前后左右</p>
+        <h3>转身找左右</h3>
+        <p>小人站在中间，左手贴了一张“左”字贴纸。点一个格子放一颗星星，再让小人转个身，看看星星跑到他的哪一边了。</p>
+        <div class="pos-grid" id="posGrid"></div>
+        <p class="func-eq" id="posFace">小人现在面朝上</p>
+        <p id="posRead">先点一个格子，放一颗星星。</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="posTurn" type="button">转身（顺时针转 90°）</button>
+          <button class="btn small ghost" id="posFaceMe" type="button" aria-pressed="false">转过来面对我</button>
+          <button class="btn small ghost" id="posReset" type="button">重新放星星</button>
+        </div>
+        <p class="demo-foot">成功标准：小人朝哪个方向，你都能说出星星在他的前面、后面、左手边还是右手边。</p>
+        <p class="why"><b>为什么？</b>左右是跟着人走的：他转个身，左和右就换边了。他面对着你的时候，他的左手正好在你右手这一边，左右是反过来的。</p>
+      </article>
+
+      <article class="demo-card" id="demo-split">
+        <p class="demo-tag">1 年级 · 1–5的认识、分与合</p>
+        <h3>分一分：第几个和几个</h3>
+        <p>点一块积木，把它搬到另一个盘子；总数不变，分法变了。下面还有排队游戏：“第 3 个”和“3 个”是一回事吗？</p>
+        <div class="control-row"><span>一共分几块</span>
+          <div class="seg" id="splitTotalSeg">
+            <button type="button" data-split-total="3" aria-pressed="false">3</button>
+            <button type="button" data-split-total="4" aria-pressed="false">4</button>
+            <button type="button" data-split-total="5" aria-pressed="true">5</button>
+          </div>
+        </div>
+        <div class="split-plates">
+          <div class="split-plate-wrap"><p class="split-label" id="splitLabelL">左盘 · 2 个</p><div class="split-plate" id="splitPlateL"></div></div>
+          <div class="split-plate-wrap"><p class="split-label" id="splitLabelR">右盘 · 3 个</p><div class="split-plate" id="splitPlateR"></div></div>
+        </div>
+        <p class="func-eq" id="splitEq">2 + 3 = 5</p>
+        <p id="splitListLabel">全部的分法（每部分至少 1 块）：</p>
+        <div class="split-list" id="splitList"></div>
+        <p class="hint">点一块积木搬到另一个盘子，看看分法怎么变；总数一直不变。点一个分法也可以直接跳到它。</p>
+        <p id="splitKidsLabel">排队游戏：5 个小朋友站成一排。</p>
+        <div class="split-kids" id="splitKids"></div>
+        <p id="splitOrdinal">点一个小朋友，看看他是第几个。</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="splitTake3" type="button">拿 3 个</button>
+          <button class="btn small ghost" id="splitReset" type="button">重新分</button>
+        </div>
+        <p id="splitTake">“拿 3 个”是拿走 3 个小朋友，和“第 3 个”不是一回事。</p>
+        <p class="demo-foot">成功标准：说出 5 的全部 4 种分法；分清“第 3 个”和“3 个”。</p>
+        <p class="why"><b>为什么？</b>把 5 块积木倒进两个盘子，挪一块过去，一个盘子多 1 个，另一个少 1 个，总数还是 5 个。分合就是这样：整体不变，变的只是两部分。</p>
+      </article>
+
+      <article class="demo-card" id="demo-addsub">
+        <p class="demo-tag">1 年级 · 5以内加减法、0</p>
+        <h3>合起来，拿走</h3>
+        <p>加法是把两盘并成一盘，减法是拿走几块。空盘子也是一个盘子，它是 0。</p>
+        <div class="control-row"><span>玩法</span>
+          <div class="seg" id="addsubModeSeg">
+            <button type="button" data-addsub-mode="add" aria-pressed="true">加法 · 合起来</button>
+            <button type="button" data-addsub-mode="sub" aria-pressed="false">减法 · 拿走</button>
+          </div>
+        </div>
+        <div class="addsub-plates">
+          <div class="addsub-plate-wrap"><p class="addsub-label" id="addsubLabelA">A 盘 · 2 个</p><div class="addsub-plate" id="addsubPlateA"></div>
+            <div class="btn-row"><button class="btn small ghost" id="addsubAMinus" type="button">A −1</button><button class="btn small ghost" id="addsubAPlus" type="button">A +1</button></div></div>
+          <div class="addsub-plate-wrap"><p class="addsub-label" id="addsubLabelB">B 盘 · 2 个</p><div class="addsub-plate" id="addsubPlateB"></div>
+            <div class="btn-row"><button class="btn small ghost" id="addsubBMinus" type="button">B −1</button><button class="btn small ghost" id="addsubBPlus" type="button">B +1</button></div></div>
+        </div>
+        <p class="func-eq" id="addsubEq">2 + 2 = 4</p>
+        <p id="addsubHint">两盘并成一盘，一共 4 块。</p>
+        <div class="btn-row"><button class="btn small ghost" id="addsubReset" type="button">重新来</button></div>
+        <p class="demo-foot">成功标准：会算 2 + 2 = 4、5 − 2 = 3；知道 3 + 0 = 3、3 − 0 = 3，空盘子是 0。</p>
+        <p class="why"><b>为什么？</b>减法是加法的反面：5 − 2 = 3，因为 3 + 2 = 5。加 0 或者拿走 0 个，盘子里的东西一点没变，所以 5 + 0 还是 5，5 − 0 还是 5。</p>
+      </article>
+
+      <article class="demo-card" id="demo-solids">
+        <p class="demo-tag">1 年级 · 认识图形（一）· 1.5 立体图形</p>
+        <h3>立体图形：滚一滚，叠一叠</h3>
+        <p>点一个图形，再让它滚一滚、叠一叠，看看它会怎么样。认图形，看的是它长什么样、能干什么，不看颜色和大小。</p>
+        <div class="solid-cards" id="solidCards"></div>
+        <p class="func-eq" id="solidResult">先点一个图形</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="solidRollBtn" type="button">滚一滚</button>
+          <button class="btn small primary" id="solidStackBtn" type="button">叠一叠</button>
+        </div>
+        <p class="hint">提示：球没有平平的面，到处都能滚；长方体和正方体有平平的面，能叠起来；圆柱躺着能滚，立着能叠。</p>
+        <p><b>拼一拼：8 个小正方体拼一个大正方体</b></p>
+        <p>点“+”加一个小正方体，看看几个才能拼成一个大正方体。</p>
+        <div class="solid-cubes" id="solidCubeRow"></div>
+        <p id="solidCubeCount">已经拼了 0 个小正方体</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="solidCubeAdd" type="button">+ 加一个小正方体</button>
+          <button class="btn small ghost" id="solidCubeReset" type="button">重来</button>
+        </div>
+        <p id="solidCubeMsg"></p>
+        <p class="demo-foot">成功标准：能说出哪个会滚、哪个能叠；知道 8 个小正方体才能拼成一个大正方体，4 个不行。</p>
+        <p class="why"><b>为什么？</b>球滚是因为它没有平平的面；盒子能叠是因为它有平平的面。长方体有 6 个平平的面，正方体也有 6 个。大正方体长、宽、高都要 2 个小正方体，2×2×2=8 个，所以 4 个拼不成。</p>
+      </article>
+
+      <article class="demo-card" id="demo-bundle">
+        <p class="demo-tag">1 年级上 · 11–20的认识</p>
+        <h3>捆小棒：10根捆成1捆</h3>
+        <p>13根小棒怎么数？先捆起10根变成1捆，剩下3根散的，13就是1个十和3个一。点一点，加一根、拿走一根，看看捆怎么变。</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="bundleAdd" type="button">+1根</button>
+          <button class="btn small ghost" id="bundleMinus" type="button">−1根</button>
+          <button class="btn small ghost" id="bundleBundle" type="button">捆一捆</button>
+          <button class="btn small ghost" id="bundleUnbundle" type="button">拆开</button>
+        </div>
+        <p class="bundle-cap">捆好的（1捆 = 10根）</p>
+        <div class="bundle-area" id="bundleBundles"></div>
+        <p class="bundle-cap">散的</p>
+        <div class="bundle-area" id="bundleLoose"></div>
+        <p class="func-eq" id="bundleReadout">1个十和3个一 = 13</p>
+        <p class="func-eq" id="bundleEq">10 + 3 = 13</p>
+        <p class="bundle-count" id="bundleCount">一共 13 根小棒</p>
+        <table class="bundle-place-table">
+          <tr><th class="bundle-pt-h">十位</th><th class="bundle-pt-h">个位</th></tr>
+          <tr><td class="bundle-pt-c" id="bundleTens">1</td><td class="bundle-pt-c" id="bundleOnes">3</td></tr>
+        </table>
+        <p class="hint" id="bundleNote">先数出13根：1捆加3根散的。</p>
+        <p class="demo-foot">成功标准：不用一个一个数，说出13是1个十和3个一，10 + 3 = 13。</p>
+        <p class="why"><b>为什么？</b>10根捆成1捆，1捆就是1个十。13写成“13”，十位上的1是1个十，不是1个一；个位上的3是3个一。位置决定大小，写成31就变成3个十和1个一了。</p>
+      </article>
+
+      <article class="demo-card" id="demo-clock">
+        <p class="demo-tag">1 年级 · 认识钟表</p>
+        <h3>拨一拨钟：认识整时和半点</h3>
+        <p>短针是时针，长针是分针。拨动表针，看看分针转一圈，时针走几格。</p>
+        <svg class="clock-face" id="clockFace" viewBox="0 0 200 200" role="img" aria-label="可以拨动的钟">
+          <circle cx="100" cy="100" r="92" fill="#fff" stroke="#334155" stroke-width="3"/>
+          <g id="clockTicks"></g>
+          <line id="clockHourHand" x1="100" y1="100" x2="100" y2="54" stroke="#1e293b" stroke-width="7" stroke-linecap="round"/>
+          <line id="clockMinHand" x1="100" y1="100" x2="100" y2="34" stroke="#ff8a3d" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="100" cy="100" r="6" fill="#1e293b"/>
+        </svg>
+        <p class="func-eq" id="clockReadout">现在是 7 点</p>
+        <p class="clock-target" id="clockTarget">目标：拨到 7 点</p>
+        <p class="clock-msg" id="clockMsg">对了，就是7点！</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="clockHourPlus" type="button">时针 +1 格</button>
+          <button class="btn small primary" id="clockMinPlus" type="button">分针 +5 分钟</button>
+          <button class="btn small ghost" id="clockMinFull" type="button">分针转一圈</button>
+          <button class="btn small ghost" id="clockNextTarget" type="button">换一题</button>
+        </div>
+        <p class="hint">分针转一圈，时针走一格。整时的时候，分针指着 12。</p>
+        <p class="demo-foot">成功标准：不用看数字，说出“长针指着 12，短针指着 7，就是 7 点”。</p>
+        <p class="why"><b>为什么？</b>钟面是一个圆，分成 12 个小时。分针转一圈是 1 小时，时针才走一格；整时的时候，分针正好回到 12，时针正好指着那个整点。</p>
+      </article>
+
+      <article class="demo-card" id="demo-tangram">
+        <p class="demo-tag">1 年级 · 认识图形（二）· 1.10 平面图形、七巧板</p>
+        <h3>七巧板：转一转，还是那个图形</h3>
+        <p>七巧板一共 7 块板。点一块板，它就转 45°，再看看它有几条边、几个角——转个方向，边和角都没有变。</p>
+        <svg class="tang-board" id="tangSvg" viewBox="0 0 200 200" role="img" aria-label="七巧板拼成的正方形"></svg>
+        <p class="func-eq" id="tangReadout">点一块板，看看它有几条边、几个角</p>
+        <p class="hint">提示：七巧板里有 5 个三角形，最大的有 2 个；还有 1 个正方形和 1 个平行四边形。</p>
+        <p><b>拼一拼：两块小三角形能拼成什么？</b></p>
+        <p>下面是七巧板里的两块完全一样的小三角形，试试两种拼法。</p>
+        <svg class="tang-pair" id="tangPairSvg" viewBox="0 0 160 170" role="img" aria-label="两块小三角形拼一拼"></svg>
+        <p id="tangPairLabel">两块一样的小三角形，分开摆着。试试拼一拼！</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="tangPairSquareBtn" type="button">拼成正方形</button>
+          <button class="btn small primary" id="tangPairBigBtn" type="button">拼成大三角形</button>
+          <button class="btn small ghost" id="tangPairResetBtn" type="button">分开</button>
+        </div>
+        <p class="demo-foot">成功标准：能数出每个图形的边和角；知道两块小三角形能拼成正方形，也能拼成一个大三角形。</p>
+        <p class="why"><b>为什么？</b>图形的样子由边和角决定，不由方向决定：三角形倒过来还是 3 条边，还是三角形。七巧板的 7 块板拼成的图形，总面积就是 7 块板加起来的面积，怎么拼都不变。</p>
+      </article>
+
+      <article class="demo-card" id="demo-sort">
+        <p class="demo-tag">1 年级 · 分类与整理 · 1.12 分类与整理</p>
+        <h3>分类分一分：加起来要等于 10</h3>
+        <p>这里一共有 10 个图形。先定一条规则——按颜色分，或者按形状分，只能选一条。再点一个图形，把它送到对应的盘子里。</p>
+        <div class="control-row"><span>先选一条规则</span><div class="seg" id="sortRuleSeg">
+          <button type="button" data-sort-rule="color" aria-pressed="true">按颜色分</button>
+          <button type="button" data-sort-rule="shape" aria-pressed="false">按形状分</button>
+        </div></div>
+        <p><b>待分的小图形</b></p>
+        <div class="sort-pool" id="sortPool"></div>
+        <div class="sort-trays" id="sortTraysColor">
+          <div class="sort-tray" id="sortTrayRed"><p class="sort-tray-title">红盘子 · <b id="sortCountRed">0</b> 个</p></div>
+          <div class="sort-tray" id="sortTrayBlue"><p class="sort-tray-title">蓝盘子 · <b id="sortCountBlue">0</b> 个</p></div>
+        </div>
+        <div class="sort-trays" id="sortTraysShape" hidden>
+          <div class="sort-tray" id="sortTrayCircle"><p class="sort-tray-title">圆形盘子 · <b id="sortCountCircle">0</b> 个</p></div>
+          <div class="sort-tray" id="sortTrayTri"><p class="sort-tray-title">三角形盘子 · <b id="sortCountTri">0</b> 个</p></div>
+          <div class="sort-tray" id="sortTraySquare"><p class="sort-tray-title">正方形盘子 · <b id="sortCountSquare">0</b> 个</p></div>
+        </div>
+        <p class="func-eq" id="sortTotal">已经分了 0 个 · 还剩 10 个 · 一共 10 个</p>
+        <p id="sortMsg">点一个小图形，把它送到对应的盘子里。</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="sortCheckBtn" type="button">加起来对不对？</button>
+          <button class="btn small ghost" id="sortResetBtn" type="button">重新分</button>
+        </div>
+        <p class="hint">提示：换一条规则要重新分。分完数一数，每组有几个，再把各组加起来，看看是不是等于总数 10。</p>
+        <p class="demo-foot">成功标准：只用一条规则分完；各组加起来等于 10；加起来不对时，能说出少了几个、漏了哪个。</p>
+        <p class="why"><b>为什么？</b>一条规则把东西分进盘子，每个东西只能进一个盘子，所以各组加起来一定等于总数。加起来不对，就是有的东西没分，或者有的东西分了两次。</p>
+      </article>
+
+      <article class="demo-card" id="demo-hundred">
+        <p class="demo-tag">1 年级下 · 100以内数的认识</p>
+        <h3>百数表：先比十位，再比个位</h3>
+        <p>46和38哪个大？别只看个位：46有4个十，38只有3个十，4捆比3捆多，所以46大。点一个数，再点一个数，比一比。</p>
+        <div class="hund-grid" id="hundGrid"></div>
+        <div class="hund-compare-wrap" id="hundCompareWrap">
+          <div class="hund-num-box">
+            <p class="hund-num-label" id="hundFirstLabel">第一个数：46</p>
+            <div class="hund-bundles" id="hundFirstBundles"></div>
+            <p class="hund-readout" id="hundFirstReadout">46 = 4个十和6个一</p>
+          </div>
+          <div class="hund-num-box">
+            <p class="hund-num-label" id="hundSecondLabel">第二个数：38</p>
+            <div class="hund-bundles" id="hundSecondBundles"></div>
+            <p class="hund-readout" id="hundSecondReadout">38 = 3个十和8个一</p>
+          </div>
+        </div>
+        <p class="func-eq" id="hundCompare">46大，因为4个十比3个十多。</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="hundTensToggle" type="button" aria-pressed="false">只看十位</button>
+          <button class="btn small ghost" id="hundReset" type="button">重新选</button>
+        </div>
+        <p class="hint">找一找：45和60之间，个位是0的整十数只有50。也可以试试52和25：5个十比2个十多，所以52大。</p>
+        <p class="demo-foot">成功标准：说出比大小先比十位，十位一样再比个位。</p>
+        <p class="why"><b>为什么？</b>十位是“捆”，1个十是10个一。46有4捆，38只有3捆，不管个位是6还是8，4捆都比3捆多。100就是10捆。</p>
+      </article>
+
+      <article class="demo-card" id="demo-shop">
+        <p class="demo-tag">1 年级 · 认识人民币</p>
+        <h3>开小店：认识元角分</h3>
+        <p>先点一个想买的东西，再点钱包里的钱付钱。付够了就买到了，多付的会找给你。</p>
+        <div class="control-row"><span>想买什么</span><div class="seg" id="shopItems"></div></div>
+        <p class="func-eq" id="shopSelected">还没选要买的东西，先点一个</p>
+        <p class="func-eq" id="shopPaid">已付 0角</p>
+        <div class="control-row"><span>钱包里的钱（点一下就付出去）</span><div class="seg" id="shopWallet"></div></div>
+        <p class="shop-wallet-total" id="shopWalletTotal">钱包一共 40角 = 4元</p>
+        <p class="shop-msg" id="shopMsg">点一个东西，再点钱来付。</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="shopAgain" type="button">再买一个</button>
+          <button class="btn small ghost" id="shopRefund" type="button">不买了，退钱</button>
+          <button class="btn small ghost" id="shopExchange" type="button">换钱：10个1角换1元</button>
+          <button class="btn small ghost" id="shopReset" type="button">重新开店</button>
+        </div>
+        <p class="shop-note" id="shopNote">10个1角可以换成1张1元。</p>
+        <p class="hint">1元 = 10角，1角 = 10分；1元5角 = 15角。</p>
+        <p class="demo-foot">成功标准：能算出本子加橡皮一共 7 角，1 元买 3 角的铅笔找回 7 角。</p>
+        <p class="why"><b>为什么？</b>元角分也是十进制：10 角就是 1 元，和 10 个一就是 1 个十是一回事。元和角是不同的单位，不能直接加：1 元 5 角不是 6 元，要先换成一样的单位。</p>
+      </article>
+
+      <article class="demo-card" id="demo-place">
+        <p class="demo-tag">1 年级下 · 100以内加减法（一）</p>
+        <h3>数位块并排算：个位满10进1，不够减借1</h3>
+        <p>23 + 5 怎么算？3个一加5个一是8个一，2个十还是2个十，所以是28。选一道题，点“加”或“减”，看数位块和竖式一起变。</p>
+        <div class="control-row"><span>选一道题</span><div class="seg" id="placeProbSeg"></div></div>
+        <div class="place-blocks" id="placeBlocks"></div>
+        <p class="place-now" id="placeNow">现在是：2个十和3个一 = 23</p>
+        <p class="func-eq" id="placeEq">23 + 5 = ?</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="placeAct" type="button">加 5</button>
+          <button class="btn small ghost" id="placeReset" type="button">换一道题</button>
+        </div>
+        <p class="hint" id="placeNote">先看第一道数摆好了，再点“加 5”。</p>
+        <div class="place-vert-wrap"><div class="place-vert" id="placeVert">  23
+      +  5
+      ——
+        ?</div></div>
+        <p class="place-mark" id="placeMark"></p>
+        <p class="demo-foot">成功标准：说出23 + 5为什么是28，47 + 8为什么进1，36 − 8为什么要借1个十。</p>
+        <p class="why"><b>为什么？</b>数位块和竖式是同一道题：左边摆块，右边列竖式，个位满10换成1个十，竖式里就进1；个位不够减，借1个十当10个一。进位不是新算法，是“换”的记录。</p>
+      </article>
+
+      <article class="demo-card" id="demo-pattern">
+        <p class="demo-tag">1 年级 · 找规律</p>
+        <h3>找规律：框出重复的单元</h3>
+        <p>先找一找：哪一小段在重复出现？把重复的单元框出来，下一个是什么就定了。</p>
+        <div class="control-row"><span>选一组</span><div class="seg" id="patSeg"></div></div>
+        <div class="pat-seq" id="patSeq"></div>
+        <div class="control-row"><span>下一个填什么</span><div class="seg" id="patChoices"></div></div>
+        <p class="pat-msg" id="patMsg">找一找重复的单元，再选下一个。</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="patUnitBtn" type="button" aria-pressed="false">框出单元</button>
+          <button class="btn small ghost" id="patNextBtn" type="button">换一组</button>
+        </div>
+        <p class="hint">图形的规律看重复的单元；数字的规律看每次多几。</p>
+        <p class="demo-foot">成功标准：能说出单元是什么，并用单元猜出下一个。</p>
+        <p class="why"><b>为什么？</b>单元重复出现，整个串就是单元一个接一个；第几个是什么，看它在单元里的位置。数字没有重复的单元，就看相邻两个数每次多几。</p>
       </article>
     </div>
   </section>

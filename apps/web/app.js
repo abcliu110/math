@@ -211,7 +211,7 @@ function renderUnit(g, ui) {
   pointDetail.querySelectorAll('[data-point]').forEach(btn =>
     btn.addEventListener('click', () => navGo('point-' + btn.dataset.point)));
 }
-const DEMO_LABEL = { fraction: '去玩分数演示', tenframe: '去玩十格阵', balance: '去玩天平演示', function: '去玩函数演示' };
+const DEMO_LABEL = { fraction: '去玩分数演示', tenframe: '去玩十格阵', balance: '去玩天平演示', function: '去玩函数演示', count: '去玩数一数', position: '去玩转身找左右', split: '去玩分一分', addsub: '去玩合起来拿走', solids: '去玩立体图形', bundle: '去玩捆小棒', clock: '去玩拨时钟', tangram: '去玩七巧板', sort: '去玩分类分一分', hundred: '去玩百数表', shop: '去玩开小店', place: '去玩数位块', pattern: '去玩找规律' };
 /* 分步评分：多步骤题拆成一步一步对。steps 是可选字段，没有 steps 的题照旧渲染。
    自评不是机器判题：每一步的对错都是学生自己标的，丢分报告只是把你标错的步骤列出来。 */
 function practiceStepsHtml(q, i, pointId) {
@@ -730,6 +730,19 @@ const NAV_DEFS = {
   'demo-fraction': { crumbs: ['数学', '互动演示', '分数切一切'], target: 'demo-fraction' },
   'demo-balance':  { crumbs: ['数学', '互动演示', '天平解方程'], target: 'demo-balance' },
   'demo-function': { crumbs: ['数学', '互动演示', '函数滑杆'], target: 'demo-function' },
+  'demo-count': { crumbs: ['数学', '互动演示', '数一数，比一比'], target: 'demo-count' },
+  'demo-position': { crumbs: ['数学', '互动演示', '转身找左右'], target: 'demo-position' },
+  'demo-split': { crumbs: ['数学', '互动演示', '分一分'], target: 'demo-split' },
+  'demo-addsub': { crumbs: ['数学', '互动演示', '合起来，拿走'], target: 'demo-addsub' },
+  'demo-solids': { crumbs: ['数学', '互动演示', '立体图形滚一滚'], target: 'demo-solids' },
+  'demo-bundle': { crumbs: ['数学', '互动演示', '捆小棒认数'], target: 'demo-bundle' },
+  'demo-clock': { crumbs: ['数学', '互动演示', '认识钟表'], target: 'demo-clock' },
+  'demo-tangram': { crumbs: ['数学', '互动演示', '七巧板转一转'], target: 'demo-tangram' },
+  'demo-sort': { crumbs: ['数学', '互动演示', '分类分一分'], target: 'demo-sort' },
+  'demo-hundred': { crumbs: ['数学', '互动演示', '百数表比大小'], target: 'demo-hundred' },
+  'demo-shop': { crumbs: ['数学', '互动演示', '开小店'], target: 'demo-shop' },
+  'demo-place': { crumbs: ['数学', '互动演示', '数位块加减法'], target: 'demo-place' },
+  'demo-pattern': { crumbs: ['数学', '互动演示', '找规律'], target: 'demo-pattern' },
   why:        { crumbs: ['数学', '互动演示', '为什么小实验'], target: 'why' },
   lab:        { crumbs: ['数学', '数学实验室'], target: 'lab' },
   review:     { crumbs: ['数学', '错题本'], target: 'review', action: renderWrongBook },
@@ -803,7 +816,7 @@ function viewForKey(key) {
   if (key === 'path') return 'path';
   if (key.startsWith('path-step-')) return 'path-step';
   if (key === 'demos') return 'demos';
-  if (key === 'demo-tenframe' || key === 'demo-fraction' || key === 'demo-balance' || key === 'demo-function') return key;
+  if (key === 'demo-tenframe' || key === 'demo-fraction' || key === 'demo-balance' || key === 'demo-function' || key === 'demo-count' || key === 'demo-position' || key === 'demo-split' || key === 'demo-addsub' || key === 'demo-solids' || key === 'demo-bundle' || key === 'demo-clock' || key === 'demo-tangram' || key === 'demo-sort' || key === 'demo-hundred' || key === 'demo-shop' || key === 'demo-place' || key === 'demo-pattern') return key;
   if (key === 'why') return 'why';
   if (key === 'lab') return 'lab';
   if (key === 'review') return 'review';
@@ -845,7 +858,7 @@ function applyView() {
   const stepN = view === 'path-step' ? key.slice('path-step-'.length) : null;
   [...pathPanelsEl.children].forEach(el => { el.hidden = !!(stepN && el.id !== 'step-' + stepN); });
   // 互动演示：列表留演示面板；叶子只留该演示卡片；为什么小实验只留 #why 区
-  const demoLeaf = view === 'demo-tenframe' || view === 'demo-fraction' || view === 'demo-balance' || view === 'demo-function';
+  const demoLeaf = view === 'demo-tenframe' || view === 'demo-fraction' || view === 'demo-balance' || view === 'demo-function' || view === 'demo-count' || view === 'demo-position' || view === 'demo-split' || view === 'demo-addsub' || view === 'demo-solids' || view === 'demo-bundle' || view === 'demo-clock' || view === 'demo-tangram' || view === 'demo-sort' || view === 'demo-hundred' || view === 'demo-shop' || view === 'demo-place' || view === 'demo-pattern';
   setHidden(demosSec, !(view === 'demos' || demoLeaf));
   setHidden(demoPanelsEl, view !== 'demos');
   setHidden(demoGridEl, !demoLeaf); // 演示卡片网格只在某一个演示的叶子视图里出现，列表视图只留演示面板
@@ -1790,3 +1803,1545 @@ function drawLabFunc() {
 document.getElementById('labFuncKRange').addEventListener('input', drawLabFunc);
 document.getElementById('labFuncBRange').addEventListener('input', drawLabFunc);
 drawLabFunc();
+
+
+/* ================= 一年级实验（1.1–1.16，2026-11-06） =================
+   13 个新实验：1.6/1.9/1.11 继续用十格阵，其余 13 条各一个小实验。
+   每个实验只做一个认知动作，不评分、不记进度、不碰浏览器历史。
+   （片段来自 ~/workspace/g1-demos/group-a..d，由 assemble.py 拼进来。） */
+
+/* 一年级 A 组演示（1.1 数数 / 1.2 位置 / 1.3 分与合 / 1.4 加减法与 0）
+   手算验算过的数（2026-11-06）：
+   数数：5 对 7 → 下面多 2（7−5=2）；5 对 5 → 一样多；10 对 0 → 上面多 10；0 对 0 → 一样多。
+   位置（小人在 (1,1)，星星的相对位置按朝向算；朝上=前是北，朝右=前是东，朝下=前是南，朝左=前是西）：
+     星在北 (0,1)：朝上→前面，朝右→左手边，朝下→后面，朝左→右手边。
+     星在东 (1,2)：朝上→右手边，朝右→前面，朝下→左手边，朝左→后面。
+     星在南 (2,1)：朝上→后面，朝右→右手边，朝下→前面，朝左→左手边。
+     星在西 (1,0)：朝上→左手边，朝右→后面，朝下→右手边，朝左→前面。
+     对角线如西北 (0,0)：朝上→左前方，朝右→左后方，朝下→右后方，朝左→右前方。
+   分与合：5 的分法是 1+4、2+3、3+2、4+1（每部分 ≥1，共 4 种）；4 的分法是 1+3、2+2、3+1；
+     3 的分法是 1+2、2+1。两盘之和恒等于总数（搬一块过去，一盘 +1、另一盘 −1）。
+     第几个 vs 几个：第 3 个是 1 个人（排第 3 位）；拿 3 个是 3 个人（前 3 位）。
+   加减法：2+2=4；5−2=3；3+0=3；3−0=3；5−5=0；0+0=0。减法 B ≤ A（B 想超过 A 时显示“不够减”）。
+   注意：无评分、无浏览器存储、无 markTried、无 history；只读写本组自己的元素。 */
+
+/* ---------- 1.1 数数、一一对应、比多少（配对法） ---------- */
+let countA = 5, countB = 7;
+let countCountedA = [false, false, false, false, false, false, false, false, false, false];
+let countCountedB = [false, false, false, false, false, false, false, false, false, false];
+let countPaired = false;
+let countDotsA = [], countDotsB = [];
+let countZeroA = null, countZeroB = null;
+
+function countBuildRow(rowEl, dots, which) {
+  for (let i = 0; i < 10; i++) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'count-dot';
+    b.textContent = String(i + 1);
+    b.setAttribute('aria-label', (which === 'A' ? '上面第 ' : '下面第 ') + (i + 1) + ' 个圆点');
+    b.addEventListener('click', () => countDotClick(which, i));
+    rowEl.appendChild(b);
+    dots.push(b);
+  }
+  const z = document.createElement('span');
+  z.className = 'count-zero';
+  z.textContent = '0 个';
+  rowEl.appendChild(z);
+  return z;
+}
+countZeroA = countBuildRow(document.getElementById('countRowA'), countDotsA, 'A');
+countZeroB = countBuildRow(document.getElementById('countRowB'), countDotsB, 'B');
+
+function countDotClick(which, i) {
+  const n = which === 'A' ? countA : countB;
+  if (i >= n) return;
+  if (which === 'A') countCountedA[i] = !countCountedA[i];
+  else countCountedB[i] = !countCountedB[i];
+  countRender();
+  const counted = which === 'A'
+    ? countCountedA.filter(Boolean).length
+    : countCountedB.filter(Boolean).length;
+  document.getElementById('countCount').textContent = counted === 0
+    ? '还没数。再点一个圆点，数一数。'
+    : (which === 'A' ? '上面数到了第 ' + counted + ' 个。' : '下面数到了第 ' + counted + ' 个。');
+}
+
+function countCompareText() {
+  const el = document.getElementById('countResult');
+  if (countA === countB) {
+    el.textContent = '上面 ' + countA + ' 个，下面 ' + countB + ' 个，一样多。';
+  } else if (countA > countB) {
+    el.textContent = '上面 ' + countA + ' 个，下面 ' + countB + ' 个，上面多 ' + (countA - countB) + ' 个。';
+  } else {
+    el.textContent = '上面 ' + countA + ' 个，下面 ' + countB + ' 个，下面多 ' + (countB - countA) + ' 个。';
+  }
+}
+
+function countRender() {
+  document.getElementById('countReadA').textContent = countA + ' 个';
+  document.getElementById('countReadB').textContent = countB + ' 个';
+  const m = Math.min(countA, countB);
+  countDotsA.forEach((d, i) => {
+    d.hidden = i >= countA;
+    d.classList.toggle('count-counted', countCountedA[i]);
+    d.classList.toggle('count-paired', countPaired && i < m);
+    d.classList.toggle('count-extra', countPaired && countA > countB && i >= m);
+  });
+  countDotsB.forEach((d, i) => {
+    d.hidden = i >= countB;
+    d.classList.toggle('count-counted', countCountedB[i]);
+    d.classList.toggle('count-paired', countPaired && i < m);
+    d.classList.toggle('count-extra', countPaired && countB > countA && i >= m);
+  });
+  countZeroA.hidden = countA !== 0;
+  countZeroB.hidden = countB !== 0;
+  if (countPaired) countCompareText();
+}
+
+function countChange(which, d) {
+  if (which === 'A') {
+    countA = Math.max(0, Math.min(10, countA + d));
+    for (let i = countA; i < 10; i++) countCountedA[i] = false;
+  } else {
+    countB = Math.max(0, Math.min(10, countB + d));
+    for (let i = countB; i < 10; i++) countCountedB[i] = false;
+  }
+  countPaired = false;
+  document.getElementById('countResult').textContent = '还没比。点“连一连比多少”看看哪排多。';
+  document.getElementById('countCount').textContent = '点一个圆点，数一数。';
+  countRender();
+}
+document.getElementById('countAMinus').addEventListener('click', () => countChange('A', -1));
+document.getElementById('countAPlus').addEventListener('click', () => countChange('A', 1));
+document.getElementById('countBMinus').addEventListener('click', () => countChange('B', -1));
+document.getElementById('countBPlus').addEventListener('click', () => countChange('B', 1));
+document.getElementById('countCompare').addEventListener('click', () => {
+  countPaired = true;
+  countRender();
+});
+document.getElementById('countReset').addEventListener('click', () => {
+  countA = 5; countB = 7; countPaired = false;
+  countCountedA = [false, false, false, false, false, false, false, false, false, false];
+  countCountedB = [false, false, false, false, false, false, false, false, false, false];
+  document.getElementById('countResult').textContent = '还没比。点“连一连比多少”看看哪排多。';
+  document.getElementById('countCount').textContent = '点一个圆点，数一数。';
+  countRender();
+});
+countRender();
+
+/* ---------- 1.2 位置（转身法） ---------- */
+let posFacing = 0; // 0 上，1 右，2 下，3 左（顺时针）
+let posFaceMe = false;
+let posStar = null; // { r, c } 或 null
+let posCells = [];
+
+const posPersonEl = document.createElement('div');
+posPersonEl.className = 'pos-person';
+const posHeadEl = document.createElement('div');
+posHeadEl.className = 'pos-head';
+const posNoseEl = document.createElement('div');
+posNoseEl.className = 'pos-nose';
+posHeadEl.appendChild(posNoseEl);
+const posBodyEl = document.createElement('div');
+posBodyEl.className = 'pos-body';
+const posHandEl = document.createElement('div');
+posHandEl.className = 'pos-hand';
+const posHandLabelEl = document.createElement('span');
+posHandLabelEl.className = 'pos-hand-label';
+posHandLabelEl.textContent = '左';
+posHandEl.appendChild(posHandLabelEl);
+posPersonEl.appendChild(posHeadEl);
+posPersonEl.appendChild(posBodyEl);
+posPersonEl.appendChild(posHandEl);
+
+const posStarEl = document.createElement('span');
+posStarEl.className = 'pos-star';
+posStarEl.textContent = '★';
+
+const posGridEl = document.getElementById('posGrid');
+for (let r = 0; r < 3; r++) {
+  for (let c = 0; c < 3; c++) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'pos-cell';
+    if (r === 1 && c === 1) {
+      b.classList.add('pos-center');
+      b.setAttribute('aria-label', '小人站在这里');
+      b.appendChild(posPersonEl);
+    } else {
+      b.setAttribute('aria-label', '第 ' + (r + 1) + ' 行第 ' + (c + 1) + ' 列，点一下放星星');
+      b.addEventListener('click', () => posPlaceStar(r, c));
+    }
+    posGridEl.appendChild(b);
+    posCells.push(b);
+  }
+}
+
+function posRelative(dr, dc) {
+  // 朝向的前方向量和右手方向向量（行，列；行 +1 是向下，列 +1 是向右）
+  const fwd = [[-1, 0], [0, 1], [1, 0], [0, -1]][posFacing];
+  const rgt = [[0, 1], [1, 0], [0, -1], [-1, 0]][posFacing];
+  const f = dr * fwd[0] + dc * fwd[1];
+  const s = dr * rgt[0] + dc * rgt[1];
+  const front = f > 0 ? '前' : (f < 0 ? '后' : '');
+  const side = s > 0 ? '右' : (s < 0 ? '左' : '');
+  if (front && side) return side + front + '方';
+  if (front) return front + '面';
+  if (side) return side + '手边';
+  return '这里';
+}
+
+function posPlaceStar(r, c) {
+  posStar = { r, c };
+  posRender();
+}
+
+function posRender() {
+  const names = ['上', '右', '下', '左'];
+  document.getElementById('posFace').textContent =
+    '小人现在面朝' + names[posFacing] + (posFaceMe ? '（面对着你）' : '');
+  posPersonEl.style.transform = 'rotate(' + (posFacing * 90) + 'deg)';
+  posHandLabelEl.style.transform = 'rotate(' + (-posFacing * 90) + 'deg)';
+  document.getElementById('posFaceMe').setAttribute('aria-pressed', String(posFaceMe));
+  if (posStar) {
+    posCells[posStar.r * 3 + posStar.c].appendChild(posStarEl);
+  } else if (posStarEl.parentNode) {
+    posStarEl.parentNode.removeChild(posStarEl);
+  }
+  const read = document.getElementById('posRead');
+  if (!posStar) {
+    read.textContent = '先点一个格子，放一颗星星。';
+    return;
+  }
+  let t = '星星在小人的' + posRelative(posStar.r - 1, posStar.c - 1) + '。';
+  if (posFaceMe) {
+    t += '他面对着你，他的左手在你右手这一边——左右反过来了，你看到的左边是他的右边。';
+  }
+  read.textContent = t;
+}
+document.getElementById('posTurn').addEventListener('click', () => {
+  posFacing = (posFacing + 1) % 4;
+  posFaceMe = false;
+  posRender();
+});
+document.getElementById('posFaceMe').addEventListener('click', () => {
+  posFaceMe = !posFaceMe;
+  if (posFaceMe) posFacing = 2; // 面对着你 = 朝下（朝向屏幕外、朝向看的人）
+  posRender();
+});
+document.getElementById('posReset').addEventListener('click', () => {
+  posStar = null;
+  posRender();
+});
+posRender();
+
+/* ---------- 1.3 1–5的认识、分与合（数分合）+ 第几 vs 几个 ---------- */
+let splitTotal = 5;
+let splitLeft = 2; // 右盘 = splitTotal - splitLeft
+let splitPicked = null; // 排队里点中的小孩下标（0–4），或 null
+let splitTaken = false; // “拿 3 个”高亮是否开着
+let splitBlocksL = [], splitBlocksR = [], splitKids = [];
+
+function splitBuildPlate(el, blocks, side) {
+  for (let i = 0; i < 5; i++) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'split-block';
+    b.setAttribute('aria-label', '一块积木，点一下搬到另一个盘子');
+    b.addEventListener('click', () => splitMove(side));
+    el.appendChild(b);
+    blocks.push(b);
+  }
+}
+splitBuildPlate(document.getElementById('splitPlateL'), splitBlocksL, 'L');
+splitBuildPlate(document.getElementById('splitPlateR'), splitBlocksR, 'R');
+
+const splitKidsEl = document.getElementById('splitKids');
+for (let i = 0; i < 5; i++) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'split-kid';
+  b.textContent = String(i + 1);
+  b.setAttribute('aria-label', '排队的小朋友，第 ' + (i + 1) + ' 个');
+  b.addEventListener('click', () => splitPick(i));
+  splitKidsEl.appendChild(b);
+  splitKids.push(b);
+}
+
+function splitMove(side) {
+  if (side === 'L' && splitLeft > 0) splitLeft--;
+  else if (side === 'R' && splitLeft < splitTotal) splitLeft++;
+  splitRender();
+}
+
+function splitPick(i) {
+  splitPicked = i;
+  splitTaken = false;
+  document.getElementById('splitOrdinal').textContent =
+    '你点的是第 ' + (i + 1) + ' 个小朋友——只有 1 个人。';
+  document.getElementById('splitTake').textContent =
+    '“拿 3 个”是拿走 3 个小朋友，和“第 3 个”不是一回事。';
+  splitRender();
+}
+
+function splitSetTotal(t) {
+  splitTotal = t;
+  splitLeft = Math.floor(t / 2); // 3→1+2，4→2+2，5→2+3
+  document.querySelectorAll('#splitTotalSeg [data-split-total]').forEach(b =>
+    b.setAttribute('aria-pressed', String(Number(b.dataset.splitTotal) === t)));
+  splitRender();
+}
+
+function splitRender() {
+  const right = splitTotal - splitLeft;
+  document.getElementById('splitLabelL').textContent = '左盘 · ' + splitLeft + ' 个';
+  document.getElementById('splitLabelR').textContent = '右盘 · ' + right + ' 个';
+  splitBlocksL.forEach((b, i) => { b.hidden = i >= splitLeft; });
+  splitBlocksR.forEach((b, i) => { b.hidden = i >= right; });
+  document.getElementById('splitEq').textContent = splitLeft + ' + ' + right + ' = ' + splitTotal;
+  const list = document.getElementById('splitList');
+  list.innerHTML = '';
+  for (let a = 1; a < splitTotal; a++) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'split-opt' + (a === splitLeft ? ' split-cur' : '');
+    b.textContent = a + '和' + (splitTotal - a);
+    b.setAttribute('aria-pressed', String(a === splitLeft));
+    b.addEventListener('click', () => { splitLeft = a; splitRender(); });
+    list.appendChild(b);
+  }
+  splitKids.forEach((k, i) => {
+    k.classList.toggle('split-picked', splitPicked === i);
+    k.classList.toggle('split-taken', splitTaken && i < 3);
+  });
+}
+document.querySelectorAll('#splitTotalSeg [data-split-total]').forEach(b =>
+  b.addEventListener('click', () => splitSetTotal(Number(b.dataset.splitTotal))));
+document.getElementById('splitTake3').addEventListener('click', () => {
+  splitTaken = true;
+  document.getElementById('splitTake').textContent =
+    '拿了 3 个小朋友：是第 1、第 2、第 3 个，一共 3 个人。“第 3 个”是 1 个人，“3 个”是 3 个人，不一样！';
+  splitRender();
+});
+document.getElementById('splitReset').addEventListener('click', () => {
+  splitLeft = Math.floor(splitTotal / 2);
+  splitPicked = null;
+  splitTaken = false;
+  document.getElementById('splitOrdinal').textContent = '点一个小朋友，看看他是第几个。';
+  document.getElementById('splitTake').textContent = '“拿 3 个”是拿走 3 个小朋友，和“第 3 个”不是一回事。';
+  splitRender();
+});
+splitRender();
+
+/* ---------- 1.4 5以内加减法、0（合盘与拿走） ---------- */
+let addsubA = 2, addsubB = 2, addsubMode = 'add';
+let addsubNote = '';
+let addsubDotsA = [], addsubDotsB = [];
+
+function addsubBuildPlate(el, dots) {
+  for (let i = 0; i < 5; i++) {
+    const s = document.createElement('span');
+    s.className = 'addsub-dot';
+    s.textContent = String(i + 1);
+    el.appendChild(s);
+    dots.push(s);
+  }
+  const e = document.createElement('span');
+  e.className = 'addsub-empty';
+  e.textContent = '空盘子是 0';
+  el.appendChild(e);
+  return e;
+}
+const addsubEmptyA = addsubBuildPlate(document.getElementById('addsubPlateA'), addsubDotsA);
+const addsubEmptyB = addsubBuildPlate(document.getElementById('addsubPlateB'), addsubDotsB);
+
+function addsubRender() {
+  document.getElementById('addsubLabelA').textContent =
+    'A 盘 · ' + addsubA + ' 个' + (addsubA === 0 ? ' · 空盘子是 0' : '');
+  document.getElementById('addsubLabelB').textContent =
+    'B 盘 · ' + addsubB + ' 个' + (addsubB === 0 ? ' · 空盘子是 0' : '');
+  addsubDotsA.forEach((s, i) => { s.hidden = i >= addsubA; });
+  addsubDotsB.forEach((s, i) => { s.hidden = i >= addsubB; });
+  addsubEmptyA.hidden = addsubA !== 0;
+  addsubEmptyB.hidden = addsubB !== 0;
+  document.querySelectorAll('#addsubModeSeg [data-addsub-mode]').forEach(b =>
+    b.setAttribute('aria-pressed', String(b.dataset.addsubMode === addsubMode)));
+  const hint = document.getElementById('addsubHint');
+  if (addsubMode === 'add') {
+    document.getElementById('addsubEq').textContent = addsubA + ' + ' + addsubB + ' = ' + (addsubA + addsubB);
+    hint.textContent = addsubNote || ('两盘并成一盘，一共 ' + (addsubA + addsubB) + ' 块。'
+      + (addsubB === 0 ? 'B 是空盘子，是 0：' + addsubA + ' + 0 = ' + addsubA + '，一点没变。' : '')
+      + (addsubA === 0 && addsubB !== 0 ? 'A 是空盘子，是 0：0 + ' + addsubB + ' = ' + addsubB + '。' : ''));
+  } else {
+    document.getElementById('addsubEq').textContent = addsubA + ' − ' + addsubB + ' = ' + (addsubA - addsubB);
+    hint.textContent = addsubNote || ('从 A 盘拿走 ' + addsubB + ' 块，还剩 ' + (addsubA - addsubB) + ' 块。'
+      + (addsubB === 0 ? 'B 是 0，什么都没拿走：' + addsubA + ' − 0 = ' + addsubA + '，一点没变。' : ''));
+  }
+  addsubNote = '';
+}
+
+function addsubChange(which, d) {
+  if (which === 'A') {
+    const next = Math.max(0, Math.min(5, addsubA + d));
+    if (next === addsubA) {
+      addsubNote = addsubA === 0 ? 'A 盘已经是空盘子了，是 0。' : 'A 盘最多放 5 块。';
+    } else {
+      addsubA = next;
+      if (addsubMode === 'sub' && addsubB > addsubA) {
+        addsubB = addsubA;
+        addsubNote = 'A 变小了，B 也跟着变小，不然不够减。';
+      }
+    }
+  } else {
+    if (addsubMode === 'sub' && d > 0 && addsubB + 1 > addsubA) {
+      addsubNote = '不够减：B 不能比 A 多。先把 A 加大，或者把 B 变小。';
+    } else {
+      const next = Math.max(0, Math.min(5, addsubB + d));
+      if (next === addsubB) {
+        addsubNote = addsubB === 0 ? 'B 盘已经是空盘子了，是 0。' : 'B 盘最多放 5 块。';
+      } else {
+        addsubB = next;
+      }
+    }
+  }
+  addsubRender();
+}
+
+function addsubSetMode(m) {
+  addsubMode = m;
+  if (m === 'sub' && addsubB > addsubA) {
+    addsubB = addsubA;
+    addsubNote = '切到减法：B 不能比 A 多，B 跟着变小了。';
+  }
+  addsubRender();
+}
+document.querySelectorAll('#addsubModeSeg [data-addsub-mode]').forEach(b =>
+  b.addEventListener('click', () => addsubSetMode(b.dataset.addsubMode)));
+document.getElementById('addsubAMinus').addEventListener('click', () => addsubChange('A', -1));
+document.getElementById('addsubAPlus').addEventListener('click', () => addsubChange('A', 1));
+document.getElementById('addsubBMinus').addEventListener('click', () => addsubChange('B', -1));
+document.getElementById('addsubBPlus').addEventListener('click', () => addsubChange('B', 1));
+document.getElementById('addsubReset').addEventListener('click', () => {
+  addsubA = 2; addsubB = 2; addsubMode = 'add'; addsubNote = '';
+  addsubRender();
+});
+addsubRender();
+
+/* group-b.js — 1 年级形状/分类演示（1.5 立体图形、1.10 平面图形·七巧板、1.12 分类与整理）
+   只操作本组元素（id 前缀 solid- / tang- / sort-），不做浏览器存储、不调进度记录、不碰页面历史。
+   交互子元素用 document.createElement / createElementNS + appendChild 生成，读数用 textContent，
+   静态按钮在加载时用 getElementById(...).addEventListener 绑定，每个演示加载时各调一次初始渲染。
+   已验算的数字（逐条手算，来源：content/grades/grade-1.js 的 1.5 / 1.10 / 1.12）：
+   - 1.5：长方体 6 个面（上下、左右、前后各 1 对）；正方体 6 个面；
+     大正方体长、宽、高都要 2 个小正方体，2×2×2=8 个；4 个小正方体拼不成大正方体；
+     一层 4 个、放满 2 层也是 2×4=8 个。
+   - 1.10：七巧板 7 块 = 2 个大三角形 + 1 个中三角形 + 2 个小三角形 + 1 个正方形 + 1 个平行四边形；
+     三角形一共 2+1+2=5 个，最大的 2 个；三角形 3 条边、3 个角；
+     正方形 4 条边一样长、4 个角都是直角；
+     两块小三角形：斜边对斜边拼成正方形，直角边对直角边拼成大三角形。
+   - 1.12：10 件物品 = 4 个红● + 2 个蓝● + 2 个红▲ + 2 个蓝■，4+2+2+2=10；
+     按颜色：红 6 个、蓝 4 个，6+4=10；按形状：● 6 个、▲ 2 个、■ 2 个，6+2+2=10。 */
+
+/* ================= 演示 1：立体图形（1.5） ================= */
+const SOLID_SHAPES = [
+  { key: 'ball', name: '球', canRoll: true, canStack: false,
+    roll: '球滚起来了！它没有平平的面，到处都能滚。',
+    stack: '球叠不起来，一放就滚走了。' },
+  { key: 'cylinder', name: '圆柱', canRoll: true, canStack: true,
+    roll: '圆柱躺着能滚，骨碌碌滚走了。',
+    stack: '圆柱立着能叠，它上下有两个平平的面。' },
+  { key: 'cuboid', name: '长方体', canRoll: false, canStack: true,
+    roll: '长方体滚不动，它有平平的面，会卡住。',
+    stack: '长方体有 6 个平平的面，能叠起来。' },
+  { key: 'cube', name: '正方体', canRoll: false, canStack: true,
+    roll: '正方体滚不动，6 个面都是平平的。',
+    stack: '正方体有 6 个平平的面，能叠得很高。' }
+];
+let solidSelected = null;
+let solidCubeCount = 0;
+const solidCardBtns = {};
+
+function solidSvgEl(tag, attrs) {
+  const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  Object.keys(attrs).forEach(function (k) { el.setAttribute(k, attrs[k]); });
+  return el;
+}
+
+function solidBuildShapeSvg(key) {
+  const svg = solidSvgEl('svg', { viewBox: '0 0 80 80', width: '72', height: '72' });
+  svg.setAttribute('aria-hidden', 'true');
+  if (key === 'ball') {
+    svg.appendChild(solidSvgEl('circle', { cx: '40', cy: '42', r: '30', fill: '#ff8a3d', stroke: '#c2410c', 'stroke-width': '2' }));
+    svg.appendChild(solidSvgEl('ellipse', { cx: '30', cy: '30', rx: '10', ry: '6', fill: '#ffffff', opacity: '0.75' }));
+  } else if (key === 'cylinder') {
+    svg.appendChild(solidSvgEl('ellipse', { cx: '40', cy: '16', rx: '26', ry: '9', fill: '#dbeafe', stroke: '#2563eb', 'stroke-width': '2' }));
+    svg.appendChild(solidSvgEl('rect', { x: '14', y: '16', width: '52', height: '46', fill: '#93c5fd', stroke: '#2563eb', 'stroke-width': '2' }));
+    svg.appendChild(solidSvgEl('ellipse', { cx: '40', cy: '62', rx: '26', ry: '9', fill: '#dbeafe', stroke: '#2563eb', 'stroke-width': '2' }));
+  } else if (key === 'cuboid') {
+    svg.appendChild(solidSvgEl('polygon', { points: '14,32 28,16 64,16 50,32', fill: '#dcfce7', stroke: '#15803d', 'stroke-width': '2' }));
+    svg.appendChild(solidSvgEl('polygon', { points: '50,32 64,16 64,50 50,66', fill: '#86efac', stroke: '#15803d', 'stroke-width': '2' }));
+    svg.appendChild(solidSvgEl('polygon', { points: '14,32 50,32 50,66 14,66', fill: '#bbf7d0', stroke: '#15803d', 'stroke-width': '2' }));
+  } else {
+    svg.appendChild(solidSvgEl('polygon', { points: '20,34 32,20 66,20 54,34', fill: '#fff7ed', stroke: '#c2410c', 'stroke-width': '2' }));
+    svg.appendChild(solidSvgEl('polygon', { points: '54,34 66,20 66,54 54,68', fill: '#fde68a', stroke: '#c2410c', 'stroke-width': '2' }));
+    svg.appendChild(solidSvgEl('polygon', { points: '20,34 54,34 54,68 20,68', fill: '#fef3c7', stroke: '#c2410c', 'stroke-width': '2' }));
+  }
+  return svg;
+}
+
+function solidBuildCards() {
+  const box = document.getElementById('solidCards');
+  SOLID_SHAPES.forEach(function (s) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'solid-card';
+    b.setAttribute('aria-pressed', 'false');
+    b.setAttribute('aria-label', s.name);
+    const pic = document.createElement('span');
+    pic.className = 'solid-shape';
+    pic.appendChild(solidBuildShapeSvg(s.key));
+    const name = document.createElement('span');
+    name.className = 'solid-name';
+    name.textContent = s.name;
+    b.appendChild(pic);
+    b.appendChild(name);
+    b.addEventListener('click', function () {
+      solidSelected = s.key;
+      solidRender();
+    });
+    box.appendChild(b);
+    solidCardBtns[s.key] = b;
+  });
+}
+
+function solidRender() {
+  SOLID_SHAPES.forEach(function (s) {
+    const b = solidCardBtns[s.key];
+    const on = solidSelected === s.key;
+    b.classList.toggle('solid-selected', on);
+    b.setAttribute('aria-pressed', String(on));
+  });
+  const out = document.getElementById('solidResult');
+  if (!solidSelected) {
+    out.textContent = '先点一个图形';
+    return;
+  }
+  const s = SOLID_SHAPES.find(function (x) { return x.key === solidSelected; });
+  out.textContent = s.name + '：点“滚一滚”或“叠一叠”，试试它会怎么样。';
+}
+
+function solidAnimate(kind) {
+  if (!solidSelected) {
+    document.getElementById('solidResult').textContent = '先点一个图形，再按“滚一滚”或“叠一叠”。';
+    return;
+  }
+  const s = SOLID_SHAPES.find(function (x) { return x.key === solidSelected; });
+  const pic = solidCardBtns[s.key].querySelector('.solid-shape');
+  let cls = '';
+  let text = '';
+  if (kind === 'roll') {
+    text = s.roll;
+    cls = s.canRoll ? 'solid-anim-roll' : 'solid-anim-shake';
+  } else {
+    text = s.stack;
+    cls = s.canStack ? 'solid-anim-stack' : 'solid-anim-roll';
+  }
+  document.getElementById('solidResult').textContent = s.name + '：' + text;
+  pic.classList.remove('solid-anim-roll', 'solid-anim-stack', 'solid-anim-shake');
+  void pic.offsetWidth;
+  pic.classList.add(cls);
+  window.setTimeout(function () { pic.classList.remove(cls); }, 900);
+}
+
+function solidCubeRender() {
+  document.getElementById('solidCubeCount').textContent = '已经拼了 ' + solidCubeCount + ' 个小正方体';
+  const msg = document.getElementById('solidCubeMsg');
+  const row = document.getElementById('solidCubeRow');
+  row.classList.toggle('solid-cube-done', solidCubeCount === 8);
+  document.getElementById('solidCubeAdd').disabled = solidCubeCount >= 8;
+  if (solidCubeCount === 8) {
+    msg.textContent = '拼成大正方体了！2×2×2=8个';
+  } else if (solidCubeCount === 4) {
+    msg.textContent = '4 个还拼不成大正方体：大正方体长、宽、高都要 2 个，一共要 8 个。';
+  } else if (solidCubeCount > 0) {
+    msg.textContent = '再加 ' + (8 - solidCubeCount) + ' 个就拼成大正方体了。';
+  } else {
+    msg.textContent = '';
+  }
+}
+
+function solidCubeReset() {
+  solidCubeCount = 0;
+  const row = document.getElementById('solidCubeRow');
+  while (row.firstChild) { row.removeChild(row.firstChild); }
+  solidCubeRender();
+}
+
+document.getElementById('solidRollBtn').addEventListener('click', function () { solidAnimate('roll'); });
+document.getElementById('solidStackBtn').addEventListener('click', function () { solidAnimate('stack'); });
+document.getElementById('solidCubeAdd').addEventListener('click', function () {
+  if (solidCubeCount >= 8) { return; }
+  solidCubeCount++;
+  const c = document.createElement('div');
+  c.className = 'solid-mini-cube';
+  c.textContent = String(solidCubeCount);
+  document.getElementById('solidCubeRow').appendChild(c);
+  solidCubeRender();
+});
+document.getElementById('solidCubeReset').addEventListener('click', solidCubeReset);
+solidBuildCards();
+solidRender();
+solidCubeRender();
+
+/* ================= 演示 2：七巧板（1.10） ================= */
+/* 7 块板的坐标拼成一个 200×200 的正方形（已验算：面积 10000+10000+5000+2500+2500+5000+5000=40000）。 */
+const TANG_PIECES = [
+  { key: 'big1', name: '大三角形', kind: 'triangle', points: [[0, 0], [200, 0], [100, 100]], fill: '#ff8a3d' },
+  { key: 'big2', name: '大三角形', kind: 'triangle', points: [[0, 0], [0, 200], [100, 100]], fill: '#fbbf24' },
+  { key: 'mid', name: '中三角形', kind: 'triangle', points: [[200, 0], [200, 100], [100, 100]], fill: '#93c5fd' },
+  { key: 'small1', name: '小三角形', kind: 'triangle', points: [[200, 100], [200, 200], [150, 150]], fill: '#86efac' },
+  { key: 'small2', name: '小三角形', kind: 'triangle', points: [[150, 150], [200, 200], [100, 200]], fill: '#fda4af' },
+  { key: 'square', name: '正方形', kind: 'square', points: [[100, 100], [150, 150], [100, 200], [50, 150]], fill: '#c4b5fd' },
+  { key: 'para', name: '平行四边形', kind: 'para', points: [[0, 200], [50, 150], [150, 150], [100, 200]], fill: '#67e8f9' }
+];
+let tangSelected = null;
+const tangAngles = {};
+const tangPolys = {};
+const tangCenters = {};
+
+function tangBuildPieces() {
+  const svg = document.getElementById('tangSvg');
+  TANG_PIECES.forEach(function (p) {
+    const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    poly.setAttribute('points', p.points.map(function (pt) { return pt[0] + ',' + pt[1]; }).join(' '));
+    poly.setAttribute('fill', p.fill);
+    poly.setAttribute('stroke', '#1e293b');
+    poly.setAttribute('stroke-width', '2');
+    poly.setAttribute('class', 'tang-piece');
+    poly.setAttribute('role', 'button');
+    poly.setAttribute('tabindex', '0');
+    poly.setAttribute('aria-label', p.name + '，点一下转 45 度');
+    const cx = p.points.reduce(function (a, pt) { return a + pt[0]; }, 0) / p.points.length;
+    const cy = p.points.reduce(function (a, pt) { return a + pt[1]; }, 0) / p.points.length;
+    tangCenters[p.key] = { x: cx, y: cy };
+    tangAngles[p.key] = 0;
+    poly.addEventListener('click', function () {
+      tangAngles[p.key] = (tangAngles[p.key] + 45) % 360;
+      tangSelected = p.key;
+      tangRender();
+    });
+    poly.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        tangAngles[p.key] = (tangAngles[p.key] + 45) % 360;
+        tangSelected = p.key;
+        tangRender();
+      }
+    });
+    svg.appendChild(poly);
+    tangPolys[p.key] = poly;
+  });
+}
+
+function tangRender() {
+  TANG_PIECES.forEach(function (p) {
+    const poly = tangPolys[p.key];
+    const c = tangCenters[p.key];
+    poly.setAttribute('transform', 'rotate(' + tangAngles[p.key] + ' ' + c.x + ' ' + c.y + ')');
+    poly.classList.toggle('tang-selected', tangSelected === p.key);
+  });
+  const out = document.getElementById('tangReadout');
+  if (!tangSelected) {
+    out.textContent = '点一块板，看看它有几条边、几个角';
+    return;
+  }
+  const p = TANG_PIECES.find(function (x) { return x.key === tangSelected; });
+  const deg = tangAngles[p.key];
+  if (p.kind === 'triangle') {
+    out.textContent = p.name + '：3条边，3个角，是三角形。转了 ' + deg + '°，倒过来还是三角形！';
+  } else if (p.kind === 'square') {
+    out.textContent = '正方形：4条边一样长，4个角都是直角。转了 ' + deg + '°，边还是一样长！';
+  } else {
+    out.textContent = '平行四边形：4条边，对边一样长，4个角。转了 ' + deg + '°，还是平行四边形！';
+  }
+}
+
+/* 两块小三角形拼一拼：直角边长 50 的等腰直角三角形 */
+const TANG_PAIR_STATES = {
+  apart: {
+    a: '10,30 60,30 10,80', b: '100,30 150,30 100,80',
+    label: '两块一样的小三角形，分开摆着。试试拼一拼！'
+  },
+  square: {
+    a: '55,55 105,55 55,105', b: '105,105 105,55 55,105',
+    label: '拼成正方形了！斜边对斜边，正方形的 4 条边一样长。'
+  },
+  big: {
+    a: '55,105 105,105 55,55', b: '55,105 105,105 55,155',
+    label: '拼成大三角形了！直角边对直角边，大三角形还是 3 条边、3 个角。'
+  }
+};
+let tangPairState = 'apart';
+
+function tangPairBuild() {
+  const svg = document.getElementById('tangPairSvg');
+  const a = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+  a.setAttribute('id', 'tangPairA');
+  a.setAttribute('fill', '#86efac');
+  a.setAttribute('stroke', '#15803d');
+  a.setAttribute('stroke-width', '2');
+  const b = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+  b.setAttribute('id', 'tangPairB');
+  b.setAttribute('fill', '#fda4af');
+  b.setAttribute('stroke', '#be123c');
+  b.setAttribute('stroke-width', '2');
+  svg.appendChild(a);
+  svg.appendChild(b);
+}
+
+function tangPairRender() {
+  const st = TANG_PAIR_STATES[tangPairState];
+  document.getElementById('tangPairA').setAttribute('points', st.a);
+  document.getElementById('tangPairB').setAttribute('points', st.b);
+  document.getElementById('tangPairLabel').textContent = st.label;
+  const svg = document.getElementById('tangPairSvg');
+  svg.classList.remove('tang-pair-pop');
+  void svg.offsetWidth;
+  svg.classList.add('tang-pair-pop');
+}
+
+document.getElementById('tangPairSquareBtn').addEventListener('click', function () {
+  tangPairState = 'square';
+  tangPairRender();
+});
+document.getElementById('tangPairBigBtn').addEventListener('click', function () {
+  tangPairState = 'big';
+  tangPairRender();
+});
+document.getElementById('tangPairResetBtn').addEventListener('click', function () {
+  tangPairState = 'apart';
+  tangPairRender();
+});
+tangBuildPieces();
+tangRender();
+tangPairBuild();
+tangPairRender();
+
+/* ================= 演示 3：分类与整理（1.12） ================= */
+/* 10 件物品（已验算 4+2+2+2=10）：4 个红●、2 个蓝●、2 个红▲、2 个蓝■。 */
+const SORT_SPEC = [
+  { shape: '●', shapeName: '圆形', color: '红', n: 4 },
+  { shape: '●', shapeName: '圆形', color: '蓝', n: 2 },
+  { shape: '▲', shapeName: '三角形', color: '红', n: 2 },
+  { shape: '■', shapeName: '正方形', color: '蓝', n: 2 }
+];
+const SORT_TOTAL = 10;
+let sortRule = 'color';
+let sortItems = [];
+
+function sortBuild() {
+  sortItems = [];
+  const pool = document.getElementById('sortPool');
+  while (pool.firstChild) { pool.removeChild(pool.firstChild); }
+  ['sortTrayRed', 'sortTrayBlue', 'sortTrayCircle', 'sortTrayTri', 'sortTraySquare'].forEach(function (id) {
+    const tray = document.getElementById(id);
+    const kids = Array.prototype.slice.call(tray.children);
+    kids.forEach(function (k) { if (!k.classList.contains('sort-tray-title')) { tray.removeChild(k); } });
+  });
+  SORT_SPEC.forEach(function (spec) {
+    for (let i = 0; i < spec.n; i++) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'sort-item ' + (spec.color === '红' ? 'sort-red' : 'sort-blue');
+      b.textContent = spec.shape;
+      b.setAttribute('aria-label', spec.color + '色' + spec.shapeName);
+      const item = { shape: spec.shape, shapeName: spec.shapeName, color: spec.color, el: b, placed: false };
+      b.addEventListener('click', function () { sortPlace(item); });
+      pool.appendChild(b);
+      sortItems.push(item);
+    }
+  });
+  document.getElementById('sortMsg').textContent = '点一个小图形，把它送到对应的盘子里。';
+  sortRender();
+}
+
+function sortTrayIdFor(item) {
+  if (sortRule === 'color') { return item.color === '红' ? 'sortTrayRed' : 'sortTrayBlue'; }
+  if (item.shape === '●') { return 'sortTrayCircle'; }
+  if (item.shape === '▲') { return 'sortTrayTri'; }
+  return 'sortTraySquare';
+}
+
+function sortPlace(item) {
+  if (item.placed) { return; }
+  item.placed = true;
+  document.getElementById(sortTrayIdFor(item)).appendChild(item.el);
+  sortRender();
+}
+
+function sortCounts() {
+  const c = { red: 0, blue: 0, circle: 0, tri: 0, square: 0, placed: 0 };
+  sortItems.forEach(function (it) {
+    if (!it.placed) { return; }
+    c.placed++;
+    if (it.color === '红') { c.red++; } else { c.blue++; }
+    if (it.shape === '●') { c.circle++; }
+    else if (it.shape === '▲') { c.tri++; }
+    else { c.square++; }
+  });
+  return c;
+}
+
+function sortRender() {
+  const c = sortCounts();
+  document.getElementById('sortCountRed').textContent = String(c.red);
+  document.getElementById('sortCountBlue').textContent = String(c.blue);
+  document.getElementById('sortCountCircle').textContent = String(c.circle);
+  document.getElementById('sortCountTri').textContent = String(c.tri);
+  document.getElementById('sortCountSquare').textContent = String(c.square);
+  document.getElementById('sortTotal').textContent =
+    '已经分了 ' + c.placed + ' 个 · 还剩 ' + (SORT_TOTAL - c.placed) + ' 个 · 一共 10 个';
+  document.getElementById('sortTraysColor').hidden = sortRule !== 'color';
+  document.getElementById('sortTraysShape').hidden = sortRule !== 'shape';
+  document.querySelectorAll('#sortRuleSeg [data-sort-rule]').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(b.dataset.sortRule === sortRule));
+  });
+}
+
+function sortCheck() {
+  const c = sortCounts();
+  const left = SORT_TOTAL - c.placed;
+  const msg = document.getElementById('sortMsg');
+  if (left === 0) {
+    if (sortRule === 'color') {
+      msg.textContent = '红 6 个 + 蓝 4 个 = 10 ✓，都分好了！';
+    } else {
+      msg.textContent = '● 6 个 + ▲ 2 个 + ■ 2 个 = 10 ✓，都分好了！';
+    }
+    return;
+  }
+  let sumText;
+  if (sortRule === 'color') {
+    sumText = '红 ' + c.red + ' 个 + 蓝 ' + c.blue + ' 个';
+  } else {
+    sumText = '● ' + c.circle + ' 个 + ▲ ' + c.tri + ' 个 + ■ ' + c.square + ' 个';
+  }
+  msg.textContent = '还剩 ' + left + ' 个没分。' + sumText + ' = ' + c.placed +
+    '，不等于 10，少了 ' + left + ' 个！';
+}
+
+document.querySelectorAll('#sortRuleSeg [data-sort-rule]').forEach(function (b) {
+  b.addEventListener('click', function () {
+    sortRule = b.dataset.sortRule;
+    sortBuild();
+  });
+});
+document.getElementById('sortCheckBtn').addEventListener('click', sortCheck);
+document.getElementById('sortResetBtn').addEventListener('click', sortBuild);
+sortBuild();
+
+/* Group C — Grade 1 place-value demos (points 1.7, 1.13, 1.15).
+   No scoring, no browser storage, no markTried. Readouts via textContent;
+   interactive children built with document.createElement + appendChild.
+   Static buttons bound at load with getElementById(...).addEventListener.
+
+   VERIFIED NUMBERS (checked by hand against grade-1.js):
+   - demo-bundle (1.7): 13 = 1个十 + 3个一 = 10 + 3; 10 + 6 = 16; 10 + 9 = 19.
+     Default 13 = 1 bundle + 3 loose sticks. 20 = 2 bundles + 0 loose.
+   - demo-hundred (1.13): 46 > 38 because 4个十 > 3个十; 52 > 25 because
+     5个十 > 2个十; the only 整十数 between 45 and 60 is 50.
+     46 = 4个十和6个一; 38 = 3个十和8个一; 100 = 10个十和0个一.
+   - demo-place (1.15): 23 + 5 = 28 (3 + 5 = 8, tens stay 2);
+     35 + 20 = 55 (3个十 + 2个十 = 5个十, ones stay 5);
+     47 + 8 = 55 (7 + 8 = 15, 写5进1, tens 4 + 1 = 5);
+     36 − 8 = 28 (6 < 8, 借1个十: 6 -> 16, 16 − 8 = 8, tens 3 − 1 = 2). */
+
+/* ---------- demo-bundle (1.7: 11–20, 捆小棒) ---------- */
+let bundleBundles = 1; // 捆好的 1捆 = 10根
+let bundleLoose = 3;   // 散的根数; default 13 = 1捆 + 3根
+const BUNDLE_MAX = 20;
+
+function bundleTotal() { return bundleBundles * 10 + bundleLoose; }
+
+function bundleMakeBundle() {
+  const bundle = document.createElement('div');
+  bundle.className = 'bundle-bundle';
+  for (let i = 0; i < 10; i++) {
+    const mini = document.createElement('span');
+    mini.className = 'bundle-mini';
+    bundle.appendChild(mini);
+  }
+  const lab = document.createElement('span');
+  lab.className = 'bundle-bundle-label';
+  lab.textContent = '1捆';
+  bundle.appendChild(lab);
+  return bundle;
+}
+
+function bundleRender() {
+  const bundlesEl = document.getElementById('bundleBundles');
+  bundlesEl.innerHTML = '';
+  for (let b = 0; b < bundleBundles; b++) bundlesEl.appendChild(bundleMakeBundle());
+  if (bundleBundles === 0) {
+    const none = document.createElement('span');
+    none.className = 'bundle-empty';
+    none.textContent = '还没有捆';
+    bundlesEl.appendChild(none);
+  }
+  const looseEl = document.getElementById('bundleLoose');
+  looseEl.innerHTML = '';
+  for (let i = 0; i < bundleLoose; i++) {
+    const s = document.createElement('span');
+    s.className = 'bundle-stick';
+    looseEl.appendChild(s);
+  }
+  if (bundleLoose === 0) {
+    const none = document.createElement('span');
+    none.className = 'bundle-empty';
+    none.textContent = '没有散的';
+    looseEl.appendChild(none);
+  }
+  const total = bundleTotal();
+  const tens = Math.floor(total / 10);
+  const ones = total % 10;
+  document.getElementById('bundleReadout').textContent = tens + '个十和' + ones + '个一 = ' + total;
+  document.getElementById('bundleEq').textContent = (tens * 10) + ' + ' + ones + ' = ' + total;
+  document.getElementById('bundleCount').textContent = '一共 ' + total + ' 根小棒';
+  document.getElementById('bundleTens').textContent = String(tens);
+  document.getElementById('bundleOnes').textContent = String(ones);
+}
+
+function bundleNoteSet(t) { document.getElementById('bundleNote').textContent = t; }
+
+function bundleAddOne() {
+  if (bundleTotal() >= BUNDLE_MAX) { bundleNoteSet('已经是20根了，不能再加了。'); return; }
+  bundleLoose++;
+  let bundled = false;
+  while (bundleLoose >= 10) { bundleLoose -= 10; bundleBundles++; bundled = true; }
+  bundleRender();
+  bundleNoteSet(bundled ? '10根捆成1捆！现在一共' + bundleTotal() + '根。' : '加了1根，现在一共' + bundleTotal() + '根。');
+}
+
+function bundleMinusOne() {
+  if (bundleTotal() <= 0) { bundleNoteSet('已经是0根了，不能再拿了。'); return; }
+  if (bundleLoose > 0) bundleLoose--;
+  else { bundleBundles--; bundleLoose = 9; }
+  bundleRender();
+  bundleNoteSet('拿走1根，现在一共' + bundleTotal() + '根。');
+}
+
+function bundleBundleUp() {
+  if (bundleLoose >= 10) {
+    const n = Math.floor(bundleLoose / 10);
+    bundleBundles += n;
+    bundleLoose = bundleLoose % 10;
+    bundleRender();
+    bundleNoteSet('捆好了！' + n + '捆，10根捆成1捆。');
+  } else {
+    bundleNoteSet('散的还不到10根，捆不了。再加几根吧。');
+  }
+}
+
+function bundleUnbundle() {
+  if (bundleBundles <= 0) { bundleNoteSet('没有捆可以拆。'); return; }
+  bundleBundles--;
+  bundleLoose += 10;
+  bundleRender();
+  bundleNoteSet('1捆拆开是10根散小棒。试试再点“捆一捆”。');
+}
+
+document.getElementById('bundleAdd').addEventListener('click', bundleAddOne);
+document.getElementById('bundleMinus').addEventListener('click', bundleMinusOne);
+document.getElementById('bundleBundle').addEventListener('click', bundleBundleUp);
+document.getElementById('bundleUnbundle').addEventListener('click', bundleUnbundle);
+bundleRender();
+
+/* ---------- demo-hundred (1.13: 100以内数, 百数表 + 捆棒) ---------- */
+let hundFirst = 46;   // 默认第一个数: 46 = 4个十和6个一
+let hundSecond = 38;  // 默认第二个数: 38 = 3个十和8个一
+let hundTensOnly = false;
+const hundCells = [];
+
+function hundTens(n) { return Math.floor(n / 10); }
+function hundOnes(n) { return n % 10; }
+
+function hundBuildGrid() {
+  const grid = document.getElementById('hundGrid');
+  for (let n = 1; n <= 100; n++) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'hund-cell';
+    b.textContent = String(n);
+    b.setAttribute('aria-label', '选 ' + n);
+    b.addEventListener('click', () => hundPick(n));
+    grid.appendChild(b);
+    hundCells.push(b);
+  }
+}
+
+function hundPick(n) {
+  if (hundSecond !== null) { hundFirst = n; hundSecond = null; }
+  else if (hundFirst === null) { hundFirst = n; }
+  else if (n !== hundFirst) { hundSecond = n; }
+  hundRender();
+}
+
+function hundRenderBundles(el, n) {
+  el.innerHTML = '';
+  for (let b = 0; b < hundTens(n); b++) {
+    const bundle = document.createElement('div');
+    bundle.className = 'hund-bundle';
+    for (let i = 0; i < 10; i++) {
+      const mini = document.createElement('span');
+      mini.className = 'hund-mini';
+      bundle.appendChild(mini);
+    }
+    const lab = document.createElement('span');
+    lab.className = 'hund-bundle-label';
+    lab.textContent = '1个十';
+    bundle.appendChild(lab);
+    el.appendChild(bundle);
+  }
+  for (let i = 0; i < hundOnes(n); i++) {
+    const s = document.createElement('span');
+    s.className = 'hund-stick';
+    el.appendChild(s);
+  }
+}
+
+function hundCompareText(a, b) {
+  if (a === b) return a + '和' + b + '一样大。';
+  const big = Math.max(a, b);
+  const small = Math.min(a, b);
+  if (hundTensOnly && hundTens(a) === hundTens(b)) {
+    return '只看十位：两个数都是' + hundTens(a) + '个十，分不出大小。关掉“只看十位”，再比个位吧。';
+  }
+  if (hundTens(a) !== hundTens(b)) {
+    return big + '大，因为' + hundTens(big) + '个十比' + hundTens(small) + '个十多。';
+  }
+  return big + '大，因为十位都是' + hundTens(a) + '个十，个位' + hundOnes(big) + '比' + hundOnes(small) + '多。';
+}
+
+function hundRender() {
+  hundCells.forEach((c, i) => {
+    const n = i + 1;
+    c.className = 'hund-cell' + (n === hundFirst ? ' hund-first' : '') + (n === hundSecond ? ' hund-second' : '');
+  });
+  document.getElementById('hundFirstLabel').textContent = '第一个数：' + hundFirst;
+  document.getElementById('hundFirstReadout').textContent =
+    hundFirst + ' = ' + hundTens(hundFirst) + '个十和' + hundOnes(hundFirst) + '个一';
+  hundRenderBundles(document.getElementById('hundFirstBundles'), hundFirst);
+  if (hundSecond === null) {
+    document.getElementById('hundSecondLabel').textContent = '第二个数：还没选';
+    document.getElementById('hundSecondReadout').textContent = '再点一个数来比一比。';
+    document.getElementById('hundSecondBundles').innerHTML = '';
+    document.getElementById('hundCompare').textContent = '再点一个数，就能比一比谁大。';
+  } else {
+    document.getElementById('hundSecondLabel').textContent = '第二个数：' + hundSecond;
+    document.getElementById('hundSecondReadout').textContent =
+      hundSecond + ' = ' + hundTens(hundSecond) + '个十和' + hundOnes(hundSecond) + '个一';
+    hundRenderBundles(document.getElementById('hundSecondBundles'), hundSecond);
+    document.getElementById('hundCompare').textContent = hundCompareText(hundFirst, hundSecond);
+  }
+  document.getElementById('hundCompareWrap').classList.toggle('hund-tens-only', hundTensOnly);
+  const tog = document.getElementById('hundTensToggle');
+  tog.setAttribute('aria-pressed', String(hundTensOnly));
+  tog.textContent = hundTensOnly ? '只看十位（开）' : '只看十位';
+}
+
+document.getElementById('hundTensToggle').addEventListener('click', () => {
+  hundTensOnly = !hundTensOnly;
+  hundRender();
+});
+document.getElementById('hundReset').addEventListener('click', () => {
+  hundFirst = 46;
+  hundSecond = 38;
+  hundTensOnly = false;
+  hundRender();
+});
+hundBuildGrid();
+hundRender();
+
+/* ---------- demo-place (1.15: 100以内加减法(一), 数位块并排算) ---------- */
+const PLACE_PROBLEMS = [
+  { a: 23, op: '+', b: 5, label: '23+5' },
+  { a: 35, op: '+', b: 20, label: '35+20' },
+  { a: 47, op: '+', b: 8, label: '47+8' },
+  { a: 36, op: '−', b: 8, label: '36−8' }
+];
+let placeProb = 0;
+let placeTens = 2;
+let placeOnes = 3;
+let placeDone = false;
+let placeCarried = false;
+let placeBorrowed = false;
+let placeNoteText = '先看第一道数摆好了，再点“加 5”。';
+
+function placeActLabel(p) { return (p.op === '+' ? '加 ' : '减 ') + p.b; }
+
+function placeBuildSeg() {
+  const seg = document.getElementById('placeProbSeg');
+  PLACE_PROBLEMS.forEach((p, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = p.label;
+    b.setAttribute('aria-pressed', String(i === placeProb));
+    b.addEventListener('click', () => placeSetProblem(i));
+    seg.appendChild(b);
+  });
+}
+
+function placeSetProblem(i) {
+  placeProb = i;
+  placeStart();
+}
+
+function placeStart() {
+  const p = PLACE_PROBLEMS[placeProb];
+  placeTens = Math.floor(p.a / 10);
+  placeOnes = p.a % 10;
+  placeDone = false;
+  placeCarried = false;
+  placeBorrowed = false;
+  placeNoteText = '先看第一道数摆好了，再点“' + placeActLabel(p) + '”。';
+  placeRender();
+}
+
+function placeApply() {
+  if (placeDone) { placeNoteText = '这道题已经算完啦，点“换一道题”重新算。'; placeRender(); return; }
+  const p = PLACE_PROBLEMS[placeProb];
+  const oldOnes = placeOnes;
+  const oldTens = placeTens;
+  if (p.op === '+') {
+    if (p.b < 10) {
+      const sum = oldOnes + p.b;
+      if (sum >= 10) {
+        placeOnes = sum - 10;
+        placeTens += 1;
+        placeCarried = true;
+        placeNoteText = oldOnes + ' + ' + p.b + ' = ' + sum + '，满10进1个十，个位写' + (sum - 10) + '。';
+      } else {
+        placeOnes = sum;
+        placeNoteText = '个位 ' + oldOnes + ' + ' + p.b + ' = ' + sum + '，十位不变。';
+      }
+    } else {
+      placeTens += p.b / 10;
+      placeNoteText = oldTens + '个十加' + (p.b / 10) + '个十是' + placeTens + '个十，个位还是' + placeOnes + '。';
+    }
+  } else {
+    if (oldOnes >= p.b) {
+      placeOnes = oldOnes - p.b;
+      placeNoteText = '个位 ' + oldOnes + ' − ' + p.b + ' = ' + placeOnes + '，十位不变。';
+    } else {
+      placeBorrowed = true;
+      placeTens -= 1;
+      placeOnes = oldOnes + 10 - p.b;
+      placeNoteText = '个位不够减，借1个十：' + oldOnes + '变成' + (oldOnes + 10) + '，' + (oldOnes + 10) + ' − ' + p.b + ' = ' + placeOnes + '，十位少了1个十。';
+    }
+  }
+  placeDone = true;
+  placeRender();
+}
+
+function placeRender() {
+  const p = PLACE_PROBLEMS[placeProb];
+  const seg = document.getElementById('placeProbSeg');
+  Array.prototype.forEach.call(seg.children, (b, i) => {
+    b.setAttribute('aria-pressed', String(i === placeProb));
+  });
+  const blocks = document.getElementById('placeBlocks');
+  blocks.innerHTML = '';
+  for (let t = 0; t < placeTens; t++) {
+    const bundle = document.createElement('div');
+    bundle.className = 'place-bundle';
+    for (let i = 0; i < 10; i++) {
+      const mini = document.createElement('span');
+      mini.className = 'place-mini';
+      bundle.appendChild(mini);
+    }
+    const lab = document.createElement('span');
+    lab.className = 'place-bundle-label';
+    lab.textContent = '1个十';
+    bundle.appendChild(lab);
+    blocks.appendChild(bundle);
+  }
+  for (let i = 0; i < placeOnes; i++) {
+    const s = document.createElement('span');
+    s.className = 'place-stick';
+    blocks.appendChild(s);
+  }
+  const value = placeTens * 10 + placeOnes;
+  document.getElementById('placeNow').textContent =
+    '现在是：' + placeTens + '个十和' + placeOnes + '个一 = ' + value;
+  const ans = p.op === '+' ? p.a + p.b : p.a - p.b;
+  document.getElementById('placeEq').textContent =
+    p.a + ' ' + p.op + ' ' + p.b + ' = ' + (placeDone ? ans : '?');
+  const act = document.getElementById('placeAct');
+  act.textContent = placeActLabel(p);
+  act.disabled = placeDone;
+  const line1 = '  ' + p.a;
+  const line2 = p.op + ' ' + (p.b < 10 ? ' ' : '') + p.b;
+  const line3 = '——';
+  const line4 = '  ' + (placeDone ? ans : '?');
+  document.getElementById('placeVert').textContent = line1 + '\n' + line2 + '\n' + line3 + '\n' + line4;
+  document.getElementById('placeMark').textContent = placeCarried
+    ? '进1：个位满10，进了1个十。'
+    : (placeBorrowed ? '借1：个位不够减，借了1个十当10个一。' : '');
+  document.getElementById('placeNote').textContent = placeNoteText;
+}
+
+document.getElementById('placeAct').addEventListener('click', placeApply);
+document.getElementById('placeReset').addEventListener('click', placeStart);
+placeBuildSeg();
+placeSetProblem(0);
+
+/* group-d · 1 年级演示：时钟 / 开小店 / 找规律
+   不评分、不记进度：不调用进度记录函数，不用浏览器存储。
+   ---- 手算核对过的数字（全部验算通过）----
+   时钟：分针 +5 分钟按 12 次 = 60 分钟，时针正好 +1 格；分针转一圈时针 +1 格。
+     6 点往前推 3 小时是 3 点（6−3=3，练一练提高题）。7 点半 = 时针 7、分针 30。
+     时针角 = 小时×30° + 分钟×0.5°（7 点半是 225°，在 7 和 8 正中间）；分针角 = 分钟×6°。
+   开小店：初始钱包 2×10角 + 2×5角 + 10×1角 = 20+10+10 = 40角 = 4元
+     （任务稿写的“35角 = 3元5角”算错了，40角才是对的，本文件用 40角）。
+     本子 5角 + 橡皮 2角 = 7角；1元买 3角铅笔：10角−3角 = 7角找回。
+     1元 = 10角，1角 = 10分；1元5角 = 10角+5角 = 15角；换钱：10个1角 = 1元。
+     找零示例：付 1元（10角）买 3角铅笔，找回 10−3 = 7角，以 7 个 1角硬币放回钱包。
+   找规律：(a) 红蓝蓝单元长 3，蓝蓝后面是红；(b) ▲●单元长 2，第 7、8、9 个是 ▲、●、▲；
+     (c) ○○△单元长 3，第 10 个：10 = 3×3+1，是第 4 组的第 1 个 → ○；
+     (d) 数字 1、2、4、7、11，相邻差 +1、+2、+3、+4，下一个 11+5 = 16，
+     再往后 16+6 = 22、22+7 = 29。
+   注意：数字组只给出 5 个数（1、2、4、7、11），所以它显示 5 个数 + 3 个空，
+   第 1 个空的答案是 16（选项 16、15、13）；图形组是 6 个 + 3 个空。 */
+
+  /* ---------- demo-clock · 认识钟表（1.8，方法：联动表针钟） ---------- */
+  let clockHour = 7;
+  let clockMin = 0;
+  let clockTargetIdx = 0;
+  const CLOCK_TARGETS = [
+    { h: 7, m: 0, label: '7点' },
+    { h: 9, m: 0, label: '9点' },
+    { h: 3, m: 0, label: '3点' },
+    { h: 7, m: 30, label: '7点半' },
+    { h: 12, m: 0, label: '12点' }
+  ];
+  function clockBuildFace() {
+    const g = document.getElementById('clockTicks');
+    const NS = 'http://www.w3.org/2000/svg';
+    for (let i = 0; i < 12; i++) {
+      const a = i * 30 * Math.PI / 180;
+      const tick = document.createElementNS(NS, 'line');
+      tick.setAttribute('x1', String(100 + 84 * Math.sin(a)));
+      tick.setAttribute('y1', String(100 - 84 * Math.cos(a)));
+      tick.setAttribute('x2', String(100 + 91 * Math.sin(a)));
+      tick.setAttribute('y2', String(100 - 91 * Math.cos(a)));
+      tick.setAttribute('stroke', '#334155');
+      tick.setAttribute('stroke-width', '3');
+      tick.setAttribute('stroke-linecap', 'round');
+      g.appendChild(tick);
+      const num = document.createElementNS(NS, 'text');
+      num.setAttribute('x', String(100 + 68 * Math.sin(a)));
+      num.setAttribute('y', String(100 - 68 * Math.cos(a) + 6));
+      num.setAttribute('text-anchor', 'middle');
+      num.setAttribute('font-size', '17');
+      num.setAttribute('font-weight', '700');
+      num.setAttribute('fill', '#1e293b');
+      num.textContent = String(i === 0 ? 12 : i);
+      g.appendChild(num);
+    }
+  }
+  function clockTimeText(h, m) {
+    if (m === 0) return h + ' 点';
+    if (m === 30) return h + ' 点半';
+    return h + ' 点 ' + m + ' 分';
+  }
+  function clockHourStep() {
+    clockHour = clockHour % 12 + 1;
+  }
+  function clockRender() {
+    const hourAngle = (clockHour % 12) * 30 + clockMin * 0.5;
+    const minAngle = clockMin * 6;
+    document.getElementById('clockHourHand').setAttribute('transform', 'rotate(' + hourAngle + ' 100 100)');
+    document.getElementById('clockMinHand').setAttribute('transform', 'rotate(' + minAngle + ' 100 100)');
+    document.getElementById('clockReadout').textContent = '现在是 ' + clockTimeText(clockHour, clockMin);
+    const t = CLOCK_TARGETS[clockTargetIdx];
+    document.getElementById('clockTarget').textContent = '目标：拨到 ' + t.label;
+    document.getElementById('clockMsg').textContent =
+      (clockHour === t.h && clockMin === t.m)
+        ? '对了，就是' + t.label + '！'
+        : '目标是' + t.label + '，再拨一拨。';
+  }
+  document.getElementById('clockHourPlus').addEventListener('click', function () { clockHourStep(); clockRender(); });
+  document.getElementById('clockMinPlus').addEventListener('click', function () {
+    clockMin += 5;
+    if (clockMin >= 60) { clockMin -= 60; clockHourStep(); }
+    clockRender();
+  });
+  document.getElementById('clockMinFull').addEventListener('click', function () { clockHourStep(); clockRender(); });
+  document.getElementById('clockNextTarget').addEventListener('click', function () {
+    clockTargetIdx = (clockTargetIdx + 1) % CLOCK_TARGETS.length;
+    clockRender();
+  });
+  clockBuildFace();
+  clockRender();
+
+  /* ---------- demo-shop · 开小店（1.14，方法：开小店 + 换钱动画） ---------- */
+  const SHOP_ITEMS = [
+    { name: '本子', price: 5 },
+    { name: '橡皮', price: 2 },
+    { name: '铅笔', price: 3 }
+  ];
+  const SHOP_COINS = [
+    { key: 'yuan', label: '1元', value: 10 },
+    { key: 'five', label: '5角', value: 5 },
+    { key: 'one', label: '1角', value: 1 }
+  ];
+  const SHOP_INIT = { yuan: 2, five: 2, one: 10 };
+  let shopWallet = { yuan: 2, five: 2, one: 10 };
+  let shopItemIdx = -1;
+  let shopPaid = 0;
+  let shopBought = false;
+  let shopPaidCoins = { yuan: 0, five: 0, one: 0 };
+  function shopTotal() {
+    return shopWallet.yuan * 10 + shopWallet.five * 5 + shopWallet.one;
+  }
+  function shopMoneyText(total) {
+    const y = Math.floor(total / 10);
+    const j = total % 10;
+    return total + '角 = ' + y + '元' + (j ? j + '角' : '');
+  }
+  function shopRender() {
+    const itemsBox = document.getElementById('shopItems');
+    itemsBox.innerHTML = '';
+    SHOP_ITEMS.forEach(function (it, i) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'btn small ghost shop-item';
+      b.textContent = it.name + ' ' + it.price + '角';
+      b.setAttribute('aria-pressed', String(i === shopItemIdx));
+      b.addEventListener('click', function () { shopSelect(i); });
+      itemsBox.appendChild(b);
+    });
+    const walletBox = document.getElementById('shopWallet');
+    walletBox.innerHTML = '';
+    SHOP_COINS.forEach(function (c) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'btn small ghost shop-coin';
+      b.textContent = c.label + ' ×' + shopWallet[c.key];
+      b.disabled = shopWallet[c.key] <= 0 || shopItemIdx < 0 || shopBought;
+      b.addEventListener('click', function () { shopPay(c.key, c.value); });
+      walletBox.appendChild(b);
+    });
+    document.getElementById('shopWalletTotal').textContent = '钱包一共 ' + shopMoneyText(shopTotal());
+    const sel = document.getElementById('shopSelected');
+    if (shopBought) sel.textContent = '已经买到' + SHOP_ITEMS[shopItemIdx].name + '了';
+    else if (shopItemIdx >= 0) sel.textContent = '要买的：' + SHOP_ITEMS[shopItemIdx].name + ' ' + SHOP_ITEMS[shopItemIdx].price + '角';
+    else sel.textContent = '还没选要买的东西，先点一个';
+    document.getElementById('shopPaid').textContent = '已付 ' + shopPaid + '角';
+  }
+  function shopSelect(i) {
+    if (shopBought) return;
+    shopItemIdx = i;
+    document.getElementById('shopMsg').textContent = '要买' + SHOP_ITEMS[i].name + '，一共 ' + SHOP_ITEMS[i].price + '角，点钱包里的钱来付。';
+    shopRender();
+  }
+  function shopPay(key, value) {
+    if (shopItemIdx < 0 || shopBought) return;
+    if (shopWallet[key] <= 0) return;
+    shopWallet[key]--;
+    shopPaidCoins[key]++;
+    shopPaid += value;
+    const price = SHOP_ITEMS[shopItemIdx].price;
+    if (shopPaid >= price) {
+      const change = shopPaid - price;
+      shopWallet.one += change;
+      shopBought = true;
+      document.getElementById('shopMsg').textContent = change > 0
+        ? '买到了！找回 ' + change + '角（已经放回钱包，变成1角硬币了）。'
+        : '买到了！不多不少，正好 ' + price + '角。';
+    } else {
+      document.getElementById('shopMsg').textContent = '已付 ' + shopPaid + '角，还差 ' + (price - shopPaid) + '角。';
+    }
+    shopRender();
+  }
+  function shopAgain() {
+    shopItemIdx = -1; shopPaid = 0; shopBought = false;
+    shopPaidCoins = { yuan: 0, five: 0, one: 0 };
+    document.getElementById('shopMsg').textContent = '再选一个想买的东西。';
+    shopRender();
+  }
+  function shopRefund() {
+    if (shopPaid <= 0 || shopBought) return;
+    shopWallet.yuan += shopPaidCoins.yuan;
+    shopWallet.five += shopPaidCoins.five;
+    shopWallet.one += shopPaidCoins.one;
+    shopPaidCoins = { yuan: 0, five: 0, one: 0 };
+    shopPaid = 0;
+    document.getElementById('shopMsg').textContent = '钱都退回钱包了。';
+    shopRender();
+  }
+  function shopExchange() {
+    const note = document.getElementById('shopNote');
+    if (shopWallet.one >= 10) {
+      shopWallet.one -= 10;
+      shopWallet.yuan += 1;
+      note.textContent = '10个1角换1元，换好了！';
+    } else {
+      note.textContent = '1角还不够10个（现在只有 ' + shopWallet.one + ' 个），换不了。';
+    }
+    shopRender();
+  }
+  function shopReset() {
+    shopWallet = { yuan: 2, five: 2, one: 10 };
+    shopItemIdx = -1; shopPaid = 0; shopBought = false;
+    shopPaidCoins = { yuan: 0, five: 0, one: 0 };
+    document.getElementById('shopMsg').textContent = '重新开店了，钱包回到一开始的样子。';
+    document.getElementById('shopNote').textContent = '10个1角可以换成1张1元。';
+    shopRender();
+  }
+  document.getElementById('shopAgain').addEventListener('click', shopAgain);
+  document.getElementById('shopRefund').addEventListener('click', shopRefund);
+  document.getElementById('shopExchange').addEventListener('click', shopExchange);
+  document.getElementById('shopReset').addEventListener('click', shopReset);
+  shopRender();
+
+  /* ---------- demo-pattern · 找规律（1.16，方法：找重复单元） ---------- */
+  function patShapeEl(key) {
+    const s = document.createElement('span');
+    s.className = 'pat-shape pat-' + key;
+    s.setAttribute('aria-hidden', 'true');
+    return s;
+  }
+  const PATTERNS = [
+    { name: '红蓝蓝', kind: 'shape', unit: ['red', 'blue', 'blue'], unitText: '红蓝蓝',
+      answers: ['red', 'blue', 'blue'],
+      choices: [{ k: 'red', label: '红色' }, { k: 'blue', label: '蓝色' }],
+      wrong: '再想想，单元是红蓝蓝', right: '对了！单元是红蓝蓝，蓝后面又是红。' },
+    { name: '三角圆', kind: 'shape', unit: ['tri', 'dot'], unitText: '▲●',
+      answers: ['tri', 'dot', 'tri'],
+      choices: [{ k: 'tri', label: '三角形' }, { k: 'dot', label: '圆形' }],
+      wrong: '再想想，单元是▲●，三角和圆轮流出现', right: '对了！单元是▲●，三角和圆轮流出现。' },
+    { name: '圆圆三角', kind: 'shape', unit: ['ring', 'ring', 'tri'], unitText: '○○△',
+      answers: ['ring', 'ring', 'tri'],
+      choices: [{ k: 'ring', label: '圆圈' }, { k: 'tri', label: '三角形' }],
+      wrong: '再想想，单元是○○△', right: '对了！单元是○○△，两个圆圈后面是三角形。' },
+    { name: '数字', kind: 'number', terms: [1, 2, 4, 7, 11], answers: [16, 22, 29],
+      wrong: '再想想，相邻两个数相差 1、2、3、4，每次多 1',
+      right: '对了！每次多 1，11 再加 5 是 16。' }
+  ];
+  let patIdx = 0;
+  let patFilled = [];
+  let patShowUnit = false;
+  function patShown() {
+    const p = PATTERNS[patIdx];
+    if (p.kind === 'number') return p.terms.slice();
+    const out = [];
+    for (let i = 0; i < 6; i++) out.push(p.unit[i % p.unit.length]);
+    return out;
+  }
+  function patChoicesFor(blankIdx) {
+    const p = PATTERNS[patIdx];
+    if (p.kind === 'number') {
+      const a = p.answers[blankIdx];
+      return [a, a - 1, a - 3];
+    }
+    return p.choices;
+  }
+  function patRender() {
+    const p = PATTERNS[patIdx];
+    const seg = document.getElementById('patSeg');
+    seg.innerHTML = '';
+    PATTERNS.forEach(function (pp, i) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = pp.name;
+      b.setAttribute('aria-pressed', String(i === patIdx));
+      b.addEventListener('click', function () { patSet(i); });
+      seg.appendChild(b);
+    });
+    const seq = document.getElementById('patSeq');
+    seq.innerHTML = '';
+    patShown().forEach(function (v, i) {
+      const cell = document.createElement('div');
+      cell.className = 'pat-cell';
+      if (patShowUnit && (p.kind === 'number' || i < p.unit.length)) cell.classList.add('pat-in-unit');
+      if (p.kind === 'number') cell.textContent = String(v);
+      else cell.appendChild(patShapeEl(v));
+      seq.appendChild(cell);
+    });
+    for (let i = 0; i < 3; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'pat-cell pat-blank';
+      if (i < patFilled.length) {
+        cell.classList.remove('pat-blank');
+        cell.classList.add('pat-filled');
+        if (p.kind === 'number') cell.textContent = String(patFilled[i]);
+        else cell.appendChild(patShapeEl(patFilled[i]));
+      } else {
+        cell.textContent = '?';
+      }
+      seq.appendChild(cell);
+    }
+    const ch = document.getElementById('patChoices');
+    ch.innerHTML = '';
+    if (patFilled.length < 3) {
+      patChoicesFor(patFilled.length).forEach(function (o) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'btn small ghost pat-choice';
+        if (p.kind === 'number') {
+          b.textContent = String(o);
+        } else {
+          b.appendChild(patShapeEl(o.k));
+          const t = document.createElement('span');
+          t.textContent = o.label;
+          b.appendChild(t);
+        }
+        b.addEventListener('click', function () { patChoose(o); });
+        ch.appendChild(b);
+      });
+    }
+    document.getElementById('patUnitBtn').setAttribute('aria-pressed', String(patShowUnit));
+  }
+  function patChoose(o) {
+    const p = PATTERNS[patIdx];
+    const idx = patFilled.length;
+    if (idx >= 3) return;
+    const val = p.kind === 'number' ? o : o.k;
+    if (val === p.answers[idx]) {
+      patFilled.push(val);
+      const msg = document.getElementById('patMsg');
+      if (patFilled.length === 3) {
+        msg.textContent = p.kind === 'number'
+          ? '全对了！1、2、4、7、11、16、22、29，每次多 1。'
+          : '全对了！单元是' + p.unitText + '，它一遍一遍重复出现。';
+      } else {
+        msg.textContent = p.right;
+      }
+    } else {
+      document.getElementById('patMsg').textContent = p.wrong + '。';
+    }
+    patRender();
+  }
+  function patSet(i) {
+    patIdx = i;
+    patFilled = [];
+    patShowUnit = false;
+    document.getElementById('patMsg').textContent = '找一找重复的单元，再选下一个。';
+    patRender();
+  }
+  document.getElementById('patUnitBtn').addEventListener('click', function () {
+    patShowUnit = !patShowUnit;
+    if (patShowUnit) {
+      const p = PATTERNS[patIdx];
+      document.getElementById('patMsg').textContent = p.kind === 'number'
+        ? '数字没有重复的单元，规律是每次多 1：已经给出的 5 个数都框出来了。'
+        : '框出来的是一个单元：' + p.unitText + '，它会一遍一遍重复。';
+    }
+    patRender();
+  });
+  document.getElementById('patNextBtn').addEventListener('click', function () {
+    patSet((patIdx + 1) % PATTERNS.length);
+  });
+  patRender();

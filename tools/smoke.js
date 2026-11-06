@@ -44,6 +44,8 @@ function makeEl(tag) {
     },
     addEventListener(t, fn) { (this._handlers[t] = this._handlers[t] || []).push(fn); },
     appendChild(c) { this.children.push(c); c.parentNode = this; return c; },
+    removeChild(c) { const i = this.children.indexOf(c); if (i >= 0) this.children.splice(i, 1); c.parentNode = null; return c; },
+    get firstChild() { return this.children[0] || null; },
     querySelector(sel) {
       if (!this._qs[sel]) this._qs[sel] = makeEl('div');
       return this._qs[sel];
@@ -72,17 +74,30 @@ function matchSel(e, sel) {
   if (sel === '[data-g-review]') return d('gReview');
   if (sel === '[data-demo-link]') return d('demoLink');
   if (sel === '.prereq-step') return (e.className || '').split(' ').includes('prereq-step');
+  // Descendant attribute selectors like '#sortRuleSeg [data-sort-rule]':
+  // static seg buttons live in index.html, which the stub never parses,
+  // so they are pre-seeded below before app.js loads (dataset + parent);
+  // matchSel checks the parent chain. (The ten-frame/lab segs are NOT
+  // pre-seeded, so their handlers stay unbound in the stub as before.)
+  const dm = sel.match(/^#([A-Za-z0-9_-]+) \[data-([A-Za-z0-9-]+)\]$/);
+  if (dm) {
+    if (e.dataset[camelData('data-' + dm[2])] === undefined) return false;
+    let p = e.parentNode;
+    while (p) { if (p === byId[dm[1]]) return true; p = p.parentNode; }
+    return false;
+  }
   return false;
 }
 const byId = {};
 const documentStub = {
   getElementById(id) { if (!byId[id]) byId[id] = makeEl('div'); return byId[id]; },
   createElement(tag) { return makeEl(tag); },
+  createElementNS(ns, tag) { return makeEl(tag); },
   querySelector(sel) { return registry.find(e => matchSel(e, sel)) || makeEl('div'); },
   querySelectorAll(sel) { return registry.filter(e => matchSel(e, sel)); },
   body: makeEl('body'),
 };
-const windowStub = { scrollTo() {}, document: documentStub };
+const windowStub = { scrollTo() {}, setTimeout, document: documentStub };
 
 // ---------- stub grade content (small but schema-faithful) ----------
 const GRADE3_CONTENT = { grade: 3, edition: 'A', units: [
@@ -101,11 +116,33 @@ const GRADE1_CONTENT = { grade: 1, edition: 'A', units: [
     { id: '1.9', title: '20以内进位加法', subtitle: '凑十法', how: '把 9 凑成 10 再加。', why: '10 是整捆。', wrong: '9+4=12', wrongWhy: '忘了凑十。', visual: '十格阵。', method: '凑十拖格', explainBack: '给 9 一个凑成 10。', tryIt: '拖 1 个到十格阵。', demo: 'tenframe', recall: { q: '9+4，先给 9 凑几个成 10？', answer: '凑 1 个', hint: '9 再加 1 是 10' }, olympiad: { q: '9+7+1+3，用凑十怎么算最快？', answer: '（9+1）+（7+3）=20', hint: '找能凑成 10 的一对' }, practice: [{ q: '9+5 = ?', answer: '14', hint: '9+1=10，再加 4', level: '基础' }, { q: '8+6 = ?', answer: '14', hint: '8+2=10，再加 4', level: '提高' }] },
   ] },
   { unit: '100以内数的认识', term: '下', points: [
-    { id: '1.13', title: '100以内数的认识', subtitle: '十和一', how: '10 个一是 1 个十。', why: '十位值是 10。', wrong: '46 比 38 小', wrongWhy: '只看了个位。', visual: '百数表。', method: '捆小棒', explainBack: '46 有 4 个十。', tryIt: '捆 4 捆加 6 根。', demo: null, recall: { q: '46 里有几个十？', answer: '4 个十', hint: '4 在十位上' }, practice: [{ q: '38 有几个十几个一？', answer: '3 个十 8 个一', hint: '3 在十位，8 在个位', level: '基础' }, { q: '比 46 大 1 的数是？', answer: '47', hint: '个位加 1', level: '提高' }] },
+    { id: '1.13', title: '100以内数的认识', subtitle: '十和一', how: '10 个一是 1 个十。', why: '十位值是 10。', wrong: '46 比 38 小', wrongWhy: '只看了个位。', visual: '百数表。', method: '捆小棒', explainBack: '46 有 4 个十。', tryIt: '捆 4 捆加 6 根。', demo: 'hundred', recall: { q: '46 里有几个十？', answer: '4 个十', hint: '4 在十位上' }, practice: [{ q: '38 有几个十几个一？', answer: '3 个十 8 个一', hint: '3 在十位，8 在个位', level: '基础' }, { q: '比 46 大 1 的数是？', answer: '47', hint: '个位加 1', level: '提高' }] },
+  ] },
+  { unit: '准备课', term: '上', points: [
+    { id: '1.1', title: '数数、比多少', subtitle: '数一数、一一对应', how: '点一个数一个，一个对一个连起来。', why: '最后数到的就是总数。', wrong: '多数一个或漏数一个', wrongWhy: '没有一个一个点着数。', visual: '两排圆点。', method: '配对法', explainBack: '一个对一个，剩下的就是多的。', tryIt: '点圆点数一数。', demo: 'count', recall: { q: '上面 5 个、下面 7 个，哪排多、多几个？', answer: '下面多 2 个', hint: '一个对一个连起来' }, practice: [{ q: '上面 4 个、下面 4 个，哪排多？', answer: '一样多', hint: '一个对一个，一个不剩', level: '基础' }, { q: '上面 10 个、下面 0 个，哪排多？', answer: '上面多 10 个', hint: '下面是空的，是 0', level: '提高' }] },
+  ] },
+  { unit: '认识钟表', term: '上', points: [
+    { id: '1.8', title: '认识钟表', subtitle: '整时、半点', how: '短针是时针，长针是分针。', why: '分针转一圈，时针走一格。', wrong: '长针短针分不清', wrongWhy: '只看长短，没看走得快慢。', visual: '钟面。', method: '联动表针钟', explainBack: '分针指着 12 就是整时。', tryIt: '拨到 7 点。', demo: 'clock', recall: { q: '分针指着 12，时针指着 7，是几点？', answer: '7 点', hint: '整时看时针' }, practice: [{ q: '分针指着 6，时针在 7 和 8 中间，是几点？', answer: '7 点半', hint: '分针指着 6 是半点', level: '基础' }, { q: '6 点往前推 3 小时是几点？', answer: '3 点', hint: '6 减 3', level: '提高' }] },
   ] },
 ] };
 const lsData = {};
 const localStorageStub = { getItem(k) { return lsData[k] || null; }, setItem(k, v) { lsData[k] = String(v); } };
+
+// Static seg buttons live in index.html; the stub never parses HTML, so
+// seed them here (dataset + parent) before app.js loads, or the G1 demos'
+// seg handlers never bind in the stub. (Real browser: the buttons are in
+// the HTML and the same querySelectorAll finds them.)
+function seedSeg(segId, attr, values) {
+  const seg = documentStub.getElementById(segId);
+  values.forEach(v => {
+    const b = makeEl('button');
+    b.dataset[camelData('data-' + attr)] = v;
+    seg.appendChild(b);
+  });
+}
+seedSeg('splitTotalSeg', 'split-total', ['3', '4', '5']);
+seedSeg('addsubModeSeg', 'addsub-mode', ['add', 'sub']);
+seedSeg('sortRuleSeg', 'sort-rule', ['color', 'shape']);
 
 // ---------- load the real app.js ----------
 const root = require('path').resolve(__dirname, '..');
@@ -424,6 +461,185 @@ check('tomorrow section lists the wrong step for tomorrow, not today',
   pointDetail.innerHTML.indexOf('3.7') > pointDetail.innerHTML.indexOf('明天回来'));
 check('grade-3 review still renders after the fix',
   pointDetail.innerHTML.includes('今天复习') && pointDetail.innerHTML.includes('练过 1 条'));
+
+// ---------- 11. 一年级实验（13 个新演示） ----------
+// 桩里的静态 seg 按钮是上面预置的（splitTotalSeg / addsubModeSeg /
+// sortRuleSeg）；JS 生成的子元素（圆点、格子、积木……）在各自容器的
+// children 里。注意桩的 innerHTML = '' 不会清掉 children，所以
+// shop/pattern 这类每次渲染重建按钮的演示里，children 会累积——
+// 下面按“第几次渲染的第几个子元素”取，见各处注释。
+const G1_DEMOS = ['count', 'position', 'split', 'addsub', 'solids', 'bundle',
+  'clock', 'tangram', 'sort', 'hundred', 'shop', 'place', 'pattern'];
+check('G1: viewForKey covers all 13 new demos',
+  G1_DEMOS.every(k => sandbox.viewForKey('demo-' + k) === 'demo-' + k));
+navGo('demos');
+check('G1: demos list shows panels, grid hidden',
+  byId.demos.hidden === false && byId.demoPanels.hidden === false && byId.demoGrid.hidden === true);
+let g1ViewsOk = true;
+G1_DEMOS.forEach(k => {
+  navGo('demo-' + k);
+  if (!(byId.demos.hidden === false && documentStub.body.dataset.view === 'demo-' + k)) g1ViewsOk = false;
+});
+check('G1: all 13 demo views render (demos section visible)', g1ViewsOk);
+navGo('demos');
+navGo('demo-count');
+sandbox.navBackFn();
+check('G1: back from a demo returns to the demos list',
+  byId.demos.hidden === false && byId.demoPanels.hidden === false);
+// Section 5-6 already played all 4 flagship demos, so the counter reads
+// '4 / 4' here; G1 demos must not move it.
+const g1ProgBefore = byId.progressCount.textContent;
+
+// 1.1 数数
+check('count: initial rows', byId.countReadA.textContent === '5 个' && byId.countReadB.textContent === '7 个');
+click(byId.countRowA.children[0]);
+check('count: click a dot counts it', byId.countCount.textContent.includes('数到了第 1 个'));
+click(byId.countCompare);
+check('count: 5 vs 7 -> below has 2 more', byId.countResult.textContent.includes('下面多 2 个'));
+check('G1 demos do not count toward the 4-demo progress', byId.progressCount.textContent === g1ProgBefore && g1ProgBefore.includes('/ 4'));
+click(byId.countAMinus); click(byId.countAMinus);
+check('count: minus twice -> 3', byId.countReadA.textContent === '3 个');
+
+// 1.2 位置
+click(byId.posGrid.children[1]); // 北边格子
+check('position: star north, facing up -> 前面', byId.posRead.textContent.includes('前面'));
+click(byId.posTurn);
+check('position: turn right -> star on the left hand', byId.posRead.textContent.includes('左手边'));
+click(byId.posFaceMe);
+check('position: facing me -> left/right reversed', byId.posRead.textContent.includes('反过来'));
+
+// 1.3 分与合
+click(byId.splitPlateL.children[0]);
+check('split: move one block -> 1 + 4 = 5', byId.splitEq.textContent === '1 + 4 = 5');
+click(byId.splitTake3);
+check('split: take 3 means 3 kids', byId.splitTake.textContent.includes('3 个人'));
+click(byId.splitKids.children[2]);
+check('split: 3rd kid is 1 person', byId.splitOrdinal.textContent.includes('第 3 个') && byId.splitOrdinal.textContent.includes('1 个人'));
+click(byId.splitTotalSeg.children[0]); // 总数 3
+check('split: total 3 -> 1 + 2 = 3', byId.splitEq.textContent === '1 + 2 = 3');
+
+// 1.4 加减法
+click(byId.addsubAPlus);
+check('addsub: 3 + 2 = 5', byId.addsubEq.textContent === '3 + 2 = 5');
+click(byId.addsubModeSeg.children[1]); // 减法
+check('addsub: switch to sub -> 3 - 2 = 1', byId.addsubEq.textContent === '3 − 2 = 1');
+click(byId.addsubBPlus);
+check('addsub: B up to 3 -> 3 - 3 = 0', byId.addsubEq.textContent === '3 − 3 = 0');
+click(byId.addsubBPlus);
+check('addsub: B cannot exceed A', byId.addsubHint.textContent.includes('不够减'));
+
+// 1.5 立体图形
+click(byId.solidCards.children[0]); // 球
+check('solids: select ball', byId.solidResult.textContent.includes('球'));
+click(byId.solidRollBtn);
+check('solids: ball rolls', byId.solidResult.textContent.includes('滚起来了'));
+for (let i = 0; i < 8; i++) click(byId.solidCubeAdd);
+check('solids: 8 small cubes make a big cube', byId.solidCubeMsg.textContent.includes('拼成大正方体了') && byId.solidCubeMsg.textContent.includes('2×2×2=8'));
+
+// 1.10 七巧板
+click(byId.tangSvg.children[0]); // 大三角形
+check('tangram: rotate a triangle, still a triangle', byId.tangReadout.textContent.includes('3条边') && byId.tangReadout.textContent.includes('倒过来还是三角形'));
+click(byId.tangPairSquareBtn);
+check('tangram: two small triangles make a square', byId.tangPairLabel.textContent.includes('拼成正方形了'));
+
+// 1.12 分类
+for (let i = 0; i < 10; i++) click(byId.sortPool.children[i]);
+check('sort: all 10 placed', byId.sortTotal.textContent.includes('已经分了 10 个') && byId.sortCountRed.textContent === '6' && byId.sortCountBlue.textContent === '4');
+click(byId.sortCheckBtn);
+check('sort: color check adds to 10', byId.sortMsg.textContent.includes('红 6 个 + 蓝 4 个 = 10'));
+click(byId.sortResetBtn);
+for (let i = 0; i < 4; i++) click(byId.sortPool.children[i]);
+click(byId.sortCheckBtn);
+check('sort: unfinished sort reports the gap', byId.sortMsg.textContent.includes('还剩 6 个没分') && byId.sortMsg.textContent.includes('少了 6 个'));
+click(byId.sortRuleSeg.children[1]); // 按形状分
+for (let i = 0; i < 10; i++) click(byId.sortPool.children[i]);
+click(byId.sortCheckBtn);
+check('sort: shape check adds to 10', byId.sortMsg.textContent.includes('● 6 个 + ▲ 2 个 + ■ 2 个 = 10'));
+
+// 1.7 捆小棒
+check('bundle: initial 13', byId.bundleReadout.textContent === '1个十和3个一 = 13' && byId.bundleEq.textContent === '10 + 3 = 13');
+for (let i = 0; i < 7; i++) click(byId.bundleAdd);
+check('bundle: +7 auto-bundles to 20', byId.bundleReadout.textContent === '2个十和0个一 = 20');
+click(byId.bundleUnbundle);
+check('bundle: unbundle notes it', byId.bundleNote.textContent.includes('拆开'));
+click(byId.bundleBundle);
+check('bundle: re-bundle works', byId.bundleNote.textContent.includes('捆好了'));
+
+// 1.13 百数表
+check('hundred: 46 > 38 by tens', byId.hundCompare.textContent.includes('46大') && byId.hundCompare.textContent.includes('4个十比3个十多'));
+click(byId.hundGrid.children[51]); // 52
+click(byId.hundGrid.children[24]); // 25
+check('hundred: 52 > 25 by tens', byId.hundCompare.textContent.includes('52大') && byId.hundCompare.textContent.includes('5个十比2个十多'));
+click(byId.hundReset);
+check('hundred: reset restores 46 vs 38', byId.hundCompare.textContent.includes('46大'));
+
+// 1.15 数位块
+check('place: initial problem 23+5', byId.placeEq.textContent === '23 + 5 = ?');
+click(byId.placeAct);
+check('place: 23+5=28', byId.placeEq.textContent === '23 + 5 = 28' && byId.placeVert.textContent.includes('28'));
+click(byId.placeProbSeg.children[2]); // 47+8
+click(byId.placeAct);
+check('place: 47+8=55 carries one', byId.placeEq.textContent === '47 + 8 = 55' && byId.placeMark.textContent.includes('进1'));
+click(byId.placeProbSeg.children[3]); // 36-8
+click(byId.placeAct);
+check('place: 36-8=28 borrows one', byId.placeEq.textContent === '36 − 8 = 28' && byId.placeMark.textContent.includes('借1'));
+
+// 1.8 时钟
+check('clock: initial 7 o\'clock, target met', byId.clockReadout.textContent === '现在是 7 点' && byId.clockMsg.textContent.includes('对了，就是7点'));
+for (let i = 0; i < 6; i++) click(byId.clockMinPlus);
+check('clock: +30 min -> 7:30', byId.clockReadout.textContent === '现在是 7 点半');
+for (let i = 0; i < 6; i++) click(byId.clockMinPlus);
+check('clock: another +30 min -> 8:00', byId.clockReadout.textContent === '现在是 8 点');
+click(byId.clockHourPlus);
+click(byId.clockNextTarget); // 目标 9 点
+check('clock: dial to the 9 o\'clock target', byId.clockReadout.textContent === '现在是 9 点' && byId.clockMsg.textContent.includes('对了，就是9点'));
+
+// 1.14 开小店
+click(byId.shopItems.children[0]); // 本子 5 角
+check('shop: select 本子', byId.shopSelected.textContent.includes('本子 5角'));
+click(byId.shopWallet.children[0]); // 付 1 元
+check('shop: pay 1 yuan for 5 jiao, change 5', byId.shopMsg.textContent.includes('找回 5角') && byId.shopWalletTotal.textContent.includes('35角'));
+click(byId.shopReset);
+check('shop: reset restores 40 jiao', byId.shopWalletTotal.textContent.includes('40角'));
+click(byId.shopExchange);
+check('shop: 10 x 1 jiao -> 1 yuan', byId.shopNote.textContent.includes('换好了') && byId.shopWalletTotal.textContent.includes('40角'));
+click(byId.shopReset);
+click(byId.shopItems.children[2]); // 铅笔 3 角
+for (let i = 0; i < 3; i++) click(byId.shopWallet.children[2]); // 3 个 1 角
+check('shop: exact payment, no change', byId.shopMsg.textContent.includes('正好 3角'));
+
+// 1.16 找规律
+click(byId.patChoices.children[0]); // 红（第 1 空答案）
+check('pattern: first blank red is right', byId.patMsg.textContent.includes('对了'));
+click(byId.patChoices.children[3]); // 第 2 次渲染的蓝（第 2 空答案）
+click(byId.patChoices.children[5]); // 第 3 次渲染的蓝（第 3 空答案）
+check('pattern: all three blanks right', byId.patMsg.textContent.includes('全对了'));
+click(byId.patUnitBtn);
+check('pattern: frame the unit', byId.patMsg.textContent.includes('红蓝蓝'));
+click(byId.patNextBtn);
+check('pattern: switch pattern resets', byId.patMsg.textContent.includes('找一找重复的单元'));
+
+// 知识点页 → 实验的链接 + 真实 grade-1.js 的映射
+navGo('point-1.1');
+check('point 1.1 links the count experiment', pointDetail.innerHTML.includes('去玩数一数') && pointDetail.innerHTML.includes('data-demo-link="demo-count"'));
+navGo('point-1.8');
+check('point 1.8 links the clock experiment', pointDetail.innerHTML.includes('去玩拨时钟') && pointDetail.innerHTML.includes('data-demo-link="demo-clock"'));
+navGo('point-1.13');
+check('point 1.13 links the hundred-chart experiment', pointDetail.innerHTML.includes('去玩百数表') && pointDetail.innerHTML.includes('data-demo-link="demo-hundred"'));
+navGo('point-1.1');
+sandbox.goDemoFromHere('demo-count');
+check('G1 demo from point keeps point as parent', byId.crumbTitle.innerHTML.includes('数数、比多少'));
+sandbox.navBackFn();
+check('G1 back from demo returns to point page', pointDetail.innerHTML.includes('数数、比多少'));
+const g1src = fs.readFileSync(root + '/content/grades/grade-1.js', 'utf8');
+const g1ids = [...g1src.matchAll(/id: "([0-9.]+)"/g)].map(m => m[1]);
+const g1demos = [...g1src.matchAll(/demo: (?:'([a-z]+)'|null)/g)].map(m => m[1] || null);
+const g1expected = {'1.1':'count','1.2':'position','1.3':'split','1.4':'addsub','1.5':'solids','1.6':'tenframe','1.7':'bundle','1.8':'clock','1.9':'tenframe','1.10':'tangram','1.11':'tenframe','1.12':'sort','1.13':'hundred','1.14':'shop','1.15':'place','1.16':'pattern'};
+check('grade-1.js: all 16 points map to the right experiment',
+  g1ids.length === 16 && g1ids.every((id, i) => g1demos[i] === g1expected[id]));
+const labelSrc = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
+check('DEMO_LABEL covers all 13 new demos',
+  G1_DEMOS.every(k => labelSrc.includes(k + ':')));
 
 // ---------- 8. grade 3 still works ----------
 navGo('grade-3-mix');

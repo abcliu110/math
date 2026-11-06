@@ -62,6 +62,11 @@ body[data-view="dimensions"] #dimensions, body[data-view="dim-detail"] #dimensio
 body[data-view="path"] #path, body[data-view="path-step"] #path,
 body[data-view="demos"] #demos, body[data-view="demo-tenframe"] #demos, body[data-view="demo-fraction"] #demos,
 body[data-view="demo-balance"] #demos, body[data-view="demo-function"] #demos,
+body[data-view="demo-count"] #demos, body[data-view="demo-position"] #demos, body[data-view="demo-split"] #demos,
+body[data-view="demo-addsub"] #demos, body[data-view="demo-solids"] #demos, body[data-view="demo-bundle"] #demos,
+body[data-view="demo-clock"] #demos, body[data-view="demo-tangram"] #demos, body[data-view="demo-sort"] #demos,
+body[data-view="demo-hundred"] #demos, body[data-view="demo-shop"] #demos, body[data-view="demo-place"] #demos,
+body[data-view="demo-pattern"] #demos,
 body[data-view="why"] #why, body[data-view="review"] #review,
 body[data-view="progress"] #review, body[data-view="lab"] #lab{display:block}
 .path-detail{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-top:16px}
@@ -258,6 +263,163 @@ main{min-width:0}
   .dim-btn{flex:none}
   .mode-dims{flex:1 1 100%}
 }
+
+
+/* ================= 一年级实验样式（1.1–1.16，2026-11-06） ================= */
+
+/* 一年级 A 组演示样式（1.1 数数 / 1.2 位置 / 1.3 分与合 / 1.4 加减法与 0）
+   只用 styles.css 的 :root 变量；所有选择器都以本组前缀开头；最小触控目标 44px。 */
+
+/* 1.1 数数 */
+.count-row{display:flex;flex-wrap:wrap;gap:8px;min-height:52px;align-items:center}
+.count-dot{width:48px;height:48px;min-width:48px;min-height:48px;border-radius:50%;border:2px solid var(--blue);background:var(--blue-light);color:var(--ink);font-size:18px;font-weight:700;cursor:pointer;padding:0}
+.count-dot.count-counted{background:var(--orange);border-color:var(--orange-dark);color:#fff}
+.count-dot.count-paired{outline:3px solid var(--blue);outline-offset:2px}
+.count-dot.count-extra{background:#fee2e2;border-color:#dc2626;outline:3px solid #dc2626}
+.count-zero{color:var(--muted);font-weight:700}
+
+/* 1.2 位置 */
+.pos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:360px;margin:12px auto}
+.pos-cell{min-height:76px;border:2px solid var(--line);border-radius:14px;background:var(--card);cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center}
+.pos-cell.pos-center{background:#fff7ed;border-color:var(--orange);cursor:default}
+.pos-person{position:relative;width:60px;height:72px;transition:transform .3s ease}
+.pos-head{position:relative;width:30px;height:30px;border-radius:50%;background:var(--orange);margin:0 auto}
+.pos-nose{position:absolute;top:-4px;left:50%;width:0;height:0;margin-left:-6px;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:10px solid var(--orange-dark)}
+.pos-body{width:34px;height:34px;margin:2px auto 0;border-radius:10px 10px 14px 14px;background:var(--blue)}
+.pos-hand{position:absolute;left:2px;top:40px;width:26px;height:26px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center}
+.pos-hand-label{color:#fff;font-size:15px;font-weight:700;line-height:1}
+.pos-star{font-size:36px;color:var(--orange-dark);line-height:1}
+
+/* 1.3 分与合 */
+.split-plates{display:flex;gap:16px}
+.split-plate-wrap{flex:1;min-width:0}
+.split-label{font-weight:700;margin:0 0 6px}
+.split-plate{display:flex;flex-wrap:wrap;gap:8px;align-content:center;justify-content:center;min-height:120px;border:2px dashed var(--line);border-radius:var(--radius);background:var(--bg);padding:10px}
+.split-block{width:48px;height:48px;min-width:48px;min-height:48px;border-radius:12px;border:2px solid var(--orange-dark);background:var(--orange);cursor:pointer;padding:0}
+.split-list{display:flex;flex-wrap:wrap;gap:8px}
+.split-opt{min-height:48px;padding:8px 16px;border:2px solid var(--line);border-radius:999px;background:#fff;font-size:16px;font-weight:700;cursor:pointer}
+.split-opt.split-cur{border-color:var(--orange);background:var(--orange);color:#fff}
+.split-kids{display:flex;flex-wrap:wrap;gap:8px}
+.split-kid{width:48px;height:48px;min-width:48px;min-height:48px;border-radius:50%;border:2px solid var(--blue);background:var(--blue-light);font-size:18px;font-weight:700;cursor:pointer;padding:0}
+.split-kid.split-picked{background:var(--orange);border-color:var(--orange-dark);color:#fff}
+.split-kid.split-taken{outline:3px solid var(--green);outline-offset:2px;background:#dcfce7}
+.split-kid.split-taken.split-picked{background:var(--orange)}
+
+/* 1.4 加减法 */
+.addsub-plates{display:flex;gap:16px}
+.addsub-plate-wrap{flex:1;min-width:0}
+.addsub-label{font-weight:700;margin:0 0 6px}
+.addsub-plate{display:flex;flex-wrap:wrap;gap:8px;align-content:center;justify-content:center;min-height:110px;border:2px solid var(--line);border-radius:var(--radius);background:var(--bg);padding:10px}
+.addsub-dot{width:48px;height:48px;min-width:48px;min-height:48px;border-radius:50%;border:2px solid var(--orange-dark);background:var(--orange);color:#fff;font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.addsub-empty{color:var(--muted);font-weight:700}
+
+/* group-b.css — 1 年级形状/分类演示样式（1.5 / 1.10 / 1.12）
+   类名全部以 solid- / tang- / sort- 开头，不用全局选择器，只用 :root 里已有的变量。
+   最小触摸目标 44px。 */
+
+/* ---- 演示 1：立体图形 ---- */
+.solid-cards{display:flex;flex-wrap:wrap;gap:12px;margin:12px 0}
+.solid-card{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:88px;min-height:120px;padding:12px 10px;border:2px solid var(--line);border-radius:var(--radius);background:var(--card);cursor:pointer;font-family:inherit;color:var(--ink)}
+.solid-card:hover{border-color:var(--orange)}
+.solid-selected{border-color:var(--orange);background:#fff7ed}
+.solid-shape{display:flex;align-items:center;justify-content:center;width:76px;height:76px}
+.solid-name{font-size:17px;font-weight:700}
+.solid-cubes{display:flex;flex-wrap:wrap;gap:8px;min-height:52px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px;margin:10px 0}
+.solid-mini-cube{width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:#fef3c7;border:2px solid var(--orange-dark);border-radius:8px;font-weight:700;font-size:17px;color:var(--ink)}
+.solid-cube-done{border-color:var(--green);background:#f0fdf4}
+.solid-anim-roll{animation:solid-roll 0.9s ease}
+.solid-anim-stack{animation:solid-stack 0.9s ease}
+.solid-anim-shake{animation:solid-shake 0.6s ease}
+@keyframes solid-roll{0%{transform:translateX(0) rotate(0deg)}50%{transform:translateX(14px) rotate(180deg)}100%{transform:translateX(0) rotate(360deg)}}
+@keyframes solid-stack{0%{transform:translateY(0)}40%{transform:translateY(-18px)}100%{transform:translateY(0)}}
+@keyframes solid-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+/* ---- 演示 2：七巧板 ---- */
+.tang-board{width:100%;max-width:280px;height:auto;display:block;margin:12px auto;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+.tang-piece{cursor:pointer;min-height:44px}
+.tang-piece:hover{opacity:0.85}
+.tang-selected{stroke:var(--orange-dark);stroke-width:4}
+.tang-pair{width:100%;max-width:220px;height:auto;display:block;margin:12px auto;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+.tang-pair-pop{animation:tang-pop 0.5s ease}
+@keyframes tang-pop{0%{transform:scale(0.96)}100%{transform:scale(1)}}
+
+/* ---- 演示 3：分类与整理 ---- */
+.sort-pool{display:flex;flex-wrap:wrap;gap:10px;min-height:56px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px;margin:10px 0}
+.sort-item{width:48px;height:48px;border-radius:12px;border:2px solid var(--line);background:var(--card);font-size:26px;line-height:1;cursor:pointer;font-family:inherit}
+.sort-item:hover{border-color:var(--orange)}
+.sort-red{color:#dc2626}
+.sort-blue{color:var(--blue)}
+.sort-trays{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:10px 0}
+.sort-tray{min-height:120px;border:2px dashed var(--line);border-radius:12px;padding:10px;background:var(--card);display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start;align-items:center}
+.sort-tray-title{width:100%;margin:0 0 4px;font-weight:700;font-size:15px;color:var(--muted)}
+.sort-total{font-size:19px;font-weight:700;text-align:center}
+
+/* Group C — Grade 1 place-value demos. Class selectors only, :root vars only.
+   Orange bundle box = 1个十, blue stick = 1个一. Min touch target 44px. */
+
+/* --- demo-bundle --- */
+.bundle-cap { margin: 10px 0 0; color: var(--muted); font-size: 14px; font-weight: 700; }
+.bundle-area { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; min-height: 64px; padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); margin-top: 8px; }
+.bundle-bundle { display: inline-flex; align-items: flex-end; gap: 2px; padding: 8px 10px 6px; border: 2px solid var(--orange-dark); border-radius: 10px; background: #fff7ed; }
+.bundle-mini { width: 8px; height: 44px; background: var(--orange); border-radius: 4px; }
+.bundle-bundle-label { font-size: 14px; font-weight: 700; color: var(--orange-dark); margin-left: 4px; }
+.bundle-stick { width: 12px; height: 48px; background: var(--blue); border-radius: 6px; }
+.bundle-empty { color: var(--muted); font-size: 15px; }
+.bundle-count { text-align: center; color: var(--muted); font-size: 15px; }
+.bundle-place-table { border-collapse: collapse; margin: 12px auto 0; }
+.bundle-pt-h { border: 1px solid var(--line); padding: 8px 20px; font-size: 15px; color: var(--muted); background: var(--bg); font-weight: 700; }
+.bundle-pt-c { border: 1px solid var(--line); padding: 8px 20px; font-size: 24px; font-weight: 800; text-align: center; }
+
+/* --- demo-hundred --- */
+.hund-grid { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 6px; margin-top: 10px; }
+.hund-cell { min-width: 44px; min-height: 44px; border: 2px solid var(--line); background: var(--card); border-radius: 10px; font-size: 16px; font-weight: 700; color: var(--ink); cursor: pointer; padding: 0; font-family: inherit; }
+.hund-cell.hund-first { background: var(--orange); border-color: var(--orange-dark); color: #fff; }
+.hund-cell.hund-second { background: var(--blue); border-color: var(--blue); color: #fff; }
+.hund-compare-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+.hund-num-box { border: 1px solid var(--line); border-radius: 12px; padding: 10px; background: var(--bg); }
+.hund-num-label { margin: 0 0 6px; font-weight: 700; font-size: 16px; }
+.hund-bundles { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; min-height: 56px; }
+.hund-bundle { display: inline-flex; align-items: flex-end; gap: 2px; padding: 6px 8px 4px; border: 2px solid var(--orange-dark); border-radius: 10px; background: #fff7ed; }
+.hund-mini { width: 7px; height: 40px; background: var(--orange); border-radius: 4px; }
+.hund-bundle-label { font-size: 13px; font-weight: 700; color: var(--orange-dark); margin-left: 3px; }
+.hund-stick { width: 11px; height: 44px; background: var(--blue); border-radius: 6px; }
+.hund-readout { margin: 8px 0 0; font-weight: 700; font-size: 17px; }
+.hund-tens-only .hund-stick { opacity: 0.2; }
+
+/* --- demo-place --- */
+.place-blocks { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; min-height: 64px; padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); margin-top: 8px; }
+.place-bundle { display: inline-flex; align-items: flex-end; gap: 2px; padding: 8px 10px 6px; border: 2px solid var(--orange-dark); border-radius: 10px; background: #fff7ed; }
+.place-mini { width: 8px; height: 44px; background: var(--orange); border-radius: 4px; }
+.place-bundle-label { font-size: 14px; font-weight: 700; color: var(--orange-dark); margin-left: 4px; }
+.place-stick { width: 12px; height: 48px; background: var(--blue); border-radius: 6px; }
+.place-now { text-align: center; font-weight: 700; font-size: 18px; }
+.place-vert-wrap { text-align: center; margin-top: 12px; }
+.place-vert { display: inline-block; white-space: pre; font-size: 20px; font-weight: 700; line-height: 1.5; text-align: left; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 12px 20px; }
+.place-mark { text-align: center; color: var(--orange-dark); font-weight: 700; min-height: 24px; }
+
+/* group-d · 1 年级演示样式：时钟 / 开小店 / 找规律。
+   只用 :root 里的变量，不用全局选择器；最小触摸目标 44px（沿用 .btn 的 48px）。 */
+.clock-face { display: block; width: 240px; max-width: 100%; height: auto; margin: 8px auto; }
+.clock-target { font-weight: 700; margin: 8px 0; }
+.clock-msg { min-height: 28px; color: var(--green); font-weight: 700; margin: 8px 0; }
+.shop-item { min-width: 96px; }
+.shop-coin { min-width: 96px; }
+.shop-wallet-total { font-size: 19px; font-weight: 700; margin: 8px 0; }
+.shop-msg { min-height: 28px; margin: 8px 0; }
+.shop-note { color: var(--muted); font-size: 14px; margin: 8px 0; }
+.pat-seq { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 12px 0; }
+.pat-cell { width: 52px; height: 52px; min-width: 52px; min-height: 52px; border: 2px solid var(--line); border-radius: 12px; display: flex; align-items: center; justify-content: center; background: var(--card); font-size: 20px; font-weight: 800; }
+.pat-cell.pat-blank { border-style: dashed; color: var(--muted); }
+.pat-cell.pat-filled { border-color: var(--green); }
+.pat-cell.pat-in-unit { border-color: var(--orange); background: var(--blue-light); outline: 3px solid var(--orange); outline-offset: 1px; }
+.pat-shape { width: 30px; height: 30px; display: inline-block; flex: none; }
+.pat-red { background: var(--orange-dark); border-radius: 50%; }
+.pat-blue { background: var(--blue); border-radius: 50%; }
+.pat-dot { background: var(--ink); border-radius: 50%; }
+.pat-ring { border: 4px solid var(--ink); border-radius: 50%; background: var(--card); box-sizing: border-box; }
+.pat-tri { background: var(--orange); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.pat-choice { display: inline-flex; align-items: center; gap: 8px; }
+.pat-msg { min-height: 28px; font-weight: 700; margin: 8px 0; }
 </style>
 </head>
 <body>
@@ -296,7 +458,7 @@ main{min-width:0}
       <p class="lead">先动手摆一摆，再看图想一想，最后才写算式。分数是切出来的，方程是天平称出来的，函数是拖出来的——不是背出来的。</p>
       <div class="hero-actions">
         <button class="btn primary" type="button" data-nav-key="grades">选一个年级开始</button>
-        <button class="btn ghost" type="button" data-nav-key="demos">先玩四个演示</button>
+        <button class="btn ghost" type="button" data-nav-key="demos">先玩互动演示</button>
       </div>
       <ul class="hero-points">
         <li>实物 → 图像 → 符号（CPA）</li>
@@ -330,7 +492,7 @@ main{min-width:0}
       <button class="panel" type="button" data-nav-key="grades"><span class="panel-icon" aria-hidden="true">1–9</span><b>选年级</b><span class="panel-sub">1–9 年级 · 按学期走</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">9 个年级</span></button>
       <button class="panel" type="button" data-nav-key="dimensions"><span class="panel-icon" aria-hidden="true">◇</span><b>换维度</b><span class="panel-sub">同一批内容换个分法</span><span class="panel-prog"><i style="width:20%"></i></span><span class="panel-tx">5 个维度</span></button>
       <button class="panel" type="button" data-nav-key="path"><span class="panel-icon" aria-hidden="true">→</span><b>学习路径</b><span class="panel-sub">动手 → 说一说 → 练 → 测</span><span class="panel-prog"><i style="width:25%"></i></span><span class="panel-tx">每课四步</span></button>
-      <button class="panel" type="button" data-nav-key="demos"><span class="panel-icon" aria-hidden="true">✦</span><b>互动演示</b><span class="panel-sub">分数、天平、函数、十格阵都能玩</span><span class="panel-prog"><i id="panelDemoProg" style="width:0%"></i></span><span class="panel-tx" id="panelDemoTx">4 个演示 · 0 已体验</span></button>
+      <button class="panel" type="button" data-nav-key="demos"><span class="panel-icon" aria-hidden="true">✦</span><b>互动演示</b><span class="panel-sub">分数、天平、函数、十格阵，还有一年级实验都能玩</span><span class="panel-prog"><i id="panelDemoProg" style="width:0%"></i></span><span class="panel-tx" id="panelDemoTx">4 个演示 · 0 已体验</span></button>
       <button class="panel" type="button" data-nav-key="lab"><span class="panel-icon" aria-hidden="true">🧪</span><b>数学实验室</b><span class="panel-sub">没有题目，随便玩：分数、十格阵、天平、函数</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">4 个自由玩小站 · 不评分</span></button>
       <button class="panel" type="button" data-nav-key="review"><span class="panel-icon" aria-hidden="true">✎</span><b>错题本</b><span class="panel-sub">错题连当时的图一起存</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">2 条示例</span></button>
       <button class="panel" type="button" data-nav-key="progress"><span class="panel-icon" aria-hidden="true">●</span><b>我的进度</b><span class="panel-sub">玩过的演示点亮一格</span><span class="panel-prog"><i id="panelProgFill" style="width:0%"></i></span><span class="panel-tx" id="panelProgTx">0 / 4 个演示</span></button>
@@ -370,13 +532,26 @@ main{min-width:0}
 
   <!-- Featured demos -->
   <section id="demos" class="section wrap">
-    <h2>互动演示 · 先玩这四个</h2>
-    <p class="section-sub">点一块面板进一个演示，都是我们自己画的图、自己写的例子。能点的都请点一点、拖一拖。</p>
+    <h2>互动演示</h2>
+    <p class="section-sub">点一块面板进一个演示，都是我们自己画的图、自己写的例子。能点的都请点一点、拖一拖。一年级的 13 个新实验也在里面。</p>
     <div class="panels" id="demoPanels" aria-label="互动演示面板">
       <button class="panel" type="button" data-nav-key="demo-tenframe"><span class="panel-icon" aria-hidden="true">▦</span><b>十格阵凑十</b><span class="panel-sub">点 1 个凑成 10，9+4 就好算了</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1–2 年级 · 加减法</span></button>
       <button class="panel" type="button" data-nav-key="demo-fraction"><span class="panel-icon" aria-hidden="true">3/4</span><b>分数切一切</b><span class="panel-sub">切饼、落数轴，3/4 = 6/8</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">3–5 年级 · 分数</span></button>
       <button class="panel" type="button" data-nav-key="demo-balance"><span class="panel-icon" aria-hidden="true">＝</span><b>天平解方程</b><span class="panel-sub">两边一起动，才保持平衡</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">5–7 年级 · 方程</span></button>
       <button class="panel" type="button" data-nav-key="demo-function"><span class="panel-icon" aria-hidden="true">k·x</span><b>函数 k / b 滑杆</b><span class="panel-sub">拖滑杆，直线、表格一起变</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">7–8 年级 · 函数</span></button>
+      <button class="panel" type="button" data-nav-key="demo-count"><span class="panel-icon" aria-hidden="true">●</span><b>数一数，比一比</b><span class="panel-sub">点一点数数，一个对一个比多少</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1 年级 · 数数</span></button>
+      <button class="panel" type="button" data-nav-key="demo-position"><span class="panel-icon" aria-hidden="true">↻</span><b>转身找左右</b><span class="panel-sub">小人转个身，星星在他的哪一边</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1 年级 · 位置</span></button>
+      <button class="panel" type="button" data-nav-key="demo-split"><span class="panel-icon" aria-hidden="true">◐</span><b>分一分：第几个和几个</b><span class="panel-sub">5 可以分成几和几，第 3 个是几个</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1 年级 · 分与合</span></button>
+      <button class="panel" type="button" data-nav-key="demo-addsub"><span class="panel-icon" aria-hidden="true">＋</span><b>合起来，拿走</b><span class="panel-sub">两盘并一盘、拿走几块，空盘子是 0</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1 年级 · 加减法</span></button>
+      <button class="panel" type="button" data-nav-key="demo-solids"><span class="panel-icon" aria-hidden="true">●</span><b>立体图形滚一滚</b><span class="panel-sub">球、圆柱、长方体、正方体：哪个会滚、哪个能叠</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1 年级 · 认识图形（一）</span></button>
+      <button class="panel" type="button" data-nav-key="demo-bundle"><span class="panel-icon" aria-hidden="true">10</span><b>捆小棒认数</b><span class="panel-sub">10根捆成1捆，13是1个十和3个一</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1 年级 · 11–20的认识</span></button>
+      <button class="panel" type="button" data-nav-key="demo-clock"><span class="panel-icon" aria-hidden="true">◷</span><b>认识钟表</b><span class="panel-sub">拨表针，整时和半点</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1 年级 · 认识钟表</span></button>
+      <button class="panel" type="button" data-nav-key="demo-tangram"><span class="panel-icon" aria-hidden="true">▲</span><b>七巧板转一转</b><span class="panel-sub">7 块板转一转，数边数角；两块小三角形拼一拼</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1 年级 · 认识图形（二）</span></button>
+      <button class="panel" type="button" data-nav-key="demo-sort"><span class="panel-icon" aria-hidden="true">▦</span><b>分类分一分</b><span class="panel-sub">10 个图形按一条规则分，加起来要等于 10</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1 年级 · 分类与整理</span></button>
+      <button class="panel" type="button" data-nav-key="demo-hundred"><span class="panel-icon" aria-hidden="true">100</span><b>百数表比大小</b><span class="panel-sub">先比十位，再比个位，46比38大</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1 年级 · 100以内数的认识</span></button>
+      <button class="panel" type="button" data-nav-key="demo-shop"><span class="panel-icon" aria-hidden="true">￥</span><b>开小店</b><span class="panel-sub">付钱、找零、换钱</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1 年级 · 认识人民币</span></button>
+      <button class="panel" type="button" data-nav-key="demo-place"><span class="panel-icon" aria-hidden="true">＋</span><b>数位块加减法</b><span class="panel-sub">满10进1，不够减借1，块和竖式一起变</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1 年级 · 100以内加减法（一）</span></button>
+      <button class="panel" type="button" data-nav-key="demo-pattern"><span class="panel-icon" aria-hidden="true">▲</span><b>找规律</b><span class="panel-sub">框出重复的单元</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1 年级 · 找规律</span></button>
       <button class="panel" type="button" data-nav-key="why"><span class="panel-icon" aria-hidden="true">？</span><b>为什么小实验</b><span class="panel-sub">进位、分数除法、面积公式</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">3 个小实验</span></button>
     </div>
 
@@ -500,6 +675,316 @@ main{min-width:0}
         </div>
         <p class="demo-foot" id="funcChallenge">小挑战：x = 2 公里时要付多少钱？拖动 k 和 b，看表格里的答案怎么变。</p>
         <p class="why"><b>为什么？</b>k 是“每多走 1 公里多付多少钱”，所以直线越陡，每公里越贵；b 是“还没走就先付的起步价”，所以直线从 y 轴的 b 那里出发。直线不是公式，是这趟车费的故事。</p>
+      </article>
+      <article class="demo-card" id="demo-count">
+        <p class="demo-tag">1 年级 · 准备课 · 数数、比多少</p>
+        <h3>数一数，比一比</h3>
+        <p>点一个圆点，就数一个数；点“连一连比多少”，两排一个对一个连起来，多出来的圆点会变红。</p>
+        <div class="control-row"><span>上面一排：<b id="countReadA">5 个</b></span>
+          <div class="btn-row">
+            <button class="btn small ghost" id="countAMinus" type="button">上面 −1</button>
+            <button class="btn small ghost" id="countAPlus" type="button">上面 +1</button>
+          </div>
+          <div class="count-row" id="countRowA"></div>
+        </div>
+        <div class="control-row"><span>下面一排：<b id="countReadB">7 个</b></span>
+          <div class="btn-row">
+            <button class="btn small ghost" id="countBMinus" type="button">下面 −1</button>
+            <button class="btn small ghost" id="countBPlus" type="button">下面 +1</button>
+          </div>
+          <div class="count-row" id="countRowB"></div>
+        </div>
+        <p class="func-eq" id="countCount">点一个圆点，数一数</p>
+        <p id="countResult">还没比。点“连一连比多少”看看哪排多。</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="countCompare" type="button">连一连比多少</button>
+          <button class="btn small ghost" id="countReset" type="button">重新数</button>
+        </div>
+        <p class="demo-foot">成功标准：点着数不漏数、不重数；不用数就说出哪排多、多几个。</p>
+        <p class="why"><b>为什么？</b>数数是给每个东西贴一张号码牌，最后一张牌就是总数；一个对一个连起来，剩下的就是多出来的，不用数也知道谁多。</p>
+      </article>
+
+      <article class="demo-card" id="demo-position">
+        <p class="demo-tag">1 年级 · 位置 · 上下前后左右</p>
+        <h3>转身找左右</h3>
+        <p>小人站在中间，左手贴了一张“左”字贴纸。点一个格子放一颗星星，再让小人转个身，看看星星跑到他的哪一边了。</p>
+        <div class="pos-grid" id="posGrid"></div>
+        <p class="func-eq" id="posFace">小人现在面朝上</p>
+        <p id="posRead">先点一个格子，放一颗星星。</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="posTurn" type="button">转身（顺时针转 90°）</button>
+          <button class="btn small ghost" id="posFaceMe" type="button" aria-pressed="false">转过来面对我</button>
+          <button class="btn small ghost" id="posReset" type="button">重新放星星</button>
+        </div>
+        <p class="demo-foot">成功标准：小人朝哪个方向，你都能说出星星在他的前面、后面、左手边还是右手边。</p>
+        <p class="why"><b>为什么？</b>左右是跟着人走的：他转个身，左和右就换边了。他面对着你的时候，他的左手正好在你右手这一边，左右是反过来的。</p>
+      </article>
+
+      <article class="demo-card" id="demo-split">
+        <p class="demo-tag">1 年级 · 1–5的认识、分与合</p>
+        <h3>分一分：第几个和几个</h3>
+        <p>点一块积木，把它搬到另一个盘子；总数不变，分法变了。下面还有排队游戏：“第 3 个”和“3 个”是一回事吗？</p>
+        <div class="control-row"><span>一共分几块</span>
+          <div class="seg" id="splitTotalSeg">
+            <button type="button" data-split-total="3" aria-pressed="false">3</button>
+            <button type="button" data-split-total="4" aria-pressed="false">4</button>
+            <button type="button" data-split-total="5" aria-pressed="true">5</button>
+          </div>
+        </div>
+        <div class="split-plates">
+          <div class="split-plate-wrap"><p class="split-label" id="splitLabelL">左盘 · 2 个</p><div class="split-plate" id="splitPlateL"></div></div>
+          <div class="split-plate-wrap"><p class="split-label" id="splitLabelR">右盘 · 3 个</p><div class="split-plate" id="splitPlateR"></div></div>
+        </div>
+        <p class="func-eq" id="splitEq">2 + 3 = 5</p>
+        <p id="splitListLabel">全部的分法（每部分至少 1 块）：</p>
+        <div class="split-list" id="splitList"></div>
+        <p class="hint">点一块积木搬到另一个盘子，看看分法怎么变；总数一直不变。点一个分法也可以直接跳到它。</p>
+        <p id="splitKidsLabel">排队游戏：5 个小朋友站成一排。</p>
+        <div class="split-kids" id="splitKids"></div>
+        <p id="splitOrdinal">点一个小朋友，看看他是第几个。</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="splitTake3" type="button">拿 3 个</button>
+          <button class="btn small ghost" id="splitReset" type="button">重新分</button>
+        </div>
+        <p id="splitTake">“拿 3 个”是拿走 3 个小朋友，和“第 3 个”不是一回事。</p>
+        <p class="demo-foot">成功标准：说出 5 的全部 4 种分法；分清“第 3 个”和“3 个”。</p>
+        <p class="why"><b>为什么？</b>把 5 块积木倒进两个盘子，挪一块过去，一个盘子多 1 个，另一个少 1 个，总数还是 5 个。分合就是这样：整体不变，变的只是两部分。</p>
+      </article>
+
+      <article class="demo-card" id="demo-addsub">
+        <p class="demo-tag">1 年级 · 5以内加减法、0</p>
+        <h3>合起来，拿走</h3>
+        <p>加法是把两盘并成一盘，减法是拿走几块。空盘子也是一个盘子，它是 0。</p>
+        <div class="control-row"><span>玩法</span>
+          <div class="seg" id="addsubModeSeg">
+            <button type="button" data-addsub-mode="add" aria-pressed="true">加法 · 合起来</button>
+            <button type="button" data-addsub-mode="sub" aria-pressed="false">减法 · 拿走</button>
+          </div>
+        </div>
+        <div class="addsub-plates">
+          <div class="addsub-plate-wrap"><p class="addsub-label" id="addsubLabelA">A 盘 · 2 个</p><div class="addsub-plate" id="addsubPlateA"></div>
+            <div class="btn-row"><button class="btn small ghost" id="addsubAMinus" type="button">A −1</button><button class="btn small ghost" id="addsubAPlus" type="button">A +1</button></div></div>
+          <div class="addsub-plate-wrap"><p class="addsub-label" id="addsubLabelB">B 盘 · 2 个</p><div class="addsub-plate" id="addsubPlateB"></div>
+            <div class="btn-row"><button class="btn small ghost" id="addsubBMinus" type="button">B −1</button><button class="btn small ghost" id="addsubBPlus" type="button">B +1</button></div></div>
+        </div>
+        <p class="func-eq" id="addsubEq">2 + 2 = 4</p>
+        <p id="addsubHint">两盘并成一盘，一共 4 块。</p>
+        <div class="btn-row"><button class="btn small ghost" id="addsubReset" type="button">重新来</button></div>
+        <p class="demo-foot">成功标准：会算 2 + 2 = 4、5 − 2 = 3；知道 3 + 0 = 3、3 − 0 = 3，空盘子是 0。</p>
+        <p class="why"><b>为什么？</b>减法是加法的反面：5 − 2 = 3，因为 3 + 2 = 5。加 0 或者拿走 0 个，盘子里的东西一点没变，所以 5 + 0 还是 5，5 − 0 还是 5。</p>
+      </article>
+
+      <article class="demo-card" id="demo-solids">
+        <p class="demo-tag">1 年级 · 认识图形（一）· 1.5 立体图形</p>
+        <h3>立体图形：滚一滚，叠一叠</h3>
+        <p>点一个图形，再让它滚一滚、叠一叠，看看它会怎么样。认图形，看的是它长什么样、能干什么，不看颜色和大小。</p>
+        <div class="solid-cards" id="solidCards"></div>
+        <p class="func-eq" id="solidResult">先点一个图形</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="solidRollBtn" type="button">滚一滚</button>
+          <button class="btn small primary" id="solidStackBtn" type="button">叠一叠</button>
+        </div>
+        <p class="hint">提示：球没有平平的面，到处都能滚；长方体和正方体有平平的面，能叠起来；圆柱躺着能滚，立着能叠。</p>
+        <p><b>拼一拼：8 个小正方体拼一个大正方体</b></p>
+        <p>点“+”加一个小正方体，看看几个才能拼成一个大正方体。</p>
+        <div class="solid-cubes" id="solidCubeRow"></div>
+        <p id="solidCubeCount">已经拼了 0 个小正方体</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="solidCubeAdd" type="button">+ 加一个小正方体</button>
+          <button class="btn small ghost" id="solidCubeReset" type="button">重来</button>
+        </div>
+        <p id="solidCubeMsg"></p>
+        <p class="demo-foot">成功标准：能说出哪个会滚、哪个能叠；知道 8 个小正方体才能拼成一个大正方体，4 个不行。</p>
+        <p class="why"><b>为什么？</b>球滚是因为它没有平平的面；盒子能叠是因为它有平平的面。长方体有 6 个平平的面，正方体也有 6 个。大正方体长、宽、高都要 2 个小正方体，2×2×2=8 个，所以 4 个拼不成。</p>
+      </article>
+
+      <article class="demo-card" id="demo-bundle">
+        <p class="demo-tag">1 年级上 · 11–20的认识</p>
+        <h3>捆小棒：10根捆成1捆</h3>
+        <p>13根小棒怎么数？先捆起10根变成1捆，剩下3根散的，13就是1个十和3个一。点一点，加一根、拿走一根，看看捆怎么变。</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="bundleAdd" type="button">+1根</button>
+          <button class="btn small ghost" id="bundleMinus" type="button">−1根</button>
+          <button class="btn small ghost" id="bundleBundle" type="button">捆一捆</button>
+          <button class="btn small ghost" id="bundleUnbundle" type="button">拆开</button>
+        </div>
+        <p class="bundle-cap">捆好的（1捆 = 10根）</p>
+        <div class="bundle-area" id="bundleBundles"></div>
+        <p class="bundle-cap">散的</p>
+        <div class="bundle-area" id="bundleLoose"></div>
+        <p class="func-eq" id="bundleReadout">1个十和3个一 = 13</p>
+        <p class="func-eq" id="bundleEq">10 + 3 = 13</p>
+        <p class="bundle-count" id="bundleCount">一共 13 根小棒</p>
+        <table class="bundle-place-table">
+          <tr><th class="bundle-pt-h">十位</th><th class="bundle-pt-h">个位</th></tr>
+          <tr><td class="bundle-pt-c" id="bundleTens">1</td><td class="bundle-pt-c" id="bundleOnes">3</td></tr>
+        </table>
+        <p class="hint" id="bundleNote">先数出13根：1捆加3根散的。</p>
+        <p class="demo-foot">成功标准：不用一个一个数，说出13是1个十和3个一，10 + 3 = 13。</p>
+        <p class="why"><b>为什么？</b>10根捆成1捆，1捆就是1个十。13写成“13”，十位上的1是1个十，不是1个一；个位上的3是3个一。位置决定大小，写成31就变成3个十和1个一了。</p>
+      </article>
+
+      <article class="demo-card" id="demo-clock">
+        <p class="demo-tag">1 年级 · 认识钟表</p>
+        <h3>拨一拨钟：认识整时和半点</h3>
+        <p>短针是时针，长针是分针。拨动表针，看看分针转一圈，时针走几格。</p>
+        <svg class="clock-face" id="clockFace" viewBox="0 0 200 200" role="img" aria-label="可以拨动的钟">
+          <circle cx="100" cy="100" r="92" fill="#fff" stroke="#334155" stroke-width="3"/>
+          <g id="clockTicks"></g>
+          <line id="clockHourHand" x1="100" y1="100" x2="100" y2="54" stroke="#1e293b" stroke-width="7" stroke-linecap="round"/>
+          <line id="clockMinHand" x1="100" y1="100" x2="100" y2="34" stroke="#ff8a3d" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="100" cy="100" r="6" fill="#1e293b"/>
+        </svg>
+        <p class="func-eq" id="clockReadout">现在是 7 点</p>
+        <p class="clock-target" id="clockTarget">目标：拨到 7 点</p>
+        <p class="clock-msg" id="clockMsg">对了，就是7点！</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="clockHourPlus" type="button">时针 +1 格</button>
+          <button class="btn small primary" id="clockMinPlus" type="button">分针 +5 分钟</button>
+          <button class="btn small ghost" id="clockMinFull" type="button">分针转一圈</button>
+          <button class="btn small ghost" id="clockNextTarget" type="button">换一题</button>
+        </div>
+        <p class="hint">分针转一圈，时针走一格。整时的时候，分针指着 12。</p>
+        <p class="demo-foot">成功标准：不用看数字，说出“长针指着 12，短针指着 7，就是 7 点”。</p>
+        <p class="why"><b>为什么？</b>钟面是一个圆，分成 12 个小时。分针转一圈是 1 小时，时针才走一格；整时的时候，分针正好回到 12，时针正好指着那个整点。</p>
+      </article>
+
+      <article class="demo-card" id="demo-tangram">
+        <p class="demo-tag">1 年级 · 认识图形（二）· 1.10 平面图形、七巧板</p>
+        <h3>七巧板：转一转，还是那个图形</h3>
+        <p>七巧板一共 7 块板。点一块板，它就转 45°，再看看它有几条边、几个角——转个方向，边和角都没有变。</p>
+        <svg class="tang-board" id="tangSvg" viewBox="0 0 200 200" role="img" aria-label="七巧板拼成的正方形"></svg>
+        <p class="func-eq" id="tangReadout">点一块板，看看它有几条边、几个角</p>
+        <p class="hint">提示：七巧板里有 5 个三角形，最大的有 2 个；还有 1 个正方形和 1 个平行四边形。</p>
+        <p><b>拼一拼：两块小三角形能拼成什么？</b></p>
+        <p>下面是七巧板里的两块完全一样的小三角形，试试两种拼法。</p>
+        <svg class="tang-pair" id="tangPairSvg" viewBox="0 0 160 170" role="img" aria-label="两块小三角形拼一拼"></svg>
+        <p id="tangPairLabel">两块一样的小三角形，分开摆着。试试拼一拼！</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="tangPairSquareBtn" type="button">拼成正方形</button>
+          <button class="btn small primary" id="tangPairBigBtn" type="button">拼成大三角形</button>
+          <button class="btn small ghost" id="tangPairResetBtn" type="button">分开</button>
+        </div>
+        <p class="demo-foot">成功标准：能数出每个图形的边和角；知道两块小三角形能拼成正方形，也能拼成一个大三角形。</p>
+        <p class="why"><b>为什么？</b>图形的样子由边和角决定，不由方向决定：三角形倒过来还是 3 条边，还是三角形。七巧板的 7 块板拼成的图形，总面积就是 7 块板加起来的面积，怎么拼都不变。</p>
+      </article>
+
+      <article class="demo-card" id="demo-sort">
+        <p class="demo-tag">1 年级 · 分类与整理 · 1.12 分类与整理</p>
+        <h3>分类分一分：加起来要等于 10</h3>
+        <p>这里一共有 10 个图形。先定一条规则——按颜色分，或者按形状分，只能选一条。再点一个图形，把它送到对应的盘子里。</p>
+        <div class="control-row"><span>先选一条规则</span><div class="seg" id="sortRuleSeg">
+          <button type="button" data-sort-rule="color" aria-pressed="true">按颜色分</button>
+          <button type="button" data-sort-rule="shape" aria-pressed="false">按形状分</button>
+        </div></div>
+        <p><b>待分的小图形</b></p>
+        <div class="sort-pool" id="sortPool"></div>
+        <div class="sort-trays" id="sortTraysColor">
+          <div class="sort-tray" id="sortTrayRed"><p class="sort-tray-title">红盘子 · <b id="sortCountRed">0</b> 个</p></div>
+          <div class="sort-tray" id="sortTrayBlue"><p class="sort-tray-title">蓝盘子 · <b id="sortCountBlue">0</b> 个</p></div>
+        </div>
+        <div class="sort-trays" id="sortTraysShape" hidden>
+          <div class="sort-tray" id="sortTrayCircle"><p class="sort-tray-title">圆形盘子 · <b id="sortCountCircle">0</b> 个</p></div>
+          <div class="sort-tray" id="sortTrayTri"><p class="sort-tray-title">三角形盘子 · <b id="sortCountTri">0</b> 个</p></div>
+          <div class="sort-tray" id="sortTraySquare"><p class="sort-tray-title">正方形盘子 · <b id="sortCountSquare">0</b> 个</p></div>
+        </div>
+        <p class="func-eq" id="sortTotal">已经分了 0 个 · 还剩 10 个 · 一共 10 个</p>
+        <p id="sortMsg">点一个小图形，把它送到对应的盘子里。</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="sortCheckBtn" type="button">加起来对不对？</button>
+          <button class="btn small ghost" id="sortResetBtn" type="button">重新分</button>
+        </div>
+        <p class="hint">提示：换一条规则要重新分。分完数一数，每组有几个，再把各组加起来，看看是不是等于总数 10。</p>
+        <p class="demo-foot">成功标准：只用一条规则分完；各组加起来等于 10；加起来不对时，能说出少了几个、漏了哪个。</p>
+        <p class="why"><b>为什么？</b>一条规则把东西分进盘子，每个东西只能进一个盘子，所以各组加起来一定等于总数。加起来不对，就是有的东西没分，或者有的东西分了两次。</p>
+      </article>
+
+      <article class="demo-card" id="demo-hundred">
+        <p class="demo-tag">1 年级下 · 100以内数的认识</p>
+        <h3>百数表：先比十位，再比个位</h3>
+        <p>46和38哪个大？别只看个位：46有4个十，38只有3个十，4捆比3捆多，所以46大。点一个数，再点一个数，比一比。</p>
+        <div class="hund-grid" id="hundGrid"></div>
+        <div class="hund-compare-wrap" id="hundCompareWrap">
+          <div class="hund-num-box">
+            <p class="hund-num-label" id="hundFirstLabel">第一个数：46</p>
+            <div class="hund-bundles" id="hundFirstBundles"></div>
+            <p class="hund-readout" id="hundFirstReadout">46 = 4个十和6个一</p>
+          </div>
+          <div class="hund-num-box">
+            <p class="hund-num-label" id="hundSecondLabel">第二个数：38</p>
+            <div class="hund-bundles" id="hundSecondBundles"></div>
+            <p class="hund-readout" id="hundSecondReadout">38 = 3个十和8个一</p>
+          </div>
+        </div>
+        <p class="func-eq" id="hundCompare">46大，因为4个十比3个十多。</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="hundTensToggle" type="button" aria-pressed="false">只看十位</button>
+          <button class="btn small ghost" id="hundReset" type="button">重新选</button>
+        </div>
+        <p class="hint">找一找：45和60之间，个位是0的整十数只有50。也可以试试52和25：5个十比2个十多，所以52大。</p>
+        <p class="demo-foot">成功标准：说出比大小先比十位，十位一样再比个位。</p>
+        <p class="why"><b>为什么？</b>十位是“捆”，1个十是10个一。46有4捆，38只有3捆，不管个位是6还是8，4捆都比3捆多。100就是10捆。</p>
+      </article>
+
+      <article class="demo-card" id="demo-shop">
+        <p class="demo-tag">1 年级 · 认识人民币</p>
+        <h3>开小店：认识元角分</h3>
+        <p>先点一个想买的东西，再点钱包里的钱付钱。付够了就买到了，多付的会找给你。</p>
+        <div class="control-row"><span>想买什么</span><div class="seg" id="shopItems"></div></div>
+        <p class="func-eq" id="shopSelected">还没选要买的东西，先点一个</p>
+        <p class="func-eq" id="shopPaid">已付 0角</p>
+        <div class="control-row"><span>钱包里的钱（点一下就付出去）</span><div class="seg" id="shopWallet"></div></div>
+        <p class="shop-wallet-total" id="shopWalletTotal">钱包一共 40角 = 4元</p>
+        <p class="shop-msg" id="shopMsg">点一个东西，再点钱来付。</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="shopAgain" type="button">再买一个</button>
+          <button class="btn small ghost" id="shopRefund" type="button">不买了，退钱</button>
+          <button class="btn small ghost" id="shopExchange" type="button">换钱：10个1角换1元</button>
+          <button class="btn small ghost" id="shopReset" type="button">重新开店</button>
+        </div>
+        <p class="shop-note" id="shopNote">10个1角可以换成1张1元。</p>
+        <p class="hint">1元 = 10角，1角 = 10分；1元5角 = 15角。</p>
+        <p class="demo-foot">成功标准：能算出本子加橡皮一共 7 角，1 元买 3 角的铅笔找回 7 角。</p>
+        <p class="why"><b>为什么？</b>元角分也是十进制：10 角就是 1 元，和 10 个一就是 1 个十是一回事。元和角是不同的单位，不能直接加：1 元 5 角不是 6 元，要先换成一样的单位。</p>
+      </article>
+
+      <article class="demo-card" id="demo-place">
+        <p class="demo-tag">1 年级下 · 100以内加减法（一）</p>
+        <h3>数位块并排算：个位满10进1，不够减借1</h3>
+        <p>23 + 5 怎么算？3个一加5个一是8个一，2个十还是2个十，所以是28。选一道题，点“加”或“减”，看数位块和竖式一起变。</p>
+        <div class="control-row"><span>选一道题</span><div class="seg" id="placeProbSeg"></div></div>
+        <div class="place-blocks" id="placeBlocks"></div>
+        <p class="place-now" id="placeNow">现在是：2个十和3个一 = 23</p>
+        <p class="func-eq" id="placeEq">23 + 5 = ?</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="placeAct" type="button">加 5</button>
+          <button class="btn small ghost" id="placeReset" type="button">换一道题</button>
+        </div>
+        <p class="hint" id="placeNote">先看第一道数摆好了，再点“加 5”。</p>
+        <div class="place-vert-wrap"><div class="place-vert" id="placeVert">  23
+      +  5
+      ——
+        ?</div></div>
+        <p class="place-mark" id="placeMark"></p>
+        <p class="demo-foot">成功标准：说出23 + 5为什么是28，47 + 8为什么进1，36 − 8为什么要借1个十。</p>
+        <p class="why"><b>为什么？</b>数位块和竖式是同一道题：左边摆块，右边列竖式，个位满10换成1个十，竖式里就进1；个位不够减，借1个十当10个一。进位不是新算法，是“换”的记录。</p>
+      </article>
+
+      <article class="demo-card" id="demo-pattern">
+        <p class="demo-tag">1 年级 · 找规律</p>
+        <h3>找规律：框出重复的单元</h3>
+        <p>先找一找：哪一小段在重复出现？把重复的单元框出来，下一个是什么就定了。</p>
+        <div class="control-row"><span>选一组</span><div class="seg" id="patSeg"></div></div>
+        <div class="pat-seq" id="patSeq"></div>
+        <div class="control-row"><span>下一个填什么</span><div class="seg" id="patChoices"></div></div>
+        <p class="pat-msg" id="patMsg">找一找重复的单元，再选下一个。</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="patUnitBtn" type="button" aria-pressed="false">框出单元</button>
+          <button class="btn small ghost" id="patNextBtn" type="button">换一组</button>
+        </div>
+        <p class="hint">图形的规律看重复的单元；数字的规律看每次多几。</p>
+        <p class="demo-foot">成功标准：能说出单元是什么，并用单元猜出下一个。</p>
+        <p class="why"><b>为什么？</b>单元重复出现，整个串就是单元一个接一个；第几个是什么，看它在单元里的位置。数字没有重复的单元，就看相邻两个数每次多几。</p>
       </article>
     </div>
   </section>
@@ -677,7 +1162,9 @@ main{min-width:0}
    和 grade-3.js 一样）。每条知识点：怎么做、为什么、容易错、看图学、
    动手试一试、讲回来、先考一考、练一练（基础 → 提高）、奥数挑战
    （只有真有适合一年级的奥数延展时才有 olympiad 字段，不硬凑）。
-   演示关联：本轮没有新演示，全部为 null。 */
+   演示关联：1.1–1.16 每条都有实验——1.6/1.9/1.11 用十格阵，其余 13 条用本轮新增的
+   13 个一年级实验（数数、位置、分与合、加减法、立体图形、捆小棒、钟表、七巧板、分类、
+   百数表、开小店、数位块、找规律）。 */
 const GRADE1_CONTENT = {
   grade: 1,
   edition: "A",
@@ -698,7 +1185,7 @@ const GRADE1_CONTENT = {
           method: "配对法",
           explainBack: "“每个东西只摸一次，最后说的数就是一共有多少个。”",
           tryIt: "摆两排积木，一排5个，一排7个，不数数，用连线比一比哪排多，多几个。",
-          demo: null,
+          demo: 'count',
           recall: { q: "桌上有6颗糖，你数的时候不小心同一颗数了两次，你会数成几颗？", answer: "7颗", hint: "一颗数了两次，就多算了一颗。" },
           practice: [
             { q: "盘子里有3个苹果，妈妈又放进2个苹果，现在盘子里有几个苹果？从3往后数：4、5。", answer: "5个", hint: "3后面再数2个：4、5。", level: "基础" },
@@ -724,7 +1211,7 @@ const GRADE1_CONTENT = {
           method: "转身法",
           explainBack: "“左是左手那边；你转个身，你的左就换边了。”",
           tryIt: "和爸爸妈妈面对面站着，互相举起左手，看看你们举的是同一边吗？再让一个人转过身去，看看左手换到哪边了。",
-          demo: null,
+          demo: 'position',
           recall: { q: "你和好朋友面对面站着，他举起左手，你看到的是他身体的哪一边？是左边还是右边？", answer: "从你看过去，是右边", hint: "他面对你，他的左手正好在你右手这一边。" },
           practice: [
             { q: "小猫在桌子上面，小狗在桌子下面。小猫在小狗的哪边？（上面还是下面）", answer: "上面", hint: "桌子上面是小猫，桌子下面是小狗。", level: "基础" },
@@ -750,7 +1237,7 @@ const GRADE1_CONTENT = {
           method: "数分合",
           explainBack: "“5可以是2和3，挪一块就变成1和4，可还是5。”",
           tryIt: "拿5块积木，分成两堆，数一数有几种分法；再把一堆里的1块挪到另一堆，看看总数变了没有。",
-          demo: null,
+          demo: 'split',
           recall: { q: "排队买票，你是第4个，你前面有几个人？", answer: "3个人", hint: "第4个就是前面有3个人，再加上你。" },
           practice: [
             { q: "5可以分成2和几？（2和3，还是2和2）", answer: "2和3", hint: "2加3是5。", level: "基础" },
@@ -770,7 +1257,7 @@ const GRADE1_CONTENT = {
           method: "合盘与拿走",
           explainBack: "“加是并盘，减是拿走；5拿走0还是5，因为什么都没拿。”",
           tryIt: "拿5块积木，先拿走2块，再把2块放回来，看看加法和减法是怎么反过来的。",
-          demo: null,
+          demo: 'addsub',
           recall: { q: "盘子里有3个苹果，妈妈一个也没拿走，盘子里还剩几个？是3个，还是0个？", answer: "3个", hint: "一个都没拿走，就是减0，盘子里的苹果一点没少。" },
           practice: [
             { q: "树上有2只鸟，又飞来2只，现在树上有几只鸟？", answer: "4只", hint: "2加2是4。", level: "基础" },
@@ -796,7 +1283,7 @@ const GRADE1_CONTENT = {
           method: "滚/滑/叠分类",
           explainBack: "“它到处都滚，所以是球；它有平的面能叠，所以是盒子。”",
           tryIt: "找一找家里哪些东西是球、哪些是圆柱、哪些是长方体；再试一试：哪些能滚？哪些能叠高？",
-          demo: null,
+          demo: 'solids',
           recall: { q: "一个篮球和一张画在纸上的圆，哪个能拿起来滚？", answer: "篮球能滚，纸上的圆不能", hint: "篮球是鼓鼓的立体图形，纸上的圆是平平的图形。" },
           practice: [
             { q: "长方体有几个平平的面？（4个还是6个）", answer: "6个", hint: "长方体上下、左右、前后各一对面，一共6个面。", level: "基础" },
@@ -848,7 +1335,7 @@ const GRADE1_CONTENT = {
           method: "捆小棒",
           explainBack: "“13是1个十和3个一，所以是10加3。”",
           tryIt: "数出13根小棒，拿橡皮筋捆起10根，看看还剩几根；再数出17根，捆一捆。",
-          demo: null,
+          demo: 'bundle',
           recall: { q: "13里面有几个十、几个一？是1个十和3个一，还是3个十和1个一？", answer: "1个十和3个一", hint: "13的十位上是1，个位上是3。" },
           practice: [
             { q: "10加6是几？10加9呢？", answer: "16；19", hint: "10加几就是十几。", level: "基础" },
@@ -874,7 +1361,7 @@ const GRADE1_CONTENT = {
           method: "联动表针钟",
           explainBack: "“长针指着12，短针指着7，就是7点。”",
           tryIt: "拨一拨家里的钟：把长针拨到12，短针拨到7，看看是几点；再拨到9点。",
-          demo: null,
+          demo: 'clock',
           recall: { q: "钟面上长针指着12，短针指着9，是几点？是9点，还是12点？", answer: "9点", hint: "长针指12是整时，短针指几就是几点。" },
           practice: [
             { q: "早上7点起床，钟面上的长针和短针分别指着几？", answer: "长针指12，短针指7", hint: "整时长针指12，短针指7就是7点。", level: "基础" },
@@ -926,7 +1413,7 @@ const GRADE1_CONTENT = {
           method: "七巧板旋转拼",
           explainBack: "“它有3条边就是三角形，倒过来也是。”",
           tryIt: "用七巧板拼一拼：两块小三角形能拼成什么图形？再转一转其中的一块，看看它还是不是三角形。",
-          demo: null,
+          demo: 'tangram',
           recall: { q: "一个三角形倒过来放，它还是三角形吗？是，还是变成了别的图形？", answer: "还是三角形", hint: "倒过来只是换了个方向，3条边一点没变。" },
           practice: [
             { q: "正方形有几条边？几条边一样长？（4条边，4条都一样长）", answer: "4条边，都一样长", hint: "正方形的4条边一样长，4个角都是直角。", level: "基础" },
@@ -978,7 +1465,7 @@ const GRADE1_CONTENT = {
           method: "一规则分拣 + 总数校验",
           explainBack: "“我按颜色分，每个都在一个盒子里，盒子加起来就是全部。”",
           tryIt: "把家里的积木按颜色分一分，数一数每组几个，再加起来看看是不是总数。",
-          demo: null,
+          demo: 'sort',
           recall: { q: "10块积木按颜色分，红组4块，蓝组5块，一共是9块，少了1块，这说明什么？", answer: "说明有1块漏掉了，没分进任何一组", hint: "各组加起来要等于总数，9不等于10，所以漏了1块。" },
           practice: [
             { q: "一盒图形里有5个三角形、3个正方形，一共有几个图形？", answer: "8个", hint: "5+3=8。", level: "基础" },
@@ -1004,7 +1491,7 @@ const GRADE1_CONTENT = {
           method: "百数表 + 捆棒",
           explainBack: "“46有4个十，38有3个十，所以46大。”",
           tryIt: "拿出4捆小棒（每捆10根）加6根，摆出46；再摆出38，比一比哪堆多。",
-          demo: null,
+          demo: 'hundred',
           recall: { q: "46和38，哪个大？是46大，还是38大？为什么？", answer: "46大；4个十比3个十大", hint: "先比十位，4比3大。" },
           practice: [
             { q: "52里面有几个十、几个一？52和25哪个大？", answer: "5个十和2个一；52大", hint: "52有5个十，25只有2个十。", level: "基础" },
@@ -1030,7 +1517,7 @@ const GRADE1_CONTENT = {
           method: "开小店 + 换钱动画",
           explainBack: "“1元是10角，所以1元5角是15角。”",
           tryIt: "拿出10个1角硬币，换成1张1元纸币；再算一算：3元2角是多少角？",
-          demo: null,
+          demo: 'shop',
           recall: { q: "1元5角是多少角？是15角，还是6元？", answer: "15角", hint: "1元是10角，再加5角是15角。" },
           practice: [
             { q: "一个本子5角，一个橡皮2角，买两个一共多少钱？", answer: "7角", hint: "5角加2角是7角。", level: "基础" },
@@ -1056,7 +1543,7 @@ const GRADE1_CONTENT = {
           method: "数位块并排算",
           explainBack: "“3个一加5个一是8个一，2个十还是2个十，所以是28。”",
           tryIt: "摆一摆23+5：2捆加3根，再加5根，看看个位有几根；再列竖式算一算。",
-          demo: null,
+          demo: 'place',
           recall: { q: "23+5，5应该加到哪一位上？是个位，还是十位？", answer: "个位：3个一加5个一是8个一", hint: "5是5个一，一要加到一上。" },
           practice: [
             { q: "算一算35+20：先算十位，再算个位。", answer: "55", hint: "3个十加2个十是5个十，个位还是5。", level: "基础" },
@@ -1082,7 +1569,7 @@ const GRADE1_CONTENT = {
           method: "找重复单元",
           explainBack: "“单元是红蓝蓝，它重复出现，所以蓝后面又是红。”",
           tryIt: "摆一摆：红、蓝、蓝、红、蓝、蓝……下一颗应该是什么颜色？把“红蓝蓝”框出来看看。",
-          demo: null,
+          demo: 'pattern',
           recall: { q: "红、蓝、蓝、红、蓝、蓝……下一个应该是什么颜色？是红色，还是蓝色？", answer: "红色", hint: "重复的单元是红蓝蓝，蓝后面又是红。" },
           practice: [
             { q: "▲、●、▲、●、▲、●……下一个图形是什么？", answer: "●", hint: "单元是▲●两个图形，轮流出现。", level: "基础" },
@@ -4648,7 +5135,7 @@ function renderUnit(g, ui) {
   pointDetail.querySelectorAll('[data-point]').forEach(btn =>
     btn.addEventListener('click', () => navGo('point-' + btn.dataset.point)));
 }
-const DEMO_LABEL = { fraction: '去玩分数演示', tenframe: '去玩十格阵', balance: '去玩天平演示', function: '去玩函数演示' };
+const DEMO_LABEL = { fraction: '去玩分数演示', tenframe: '去玩十格阵', balance: '去玩天平演示', function: '去玩函数演示', count: '去玩数一数', position: '去玩转身找左右', split: '去玩分一分', addsub: '去玩合起来拿走', solids: '去玩立体图形', bundle: '去玩捆小棒', clock: '去玩拨时钟', tangram: '去玩七巧板', sort: '去玩分类分一分', hundred: '去玩百数表', shop: '去玩开小店', place: '去玩数位块', pattern: '去玩找规律' };
 /* 分步评分：多步骤题拆成一步一步对。steps 是可选字段，没有 steps 的题照旧渲染。
    自评不是机器判题：每一步的对错都是学生自己标的，丢分报告只是把你标错的步骤列出来。 */
 function practiceStepsHtml(q, i, pointId) {
@@ -5167,6 +5654,19 @@ const NAV_DEFS = {
   'demo-fraction': { crumbs: ['数学', '互动演示', '分数切一切'], target: 'demo-fraction' },
   'demo-balance':  { crumbs: ['数学', '互动演示', '天平解方程'], target: 'demo-balance' },
   'demo-function': { crumbs: ['数学', '互动演示', '函数滑杆'], target: 'demo-function' },
+  'demo-count': { crumbs: ['数学', '互动演示', '数一数，比一比'], target: 'demo-count' },
+  'demo-position': { crumbs: ['数学', '互动演示', '转身找左右'], target: 'demo-position' },
+  'demo-split': { crumbs: ['数学', '互动演示', '分一分'], target: 'demo-split' },
+  'demo-addsub': { crumbs: ['数学', '互动演示', '合起来，拿走'], target: 'demo-addsub' },
+  'demo-solids': { crumbs: ['数学', '互动演示', '立体图形滚一滚'], target: 'demo-solids' },
+  'demo-bundle': { crumbs: ['数学', '互动演示', '捆小棒认数'], target: 'demo-bundle' },
+  'demo-clock': { crumbs: ['数学', '互动演示', '认识钟表'], target: 'demo-clock' },
+  'demo-tangram': { crumbs: ['数学', '互动演示', '七巧板转一转'], target: 'demo-tangram' },
+  'demo-sort': { crumbs: ['数学', '互动演示', '分类分一分'], target: 'demo-sort' },
+  'demo-hundred': { crumbs: ['数学', '互动演示', '百数表比大小'], target: 'demo-hundred' },
+  'demo-shop': { crumbs: ['数学', '互动演示', '开小店'], target: 'demo-shop' },
+  'demo-place': { crumbs: ['数学', '互动演示', '数位块加减法'], target: 'demo-place' },
+  'demo-pattern': { crumbs: ['数学', '互动演示', '找规律'], target: 'demo-pattern' },
   why:        { crumbs: ['数学', '互动演示', '为什么小实验'], target: 'why' },
   lab:        { crumbs: ['数学', '数学实验室'], target: 'lab' },
   review:     { crumbs: ['数学', '错题本'], target: 'review', action: renderWrongBook },
@@ -5240,7 +5740,7 @@ function viewForKey(key) {
   if (key === 'path') return 'path';
   if (key.startsWith('path-step-')) return 'path-step';
   if (key === 'demos') return 'demos';
-  if (key === 'demo-tenframe' || key === 'demo-fraction' || key === 'demo-balance' || key === 'demo-function') return key;
+  if (key === 'demo-tenframe' || key === 'demo-fraction' || key === 'demo-balance' || key === 'demo-function' || key === 'demo-count' || key === 'demo-position' || key === 'demo-split' || key === 'demo-addsub' || key === 'demo-solids' || key === 'demo-bundle' || key === 'demo-clock' || key === 'demo-tangram' || key === 'demo-sort' || key === 'demo-hundred' || key === 'demo-shop' || key === 'demo-place' || key === 'demo-pattern') return key;
   if (key === 'why') return 'why';
   if (key === 'lab') return 'lab';
   if (key === 'review') return 'review';
@@ -5282,7 +5782,7 @@ function applyView() {
   const stepN = view === 'path-step' ? key.slice('path-step-'.length) : null;
   [...pathPanelsEl.children].forEach(el => { el.hidden = !!(stepN && el.id !== 'step-' + stepN); });
   // 互动演示：列表留演示面板；叶子只留该演示卡片；为什么小实验只留 #why 区
-  const demoLeaf = view === 'demo-tenframe' || view === 'demo-fraction' || view === 'demo-balance' || view === 'demo-function';
+  const demoLeaf = view === 'demo-tenframe' || view === 'demo-fraction' || view === 'demo-balance' || view === 'demo-function' || view === 'demo-count' || view === 'demo-position' || view === 'demo-split' || view === 'demo-addsub' || view === 'demo-solids' || view === 'demo-bundle' || view === 'demo-clock' || view === 'demo-tangram' || view === 'demo-sort' || view === 'demo-hundred' || view === 'demo-shop' || view === 'demo-place' || view === 'demo-pattern';
   setHidden(demosSec, !(view === 'demos' || demoLeaf));
   setHidden(demoPanelsEl, view !== 'demos');
   setHidden(demoGridEl, !demoLeaf); // 演示卡片网格只在某一个演示的叶子视图里出现，列表视图只留演示面板
@@ -6227,6 +6727,1548 @@ function drawLabFunc() {
 document.getElementById('labFuncKRange').addEventListener('input', drawLabFunc);
 document.getElementById('labFuncBRange').addEventListener('input', drawLabFunc);
 drawLabFunc();
+
+
+/* ================= 一年级实验（1.1–1.16，2026-11-06） =================
+   13 个新实验：1.6/1.9/1.11 继续用十格阵，其余 13 条各一个小实验。
+   每个实验只做一个认知动作，不评分、不记进度、不碰浏览器历史。
+   （片段来自 ~/workspace/g1-demos/group-a..d，由 assemble.py 拼进来。） */
+
+/* 一年级 A 组演示（1.1 数数 / 1.2 位置 / 1.3 分与合 / 1.4 加减法与 0）
+   手算验算过的数（2026-11-06）：
+   数数：5 对 7 → 下面多 2（7−5=2）；5 对 5 → 一样多；10 对 0 → 上面多 10；0 对 0 → 一样多。
+   位置（小人在 (1,1)，星星的相对位置按朝向算；朝上=前是北，朝右=前是东，朝下=前是南，朝左=前是西）：
+     星在北 (0,1)：朝上→前面，朝右→左手边，朝下→后面，朝左→右手边。
+     星在东 (1,2)：朝上→右手边，朝右→前面，朝下→左手边，朝左→后面。
+     星在南 (2,1)：朝上→后面，朝右→右手边，朝下→前面，朝左→左手边。
+     星在西 (1,0)：朝上→左手边，朝右→后面，朝下→右手边，朝左→前面。
+     对角线如西北 (0,0)：朝上→左前方，朝右→左后方，朝下→右后方，朝左→右前方。
+   分与合：5 的分法是 1+4、2+3、3+2、4+1（每部分 ≥1，共 4 种）；4 的分法是 1+3、2+2、3+1；
+     3 的分法是 1+2、2+1。两盘之和恒等于总数（搬一块过去，一盘 +1、另一盘 −1）。
+     第几个 vs 几个：第 3 个是 1 个人（排第 3 位）；拿 3 个是 3 个人（前 3 位）。
+   加减法：2+2=4；5−2=3；3+0=3；3−0=3；5−5=0；0+0=0。减法 B ≤ A（B 想超过 A 时显示“不够减”）。
+   注意：无评分、无浏览器存储、无 markTried、无 history；只读写本组自己的元素。 */
+
+/* ---------- 1.1 数数、一一对应、比多少（配对法） ---------- */
+let countA = 5, countB = 7;
+let countCountedA = [false, false, false, false, false, false, false, false, false, false];
+let countCountedB = [false, false, false, false, false, false, false, false, false, false];
+let countPaired = false;
+let countDotsA = [], countDotsB = [];
+let countZeroA = null, countZeroB = null;
+
+function countBuildRow(rowEl, dots, which) {
+  for (let i = 0; i < 10; i++) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'count-dot';
+    b.textContent = String(i + 1);
+    b.setAttribute('aria-label', (which === 'A' ? '上面第 ' : '下面第 ') + (i + 1) + ' 个圆点');
+    b.addEventListener('click', () => countDotClick(which, i));
+    rowEl.appendChild(b);
+    dots.push(b);
+  }
+  const z = document.createElement('span');
+  z.className = 'count-zero';
+  z.textContent = '0 个';
+  rowEl.appendChild(z);
+  return z;
+}
+countZeroA = countBuildRow(document.getElementById('countRowA'), countDotsA, 'A');
+countZeroB = countBuildRow(document.getElementById('countRowB'), countDotsB, 'B');
+
+function countDotClick(which, i) {
+  const n = which === 'A' ? countA : countB;
+  if (i >= n) return;
+  if (which === 'A') countCountedA[i] = !countCountedA[i];
+  else countCountedB[i] = !countCountedB[i];
+  countRender();
+  const counted = which === 'A'
+    ? countCountedA.filter(Boolean).length
+    : countCountedB.filter(Boolean).length;
+  document.getElementById('countCount').textContent = counted === 0
+    ? '还没数。再点一个圆点，数一数。'
+    : (which === 'A' ? '上面数到了第 ' + counted + ' 个。' : '下面数到了第 ' + counted + ' 个。');
+}
+
+function countCompareText() {
+  const el = document.getElementById('countResult');
+  if (countA === countB) {
+    el.textContent = '上面 ' + countA + ' 个，下面 ' + countB + ' 个，一样多。';
+  } else if (countA > countB) {
+    el.textContent = '上面 ' + countA + ' 个，下面 ' + countB + ' 个，上面多 ' + (countA - countB) + ' 个。';
+  } else {
+    el.textContent = '上面 ' + countA + ' 个，下面 ' + countB + ' 个，下面多 ' + (countB - countA) + ' 个。';
+  }
+}
+
+function countRender() {
+  document.getElementById('countReadA').textContent = countA + ' 个';
+  document.getElementById('countReadB').textContent = countB + ' 个';
+  const m = Math.min(countA, countB);
+  countDotsA.forEach((d, i) => {
+    d.hidden = i >= countA;
+    d.classList.toggle('count-counted', countCountedA[i]);
+    d.classList.toggle('count-paired', countPaired && i < m);
+    d.classList.toggle('count-extra', countPaired && countA > countB && i >= m);
+  });
+  countDotsB.forEach((d, i) => {
+    d.hidden = i >= countB;
+    d.classList.toggle('count-counted', countCountedB[i]);
+    d.classList.toggle('count-paired', countPaired && i < m);
+    d.classList.toggle('count-extra', countPaired && countB > countA && i >= m);
+  });
+  countZeroA.hidden = countA !== 0;
+  countZeroB.hidden = countB !== 0;
+  if (countPaired) countCompareText();
+}
+
+function countChange(which, d) {
+  if (which === 'A') {
+    countA = Math.max(0, Math.min(10, countA + d));
+    for (let i = countA; i < 10; i++) countCountedA[i] = false;
+  } else {
+    countB = Math.max(0, Math.min(10, countB + d));
+    for (let i = countB; i < 10; i++) countCountedB[i] = false;
+  }
+  countPaired = false;
+  document.getElementById('countResult').textContent = '还没比。点“连一连比多少”看看哪排多。';
+  document.getElementById('countCount').textContent = '点一个圆点，数一数。';
+  countRender();
+}
+document.getElementById('countAMinus').addEventListener('click', () => countChange('A', -1));
+document.getElementById('countAPlus').addEventListener('click', () => countChange('A', 1));
+document.getElementById('countBMinus').addEventListener('click', () => countChange('B', -1));
+document.getElementById('countBPlus').addEventListener('click', () => countChange('B', 1));
+document.getElementById('countCompare').addEventListener('click', () => {
+  countPaired = true;
+  countRender();
+});
+document.getElementById('countReset').addEventListener('click', () => {
+  countA = 5; countB = 7; countPaired = false;
+  countCountedA = [false, false, false, false, false, false, false, false, false, false];
+  countCountedB = [false, false, false, false, false, false, false, false, false, false];
+  document.getElementById('countResult').textContent = '还没比。点“连一连比多少”看看哪排多。';
+  document.getElementById('countCount').textContent = '点一个圆点，数一数。';
+  countRender();
+});
+countRender();
+
+/* ---------- 1.2 位置（转身法） ---------- */
+let posFacing = 0; // 0 上，1 右，2 下，3 左（顺时针）
+let posFaceMe = false;
+let posStar = null; // { r, c } 或 null
+let posCells = [];
+
+const posPersonEl = document.createElement('div');
+posPersonEl.className = 'pos-person';
+const posHeadEl = document.createElement('div');
+posHeadEl.className = 'pos-head';
+const posNoseEl = document.createElement('div');
+posNoseEl.className = 'pos-nose';
+posHeadEl.appendChild(posNoseEl);
+const posBodyEl = document.createElement('div');
+posBodyEl.className = 'pos-body';
+const posHandEl = document.createElement('div');
+posHandEl.className = 'pos-hand';
+const posHandLabelEl = document.createElement('span');
+posHandLabelEl.className = 'pos-hand-label';
+posHandLabelEl.textContent = '左';
+posHandEl.appendChild(posHandLabelEl);
+posPersonEl.appendChild(posHeadEl);
+posPersonEl.appendChild(posBodyEl);
+posPersonEl.appendChild(posHandEl);
+
+const posStarEl = document.createElement('span');
+posStarEl.className = 'pos-star';
+posStarEl.textContent = '★';
+
+const posGridEl = document.getElementById('posGrid');
+for (let r = 0; r < 3; r++) {
+  for (let c = 0; c < 3; c++) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'pos-cell';
+    if (r === 1 && c === 1) {
+      b.classList.add('pos-center');
+      b.setAttribute('aria-label', '小人站在这里');
+      b.appendChild(posPersonEl);
+    } else {
+      b.setAttribute('aria-label', '第 ' + (r + 1) + ' 行第 ' + (c + 1) + ' 列，点一下放星星');
+      b.addEventListener('click', () => posPlaceStar(r, c));
+    }
+    posGridEl.appendChild(b);
+    posCells.push(b);
+  }
+}
+
+function posRelative(dr, dc) {
+  // 朝向的前方向量和右手方向向量（行，列；行 +1 是向下，列 +1 是向右）
+  const fwd = [[-1, 0], [0, 1], [1, 0], [0, -1]][posFacing];
+  const rgt = [[0, 1], [1, 0], [0, -1], [-1, 0]][posFacing];
+  const f = dr * fwd[0] + dc * fwd[1];
+  const s = dr * rgt[0] + dc * rgt[1];
+  const front = f > 0 ? '前' : (f < 0 ? '后' : '');
+  const side = s > 0 ? '右' : (s < 0 ? '左' : '');
+  if (front && side) return side + front + '方';
+  if (front) return front + '面';
+  if (side) return side + '手边';
+  return '这里';
+}
+
+function posPlaceStar(r, c) {
+  posStar = { r, c };
+  posRender();
+}
+
+function posRender() {
+  const names = ['上', '右', '下', '左'];
+  document.getElementById('posFace').textContent =
+    '小人现在面朝' + names[posFacing] + (posFaceMe ? '（面对着你）' : '');
+  posPersonEl.style.transform = 'rotate(' + (posFacing * 90) + 'deg)';
+  posHandLabelEl.style.transform = 'rotate(' + (-posFacing * 90) + 'deg)';
+  document.getElementById('posFaceMe').setAttribute('aria-pressed', String(posFaceMe));
+  if (posStar) {
+    posCells[posStar.r * 3 + posStar.c].appendChild(posStarEl);
+  } else if (posStarEl.parentNode) {
+    posStarEl.parentNode.removeChild(posStarEl);
+  }
+  const read = document.getElementById('posRead');
+  if (!posStar) {
+    read.textContent = '先点一个格子，放一颗星星。';
+    return;
+  }
+  let t = '星星在小人的' + posRelative(posStar.r - 1, posStar.c - 1) + '。';
+  if (posFaceMe) {
+    t += '他面对着你，他的左手在你右手这一边——左右反过来了，你看到的左边是他的右边。';
+  }
+  read.textContent = t;
+}
+document.getElementById('posTurn').addEventListener('click', () => {
+  posFacing = (posFacing + 1) % 4;
+  posFaceMe = false;
+  posRender();
+});
+document.getElementById('posFaceMe').addEventListener('click', () => {
+  posFaceMe = !posFaceMe;
+  if (posFaceMe) posFacing = 2; // 面对着你 = 朝下（朝向屏幕外、朝向看的人）
+  posRender();
+});
+document.getElementById('posReset').addEventListener('click', () => {
+  posStar = null;
+  posRender();
+});
+posRender();
+
+/* ---------- 1.3 1–5的认识、分与合（数分合）+ 第几 vs 几个 ---------- */
+let splitTotal = 5;
+let splitLeft = 2; // 右盘 = splitTotal - splitLeft
+let splitPicked = null; // 排队里点中的小孩下标（0–4），或 null
+let splitTaken = false; // “拿 3 个”高亮是否开着
+let splitBlocksL = [], splitBlocksR = [], splitKids = [];
+
+function splitBuildPlate(el, blocks, side) {
+  for (let i = 0; i < 5; i++) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'split-block';
+    b.setAttribute('aria-label', '一块积木，点一下搬到另一个盘子');
+    b.addEventListener('click', () => splitMove(side));
+    el.appendChild(b);
+    blocks.push(b);
+  }
+}
+splitBuildPlate(document.getElementById('splitPlateL'), splitBlocksL, 'L');
+splitBuildPlate(document.getElementById('splitPlateR'), splitBlocksR, 'R');
+
+const splitKidsEl = document.getElementById('splitKids');
+for (let i = 0; i < 5; i++) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'split-kid';
+  b.textContent = String(i + 1);
+  b.setAttribute('aria-label', '排队的小朋友，第 ' + (i + 1) + ' 个');
+  b.addEventListener('click', () => splitPick(i));
+  splitKidsEl.appendChild(b);
+  splitKids.push(b);
+}
+
+function splitMove(side) {
+  if (side === 'L' && splitLeft > 0) splitLeft--;
+  else if (side === 'R' && splitLeft < splitTotal) splitLeft++;
+  splitRender();
+}
+
+function splitPick(i) {
+  splitPicked = i;
+  splitTaken = false;
+  document.getElementById('splitOrdinal').textContent =
+    '你点的是第 ' + (i + 1) + ' 个小朋友——只有 1 个人。';
+  document.getElementById('splitTake').textContent =
+    '“拿 3 个”是拿走 3 个小朋友，和“第 3 个”不是一回事。';
+  splitRender();
+}
+
+function splitSetTotal(t) {
+  splitTotal = t;
+  splitLeft = Math.floor(t / 2); // 3→1+2，4→2+2，5→2+3
+  document.querySelectorAll('#splitTotalSeg [data-split-total]').forEach(b =>
+    b.setAttribute('aria-pressed', String(Number(b.dataset.splitTotal) === t)));
+  splitRender();
+}
+
+function splitRender() {
+  const right = splitTotal - splitLeft;
+  document.getElementById('splitLabelL').textContent = '左盘 · ' + splitLeft + ' 个';
+  document.getElementById('splitLabelR').textContent = '右盘 · ' + right + ' 个';
+  splitBlocksL.forEach((b, i) => { b.hidden = i >= splitLeft; });
+  splitBlocksR.forEach((b, i) => { b.hidden = i >= right; });
+  document.getElementById('splitEq').textContent = splitLeft + ' + ' + right + ' = ' + splitTotal;
+  const list = document.getElementById('splitList');
+  list.innerHTML = '';
+  for (let a = 1; a < splitTotal; a++) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'split-opt' + (a === splitLeft ? ' split-cur' : '');
+    b.textContent = a + '和' + (splitTotal - a);
+    b.setAttribute('aria-pressed', String(a === splitLeft));
+    b.addEventListener('click', () => { splitLeft = a; splitRender(); });
+    list.appendChild(b);
+  }
+  splitKids.forEach((k, i) => {
+    k.classList.toggle('split-picked', splitPicked === i);
+    k.classList.toggle('split-taken', splitTaken && i < 3);
+  });
+}
+document.querySelectorAll('#splitTotalSeg [data-split-total]').forEach(b =>
+  b.addEventListener('click', () => splitSetTotal(Number(b.dataset.splitTotal))));
+document.getElementById('splitTake3').addEventListener('click', () => {
+  splitTaken = true;
+  document.getElementById('splitTake').textContent =
+    '拿了 3 个小朋友：是第 1、第 2、第 3 个，一共 3 个人。“第 3 个”是 1 个人，“3 个”是 3 个人，不一样！';
+  splitRender();
+});
+document.getElementById('splitReset').addEventListener('click', () => {
+  splitLeft = Math.floor(splitTotal / 2);
+  splitPicked = null;
+  splitTaken = false;
+  document.getElementById('splitOrdinal').textContent = '点一个小朋友，看看他是第几个。';
+  document.getElementById('splitTake').textContent = '“拿 3 个”是拿走 3 个小朋友，和“第 3 个”不是一回事。';
+  splitRender();
+});
+splitRender();
+
+/* ---------- 1.4 5以内加减法、0（合盘与拿走） ---------- */
+let addsubA = 2, addsubB = 2, addsubMode = 'add';
+let addsubNote = '';
+let addsubDotsA = [], addsubDotsB = [];
+
+function addsubBuildPlate(el, dots) {
+  for (let i = 0; i < 5; i++) {
+    const s = document.createElement('span');
+    s.className = 'addsub-dot';
+    s.textContent = String(i + 1);
+    el.appendChild(s);
+    dots.push(s);
+  }
+  const e = document.createElement('span');
+  e.className = 'addsub-empty';
+  e.textContent = '空盘子是 0';
+  el.appendChild(e);
+  return e;
+}
+const addsubEmptyA = addsubBuildPlate(document.getElementById('addsubPlateA'), addsubDotsA);
+const addsubEmptyB = addsubBuildPlate(document.getElementById('addsubPlateB'), addsubDotsB);
+
+function addsubRender() {
+  document.getElementById('addsubLabelA').textContent =
+    'A 盘 · ' + addsubA + ' 个' + (addsubA === 0 ? ' · 空盘子是 0' : '');
+  document.getElementById('addsubLabelB').textContent =
+    'B 盘 · ' + addsubB + ' 个' + (addsubB === 0 ? ' · 空盘子是 0' : '');
+  addsubDotsA.forEach((s, i) => { s.hidden = i >= addsubA; });
+  addsubDotsB.forEach((s, i) => { s.hidden = i >= addsubB; });
+  addsubEmptyA.hidden = addsubA !== 0;
+  addsubEmptyB.hidden = addsubB !== 0;
+  document.querySelectorAll('#addsubModeSeg [data-addsub-mode]').forEach(b =>
+    b.setAttribute('aria-pressed', String(b.dataset.addsubMode === addsubMode)));
+  const hint = document.getElementById('addsubHint');
+  if (addsubMode === 'add') {
+    document.getElementById('addsubEq').textContent = addsubA + ' + ' + addsubB + ' = ' + (addsubA + addsubB);
+    hint.textContent = addsubNote || ('两盘并成一盘，一共 ' + (addsubA + addsubB) + ' 块。'
+      + (addsubB === 0 ? 'B 是空盘子，是 0：' + addsubA + ' + 0 = ' + addsubA + '，一点没变。' : '')
+      + (addsubA === 0 && addsubB !== 0 ? 'A 是空盘子，是 0：0 + ' + addsubB + ' = ' + addsubB + '。' : ''));
+  } else {
+    document.getElementById('addsubEq').textContent = addsubA + ' − ' + addsubB + ' = ' + (addsubA - addsubB);
+    hint.textContent = addsubNote || ('从 A 盘拿走 ' + addsubB + ' 块，还剩 ' + (addsubA - addsubB) + ' 块。'
+      + (addsubB === 0 ? 'B 是 0，什么都没拿走：' + addsubA + ' − 0 = ' + addsubA + '，一点没变。' : ''));
+  }
+  addsubNote = '';
+}
+
+function addsubChange(which, d) {
+  if (which === 'A') {
+    const next = Math.max(0, Math.min(5, addsubA + d));
+    if (next === addsubA) {
+      addsubNote = addsubA === 0 ? 'A 盘已经是空盘子了，是 0。' : 'A 盘最多放 5 块。';
+    } else {
+      addsubA = next;
+      if (addsubMode === 'sub' && addsubB > addsubA) {
+        addsubB = addsubA;
+        addsubNote = 'A 变小了，B 也跟着变小，不然不够减。';
+      }
+    }
+  } else {
+    if (addsubMode === 'sub' && d > 0 && addsubB + 1 > addsubA) {
+      addsubNote = '不够减：B 不能比 A 多。先把 A 加大，或者把 B 变小。';
+    } else {
+      const next = Math.max(0, Math.min(5, addsubB + d));
+      if (next === addsubB) {
+        addsubNote = addsubB === 0 ? 'B 盘已经是空盘子了，是 0。' : 'B 盘最多放 5 块。';
+      } else {
+        addsubB = next;
+      }
+    }
+  }
+  addsubRender();
+}
+
+function addsubSetMode(m) {
+  addsubMode = m;
+  if (m === 'sub' && addsubB > addsubA) {
+    addsubB = addsubA;
+    addsubNote = '切到减法：B 不能比 A 多，B 跟着变小了。';
+  }
+  addsubRender();
+}
+document.querySelectorAll('#addsubModeSeg [data-addsub-mode]').forEach(b =>
+  b.addEventListener('click', () => addsubSetMode(b.dataset.addsubMode)));
+document.getElementById('addsubAMinus').addEventListener('click', () => addsubChange('A', -1));
+document.getElementById('addsubAPlus').addEventListener('click', () => addsubChange('A', 1));
+document.getElementById('addsubBMinus').addEventListener('click', () => addsubChange('B', -1));
+document.getElementById('addsubBPlus').addEventListener('click', () => addsubChange('B', 1));
+document.getElementById('addsubReset').addEventListener('click', () => {
+  addsubA = 2; addsubB = 2; addsubMode = 'add'; addsubNote = '';
+  addsubRender();
+});
+addsubRender();
+
+/* group-b.js — 1 年级形状/分类演示（1.5 立体图形、1.10 平面图形·七巧板、1.12 分类与整理）
+   只操作本组元素（id 前缀 solid- / tang- / sort-），不做浏览器存储、不调进度记录、不碰页面历史。
+   交互子元素用 document.createElement / createElementNS + appendChild 生成，读数用 textContent，
+   静态按钮在加载时用 getElementById(...).addEventListener 绑定，每个演示加载时各调一次初始渲染。
+   已验算的数字（逐条手算，来源：content/grades/grade-1.js 的 1.5 / 1.10 / 1.12）：
+   - 1.5：长方体 6 个面（上下、左右、前后各 1 对）；正方体 6 个面；
+     大正方体长、宽、高都要 2 个小正方体，2×2×2=8 个；4 个小正方体拼不成大正方体；
+     一层 4 个、放满 2 层也是 2×4=8 个。
+   - 1.10：七巧板 7 块 = 2 个大三角形 + 1 个中三角形 + 2 个小三角形 + 1 个正方形 + 1 个平行四边形；
+     三角形一共 2+1+2=5 个，最大的 2 个；三角形 3 条边、3 个角；
+     正方形 4 条边一样长、4 个角都是直角；
+     两块小三角形：斜边对斜边拼成正方形，直角边对直角边拼成大三角形。
+   - 1.12：10 件物品 = 4 个红● + 2 个蓝● + 2 个红▲ + 2 个蓝■，4+2+2+2=10；
+     按颜色：红 6 个、蓝 4 个，6+4=10；按形状：● 6 个、▲ 2 个、■ 2 个，6+2+2=10。 */
+
+/* ================= 演示 1：立体图形（1.5） ================= */
+const SOLID_SHAPES = [
+  { key: 'ball', name: '球', canRoll: true, canStack: false,
+    roll: '球滚起来了！它没有平平的面，到处都能滚。',
+    stack: '球叠不起来，一放就滚走了。' },
+  { key: 'cylinder', name: '圆柱', canRoll: true, canStack: true,
+    roll: '圆柱躺着能滚，骨碌碌滚走了。',
+    stack: '圆柱立着能叠，它上下有两个平平的面。' },
+  { key: 'cuboid', name: '长方体', canRoll: false, canStack: true,
+    roll: '长方体滚不动，它有平平的面，会卡住。',
+    stack: '长方体有 6 个平平的面，能叠起来。' },
+  { key: 'cube', name: '正方体', canRoll: false, canStack: true,
+    roll: '正方体滚不动，6 个面都是平平的。',
+    stack: '正方体有 6 个平平的面，能叠得很高。' }
+];
+let solidSelected = null;
+let solidCubeCount = 0;
+const solidCardBtns = {};
+
+function solidSvgEl(tag, attrs) {
+  const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  Object.keys(attrs).forEach(function (k) { el.setAttribute(k, attrs[k]); });
+  return el;
+}
+
+function solidBuildShapeSvg(key) {
+  const svg = solidSvgEl('svg', { viewBox: '0 0 80 80', width: '72', height: '72' });
+  svg.setAttribute('aria-hidden', 'true');
+  if (key === 'ball') {
+    svg.appendChild(solidSvgEl('circle', { cx: '40', cy: '42', r: '30', fill: '#ff8a3d', stroke: '#c2410c', 'stroke-width': '2' }));
+    svg.appendChild(solidSvgEl('ellipse', { cx: '30', cy: '30', rx: '10', ry: '6', fill: '#ffffff', opacity: '0.75' }));
+  } else if (key === 'cylinder') {
+    svg.appendChild(solidSvgEl('ellipse', { cx: '40', cy: '16', rx: '26', ry: '9', fill: '#dbeafe', stroke: '#2563eb', 'stroke-width': '2' }));
+    svg.appendChild(solidSvgEl('rect', { x: '14', y: '16', width: '52', height: '46', fill: '#93c5fd', stroke: '#2563eb', 'stroke-width': '2' }));
+    svg.appendChild(solidSvgEl('ellipse', { cx: '40', cy: '62', rx: '26', ry: '9', fill: '#dbeafe', stroke: '#2563eb', 'stroke-width': '2' }));
+  } else if (key === 'cuboid') {
+    svg.appendChild(solidSvgEl('polygon', { points: '14,32 28,16 64,16 50,32', fill: '#dcfce7', stroke: '#15803d', 'stroke-width': '2' }));
+    svg.appendChild(solidSvgEl('polygon', { points: '50,32 64,16 64,50 50,66', fill: '#86efac', stroke: '#15803d', 'stroke-width': '2' }));
+    svg.appendChild(solidSvgEl('polygon', { points: '14,32 50,32 50,66 14,66', fill: '#bbf7d0', stroke: '#15803d', 'stroke-width': '2' }));
+  } else {
+    svg.appendChild(solidSvgEl('polygon', { points: '20,34 32,20 66,20 54,34', fill: '#fff7ed', stroke: '#c2410c', 'stroke-width': '2' }));
+    svg.appendChild(solidSvgEl('polygon', { points: '54,34 66,20 66,54 54,68', fill: '#fde68a', stroke: '#c2410c', 'stroke-width': '2' }));
+    svg.appendChild(solidSvgEl('polygon', { points: '20,34 54,34 54,68 20,68', fill: '#fef3c7', stroke: '#c2410c', 'stroke-width': '2' }));
+  }
+  return svg;
+}
+
+function solidBuildCards() {
+  const box = document.getElementById('solidCards');
+  SOLID_SHAPES.forEach(function (s) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'solid-card';
+    b.setAttribute('aria-pressed', 'false');
+    b.setAttribute('aria-label', s.name);
+    const pic = document.createElement('span');
+    pic.className = 'solid-shape';
+    pic.appendChild(solidBuildShapeSvg(s.key));
+    const name = document.createElement('span');
+    name.className = 'solid-name';
+    name.textContent = s.name;
+    b.appendChild(pic);
+    b.appendChild(name);
+    b.addEventListener('click', function () {
+      solidSelected = s.key;
+      solidRender();
+    });
+    box.appendChild(b);
+    solidCardBtns[s.key] = b;
+  });
+}
+
+function solidRender() {
+  SOLID_SHAPES.forEach(function (s) {
+    const b = solidCardBtns[s.key];
+    const on = solidSelected === s.key;
+    b.classList.toggle('solid-selected', on);
+    b.setAttribute('aria-pressed', String(on));
+  });
+  const out = document.getElementById('solidResult');
+  if (!solidSelected) {
+    out.textContent = '先点一个图形';
+    return;
+  }
+  const s = SOLID_SHAPES.find(function (x) { return x.key === solidSelected; });
+  out.textContent = s.name + '：点“滚一滚”或“叠一叠”，试试它会怎么样。';
+}
+
+function solidAnimate(kind) {
+  if (!solidSelected) {
+    document.getElementById('solidResult').textContent = '先点一个图形，再按“滚一滚”或“叠一叠”。';
+    return;
+  }
+  const s = SOLID_SHAPES.find(function (x) { return x.key === solidSelected; });
+  const pic = solidCardBtns[s.key].querySelector('.solid-shape');
+  let cls = '';
+  let text = '';
+  if (kind === 'roll') {
+    text = s.roll;
+    cls = s.canRoll ? 'solid-anim-roll' : 'solid-anim-shake';
+  } else {
+    text = s.stack;
+    cls = s.canStack ? 'solid-anim-stack' : 'solid-anim-roll';
+  }
+  document.getElementById('solidResult').textContent = s.name + '：' + text;
+  pic.classList.remove('solid-anim-roll', 'solid-anim-stack', 'solid-anim-shake');
+  void pic.offsetWidth;
+  pic.classList.add(cls);
+  window.setTimeout(function () { pic.classList.remove(cls); }, 900);
+}
+
+function solidCubeRender() {
+  document.getElementById('solidCubeCount').textContent = '已经拼了 ' + solidCubeCount + ' 个小正方体';
+  const msg = document.getElementById('solidCubeMsg');
+  const row = document.getElementById('solidCubeRow');
+  row.classList.toggle('solid-cube-done', solidCubeCount === 8);
+  document.getElementById('solidCubeAdd').disabled = solidCubeCount >= 8;
+  if (solidCubeCount === 8) {
+    msg.textContent = '拼成大正方体了！2×2×2=8个';
+  } else if (solidCubeCount === 4) {
+    msg.textContent = '4 个还拼不成大正方体：大正方体长、宽、高都要 2 个，一共要 8 个。';
+  } else if (solidCubeCount > 0) {
+    msg.textContent = '再加 ' + (8 - solidCubeCount) + ' 个就拼成大正方体了。';
+  } else {
+    msg.textContent = '';
+  }
+}
+
+function solidCubeReset() {
+  solidCubeCount = 0;
+  const row = document.getElementById('solidCubeRow');
+  while (row.firstChild) { row.removeChild(row.firstChild); }
+  solidCubeRender();
+}
+
+document.getElementById('solidRollBtn').addEventListener('click', function () { solidAnimate('roll'); });
+document.getElementById('solidStackBtn').addEventListener('click', function () { solidAnimate('stack'); });
+document.getElementById('solidCubeAdd').addEventListener('click', function () {
+  if (solidCubeCount >= 8) { return; }
+  solidCubeCount++;
+  const c = document.createElement('div');
+  c.className = 'solid-mini-cube';
+  c.textContent = String(solidCubeCount);
+  document.getElementById('solidCubeRow').appendChild(c);
+  solidCubeRender();
+});
+document.getElementById('solidCubeReset').addEventListener('click', solidCubeReset);
+solidBuildCards();
+solidRender();
+solidCubeRender();
+
+/* ================= 演示 2：七巧板（1.10） ================= */
+/* 7 块板的坐标拼成一个 200×200 的正方形（已验算：面积 10000+10000+5000+2500+2500+5000+5000=40000）。 */
+const TANG_PIECES = [
+  { key: 'big1', name: '大三角形', kind: 'triangle', points: [[0, 0], [200, 0], [100, 100]], fill: '#ff8a3d' },
+  { key: 'big2', name: '大三角形', kind: 'triangle', points: [[0, 0], [0, 200], [100, 100]], fill: '#fbbf24' },
+  { key: 'mid', name: '中三角形', kind: 'triangle', points: [[200, 0], [200, 100], [100, 100]], fill: '#93c5fd' },
+  { key: 'small1', name: '小三角形', kind: 'triangle', points: [[200, 100], [200, 200], [150, 150]], fill: '#86efac' },
+  { key: 'small2', name: '小三角形', kind: 'triangle', points: [[150, 150], [200, 200], [100, 200]], fill: '#fda4af' },
+  { key: 'square', name: '正方形', kind: 'square', points: [[100, 100], [150, 150], [100, 200], [50, 150]], fill: '#c4b5fd' },
+  { key: 'para', name: '平行四边形', kind: 'para', points: [[0, 200], [50, 150], [150, 150], [100, 200]], fill: '#67e8f9' }
+];
+let tangSelected = null;
+const tangAngles = {};
+const tangPolys = {};
+const tangCenters = {};
+
+function tangBuildPieces() {
+  const svg = document.getElementById('tangSvg');
+  TANG_PIECES.forEach(function (p) {
+    const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    poly.setAttribute('points', p.points.map(function (pt) { return pt[0] + ',' + pt[1]; }).join(' '));
+    poly.setAttribute('fill', p.fill);
+    poly.setAttribute('stroke', '#1e293b');
+    poly.setAttribute('stroke-width', '2');
+    poly.setAttribute('class', 'tang-piece');
+    poly.setAttribute('role', 'button');
+    poly.setAttribute('tabindex', '0');
+    poly.setAttribute('aria-label', p.name + '，点一下转 45 度');
+    const cx = p.points.reduce(function (a, pt) { return a + pt[0]; }, 0) / p.points.length;
+    const cy = p.points.reduce(function (a, pt) { return a + pt[1]; }, 0) / p.points.length;
+    tangCenters[p.key] = { x: cx, y: cy };
+    tangAngles[p.key] = 0;
+    poly.addEventListener('click', function () {
+      tangAngles[p.key] = (tangAngles[p.key] + 45) % 360;
+      tangSelected = p.key;
+      tangRender();
+    });
+    poly.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        tangAngles[p.key] = (tangAngles[p.key] + 45) % 360;
+        tangSelected = p.key;
+        tangRender();
+      }
+    });
+    svg.appendChild(poly);
+    tangPolys[p.key] = poly;
+  });
+}
+
+function tangRender() {
+  TANG_PIECES.forEach(function (p) {
+    const poly = tangPolys[p.key];
+    const c = tangCenters[p.key];
+    poly.setAttribute('transform', 'rotate(' + tangAngles[p.key] + ' ' + c.x + ' ' + c.y + ')');
+    poly.classList.toggle('tang-selected', tangSelected === p.key);
+  });
+  const out = document.getElementById('tangReadout');
+  if (!tangSelected) {
+    out.textContent = '点一块板，看看它有几条边、几个角';
+    return;
+  }
+  const p = TANG_PIECES.find(function (x) { return x.key === tangSelected; });
+  const deg = tangAngles[p.key];
+  if (p.kind === 'triangle') {
+    out.textContent = p.name + '：3条边，3个角，是三角形。转了 ' + deg + '°，倒过来还是三角形！';
+  } else if (p.kind === 'square') {
+    out.textContent = '正方形：4条边一样长，4个角都是直角。转了 ' + deg + '°，边还是一样长！';
+  } else {
+    out.textContent = '平行四边形：4条边，对边一样长，4个角。转了 ' + deg + '°，还是平行四边形！';
+  }
+}
+
+/* 两块小三角形拼一拼：直角边长 50 的等腰直角三角形 */
+const TANG_PAIR_STATES = {
+  apart: {
+    a: '10,30 60,30 10,80', b: '100,30 150,30 100,80',
+    label: '两块一样的小三角形，分开摆着。试试拼一拼！'
+  },
+  square: {
+    a: '55,55 105,55 55,105', b: '105,105 105,55 55,105',
+    label: '拼成正方形了！斜边对斜边，正方形的 4 条边一样长。'
+  },
+  big: {
+    a: '55,105 105,105 55,55', b: '55,105 105,105 55,155',
+    label: '拼成大三角形了！直角边对直角边，大三角形还是 3 条边、3 个角。'
+  }
+};
+let tangPairState = 'apart';
+
+function tangPairBuild() {
+  const svg = document.getElementById('tangPairSvg');
+  const a = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+  a.setAttribute('id', 'tangPairA');
+  a.setAttribute('fill', '#86efac');
+  a.setAttribute('stroke', '#15803d');
+  a.setAttribute('stroke-width', '2');
+  const b = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+  b.setAttribute('id', 'tangPairB');
+  b.setAttribute('fill', '#fda4af');
+  b.setAttribute('stroke', '#be123c');
+  b.setAttribute('stroke-width', '2');
+  svg.appendChild(a);
+  svg.appendChild(b);
+}
+
+function tangPairRender() {
+  const st = TANG_PAIR_STATES[tangPairState];
+  document.getElementById('tangPairA').setAttribute('points', st.a);
+  document.getElementById('tangPairB').setAttribute('points', st.b);
+  document.getElementById('tangPairLabel').textContent = st.label;
+  const svg = document.getElementById('tangPairSvg');
+  svg.classList.remove('tang-pair-pop');
+  void svg.offsetWidth;
+  svg.classList.add('tang-pair-pop');
+}
+
+document.getElementById('tangPairSquareBtn').addEventListener('click', function () {
+  tangPairState = 'square';
+  tangPairRender();
+});
+document.getElementById('tangPairBigBtn').addEventListener('click', function () {
+  tangPairState = 'big';
+  tangPairRender();
+});
+document.getElementById('tangPairResetBtn').addEventListener('click', function () {
+  tangPairState = 'apart';
+  tangPairRender();
+});
+tangBuildPieces();
+tangRender();
+tangPairBuild();
+tangPairRender();
+
+/* ================= 演示 3：分类与整理（1.12） ================= */
+/* 10 件物品（已验算 4+2+2+2=10）：4 个红●、2 个蓝●、2 个红▲、2 个蓝■。 */
+const SORT_SPEC = [
+  { shape: '●', shapeName: '圆形', color: '红', n: 4 },
+  { shape: '●', shapeName: '圆形', color: '蓝', n: 2 },
+  { shape: '▲', shapeName: '三角形', color: '红', n: 2 },
+  { shape: '■', shapeName: '正方形', color: '蓝', n: 2 }
+];
+const SORT_TOTAL = 10;
+let sortRule = 'color';
+let sortItems = [];
+
+function sortBuild() {
+  sortItems = [];
+  const pool = document.getElementById('sortPool');
+  while (pool.firstChild) { pool.removeChild(pool.firstChild); }
+  ['sortTrayRed', 'sortTrayBlue', 'sortTrayCircle', 'sortTrayTri', 'sortTraySquare'].forEach(function (id) {
+    const tray = document.getElementById(id);
+    const kids = Array.prototype.slice.call(tray.children);
+    kids.forEach(function (k) { if (!k.classList.contains('sort-tray-title')) { tray.removeChild(k); } });
+  });
+  SORT_SPEC.forEach(function (spec) {
+    for (let i = 0; i < spec.n; i++) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'sort-item ' + (spec.color === '红' ? 'sort-red' : 'sort-blue');
+      b.textContent = spec.shape;
+      b.setAttribute('aria-label', spec.color + '色' + spec.shapeName);
+      const item = { shape: spec.shape, shapeName: spec.shapeName, color: spec.color, el: b, placed: false };
+      b.addEventListener('click', function () { sortPlace(item); });
+      pool.appendChild(b);
+      sortItems.push(item);
+    }
+  });
+  document.getElementById('sortMsg').textContent = '点一个小图形，把它送到对应的盘子里。';
+  sortRender();
+}
+
+function sortTrayIdFor(item) {
+  if (sortRule === 'color') { return item.color === '红' ? 'sortTrayRed' : 'sortTrayBlue'; }
+  if (item.shape === '●') { return 'sortTrayCircle'; }
+  if (item.shape === '▲') { return 'sortTrayTri'; }
+  return 'sortTraySquare';
+}
+
+function sortPlace(item) {
+  if (item.placed) { return; }
+  item.placed = true;
+  document.getElementById(sortTrayIdFor(item)).appendChild(item.el);
+  sortRender();
+}
+
+function sortCounts() {
+  const c = { red: 0, blue: 0, circle: 0, tri: 0, square: 0, placed: 0 };
+  sortItems.forEach(function (it) {
+    if (!it.placed) { return; }
+    c.placed++;
+    if (it.color === '红') { c.red++; } else { c.blue++; }
+    if (it.shape === '●') { c.circle++; }
+    else if (it.shape === '▲') { c.tri++; }
+    else { c.square++; }
+  });
+  return c;
+}
+
+function sortRender() {
+  const c = sortCounts();
+  document.getElementById('sortCountRed').textContent = String(c.red);
+  document.getElementById('sortCountBlue').textContent = String(c.blue);
+  document.getElementById('sortCountCircle').textContent = String(c.circle);
+  document.getElementById('sortCountTri').textContent = String(c.tri);
+  document.getElementById('sortCountSquare').textContent = String(c.square);
+  document.getElementById('sortTotal').textContent =
+    '已经分了 ' + c.placed + ' 个 · 还剩 ' + (SORT_TOTAL - c.placed) + ' 个 · 一共 10 个';
+  document.getElementById('sortTraysColor').hidden = sortRule !== 'color';
+  document.getElementById('sortTraysShape').hidden = sortRule !== 'shape';
+  document.querySelectorAll('#sortRuleSeg [data-sort-rule]').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(b.dataset.sortRule === sortRule));
+  });
+}
+
+function sortCheck() {
+  const c = sortCounts();
+  const left = SORT_TOTAL - c.placed;
+  const msg = document.getElementById('sortMsg');
+  if (left === 0) {
+    if (sortRule === 'color') {
+      msg.textContent = '红 6 个 + 蓝 4 个 = 10 ✓，都分好了！';
+    } else {
+      msg.textContent = '● 6 个 + ▲ 2 个 + ■ 2 个 = 10 ✓，都分好了！';
+    }
+    return;
+  }
+  let sumText;
+  if (sortRule === 'color') {
+    sumText = '红 ' + c.red + ' 个 + 蓝 ' + c.blue + ' 个';
+  } else {
+    sumText = '● ' + c.circle + ' 个 + ▲ ' + c.tri + ' 个 + ■ ' + c.square + ' 个';
+  }
+  msg.textContent = '还剩 ' + left + ' 个没分。' + sumText + ' = ' + c.placed +
+    '，不等于 10，少了 ' + left + ' 个！';
+}
+
+document.querySelectorAll('#sortRuleSeg [data-sort-rule]').forEach(function (b) {
+  b.addEventListener('click', function () {
+    sortRule = b.dataset.sortRule;
+    sortBuild();
+  });
+});
+document.getElementById('sortCheckBtn').addEventListener('click', sortCheck);
+document.getElementById('sortResetBtn').addEventListener('click', sortBuild);
+sortBuild();
+
+/* Group C — Grade 1 place-value demos (points 1.7, 1.13, 1.15).
+   No scoring, no browser storage, no markTried. Readouts via textContent;
+   interactive children built with document.createElement + appendChild.
+   Static buttons bound at load with getElementById(...).addEventListener.
+
+   VERIFIED NUMBERS (checked by hand against grade-1.js):
+   - demo-bundle (1.7): 13 = 1个十 + 3个一 = 10 + 3; 10 + 6 = 16; 10 + 9 = 19.
+     Default 13 = 1 bundle + 3 loose sticks. 20 = 2 bundles + 0 loose.
+   - demo-hundred (1.13): 46 > 38 because 4个十 > 3个十; 52 > 25 because
+     5个十 > 2个十; the only 整十数 between 45 and 60 is 50.
+     46 = 4个十和6个一; 38 = 3个十和8个一; 100 = 10个十和0个一.
+   - demo-place (1.15): 23 + 5 = 28 (3 + 5 = 8, tens stay 2);
+     35 + 20 = 55 (3个十 + 2个十 = 5个十, ones stay 5);
+     47 + 8 = 55 (7 + 8 = 15, 写5进1, tens 4 + 1 = 5);
+     36 − 8 = 28 (6 < 8, 借1个十: 6 -> 16, 16 − 8 = 8, tens 3 − 1 = 2). */
+
+/* ---------- demo-bundle (1.7: 11–20, 捆小棒) ---------- */
+let bundleBundles = 1; // 捆好的 1捆 = 10根
+let bundleLoose = 3;   // 散的根数; default 13 = 1捆 + 3根
+const BUNDLE_MAX = 20;
+
+function bundleTotal() { return bundleBundles * 10 + bundleLoose; }
+
+function bundleMakeBundle() {
+  const bundle = document.createElement('div');
+  bundle.className = 'bundle-bundle';
+  for (let i = 0; i < 10; i++) {
+    const mini = document.createElement('span');
+    mini.className = 'bundle-mini';
+    bundle.appendChild(mini);
+  }
+  const lab = document.createElement('span');
+  lab.className = 'bundle-bundle-label';
+  lab.textContent = '1捆';
+  bundle.appendChild(lab);
+  return bundle;
+}
+
+function bundleRender() {
+  const bundlesEl = document.getElementById('bundleBundles');
+  bundlesEl.innerHTML = '';
+  for (let b = 0; b < bundleBundles; b++) bundlesEl.appendChild(bundleMakeBundle());
+  if (bundleBundles === 0) {
+    const none = document.createElement('span');
+    none.className = 'bundle-empty';
+    none.textContent = '还没有捆';
+    bundlesEl.appendChild(none);
+  }
+  const looseEl = document.getElementById('bundleLoose');
+  looseEl.innerHTML = '';
+  for (let i = 0; i < bundleLoose; i++) {
+    const s = document.createElement('span');
+    s.className = 'bundle-stick';
+    looseEl.appendChild(s);
+  }
+  if (bundleLoose === 0) {
+    const none = document.createElement('span');
+    none.className = 'bundle-empty';
+    none.textContent = '没有散的';
+    looseEl.appendChild(none);
+  }
+  const total = bundleTotal();
+  const tens = Math.floor(total / 10);
+  const ones = total % 10;
+  document.getElementById('bundleReadout').textContent = tens + '个十和' + ones + '个一 = ' + total;
+  document.getElementById('bundleEq').textContent = (tens * 10) + ' + ' + ones + ' = ' + total;
+  document.getElementById('bundleCount').textContent = '一共 ' + total + ' 根小棒';
+  document.getElementById('bundleTens').textContent = String(tens);
+  document.getElementById('bundleOnes').textContent = String(ones);
+}
+
+function bundleNoteSet(t) { document.getElementById('bundleNote').textContent = t; }
+
+function bundleAddOne() {
+  if (bundleTotal() >= BUNDLE_MAX) { bundleNoteSet('已经是20根了，不能再加了。'); return; }
+  bundleLoose++;
+  let bundled = false;
+  while (bundleLoose >= 10) { bundleLoose -= 10; bundleBundles++; bundled = true; }
+  bundleRender();
+  bundleNoteSet(bundled ? '10根捆成1捆！现在一共' + bundleTotal() + '根。' : '加了1根，现在一共' + bundleTotal() + '根。');
+}
+
+function bundleMinusOne() {
+  if (bundleTotal() <= 0) { bundleNoteSet('已经是0根了，不能再拿了。'); return; }
+  if (bundleLoose > 0) bundleLoose--;
+  else { bundleBundles--; bundleLoose = 9; }
+  bundleRender();
+  bundleNoteSet('拿走1根，现在一共' + bundleTotal() + '根。');
+}
+
+function bundleBundleUp() {
+  if (bundleLoose >= 10) {
+    const n = Math.floor(bundleLoose / 10);
+    bundleBundles += n;
+    bundleLoose = bundleLoose % 10;
+    bundleRender();
+    bundleNoteSet('捆好了！' + n + '捆，10根捆成1捆。');
+  } else {
+    bundleNoteSet('散的还不到10根，捆不了。再加几根吧。');
+  }
+}
+
+function bundleUnbundle() {
+  if (bundleBundles <= 0) { bundleNoteSet('没有捆可以拆。'); return; }
+  bundleBundles--;
+  bundleLoose += 10;
+  bundleRender();
+  bundleNoteSet('1捆拆开是10根散小棒。试试再点“捆一捆”。');
+}
+
+document.getElementById('bundleAdd').addEventListener('click', bundleAddOne);
+document.getElementById('bundleMinus').addEventListener('click', bundleMinusOne);
+document.getElementById('bundleBundle').addEventListener('click', bundleBundleUp);
+document.getElementById('bundleUnbundle').addEventListener('click', bundleUnbundle);
+bundleRender();
+
+/* ---------- demo-hundred (1.13: 100以内数, 百数表 + 捆棒) ---------- */
+let hundFirst = 46;   // 默认第一个数: 46 = 4个十和6个一
+let hundSecond = 38;  // 默认第二个数: 38 = 3个十和8个一
+let hundTensOnly = false;
+const hundCells = [];
+
+function hundTens(n) { return Math.floor(n / 10); }
+function hundOnes(n) { return n % 10; }
+
+function hundBuildGrid() {
+  const grid = document.getElementById('hundGrid');
+  for (let n = 1; n <= 100; n++) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'hund-cell';
+    b.textContent = String(n);
+    b.setAttribute('aria-label', '选 ' + n);
+    b.addEventListener('click', () => hundPick(n));
+    grid.appendChild(b);
+    hundCells.push(b);
+  }
+}
+
+function hundPick(n) {
+  if (hundSecond !== null) { hundFirst = n; hundSecond = null; }
+  else if (hundFirst === null) { hundFirst = n; }
+  else if (n !== hundFirst) { hundSecond = n; }
+  hundRender();
+}
+
+function hundRenderBundles(el, n) {
+  el.innerHTML = '';
+  for (let b = 0; b < hundTens(n); b++) {
+    const bundle = document.createElement('div');
+    bundle.className = 'hund-bundle';
+    for (let i = 0; i < 10; i++) {
+      const mini = document.createElement('span');
+      mini.className = 'hund-mini';
+      bundle.appendChild(mini);
+    }
+    const lab = document.createElement('span');
+    lab.className = 'hund-bundle-label';
+    lab.textContent = '1个十';
+    bundle.appendChild(lab);
+    el.appendChild(bundle);
+  }
+  for (let i = 0; i < hundOnes(n); i++) {
+    const s = document.createElement('span');
+    s.className = 'hund-stick';
+    el.appendChild(s);
+  }
+}
+
+function hundCompareText(a, b) {
+  if (a === b) return a + '和' + b + '一样大。';
+  const big = Math.max(a, b);
+  const small = Math.min(a, b);
+  if (hundTensOnly && hundTens(a) === hundTens(b)) {
+    return '只看十位：两个数都是' + hundTens(a) + '个十，分不出大小。关掉“只看十位”，再比个位吧。';
+  }
+  if (hundTens(a) !== hundTens(b)) {
+    return big + '大，因为' + hundTens(big) + '个十比' + hundTens(small) + '个十多。';
+  }
+  return big + '大，因为十位都是' + hundTens(a) + '个十，个位' + hundOnes(big) + '比' + hundOnes(small) + '多。';
+}
+
+function hundRender() {
+  hundCells.forEach((c, i) => {
+    const n = i + 1;
+    c.className = 'hund-cell' + (n === hundFirst ? ' hund-first' : '') + (n === hundSecond ? ' hund-second' : '');
+  });
+  document.getElementById('hundFirstLabel').textContent = '第一个数：' + hundFirst;
+  document.getElementById('hundFirstReadout').textContent =
+    hundFirst + ' = ' + hundTens(hundFirst) + '个十和' + hundOnes(hundFirst) + '个一';
+  hundRenderBundles(document.getElementById('hundFirstBundles'), hundFirst);
+  if (hundSecond === null) {
+    document.getElementById('hundSecondLabel').textContent = '第二个数：还没选';
+    document.getElementById('hundSecondReadout').textContent = '再点一个数来比一比。';
+    document.getElementById('hundSecondBundles').innerHTML = '';
+    document.getElementById('hundCompare').textContent = '再点一个数，就能比一比谁大。';
+  } else {
+    document.getElementById('hundSecondLabel').textContent = '第二个数：' + hundSecond;
+    document.getElementById('hundSecondReadout').textContent =
+      hundSecond + ' = ' + hundTens(hundSecond) + '个十和' + hundOnes(hundSecond) + '个一';
+    hundRenderBundles(document.getElementById('hundSecondBundles'), hundSecond);
+    document.getElementById('hundCompare').textContent = hundCompareText(hundFirst, hundSecond);
+  }
+  document.getElementById('hundCompareWrap').classList.toggle('hund-tens-only', hundTensOnly);
+  const tog = document.getElementById('hundTensToggle');
+  tog.setAttribute('aria-pressed', String(hundTensOnly));
+  tog.textContent = hundTensOnly ? '只看十位（开）' : '只看十位';
+}
+
+document.getElementById('hundTensToggle').addEventListener('click', () => {
+  hundTensOnly = !hundTensOnly;
+  hundRender();
+});
+document.getElementById('hundReset').addEventListener('click', () => {
+  hundFirst = 46;
+  hundSecond = 38;
+  hundTensOnly = false;
+  hundRender();
+});
+hundBuildGrid();
+hundRender();
+
+/* ---------- demo-place (1.15: 100以内加减法(一), 数位块并排算) ---------- */
+const PLACE_PROBLEMS = [
+  { a: 23, op: '+', b: 5, label: '23+5' },
+  { a: 35, op: '+', b: 20, label: '35+20' },
+  { a: 47, op: '+', b: 8, label: '47+8' },
+  { a: 36, op: '−', b: 8, label: '36−8' }
+];
+let placeProb = 0;
+let placeTens = 2;
+let placeOnes = 3;
+let placeDone = false;
+let placeCarried = false;
+let placeBorrowed = false;
+let placeNoteText = '先看第一道数摆好了，再点“加 5”。';
+
+function placeActLabel(p) { return (p.op === '+' ? '加 ' : '减 ') + p.b; }
+
+function placeBuildSeg() {
+  const seg = document.getElementById('placeProbSeg');
+  PLACE_PROBLEMS.forEach((p, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = p.label;
+    b.setAttribute('aria-pressed', String(i === placeProb));
+    b.addEventListener('click', () => placeSetProblem(i));
+    seg.appendChild(b);
+  });
+}
+
+function placeSetProblem(i) {
+  placeProb = i;
+  placeStart();
+}
+
+function placeStart() {
+  const p = PLACE_PROBLEMS[placeProb];
+  placeTens = Math.floor(p.a / 10);
+  placeOnes = p.a % 10;
+  placeDone = false;
+  placeCarried = false;
+  placeBorrowed = false;
+  placeNoteText = '先看第一道数摆好了，再点“' + placeActLabel(p) + '”。';
+  placeRender();
+}
+
+function placeApply() {
+  if (placeDone) { placeNoteText = '这道题已经算完啦，点“换一道题”重新算。'; placeRender(); return; }
+  const p = PLACE_PROBLEMS[placeProb];
+  const oldOnes = placeOnes;
+  const oldTens = placeTens;
+  if (p.op === '+') {
+    if (p.b < 10) {
+      const sum = oldOnes + p.b;
+      if (sum >= 10) {
+        placeOnes = sum - 10;
+        placeTens += 1;
+        placeCarried = true;
+        placeNoteText = oldOnes + ' + ' + p.b + ' = ' + sum + '，满10进1个十，个位写' + (sum - 10) + '。';
+      } else {
+        placeOnes = sum;
+        placeNoteText = '个位 ' + oldOnes + ' + ' + p.b + ' = ' + sum + '，十位不变。';
+      }
+    } else {
+      placeTens += p.b / 10;
+      placeNoteText = oldTens + '个十加' + (p.b / 10) + '个十是' + placeTens + '个十，个位还是' + placeOnes + '。';
+    }
+  } else {
+    if (oldOnes >= p.b) {
+      placeOnes = oldOnes - p.b;
+      placeNoteText = '个位 ' + oldOnes + ' − ' + p.b + ' = ' + placeOnes + '，十位不变。';
+    } else {
+      placeBorrowed = true;
+      placeTens -= 1;
+      placeOnes = oldOnes + 10 - p.b;
+      placeNoteText = '个位不够减，借1个十：' + oldOnes + '变成' + (oldOnes + 10) + '，' + (oldOnes + 10) + ' − ' + p.b + ' = ' + placeOnes + '，十位少了1个十。';
+    }
+  }
+  placeDone = true;
+  placeRender();
+}
+
+function placeRender() {
+  const p = PLACE_PROBLEMS[placeProb];
+  const seg = document.getElementById('placeProbSeg');
+  Array.prototype.forEach.call(seg.children, (b, i) => {
+    b.setAttribute('aria-pressed', String(i === placeProb));
+  });
+  const blocks = document.getElementById('placeBlocks');
+  blocks.innerHTML = '';
+  for (let t = 0; t < placeTens; t++) {
+    const bundle = document.createElement('div');
+    bundle.className = 'place-bundle';
+    for (let i = 0; i < 10; i++) {
+      const mini = document.createElement('span');
+      mini.className = 'place-mini';
+      bundle.appendChild(mini);
+    }
+    const lab = document.createElement('span');
+    lab.className = 'place-bundle-label';
+    lab.textContent = '1个十';
+    bundle.appendChild(lab);
+    blocks.appendChild(bundle);
+  }
+  for (let i = 0; i < placeOnes; i++) {
+    const s = document.createElement('span');
+    s.className = 'place-stick';
+    blocks.appendChild(s);
+  }
+  const value = placeTens * 10 + placeOnes;
+  document.getElementById('placeNow').textContent =
+    '现在是：' + placeTens + '个十和' + placeOnes + '个一 = ' + value;
+  const ans = p.op === '+' ? p.a + p.b : p.a - p.b;
+  document.getElementById('placeEq').textContent =
+    p.a + ' ' + p.op + ' ' + p.b + ' = ' + (placeDone ? ans : '?');
+  const act = document.getElementById('placeAct');
+  act.textContent = placeActLabel(p);
+  act.disabled = placeDone;
+  const line1 = '  ' + p.a;
+  const line2 = p.op + ' ' + (p.b < 10 ? ' ' : '') + p.b;
+  const line3 = '——';
+  const line4 = '  ' + (placeDone ? ans : '?');
+  document.getElementById('placeVert').textContent = line1 + '\n' + line2 + '\n' + line3 + '\n' + line4;
+  document.getElementById('placeMark').textContent = placeCarried
+    ? '进1：个位满10，进了1个十。'
+    : (placeBorrowed ? '借1：个位不够减，借了1个十当10个一。' : '');
+  document.getElementById('placeNote').textContent = placeNoteText;
+}
+
+document.getElementById('placeAct').addEventListener('click', placeApply);
+document.getElementById('placeReset').addEventListener('click', placeStart);
+placeBuildSeg();
+placeSetProblem(0);
+
+/* group-d · 1 年级演示：时钟 / 开小店 / 找规律
+   不评分、不记进度：不调用进度记录函数，不用浏览器存储。
+   ---- 手算核对过的数字（全部验算通过）----
+   时钟：分针 +5 分钟按 12 次 = 60 分钟，时针正好 +1 格；分针转一圈时针 +1 格。
+     6 点往前推 3 小时是 3 点（6−3=3，练一练提高题）。7 点半 = 时针 7、分针 30。
+     时针角 = 小时×30° + 分钟×0.5°（7 点半是 225°，在 7 和 8 正中间）；分针角 = 分钟×6°。
+   开小店：初始钱包 2×10角 + 2×5角 + 10×1角 = 20+10+10 = 40角 = 4元
+     （任务稿写的“35角 = 3元5角”算错了，40角才是对的，本文件用 40角）。
+     本子 5角 + 橡皮 2角 = 7角；1元买 3角铅笔：10角−3角 = 7角找回。
+     1元 = 10角，1角 = 10分；1元5角 = 10角+5角 = 15角；换钱：10个1角 = 1元。
+     找零示例：付 1元（10角）买 3角铅笔，找回 10−3 = 7角，以 7 个 1角硬币放回钱包。
+   找规律：(a) 红蓝蓝单元长 3，蓝蓝后面是红；(b) ▲●单元长 2，第 7、8、9 个是 ▲、●、▲；
+     (c) ○○△单元长 3，第 10 个：10 = 3×3+1，是第 4 组的第 1 个 → ○；
+     (d) 数字 1、2、4、7、11，相邻差 +1、+2、+3、+4，下一个 11+5 = 16，
+     再往后 16+6 = 22、22+7 = 29。
+   注意：数字组只给出 5 个数（1、2、4、7、11），所以它显示 5 个数 + 3 个空，
+   第 1 个空的答案是 16（选项 16、15、13）；图形组是 6 个 + 3 个空。 */
+
+  /* ---------- demo-clock · 认识钟表（1.8，方法：联动表针钟） ---------- */
+  let clockHour = 7;
+  let clockMin = 0;
+  let clockTargetIdx = 0;
+  const CLOCK_TARGETS = [
+    { h: 7, m: 0, label: '7点' },
+    { h: 9, m: 0, label: '9点' },
+    { h: 3, m: 0, label: '3点' },
+    { h: 7, m: 30, label: '7点半' },
+    { h: 12, m: 0, label: '12点' }
+  ];
+  function clockBuildFace() {
+    const g = document.getElementById('clockTicks');
+    const NS = 'http://www.w3.org/2000/svg';
+    for (let i = 0; i < 12; i++) {
+      const a = i * 30 * Math.PI / 180;
+      const tick = document.createElementNS(NS, 'line');
+      tick.setAttribute('x1', String(100 + 84 * Math.sin(a)));
+      tick.setAttribute('y1', String(100 - 84 * Math.cos(a)));
+      tick.setAttribute('x2', String(100 + 91 * Math.sin(a)));
+      tick.setAttribute('y2', String(100 - 91 * Math.cos(a)));
+      tick.setAttribute('stroke', '#334155');
+      tick.setAttribute('stroke-width', '3');
+      tick.setAttribute('stroke-linecap', 'round');
+      g.appendChild(tick);
+      const num = document.createElementNS(NS, 'text');
+      num.setAttribute('x', String(100 + 68 * Math.sin(a)));
+      num.setAttribute('y', String(100 - 68 * Math.cos(a) + 6));
+      num.setAttribute('text-anchor', 'middle');
+      num.setAttribute('font-size', '17');
+      num.setAttribute('font-weight', '700');
+      num.setAttribute('fill', '#1e293b');
+      num.textContent = String(i === 0 ? 12 : i);
+      g.appendChild(num);
+    }
+  }
+  function clockTimeText(h, m) {
+    if (m === 0) return h + ' 点';
+    if (m === 30) return h + ' 点半';
+    return h + ' 点 ' + m + ' 分';
+  }
+  function clockHourStep() {
+    clockHour = clockHour % 12 + 1;
+  }
+  function clockRender() {
+    const hourAngle = (clockHour % 12) * 30 + clockMin * 0.5;
+    const minAngle = clockMin * 6;
+    document.getElementById('clockHourHand').setAttribute('transform', 'rotate(' + hourAngle + ' 100 100)');
+    document.getElementById('clockMinHand').setAttribute('transform', 'rotate(' + minAngle + ' 100 100)');
+    document.getElementById('clockReadout').textContent = '现在是 ' + clockTimeText(clockHour, clockMin);
+    const t = CLOCK_TARGETS[clockTargetIdx];
+    document.getElementById('clockTarget').textContent = '目标：拨到 ' + t.label;
+    document.getElementById('clockMsg').textContent =
+      (clockHour === t.h && clockMin === t.m)
+        ? '对了，就是' + t.label + '！'
+        : '目标是' + t.label + '，再拨一拨。';
+  }
+  document.getElementById('clockHourPlus').addEventListener('click', function () { clockHourStep(); clockRender(); });
+  document.getElementById('clockMinPlus').addEventListener('click', function () {
+    clockMin += 5;
+    if (clockMin >= 60) { clockMin -= 60; clockHourStep(); }
+    clockRender();
+  });
+  document.getElementById('clockMinFull').addEventListener('click', function () { clockHourStep(); clockRender(); });
+  document.getElementById('clockNextTarget').addEventListener('click', function () {
+    clockTargetIdx = (clockTargetIdx + 1) % CLOCK_TARGETS.length;
+    clockRender();
+  });
+  clockBuildFace();
+  clockRender();
+
+  /* ---------- demo-shop · 开小店（1.14，方法：开小店 + 换钱动画） ---------- */
+  const SHOP_ITEMS = [
+    { name: '本子', price: 5 },
+    { name: '橡皮', price: 2 },
+    { name: '铅笔', price: 3 }
+  ];
+  const SHOP_COINS = [
+    { key: 'yuan', label: '1元', value: 10 },
+    { key: 'five', label: '5角', value: 5 },
+    { key: 'one', label: '1角', value: 1 }
+  ];
+  const SHOP_INIT = { yuan: 2, five: 2, one: 10 };
+  let shopWallet = { yuan: 2, five: 2, one: 10 };
+  let shopItemIdx = -1;
+  let shopPaid = 0;
+  let shopBought = false;
+  let shopPaidCoins = { yuan: 0, five: 0, one: 0 };
+  function shopTotal() {
+    return shopWallet.yuan * 10 + shopWallet.five * 5 + shopWallet.one;
+  }
+  function shopMoneyText(total) {
+    const y = Math.floor(total / 10);
+    const j = total % 10;
+    return total + '角 = ' + y + '元' + (j ? j + '角' : '');
+  }
+  function shopRender() {
+    const itemsBox = document.getElementById('shopItems');
+    itemsBox.innerHTML = '';
+    SHOP_ITEMS.forEach(function (it, i) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'btn small ghost shop-item';
+      b.textContent = it.name + ' ' + it.price + '角';
+      b.setAttribute('aria-pressed', String(i === shopItemIdx));
+      b.addEventListener('click', function () { shopSelect(i); });
+      itemsBox.appendChild(b);
+    });
+    const walletBox = document.getElementById('shopWallet');
+    walletBox.innerHTML = '';
+    SHOP_COINS.forEach(function (c) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'btn small ghost shop-coin';
+      b.textContent = c.label + ' ×' + shopWallet[c.key];
+      b.disabled = shopWallet[c.key] <= 0 || shopItemIdx < 0 || shopBought;
+      b.addEventListener('click', function () { shopPay(c.key, c.value); });
+      walletBox.appendChild(b);
+    });
+    document.getElementById('shopWalletTotal').textContent = '钱包一共 ' + shopMoneyText(shopTotal());
+    const sel = document.getElementById('shopSelected');
+    if (shopBought) sel.textContent = '已经买到' + SHOP_ITEMS[shopItemIdx].name + '了';
+    else if (shopItemIdx >= 0) sel.textContent = '要买的：' + SHOP_ITEMS[shopItemIdx].name + ' ' + SHOP_ITEMS[shopItemIdx].price + '角';
+    else sel.textContent = '还没选要买的东西，先点一个';
+    document.getElementById('shopPaid').textContent = '已付 ' + shopPaid + '角';
+  }
+  function shopSelect(i) {
+    if (shopBought) return;
+    shopItemIdx = i;
+    document.getElementById('shopMsg').textContent = '要买' + SHOP_ITEMS[i].name + '，一共 ' + SHOP_ITEMS[i].price + '角，点钱包里的钱来付。';
+    shopRender();
+  }
+  function shopPay(key, value) {
+    if (shopItemIdx < 0 || shopBought) return;
+    if (shopWallet[key] <= 0) return;
+    shopWallet[key]--;
+    shopPaidCoins[key]++;
+    shopPaid += value;
+    const price = SHOP_ITEMS[shopItemIdx].price;
+    if (shopPaid >= price) {
+      const change = shopPaid - price;
+      shopWallet.one += change;
+      shopBought = true;
+      document.getElementById('shopMsg').textContent = change > 0
+        ? '买到了！找回 ' + change + '角（已经放回钱包，变成1角硬币了）。'
+        : '买到了！不多不少，正好 ' + price + '角。';
+    } else {
+      document.getElementById('shopMsg').textContent = '已付 ' + shopPaid + '角，还差 ' + (price - shopPaid) + '角。';
+    }
+    shopRender();
+  }
+  function shopAgain() {
+    shopItemIdx = -1; shopPaid = 0; shopBought = false;
+    shopPaidCoins = { yuan: 0, five: 0, one: 0 };
+    document.getElementById('shopMsg').textContent = '再选一个想买的东西。';
+    shopRender();
+  }
+  function shopRefund() {
+    if (shopPaid <= 0 || shopBought) return;
+    shopWallet.yuan += shopPaidCoins.yuan;
+    shopWallet.five += shopPaidCoins.five;
+    shopWallet.one += shopPaidCoins.one;
+    shopPaidCoins = { yuan: 0, five: 0, one: 0 };
+    shopPaid = 0;
+    document.getElementById('shopMsg').textContent = '钱都退回钱包了。';
+    shopRender();
+  }
+  function shopExchange() {
+    const note = document.getElementById('shopNote');
+    if (shopWallet.one >= 10) {
+      shopWallet.one -= 10;
+      shopWallet.yuan += 1;
+      note.textContent = '10个1角换1元，换好了！';
+    } else {
+      note.textContent = '1角还不够10个（现在只有 ' + shopWallet.one + ' 个），换不了。';
+    }
+    shopRender();
+  }
+  function shopReset() {
+    shopWallet = { yuan: 2, five: 2, one: 10 };
+    shopItemIdx = -1; shopPaid = 0; shopBought = false;
+    shopPaidCoins = { yuan: 0, five: 0, one: 0 };
+    document.getElementById('shopMsg').textContent = '重新开店了，钱包回到一开始的样子。';
+    document.getElementById('shopNote').textContent = '10个1角可以换成1张1元。';
+    shopRender();
+  }
+  document.getElementById('shopAgain').addEventListener('click', shopAgain);
+  document.getElementById('shopRefund').addEventListener('click', shopRefund);
+  document.getElementById('shopExchange').addEventListener('click', shopExchange);
+  document.getElementById('shopReset').addEventListener('click', shopReset);
+  shopRender();
+
+  /* ---------- demo-pattern · 找规律（1.16，方法：找重复单元） ---------- */
+  function patShapeEl(key) {
+    const s = document.createElement('span');
+    s.className = 'pat-shape pat-' + key;
+    s.setAttribute('aria-hidden', 'true');
+    return s;
+  }
+  const PATTERNS = [
+    { name: '红蓝蓝', kind: 'shape', unit: ['red', 'blue', 'blue'], unitText: '红蓝蓝',
+      answers: ['red', 'blue', 'blue'],
+      choices: [{ k: 'red', label: '红色' }, { k: 'blue', label: '蓝色' }],
+      wrong: '再想想，单元是红蓝蓝', right: '对了！单元是红蓝蓝，蓝后面又是红。' },
+    { name: '三角圆', kind: 'shape', unit: ['tri', 'dot'], unitText: '▲●',
+      answers: ['tri', 'dot', 'tri'],
+      choices: [{ k: 'tri', label: '三角形' }, { k: 'dot', label: '圆形' }],
+      wrong: '再想想，单元是▲●，三角和圆轮流出现', right: '对了！单元是▲●，三角和圆轮流出现。' },
+    { name: '圆圆三角', kind: 'shape', unit: ['ring', 'ring', 'tri'], unitText: '○○△',
+      answers: ['ring', 'ring', 'tri'],
+      choices: [{ k: 'ring', label: '圆圈' }, { k: 'tri', label: '三角形' }],
+      wrong: '再想想，单元是○○△', right: '对了！单元是○○△，两个圆圈后面是三角形。' },
+    { name: '数字', kind: 'number', terms: [1, 2, 4, 7, 11], answers: [16, 22, 29],
+      wrong: '再想想，相邻两个数相差 1、2、3、4，每次多 1',
+      right: '对了！每次多 1，11 再加 5 是 16。' }
+  ];
+  let patIdx = 0;
+  let patFilled = [];
+  let patShowUnit = false;
+  function patShown() {
+    const p = PATTERNS[patIdx];
+    if (p.kind === 'number') return p.terms.slice();
+    const out = [];
+    for (let i = 0; i < 6; i++) out.push(p.unit[i % p.unit.length]);
+    return out;
+  }
+  function patChoicesFor(blankIdx) {
+    const p = PATTERNS[patIdx];
+    if (p.kind === 'number') {
+      const a = p.answers[blankIdx];
+      return [a, a - 1, a - 3];
+    }
+    return p.choices;
+  }
+  function patRender() {
+    const p = PATTERNS[patIdx];
+    const seg = document.getElementById('patSeg');
+    seg.innerHTML = '';
+    PATTERNS.forEach(function (pp, i) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = pp.name;
+      b.setAttribute('aria-pressed', String(i === patIdx));
+      b.addEventListener('click', function () { patSet(i); });
+      seg.appendChild(b);
+    });
+    const seq = document.getElementById('patSeq');
+    seq.innerHTML = '';
+    patShown().forEach(function (v, i) {
+      const cell = document.createElement('div');
+      cell.className = 'pat-cell';
+      if (patShowUnit && (p.kind === 'number' || i < p.unit.length)) cell.classList.add('pat-in-unit');
+      if (p.kind === 'number') cell.textContent = String(v);
+      else cell.appendChild(patShapeEl(v));
+      seq.appendChild(cell);
+    });
+    for (let i = 0; i < 3; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'pat-cell pat-blank';
+      if (i < patFilled.length) {
+        cell.classList.remove('pat-blank');
+        cell.classList.add('pat-filled');
+        if (p.kind === 'number') cell.textContent = String(patFilled[i]);
+        else cell.appendChild(patShapeEl(patFilled[i]));
+      } else {
+        cell.textContent = '?';
+      }
+      seq.appendChild(cell);
+    }
+    const ch = document.getElementById('patChoices');
+    ch.innerHTML = '';
+    if (patFilled.length < 3) {
+      patChoicesFor(patFilled.length).forEach(function (o) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'btn small ghost pat-choice';
+        if (p.kind === 'number') {
+          b.textContent = String(o);
+        } else {
+          b.appendChild(patShapeEl(o.k));
+          const t = document.createElement('span');
+          t.textContent = o.label;
+          b.appendChild(t);
+        }
+        b.addEventListener('click', function () { patChoose(o); });
+        ch.appendChild(b);
+      });
+    }
+    document.getElementById('patUnitBtn').setAttribute('aria-pressed', String(patShowUnit));
+  }
+  function patChoose(o) {
+    const p = PATTERNS[patIdx];
+    const idx = patFilled.length;
+    if (idx >= 3) return;
+    const val = p.kind === 'number' ? o : o.k;
+    if (val === p.answers[idx]) {
+      patFilled.push(val);
+      const msg = document.getElementById('patMsg');
+      if (patFilled.length === 3) {
+        msg.textContent = p.kind === 'number'
+          ? '全对了！1、2、4、7、11、16、22、29，每次多 1。'
+          : '全对了！单元是' + p.unitText + '，它一遍一遍重复出现。';
+      } else {
+        msg.textContent = p.right;
+      }
+    } else {
+      document.getElementById('patMsg').textContent = p.wrong + '。';
+    }
+    patRender();
+  }
+  function patSet(i) {
+    patIdx = i;
+    patFilled = [];
+    patShowUnit = false;
+    document.getElementById('patMsg').textContent = '找一找重复的单元，再选下一个。';
+    patRender();
+  }
+  document.getElementById('patUnitBtn').addEventListener('click', function () {
+    patShowUnit = !patShowUnit;
+    if (patShowUnit) {
+      const p = PATTERNS[patIdx];
+      document.getElementById('patMsg').textContent = p.kind === 'number'
+        ? '数字没有重复的单元，规律是每次多 1：已经给出的 5 个数都框出来了。'
+        : '框出来的是一个单元：' + p.unitText + '，它会一遍一遍重复。';
+    }
+    patRender();
+  });
+  document.getElementById('patNextBtn').addEventListener('click', function () {
+    patSet((patIdx + 1) % PATTERNS.length);
+  });
+  patRender();
 
 </script>
 </body>
