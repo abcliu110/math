@@ -107,6 +107,14 @@ body[data-view="demo-twentyfour"] #demos, body[data-view="demo-monty"] #demos, b
 body[data-view="demo-matches"] #demos, body[data-view="demo-mobius"] #demos, body[data-view="demo-shopweek"] #demos,
 body[data-view="demo-fairgame"] #demos, body[data-view="demo-makerule"] #demos,
 body[data-view="demo-thirteen"] #demos,
+body[data-view="demo-maketen"] #demos,
+body[data-view="demo-areamul"] #demos,
+body[data-view="demo-fraceq"] #demos,
+body[data-view="demo-buildfrac"] #demos,
+body[data-view="demo-areabuild"] #demos,
+body[data-view="demo-quadmorph"] #demos,
+body[data-view="demo-numplay"] #demos,
+body[data-view="demo-fracnumline"] #demos,
 body[data-view="why"] #why, body[data-view="review"] #review,
 body[data-view="progress"] #review, body[data-view="parent"] #review, body[data-view="lab"] #lab,
 body[data-view="exam"] #exam, body[data-view="inquiry"] #inquiry, body[data-view="checkpoint"] #checkpoint{display:block}
@@ -860,3 +868,12 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
 /* 挑战模式：提示藏起来，学生自己想 */
 #lab.lab-challenge .hint,#lab.lab-challenge .lab-hint{display:none}
 @media (max-width:1024px){.lab-questions{grid-template-columns:1fr}}
+
+/* 互动模拟 */
+.area-grid { display: block; margin: 8px auto; max-width: 340px; width: 100%; height: auto; }
+.bf-piece { width: 44px; height: 44px; font-size: 20px; border: 2px solid #78716c; background: #fff; border-radius: 8px; cursor: pointer; }
+.bf-piece.filled { background: #f97316; color: #fff; border-color: #c2410c; }
+.ab-grid { display: grid; grid-template-columns: repeat(6, 44px); gap: 4px; justify-content: center; margin: 8px 0; }
+.ab-cell { width: 44px; height: 44px; border: 2px solid #d6d3d1; background: #fff; border-radius: 6px; cursor: pointer; font-size: 18px; }
+.ab-cell.filled { background: #f97316; color: #fff; border-color: #c2410c; }
+#npDots { font-size: 26px; letter-spacing: 4px; color: #ea580c; min-height: 34px; }

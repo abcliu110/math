@@ -52,7 +52,7 @@ const GRADES = {
 };
 
 /* ---------- 进度（原型：记演示是否玩过） ----------
-   133 个演示全都计入：4 个经典演示 + 13 个一年级实验 + 15 个二年级实验 + 14 个三年级实验 + 16 个四年级实验 + 11 个五年级实验 + 12 个六年级实验 + 13 个七年级实验 + 11 个八年级实验 + 15 个九年级实验 + 9 个创意实验 = 133 个。
+   141 个演示全都计入：4 个经典演示 + 13 个一年级实验 + 15 个二年级实验 + 14 个三年级实验 + 16 个四年级实验 + 11 个五年级实验 + 12 个六年级实验 + 13 个七年级实验 + 11 个八年级实验 + 15 个九年级实验 + 9 个创意实验 + 8 个互动模拟 = 141 个。
    首页却写着“4 个演示”，演示页上却是 17 张卡，数字对不上
    （2026-11-06 真机审计第 6 条）。 */
 const tried = new Set();
@@ -77,7 +77,7 @@ const ALL_DEMOS = ['tenframe', 'fraction', 'balance', 'function',
   'radical', 'pythag', 'pargram', 'specialquad', 'datastats',
   'quad', 'growth', 'parabola', 'spin', 'circangle', 'tangent', 'sector', 'coin',
   'tree', 'hyperbola', 'similar', 'shadow', 'trig', 'slope', 'project',
-  'twentyfour', 'monty', 'maxarea', 'matches', 'mobius', 'shopweek', 'fairgame', 'makerule', 'thirteen'];
+  'twentyfour', 'monty', 'maxarea', 'matches', 'mobius', 'shopweek', 'fairgame', 'makerule', 'thirteen', 'maketen', 'areamul', 'fraceq', 'buildfrac', 'areabuild', 'quadmorph', 'numplay', 'fracnumline'];
 // 刷新后进度还在：已体验的演示存在本地（只存本机，不上传）。
 try { JSON.parse(lsGet('math-tried-demos-v1') || '[]').forEach(k => tried.add(k)); } catch (e) {}
 // 已体验演示的唯一事实来源：内存里的 tried 集合。启动时从存储读一次，
@@ -461,7 +461,7 @@ function renderUnit(g, ui) {
   pointDetail.querySelectorAll('[data-cp-link]').forEach(btn =>
     btn.addEventListener('click', () => navGo('checkpoint')));
 }
-const DEMO_LABEL = { fraction: '去玩分数演示', tenframe: '去玩十格阵', balance: '去玩天平演示', function: '去玩函数演示', count: '去玩数一数', position: '去玩转身找左右', split: '去玩分一分', addsub: '去玩合起来拿走', solids: '去玩立体图形', bundle: '去玩捆小棒', clock: '去玩拨时钟', tangram: '去玩七巧板', sort: '去玩分类分一分', hundred: '去玩百数表', shop: '去玩开小店', place: '去玩数位块', pattern: '去玩找规律', ruler: '去玩尺子量一量', estimate: '去玩先估后算', angle: '去玩转一转角', array: '去玩点阵乘法', observe: '去玩换个方向看', time: '去玩拨时钟（时和分）', share: '去玩轮流分一分', motion: '去玩折一折转一转', mixop: '去玩先算哪一堆', remain: '去玩装一包装不满', thousand: '去玩数轴找近似数', weight: '去玩天平称一称', chart: '去玩投票变条形图', logic: '去玩排除格推理', pair: '去玩搭配连一连', elapsed: '去玩时间轴走一走', verify: '去玩算回去验算', units: '去玩单位楼梯', times: '去玩条形复制', splitmul: '去玩面积切一切', rectsq: '去玩拉一拉变正方形', venn: '去玩韦恩图拖人', compass: '去玩指南针转一转', divplace: '去玩按数位分一分', stattable: '去玩复式统计表', fourgrid: '去玩四格面积模型', area: '去玩铺方砖数面积', calendar: '去玩日历翻一翻', decimal: '去玩十分条比大小', bignum: '去玩大数数轴', field: '去玩足球场拼一拼', protractor: '去玩量角器', areamodel: '去玩面积模型', parallelogram: '去玩平行四边形', trialdiv: '去玩试商调商', baraxis: '去玩条形图轴', teatime: '去玩沏茶排一排', zerodiv: '去玩除以0', laws: '去玩运算定律', placeslider: '去玩数位滑块', tearangle: '去玩撕角拼平角', decadd: '去玩小数加减对齐', moveshape: '去玩图形平移', average: '去玩削峰填谷', chickenrabbit: '去玩鸡兔同笼', decmul: '去玩单位正方形', gridpos: '去玩数对点一点', decdiv: '去玩两数同乘', prob: '去玩摸球模拟', polyarea: '去玩切一刀变长方形', planttree: '去玩种树数间隔', factor: '去玩拼长方形', cuboid: '去玩分层装块', fracadd: '去玩先重切再数', rotate: '去玩绕钉旋转', findbad: '去玩三组称找次品', radar: '去玩雷达找地方', ratio: '去玩比条分一分', circle: '去玩绕绳量圆', percent: '去玩百分条', fan: '去玩扇形转一转', lsquare: '去玩一层层包正方形', thermo: '去玩温度计比一比', negmul: '去玩负数乘法规律', discount: '去玩打折算一算', cylinder: '去玩倒沙装满圆柱', pigeon: '去玩鸽子找洞', conceptmap: '去玩认出老办法', numline: '去玩数轴标一点', powerup: '去玩对折纸和科学记数法', monomial: '去玩拆零件看系数次数', liketerms: '去玩合并同类项', meetline: '去玩相向而行', lineseg: '去玩直线射线线段', anglepair: '去玩余角补角拼一拼', vertangle: '去玩对顶角转一转', parangles: '去玩平行线截角', roots: '去玩开方机器', coordplane: '去玩坐标平面点一点', ineqline: '去玩不等式画数轴', histogram: '去玩直方图分组', trisides: '去玩三边围不围', congruent: '去玩全等判定拼一拼', foldmirror: '去玩对折看对称', algarea: '去玩面积模型算整式', algfrac: '去玩分式约分', eqsieve: '去玩分式方程过筛子', radical: '去玩二次根式化简', pythag: '去玩勾股定理面积拼图', pargram: '去玩平行四边形推一推', specialquad: '去玩加条件变特殊', datastats: '去玩数据分析算一算', quad: '去玩一元二次方程', growth: '去玩利滚利和韦达', parabola: '去玩抛物线滑杆', spin: '去玩旋转和中心对称', circangle: '去玩圆周角', tangent: '去玩直线和圆切线', sector: '去玩扇形和圆锥', coin: '去玩抛硬币摸红球', tree: '去玩树状图数一数', hyperbola: '去玩双曲线', similar: '去玩相似放大', shadow: '去玩影子测高', trig: '去玩锐角三角函数', slope: '去玩仰角和坡度', project: '去玩投影和三视图', twentyfour: '去玩24点拼一拼', monty: '去玩三门问题', maxarea: '去玩周长面积最大', matches: '去玩火柴棒', mobius: '去玩莫比乌斯带', shopweek: '去玩开店一周', fairgame: '去玩公平游戏', makerule: '去玩造规律', thirteen: '去玩13有几种凑法' };
+const DEMO_LABEL = { fraction: '去玩分数演示', tenframe: '去玩十格阵', balance: '去玩天平演示', function: '去玩函数演示', count: '去玩数一数', position: '去玩转身找左右', split: '去玩分一分', addsub: '去玩合起来拿走', solids: '去玩立体图形', bundle: '去玩捆小棒', clock: '去玩拨时钟', tangram: '去玩七巧板', sort: '去玩分类分一分', hundred: '去玩百数表', shop: '去玩开小店', place: '去玩数位块', pattern: '去玩找规律', ruler: '去玩尺子量一量', estimate: '去玩先估后算', angle: '去玩转一转角', array: '去玩点阵乘法', observe: '去玩换个方向看', time: '去玩拨时钟（时和分）', share: '去玩轮流分一分', motion: '去玩折一折转一转', mixop: '去玩先算哪一堆', remain: '去玩装一包装不满', thousand: '去玩数轴找近似数', weight: '去玩天平称一称', chart: '去玩投票变条形图', logic: '去玩排除格推理', pair: '去玩搭配连一连', elapsed: '去玩时间轴走一走', verify: '去玩算回去验算', units: '去玩单位楼梯', times: '去玩条形复制', splitmul: '去玩面积切一切', rectsq: '去玩拉一拉变正方形', venn: '去玩韦恩图拖人', compass: '去玩指南针转一转', divplace: '去玩按数位分一分', stattable: '去玩复式统计表', fourgrid: '去玩四格面积模型', area: '去玩铺方砖数面积', calendar: '去玩日历翻一翻', decimal: '去玩十分条比大小', bignum: '去玩大数数轴', field: '去玩足球场拼一拼', protractor: '去玩量角器', areamodel: '去玩面积模型', parallelogram: '去玩平行四边形', trialdiv: '去玩试商调商', baraxis: '去玩条形图轴', teatime: '去玩沏茶排一排', zerodiv: '去玩除以0', laws: '去玩运算定律', placeslider: '去玩数位滑块', tearangle: '去玩撕角拼平角', decadd: '去玩小数加减对齐', moveshape: '去玩图形平移', average: '去玩削峰填谷', chickenrabbit: '去玩鸡兔同笼', decmul: '去玩单位正方形', gridpos: '去玩数对点一点', decdiv: '去玩两数同乘', prob: '去玩摸球模拟', polyarea: '去玩切一刀变长方形', planttree: '去玩种树数间隔', factor: '去玩拼长方形', cuboid: '去玩分层装块', fracadd: '去玩先重切再数', rotate: '去玩绕钉旋转', findbad: '去玩三组称找次品', radar: '去玩雷达找地方', ratio: '去玩比条分一分', circle: '去玩绕绳量圆', percent: '去玩百分条', fan: '去玩扇形转一转', lsquare: '去玩一层层包正方形', thermo: '去玩温度计比一比', negmul: '去玩负数乘法规律', discount: '去玩打折算一算', cylinder: '去玩倒沙装满圆柱', pigeon: '去玩鸽子找洞', conceptmap: '去玩认出老办法', numline: '去玩数轴标一点', powerup: '去玩对折纸和科学记数法', monomial: '去玩拆零件看系数次数', liketerms: '去玩合并同类项', meetline: '去玩相向而行', lineseg: '去玩直线射线线段', anglepair: '去玩余角补角拼一拼', vertangle: '去玩对顶角转一转', parangles: '去玩平行线截角', roots: '去玩开方机器', coordplane: '去玩坐标平面点一点', ineqline: '去玩不等式画数轴', histogram: '去玩直方图分组', trisides: '去玩三边围不围', congruent: '去玩全等判定拼一拼', foldmirror: '去玩对折看对称', algarea: '去玩面积模型算整式', algfrac: '去玩分式约分', eqsieve: '去玩分式方程过筛子', radical: '去玩二次根式化简', pythag: '去玩勾股定理面积拼图', pargram: '去玩平行四边形推一推', specialquad: '去玩加条件变特殊', datastats: '去玩数据分析算一算', quad: '去玩一元二次方程', growth: '去玩利滚利和韦达', parabola: '去玩抛物线滑杆', spin: '去玩旋转和中心对称', circangle: '去玩圆周角', tangent: '去玩直线和圆切线', sector: '去玩扇形和圆锥', coin: '去玩抛硬币摸红球', tree: '去玩树状图数一数', hyperbola: '去玩双曲线', similar: '去玩相似放大', shadow: '去玩影子测高', trig: '去玩锐角三角函数', slope: '去玩仰角和坡度', project: '去玩投影和三视图', twentyfour: '去玩24点拼一拼', monty: '去玩三门问题', maxarea: '去玩周长面积最大', matches: '去玩火柴棒', mobius: '去玩莫比乌斯带', shopweek: '去玩开店一周', fairgame: '去玩公平游戏', makerule: '去玩造规律', thirteen: '去玩13有几种凑法', maketen: '去玩凑十装满', areamul: '去玩面积模型乘法', fraceq: '去玩分数相等', buildfrac: '去玩造分数', areabuild: '去玩面积建造者', quadmorph: '去玩四边形变形', numplay: '去玩一个数五种样子', fracnumline: '去玩分数变数线' };
 /* 分步评分：多步骤题拆成一步一步对。steps 是可选字段，没有 steps 的题照旧渲染。
    自评不是机器判题：每一步的对错都是学生自己标的，丢分报告只是把你标错的步骤列出来。 */
 function practiceStepsHtml(q, i, pointId) {
@@ -1011,7 +1011,9 @@ const DEMO_GRADES = { tenframe: [1, 2], fraction: [3, 4, 5, 6], balance: [5, 6, 
   quad: [9], growth: [9], parabola: [9], spin: [9], circangle: [9], tangent: [9], sector: [9], coin: [9],
   tree: [9], hyperbola: [9], similar: [9], shadow: [9], trig: [9], slope: [9], project: [9],
   twentyfour: [4, 5], monty: [9], maxarea: [3, 4, 5], matches: [3, 4],
-  mobius: [6, 7], shopweek: [5, 6], fairgame: [5], makerule: [1, 2], thirteen: [1] };
+  mobius: [6, 7], shopweek: [5, 6], fairgame: [5], makerule: [1, 2], thirteen: [1],
+  maketen: [1, 2], areamul: [3, 4], fraceq: [3, 4, 5], buildfrac: [3, 4, 5],
+  areabuild: [3, 4, 5], quadmorph: [4, 7, 8], numplay: [1], fracnumline: [3, 4, 5] };
 function renderProgress() {
   const card = document.getElementById('progressCard');
   if (!card) return;
@@ -1887,6 +1889,14 @@ const NAV_DEFS = {
   'demo-fairgame': { crumbs: ['数学', '互动演示', '公平游戏：自己定规则'], target: 'demo-fairgame' },
   'demo-makerule': { crumbs: ['数学', '互动演示', '造规律：考考第20个'], target: 'demo-makerule' },
   'demo-thirteen': { crumbs: ['数学', '互动演示', '13有几种凑法'], target: 'demo-thirteen' },
+  'demo-maketen': { crumbs: ['数学', '互动演示', '凑十：把 10 装满'], target: 'demo-maketen' },
+  'demo-areamul': { crumbs: ['数学', '互动演示', '面积模型乘法'], target: 'demo-areamul' },
+  'demo-fraceq': { crumbs: ['数学', '互动演示', '分数相等'], target: 'demo-fraceq' },
+  'demo-buildfrac': { crumbs: ['数学', '互动演示', '造分数'], target: 'demo-buildfrac' },
+  'demo-areabuild': { crumbs: ['数学', '互动演示', '面积建造者'], target: 'demo-areabuild' },
+  'demo-quadmorph': { crumbs: ['数学', '互动演示', '四边形变形'], target: 'demo-quadmorph' },
+  'demo-numplay': { crumbs: ['数学', '互动演示', '数一数：一个数，五种样子'], target: 'demo-numplay' },
+  'demo-fracnumline': { crumbs: ['数学', '互动演示', '分数变数线'], target: 'demo-fracnumline' },
   why:        { crumbs: ['数学', '互动演示', '为什么小实验'], target: 'why' },
   lab:        { crumbs: ['数学', '数学实验室'], target: 'lab' },
   review:     { crumbs: ['数学', '错题本'], target: 'review', action: renderWrongBook },
@@ -1945,6 +1955,8 @@ const demosSec = document.getElementById('demos');
 const demoPanelsEl = document.getElementById('demoPanels');
 const creativePanelsEl = document.getElementById('creativePanels');
 const creativeLabelEl = document.getElementById('creativeLabel');
+const simPanelsEl = document.getElementById('simPanels');
+const simLabelEl = document.getElementById('simLabel');
 const demoGridEl = document.getElementById('demoGrid');
 const whySec = document.getElementById('why');
 const labSec = document.getElementById('lab');
@@ -1975,7 +1987,7 @@ function viewForKey(key) {
   if (key === 'path') return 'path';
   if (key.startsWith('path-step-')) return 'path-step';
   if (key === 'demos') return 'demos';
-  if (key === 'demo-tenframe' || key === 'demo-fraction' || key === 'demo-balance' || key === 'demo-function' || key === 'demo-count' || key === 'demo-position' || key === 'demo-split' || key === 'demo-addsub' || key === 'demo-solids' || key === 'demo-bundle' || key === 'demo-clock' || key === 'demo-tangram' || key === 'demo-sort' || key === 'demo-hundred' || key === 'demo-shop' || key === 'demo-place' || key === 'demo-pattern' || key === 'demo-ruler' || key === 'demo-estimate' || key === 'demo-angle' || key === 'demo-array' || key === 'demo-observe' || key === 'demo-time' || key === 'demo-share' || key === 'demo-motion' || key === 'demo-mixop' || key === 'demo-remain' || key === 'demo-thousand' || key === 'demo-weight' || key === 'demo-chart' || key === 'demo-logic' || key === 'demo-pair' || key === 'demo-elapsed' || key === 'demo-verify' || key === 'demo-units' || key === 'demo-times' || key === 'demo-splitmul' || key === 'demo-rectsq' || key === 'demo-venn' || key === 'demo-compass' || key === 'demo-divplace' || key === 'demo-stattable' || key === 'demo-fourgrid' || key === 'demo-area' || key === 'demo-calendar' || key === 'demo-decimal' || key === 'demo-bignum' || key === 'demo-field' || key === 'demo-protractor' || key === 'demo-areamodel' || key === 'demo-parallelogram' || key === 'demo-trialdiv' || key === 'demo-baraxis' || key === 'demo-teatime' || key === 'demo-zerodiv' || key === 'demo-laws' || key === 'demo-placeslider' || key === 'demo-tearangle' || key === 'demo-decadd' || key === 'demo-moveshape' || key === 'demo-average' || key === 'demo-chickenrabbit' || key === 'demo-decmul' || key === 'demo-gridpos' || key === 'demo-decdiv' || key === 'demo-prob' || key === 'demo-polyarea' || key === 'demo-planttree' || key === 'demo-factor' || key === 'demo-cuboid' || key === 'demo-fracadd' || key === 'demo-rotate' || key === 'demo-findbad' || key === 'demo-radar' || key === 'demo-ratio' || key === 'demo-circle' || key === 'demo-percent' || key === 'demo-fan' || key === 'demo-lsquare' || key === 'demo-thermo' || key === 'demo-negmul' || key === 'demo-discount' || key === 'demo-cylinder' || key === 'demo-pigeon' || key === 'demo-numline' || key === 'demo-powerup' || key === 'demo-monomial' || key === 'demo-liketerms' || key === 'demo-meetline' || key === 'demo-lineseg' || key === 'demo-anglepair' || key === 'demo-vertangle' || key === 'demo-parangles' || key === 'demo-roots' || key === 'demo-coordplane' || key === 'demo-ineqline' || key === 'demo-histogram' || key === 'demo-trisides' || key === 'demo-congruent' || key === 'demo-foldmirror' || key === 'demo-algarea' || key === 'demo-algfrac' || key === 'demo-eqsieve' || key === 'demo-radical' || key === 'demo-pythag' || key === 'demo-pargram' || key === 'demo-specialquad' || key === 'demo-datastats' || key === 'demo-quad' || key === 'demo-growth' || key === 'demo-parabola' || key === 'demo-spin' || key === 'demo-circangle' || key === 'demo-tangent' || key === 'demo-sector' || key === 'demo-coin' || key === 'demo-tree' || key === 'demo-hyperbola' || key === 'demo-similar' || key === 'demo-shadow' || key === 'demo-trig' || key === 'demo-slope' || key === 'demo-project' || key === 'demo-twentyfour' || key === 'demo-monty' || key === 'demo-maxarea' || key === 'demo-matches' || key === 'demo-mobius' || key === 'demo-shopweek' || key === 'demo-fairgame' || key === 'demo-makerule' || key === 'demo-thirteen') return key;
+  if (key === 'demo-tenframe' || key === 'demo-fraction' || key === 'demo-balance' || key === 'demo-function' || key === 'demo-count' || key === 'demo-position' || key === 'demo-split' || key === 'demo-addsub' || key === 'demo-solids' || key === 'demo-bundle' || key === 'demo-clock' || key === 'demo-tangram' || key === 'demo-sort' || key === 'demo-hundred' || key === 'demo-shop' || key === 'demo-place' || key === 'demo-pattern' || key === 'demo-ruler' || key === 'demo-estimate' || key === 'demo-angle' || key === 'demo-array' || key === 'demo-observe' || key === 'demo-time' || key === 'demo-share' || key === 'demo-motion' || key === 'demo-mixop' || key === 'demo-remain' || key === 'demo-thousand' || key === 'demo-weight' || key === 'demo-chart' || key === 'demo-logic' || key === 'demo-pair' || key === 'demo-elapsed' || key === 'demo-verify' || key === 'demo-units' || key === 'demo-times' || key === 'demo-splitmul' || key === 'demo-rectsq' || key === 'demo-venn' || key === 'demo-compass' || key === 'demo-divplace' || key === 'demo-stattable' || key === 'demo-fourgrid' || key === 'demo-area' || key === 'demo-calendar' || key === 'demo-decimal' || key === 'demo-bignum' || key === 'demo-field' || key === 'demo-protractor' || key === 'demo-areamodel' || key === 'demo-parallelogram' || key === 'demo-trialdiv' || key === 'demo-baraxis' || key === 'demo-teatime' || key === 'demo-zerodiv' || key === 'demo-laws' || key === 'demo-placeslider' || key === 'demo-tearangle' || key === 'demo-decadd' || key === 'demo-moveshape' || key === 'demo-average' || key === 'demo-chickenrabbit' || key === 'demo-decmul' || key === 'demo-gridpos' || key === 'demo-decdiv' || key === 'demo-prob' || key === 'demo-polyarea' || key === 'demo-planttree' || key === 'demo-factor' || key === 'demo-cuboid' || key === 'demo-fracadd' || key === 'demo-rotate' || key === 'demo-findbad' || key === 'demo-radar' || key === 'demo-ratio' || key === 'demo-circle' || key === 'demo-percent' || key === 'demo-fan' || key === 'demo-lsquare' || key === 'demo-thermo' || key === 'demo-negmul' || key === 'demo-discount' || key === 'demo-cylinder' || key === 'demo-pigeon' || key === 'demo-numline' || key === 'demo-powerup' || key === 'demo-monomial' || key === 'demo-liketerms' || key === 'demo-meetline' || key === 'demo-lineseg' || key === 'demo-anglepair' || key === 'demo-vertangle' || key === 'demo-parangles' || key === 'demo-roots' || key === 'demo-coordplane' || key === 'demo-ineqline' || key === 'demo-histogram' || key === 'demo-trisides' || key === 'demo-congruent' || key === 'demo-foldmirror' || key === 'demo-algarea' || key === 'demo-algfrac' || key === 'demo-eqsieve' || key === 'demo-radical' || key === 'demo-pythag' || key === 'demo-pargram' || key === 'demo-specialquad' || key === 'demo-datastats' || key === 'demo-quad' || key === 'demo-growth' || key === 'demo-parabola' || key === 'demo-spin' || key === 'demo-circangle' || key === 'demo-tangent' || key === 'demo-sector' || key === 'demo-coin' || key === 'demo-tree' || key === 'demo-hyperbola' || key === 'demo-similar' || key === 'demo-shadow' || key === 'demo-trig' || key === 'demo-slope' || key === 'demo-project' || key === 'demo-twentyfour' || key === 'demo-monty' || key === 'demo-maxarea' || key === 'demo-matches' || key === 'demo-mobius' || key === 'demo-shopweek' || key === 'demo-fairgame' || key === 'demo-makerule' || key === 'demo-thirteen' || key === 'demo-maketen' || key === 'demo-areamul' || key === 'demo-fraceq' || key === 'demo-buildfrac' || key === 'demo-areabuild' || key === 'demo-quadmorph' || key === 'demo-numplay' || key === 'demo-fracnumline') return key;
   if (key === 'why') return 'why';
   if (key === 'lab') return 'lab';
   if (key === 'review') return 'review';
@@ -2024,11 +2036,13 @@ function applyView() {
   const stepN = view === 'path-step' ? key.slice('path-step-'.length) : null;
   [...pathPanelsEl.children].forEach(el => { el.hidden = !!(stepN && el.id !== 'step-' + stepN); });
   // 互动演示：列表留演示面板；叶子只留该演示卡片；为什么小实验只留 #why 区
-  const demoLeaf = view === 'demo-tenframe' || view === 'demo-fraction' || view === 'demo-balance' || view === 'demo-function' || view === 'demo-count' || view === 'demo-position' || view === 'demo-split' || view === 'demo-addsub' || view === 'demo-solids' || view === 'demo-bundle' || view === 'demo-clock' || view === 'demo-tangram' || view === 'demo-sort' || view === 'demo-hundred' || view === 'demo-shop' || view === 'demo-place' || view === 'demo-pattern' || view === 'demo-ruler' || view === 'demo-estimate' || view === 'demo-angle' || view === 'demo-array' || view === 'demo-observe' || view === 'demo-time' || view === 'demo-share' || view === 'demo-motion' || view === 'demo-mixop' || view === 'demo-remain' || view === 'demo-thousand' || view === 'demo-weight' || view === 'demo-chart' || view === 'demo-logic' || view === 'demo-pair' || view === 'demo-elapsed' || view === 'demo-verify' || view === 'demo-units' || view === 'demo-times' || view === 'demo-splitmul' || view === 'demo-rectsq' || view === 'demo-venn' || view === 'demo-compass' || view === 'demo-divplace' || view === 'demo-stattable' || view === 'demo-fourgrid' || view === 'demo-area' || view === 'demo-calendar' || view === 'demo-decimal' || view === 'demo-bignum' || view === 'demo-field' || view === 'demo-protractor' || view === 'demo-areamodel' || view === 'demo-parallelogram' || view === 'demo-trialdiv' || view === 'demo-baraxis' || view === 'demo-teatime' || view === 'demo-zerodiv' || view === 'demo-laws' || view === 'demo-placeslider' || view === 'demo-tearangle' || view === 'demo-decadd' || view === 'demo-moveshape' || view === 'demo-average' || view === 'demo-chickenrabbit' || view === 'demo-decmul' || view === 'demo-gridpos' || view === 'demo-decdiv' || view === 'demo-prob' || view === 'demo-polyarea' || view === 'demo-planttree' || view === 'demo-factor' || view === 'demo-cuboid' || view === 'demo-fracadd' || view === 'demo-rotate' || view === 'demo-findbad' || view === 'demo-radar' || view === 'demo-ratio' || view === 'demo-circle' || view === 'demo-percent' || view === 'demo-fan' || view === 'demo-lsquare' || view === 'demo-thermo' || view === 'demo-negmul' || view === 'demo-discount' || view === 'demo-cylinder' || view === 'demo-pigeon' || view === 'demo-numline' || view === 'demo-powerup' || view === 'demo-monomial' || view === 'demo-liketerms' || view === 'demo-meetline' || view === 'demo-lineseg' || view === 'demo-anglepair' || view === 'demo-vertangle' || view === 'demo-parangles' || view === 'demo-roots' || view === 'demo-coordplane' || view === 'demo-ineqline' || view === 'demo-histogram' || view === 'demo-trisides' || view === 'demo-congruent' || view === 'demo-foldmirror' || view === 'demo-algarea' || view === 'demo-algfrac' || view === 'demo-eqsieve' || view === 'demo-radical' || view === 'demo-pythag' || view === 'demo-pargram' || view === 'demo-specialquad' || view === 'demo-datastats' || view === 'demo-quad' || view === 'demo-growth' || view === 'demo-parabola' || view === 'demo-spin' || view === 'demo-circangle' || view === 'demo-tangent' || view === 'demo-sector' || view === 'demo-coin' || view === 'demo-tree' || view === 'demo-hyperbola' || view === 'demo-similar' || view === 'demo-shadow' || view === 'demo-trig' || view === 'demo-slope' || view === 'demo-project' || view === 'demo-twentyfour' || view === 'demo-monty' || view === 'demo-maxarea' || view === 'demo-matches' || view === 'demo-mobius' || view === 'demo-shopweek' || view === 'demo-fairgame' || view === 'demo-makerule' || view === 'demo-thirteen';
+  const demoLeaf = view === 'demo-tenframe' || view === 'demo-fraction' || view === 'demo-balance' || view === 'demo-function' || view === 'demo-count' || view === 'demo-position' || view === 'demo-split' || view === 'demo-addsub' || view === 'demo-solids' || view === 'demo-bundle' || view === 'demo-clock' || view === 'demo-tangram' || view === 'demo-sort' || view === 'demo-hundred' || view === 'demo-shop' || view === 'demo-place' || view === 'demo-pattern' || view === 'demo-ruler' || view === 'demo-estimate' || view === 'demo-angle' || view === 'demo-array' || view === 'demo-observe' || view === 'demo-time' || view === 'demo-share' || view === 'demo-motion' || view === 'demo-mixop' || view === 'demo-remain' || view === 'demo-thousand' || view === 'demo-weight' || view === 'demo-chart' || view === 'demo-logic' || view === 'demo-pair' || view === 'demo-elapsed' || view === 'demo-verify' || view === 'demo-units' || view === 'demo-times' || view === 'demo-splitmul' || view === 'demo-rectsq' || view === 'demo-venn' || view === 'demo-compass' || view === 'demo-divplace' || view === 'demo-stattable' || view === 'demo-fourgrid' || view === 'demo-area' || view === 'demo-calendar' || view === 'demo-decimal' || view === 'demo-bignum' || view === 'demo-field' || view === 'demo-protractor' || view === 'demo-areamodel' || view === 'demo-parallelogram' || view === 'demo-trialdiv' || view === 'demo-baraxis' || view === 'demo-teatime' || view === 'demo-zerodiv' || view === 'demo-laws' || view === 'demo-placeslider' || view === 'demo-tearangle' || view === 'demo-decadd' || view === 'demo-moveshape' || view === 'demo-average' || view === 'demo-chickenrabbit' || view === 'demo-decmul' || view === 'demo-gridpos' || view === 'demo-decdiv' || view === 'demo-prob' || view === 'demo-polyarea' || view === 'demo-planttree' || view === 'demo-factor' || view === 'demo-cuboid' || view === 'demo-fracadd' || view === 'demo-rotate' || view === 'demo-findbad' || view === 'demo-radar' || view === 'demo-ratio' || view === 'demo-circle' || view === 'demo-percent' || view === 'demo-fan' || view === 'demo-lsquare' || view === 'demo-thermo' || view === 'demo-negmul' || view === 'demo-discount' || view === 'demo-cylinder' || view === 'demo-pigeon' || view === 'demo-numline' || view === 'demo-powerup' || view === 'demo-monomial' || view === 'demo-liketerms' || view === 'demo-meetline' || view === 'demo-lineseg' || view === 'demo-anglepair' || view === 'demo-vertangle' || view === 'demo-parangles' || view === 'demo-roots' || view === 'demo-coordplane' || view === 'demo-ineqline' || view === 'demo-histogram' || view === 'demo-trisides' || view === 'demo-congruent' || view === 'demo-foldmirror' || view === 'demo-algarea' || view === 'demo-algfrac' || view === 'demo-eqsieve' || view === 'demo-radical' || view === 'demo-pythag' || view === 'demo-pargram' || view === 'demo-specialquad' || view === 'demo-datastats' || view === 'demo-quad' || view === 'demo-growth' || view === 'demo-parabola' || view === 'demo-spin' || view === 'demo-circangle' || view === 'demo-tangent' || view === 'demo-sector' || view === 'demo-coin' || view === 'demo-tree' || view === 'demo-hyperbola' || view === 'demo-similar' || view === 'demo-shadow' || view === 'demo-trig' || view === 'demo-slope' || view === 'demo-project' || view === 'demo-twentyfour' || view === 'demo-monty' || view === 'demo-maxarea' || view === 'demo-matches' || view === 'demo-mobius' || view === 'demo-shopweek' || view === 'demo-fairgame' || view === 'demo-makerule' || view === 'demo-thirteen' || view === 'demo-maketen' || view === 'demo-areamul' || view === 'demo-fraceq' || view === 'demo-buildfrac' || view === 'demo-areabuild' || view === 'demo-quadmorph' || view === 'demo-numplay' || view === 'demo-fracnumline';
   setHidden(demosSec, !(view === 'demos' || demoLeaf));
   setHidden(demoPanelsEl, view !== 'demos');
   setHidden(creativePanelsEl, view !== 'demos');
   setHidden(creativeLabelEl, view !== 'demos');
+  setHidden(simPanelsEl, view !== 'demos');
+  setHidden(simLabelEl, view !== 'demos');
   setHidden(demoGridEl, !demoLeaf); // 演示卡片网格只在某一个演示的叶子视图里出现，列表视图只留演示面板
   setHidden(demosSec.querySelector('h2'), demoLeaf);
   setHidden(demosSec.querySelector('.section-sub'), demoLeaf);
@@ -3405,6 +3419,710 @@ labTrayRender();
 labFaRender();
 labWbRender();
 labLineRender();
+
+/* ================= 互动模拟（PhET 式单概念模拟） ================= */
+
+/* ---- 凑十：把 10 装满 ---- */
+const MT_PROBS = [[8, 5], [9, 6], [7, 5], [6, 7], [9, 8]];
+let mtIdx = 0, mtGuess = 2, mtGuessed = false, mtMoved = 0, mtStreak = 0, mtUsed = [];
+let mtTiers = null;
+function mtTarget() { return MT_PROBS[mtIdx]; }
+function mkRender() {
+  const A = mtTarget()[0], B = mtTarget()[1];
+  const box = document.getElementById('mtBox');
+  clearChildren(box);
+  for (let i = 0; i < 10; i++) {
+    const c = document.createElement('button');
+    c.type = 'button';
+    c.className = 'tf-cell' + (i < A ? ' filled' : (i < A + mtMoved ? ' filled b' : ''));
+    c.textContent = i < A + mtMoved ? '●' : '';
+    c.dataset.idx = i;
+    c.addEventListener('click', function () { mtBoxClick(i); });
+    box.appendChild(c);
+  }
+  const out = document.getElementById('mtOutside');
+  clearChildren(out);
+  for (let j = 0; j < B; j++) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'btn small' + (mtUsed[j] ? ' ghost' : ' primary');
+    b.textContent = '●';
+    b.disabled = !!mtUsed[j];
+    b.dataset.j = j;
+    b.addEventListener('click', function () { mtMove(j); });
+    out.appendChild(b);
+  }
+  document.getElementById('mtLeftTx').textContent = '外面还剩 ' + (B - mtMoved) + ' 个';
+  const m = mtMoved;
+  document.getElementById('mkEq').textContent = m === 0 ? A + ' + ' + B + ' = ?' :
+    (A + mtMoved === 10 ? A + ' + ' + B + ' = ' + A + ' + ' + m + ' + ' + (B - m) + ' = 10 + ' + (B - m) + ' = ' + (A + B) :
+      A + ' + ' + B + ' = ' + A + ' + ' + m + ' + ' + (B - m) + '（盒子里 ' + (A + m) + ' 个，还差 ' + (10 - A - m) + ' 个）');
+}
+function mtBoxClick(i) {
+  const A = mtTarget()[0];
+  if (i >= A && i < A + mtMoved) {
+    mtMoved--;
+    const j = mtUsed.indexOf(true);
+    if (j >= 0) mtUsed[j] = false;
+    mkRender();
+    document.getElementById('mkMsg').textContent = '拿回一个，外面又多了 1 个。';
+  } else if (i < A) {
+    document.getElementById('mkMsg').textContent = '这是盒子里原来的 ' + A + ' 个，拿不出来——要拿的是外面蓝色的。';
+  }
+}
+function mtMove(j) {
+  const A = mtTarget()[0], B = mtTarget()[1];
+  if (mtUsed[j]) return;
+  if (A + mtMoved >= 10) {
+    document.getElementById('mkMsg').textContent = '装不下了！盒子只能装 10 个，再放就溢出来了。';
+    return;
+  }
+  mtUsed[j] = true; mtMoved++;
+  mkRender();
+  if (A + mtMoved === 10) {
+    const need = 10 - A;
+    const ok = mtGuessed && mtGuess === need;
+    document.getElementById('mkMsg').textContent = '盒子满了！' + A + ' + ' + B + ' = 10 + ' + (B - need) + ' = ' + (A + B) +
+      (mtGuessed ? (ok ? '你猜要拿 ' + need + ' 个，猜对了！' : '你猜要拿 ' + mtGuess + ' 个，实际拿了 ' + need + ' 个。') : '（先猜要拿几个，再动手，猜得更准。）');
+    if (ok) { mtStreak++; if (mtTiers) mtTiers.done(1); } else mtStreak = 0;
+    if (mtTiers) mtTiers.done(0);
+    if (mtStreak >= 2 && mtTiers) mtTiers.done(2);
+    document.getElementById('mtWhy').hidden = false;
+    markTried('maketen');
+    labTrace('凑十：' + A + '+' + B + ' 拿了 ' + need + ' 个凑满 10', true);
+  }
+}
+function mtNewProblem() {
+  mtIdx = (mtIdx + 1) % MT_PROBS.length;
+  mtMoved = 0; mtUsed = []; mtGuessed = false;
+  mtGuess = 2;
+  document.getElementById('mtGuessLabel').textContent = '2 个';
+  document.getElementById('mtGuessTx').textContent = mtTarget()[0] + '+' + mtTarget()[1] + '，要从第二个数里拿几个给第一个，才能凑成 10？先猜一个数。';
+  document.getElementById('mkMsg').textContent = '先猜要拿几个，再点蓝色的圆点往盒子里送。';
+  mkRender();
+}
+(function () {
+  const g = document.getElementById('mtGuessSet'); if (!g) return;
+  mtTiers = makeTiers(document.getElementById('mtTiers'), ['基础：装满一次', '提高：猜对要拿几个', '挑战：连续两道都猜对']);
+  wireDiscovery('maketen', 'mtFind', 'mtFindSave', 'mtFindSaved');
+  document.getElementById('mtGuessMinus').addEventListener('click', function () { mtGuess = Math.max(0, mtGuess - 1); document.getElementById('mtGuessLabel').textContent = mtGuess + ' 个'; });
+  document.getElementById('mtGuessPlus').addEventListener('click', function () { mtGuess = Math.min(mtTarget()[1], mtGuess + 1); document.getElementById('mtGuessLabel').textContent = mtGuess + ' 个'; });
+  g.addEventListener('click', function () { mtGuessed = true; document.getElementById('mtGuessTx').textContent = '你猜要拿 ' + mtGuess + ' 个。动手吧——点蓝色的圆点往盒子里送。'; });
+  document.getElementById('mtNext').addEventListener('click', function () { mtNewProblem(); });
+  document.getElementById('mtReset').addEventListener('click', function () { mtMoved = 0; mtUsed = []; mkRender(); document.getElementById('mkMsg').textContent = '重新摆。'; });
+  mkRender();
+})();
+
+/* ---- 面积模型乘法 ---- */
+let amA = 8, amB = 15, amA1 = 5, amB1 = 10, amGuess = null, amPartsOn = false, amChal = false, amRevealed = false;
+let amTiers = null;
+function amCell() { return Math.floor(300 / Math.max(amA, amB)); }
+function amDraw() {
+  const svg = document.getElementById('amSvg');
+  const cell = amCell(), W = amA * cell, H = amB * cell;
+  const a2 = amA - amA1, b2 = amB - amB1;
+  let s = '<rect x="20" y="20" width="' + W + '" height="' + H + '" fill="#fff7ed" stroke="#ea580c" stroke-width="2"/>';
+  for (let i = 1; i < amA; i++) s += '<line x1="' + (20 + i * cell) + '" y1="20" x2="' + (20 + i * cell) + '" y2="' + (20 + H) + '" stroke="#fdba74" stroke-width="1"/>';
+  for (let j = 1; j < amB; j++) s += '<line x1="20" y1="' + (20 + j * cell) + '" x2="' + (20 + W) + '" y2="' + (20 + j * cell) + '" stroke="#fdba74" stroke-width="1"/>';
+  if (amPartsOn) {
+    const cols = ['#fde68a', '#bfdbfe', '#bbf7d0', '#fecaca'];
+    const parts = [[0, 0, amA1, amB1], [amA1, 0, a2, amB1], [0, amB1, amA1, b2], [amA1, amB1, a2, b2]];
+    for (let k = 0; k < 4; k++) {
+      const p = parts[k];
+      s += '<rect x="' + (20 + p[0] * cell) + '" y="' + (20 + p[1] * cell) + '" width="' + (p[2] * cell) + '" height="' + (p[3] * cell) + '" fill="' + cols[k] + '" fill-opacity="0.65"/>';
+    }
+    s += '<line x1="' + (20 + amA1 * cell) + '" y1="20" x2="' + (20 + amA1 * cell) + '" y2="' + (20 + H) + '" stroke="#b45309" stroke-width="2"/>';
+    s += '<line x1="20" y1="' + (20 + amB1 * cell) + '" x2="' + (20 + W) + '" y2="' + (20 + amB1 * cell) + '" stroke="#b45309" stroke-width="2"/>';
+    for (let k = 0; k < 4; k++) {
+      const p = parts[k];
+      const cx = 20 + (p[0] + p[2] / 2) * cell, cy = 20 + (p[1] + p[3] / 2) * cell;
+      const pw = [amA1, a2][k % 2], ph = [amB1, b2][Math.floor(k / 2)];
+      s += '<text x="' + cx + '" y="' + cy + '" text-anchor="middle" font-size="13" fill="#7c2d12">' + (pw * ph) + '</text>';
+    }
+  }
+  s += '<text x="20" y="14" font-size="12" fill="#57534e">长 ' + amA + '</text><text x="12" y="' + (20 + H / 2) + '" font-size="12" fill="#57534e" transform="rotate(-90 12 ' + (20 + H / 2) + ')">宽 ' + amB + '</text>';
+  svg.innerHTML = s;
+  document.getElementById('amALabel').textContent = amA;
+  document.getElementById('amBLabel').textContent = amChal ? '?' : amB;
+  document.getElementById('amA1Label').textContent = amA1;
+  document.getElementById('amB1Label').textContent = amB1;
+  if (amChal) {
+    document.getElementById('amProd').textContent = '面积是 ' + (amA * amB) + '，目标是 120。宽是几？';
+  } else if (amRevealed) {
+    document.getElementById('amProd').textContent = amA + ' × ' + amB + ' = ' + (amA * amB);
+  } else {
+    document.getElementById('amProd').textContent = amA + ' × ' + amB + ' = ?';
+  }
+  if (amPartsOn) {
+    const p1 = amA1 * amB1, p2 = a2 * amB1, p3 = amA1 * b2, p4 = a2 * b2;
+    document.getElementById('amPartsOut').textContent = amA + '×' + amB + ' = (' + amA1 + '+' + a2 + ')×(' + amB1 + '+' + b2 + ') = ' + amA1 + '×' + amB1 + ' + ' + a2 + '×' + amB1 + ' + ' + amA1 + '×' + b2 + ' + ' + a2 + '×' + b2 + ' = ' + p1 + '+' + p2 + '+' + p3 + '+' + p4 + ' = ' + (amA * amB);
+  } else {
+    document.getElementById('amPartsOut').textContent = '';
+  }
+}
+function amSetA(v) { amA = Math.max(2, Math.min(12, v)); amA1 = Math.max(1, Math.min(amA - 1, amA1)); amRevealed = false; amDraw(); }
+function amSetB(v) {
+  amB = Math.max(2, Math.min(15, v)); amB1 = Math.max(1, Math.min(amB - 1, amB1)); amRevealed = false; amDraw();
+  if (amChal && amA * amB === 120) {
+    document.getElementById('amuMsg').textContent = '找到了！宽是 15。8×15=120，面积正好 120。';
+    if (amTiers) amTiers.done(2);
+    document.getElementById('amWhy').hidden = false;
+    markTried('areamul');
+    labTrace('面积模型：反过来找到了宽 15', true);
+  }
+}
+function amCalc() {
+  const prod = amA * amB;
+  amRevealed = true;
+  document.getElementById('amProd').textContent = amA + ' × ' + amB + ' = ' + prod;
+  if (amGuess !== null) {
+    document.getElementById('amuMsg').textContent = amGuess === prod ? '你猜 ' + amGuess + '，猜对了！长方形里的方块数就是积。' : '你猜 ' + amGuess + '，实际是 ' + prod + '——' + (amGuess < prod ? '少猜了 ' + (prod - amGuess) : '多猜了 ' + (amGuess - prod)) + '。数一数长方形里的方块，就知道了。';
+  } else {
+    document.getElementById('amuMsg').textContent = '一共 ' + prod + ' 个小方块。下次先猜一个再数。';
+  }
+  if (amTiers) amTiers.done(0);
+  markTried('areamul');
+  labTrace('面积模型：' + amA + '×' + amB + ' = ' + prod, true);
+}
+(function () {
+  const g = document.getElementById('amGuessSet'); if (!g) return;
+  amTiers = makeTiers(document.getElementById('amTiers'), ['基础：数出一个积', '提高：看懂分步乘积', '挑战：反过来找到宽']);
+  wireDiscovery('areamul', 'amFind', 'amFindSave', 'amFindSaved');
+  g.addEventListener('click', function () {
+    const v = parseInt(document.getElementById('amGuess').value, 10);
+    if (isNaN(v)) { document.getElementById('amGuessTx').textContent = '先写个数字再猜。'; return; }
+    amGuess = v;
+    document.getElementById('amGuessTx').textContent = '你猜积是 ' + v + '。调一调长方形，再点“数一数”。';
+  });
+  document.getElementById('amAMinus').addEventListener('click', function () { amSetA(amA - 1); });
+  document.getElementById('amAPlus').addEventListener('click', function () { amSetA(amA + 1); });
+  document.getElementById('amBMinus').addEventListener('click', function () { amSetB(amB - 1); });
+  document.getElementById('amBPlus').addEventListener('click', function () { amSetB(amB + 1); });
+  document.getElementById('amA1Minus').addEventListener('click', function () { amA1 = Math.max(1, amA1 - 1); amDraw(); });
+  document.getElementById('amA1Plus').addEventListener('click', function () { amA1 = Math.min(amA - 1, amA1 + 1); amDraw(); });
+  document.getElementById('amB1Minus').addEventListener('click', function () { amB1 = Math.max(1, amB1 - 1); amDraw(); });
+  document.getElementById('amB1Plus').addEventListener('click', function () { amB1 = Math.min(amB - 1, amB1 + 1); amDraw(); });
+  document.getElementById('amParts').addEventListener('click', function () {
+    amPartsOn = !amPartsOn; amDraw();
+    if (amPartsOn) {
+      if (amTiers) amTiers.done(1);
+      document.getElementById('amWhy').hidden = false;
+      document.getElementById('amuMsg').textContent = '四块加起来就是总数：分着算，加起来，和直接数是一样的。';
+    }
+  });
+  document.getElementById('amCalc').addEventListener('click', function () { if (!amChal) amCalc(); });
+  document.getElementById('amChallenge').addEventListener('click', function () {
+    amChal = !amChal;
+    if (amChal) {
+      amA = 8; amB = 10; amA1 = 5; amB1 = 5; amPartsOn = false;
+      document.getElementById('amProd').textContent = '面积是 80，目标是 120。宽是几？';
+      document.getElementById('amuMsg').textContent = '宽藏起来了（显示“?”）。调宽的按钮，看面积变到 120 时宽是几。';
+    } else {
+      amB = 15; amRevealed = false;
+      document.getElementById('amProd').textContent = '8 × 15 = ?';
+      document.getElementById('amuMsg').textContent = '回到自由玩。';
+    }
+    amDraw();
+  });
+  amDraw();
+})();
+
+/* ---- 分数相等 ---- */
+const FE_TASKS = [{ n: 1, d: 2, need: 4 }, { n: 2, d: 3, need: 6 }, { n: 3, d: 4, need: 12 }];
+let feIdx = 0, feN = 1, feD = 2, feGuess = 2, feGuessed = false, feFound = [];
+let feTiers = null;
+function feTask() { return FE_TASKS[feIdx]; }
+function feFracDiff(n1, d1, n2, d2) {
+  const num = Math.abs(n1 * d2 - n2 * d1), den = d1 * d2, g = gcd(num, den) || 1;
+  return { text: (num / g) + '/' + (den / g), more: n1 * d2 > n2 * d1 };
+}
+function feDraw() {
+  const t = feTask();
+  document.getElementById('feNLabel').textContent = feN;
+  document.getElementById('feDLabel').textContent = feD;
+  document.getElementById('feText').textContent = feN + '/' + feD;
+  document.getElementById('feTarget').textContent = '目标：' + t.n + '/' + t.d + '（切成 ' + t.need + ' 份来找）';
+  document.getElementById('feGuessTx').textContent = '目标是 ' + t.n + '/' + t.d + '。把它切成 ' + t.need + ' 份，分子要变成几，阴影才一样多？先猜。';
+  document.getElementById('feGuessLabel').textContent = feGuess;
+  let s = '<circle cx="100" cy="100" r="88" fill="#fff" stroke="#78716c" stroke-width="2"/>';
+  for (let i = 0; i < feN; i++) s += '<path d="' + sector(100, 100, 88, -90 + i * 360 / feD, -90 + (i + 1) * 360 / feD) + '" fill="#f97316"/>';
+  for (let i = 1; i < feD; i++) { const a = -90 + i * 360 / feD, p = polar(100, 100, 88, a); s += '<line x1="100" y1="100" x2="' + p[0].toFixed(1) + '" y2="' + p[1].toFixed(1) + '" stroke="#78716c" stroke-width="1"/>'; }
+  document.getElementById('fePie').innerHTML = s;
+  let b = '';
+  const rows = [[t.n, t.d, 8, '目标'], [feN, feD, 36, '我的']];
+  rows.forEach(function (r) {
+    b += '<text x="4" y="' + (r[2] + 14) + '" font-size="12" fill="#57534e">' + r[3] + '</text>';
+    for (let i = 0; i < r[1]; i++) {
+      b += '<rect x="' + (44 + i * 260 / r[1]) + '" y="' + r[2] + '" width="' + (260 / r[1]) + '" height="20" fill="' + (i < r[0] ? '#f97316' : '#fff') + '" stroke="#78716c" stroke-width="1"/>';
+    }
+  });
+  document.getElementById('feBar').innerHTML = b;
+  let l = '<line x1="20" y1="40" x2="300" y2="40" stroke="#78716c" stroke-width="2"/>';
+  for (let i = 0; i <= 4; i++) { const x = 20 + i * 70; l += '<line x1="' + x + '" y1="34" x2="' + x + '" y2="46" stroke="#78716c" stroke-width="1"/><text x="' + x + '" y="60" font-size="11" text-anchor="middle" fill="#57534e">' + (i / 4) + '</text>'; }
+  const tx = 20 + (t.n / t.d) * 280, mx = 20 + (feN / feD) * 280;
+  l += '<line x1="' + tx + '" y1="28" x2="' + tx + '" y2="52" stroke="#16a34a" stroke-width="2" stroke-dasharray="4 2"/>';
+  l += '<circle cx="' + mx + '" cy="40" r="6" fill="#f97316" stroke="#7c2d12" stroke-width="1"/>';
+  document.getElementById('feLine').innerHTML = l;
+}
+function feCompare() {
+  const t = feTask();
+  const equal = feN * t.d === t.n * feD;
+  const key = feN + '/' + feD;
+  if (equal && feD === t.need) {
+    const ok = feGuessed && feGuess === feN;
+    document.getElementById('feMsg').textContent = '一样大！' + t.n + '/' + t.d + ' = ' + feN + '/' + feD + '。' + (feGuessed ? (ok ? '你猜分子是 ' + feN + '，猜对了！' : '你猜分子是 ' + feGuess + '，实际是 ' + feN + '。') : '');
+    if (feFound.indexOf(key) < 0) feFound.push(key);
+    document.getElementById('feFound').textContent = '已经找到的相等分数：' + feFound.join('、');
+    if (feTiers) feTiers.done(0);
+    if (ok && feTiers) feTiers.done(1);
+    if (feFound.length >= 3 && feTiers) feTiers.done(2);
+    document.getElementById('feWhy').hidden = false;
+    markTried('fraceq');
+    labTrace('分数相等：找到了 ' + t.n + '/' + t.d + ' = ' + key, true);
+  } else if (equal) {
+    document.getElementById('feMsg').textContent = '量是一样大（' + feN + '/' + feD + ' = ' + t.n + '/' + t.d + '），但分母不是 ' + t.need + '——题目要的是切成 ' + t.need + ' 份的那个。';
+  } else {
+    const diff = feFracDiff(feN, feD, t.n, t.d);
+    document.getElementById('feMsg').textContent = '阴影不一样多：你的 ' + feN + '/' + feD + ' 比目标 ' + t.n + '/' + t.d + (diff.more ? ' 多了 ' : ' 少了 ') + diff.text + '——只改分母，大小就变了。看上面的两条长条，阴影的长度不一样。';
+  }
+}
+function feNextTask() {
+  feIdx = (feIdx + 1) % FE_TASKS.length;
+  const t = feTask();
+  feN = t.n; feD = t.d; feGuessed = false; feGuess = Math.floor(t.need / 2);
+  document.getElementById('feMsg').textContent = '新目标：' + t.n + '/' + t.d + '，切成 ' + t.need + ' 份来找。';
+  feDraw();
+}
+(function () {
+  const g = document.getElementById('feGuessSet'); if (!g) return;
+  feTiers = makeTiers(document.getElementById('feTiers'), ['基础：找到一个相等分数', '提高：猜对分子', '挑战：三个目标都找到']);
+  wireDiscovery('fraceq', 'feFind', 'feFindSave', 'feFindSaved');
+  document.getElementById('feGuessMinus').addEventListener('click', function () { feGuess = Math.max(0, feGuess - 1); feDraw(); });
+  document.getElementById('feGuessPlus').addEventListener('click', function () { feGuess = Math.min(feTask().need, feGuess + 1); feDraw(); });
+  g.addEventListener('click', function () { feGuessed = true; document.getElementById('feGuessTx').textContent = '你猜切成 ' + feTask().need + ' 份时，分子是 ' + feGuess + '。动手调一调，再点“比一比”。'; });
+  document.getElementById('feNMinus').addEventListener('click', function () { feN = Math.max(0, feN - 1); feDraw(); });
+  document.getElementById('feNPlus').addEventListener('click', function () { feN = Math.min(feD, feN + 1); feDraw(); });
+  document.getElementById('feDMinus').addEventListener('click', function () { feD = Math.max(2, feD - 1); feN = Math.min(feN, feD); feDraw(); });
+  document.getElementById('feDPlus').addEventListener('click', function () { feD = Math.min(12, feD + 1); feDraw(); });
+  document.getElementById('feCompare').addEventListener('click', function () { feCompare(); });
+  document.getElementById('feNext').addEventListener('click', function () { feNextTask(); });
+  feDraw();
+})();
+
+/* ---- 造分数 ---- */
+const BF_TASKS = [{ n: 3, d: 4, need: 4 }, { n: 5, d: 6, need: 12 }, { n: 2, d: 3, need: 9 }];
+let bfIdx = 0, bfD = 4, bfShaded = [], bfGuess = 2, bfGuessed = false, bfDoneIdx = [];
+let bfTiers = null;
+function bfTask() { return BF_TASKS[bfIdx]; }
+function bfRender() {
+  const t = bfTask();
+  document.getElementById('bfDLabel').textContent = bfD;
+  document.getElementById('bfTargetTx').textContent = t.n + '/' + t.d + '（切成 ' + t.need + ' 份来造）';
+  document.getElementById('bfGuessTx').textContent = '目标 ' + t.n + '/' + t.d + '。切成 ' + t.need + ' 份的话，要涂几份？先猜。';
+  document.getElementById('bfGuessLabel').textContent = bfGuess + ' 份';
+  let tb = '';
+  for (let i = 0; i < t.d; i++) tb += '<rect x="' + (10 + i * 300 / t.d) + '" y="10" width="' + (300 / t.d) + '" height="26" fill="' + (i < t.n ? '#16a34a' : '#fff') + '" stroke="#78716c" stroke-width="1"/>';
+  tb += '<text x="10" y="48" font-size="12" fill="#57534e">目标 ' + t.n + '/' + t.d + '</text>';
+  document.getElementById('bfTargetBar').innerHTML = tb;
+  const box = document.getElementById('bfPieces');
+  clearChildren(box);
+  for (let i = 0; i < bfD; i++) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'bf-piece' + (bfShaded[i] ? ' filled' : '');
+    b.textContent = bfShaded[i] ? '■' : '□';
+    b.dataset.i = i;
+    b.addEventListener('click', function () { bfShaded[i] = !bfShaded[i]; bfRender(); });
+    box.appendChild(b);
+  }
+  const n = bfShaded.filter(Boolean).length;
+  document.getElementById('bfBuiltTx').textContent = '你涂了：' + n + '/' + bfD;
+}
+function bfCheck() {
+  const t = bfTask();
+  const n = bfShaded.filter(Boolean).length;
+  const equal = n * t.d === t.n * bfD;
+  if (equal && bfD === t.need) {
+    const ok = bfGuessed && bfGuess === n;
+    document.getElementById('bfMsg').textContent = '造对了！' + n + '/' + bfD + ' = ' + t.n + '/' + t.d + '。' + (bfGuessed ? (ok ? '你猜要涂 ' + n + ' 份，猜对了！' : '你猜要涂 ' + bfGuess + ' 份，实际是 ' + n + ' 份。') : '');
+    if (bfDoneIdx.indexOf(bfIdx) < 0) bfDoneIdx.push(bfIdx);
+    if (bfTiers) bfTiers.done(0);
+    if (ok && bfTiers) bfTiers.done(1);
+    if (bfDoneIdx.length >= 3 && bfTiers) bfTiers.done(2);
+    document.getElementById('bfWhy').hidden = false;
+    markTried('buildfrac');
+    labTrace('造分数：造出了 ' + t.n + '/' + t.d + ' = ' + n + '/' + bfD, true);
+  } else if (equal) {
+    document.getElementById('bfMsg').textContent = '量对了（' + n + '/' + bfD + ' = ' + t.n + '/' + t.d + '），但不是切成 ' + t.need + ' 份的那个——题目要 ' + t.need + ' 份。';
+  } else {
+    const diff = feFracDiff(n, bfD, t.n, t.d);
+    document.getElementById('bfMsg').textContent = '还不对：你涂了 ' + n + '/' + bfD + '，目标是 ' + t.n + '/' + t.d + '——阴影' + (diff.more ? '多了 ' : '少了 ') + diff.text + '。看上面的目标条，再调一调。';
+  }
+}
+function bfNextTask() {
+  bfIdx = (bfIdx + 1) % BF_TASKS.length;
+  const t = bfTask();
+  bfD = t.d; bfShaded = []; bfGuessed = false; bfGuess = Math.floor(t.need / 2);
+  document.getElementById('bfMsg').textContent = '新目标：' + t.n + '/' + t.d + '，切成 ' + t.need + ' 份来造。';
+  bfRender();
+}
+(function () {
+  const g = document.getElementById('bfGuessSet'); if (!g) return;
+  bfTiers = makeTiers(document.getElementById('bfTiers'), ['基础：造出一个目标分数', '提高：猜对要涂几份', '挑战：三个目标都造出来']);
+  wireDiscovery('buildfrac', 'bfFind', 'bfFindSave', 'bfFindSaved');
+  document.getElementById('bfGuessMinus').addEventListener('click', function () { bfGuess = Math.max(0, bfGuess - 1); bfRender(); });
+  document.getElementById('bfGuessPlus').addEventListener('click', function () { bfGuess = Math.min(bfTask().need, bfGuess + 1); bfRender(); });
+  g.addEventListener('click', function () { bfGuessed = true; document.getElementById('bfGuessTx').textContent = '你猜切成 ' + bfTask().need + ' 份时，要涂 ' + bfGuess + ' 份。动手涂一涂，再点“检查”。'; });
+  document.getElementById('bfDMinus').addEventListener('click', function () { bfD = Math.max(2, bfD - 1); bfShaded = []; bfRender(); });
+  document.getElementById('bfDPlus').addEventListener('click', function () { bfD = Math.min(12, bfD + 1); bfShaded = []; bfRender(); });
+  document.getElementById('bfCheck').addEventListener('click', function () { bfCheck(); });
+  document.getElementById('bfNext').addEventListener('click', function () { bfNextTask(); });
+  bfRender();
+})();
+
+
+/* ---- 面积建造者 ---- */
+const AB_TASKS = [{ area: 12, per: 14 }, { area: 12, per: 16 }, { area: 12, per: 18 }];
+let abIdx = 0, abCells = [], abPred = null, abDoneIdx = [];
+let abTiers = null;
+function abRead() {
+  const n = abCells.filter(Boolean).length;
+  let shared = 0;
+  for (let r = 0; r < 6; r++) for (let c = 0; c < 6; c++) {
+    if (!abCells[r * 6 + c]) continue;
+    if (c < 5 && abCells[r * 6 + c + 1]) shared++;
+    if (r < 5 && abCells[(r + 1) * 6 + c]) shared++;
+  }
+  return { n: n, per: 4 * n - 2 * shared };
+}
+function abRender() {
+  const box = document.getElementById('abGrid');
+  clearChildren(box);
+  for (let i = 0; i < 36; i++) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'ab-cell' + (abCells[i] ? ' filled' : '');
+    b.textContent = abCells[i] ? '■' : '';
+    b.dataset.i = i;
+    b.addEventListener('click', function () { abCells[i] = !abCells[i]; abRender(); });
+    box.appendChild(b);
+  }
+  const r = abRead();
+  document.getElementById('abRead').textContent = '面积 ' + r.n + ' · 周长 ' + r.per;
+  const t = AB_TASKS[abIdx];
+  document.getElementById('abTaskTx').textContent = '造一个面积 ' + t.area + '、周长 ' + t.per + ' 的图形';
+}
+function abCheck() {
+  const t = AB_TASKS[abIdx];
+  const r = abRead();
+  if (r.n === t.area && r.per === t.per) {
+    document.getElementById('abMsg').textContent = '造出来了！面积 ' + r.n + '，周长 ' + r.per + '。';
+    if (abDoneIdx.indexOf(abIdx) < 0) abDoneIdx.push(abIdx);
+    if (abTiers) abTiers.done(0);
+    if (abDoneIdx.indexOf(0) >= 0 && abDoneIdx.indexOf(1) >= 0 && abTiers) {
+      abTiers.done(1);
+      document.getElementById('abPredTx').textContent = abPred === 'no' ? '你猜“不一定”，猜对了——面积都是 12，周长可以是 14 也可以是 16。' : '你猜“一定是 14”，猜错了——面积都是 12，周长可以是 14 也可以是 16。同样 12 格，排得越散周长越大。';
+      document.getElementById('abWhy').hidden = false;
+    }
+    if (abDoneIdx.length >= 3 && abTiers) abTiers.done(2);
+    markTried('areabuild');
+    labTrace('面积建造者：造出了面积 12、周长 ' + t.per, true);
+  } else if (r.n === t.area) {
+    document.getElementById('abMsg').textContent = '面积对了（' + r.n + '），周长是 ' + r.per + ' 不是 ' + t.per + '——这个图形太' + (r.per > t.per ? '散' : '紧凑') + '了，' + (r.per > t.per ? '排紧凑一点（长方形最紧凑）' : '拉长一点、排松一点') + '。';
+  } else {
+    document.getElementById('abMsg').textContent = '面积是 ' + r.n + '，不是 ' + t.area + '——再' + (r.n < t.area ? '加' : '减') + '几个格子。';
+  }
+}
+function abSetCells(list) { abCells = []; for (let i = 0; i < 36; i++) abCells.push(false); list.forEach(function (i) { abCells[i] = true; }); abRender(); }
+(function () {
+  const g = document.getElementById('abCheck'); if (!g) return;
+  abTiers = makeTiers(document.getElementById('abTiers'), ['基础：造出一个面积 12 的图形', '提高：同样面积造出两种周长', '挑战：面积 12、周长 18 也造出来']);
+  wireDiscovery('areabuild', 'abFind', 'abFindSave', 'abFindSaved');
+  document.getElementById('abPredYes').addEventListener('click', function () { abPred = 'yes'; document.getElementById('abPredTx').textContent = '你猜“一定是 14”。动手造一造，看能不能造出周长不是 14 的。'; });
+  document.getElementById('abPredNo').addEventListener('click', function () { abPred = 'no'; document.getElementById('abPredTx').textContent = '你猜“不一定”。动手造一造：面积 12 的图形，周长能不能不是 14？'; });
+  g.addEventListener('click', function () { abCheck(); });
+  document.getElementById('abClear').addEventListener('click', function () { abCells = []; abRender(); document.getElementById('abMsg').textContent = '清空了，重新造。'; });
+  document.getElementById('abNext').addEventListener('click', function () { abIdx = (abIdx + 1) % AB_TASKS.length; abCells = []; abRender(); document.getElementById('abMsg').textContent = '新任务：面积 12，周长 ' + AB_TASKS[abIdx].per + '。'; });
+  abRender();
+})();
+
+/* ---- 四边形变形 ---- */
+const QM_TYPES = ['长方形', '平行四边形', '菱形', '正方形', '梯形'];
+const QM_SHAPES = {
+  '长方形': [[40, 60], [160, 60], [160, 140], [40, 140]],
+  '平行四边形': [[60, 60], [160, 60], [140, 140], [40, 140]],
+  '菱形': [[100, 40], [170, 100], [100, 160], [30, 100]],
+  '正方形': [[60, 60], [140, 60], [140, 140], [60, 140]],
+  '梯形': [[40, 140], [160, 140], [130, 60], [70, 60]]
+};
+let qmType = '长方形', qmPts = QM_SHAPES['长方形'].map(function (p) { return [p[0], p[1]]; });
+let qmSel = 0, qmPred = null, qmPredChecked = false, qmDrag = -1, qmMoved = false;
+let qmTiers = null;
+function qmVec(a, b) { return [b[0] - a[0], b[1] - a[1]]; }
+function qmLen(v) { return Math.sqrt(v[0] * v[0] + v[1] * v[1]); }
+function qmParallel(u, v) { return Math.abs(u[0] * v[1] - u[1] * v[0]) / (qmLen(u) * qmLen(v) || 1) < 0.08; }
+function qmRight(a, b, c) {
+  const u = qmVec(b, a), v = qmVec(b, c);
+  return Math.abs(u[0] * v[0] + u[1] * v[1]) / (qmLen(u) * qmLen(v) || 1) < 0.07;
+}
+function qmEq(x, y) { return Math.abs(x - y) < 3; }
+function qmSides() {
+  const P = qmPts;
+  return [qmLen(qmVec(P[0], P[1])), qmLen(qmVec(P[1], P[2])), qmLen(qmVec(P[2], P[3])), qmLen(qmVec(P[3], P[0]))];
+}
+function qmPars() {
+  const P = qmPts;
+  return [qmParallel(qmVec(P[0], P[1]), qmVec(P[3], P[2])), qmParallel(qmVec(P[1], P[2]), qmVec(P[0], P[3]))];
+}
+function qmAllRight() {
+  const P = qmPts;
+  return qmRight(P[3], P[0], P[1]) && qmRight(P[0], P[1], P[2]) && qmRight(P[1], P[2], P[3]) && qmRight(P[2], P[3], P[0]);
+}
+function qmClassify() {
+  const s = qmSides(), par = qmPars();
+  const allRight = qmAllRight();
+  const allEq = qmEq(s[0], s[1]) && qmEq(s[1], s[2]) && qmEq(s[2], s[3]);
+  const oppEq = qmEq(s[0], s[2]) && qmEq(s[1], s[3]);
+  if (allEq && allRight) return '正方形';
+  if (allRight && oppEq) return '长方形';
+  if (allEq && par[0] && par[1]) return '菱形';
+  if (par[0] && par[1]) return '平行四边形';
+  if (par[0] !== par[1]) return '梯形';
+  return '一般四边形';
+}
+function qmPropsFor(type) {
+  const s = qmSides(), par = qmPars();
+  const allRight = qmAllRight();
+  const allEq = qmEq(s[0], s[1]) && qmEq(s[1], s[2]) && qmEq(s[2], s[3]);
+  const oppEq = qmEq(s[0], s[2]) && qmEq(s[1], s[3]);
+  if (type === '长方形') return [['四个角都是直角', allRight], ['对边相等', oppEq]];
+  if (type === '平行四边形') return [['两组对边分别平行', par[0] && par[1]], ['对边相等', oppEq]];
+  if (type === '菱形') return [['四条边都相等', allEq], ['对边平行', par[0] && par[1]]];
+  if (type === '正方形') return [['四条边都相等', allEq], ['四个角都是直角', allRight]];
+  return [['一组对边平行', par[0] || par[1]], ['另一组对边不平行', !(par[0] && par[1])]];
+}
+function qmRender() {
+  const svg = document.getElementById('qmSvg');
+  const P = qmPts;
+  const pts = P.map(function (p) { return p[0] + ',' + p[1]; }).join(' ');
+  let s = '<polygon points="' + pts + '" fill="#fff7ed" stroke="#ea580c" stroke-width="2"/>';
+  const names = ['A', 'B', 'C', 'D'];
+  for (let i = 0; i < 4; i++) {
+    s += '<circle cx="' + P[i][0] + '" cy="' + P[i][1] + '" r="9" fill="' + (i === qmSel ? '#ea580c' : '#fff') + '" stroke="#7c2d12" stroke-width="2" data-qmv="' + i + '"/>';
+    s += '<text x="' + (P[i][0] + 12) + '" y="' + (P[i][1] - 10) + '" font-size="13" fill="#57534e">' + names[i] + '</text>';
+  }
+  svg.innerHTML = s;
+  const now = qmClassify();
+  document.getElementById('qmNow').textContent = '目标：' + qmType + '；现在是：' + now;
+  const props = qmPropsFor(qmType);
+  document.getElementById('qmProps').textContent = qmType + '的规矩：' + props.map(function (p) { return (p[1] ? '✓ ' : '✗ ') + p[0]; }).join('；');
+  const seg = document.getElementById('qmTypeSeg');
+  clearChildren(seg);
+  QM_TYPES.forEach(function (t) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'btn small' + (t === qmType ? ' primary' : ' ghost');
+    b.textContent = t;
+    b.addEventListener('click', function () { qmSetType(t); });
+    seg.appendChild(b);
+  });
+}
+function qmAfterMove() {
+  qmMoved = true;
+  const now = qmClassify();
+  let said = false;
+  if (qmType === '长方形' && !qmPredChecked && now !== '长方形') {
+    qmPredChecked = true;
+    document.getElementById('qmMsg').textContent = qmPred === 'no' ? '你猜“不是了”，猜对了——拖完这个角不是直角了，所以它不再是长方形。' : qmPred === 'yes' ? '你猜“还是长方形”，猜错了——拖完这个角不是直角了，所以它不再是长方形。' : '拖完这个角不是直角了，所以它不再是长方形。先猜一个再拖，下次能猜对吗？';
+    if (qmTiers) qmTiers.done(0);
+    document.getElementById('qmWhy').hidden = false;
+    said = true;
+  }
+  if (now === '正方形' && qmTiers) { qmTiers.done(1); if (!said) { document.getElementById('qmMsg').textContent = '是正方形了！四条边相等，四个角都是直角。'; said = true; } }
+  if (now === '梯形' && qmTiers) { qmTiers.done(2); if (!said) document.getElementById('qmMsg').textContent = '是梯形了！只有一组对边平行。'; }
+  markTried('quadmorph');
+  qmRender();
+}
+function qmNudge(dx, dy) {
+  const p = qmPts[qmSel];
+  p[0] = Math.max(10, Math.min(190, Math.round((p[0] + dx) / 10) * 10));
+  p[1] = Math.max(10, Math.min(190, Math.round((p[1] + dy) / 10) * 10));
+  qmAfterMove();
+}
+function qmSetType(t) {
+  qmType = t;
+  qmPts = QM_SHAPES[t].map(function (p) { return [p[0], p[1]]; });
+  qmPredChecked = false; qmMoved = false;
+  document.getElementById('qmMsg').textContent = '目标换成' + t + '了。拖顶点，看看什么时候是' + t + '、什么时候不是。';
+  qmRender();
+}
+(function () {
+  const g = document.getElementById('qmPredYes'); if (!g) return;
+  qmTiers = makeTiers(document.getElementById('qmTiers'), ['基础：把长方形拖成不是长方形', '提高：拼出一个正方形', '挑战：拼出一个梯形']);
+  wireDiscovery('quadmorph', 'qmFind', 'qmFindSave', 'qmFindSaved');
+  g.addEventListener('click', function () { qmPred = 'yes'; document.getElementById('qmPredTx').textContent = '你猜“还是长方形”。动手拖一个顶点验证。'; });
+  document.getElementById('qmPredNo').addEventListener('click', function () { qmPred = 'no'; document.getElementById('qmPredTx').textContent = '你猜“不是了”。动手拖一个顶点验证。'; });
+  document.getElementById('qmV0').addEventListener('click', function () { qmSel = 0; qmRender(); });
+  document.getElementById('qmV1').addEventListener('click', function () { qmSel = 1; qmRender(); });
+  document.getElementById('qmV2').addEventListener('click', function () { qmSel = 2; qmRender(); });
+  document.getElementById('qmV3').addEventListener('click', function () { qmSel = 3; qmRender(); });
+  document.getElementById('qmLeft').addEventListener('click', function () { qmNudge(-10, 0); });
+  document.getElementById('qmRight').addEventListener('click', function () { qmNudge(10, 0); });
+  document.getElementById('qmUp').addEventListener('click', function () { qmNudge(0, -10); });
+  document.getElementById('qmDown').addEventListener('click', function () { qmNudge(0, 10); });
+  const svg = document.getElementById('qmSvg');
+  svg.addEventListener('pointerdown', function (e) {
+    const v = e.target && e.target.dataset ? e.target.dataset.qmv : null;
+    if (v === undefined || v === null) return;
+    qmDrag = parseInt(v, 10); qmSel = qmDrag;
+    if (svg.setPointerCapture && e.pointerId !== undefined) { try { svg.setPointerCapture(e.pointerId); } catch (err) {} }
+  });
+  svg.addEventListener('pointermove', function (e) {
+    if (qmDrag < 0) return;
+    const rect = svg.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width * 200;
+    const y = (e.clientY - rect.top) / rect.height * 200;
+    qmPts[qmDrag][0] = Math.max(10, Math.min(190, Math.round(x / 10) * 10));
+    qmPts[qmDrag][1] = Math.max(10, Math.min(190, Math.round(y / 10) * 10));
+    qmRender();
+  });
+  svg.addEventListener('pointerup', function () { if (qmDrag >= 0) { qmDrag = -1; qmAfterMove(); } });
+  qmRender();
+})();
+
+/* ---- 数一数：一个数，五种样子 ---- */
+const NP_WORDS = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二', '十三', '十四', '十五', '十六', '十七', '十八', '十九', '二十'];
+let npN = 7, npGuess = 7, npGuessed = false, npCovered = true;
+let npTiers = null;
+function npRender() {
+  document.getElementById('npNum').textContent = npCovered ? '？' : '' + npN;
+  document.getElementById('npWords').textContent = npCovered ? '？' : NP_WORDS[npN];
+  let dots = '';
+  for (let i = 0; i < npN; i++) dots += '●';
+  document.getElementById('npDots').textContent = dots || '（0 个）';
+  [['npFrameA', 0], ['npFrameB', 10]].forEach(function (f) {
+    const box = document.getElementById(f[0]);
+    clearChildren(box);
+    for (let i = 0; i < 10; i++) {
+      const c = document.createElement('span');
+      c.className = 'tf-cell' + (npN > f[1] + i ? ' filled' : '');
+      c.textContent = npN > f[1] + i ? '●' : '';
+      box.appendChild(c);
+    }
+  });
+  let l = '<line x1="10" y1="40" x2="310" y2="40" stroke="#78716c" stroke-width="2"/>';
+  for (let i = 0; i <= 20; i += 5) { const x = 10 + i * 15; l += '<line x1="' + x + '" y1="34" x2="' + x + '" y2="46" stroke="#78716c" stroke-width="1"/><text x="' + x + '" y="60" font-size="11" text-anchor="middle" fill="#57534e">' + i + '</text>'; }
+  const mx = 10 + npN * 15;
+  l += '<circle cx="' + mx + '" cy="40" r="7" fill="#f97316" stroke="#7c2d12" stroke-width="1"/>';
+  document.getElementById('npLine').innerHTML = l;
+  if (npN === 20 && !npCovered && npTiers) npTiers.done(2);
+}
+function npSetN(n, cover) {
+  npN = Math.max(0, Math.min(20, n));
+  npCovered = !!cover;
+  npGuessed = false;
+  npRender();
+  document.getElementById('npMsg').textContent = npCovered ? '只看圆点、十格阵和数轴，猜猜是几？' : '五种样子都在这儿了。';
+}
+function npReveal() {
+  if (!npCovered) return;
+  npCovered = false;
+  npRender();
+  const ok = npGuessed && npGuess === npN;
+  document.getElementById('npMsg').textContent = '是 ' + npN + '（' + NP_WORDS[npN] + '）。' + (npGuessed ? (ok ? '你猜 ' + npGuess + '，猜对了！' : '你猜 ' + npGuess + '，猜错了——数一数圆点，一共 ' + npN + ' 个。') : '（下次先猜一个再揭开。）');
+  if (npTiers) npTiers.done(0);
+  if (ok && npTiers) npTiers.done(1);
+  document.getElementById('npWhy').hidden = false;
+  markTried('numplay');
+  labTrace('数一数：' + npN + ' 的五种样子', true);
+}
+(function () {
+  const g = document.getElementById('npGuessSet'); if (!g) return;
+  npTiers = makeTiers(document.getElementById('npTiers'), ['基础：揭开一个数', '提高：只看圆点就猜对', '挑战：造出 20 的五种样子']);
+  wireDiscovery('numplay', 'npFind', 'npFindSave', 'npFindSaved');
+  document.getElementById('npGuessMinus').addEventListener('click', function () { npGuess = Math.max(0, npGuess - 1); document.getElementById('npGuessLabel').textContent = npGuess; });
+  document.getElementById('npGuessPlus').addEventListener('click', function () { npGuess = Math.min(20, npGuess + 1); document.getElementById('npGuessLabel').textContent = npGuess; });
+  g.addEventListener('click', function () { npGuessed = true; document.getElementById('npGuessTx').textContent = '你猜是 ' + npGuess + '。点“揭开”看看。'; });
+  document.getElementById('npReveal').addEventListener('click', function () { npReveal(); });
+  document.getElementById('npNew').addEventListener('click', function () { npSetN(5 + Math.floor(Math.random() * 16), true); });
+  document.getElementById('npMinus').addEventListener('click', function () { npSetN(npN - 1, false); });
+  document.getElementById('npPlus').addEventListener('click', function () { npSetN(npN + 1, false); });
+  npRender();
+})();
+
+/* ---- 分数变数线 ---- */
+const FNL_TARGETS = [{ n: 1, d: 2 }, { n: 3, d: 4 }, { n: 5, d: 4 }, { n: 2, d: 3 }];
+let fnlIdx = 0, fnlGuess = 0.5, fnlShown = false, fnlDoneIdx = [];
+let fnlTiers = null;
+function fnlTarget() { return FNL_TARGETS[fnlIdx]; }
+function fnlTrue() { const t = fnlTarget(); return t.n / t.d; }
+function fnlRender() {
+  const t = fnlTarget();
+  document.getElementById('fnlGuessTx').textContent = '目标是 ' + t.n + '/' + t.d + '。它会落在数轴上的哪里？先在数轴上点一下（或拖滑杆），再点“展开”。';
+  document.getElementById('fnlGuessLabel').textContent = fnlGuess.toFixed(2);
+  let s = '<circle cx="100" cy="100" r="88" fill="#fff" stroke="#78716c" stroke-width="2"/>';
+  const shaded = Math.min(t.n, t.d);
+  for (let i = 0; i < shaded; i++) s += '<path d="' + sector(100, 100, 88, -90 + i * 360 / t.d, -90 + (i + 1) * 360 / t.d) + '" fill="#f97316"/>';
+  for (let i = 1; i < t.d; i++) { const a = -90 + i * 360 / t.d, p = polar(100, 100, 88, a); s += '<line x1="100" y1="100" x2="' + p[0].toFixed(1) + '" y2="' + p[1].toFixed(1) + '" stroke="#78716c" stroke-width="1"/>'; }
+  if (t.n > t.d) s += '<text x="100" y="104" font-size="13" text-anchor="middle" fill="#7c2d12">1 个整饼 + ' + (t.n - t.d) + '/' + t.d + '</text>';
+  document.getElementById('fnlPie').innerHTML = s;
+  const gx = 20 + fnlGuess * 140, tx = 20 + fnlTrue() * 140;
+  let l = '<line x1="20" y1="40" x2="300" y2="40" stroke="#78716c" stroke-width="2"/>';
+  for (let i = 0; i <= 4; i++) { const x = 20 + i * 70; l += '<line x1="' + x + '" y1="34" x2="' + x + '" y2="46" stroke="#78716c" stroke-width="1"/><text x="' + x + '" y="58" font-size="11" text-anchor="middle" fill="#57534e">' + (i / 2) + '</text>'; }
+  if (fnlShown) l += '<rect x="20" y="30" width="' + (fnlTrue() * 140) + '" height="8" fill="#16a34a" fill-opacity="0.5"/>';
+  l += '<path d="M' + gx + ' 28 l5 -10 l5 10 Z" fill="#ea580c"/>';
+  if (fnlShown) l += '<circle cx="' + tx + '" cy="40" r="6" fill="#16a34a" stroke="#14532d" stroke-width="1"/>';
+  document.getElementById('fnlLine').innerHTML = l;
+}
+function fnlSetGuess(v) {
+  fnlGuess = Math.max(0, Math.min(2, Math.round(v * 20) / 20));
+  const r = document.getElementById('fnlGuessRange'); if (r) r.value = fnlGuess;
+  fnlRender();
+}
+function fnlUnfurl() {
+  const t = fnlTarget(), tv = fnlTrue();
+  fnlShown = true;
+  fnlRender();
+  const diff = fnlGuess - tv;
+  const ad = Math.abs(diff);
+  let verdict;
+  if (ad <= 0.05) {
+    verdict = '猜对了！' + t.n + '/' + t.d + ' 正好落在 ' + tv + ' 那里。';
+  } else {
+    const g20 = Math.round(fnlGuess * 20);
+    const num = Math.abs(g20 * t.d - t.n * 20), den = 20 * t.d, g = gcd(num, den) || 1;
+    verdict = (diff < 0 ? '猜短了：' : '猜长了：') + '你猜 ' + fnlGuess.toFixed(2) + '，实际是 ' + tv + '，差了 ' + (num / g) + '/' + (den / g) + '——圆饼展开比你想的' + (diff < 0 ? '长' : '短') + '。';
+  }
+  document.getElementById('fnlMsg').textContent = verdict + '一个圆饼（1）展开就是数轴上 0 到 1 的距离；' + t.n + '/' + t.d + ' 个圆饼就是 ' + tv + ' 的距离。';
+  if (ad <= 0.05) {
+    if (fnlDoneIdx.indexOf(fnlIdx) < 0) fnlDoneIdx.push(fnlIdx);
+    if (fnlTiers) fnlTiers.done(0);
+    if (fnlIdx >= 1 && fnlTiers) fnlTiers.done(1);
+    if (fnlDoneIdx.indexOf(2) >= 0 && fnlTiers) fnlTiers.done(2);
+    document.getElementById('fnlWhy').hidden = false;
+    markTried('fracnumline');
+    labTrace('分数变数线：' + t.n + '/' + t.d + ' 落在 ' + tv, true);
+  }
+}
+(function () {
+  const g = document.getElementById('fnlUnfurl'); if (!g) return;
+  fnlTiers = makeTiers(document.getElementById('fnlTiers'), ['基础：把 1/2 放对位置', '提高：把 3/4 放对位置', '挑战：把 5/4（超过 1）放对位置']);
+  wireDiscovery('fracnumline', 'fnlFind', 'fnlFindSave', 'fnlFindSaved');
+  document.getElementById('fnlGuessRange').addEventListener('input', function (e) { fnlSetGuess(parseFloat(e.target.value)); });
+  document.getElementById('fnlLine').addEventListener('click', function (e) {
+    const rect = e.target.getBoundingClientRect ? e.target.getBoundingClientRect() : { left: 0, width: 320 };
+    const x = (e.clientX - rect.left) / rect.width * 320;
+    fnlSetGuess((x - 20) / 140);
+  });
+  g.addEventListener('click', function () { fnlUnfurl(); });
+  document.getElementById('fnlNext').addEventListener('click', function () {
+    fnlIdx = (fnlIdx + 1) % FNL_TARGETS.length;
+    fnlShown = false; fnlGuess = 0.5;
+    document.getElementById('fnlMsg').textContent = '新分数：' + fnlTarget().n + '/' + fnlTarget().d + '。先猜位置，再点“展开”。';
+    fnlRender();
+  });
+  fnlRender();
+})();
 
 
 /* ================= 一年级实验（1.1–1.16，2026-11-06） =================
