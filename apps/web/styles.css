@@ -53,7 +53,7 @@ body[data-view="unit-detail"] #grades, body[data-view="point-detail"] #grades,
 body[data-view="mix"] #grades, body[data-view="review"] #grades,
 body[data-view="dimensions"] #dimensions, body[data-view="dim-detail"] #dimensions,
 body[data-view="path"] #path, body[data-view="path-step"] #path,
-body[data-view="demos"] #demos, body[data-view="demo-fraction"] #demos,
+body[data-view="demos"] #demos, body[data-view="demo-tenframe"] #demos, body[data-view="demo-fraction"] #demos,
 body[data-view="demo-balance"] #demos, body[data-view="demo-function"] #demos,
 body[data-view="why"] #why, body[data-view="review"] #review,
 body[data-view="progress"] #review{display:block}
