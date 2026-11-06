@@ -105,6 +105,14 @@ main{min-width:0}
 .qa p{margin:4px 0}
 .qa-a{color:var(--green);font-weight:700}
 
+/* 分步评分：每一步单独看答案、单独自评，标完出丢分报告 */
+.steps{margin-top:12px}
+.step{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:8px;background:#f8fafc}
+.step p{margin:4px 0}
+.step-a{color:var(--green);font-weight:700}
+.step-mark .btn[aria-pressed="true"]{border-color:var(--orange);background:#fff7ed;font-weight:700}
+.step-report{margin-top:10px}
+
 /* Buttons */
 .btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:10px 20px;border-radius:12px;border:2px solid transparent;font-size:16px;font-weight:700;text-decoration:none;cursor:pointer}
 .btn.primary{background:var(--orange);color:#fff}

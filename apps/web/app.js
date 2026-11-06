@@ -111,6 +111,8 @@ function shuffle(arr) {
 }
 let currentPointId = null;
 let qaState = {}; // key: pointId + ':' + idx -> {correct, confident}
+let stepState = {}; // key: pointId + ':' + qIdx + ':' + stepIdx -> {correct}
+let stepQuestions = {}; // key: pointId + ':' + qIdx -> steps array (set at render time)
 
 /* ---------- 年级选择 ---------- */
 /* 年级菜单层级是面板：9 块年级面板，点一块进该年级（走 navGo，不是直接调 selectGrade）。 */
@@ -210,6 +212,39 @@ function renderUnit(g, ui) {
     btn.addEventListener('click', () => navGo('point-' + btn.dataset.point)));
 }
 const DEMO_LABEL = { fraction: '去玩分数演示', tenframe: '去玩十格阵', balance: '去玩天平演示', function: '去玩函数演示' };
+/* 分步评分：多步骤题拆成一步一步对。steps 是可选字段，没有 steps 的题照旧渲染。
+   自评不是机器判题：每一步的对错都是学生自己标的，丢分报告只是把你标错的步骤列出来。 */
+function practiceStepsHtml(q, i, pointId) {
+  if (!q.steps || !q.steps.length) return '';
+  stepQuestions[pointId + ':' + i] = q.steps;
+  q.steps.forEach((s, si) => { delete stepState[pointId + ':' + i + ':' + si]; });
+  return '<div class="steps" data-steps="' + i + '" data-steps-point="' + esc(pointId) + '">' +
+    '<p class="muted">这道题可以拆成 ' + q.steps.length + ' 步：每一步先自己算，再点开对一对，告诉我这一步你做对没。</p>' +
+    q.steps.map((s, si) =>
+      '<div class="step"><p><b>第 ' + (si + 1) + ' 步 · ' + esc(s.label) + '</b> ' +
+      '<button class="btn ghost small qa-btn" type="button" data-step-reveal="' + i + '-' + si + '">看这一步</button></p>' +
+      '<p class="step-a" data-step-a="' + i + '-' + si + '" hidden>' + esc(s.text) + '</p>' +
+      '<div class="step-mark" data-step-mark="' + i + '-' + si + '" hidden>' +
+      '<p>这一步你做对了吗？ <button class="btn small" type="button" data-step-mark-btn="right">对了</button> <button class="btn small" type="button" data-step-mark-btn="wrong">错了</button></p>' +
+      '<p class="qa-a" data-step-saved="' + i + '-' + si + '" hidden></p></div></div>'
+    ).join('') +
+    '<p class="qa-a step-report" data-step-report="' + i + '" hidden></p></div>';
+}
+function updateStepReport(pid, qi) {
+  const steps = stepQuestions[pid + ':' + qi];
+  const report = pointDetail.querySelector('[data-step-report="' + qi + '"]');
+  if (!steps || !report) return;
+  const marks = steps.map((s, si) => stepState[pid + ':' + qi + ':' + si]);
+  if (marks.some(m => !m)) return; // 还有没标的步，先不报
+  report.hidden = false;
+  const wrong = steps.map((s, si) => ({ s, si })).filter(x => !marks[x.si].correct);
+  if (!wrong.length) {
+    report.textContent = '丢分报告：全对，思路很稳——每一步都对上了。';
+  } else {
+    report.textContent = '丢分报告：你卡在' + wrong.map(x => '第 ' + (x.si + 1) + ' 步 · ' + x.s.label).join('、') +
+      '。再对一遍' + (wrong.length > 1 ? '这些步' : '这一步') + '：' + wrong.map(x => x.s.text).join('；') + '。';
+  }
+}
 function renderPoint(id) {
   const f = findPoint(id);
   if (!f) return;
@@ -242,6 +277,7 @@ function renderPoint(id) {
       (i === 1 ? '<button class="btn ghost small qa-btn" type="button" data-hint="' + i + '">要提示</button><p class="hint" data-hint-t="' + i + '" hidden>提示：' + esc(q.hint) + '</p>' : '') +
       '<button class="btn ghost small qa-btn" type="button" data-qa="' + i + '">看答案</button>' +
       '<p class="qa-a" data-qa-a="' + i + '" hidden>答案：' + esc(q.answer) + '</p>' +
+      practiceStepsHtml(q, i, id) +
       '<div class="qa-mark" data-qa-mark="' + i + '" data-point="' + esc(id) + '" hidden>' +
       '<p>你答对了吗？ <button class="btn small" type="button" data-mark="right">答对了</button> <button class="btn small" type="button" data-mark="wrong">答错了</button></p>' +
       '<p>答之前有把握吗？ <button class="btn small" type="button" data-conf="yes">有把握</button> <button class="btn small" type="button" data-conf="no">没把握</button></p>' +
@@ -277,6 +313,7 @@ function renderMix(g) {
     '<div class="point-sec"><h4>' + esc(pk.point.id) + ' · ' + esc(pk.point.title) + '</h4><p>' + (pk.q.level ? '<span class="pill">' + esc(pk.q.level) + '</span> ' : '') + esc(pk.q.q) + '</p>' +
     '<button class="btn ghost small qa-btn" type="button" data-qa="' + i + '">看答案</button>' +
     '<p class="qa-a" data-qa-a="' + i + '" hidden>答案：' + esc(pk.q.answer) + '（提示：' + esc(pk.q.hint) + '）</p>' +
+    practiceStepsHtml(pk.q, i, pk.point.id) +
     '<div class="qa-mark" data-qa-mark="' + i + '" data-point="' + esc(pk.point.id) + '" hidden>' +
     '<p>你答对了吗？ <button class="btn small" type="button" data-mark="right">答对了</button> <button class="btn small" type="button" data-mark="wrong">答错了</button></p>' +
     '<p>答之前有把握吗？ <button class="btn small" type="button" data-conf="yes">有把握</button> <button class="btn small" type="button" data-conf="no">没把握</button></p>' +
@@ -330,6 +367,42 @@ if (pointDetail) pointDetail.addEventListener('click', e => {
     const mark = pointDetail.querySelector('[data-qa-mark="' + i + '"]');
     if (ans) { ans.hidden = !ans.hidden; qaBtn.textContent = ans.hidden ? '看答案' : '收起答案'; }
     if (mark) mark.hidden = ans ? ans.hidden : true;
+    return;
+  }
+  const stepReveal = e.target.closest('[data-step-reveal]');
+  if (stepReveal) {
+    const key = stepReveal.dataset.stepReveal;
+    const a = pointDetail.querySelector('[data-step-a="' + key + '"]');
+    const m = pointDetail.querySelector('[data-step-mark="' + key + '"]');
+    if (a) { a.hidden = !a.hidden; stepReveal.textContent = a.hidden ? '看这一步' : '收起这一步'; }
+    if (m) m.hidden = a ? a.hidden : true;
+    return;
+  }
+  const stepMarkBtn = e.target.closest('[data-step-mark-btn]');
+  if (stepMarkBtn) {
+    const markRow = e.target.closest('[data-step-mark]');
+    if (!markRow) return;
+    const key = markRow.dataset.stepMark; // "qi-si"
+    const qi = key.split('-')[0];
+    const si = key.split('-')[1];
+    const stepsEl = pointDetail.querySelector('[data-steps="' + qi + '"]');
+    const pid = (stepsEl && stepsEl.dataset.stepsPoint) || currentPointId;
+    const skey = pid + ':' + qi + ':' + si;
+    const wasWrong = stepState[skey] && stepState[skey].correct === false;
+    const correct = stepMarkBtn.dataset.stepMarkBtn === 'right';
+    stepState[skey] = { correct };
+    markRow.querySelectorAll('[data-step-mark-btn]').forEach(b => b.setAttribute('aria-pressed', String(b === stepMarkBtn)));
+    const saved = pointDetail.querySelector('[data-step-saved="' + key + '"]');
+    if (saved) {
+      saved.hidden = false;
+      if (!correct) {
+        saved.textContent = '记下了：这一步错了，明天复习时会回来找你。';
+        if (!wasWrong) recordAttempt(pid, false, false);
+      } else {
+        saved.textContent = '这一步对了。';
+      }
+    }
+    updateStepReport(pid, qi);
     return;
   }
   const markBtn = e.target.closest('[data-mark]');

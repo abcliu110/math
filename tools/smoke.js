@@ -87,7 +87,7 @@ const windowStub = { scrollTo() {}, document: documentStub };
 // ---------- stub grade content (small but schema-faithful) ----------
 const GRADE3_CONTENT = { grade: 3, edition: 'A', units: [
   { unit: '分数的初步认识', term: '上', points: [
-    { id: '3.7', title: '分数的初步认识', subtitle: '几分之一、几分之几', how: '把一个整体平均分。', why: '分母是切了几份。', wrong: '1/4 比 1/3 大', wrongWhy: '分母是大小不是个数。', visual: '分数条。', method: '分数条 + 数轴', explainBack: '1/4 是一份。', tryIt: '把纸对折两次。', demo: 'fraction', recall: { q: '一个饼切成 4 等份，吃了 1 份，吃了几分之几？', answer: '1/4', hint: '一共 4 份，吃了 1 份' }, practice: [{ q: '1/2 和 1/4 谁大？', answer: '1/2 大', hint: '份数少，每份大' }, { q: '2/7 + 3/7 = ?', answer: '5/7', hint: '分母不变，分子相加' }] },
+    { id: '3.7', title: '分数的初步认识', subtitle: '几分之一、几分之几', how: '把一个整体平均分。', why: '分母是切了几份。', wrong: '1/4 比 1/3 大', wrongWhy: '分母是大小不是个数。', visual: '分数条。', method: '分数条 + 数轴', explainBack: '1/4 是一份。', tryIt: '把纸对折两次。', demo: 'fraction', recall: { q: '一个饼切成 4 等份，吃了 1 份，吃了几分之几？', answer: '1/4', hint: '一共 4 份，吃了 1 份' }, practice: [{ q: '1/2 和 1/4 谁大？', answer: '1/2 大', hint: '份数少，每份大', steps: [{ label: '看分母', text: '1/2 是切 2 份，1/4 是切 4 份' }, { label: '比一比', text: '切的份数越少，每份越大，所以 1/2 大' }] }, { q: '2/7 + 3/7 = ?', answer: '5/7', hint: '分母不变，分子相加', steps: [{ label: '分母不变', text: '分母还是 7' }, { label: '分子相加', text: '2 + 3 = 5，所以是 5/7' }] }] },
   ] },
   { unit: '面积', term: '下', points: [
     { id: '3.12', title: '面积', subtitle: '面积单位、长方形面积', how: '数小方块。', why: '面积就是盖了多少个单位正方形。', wrong: '面积就是周长', wrongWhy: '周长是边，面积是面。', visual: '方格纸铺一铺。', method: '铺方块数一数', explainBack: '面积是里面有几个方块。', tryIt: '用小方块铺长方形。', demo: null, recall: { q: '长 4 宽 3 的长方形里能铺几个小方块？', answer: '12 个', hint: '4×3' }, practice: [{ q: '4 行 3 列是多少个方块？', answer: '12 个', hint: '4×3' }, { q: '边长 6 厘米的正方形面积？', answer: '36 平方厘米', hint: '边长×边长' }] },
@@ -365,6 +365,45 @@ const labK = byId.labFuncKRange; labK.value = '-1';
 check('lab function: k slider updates equation', Number(byId.labFuncK.textContent) === -1);
 sandbox.navBackFn();
 check('back from lab returns home', byId.hero.hidden === false && byId.lab.hidden === true);
+
+// ---------- 9. per-step scoring (分步评分 + 丢分定位) ----------
+navGo('point-3.12');
+check('question without steps renders no step UI', !pointDetail.innerHTML.includes('看这一步'));
+navGo('point-3.7');
+check('steps render under a stepped question', pointDetail.innerHTML.includes('看这一步') && pointDetail.innerHTML.includes('第 1 步 · 看分母') && pointDetail.innerHTML.includes('拆成 2 步'));
+// all-correct path on Q1 (index 0)
+const s0a = pointDetail.querySelector('[data-step-a="0-0"]'); s0a.hidden = true;
+const s0m = pointDetail.querySelector('[data-step-mark="0-0"]'); s0m.hidden = true;
+const s0Reveal = makeEl('button'); s0Reveal.dataset.stepReveal = '0-0';
+clickPD(s0Reveal);
+check('step reveal shows step 0', s0a.hidden === false);
+check('step reveal unhides its mark row', s0m.hidden === false);
+const stepsEl0 = pointDetail.querySelector('[data-steps="0"]'); stepsEl0.dataset.stepsPoint = '3.7';
+const row00 = pointDetail.querySelector('[data-step-mark="0-0"]'); row00.dataset.stepMark = '0-0';
+const right00 = makeEl('button'); right00.dataset.stepMarkBtn = 'right';
+right00.closest = (sel) => sel === '[data-step-mark-btn]' ? right00 : (sel === '[data-step-mark]' ? row00 : null);
+clickPD(right00);
+check('step right shows saved line', pointDetail.querySelector('[data-step-saved="0-0"]').hidden === false);
+const row01 = pointDetail.querySelector('[data-step-mark="0-1"]'); row01.dataset.stepMark = '0-1';
+const right01 = makeEl('button'); right01.dataset.stepMarkBtn = 'right';
+right01.closest = (sel) => sel === '[data-step-mark-btn]' ? right01 : (sel === '[data-step-mark]' ? row01 : null);
+clickPD(right01);
+const rep0 = pointDetail.querySelector('[data-step-report="0"]');
+check('all steps right shows 全对 report', rep0.hidden === false && rep0.textContent.includes('全对'));
+// wrong-step path on Q2 (index 1)
+const stepsEl1 = pointDetail.querySelector('[data-steps="1"]'); stepsEl1.dataset.stepsPoint = '3.7';
+const row10 = pointDetail.querySelector('[data-step-mark="1-0"]'); row10.dataset.stepMark = '1-0';
+const right10 = makeEl('button'); right10.dataset.stepMarkBtn = 'right';
+right10.closest = (sel) => sel === '[data-step-mark-btn]' ? right10 : (sel === '[data-step-mark]' ? row10 : null);
+clickPD(right10);
+const row11 = pointDetail.querySelector('[data-step-mark="1-1"]'); row11.dataset.stepMark = '1-1';
+const wrong11 = makeEl('button'); wrong11.dataset.stepMarkBtn = 'wrong';
+wrong11.closest = (sel) => sel === '[data-step-mark-btn]' ? wrong11 : (sel === '[data-step-mark]' ? row11 : null);
+clickPD(wrong11);
+const rep1 = pointDetail.querySelector('[data-step-report="1"]');
+check('wrong step names the lost step', rep1.hidden === false && rep1.textContent.includes('第 2 步') && rep1.textContent.includes('分子相加'));
+const stored2 = JSON.parse(lsData['math-review-v1'] || '{}');
+check('wrong step queues the point for review', stored2['3.7'] && stored2['3.7'].correct === false);
 
 // ---------- 8. grade 3 still works ----------
 navGo('grade-3-mix');

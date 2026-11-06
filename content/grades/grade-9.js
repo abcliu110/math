@@ -33,7 +33,12 @@ const GRADE9_CONTENT = {
           recall: { q: "方程x²=9的解是多少？是x=3，还是x=±3？", answer: "x=±3", hint: "3²=9，(-3)²=9。" },
           practice: [
             { q: "解方程：x²-5x+6=0（用因式分解法）。", answer: "x=2或x=3", hint: "x²-5x+6=(x-2)(x-3)。", level: "基础" },
-            { q: "用配方法解方程：x²+6x-7=0。", answer: "x=1或x=-7", hint: "x²+6x+9=16，(x+3)²=16，x+3=±4。", level: "提高" }
+            { q: "用配方法解方程：x²+6x-7=0。", answer: "x=1或x=-7", hint: "x²+6x+9=16，(x+3)²=16，x+3=±4。", level: "提高", steps: [
+              { label: "移项", text: "x² + 6x = 7" },
+              { label: "配方", text: "两边加 9：x² + 6x + 9 = 16，即 (x+3)² = 16" },
+              { label: "开平方", text: "x + 3 = 4 或 x + 3 = −4" },
+              { label: "求解", text: "x = 1 或 x = −7" }
+            ] }
           ],
           olympiad: { q: "若方程x²-4x+m=0有两个相等的实数根，求m的值。", answer: "m=4", hint: "两个相等的实数根，判别式Δ=0：16-4m=0。" }
         },
