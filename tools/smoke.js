@@ -244,7 +244,30 @@ sandbox.goDemoFromHere('demo-tenframe');
 sandbox.navBackFn();
 check('back from ten-frame demo returns to point page', pointDetail.innerHTML.includes('挑战 · 奥数'));
 
-// ---------- 6. grade 3 still works ----------
+// ---------- 7. math lab (free play) ----------
+navGo('home');
+navGo('lab');
+check("viewForKey('lab') is lab", sandbox.viewForKey('lab') === 'lab');
+check('lab view: lab section visible, hero + demos hidden',
+  byId.lab.hidden === false && byId.hero.hidden === true && byId.demos.hidden === true);
+check('lab fraction initial readout', byId.labFracText.textContent === '3/4');
+click(byId.labFracDenomSeg.children[4]);
+check('lab fraction: denominator 8 updates readout', byId.labFracText.textContent === '3/8');
+const labCell = byId.labTfA.children[0];
+click(labCell);
+check('lab ten-frame: click a cell adds one', byId.labTfEq.textContent === '1 + 0 = 1');
+click(labCell);
+check('lab ten-frame: click again removes it', byId.labTfEq.textContent === '0 + 0 = 0');
+check('lab balance initial equation', byId.labBalEq.textContent === '左 5 ＝ 右 3');
+click(byId.labBalAddR);
+check('lab balance: add right weight updates equation', byId.labBalEq.textContent === '左 5 ＝ 右 4');
+const labK = byId.labFuncKRange; labK.value = '-1';
+(labK._handlers.input || []).forEach(f => f({ target: labK }));
+check('lab function: k slider updates equation', Number(byId.labFuncK.textContent) === -1);
+sandbox.navBackFn();
+check('back from lab returns home', byId.hero.hidden === false && byId.lab.hidden === true);
+
+// ---------- 8. grade 3 still works ----------
 navGo('grade-3-mix');
 check('grade-3 mix still renders', pointDetail.innerHTML.includes('混着练') && pointDetail.hidden === false);
 

@@ -36,7 +36,7 @@ NEED = {
     'point-detail': '#grades', 'mix': '#grades',
     'dimensions': '#dimensions', 'dim-detail': '#dimensions',
     'path': '#path', 'path-step': '#path',
-    'demos': '#demos', 'why': '#why',
+    'demos': '#demos', 'why': '#why', 'lab': '#lab',
     'review': '#review', 'progress': '#review',
 }
 # Demo keys: every 'demo-*' key registered in NAV_DEFS needs #demos.

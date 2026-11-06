@@ -618,6 +618,7 @@ const NAV_DEFS = {
   'demo-balance':  { crumbs: ['数学', '互动演示', '天平解方程'], target: 'demo-balance' },
   'demo-function': { crumbs: ['数学', '互动演示', '函数滑杆'], target: 'demo-function' },
   why:        { crumbs: ['数学', '互动演示', '为什么小实验'], target: 'why' },
+  lab:        { crumbs: ['数学', '数学实验室'], target: 'lab' },
   review:     { crumbs: ['数学', '错题本'], target: 'review' },
   progress:   { crumbs: ['数学', '我的进度'], target: 'progressCard' },
 };
@@ -668,6 +669,7 @@ const demosSec = document.getElementById('demos');
 const demoPanelsEl = document.getElementById('demoPanels');
 const demoGridEl = document.getElementById('demoGrid');
 const whySec = document.getElementById('why');
+const labSec = document.getElementById('lab');
 const reviewSec = document.getElementById('review');
 const progressCardEl = document.getElementById('progressCard');
 const reviewCardEl = document.getElementById('reviewCard');
@@ -690,6 +692,7 @@ function viewForKey(key) {
   if (key === 'demos') return 'demos';
   if (key === 'demo-tenframe' || key === 'demo-fraction' || key === 'demo-balance' || key === 'demo-function') return key;
   if (key === 'why') return 'why';
+  if (key === 'lab') return 'lab';
   if (key === 'review') return 'review';
   if (key === 'progress') return 'progress';
   return 'home';
@@ -733,6 +736,8 @@ function applyView() {
   setHidden(demosSec.querySelector('.section-sub'), demoLeaf);
   [...demoGridEl.children].forEach(el => { el.hidden = demoLeaf && el.id !== view; });
   setHidden(whySec, view !== 'why');
+  // 数学实验室：只有进实验室才显示整个 #lab 区
+  setHidden(labSec, view !== 'lab');
   // 复习与进度：错题本只留错题卡片，我的进度只留进度卡片
   setHidden(reviewSec, !(view === 'review' || view === 'progress'));
   setHidden(progressCardEl, view !== 'progress');
@@ -989,6 +994,30 @@ renderBalance();
 /* ---------- P3 函数 ---------- */
 const canvas = document.getElementById('funcCanvas');
 const ctx = canvas.getContext('2d');
+/* 画一次函数图像（主演示和数学实验室共用）：给 k、b 和一块画布，就画网格、坐标轴、
+   直线 y = kx + b 和 (0, b) 截距点。标签和表格各由调用方自己管。 */
+function drawFuncGraph(c2, cv, k, b) {
+  const W = cv.width, H = cv.height;
+  const xMin = -5, xMax = 6, yMin = -10, yMax = 24;
+  const X = x => 50 + (x - xMin) / (xMax - xMin) * (W - 70);
+  const Y = y => H - 40 - (y - yMin) / (yMax - yMin) * (H - 70);
+  c2.clearRect(0, 0, W, H);
+  c2.strokeStyle = '#e2e8f0'; c2.lineWidth = 1;
+  for (let x = xMin; x <= xMax; x++) { c2.beginPath(); c2.moveTo(X(x), Y(yMin)); c2.lineTo(X(x), Y(yMax)); c2.stroke(); }
+  for (let y = -10; y <= 20; y += 5) { c2.beginPath(); c2.moveTo(X(xMin), Y(y)); c2.lineTo(X(xMax), Y(y)); c2.stroke(); }
+  c2.strokeStyle = '#334155'; c2.lineWidth = 2;
+  c2.beginPath(); c2.moveTo(X(xMin), Y(0)); c2.lineTo(X(xMax), Y(0)); c2.stroke();
+  c2.beginPath(); c2.moveTo(X(0), Y(yMin)); c2.lineTo(X(0), Y(yMax)); c2.stroke();
+  c2.fillStyle = '#64748b'; c2.font = '13px system-ui';
+  c2.fillText('x', X(xMax) - 8, Y(0) - 8); c2.fillText('y', X(0) + 8, Y(yMax) + 14);
+  // line y = kx + b
+  c2.strokeStyle = '#ff8a3d'; c2.lineWidth = 4; c2.beginPath();
+  c2.moveTo(X(xMin), Y(k * xMin + b)); c2.lineTo(X(xMax), Y(k * xMax + b)); c2.stroke();
+  // intercept (0,b)
+  c2.fillStyle = '#2563eb'; c2.beginPath(); c2.arc(X(0), Y(b), 7, 0, Math.PI * 2); c2.fill();
+  c2.fillStyle = '#1d4ed8'; c2.font = 'bold 14px system-ui';
+  c2.fillText('(0, ' + b + ')', X(0) + 12, Y(b) - 8);
+}
 function drawFunc() {
   const k = parseFloat(document.getElementById('kRange').value);
   const b = parseFloat(document.getElementById('bRange').value);
@@ -996,26 +1025,7 @@ function drawFunc() {
   document.getElementById('bLabel').textContent = b;
   document.getElementById('funcK').textContent = k;
   document.getElementById('funcB').textContent = b;
-  const W = canvas.width, H = canvas.height;
-  const xMin = -5, xMax = 6, yMin = -10, yMax = 24;
-  const X = x => 50 + (x - xMin) / (xMax - xMin) * (W - 70);
-  const Y = y => H - 40 - (y - yMin) / (yMax - yMin) * (H - 70);
-  ctx.clearRect(0, 0, W, H);
-  ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 1;
-  for (let x = xMin; x <= xMax; x++) { ctx.beginPath(); ctx.moveTo(X(x), Y(yMin)); ctx.lineTo(X(x), Y(yMax)); ctx.stroke(); }
-  for (let y = -10; y <= 20; y += 5) { ctx.beginPath(); ctx.moveTo(X(xMin), Y(y)); ctx.lineTo(X(xMax), Y(y)); ctx.stroke(); }
-  ctx.strokeStyle = '#334155'; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(X(xMin), Y(0)); ctx.lineTo(X(xMax), Y(0)); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(X(0), Y(yMin)); ctx.lineTo(X(0), Y(yMax)); ctx.stroke();
-  ctx.fillStyle = '#64748b'; ctx.font = '13px system-ui';
-  ctx.fillText('x', X(xMax) - 8, Y(0) - 8); ctx.fillText('y', X(0) + 8, Y(yMax) + 14);
-  // line y = kx + b
-  ctx.strokeStyle = '#ff8a3d'; ctx.lineWidth = 4; ctx.beginPath();
-  ctx.moveTo(X(xMin), Y(k * xMin + b)); ctx.lineTo(X(xMax), Y(k * xMax + b)); ctx.stroke();
-  // intercept (0,b)
-  ctx.fillStyle = '#2563eb'; ctx.beginPath(); ctx.arc(X(0), Y(b), 7, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#1d4ed8'; ctx.font = 'bold 14px system-ui';
-  ctx.fillText('(0, ' + b + ')', X(0) + 12, Y(b) - 8);
+  drawFuncGraph(ctx, canvas, k, b);
   // table
   [0, 1, 2, 3, 5].forEach(x => { document.getElementById('y' + x).textContent = (k * x + b); });
   document.getElementById('funcChallenge').textContent =
@@ -1208,3 +1218,165 @@ document.getElementById('areaRowMinus').addEventListener('click', () => { if (ar
 document.getElementById('areaColPlus').addEventListener('click', () => { if (areaCols < 6) areaCols++; renderArea(); markTried('why-area'); });
 document.getElementById('areaColMinus').addEventListener('click', () => { if (areaCols > 1) areaCols--; renderArea(); markTried('why-area'); });
 renderArea();
+
+/* ---------- 数学实验室 · 自由玩（借 NB实验室“自由组合、即时看后果”的做法）
+   四个小站是独立的自由模式实例，原演示一字不动：
+   - 分数站复用 polar()/sector() 画饼 + 同款数轴拖点；
+   - 十格阵站复用 .tf-cell 样式，点格子放/拿圆点；
+   - 天平站复用横梁 SVG 结构，砝码随便加减，横梁按两边重量实时倾斜；
+   - 函数站复用 drawFuncGraph() 画图，k/b 随便调。
+   四个小站都没有固定题目、不判对错、不计入“已体验演示”进度——实验室就是来玩的。 */
+
+/* 分数自由玩：分母、分子随便改，饼和数轴实时跟上 */
+let labDenom = 4, labNumer = 3;
+const labPieSvg = document.getElementById('labFracPie');
+const labLineTicks = document.getElementById('labFracTicks');
+const labLineDot = document.getElementById('labFracDot');
+const labDenomSeg = document.getElementById('labFracDenomSeg');
+[2, 3, 4, 6, 8].forEach(d => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.textContent = d; b.setAttribute('aria-pressed', String(d === labDenom));
+  b.addEventListener('click', () => { labDenom = d; if (labNumer > d) labNumer = d; labRenderFrac(); });
+  labDenomSeg.appendChild(b);
+});
+function labRenderFrac() {
+  [...labDenomSeg.children].forEach((el, i) => el.setAttribute('aria-pressed', String([2, 3, 4, 6, 8][i] === labDenom)));
+  document.getElementById('labFracNumRange').max = labDenom;
+  document.getElementById('labFracNumRange').value = labNumer;
+  document.getElementById('labFracNumLabel').textContent = labNumer;
+  let svg = '';
+  for (let i = 0; i < labDenom; i++) {
+    const a0 = i * 360 / labDenom, a1 = (i + 1) * 360 / labDenom;
+    svg += '<path d="' + sector(100, 100, 88, a0, a1) + '" fill="' + (i < labNumer ? '#ff8a3d' : '#fff3e6') +
+      '" stroke="#c2410c" stroke-width="2" data-lab-slice="' + i + '" style="cursor:pointer"/>';
+  }
+  labPieSvg.innerHTML = svg;
+  labPieSvg.querySelectorAll('[data-lab-slice]').forEach(p => p.addEventListener('click', () => {
+    const i = +p.dataset.labSlice; labNumer = (i < labNumer) ? i : i + 1; labRenderFrac();
+  }));
+  const dec = labDenom ? (labNumer / labDenom) : 0;
+  document.getElementById('labFracText').textContent = labNumer + '/' + labDenom;
+  document.getElementById('labFracDecimal').textContent = dec.toFixed(2).replace(/0$/, '');
+  document.getElementById('labFracNote').textContent =
+    labNumer === 0 ? '还没取，试着拖滑杆或点一块饼。' :
+    labNumer === labDenom ? '取满了，就是 1 个整体。' :
+    '取了 ' + labNumer + ' 份，每份是 1/' + labDenom + '。';
+  let ticks = '';
+  for (let i = 0; i <= labDenom; i++) {
+    const x = 20 + i * 280 / labDenom;
+    ticks += '<line x1="' + x + '" y1="22" x2="' + x + '" y2="38" stroke="#94a3b8" stroke-width="2"/>';
+  }
+  labLineTicks.innerHTML = ticks;
+  labLineDot.setAttribute('cx', 20 + dec * 280);
+}
+document.getElementById('labFracNumRange').addEventListener('input', e => { labNumer = +e.target.value; labRenderFrac(); });
+document.getElementById('labFracReset').addEventListener('click', () => { labDenom = 4; labNumer = 3; labRenderFrac(); });
+(function () {
+  const svg = document.getElementById('labFracLine');
+  let dragging = false;
+  function setFromEvent(e) {
+    const r = svg.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+    const xSvg = 20 + ratio * 280;
+    labNumer = Math.max(0, Math.min(labDenom, Math.round((xSvg - 20) / 280 * labDenom)));
+    labRenderFrac();
+  }
+  labLineDot.addEventListener('pointerdown', e => { dragging = true; labLineDot.setPointerCapture(e.pointerId); setFromEvent(e); });
+  labLineDot.addEventListener('pointermove', e => { if (dragging) setFromEvent(e); });
+  labLineDot.addEventListener('pointerup', () => { dragging = false; });
+})();
+labRenderFrac();
+
+/* 十格阵自由玩：点格子放一个圆点，再点拿走；算式实时算两边加起来是多少 */
+let labTfA = 0, labTfB = 0;
+const labTfAEl = document.getElementById('labTfA');
+const labTfBEl = document.getElementById('labTfB');
+const labTfCells = { A: [], B: [] };
+['A', 'B'].forEach(f => {
+  const box = f === 'A' ? labTfAEl : labTfBEl;
+  for (let i = 0; i < 10; i++) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'tf-cell' + (f === 'B' ? ' b' : '');
+    b.setAttribute('aria-label', (f === 'A' ? '左边第 ' : '右边第 ') + (i + 1) + ' 格');
+    b.addEventListener('click', () => labTfToggle(f, i));
+    box.appendChild(b);
+    labTfCells[f].push(b);
+  }
+});
+function labTfToggle(f, i) {
+  const cell = labTfCells[f][i];
+  cell.classList.toggle('filled', !cell.classList.contains('filled'));
+  labTfA = labTfCells.A.filter(c => c.classList.contains('filled')).length;
+  labTfB = labTfCells.B.filter(c => c.classList.contains('filled')).length;
+  labTfRender();
+}
+function labTfRender() {
+  document.getElementById('labTfLabelA').textContent = '左边 · ' + labTfA + ' 个';
+  document.getElementById('labTfLabelB').textContent = '右边 · ' + labTfB + ' 个';
+  document.getElementById('labTfEq').textContent = labTfA + ' + ' + labTfB + ' = ' + (labTfA + labTfB);
+  document.getElementById('labTfNote').textContent =
+    (labTfA === 10 && labTfB === 10) ? '两边都满了：10 + 10 = 20。' :
+    (labTfA + labTfB === 0) ? '试试：两边都放满 10 个，是多少？只放一边 10 个、另一边 0 个呢？' :
+    '现在是 ' + labTfA + ' + ' + labTfB + ' = ' + (labTfA + labTfB) + '。再点一个格子试试？';
+}
+document.getElementById('labTfReset').addEventListener('click', () => {
+  labTfCells.A.forEach(c => c.classList.remove('filled'));
+  labTfCells.B.forEach(c => c.classList.remove('filled'));
+  labTfA = 0; labTfB = 0; labTfRender();
+});
+labTfRender();
+
+/* 天平自由玩：两边砝码随便加减（按钮或点砝码），横梁按重量差实时倾斜 */
+let labBalL = 5, labBalR = 3;
+function labRenderBal() {
+  const tilt = Math.max(-15, Math.min(15, (labBalR - labBalL) * 3));
+  document.getElementById('labBeamGroup').setAttribute('transform', 'rotate(' + tilt + ' 160 70)');
+  let left = '', right = '';
+  for (let i = 0; i < labBalL; i++) {
+    left += '<rect x="' + (33 + (i % 5) * 13) + '" y="' + (76 + Math.floor(i / 5) * 13) + '" width="11" height="11" rx="2" fill="#2563eb" data-lab-w="L" style="cursor:pointer"/>';
+  }
+  for (let i = 0; i < labBalR; i++) {
+    right += '<rect x="' + (233 + (i % 5) * 13) + '" y="' + (76 + Math.floor(i / 5) * 13) + '" width="11" height="11" rx="2" fill="#ff8a3d" data-lab-w="R" style="cursor:pointer"/>';
+  }
+  document.getElementById('labLeftWeights').innerHTML = left;
+  document.getElementById('labRightWeights').innerHTML = right;
+  document.querySelectorAll('#labBalSvg [data-lab-w]').forEach(w => w.addEventListener('click', () => {
+    if (w.dataset.labW === 'L' && labBalL > 0) labBalL--;
+    if (w.dataset.labW === 'R' && labBalR > 0) labBalR--;
+    labRenderBal();
+  }));
+  document.getElementById('labBalEq').textContent = '左 ' + labBalL + ' ＝ 右 ' + labBalR;
+  document.getElementById('labBalMsg').textContent =
+    labBalL === labBalR ? '天平平了，左右一样重。' :
+    labBalL > labBalR ? '左边重 ' + (labBalL - labBalR) + '，天平向左歪了。试试右边再加几个。' :
+    '右边重 ' + (labBalR - labBalL) + '，天平向右歪了。试试左边再加几个。';
+}
+function labBalChange(side, d) {
+  if (side === 'L') labBalL = Math.max(0, Math.min(10, labBalL + d));
+  else labBalR = Math.max(0, Math.min(10, labBalR + d));
+  labRenderBal();
+}
+document.getElementById('labBalAddL').addEventListener('click', () => labBalChange('L', 1));
+document.getElementById('labBalSubL').addEventListener('click', () => labBalChange('L', -1));
+document.getElementById('labBalAddR').addEventListener('click', () => labBalChange('R', 1));
+document.getElementById('labBalSubR').addEventListener('click', () => labBalChange('R', -1));
+document.getElementById('labBalReset').addEventListener('click', () => { labBalL = 0; labBalR = 0; labRenderBal(); });
+labRenderBal();
+
+/* 函数自由玩：k、b 随便调，直线和表格实时跟上（画图走共用的 drawFuncGraph） */
+const labFuncCanvas = document.getElementById('labFuncCanvas');
+const labFuncCtx = labFuncCanvas.getContext('2d');
+function drawLabFunc() {
+  const k = parseFloat(document.getElementById('labFuncKRange').value);
+  const b = parseFloat(document.getElementById('labFuncBRange').value);
+  document.getElementById('labFuncKLabel').textContent = k;
+  document.getElementById('labFuncBLabel').textContent = b;
+  document.getElementById('labFuncK').textContent = k;
+  document.getElementById('labFuncB').textContent = b;
+  drawFuncGraph(labFuncCtx, labFuncCanvas, k, b);
+  [0, 1, 2, 3, 5].forEach(x => { document.getElementById('labY' + x).textContent = (k * x + b); });
+}
+document.getElementById('labFuncKRange').addEventListener('input', drawLabFunc);
+document.getElementById('labFuncBRange').addEventListener('input', drawLabFunc);
+drawLabFunc();

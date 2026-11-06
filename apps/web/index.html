@@ -77,6 +77,7 @@
       <button class="panel" type="button" data-nav-key="dimensions"><span class="panel-icon" aria-hidden="true">◇</span><b>换维度</b><span class="panel-sub">同一批内容换个分法</span><span class="panel-prog"><i style="width:20%"></i></span><span class="panel-tx">5 个维度</span></button>
       <button class="panel" type="button" data-nav-key="path"><span class="panel-icon" aria-hidden="true">→</span><b>学习路径</b><span class="panel-sub">动手 → 说一说 → 练 → 测</span><span class="panel-prog"><i style="width:25%"></i></span><span class="panel-tx">每课四步</span></button>
       <button class="panel" type="button" data-nav-key="demos"><span class="panel-icon" aria-hidden="true">✦</span><b>互动演示</b><span class="panel-sub">分数、天平、函数、十格阵都能玩</span><span class="panel-prog"><i id="panelDemoProg" style="width:0%"></i></span><span class="panel-tx" id="panelDemoTx">4 个演示 · 0 已体验</span></button>
+      <button class="panel" type="button" data-nav-key="lab"><span class="panel-icon" aria-hidden="true">🧪</span><b>数学实验室</b><span class="panel-sub">没有题目，随便玩：分数、十格阵、天平、函数</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">4 个自由玩小站 · 不评分</span></button>
       <button class="panel" type="button" data-nav-key="review"><span class="panel-icon" aria-hidden="true">✎</span><b>错题本</b><span class="panel-sub">错题连当时的图一起存</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">2 条示例</span></button>
       <button class="panel" type="button" data-nav-key="progress"><span class="panel-icon" aria-hidden="true">●</span><b>我的进度</b><span class="panel-sub">玩过的演示点亮一格</span><span class="panel-prog"><i id="panelProgFill" style="width:0%"></i></span><span class="panel-tx" id="panelProgTx">0 / 4 个演示</span></button>
     </div>
@@ -221,6 +222,98 @@
         </table>
         <p class="demo-foot" id="funcChallenge">小挑战：x = 2 公里时要付多少钱？拖动 k 和 b，看表格里的答案怎么变。</p>
         <p class="why"><b>为什么？</b>k 是“每多走 1 公里多付多少钱”，所以直线越陡，每公里越贵；b 是“还没走就先付的起步价”，所以直线从 y 轴的 b 那里出发。直线不是公式，是这趟车费的故事。</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- 数学实验室：自由玩（借 NB实验室“自由组合、即时看后果”的做法）
+       没有题目、没有对错、不评分——四个小站都复用已有演示的组件和画法，
+       只是去掉了固定题目：随便摆、随便拖，看图会发生什么。 -->
+  <section id="lab" class="section wrap">
+    <h2>数学实验室 · 自由玩</h2>
+    <p class="section-sub">没有题目，没有对错，也不评分。四个小站随便玩：分数随便切，十格阵随便放，天平随便压，函数随便拖——图会立刻告诉你发生了什么。</p>
+    <div class="lab-grid">
+      <!-- 分数自由玩：复用分数演示的切饼 + 数轴画法，没有目标分数 -->
+      <article class="demo-card" id="lab-fraction">
+        <p class="demo-tag">自由玩 · 3–5 年级 · 分数</p>
+        <h3>分数切一切</h3>
+        <p>想切几份就切几份，想取几份就取几份，饼和数轴跟着变。</p>
+        <div class="control-row"><span>切成几份（分母）</span><div class="seg" id="labFracDenomSeg"></div></div>
+        <div class="control-row"><label for="labFracNumRange">取几份（分子） <b id="labFracNumLabel">3</b></label><input type="range" id="labFracNumRange" min="0" max="4" step="1" value="3"></div>
+        <div class="fraction-visual">
+          <svg id="labFracPie" viewBox="0 0 200 200" role="img" aria-label="分数圆饼图"></svg>
+          <div class="fraction-readout">
+            <div class="big-frac"><span id="labFracText">3/4</span> = <span id="labFracDecimal">0.75</span></div>
+            <p id="labFracNote">取了 3 份，每份是 1/4。</p>
+          </div>
+        </div>
+        <svg id="labFracLine" viewBox="0 0 320 70" class="number-line" role="img" aria-label="分数数轴">
+          <line x1="20" y1="30" x2="300" y2="30" stroke="#334155" stroke-width="3" stroke-linecap="round"/>
+          <g id="labFracTicks"></g>
+          <circle id="labFracDot" cx="230" cy="30" r="11" fill="#ff8a3d" stroke="#fff" stroke-width="3" style="cursor:grab; touch-action:none"/>
+          <text x="20" y="60" font-size="13" fill="#64748b">0</text>
+          <text x="292" y="60" font-size="13" fill="#64748b">1</text>
+        </svg>
+        <p class="hint">试试：切成 8 份只取 1 份，它在数轴上的哪里？切成 6 份取 3 份，和切成 2 份取 1 份是一回事吗？</p>
+        <div class="btn-row"><button class="btn small ghost" id="labFracReset" type="button">重置</button></div>
+      </article>
+
+      <!-- 十格阵自由玩：复用十格阵的格子样式，没有 9+4 这类题目 -->
+      <article class="demo-card" id="lab-tenframe">
+        <p class="demo-tag">自由玩 · 1–2 年级 · 20以内加减法</p>
+        <h3>十格阵随便放</h3>
+        <p>没有题目：点一个格子放一个圆点，再点拿走，两边加起来是多少，算式立刻告诉你。</p>
+        <div class="tenframe-wrap" id="labTfWrap">
+          <div><p class="tf-label" id="labTfLabelA">左边 · 0 个</p><div class="tenframe" id="labTfA"></div></div>
+          <div><p class="tf-label" id="labTfLabelB">右边 · 0 个</p><div class="tenframe" id="labTfB"></div></div>
+        </div>
+        <p class="func-eq" id="labTfEq">0 + 0 = 0</p>
+        <p id="labTfNote">试试：两边都放满 10 个，是多少？只放一边 10 个、另一边 0 个呢？</p>
+        <div class="btn-row"><button class="btn small ghost" id="labTfReset" type="button">清空</button></div>
+      </article>
+
+      <!-- 天平自由玩：复用天平演示的横梁 SVG，没有 3x+5=20 这类目标方程 -->
+      <article class="demo-card" id="lab-balance">
+        <p class="demo-tag">自由玩 · 5–7 年级 · 方程</p>
+        <h3>天平随便压</h3>
+        <p>两边随便加砝码、随便拿，天平立刻歪给你看。点砝码也可以拿走一个。</p>
+        <div class="balance-visual">
+          <svg id="labBalSvg" viewBox="0 0 320 190" role="img" aria-label="天平">
+            <line x1="20" y1="170" x2="300" y2="170" stroke="#94a3b8" stroke-width="4"/>
+            <line x1="160" y1="170" x2="160" y2="70" stroke="#334155" stroke-width="5"/>
+            <g id="labBeamGroup">
+              <line x1="50" y1="70" x2="270" y2="70" stroke="#334155" stroke-width="5" stroke-linecap="round"/>
+              <g id="labLeftPan"><line x1="60" y1="70" x2="60" y2="105" stroke="#64748b" stroke-width="3"/><path d="M30 105 Q60 135 90 105 Z" fill="#e2e8f0" stroke="#64748b" stroke-width="2"/><g id="labLeftWeights"></g></g>
+              <g id="labRightPan"><line x1="260" y1="70" x2="260" y2="105" stroke="#64748b" stroke-width="3"/><path d="M230 105 Q260 135 290 105 Z" fill="#e2e8f0" stroke="#64748b" stroke-width="2"/><g id="labRightWeights"></g></g>
+            </g>
+          </svg>
+          <p class="balance-eq" id="labBalEq">左 5 ＝ 右 3</p>
+          <p id="labBalMsg">左边重 2，天平向左歪了。试试右边再加几个。</p>
+        </div>
+        <div class="btn-row">
+          <button class="btn small primary" id="labBalAddL" type="button">左边 +1</button>
+          <button class="btn small ghost" id="labBalSubL" type="button">左边 −1</button>
+          <button class="btn small primary" id="labBalAddR" type="button">右边 +1</button>
+          <button class="btn small ghost" id="labBalSubR" type="button">右边 −1</button>
+          <button class="btn small ghost" id="labBalReset" type="button">清空</button>
+        </div>
+        <p class="hint">试试把天平弄歪，再想办法把它弄平——要加几个、拿几个？</p>
+      </article>
+
+      <!-- 函数自由玩：复用函数演示的画图，没有目标直线 -->
+      <article class="demo-card" id="lab-function">
+        <p class="demo-tag">自由玩 · 7–8 年级 · 函数</p>
+        <h3>函数随便拖</h3>
+        <p>没有目标直线：k 和 b 随便调，直线、表格一起变。</p>
+        <div class="control-row"><label for="labFuncKRange">k（斜率） <b id="labFuncKLabel">2</b></label><input type="range" id="labFuncKRange" min="-3" max="4" step="0.5" value="2"></div>
+        <div class="control-row"><label for="labFuncBRange">b（截距） <b id="labFuncBLabel">8</b></label><input type="range" id="labFuncBRange" min="0" max="15" step="1" value="8"></div>
+        <p class="func-eq">y = <span id="labFuncK">2</span>x + <span id="labFuncB">8</span></p>
+        <canvas id="labFuncCanvas" width="640" height="360" aria-label="一次函数图像"></canvas>
+        <table class="func-table">
+          <thead><tr><th>x</th><th>0</th><th>1</th><th>2</th><th>3</th><th>5</th></tr></thead>
+          <tbody><tr><th>y</th><td id="labY0"></td><td id="labY1"></td><td id="labY2"></td><td id="labY3"></td><td id="labY5"></td></tr></tbody>
+        </table>
+        <p class="hint">试试：把 k 调成负数，直线往哪边倒？把 b 调到 0，直线从哪里出发？</p>
       </article>
     </div>
   </section>

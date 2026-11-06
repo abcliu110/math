@@ -46,7 +46,7 @@ code{background:#eef2ff;padding:2px 6px;border-radius:6px}
    body[data-view] 由 app.js 的 applyView() 维护；万一 JS 没跑起来，页面保持原样全部显示（不白屏）。 */
 [hidden]{display:none !important}
 body[data-view] #grades, body[data-view] #dimensions, body[data-view] #path,
-body[data-view] #demos, body[data-view] #why, body[data-view] #review,
+body[data-view] #demos, body[data-view] #why, body[data-view] #review, body[data-view] #lab,
 body[data-view] .next-steps, body[data-view] footer.footer{display:none}
 body[data-view="grades"] #grades, body[data-view="grade-detail"] #grades,
 body[data-view="unit-detail"] #grades, body[data-view="point-detail"] #grades,
@@ -56,7 +56,7 @@ body[data-view="path"] #path, body[data-view="path-step"] #path,
 body[data-view="demos"] #demos, body[data-view="demo-tenframe"] #demos, body[data-view="demo-fraction"] #demos,
 body[data-view="demo-balance"] #demos, body[data-view="demo-function"] #demos,
 body[data-view="why"] #why, body[data-view="review"] #review,
-body[data-view="progress"] #review{display:block}
+body[data-view="progress"] #review, body[data-view="lab"] #lab{display:block}
 .path-detail{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-top:16px}
 .path-detail h3{margin:0 0 8px}
 .path-detail p{margin:0;color:#334155}
@@ -150,11 +150,15 @@ main{min-width:0}
 .demo-foot{color:var(--muted);font-size:14px;border-top:1px solid var(--line);padding-top:10px}
 .balance-visual{text-align:center}
 .balance-eq{font-size:22px;font-weight:800;margin:6px 0}
-#balanceMsg{min-height:44px;color:#334155}
+#balanceMsg, #labBalMsg{min-height:44px;color:#334155}
 .func-eq{font-size:19px;font-weight:700;text-align:center}
-#funcCanvas{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px;background:#fff}
+#funcCanvas, #labFuncCanvas{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px;background:#fff}
 .func-table{width:100%;border-collapse:collapse;margin-top:10px;text-align:center}
 .func-table th,.func-table td{border:1px solid var(--line);padding:8px}
+
+/* 数学实验室：四个自由玩小站，两列排布（十格阵两副格子并排要 540px 左右，
+   三列放不下）；小屏改一列。 */
+.lab-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
 
 /* Review */
 .review-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
@@ -184,7 +188,7 @@ main{min-width:0}
   .crumb-title{font-size:16px}
   .crumb-title .crumb{font-size:16px}
   .brand-text small{display:none}
-  .demo-grid,.unit-list,.review-grid{grid-template-columns:1fr}
+  .demo-grid,.lab-grid,.unit-list,.review-grid{grid-template-columns:1fr}
   .fraction-visual{flex-direction:column;text-align:center}
   .progress-chip{display:none}
 }
