@@ -17,7 +17,7 @@
       <span class="brand-text"><strong>数学小宇宙</strong><small>小学 1–6 · 初中 7–9 · 动手玩懂数学</small></span>
     </button>
     <h1 class="crumb-title" id="crumbTitle" aria-label="当前位置">数学</h1>
-    <div class="progress-chip" id="progressChip" title="已体验的演示">已体验 <b id="progressCount">0 / 124</b> 个演示</div>
+    <div class="progress-chip" id="progressChip" title="已体验的演示">已体验 <b id="progressCount">0 / 132</b> 个演示</div>
   </div>
 </header>
 
@@ -82,10 +82,10 @@
     </div>
     <h3 class="panel-group-label">工具箱</h3>
     <div class="panels four">
-      <button class="panel" type="button" data-nav-key="demos"><span class="panel-icon" aria-hidden="true">✦</span><b>互动演示</b><span class="panel-sub">分数、天平、函数、十格阵，还有一到九年级实验都能玩</span><span class="panel-prog"><i id="panelDemoProg" style="width:0%"></i></span><span class="panel-tx" id="panelDemoTx">124 个演示 · 0 已体验</span></button>
+      <button class="panel" type="button" data-nav-key="demos"><span class="panel-icon" aria-hidden="true">✦</span><b>互动演示</b><span class="panel-sub">分数、天平、函数、十格阵，还有一到九年级实验都能玩</span><span class="panel-prog"><i id="panelDemoProg" style="width:0%"></i></span><span class="panel-tx" id="panelDemoTx">132 个演示 · 0 已体验</span></button>
       <button class="panel" type="button" data-nav-key="lab"><span class="panel-icon" aria-hidden="true">🧪</span><b>数学实验室</b><span class="panel-sub">没有题目，随便玩：分数、十格阵、天平、函数</span><span class="panel-tx">4 个自由玩小站 · 不评分</span></button>
       <button class="panel" type="button" data-nav-key="review"><span class="panel-icon" aria-hidden="true">✎</span><b>错题本</b><span class="panel-sub">错题连当时的图一起存</span><span class="panel-tx">还没有错题</span></button>
-      <button class="panel" type="button" data-nav-key="progress"><span class="panel-icon" aria-hidden="true">●</span><b>我的进度</b><span class="panel-sub">玩过的演示点亮一格</span><span class="panel-prog"><i id="panelProgFill" style="width:0%"></i></span><span class="panel-tx" id="panelProgTx">0 / 124 个演示</span></button>
+      <button class="panel" type="button" data-nav-key="progress"><span class="panel-icon" aria-hidden="true">●</span><b>我的进度</b><span class="panel-sub">玩过的演示点亮一格</span><span class="panel-prog"><i id="panelProgFill" style="width:0%"></i></span><span class="panel-tx" id="panelProgTx">0 / 132 个演示</span></button>
     </div>
   </section>
 
@@ -127,7 +127,18 @@
   <!-- Featured demos -->
   <section id="demos" class="section wrap">
     <h2>互动演示</h2>
-    <p class="section-sub">点一块面板进一个演示，都是我们自己画的图、自己写的例子。能点的都请点一点、拖一拖。一到七年级的新实验也都在里面。</p>
+    <p class="section-sub">点一块面板进一个演示，都是我们自己画的图、自己写的例子。能点的都请点一点、拖一拖。一到九年级的实验也都在里面，顶上 8 个是创意实验：先猜，再玩，再想明白。</p>
+<p class="panel-group-label" id="creativeLabel">创意实验 · 先猜，再玩，再想明白</p>
+    <div class="panels" id="creativePanels" aria-label="创意实验面板">
+      <button class="panel" type="button" data-nav-key="demo-twentyfour"><span class="panel-icon" aria-hidden="true">24</span><b>24点：四个数拼出24</b><span class="panel-sub">四个数、四个运算，拼出 24——不止一种拼法</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">4–5 年级 · 四则运算</span></button>
+      <button class="panel" type="button" data-nav-key="demo-monty"><span class="panel-icon" aria-hidden="true">🚪</span><b>三门问题：换还是不换</b><span class="panel-sub">选了一扇门，主持人打开一扇有羊的门——换，还是不换？</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">9 年级 · 概率</span></button>
+      <button class="panel" type="button" data-nav-key="demo-maxarea"><span class="panel-icon" aria-hidden="true">▭</span><b>周长20，面积谁最大</b><span class="panel-sub">周长都是 20 厘米，长方形面积最大能到多少？</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">3–5 年级 · 面积</span></button>
+      <button class="panel" type="button" data-nav-key="demo-matches"><span class="panel-icon" aria-hidden="true">🔥</span><b>火柴棒：动一根就对了</b><span class="panel-sub">错的算式，动一根火柴就能变对——你找得到吗？</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">3–4 年级 · 图形与运算</span></button>
+      <button class="panel" type="button" data-nav-key="demo-mobius"><span class="panel-icon" aria-hidden="true">∞</span><b>莫比乌斯带：剪一刀</b><span class="panel-sub">先猜：剪一刀会变成几个圈？剪完再看答案</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">6–7 年级 · 拓扑直觉</span></button>
+      <button class="panel" type="button" data-nav-key="demo-shopweek"><span class="panel-icon" aria-hidden="true">🏪</span><b>开店一周：怎么赚钱</b><span class="panel-sub">200 元本钱开店 7 天，进多少、卖多少钱，你说了算</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">5–6 年级 · 钱与决策</span></button>
+      <button class="panel" type="button" data-nav-key="demo-fairgame"><span class="panel-icon" aria-hidden="true">🎲</span><b>公平游戏：自己定规则</b><span class="panel-sub">掷骰子比大小，你来定谁赢——定完了模拟 100 次验一验</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">5 年级 · 可能性</span></button>
+      <button class="panel" type="button" data-nav-key="demo-makerule"><span class="panel-icon" aria-hidden="true">✦</span><b>造规律：考考第20个</b><span class="panel-sub">自己造一个重复的规律，再算第 10 个、第 20 个是什么</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1–2 年级 · 规律</span></button>
+    </div>
     <div class="panels" id="demoPanels" aria-label="互动演示面板">
       <button class="panel" type="button" data-nav-key="demo-tenframe"><span class="panel-icon" aria-hidden="true">▦</span><b>十格阵凑十</b><span class="panel-sub">点 1 个凑成 10，9+4 就好算了</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1–2 年级 · 加减法</span></button>
       <button class="panel" type="button" data-nav-key="demo-fraction"><span class="panel-icon" aria-hidden="true">3/4</span><b>分数切一切</b><span class="panel-sub">切饼、落数轴，3/4 = 6/8</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">3–5 年级 · 分数</span></button>
@@ -2915,6 +2926,174 @@
         <p id="pjMsg"></p>
         <p class="demo-foot">成功标准：说出“主视图从前看，左视图从左看，俯视图从上看；长对正、高平齐、宽相等”。</p>
         <p class="why"><b>为什么？</b>三个视图看的是同一个物体的同一条边，所以长对正、高平齐、宽相等。俯视图是从上面往下看，从下面看叫仰视图。</p>
+      </article>
+
+      <!-- 创意实验：24点 -->
+      <article class="demo-card" id="demo-twentyfour">
+        <p class="demo-tag">创意实验 · 4–5 年级 · 四则运算</p>
+        <h3>24点：四个数拼出24</h3>
+        <p>四个数摆在桌上，加减乘除和括号随便用，每个数恰好用一次，拼出 24。注意：<b>同一组数不止一种拼法</b>——找到第二种，才算真会了。</p>
+        <p class="func-eq" id="tf24Nums">3　3　8　8</p>
+        <p>算式：<b id="tf24Expr">（点下面的数字和符号）</b></p>
+        <div class="btn-row" id="tf24NumRow"></div>
+        <div class="btn-row" id="tf24OpRow"></div>
+        <div class="btn-row">
+          <button class="btn small primary" id="tf24Calc" type="button">算一算</button>
+          <button class="btn small ghost" id="tf24Back" type="button">退一格</button>
+          <button class="btn small ghost" id="tf24Clear" type="button">清空算式</button>
+          <button class="btn small ghost" id="tf24Hint" type="button">给个提示</button>
+          <button class="btn small ghost" id="tf24New" type="button">换一组数字</button>
+        </div>
+        <p id="tf24Msg">先点数字，再点运算符号，把算式拼出来。</p>
+        <p id="tf24Found">这组数已经找到的拼法：0 种。</p>
+        <p class="demo-foot">成功标准：同一组数找到 2 种不同拼法。</p>
+        <p class="why"><b>为什么？</b>24 点没有“标准答案”：8÷(3−8÷3) 和别的拼法都对。会拼 24 点，拼的是“先算什么、后算什么”的顺序感。</p>
+      </article>
+
+      <!-- 创意实验：三门问题 -->
+      <article class="demo-card" id="demo-monty">
+        <p class="demo-tag">创意实验 · 9 年级 · 概率</p>
+        <h3>三门问题：换还是不换</h3>
+        <p>三扇门后面，一扇是汽车，两扇是山羊。你先选一扇，主持人打开一扇有山羊的门，问你：<b>换，还是不换？</b>先猜，再玩 1 局，再跑 100 次模拟——结果可能跟你想的不一样。</p>
+        <p>第一步 · 先猜：<span id="moPredTx">你觉得换门好，还是不换好？</span></p>
+        <div class="btn-row">
+          <button class="btn small primary" id="moPredSwitch" type="button">换门更好</button>
+          <button class="btn small primary" id="moPredStay" type="button">不换更好</button>
+          <button class="btn small primary" id="moPredSame" type="button">换不换都一样</button>
+        </div>
+        <p>第二步 · 玩 1 局：</p>
+        <div class="btn-row" id="moDoors"></div>
+        <p id="moRound">点一扇门，选你的第一扇。</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="moSwitch" type="button">换到另一扇门</button>
+          <button class="btn small primary" id="moStay" type="button">坚持原来的门</button>
+          <button class="btn small ghost" id="moNewRound" type="button">再来一局</button>
+        </div>
+        <p>第三步 · 跑 100 次模拟：</p>
+        <div class="btn-row"><button class="btn small primary" id="moSim" type="button">换门跑 100 次 + 不换跑 100 次</button></div>
+        <p id="moSimOut"></p>
+        <p id="moWhy"></p>
+        <p class="demo-foot">成功标准：说出“换门赢的可能大约是 2/3，不换大约是 1/3”，并且能说清为什么。</p>
+        <p class="why"><b>为什么？</b>一开始选对的可能只有 1/3。主持人打开一扇羊门之后，那 2/3 的可能并没有消失——它全跑到另一扇没开的门上了。所以换门，就是拿走那 2/3。</p>
+      </article>
+
+      <!-- 创意实验：周长一定面积最大 -->
+      <article class="demo-card" id="demo-maxarea">
+        <p class="demo-tag">创意实验 · 3–5 年级 · 面积</p>
+        <h3>周长20，面积谁最大</h3>
+        <p>一根 20 厘米的绳子围成长方形。<b>先猜</b>：长和宽是多少时，面积最大？猜完再动手试——答案不在下面，在你自己的记录表里。</p>
+        <p>你的猜测：<b id="maGuessTx">还没猜</b></p>
+        <div class="control-row"><label for="maLRange">长 <b id="maLLabel">5</b> 厘米（宽 = 10 − 长）</label><input type="range" id="maLRange" min="1" max="9" step="1" value="5"></div>
+        <div class="btn-row">
+          <button class="btn small primary" id="maGuessSet" type="button">就猜这个长</button>
+          <button class="btn small ghost" id="maLMinus" type="button">长 −1</button>
+          <button class="btn small ghost" id="maLPlus" type="button">长 +1</button>
+        </div>
+        <svg id="maSvg" viewBox="0 0 320 190" role="img" aria-label="长方形"></svg>
+        <p class="func-eq" id="maEq">长 5 厘米，宽 5 厘米，面积 25 平方厘米</p>
+        <div class="btn-row"><button class="btn small primary" id="maRecord" type="button">记下来</button><button class="btn small ghost" id="maReset" type="button">清空记录表</button></div>
+        <table class="func-table"><thead><tr><th>长</th><th>宽</th><th>面积</th></tr></thead><tbody id="maTable"></tbody></table>
+        <p id="maFind"></p>
+        <p id="maWhy" hidden><b>为什么？</b>周长一定，长和宽越接近，面积越大——最接近就是相等，变成正方形。反过来想：长 1 宽 9 的长方形又细又长，面积只有 9。</p>
+        <p class="demo-foot">成功标准：记录 5 种以上的长方形，并且从表里找出面积最大的是哪一种。</p>
+      </article>
+
+      <!-- 创意实验：火柴棒 -->
+      <article class="demo-card" id="demo-matches">
+        <p class="demo-tag">创意实验 · 3–4 年级 · 图形与运算</p>
+        <h3>火柴棒：动一根就对了</h3>
+        <p>下面的算式是错的。<b>只动一根火柴</b>（点一根亮着的火柴把它拿起来，再点一个空着的位置放下去），让算式变对。动完点“检查”。</p>
+        <p class="func-eq" id="msTitle">第 1 题：6 + 4 = 4</p>
+        <div class="ms-board" id="msBoard"></div>
+        <p id="msMsg">点一根亮着的火柴把它拿起来，再点一个空着的位置放下去。</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="msCheck" type="button">检查</button>
+          <button class="btn small ghost" id="msReset" type="button">重摆这道题</button>
+          <button class="btn small ghost" id="msNext" type="button">下一题</button>
+        </div>
+        <p id="msSolved">已经做对的题：0 / 3。</p>
+        <p class="demo-foot">成功标准：3 道题都只动一根火柴做对。</p>
+        <p class="why"><b>为什么？</b>一根火柴既能“拆掉”一个数字，也能“补出”另一个数字：6 拿走一根变 5、补一根变 8；加号拿走一根变减号。动火柴，就是在动数字的形状。</p>
+      </article>
+
+      <!-- 创意实验：莫比乌斯带 -->
+      <article class="demo-card" id="demo-mobius">
+        <p class="demo-tag">创意实验 · 6–7 年级 · 拓扑直觉</p>
+        <h3>莫比乌斯带：剪一刀</h3>
+        <p>拿一条纸带，拧一下再把两头粘起来，就得到莫比乌斯带——它只有一个面、一条边。现在沿着中间剪一刀，<b>先猜</b>：会变成什么？</p>
+        <p>第一步 · 先猜：剪一刀之后，会变成几个圈？</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="mbPred2" type="button">2 个圈</button>
+          <button class="btn small primary" id="mbPred1" type="button">还是 1 个圈</button>
+          <button class="btn small primary" id="mbPredKnot" type="button">变成一个结</button>
+        </div>
+        <p id="mbPredTx">先选一个猜测，再剪。</p>
+        <svg id="mbSvg" viewBox="0 0 320 190" role="img" aria-label="莫比乌斯带"></svg>
+        <div class="btn-row">
+          <button class="btn small primary" id="mbCut" type="button">✂ 沿中间剪一刀</button>
+          <button class="btn small ghost" id="mbCutThird" type="button">换个地方：离边缘 1/3 处剪</button>
+          <button class="btn small ghost" id="mbReset" type="button">再拿一条新纸带</button>
+        </div>
+        <p id="mbResult"></p>
+        <p id="mbWhy" hidden><b>为什么？</b>莫比乌斯带只有一个面：沿中间剪，剪刀走的其实是同一条边绕了两圈，所以不断开，只是变长、变拧了。离边缘 1/3 处剪，剪刀会绕出两个圈，套在一起。</p>
+        <p class="demo-foot">成功标准：两个实验都猜过、都剪过，并且能说出两次剪完各是几个圈。</p>
+      </article>
+
+      <!-- 创意实验：开店一周 -->
+      <article class="demo-card" id="demo-shopweek">
+        <p class="demo-tag">创意实验 · 5–6 年级 · 钱与决策</p>
+        <h3>开店一周：怎么赚钱</h3>
+        <p>你有 <b>200 元</b>本钱，开一家卖文具盒的小店，进价 <b>8 元</b>一个。每天：定售价、定进多少货，然后开门营业。顾客多少看售价：<b>卖得越贵，来的顾客越少</b>。7 天之后算总账。每天的顾客数是固定的，换个策略可以公平对比。</p>
+        <p class="func-eq" id="swStatus">第 1 天 · 手里 200 元 · 库存 0 个</p>
+        <div class="control-row"><span>今天卖多少钱一个</span><div class="btn-row"><button class="btn small ghost" id="swPriceMinus" type="button">−1 元</button><b id="swPriceLabel">12 元</b><button class="btn small ghost" id="swPricePlus" type="button">+1 元</button></div></div>
+        <div class="control-row"><span>今天进多少货（8 元/个）</span><div class="btn-row"><button class="btn small ghost" id="swQtyMinus" type="button">−1 个</button><b id="swQtyLabel">20 个</b><button class="btn small ghost" id="swQtyPlus" type="button">+1 个</button></div></div>
+        <p id="swPlan">今天要花 160 元进货。</p>
+        <div class="btn-row"><button class="btn small primary" id="swOpen" type="button">开门营业</button><button class="btn small ghost" id="swReplay" type="button">换个策略再来一周</button></div>
+        <p id="swDayOut"></p>
+        <table class="func-table"><thead><tr><th>天</th><th>售价</th><th>进货</th><th>来客</th><th>卖出</th><th>收入</th></tr></thead><tbody id="swTable"></tbody></table>
+        <p id="swReport"></p>
+        <p class="demo-foot">成功标准：开完 7 天，能说出“哪天赚得最多、哪天亏了、为什么”，并且换个策略再开一周，对比总利润。</p>
+        <p class="why"><b>为什么？</b>卖得贵，单个赚得多，但顾客少；卖得便宜，顾客多，但单个赚得少。进太多卖不完，钱压在货上；进太少，顾客来了没货，白白跑掉。开店就是在这几头之间找平衡。</p>
+      </article>
+
+      <!-- 创意实验：公平游戏 -->
+      <article class="demo-card" id="demo-fairgame">
+        <p class="demo-tag">创意实验 · 5 年级 · 可能性</p>
+        <h3>公平游戏：自己定规则</h3>
+        <p>甲乙两人掷两枚骰子，比点数之和。规则你来定：点一下 2–12，轮流分给甲、乙。分完先别急着玩——<b>你觉得公平吗？</b>模拟 100 次验一验，再看 36 种可能找找原因。</p>
+        <div class="btn-row" id="fgSums"></div>
+        <p class="func-eq" id="fgWays">甲：0 种可能 · 乙：0 种可能</p>
+        <p id="fgVerdict">先把 2–12 分完，再模拟。</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="fgSim" type="button">模拟 100 次</button>
+          <button class="btn small ghost" id="fgTable" type="button">看 36 种可能</button>
+          <button class="btn small ghost" id="fgReset" type="button">重新分</button>
+        </div>
+        <p id="fgSimOut"></p>
+        <p id="fgTableOut" hidden></p>
+        <p id="fgWhy" hidden><b>为什么？</b>点数之和不是一样容易：和是 7 有 6 种掷法，和是 2 只有 1 种。定规则不能只看“和有几个”，要看“每种和有几种掷法”。</p>
+        <p class="demo-foot">成功标准：分出一个公平的规则（甲乙各 18 种可能），并且能说出“7 最容易出现，2 和 12 最难”。</p>
+      </article>
+
+      <!-- 创意实验：造规律 -->
+      <article class="demo-card" id="demo-makerule">
+        <p class="demo-tag">创意实验 · 1–2 年级 · 规律</p>
+        <h3>造规律：考考第20个</h3>
+        <p>轮到你出题了：先造一个重复的规律（点下面的图形，排成一个单元），再算一算——<b>第 10 个是什么？第 20 个是什么？</b>不用一个个数，找找单元里藏的办法。</p>
+        <p>我的单元：<b id="mrUnit">（点下面的图形，排 2–5 个）</b></p>
+        <div class="btn-row" id="mrPalette"></div>
+        <div class="btn-row"><button class="btn small ghost" id="mrDel" type="button">删最后一个</button><button class="btn small ghost" id="mrClear" type="button">重排</button></div>
+        <p id="mrRow"></p>
+        <p>第 10 个是：</p>
+        <div class="btn-row" id="mrQ10"></div>
+        <p id="mrA10"></p>
+        <p>第 20 个是：</p>
+        <div class="btn-row" id="mrQ20"></div>
+        <p id="mrA20"></p>
+        <div class="btn-row"><button class="btn small primary" id="mrCard" type="button">生成出题卡</button></div>
+        <p id="mrCardOut"></p>
+        <p class="demo-foot">成功标准：造一个 3 个以上的单元，第 10 个和第 20 个都答对，并且生成一张出题卡。</p>
+        <p class="why"><b>为什么？</b>一个单元有 3 个，第 10 个就是第 4 个单元的第 1 个——10 除以 3 余 1。规律题不用数到 20，数“第几个单元、单元里第几个”就行。</p>
       </article>
 
 

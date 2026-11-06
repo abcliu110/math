@@ -52,7 +52,7 @@ const GRADES = {
 };
 
 /* ---------- 进度（原型：记演示是否玩过） ----------
-   124 个演示全都计入：4 个经典演示 + 13 个一年级实验 + 15 个二年级实验 + 14 个三年级实验 + 16 个四年级实验 + 11 个五年级实验 + 12 个六年级实验 + 13 个七年级实验 + 11 个八年级实验 + 15 个九年级实验 = 124 个。
+   132 个演示全都计入：4 个经典演示 + 13 个一年级实验 + 15 个二年级实验 + 14 个三年级实验 + 16 个四年级实验 + 11 个五年级实验 + 12 个六年级实验 + 13 个七年级实验 + 11 个八年级实验 + 15 个九年级实验 + 8 个创意实验 = 132 个。
    首页却写着“4 个演示”，演示页上却是 17 张卡，数字对不上
    （2026-11-06 真机审计第 6 条）。 */
 const tried = new Set();
@@ -76,7 +76,8 @@ const ALL_DEMOS = ['tenframe', 'fraction', 'balance', 'function',
   'trisides', 'congruent', 'foldmirror', 'algarea', 'algfrac', 'eqsieve',
   'radical', 'pythag', 'pargram', 'specialquad', 'datastats',
   'quad', 'growth', 'parabola', 'spin', 'circangle', 'tangent', 'sector', 'coin',
-  'tree', 'hyperbola', 'similar', 'shadow', 'trig', 'slope', 'project'];
+  'tree', 'hyperbola', 'similar', 'shadow', 'trig', 'slope', 'project',
+  'twentyfour', 'monty', 'maxarea', 'matches', 'mobius', 'shopweek', 'fairgame', 'makerule'];
 // 刷新后进度还在：已体验的演示存在本地（只存本机，不上传）。
 try { JSON.parse(lsGet('math-tried-demos-v1') || '[]').forEach(k => tried.add(k)); } catch (e) {}
 // 已体验演示的唯一事实来源：内存里的 tried 集合。启动时从存储读一次，
@@ -446,7 +447,7 @@ function renderUnit(g, ui) {
   pointDetail.querySelectorAll('[data-cp-link]').forEach(btn =>
     btn.addEventListener('click', () => navGo('checkpoint')));
 }
-const DEMO_LABEL = { fraction: '去玩分数演示', tenframe: '去玩十格阵', balance: '去玩天平演示', function: '去玩函数演示', count: '去玩数一数', position: '去玩转身找左右', split: '去玩分一分', addsub: '去玩合起来拿走', solids: '去玩立体图形', bundle: '去玩捆小棒', clock: '去玩拨时钟', tangram: '去玩七巧板', sort: '去玩分类分一分', hundred: '去玩百数表', shop: '去玩开小店', place: '去玩数位块', pattern: '去玩找规律', ruler: '去玩尺子量一量', estimate: '去玩先估后算', angle: '去玩转一转角', array: '去玩点阵乘法', observe: '去玩换个方向看', time: '去玩拨时钟（时和分）', share: '去玩轮流分一分', motion: '去玩折一折转一转', mixop: '去玩先算哪一堆', remain: '去玩装一包装不满', thousand: '去玩数轴找近似数', weight: '去玩天平称一称', chart: '去玩投票变条形图', logic: '去玩排除格推理', pair: '去玩搭配连一连', elapsed: '去玩时间轴走一走', verify: '去玩算回去验算', units: '去玩单位楼梯', times: '去玩条形复制', splitmul: '去玩面积切一切', rectsq: '去玩拉一拉变正方形', venn: '去玩韦恩图拖人', compass: '去玩指南针转一转', divplace: '去玩按数位分一分', stattable: '去玩复式统计表', fourgrid: '去玩四格面积模型', area: '去玩铺方砖数面积', calendar: '去玩日历翻一翻', decimal: '去玩十分条比大小', bignum: '去玩大数数轴', field: '去玩足球场拼一拼', protractor: '去玩量角器', areamodel: '去玩面积模型', parallelogram: '去玩平行四边形', trialdiv: '去玩试商调商', baraxis: '去玩条形图轴', teatime: '去玩沏茶排一排', zerodiv: '去玩除以0', laws: '去玩运算定律', placeslider: '去玩数位滑块', tearangle: '去玩撕角拼平角', decadd: '去玩小数加减对齐', moveshape: '去玩图形平移', average: '去玩削峰填谷', chickenrabbit: '去玩鸡兔同笼', decmul: '去玩单位正方形', gridpos: '去玩数对点一点', decdiv: '去玩两数同乘', prob: '去玩摸球模拟', polyarea: '去玩切一刀变长方形', planttree: '去玩种树数间隔', factor: '去玩拼长方形', cuboid: '去玩分层装块', fracadd: '去玩先重切再数', rotate: '去玩绕钉旋转', findbad: '去玩三组称找次品', radar: '去玩雷达找地方', ratio: '去玩比条分一分', circle: '去玩绕绳量圆', percent: '去玩百分条', fan: '去玩扇形转一转', lsquare: '去玩一层层包正方形', thermo: '去玩温度计比一比', negmul: '去玩负数乘法规律', discount: '去玩打折算一算', cylinder: '去玩倒沙装满圆柱', pigeon: '去玩鸽子找洞', conceptmap: '去玩认出老办法', numline: '去玩数轴标一点', powerup: '去玩对折纸和科学记数法', monomial: '去玩拆零件看系数次数', liketerms: '去玩合并同类项', meetline: '去玩相向而行', lineseg: '去玩直线射线线段', anglepair: '去玩余角补角拼一拼', vertangle: '去玩对顶角转一转', parangles: '去玩平行线截角', roots: '去玩开方机器', coordplane: '去玩坐标平面点一点', ineqline: '去玩不等式画数轴', histogram: '去玩直方图分组', trisides: '去玩三边围不围', congruent: '去玩全等判定拼一拼', foldmirror: '去玩对折看对称', algarea: '去玩面积模型算整式', algfrac: '去玩分式约分', eqsieve: '去玩分式方程过筛子', radical: '去玩二次根式化简', pythag: '去玩勾股定理面积拼图', pargram: '去玩平行四边形推一推', specialquad: '去玩加条件变特殊', datastats: '去玩数据分析算一算', quad: '去玩一元二次方程', growth: '去玩利滚利和韦达', parabola: '去玩抛物线滑杆', spin: '去玩旋转和中心对称', circangle: '去玩圆周角', tangent: '去玩直线和圆切线', sector: '去玩扇形和圆锥', coin: '去玩抛硬币摸红球', tree: '去玩树状图数一数', hyperbola: '去玩双曲线', similar: '去玩相似放大', shadow: '去玩影子测高', trig: '去玩锐角三角函数', slope: '去玩仰角和坡度', project: '去玩投影和三视图' };
+const DEMO_LABEL = { fraction: '去玩分数演示', tenframe: '去玩十格阵', balance: '去玩天平演示', function: '去玩函数演示', count: '去玩数一数', position: '去玩转身找左右', split: '去玩分一分', addsub: '去玩合起来拿走', solids: '去玩立体图形', bundle: '去玩捆小棒', clock: '去玩拨时钟', tangram: '去玩七巧板', sort: '去玩分类分一分', hundred: '去玩百数表', shop: '去玩开小店', place: '去玩数位块', pattern: '去玩找规律', ruler: '去玩尺子量一量', estimate: '去玩先估后算', angle: '去玩转一转角', array: '去玩点阵乘法', observe: '去玩换个方向看', time: '去玩拨时钟（时和分）', share: '去玩轮流分一分', motion: '去玩折一折转一转', mixop: '去玩先算哪一堆', remain: '去玩装一包装不满', thousand: '去玩数轴找近似数', weight: '去玩天平称一称', chart: '去玩投票变条形图', logic: '去玩排除格推理', pair: '去玩搭配连一连', elapsed: '去玩时间轴走一走', verify: '去玩算回去验算', units: '去玩单位楼梯', times: '去玩条形复制', splitmul: '去玩面积切一切', rectsq: '去玩拉一拉变正方形', venn: '去玩韦恩图拖人', compass: '去玩指南针转一转', divplace: '去玩按数位分一分', stattable: '去玩复式统计表', fourgrid: '去玩四格面积模型', area: '去玩铺方砖数面积', calendar: '去玩日历翻一翻', decimal: '去玩十分条比大小', bignum: '去玩大数数轴', field: '去玩足球场拼一拼', protractor: '去玩量角器', areamodel: '去玩面积模型', parallelogram: '去玩平行四边形', trialdiv: '去玩试商调商', baraxis: '去玩条形图轴', teatime: '去玩沏茶排一排', zerodiv: '去玩除以0', laws: '去玩运算定律', placeslider: '去玩数位滑块', tearangle: '去玩撕角拼平角', decadd: '去玩小数加减对齐', moveshape: '去玩图形平移', average: '去玩削峰填谷', chickenrabbit: '去玩鸡兔同笼', decmul: '去玩单位正方形', gridpos: '去玩数对点一点', decdiv: '去玩两数同乘', prob: '去玩摸球模拟', polyarea: '去玩切一刀变长方形', planttree: '去玩种树数间隔', factor: '去玩拼长方形', cuboid: '去玩分层装块', fracadd: '去玩先重切再数', rotate: '去玩绕钉旋转', findbad: '去玩三组称找次品', radar: '去玩雷达找地方', ratio: '去玩比条分一分', circle: '去玩绕绳量圆', percent: '去玩百分条', fan: '去玩扇形转一转', lsquare: '去玩一层层包正方形', thermo: '去玩温度计比一比', negmul: '去玩负数乘法规律', discount: '去玩打折算一算', cylinder: '去玩倒沙装满圆柱', pigeon: '去玩鸽子找洞', conceptmap: '去玩认出老办法', numline: '去玩数轴标一点', powerup: '去玩对折纸和科学记数法', monomial: '去玩拆零件看系数次数', liketerms: '去玩合并同类项', meetline: '去玩相向而行', lineseg: '去玩直线射线线段', anglepair: '去玩余角补角拼一拼', vertangle: '去玩对顶角转一转', parangles: '去玩平行线截角', roots: '去玩开方机器', coordplane: '去玩坐标平面点一点', ineqline: '去玩不等式画数轴', histogram: '去玩直方图分组', trisides: '去玩三边围不围', congruent: '去玩全等判定拼一拼', foldmirror: '去玩对折看对称', algarea: '去玩面积模型算整式', algfrac: '去玩分式约分', eqsieve: '去玩分式方程过筛子', radical: '去玩二次根式化简', pythag: '去玩勾股定理面积拼图', pargram: '去玩平行四边形推一推', specialquad: '去玩加条件变特殊', datastats: '去玩数据分析算一算', quad: '去玩一元二次方程', growth: '去玩利滚利和韦达', parabola: '去玩抛物线滑杆', spin: '去玩旋转和中心对称', circangle: '去玩圆周角', tangent: '去玩直线和圆切线', sector: '去玩扇形和圆锥', coin: '去玩抛硬币摸红球', tree: '去玩树状图数一数', hyperbola: '去玩双曲线', similar: '去玩相似放大', shadow: '去玩影子测高', trig: '去玩锐角三角函数', slope: '去玩仰角和坡度', project: '去玩投影和三视图', twentyfour: '去玩24点拼一拼', monty: '去玩三门问题', maxarea: '去玩周长面积最大', matches: '去玩火柴棒', mobius: '去玩莫比乌斯带', shopweek: '去玩开店一周', fairgame: '去玩公平游戏', makerule: '去玩造规律' };
 /* 分步评分：多步骤题拆成一步一步对。steps 是可选字段，没有 steps 的题照旧渲染。
    自评不是机器判题：每一步的对错都是学生自己标的，丢分报告只是把你标错的步骤列出来。 */
 function practiceStepsHtml(q, i, pointId) {
@@ -987,7 +988,9 @@ const DEMO_GRADES = { tenframe: [1, 2], fraction: [3, 4, 5, 6], balance: [5, 6, 
   trisides: [8], congruent: [8], foldmirror: [8], algarea: [8], algfrac: [8], eqsieve: [8],
   radical: [8], pythag: [8], pargram: [8], specialquad: [8], datastats: [8],
   quad: [9], growth: [9], parabola: [9], spin: [9], circangle: [9], tangent: [9], sector: [9], coin: [9],
-  tree: [9], hyperbola: [9], similar: [9], shadow: [9], trig: [9], slope: [9], project: [9] };
+  tree: [9], hyperbola: [9], similar: [9], shadow: [9], trig: [9], slope: [9], project: [9],
+  twentyfour: [4, 5], monty: [9], maxarea: [3, 4, 5], matches: [3, 4],
+  mobius: [6, 7], shopweek: [5, 6], fairgame: [5], makerule: [1, 2] };
 function renderProgress() {
   const card = document.getElementById('progressCard');
   if (!card) return;
@@ -1851,6 +1854,14 @@ const NAV_DEFS = {
   'demo-trig': { crumbs: ['数学', '互动演示', '锐角三角函数'], target: 'demo-trig' },
   'demo-slope': { crumbs: ['数学', '互动演示', '仰角、俯角与坡度'], target: 'demo-slope' },
   'demo-project': { crumbs: ['数学', '互动演示', '投影与三视图'], target: 'demo-project' },
+  'demo-twentyfour': { crumbs: ['数学', '互动演示', '24点：四个数拼出24'], target: 'demo-twentyfour' },
+  'demo-monty': { crumbs: ['数学', '互动演示', '三门问题：换还是不换'], target: 'demo-monty' },
+  'demo-maxarea': { crumbs: ['数学', '互动演示', '周长20，面积谁最大'], target: 'demo-maxarea' },
+  'demo-matches': { crumbs: ['数学', '互动演示', '火柴棒：动一根就对了'], target: 'demo-matches' },
+  'demo-mobius': { crumbs: ['数学', '互动演示', '莫比乌斯带：剪一刀'], target: 'demo-mobius' },
+  'demo-shopweek': { crumbs: ['数学', '互动演示', '开店一周：怎么赚钱'], target: 'demo-shopweek' },
+  'demo-fairgame': { crumbs: ['数学', '互动演示', '公平游戏：自己定规则'], target: 'demo-fairgame' },
+  'demo-makerule': { crumbs: ['数学', '互动演示', '造规律：考考第20个'], target: 'demo-makerule' },
   why:        { crumbs: ['数学', '互动演示', '为什么小实验'], target: 'why' },
   lab:        { crumbs: ['数学', '数学实验室'], target: 'lab' },
   review:     { crumbs: ['数学', '错题本'], target: 'review', action: renderWrongBook },
@@ -1907,6 +1918,8 @@ const pathSec = document.getElementById('path');
 const pathPanelsEl = document.getElementById('pathPanels');
 const demosSec = document.getElementById('demos');
 const demoPanelsEl = document.getElementById('demoPanels');
+const creativePanelsEl = document.getElementById('creativePanels');
+const creativeLabelEl = document.getElementById('creativeLabel');
 const demoGridEl = document.getElementById('demoGrid');
 const whySec = document.getElementById('why');
 const labSec = document.getElementById('lab');
@@ -1937,7 +1950,7 @@ function viewForKey(key) {
   if (key === 'path') return 'path';
   if (key.startsWith('path-step-')) return 'path-step';
   if (key === 'demos') return 'demos';
-  if (key === 'demo-tenframe' || key === 'demo-fraction' || key === 'demo-balance' || key === 'demo-function' || key === 'demo-count' || key === 'demo-position' || key === 'demo-split' || key === 'demo-addsub' || key === 'demo-solids' || key === 'demo-bundle' || key === 'demo-clock' || key === 'demo-tangram' || key === 'demo-sort' || key === 'demo-hundred' || key === 'demo-shop' || key === 'demo-place' || key === 'demo-pattern' || key === 'demo-ruler' || key === 'demo-estimate' || key === 'demo-angle' || key === 'demo-array' || key === 'demo-observe' || key === 'demo-time' || key === 'demo-share' || key === 'demo-motion' || key === 'demo-mixop' || key === 'demo-remain' || key === 'demo-thousand' || key === 'demo-weight' || key === 'demo-chart' || key === 'demo-logic' || key === 'demo-pair' || key === 'demo-elapsed' || key === 'demo-verify' || key === 'demo-units' || key === 'demo-times' || key === 'demo-splitmul' || key === 'demo-rectsq' || key === 'demo-venn' || key === 'demo-compass' || key === 'demo-divplace' || key === 'demo-stattable' || key === 'demo-fourgrid' || key === 'demo-area' || key === 'demo-calendar' || key === 'demo-decimal' || key === 'demo-bignum' || key === 'demo-field' || key === 'demo-protractor' || key === 'demo-areamodel' || key === 'demo-parallelogram' || key === 'demo-trialdiv' || key === 'demo-baraxis' || key === 'demo-teatime' || key === 'demo-zerodiv' || key === 'demo-laws' || key === 'demo-placeslider' || key === 'demo-tearangle' || key === 'demo-decadd' || key === 'demo-moveshape' || key === 'demo-average' || key === 'demo-chickenrabbit' || key === 'demo-decmul' || key === 'demo-gridpos' || key === 'demo-decdiv' || key === 'demo-prob' || key === 'demo-polyarea' || key === 'demo-planttree' || key === 'demo-factor' || key === 'demo-cuboid' || key === 'demo-fracadd' || key === 'demo-rotate' || key === 'demo-findbad' || key === 'demo-radar' || key === 'demo-ratio' || key === 'demo-circle' || key === 'demo-percent' || key === 'demo-fan' || key === 'demo-lsquare' || key === 'demo-thermo' || key === 'demo-negmul' || key === 'demo-discount' || key === 'demo-cylinder' || key === 'demo-pigeon' || key === 'demo-numline' || key === 'demo-powerup' || key === 'demo-monomial' || key === 'demo-liketerms' || key === 'demo-meetline' || key === 'demo-lineseg' || key === 'demo-anglepair' || key === 'demo-vertangle' || key === 'demo-parangles' || key === 'demo-roots' || key === 'demo-coordplane' || key === 'demo-ineqline' || key === 'demo-histogram' || key === 'demo-trisides' || key === 'demo-congruent' || key === 'demo-foldmirror' || key === 'demo-algarea' || key === 'demo-algfrac' || key === 'demo-eqsieve' || key === 'demo-radical' || key === 'demo-pythag' || key === 'demo-pargram' || key === 'demo-specialquad' || key === 'demo-datastats' || key === 'demo-quad' || key === 'demo-growth' || key === 'demo-parabola' || key === 'demo-spin' || key === 'demo-circangle' || key === 'demo-tangent' || key === 'demo-sector' || key === 'demo-coin' || key === 'demo-tree' || key === 'demo-hyperbola' || key === 'demo-similar' || key === 'demo-shadow' || key === 'demo-trig' || key === 'demo-slope' || key === 'demo-project') return key;
+  if (key === 'demo-tenframe' || key === 'demo-fraction' || key === 'demo-balance' || key === 'demo-function' || key === 'demo-count' || key === 'demo-position' || key === 'demo-split' || key === 'demo-addsub' || key === 'demo-solids' || key === 'demo-bundle' || key === 'demo-clock' || key === 'demo-tangram' || key === 'demo-sort' || key === 'demo-hundred' || key === 'demo-shop' || key === 'demo-place' || key === 'demo-pattern' || key === 'demo-ruler' || key === 'demo-estimate' || key === 'demo-angle' || key === 'demo-array' || key === 'demo-observe' || key === 'demo-time' || key === 'demo-share' || key === 'demo-motion' || key === 'demo-mixop' || key === 'demo-remain' || key === 'demo-thousand' || key === 'demo-weight' || key === 'demo-chart' || key === 'demo-logic' || key === 'demo-pair' || key === 'demo-elapsed' || key === 'demo-verify' || key === 'demo-units' || key === 'demo-times' || key === 'demo-splitmul' || key === 'demo-rectsq' || key === 'demo-venn' || key === 'demo-compass' || key === 'demo-divplace' || key === 'demo-stattable' || key === 'demo-fourgrid' || key === 'demo-area' || key === 'demo-calendar' || key === 'demo-decimal' || key === 'demo-bignum' || key === 'demo-field' || key === 'demo-protractor' || key === 'demo-areamodel' || key === 'demo-parallelogram' || key === 'demo-trialdiv' || key === 'demo-baraxis' || key === 'demo-teatime' || key === 'demo-zerodiv' || key === 'demo-laws' || key === 'demo-placeslider' || key === 'demo-tearangle' || key === 'demo-decadd' || key === 'demo-moveshape' || key === 'demo-average' || key === 'demo-chickenrabbit' || key === 'demo-decmul' || key === 'demo-gridpos' || key === 'demo-decdiv' || key === 'demo-prob' || key === 'demo-polyarea' || key === 'demo-planttree' || key === 'demo-factor' || key === 'demo-cuboid' || key === 'demo-fracadd' || key === 'demo-rotate' || key === 'demo-findbad' || key === 'demo-radar' || key === 'demo-ratio' || key === 'demo-circle' || key === 'demo-percent' || key === 'demo-fan' || key === 'demo-lsquare' || key === 'demo-thermo' || key === 'demo-negmul' || key === 'demo-discount' || key === 'demo-cylinder' || key === 'demo-pigeon' || key === 'demo-numline' || key === 'demo-powerup' || key === 'demo-monomial' || key === 'demo-liketerms' || key === 'demo-meetline' || key === 'demo-lineseg' || key === 'demo-anglepair' || key === 'demo-vertangle' || key === 'demo-parangles' || key === 'demo-roots' || key === 'demo-coordplane' || key === 'demo-ineqline' || key === 'demo-histogram' || key === 'demo-trisides' || key === 'demo-congruent' || key === 'demo-foldmirror' || key === 'demo-algarea' || key === 'demo-algfrac' || key === 'demo-eqsieve' || key === 'demo-radical' || key === 'demo-pythag' || key === 'demo-pargram' || key === 'demo-specialquad' || key === 'demo-datastats' || key === 'demo-quad' || key === 'demo-growth' || key === 'demo-parabola' || key === 'demo-spin' || key === 'demo-circangle' || key === 'demo-tangent' || key === 'demo-sector' || key === 'demo-coin' || key === 'demo-tree' || key === 'demo-hyperbola' || key === 'demo-similar' || key === 'demo-shadow' || key === 'demo-trig' || key === 'demo-slope' || key === 'demo-project' || key === 'demo-twentyfour' || key === 'demo-monty' || key === 'demo-maxarea' || key === 'demo-matches' || key === 'demo-mobius' || key === 'demo-shopweek' || key === 'demo-fairgame' || key === 'demo-makerule') return key;
   if (key === 'why') return 'why';
   if (key === 'lab') return 'lab';
   if (key === 'review') return 'review';
@@ -1986,9 +1999,11 @@ function applyView() {
   const stepN = view === 'path-step' ? key.slice('path-step-'.length) : null;
   [...pathPanelsEl.children].forEach(el => { el.hidden = !!(stepN && el.id !== 'step-' + stepN); });
   // 互动演示：列表留演示面板；叶子只留该演示卡片；为什么小实验只留 #why 区
-  const demoLeaf = view === 'demo-tenframe' || view === 'demo-fraction' || view === 'demo-balance' || view === 'demo-function' || view === 'demo-count' || view === 'demo-position' || view === 'demo-split' || view === 'demo-addsub' || view === 'demo-solids' || view === 'demo-bundle' || view === 'demo-clock' || view === 'demo-tangram' || view === 'demo-sort' || view === 'demo-hundred' || view === 'demo-shop' || view === 'demo-place' || view === 'demo-pattern' || view === 'demo-ruler' || view === 'demo-estimate' || view === 'demo-angle' || view === 'demo-array' || view === 'demo-observe' || view === 'demo-time' || view === 'demo-share' || view === 'demo-motion' || view === 'demo-mixop' || view === 'demo-remain' || view === 'demo-thousand' || view === 'demo-weight' || view === 'demo-chart' || view === 'demo-logic' || view === 'demo-pair' || view === 'demo-elapsed' || view === 'demo-verify' || view === 'demo-units' || view === 'demo-times' || view === 'demo-splitmul' || view === 'demo-rectsq' || view === 'demo-venn' || view === 'demo-compass' || view === 'demo-divplace' || view === 'demo-stattable' || view === 'demo-fourgrid' || view === 'demo-area' || view === 'demo-calendar' || view === 'demo-decimal' || view === 'demo-bignum' || view === 'demo-field' || view === 'demo-protractor' || view === 'demo-areamodel' || view === 'demo-parallelogram' || view === 'demo-trialdiv' || view === 'demo-baraxis' || view === 'demo-teatime' || view === 'demo-zerodiv' || view === 'demo-laws' || view === 'demo-placeslider' || view === 'demo-tearangle' || view === 'demo-decadd' || view === 'demo-moveshape' || view === 'demo-average' || view === 'demo-chickenrabbit' || view === 'demo-decmul' || view === 'demo-gridpos' || view === 'demo-decdiv' || view === 'demo-prob' || view === 'demo-polyarea' || view === 'demo-planttree' || view === 'demo-factor' || view === 'demo-cuboid' || view === 'demo-fracadd' || view === 'demo-rotate' || view === 'demo-findbad' || view === 'demo-radar' || view === 'demo-ratio' || view === 'demo-circle' || view === 'demo-percent' || view === 'demo-fan' || view === 'demo-lsquare' || view === 'demo-thermo' || view === 'demo-negmul' || view === 'demo-discount' || view === 'demo-cylinder' || view === 'demo-pigeon' || view === 'demo-numline' || view === 'demo-powerup' || view === 'demo-monomial' || view === 'demo-liketerms' || view === 'demo-meetline' || view === 'demo-lineseg' || view === 'demo-anglepair' || view === 'demo-vertangle' || view === 'demo-parangles' || view === 'demo-roots' || view === 'demo-coordplane' || view === 'demo-ineqline' || view === 'demo-histogram' || view === 'demo-trisides' || view === 'demo-congruent' || view === 'demo-foldmirror' || view === 'demo-algarea' || view === 'demo-algfrac' || view === 'demo-eqsieve' || view === 'demo-radical' || view === 'demo-pythag' || view === 'demo-pargram' || view === 'demo-specialquad' || view === 'demo-datastats' || view === 'demo-quad' || view === 'demo-growth' || view === 'demo-parabola' || view === 'demo-spin' || view === 'demo-circangle' || view === 'demo-tangent' || view === 'demo-sector' || view === 'demo-coin' || view === 'demo-tree' || view === 'demo-hyperbola' || view === 'demo-similar' || view === 'demo-shadow' || view === 'demo-trig' || view === 'demo-slope' || view === 'demo-project';
+  const demoLeaf = view === 'demo-tenframe' || view === 'demo-fraction' || view === 'demo-balance' || view === 'demo-function' || view === 'demo-count' || view === 'demo-position' || view === 'demo-split' || view === 'demo-addsub' || view === 'demo-solids' || view === 'demo-bundle' || view === 'demo-clock' || view === 'demo-tangram' || view === 'demo-sort' || view === 'demo-hundred' || view === 'demo-shop' || view === 'demo-place' || view === 'demo-pattern' || view === 'demo-ruler' || view === 'demo-estimate' || view === 'demo-angle' || view === 'demo-array' || view === 'demo-observe' || view === 'demo-time' || view === 'demo-share' || view === 'demo-motion' || view === 'demo-mixop' || view === 'demo-remain' || view === 'demo-thousand' || view === 'demo-weight' || view === 'demo-chart' || view === 'demo-logic' || view === 'demo-pair' || view === 'demo-elapsed' || view === 'demo-verify' || view === 'demo-units' || view === 'demo-times' || view === 'demo-splitmul' || view === 'demo-rectsq' || view === 'demo-venn' || view === 'demo-compass' || view === 'demo-divplace' || view === 'demo-stattable' || view === 'demo-fourgrid' || view === 'demo-area' || view === 'demo-calendar' || view === 'demo-decimal' || view === 'demo-bignum' || view === 'demo-field' || view === 'demo-protractor' || view === 'demo-areamodel' || view === 'demo-parallelogram' || view === 'demo-trialdiv' || view === 'demo-baraxis' || view === 'demo-teatime' || view === 'demo-zerodiv' || view === 'demo-laws' || view === 'demo-placeslider' || view === 'demo-tearangle' || view === 'demo-decadd' || view === 'demo-moveshape' || view === 'demo-average' || view === 'demo-chickenrabbit' || view === 'demo-decmul' || view === 'demo-gridpos' || view === 'demo-decdiv' || view === 'demo-prob' || view === 'demo-polyarea' || view === 'demo-planttree' || view === 'demo-factor' || view === 'demo-cuboid' || view === 'demo-fracadd' || view === 'demo-rotate' || view === 'demo-findbad' || view === 'demo-radar' || view === 'demo-ratio' || view === 'demo-circle' || view === 'demo-percent' || view === 'demo-fan' || view === 'demo-lsquare' || view === 'demo-thermo' || view === 'demo-negmul' || view === 'demo-discount' || view === 'demo-cylinder' || view === 'demo-pigeon' || view === 'demo-numline' || view === 'demo-powerup' || view === 'demo-monomial' || view === 'demo-liketerms' || view === 'demo-meetline' || view === 'demo-lineseg' || view === 'demo-anglepair' || view === 'demo-vertangle' || view === 'demo-parangles' || view === 'demo-roots' || view === 'demo-coordplane' || view === 'demo-ineqline' || view === 'demo-histogram' || view === 'demo-trisides' || view === 'demo-congruent' || view === 'demo-foldmirror' || view === 'demo-algarea' || view === 'demo-algfrac' || view === 'demo-eqsieve' || view === 'demo-radical' || view === 'demo-pythag' || view === 'demo-pargram' || view === 'demo-specialquad' || view === 'demo-datastats' || view === 'demo-quad' || view === 'demo-growth' || view === 'demo-parabola' || view === 'demo-spin' || view === 'demo-circangle' || view === 'demo-tangent' || view === 'demo-sector' || view === 'demo-coin' || view === 'demo-tree' || view === 'demo-hyperbola' || view === 'demo-similar' || view === 'demo-shadow' || view === 'demo-trig' || view === 'demo-slope' || view === 'demo-project' || view === 'demo-twentyfour' || view === 'demo-monty' || view === 'demo-maxarea' || view === 'demo-matches' || view === 'demo-mobius' || view === 'demo-shopweek' || view === 'demo-fairgame' || view === 'demo-makerule';
   setHidden(demosSec, !(view === 'demos' || demoLeaf));
   setHidden(demoPanelsEl, view !== 'demos');
+  setHidden(creativePanelsEl, view !== 'demos');
+  setHidden(creativeLabelEl, view !== 'demos');
   setHidden(demoGridEl, !demoLeaf); // 演示卡片网格只在某一个演示的叶子视图里出现，列表视图只留演示面板
   setHidden(demosSec.querySelector('h2'), demoLeaf);
   setHidden(demosSec.querySelector('.section-sub'), demoLeaf);
@@ -10333,7 +10348,7 @@ function dsRender() {
   dsRender();
 })();
 
-/* ---------- 九年级实验（15 个新演示，124 个演示） ----------
+/* ---------- 九年级实验（15 个新演示） ----------
    每个实验一个认知动作：滑杆/步进改一个量，图和数立刻跟着变；不评分。 */
 function g9El(tag, attrs) {
   const NS = 'http://www.w3.org/2000/svg';
@@ -11421,4 +11436,671 @@ function pjRender() {
   document.getElementById('pjDMinus').addEventListener('click', function () { pjD = Math.max(1, pjD - 1); markTried('project'); pjRender(); });
   document.getElementById('pjDPlus').addEventListener('click', function () { pjD = Math.min(4, pjD + 1); markTried('project'); pjRender(); });
   pjRender();
+})();
+
+/* ---------- 创意实验（2026-11-06）：先猜、再玩、再想明白 ----------
+   每一个都是开放式 / 多解 / 有意外 / 要试好几次的真实验，不是滑杆看答案。
+   mulberry32 是确定性伪随机：模拟结果每次一样，方便复现和核对（节点数见注释）。 */
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+/* 清空一个容器的子元素：不能用 innerHTML=''，因为桩 DOM 的 children 数组不会跟着清。 */
+function clearChildren(el) { while (el.firstChild) el.removeChild(el.firstChild); }
+/* 实验室“实验记录”：只记在本页（不存 localStorage）；挑战模式的错题另由 recordAttempt 记进错题本。 */
+const labTraceLog = [];
+function labTrace(text, ok) {
+  labTraceLog.push({ text: text, ok: !!ok });
+  if (labTraceLog.length > 40) labTraceLog.shift();
+  const ul = document.getElementById('labTraceList');
+  if (ul) ul.innerHTML = labTraceLog.slice(-12).map(function (e) { return '<li>' + (e.ok ? '✓ ' : '✗ ') + esc(e.text) + '</li>'; }).join('');
+}
+
+/* ---------- 创意实验 1：24点（4–5 年级，自由组合） ----------
+   6 组数都验算过（见 tools/smoke.js 的断言）：每组至少一种拼法；(3,3,8,8) 的解是 8÷(3−8÷3)，
+   浮点算出来是 23.99999999999999，所以判等用 1e-6 的容差。 */
+(function () {
+  const SETS = [
+    { nums: [3, 3, 8, 8], hint: '8÷3 不是整数——但 3 减去它之后，再用 8 去除，试试？' },
+    { nums: [1, 5, 5, 5], hint: '1÷5 是 0.2，5 减去 0.2 是 4.8……' },
+    { nums: [3, 4, 5, 6], hint: '先凑出 4，再乘 6。' },
+    { nums: [2, 4, 6, 8], hint: '6×8 是 48，48 除以几是 24？' },
+    { nums: [1, 2, 3, 4], hint: '1+3 是 4，4+2 是 6，4×6 是……' },
+    { nums: [3, 6, 6, 9], hint: '6÷6 是 1，9 减去 1 是 8……' }
+  ];
+  let si = 0, tokens = [], found = [];
+  const numsEl = document.getElementById('tf24Nums');
+  const exprEl = document.getElementById('tf24Expr');
+  const msgEl = document.getElementById('tf24Msg');
+  const foundEl = document.getElementById('tf24Found');
+  const numRow = document.getElementById('tf24NumRow');
+  const opRow = document.getElementById('tf24OpRow');
+  function renderNums() {
+    numsEl.textContent = SETS[si].nums.join('　');
+    clearChildren(numRow);
+    SETS[si].nums.forEach(function (n, i) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'btn small primary'; b.textContent = n;
+      b.dataset.tf24Num = i;
+      b.addEventListener('click', function () {
+        if (b.disabled) return;
+        tokens.push({ k: 'n', v: n, chip: i });
+        b.disabled = true; b.classList.add('tf24-used');
+        renderExpr();
+      });
+      numRow.appendChild(b);
+    });
+    clearChildren(opRow);
+    ['+', '−', '×', '÷', '(', ')'].forEach(function (s) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'btn small ghost'; b.textContent = s;
+      b.dataset.tf24Op = s;
+      b.addEventListener('click', function () {
+        const v = s === '−' ? '-' : s === '×' ? '*' : s === '÷' ? '/' : s;
+        tokens.push({ k: 'o', v: v });
+        renderExpr();
+      });
+      opRow.appendChild(b);
+    });
+  }
+  function renderExpr() {
+    exprEl.textContent = tokens.length ? tokens.map(function (t) {
+      return t.k === 'n' ? String(t.v) : t.v === '*' ? '×' : t.v === '/' ? '÷' : t.v === '-' ? '−' : t.v;
+    }).join(' ') : '（点下面的数字和符号）';
+  }
+  function parseExpr(tk) {
+    let p = 0;
+    function expr() { let v = term(); while (p < tk.length && (tk[p].v === '+' || tk[p].v === '-')) { const op = tk[p++].v; const w = term(); v = op === '+' ? v + w : v - w; } return v; }
+    function term() { let v = fact(); while (p < tk.length && (tk[p].v === '*' || tk[p].v === '/')) { const op = tk[p++].v; const w = fact(); v = op === '*' ? v * w : v / w; } return v; }
+    function fact() {
+      if (p >= tk.length) return NaN;
+      const t = tk[p];
+      if (t.v === '(') { p++; const v = expr(); if (tk[p] && tk[p].v === ')') p++; return v; }
+      if (t.v === '-') { p++; return -fact(); }
+      if (t.k === 'n') { p++; return t.v; }
+      return NaN;
+    }
+    const v = expr();
+    return (p === tk.length) ? v : NaN;
+  }
+  document.getElementById('tf24Back').addEventListener('click', function () {
+    const t = tokens.pop();
+    if (t && t.k === 'n') {
+      [...numRow.children].forEach(function (b, i) { if (i === t.chip) { b.disabled = false; b.classList.remove('tf24-used'); } });
+    }
+    renderExpr();
+  });
+  document.getElementById('tf24Clear').addEventListener('click', function () {
+    tokens = []; renderExpr();
+    [...numRow.children].forEach(function (b) { b.disabled = false; b.classList.remove('tf24-used'); });
+    msgEl.textContent = '算式清空了，重新拼。';
+  });
+  document.getElementById('tf24Hint').addEventListener('click', function () {
+    msgEl.textContent = '提示：' + SETS[si].hint;
+  });
+  document.getElementById('tf24New').addEventListener('click', function () {
+    si = (si + 1) % SETS.length; tokens = []; found = [];
+    renderNums(); renderExpr();
+    foundEl.textContent = '这组数已经找到的拼法：0 种。';
+    msgEl.textContent = '换了一组数：' + SETS[si].nums.join('、') + '。';
+  });
+  document.getElementById('tf24Calc').addEventListener('click', function () {
+    if (!tokens.length) { msgEl.textContent = '先拼一个算式。'; return; }
+    const used = tokens.filter(function (t) { return t.k === 'n'; }).map(function (t) { return t.chip; });
+    if (used.length < 4) { msgEl.textContent = '还有数字没用上：每个数都要恰好用一次。'; labTrace('24点：算式里少了数字', false); return; }
+    const v = parseExpr(tokens);
+    if (isNaN(v) || !isFinite(v)) { msgEl.textContent = '这个算式算不出来（可能是分母为 0，或者符号没拼对）。'; labTrace('24点：算式拼错了，算不出来', false); return; }
+    const key = tokens.map(function (t) { return t.k === 'n' ? String(t.v) : t.v; }).join('');
+    if (Math.abs(v - 24) < 1e-6) {
+      if (found.indexOf(key) >= 0) { msgEl.textContent = '这个拼法已经记下了，换个拼法试试——同一组数不止一种。'; return; }
+      found.push(key);
+      foundEl.textContent = '这组数已经找到的拼法：' + found.length + ' 种。' + (found.length >= 2 ? '够两种了，真会了！' : '再找一种不同的拼法。');
+      msgEl.textContent = '拼出来了！' + exprEl.textContent + ' = 24。';
+      markTried('twentyfour');
+      labTrace('24点：拼出 ' + exprEl.textContent + ' = 24', true);
+    } else {
+      msgEl.textContent = '算出来是 ' + (Math.round(v * 100) / 100) + '，不是 24（' + (v < 24 ? '还差 ' + (Math.round((24 - v) * 100) / 100) : '多了 ' + (Math.round((v - 24) * 100) / 100)) + '）。再调一调。';
+      labTrace('24点：算出来 ' + (Math.round(v * 100) / 100) + '，不是 24', false);
+    }
+  });
+  renderNums(); renderExpr();
+})();
+
+/* ---------- 创意实验 2：三门问题（9 年级，预测打脸） ----------
+   100 次模拟用固定种子 mulberry32(20261106)：换门赢 68 次，不换赢 36 次（Node 验算过）。 */
+(function () {
+  let pred = null, prize = -1, pick = -1, opened = -1, phase = 'pick';
+  const roundEl = document.getElementById('moRound');
+  const predTx = document.getElementById('moPredTx');
+  const simOut = document.getElementById('moSimOut');
+  const whyEl = document.getElementById('moWhy');
+  const doorsEl = document.getElementById('moDoors');
+  for (let i = 0; i < 3; i++) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'btn small primary mo-door'; b.textContent = '🚪 ' + (i + 1) + ' 号门';
+    b.dataset.moDoor = i;
+    b.addEventListener('click', function () { pickDoor(i); });
+    doorsEl.appendChild(b);
+  }
+  function pickDoor(i) {
+    if (phase !== 'pick') return;
+    pick = i;
+    prize = Math.floor(Math.random() * 3);
+    const goats = [0, 1, 2].filter(function (d) { return d !== prize && d !== pick; });
+    opened = goats[Math.floor(Math.random() * goats.length)];
+    phase = 'decide';
+    roundEl.textContent = '你选了 ' + (pick + 1) + ' 号门。主持人打开了 ' + (opened + 1) + ' 号门——里面是山羊 🐐。现在：换到另一扇门，还是坚持原来的？';
+  }
+  function finish(doSwitch) {
+    if (phase !== 'decide') return;
+    const finalPick = doSwitch ? [0, 1, 2].find(function (d) { return d !== pick && d !== opened; }) : pick;
+    const win = finalPick === prize;
+    phase = 'done';
+    roundEl.textContent = '你最后选了 ' + (finalPick + 1) + ' 号门，里面是 ' + (win ? '汽车 🚗——赢了！' : '山羊 🐐——没赢。') + '汽车在 ' + (prize + 1) + ' 号门后面。';
+    labTrace('三门问题：' + (doSwitch ? '换门' : '不换门') + '，' + (win ? '赢了' : '输了'), win);
+    markTried('monty');
+  }
+  document.getElementById('moSwitch').addEventListener('click', function () { finish(true); });
+  document.getElementById('moStay').addEventListener('click', function () { finish(false); });
+  document.getElementById('moNewRound').addEventListener('click', function () {
+    phase = 'pick'; pick = -1; prize = -1; opened = -1;
+    roundEl.textContent = '点一扇门，选你的第一扇。';
+  });
+  function setPred(p, label) {
+    pred = p;
+    predTx.textContent = '你的预测：' + label + '。玩一局，再跑 100 次模拟，看看预测对不对。';
+  }
+  document.getElementById('moPredSwitch').addEventListener('click', function () { setPred('switch', '换门更好'); });
+  document.getElementById('moPredStay').addEventListener('click', function () { setPred('stay', '不换更好'); });
+  document.getElementById('moPredSame').addEventListener('click', function () { setPred('same', '换不换都一样'); });
+  document.getElementById('moSim').addEventListener('click', function () {
+    const rand = mulberry32(20261106);
+    function oneRound(doSwitch) {
+      const pr = Math.floor(rand() * 3), pk = Math.floor(rand() * 3);
+      const goats = [0, 1, 2].filter(function (d) { return d !== pr && d !== pk; });
+      const op = goats[Math.floor(rand() * goats.length)];
+      const fin = doSwitch ? [0, 1, 2].find(function (d) { return d !== pk && d !== op; }) : pk;
+      return fin === pr;
+    }
+    let sw = 0, st = 0;
+    for (let i = 0; i < 100; i++) if (oneRound(true)) sw++;
+    for (let i = 0; i < 100; i++) if (oneRound(false)) st++;
+    clearChildren(simOut);
+    simOut.textContent = '100 次模拟：换门赢了 ' + sw + ' 次，不换赢了 ' + st + ' 次。';
+    const bar1 = document.createElement('div'); bar1.className = 'mo-bar';
+    const fill1 = document.createElement('i'); fill1.className = 'switch'; fill1.style.width = sw + '%';
+    bar1.appendChild(fill1); simOut.appendChild(bar1);
+    const lab1 = document.createElement('p'); lab1.textContent = '换门：' + sw + ' / 100'; simOut.appendChild(lab1);
+    const bar2 = document.createElement('div'); bar2.className = 'mo-bar';
+    const fill2 = document.createElement('i'); fill2.style.width = st + '%';
+    bar2.appendChild(fill2); simOut.appendChild(bar2);
+    const lab2 = document.createElement('p'); lab2.textContent = '不换：' + st + ' / 100'; simOut.appendChild(lab2);
+    whyEl.textContent = pred === 'switch' ? '你的预测对了：换门赢的可能大约是 2/3，不换大约是 1/3。'
+      : pred ? '你的预测错了——换门赢 ' + sw + ' 次，不换只赢 ' + st + ' 次。这正是三门问题出名的原因：直觉说“换不换都一样”，数学说“换”。'
+      : '换门赢 ' + sw + ' 次，不换只赢 ' + st + ' 次——换门赢的可能大约是 2/3。';
+    labTrace('三门问题：100 次模拟，换门赢 ' + sw + ' 次，不换赢 ' + st + ' 次', sw > st);
+    markTried('monty');
+  });
+})();
+
+/* ---------- 创意实验 3：周长一定，面积最大（3–5 年级，预测 + 开放探究） ----------
+   周长 20：长 1–9、宽 9–1，面积 9、16、21、24、25、24、21、16、9——最大值在正方形。 */
+(function () {
+  let L = 5, guess = null, rows = [], found = false;
+  const svg = document.getElementById('maSvg');
+  const eqEl = document.getElementById('maEq');
+  const tableEl = document.getElementById('maTable');
+  const findEl = document.getElementById('maFind');
+  const guessTx = document.getElementById('maGuessTx');
+  const whyEl = document.getElementById('maWhy');
+  const rangeEl = document.getElementById('maLRange');
+  const labelEl = document.getElementById('maLLabel');
+  function render() {
+    const W = 10 - L, A = L * W;
+    labelEl.textContent = L;
+    rangeEl.value = L;
+    eqEl.textContent = '长 ' + L + ' 厘米，宽 ' + W + ' 厘米，面积 ' + A + ' 平方厘米';
+    const w = 40 + L * 24, h = 40 + W * 12;
+    svg.innerHTML = '<rect x="' + (160 - w / 2) + '" y="' + (95 - h / 2) + '" width="' + w + '" height="' + h + '" fill="#fff3e6" stroke="#ff8a3d" stroke-width="3" rx="6"/>' +
+      '<text x="160" y="100" font-size="16" text-anchor="middle" fill="#334155">长 ' + L + ' × 宽 ' + W + '</text>';
+  }
+  function setL(v) { L = Math.max(1, Math.min(9, v)); render(); }
+  rangeEl.addEventListener('input', function (e) { setL(+e.target.value); });
+  document.getElementById('maLMinus').addEventListener('click', function () { setL(L - 1); });
+  document.getElementById('maLPlus').addEventListener('click', function () { setL(L + 1); });
+  document.getElementById('maGuessSet').addEventListener('click', function () {
+    guess = L;
+    guessTx.textContent = '你猜：长 ' + guess + ' 厘米时面积最大。动手试试，记下来验证。';
+    labTrace('周长面积：猜长 ' + guess + ' 厘米时面积最大', true);
+  });
+  document.getElementById('maRecord').addEventListener('click', function () {
+    const W = 10 - L, A = L * W;
+    if (rows.some(function (r) { return r.L === L; })) { findEl.textContent = '长 ' + L + ' 已经记过了，换个长试试。'; return; }
+    rows.push({ L: L, W: W, A: A });
+    tableEl.innerHTML = rows.map(function (r) { return '<tr><td>' + r.L + '</td><td>' + r.W + '</td><td>' + r.A + '</td></tr>'; }).join('');
+    if (!found && rows.some(function (r) { return r.L === 5; }) && rows.length >= 3) {
+      found = true;
+      const best = rows.reduce(function (a, b) { return b.A > a.A ? b : a; }, rows[0]);
+      findEl.textContent = '你试出来的最大面积是 ' + best.A + ' 平方厘米（长 ' + best.L + ' 宽 ' + best.W + '）。' +
+        (guess === null ? '你还没猜过——下次先猜再试。' : guess === 5 ? '和你猜的一样！' : '你猜的是长 ' + guess + '，实际是长 5——猜错了也没关系，表不会骗人。');
+      whyEl.hidden = false;
+      markTried('maxarea');
+      labTrace('周长面积：发现最大面积 25（长 5 宽 5）', true);
+    } else if (!found && rows.length >= 5) {
+      findEl.textContent = '记了 ' + rows.length + ' 种了，还没试过长 5 宽 5 吗？';
+    } else if (!found) {
+      findEl.textContent = '记下了 ' + rows.length + ' 种。继续试——面积最大的那一种藏在表里。';
+    }
+  });
+  document.getElementById('maReset').addEventListener('click', function () {
+    rows = []; found = false; guess = null;
+    tableEl.innerHTML = ''; findEl.textContent = ''; guessTx.textContent = '还没猜';
+    whyEl.hidden = true;
+  });
+  render();
+})();
+
+/* ---------- 创意实验 4：火柴棒（3–4 年级，自由组合 + 开放探究） ----------
+   3 道题都验算过（七段数码）：6+4=4 → 8−4=4（把 + 的竖棍移到 6 的右上）；
+   9+3=5 → 3+3=6（把 9 的左上棍移到 5 的左下）；7−2=3 → 7−2=5（把 3 的右上棍移到左上）。
+   检查只认“算式成立且恰好动了 1 根”，别的拼法只要成立也算对。 */
+(function () {
+  const DIGITS = { '0': 'abcdef', '1': 'bc', '2': 'abged', '3': 'abgcd', '4': 'fgbc', '5': 'afgcd', '6': 'afgcde', '7': 'abc', '8': 'abcdefg', '9': 'abcdfg' };
+  const SEG_POS = {
+    a: { left: '8px', top: '0px', width: '28px', height: '6px' },
+    b: { right: '0px', top: '6px', width: '6px', height: '28px' },
+    c: { right: '0px', bottom: '6px', width: '6px', height: '28px' },
+    d: { left: '8px', bottom: '0px', width: '28px', height: '6px' },
+    e: { left: '0px', bottom: '6px', width: '6px', height: '28px' },
+    f: { left: '0px', top: '6px', width: '6px', height: '28px' },
+    g: { left: '8px', top: '35px', width: '28px', height: '6px' }
+  };
+  const PUZZLES = [
+    { text: '第 1 题：6 + 4 = 4', chars: ['6', '+', '4', '=', '4'] },
+    { text: '第 2 题：9 + 3 = 5', chars: ['9', '+', '3', '=', '5'] },
+    { text: '第 3 题：7 − 2 = 3', chars: ['7', '−', '2', '=', '3'] }
+  ];
+  let pi = 0, moves = 0, held = null, solved = 0;
+  const solvedSet = {};
+  const board = document.getElementById('msBoard');
+  const msgEl = document.getElementById('msMsg');
+  const titleEl = document.getElementById('msTitle');
+  const solvedEl = document.getElementById('msSolved');
+  let charState = [];
+  function litFor(ch) {
+    if (DIGITS[ch]) return new Set(DIGITS[ch].split(''));
+    if (ch === '+') return new Set(['h', 'v']);
+    if (ch === '−') return new Set(['h']);
+    return new Set();
+  }
+  function render() {
+    clearChildren(board);
+    charState = [];
+    const puz = PUZZLES[pi];
+    titleEl.textContent = puz.text;
+    puz.chars.forEach(function (ch, ci) {
+      const wrap = document.createElement('div');
+      wrap.className = 'ms-char';
+      if (ch === '=') {
+        const b1 = document.createElement('div'); b1.className = 'ms-eqbar'; b1.style.top = '26px';
+        const b2 = document.createElement('div'); b2.className = 'ms-eqbar'; b2.style.top = '44px';
+        wrap.appendChild(b1); wrap.appendChild(b2);
+        charState.push({ kind: 'eq', lit: new Set() });
+      } else if (ch === '+' || ch === '−') {
+        const lit = litFor(ch);
+        charState.push({ kind: 'op', lit: lit });
+        const h = document.createElement('button');
+        h.type = 'button'; h.className = 'ms-seg' + (lit.has('h') ? ' lit' : '');
+        h.style.left = '8px'; h.style.top = '35px'; h.style.width = '28px'; h.style.height = '6px';
+        h.dataset.msSeg = ci + '-h'; h.dataset.msLit = lit.has('h') ? '1' : '0';
+        h.setAttribute('aria-label', '算符横向火柴');
+        h.addEventListener('click', function () { segClick(ci, 'h', h); });
+        wrap.appendChild(h);
+        const v = document.createElement('button');
+        v.type = 'button'; v.className = 'ms-seg' + (lit.has('v') ? ' lit' : '');
+        v.style.left = '19px'; v.style.top = '6px'; v.style.width = '6px'; v.style.height = '64px';
+        v.dataset.msSeg = ci + '-v'; v.dataset.msLit = lit.has('v') ? '1' : '0';
+        v.setAttribute('aria-label', '算符纵向火柴');
+        v.addEventListener('click', function () { segClick(ci, 'v', v); });
+        wrap.appendChild(v);
+      } else {
+        const lit = litFor(ch);
+        charState.push({ kind: 'digit', lit: lit });
+        Object.keys(SEG_POS).forEach(function (seg) {
+          const b = document.createElement('button');
+          b.type = 'button'; b.className = 'ms-seg' + (lit.has(seg) ? ' lit' : '');
+          const pos = SEG_POS[seg];
+          b.style.left = pos.left || ''; b.style.top = pos.top || '';
+          b.style.right = pos.right || ''; b.style.bottom = pos.bottom || '';
+          b.style.width = pos.width; b.style.height = pos.height;
+          b.dataset.msSeg = ci + '-' + seg; b.dataset.msLit = lit.has(seg) ? '1' : '0';
+          b.setAttribute('aria-label', '数字第 ' + (ci + 1) + ' 位火柴 ' + seg);
+          b.addEventListener('click', function () { segClick(ci, seg, b); });
+          wrap.appendChild(b);
+        });
+      }
+      board.appendChild(wrap);
+    });
+    moves = 0; held = null;
+    msgEl.textContent = '点一根亮着的火柴把它拿起来，再点一个空着的位置放下去。';
+  }
+  function segClick(ci, seg, el) {
+    const st = charState[ci];
+    const isLit = st.lit.has(seg);
+    if (held) {
+      if (held.ci === ci && held.seg === seg) {
+        st.lit.add(seg); el.classList.add('lit'); el.dataset.msLit = '1';
+        el.classList.remove('held');
+        held = null;
+        msgEl.textContent = '放回去了。再想想拿哪一根。';
+        return;
+      }
+      if (isLit) { msgEl.textContent = '那根火柴已经亮着——先把手里的火柴放到一个空位上。'; return; }
+      held.el.classList.remove('held');
+      st.lit.add(seg); el.classList.add('lit'); el.dataset.msLit = '1';
+      moves++;
+      held = null;
+      msgEl.textContent = '动了 ' + moves + ' 根火柴。动完点“检查”。';
+      return;
+    }
+    if (!isLit) { msgEl.textContent = '这里没有火柴——先点一根亮着的火柴拿起来。'; return; }
+    st.lit.delete(seg); el.classList.remove('lit'); el.dataset.msLit = '0';
+    el.classList.add('held');
+    held = { ci: ci, seg: seg, el: el };
+    msgEl.textContent = '手里有一根火柴，点一个空着的位置放下去。点原来那根可以放回去。';
+  }
+  function parseChar(st) {
+    if (st.kind === 'eq') return '=';
+    if (st.kind === 'op') {
+      if (st.lit.has('h') && st.lit.has('v')) return '+';
+      if (st.lit.has('h') && !st.lit.has('v')) return '−';
+      return null;
+    }
+    const key = [...st.lit].sort().join('');
+    for (const d in DIGITS) if (DIGITS[d].split('').sort().join('') === key) return d;
+    return null;
+  }
+  document.getElementById('msCheck').addEventListener('click', function () {
+    const vals = charState.map(parseChar);
+    if (vals.some(function (v) { return v === null; })) { msgEl.textContent = '有个数字（或符号）的形状不对——火柴拼不出这个数，先调一调。'; labTrace('火柴棒：拼出的形状不是数字', false); return; }
+    if (moves !== 1) { msgEl.textContent = '动了 ' + moves + ' 根火柴，只能动 1 根——点“重摆这道题”再试。'; return; }
+    const a = +vals[0], b = +vals[2], c = +vals[4];
+    const left = vals[1] === '+' ? a + b : a - b;
+    if (left === c) {
+      msgEl.textContent = '对了！' + a + ' ' + vals[1] + ' ' + b + ' = ' + c + '，只动了一根火柴。';
+      if (!solvedSet[pi]) { solvedSet[pi] = true; solved++; solvedEl.textContent = '已经做对的题：' + solved + ' / 3。'; }
+      markTried('matches');
+      labTrace('火柴棒：第 ' + (pi + 1) + ' 题做对了', true);
+    } else {
+      msgEl.textContent = '还不对：左边是 ' + left + '，右边是 ' + c + '。再动一动。';
+      labTrace('火柴棒：第 ' + (pi + 1) + ' 题还不对（' + left + ' ≠ ' + c + '）', false);
+    }
+  });
+  document.getElementById('msReset').addEventListener('click', function () { render(); });
+  document.getElementById('msNext').addEventListener('click', function () { pi = (pi + 1) % PUZZLES.length; render(); });
+  render();
+})();
+
+/* ---------- 创意实验 5：莫比乌斯带（6–7 年级，预测打脸） ----------
+   中间剪还是 1 个圈（长一倍、4 个半拧）；离边缘 1/3 处剪是 2 个套在一起的圈。 */
+(function () {
+  let pred = null;
+  const svg = document.getElementById('mbSvg');
+  const predTx = document.getElementById('mbPredTx');
+  const resultEl = document.getElementById('mbResult');
+  const whyEl = document.getElementById('mbWhy');
+  function drawBand() {
+    svg.innerHTML = '<ellipse cx="160" cy="95" rx="110" ry="60" fill="none" stroke="#ff8a3d" stroke-width="26"/>' +
+      '<ellipse cx="160" cy="95" rx="110" ry="60" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="4 8"/>' +
+      '<text x="160" y="99" font-size="15" text-anchor="middle" fill="#334155">莫比乌斯带：拧了一下再粘起来</text>' +
+      '<line x1="160" y1="20" x2="160" y2="170" stroke="#1d4ed8" stroke-width="2" stroke-dasharray="6 5"/>' +
+      '<text x="160" y="14" font-size="13" text-anchor="middle" fill="#1d4ed8">从这里剪下去</text>';
+  }
+  function drawCenterCut() {
+    svg.innerHTML = '<ellipse cx="160" cy="95" rx="140" ry="72" fill="none" stroke="#ff8a3d" stroke-width="18"/>' +
+      '<text x="160" y="99" font-size="15" text-anchor="middle" fill="#334155">还是 1 个圈，长了一倍，拧了 4 个半圈</text>';
+  }
+  function drawThirdCut() {
+    svg.innerHTML = '<ellipse cx="120" cy="95" rx="70" ry="48" fill="none" stroke="#ff8a3d" stroke-width="16"/>' +
+      '<ellipse cx="210" cy="95" rx="95" ry="62" fill="none" stroke="#2563eb" stroke-width="16"/>' +
+      '<text x="160" y="182" font-size="15" text-anchor="middle" fill="#334155">2 个圈，套在一起</text>';
+  }
+  function setPred(p, label) { pred = p; predTx.textContent = '你的预测：' + label + '。现在剪下去看看。'; }
+  document.getElementById('mbPred2').addEventListener('click', function () { setPred('two', '剪完是 2 个圈'); });
+  document.getElementById('mbPred1').addEventListener('click', function () { setPred('one', '还是 1 个圈'); });
+  document.getElementById('mbPredKnot').addEventListener('click', function () { setPred('knot', '变成一个结'); });
+  function cut(which) {
+    if (which === 'center') {
+      drawCenterCut();
+      resultEl.textContent = '剪完了：还是 1 个圈！只是长了一倍，拧了 4 个半圈。' + (pred === 'one' ? '你猜对了。' : pred ? '你猜的是' + (pred === 'two' ? ' 2 个圈' : '一个结') + '，猜错了——这正是莫比乌斯带出名的地方。' : '先猜再剪，下次试试。');
+      labTrace('莫比乌斯带：中间剪，还是 1 个圈', pred === 'one');
+    } else {
+      drawThirdCut();
+      resultEl.textContent = '剪完了：2 个圈，套在一起！一个小的还是莫比乌斯带，一个大的有了两面。' + (pred === 'two' ? '你猜对了。' : pred ? '你猜的是' + (pred === 'one' ? '还是 1 个圈' : '一个结') + '，猜错了——换个地方剪，结果完全不一样。' : '');
+      labTrace('莫比乌斯带：1/3 处剪，变成 2 个套在一起的圈', pred === 'two');
+    }
+    whyEl.hidden = false;
+    pred = null;
+    predTx.textContent = '再猜一次：换个地方剪，会变成几个圈？';
+    markTried('mobius');
+  }
+  document.getElementById('mbCut').addEventListener('click', function () { cut('center'); });
+  document.getElementById('mbCutThird').addEventListener('click', function () { cut('third'); });
+  document.getElementById('mbReset').addEventListener('click', function () {
+    pred = null; drawBand();
+    predTx.textContent = '先选一个猜测，再剪。';
+    resultEl.textContent = '';
+    whyEl.hidden = true;
+  });
+  drawBand();
+})();
+
+/* ---------- 创意实验 6：开店一周（5–6 年级，现实使命） ----------
+   进价 8 元，本钱 200 元；需求 = 50 − 2×售价 + 噪声（噪声按天固定：mulberry32(1000+天)，
+   第 1–7 天依次是 −3、0、−1、−2、−1、−1、+3）。策略“每天 12 元进 20 个”验算过：
+   总收入 1680 元，总成本 1120 元，总利润 560 元。 */
+(function () {
+  const COST = 8, START_CASH = 200;
+  let day = 1, cash = START_CASH, stock = 0, price = 12, qty = 20;
+  let totalCost = 0, totalRev = 0, totalLost = 0;
+  const statusEl = document.getElementById('swStatus');
+  const planEl = document.getElementById('swPlan');
+  const dayOutEl = document.getElementById('swDayOut');
+  const tableEl = document.getElementById('swTable');
+  const reportEl = document.getElementById('swReport');
+  const priceLabel = document.getElementById('swPriceLabel');
+  const qtyLabel = document.getElementById('swQtyLabel');
+  function noise(d) { return Math.floor(mulberry32(1000 + d)() * 7) - 3; }
+  function customersFor(p, d) { return Math.max(0, Math.min(40, (50 - 2 * p) + noise(d))); }
+  function clampQty() { const max = Math.floor(cash / COST); if (qty > max) qty = max; }
+  function render() {
+    if (day <= 7) statusEl.textContent = '第 ' + day + ' 天 · 手里 ' + cash + ' 元 · 库存 ' + stock + ' 个';
+    priceLabel.textContent = price + ' 元';
+    qtyLabel.textContent = qty + ' 个';
+    planEl.textContent = '今天要花 ' + (qty * COST) + ' 元进货。' + (qty * COST > cash ? '钱不够！最多只能进 ' + Math.floor(cash / COST) + ' 个。' : '');
+  }
+  document.getElementById('swPriceMinus').addEventListener('click', function () { price = Math.max(10, price - 1); render(); });
+  document.getElementById('swPricePlus').addEventListener('click', function () { price = Math.min(20, price + 1); render(); });
+  document.getElementById('swQtyMinus').addEventListener('click', function () { qty = Math.max(0, qty - 1); render(); });
+  document.getElementById('swQtyPlus').addEventListener('click', function () { qty = Math.min(30, qty + 1); clampQty(); render(); });
+  document.getElementById('swOpen').addEventListener('click', function () {
+    if (day > 7) { dayOutEl.textContent = '一周已经开完了，点“换个策略再来一周”。'; return; }
+    clampQty();
+    const cost = qty * COST;
+    cash -= cost; stock += qty; totalCost += cost;
+    const cust = customersFor(price, day);
+    const sold = Math.min(cust, stock);
+    const rev = sold * price;
+    const lost = cust - sold;
+    cash += rev; stock -= sold; totalRev += rev; totalLost += lost;
+    tableEl.innerHTML += '<tr><td>' + day + '</td><td>' + price + '</td><td>' + qty + '</td><td>' + cust + '</td><td>' + sold + '</td><td>' + rev + '</td></tr>';
+    dayOutEl.textContent = '第 ' + day + ' 天：来了 ' + cust + ' 个顾客，卖出 ' + sold + ' 个，收入 ' + rev + ' 元。' +
+      (lost > 0 ? '有 ' + lost + ' 个顾客想买但没货了。' : '') + (stock > 0 ? '还剩 ' + stock + ' 个没卖掉。' : '货卖完了。');
+    labTrace('开店：第 ' + day + ' 天卖 ' + price + ' 元，卖出 ' + sold + ' 个，收入 ' + rev + ' 元', sold > 0);
+    day++;
+    if (day > 7) {
+      const leftoverValue = stock * COST;
+      const profit = (cash - START_CASH) + leftoverValue;
+      reportEl.textContent = '一周总账：总收入 ' + totalRev + ' 元，总进货成本 ' + totalCost + ' 元，剩下 ' + stock + ' 个文具盒（值 ' + leftoverValue + ' 元）。总利润：' + profit + ' 元。' +
+        (profit > 0 ? '赚了！' : profit < 0 ? '亏了。' : '不赚不亏。') +
+        (totalLost > 0 ? '一共有 ' + totalLost + ' 个顾客因为没货白跑了——下次多进点，或者别定太贵。' : '') +
+        (stock > 0 ? '剩下 ' + stock + ' 个没卖掉，压了 ' + leftoverValue + ' 元——下次少进点。' : '');
+      statusEl.textContent = '一周开完了 · 手里 ' + cash + ' 元 · 库存 ' + stock + ' 个';
+      markTried('shopweek');
+      labTrace('开店：一周总利润 ' + profit + ' 元', profit > 0);
+    }
+    render();
+  });
+  document.getElementById('swReplay').addEventListener('click', function () {
+    day = 1; cash = START_CASH; stock = 0; price = 12; qty = 20;
+    totalCost = 0; totalRev = 0; totalLost = 0;
+    tableEl.innerHTML = ''; dayOutEl.textContent = ''; reportEl.textContent = '';
+    render();
+  });
+  render();
+})();
+
+/* ---------- 创意实验 7：公平游戏（5 年级，开放探究 + 学生出题） ----------
+   两枚骰子点数之和的掷法数：2:1、3:2、4:3、5:4、6:5、7:6、8:5、9:4、10:3、11:2、12:1。
+   公平分法之一：甲 {2,3,4,7,10,11,12}、乙 {5,6,8,9}，各 18 种。
+   模拟用固定种子 mulberry32(777)：甲 {2–7}、乙 {8–12} 时甲赢 58 次、乙赢 42 次。 */
+(function () {
+  const WAYS = { 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 5, 9: 4, 10: 3, 11: 2, 12: 1 };
+  const assign = {};
+  const sumsEl = document.getElementById('fgSums');
+  const waysEl = document.getElementById('fgWays');
+  const verdictEl = document.getElementById('fgVerdict');
+  const simOut = document.getElementById('fgSimOut');
+  const tableOut = document.getElementById('fgTableOut');
+  const whyEl = document.getElementById('fgWhy');
+  const sumBtns = {};
+  for (let s = 2; s <= 12; s++) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'btn small ghost'; b.textContent = s;
+    b.dataset.fgSum = s;
+    b.addEventListener('click', function () {
+      assign[s] = assign[s] === undefined ? 'A' : assign[s] === 'A' ? 'B' : undefined;
+      render();
+    });
+    sumsEl.appendChild(b); sumBtns[s] = b;
+  }
+  function waysOf(who) {
+    let n = 0;
+    for (let s = 2; s <= 12; s++) if (assign[s] === who) n += WAYS[s];
+    return n;
+  }
+  function allAssigned() { for (let s = 2; s <= 12; s++) if (!assign[s]) return false; return true; }
+  function render() {
+    for (let s = 2; s <= 12; s++) {
+      const b = sumBtns[s];
+      b.classList.remove('fg-a', 'fg-b');
+      if (assign[s] === 'A') { b.classList.add('fg-a'); b.textContent = s + '·甲'; }
+      else if (assign[s] === 'B') { b.classList.add('fg-b'); b.textContent = s + '·乙'; }
+      else b.textContent = s;
+    }
+    const wa = waysOf('A'), wb = waysOf('B');
+    waysEl.textContent = '甲：' + wa + ' 种可能 · 乙：' + wb + ' 种可能';
+    if (!allAssigned()) verdictEl.textContent = '还有和没分完——2–12 都要分给甲或乙。';
+    else if (wa === wb) verdictEl.textContent = '公平！甲乙各 ' + wa + ' 种可能。';
+    else verdictEl.textContent = '不公平：甲 ' + wa + ' 种，乙 ' + wb + ' 种——' + (wa > wb ? '甲赢面大。' : '乙赢面大。');
+  }
+  document.getElementById('fgSim').addEventListener('click', function () {
+    if (!allAssigned()) { simOut.textContent = '先把 2–12 分完再模拟。'; return; }
+    const rand = mulberry32(777);
+    let aw = 0, bw = 0, dw = 0;
+    for (let i = 0; i < 100; i++) {
+      const s = 1 + Math.floor(rand() * 6) + 1 + Math.floor(rand() * 6);
+      if (assign[s] === 'A') aw++; else if (assign[s] === 'B') bw++; else dw++;
+    }
+    simOut.textContent = '模拟 100 次：甲赢 ' + aw + ' 次，乙赢 ' + bw + ' 次' + (dw ? '，' + dw + ' 次没人赢' : '') + '。' +
+      (waysOf('A') === waysOf('B') ? '分法公平，赢的次数也差不多。' : '赢的次数差这么多，就是因为两种和出现的可能不一样多。');
+    labTrace('公平游戏：模拟 100 次，甲赢 ' + aw + ' 次，乙赢 ' + bw + ' 次', waysOf('A') === waysOf('B'));
+    markTried('fairgame');
+  });
+  document.getElementById('fgTable').addEventListener('click', function () {
+    tableOut.hidden = false;
+    tableOut.textContent = '36 种掷法：和 2 有 1 种，3 有 2 种，4 有 3 种，5 有 4 种，6 有 5 种，7 有 6 种，8 有 5 种，9 有 4 种，10 有 3 种，11 有 2 种，12 有 1 种。一共 36 种。';
+    whyEl.hidden = false;
+  });
+  document.getElementById('fgReset').addEventListener('click', function () {
+    for (let s = 2; s <= 12; s++) delete assign[s];
+    simOut.textContent = ''; tableOut.hidden = true; whyEl.hidden = true;
+    render();
+  });
+  render();
+})();
+
+/* ---------- 创意实验 8：造规律（1–2 年级，学生出题） ----------
+   单元长 n，第 k 个是第 ceil(k/n) 个单元的第 ((k−1)%n)+1 个。 */
+(function () {
+  const SHAPES = ['●', '▲', '■', '★', '◆', '♥'];
+  let unit = [];
+  const unitEl = document.getElementById('mrUnit');
+  const rowEl = document.getElementById('mrRow');
+  const a10El = document.getElementById('mrA10');
+  const a20El = document.getElementById('mrA20');
+  const cardOut = document.getElementById('mrCardOut');
+  const paletteEl = document.getElementById('mrPalette');
+  const q10El = document.getElementById('mrQ10');
+  const q20El = document.getElementById('mrQ20');
+  function buildOptions(container, n, outEl) {
+    SHAPES.forEach(function (s) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'btn small ghost mr-shape'; b.textContent = s;
+      b.dataset.mrOpt = s;
+      b.addEventListener('click', function () { answer(n, s, outEl); });
+      container.appendChild(b);
+    });
+  }
+  SHAPES.forEach(function (s) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'btn small ghost mr-shape'; b.textContent = s;
+    b.dataset.mrShape = s;
+    b.addEventListener('click', function () {
+      if (unit.length >= 5) { unitEl.textContent = '单元最多 5 个，够长了。'; return; }
+      unit.push(s); a10El.textContent = ''; a20El.textContent = ''; cardOut.textContent = '';
+      render();
+    });
+    paletteEl.appendChild(b);
+  });
+  buildOptions(q10El, 10, a10El);
+  buildOptions(q20El, 20, a20El);
+  function answer(n, s, outEl) {
+    if (unit.length < 2) { outEl.textContent = '先排一个单元（至少 2 个图形）。'; return; }
+    const idx = (n - 1) % unit.length;
+    const right = unit[idx];
+    const full = Math.floor(n / unit.length), rem = n % unit.length;
+    const unitNo = full + (rem ? 1 : 0), pos = rem || unit.length;
+    if (s === right) {
+      outEl.textContent = '对了！第 ' + n + ' 个是第 ' + unitNo + ' 个单元的第 ' + pos + ' 个，就是 ' + right + '。';
+      labTrace('造规律：第 ' + n + ' 个答对了（' + right + '）', true);
+      markTried('makerule');
+    } else {
+      outEl.textContent = '再想想：一个单元有 ' + unit.length + ' 个，' + n + ' 里面有 ' + full + ' 个完整单元，还多 ' + rem + ' 个——第 ' + n + ' 个是第 ' + unitNo + ' 个单元的第 ' + pos + ' 个。';
+      labTrace('造规律：第 ' + n + ' 个答错了', false);
+    }
+  }
+  function render() {
+    unitEl.textContent = unit.length ? unit.join(' ') : '（点下面的图形，排 2–5 个）';
+    let row = '';
+    if (unit.length) { for (let i = 0; i < 15; i++) row += unit[i % unit.length] + ' '; }
+    rowEl.textContent = unit.length ? '这样重复下去：' + row + '……' : '';
+  }
+  document.getElementById('mrDel').addEventListener('click', function () {
+    unit.pop(); a10El.textContent = ''; a20El.textContent = ''; render();
+  });
+  document.getElementById('mrClear').addEventListener('click', function () {
+    unit = []; a10El.textContent = ''; a20El.textContent = ''; cardOut.textContent = ''; render();
+  });
+  document.getElementById('mrCard').addEventListener('click', function () {
+    if (unit.length < 2) { cardOut.textContent = '先排一个单元（至少 2 个图形）。'; return; }
+    const t10 = unit[(10 - 1) % unit.length], t20 = unit[(20 - 1) % unit.length];
+    cardOut.textContent = '出题卡：我的规律是 ' + unit.join('') + ' 重复。第 10 个是什么？第 20 个是什么？（答案：第 10 个 ' + t10 + '，第 20 个 ' + t20 + '）';
+    markTried('makerule');
+  });
+  render();
 })();

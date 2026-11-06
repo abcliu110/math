@@ -103,6 +103,9 @@ body[data-view="demo-spin"] #demos, body[data-view="demo-circangle"] #demos, bod
 body[data-view="demo-sector"] #demos, body[data-view="demo-coin"] #demos, body[data-view="demo-tree"] #demos,
 body[data-view="demo-hyperbola"] #demos, body[data-view="demo-similar"] #demos, body[data-view="demo-shadow"] #demos,
 body[data-view="demo-trig"] #demos, body[data-view="demo-slope"] #demos, body[data-view="demo-project"] #demos,
+body[data-view="demo-twentyfour"] #demos, body[data-view="demo-monty"] #demos, body[data-view="demo-maxarea"] #demos,
+body[data-view="demo-matches"] #demos, body[data-view="demo-mobius"] #demos, body[data-view="demo-shopweek"] #demos,
+body[data-view="demo-fairgame"] #demos, body[data-view="demo-makerule"] #demos,
 body[data-view="why"] #why, body[data-view="review"] #review,
 body[data-view="progress"] #review, body[data-view="parent"] #review, body[data-view="lab"] #lab,
 body[data-view="exam"] #exam, body[data-view="inquiry"] #inquiry, body[data-view="checkpoint"] #checkpoint{display:block}
@@ -809,3 +812,19 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
 .g7-hg-bar { width: 100%; background: #2563eb; border-radius: 6px 6px 0 0; }
 .g7-hg-cnt { font-size: 13px; font-weight: 700; white-space: nowrap; }
 .g7-hg-lab { font-size: 12px; color: var(--muted); margin-top: 4px; white-space: nowrap; }
+
+/* ---------- 创意实验（2026-11-06）：先猜、再玩、再想明白 ---------- */
+.ms-board{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:14px 0}
+.ms-char{position:relative;width:44px;height:76px;flex:none}
+.ms-seg{position:absolute;border:0;border-radius:3px;background:#e8edf3;cursor:pointer;padding:0}
+.ms-seg.lit{background:#ff8a3d}
+.ms-seg.held{outline:3px solid #1d4ed8;outline-offset:1px}
+.ms-eqbar{position:absolute;left:6px;width:32px;height:6px;border-radius:3px;background:#ff8a3d}
+.mo-door{font-size:26px;padding:10px 16px}
+.btn.fg-a{background:#dbeafe;border-color:#2563eb;font-weight:700}
+.btn.fg-b{background:#dcfce7;border-color:#16a34a;font-weight:700}
+.mr-shape{font-size:26px;padding:8px 16px}
+.tf24-used{opacity:.35}
+.mo-bar,.fg-bar{height:14px;border-radius:7px;background:#e2e8f0;overflow:hidden;margin:6px 0}
+.mo-bar i,.fg-bar i{display:block;height:100%;background:#2563eb}
+.mo-bar i.switch{background:#ff8a3d}
