@@ -58,6 +58,17 @@
 - 我们已经比它好的地方：142 条知识点 + 三级 ladder、学习科学机制（提取/间隔/交叉/元认知）、完全免费无登录。
 - 未验证：点开 NB数学实验 卡片后发生什么（需真浏览器点一次）、NB信息科技卡、抖音/西瓜 App 内搜。
 
+## 6. GitHub 开源数学项目
+
+`github-math-opensource-20261106/report.md`
+
+- 15 个项目逐个核实（仓库、星数、许可证、语言/栈、最后活动、最佳交互、复用 verdict）。
+- 最像我们的：kenowong/math-mastery（MIT，409★）——纯前端零依赖单文件可离线、localStorage 存进度，与我们架构相同；核心是 `qgen(n)` 参数化出题引擎（题目永不重样、答案由构造算出、分步解析 + SVG 配图），可直接移植到练一练/混着练/模拟测。
+- 最值得升级的：FSRS（open-spaced-repetition/ts-fsrs，MIT，852★，Anki 官方采用）——UMD 可直接内联进单文件，把固定 1/3/7 天复习换成记忆模型驱动的动态间隔。
+- 最好的设计规则：edu-ai-builders/math-viz-kit（无许可证，90★）——123 个单文件可视化 + 8 条学习科学规则（每个工具只承载一个认知动作、反馈揭示规律而非只说对错）；代码不能碰，规则可当新演示的验收清单。
+- 红线：PhET 各模拟仓库已归档，源码并入不公开 monorepo，拿不到代码；Mathigon 教材 UNLICENSED、GeoGebra 整体非商业许可、Anki 本体 AGPL、algebra-3d GPL-3.0、math-viz-kit 与 little-math-lab 无许可证——这 6 个只学思路不碰代码。
+- Top 5 借鉴：参数化出题引擎 qgen、FSRS 升级今天复习、设计规则检查清单、工具注册表 + 每工具独立测试、分步评分自动验算（nerdamer/mathjs + stepper）。
+
 ## 版权原则
 
 深入理解别人的思想，再重写转化为自己的原创版本；不复制任何来源的文字、图片、视频、代码、题干。
