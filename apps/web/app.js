@@ -127,6 +127,7 @@ function recordAttempt(pointId, correct, confident) {
   reviewStore[pointId] = { last: Date.now(), correct: !!correct, confident: !!confident, streak: streak, due: Date.now() + days * 86400000 };
   saveReview();
   updateHomeReviewTx();
+  updateCheckpointHomeTx();
   return days;
 }
 function duePointIds() {
@@ -167,22 +168,28 @@ function selectGrade(g) {
     // 该年级已有真实内容：按人教版 A 版单元列出，点一个单元进它的知识点。
     const total = gd.units.reduce((n, u) => n + u.points.length, 0);
     const due = duePointIds().length;
+    const litCount = gd.units.filter((u, i) => { const cp = unitCheckpoint(g, i); return cp && cp.lit; }).length;
     gradeDetail.innerHTML =
-      '<h3>' + d.title + '</h3><p class="muted">人教版 A 版顺序 · ' + gd.units.length + ' 个单元 · ' + total + ' 个知识点；每条都有怎么做、为什么、容易错、讲回来。</p>' +
+      '<h3>' + d.title + '</h3><p class="muted">人教版 A 版顺序 · ' + gd.units.length + ' 个单元 · ' + total + ' 个知识点；每条都有怎么做、为什么、容易错、讲回来。本年级已点亮 ' + litCount + ' / ' + gd.units.length + ' 个单元。</p>' +
       '<div class="btn-row"><button class="btn primary" type="button" data-g-mix="1">混着练：5 道不同单元的题</button>' +
-      '<button class="btn ghost" type="button" data-g-review="1">今天复习（' + due + ' 条）</button></div>' +
-      '<div class="unit-list">' + gd.units.map((u, i) =>
+      '<button class="btn ghost" type="button" data-g-review="1">今天复习（' + due + ' 条）</button>' +
+      '<button class="btn ghost" type="button" data-cp-link="1">去闯关路</button></div>' +
+      '<div class="unit-list">' + gd.units.map((u, i) => {
         // 单元卡片带上知识点编号：单点单元是“3.15a · 复式统计表”，多点单元是“8.3–8.4 · 轴对称”。
         // 编号是主题标签（3.15a/3.15b 是拆分的两个点），和知识点页的编号一致，不再让读者按卡片数数。
-        '<button class="unit unit-btn" type="button" data-unit="' + i + '"><b>' + esc(u.points.length === 1 ? u.points[0].id + ' · ' + u.unit : u.points[0].id + '–' + u.points[u.points.length - 1].id + ' · ' + u.unit) + '</b><p>' + esc(u.term) + ' · ' + u.points.length + ' 个知识点</p>' +
-        '<span class="pill">内容已完成</span></button>'
-      ).join('') + '</div>';
+        const cp = unitCheckpoint(g, i);
+        const status = cp ? (cp.lit ? '✓ 已点亮 · ' + cp.badge : '闯关 ' + cp.done + ' / ' + cp.total) : '';
+        return '<button class="unit unit-btn' + (cp && cp.lit ? ' cp-lit' : '') + '" type="button" data-unit="' + i + '"><b>' + esc(u.points.length === 1 ? u.points[0].id + ' · ' + u.unit : u.points[0].id + '–' + u.points[u.points.length - 1].id + ' · ' + u.unit) + '</b><p>' + esc(u.term) + ' · ' + u.points.length + ' 个知识点</p>' +
+        '<span class="pill">内容已完成</span>' + (status ? '<span class="pill">' + esc(status) + '</span>' : '') + '</button>';
+      }).join('') + '</div>';
     gradeDetail.querySelectorAll('[data-unit]').forEach(btn =>
       btn.addEventListener('click', () => navGo('unit-' + g + '-' + btn.dataset.unit)));
     gradeDetail.querySelectorAll('[data-g-mix]').forEach(btn =>
       btn.addEventListener('click', () => navGo('grade-' + g + '-mix')));
     gradeDetail.querySelectorAll('[data-g-review]').forEach(btn =>
       btn.addEventListener('click', () => navGo('grade-' + g + '-review')));
+    gradeDetail.querySelectorAll('[data-cp-link]').forEach(btn =>
+      btn.addEventListener('click', () => navGo('checkpoint')));
     return;
   }
   gradeDetail.innerHTML =
@@ -233,14 +240,20 @@ function renderUnit(g, ui) {
   const gd = gradeData(g);
   if (!gd || !gd.units[ui]) return;
   const u = gd.units[ui];
+  const cp = unitCheckpoint(g, ui);
+  const cpBox = cp ? '<div class="point-sec"><h4>闯关任务' + (cp.lit ? ' · 已点亮' : '') + '</h4>' + cpTaskListHtml(cp) +
+    '<p class="muted">顺序只是建议：这一站做完就点亮，想先去别的站也可以直接点。</p>' +
+    '<div class="btn-row"><button class="btn ghost" type="button" data-cp-link="1">去闯关路看看</button></div></div>' : '';
   pointDetail.innerHTML =
-    '<h3>' + esc(u.unit) + '</h3><p class="muted">' + esc(u.term) + ' · ' + u.points.length + ' 个知识点 · 点一条进内容。</p>' +
+    '<h3>' + esc(u.unit) + '</h3><p class="muted">' + esc(u.term) + ' · ' + u.points.length + ' 个知识点 · 点一条进内容。</p>' + cpBox +
     '<div class="unit-list">' + u.points.map(p =>
       '<button class="unit unit-btn" type="button" data-point="' + esc(p.id) + '"><b>' + esc(p.id) + ' · ' + esc(p.title) + '</b><p>' + esc(p.subtitle) + '</p>' +
       '<span class="pill">' + esc(p.method) + '</span></button>'
     ).join('') + '</div>';
   pointDetail.querySelectorAll('[data-point]').forEach(btn =>
     btn.addEventListener('click', () => navGo('point-' + btn.dataset.point)));
+  pointDetail.querySelectorAll('[data-cp-link]').forEach(btn =>
+    btn.addEventListener('click', () => navGo('checkpoint')));
 }
 const DEMO_LABEL = { fraction: '去玩分数演示', tenframe: '去玩十格阵', balance: '去玩天平演示', function: '去玩函数演示', count: '去玩数一数', position: '去玩转身找左右', split: '去玩分一分', addsub: '去玩合起来拿走', solids: '去玩立体图形', bundle: '去玩捆小棒', clock: '去玩拨时钟', tangram: '去玩七巧板', sort: '去玩分类分一分', hundred: '去玩百数表', shop: '去玩开小店', place: '去玩数位块', pattern: '去玩找规律', ruler: '去玩尺子量一量', estimate: '去玩先估后算', angle: '去玩转一转角', array: '去玩点阵乘法', observe: '去玩换个方向看', time: '去玩拨时钟（时和分）', share: '去玩轮流分一分', motion: '去玩折一折转一转', mixop: '去玩先算哪一堆', remain: '去玩装一包装不满', thousand: '去玩数轴找近似数', weight: '去玩天平称一称', chart: '去玩投票变条形图', logic: '去玩排除格推理', pair: '去玩搭配连一连', elapsed: '去玩时间轴走一走', verify: '去玩算回去验算', units: '去玩单位楼梯', times: '去玩条形复制', splitmul: '去玩面积切一切', rectsq: '去玩拉一拉变正方形', venn: '去玩韦恩图拖人', compass: '去玩指南针转一转', divplace: '去玩按数位分一分', stattable: '去玩复式统计表', fourgrid: '去玩四格面积模型', area: '去玩铺方砖数面积', calendar: '去玩日历翻一翻', decimal: '去玩十分条比大小', bignum: '去玩大数数轴', field: '去玩足球场拼一拼', protractor: '去玩量角器', areamodel: '去玩面积模型', parallelogram: '去玩平行四边形', trialdiv: '去玩试商调商', baraxis: '去玩条形图轴', teatime: '去玩沏茶排一排', zerodiv: '去玩除以0', laws: '去玩运算定律', placeslider: '去玩数位滑块', tearangle: '去玩撕角拼平角', decadd: '去玩小数加减对齐', moveshape: '去玩图形平移', average: '去玩削峰填谷', chickenrabbit: '去玩鸡兔同笼', decmul: '去玩单位正方形', gridpos: '去玩数对点一点', decdiv: '去玩两数同乘', prob: '去玩摸球模拟', polyarea: '去玩切一刀变长方形', planttree: '去玩种树数间隔', factor: '去玩拼长方形', cuboid: '去玩分层装块', fracadd: '去玩先重切再数', rotate: '去玩绕钉旋转', findbad: '去玩三组称找次品', radar: '去玩雷达找地方', ratio: '去玩比条分一分', circle: '去玩绕绳量圆', percent: '去玩百分条', fan: '去玩扇形转一转', lsquare: '去玩一层层包正方形', thermo: '去玩温度计比一比', negmul: '去玩负数乘法规律', discount: '去玩打折算一算', cylinder: '去玩倒沙装满圆柱', pigeon: '去玩鸽子找洞', conceptmap: '去玩认出老办法', numline: '去玩数轴标一点', powerup: '去玩对折纸和科学记数法', monomial: '去玩拆零件看系数次数', liketerms: '去玩合并同类项', meetline: '去玩相向而行', lineseg: '去玩直线射线线段', anglepair: '去玩余角补角拼一拼', vertangle: '去玩对顶角转一转', parangles: '去玩平行线截角', roots: '去玩开方机器', coordplane: '去玩坐标平面点一点', ineqline: '去玩不等式画数轴', histogram: '去玩直方图分组', trisides: '去玩三边围不围', congruent: '去玩全等判定拼一拼', foldmirror: '去玩对折看对称', algarea: '去玩面积模型算整式', algfrac: '去玩分式约分', eqsieve: '去玩分式方程过筛子', radical: '去玩二次根式化简', pythag: '去玩勾股定理面积拼图', pargram: '去玩平行四边形推一推', specialquad: '去玩加条件变特殊', datastats: '去玩数据分析算一算', quad: '去玩一元二次方程', growth: '去玩利滚利和韦达', parabola: '去玩抛物线滑杆', spin: '去玩旋转和中心对称', circangle: '去玩圆周角', tangent: '去玩直线和圆切线', sector: '去玩扇形和圆锥', coin: '去玩抛硬币摸红球', tree: '去玩树状图数一数', hyperbola: '去玩双曲线', similar: '去玩相似放大', shadow: '去玩影子测高', trig: '去玩锐角三角函数', slope: '去玩仰角和坡度', project: '去玩投影和三视图' };
 /* 分步评分：多步骤题拆成一步一步对。steps 是可选字段，没有 steps 的题照旧渲染。
@@ -765,16 +778,23 @@ function renderProgress() {
     const mast = ids.filter(id => reviewStore[id] && reviewStore[id].streak >= 2).length;
     const demosInGrade = ALL_DEMOS.filter(k => (DEMO_GRADES[k] || []).includes(g));
     const demosDone = demosInGrade.filter(k => tried.has(k)).length;
+    const litUnits = gd.units.filter((u, ui) => { const cp = unitCheckpoint(g, ui); return cp && cp.lit; }).length;
     const pct = total ? Math.round(done / total * 100) : 0;
     html += '<div class="prog-row"><b>' + g + ' 年级 · ' + esc(GRADES[g].title.split('· ')[1] || '') + '</b>' +
-      '<p class="prog-nums">演示 ' + demosDone + ' / ' + demosInGrade.length + ' · 已练 ' + done + ' / ' + total + ' 条 · 已掌握 ' + mast + ' 条</p>' +
+      '<p class="prog-nums">演示 ' + demosDone + ' / ' + demosInGrade.length + ' · 已练 ' + done + ' / ' + total + ' 条 · 已掌握 ' + mast + ' 条 · 已点亮 ' + litUnits + ' / ' + gd.units.length + ' 个单元</p>' +
       '<div class="prog-track"><i style="width:' + pct + '%"></i></div></div>';
   }
+  const allCp = allUnitCheckpoints();
+  const litAll = allCp.filter(cp => cp.lit).length;
+  html += '<div class="point-sec"><h4>徽章</h4><p>' + (litAll ? '已拿到 ' + litAll + ' 个徽章（点亮 ' + litAll + ' / ' + allCp.length + ' 个单元）。' : '还没有徽章。点亮一个单元（把它的任务都做完），徽章就会出现。') + '</p>' +
+    '<div class="btn-row"><button class="btn primary" type="button" data-checkpoint-link="1">去闯关路看徽章墙</button></div></div>';
   html += '<div class="btn-row"><button class="btn primary" type="button" data-exam-start="1">开始模拟测（5 道题 · 10 分钟）</button>' +
     '<button class="btn ghost" type="button" data-parent-link="1">家长看这里：这周练了什么、卡在哪</button></div>';
   card.innerHTML = html;
   card.querySelectorAll('[data-exam-start]').forEach(b => b.addEventListener('click', () => navGo('exam')));
   card.querySelectorAll('[data-parent-link]').forEach(b => b.addEventListener('click', () => navGo('parent')));
+  card.querySelectorAll('[data-checkpoint-link]').forEach(b => b.addEventListener('click', () => navGo('checkpoint')));
+  updateCheckpointHomeTx();
 }
 
 /* ---------- 家长端 + 探究作业（Phase 3，本地-only，不登录、不联网）
@@ -992,6 +1012,108 @@ if (inquiryDetail) inquiryDetail.addEventListener('click', e => {
     return;
   }
 });
+
+/* ---------- 闯关路（Phase 4：只做视觉层，不改内容结构） ----------
+   已有的学习进度变成一条看得见的路：一个单元一站，按年级顺序往下走。
+   每站的任务全部取自 app 已有的行为，不新增题目：
+   ① 玩过该单元的演示（math-tried-demos-v1 里有该单元任一演示即算）；
+   ② 练过该单元的知识点（math-review-v1 里有该单元任一知识点即算）；
+   ③ 交过挂在本单元的探究作业（math-inquiry-v1 里有对应 taskId 的提交即算；
+   只有 6 个单元挂着探究作业，其他单元只有前两项任务）。
+   模拟测考完不记成绩，所以不算进任务里；小老师讲题没挂在具体单元上，也不算。
+   点亮 = 该站任务全做完；不锁后面的站，顺序只是建议的视觉引导。
+   徽章名直接用单元已有的标题 + “小达人”，只来自真实完成记录。
+   每次渲染都从存储现读（loadStoredReview / loadTriedKeys / loadInquiry），
+   不用内存里的 reviewStore / tried，这样数字一定和存下来的记录一致。 */
+function inquiryTaskForUnit(g, ui) {
+  for (const t of INQUIRY_TASKS) {
+    const f = findPoint(t.pointId);
+    if (f && f.grade === g && f.unitIndex === ui) return t;
+  }
+  return null;
+}
+function unitCheckpoint(g, ui) {
+  const gd = gradeData(g);
+  if (!gd || !gd.units[ui]) return null;
+  const u = gd.units[ui];
+  const store = loadStoredReview();
+  const triedKeys = loadTriedKeys();
+  const demos = [];
+  u.points.forEach(p => { if (p.demo && demos.indexOf(p.demo) < 0) demos.push(p.demo); });
+  const demosDone = demos.filter(k => triedKeys.indexOf(k) >= 0).length;
+  const practiced = u.points.filter(p => store[p.id]).length;
+  const inq = inquiryTaskForUnit(g, ui);
+  const inqDone = inq ? loadInquiry().some(e => e && e.kind === 'inq' && e.taskId === inq.id) : false;
+  const tasks = [
+    { key: 'demo', label: '玩一玩本单元的演示', done: demosDone > 0, detail: '演示 ' + demosDone + ' / ' + demos.length },
+    { key: 'practice', label: '练一练本单元的知识点', done: practiced > 0, detail: '已练 ' + practiced + ' / ' + u.points.length + ' 条' },
+  ];
+  if (inq) tasks.push({ key: 'inquiry', label: '交一份探究作业：' + inq.title, done: inqDone, detail: inqDone ? '已交' : '还没交' });
+  const done = tasks.filter(t => t.done).length;
+  return { grade: g, unitIndex: ui, unit: u.unit, term: u.term, pointsTotal: u.points.length, demosTotal: demos.length, demosDone: demosDone, practiced: practiced, tasks: tasks, done: done, total: tasks.length, lit: done === tasks.length, badge: u.unit + '小达人' };
+}
+function allUnitCheckpoints() {
+  const list = [];
+  for (let g = 1; g <= 9; g++) {
+    const gd = gradeData(g);
+    if (!gd) continue;
+    gd.units.forEach((u, ui) => { const cp = unitCheckpoint(g, ui); if (cp) list.push(cp); });
+  }
+  return list;
+}
+function cpTaskListHtml(cp) {
+  return '<ul class="cp-tasks">' + cp.tasks.map(t =>
+    '<li>' + (t.done ? '✓ ' : '○ ') + esc(t.label) + '（' + esc(t.detail) + '）</li>'
+  ).join('') + '</ul>' +
+  '<div class="prog-track"><i style="width:' + Math.round(cp.done / cp.total * 100) + '%"></i></div>' +
+  '<p class="prog-nums">任务 ' + cp.done + ' / ' + cp.total + (cp.lit ? ' · 已点亮，拿到徽章「' + esc(cp.badge) + '」' : '') + '</p>';
+}
+const checkpointDetail = document.getElementById('checkpointDetail');
+function renderCheckpoint() {
+  if (!checkpointDetail) return;
+  const all = allUnitCheckpoints();
+  const lit = all.filter(cp => cp.lit);
+  let n = 0;
+  let html = '<h3>闯关路</h3><p class="muted">一个单元就是一站，按年级顺序往下走，就是建议的顺序——每一站都能直接点进去，没有锁，想先去哪一站都可以。任务只数本机已经存下来的记录：玩过的演示、练过的知识点、交过的探究作业。</p>' +
+    '<p class="muted">一共 ' + all.length + ' 个单元 · 已点亮 ' + lit.length + ' 个 · 拿到 ' + lit.length + ' 个徽章</p>';
+  for (let g = 1; g <= 9; g++) {
+    const gd = gradeData(g);
+    if (!gd) continue;
+    const units = all.filter(cp => cp.grade === g);
+    if (!units.length) continue;
+    const gl = units.filter(cp => cp.lit).length;
+    html += '<div class="point-sec"><h4>' + g + ' 年级 · ' + esc(GRADES[g].title.split('· ')[1] || '') + '（已点亮 ' + gl + ' / ' + units.length + '）</h4><div class="unit-list">' +
+      units.map(cp => {
+        n++;
+        return '<button class="unit unit-btn' + (cp.lit ? ' cp-lit' : '') + '" type="button" data-cp-unit="' + cp.grade + '-' + cp.unitIndex + '"><b>第 ' + n + ' 站 · ' + esc(cp.unit) + '</b><p>' + esc(cp.term) + ' · ' + cp.pointsTotal + ' 个知识点</p>' + cpTaskListHtml(cp) +
+        '<span class="pill">' + (cp.lit ? '🏅 已点亮 · ' + esc(cp.badge) : '进行中 · 任务 ' + cp.done + ' / ' + cp.total) + '</span></button>';
+      }).join('') + '</div></div>';
+  }
+  html += '<div class="point-sec"><h4>徽章墙</h4>';
+  if (!lit.length) {
+    html += '<p>还没有徽章。点亮一个单元（把它的任务都做完），徽章就会出现在这里。</p>';
+  } else {
+    html += '<div class="cp-wall">' + lit.map(cp => '<span class="cp-badge">🏅 ' + cp.grade + ' 年级 · ' + esc(cp.badge) + '</span>').join('') + '</div>';
+  }
+  html += '</div>';
+  html += '<p class="muted">模拟测考完不记成绩，所以不算进闯关任务里；探究作业只挂在 6 个单元上，其他单元只有前面两项任务。</p>';
+  checkpointDetail.innerHTML = html;
+  updateCheckpointHomeTx();
+}
+if (checkpointDetail) checkpointDetail.addEventListener('click', e => {
+  const b = e.target.closest('[data-cp-unit]');
+  if (b) { const parts = b.dataset.cpUnit.split('-'); navGo('unit-' + parts[0] + '-' + parts[1]); }
+});
+/* 首页“闯关路”面板的小字：已点亮的单元数。练题 / 玩演示 / 交作业后都刷新一次。 */
+function updateCheckpointHomeTx() {
+  const tx = document.getElementById('panelCpTx');
+  const fill = document.getElementById('panelCpFill');
+  if (!tx && !fill) return;
+  const all = allUnitCheckpoints();
+  const lit = all.filter(cp => cp.lit).length;
+  if (tx) tx.textContent = lit ? '已点亮 ' + lit + ' / ' + all.length + ' 个单元' : '还没有点亮的单元';
+  if (fill) fill.style.width = (all.length ? lit / all.length * 100 : 0) + '%';
+}
 if (pointDetail) pointDetail.addEventListener('click', e => {
   const examStartBtn = e.target.closest('[data-exam-start]');
   if (examStartBtn) { navGo('exam'); return; }
@@ -1493,6 +1615,7 @@ const NAV_DEFS = {
   exam:       { crumbs: ['数学', '模拟测'], target: 'exam', action: renderExamIntro },
   parent:     { crumbs: ['数学', '我的进度', '家长看这里'], target: 'parentCard', action: renderParent },
   inquiry:    { crumbs: ['数学', '探究作业'], target: 'inquiry', action: renderInquiry },
+  checkpoint: { crumbs: ['数学', '闯关路'], target: 'checkpoint', action: renderCheckpoint },
 };
 Object.keys(GRADES).forEach(g => {
   NAV_DEFS['grade-' + g] = { crumbs: ['数学', '选年级', g + ' 年级'], target: 'grades', action: () => selectGrade(+g) };
@@ -1549,6 +1672,7 @@ const progressCardEl = document.getElementById('progressCard');
 const reviewCardEl = document.getElementById('reviewCard');
 const parentCardEl = document.getElementById('parentCard');
 const inquirySec = document.getElementById('inquiry');
+const checkpointSec = document.getElementById('checkpoint');
 const inquiryEntryRow = document.getElementById('inquiryEntryRow');
 const nextStepsEl = document.getElementById('nextSteps');
 const footerEl = document.getElementById('pageFooter');
@@ -1577,6 +1701,7 @@ function viewForKey(key) {
   if (key === 'parent') return 'parent';
   if (key === 'exam') return 'exam';
   if (key === 'inquiry') return 'inquiry';
+  if (key === 'checkpoint') return 'checkpoint';
   return 'home';
 }
 function setHidden(el, hidden) { if (el) el.hidden = hidden; }
@@ -1637,6 +1762,8 @@ function applyView() {
   setHidden(examSec, view !== 'exam');
   // 探究作业：只有进探究作业才显示整个 #inquiry 区
   setHidden(inquirySec, view !== 'inquiry');
+  // 闯关路：只有进闯关路才显示整个 #checkpoint 区
+  setHidden(checkpointSec, view !== 'checkpoint');
   setHidden(reviewSec.querySelector('h2'), true); // 卡片自带 h3 标题，区标题“进度与错题本”不再出现
   // 维度切换 pills 只在某个维度的详情页出现：维度卡片列表页上，
   // 模式栏的 5 个 pills 和下面 5 张卡片是同一批内容，重复了（2026-11-06 真机审计第 5 条）。

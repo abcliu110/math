@@ -51,7 +51,7 @@ code{background:#eef2ff;padding:2px 6px;border-radius:6px}
 [hidden]{display:none !important}
 body[data-view] #grades, body[data-view] #dimensions, body[data-view] #path,
 body[data-view] #demos, body[data-view] #why, body[data-view] #review, body[data-view] #lab,
-body[data-view] #exam, body[data-view] #inquiry,
+body[data-view] #exam, body[data-view] #inquiry, body[data-view] #checkpoint,
 body[data-view] .next-steps, body[data-view] footer.footer{display:none}
 body[data-view="grades"] #grades, body[data-view="grade-detail"] #grades,
 body[data-view="unit-detail"] #grades, body[data-view="point-detail"] #grades,
@@ -105,7 +105,7 @@ body[data-view="demo-hyperbola"] #demos, body[data-view="demo-similar"] #demos, 
 body[data-view="demo-trig"] #demos, body[data-view="demo-slope"] #demos, body[data-view="demo-project"] #demos,
 body[data-view="why"] #why, body[data-view="review"] #review,
 body[data-view="progress"] #review, body[data-view="parent"] #review, body[data-view="lab"] #lab,
-body[data-view="exam"] #exam, body[data-view="inquiry"] #inquiry{display:block}
+body[data-view="exam"] #exam, body[data-view="inquiry"] #inquiry, body[data-view="checkpoint"] #checkpoint{display:block}
 .exam-timer{font-size:20px;font-weight:700;color:#c2410c;margin:8px 0}
 .path-detail{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-top:16px}
 .path-detail h3{margin:0 0 8px}
@@ -276,6 +276,11 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
 .prog-nums{color:var(--muted);font-size:14px;margin:4px 0 8px}
 .prog-track{height:10px;background:#e2e8f0;border-radius:999px;overflow:hidden}
 .prog-track i{display:block;height:100%;background:var(--orange);border-radius:999px}
+/* 闯关路：任务清单、点亮的站、徽章墙 */
+.cp-tasks{list-style:none;padding:0;margin:8px 0;display:flex;flex-direction:column;gap:4px;font-size:14px;text-align:left}
+.cp-unit.cp-lit{border-color:#f59e0b;background:#fffbeb}
+.cp-wall{display:flex;flex-wrap:wrap;gap:8px}
+.cp-badge{display:inline-block;background:#fef3c7;border:1px solid #f59e0b;border-radius:999px;padding:6px 12px;font-size:14px}
 .review-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
 .progress-bar{height:14px;background:#e2e8f0;border-radius:999px;overflow:hidden}
 .progress-fill{height:100%;background:var(--orange);width:0%;transition:width .4s}

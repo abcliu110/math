@@ -78,6 +78,7 @@
       <button class="panel" type="button" data-nav-key="dimensions"><span class="panel-icon" aria-hidden="true">◇</span><b>换维度</b><span class="panel-sub">同一批内容换个分法</span><span class="panel-tx">5 个维度</span></button>
       <button class="panel" type="button" data-nav-key="path"><span class="panel-icon" aria-hidden="true">→</span><b>学习路径</b><span class="panel-sub">动手 → 说一说 → 练 → 测</span><span class="panel-tx">每课四步</span></button>
       <button class="panel" type="button" data-nav-key="today-review"><span class="panel-icon" aria-hidden="true">↻</span><b>今天复习</b><span class="panel-sub">到期的题回来练，错了明天再来</span><span class="panel-tx" id="todayReviewTx">今天没有到期的</span></button>
+      <button class="panel" type="button" data-nav-key="checkpoint"><span class="panel-icon" aria-hidden="true">🏅</span><b>闯关路</b><span class="panel-sub">一个单元一站，点亮了就拿徽章</span><span class="panel-prog"><i id="panelCpFill" style="width:0%"></i></span><span class="panel-tx" id="panelCpTx">还没有点亮的单元</span></button>
     </div>
     <h3 class="panel-group-label">工具箱</h3>
     <div class="panels four">
@@ -3072,6 +3073,11 @@
   <!-- 探究作业：交的是过程，不是答案；小老师讲题只写字，不录音 -->
   <section id="inquiry" class="section wrap">
     <div class="inquiry-detail" id="inquiryDetail" aria-live="polite"></div>
+  </section>
+
+  <!-- 闯关路：一个单元一站，按年级顺序走；任务只数已存的记录，不锁站 -->
+  <section id="checkpoint" class="section wrap">
+    <div class="checkpoint-detail" id="checkpointDetail" aria-live="polite"></div>
   </section>
 
   <!-- Next steps：视图隔离后不再显示（首页不露出任何模块内容，模块视图只显示本面板内容） -->

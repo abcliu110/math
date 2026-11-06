@@ -1058,11 +1058,12 @@ check('layout CSS: open demo renders single-column full-width',
   cssText.includes('.demo-grid{display:grid;grid-template-columns:minmax(0,1fr)'));
 check('layout CSS: point page is a narrow centered column',
   cssText.includes('.point-detail{scroll-margin-top:88px;max-width:760px;margin:0 auto'));
-// index.html：首页 8 块面板分两组，含今天复习入口；函数表有 x=4
+// index.html：首页 9 块面板分两组，含今天复习入口和闯关路入口；函数表有 x=4
 const htmlText = fs.readFileSync(root + '/apps/web/index.html', 'utf8');
 const panelsSec = htmlText.split('id="panels"')[1].split('</section>')[0];
-check('home: 8 panels in two groups incl. 今天复习',
-  (panelsSec.match(/data-nav-key="/g) || []).length === 8 && panelsSec.includes('data-nav-key="today-review"') &&
+check('home: 9 panels in two groups incl. 今天复习 and 闯关路',
+  (panelsSec.match(/data-nav-key="/g) || []).length === 9 && panelsSec.includes('data-nav-key="today-review"') &&
+  panelsSec.includes('data-nav-key="checkpoint"') &&
   panelsSec.includes('开始学') && panelsSec.includes('工具箱'));
 check('function tables include x=4', htmlText.includes('<td id="y4">') && htmlText.includes('<td id="labY4">'));
 // 今天复习首页入口
@@ -2618,6 +2619,60 @@ navGo('parent');
 check('K parent: empty data says so honestly, no invented numbers',
   byId.parentCard.innerHTML.includes('还没有记录，先去练一练') &&
   !byId.parentCard.innerHTML.includes('这 7 天一共练了'));
+
+// ---------- L. checkpoint / 闯关路 ----------
+const checkpointDetail = byId.checkpointDetail;
+function clickCp(el) { (checkpointDetail._handlers.click || []).forEach(f => f({ target: el })); }
+navGo('checkpoint');
+check('L checkpoint view: checkpoint section visible, review + grades hidden',
+  documentStub.body.dataset.view === 'checkpoint' && byId.checkpoint.hidden === false && byId.review.hidden === true && byId.grades.hidden === true);
+check('L checkpoint: empty data shows 0 lit and an empty badge wall, no fake badges',
+  checkpointDetail.innerHTML.includes('已点亮 0 个') && checkpointDetail.innerHTML.includes('还没有徽章') &&
+  !checkpointDetail.innerHTML.includes('小达人'));
+// 3 年级“分数的初步认识”单元（stub 里只有 3.7 一个点，演示 fraction）：玩过演示 + 练过 3.7 → 2/2 点亮。
+lsData['math-tried-demos-v1'] = JSON.stringify(['fraction']);
+lsData['math-review-v1'] = JSON.stringify({ '3.7': { last: Date.now(), correct: true, confident: true, streak: 1, due: Date.now() + 86400000 } });
+navGo('checkpoint');
+check('L checkpoint: unit lights up only when all its tasks are done',
+  checkpointDetail.innerHTML.includes('分数的初步认识小达人') && checkpointDetail.innerHTML.includes('已点亮 1 个'));
+check('L checkpoint: lit unit shows task counts matching storage',
+  checkpointDetail.innerHTML.includes('演示 1 / 1') && checkpointDetail.innerHTML.includes('已练 1 / 1 条') && checkpointDetail.innerHTML.includes('任务 2 / 2'));
+// 只玩演示、没练过 → 1/2，不点亮、不给徽章。
+lsData['math-review-v1'] = JSON.stringify({});
+navGo('checkpoint');
+check('L checkpoint: half-done unit is not lit and earns no badge',
+  checkpointDetail.innerHTML.includes('任务 1 / 2') && checkpointDetail.innerHTML.includes('已点亮 0 个') &&
+  !checkpointDetail.innerHTML.includes('分数的初步认识小达人') && checkpointDetail.innerHTML.includes('还没有徽章'));
+// 年级页和单元页也看得到点亮状态。
+lsData['math-review-v1'] = JSON.stringify({ '3.7': { last: Date.now(), correct: true, confident: true, streak: 1, due: Date.now() + 86400000 } });
+navGo('grade-3');
+check('L checkpoint: grade page shows the lit unit',
+  gradeDetail.innerHTML.includes('已点亮 1 / 4 个单元') && gradeDetail.innerHTML.includes('✓ 已点亮 · 分数的初步认识小达人'));
+navGo('unit-3-0');
+check('L checkpoint: unit page shows its task list and lit state',
+  pointDetail.innerHTML.includes('闯关任务 · 已点亮') && pointDetail.innerHTML.includes('任务 2 / 2'));
+// 1 年级单元挂着探究作业 inq-tenframe（点 1.9）：演示 + 练题都做了、没交作业 → 2/3 不点亮；交了才点亮。
+lsData['math-tried-demos-v1'] = JSON.stringify(['tenframe']);
+lsData['math-review-v1'] = JSON.stringify({ '1.9': { last: Date.now(), correct: true, confident: true, streak: 1, due: Date.now() + 86400000 } });
+delete lsData['math-inquiry-v1'];
+navGo('checkpoint');
+check('L checkpoint: inquiry task counts only where one exists, and blocks lighting until submitted',
+  checkpointDetail.innerHTML.includes('任务 2 / 3') && !checkpointDetail.innerHTML.includes('20以内的进位加法小达人'));
+lsData['math-inquiry-v1'] = JSON.stringify([{ kind: 'inq', taskId: 'inq-tenframe', text: '三种凑十法', demo: 'tenframe', ts: Date.now() }]);
+navGo('checkpoint');
+check('L checkpoint: submitting the inquiry lights the unit and earns its badge',
+  checkpointDetail.innerHTML.includes('20以内的进位加法小达人') && checkpointDetail.innerHTML.includes('已点亮 1 个'));
+// 闯关路上的站能点进去（没有锁），点进去是单元页。
+const cpBtn = makeEl('button'); cpBtn.dataset.cpUnit = '3-0';
+clickCp(cpBtn);
+check('L checkpoint: tapping a station opens its unit page, no lock',
+  documentStub.body.dataset.view === 'unit-detail' && pointDetail.innerHTML.includes('分数的初步认识'));
+// 我的进度页也看得到点亮数和徽章入口。
+lsData['math-tried-demos-v1'] = JSON.stringify(['tenframe', 'fraction']);
+lsData['math-review-v1'] = JSON.stringify({ '1.9': { last: Date.now(), correct: true, confident: true, streak: 1, due: Date.now() + 86400000 }, '3.7': { last: Date.now(), correct: true, confident: true, streak: 1, due: Date.now() + 86400000 } });
+navGo('progress');
+check('L checkpoint: progress page shows lit-unit counts and a badge-wall link',
+  byId.progressCard.innerHTML.includes('已点亮 1 / 4 个单元') && byId.progressCard.innerHTML.includes('已拿到 2 个徽章'));
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
