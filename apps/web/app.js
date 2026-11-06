@@ -75,21 +75,24 @@ function markTried(key) {
 }
 
 /* ---------- 年级选择 ---------- */
-const gradeGrid = document.getElementById('gradeGrid');
+/* 年级菜单层级是面板：9 块年级面板，点一块进该年级（走 navGo，不是直接调 selectGrade）。 */
+const gradePanels = document.getElementById('gradePanels');
 const gradeDetail = document.getElementById('gradeDetail');
 let currentGrade = 3;
 Object.keys(GRADES).forEach(g => {
   const b = document.createElement('button');
-  b.className = 'grade-btn'; b.type = 'button';
+  b.className = 'panel'; b.type = 'button'; b.dataset.navKey = 'grade-' + g;
   b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', String(+g === currentGrade));
-  b.innerHTML = g + ' 年级<small>' + GRADES[g].stage + '</small>';
-  b.addEventListener('click', () => selectGrade(+g));
-  gradeGrid.appendChild(b);
+  b.innerHTML = '<span class="panel-icon" aria-hidden="true">' + g + '</span><b>' + g + ' 年级</b>' +
+    '<span class="panel-sub">' + GRADES[g].stage + ' · ' + GRADES[g].title.split('· ')[1] + '</span>' +
+    '<span class="panel-prog"><i style="width:0%"></i></span>' +
+    '<span class="panel-tx">' + GRADES[g].units.length + ' 个单元</span>';
+  gradePanels.appendChild(b);
 });
 function selectGrade(g) {
   currentGrade = g;
   updateModeUI('grade');
-  [...gradeGrid.children].forEach((el, i) => el.setAttribute('aria-selected', String(i + 1 === g)));
+  [...gradePanels.children].forEach((el, i) => el.setAttribute('aria-selected', String(i + 1 === g)));
   const d = GRADES[g];
   gradeDetail.innerHTML =
     '<h3>' + d.title + '</h3><p class="muted">每节课走四步：动手试一试 → 说一说 → 练一练 → 测一测。</p>' +
@@ -295,6 +298,18 @@ DIMENSIONS.forEach(d => {
   b.addEventListener('click', () => goDimension(d.id));
   dimBar.appendChild(b);
 });
+/* 维度菜单层级也是面板：5 块维度面板，点一块进该维度（走 navGo，见下方的 [data-nav-key] 绑定）。 */
+const DIM_ICONS = { domain: '◇', cognitive: '◎', literacy: '✦', prereq: '→', qtype: '？' };
+const dimPanels = document.getElementById('dimPanels');
+DIMENSIONS.forEach(d => {
+  const b = document.createElement('button');
+  b.className = 'panel'; b.type = 'button'; b.dataset.navKey = 'dim-' + d.id;
+  const count = d.cats ? d.cats.length + ' 个分类' : d.chains.length + ' 条链';
+  b.innerHTML = '<span class="panel-icon" aria-hidden="true">' + (DIM_ICONS[d.id] || '◇') + '</span><b>' + d.name + '</b>' +
+    '<span class="panel-sub">' + d.short + '</span>' +
+    '<span class="panel-prog"><i style="width:20%"></i></span><span class="panel-tx">' + count + '</span>';
+  dimPanels.appendChild(b);
+});
 renderDimension(currentDim);
 
 /* ---------- 模式切换（主界面模式栏，与维度渲染保持同步）
@@ -345,9 +360,6 @@ DIMENSIONS.forEach(d => {
 
 const navBack = document.getElementById('navBack');
 const crumbTitle = document.getElementById('crumbTitle');
-const sideNav = document.getElementById('sideNav');
-const menuToggle = document.getElementById('menuToggle');
-const navOverlay = document.getElementById('navOverlay');
 let navStack = [{ key: 'home', crumbs: ['数学'], target: 'top' }];
 
 function scrollToTarget(id) {
@@ -375,10 +387,12 @@ function renderNav() {
   document.querySelectorAll('[data-nav-key]').forEach(el =>
     el.setAttribute('aria-current', String(el.dataset.navKey === top.key)));
 }
-function closeDrawer() {
-  sideNav.classList.remove('open');
-  navOverlay.hidden = true;
-  menuToggle.setAttribute('aria-expanded', 'false');
+/* 叶子级的父级：面包屑里的每一级都必须是栈里的真层级，否则点面包屑的父级会跳不回去。 */
+const NAV_PARENT = { 'grade-': 'grades', 'dim-': 'dimensions', 'path-step-': 'path', 'demo-': 'demos' };
+function parentOf(key) {
+  if (key === 'why') return 'demos';
+  for (const p of ['grade-', 'dim-', 'path-step-', 'demo-']) if (key.startsWith(p)) return NAV_PARENT[p];
+  return null;
 }
 function navGo(key) {
   const def = NAV_DEFS[key];
@@ -399,16 +413,25 @@ function navGo(key) {
     navStack[navStack.length - 1] = { key, crumbs: def.crumbs, target: def.target };
     enterNavEntry(navStack[navStack.length - 1]);
   }
-  else { navStack.push({ key, crumbs: def.crumbs, target: def.target }); enterNavEntry(navStack[navStack.length - 1]); }
+  else {
+    // 进叶子级时先补上父级（例如从首页点 3 年级面板，栈是 [首页, 选年级, 3 年级]）；
+    // 跨分支跳转时从首页重开一条路，不把旧分支留在面包屑里。
+    const parent = parentOf(key);
+    const entry = { key, crumbs: def.crumbs, target: def.target };
+    if (parent) {
+      const pdef = NAV_DEFS[parent];
+      if (top.key === parent) { navStack.push(entry); }
+      else { navStack = [navStack[0], { key: parent, crumbs: pdef.crumbs, target: pdef.target }, entry]; }
+    } else { navStack.push(entry); }
+    enterNavEntry(navStack[navStack.length - 1]);
+  }
   renderNav();
-  closeDrawer();
 }
 function navBackFn() {
   if (navStack.length <= 1) return;
   navStack.pop();
   enterNavEntry(navStack[navStack.length - 1]);
   renderNav();
-  closeDrawer();
 }
 /* 模式切换（主界面模式栏）：不是入栈一级，而是跳到顶层视图。
    点「按年级」就回到 [数学 › 选年级]，点「按维度」就回到 [数学 › 换维度]，
@@ -419,7 +442,6 @@ function setModeView(mode) {
   navStack = [navStack[0], { key, crumbs: def.crumbs, target: def.target }];
   enterNavEntry(navStack[1]);
   renderNav();
-  closeDrawer();
 }
 /* 点模式栏里的某个维度：已在维度分支内就替换栈顶（换维度不堆叠），
    不在维度分支内就从首页直接进该维度。 */
@@ -431,10 +453,9 @@ function goDimension(id) {
   const top = navStack[navStack.length - 1];
   if (top.key === 'dimensions') navStack.push(entry);
   else if (top.key.startsWith('dim-')) navStack[navStack.length - 1] = entry;
-  else navStack = [navStack[0], entry];
+  else navStack = [navStack[0], { key: 'dimensions', crumbs: NAV_DEFS.dimensions.crumbs, target: NAV_DEFS.dimensions.target }, entry];
   enterNavEntry(entry);
   renderNav();
-  closeDrawer();
 }
 navBack.addEventListener('click', navBackFn);
 crumbTitle.addEventListener('click', e => {
@@ -447,22 +468,9 @@ crumbTitle.addEventListener('click', e => {
   renderNav();
 });
 document.getElementById('brandHome').addEventListener('click', () => navGo('home'));
-menuToggle.addEventListener('click', () => {
-  const open = sideNav.classList.toggle('open');
-  navOverlay.hidden = !open;
-  menuToggle.setAttribute('aria-expanded', String(open));
-});
-navOverlay.addEventListener('click', closeDrawer);
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
-// 侧边栏子项由数据生成：年级 1–9。
-// 侧边栏里没有维度切换：维度切换只在主界面的模式栏里（见 updateModeUI），这里不生成。
-const navGrades = document.getElementById('navGrades');
-Object.keys(GRADES).forEach(g => {
-  const b = document.createElement('button');
-  b.className = 'menu-subitem'; b.type = 'button'; b.dataset.navKey = 'grade-' + g;
-  b.textContent = g + ' 年级 · ' + GRADES[g].stage;
-  navGrades.appendChild(b);
-});
+// 没有侧边栏：菜单层级全部是面板——年级面板（gradePanels）、维度面板（dimPanels）、
+// 学习路径面板（#pathPanels，写在 index.html 里）、互动演示面板（#demoPanels，写在 index.html 里）。
+// 它们都带 data-nav-key，由下面统一的 [data-nav-key] 绑定走 navGo()。
 document.querySelectorAll('[data-nav-key]').forEach(el =>
   el.addEventListener('click', () => navGo(el.dataset.navKey)));
 // 模式栏的两个模式按钮走同一套逻辑导航：按年级进年级视图，按维度进维度视图。

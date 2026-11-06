@@ -30,7 +30,6 @@ code{background:#eef2ff;padding:2px 6px;border-radius:6px}
 .topbar-inner{display:flex;align-items:center;gap:14px;min-height:64px}
 .back-btn{min-height:48px;padding:8px 16px;border:2px solid var(--orange-dark);border-radius:12px;background:var(--orange);color:#fff;font-size:16px;font-weight:700;cursor:pointer}
 .back-btn:hover{background:var(--orange-dark)}
-.menu-toggle{display:none;min-height:48px;min-width:56px;padding:8px 12px;border:2px solid var(--line);border-radius:12px;background:#fff;font-size:16px;font-weight:700;cursor:pointer}
 .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);background:none;border:0;padding:0;cursor:pointer;font-family:inherit;text-align:left}
 .brand-text{display:flex;flex-direction:column;line-height:1.25}
 .brand-text small{color:var(--muted);font-size:12px}
@@ -39,7 +38,6 @@ code{background:#eef2ff;padding:2px 6px;border-radius:6px}
 .crumb-title .crumb:hover{text-decoration:underline;color:var(--ink)}
 .crumb-title .crumb-sep{margin:0 6px;color:var(--muted);font-weight:400}
 .crumb-title .crumb.cur{color:var(--ink);font-weight:700}
-.topnav{display:none}
 
 /* 模式切换栏：主界面上的常驻切换器，顶栏下方吸顶；不在侧边栏、不在测试栏 */
 .mode-bar{position:sticky;top:64px;z-index:20;background:rgba(255,255,255,.97);border-bottom:1px solid var(--line)}
@@ -50,25 +48,16 @@ code{background:#eef2ff;padding:2px 6px;border-radius:6px}
 .mode-bar .dim-bar{margin-bottom:0}
 .dim-bar[hidden]{display:none}
 
-/* App shell: 桌面侧边栏常驻，平板抽屉 */
-.app-shell{display:grid;grid-template-columns:264px minmax(0,1fr);max-width:1400px;margin:0 auto}
-.app-shell main{min-width:0}
-.sidenav{position:sticky;top:64px;height:calc(100vh - 64px);overflow-y:auto;background:#fff;border-right:1px solid var(--line);padding:16px 12px 32px}
-.sidenav-head{font-size:13px;color:var(--muted);font-weight:700;letter-spacing:2px;margin:4px 8px 8px}
-.menu-group{margin-bottom:18px}
-.menu-group-title{font-size:13px;color:var(--muted);font-weight:700;margin:0 8px 6px}
-.menu-item,.menu-subitem{display:flex;width:100%;min-height:48px;align-items:center;padding:8px 12px;border:2px solid transparent;border-radius:12px;background:none;color:var(--ink);font-size:16px;font-weight:700;cursor:pointer;text-align:left;font-family:inherit}
-.menu-subitem{min-height:48px;padding-left:28px;font-size:15px;font-weight:400}
-.menu-item:hover,.menu-subitem:hover{background:#f8fafc;border-color:var(--line)}
-.menu-item[aria-current="true"],.menu-subitem[aria-current="true"]{border-color:var(--orange);background:#fff7ed;color:var(--orange-dark)}
-.nav-overlay{display:none}
-.path-steps li.flash{outline:3px solid var(--orange);outline-offset:2px}
+/* 没有侧边栏：主界面通栏，菜单层级全部用面板表示（见 #panels / .panel） */
+main{min-width:0}
+.panel.flash{outline:3px solid var(--orange);outline-offset:2px}
 
 /* 模块面板（借汉字 App 首页面板排布：大卡片 + 图标 + 标题 + 副文 + 进度条） */
 .panels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
 .panel{border:1px solid var(--line);border-radius:18px;padding:24px 14px 18px;background:var(--card);color:var(--ink);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;min-height:180px;font-family:inherit}
 .panel:hover{transform:translateY(-4px);box-shadow:0 10px 24px rgba(30,41,59,.12);border-color:var(--orange)}
 .panel:active{transform:translateY(-1px)}
+.panel[aria-current="true"]{border-color:var(--orange);background:#fff7ed}
 .panel-icon{font-size:30px;font-weight:800;color:var(--orange-dark);line-height:1}
 .panel b{font-size:18px}
 .panel-sub{font-size:14px;color:var(--muted);text-align:center}
@@ -95,24 +84,6 @@ code{background:#eef2ff;padding:2px 6px;border-radius:6px}
 .hero-visual{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
 .hero-svg{width:100%;height:auto;display:block}
 .hero-caption{text-align:center;color:var(--muted);font-size:14px;margin:8px 0 0}
-
-/* Grades */
-.grade-grid{display:grid;grid-template-columns:repeat(9,1fr);gap:10px}
-.grade-btn{min-height:64px;border:2px solid var(--line);background:#fff;border-radius:14px;cursor:pointer;font-size:16px;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
-.grade-btn small{font-size:12px;color:var(--muted);font-weight:400}
-.grade-btn[aria-selected="true"]{border-color:var(--orange);background:#fff7ed;color:var(--orange-dark)}
-.grade-detail{margin-top:16px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
-.unit-list{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
-.unit{border:1px solid var(--line);border-radius:12px;padding:14px;background:#f8fafc}
-.unit b{display:block}
-.unit p{margin:6px 0;color:#334155;font-size:15px}
-.pill{display:inline-block;background:var(--blue-light);color:#1d4ed8;border-radius:999px;padding:2px 10px;font-size:13px;margin-right:6px}
-
-/* Path */
-.path-steps{list-style:none;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.path-steps li{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;gap:6px}
-.path-steps b{font-size:17px}
-.path-steps span{color:var(--muted);font-size:15px}
 
 /* Demos */
 .demo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:start}
@@ -153,18 +124,10 @@ code{background:#eef2ff;padding:2px 6px;border-radius:6px}
 
 /* Responsive: tablet + desktop */
 @media (max-width:1024px){
-  .menu-toggle{display:inline-flex;align-items:center;justify-content:center}
-  .app-shell{grid-template-columns:minmax(0,1fr)}
-  .sidenav{position:fixed;top:0;left:0;bottom:0;z-index:40;width:min(300px,84vw);height:100vh;transform:translateX(-105%);transition:transform .25s;box-shadow:0 0 32px rgba(30,41,59,.2)}
-  .sidenav.open{transform:none}
-  .nav-overlay{display:block;position:fixed;inset:0;z-index:35;background:rgba(30,41,59,.4)}
-  .nav-overlay[hidden]{display:none}
   .panels{grid-template-columns:repeat(2,1fr)}
   .hero{grid-template-columns:1fr;padding-top:32px}
-  .grade-grid{grid-template-columns:repeat(5,1fr)}
   .demo-grid{grid-template-columns:1fr 1fr}
-  .path-steps{grid-template-columns:repeat(2,1fr)}
-  .btn,.grade-btn,.seg button{min-height:52px}
+  .btn,.seg button{min-height:52px}
 }
 @media (max-width:700px){
   body{font-size:16px}
@@ -173,8 +136,7 @@ code{background:#eef2ff;padding:2px 6px;border-radius:6px}
   .crumb-title{font-size:16px}
   .crumb-title .crumb{font-size:16px}
   .brand-text small{display:none}
-  .grade-grid{grid-template-columns:repeat(3,1fr)}
-  .demo-grid,.unit-list,.review-grid,.path-steps{grid-template-columns:1fr}
+  .demo-grid,.unit-list,.review-grid{grid-template-columns:1fr}
   .fraction-visual{flex-direction:column;text-align:center}
   .progress-chip{display:none}
 }
@@ -223,7 +185,6 @@ code{background:#eef2ff;padding:2px 6px;border-radius:6px}
 <header class="topbar">
   <div class="wrap topbar-inner">
     <button class="back-btn" id="navBack" type="button" hidden>← 返回</button>
-    <button class="menu-toggle" id="menuToggle" type="button" aria-controls="sideNav" aria-expanded="false">☰ 菜单</button>
     <button class="brand" id="brandHome" type="button" aria-label="回首页">
       <span class="brand-mark" aria-hidden="true">
         <svg viewBox="0 0 48 48" width="36" height="36"><circle cx="24" cy="24" r="20" fill="#ff8a3d"/><path d="M24 8 L24 40 M8 24 L40 24" stroke="#fff" stroke-width="4" stroke-linecap="round"/><circle cx="24" cy="24" r="6" fill="#fff"/></svg>
@@ -234,43 +195,6 @@ code{background:#eef2ff;padding:2px 6px;border-radius:6px}
     <div class="progress-chip" id="progressChip" title="已体验的演示">已体验 <b id="progressCount">0 / 3</b> 个演示</div>
   </div>
 </header>
-
-<div class="app-shell">
-  <div class="nav-overlay" id="navOverlay" hidden></div>
-  <aside class="sidenav" id="sideNav" aria-label="菜单">
-    <p class="sidenav-head">菜单</p>
-    <nav id="sideMenu">
-      <div class="menu-group">
-        <p class="menu-group-title">开始</p>
-        <button class="menu-item" type="button" data-nav-key="home">首页</button>
-      </div>
-      <div class="menu-group">
-        <p class="menu-group-title">选年级</p>
-        <div id="navGrades"></div>
-      </div>
-      <div class="menu-group">
-        <p class="menu-group-title">学习路径</p>
-        <button class="menu-item" type="button" data-nav-key="path">学习路径 · 四步</button>
-        <button class="menu-subitem" type="button" data-nav-key="path-step-1">① 动手试一试</button>
-        <button class="menu-subitem" type="button" data-nav-key="path-step-2">② 说一说</button>
-        <button class="menu-subitem" type="button" data-nav-key="path-step-3">③ 练一练</button>
-        <button class="menu-subitem" type="button" data-nav-key="path-step-4">④ 测一测</button>
-      </div>
-      <div class="menu-group">
-        <p class="menu-group-title">互动演示</p>
-        <button class="menu-item" type="button" data-nav-key="demos">互动演示 · 全部</button>
-        <button class="menu-subitem" type="button" data-nav-key="demo-fraction">分数切一切</button>
-        <button class="menu-subitem" type="button" data-nav-key="demo-balance">天平解方程</button>
-        <button class="menu-subitem" type="button" data-nav-key="demo-function">函数 k / b 滑杆</button>
-        <button class="menu-subitem" type="button" data-nav-key="why">为什么小实验</button>
-      </div>
-      <div class="menu-group">
-        <p class="menu-group-title">复习与进度</p>
-        <button class="menu-item" type="button" data-nav-key="review">错题本</button>
-        <button class="menu-item" type="button" data-nav-key="progress">我的进度</button>
-      </div>
-    </nav>
-  </aside>
 
 <main id="top">
   <!-- 模式切换：直接放在主界面上（顶栏下方、常驻可见），不在侧边栏、不在测试栏。
@@ -336,15 +260,16 @@ code{background:#eef2ff;padding:2px 6px;border-radius:6px}
   <!-- Grade selector -->
   <section id="grades" class="section wrap">
     <h2>选年级</h2>
-    <p class="section-sub">点一个年级，看看这个年级要学什么、用什么图来学。内容按人教版课标顺序整理（待与教材逐册核对）。</p>
-    <div class="grade-grid" id="gradeGrid" role="tablist" aria-label="年级选择"></div>
+    <p class="section-sub">点一块面板进一个年级，看看这个年级要学什么、用什么图来学。内容按人教版课标顺序整理（待与教材逐册核对）。</p>
+    <div class="panels" id="gradePanels" role="tablist" aria-label="年级面板"></div>
     <div class="grade-detail" id="gradeDetail" aria-live="polite"></div>
   </section>
 
   <!-- Dimension detail：维度内容显示在这里；切换维度用的按钮在上方主界面的模式栏里，这里只有一份切换器 -->
   <section id="dimensions" class="section wrap">
     <h2>换个维度看知识</h2>
-    <p class="section-sub">在上方模式栏选「按维度」，再点一个维度，同一批 1–6 年级内容就按这个维度重新分组；点一个分类看看。</p>
+    <p class="section-sub">点一块面板进一个维度，同一批 1–6 年级内容就按这个维度重新分组；点一个分类看看。也可以在上方模式栏直接切维度。</p>
+    <div class="panels" id="dimPanels" aria-label="维度面板"></div>
     <div class="dim-detail" id="dimDetail" aria-live="polite"></div>
     <p class="muted">说明：维度分组是本原型的整理，待与人教版教材逐册核对（待核实）；文字和例子都是原创，没有直接复制任何教程。</p>
   </section>
@@ -353,18 +278,24 @@ code{background:#eef2ff;padding:2px 6px;border-radius:6px}
   <section id="path" class="section wrap">
     <h2>学习路径：每节课都走这四步</h2>
     <p class="section-sub">不是先讲规则再刷题，而是先动手，再命名，再练习，最后检查。</p>
-    <ol class="path-steps">
-      <li id="step-1"><b>① 动手试一试</b><span>拖、切、拼、调，先玩出感觉。</span></li>
-      <li id="step-2"><b>② 说一说</b><span>用自己的话说出规律，再出现正式名字和符号。</span></li>
-      <li id="step-3"><b>③ 练一练</b><span>3–5 道题，都用同一张图来练，不换花样。</span></li>
-      <li id="step-4"><b>④ 测一测</b><span>小测验过关才往下走；错了回退一步，用图再讲一遍。</span></li>
-    </ol>
+    <div class="panels" id="pathPanels" aria-label="学习路径面板">
+      <button class="panel" type="button" id="step-1" data-nav-key="path-step-1"><span class="panel-icon" aria-hidden="true">①</span><b>动手试一试</b><span class="panel-sub">拖、切、拼、调，先玩出感觉。</span><span class="panel-prog"><i style="width:25%"></i></span><span class="panel-tx">第 1 步</span></button>
+      <button class="panel" type="button" id="step-2" data-nav-key="path-step-2"><span class="panel-icon" aria-hidden="true">②</span><b>说一说</b><span class="panel-sub">用自己的话说出规律，再出现正式名字和符号。</span><span class="panel-prog"><i style="width:25%"></i></span><span class="panel-tx">第 2 步</span></button>
+      <button class="panel" type="button" id="step-3" data-nav-key="path-step-3"><span class="panel-icon" aria-hidden="true">③</span><b>练一练</b><span class="panel-sub">3–5 道题，都用同一张图来练，不换花样。</span><span class="panel-prog"><i style="width:25%"></i></span><span class="panel-tx">第 3 步</span></button>
+      <button class="panel" type="button" id="step-4" data-nav-key="path-step-4"><span class="panel-icon" aria-hidden="true">④</span><b>测一测</b><span class="panel-sub">小测验过关才往下走；错了回退一步，用图再讲一遍。</span><span class="panel-prog"><i style="width:25%"></i></span><span class="panel-tx">第 4 步</span></button>
+    </div>
   </section>
 
   <!-- Featured demos -->
   <section id="demos" class="section wrap">
     <h2>互动演示 · 先玩这三个</h2>
-    <p class="section-sub">三个招牌原型，都是我们自己画的图、自己写的例子。能点的都请点一点、拖一拖。</p>
+    <p class="section-sub">点一块面板进一个演示，都是我们自己画的图、自己写的例子。能点的都请点一点、拖一拖。</p>
+    <div class="panels" id="demoPanels" aria-label="互动演示面板">
+      <button class="panel" type="button" data-nav-key="demo-fraction"><span class="panel-icon" aria-hidden="true">3/4</span><b>分数切一切</b><span class="panel-sub">切饼、落数轴，3/4 = 6/8</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">3–5 年级 · 分数</span></button>
+      <button class="panel" type="button" data-nav-key="demo-balance"><span class="panel-icon" aria-hidden="true">＝</span><b>天平解方程</b><span class="panel-sub">两边一起动，才保持平衡</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">5–7 年级 · 方程</span></button>
+      <button class="panel" type="button" data-nav-key="demo-function"><span class="panel-icon" aria-hidden="true">k·x</span><b>函数 k / b 滑杆</b><span class="panel-sub">拖滑杆，直线、表格一起变</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">7–8 年级 · 函数</span></button>
+      <button class="panel" type="button" data-nav-key="why"><span class="panel-icon" aria-hidden="true">？</span><b>为什么小实验</b><span class="panel-sub">进位、分数除法、面积公式</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">3 个小实验</span></button>
+    </div>
 
     <div class="demo-grid">
       <!-- P1 Fraction -->
@@ -507,7 +438,6 @@ code{background:#eef2ff;padding:2px 6px;border-radius:6px}
     <p class="muted">这个首页是原型：年级内容、练习题、错题记录都还是占位或简化版，三个演示是真的能玩的。</p>
   </section>
 </main>
-</div>
 
 <footer class="footer">
   <div class="wrap">
@@ -594,21 +524,24 @@ function markTried(key) {
 }
 
 /* ---------- 年级选择 ---------- */
-const gradeGrid = document.getElementById('gradeGrid');
+/* 年级菜单层级是面板：9 块年级面板，点一块进该年级（走 navGo，不是直接调 selectGrade）。 */
+const gradePanels = document.getElementById('gradePanels');
 const gradeDetail = document.getElementById('gradeDetail');
 let currentGrade = 3;
 Object.keys(GRADES).forEach(g => {
   const b = document.createElement('button');
-  b.className = 'grade-btn'; b.type = 'button';
+  b.className = 'panel'; b.type = 'button'; b.dataset.navKey = 'grade-' + g;
   b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', String(+g === currentGrade));
-  b.innerHTML = g + ' 年级<small>' + GRADES[g].stage + '</small>';
-  b.addEventListener('click', () => selectGrade(+g));
-  gradeGrid.appendChild(b);
+  b.innerHTML = '<span class="panel-icon" aria-hidden="true">' + g + '</span><b>' + g + ' 年级</b>' +
+    '<span class="panel-sub">' + GRADES[g].stage + ' · ' + GRADES[g].title.split('· ')[1] + '</span>' +
+    '<span class="panel-prog"><i style="width:0%"></i></span>' +
+    '<span class="panel-tx">' + GRADES[g].units.length + ' 个单元</span>';
+  gradePanels.appendChild(b);
 });
 function selectGrade(g) {
   currentGrade = g;
   updateModeUI('grade');
-  [...gradeGrid.children].forEach((el, i) => el.setAttribute('aria-selected', String(i + 1 === g)));
+  [...gradePanels.children].forEach((el, i) => el.setAttribute('aria-selected', String(i + 1 === g)));
   const d = GRADES[g];
   gradeDetail.innerHTML =
     '<h3>' + d.title + '</h3><p class="muted">每节课走四步：动手试一试 → 说一说 → 练一练 → 测一测。</p>' +
@@ -814,6 +747,18 @@ DIMENSIONS.forEach(d => {
   b.addEventListener('click', () => goDimension(d.id));
   dimBar.appendChild(b);
 });
+/* 维度菜单层级也是面板：5 块维度面板，点一块进该维度（走 navGo，见下方的 [data-nav-key] 绑定）。 */
+const DIM_ICONS = { domain: '◇', cognitive: '◎', literacy: '✦', prereq: '→', qtype: '？' };
+const dimPanels = document.getElementById('dimPanels');
+DIMENSIONS.forEach(d => {
+  const b = document.createElement('button');
+  b.className = 'panel'; b.type = 'button'; b.dataset.navKey = 'dim-' + d.id;
+  const count = d.cats ? d.cats.length + ' 个分类' : d.chains.length + ' 条链';
+  b.innerHTML = '<span class="panel-icon" aria-hidden="true">' + (DIM_ICONS[d.id] || '◇') + '</span><b>' + d.name + '</b>' +
+    '<span class="panel-sub">' + d.short + '</span>' +
+    '<span class="panel-prog"><i style="width:20%"></i></span><span class="panel-tx">' + count + '</span>';
+  dimPanels.appendChild(b);
+});
 renderDimension(currentDim);
 
 /* ---------- 模式切换（主界面模式栏，与维度渲染保持同步）
@@ -864,9 +809,6 @@ DIMENSIONS.forEach(d => {
 
 const navBack = document.getElementById('navBack');
 const crumbTitle = document.getElementById('crumbTitle');
-const sideNav = document.getElementById('sideNav');
-const menuToggle = document.getElementById('menuToggle');
-const navOverlay = document.getElementById('navOverlay');
 let navStack = [{ key: 'home', crumbs: ['数学'], target: 'top' }];
 
 function scrollToTarget(id) {
@@ -894,10 +836,12 @@ function renderNav() {
   document.querySelectorAll('[data-nav-key]').forEach(el =>
     el.setAttribute('aria-current', String(el.dataset.navKey === top.key)));
 }
-function closeDrawer() {
-  sideNav.classList.remove('open');
-  navOverlay.hidden = true;
-  menuToggle.setAttribute('aria-expanded', 'false');
+/* 叶子级的父级：面包屑里的每一级都必须是栈里的真层级，否则点面包屑的父级会跳不回去。 */
+const NAV_PARENT = { 'grade-': 'grades', 'dim-': 'dimensions', 'path-step-': 'path', 'demo-': 'demos' };
+function parentOf(key) {
+  if (key === 'why') return 'demos';
+  for (const p of ['grade-', 'dim-', 'path-step-', 'demo-']) if (key.startsWith(p)) return NAV_PARENT[p];
+  return null;
 }
 function navGo(key) {
   const def = NAV_DEFS[key];
@@ -918,16 +862,25 @@ function navGo(key) {
     navStack[navStack.length - 1] = { key, crumbs: def.crumbs, target: def.target };
     enterNavEntry(navStack[navStack.length - 1]);
   }
-  else { navStack.push({ key, crumbs: def.crumbs, target: def.target }); enterNavEntry(navStack[navStack.length - 1]); }
+  else {
+    // 进叶子级时先补上父级（例如从首页点 3 年级面板，栈是 [首页, 选年级, 3 年级]）；
+    // 跨分支跳转时从首页重开一条路，不把旧分支留在面包屑里。
+    const parent = parentOf(key);
+    const entry = { key, crumbs: def.crumbs, target: def.target };
+    if (parent) {
+      const pdef = NAV_DEFS[parent];
+      if (top.key === parent) { navStack.push(entry); }
+      else { navStack = [navStack[0], { key: parent, crumbs: pdef.crumbs, target: pdef.target }, entry]; }
+    } else { navStack.push(entry); }
+    enterNavEntry(navStack[navStack.length - 1]);
+  }
   renderNav();
-  closeDrawer();
 }
 function navBackFn() {
   if (navStack.length <= 1) return;
   navStack.pop();
   enterNavEntry(navStack[navStack.length - 1]);
   renderNav();
-  closeDrawer();
 }
 /* 模式切换（主界面模式栏）：不是入栈一级，而是跳到顶层视图。
    点「按年级」就回到 [数学 › 选年级]，点「按维度」就回到 [数学 › 换维度]，
@@ -938,7 +891,6 @@ function setModeView(mode) {
   navStack = [navStack[0], { key, crumbs: def.crumbs, target: def.target }];
   enterNavEntry(navStack[1]);
   renderNav();
-  closeDrawer();
 }
 /* 点模式栏里的某个维度：已在维度分支内就替换栈顶（换维度不堆叠），
    不在维度分支内就从首页直接进该维度。 */
@@ -950,10 +902,9 @@ function goDimension(id) {
   const top = navStack[navStack.length - 1];
   if (top.key === 'dimensions') navStack.push(entry);
   else if (top.key.startsWith('dim-')) navStack[navStack.length - 1] = entry;
-  else navStack = [navStack[0], entry];
+  else navStack = [navStack[0], { key: 'dimensions', crumbs: NAV_DEFS.dimensions.crumbs, target: NAV_DEFS.dimensions.target }, entry];
   enterNavEntry(entry);
   renderNav();
-  closeDrawer();
 }
 navBack.addEventListener('click', navBackFn);
 crumbTitle.addEventListener('click', e => {
@@ -966,22 +917,9 @@ crumbTitle.addEventListener('click', e => {
   renderNav();
 });
 document.getElementById('brandHome').addEventListener('click', () => navGo('home'));
-menuToggle.addEventListener('click', () => {
-  const open = sideNav.classList.toggle('open');
-  navOverlay.hidden = !open;
-  menuToggle.setAttribute('aria-expanded', String(open));
-});
-navOverlay.addEventListener('click', closeDrawer);
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
-// 侧边栏子项由数据生成：年级 1–9。
-// 侧边栏里没有维度切换：维度切换只在主界面的模式栏里（见 updateModeUI），这里不生成。
-const navGrades = document.getElementById('navGrades');
-Object.keys(GRADES).forEach(g => {
-  const b = document.createElement('button');
-  b.className = 'menu-subitem'; b.type = 'button'; b.dataset.navKey = 'grade-' + g;
-  b.textContent = g + ' 年级 · ' + GRADES[g].stage;
-  navGrades.appendChild(b);
-});
+// 没有侧边栏：菜单层级全部是面板——年级面板（gradePanels）、维度面板（dimPanels）、
+// 学习路径面板（#pathPanels，写在 index.html 里）、互动演示面板（#demoPanels，写在 index.html 里）。
+// 它们都带 data-nav-key，由下面统一的 [data-nav-key] 绑定走 navGo()。
 document.querySelectorAll('[data-nav-key]').forEach(el =>
   el.addEventListener('click', () => navGo(el.dataset.navKey)));
 // 模式栏的两个模式按钮走同一套逻辑导航：按年级进年级视图，按维度进维度视图。

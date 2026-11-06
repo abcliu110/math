@@ -10,7 +10,6 @@
 <header class="topbar">
   <div class="wrap topbar-inner">
     <button class="back-btn" id="navBack" type="button" hidden>← 返回</button>
-    <button class="menu-toggle" id="menuToggle" type="button" aria-controls="sideNav" aria-expanded="false">☰ 菜单</button>
     <button class="brand" id="brandHome" type="button" aria-label="回首页">
       <span class="brand-mark" aria-hidden="true">
         <svg viewBox="0 0 48 48" width="36" height="36"><circle cx="24" cy="24" r="20" fill="#ff8a3d"/><path d="M24 8 L24 40 M8 24 L40 24" stroke="#fff" stroke-width="4" stroke-linecap="round"/><circle cx="24" cy="24" r="6" fill="#fff"/></svg>
@@ -21,43 +20,6 @@
     <div class="progress-chip" id="progressChip" title="已体验的演示">已体验 <b id="progressCount">0 / 3</b> 个演示</div>
   </div>
 </header>
-
-<div class="app-shell">
-  <div class="nav-overlay" id="navOverlay" hidden></div>
-  <aside class="sidenav" id="sideNav" aria-label="菜单">
-    <p class="sidenav-head">菜单</p>
-    <nav id="sideMenu">
-      <div class="menu-group">
-        <p class="menu-group-title">开始</p>
-        <button class="menu-item" type="button" data-nav-key="home">首页</button>
-      </div>
-      <div class="menu-group">
-        <p class="menu-group-title">选年级</p>
-        <div id="navGrades"></div>
-      </div>
-      <div class="menu-group">
-        <p class="menu-group-title">学习路径</p>
-        <button class="menu-item" type="button" data-nav-key="path">学习路径 · 四步</button>
-        <button class="menu-subitem" type="button" data-nav-key="path-step-1">① 动手试一试</button>
-        <button class="menu-subitem" type="button" data-nav-key="path-step-2">② 说一说</button>
-        <button class="menu-subitem" type="button" data-nav-key="path-step-3">③ 练一练</button>
-        <button class="menu-subitem" type="button" data-nav-key="path-step-4">④ 测一测</button>
-      </div>
-      <div class="menu-group">
-        <p class="menu-group-title">互动演示</p>
-        <button class="menu-item" type="button" data-nav-key="demos">互动演示 · 全部</button>
-        <button class="menu-subitem" type="button" data-nav-key="demo-fraction">分数切一切</button>
-        <button class="menu-subitem" type="button" data-nav-key="demo-balance">天平解方程</button>
-        <button class="menu-subitem" type="button" data-nav-key="demo-function">函数 k / b 滑杆</button>
-        <button class="menu-subitem" type="button" data-nav-key="why">为什么小实验</button>
-      </div>
-      <div class="menu-group">
-        <p class="menu-group-title">复习与进度</p>
-        <button class="menu-item" type="button" data-nav-key="review">错题本</button>
-        <button class="menu-item" type="button" data-nav-key="progress">我的进度</button>
-      </div>
-    </nav>
-  </aside>
 
 <main id="top">
   <!-- 模式切换：直接放在主界面上（顶栏下方、常驻可见），不在侧边栏、不在测试栏。
@@ -123,15 +85,16 @@
   <!-- Grade selector -->
   <section id="grades" class="section wrap">
     <h2>选年级</h2>
-    <p class="section-sub">点一个年级，看看这个年级要学什么、用什么图来学。内容按人教版课标顺序整理（待与教材逐册核对）。</p>
-    <div class="grade-grid" id="gradeGrid" role="tablist" aria-label="年级选择"></div>
+    <p class="section-sub">点一块面板进一个年级，看看这个年级要学什么、用什么图来学。内容按人教版课标顺序整理（待与教材逐册核对）。</p>
+    <div class="panels" id="gradePanels" role="tablist" aria-label="年级面板"></div>
     <div class="grade-detail" id="gradeDetail" aria-live="polite"></div>
   </section>
 
   <!-- Dimension detail：维度内容显示在这里；切换维度用的按钮在上方主界面的模式栏里，这里只有一份切换器 -->
   <section id="dimensions" class="section wrap">
     <h2>换个维度看知识</h2>
-    <p class="section-sub">在上方模式栏选「按维度」，再点一个维度，同一批 1–6 年级内容就按这个维度重新分组；点一个分类看看。</p>
+    <p class="section-sub">点一块面板进一个维度，同一批 1–6 年级内容就按这个维度重新分组；点一个分类看看。也可以在上方模式栏直接切维度。</p>
+    <div class="panels" id="dimPanels" aria-label="维度面板"></div>
     <div class="dim-detail" id="dimDetail" aria-live="polite"></div>
     <p class="muted">说明：维度分组是本原型的整理，待与人教版教材逐册核对（待核实）；文字和例子都是原创，没有直接复制任何教程。</p>
   </section>
@@ -140,18 +103,24 @@
   <section id="path" class="section wrap">
     <h2>学习路径：每节课都走这四步</h2>
     <p class="section-sub">不是先讲规则再刷题，而是先动手，再命名，再练习，最后检查。</p>
-    <ol class="path-steps">
-      <li id="step-1"><b>① 动手试一试</b><span>拖、切、拼、调，先玩出感觉。</span></li>
-      <li id="step-2"><b>② 说一说</b><span>用自己的话说出规律，再出现正式名字和符号。</span></li>
-      <li id="step-3"><b>③ 练一练</b><span>3–5 道题，都用同一张图来练，不换花样。</span></li>
-      <li id="step-4"><b>④ 测一测</b><span>小测验过关才往下走；错了回退一步，用图再讲一遍。</span></li>
-    </ol>
+    <div class="panels" id="pathPanels" aria-label="学习路径面板">
+      <button class="panel" type="button" id="step-1" data-nav-key="path-step-1"><span class="panel-icon" aria-hidden="true">①</span><b>动手试一试</b><span class="panel-sub">拖、切、拼、调，先玩出感觉。</span><span class="panel-prog"><i style="width:25%"></i></span><span class="panel-tx">第 1 步</span></button>
+      <button class="panel" type="button" id="step-2" data-nav-key="path-step-2"><span class="panel-icon" aria-hidden="true">②</span><b>说一说</b><span class="panel-sub">用自己的话说出规律，再出现正式名字和符号。</span><span class="panel-prog"><i style="width:25%"></i></span><span class="panel-tx">第 2 步</span></button>
+      <button class="panel" type="button" id="step-3" data-nav-key="path-step-3"><span class="panel-icon" aria-hidden="true">③</span><b>练一练</b><span class="panel-sub">3–5 道题，都用同一张图来练，不换花样。</span><span class="panel-prog"><i style="width:25%"></i></span><span class="panel-tx">第 3 步</span></button>
+      <button class="panel" type="button" id="step-4" data-nav-key="path-step-4"><span class="panel-icon" aria-hidden="true">④</span><b>测一测</b><span class="panel-sub">小测验过关才往下走；错了回退一步，用图再讲一遍。</span><span class="panel-prog"><i style="width:25%"></i></span><span class="panel-tx">第 4 步</span></button>
+    </div>
   </section>
 
   <!-- Featured demos -->
   <section id="demos" class="section wrap">
     <h2>互动演示 · 先玩这三个</h2>
-    <p class="section-sub">三个招牌原型，都是我们自己画的图、自己写的例子。能点的都请点一点、拖一拖。</p>
+    <p class="section-sub">点一块面板进一个演示，都是我们自己画的图、自己写的例子。能点的都请点一点、拖一拖。</p>
+    <div class="panels" id="demoPanels" aria-label="互动演示面板">
+      <button class="panel" type="button" data-nav-key="demo-fraction"><span class="panel-icon" aria-hidden="true">3/4</span><b>分数切一切</b><span class="panel-sub">切饼、落数轴，3/4 = 6/8</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">3–5 年级 · 分数</span></button>
+      <button class="panel" type="button" data-nav-key="demo-balance"><span class="panel-icon" aria-hidden="true">＝</span><b>天平解方程</b><span class="panel-sub">两边一起动，才保持平衡</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">5–7 年级 · 方程</span></button>
+      <button class="panel" type="button" data-nav-key="demo-function"><span class="panel-icon" aria-hidden="true">k·x</span><b>函数 k / b 滑杆</b><span class="panel-sub">拖滑杆，直线、表格一起变</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">7–8 年级 · 函数</span></button>
+      <button class="panel" type="button" data-nav-key="why"><span class="panel-icon" aria-hidden="true">？</span><b>为什么小实验</b><span class="panel-sub">进位、分数除法、面积公式</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">3 个小实验</span></button>
+    </div>
 
     <div class="demo-grid">
       <!-- P1 Fraction -->
@@ -294,7 +263,6 @@
     <p class="muted">这个首页是原型：年级内容、练习题、错题记录都还是占位或简化版，三个演示是真的能玩的。</p>
   </section>
 </main>
-</div>
 
 <footer class="footer">
   <div class="wrap">
