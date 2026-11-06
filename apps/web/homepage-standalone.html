@@ -103,6 +103,7 @@ main{min-width:0}
 .point-sec.warn{background:#fffbeb;border-color:#fde68a;border-left:5px solid var(--orange)}
 .point-sec.talk{background:#eff6ff;border-color:#bfdbfe}
 .point-sec.recall{background:#f0fdf4;border-color:#bbf7d0;border-left:5px solid var(--green)}
+.point-sec.olympiad{background:#faf5ff;border-color:#e9d5ff;border-left:5px solid #a855f7}
 .qa-mark p{margin:8px 0}
 .qa-mark .btn[aria-pressed="true"]{border-color:var(--orange);background:#fff7ed;font-weight:700}
 .unit-btn{text-align:left;cursor:pointer;font-family:inherit;color:var(--ink);width:100%}
@@ -494,6 +495,433 @@ main{min-width:0}
   </div>
 </footer>
 
+<script>
+/* 1 年级数学全部知识点 · 人教版 A 版顺序
+   内容来源：research_notes 里的 1–6 年级全图报告（§2.1 GRADE 1，1.1–1.16）
+   和“每个知识点最好的方法”报告（一年级部分）；全部用自己的话重写，
+   数字和结论以报告为准。共 15 个教学单元、16 条知识点（总复习不单列，
+   和 grade-3.js 一样）。每条知识点：怎么做、为什么、容易错、看图学、
+   动手试一试、讲回来、先考一考、练一练（基础 → 提高）、奥数挑战
+   （只有真有适合一年级的奥数延展时才有 olympiad 字段，不硬凑）。
+   演示关联：本轮没有新演示，全部为 null。 */
+const GRADE1_CONTENT = {
+  grade: 1,
+  edition: "A",
+  units: [
+    {
+      unit: "准备课",
+      term: "上",
+      points: [
+        {
+          id: "1.1",
+          title: "数数、一一对应、比多少",
+          subtitle: "数数、一个对一个、比多少",
+          how: "数东西时，一个一个摸过去，每个东西只数一次，摸一个说一个数。最后说的那个数，就是一共有多少个。比多少不用数：把两排东西一个对一个连起来，哪排剩下了，哪排就多。",
+          why: "数数其实是给每个东西贴一张号码牌，号码牌是按顺序贴的，最后一张牌就是总数。如果数漏了一个，或者同一个东西数了两次，牌就贴错了，总数也就错了。比多少时一个对一个连线，剩下的就是多出来的，不用数也知道谁多。",
+          wrong: "数得快就是数对了；同一个东西数两次也没关系。",
+          wrongWhy: "数得快容易漏数或者重数；一个东西数了两次，牌就多贴了一张，总数会比真的多一个。",
+          visual: "两排小点，一个对一个连线，剩下的点闪一闪；数数时摸到的点亮起来。",
+          method: "配对法",
+          explainBack: "“每个东西只摸一次，最后说的数就是一共有多少个。”",
+          tryIt: "摆两排积木，一排5个，一排7个，不数数，用连线比一比哪排多，多几个。",
+          demo: null,
+          recall: { q: "桌上有6颗糖，你数的时候不小心同一颗数了两次，你会数成几颗？", answer: "7颗", hint: "一颗数了两次，就多算了一颗。" },
+          practice: [
+            { q: "盘子里有3个苹果，妈妈又放进2个苹果，现在盘子里有几个苹果？从3往后数：4、5。", answer: "5个", hint: "3后面再数2个：4、5。", level: "基础" },
+            { q: "小明有8支铅笔，小红的铅笔和小明一样多。小红送给小明2支后，谁的铅笔多？多几支？", answer: "小明多，多4支", hint: "送之前一样多；送了2支后，小明多2支，小红少2支，一共差4支。", level: "提高" }
+          ],
+          olympiad: { q: "一队小朋友排队，小明从左往右数是第3个，从右往左数也是第3个，这一队一共有几个小朋友？", answer: "5个", hint: "小明被数了两次：左边2个、右边2个，再加小明自己。" }
+        }
+      ]
+    },
+    {
+      unit: "位置",
+      term: "上",
+      points: [
+        {
+          id: "1.2",
+          title: "位置",
+          subtitle: "上、下、前、后、左、右",
+          how: "说左右，先找到自己的左手：左手那边就是左，右手那边就是右。说上下、前后，要先说清以谁为标准：书在桌子上面，桌子在书下面。",
+          why: "左右是跟着人走的：你转个身，左和右就换边了。所以说左右一定要说清是谁的左。上下和前后也是这样，都是相对的，不是绝对的。",
+          wrong: "对面小朋友的左手边，就是我的左手边。",
+          wrongWhy: "他面对着你，他的左和你的左正好相反；要站在他的位置想，或者让他举起左手比一比。",
+          visual: "教室地图上一个会转身的小人，左手贴一张小贴纸；转身后贴纸跟着换边。",
+          method: "转身法",
+          explainBack: "“左是左手那边；你转个身，你的左就换边了。”",
+          tryIt: "和爸爸妈妈面对面站着，互相举起左手，看看你们举的是同一边吗？再让一个人转过身去，看看左手换到哪边了。",
+          demo: null,
+          recall: { q: "你和好朋友面对面站着，他举起左手，你看到的是他身体的哪一边？是左边还是右边？", answer: "从你看过去，是右边", hint: "他面对你，他的左手正好在你右手这一边。" },
+          practice: [
+            { q: "小猫在桌子上面，小狗在桌子下面。小猫在小狗的哪边？（上面还是下面）", answer: "上面", hint: "桌子上面是小猫，桌子下面是小狗。", level: "基础" },
+            { q: "小军和小丽面对面站着，小军的左手边有一棵树。这棵树在小丽的哪一边？（左手边还是右手边）", answer: "右手边", hint: "面对面站着，小军的左和你的右是同一边。", level: "提高" }
+          ],
+          olympiad: { q: "小红、小明、小刚站成一排，小红站在小明的左边，小刚站在小明的右边，谁站在最左边？谁站在最右边？", answer: "最左边是小红，最右边是小刚", hint: "小明在中间，左边是小红，右边是小刚。" }
+        }
+      ]
+    },
+    {
+      unit: "1~5的认识和加减法",
+      term: "上",
+      points: [
+        {
+          id: "1.3",
+          title: "1–5的认识、分与合",
+          subtitle: "1–5、比大小、第几、分与合",
+          how: "5可以分成2和3，也可以分成1和4，分来分去总数还是5。比大小就看谁的东西多。第几是排队的位置：第3个是排在第3位的那一个，不是3个东西。",
+          why: "把5块积木倒进两个盘子，挪一块过去，一个盘子多了1个，另一个盘子少了1个，总数还是5个。分合就是这样：整体不变，变的只是两部分。",
+          wrong: "第3个就是3个；5比4大，是因为5排在4后面。",
+          wrongWhy: "第3个是一个位置，只有一个东西；3个是3个东西。5比4大是因为5个东西比4个东西多，不是因为排在后面。",
+          visual: "分合图：5块积木在两个盘子里来回倒；排队游戏里点“第3个”和“拿3个”比一比。",
+          method: "数分合",
+          explainBack: "“5可以是2和3，挪一块就变成1和4，可还是5。”",
+          tryIt: "拿5块积木，分成两堆，数一数有几种分法；再把一堆里的1块挪到另一堆，看看总数变了没有。",
+          demo: null,
+          recall: { q: "排队买票，你是第4个，你前面有几个人？", answer: "3个人", hint: "第4个就是前面有3个人，再加上你。" },
+          practice: [
+            { q: "5可以分成2和几？（2和3，还是2和2）", answer: "2和3", hint: "2加3是5。", level: "基础" },
+            { q: "一个数可以分成1和4，也可以分成2和3，这个数是几？请你把这个数所有的分法都写出来。", answer: "5；5可以分成1和4、2和3、3和2、4和1", hint: "两部分加起来是5，有几种分法？", level: "提高" }
+          ],
+          olympiad: { q: "5颗糖分给两个人，每人至少分到1颗，一共有几种分法？", answer: "4种：1和4、2和3、3和2、4和1", hint: "先给一个人1颗，另一个人得4颗，再换着分。" }
+        },
+        {
+          id: "1.4",
+          title: "5以内加减法、0",
+          subtitle: "5以内加减、0的认识",
+          how: "加是把两盘东西并成一盘，减是拿走一些。0就是一个空盘子：什么都没有，但它还是一个数。5+0=5，5-0=5。",
+          why: "减法是加法的反面：5-2=3，因为3+2=5。0加上去或者拿走0个，盘子里的东西一点没变，所以5+0还是5，5-0还是5。",
+          wrong: "减法一定会变小，所以5-0一定比5小；0不是数，不用管它。",
+          wrongWhy: "减0个就是什么都没拿走，盘子还是原来的样子；0也是一个数，空盘子也是一个盘子。",
+          visual: "两个盘子并成一盘、拿走几块的动画；空盘子标一个0。",
+          method: "合盘与拿走",
+          explainBack: "“加是并盘，减是拿走；5拿走0还是5，因为什么都没拿。”",
+          tryIt: "拿5块积木，先拿走2块，再把2块放回来，看看加法和减法是怎么反过来的。",
+          demo: null,
+          recall: { q: "盘子里有3个苹果，妈妈一个也没拿走，盘子里还剩几个？是3个，还是0个？", answer: "3个", hint: "一个都没拿走，就是减0，盘子里的苹果一点没少。" },
+          practice: [
+            { q: "树上有2只鸟，又飞来2只，现在树上有几只鸟？", answer: "4只", hint: "2加2是4。", level: "基础" },
+            { q: "小华有5颗糖，吃了2颗，又得到了3颗，现在有几颗糖？（先减再加）", answer: "6颗", hint: "5-2=3，再加3是6。", level: "提高" }
+          ],
+          olympiad: { q: "□-2=3，□里是几？", answer: "5", hint: "减法倒过来是加法：3+2=5。" }
+        }
+      ]
+    },
+    {
+      unit: "认识图形（一）",
+      term: "上",
+      points: [
+        {
+          id: "1.5",
+          title: "立体图形",
+          subtitle: "长方体、正方体、圆柱、球、拼一拼",
+          how: "认立体图形，先看它会干什么：球到处都能滚，长方体和正方体有平平的面，能叠起来；圆柱能立着放，也能躺着滚。",
+          why: "球滚是因为它没有平平的面；盒子能叠是因为它有平平的面。认图形看的是它长什么样、能干什么，不看颜色和大小。",
+          wrong: "球就是圆；所有圆圆的东西都是球。",
+          wrongWhy: "圆是平平的一张纸，球是鼓鼓的一个东西，能拿起来到处滚；圆圆的东西还有圆柱，它和球不一样。",
+          visual: "滚道、叠塔、摸袋：把东西放进袋子里，摸一摸猜是什么。",
+          method: "滚/滑/叠分类",
+          explainBack: "“它到处都滚，所以是球；它有平的面能叠，所以是盒子。”",
+          tryIt: "找一找家里哪些东西是球、哪些是圆柱、哪些是长方体；再试一试：哪些能滚？哪些能叠高？",
+          demo: null,
+          recall: { q: "一个篮球和一张画在纸上的圆，哪个能拿起来滚？", answer: "篮球能滚，纸上的圆不能", hint: "篮球是鼓鼓的立体图形，纸上的圆是平平的图形。" },
+          practice: [
+            { q: "长方体有几个平平的面？（4个还是6个）", answer: "6个", hint: "长方体上下、左右、前后各一对面，一共6个面。", level: "基础" },
+            { q: "8个小正方体能拼成一个大正方体，4个能吗？为什么？", answer: "不能；拼大正方体长、宽、高都要2个小正方体，2×2×2=8个", hint: "大正方体长、宽、高都要2个小正方体。", level: "提高" }
+          ],
+          olympiad: { q: "一个盒子一层能放4个小正方体，放满2层一共是几个小正方体？", answer: "8个", hint: "一层4个，两层就是2个4。" }
+        }
+      ]
+    },
+    {
+      unit: "6~10的认识和加减法",
+      term: "上",
+      points: [
+        {
+          id: "1.6",
+          title: "6–10的认识、连加连减",
+          subtitle: "6–10、十格阵、连加连减、加减混合",
+          how: "6到10都是“5再加几”：6是5加1，8是5加3。10是十格阵装满一格。连加就是一堆一堆往上加，顺序换一换总数不变。",
+          why: "十格阵先装满5格，剩下的格子一眼就能数出来，所以8是“5再加3”。10装满一格，就是1个十，以后所有的数都是这样“一捆一捆”数的。",
+          wrong: "每次都从1开始数；10就是9后面的一个数，没什么特别的。",
+          wrongWhy: "从1数起又慢又容易错；10是第一捆，是1个十，后面的11、12都是“1个十再加几”。",
+          visual: "十格阵：先装满5格，再装剩下的；10格装满一格亮起来。",
+          method: "十格阵装满",
+          explainBack: "“8是5再加3；10是一格装满。”",
+          tryIt: "在十格阵里摆8个点：先摆满上面5个，再摆3个；再摆满10个，看看10个是一格。",
+          demo: null,
+          recall: { q: "十格阵上半格已经装满5个点，下面又放了2个点，一共是几个点？不用从1数起，你能直接说出来吗？", answer: "7个：5再加2", hint: "上面5个是满的，再加下面的2个。" },
+          practice: [
+            { q: "十格阵里有6个点，再放2个点，格子满了吗？一共几个点？", answer: "还没满，一共8个点", hint: "6加2是8，离10还差2个。", level: "基础" },
+            { q: "小红有3支铅笔，小明有4支，小亮有2支，三人一共有几支？（连加）", answer: "9支", hint: "3+4=7，再加2是9；也可以先把3和2凑成5，再加4。", level: "提高" }
+          ],
+          olympiad: { q: "1+2+3+4+5+6+7+8+9=？找一找，哪两个数加起来是10？", answer: "45", hint: "1和9是一对，2和8是一对，3和7是一对，4和6是一对，每对都是10，再加中间的5。" }
+        }
+      ]
+    },
+    {
+      unit: "11~20各数的认识",
+      term: "上",
+      points: [
+        {
+          id: "1.7",
+          title: "11–20的认识、10加几",
+          subtitle: "11–20、1个十和几个一、10加几",
+          how: "11到20都是“1个十再加几个一”：13是1捆小棒加3根小棒。10加几就是十几：10+3=13。",
+          why: "10根小棒用橡皮筋捆成一捆，1捆就是1个十。13写成“13”，1在十位上，表示1个十，不是1个一；3在个位上，表示3个一。",
+          wrong: "13读成“一和三”，写成31也可以。",
+          wrongWhy: "数字的位置决定它的大小：十位上的1是10个一，个位上的3是3个一；写成31就变成3个十和1个一，是31了。",
+          visual: "10根小棒一捆，13是1捆加3根；数位表里十位和个位分开。",
+          method: "捆小棒",
+          explainBack: "“13是1个十和3个一，所以是10加3。”",
+          tryIt: "数出13根小棒，拿橡皮筋捆起10根，看看还剩几根；再数出17根，捆一捆。",
+          demo: null,
+          recall: { q: "13里面有几个十、几个一？是1个十和3个一，还是3个十和1个一？", answer: "1个十和3个一", hint: "13的十位上是1，个位上是3。" },
+          practice: [
+            { q: "10加6是几？10加9呢？", answer: "16；19", hint: "10加几就是十几。", level: "基础" },
+            { q: "一个数由1个十和5个一组成，这个数是几？再减去5，还剩几？", answer: "15；还剩10", hint: "1个十和5个一是15；15减5等于10。", level: "提高" }
+          ],
+          olympiad: { q: "一个两位数，个位上的数是十位上数的2倍，这个两位数可能是几？（写出所有可能）", answer: "12、24、36、48", hint: "十位上是1，个位就是2；十位上是2，个位就是4……" }
+        }
+      ]
+    },
+    {
+      unit: "认识钟表",
+      term: "上",
+      points: [
+        {
+          id: "1.8",
+          title: "认识钟表",
+          subtitle: "整时、时针、分针",
+          how: "看钟先看长针（分针）：长针指着12，就是整时；再看短针（时针）指着几，就是几点。",
+          why: "钟面是一个圆，分成12个小时。分针转一圈是1小时，时针才走一格；整时的时候，分针正好回到12，时针正好指着那个整点。",
+          wrong: "时针在7和8之间，所以是8点。",
+          wrongWhy: "时针在7和8之间，说明7点已经过了、8点还没到；只有时针正好指着7、分针指着12，才是7点。",
+          visual: "能拨动的钟：拨分针转一圈，时针走一格；一日作息时间轴。",
+          method: "联动表针钟",
+          explainBack: "“长针指着12，短针指着7，就是7点。”",
+          tryIt: "拨一拨家里的钟：把长针拨到12，短针拨到7，看看是几点；再拨到9点。",
+          demo: null,
+          recall: { q: "钟面上长针指着12，短针指着9，是几点？是9点，还是12点？", answer: "9点", hint: "长针指12是整时，短针指几就是几点。" },
+          practice: [
+            { q: "早上7点起床，钟面上的长针和短针分别指着几？", answer: "长针指12，短针指7", hint: "整时长针指12，短针指7就是7点。", level: "基础" },
+            { q: "妈妈说3小时后是6点，现在是几点？", answer: "3点", hint: "6点往前推3小时：5点、4点、3点。", level: "提高" }
+          ],
+          olympiad: { q: "分针指着6，时针在7和8中间，现在是几点半？", answer: "7点半", hint: "分针指6是走了半圈，时针过了7还没到8。" }
+        }
+      ]
+    },
+    {
+      unit: "20以内的进位加法",
+      term: "上",
+      points: [
+        {
+          id: "1.9",
+          title: "20以内进位加法、凑十法",
+          subtitle: "9加几、8加几、凑十法",
+          how: "9加几，先从另一个数里借1个给9，把9凑成10，再加剩下的：9+4，先把4拆成1和3，9+1=10，10+3=13。",
+          why: "凑十不是背口诀，是把数重新捆一捆：9+4=9+(1+3)=(9+1)+3=10+3。凑成10以后，加法一下子变简单了。",
+          wrong: "9+4=13，我背下来了；或者一个一个数：9、10、11、12、13。",
+          wrongWhy: "只背答案，忘了就不会了；一个一个数又慢又容易错。凑成10，就有了不会忘的办法。",
+          visual: "十格阵：从4里拖1个点给9，把格子装满，剩下10+3。",
+          method: "凑十拖格",
+          explainBack: "“我给9一个凑成10，再加3就是13。”",
+          tryIt: "用十格阵算一算8+5：从5里拖几个给8能凑满10？剩下几个？",
+          demo: null,
+          recall: { q: "算9+5，凑十法应该从5里借几个给9？是借1个，还是借5个？", answer: "借1个，9+1=10，再加剩下的4", hint: "9再加1就满10了。" },
+          practice: [
+            { q: "算一算8+4：先把4拆成几和几？（2和2）再算8+2+2。", answer: "12", hint: "8+2=10，10+2=12。", level: "基础" },
+            { q: "算一算7+8：7需要借几个凑成10？8还剩几个？", answer: "15", hint: "7借3凑成10，8还剩5，10+5=15。", level: "提高" }
+          ],
+          olympiad: { q: "9+5+1，先算哪两个最快？一共是几？", answer: "先算9+1=10，再加5是15", hint: "找一对能凑成10的数，先加起来。" }
+        }
+      ]
+    },
+    {
+      unit: "认识图形（二）",
+      term: "下",
+      points: [
+        {
+          id: "1.10",
+          title: "平面图形、七巧板",
+          subtitle: "长方形、正方形、三角形、圆、图形的拼组",
+          how: "认平面图形，先数边和角：三角形有3条边、3个角，正方形有4条边一样长、4个角都是直角。七巧板是7块板，拼来拼去总面积不变。",
+          why: "图形的样子由边和角决定，不由方向决定：三角形倒过来还是3条边，还是三角形。七巧板的7块板拼成的图形，总面积就是7块板加起来的面积，怎么拼都不变。",
+          wrong: "倒过来的三角形不是三角形；瘦瘦的长方形不是长方形。",
+          wrongWhy: "转个方向，边和角都没有变；长方形只要4个角是直角、对边相等，不管胖瘦都是长方形。",
+          visual: "七巧板拖一拖、转一转；数边数角的分类器。",
+          method: "七巧板旋转拼",
+          explainBack: "“它有3条边就是三角形，倒过来也是。”",
+          tryIt: "用七巧板拼一拼：两块小三角形能拼成什么图形？再转一转其中的一块，看看它还是不是三角形。",
+          demo: null,
+          recall: { q: "一个三角形倒过来放，它还是三角形吗？是，还是变成了别的图形？", answer: "还是三角形", hint: "倒过来只是换了个方向，3条边一点没变。" },
+          practice: [
+            { q: "正方形有几条边？几条边一样长？（4条边，4条都一样长）", answer: "4条边，都一样长", hint: "正方形的4条边一样长，4个角都是直角。", level: "基础" },
+            { q: "用七巧板里的两块完全一样的三角形，能拼成什么图形？", answer: "可以拼成正方形，也可以拼成一个大三角形", hint: "斜边对斜边拼成正方形，直角边对直角边拼成大三角形。", level: "提高" }
+          ],
+          olympiad: { q: "七巧板一共有7块板，其中有几个三角形？最大的三角形有几个？", answer: "一共有5个三角形；最大的有2个", hint: "数一数：2个大三角形、1个中三角形、2个小三角形。" }
+        }
+      ]
+    },
+    {
+      unit: "20以内的退位减法",
+      term: "下",
+      points: [
+        {
+          id: "1.11",
+          title: "20以内退位减法、破十法",
+          subtitle: "十几减9、8、7、6、5、4、3、2、破十法",
+          how: "13-5，先把13拆成10和3：10减5是5，再加3，是8。先从整10里拿，再加上零头。",
+          why: "破十是凑十的镜子：凑十是把数凑成10，破十是把10拆开用。13=10+3，13-5=(10-5)+3，减法在10里面先算好，再加零头。",
+          wrong: "13-5，一个一个往回数：13、12、11、10、9、8。",
+          wrongWhy: "倒数能算对小的数，但数大了就数不过来了；破十到了52-17还能用，倒数就数乱了。",
+          visual: "十格阵：满格的10里拿走5个，剩5个，再加3个。",
+          method: "破十拿走",
+          explainBack: "“13是10和3；10拿走5剩5，再加3是8。”",
+          tryIt: "用十格阵算一算15-6：先从满格的10里拿走6个，剩几个？再加5个一，是几？",
+          demo: null,
+          recall: { q: "算13-6，破十法先算什么？是10-6，还是13-3？", answer: "先算10-6=4，再加3是7", hint: "先从整10里拿走6个，再加剩下的3个一。" },
+          practice: [
+            { q: "算一算12-4：先算10-4，再加2。", answer: "8", hint: "10-4=6，6+2=8。", level: "基础" },
+            { q: "算一算17-9：先算10-9，再加7。", answer: "8", hint: "10-9=1，1+7=8。", level: "提高" }
+          ],
+          olympiad: { q: "15-7-3，先把7和3加起来是10，再用15减10，是几？", answer: "5", hint: "7+3=10，15-10=5。" }
+        }
+      ]
+    },
+    {
+      unit: "分类与整理",
+      term: "下",
+      points: [
+        {
+          id: "1.12",
+          title: "分类与整理",
+          subtitle: "按一种规则分类、数一数、总数校验",
+          how: "分类先定一条规则：按颜色分，或者按形状分，只能选一条。分完数一数，每组有几个，再把各组加起来，看看是不是等于总数。",
+          why: "一条规则把东西分进盒子，每个东西只能进一个盒子，所以各组加起来一定等于总数。加起来不对，就是有的东西没分，或者有的东西分了两次。",
+          wrong: "颜色和形状两条规则一起用；分不进去的就不用数了。",
+          wrongWhy: "两条规则一起用，有的盒子会重叠，有的会漏掉；总数对不上，分类就是错的。",
+          visual: "分拣盘：拖一拖分类，总数条跟着变；加起来不对时总数条变红。",
+          method: "一规则分拣 + 总数校验",
+          explainBack: "“我按颜色分，每个都在一个盒子里，盒子加起来就是全部。”",
+          tryIt: "把家里的积木按颜色分一分，数一数每组几个，再加起来看看是不是总数。",
+          demo: null,
+          recall: { q: "10块积木按颜色分，红组4块，蓝组5块，一共是9块，少了1块，这说明什么？", answer: "说明有1块漏掉了，没分进任何一组", hint: "各组加起来要等于总数，9不等于10，所以漏了1块。" },
+          practice: [
+            { q: "一盒图形里有5个三角形、3个正方形，一共有几个图形？", answer: "8个", hint: "5+3=8。", level: "基础" },
+            { q: "一袋水果有6个苹果、4个梨，小明吃掉2个苹果后，袋子里还剩几个水果？苹果还剩几个？", answer: "还剩8个水果；苹果还剩4个", hint: "总数6+4=10，吃掉2个是8个；苹果6-2=4个。", level: "提高" }
+          ],
+          olympiad: { q: "一盒积木有12块，其中红色三角形有3块，红色的一共有5块。红色但不是三角形的积木有几块？", answer: "2块", hint: "红色的5块里，3块是三角形，剩下的2块不是三角形。" }
+        }
+      ]
+    },
+    {
+      unit: "100以内数的认识",
+      term: "下",
+      points: [
+        {
+          id: "1.13",
+          title: "100以内数的认识",
+          subtitle: "100以内数、数的组成、比大小、100的认识",
+          how: "100以内数都是“几个十再加几个一”：46是4个十和6个一。比大小先比十位：十位大的数就大；十位一样，再比个位。",
+          why: "十位是“捆”，1个十是10个一。46有4捆，38只有3捆，不管个位是6还是8，4捆都比3捆多。100就是10捆。",
+          wrong: "46比38小，因为6比8小；99后面是100，100后面是101。",
+          wrongWhy: "比大小要先比十位：4个十比3个十多，所以46比38大。99后面是100没错，但100是10个十，是三位数了。",
+          visual: "百数表、十捆棒、0到100的数轴；遮住个位只比十位。",
+          method: "百数表 + 捆棒",
+          explainBack: "“46有4个十，38有3个十，所以46大。”",
+          tryIt: "拿出4捆小棒（每捆10根）加6根，摆出46；再摆出38，比一比哪堆多。",
+          demo: null,
+          recall: { q: "46和38，哪个大？是46大，还是38大？为什么？", answer: "46大；4个十比3个十大", hint: "先比十位，4比3大。" },
+          practice: [
+            { q: "52里面有几个十、几个一？52和25哪个大？", answer: "5个十和2个一；52大", hint: "52有5个十，25只有2个十。", level: "基础" },
+            { q: "写出比45大、比60小的所有整十数。", answer: "50", hint: "整十数就是个位是0的数：45到60之间只有50。", level: "提高" }
+          ],
+          olympiad: { q: "一个两位数，个位上的数比十位上的数大1，这个数最大是几？最小是几？", answer: "最大是89，最小是12", hint: "十位上最大是8，个位就是9；十位上最小是1，个位就是2。" }
+        }
+      ]
+    },
+    {
+      unit: "认识人民币",
+      term: "下",
+      points: [
+        {
+          id: "1.14",
+          title: "认识人民币",
+          subtitle: "元、角、分、换钱、购物",
+          how: "1元=10角，1角=10分。换钱就是换包装：10个1角换1元，1元5角就是15角。买东西先算一共多少钱，再算找回多少钱。",
+          why: "元角分也是十进制：10角就是1元，和10个一就是1个十是一回事。元和角是不同的“位”，不能直接加：1元5角不是6元，要先换成一样的单位。",
+          wrong: "1元5角=6元；1元=100角。",
+          wrongWhy: "元和角是不同的单位，1和5不能直接加；1元是10角，不是100角，100分才是1元。",
+          visual: "开小店：拖钱币付钱，10个1角换成1元的动画；找零。",
+          method: "开小店 + 换钱动画",
+          explainBack: "“1元是10角，所以1元5角是15角。”",
+          tryIt: "拿出10个1角硬币，换成1张1元纸币；再算一算：3元2角是多少角？",
+          demo: null,
+          recall: { q: "1元5角是多少角？是15角，还是6元？", answer: "15角", hint: "1元是10角，再加5角是15角。" },
+          practice: [
+            { q: "一个本子5角，一个橡皮2角，买两个一共多少钱？", answer: "7角", hint: "5角加2角是7角。", level: "基础" },
+            { q: "小明有1元钱，买了一支3角的铅笔，应该找回多少钱？", answer: "7角", hint: "1元是10角，10角减3角是7角。", level: "提高" }
+          ],
+          olympiad: { q: "用5角和1角的硬币凑成1元，有几种凑法？", answer: "3种：2个5角；1个5角加5个1角；10个1角", hint: "先想5角用几个：2个、1个、0个，再算1角要几个。" }
+        }
+      ]
+    },
+    {
+      unit: "100以内的加法和减法（一）",
+      term: "下",
+      points: [
+        {
+          id: "1.15",
+          title: "100以内加减法（一）",
+          subtitle: "两位数加减一位数、整十数、进位退位",
+          how: "两位数加减，先个位加个位、十位加十位。个位满10了，就向十位进1个十；个位不够减，就向十位借1个十当10个一。竖式是把“换”的过程写下来。",
+          why: "数位块和竖式是同一道题：左边摆块，右边列竖式，个位满10换成1个十，竖式里就进1。进位不是新算法，是“换”的记录。",
+          wrong: "23+5=73；竖式里进的1就是1个一。",
+          wrongWhy: "5是5个一，要加到个位上，不是十位上；进的1是1个十，不是1个一。",
+          visual: "数位块、数位表、竖式三栏并排，同一道题同步走。",
+          method: "数位块并排算",
+          explainBack: "“3个一加5个一是8个一，2个十还是2个十，所以是28。”",
+          tryIt: "摆一摆23+5：2捆加3根，再加5根，看看个位有几根；再列竖式算一算。",
+          demo: null,
+          recall: { q: "23+5，5应该加到哪一位上？是个位，还是十位？", answer: "个位：3个一加5个一是8个一", hint: "5是5个一，一要加到一上。" },
+          practice: [
+            { q: "算一算35+20：先算十位，再算个位。", answer: "55", hint: "3个十加2个十是5个十，个位还是5。", level: "基础" },
+            { q: "算一算47+8：个位7+8满10了，怎么办？", answer: "55", hint: "7+8=15，写5进1个十；4个十加进的1个十是5个十。", level: "提高" }
+          ],
+          olympiad: { q: "27+36+73，先算哪两个最快？一共是几？", answer: "先算27+73=100，再加36是136", hint: "27和73加起来正好是100。" }
+        }
+      ]
+    },
+    {
+      unit: "找规律",
+      term: "下",
+      points: [
+        {
+          id: "1.16",
+          title: "找规律",
+          subtitle: "重复的单元、预测下一个、图形和数字规律",
+          how: "找规律先找“重复的单元”：把一小段框出来，看看它是不是一遍一遍重复出现。找到单元，下一颗是什么就定了。",
+          why: "单元重复出现，整个串就是单元一个接一个；第几个是什么，看它在单元里的位置：位置除以单元的长度，余数就是它在单元里的第几个。",
+          wrong: "下一个是红色，因为我喜欢红色；照着最后一个抄一个就行了。",
+          wrongWhy: "规律是整串的规则，不是猜一个点；只抄最后一个，抄的是样子，不是规则。",
+          visual: "序列搭建器：把重复单元框出来、高亮；遮住后面，用单元预测。",
+          method: "找重复单元",
+          explainBack: "“单元是红蓝蓝，它重复出现，所以蓝后面又是红。”",
+          tryIt: "摆一摆：红、蓝、蓝、红、蓝、蓝……下一颗应该是什么颜色？把“红蓝蓝”框出来看看。",
+          demo: null,
+          recall: { q: "红、蓝、蓝、红、蓝、蓝……下一个应该是什么颜色？是红色，还是蓝色？", answer: "红色", hint: "重复的单元是红蓝蓝，蓝后面又是红。" },
+          practice: [
+            { q: "▲、●、▲、●、▲、●……下一个图形是什么？", answer: "●", hint: "单元是▲●两个图形，轮流出现。", level: "基础" },
+            { q: "○、○、△、○、○、△……第10个图形是什么？", answer: "○", hint: "单元是○○△，3个一组；第10个是第4组的第1个，是○。", level: "提高" }
+          ],
+          olympiad: { q: "1、2、4、7、11……下一个数是几？", answer: "16", hint: "相邻两个数相差1、2、3、4，每次多1；11再加5是16。" }
+        }
+      ]
+    }
+  ]
+};
+
+</script>
 <script>
 /* 3 年级数学全部知识点 · 人教版 A 版顺序
    内容来源：research_notes 里的 1–6 年级全图报告（§2.1 GRADE 3，3.1–3.15）
@@ -1042,25 +1470,25 @@ function selectGrade(g) {
   updateModeUI('grade');
   [...gradePanels.children].forEach((el, i) => el.setAttribute('aria-selected', String(i + 1 === g)));
   const d = GRADES[g];
-  const g3 = (g === 3) ? grade3Data() : null;
-  if (g3) {
-    // 3 年级已有真实内容：按人教版 A 版单元列出，点一个单元进它的知识点。
-    const total = g3.units.reduce((n, u) => n + u.points.length, 0);
+  const gd = gradeData(g);
+  if (gd) {
+    // 该年级已有真实内容：按人教版 A 版单元列出，点一个单元进它的知识点。
+    const total = gd.units.reduce((n, u) => n + u.points.length, 0);
     const due = duePointIds().length;
     gradeDetail.innerHTML =
-      '<h3>' + d.title + '</h3><p class="muted">人教版 A 版顺序 · ' + g3.units.length + ' 个单元 · ' + total + ' 个知识点；每条都有怎么做、为什么、容易错、讲回来。</p>' +
-      '<div class="btn-row"><button class="btn primary" type="button" data-g3-mix="1">混着练：5 道不同单元的题</button>' +
-      '<button class="btn ghost" type="button" data-g3-review="1">今天复习（' + due + ' 条）</button></div>' +
-      '<div class="unit-list">' + g3.units.map((u, i) =>
+      '<h3>' + d.title + '</h3><p class="muted">人教版 A 版顺序 · ' + gd.units.length + ' 个单元 · ' + total + ' 个知识点；每条都有怎么做、为什么、容易错、讲回来。</p>' +
+      '<div class="btn-row"><button class="btn primary" type="button" data-g-mix="1">混着练：5 道不同单元的题</button>' +
+      '<button class="btn ghost" type="button" data-g-review="1">今天复习（' + due + ' 条）</button></div>' +
+      '<div class="unit-list">' + gd.units.map((u, i) =>
         '<button class="unit unit-btn" type="button" data-unit="' + i + '"><b>' + esc(u.unit) + '</b><p>' + esc(u.term) + ' · ' + u.points.length + ' 个知识点</p>' +
         '<span class="pill">内容已完成</span></button>'
       ).join('') + '</div>';
     gradeDetail.querySelectorAll('[data-unit]').forEach(btn =>
-      btn.addEventListener('click', () => navGo('unit-3-' + btn.dataset.unit)));
-    gradeDetail.querySelectorAll('[data-g3-mix]').forEach(btn =>
-      btn.addEventListener('click', () => navGo('grade-3-mix')));
-    gradeDetail.querySelectorAll('[data-g3-review]').forEach(btn =>
-      btn.addEventListener('click', () => navGo('grade-3-review')));
+      btn.addEventListener('click', () => navGo('unit-' + g + '-' + btn.dataset.unit)));
+    gradeDetail.querySelectorAll('[data-g-mix]').forEach(btn =>
+      btn.addEventListener('click', () => navGo('grade-' + g + '-mix')));
+    gradeDetail.querySelectorAll('[data-g-review]').forEach(btn =>
+      btn.addEventListener('click', () => navGo('grade-' + g + '-review')));
     return;
   }
   gradeDetail.innerHTML =
@@ -1072,25 +1500,32 @@ function selectGrade(g) {
 }
 selectGrade(currentGrade);
 
-/* ---------- 3 年级真实内容（content/grades/grade-3.js 提供 GRADE3_CONTENT） ----------
+/* ---------- 真实内容（content/grades/grade-N.js 提供 GRADE1_CONTENT / GRADE3_CONTENT） ----------
    内容与原型逻辑分开：知识点文字只活在 content/ 里，app.js 只负责渲染。
-   层级：3 年级 → 单元 → 知识点，每条知识点一页：怎么做、为什么、容易错、
-   看图学、动手试一试、讲回来、练一练。文件没加载到时，3 年级退回旧的 4 单元占位。 */
+   层级：年级 → 单元 → 知识点，每条知识点一页：怎么做、为什么、容易错、
+   看图学、动手试一试、讲回来、练一练（由浅入深：基础 → 提高 → 奥数挑战）。文件没加载到时，该年级退回旧的占位。 */
 const pointDetail = document.getElementById('pointDetail');
-function grade3Data() { return (typeof GRADE3_CONTENT !== 'undefined' && GRADE3_CONTENT) || null; }
+function gradeData(g) {
+  if (g === 1) return (typeof GRADE1_CONTENT !== 'undefined' && GRADE1_CONTENT) || null;
+  if (g === 3) return (typeof GRADE3_CONTENT !== 'undefined' && GRADE3_CONTENT) || null;
+  return null;
+}
+function grade3Data() { return gradeData(3); }
 function findPoint(id) {
-  const g3 = grade3Data();
-  if (!g3) return null;
-  for (let ui = 0; ui < g3.units.length; ui++) {
-    const p = g3.units[ui].points.find(pt => pt.id === id);
-    if (p) return { point: p, unit: g3.units[ui], unitIndex: ui };
+  for (const g of [1, 3]) {
+    const gd = gradeData(g);
+    if (!gd) continue;
+    for (let ui = 0; ui < gd.units.length; ui++) {
+      const p = gd.units[ui].points.find(pt => pt.id === id);
+      if (p) return { point: p, unit: gd.units[ui], unitIndex: ui, grade: g };
+    }
   }
   return null;
 }
-function renderUnit(ui) {
-  const g3 = grade3Data();
-  if (!g3 || !g3.units[ui]) return;
-  const u = g3.units[ui];
+function renderUnit(g, ui) {
+  const gd = gradeData(g);
+  if (!gd || !gd.units[ui]) return;
+  const u = gd.units[ui];
   pointDetail.innerHTML =
     '<h3>' + esc(u.unit) + '</h3><p class="muted">' + esc(u.term) + ' · ' + u.points.length + ' 个知识点 · 点一条进内容。</p>' +
     '<div class="unit-list">' + u.points.map(p =>
@@ -1110,6 +1545,12 @@ function renderPoint(id) {
       '<button class="btn ghost small qa-btn" type="button" data-recall="1">想好了，看答案</button>' +
       '<p class="qa-a" data-recall-a hidden>答案：' + esc(p.recall.answer) + '（提示：' + esc(p.recall.hint) + '）</p></div>'
     : '';
+  // 由浅入深：练一练两道题是 基础 → 提高；有奥数题的知识点再加一道挑战（没有就不显示，不硬凑）。
+  const olympiadHtml = p.olympiad
+    ? '<div class="point-sec olympiad"><h4>挑战 · 奥数</h4><p>' + esc(p.olympiad.q) + '</p>' +
+      '<button class="btn ghost small qa-btn" type="button" data-olympiad="1">想好了，看答案</button>' +
+      '<p class="qa-a" data-olympiad-a hidden>答案：' + esc(p.olympiad.answer) + '（提示：' + esc(p.olympiad.hint) + '）</p></div>'
+    : '';
   let html = '<h3>' + esc(p.id) + ' · ' + esc(p.title) + '</h3>' +
     '<p class="muted">' + esc(f.unit.unit) + '（' + esc(f.unit.term) + '）· 最佳方法：' + esc(p.method) + '</p>' +
     '<p class="muted">' + esc(p.subtitle) + '</p>' + recallHtml +
@@ -1120,8 +1561,8 @@ function renderPoint(id) {
     '<div class="point-sec"><h4>动手试一试</h4><p>' + esc(p.tryIt) + '</p>' +
     (p.demo === 'fraction' ? '<div class="btn-row"><button class="btn primary" type="button" data-demo-link="demo-fraction">去玩分数演示</button></div>' : '') + '</div>' +
     '<div class="point-sec talk"><h4>讲回来</h4><p>“' + esc(p.explainBack) + '”</p></div>' +
-    '<div class="point-sec"><h4>练一练</h4><p class="muted">第一道题提示直接给，第二道题先自己做，卡住了再点“要提示”。答完先对答案，再告诉我你答对没、有把握没——答错的和没把握的，明天会回来找你。</p>' + p.practice.map((q, i) =>
-      '<div class="qa"><p>' + (i + 1) + '. ' + esc(q.q) + '</p>' +
+    '<div class="point-sec"><h4>练一练</h4><p class="muted">两道题由浅入深：第一道基础（提示直接给），第二道提高（先自己做，卡住了再点“要提示”）。答完先对答案，再告诉我你答对没、有把握没——答错的和没把握的，明天会回来找你。' + (p.olympiad ? '做完还有一道奥数挑战。' : '') + '</p>' + p.practice.map((q, i) =>
+      '<div class="qa"><p>' + (i + 1) + '. ' + (q.level ? '<span class="pill">' + esc(q.level) + '</span> ' : '') + esc(q.q) + '</p>' +
       (i === 0 ? '<p class="hint">提示：' + esc(q.hint) + '</p>' : '') +
       (i === 1 ? '<button class="btn ghost small qa-btn" type="button" data-hint="' + i + '">要提示</button><p class="hint" data-hint-t="' + i + '" hidden>提示：' + esc(q.hint) + '</p>' : '') +
       '<button class="btn ghost small qa-btn" type="button" data-qa="' + i + '">看答案</button>' +
@@ -1130,7 +1571,7 @@ function renderPoint(id) {
       '<p>你答对了吗？ <button class="btn small" type="button" data-mark="right">答对了</button> <button class="btn small" type="button" data-mark="wrong">答错了</button></p>' +
       '<p>答之前有把握吗？ <button class="btn small" type="button" data-conf="yes">有把握</button> <button class="btn small" type="button" data-conf="no">没把握</button></p>' +
       '<p class="qa-a" data-qa-saved="' + i + '" hidden></p></div></div>'
-    ).join('') + '</div>';
+    ).join('') + '</div>' + olympiadHtml;
   pointDetail.innerHTML = html;
   pointDetail.querySelectorAll('[data-demo-link]').forEach(el =>
     el.addEventListener('click', () => goDemoFromHere(el.dataset.demoLink)));
@@ -1147,16 +1588,18 @@ function goDemoFromHere(demoKey) {
   renderNav();
 }
 /* 混着练（交叉练习）：每次从 5 个不同单元各抽 1 道题，打乱顺序练。 */
-function renderMix() {
-  const g3 = grade3Data();
-  if (!g3) return;
-  const picks = shuffle(g3.units.filter(u => u.points.length)).slice(0, 5).map(u => {
+let mixGrade = 3;
+function renderMix(g) {
+  if (g) mixGrade = g;
+  const gd = gradeData(mixGrade);
+  if (!gd) return;
+  const picks = shuffle(gd.units.filter(u => u.points.length)).slice(0, 5).map(u => {
     const p = u.points[Math.floor(Math.random() * u.points.length)];
     return { point: p, q: p.practice[Math.floor(Math.random() * p.practice.length)] };
   });
   currentPointId = null;
   pointDetail.innerHTML = '<h3>混着练</h3><p class="muted">5 道题，来自 5 个不同单元——混着练比一个单元一个单元刷记得更牢。答完对答案，再告诉我对错和把握。</p>' + picks.map((pk, i) =>
-    '<div class="point-sec"><h4>' + esc(pk.point.id) + ' · ' + esc(pk.point.title) + '</h4><p>' + esc(pk.q.q) + '</p>' +
+    '<div class="point-sec"><h4>' + esc(pk.point.id) + ' · ' + esc(pk.point.title) + '</h4><p>' + (pk.q.level ? '<span class="pill">' + esc(pk.q.level) + '</span> ' : '') + esc(pk.q.q) + '</p>' +
     '<button class="btn ghost small qa-btn" type="button" data-qa="' + i + '">看答案</button>' +
     '<p class="qa-a" data-qa-a="' + i + '" hidden>答案：' + esc(pk.q.answer) + '（提示：' + esc(pk.q.hint) + '）</p>' +
     '<div class="qa-mark" data-qa-mark="' + i + '" data-point="' + esc(pk.point.id) + '" hidden>' +
@@ -1164,7 +1607,7 @@ function renderMix() {
     '<p>答之前有把握吗？ <button class="btn small" type="button" data-conf="yes">有把握</button> <button class="btn small" type="button" data-conf="no">没把握</button></p>' +
     '<p class="qa-a" data-qa-saved="' + i + '" hidden></p></div></div>'
   ).join('') + '<div class="btn-row"><button class="btn primary" type="button" data-mix-again="1">再混 5 道</button></div>';
-  pointDetail.querySelectorAll('[data-mix-again]').forEach(b => b.addEventListener('click', renderMix));
+  pointDetail.querySelectorAll('[data-mix-again]').forEach(b => b.addEventListener('click', () => renderMix()));
 }
 /* 今天复习（间隔重复）：到期的知识点列出来，点一条回去重练。 */
 function renderReview() {
@@ -1191,6 +1634,12 @@ if (pointDetail) pointDetail.addEventListener('click', e => {
   if (recallBtn) {
     const ans = pointDetail.querySelector('[data-recall-a]');
     if (ans) { ans.hidden = !ans.hidden; recallBtn.textContent = ans.hidden ? '想好了，看答案' : '收起答案'; }
+    return;
+  }
+  const olyBtn = e.target.closest('[data-olympiad]');
+  if (olyBtn) {
+    const ans = pointDetail.querySelector('[data-olympiad-a]');
+    if (ans) { ans.hidden = !ans.hidden; olyBtn.textContent = ans.hidden ? '想好了，看答案' : '收起答案'; }
     return;
   }
   const hintBtn = e.target.closest('[data-hint]');
@@ -1502,23 +1951,25 @@ Object.keys(GRADES).forEach(g => {
 DIMENSIONS.forEach(d => {
   NAV_DEFS['dim-' + d.id] = { crumbs: ['数学', '换维度', d.name], target: 'dimensions', action: () => { renderDimension(d.id); updateModeUI('dimension'); } };
 });
-/* 3 年级内容导航：单元与知识点各一级（面包屑：数学 › 选年级 › 3 年级 › 单元 › 知识点）。
-   内容文件没加载到时不注册，3 年级保持旧的 4 单元占位。 */
-(function registerGrade3Nav() {
-  const g3 = grade3Data();
-  if (!g3) return;
-  g3.units.forEach((u, ui) => {
-    NAV_DEFS['unit-3-' + ui] = { crumbs: ['数学', '选年级', '3 年级', u.unit], target: 'grades', action: () => renderUnit(ui) };
+/* 年级内容导航：单元与知识点各一级（面包屑：数学 › 选年级 › N 年级 › 单元 › 知识点）。
+   内容文件没加载到时不注册，该年级保持旧的占位。 */
+function registerGradeNav(g) {
+  const gd = gradeData(g);
+  if (!gd) return;
+  gd.units.forEach((u, ui) => {
+    NAV_DEFS['unit-' + g + '-' + ui] = { crumbs: ['数学', '选年级', g + ' 年级', u.unit], target: 'grades', action: () => renderUnit(g, ui) };
     u.points.forEach(p => {
-      NAV_DEFS['point-' + p.id] = { crumbs: ['数学', '选年级', '3 年级', u.unit, p.title], target: 'grades', action: () => renderPoint(p.id) };
+      NAV_DEFS['point-' + p.id] = { crumbs: ['数学', '选年级', g + ' 年级', u.unit, p.title], target: 'grades', action: () => renderPoint(p.id) };
     });
   });
-  NAV_DEFS['grade-3-mix'] = { crumbs: ['数学', '选年级', '3 年级', '混着练'], target: 'grades', action: renderMix };
-  NAV_DEFS['grade-3-review'] = { crumbs: ['数学', '选年级', '3 年级', '今天复习'], target: 'grades', action: renderReview };
-  // 3 年级面板改显示真实进度：16 个知识点已完成。
-  const panel3 = document.querySelector('[data-nav-key="grade-3"] .panel-tx');
-  if (panel3) panel3.textContent = g3.units.reduce((n, u) => n + u.points.length, 0) + ' 个知识点 · 已完成';
-})();
+  NAV_DEFS['grade-' + g + '-mix'] = { crumbs: ['数学', '选年级', g + ' 年级', '混着练'], target: 'grades', action: () => renderMix(g) };
+  NAV_DEFS['grade-' + g + '-review'] = { crumbs: ['数学', '选年级', g + ' 年级', '今天复习'], target: 'grades', action: renderReview };
+  // 该年级面板改显示真实进度：N 个知识点 · 已完成。
+  const panel = document.querySelector('[data-nav-key="grade-' + g + '"] .panel-tx');
+  if (panel) panel.textContent = gd.units.reduce((n, u) => n + u.points.length, 0) + ' 个知识点 · 已完成';
+}
+registerGradeNav(1);
+registerGradeNav(3);
 
 const navBack = document.getElementById('navBack');
 const crumbTitle = document.getElementById('crumbTitle');
@@ -1552,8 +2003,8 @@ function viewForKey(key) {
   if (key === 'grades') return 'grades';
   // 注意顺序：'grade-3-mix' / 'grade-3-review' 也以 'grade-' 开头，必须先精确匹配，
   // 否则会被下面的 startsWith('grade-') 吞掉，混着练和今天复习就会显示成年级详情（2026-11-06 真机测出）。
-  if (key === 'grade-3-mix') return 'mix';
-  if (key === 'grade-3-review') return 'review';
+  if (/^grade-\d+-mix$/.test(key)) return 'mix';
+  if (/^grade-\d+-review$/.test(key)) return 'review';
   if (key.startsWith('grade-')) return 'grade-detail';
   if (key.startsWith('unit-')) return 'unit-detail';
   if (key.startsWith('point-')) return 'point-detail';
@@ -1643,11 +2094,11 @@ function renderNav() {
 const NAV_PARENT = { 'grade-': 'grades', 'dim-': 'dimensions', 'path-step-': 'path', 'demo-': 'demos' };
 function parentOf(key) {
   if (key === 'why') return 'demos';
-  if (key.startsWith('unit-')) return 'grade-3';
-  if (key === 'grade-3-mix' || key === 'grade-3-review') return 'grade-3';
+  if (key.startsWith('unit-')) return 'grade-' + key.split('-')[1];
+  if (/^grade-\d+-(mix|review)$/.test(key)) return 'grade-' + key.split('-')[1];
   if (key.startsWith('point-')) {
     const f = findPoint(key.slice('point-'.length));
-    return f ? 'unit-3-' + f.unitIndex : 'grade-3';
+    return f ? 'unit-' + f.grade + '-' + f.unitIndex : 'grade-3';
   }
   for (const p of ['grade-', 'dim-', 'path-step-', 'demo-']) if (key.startsWith(p)) return NAV_PARENT[p];
   return null;

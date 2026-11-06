@@ -131,25 +131,25 @@ function selectGrade(g) {
   updateModeUI('grade');
   [...gradePanels.children].forEach((el, i) => el.setAttribute('aria-selected', String(i + 1 === g)));
   const d = GRADES[g];
-  const g3 = (g === 3) ? grade3Data() : null;
-  if (g3) {
-    // 3 年级已有真实内容：按人教版 A 版单元列出，点一个单元进它的知识点。
-    const total = g3.units.reduce((n, u) => n + u.points.length, 0);
+  const gd = gradeData(g);
+  if (gd) {
+    // 该年级已有真实内容：按人教版 A 版单元列出，点一个单元进它的知识点。
+    const total = gd.units.reduce((n, u) => n + u.points.length, 0);
     const due = duePointIds().length;
     gradeDetail.innerHTML =
-      '<h3>' + d.title + '</h3><p class="muted">人教版 A 版顺序 · ' + g3.units.length + ' 个单元 · ' + total + ' 个知识点；每条都有怎么做、为什么、容易错、讲回来。</p>' +
-      '<div class="btn-row"><button class="btn primary" type="button" data-g3-mix="1">混着练：5 道不同单元的题</button>' +
-      '<button class="btn ghost" type="button" data-g3-review="1">今天复习（' + due + ' 条）</button></div>' +
-      '<div class="unit-list">' + g3.units.map((u, i) =>
+      '<h3>' + d.title + '</h3><p class="muted">人教版 A 版顺序 · ' + gd.units.length + ' 个单元 · ' + total + ' 个知识点；每条都有怎么做、为什么、容易错、讲回来。</p>' +
+      '<div class="btn-row"><button class="btn primary" type="button" data-g-mix="1">混着练：5 道不同单元的题</button>' +
+      '<button class="btn ghost" type="button" data-g-review="1">今天复习（' + due + ' 条）</button></div>' +
+      '<div class="unit-list">' + gd.units.map((u, i) =>
         '<button class="unit unit-btn" type="button" data-unit="' + i + '"><b>' + esc(u.unit) + '</b><p>' + esc(u.term) + ' · ' + u.points.length + ' 个知识点</p>' +
         '<span class="pill">内容已完成</span></button>'
       ).join('') + '</div>';
     gradeDetail.querySelectorAll('[data-unit]').forEach(btn =>
-      btn.addEventListener('click', () => navGo('unit-3-' + btn.dataset.unit)));
-    gradeDetail.querySelectorAll('[data-g3-mix]').forEach(btn =>
-      btn.addEventListener('click', () => navGo('grade-3-mix')));
-    gradeDetail.querySelectorAll('[data-g3-review]').forEach(btn =>
-      btn.addEventListener('click', () => navGo('grade-3-review')));
+      btn.addEventListener('click', () => navGo('unit-' + g + '-' + btn.dataset.unit)));
+    gradeDetail.querySelectorAll('[data-g-mix]').forEach(btn =>
+      btn.addEventListener('click', () => navGo('grade-' + g + '-mix')));
+    gradeDetail.querySelectorAll('[data-g-review]').forEach(btn =>
+      btn.addEventListener('click', () => navGo('grade-' + g + '-review')));
     return;
   }
   gradeDetail.innerHTML =
@@ -161,25 +161,32 @@ function selectGrade(g) {
 }
 selectGrade(currentGrade);
 
-/* ---------- 3 年级真实内容（content/grades/grade-3.js 提供 GRADE3_CONTENT） ----------
+/* ---------- 真实内容（content/grades/grade-N.js 提供 GRADE1_CONTENT / GRADE3_CONTENT） ----------
    内容与原型逻辑分开：知识点文字只活在 content/ 里，app.js 只负责渲染。
-   层级：3 年级 → 单元 → 知识点，每条知识点一页：怎么做、为什么、容易错、
-   看图学、动手试一试、讲回来、练一练。文件没加载到时，3 年级退回旧的 4 单元占位。 */
+   层级：年级 → 单元 → 知识点，每条知识点一页：怎么做、为什么、容易错、
+   看图学、动手试一试、讲回来、练一练（由浅入深：基础 → 提高 → 奥数挑战）。文件没加载到时，该年级退回旧的占位。 */
 const pointDetail = document.getElementById('pointDetail');
-function grade3Data() { return (typeof GRADE3_CONTENT !== 'undefined' && GRADE3_CONTENT) || null; }
+function gradeData(g) {
+  if (g === 1) return (typeof GRADE1_CONTENT !== 'undefined' && GRADE1_CONTENT) || null;
+  if (g === 3) return (typeof GRADE3_CONTENT !== 'undefined' && GRADE3_CONTENT) || null;
+  return null;
+}
+function grade3Data() { return gradeData(3); }
 function findPoint(id) {
-  const g3 = grade3Data();
-  if (!g3) return null;
-  for (let ui = 0; ui < g3.units.length; ui++) {
-    const p = g3.units[ui].points.find(pt => pt.id === id);
-    if (p) return { point: p, unit: g3.units[ui], unitIndex: ui };
+  for (const g of [1, 3]) {
+    const gd = gradeData(g);
+    if (!gd) continue;
+    for (let ui = 0; ui < gd.units.length; ui++) {
+      const p = gd.units[ui].points.find(pt => pt.id === id);
+      if (p) return { point: p, unit: gd.units[ui], unitIndex: ui, grade: g };
+    }
   }
   return null;
 }
-function renderUnit(ui) {
-  const g3 = grade3Data();
-  if (!g3 || !g3.units[ui]) return;
-  const u = g3.units[ui];
+function renderUnit(g, ui) {
+  const gd = gradeData(g);
+  if (!gd || !gd.units[ui]) return;
+  const u = gd.units[ui];
   pointDetail.innerHTML =
     '<h3>' + esc(u.unit) + '</h3><p class="muted">' + esc(u.term) + ' · ' + u.points.length + ' 个知识点 · 点一条进内容。</p>' +
     '<div class="unit-list">' + u.points.map(p =>
@@ -199,6 +206,12 @@ function renderPoint(id) {
       '<button class="btn ghost small qa-btn" type="button" data-recall="1">想好了，看答案</button>' +
       '<p class="qa-a" data-recall-a hidden>答案：' + esc(p.recall.answer) + '（提示：' + esc(p.recall.hint) + '）</p></div>'
     : '';
+  // 由浅入深：练一练两道题是 基础 → 提高；有奥数题的知识点再加一道挑战（没有就不显示，不硬凑）。
+  const olympiadHtml = p.olympiad
+    ? '<div class="point-sec olympiad"><h4>挑战 · 奥数</h4><p>' + esc(p.olympiad.q) + '</p>' +
+      '<button class="btn ghost small qa-btn" type="button" data-olympiad="1">想好了，看答案</button>' +
+      '<p class="qa-a" data-olympiad-a hidden>答案：' + esc(p.olympiad.answer) + '（提示：' + esc(p.olympiad.hint) + '）</p></div>'
+    : '';
   let html = '<h3>' + esc(p.id) + ' · ' + esc(p.title) + '</h3>' +
     '<p class="muted">' + esc(f.unit.unit) + '（' + esc(f.unit.term) + '）· 最佳方法：' + esc(p.method) + '</p>' +
     '<p class="muted">' + esc(p.subtitle) + '</p>' + recallHtml +
@@ -209,8 +222,8 @@ function renderPoint(id) {
     '<div class="point-sec"><h4>动手试一试</h4><p>' + esc(p.tryIt) + '</p>' +
     (p.demo === 'fraction' ? '<div class="btn-row"><button class="btn primary" type="button" data-demo-link="demo-fraction">去玩分数演示</button></div>' : '') + '</div>' +
     '<div class="point-sec talk"><h4>讲回来</h4><p>“' + esc(p.explainBack) + '”</p></div>' +
-    '<div class="point-sec"><h4>练一练</h4><p class="muted">第一道题提示直接给，第二道题先自己做，卡住了再点“要提示”。答完先对答案，再告诉我你答对没、有把握没——答错的和没把握的，明天会回来找你。</p>' + p.practice.map((q, i) =>
-      '<div class="qa"><p>' + (i + 1) + '. ' + esc(q.q) + '</p>' +
+    '<div class="point-sec"><h4>练一练</h4><p class="muted">两道题由浅入深：第一道基础（提示直接给），第二道提高（先自己做，卡住了再点“要提示”）。答完先对答案，再告诉我你答对没、有把握没——答错的和没把握的，明天会回来找你。' + (p.olympiad ? '做完还有一道奥数挑战。' : '') + '</p>' + p.practice.map((q, i) =>
+      '<div class="qa"><p>' + (i + 1) + '. ' + (q.level ? '<span class="pill">' + esc(q.level) + '</span> ' : '') + esc(q.q) + '</p>' +
       (i === 0 ? '<p class="hint">提示：' + esc(q.hint) + '</p>' : '') +
       (i === 1 ? '<button class="btn ghost small qa-btn" type="button" data-hint="' + i + '">要提示</button><p class="hint" data-hint-t="' + i + '" hidden>提示：' + esc(q.hint) + '</p>' : '') +
       '<button class="btn ghost small qa-btn" type="button" data-qa="' + i + '">看答案</button>' +
@@ -219,7 +232,7 @@ function renderPoint(id) {
       '<p>你答对了吗？ <button class="btn small" type="button" data-mark="right">答对了</button> <button class="btn small" type="button" data-mark="wrong">答错了</button></p>' +
       '<p>答之前有把握吗？ <button class="btn small" type="button" data-conf="yes">有把握</button> <button class="btn small" type="button" data-conf="no">没把握</button></p>' +
       '<p class="qa-a" data-qa-saved="' + i + '" hidden></p></div></div>'
-    ).join('') + '</div>';
+    ).join('') + '</div>' + olympiadHtml;
   pointDetail.innerHTML = html;
   pointDetail.querySelectorAll('[data-demo-link]').forEach(el =>
     el.addEventListener('click', () => goDemoFromHere(el.dataset.demoLink)));
@@ -236,16 +249,18 @@ function goDemoFromHere(demoKey) {
   renderNav();
 }
 /* 混着练（交叉练习）：每次从 5 个不同单元各抽 1 道题，打乱顺序练。 */
-function renderMix() {
-  const g3 = grade3Data();
-  if (!g3) return;
-  const picks = shuffle(g3.units.filter(u => u.points.length)).slice(0, 5).map(u => {
+let mixGrade = 3;
+function renderMix(g) {
+  if (g) mixGrade = g;
+  const gd = gradeData(mixGrade);
+  if (!gd) return;
+  const picks = shuffle(gd.units.filter(u => u.points.length)).slice(0, 5).map(u => {
     const p = u.points[Math.floor(Math.random() * u.points.length)];
     return { point: p, q: p.practice[Math.floor(Math.random() * p.practice.length)] };
   });
   currentPointId = null;
   pointDetail.innerHTML = '<h3>混着练</h3><p class="muted">5 道题，来自 5 个不同单元——混着练比一个单元一个单元刷记得更牢。答完对答案，再告诉我对错和把握。</p>' + picks.map((pk, i) =>
-    '<div class="point-sec"><h4>' + esc(pk.point.id) + ' · ' + esc(pk.point.title) + '</h4><p>' + esc(pk.q.q) + '</p>' +
+    '<div class="point-sec"><h4>' + esc(pk.point.id) + ' · ' + esc(pk.point.title) + '</h4><p>' + (pk.q.level ? '<span class="pill">' + esc(pk.q.level) + '</span> ' : '') + esc(pk.q.q) + '</p>' +
     '<button class="btn ghost small qa-btn" type="button" data-qa="' + i + '">看答案</button>' +
     '<p class="qa-a" data-qa-a="' + i + '" hidden>答案：' + esc(pk.q.answer) + '（提示：' + esc(pk.q.hint) + '）</p>' +
     '<div class="qa-mark" data-qa-mark="' + i + '" data-point="' + esc(pk.point.id) + '" hidden>' +
@@ -253,7 +268,7 @@ function renderMix() {
     '<p>答之前有把握吗？ <button class="btn small" type="button" data-conf="yes">有把握</button> <button class="btn small" type="button" data-conf="no">没把握</button></p>' +
     '<p class="qa-a" data-qa-saved="' + i + '" hidden></p></div></div>'
   ).join('') + '<div class="btn-row"><button class="btn primary" type="button" data-mix-again="1">再混 5 道</button></div>';
-  pointDetail.querySelectorAll('[data-mix-again]').forEach(b => b.addEventListener('click', renderMix));
+  pointDetail.querySelectorAll('[data-mix-again]').forEach(b => b.addEventListener('click', () => renderMix()));
 }
 /* 今天复习（间隔重复）：到期的知识点列出来，点一条回去重练。 */
 function renderReview() {
@@ -280,6 +295,12 @@ if (pointDetail) pointDetail.addEventListener('click', e => {
   if (recallBtn) {
     const ans = pointDetail.querySelector('[data-recall-a]');
     if (ans) { ans.hidden = !ans.hidden; recallBtn.textContent = ans.hidden ? '想好了，看答案' : '收起答案'; }
+    return;
+  }
+  const olyBtn = e.target.closest('[data-olympiad]');
+  if (olyBtn) {
+    const ans = pointDetail.querySelector('[data-olympiad-a]');
+    if (ans) { ans.hidden = !ans.hidden; olyBtn.textContent = ans.hidden ? '想好了，看答案' : '收起答案'; }
     return;
   }
   const hintBtn = e.target.closest('[data-hint]');
@@ -591,23 +612,25 @@ Object.keys(GRADES).forEach(g => {
 DIMENSIONS.forEach(d => {
   NAV_DEFS['dim-' + d.id] = { crumbs: ['数学', '换维度', d.name], target: 'dimensions', action: () => { renderDimension(d.id); updateModeUI('dimension'); } };
 });
-/* 3 年级内容导航：单元与知识点各一级（面包屑：数学 › 选年级 › 3 年级 › 单元 › 知识点）。
-   内容文件没加载到时不注册，3 年级保持旧的 4 单元占位。 */
-(function registerGrade3Nav() {
-  const g3 = grade3Data();
-  if (!g3) return;
-  g3.units.forEach((u, ui) => {
-    NAV_DEFS['unit-3-' + ui] = { crumbs: ['数学', '选年级', '3 年级', u.unit], target: 'grades', action: () => renderUnit(ui) };
+/* 年级内容导航：单元与知识点各一级（面包屑：数学 › 选年级 › N 年级 › 单元 › 知识点）。
+   内容文件没加载到时不注册，该年级保持旧的占位。 */
+function registerGradeNav(g) {
+  const gd = gradeData(g);
+  if (!gd) return;
+  gd.units.forEach((u, ui) => {
+    NAV_DEFS['unit-' + g + '-' + ui] = { crumbs: ['数学', '选年级', g + ' 年级', u.unit], target: 'grades', action: () => renderUnit(g, ui) };
     u.points.forEach(p => {
-      NAV_DEFS['point-' + p.id] = { crumbs: ['数学', '选年级', '3 年级', u.unit, p.title], target: 'grades', action: () => renderPoint(p.id) };
+      NAV_DEFS['point-' + p.id] = { crumbs: ['数学', '选年级', g + ' 年级', u.unit, p.title], target: 'grades', action: () => renderPoint(p.id) };
     });
   });
-  NAV_DEFS['grade-3-mix'] = { crumbs: ['数学', '选年级', '3 年级', '混着练'], target: 'grades', action: renderMix };
-  NAV_DEFS['grade-3-review'] = { crumbs: ['数学', '选年级', '3 年级', '今天复习'], target: 'grades', action: renderReview };
-  // 3 年级面板改显示真实进度：16 个知识点已完成。
-  const panel3 = document.querySelector('[data-nav-key="grade-3"] .panel-tx');
-  if (panel3) panel3.textContent = g3.units.reduce((n, u) => n + u.points.length, 0) + ' 个知识点 · 已完成';
-})();
+  NAV_DEFS['grade-' + g + '-mix'] = { crumbs: ['数学', '选年级', g + ' 年级', '混着练'], target: 'grades', action: () => renderMix(g) };
+  NAV_DEFS['grade-' + g + '-review'] = { crumbs: ['数学', '选年级', g + ' 年级', '今天复习'], target: 'grades', action: renderReview };
+  // 该年级面板改显示真实进度：N 个知识点 · 已完成。
+  const panel = document.querySelector('[data-nav-key="grade-' + g + '"] .panel-tx');
+  if (panel) panel.textContent = gd.units.reduce((n, u) => n + u.points.length, 0) + ' 个知识点 · 已完成';
+}
+registerGradeNav(1);
+registerGradeNav(3);
 
 const navBack = document.getElementById('navBack');
 const crumbTitle = document.getElementById('crumbTitle');
@@ -641,8 +664,8 @@ function viewForKey(key) {
   if (key === 'grades') return 'grades';
   // 注意顺序：'grade-3-mix' / 'grade-3-review' 也以 'grade-' 开头，必须先精确匹配，
   // 否则会被下面的 startsWith('grade-') 吞掉，混着练和今天复习就会显示成年级详情（2026-11-06 真机测出）。
-  if (key === 'grade-3-mix') return 'mix';
-  if (key === 'grade-3-review') return 'review';
+  if (/^grade-\d+-mix$/.test(key)) return 'mix';
+  if (/^grade-\d+-review$/.test(key)) return 'review';
   if (key.startsWith('grade-')) return 'grade-detail';
   if (key.startsWith('unit-')) return 'unit-detail';
   if (key.startsWith('point-')) return 'point-detail';
@@ -732,11 +755,11 @@ function renderNav() {
 const NAV_PARENT = { 'grade-': 'grades', 'dim-': 'dimensions', 'path-step-': 'path', 'demo-': 'demos' };
 function parentOf(key) {
   if (key === 'why') return 'demos';
-  if (key.startsWith('unit-')) return 'grade-3';
-  if (key === 'grade-3-mix' || key === 'grade-3-review') return 'grade-3';
+  if (key.startsWith('unit-')) return 'grade-' + key.split('-')[1];
+  if (/^grade-\d+-(mix|review)$/.test(key)) return 'grade-' + key.split('-')[1];
   if (key.startsWith('point-')) {
     const f = findPoint(key.slice('point-'.length));
-    return f ? 'unit-3-' + f.unitIndex : 'grade-3';
+    return f ? 'unit-' + f.grade + '-' + f.unitIndex : 'grade-3';
   }
   for (const p of ['grade-', 'dim-', 'path-step-', 'demo-']) if (key.startsWith(p)) return NAV_PARENT[p];
   return null;
