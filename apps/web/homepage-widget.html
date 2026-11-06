@@ -122,6 +122,10 @@ body[data-view="demo-areabuild"] #demos,
 body[data-view="demo-quadmorph"] #demos,
 body[data-view="demo-numplay"] #demos,
 body[data-view="demo-fracnumline"] #demos,
+body[data-view="demo-crslider"] #demos,
+body[data-view="demo-crdraw"] #demos,
+body[data-view="demo-crlist"] #demos,
+body[data-view="demo-crgolden"] #demos,
 body[data-view="why"] #why, body[data-view="review"] #review,
 body[data-view="progress"] #review, body[data-view="parent"] #review, body[data-view="lab"] #lab,
 body[data-view="exam"] #exam, body[data-view="inquiry"] #inquiry, body[data-view="checkpoint"] #checkpoint{display:block}
@@ -741,6 +745,22 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
 /* --- demo-chickenrabbit --- */
 .cr-track { height: 22px; border-radius: 11px; background: var(--bg); border: 2px solid var(--line); overflow: hidden; margin: 12px 0; }
 .cr-fill { height: 100%; background: var(--orange); transition: width .2s; }
+/* 鸡兔同笼四种方法：笼子格、画图头、枚举行、脚点 */
+.cr-cage{display:flex;flex-wrap:wrap;gap:4px;margin:10px 0}
+.cr-cell{width:36px;border:1px solid var(--line);border-radius:8px;text-align:center;padding:3px 0;background:#fff;font-size:13px;line-height:1.3}
+.cr-cell.rabbit{background:#dcfce7;border-color:#16a34a;font-weight:700}
+.cr-cell .legs{font-size:11px;color:#475569}
+.cr-head{width:46px;border:1px solid var(--line);border-radius:8px;background:#fff;padding:4px 0;font-size:13px;line-height:1.4;cursor:pointer}
+.cr-head.rabbit{background:#dcfce7;border-color:#16a34a;font-weight:700}
+.cr-rows{display:flex;flex-direction:column;gap:4px;margin:10px 0;max-height:260px;overflow:auto}
+.cr-row{border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:#fff;font-size:14px}
+.cr-row.hit{border-color:#16a34a;background:#dcfce7;font-weight:700}
+.cr-dot{font-size:15px;line-height:1.3;margin:0 1px}
+.cr-dot.heads{color:#64748b}
+.cr-dot.feet{color:#16a34a}
+.cr-dot.feet.dim{color:#94a3b8}
+.cr-dot.feet.extra{color:#ea580c}
+.cr-range{width:100%;margin:8px 0}
 
 /* --- Grade 5 demos --- */
 .dm-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; max-width: 480px; margin: 12px auto; }
@@ -897,7 +917,7 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
       <span class="brand-text"><strong>数学小宇宙</strong><small>小学 1–6 · 初中 7–9 · 动手玩懂数学</small></span>
     </button>
     <h1 class="crumb-title" id="crumbTitle" aria-label="当前位置">数学</h1>
-    <div class="progress-chip" id="progressChip" title="已体验的动画">已体验 <b id="progressCount">0 / 141</b> 个动画</div>
+    <div class="progress-chip" id="progressChip" title="已体验的动画">已体验 <b id="progressCount">0 / 145</b> 个动画</div>
   </div>
 </header>
 
@@ -962,10 +982,10 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
     </div>
     <h3 class="panel-group-label">工具箱</h3>
     <div class="panels four">
-      <button class="panel" type="button" data-nav-key="demos"><span class="panel-icon" aria-hidden="true">✦</span><b>动画</b><span class="panel-sub">分数、天平、函数、十格阵，还有一到九年级实验都能玩</span><span class="panel-prog"><i id="panelDemoProg" style="width:0%"></i></span><span class="panel-tx" id="panelDemoTx">141 个动画 · 0 已体验</span></button>
+      <button class="panel" type="button" data-nav-key="demos"><span class="panel-icon" aria-hidden="true">✦</span><b>动画</b><span class="panel-sub">分数、天平、函数、十格阵，还有一到九年级实验都能玩</span><span class="panel-prog"><i id="panelDemoProg" style="width:0%"></i></span><span class="panel-tx" id="panelDemoTx">145 个动画 · 0 已体验</span></button>
       <button class="panel" type="button" data-nav-key="lab"><span class="panel-icon" aria-hidden="true">🧪</span><b>数学实验室</b><span class="panel-sub">先选一个问题，再去工作间里摆弄</span><span class="panel-tx">13 个问题 · 自由玩 / 挑战</span></button>
       <button class="panel" type="button" data-nav-key="review"><span class="panel-icon" aria-hidden="true">✎</span><b>错题本</b><span class="panel-sub">错题连当时的图一起存</span><span class="panel-tx">还没有错题</span></button>
-      <button class="panel" type="button" data-nav-key="progress"><span class="panel-icon" aria-hidden="true">●</span><b>我的进度</b><span class="panel-sub">玩过的动画点亮一格</span><span class="panel-prog"><i id="panelProgFill" style="width:0%"></i></span><span class="panel-tx" id="panelProgTx">0 / 141 个动画</span></button>
+      <button class="panel" type="button" data-nav-key="progress"><span class="panel-icon" aria-hidden="true">●</span><b>我的进度</b><span class="panel-sub">玩过的动画点亮一格</span><span class="panel-prog"><i id="panelProgFill" style="width:0%"></i></span><span class="panel-tx" id="panelProgTx">0 / 145 个动画</span></button>
     </div>
   </section>
 
@@ -1095,6 +1115,10 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
       <button class="panel" type="button" data-nav-key="demo-moveshape"><span class="panel-icon" aria-hidden="true">➡</span><b>图形平移对称</b><span class="panel-sub">每个点都向右移 3 格</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">4 年级 · 图形的运动（二）</span></button>
       <button class="panel" type="button" data-nav-key="demo-average"><span class="panel-icon" aria-hidden="true">⚖</span><b>削峰填谷</b><span class="panel-sub">80、90、100、90，平均是 90</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">4 年级 · 平均数</span></button>
       <button class="panel" type="button" data-nav-key="demo-chickenrabbit"><span class="panel-icon" aria-hidden="true">🐔</span><b>鸡兔同笼</b><span class="panel-sub">全当鸡是 70 条腿，滑到 94 条</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">4 年级 · 数学广角——鸡兔同笼</span></button>
+      <button class="panel" type="button" data-nav-key="demo-crslider"><span class="panel-icon" aria-hidden="true">↔</span><b>鸡兔同笼：猜了再滑</b><span class="panel-sub">先猜兔有几只，再拖滑杆看腿数对不对</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">4 年级 · 数学广角——鸡兔同笼 · 方法一</span></button>
+      <button class="panel" type="button" data-nav-key="demo-crdraw"><span class="panel-icon" aria-hidden="true">✎</span><b>鸡兔同笼：画图补腿</b><span class="panel-sub">每个头先画 2 条腿，少的 2 条 2 条往上补</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">4 年级 · 数学广角——鸡兔同笼 · 方法二</span></button>
+      <button class="panel" type="button" data-nav-key="demo-crlist"><span class="panel-icon" aria-hidden="true">☰</span><b>鸡兔同笼：列表枚举</b><span class="panel-sub">鸡从 0 只试到 35 只，腿数一行一行变</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">4 年级 · 数学广角——鸡兔同笼 · 方法三</span></button>
+      <button class="panel" type="button" data-nav-key="demo-crgolden"><span class="panel-icon" aria-hidden="true">🐓</span><b>鸡兔同笼：金鸡独立</b><span class="panel-sub">脚减半，鸡 1 只脚、兔 2 只脚，多出来的就是兔</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">4 年级 · 数学广角——鸡兔同笼 · 方法四</span></button>
       <button class="panel" type="button" data-nav-key="demo-decmul"><span class="panel-icon" aria-hidden="true">▦</span><b>小数乘法：单位正方形</b><span class="panel-sub">0.3×0.4 是 0.12 不是 1.2</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">5 年级 · 小数乘法</span></button>
       <button class="panel" type="button" data-nav-key="demo-gridpos"><span class="panel-icon" aria-hidden="true">◎</span><b>位置：数对点一点</b><span class="panel-sub">(3,2) 和 (2,3) 不是同一个位置</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">5 年级 · 位置</span></button>
       <button class="panel" type="button" data-nav-key="demo-decdiv"><span class="panel-icon" aria-hidden="true">÷</span><b>小数除法：两数同乘</b><span class="panel-sub">2.4÷0.6，两边都乘 10 是 24÷6</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">5 年级 · 小数除法</span></button>
@@ -2484,6 +2508,91 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
         <p id="crMsg">还差 24 条腿：每换一只兔多 2 条腿，还要换 12 只兔。</p>
         <p class="demo-foot">成功标准：说出“全是鸡是 70 条腿，实际 94 条，每换一只兔多 2 条腿”。</p>
         <p class="why"><b>为什么？</b>假设法不是猜：鸡和兔的腿数差是固定的——每换一只，腿就多 2 条。差 24 条腿，就要换 24÷2=12 只。差值除以 2，就是要换的只数，算出来的，不是猜出来的。</p>
+      </article>
+
+      <!-- 4.16 鸡兔同笼 · 方法一：假设法（猜了再滑） -->
+      <article class="demo-card" id="demo-crslider">
+        <p class="demo-tag">4 年级 · 数学广角——鸡兔同笼 · 方法一：假设法</p>
+        <h3>鸡兔同笼：猜了再滑</h3>
+        <p>35 个头、94 条腿，兔有几只？别急着算——先猜，再拖滑杆一只一只把鸡换成兔，腿数跟着变，滑到 94 条正好停住。</p>
+        <div class="control-row"><span>选一道题</span><div class="seg" id="csProbSeg"></div></div>
+        <p>第一步 · 先猜：<b id="csGuessTx">头 10 个，脚 28 只：兔有几只？先猜一个数。</b></p>
+        <div class="btn-row"><button class="btn small ghost" id="csGuessMinus" type="button">−1</button><b id="csGuessLabel">2 只</b><button class="btn small ghost" id="csGuessPlus" type="button">+1</button><button class="btn small primary" id="csGuessSet" type="button">就猜这个</button></div>
+        <p>第二步 · 玩：拖滑杆，笼子里的鸡一只一只变成兔；也可以点 − / + 一只一只换。</p>
+        <p class="func-eq" id="csRead">鸡 10 只，兔 0 只，一共 20 条腿（目标 28 条）。</p>
+        <div class="cr-track"><div class="cr-fill" id="csFill" style="width:50%"></div></div>
+        <input type="range" id="csRange" class="cr-range" min="0" max="10" step="1" value="0">
+        <div class="control-row"><span>兔有几只</span><div class="seg"><button type="button" id="csMinus">−</button><span class="arr-tx" id="csRabbitTx">兔 0 只</span><button type="button" id="csPlus">＋</button></div></div>
+        <div class="cr-cage" id="csCage"></div>
+        <div class="btn-row"><button class="btn small ghost" id="csAllChicken" type="button">先全当鸡</button></div>
+        <p id="csMsg">先猜要换几只兔，再拖滑杆。</p>
+        <div class="tier-row" id="csTiers"></div>
+        <div class="find-row"><label>说一说你的发现：<input type="text" id="csFind" placeholder="我发现……"></label><button class="btn small primary" id="csFindSave" type="button">记下来</button></div>
+        <p id="csFindSaved"></p>
+        <p id="csWhy" hidden><b>为什么？</b>每换一只兔，腿就多 2 条——这个差是固定的。差 8 条腿，就要换 8÷2=4 只。差值除以 2，就是要换的只数，算出来的，不是猜出来的。</p>
+        <p class="demo-foot">成功标准：先猜再滑，滑到目标腿数停住，说出“差几条腿、换几只兔”。</p>
+      </article>
+
+      <!-- 4.16 鸡兔同笼 · 方法二：画图法 -->
+      <article class="demo-card" id="demo-crdraw">
+        <p class="demo-tag">4 年级 · 数学广角——鸡兔同笼 · 方法二：画图法</p>
+        <h3>鸡兔同笼：画图补腿</h3>
+        <p>每个头先画 2 条腿，腿不够了就 2 条 2 条往上补——补满 4 条腿的，就是兔。</p>
+        <div class="control-row"><span>选一道题</span><div class="seg" id="cdProbSeg"></div></div>
+        <p>第一步 · 先猜：<b id="cdGuessTx">头 8 个，脚 22 只：兔有几只？先猜一个数。</b></p>
+        <div class="btn-row"><button class="btn small ghost" id="cdGuessMinus" type="button">−1</button><b id="cdGuessLabel">1 只</b><button class="btn small ghost" id="cdGuessPlus" type="button">+1</button><button class="btn small primary" id="cdGuessSet" type="button">就猜这个</button></div>
+        <p>第二步 · 玩：点一个头，给它补 2 条腿；已经 4 条腿的不能再补。</p>
+        <div class="cr-cage" id="cdHeads"></div>
+        <p class="func-eq" id="cdRead">一共 16 条腿（目标 22 条），还差 6 条。</p>
+        <div class="btn-row"><button class="btn small ghost" id="cdBig" type="button">35 头怎么办？</button></div>
+        <p id="cdBigTx"></p>
+        <p id="cdMsg">每个头先画 2 条腿，再 2 条 2 条往上补。</p>
+        <div class="tier-row" id="cdTiers"></div>
+        <div class="find-row"><label>说一说你的发现：<input type="text" id="cdFind" placeholder="我发现……"></label><button class="btn small primary" id="cdFindSave" type="button">记下来</button></div>
+        <p id="cdFindSaved"></p>
+        <p id="cdWhy" hidden><b>为什么？</b>先给每个头画 2 条腿，是因为鸡最少 2 条腿；少的腿一定是兔子的，每只兔比鸡多 2 条腿，所以少的腿 2 条 2 条补，补几次就有几只兔。</p>
+        <p class="demo-foot">成功标准：补满目标腿数，说出“补了几次、兔有几只”，并且能说 35 头为什么画不完。</p>
+      </article>
+
+      <!-- 4.16 鸡兔同笼 · 方法三：列表枚举法 -->
+      <article class="demo-card" id="demo-crlist">
+        <p class="demo-tag">4 年级 · 数学广角——鸡兔同笼 · 方法三：列表枚举法</p>
+        <h3>鸡兔同笼：列表枚举</h3>
+        <p>鸡从 0 只开始试，腿数一行一行变——35 头 94 腿，只在 23 鸡 12 兔那一行对上。慢，但一定找得到。</p>
+        <div class="control-row"><span>选一道题</span><div class="seg" id="clProbSeg"></div></div>
+        <p>第一步 · 先猜：<b id="clGuessTx">头 10 个，脚 28 只：鸡有几只？先猜一个数。</b></p>
+        <div class="btn-row"><button class="btn small ghost" id="clGuessMinus" type="button">−1</button><b id="clGuessLabel">3 只</b><button class="btn small ghost" id="clGuessPlus" type="button">+1</button><button class="btn small primary" id="clGuessSet" type="button">就猜这个</button></div>
+        <p>第二步 · 玩：一行一行试下去，或者直接跳到你猜的那一行。</p>
+        <div class="btn-row"><button class="btn small primary" id="clNext" type="button">试下一个</button><button class="btn small ghost" id="clJump" type="button">跳到猜的那一行</button><button class="btn small ghost" id="clReset" type="button">从头再试</button></div>
+        <div class="cr-rows" id="clRows"></div>
+        <p class="func-eq" id="clRead">还没有试，目标 28 条腿。</p>
+        <p id="clMsg">鸡从 0 只开始，一行一行试下去。</p>
+        <div class="tier-row" id="clTiers"></div>
+        <div class="find-row"><label>说一说你的发现：<input type="text" id="clFind" placeholder="我发现……"></label><button class="btn small primary" id="clFindSave" type="button">记下来</button></div>
+        <p id="clFindSaved"></p>
+        <p id="clWhy" hidden><b>为什么？</b>鸡每多 1 只，腿就少 2 条——这个表不是瞎试的，它一行一行往目标走。腿多了就加鸡，腿少了就减鸡，方向不会错。</p>
+        <p class="demo-foot">成功标准：试出正好的那一行，说出“腿多了加鸡、腿少了减鸡”。</p>
+      </article>
+
+      <!-- 4.16 鸡兔同笼 · 方法四：金鸡独立法 -->
+      <article class="demo-card" id="demo-crgolden">
+        <p class="demo-tag">4 年级 · 数学广角——鸡兔同笼 · 方法四：金鸡独立法</p>
+        <h3>鸡兔同笼：金鸡独立</h3>
+        <p>让每只鸡抬起 1 只脚、每只兔抬起 2 只脚——脚一下少了一半，多出来的脚数就是兔的只数。</p>
+        <div class="control-row"><span>选一道题</span><div class="seg" id="cgProbSeg"></div></div>
+        <p>第一步 · 先猜：<b id="cgGuessTx">头 10 个，脚 28 只：兔有几只？先猜一个数。</b></p>
+        <div class="btn-row"><button class="btn small ghost" id="cgGuessMinus" type="button">−1</button><b id="cgGuessLabel">2 只</b><button class="btn small ghost" id="cgGuessPlus" type="button">+1</button><button class="btn small primary" id="cgGuessSet" type="button">就猜这个</button></div>
+        <p>第二步 · 玩：点“金鸡独立”，脚减半；再点“算一算”。</p>
+        <div class="cr-cage" id="cgHeads"></div>
+        <div class="cr-cage" id="cgFeet"></div>
+        <p class="func-eq" id="crgRead">头 10 个，脚 28 只。先猜兔有几只，再让它们金鸡独立。</p>
+        <div class="btn-row"><button class="btn small primary" id="cgHalf" type="button">金鸡独立</button><button class="btn small ghost" id="cgCalc" type="button">算一算</button></div>
+        <p id="crgMsg">先猜兔有几只，再让它们金鸡独立。</p>
+        <div class="tier-row" id="cgTiers"></div>
+        <div class="find-row"><label>说一说你的发现：<input type="text" id="cgFind" placeholder="我发现……"></label><button class="btn small primary" id="cgFindSave" type="button">记下来</button></div>
+        <p id="cgFindSaved"></p>
+        <p id="cgWhy" hidden><b>为什么？</b>脚减半以后，鸡只剩 1 只脚着地，兔剩 2 只。每个头至少 1 只脚，多出来的脚每只都属于一只兔——多出几只脚，就有几只兔。94÷2−35=12，就是这么来的。</p>
+        <p class="demo-foot">成功标准：先猜再验证，说出“脚减半多出来几只，就是几只兔”。</p>
       </article>
 
       <!-- 5.1 小数乘法 -->
@@ -8510,7 +8619,7 @@ const GRADES = {
 };
 
 /* ---------- 进度（原型：记演示是否玩过） ----------
-   141 个演示全都计入：4 个经典演示 + 13 个一年级实验 + 15 个二年级实验 + 14 个三年级实验 + 16 个四年级实验 + 11 个五年级实验 + 12 个六年级实验 + 13 个七年级实验 + 11 个八年级实验 + 15 个九年级实验 + 9 个创意实验 + 8 个互动模拟 = 141 个。
+   145 个动画全都计入：4 个经典演示 + 13 个一年级实验 + 15 个二年级实验 + 14 个三年级实验 + 20 个四年级实验（16 个 + 鸡兔同笼 4 种方法） + 11 个五年级实验 + 12 个六年级实验 + 13 个七年级实验 + 11 个八年级实验 + 15 个九年级实验 + 9 个创意实验 + 8 个互动模拟 = 145 个。
    首页却写着“4 个演示”，演示页上却是 17 张卡，数字对不上
    （2026-11-06 真机审计第 6 条）。 */
 const tried = new Set();
@@ -8524,7 +8633,7 @@ const ALL_DEMOS = ['tenframe', 'fraction', 'balance', 'function',
   'compass', 'divplace', 'stattable', 'fourgrid', 'area', 'calendar', 'decimal',
   'bignum', 'field', 'protractor', 'areamodel', 'parallelogram', 'trialdiv',
   'baraxis', 'teatime', 'zerodiv', 'laws', 'placeslider', 'tearangle',
-  'decadd', 'moveshape', 'average', 'chickenrabbit',
+  'decadd', 'moveshape', 'average', 'chickenrabbit', 'crslider', 'crdraw', 'crlist', 'crgolden',
   'decmul', 'gridpos', 'decdiv', 'prob', 'polyarea', 'planttree',
   'factor', 'cuboid', 'fracadd', 'rotate', 'findbad',
   'radar', 'ratio', 'circle', 'percent', 'fan', 'lsquare', 'thermo', 'negmul',
@@ -8929,13 +9038,14 @@ function renderUnit(g, ui) {
   pointDetail.querySelectorAll('[data-demo-link]').forEach(el =>
     el.addEventListener('click', () => goDemoFromHere(el.dataset.demoLink)));
 }
-const DEMO_LABEL = { fraction: '去玩分数演示', tenframe: '去玩十格阵', balance: '去玩天平演示', function: '去玩函数演示', count: '去玩数一数', position: '去玩转身找左右', split: '去玩分一分', addsub: '去玩合起来拿走', solids: '去玩立体图形', bundle: '去玩捆小棒', clock: '去玩拨时钟', tangram: '去玩七巧板', sort: '去玩分类分一分', hundred: '去玩百数表', shop: '去玩开小店', place: '去玩数位块', pattern: '去玩找规律', ruler: '去玩尺子量一量', estimate: '去玩先估后算', angle: '去玩转一转角', array: '去玩点阵乘法', observe: '去玩换个方向看', time: '去玩拨时钟（时和分）', share: '去玩轮流分一分', motion: '去玩折一折转一转', mixop: '去玩先算哪一堆', remain: '去玩装一包装不满', thousand: '去玩数轴找近似数', weight: '去玩天平称一称', chart: '去玩投票变条形图', logic: '去玩排除格推理', pair: '去玩搭配连一连', elapsed: '去玩时间轴走一走', verify: '去玩算回去验算', units: '去玩单位楼梯', times: '去玩条形复制', splitmul: '去玩面积切一切', rectsq: '去玩拉一拉变正方形', venn: '去玩韦恩图拖人', compass: '去玩指南针转一转', divplace: '去玩按数位分一分', stattable: '去玩复式统计表', fourgrid: '去玩四格面积模型', area: '去玩铺方砖数面积', calendar: '去玩日历翻一翻', decimal: '去玩十分条比大小', bignum: '去玩大数数轴', field: '去玩足球场拼一拼', protractor: '去玩量角器', areamodel: '去玩面积模型', parallelogram: '去玩平行四边形', trialdiv: '去玩试商调商', baraxis: '去玩条形图轴', teatime: '去玩沏茶排一排', zerodiv: '去玩除以0', laws: '去玩运算定律', placeslider: '去玩数位滑块', tearangle: '去玩撕角拼平角', decadd: '去玩小数加减对齐', moveshape: '去玩图形平移', average: '去玩削峰填谷', chickenrabbit: '去玩鸡兔同笼', decmul: '去玩单位正方形', gridpos: '去玩数对点一点', decdiv: '去玩两数同乘', prob: '去玩摸球模拟', polyarea: '去玩切一刀变长方形', planttree: '去玩种树数间隔', factor: '去玩拼长方形', cuboid: '去玩分层装块', fracadd: '去玩先重切再数', rotate: '去玩绕钉旋转', findbad: '去玩三组称找次品', radar: '去玩雷达找地方', ratio: '去玩比条分一分', circle: '去玩绕绳量圆', percent: '去玩百分条', fan: '去玩扇形转一转', lsquare: '去玩一层层包正方形', thermo: '去玩温度计比一比', negmul: '去玩负数乘法规律', discount: '去玩打折算一算', cylinder: '去玩倒沙装满圆柱', pigeon: '去玩鸽子找洞', conceptmap: '去玩认出老办法', numline: '去玩数轴标一点', powerup: '去玩对折纸和科学记数法', monomial: '去玩拆零件看系数次数', liketerms: '去玩合并同类项', meetline: '去玩相向而行', lineseg: '去玩直线射线线段', anglepair: '去玩余角补角拼一拼', vertangle: '去玩对顶角转一转', parangles: '去玩平行线截角', roots: '去玩开方机器', coordplane: '去玩坐标平面点一点', ineqline: '去玩不等式画数轴', histogram: '去玩直方图分组', trisides: '去玩三边围不围', congruent: '去玩全等判定拼一拼', foldmirror: '去玩对折看对称', algarea: '去玩面积模型算整式', algfrac: '去玩分式约分', eqsieve: '去玩分式方程过筛子', radical: '去玩二次根式化简', pythag: '去玩勾股定理面积拼图', pargram: '去玩平行四边形推一推', specialquad: '去玩加条件变特殊', datastats: '去玩数据分析算一算', quad: '去玩一元二次方程', growth: '去玩利滚利和韦达', parabola: '去玩抛物线滑杆', spin: '去玩旋转和中心对称', circangle: '去玩圆周角', tangent: '去玩直线和圆切线', sector: '去玩扇形和圆锥', coin: '去玩抛硬币摸红球', tree: '去玩树状图数一数', hyperbola: '去玩双曲线', similar: '去玩相似放大', shadow: '去玩影子测高', trig: '去玩锐角三角函数', slope: '去玩仰角和坡度', project: '去玩投影和三视图', twentyfour: '去玩24点拼一拼', monty: '去玩三门问题', maxarea: '去玩周长面积最大', matches: '去玩火柴棒', mobius: '去玩莫比乌斯带', shopweek: '去玩开店一周', fairgame: '去玩公平游戏', makerule: '去玩造规律', thirteen: '去玩13有几种凑法', maketen: '去玩凑十装满', areamul: '去玩面积模型乘法', fraceq: '去玩分数相等', buildfrac: '去玩造分数', areabuild: '去玩面积建造者', quadmorph: '去玩四边形变形', numplay: '去玩一个数五种样子', fracnumline: '去玩分数变数线' };
+const DEMO_LABEL = { fraction: '去玩分数演示', tenframe: '去玩十格阵', balance: '去玩天平演示', function: '去玩函数演示', count: '去玩数一数', position: '去玩转身找左右', split: '去玩分一分', addsub: '去玩合起来拿走', solids: '去玩立体图形', bundle: '去玩捆小棒', clock: '去玩拨时钟', tangram: '去玩七巧板', sort: '去玩分类分一分', hundred: '去玩百数表', shop: '去玩开小店', place: '去玩数位块', pattern: '去玩找规律', ruler: '去玩尺子量一量', estimate: '去玩先估后算', angle: '去玩转一转角', array: '去玩点阵乘法', observe: '去玩换个方向看', time: '去玩拨时钟（时和分）', share: '去玩轮流分一分', motion: '去玩折一折转一转', mixop: '去玩先算哪一堆', remain: '去玩装一包装不满', thousand: '去玩数轴找近似数', weight: '去玩天平称一称', chart: '去玩投票变条形图', logic: '去玩排除格推理', pair: '去玩搭配连一连', elapsed: '去玩时间轴走一走', verify: '去玩算回去验算', units: '去玩单位楼梯', times: '去玩条形复制', splitmul: '去玩面积切一切', rectsq: '去玩拉一拉变正方形', venn: '去玩韦恩图拖人', compass: '去玩指南针转一转', divplace: '去玩按数位分一分', stattable: '去玩复式统计表', fourgrid: '去玩四格面积模型', area: '去玩铺方砖数面积', calendar: '去玩日历翻一翻', decimal: '去玩十分条比大小', bignum: '去玩大数数轴', field: '去玩足球场拼一拼', protractor: '去玩量角器', areamodel: '去玩面积模型', parallelogram: '去玩平行四边形', trialdiv: '去玩试商调商', baraxis: '去玩条形图轴', teatime: '去玩沏茶排一排', zerodiv: '去玩除以0', laws: '去玩运算定律', placeslider: '去玩数位滑块', tearangle: '去玩撕角拼平角', decadd: '去玩小数加减对齐', moveshape: '去玩图形平移', average: '去玩削峰填谷', chickenrabbit: '去玩鸡兔同笼', crslider: '去玩猜了再滑', crdraw: '去玩画图补腿', crlist: '去玩列表枚举', crgolden: '去玩金鸡独立', decmul: '去玩单位正方形', gridpos: '去玩数对点一点', decdiv: '去玩两数同乘', prob: '去玩摸球模拟', polyarea: '去玩切一刀变长方形', planttree: '去玩种树数间隔', factor: '去玩拼长方形', cuboid: '去玩分层装块', fracadd: '去玩先重切再数', rotate: '去玩绕钉旋转', findbad: '去玩三组称找次品', radar: '去玩雷达找地方', ratio: '去玩比条分一分', circle: '去玩绕绳量圆', percent: '去玩百分条', fan: '去玩扇形转一转', lsquare: '去玩一层层包正方形', thermo: '去玩温度计比一比', negmul: '去玩负数乘法规律', discount: '去玩打折算一算', cylinder: '去玩倒沙装满圆柱', pigeon: '去玩鸽子找洞', conceptmap: '去玩认出老办法', numline: '去玩数轴标一点', powerup: '去玩对折纸和科学记数法', monomial: '去玩拆零件看系数次数', liketerms: '去玩合并同类项', meetline: '去玩相向而行', lineseg: '去玩直线射线线段', anglepair: '去玩余角补角拼一拼', vertangle: '去玩对顶角转一转', parangles: '去玩平行线截角', roots: '去玩开方机器', coordplane: '去玩坐标平面点一点', ineqline: '去玩不等式画数轴', histogram: '去玩直方图分组', trisides: '去玩三边围不围', congruent: '去玩全等判定拼一拼', foldmirror: '去玩对折看对称', algarea: '去玩面积模型算整式', algfrac: '去玩分式约分', eqsieve: '去玩分式方程过筛子', radical: '去玩二次根式化简', pythag: '去玩勾股定理面积拼图', pargram: '去玩平行四边形推一推', specialquad: '去玩加条件变特殊', datastats: '去玩数据分析算一算', quad: '去玩一元二次方程', growth: '去玩利滚利和韦达', parabola: '去玩抛物线滑杆', spin: '去玩旋转和中心对称', circangle: '去玩圆周角', tangent: '去玩直线和圆切线', sector: '去玩扇形和圆锥', coin: '去玩抛硬币摸红球', tree: '去玩树状图数一数', hyperbola: '去玩双曲线', similar: '去玩相似放大', shadow: '去玩影子测高', trig: '去玩锐角三角函数', slope: '去玩仰角和坡度', project: '去玩投影和三视图', twentyfour: '去玩24点拼一拼', monty: '去玩三门问题', maxarea: '去玩周长面积最大', matches: '去玩火柴棒', mobius: '去玩莫比乌斯带', shopweek: '去玩开店一周', fairgame: '去玩公平游戏', makerule: '去玩造规律', thirteen: '去玩13有几种凑法', maketen: '去玩凑十装满', areamul: '去玩面积模型乘法', fraceq: '去玩分数相等', buildfrac: '去玩造分数', areabuild: '去玩面积建造者', quadmorph: '去玩四边形变形', numplay: '去玩一个数五种样子', fracnumline: '去玩分数变数线' };
 /* ---------- 一个点的全部动画（实验放哪里的答案） ----------
    动画 = 所有能上手玩的东西（总称）；演示 = 看明白的工具（124 + 4 旗舰）；
    模拟 = 一个概念一种玩法（8 个）；实验 = 一个问题（9 个创意 + 实验室问题）。
    一个点有哪些动画，只从这里算，不手写两份：
      p.demo（内容文件里的主演示）
      + SIM_LINKS（模拟 → 知识点，只写核对过标题的）
+     + METHOD_DEMOS（一个点多种方法：同一点的不同解法，各一个动画——第一个是 4.16 鸡兔同笼）
      + LAB_QUESTIONS 里 points 含该点的演示型问题（实验的家在实验室，点上是第二个门）
    点页、单元页、年级页都读同一份注册表；演示页下阶段也从注册表生成（见设计文档）。 */
 var CREATIVE_DEMOS = ['thirteen', 'twentyfour', 'monty', 'maxarea', 'matches', 'mobius', 'shopweek', 'fairgame', 'makerule'];
@@ -8957,6 +9067,11 @@ var SIM_LINKS = {
   '4.5': ['quadmorph'],
   '8.13': ['quadmorph'],
 };
+/* 一个点多种方法：点 id → 该点的各方法动画（按方法顺序排，点页上就按这个顺序出按钮）。
+   第一个是 4.16 鸡兔同笼：4 种方法各一个动画，旧的 chickenrabbit（腿数滑杆步进版）照旧排第一个。 */
+var METHOD_DEMOS = {
+  '4.16': ['crslider', 'crdraw', 'crlist', 'crgolden'],
+};
 function animsForPoint(id) {
   const f = findPoint(id);
   if (!f) return [];
@@ -8964,6 +9079,7 @@ function animsForPoint(id) {
   const push = k => { if (k && keys.indexOf(k) < 0) keys.push(k); };
   if (f.point.demo) push(f.point.demo);
   (SIM_LINKS[id] || []).forEach(push);
+  (METHOD_DEMOS[id] || []).forEach(push);
   // 实验室问题：points 含该点的演示型问题也算该点的实验（bench 型没有独立卡片，进不了点页）。
   if (typeof LAB_QUESTIONS !== 'undefined') {
     LAB_QUESTIONS.forEach(q => { if (q.demo && q.points && q.points.indexOf(id) >= 0) push(q.demo); });
@@ -9521,6 +9637,7 @@ const DEMO_GRADES = { tenframe: [1, 2], fraction: [3, 4, 5, 6], balance: [5, 6, 
   bignum: [4], field: [4], protractor: [4], areamodel: [4], parallelogram: [4], trialdiv: [4],
   baraxis: [4], teatime: [4], zerodiv: [4], laws: [4], placeslider: [4], tearangle: [4],
   decadd: [4], moveshape: [4], average: [4], chickenrabbit: [4],
+  crslider: [4], crdraw: [4], crlist: [4], crgolden: [4],
   decmul: [5], gridpos: [5], decdiv: [5], prob: [5], polyarea: [5], planttree: [5],
   factor: [5], cuboid: [5], fracadd: [5], rotate: [5], findbad: [5],
   radar: [6], ratio: [6], circle: [6], percent: [6], fan: [6], lsquare: [6],
@@ -10339,6 +10456,10 @@ const NAV_DEFS = {
   'demo-moveshape': { crumbs: ['数学', '动画', '图形平移和对称'], target: 'demo-moveshape' },
   'demo-average': { crumbs: ['数学', '动画', '削峰填谷求平均数'], target: 'demo-average' },
   'demo-chickenrabbit': { crumbs: ['数学', '动画', '鸡兔同笼腿数滑杆'], target: 'demo-chickenrabbit' },
+  'demo-crslider': { crumbs: ['数学', '动画', '鸡兔同笼：猜了再滑'], target: 'demo-crslider' },
+  'demo-crdraw': { crumbs: ['数学', '动画', '鸡兔同笼：画图补腿'], target: 'demo-crdraw' },
+  'demo-crlist': { crumbs: ['数学', '动画', '鸡兔同笼：列表枚举'], target: 'demo-crlist' },
+  'demo-crgolden': { crumbs: ['数学', '动画', '鸡兔同笼：金鸡独立'], target: 'demo-crgolden' },
   'demo-decmul': { crumbs: ['数学', '动画', '小数乘法：单位正方形'], target: 'demo-decmul' },
   'demo-gridpos': { crumbs: ['数学', '动画', '位置：数对点一点'], target: 'demo-gridpos' },
   'demo-decdiv': { crumbs: ['数学', '动画', '小数除法：两数同乘'], target: 'demo-decdiv' },
@@ -10509,7 +10630,7 @@ function viewForKey(key) {
   if (key === 'path') return 'path';
   if (key.startsWith('path-step-')) return 'path-step';
   if (key === 'demos') return 'demos';
-  if (key === 'demo-tenframe' || key === 'demo-fraction' || key === 'demo-balance' || key === 'demo-function' || key === 'demo-count' || key === 'demo-position' || key === 'demo-split' || key === 'demo-addsub' || key === 'demo-solids' || key === 'demo-bundle' || key === 'demo-clock' || key === 'demo-tangram' || key === 'demo-sort' || key === 'demo-hundred' || key === 'demo-shop' || key === 'demo-place' || key === 'demo-pattern' || key === 'demo-ruler' || key === 'demo-estimate' || key === 'demo-angle' || key === 'demo-array' || key === 'demo-observe' || key === 'demo-time' || key === 'demo-share' || key === 'demo-motion' || key === 'demo-mixop' || key === 'demo-remain' || key === 'demo-thousand' || key === 'demo-weight' || key === 'demo-chart' || key === 'demo-logic' || key === 'demo-pair' || key === 'demo-elapsed' || key === 'demo-verify' || key === 'demo-units' || key === 'demo-times' || key === 'demo-splitmul' || key === 'demo-rectsq' || key === 'demo-venn' || key === 'demo-compass' || key === 'demo-divplace' || key === 'demo-stattable' || key === 'demo-fourgrid' || key === 'demo-area' || key === 'demo-calendar' || key === 'demo-decimal' || key === 'demo-bignum' || key === 'demo-field' || key === 'demo-protractor' || key === 'demo-areamodel' || key === 'demo-parallelogram' || key === 'demo-trialdiv' || key === 'demo-baraxis' || key === 'demo-teatime' || key === 'demo-zerodiv' || key === 'demo-laws' || key === 'demo-placeslider' || key === 'demo-tearangle' || key === 'demo-decadd' || key === 'demo-moveshape' || key === 'demo-average' || key === 'demo-chickenrabbit' || key === 'demo-decmul' || key === 'demo-gridpos' || key === 'demo-decdiv' || key === 'demo-prob' || key === 'demo-polyarea' || key === 'demo-planttree' || key === 'demo-factor' || key === 'demo-cuboid' || key === 'demo-fracadd' || key === 'demo-rotate' || key === 'demo-findbad' || key === 'demo-radar' || key === 'demo-ratio' || key === 'demo-circle' || key === 'demo-percent' || key === 'demo-fan' || key === 'demo-lsquare' || key === 'demo-thermo' || key === 'demo-negmul' || key === 'demo-discount' || key === 'demo-cylinder' || key === 'demo-pigeon' || key === 'demo-numline' || key === 'demo-powerup' || key === 'demo-monomial' || key === 'demo-liketerms' || key === 'demo-meetline' || key === 'demo-lineseg' || key === 'demo-anglepair' || key === 'demo-vertangle' || key === 'demo-parangles' || key === 'demo-roots' || key === 'demo-coordplane' || key === 'demo-ineqline' || key === 'demo-histogram' || key === 'demo-trisides' || key === 'demo-congruent' || key === 'demo-foldmirror' || key === 'demo-algarea' || key === 'demo-algfrac' || key === 'demo-eqsieve' || key === 'demo-radical' || key === 'demo-pythag' || key === 'demo-pargram' || key === 'demo-specialquad' || key === 'demo-datastats' || key === 'demo-quad' || key === 'demo-growth' || key === 'demo-parabola' || key === 'demo-spin' || key === 'demo-circangle' || key === 'demo-tangent' || key === 'demo-sector' || key === 'demo-coin' || key === 'demo-tree' || key === 'demo-hyperbola' || key === 'demo-similar' || key === 'demo-shadow' || key === 'demo-trig' || key === 'demo-slope' || key === 'demo-project' || key === 'demo-twentyfour' || key === 'demo-monty' || key === 'demo-maxarea' || key === 'demo-matches' || key === 'demo-mobius' || key === 'demo-shopweek' || key === 'demo-fairgame' || key === 'demo-makerule' || key === 'demo-thirteen' || key === 'demo-maketen' || key === 'demo-areamul' || key === 'demo-fraceq' || key === 'demo-buildfrac' || key === 'demo-areabuild' || key === 'demo-quadmorph' || key === 'demo-numplay' || key === 'demo-fracnumline') return key;
+  if (key === 'demo-tenframe' || key === 'demo-fraction' || key === 'demo-balance' || key === 'demo-function' || key === 'demo-count' || key === 'demo-position' || key === 'demo-split' || key === 'demo-addsub' || key === 'demo-solids' || key === 'demo-bundle' || key === 'demo-clock' || key === 'demo-tangram' || key === 'demo-sort' || key === 'demo-hundred' || key === 'demo-shop' || key === 'demo-place' || key === 'demo-pattern' || key === 'demo-ruler' || key === 'demo-estimate' || key === 'demo-angle' || key === 'demo-array' || key === 'demo-observe' || key === 'demo-time' || key === 'demo-share' || key === 'demo-motion' || key === 'demo-mixop' || key === 'demo-remain' || key === 'demo-thousand' || key === 'demo-weight' || key === 'demo-chart' || key === 'demo-logic' || key === 'demo-pair' || key === 'demo-elapsed' || key === 'demo-verify' || key === 'demo-units' || key === 'demo-times' || key === 'demo-splitmul' || key === 'demo-rectsq' || key === 'demo-venn' || key === 'demo-compass' || key === 'demo-divplace' || key === 'demo-stattable' || key === 'demo-fourgrid' || key === 'demo-area' || key === 'demo-calendar' || key === 'demo-decimal' || key === 'demo-bignum' || key === 'demo-field' || key === 'demo-protractor' || key === 'demo-areamodel' || key === 'demo-parallelogram' || key === 'demo-trialdiv' || key === 'demo-baraxis' || key === 'demo-teatime' || key === 'demo-zerodiv' || key === 'demo-laws' || key === 'demo-placeslider' || key === 'demo-tearangle' || key === 'demo-decadd' || key === 'demo-moveshape' || key === 'demo-average' || key === 'demo-chickenrabbit' || key === 'demo-crslider' || key === 'demo-crdraw' || key === 'demo-crlist' || key === 'demo-crgolden' || key === 'demo-decmul' || key === 'demo-gridpos' || key === 'demo-decdiv' || key === 'demo-prob' || key === 'demo-polyarea' || key === 'demo-planttree' || key === 'demo-factor' || key === 'demo-cuboid' || key === 'demo-fracadd' || key === 'demo-rotate' || key === 'demo-findbad' || key === 'demo-radar' || key === 'demo-ratio' || key === 'demo-circle' || key === 'demo-percent' || key === 'demo-fan' || key === 'demo-lsquare' || key === 'demo-thermo' || key === 'demo-negmul' || key === 'demo-discount' || key === 'demo-cylinder' || key === 'demo-pigeon' || key === 'demo-numline' || key === 'demo-powerup' || key === 'demo-monomial' || key === 'demo-liketerms' || key === 'demo-meetline' || key === 'demo-lineseg' || key === 'demo-anglepair' || key === 'demo-vertangle' || key === 'demo-parangles' || key === 'demo-roots' || key === 'demo-coordplane' || key === 'demo-ineqline' || key === 'demo-histogram' || key === 'demo-trisides' || key === 'demo-congruent' || key === 'demo-foldmirror' || key === 'demo-algarea' || key === 'demo-algfrac' || key === 'demo-eqsieve' || key === 'demo-radical' || key === 'demo-pythag' || key === 'demo-pargram' || key === 'demo-specialquad' || key === 'demo-datastats' || key === 'demo-quad' || key === 'demo-growth' || key === 'demo-parabola' || key === 'demo-spin' || key === 'demo-circangle' || key === 'demo-tangent' || key === 'demo-sector' || key === 'demo-coin' || key === 'demo-tree' || key === 'demo-hyperbola' || key === 'demo-similar' || key === 'demo-shadow' || key === 'demo-trig' || key === 'demo-slope' || key === 'demo-project' || key === 'demo-twentyfour' || key === 'demo-monty' || key === 'demo-maxarea' || key === 'demo-matches' || key === 'demo-mobius' || key === 'demo-shopweek' || key === 'demo-fairgame' || key === 'demo-makerule' || key === 'demo-thirteen' || key === 'demo-maketen' || key === 'demo-areamul' || key === 'demo-fraceq' || key === 'demo-buildfrac' || key === 'demo-areabuild' || key === 'demo-quadmorph' || key === 'demo-numplay' || key === 'demo-fracnumline') return key;
   if (key === 'why') return 'why';
   if (key === 'lab') return 'lab';
   if (key === 'review') return 'review';
@@ -10558,7 +10679,7 @@ function applyView() {
   const stepN = view === 'path-step' ? key.slice('path-step-'.length) : null;
   [...pathPanelsEl.children].forEach(el => { el.hidden = !!(stepN && el.id !== 'step-' + stepN); });
   // 互动演示：列表留演示面板；叶子只留该演示卡片；为什么小实验只留 #why 区
-  const demoLeaf = view === 'demo-tenframe' || view === 'demo-fraction' || view === 'demo-balance' || view === 'demo-function' || view === 'demo-count' || view === 'demo-position' || view === 'demo-split' || view === 'demo-addsub' || view === 'demo-solids' || view === 'demo-bundle' || view === 'demo-clock' || view === 'demo-tangram' || view === 'demo-sort' || view === 'demo-hundred' || view === 'demo-shop' || view === 'demo-place' || view === 'demo-pattern' || view === 'demo-ruler' || view === 'demo-estimate' || view === 'demo-angle' || view === 'demo-array' || view === 'demo-observe' || view === 'demo-time' || view === 'demo-share' || view === 'demo-motion' || view === 'demo-mixop' || view === 'demo-remain' || view === 'demo-thousand' || view === 'demo-weight' || view === 'demo-chart' || view === 'demo-logic' || view === 'demo-pair' || view === 'demo-elapsed' || view === 'demo-verify' || view === 'demo-units' || view === 'demo-times' || view === 'demo-splitmul' || view === 'demo-rectsq' || view === 'demo-venn' || view === 'demo-compass' || view === 'demo-divplace' || view === 'demo-stattable' || view === 'demo-fourgrid' || view === 'demo-area' || view === 'demo-calendar' || view === 'demo-decimal' || view === 'demo-bignum' || view === 'demo-field' || view === 'demo-protractor' || view === 'demo-areamodel' || view === 'demo-parallelogram' || view === 'demo-trialdiv' || view === 'demo-baraxis' || view === 'demo-teatime' || view === 'demo-zerodiv' || view === 'demo-laws' || view === 'demo-placeslider' || view === 'demo-tearangle' || view === 'demo-decadd' || view === 'demo-moveshape' || view === 'demo-average' || view === 'demo-chickenrabbit' || view === 'demo-decmul' || view === 'demo-gridpos' || view === 'demo-decdiv' || view === 'demo-prob' || view === 'demo-polyarea' || view === 'demo-planttree' || view === 'demo-factor' || view === 'demo-cuboid' || view === 'demo-fracadd' || view === 'demo-rotate' || view === 'demo-findbad' || view === 'demo-radar' || view === 'demo-ratio' || view === 'demo-circle' || view === 'demo-percent' || view === 'demo-fan' || view === 'demo-lsquare' || view === 'demo-thermo' || view === 'demo-negmul' || view === 'demo-discount' || view === 'demo-cylinder' || view === 'demo-pigeon' || view === 'demo-numline' || view === 'demo-powerup' || view === 'demo-monomial' || view === 'demo-liketerms' || view === 'demo-meetline' || view === 'demo-lineseg' || view === 'demo-anglepair' || view === 'demo-vertangle' || view === 'demo-parangles' || view === 'demo-roots' || view === 'demo-coordplane' || view === 'demo-ineqline' || view === 'demo-histogram' || view === 'demo-trisides' || view === 'demo-congruent' || view === 'demo-foldmirror' || view === 'demo-algarea' || view === 'demo-algfrac' || view === 'demo-eqsieve' || view === 'demo-radical' || view === 'demo-pythag' || view === 'demo-pargram' || view === 'demo-specialquad' || view === 'demo-datastats' || view === 'demo-quad' || view === 'demo-growth' || view === 'demo-parabola' || view === 'demo-spin' || view === 'demo-circangle' || view === 'demo-tangent' || view === 'demo-sector' || view === 'demo-coin' || view === 'demo-tree' || view === 'demo-hyperbola' || view === 'demo-similar' || view === 'demo-shadow' || view === 'demo-trig' || view === 'demo-slope' || view === 'demo-project' || view === 'demo-twentyfour' || view === 'demo-monty' || view === 'demo-maxarea' || view === 'demo-matches' || view === 'demo-mobius' || view === 'demo-shopweek' || view === 'demo-fairgame' || view === 'demo-makerule' || view === 'demo-thirteen' || view === 'demo-maketen' || view === 'demo-areamul' || view === 'demo-fraceq' || view === 'demo-buildfrac' || view === 'demo-areabuild' || view === 'demo-quadmorph' || view === 'demo-numplay' || view === 'demo-fracnumline';
+  const demoLeaf = view === 'demo-tenframe' || view === 'demo-fraction' || view === 'demo-balance' || view === 'demo-function' || view === 'demo-count' || view === 'demo-position' || view === 'demo-split' || view === 'demo-addsub' || view === 'demo-solids' || view === 'demo-bundle' || view === 'demo-clock' || view === 'demo-tangram' || view === 'demo-sort' || view === 'demo-hundred' || view === 'demo-shop' || view === 'demo-place' || view === 'demo-pattern' || view === 'demo-ruler' || view === 'demo-estimate' || view === 'demo-angle' || view === 'demo-array' || view === 'demo-observe' || view === 'demo-time' || view === 'demo-share' || view === 'demo-motion' || view === 'demo-mixop' || view === 'demo-remain' || view === 'demo-thousand' || view === 'demo-weight' || view === 'demo-chart' || view === 'demo-logic' || view === 'demo-pair' || view === 'demo-elapsed' || view === 'demo-verify' || view === 'demo-units' || view === 'demo-times' || view === 'demo-splitmul' || view === 'demo-rectsq' || view === 'demo-venn' || view === 'demo-compass' || view === 'demo-divplace' || view === 'demo-stattable' || view === 'demo-fourgrid' || view === 'demo-area' || view === 'demo-calendar' || view === 'demo-decimal' || view === 'demo-bignum' || view === 'demo-field' || view === 'demo-protractor' || view === 'demo-areamodel' || view === 'demo-parallelogram' || view === 'demo-trialdiv' || view === 'demo-baraxis' || view === 'demo-teatime' || view === 'demo-zerodiv' || view === 'demo-laws' || view === 'demo-placeslider' || view === 'demo-tearangle' || view === 'demo-decadd' || view === 'demo-moveshape' || view === 'demo-average' || view === 'demo-chickenrabbit' || view === 'demo-crslider' || view === 'demo-crdraw' || view === 'demo-crlist' || view === 'demo-crgolden' || view === 'demo-decmul' || view === 'demo-gridpos' || view === 'demo-decdiv' || view === 'demo-prob' || view === 'demo-polyarea' || view === 'demo-planttree' || view === 'demo-factor' || view === 'demo-cuboid' || view === 'demo-fracadd' || view === 'demo-rotate' || view === 'demo-findbad' || view === 'demo-radar' || view === 'demo-ratio' || view === 'demo-circle' || view === 'demo-percent' || view === 'demo-fan' || view === 'demo-lsquare' || view === 'demo-thermo' || view === 'demo-negmul' || view === 'demo-discount' || view === 'demo-cylinder' || view === 'demo-pigeon' || view === 'demo-numline' || view === 'demo-powerup' || view === 'demo-monomial' || view === 'demo-liketerms' || view === 'demo-meetline' || view === 'demo-lineseg' || view === 'demo-anglepair' || view === 'demo-vertangle' || view === 'demo-parangles' || view === 'demo-roots' || view === 'demo-coordplane' || view === 'demo-ineqline' || view === 'demo-histogram' || view === 'demo-trisides' || view === 'demo-congruent' || view === 'demo-foldmirror' || view === 'demo-algarea' || view === 'demo-algfrac' || view === 'demo-eqsieve' || view === 'demo-radical' || view === 'demo-pythag' || view === 'demo-pargram' || view === 'demo-specialquad' || view === 'demo-datastats' || view === 'demo-quad' || view === 'demo-growth' || view === 'demo-parabola' || view === 'demo-spin' || view === 'demo-circangle' || view === 'demo-tangent' || view === 'demo-sector' || view === 'demo-coin' || view === 'demo-tree' || view === 'demo-hyperbola' || view === 'demo-similar' || view === 'demo-shadow' || view === 'demo-trig' || view === 'demo-slope' || view === 'demo-project' || view === 'demo-twentyfour' || view === 'demo-monty' || view === 'demo-maxarea' || view === 'demo-matches' || view === 'demo-mobius' || view === 'demo-shopweek' || view === 'demo-fairgame' || view === 'demo-makerule' || view === 'demo-thirteen' || view === 'demo-maketen' || view === 'demo-areamul' || view === 'demo-fraceq' || view === 'demo-buildfrac' || view === 'demo-areabuild' || view === 'demo-quadmorph' || view === 'demo-numplay' || view === 'demo-fracnumline';
   setHidden(demosSec, !(view === 'demos' || demoLeaf));
   setHidden(demoPanelsEl, view !== 'demos');
   setHidden(creativePanelsEl, view !== 'demos');
@@ -16761,6 +16882,497 @@ function crRender() {
   document.getElementById('crPlus').addEventListener('click', function () { if (crRabbits < CR_PROBS[crProbIdx].heads) crRabbits++; markTried('chickenrabbit'); crRender(); });
   document.getElementById('crAllChicken').addEventListener('click', function () { crRabbits = 0; markTried('chickenrabbit'); crRender(); });
   crRender();
+})();
+
+/* ---------- 4.16 鸡兔同笼：一个点，四种方法 ----------
+   调研（band-4-6.json 4.16）给的 4 种方法，各一个动画；旧的 chickenrabbit（步进换兔，
+   没有先猜、没有三档）照旧保留，排在点页第一个。
+   每道题都验算过：10 头 28 腿 → 兔 4 鸡 6；35 头 94 腿 → 兔 12 鸡 23；
+   24 头 74 腿 → 兔 13 鸡 11；20 头 56 腿 → 兔 8 鸡 12；8 头 22 腿 → 兔 3 鸡 5；
+   12 头 34 腿 → 兔 5 鸡 7。金鸡独立要求腿数是偶数，上面全是偶数。 */
+function crSolve(h, l) { const r = (l - 2 * h) / 2; return { r: r, c: h - r }; }
+
+/* ---- 方法一：假设法——猜了再滑 ----
+   和旧演示的区别：旧的是 +/− 步进、直接给答案；这里先猜兔的只数，再拖一条真正的滑杆，
+   笼子里的鸡一只一只变成兔，滑到目标腿数正好停住才亮答案，猜错了能看到差几条腿。 */
+const CS_PROBS = [
+  { heads: 10, legs: 28 },
+  { heads: 35, legs: 94 },
+  { heads: 24, legs: 74 }
+];
+let csProbIdx = 0, csRabbits = 0, csGuess = 2, csGuessed = false, csStreak = 0, csSolved = false, csCounted = '';
+let csTiers = null;
+function csProb() { return CS_PROBS[csProbIdx]; }
+function csLegs() { const p = csProb(); return (p.heads - csRabbits) * 2 + csRabbits * 4; }
+function csRender() {
+  const p = csProb();
+  const chickens = p.heads - csRabbits;
+  const legs = csLegs();
+  document.getElementById('csRead').textContent = '鸡 ' + chickens + ' 只，兔 ' + csRabbits + ' 只，一共 ' + legs + ' 条腿（目标 ' + p.legs + ' 条）。';
+  document.getElementById('csFill').style.width = Math.round(legs / (p.heads * 4) * 100) + '%';
+  document.getElementById('csRabbitTx').textContent = '兔 ' + csRabbits + ' 只';
+  const range = document.getElementById('csRange');
+  range.max = p.heads;
+  range.value = csRabbits;
+  const cage = document.getElementById('csCage');
+  clearChildren(cage);
+  for (let i = 0; i < p.heads; i++) {
+    const cell = document.createElement('div');
+    const rabbit = i < csRabbits;
+    cell.className = 'cr-cell' + (rabbit ? ' rabbit' : '');
+    const nm = document.createElement('div');
+    nm.textContent = rabbit ? '兔' : '鸡';
+    const lg = document.createElement('div');
+    lg.className = 'legs';
+    lg.textContent = rabbit ? '●●●●' : '●●';
+    cell.appendChild(nm);
+    cell.appendChild(lg);
+    cage.appendChild(cell);
+  }
+  document.querySelectorAll('#csProbSeg [data-cs-prob]').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(+b.dataset.csProb === csProbIdx));
+  });
+}
+function csGuessText(sol) {
+  if (!csGuessed) return '（先猜兔有几只再动手，猜得更准。）';
+  if (csGuess === sol.r) return '你猜 ' + sol.r + ' 只，猜对了！';
+  const d = (sol.r - csGuess) * 2;
+  return d > 0
+    ? '你猜 ' + csGuess + ' 只，实际是 ' + sol.r + ' 只——还差 ' + d + ' 条腿，每只兔多 2 条腿，还差 ' + (d / 2) + ' 只兔。'
+    : '你猜 ' + csGuess + ' 只，实际是 ' + sol.r + ' 只——多了 ' + (-d) + ' 条腿，兔换回 ' + (-d / 2) + ' 只鸡。';
+}
+function csSet(n) {
+  const p = csProb();
+  csRabbits = Math.max(0, Math.min(p.heads, n));
+  markTried('crslider');
+  csRender();
+  const legs = csLegs(), diff = p.legs - legs;
+  const msg = document.getElementById('csMsg');
+  if (diff === 0) {
+    const sol = crSolve(p.heads, p.legs);
+    msg.textContent = '正好 ' + p.legs + ' 条腿！兔 ' + sol.r + ' 只，鸡 ' + sol.c + ' 只——验算：' + sol.c + '×2+' + sol.r + '×4=' + p.legs + '。' + csGuessText(sol);
+    if (csGuessed) {
+      const key = csProbIdx + ':' + csGuess;
+      if (csGuess === sol.r) {
+        if (csCounted !== key) {
+          csCounted = key;
+          csStreak++;
+          if (csTiers) csTiers.done(1);
+          if (csStreak >= 2 && csTiers) csTiers.done(2);
+        }
+      } else { csStreak = 0; csCounted = ''; }
+    }
+    if (!csSolved && csTiers) csTiers.done(0);
+    if (!csSolved) {
+      csSolved = true;
+      document.getElementById('csWhy').hidden = false;
+      labTrace('鸡兔同笼·猜了再滑：' + p.heads + ' 头 ' + p.legs + ' 腿，兔 ' + sol.r + ' 只', true);
+    }
+  } else if (diff > 0) {
+    msg.textContent = '还差 ' + diff + ' 条腿：每换一只兔多 2 条腿，还要换 ' + (diff / 2) + ' 只兔。';
+  } else {
+    msg.textContent = '多了 ' + (-diff) + ' 条腿：换回去 ' + (-diff / 2) + ' 只鸡。';
+  }
+}
+function csSetGuess(n) {
+  const p = csProb();
+  csGuess = Math.max(0, Math.min(p.heads, n));
+  csGuessed = true;
+  document.getElementById('csGuessLabel').textContent = csGuess + ' 只';
+  document.getElementById('csGuessTx').textContent = '你猜兔有 ' + csGuess + ' 只。动手吧——拖滑杆，滑到目标腿数就停。';
+}
+function csNewProblem(i) {
+  csProbIdx = i;
+  csRabbits = 0; csGuessed = false; csGuess = 2; csSolved = false; csCounted = '';
+  document.getElementById('csGuessLabel').textContent = '2 只';
+  document.getElementById('csGuessTx').textContent = '头 ' + csProb().heads + ' 个，脚 ' + csProb().legs + ' 只：兔有几只？先猜一个数。';
+  document.getElementById('csMsg').textContent = '先猜要换几只兔，再拖滑杆。';
+  csRender();
+}
+(function csInit() {
+  const seg = document.getElementById('csProbSeg');
+  if (!seg) return;
+  csTiers = makeTiers(document.getElementById('csTiers'), ['基础：滑到目标腿数', '提高：猜对兔的只数', '挑战：连续两道都猜对']);
+  wireDiscovery('crslider', 'csFind', 'csFindSave', 'csFindSaved');
+  CS_PROBS.forEach(function (p, i) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = '头 ' + p.heads + ' 个，脚 ' + p.legs + ' 只';
+    b.dataset.csProb = String(i);
+    b.addEventListener('click', function () { csNewProblem(i); });
+    seg.appendChild(b);
+  });
+  document.getElementById('csGuessMinus').addEventListener('click', function () { csGuess = Math.max(0, csGuess - 1); document.getElementById('csGuessLabel').textContent = csGuess + ' 只'; });
+  document.getElementById('csGuessPlus').addEventListener('click', function () { csGuess = Math.min(csProb().heads, csGuess + 1); document.getElementById('csGuessLabel').textContent = csGuess + ' 只'; });
+  document.getElementById('csGuessSet').addEventListener('click', function () { csSetGuess(csGuess); });
+  document.getElementById('csRange').addEventListener('input', function (e) { csSet(+e.target.value); });
+  document.getElementById('csMinus').addEventListener('click', function () { csSet(csRabbits - 1); });
+  document.getElementById('csPlus').addEventListener('click', function () { csSet(csRabbits + 1); });
+  document.getElementById('csAllChicken').addEventListener('click', function () { csSet(0); });
+  csRender();
+})();
+
+/* ---- 方法二：画图法——先画 2 条腿，再 2 条 2 条补 ----
+   每个头先画 2 条腿，少的腿 2 条 2 条往上补，补满 4 条的就是兔。
+   数大了画不完（35 个头要补 12 次），自然过渡到假设法——挑战档就是这个过渡。 */
+const CD_PROBS = [
+  { heads: 8, legs: 22 },
+  { heads: 10, legs: 28 },
+  { heads: 12, legs: 34 }
+];
+let cdProbIdx = 0, cdLegs = [], cdGuess = 1, cdGuessed = false, cdSolved = false, cdBigSeen = false, cdSolved2 = false;
+let cdTiers = null;
+function cdProb() { return CD_PROBS[cdProbIdx]; }
+function cdSum() { return cdLegs.reduce(function (a, b) { return a + b; }, 0); }
+function cdRender() {
+  const p = cdProb();
+  const box = document.getElementById('cdHeads');
+  clearChildren(box);
+  cdLegs.forEach(function (legs, i) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'cr-head' + (legs === 4 ? ' rabbit' : '');
+    b.dataset.cdHead = String(i);
+    const hd = document.createElement('div');
+    hd.textContent = legs === 4 ? '兔' : '头';
+    const lg = document.createElement('div');
+    lg.textContent = legs === 4 ? '●●●●' : '●●';
+    b.appendChild(hd);
+    b.appendChild(lg);
+    b.addEventListener('click', function () { cdAddLeg(i); });
+    box.appendChild(b);
+  });
+  document.getElementById('cdRead').textContent = '一共 ' + cdSum() + ' 条腿（目标 ' + p.legs + ' 条），还差 ' + (p.legs - cdSum()) + ' 条。';
+  document.querySelectorAll('#cdProbSeg [data-cd-prob]').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(+b.dataset.cdProb === cdProbIdx));
+  });
+}
+function cdGuessText(sol) {
+  if (!cdGuessed) return '（先猜兔有几只再动手，猜得更准。）';
+  if (cdGuess === sol.r) return '你猜 ' + sol.r + ' 只，猜对了！';
+  const d = sol.r - cdGuess;
+  return d > 0
+    ? '你猜 ' + cdGuess + ' 只，实际是 ' + sol.r + ' 只——少补了 ' + d + ' 次，每次补 2 条腿。'
+    : '你猜 ' + cdGuess + ' 只，实际是 ' + sol.r + ' 只——多补了 ' + (-d) + ' 次。';
+}
+function cdAddLeg(i) {
+  const p = cdProb(), sol = crSolve(p.heads, p.legs);
+  const sum = cdSum();
+  const msg = document.getElementById('cdMsg');
+  if (sum >= p.legs) {
+    msg.textContent = '腿已经够了！再补就超过 ' + p.legs + ' 条了——数一数 4 条腿的有几只，那就是兔。';
+    return;
+  }
+  if (cdLegs[i] === 4) {
+    msg.textContent = '这只已经 4 条腿了，再补就 6 条了——兔只有 4 条腿，补到这里就停。';
+    return;
+  }
+  cdLegs[i] = 4;
+  markTried('crdraw');
+  cdRender();
+  const now = cdSum(), diff = p.legs - now;
+  if (diff === 0) {
+    cdSolved = true;
+    msg.textContent = '补满了！4 条腿的有 ' + sol.r + ' 只，就是兔；2 条腿的有 ' + sol.c + ' 只，是鸡。' + cdGuessText(sol);
+    if (cdProbIdx === 2) {
+      cdSolved2 = true;
+      if (cdBigSeen && cdTiers) cdTiers.done(2);
+      else msg.textContent += '再点“35 头怎么办”，想想大数怎么画。';
+    } else if (cdTiers) { cdTiers.done(cdProbIdx); }
+    document.getElementById('cdWhy').hidden = false;
+    labTrace('鸡兔同笼·画图补腿：' + p.heads + ' 头 ' + p.legs + ' 腿，兔 ' + sol.r + ' 只', true);
+  } else {
+    msg.textContent = '还差 ' + diff + ' 条腿：每次补 2 条，还要补 ' + (diff / 2) + ' 次。';
+  }
+}
+function cdBig() {
+  cdBigSeen = true;
+  document.getElementById('cdBigTx').textContent = '35 个头画不完吧？先全当鸡是 70 条腿，少 24 条；2 条 2 条补，要补 12 次——24÷2=12 只兔。画图法画到大数，就变成了假设法。';
+  if (cdSolved2 && cdTiers) cdTiers.done(2);
+  markTried('crdraw');
+}
+function cdSetGuess(n) {
+  const p = cdProb();
+  cdGuess = Math.max(0, Math.min(p.heads, n));
+  cdGuessed = true;
+  document.getElementById('cdGuessLabel').textContent = cdGuess + ' 只';
+  document.getElementById('cdGuessTx').textContent = '你猜兔有 ' + cdGuess + ' 只。动手吧——点一个头，给它补 2 条腿。';
+}
+function cdNewProblem(i) {
+  cdProbIdx = i;
+  cdLegs = [];
+  for (let k = 0; k < cdProb().heads; k++) cdLegs.push(2);
+  cdGuessed = false; cdGuess = 1; cdSolved = false; cdBigSeen = false; cdSolved2 = false;
+  document.getElementById('cdGuessLabel').textContent = '1 只';
+  document.getElementById('cdGuessTx').textContent = '头 ' + cdProb().heads + ' 个，脚 ' + cdProb().legs + ' 只：兔有几只？先猜一个数。';
+  document.getElementById('cdBigTx').textContent = '';
+  document.getElementById('cdMsg').textContent = '每个头先画 2 条腿，再 2 条 2 条往上补。';
+  cdRender();
+}
+(function cdInit() {
+  const seg = document.getElementById('cdProbSeg');
+  if (!seg) return;
+  cdTiers = makeTiers(document.getElementById('cdTiers'), ['基础：画出 8 头 22 腿', '提高：画出 10 头 28 腿', '挑战：画出 12 头 34 腿，再想想 35 头']);
+  wireDiscovery('crdraw', 'cdFind', 'cdFindSave', 'cdFindSaved');
+  CD_PROBS.forEach(function (p, i) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = '头 ' + p.heads + ' 个，脚 ' + p.legs + ' 只';
+    b.dataset.cdProb = String(i);
+    b.addEventListener('click', function () { cdNewProblem(i); });
+    seg.appendChild(b);
+  });
+  document.getElementById('cdGuessMinus').addEventListener('click', function () { cdGuess = Math.max(0, cdGuess - 1); document.getElementById('cdGuessLabel').textContent = cdGuess + ' 只'; });
+  document.getElementById('cdGuessPlus').addEventListener('click', function () { cdGuess = Math.min(cdProb().heads, cdGuess + 1); document.getElementById('cdGuessLabel').textContent = cdGuess + ' 只'; });
+  document.getElementById('cdGuessSet').addEventListener('click', function () { cdSetGuess(cdGuess); });
+  document.getElementById('cdBig').addEventListener('click', function () { cdBig(); });
+  cdNewProblem(0);
+})();
+
+/* ---- 方法三：列表枚举法——鸡从 0 只试到头数 ----
+   腿数一行一行变，35 头 94 腿只在 23 鸡 12 兔处对上。
+   慢但可靠：每行都写清多了还是少了，方向本身就是规律（鸡每多 1 只，腿少 2 条）。 */
+const CL_PROBS = [
+  { heads: 10, legs: 28 },
+  { heads: 20, legs: 56 },
+  { heads: 35, legs: 94 }
+];
+let clProbIdx = 0, clShown = 0, clGuess = 3, clGuessed = false, clSolved = false;
+let clTiers = null;
+function clProb() { return CL_PROBS[clProbIdx]; }
+function clHitN() { const p = clProb(); return p.heads - crSolve(p.heads, p.legs).r; }
+function clRowLegs(n) { const p = clProb(); return 2 * n + 4 * (p.heads - n); }
+function clRenderRows() {
+  const p = clProb();
+  const box = document.getElementById('clRows');
+  clearChildren(box);
+  for (let n = 0; n < clShown; n++) {
+    const legs = clRowLegs(n);
+    const row = document.createElement('div');
+    const hit = legs === p.legs;
+    row.className = 'cr-row' + (hit ? ' hit' : '');
+    row.textContent = '鸡 ' + n + ' 只 · 兔 ' + (p.heads - n) + ' 只 · 腿 ' + legs + ' 条' +
+      (hit ? ' ✓ 正好' : (legs > p.legs ? '（多了 ' + (legs - p.legs) + ' 条）' : '（少了 ' + (p.legs - legs) + ' 条）'));
+    box.appendChild(row);
+  }
+  document.getElementById('clRead').textContent = clShown === 0
+    ? '还没有试，目标 ' + p.legs + ' 条腿。'
+    : '已经试了 ' + clShown + ' 行（鸡 0 只到鸡 ' + (clShown - 1) + ' 只），目标 ' + p.legs + ' 条腿。' +
+      (clShown >= 3 ? '看出来了吗：鸡每多 1 只，腿就少 2 条。' : '');
+  document.querySelectorAll('#clProbSeg [data-cl-prob]').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(+b.dataset.clProb === clProbIdx));
+  });
+}
+function clGuessText(sol) {
+  if (!clGuessed) return '（先猜鸡有几只再试，猜得更准。）';
+  if (clGuess === sol.c) return '你猜鸡 ' + sol.c + ' 只，猜对了！';
+  const d = clRowLegs(clGuess) - clProb().legs;
+  return d > 0
+    ? '你猜鸡 ' + clGuess + ' 只，腿是 ' + clRowLegs(clGuess) + ' 条，多了 ' + d + ' 条——鸡太少了，腿多了就要加鸡。'
+    : '你猜鸡 ' + clGuess + ' 只，腿是 ' + clRowLegs(clGuess) + ' 条，少了 ' + (-d) + ' 条——鸡太多了，腿少了就要减鸡。';
+}
+function clCheckSolved() {
+  const p = clProb();
+  if (clSolved || clHitN() >= clShown) return;
+  clSolved = true;
+  const sol = crSolve(p.heads, p.legs);
+  document.getElementById('clMsg').textContent = '表里找到了：鸡 ' + sol.c + ' 只，兔 ' + sol.r + ' 只，腿正好 ' + p.legs + ' 条。' + clGuessText(sol);
+  if (clTiers) clTiers.done(clProbIdx);
+  document.getElementById('clWhy').hidden = false;
+  labTrace('鸡兔同笼·列表枚举：' + p.heads + ' 头 ' + p.legs + ' 腿，兔 ' + sol.r + ' 只', true);
+}
+function clNext() {
+  const p = clProb();
+  if (clShown > p.heads) { document.getElementById('clMsg').textContent = '都试完了，只有一行正好。'; return; }
+  const n = clShown;
+  clShown++;
+  markTried('crlist');
+  clRenderRows();
+  const legs = clRowLegs(n);
+  if (legs !== p.legs) {
+    document.getElementById('clMsg').textContent = '鸡 ' + n + ' 只，腿 ' + legs + ' 条，' +
+      (legs > p.legs ? '多了 ' + (legs - p.legs) + ' 条：鸡太少了，加 1 只鸡，腿就少 2 条。' : '少了 ' + (p.legs - legs) + ' 条：鸡太多了，减 1 只鸡，腿就多 2 条。');
+  }
+  clCheckSolved();
+}
+function clSetGuess(n) {
+  const p = clProb();
+  clGuess = Math.max(0, Math.min(p.heads, n));
+  clGuessed = true;
+  document.getElementById('clGuessLabel').textContent = clGuess + ' 只';
+  document.getElementById('clGuessTx').textContent = '你猜鸡有 ' + clGuess + ' 只。跳到那一行看看，对不对。';
+}
+function clJump() {
+  if (!clGuessed) clSetGuess(clGuess);
+  clShown = Math.max(clShown, clGuess + 1);
+  markTried('crlist');
+  clRenderRows();
+  const p = clProb();
+  const legs = clRowLegs(clGuess);
+  if (legs !== p.legs) {
+    document.getElementById('clMsg').textContent = '鸡 ' + clGuess + ' 只，腿 ' + legs + ' 条，' +
+      (legs > p.legs ? '多了 ' + (legs - p.legs) + ' 条：鸡太少了，继续往下试，腿会越来越少。' : '少了 ' + (p.legs - legs) + ' 条：鸡太多了，跳过头了，正好的那行在上面。');
+  }
+  clCheckSolved();
+}
+function clNewProblem(i) {
+  clProbIdx = i;
+  clShown = 0; clGuessed = false; clGuess = 3; clSolved = false;
+  document.getElementById('clGuessLabel').textContent = '3 只';
+  document.getElementById('clGuessTx').textContent = '头 ' + clProb().heads + ' 个，脚 ' + clProb().legs + ' 只：鸡有几只？先猜一个数。';
+  document.getElementById('clMsg').textContent = '鸡从 0 只开始，一行一行试下去。';
+  clRenderRows();
+}
+(function clInit() {
+  const seg = document.getElementById('clProbSeg');
+  if (!seg) return;
+  clTiers = makeTiers(document.getElementById('clTiers'), ['基础：试出 10 头 28 腿', '提高：试出 20 头 56 腿', '挑战：试出 35 头 94 腿']);
+  wireDiscovery('crlist', 'clFind', 'clFindSave', 'clFindSaved');
+  CL_PROBS.forEach(function (p, i) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = '头 ' + p.heads + ' 个，脚 ' + p.legs + ' 只';
+    b.dataset.clProb = String(i);
+    b.addEventListener('click', function () { clNewProblem(i); });
+    seg.appendChild(b);
+  });
+  document.getElementById('clGuessMinus').addEventListener('click', function () { clGuess = Math.max(0, clGuess - 1); document.getElementById('clGuessLabel').textContent = clGuess + ' 只'; });
+  document.getElementById('clGuessPlus').addEventListener('click', function () { clGuess = Math.min(clProb().heads, clGuess + 1); document.getElementById('clGuessLabel').textContent = clGuess + ' 只'; });
+  document.getElementById('clGuessSet').addEventListener('click', function () { clSetGuess(clGuess); });
+  document.getElementById('clNext').addEventListener('click', function () { clNext(); });
+  document.getElementById('clJump').addEventListener('click', function () { clJump(); });
+  document.getElementById('clReset').addEventListener('click', function () { clNewProblem(clProbIdx); });
+  clNewProblem(0);
+})();
+
+/* ---- 方法四：金鸡独立法——脚减半 ----
+   总脚数减半：鸡变 1 只脚、兔变 2 只脚，脚比头多出来的数就是兔数。
+   94÷2−35=12。脚数必须是偶数——这三道题全是偶数。 */
+const CG_PROBS = [
+  { heads: 10, legs: 28 },
+  { heads: 35, legs: 94 },
+  { heads: 24, legs: 74 }
+];
+let crgProbIdx = 0, crgGuess = 2, crgGuessed = false, crgHalved = false, crgSolved = false, crgStreak = 0, crgCounted = '';
+let crgTiers = null;
+function crgProb() { return CG_PROBS[crgProbIdx]; }
+function crgRender() {
+  const p = crgProb();
+  const heads = document.getElementById('cgHeads');
+  clearChildren(heads);
+  for (let i = 0; i < p.heads; i++) {
+    const s = document.createElement('span');
+    s.className = 'cr-dot heads';
+    s.textContent = '○';
+    heads.appendChild(s);
+  }
+  const feet = document.getElementById('cgFeet');
+  clearChildren(feet);
+  if (crgHalved) {
+    const half = p.legs / 2;
+    for (let i = 0; i < half; i++) {
+      const s = document.createElement('span');
+      s.className = 'cr-dot feet' + (i >= p.heads ? ' extra' : '');
+      s.textContent = '●';
+      feet.appendChild(s);
+    }
+  } else {
+    for (let i = 0; i < p.legs; i++) {
+      const s = document.createElement('span');
+      s.className = 'cr-dot feet dim';
+      s.textContent = '●';
+      feet.appendChild(s);
+    }
+  }
+  document.getElementById('crgRead').textContent = crgHalved
+    ? '脚减半：一共 ' + p.legs + '÷2 = ' + (p.legs / 2) + ' 只脚着地。绿点是每头 1 只脚，橙点是多出来的。'
+    : '头 ' + p.heads + ' 个，脚 ' + p.legs + ' 只：脚都在地上。先猜兔有几只，再点“金鸡独立”。';
+  document.querySelectorAll('#cgProbSeg [data-crg-prob]').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(+b.dataset.crgProb === crgProbIdx));
+  });
+}
+function crgHalf() {
+  const p = crgProb();
+  if (!crgGuessed) {
+    document.getElementById('crgMsg').textContent = '先猜兔有几只，再金鸡独立——不然你就直接看到答案了。';
+    return;
+  }
+  if (!crgHalved) {
+    crgHalved = true;
+    markTried('crgolden');
+    crgRender();
+  }
+  const sol = crSolve(p.heads, p.legs);
+  const half = p.legs / 2;
+  const expected = p.heads + crgGuess;
+  let t = '现在着地 ' + half + ' 只脚。' + p.heads + ' 个头，每个头至少 1 只脚着地，用掉 ' + p.heads + ' 只，还剩 ' + (half - p.heads) + ' 只脚——这 ' + (half - p.heads) + ' 只脚一定是兔子的，因为鸡已经只有 1 只脚了。';
+  if (crgGuess === sol.r) {
+    t += '你猜 ' + sol.r + ' 只，猜对了！';
+    const key = crgProbIdx + ':' + crgGuess;
+    if (crgCounted !== key) {
+      crgCounted = key;
+      crgStreak++;
+      if (crgTiers && crgProbIdx === 1) crgTiers.done(1);
+      if (crgStreak >= 2 && crgTiers) crgTiers.done(2);
+    }
+  } else if (expected < half) {
+    t += '你猜兔 ' + crgGuess + ' 只：着地的脚应该是 ' + expected + ' 只，可实际是 ' + half + ' 只，还差 ' + (half - expected) + ' 只脚——每只兔多 1 只脚，还差 ' + (half - expected) + ' 只兔。';
+    crgStreak = 0; crgCounted = '';
+  } else {
+    t += '你猜兔 ' + crgGuess + ' 只：着地的脚应该是 ' + expected + ' 只，可实际只有 ' + half + ' 只，多了 ' + (expected - half) + ' 只脚——每只兔多 1 只脚，兔要少 ' + (expected - half) + ' 只。';
+    crgStreak = 0; crgCounted = '';
+  }
+  document.getElementById('crgMsg').textContent = t;
+}
+function crgCalc() {
+  const p = crgProb();
+  if (!crgHalved) {
+    document.getElementById('crgMsg').textContent = '先点“金鸡独立”，让脚减半，再算。';
+    return;
+  }
+  if (crgSolved) return;
+  crgSolved = true;
+  const sol = crSolve(p.heads, p.legs);
+  const half = p.legs / 2;
+  document.getElementById('crgMsg').textContent = '兔 = ' + half + ' − ' + p.heads + ' = ' + sol.r + ' 只，鸡 = ' + p.heads + ' − ' + sol.r + ' = ' + sol.c + ' 只。验算：' + sol.c + '×2+' + sol.r + '×4=' + p.legs + '。';
+  if (crgTiers) crgTiers.done(0);
+  document.getElementById('cgWhy').hidden = false;
+  labTrace('鸡兔同笼·金鸡独立：' + p.heads + ' 头 ' + p.legs + ' 腿，兔 ' + sol.r + ' 只', true);
+}
+function crgSetGuess(n) {
+  const p = crgProb();
+  crgGuess = Math.max(0, Math.min(p.heads, n));
+  crgGuessed = true;
+  document.getElementById('cgGuessLabel').textContent = crgGuess + ' 只';
+  document.getElementById('cgGuessTx').textContent = '你猜兔有 ' + crgGuess + ' 只。动手吧——点“金鸡独立”。';
+}
+function crgNewProblem(i) {
+  crgProbIdx = i;
+  crgGuessed = false; crgGuess = 2; crgHalved = false; crgSolved = false; crgCounted = '';
+  document.getElementById('cgGuessLabel').textContent = '2 只';
+  document.getElementById('cgGuessTx').textContent = '头 ' + crgProb().heads + ' 个，脚 ' + crgProb().legs + ' 只：兔有几只？先猜一个数。';
+  document.getElementById('crgMsg').textContent = '先猜兔有几只，再让它们金鸡独立。';
+  crgRender();
+}
+(function crgInit() {
+  const seg = document.getElementById('cgProbSeg');
+  if (!seg) return;
+  crgTiers = makeTiers(document.getElementById('cgTiers'), ['基础：脚减半算出 10 头 28 腿', '提高：猜对 35 头 94 腿的兔数', '挑战：连续两道都猜对']);
+  wireDiscovery('crgolden', 'cgFind', 'cgFindSave', 'cgFindSaved');
+  CG_PROBS.forEach(function (p, i) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = '头 ' + p.heads + ' 个，脚 ' + p.legs + ' 只';
+    b.dataset.crgProb = String(i);
+    b.addEventListener('click', function () { crgNewProblem(i); });
+    seg.appendChild(b);
+  });
+  document.getElementById('cgGuessMinus').addEventListener('click', function () { crgGuess = Math.max(0, crgGuess - 1); document.getElementById('cgGuessLabel').textContent = crgGuess + ' 只'; });
+  document.getElementById('cgGuessPlus').addEventListener('click', function () { crgGuess = Math.min(crgProb().heads, crgGuess + 1); document.getElementById('cgGuessLabel').textContent = crgGuess + ' 只'; });
+  document.getElementById('cgGuessSet').addEventListener('click', function () { crgSetGuess(crgGuess); });
+  document.getElementById('cgHalf').addEventListener('click', function () { crgHalf(); });
+  document.getElementById('cgCalc').addEventListener('click', function () { crgCalc(); });
+  crgNewProblem(0);
 })();
 
 /* ---------- demo-decmul · 5.1 小数乘法（方法：单位正方形重叠） ----------
