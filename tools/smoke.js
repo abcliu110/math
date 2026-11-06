@@ -700,6 +700,11 @@ check('progress: per-grade rows with real numbers',
   byId.progressCard.innerHTML.includes('1 年级') && byId.progressCard.innerHTML.includes('3 年级') &&
   byId.progressCard.innerHTML.includes('演示') && byId.progressCard.innerHTML.includes('已练'));
 check('progress: all 17 demos tried by now', byId.progressCount.textContent === '17 / 17');
+// 首页不显示孤零零的“数学”面包屑，子页面显示完整面包屑
+navGo('home');
+check('home hides the lone crumb title', byId.crumbTitle.hidden === true);
+navGo('grades');
+check('sub-page shows the breadcrumb', byId.crumbTitle.hidden === false && byId.crumbTitle.innerHTML.includes('数学'));
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

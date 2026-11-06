@@ -1021,6 +1021,8 @@ function renderNav() {
   const top = navStack[navStack.length - 1];
   applyView();
   navBack.hidden = navStack.length <= 1;
+  // 首页只有一级面包屑“数学”，和品牌“数学小宇宙”重了，顶栏里看着像残字：首页藏起它，子页面再显示完整面包屑。
+  crumbTitle.hidden = top.key === 'home';
   crumbTitle.innerHTML = top.crumbs.map((c, i) =>
     i < top.crumbs.length - 1
       ? '<button class="crumb" type="button" data-crumb="' + i + '">' + esc(c) + '</button><span class="crumb-sep">›</span>'
