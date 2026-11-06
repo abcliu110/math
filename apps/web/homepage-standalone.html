@@ -1667,11 +1667,14 @@ function navGo(key) {
   // 同一族内切换（维度换维度、年级换年级、单元换单元、知识点换知识点）替换栈顶，不层层入栈：
   // 面包屑始终是「数学 › 换维度 › 某个维度」，不会越点越长。
   else if ((key.startsWith('dim-') && top.key.startsWith('dim-')) ||
-           (key.startsWith('grade-') && top.key.startsWith('grade-')) ||
+           (/^grade-\d+$/.test(key) && /^grade-\d+$/.test(top.key)) ||
            (key.startsWith('unit-') && top.key.startsWith('unit-')) ||
            (key.startsWith('point-') && top.key.startsWith('point-'))) {
     navStack[navStack.length - 1] = { key, crumbs: def.crumbs, target: def.target };
     enterNavEntry(navStack[navStack.length - 1]);
+    // 注意：年级这里不能写 startsWith('grade-')——'grade-3-mix' / 'grade-3-review' 也以 grade- 开头，
+    // 它们是 3 年级的孩子不是同级；写成前缀判断会把 3 年级从栈里换掉，面包屑就少一级，
+    // 点“3 年级”没反应、返回也会跳到选年级去（2026-11-06 真机测出）。
   }
   else {
     // 进叶子级时先补上父级（例如从首页点 3 年级面板，栈是 [首页, 选年级, 3 年级]）；
