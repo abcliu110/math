@@ -51,25 +51,26 @@ const GRADES = {
     { name: '相似与概率', topics: '相似三角形、概率初步', visual: '缩放对比、模拟实验' } ] },
 };
 
-/* ---------- 进度（原型：只记三个演示是否玩过） ---------- */
+/* ---------- 进度（原型：只记招牌演示是否玩过） ---------- */
 const tried = new Set();
-const FLAGSHIP = ['fraction', 'balance', 'function'];
+const FLAGSHIP = ['tenframe', 'fraction', 'balance', 'function'];
 // 刷新后进度还在：已体验的演示存在本地（只存本机，不上传）。
 try { JSON.parse(lsGet('math-tried-demos-v1') || '[]').forEach(k => tried.add(k)); } catch (e) {}
 function renderTried() {
-  document.getElementById('progressCount').textContent = tried.size + ' / 3';
-  document.getElementById('progressFill').style.width = (tried.size / 3 * 100) + '%';
+  const n = FLAGSHIP.length;
+  document.getElementById('progressCount').textContent = tried.size + ' / ' + n;
+  document.getElementById('progressFill').style.width = (tried.size / n * 100) + '%';
   const pf = document.getElementById('panelProgFill');
-  if (pf) pf.style.width = (tried.size / 3 * 100) + '%';
+  if (pf) pf.style.width = (tried.size / n * 100) + '%';
   const pt = document.getElementById('panelProgTx');
-  if (pt) pt.textContent = tried.size + ' / 3 个演示';
+  if (pt) pt.textContent = tried.size + ' / ' + n + ' 个演示';
   const dp = document.getElementById('panelDemoProg');
-  if (dp) dp.style.width = (tried.size / 3 * 100) + '%';
+  if (dp) dp.style.width = (tried.size / n * 100) + '%';
   const dt = document.getElementById('panelDemoTx');
-  if (dt) dt.textContent = '3 个演示 · ' + tried.size + ' 已体验';
+  if (dt) dt.textContent = n + ' 个演示 · ' + tried.size + ' 已体验';
   document.getElementById('progressText').textContent =
-    tried.size === 3 ? '三个演示都玩过了！下一步可以选一个年级做完整单元。'
-    : '已体验 ' + tried.size + ' / 3 个演示，继续玩剩下的吧。';
+    tried.size === n ? '演示都玩过了！下一步可以选一个年级做完整单元。'
+    : '已体验 ' + tried.size + ' / ' + n + ' 个演示，继续玩剩下的吧。';
 }
 function markTried(key) {
   if (!FLAGSHIP.includes(key)) return; // “为什么”小实验不计入 3 个招牌演示的进度
@@ -196,6 +197,7 @@ function renderUnit(g, ui) {
   pointDetail.querySelectorAll('[data-point]').forEach(btn =>
     btn.addEventListener('click', () => navGo('point-' + btn.dataset.point)));
 }
+const DEMO_LABEL = { fraction: '去玩分数演示', tenframe: '去玩十格阵' };
 function renderPoint(id) {
   const f = findPoint(id);
   if (!f) return;
@@ -220,7 +222,7 @@ function renderPoint(id) {
     '<div class="point-sec warn"><h4>容易错</h4><p>错法：' + esc(p.wrong) + '</p><p>为什么错：' + esc(p.wrongWhy) + '</p></div>' +
     '<div class="point-sec"><h4>看图学</h4><p>' + esc(p.visual) + '</p></div>' +
     '<div class="point-sec"><h4>动手试一试</h4><p>' + esc(p.tryIt) + '</p>' +
-    (p.demo === 'fraction' ? '<div class="btn-row"><button class="btn primary" type="button" data-demo-link="demo-fraction">去玩分数演示</button></div>' : '') + '</div>' +
+    (p.demo ? '<div class="btn-row"><button class="btn primary" type="button" data-demo-link="demo-' + esc(p.demo) + '">' + (DEMO_LABEL[p.demo] || '去玩演示') + '</button></div>' : '') + '</div>' +
     '<div class="point-sec talk"><h4>讲回来</h4><p>“' + esc(p.explainBack) + '”</p></div>' +
     '<div class="point-sec"><h4>练一练</h4><p class="muted">两道题由浅入深：第一道基础（提示直接给），第二道提高（先自己做，卡住了再点“要提示”）。答完先对答案，再告诉我你答对没、有把握没——答错的和没把握的，明天会回来找你。' + (p.olympiad ? '做完还有一道奥数挑战。' : '') + '</p>' + p.practice.map((q, i) =>
       '<div class="qa"><p>' + (i + 1) + '. ' + (q.level ? '<span class="pill">' + esc(q.level) + '</span> ' : '') + esc(q.q) + '</p>' +
@@ -599,6 +601,7 @@ const NAV_DEFS = {
   'path-step-3': { crumbs: ['数学', '学习路径', '练一练'], target: 'step-3', flash: 'step-3', action: () => showPathStep(3) },
   'path-step-4': { crumbs: ['数学', '学习路径', '测一测'], target: 'step-4', flash: 'step-4', action: () => showPathStep(4) },
   demos:      { crumbs: ['数学', '互动演示'], target: 'demos' },
+  'demo-tenframe': { crumbs: ['数学', '互动演示', '十格阵凑十'], target: 'demo-tenframe' },
   'demo-fraction': { crumbs: ['数学', '互动演示', '分数切一切'], target: 'demo-fraction' },
   'demo-balance':  { crumbs: ['数学', '互动演示', '天平解方程'], target: 'demo-balance' },
   'demo-function': { crumbs: ['数学', '互动演示', '函数滑杆'], target: 'demo-function' },
@@ -674,7 +677,7 @@ function viewForKey(key) {
   if (key === 'path') return 'path';
   if (key.startsWith('path-step-')) return 'path-step';
   if (key === 'demos') return 'demos';
-  if (key === 'demo-fraction' || key === 'demo-balance' || key === 'demo-function') return key;
+  if (key === 'demo-tenframe' || key === 'demo-fraction' || key === 'demo-balance' || key === 'demo-function') return key;
   if (key === 'why') return 'why';
   if (key === 'review') return 'review';
   if (key === 'progress') return 'progress';
@@ -711,7 +714,7 @@ function applyView() {
   const stepN = view === 'path-step' ? key.slice('path-step-'.length) : null;
   [...pathPanelsEl.children].forEach(el => { el.hidden = !!(stepN && el.id !== 'step-' + stepN); });
   // 互动演示：列表留演示面板；叶子只留该演示卡片；为什么小实验只留 #why 区
-  const demoLeaf = view === 'demo-fraction' || view === 'demo-balance' || view === 'demo-function';
+  const demoLeaf = view === 'demo-tenframe' || view === 'demo-fraction' || view === 'demo-balance' || view === 'demo-function';
   setHidden(demosSec, !(view === 'demos' || demoLeaf));
   setHidden(demoPanelsEl, view !== 'demos');
   setHidden(demoGridEl, !demoLeaf); // 演示卡片网格只在某一个演示的叶子视图里出现，列表视图只留演示面板
@@ -1010,6 +1013,123 @@ function drawFunc() {
 document.getElementById('kRange').addEventListener('input', () => { drawFunc(); markTried('function'); });
 document.getElementById('bRange').addEventListener('input', () => { drawFunc(); markTried('function'); });
 drawFunc();
+
+/* ---------- P0 十格阵：凑十 / 破十（1 年级招牌教法） ----------
+   加法：点右边一个圆点，把它搬到左边凑成 10（也可以拖过去）；减法：点满 10 的格子
+   里的圆点拿走。凑十和破十是同一招的两面：都是围着 10 重捆。 */
+const TF_ADD = [[9, 4], [8, 5], [7, 6], [9, 7], [8, 8]];
+const TF_SUB = [[13, 5], [12, 4], [15, 8], [14, 6], [11, 7]];
+let tfMode = 'add';
+let tfProb = 0;
+let tfA = 9, tfB = 4; // 加法：A 框个数，B 框个数；减法：A 框是满 10 框里剩的，B 是零散个数
+let tfTaken = 0; // 减法：已经拿走了几个
+const tfAEl = document.getElementById('tfA');
+const tfBEl = document.getElementById('tfB');
+const tfCells = { A: [], B: [] };
+let tfDrag = null;
+function tfCellClick(f, i) {
+  if (tfMode === 'add' && f === 'B' && i < tfB) tfMoveOne();
+  else if (tfMode === 'sub' && f === 'A' && i < tfA) tfTakeOne();
+}
+function tfCellDown(f, i) {
+  // 只支持加法从 B 框拖到 A 框；减法拿走直接点。
+  if (tfMode === 'add' && f === 'B' && i < tfB) {
+    tfDrag = { f, i };
+    tfCells.B[i].classList.add('dragging');
+  }
+}
+function tfCellUp(f) {
+  if (!tfDrag) return;
+  tfCells[tfDrag.f][tfDrag.i].classList.remove('dragging');
+  const ok = tfMode === 'add' && tfDrag.f === 'B' && f === 'A';
+  tfDrag = null;
+  if (ok) tfMoveOne();
+}
+['A', 'B'].forEach(f => {
+  const box = f === 'A' ? tfAEl : tfBEl;
+  for (let i = 0; i < 10; i++) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'tf-cell' + (f === 'B' ? ' b' : '');
+    b.setAttribute('aria-label', (f === 'A' ? '第一个格子第 ' : '第二个格子第 ') + (i + 1) + ' 格');
+    b.addEventListener('click', () => tfCellClick(f, i));
+    b.addEventListener('pointerdown', () => tfCellDown(f, i));
+    b.addEventListener('pointerup', () => tfCellUp(f));
+    box.appendChild(b);
+    tfCells[f].push(b);
+  }
+});
+function tfMoveOne() {
+  if (tfA >= 10 || tfB <= 0) return;
+  tfA++; tfB--;
+  tfRender(); markTried('tenframe');
+}
+function tfTakeOne() {
+  const take = TF_SUB[tfProb][1];
+  if (tfTaken >= take) return;
+  tfA--; tfTaken++;
+  tfRender(); markTried('tenframe');
+}
+function tfAuto() {
+  if (tfMode === 'add') { while (tfA < 10 && tfB > 0) { tfA++; tfB--; } }
+  else { const take = TF_SUB[tfProb][1]; while (tfTaken < take) { tfA--; tfTaken++; } }
+  tfRender(); markTried('tenframe');
+}
+function tfSetProblem(mode, idx) {
+  tfMode = mode; tfProb = idx; tfTaken = 0;
+  const list = mode === 'add' ? TF_ADD : TF_SUB;
+  tfA = mode === 'add' ? list[idx][0] : 10;
+  tfB = mode === 'add' ? list[idx][1] : list[idx][0] - 10;
+  document.querySelectorAll('#tfModeSeg [data-tf-mode]').forEach(b =>
+    b.setAttribute('aria-pressed', String(b.dataset.tfMode === mode)));
+  const seg = document.getElementById('tfProbSeg');
+  seg.innerHTML = '';
+  list.forEach((pr, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = pr[0] + (mode === 'add' ? '+' : '−') + pr[1];
+    b.setAttribute('aria-pressed', String(i === idx));
+    b.addEventListener('click', () => tfSetProblem(mode, i));
+    seg.appendChild(b);
+  });
+  document.getElementById('tfAuto').textContent = mode === 'add' ? '凑十！' : '破十！';
+  tfRender();
+}
+function tfRender() {
+  tfCells.A.forEach((c, i) => c.classList.toggle('filled', i < tfA));
+  tfCells.B.forEach((c, i) => c.classList.toggle('filled', i < tfB));
+  const eq = document.getElementById('tfEq');
+  const note = document.getElementById('tfNote');
+  document.getElementById('tfLabelA').textContent =
+    tfMode === 'add' ? '第一个格子 · ' + tfA + ' 个' : '满 10 的格子 · 还剩 ' + tfA + ' 个';
+  document.getElementById('tfLabelB').textContent =
+    tfMode === 'add' ? '第二个格子 · ' + tfB + ' 个' : '零散的 · ' + tfB + ' 个';
+  if (tfMode === 'add') {
+    const pr = TF_ADD[tfProb];
+    if (tfA < 10) {
+      eq.textContent = pr[0] + ' + ' + pr[1] + ' = ?';
+      note.textContent = '还差 ' + (10 - tfA) + ' 个满 10：点右边一个圆点搬过来，或点“凑十！”。也可以拖过去。';
+    } else {
+      eq.textContent = pr[0] + ' + ' + pr[1] + ' = ' + (10 + tfB);
+      note.textContent = '10 + ' + tfB + ' = ' + (10 + tfB) + '。' + pr[0] + ' 凑成 10 之后，剩下 ' + tfB + ' 个，不用一个一个数了。';
+    }
+  } else {
+    const pr = TF_SUB[tfProb];
+    const take = pr[1];
+    if (tfTaken < take) {
+      eq.textContent = pr[0] + ' − ' + take + ' = ?';
+      note.textContent = '已经拿走 ' + tfTaken + ' 个，还要拿 ' + (take - tfTaken) + ' 个：点上面满格里的圆点。';
+    } else {
+      eq.textContent = pr[0] + ' − ' + take + ' = ' + (10 - take + tfB);
+      note.textContent = '(10 − ' + take + ') + ' + tfB + ' = ' + (10 - take + tfB) + '。先从 10 里拿走，再加零散的 ' + tfB + ' 个。';
+    }
+  }
+}
+document.querySelectorAll('#tfModeSeg [data-tf-mode]').forEach(b =>
+  b.addEventListener('click', () => tfSetProblem(b.dataset.tfMode, 0)));
+document.getElementById('tfAuto').addEventListener('click', tfAuto);
+document.getElementById('tfReset').addEventListener('click', () => tfSetProblem(tfMode, tfProb));
+tfSetProblem('add', 0);
 
 /* ---------- 为什么小实验 ---------- */
 // 进位：从 8 个一开始，+1 到 10 就打包成 1 个十

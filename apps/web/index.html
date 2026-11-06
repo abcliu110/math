@@ -17,7 +17,7 @@
       <span class="brand-text"><strong>数学小宇宙</strong><small>小学 1–6 · 初中 7–9 · 动手玩懂数学</small></span>
     </button>
     <h1 class="crumb-title" id="crumbTitle" aria-label="当前位置">数学</h1>
-    <div class="progress-chip" id="progressChip" title="已体验的演示">已体验 <b id="progressCount">0 / 3</b> 个演示</div>
+    <div class="progress-chip" id="progressChip" title="已体验的演示">已体验 <b id="progressCount">0 / 4</b> 个演示</div>
   </div>
 </header>
 
@@ -76,9 +76,9 @@
       <button class="panel" type="button" data-nav-key="grades"><span class="panel-icon" aria-hidden="true">1–9</span><b>选年级</b><span class="panel-sub">1–9 年级 · 按学期走</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">9 个年级</span></button>
       <button class="panel" type="button" data-nav-key="dimensions"><span class="panel-icon" aria-hidden="true">◇</span><b>换维度</b><span class="panel-sub">同一批内容换个分法</span><span class="panel-prog"><i style="width:20%"></i></span><span class="panel-tx">5 个维度</span></button>
       <button class="panel" type="button" data-nav-key="path"><span class="panel-icon" aria-hidden="true">→</span><b>学习路径</b><span class="panel-sub">动手 → 说一说 → 练 → 测</span><span class="panel-prog"><i style="width:25%"></i></span><span class="panel-tx">每课四步</span></button>
-      <button class="panel" type="button" data-nav-key="demos"><span class="panel-icon" aria-hidden="true">✦</span><b>互动演示</b><span class="panel-sub">分数、天平、函数都能玩</span><span class="panel-prog"><i id="panelDemoProg" style="width:0%"></i></span><span class="panel-tx" id="panelDemoTx">3 个演示 · 0 已体验</span></button>
+      <button class="panel" type="button" data-nav-key="demos"><span class="panel-icon" aria-hidden="true">✦</span><b>互动演示</b><span class="panel-sub">分数、天平、函数、十格阵都能玩</span><span class="panel-prog"><i id="panelDemoProg" style="width:0%"></i></span><span class="panel-tx" id="panelDemoTx">4 个演示 · 0 已体验</span></button>
       <button class="panel" type="button" data-nav-key="review"><span class="panel-icon" aria-hidden="true">✎</span><b>错题本</b><span class="panel-sub">错题连当时的图一起存</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">2 条示例</span></button>
-      <button class="panel" type="button" data-nav-key="progress"><span class="panel-icon" aria-hidden="true">●</span><b>我的进度</b><span class="panel-sub">玩过的演示点亮一格</span><span class="panel-prog"><i id="panelProgFill" style="width:0%"></i></span><span class="panel-tx" id="panelProgTx">0 / 3 个演示</span></button>
+      <button class="panel" type="button" data-nav-key="progress"><span class="panel-icon" aria-hidden="true">●</span><b>我的进度</b><span class="panel-sub">玩过的演示点亮一格</span><span class="panel-prog"><i id="panelProgFill" style="width:0%"></i></span><span class="panel-tx" id="panelProgTx">0 / 4 个演示</span></button>
     </div>
   </section>
 
@@ -115,9 +115,10 @@
 
   <!-- Featured demos -->
   <section id="demos" class="section wrap">
-    <h2>互动演示 · 先玩这三个</h2>
+    <h2>互动演示 · 先玩这四个</h2>
     <p class="section-sub">点一块面板进一个演示，都是我们自己画的图、自己写的例子。能点的都请点一点、拖一拖。</p>
     <div class="panels" id="demoPanels" aria-label="互动演示面板">
+      <button class="panel" type="button" data-nav-key="demo-tenframe"><span class="panel-icon" aria-hidden="true">▦</span><b>十格阵凑十</b><span class="panel-sub">点 1 个凑成 10，9+4 就好算了</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1–2 年级 · 加减法</span></button>
       <button class="panel" type="button" data-nav-key="demo-fraction"><span class="panel-icon" aria-hidden="true">3/4</span><b>分数切一切</b><span class="panel-sub">切饼、落数轴，3/4 = 6/8</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">3–5 年级 · 分数</span></button>
       <button class="panel" type="button" data-nav-key="demo-balance"><span class="panel-icon" aria-hidden="true">＝</span><b>天平解方程</b><span class="panel-sub">两边一起动，才保持平衡</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">5–7 年级 · 方程</span></button>
       <button class="panel" type="button" data-nav-key="demo-function"><span class="panel-icon" aria-hidden="true">k·x</span><b>函数 k / b 滑杆</b><span class="panel-sub">拖滑杆，直线、表格一起变</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">7–8 年级 · 函数</span></button>
@@ -125,6 +126,30 @@
     </div>
 
     <div class="demo-grid" id="demoGrid">
+      <!-- P0 Ten-frame -->
+      <article class="demo-card" id="demo-tenframe">
+        <p class="demo-tag">P0 · 1–2 年级 · 20以内加减法</p>
+        <h3>十格阵：凑 1 个成 10</h3>
+        <p>9 + 4 怎么算？从右边拿 1 个给 9，9 就凑成 10，剩下 3，就是 13。点右边一个圆点，把它搬到左边；也可以直接点“凑十”。</p>
+        <div class="control-row"><span>先选玩法</span><div class="seg" id="tfModeSeg">
+          <button type="button" data-tf-mode="add" aria-pressed="true">加法 · 凑十</button>
+          <button type="button" data-tf-mode="sub" aria-pressed="false">减法 · 破十</button>
+        </div></div>
+        <div class="control-row"><span>选一道题</span><div class="seg" id="tfProbSeg"></div></div>
+        <div class="tenframe-wrap">
+          <div><p class="tf-label" id="tfLabelA">第一个格子</p><div class="tenframe" id="tfA"></div></div>
+          <div><p class="tf-label" id="tfLabelB">第二个格子</p><div class="tenframe" id="tfB"></div></div>
+        </div>
+        <p class="func-eq" id="tfEq">9 + 4 = ?</p>
+        <p id="tfNote">点右边一个圆点，把它搬到左边凑成 10。</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="tfAuto" type="button">凑十！</button>
+          <button class="btn small ghost" id="tfReset" type="button">重来</button>
+        </div>
+        <p class="demo-foot">成功标准：不用数手指，说出 9 + 4 为什么是 13，13 − 5 为什么是 8。</p>
+        <p class="why"><b>为什么？</b>10 是整捆，凑成 10 之后就不用一个一个数了。加法是“拿 1 个给 9 凑成 10”，减法反过来，是“从 10 里拿走，再加剩下的 3”。凑十和破十是同一招的两面。</p>
+      </article>
+
       <!-- P1 Fraction -->
       <article class="demo-card" id="demo-fraction">
         <p class="demo-tag">P1 · 3–5 年级 · 分数</p>
