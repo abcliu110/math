@@ -470,6 +470,57 @@ check('exam: wrong points show up in today review the same day',
 navGo('home');
 check('exam: leaving exam hides the exam section', byId.exam.hidden === true);
 
+// 模拟测修复（真机复测 A/B/D）：分步题必出、计时不回跳、换数字题进模拟测。
+// A · 分步题必出：学过只剩 3.12（没有分步题）时，连续 5 套题里每套都至少有一道分步题
+// （改前是纯随机抽，3.12 一套里没有分步题就整套都没有；桩内容里只有 3.7 有分步题）。
+const origLearnedAB = sandbox.learnedPointIds;
+sandbox.learnedPointIds = () => new Set(['3.12']);
+Math.random = () => 0;
+let examStepOk = true;
+for (let s = 0; s < 5; s++) {
+  if (!sandbox.pickExamQuestions().qs.some(x => x.q && x.q.steps && x.q.steps.length)) examStepOk = false;
+}
+check('exam: every set contains a step question even when no learned point has steps', examStepOk);
+// D · 换数字题进模拟测：抽题走参数化出题路径（改前这条路一直都在，这里是防退化锁），
+// 题面带“换数字再练”药丸（和混着练一样一眼能认出来）；生成题答错了记下当初那组数字。
+const examQgenSet = sandbox.pickExamQuestions();
+check('exam: qgen-type learned point yields a generated variant (type set)',
+  examQgenSet.qs.some(x => x.q && x.q.type));
+navGo('exam');
+clickExam(examBtn({ examBegin: '1' }));
+let examTagSeen = false;
+for (let i = 0; i < 5; i++) {
+  const isGen = examDetail.innerHTML.includes('换数字再练');
+  if (isGen) examTagSeen = true;
+  examMarkCurrent(!isGen); // 生成题标错、别的标对：正好验一把错题记数
+  if (i < 4) clickExam(examBtn({ examNext: '1' }));
+}
+check('exam: a generated variant in the set shows the 换数字再练 pill', examTagSeen);
+clickExam(examBtn({ examSubmit: '1' })); // 5 道都标完了，直接出报告
+check('exam: submitting a fully marked set reports directly',
+  examDetail.innerHTML.includes('模拟测报告'));
+const examFailed = JSON.parse(lsData['math-qgen-failed-v1'] || '{}')['3.12'];
+check('exam: a generated variant marked wrong is stored for exact replay',
+  examFailed && typeof examFailed.q === 'string' && examFailed.q.indexOf('一块长方形黑板') === 0);
+sandbox.learnedPointIds = origLearnedAB;
+Math.random = origRandom;
+navGo('home');
+
+// B · 计时不回跳：开考后把时间拨快 3 分半（Date.now 替身），再翻到下一题，
+// 题面上的倒计时必须是从 10:00 往下走的 06:30，而不是回到 10:00。
+// 注意：从外面读 sandbox.Date 是 undefined（vm 内建的 Date 不是沙箱的自有属性），
+// 所以不能用“存起来再赋值回去”的办法恢复——直接删掉替身，内建 Date 就回来了。
+navGo('exam');
+clickExam(examBtn({ examBegin: '1' }));
+const t0b = Date.now();
+examMarkCurrent(true);
+sandbox.Date = { now: () => t0b + 210000 };
+clickExam(examBtn({ examNext: '1' }));
+check('exam: timer keeps counting down on question render (06:30, not 10:00)',
+  examDetail.innerHTML.includes('还剩 06:30'));
+delete sandbox.Date;
+navGo('home');
+
 // ---------- 4. grade 1 ----------
 navGo('grade-1');
 check('grade-1 shows real units', gradeDetail.innerHTML.includes('20以内的进位加法') && gradeDetail.innerHTML.includes('100以内数的认识'));
@@ -2804,6 +2855,115 @@ navGo('grade-3-mix');
 check('N qgen: mix uses a generated variant for a point that has one (3.12)',
   pointDetail.innerHTML.includes('换数字再练') && pointDetail.innerHTML.includes('混着练'));
 Math.random = origRandom2;
+
+// ---------- O. G8 修复 + 计数统一 + 错题原数重做 ----------
+// 特殊的平行四边形：正方形状态下，对角线步进器显示按边长算出来的真值 8.49，
+// 侧边显示 6，不再和图上（对角线 6√2、边长 6）打架；不决定图形的步进器禁用。
+function clickSp(el) { (el._handlers.click || []).forEach(f => f()); }
+if (byId.spRectBtn.getAttribute('aria-pressed') !== 'true') clickSp(byId.spRectBtn);
+if (byId.spRhomBtn.getAttribute('aria-pressed') !== 'true') clickSp(byId.spRhomBtn);
+check('specialquad: square state shows computed diagonals 8.49 and side 6, steppers disabled',
+  byId.spD1Tx.textContent.includes('对角线 1 = 8.49') && byId.spD2Tx.textContent.includes('对角线 2 = 8.49') &&
+  byId.spBTx.textContent.includes('侧边 = 6') &&
+  byId.spD1Minus.disabled === true && byId.spD2Minus.disabled === true && byId.spBMinus.disabled === true &&
+  byId.spAMinus.disabled === false);
+check('specialquad: square read says diagonals are 6√2 ≈ 8.49',
+  byId.spRead.textContent.includes('8.49'));
+// 菱形状态：对角线 6、8 时边长是 5，底边/侧边显示 5 且禁用；对角线能调。
+clickSp(byId.spRectBtn);
+check('specialquad: rhombus state shows computed side 5, diagonals adjustable',
+  byId.spATx.textContent.includes('底边 = 5') && byId.spBTx.textContent.includes('侧边 = 5') &&
+  byId.spAMinus.disabled === true && byId.spD1Minus.disabled === false &&
+  byId.spRead.textContent.includes('边长是 5'));
+clickSp(byId.spRhomBtn);
+check('specialquad: back to parallelogram, sides adjustable again',
+  byId.spATx.textContent.includes('底边 = 6') && byId.spBTx.textContent.includes('侧边 = 4') &&
+  byId.spAMinus.disabled === false && byId.spBMinus.disabled === false);
+
+// 全等三角形：SSA 形状二的第三边 2.49 也要标在右图上（改前右边三个标签全是空的）。
+function clickCg(el) { (el._handlers.click || []).forEach(f => f()); }
+clickCg(byId.cgCondSeg.children.find(b => b.dataset.cgCond === 'ssa'));
+clickCg(byId.cgSsaSeg.children.find(b => b.dataset.cgSsa === '2'));
+check('congruent: SSA shape 2 labels its third side 2.49 on the right triangle',
+  byId.cgLabE && byId.cgLabE.textContent === '2.49');
+check('congruent: SSA shape 2 labels all three right sides (5, 2.49, 7)',
+  byId.cgLabD && byId.cgLabD.textContent === '5' && byId.cgLabF && byId.cgLabF.textContent === '7');
+
+// 计数统一：别的标签页改了已体验记录（这里模拟少一条），顶栏、面板、进度页、
+// 家长端必须同数——改前顶栏读内存集合、家长端现读存储，两边分叉。
+const triedBefore = JSON.parse(lsData['math-tried-demos-v1'] || '[]');
+const simTried = triedBefore.length ? triedBefore.slice(1) : ['tenframe'];
+const nTried = simTried.length;
+lsData['math-tried-demos-v1'] = JSON.stringify(simTried);
+sandbox.renderTried();
+navGo('parent');
+check('counter: topbar, panels, progress and parent agree after another tab writes',
+  byId.progressCount.textContent.includes(nTried + ' / 124') &&
+  byId.panelProgTx.textContent.includes(nTried + ' / 124') &&
+  byId.panelDemoTx.textContent.includes(nTried + ' 已体验') &&
+  byId.progressText.textContent.includes('已体验 ' + nTried + ' / 124') &&
+  byId.parentCard.innerHTML.includes('演示一共玩过 ' + nTried + ' / 124 个'));
+lsData['math-tried-demos-v1'] = JSON.stringify(triedBefore);
+sandbox.renderTried();
+navGo('home');
+
+// 两位数乘两位数：因数不取整十数（20×24 这种太容易）。50 次生成里两个因数都不能是整十数。
+let mul2dOk = true;
+for (let i = 0; i < 50; i++) {
+  const g = sandbox.qgenGenerate('mul-2d');
+  const m = g.q.match(/每盒装 (\d+) 支笔，买 (\d+) 盒/);
+  if (!m || (+m[1]) % 10 === 0 || (+m[2]) % 10 === 0) mul2dOk = false;
+}
+check('N qgen: mul-2d factors are never multiples of 10', mul2dOk);
+
+// 错题原数重做：换数字题答错了，下次回来先重做当初错的那组数字，
+// 而不是换一组新的——错题本就是这个道理。答对了清掉，换一题只换当前显示。
+navGo('point-3.12');
+const q1 = sandbox.qgenShown && sandbox.qgenShown['3.12'] && sandbox.qgenShown['3.12'].q;
+const gAns2 = pointDetail.querySelector('[data-qa-a="g"]'); gAns2.hidden = true;
+const gBtn2 = makeEl('button'); gBtn2.dataset.qa = 'g';
+clickPD(gBtn2);
+const gRow2 = pointDetail.querySelector('[data-qa-mark="g"]');
+gRow2.dataset.point = '3.12'; gRow2.dataset.qaMark = 'g';
+const gMarkW = makeEl('button'); gMarkW.dataset.mark = 'wrong';
+const gConfN = makeEl('button'); gConfN.dataset.conf = 'no';
+gMarkW.closest = (sel) => sel === '[data-mark]' ? gMarkW : (sel === '[data-qa-mark]' ? gRow2 : null);
+gConfN.closest = (sel) => sel === '[data-conf]' ? gConfN : (sel === '[data-qa-mark]' ? gRow2 : null);
+clickPD(gMarkW); clickPD(gConfN);
+check('N qgen: marking a generated question wrong stores its exact numbers',
+  JSON.parse(lsData['math-qgen-failed-v1'] || '{}')['3.12'] &&
+  JSON.parse(lsData['math-qgen-failed-v1'] || '{}')['3.12'].q === q1);
+navGo('home');
+navGo('point-3.12');
+check('N qgen: revisiting the point replays the exact missed numbers, not a fresh variant',
+  sandbox.qgenShown && sandbox.qgenShown['3.12'] && sandbox.qgenShown['3.12'].q === q1 &&
+  pointDetail.innerHTML.includes('上次做错的那道题'));
+const againBtn2 = makeEl('button'); againBtn2.dataset.qgenAgain = '1';
+clickPD(againBtn2);
+const q2 = sandbox.qgenShown && sandbox.qgenShown['3.12'] && sandbox.qgenShown['3.12'].q;
+check('N qgen: 换一题 shows a fresh variant while the missed one stays stored',
+  q2 && q2 !== q1 && JSON.parse(lsData['math-qgen-failed-v1'] || '{}')['3.12'].q === q1);
+navGo('home');
+navGo('point-3.12');
+check('N qgen: after 换一题, revisiting still replays the missed numbers first',
+  sandbox.qgenShown && sandbox.qgenShown['3.12'] && sandbox.qgenShown['3.12'].q === q1);
+const gAns3 = pointDetail.querySelector('[data-qa-a="g"]'); gAns3.hidden = true;
+const gBtn3 = makeEl('button'); gBtn3.dataset.qa = 'g';
+clickPD(gBtn3);
+const gRow3 = pointDetail.querySelector('[data-qa-mark="g"]');
+gRow3.dataset.point = '3.12'; gRow3.dataset.qaMark = 'g';
+const gMarkR = makeEl('button'); gMarkR.dataset.mark = 'right';
+const gConfY = makeEl('button'); gConfY.dataset.conf = 'yes';
+gMarkR.closest = (sel) => sel === '[data-mark]' ? gMarkR : (sel === '[data-qa-mark]' ? gRow3 : null);
+gConfY.closest = (sel) => sel === '[data-conf]' ? gConfY : (sel === '[data-qa-mark]' ? gRow3 : null);
+clickPD(gMarkR); clickPD(gConfY);
+check('N qgen: marking the replayed question right clears the stored miss',
+  !JSON.parse(lsData['math-qgen-failed-v1'] || '{}')['3.12']);
+navGo('home');
+navGo('point-3.12');
+check('N qgen: after clearing, the point shows a fresh variant again',
+  sandbox.qgenShown && sandbox.qgenShown['3.12'] && sandbox.qgenShown['3.12'].q !== q1 &&
+  !pointDetail.innerHTML.includes('上次做错的那道题'));
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

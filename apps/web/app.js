@@ -79,7 +79,19 @@ const ALL_DEMOS = ['tenframe', 'fraction', 'balance', 'function',
   'tree', 'hyperbola', 'similar', 'shadow', 'trig', 'slope', 'project'];
 // 刷新后进度还在：已体验的演示存在本地（只存本机，不上传）。
 try { JSON.parse(lsGet('math-tried-demos-v1') || '[]').forEach(k => tried.add(k)); } catch (e) {}
+// 已体验演示的唯一事实来源：内存里的 tried 集合。启动时从存储读一次，
+// 之后 markTried 只改集合 + 写回存储；别的标签页改了存储时，storage 事件
+// 会把集合重新同步过来。所有显示（顶栏、面板、进度页、家长端、闯关路）
+// 都读这个集合，不再各读各的存储快照——以前家长端现读存储、别处读内存，
+// 并行开两个窗口时两边数字会分叉（真机复测：39/124 对 31/124，43/109 对 42/109）。
+function syncTriedFromStorage() {
+  try {
+    const a = JSON.parse(lsGet('math-tried-demos-v1') || '[]');
+    if (Array.isArray(a)) { tried.clear(); a.forEach(k => { if (ALL_DEMOS.includes(k)) tried.add(k); }); }
+  } catch (e) {}
+}
 function renderTried() {
+  syncTriedFromStorage();
   const n = ALL_DEMOS.length;
   const pc = document.getElementById('progressCount');
   if (pc) pc.textContent = tried.size + ' / ' + n;
@@ -106,6 +118,13 @@ function markTried(key) {
     lsSet('math-tried-demos-v1', JSON.stringify([...tried]));
     renderTried();
   }
+}
+// 别的标签页改了已体验记录：同步过来、刷新所有显示（storage 事件只在
+// 改动的那个标签页之外的标签页触发，本页自己的 markTried 不走这里）。
+if (typeof window !== 'undefined' && window.addEventListener) {
+  window.addEventListener('storage', function (e) {
+    if (e && e.key === 'math-tried-demos-v1') { syncTriedFromStorage(); renderTried(); }
+  });
 }
 // 注意：首次 renderTried() 不在这里调——它会调 renderProgress()，而 reviewStore
 // 和 progressCardEl 在文件后面才初始化；首次调用放在文件末尾的初始化里。
@@ -171,8 +190,10 @@ const QGEN_DEFS = {
       hint: '从个位加起，哪一位满十就向前面进 1；也可以用减法验算：和减一个加数等于另一个加数。' };
   } },
   // 3.11 两位数乘两位数 · 基础：原题“每盒装24支笔，买13盒一共多少支？”
+  // 因数不取整十数：20×24 这种一半是整十的太容易，练不到两位数乘法。
   'mul-2d': { pointId: '3.11', level: '基础', gen: function () {
-    const a = qgenInt(12, 89), b = qgenInt(12, 89);
+    let a, b;
+    do { a = qgenInt(12, 89); b = qgenInt(12, 89); } while (a % 10 === 0 || b % 10 === 0);
     const ones = b % 10, tens = Math.floor(b / 10) * 10;
     return { key: a + 'x' + b, q: '每盒装 ' + a + ' 支笔，买 ' + b + ' 盒一共多少支？', answer: (a * b) + '支',
       hint: '先算 ' + a + ' × ' + ones + ' = ' + (a * ones) + '，再算 ' + a + ' × ' + tens + ' = ' + (a * tens) + '，加起来。' };
@@ -238,6 +259,27 @@ const QGEN_DEFS = {
 const QGEN_BY_POINT = {};
 Object.keys(QGEN_DEFS).forEach(function (t) { QGEN_BY_POINT[QGEN_DEFS[t].pointId] = t; });
 var qgenRecent = {}; // type -> 最近 8 个数字组合的 key
+/* 做错的换数字题：下次回来先重做原题。错题重做要对着当初错的那组数字——
+   换一组新的，学生没法验证自己改没改对（错题本就是这个道理）。
+   记在单独的键 math-qgen-failed-v1 里（pointId -> { q, answer, hint, level }），
+   不动 reviewStore 的结构；答对了就清掉，换一题只换当前显示、不清它。 */
+const FAILED_QGEN_KEY = 'math-qgen-failed-v1';
+function loadFailedQgen() {
+  try { const o = JSON.parse(lsGet(FAILED_QGEN_KEY) || '{}'); return o && typeof o === 'object' ? o : {}; }
+  catch (e) { return {}; }
+}
+function saveFailedQgen(o) { lsSet(FAILED_QGEN_KEY, JSON.stringify(o)); }
+function clearFailedQgen(pid) {
+  const f = loadFailedQgen();
+  if (f[pid]) { delete f[pid]; saveFailedQgen(f); }
+}
+function storeFailedQgen(pid, gq) {
+  if (!gq) return;
+  const f = loadFailedQgen();
+  f[pid] = { q: gq.q, answer: gq.answer, hint: gq.hint, level: gq.level };
+  saveFailedQgen(f);
+}
+var qgenShown = {}; // pid -> 当前显示的那道换数字题（练一练里正在看的那组数字）
 function qgenGenerate(type) {
   const def = QGEN_DEFS[type];
   if (!def) return null;
@@ -259,11 +301,16 @@ function qgenForPoint(pointId) {
 }
 /* 练一练里的换数字同类题：和原题同一套自评（索引固定用 'g'，自评键是 pointId + ':g'，
    点“看答案”才出现自评行，和原题一样）。点“换一题”只换这一块的内容，不动原题。 */
-function qgenInnerHtml(pid) {
-  const gq = qgenForPoint(pid);
+function qgenInnerHtml(pid, fresh) {
+  // 没做错过就换一组新的；做错过没改对的，先重做当初错的那组数字。
+  const failed = !fresh && loadFailedQgen()[pid];
+  const gq = failed || qgenForPoint(pid);
   if (!gq) return '<p class="muted">换数字再练：这条暂时没有换数字的题。</p>';
+  qgenShown[pid] = gq;
   return '<p><span class="pill">换数字再练</span> ' + (gq.level ? '<span class="pill">' + esc(gq.level) + '</span> ' : '') + esc(gq.q) + '</p>' +
-    '<p class="muted">同一题型，数字换过了——和上面原题是同类题，不是新题型。</p>' +
+    (failed
+      ? '<p class="muted">这是你上次做错的那道题——先把它做对，再换新的。</p>'
+      : '<p class="muted">同一题型，数字换过了——和上面原题是同类题，不是新题型。</p>') +
     '<button class="btn ghost small qa-btn" type="button" data-hint="g">要提示</button><p class="hint" data-hint-t="g" hidden>提示：' + esc(gq.hint) + '</p>' +
     '<button class="btn ghost small qa-btn" type="button" data-qa="g">看答案</button>' +
     '<p class="qa-a" data-qa-a="g" hidden>答案：' + esc(gq.answer) + '</p>' +
@@ -554,7 +601,7 @@ function renderReview() {
   const practiced = Object.keys(reviewStore).length;
   const mastered = Object.keys(reviewStore).filter(id => reviewStore[id].streak >= 2).length;
   let html = '<h3>今天复习</h3><p class="muted">练过 ' + practiced + ' 条 · 已掌握 ' + mastered + ' 条（连续答对两次算掌握）。答错和没把握的第二天回来，答对且有把握的 3 天后回来，掌握的 7 天后回来。</p>' +
-    '<div class="btn-row"><button class="btn primary" type="button" data-exam-start="1">开始模拟测（5 道题 · 10 分钟）</button></div>';
+    '<div class="btn-row"><button class="btn primary" type="button" data-exam-start="1">去模拟测</button></div>';
   if (!due.length) {
     html += '<div class="point-sec"><p>今天没有到期的复习。去练一练新的，或者点“混着练”。</p></div>';
   } else {
@@ -622,22 +669,38 @@ function pickExamQuestion(p) {
   if (gq && Math.random() < 0.5) return gq;
   return p.practice[Math.floor(Math.random() * p.practice.length)];
 }
+/* 模拟测抽题：先保证至少一道分步题（“有分步的题就一步一步标”是写在介绍里的承诺，
+   不能靠运气——原来 5 道全从学过的里随机抽，分步题常常抽不到，实测两套 10 道里一道都没有）。
+   其余按原逻辑：先学过的，再混合补足；原题和换数字同类题各一半概率。
+   fromLearned 按最后成套的题里学过的条数实算。 */
+function stepQuestionOf(p) {
+  return (p.practice || []).find(function (q) { return q.steps && q.steps.length; }) || null;
+}
 function pickExamQuestions() {
-  const learned = shuffle([...learnedPointIds()].map(id => findPoint(id)).filter(f => f).map(f => f.point));
+  const learnedIds = learnedPointIds();
+  const learnedPts = shuffle([...learnedIds].map(id => findPoint(id)).filter(f => f).map(f => f.point));
   const qs = [];
   const used = new Set();
-  learned.forEach(p => {
-    if (qs.length >= EXAM_COUNT) return;
+  const stepPool = learnedPts.filter(p => stepQuestionOf(p));
+  const stepFrom = stepPool.length ? stepPool : allPoints().filter(p => stepQuestionOf(p));
+  if (stepFrom.length) {
+    const p = stepFrom[Math.floor(Math.random() * stepFrom.length)];
+    qs.push({ pointId: p.id, title: p.title, q: stepQuestionOf(p) });
+    used.add(p.id);
+  }
+  learnedPts.forEach(p => {
+    if (qs.length >= EXAM_COUNT || used.has(p.id)) return;
     qs.push({ pointId: p.id, title: p.title, q: pickExamQuestion(p) });
     used.add(p.id);
   });
-  const fromLearned = qs.length;
   if (qs.length < EXAM_COUNT) {
     shuffle(allPoints().filter(p => !used.has(p.id))).forEach(p => {
       if (qs.length >= EXAM_COUNT) return;
       qs.push({ pointId: p.id, title: p.title, q: pickExamQuestion(p) });
+      used.add(p.id);
     });
   }
+  const fromLearned = qs.filter(x => learnedIds.has(x.pointId)).length;
   return { qs: shuffle(qs), fromLearned };
 }
 function fmtClock(ms) {
@@ -704,10 +767,10 @@ function renderExamQuestion() {
     : '<p class="muted">这套题 5 道都来自你学过的知识点。</p>';
   exam.confirmSubmit = false;
   examDetail.innerHTML = '<h3>模拟测</h3>' +
-    '<p class="exam-timer" id="examTimer">还剩 ' + fmtClock(EXAM_MS) + '</p>' +
+    '<p class="exam-timer" id="examTimer">还剩 ' + fmtClock(exam.deadline - Date.now()) + '</p>' +
     '<p class="muted">第 ' + (exam.idx + 1) + ' / ' + exam.qs.length + ' 题 · 5 道题，10 分钟；考试中不给提示和答案，答完自己标对错。时间到了自动交卷。</p>' + srcNote +
     '<div class="point-sec"><h4>' + esc(item.pointId) + ' · ' + esc(item.title) + '</h4>' +
-    '<p>' + (q.level ? '<span class="pill">' + esc(q.level) + '</span> ' : '') + esc(q.q) + '</p>' +
+    '<p>' + (q.type ? '<span class="pill">换数字再练</span> ' : '') + (q.level ? '<span class="pill">' + esc(q.level) + '</span> ' : '') + esc(q.q) + '</p>' +
     bodyHtml +
     '<p class="qa-a" data-exam-saved hidden></p>' +
     '<p class="qa-a" data-exam-remind hidden></p></div>' +
@@ -732,9 +795,12 @@ function submitExam(timedOut) {
   const rows = exam.qs.map((item, i) => {
     const m = exam.marks[i];
     const correct = m.correct === true; // 没标对错的按答错算
-    if (correct) score += EXAM_SCORE_PER_Q;
-    else {
+    if (correct) {
+      score += EXAM_SCORE_PER_Q;
+      if (item.q && item.q.type) clearFailedQgen(item.pointId);
+    } else {
       recordAttempt(item.pointId, false, false);
+      if (item.q && item.q.type) storeFailedQgen(item.pointId, item.q);
       // 模拟测里错的题今天就复习：把 due 拨到现在（练一练里答错是明天再来，考试错了马上练）。
       if (reviewStore[item.pointId]) { reviewStore[item.pointId].due = Date.now(); saveReview(); updateHomeReviewTx(); }
     }
@@ -948,7 +1014,7 @@ function renderProgress() {
   const litAll = allCp.filter(cp => cp.lit).length;
   html += '<div class="point-sec"><h4>徽章</h4><p>' + (litAll ? '已拿到 ' + litAll + ' 个徽章（点亮 ' + litAll + ' / ' + allCp.length + ' 个单元）。' : '还没有徽章。点亮一个单元（把它的任务都做完），徽章就会出现。') + '</p>' +
     '<div class="btn-row"><button class="btn primary" type="button" data-checkpoint-link="1">去闯关路看徽章墙</button></div></div>';
-  html += '<div class="btn-row"><button class="btn primary" type="button" data-exam-start="1">开始模拟测（5 道题 · 10 分钟）</button>' +
+  html += '<div class="btn-row"><button class="btn primary" type="button" data-exam-start="1">去模拟测</button>' +
     '<button class="btn ghost" type="button" data-parent-link="1">家长看这里：这周练了什么、卡在哪</button></div>';
   card.innerHTML = html;
   card.querySelectorAll('[data-exam-start]').forEach(b => b.addEventListener('click', () => navGo('exam')));
@@ -970,14 +1036,16 @@ function fmtDate(ts) {
   const d = new Date(ts);
   return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
 }
-/* 家长端每次都从存储现读，不用内存里的 reviewStore / tried：
-   这样渲染出来的数字一定和存下来的记录一致。 */
+/* 家长端每次都从存储现读，不用内存里的 reviewStore：
+   这样渲染出来的数字一定和存下来的记录一致。
+   已体验演示只读 tried 集合（loadTriedKeys 先从存储同步一次），
+   和顶栏、面板、进度页是同一份数字，不再各读各的。 */
 function loadStoredReview() {
   try { return JSON.parse(lsGet(REVIEW_KEY) || '{}') || {}; } catch (e) { return {}; }
 }
 function loadTriedKeys() {
-  try { const a = JSON.parse(lsGet('math-tried-demos-v1') || '[]'); return Array.isArray(a) ? a : []; }
-  catch (e) { return []; }
+  syncTriedFromStorage();
+  return [...tried];
 }
 function loadInquiry() {
   try { const a = JSON.parse(lsGet(INQUIRY_KEY) || '[]'); return Array.isArray(a) ? a : []; }
@@ -1320,7 +1388,7 @@ if (pointDetail) pointDetail.addEventListener('click', e => {
     const box = pointDetail.querySelector('[data-qgen-box]');
     if (box && currentPointId) {
       delete qaState[currentPointId + ':g'];
-      box.innerHTML = qgenInnerHtml(currentPointId);
+      box.innerHTML = qgenInnerHtml(currentPointId, true);
     }
     return;
   }
@@ -1375,6 +1443,11 @@ if (pointDetail) pointDetail.addEventListener('click', e => {
     const st = qaState[key];
     if (st.correct !== undefined && st.confident !== undefined) {
       const days = recordAttempt(pid, st.correct, st.confident);
+      // 换数字题：答错了记下当初那组数字，下次回来先重做它；答对了就清掉。
+      if (row.dataset.qaMark === 'g') {
+        if (st.correct) clearFailedQgen(pid);
+        else storeFailedQgen(pid, qgenShown[pid]);
+      }
       const saved = pointDetail.querySelector('[data-qa-saved="' + row.dataset.qaMark + '"]');
       if (saved) {
         saved.hidden = false;
@@ -1634,7 +1707,7 @@ function showPathStep(n) {
   const s = PATH_STEPS[n];
   if (!s || !pathDetail) return;
   pathDetail.innerHTML = '<h3>第 ' + n + ' 步 · ' + s.title + '</h3><p>' + s.desc + '</p>' +
-    (n === 4 ? '<div class="btn-row"><button class="btn primary" type="button" data-exam-start="1">开始模拟测（5 道题 · 10 分钟）</button></div>' : '');
+    (n === 4 ? '<div class="btn-row"><button class="btn primary" type="button" data-exam-start="1">去模拟测</button></div>' : '');
   pathDetail.querySelectorAll('[data-exam-start]').forEach(b => b.addEventListener('click', () => navGo('exam')));
 }
 
@@ -9189,6 +9262,19 @@ function cgRender() {
     angLab.setAttribute('x', pl[0][0] + 34); angLab.setAttribute('y', pl[0][1] - 8);
     angLab.textContent = '∠A=' + leftSpec.ang + '°';
   }
+  // 右三角形：三条边也标出来，和左边同一套算法。SSA 形状二的第三边是 2.49，
+  // 以前右边没有标签，两种形状的区别在图上看不出来。
+  const pr = right.placed;
+  const rawR = rightSpec.v;
+  const rawSidesR = [cgDist(rawR[1], rawR[2]), cgDist(rawR[0], rawR[2]), cgDist(rawR[0], rawR[1])];
+  const labsR = [document.getElementById('cgLabD'), document.getElementById('cgLabE'), document.getElementById('cgLabF')];
+  const midsR = [[(pr[1][0] + pr[2][0]) / 2 + 16, (pr[1][1] + pr[2][1]) / 2],
+    [(pr[0][0] + pr[2][0]) / 2 - 18, (pr[0][1] + pr[2][1]) / 2],
+    [(pr[0][0] + pr[1][0]) / 2, (pr[0][1] + pr[1][1]) / 2 + 20]];
+  labsR.forEach(function (lab, i) {
+    lab.setAttribute('x', midsR[i][0].toFixed(1)); lab.setAttribute('y', midsR[i][1].toFixed(1));
+    lab.textContent = fmtNum(rawSidesR[i]);
+  });
   document.getElementById('cgShapeA').textContent = cgCond === 'ssa' ? '形状一' : '△1';
   document.getElementById('cgShapeB').textContent = cgCond === 'ssa' ? (cgSsa === 1 ? '形状一' : '形状二') : '△2';
   const s = cgSide, a = cgAng;
@@ -10029,10 +10115,33 @@ let spRect = false, spRhom = false, spA = 6, spB = 4, spD1 = 6, spD2 = 8;
 function spRender() {
   document.getElementById('spRectBtn').setAttribute('aria-pressed', String(spRect));
   document.getElementById('spRhomBtn').setAttribute('aria-pressed', String(spRhom));
-  document.getElementById('spATx').textContent = '底边 = ' + spA;
-  document.getElementById('spBTx').textContent = '侧边 = ' + spB;
-  document.getElementById('spD1Tx').textContent = '对角线 1 = ' + spD1;
-  document.getElementById('spD2Tx').textContent = '对角线 2 = ' + spD2;
+  // 四个数字永远不能互相矛盾：只有真正决定当前图形的参数能调，
+  // 不决定图形的步进器禁用，标签显示按图形算出来的真值。
+  // 正方形：边长就是底边 spA，对角线都是 spA·√2；菱形：边长由两条对角线定，
+  // 是 √((D1/2)²+(D2/2)²)，底边/侧边步进器这时并不画图。
+  const spDiag = spA * Math.SQRT2;
+  const spSide = Math.sqrt(spD1 * spD1 / 4 + spD2 * spD2 / 4);
+  function spSetStepper(minusId, plusId, txId, label, enabled) {
+    document.getElementById(txId).textContent = label;
+    document.getElementById(minusId).disabled = !enabled;
+    document.getElementById(plusId).disabled = !enabled;
+  }
+  if (spRhom && spRect) {
+    spSetStepper('spAMinus', 'spAPlus', 'spATx', '底边 = ' + spA, true);
+    spSetStepper('spBMinus', 'spBPlus', 'spBTx', '侧边 = ' + spA, false);
+    spSetStepper('spD1Minus', 'spD1Plus', 'spD1Tx', '对角线 1 = ' + fmtNum(spDiag), false);
+    spSetStepper('spD2Minus', 'spD2Plus', 'spD2Tx', '对角线 2 = ' + fmtNum(spDiag), false);
+  } else if (spRhom) {
+    spSetStepper('spAMinus', 'spAPlus', 'spATx', '底边 = ' + fmtNum(spSide), false);
+    spSetStepper('spBMinus', 'spBPlus', 'spBTx', '侧边 = ' + fmtNum(spSide), false);
+    spSetStepper('spD1Minus', 'spD1Plus', 'spD1Tx', '对角线 1 = ' + spD1, true);
+    spSetStepper('spD2Minus', 'spD2Plus', 'spD2Tx', '对角线 2 = ' + spD2, true);
+  } else {
+    spSetStepper('spAMinus', 'spAPlus', 'spATx', '底边 = ' + spA, true);
+    spSetStepper('spBMinus', 'spBPlus', 'spBTx', '侧边 = ' + spB, true);
+    spSetStepper('spD1Minus', 'spD1Plus', 'spD1Tx', '对角线 1 = ' + spD1, false);
+    spSetStepper('spD2Minus', 'spD2Plus', 'spD2Tx', '对角线 2 = ' + spD2, false);
+  }
   document.getElementById('spDiagBox').hidden = !spRhom;
   const poly = document.getElementById('spPoly');
   const d1 = document.getElementById('spDiag1'), d2 = document.getElementById('spDiag2');
@@ -10053,7 +10162,7 @@ function spRender() {
     poly.setAttribute('points', pts.map(function (p) { return p[0] + ',' + p[1]; }).join(' '));
     d1.setAttribute('x1', cx - spD1 * k); d1.setAttribute('y1', cy); d1.setAttribute('x2', cx + spD1 * k); d1.setAttribute('y2', cy);
     d2.setAttribute('x1', cx); d2.setAttribute('y1', cy - spD2 * k); d2.setAttribute('x2', cx); d2.setAttribute('y2', cy + spD2 * k);
-    read = '菱形：有一组邻边相等的平行四边形。对角线互相垂直平分，面积 = 对角线乘积的一半 = ' + spD1 + '×' + spD2 + '÷2 = ' + (spD1 * spD2 / 2) + '。';
+    read = '菱形：有一组邻边相等的平行四边形。对角线互相垂直平分，面积 = 对角线乘积的一半 = ' + spD1 + '×' + spD2 + '÷2 = ' + (spD1 * spD2 / 2) + '。四条边都相等，边长是 ' + fmtNum(spSide) + '。';
     msg = '菱形面积是对角线乘积的一半：两条对角线把菱形切成了 4 个一样的小直角三角形。';
   } else {
     const u = 22, ax = 150, ay = 220;
