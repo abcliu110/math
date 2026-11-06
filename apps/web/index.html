@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>数学小宇宙 · 动手玩懂数学</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <button class="back-btn" id="navBack" type="button" hidden>← 返回</button>
+    <button class="menu-toggle" id="menuToggle" type="button" aria-controls="sideNav" aria-expanded="false">☰ 菜单</button>
+    <button class="brand" id="brandHome" type="button" aria-label="回首页">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 48 48" width="36" height="36"><circle cx="24" cy="24" r="20" fill="#ff8a3d"/><path d="M24 8 L24 40 M8 24 L40 24" stroke="#fff" stroke-width="4" stroke-linecap="round"/><circle cx="24" cy="24" r="6" fill="#fff"/></svg>
+      </span>
+      <span class="brand-text"><strong>数学小宇宙</strong><small>小学 1–6 · 初中 7–9 · 动手玩懂数学</small></span>
+    </button>
+    <h1 class="crumb-title" id="crumbTitle" aria-label="当前位置">数学</h1>
+    <div class="progress-chip" id="progressChip" title="已体验的演示">已体验 <b id="progressCount">0 / 3</b> 个演示</div>
+  </div>
+</header>
+
+<div class="app-shell">
+  <div class="nav-overlay" id="navOverlay" hidden></div>
+  <aside class="sidenav" id="sideNav" aria-label="菜单">
+    <p class="sidenav-head">菜单</p>
+    <nav id="sideMenu">
+      <div class="menu-group">
+        <p class="menu-group-title">开始</p>
+        <button class="menu-item" type="button" data-nav-key="home">首页</button>
+      </div>
+      <div class="menu-group">
+        <p class="menu-group-title">选年级</p>
+        <div id="navGrades"></div>
+      </div>
+      <div class="menu-group">
+        <p class="menu-group-title">学习路径</p>
+        <button class="menu-item" type="button" data-nav-key="path">学习路径 · 四步</button>
+        <button class="menu-subitem" type="button" data-nav-key="path-step-1">① 动手试一试</button>
+        <button class="menu-subitem" type="button" data-nav-key="path-step-2">② 说一说</button>
+        <button class="menu-subitem" type="button" data-nav-key="path-step-3">③ 练一练</button>
+        <button class="menu-subitem" type="button" data-nav-key="path-step-4">④ 测一测</button>
+      </div>
+      <div class="menu-group">
+        <p class="menu-group-title">互动演示</p>
+        <button class="menu-item" type="button" data-nav-key="demos">互动演示 · 全部</button>
+        <button class="menu-subitem" type="button" data-nav-key="demo-fraction">分数切一切</button>
+        <button class="menu-subitem" type="button" data-nav-key="demo-balance">天平解方程</button>
+        <button class="menu-subitem" type="button" data-nav-key="demo-function">函数 k / b 滑杆</button>
+        <button class="menu-subitem" type="button" data-nav-key="why">为什么小实验</button>
+      </div>
+      <div class="menu-group">
+        <p class="menu-group-title">复习与进度</p>
+        <button class="menu-item" type="button" data-nav-key="review">错题本</button>
+        <button class="menu-item" type="button" data-nav-key="progress">我的进度</button>
+      </div>
+    </nav>
+  </aside>
+
+<main id="top">
+  <!-- 模式切换：直接放在主界面上（顶栏下方、常驻可见），不在侧边栏、不在测试栏。
+       按年级是主线；按维度时，下方出现 5 个维度按钮，点一个就按该维度重分组。 -->
+  <div class="mode-bar" id="modeBar">
+    <div class="wrap mode-bar-inner">
+      <div class="mode-switch" role="tablist" aria-label="查看方式">
+        <button class="mode-btn" id="modeGrade" type="button" role="tab" aria-selected="true" data-mode="grade">按年级</button>
+        <button class="mode-btn" id="modeDim" type="button" role="tab" aria-selected="false" data-mode="dimension">按维度</button>
+      </div>
+      <div class="dim-bar mode-dims" id="dimBar" role="tablist" aria-label="维度选择" hidden></div>
+    </div>
+  </div>
+
+  <!-- Hero -->
+  <section class="hero wrap">
+    <div class="hero-copy">
+      <p class="eyebrow">可视化优先 · 复杂变简单 · 能动手就不只看</p>
+      <h1>每个抽象概念，<br>都能拖、能切、能调。</h1>
+      <p class="lead">先动手摆一摆，再看图想一想，最后才写算式。分数是切出来的，方程是天平称出来的，函数是拖出来的——不是背出来的。</p>
+      <div class="hero-actions">
+        <button class="btn primary" type="button" data-nav-key="grades">选一个年级开始</button>
+        <button class="btn ghost" type="button" data-nav-key="demos">先玩三个演示</button>
+      </div>
+      <ul class="hero-points">
+        <li>实物 → 图像 → 符号（CPA）</li>
+        <li>平板 + 桌面，触屏和键盘都好用</li>
+        <li>错了也看得见：图会告诉你错在哪</li>
+      </ul>
+    </div>
+    <div class="hero-visual" aria-hidden="true">
+      <svg viewBox="0 0 320 240" class="hero-svg">
+        <rect x="20" y="30" width="130" height="90" rx="14" fill="#fff3e6" stroke="#ff8a3d" stroke-width="3"/>
+        <text x="85" y="82" text-anchor="middle" font-size="28" fill="#c2410c">3/4</text>
+        <circle cx="230" cy="80" r="52" fill="#dbeafe" stroke="#2563eb" stroke-width="3"/>
+        <path d="M230 80 L230 28 A52 52 0 0 1 282 80 Z" fill="#2563eb"/>
+        <path d="M230 80 L282 80 A52 52 0 0 1 230 132 Z" fill="#93c5fd"/>
+        <path d="M230 80 L230 132 A52 52 0 0 1 178 80 Z" fill="#93c5fd"/>
+        <line x1="40" y1="180" x2="280" y2="180" stroke="#334155" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="220" cy="180" r="9" fill="#ff8a3d" stroke="#fff" stroke-width="3"/>
+        <text x="40" y="205" font-size="13" fill="#64748b">0</text>
+        <text x="272" y="205" font-size="13" fill="#64748b">1</text>
+        <text x="212" y="205" font-size="13" fill="#c2410c">3/4</text>
+      </svg>
+      <p class="hero-caption">同一块饼：切开是 3/4，放到数轴上还是 3/4。</p>
+    </div>
+  </section>
+
+  <!-- 模块面板：借汉字 App 首页面板的排布——大卡片、图标、标题、副文、进度条，点一块进一个模块 -->
+  <section class="section wrap" id="panels" aria-label="模块面板">
+    <h2>从这里开始</h2>
+    <p class="section-sub">点一块面板进一个模块；顶栏的「← 返回」回上一级，面包屑点哪级回哪级。</p>
+    <div class="panels">
+      <button class="panel" type="button" data-nav-key="grades"><span class="panel-icon" aria-hidden="true">1–9</span><b>选年级</b><span class="panel-sub">1–9 年级 · 按学期走</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">9 个年级</span></button>
+      <button class="panel" type="button" data-nav-key="dimensions"><span class="panel-icon" aria-hidden="true">◇</span><b>换维度</b><span class="panel-sub">同一批内容换个分法</span><span class="panel-prog"><i style="width:20%"></i></span><span class="panel-tx">5 个维度</span></button>
+      <button class="panel" type="button" data-nav-key="path"><span class="panel-icon" aria-hidden="true">→</span><b>学习路径</b><span class="panel-sub">动手 → 说一说 → 练 → 测</span><span class="panel-prog"><i style="width:25%"></i></span><span class="panel-tx">每课四步</span></button>
+      <button class="panel" type="button" data-nav-key="demos"><span class="panel-icon" aria-hidden="true">✦</span><b>互动演示</b><span class="panel-sub">分数、天平、函数都能玩</span><span class="panel-prog"><i id="panelDemoProg" style="width:0%"></i></span><span class="panel-tx" id="panelDemoTx">3 个演示 · 0 已体验</span></button>
+      <button class="panel" type="button" data-nav-key="review"><span class="panel-icon" aria-hidden="true">✎</span><b>错题本</b><span class="panel-sub">错题连当时的图一起存</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">2 条示例</span></button>
+      <button class="panel" type="button" data-nav-key="progress"><span class="panel-icon" aria-hidden="true">●</span><b>我的进度</b><span class="panel-sub">玩过的演示点亮一格</span><span class="panel-prog"><i id="panelProgFill" style="width:0%"></i></span><span class="panel-tx" id="panelProgTx">0 / 3 个演示</span></button>
+    </div>
+  </section>
+
+  <!-- Grade selector -->
+  <section id="grades" class="section wrap">
+    <h2>选年级</h2>
+    <p class="section-sub">点一个年级，看看这个年级要学什么、用什么图来学。内容按人教版课标顺序整理（待与教材逐册核对）。</p>
+    <div class="grade-grid" id="gradeGrid" role="tablist" aria-label="年级选择"></div>
+    <div class="grade-detail" id="gradeDetail" aria-live="polite"></div>
+  </section>
+
+  <!-- Dimension detail：维度内容显示在这里；切换维度用的按钮在上方主界面的模式栏里，这里只有一份切换器 -->
+  <section id="dimensions" class="section wrap">
+    <h2>换个维度看知识</h2>
+    <p class="section-sub">在上方模式栏选「按维度」，再点一个维度，同一批 1–6 年级内容就按这个维度重新分组；点一个分类看看。</p>
+    <div class="dim-detail" id="dimDetail" aria-live="polite"></div>
+    <p class="muted">说明：维度分组是本原型的整理，待与人教版教材逐册核对（待核实）；文字和例子都是原创，没有直接复制任何教程。</p>
+  </section>
+
+  <!-- Learning path -->
+  <section id="path" class="section wrap">
+    <h2>学习路径：每节课都走这四步</h2>
+    <p class="section-sub">不是先讲规则再刷题，而是先动手，再命名，再练习，最后检查。</p>
+    <ol class="path-steps">
+      <li id="step-1"><b>① 动手试一试</b><span>拖、切、拼、调，先玩出感觉。</span></li>
+      <li id="step-2"><b>② 说一说</b><span>用自己的话说出规律，再出现正式名字和符号。</span></li>
+      <li id="step-3"><b>③ 练一练</b><span>3–5 道题，都用同一张图来练，不换花样。</span></li>
+      <li id="step-4"><b>④ 测一测</b><span>小测验过关才往下走；错了回退一步，用图再讲一遍。</span></li>
+    </ol>
+  </section>
+
+  <!-- Featured demos -->
+  <section id="demos" class="section wrap">
+    <h2>互动演示 · 先玩这三个</h2>
+    <p class="section-sub">三个招牌原型，都是我们自己画的图、自己写的例子。能点的都请点一点、拖一拖。</p>
+
+    <div class="demo-grid">
+      <!-- P1 Fraction -->
+      <article class="demo-card" id="demo-fraction">
+        <p class="demo-tag">P1 · 3–5 年级 · 分数</p>
+        <h3>分数切一切，落到数轴上</h3>
+        <p>点一块饼切开，看看它在数轴上的位置。3/4 和 6/8 会落在同一个点上吗？</p>
+        <div class="fraction-controls">
+          <div class="control-row"><span>切成几份（分母）</span><div class="seg" id="denomSeg"></div></div>
+          <div class="control-row"><label for="numRange">取几份（分子） <b id="numLabel">3</b></label><input type="range" id="numRange" min="0" max="4" step="1" value="3"></div>
+        </div>
+        <div class="fraction-visual">
+          <svg id="pieSvg" viewBox="0 0 200 200" role="img" aria-label="分数圆饼图"></svg>
+          <div class="fraction-readout">
+            <div class="big-frac"><span id="fracText">3/4</span> = <span id="fracDecimal">0.75</span></div>
+            <p id="fracNote">取了 3 份，每份是 1/4。</p>
+            <p class="hint">提示：点圆饼上的一块，也可以改分子；拖数轴上的点也可以。</p>
+          </div>
+        </div>
+        <svg id="lineSvg" viewBox="0 0 320 70" class="number-line" role="img" aria-label="分数数轴">
+          <line x1="20" y1="30" x2="300" y2="30" stroke="#334155" stroke-width="3" stroke-linecap="round"/>
+          <g id="lineTicks"></g>
+          <circle id="lineDot" cx="230" cy="30" r="11" fill="#ff8a3d" stroke="#fff" stroke-width="3" style="cursor:grab; touch-action:none"/>
+          <text x="20" y="60" font-size="13" fill="#64748b">0</text>
+          <text x="292" y="60" font-size="13" fill="#64748b">1</text>
+        </svg>
+        <p class="demo-foot">成功标准：能把 3/4 和 6/8 放到同一个点，并说出为什么。</p>
+        <p class="why"><b>为什么？</b>一块饼切成 4 份取 3 份，和切成 8 份取 6 份，吃的量一样多——份数变多了，每份变小了，总量没变。所以它们在数轴上是同一个点。</p>
+      </article>
+
+      <!-- P2 Balance -->
+      <article class="demo-card" id="demo-balance">
+        <p class="demo-tag">P2 · 5–7 年级 · 方程</p>
+        <h3>天平解方程：两边要一起动</h3>
+        <p>解 <b>3x + 5 = 20</b>。只动一边天平会歪，两边一起动才保持平衡。</p>
+        <div class="balance-visual">
+          <svg id="balanceSvg" viewBox="0 0 320 190" role="img" aria-label="天平">
+            <line x1="20" y1="170" x2="300" y2="170" stroke="#94a3b8" stroke-width="4"/>
+            <line x1="160" y1="170" x2="160" y2="70" stroke="#334155" stroke-width="5"/>
+            <g id="beamGroup">
+              <line x1="50" y1="70" x2="270" y2="70" stroke="#334155" stroke-width="5" stroke-linecap="round"/>
+              <g id="leftPan"><line x1="60" y1="70" x2="60" y2="105" stroke="#64748b" stroke-width="3"/><path d="M30 105 Q60 135 90 105 Z" fill="#e2e8f0" stroke="#64748b" stroke-width="2"/><g id="leftWeights"></g></g>
+              <g id="rightPan"><line x1="260" y1="70" x2="260" y2="105" stroke="#64748b" stroke-width="3"/><path d="M230 105 Q260 135 290 105 Z" fill="#e2e8f0" stroke="#64748b" stroke-width="2"/><g id="rightWeights"></g></g>
+            </g>
+          </svg>
+          <p class="balance-eq" id="balanceEq">3x + 5 = 20</p>
+          <p id="balanceMsg">天平是平的。先试试两边同时 −5。</p>
+        </div>
+        <div class="btn-row">
+          <button class="btn small primary" id="balMinus5">两边同时 −5</button>
+          <button class="btn small primary" id="balDiv3">两边同时 ÷3</button>
+          <button class="btn small ghost" id="balWrong">只左边 −5（试试）</button>
+          <button class="btn small ghost" id="balReset">重置</button>
+        </div>
+        <p class="demo-foot">成功标准：用天平的动作解出 x = 5，再写出每一步。</p>
+        <p class="why"><b>为什么？</b>“=”不是“算出答案”，而是“两边一样重”。两边一起拿掉 5，天平还是平的；两边一起除以 3，天平还是平的。所以每一步不是背口诀，是保持平衡。</p>
+      </article>
+
+      <!-- P3 Function -->
+      <article class="demo-card" id="demo-function">
+        <p class="demo-tag">P3 · 7–8 年级 · 函数</p>
+        <h3>拖一拖 k 和 b，直线跟着动</h3>
+        <p>打车费：起步价 <b>b</b> 元，每公里 <b>k</b> 元，总价 y = kx + b。拖滑杆，看直线、表格和故事一起变。</p>
+        <div class="control-row"><label for="kRange">k（每公里） <b id="kLabel">2</b> 元/公里</label><input type="range" id="kRange" min="-3" max="4" step="0.5" value="2"></div>
+        <div class="control-row"><label for="bRange">b（起步价） <b id="bLabel">8</b> 元</label><input type="range" id="bRange" min="0" max="15" step="1" value="8"></div>
+        <p class="func-eq">y = <span id="funcK">2</span>x + <span id="funcB">8</span>　·　x = 公里，y = 总价（元）</p>
+        <canvas id="funcCanvas" width="640" height="360" aria-label="一次函数图像"></canvas>
+        <table class="func-table" id="funcTable">
+          <thead><tr><th>x（公里）</th><th>0</th><th>1</th><th>2</th><th>3</th><th>5</th></tr></thead>
+          <tbody><tr><th>y（元）</th><td id="y0"></td><td id="y1"></td><td id="y2"></td><td id="y3"></td><td id="y5"></td></tr></tbody>
+        </table>
+        <p class="demo-foot" id="funcChallenge">小挑战：x = 2 公里时要付多少钱？拖动 k 和 b，看表格里的答案怎么变。</p>
+        <p class="why"><b>为什么？</b>k 是“每多走 1 公里多付多少钱”，所以直线越陡，每公里越贵；b 是“还没走就先付的起步价”，所以直线从 y 轴的 b 那里出发。直线不是公式，是这趟车费的故事。</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- Why, not just how -->
+  <section id="why" class="section wrap">
+    <h2>为什么？不只是怎么做</h2>
+    <p class="section-sub">每个做法背后都有一个“为什么”。先看懂为什么，再记怎么做，就不容易忘。三个小实验，都可以动手点一点。</p>
+    <div class="why-grid">
+      <article class="why-card">
+        <h3>进位为什么？10 个一 = 1 个十</h3>
+        <p>8 + 5 为什么是 13，还要进 1？点“+1”，看 10 个一变成 1 个十。</p>
+        <div class="carry-visual" id="carryVisual" aria-live="polite"></div>
+        <div class="btn-row"><button class="btn small primary" id="carryAdd" type="button">+1 个一</button><button class="btn small ghost" id="carryReset" type="button">重置</button></div>
+        <p class="why"><b>为什么？</b>满十进一不是规矩，是打包：10 个散的“1”正好装成 1 捆“10”，所以个位只留 3，十位多 1。</p>
+      </article>
+      <article class="why-card">
+        <h3>分数除法为什么要倒数相乘？</h3>
+        <p>3/4 ÷ 1/4 不是背“倒过来乘”，是问：3/4 里面能装几个 1/4？点一下数一数。</p>
+        <div class="fracdiv-visual" id="fracDivVisual" aria-live="polite"></div>
+        <div class="btn-row"><button class="btn small primary" id="fracDivCount" type="button">数一数能装几个</button><button class="btn small ghost" id="fracDivReset" type="button">重置</button></div>
+        <p class="why"><b>为什么？</b>1/4 是小块，3/4 里面正好装下 3 个小块，所以答案是 3。倒数相乘只是把“数有几个”算得更快。</p>
+      </article>
+      <article class="why-card">
+        <h3>面积公式为什么是长 × 宽？</h3>
+        <p>长方形面积不是背出来的，是数小方块数出来的。改一改行数和列数，看总数怎么变。</p>
+        <div class="control-row"><label>行 <b id="areaRowsLabel">3</b>　列 <b id="areaColsLabel">4</b></label>
+          <div class="btn-row"><button class="btn small ghost" id="areaRowMinus" type="button">行 −1</button><button class="btn small ghost" id="areaRowPlus" type="button">行 +1</button><button class="btn small ghost" id="areaColMinus" type="button">列 −1</button><button class="btn small ghost" id="areaColPlus" type="button">列 +1</button></div>
+        </div>
+        <svg id="areaGrid" viewBox="0 0 320 180" class="area-grid" role="img" aria-label="面积小方块"></svg>
+        <p id="areaText">3 行 × 4 列 = 12 个小方块，面积就是 12。</p>
+        <p class="why"><b>为什么？</b>每行有 4 块，有 3 行，就是 3 个 4。长 × 宽就是在数“有几行，每行几个”。</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- Progress / 错题本 -->
+  <section id="review" class="section wrap">
+    <h2>进度与错题本</h2>
+    <div class="review-grid">
+      <div class="review-card" id="progressCard">
+        <h3>我的进度（原型）</h3>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+        <p id="progressText">还没开始。玩一个演示，就点亮一格。</p>
+        <p class="muted">进度先存在本机浏览器里（原型暂未接入账号同步）。</p>
+      </div>
+      <div class="review-card">
+        <h3>错题本（占位示例）</h3>
+        <p class="muted">真实错题会在练习时自动记录，并保存当时的图，不只是题目文字。</p>
+        <ul class="wrong-list">
+          <li><span class="tag">示例</span> 分数加法：分母不能直接相加，先通分。<small>标签：frac-add-denominators</small></li>
+          <li><span class="tag">示例</span> 移项：移到等号另一边要变号。<small>标签：balance-one-side</small></li>
+        </ul>
+        <p class="muted">复习节奏（原型设定）：+1 天、+1 周各推一次同类错题。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Next steps -->
+  <section class="section wrap next-steps">
+    <h2>下一步</h2>
+    <ol>
+      <li>你先玩一玩上面三个演示，告诉我哪个最顺手、哪个最别扭。</li>
+      <li>选一个年级做完整单元：我建议先做 <b>3 年级分数</b> 或 <b>7 年级方程与函数</b>，做满一个单元再扩。</li>
+      <li>核对人教版各年级章节顺序，再把内容一册一册填进 <code>content/</code>。</li>
+    </ol>
+    <p class="muted">这个首页是原型：年级内容、练习题、错题记录都还是占位或简化版，三个演示是真的能玩的。</p>
+  </section>
+</main>
+</div>
+
+<footer class="footer">
+  <div class="wrap">
+    <p>数学小宇宙 · 原创原型 —— 所有文字、图和例子都是我们自己写的，没有直接复制任何教程、图片或代码。借鉴的只是背后的教学想法：CPA、条形图、天平、滑杆联动。</p>
+    <p class="muted">本地预览：用浏览器直接打开 apps/web/index.html，或在仓库根目录运行 python3 -m http.server，再访问 http://localhost:8000/apps/web/</p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
