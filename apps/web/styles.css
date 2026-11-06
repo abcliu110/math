@@ -93,6 +93,10 @@ body[data-view="demo-liketerms"] #demos, body[data-view="demo-meetline"] #demos,
 body[data-view="demo-anglepair"] #demos, body[data-view="demo-vertangle"] #demos, body[data-view="demo-parangles"] #demos,
 body[data-view="demo-roots"] #demos, body[data-view="demo-coordplane"] #demos, body[data-view="demo-ineqline"] #demos,
 body[data-view="demo-histogram"] #demos,
+body[data-view="demo-trisides"] #demos, body[data-view="demo-congruent"] #demos, body[data-view="demo-foldmirror"] #demos,
+body[data-view="demo-algarea"] #demos, body[data-view="demo-algfrac"] #demos, body[data-view="demo-eqsieve"] #demos,
+body[data-view="demo-radical"] #demos, body[data-view="demo-pythag"] #demos, body[data-view="demo-pargram"] #demos,
+body[data-view="demo-specialquad"] #demos, body[data-view="demo-datastats"] #demos,
 body[data-view="why"] #why, body[data-view="review"] #review,
 body[data-view="progress"] #review, body[data-view="lab"] #lab{display:block}
 .path-detail{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-top:16px}
@@ -730,6 +734,8 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid{gr
 
 /* --- Grade 6 demos --- */
 .rd-map { position: relative; width: 320px; height: 320px; max-width: 100%; margin: 12px auto; border: 2px solid var(--line); border-radius: 12px; background: #f8fafc; overflow: hidden; }
+.rd-rings { position: absolute; left: 0; top: 0; width: 320px; height: 320px; }
+.g8-off { opacity: .35; text-decoration: line-through; }
 .rd-ray { position: absolute; left: 160px; top: 158px; height: 4px; background: #dc2626; transform-origin: left center; border-radius: 2px; }
 .rd-dot { position: absolute; width: 28px; height: 28px; font-size: 22px; line-height: 28px; text-align: center; }
 .rd-ghost { position: absolute; width: 16px; height: 16px; border-radius: 50%; background: #fca5a5; border: 2px solid #dc2626; }

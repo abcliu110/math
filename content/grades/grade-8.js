@@ -28,7 +28,7 @@ const GRADE8_CONTENT = {
           method: "撕角拼图法",
           explainBack: "“三角形内角和180°；两边之和大于第三边；多边形内角和是(n-2)×180°。”",
           tryIt: "量一量一个三角形的三个角，加起来看看是不是180°；拿3、4、8三根小棒试试，能围成三角形吗？再算一算五边形的内角和。",
-          demo: null,
+          demo: 'trisides',
           recall: { q: "一个三角形的两个角是60°和70°，第三个角是多少度？", answer: "50°", hint: "180°-60°-70°=50°。" },
           practice: [
             { q: "三角形的两边长分别是3和7，第三边长是整数，可能是几？（写出所有可能）", answer: "5、6、7、8、9", hint: "第三边要大于7-3=4，小于7+3=10。", level: "基础" },
@@ -54,7 +54,7 @@ const GRADE8_CONTENT = {
           method: "边定形状法",
           explainBack: "“SSS、SAS、ASA、AAS、HL能判定全等；SSA和AAA不行。”",
           tryIt: "用三根小棒拼三角形：固定三边长，看看形状还能不能变；再固定两边和一个非夹角，看看能拼出几种三角形。",
-          demo: null,
+          demo: 'congruent',
           recall: { q: "两个三角形有两条边和一个角分别相等，它们一定全等吗？", answer: "不一定", hint: "那个角要是夹角才行；SSA不能判定全等。" },
           practice: [
             { q: "AB=DE，AC=DF，∠A=∠D，这两个三角形全等吗？用什么判定？", answer: "全等，SAS", hint: "两边和它们的夹角分别相等。", level: "基础" },
@@ -80,7 +80,7 @@ const GRADE8_CONTENT = {
           method: "对折镜像法",
           explainBack: "“沿对称轴对折重合；关于x轴对称，横不变纵变号。”",
           tryIt: "把一张纸对折剪个图形，展开看看对称轴在哪；写出点(2,-3)关于x轴和y轴的对称点。",
-          demo: null,
+          demo: 'foldmirror',
           recall: { q: "点A(3,-2)关于x轴对称的点坐标是多少？", answer: "(3,2)", hint: "关于x轴对称，横坐标不变，纵坐标变号。" },
           practice: [
             { q: "写出点B(-1,5)关于y轴对称的点坐标。", answer: "(1,5)", hint: "关于y轴对称，纵坐标不变，横坐标变号。", level: "基础" },
@@ -100,7 +100,7 @@ const GRADE8_CONTENT = {
           method: "对折重合法",
           explainBack: "“等边对等角；顶角平分线、底边中线、底边上的高是同一条线。”",
           tryIt: "剪一个等腰三角形，沿顶角平分线对折，看看两个底角是不是重合；再量一量等边三角形的三个角。",
-          demo: null,
+          demo: 'foldmirror',
           recall: { q: "等腰三角形的一个底角是70°，顶角是多少度？", answer: "40°", hint: "180°-70°-70°=40°。" },
           practice: [
             { q: "等腰三角形两边长分别是3和7，第三边长是多少？", answer: "7", hint: "3不能做腰，否则3+3<7，围不成三角形。", level: "基础" },
@@ -126,7 +126,7 @@ const GRADE8_CONTENT = {
           method: "指数计数法",
           explainBack: "“同底数幂相乘指数加，幂的乘方指数乘；多项式乘多项式，每一项乘每一项。”",
           tryIt: "算一算x²·x³、(x²)³、(2a)³，再用面积图算一算(x+1)(x+2)。",
-          demo: null,
+          demo: 'algarea',
           recall: { q: "x²·x³等于几？是x⁵，还是x⁶？", answer: "x⁵", hint: "同底数幂相乘，指数相加：2+3=5。" },
           practice: [
             { q: "计算：(2a²)³。", answer: "8a⁶", hint: "系数2³=8，(a²)³=a⁶。", level: "基础" },
@@ -146,7 +146,7 @@ const GRADE8_CONTENT = {
           method: "面积拼图法",
           explainBack: "“平方差是a²-b²；完全平方是a²±2ab+b²。”",
           tryIt: "用101×99算一算：(100+1)(100-1)；再用面积图验证(a+2)²=a²+4a+4。",
-          demo: null,
+          demo: 'algarea',
           recall: { q: "101×99用平方差公式怎么算？", answer: "(100+1)(100-1)=10000-1=9999", hint: "把101看成100+1，99看成100-1。" },
           practice: [
             { q: "计算：(3x+2)(3x-2)。", answer: "9x²-4", hint: "平方差公式：(3x)²-2²。", level: "基础" },
@@ -166,7 +166,7 @@ const GRADE8_CONTENT = {
           method: "先提后套法",
           explainBack: "“先提公因式，再套公式；分解要彻底。”",
           tryIt: "分解因式：6x²-9x、x²-16、x²+6x+9，看看每道题先提公因式还是直接套公式。",
-          demo: null,
+          demo: 'algarea',
           recall: { q: "x²-9分解因式的结果是什么？", answer: "(x+3)(x-3)", hint: "平方差公式。" },
           practice: [
             { q: "分解因式：3x²-6x。", answer: "3x(x-2)", hint: "先提公因式3x。", level: "基础" },
@@ -192,7 +192,7 @@ const GRADE8_CONTENT = {
           method: "分数对照法",
           explainBack: "“分式就是字母版的分数；分母不能为0。”",
           tryIt: "约分：12a²b/(4ab)；计算：(x/2)·(4/x)、1/(x-1)+1/(x+1)。",
-          demo: null,
+          demo: 'algfrac',
           recall: { q: "分式1/(x-2)在x取什么值时无意义？", answer: "x=2", hint: "分母为0时无意义。" },
           practice: [
             { q: "约分：6x²y/(3xy)。", answer: "2x", hint: "分子分母同除3xy。", level: "基础" },
@@ -212,7 +212,7 @@ const GRADE8_CONTENT = {
           method: "过筛检验法",
           explainBack: "“去分母化成整式方程，解完一定要检验，增根舍去。”",
           tryIt: "解方程2/(x-3)=1/(x+1)，解完把解代回原方程验算一次；再解一解3/(x-1)-2/(x+1)=1。",
-          demo: null,
+          demo: 'eqsieve',
           recall: { q: "解分式方程后，为什么一定要检验？", answer: "防止增根（使分母为0的解）", hint: "乘公分母可能变出假解。" },
           practice: [
             { q: "解方程：1/x=2（x≠0）。", answer: "x=1/2", hint: "两边同乘x：1=2x。", level: "基础" },
@@ -243,7 +243,7 @@ const GRADE8_CONTENT = {
           method: "提平方因数法",
           explainBack: "“化简就是把平方因数提出来；同类二次根式才能合并。”",
           tryIt: "化简√18、√50、√72；计算√8+√2、(√5+√3)(√5-√3)。",
-          demo: null,
+          demo: 'radical',
           recall: { q: "√12化简后是多少？", answer: "2√3", hint: "12=4×3，√4=2。" },
           practice: [
             { q: "计算：√18-√2。", answer: "2√2", hint: "√18=3√2，3√2-√2=2√2。", level: "基础" },
@@ -269,7 +269,7 @@ const GRADE8_CONTENT = {
           method: "面积拼图法",
           explainBack: "“直角三角形：两条直角边的平方和等于斜边的平方。”",
           tryIt: "量一量：直角边3和4，斜边是不是5？再验证5、12、13是不是勾股数；画一个直角三角形，量三边算一算。",
-          demo: null,
+          demo: 'pythag',
           recall: { q: "直角三角形两条直角边是3和4，斜边是几？", answer: "5", hint: "3²+4²=25，√25=5。" },
           practice: [
             { q: "直角三角形斜边长10，一条直角边长6，另一条直角边长几？", answer: "8", hint: "10²-6²=64，√64=8。", level: "基础" },
@@ -295,7 +295,7 @@ const GRADE8_CONTENT = {
           method: "推一推变形法",
           explainBack: "“对边相等、对角相等、对角线互相平分；反过来也能判定。”",
           tryIt: "用四根小棒拼一个平行四边形，推一推看看形状怎么变；量一量对角线，看看是不是互相平分。",
-          demo: null,
+          demo: 'pargram',
           recall: { q: "平行四边形ABCD中，∠A=70°，∠C是多少度？", answer: "70°", hint: "对角相等。" },
           practice: [
             { q: "平行四边形ABCD，AB=5，BC=8，周长是多少？", answer: "26", hint: "周长=2×(5+8)。", level: "基础" },
@@ -315,7 +315,7 @@ const GRADE8_CONTENT = {
           method: "加条件变身法",
           explainBack: "“加一个直角是矩形，加一组邻边相等是菱形，两个都加是正方形。”",
           tryIt: "画一个菱形，量一量两条对角线，算一算面积；再画一个矩形，量一量对角线是不是相等。",
-          demo: null,
+          demo: 'specialquad',
           recall: { q: "菱形的两条对角线长分别是6和8，它的面积是多少？", answer: "24", hint: "面积=对角线乘积的一半：6×8÷2。" },
           practice: [
             { q: "矩形ABCD的对角线AC=10，BD长是多少？", answer: "10", hint: "矩形的对角线相等。", level: "基础" },
@@ -341,7 +341,7 @@ const GRADE8_CONTENT = {
           method: "输入输出机器",
           explainBack: "“一个x只对应一个y；正比例函数是过原点的直线。”",
           tryIt: "画一画y=2x和y=-2x的图象，比一比谁陡、谁向哪边倾斜；再判断y=3x、y=x²哪个是正比例函数。",
-          demo: null,
+          demo: 'function',
           recall: { q: "y=2x，当x=3时，y是多少？", answer: "6", hint: "把3代进去：2×3=6。" },
           practice: [
             { q: "判断：y=3x是不是正比例函数？k是多少？", answer: "是，k=3", hint: "y=kx的形式，k=3。", level: "基础" },
@@ -387,7 +387,7 @@ const GRADE8_CONTENT = {
           method: "排队找中间法",
           explainBack: "“平均数怕极端值，中位数不怕；方差越小越稳定。”",
           tryIt: "算一算2，3，3，5，7的平均数、中位数、众数；再比较甲乙两组数据的方差，看看哪组更稳定。",
-          demo: null,
+          demo: 'datastats',
           recall: { q: "数据2，3，3，5，7的平均数是多少？", answer: "4", hint: "(2+3+3+5+7)÷5=20÷5。" },
           practice: [
             { q: "数据1，2，2，3，4的众数和中位数各是多少？", answer: "众数2，中位数2", hint: "2出现2次，最多；排好序中间是2。", level: "基础" },

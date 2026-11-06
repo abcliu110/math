@@ -110,6 +110,9 @@ const GRADE3_CONTENT = { grade: 3, edition: 'A', units: [
   { unit: '测量', term: '上', points: [
     { id: '3.3', title: '测量', subtitle: '毫米/分米/千米/吨', how: '看进率换算。', why: '单位是打包办法。', wrong: '1 千米=100 米', wrongWhy: '米到千米是 1000 倍。', visual: '单位楼梯。', method: '单位楼梯', explainBack: '1 千米是 1000 米。', tryIt: '量一量书的厚度。', demo: 'units', recall: { q: '2 千米是多少米？', answer: '2000 米', hint: '1 千米=1000 米' }, practice: [{ q: '3 吨是多少千克？', answer: '3000 千克', hint: '1 吨=1000 千克' }, { q: '5000 米是多少千米？', answer: '5 千米', hint: '1000 米=1 千米' }] },
   ] },
+  { unit: '复式统计表', term: '下', points: [
+    { id: '3.15a', title: '复式统计表', subtitle: '复式统计表', how: '把两个表拼成一个表。', why: '对照着看才方便。', wrong: '两个表各看各的', wrongWhy: '拼起来才能直接比。', visual: '复式表。', method: '拼表对照', explainBack: '行是项目，列是组别。', tryIt: '把两个班的统计表拼起来。', demo: 'stattable', recall: { q: '复式统计表有什么好处？', answer: '两个组的数据能直接对照', hint: '拼成一个表' }, practice: [{ q: '复式统计表里，行一般表示什么？', answer: '项目', hint: '行是项目' }, { q: '三个年级的人数放在一个复式统计表里，要几列？', answer: '4 列（含项目列）', hint: '3 个年级加项目列', level: '提高' }] },
+  ] },
 ] };
 const GRADE1_CONTENT = { grade: 1, edition: 'A', units: [
   { unit: '20以内的进位加法', term: '上', points: [
@@ -123,6 +126,9 @@ const GRADE1_CONTENT = { grade: 1, edition: 'A', units: [
   ] },
   { unit: '认识钟表', term: '上', points: [
     { id: '1.8', title: '认识钟表', subtitle: '整时、半点', how: '短针是时针，长针是分针。', why: '分针转一圈，时针走一格。', wrong: '长针短针分不清', wrongWhy: '只看长短，没看走得快慢。', visual: '钟面。', method: '联动表针钟', explainBack: '分针指着 12 就是整时。', tryIt: '拨到 7 点。', demo: 'clock', recall: { q: '分针指着 12，时针指着 7，是几点？', answer: '7 点', hint: '整时看时针' }, practice: [{ q: '分针指着 6，时针在 7 和 8 中间，是几点？', answer: '7 点半', hint: '分针指着 6 是半点', level: '基础' }, { q: '6 点往前推 3 小时是几点？', answer: '3 点', hint: '6 减 3', level: '提高' }] },
+  ] },
+  { unit: '位置', term: '上', points: [
+    { id: '1.2', title: '位置', subtitle: '上下、前后、左右', how: '上和下、前和后、左和右是相对的。', why: '位置是相对的，换了参照就换了。', wrong: '左边和右边分不清', wrongWhy: '左右要看朝向。', visual: '小人转一转。', method: '朝向法', explainBack: '先定好谁是前面。', tryIt: '转个身，左手边是什么？', demo: 'position', recall: { q: '小明前面是小红，小红前面是谁？', answer: '小红前面是别人', hint: '位置是相对的' }, practice: [{ q: '坐在你左手边的是谁？', answer: '左边的同学', hint: '看左手边' }, { q: '书包在课桌的上面还是下面？', answer: '下面', hint: '课桌在上面', level: '提高' }] },
   ] },
 ] };
 const GRADE2_CONTENT = { grade: 2, edition: 'A', units: [
@@ -172,6 +178,9 @@ const GRADE6_CONTENT = { grade: 6, edition: 'A', units: [
   { unit: '数学广角——鸽巢问题', term: '下', points: [
     { id: '6.13', title: '鸽巢问题', subtitle: '鸽巢原理', how: '先每个巢放 1 只，第 n+1 只没地方去，只能合住。', why: '这是数出来的，不是运气。', wrong: '可能发生，但不一定', wrongWhy: '这是计数证明。', visual: '鸽洞动画。', method: '先每洞一只', explainBack: '每个洞先放一只，下一只只能合住。', tryIt: '拿 5 支笔放进 4 个笔筒。', demo: 'pigeon', recall: { q: '5 只鸽子飞进 4 个鸽巢，一定有一个巢里至少有几只？', answer: '2 只', hint: '每个巢先放 1 只' }, practice: [{ q: '把 10 个苹果放进 9 个抽屉，至少有一个抽屉里有几个？', answer: '2 个', hint: '每个抽屉先放 1 个', level: '基础' }, { q: '把 13 支铅笔放进 4 个文具盒，至少有一个盒里有几支？', answer: '4 支', hint: '每个盒先放 3 支', level: '提高' }] },
   ] },
+  { unit: '百分数（一）', term: '上', points: [
+    { id: '6.6', title: '百分数（一）', subtitle: '百分数的意义、读写、分数小数互化', how: '百分数就是分母是 100 的分数。', why: '百分数是“每 100 个里有几个”。', wrong: '35% 就是 35', wrongWhy: '35% 是 35 个百分之一。', visual: '百分条。', method: '百分条', explainBack: '35% 是 35/100。', tryIt: '把 0.35 写成百分数。', demo: 'percent', recall: { q: '35% 表示什么意思？', answer: '每 100 个里有 35 个', hint: '分母是 100' }, practice: [{ q: '0.25 写成百分数是多少？', answer: '25%', hint: '0.25 是 25 个百分之一', level: '基础' }, { q: '80% 写成小数是多少？', answer: '0.8', hint: '80 个百分之一', level: '提高' }] },
+  ] },
 ] };
 
 // 桩里的七年级内容：只留点进实验要用的七个点（7.1/7.2 共用 numline、7.6/7.14 复用 balance、7.7 新演示 meetline、7.13 新演示 coordplane、7.16 新演示 histogram）。
@@ -197,6 +206,45 @@ const GRADE7_CONTENT = { grade: 7, edition: 'A', units: [
     { id: '7.16', title: '统计调查与直方图', subtitle: '全面调查、抽样调查、频数、直方图', how: '全面调查问所有人，抽样调查抽一部分。', why: '抽样调查省时间，但样本偏了结论就偏了。', wrong: '样本越大越好，不管随机不随机', wrongWhy: '样本再大，不随机也白搭。', visual: '直方图生成器。', method: '随机抽样法', explainBack: '样本要随机，不然结论会偏。', tryIt: '把全班身高数据画成直方图。', demo: 'histogram', recall: { q: '调查全校学生的午餐喜好，只抽10个自己班的同学，样本有代表性吗？', answer: '没有', hint: '只抽一个班' }, practice: [{ q: '某班40名学生，身高在150~160厘米的有12人，这组的频数是多少？频率是多少？', answer: '频数12，频率0.3', hint: '频率=12÷40', level: '基础' }, { q: '50名学生参加数学竞赛，成绩在80~90分的有15人，在90~100分的有10人，80分以上的一共有多少人？', answer: '25人，占1/2', hint: '15+10=25人', level: '提高' }] },
   ] },
 ] };
+// 桩里的八年级内容：16 个点全留（8.3/8.4 共用 foldmirror、8.5/8.6/8.7 共用 algarea、8.14/8.15 共用 function）。
+const GRADE8_CONTENT = { grade: 8, edition: 'A', units: [
+  { unit: '三角形', term: '上', points: [
+    { id: '8.1', title: '三角形', subtitle: '三角形的边、角、多边形内角和', how: '任意两边之和大于第三边。', why: '两点之间线段最短。', wrong: '3、4、7 能围成三角形', wrongWhy: '3+4=7，不是大于。', visual: '三根棍子围一围。', method: '围不围试一试', explainBack: '两边之和要大于第三边。', tryIt: '拿 3、4、5 围一围。', demo: 'trisides', recall: { q: '3、4、7 能围成三角形吗？', answer: '不能，3+4=7', hint: '两边之和要大于第三边' }, practice: [{ q: '三边长 5、5、8，能围成三角形吗？', answer: '能', hint: '5+5>8', level: '基础' }, { q: '五边形的内角和是多少度？', answer: '540°', hint: '(5-2)×180°', level: '提高' }] },
+  ] },
+  { unit: '全等三角形', term: '上', points: [
+    { id: '8.2', title: '全等三角形的判定', subtitle: 'SSS、SAS、ASA、AAS、HL', how: '三条边相等就全等。', why: '三条边定住了形状和大小。', wrong: 'SSA 能判定全等', wrongWhy: 'SSA 能画出两个不一样的三角形。', visual: '两个三角形拼一拼。', method: '条件拼图法', explainBack: 'SSS、SAS、ASA、AAS、HL 都能判定。', tryIt: '给两条边和一个角，画一画。', demo: 'congruent', recall: { q: 'SSA 能判定两个三角形全等吗？', answer: '不能', hint: '能画出两个不一样的三角形' }, practice: [{ q: '三边分别是 5、6、7 的两个三角形全等吗？', answer: '全等，SSS', hint: '三条边都相等', level: '基础' }, { q: '直角三角形里，斜边和一条直角边相等，能判定全等吗？', answer: '能，HL', hint: '斜边加直角边', level: '提高' }] },
+  ] },
+  { unit: '轴对称', term: '上', points: [
+    { id: '8.3', title: '轴对称', subtitle: '轴对称图形、轴对称、对称轴', how: '沿一条直线对折，两边完全重合。', why: '对称是镜子里的样子。', wrong: '平行四边形是轴对称图形', wrongWhy: '对折后两边对不上。', visual: '对折纸。', method: '对折法', explainBack: '对折后两边完全重合。', tryIt: '对折一张纸，画一半剪一剪。', demo: 'foldmirror', recall: { q: '等腰三角形有几条对称轴？', answer: '1 条', hint: '沿顶角平分线对折' }, practice: [{ q: '长方形有几条对称轴？', answer: '2 条', hint: '横着对折、竖着对折', level: '基础' }, { q: '点（2，-3）关于 x 轴的对称点是？', answer: '（2，3）', hint: '横坐标不变，纵坐标变号', level: '提高' }] },
+    { id: '8.4', title: '等腰三角形', subtitle: '等腰三角形的性质与判定', how: '等腰三角形两腰相等，底角相等。', why: '沿顶角平分线对折，两边重合。', wrong: '等腰三角形顶角一定是最大的角', wrongWhy: '底角也可以比顶角大。', visual: '对折等腰三角形。', method: '对折法', explainBack: '对折后底角重合，所以底角相等。', tryIt: '对折等腰三角形，看底角。', demo: 'foldmirror', recall: { q: '等腰三角形底角是 70°，顶角是多少度？', answer: '40°', hint: '180°-70°×2' }, practice: [{ q: '等腰三角形一个角是 50°，顶角可能是多少度？', answer: '80° 或 50°', hint: '50° 可能是底角也可能是顶角', level: '基础' }, { q: '等腰三角形两边长是 4 和 9，第三边长是多少？', answer: '9', hint: '4+4<9，腰不能是 4', level: '提高' }] },
+  ] },
+  { unit: '整式的乘法与因式分解', term: '上', points: [
+    { id: '8.5', title: '幂的运算与整式的乘法', subtitle: '同底数幂的乘法、幂的乘方、单项式乘多项式', how: '同底数幂相乘，底数不变，指数相加。', why: '指数是数有几个相同的因数。', wrong: 'a³×a²=a⁶', wrongWhy: '指数是相加，不是相乘。', visual: '面积模型。', method: '面积模型法', explainBack: 'a³×a² 是 5 个 a 相乘。', tryIt: '在面积图上算（x+2）（x+3）。', demo: 'algarea', recall: { q: 'a³×a² 等于多少？', answer: 'a⁵', hint: '3+2=5' }, practice: [{ q: '（a²）³ 等于多少？', answer: 'a⁶', hint: '2×3=6', level: '基础' }, { q: '（x+2）（x+3）展开是多少？', answer: 'x²+5x+6', hint: 'x²+3x+2x+6', level: '提高' }] },
+    { id: '8.6', title: '乘法公式', subtitle: '平方差公式、完全平方公式', how: '（a+b）²=a²+2ab+b²。', why: '面积图里大正方形被切成四块。', wrong: '（a+b）²=a²+b²', wrongWhy: '漏了中间两块 ab。', visual: '面积图。', method: '面积模型法', explainBack: '大正方形是 a²+ab+ab+b²。', tryIt: '在面积图上看（5+2）²。', demo: 'algarea', recall: { q: '（a+b）² 展开后中间那项是什么？', answer: '2ab', hint: '两块 ab' }, practice: [{ q: '（x+3）² 展开是多少？', answer: 'x²+6x+9', hint: '2×x×3=6x', level: '基础' }, { q: '（2a-b）² 展开是多少？', answer: '4a²-4ab+b²', hint: '2×2a×b=4ab', level: '提高' }] },
+    { id: '8.7', title: '因式分解', subtitle: '提公因式法、公式法、十字相乘法', how: '因式分解就是把多项式写成几个整式的乘积。', why: '乘法和因式分解是互逆的。', wrong: 'x²+5x+6=（x+1）（x+6）', wrongWhy: '1+6=7，不是 5。', visual: '猜两因数。', method: '猜两因数法', explainBack: '相乘得 6、相加得 5 的两个数是 2 和 3。', tryIt: '把 x²+5x+6 写成两个括号相乘。', demo: 'algarea', recall: { q: 'x²+5x+6 分解成哪两个括号相乘？', answer: '（x+2）（x+3）', hint: '相乘得 6、相加得 5' }, practice: [{ q: 'x²+7x+12 分解成哪两个括号相乘？', answer: '（x+3）（x+4）', hint: '3+4=7，3×4=12', level: '基础' }, { q: 'x²-5x+6 分解成哪两个括号相乘？', answer: '（x-2）（x-3）', hint: '-2+（-3）=-5，（-2）×（-3）=6', level: '提高' }] },
+  ] },
+  { unit: '分式', term: '上', points: [
+    { id: '8.8', title: '分式及其运算', subtitle: '分式的概念、约分、通分、分式的加减乘除', how: '分式就是分子分母都带字母的分数。', why: '分母不能为 0。', wrong: '约分时只约分子', wrongWhy: '分子分母要一起约。', visual: '约分点一点。', method: '约分点一点', explainBack: '一对约一对，约干净为止。', tryIt: '把 12a²b/4ab 约分。', demo: 'algfrac', recall: { q: '分式 1/（x-2），x 取几时分式没有意义？', answer: 'x=2', hint: '分母不能为 0' }, practice: [{ q: '6x²y/3xy 约分后是多少？', answer: '2x', hint: '分子分母都约掉 3xy', level: '基础' }, { q: '（x²-9）/（x+3）约分后是多少？', answer: 'x-3', hint: 'x²-9=（x+3）（x-3）', level: '提高' }] },
+    { id: '8.9', title: '分式方程', subtitle: '分式方程的解法、增根、检验', how: '去分母把分式方程变成整式方程。', why: '分母不能为 0，解出来要检验。', wrong: '解出来就完了，不用检验', wrongWhy: '解可能是增根。', visual: '过筛子。', method: '去分母、解、检验三步法', explainBack: '增根会让分母变成 0，要筛掉。', tryIt: '解 2/（x-3）=1/（x+1），再检验。', demo: 'eqsieve', recall: { q: '解分式方程最后一步要做什么？', answer: '检验', hint: '看看分母是不是 0' }, practice: [{ q: '方程 1/（x-1）=2/（x²-1）的解是？', answer: '无解（x=1 是增根）', hint: '解出来是 x=1，但 x=1 让分母为 0', level: '基础' }, { q: '方程 2/（x-3）=1/（x+1）的解是？', answer: 'x=-5', hint: '去分母得 2（x+1）=x-3', level: '提高' }] },
+  ] },
+  { unit: '二次根式', term: '下', points: [
+    { id: '8.10', title: '二次根式', subtitle: '二次根式的概念、化简、加减乘除', how: '√12=√（4×3）=2√3。', why: '平方因数可以提出来。', wrong: '√12=√4+√3', wrongWhy: '根号不能拆加法。', visual: '提平方因数。', method: '提平方因数法', explainBack: '4 是平方数，能提出来变成 2。', tryIt: '把 √72 化简。', demo: 'radical', recall: { q: '√12 化简后是多少？', answer: '2√3', hint: '12=4×3，4 是平方数' }, practice: [{ q: '√50 化简后是多少？', answer: '5√2', hint: '50=25×2', level: '基础' }, { q: '√8+√2 等于多少？', answer: '3√2', hint: '√8=2√2', level: '提高' }] },
+  ] },
+  { unit: '勾股定理', term: '下', points: [
+    { id: '8.11', title: '勾股定理', subtitle: '勾股定理、勾股定理的逆定理', how: '直角三角形两条直角边的平方和等于斜边的平方。', why: '三条边上的正方形面积能拼出来。', wrong: 'a²+b²=c² 对所有三角形都成立', wrongWhy: '只对直角三角形成立。', visual: '面积拼图。', method: '面积拼图法', explainBack: 'a²+b² 的面积正好等于 c²。', tryIt: '拼一拼 3、4、5 的三个正方形。', demo: 'pythag', recall: { q: '直角三角形两条直角边是 3 和 4，斜边是几？', answer: '5', hint: '3²+4²=25' }, practice: [{ q: '三边长 6、8、10 的三角形是直角三角形吗？', answer: '是', hint: '6²+8²=100=10²', level: '基础' }, { q: '三边长 3、4、6 的三角形是直角三角形吗？', answer: '不是', hint: '3²+4²=25≠36', level: '提高' }] },
+  ] },
+  { unit: '平行四边形', term: '下', points: [
+    { id: '8.12', title: '平行四边形', subtitle: '平行四边形的性质与判定', how: '平行四边形对边相等、对角相等、对角线互相平分。', why: '推一推，形状变了，边长没变。', wrong: '一组对边相等就能判定平行四边形', wrongWhy: '还可能是等腰梯形。', visual: '推一推。', method: '推一推法', explainBack: '推的时候对边一直平行、一直等长。', tryIt: '把平行四边形推一推，看对角线。', demo: 'pargram', recall: { q: '平行四边形的对角线有什么关系？', answer: '互相平分', hint: '交点是中点' }, practice: [{ q: '平行四边形 ABCD 中 AB=11，BC=7，CD 是多少？', answer: '11', hint: '对边相等', level: '基础' }, { q: '一组对边平行且相等的四边形是平行四边形吗？', answer: '是', hint: '一组对边平行且相等就能判定', level: '提高' }] },
+    { id: '8.13', title: '特殊的平行四边形', subtitle: '矩形、菱形、正方形', how: '给平行四边形加一个条件，就变成矩形或菱形。', why: '矩形是角特殊了，菱形是边特殊了。', wrong: '矩形和菱形没有关系', wrongWhy: '两个条件都满足就是正方形。', visual: '加条件变身。', method: '加条件变身法', explainBack: '加“一个角是直角”变矩形，加“邻边相等”变菱形。', tryIt: '给平行四边形加一个条件，看它变成什么。', demo: 'specialquad', recall: { q: '平行四边形加一个“邻边相等”的条件，变成什么？', answer: '菱形', hint: '四条边都相等' }, practice: [{ q: '菱形的对角线是 6 和 8，面积是多少？', answer: '24', hint: '6×8÷2', level: '基础' }, { q: '一个四边形既是矩形又是菱形，它是什么？', answer: '正方形', hint: '两个条件都满足', level: '提高' }] },
+  ] },
+  { unit: '一次函数', term: '下', points: [
+    { id: '8.14', title: '函数与正比例函数', subtitle: '变量与函数、正比例函数', how: '一个量变了，另一个量跟着变。', why: '函数就是两个量之间的对应关系。', wrong: 'y=kx 里 k 可以是 0', wrongWhy: 'k=0 时 y 恒等于 0，不成正比。', visual: '函数图象。', method: '图象法', explainBack: '正比例函数的图象是过原点的一条直线。', tryIt: '拖 k 和 b，看直线怎么变。', demo: 'function', recall: { q: 'y=2x 的图象经过原点吗？', answer: '经过', hint: 'b=0' }, practice: [{ q: 'y=3x 中，x=2 时 y 是几？', answer: '6', hint: '3×2=6', level: '基础' }, { q: '正比例函数 y=kx 经过点（2，6），k 是几？', answer: '3', hint: '6=2k', level: '提高' }] },
+    { id: '8.15', title: '一次函数', subtitle: '一次函数的图象与性质、一次函数与方程', how: 'y=kx+b 的图象是一条直线。', why: 'k 管斜率，b 管截距。', wrong: 'k 越大直线越陡', wrongWhy: '陡不陡看 |k|。', visual: '函数图象。', method: '图象法', explainBack: 'k 决定倾斜方向和程度，b 决定和 y 轴的交点。', tryIt: '拖 k 和 b，看直线怎么变。', demo: 'function', recall: { q: 'y=2x+1 和 y 轴交于哪一点？', answer: '（0，1）', hint: 'b=1' }, practice: [{ q: '一次函数 y=-x+3，x=1 时 y 是几？', answer: '2', hint: '-1+3=2', level: '基础' }, { q: '直线 y=2x+1 向下平移 2 个单位，新的解析式是？', answer: 'y=2x-1', hint: 'b 减 2', level: '提高' }] },
+  ] },
+  { unit: '数据的分析', term: '下', points: [
+    { id: '8.16', title: '数据的分析', subtitle: '平均数、中位数、众数、方差', how: '平均数是总和除以个数。', why: '平均数怕极端值，中位数不怕。', wrong: '平均数越小数据越稳定', wrongWhy: '稳定不稳定看方差。', visual: '点图。', method: '点图法', explainBack: '点越集中，方差越小，数据越稳定。', tryIt: '改一个数，看四个量怎么变。', demo: 'datastats', recall: { q: '数据 2、3、3、5、7 的众数是几？', answer: '3', hint: '出现次数最多' }, practice: [{ q: '数据 2、3、3、5、7 的平均数是多少？', answer: '4', hint: '（2+3+3+5+7）÷5', level: '基础' }, { q: '甲组数据方差是 2，乙组是 18，哪组更稳定？', answer: '甲组', hint: '方差越小越稳定', level: '提高' }] },
+  ] },
+] };
 const lsData = {};
 const localStorageStub = { getItem(k) { return lsData[k] || null; }, setItem(k, v) { lsData[k] = String(v); } };
 
@@ -219,7 +267,7 @@ seedSeg('sortRuleSeg', 'sort-rule', ['color', 'shape']);
 // ---------- load the real app.js ----------
 const root = require('path').resolve(__dirname, '..');
 const src = fs.readFileSync(root + '/apps/web/app.js', 'utf8');
-const sandbox = { document: documentStub, window: windowStub, console, setTimeout, Math, JSON, Object, Array, String, Number, parseInt, parseFloat, isNaN, GRADE3_CONTENT, GRADE1_CONTENT, GRADE2_CONTENT, GRADE4_CONTENT, GRADE5_CONTENT, GRADE6_CONTENT, GRADE7_CONTENT, localStorage: localStorageStub };
+const sandbox = { document: documentStub, window: windowStub, console, setTimeout, Math, JSON, Object, Array, String, Number, parseInt, parseFloat, isNaN, GRADE3_CONTENT, GRADE1_CONTENT, GRADE2_CONTENT, GRADE4_CONTENT, GRADE5_CONTENT, GRADE6_CONTENT, GRADE7_CONTENT, GRADE8_CONTENT, localStorage: localStorageStub };
 vm.createContext(sandbox);
 try {
   vm.runInContext(src, sandbox, { filename: 'app.js' });
@@ -342,7 +390,7 @@ const bCell0 = byId.tfB.children[0];
 click(bCell0);
 check('tenframe: click B cell moves one to fill ten', byId.tfEq.textContent === '9 + 4 = 13');
 check('tenframe note explains 10+3', byId.tfNote.textContent.includes('10 + 3 = 13'));
-check('demo counter counts a played demo', byId.progressCount.textContent === '1 / 98' &&
+check('demo counter counts a played demo', byId.progressCount.textContent === '1 / 109' &&
   JSON.parse(lsData['math-tried-demos-v1'] || '[]').includes('tenframe'));
 sandbox.tfSetProblem('sub', 0);
 check('tenframe sub initial equation', byId.tfEq.textContent === '13 − 5 = ?');
@@ -571,7 +619,7 @@ click(byId.countRowA.children[0]);
 check('count: click a dot counts it', byId.countCount.textContent.includes('数到了第 1 个'));
 click(byId.countCompare);
 check('count: 5 vs 7 -> below has 2 more', byId.countResult.textContent.includes('下面多 2 个'));
-check('G1 demos count toward the 98-demo progress', g1ProgBefore === '4 / 98' && byId.progressCount.textContent === '5 / 98');
+check('G1 demos count toward the 109-demo progress', g1ProgBefore === '4 / 109' && byId.progressCount.textContent === '5 / 109');
 click(byId.countAMinus); click(byId.countAMinus);
 check('count: minus twice -> 3', byId.countReadA.textContent === '3 个');
 
@@ -747,7 +795,7 @@ check('ruler: eraser is 3 cm', byId.rulReadout.textContent.includes('3 厘米'))
 click(byId.rulFromBtn);
 check('ruler: measuring from 1 over-reads by 1', byId.rulMsg.textContent.includes('多算1厘米'));
 check('ruler: meter strip is 100 cm squares', byId.rulMeter.children.length === 100);
-check('G2 demos count toward the 98-demo progress', g2ProgBefore === '17 / 98' && byId.progressCount.textContent === '18 / 98');
+check('G2 demos count toward the 109-demo progress', g2ProgBefore === '17 / 109' && byId.progressCount.textContent === '18 / 109');
 
 // 2.2 先估后算
 click(byId.estProbSeg.children[1]); // 26+38
@@ -887,7 +935,7 @@ check('grade-2.js: all 16 points map to the right experiment',
 const labelSrc2 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
 check('DEMO_LABEL covers all 15 new demos',
   G2_DEMOS.every(k => labelSrc2.includes(k + ':')));
-check('G2: all 15 new demos tried by now', byId.progressCount.textContent === '32 / 98');
+check('G2: all 15 new demos tried by now', byId.progressCount.textContent === '32 / 109');
 
 // ---------- 12. 全站布局改版（2026-11-06 真机审计） ----------
 // CSS：顶栏实底不透光，模式栏不吸顶，演示单列，知识点页窄栏
@@ -940,7 +988,7 @@ navGo('progress');
 check('progress: per-grade rows with real numbers',
   byId.progressCard.innerHTML.includes('1 年级') && byId.progressCard.innerHTML.includes('3 年级') &&
   byId.progressCard.innerHTML.includes('演示') && byId.progressCard.innerHTML.includes('已练'));
-check('progress: 32 of 98 demos tried by now', byId.progressCount.textContent === '32 / 98');
+check('progress: 32 of 109 demos tried by now', byId.progressCount.textContent === '32 / 109');
 // 首页不显示孤零零的“数学”面包屑，子页面显示完整面包屑
 navGo('home');
 check('home hides the lone crumb title', byId.crumbTitle.hidden === true);
@@ -977,7 +1025,7 @@ check('elapsed: jump to the whole hour lands on 8:00', byId.elReadout.textConten
 for (let i = 0; i < 6; i++) click(byId.elPlus10);
 click(byId.elPlus5);
 check('elapsed: 7:30 -> 9:05 is 1 hour 35 minutes', byId.elMsg.textContent.includes('1 小时 35 分'));
-check('G3 demos count toward the 98-demo progress', g3ProgBefore === '32 / 98' && byId.progressCount.textContent === '33 / 98');
+check('G3 demos count toward the 109-demo progress', g3ProgBefore === '32 / 109' && byId.progressCount.textContent === '33 / 109');
 
 // 3.2 算一算，再算回去
 for (let i = 0; i < 4; i++) click(byId.vfNext);
@@ -1101,7 +1149,7 @@ check('grade-3.js: all 16 points map to the right experiment',
 const labelSrc3 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
 check('DEMO_LABEL covers all 14 new demos',
   G3_DEMOS.every(k => labelSrc3.includes(k + ':')));
-check('G3: all 14 new demos tried by now', byId.progressCount.textContent === '46 / 98');
+check('G3: all 14 new demos tried by now', byId.progressCount.textContent === '46 / 109');
 
 
 // ---------- 11d. 四年级实验（16 个新演示 + 4.17 复用换个方向看） ----------
@@ -1134,7 +1182,7 @@ click(byId.bnRound);
 check('bignum: 62850 rounds to 6 wan', byId.bnMsg.textContent.includes('约是 6万'));
 click(byId.bnProbSeg.children[2]); // 75000
 check('bignum: 75000 sits on the halfway mark', byId.bnNear.textContent.includes('正好在半点上'));
-check('G4 demos count toward the 98-demo progress', g4ProgBefore === '46 / 98' && byId.progressCount.textContent === '47 / 98');
+check('G4 demos count toward the 109-demo progress', g4ProgBefore === '46 / 109' && byId.progressCount.textContent === '47 / 109');
 
 // 4.2 足球场拼一拼
 check('field: 1 field is 1 hectare, 10000 square meters', byId.fdReadout.textContent.includes('1 公顷') && byId.fdReadout.textContent.includes('10000 平方米'));
@@ -1282,7 +1330,7 @@ check('grade-4.js: all 17 points map to the right experiment',
 const labelSrc4 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
 check('DEMO_LABEL covers all 16 new demos',
   G4_DEMOS.every(k => labelSrc4.includes(k + ':')));
-check('G4: all 16 new demos tried by now', byId.progressCount.textContent === '62 / 98');
+check('G4: all 16 new demos tried by now', byId.progressCount.textContent === '62 / 109');
 
 
 // ---------- 6. grade 5 ----------
@@ -1296,7 +1344,7 @@ click(byId.dmProbSeg.children[1]); // 0.2x0.5
 check('decmul: 0.2x0.5 is 0.10, that is 0.1', byId.dmRead.textContent.includes('0.10') && byId.dmRead.textContent.includes('0.1'));
 click(byId.dmProbSeg.children[2]); // 0.6x0.7
 check('decmul: 0.6x0.7 is 0.42', byId.dmRead.textContent.includes('0.42'));
-check('G5 demos count toward the 98-demo progress', g5ProgBefore === '62 / 98' && byId.progressCount.textContent === '63 / 98');
+check('G5 demos count toward the 109-demo progress', g5ProgBefore === '62 / 109' && byId.progressCount.textContent === '63 / 109');
 
 // 5.2 位置：数对
 click(byId.gpGrid.children[8]); // row 1, col 2 -> (3,2)
@@ -1417,7 +1465,7 @@ const G5_DEMOS = ['decmul', 'gridpos', 'decdiv', 'prob', 'polyarea', 'planttree'
 const labelSrc5 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
 check('DEMO_LABEL covers all 11 new demos',
   G5_DEMOS.every(k => labelSrc5.includes(k + ':')));
-check('G5: all 11 new demos tried by now', byId.progressCount.textContent === '73 / 98');
+check('G5: all 11 new demos tried by now', byId.progressCount.textContent === '73 / 109');
 
 
 // ---------- 7. grade 6 ----------
@@ -1432,7 +1480,7 @@ check('radar: direction only is a ray with countless points', byId.rdRead.textCo
 click(byId.rdModeSeg.children[0]); // 方向+距离
 click(byId.rdDirSeg.children[1]); // 北偏西
 check('radar: north-west 40 degrees', byId.rdRead.textContent.includes('北偏西 40°'));
-check('G6 demos count toward the 98-demo progress', g6ProgBefore === '73 / 98' && byId.progressCount.textContent === '74 / 98');
+check('G6 demos count toward the 109-demo progress', g6ProgBefore === '73 / 109' && byId.progressCount.textContent === '74 / 109');
 
 // 6.4 比：比条
 check('ratio: 2:3 of 50 is 20 and 30', byId.raRead.textContent.includes('20 元') && byId.raRead.textContent.includes('30 元'));
@@ -1543,7 +1591,7 @@ const G6_DEMOS = ['radar', 'ratio', 'circle', 'percent', 'fan', 'lsquare', 'ther
 const labelSrc6 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
 check('DEMO_LABEL covers all 12 new demos',
   G6_DEMOS.every(k => labelSrc6.includes(k + ':')));
-check('G6: all 12 new demos tried by now', byId.progressCount.textContent === '85 / 98');
+check('G6: all 12 new demos tried by now', byId.progressCount.textContent === '85 / 109');
 
 // ---------- 8. grade 7 ----------
 const g7ProgBefore = byId.progressCount.textContent;
@@ -1558,7 +1606,7 @@ click(byId.nlBMinus); click(byId.nlBMinus); // b=5
 check('numline: -4+5 walks to 1', byId.nlRead.textContent.includes('−4 + 5') && byId.nlRead.textContent.includes('停在 1'));
 click(byId.nlAMinus); // a=-5
 check('numline: -5+5 walks to 0', byId.nlRead.textContent.includes('−5 + 5') && byId.nlRead.textContent.includes('停在 0'));
-check('G7 demos count toward the 98-demo progress', g7ProgBefore === '85 / 98' && byId.progressCount.textContent === '86 / 98');
+check('G7 demos count toward the 109-demo progress', g7ProgBefore === '85 / 109' && byId.progressCount.textContent === '86 / 109');
 
 // 7.3 乘方与科学记数法
 check('powerup: 10 folds is 1024x, 102.4mm', byId.puRead.textContent.includes('1024') && byId.puRead.textContent.includes('102.4 毫米'));
@@ -1720,7 +1768,372 @@ check('DEMO_LABEL covers all 13 new demos',
   G7_DEMOS.every(k => labelSrc7.includes(k + ':')));
 check('viewForKey covers all 13 new demos',
   G7_DEMOS.every(k => sandbox.viewForKey('demo-' + k) === 'demo-' + k));
-check('G7: all 13 new demos tried by now', byId.progressCount.textContent === '98 / 98');
+check('G7: all 13 new demos tried by now', byId.progressCount.textContent === '98 / 109');
+
+
+// ---------- 8. 八年级实验（11 个新演示，109 个演示） ----------
+check('G8 start: progress is 98 / 109 before any G8 demo is tried', byId.progressCount.textContent === '98 / 109');
+
+navGo('demo-trisides');
+check('trisides renders: 3-4-5 closes, angles sum to 180°',
+  byId.tsRead.textContent.includes('能围成三角形') && byId.tsRead.textContent.includes('180°'));
+click(byId.tsCPlus); click(byId.tsCPlus); // c=7
+check('trisides: c=7 fails (3+4=7, not > 7)',
+  byId.tsRead.textContent.includes('围不起来') && byId.tsRead.textContent.includes('3+4=7'));
+click(byId.tsModeSeg.children[1]); // 多边形内角和
+check('trisides polygon: pentagon interior sum 540°', byId.tsRead.textContent.includes('540°'));
+click(byId.tsNPlus); // 6 边形
+check('trisides polygon: hexagon interior sum 720°', byId.tsRead.textContent.includes('720°'));
+check('G8: trisides counts toward the 109-demo progress', byId.progressCount.textContent === '99 / 109');
+
+navGo('demo-congruent');
+check('congruent renders: SSS 5-6-7 always congruent',
+  byId.cgRead.textContent.includes('5、6、7') && byId.cgRead.textContent.includes('（SSS）'));
+click(byId.cgCondSeg.children[4]); // HL
+check('congruent HL: the other leg is forced to 4',
+  byId.cgRead.textContent.includes('只能是 4') && byId.cgRead.textContent.includes('（HL）'));
+click(byId.cgCondSeg.children[5]); // SSA
+check('congruent SSA: shape one looks congruent at first', byId.cgRead.textContent.includes('形状一'));
+click(byId.cgSsaSeg.children[1]); // 形状二
+check('congruent SSA: shape two shows SSA cannot prove congruence',
+  byId.cgRead.textContent.includes('SSA 不能判定全等'));
+click(byId.cgCondSeg.children[6]); // AAA
+check('congruent AAA: same shape, size can differ', byId.cgRead.textContent.includes('AAA 不能判定全等'));
+click(byId.cgScalePlus); // ×2
+check('congruent AAA: scale ×2 shown', byId.cgRead.textContent.includes('×2'));
+check('G8: congruent counts toward the 109-demo progress', byId.progressCount.textContent === '100 / 109');
+
+navGo('demo-foldmirror');
+check('foldmirror renders: isosceles triangle fold prompt',
+  byId.fmRead.textContent.includes('等腰三角形'));
+click(byId.fmFoldBtn);
+check('foldmirror fold: isosceles folds exactly',
+  byId.fmRead.textContent.includes('对折后完全重合'));
+click(byId.fmShapeSeg.children[1]); // 直角三角形
+check('foldmirror fold: right triangle prompt', byId.fmRead.textContent.includes('直角三角形'));
+click(byId.fmFoldBtn);
+check('foldmirror fold: right triangle does not fold onto itself',
+  byId.fmRead.textContent.includes('重合不了'));
+click(byId.fmModeSeg.children[1]); // 坐标对称点
+check('foldmirror coord: (2,-3) mirrors to (2,3) over the x-axis',
+  byId.fmRead.textContent.includes('关于x 轴的对称点是 (2,3)'));
+click(byId.fmSymSeg.children[1]); // 关于 y 轴
+check('foldmirror coord: (2,-3) mirrors to (-2,-3) over the y-axis',
+  byId.fmRead.textContent.includes('关于y 轴的对称点是 (-2,-3)'));
+click(byId.fmModeSeg.children[2]); // 等腰三角形对折
+check('foldmirror isosceles: base 70°, top 40°',
+  byId.fmRead.textContent.includes('底角是 70°') && byId.fmRead.textContent.includes('顶角是 40°'));
+click(byId.fmIsoFoldBtn);
+check('foldmirror isosceles fold: the three lines coincide',
+  byId.fmRead.textContent.includes('三线合一'));
+check('G8: foldmirror counts toward the 109-demo progress', byId.progressCount.textContent === '101 / 109');
+
+navGo('demo-algarea');
+check('algarea renders: a³·a² = a⁵, exponents add',
+  byId.aaRead.textContent.includes('a5') && byId.aaRead.textContent.includes('3+2=5'));
+click(byId.aaPowSeg.children[1]); // 幂的乘方
+check('algarea power: (a³)² = a⁶, exponents multiply',
+  byId.aaRead.textContent.includes('a6') && byId.aaRead.textContent.includes('3×2=6'));
+click(byId.aaModeSeg.children[1]); // (x+a)(x+b)
+check('algarea mul: (x+2)(x+3) = x²+5x+6',
+  byId.aaRead.textContent.includes('(x+2)(x+3) = x²+5x+6'));
+click(byId.aaMulAPlus); // a=3
+check('algarea mul: a=3 gives (x+3)(x+3) = x²+6x+9',
+  byId.aaRead.textContent.includes('(x+3)(x+3) = x²+6x+9'));
+click(byId.aaModeSeg.children[2]); // 乘法公式
+check('algarea formula: (5+2)² = 25+20+4 = 49',
+  byId.aaRead.textContent.includes('(5+2)² = 25+20+4 = 49'));
+click(byId.aaFormSeg.children[2]); // 平方差
+check('algarea formula: (5+2)(5−2) = 25−4 = 21',
+  byId.aaRead.textContent.includes('25−4 = 21'));
+click(byId.aaModeSeg.children[3]); // 因式分解
+check('algarea factor: 1×1 and 1+1 both miss for x²+5x+6',
+  byId.aaRead.textContent.includes('相乘 1×1=1（要 6）') && byId.aaRead.textContent.includes('相加 1+1=2（要 5）'));
+click(byId.aaF1Plus); click(byId.aaF2Plus); click(byId.aaF2Plus); // 2, 3
+check('algarea factor: (2,3) solves x²+5x+6 = (x+2)(x+3)',
+  byId.aaRead.textContent.includes('x²+5x+6 = (x+2)(x+3)'));
+check('G8: algarea counts toward the 109-demo progress', byId.progressCount.textContent === '102 / 109');
+
+navGo('demo-algfrac');
+check('algfrac renders: 12a²b/4ab prompt with remaining factors',
+  byId.afRead.textContent.includes('12a²b/4ab') && byId.afRead.textContent.includes('还剩分子 3·4·a·a·b'));
+click(byId.afNumChips.children[1]); // 约掉 4
+check('algfrac cancel: 4 cancels, numerator left 3·a·a·b',
+  byId.afRead.textContent.includes('还剩分子 3·a·a·b'));
+click(byId.afNumChips.children[2]); // 约掉一个 a
+check('algfrac cancel: one a cancels, numerator left 3·a·b',
+  byId.afRead.textContent.includes('还剩分子 3·a·b'));
+click(byId.afNumChips.children[3]); // 第二个 a 没得配
+check('algfrac cancel: the second a has no partner in the denominator',
+  byId.afRead.textContent.includes('约不掉'));
+click(byId.afNumChips.children[4]); // 约掉 b，约完
+check('algfrac cancel: finished, 12a²b/4ab = 3a',
+  byId.afRead.textContent.includes('约分完了') && byId.afRead.textContent.includes('= 3a'));
+click(byId.afModeSeg.children[1]); // 分母为 0
+check('algfrac zero: x=0, denominator x−2 = -2, fraction defined',
+  byId.afRead.textContent.includes('分母 x−2 = -2') && byId.afRead.textContent.includes('有意义'));
+click(byId.afXPlus); click(byId.afXPlus); // x=2
+check('algfrac zero: x=2, denominator 0, fraction undefined',
+  byId.afRead.textContent.includes('分母 x−2 = 0') && byId.afRead.textContent.includes('没有意义'));
+check('G8: algfrac counts toward the 109-demo progress', byId.progressCount.textContent === '103 / 109');
+
+navGo('demo-eqsieve');
+check('eqsieve renders: 2/(x−3) = 1/(x+1)',
+  byId.esEq.textContent.includes('2/(x−3) = 1/(x+1)'));
+click(byId.esStep1);
+check('eqsieve step 1: clearing denominators gives 2(x+1) = x−3',
+  byId.esLine1.hidden === false && byId.esLine1.textContent.includes('2(x+1) = x−3'));
+click(byId.esStep2);
+check('eqsieve step 2: solution x = −5', byId.esLine2.textContent.includes('x = −5'));
+click(byId.esStep3);
+check('eqsieve step 3: x=−5 checks out (denominators −8 and −4)',
+  byId.esLine3.textContent.includes('是原方程的解'));
+click(byId.esProbSeg.children[1]); // 1/(x−1) = 2/(x²−1)
+check('eqsieve problem 2: 1/(x−1) = 2/(x²−1)',
+  byId.esEq.textContent.includes('1/(x−1) = 2/(x²−1)'));
+click(byId.esStep3);
+check('eqsieve problem 2: x=1 is extraneous, no solution',
+  byId.esLine3.textContent.includes('增根') && byId.esLine3.textContent.includes('无解'));
+check('G8: eqsieve counts toward the 109-demo progress', byId.progressCount.textContent === '104 / 109');
+
+navGo('demo-radical');
+check('radical renders: simplify √12, largest square factor prompt',
+  byId.rxRead.textContent.includes('√12') && byId.rxRead.textContent.includes('最大的平方因数'));
+click(byId.rxChipSeg.children[0]); // 4
+check('radical: √12 = 2√3 with square factor 4',
+  byId.rxRead.textContent.includes('√12 = √(4×3) = 2√3'));
+click(byId.rxNumSeg.children[3]); // 72
+click(byId.rxChipSeg.children[0]); // 4
+check('radical: √72 with 4 still simplifies further to 6√2',
+  byId.rxRead.textContent.includes('还没化简完') && byId.rxRead.textContent.includes('6√2'));
+click(byId.rxModeSeg.children[1]); // 合并同类
+check('radical combine: √8 + √2 = 3√2', byId.rxRead.textContent.includes('3√2'));
+click(byId.rxPairSeg.children[3]); // √5, √3
+check('radical combine: √5 and √3 cannot merge', byId.rxRead.textContent.includes('合不了'));
+check('G8: radical counts toward the 109-demo progress', byId.progressCount.textContent === '105 / 109');
+
+navGo('demo-pythag');
+check('pythag renders: 3²+4² = 5² by areas',
+  byId.pyRead.textContent.includes('3²+4²') && byId.pyRead.textContent.includes('= 5²'));
+click(byId.pyTripleSeg.children[1]); // 5, 12, 13
+check('pythag: 5-12-13 also works',
+  byId.pyRead.textContent.includes('5²+12²') && byId.pyRead.textContent.includes('= 13²'));
+click(byId.pyModeSeg.children[1]); // 是直角三角形吗
+check('pythag check: 5-12-13 is a right triangle',
+  byId.pyRead.textContent.includes('是直角三角形'));
+click(byId.pyCheckSeg.children[1]); // 3, 4, 6
+check('pythag check: 3-4-6 is not (25 ≠ 36)',
+  byId.pyRead.textContent.includes('不是直角三角形') && byId.pyRead.textContent.includes('≠ 36'));
+check('G8: pythag counts toward the 109-demo progress', byId.progressCount.textContent === '106 / 109');
+
+navGo('demo-pargram');
+check('pargram renders: AB = CD = 11, diagonals bisect each other',
+  byId.pgmRead.textContent.includes('AB = CD = 11') && byId.pgmRead.textContent.includes('AO = OC'));
+click(byId.pgmAngPlus); // 65°
+check('pargram push: angle 65°, opposite angles still equal',
+  byId.pgmRead.textContent.includes('∠A = ∠C = 65°'));
+click(byId.pgmModeSeg.children[1]); // 判定
+check('pargram judge: two pairs of equal opposite sides proves a parallelogram',
+  byId.pgmRead.textContent.includes('能判定是平行四边形'));
+click(byId.pgmJudgeSeg.children[3]); // 一组对边平行、另一组对边相等
+check('pargram judge: that may be an isosceles trapezoid, not a parallelogram',
+  byId.pgmRead.textContent.includes('等腰梯形') && byId.pgmRead.textContent.includes('不能判定'));
+check('G8: pargram counts toward the 109-demo progress', byId.progressCount.textContent === '107 / 109');
+
+navGo('demo-specialquad');
+check('specialquad renders: plain parallelogram',
+  byId.spRead.textContent.includes('平行四边形'));
+click(byId.spRectBtn); // 加一个直角
+check('specialquad: add a right angle → rectangle, diagonals equal',
+  byId.spRead.textContent.includes('矩形') && byId.spRead.textContent.includes('对角线相等'));
+click(byId.spRectBtn); // 拿掉直角
+click(byId.spRhomBtn); // 加一组邻边相等
+check('specialquad: add equal adjacent sides → rhombus, area 6×8÷2 = 24',
+  byId.spRead.textContent.includes('菱形') && byId.spRead.textContent.includes('6×8÷2 = 24'));
+click(byId.spRectBtn); // 两个条件都加
+check('specialquad: both conditions → square, area 36',
+  byId.spRead.textContent.includes('正方形') && byId.spRead.textContent.includes('面积 36'));
+check('G8: specialquad counts toward the 109-demo progress', byId.progressCount.textContent === '108 / 109');
+
+navGo('demo-datastats');
+check('datastats renders: 2,3,3,5,7 — mean 4, median 3, mode 3, variance 3.2',
+  byId.dsRead.textContent.includes('平均数是 4') && byId.dsRead.textContent.includes('中位数是 3') &&
+  byId.dsRead.textContent.includes('众数是 3') && byId.dsRead.textContent.includes('方差是 3.2'));
+click(byId.dsChips.children[0]); // 第一个数 2→3
+check('datastats edit: first value 2→3, mean 4.2, variance 2.56',
+  byId.dsRead.textContent.includes('平均数是 4.2') && byId.dsRead.textContent.includes('方差是 2.56'));
+click(byId.dsOutBtn); // 加一个 100
+check('datastats outlier: adding 100 moves the mean to 20.17, median stays 4',
+  byId.dsMsg.textContent.includes('平均数一下子变成 20.17') && byId.dsMsg.textContent.includes('中位数还是 4'));
+click(byId.dsReset);
+check('datastats reset: back to mean 4', byId.dsRead.textContent.includes('平均数是 4'));
+click(byId.dsModeSeg.children[1]); // 比一比谁更稳定
+check('datastats compare: same mean 9, group 甲 has smaller variance, more stable',
+  byId.dsRead.textContent.includes('方差 2') && byId.dsRead.textContent.includes('方差 18') &&
+  byId.dsRead.textContent.includes('甲更稳定'));
+click(byId.dsPairSeg.children[1]); // 丙 / 丁
+check('datastats compare: group 丙 variance 0, most stable',
+  byId.dsRead.textContent.includes('丙更稳定'));
+check('G8: all 11 new demos tried by now', byId.progressCount.textContent === '109 / 109');
+
+// 知识点页 → 实验的链接（桩里的 grade-8.js）+ 真实 grade-8.js 的映射
+const G8_LINKS = [
+  ['8.1', 'trisides', '去玩三边围不围'], ['8.2', 'congruent', '去玩全等判定拼一拼'],
+  ['8.3', 'foldmirror', '去玩对折看对称'], ['8.4', 'foldmirror', '去玩对折看对称'],
+  ['8.5', 'algarea', '去玩面积模型算整式'], ['8.6', 'algarea', '去玩面积模型算整式'],
+  ['8.7', 'algarea', '去玩面积模型算整式'], ['8.8', 'algfrac', '去玩分式约分'],
+  ['8.9', 'eqsieve', '去玩分式方程过筛子'], ['8.10', 'radical', '去玩二次根式化简'],
+  ['8.11', 'pythag', '去玩勾股定理面积拼图'], ['8.12', 'pargram', '去玩平行四边形推一推'],
+  ['8.13', 'specialquad', '去玩加条件变特殊'], ['8.14', 'function', '去玩函数演示'],
+  ['8.15', 'function', '去玩函数演示'], ['8.16', 'datastats', '去玩数据分析算一算']
+];
+G8_LINKS.forEach(function ([id, demo, label]) {
+  navGo('point-' + id);
+  check('point ' + id + ' links the ' + demo + ' experiment',
+    pointDetail.innerHTML.includes(label) && pointDetail.innerHTML.includes('data-demo-link="demo-' + demo + '"'));
+});
+navGo('point-8.11');
+sandbox.goDemoFromHere('demo-pythag');
+check('G8 demo from point keeps point as parent', byId.crumbTitle.innerHTML.includes('勾股定理'));
+sandbox.navBackFn();
+check('G8 back from demo returns to point page', pointDetail.innerHTML.includes('勾股定理'));
+const g8src = fs.readFileSync(root + '/content/grades/grade-8.js', 'utf8');
+const g8ids = [...g8src.matchAll(/id: "([0-9.]+)"/g)].map(m => m[1]);
+const g8demos = [...g8src.matchAll(/demo: (?:'([a-z]+)'|null)/g)].map(m => m[1] || null);
+const g8expected = {'8.1':'trisides','8.2':'congruent','8.3':'foldmirror','8.4':'foldmirror','8.5':'algarea','8.6':'algarea','8.7':'algarea','8.8':'algfrac','8.9':'eqsieve','8.10':'radical','8.11':'pythag','8.12':'pargram','8.13':'specialquad','8.14':'function','8.15':'function','8.16':'datastats'};
+check('grade-8.js: all 16 points map to the right experiment',
+  g8ids.length === 16 && g8ids.every((id, i) => g8demos[i] === g8expected[id]));
+const G8_DEMOS = ['trisides', 'congruent', 'foldmirror', 'algarea', 'algfrac', 'eqsieve', 'radical', 'pythag', 'pargram', 'specialquad', 'datastats'];
+const labelSrc8 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
+check('DEMO_LABEL covers all 11 new demos',
+  G8_DEMOS.every(k => labelSrc8.includes(k + ':')));
+check('viewForKey covers all 11 new demos',
+  G8_DEMOS.every(k => sandbox.viewForKey('demo-' + k) === 'demo-' + k));
+
+// ---------- 9. 复测修复 A–J ----------
+const html = fs.readFileSync(root + '/apps/web/index.html', 'utf8');
+
+// A. array demo: intro/foot/why follow rows/cols; square rotate message is meaningful.
+navGo('demo-array');
+// Navigate to 4×4 from whatever state the G2 test left (it ends at 4×4 already).
+while (parseInt(byId.arrRowsTx.textContent) < 4) click(byId.arrRowsPlus);
+while (parseInt(byId.arrRowsTx.textContent) > 4) click(byId.arrRowsMinus);
+while (parseInt(byId.arrColsTx.textContent) < 4) click(byId.arrColsPlus);
+while (parseInt(byId.arrColsTx.textContent) > 4) click(byId.arrColsMinus);
+check('A array: at 4×4, heading/intro/foot/why all say 4 rows 4 columns, 16 dots',
+  byId.arrTitle.textContent.includes('4 行 4 列') && byId.arrTitle.textContent.includes('16 个点') &&
+  byId.arrIntro.textContent.includes('4 行 4 列') && byId.arrFoot.textContent.includes('4行4列') &&
+  byId.arrWhy.innerHTML.includes('4 行 4 列') && byId.arrWhy.innerHTML.includes('16 个点') &&
+  !byId.arrIntro.textContent.includes('3 行 4 列') && !byId.arrFoot.textContent.includes('3行4列') &&
+  !byId.arrWhy.innerHTML.includes('3 行 4 列'));
+click(byId.arrRotate);
+check('A array: square rotate message says the square stays the same, no 4×4 vs 4×4 phrasing',
+  byId.arrMsg.textContent.includes('正方形转一圈还是正方形') && !byId.arrMsg.textContent.includes('4×4 和 4×4'));
+// A (cont.): 口诀 follows every rows/cols combo 2–6.
+const ARR_CN_T = { 2: '二', 3: '三', 4: '四', 5: '五', 6: '六' };
+const ARR_SMALL_T = { 4: '四', 5: '五', 6: '六', 8: '八', 9: '九' };
+let kouOk = true;
+for (let r = 2; r <= 6; r++) {
+  for (let c = 2; c <= 6; c++) {
+    while (parseInt(byId.arrRowsTx.textContent) < r) click(byId.arrRowsPlus);
+    while (parseInt(byId.arrRowsTx.textContent) > r) click(byId.arrRowsMinus);
+    while (parseInt(byId.arrColsTx.textContent) < c) click(byId.arrColsPlus);
+    while (parseInt(byId.arrColsTx.textContent) > c) click(byId.arrColsMinus);
+    const p = r * c;
+    const exp = ARR_CN_T[r] + ARR_CN_T[c] + (p < 10 ? '得' + ARR_SMALL_T[p] : String(p));
+    if (byId.arrKoujue.textContent !== '口诀：' + exp) kouOk = false;
+  }
+}
+check('A array: 口诀 updates correctly for every rows/cols combo 2–6', kouOk);
+
+// B. circle demo: real circle SVGs, wedge count follows slices.
+check('B circle: real circle SVG with radius and diameter drawn',
+  html.includes('id="ccCircSvg"') && html.includes('id="ccCircle"') &&
+  html.includes('id="ccDiamLine"') && html.includes('id="ccRadiusLine"'));
+check('B circle: area mode has wedge and rectangle SVGs',
+  html.includes('id="ccWedgeSvg"') && html.includes('id="ccRectSvg"'));
+navGo('demo-circle');
+click(byId.ccSliceSeg.children[0]); // 4 片（此前是 16 片）
+check('B circle: 4 slices in area mode → 4 wedge paths and 4 rectangle wedges',
+  byId.ccWedgeSvg.children.length === 4 && byId.ccRectSvg.children.length === 4);
+click(byId.ccSliceSeg.children[2]); // 16 片
+check('B circle: 16 slices in area mode → 16 wedge paths and 16 rectangle wedges',
+  byId.ccWedgeSvg.children.length === 16 && byId.ccRectSvg.children.length === 16);
+click(byId.ccModeSeg.children[0]); // 周长模式
+click(byId.ccRMinus); // r=4→3
+check('B circle: circumference mode draws a circle with radius 33 (r=3)',
+  byId.ccCircle.getAttribute('r') === '33');
+
+// C. radar demo: rings SVG inside the map.
+const rdMapHtml = html.slice(html.indexOf('id="rdMap"'), html.indexOf('id="rdRay"'));
+check('C radar: rings SVG exists inside the radar map',
+  rdMapHtml.includes('id="rdRings"') && rdMapHtml.includes('r="28"') && rdMapHtml.includes('r="140"') &&
+  rdMapHtml.includes('100m') && rdMapHtml.includes('500m'));
+
+// D. breadcrumb dedup: unit name shown once when it equals the point title.
+navGo('point-6.6');
+check('D breadcrumb: point 6.6 shows 百分数（一） exactly once',
+  (byId.crumbTitle.innerHTML.match(/百分数（一）/g) || []).length === 1);
+navGo('point-1.2');
+check('D breadcrumb: point 1.2 shows 位置 exactly once',
+  (byId.crumbTitle.innerHTML.match(/位置/g) || []).length === 1);
+navGo('point-7.6');
+check('D breadcrumb: normal point 7.6 still shows both unit and point title',
+  byId.crumbTitle.innerHTML.includes('一元一次方程') && byId.crumbTitle.innerHTML.includes('解一元一次方程'));
+
+// E. trialdiv: success text follows the problem; switching problems clears stale feedback.
+navGo('demo-trialdiv');
+click(byId.tdProbSeg.children[1]); // 161÷23
+check('E trialdiv: switch to 161÷23, success text follows the problem and feedback resets',
+  byId.tdFoot.textContent.includes('161') && byId.tdFoot.textContent.includes('7×23=161') &&
+  byId.tdMsg.textContent === '先猜一个商，再点“乘回去验算”。');
+click(byId.tdProbSeg.children[0]); // 150÷26
+check('E trialdiv: switch back to 150÷26, success text says 5×26=130, remainder 20',
+  byId.tdFoot.textContent.includes('130') && byId.tdFoot.textContent.includes('余 20'));
+
+// F. baraxis why: plain wording that matches the demo's 28/24 data.
+check('F baraxis: why now says plainly what the demo shows (28 vs 24, axis from 20)',
+  html.includes('男生 28 人、女生 24 人') && html.includes('女生条只有男生条一半高'));
+check('F baraxis: old confusing sentence is gone', !html.includes('只差一倍的一半'));
+
+// G. grade numbering: unit cards carry their point ids.
+navGo('grade-3');
+check('G grade-3 numbering: unit card shows 3.15a · 复式统计表',
+  gradeDetail.innerHTML.includes('3.15a · 复式统计表'));
+navGo('grade-8');
+check('G grade numbering: multi-point unit shows id range 8.3–8.4 · 轴对称',
+  gradeDetail.innerHTML.includes('8.3–8.4 · 轴对称'));
+
+// H. area demo: success text matches the starting state.
+check('H area: success text matches the starting state (5 rows of 3, 15 tiles)',
+  html.includes('5 行 3 块就是 15 块') && !html.includes('4 行 3 块就是 12 块'));
+
+// I. calendar typo: February reads correctly for both years.
+navGo('demo-calendar');
+click(byId.caYearSeg.children[0]); // 2024 闰年（G3 测试留在了 2025 年）
+click(byId.caMonthSeg.children[1]); // 2 月
+check('I calendar: February leap year reads 2 月：2024 年是闰年，有 29 天',
+  byId.caReadout.textContent.includes('2 月：2024 年是闰年，有 29 天'));
+click(byId.caYearSeg.children[1]); // 2025 平年
+check('I calendar: February common year reads 2 月：2025 年是平年，有 28 天',
+  byId.caReadout.textContent.includes('2 月：2025 年是平年，有 28 天'));
+click(byId.caMonthSeg.children[2]); // 3 月
+check('I calendar: other months still read correctly (3 月是大月，有 31 天）',
+  byId.caReadout.textContent.includes('3 月是大月，有 31 天'));
+
+// J. divplace why: follows the selected problem; grade-3.js 3.10 why matches the default problem.
+navGo('demo-divplace');
+click(byId.d1ProbSeg.children[0]); // 96÷4（G3 测试留在了 408÷4）
+check('J divplace: with 96÷4 shown, the why has no zero-placeholder sentence',
+  byId.d1Why.innerHTML.includes('96÷4') && !byId.d1Why.innerHTML.includes('商中间的 0'));
+click(byId.d1ProbSeg.children[1]); // 408÷4
+check('J divplace: with 408÷4 shown, the why keeps the zero-placeholder sentence',
+  byId.d1Why.innerHTML.includes('商中间的 0 是占位符'));
+const m310 = g3src.match(/id: "3\.10"[\s\S]*?why: "([^"]*)"/);
+check('J divplace: grade-3.js 3.10 why matches the default problem (no zero sentence)',
+  m310 && !m310[1].includes('商中间的0'));
+check('J divplace: grade-3.js 3.10 wrongWhy still explains the 408÷4 trap',
+  g3src.includes('0是占位符：102是1个百、0个十、2个一'));
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
