@@ -69,6 +69,11 @@ body[data-view="demo-array"] #demos, body[data-view="demo-observe"] #demos, body
 body[data-view="demo-share"] #demos, body[data-view="demo-motion"] #demos, body[data-view="demo-mixop"] #demos,
 body[data-view="demo-remain"] #demos, body[data-view="demo-thousand"] #demos, body[data-view="demo-weight"] #demos,
 body[data-view="demo-chart"] #demos, body[data-view="demo-logic"] #demos, body[data-view="demo-pair"] #demos,
+body[data-view="demo-elapsed"] #demos, body[data-view="demo-verify"] #demos, body[data-view="demo-units"] #demos,
+body[data-view="demo-times"] #demos, body[data-view="demo-splitmul"] #demos, body[data-view="demo-rectsq"] #demos,
+body[data-view="demo-venn"] #demos, body[data-view="demo-compass"] #demos, body[data-view="demo-divplace"] #demos,
+body[data-view="demo-stattable"] #demos, body[data-view="demo-fourgrid"] #demos, body[data-view="demo-area"] #demos,
+body[data-view="demo-calendar"] #demos, body[data-view="demo-decimal"] #demos,
 body[data-view="why"] #why, body[data-view="review"] #review,
 body[data-view="progress"] #review, body[data-view="lab"] #lab{display:block}
 .path-detail{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-top:16px}
@@ -539,3 +544,63 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid{gr
 .lg-cell { width: 64px; height: 64px; min-width: 64px; min-height: 64px; border: 2px solid var(--line); border-radius: 12px; background: var(--card); font-size: 28px; font-weight: 800; cursor: pointer; font-family: inherit; color: var(--ink); padding: 0; }
 .lg-cell.lg-x { color: #dc2626; border-color: #fecaca; background: #fef2f2; }
 .lg-cell.lg-yes { color: var(--green); border-color: var(--green); background: #f0fdf4; }
+
+/* ================= 三年级实验样式（3.1–3.15，2026-11-06） =================
+   只用 :root 里的变量；所有选择器都以本组前缀开头。 */
+
+/* --- demo-elapsed --- */
+.el-track { position: relative; height: 14px; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; margin: 24px 0 12px; }
+.el-marker { position: absolute; top: -9px; left: 0; width: 30px; height: 30px; margin-left: -15px; border-radius: 50%; background: var(--orange); border: 3px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.25); }
+
+/* --- demo-verify / demo-divplace --- */
+.vf-step { background: var(--bg); border-left: 4px solid var(--orange); border-radius: 8px; padding: 10px 12px; margin: 8px 0; }
+
+/* --- demo-times --- */
+.tx-bar { height: 28px; border-radius: 8px; margin: 6px 0 12px; }
+.tx-small { background: var(--blue-light); border: 2px solid #93c5fd; }
+.tx-big { background: #dcfce7; border: 2px solid var(--green); }
+.tx-copy { height: 28px; background: var(--blue-light); border: 2px solid #93c5fd; border-radius: 8px; margin: 6px 0; }
+
+/* --- demo-splitmul --- */
+.m1-blocks { display: flex; gap: 8px; margin: 12px 0; }
+.m1-block { flex: none; min-height: 88px; border-radius: 12px; background: var(--blue-light); border: 2px solid #93c5fd; font-size: 20px; font-weight: 800; color: var(--ink); font-family: inherit; cursor: pointer; }
+.m1-block.m1-b { background: #dcfce7; border-color: var(--green); }
+
+/* --- demo-rectsq --- */
+.rs-stage { display: flex; align-items: center; justify-content: center; min-height: 300px; margin: 12px 0; }
+.rs-rect { background: var(--blue-light); border: 3px solid #2563eb; border-radius: 6px; }
+
+/* --- demo-venn --- */
+.vn-zones { display: flex; gap: 8px; margin: 12px 0; }
+.vn-zone { flex: 1; min-height: 140px; border: 2px solid #93c5fd; border-radius: 12px; background: var(--bg); padding: 10px; text-align: center; }
+.vn-zone.vn-mid { border-color: var(--green); background: #f0fdf4; }
+.vn-people { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 8px; }
+.vn-chip { min-width: 52px; min-height: 52px; border: 2px solid var(--line); background: #fff; border-radius: 999px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; color: var(--ink); }
+
+/* --- demo-compass --- */
+.cp-compass { display: flex; align-items: center; justify-content: center; gap: 8px; width: 120px; height: 120px; margin: 12px auto; border: 3px solid #334155; border-radius: 50%; background: #fff; }
+.cp-needle { color: #dc2626; font-size: 32px; line-height: 1; }
+.cp-map { display: flex; justify-content: space-around; align-items: center; height: 96px; margin: 12px 0; border: 2px dashed var(--line); border-radius: 12px; background: var(--bg); font-weight: 700; transition: transform .4s ease; }
+
+/* --- demo-stattable --- */
+.t2-table { border-collapse: collapse; margin: 12px 0; font-size: 18px; }
+.t2-table th, .t2-table td { border: 2px solid var(--line); padding: 12px 18px; text-align: center; min-width: 64px; }
+.t2-table th { background: var(--bg); }
+
+/* --- demo-fourgrid --- */
+.m2-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
+.m2-block { min-height: 88px; border-radius: 12px; background: var(--blue-light); border: 2px solid #93c5fd; font-size: 20px; font-weight: 800; color: var(--ink); font-family: inherit; cursor: pointer; }
+.m2-block:nth-child(2) { background: #fef3c7; border-color: #f59e0b; }
+.m2-block:nth-child(3) { background: #dcfce7; border-color: var(--green); }
+.m2-block:nth-child(4) { background: #fce7f3; border-color: #ec4899; }
+
+/* --- demo-area --- */
+.ar-grid { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 4px; max-width: 420px; margin: 12px 0; }
+.ar-cell { aspect-ratio: 1; min-height: 40px; border-radius: 6px; background: var(--bg); border: 1px solid var(--line); }
+.ar-cell.ar-on { background: var(--orange); border-color: var(--orange-dark); }
+
+/* --- demo-decimal --- */
+.dc-bar { display: flex; gap: 4px; max-width: 560px; margin: 8px 0; }
+.dc-cell { flex: 1; height: 40px; border-radius: 6px; background: var(--bg); border: 2px solid var(--line); }
+.dc-cell.dc-on { background: var(--orange); border-color: var(--orange-dark); }
+.dc-cell.dc-half { background: linear-gradient(90deg, var(--orange) 50%, var(--bg) 50%); border-color: var(--orange-dark); }

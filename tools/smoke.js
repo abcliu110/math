@@ -105,10 +105,10 @@ const GRADE3_CONTENT = { grade: 3, edition: 'A', units: [
     { id: '3.7', title: '分数的初步认识', subtitle: '几分之一、几分之几', how: '把一个整体平均分。', why: '分母是切了几份。', wrong: '1/4 比 1/3 大', wrongWhy: '分母是大小不是个数。', visual: '分数条。', method: '分数条 + 数轴', explainBack: '1/4 是一份。', tryIt: '把纸对折两次。', demo: 'fraction', recall: { q: '一个饼切成 4 等份，吃了 1 份，吃了几分之几？', answer: '1/4', hint: '一共 4 份，吃了 1 份' }, practice: [{ q: '1/2 和 1/4 谁大？', answer: '1/2 大', hint: '份数少，每份大', steps: [{ label: '看分母', text: '1/2 是切 2 份，1/4 是切 4 份' }, { label: '比一比', text: '切的份数越少，每份越大，所以 1/2 大' }] }, { q: '2/7 + 3/7 = ?', answer: '5/7', hint: '分母不变，分子相加', steps: [{ label: '分母不变', text: '分母还是 7' }, { label: '分子相加', text: '2 + 3 = 5，所以是 5/7' }] }] },
   ] },
   { unit: '面积', term: '下', points: [
-    { id: '3.12', title: '面积', subtitle: '面积单位、长方形面积', how: '数小方块。', why: '面积就是盖了多少个单位正方形。', wrong: '面积就是周长', wrongWhy: '周长是边，面积是面。', visual: '方格纸铺一铺。', method: '铺方块数一数', explainBack: '面积是里面有几个方块。', tryIt: '用小方块铺长方形。', demo: null, recall: { q: '长 4 宽 3 的长方形里能铺几个小方块？', answer: '12 个', hint: '4×3' }, practice: [{ q: '4 行 3 列是多少个方块？', answer: '12 个', hint: '4×3' }, { q: '边长 6 厘米的正方形面积？', answer: '36 平方厘米', hint: '边长×边长' }] },
+    { id: '3.12', title: '面积', subtitle: '面积单位、长方形面积', how: '数小方块。', why: '面积就是盖了多少个单位正方形。', wrong: '面积就是周长', wrongWhy: '周长是边，面积是面。', visual: '方格纸铺一铺。', method: '铺方块数一数', explainBack: '面积是里面有几个方块。', tryIt: '用小方块铺长方形。', demo: 'area', recall: { q: '长 4 宽 3 的长方形里能铺几个小方块？', answer: '12 个', hint: '4×3' }, practice: [{ q: '4 行 3 列是多少个方块？', answer: '12 个', hint: '4×3' }, { q: '边长 6 厘米的正方形面积？', answer: '36 平方厘米', hint: '边长×边长' }] },
   ] },
   { unit: '测量', term: '上', points: [
-    { id: '3.3', title: '测量', subtitle: '毫米/分米/千米/吨', how: '看进率换算。', why: '单位是打包办法。', wrong: '1 千米=100 米', wrongWhy: '米到千米是 1000 倍。', visual: '单位楼梯。', method: '单位楼梯', explainBack: '1 千米是 1000 米。', tryIt: '量一量书的厚度。', demo: null, recall: { q: '2 千米是多少米？', answer: '2000 米', hint: '1 千米=1000 米' }, practice: [{ q: '3 吨是多少千克？', answer: '3000 千克', hint: '1 吨=1000 千克' }, { q: '5000 米是多少千米？', answer: '5 千米', hint: '1000 米=1 千米' }] },
+    { id: '3.3', title: '测量', subtitle: '毫米/分米/千米/吨', how: '看进率换算。', why: '单位是打包办法。', wrong: '1 千米=100 米', wrongWhy: '米到千米是 1000 倍。', visual: '单位楼梯。', method: '单位楼梯', explainBack: '1 千米是 1000 米。', tryIt: '量一量书的厚度。', demo: 'units', recall: { q: '2 千米是多少米？', answer: '2000 米', hint: '1 千米=1000 米' }, practice: [{ q: '3 吨是多少千克？', answer: '3000 千克', hint: '1 吨=1000 千克' }, { q: '5000 米是多少千米？', answer: '5 千米', hint: '1000 米=1 千米' }] },
   ] },
 ] };
 const GRADE1_CONTENT = { grade: 1, edition: 'A', units: [
@@ -278,7 +278,7 @@ const bCell0 = byId.tfB.children[0];
 click(bCell0);
 check('tenframe: click B cell moves one to fill ten', byId.tfEq.textContent === '9 + 4 = 13');
 check('tenframe note explains 10+3', byId.tfNote.textContent.includes('10 + 3 = 13'));
-check('demo counter counts a played demo', byId.progressCount.textContent === '1 / 32' &&
+check('demo counter counts a played demo', byId.progressCount.textContent === '1 / 46' &&
   JSON.parse(lsData['math-tried-demos-v1'] || '[]').includes('tenframe'));
 sandbox.tfSetProblem('sub', 0);
 check('tenframe sub initial equation', byId.tfEq.textContent === '13 − 5 = ?');
@@ -507,7 +507,7 @@ click(byId.countRowA.children[0]);
 check('count: click a dot counts it', byId.countCount.textContent.includes('数到了第 1 个'));
 click(byId.countCompare);
 check('count: 5 vs 7 -> below has 2 more', byId.countResult.textContent.includes('下面多 2 个'));
-check('G1 demos count toward the 32-demo progress', g1ProgBefore === '4 / 32' && byId.progressCount.textContent === '5 / 32');
+check('G1 demos count toward the 46-demo progress', g1ProgBefore === '4 / 46' && byId.progressCount.textContent === '5 / 46');
 click(byId.countAMinus); click(byId.countAMinus);
 check('count: minus twice -> 3', byId.countReadA.textContent === '3 个');
 
@@ -683,7 +683,7 @@ check('ruler: eraser is 3 cm', byId.rulReadout.textContent.includes('3 厘米'))
 click(byId.rulFromBtn);
 check('ruler: measuring from 1 over-reads by 1', byId.rulMsg.textContent.includes('多算1厘米'));
 check('ruler: meter strip is 100 cm squares', byId.rulMeter.children.length === 100);
-check('G2 demos count toward the 32-demo progress', g2ProgBefore === '17 / 32' && byId.progressCount.textContent === '18 / 32');
+check('G2 demos count toward the 46-demo progress', g2ProgBefore === '17 / 46' && byId.progressCount.textContent === '18 / 46');
 
 // 2.2 先估后算
 click(byId.estProbSeg.children[1]); // 26+38
@@ -814,7 +814,7 @@ check('grade-2.js: all 16 points map to the right experiment',
 const labelSrc2 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
 check('DEMO_LABEL covers all 15 new demos',
   G2_DEMOS.every(k => labelSrc2.includes(k + ':')));
-check('G2: all 15 new demos tried by now', byId.progressCount.textContent === '32 / 32');
+check('G2: all 15 new demos tried by now', byId.progressCount.textContent === '32 / 46');
 
 // ---------- 12. 全站布局改版（2026-11-06 真机审计） ----------
 // CSS：顶栏实底不透光，模式栏不吸顶，演示单列，知识点页窄栏
@@ -862,17 +862,173 @@ check('wrong-book includes today-review and tomorrow sections',
 navGo('grade-3-review');
 check('per-grade review hides the wrong-book section',
   byId.review.hidden === true && byId.reviewCard.hidden === true);
-// 我的进度：分年级真数字；到这里 32 个演示都玩过了
+// 我的进度：分年级真数字；到这里 32 个演示都玩过了（三年级的 14 个还没玩）
 navGo('progress');
 check('progress: per-grade rows with real numbers',
   byId.progressCard.innerHTML.includes('1 年级') && byId.progressCard.innerHTML.includes('3 年级') &&
   byId.progressCard.innerHTML.includes('演示') && byId.progressCard.innerHTML.includes('已练'));
-check('progress: all 32 demos tried by now', byId.progressCount.textContent === '32 / 32');
+check('progress: 32 of 46 demos tried by now', byId.progressCount.textContent === '32 / 46');
 // 首页不显示孤零零的“数学”面包屑，子页面显示完整面包屑
 navGo('home');
 check('home hides the lone crumb title', byId.crumbTitle.hidden === true);
 navGo('grades');
 check('sub-page shows the breadcrumb', byId.crumbTitle.hidden === false && byId.crumbTitle.innerHTML.includes('数学'));
+
+
+// ---------- 11c. 三年级实验（14 个新演示） ----------
+const G3_DEMOS = ['elapsed', 'verify', 'units', 'times', 'splitmul', 'rectsq',
+  'venn', 'compass', 'divplace', 'stattable', 'fourgrid', 'area', 'calendar', 'decimal'];
+check('G3: viewForKey covers all 14 new demos',
+  G3_DEMOS.every(k => sandbox.viewForKey('demo-' + k) === 'demo-' + k));
+navGo('demos');
+let g3ViewsOk = true;
+G3_DEMOS.forEach(k => {
+  navGo('demo-' + k);
+  if (!(byId.demos.hidden === false && documentStub.body.dataset.view === 'demo-' + k)) g3ViewsOk = false;
+});
+check('G3: all 14 demo views render (demos section visible)', g3ViewsOk);
+navGo('demos');
+navGo('demo-elapsed');
+sandbox.navBackFn();
+check('G3: back from a demo returns to the demos list',
+  byId.demos.hidden === false && byId.demoPanels.hidden === false);
+const g3ProgBefore = byId.progressCount.textContent;
+
+// 3.1 时间轴走一走
+check('elapsed: starts at 7:45', byId.elReadout.textContent.includes('7时45分'));
+for (let i = 0; i < 5; i++) click(byId.elPlus5);
+check('elapsed: 7:45 -> 8:10 is 25 minutes', byId.elMsg.textContent.includes('到了') && byId.elMsg.textContent.includes('25 分钟'));
+click(byId.elProbSeg.children[1]); // 7:30 -> 9:05
+click(byId.elJump);
+check('elapsed: jump to the whole hour lands on 8:00', byId.elReadout.textContent.includes('8时00分'));
+for (let i = 0; i < 6; i++) click(byId.elPlus10);
+click(byId.elPlus5);
+check('elapsed: 7:30 -> 9:05 is 1 hour 35 minutes', byId.elMsg.textContent.includes('1 小时 35 分'));
+check('G3 demos count toward the 46-demo progress', g3ProgBefore === '32 / 46' && byId.progressCount.textContent === '33 / 46');
+
+// 3.2 算一算，再算回去
+for (let i = 0; i < 4; i++) click(byId.vfNext);
+check('verify: 456+278 worked out to 734', byId.vfStep3.textContent.includes('734'));
+click(byId.vfVerify);
+check('verify: 734-278 gets back to 456', byId.vfMsg.textContent.includes('456') && byId.vfMsg.textContent.includes('算对了'));
+click(byId.vfProbSeg.children[1]); // 1000-658
+for (let i = 0; i < 5; i++) click(byId.vfNext);
+check('verify: 1000-658 worked out to 342', byId.vfStep4.textContent.includes('342'));
+click(byId.vfVerify);
+check('verify: 342+658 gets back to 1000', byId.vfMsg.textContent.includes('1000'));
+
+// 3.3 单位楼梯
+click(byId.unLenSeg.children[4]); // 千米
+check('units: 1 km is 1000 m', byId.unReadout.textContent.includes('1000 米'));
+click(byId.unWtSeg.children[2]); // 吨
+check('units: 3 tons are 3000 kg', byId.unReadout.textContent.includes('3000 千克'));
+click(byId.unOpt1); // 2000 米
+check('units: 2 km = 2000 m', byId.unMsg.textContent.includes('对了'));
+click(byId.unProbSeg.children[2]); // 2 米 = ? 厘米
+click(byId.unOpt1); // 200 厘米
+check('units: 2 m = 200 cm', byId.unMsg.textContent.includes('对了'));
+
+// 3.4 条形复制
+for (let i = 0; i < 3; i++) click(byId.txCopyBtn);
+check('times: 12 is 3 times 4', byId.txMsg.textContent.includes('3 倍'));
+click(byId.txProbSeg.children[2]); // 10 是 5 的几倍
+for (let i = 0; i < 2; i++) click(byId.txCopyBtn);
+check('times: 10 is 2 times 5', byId.txMsg.textContent.includes('2 倍'));
+
+// 3.5 面积切一切
+click(byId.m1BlockA);
+click(byId.m1BlockB);
+check('splitmul: 23x4 = 80+12 = 92', byId.m1Msg.textContent.includes('92'));
+click(byId.m1ProbSeg.children[1]); // 32x3
+click(byId.m1BlockA);
+click(byId.m1BlockB);
+check('splitmul: 32x3 = 90+6 = 96', byId.m1Msg.textContent.includes('96'));
+
+// 3.6 拉一拉变正方形
+for (let i = 0; i < 3; i++) click(byId.rsWidPlus);
+check('rectsq: width 8 = length 8 makes a square', byId.rsReadout.textContent.includes('正方形'));
+click(byId.rsLenMinus);
+check('rectsq: 7 by 8 is a rectangle again', byId.rsReadout.textContent.includes('长方形'));
+
+// 3.8 韦恩图拖人
+check('venn: 10 draw, 8 sing, 15 people', byId.vnCountA.textContent.includes('10 人') && byId.vnCountB.textContent.includes('8 人') && byId.vnCountTotal.textContent.includes('15 个人'));
+click(byId.vnOnlyA.children[0]); // 小红 moves into the overlap
+check('venn: moving one into the overlap keeps 15 people, singing becomes 9', byId.vnCountA.textContent.includes('10 人') && byId.vnCountB.textContent.includes('9 人') && byId.vnCountTotal.textContent.includes('15 个人'));
+click(byId.vnCheck);
+check('venn: 10+9-4=15', byId.vnMsg.textContent.includes('一共 15 人'));
+
+// 3.9 指南针转一转
+click(byId.cpRotate);
+check('compass: needle still points north after turning the map', byId.cpNeedle.textContent.includes('北'));
+click(byId.cpNorth);
+click(byId.cpEast);
+check('compass: north then east -> northeast', byId.cpMsg.textContent.includes('东北方向'));
+click(byId.cpQuizSeg.children[0]); // 北
+check('compass: facing east, left hand is north', byId.cpQuizMsg.textContent.includes('对了'));
+
+// 3.10 按数位分一分
+for (let i = 0; i < 4; i++) click(byId.d1Next);
+check('divplace: 96/4 = 24', byId.d1Step3.textContent.includes('24'));
+click(byId.d1ProbSeg.children[1]); // 408/4
+for (let i = 0; i < 4; i++) click(byId.d1Next);
+check('divplace: 408/4 = 102, zero holds the place', byId.d1Step3.textContent.includes('102') && byId.d1Step3.textContent.includes('占位'));
+
+// 3.15a 复式统计表
+click(byId.t2Opt2); // 13
+check('stattable: guessing 13 makes the total 30', byId.t2Total.textContent === '30');
+click(byId.t2Check);
+check('stattable: rows and columns check out', byId.t2Msg.textContent.includes('对上了'));
+
+// 3.11 四格面积模型
+for (let i = 0; i < 4; i++) click(byId['m2B' + i]);
+check('fourgrid: 23x15 = 345', byId.m2Msg.textContent.includes('345'));
+click(byId.m2ProbSeg.children[1]); // 24x13
+for (let i = 0; i < 4; i++) click(byId['m2B' + i]);
+check('fourgrid: 24x13 = 312', byId.m2Msg.textContent.includes('312'));
+
+// 3.12 铺方砖数面积
+check('area: 5 by 3 is 15 squares', byId.arReadout.textContent.includes('15 平方厘米'));
+click(byId.arLenMinus);
+check('area: 4 by 3 is 12 squares', byId.arReadout.textContent.includes('12 平方厘米'));
+click(byId.arPerim);
+check('area: perimeter of 4 by 3 is 14 cm', byId.arMsg.textContent.includes('14 厘米'));
+
+// 3.13 日历翻一翻
+click(byId.caMonthSeg.children[1]); // 2 月
+check('calendar: Feb 2024 (leap) has 29 days', byId.caReadout.textContent.includes('29 天'));
+click(byId.caYearSeg.children[1]); // 2025 平年
+check('calendar: Feb 2025 has 28 days', byId.caReadout.textContent.includes('28 天'));
+click(byId.caTimeSeg.children[1]); // 下午 3:00
+check('calendar: 3pm is 15:00 in 24-hour time', byId.caTimeReadout.textContent.includes('15:00'));
+
+// 3.14 十分条比大小
+check('decimal: A is 0.5, B is 0.25', byId.dcReadA.textContent.includes('0.5') && byId.dcReadB.textContent.includes('0.25'));
+click(byId.dcCompare);
+check('decimal: 0.5 is bigger than 0.25', byId.dcMsg.textContent.includes('0.5 大'));
+for (let i = 0; i < 3; i++) click(byId.dcAMinus); // A -> 0.2
+click(byId.dcCompare);
+check('decimal: 0.25 beats 0.2 on hundredths', byId.dcMsg.textContent.includes('0.25 大'));
+
+// 知识点页 → 实验的链接（桩里的 grade-3.js）+ 真实 grade-3.js 的映射
+navGo('point-3.12');
+check('point 3.12 links the area experiment', pointDetail.innerHTML.includes('去玩铺方砖数面积') && pointDetail.innerHTML.includes('data-demo-link="demo-area"'));
+navGo('point-3.3');
+check('point 3.3 links the units experiment', pointDetail.innerHTML.includes('去玩单位楼梯') && pointDetail.innerHTML.includes('data-demo-link="demo-units"'));
+navGo('point-3.12');
+sandbox.goDemoFromHere('demo-area');
+check('G3 demo from point keeps point as parent', byId.crumbTitle.innerHTML.includes('面积'));
+sandbox.navBackFn();
+check('G3 back from demo returns to point page', pointDetail.innerHTML.includes('面积'));
+const g3src = fs.readFileSync(root + '/content/grades/grade-3.js', 'utf8');
+const g3ids = [...g3src.matchAll(/id: "([0-9.]+[a-z]?)"/g)].map(m => m[1]);
+const g3demos = [...g3src.matchAll(/demo: (?:"([a-z]+)"|null)/g)].map(m => m[1] || null);
+const g3expected = {'3.1':'elapsed','3.2':'verify','3.3':'units','3.4':'times','3.5':'splitmul','3.6':'rectsq','3.7':'fraction','3.8':'venn','3.9':'compass','3.10':'divplace','3.15a':'stattable','3.11':'fourgrid','3.12':'area','3.13':'calendar','3.14':'decimal','3.15b':'pair'};
+check('grade-3.js: all 16 points map to the right experiment',
+  g3ids.length === 16 && g3ids.every((id, i) => g3demos[i] === g3expected[id]));
+const labelSrc3 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
+check('DEMO_LABEL covers all 14 new demos',
+  G3_DEMOS.every(k => labelSrc3.includes(k + ':')));
+check('G3: all 14 new demos tried by now', byId.progressCount.textContent === '46 / 46');
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
