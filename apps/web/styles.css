@@ -64,6 +64,11 @@ body[data-view="demo-addsub"] #demos, body[data-view="demo-solids"] #demos, body
 body[data-view="demo-clock"] #demos, body[data-view="demo-tangram"] #demos, body[data-view="demo-sort"] #demos,
 body[data-view="demo-hundred"] #demos, body[data-view="demo-shop"] #demos, body[data-view="demo-place"] #demos,
 body[data-view="demo-pattern"] #demos,
+body[data-view="demo-ruler"] #demos, body[data-view="demo-estimate"] #demos, body[data-view="demo-angle"] #demos,
+body[data-view="demo-array"] #demos, body[data-view="demo-observe"] #demos, body[data-view="demo-time"] #demos,
+body[data-view="demo-share"] #demos, body[data-view="demo-motion"] #demos, body[data-view="demo-mixop"] #demos,
+body[data-view="demo-remain"] #demos, body[data-view="demo-thousand"] #demos, body[data-view="demo-weight"] #demos,
+body[data-view="demo-chart"] #demos, body[data-view="demo-logic"] #demos, body[data-view="demo-pair"] #demos,
 body[data-view="why"] #why, body[data-view="review"] #review,
 body[data-view="progress"] #review, body[data-view="lab"] #lab{display:block}
 .path-detail{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-top:16px}
@@ -76,7 +81,7 @@ main{min-width:0}
 
 /* 模块面板（借汉字 App 首页面板排布：大卡片 + 图标 + 标题 + 副文 + 进度条）
    网格按内容分组，不留孤儿卡：首页 8 块面板是 4 列 × 2 行（.four），
-   学习路径 4 块也是 4 列；演示 18 块和年级 9 块用默认 3 列（3×6、3×3），
+   学习路径 4 块也是 4 列；演示 33 块和年级 9 块用默认 3 列（3×11、3×3），
    维度 5 块用 5 列（.five）。最后一行只有一个元素的卡片不拉伸，
    靠列数整除来避免（2026-11-06 真机审计第 2 条）。 */
 .panels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
@@ -472,3 +477,65 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid{gr
 .pat-tri { background: var(--orange); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
 .pat-choice { display: inline-flex; align-items: center; gap: 8px; }
 .pat-msg { min-height: 28px; font-weight: 700; margin: 8px 0; }
+
+/* ================= 二年级实验样式（2.1–2.15，2026-11-06） =================
+   只用 :root 里的变量；所有选择器都以本组前缀开头。
+   演示里的按钮最小 52px（孩子的手指），见文件末尾的通用规则。 */
+
+/* 演示按钮统一放大到 52px：二年级实验要求大触控目标；旧演示也一起受益，
+   只是从 48px 变成 52px，没有布局变化。 */
+.demo-card .btn, .demo-card .seg button { min-height: 52px; }
+
+/* --- demo-ruler --- */
+.rul-svg { width: 100%; max-width: 560px; height: auto; display: block; margin: 8px 0; }
+.rul-meter { display: grid; grid-template-columns: repeat(20, minmax(0, 1fr)); gap: 3px; max-width: 560px; margin: 8px 0; }
+.rul-cm { aspect-ratio: 1; background: var(--blue-light); border: 1px solid #93c5fd; border-radius: 3px; }
+
+/* --- demo-array --- */
+.arr-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; max-width: 420px; margin: 12px 0; }
+.arr-dot { aspect-ratio: 1; min-height: 44px; border-radius: 50%; background: var(--blue-light); border: 2px solid #93c5fd; }
+.arr-dot.arr-on { background: var(--orange); border-color: var(--orange-dark); }
+.arr-tx { display: inline-flex; align-items: center; font-weight: 700; padding: 0 8px; }
+
+/* --- demo-observe / demo-angle / demo-motion --- */
+.obs-svg { width: 100%; max-width: 320px; height: auto; display: block; margin: 12px auto; }
+.ang-svg { width: 100%; max-width: 280px; height: auto; display: block; margin: 8px auto; }
+.mo-svg { width: 100%; max-width: 320px; height: auto; display: block; margin: 12px auto; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
+
+/* --- demo-pair --- */
+.pair-found { display: flex; flex-wrap: wrap; gap: 8px; min-height: 44px; margin: 8px 0; }
+.pair-chip { display: inline-block; background: #dcfce7; border: 2px solid var(--green); border-radius: 999px; padding: 8px 14px; font-weight: 700; }
+
+/* --- demo-chart --- */
+.ch-rows { display: flex; flex-direction: column; gap: 10px; margin: 12px 0; }
+.ch-row { display: flex; align-items: center; gap: 10px; }
+.ch-name { flex: none; width: 52px; font-weight: 700; }
+.ch-track { flex: 1; height: 28px; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+.ch-bar { height: 100%; width: 0; background: var(--orange); border-radius: 999px; }
+.ch-row b { flex: none; width: 56px; text-align: right; }
+
+/* --- demo-share --- */
+.sh-trays { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0; }
+.sh-tray { flex: 1 1 120px; min-height: 64px; border: 2px dashed var(--line); border-radius: 12px; background: var(--bg); display: flex; align-items: center; justify-content: center; font-weight: 700; padding: 10px; }
+
+/* --- demo-mixop --- */
+.mx-bars { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+.mx-bar { display: flex; gap: 4px; }
+.mx-unit { width: 34px; height: 34px; min-width: 34px; min-height: 34px; border-radius: 8px; background: var(--blue-light); border: 2px solid #93c5fd; }
+
+/* --- demo-weight --- */
+.wt-bar-wrap { position: relative; height: 28px; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; overflow: visible; margin: 12px 0 20px; }
+.wt-bar-fill { height: 100%; width: 0; background: var(--orange); border-radius: 999px; }
+.wt-mark { position: absolute; left: 20%; top: -8px; transform: translateX(-50%); background: #fff; border: 2px solid var(--green); color: var(--green); border-radius: 999px; padding: 2px 8px; font-size: 13px; font-weight: 700; white-space: nowrap; }
+
+/* --- demo-logic --- */
+.lg-wrap { margin: 12px 0; }
+.lg-head { display: grid; grid-template-columns: 64px repeat(3, 64px); gap: 6px; margin-bottom: 6px; }
+.lg-head span { text-align: center; font-weight: 700; }
+.lg-body { display: flex; gap: 6px; align-items: flex-start; }
+.lg-names { display: flex; flex-direction: column; gap: 6px; }
+.lg-names span { width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+.lg-grid { display: grid; grid-template-columns: repeat(3, 64px); gap: 6px; }
+.lg-cell { width: 64px; height: 64px; min-width: 64px; min-height: 64px; border: 2px solid var(--line); border-radius: 12px; background: var(--card); font-size: 28px; font-weight: 800; cursor: pointer; font-family: inherit; color: var(--ink); padding: 0; }
+.lg-cell.lg-x { color: #dc2626; border-color: #fecaca; background: #fef2f2; }
+.lg-cell.lg-yes { color: var(--green); border-color: var(--green); background: #f0fdf4; }

@@ -71,6 +71,11 @@ body[data-view="demo-addsub"] #demos, body[data-view="demo-solids"] #demos, body
 body[data-view="demo-clock"] #demos, body[data-view="demo-tangram"] #demos, body[data-view="demo-sort"] #demos,
 body[data-view="demo-hundred"] #demos, body[data-view="demo-shop"] #demos, body[data-view="demo-place"] #demos,
 body[data-view="demo-pattern"] #demos,
+body[data-view="demo-ruler"] #demos, body[data-view="demo-estimate"] #demos, body[data-view="demo-angle"] #demos,
+body[data-view="demo-array"] #demos, body[data-view="demo-observe"] #demos, body[data-view="demo-time"] #demos,
+body[data-view="demo-share"] #demos, body[data-view="demo-motion"] #demos, body[data-view="demo-mixop"] #demos,
+body[data-view="demo-remain"] #demos, body[data-view="demo-thousand"] #demos, body[data-view="demo-weight"] #demos,
+body[data-view="demo-chart"] #demos, body[data-view="demo-logic"] #demos, body[data-view="demo-pair"] #demos,
 body[data-view="why"] #why, body[data-view="review"] #review,
 body[data-view="progress"] #review, body[data-view="lab"] #lab{display:block}
 .path-detail{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-top:16px}
@@ -83,7 +88,7 @@ main{min-width:0}
 
 /* 模块面板（借汉字 App 首页面板排布：大卡片 + 图标 + 标题 + 副文 + 进度条）
    网格按内容分组，不留孤儿卡：首页 8 块面板是 4 列 × 2 行（.four），
-   学习路径 4 块也是 4 列；演示 18 块和年级 9 块用默认 3 列（3×6、3×3），
+   学习路径 4 块也是 4 列；演示 33 块和年级 9 块用默认 3 列（3×11、3×3），
    维度 5 块用 5 列（.five）。最后一行只有一个元素的卡片不拉伸，
    靠列数整除来避免（2026-11-06 真机审计第 2 条）。 */
 .panels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
@@ -479,6 +484,68 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid{gr
 .pat-tri { background: var(--orange); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
 .pat-choice { display: inline-flex; align-items: center; gap: 8px; }
 .pat-msg { min-height: 28px; font-weight: 700; margin: 8px 0; }
+
+/* ================= 二年级实验样式（2.1–2.15，2026-11-06） =================
+   只用 :root 里的变量；所有选择器都以本组前缀开头。
+   演示里的按钮最小 52px（孩子的手指），见文件末尾的通用规则。 */
+
+/* 演示按钮统一放大到 52px：二年级实验要求大触控目标；旧演示也一起受益，
+   只是从 48px 变成 52px，没有布局变化。 */
+.demo-card .btn, .demo-card .seg button { min-height: 52px; }
+
+/* --- demo-ruler --- */
+.rul-svg { width: 100%; max-width: 560px; height: auto; display: block; margin: 8px 0; }
+.rul-meter { display: grid; grid-template-columns: repeat(20, minmax(0, 1fr)); gap: 3px; max-width: 560px; margin: 8px 0; }
+.rul-cm { aspect-ratio: 1; background: var(--blue-light); border: 1px solid #93c5fd; border-radius: 3px; }
+
+/* --- demo-array --- */
+.arr-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; max-width: 420px; margin: 12px 0; }
+.arr-dot { aspect-ratio: 1; min-height: 44px; border-radius: 50%; background: var(--blue-light); border: 2px solid #93c5fd; }
+.arr-dot.arr-on { background: var(--orange); border-color: var(--orange-dark); }
+.arr-tx { display: inline-flex; align-items: center; font-weight: 700; padding: 0 8px; }
+
+/* --- demo-observe / demo-angle / demo-motion --- */
+.obs-svg { width: 100%; max-width: 320px; height: auto; display: block; margin: 12px auto; }
+.ang-svg { width: 100%; max-width: 280px; height: auto; display: block; margin: 8px auto; }
+.mo-svg { width: 100%; max-width: 320px; height: auto; display: block; margin: 12px auto; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
+
+/* --- demo-pair --- */
+.pair-found { display: flex; flex-wrap: wrap; gap: 8px; min-height: 44px; margin: 8px 0; }
+.pair-chip { display: inline-block; background: #dcfce7; border: 2px solid var(--green); border-radius: 999px; padding: 8px 14px; font-weight: 700; }
+
+/* --- demo-chart --- */
+.ch-rows { display: flex; flex-direction: column; gap: 10px; margin: 12px 0; }
+.ch-row { display: flex; align-items: center; gap: 10px; }
+.ch-name { flex: none; width: 52px; font-weight: 700; }
+.ch-track { flex: 1; height: 28px; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+.ch-bar { height: 100%; width: 0; background: var(--orange); border-radius: 999px; }
+.ch-row b { flex: none; width: 56px; text-align: right; }
+
+/* --- demo-share --- */
+.sh-trays { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0; }
+.sh-tray { flex: 1 1 120px; min-height: 64px; border: 2px dashed var(--line); border-radius: 12px; background: var(--bg); display: flex; align-items: center; justify-content: center; font-weight: 700; padding: 10px; }
+
+/* --- demo-mixop --- */
+.mx-bars { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+.mx-bar { display: flex; gap: 4px; }
+.mx-unit { width: 34px; height: 34px; min-width: 34px; min-height: 34px; border-radius: 8px; background: var(--blue-light); border: 2px solid #93c5fd; }
+
+/* --- demo-weight --- */
+.wt-bar-wrap { position: relative; height: 28px; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; overflow: visible; margin: 12px 0 20px; }
+.wt-bar-fill { height: 100%; width: 0; background: var(--orange); border-radius: 999px; }
+.wt-mark { position: absolute; left: 20%; top: -8px; transform: translateX(-50%); background: #fff; border: 2px solid var(--green); color: var(--green); border-radius: 999px; padding: 2px 8px; font-size: 13px; font-weight: 700; white-space: nowrap; }
+
+/* --- demo-logic --- */
+.lg-wrap { margin: 12px 0; }
+.lg-head { display: grid; grid-template-columns: 64px repeat(3, 64px); gap: 6px; margin-bottom: 6px; }
+.lg-head span { text-align: center; font-weight: 700; }
+.lg-body { display: flex; gap: 6px; align-items: flex-start; }
+.lg-names { display: flex; flex-direction: column; gap: 6px; }
+.lg-names span { width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+.lg-grid { display: grid; grid-template-columns: repeat(3, 64px); gap: 6px; }
+.lg-cell { width: 64px; height: 64px; min-width: 64px; min-height: 64px; border: 2px solid var(--line); border-radius: 12px; background: var(--card); font-size: 28px; font-weight: 800; cursor: pointer; font-family: inherit; color: var(--ink); padding: 0; }
+.lg-cell.lg-x { color: #dc2626; border-color: #fecaca; background: #fef2f2; }
+.lg-cell.lg-yes { color: var(--green); border-color: var(--green); background: #f0fdf4; }
 </style>
 </head>
 <body>
@@ -556,10 +623,10 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid{gr
     </div>
     <h3 class="panel-group-label">工具箱</h3>
     <div class="panels four">
-      <button class="panel" type="button" data-nav-key="demos"><span class="panel-icon" aria-hidden="true">✦</span><b>互动演示</b><span class="panel-sub">分数、天平、函数、十格阵，还有一年级实验都能玩</span><span class="panel-prog"><i id="panelDemoProg" style="width:0%"></i></span><span class="panel-tx" id="panelDemoTx">17 个演示 · 0 已体验</span></button>
+      <button class="panel" type="button" data-nav-key="demos"><span class="panel-icon" aria-hidden="true">✦</span><b>互动演示</b><span class="panel-sub">分数、天平、函数、十格阵，还有一年级实验都能玩</span><span class="panel-prog"><i id="panelDemoProg" style="width:0%"></i></span><span class="panel-tx" id="panelDemoTx">32 个演示 · 0 已体验</span></button>
       <button class="panel" type="button" data-nav-key="lab"><span class="panel-icon" aria-hidden="true">🧪</span><b>数学实验室</b><span class="panel-sub">没有题目，随便玩：分数、十格阵、天平、函数</span><span class="panel-tx">4 个自由玩小站 · 不评分</span></button>
       <button class="panel" type="button" data-nav-key="review"><span class="panel-icon" aria-hidden="true">✎</span><b>错题本</b><span class="panel-sub">错题连当时的图一起存</span><span class="panel-tx">还没有错题</span></button>
-      <button class="panel" type="button" data-nav-key="progress"><span class="panel-icon" aria-hidden="true">●</span><b>我的进度</b><span class="panel-sub">玩过的演示点亮一格</span><span class="panel-prog"><i id="panelProgFill" style="width:0%"></i></span><span class="panel-tx" id="panelProgTx">0 / 17 个演示</span></button>
+      <button class="panel" type="button" data-nav-key="progress"><span class="panel-icon" aria-hidden="true">●</span><b>我的进度</b><span class="panel-sub">玩过的演示点亮一格</span><span class="panel-prog"><i id="panelProgFill" style="width:0%"></i></span><span class="panel-tx" id="panelProgTx">0 / 32 个演示</span></button>
     </div>
   </section>
 
@@ -597,7 +664,7 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid{gr
   <!-- Featured demos -->
   <section id="demos" class="section wrap">
     <h2>互动演示</h2>
-    <p class="section-sub">点一块面板进一个演示，都是我们自己画的图、自己写的例子。能点的都请点一点、拖一拖。一年级的 13 个新实验也在里面。</p>
+    <p class="section-sub">点一块面板进一个演示，都是我们自己画的图、自己写的例子。能点的都请点一点、拖一拖。一年级的 13 个新实验和二年级的 15 个新实验也在里面。</p>
     <div class="panels" id="demoPanels" aria-label="互动演示面板">
       <button class="panel" type="button" data-nav-key="demo-tenframe"><span class="panel-icon" aria-hidden="true">▦</span><b>十格阵凑十</b><span class="panel-sub">点 1 个凑成 10，9+4 就好算了</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1–2 年级 · 加减法</span></button>
       <button class="panel" type="button" data-nav-key="demo-fraction"><span class="panel-icon" aria-hidden="true">3/4</span><b>分数切一切</b><span class="panel-sub">切饼、落数轴，3/4 = 6/8</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">3–5 年级 · 分数</span></button>
@@ -616,6 +683,21 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid{gr
       <button class="panel" type="button" data-nav-key="demo-shop"><span class="panel-icon" aria-hidden="true">￥</span><b>开小店</b><span class="panel-sub">付钱、找零、换钱</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1 年级 · 认识人民币</span></button>
       <button class="panel" type="button" data-nav-key="demo-place"><span class="panel-icon" aria-hidden="true">＋</span><b>数位块加减法</b><span class="panel-sub">满10进1，不够减借1，块和竖式一起变</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1 年级 · 100以内加减法（一）</span></button>
       <button class="panel" type="button" data-nav-key="demo-pattern"><span class="panel-icon" aria-hidden="true">▲</span><b>找规律</b><span class="panel-sub">框出重复的单元</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1 年级 · 找规律</span></button>
+      <button class="panel" type="button" data-nav-key="demo-ruler"><span class="panel-icon" aria-hidden="true">📏</span><b>尺子量长度</b><span class="panel-sub">从 0 量起，7 厘米就是 7 厘米</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">2 年级 · 长度单位</span></button>
+      <button class="panel" type="button" data-nav-key="demo-estimate"><span class="panel-icon" aria-hidden="true">≈</span><b>先估后算</b><span class="panel-sub">48+31 大约是 80，精确答案是 79</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">2 年级 · 100以内加减法</span></button>
+      <button class="panel" type="button" data-nav-key="demo-angle"><span class="panel-icon" aria-hidden="true">∠</span><b>转一转角</b><span class="panel-sub">张开多少角就是多少，臂拉长角不变</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">2 年级 · 角的初步认识</span></button>
+      <button class="panel" type="button" data-nav-key="demo-array"><span class="panel-icon" aria-hidden="true">▦</span><b>点阵乘法</b><span class="panel-sub">3 行 4 列是 12 个点，转个方向还是 12 个</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">2 年级 · 表内乘法</span></button>
+      <button class="panel" type="button" data-nav-key="demo-observe"><span class="panel-icon" aria-hidden="true">▣</span><b>换个方向看</b><span class="panel-sub">前面、左面、上面，看到的样子不一样</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">2 年级 · 观察物体</span></button>
+      <button class="panel" type="button" data-nav-key="demo-time"><span class="panel-icon" aria-hidden="true">◷</span><b>认识时间：时和分</b><span class="panel-sub">分针走一小格是 1 分，7 时 05 分别读成 7 时 5 分</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">2 年级 · 认识时间</span></button>
+      <button class="panel" type="button" data-nav-key="demo-share"><span class="panel-icon" aria-hidden="true">🍬</span><b>轮流分一分</b><span class="panel-sub">12 颗糖分给 3 个人，一人一颗轮流发</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">2 年级 · 表内除法</span></button>
+      <button class="panel" type="button" data-nav-key="demo-motion"><span class="panel-icon" aria-hidden="true">↻</span><b>折一折，转一转</b><span class="panel-sub">对折重合才是对称轴；转一转方向变了</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">2 年级 · 图形的运动</span></button>
+      <button class="panel" type="button" data-nav-key="demo-mixop"><span class="panel-icon" aria-hidden="true">＋×</span><b>先算哪一堆</b><span class="panel-sub">2+3×4，先算乘法那一堆，是 14 不是 20</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">2 年级 · 混合运算</span></button>
+      <button class="panel" type="button" data-nav-key="demo-remain"><span class="panel-icon" aria-hidden="true">÷</span><b>装一包，剩几颗</b><span class="panel-sub">17 颗糖每 5 颗装一包，装 3 包剩 2 颗</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">2 年级 · 有余数的除法</span></button>
+      <button class="panel" type="button" data-nav-key="demo-thousand"><span class="panel-icon" aria-hidden="true">1000</span><b>数轴找近似数</b><span class="panel-sub">678 离 700 近，大约是 700</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">2 年级 · 万以内数的认识</span></button>
+      <button class="panel" type="button" data-nav-key="demo-weight"><span class="panel-icon" aria-hidden="true">⚖</span><b>天平称一称</b><span class="panel-sub">1 千克是 1000 克，4 袋盐是 2 千克</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">2 年级 · 克和千克</span></button>
+      <button class="panel" type="button" data-nav-key="demo-chart"><span class="panel-icon" aria-hidden="true">▮</span><b>投票变条形图</b><span class="panel-sub">每投一票，条长一格；总数要对上 30</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">2 年级 · 数据收集整理</span></button>
+      <button class="panel" type="button" data-nav-key="demo-logic"><span class="panel-icon" aria-hidden="true">？</span><b>排除格推理</b><span class="panel-sub">划掉不可能的，剩下的就是答案</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">2 年级 · 推理</span></button>
+      <button class="panel" type="button" data-nav-key="demo-pair"><span class="panel-icon" aria-hidden="true">👕</span><b>搭配连一连</b><span class="panel-sub">3 件上衣 2 条裤子，是 6 种不是 5 种</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">2 年级 · 搭配（一）</span></button>
       <button class="panel" type="button" data-nav-key="why"><span class="panel-icon" aria-hidden="true">？</span><b>为什么小实验</b><span class="panel-sub">进位、分数除法、面积公式</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">3 个小实验</span></button>
     </div>
 
@@ -1049,6 +1131,309 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid{gr
         <p class="hint">图形的规律看重复的单元；数字的规律看每次多几。</p>
         <p class="demo-foot">成功标准：能说出单元是什么，并用单元猜出下一个。</p>
         <p class="why"><b>为什么？</b>单元重复出现，整个串就是单元一个接一个；第几个是什么，看它在单元里的位置。数字没有重复的单元，就看相邻两个数每次多几。</p>
+      </article>
+
+      <!-- 2.1 尺子量长度 -->
+      <article class="demo-card" id="demo-ruler">
+        <p class="demo-tag">2 年级 · 长度单位</p>
+        <h3>尺子量长度：从 0 量起</h3>
+        <p>量长度，先把尺子的 0 刻度对准物体的一端，再看另一端对着几，就是几厘米。选一样东西，看看它有多长；再试试从 1 开始量，会发生什么。</p>
+        <div class="control-row"><span>选一样东西</span><div class="seg" id="rulObjSeg"></div></div>
+        <svg class="rul-svg" viewBox="0 0 320 64" role="img" aria-label="尺子">
+          <rect x="10" y="30" width="300" height="6" fill="#e2e8f0"/>
+          <g id="rulTicks"></g>
+          <rect id="rulBar" x="10" y="12" width="140" height="14" rx="4" fill="#ff8a3d"/>
+        </svg>
+        <p class="func-eq" id="rulReadout">从0量到 7，是 7 厘米</p>
+        <p id="rulMsg">0对准一端，另一端停在 7，就是 7 厘米。</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="rulFromBtn" type="button">试试从1开始量</button>
+        </div>
+        <p><b>1 米 = 100 厘米：</b>下面是 100 个 1 厘米，一个接一个排起来，就是 1 米。</p>
+        <div class="rul-meter" id="rulMeter" aria-label="100 个 1 厘米"></div>
+        <p class="demo-foot">成功标准：说出“从 0 量，另一端停在哪就是几厘米”；说出从 1 量会多算 1 厘米。</p>
+        <p class="why"><b>为什么？</b>长度就是数“几个单位放得下”：一根 7 厘米的铅笔，就是 7 个 1 厘米一个接一个排起来。1 米是 100 个 1 厘米排起来，所以 1 米 = 100 厘米。</p>
+      </article>
+
+      <!-- 2.2 先估后算 -->
+      <article class="demo-card" id="demo-estimate">
+        <p class="demo-tag">2 年级 · 100以内的加法和减法（二）</p>
+        <h3>先估后算：估算用来抓错</h3>
+        <p>估算不是猜，是“先画个圈”：48 离 50 近，31 离 30 近，所以答案一定在 80 附近。先估一估，再精确算一算。</p>
+        <div class="control-row"><span>选一道题</span><div class="seg" id="estProbSeg"></div></div>
+        <p class="func-eq" id="estLine">48 → 50　　31 → 30　　大约 80</p>
+        <div class="control-row"><span>你估大约是多少？</span><div class="seg" id="estGuessSeg"></div></div>
+        <p class="func-eq" id="estEq">48 + 31 = ?</p>
+        <p id="estMsg">先估一估：48接近50，31接近30，大约是多少？</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="estExactBtn" type="button">精确算一算</button>
+        </div>
+        <p class="demo-foot">成功标准：先估出 80 附近，再算出精确答案 79，落在圈里。</p>
+        <p class="why"><b>为什么？</b>算完精确答案是 79，落在 80 附近，说明算对了；如果算出 19，离 80 太远，一定算错了。估算是用来抓错的，不是代替计算的。</p>
+      </article>
+
+      <!-- 2.4 转一转角 -->
+      <article class="demo-card" id="demo-angle">
+        <p class="demo-tag">2 年级 · 角的初步认识</p>
+        <h3>转一转角：角是“转了多少”</h3>
+        <p>角是两条边从一个顶点张开的样子。张大、合小，看看角怎么变；再把臂拉长，看看角变了没有。转到 90°，就是方方正正的直角。</p>
+        <svg class="ang-svg" viewBox="0 0 200 160" role="img" aria-label="可以转动的角">
+          <line x1="100" y1="140" x2="190" y2="140" stroke="#1e293b" stroke-width="5" stroke-linecap="round"/>
+          <line id="angArm" x1="100" y1="140" x2="163" y2="76" stroke="#ff8a3d" stroke-width="5" stroke-linecap="round"/>
+          <path id="angRightMark" d="M100 128 L112 128 L112 140" fill="none" stroke="#15803d" stroke-width="3" hidden/>
+          <circle cx="100" cy="140" r="6" fill="#1e293b"/>
+        </svg>
+        <p class="func-eq" id="angReadout">张开了 45°，比直角小</p>
+        <p id="angMsg">臂张开多少，角就是多少；把臂拉长，角一点没变。</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="angOpen" type="button">张大 +15°</button>
+          <button class="btn small primary" id="angClose" type="button">合小 −15°</button>
+          <button class="btn small ghost" id="angLenBtn" type="button">臂变长</button>
+        </div>
+        <p class="hint">提示：边越长角越大吗？拉长臂，看看角度数动不动。</p>
+        <p class="demo-foot">成功标准：说出角的大小看张开的程度，不看边的长短；认出 90° 的直角。</p>
+        <p class="why"><b>为什么？</b>角是“转了多少”：两条边张开得越大，角就越大；把边拉长，角一点没变。直角是转了四分之一圈，所以不管怎么放，方方的角都是直角。</p>
+      </article>
+
+      <!-- 2.5 点阵乘法 -->
+      <article class="demo-card" id="demo-array">
+        <p class="demo-tag">2 年级 · 表内乘法</p>
+        <h3>点阵乘法：3 行 4 列是 12 个点</h3>
+        <p>乘法是“几个几相加”的简便写法：3 个 4 相加，写成 3×4=12。画成点阵是 3 行 4 列。转个方向，点阵变成 4 行 3 列，点还是 12 个。</p>
+        <div class="control-row"><span>几行</span><div class="seg"><button type="button" id="arrRowsMinus">−</button><span class="arr-tx" id="arrRowsTx">3 行</span><button type="button" id="arrRowsPlus">＋</button></div></div>
+        <div class="control-row"><span>几列</span><div class="seg"><button type="button" id="arrColsMinus">−</button><span class="arr-tx" id="arrColsTx">4 列</span><button type="button" id="arrColsPlus">＋</button></div></div>
+        <div class="arr-grid" id="arrGrid"></div>
+        <p class="func-eq" id="arrEq">3 × 4 = 12</p>
+        <p class="func-eq" id="arrKoujue">口诀：三四十二</p>
+        <p id="arrMsg">点阵转个方向，行和列换过来，点数不变。</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="arrRotate" type="button">转个方向</button>
+        </div>
+        <p class="demo-foot">成功标准：说出“3乘4是3组4，一共12个点，排成3行4列”；说出 3×4 和 4×3 是一道题。</p>
+        <p class="why"><b>为什么？</b>3×4 的点阵转个方向就变成 4×3，点还是 12 个，所以 3×4=4×3。口诀不是背下来的顺口溜，是点阵数出来的：三四十二，就是 3 行 4 列一共 12 个点。</p>
+      </article>
+
+      <!-- 2.6 换个方向看 -->
+      <article class="demo-card" id="demo-observe">
+        <p class="demo-tag">2 年级 · 观察物体（一）</p>
+        <h3>换个方向看：前面、左面、上面</h3>
+        <p>桌上有一堆积木：底下一排 3 个，中间上面还有 1 个。站在不同的位置看同一个东西，看到的样子不一样。换个方向看一看，再把积木转 90°。</p>
+        <div class="control-row"><span>站在哪个方向看？</span><div class="seg" id="obsViewSeg"></div></div>
+        <svg class="obs-svg" id="obsSvg" viewBox="0 0 220 120" role="img" aria-label="从不同方向看到的积木"></svg>
+        <p class="func-eq" id="obsMsg">从前面看：看到 4 个正方形。</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="obsRotate" type="button">把积木转 90°</button>
+        </div>
+        <p class="demo-foot">成功标准：说出前面 4 个、左面 2 个、上面 3 个正方形；说出东西没变，变的是站的位置。</p>
+        <p class="why"><b>为什么？</b>你看到的只是物体朝向你的那一面，背后的部分被挡住了。东西本身没有变，变的是你站的位置，所以不同方向的照片拼在一起，才能知道它真正的样子。</p>
+      </article>
+
+      <!-- 2.7 认识时间：时和分 -->
+      <article class="demo-card" id="demo-time">
+        <p class="demo-tag">2 年级 · 认识时间</p>
+        <h3>拨一拨钟：时和分</h3>
+        <p>钟面上一大格是 5 分，一圈是 60 分。分针走一小格是 1 分，走一大格是 5 分；分针走一圈，时针走一大格，就是 1 小时。注意：5 分要写成 05，0 是占位符，不能丢。</p>
+        <svg class="clock-face" id="tmFace" viewBox="0 0 200 200" role="img" aria-label="可以拨动的钟">
+          <circle cx="100" cy="100" r="92" fill="#fff" stroke="#334155" stroke-width="3"/>
+          <g id="tmTicks"></g>
+          <line id="tmHourHand" x1="100" y1="100" x2="100" y2="54" stroke="#1e293b" stroke-width="7" stroke-linecap="round"/>
+          <line id="tmMinHand" x1="100" y1="100" x2="100" y2="34" stroke="#ff8a3d" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="100" cy="100" r="6" fill="#1e293b"/>
+        </svg>
+        <p class="func-eq" id="tmReadout">现在是 7时00分</p>
+        <p class="clock-target" id="tmTarget">目标：拨到 7时05分</p>
+        <p class="clock-msg" id="tmMsg">目标是7时05分，再拨一拨。</p>
+        <p class="hint" id="tmWrap"></p>
+        <div class="btn-row">
+          <button class="btn small primary" id="tmMinPlus1" type="button">分针 +1 分钟</button>
+          <button class="btn small primary" id="tmMinPlus5" type="button">分针 +5 分钟</button>
+          <button class="btn small primary" id="tmHourPlus" type="button">时针 +1 小时</button>
+          <button class="btn small ghost" id="tmNextTarget" type="button">换一题</button>
+        </div>
+        <p class="hint">分针转一圈，时针走一格。7 时 55 分还没到 8 时，时针还没到 8。</p>
+        <p class="demo-foot">成功标准：拨出 7 时 05 分，说出“5 分要写成 05”；说出 1 时 = 60 分。</p>
+        <p class="why"><b>为什么？</b>1 时 = 60 分，是因为钟面被分成了 60 个小格：分针转满一圈要走 60 小格，这段时间里时针正好走一格。分钟是“小时里面的数”，0 到 59，满 60 就进 1 小时。</p>
+      </article>
+
+      <!-- 2.8 轮流分一分 -->
+      <article class="demo-card" id="demo-share">
+        <p class="demo-tag">2 年级 · 表内除法</p>
+        <h3>轮流分一分：平均分就是轮流发</h3>
+        <p>平均分是轮流发：12 颗糖分给 3 个人，一人一颗轮流发，每人分到 4 颗，写成 12÷3=4。除法是乘法的反面：12÷3=4，因为 4×3=12。也可以换一种分法：每次拿走一份，看看能拿几次。</p>
+        <div class="control-row"><span>选一道题</span><div class="seg" id="shProbSeg"></div></div>
+        <div class="control-row"><span>怎么分？</span><div class="seg" id="shModeSeg"></div></div>
+        <div class="sh-trays" id="shTrays"></div>
+        <p class="func-eq" id="shLeft">还没分的：12个</p>
+        <p class="func-eq" id="shEq">12 ÷ 3 = ?</p>
+        <p id="shMsg">点“轮流发一圈”，一人一颗轮流发。</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="shDeal" type="button">轮流发一圈</button>
+          <button class="btn small ghost" id="shResetBtn" type="button">重新分</button>
+        </div>
+        <p class="demo-foot">成功标准：说出“12分给3个人每人4个，因为4乘3是12”；说出每次拿 3 个，能拿 4 次。</p>
+        <p class="why"><b>为什么？</b>除法问的是两种问题：“每份几个”（等分）和“有几份”（包含），但都是乘法的逆运算：12÷3=4 成立，是因为 4×3=12。轮流发保证每人一样多。</p>
+      </article>
+
+      <!-- 2.9 折一折，转一转 -->
+      <article class="demo-card" id="demo-motion">
+        <p class="demo-tag">2 年级 · 图形的运动（一）</p>
+        <h3>折一折，转一转：轴对称、平移、旋转</h3>
+        <p>轴对称是沿一条线对折，两边完全重合，这条线叫对称轴。选一个图形、选一条线，对折看看能不能重合。再让下面的三角形滑一滑、转一转。</p>
+        <div class="control-row"><span>选一个图形</span><div class="seg" id="moShapeSeg"></div></div>
+        <div class="control-row"><span>沿哪条线折？</span><div class="seg" id="moFoldSeg"></div></div>
+        <svg class="mo-svg" id="moFoldSvg" viewBox="0 0 220 160" role="img" aria-label="对折的图形"></svg>
+        <p id="moFoldMsg">选一条线，点“对折”，看看两半能不能重合。</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="moFoldBtn" type="button">对折</button>
+        </div>
+        <p><b>平移和旋转：</b>三角形滑过去、转过去，样子变了没有？</p>
+        <svg class="mo-svg" viewBox="0 0 220 120" role="img" aria-label="平移和旋转的三角形">
+          <g id="moTri"><polygon points="110,20 150,100 70,100" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/></g>
+        </svg>
+        <p id="moMoveMsg">点“平移”让三角形滑过去，点“旋转”让它转一转。</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="moMoveBtn" type="button">平移</button>
+          <button class="btn small primary" id="moRotBtn" type="button">旋转 90°</button>
+        </div>
+        <p class="demo-foot">成功标准：说出长方形竖折、横折能重合，斜折不能；说出平移样子和方向都不变，旋转只变方向。</p>
+        <p class="why"><b>为什么？</b>对折后两边重合，是因为对称轴两边的点一一对应、到轴的距离相等。平移不改变图形，是因为每个点都向同一个方向移动了同样的距离；旋转也一样，每个点绕同一个中心转了同样的角度。</p>
+      </article>
+
+      <!-- 2.10 先算哪一堆 -->
+      <article class="demo-card" id="demo-mixop">
+        <p class="demo-tag">2 年级 · 混合运算</p>
+        <h3>先算哪一堆：先乘除后加减，小括号先算</h3>
+        <p>算式里有加减又有乘除，先算乘除，再算加减：2+3×4，先算 3×4=12，再加 2 是 14。有小括号先算括号里的。下面每根条是一堆，数一数每堆有几个。</p>
+        <div class="control-row"><span>选一道题</span><div class="seg" id="mxProbSeg"></div></div>
+        <div class="mx-bars" id="mxBars"></div>
+        <p class="func-eq" id="mxEq">2+3×4 = ?</p>
+        <p id="mxMsg">先想一想：哪一堆要先算？</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="mxFirstBtn" type="button">先算乘法</button>
+          <button class="btn small ghost" id="mxLeftBtn" type="button">从左往右算</button>
+        </div>
+        <p class="demo-foot">成功标准：说出“先算乘法那一堆，因为3乘4是一堆，再加2”；说出括号是“这一堆先算”。</p>
+        <p class="why"><b>为什么？</b>2+3×4 的意思是“2 加上 3 组 4”：3×4 是一堆，先数好这一堆，再加 2。括号是说“这一堆先算”：(2+3)×4 是 5 组 4，和 2+3×4 是两道不同的题。</p>
+      </article>
+
+      <!-- 2.11 装一包，剩几颗 -->
+      <article class="demo-card" id="demo-remain">
+        <p class="demo-tag">2 年级 · 有余数的除法</p>
+        <h3>装一包，剩几颗：余数一定要比除数小</h3>
+        <p>17 颗糖，每 5 颗装一包，能装 3 包，还剩 2 颗，写成 17÷5=3……2。余数一定要比除数小：剩下的要是 5 颗或更多，还能再装一包。</p>
+        <div class="control-row"><span>选一道题</span><div class="seg" id="remProbSeg"></div></div>
+        <p class="func-eq" id="remBags">已经装了 0 包</p>
+        <p class="func-eq" id="remLeft">还剩 17 颗</p>
+        <p class="func-eq" id="remEq">17 ÷ 5 = ?</p>
+        <p id="remMsg">每 5 颗装一包，装到不够 5 颗就停下。</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="remPackBtn" type="button">装一包（5颗）</button>
+          <button class="btn small ghost" id="remResetBtn" type="button">重新装</button>
+        </div>
+        <p class="demo-foot">成功标准：说出“3 包 5 颗是 15 颗，剩 2 颗，2 比 5 小，不能再包了”。</p>
+        <p class="why"><b>为什么？</b>余数小于除数，是因为如果余数比除数大，还能再分一轮，除法就没分完。3×5=15 是 17 里面最大的 5 的倍数，剩下的 2 就是分不完的零头。</p>
+      </article>
+
+      <!-- 2.12 数轴找近似数 -->
+      <article class="demo-card" id="demo-thousand">
+        <p class="demo-tag">2 年级 · 万以内数的认识</p>
+        <h3>数轴找近似数：离谁近就是谁</h3>
+        <p>近似数看数轴上离谁近：678 离 700 近，大约是 700。数轴中间有一条半点线：过了半点，就离上面那个整百近了。选一个数，看看它落在半点的哪一边。</p>
+        <div class="control-row"><span>选一个数</span><div class="seg" id="thNumSeg"></div></div>
+        <p class="func-eq" id="thPlace">678 = 6个百、7个十、8个一</p>
+        <svg class="number-line" viewBox="0 0 320 70" role="img" aria-label="近似数数轴">
+          <line x1="20" y1="30" x2="300" y2="30" stroke="#334155" stroke-width="3" stroke-linecap="round"/>
+          <line x1="160" y1="20" x2="160" y2="40" stroke="#dc2626" stroke-width="2" stroke-dasharray="4 3"/>
+          <circle id="thDot" cx="238" cy="30" r="11" fill="#ff8a3d" stroke="#fff" stroke-width="3"/>
+          <text id="thLowTx" x="20" y="60" font-size="13" fill="#64748b">600</text>
+          <text id="thMidTx" x="160" y="60" font-size="13" fill="#dc2626" text-anchor="middle">650</text>
+          <text id="thUpTx" x="300" y="60" font-size="13" fill="#64748b" text-anchor="end">700</text>
+        </svg>
+        <p class="func-eq" id="thApprox">678到700是22，到600是78，离700近，大约是700。</p>
+        <p class="hint">红虚线是半点：过了它，就离上面那个整百近了。10 个一百是 1000，10 个一千是 10000。</p>
+        <p class="demo-foot">成功标准：说出“678离700比离600近，所以大约是700”；说出半点过了就往上估。</p>
+        <p class="why"><b>为什么？</b>数位还是 10 个换 1 个的老规矩：每个新数位都是前一个的 10 倍。近似数不是看首位数字，是看数轴上的距离：678 到 700 是 22，到 600 是 78，22 更近，所以大约是 700。</p>
+      </article>
+
+      <!-- 2.13 天平称一称 -->
+      <article class="demo-card" id="demo-weight">
+        <p class="demo-tag">2 年级 · 克和千克</p>
+        <h3>天平称一称：1 千克 = 1000 克</h3>
+        <p>称东西的轻重要用天平。1 千克 = 1000 克，一个苹果大约 150 克，一袋盐大约 500 克。东西大不一定重：轻重是天平说了算，不是眼睛。点一样东西放到盘子里，看看一共多重。</p>
+        <div class="control-row"><span>点一样东西，放上盘子</span><div class="btn-row" id="wtItems"></div></div>
+        <p class="func-eq" id="wtTotal">盘子里一共 0克</p>
+        <div class="wt-bar-wrap"><div class="wt-bar-fill" id="wtBarFill"></div><span class="wt-mark">1千克</span></div>
+        <p id="wtMsg">点一样东西放到盘子里，称一称它有多重。</p>
+        <div class="btn-row">
+          <button class="btn small ghost" id="wtReset" type="button">拿下来，重新称</button>
+        </div>
+        <p class="hint">提示：几袋盐是 2 千克？一袋盐 500 克，试着放 4 袋。</p>
+        <p class="demo-foot">成功标准：说出“1千克是1000克，所以2千克是2000克”；说出大不一定重，称了才知道。</p>
+        <p class="why"><b>为什么？</b>千克和克也是 10 进制的亲戚：1 千克是 1000 个 1 克，就像 1 米是 100 个 1 厘米。估轻重靠“基准物”：先记住一个苹果约 150 克，再和它比一比。</p>
+      </article>
+
+      <!-- 2.14a 投票变条形图 -->
+      <article class="demo-card" id="demo-chart">
+        <p class="demo-tag">2 年级 · 数据收集整理</p>
+        <h3>投票变条形图：总数要对上</h3>
+        <p>全班 30 人投票选最喜欢的水果，已经数了 28 票：苹果 12 票、香蕉 10 票、橘子 6 票，葡萄还是 0 票。继续投一投，再数一数总数对不对。</p>
+        <div class="control-row"><span>投一票</span><div class="btn-row" id="chVotes"></div></div>
+        <div class="ch-rows">
+          <div class="ch-row"><span class="ch-name">苹果</span><div class="ch-track"><div class="ch-bar" id="chBar0"></div></div><b id="chNum0">12 票</b></div>
+          <div class="ch-row"><span class="ch-name">香蕉</span><div class="ch-track"><div class="ch-bar" id="chBar1"></div></div><b id="chNum1">10 票</b></div>
+          <div class="ch-row"><span class="ch-name">橘子</span><div class="ch-track"><div class="ch-bar" id="chBar2"></div></div><b id="chNum2">6 票</b></div>
+          <div class="ch-row"><span class="ch-name">葡萄</span><div class="ch-track"><div class="ch-bar" id="chBar3"></div></div><b id="chNum3">0 票</b></div>
+        </div>
+        <p class="func-eq" id="chTotal">已经投了 28 / 30 票</p>
+        <p id="chMsg">少了 2 票，有人的票漏数了——投给葡萄试试。</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="chCheck" type="button">总数对不对？</button>
+        </div>
+        <p class="demo-foot">成功标准：投满 30 票，说出“每人只数一次，条加起来就是全班人数”。</p>
+        <p class="why"><b>为什么？</b>每一笔都是一个真实的答案，表是这些答案的汇总。总数对不上，就说明有人数了两次，或者有人漏数了——表不会自己说谎，数错了它会露馅。</p>
+      </article>
+
+      <!-- 2.14b 排除格推理 -->
+      <article class="demo-card" id="demo-logic">
+        <p class="demo-tag">2 年级 · 数学广角——推理</p>
+        <h3>排除格推理：划掉不可能的</h3>
+        <p>小红、小明、小刚三人，一个拿苹果，一个拿梨，一个拿香蕉。推理是划掉不可能的：先把“不可能是谁”划掉，剩下的就是答案。点一个格子划掉它，或者先点一条线索。</p>
+        <div class="lg-wrap">
+          <div class="lg-head"><span class="lg-corner"></span><span>苹果</span><span>梨</span><span>香蕉</span></div>
+          <div class="lg-body">
+            <div class="lg-names"><span>小红</span><span>小明</span><span>小刚</span></div>
+            <div class="lg-grid" id="lgGrid"></div>
+          </div>
+        </div>
+        <p class="hint">格子是 3 行 × 3 列：小红、小明、小刚各一行，苹果、梨、香蕉各一列。点一下划 ✕，再点一下取消。</p>
+        <p id="lgMsg">点一个格子划掉不可能的，或者先点一条线索。</p>
+        <div class="btn-row">
+          <button class="btn small ghost" id="lgClue1" type="button">线索：小红拿的不是苹果</button>
+          <button class="btn small ghost" id="lgClue2" type="button">线索：小明拿的不是梨</button>
+          <button class="btn small ghost" id="lgClue3" type="button">线索：小明拿的不是苹果</button>
+          <button class="btn small ghost" id="lgReset" type="button">重新来</button>
+        </div>
+        <p class="demo-foot">成功标准：三条线索用完，说出“小红拿梨，小明拿香蕉，小刚拿苹果”。</p>
+        <p class="why"><b>为什么？</b>排除法管用，是因为答案只能是这几个人里的一个：划掉两个不可能的，剩下的那个一定是对的。推理不是猜，是把不可能的都去掉。</p>
+      </article>
+
+      <!-- 2.15 搭配连一连 -->
+      <article class="demo-card" id="demo-pair">
+        <p class="demo-tag">2 年级 · 数学广角——搭配（一）</p>
+        <h3>搭配连一连：3 件上衣 × 2 条裤子</h3>
+        <p>先定住一件上衣，再配一条裤子。每件上衣都能配每条裤子——3 件上衣、2 条裤子，每件上衣有 2 种配法，3 个 2 就是 6 种。搭配是乘，不是加。</p>
+        <div class="control-row"><span>选一件上衣</span><div class="seg" id="pairShirtSeg"></div></div>
+        <div class="control-row"><span>选一条裤子</span><div class="seg" id="pairPantsSeg"></div></div>
+        <p class="func-eq" id="pairSel">现在选的是：红上衣 + 黑裤子</p>
+        <div class="btn-row">
+          <button class="btn small primary" id="pairMake" type="button">配一身</button>
+          <button class="btn small ghost" id="pairReset" type="button">重新配</button>
+        </div>
+        <p class="func-eq" id="pairCount">已经配出 0 / 6 种</p>
+        <div class="pair-found" id="pairFound"></div>
+        <p id="pairMsg">先定住一件上衣，再配一条裤子。</p>
+        <p class="demo-foot">成功标准：配出全部 6 种，说出“3件上衣2条裤子是3×2=6种，不是3+2=5种”。</p>
+        <p class="why"><b>为什么？</b>每件上衣都能配每条裤子——3 件上衣、2 条裤子，每件上衣有 2 种配法，3 个 2 就是 6 种。搭配是乘，不是加。</p>
       </article>
     </div>
   </section>
@@ -1658,7 +2043,7 @@ const GRADE1_CONTENT = {
    在全图报告的 2 年级主题表里没有对应的知识点，本文件暂不收录。
    每条知识点：怎么做、为什么、容易错、看图学、动手试一试、讲回来、
    先考一考、练一练（基础 → 提高）、奥数挑战。
-   演示关联：只有 2.3 进位/退位配十格阵演示，其余为 null。 */
+   演示关联：16 条知识点都有实验——2.3 复用十格阵演示，其余 15 条各有新实验。 */
 const GRADE2_CONTENT = {
   grade: 2,
   edition: "A",
@@ -1679,7 +2064,7 @@ const GRADE2_CONTENT = {
           method: "从0量起 + 身体尺",
           explainBack: "“我从0开始量，到7就是7厘米。”",
           tryIt: "用尺子量一量你的铅笔有多长，再量一量你的一拃（张开的手掌）大约是几厘米。",
-          demo: null,
+          demo: "ruler",
           recall: { q: "用尺子量一支铅笔，你把铅笔的一端对准了刻度1，另一端对准了刻度8，这支铅笔是几厘米？是8厘米，还是7厘米？", answer: "7厘米", hint: "从1量到8，中间是7个1厘米；从0量才直接读数。" },
           practice: [
             { q: "一根绳子长5厘米，再接上一根3厘米的绳子，一共长几厘米？", answer: "8厘米", hint: "5+3=8。", level: "基础" },
@@ -1705,7 +2090,7 @@ const GRADE2_CONTENT = {
           method: "先估后算",
           explainBack: "“48靠近50，31靠近30，所以答案靠近80。”",
           tryIt: "先估一估26+38大约是多少（30+40=70），再精确算一算，看看估得准不准。",
-          demo: null,
+          demo: "estimate",
           recall: { q: "小明算48+31，得数是19。你不用算就知道他错了，为什么？", answer: "48接近50，31接近30，加起来应该接近80，19离80太远了", hint: "先估一估：50+30=80。" },
           practice: [
             { q: "算一算36+24。", answer: "60", hint: "个位6+4=10，写0进1个十；十位3+2再加进的1是6。", level: "基础" },
@@ -1751,7 +2136,7 @@ const GRADE2_CONTENT = {
           method: "角是“转了多少”",
           explainBack: "“臂张开多少，角就是多少，臂拉长角不变。”",
           tryIt: "拿两根吸管拼成一个角，张大、合小；再把吸管换成更长的，看看角变了没有。找一找家里哪些角是直角。",
-          demo: null,
+          demo: "angle",
           recall: { q: "一个角的两条边都画得很长，另一个角的两条边画得很短，两个角张开的程度一样大，哪个角大？是一样大，还是长边的角大？", answer: "一样大", hint: "角的大小看张开的程度，不看边的长短。" },
           practice: [
             { q: "一个长方形有几个直角？", answer: "4个", hint: "长方形的4个角都是直角。", level: "基础" },
@@ -1777,7 +2162,7 @@ const GRADE2_CONTENT = {
           method: "阵列点阵",
           explainBack: "“3乘4是3组4，一共12个点，排成3行4列。”",
           tryIt: "摆一摆3×4的点阵：3行，每行4个点；再转个方向，看看是不是4×3。一辆小汽车有4个轮子，3辆小汽车一共有几个轮子？",
-          demo: null,
+          demo: "array",
           recall: { q: "小明说3×4就是3+4，等于7。你同意吗？3×4到底是多少？", answer: "不同意；3×4是3个4相加，等于12", hint: "3×4是4+4+4，不是3+4。" },
           practice: [
             { q: "一辆小汽车有4个轮子，5辆小汽车一共有几个轮子？", answer: "20个", hint: "5个4相加：4×5=20。", level: "基础" },
@@ -1803,7 +2188,7 @@ const GRADE2_CONTENT = {
           method: "拖动旋转3D物体",
           explainBack: "“前面看是长方形，上面看是正方形，是同一个盒子。”",
           tryIt: "拿一个长方体盒子放在桌上，分别从前面、侧面、上面看一看，画下来；再把盒子转90度，看看你看到的样子变了没有。",
-          demo: null,
+          demo: "observe",
           recall: { q: "小明从前面看一个盒子是长方形，小红从上面看同一个盒子是正方形。他们看到的是同一个盒子吗？", answer: "是同一个盒子", hint: "站的位置不同，看到的样子就不同；盒子本身没有变。" },
           practice: [
             { q: "一个圆柱从上面看是什么图形？从前面看是什么图形？", answer: "从上面看是圆，从前面看是长方形", hint: "圆柱躺着看是长方形，竖着从上看是圆。", level: "基础" },
@@ -1829,7 +2214,7 @@ const GRADE2_CONTENT = {
           method: "联动表针 + 5分跳数",
           explainBack: "“分针走了5小格，就是7点05分。”",
           tryIt: "拨一拨钟：先拨到7时05分，再拨到8时30分，看看分针走了几圈、时针走了几格。",
-          demo: null,
+          demo: "time",
           recall: { q: "钟面上分针指着1后面一小格，时针刚过7，是几点几分？是7时5分，还是7时05分？", answer: "7时05分", hint: "5分要写成05，0是占位符，不能丢。" },
           practice: [
             { q: "分针从12走到6，走了多少分？时针走了多少？", answer: "走了30分；时针走了半格（半小时）", hint: "分针走一大格是5分，12到6是6大格，6×5=30分。", level: "基础" },
@@ -1855,7 +2240,7 @@ const GRADE2_CONTENT = {
           method: "搭配树/连线：定住一种，配另一种",
           explainBack: "“3件上衣2条裤子是3×2=6种，不是3+2=5种。”",
           tryIt: "拿3件衣服、2条裤子摆一摆，连线数一数有几种穿法。",
-          demo: null,
+          demo: "pair",
           recall: { q: "2件上衣3条裤子，一共有几种穿法？", answer: "6种", hint: "每件上衣配3条裤子，2×3=6" },
           practice: [
             { q: "食堂有3种主食、2种汤，一顿饭有几种搭配？", answer: "6种", hint: "3×2=6。", level: "基础" },
@@ -1881,7 +2266,7 @@ const GRADE2_CONTENT = {
           method: "投票变条形图 + 总数校验",
           explainBack: "“每人只数一次，条加起来就是全班人数。”",
           tryIt: "调查一下你们家：每人最喜欢的水果是什么？画一张表，看看总数对不对。",
-          demo: null,
+          demo: "chart",
           recall: { q: "全班30人投票，统计表里苹果12票、香蕉10票、橘子6票，一共是28票，少了2票，这说明什么？", answer: "说明有2个人的票漏数了", hint: "12+10+6=28，比30少2。" },
           practice: [
             { q: "小明调查了20名同学最喜欢的颜色，喜欢红色的有8人，喜欢蓝色的有7人，喜欢绿色的有几人？", answer: "5人", hint: "20-8-7=5。", level: "基础" },
@@ -1907,7 +2292,7 @@ const GRADE2_CONTENT = {
           method: "轮流发牌",
           explainBack: "“12分给3个人每人4个，因为4乘3是12。”",
           tryIt: "拿12颗糖，轮流分给3个人，每人几颗？再试一试：每次拿走3颗，能拿几次？",
-          demo: null,
+          demo: "share",
           recall: { q: "12÷3=4，你怎么检查它对不对？是算12-3，还是算4×3？", answer: "算4×3：4×3=12，所以12÷3=4是对的", hint: "除法是乘法的反面，用乘法检查除法。" },
           practice: [
             { q: "把15个苹果平均分给5个小朋友，每个小朋友分几个？", answer: "3个", hint: "想口诀：三五十五，15÷5=3。", level: "基础" },
@@ -1933,7 +2318,7 @@ const GRADE2_CONTENT = {
           method: "折纸 + 镜面拖",
           explainBack: "“沿这条线折过去，两半完全一样，所以这是对称轴。”",
           tryIt: "拿一张纸，画一个长方形，沿竖线对折，看看两边是不是完全重合；再画一个平行四边形对折，看看能不能重合。",
-          demo: null,
+          demo: "motion",
           recall: { q: "一个图形沿着竖线对折能完全重合，沿着斜线对折不能重合。哪条线是对称轴？是竖线，还是两条都是？", answer: "竖线是对称轴，斜线不是", hint: "对称轴要折过去完全重合才算。" },
           practice: [
             { q: "下面的图形哪些是轴对称图形：长方形、正方形、平行四边形？", answer: "长方形和正方形是轴对称图形；平行四边形（一般的）不是", hint: "长方形沿中线对折能重合；一般的平行四边形对折后重合不了。", level: "基础" },
@@ -1959,7 +2344,7 @@ const GRADE2_CONTENT = {
           method: "条形分堆",
           explainBack: "“先算乘法那一堆，因为3乘4是一堆，再加2。”",
           tryIt: "画一画2+3×4：先画3个4的条，再加2；再画一画(2+3)×4：先把2+3框起来，看看两根条有什么不一样。",
-          demo: null,
+          demo: "mixop",
           recall: { q: "2+3×4，小明从左往右算得20，小红先算乘法得14。谁对？为什么？", answer: "小红对；要先算乘法3×4=12，再加2是14", hint: "3×4是一堆，先数好这一堆。" },
           practice: [
             { q: "算一算5+2×3。", answer: "11", hint: "先算2×3=6，再加5是11。", level: "基础" },
@@ -1985,7 +2370,7 @@ const GRADE2_CONTENT = {
           method: "分到不够分为止",
           explainBack: "“3包5颗是15颗，剩2颗，2比5小，不能再包了。”",
           tryIt: "拿17颗糖，每5颗装一包，装几包、剩几颗？再试一试20颗糖每6颗装一包。",
-          demo: null,
+          demo: "remain",
           recall: { q: "17÷5，小明算出来是3余7。你不用算就知道他错了，为什么？", answer: "余数7比除数5大，7里面还能再装一包5，余数应该是2", hint: "余数一定要比除数小。" },
           practice: [
             { q: "20÷6=？余几？", answer: "商3余2", hint: "3×6=18，20-18=2。", level: "基础" },
@@ -2011,7 +2396,7 @@ const GRADE2_CONTENT = {
           method: "千方块 + 数轴半点",
           explainBack: "“678离700比离600近，所以大约是700。”",
           tryIt: "在数轴上标出678：它在600和700之间，离哪边近？再标出649，看看它离哪边近。",
-          demo: null,
+          demo: "thousand",
           recall: { q: "678大约是600还是700？是看首位数字6，还是看它在数轴上离谁近？", answer: "大约是700；看数轴上的距离", hint: "678到700是22，到600是78，离700近。" },
           practice: [
             { q: "1000里面有几个一百？10000里面有几个一千？", answer: "10个一百；10个一千", hint: "10个100是1000，10个1000是10000。", level: "基础" },
@@ -2037,7 +2422,7 @@ const GRADE2_CONTENT = {
           method: "天平称 + 基准物",
           explainBack: "“1千克是1000克，所以2千克是2000克。”",
           tryIt: "掂一掂家里的东西：一个苹果、一袋盐、一本书，猜猜各有多重，再用厨房秤称一称。",
-          demo: null,
+          demo: "weight",
           recall: { q: "一个大盒子和一块小石头，哪个重？是看大小，还是放上天平称一称？", answer: "放上天平称一称才知道", hint: "大不一定重，轻重是天平说了算。" },
           practice: [
             { q: "一袋大米重5千克，是多少克？", answer: "5000克", hint: "1千克是1000克，5千克是5个1000克。", level: "基础" },
@@ -2063,7 +2448,7 @@ const GRADE2_CONTENT = {
           method: "排除格",
           explainBack: "“不是这个，也不是那个，剩下的就是它。”",
           tryIt: "玩一玩：小红、小明、小刚三人，一个拿苹果，一个拿梨，一个拿香蕉。小红拿的不是苹果，小明拿的不是梨也不是苹果。谁拿了什么？",
-          demo: null,
+          demo: "logic",
           recall: { q: "小红、小明、小刚三人，一个是老师，一个是医生，一个是警察。小明不是医生，也不是老师。小明是什么？", answer: "警察", hint: "不是医生也不是老师，剩下的只有警察。" },
           practice: [
             { q: "小红、小明、小刚三人，一个拿苹果，一个拿梨，一个拿香蕉。小明拿的不是梨，也不是苹果，小明拿的是什么？", answer: "香蕉", hint: "不是梨也不是苹果，剩下的只有香蕉。", level: "基础" },
@@ -5040,14 +5425,16 @@ const GRADES = {
 };
 
 /* ---------- 进度（原型：记演示是否玩过） ----------
-   17 个演示全都计入：4 个经典演示 + 13 个一年级实验。以前只记 4 个经典，
+   32 个演示全都计入：4 个经典演示 + 13 个一年级实验 + 15 个二年级实验。以前只记 4 个经典，
    首页却写着“4 个演示”，演示页上却是 17 张卡，数字对不上
    （2026-11-06 真机审计第 6 条）。 */
 const tried = new Set();
 const FLAGSHIP = ['tenframe', 'fraction', 'balance', 'function'];
 const ALL_DEMOS = ['tenframe', 'fraction', 'balance', 'function',
   'count', 'position', 'split', 'addsub', 'solids', 'bundle', 'clock',
-  'tangram', 'sort', 'hundred', 'shop', 'place', 'pattern'];
+  'tangram', 'sort', 'hundred', 'shop', 'place', 'pattern',
+  'ruler', 'estimate', 'angle', 'array', 'observe', 'time', 'share',
+  'motion', 'mixop', 'remain', 'thousand', 'weight', 'chart', 'logic', 'pair'];
 // 刷新后进度还在：已体验的演示存在本地（只存本机，不上传）。
 try { JSON.parse(lsGet('math-tried-demos-v1') || '[]').forEach(k => tried.add(k)); } catch (e) {}
 function renderTried() {
@@ -5209,7 +5596,7 @@ function renderUnit(g, ui) {
   pointDetail.querySelectorAll('[data-point]').forEach(btn =>
     btn.addEventListener('click', () => navGo('point-' + btn.dataset.point)));
 }
-const DEMO_LABEL = { fraction: '去玩分数演示', tenframe: '去玩十格阵', balance: '去玩天平演示', function: '去玩函数演示', count: '去玩数一数', position: '去玩转身找左右', split: '去玩分一分', addsub: '去玩合起来拿走', solids: '去玩立体图形', bundle: '去玩捆小棒', clock: '去玩拨时钟', tangram: '去玩七巧板', sort: '去玩分类分一分', hundred: '去玩百数表', shop: '去玩开小店', place: '去玩数位块', pattern: '去玩找规律' };
+const DEMO_LABEL = { fraction: '去玩分数演示', tenframe: '去玩十格阵', balance: '去玩天平演示', function: '去玩函数演示', count: '去玩数一数', position: '去玩转身找左右', split: '去玩分一分', addsub: '去玩合起来拿走', solids: '去玩立体图形', bundle: '去玩捆小棒', clock: '去玩拨时钟', tangram: '去玩七巧板', sort: '去玩分类分一分', hundred: '去玩百数表', shop: '去玩开小店', place: '去玩数位块', pattern: '去玩找规律', ruler: '去玩尺子量一量', estimate: '去玩先估后算', angle: '去玩转一转角', array: '去玩点阵乘法', observe: '去玩换个方向看', time: '去玩拨时钟（时和分）', share: '去玩轮流分一分', motion: '去玩折一折转一转', mixop: '去玩先算哪一堆', remain: '去玩装一包装不满', thousand: '去玩数轴找近似数', weight: '去玩天平称一称', chart: '去玩投票变条形图', logic: '去玩排除格推理', pair: '去玩搭配连一连' };
 /* 分步评分：多步骤题拆成一步一步对。steps 是可选字段，没有 steps 的题照旧渲染。
    自评不是机器判题：每一步的对错都是学生自己标的，丢分报告只是把你标错的步骤列出来。 */
 function practiceStepsHtml(q, i, pointId) {
@@ -5444,7 +5831,9 @@ function updateHomeReviewTx() {
    条的宽度 = 练过知识点 / 该年级全部知识点。 */
 const DEMO_GRADES = { tenframe: [1, 2], fraction: [3, 4, 5], balance: [5, 6, 7], function: [7, 8],
   count: [1], position: [1], split: [1], addsub: [1], solids: [1], bundle: [1], clock: [1],
-  tangram: [1], sort: [1], hundred: [1], shop: [1], place: [1], pattern: [1] };
+  tangram: [1], sort: [1], hundred: [1], shop: [1], place: [1], pattern: [1],
+  ruler: [2], estimate: [2], angle: [2], array: [2], observe: [2], time: [2], share: [2],
+  motion: [2], mixop: [2], remain: [2], thousand: [2], weight: [2], chart: [2], logic: [2], pair: [2] };
 function renderProgress() {
   const card = document.getElementById('progressCard');
   if (!card) return;
@@ -5850,6 +6239,21 @@ const NAV_DEFS = {
   'demo-shop': { crumbs: ['数学', '互动演示', '开小店'], target: 'demo-shop' },
   'demo-place': { crumbs: ['数学', '互动演示', '数位块加减法'], target: 'demo-place' },
   'demo-pattern': { crumbs: ['数学', '互动演示', '找规律'], target: 'demo-pattern' },
+  'demo-ruler': { crumbs: ['数学', '互动演示', '尺子量长度'], target: 'demo-ruler' },
+  'demo-estimate': { crumbs: ['数学', '互动演示', '先估后算'], target: 'demo-estimate' },
+  'demo-angle': { crumbs: ['数学', '互动演示', '转一转角'], target: 'demo-angle' },
+  'demo-array': { crumbs: ['数学', '互动演示', '点阵乘法'], target: 'demo-array' },
+  'demo-observe': { crumbs: ['数学', '互动演示', '换个方向看'], target: 'demo-observe' },
+  'demo-time': { crumbs: ['数学', '互动演示', '认识时间：时和分'], target: 'demo-time' },
+  'demo-share': { crumbs: ['数学', '互动演示', '轮流分一分'], target: 'demo-share' },
+  'demo-motion': { crumbs: ['数学', '互动演示', '折一折，转一转'], target: 'demo-motion' },
+  'demo-mixop': { crumbs: ['数学', '互动演示', '先算哪一堆'], target: 'demo-mixop' },
+  'demo-remain': { crumbs: ['数学', '互动演示', '装一包，剩几颗'], target: 'demo-remain' },
+  'demo-thousand': { crumbs: ['数学', '互动演示', '数轴找近似数'], target: 'demo-thousand' },
+  'demo-weight': { crumbs: ['数学', '互动演示', '天平称一称'], target: 'demo-weight' },
+  'demo-chart': { crumbs: ['数学', '互动演示', '投票变条形图'], target: 'demo-chart' },
+  'demo-logic': { crumbs: ['数学', '互动演示', '排除格推理'], target: 'demo-logic' },
+  'demo-pair': { crumbs: ['数学', '互动演示', '搭配连一连'], target: 'demo-pair' },
   why:        { crumbs: ['数学', '互动演示', '为什么小实验'], target: 'why' },
   lab:        { crumbs: ['数学', '数学实验室'], target: 'lab' },
   review:     { crumbs: ['数学', '错题本'], target: 'review', action: renderWrongBook },
@@ -5926,7 +6330,7 @@ function viewForKey(key) {
   if (key === 'path') return 'path';
   if (key.startsWith('path-step-')) return 'path-step';
   if (key === 'demos') return 'demos';
-  if (key === 'demo-tenframe' || key === 'demo-fraction' || key === 'demo-balance' || key === 'demo-function' || key === 'demo-count' || key === 'demo-position' || key === 'demo-split' || key === 'demo-addsub' || key === 'demo-solids' || key === 'demo-bundle' || key === 'demo-clock' || key === 'demo-tangram' || key === 'demo-sort' || key === 'demo-hundred' || key === 'demo-shop' || key === 'demo-place' || key === 'demo-pattern') return key;
+  if (key === 'demo-tenframe' || key === 'demo-fraction' || key === 'demo-balance' || key === 'demo-function' || key === 'demo-count' || key === 'demo-position' || key === 'demo-split' || key === 'demo-addsub' || key === 'demo-solids' || key === 'demo-bundle' || key === 'demo-clock' || key === 'demo-tangram' || key === 'demo-sort' || key === 'demo-hundred' || key === 'demo-shop' || key === 'demo-place' || key === 'demo-pattern' || key === 'demo-ruler' || key === 'demo-estimate' || key === 'demo-angle' || key === 'demo-array' || key === 'demo-observe' || key === 'demo-time' || key === 'demo-share' || key === 'demo-motion' || key === 'demo-mixop' || key === 'demo-remain' || key === 'demo-thousand' || key === 'demo-weight' || key === 'demo-chart' || key === 'demo-logic' || key === 'demo-pair') return key;
   if (key === 'why') return 'why';
   if (key === 'lab') return 'lab';
   if (key === 'review') return 'review';
@@ -5970,7 +6374,7 @@ function applyView() {
   const stepN = view === 'path-step' ? key.slice('path-step-'.length) : null;
   [...pathPanelsEl.children].forEach(el => { el.hidden = !!(stepN && el.id !== 'step-' + stepN); });
   // 互动演示：列表留演示面板；叶子只留该演示卡片；为什么小实验只留 #why 区
-  const demoLeaf = view === 'demo-tenframe' || view === 'demo-fraction' || view === 'demo-balance' || view === 'demo-function' || view === 'demo-count' || view === 'demo-position' || view === 'demo-split' || view === 'demo-addsub' || view === 'demo-solids' || view === 'demo-bundle' || view === 'demo-clock' || view === 'demo-tangram' || view === 'demo-sort' || view === 'demo-hundred' || view === 'demo-shop' || view === 'demo-place' || view === 'demo-pattern';
+  const demoLeaf = view === 'demo-tenframe' || view === 'demo-fraction' || view === 'demo-balance' || view === 'demo-function' || view === 'demo-count' || view === 'demo-position' || view === 'demo-split' || view === 'demo-addsub' || view === 'demo-solids' || view === 'demo-bundle' || view === 'demo-clock' || view === 'demo-tangram' || view === 'demo-sort' || view === 'demo-hundred' || view === 'demo-shop' || view === 'demo-place' || view === 'demo-pattern' || view === 'demo-ruler' || view === 'demo-estimate' || view === 'demo-angle' || view === 'demo-array' || view === 'demo-observe' || view === 'demo-time' || view === 'demo-share' || view === 'demo-motion' || view === 'demo-mixop' || view === 'demo-remain' || view === 'demo-thousand' || view === 'demo-weight' || view === 'demo-chart' || view === 'demo-logic' || view === 'demo-pair';
   setHidden(demosSec, !(view === 'demos' || demoLeaf));
   setHidden(demoPanelsEl, view !== 'demos');
   setHidden(demoGridEl, !demoLeaf); // 演示卡片网格只在某一个演示的叶子视图里出现，列表视图只留演示面板
@@ -8477,6 +8881,930 @@ placeSetProblem(0);
     patSet((patIdx + 1) % PATTERNS.length);
   });
   patRender();
+
+/* ================= 二年级实验（2.1–2.15，2026-11-06） =================
+   Group E — Grade 2 demos. One small tool per point, same patterns as the
+   Grade 1 groups: seg buttons built once at init (never rebuilt, so the
+   smoke stub's children lists stay stable), readouts in textContent,
+   markTried() on the main interaction, no scoring, no login.
+   Numbers verified by hand — see the comments on each problem set. */
+
+/* ---------- demo-ruler · 2.1 长度单位、线段（方法：从0量起 + 身体尺） ---------- */
+const RUL_OBJS = [
+  { name: '铅笔', len: 7 },
+  { name: '橡皮', len: 3 },
+  { name: '彩带', len: 12 }
+];
+let rulObjIdx = 0;
+let rulFromOne = false;
+function rulBuildTicks() {
+  const g = document.getElementById('rulTicks');
+  const NS = 'http://www.w3.org/2000/svg';
+  for (let cm = 0; cm <= 15; cm++) {
+    const x = 10 + cm * 20;
+    const tick = document.createElementNS(NS, 'line');
+    tick.setAttribute('x1', String(x));
+    tick.setAttribute('y1', '34');
+    tick.setAttribute('x2', String(x));
+    tick.setAttribute('y2', cm % 5 === 0 ? '14' : '24');
+    tick.setAttribute('stroke', '#334155');
+    tick.setAttribute('stroke-width', cm % 5 === 0 ? '3' : '2');
+    g.appendChild(tick);
+    if (cm % 5 === 0) {
+      const num = document.createElementNS(NS, 'text');
+      num.setAttribute('x', String(x));
+      num.setAttribute('y', '58');
+      num.setAttribute('text-anchor', 'middle');
+      num.setAttribute('font-size', '13');
+      num.setAttribute('fill', '#64748b');
+      num.textContent = String(cm);
+      g.appendChild(num);
+    }
+  }
+}
+function rulBuildMeter() {
+  const strip = document.getElementById('rulMeter');
+  for (let i = 0; i < 100; i++) {
+    const s = document.createElement('span');
+    s.className = 'rul-cm';
+    strip.appendChild(s);
+  }
+}
+function rulRender() {
+  const obj = RUL_OBJS[rulObjIdx];
+  const x0 = rulFromOne ? 30 : 10; // 从1量：条子的左端对着刻度1
+  const bar = document.getElementById('rulBar');
+  bar.setAttribute('x', String(x0));
+  bar.setAttribute('width', String(obj.len * 20));
+  document.getElementById('rulReadout').textContent = rulFromOne
+    ? '尺子上读到 ' + (obj.len + 1) + ' 厘米'
+    : '从0量到 ' + obj.len + '，是 ' + obj.len + ' 厘米';
+  document.getElementById('rulMsg').textContent = rulFromOne
+    ? '从1开始量，读出来是 ' + (obj.len + 1) + '，可是' + obj.name + '只有 ' + obj.len + ' 厘米——从1量会多算1厘米，一定要从0量。'
+    : '0对准一端，另一端停在 ' + obj.len + '，就是 ' + obj.len + ' 厘米。';
+  document.getElementById('rulFromBtn').textContent = rulFromOne ? '改回从0量' : '试试从1开始量';
+  document.querySelectorAll('#rulObjSeg [data-rul-obj]').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(+b.dataset.rulObj === rulObjIdx));
+  });
+}
+(function rulInit() {
+  const seg = document.getElementById('rulObjSeg');
+  RUL_OBJS.forEach(function (o, i) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = o.name + ' ' + o.len + '厘米';
+    b.dataset.rulObj = String(i);
+    b.addEventListener('click', function () { rulObjIdx = i; markTried('ruler'); rulRender(); });
+    seg.appendChild(b);
+  });
+  document.getElementById('rulFromBtn').addEventListener('click', function () {
+    rulFromOne = !rulFromOne;
+    markTried('ruler');
+    rulRender();
+  });
+  rulBuildTicks();
+  rulBuildMeter();
+  rulRender();
+})();
+
+/* ---------- demo-estimate · 2.2 先估后算（方法：先估后算） ----------
+   48+31=79（估 50+30=80），26+38=64（估 30+40=70）。 */
+const EST_PROBS = [
+  { a: 48, b: 31, est: 80, exact: 79, near: '48接近50，31接近30' },
+  { a: 26, b: 38, est: 70, exact: 64, near: '26接近30，38接近40' }
+];
+let estProbIdx = 0;
+let estGuess = null;
+function estRender() {
+  const p = EST_PROBS[estProbIdx];
+  document.getElementById('estLine').textContent = p.a + ' → ' + (Math.round(p.a / 10) * 10) + '　　' + p.b + ' → ' + (Math.round(p.b / 10) * 10) + '　　大约 ' + p.est;
+  document.getElementById('estEq').textContent = p.a + ' + ' + p.b + ' = ?';
+  document.querySelectorAll('#estProbSeg [data-est-prob]').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(+b.dataset.estProb === estProbIdx));
+  });
+  document.querySelectorAll('#estGuessSeg [data-est-guess]').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(estGuess !== null && +b.dataset.estGuess === estGuess));
+  });
+}
+(function estInit() {
+  const seg = document.getElementById('estProbSeg');
+  EST_PROBS.forEach(function (p, i) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = p.a + ' + ' + p.b;
+    b.dataset.estProb = String(i);
+    b.addEventListener('click', function () { estProbIdx = i; estGuess = null; document.getElementById('estMsg').textContent = '先估一估：' + p.near + '，大约是多少？'; estRender(); });
+    seg.appendChild(b);
+  });
+  const gseg = document.getElementById('estGuessSeg');
+  [60, 70, 80, 90].forEach(function (g) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = '大约 ' + g;
+    b.dataset.estGuess = String(g);
+    b.addEventListener('click', function () {
+      const p = EST_PROBS[estProbIdx];
+      estGuess = g;
+      markTried('estimate');
+      document.getElementById('estMsg').textContent = g === p.est
+        ? '对了！' + p.near + '，加起来应该接近 ' + p.est + '。'
+        : '离 ' + p.est + ' 有点远——' + p.near + '，再想想。';
+      estRender();
+    });
+    gseg.appendChild(b);
+  });
+  document.getElementById('estExactBtn').addEventListener('click', function () {
+    const p = EST_PROBS[estProbIdx];
+    markTried('estimate');
+    document.getElementById('estEq').textContent = p.a + ' + ' + p.b + ' = ' + p.exact;
+    document.getElementById('estMsg').textContent = estGuess === p.est
+      ? '精确答案是 ' + p.exact + '，落在 ' + p.est + ' 附近，估对了！'
+      : '精确答案是 ' + p.exact + '，在 ' + p.est + ' 附近——先估一估，算错了马上能抓住。';
+  });
+  document.getElementById('estMsg').textContent = '先估一估：48接近50，31接近30，大约是多少？';
+  estRender();
+})();
+
+/* ---------- demo-angle · 2.4 角的初步认识、直角（方法：角是“转了多少”） ----------
+   张开 15°–165°，步进 15°；90° 是直角。臂长 60 / 90，角度数不变。 */
+let angDeg = 45;
+let angLong = false;
+function angRender() {
+  const len = angLong ? 60 : 90;
+  const rad = angDeg * Math.PI / 180;
+  const x = 100 + len * Math.cos(rad);
+  const y = 140 - len * Math.sin(rad);
+  const arm = document.getElementById('angArm');
+  arm.setAttribute('x2', String(Math.round(x * 10) / 10));
+  arm.setAttribute('y2', String(Math.round(y * 10) / 10));
+  const kind = angDeg < 90 ? '比直角小' : (angDeg === 90 ? '是直角' : '比直角大');
+  document.getElementById('angReadout').textContent = '张开了 ' + angDeg + '°，' + kind;
+  document.getElementById('angMsg').textContent = angDeg === 90
+    ? '这就是直角：方方正正的角，像书角、桌角一样。'
+    : '臂张开多少，角就是多少；把臂拉长，角一点没变。';
+  const mark = document.getElementById('angRightMark');
+  if (angDeg === 90) mark.removeAttribute('hidden'); else mark.setAttribute('hidden', '');
+  document.getElementById('angLenBtn').textContent = angLong ? '臂变短' : '臂变长';
+}
+(function angInit() {
+  document.getElementById('angOpen').addEventListener('click', function () {
+    if (angDeg < 165) angDeg += 15;
+    markTried('angle');
+    angRender();
+  });
+  document.getElementById('angClose').addEventListener('click', function () {
+    if (angDeg > 15) angDeg -= 15;
+    markTried('angle');
+    angRender();
+  });
+  document.getElementById('angLenBtn').addEventListener('click', function () {
+    angLong = !angLong;
+    markTried('angle');
+    angRender();
+  });
+  angRender();
+})();
+
+/* ---------- demo-array · 2.5 乘法初步认识、口诀（方法：阵列点阵） ----------
+   行 2–6，列 2–6；口诀：积 <10 用“得”，否则直接读数。3×4=12 三四十二。 */
+const ARR_CN = { 2: '二', 3: '三', 4: '四', 5: '五', 6: '六' };
+const ARR_SMALL = { 4: '四', 5: '五', 6: '六', 8: '八', 9: '九' };
+let arrRows = 3;
+let arrCols = 4;
+function arrKoujue(r, c) {
+  const p = r * c;
+  return ARR_CN[r] + ARR_CN[c] + (p < 10 ? '得' + ARR_SMALL[p] : String(p));
+}
+function arrRender() {
+  const grid = document.getElementById('arrGrid');
+  for (let i = 0; i < grid.children.length; i++) {
+    const r = Math.floor(i / 6);
+    const c = i % 6;
+    const on = r < arrRows && c < arrCols;
+    grid.children[i].classList.toggle('arr-on', on);
+    grid.children[i].style.visibility = on ? 'visible' : 'hidden';
+  }
+  document.getElementById('arrEq').textContent = arrRows + ' × ' + arrCols + ' = ' + (arrRows * arrCols);
+  document.getElementById('arrKoujue').textContent = '口诀：' + arrKoujue(arrRows, arrCols);
+  document.getElementById('arrRowsTx').textContent = arrRows + ' 行';
+  document.getElementById('arrColsTx').textContent = arrCols + ' 列';
+}
+(function arrInit() {
+  const grid = document.getElementById('arrGrid');
+  for (let i = 0; i < 36; i++) {
+    const d = document.createElement('span');
+    d.className = 'arr-dot';
+    grid.appendChild(d);
+  }
+  document.getElementById('arrRowsMinus').addEventListener('click', function () { if (arrRows > 2) arrRows--; markTried('array'); arrRender(); });
+  document.getElementById('arrRowsPlus').addEventListener('click', function () { if (arrRows < 6) arrRows++; markTried('array'); arrRender(); });
+  document.getElementById('arrColsMinus').addEventListener('click', function () { if (arrCols > 2) arrCols--; markTried('array'); arrRender(); });
+  document.getElementById('arrColsPlus').addEventListener('click', function () { if (arrCols < 6) arrCols++; markTried('array'); arrRender(); });
+  document.getElementById('arrRotate').addEventListener('click', function () {
+    const t = arrRows; arrRows = arrCols; arrCols = t;
+    markTried('array');
+    arrRender();
+    document.getElementById('arrMsg').textContent = '转个方向：' + arrRows + ' × ' + arrCols + ' = ' + (arrRows * arrCols) + '，点还是 ' + (arrRows * arrCols) + ' 个——所以 ' + arrCols + '×' + arrRows + ' 和 ' + arrRows + '×' + arrCols + ' 是一道题。';
+  });
+  arrRender();
+})();
+
+/* ---------- demo-observe · 2.6 观察物体（方法：拖动旋转3D物体） ----------
+   积木堆：底下一排 3 个，中间上面 1 个。前面 4 个正方形，左面 2 个，上面 3 个。
+   转 90° 后前面和左面互换。 */
+const OBS_VIEWS = {
+  front: { cells: [[0, 0], [1, 0], [2, 0], [1, 1]], label: '前面', n: 4 },
+  left: { cells: [[0, 0], [0, 1]], label: '左面', n: 2 },
+  top: { cells: [[0, 0], [1, 0], [2, 0]], label: '上面', n: 3 }
+};
+let obsView = 'front';
+let obsRotated = false;
+function obsRender() {
+  const key = obsView === 'top' ? 'top' : (obsRotated ? (obsView === 'front' ? 'left' : 'front') : obsView);
+  const v = OBS_VIEWS[key];
+  const svg = document.getElementById('obsSvg');
+  svg.innerHTML = '';
+  const NS = 'http://www.w3.org/2000/svg';
+  v.cells.forEach(function (cell) {
+    const r = document.createElementNS(NS, 'rect');
+    const cols = v.cells.reduce(function (m, c) { return Math.max(m, c[0] + 1); }, 0);
+    const x = 110 - cols * 22 + cell[0] * 44;
+    const y = 96 - cell[1] * 44 - 40;
+    r.setAttribute('x', String(x));
+    r.setAttribute('y', String(y));
+    r.setAttribute('width', '40');
+    r.setAttribute('height', '40');
+    r.setAttribute('rx', '6');
+    r.setAttribute('fill', '#dbeafe');
+    r.setAttribute('stroke', '#2563eb');
+    r.setAttribute('stroke-width', '2');
+    svg.appendChild(r);
+  });
+  document.getElementById('obsMsg').textContent = '从' + OBS_VIEWS[obsView].label + '看：看到 ' + v.n + ' 个正方形。' +
+    (obsRotated && obsView !== 'top' ? '（积木转了 90°，前面和左面换过来了。）' : '东西本身没有变，变的是你站的位置。');
+  document.querySelectorAll('#obsViewSeg [data-obs-view]').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(b.dataset.obsView === obsView));
+  });
+}
+(function obsInit() {
+  const seg = document.getElementById('obsViewSeg');
+  ['front', 'left', 'top'].forEach(function (k) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = OBS_VIEWS[k].label;
+    b.dataset.obsView = k;
+    b.addEventListener('click', function () { obsView = k; markTried('observe'); obsRender(); });
+    seg.appendChild(b);
+  });
+  document.getElementById('obsRotate').addEventListener('click', function () {
+    obsRotated = !obsRotated;
+    markTried('observe');
+    obsRender();
+  });
+  obsRender();
+})();
+
+/* ---------- demo-time · 2.7 认识时间（方法：联动表针 + 5分跳数） ----------
+   目标：7时05分、7时45分、9时40分。分针满 60 分进 1 时。 */
+let tmHour = 7;
+let tmMin = 0;
+let tmTargetIdx = 0;
+let tmWrapped = false;
+const TM_TARGETS = [
+  { h: 7, m: 5, label: '7时05分' },
+  { h: 7, m: 45, label: '7时45分' },
+  { h: 9, m: 40, label: '9时40分' }
+];
+function tmTimeText(h, m) {
+  return h + '时' + (m < 10 ? '0' + m : String(m)) + '分';
+}
+function tmBuildFace() {
+  const g = document.getElementById('tmTicks');
+  const NS = 'http://www.w3.org/2000/svg';
+  for (let i = 0; i < 12; i++) {
+    const a = i * 30 * Math.PI / 180;
+    const tick = document.createElementNS(NS, 'line');
+    tick.setAttribute('x1', String(100 + 84 * Math.sin(a)));
+    tick.setAttribute('y1', String(100 - 84 * Math.cos(a)));
+    tick.setAttribute('x2', String(100 + 91 * Math.sin(a)));
+    tick.setAttribute('y2', String(100 - 91 * Math.cos(a)));
+    tick.setAttribute('stroke', '#334155');
+    tick.setAttribute('stroke-width', '3');
+    tick.setAttribute('stroke-linecap', 'round');
+    g.appendChild(tick);
+    const num = document.createElementNS(NS, 'text');
+    num.setAttribute('x', String(100 + 68 * Math.sin(a)));
+    num.setAttribute('y', String(100 - 68 * Math.cos(a) + 6));
+    num.setAttribute('text-anchor', 'middle');
+    num.setAttribute('font-size', '17');
+    num.setAttribute('font-weight', '700');
+    num.setAttribute('fill', '#1e293b');
+    num.textContent = String(i === 0 ? 12 : i);
+    g.appendChild(num);
+  }
+}
+function tmHourStep() { tmHour = tmHour % 12 + 1; }
+function tmRender() {
+  const hourAngle = (tmHour % 12) * 30 + tmMin * 0.5;
+  const minAngle = tmMin * 6;
+  document.getElementById('tmHourHand').setAttribute('transform', 'rotate(' + hourAngle + ' 100 100)');
+  document.getElementById('tmMinHand').setAttribute('transform', 'rotate(' + minAngle + ' 100 100)');
+  document.getElementById('tmReadout').textContent = '现在是 ' + tmTimeText(tmHour, tmMin);
+  const t = TM_TARGETS[tmTargetIdx];
+  document.getElementById('tmTarget').textContent = '目标：拨到 ' + t.label;
+  document.getElementById('tmMsg').textContent =
+    (tmHour === t.h && tmMin === t.m) ? '对了，就是' + t.label + '！' : '目标是' + t.label + '，再拨一拨。';
+  document.getElementById('tmWrap').textContent = tmWrapped
+    ? '刚才分针转满了一圈，时针走了一格——1时=60分。' : '';
+}
+function tmAddMin(n) {
+  tmMin += n;
+  if (tmMin >= 60) { tmMin -= 60; tmHourStep(); tmWrapped = true; }
+  markTried('time');
+  tmRender();
+}
+(function tmInit() {
+  document.getElementById('tmMinPlus1').addEventListener('click', function () { tmAddMin(1); });
+  document.getElementById('tmMinPlus5').addEventListener('click', function () { tmAddMin(5); });
+  document.getElementById('tmHourPlus').addEventListener('click', function () { tmHourStep(); markTried('time'); tmRender(); });
+  document.getElementById('tmNextTarget').addEventListener('click', function () {
+    tmTargetIdx = (tmTargetIdx + 1) % TM_TARGETS.length;
+    tmWrapped = false;
+    tmRender();
+  });
+  tmBuildFace();
+  tmRender();
+})();
+
+/* ---------- demo-pair · 2.15 搭配（一）（方法：搭配树/连线：定住一种，配另一种） ----------
+   3 件上衣 × 2 条裤子 = 6 种穿法，不是 3+2=5。 */
+const PAIR_SHIRTS = ['红上衣', '蓝上衣', '绿上衣'];
+const PAIR_PANTS = ['黑裤子', '白裤子'];
+let pairShirt = 0;
+let pairPants = 0;
+const pairFound = new Set();
+function pairRender() {
+  document.getElementById('pairCount').textContent = '已经配出 ' + pairFound.size + ' / 6 种';
+  document.getElementById('pairSel').textContent = '现在选的是：' + PAIR_SHIRTS[pairShirt] + ' + ' + PAIR_PANTS[pairPants];
+  document.querySelectorAll('#pairShirtSeg [data-pair-shirt]').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(+b.dataset.pairShirt === pairShirt));
+  });
+  document.querySelectorAll('#pairPantsSeg [data-pair-pants]').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(+b.dataset.pairPants === pairPants));
+  });
+}
+(function pairInit() {
+  const sseg = document.getElementById('pairShirtSeg');
+  PAIR_SHIRTS.forEach(function (s, i) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = s;
+    b.dataset.pairShirt = String(i);
+    b.addEventListener('click', function () { pairShirt = i; pairRender(); });
+    sseg.appendChild(b);
+  });
+  const pseg = document.getElementById('pairPantsSeg');
+  PAIR_PANTS.forEach(function (s, i) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = s;
+    b.dataset.pairPants = String(i);
+    b.addEventListener('click', function () { pairPants = i; pairRender(); });
+    pseg.appendChild(b);
+  });
+  document.getElementById('pairMake').addEventListener('click', function () {
+    const key = pairShirt + '-' + pairPants;
+    const combo = PAIR_SHIRTS[pairShirt] + ' + ' + PAIR_PANTS[pairPants];
+    markTried('pair');
+    const msg = document.getElementById('pairMsg');
+    if (pairFound.has(key)) {
+      msg.textContent = combo + '已经配过了，换一身试试。';
+    } else {
+      pairFound.add(key);
+      const chip = document.createElement('span');
+      chip.className = 'pair-chip';
+      chip.textContent = combo;
+      document.getElementById('pairFound').appendChild(chip);
+      msg.textContent = pairFound.size === 6
+        ? '都配出来了：3件上衣 × 2条裤子 = 6种穿法，不是3+2=5种——每件上衣都能配2条裤子。'
+        : '配好了 ' + combo + '，还有 ' + (6 - pairFound.size) + ' 种没配。';
+    }
+    pairRender();
+  });
+  document.getElementById('pairReset').addEventListener('click', function () {
+    pairFound.clear();
+    document.getElementById('pairFound').innerHTML = '';
+    document.getElementById('pairMsg').textContent = '先定住一件上衣，再配一条裤子。';
+    pairRender();
+  });
+  pairRender();
+})();
+
+/* ---------- demo-chart · 2.14a 数据收集整理（方法：投票变条形图 + 总数校验） ----------
+   全班 30 人：苹果 12、香蕉 10、橘子 6、葡萄 0，一共 28 票，少了 2 票。 */
+const CH_FRUITS = [
+  { name: '苹果', n: 12 },
+  { name: '香蕉', n: 10 },
+  { name: '橘子', n: 6 },
+  { name: '葡萄', n: 0 }
+];
+function chTotal() { return CH_FRUITS.reduce(function (s, f) { return s + f.n; }, 0); }
+function chRender() {
+  CH_FRUITS.forEach(function (f, i) {
+    document.getElementById('chBar' + i).style.width = (f.n / 15 * 100) + '%';
+    document.getElementById('chNum' + i).textContent = f.n + ' 票';
+  });
+  document.getElementById('chTotal').textContent = '已经投了 ' + chTotal() + ' / 30 票';
+}
+(function chInit() {
+  const box = document.getElementById('chVotes');
+  CH_FRUITS.forEach(function (f, i) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'btn small ghost';
+    b.textContent = '投' + f.name + '一票';
+    b.addEventListener('click', function () {
+      f.n++;
+      markTried('chart');
+      chRender();
+      document.getElementById('chMsg').textContent = '投给了' + f.name + '，它现在有 ' + f.n + ' 票。';
+    });
+    box.appendChild(b);
+  });
+  document.getElementById('chCheck').addEventListener('click', function () {
+    markTried('chart');
+    const t = chTotal();
+    document.getElementById('chMsg').textContent = t < 30
+      ? '一共 ' + t + ' 票，还差 ' + (30 - t) + ' 票——有人的票漏数了。'
+      : t === 30
+        ? '30 票都数了：' + CH_FRUITS.map(function (f) { return f.n; }).join('+') + '=30，对上了！'
+        : '一共 ' + t + ' 票，比 30 多了 ' + (t - 30) + ' 票——有人数了两次。';
+  });
+  chRender();
+})();
+
+/* ---------- demo-share · 2.8 除法初步认识（方法：轮流发牌） ----------
+   12÷3=4，15÷5=3，20÷4=5。平均分：轮流发；包含除：每次拿走一份。 */
+const SH_PROBS = [
+  { total: 12, per: 3, label: '12颗糖分给3个人', names: ['小红', '小明', '小刚'] },
+  { total: 15, per: 5, label: '15个苹果分给5个小朋友', names: ['小红', '小明', '小刚', '小丽', '小强'] },
+  { total: 20, per: 4, label: '20块饼干分给4个人', names: ['小红', '小明', '小刚', '小丽'] }
+];
+let shProbIdx = 0;
+let shMode = 'deal';
+let shRemaining = 12;
+let shEach = [0, 0, 0, 0, 0];
+let shGroups = 0;
+function shReset() {
+  const p = SH_PROBS[shProbIdx];
+  shRemaining = p.total;
+  shEach = [0, 0, 0, 0, 0];
+  shGroups = 0;
+}
+function shRender() {
+  const p = SH_PROBS[shProbIdx];
+  const trays = document.getElementById('shTrays');
+  for (let i = 0; i < 5; i++) {
+    const t = trays.children[i];
+    if (shMode === 'deal') {
+      t.hidden = i >= p.per;
+      if (i < p.per) t.textContent = p.names[i] + '：' + shEach[i] + '个';
+    } else {
+      t.hidden = i >= shGroups;
+      if (i < shGroups) t.textContent = '第' + (i + 1) + '份：' + p.per + '个';
+    }
+  }
+  document.getElementById('shLeft').textContent = '还没分的：' + shRemaining + '个';
+  document.getElementById('shEq').textContent = shRemaining === 0
+    ? p.total + ' ÷ ' + p.per + ' = ' + (p.total / p.per)
+    : p.total + ' ÷ ' + p.per + ' = ?';
+  document.querySelectorAll('#shProbSeg [data-sh-prob]').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(+b.dataset.shProb === shProbIdx));
+  });
+  document.querySelectorAll('#shModeSeg [data-sh-mode]').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(b.dataset.shMode === shMode));
+  });
+  document.getElementById('shDeal').textContent = shMode === 'deal' ? '轮流发一圈' : '拿走' + p.per + '个';
+}
+(function shInit() {
+  const trays = document.getElementById('shTrays');
+  for (let i = 0; i < 5; i++) {
+    const t = document.createElement('div');
+    t.className = 'sh-tray';
+    trays.appendChild(t);
+  }
+  const seg = document.getElementById('shProbSeg');
+  SH_PROBS.forEach(function (p, i) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = p.label;
+    b.dataset.shProb = String(i);
+    b.addEventListener('click', function () { shProbIdx = i; shReset(); document.getElementById('shMsg').textContent = '点“轮流发一圈”，一人一颗轮流发。'; shRender(); });
+    seg.appendChild(b);
+  });
+  const mseg = document.getElementById('shModeSeg');
+  [['deal', '平均分：轮流发'], ['take', '包含除：每次拿走一份']].forEach(function (m) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = m[1];
+    b.dataset.shMode = m[0];
+    b.addEventListener('click', function () { shMode = m[0]; shReset(); document.getElementById('shMsg').textContent = shMode === 'deal' ? '点“轮流发一圈”，一人一颗轮流发。' : '点“拿走' + SH_PROBS[shProbIdx].per + '个”，每次拿走一份，看看能拿几次。'; shRender(); });
+    mseg.appendChild(b);
+  });
+  document.getElementById('shDeal').addEventListener('click', function () {
+    const p = SH_PROBS[shProbIdx];
+    markTried('share');
+    const msg = document.getElementById('shMsg');
+    if (shRemaining <= 0) { msg.textContent = '已经分完了。'; return; }
+    if (shMode === 'deal') {
+      for (let i = 0; i < p.per; i++) shEach[i]++;
+      shRemaining -= p.per;
+      if (shRemaining === 0) msg.textContent = '每人 ' + (p.total / p.per) + ' 个，' + (p.total / p.per) + ' × ' + p.per + ' = ' + p.total + '，平均分对了。';
+      else msg.textContent = '发了一圈，每人 ' + shEach[0] + ' 个，还剩 ' + shRemaining + ' 个。';
+    } else {
+      if (shRemaining < p.per) { msg.textContent = '剩下的不够 ' + p.per + ' 个了。'; return; }
+      shGroups++;
+      shRemaining -= p.per;
+      if (shRemaining === 0) msg.textContent = '一共拿了 ' + shGroups + ' 次，' + (p.total / p.per) + ' × ' + p.per + ' = ' + p.total + '。';
+      else msg.textContent = '拿走了 1 份，还剩 ' + shRemaining + ' 个，能拿 ' + shGroups + ' 次了。';
+    }
+    shRender();
+  });
+  document.getElementById('shResetBtn').addEventListener('click', function () { shReset(); document.getElementById('shMsg').textContent = '重新来。'; shRender(); });
+  shReset();
+  shRender();
+})();
+
+/* ---------- demo-motion · 2.9 图形的运动（方法：折纸 + 镜面拖） ----------
+   对折：长方形竖✓横✓斜✗；正方形竖✓横✓斜✓；平行四边形全✗。 */
+const MO_SHAPES = [
+  { name: '长方形', folds: { '竖': true, '横': true, '斜': false } },
+  { name: '正方形', folds: { '竖': true, '横': true, '斜': true } },
+  { name: '平行四边形', folds: { '竖': false, '横': false, '斜': false } }
+];
+let moShapeIdx = 0;
+let moFold = '竖';
+let moMoveX = 0;
+let moRot = 0;
+function moRenderShape() {
+  const svg = document.getElementById('moFoldSvg');
+  svg.innerHTML = '';
+  const NS = 'http://www.w3.org/2000/svg';
+  const s = MO_SHAPES[moShapeIdx];
+  let pts;
+  if (moShapeIdx === 0) pts = '40,40 180,40 180,110 40,110';
+  else if (moShapeIdx === 1) pts = '60,30 160,30 160,130 60,130';
+  else pts = '70,40 180,40 150,110 40,110';
+  const poly = document.createElementNS(NS, 'polygon');
+  poly.setAttribute('points', pts);
+  poly.setAttribute('fill', '#dbeafe');
+  poly.setAttribute('stroke', '#2563eb');
+  poly.setAttribute('stroke-width', '2');
+  svg.appendChild(poly);
+  const line = document.createElementNS(NS, 'line');
+  if (moFold === '竖') { line.setAttribute('x1', '110'); line.setAttribute('y1', '20'); line.setAttribute('x2', '110'); line.setAttribute('y2', '140'); }
+  else if (moFold === '横') { line.setAttribute('x1', '20'); line.setAttribute('y1', '80'); line.setAttribute('x2', '200'); line.setAttribute('y2', '80'); }
+  else { line.setAttribute('x1', '40'); line.setAttribute('y1', '20'); line.setAttribute('x2', '180'); line.setAttribute('y2', '140'); }
+  line.setAttribute('stroke', '#dc2626');
+  line.setAttribute('stroke-width', '2');
+  line.setAttribute('stroke-dasharray', '6 4');
+  svg.appendChild(line);
+  document.querySelectorAll('#moShapeSeg [data-mo-shape]').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(+b.dataset.moShape === moShapeIdx));
+  });
+  document.querySelectorAll('#moFoldSeg [data-mo-fold]').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(b.dataset.moFold === moFold));
+  });
+}
+(function moInit() {
+  const sseg = document.getElementById('moShapeSeg');
+  MO_SHAPES.forEach(function (s, i) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = s.name;
+    b.dataset.moShape = String(i);
+    b.addEventListener('click', function () { moShapeIdx = i; document.getElementById('moFoldMsg').textContent = '选一条线，点“对折”，看看两半能不能重合。'; moRenderShape(); });
+    sseg.appendChild(b);
+  });
+  const fseg = document.getElementById('moFoldSeg');
+  ['竖', '横', '斜'].forEach(function (f) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = f + '着折';
+    b.dataset.moFold = f;
+    b.addEventListener('click', function () { moFold = f; moRenderShape(); });
+    fseg.appendChild(b);
+  });
+  document.getElementById('moFoldBtn').addEventListener('click', function () {
+    const s = MO_SHAPES[moShapeIdx];
+    markTried('motion');
+    document.getElementById('moFoldMsg').textContent = s.folds[moFold]
+      ? '沿' + moFold + '线折过去，两半完全重合——这条线是对称轴。'
+      : '沿' + moFold + '线折过去，两半重合不了——这条线不是对称轴。';
+  });
+  document.getElementById('moMoveBtn').addEventListener('click', function () {
+    moMoveX = (moMoveX + 36) % 144;
+    markTried('motion');
+    document.getElementById('moTri').setAttribute('transform', 'translate(' + moMoveX + ' 0) rotate(' + moRot + ' 110 60)');
+    document.getElementById('moMoveMsg').textContent = '整个图形直直地滑过去了，样子和方向都没变。';
+  });
+  document.getElementById('moRotBtn').addEventListener('click', function () {
+    moRot = (moRot + 90) % 360;
+    markTried('motion');
+    document.getElementById('moTri').setAttribute('transform', 'translate(' + moMoveX + ' 0) rotate(' + moRot + ' 110 60)');
+    document.getElementById('moMoveMsg').textContent = '绕着点转了 90°，样子没变，方向变了——转过的图形还是原来的图形。';
+  });
+  moRenderShape();
+})();
+
+/* ---------- demo-mixop · 2.10 混合运算（方法：条形分堆） ----------
+   2+3×4=14（错算 20），5+2×3=11（错算 21），(2+3)×4=20（错算 14），(18-6)÷2=6（错算 15）。 */
+const MX_PROBS = [
+  { label: '2+3×4', first: '先算乘法', firstText: '3×4=12，再加2', result: 14, wrong: 20, wrongText: '从左往右算：2+3=5，5×4=20——那是(2+3)×4的答案，不是2+3×4的。', bars: [4, 4, 4, 2] },
+  { label: '5+2×3', first: '先算乘法', firstText: '2×3=6，再加5', result: 11, wrong: 21, wrongText: '从左往右算：5+2=7，7×3=21——错了，乘法那堆要先算。', bars: [3, 3, 5] },
+  { label: '(2+3)×4', first: '先算括号里', firstText: '2+3=5，再算5×4', result: 20, wrong: 14, wrongText: '不算括号先算乘法：3×4=12，再加2是14——那是2+3×4的答案，括号说了“这一堆先算”。', bars: [5, 5, 5, 5] },
+  { label: '(18-6)÷2', first: '先算括号里', firstText: '18-6=12，再算12÷2', result: 6, wrong: 15, wrongText: '不算括号：6÷2=3，18-3=15——错了，括号里的要先算。', bars: [6, 6] }
+];
+let mxProbIdx = 0;
+function mxRender() {
+  const p = MX_PROBS[mxProbIdx];
+  document.getElementById('mxEq').textContent = p.label + ' = ?';
+  document.getElementById('mxFirstBtn').textContent = p.first;
+  const bars = document.getElementById('mxBars');
+  bars.innerHTML = '';
+  p.bars.forEach(function (n) {
+    const bar = document.createElement('div');
+    bar.className = 'mx-bar';
+    for (let i = 0; i < n; i++) {
+      const u = document.createElement('span');
+      u.className = 'mx-unit';
+      bar.appendChild(u);
+    }
+    bars.appendChild(bar);
+  });
+  document.querySelectorAll('#mxProbSeg [data-mx-prob]').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(+b.dataset.mxProb === mxProbIdx));
+  });
+}
+(function mxInit() {
+  const seg = document.getElementById('mxProbSeg');
+  MX_PROBS.forEach(function (p, i) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = p.label;
+    b.dataset.mxProb = String(i);
+    b.addEventListener('click', function () { mxProbIdx = i; document.getElementById('mxMsg').textContent = '先想一想：哪一堆要先算？'; mxRender(); });
+    seg.appendChild(b);
+  });
+  document.getElementById('mxFirstBtn').addEventListener('click', function () {
+    const p = MX_PROBS[mxProbIdx];
+    markTried('mixop');
+    document.getElementById('mxEq').textContent = p.label + ' = ' + p.result;
+    document.getElementById('mxMsg').textContent = '对了！' + p.firstText + '，是 ' + p.result + '。';
+  });
+  document.getElementById('mxLeftBtn').addEventListener('click', function () {
+    const p = MX_PROBS[mxProbIdx];
+    markTried('mixop');
+    document.getElementById('mxMsg').textContent = '错了：' + p.wrongText;
+  });
+  mxRender();
+})();
+
+/* ---------- demo-remain · 2.11 有余数的除法（方法：分到不够分为止） ----------
+   17÷5=3余2，20÷6=3余2，23÷4=5余3。 */
+const REM_PROBS = [
+  { total: 17, size: 5 },
+  { total: 20, size: 6 },
+  { total: 23, size: 4 }
+];
+let remProbIdx = 0;
+let remBags = 0;
+let remLeft = 17;
+function remReset() {
+  remBags = 0;
+  remLeft = REM_PROBS[remProbIdx].total;
+}
+function remRender() {
+  const p = REM_PROBS[remProbIdx];
+  document.getElementById('remPackBtn').textContent = '装一包（' + p.size + '颗）';
+  document.getElementById('remBags').textContent = '已经装了 ' + remBags + ' 包';
+  document.getElementById('remLeft').textContent = '还剩 ' + remLeft + ' 颗';
+  document.getElementById('remEq').textContent = (remLeft < p.size && remBags > 0)
+    ? p.total + ' ÷ ' + p.size + ' = ' + remBags + ' …… ' + remLeft
+    : p.total + ' ÷ ' + p.size + ' = ?';
+  document.querySelectorAll('#remProbSeg [data-rem-prob]').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(+b.dataset.remProb === remProbIdx));
+  });
+}
+(function remInit() {
+  const seg = document.getElementById('remProbSeg');
+  REM_PROBS.forEach(function (p, i) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = p.total + ' ÷ ' + p.size;
+    b.dataset.remProb = String(i);
+    b.addEventListener('click', function () { remProbIdx = i; remReset(); document.getElementById('remMsg').textContent = '每 ' + p.size + ' 颗装一包，装到不够 ' + p.size + ' 颗就停下。'; remRender(); });
+    seg.appendChild(b);
+  });
+  document.getElementById('remPackBtn').addEventListener('click', function () {
+    const p = REM_PROBS[remProbIdx];
+    markTried('remain');
+    const msg = document.getElementById('remMsg');
+    if (remLeft < p.size) {
+      msg.textContent = '剩下的 ' + remLeft + ' 颗不够 ' + p.size + ' 颗，装不了了。';
+    } else {
+      remBags++;
+      remLeft -= p.size;
+      if (remLeft < p.size) msg.textContent = '装了 ' + remBags + ' 包，剩下的 ' + remLeft + ' 颗不够 ' + p.size + ' 颗，不能再装了——余数 ' + remLeft + ' 比除数 ' + p.size + ' 小。';
+      else msg.textContent = '装了 ' + remBags + ' 包，还剩 ' + remLeft + ' 颗，还能再装。';
+    }
+    remRender();
+  });
+  document.getElementById('remResetBtn').addEventListener('click', function () { remReset(); document.getElementById('remMsg').textContent = '重新来。'; remRender(); });
+  remReset();
+  remRender();
+})();
+
+/* ---------- demo-thousand · 2.12 万以内数的认识、近似数（方法：千方块 + 数轴半点） ----------
+   678→700（22 vs 78），649→600（49 vs 51），589→600，612→600，549→500，450→500（满5进1）。 */
+const TH_NUMS = [678, 649, 589, 612, 549, 450];
+let thNum = 678;
+function thRender() {
+  const n = thNum;
+  const lower = Math.floor(n / 100) * 100;
+  const upper = lower + 100;
+  const mid = lower + 50;
+  const dLow = n - lower;
+  const dUp = upper - n;
+  const approx = dUp <= dLow ? upper : lower;
+  const h = Math.floor(n / 100);
+  const t = Math.floor((n % 100) / 10);
+  const o = n % 10;
+  document.getElementById('thPlace').textContent = n + ' = ' + h + '个百、' + t + '个十、' + o + '个一';
+  document.getElementById('thApprox').textContent = dLow === dUp
+    ? n + '到' + upper + '和到' + lower + '都是' + dLow + '，正好在中间，满5进1，大约是' + approx + '。'
+    : n + '到' + upper + '是' + dUp + '，到' + lower + '是' + dLow + '，离' + approx + '近，大约是' + approx + '。';
+  const dot = document.getElementById('thDot');
+  dot.setAttribute('cx', String(20 + (n - lower) / 100 * 280));
+  document.getElementById('thLowTx').textContent = String(lower);
+  document.getElementById('thMidTx').textContent = String(mid);
+  document.getElementById('thUpTx').textContent = String(upper);
+  document.querySelectorAll('#thNumSeg [data-th-num]').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(+b.dataset.thNum === n));
+  });
+}
+(function thInit() {
+  const seg = document.getElementById('thNumSeg');
+  TH_NUMS.forEach(function (n) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = String(n);
+    b.dataset.thNum = String(n);
+    b.addEventListener('click', function () { thNum = n; markTried('thousand'); thRender(); });
+    seg.appendChild(b);
+  });
+  thRender();
+})();
+
+/* ---------- demo-weight · 2.13 克和千克（方法：天平称 + 基准物） ----------
+   苹果 150 克，一袋盐 500 克，一袋洗衣粉 2 千克，一袋大米 5 千克。1 千克 = 1000 克。 */
+const WT_ITEMS = [
+  { name: '苹果', g: 150 },
+  { name: '一袋盐', g: 500 },
+  { name: '一袋洗衣粉', g: 2000 },
+  { name: '一袋大米', g: 5000 }
+];
+const wtCounts = [0, 0, 0, 0];
+function wtTotal() { return WT_ITEMS.reduce(function (s, it, i) { return s + it.g * wtCounts[i]; }, 0); }
+function wtText(total) {
+  if (total < 1000) return total + '克';
+  const kg = Math.floor(total / 1000);
+  const rest = total % 1000;
+  return total + '克 = ' + kg + '千克' + (rest ? rest + '克' : '');
+}
+function wtRender() {
+  const total = wtTotal();
+  document.getElementById('wtTotal').textContent = '盘子里一共 ' + wtText(total);
+  document.getElementById('wtBarFill').style.width = Math.min(total / 5000 * 100, 100) + '%';
+  let msg;
+  if (total === 0) msg = '点一样东西放到盘子里，称一称它有多重。';
+  else if (total < 1000) msg = '比1千克轻。';
+  else if (total === 1000) msg = '正好是1千克。';
+  else msg = '比1千克重。';
+  if (wtCounts[1] === 4) msg += '4袋盐 = 2000克 = 2千克。';
+  document.getElementById('wtMsg').textContent = msg;
+  WT_ITEMS.forEach(function (it, i) {
+    document.getElementById('wtCount' + i).textContent = '×' + wtCounts[i];
+  });
+}
+(function wtInit() {
+  const box = document.getElementById('wtItems');
+  WT_ITEMS.forEach(function (it, i) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'btn small ghost';
+    b.innerHTML = it.name + ' ' + (it.g >= 1000 ? (it.g / 1000) + '千克' : it.g + '克') + ' <b id="wtCount' + i + '">×0</b>';
+    b.addEventListener('click', function () { wtCounts[i]++; markTried('weight'); wtRender(); });
+    box.appendChild(b);
+  });
+  document.getElementById('wtReset').addEventListener('click', function () {
+    for (let i = 0; i < wtCounts.length; i++) wtCounts[i] = 0;
+    wtRender();
+  });
+  wtRender();
+})();
+
+/* ---------- demo-logic · 2.14b 推理（方法：排除格） ----------
+   小红拿的不是苹果，小明拿的不是梨也不是苹果 → 小明拿香蕉，小红拿梨，小刚拿苹果。 */
+const LG_PEOPLE = ['小红', '小明', '小刚'];
+const LG_FRUITS = ['苹果', '梨', '香蕉'];
+const lgGrid = [];
+for (let i = 0; i < 3; i++) lgGrid.push(['', '', '']);
+function lgCellEl(r, c) { return document.getElementById('lgGrid').children[r * 3 + c]; }
+function lgResolve() {
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (let r = 0; r < 3; r++) {
+      const xs = lgGrid[r].filter(function (v) { return v === 'x'; }).length;
+      const blank = lgGrid[r].indexOf('');
+      if (xs === 2 && blank >= 0) { lgGrid[r][blank] = 'y'; changed = true; }
+      const yi = lgGrid[r].indexOf('y');
+      if (yi >= 0) {
+        for (let c = 0; c < 3; c++) if (c !== yi && lgGrid[r][c] === '') { lgGrid[r][c] = 'x'; changed = true; }
+      }
+    }
+    for (let c = 0; c < 3; c++) {
+      const col = [lgGrid[0][c], lgGrid[1][c], lgGrid[2][c]];
+      const xs = col.filter(function (v) { return v === 'x'; }).length;
+      const blank = col.indexOf('');
+      if (xs === 2 && blank >= 0) { lgGrid[blank][c] = 'y'; changed = true; }
+      const yi = col.indexOf('y');
+      if (yi >= 0) {
+        for (let r = 0; r < 3; r++) if (r !== yi && lgGrid[r][c] === '') { lgGrid[r][c] = 'x'; changed = true; }
+      }
+    }
+  }
+}
+function lgRender() {
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 3; c++) {
+      const el = lgCellEl(r, c);
+      const v = lgGrid[r][c];
+      el.textContent = v === 'x' ? '✕' : (v === 'y' ? '✓' : '');
+      el.classList.toggle('lg-x', v === 'x');
+      el.classList.toggle('lg-yes', v === 'y');
+      el.setAttribute('aria-pressed', String(v === 'x'));
+    }
+  }
+  const done = lgGrid.every(function (row) { return row.indexOf('y') >= 0; });
+  if (done) {
+    const ans = [];
+    for (let r = 0; r < 3; r++) ans.push(LG_PEOPLE[r] + '拿' + LG_FRUITS[lgGrid[r].indexOf('y')]);
+    document.getElementById('lgMsg').textContent = '都找出来了：' + ans.join('，') + '。';
+  }
+}
+function lgMark(r, c) {
+  if (lgGrid[r][c] === 'y') return;
+  lgGrid[r][c] = lgGrid[r][c] === 'x' ? '' : 'x';
+  lgResolve();
+  lgRender();
+}
+(function lgInit() {
+  const grid = document.getElementById('lgGrid');
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 3; c++) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'lg-cell';
+      b.setAttribute('aria-label', LG_PEOPLE[r] + '拿' + LG_FRUITS[c]);
+      b.addEventListener('click', function () { markTried('logic'); lgMark(r, c); });
+      grid.appendChild(b);
+    }
+  }
+  const clues = [
+    { id: 'lgClue1', r: 0, c: 0, text: '小红拿的不是苹果' },
+    { id: 'lgClue2', r: 1, c: 1, text: '小明拿的不是梨' },
+    { id: 'lgClue3', r: 1, c: 0, text: '小明拿的不是苹果' }
+  ];
+  clues.forEach(function (cl) {
+    document.getElementById(cl.id).addEventListener('click', function () {
+      markTried('logic');
+      if (lgGrid[cl.r][cl.c] !== 'y') lgGrid[cl.r][cl.c] = 'x';
+      lgResolve();
+      lgRender();
+      if (document.getElementById('lgMsg').textContent.indexOf('都找出来了') < 0) {
+        document.getElementById('lgMsg').textContent = '划掉了：' + cl.text + '。再用一条线索。';
+      }
+    });
+  });
+  document.getElementById('lgReset').addEventListener('click', function () {
+    for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) lgGrid[r][c] = '';
+    document.getElementById('lgMsg').textContent = '点一个格子划掉不可能的，或者先点一条线索。';
+    lgRender();
+  });
+  lgRender();
+})();
 
 </script>
 </body>

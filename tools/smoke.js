@@ -125,6 +125,14 @@ const GRADE1_CONTENT = { grade: 1, edition: 'A', units: [
     { id: '1.8', title: '认识钟表', subtitle: '整时、半点', how: '短针是时针，长针是分针。', why: '分针转一圈，时针走一格。', wrong: '长针短针分不清', wrongWhy: '只看长短，没看走得快慢。', visual: '钟面。', method: '联动表针钟', explainBack: '分针指着 12 就是整时。', tryIt: '拨到 7 点。', demo: 'clock', recall: { q: '分针指着 12，时针指着 7，是几点？', answer: '7 点', hint: '整时看时针' }, practice: [{ q: '分针指着 6，时针在 7 和 8 中间，是几点？', answer: '7 点半', hint: '分针指着 6 是半点', level: '基础' }, { q: '6 点往前推 3 小时是几点？', answer: '3 点', hint: '6 减 3', level: '提高' }] },
   ] },
 ] };
+const GRADE2_CONTENT = { grade: 2, edition: 'A', units: [
+  { unit: '长度单位', term: '上', points: [
+    { id: '2.1', title: '长度单位、线段', subtitle: '厘米、米、线段', how: '从 0 量起。', why: '长度就是数几个单位放得下。', wrong: '从刻度 1 开始量', wrongWhy: '会多算 1 厘米。', visual: '可拖动的尺子。', method: '从0量起 + 身体尺', explainBack: '我从0开始量，到7就是7厘米。', tryIt: '量一量铅笔。', demo: 'ruler', recall: { q: '从 1 量到 8 是几厘米？', answer: '7厘米', hint: '从1量到8是7个1厘米' }, practice: [{ q: '5厘米加3厘米是几厘米？', answer: '8厘米', hint: '5+3=8', level: '基础' }, { q: '1米减30厘米剩几厘米？', answer: '70厘米', hint: '1米是100厘米', level: '提高' }] },
+  ] },
+  { unit: '100以内的加法和减法（二）', term: '上', points: [
+    { id: '2.3', title: '进位加法、退位减法', subtitle: '进位加法、退位减法、满十进一', how: '10个一换成1个十。', why: '进位是换，总数不变。', wrong: '借1以后要还', wrongWhy: '借来的十已经用掉了。', visual: '数位块换一换。', method: '数位块“换”动画', explainBack: '10个一换成1个十，总数不变。', tryIt: '摆一摆27+15。', demo: 'tenframe', recall: { q: '52-17，个位不够减怎么办？', answer: '从十位借1个十', hint: '12-7=5' }, practice: [{ q: '27+15 = ?', answer: '42', hint: '个位7+5=12', level: '基础' }, { q: '64-28 = ?', answer: '36', hint: '个位借1个十', level: '提高' }] },
+  ] },
+] };
 const lsData = {};
 const localStorageStub = { getItem(k) { return lsData[k] || null; }, setItem(k, v) { lsData[k] = String(v); } };
 
@@ -147,7 +155,7 @@ seedSeg('sortRuleSeg', 'sort-rule', ['color', 'shape']);
 // ---------- load the real app.js ----------
 const root = require('path').resolve(__dirname, '..');
 const src = fs.readFileSync(root + '/apps/web/app.js', 'utf8');
-const sandbox = { document: documentStub, window: windowStub, console, setTimeout, Math, JSON, Object, Array, String, Number, parseInt, parseFloat, isNaN, GRADE3_CONTENT, GRADE1_CONTENT, localStorage: localStorageStub };
+const sandbox = { document: documentStub, window: windowStub, console, setTimeout, Math, JSON, Object, Array, String, Number, parseInt, parseFloat, isNaN, GRADE3_CONTENT, GRADE1_CONTENT, GRADE2_CONTENT, localStorage: localStorageStub };
 vm.createContext(sandbox);
 try {
   vm.runInContext(src, sandbox, { filename: 'app.js' });
@@ -270,7 +278,7 @@ const bCell0 = byId.tfB.children[0];
 click(bCell0);
 check('tenframe: click B cell moves one to fill ten', byId.tfEq.textContent === '9 + 4 = 13');
 check('tenframe note explains 10+3', byId.tfNote.textContent.includes('10 + 3 = 13'));
-check('demo counter counts a played demo', byId.progressCount.textContent === '1 / 17' &&
+check('demo counter counts a played demo', byId.progressCount.textContent === '1 / 32' &&
   JSON.parse(lsData['math-tried-demos-v1'] || '[]').includes('tenframe'));
 sandbox.tfSetProblem('sub', 0);
 check('tenframe sub initial equation', byId.tfEq.textContent === '13 − 5 = ?');
@@ -499,7 +507,7 @@ click(byId.countRowA.children[0]);
 check('count: click a dot counts it', byId.countCount.textContent.includes('数到了第 1 个'));
 click(byId.countCompare);
 check('count: 5 vs 7 -> below has 2 more', byId.countResult.textContent.includes('下面多 2 个'));
-check('G1 demos count toward the 17-demo progress', g1ProgBefore === '4 / 17' && byId.progressCount.textContent === '5 / 17');
+check('G1 demos count toward the 32-demo progress', g1ProgBefore === '4 / 32' && byId.progressCount.textContent === '5 / 32');
 click(byId.countAMinus); click(byId.countAMinus);
 check('count: minus twice -> 3', byId.countReadA.textContent === '3 个');
 
@@ -648,6 +656,166 @@ check('DEMO_LABEL covers all 13 new demos',
 navGo('grade-3-mix');
 check('grade-3 mix still renders', pointDetail.innerHTML.includes('混着练') && pointDetail.hidden === false);
 
+
+// ---------- 11b. 二年级实验（15 个新演示） ----------
+const G2_DEMOS = ['ruler', 'estimate', 'angle', 'array', 'observe', 'time',
+  'share', 'motion', 'mixop', 'remain', 'thousand', 'weight', 'chart', 'logic', 'pair'];
+check('G2: viewForKey covers all 15 new demos',
+  G2_DEMOS.every(k => sandbox.viewForKey('demo-' + k) === 'demo-' + k));
+navGo('demos');
+let g2ViewsOk = true;
+G2_DEMOS.forEach(k => {
+  navGo('demo-' + k);
+  if (!(byId.demos.hidden === false && documentStub.body.dataset.view === 'demo-' + k)) g2ViewsOk = false;
+});
+check('G2: all 15 demo views render (demos section visible)', g2ViewsOk);
+navGo('demos');
+navGo('demo-ruler');
+sandbox.navBackFn();
+check('G2: back from a demo returns to the demos list',
+  byId.demos.hidden === false && byId.demoPanels.hidden === false);
+const g2ProgBefore = byId.progressCount.textContent;
+
+// 2.1 尺子量长度
+check('ruler: initial 7 cm pencil', byId.rulReadout.textContent.includes('7 厘米'));
+click(byId.rulObjSeg.children[1]); // 橡皮 3 厘米
+check('ruler: eraser is 3 cm', byId.rulReadout.textContent.includes('3 厘米'));
+click(byId.rulFromBtn);
+check('ruler: measuring from 1 over-reads by 1', byId.rulMsg.textContent.includes('多算1厘米'));
+check('ruler: meter strip is 100 cm squares', byId.rulMeter.children.length === 100);
+check('G2 demos count toward the 32-demo progress', g2ProgBefore === '17 / 32' && byId.progressCount.textContent === '18 / 32');
+
+// 2.2 先估后算
+click(byId.estProbSeg.children[1]); // 26+38
+click(byId.estGuessSeg.children[1]); // 大约 70
+check('estimate: 26+38 is about 70', byId.estMsg.textContent.includes('对了'));
+click(byId.estExactBtn);
+check('estimate: exact 26+38=64', byId.estEq.textContent === '26 + 38 = 64');
+
+// 2.4 转一转角
+for (let i = 0; i < 3; i++) click(byId.angOpen);
+check('angle: open 3 steps -> 90 degrees, a right angle', byId.angReadout.textContent.includes('90°') && byId.angMsg.textContent.includes('直角'));
+click(byId.angLenBtn);
+check('angle: longer arm, angle unchanged at 90', byId.angReadout.textContent.includes('90°'));
+
+// 2.5 点阵乘法
+click(byId.arrRowsMinus);
+check('array: 2 x 4 = 8, koujue er-si-de-ba', byId.arrEq.textContent === '2 × 4 = 8' && byId.arrKoujue.textContent.includes('二四得八'));
+click(byId.arrRotate);
+check('array: rotate -> 4 x 2 = 8, same dots', byId.arrEq.textContent === '4 × 2 = 8' && byId.arrMsg.textContent.includes('点还是 8 个'));
+
+// 2.6 换个方向看
+click(byId.obsViewSeg.children[1]); // 左面
+check('observe: left view shows 2 squares', byId.obsMsg.textContent.includes('2 个正方形'));
+click(byId.obsViewSeg.children[2]); // 上面
+check('observe: top view shows 3 squares', byId.obsMsg.textContent.includes('3 个正方形'));
+click(byId.obsRotate);
+click(byId.obsViewSeg.children[0]); // 前面（转过 90° 后是左面的样子）
+check('observe: after a 90-degree turn the front shows 2 squares', byId.obsMsg.textContent.includes('2 个正方形'));
+
+// 2.7 认识时间：时和分
+for (let i = 0; i < 5; i++) click(byId.tmMinPlus1);
+check('time: +5 minutes -> 7:05, target met', byId.tmReadout.textContent === '现在是 7时05分' && byId.tmMsg.textContent.includes('对了，就是7时05分'));
+click(byId.tmNextTarget); // 目标 7 时 45 分
+for (let i = 0; i < 8; i++) click(byId.tmMinPlus5);
+check('time: +40 minutes -> 7:45, target met', byId.tmReadout.textContent === '现在是 7时45分' && byId.tmMsg.textContent.includes('对了，就是7时45分'));
+
+// 2.15 搭配连一连
+const pairCombos = [[0, 0], [1, 0], [2, 0], [0, 1], [1, 1], [2, 1]];
+pairCombos.forEach(c => {
+  click(byId.pairShirtSeg.children[c[0]]);
+  click(byId.pairPantsSeg.children[c[1]]);
+  click(byId.pairMake);
+});
+check('pair: all 6 outfits found, 3x2 not 3+2', byId.pairCount.textContent.includes('6 / 6') && byId.pairMsg.textContent.includes('6种穿法'));
+
+// 2.14a 投票变条形图
+check('chart: starts at 28 of 30 votes', byId.chTotal.textContent.includes('28 / 30'));
+click(byId.chVotes.children[3]); // 葡萄
+click(byId.chVotes.children[3]);
+check('chart: two grape votes -> 30 of 30', byId.chTotal.textContent.includes('30 / 30'));
+click(byId.chCheck);
+check('chart: total checks out', byId.chMsg.textContent.includes('对上了'));
+
+// 2.8 轮流分一分
+for (let i = 0; i < 4; i++) click(byId.shDeal);
+check('share: deal 12 to 3 -> 12 / 3 = 4', byId.shEq.textContent === '12 ÷ 3 = 4');
+click(byId.shModeSeg.children[1]); // 包含除：每次拿走一份
+for (let i = 0; i < 4; i++) click(byId.shDeal);
+check('share: take 3 at a time -> 4 groups', byId.shMsg.textContent.includes('拿了 4 次'));
+
+// 2.9 折一折，转一转
+click(byId.moFoldSeg.children[2]); // 斜着折
+click(byId.moFoldBtn);
+check('motion: rectangle folded diagonally does not match', byId.moFoldMsg.textContent.includes('不是对称轴'));
+click(byId.moShapeSeg.children[1]); // 正方形
+click(byId.moFoldBtn);
+check('motion: square folded diagonally matches', byId.moFoldMsg.textContent.includes('是对称轴'));
+click(byId.moMoveBtn);
+check('motion: slide keeps shape and direction', byId.moMoveMsg.textContent.includes('样子和方向都没变'));
+click(byId.moRotBtn);
+check('motion: rotate changes direction only', byId.moMoveMsg.textContent.includes('方向变了'));
+
+// 2.10 先算哪一堆
+click(byId.mxFirstBtn);
+check('mixop: 2+3x4 first the multiplication pile -> 14', byId.mxEq.textContent === '2+3×4 = 14');
+click(byId.mxLeftBtn);
+check('mixop: left-to-right gives the wrong 20', byId.mxMsg.textContent.includes('20'));
+click(byId.mxProbSeg.children[3]); // (18-6)÷2
+click(byId.mxFirstBtn);
+check('mixop: (18-6)/2 -> 6', byId.mxEq.textContent === '(18-6)÷2 = 6');
+
+// 2.11 装一包，剩几颗
+for (let i = 0; i < 3; i++) click(byId.remPackBtn);
+check('remain: 17/5 packs 3, leaves 2', byId.remEq.textContent === '17 ÷ 5 = 3 …… 2' && byId.remMsg.textContent.includes('余数 2 比除数 5 小'));
+click(byId.remPackBtn);
+check('remain: cannot pack the last 2', byId.remMsg.textContent.includes('装不了了'));
+
+// 2.12 数轴找近似数
+check('thousand: 678 is about 700', byId.thApprox.textContent.includes('大约是700'));
+click(byId.thNumSeg.children[1]); // 649
+check('thousand: 649 is about 600', byId.thApprox.textContent.includes('大约是600'));
+click(byId.thNumSeg.children[5]); // 450
+check('thousand: 450 rounds up to 500', byId.thApprox.textContent.includes('大约是500'));
+
+// 2.13 天平称一称
+click(byId.wtItems.children[1]); // 一袋盐 500 克
+click(byId.wtItems.children[1]);
+check('weight: two bags of salt are exactly 1 kg', byId.wtTotal.textContent.includes('1000克') && byId.wtMsg.textContent.includes('正好是1千克'));
+click(byId.wtItems.children[1]);
+click(byId.wtItems.children[1]);
+check('weight: four bags of salt are 2 kg', byId.wtTotal.textContent.includes('2000克') && byId.wtMsg.textContent.includes('4袋盐'));
+click(byId.wtReset);
+check('weight: reset empties the pan', byId.wtTotal.textContent.includes('0克'));
+
+// 2.14b 排除格推理
+click(byId.lgClue1);
+click(byId.lgClue2);
+click(byId.lgClue3);
+check('logic: three clues solve the puzzle', byId.lgMsg.textContent.includes('小红拿梨') && byId.lgMsg.textContent.includes('小明拿香蕉') && byId.lgMsg.textContent.includes('小刚拿苹果'));
+check('logic: grid marks 小明-香蕉 as the answer', byId.lgGrid.children[5].textContent === '✓');
+
+// 知识点页 → 实验的链接（桩里的 grade-2.js）+ 真实 grade-2.js 的映射
+navGo('point-2.1');
+check('point 2.1 links the ruler experiment', pointDetail.innerHTML.includes('去玩尺子量一量') && pointDetail.innerHTML.includes('data-demo-link="demo-ruler"'));
+navGo('point-2.3');
+check('point 2.3 reuses the ten-frame experiment', pointDetail.innerHTML.includes('去玩十格阵') && pointDetail.innerHTML.includes('data-demo-link="demo-tenframe"'));
+navGo('point-2.1');
+sandbox.goDemoFromHere('demo-ruler');
+check('G2 demo from point keeps point as parent', byId.crumbTitle.innerHTML.includes('长度单位、线段'));
+sandbox.navBackFn();
+check('G2 back from demo returns to point page', pointDetail.innerHTML.includes('长度单位、线段'));
+const g2src = fs.readFileSync(root + '/content/grades/grade-2.js', 'utf8');
+const g2ids = [...g2src.matchAll(/id: "([0-9.]+[a-z]?)"/g)].map(m => m[1]);
+const g2demos = [...g2src.matchAll(/demo: (?:"([a-z]+)"|null)/g)].map(m => m[1] || null);
+const g2expected = {'2.1':'ruler','2.2':'estimate','2.3':'tenframe','2.4':'angle','2.5':'array','2.6':'observe','2.7':'time','2.15':'pair','2.14a':'chart','2.8':'share','2.9':'motion','2.10':'mixop','2.11':'remain','2.12':'thousand','2.13':'weight','2.14b':'logic'};
+check('grade-2.js: all 16 points map to the right experiment',
+  g2ids.length === 16 && g2ids.every((id, i) => g2demos[i] === g2expected[id]));
+const labelSrc2 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
+check('DEMO_LABEL covers all 15 new demos',
+  G2_DEMOS.every(k => labelSrc2.includes(k + ':')));
+check('G2: all 15 new demos tried by now', byId.progressCount.textContent === '32 / 32');
+
 // ---------- 12. 全站布局改版（2026-11-06 真机审计） ----------
 // CSS：顶栏实底不透光，模式栏不吸顶，演示单列，知识点页窄栏
 check('layout CSS: topbar is solid opaque, no backdrop blur',
@@ -694,12 +862,12 @@ check('wrong-book includes today-review and tomorrow sections',
 navGo('grade-3-review');
 check('per-grade review hides the wrong-book section',
   byId.review.hidden === true && byId.reviewCard.hidden === true);
-// 我的进度：分年级真数字；到这里 17 个演示都玩过了
+// 我的进度：分年级真数字；到这里 32 个演示都玩过了
 navGo('progress');
 check('progress: per-grade rows with real numbers',
   byId.progressCard.innerHTML.includes('1 年级') && byId.progressCard.innerHTML.includes('3 年级') &&
   byId.progressCard.innerHTML.includes('演示') && byId.progressCard.innerHTML.includes('已练'));
-check('progress: all 17 demos tried by now', byId.progressCount.textContent === '17 / 17');
+check('progress: all 32 demos tried by now', byId.progressCount.textContent === '32 / 32');
 // 首页不显示孤零零的“数学”面包屑，子页面显示完整面包屑
 navGo('home');
 check('home hides the lone crumb title', byId.crumbTitle.hidden === true);
