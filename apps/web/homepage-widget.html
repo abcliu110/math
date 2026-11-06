@@ -4774,9 +4774,49 @@ function renderReview() {
       return '<button class="unit unit-btn" type="button" data-point="' + esc(id) + '"><b>' + esc(id) + ' · ' + esc(title) + '</b><p>' + (st.correct ? '上次答对' : '上次答错') + ' · ' + (st.confident ? '有把握' : '没把握') + '</p><span class="pill">今天复习</span></button>';
     }).join('') + '</div>';
   }
+  // 明天回来：已经排进明天、但今天还没到期的（答错 / 没把握的第二天回来）。
+  // 不写这一段，刚答错的题今天看不到、明天才突然出现，没人知道它被排进去了
+  // （2026-11-06 真机测试：第 4 项按“今天能看到”判了错，数据其实是对的）。
+  const now = Date.now();
+  const tomorrow = Object.keys(reviewStore).filter(id => {
+    const st = reviewStore[id];
+    return st && st.due > now && st.due <= now + 86400000;
+  });
+  if (tomorrow.length) {
+    html += '<div class="point-sec"><h4>明天回来</h4><p>这些明天到期，到时候再练。</p><div class="unit-list">' + tomorrow.map(id => {
+      const f = findPoint(id);
+      const title = f ? f.point.title : id;
+      const st = reviewStore[id];
+      return '<button class="unit unit-btn" type="button" data-point="' + esc(id) + '"><b>' + esc(id) + ' · ' + esc(title) + '</b><p>' + (st.correct ? '上次答对' : '上次答错') + ' · ' + (st.confident ? '有把握' : '没把握') + '</p><span class="pill">明天</span></button>';
+    }).join('') + '</div></div>';
+  }
   pointDetail.innerHTML = html;
   pointDetail.querySelectorAll('[data-point]').forEach(btn =>
     btn.addEventListener('click', () => navGo('point-' + btn.dataset.point)));
+}
+/* 错题本（首页面板）：真实错题列表——最近一次答错的知识点，点一条回知识点页重练。
+   之前这里只有 2 条占位示例，而且因为它和各年级的今天复习共用 view 'review'，
+   点进来还会把上一个知识点页的旧内容留在屏幕上（2026-11-06 真机测出）。 */
+function renderWrongBook() {
+  const wrong = Object.keys(reviewStore).filter(id => reviewStore[id] && reviewStore[id].correct === false);
+  let html = '<h3>错题本</h3>';
+  if (!wrong.length) {
+    html += '<p class="muted">还没有错题。练一练里答错的题会自动记到这里，点一条回去重练。</p>';
+  } else {
+    html += '<p class="muted">共 ' + wrong.length + ' 条错题，点一条回去重练。</p><ul class="wrong-list">' + wrong.map(id => {
+      const f = findPoint(id);
+      const title = f ? f.point.title : id;
+      const st = reviewStore[id];
+      const when = st.due <= Date.now() ? '今天复习' : '明天回来';
+      return '<li><button class="unit unit-btn" type="button" data-point="' + esc(id) + '"><b>' + esc(id) + ' · ' + esc(title) + '</b><small>上次答错 · ' + when + '</small></button></li>';
+    }).join('') + '</ul>';
+  }
+  reviewCardEl.innerHTML = html;
+  reviewCardEl.querySelectorAll('[data-point]').forEach(btn =>
+    btn.addEventListener('click', () => navGo('point-' + btn.dataset.point)));
+  // 首页错题本面板的小字也改成真实条数，别再写“2 条示例”。
+  const tx = document.querySelector('[data-nav-key="review"] .panel-tx');
+  if (tx) tx.textContent = wrong.length ? wrong.length + ' 条错题' : '还没有错题';
 }
 if (pointDetail) pointDetail.addEventListener('click', e => {
   const recallBtn = e.target.closest('[data-recall]');
@@ -5129,7 +5169,7 @@ const NAV_DEFS = {
   'demo-function': { crumbs: ['数学', '互动演示', '函数滑杆'], target: 'demo-function' },
   why:        { crumbs: ['数学', '互动演示', '为什么小实验'], target: 'why' },
   lab:        { crumbs: ['数学', '数学实验室'], target: 'lab' },
-  review:     { crumbs: ['数学', '错题本'], target: 'review' },
+  review:     { crumbs: ['数学', '错题本'], target: 'review', action: renderWrongBook },
   progress:   { crumbs: ['数学', '我的进度'], target: 'progressCard' },
 };
 Object.keys(GRADES).forEach(g => {
@@ -5216,11 +5256,15 @@ function applyView() {
   setHidden(heroEl, view !== 'home');
   setHidden(panelsSec, view !== 'home');
   // 选年级：列表只留 9 块年级面板；叶子只留该年级详情；3 年级再往下是单元和知识点
-  const inGrades = view === 'grades' || view === 'grade-detail' || view === 'unit-detail' || view === 'point-detail' || view === 'mix' || view === 'review';
+  // 注意：首页错题本（key 'review'）和各年级的今天复习（key 'grade-N-review'）都映射到
+  // view 'review'，但内容不一样——今天复习把到期列表画进 pointDetail，首页错题本画进
+  // reviewCard。首页错题本绝不能把 pointDetail 的旧内容留在屏幕上（2026-11-06 真机测出）。
+  const isHomeReview = key === 'review';
+  const inGrades = view === 'grades' || view === 'grade-detail' || view === 'unit-detail' || view === 'point-detail' || view === 'mix' || (view === 'review' && !isHomeReview);
   setHidden(gradesSec, !inGrades);
   setHidden(gradePanels, view !== 'grades');
   setHidden(gradeDetail, view !== 'grade-detail');
-  setHidden(pointDetail, !(view === 'unit-detail' || view === 'point-detail' || view === 'mix' || view === 'review'));
+  setHidden(pointDetail, !(view === 'unit-detail' || view === 'point-detail' || view === 'mix' || (view === 'review' && !isHomeReview)));
   setHidden(gradesSec.querySelector('h2'), inGrades && view !== 'grades');
   setHidden(gradesSec.querySelector('.section-sub'), inGrades && view !== 'grades');
   // 换维度：列表只留 5 块维度面板；叶子只留该维度的分组内容
@@ -5392,6 +5436,7 @@ document.querySelectorAll('[data-nav-key]').forEach(el =>
 document.getElementById('modeGrade').addEventListener('click', () => setModeView('grade'));
 document.getElementById('modeDim').addEventListener('click', () => setModeView('dimension'));
 renderNav();
+renderWrongBook(); // 首页错题本卡片和面板条数一进页面就是真实的，不是占位示例。
 
 function gcd(a, b) { a = Math.abs(a); b = Math.abs(b); return b ? gcd(b, a % b) : a; }
 

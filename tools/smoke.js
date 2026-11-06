@@ -405,6 +405,26 @@ check('wrong step names the lost step', rep1.hidden === false && rep1.textConten
 const stored2 = JSON.parse(lsData['math-review-v1'] || '{}');
 check('wrong step queues the point for review', stored2['3.7'] && stored2['3.7'].correct === false);
 
+// ---------- 10. 错题本是真列表 + 明天回来 ----------
+// 3.7 在第 9 节被记了一次答错（due 明天）。先去知识点页（pointDetail 里是旧内容），
+// 再点首页错题本：必须看到真实错题列表，看不到旧的知识点页。
+navGo('point-3.7');
+navGo('review');
+check('home wrong-book shows the real wrong list, not the stale point page',
+  byId.reviewCard.innerHTML.includes('3.7') && byId.reviewCard.innerHTML.includes('分数的初步认识') &&
+  !byId.reviewCard.innerHTML.includes('占位示例') &&
+  pointDetail.hidden === true && byId.grades.hidden === true && byId.review.hidden === false);
+check('home wrong-book: review section visible, review card visible',
+  byId.review.hidden === false && byId.reviewCard.hidden === false);
+// 今天复习：3.7 今天没到期（错了明天才来），所以今天列表是空的，明天回来里有它。
+navGo('grade-3-review');
+check('tomorrow section lists the wrong step for tomorrow, not today',
+  pointDetail.innerHTML.includes('明天回来') &&
+  pointDetail.innerHTML.includes('今天没有到期的复习') &&
+  pointDetail.innerHTML.indexOf('3.7') > pointDetail.innerHTML.indexOf('明天回来'));
+check('grade-3 review still renders after the fix',
+  pointDetail.innerHTML.includes('今天复习') && pointDetail.innerHTML.includes('练过 1 条'));
+
 // ---------- 8. grade 3 still works ----------
 navGo('grade-3-mix');
 check('grade-3 mix still renders', pointDetail.innerHTML.includes('混着练') && pointDetail.hidden === false);
