@@ -238,7 +238,7 @@ const GRADE1_CONTENT = {
           method: "凑十拖格",
           explainBack: "“我给9一个凑成10，再加3就是13。”",
           tryIt: "用十格阵算一算8+5：从5里拖几个给8能凑满10？剩下几个？",
-          demo: 'tenframe',
+          demo: 'thirteen',
           recall: { q: "算9+5，凑十法应该从5里借几个给9？是借1个，还是借5个？", answer: "借1个，9+1=10，再加剩下的4", hint: "9再加1就满10了。" },
           practice: [
             { q: "算一算8+4：先把4拆成几和几？（2和2）再算8+2+2。", answer: "12", hint: "8+2=10，10+2=12。", level: "基础" },

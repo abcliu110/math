@@ -52,7 +52,7 @@ const GRADES = {
 };
 
 /* ---------- 进度（原型：记演示是否玩过） ----------
-   132 个演示全都计入：4 个经典演示 + 13 个一年级实验 + 15 个二年级实验 + 14 个三年级实验 + 16 个四年级实验 + 11 个五年级实验 + 12 个六年级实验 + 13 个七年级实验 + 11 个八年级实验 + 15 个九年级实验 + 8 个创意实验 = 132 个。
+   133 个演示全都计入：4 个经典演示 + 13 个一年级实验 + 15 个二年级实验 + 14 个三年级实验 + 16 个四年级实验 + 11 个五年级实验 + 12 个六年级实验 + 13 个七年级实验 + 11 个八年级实验 + 15 个九年级实验 + 9 个创意实验 = 133 个。
    首页却写着“4 个演示”，演示页上却是 17 张卡，数字对不上
    （2026-11-06 真机审计第 6 条）。 */
 const tried = new Set();
@@ -77,7 +77,7 @@ const ALL_DEMOS = ['tenframe', 'fraction', 'balance', 'function',
   'radical', 'pythag', 'pargram', 'specialquad', 'datastats',
   'quad', 'growth', 'parabola', 'spin', 'circangle', 'tangent', 'sector', 'coin',
   'tree', 'hyperbola', 'similar', 'shadow', 'trig', 'slope', 'project',
-  'twentyfour', 'monty', 'maxarea', 'matches', 'mobius', 'shopweek', 'fairgame', 'makerule'];
+  'twentyfour', 'monty', 'maxarea', 'matches', 'mobius', 'shopweek', 'fairgame', 'makerule', 'thirteen'];
 // 刷新后进度还在：已体验的演示存在本地（只存本机，不上传）。
 try { JSON.parse(lsGet('math-tried-demos-v1') || '[]').forEach(k => tried.add(k)); } catch (e) {}
 // 已体验演示的唯一事实来源：内存里的 tried 集合。启动时从存储读一次，
@@ -125,6 +125,9 @@ function markTried(key) {
 if (typeof window !== 'undefined' && window.addEventListener) {
   window.addEventListener('storage', function (e) {
     if (e && e.key === 'math-tried-demos-v1') { syncTriedFromStorage(); renderTried(); }
+    // 复习库也是跨标签页共享的：别的窗口记了一笔错题，这边错题本、进度页都要立刻跟上
+    // （和演示进度一样的单源头 + storage 事件；换数字错题不用同步，它每次现读存储）。
+    if (e && e.key === REVIEW_KEY) { syncReviewFromStorage(); renderWrongBook(); renderProgress(); }
   });
 }
 // 注意：首次 renderTried() 不在这里调——它会调 renderProgress()，而 reviewStore
@@ -140,6 +143,15 @@ const REVIEW_KEY = 'math-review-v1';
 let reviewStore = {};
 try { reviewStore = JSON.parse(lsGet(REVIEW_KEY) || '{}') || {}; } catch (e) { reviewStore = {}; }
 function saveReview() { lsSet(REVIEW_KEY, JSON.stringify(reviewStore)); }
+/* 别的标签页改了复习库：重新从存储读一份，内存里那份就作废——
+   以前只同步了演示进度，复习库只在启动时读一次，两个窗口的错题数会分叉
+   （真机复测 7edb765：新开的标签页 5 条，原标签页 4 条）。 */
+function syncReviewFromStorage() {
+  try {
+    const a = JSON.parse(lsGet(REVIEW_KEY) || '{}');
+    if (a && typeof a === 'object') reviewStore = a;
+  } catch (e) {}
+}
 function recordAttempt(pointId, correct, confident) {
   const prev = reviewStore[pointId] || { streak: 0 };
   const streak = correct ? (prev.streak || 0) + 1 : 0;
@@ -147,6 +159,7 @@ function recordAttempt(pointId, correct, confident) {
   reviewStore[pointId] = { last: Date.now(), correct: !!correct, confident: !!confident, streak: streak, due: Date.now() + days * 86400000 };
   saveReview();
   updateHomeReviewTx();
+  updateWrongBookTx();
   updateCheckpointHomeTx();
   return days;
 }
@@ -281,6 +294,7 @@ function storeFailedQgen(pid, gq) {
   saveFailedQgen(f);
 }
 var qgenShown = {}; // pid -> 当前显示的那道换数字题（练一练里正在看的那组数字）
+var mixShown = {}; // pid -> 混着练里当前显示的那道换数字题（和 qgenShown 一样，只记当前这 5 道）
 function qgenGenerate(type) {
   const def = QGEN_DEFS[type];
   if (!def) return null;
@@ -447,7 +461,7 @@ function renderUnit(g, ui) {
   pointDetail.querySelectorAll('[data-cp-link]').forEach(btn =>
     btn.addEventListener('click', () => navGo('checkpoint')));
 }
-const DEMO_LABEL = { fraction: '去玩分数演示', tenframe: '去玩十格阵', balance: '去玩天平演示', function: '去玩函数演示', count: '去玩数一数', position: '去玩转身找左右', split: '去玩分一分', addsub: '去玩合起来拿走', solids: '去玩立体图形', bundle: '去玩捆小棒', clock: '去玩拨时钟', tangram: '去玩七巧板', sort: '去玩分类分一分', hundred: '去玩百数表', shop: '去玩开小店', place: '去玩数位块', pattern: '去玩找规律', ruler: '去玩尺子量一量', estimate: '去玩先估后算', angle: '去玩转一转角', array: '去玩点阵乘法', observe: '去玩换个方向看', time: '去玩拨时钟（时和分）', share: '去玩轮流分一分', motion: '去玩折一折转一转', mixop: '去玩先算哪一堆', remain: '去玩装一包装不满', thousand: '去玩数轴找近似数', weight: '去玩天平称一称', chart: '去玩投票变条形图', logic: '去玩排除格推理', pair: '去玩搭配连一连', elapsed: '去玩时间轴走一走', verify: '去玩算回去验算', units: '去玩单位楼梯', times: '去玩条形复制', splitmul: '去玩面积切一切', rectsq: '去玩拉一拉变正方形', venn: '去玩韦恩图拖人', compass: '去玩指南针转一转', divplace: '去玩按数位分一分', stattable: '去玩复式统计表', fourgrid: '去玩四格面积模型', area: '去玩铺方砖数面积', calendar: '去玩日历翻一翻', decimal: '去玩十分条比大小', bignum: '去玩大数数轴', field: '去玩足球场拼一拼', protractor: '去玩量角器', areamodel: '去玩面积模型', parallelogram: '去玩平行四边形', trialdiv: '去玩试商调商', baraxis: '去玩条形图轴', teatime: '去玩沏茶排一排', zerodiv: '去玩除以0', laws: '去玩运算定律', placeslider: '去玩数位滑块', tearangle: '去玩撕角拼平角', decadd: '去玩小数加减对齐', moveshape: '去玩图形平移', average: '去玩削峰填谷', chickenrabbit: '去玩鸡兔同笼', decmul: '去玩单位正方形', gridpos: '去玩数对点一点', decdiv: '去玩两数同乘', prob: '去玩摸球模拟', polyarea: '去玩切一刀变长方形', planttree: '去玩种树数间隔', factor: '去玩拼长方形', cuboid: '去玩分层装块', fracadd: '去玩先重切再数', rotate: '去玩绕钉旋转', findbad: '去玩三组称找次品', radar: '去玩雷达找地方', ratio: '去玩比条分一分', circle: '去玩绕绳量圆', percent: '去玩百分条', fan: '去玩扇形转一转', lsquare: '去玩一层层包正方形', thermo: '去玩温度计比一比', negmul: '去玩负数乘法规律', discount: '去玩打折算一算', cylinder: '去玩倒沙装满圆柱', pigeon: '去玩鸽子找洞', conceptmap: '去玩认出老办法', numline: '去玩数轴标一点', powerup: '去玩对折纸和科学记数法', monomial: '去玩拆零件看系数次数', liketerms: '去玩合并同类项', meetline: '去玩相向而行', lineseg: '去玩直线射线线段', anglepair: '去玩余角补角拼一拼', vertangle: '去玩对顶角转一转', parangles: '去玩平行线截角', roots: '去玩开方机器', coordplane: '去玩坐标平面点一点', ineqline: '去玩不等式画数轴', histogram: '去玩直方图分组', trisides: '去玩三边围不围', congruent: '去玩全等判定拼一拼', foldmirror: '去玩对折看对称', algarea: '去玩面积模型算整式', algfrac: '去玩分式约分', eqsieve: '去玩分式方程过筛子', radical: '去玩二次根式化简', pythag: '去玩勾股定理面积拼图', pargram: '去玩平行四边形推一推', specialquad: '去玩加条件变特殊', datastats: '去玩数据分析算一算', quad: '去玩一元二次方程', growth: '去玩利滚利和韦达', parabola: '去玩抛物线滑杆', spin: '去玩旋转和中心对称', circangle: '去玩圆周角', tangent: '去玩直线和圆切线', sector: '去玩扇形和圆锥', coin: '去玩抛硬币摸红球', tree: '去玩树状图数一数', hyperbola: '去玩双曲线', similar: '去玩相似放大', shadow: '去玩影子测高', trig: '去玩锐角三角函数', slope: '去玩仰角和坡度', project: '去玩投影和三视图', twentyfour: '去玩24点拼一拼', monty: '去玩三门问题', maxarea: '去玩周长面积最大', matches: '去玩火柴棒', mobius: '去玩莫比乌斯带', shopweek: '去玩开店一周', fairgame: '去玩公平游戏', makerule: '去玩造规律' };
+const DEMO_LABEL = { fraction: '去玩分数演示', tenframe: '去玩十格阵', balance: '去玩天平演示', function: '去玩函数演示', count: '去玩数一数', position: '去玩转身找左右', split: '去玩分一分', addsub: '去玩合起来拿走', solids: '去玩立体图形', bundle: '去玩捆小棒', clock: '去玩拨时钟', tangram: '去玩七巧板', sort: '去玩分类分一分', hundred: '去玩百数表', shop: '去玩开小店', place: '去玩数位块', pattern: '去玩找规律', ruler: '去玩尺子量一量', estimate: '去玩先估后算', angle: '去玩转一转角', array: '去玩点阵乘法', observe: '去玩换个方向看', time: '去玩拨时钟（时和分）', share: '去玩轮流分一分', motion: '去玩折一折转一转', mixop: '去玩先算哪一堆', remain: '去玩装一包装不满', thousand: '去玩数轴找近似数', weight: '去玩天平称一称', chart: '去玩投票变条形图', logic: '去玩排除格推理', pair: '去玩搭配连一连', elapsed: '去玩时间轴走一走', verify: '去玩算回去验算', units: '去玩单位楼梯', times: '去玩条形复制', splitmul: '去玩面积切一切', rectsq: '去玩拉一拉变正方形', venn: '去玩韦恩图拖人', compass: '去玩指南针转一转', divplace: '去玩按数位分一分', stattable: '去玩复式统计表', fourgrid: '去玩四格面积模型', area: '去玩铺方砖数面积', calendar: '去玩日历翻一翻', decimal: '去玩十分条比大小', bignum: '去玩大数数轴', field: '去玩足球场拼一拼', protractor: '去玩量角器', areamodel: '去玩面积模型', parallelogram: '去玩平行四边形', trialdiv: '去玩试商调商', baraxis: '去玩条形图轴', teatime: '去玩沏茶排一排', zerodiv: '去玩除以0', laws: '去玩运算定律', placeslider: '去玩数位滑块', tearangle: '去玩撕角拼平角', decadd: '去玩小数加减对齐', moveshape: '去玩图形平移', average: '去玩削峰填谷', chickenrabbit: '去玩鸡兔同笼', decmul: '去玩单位正方形', gridpos: '去玩数对点一点', decdiv: '去玩两数同乘', prob: '去玩摸球模拟', polyarea: '去玩切一刀变长方形', planttree: '去玩种树数间隔', factor: '去玩拼长方形', cuboid: '去玩分层装块', fracadd: '去玩先重切再数', rotate: '去玩绕钉旋转', findbad: '去玩三组称找次品', radar: '去玩雷达找地方', ratio: '去玩比条分一分', circle: '去玩绕绳量圆', percent: '去玩百分条', fan: '去玩扇形转一转', lsquare: '去玩一层层包正方形', thermo: '去玩温度计比一比', negmul: '去玩负数乘法规律', discount: '去玩打折算一算', cylinder: '去玩倒沙装满圆柱', pigeon: '去玩鸽子找洞', conceptmap: '去玩认出老办法', numline: '去玩数轴标一点', powerup: '去玩对折纸和科学记数法', monomial: '去玩拆零件看系数次数', liketerms: '去玩合并同类项', meetline: '去玩相向而行', lineseg: '去玩直线射线线段', anglepair: '去玩余角补角拼一拼', vertangle: '去玩对顶角转一转', parangles: '去玩平行线截角', roots: '去玩开方机器', coordplane: '去玩坐标平面点一点', ineqline: '去玩不等式画数轴', histogram: '去玩直方图分组', trisides: '去玩三边围不围', congruent: '去玩全等判定拼一拼', foldmirror: '去玩对折看对称', algarea: '去玩面积模型算整式', algfrac: '去玩分式约分', eqsieve: '去玩分式方程过筛子', radical: '去玩二次根式化简', pythag: '去玩勾股定理面积拼图', pargram: '去玩平行四边形推一推', specialquad: '去玩加条件变特殊', datastats: '去玩数据分析算一算', quad: '去玩一元二次方程', growth: '去玩利滚利和韦达', parabola: '去玩抛物线滑杆', spin: '去玩旋转和中心对称', circangle: '去玩圆周角', tangent: '去玩直线和圆切线', sector: '去玩扇形和圆锥', coin: '去玩抛硬币摸红球', tree: '去玩树状图数一数', hyperbola: '去玩双曲线', similar: '去玩相似放大', shadow: '去玩影子测高', trig: '去玩锐角三角函数', slope: '去玩仰角和坡度', project: '去玩投影和三视图', twentyfour: '去玩24点拼一拼', monty: '去玩三门问题', maxarea: '去玩周长面积最大', matches: '去玩火柴棒', mobius: '去玩莫比乌斯带', shopweek: '去玩开店一周', fairgame: '去玩公平游戏', makerule: '去玩造规律', thirteen: '去玩13有几种凑法' };
 /* 分步评分：多步骤题拆成一步一步对。steps 是可选字段，没有 steps 的题照旧渲染。
    自评不是机器判题：每一步的对错都是学生自己标的，丢分报告只是把你标错的步骤列出来。 */
 function practiceStepsHtml(q, i, pointId) {
@@ -573,6 +587,7 @@ function goDemoFromHere(demoKey) {
 let mixGrade = 3;
 function renderMix(g) {
   if (g) mixGrade = g;
+  mixShown = {};
   const gd = gradeData(mixGrade);
   if (!gd) return;
   const picks = shuffle(gd.units.filter(u => u.points.length)).slice(0, 5).map(u => {
@@ -580,7 +595,7 @@ function renderMix(g) {
     // 一半概率用换数字的同类题（该知识点有参数化题型时）：混着练的题本来就每次重抽，
     // 换数字的题也一样，每次数字都不同；题面带“换数字再练”药丸，一眼能认出来。
     const gq = qgenForPoint(p.id);
-    if (gq && Math.random() < 0.5) return { point: p, q: gq, qgen: true };
+    if (gq && Math.random() < 0.5) { mixShown[p.id] = gq; return { point: p, q: gq, qgen: true }; }
     return { point: p, q: p.practice[Math.floor(Math.random() * p.practice.length)] };
   });
   currentPointId = null;
@@ -589,7 +604,7 @@ function renderMix(g) {
     '<button class="btn ghost small qa-btn" type="button" data-qa="' + i + '">看答案</button>' +
     '<p class="qa-a" data-qa-a="' + i + '" hidden>答案：' + esc(pk.q.answer) + '（提示：' + esc(pk.q.hint) + '）</p>' +
     practiceStepsHtml(pk.q, i, pk.point.id) +
-    '<div class="qa-mark" data-qa-mark="' + i + '" data-point="' + esc(pk.point.id) + '" hidden>' +
+    '<div class="qa-mark" data-qa-mark="' + i + '" data-point="' + esc(pk.point.id) + '"' + (pk.qgen ? ' data-qgen="1"' : '') + ' hidden>' +
     '<p>你答对了吗？ <button class="btn small" type="button" data-mark="right">答对了</button> <button class="btn small" type="button" data-mark="wrong">答错了</button></p>' +
     '<p>答之前有把握吗？ <button class="btn small" type="button" data-conf="yes">有把握</button> <button class="btn small" type="button" data-conf="no">没把握</button></p>' +
     '<p class="qa-a" data-qa-saved="' + i + '" hidden></p></div></div>'
@@ -954,10 +969,16 @@ function renderWrongBook() {
   reviewCardEl.innerHTML = html;
   reviewCardEl.querySelectorAll('[data-point]').forEach(btn =>
     btn.addEventListener('click', () => navGo('point-' + btn.dataset.point)));
-  // 首页错题本面板的小字也改成真实条数，别再写“2 条示例”。
-  const tx = document.querySelector('[data-nav-key="review"] .panel-tx');
-  if (tx) tx.textContent = wrong.length ? wrong.length + ' 条错题' : '还没有错题';
+  updateWrongBookTx();
   updateHomeReviewTx();
+}
+/* 首页错题本面板的小字：真实错题条数。记一次答题就刷新一次——
+   以前只在打开错题本时刷，首页面板上的数字会比实际少（真机复测 7edb765：答错后面板还停在 4 条）。 */
+function updateWrongBookTx() {
+  const tx = document.querySelector('[data-nav-key="review"] .panel-tx');
+  if (!tx) return;
+  const n = Object.keys(reviewStore).filter(id => reviewStore[id] && reviewStore[id].correct === false).length;
+  tx.textContent = n ? n + ' 条错题' : '还没有错题';
 }
 /* 首页“今天复习”面板的小字：今天到期的条数。记一次答题就刷新一次。 */
 function updateHomeReviewTx() {
@@ -990,7 +1011,7 @@ const DEMO_GRADES = { tenframe: [1, 2], fraction: [3, 4, 5, 6], balance: [5, 6, 
   quad: [9], growth: [9], parabola: [9], spin: [9], circangle: [9], tangent: [9], sector: [9], coin: [9],
   tree: [9], hyperbola: [9], similar: [9], shadow: [9], trig: [9], slope: [9], project: [9],
   twentyfour: [4, 5], monty: [9], maxarea: [3, 4, 5], matches: [3, 4],
-  mobius: [6, 7], shopweek: [5, 6], fairgame: [5], makerule: [1, 2] };
+  mobius: [6, 7], shopweek: [5, 6], fairgame: [5], makerule: [1, 2], thirteen: [1] };
 function renderProgress() {
   const card = document.getElementById('progressCard');
   if (!card) return;
@@ -1066,8 +1087,8 @@ function taskTitle(taskId) {
 function inquiryListHtml(list, emptyText) {
   if (!list.length) return '<p class="muted">' + esc(emptyText) + '</p>';
   return '<ul class="wrong-list">' + list.slice().reverse().map(e => {
-    const kind = e.kind === 'teach' ? '小老师讲题' : '探究作业';
-    const title = e.kind === 'teach' ? (e.question || '没写题目') : taskTitle(e.taskId);
+    const kind = e.kind === 'teach' ? '小老师讲题' : e.kind === 'discovery' ? '我的发现' : '探究作业';
+    const title = e.kind === 'teach' ? (e.question || '没写题目') : e.kind === 'discovery' ? demoName(e.demo) : taskTitle(e.taskId);
     const demo = e.demo ? '用了演示：' + demoName(e.demo) : '没用演示';
     return '<li><b>' + esc(kind) + ' · ' + esc(title) + '</b><small>' + fmtDate(e.ts) + ' · ' + esc(demo) + '</small><p>' + esc(e.text || '') + '</p></li>';
   }).join('') + '</ul>';
@@ -1447,9 +1468,12 @@ if (pointDetail) pointDetail.addEventListener('click', e => {
     if (st.correct !== undefined && st.confident !== undefined) {
       const days = recordAttempt(pid, st.correct, st.confident);
       // 换数字题：答错了记下当初那组数字，下次回来先重做它；答对了就清掉。
-      if (row.dataset.qaMark === 'g') {
+      // 练一练里是 data-qa-mark="g" + qgenShown；混着练里是序号 + data-qgen + mixShown——
+      // 以前混着练没记，答错的换数字题进了复习库却丢了当初的数字（真机复测 7edb765：重开 3.11 总是新题）。
+      if (row.dataset.qaMark === 'g' || row.dataset.qgen) {
+        const gq = row.dataset.qaMark === 'g' ? qgenShown[pid] : mixShown[pid];
         if (st.correct) clearFailedQgen(pid);
-        else storeFailedQgen(pid, qgenShown[pid]);
+        else storeFailedQgen(pid, gq);
       }
       const saved = pointDetail.querySelector('[data-qa-saved="' + row.dataset.qaMark + '"]');
       if (saved) {
@@ -1862,6 +1886,7 @@ const NAV_DEFS = {
   'demo-shopweek': { crumbs: ['数学', '互动演示', '开店一周：怎么赚钱'], target: 'demo-shopweek' },
   'demo-fairgame': { crumbs: ['数学', '互动演示', '公平游戏：自己定规则'], target: 'demo-fairgame' },
   'demo-makerule': { crumbs: ['数学', '互动演示', '造规律：考考第20个'], target: 'demo-makerule' },
+  'demo-thirteen': { crumbs: ['数学', '互动演示', '13有几种凑法'], target: 'demo-thirteen' },
   why:        { crumbs: ['数学', '互动演示', '为什么小实验'], target: 'why' },
   lab:        { crumbs: ['数学', '数学实验室'], target: 'lab' },
   review:     { crumbs: ['数学', '错题本'], target: 'review', action: renderWrongBook },
@@ -1950,7 +1975,7 @@ function viewForKey(key) {
   if (key === 'path') return 'path';
   if (key.startsWith('path-step-')) return 'path-step';
   if (key === 'demos') return 'demos';
-  if (key === 'demo-tenframe' || key === 'demo-fraction' || key === 'demo-balance' || key === 'demo-function' || key === 'demo-count' || key === 'demo-position' || key === 'demo-split' || key === 'demo-addsub' || key === 'demo-solids' || key === 'demo-bundle' || key === 'demo-clock' || key === 'demo-tangram' || key === 'demo-sort' || key === 'demo-hundred' || key === 'demo-shop' || key === 'demo-place' || key === 'demo-pattern' || key === 'demo-ruler' || key === 'demo-estimate' || key === 'demo-angle' || key === 'demo-array' || key === 'demo-observe' || key === 'demo-time' || key === 'demo-share' || key === 'demo-motion' || key === 'demo-mixop' || key === 'demo-remain' || key === 'demo-thousand' || key === 'demo-weight' || key === 'demo-chart' || key === 'demo-logic' || key === 'demo-pair' || key === 'demo-elapsed' || key === 'demo-verify' || key === 'demo-units' || key === 'demo-times' || key === 'demo-splitmul' || key === 'demo-rectsq' || key === 'demo-venn' || key === 'demo-compass' || key === 'demo-divplace' || key === 'demo-stattable' || key === 'demo-fourgrid' || key === 'demo-area' || key === 'demo-calendar' || key === 'demo-decimal' || key === 'demo-bignum' || key === 'demo-field' || key === 'demo-protractor' || key === 'demo-areamodel' || key === 'demo-parallelogram' || key === 'demo-trialdiv' || key === 'demo-baraxis' || key === 'demo-teatime' || key === 'demo-zerodiv' || key === 'demo-laws' || key === 'demo-placeslider' || key === 'demo-tearangle' || key === 'demo-decadd' || key === 'demo-moveshape' || key === 'demo-average' || key === 'demo-chickenrabbit' || key === 'demo-decmul' || key === 'demo-gridpos' || key === 'demo-decdiv' || key === 'demo-prob' || key === 'demo-polyarea' || key === 'demo-planttree' || key === 'demo-factor' || key === 'demo-cuboid' || key === 'demo-fracadd' || key === 'demo-rotate' || key === 'demo-findbad' || key === 'demo-radar' || key === 'demo-ratio' || key === 'demo-circle' || key === 'demo-percent' || key === 'demo-fan' || key === 'demo-lsquare' || key === 'demo-thermo' || key === 'demo-negmul' || key === 'demo-discount' || key === 'demo-cylinder' || key === 'demo-pigeon' || key === 'demo-numline' || key === 'demo-powerup' || key === 'demo-monomial' || key === 'demo-liketerms' || key === 'demo-meetline' || key === 'demo-lineseg' || key === 'demo-anglepair' || key === 'demo-vertangle' || key === 'demo-parangles' || key === 'demo-roots' || key === 'demo-coordplane' || key === 'demo-ineqline' || key === 'demo-histogram' || key === 'demo-trisides' || key === 'demo-congruent' || key === 'demo-foldmirror' || key === 'demo-algarea' || key === 'demo-algfrac' || key === 'demo-eqsieve' || key === 'demo-radical' || key === 'demo-pythag' || key === 'demo-pargram' || key === 'demo-specialquad' || key === 'demo-datastats' || key === 'demo-quad' || key === 'demo-growth' || key === 'demo-parabola' || key === 'demo-spin' || key === 'demo-circangle' || key === 'demo-tangent' || key === 'demo-sector' || key === 'demo-coin' || key === 'demo-tree' || key === 'demo-hyperbola' || key === 'demo-similar' || key === 'demo-shadow' || key === 'demo-trig' || key === 'demo-slope' || key === 'demo-project' || key === 'demo-twentyfour' || key === 'demo-monty' || key === 'demo-maxarea' || key === 'demo-matches' || key === 'demo-mobius' || key === 'demo-shopweek' || key === 'demo-fairgame' || key === 'demo-makerule') return key;
+  if (key === 'demo-tenframe' || key === 'demo-fraction' || key === 'demo-balance' || key === 'demo-function' || key === 'demo-count' || key === 'demo-position' || key === 'demo-split' || key === 'demo-addsub' || key === 'demo-solids' || key === 'demo-bundle' || key === 'demo-clock' || key === 'demo-tangram' || key === 'demo-sort' || key === 'demo-hundred' || key === 'demo-shop' || key === 'demo-place' || key === 'demo-pattern' || key === 'demo-ruler' || key === 'demo-estimate' || key === 'demo-angle' || key === 'demo-array' || key === 'demo-observe' || key === 'demo-time' || key === 'demo-share' || key === 'demo-motion' || key === 'demo-mixop' || key === 'demo-remain' || key === 'demo-thousand' || key === 'demo-weight' || key === 'demo-chart' || key === 'demo-logic' || key === 'demo-pair' || key === 'demo-elapsed' || key === 'demo-verify' || key === 'demo-units' || key === 'demo-times' || key === 'demo-splitmul' || key === 'demo-rectsq' || key === 'demo-venn' || key === 'demo-compass' || key === 'demo-divplace' || key === 'demo-stattable' || key === 'demo-fourgrid' || key === 'demo-area' || key === 'demo-calendar' || key === 'demo-decimal' || key === 'demo-bignum' || key === 'demo-field' || key === 'demo-protractor' || key === 'demo-areamodel' || key === 'demo-parallelogram' || key === 'demo-trialdiv' || key === 'demo-baraxis' || key === 'demo-teatime' || key === 'demo-zerodiv' || key === 'demo-laws' || key === 'demo-placeslider' || key === 'demo-tearangle' || key === 'demo-decadd' || key === 'demo-moveshape' || key === 'demo-average' || key === 'demo-chickenrabbit' || key === 'demo-decmul' || key === 'demo-gridpos' || key === 'demo-decdiv' || key === 'demo-prob' || key === 'demo-polyarea' || key === 'demo-planttree' || key === 'demo-factor' || key === 'demo-cuboid' || key === 'demo-fracadd' || key === 'demo-rotate' || key === 'demo-findbad' || key === 'demo-radar' || key === 'demo-ratio' || key === 'demo-circle' || key === 'demo-percent' || key === 'demo-fan' || key === 'demo-lsquare' || key === 'demo-thermo' || key === 'demo-negmul' || key === 'demo-discount' || key === 'demo-cylinder' || key === 'demo-pigeon' || key === 'demo-numline' || key === 'demo-powerup' || key === 'demo-monomial' || key === 'demo-liketerms' || key === 'demo-meetline' || key === 'demo-lineseg' || key === 'demo-anglepair' || key === 'demo-vertangle' || key === 'demo-parangles' || key === 'demo-roots' || key === 'demo-coordplane' || key === 'demo-ineqline' || key === 'demo-histogram' || key === 'demo-trisides' || key === 'demo-congruent' || key === 'demo-foldmirror' || key === 'demo-algarea' || key === 'demo-algfrac' || key === 'demo-eqsieve' || key === 'demo-radical' || key === 'demo-pythag' || key === 'demo-pargram' || key === 'demo-specialquad' || key === 'demo-datastats' || key === 'demo-quad' || key === 'demo-growth' || key === 'demo-parabola' || key === 'demo-spin' || key === 'demo-circangle' || key === 'demo-tangent' || key === 'demo-sector' || key === 'demo-coin' || key === 'demo-tree' || key === 'demo-hyperbola' || key === 'demo-similar' || key === 'demo-shadow' || key === 'demo-trig' || key === 'demo-slope' || key === 'demo-project' || key === 'demo-twentyfour' || key === 'demo-monty' || key === 'demo-maxarea' || key === 'demo-matches' || key === 'demo-mobius' || key === 'demo-shopweek' || key === 'demo-fairgame' || key === 'demo-makerule' || key === 'demo-thirteen') return key;
   if (key === 'why') return 'why';
   if (key === 'lab') return 'lab';
   if (key === 'review') return 'review';
@@ -1999,7 +2024,7 @@ function applyView() {
   const stepN = view === 'path-step' ? key.slice('path-step-'.length) : null;
   [...pathPanelsEl.children].forEach(el => { el.hidden = !!(stepN && el.id !== 'step-' + stepN); });
   // 互动演示：列表留演示面板；叶子只留该演示卡片；为什么小实验只留 #why 区
-  const demoLeaf = view === 'demo-tenframe' || view === 'demo-fraction' || view === 'demo-balance' || view === 'demo-function' || view === 'demo-count' || view === 'demo-position' || view === 'demo-split' || view === 'demo-addsub' || view === 'demo-solids' || view === 'demo-bundle' || view === 'demo-clock' || view === 'demo-tangram' || view === 'demo-sort' || view === 'demo-hundred' || view === 'demo-shop' || view === 'demo-place' || view === 'demo-pattern' || view === 'demo-ruler' || view === 'demo-estimate' || view === 'demo-angle' || view === 'demo-array' || view === 'demo-observe' || view === 'demo-time' || view === 'demo-share' || view === 'demo-motion' || view === 'demo-mixop' || view === 'demo-remain' || view === 'demo-thousand' || view === 'demo-weight' || view === 'demo-chart' || view === 'demo-logic' || view === 'demo-pair' || view === 'demo-elapsed' || view === 'demo-verify' || view === 'demo-units' || view === 'demo-times' || view === 'demo-splitmul' || view === 'demo-rectsq' || view === 'demo-venn' || view === 'demo-compass' || view === 'demo-divplace' || view === 'demo-stattable' || view === 'demo-fourgrid' || view === 'demo-area' || view === 'demo-calendar' || view === 'demo-decimal' || view === 'demo-bignum' || view === 'demo-field' || view === 'demo-protractor' || view === 'demo-areamodel' || view === 'demo-parallelogram' || view === 'demo-trialdiv' || view === 'demo-baraxis' || view === 'demo-teatime' || view === 'demo-zerodiv' || view === 'demo-laws' || view === 'demo-placeslider' || view === 'demo-tearangle' || view === 'demo-decadd' || view === 'demo-moveshape' || view === 'demo-average' || view === 'demo-chickenrabbit' || view === 'demo-decmul' || view === 'demo-gridpos' || view === 'demo-decdiv' || view === 'demo-prob' || view === 'demo-polyarea' || view === 'demo-planttree' || view === 'demo-factor' || view === 'demo-cuboid' || view === 'demo-fracadd' || view === 'demo-rotate' || view === 'demo-findbad' || view === 'demo-radar' || view === 'demo-ratio' || view === 'demo-circle' || view === 'demo-percent' || view === 'demo-fan' || view === 'demo-lsquare' || view === 'demo-thermo' || view === 'demo-negmul' || view === 'demo-discount' || view === 'demo-cylinder' || view === 'demo-pigeon' || view === 'demo-numline' || view === 'demo-powerup' || view === 'demo-monomial' || view === 'demo-liketerms' || view === 'demo-meetline' || view === 'demo-lineseg' || view === 'demo-anglepair' || view === 'demo-vertangle' || view === 'demo-parangles' || view === 'demo-roots' || view === 'demo-coordplane' || view === 'demo-ineqline' || view === 'demo-histogram' || view === 'demo-trisides' || view === 'demo-congruent' || view === 'demo-foldmirror' || view === 'demo-algarea' || view === 'demo-algfrac' || view === 'demo-eqsieve' || view === 'demo-radical' || view === 'demo-pythag' || view === 'demo-pargram' || view === 'demo-specialquad' || view === 'demo-datastats' || view === 'demo-quad' || view === 'demo-growth' || view === 'demo-parabola' || view === 'demo-spin' || view === 'demo-circangle' || view === 'demo-tangent' || view === 'demo-sector' || view === 'demo-coin' || view === 'demo-tree' || view === 'demo-hyperbola' || view === 'demo-similar' || view === 'demo-shadow' || view === 'demo-trig' || view === 'demo-slope' || view === 'demo-project' || view === 'demo-twentyfour' || view === 'demo-monty' || view === 'demo-maxarea' || view === 'demo-matches' || view === 'demo-mobius' || view === 'demo-shopweek' || view === 'demo-fairgame' || view === 'demo-makerule';
+  const demoLeaf = view === 'demo-tenframe' || view === 'demo-fraction' || view === 'demo-balance' || view === 'demo-function' || view === 'demo-count' || view === 'demo-position' || view === 'demo-split' || view === 'demo-addsub' || view === 'demo-solids' || view === 'demo-bundle' || view === 'demo-clock' || view === 'demo-tangram' || view === 'demo-sort' || view === 'demo-hundred' || view === 'demo-shop' || view === 'demo-place' || view === 'demo-pattern' || view === 'demo-ruler' || view === 'demo-estimate' || view === 'demo-angle' || view === 'demo-array' || view === 'demo-observe' || view === 'demo-time' || view === 'demo-share' || view === 'demo-motion' || view === 'demo-mixop' || view === 'demo-remain' || view === 'demo-thousand' || view === 'demo-weight' || view === 'demo-chart' || view === 'demo-logic' || view === 'demo-pair' || view === 'demo-elapsed' || view === 'demo-verify' || view === 'demo-units' || view === 'demo-times' || view === 'demo-splitmul' || view === 'demo-rectsq' || view === 'demo-venn' || view === 'demo-compass' || view === 'demo-divplace' || view === 'demo-stattable' || view === 'demo-fourgrid' || view === 'demo-area' || view === 'demo-calendar' || view === 'demo-decimal' || view === 'demo-bignum' || view === 'demo-field' || view === 'demo-protractor' || view === 'demo-areamodel' || view === 'demo-parallelogram' || view === 'demo-trialdiv' || view === 'demo-baraxis' || view === 'demo-teatime' || view === 'demo-zerodiv' || view === 'demo-laws' || view === 'demo-placeslider' || view === 'demo-tearangle' || view === 'demo-decadd' || view === 'demo-moveshape' || view === 'demo-average' || view === 'demo-chickenrabbit' || view === 'demo-decmul' || view === 'demo-gridpos' || view === 'demo-decdiv' || view === 'demo-prob' || view === 'demo-polyarea' || view === 'demo-planttree' || view === 'demo-factor' || view === 'demo-cuboid' || view === 'demo-fracadd' || view === 'demo-rotate' || view === 'demo-findbad' || view === 'demo-radar' || view === 'demo-ratio' || view === 'demo-circle' || view === 'demo-percent' || view === 'demo-fan' || view === 'demo-lsquare' || view === 'demo-thermo' || view === 'demo-negmul' || view === 'demo-discount' || view === 'demo-cylinder' || view === 'demo-pigeon' || view === 'demo-numline' || view === 'demo-powerup' || view === 'demo-monomial' || view === 'demo-liketerms' || view === 'demo-meetline' || view === 'demo-lineseg' || view === 'demo-anglepair' || view === 'demo-vertangle' || view === 'demo-parangles' || view === 'demo-roots' || view === 'demo-coordplane' || view === 'demo-ineqline' || view === 'demo-histogram' || view === 'demo-trisides' || view === 'demo-congruent' || view === 'demo-foldmirror' || view === 'demo-algarea' || view === 'demo-algfrac' || view === 'demo-eqsieve' || view === 'demo-radical' || view === 'demo-pythag' || view === 'demo-pargram' || view === 'demo-specialquad' || view === 'demo-datastats' || view === 'demo-quad' || view === 'demo-growth' || view === 'demo-parabola' || view === 'demo-spin' || view === 'demo-circangle' || view === 'demo-tangent' || view === 'demo-sector' || view === 'demo-coin' || view === 'demo-tree' || view === 'demo-hyperbola' || view === 'demo-similar' || view === 'demo-shadow' || view === 'demo-trig' || view === 'demo-slope' || view === 'demo-project' || view === 'demo-twentyfour' || view === 'demo-monty' || view === 'demo-maxarea' || view === 'demo-matches' || view === 'demo-mobius' || view === 'demo-shopweek' || view === 'demo-fairgame' || view === 'demo-makerule' || view === 'demo-thirteen';
   setHidden(demosSec, !(view === 'demos' || demoLeaf));
   setHidden(demoPanelsEl, view !== 'demos');
   setHidden(creativePanelsEl, view !== 'demos');
@@ -11451,6 +11476,39 @@ function mulberry32(a) {
 }
 /* 清空一个容器的子元素：不能用 innerHTML=''，因为桩 DOM 的 children 数组不会跟着清。 */
 function clearChildren(el) { while (el.firstChild) el.removeChild(el.firstChild); }
+/* ---------- 创意实验的通用件（设计原则：猜→玩→说；三档；我的发现） ---------- */
+/* 三档：基础 / 提高 / 挑战。每个实验自己决定三档是什么，done(i) 点亮第 i 档。 */
+function makeTiers(el, labels) {
+  clearChildren(el);
+  const chips = labels.map(function (label) {
+    const s = document.createElement('span');
+    s.className = 'tier-chip';
+    s.textContent = '○ ' + label;
+    el.appendChild(s);
+    return s;
+  });
+  return {
+    done: function (i) {
+      if (chips[i]) { chips[i].classList.add('done'); chips[i].textContent = '✓ ' + labels[i]; }
+    }
+  };
+}
+/* “我的发现”：存在已有的探究作业键里（kind 'discovery'），不在这里新开键；
+   探究作业列表会把它标成“我的发现”，不混进作业；挑战模式的错题另由 recordAttempt 记进错题本。 */
+function wireDiscovery(demoKey, inputId, btnId, outId) {
+  const input = document.getElementById(inputId);
+  const out = document.getElementById(outId);
+  document.getElementById(btnId).addEventListener('click', function () {
+    const text = (input.value || '').trim();
+    if (!text) { out.textContent = '先写一句你的发现，再记下来。'; return; }
+    const list = JSON.parse(lsGet(INQUIRY_KEY) || '[]');
+    list.push({ kind: 'discovery', taskId: demoKey, text: text, demo: demoKey, ts: Date.now() });
+    lsSet(INQUIRY_KEY, JSON.stringify(list));
+    out.textContent = '记下来了：' + text;
+    labTrace('我的发现（' + demoKey + '）：' + text, true);
+    input.value = '';
+  });
+}
 /* 实验室“实验记录”：只记在本页（不存 localStorage）；挑战模式的错题另由 recordAttempt 记进错题本。 */
 const labTraceLog = [];
 function labTrace(text, ok) {
@@ -11472,7 +11530,9 @@ function labTrace(text, ok) {
     { nums: [1, 2, 3, 4], hint: '1+3 是 4，4+2 是 6，4×6 是……' },
     { nums: [3, 6, 6, 9], hint: '6÷6 是 1，9 减去 1 是 8……' }
   ];
-  let si = 0, tokens = [], found = [];
+  let si = 0, tokens = [], found = [], pred = null, hintUsed = false;
+  const tiers = makeTiers(document.getElementById('tf24Tiers'),
+    ['基础：拼出一种', '提高：同一组找到两种拼法', '挑战：不用提示拼出 3 3 8 8']);
   const numsEl = document.getElementById('tf24Nums');
   const exprEl = document.getElementById('tf24Expr');
   const msgEl = document.getElementById('tf24Msg');
@@ -11540,10 +11600,20 @@ function labTrace(text, ok) {
     msgEl.textContent = '算式清空了，重新拼。';
   });
   document.getElementById('tf24Hint').addEventListener('click', function () {
+    hintUsed = true;
     msgEl.textContent = '提示：' + SETS[si].hint;
   });
+  document.getElementById('tf24PredYes').addEventListener('click', function () {
+    pred = 'yes';
+    document.getElementById('tf24PredTx').textContent = '你的预测：这组数能拼出 24。拼出来看看。';
+  });
+  document.getElementById('tf24PredNo').addEventListener('click', function () {
+    pred = 'no';
+    document.getElementById('tf24PredTx').textContent = '你的预测：这组数拼不出 24。拼出来看看。';
+  });
   document.getElementById('tf24New').addEventListener('click', function () {
-    si = (si + 1) % SETS.length; tokens = []; found = [];
+    si = (si + 1) % SETS.length; tokens = []; found = []; pred = null; hintUsed = false;
+    document.getElementById('tf24PredTx').textContent = '先猜一个，再动手拼。';
     renderNums(); renderExpr();
     foundEl.textContent = '这组数已经找到的拼法：0 种。';
     msgEl.textContent = '换了一组数：' + SETS[si].nums.join('、') + '。';
@@ -11559,7 +11629,11 @@ function labTrace(text, ok) {
       if (found.indexOf(key) >= 0) { msgEl.textContent = '这个拼法已经记下了，换个拼法试试——同一组数不止一种。'; return; }
       found.push(key);
       foundEl.textContent = '这组数已经找到的拼法：' + found.length + ' 种。' + (found.length >= 2 ? '够两种了，真会了！' : '再找一种不同的拼法。');
-      msgEl.textContent = '拼出来了！' + exprEl.textContent + ' = 24。';
+      msgEl.textContent = '拼出来了！' + exprEl.textContent + ' = 24。' +
+        (pred === 'yes' ? '你猜对了：这组数能拼出来。' : pred === 'no' ? '你猜错了——这组数其实能拼出来！' : '下次先猜再拼。');
+      if (found.length >= 1) tiers.done(0);
+      if (found.length >= 2) tiers.done(1);
+      if (si === 0 && !hintUsed) tiers.done(2);
       markTried('twentyfour');
       labTrace('24点：拼出 ' + exprEl.textContent + ' = 24', true);
     } else {
@@ -11567,6 +11641,7 @@ function labTrace(text, ok) {
       labTrace('24点：算出来 ' + (Math.round(v * 100) / 100) + '，不是 24', false);
     }
   });
+  wireDiscovery('twentyfour', 'tf24Find', 'tf24FindSave', 'tf24FindSaved');
   renderNums(); renderExpr();
 })();
 
@@ -11574,6 +11649,11 @@ function labTrace(text, ok) {
    100 次模拟用固定种子 mulberry32(20261106)：换门赢 68 次，不换赢 36 次（Node 验算过）。 */
 (function () {
   let pred = null, prize = -1, pick = -1, opened = -1, phase = 'pick';
+  let swW = 0, swL = 0, stW = 0, stL = 0, played = 0, swPlayed = 0, stPlayed = 0;
+  const scoreEl = document.getElementById('moScore');
+  const tiers = makeTiers(document.getElementById('moTiers'),
+    ['基础：玩 1 局', '提高：跑 100 次模拟', '挑战：换门和不换门各玩至少 2 局（共 5 局以上）']);
+  function renderScore() { scoreEl.textContent = '换门：' + swW + ' 胜 ' + swL + ' 负 · 不换：' + stW + ' 胜 ' + stL + ' 负'; }
   const roundEl = document.getElementById('moRound');
   const predTx = document.getElementById('moPredTx');
   const simOut = document.getElementById('moSimOut');
@@ -11600,6 +11680,11 @@ function labTrace(text, ok) {
     const finalPick = doSwitch ? [0, 1, 2].find(function (d) { return d !== pick && d !== opened; }) : pick;
     const win = finalPick === prize;
     phase = 'done';
+    played++;
+    if (doSwitch) { swPlayed++; if (win) swW++; else swL++; } else { stPlayed++; if (win) stW++; else stL++; }
+    renderScore();
+    tiers.done(0);
+    if (played >= 5 && swPlayed >= 2 && stPlayed >= 2) tiers.done(2);
     roundEl.textContent = '你最后选了 ' + (finalPick + 1) + ' 号门，里面是 ' + (win ? '汽车 🚗——赢了！' : '山羊 🐐——没赢。') + '汽车在 ' + (prize + 1) + ' 号门后面。';
     labTrace('三门问题：' + (doSwitch ? '换门' : '不换门') + '，' + (win ? '赢了' : '输了'), win);
     markTried('monty');
@@ -11642,15 +11727,22 @@ function labTrace(text, ok) {
     whyEl.textContent = pred === 'switch' ? '你的预测对了：换门赢的可能大约是 2/3，不换大约是 1/3。'
       : pred ? '你的预测错了——换门赢 ' + sw + ' 次，不换只赢 ' + st + ' 次。这正是三门问题出名的原因：直觉说“换不换都一样”，数学说“换”。'
       : '换门赢 ' + sw + ' 次，不换只赢 ' + st + ' 次——换门赢的可能大约是 2/3。';
+    document.getElementById('moWhyStatic').hidden = false; // 为什么只在看过模拟结果之后出现，猜之前不剧透
+    tiers.done(1);
     labTrace('三门问题：100 次模拟，换门赢 ' + sw + ' 次，不换赢 ' + st + ' 次', sw > st);
     markTried('monty');
   });
+  wireDiscovery('monty', 'moFind', 'moFindSave', 'moFindSaved');
+  renderScore();
 })();
 
 /* ---------- 创意实验 3：周长一定，面积最大（3–5 年级，预测 + 开放探究） ----------
    周长 20：长 1–9、宽 9–1，面积 9、16、21、24、25、24、21、16、9——最大值在正方形。 */
 (function () {
-  let L = 5, guess = null, rows = [], found = false;
+  let L = 8, per = 20, guess = null, rows = [];
+  const foundPer = {};
+  const tiers = makeTiers(document.getElementById('maTiers'),
+    ['基础：记下 1 种长方形', '提高：在一个周长下找出最大面积', '挑战：周长 20 和 24 都找出最大面积']);
   const svg = document.getElementById('maSvg');
   const eqEl = document.getElementById('maEq');
   const tableEl = document.getElementById('maTable');
@@ -11660,15 +11752,25 @@ function labTrace(text, ok) {
   const rangeEl = document.getElementById('maLRange');
   const labelEl = document.getElementById('maLLabel');
   function render() {
-    const W = 10 - L, A = L * W;
+    const W = per / 2 - L, A = L * W;
     labelEl.textContent = L;
     rangeEl.value = L;
+    rangeEl.max = per / 2 - 1;
+    document.getElementById('maHalfTx').textContent = per / 2;
     eqEl.textContent = '长 ' + L + ' 厘米，宽 ' + W + ' 厘米，面积 ' + A + ' 平方厘米';
     const w = 40 + L * 24, h = 40 + W * 12;
     svg.innerHTML = '<rect x="' + (160 - w / 2) + '" y="' + (95 - h / 2) + '" width="' + w + '" height="' + h + '" fill="#fff3e6" stroke="#ff8a3d" stroke-width="3" rx="6"/>' +
       '<text x="160" y="100" font-size="16" text-anchor="middle" fill="#334155">长 ' + L + ' × 宽 ' + W + '</text>';
   }
-  function setL(v) { L = Math.max(1, Math.min(9, v)); render(); }
+  function setL(v) { L = Math.max(1, Math.min(per / 2 - 1, v)); render(); }
+  function setPer(p) {
+    per = p;
+    if (L >= per / 2) L = per / 2 - 1;
+    document.getElementById('maPTx').textContent = per + ' 厘米';
+    render();
+  }
+  document.getElementById('maP20').addEventListener('click', function () { setPer(20); });
+  document.getElementById('maP24').addEventListener('click', function () { setPer(24); });
   rangeEl.addEventListener('input', function (e) { setL(+e.target.value); });
   document.getElementById('maLMinus').addEventListener('click', function () { setL(L - 1); });
   document.getElementById('maLPlus').addEventListener('click', function () { setL(L + 1); });
@@ -11678,29 +11780,36 @@ function labTrace(text, ok) {
     labTrace('周长面积：猜长 ' + guess + ' 厘米时面积最大', true);
   });
   document.getElementById('maRecord').addEventListener('click', function () {
-    const W = 10 - L, A = L * W;
-    if (rows.some(function (r) { return r.L === L; })) { findEl.textContent = '长 ' + L + ' 已经记过了，换个长试试。'; return; }
-    rows.push({ L: L, W: W, A: A });
+    const W = per / 2 - L, A = L * W;
+    if (rows.some(function (r) { return r.P === per && r.L === L; })) { findEl.textContent = '周长 ' + per + ' 时，长 ' + L + ' 已经记过了，换个长试试。'; return; }
+    rows.push({ P: per, L: L, W: W, A: A });
+    tiers.done(0);
     tableEl.innerHTML = rows.map(function (r) { return '<tr><td>' + r.L + '</td><td>' + r.W + '</td><td>' + r.A + '</td></tr>'; }).join('');
-    if (!found && rows.some(function (r) { return r.L === 5; }) && rows.length >= 3) {
-      found = true;
-      const best = rows.reduce(function (a, b) { return b.A > a.A ? b : a; }, rows[0]);
+    const mine = rows.filter(function (r) { return r.P === per; });
+    const sq = per / 4; // 正方形的边长 = 周长 ÷ 4（20→5，24→6）；per/2 是“长+宽”，不是边长
+    if (!foundPer[per] && mine.some(function (r) { return r.L === sq; }) && mine.length >= 3) {
+      foundPer[per] = true;
+      const best = mine.reduce(function (a, b) { return b.A > a.A ? b : a; }, mine[0]);
       findEl.textContent = '你试出来的最大面积是 ' + best.A + ' 平方厘米（长 ' + best.L + ' 宽 ' + best.W + '）。' +
-        (guess === null ? '你还没猜过——下次先猜再试。' : guess === 5 ? '和你猜的一样！' : '你猜的是长 ' + guess + '，实际是长 5——猜错了也没关系，表不会骗人。');
+        (guess === null ? '你还没猜过——下次先猜再试。' : guess === sq ? '和你猜的一样！' : '你猜的是长 ' + guess + '，实际是长 ' + sq + '——猜错了也没关系，表不会骗人。');
       whyEl.hidden = false;
       markTried('maxarea');
-      labTrace('周长面积：发现最大面积 25（长 5 宽 5）', true);
-    } else if (!found && rows.length >= 5) {
-      findEl.textContent = '记了 ' + rows.length + ' 种了，还没试过长 5 宽 5 吗？';
-    } else if (!found) {
-      findEl.textContent = '记下了 ' + rows.length + ' 种。继续试——面积最大的那一种藏在表里。';
+      labTrace('周长面积：发现最大面积 ' + best.A + '（长 ' + best.L + ' 宽 ' + best.W + '）', true);
+      tiers.done(1);
+      if (foundPer[20] && foundPer[24]) tiers.done(2);
+    } else if (!foundPer[per] && mine.length >= 5) {
+      findEl.textContent = '记了 ' + mine.length + ' 种了，还没试过长 ' + sq + ' 宽 ' + sq + ' 吗？';
+    } else if (!foundPer[per]) {
+      findEl.textContent = '记下了 ' + mine.length + ' 种。继续试——面积最大的那一种藏在表里。';
     }
   });
   document.getElementById('maReset').addEventListener('click', function () {
-    rows = []; found = false; guess = null;
+    rows = []; guess = null;
+    for (const k in foundPer) delete foundPer[k];
     tableEl.innerHTML = ''; findEl.textContent = ''; guessTx.textContent = '还没猜';
     whyEl.hidden = true;
   });
+  wireDiscovery('maxarea', 'maDisc', 'maDiscSave', 'maDiscSaved');
   render();
 })();
 
@@ -11724,7 +11833,9 @@ function labTrace(text, ok) {
     { text: '第 2 题：9 + 3 = 5', chars: ['9', '+', '3', '=', '5'] },
     { text: '第 3 题：7 − 2 = 3', chars: ['7', '−', '2', '=', '3'] }
   ];
-  let pi = 0, moves = 0, held = null, solved = 0;
+  let pi = 0, moves = 0, held = null, solved = 0, pred = null, movedFrom = null;
+  const tiers = makeTiers(document.getElementById('msTiers'),
+    ['基础：做对 1 题', '提高：做对 2 题', '挑战：3 题都做对']);
   const solvedSet = {};
   const board = document.getElementById('msBoard');
   const msgEl = document.getElementById('msMsg');
@@ -11785,8 +11896,9 @@ function labTrace(text, ok) {
       }
       board.appendChild(wrap);
     });
-    moves = 0; held = null;
+    moves = 0; held = null; pred = null; movedFrom = null;
     msgEl.textContent = '点一根亮着的火柴把它拿起来，再点一个空着的位置放下去。';
+    document.getElementById('msPredTx').textContent = '先猜一个，再动手。';
   }
   function segClick(ci, seg, el) {
     const st = charState[ci];
@@ -11811,6 +11923,7 @@ function labTrace(text, ok) {
     st.lit.delete(seg); el.classList.remove('lit'); el.dataset.msLit = '0';
     el.classList.add('held');
     held = { ci: ci, seg: seg, el: el };
+    movedFrom = st.kind === 'op' ? 'op' : 'digit';
     msgEl.textContent = '手里有一根火柴，点一个空着的位置放下去。点原来那根可以放回去。';
   }
   function parseChar(st) {
@@ -11831,8 +11944,12 @@ function labTrace(text, ok) {
     const a = +vals[0], b = +vals[2], c = +vals[4];
     const left = vals[1] === '+' ? a + b : a - b;
     if (left === c) {
-      msgEl.textContent = '对了！' + a + ' ' + vals[1] + ' ' + b + ' = ' + c + '，只动了一根火柴。';
+      msgEl.textContent = '对了！' + a + ' ' + vals[1] + ' ' + b + ' = ' + c + '，只动了一根火柴。' +
+        (pred ? ((pred === 'op') === (movedFrom === 'op') ? '你猜对了：这次动的正是' + (movedFrom === 'op' ? '加号（减号）。' : '数字。') : '你猜错了——这次动的其实是' + (movedFrom === 'op' ? '加号（减号）。' : '数字。')) : '');
       if (!solvedSet[pi]) { solvedSet[pi] = true; solved++; solvedEl.textContent = '已经做对的题：' + solved + ' / 3。'; }
+      if (solved >= 1) tiers.done(0);
+      if (solved >= 2) tiers.done(1);
+      if (solved >= 3) tiers.done(2);
       markTried('matches');
       labTrace('火柴棒：第 ' + (pi + 1) + ' 题做对了', true);
     } else {
@@ -11840,15 +11957,27 @@ function labTrace(text, ok) {
       labTrace('火柴棒：第 ' + (pi + 1) + ' 题还不对（' + left + ' ≠ ' + c + '）', false);
     }
   });
+  document.getElementById('msPredOp').addEventListener('click', function () {
+    pred = 'op';
+    document.getElementById('msPredTx').textContent = '你的预测：要动加号（或减号）。动手吧。';
+  });
+  document.getElementById('msPredDigit').addEventListener('click', function () {
+    pred = 'digit';
+    document.getElementById('msPredTx').textContent = '你的预测：要动数字。动手吧。';
+  });
   document.getElementById('msReset').addEventListener('click', function () { render(); });
   document.getElementById('msNext').addEventListener('click', function () { pi = (pi + 1) % PUZZLES.length; render(); });
+  wireDiscovery('matches', 'msFind', 'msFindSave', 'msFindSaved');
   render();
 })();
 
 /* ---------- 创意实验 5：莫比乌斯带（6–7 年级，预测打脸） ----------
    中间剪还是 1 个圈（长一倍、4 个半拧）；离边缘 1/3 处剪是 2 个套在一起的圈。 */
 (function () {
-  let pred = null;
+  let pred = null, pred2 = null;
+  const cutKinds = {};
+  const tiers = makeTiers(document.getElementById('mbTiers'),
+    ['基础：剪过 1 次', '提高：中间和 1/3 处都剪过', '挑战：猜对“1/4 和 1/3 结果一样”']);
   const svg = document.getElementById('mbSvg');
   const predTx = document.getElementById('mbPredTx');
   const resultEl = document.getElementById('mbResult');
@@ -11874,14 +12003,23 @@ function labTrace(text, ok) {
   document.getElementById('mbPred1').addEventListener('click', function () { setPred('one', '还是 1 个圈'); });
   document.getElementById('mbPredKnot').addEventListener('click', function () { setPred('knot', '变成一个结'); });
   function cut(which) {
+    cutKinds[which] = true;
+    tiers.done(0);
+    if (cutKinds.center && cutKinds.third) tiers.done(1);
     if (which === 'center') {
       drawCenterCut();
       resultEl.textContent = '剪完了：还是 1 个圈！只是长了一倍，拧了 4 个半圈。' + (pred === 'one' ? '你猜对了。' : pred ? '你猜的是' + (pred === 'two' ? ' 2 个圈' : '一个结') + '，猜错了——这正是莫比乌斯带出名的地方。' : '先猜再剪，下次试试。');
       labTrace('莫比乌斯带：中间剪，还是 1 个圈', pred === 'one');
-    } else {
+    } else if (which === 'third') {
       drawThirdCut();
       resultEl.textContent = '剪完了：2 个圈，套在一起！一个小的还是莫比乌斯带，一个大的有了两面。' + (pred === 'two' ? '你猜对了。' : pred ? '你猜的是' + (pred === 'one' ? '还是 1 个圈' : '一个结') + '，猜错了——换个地方剪，结果完全不一样。' : '');
       labTrace('莫比乌斯带：1/3 处剪，变成 2 个套在一起的圈', pred === 'two');
+    } else {
+      drawThirdCut();
+      resultEl.textContent = '剪完了：也是 2 个圈，套在一起！和 1/3 处剪一样——只要不剪在正中间，都是 2 个圈。' +
+        (pred2 === 'same' ? '你猜对了。' : pred2 === 'diff' ? '你猜错了——1/4 和 1/3 剪出来一样，都是 2 个圈。' : '先猜再剪，下次试试。');
+      if (pred2 === 'same') tiers.done(2);
+      labTrace('莫比乌斯带：1/4 处剪，也是 2 个套在一起的圈', pred2 === 'same');
     }
     whyEl.hidden = false;
     pred = null;
@@ -11890,12 +12028,25 @@ function labTrace(text, ok) {
   }
   document.getElementById('mbCut').addEventListener('click', function () { cut('center'); });
   document.getElementById('mbCutThird').addEventListener('click', function () { cut('third'); });
+  document.getElementById('mbCutQuarter').addEventListener('click', function () { cut('quarter'); });
+  document.getElementById('mbPred2Same').addEventListener('click', function () {
+    pred2 = 'same';
+    document.getElementById('mbPred2Tx').textContent = '你的预测：1/4 和 1/3 剪出来一样，都是 2 个圈。现在剪下去看看。';
+  });
+  document.getElementById('mbPred2Diff').addEventListener('click', function () {
+    pred2 = 'diff';
+    document.getElementById('mbPred2Tx').textContent = '你的预测：1/4 和 1/3 剪出来不一样。现在剪下去看看。';
+  });
   document.getElementById('mbReset').addEventListener('click', function () {
-    pred = null; drawBand();
+    pred = null; pred2 = null;
+    for (const k in cutKinds) delete cutKinds[k];
+    drawBand();
     predTx.textContent = '先选一个猜测，再剪。';
+    document.getElementById('mbPred2Tx').textContent = '先猜一个，再剪。';
     resultEl.textContent = '';
     whyEl.hidden = true;
   });
+  wireDiscovery('mobius', 'mbFind', 'mbFindSave', 'mbFindSaved');
   drawBand();
 })();
 
@@ -11906,7 +12057,10 @@ function labTrace(text, ok) {
 (function () {
   const COST = 8, START_CASH = 200;
   let day = 1, cash = START_CASH, stock = 0, price = 12, qty = 20;
-  let totalCost = 0, totalRev = 0, totalLost = 0;
+  let totalCost = 0, totalRev = 0, totalLost = 0, totalSold = 0;
+  let guess = null, lastProfit = null, weeks = 0;
+  const tiers = makeTiers(document.getElementById('swTiers'),
+    ['基础：开完一周', '提高：猜的利润和实际差在 100 元以内', '挑战：第二周比第一周赚得多']);
   const statusEl = document.getElementById('swStatus');
   const planEl = document.getElementById('swPlan');
   const dayOutEl = document.getElementById('swDayOut');
@@ -11936,31 +12090,54 @@ function labTrace(text, ok) {
     const sold = Math.min(cust, stock);
     const rev = sold * price;
     const lost = cust - sold;
-    cash += rev; stock -= sold; totalRev += rev; totalLost += lost;
+    cash += rev; stock -= sold; totalRev += rev; totalLost += lost; totalSold += sold;
     tableEl.innerHTML += '<tr><td>' + day + '</td><td>' + price + '</td><td>' + qty + '</td><td>' + cust + '</td><td>' + sold + '</td><td>' + rev + '</td></tr>';
     dayOutEl.textContent = '第 ' + day + ' 天：来了 ' + cust + ' 个顾客，卖出 ' + sold + ' 个，收入 ' + rev + ' 元。' +
       (lost > 0 ? '有 ' + lost + ' 个顾客想买但没货了。' : '') + (stock > 0 ? '还剩 ' + stock + ' 个没卖掉。' : '货卖完了。');
     labTrace('开店：第 ' + day + ' 天卖 ' + price + ' 元，卖出 ' + sold + ' 个，收入 ' + rev + ' 元', sold > 0);
     day++;
     if (day > 7) {
+      weeks++;
+      // 现金利润 = 手里的钱实打实多了多少（总收入 − 总进货成本）；压在剩货里的钱不算利润，另列。
+      const cashProfit = cash - START_CASH;
       const leftoverValue = stock * COST;
-      const profit = (cash - START_CASH) + leftoverValue;
-      reportEl.textContent = '一周总账：总收入 ' + totalRev + ' 元，总进货成本 ' + totalCost + ' 元，剩下 ' + stock + ' 个文具盒（值 ' + leftoverValue + ' 元）。总利润：' + profit + ' 元。' +
-        (profit > 0 ? '赚了！' : profit < 0 ? '亏了。' : '不赚不亏。') +
-        (totalLost > 0 ? '一共有 ' + totalLost + ' 个顾客因为没货白跑了——下次多进点，或者别定太贵。' : '') +
-        (stock > 0 ? '剩下 ' + stock + ' 个没卖掉，压了 ' + leftoverValue + ' 元——下次少进点。' : '');
+      reportEl.textContent = '一周总账：总收入 ' + totalRev + ' 元，总进货成本 ' + totalCost + ' 元。现金利润：' + cashProfit + ' 元（手里的钱从 200 元变成 ' + cash + ' 元）。' +
+        (stock > 0 ? '还剩 ' + stock + ' 个文具盒，值 ' + leftoverValue + ' 元成本——下次能接着卖，不算进这周的利润里。' : '货全卖完了。') +
+        (guess != null ? '你猜一周能赚 ' + guess + ' 元，实际现金利润是 ' + cashProfit + ' 元' + (Math.abs(guess - cashProfit) <= 100 ? '——猜得很准！' : '——差了 ' + Math.abs(guess - cashProfit) + ' 元，下次再猜准一点。') : '') +
+        (lastProfit != null ? (cashProfit > lastProfit ? '比上周多赚了 ' + (cashProfit - lastProfit) + ' 元！' : '比上周少赚了 ' + (lastProfit - cashProfit) + ' 元。') : '') +
+        (totalLost > 0 ? '一共有 ' + totalLost + ' 个顾客因为没货白跑了——下次多进点，或者别定太贵。' : '');
       statusEl.textContent = '一周开完了 · 手里 ' + cash + ' 元 · 库存 ' + stock + ' 个';
+      tiers.done(0);
+      if (guess != null && Math.abs(guess - cashProfit) <= 100) tiers.done(1);
+      if (lastProfit != null && cashProfit > lastProfit) tiers.done(2);
+      lastProfit = cashProfit;
       markTried('shopweek');
-      labTrace('开店：一周总利润 ' + profit + ' 元', profit > 0);
+      labTrace('开店：一周现金利润 ' + cashProfit + ' 元', cashProfit > 0);
     }
     render();
   });
+  document.getElementById('swGuessMinus').addEventListener('click', function () {
+    guess = Math.max(0, (guess == null ? 500 : guess) - 10);
+    document.getElementById('swGuessLabel').textContent = guess + ' 元';
+  });
+  document.getElementById('swGuessPlus').addEventListener('click', function () {
+    guess = Math.min(2000, (guess == null ? 500 : guess) + 10);
+    document.getElementById('swGuessLabel').textContent = guess + ' 元';
+  });
+  document.getElementById('swGuessSet').addEventListener('click', function () {
+    if (guess == null) guess = 500;
+    document.getElementById('swGuessTx').textContent = '你猜这一周能赚 ' + guess + ' 元。开完 7 天再来对答案。';
+    labTrace('开店：猜一周赚 ' + guess + ' 元', true);
+  });
   document.getElementById('swReplay').addEventListener('click', function () {
     day = 1; cash = START_CASH; stock = 0; price = 12; qty = 20;
-    totalCost = 0; totalRev = 0; totalLost = 0;
+    totalCost = 0; totalRev = 0; totalLost = 0; totalSold = 0; guess = null;
     tableEl.innerHTML = ''; dayOutEl.textContent = ''; reportEl.textContent = '';
+    document.getElementById('swGuessTx').textContent = '先猜一个数，再开门。';
+    document.getElementById('swGuessLabel').textContent = '500 元';
     render();
   });
+  wireDiscovery('shopweek', 'swFind', 'swFindSave', 'swFindSaved');
   render();
 })();
 
@@ -11971,6 +12148,10 @@ function labTrace(text, ok) {
 (function () {
   const WAYS = { 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 5, 9: 4, 10: 3, 11: 2, 12: 1 };
   const assign = {};
+  let pred = null;
+  const fairSigs = [];
+  const tiers = makeTiers(document.getElementById('fgTiers'),
+    ['基础：分完规则并模拟 1 次', '提高：找出一种公平分法', '挑战：找出第二种不同的公平分法']);
   const sumsEl = document.getElementById('fgSums');
   const waysEl = document.getElementById('fgWays');
   const verdictEl = document.getElementById('fgVerdict');
@@ -12005,7 +12186,17 @@ function labTrace(text, ok) {
     const wa = waysOf('A'), wb = waysOf('B');
     waysEl.textContent = '甲：' + wa + ' 种可能 · 乙：' + wb + ' 种可能';
     if (!allAssigned()) verdictEl.textContent = '还有和没分完——2–12 都要分给甲或乙。';
-    else if (wa === wb) verdictEl.textContent = '公平！甲乙各 ' + wa + ' 种可能。';
+    else if (wa === wb) {
+      verdictEl.textContent = '公平！甲乙各 ' + wa + ' 种可能。';
+      const sig = [];
+      for (let s = 2; s <= 12; s++) if (assign[s] === 'A') sig.push(s);
+      const key = sig.join(',');
+      if (fairSigs.indexOf(key) < 0) {
+        fairSigs.push(key);
+        if (fairSigs.length >= 1) tiers.done(1);
+        if (fairSigs.length >= 2) tiers.done(2);
+      }
+    }
     else verdictEl.textContent = '不公平：甲 ' + wa + ' 种，乙 ' + wb + ' 种——' + (wa > wb ? '甲赢面大。' : '乙赢面大。');
   }
   document.getElementById('fgSim').addEventListener('click', function () {
@@ -12018,12 +12209,23 @@ function labTrace(text, ok) {
     }
     simOut.textContent = '模拟 100 次：甲赢 ' + aw + ' 次，乙赢 ' + bw + ' 次' + (dw ? '，' + dw + ' 次没人赢' : '') + '。' +
       (waysOf('A') === waysOf('B') ? '分法公平，赢的次数也差不多。' : '赢的次数差这么多，就是因为两种和出现的可能不一样多。');
+    tiers.done(0);
     labTrace('公平游戏：模拟 100 次，甲赢 ' + aw + ' 次，乙赢 ' + bw + ' 次', waysOf('A') === waysOf('B'));
     markTried('fairgame');
   });
+  document.getElementById('fgPredYes').addEventListener('click', function () {
+    pred = 'yes';
+    document.getElementById('fgPredTx').textContent = '你的预测：和的个数多，赢面就大。分完规则、模拟 100 次，再看 36 种可能验证。';
+  });
+  document.getElementById('fgPredNo').addEventListener('click', function () {
+    pred = 'no';
+    document.getElementById('fgPredTx').textContent = '你的预测：和的个数多，赢面不一定大——要看每种和有几种掷法。分完规则、模拟 100 次，再看 36 种可能验证。';
+  });
   document.getElementById('fgTable').addEventListener('click', function () {
     tableOut.hidden = false;
-    tableOut.textContent = '36 种掷法：和 2 有 1 种，3 有 2 种，4 有 3 种，5 有 4 种，6 有 5 种，7 有 6 种，8 有 5 种，9 有 4 种，10 有 3 种，11 有 2 种，12 有 1 种。一共 36 种。';
+    tableOut.textContent = '36 种掷法：和 2 有 1 种，3 有 2 种，4 有 3 种，5 有 4 种，6 有 5 种，7 有 6 种，8 有 5 种，9 有 4 种，10 有 3 种，11 有 2 种，12 有 1 种。一共 36 种。' +
+      (pred === 'no' ? '你猜对了：和有几个不重要，重要的是每种和有几种掷法——和 7 有 6 种，和 2 只有 1 种。'
+        : pred === 'yes' ? '你猜错了：和 2 和 12 各只有 1 种掷法，和 7 有 6 种——个数一样多，赢面可以差 6 倍。' : '');
     whyEl.hidden = false;
   });
   document.getElementById('fgReset').addEventListener('click', function () {
@@ -12031,6 +12233,7 @@ function labTrace(text, ok) {
     simOut.textContent = ''; tableOut.hidden = true; whyEl.hidden = true;
     render();
   });
+  wireDiscovery('fairgame', 'fgFind', 'fgFindSave', 'fgFindSaved');
   render();
 })();
 
@@ -12038,7 +12241,9 @@ function labTrace(text, ok) {
    单元长 n，第 k 个是第 ceil(k/n) 个单元的第 ((k−1)%n)+1 个。 */
 (function () {
   const SHAPES = ['●', '▲', '■', '★', '◆', '♥'];
-  let unit = [];
+  let unit = [], q10ok = false, q20ok = false;
+  const tiers = makeTiers(document.getElementById('mrTiers'),
+    ['基础：排好一个单元', '提高：第 10 个和第 20 个都答对', '挑战：造出“第 10 个是 ★”的单元']);
   const unitEl = document.getElementById('mrUnit');
   const rowEl = document.getElementById('mrRow');
   const a10El = document.getElementById('mrA10');
@@ -12063,6 +12268,8 @@ function labTrace(text, ok) {
     b.addEventListener('click', function () {
       if (unit.length >= 5) { unitEl.textContent = '单元最多 5 个，够长了。'; return; }
       unit.push(s); a10El.textContent = ''; a20El.textContent = ''; cardOut.textContent = '';
+      q10ok = false; q20ok = false;
+      if (unit.length >= 2) tiers.done(0);
       render();
     });
     paletteEl.appendChild(b);
@@ -12076,6 +12283,9 @@ function labTrace(text, ok) {
     const full = Math.floor(n / unit.length), rem = n % unit.length;
     const unitNo = full + (rem ? 1 : 0), pos = rem || unit.length;
     if (s === right) {
+      if (n === 10) q10ok = true;
+      if (n === 20) q20ok = true;
+      if (q10ok && q20ok) tiers.done(1);
       outEl.textContent = '对了！第 ' + n + ' 个是第 ' + unitNo + ' 个单元的第 ' + pos + ' 个，就是 ' + right + '。';
       labTrace('造规律：第 ' + n + ' 个答对了（' + right + '）', true);
       markTried('makerule');
@@ -12091,10 +12301,27 @@ function labTrace(text, ok) {
     rowEl.textContent = unit.length ? '这样重复下去：' + row + '……' : '';
   }
   document.getElementById('mrDel').addEventListener('click', function () {
-    unit.pop(); a10El.textContent = ''; a20El.textContent = ''; render();
+    unit.pop(); a10El.textContent = ''; a20El.textContent = ''; q10ok = false; q20ok = false; render();
   });
   document.getElementById('mrClear').addEventListener('click', function () {
-    unit = []; a10El.textContent = ''; a20El.textContent = ''; cardOut.textContent = ''; render();
+    unit = []; a10El.textContent = ''; a20El.textContent = ''; cardOut.textContent = ''; q10ok = false; q20ok = false; render();
+  });
+  document.getElementById('mrChallenge').addEventListener('click', function () {
+    const out = document.getElementById('mrChallengeOut');
+    if (unit.length < 2) { out.textContent = '先排一个单元（至少 2 个图形）。'; return; }
+    const idx = unit.indexOf('★');
+    if (idx < 0) { out.textContent = '单元里没有 ★——先把 ★ 排进去。'; return; }
+    const full = Math.floor(10 / unit.length), rem = 10 % unit.length;
+    const unitNo = full + (rem ? 1 : 0), pos = rem || unit.length;
+    if ((10 - 1) % unit.length === idx) {
+      out.textContent = '做到了！你的单元是 ' + unit.join('') + '，第 10 个正好是第 ' + unitNo + ' 个单元的第 ' + pos + ' 个，就是 ★。';
+      tiers.done(2);
+      markTried('makerule');
+      labTrace('造规律：造出“第 10 个是 ★”的单元', true);
+    } else {
+      out.textContent = '还差一点：你的单元是 ' + unit.join('') + '，第 10 个是 ' + unit[(10 - 1) % unit.length] + '，不是 ★。想想 ★ 该放在单元的第几个。';
+      labTrace('造规律：第 10 个是 ★ 的挑战还没做出来', false);
+    }
   });
   document.getElementById('mrCard').addEventListener('click', function () {
     if (unit.length < 2) { cardOut.textContent = '先排一个单元（至少 2 个图形）。'; return; }
@@ -12102,5 +12329,121 @@ function labTrace(text, ok) {
     cardOut.textContent = '出题卡：我的规律是 ' + unit.join('') + ' 重复。第 10 个是什么？第 20 个是什么？（答案：第 10 个 ' + t10 + '，第 20 个 ' + t20 + '）';
     markTried('makerule');
   });
+  wireDiscovery('makerule', 'mrFind', 'mrFindSave', 'mrFindSaved');
+  render();
+})();
+
+/* ---------- 创意实验 0：13有几种凑法？（1 年级，加法） ----------
+   两个十格阵，每边最多 10 个；13 的拆法是 8 种有序对（3+10 … 10+3）。
+   总数公式：min(10, T−1) − max(1, T−10) + 1（T=12→9，13→8，14→7，15→6）。
+   顺序很重要：swap 标记要在把新凑法推进 found 之前算，否则自己跟自己比。 */
+(function () {
+  const TARGETS = [13, 14, 15, 12];
+  function totalWays(t) { return Math.min(10, t - 1) - Math.max(1, t - 10) + 1; }
+  let ti = 0;
+  let guess = 4;
+  const found = {};      // target -> ['9+4', ...]
+  const guessedMap = {}; // target -> guess
+  const completed = {};  // target -> true
+  const cells = { A: [], B: [] };
+  const tiers = makeTiers(document.getElementById('thTiers'),
+    ['基础：找到 1 种凑法', '提高：把一个目标的凑法找全', '挑战：换个目标也找全']);
+  function target() { return TARGETS[ti]; }
+  function count(f) { return cells[f].filter(function (c) { return c.classList.contains('filled'); }).length; }
+  function guessed() { return guessedMap[target()] != null; }
+  function completedCount() { return TARGETS.filter(function (t) { return completed[t]; }).length; }
+  function render() {
+    const t = target(), L = count('A'), R = count('B');
+    const list = found[t] || [];
+    document.getElementById('thTargetTx').textContent = '' + t;
+    document.getElementById('thLabelA').textContent = '左边 · ' + L + ' 个';
+    document.getElementById('thLabelB').textContent = '右边 · ' + R + ' 个';
+    document.getElementById('thEq').textContent = L + ' + ' + R + ' = ' + (L + R);
+    document.getElementById('thGuessLabel').textContent = guess + ' 种';
+    document.getElementById('thGuessTx').textContent = guessed()
+      ? '你猜的是 ' + guessedMap[t] + ' 种。找一找，看看到底有几种。'
+      : t + ' 有几种凑法？先猜一个数（1–12），再点“就猜这个”。';
+    document.getElementById('thFound').textContent = list.length
+      ? '已经找到的凑法：' + list.join('、') + '。'
+      : '已经找到的凑法：还没有。';
+    document.getElementById('thCount').textContent = guessed()
+      ? '找到了 ' + list.length + ' / ' + totalWays(t) + ' 种。你猜的是 ' + guessedMap[t] + ' 种。' +
+        (list.length === totalWays(t) ? '——找全了！' : '')
+      : '找到了 ' + list.length + ' 种（先猜一共有几种，再告诉你目标）。';
+    if (list.length >= 1) tiers.done(0);
+    if (list.length === totalWays(t)) tiers.done(1);
+    if (completedCount() >= 2) tiers.done(2);
+    document.getElementById('thWhy').hidden = completedCount() < 1;
+  }
+  function buildFrame(frameId, f) {
+    const frame = document.getElementById(frameId);
+    clearChildren(frame);
+    cells[f] = [];
+    for (let i = 0; i < 10; i++) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'tf-cell' + (f === 'B' ? ' b' : '');
+      b.dataset.thCell = f + '-' + i;
+      b.addEventListener('click', function () {
+        b.classList.toggle('filled');
+        render();
+      });
+      frame.appendChild(b);
+      cells[f].push(b);
+    }
+  }
+  buildFrame('thFrameA', 'A');
+  buildFrame('thFrameB', 'B');
+  document.getElementById('thGuessMinus').addEventListener('click', function () {
+    guess = Math.max(1, guess - 1); render();
+  });
+  document.getElementById('thGuessPlus').addEventListener('click', function () {
+    guess = Math.min(12, guess + 1); render();
+  });
+  document.getElementById('thGuessSet').addEventListener('click', function () {
+    guessedMap[target()] = guess;
+    document.getElementById('thMsg').textContent =
+      '记下了：你猜 ' + target() + ' 有 ' + guess + ' 种凑法。现在开始找。';
+    render();
+  });
+  document.getElementById('thClear').addEventListener('click', function () {
+    cells.A.concat(cells.B).forEach(function (c) { c.classList.remove('filled'); });
+    render();
+  });
+  document.getElementById('thNewTarget').addEventListener('click', function () {
+    ti = (ti + 1) % TARGETS.length;
+    guess = guessedMap[target()] != null ? guessedMap[target()] : 4;
+    cells.A.concat(cells.B).forEach(function (c) { c.classList.remove('filled'); });
+    document.getElementById('thMsg').textContent = '目标换成 ' + target() + ' 了。先猜，再找。';
+    render();
+  });
+  document.getElementById('thRecord').addEventListener('click', function () {
+    const t = target(), L = count('A'), R = count('B'), sum = L + R;
+    if (sum !== t) {
+      document.getElementById('thMsg').textContent =
+        '现在摆的是 ' + L + ' + ' + R + ' = ' + sum + '，不是 ' + t + '。再添几个或拿掉几个。';
+      return;
+    }
+    const list = found[t] || (found[t] = []);
+    const key = L + '+' + R;
+    if (list.indexOf(key) >= 0) {
+      document.getElementById('thMsg').textContent = '这个凑法已经记过了——换个摆法试试。';
+      return;
+    }
+    const swap = list.indexOf(R + '+' + L) >= 0; // 一定要在 push 之前算
+    list.push(key);
+    const mx = Math.max(L, R), give = 10 - mx;
+    const tenNote = give === 0
+      ? '10 已经是 10 了，10 + ' + (t - 10) + ' = ' + t + '。'
+      : mx + ' 再凑 ' + give + ' 个就是 10，10 + ' + (t - 10) + ' = ' + t + '。';
+    let msg = '记下了：' + key + ' = ' + t + '。' + tenNote;
+    if (swap) msg += R + '+' + L + ' 是它换了位置——加法里，两个加数换位置，和不变。';
+    if (list.length === 1) markTried('thirteen');
+    if (list.length === totalWays(t)) { completed[t] = true; msg += '——' + t + ' 的凑法找全了！'; }
+    document.getElementById('thMsg').textContent = msg;
+    cells.A.concat(cells.B).forEach(function (c) { c.classList.remove('filled'); });
+    render();
+  });
+  wireDiscovery('thirteen', 'thFind', 'thFindSave', 'thFindSaved');
   render();
 })();

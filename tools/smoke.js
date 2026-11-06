@@ -116,7 +116,7 @@ const GRADE3_CONTENT = { grade: 3, edition: 'A', units: [
 ] };
 const GRADE1_CONTENT = { grade: 1, edition: 'A', units: [
   { unit: '20以内的进位加法', term: '上', points: [
-    { id: '1.9', title: '20以内进位加法', subtitle: '凑十法', how: '把 9 凑成 10 再加。', why: '10 是整捆。', wrong: '9+4=12', wrongWhy: '忘了凑十。', visual: '十格阵。', method: '凑十拖格', explainBack: '给 9 一个凑成 10。', tryIt: '拖 1 个到十格阵。', demo: 'tenframe', recall: { q: '9+4，先给 9 凑几个成 10？', answer: '凑 1 个', hint: '9 再加 1 是 10' }, olympiad: { q: '9+7+1+3，用凑十怎么算最快？', answer: '（9+1）+（7+3）=20', hint: '找能凑成 10 的一对' }, practice: [{ q: '9+5 = ?', answer: '14', hint: '9+1=10，再加 4', level: '基础' }, { q: '8+6 = ?', answer: '14', hint: '8+2=10，再加 4', level: '提高' }] },
+    { id: '1.9', title: '20以内进位加法', subtitle: '凑十法', how: '把 9 凑成 10 再加。', why: '10 是整捆。', wrong: '9+4=12', wrongWhy: '忘了凑十。', visual: '十格阵。', method: '凑十拖格', explainBack: '给 9 一个凑成 10。', tryIt: '拖 1 个到十格阵。', demo: 'thirteen', recall: { q: '9+4，先给 9 凑几个成 10？', answer: '凑 1 个', hint: '9 再加 1 是 10' }, olympiad: { q: '9+7+1+3，用凑十怎么算最快？', answer: '（9+1）+（7+3）=20', hint: '找能凑成 10 的一对' }, practice: [{ q: '9+5 = ?', answer: '14', hint: '9+1=10，再加 4', level: '基础' }, { q: '8+6 = ?', answer: '14', hint: '8+2=10，再加 4', level: '提高' }] },
   ] },
   { unit: '100以内数的认识', term: '下', points: [
     { id: '1.13', title: '100以内数的认识', subtitle: '十和一', how: '10 个一是 1 个十。', why: '十位值是 10。', wrong: '46 比 38 小', wrongWhy: '只看了个位。', visual: '百数表。', method: '捆小棒', explainBack: '46 有 4 个十。', tryIt: '捆 4 捆加 6 根。', demo: 'hundred', recall: { q: '46 里有几个十？', answer: '4 个十', hint: '4 在十位上' }, practice: [{ q: '38 有几个十几个一？', answer: '3 个十 8 个一', hint: '3 在十位，8 在个位', level: '基础' }, { q: '比 46 大 1 的数是？', answer: '47', hint: '个位加 1', level: '提高' }] },
@@ -530,7 +530,7 @@ check('grade-1 unit view lists points', pointDetail.innerHTML.includes('1.9'));
 navGo('point-1.9');
 check('point 1.9 shows olympiad section', pointDetail.innerHTML.includes('挑战 · 奥数') && pointDetail.innerHTML.includes('9+7+1+3'));
 check('point 1.9 shows level pills', pointDetail.innerHTML.includes('基础') && pointDetail.innerHTML.includes('提高'));
-check('point 1.9 links ten-frame demo', pointDetail.innerHTML.includes('去玩十格阵') && pointDetail.innerHTML.includes('data-demo-link="demo-tenframe"'));
+check('point 1.9 links the thirteen experiment', pointDetail.innerHTML.includes('去玩13有几种凑法') && pointDetail.innerHTML.includes('data-demo-link="demo-thirteen"'));
 const olyAns = pointDetail.querySelector('[data-olympiad-a]');
 olyAns.hidden = true;
 const olyBtn = makeEl('button'); olyBtn.dataset.olympiad = '1';
@@ -552,7 +552,7 @@ const bCell0 = byId.tfB.children[0];
 click(bCell0);
 check('tenframe: click B cell moves one to fill ten', byId.tfEq.textContent === '9 + 4 = 13');
 check('tenframe note explains 10+3', byId.tfNote.textContent.includes('10 + 3 = 13'));
-check('demo counter counts a played demo', byId.progressCount.textContent === '1 / 132' &&
+check('demo counter counts a played demo', byId.progressCount.textContent === '1 / 133' &&
   JSON.parse(lsData['math-tried-demos-v1'] || '[]').includes('tenframe'));
 sandbox.tfSetProblem('sub', 0);
 check('tenframe sub initial equation', byId.tfEq.textContent === '13 − 5 = ?');
@@ -782,7 +782,7 @@ click(byId.countRowA.children[0]);
 check('count: click a dot counts it', byId.countCount.textContent.includes('数到了第 1 个'));
 click(byId.countCompare);
 check('count: 5 vs 7 -> below has 2 more', byId.countResult.textContent.includes('下面多 2 个'));
-check('G1 demos count toward the 132-demo progress', g1ProgBefore === '4 / 132' && byId.progressCount.textContent === '5 / 132');
+check('G1 demos count toward the 133-demo progress', g1ProgBefore === '4 / 133' && byId.progressCount.textContent === '5 / 133');
 click(byId.countAMinus); click(byId.countAMinus);
 check('count: minus twice -> 3', byId.countReadA.textContent === '3 个');
 
@@ -920,7 +920,7 @@ check('G1 back from demo returns to point page', pointDetail.innerHTML.includes(
 const g1src = fs.readFileSync(root + '/content/grades/grade-1.js', 'utf8');
 const g1ids = [...g1src.matchAll(/id: "([0-9.]+)"/g)].map(m => m[1]);
 const g1demos = [...g1src.matchAll(/demo: (?:'([a-z]+)'|null)/g)].map(m => m[1] || null);
-const g1expected = {'1.1':'count','1.2':'position','1.3':'split','1.4':'addsub','1.5':'solids','1.6':'tenframe','1.7':'bundle','1.8':'clock','1.9':'tenframe','1.10':'tangram','1.11':'tenframe','1.12':'sort','1.13':'hundred','1.14':'shop','1.15':'place','1.16':'pattern'};
+const g1expected = {'1.1':'count','1.2':'position','1.3':'split','1.4':'addsub','1.5':'solids','1.6':'tenframe','1.7':'bundle','1.8':'clock','1.9':'thirteen','1.10':'tangram','1.11':'tenframe','1.12':'sort','1.13':'hundred','1.14':'shop','1.15':'place','1.16':'pattern'};
 check('grade-1.js: all 16 points map to the right experiment',
   g1ids.length === 16 && g1ids.every((id, i) => g1demos[i] === g1expected[id]));
 const labelSrc = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
@@ -958,7 +958,7 @@ check('ruler: eraser is 3 cm', byId.rulReadout.textContent.includes('3 厘米'))
 click(byId.rulFromBtn);
 check('ruler: measuring from 1 over-reads by 1', byId.rulMsg.textContent.includes('多算1厘米'));
 check('ruler: meter strip is 100 cm squares', byId.rulMeter.children.length === 100);
-check('G2 demos count toward the 132-demo progress', g2ProgBefore === '17 / 132' && byId.progressCount.textContent === '18 / 132');
+check('G2 demos count toward the 133-demo progress', g2ProgBefore === '17 / 133' && byId.progressCount.textContent === '18 / 133');
 
 // 2.2 先估后算
 click(byId.estProbSeg.children[1]); // 26+38
@@ -1098,7 +1098,7 @@ check('grade-2.js: all 16 points map to the right experiment',
 const labelSrc2 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
 check('DEMO_LABEL covers all 15 new demos',
   G2_DEMOS.every(k => labelSrc2.includes(k + ':')));
-check('G2: all 15 new demos tried by now', byId.progressCount.textContent === '32 / 132');
+check('G2: all 15 new demos tried by now', byId.progressCount.textContent === '32 / 133');
 
 // ---------- 12. 全站布局改版（2026-11-06 真机审计） ----------
 // CSS：顶栏实底不透光，模式栏不吸顶，演示单列，知识点页窄栏
@@ -1152,7 +1152,7 @@ navGo('progress');
 check('progress: per-grade rows with real numbers',
   byId.progressCard.innerHTML.includes('1 年级') && byId.progressCard.innerHTML.includes('3 年级') &&
   byId.progressCard.innerHTML.includes('演示') && byId.progressCard.innerHTML.includes('已练'));
-check('progress: 32 of 132 demos tried by now', byId.progressCount.textContent === '32 / 132');
+check('progress: 32 of 133 demos tried by now', byId.progressCount.textContent === '32 / 133');
 // 首页不显示孤零零的“数学”面包屑，子页面显示完整面包屑
 navGo('home');
 check('home hides the lone crumb title', byId.crumbTitle.hidden === true);
@@ -1189,7 +1189,7 @@ check('elapsed: jump to the whole hour lands on 8:00', byId.elReadout.textConten
 for (let i = 0; i < 6; i++) click(byId.elPlus10);
 click(byId.elPlus5);
 check('elapsed: 7:30 -> 9:05 is 1 hour 35 minutes', byId.elMsg.textContent.includes('1 小时 35 分'));
-check('G3 demos count toward the 132-demo progress', g3ProgBefore === '32 / 132' && byId.progressCount.textContent === '33 / 132');
+check('G3 demos count toward the 133-demo progress', g3ProgBefore === '32 / 133' && byId.progressCount.textContent === '33 / 133');
 
 // 3.2 算一算，再算回去
 for (let i = 0; i < 4; i++) click(byId.vfNext);
@@ -1313,7 +1313,7 @@ check('grade-3.js: all 16 points map to the right experiment',
 const labelSrc3 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
 check('DEMO_LABEL covers all 14 new demos',
   G3_DEMOS.every(k => labelSrc3.includes(k + ':')));
-check('G3: all 14 new demos tried by now', byId.progressCount.textContent === '46 / 132');
+check('G3: all 14 new demos tried by now', byId.progressCount.textContent === '46 / 133');
 
 
 // ---------- 11d. 四年级实验（16 个新演示 + 4.17 复用换个方向看） ----------
@@ -1346,7 +1346,7 @@ click(byId.bnRound);
 check('bignum: 62850 rounds to 6 wan', byId.bnMsg.textContent.includes('约是 6万'));
 click(byId.bnProbSeg.children[2]); // 75000
 check('bignum: 75000 sits on the halfway mark', byId.bnNear.textContent.includes('正好在半点上'));
-check('G4 demos count toward the 132-demo progress', g4ProgBefore === '46 / 132' && byId.progressCount.textContent === '47 / 132');
+check('G4 demos count toward the 133-demo progress', g4ProgBefore === '46 / 133' && byId.progressCount.textContent === '47 / 133');
 
 // 4.2 足球场拼一拼
 check('field: 1 field is 1 hectare, 10000 square meters', byId.fdReadout.textContent.includes('1 公顷') && byId.fdReadout.textContent.includes('10000 平方米'));
@@ -1494,7 +1494,7 @@ check('grade-4.js: all 17 points map to the right experiment',
 const labelSrc4 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
 check('DEMO_LABEL covers all 16 new demos',
   G4_DEMOS.every(k => labelSrc4.includes(k + ':')));
-check('G4: all 16 new demos tried by now', byId.progressCount.textContent === '62 / 132');
+check('G4: all 16 new demos tried by now', byId.progressCount.textContent === '62 / 133');
 
 
 // ---------- 6. grade 5 ----------
@@ -1508,7 +1508,7 @@ click(byId.dmProbSeg.children[1]); // 0.2x0.5
 check('decmul: 0.2x0.5 is 0.10, that is 0.1', byId.dmRead.textContent.includes('0.10') && byId.dmRead.textContent.includes('0.1'));
 click(byId.dmProbSeg.children[2]); // 0.6x0.7
 check('decmul: 0.6x0.7 is 0.42', byId.dmRead.textContent.includes('0.42'));
-check('G5 demos count toward the 132-demo progress', g5ProgBefore === '62 / 132' && byId.progressCount.textContent === '63 / 132');
+check('G5 demos count toward the 133-demo progress', g5ProgBefore === '62 / 133' && byId.progressCount.textContent === '63 / 133');
 
 // 5.2 位置：数对
 click(byId.gpGrid.children[8]); // row 1, col 2 -> (3,2)
@@ -1629,7 +1629,7 @@ const G5_DEMOS = ['decmul', 'gridpos', 'decdiv', 'prob', 'polyarea', 'planttree'
 const labelSrc5 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
 check('DEMO_LABEL covers all 11 new demos',
   G5_DEMOS.every(k => labelSrc5.includes(k + ':')));
-check('G5: all 11 new demos tried by now', byId.progressCount.textContent === '73 / 132');
+check('G5: all 11 new demos tried by now', byId.progressCount.textContent === '73 / 133');
 
 
 // ---------- 7. grade 6 ----------
@@ -1644,7 +1644,7 @@ check('radar: direction only is a ray with countless points', byId.rdRead.textCo
 click(byId.rdModeSeg.children[0]); // 方向+距离
 click(byId.rdDirSeg.children[1]); // 北偏西
 check('radar: north-west 40 degrees', byId.rdRead.textContent.includes('北偏西 40°'));
-check('G6 demos count toward the 132-demo progress', g6ProgBefore === '73 / 132' && byId.progressCount.textContent === '74 / 132');
+check('G6 demos count toward the 133-demo progress', g6ProgBefore === '73 / 133' && byId.progressCount.textContent === '74 / 133');
 
 // 6.4 比：比条
 check('ratio: 2:3 of 50 is 20 and 30', byId.raRead.textContent.includes('20 元') && byId.raRead.textContent.includes('30 元'));
@@ -1755,7 +1755,7 @@ const G6_DEMOS = ['radar', 'ratio', 'circle', 'percent', 'fan', 'lsquare', 'ther
 const labelSrc6 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
 check('DEMO_LABEL covers all 12 new demos',
   G6_DEMOS.every(k => labelSrc6.includes(k + ':')));
-check('G6: all 12 new demos tried by now', byId.progressCount.textContent === '85 / 132');
+check('G6: all 12 new demos tried by now', byId.progressCount.textContent === '85 / 133');
 
 // ---------- 8. grade 7 ----------
 const g7ProgBefore = byId.progressCount.textContent;
@@ -1770,7 +1770,7 @@ click(byId.nlBMinus); click(byId.nlBMinus); // b=5
 check('numline: -4+5 walks to 1', byId.nlRead.textContent.includes('−4 + 5') && byId.nlRead.textContent.includes('停在 1'));
 click(byId.nlAMinus); // a=-5
 check('numline: -5+5 walks to 0', byId.nlRead.textContent.includes('−5 + 5') && byId.nlRead.textContent.includes('停在 0'));
-check('G7 demos count toward the 132-demo progress', g7ProgBefore === '85 / 132' && byId.progressCount.textContent === '86 / 132');
+check('G7 demos count toward the 133-demo progress', g7ProgBefore === '85 / 133' && byId.progressCount.textContent === '86 / 133');
 
 // 7.3 乘方与科学记数法
 check('powerup: 10 folds is 1024x, 102.4mm', byId.puRead.textContent.includes('1024') && byId.puRead.textContent.includes('102.4 毫米'));
@@ -1932,11 +1932,11 @@ check('DEMO_LABEL covers all 13 new demos',
   G7_DEMOS.every(k => labelSrc7.includes(k + ':')));
 check('viewForKey covers all 13 new demos',
   G7_DEMOS.every(k => sandbox.viewForKey('demo-' + k) === 'demo-' + k));
-check('G7: all 13 new demos tried by now', byId.progressCount.textContent === '98 / 132');
+check('G7: all 13 new demos tried by now', byId.progressCount.textContent === '98 / 133');
 
 
-// ---------- 8. 八年级实验（11 个新演示，132 个演示） ----------
-check('G8 start: progress is 98 / 132 before any G8 demo is tried', byId.progressCount.textContent === '98 / 132');
+// ---------- 8. 八年级实验（11 个新演示，133 个演示） ----------
+check('G8 start: progress is 98 / 133 before any G8 demo is tried', byId.progressCount.textContent === '98 / 133');
 
 navGo('demo-trisides');
 check('trisides renders: 3-4-5 closes, angles sum to 180°',
@@ -1948,7 +1948,7 @@ click(byId.tsModeSeg.children[1]); // 多边形内角和
 check('trisides polygon: pentagon interior sum 540°', byId.tsRead.textContent.includes('540°'));
 click(byId.tsNPlus); // 6 边形
 check('trisides polygon: hexagon interior sum 720°', byId.tsRead.textContent.includes('720°'));
-check('G8: trisides counts toward the 132-demo progress', byId.progressCount.textContent === '99 / 132');
+check('G8: trisides counts toward the 133-demo progress', byId.progressCount.textContent === '99 / 133');
 
 navGo('demo-congruent');
 check('congruent renders: SSS 5-6-7 always congruent',
@@ -1965,7 +1965,7 @@ click(byId.cgCondSeg.children[6]); // AAA
 check('congruent AAA: same shape, size can differ', byId.cgRead.textContent.includes('AAA 不能判定全等'));
 click(byId.cgScalePlus); // ×2
 check('congruent AAA: scale ×2 shown', byId.cgRead.textContent.includes('×2'));
-check('G8: congruent counts toward the 132-demo progress', byId.progressCount.textContent === '100 / 132');
+check('G8: congruent counts toward the 133-demo progress', byId.progressCount.textContent === '100 / 133');
 
 navGo('demo-foldmirror');
 check('foldmirror renders: isosceles triangle fold prompt',
@@ -1990,7 +1990,7 @@ check('foldmirror isosceles: base 70°, top 40°',
 click(byId.fmIsoFoldBtn);
 check('foldmirror isosceles fold: the three lines coincide',
   byId.fmRead.textContent.includes('三线合一'));
-check('G8: foldmirror counts toward the 132-demo progress', byId.progressCount.textContent === '101 / 132');
+check('G8: foldmirror counts toward the 133-demo progress', byId.progressCount.textContent === '101 / 133');
 
 navGo('demo-algarea');
 check('algarea renders: a³·a² = a⁵, exponents add',
@@ -2016,7 +2016,7 @@ check('algarea factor: 1×1 and 1+1 both miss for x²+5x+6',
 click(byId.aaF1Plus); click(byId.aaF2Plus); click(byId.aaF2Plus); // 2, 3
 check('algarea factor: (2,3) solves x²+5x+6 = (x+2)(x+3)',
   byId.aaRead.textContent.includes('x²+5x+6 = (x+2)(x+3)'));
-check('G8: algarea counts toward the 132-demo progress', byId.progressCount.textContent === '102 / 132');
+check('G8: algarea counts toward the 133-demo progress', byId.progressCount.textContent === '102 / 133');
 
 navGo('demo-algfrac');
 check('algfrac renders: 12a²b/4ab prompt with remaining factors',
@@ -2039,7 +2039,7 @@ check('algfrac zero: x=0, denominator x−2 = -2, fraction defined',
 click(byId.afXPlus); click(byId.afXPlus); // x=2
 check('algfrac zero: x=2, denominator 0, fraction undefined',
   byId.afRead.textContent.includes('分母 x−2 = 0') && byId.afRead.textContent.includes('没有意义'));
-check('G8: algfrac counts toward the 132-demo progress', byId.progressCount.textContent === '103 / 132');
+check('G8: algfrac counts toward the 133-demo progress', byId.progressCount.textContent === '103 / 133');
 
 navGo('demo-eqsieve');
 check('eqsieve renders: 2/(x−3) = 1/(x+1)',
@@ -2058,7 +2058,7 @@ check('eqsieve problem 2: 1/(x−1) = 2/(x²−1)',
 click(byId.esStep3);
 check('eqsieve problem 2: x=1 is extraneous, no solution',
   byId.esLine3.textContent.includes('增根') && byId.esLine3.textContent.includes('无解'));
-check('G8: eqsieve counts toward the 132-demo progress', byId.progressCount.textContent === '104 / 132');
+check('G8: eqsieve counts toward the 133-demo progress', byId.progressCount.textContent === '104 / 133');
 
 navGo('demo-radical');
 check('radical renders: simplify √12, largest square factor prompt',
@@ -2074,7 +2074,7 @@ click(byId.rxModeSeg.children[1]); // 合并同类
 check('radical combine: √8 + √2 = 3√2', byId.rxRead.textContent.includes('3√2'));
 click(byId.rxPairSeg.children[3]); // √5, √3
 check('radical combine: √5 and √3 cannot merge', byId.rxRead.textContent.includes('合不了'));
-check('G8: radical counts toward the 132-demo progress', byId.progressCount.textContent === '105 / 132');
+check('G8: radical counts toward the 133-demo progress', byId.progressCount.textContent === '105 / 133');
 
 navGo('demo-pythag');
 check('pythag renders: 3²+4² = 5² by areas',
@@ -2088,7 +2088,7 @@ check('pythag check: 5-12-13 is a right triangle',
 click(byId.pyCheckSeg.children[1]); // 3, 4, 6
 check('pythag check: 3-4-6 is not (25 ≠ 36)',
   byId.pyRead.textContent.includes('不是直角三角形') && byId.pyRead.textContent.includes('≠ 36'));
-check('G8: pythag counts toward the 132-demo progress', byId.progressCount.textContent === '106 / 132');
+check('G8: pythag counts toward the 133-demo progress', byId.progressCount.textContent === '106 / 133');
 
 navGo('demo-pargram');
 check('pargram renders: AB = CD = 11, diagonals bisect each other',
@@ -2102,7 +2102,7 @@ check('pargram judge: two pairs of equal opposite sides proves a parallelogram',
 click(byId.pgmJudgeSeg.children[3]); // 一组对边平行、另一组对边相等
 check('pargram judge: that may be an isosceles trapezoid, not a parallelogram',
   byId.pgmRead.textContent.includes('等腰梯形') && byId.pgmRead.textContent.includes('不能判定'));
-check('G8: pargram counts toward the 132-demo progress', byId.progressCount.textContent === '107 / 132');
+check('G8: pargram counts toward the 133-demo progress', byId.progressCount.textContent === '107 / 133');
 
 navGo('demo-specialquad');
 check('specialquad renders: plain parallelogram',
@@ -2117,7 +2117,7 @@ check('specialquad: add equal adjacent sides → rhombus, area 6×8÷2 = 24',
 click(byId.spRectBtn); // 两个条件都加
 check('specialquad: both conditions → square, area 36',
   byId.spRead.textContent.includes('正方形') && byId.spRead.textContent.includes('面积 36'));
-check('G8: specialquad counts toward the 132-demo progress', byId.progressCount.textContent === '108 / 132');
+check('G8: specialquad counts toward the 133-demo progress', byId.progressCount.textContent === '108 / 133');
 
 navGo('demo-datastats');
 check('datastats renders: 2,3,3,5,7 — mean 4, median 3, mode 3, variance 3.2',
@@ -2138,7 +2138,7 @@ check('datastats compare: same mean 9, group 甲 has smaller variance, more stab
 click(byId.dsPairSeg.children[1]); // 丙 / 丁
 check('datastats compare: group 丙 variance 0, most stable',
   byId.dsRead.textContent.includes('丙更稳定'));
-check('G8: all 11 new demos tried by now', byId.progressCount.textContent === '109 / 132');
+check('G8: all 11 new demos tried by now', byId.progressCount.textContent === '109 / 133');
 
 // 知识点页 → 实验的链接（桩里的 grade-8.js）+ 真实 grade-8.js 的映射
 const G8_LINKS = [
@@ -2175,8 +2175,8 @@ check('viewForKey covers all 11 new demos',
   G8_DEMOS.every(k => sandbox.viewForKey('demo-' + k) === 'demo-' + k));
 
 
-// ---------- 9. 九年级实验（15 个新演示，132 个演示） ----------
-check('G9 start: progress is 109 / 132 before any G9 demo is tried', byId.progressCount.textContent === '109 / 132');
+// ---------- 9. 九年级实验（15 个新演示，133 个演示） ----------
+check('G9 start: progress is 109 / 133 before any G9 demo is tried', byId.progressCount.textContent === '109 / 133');
 
 navGo('demo-quad');
 check('quad renders: x²−5x+6=0 completes to (x−2.5)²=0.25',
@@ -2195,7 +2195,7 @@ click(byId.qqModeSeg.children[3]); // 代回去验算
 check('quad check: x=1 and x=-7 both substitute to 0',
   byId.qqRead.textContent.includes('x=1') && byId.qqRead.textContent.includes('x=-7') &&
   byId.qqRead.textContent.includes('得 0'));
-check('G9: quad counts toward the 132-demo progress', byId.progressCount.textContent === '110 / 132');
+check('G9: quad counts toward the 133-demo progress', byId.progressCount.textContent === '110 / 133');
 
 navGo('demo-growth');
 check('growth renders: 100 yuan at 10% for 2 years is 121',
@@ -2210,7 +2210,7 @@ check('growth vieta: x²−3x+1=0, sum 3, product 1, squares sum 7',
 click(byId.gwVietaSeg.children[1]); // x²−5x+6=0
 check('growth vieta: x²−5x+6=0, squares sum 13',
   byId.gwMsg.textContent.includes('=13'));
-check('G9: growth counts toward the 132-demo progress', byId.progressCount.textContent === '111 / 132');
+check('G9: growth counts toward the 133-demo progress', byId.progressCount.textContent === '111 / 133');
 
 navGo('demo-parabola');
 check('parabola renders: y=x², vertex (0,0), tangent to x-axis',
@@ -2228,7 +2228,7 @@ check('parabola profit: raise 5 yuan, max profit 2450',
 click(byId.ppXMinus); // 4 元
 check('parabola profit: raise 4 yuan, profit 2448',
   byId.ppRead.textContent.includes('总利润 2448 元'));
-check('G9: parabola counts toward the 132-demo progress', byId.progressCount.textContent === '112 / 132');
+check('G9: parabola counts toward the 133-demo progress', byId.progressCount.textContent === '112 / 133');
 
 navGo('demo-spin');
 check('spin renders: square rotates 90°, distance from O unchanged',
@@ -2246,7 +2246,7 @@ click(byId.snShapeSeg.children[2]); // 等边三角形
 click(byId.snAngPlus); click(byId.snAngPlus); click(byId.snAngPlus); click(byId.snAngPlus); // 180→300
 check('spin: equilateral at 300° does not coincide (needs 120° steps)',
   byId.snMsg.textContent.includes('还没和原来重合'));
-check('G9: spin counts toward the 132-demo progress', byId.progressCount.textContent === '113 / 132');
+check('G9: spin counts toward the 133-demo progress', byId.progressCount.textContent === '113 / 133');
 
 navGo('demo-circangle');
 check('circangle renders: central 120°, inscribed 60°',
@@ -2260,7 +2260,7 @@ check('circangle chord: r=5, chord 8, distance 3',
 click(byId.cjChordPlus); // 弦 6
 check('circangle chord: chord 6, distance 4',
   byId.cjRead.textContent.includes('弦长 6') && byId.cjRead.textContent.includes('距离是 4'));
-check('G9: circangle counts toward the 132-demo progress', byId.progressCount.textContent === '114 / 132');
+check('G9: circangle counts toward the 133-demo progress', byId.progressCount.textContent === '114 / 133');
 
 navGo('demo-tangent');
 check('tangent renders: r=4, d=5, separate, 0 intersections',
@@ -2277,7 +2277,7 @@ check('tangent length: OP=5, PA=PB=3',
 click(byId.tgOPPlus); // OP=6
 check('tangent length: OP=6, PA=PB=4.47',
   byId.tgRead.textContent.includes('PA=PB=4.47'));
-check('G9: tangent counts toward the 132-demo progress', byId.progressCount.textContent === '115 / 132');
+check('G9: tangent counts toward the 133-demo progress', byId.progressCount.textContent === '115 / 133');
 
 navGo('demo-sector');
 check('sector renders: r=6, n=60°, arc 6.28, area 18.85',
@@ -2291,7 +2291,7 @@ check('sector cone: r=3, l=5, lateral area 15π, angle 216°',
 click(byId.sfCRPlus); // r=4
 check('sector cone: r=4, lateral area 20π, angle 288°',
   byId.sfRead.textContent.includes('20π') && byId.sfMsg.textContent.includes('288°'));
-check('G9: sector counts toward the 132-demo progress', byId.progressCount.textContent === '116 / 132');
+check('G9: sector counts toward the 133-demo progress', byId.progressCount.textContent === '116 / 133');
 
 navGo('demo-coin');
 check('coin renders: no tosses yet',
@@ -2306,7 +2306,7 @@ check('coin ball: red probability 3/5',
   byId.cfRead.textContent.includes('3/5=0.6'));
 click(byId.cfDrawBtn);
 check('coin ball: one draw counted', byId.cfRead.textContent.includes('摸了 1 次'));
-check('G9: coin counts toward the 132-demo progress', byId.progressCount.textContent === '117 / 132');
+check('G9: coin counts toward the 133-demo progress', byId.progressCount.textContent === '117 / 133');
 
 navGo('demo-tree');
 check('tree renders: prompt to grow the next level',
@@ -2325,7 +2325,7 @@ click(byId.twScenSeg.children[2]); // 抽两张卡片
 click(byId.twNextBtn); click(byId.twNextBtn);
 check('tree cards: 6 combinations, both odd 1/6',
   byId.twRead.textContent.includes('6 种组合') && byId.twRead.textContent.includes('概率 1/6'));
-check('G9: tree counts toward the 132-demo progress', byId.progressCount.textContent === '118 / 132');
+check('G9: tree counts toward the 133-demo progress', byId.progressCount.textContent === '118 / 133');
 
 navGo('demo-hyperbola');
 check('hyperbola renders: k=6 in quadrants I/III, P(2,3), area 6',
@@ -2337,7 +2337,7 @@ check('hyperbola: k=4, P(2,2), area 4',
 click(byId.hbKMinus); click(byId.hbKMinus); // k=-2
 check('hyperbola: k=-2 in quadrants II/IV, P(2,-1)',
   byId.hbRead.textContent.includes('第二、四象限') && byId.hbRead.textContent.includes('P(2,-1)'));
-check('G9: hyperbola counts toward the 132-demo progress', byId.progressCount.textContent === '119 / 132');
+check('G9: hyperbola counts toward the 133-demo progress', byId.progressCount.textContent === '119 / 133');
 
 navGo('demo-similar');
 check('similar renders: 3-4-5 scaled ×2 is 6-8-10, perimeter 24, area 24',
@@ -2353,7 +2353,7 @@ check('similar homothety: OA=2, k=2.5, OA′=5',
 click(byId.siKPlus); // k=3
 check('similar homothety: k=3, area 5×9=45',
   byId.siMsg.textContent.includes('5×9=45'));
-check('G9: similar counts toward the 132-demo progress', byId.progressCount.textContent === '120 / 132');
+check('G9: similar counts toward the 133-demo progress', byId.progressCount.textContent === '120 / 133');
 
 navGo('demo-shadow');
 check('shadow renders: your shadow 2m, pole 9.6m',
@@ -2367,7 +2367,7 @@ check('shadow AA: ∠A=50°, ∠B=60°, ∠C=70°',
 click(byId.swAMinus); // ∠A=40°
 check('shadow AA: ∠A=40°, ∠C=80°',
   byId.swRead.textContent.includes('∠C=80°'));
-check('G9: shadow counts toward the 132-demo progress', byId.progressCount.textContent === '121 / 132');
+check('G9: shadow counts toward the 133-demo progress', byId.progressCount.textContent === '121 / 133');
 
 navGo('demo-trig');
 check('trig renders: ∠A=30°, opposite 5, adjacent 8.66, sin 0.5',
@@ -2380,7 +2380,7 @@ check('trig 45°: tan A=1, sin45°=cos45°=√2/2',
 click(byId.tjSpecialSeg.children[2]); // 60°
 check('trig 60°: sin60°=√3/2, opposite 8.66',
   byId.tjMsg.textContent.includes('sin60°=√3/2') && byId.tjRead.textContent.includes('对边 8.66'));
-check('G9: trig counts toward the 132-demo progress', byId.progressCount.textContent === '122 / 132');
+check('G9: trig counts toward the 133-demo progress', byId.progressCount.textContent === '122 / 133');
 
 navGo('demo-slope');
 check('slope renders: elevation 30°, 20m away, tower 11.55m',
@@ -2394,7 +2394,7 @@ check('slope grade: 1:1, height 4m, slope face 4√2 ≈ 5.66m',
 click(byId.soRatioSeg.children[1]); // 1:2
 check('slope grade: 1:2, height 4m, horizontal 8m, slope face 8.94m',
   byId.soRead.textContent.includes('水平距离 8 米') && byId.soRead.textContent.includes('坡面长 8.94 米'));
-check('G9: slope counts toward the 132-demo progress', byId.progressCount.textContent === '123 / 132');
+check('G9: slope counts toward the 133-demo progress', byId.progressCount.textContent === '123 / 133');
 
 navGo('demo-project');
 check('project renders: 4m object, sun 45°, shadow 4m',
@@ -2416,7 +2416,7 @@ click(byId.pjSolidSeg.children[1]); // 长方体
 check('project views: cuboid 6×3×4, front 6×4, left 3×4, top 6×3',
   byId.pjRead.textContent.includes('主视图是长方形 6×4') && byId.pjRead.textContent.includes('左视图是长方形 3×4') &&
   byId.pjRead.textContent.includes('俯视图是长方形 6×3'));
-check('G9: all 15 new demos tried by now', byId.progressCount.textContent === '124 / 132');
+check('G9: all 15 new demos tried by now', byId.progressCount.textContent === '124 / 133');
 
 // 知识点页 → 实验的链接（桩里的 grade-9.js）+ 真实 grade-9.js 的映射
 const G9_LINKS = [
@@ -2609,7 +2609,7 @@ check('K parent: week summary counts 3 practiced this week (old 1.1 excluded)',
 check('K parent: week summary groups by grade/unit',
   byId.parentCard.innerHTML.includes('3 年级') && byId.parentCard.innerHTML.includes('1 年级'));
 check('K parent: demos counted from stored tried list, honestly not weekly',
-  byId.parentCard.innerHTML.includes('演示一共玩过 2 / 132 个') && byId.parentCard.innerHTML.includes('没法按周分开算'));
+  byId.parentCard.innerHTML.includes('演示一共玩过 2 / 133 个') && byId.parentCard.innerHTML.includes('没法按周分开算'));
 check('K parent: difficulty lists the wrong point and the low-confidence point',
   byId.parentCard.innerHTML.includes('3.7') && byId.parentCard.innerHTML.includes('上次答错了') &&
   byId.parentCard.innerHTML.includes('3.12') && byId.parentCard.innerHTML.includes('没把握'));
@@ -2703,7 +2703,8 @@ navGo('unit-3-0');
 check('L checkpoint: unit page shows its task list and lit state',
   pointDetail.innerHTML.includes('闯关任务 · 已点亮') && pointDetail.innerHTML.includes('任务 2 / 2'));
 // 1 年级单元挂着探究作业 inq-tenframe（点 1.9）：演示 + 练题都做了、没交作业 → 2/3 不点亮；交了才点亮。
-lsData['math-tried-demos-v1'] = JSON.stringify(['tenframe']);
+// 注意：1.9 的演示已换成 thirteen（十格阵仍挂在 1.6/1.11），夹具里“玩过演示”就是玩过 thirteen。
+lsData['math-tried-demos-v1'] = JSON.stringify(['thirteen']);
 lsData['math-review-v1'] = JSON.stringify({ '1.9': { last: Date.now(), correct: true, confident: true, streak: 1, due: Date.now() + 86400000 } });
 delete lsData['math-inquiry-v1'];
 navGo('checkpoint');
@@ -2719,7 +2720,7 @@ clickCp(cpBtn);
 check('L checkpoint: tapping a station opens its unit page, no lock',
   documentStub.body.dataset.view === 'unit-detail' && pointDetail.innerHTML.includes('分数的初步认识'));
 // 我的进度页也看得到点亮数和徽章入口。
-lsData['math-tried-demos-v1'] = JSON.stringify(['tenframe', 'fraction']);
+lsData['math-tried-demos-v1'] = JSON.stringify(['thirteen', 'fraction']);
 lsData['math-review-v1'] = JSON.stringify({ '1.9': { last: Date.now(), correct: true, confident: true, streak: 1, due: Date.now() + 86400000 }, '3.7': { last: Date.now(), correct: true, confident: true, streak: 1, due: Date.now() + 86400000 } });
 navGo('progress');
 check('L checkpoint: progress page shows lit-unit counts and a badge-wall link',
@@ -2898,11 +2899,11 @@ lsData['math-tried-demos-v1'] = JSON.stringify(simTried);
 sandbox.renderTried();
 navGo('parent');
 check('counter: topbar, panels, progress and parent agree after another tab writes',
-  byId.progressCount.textContent.includes(nTried + ' / 132') &&
-  byId.panelProgTx.textContent.includes(nTried + ' / 132') &&
+  byId.progressCount.textContent.includes(nTried + ' / 133') &&
+  byId.panelProgTx.textContent.includes(nTried + ' / 133') &&
   byId.panelDemoTx.textContent.includes(nTried + ' 已体验') &&
-  byId.progressText.textContent.includes('已体验 ' + nTried + ' / 132') &&
-  byId.parentCard.innerHTML.includes('演示一共玩过 ' + nTried + ' / 132 个'));
+  byId.progressText.textContent.includes('已体验 ' + nTried + ' / 133') &&
+  byId.parentCard.innerHTML.includes('演示一共玩过 ' + nTried + ' / 133 个'));
 lsData['math-tried-demos-v1'] = JSON.stringify(triedBefore);
 sandbox.renderTried();
 navGo('home');
@@ -2964,9 +2965,79 @@ navGo('point-3.12');
 check('N qgen: after clearing, the point shows a fresh variant again',
   sandbox.qgenShown && sandbox.qgenShown['3.12'] && sandbox.qgenShown['3.12'].q !== q1 &&
   !pointDetail.innerHTML.includes('上次做错的那道题'));
+// 混着练里的换数字题答错了，也要记下当初那组数字——改前混着练的自评行 data-qa-mark 是题号
+// （不是 'g'），又没记 mixShown，答错只进了复习库、数字丢了；重开知识点页总是新题
+// （真机复测 7edb765：3.11 的 47×29 答错后重开变 35×68、48×74，全无“上次做错”提示）。
+// 先把复习库和错题键拍个快照，查完还回去，免得污染后面的检查。
+const mixReviewBefore = lsData['math-review-v1'];
+const mixFailedBefore = lsData['math-qgen-failed-v1'];
+const origRandom3 = Math.random;
+Math.random = () => 0.4;
+navGo('grade-3-mix');
+Math.random = origRandom3;
+const mixPids = Object.keys(sandbox.mixShown || {});
+check('N qgen: mix shows at least one generated question with fixed random',
+  mixPids.length >= 1 && pointDetail.innerHTML.includes('换数字再练'));
+if (mixPids.length) {
+  const mixPid = mixPids[0];
+  const mixQ = sandbox.mixShown[mixPid].q;
+  // 题面里找这条换数字题的自评行序号：data-qa-mark="N" data-point="pid"。
+  const mixRowM = pointDetail.innerHTML.match(new RegExp('data-qa-mark="(\\d+)" data-point="' + mixPid.replace('.', '\\.') + '"'));
+  const mixIdx = mixRowM ? mixRowM[1] : null;
+  check('N qgen: mix generated question has a mark row', mixIdx !== null);
+  const mixRow = pointDetail.querySelector('[data-qa-mark="' + mixIdx + '"]');
+  mixRow.dataset.point = mixPid; mixRow.dataset.qaMark = mixIdx; mixRow.dataset.qgen = '1';
+  const mixMarkW = makeEl('button'); mixMarkW.dataset.mark = 'wrong';
+  const mixConfN = makeEl('button'); mixConfN.dataset.conf = 'no';
+  mixMarkW.closest = (sel) => sel === '[data-mark]' ? mixMarkW : (sel === '[data-qa-mark]' ? mixRow : null);
+  mixConfN.closest = (sel) => sel === '[data-conf]' ? mixConfN : (sel === '[data-qa-mark]' ? mixRow : null);
+  clickPD(mixMarkW); clickPD(mixConfN);
+  check('N qgen: marking a generated MIX question wrong stores its exact numbers',
+    JSON.parse(lsData['math-qgen-failed-v1'] || '{}')[mixPid] &&
+    JSON.parse(lsData['math-qgen-failed-v1'] || '{}')[mixPid].q === mixQ);
+  navGo('home');
+  navGo('point-' + mixPid);
+  check('N qgen: mix-missed question replays from the point page with the note',
+    sandbox.qgenShown && sandbox.qgenShown[mixPid] && sandbox.qgenShown[mixPid].q === mixQ &&
+    pointDetail.innerHTML.includes('上次做错的那道题'));
+  // 答对清掉（走练一练的 'g' 行），再把复习库和错题键还回快照。
+  const mixAns = pointDetail.querySelector('[data-qa-a="g"]'); mixAns.hidden = true;
+  const mixBtn = makeEl('button'); mixBtn.dataset.qa = 'g';
+  clickPD(mixBtn);
+  const mixRowG = pointDetail.querySelector('[data-qa-mark="g"]');
+  mixRowG.dataset.point = mixPid; mixRowG.dataset.qaMark = 'g';
+  const mixMarkR = makeEl('button'); mixMarkR.dataset.mark = 'right';
+  const mixConfY = makeEl('button'); mixConfY.dataset.conf = 'yes';
+  mixMarkR.closest = (sel) => sel === '[data-mark]' ? mixMarkR : (sel === '[data-qa-mark]' ? mixRowG : null);
+  mixConfY.closest = (sel) => sel === '[data-conf]' ? mixConfY : (sel === '[data-qa-mark]' ? mixRowG : null);
+  clickPD(mixMarkR); clickPD(mixConfY);
+  check('N qgen: mix-missed question cleared after answering it right',
+    !JSON.parse(lsData['math-qgen-failed-v1'] || '{}')[mixPid]);
+}
+lsData['math-review-v1'] = mixReviewBefore;
+lsData['math-qgen-failed-v1'] = mixFailedBefore;
+if (typeof sandbox.syncReviewFromStorage === 'function') sandbox.syncReviewFromStorage();
+// 错题本跨标签页同步：别的窗口记了一笔错题，这边同步后错题本立刻跟上——
+// 改前 reviewStore 只在启动时读一次，storage 事件只同步演示进度，
+// 两个窗口的错题数会分叉（真机复测 7edb765：新开的标签页 5 条，原标签页 4 条）。
+// 断言用“当前数 +1”：写死 5 条会在旧代码上偶然通过（当时库里正好 5 条错题）。
+const wbBefore = lsData['math-review-v1'];
+navGo('review');
+const wbM = byId.reviewCard.innerHTML.match(/共 (\d+) 条错题/);
+const wbN = wbM ? +wbM[1] : 0;
+const wbCur = JSON.parse(lsData['math-review-v1'] || '{}');
+const wbFreshId = ['1.13', '1.8', '3.3', '1.2'].find(id => !wbCur[id]) || '1.13';
+wbCur[wbFreshId] = { last: Date.now(), correct: false, confident: false, streak: 0, due: Date.now() + 86400000 };
+lsData['math-review-v1'] = JSON.stringify(wbCur);
+if (typeof sandbox.syncReviewFromStorage === 'function') sandbox.syncReviewFromStorage();
+navGo('review');
+check('wrongbook: sync from another tab updates the wrong-book count',
+  byId.reviewCard.innerHTML.includes('共 ' + (wbN + 1) + ' 条错题'));
+lsData['math-review-v1'] = wbBefore;
+if (typeof sandbox.syncReviewFromStorage === 'function') sandbox.syncReviewFromStorage();
 
-// ---------- 11. 创意实验（8 个新演示，132 个演示） ----------
-const CREATIVE = ['twentyfour', 'monty', 'maxarea', 'matches', 'mobius', 'shopweek', 'fairgame', 'makerule'];
+// ---------- 11. 创意实验（8 个新演示，133 个演示） ----------
+const CREATIVE = ['thirteen', 'twentyfour', 'monty', 'maxarea', 'matches', 'mobius', 'shopweek', 'fairgame', 'makerule'];
 check('creative: DEMO_LABEL covers all 8 creative demos',
   CREATIVE.every(k => labelSrc9.includes(k + ':')));
 check('creative: viewForKey covers all 8 creative demos',
@@ -2974,22 +3045,81 @@ check('creative: viewForKey covers all 8 creative demos',
 check('creative: DEMO_GRADES lists the 8 creative demos in their grades',
   src.includes('twentyfour: [4, 5]') && src.includes('monty: [9]') && src.includes('maxarea: [3, 4, 5]') &&
   src.includes('matches: [3, 4]') && src.includes('mobius: [6, 7]') && src.includes('shopweek: [5, 6]') &&
-  src.includes('fairgame: [5]') && src.includes('makerule: [1, 2]'));
+  src.includes('fairgame: [5]') && src.includes('makerule: [1, 2]') && src.includes('thirteen: [1]'));
 check('creative: 8 creative panels + heading on the demos page',
   html.includes('创意实验') && CREATIVE.every(k => html.includes('data-nav-key="demo-' + k + '"')));
 function triedCount() { return parseInt(byId.progressCount.textContent.split(' / ')[0], 10); }
+// 第 11 节从干净的 tried 表开始数：L 节的夹具为了点亮 1.9 单元，把 thirteen 留在了 tried 表里，
+// 这里不清掉，十三的“+1”和最后的“+9”都会因为 thirteen 已在表里而少算。
+lsData['math-tried-demos-v1'] = '[]';
+sandbox.renderTried();
 const triedAtStart = JSON.parse(lsData['math-tried-demos-v1'] || '[]');
+function tierLit(container, label) {
+  // 桩 DOM 的 textContent 不汇总子元素；三档 chips 是容器的孩子，逐个查。
+  for (let i = 0; i < container.children.length; i++) {
+    if (container.children[i].textContent.indexOf('✓ ' + label) === 0) return true;
+  }
+  return false;
+}
 function findIn(container, sel, key, val) {
   const els = container.querySelectorAll(sel);
   for (let i = 0; i < els.length; i++) if (String(els[i].dataset[key]) === String(val)) return els[i];
   return null;
 }
 
+// 13有几种凑法：先猜 4 种，再摆 9+4 和 4+9（换位置也算一种），找全 8 种。
+let c13 = triedCount();
+navGo('demo-thirteen');
+click(byId.thGuessSet);
+check('thirteen: guess recorded before play, total revealed only as / 8',
+  byId.thGuessTx.textContent.includes('你猜的是 4 种') && byId.thCount.textContent.includes('/ 8 种'));
+function thFill(a, b) {
+  click(byId.thClear);
+  for (let i = 0; i < a; i++) click(findIn(byId.thFrameA, '#thFrameA [data-th-cell]', 'thCell', 'A-' + i));
+  for (let i = 0; i < b; i++) click(findIn(byId.thFrameB, '#thFrameB [data-th-cell]', 'thCell', 'B-' + i));
+}
+thFill(9, 4);
+check('thirteen: 9+4 shows the equation', byId.thEq.textContent.includes('9 + 4 = 13'));
+click(byId.thRecord);
+check('thirteen: 9+4 recorded with the make-ten note and counts toward progress',
+  byId.thMsg.textContent.includes('记下了：9+4 = 13') && byId.thMsg.textContent.includes('9 再凑 1 个就是 10') &&
+  byId.thFound.textContent.includes('9+4') && triedCount() === c13 + 1);
+thFill(4, 9);
+click(byId.thRecord);
+check('thirteen: 4+9 counts as a different way and notes the swap',
+  byId.thMsg.textContent.includes('记下了：4+9 = 13') && byId.thMsg.textContent.includes('换了位置') &&
+  byId.thCount.textContent.includes('找到了 2 / 8 种'));
+thFill(5, 5);
+click(byId.thRecord);
+check('thirteen: 5+5 is not 13 and is refused', byId.thMsg.textContent.includes('不是 13'));
+[[3, 10], [10, 3], [5, 8], [8, 5], [6, 7], [7, 6]].forEach(function (pr) { thFill(pr[0], pr[1]); click(byId.thRecord); });
+check('thirteen: all 8 ordered ways found, why revealed',
+  byId.thCount.textContent.includes('找到了 8 / 8 种') && byId.thCount.textContent.includes('找全了') &&
+  byId.thWhy.hidden === false);
+click(byId.thNewTarget);
+check('thirteen: new target is 14', byId.thTargetTx.textContent.includes('14'));
+click(byId.thGuessSet);
+check('thirteen: guess for 14 reveals / 7', byId.thCount.textContent.includes('/ 7 种'));
+thFill(10, 4); click(byId.thRecord);
+check('thirteen: 10+4 on target 14 uses the 10-already-ten note',
+  byId.thMsg.textContent.includes('记下了：10+4 = 14') && byId.thMsg.textContent.includes('10 已经是 10 了'));
+byId.thFind.value = '13 能拆成好多对';
+click(byId.thFindSave);
+check('thirteen: discovery saved into math-inquiry-v1',
+  byId.thFindSaved.textContent.includes('记下来了') &&
+  JSON.parse(lsData['math-inquiry-v1'] || '[]').some(function (e) { return e.kind === 'discovery' && e.demo === 'thirteen'; }));
+check('thirteen: discovery renders as 我的发现 in the inquiry list, not as homework',
+  sandbox.inquiryListHtml([{ kind: 'discovery', taskId: 'thirteen', text: '13 能拆成好多对', demo: 'thirteen', ts: Date.now() }], '空').includes('我的发现') &&
+  sandbox.inquiryListHtml([{ kind: 'discovery', taskId: 'thirteen', text: '13 能拆成好多对', demo: 'thirteen', ts: Date.now() }], '空').includes('13有几种凑法') &&
+  !sandbox.inquiryListHtml([{ kind: 'discovery', taskId: 'thirteen', text: '13 能拆成好多对', demo: 'thirteen', ts: Date.now() }], '空').includes('探究作业'));
+
 // 24点：先拼 8÷(3−8÷3)=24（浮点是 23.99999999999999，靠 1e-6 容差认出来）。
 let c0 = triedCount();
 navGo('demo-twentyfour');
 check('twentyfour: first set is 3 3 8 8', byId.tf24Nums.textContent.includes('3') && byId.tf24Nums.textContent.includes('8') &&
   byId.tf24NumRow.children.length === 4);
+click(byId.tf24PredNo);
+check('twentyfour: prediction recorded', byId.tf24PredTx.textContent.includes('拼不出 24'));
 click(findIn(byId.tf24NumRow, '#tf24NumRow [data-tf24-num]', 'tf24Num', 2));
 click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', '÷'));
 click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', '('));
@@ -3000,8 +3130,10 @@ click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', '÷'));
 click(findIn(byId.tf24NumRow, '#tf24NumRow [data-tf24-num]', 'tf24Num', 1));
 click(findIn(byId.tf24OpRow, '#tf24OpRow [data-tf24-op]', 'tf24Op', ')'));
 click(byId.tf24Calc);
-check('twentyfour: 8÷(3−8÷3) counts as 24 and counts toward progress',
+check('twentyfour: 8÷(3−8÷3) counts as 24, wrong prediction called out, tiers lit',
   byId.tf24Msg.textContent.includes('拼出来了') && byId.tf24Found.textContent.includes('1 种') &&
+  byId.tf24Msg.textContent.includes('你猜错了') &&
+  tierLit(byId.tf24Tiers, '基础') && tierLit(byId.tf24Tiers, '挑战') &&
   triedCount() === c0 + 1);
 // 同一组数换个拼法要能再算对：先换到 (1,2,3,4)，(1+3)×(4+2) 和 4×3×2×1 都是 24。
 click(byId.tf24New); click(byId.tf24New); click(byId.tf24New); click(byId.tf24New);
@@ -3030,39 +3162,67 @@ click(findIn(byId.tf24NumRow, '#tf24NumRow [data-tf24-num]', 'tf24Num', 0));
 click(byId.tf24Calc);
 check('twentyfour: a second, different solution 4×3×2×1 is also accepted',
   byId.tf24Msg.textContent.includes('拼出来了') && byId.tf24Found.textContent.includes('2 种') &&
-  byId.tf24Found.textContent.includes('够两种了'));
+  byId.tf24Found.textContent.includes('够两种了') && tierLit(byId.tf24Tiers, '提高'));
+byId.tf24Find.value = '24 点没有标准答案，顺序最重要';
+click(byId.tf24FindSave);
+check('twentyfour: discovery saved', byId.tf24FindSaved.textContent.includes('记下来了'));
 
 // 三门问题：固定种子模拟换门赢 68 次、不换赢 36 次；预测“不换更好”会被打脸。
 c0 = triedCount();
 navGo('demo-monty');
 check('monty: three doors', byId.moDoors.children.length === 3);
+check('monty: why is hidden in the markup until the sim runs (no spoiler before predicting)',
+  html.includes('id="moWhyStatic" hidden'));
 click(byId.moPredStay);
 click(byId.moSim);
 check('monty: seeded 100-round sim says switch wins 68, stay wins 36',
   byId.moSimOut.textContent.includes('换门赢了 68 次') && byId.moSimOut.textContent.includes('不换赢了 36 次') &&
-  byId.moWhy.textContent.includes('你的预测错了') && triedCount() === c0 + 1);
+  byId.moWhy.textContent.includes('你的预测错了') && byId.moWhyStatic.hidden === false && triedCount() === c0 + 1);
 click(findIn(byId.moDoors, '#moDoors [data-mo-door]', 'moDoor', 0));
 check('monty: host opens a goat door after the first pick', byId.moRound.textContent.includes('主持人打开了'));
 click(byId.moStay);
 check('monty: staying reveals the prize door', byId.moRound.textContent.includes('汽车在'));
+check('monty: scoreboard tracks the played round',
+  byId.moScore.textContent.includes('换门：0 胜 0 负') &&
+  (byId.moScore.textContent.includes('不换：1 胜 0 负') || byId.moScore.textContent.includes('不换：0 胜 1 负')));
+byId.moFind.value = '换门赢的可能大约是 2/3';
+click(byId.moFindSave);
+check('monty: discovery saved', byId.moFindSaved.textContent.includes('记下来了'));
 
-// 周长一定面积最大：先猜长 4，再试出长 5 宽 5 面积 25 最大。
+// 周长一定面积最大：默认长 8（不是正方形），先猜长 7，再试出长 5 宽 5 面积 25 最大；再换周长 24。
 c0 = triedCount();
 navGo('demo-maxarea');
-check('maxarea: default L=5 gives area 25', byId.maEq.textContent.includes('面积 25 平方厘米'));
+check('maxarea: default L=8 is not the square (8×2=16)', byId.maEq.textContent.includes('长 8 厘米，宽 2 厘米，面积 16 平方厘米'));
 click(byId.maLMinus);
-check('maxarea: L=4 gives 4×6=24', byId.maEq.textContent.includes('长 4 厘米，宽 6 厘米，面积 24 平方厘米'));
+check('maxarea: L=7 gives 7×3=21', byId.maEq.textContent.includes('长 7 厘米，宽 3 厘米，面积 21 平方厘米'));
 click(byId.maGuessSet);
-check('maxarea: guess recorded', byId.maGuessTx.textContent.includes('长 4 厘米'));
+check('maxarea: guess recorded', byId.maGuessTx.textContent.includes('长 7 厘米'));
 click(byId.maRecord);
 click(byId.maLPlus);
 click(byId.maRecord);
 click(byId.maLMinus); click(byId.maLMinus);
 click(byId.maRecord);
-check('maxarea: after 3 recorded rows incl. 5×5, discovery names the square and the wrong guess',
+click(byId.maLMinus);
+click(byId.maRecord);
+check('maxarea: after 4 recorded rows incl. 5×5, discovery names the square and the wrong guess',
   byId.maFind.textContent.includes('最大面积是 25') && byId.maFind.textContent.includes('长 5 宽 5') &&
-  byId.maFind.textContent.includes('你猜的是长 4') && byId.maWhy.hidden === false &&
-  triedCount() === c0 + 1);
+  byId.maFind.textContent.includes('你猜的是长 7') && byId.maWhy.hidden === false &&
+  tierLit(byId.maTiers, '提高') && triedCount() === c0 + 1);
+// 周长 24：正方形是 6×6=36，找全两个周长才算挑战。
+click(byId.maP24);
+check('maxarea: perimeter 24 switches the range', byId.maPTx.textContent.includes('24 厘米') && byId.maEq.textContent.includes('宽 7 厘米'));
+click(byId.maLPlus);
+click(byId.maRecord);
+click(byId.maLMinus); click(byId.maLMinus);
+click(byId.maRecord);
+click(byId.maLPlus); click(byId.maLPlus); click(byId.maLPlus);
+click(byId.maRecord);
+check('maxarea: perimeter 24 square 6×6=36 found, challenge tier lit',
+  byId.maFind.textContent.includes('最大面积是 36') && byId.maFind.textContent.includes('长 6 宽 6') &&
+  tierLit(byId.maTiers, '挑战'));
+byId.maDisc.value = '周长一定，长宽越接近面积越大';
+click(byId.maDiscSave);
+check('maxarea: discovery saved', byId.maDiscSaved.textContent.includes('记下来了'));
 
 // 火柴棒：第 1 题 6+4=4 → 8−4=4；第 2 题 9+3=5 → 3+3=6；错形、0 动都拒。
 c0 = triedCount();
@@ -3075,19 +3235,25 @@ click(findIn(byId.msBoard, '#msBoard [data-ms-seg]', 'msSeg', '2-a'));
 click(byId.msCheck);
 check('matches: a move that breaks the digit shape is refused', byId.msMsg.textContent.includes('形状不对'));
 click(byId.msReset);
+click(byId.msPredOp);
 click(findIn(byId.msBoard, '#msBoard [data-ms-seg]', 'msSeg', '1-v'));
 click(findIn(byId.msBoard, '#msBoard [data-ms-seg]', 'msSeg', '0-b'));
 click(byId.msCheck);
-check('matches: puzzle 1 solved by moving + vertical to 6 (8−4=4)',
-  byId.msMsg.textContent.includes('对了！8 − 4 = 4') && byId.msSolved.textContent.includes('1 / 3') &&
-  triedCount() === c0 + 1);
+check('matches: puzzle 1 solved by moving + vertical to 6 (8−4=4), prediction right',
+  byId.msMsg.textContent.includes('对了！8 − 4 = 4') && byId.msMsg.textContent.includes('你猜对了') &&
+  byId.msSolved.textContent.includes('1 / 3') && triedCount() === c0 + 1);
 click(byId.msNext);
 check('matches: puzzle 2 is 9+3=5', byId.msTitle.textContent.includes('9 + 3 = 5'));
+click(byId.msPredDigit);
 click(findIn(byId.msBoard, '#msBoard [data-ms-seg]', 'msSeg', '0-f'));
 click(findIn(byId.msBoard, '#msBoard [data-ms-seg]', 'msSeg', '4-e'));
 click(byId.msCheck);
-check('matches: puzzle 2 solved by moving 9’s f to 5’s e (3+3=6)',
-  byId.msMsg.textContent.includes('对了！3 + 3 = 6') && byId.msSolved.textContent.includes('2 / 3'));
+check('matches: puzzle 2 solved by moving 9’s f to 5’s e (3+3=6), prediction right',
+  byId.msMsg.textContent.includes('对了！3 + 3 = 6') && byId.msMsg.textContent.includes('你猜对了') &&
+  byId.msSolved.textContent.includes('2 / 3') && tierLit(byId.msTiers, '提高'));
+byId.msFind.value = '一根火柴能拆数字也能补数字';
+click(byId.msFindSave);
+check('matches: discovery saved', byId.msFindSaved.textContent.includes('记下来了'));
 
 // 莫比乌斯带：预测 2 个圈被打脸；1/3 处剪是 2 个套在一起的圈。
 c0 = triedCount();
@@ -3100,23 +3266,48 @@ check('mobius: center cut stays 1 loop and contradicts the 2-loop prediction',
 click(byId.mbPred2);
 click(byId.mbCutThird);
 check('mobius: cut at 1/3 gives 2 linked loops',
-  byId.mbResult.textContent.includes('2 个圈，套在一起') && byId.mbResult.textContent.includes('你猜对了'));
+  byId.mbResult.textContent.includes('2 个圈，套在一起') && byId.mbResult.textContent.includes('你猜对了') &&
+  tierLit(byId.mbTiers, '提高'));
+click(byId.mbPred2Same);
+click(byId.mbCutQuarter);
+check('mobius: cut at 1/4 also gives 2 linked loops, second prediction right',
+  byId.mbResult.textContent.includes('也是 2 个圈') && byId.mbResult.textContent.includes('你猜对了') &&
+  tierLit(byId.mbTiers, '挑战'));
+byId.mbFind.value = '剪的位置不一样，结果完全不一样';
+click(byId.mbFindSave);
+check('mobius: discovery saved', byId.mbFindSaved.textContent.includes('记下来了'));
 
-// 开店一周：每天 12 元进 20 个，总收入 1680 元、总利润 560 元。
+// 开店一周：每天 12 元进 20 个，总收入 1680 元、现金利润 560 元（全卖完，剩货 0）。
 c0 = triedCount();
 navGo('demo-shopweek');
 check('shopweek: day 1 with 200 cash', byId.swStatus.textContent.includes('第 1 天') && byId.swStatus.textContent.includes('200 元'));
+click(byId.swGuessSet);
+check('shopweek: profit guess recorded at 500', byId.swGuessTx.textContent.includes('你猜这一周能赚 500 元'));
 click(byId.swOpen);
 check('shopweek: day 1 at price 12 draws 23 customers and sells 20',
   byId.swDayOut.textContent.includes('来了 23 个顾客') && byId.swDayOut.textContent.includes('收入 240 元'));
 for (let d = 0; d < 6; d++) click(byId.swOpen);
-check('shopweek: a week at 12/20 ends with revenue 1680 and profit 560',
-  byId.swReport.textContent.includes('总收入 1680 元') && byId.swReport.textContent.includes('总利润：560 元') &&
+check('shopweek: a week at 12/20 ends with revenue 1680 and cash profit 560',
+  byId.swReport.textContent.includes('总收入 1680 元') && byId.swReport.textContent.includes('现金利润：560 元') &&
+  byId.swReport.textContent.includes('你猜一周能赚 500 元，实际现金利润是 560 元') &&
+  byId.swReport.textContent.includes('猜得很准') &&
   byId.swStatus.textContent.includes('760 元') && triedCount() === c0 + 1);
+// 换个策略再来一周：14 元进 20 个，收入 1960 元、现金利润 840 元，比上周多赚 280 元。
+click(byId.swReplay);
+click(byId.swPricePlus); click(byId.swPricePlus);
+for (let d = 0; d < 7; d++) click(byId.swOpen);
+check('shopweek: replay at 14/20 beats last week (cash profit 840)',
+  byId.swReport.textContent.includes('总收入 1960 元') && byId.swReport.textContent.includes('现金利润：840 元') &&
+  byId.swReport.textContent.includes('比上周多赚了 280 元') && tierLit(byId.swTiers, '挑战'));
+byId.swFind.value = '卖贵一点，顾客少了但赚得更多';
+click(byId.swFindSave);
+check('shopweek: discovery saved', byId.swFindSaved.textContent.includes('记下来了'));
 
 // 公平游戏：甲 {2–7} 乙 {8–12} 是 21 对 15，模拟 58 对 42；公平分法各 18 种。
 c0 = triedCount();
 navGo('demo-fairgame');
+click(byId.fgPredYes);
+check('fairgame: prediction recorded', byId.fgPredTx.textContent.includes('和的个数多，赢面就大'));
 function fgClick(sum, times) { for (let i = 0; i < times; i++) click(findIn(byId.fgSums, '#fgSums [data-fg-sum]', 'fgSum', sum)); }
 [2, 3, 4, 5, 6, 7].forEach(s => fgClick(s, 1));
 [8, 9, 10, 11, 12].forEach(s => fgClick(s, 2));
@@ -3128,14 +3319,22 @@ check('fairgame: seeded 100-roll sim gives A 58, B 42',
   byId.fgSimOut.textContent.includes('甲赢 58 次') && byId.fgSimOut.textContent.includes('乙赢 42 次') &&
   triedCount() === c0 + 1);
 click(byId.fgTable);
-check('fairgame: 36-outcome table shows 7 has 6 ways',
+check('fairgame: 36-outcome table shows 7 has 6 ways and calls out the wrong prediction',
   byId.fgTableOut.textContent.includes('7 有 6 种') && byId.fgTableOut.textContent.includes('一共 36 种') &&
-  byId.fgWhy.hidden === false);
+  byId.fgTableOut.textContent.includes('你猜错了') && byId.fgWhy.hidden === false);
 click(byId.fgReset);
 [2, 3, 4, 7, 10, 11, 12].forEach(s => fgClick(s, 1));
 [5, 6, 8, 9].forEach(s => fgClick(s, 2));
 check('fairgame: A {2,3,4,7,10,11,12} vs B {5,6,8,9} is fair at 18 each',
-  byId.fgVerdict.textContent.includes('公平！甲乙各 18 种可能'));
+  byId.fgVerdict.textContent.includes('公平！甲乙各 18 种可能') && tierLit(byId.fgTiers, '提高'));
+click(byId.fgReset);
+[4, 5, 6, 7].forEach(s => fgClick(s, 1));
+[2, 3, 8, 9, 10, 11, 12].forEach(s => fgClick(s, 2));
+check('fairgame: a second fair split A {4,5,6,7} vs B {2,3,8,9,10,11,12} is also 18 each',
+  byId.fgVerdict.textContent.includes('公平！甲乙各 18 种可能') && tierLit(byId.fgTiers, '挑战'));
+byId.fgFind.value = '和有几个不重要，几种掷法才重要';
+click(byId.fgFindSave);
+check('fairgame: discovery saved', byId.fgFindSaved.textContent.includes('记下来了'));
 
 // 造规律：单元 ●▲■，第 10 个是 ●，第 20 个是 ▲；错答只给提示不给答案。
 c0 = triedCount();
@@ -3152,15 +3351,25 @@ check('makerule: 10th is ● (4th unit, 1st item)',
   byId.mrA10.textContent.includes('对了！第 10 个是第 4 个单元的第 1 个') && triedCount() === c0 + 1);
 click(findIn(byId.mrQ20, '#mrQ20 [data-mr-opt]', 'mrOpt', '▲'));
 check('makerule: 20th is ▲ (7th unit, 2nd item)',
-  byId.mrA20.textContent.includes('对了！第 20 个是第 7 个单元的第 2 个'));
+  byId.mrA20.textContent.includes('对了！第 20 个是第 7 个单元的第 2 个') && tierLit(byId.mrTiers, '提高'));
 click(byId.mrCard);
 check('makerule: challenge card names both answers',
   byId.mrCardOut.textContent.includes('出题卡') && byId.mrCardOut.textContent.includes('第 10 个 ●') &&
   byId.mrCardOut.textContent.includes('第 20 个 ▲'));
+click(byId.mrClear);
+click(findIn(byId.mrPalette, '#mrPalette [data-mr-shape]', 'mrShape', '●'));
+click(findIn(byId.mrPalette, '#mrPalette [data-mr-shape]', 'mrShape', '★'));
+click(byId.mrChallenge);
+check('makerule: unit ●★ makes the 10th a ★',
+  byId.mrChallengeOut.textContent.includes('做到了') && byId.mrChallengeOut.textContent.includes('第 10 个正好是第 5 个单元的第 2 个') &&
+  tierLit(byId.mrTiers, '挑战'));
+byId.mrFind.value = '第几个不用数，数第几个单元就行';
+click(byId.mrFindSave);
+check('makerule: discovery saved', byId.mrFindSaved.textContent.includes('记下来了'));
 
 const triedAtEnd = JSON.parse(lsData['math-tried-demos-v1'] || '[]');
 check('creative: all 8 creative demos are in the tried list',
-  CREATIVE.every(k => triedAtEnd.includes(k)) && triedAtEnd.length === triedAtStart.length + 8);
+  CREATIVE.every(k => triedAtEnd.includes(k)) && triedAtEnd.length === triedAtStart.length + 9);
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

@@ -106,6 +106,7 @@ body[data-view="demo-trig"] #demos, body[data-view="demo-slope"] #demos, body[da
 body[data-view="demo-twentyfour"] #demos, body[data-view="demo-monty"] #demos, body[data-view="demo-maxarea"] #demos,
 body[data-view="demo-matches"] #demos, body[data-view="demo-mobius"] #demos, body[data-view="demo-shopweek"] #demos,
 body[data-view="demo-fairgame"] #demos, body[data-view="demo-makerule"] #demos,
+body[data-view="demo-thirteen"] #demos,
 body[data-view="why"] #why, body[data-view="review"] #review,
 body[data-view="progress"] #review, body[data-view="parent"] #review, body[data-view="lab"] #lab,
 body[data-view="exam"] #exam, body[data-view="inquiry"] #inquiry, body[data-view="checkpoint"] #checkpoint{display:block}
@@ -828,3 +829,11 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
 .mo-bar,.fg-bar{height:14px;border-radius:7px;background:#e2e8f0;overflow:hidden;margin:6px 0}
 .mo-bar i,.fg-bar i{display:block;height:100%;background:#2563eb}
 .mo-bar i.switch{background:#ff8a3d}
+
+/* ---------- 创意实验通用件：三档 + 我的发现 ---------- */
+.tier-row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.tier-chip{border:2px solid var(--line);border-radius:999px;padding:6px 12px;font-size:14px;background:#fff}
+.tier-chip.done{border-color:#16a34a;background:#dcfce7;font-weight:700}
+.find-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
+.find-row label{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.demo-card input[type=text]{min-height:48px;border:2px solid var(--line);border-radius:10px;padding:8px 12px;font-size:15px;font-family:inherit;max-width:100%}
