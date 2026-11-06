@@ -99,17 +99,17 @@ function renderTried() {
   const pf = document.getElementById('panelProgFill');
   if (pf) pf.style.width = (tried.size / n * 100) + '%';
   const pt = document.getElementById('panelProgTx');
-  if (pt) pt.textContent = tried.size + ' / ' + n + ' 个演示';
+  if (pt) pt.textContent = tried.size + ' / ' + n + ' 个动画';
   const dp = document.getElementById('panelDemoProg');
   if (dp) dp.style.width = (tried.size / n * 100) + '%';
   const dt = document.getElementById('panelDemoTx');
-  if (dt) dt.textContent = n + ' 个演示 · ' + tried.size + ' 已体验';
+  if (dt) dt.textContent = n + ' 个动画 · ' + tried.size + ' 已体验';
   const pFill = document.getElementById('progressFill');
   if (pFill) pFill.style.width = (tried.size / n * 100) + '%';
   const pText = document.getElementById('progressText');
   if (pText) pText.textContent =
-    tried.size === n ? '演示都玩过了！下一步可以选一个年级做完整单元。'
-    : '已体验 ' + tried.size + ' / ' + n + ' 个演示，继续玩剩下的吧。';
+    tried.size === n ? '动画都玩过了！下一步可以选一个年级做完整单元。'
+    : '已体验 ' + tried.size + ' / ' + n + ' 个动画，继续玩剩下的吧。';
   renderProgress();
 }
 function markTried(key) {
@@ -1082,7 +1082,7 @@ function renderProgress() {
   if (!card) return;
   const practiced = Object.keys(reviewStore).length;
   const mastered = Object.keys(reviewStore).filter(id => reviewStore[id].streak >= 2).length;
-  let html = '<h3>我的进度</h3><p class="muted">一共玩过 ' + tried.size + ' / ' + ALL_DEMOS.length + ' 个演示 · 练过 ' + practiced + ' 条知识点 · 已掌握 ' + mastered + ' 条（连续答对两次算掌握）。进度只存在本机浏览器里。</p>';
+  let html = '<h3>我的进度</h3><p class="muted">一共玩过 ' + tried.size + ' / ' + ALL_DEMOS.length + ' 个动画 · 练过 ' + practiced + ' 条知识点 · 已掌握 ' + mastered + ' 条（连续答对两次算掌握）。进度只存在本机浏览器里。</p>';
   for (let g = 1; g <= 9; g++) {
     const gd = gradeData(g);
     if (!gd) continue;
@@ -1096,7 +1096,7 @@ function renderProgress() {
     const litUnits = gd.units.filter((u, ui) => { const cp = unitCheckpoint(g, ui); return cp && cp.lit; }).length;
     const pct = total ? Math.round(done / total * 100) : 0;
     html += '<div class="prog-row"><b>' + g + ' 年级 · ' + esc(GRADES[g].title.split('· ')[1] || '') + '</b>' +
-      '<p class="prog-nums">演示 ' + demosDone + ' / ' + demosInGrade.length + ' · 已练 ' + done + ' / ' + total + ' 条 · 已掌握 ' + mast + ' 条 · 已点亮 ' + litUnits + ' / ' + gd.units.length + ' 个单元</p>' +
+      '<p class="prog-nums">动画 ' + demosDone + ' / ' + demosInGrade.length + ' · 已练 ' + done + ' / ' + total + ' 条 · 已掌握 ' + mast + ' 条 · 已点亮 ' + litUnits + ' / ' + gd.units.length + ' 个单元</p>' +
       '<div class="prog-track"><i style="width:' + pct + '%"></i></div></div>';
   }
   const allCp = allUnitCheckpoints();
@@ -1154,7 +1154,7 @@ function inquiryListHtml(list, emptyText) {
   return '<ul class="wrong-list">' + list.slice().reverse().map(e => {
     const kind = e.kind === 'teach' ? '小老师讲题' : e.kind === 'discovery' ? '我的发现' : '探究作业';
     const title = e.kind === 'teach' ? (e.question || '没写题目') : e.kind === 'discovery' ? demoName(e.demo) : taskTitle(e.taskId);
-    const demo = e.demo ? '用了演示：' + demoName(e.demo) : '没用演示';
+    const demo = e.demo ? '用了动画：' + demoName(e.demo) : '没用演示';
     return '<li><b>' + esc(kind) + ' · ' + esc(title) + '</b><small>' + fmtDate(e.ts) + ' · ' + esc(demo) + '</small><p>' + esc(e.text || '') + '</p></li>';
   }).join('') + '</ul>';
 }
@@ -1167,7 +1167,7 @@ function renderParent() {
   const inq = loadInquiry();
   let html = '<h3>家长看这里</h3><p class="muted">只看这台设备上已经存下来的练习记录，不登录、不上传。下面所有数字都是从记录里数出来的。</p>';
   if (!ids.length && !triedKeys.length && !inq.length) {
-    html += '<div class="point-sec"><p>还没有记录，先去练一练。练过题、玩过演示、交过探究作业，这里才会有内容。</p></div>' +
+    html += '<div class="point-sec"><p>还没有记录，先去练一练。练过题、玩过动画、交过探究作业，这里才会有内容。</p></div>' +
       '<div class="btn-row"><button class="btn primary" type="button" data-parent-grades="1">选一个年级开始</button></div>';
     card.innerHTML = html;
     card.querySelectorAll('[data-parent-grades]').forEach(b => b.addEventListener('click', () => navGo('grades')));
@@ -1276,7 +1276,7 @@ function renderInquiry() {
   INQUIRY_TASKS.forEach(t => { if (!demoKeys.includes(t.demo)) demoKeys.push(t.demo); });
   const demoOpts = '<option value="">没用演示</option>' +
     demoKeys.map(k => '<option value="' + esc(k) + '">' + esc(demoName(k)) + '</option>').join('');
-  let html = '<h3>探究作业</h3><p class="muted">交的是过程，不是答案：写下来你是怎么想的、怎么试的，用了哪个演示帮忙。只存在这台设备上，不上传，家长能在“家长看这里”看到。</p>';
+  let html = '<h3>探究作业</h3><p class="muted">交的是过程，不是答案：写下来你是怎么想的、怎么试的，用了哪个动画帮忙。只存在这台设备上，不上传，家长能在“家长看这里”看到。</p>';
   if (inqNotice) {
     html += '<p class="qa-a" data-inq-notice>' + esc(inqNotice) + '</p>';
     inqNotice = '';
@@ -1287,7 +1287,7 @@ function renderInquiry() {
       '<div class="btn-row"><button class="btn ghost" type="button" data-inq-demo-link="demo-' + esc(t.demo) + '">先去玩' + esc(demoName(t.demo)) + '演示</button>' +
       (f ? '<button class="btn ghost" type="button" data-point="' + esc(t.pointId) + '">看看相关知识点 ' + esc(t.pointId) + ' · ' + esc(f.point.title) + '</button>' : '') + '</div>' +
       '<p class="muted">写下你的过程：</p><textarea class="inq-textarea" data-inq-text="' + esc(t.id) + '" placeholder="写下来你是怎么做的、怎么想的……"></textarea>' +
-      '<p class="muted">用了哪个演示？ <select class="inq-select" data-inq-demo="' + esc(t.id) + '">' + demoOpts + '</select></p>' +
+      '<p class="muted">用了哪个动画？ <select class="inq-select" data-inq-demo="' + esc(t.id) + '">' + demoOpts + '</select></p>' +
       '<div class="btn-row"><button class="btn primary" type="button" data-inq-submit="' + esc(t.id) + '">交这份作业</button></div></div>';
   }).join('');
   html += '<div class="point-sec"><h4>小老师讲题</h4><p>选一道你做过的题，用文字把它讲给别人听：第一步做什么、第二步做什么，每一步为什么这样做。写得让没做过这道题的人也能看懂，就算讲明白了。只写字，不录音。</p>' +
@@ -1362,7 +1362,7 @@ function unitCheckpoint(g, ui) {
   const inq = inquiryTaskForUnit(g, ui);
   const inqDone = inq ? loadInquiry().some(e => e && e.kind === 'inq' && e.taskId === inq.id) : false;
   const tasks = [
-    { key: 'demo', label: '玩一玩本单元的演示', done: demosDone > 0, detail: '演示 ' + demosDone + ' / ' + demos.length },
+    { key: 'demo', label: '玩一玩本单元的动画', done: demosDone > 0, detail: '动画 ' + demosDone + ' / ' + demos.length },
     { key: 'practice', label: '练一练本单元的知识点', done: practiced > 0, detail: '已练 ' + practiced + ' / ' + u.points.length + ' 条' },
   ];
   if (inq) tasks.push({ key: 'inquiry', label: '交一份探究作业：' + inq.title, done: inqDone, detail: inqDone ? '已交' : '还没交' });
@@ -1818,149 +1818,149 @@ const NAV_DEFS = {
   'path-step-2': { crumbs: ['数学', '学习路径', '说一说'], target: 'step-2', flash: 'step-2', action: () => showPathStep(2) },
   'path-step-3': { crumbs: ['数学', '学习路径', '练一练'], target: 'step-3', flash: 'step-3', action: () => showPathStep(3) },
   'path-step-4': { crumbs: ['数学', '学习路径', '测一测'], target: 'step-4', flash: 'step-4', action: () => showPathStep(4) },
-  demos:      { crumbs: ['数学', '互动演示'], target: 'demos' },
-  'demo-tenframe': { crumbs: ['数学', '互动演示', '十格阵凑十'], target: 'demo-tenframe' },
-  'demo-fraction': { crumbs: ['数学', '互动演示', '分数切一切'], target: 'demo-fraction' },
-  'demo-balance':  { crumbs: ['数学', '互动演示', '天平解方程'], target: 'demo-balance' },
-  'demo-function': { crumbs: ['数学', '互动演示', '函数滑杆'], target: 'demo-function' },
-  'demo-count': { crumbs: ['数学', '互动演示', '数一数，比一比'], target: 'demo-count' },
-  'demo-position': { crumbs: ['数学', '互动演示', '转身找左右'], target: 'demo-position' },
-  'demo-split': { crumbs: ['数学', '互动演示', '分一分'], target: 'demo-split' },
-  'demo-addsub': { crumbs: ['数学', '互动演示', '合起来，拿走'], target: 'demo-addsub' },
-  'demo-solids': { crumbs: ['数学', '互动演示', '立体图形滚一滚'], target: 'demo-solids' },
-  'demo-bundle': { crumbs: ['数学', '互动演示', '捆小棒认数'], target: 'demo-bundle' },
-  'demo-clock': { crumbs: ['数学', '互动演示', '认识钟表'], target: 'demo-clock' },
-  'demo-tangram': { crumbs: ['数学', '互动演示', '七巧板转一转'], target: 'demo-tangram' },
-  'demo-sort': { crumbs: ['数学', '互动演示', '分类分一分'], target: 'demo-sort' },
-  'demo-hundred': { crumbs: ['数学', '互动演示', '百数表比大小'], target: 'demo-hundred' },
-  'demo-shop': { crumbs: ['数学', '互动演示', '开小店'], target: 'demo-shop' },
-  'demo-place': { crumbs: ['数学', '互动演示', '数位块加减法'], target: 'demo-place' },
-  'demo-pattern': { crumbs: ['数学', '互动演示', '找规律'], target: 'demo-pattern' },
-  'demo-ruler': { crumbs: ['数学', '互动演示', '尺子量长度'], target: 'demo-ruler' },
-  'demo-estimate': { crumbs: ['数学', '互动演示', '先估后算'], target: 'demo-estimate' },
-  'demo-angle': { crumbs: ['数学', '互动演示', '转一转角'], target: 'demo-angle' },
-  'demo-array': { crumbs: ['数学', '互动演示', '点阵乘法'], target: 'demo-array' },
-  'demo-observe': { crumbs: ['数学', '互动演示', '换个方向看'], target: 'demo-observe' },
-  'demo-time': { crumbs: ['数学', '互动演示', '认识时间：时和分'], target: 'demo-time' },
-  'demo-share': { crumbs: ['数学', '互动演示', '轮流分一分'], target: 'demo-share' },
-  'demo-motion': { crumbs: ['数学', '互动演示', '折一折，转一转'], target: 'demo-motion' },
-  'demo-mixop': { crumbs: ['数学', '互动演示', '先算哪一堆'], target: 'demo-mixop' },
-  'demo-remain': { crumbs: ['数学', '互动演示', '装一包，剩几颗'], target: 'demo-remain' },
-  'demo-thousand': { crumbs: ['数学', '互动演示', '数轴找近似数'], target: 'demo-thousand' },
-  'demo-weight': { crumbs: ['数学', '互动演示', '天平称一称'], target: 'demo-weight' },
-  'demo-chart': { crumbs: ['数学', '互动演示', '投票变条形图'], target: 'demo-chart' },
-  'demo-logic': { crumbs: ['数学', '互动演示', '排除格推理'], target: 'demo-logic' },
-  'demo-pair': { crumbs: ['数学', '互动演示', '搭配连一连'], target: 'demo-pair' },
-  'demo-elapsed': { crumbs: ['数学', '互动演示', '时间轴走一走'], target: 'demo-elapsed' },
-  'demo-verify': { crumbs: ['数学', '互动演示', '算一算，再算回去'], target: 'demo-verify' },
-  'demo-units': { crumbs: ['数学', '互动演示', '单位楼梯'], target: 'demo-units' },
-  'demo-times': { crumbs: ['数学', '互动演示', '条形复制'], target: 'demo-times' },
-  'demo-splitmul': { crumbs: ['数学', '互动演示', '面积切一切'], target: 'demo-splitmul' },
-  'demo-rectsq': { crumbs: ['数学', '互动演示', '拉一拉变正方形'], target: 'demo-rectsq' },
-  'demo-venn': { crumbs: ['数学', '互动演示', '韦恩图拖人'], target: 'demo-venn' },
-  'demo-compass': { crumbs: ['数学', '互动演示', '指南针转一转'], target: 'demo-compass' },
-  'demo-divplace': { crumbs: ['数学', '互动演示', '按数位分一分'], target: 'demo-divplace' },
-  'demo-stattable': { crumbs: ['数学', '互动演示', '复式统计表'], target: 'demo-stattable' },
-  'demo-fourgrid': { crumbs: ['数学', '互动演示', '四格面积模型'], target: 'demo-fourgrid' },
-  'demo-area': { crumbs: ['数学', '互动演示', '铺方砖数面积'], target: 'demo-area' },
-  'demo-calendar': { crumbs: ['数学', '互动演示', '日历翻一翻'], target: 'demo-calendar' },
-  'demo-decimal': { crumbs: ['数学', '互动演示', '十分条比大小'], target: 'demo-decimal' },
-  'demo-bignum': { crumbs: ['数学', '互动演示', '大数数轴'], target: 'demo-bignum' },
-  'demo-field': { crumbs: ['数学', '互动演示', '足球场拼平方千米'], target: 'demo-field' },
-  'demo-protractor': { crumbs: ['数学', '互动演示', '量角器量一量'], target: 'demo-protractor' },
-  'demo-areamodel': { crumbs: ['数学', '互动演示', '面积模型乘三位数'], target: 'demo-areamodel' },
-  'demo-parallelogram': { crumbs: ['数学', '互动演示', '平行四边形推一推'], target: 'demo-parallelogram' },
-  'demo-trialdiv': { crumbs: ['数学', '互动演示', '试商调商'], target: 'demo-trialdiv' },
-  'demo-baraxis': { crumbs: ['数学', '互动演示', '条形图会说谎'], target: 'demo-baraxis' },
-  'demo-teatime': { crumbs: ['数学', '互动演示', '沏茶排一排'], target: 'demo-teatime' },
-  'demo-zerodiv': { crumbs: ['数学', '互动演示', '除以0没有答案'], target: 'demo-zerodiv' },
-  'demo-laws': { crumbs: ['数学', '互动演示', '运算定律'], target: 'demo-laws' },
-  'demo-placeslider': { crumbs: ['数学', '互动演示', '数位滑块'], target: 'demo-placeslider' },
-  'demo-tearangle': { crumbs: ['数学', '互动演示', '撕角拼平角'], target: 'demo-tearangle' },
-  'demo-decadd': { crumbs: ['数学', '互动演示', '小数加减对齐'], target: 'demo-decadd' },
-  'demo-moveshape': { crumbs: ['数学', '互动演示', '图形平移和对称'], target: 'demo-moveshape' },
-  'demo-average': { crumbs: ['数学', '互动演示', '削峰填谷求平均数'], target: 'demo-average' },
-  'demo-chickenrabbit': { crumbs: ['数学', '互动演示', '鸡兔同笼腿数滑杆'], target: 'demo-chickenrabbit' },
-  'demo-decmul': { crumbs: ['数学', '互动演示', '小数乘法：单位正方形'], target: 'demo-decmul' },
-  'demo-gridpos': { crumbs: ['数学', '互动演示', '位置：数对点一点'], target: 'demo-gridpos' },
-  'demo-decdiv': { crumbs: ['数学', '互动演示', '小数除法：两数同乘'], target: 'demo-decdiv' },
-  'demo-prob': { crumbs: ['数学', '互动演示', '可能性：摸球模拟'], target: 'demo-prob' },
-  'demo-polyarea': { crumbs: ['数学', '互动演示', '多边形的面积：切一刀'], target: 'demo-polyarea' },
-  'demo-planttree': { crumbs: ['数学', '互动演示', '植树问题：种树数间隔'], target: 'demo-planttree' },
-  'demo-factor': { crumbs: ['数学', '互动演示', '因数与倍数：拼长方形'], target: 'demo-factor' },
-  'demo-cuboid': { crumbs: ['数学', '互动演示', '长方体：分层装块'], target: 'demo-cuboid' },
-  'demo-fracadd': { crumbs: ['数学', '互动演示', '分数加减法：先重切再数'], target: 'demo-fracadd' },
-  'demo-rotate': { crumbs: ['数学', '互动演示', '图形的运动：绕钉旋转'], target: 'demo-rotate' },
-  'demo-findbad': { crumbs: ['数学', '互动演示', '找次品：三组称'], target: 'demo-findbad' },
-  'demo-radar': { crumbs: ['数学', '互动演示', '位置与方向：雷达找地方'], target: 'demo-radar' },
-  'demo-ratio': { crumbs: ['数学', '互动演示', '比：比条分一分'], target: 'demo-ratio' },
-  'demo-circle': { crumbs: ['数学', '互动演示', '圆：绕绳量一量'], target: 'demo-circle' },
-  'demo-percent': { crumbs: ['数学', '互动演示', '百分数：百分条'], target: 'demo-percent' },
-  'demo-fan': { crumbs: ['数学', '互动演示', '扇形统计图：转一转'], target: 'demo-fan' },
-  'demo-lsquare': { crumbs: ['数学', '互动演示', '数与形：一层层包正方形'], target: 'demo-lsquare' },
-  'demo-thermo': { crumbs: ['数学', '互动演示', '负数：温度计'], target: 'demo-thermo' },
-  'demo-negmul': { crumbs: ['数学', '互动演示', '负数运算：翻一翻'], target: 'demo-negmul' },
-  'demo-discount': { crumbs: ['数学', '互动演示', '百分数（二）：打折和利息'], target: 'demo-discount' },
-  'demo-cylinder': { crumbs: ['数学', '互动演示', '圆柱与圆锥：倒沙'], target: 'demo-cylinder' },
-  'demo-pigeon': { crumbs: ['数学', '互动演示', '鸽巢问题：先每洞一只'], target: 'demo-pigeon' },
-  'demo-conceptmap': { crumbs: ['数学', '互动演示', '整理和复习：认出老办法'], target: 'demo-conceptmap' },
-  'demo-numline': { crumbs: ['数学', '互动演示', '数轴：标一点、走一走'], target: 'demo-numline' },
-  'demo-powerup': { crumbs: ['数学', '互动演示', '乘方：对折纸和科学记数法'], target: 'demo-powerup' },
-  'demo-monomial': { crumbs: ['数学', '互动演示', '整式：拆零件看系数次数'], target: 'demo-monomial' },
-  'demo-liketerms': { crumbs: ['数学', '互动演示', '整式的加减：合并同类项'], target: 'demo-liketerms' },
-  'demo-meetline': { crumbs: ['数学', '互动演示', '相向而行：几小时相遇'], target: 'demo-meetline' },
-  'demo-lineseg': { crumbs: ['数学', '互动演示', '直线、射线、线段'], target: 'demo-lineseg' },
-  'demo-anglepair': { crumbs: ['数学', '互动演示', '角：余角、补角、角平分线'], target: 'demo-anglepair' },
-  'demo-vertangle': { crumbs: ['数学', '互动演示', '相交线：对顶角和垂线段'], target: 'demo-vertangle' },
-  'demo-parangles': { crumbs: ['数学', '互动演示', '平行线：截角和平移'], target: 'demo-parangles' },
-  'demo-roots': { crumbs: ['数学', '互动演示', '实数：开方机器和 √2'], target: 'demo-roots' },
-  'demo-coordplane': { crumbs: ['数学', '互动演示', '平面直角坐标系：点一点'], target: 'demo-coordplane' },
-  'demo-ineqline': { crumbs: ['数学', '互动演示', '不等式：数轴上画解集'], target: 'demo-ineqline' },
-  'demo-histogram': { crumbs: ['数学', '互动演示', '直方图：分组数频数'], target: 'demo-histogram' },
-  'demo-trisides': { crumbs: ['数学', '互动演示', '三角形：三边围不围'], target: 'demo-trisides' },
-  'demo-congruent': { crumbs: ['数学', '互动演示', '全等三角形：判定拼一拼'], target: 'demo-congruent' },
-  'demo-foldmirror': { crumbs: ['数学', '互动演示', '轴对称：对折看对称'], target: 'demo-foldmirror' },
-  'demo-algarea': { crumbs: ['数学', '互动演示', '整式：面积模型'], target: 'demo-algarea' },
-  'demo-algfrac': { crumbs: ['数学', '互动演示', '分式：约分'], target: 'demo-algfrac' },
-  'demo-eqsieve': { crumbs: ['数学', '互动演示', '分式方程：过筛检验'], target: 'demo-eqsieve' },
-  'demo-radical': { crumbs: ['数学', '互动演示', '二次根式：化简'], target: 'demo-radical' },
-  'demo-pythag': { crumbs: ['数学', '互动演示', '勾股定理：面积拼图'], target: 'demo-pythag' },
-  'demo-pargram': { crumbs: ['数学', '互动演示', '平行四边形：推一推'], target: 'demo-pargram' },
-  'demo-specialquad': { crumbs: ['数学', '互动演示', '特殊的平行四边形：加条件变身'], target: 'demo-specialquad' },
-  'demo-datastats': { crumbs: ['数学', '互动演示', '数据的分析：算一算'], target: 'demo-datastats' },
-  'demo-quad': { crumbs: ['数学', '互动演示', '一元二次方程：配方法、判别式'], target: 'demo-quad' },
-  'demo-growth': { crumbs: ['数学', '互动演示', '增长率与韦达定理'], target: 'demo-growth' },
-  'demo-parabola': { crumbs: ['数学', '互动演示', '二次函数：抛物线'], target: 'demo-parabola' },
-  'demo-spin': { crumbs: ['数学', '互动演示', '旋转与中心对称'], target: 'demo-spin' },
-  'demo-circangle': { crumbs: ['数学', '互动演示', '圆：圆周角与垂径定理'], target: 'demo-circangle' },
-  'demo-tangent': { crumbs: ['数学', '互动演示', '直线和圆、切线长'], target: 'demo-tangent' },
-  'demo-sector': { crumbs: ['数学', '互动演示', '弧长、扇形与圆锥'], target: 'demo-sector' },
-  'demo-coin': { crumbs: ['数学', '互动演示', '随机事件与概率'], target: 'demo-coin' },
-  'demo-tree': { crumbs: ['数学', '互动演示', '树状图求概率'], target: 'demo-tree' },
-  'demo-hyperbola': { crumbs: ['数学', '互动演示', '反比例函数：双曲线'], target: 'demo-hyperbola' },
-  'demo-similar': { crumbs: ['数学', '互动演示', '相似与位似'], target: 'demo-similar' },
-  'demo-shadow': { crumbs: ['数学', '互动演示', '相似三角形：影子测高'], target: 'demo-shadow' },
-  'demo-trig': { crumbs: ['数学', '互动演示', '锐角三角函数'], target: 'demo-trig' },
-  'demo-slope': { crumbs: ['数学', '互动演示', '仰角、俯角与坡度'], target: 'demo-slope' },
-  'demo-project': { crumbs: ['数学', '互动演示', '投影与三视图'], target: 'demo-project' },
-  'demo-twentyfour': { crumbs: ['数学', '互动演示', '24点：四个数拼出24'], target: 'demo-twentyfour' },
-  'demo-monty': { crumbs: ['数学', '互动演示', '三门问题：换还是不换'], target: 'demo-monty' },
-  'demo-maxarea': { crumbs: ['数学', '互动演示', '周长20，面积谁最大'], target: 'demo-maxarea' },
-  'demo-matches': { crumbs: ['数学', '互动演示', '火柴棒：动一根就对了'], target: 'demo-matches' },
-  'demo-mobius': { crumbs: ['数学', '互动演示', '莫比乌斯带：剪一刀'], target: 'demo-mobius' },
-  'demo-shopweek': { crumbs: ['数学', '互动演示', '开店一周：怎么赚钱'], target: 'demo-shopweek' },
-  'demo-fairgame': { crumbs: ['数学', '互动演示', '公平游戏：自己定规则'], target: 'demo-fairgame' },
-  'demo-makerule': { crumbs: ['数学', '互动演示', '造规律：考考第20个'], target: 'demo-makerule' },
-  'demo-thirteen': { crumbs: ['数学', '互动演示', '13有几种凑法'], target: 'demo-thirteen' },
-  'demo-maketen': { crumbs: ['数学', '互动演示', '凑十：把 10 装满'], target: 'demo-maketen' },
-  'demo-areamul': { crumbs: ['数学', '互动演示', '面积模型乘法'], target: 'demo-areamul' },
-  'demo-fraceq': { crumbs: ['数学', '互动演示', '分数相等'], target: 'demo-fraceq' },
-  'demo-buildfrac': { crumbs: ['数学', '互动演示', '造分数'], target: 'demo-buildfrac' },
-  'demo-areabuild': { crumbs: ['数学', '互动演示', '面积建造者'], target: 'demo-areabuild' },
-  'demo-quadmorph': { crumbs: ['数学', '互动演示', '四边形变形'], target: 'demo-quadmorph' },
-  'demo-numplay': { crumbs: ['数学', '互动演示', '数一数：一个数，五种样子'], target: 'demo-numplay' },
-  'demo-fracnumline': { crumbs: ['数学', '互动演示', '分数变数线'], target: 'demo-fracnumline' },
-  why:        { crumbs: ['数学', '互动演示', '为什么小实验'], target: 'why' },
+  demos:      { crumbs: ['数学', '动画'], target: 'demos' },
+  'demo-tenframe': { crumbs: ['数学', '动画', '十格阵凑十'], target: 'demo-tenframe' },
+  'demo-fraction': { crumbs: ['数学', '动画', '分数切一切'], target: 'demo-fraction' },
+  'demo-balance':  { crumbs: ['数学', '动画', '天平解方程'], target: 'demo-balance' },
+  'demo-function': { crumbs: ['数学', '动画', '函数滑杆'], target: 'demo-function' },
+  'demo-count': { crumbs: ['数学', '动画', '数一数，比一比'], target: 'demo-count' },
+  'demo-position': { crumbs: ['数学', '动画', '转身找左右'], target: 'demo-position' },
+  'demo-split': { crumbs: ['数学', '动画', '分一分'], target: 'demo-split' },
+  'demo-addsub': { crumbs: ['数学', '动画', '合起来，拿走'], target: 'demo-addsub' },
+  'demo-solids': { crumbs: ['数学', '动画', '立体图形滚一滚'], target: 'demo-solids' },
+  'demo-bundle': { crumbs: ['数学', '动画', '捆小棒认数'], target: 'demo-bundle' },
+  'demo-clock': { crumbs: ['数学', '动画', '认识钟表'], target: 'demo-clock' },
+  'demo-tangram': { crumbs: ['数学', '动画', '七巧板转一转'], target: 'demo-tangram' },
+  'demo-sort': { crumbs: ['数学', '动画', '分类分一分'], target: 'demo-sort' },
+  'demo-hundred': { crumbs: ['数学', '动画', '百数表比大小'], target: 'demo-hundred' },
+  'demo-shop': { crumbs: ['数学', '动画', '开小店'], target: 'demo-shop' },
+  'demo-place': { crumbs: ['数学', '动画', '数位块加减法'], target: 'demo-place' },
+  'demo-pattern': { crumbs: ['数学', '动画', '找规律'], target: 'demo-pattern' },
+  'demo-ruler': { crumbs: ['数学', '动画', '尺子量长度'], target: 'demo-ruler' },
+  'demo-estimate': { crumbs: ['数学', '动画', '先估后算'], target: 'demo-estimate' },
+  'demo-angle': { crumbs: ['数学', '动画', '转一转角'], target: 'demo-angle' },
+  'demo-array': { crumbs: ['数学', '动画', '点阵乘法'], target: 'demo-array' },
+  'demo-observe': { crumbs: ['数学', '动画', '换个方向看'], target: 'demo-observe' },
+  'demo-time': { crumbs: ['数学', '动画', '认识时间：时和分'], target: 'demo-time' },
+  'demo-share': { crumbs: ['数学', '动画', '轮流分一分'], target: 'demo-share' },
+  'demo-motion': { crumbs: ['数学', '动画', '折一折，转一转'], target: 'demo-motion' },
+  'demo-mixop': { crumbs: ['数学', '动画', '先算哪一堆'], target: 'demo-mixop' },
+  'demo-remain': { crumbs: ['数学', '动画', '装一包，剩几颗'], target: 'demo-remain' },
+  'demo-thousand': { crumbs: ['数学', '动画', '数轴找近似数'], target: 'demo-thousand' },
+  'demo-weight': { crumbs: ['数学', '动画', '天平称一称'], target: 'demo-weight' },
+  'demo-chart': { crumbs: ['数学', '动画', '投票变条形图'], target: 'demo-chart' },
+  'demo-logic': { crumbs: ['数学', '动画', '排除格推理'], target: 'demo-logic' },
+  'demo-pair': { crumbs: ['数学', '动画', '搭配连一连'], target: 'demo-pair' },
+  'demo-elapsed': { crumbs: ['数学', '动画', '时间轴走一走'], target: 'demo-elapsed' },
+  'demo-verify': { crumbs: ['数学', '动画', '算一算，再算回去'], target: 'demo-verify' },
+  'demo-units': { crumbs: ['数学', '动画', '单位楼梯'], target: 'demo-units' },
+  'demo-times': { crumbs: ['数学', '动画', '条形复制'], target: 'demo-times' },
+  'demo-splitmul': { crumbs: ['数学', '动画', '面积切一切'], target: 'demo-splitmul' },
+  'demo-rectsq': { crumbs: ['数学', '动画', '拉一拉变正方形'], target: 'demo-rectsq' },
+  'demo-venn': { crumbs: ['数学', '动画', '韦恩图拖人'], target: 'demo-venn' },
+  'demo-compass': { crumbs: ['数学', '动画', '指南针转一转'], target: 'demo-compass' },
+  'demo-divplace': { crumbs: ['数学', '动画', '按数位分一分'], target: 'demo-divplace' },
+  'demo-stattable': { crumbs: ['数学', '动画', '复式统计表'], target: 'demo-stattable' },
+  'demo-fourgrid': { crumbs: ['数学', '动画', '四格面积模型'], target: 'demo-fourgrid' },
+  'demo-area': { crumbs: ['数学', '动画', '铺方砖数面积'], target: 'demo-area' },
+  'demo-calendar': { crumbs: ['数学', '动画', '日历翻一翻'], target: 'demo-calendar' },
+  'demo-decimal': { crumbs: ['数学', '动画', '十分条比大小'], target: 'demo-decimal' },
+  'demo-bignum': { crumbs: ['数学', '动画', '大数数轴'], target: 'demo-bignum' },
+  'demo-field': { crumbs: ['数学', '动画', '足球场拼平方千米'], target: 'demo-field' },
+  'demo-protractor': { crumbs: ['数学', '动画', '量角器量一量'], target: 'demo-protractor' },
+  'demo-areamodel': { crumbs: ['数学', '动画', '面积模型乘三位数'], target: 'demo-areamodel' },
+  'demo-parallelogram': { crumbs: ['数学', '动画', '平行四边形推一推'], target: 'demo-parallelogram' },
+  'demo-trialdiv': { crumbs: ['数学', '动画', '试商调商'], target: 'demo-trialdiv' },
+  'demo-baraxis': { crumbs: ['数学', '动画', '条形图会说谎'], target: 'demo-baraxis' },
+  'demo-teatime': { crumbs: ['数学', '动画', '沏茶排一排'], target: 'demo-teatime' },
+  'demo-zerodiv': { crumbs: ['数学', '动画', '除以0没有答案'], target: 'demo-zerodiv' },
+  'demo-laws': { crumbs: ['数学', '动画', '运算定律'], target: 'demo-laws' },
+  'demo-placeslider': { crumbs: ['数学', '动画', '数位滑块'], target: 'demo-placeslider' },
+  'demo-tearangle': { crumbs: ['数学', '动画', '撕角拼平角'], target: 'demo-tearangle' },
+  'demo-decadd': { crumbs: ['数学', '动画', '小数加减对齐'], target: 'demo-decadd' },
+  'demo-moveshape': { crumbs: ['数学', '动画', '图形平移和对称'], target: 'demo-moveshape' },
+  'demo-average': { crumbs: ['数学', '动画', '削峰填谷求平均数'], target: 'demo-average' },
+  'demo-chickenrabbit': { crumbs: ['数学', '动画', '鸡兔同笼腿数滑杆'], target: 'demo-chickenrabbit' },
+  'demo-decmul': { crumbs: ['数学', '动画', '小数乘法：单位正方形'], target: 'demo-decmul' },
+  'demo-gridpos': { crumbs: ['数学', '动画', '位置：数对点一点'], target: 'demo-gridpos' },
+  'demo-decdiv': { crumbs: ['数学', '动画', '小数除法：两数同乘'], target: 'demo-decdiv' },
+  'demo-prob': { crumbs: ['数学', '动画', '可能性：摸球模拟'], target: 'demo-prob' },
+  'demo-polyarea': { crumbs: ['数学', '动画', '多边形的面积：切一刀'], target: 'demo-polyarea' },
+  'demo-planttree': { crumbs: ['数学', '动画', '植树问题：种树数间隔'], target: 'demo-planttree' },
+  'demo-factor': { crumbs: ['数学', '动画', '因数与倍数：拼长方形'], target: 'demo-factor' },
+  'demo-cuboid': { crumbs: ['数学', '动画', '长方体：分层装块'], target: 'demo-cuboid' },
+  'demo-fracadd': { crumbs: ['数学', '动画', '分数加减法：先重切再数'], target: 'demo-fracadd' },
+  'demo-rotate': { crumbs: ['数学', '动画', '图形的运动：绕钉旋转'], target: 'demo-rotate' },
+  'demo-findbad': { crumbs: ['数学', '动画', '找次品：三组称'], target: 'demo-findbad' },
+  'demo-radar': { crumbs: ['数学', '动画', '位置与方向：雷达找地方'], target: 'demo-radar' },
+  'demo-ratio': { crumbs: ['数学', '动画', '比：比条分一分'], target: 'demo-ratio' },
+  'demo-circle': { crumbs: ['数学', '动画', '圆：绕绳量一量'], target: 'demo-circle' },
+  'demo-percent': { crumbs: ['数学', '动画', '百分数：百分条'], target: 'demo-percent' },
+  'demo-fan': { crumbs: ['数学', '动画', '扇形统计图：转一转'], target: 'demo-fan' },
+  'demo-lsquare': { crumbs: ['数学', '动画', '数与形：一层层包正方形'], target: 'demo-lsquare' },
+  'demo-thermo': { crumbs: ['数学', '动画', '负数：温度计'], target: 'demo-thermo' },
+  'demo-negmul': { crumbs: ['数学', '动画', '负数运算：翻一翻'], target: 'demo-negmul' },
+  'demo-discount': { crumbs: ['数学', '动画', '百分数（二）：打折和利息'], target: 'demo-discount' },
+  'demo-cylinder': { crumbs: ['数学', '动画', '圆柱与圆锥：倒沙'], target: 'demo-cylinder' },
+  'demo-pigeon': { crumbs: ['数学', '动画', '鸽巢问题：先每洞一只'], target: 'demo-pigeon' },
+  'demo-conceptmap': { crumbs: ['数学', '动画', '整理和复习：认出老办法'], target: 'demo-conceptmap' },
+  'demo-numline': { crumbs: ['数学', '动画', '数轴：标一点、走一走'], target: 'demo-numline' },
+  'demo-powerup': { crumbs: ['数学', '动画', '乘方：对折纸和科学记数法'], target: 'demo-powerup' },
+  'demo-monomial': { crumbs: ['数学', '动画', '整式：拆零件看系数次数'], target: 'demo-monomial' },
+  'demo-liketerms': { crumbs: ['数学', '动画', '整式的加减：合并同类项'], target: 'demo-liketerms' },
+  'demo-meetline': { crumbs: ['数学', '动画', '相向而行：几小时相遇'], target: 'demo-meetline' },
+  'demo-lineseg': { crumbs: ['数学', '动画', '直线、射线、线段'], target: 'demo-lineseg' },
+  'demo-anglepair': { crumbs: ['数学', '动画', '角：余角、补角、角平分线'], target: 'demo-anglepair' },
+  'demo-vertangle': { crumbs: ['数学', '动画', '相交线：对顶角和垂线段'], target: 'demo-vertangle' },
+  'demo-parangles': { crumbs: ['数学', '动画', '平行线：截角和平移'], target: 'demo-parangles' },
+  'demo-roots': { crumbs: ['数学', '动画', '实数：开方机器和 √2'], target: 'demo-roots' },
+  'demo-coordplane': { crumbs: ['数学', '动画', '平面直角坐标系：点一点'], target: 'demo-coordplane' },
+  'demo-ineqline': { crumbs: ['数学', '动画', '不等式：数轴上画解集'], target: 'demo-ineqline' },
+  'demo-histogram': { crumbs: ['数学', '动画', '直方图：分组数频数'], target: 'demo-histogram' },
+  'demo-trisides': { crumbs: ['数学', '动画', '三角形：三边围不围'], target: 'demo-trisides' },
+  'demo-congruent': { crumbs: ['数学', '动画', '全等三角形：判定拼一拼'], target: 'demo-congruent' },
+  'demo-foldmirror': { crumbs: ['数学', '动画', '轴对称：对折看对称'], target: 'demo-foldmirror' },
+  'demo-algarea': { crumbs: ['数学', '动画', '整式：面积模型'], target: 'demo-algarea' },
+  'demo-algfrac': { crumbs: ['数学', '动画', '分式：约分'], target: 'demo-algfrac' },
+  'demo-eqsieve': { crumbs: ['数学', '动画', '分式方程：过筛检验'], target: 'demo-eqsieve' },
+  'demo-radical': { crumbs: ['数学', '动画', '二次根式：化简'], target: 'demo-radical' },
+  'demo-pythag': { crumbs: ['数学', '动画', '勾股定理：面积拼图'], target: 'demo-pythag' },
+  'demo-pargram': { crumbs: ['数学', '动画', '平行四边形：推一推'], target: 'demo-pargram' },
+  'demo-specialquad': { crumbs: ['数学', '动画', '特殊的平行四边形：加条件变身'], target: 'demo-specialquad' },
+  'demo-datastats': { crumbs: ['数学', '动画', '数据的分析：算一算'], target: 'demo-datastats' },
+  'demo-quad': { crumbs: ['数学', '动画', '一元二次方程：配方法、判别式'], target: 'demo-quad' },
+  'demo-growth': { crumbs: ['数学', '动画', '增长率与韦达定理'], target: 'demo-growth' },
+  'demo-parabola': { crumbs: ['数学', '动画', '二次函数：抛物线'], target: 'demo-parabola' },
+  'demo-spin': { crumbs: ['数学', '动画', '旋转与中心对称'], target: 'demo-spin' },
+  'demo-circangle': { crumbs: ['数学', '动画', '圆：圆周角与垂径定理'], target: 'demo-circangle' },
+  'demo-tangent': { crumbs: ['数学', '动画', '直线和圆、切线长'], target: 'demo-tangent' },
+  'demo-sector': { crumbs: ['数学', '动画', '弧长、扇形与圆锥'], target: 'demo-sector' },
+  'demo-coin': { crumbs: ['数学', '动画', '随机事件与概率'], target: 'demo-coin' },
+  'demo-tree': { crumbs: ['数学', '动画', '树状图求概率'], target: 'demo-tree' },
+  'demo-hyperbola': { crumbs: ['数学', '动画', '反比例函数：双曲线'], target: 'demo-hyperbola' },
+  'demo-similar': { crumbs: ['数学', '动画', '相似与位似'], target: 'demo-similar' },
+  'demo-shadow': { crumbs: ['数学', '动画', '相似三角形：影子测高'], target: 'demo-shadow' },
+  'demo-trig': { crumbs: ['数学', '动画', '锐角三角函数'], target: 'demo-trig' },
+  'demo-slope': { crumbs: ['数学', '动画', '仰角、俯角与坡度'], target: 'demo-slope' },
+  'demo-project': { crumbs: ['数学', '动画', '投影与三视图'], target: 'demo-project' },
+  'demo-twentyfour': { crumbs: ['数学', '动画', '24点：四个数拼出24'], target: 'demo-twentyfour' },
+  'demo-monty': { crumbs: ['数学', '动画', '三门问题：换还是不换'], target: 'demo-monty' },
+  'demo-maxarea': { crumbs: ['数学', '动画', '周长20，面积谁最大'], target: 'demo-maxarea' },
+  'demo-matches': { crumbs: ['数学', '动画', '火柴棒：动一根就对了'], target: 'demo-matches' },
+  'demo-mobius': { crumbs: ['数学', '动画', '莫比乌斯带：剪一刀'], target: 'demo-mobius' },
+  'demo-shopweek': { crumbs: ['数学', '动画', '开店一周：怎么赚钱'], target: 'demo-shopweek' },
+  'demo-fairgame': { crumbs: ['数学', '动画', '公平游戏：自己定规则'], target: 'demo-fairgame' },
+  'demo-makerule': { crumbs: ['数学', '动画', '造规律：考考第20个'], target: 'demo-makerule' },
+  'demo-thirteen': { crumbs: ['数学', '动画', '13有几种凑法'], target: 'demo-thirteen' },
+  'demo-maketen': { crumbs: ['数学', '动画', '凑十：把 10 装满'], target: 'demo-maketen' },
+  'demo-areamul': { crumbs: ['数学', '动画', '面积模型乘法'], target: 'demo-areamul' },
+  'demo-fraceq': { crumbs: ['数学', '动画', '分数相等'], target: 'demo-fraceq' },
+  'demo-buildfrac': { crumbs: ['数学', '动画', '造分数'], target: 'demo-buildfrac' },
+  'demo-areabuild': { crumbs: ['数学', '动画', '面积建造者'], target: 'demo-areabuild' },
+  'demo-quadmorph': { crumbs: ['数学', '动画', '四边形变形'], target: 'demo-quadmorph' },
+  'demo-numplay': { crumbs: ['数学', '动画', '数一数：一个数，五种样子'], target: 'demo-numplay' },
+  'demo-fracnumline': { crumbs: ['数学', '动画', '分数变数线'], target: 'demo-fracnumline' },
+  why:        { crumbs: ['数学', '动画', '为什么小实验'], target: 'why' },
   lab:        { crumbs: ['数学', '数学实验室'], target: 'lab' },
   review:     { crumbs: ['数学', '错题本'], target: 'review', action: renderWrongBook },
   'today-review': { crumbs: ['数学', '今天复习'], target: 'grades', action: renderReview },

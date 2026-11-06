@@ -17,7 +17,7 @@
       <span class="brand-text"><strong>数学小宇宙</strong><small>小学 1–6 · 初中 7–9 · 动手玩懂数学</small></span>
     </button>
     <h1 class="crumb-title" id="crumbTitle" aria-label="当前位置">数学</h1>
-    <div class="progress-chip" id="progressChip" title="已体验的演示">已体验 <b id="progressCount">0 / 141</b> 个演示</div>
+    <div class="progress-chip" id="progressChip" title="已体验的动画">已体验 <b id="progressCount">0 / 141</b> 个动画</div>
   </div>
 </header>
 
@@ -42,7 +42,7 @@
       <p class="lead">先动手摆一摆，再看图想一想，最后才写算式。分数是切出来的，方程是天平称出来的，函数是拖出来的——不是背出来的。</p>
       <div class="hero-actions">
         <button class="btn primary" type="button" data-nav-key="grades">选一个年级开始</button>
-        <button class="btn ghost" type="button" data-nav-key="demos">先玩互动演示</button>
+        <button class="btn ghost" type="button" data-nav-key="demos">先玩动画</button>
       </div>
       <ul class="hero-points">
         <li>实物 → 图像 → 符号（CPA）</li>
@@ -82,10 +82,10 @@
     </div>
     <h3 class="panel-group-label">工具箱</h3>
     <div class="panels four">
-      <button class="panel" type="button" data-nav-key="demos"><span class="panel-icon" aria-hidden="true">✦</span><b>互动演示</b><span class="panel-sub">分数、天平、函数、十格阵，还有一到九年级实验都能玩</span><span class="panel-prog"><i id="panelDemoProg" style="width:0%"></i></span><span class="panel-tx" id="panelDemoTx">141 个演示 · 0 已体验</span></button>
+      <button class="panel" type="button" data-nav-key="demos"><span class="panel-icon" aria-hidden="true">✦</span><b>动画</b><span class="panel-sub">分数、天平、函数、十格阵，还有一到九年级实验都能玩</span><span class="panel-prog"><i id="panelDemoProg" style="width:0%"></i></span><span class="panel-tx" id="panelDemoTx">141 个动画 · 0 已体验</span></button>
       <button class="panel" type="button" data-nav-key="lab"><span class="panel-icon" aria-hidden="true">🧪</span><b>数学实验室</b><span class="panel-sub">先选一个问题，再去工作间里摆弄</span><span class="panel-tx">13 个问题 · 自由玩 / 挑战</span></button>
       <button class="panel" type="button" data-nav-key="review"><span class="panel-icon" aria-hidden="true">✎</span><b>错题本</b><span class="panel-sub">错题连当时的图一起存</span><span class="panel-tx">还没有错题</span></button>
-      <button class="panel" type="button" data-nav-key="progress"><span class="panel-icon" aria-hidden="true">●</span><b>我的进度</b><span class="panel-sub">玩过的演示点亮一格</span><span class="panel-prog"><i id="panelProgFill" style="width:0%"></i></span><span class="panel-tx" id="panelProgTx">0 / 141 个演示</span></button>
+      <button class="panel" type="button" data-nav-key="progress"><span class="panel-icon" aria-hidden="true">●</span><b>我的进度</b><span class="panel-sub">玩过的动画点亮一格</span><span class="panel-prog"><i id="panelProgFill" style="width:0%"></i></span><span class="panel-tx" id="panelProgTx">0 / 141 个动画</span></button>
     </div>
   </section>
 
@@ -126,8 +126,8 @@
 
   <!-- Featured demos -->
   <section id="demos" class="section wrap">
-    <h2>互动演示</h2>
-    <p class="section-sub">点一块面板进一个演示，都是我们自己画的图、自己写的例子。能点的都请点一点、拖一拖。一到九年级的实验也都在里面，顶上 9 个是创意实验，接着 8 个是互动模拟：先猜，再玩，再想明白。</p>
+    <h2>动画</h2>
+    <p class="section-sub">点一块面板进一个动画，都是我们自己画的图、自己写的例子。能点的都请点一点、拖一拖。一到九年级的实验也都在里面，顶上 9 个是创意实验，接着 8 个是互动模拟：先猜，再玩，再想明白。</p>
 <p class="panel-group-label" id="creativeLabel">创意实验 · 先猜，再玩，再想明白</p>
     <div class="panels" id="creativePanels" aria-label="创意实验面板">
       <button class="panel" type="button" data-nav-key="demo-thirteen"><span class="panel-icon" aria-hidden="true">13</span><b>13有几种凑法？</b><span class="panel-sub">1 年级的加法也能做实验：13 能拆成几种？先猜，再找全</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1 年级 · 加法</span></button>
@@ -152,7 +152,7 @@
       <button class="panel" type="button" data-nav-key="demo-fracnumline"><span class="panel-icon" aria-hidden="true">→</span><b>分数变数线</b><span class="panel-sub">圆饼展开成距离：3/4 落在数轴哪里？先猜</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">3–5 年级 · 分数</span></button>
     </div>
 <p class="panel-group-label" id="demoLabel">演示 · 先看明白</p>
-    <div class="panels" id="demoPanels" aria-label="互动演示面板">
+    <div class="panels" id="demoPanels" aria-label="动画面板">
       <button class="panel" type="button" data-nav-key="demo-tenframe"><span class="panel-icon" aria-hidden="true">▦</span><b>十格阵凑十</b><span class="panel-sub">点 1 个凑成 10，9+4 就好算了</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1–2 年级 · 加减法</span></button>
       <button class="panel" type="button" data-nav-key="demo-fraction"><span class="panel-icon" aria-hidden="true">3/4</span><b>分数切一切</b><span class="panel-sub">切饼、落数轴，3/4 = 6/8</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">3–5 年级 · 分数</span></button>
       <button class="panel" type="button" data-nav-key="demo-balance"><span class="panel-icon" aria-hidden="true">＝</span><b>天平解方程</b><span class="panel-sub">两边一起动，才保持平衡</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">5–7 年级 · 方程</span></button>
@@ -3629,7 +3629,7 @@
       <div class="review-card" id="progressCard">
         <h3>我的进度（原型）</h3>
         <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
-        <p id="progressText">还没开始。玩一个演示，就点亮一格。</p>
+        <p id="progressText">还没开始。玩一个动画，就点亮一格。</p>
         <p class="muted">进度先存在本机浏览器里（原型暂未接入账号同步）。</p>
       </div>
       <div class="review-card" id="reviewCard">
@@ -3664,11 +3664,11 @@
   <section class="section wrap next-steps" id="nextSteps">
     <h2>下一步</h2>
     <ol>
-      <li>你先玩一玩上面三个演示，告诉我哪个最顺手、哪个最别扭。</li>
+      <li>你先玩一玩上面三个动画，告诉我哪个最顺手、哪个最别扭。</li>
       <li>选一个年级做完整单元：我建议先做 <b>3 年级分数</b> 或 <b>7 年级方程与函数</b>，做满一个单元再扩。</li>
       <li>核对人教版各年级章节顺序，再把内容一册一册填进 <code>content/</code>。</li>
     </ol>
-    <p class="muted">这个首页是原型：年级内容、练习题、错题记录都还是占位或简化版，三个演示是真的能玩的。</p>
+    <p class="muted">这个首页是原型：年级内容、练习题、错题记录都还是占位或简化版，三个动画是真的能玩的。</p>
   </section>
 </main>
 

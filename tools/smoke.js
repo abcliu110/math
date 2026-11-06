@@ -1151,7 +1151,7 @@ check('per-grade review hides the wrong-book section',
 navGo('progress');
 check('progress: per-grade rows with real numbers',
   byId.progressCard.innerHTML.includes('1 年级') && byId.progressCard.innerHTML.includes('3 年级') &&
-  byId.progressCard.innerHTML.includes('演示') && byId.progressCard.innerHTML.includes('已练'));
+  byId.progressCard.innerHTML.includes('动画') && byId.progressCard.innerHTML.includes('已练'));
 check('progress: 32 of 141 demos tried by now', byId.progressCount.textContent === '32 / 141');
 // 首页不显示孤零零的“数学”面包屑，子页面显示完整面包屑
 navGo('home');
@@ -2687,7 +2687,7 @@ navGo('checkpoint');
 check('L checkpoint: unit lights up only when all its tasks are done',
   checkpointDetail.innerHTML.includes('分数的初步认识小达人') && checkpointDetail.innerHTML.includes('已点亮 1 个'));
 check('L checkpoint: lit unit shows task counts matching storage',
-  checkpointDetail.innerHTML.includes('演示 1 / 1') && checkpointDetail.innerHTML.includes('已练 1 / 1 条') && checkpointDetail.innerHTML.includes('任务 2 / 2'));
+  checkpointDetail.innerHTML.includes('动画 1 / 1') && checkpointDetail.innerHTML.includes('已练 1 / 1 条') && checkpointDetail.innerHTML.includes('任务 2 / 2'));
 // 只玩演示、没练过 → 1/2，不点亮、不给徽章。
 lsData['math-review-v1'] = JSON.stringify({});
 navGo('checkpoint');
