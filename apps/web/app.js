@@ -10368,11 +10368,10 @@ function gwRender() {
 
 /* ---------- demo-parabola · 9.3/9.4 二次函数的图象、性质与应用（方法：滑杆看抛物线法） ----------
    顶点式 y=a(x−h)²+k：a 管开口，(h,k) 是顶点；交点横坐标就是方程的根，顶点处取最值。
-   利润模式用一道算对的题：每件利润 10 元，每天卖 80 件，每涨 1 元少卖 2 件，
-   利润=(10+x)(80−2x)=−2x²+60x+800，顶点 x=15，最大利润 1250 元。
-   （注意：9.4 练一练原题 (30+x)(80−4x) 的顶点其实在 x=−5，不在 x=5，
-   这里不用那道题的数字，只教“顶点处取最值”的方法。） */
-let ppMode = 'para', ppA = 1, ppH = 0, ppK = 0, ppX = 15;
+   利润模式用 9.4 练一练 Q2 同一道题：每件利润 30 元，每天卖 80 件，每涨 1 元少卖 2 件，
+   利润=(30+x)(80−2x)=−2x²+20x+2400，顶点 x=5，最大利润 2450 元。
+   （演示和知识点页用同一组数字，顶点、最大值处处对得上。） */
+let ppMode = 'para', ppA = 1, ppH = 0, ppK = 0, ppX = 5;
 function ppDrawPara() {
   const svg = document.getElementById('ppSvg');
   g9Clear(svg);
@@ -10396,23 +10395,23 @@ function ppDrawPara() {
 function ppDrawProfit() {
   const svg = document.getElementById('ppProfitSvg');
   g9Clear(svg);
-  const px = function (x) { return 40 + x * 28; }, py = function (p) { return 330 - p / 1400 * 300; };
+  const px = function (x) { return 40 + x * 28; }, py = function (p) { return 330 - p / 2600 * 300; };
   g9SvgLine(svg, 40, 330, 620, 330, '#94a3b8', 2);
   g9SvgLine(svg, 40, 30, 40, 330, '#94a3b8', 2);
   g9SvgText(svg, 612, 318, '涨价 x 元', 14, '#64748b', 'end');
   g9SvgText(svg, 48, 44, '利润（元）', 14, '#64748b', 'start');
   let d = '';
   for (let x = 0; x <= 20.01; x += 0.5) {
-    const p = (10 + x) * (80 - 2 * x);
+    const p = (30 + x) * (80 - 2 * x);
     d += (d ? ' L' : 'M') + px(x).toFixed(1) + ',' + py(p).toFixed(1);
   }
   svg.appendChild(g9El('path', { d: d, fill: 'none', stroke: '#2563eb', 'stroke-width': 3 }));
-  const p = (10 + ppX) * (80 - 2 * ppX);
+  const p = (30 + ppX) * (80 - 2 * ppX);
   const dot = g9El('circle', { cx: px(ppX), cy: py(p), r: 8, fill: '#ff8a3d', stroke: '#fff', 'stroke-width': 2 });
   svg.appendChild(dot);
-  const top = g9El('circle', { cx: px(15), cy: py(1250), r: 8, fill: '#16a34a', stroke: '#fff', 'stroke-width': 2 });
+  const top = g9El('circle', { cx: px(5), cy: py(2450), r: 8, fill: '#16a34a', stroke: '#fff', 'stroke-width': 2 });
   svg.appendChild(top);
-  g9SvgText(svg, px(15) + 8, py(1250) - 12, '最高点 (15, 1250)', 15, '#15803d', 'start');
+  g9SvgText(svg, px(5) + 8, py(2450) - 12, '最高点 (5, 2450)', 15, '#15803d', 'start');
 }
 function ppRender() {
   document.querySelectorAll('#ppModeSeg [data-pp-mode]').forEach(function (btn) {
@@ -10441,11 +10440,11 @@ function ppRender() {
     msg = wide + '；' + inter + '；' + (ppA > 0 ? '顶点处取最小值 ' + ppK : '顶点处取最大值 ' + ppK) + '。';
   } else {
     ppDrawProfit();
-    const p = (10 + ppX) * (80 - 2 * ppX);
-    read = '涨 ' + ppX + ' 元：每件利润 ' + (10 + ppX) + ' 元，每天卖 ' + (80 - 2 * ppX) + ' 件，总利润 ' + p + ' 元。';
-    msg = ppX === 15
-      ? '涨 15 元时利润最大，最大利润 1250 元：利润=(10+x)(80−2x)=−2x²+60x+800，顶点横坐标 x=15。涨价不是越多越好，涨多了卖得少。'
-      : '利润=(10+x)(80−2x)=−2x²+60x+800；顶点在 x=15，最大利润 1250 元。现在是 ' + p + ' 元，比最高点少 ' + (1250 - p) + ' 元。';
+    const p = (30 + ppX) * (80 - 2 * ppX);
+    read = '涨 ' + ppX + ' 元：每件利润 ' + (30 + ppX) + ' 元，每天卖 ' + (80 - 2 * ppX) + ' 件，总利润 ' + p + ' 元。';
+    msg = ppX === 5
+      ? '涨 5 元时利润最大，最大利润 2450 元：利润=(30+x)(80−2x)=−2x²+20x+2400，顶点横坐标 x=5。涨价不是越多越好，涨多了卖得少。'
+      : '利润=(30+x)(80−2x)=−2x²+20x+2400；顶点在 x=5，最大利润 2450 元。现在是 ' + p + ' 元，比最高点少 ' + (2450 - p) + ' 元。';
   }
   document.getElementById('ppRead').textContent = read;
   document.getElementById('ppMsg').textContent = msg;

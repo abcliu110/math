@@ -2172,11 +2172,11 @@ click(byId.ppKPlus); click(byId.ppKPlus); // k=1
 check('parabola: k=1 has no x-intercepts, Δ<0',
   byId.ppMsg.textContent.includes('与 x 轴没有交点'));
 click(byId.ppModeSeg.children[1]); // 利润最高点
-check('parabola profit: raise 15 yuan, max profit 1250',
-  byId.ppRead.textContent.includes('总利润 1250 元') && byId.ppMsg.textContent.includes('最大利润 1250 元'));
-click(byId.ppXMinus); // 14 元
-check('parabola profit: raise 14 yuan, profit 1248',
-  byId.ppRead.textContent.includes('总利润 1248 元'));
+check('parabola profit: raise 5 yuan, max profit 2450',
+  byId.ppRead.textContent.includes('总利润 2450 元') && byId.ppMsg.textContent.includes('最大利润 2450 元'));
+click(byId.ppXMinus); // 4 元
+check('parabola profit: raise 4 yuan, profit 2448',
+  byId.ppRead.textContent.includes('总利润 2448 元'));
 check('G9: parabola counts toward the 124-demo progress', byId.progressCount.textContent === '112 / 124');
 
 navGo('demo-spin');
