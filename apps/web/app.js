@@ -328,6 +328,20 @@ function updateModeUI(mode) {
   if (bar) bar.setAttribute('data-mode', mode);
 }
 
+/* ---------- 学习路径：每一步的说明（点一步只显示这一步的面板 + 这段说明） ---------- */
+const PATH_STEPS = {
+  1: { title: '动手试一试', desc: '拖、切、拼、调，先玩出感觉。玩明白了，再说它叫什么名字。' },
+  2: { title: '说一说', desc: '用自己的话讲出规律。讲不出来，就回去再玩一遍，玩到能讲出来为止。' },
+  3: { title: '练一练', desc: '3–5 道题，都用同一张图来练，不换花样。图换了，思路就断了。' },
+  4: { title: '测一测', desc: '小测验过关才往下走；错了回退一步，用图再讲一遍，不直接刷下一题。' }
+};
+const pathDetail = document.getElementById('pathDetail');
+function showPathStep(n) {
+  const s = PATH_STEPS[n];
+  if (!s || !pathDetail) return;
+  pathDetail.innerHTML = '<h3>第 ' + n + ' 步 · ' + s.title + '</h3><p>' + s.desc + '</p>';
+}
+
 /* ---------- 逻辑导航（借汉字 App FRONTEND_UI.md §7 的规则，用自己的写法实现）
    只用界面层级，不用浏览器历史：全站禁止用浏览器历史 API 做导航。
    一个层级栈 navStack 记录当前路径，每一级带自己的进入函数（选年级 / 换维度 / 滚动到某节）。
@@ -339,10 +353,10 @@ const NAV_DEFS = {
   grades:     { crumbs: ['数学', '选年级'], target: 'grades', action: () => updateModeUI('grade') },
   dimensions: { crumbs: ['数学', '换维度'], target: 'dimensions', action: () => { updateModeUI('dimension'); renderDimension(currentDim); } },
   path:       { crumbs: ['数学', '学习路径'], target: 'path' },
-  'path-step-1': { crumbs: ['数学', '学习路径', '动手试一试'], target: 'step-1', flash: 'step-1' },
-  'path-step-2': { crumbs: ['数学', '学习路径', '说一说'], target: 'step-2', flash: 'step-2' },
-  'path-step-3': { crumbs: ['数学', '学习路径', '练一练'], target: 'step-3', flash: 'step-3' },
-  'path-step-4': { crumbs: ['数学', '学习路径', '测一测'], target: 'step-4', flash: 'step-4' },
+  'path-step-1': { crumbs: ['数学', '学习路径', '动手试一试'], target: 'step-1', flash: 'step-1', action: () => showPathStep(1) },
+  'path-step-2': { crumbs: ['数学', '学习路径', '说一说'], target: 'step-2', flash: 'step-2', action: () => showPathStep(2) },
+  'path-step-3': { crumbs: ['数学', '学习路径', '练一练'], target: 'step-3', flash: 'step-3', action: () => showPathStep(3) },
+  'path-step-4': { crumbs: ['数学', '学习路径', '测一测'], target: 'step-4', flash: 'step-4', action: () => showPathStep(4) },
   demos:      { crumbs: ['数学', '互动演示'], target: 'demos' },
   'demo-fraction': { crumbs: ['数学', '互动演示', '分数切一切'], target: 'demo-fraction' },
   'demo-balance':  { crumbs: ['数学', '互动演示', '天平解方程'], target: 'demo-balance' },
@@ -362,15 +376,95 @@ const navBack = document.getElementById('navBack');
 const crumbTitle = document.getElementById('crumbTitle');
 let navStack = [{ key: 'home', crumbs: ['数学'], target: 'top' }];
 
-function scrollToTarget(id) {
-  if (id === 'top') { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
-  const el = document.getElementById(id);
-  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+/* ---------- 视图隔离：一次只显示一个视图（Iris 2026-11-06 的要求）
+   首页只显示顶栏、模式栏、首页介绍和首页面板；模块内容（年级、维度、学习路径、
+   演示、为什么、错题本、进度、下一步、页脚）在首页一律藏起来，下滑也看不到。
+   点面板进模块时只显示该面板对应的内容，首页面板和介绍同时藏起来；
+   返回 / 面包屑 / 点品牌回首页时，模块内容重新藏起来，上一级面板再出现。
+   实现：renderNav() 每次都调 applyView()，按栈顶算出视图，逐项设 hidden；
+   样式里 [hidden]{display:none !important} 保证 .panels/.hero 的 display 规则盖不掉 hidden，
+   body[data-view] 的 CSS 规则是第二道防线（见 styles.css）。 */
+const heroEl = document.getElementById('hero');
+const panelsSec = document.getElementById('panels');
+const gradesSec = document.getElementById('grades');
+const dimsSec = document.getElementById('dimensions');
+const pathSec = document.getElementById('path');
+const pathPanelsEl = document.getElementById('pathPanels');
+const demosSec = document.getElementById('demos');
+const demoPanelsEl = document.getElementById('demoPanels');
+const demoGridEl = document.getElementById('demoGrid');
+const whySec = document.getElementById('why');
+const reviewSec = document.getElementById('review');
+const progressCardEl = document.getElementById('progressCard');
+const reviewCardEl = document.getElementById('reviewCard');
+const nextStepsEl = document.getElementById('nextSteps');
+const footerEl = document.getElementById('pageFooter');
+function viewForKey(key) {
+  if (key === 'home') return 'home';
+  if (key === 'grades') return 'grades';
+  if (key.startsWith('grade-')) return 'grade-detail';
+  if (key === 'dimensions') return 'dimensions';
+  if (key.startsWith('dim-')) return 'dim-detail';
+  if (key === 'path') return 'path';
+  if (key.startsWith('path-step-')) return 'path-step';
+  if (key === 'demos') return 'demos';
+  if (key === 'demo-fraction' || key === 'demo-balance' || key === 'demo-function') return key;
+  if (key === 'why') return 'why';
+  if (key === 'review') return 'review';
+  if (key === 'progress') return 'progress';
+  return 'home';
 }
+function setHidden(el, hidden) { if (el) el.hidden = hidden; }
+function applyView() {
+  const key = navStack[navStack.length - 1].key;
+  const view = viewForKey(key);
+  document.body.dataset.view = view;
+  // 首页：只留介绍和首页面板
+  setHidden(heroEl, view !== 'home');
+  setHidden(panelsSec, view !== 'home');
+  // 选年级：列表只留 9 块年级面板；叶子只留该年级详情
+  setHidden(gradesSec, !(view === 'grades' || view === 'grade-detail'));
+  setHidden(gradePanels, view !== 'grades');
+  setHidden(gradeDetail, view !== 'grade-detail');
+  setHidden(gradesSec.querySelector('h2'), view === 'grade-detail');
+  setHidden(gradesSec.querySelector('.section-sub'), view === 'grade-detail');
+  // 换维度：列表只留 5 块维度面板；叶子只留该维度的分组内容
+  setHidden(dimsSec, !(view === 'dimensions' || view === 'dim-detail'));
+  setHidden(dimPanels, view !== 'dimensions');
+  setHidden(dimDetail, view !== 'dim-detail');
+  setHidden(dimsSec.querySelector('h2'), view === 'dim-detail');
+  setHidden(dimsSec.querySelector('.section-sub'), view === 'dim-detail');
+  setHidden(dimsSec.querySelector('.muted'), view !== 'dim-detail');
+  // 学习路径：列表留 4 步面板；叶子只留该步的面板 + 说明
+  setHidden(pathSec, !(view === 'path' || view === 'path-step'));
+  setHidden(pathDetail, view !== 'path-step');
+  setHidden(pathSec.querySelector('h2'), view === 'path-step');
+  setHidden(pathSec.querySelector('.section-sub'), view === 'path-step');
+  const stepN = view === 'path-step' ? key.slice('path-step-'.length) : null;
+  [...pathPanelsEl.children].forEach(el => { el.hidden = !!(stepN && el.id !== 'step-' + stepN); });
+  // 互动演示：列表留演示面板；叶子只留该演示卡片；为什么小实验只留 #why 区
+  const demoLeaf = view === 'demo-fraction' || view === 'demo-balance' || view === 'demo-function';
+  setHidden(demosSec, !(view === 'demos' || demoLeaf));
+  setHidden(demoPanelsEl, view !== 'demos');
+  setHidden(demoGridEl, !demoLeaf); // 演示卡片网格只在某一个演示的叶子视图里出现，列表视图只留演示面板
+  setHidden(demosSec.querySelector('h2'), demoLeaf);
+  setHidden(demosSec.querySelector('.section-sub'), demoLeaf);
+  [...demoGridEl.children].forEach(el => { el.hidden = demoLeaf && el.id !== view; });
+  setHidden(whySec, view !== 'why');
+  // 复习与进度：错题本只留错题卡片，我的进度只留进度卡片
+  setHidden(reviewSec, !(view === 'review' || view === 'progress'));
+  setHidden(progressCardEl, view !== 'progress');
+  setHidden(reviewCardEl, view !== 'review');
+  // 下一步与页脚：视图隔离后不再出现（首页不露出任何模块内容，模块视图只显示本面板内容）
+  setHidden(nextStepsEl, true);
+  setHidden(footerEl, true);
+}
+
 function enterNavEntry(entry) {
   const def = NAV_DEFS[entry.key] || {};
   if (def.action) def.action();
-  scrollToTarget(entry.target || def.target || 'top');
+  // 一次只显示一个视图，内容都在页顶，不再按目标滚动。
+  window.scrollTo({ top: 0, behavior: 'smooth' });
   if (def.flash) {
     const el = document.getElementById(def.flash);
     if (el) { el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 1600); }
@@ -378,6 +472,7 @@ function enterNavEntry(entry) {
 }
 function renderNav() {
   const top = navStack[navStack.length - 1];
+  applyView();
   navBack.hidden = navStack.length <= 1;
   crumbTitle.innerHTML = top.crumbs.map((c, i) =>
     i < top.crumbs.length - 1

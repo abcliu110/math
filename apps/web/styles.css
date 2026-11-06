@@ -41,6 +41,24 @@ code{background:#eef2ff;padding:2px 6px;border-radius:6px}
 .mode-bar .dim-bar{margin-bottom:0}
 .dim-bar[hidden]{display:none}
 
+/* 视图隔离：一次只显示一个视图，首页不露出任何模块内容（Iris 2026-11-06 的要求）。
+   [hidden] 必须加 !important：.panels/.hero 的 display 规则会盖掉浏览器对 hidden 的默认样式。
+   body[data-view] 由 app.js 的 applyView() 维护；万一 JS 没跑起来，页面保持原样全部显示（不白屏）。 */
+[hidden]{display:none !important}
+body[data-view] #grades, body[data-view] #dimensions, body[data-view] #path,
+body[data-view] #demos, body[data-view] #why, body[data-view] #review,
+body[data-view] .next-steps, body[data-view] footer.footer{display:none}
+body[data-view="grades"] #grades, body[data-view="grade-detail"] #grades,
+body[data-view="dimensions"] #dimensions, body[data-view="dim-detail"] #dimensions,
+body[data-view="path"] #path, body[data-view="path-step"] #path,
+body[data-view="demos"] #demos, body[data-view="demo-fraction"] #demos,
+body[data-view="demo-balance"] #demos, body[data-view="demo-function"] #demos,
+body[data-view="why"] #why, body[data-view="review"] #review,
+body[data-view="progress"] #review{display:block}
+.path-detail{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-top:16px}
+.path-detail h3{margin:0 0 8px}
+.path-detail p{margin:0;color:#334155}
+
 /* 没有侧边栏：主界面通栏，菜单层级全部用面板表示（见 #panels / .panel） */
 main{min-width:0}
 .panel.flash{outline:3px solid var(--orange);outline-offset:2px}

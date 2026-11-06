@@ -34,8 +34,8 @@
     </div>
   </div>
 
-  <!-- Hero -->
-  <section class="hero wrap">
+  <!-- Hero：只在首页显示；进了任何面板，首页和模块面板一起藏起来 -->
+  <section class="hero wrap" id="hero">
     <div class="hero-copy">
       <p class="eyebrow">可视化优先 · 复杂变简单 · 能动手就不只看</p>
       <h1>每个抽象概念，<br>都能拖、能切、能调。</h1>
@@ -109,6 +109,7 @@
       <button class="panel" type="button" id="step-3" data-nav-key="path-step-3"><span class="panel-icon" aria-hidden="true">③</span><b>练一练</b><span class="panel-sub">3–5 道题，都用同一张图来练，不换花样。</span><span class="panel-prog"><i style="width:25%"></i></span><span class="panel-tx">第 3 步</span></button>
       <button class="panel" type="button" id="step-4" data-nav-key="path-step-4"><span class="panel-icon" aria-hidden="true">④</span><b>测一测</b><span class="panel-sub">小测验过关才往下走；错了回退一步，用图再讲一遍。</span><span class="panel-prog"><i style="width:25%"></i></span><span class="panel-tx">第 4 步</span></button>
     </div>
+    <div class="path-detail" id="pathDetail" aria-live="polite"></div>
   </section>
 
   <!-- Featured demos -->
@@ -122,7 +123,7 @@
       <button class="panel" type="button" data-nav-key="why"><span class="panel-icon" aria-hidden="true">？</span><b>为什么小实验</b><span class="panel-sub">进位、分数除法、面积公式</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">3 个小实验</span></button>
     </div>
 
-    <div class="demo-grid">
+    <div class="demo-grid" id="demoGrid">
       <!-- P1 Fraction -->
       <article class="demo-card" id="demo-fraction">
         <p class="demo-tag">P1 · 3–5 年级 · 分数</p>
@@ -240,7 +241,7 @@
         <p id="progressText">还没开始。玩一个演示，就点亮一格。</p>
         <p class="muted">进度先存在本机浏览器里（原型暂未接入账号同步）。</p>
       </div>
-      <div class="review-card">
+      <div class="review-card" id="reviewCard">
         <h3>错题本（占位示例）</h3>
         <p class="muted">真实错题会在练习时自动记录，并保存当时的图，不只是题目文字。</p>
         <ul class="wrong-list">
@@ -252,8 +253,8 @@
     </div>
   </section>
 
-  <!-- Next steps -->
-  <section class="section wrap next-steps">
+  <!-- Next steps：视图隔离后不再显示（首页不露出任何模块内容，模块视图只显示本面板内容） -->
+  <section class="section wrap next-steps" id="nextSteps">
     <h2>下一步</h2>
     <ol>
       <li>你先玩一玩上面三个演示，告诉我哪个最顺手、哪个最别扭。</li>
@@ -264,7 +265,7 @@
   </section>
 </main>
 
-<footer class="footer">
+<footer class="footer" id="pageFooter">
   <div class="wrap">
     <p>数学小宇宙 · 原创原型 —— 所有文字、图和例子都是我们自己写的，没有直接复制任何教程、图片或代码。借鉴的只是背后的教学想法：CPA、条形图、天平、滑杆联动。</p>
     <p class="muted">本地预览：用浏览器直接打开 apps/web/index.html，或在仓库根目录运行 python3 -m http.server，再访问 http://localhost:8000/apps/web/</p>
