@@ -51,6 +51,7 @@ code{background:#eef2ff;padding:2px 6px;border-radius:6px}
 [hidden]{display:none !important}
 body[data-view] #grades, body[data-view] #dimensions, body[data-view] #path,
 body[data-view] #demos, body[data-view] #why, body[data-view] #review, body[data-view] #lab,
+body[data-view] #exam,
 body[data-view] .next-steps, body[data-view] footer.footer{display:none}
 body[data-view="grades"] #grades, body[data-view="grade-detail"] #grades,
 body[data-view="unit-detail"] #grades, body[data-view="point-detail"] #grades,
@@ -103,7 +104,9 @@ body[data-view="demo-sector"] #demos, body[data-view="demo-coin"] #demos, body[d
 body[data-view="demo-hyperbola"] #demos, body[data-view="demo-similar"] #demos, body[data-view="demo-shadow"] #demos,
 body[data-view="demo-trig"] #demos, body[data-view="demo-slope"] #demos, body[data-view="demo-project"] #demos,
 body[data-view="why"] #why, body[data-view="review"] #review,
-body[data-view="progress"] #review, body[data-view="lab"] #lab{display:block}
+body[data-view="progress"] #review, body[data-view="lab"] #lab,
+body[data-view="exam"] #exam{display:block}
+.exam-timer{font-size:20px;font-weight:700;color:#c2410c;margin:8px 0}
 .path-detail{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-top:16px}
 .path-detail h3{margin:0 0 8px}
 .path-detail p{margin:0;color:#334155}

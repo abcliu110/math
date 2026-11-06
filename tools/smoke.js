@@ -397,6 +397,79 @@ navGo('grade-3-mix');
 sandbox.navBackFn();
 check('back from mix returns to grade detail', gradeDetail.hidden === false);
 
+// ---------- 3b. 模拟测（低压力自测） ----------
+// 到这里 reviewStore 里只有 3.7（第 2 节标过一次答对），演示一个都还没玩，
+// 所以“学过”只有 3.7：第一套题必然包含 3.7，且有 4 道是混合题补的。
+// Math.random 固定为 0，让抽题完全确定：3.7 抽到的是第 1 道练习题（有分步）。
+const examDetail = byId.examDetail;
+function clickExam(el) { (examDetail._handlers.click || []).forEach(f => f({ target: el })); }
+function examBtn(data) { const b = makeEl('button'); Object.assign(b.dataset, data); return b; }
+// 把当前这道题标对 / 标错：有分步的题一步一步标，没分步的整题标。返回这道题是否有分步。
+function examMarkCurrent(correct) {
+  const hasSteps = examDetail.innerHTML.includes('data-exam-step-reveal');
+  if (hasSteps) {
+    const n = (examDetail.innerHTML.match(/data-exam-step-reveal="/g) || []).length;
+    for (let si = 0; si < n; si++) {
+      clickExam(examBtn({ examStepReveal: String(si) }));
+      const b = examBtn({ examStepBtn: correct ? 'right' : 'wrong' });
+      const row = makeEl('div'); row.dataset.examStepMark = String(si);
+      b.closest = (sel) => sel === '[data-exam-step-btn]' ? b : (sel === '[data-exam-step-mark]' ? row : null);
+      clickExam(b);
+    }
+  } else {
+    clickExam(examBtn({ examMark: correct ? 'right' : 'wrong' }));
+  }
+  return hasSteps;
+}
+check("viewForKey('exam') is exam", sandbox.viewForKey('exam') === 'exam');
+navGo('exam');
+check('exam intro renders', byId.exam.hidden === false && examDetail.innerHTML.includes('模拟测') && examDetail.innerHTML.includes('开始模拟测'));
+check('exam view: home panels + grades hidden', byId.panels.hidden === true && byId.grades.hidden === true && byId.review.hidden === true);
+const origRandom = Math.random;
+Math.random = () => 0;
+clickExam(examBtn({ examBegin: '1' }));
+check('exam: timer shows 10:00', (byId.examTimer.textContent || '').includes('10:00'));
+check('exam: first question shown, no hint/answer in exam',
+  examDetail.innerHTML.includes('第 1 / 5 题') &&
+  !examDetail.innerHTML.includes('data-hint') && !examDetail.innerHTML.includes('看答案') &&
+  !examDetail.innerHTML.includes('要提示'));
+check('exam: honest note when learned points are fewer than 5',
+  examDetail.innerHTML.includes('1 道来自你学过的知识点') && examDetail.innerHTML.includes('混合题'));
+let examSawSteps = false;
+for (let qi = 0; qi < 5; qi++) {
+  if (examMarkCurrent(false)) examSawSteps = true;
+  if (qi < 4) {
+    clickExam(examBtn({ examNext: '1' }));
+    check('exam: moved to question ' + (qi + 2), examDetail.innerHTML.includes('第 ' + (qi + 2) + ' / 5 题'));
+  }
+}
+check('exam: a steps question was in the set (3.7 from learned)', examSawSteps);
+clickExam(examBtn({ examSubmit: '1' }));
+check('exam: report shown after 5 questions', examDetail.innerHTML.includes('模拟测报告'));
+check('exam: all-wrong run scores 0', examDetail.innerHTML.includes('0 分') && examDetail.innerHTML.includes('正确率 0%'));
+check('exam: report names the stuck step', examDetail.innerHTML.includes('你卡在第 1 步 · 看分母'));
+const examStored = JSON.parse(lsData['math-review-v1'] || '{}');
+check('exam: wrong points entered the review store',
+  Object.keys(examStored).filter(id => examStored[id] && examStored[id].correct === false).length >= 5);
+Math.random = origRandom;
+// 第二套：再测一套 + 提前交卷（只标第 1 题对，剩下按答错算）。
+clickExam(examBtn({ examAgain: '1' }));
+check('exam: again starts a new set', examDetail.innerHTML.includes('第 1 / 5 题') && examDetail.innerHTML.includes('还剩 10:00'));
+examMarkCurrent(true);
+const earlySubmit = examBtn({ examSubmit: '1' });
+clickExam(earlySubmit);
+check('exam: early submit asks to confirm', earlySubmit.textContent.includes('确认交卷') &&
+  examDetail.querySelector('[data-exam-remind]').textContent.includes('还有 4 道题没标对错'));
+clickExam(earlySubmit);
+check('exam: early submit reports with unanswered counted wrong',
+  examDetail.innerHTML.includes('模拟测报告') && examDetail.innerHTML.includes('20 分') && examDetail.innerHTML.includes('正确率 20%'));
+// 模拟测里错的题今天就进今天复习（due 拨到现在）：去今天复习看看，今天列表不是空的。
+navGo('grade-3-review');
+check('exam: wrong points show up in today review the same day',
+  pointDetail.innerHTML.includes('今天复习') && !pointDetail.innerHTML.includes('今天没有到期的复习'));
+navGo('home');
+check('exam: leaving exam hides the exam section', byId.exam.hidden === true);
+
 // ---------- 4. grade 1 ----------
 navGo('grade-1');
 check('grade-1 shows real units', gradeDetail.innerHTML.includes('20以内的进位加法') && gradeDetail.innerHTML.includes('100以内数的认识'));
@@ -614,14 +687,15 @@ check('home wrong-book shows the real wrong list, not the stale point page',
   pointDetail.hidden === true && byId.grades.hidden === true && byId.review.hidden === false);
 check('home wrong-book: review section visible, review card visible',
   byId.review.hidden === false && byId.reviewCard.hidden === false);
-// 今天复习：3.7 今天没到期（错了明天才来），所以今天列表是空的，明天回来里有它。
+// 今天复习：3.7 今天没到期（错了明天才来），所以 3.7 在明天回来里，不在今天列表里。
+// 注意：模拟测（第 3b 节）错的题是当天进今天复习的，所以今天列表不再是空的——
+// 这里只断言 3.7 的位置（第一次出现必须在“明天回来”之后），不断言今天列表为空。
 navGo('grade-3-review');
 check('tomorrow section lists the wrong step for tomorrow, not today',
   pointDetail.innerHTML.includes('明天回来') &&
-  pointDetail.innerHTML.includes('今天没有到期的复习') &&
   pointDetail.innerHTML.indexOf('3.7') > pointDetail.innerHTML.indexOf('明天回来'));
 check('grade-3 review still renders after the fix',
-  pointDetail.innerHTML.includes('今天复习') && pointDetail.innerHTML.includes('练过 1 条'));
+  pointDetail.innerHTML.includes('今天复习') && /练过 \d+ 条/.test(pointDetail.innerHTML));
 
 // ---------- 11. 一年级实验（13 个新演示） ----------
 // 桩里的静态 seg 按钮是上面预置的（splitTotalSeg / addsubModeSeg /

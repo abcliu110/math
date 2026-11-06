@@ -37,7 +37,7 @@ NEED = {
     'dimensions': '#dimensions', 'dim-detail': '#dimensions',
     'path': '#path', 'path-step': '#path',
     'demos': '#demos', 'why': '#why', 'lab': '#lab',
-    'review': '#review', 'progress': '#review',
+    'review': '#review', 'progress': '#review', 'exam': '#exam',
 }
 # Demo keys: every 'demo-*' key registered in NAV_DEFS needs #demos.
 demo_keys = sorted(set(re.findall(r"'(demo-[a-z]+)'\s*:", JS)))

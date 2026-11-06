@@ -198,6 +198,7 @@ function selectGrade(g) {
    层级：年级 → 单元 → 知识点，每条知识点一页：怎么做、为什么、容易错、
    看图学、动手试一试、讲回来、练一练（由浅入深：基础 → 提高 → 奥数挑战）。文件没加载到时，该年级退回旧的占位。 */
 const pointDetail = document.getElementById('pointDetail');
+const examDetail = document.getElementById('examDetail');
 // 每个年级文件都是顶层 const；typeof 守卫让没加载到的年级安全地返回 null。
 // map 建在函数里（不在顶层建 const）：加载时 selectGrade() 在它之前就跑，
 // 顶层 const 会撞上暂时性死区。
@@ -386,7 +387,8 @@ function renderReview() {
   const due = duePointIds();
   const practiced = Object.keys(reviewStore).length;
   const mastered = Object.keys(reviewStore).filter(id => reviewStore[id].streak >= 2).length;
-  let html = '<h3>今天复习</h3><p class="muted">练过 ' + practiced + ' 条 · 已掌握 ' + mastered + ' 条（连续答对两次算掌握）。答错和没把握的第二天回来，答对且有把握的 3 天后回来，掌握的 7 天后回来。</p>';
+  let html = '<h3>今天复习</h3><p class="muted">练过 ' + practiced + ' 条 · 已掌握 ' + mastered + ' 条（连续答对两次算掌握）。答错和没把握的第二天回来，答对且有把握的 3 天后回来，掌握的 7 天后回来。</p>' +
+    '<div class="btn-row"><button class="btn primary" type="button" data-exam-start="1">开始模拟测（5 道题 · 10 分钟）</button></div>';
   if (!due.length) {
     html += '<div class="point-sec"><p>今天没有到期的复习。去练一练新的，或者点“混着练”。</p></div>';
   } else {
@@ -417,6 +419,259 @@ function renderReview() {
   pointDetail.querySelectorAll('[data-point]').forEach(btn =>
     btn.addEventListener('click', () => navGo('point-' + btn.dataset.point)));
 }
+/* ---------- 模拟测（低压力自测，不是高压考试） ----------
+   定位是“检验自己学到哪了”：5 道题，10 分钟，考完才给答案。
+   出题只复用各年级内容文件里已有的 practice 题目（q/answer/hint/level），不新编题。
+   考试中不显示提示和答案：没有“要提示”按钮，没有“看答案”，解析也不出现；
+   有 steps 的题复用分步计分 UI（每步“看这一步”+ 对/错自评），没 steps 的题整题自评。
+   计时用 setTimeout 链（不用 setInterval：smoke 沙箱只提供 setTimeout）。
+   错题只用已有的 reviewStore：recordAttempt(pid, false, false) 后把 due 拨到现在，
+   这样错题今天就出现在“今天复习”里；不另造一套存储。 */
+const EXAM_COUNT = 5;
+const EXAM_MINUTES = 10;
+const EXAM_MS = EXAM_MINUTES * 60 * 1000;
+const EXAM_SCORE_PER_Q = 20; // 5 题 × 20 分 = 100 分
+let exam = null; // { qs, fromLearned, idx, marks, startedAt, deadline, submitted, timedOut, confirmSubmit, seq }
+let examSeq = 0;
+function allPoints() {
+  const out = [];
+  for (const g of [1, 2, 3, 4, 5, 6, 7, 8, 9]) {
+    const gd = gradeData(g);
+    if (!gd) continue;
+    gd.units.forEach(u => u.points.forEach(p => { if (p.practice && p.practice.length) out.push(p); }));
+  }
+  return out;
+}
+/* 学过 = 在 reviewStore 里练过，或该知识点的演示已经玩过（math-tried-demos-v1）。 */
+function learnedPointIds() {
+  const ids = new Set(Object.keys(reviewStore));
+  allPoints().forEach(p => { if (p.demo && tried.has(p.demo)) ids.add(p.id); });
+  return ids;
+}
+function pickExamQuestions() {
+  const learned = shuffle([...learnedPointIds()].map(id => findPoint(id)).filter(f => f).map(f => f.point));
+  const qs = [];
+  const used = new Set();
+  learned.forEach(p => {
+    if (qs.length >= EXAM_COUNT) return;
+    qs.push({ pointId: p.id, title: p.title, q: p.practice[Math.floor(Math.random() * p.practice.length)] });
+    used.add(p.id);
+  });
+  const fromLearned = qs.length;
+  if (qs.length < EXAM_COUNT) {
+    shuffle(allPoints().filter(p => !used.has(p.id))).forEach(p => {
+      if (qs.length >= EXAM_COUNT) return;
+      qs.push({ pointId: p.id, title: p.title, q: p.practice[Math.floor(Math.random() * p.practice.length)] });
+    });
+  }
+  return { qs: shuffle(qs), fromLearned };
+}
+function fmtClock(ms) {
+  const s = Math.max(0, Math.ceil(ms / 1000));
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return (m < 10 ? '0' + m : '' + m) + ':' + (r < 10 ? '0' + r : '' + r);
+}
+function examTick(seq) {
+  if (!exam || exam.submitted || exam.seq !== seq) return;
+  if (document.body.dataset.view !== 'exam') return; // 离开模拟测就停表，不在后台交卷
+  const left = exam.deadline - Date.now();
+  const t = document.getElementById('examTimer');
+  if (left <= 0) { if (t) t.textContent = '时间到'; submitExam(true); return; }
+  if (t) t.textContent = '还剩 ' + fmtClock(left);
+  setTimeout(() => examTick(seq), 1000);
+}
+function renderExamIntro() {
+  exam = null;
+  const learned = learnedPointIds().size;
+  const total = allPoints().length;
+  examDetail.innerHTML = '<h3>模拟测</h3><p class="muted">检验一下自己学到哪了——不是正式考试，不用紧张。错了也没关系，错的题会回到今天复习里。</p>' +
+    '<div class="point-sec"><h4>怎么考</h4><p>5 道题，10 分钟。考试的时候不给提示、不给答案，答完自己标对错；有分步的题就一步一步标。时间到了自动交卷，也可以提前交卷。</p>' +
+    '<p>你已经练过 ' + learned + ' 条知识点（共 ' + total + ' 条）。出题先从你学过的里面抽；学过的不够 5 条时，用各年级混合题补足，到时候会如实告诉你哪几道是补的。</p></div>' +
+    '<div class="btn-row"><button class="btn primary" type="button" data-exam-begin="1">开始模拟测（5 道题 · 10 分钟）</button></div>';
+}
+function startExam() {
+  const picked = pickExamQuestions();
+  exam = { qs: picked.qs, fromLearned: picked.fromLearned, idx: 0,
+    marks: picked.qs.map(() => ({ correct: null, steps: {} })),
+    startedAt: Date.now(), deadline: Date.now() + EXAM_MS,
+    submitted: false, timedOut: false, confirmSubmit: false, seq: ++examSeq };
+  renderExamQuestion();
+  examTick(exam.seq);
+}
+function examIsMarked(i) {
+  const m = exam.marks[i];
+  const q = exam.qs[i].q;
+  if (q.steps && q.steps.length) return q.steps.every((s, si) => m.steps[si] !== undefined);
+  return m.correct !== null;
+}
+function renderExamQuestion() {
+  const item = exam.qs[exam.idx];
+  const q = item.q;
+  const m = exam.marks[exam.idx];
+  const hasSteps = !!(q.steps && q.steps.length);
+  let bodyHtml = '';
+  if (hasSteps) {
+    bodyHtml = '<div class="steps"><p class="muted">这道题可以拆成 ' + q.steps.length + ' 步：每一步先自己算，再点开对一对，告诉我这一步你做对没。</p>' +
+      q.steps.map((s, si) =>
+        '<div class="step"><p><b>第 ' + (si + 1) + ' 步 · ' + esc(s.label) + '</b> ' +
+        '<button class="btn ghost small qa-btn" type="button" data-exam-step-reveal="' + si + '">看这一步</button></p>' +
+        '<p class="step-a" data-exam-step-a="' + si + '" hidden>' + esc(s.text) + '</p>' +
+        '<div class="step-mark" data-exam-step-mark="' + si + '" hidden>' +
+        '<p>这一步你做对了吗？ <button class="btn small" type="button" data-exam-step-btn="right">对了</button> <button class="btn small" type="button" data-exam-step-btn="wrong">错了</button></p>' +
+        '<p class="qa-a" data-exam-step-saved="' + si + '" hidden></p></div></div>'
+      ).join('') + '<p class="muted">全部标完后才能去下一题。</p></div>';
+  } else {
+    bodyHtml = '<div class="qa-mark"><p>这道题你做对了吗？ <button class="btn small" type="button" data-exam-mark="right">答对了</button> <button class="btn small" type="button" data-exam-mark="wrong">答错了</button></p></div>';
+  }
+  const last = exam.idx === exam.qs.length - 1;
+  const srcNote = exam.fromLearned < EXAM_COUNT
+    ? '<p class="muted">这套题里 ' + exam.fromLearned + ' 道来自你学过的知识点，' + (EXAM_COUNT - exam.fromLearned) + ' 道是各年级混合题（学过的不够 5 条，补足的）。</p>'
+    : '<p class="muted">这套题 5 道都来自你学过的知识点。</p>';
+  exam.confirmSubmit = false;
+  examDetail.innerHTML = '<h3>模拟测</h3>' +
+    '<p class="exam-timer" id="examTimer">还剩 ' + fmtClock(EXAM_MS) + '</p>' +
+    '<p class="muted">第 ' + (exam.idx + 1) + ' / ' + exam.qs.length + ' 题 · 5 道题，10 分钟；考试中不给提示和答案，答完自己标对错。时间到了自动交卷。</p>' + srcNote +
+    '<div class="point-sec"><h4>' + esc(item.pointId) + ' · ' + esc(item.title) + '</h4>' +
+    '<p>' + (q.level ? '<span class="pill">' + esc(q.level) + '</span> ' : '') + esc(q.q) + '</p>' +
+    bodyHtml +
+    '<p class="qa-a" data-exam-saved hidden></p>' +
+    '<p class="qa-a" data-exam-remind hidden></p></div>' +
+    '<div class="btn-row">' +
+    (last
+      ? '<button class="btn primary" type="button" data-exam-submit="1">交卷</button>'
+      : '<button class="btn primary" type="button" data-exam-next="1">下一题 →</button>' +
+        '<button class="btn ghost" type="button" data-exam-submit="1">提前交卷</button>') +
+    '</div>';
+  // 已经标过的题回来时，把标过的状态写回去（只写文字，不恢复按钮状态）。
+  if (examIsMarked(exam.idx)) {
+    const saved = examDetail.querySelector('[data-exam-saved]');
+    if (saved) { saved.hidden = false; saved.textContent = m.correct === true ? '已记下：这道题答对了。' : '已记下：这道题答错了。'; }
+  }
+}
+function submitExam(timedOut) {
+  if (!exam || exam.submitted) return;
+  exam.submitted = true;
+  exam.timedOut = !!timedOut;
+  const usedMs = Date.now() - exam.startedAt;
+  let score = 0;
+  const rows = exam.qs.map((item, i) => {
+    const m = exam.marks[i];
+    const correct = m.correct === true; // 没标对错的按答错算
+    if (correct) score += EXAM_SCORE_PER_Q;
+    else {
+      recordAttempt(item.pointId, false, false);
+      // 模拟测里错的题今天就复习：把 due 拨到现在（练一练里答错是明天再来，考试错了马上练）。
+      if (reviewStore[item.pointId]) { reviewStore[item.pointId].due = Date.now(); saveReview(); updateHomeReviewTx(); }
+    }
+    const wrongSteps = (item.q.steps || []).map((s, si) => ({ s, si })).filter(x => m.steps[x.si] === false);
+    return { item, correct, wrongSteps };
+  });
+  const right = rows.filter(r => r.correct).length;
+  const total = exam.qs.length;
+  const pct = Math.round(right / total * 100);
+  const wrongIds = rows.filter(r => !r.correct).map(r => r.item.pointId);
+  const head = exam.timedOut
+    ? '<p class="muted">时间到了，自动交卷了——没做完的题也别慌，下次再来。</p>'
+    : '<p class="muted">用时 ' + fmtClock(usedMs) + '。不着急，错的地方就是接下来要练的。</p>';
+  const advice = right === total
+    ? '<p>全对，思路很稳——可以去挑战下一级，或者再测一套换一批题。</p>'
+    : '<p>答错的 ' + wrongIds.length + ' 条已经放进今天复习，点一条回去重练；练一练里再对一遍，明天还会回来找你。</p>';
+  examDetail.innerHTML = '<h3>模拟测报告</h3>' + head +
+    '<div class="point-sec"><h4>得分：' + score + ' 分（满分 100 分）· 答对 ' + right + ' / ' + total + ' 题 · 正确率 ' + pct + '%</h4>' + advice + '</div>' +
+    '<div class="point-sec"><h4>每道题</h4><ol>' + rows.map((r, i) => {
+      let line = '<li><b>第 ' + (i + 1) + ' 题 · ' + esc(r.item.pointId) + ' ' + esc(r.item.title) + '</b> ' + (r.correct ? '答对了' : '答错了') + '。';
+      if (!r.correct) {
+        if (r.wrongSteps.length) {
+          line += '<br>丢分报告：你卡在' + r.wrongSteps.map(x => '第 ' + (x.si + 1) + ' 步 · ' + x.s.label).join('、') + '。';
+        } else {
+          line += '<br>丢分报告：这道题整题答错了，回去把 ' + esc(r.item.pointId) + ' 再练一遍。';
+        }
+        line += ' <button class="btn ghost small" type="button" data-point="' + esc(r.item.pointId) + '">回 ' + esc(r.item.pointId) + ' 重练</button>';
+      }
+      line += '<br><span class="muted">答案：' + esc(r.item.q.answer) + '</span></li>';
+      return line;
+    }).join('') + '</ol></div>' +
+    '<div class="btn-row"><button class="btn primary" type="button" data-exam-again="1">再测一套</button>' +
+    '<button class="btn ghost" type="button" data-exam-review="1">去今天复习</button>' +
+    '<button class="btn ghost" type="button" data-exam-home="1">回首页</button></div>';
+}
+if (examDetail) examDetail.addEventListener('click', e => {
+  const beginBtn = e.target.closest('[data-exam-begin]');
+  if (beginBtn) { startExam(); return; }
+  const againBtn = e.target.closest('[data-exam-again]');
+  if (againBtn) { startExam(); return; }
+  const reviewBtn = e.target.closest('[data-exam-review]');
+  if (reviewBtn) { navGo('today-review'); return; }
+  const homeBtn = e.target.closest('[data-exam-home]');
+  if (homeBtn) { navGo('home'); return; }
+  const pointBtn = e.target.closest('[data-point]');
+  if (pointBtn) { navGo('point-' + pointBtn.dataset.point); return; }
+  if (!exam || exam.submitted) return;
+  const stepReveal = e.target.closest('[data-exam-step-reveal]');
+  if (stepReveal) {
+    const si = stepReveal.dataset.examStepReveal;
+    const a = examDetail.querySelector('[data-exam-step-a="' + si + '"]');
+    const m = examDetail.querySelector('[data-exam-step-mark="' + si + '"]');
+    if (a) { a.hidden = !a.hidden; stepReveal.textContent = a.hidden ? '看这一步' : '收起这一步'; }
+    if (m) m.hidden = a ? a.hidden : true;
+    return;
+  }
+  const stepBtn = e.target.closest('[data-exam-step-btn]');
+  if (stepBtn) {
+    const row = e.target.closest('[data-exam-step-mark]');
+    if (!row) return;
+    const si = +row.dataset.examStepMark;
+    const correct = stepBtn.dataset.examStepBtn === 'right';
+    exam.marks[exam.idx].steps[si] = correct;
+    row.querySelectorAll('[data-exam-step-btn]').forEach(b => b.setAttribute('aria-pressed', String(b === stepBtn)));
+    const saved = examDetail.querySelector('[data-exam-step-saved="' + si + '"]');
+    if (saved) { saved.hidden = false; saved.textContent = correct ? '记下了：第 ' + (si + 1) + ' 步对了。' : '记下了：第 ' + (si + 1) + ' 步错了。'; }
+    const q = exam.qs[exam.idx].q;
+    if (q.steps.every((s, i) => exam.marks[exam.idx].steps[i] !== undefined)) {
+      const allRight = q.steps.every((s, i) => exam.marks[exam.idx].steps[i] === true);
+      exam.marks[exam.idx].correct = allRight;
+      const allSaved = examDetail.querySelector('[data-exam-saved]');
+      if (allSaved) {
+        allSaved.hidden = false;
+        allSaved.textContent = allRight ? '这道题的每一步都对了，记下了：答对了。' : '这道题的每一步都标完了，记下了：答错了。';
+      }
+    }
+    return;
+  }
+  const markBtn = e.target.closest('[data-exam-mark]');
+  if (markBtn) {
+    const correct = markBtn.dataset.examMark === 'right';
+    exam.marks[exam.idx].correct = correct;
+    const saved = examDetail.querySelector('[data-exam-saved]');
+    if (saved) { saved.hidden = false; saved.textContent = correct ? '已记下：这道题答对了。' : '已记下：这道题答错了。'; }
+    return;
+  }
+  const nextBtn = e.target.closest('[data-exam-next]');
+  if (nextBtn) {
+    if (!examIsMarked(exam.idx)) {
+      const rem = examDetail.querySelector('[data-exam-remind]');
+      if (rem) { rem.hidden = false; rem.textContent = '先标一下这道题对错，再往下走。'; }
+      return;
+    }
+    exam.idx++;
+    renderExamQuestion();
+    return;
+  }
+  const submitBtn = e.target.closest('[data-exam-submit]');
+  if (submitBtn) {
+    const unmarked = exam.marks.filter((m, i) => !examIsMarked(i)).length;
+    if (unmarked > 0 && !exam.confirmSubmit) {
+      exam.confirmSubmit = true;
+      submitBtn.textContent = '确认交卷（剩 ' + unmarked + ' 题按答错算）';
+      const rem = examDetail.querySelector('[data-exam-remind]');
+      if (rem) { rem.hidden = false; rem.textContent = '还有 ' + unmarked + ' 道题没标对错，交卷后按答错算。想继续做就点“下一题”，确认交卷就再点一次交卷。'; }
+      return;
+    }
+    submitExam(false);
+    return;
+  }
+});
 /* 错题本（首页面板）：真实错题列表——最近一次答错的知识点，点一条回知识点页重练。
    之前这里只有 2 条占位示例，而且因为它和各年级的今天复习共用 view 'review'，
    点进来还会把上一个知识点页的旧内容留在屏幕上（2026-11-06 真机测出）。
@@ -514,9 +769,13 @@ function renderProgress() {
       '<p class="prog-nums">演示 ' + demosDone + ' / ' + demosInGrade.length + ' · 已练 ' + done + ' / ' + total + ' 条 · 已掌握 ' + mast + ' 条</p>' +
       '<div class="prog-track"><i style="width:' + pct + '%"></i></div></div>';
   }
+  html += '<div class="btn-row"><button class="btn primary" type="button" data-exam-start="1">开始模拟测（5 道题 · 10 分钟）</button></div>';
   card.innerHTML = html;
+  card.querySelectorAll('[data-exam-start]').forEach(b => b.addEventListener('click', () => navGo('exam')));
 }
 if (pointDetail) pointDetail.addEventListener('click', e => {
+  const examStartBtn = e.target.closest('[data-exam-start]');
+  if (examStartBtn) { navGo('exam'); return; }
   const secBtn = e.target.closest('[data-sec]');
   if (secBtn) {
     // 章节导航：跳到那一节的顶部，顶栏吸顶的高度由 .point-sec 的 scroll-margin-top 留出来。
@@ -862,7 +1121,9 @@ const pathDetail = document.getElementById('pathDetail');
 function showPathStep(n) {
   const s = PATH_STEPS[n];
   if (!s || !pathDetail) return;
-  pathDetail.innerHTML = '<h3>第 ' + n + ' 步 · ' + s.title + '</h3><p>' + s.desc + '</p>';
+  pathDetail.innerHTML = '<h3>第 ' + n + ' 步 · ' + s.title + '</h3><p>' + s.desc + '</p>' +
+    (n === 4 ? '<div class="btn-row"><button class="btn primary" type="button" data-exam-start="1">开始模拟测（5 道题 · 10 分钟）</button></div>' : '');
+  pathDetail.querySelectorAll('[data-exam-start]').forEach(b => b.addEventListener('click', () => navGo('exam')));
 }
 
 /* ---------- 逻辑导航（借汉字 App FRONTEND_UI.md §7 的规则，用自己的写法实现）
@@ -1010,6 +1271,7 @@ const NAV_DEFS = {
   review:     { crumbs: ['数学', '错题本'], target: 'review', action: renderWrongBook },
   'today-review': { crumbs: ['数学', '今天复习'], target: 'grades', action: renderReview },
   progress:   { crumbs: ['数学', '我的进度'], target: 'progressCard', action: renderProgress },
+  exam:       { crumbs: ['数学', '模拟测'], target: 'exam', action: renderExamIntro },
 };
 Object.keys(GRADES).forEach(g => {
   NAV_DEFS['grade-' + g] = { crumbs: ['数学', '选年级', g + ' 年级'], target: 'grades', action: () => selectGrade(+g) };
@@ -1061,6 +1323,7 @@ const demoGridEl = document.getElementById('demoGrid');
 const whySec = document.getElementById('why');
 const labSec = document.getElementById('lab');
 const reviewSec = document.getElementById('review');
+const examSec = document.getElementById('exam');
 const progressCardEl = document.getElementById('progressCard');
 const reviewCardEl = document.getElementById('reviewCard');
 const nextStepsEl = document.getElementById('nextSteps');
@@ -1087,6 +1350,7 @@ function viewForKey(key) {
   if (key === 'lab') return 'lab';
   if (key === 'review') return 'review';
   if (key === 'progress') return 'progress';
+  if (key === 'exam') return 'exam';
   return 'home';
 }
 function setHidden(el, hidden) { if (el) el.hidden = hidden; }
@@ -1141,6 +1405,8 @@ function applyView() {
   setHidden(reviewSec, !(isWrongBook || view === 'progress'));
   setHidden(progressCardEl, view !== 'progress');
   setHidden(reviewCardEl, !isWrongBook);
+  // 模拟测：只有进模拟测才显示整个 #exam 区
+  setHidden(examSec, view !== 'exam');
   setHidden(reviewSec.querySelector('h2'), true); // 卡片自带 h3 标题，区标题“进度与错题本”不再出现
   // 维度切换 pills 只在某个维度的详情页出现：维度卡片列表页上，
   // 模式栏的 5 个 pills 和下面 5 张卡片是同一批内容，重复了（2026-11-06 真机审计第 5 条）。
