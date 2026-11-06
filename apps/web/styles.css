@@ -86,6 +86,19 @@ main{min-width:0}
 .pill{display:inline-block;background:#fff7ed;border:1px solid #fed7aa;border-radius:999px;padding:4px 12px;font-size:14px;margin:0 8px 4px 0}
 .pill:last-child{margin-right:0}
 
+/* 知识点内容页：怎么做 / 为什么 / 容易错 / 看图学 / 动手试一试 / 讲回来 / 练一练 */
+.point-detail{scroll-margin-top:150px}
+.point-sec{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;margin-top:14px}
+.point-sec h4{margin:0 0 8px;font-size:17px}
+.point-sec p{margin:6px 0;color:#334155}
+.point-sec.warn{background:#fffbeb;border-color:#fde68a;border-left:5px solid var(--orange)}
+.point-sec.talk{background:#eff6ff;border-color:#bfdbfe}
+.unit-btn{text-align:left;cursor:pointer;font-family:inherit;color:var(--ink);width:100%}
+.unit-btn:hover{border-color:var(--orange);box-shadow:0 6px 16px rgba(30,41,59,.10)}
+.qa{border-top:1px solid var(--line);padding-top:10px;margin-top:10px}
+.qa p{margin:4px 0}
+.qa-a{color:var(--green);font-weight:700}
+
 /* Buttons */
 .btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:10px 20px;border-radius:12px;border:2px solid transparent;font-size:16px;font-weight:700;text-decoration:none;cursor:pointer}
 .btn.primary{background:var(--orange);color:#fff}

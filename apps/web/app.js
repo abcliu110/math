@@ -94,6 +94,20 @@ function selectGrade(g) {
   updateModeUI('grade');
   [...gradePanels.children].forEach((el, i) => el.setAttribute('aria-selected', String(i + 1 === g)));
   const d = GRADES[g];
+  const g3 = (g === 3) ? grade3Data() : null;
+  if (g3) {
+    // 3 年级已有真实内容：按人教版 A 版单元列出，点一个单元进它的知识点。
+    const total = g3.units.reduce((n, u) => n + u.points.length, 0);
+    gradeDetail.innerHTML =
+      '<h3>' + d.title + '</h3><p class="muted">人教版 A 版顺序 · ' + g3.units.length + ' 个单元 · ' + total + ' 个知识点；每条都有怎么做、为什么、容易错、讲回来。</p>' +
+      '<div class="unit-list">' + g3.units.map((u, i) =>
+        '<button class="unit unit-btn" type="button" data-unit="' + i + '"><b>' + esc(u.unit) + '</b><p>' + esc(u.term) + ' · ' + u.points.length + ' 个知识点</p>' +
+        '<span class="pill">内容已完成</span></button>'
+      ).join('') + '</div>';
+    gradeDetail.querySelectorAll('[data-unit]').forEach(btn =>
+      btn.addEventListener('click', () => navGo('unit-3-' + btn.dataset.unit)));
+    return;
+  }
   gradeDetail.innerHTML =
     '<h3>' + d.title + '</h3><p class="muted">每节课走四步：动手试一试 → 说一说 → 练一练 → 测一测。</p>' +
     '<div class="unit-list">' + d.units.map(u =>
@@ -102,6 +116,64 @@ function selectGrade(g) {
     ).join('') + '</div>';
 }
 selectGrade(currentGrade);
+
+/* ---------- 3 年级真实内容（content/grades/grade-3.js 提供 GRADE3_CONTENT） ----------
+   内容与原型逻辑分开：知识点文字只活在 content/ 里，app.js 只负责渲染。
+   层级：3 年级 → 单元 → 知识点，每条知识点一页：怎么做、为什么、容易错、
+   看图学、动手试一试、讲回来、练一练。文件没加载到时，3 年级退回旧的 4 单元占位。 */
+const pointDetail = document.getElementById('pointDetail');
+function grade3Data() { return (typeof GRADE3_CONTENT !== 'undefined' && GRADE3_CONTENT) || null; }
+function findPoint(id) {
+  const g3 = grade3Data();
+  if (!g3) return null;
+  for (let ui = 0; ui < g3.units.length; ui++) {
+    const p = g3.units[ui].points.find(pt => pt.id === id);
+    if (p) return { point: p, unit: g3.units[ui], unitIndex: ui };
+  }
+  return null;
+}
+function renderUnit(ui) {
+  const g3 = grade3Data();
+  if (!g3 || !g3.units[ui]) return;
+  const u = g3.units[ui];
+  pointDetail.innerHTML =
+    '<h3>' + esc(u.unit) + '</h3><p class="muted">' + esc(u.term) + ' · ' + u.points.length + ' 个知识点 · 点一条进内容。</p>' +
+    '<div class="unit-list">' + u.points.map(p =>
+      '<button class="unit unit-btn" type="button" data-point="' + esc(p.id) + '"><b>' + esc(p.id) + ' · ' + esc(p.title) + '</b><p>' + esc(p.subtitle) + '</p>' +
+      '<span class="pill">' + esc(p.method) + '</span></button>'
+    ).join('') + '</div>';
+  pointDetail.querySelectorAll('[data-point]').forEach(btn =>
+    btn.addEventListener('click', () => navGo('point-' + btn.dataset.point)));
+}
+function renderPoint(id) {
+  const f = findPoint(id);
+  if (!f) return;
+  const p = f.point;
+  let html = '<h3>' + esc(p.id) + ' · ' + esc(p.title) + '</h3>' +
+    '<p class="muted">' + esc(f.unit.unit) + '（' + esc(f.unit.term) + '）· 最佳方法：' + esc(p.method) + '</p>' +
+    '<p class="muted">' + esc(p.subtitle) + '</p>' +
+    '<div class="point-sec"><h4>怎么做</h4><p>' + esc(p.how) + '</p></div>' +
+    '<div class="point-sec"><h4>为什么</h4><p>' + esc(p.why) + '</p></div>' +
+    '<div class="point-sec warn"><h4>容易错</h4><p>错法：' + esc(p.wrong) + '</p><p>为什么错：' + esc(p.wrongWhy) + '</p></div>' +
+    '<div class="point-sec"><h4>看图学</h4><p>' + esc(p.visual) + '</p></div>' +
+    '<div class="point-sec"><h4>动手试一试</h4><p>' + esc(p.tryIt) + '</p>' +
+    (p.demo === 'fraction' ? '<div class="btn-row"><button class="btn primary" type="button" data-nav-key="demo-fraction">去玩分数演示</button></div>' : '') + '</div>' +
+    '<div class="point-sec talk"><h4>讲回来</h4><p>“' + esc(p.explainBack) + '”</p></div>' +
+    '<div class="point-sec"><h4>练一练</h4>' + p.practice.map((q, i) =>
+      '<div class="qa"><p>' + (i + 1) + '. ' + esc(q.q) + '</p>' +
+      '<button class="btn ghost small qa-btn" type="button" data-qa="' + i + '">看答案</button>' +
+      '<p class="qa-a" data-qa-a="' + i + '" hidden>答案：' + esc(q.answer) + '（提示：' + esc(q.hint) + '）</p></div>'
+    ).join('') + '</div>';
+  pointDetail.innerHTML = html;
+  pointDetail.querySelectorAll('[data-nav-key]').forEach(el =>
+    el.addEventListener('click', () => navGo(el.dataset.navKey)));
+}
+if (pointDetail) pointDetail.addEventListener('click', e => {
+  const btn = e.target.closest('[data-qa]');
+  if (!btn) return;
+  const ans = pointDetail.querySelector('[data-qa-a="' + btn.dataset.qa + '"]');
+  if (ans) { ans.hidden = !ans.hidden; btn.textContent = ans.hidden ? '看答案' : '收起答案'; }
+});
 
 /* ---------- 维度切换：同一批 1–6 年级内容，按 5 个维度重分组 ----------
    映射为本原型的整理，待与人教版教材逐册核对（待核实）。
@@ -371,6 +443,21 @@ Object.keys(GRADES).forEach(g => {
 DIMENSIONS.forEach(d => {
   NAV_DEFS['dim-' + d.id] = { crumbs: ['数学', '换维度', d.name], target: 'dimensions', action: () => { renderDimension(d.id); updateModeUI('dimension'); } };
 });
+/* 3 年级内容导航：单元与知识点各一级（面包屑：数学 › 选年级 › 3 年级 › 单元 › 知识点）。
+   内容文件没加载到时不注册，3 年级保持旧的 4 单元占位。 */
+(function registerGrade3Nav() {
+  const g3 = grade3Data();
+  if (!g3) return;
+  g3.units.forEach((u, ui) => {
+    NAV_DEFS['unit-3-' + ui] = { crumbs: ['数学', '选年级', '3 年级', u.unit], target: 'grades', action: () => renderUnit(ui) };
+    u.points.forEach(p => {
+      NAV_DEFS['point-' + p.id] = { crumbs: ['数学', '选年级', '3 年级', u.unit, p.title], target: 'grades', action: () => renderPoint(p.id) };
+    });
+  });
+  // 3 年级面板改显示真实进度：16 个知识点已完成。
+  const panel3 = document.querySelector('[data-nav-key="grade-3"] .panel-tx');
+  if (panel3) panel3.textContent = g3.units.reduce((n, u) => n + u.points.length, 0) + ' 个知识点 · 已完成';
+})();
 
 const navBack = document.getElementById('navBack');
 const crumbTitle = document.getElementById('crumbTitle');
@@ -403,6 +490,8 @@ function viewForKey(key) {
   if (key === 'home') return 'home';
   if (key === 'grades') return 'grades';
   if (key.startsWith('grade-')) return 'grade-detail';
+  if (key.startsWith('unit-')) return 'unit-detail';
+  if (key.startsWith('point-')) return 'point-detail';
   if (key === 'dimensions') return 'dimensions';
   if (key.startsWith('dim-')) return 'dim-detail';
   if (key === 'path') return 'path';
@@ -422,12 +511,14 @@ function applyView() {
   // 首页：只留介绍和首页面板
   setHidden(heroEl, view !== 'home');
   setHidden(panelsSec, view !== 'home');
-  // 选年级：列表只留 9 块年级面板；叶子只留该年级详情
-  setHidden(gradesSec, !(view === 'grades' || view === 'grade-detail'));
+  // 选年级：列表只留 9 块年级面板；叶子只留该年级详情；3 年级再往下是单元和知识点
+  const inGrades = view === 'grades' || view === 'grade-detail' || view === 'unit-detail' || view === 'point-detail';
+  setHidden(gradesSec, !inGrades);
   setHidden(gradePanels, view !== 'grades');
   setHidden(gradeDetail, view !== 'grade-detail');
-  setHidden(gradesSec.querySelector('h2'), view === 'grade-detail');
-  setHidden(gradesSec.querySelector('.section-sub'), view === 'grade-detail');
+  setHidden(pointDetail, !(view === 'unit-detail' || view === 'point-detail'));
+  setHidden(gradesSec.querySelector('h2'), view === 'grade-detail' || view === 'unit-detail' || view === 'point-detail');
+  setHidden(gradesSec.querySelector('.section-sub'), view === 'grade-detail' || view === 'unit-detail' || view === 'point-detail');
   // 换维度：列表只留 5 块维度面板；叶子只留该维度的分组内容
   setHidden(dimsSec, !(view === 'dimensions' || view === 'dim-detail'));
   setHidden(dimPanels, view !== 'dimensions');
@@ -487,6 +578,11 @@ function renderNav() {
 const NAV_PARENT = { 'grade-': 'grades', 'dim-': 'dimensions', 'path-step-': 'path', 'demo-': 'demos' };
 function parentOf(key) {
   if (key === 'why') return 'demos';
+  if (key.startsWith('unit-')) return 'grade-3';
+  if (key.startsWith('point-')) {
+    const f = findPoint(key.slice('point-'.length));
+    return f ? 'unit-3-' + f.unitIndex : 'grade-3';
+  }
   for (const p of ['grade-', 'dim-', 'path-step-', 'demo-']) if (key.startsWith(p)) return NAV_PARENT[p];
   return null;
 }
@@ -502,10 +598,12 @@ function navGo(key) {
     navStack[navStack.length - 1] = { key, crumbs: def.crumbs, target: def.target };
     enterNavEntry(navStack[navStack.length - 1]);
   }
-  // 同一族内切换（维度换维度、年级换年级）替换栈顶，不层层入栈：
+  // 同一族内切换（维度换维度、年级换年级、单元换单元、知识点换知识点）替换栈顶，不层层入栈：
   // 面包屑始终是「数学 › 换维度 › 某个维度」，不会越点越长。
   else if ((key.startsWith('dim-') && top.key.startsWith('dim-')) ||
-           (key.startsWith('grade-') && top.key.startsWith('grade-'))) {
+           (key.startsWith('grade-') && top.key.startsWith('grade-')) ||
+           (key.startsWith('unit-') && top.key.startsWith('unit-')) ||
+           (key.startsWith('point-') && top.key.startsWith('point-'))) {
     navStack[navStack.length - 1] = { key, crumbs: def.crumbs, target: def.target };
     enterNavEntry(navStack[navStack.length - 1]);
   }
