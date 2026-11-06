@@ -34,6 +34,8 @@ function makeEl(tag) {
       contains(c) { return this._s.has(c); } },
     setAttribute(k, v) { this['attr:' + k] = String(v); },
     getAttribute(k) { return this['attr:' + k]; },
+    removeAttribute(k) { delete this['attr:' + k]; },
+    hasAttribute(k) { return this['attr:' + k] !== undefined; },
     getContext() {
       // canvas 2d stub: function demo draws on it at load.
       return { clearRect() {}, beginPath() {}, moveTo() {}, lineTo() {}, stroke() {},
@@ -245,12 +247,18 @@ sandbox.navBackFn();
 check('back from ten-frame demo returns to point page', pointDetail.innerHTML.includes('挑战 · 奥数'));
 
 // ---------- 6. challenge mode (visible error feedback) ----------
+// index.html puts a `hidden` attribute on the SVG target dot; the stub's plain
+// `.hidden` property cannot represent it (SVGElement has no `hidden` IDL — see
+// the 2026-11-06 real-browser defect), so seed the attribute here to mirror
+// the real initial DOM. Checks below must assert on the ATTRIBUTE, not the
+// property, or the dot bug stays invisible to this test.
+byId.lineTargetDot.setAttribute('hidden', '');
 // fraction: target 3/4, wrong build shows the numeric gap + marks slices
 navGo('demo-fraction');
 click(byId.fracChallengeBtn);
 check('frac challenge: target shown', byId.fracChallengeTarget.textContent.includes('3/4'));
 check('frac challenge: empty build reports missing', byId.fracChallengeMsg.textContent.includes('少了 3/4'));
-check('frac challenge: target dot shown on number line', byId.lineTargetDot.hidden === false);
+check('frac challenge: target dot shown on number line', byId.lineTargetDot.getAttribute('hidden') === undefined);
 const numRange = byId.numRange; numRange.value = '3';
 (numRange._handlers.input || []).forEach(f => f({ target: numRange }));
 check('frac challenge: 3/4 is correct', byId.fracChallengeMsg.textContent.includes('拼对了'));
@@ -260,8 +268,27 @@ check('frac challenge: 2/4 reports missing + marks missing slice green', byId.fr
 numRange.value = '4';
 (numRange._handlers.input || []).forEach(f => f({ target: numRange }));
 check('frac challenge: 4/4 reports extra + marks extra slice red', byId.fracChallengeMsg.textContent.includes('多了') && byId.pieSvg.innerHTML.includes('#ef4444'));
+// Cross-denominator marking (the 2026-11-06 real-browser defect): the pie must
+// mark the difference by VALUE, not by denominator equality.
+click(byId.denomSeg.children[4]); // denominator 8
+numRange.value = '5';
+(numRange._handlers.input || []).forEach(f => f({ target: numRange }));
+check('frac challenge: 5/8 vs 3/4 reports missing 1/8', byId.fracChallengeMsg.textContent.includes('少了 1/8'));
+check('frac challenge: 5/8 vs 3/4 marks missing slice green', byId.pieSvg.innerHTML.includes('#bbf7d0'));
+check('frac challenge: target dot sits at 3/4 on the number line', byId.lineTargetDot.getAttribute('hidden') === undefined && byId.lineTargetDot.getAttribute('cx') === '230');
+click(byId.fracChallengeNext); // target 1/2
+numRange.value = '5';
+(numRange._handlers.input || []).forEach(f => f({ target: numRange }));
+check('frac challenge: 5/8 vs 1/2 reports extra 1/8', byId.fracChallengeMsg.textContent.includes('多了 1/8'));
+check('frac challenge: 5/8 vs 1/2 marks extra slice red', byId.pieSvg.innerHTML.includes('#ef4444'));
+click(byId.fracChallengeBtn); // exit, restores denom 4 / numer 3
+click(byId.fracChallengeBtn); // re-enter, target 3/4 again
+click(byId.denomSeg.children[4]); // denominator 8
+numRange.value = '6';
+(numRange._handlers.input || []).forEach(f => f({ target: numRange }));
+check('frac challenge: 6/8 = 3/4 counts as correct, no error marking', byId.fracChallengeMsg.textContent.includes('拼对了') && !byId.pieSvg.innerHTML.includes('#ef4444') && !byId.pieSvg.innerHTML.includes('#bbf7d0'));
 click(byId.fracChallengeBtn);
-check('frac challenge: exit hides box + target dot', byId.fracChallengeBox.hidden === true && byId.lineTargetDot.hidden === true);
+check('frac challenge: exit hides box + target dot', byId.fracChallengeBox.hidden === true && byId.lineTargetDot.getAttribute('hidden') === '');
 
 // ten-frame: target total 13, free placement, extra cell marked red
 sandbox.tfSetProblem('add', 0);
@@ -272,7 +299,12 @@ check('tf challenge: starts empty', byId.tfEq.textContent === '0 + 0 = 0');
 for (let i = 0; i < 9; i++) click(byId.tfA.children[i]);
 for (let i = 0; i < 5; i++) click(byId.tfB.children[i]);
 check('tf challenge: 9+5=14 reports one extra', byId.tfNote.textContent.includes('多了 1 个'));
-check('tf challenge: extra cell marked red', byId.tfB.children[4].classList.contains('extra'));
+check('tf challenge: extra cell gets the extra class', byId.tfB.children[4].classList.contains('extra'));
+// The class above IS applied by tfRender, but in a real browser the red never
+// showed: `.tf-cell.filled.b` (0,3,0) outranks `.tf-cell.extra` (0,2,0), so the
+// blue fill won on frame-B cells. Assert the stylesheet has a rule that wins.
+const cssText = fs.readFileSync(root + '/apps/web/styles.css', 'utf8');
+check('tf challenge: extra rule beats filled-blue in the stylesheet', cssText.includes('.tf-cell.filled.b.extra'));
 click(byId.tfB.children[4]);
 check('tf challenge: removing the extra completes it', byId.tfNote.textContent.includes('拼对了'));
 click(byId.tfChallengeBtn);

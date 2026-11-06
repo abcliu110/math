@@ -165,7 +165,11 @@ main{min-width:0}
 .challenge-msg{margin:6px 0 0;color:#334155}
 .challenge-msg.ok{color:var(--green);font-weight:700}
 .demo-card.challenge-on #tfModeSeg,.demo-card.challenge-on #tfProbSeg{opacity:.45;pointer-events:none}
-.tf-cell.extra{background:#fecaca;border-color:#dc2626}
+/* 注意：.tf-cell.filled.b 是 0,3,0，比 .tf-cell.extra (0,2,0) 高，B 框多出来的
+   圆点会被蓝色盖掉、红框出不来；所以多出来的格子用更高优先级的规则 + outline
+   （outline 不跟背景/边框抢，红框一定看得见）。 */
+.tf-cell.extra{background:#fecaca;border-color:#dc2626;outline:3px solid #dc2626;outline-offset:2px}
+.tf-cell.filled.extra,.tf-cell.filled.b.extra{background:#fecaca;border-color:#dc2626}
 
 .lab-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
 

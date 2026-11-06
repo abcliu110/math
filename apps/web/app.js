@@ -930,9 +930,12 @@ function renderFraction() {
     const a0 = i * 360 / denom, a1 = (i + 1) * 360 / denom;
     const filled = i < numer;
     let fill = filled ? '#ff8a3d' : '#fff3e6', stroke = '#c2410c', dash = '';
-    if (fracChallenge && denom === t.d) {
-      if (filled && i >= t.n) fill = '#ef4444'; // 多出来的块：变红
-      if (!filled && i < t.n) { fill = '#bbf7d0'; stroke = '#15803d'; dash = ' stroke-dasharray="5 4"'; } // 还差的块：绿框
+    if (fracChallenge && numer * t.d !== t.n * denom) {
+      // 按值比较，不看分母是否相同：目标换算成现在的份数（可能不是整数），
+      // 超出目标的已填块变红、目标以内还没填的块描绿框；等值分数不标。
+      const targetSlices = t.n * denom / t.d;
+      if (filled && i + 1 > targetSlices) fill = '#ef4444'; // 多出来的块：变红
+      if (!filled && i < targetSlices) { fill = '#bbf7d0'; stroke = '#15803d'; dash = ' stroke-dasharray="5 4"'; } // 还差的块：绿框
     }
     svg += '<path d="' + sector(100, 100, 88, a0, a1) + '" fill="' + fill +
       '" stroke="' + stroke + '" stroke-width="2"' + dash + ' data-slice="' + i + '" style="cursor:pointer"/>';
@@ -959,7 +962,11 @@ function renderFraction() {
   lineDot.setAttribute('cx', 20 + dec * 280);
   // 挑战模式：数轴上再放一个绿点标目标位置；拼对了消息变绿。
   if (lineTargetDot) {
-    lineTargetDot.hidden = !fracChallenge;
+    // 注意：这是 SVG <circle>，没有 `hidden` 的 IDL 属性——写 `.hidden = false`
+    // 只会挂一个 JS 属性，index.html 里的 hidden 属性还在，CSS 的 [hidden] 规则
+    // 会一直把它藏起来。所以必须直接改 hidden 属性。
+    if (fracChallenge) lineTargetDot.removeAttribute('hidden');
+    else lineTargetDot.setAttribute('hidden', '');
     if (fracChallenge) lineTargetDot.setAttribute('cx', 20 + (FRAC_CH[fracChIdx].n / FRAC_CH[fracChIdx].d) * 280);
   }
   const fracMsgEl = document.getElementById('fracChallengeMsg');
