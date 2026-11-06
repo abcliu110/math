@@ -51,7 +51,7 @@ code{background:#eef2ff;padding:2px 6px;border-radius:6px}
 [hidden]{display:none !important}
 body[data-view] #grades, body[data-view] #dimensions, body[data-view] #path,
 body[data-view] #demos, body[data-view] #why, body[data-view] #review, body[data-view] #lab,
-body[data-view] #exam,
+body[data-view] #exam, body[data-view] #inquiry,
 body[data-view] .next-steps, body[data-view] footer.footer{display:none}
 body[data-view="grades"] #grades, body[data-view="grade-detail"] #grades,
 body[data-view="unit-detail"] #grades, body[data-view="point-detail"] #grades,
@@ -104,8 +104,8 @@ body[data-view="demo-sector"] #demos, body[data-view="demo-coin"] #demos, body[d
 body[data-view="demo-hyperbola"] #demos, body[data-view="demo-similar"] #demos, body[data-view="demo-shadow"] #demos,
 body[data-view="demo-trig"] #demos, body[data-view="demo-slope"] #demos, body[data-view="demo-project"] #demos,
 body[data-view="why"] #why, body[data-view="review"] #review,
-body[data-view="progress"] #review, body[data-view="lab"] #lab,
-body[data-view="exam"] #exam{display:block}
+body[data-view="progress"] #review, body[data-view="parent"] #review, body[data-view="lab"] #lab,
+body[data-view="exam"] #exam, body[data-view="inquiry"] #inquiry{display:block}
 .exam-timer{font-size:20px;font-weight:700;color:#c2410c;margin:8px 0}
 .path-detail{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-top:16px}
 .path-detail h3{margin:0 0 8px}
@@ -268,7 +268,7 @@ main{min-width:0}
 .review-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 /* 错题本 / 我的进度是单卡片页：以前 2 列网格里只剩一张卡，半个屏幕是白的
    （2026-11-06 真机审计第 2 条）；现在这两个视图里网格改成 1 列满宽。 */
-body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid{grid-template-columns:minmax(0,1fr)}
+body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,body[data-view="parent"] .review-grid{grid-template-columns:minmax(0,1fr)}
 /* 我的进度：每年级一行，带标签的进度条 + 真实数字（演示玩过几个 / 练过几条）。
    条的宽度 = 练过知识点 / 该年级全部知识点；数字另外列演示数。 */
 .prog-row{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:10px;background:#f8fafc}
@@ -283,6 +283,11 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid{gr
 .wrong-list li{border:1px solid var(--line);border-radius:10px;padding:10px;background:#f8fafc}
 .tag{background:#fef3c7;border-radius:999px;padding:2px 8px;font-size:12px;margin-right:6px}
 .wrong-list small{display:block;color:var(--muted)}
+
+/* 探究作业：文字输入框和下拉框（只在探究作业区用） */
+.inq-textarea,.inq-input,.inq-select{width:100%;box-sizing:border-box;font:inherit;font-size:16px;padding:10px;border:1px solid #cbd5e1;border-radius:8px;margin:6px 0;background:#fff;color:var(--ink)}
+.inq-textarea{min-height:96px;resize:vertical}
+.inq-select{width:auto;min-width:220px}
 
 /* Next steps / footer */
 .next-steps ol{font-size:17px}

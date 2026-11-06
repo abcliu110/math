@@ -2533,5 +2533,91 @@ check('J divplace: grade-3.js 3.10 why matches the default problem (no zero sent
 check('J divplace: grade-3.js 3.10 wrongWhy still explains the 408÷4 trap',
   g3src.includes('0是占位符：102是1个百、0个十、2个一'));
 
+// ---------- K. 家长端 + 探究作业（Phase 3） ----------
+// 先造一份有时间的练习记录：3.7 上次答错（本周内），1.9 答对且有把握（2 天前），
+// 3.12 答对但没把握（1 天前），1.1 是 10 天前的旧记录（不在本周内）。
+const now0 = Date.now();
+lsData['math-review-v1'] = JSON.stringify({
+  '3.7': { last: now0, correct: false, confident: false, streak: 0, due: now0 },
+  '1.9': { last: now0 - 2 * 86400000, correct: true, confident: true, streak: 1, due: now0 + 86400000 },
+  '3.12': { last: now0 - 1 * 86400000, correct: true, confident: false, streak: 0, due: now0 },
+  '1.1': { last: now0 - 10 * 86400000, correct: true, confident: true, streak: 2, due: now0 + 7 * 86400000 },
+});
+lsData['math-tried-demos-v1'] = JSON.stringify(['tenframe', 'fraction']);
+check("viewForKey('parent') is parent", sandbox.viewForKey('parent') === 'parent');
+check("viewForKey('inquiry') is inquiry", sandbox.viewForKey('inquiry') === 'inquiry');
+navGo('parent');
+check('K parent view: review section + parent card visible, progress/review cards hidden',
+  byId.review.hidden === false && byId.parentCard.hidden === false &&
+  byId.progressCard.hidden === true && byId.reviewCard.hidden === true);
+check('K parent: breadcrumb shows 家长看这里 under 我的进度',
+  byId.crumbTitle.innerHTML.includes('家长看这里') && byId.crumbTitle.innerHTML.includes('我的进度'));
+check('K parent: week summary counts 3 practiced this week (old 1.1 excluded)',
+  byId.parentCard.innerHTML.includes('这 7 天一共练了 3 条知识点'));
+check('K parent: week summary groups by grade/unit',
+  byId.parentCard.innerHTML.includes('3 年级') && byId.parentCard.innerHTML.includes('1 年级'));
+check('K parent: demos counted from stored tried list, honestly not weekly',
+  byId.parentCard.innerHTML.includes('演示一共玩过 2 / 124 个') && byId.parentCard.innerHTML.includes('没法按周分开算'));
+check('K parent: difficulty lists the wrong point and the low-confidence point',
+  byId.parentCard.innerHTML.includes('3.7') && byId.parentCard.innerHTML.includes('上次答错了') &&
+  byId.parentCard.innerHTML.includes('3.12') && byId.parentCard.innerHTML.includes('没把握'));
+check('K parent: wrong questions grouped by the point’s own wrong text',
+  byId.parentCard.innerHTML.includes('错因：1/4 比 1/3 大'));
+navGo('inquiry');
+check('K inquiry view: inquiry section visible, review hidden',
+  byId.inquiry.hidden === false && byId.review.hidden === true);
+check('K inquiry: 6 tasks listed, low/mid/high bands + teach-a-lesson card',
+  (byId.inquiryDetail.innerHTML.match(/data-inq-submit="/g) || []).length === 6 &&
+  byId.inquiryDetail.innerHTML.includes('8+6') && byId.inquiryDetail.innerHTML.includes('23×14') &&
+  byId.inquiryDetail.innerHTML.includes('反比例') && byId.inquiryDetail.innerHTML.includes('小老师讲题'));
+function clickInq(el) { (byId.inquiryDetail._handlers.click || []).forEach(f => f({ target: el })); }
+const inqTa = byId.inquiryDetail.querySelector('[data-inq-text="inq-tenframe"]');
+inqTa.value = '第一种：给 8 凑 10，6 拆成 2 和 4；第二种：给 6 凑 10，8 拆成 4 和 4；第三种：6+6=12，再加 2。';
+const inqSel = byId.inquiryDetail.querySelector('[data-inq-demo="inq-tenframe"]');
+inqSel.value = 'tenframe';
+const inqBtn = makeEl('button'); inqBtn.dataset.inqSubmit = 'inq-tenframe';
+clickInq(inqBtn);
+const inqSaved = JSON.parse(lsData['math-inquiry-v1'] || '[]');
+check('K inquiry: submit saves process + demo to math-inquiry-v1',
+  inqSaved.length === 1 && inqSaved[0].taskId === 'inq-tenframe' && inqSaved[0].demo === 'tenframe' &&
+  inqSaved[0].text.includes('给 8 凑 10'));
+check('K inquiry: submitted work shows in my list',
+  byId.inquiryDetail.innerHTML.includes('给 8 凑 10'));
+const teachQ = byId.inquiryDetail.querySelector('[data-teach-q]');
+teachQ.value = '23×14 怎么算';
+const teachTa = byId.inquiryDetail.querySelector('[data-teach-text]');
+teachTa.value = '第一步把 14 拆成 10 和 4；第二步 23×10=230；第三步 23×4=92；最后 230+92=322。';
+const teachBtn = makeEl('button'); teachBtn.dataset.teachSubmit = '1';
+clickInq(teachBtn);
+const inqSaved2 = JSON.parse(lsData['math-inquiry-v1'] || '[]');
+check('K inquiry: teach-a-lesson saves with kind teach',
+  inqSaved2.length === 2 && inqSaved2[1].kind === 'teach' && inqSaved2[1].question === '23×14 怎么算');
+const inqTa2 = byId.inquiryDetail.querySelector('[data-inq-text="inq-array"]');
+inqTa2.value = '';
+const inqBtn2 = makeEl('button'); inqBtn2.dataset.inqSubmit = 'inq-array';
+clickInq(inqBtn2);
+check('K inquiry: empty process is not saved, reminder shown',
+  JSON.parse(lsData['math-inquiry-v1'] || '[]').length === 2 &&
+  byId.inquiryDetail.innerHTML.includes('先写几句过程再交'));
+navGo('parent');
+check('K parent: inquiry submissions visible to parents',
+  byId.parentCard.innerHTML.includes('给 8 凑 10') && byId.parentCard.innerHTML.includes('小老师讲题') &&
+  byId.parentCard.innerHTML.includes('23×14 怎么算'));
+navGo('inquiry');
+const dlBtn = makeEl('button'); dlBtn.dataset.inqDemoLink = 'demo-tenframe';
+clickInq(dlBtn);
+check('K inquiry: demo tool button opens the demo',
+  documentStub.body.dataset.view === 'demo-tenframe');
+sandbox.navBackFn();
+check('K inquiry: back from demo returns to inquiry',
+  byId.inquiryDetail.innerHTML.includes('探究作业'));
+delete lsData['math-review-v1'];
+delete lsData['math-tried-demos-v1'];
+delete lsData['math-inquiry-v1'];
+navGo('parent');
+check('K parent: empty data says so honestly, no invented numbers',
+  byId.parentCard.innerHTML.includes('还没有记录，先去练一练') &&
+  !byId.parentCard.innerHTML.includes('这 7 天一共练了'));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

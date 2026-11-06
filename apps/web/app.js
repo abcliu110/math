@@ -199,6 +199,7 @@ function selectGrade(g) {
    看图学、动手试一试、讲回来、练一练（由浅入深：基础 → 提高 → 奥数挑战）。文件没加载到时，该年级退回旧的占位。 */
 const pointDetail = document.getElementById('pointDetail');
 const examDetail = document.getElementById('examDetail');
+const inquiryDetail = document.getElementById('inquiryDetail');
 // 每个年级文件都是顶层 const；typeof 守卫让没加载到的年级安全地返回 null。
 // map 建在函数里（不在顶层建 const）：加载时 selectGrade() 在它之前就跑，
 // 顶层 const 会撞上暂时性死区。
@@ -769,10 +770,228 @@ function renderProgress() {
       '<p class="prog-nums">演示 ' + demosDone + ' / ' + demosInGrade.length + ' · 已练 ' + done + ' / ' + total + ' 条 · 已掌握 ' + mast + ' 条</p>' +
       '<div class="prog-track"><i style="width:' + pct + '%"></i></div></div>';
   }
-  html += '<div class="btn-row"><button class="btn primary" type="button" data-exam-start="1">开始模拟测（5 道题 · 10 分钟）</button></div>';
+  html += '<div class="btn-row"><button class="btn primary" type="button" data-exam-start="1">开始模拟测（5 道题 · 10 分钟）</button>' +
+    '<button class="btn ghost" type="button" data-parent-link="1">家长看这里：这周练了什么、卡在哪</button></div>';
   card.innerHTML = html;
   card.querySelectorAll('[data-exam-start]').forEach(b => b.addEventListener('click', () => navGo('exam')));
+  card.querySelectorAll('[data-parent-link]').forEach(b => b.addEventListener('click', () => navGo('parent')));
 }
+
+/* ---------- 家长端 + 探究作业（Phase 3，本地-only，不登录、不联网）
+   家长端只读已经存下来的数据：math-review-v1（练题记录）和
+   math-tried-demos-v1（玩过的演示），外加探究作业自己的 math-inquiry-v1。
+   不新建别的存储键，不改 reviewStore 的结构；每次渲染都从存储里现读现算，
+   展示的数字全部来自真实记录。
+   探究作业交的是过程（文字说明 + 用了哪个演示），小老师讲题只写字、不录音：
+   浏览器录音存 localStorage 不可靠、体积也大，所以如实只做文字版。 */
+const INQUIRY_KEY = 'math-inquiry-v1';
+const WEEK_MS = 7 * 86400000;
+function fmtDate(ts) {
+  const d = new Date(ts);
+  return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+}
+/* 家长端每次都从存储现读，不用内存里的 reviewStore / tried：
+   这样渲染出来的数字一定和存下来的记录一致。 */
+function loadStoredReview() {
+  try { return JSON.parse(lsGet(REVIEW_KEY) || '{}') || {}; } catch (e) { return {}; }
+}
+function loadTriedKeys() {
+  try { const a = JSON.parse(lsGet('math-tried-demos-v1') || '[]'); return Array.isArray(a) ? a : []; }
+  catch (e) { return []; }
+}
+function loadInquiry() {
+  try { const a = JSON.parse(lsGet(INQUIRY_KEY) || '[]'); return Array.isArray(a) ? a : []; }
+  catch (e) { return []; }
+}
+function saveInquiry(list) { lsSet(INQUIRY_KEY, JSON.stringify(list)); }
+function demoName(key) {
+  const def = NAV_DEFS['demo-' + key];
+  return def ? def.crumbs[def.crumbs.length - 1] : key;
+}
+function taskTitle(taskId) {
+  const t = INQUIRY_TASKS.find(x => x.id === taskId);
+  return t ? t.title : '探究作业';
+}
+function inquiryListHtml(list, emptyText) {
+  if (!list.length) return '<p class="muted">' + esc(emptyText) + '</p>';
+  return '<ul class="wrong-list">' + list.slice().reverse().map(e => {
+    const kind = e.kind === 'teach' ? '小老师讲题' : '探究作业';
+    const title = e.kind === 'teach' ? (e.question || '没写题目') : taskTitle(e.taskId);
+    const demo = e.demo ? '用了演示：' + demoName(e.demo) : '没用演示';
+    return '<li><b>' + esc(kind) + ' · ' + esc(title) + '</b><small>' + fmtDate(e.ts) + ' · ' + esc(demo) + '</small><p>' + esc(e.text || '') + '</p></li>';
+  }).join('') + '</ul>';
+}
+function renderParent() {
+  const card = document.getElementById('parentCard');
+  if (!card) return;
+  const store = loadStoredReview();
+  const ids = Object.keys(store);
+  const triedKeys = loadTriedKeys();
+  const inq = loadInquiry();
+  let html = '<h3>家长看这里</h3><p class="muted">只看这台设备上已经存下来的练习记录，不登录、不上传。下面所有数字都是从记录里数出来的。</p>';
+  if (!ids.length && !triedKeys.length && !inq.length) {
+    html += '<div class="point-sec"><p>还没有记录，先去练一练。练过题、玩过演示、交过探究作业，这里才会有内容。</p></div>' +
+      '<div class="btn-row"><button class="btn primary" type="button" data-parent-grades="1">选一个年级开始</button></div>';
+    card.innerHTML = html;
+    card.querySelectorAll('[data-parent-grades]').forEach(b => b.addEventListener('click', () => navGo('grades')));
+    return;
+  }
+  // ① 本周小结：近 7 天练了多少条、哪些年级/单元有进展；演示只记总数，不记哪天玩的，如实说明。
+  const now = Date.now();
+  const weekIds = ids.filter(id => store[id] && typeof store[id].last === 'number' && store[id].last >= now - WEEK_MS);
+  const byGrade = {};
+  let unknown = 0;
+  weekIds.forEach(id => {
+    const f = findPoint(id);
+    if (!f) { unknown++; return; }
+    const k = f.grade + ' 年级 · ' + f.unit.unit;
+    byGrade[k] = (byGrade[k] || 0) + 1;
+  });
+  html += '<div class="point-sec"><h4>本周小结（近 7 天）</h4>';
+  if (!weekIds.length) {
+    html += '<p>这 7 天里没有练题记录。一共练过 ' + ids.length + ' 条，都是 7 天以前的。</p>';
+  } else {
+    html += '<p>这 7 天一共练了 ' + weekIds.length + ' 条知识点。</p>';
+    if (Object.keys(byGrade).length) {
+      html += '<ul>' + Object.keys(byGrade).map(k => '<li>' + esc(k) + '：练了 ' + byGrade[k] + ' 条</li>').join('') + '</ul>';
+    }
+    if (unknown) html += '<p>还有 ' + unknown + ' 条在内容里找不到对应的知识点，没算进上面。</p>';
+  }
+  html += '<p>演示一共玩过 ' + triedKeys.length + ' / ' + ALL_DEMOS.length + ' 个。演示只记总数、不记哪天玩的，所以这一项没法按周分开算。</p></div>';
+  // ② 困难提醒：上次答错的 + 答对了但没把握的，各自写清楚下一步练什么。
+  const wrongIds = ids.filter(id => store[id] && store[id].correct === false);
+  const lowConfIds = ids.filter(id => store[id] && store[id].correct === true && store[id].confident === false);
+  html += '<div class="point-sec"><h4>困难提醒：卡在哪</h4>';
+  if (!wrongIds.length && !lowConfIds.length) {
+    html += '<p>没有正在卡住的知识点：最近一次都答对了，而且有把握。</p>';
+  } else {
+    html += '<div class="unit-list">';
+    wrongIds.forEach(id => {
+      const f = findPoint(id);
+      const title = f ? f.point.title : id;
+      const wrong = f ? '容易错：' + f.point.wrong + '——' + f.point.wrongWhy : '';
+      html += '<button class="unit unit-btn" type="button" data-point="' + esc(id) + '"><b>' + esc(id) + ' · ' + esc(title) + '</b><p>上次答错了。' + esc(wrong) + '下一步：点这里回去重练这条，明天复习里也会再出现。</p><span class="pill">去练这条</span></button>';
+    });
+    lowConfIds.forEach(id => {
+      const f = findPoint(id);
+      const title = f ? f.point.title : id;
+      html += '<button class="unit unit-btn" type="button" data-point="' + esc(id) + '"><b>' + esc(id) + ' · ' + esc(title) + '</b><p>答对了，但答之前没把握。下一步：明天再练一次，练到有把握为止。</p><span class="pill">去练这条</span></button>';
+    });
+    html += '</div>';
+  }
+  html += '</div>';
+  // ③ 错题按错因分组：错因就是各知识点内容里已有的 wrong 字段原文，不新编标签。
+  html += '<div class="point-sec"><h4>错题按错因分</h4>';
+  if (!wrongIds.length) {
+    html += '<p>现在没有错题。</p>';
+  } else {
+    const groups = {};
+    wrongIds.forEach(id => {
+      const f = findPoint(id);
+      const key = f ? f.point.wrong : id;
+      (groups[key] = groups[key] || []).push(id);
+    });
+    Object.keys(groups).forEach(wrongText => {
+      html += '<p><b>错因：' + esc(wrongText) + '</b></p><ul class="wrong-list">' + groups[wrongText].map(id => {
+        const f = findPoint(id);
+        const title = f ? f.point.title : id;
+        const why = f ? f.point.wrongWhy : '';
+        return '<li><button class="unit unit-btn" type="button" data-point="' + esc(id) + '"><b>' + esc(id) + ' · ' + esc(title) + '</b><small>' + esc(why) + '</small></button></li>';
+      }).join('') + '</ul>';
+    });
+  }
+  html += '</div>';
+  // ④ 孩子交的探究作业。
+  html += '<div class="point-sec"><h4>孩子交的探究作业</h4>' + inquiryListHtml(inq, '还没有交过探究作业。') + '</div>';
+  card.innerHTML = html;
+  card.querySelectorAll('[data-point]').forEach(btn => btn.addEventListener('click', () => navGo('point-' + btn.dataset.point)));
+}
+
+/* 探究任务：6 个，覆盖低中高年级，每个都挂在一个真实存在的知识点和演示上。
+   数字都手算过：8+6=14（三种凑十法）；23×14=322（200+80+30+12）；
+   1/2+1/3=5/6（先都切成 1/6）；3²+4²=9+16=25=5²。任务文字里不直接给答案。 */
+const INQUIRY_TASKS = [
+  { id: 'inq-tenframe', band: '1–2 年级', title: '用十格阵拼出 8+6 的三种方法',
+    task: '8+6 是多少？别直接写答案：先去十格阵里摆一摆，找出三种不同的凑十办法，再写下来你每种办法是怎么凑的。',
+    pointId: '1.9', demo: 'tenframe' },
+  { id: 'inq-array', band: '2–3 年级', title: '3 行 4 列的点阵，转个方向还是 12 个吗？',
+    task: '在点阵演示里摆一个 3 行 4 列的点阵，数一数有几个点；再把它转个方向，变成 4 行 3 列，再数一数。写下来：两次数出来一样吗？你觉得为什么会这样？',
+    pointId: '2.5', demo: 'array' },
+  { id: 'inq-fourgrid', band: '3–4 年级', title: '用面积模型算 23×14，并把图画出来',
+    task: '23×14 是多少？在四格面积模型里把 23×14 的长方形切成四块，每块的面积是多少、四块加起来是多少，写下来。也可以在纸上把这个长方形画出来，再把过程写在这里。',
+    pointId: '3.11', demo: 'fourgrid' },
+  { id: 'inq-fracadd', band: '5 年级', title: '1/2 + 1/3：先拼一拼，再说为什么不能直接加',
+    task: '先在分数条上拼一拼：1/2 和 1/3 各是几份？拼在一起是多少？再写下来：为什么不能把分子加分子、分母加分母？要先做什么，才能加？',
+    pointId: '5.11', demo: 'fracadd' },
+  { id: 'inq-hyperbola', band: '9 年级', title: '找一个生活中的反比例例子，并说明为什么',
+    task: '找一个你身边的例子：两个量，一个变大、另一个变小，而且它们的乘积不变。写下来你找的是什么、两个量分别是多少、乘积是多少，再说说为什么它是反比例、不是别的。',
+    pointId: '9.11', demo: 'hyperbola' },
+  { id: 'inq-pythag', band: '8 年级', title: '拼出 3² + 4² = 5²，再说说为什么',
+    task: '在勾股定理面积拼图里拼一拼：边长 3 和边长 4 的两个正方形，面积加起来是不是等于边长 5 的正方形？写下来你是怎么拼的、每块面积是多少，再说说你觉得为什么会这样。',
+    pointId: '8.11', demo: 'pythag' },
+];
+let inqNotice = '';
+function renderInquiry() {
+  if (!inquiryDetail) return;
+  const list = loadInquiry();
+  // 演示下拉框：6 个任务用到的演示 + 没用演示（可点名，不硬凑全表）。
+  const demoKeys = [];
+  INQUIRY_TASKS.forEach(t => { if (!demoKeys.includes(t.demo)) demoKeys.push(t.demo); });
+  const demoOpts = '<option value="">没用演示</option>' +
+    demoKeys.map(k => '<option value="' + esc(k) + '">' + esc(demoName(k)) + '</option>').join('');
+  let html = '<h3>探究作业</h3><p class="muted">交的是过程，不是答案：写下来你是怎么想的、怎么试的，用了哪个演示帮忙。只存在这台设备上，不上传，家长能在“家长看这里”看到。</p>';
+  if (inqNotice) {
+    html += '<p class="qa-a" data-inq-notice>' + esc(inqNotice) + '</p>';
+    inqNotice = '';
+  }
+  html += INQUIRY_TASKS.map(t => {
+    const f = findPoint(t.pointId);
+    return '<div class="point-sec"><h4><span class="pill">' + esc(t.band) + '</span> ' + esc(t.title) + '</h4><p>' + esc(t.task) + '</p>' +
+      '<div class="btn-row"><button class="btn ghost" type="button" data-inq-demo-link="demo-' + esc(t.demo) + '">先去玩' + esc(demoName(t.demo)) + '演示</button>' +
+      (f ? '<button class="btn ghost" type="button" data-point="' + esc(t.pointId) + '">看看相关知识点 ' + esc(t.pointId) + ' · ' + esc(f.point.title) + '</button>' : '') + '</div>' +
+      '<p class="muted">写下你的过程：</p><textarea class="inq-textarea" data-inq-text="' + esc(t.id) + '" placeholder="写下来你是怎么做的、怎么想的……"></textarea>' +
+      '<p class="muted">用了哪个演示？ <select class="inq-select" data-inq-demo="' + esc(t.id) + '">' + demoOpts + '</select></p>' +
+      '<div class="btn-row"><button class="btn primary" type="button" data-inq-submit="' + esc(t.id) + '">交这份作业</button></div></div>';
+  }).join('');
+  html += '<div class="point-sec"><h4>小老师讲题</h4><p>选一道你做过的题，用文字把它讲给别人听：第一步做什么、第二步做什么，每一步为什么这样做。写得让没做过这道题的人也能看懂，就算讲明白了。只写字，不录音。</p>' +
+    '<p class="muted">讲的是哪道题？</p><input class="inq-input" type="text" data-teach-q placeholder="例如：23×14 怎么算">' +
+    '<p class="muted">你的讲解：</p><textarea class="inq-textarea" data-teach-text placeholder="第一步……第二步……每一步为什么这样做……"></textarea>' +
+    '<div class="btn-row"><button class="btn primary" type="button" data-teach-submit="1">交这份讲解</button></div></div>';
+  html += '<div class="point-sec"><h4>我的提交（只存在这台设备上）</h4>' + inquiryListHtml(list, '还没有提交过。交一份作业或讲一次题，这里就会出现。') + '</div>';
+  inquiryDetail.innerHTML = html;
+  inquiryDetail.querySelectorAll('[data-point]').forEach(btn => btn.addEventListener('click', () => navGo('point-' + btn.dataset.point)));
+}
+if (inquiryDetail) inquiryDetail.addEventListener('click', e => {
+  const dl = e.target.closest('[data-inq-demo-link]');
+  if (dl) { goDemoFromHere(dl.dataset.inqDemoLink); return; }
+  const sub = e.target.closest('[data-inq-submit]');
+  if (sub) {
+    const taskId = sub.dataset.inqSubmit;
+    const ta = inquiryDetail.querySelector('[data-inq-text="' + taskId + '"]');
+    const sel = inquiryDetail.querySelector('[data-inq-demo="' + taskId + '"]');
+    const text = ta && ta.value ? ta.value.trim() : '';
+    if (!text) { inqNotice = '先写几句过程再交：你是怎么做的、怎么想的？'; renderInquiry(); return; }
+    const list = loadInquiry();
+    list.push({ kind: 'inq', taskId: taskId, text: text, demo: sel ? sel.value : '', ts: Date.now() });
+    saveInquiry(list);
+    inqNotice = '交好了，只存在这台设备上。家长在“家长看这里”能看到这份作业。';
+    renderInquiry();
+    return;
+  }
+  const teach = e.target.closest('[data-teach-submit]');
+  if (teach) {
+    const q = inquiryDetail.querySelector('[data-teach-q]');
+    const ta = inquiryDetail.querySelector('[data-teach-text]');
+    const text = ta && ta.value ? ta.value.trim() : '';
+    if (!text) { inqNotice = '先写下你的讲解步骤再交。'; renderInquiry(); return; }
+    const list = loadInquiry();
+    list.push({ kind: 'teach', question: q && q.value ? q.value.trim() : '', text: text, demo: '', ts: Date.now() });
+    saveInquiry(list);
+    inqNotice = '交好了，只存在这台设备上。家长在“家长看这里”能看到这份讲解。';
+    renderInquiry();
+    return;
+  }
+});
 if (pointDetail) pointDetail.addEventListener('click', e => {
   const examStartBtn = e.target.closest('[data-exam-start]');
   if (examStartBtn) { navGo('exam'); return; }
@@ -1272,6 +1491,8 @@ const NAV_DEFS = {
   'today-review': { crumbs: ['数学', '今天复习'], target: 'grades', action: renderReview },
   progress:   { crumbs: ['数学', '我的进度'], target: 'progressCard', action: renderProgress },
   exam:       { crumbs: ['数学', '模拟测'], target: 'exam', action: renderExamIntro },
+  parent:     { crumbs: ['数学', '我的进度', '家长看这里'], target: 'parentCard', action: renderParent },
+  inquiry:    { crumbs: ['数学', '探究作业'], target: 'inquiry', action: renderInquiry },
 };
 Object.keys(GRADES).forEach(g => {
   NAV_DEFS['grade-' + g] = { crumbs: ['数学', '选年级', g + ' 年级'], target: 'grades', action: () => selectGrade(+g) };
@@ -1326,6 +1547,9 @@ const reviewSec = document.getElementById('review');
 const examSec = document.getElementById('exam');
 const progressCardEl = document.getElementById('progressCard');
 const reviewCardEl = document.getElementById('reviewCard');
+const parentCardEl = document.getElementById('parentCard');
+const inquirySec = document.getElementById('inquiry');
+const inquiryEntryRow = document.getElementById('inquiryEntryRow');
 const nextStepsEl = document.getElementById('nextSteps');
 const footerEl = document.getElementById('pageFooter');
 function viewForKey(key) {
@@ -1350,7 +1574,9 @@ function viewForKey(key) {
   if (key === 'lab') return 'lab';
   if (key === 'review') return 'review';
   if (key === 'progress') return 'progress';
+  if (key === 'parent') return 'parent';
   if (key === 'exam') return 'exam';
+  if (key === 'inquiry') return 'inquiry';
   return 'home';
 }
 function setHidden(el, hidden) { if (el) el.hidden = hidden; }
@@ -1385,6 +1611,7 @@ function applyView() {
   // 学习路径：列表留 4 步面板；叶子只留该步的面板 + 说明
   setHidden(pathSec, !(view === 'path' || view === 'path-step'));
   setHidden(pathDetail, view !== 'path-step');
+  setHidden(inquiryEntryRow, view !== 'path');
   setHidden(pathSec.querySelector('h2'), view === 'path-step');
   setHidden(pathSec.querySelector('.section-sub'), view === 'path-step');
   const stepN = view === 'path-step' ? key.slice('path-step-'.length) : null;
@@ -1400,13 +1627,16 @@ function applyView() {
   setHidden(whySec, view !== 'why');
   // 数学实验室：只有进实验室才显示整个 #lab 区
   setHidden(labSec, view !== 'lab');
-  // 复习与进度：错题本只留错题卡片，我的进度只留进度卡片；
+  // 复习与进度：错题本只留错题卡片，我的进度只留进度卡片，家长端只留家长卡片；
   // 今天复习不留 #review 区（它的列表在 pointDetail 里）。
-  setHidden(reviewSec, !(isWrongBook || view === 'progress'));
+  setHidden(reviewSec, !(isWrongBook || view === 'progress' || view === 'parent'));
   setHidden(progressCardEl, view !== 'progress');
   setHidden(reviewCardEl, !isWrongBook);
+  setHidden(parentCardEl, view !== 'parent');
   // 模拟测：只有进模拟测才显示整个 #exam 区
   setHidden(examSec, view !== 'exam');
+  // 探究作业：只有进探究作业才显示整个 #inquiry 区
+  setHidden(inquirySec, view !== 'inquiry');
   setHidden(reviewSec.querySelector('h2'), true); // 卡片自带 h3 标题，区标题“进度与错题本”不再出现
   // 维度切换 pills 只在某个维度的详情页出现：维度卡片列表页上，
   // 模式栏的 5 个 pills 和下面 5 张卡片是同一批内容，重复了（2026-11-06 真机审计第 5 条）。
@@ -1444,6 +1674,8 @@ function renderNav() {
 /* 叶子级的父级：面包屑里的每一级都必须是栈里的真层级，否则点面包屑的父级会跳不回去。 */
 const NAV_PARENT = { 'grade-': 'grades', 'dim-': 'dimensions', 'path-step-': 'path', 'demo-': 'demos' };
 function parentOf(key) {
+  if (key === 'parent') return 'progress';
+  if (key === 'inquiry') return 'path';
   if (key === 'why') return 'demos';
   if (key.startsWith('unit-')) return 'grade-' + key.split('-')[1];
   if (/^grade-\d+-(mix|review)$/.test(key)) return 'grade-' + key.split('-')[1];

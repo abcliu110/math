@@ -117,6 +117,10 @@
       <button class="panel" type="button" id="step-4" data-nav-key="path-step-4"><span class="panel-icon" aria-hidden="true">④</span><b>测一测</b><span class="panel-sub">小测验过关才往下走；错了回退一步，用图再讲一遍。</span><span class="panel-prog"><i style="width:25%"></i></span><span class="panel-tx">第 4 步</span></button>
     </div>
     <div class="path-detail" id="pathDetail" aria-live="polite"></div>
+    <div class="btn-row" id="inquiryEntryRow">
+      <button class="btn primary" type="button" data-nav-key="inquiry">探究作业：交过程，不交答案</button>
+      <span class="muted">不用交答案，交你是怎么想的、怎么试的；还有“小老师讲题”，用文字把一道题讲给别人听。</span>
+    </div>
   </section>
 
   <!-- Featured demos -->
@@ -3056,12 +3060,18 @@
         </ul>
         <p class="muted">复习节奏（原型设定）：+1 天、+1 周各推一次同类错题。</p>
       </div>
+      <div class="review-card" id="parentCard"></div>
     </div>
   </section>
 
   <!-- 模拟测：低压力自测，5 道题 10 分钟，考完才给答案 -->
   <section id="exam" class="section wrap">
     <div class="exam-detail" id="examDetail" aria-live="polite"></div>
+  </section>
+
+  <!-- 探究作业：交的是过程，不是答案；小老师讲题只写字，不录音 -->
+  <section id="inquiry" class="section wrap">
+    <div class="inquiry-detail" id="inquiryDetail" aria-live="polite"></div>
   </section>
 
   <!-- Next steps：视图隔离后不再显示（首页不露出任何模块内容，模块视图只显示本面板内容） -->
