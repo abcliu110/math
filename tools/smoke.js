@@ -245,6 +245,44 @@ const GRADE8_CONTENT = { grade: 8, edition: 'A', units: [
     { id: '8.16', title: '数据的分析', subtitle: '平均数、中位数、众数、方差', how: '平均数是总和除以个数。', why: '平均数怕极端值，中位数不怕。', wrong: '平均数越小数据越稳定', wrongWhy: '稳定不稳定看方差。', visual: '点图。', method: '点图法', explainBack: '点越集中，方差越小，数据越稳定。', tryIt: '改一个数，看四个量怎么变。', demo: 'datastats', recall: { q: '数据 2、3、3、5、7 的众数是几？', answer: '3', hint: '出现次数最多' }, practice: [{ q: '数据 2、3、3、5、7 的平均数是多少？', answer: '4', hint: '（2+3+3+5+7）÷5', level: '基础' }, { q: '甲组数据方差是 2，乙组是 18，哪组更稳定？', answer: '甲组', hint: '方差越小越稳定', level: '提高' }] },
   ] },
 ] };
+
+// 桩里的九年级内容：16 个点全留（9.3/9.4 共用 parabola，9.11 用 hyperbola）。
+const GRADE9_CONTENT = { grade: 9, edition: 'A', units: [
+  { unit: '一元二次方程', term: '上', points: [
+    { id: '9.1', title: '解一元二次方程', subtitle: '直接开平方法、配方法、公式法、因式分解法、判别式', how: '配方法是补一块正方形。', why: '公式法就是配方法配出来的通用答案。', wrong: '配方时只加一次项系数的一半，不平方', wrongWhy: '要加一次项系数一半的平方。', visual: '配方法拼图。', method: '配方法拼图', explainBack: '配方法是补一块正方形。', tryIt: '用配方法解 x²+6x-7=0。', demo: 'quad', recall: { q: '方程 x²=9 的解是多少？', answer: 'x=±3', hint: '3²=9，(-3)²=9' }, practice: [{ q: '解方程：x²-5x+6=0。', answer: 'x=2 或 x=3', hint: '因式分解', level: '基础' }, { q: '用配方法解方程：x²+6x-7=0。', answer: 'x=1 或 x=-7', hint: '(x+3)²=16', level: '提高' }] },
+    { id: '9.2', title: '一元二次方程的应用与根的判别式', subtitle: '增长率问题、面积问题、根与系数的关系', how: '增长率问题 a(1+x)²=b。', why: '增长率是利滚利。', wrong: '增长率问题写成 a(1+2x)=b', wrongWhy: '连续两次增长是乘两次。', visual: '利滚利动画。', method: '利滚利法', explainBack: '连续两次增长是平方。', tryIt: '算一算：100 元连续两次涨 10% 是多少？', demo: 'growth', recall: { q: '某产品原价 100 元，连续两次降价 10%，现价是多少？', answer: '81 元', hint: '100×0.9×0.9' }, practice: [{ q: '某商品原价 200 元，两次降价后现价 162 元，平均每次降价的百分率是多少？', answer: '10%', hint: '200(1-x)²=162', level: '基础' }, { q: '若关于 x 的方程 x²-2x+k=0 有两个不相等的实数根，求 k 的取值范围。', answer: 'k<1', hint: 'Δ=4-4k>0', level: '提高' }] },
+  ] },
+  { unit: '二次函数', term: '上', points: [
+    { id: '9.3', title: '二次函数的图象和性质', subtitle: '抛物线、开口方向、对称轴、顶点、顶点式', how: '二次函数 y=ax²+bx+c 的图象是抛物线。', why: '抛物线是“对称的弯”。', wrong: '顶点式 y=a(x-h)²+k 的顶点是 (-h,k)', wrongWhy: '顶点是 (h,k)。', visual: '抛物线滑杆。', method: '滑杆看抛物线法', explainBack: 'a 管开口方向和大小。', tryIt: '画一画 y=x²、y=2x²、y=-x² 的图象。', demo: 'parabola', recall: { q: '抛物线 y=2(x-1)²+3 的顶点坐标是多少？', answer: '(1,3)', hint: '顶点式' }, practice: [{ q: '抛物线 y=-x²+4x-3 的开口方向和对称轴。', answer: '开口向下，对称轴 x=2', hint: 'a=-1', level: '基础' }, { q: '求抛物线 y=x²-2x-3 的顶点坐标和与 x 轴的交点。', answer: '顶点 (1,-4)，与 x 轴交于 (3,0) 和 (-1,0)', hint: '顶点横坐标 x=1', level: '提高' }] },
+    { id: '9.4', title: '二次函数与方程及应用', subtitle: '图象与 x 轴的交点、最值问题', how: '抛物线与 x 轴的交点横坐标就是方程的根。', why: 'y=0 的点就是方程的解。', wrong: '抛物线与 x 轴没有交点，方程就有两个根', wrongWhy: '没有交点，Δ<0，没有实数根。', visual: '抛物线上下移动。', method: '交点即根法', explainBack: '抛物线与 x 轴的交点横坐标就是方程的根。', tryIt: '算一算 y=x²-4x+3 与 x 轴有几个交点。', demo: 'parabola', recall: { q: '抛物线 y=x²-4x+3 与 x 轴有几个交点？', answer: '2 个', hint: 'Δ=4>0' }, practice: [{ q: '求抛物线 y=x²-2x-8 与 x 轴交点的横坐标。', answer: '4 和 -2', hint: '令 y=0', level: '基础' }, { q: '某商品每件利润 30 元，每天可卖 80 件；每涨价 1 元，每天少卖 4 件。涨价几元时每天总利润最大？', answer: '涨价 5 元，最大利润 2100 元', hint: '顶点', level: '提高' }] },
+  ] },
+  { unit: '旋转', term: '上', points: [
+    { id: '9.5', title: '图形的旋转与中心对称', subtitle: '旋转、旋转角、中心对称、中心对称图形', how: '旋转是绕一个定点、按一个方向、转一个角度。', why: '旋转是钉住一点转。', wrong: '旋转后图形变大了', wrongWhy: '旋转只改变位置。', visual: '旋转动画。', method: '钉住一点转', explainBack: '旋转只变位置不改形状。', tryIt: '把三角形绕一个点旋转 90°。', demo: 'spin', recall: { q: '正方形绕它的中心旋转多少度能与自身重合？', answer: '90°', hint: '360°÷4' }, practice: [{ q: '点 A(2,3) 绕原点旋转 180° 后，对应点的坐标是多少？', answer: '(-2,-3)', hint: '横、纵坐标都变号', level: '基础' }, { q: '等边三角形绕它的中心旋转多少度能与自身重合？', answer: '120°', hint: '360°÷3', level: '提高' }] },
+  ] },
+  { unit: '圆', term: '上', points: [
+    { id: '9.6', title: '圆的有关性质', subtitle: '垂径定理、圆心角、圆周角', how: '一条弧所对的圆周角等于它所对圆心角的一半。', why: '站在圆上看，视角只有圆心的一半。', wrong: '圆周角等于圆心角', wrongWhy: '圆周角是圆心角的一半。', visual: '圆周角动画。', method: '站圆上看弦法', explainBack: '圆周角是圆心角的一半。', tryIt: '量一量同一条弧所对的圆心角和圆周角。', demo: 'circangle', recall: { q: '圆心角∠AOB=80°，它所对弧上的圆周角是多少度？', answer: '40°', hint: '一半' }, practice: [{ q: '半径是 5 的圆中，一条弦长 8，这条弦到圆心的距离是多少？', answer: '3', hint: '√(5²-4²)', level: '基础' }, { q: '圆周角∠ACB=35°，它所对的圆心角∠AOB 是多少度？', answer: '70°', hint: '2 倍', level: '提高' }] },
+    { id: '9.7', title: '点、直线和圆的位置关系', subtitle: '点和圆、直线和圆、切线、切线长、外心与内心', how: 'd<r 相交，d=r 相切，d>r 相离。', why: '切线是刚好碰一下的直线。', wrong: '外心和内心是一回事', wrongWhy: '外心到顶点等距，内心到三边等距。', visual: '位置关系动画。', method: '距离比半径法', explainBack: 'd<r 相交，d=r 相切，d>r 相离。', tryIt: '画一个圆，画一条直线，判断位置关系。', demo: 'tangent', recall: { q: '圆的半径是 4，圆心到一条直线的距离是 4，这条直线和圆是什么关系？', answer: '相切', hint: 'd=r' }, practice: [{ q: '圆的半径是 6，圆心到直线的距离是 3，直线和圆有几个交点？', answer: '2 个', hint: 'd<r', level: '基础' }, { q: 'PA、PB 是⊙O 的两条切线，PA=8，PB 长是多少？', answer: '8', hint: '切线长相等', level: '提高' }] },
+    { id: '9.8', title: '弧长和扇形面积', subtitle: '弧长公式、扇形面积、圆锥的侧面积', how: '弧长 l=nπr/180，扇形面积 S=nπr²/360。', why: '弧长是圆周长的几分之几。', wrong: '弧长公式用直径不用半径', wrongWhy: '公式里的 r 是半径。', visual: '扇形切分动画。', method: '几分之几法', explainBack: '弧长是圆周长的几分之几。', tryIt: '算一算半径 6、圆心角 60° 的扇形的弧长和面积。', demo: 'sector', recall: { q: '半径 6、圆心角 60° 的扇形，弧长是多少？', answer: '2π', hint: 'l=60×π×6÷180' }, practice: [{ q: '半径是 10、圆心角是 90° 的扇形面积是多少？', answer: '25π', hint: 'S=90×π×10²÷360', level: '基础' }, { q: '一个圆锥的底面半径是 3，母线长是 5，它的侧面积是多少？', answer: '15π', hint: 'πrl', level: '提高' }] },
+  ] },
+  { unit: '概率初步', term: '上', points: [
+    { id: '9.9', title: '随机事件与概率', subtitle: '确定事件、随机事件、概率的定义', how: '概率 P(A)=m/n。', why: '概率是长期频率。', wrong: '抛硬币连续 3 次正面，下一次一定是反面', wrongWhy: '每次都是独立的。', visual: '抛硬币模拟器。', method: '长期频率法', explainBack: '概率是长期频率。', tryIt: '抛 10 次硬币，数一数正面几次。', demo: 'coin', recall: { q: '一个袋子里有 3 个红球、2 个白球，摸出一个球，摸到红球的概率是多少？', answer: '3/5', hint: '3 个红球，一共 5 个球' }, practice: [{ q: '掷一枚骰子，掷出偶数的概率是多少？', answer: '1/2', hint: '偶数有 3 个', level: '基础' }, { q: '一个转盘平均分成 8 份，其中 3 份是红色，指针停在红色区域的概率是多少？', answer: '3/8', hint: '3 份红色', level: '提高' }] },
+    { id: '9.10', title: '列举法求概率与频率估计', subtitle: '列表法、树状图法、用频率估计概率', how: '列表法画表格，树状图法画分支。', why: '把所有可能都摆出来数。', wrong: '两枚骰子点数和是 7 的概率是 1/11', wrongWhy: '11 种和数不是等可能的。', visual: '树状图生成器。', method: '摆出来数清法', explainBack: '列表画树，把所有可能摆出来数。', tryIt: '掷两枚硬币，画树状图列出所有结果。', demo: 'tree', recall: { q: '掷两枚硬币，用树状图列一列，一共有几种可能的结果？', answer: '4 种', hint: '2×2' }, practice: [{ q: '同时掷两枚硬币，两枚都是正面的概率是多少？', answer: '1/4', hint: '4 种里只有正正 1 种', level: '基础' }, { q: '从 1、2、3、4 四张卡片中抽两张（不放回），两张都是奇数的概率是多少？', answer: '1/6', hint: '只有 (1,3) 1 种组合', level: '提高' }] },
+  ] },
+  { unit: '反比例函数', term: '下', points: [
+    { id: '9.11', title: '反比例函数', subtitle: '反比例函数的概念、图象、性质、k 的几何意义', how: '反比例函数 y=k/x 的图象是双曲线。', why: 'y=k/x 是乘积一定。', wrong: '反比例函数图象经过原点', wrongWhy: 'x=0 时 y 没意义。', visual: '双曲线滑杆。', method: '乘积一定法', explainBack: 'xy=k，乘积一定。', tryIt: '画一画 y=6/x 和 y=-6/x 的图象。', demo: 'hyperbola', recall: { q: '点 (2,3) 在反比例函数 y=k/x 的图象上，k 是多少？', answer: '6', hint: 'k=xy' }, practice: [{ q: '反比例函数 y=6/x 的图象在第几象限？', answer: '第一、三象限', hint: 'k=6>0', level: '基础' }, { q: '若点 A(-2,3) 在反比例函数 y=k/x 的图象上，求 k，并判断点 B(3,-2) 在不在图象上。', answer: 'k=-6，B 在图象上', hint: '乘积都是 -6', level: '提高' }] },
+  ] },
+  { unit: '相似', term: '下', points: [
+    { id: '9.12', title: '图形的相似与位似', subtitle: '相似图形、相似比、面积比、位似', how: '周长比=相似比，面积比=相似比的平方。', why: '相似是按比例放大缩小。', wrong: '面积比等于相似比', wrongWhy: '面积比是相似比的平方。', visual: '放大缩小动画。', method: '按比例放大法', explainBack: '周长比等于相似比，面积比等于相似比的平方。', tryIt: '算一算：相似比 2:3 的两个三角形，面积比是多少？', demo: 'similar', recall: { q: '两个相似三角形的相似比是 2:3，它们的面积比是多少？', answer: '4:9', hint: '平方' }, practice: [{ q: '两个相似多边形的相似比是 1:2，小多边形的周长是 10，大多边形的周长是多少？', answer: '20', hint: '周长比等于相似比', level: '基础' }, { q: '两个相似三角形的面积比是 9:16，相似比是多少？', answer: '3:4', hint: '开方', level: '提高' }] },
+    { id: '9.13', title: '相似三角形', subtitle: '相似三角形的判定与性质、应用', how: '判定：AA、SAS、SSS、HL。', why: 'AA 就够了。', wrong: '两边成比例就能判定相似', wrongWhy: '还要夹角相等。', visual: '影子测高动画。', method: '影子测高法', explainBack: '两角相等就能判定相似。', tryIt: '量一量自己的影子和旗杆的影子。', demo: 'shadow', recall: { q: '△ABC∽△DEF，AB=6，DE=9，BC=8，EF 是多少？', answer: '12', hint: '6:9=8:EF' }, practice: [{ q: '△ABC∽△DEF，相似比是 2:5，△ABC 的周长是 12，△DEF 的周长是多少？', answer: '30', hint: '12×5÷2', level: '基础' }, { q: '旗杆的影子长 12 米，同一时刻身高 1.6 米的人影子长 2 米，旗杆高多少米？', answer: '9.6 米', hint: '1.6:2=旗杆高:12', level: '提高' }] },
+  ] },
+  { unit: '锐角三角函数', term: '下', points: [
+    { id: '9.14', title: '锐角三角函数', subtitle: '正弦、余弦、正切、特殊角、同角关系', how: 'sin A=对边/斜边，cos A=邻边/斜边，tan A=对边/邻边。', why: 'sin、cos、tan 是角的比值。', wrong: 'sin30°=1/2，所以 sin60°=1', wrongWhy: '角度翻倍，比值不翻倍。', visual: '角的比值动画。', method: '角定比值定法', explainBack: 'sin 是对边比斜边。', tryIt: '在 Rt△ABC 中算一算 sin A、cos A、tan A。', demo: 'trig', recall: { q: '直角三角形中，∠A=30°，斜边是 10，∠A 的对边长是多少？', answer: '5', hint: 'sin30°=1/2' }, practice: [{ q: '在 Rt△ABC 中，∠C=90°，AC=3，BC=4，求 sin A 和 tan A 的值。', answer: 'sin A=4/5，tan A=4/3', hint: '斜边 AB=5', level: '基础' }, { q: '计算：sin²30°+cos²30° 的值。', answer: '1', hint: '(1/2)²+(√3/2)²', level: '提高' }] },
+    { id: '9.15', title: '解直角三角形及其应用', subtitle: '解直角三角形、仰角俯角、坡度', how: '仰角俯角都是视线和水平线的夹角。', why: '选三角函数就是看已知什么、求什么。', wrong: '仰角是从铅垂线量的', wrongWhy: '仰角是视线和水平线的夹角。', visual: '仰角俯角演示。', method: '画图选函数法', explainBack: '已知什么、求什么，就选哪个三角函数。', tryIt: '测一测看旗杆顶的仰角。', demo: 'slope', recall: { q: '站在地面看 10 米高的楼顶，仰角是 30°，你离楼底多远？', answer: '约 17.3 米', hint: 'tan30°=10÷距离' }, practice: [{ q: '在 Rt△ABC 中，∠C=90°，∠A=30°，斜边 AB=8，求 BC 的长。', answer: '4', hint: 'sin30°=BC/8', level: '基础' }, { q: '一条斜坡的坡度是 1:1，坡面长是 4√2 米，坡的铅直高度是多少？', answer: '4 米', hint: 'h²+h²=(4√2)²', level: '提高' }] },
+  ] },
+  { unit: '投影与视图', term: '下', points: [
+    { id: '9.16', title: '投影与视图', subtitle: '平行投影、中心投影、三视图', how: '主视图从前看，左视图从左看，俯视图从上看。', why: '三视图是三个方向的影子。', wrong: '俯视图是从下面看的', wrongWhy: '俯视图是从上面往下看。', visual: '三视图转盘。', method: '三个方向看影子法', explainBack: '长对正、高平齐、宽相等。', tryIt: '画一画圆柱和长方体的三视图。', demo: 'project', recall: { q: '一个正方体的主视图、左视图、俯视图分别是什么图形？', answer: '都是正方形', hint: '从哪个方向看都是正方形' }, practice: [{ q: '一个圆柱的主视图是什么图形？俯视图呢？', answer: '主视图是长方形，俯视图是圆形', hint: '从前面看是长方形', level: '基础' }, { q: '一个几何体的主视图是长方形，俯视图是圆形，这个几何体可能是什么？', answer: '圆柱', hint: '主视图长方形、俯视图圆形', level: '提高' }] },
+  ] },
+] };
 const lsData = {};
 const localStorageStub = { getItem(k) { return lsData[k] || null; }, setItem(k, v) { lsData[k] = String(v); } };
 
@@ -267,7 +305,7 @@ seedSeg('sortRuleSeg', 'sort-rule', ['color', 'shape']);
 // ---------- load the real app.js ----------
 const root = require('path').resolve(__dirname, '..');
 const src = fs.readFileSync(root + '/apps/web/app.js', 'utf8');
-const sandbox = { document: documentStub, window: windowStub, console, setTimeout, Math, JSON, Object, Array, String, Number, parseInt, parseFloat, isNaN, GRADE3_CONTENT, GRADE1_CONTENT, GRADE2_CONTENT, GRADE4_CONTENT, GRADE5_CONTENT, GRADE6_CONTENT, GRADE7_CONTENT, GRADE8_CONTENT, localStorage: localStorageStub };
+const sandbox = { document: documentStub, window: windowStub, console, setTimeout, Math, JSON, Object, Array, String, Number, parseInt, parseFloat, isNaN, GRADE3_CONTENT, GRADE1_CONTENT, GRADE2_CONTENT, GRADE4_CONTENT, GRADE5_CONTENT, GRADE6_CONTENT, GRADE7_CONTENT, GRADE8_CONTENT, GRADE9_CONTENT, localStorage: localStorageStub };
 vm.createContext(sandbox);
 try {
   vm.runInContext(src, sandbox, { filename: 'app.js' });
@@ -390,7 +428,7 @@ const bCell0 = byId.tfB.children[0];
 click(bCell0);
 check('tenframe: click B cell moves one to fill ten', byId.tfEq.textContent === '9 + 4 = 13');
 check('tenframe note explains 10+3', byId.tfNote.textContent.includes('10 + 3 = 13'));
-check('demo counter counts a played demo', byId.progressCount.textContent === '1 / 109' &&
+check('demo counter counts a played demo', byId.progressCount.textContent === '1 / 124' &&
   JSON.parse(lsData['math-tried-demos-v1'] || '[]').includes('tenframe'));
 sandbox.tfSetProblem('sub', 0);
 check('tenframe sub initial equation', byId.tfEq.textContent === '13 − 5 = ?');
@@ -619,7 +657,7 @@ click(byId.countRowA.children[0]);
 check('count: click a dot counts it', byId.countCount.textContent.includes('数到了第 1 个'));
 click(byId.countCompare);
 check('count: 5 vs 7 -> below has 2 more', byId.countResult.textContent.includes('下面多 2 个'));
-check('G1 demos count toward the 109-demo progress', g1ProgBefore === '4 / 109' && byId.progressCount.textContent === '5 / 109');
+check('G1 demos count toward the 124-demo progress', g1ProgBefore === '4 / 124' && byId.progressCount.textContent === '5 / 124');
 click(byId.countAMinus); click(byId.countAMinus);
 check('count: minus twice -> 3', byId.countReadA.textContent === '3 个');
 
@@ -795,7 +833,7 @@ check('ruler: eraser is 3 cm', byId.rulReadout.textContent.includes('3 厘米'))
 click(byId.rulFromBtn);
 check('ruler: measuring from 1 over-reads by 1', byId.rulMsg.textContent.includes('多算1厘米'));
 check('ruler: meter strip is 100 cm squares', byId.rulMeter.children.length === 100);
-check('G2 demos count toward the 109-demo progress', g2ProgBefore === '17 / 109' && byId.progressCount.textContent === '18 / 109');
+check('G2 demos count toward the 124-demo progress', g2ProgBefore === '17 / 124' && byId.progressCount.textContent === '18 / 124');
 
 // 2.2 先估后算
 click(byId.estProbSeg.children[1]); // 26+38
@@ -935,7 +973,7 @@ check('grade-2.js: all 16 points map to the right experiment',
 const labelSrc2 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
 check('DEMO_LABEL covers all 15 new demos',
   G2_DEMOS.every(k => labelSrc2.includes(k + ':')));
-check('G2: all 15 new demos tried by now', byId.progressCount.textContent === '32 / 109');
+check('G2: all 15 new demos tried by now', byId.progressCount.textContent === '32 / 124');
 
 // ---------- 12. 全站布局改版（2026-11-06 真机审计） ----------
 // CSS：顶栏实底不透光，模式栏不吸顶，演示单列，知识点页窄栏
@@ -988,7 +1026,7 @@ navGo('progress');
 check('progress: per-grade rows with real numbers',
   byId.progressCard.innerHTML.includes('1 年级') && byId.progressCard.innerHTML.includes('3 年级') &&
   byId.progressCard.innerHTML.includes('演示') && byId.progressCard.innerHTML.includes('已练'));
-check('progress: 32 of 109 demos tried by now', byId.progressCount.textContent === '32 / 109');
+check('progress: 32 of 124 demos tried by now', byId.progressCount.textContent === '32 / 124');
 // 首页不显示孤零零的“数学”面包屑，子页面显示完整面包屑
 navGo('home');
 check('home hides the lone crumb title', byId.crumbTitle.hidden === true);
@@ -1025,7 +1063,7 @@ check('elapsed: jump to the whole hour lands on 8:00', byId.elReadout.textConten
 for (let i = 0; i < 6; i++) click(byId.elPlus10);
 click(byId.elPlus5);
 check('elapsed: 7:30 -> 9:05 is 1 hour 35 minutes', byId.elMsg.textContent.includes('1 小时 35 分'));
-check('G3 demos count toward the 109-demo progress', g3ProgBefore === '32 / 109' && byId.progressCount.textContent === '33 / 109');
+check('G3 demos count toward the 124-demo progress', g3ProgBefore === '32 / 124' && byId.progressCount.textContent === '33 / 124');
 
 // 3.2 算一算，再算回去
 for (let i = 0; i < 4; i++) click(byId.vfNext);
@@ -1149,7 +1187,7 @@ check('grade-3.js: all 16 points map to the right experiment',
 const labelSrc3 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
 check('DEMO_LABEL covers all 14 new demos',
   G3_DEMOS.every(k => labelSrc3.includes(k + ':')));
-check('G3: all 14 new demos tried by now', byId.progressCount.textContent === '46 / 109');
+check('G3: all 14 new demos tried by now', byId.progressCount.textContent === '46 / 124');
 
 
 // ---------- 11d. 四年级实验（16 个新演示 + 4.17 复用换个方向看） ----------
@@ -1182,7 +1220,7 @@ click(byId.bnRound);
 check('bignum: 62850 rounds to 6 wan', byId.bnMsg.textContent.includes('约是 6万'));
 click(byId.bnProbSeg.children[2]); // 75000
 check('bignum: 75000 sits on the halfway mark', byId.bnNear.textContent.includes('正好在半点上'));
-check('G4 demos count toward the 109-demo progress', g4ProgBefore === '46 / 109' && byId.progressCount.textContent === '47 / 109');
+check('G4 demos count toward the 124-demo progress', g4ProgBefore === '46 / 124' && byId.progressCount.textContent === '47 / 124');
 
 // 4.2 足球场拼一拼
 check('field: 1 field is 1 hectare, 10000 square meters', byId.fdReadout.textContent.includes('1 公顷') && byId.fdReadout.textContent.includes('10000 平方米'));
@@ -1330,7 +1368,7 @@ check('grade-4.js: all 17 points map to the right experiment',
 const labelSrc4 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
 check('DEMO_LABEL covers all 16 new demos',
   G4_DEMOS.every(k => labelSrc4.includes(k + ':')));
-check('G4: all 16 new demos tried by now', byId.progressCount.textContent === '62 / 109');
+check('G4: all 16 new demos tried by now', byId.progressCount.textContent === '62 / 124');
 
 
 // ---------- 6. grade 5 ----------
@@ -1344,7 +1382,7 @@ click(byId.dmProbSeg.children[1]); // 0.2x0.5
 check('decmul: 0.2x0.5 is 0.10, that is 0.1', byId.dmRead.textContent.includes('0.10') && byId.dmRead.textContent.includes('0.1'));
 click(byId.dmProbSeg.children[2]); // 0.6x0.7
 check('decmul: 0.6x0.7 is 0.42', byId.dmRead.textContent.includes('0.42'));
-check('G5 demos count toward the 109-demo progress', g5ProgBefore === '62 / 109' && byId.progressCount.textContent === '63 / 109');
+check('G5 demos count toward the 124-demo progress', g5ProgBefore === '62 / 124' && byId.progressCount.textContent === '63 / 124');
 
 // 5.2 位置：数对
 click(byId.gpGrid.children[8]); // row 1, col 2 -> (3,2)
@@ -1465,7 +1503,7 @@ const G5_DEMOS = ['decmul', 'gridpos', 'decdiv', 'prob', 'polyarea', 'planttree'
 const labelSrc5 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
 check('DEMO_LABEL covers all 11 new demos',
   G5_DEMOS.every(k => labelSrc5.includes(k + ':')));
-check('G5: all 11 new demos tried by now', byId.progressCount.textContent === '73 / 109');
+check('G5: all 11 new demos tried by now', byId.progressCount.textContent === '73 / 124');
 
 
 // ---------- 7. grade 6 ----------
@@ -1480,7 +1518,7 @@ check('radar: direction only is a ray with countless points', byId.rdRead.textCo
 click(byId.rdModeSeg.children[0]); // 方向+距离
 click(byId.rdDirSeg.children[1]); // 北偏西
 check('radar: north-west 40 degrees', byId.rdRead.textContent.includes('北偏西 40°'));
-check('G6 demos count toward the 109-demo progress', g6ProgBefore === '73 / 109' && byId.progressCount.textContent === '74 / 109');
+check('G6 demos count toward the 124-demo progress', g6ProgBefore === '73 / 124' && byId.progressCount.textContent === '74 / 124');
 
 // 6.4 比：比条
 check('ratio: 2:3 of 50 is 20 and 30', byId.raRead.textContent.includes('20 元') && byId.raRead.textContent.includes('30 元'));
@@ -1591,7 +1629,7 @@ const G6_DEMOS = ['radar', 'ratio', 'circle', 'percent', 'fan', 'lsquare', 'ther
 const labelSrc6 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
 check('DEMO_LABEL covers all 12 new demos',
   G6_DEMOS.every(k => labelSrc6.includes(k + ':')));
-check('G6: all 12 new demos tried by now', byId.progressCount.textContent === '85 / 109');
+check('G6: all 12 new demos tried by now', byId.progressCount.textContent === '85 / 124');
 
 // ---------- 8. grade 7 ----------
 const g7ProgBefore = byId.progressCount.textContent;
@@ -1606,7 +1644,7 @@ click(byId.nlBMinus); click(byId.nlBMinus); // b=5
 check('numline: -4+5 walks to 1', byId.nlRead.textContent.includes('−4 + 5') && byId.nlRead.textContent.includes('停在 1'));
 click(byId.nlAMinus); // a=-5
 check('numline: -5+5 walks to 0', byId.nlRead.textContent.includes('−5 + 5') && byId.nlRead.textContent.includes('停在 0'));
-check('G7 demos count toward the 109-demo progress', g7ProgBefore === '85 / 109' && byId.progressCount.textContent === '86 / 109');
+check('G7 demos count toward the 124-demo progress', g7ProgBefore === '85 / 124' && byId.progressCount.textContent === '86 / 124');
 
 // 7.3 乘方与科学记数法
 check('powerup: 10 folds is 1024x, 102.4mm', byId.puRead.textContent.includes('1024') && byId.puRead.textContent.includes('102.4 毫米'));
@@ -1768,11 +1806,11 @@ check('DEMO_LABEL covers all 13 new demos',
   G7_DEMOS.every(k => labelSrc7.includes(k + ':')));
 check('viewForKey covers all 13 new demos',
   G7_DEMOS.every(k => sandbox.viewForKey('demo-' + k) === 'demo-' + k));
-check('G7: all 13 new demos tried by now', byId.progressCount.textContent === '98 / 109');
+check('G7: all 13 new demos tried by now', byId.progressCount.textContent === '98 / 124');
 
 
-// ---------- 8. 八年级实验（11 个新演示，109 个演示） ----------
-check('G8 start: progress is 98 / 109 before any G8 demo is tried', byId.progressCount.textContent === '98 / 109');
+// ---------- 8. 八年级实验（11 个新演示，124 个演示） ----------
+check('G8 start: progress is 98 / 124 before any G8 demo is tried', byId.progressCount.textContent === '98 / 124');
 
 navGo('demo-trisides');
 check('trisides renders: 3-4-5 closes, angles sum to 180°',
@@ -1784,7 +1822,7 @@ click(byId.tsModeSeg.children[1]); // 多边形内角和
 check('trisides polygon: pentagon interior sum 540°', byId.tsRead.textContent.includes('540°'));
 click(byId.tsNPlus); // 6 边形
 check('trisides polygon: hexagon interior sum 720°', byId.tsRead.textContent.includes('720°'));
-check('G8: trisides counts toward the 109-demo progress', byId.progressCount.textContent === '99 / 109');
+check('G8: trisides counts toward the 124-demo progress', byId.progressCount.textContent === '99 / 124');
 
 navGo('demo-congruent');
 check('congruent renders: SSS 5-6-7 always congruent',
@@ -1801,7 +1839,7 @@ click(byId.cgCondSeg.children[6]); // AAA
 check('congruent AAA: same shape, size can differ', byId.cgRead.textContent.includes('AAA 不能判定全等'));
 click(byId.cgScalePlus); // ×2
 check('congruent AAA: scale ×2 shown', byId.cgRead.textContent.includes('×2'));
-check('G8: congruent counts toward the 109-demo progress', byId.progressCount.textContent === '100 / 109');
+check('G8: congruent counts toward the 124-demo progress', byId.progressCount.textContent === '100 / 124');
 
 navGo('demo-foldmirror');
 check('foldmirror renders: isosceles triangle fold prompt',
@@ -1826,7 +1864,7 @@ check('foldmirror isosceles: base 70°, top 40°',
 click(byId.fmIsoFoldBtn);
 check('foldmirror isosceles fold: the three lines coincide',
   byId.fmRead.textContent.includes('三线合一'));
-check('G8: foldmirror counts toward the 109-demo progress', byId.progressCount.textContent === '101 / 109');
+check('G8: foldmirror counts toward the 124-demo progress', byId.progressCount.textContent === '101 / 124');
 
 navGo('demo-algarea');
 check('algarea renders: a³·a² = a⁵, exponents add',
@@ -1852,7 +1890,7 @@ check('algarea factor: 1×1 and 1+1 both miss for x²+5x+6',
 click(byId.aaF1Plus); click(byId.aaF2Plus); click(byId.aaF2Plus); // 2, 3
 check('algarea factor: (2,3) solves x²+5x+6 = (x+2)(x+3)',
   byId.aaRead.textContent.includes('x²+5x+6 = (x+2)(x+3)'));
-check('G8: algarea counts toward the 109-demo progress', byId.progressCount.textContent === '102 / 109');
+check('G8: algarea counts toward the 124-demo progress', byId.progressCount.textContent === '102 / 124');
 
 navGo('demo-algfrac');
 check('algfrac renders: 12a²b/4ab prompt with remaining factors',
@@ -1875,7 +1913,7 @@ check('algfrac zero: x=0, denominator x−2 = -2, fraction defined',
 click(byId.afXPlus); click(byId.afXPlus); // x=2
 check('algfrac zero: x=2, denominator 0, fraction undefined',
   byId.afRead.textContent.includes('分母 x−2 = 0') && byId.afRead.textContent.includes('没有意义'));
-check('G8: algfrac counts toward the 109-demo progress', byId.progressCount.textContent === '103 / 109');
+check('G8: algfrac counts toward the 124-demo progress', byId.progressCount.textContent === '103 / 124');
 
 navGo('demo-eqsieve');
 check('eqsieve renders: 2/(x−3) = 1/(x+1)',
@@ -1894,7 +1932,7 @@ check('eqsieve problem 2: 1/(x−1) = 2/(x²−1)',
 click(byId.esStep3);
 check('eqsieve problem 2: x=1 is extraneous, no solution',
   byId.esLine3.textContent.includes('增根') && byId.esLine3.textContent.includes('无解'));
-check('G8: eqsieve counts toward the 109-demo progress', byId.progressCount.textContent === '104 / 109');
+check('G8: eqsieve counts toward the 124-demo progress', byId.progressCount.textContent === '104 / 124');
 
 navGo('demo-radical');
 check('radical renders: simplify √12, largest square factor prompt',
@@ -1910,7 +1948,7 @@ click(byId.rxModeSeg.children[1]); // 合并同类
 check('radical combine: √8 + √2 = 3√2', byId.rxRead.textContent.includes('3√2'));
 click(byId.rxPairSeg.children[3]); // √5, √3
 check('radical combine: √5 and √3 cannot merge', byId.rxRead.textContent.includes('合不了'));
-check('G8: radical counts toward the 109-demo progress', byId.progressCount.textContent === '105 / 109');
+check('G8: radical counts toward the 124-demo progress', byId.progressCount.textContent === '105 / 124');
 
 navGo('demo-pythag');
 check('pythag renders: 3²+4² = 5² by areas',
@@ -1924,7 +1962,7 @@ check('pythag check: 5-12-13 is a right triangle',
 click(byId.pyCheckSeg.children[1]); // 3, 4, 6
 check('pythag check: 3-4-6 is not (25 ≠ 36)',
   byId.pyRead.textContent.includes('不是直角三角形') && byId.pyRead.textContent.includes('≠ 36'));
-check('G8: pythag counts toward the 109-demo progress', byId.progressCount.textContent === '106 / 109');
+check('G8: pythag counts toward the 124-demo progress', byId.progressCount.textContent === '106 / 124');
 
 navGo('demo-pargram');
 check('pargram renders: AB = CD = 11, diagonals bisect each other',
@@ -1938,7 +1976,7 @@ check('pargram judge: two pairs of equal opposite sides proves a parallelogram',
 click(byId.pgmJudgeSeg.children[3]); // 一组对边平行、另一组对边相等
 check('pargram judge: that may be an isosceles trapezoid, not a parallelogram',
   byId.pgmRead.textContent.includes('等腰梯形') && byId.pgmRead.textContent.includes('不能判定'));
-check('G8: pargram counts toward the 109-demo progress', byId.progressCount.textContent === '107 / 109');
+check('G8: pargram counts toward the 124-demo progress', byId.progressCount.textContent === '107 / 124');
 
 navGo('demo-specialquad');
 check('specialquad renders: plain parallelogram',
@@ -1953,7 +1991,7 @@ check('specialquad: add equal adjacent sides → rhombus, area 6×8÷2 = 24',
 click(byId.spRectBtn); // 两个条件都加
 check('specialquad: both conditions → square, area 36',
   byId.spRead.textContent.includes('正方形') && byId.spRead.textContent.includes('面积 36'));
-check('G8: specialquad counts toward the 109-demo progress', byId.progressCount.textContent === '108 / 109');
+check('G8: specialquad counts toward the 124-demo progress', byId.progressCount.textContent === '108 / 124');
 
 navGo('demo-datastats');
 check('datastats renders: 2,3,3,5,7 — mean 4, median 3, mode 3, variance 3.2',
@@ -1974,7 +2012,7 @@ check('datastats compare: same mean 9, group 甲 has smaller variance, more stab
 click(byId.dsPairSeg.children[1]); // 丙 / 丁
 check('datastats compare: group 丙 variance 0, most stable',
   byId.dsRead.textContent.includes('丙更稳定'));
-check('G8: all 11 new demos tried by now', byId.progressCount.textContent === '109 / 109');
+check('G8: all 11 new demos tried by now', byId.progressCount.textContent === '109 / 124');
 
 // 知识点页 → 实验的链接（桩里的 grade-8.js）+ 真实 grade-8.js 的映射
 const G8_LINKS = [
@@ -2010,7 +2048,289 @@ check('DEMO_LABEL covers all 11 new demos',
 check('viewForKey covers all 11 new demos',
   G8_DEMOS.every(k => sandbox.viewForKey('demo-' + k) === 'demo-' + k));
 
-// ---------- 9. 复测修复 A–J ----------
+
+// ---------- 9. 九年级实验（15 个新演示，124 个演示） ----------
+check('G9 start: progress is 109 / 124 before any G9 demo is tried', byId.progressCount.textContent === '109 / 124');
+
+navGo('demo-quad');
+check('quad renders: x²−5x+6=0 completes to (x−2.5)²=0.25',
+  byId.qqRead.textContent.includes('x²−5x+6=0') && byId.qqRead.textContent.includes('(x−2.5)²=0.25'));
+click(byId.qqModeSeg.children[1]); // 公式法
+check('quad formula: Δ=1, roots 2 and 3',
+  byId.qqRead.textContent.includes('Δ=b²−4ac=1') && byId.qqMsg.textContent.includes('x=2') && byId.qqMsg.textContent.includes('x=3'));
+click(byId.qqProbSeg.children[2]); // x²−4x+5=0
+check('quad: x²−4x+5=0 has Δ=-4, no real roots',
+  byId.qqRead.textContent.includes('Δ=b²−4ac=-4') && byId.qqMsg.textContent.includes('没有实数根'));
+click(byId.qqModeSeg.children[3]); // 代回去验算
+check('quad check: no real roots, nothing to substitute',
+  byId.qqRead.textContent.includes('没有实数根'));
+click(byId.qqProbSeg.children[1]); // x²+6x−7=0
+click(byId.qqModeSeg.children[3]); // 代回去验算
+check('quad check: x=1 and x=-7 both substitute to 0',
+  byId.qqRead.textContent.includes('x=1') && byId.qqRead.textContent.includes('x=-7') &&
+  byId.qqRead.textContent.includes('得 0'));
+check('G9: quad counts toward the 124-demo progress', byId.progressCount.textContent === '110 / 124');
+
+navGo('demo-growth');
+check('growth renders: 100 yuan at 10% for 2 years is 121',
+  byId.gwRead.textContent.includes('121'));
+click(byId.gwXPlus); // 11%
+check('growth: 11% for 2 years is 123.21, not 122',
+  byId.gwRead.textContent.includes('123.21') && byId.gwMsg.textContent.includes('100×(1+11%)²=123.21'));
+click(byId.gwModeSeg.children[1]); // 韦达
+check('growth vieta: x²−3x+1=0, sum 3, product 1, squares sum 7',
+  byId.gwRead.textContent.includes('x₁+x₂=3') && byId.gwRead.textContent.includes('x₁x₂=1') &&
+  byId.gwMsg.textContent.includes('=7'));
+click(byId.gwVietaSeg.children[1]); // x²−5x+6=0
+check('growth vieta: x²−5x+6=0, squares sum 13',
+  byId.gwMsg.textContent.includes('=13'));
+check('G9: growth counts toward the 124-demo progress', byId.progressCount.textContent === '111 / 124');
+
+navGo('demo-parabola');
+check('parabola renders: y=x², vertex (0,0), tangent to x-axis',
+  byId.ppRead.textContent.includes('顶点 (0,0)') && byId.ppRead.textContent.includes('开口向上') &&
+  byId.ppMsg.textContent.includes('与 x 轴相切于 (0,0)'));
+click(byId.ppKMinus); // k=-1
+check('parabola: k=-1 crosses the x-axis at (-1,0) and (1,0)',
+  byId.ppMsg.textContent.includes('与 x 轴交于 (-1,0) 和 (1,0)'));
+click(byId.ppKPlus); click(byId.ppKPlus); // k=1
+check('parabola: k=1 has no x-intercepts, Δ<0',
+  byId.ppMsg.textContent.includes('与 x 轴没有交点'));
+click(byId.ppModeSeg.children[1]); // 利润最高点
+check('parabola profit: raise 15 yuan, max profit 1250',
+  byId.ppRead.textContent.includes('总利润 1250 元') && byId.ppMsg.textContent.includes('最大利润 1250 元'));
+click(byId.ppXMinus); // 14 元
+check('parabola profit: raise 14 yuan, profit 1248',
+  byId.ppRead.textContent.includes('总利润 1248 元'));
+check('G9: parabola counts toward the 124-demo progress', byId.progressCount.textContent === '112 / 124');
+
+navGo('demo-spin');
+check('spin renders: square rotates 90°, distance from O unchanged',
+  byId.snRead.textContent.includes('正方形') && byId.snRead.textContent.includes('转 90°') &&
+  byId.snRead.textContent.includes('距离都是'));
+check('spin: square at 90° coincides with itself',
+  byId.snMsg.textContent.includes('重合'));
+click(byId.snShapeSeg.children[0]); // 三角形
+check('spin: scalene triangle at 90° does not coincide',
+  byId.snMsg.textContent.includes('还没和原来重合'));
+click(byId.snHalfBtn); // 转 180°
+check('spin: 180° is central symmetry',
+  byId.snRead.textContent.includes('转 180°') && byId.snMsg.textContent.includes('中心对称'));
+click(byId.snShapeSeg.children[2]); // 等边三角形
+click(byId.snAngPlus); click(byId.snAngPlus); click(byId.snAngPlus); click(byId.snAngPlus); // 180→300
+check('spin: equilateral at 300° does not coincide (needs 120° steps)',
+  byId.snMsg.textContent.includes('还没和原来重合'));
+check('G9: spin counts toward the 124-demo progress', byId.progressCount.textContent === '113 / 124');
+
+navGo('demo-circangle');
+check('circangle renders: central 120°, inscribed 60°',
+  byId.cjRead.textContent.includes('∠AOB=120°') && byId.cjRead.textContent.includes('∠ACB=60°'));
+click(byId.cjCPosSeg.children[3]); // 劣弧 90°
+check('circangle: C on the minor arc sees 120°',
+  byId.cjRead.textContent.includes('∠ACB=120°'));
+click(byId.cjModeSeg.children[1]); // 垂径
+check('circangle chord: r=5, chord 8, distance 3',
+  byId.cjRead.textContent.includes('弦长 8') && byId.cjRead.textContent.includes('距离是 3'));
+click(byId.cjChordPlus); // 弦 6
+check('circangle chord: chord 6, distance 4',
+  byId.cjRead.textContent.includes('弦长 6') && byId.cjRead.textContent.includes('距离是 4'));
+check('G9: circangle counts toward the 124-demo progress', byId.progressCount.textContent === '114 / 124');
+
+navGo('demo-tangent');
+check('tangent renders: r=4, d=5, separate, 0 intersections',
+  byId.tgRead.textContent.includes('d=5') && byId.tgRead.textContent.includes('相离') && byId.tgRead.textContent.includes('0 个交点'));
+click(byId.tgDMinus); // d=4
+check('tangent: d=4, tangent, 1 intersection',
+  byId.tgRead.textContent.includes('相切') && byId.tgRead.textContent.includes('1 个交点'));
+click(byId.tgDMinus); // d=3
+check('tangent: d=3, intersecting, 2 intersections',
+  byId.tgRead.textContent.includes('相交') && byId.tgRead.textContent.includes('2 个交点'));
+click(byId.tgModeSeg.children[1]); // 切线长
+check('tangent length: OP=5, PA=PB=3',
+  byId.tgRead.textContent.includes('PA=PB=3'));
+click(byId.tgOPPlus); // OP=6
+check('tangent length: OP=6, PA=PB=4.47',
+  byId.tgRead.textContent.includes('PA=PB=4.47'));
+check('G9: tangent counts toward the 124-demo progress', byId.progressCount.textContent === '115 / 124');
+
+navGo('demo-sector');
+check('sector renders: r=6, n=60°, arc 6.28, area 18.85',
+  byId.sfRead.textContent.includes('弧长 l=6.28') && byId.sfRead.textContent.includes('面积 S=18.85'));
+click(byId.sfNPlus); // n=90°
+check('sector: n=90°, arc 9.42',
+  byId.sfRead.textContent.includes('弧长 l=9.42'));
+click(byId.sfModeSeg.children[1]); // 圆锥
+check('sector cone: r=3, l=5, lateral area 15π, angle 216°',
+  byId.sfRead.textContent.includes('15π') && byId.sfMsg.textContent.includes('216°'));
+click(byId.sfCRPlus); // r=4
+check('sector cone: r=4, lateral area 20π, angle 288°',
+  byId.sfRead.textContent.includes('20π') && byId.sfMsg.textContent.includes('288°'));
+check('G9: sector counts toward the 124-demo progress', byId.progressCount.textContent === '116 / 124');
+
+navGo('demo-coin');
+check('coin renders: no tosses yet',
+  byId.cfRead.textContent.includes('还没抛'));
+click(byId.cfToss10);
+check('coin: 10 tosses counted, frequency shown',
+  byId.cfRead.textContent.includes('抛了 10 次') && byId.cfRead.textContent.includes('频率是'));
+click(byId.cfReset);
+check('coin reset: back to no tosses', byId.cfRead.textContent.includes('还没抛'));
+click(byId.cfModeSeg.children[1]); // 摸红球
+check('coin ball: red probability 3/5',
+  byId.cfRead.textContent.includes('3/5=0.6'));
+click(byId.cfDrawBtn);
+check('coin ball: one draw counted', byId.cfRead.textContent.includes('摸了 1 次'));
+check('G9: coin counts toward the 124-demo progress', byId.progressCount.textContent === '117 / 124');
+
+navGo('demo-tree');
+check('tree renders: prompt to grow the next level',
+  byId.twRead.textContent.includes('长出下一层'));
+click(byId.twNextBtn);
+check('tree level 1: first coin has 正面、反面',
+  byId.twRead.textContent.includes('正面、反面'));
+click(byId.twNextBtn);
+check('tree level 2: two coins, 4 outcomes, both heads 1/4',
+  byId.twRead.textContent.includes('4 种') && byId.twRead.textContent.includes('概率 1/4'));
+click(byId.twScenSeg.children[1]); // 两枚骰子
+click(byId.twNextBtn); click(byId.twNextBtn);
+check('tree dice: 36 outcomes, sum 7 has 6, probability 1/6',
+  byId.twRead.textContent.includes('36 种') && byId.twRead.textContent.includes('1/6'));
+click(byId.twScenSeg.children[2]); // 抽两张卡片
+click(byId.twNextBtn); click(byId.twNextBtn);
+check('tree cards: 6 combinations, both odd 1/6',
+  byId.twRead.textContent.includes('6 种组合') && byId.twRead.textContent.includes('概率 1/6'));
+check('G9: tree counts toward the 124-demo progress', byId.progressCount.textContent === '118 / 124');
+
+navGo('demo-hyperbola');
+check('hyperbola renders: k=6 in quadrants I/III, P(2,3), area 6',
+  byId.hbRead.textContent.includes('第一、三象限') && byId.hbRead.textContent.includes('P(2,3)') &&
+  byId.hbRead.textContent.includes('矩形面积 |xy|=6'));
+click(byId.hbKMinus); // k=4
+check('hyperbola: k=4, P(2,2), area 4',
+  byId.hbRead.textContent.includes('P(2,2)') && byId.hbRead.textContent.includes('矩形面积 |xy|=4'));
+click(byId.hbKMinus); click(byId.hbKMinus); // k=-2
+check('hyperbola: k=-2 in quadrants II/IV, P(2,-1)',
+  byId.hbRead.textContent.includes('第二、四象限') && byId.hbRead.textContent.includes('P(2,-1)'));
+check('G9: hyperbola counts toward the 124-demo progress', byId.progressCount.textContent === '119 / 124');
+
+navGo('demo-similar');
+check('similar renders: 3-4-5 scaled ×2 is 6-8-10, perimeter 24, area 24',
+  byId.siRead.textContent.includes('6、8、10') && byId.siRead.textContent.includes('周长 24') &&
+  byId.siRead.textContent.includes('面积 24'));
+click(byId.siKPlus); // k=2.5
+check('similar: ×2.5, sides 7.5-10-12.5, perimeter 30, area 37.5',
+  byId.siRead.textContent.includes('7.5、10、12.5') && byId.siRead.textContent.includes('周长 30') &&
+  byId.siRead.textContent.includes('面积 37.5'));
+click(byId.siModeSeg.children[1]); // 位似
+check('similar homothety: OA=2, k=2.5, OA′=5',
+  byId.siRead.textContent.includes("OA′=5"));
+click(byId.siKPlus); // k=3
+check('similar homothety: k=3, area 5×9=45',
+  byId.siMsg.textContent.includes('5×9=45'));
+check('G9: similar counts toward the 124-demo progress', byId.progressCount.textContent === '120 / 124');
+
+navGo('demo-shadow');
+check('shadow renders: your shadow 2m, pole 9.6m',
+  byId.swRead.textContent.includes('旗杆高 1.6×12÷2=9.6 米'));
+click(byId.swSPlus); // 3 米
+check('shadow: your shadow 3m, pole 6.4m',
+  byId.swRead.textContent.includes('旗杆高 1.6×12÷3=6.4 米'));
+click(byId.swModeSeg.children[1]); // AA 判定
+check('shadow AA: ∠A=50°, ∠B=60°, ∠C=70°',
+  byId.swRead.textContent.includes('∠C=70°') && byId.swMsg.textContent.includes('相似（AA）'));
+click(byId.swAMinus); // ∠A=40°
+check('shadow AA: ∠A=40°, ∠C=80°',
+  byId.swRead.textContent.includes('∠C=80°'));
+check('G9: shadow counts toward the 124-demo progress', byId.progressCount.textContent === '121 / 124');
+
+navGo('demo-trig');
+check('trig renders: ∠A=30°, opposite 5, adjacent 8.66, sin 0.5',
+  byId.tjRead.textContent.includes('对边 5') && byId.tjRead.textContent.includes('邻边 8.66') &&
+  byId.tjRead.textContent.includes('sin A=0.5'));
+check('trig: sin²+cos²=1', byId.tjMsg.textContent.includes('sin²A+cos²A=1'));
+click(byId.tjSpecialSeg.children[1]); // 45°
+check('trig 45°: tan A=1, sin45°=cos45°=√2/2',
+  byId.tjRead.textContent.includes('tan A=1') && byId.tjMsg.textContent.includes('sin45°=cos45°=√2/2'));
+click(byId.tjSpecialSeg.children[2]); // 60°
+check('trig 60°: sin60°=√3/2, opposite 8.66',
+  byId.tjMsg.textContent.includes('sin60°=√3/2') && byId.tjRead.textContent.includes('对边 8.66'));
+check('G9: trig counts toward the 124-demo progress', byId.progressCount.textContent === '122 / 124');
+
+navGo('demo-slope');
+check('slope renders: elevation 30°, 20m away, tower 11.55m',
+  byId.soRead.textContent.includes('楼高=20×tan30°=11.55 米'));
+click(byId.soAngSeg.children[1]); // 45°
+check('slope: elevation 45°, 20m away, tower 20m',
+  byId.soRead.textContent.includes('楼高=20×tan45°=20 米'));
+click(byId.soModeSeg.children[1]); // 坡度
+check('slope grade: 1:1, height 4m, slope face 4√2 ≈ 5.66m',
+  byId.soRead.textContent.includes('坡面长 5.66 米') && byId.soMsg.textContent.includes('4√2'));
+click(byId.soRatioSeg.children[1]); // 1:2
+check('slope grade: 1:2, height 4m, horizontal 8m, slope face 8.94m',
+  byId.soRead.textContent.includes('水平距离 8 米') && byId.soRead.textContent.includes('坡面长 8.94 米'));
+check('G9: slope counts toward the 124-demo progress', byId.progressCount.textContent === '123 / 124');
+
+navGo('demo-project');
+check('project renders: 4m object, sun 45°, shadow 4m',
+  byId.pjRead.textContent.includes('影长=4÷tan45°=4 米'));
+click(byId.pjAngSeg.children[0]); // 30°
+check('project sun: 30°, shadow 6.93m',
+  byId.pjRead.textContent.includes('影长=4÷tan30°=6.93 米'));
+click(byId.pjModeSeg.children[1]); // 灯光
+check('project lamp: lamp 2m away, shadow 1m',
+  byId.pjRead.textContent.includes('影长 1 米'));
+click(byId.pjDPlus); // 3 米
+check('project lamp: lamp 3m away, shadow 1.5m',
+  byId.pjRead.textContent.includes('影长 1.5 米'));
+click(byId.pjModeSeg.children[2]); // 三视图
+check('project views: cylinder, front rectangle, top circle',
+  byId.pjRead.textContent.includes('圆柱') && byId.pjRead.textContent.includes('主视图是长方形') &&
+  byId.pjRead.textContent.includes('俯视图是圆形'));
+click(byId.pjSolidSeg.children[1]); // 长方体
+check('project views: cuboid 6×3×4, front 6×4, left 3×4, top 6×3',
+  byId.pjRead.textContent.includes('主视图是长方形 6×4') && byId.pjRead.textContent.includes('左视图是长方形 3×4') &&
+  byId.pjRead.textContent.includes('俯视图是长方形 6×3'));
+check('G9: all 15 new demos tried by now', byId.progressCount.textContent === '124 / 124');
+
+// 知识点页 → 实验的链接（桩里的 grade-9.js）+ 真实 grade-9.js 的映射
+const G9_LINKS = [
+  ['9.1', 'quad', '去玩一元二次方程'], ['9.2', 'growth', '去玩利滚利和韦达'],
+  ['9.3', 'parabola', '去玩抛物线滑杆'], ['9.4', 'parabola', '去玩抛物线滑杆'],
+  ['9.5', 'spin', '去玩旋转和中心对称'], ['9.6', 'circangle', '去玩圆周角'],
+  ['9.7', 'tangent', '去玩直线和圆切线'], ['9.8', 'sector', '去玩扇形和圆锥'],
+  ['9.9', 'coin', '去玩抛硬币摸红球'], ['9.10', 'tree', '去玩树状图数一数'],
+  ['9.11', 'hyperbola', '去玩双曲线'], ['9.12', 'similar', '去玩相似放大'],
+  ['9.13', 'shadow', '去玩影子测高'], ['9.14', 'trig', '去玩锐角三角函数'],
+  ['9.15', 'slope', '去玩仰角和坡度'], ['9.16', 'project', '去玩投影和三视图']
+];
+G9_LINKS.forEach(function ([id, demo, label]) {
+  navGo('point-' + id);
+  check('point ' + id + ' links the ' + demo + ' experiment',
+    pointDetail.innerHTML.includes(label) && pointDetail.innerHTML.includes('data-demo-link="demo-' + demo + '"'));
+});
+navGo('point-9.3');
+sandbox.goDemoFromHere('demo-parabola');
+check('G9 demo from point keeps point as parent', byId.crumbTitle.innerHTML.includes('二次函数的图象和性质'));
+sandbox.navBackFn();
+check('G9 back from demo returns to point page', pointDetail.innerHTML.includes('二次函数的图象和性质'));
+const g9src = fs.readFileSync(root + '/content/grades/grade-9.js', 'utf8');
+const g9ids = [...g9src.matchAll(/id: "([0-9.]+)"/g)].map(m => m[1]);
+const g9demos = [...g9src.matchAll(/demo: (?:'([a-z]+)'|null)/g)].map(m => m[1] || null);
+const g9expected = {'9.1':'quad','9.2':'growth','9.3':'parabola','9.4':'parabola','9.5':'spin','9.6':'circangle','9.7':'tangent','9.8':'sector','9.9':'coin','9.10':'tree','9.11':'hyperbola','9.12':'similar','9.13':'shadow','9.14':'trig','9.15':'slope','9.16':'project'};
+check('grade-9.js: all 16 points map to the right experiment',
+  g9ids.length === 16 && g9ids.every((id, i) => g9demos[i] === g9expected[id]));
+check('grade-9.js: 9.3/9.11 no longer point at the linear function demo',
+  !g9src.includes("demo: 'function'"));
+const G9_DEMOS = ['quad', 'growth', 'parabola', 'spin', 'circangle', 'tangent', 'sector', 'coin', 'tree', 'hyperbola', 'similar', 'shadow', 'trig', 'slope', 'project'];
+const labelSrc9 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
+check('DEMO_LABEL covers all 15 new demos',
+  G9_DEMOS.every(k => labelSrc9.includes(k + ':')));
+check('viewForKey covers all 15 new demos',
+  G9_DEMOS.every(k => sandbox.viewForKey('demo-' + k) === 'demo-' + k));
+check('DEMO_GRADES puts all 15 new demos in grade 9',
+  G9_DEMOS.every(k => src.includes(k + ': [9]')));
+
+// ---------- 10. 复测修复 A–J ----------
 const html = fs.readFileSync(root + '/apps/web/index.html', 'utf8');
 
 // A. array demo: intro/foot/why follow rows/cols; square rotate message is meaningful.

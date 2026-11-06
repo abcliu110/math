@@ -6,9 +6,10 @@
    投影与视图。注意：2024 年修订版把章节重新编号（九下变为 31–34 章，
    概率初步移到九下），但主题顺序基本一致；本书按 A 版旧章节顺序写。共 9 个教学单元、16 条
    知识点。每条知识点：怎么做、为什么、容易错、看图学、动手试一试、讲回来、
-   先考一考、练一练（基础 → 提高）、奥数挑战。演示关联：二次函数、反比例
-   函数用函数演示（function）——演示本身是 y=kx+b 的滑杆，链接的用意是
-   “拖滑杆看图象变”的思路，二次函数/反比例函数的图象不是直线；其余为 null。 */
+   先考一考、练一练（基础 → 提高）、奥数挑战。演示关联：16 条知识点各有实验，
+   其中 9.3/9.4 共用抛物线演示（parabola，顶点式滑杆 + 交点即根 + 利润最值），
+   9.11 用双曲线演示（hyperbola，k 滑杆 + 矩形面积 |k|）；线性函数演示
+   （function，y=kx+b）只在 8 年级复用，9 年级不再用它冒充二次函数/反比例函数。 */
 const GRADE9_CONTENT = {
   grade: 9,
   edition: "A",
@@ -29,7 +30,7 @@ const GRADE9_CONTENT = {
           method: "配方法拼图",
           explainBack: "“配方法是补一块正方形；判别式先看有没有解。”",
           tryIt: "用配方法解x²+6x-7=0，再用公式法解一遍，比一比；算一算x²-4x+5=0的判别式，看看有没有实数根。",
-          demo: null,
+          demo: 'quad',
           recall: { q: "方程x²=9的解是多少？是x=3，还是x=±3？", answer: "x=±3", hint: "3²=9，(-3)²=9。" },
           practice: [
             { q: "解方程：x²-5x+6=0（用因式分解法）。", answer: "x=2或x=3", hint: "x²-5x+6=(x-2)(x-3)。", level: "基础" },
@@ -54,7 +55,7 @@ const GRADE9_CONTENT = {
           method: "利滚利法",
           explainBack: "“连续两次增长是平方；根的和与积藏在系数里。”",
           tryIt: "算一算：100元连续两次涨10%是多少？再算一算：200元两次降价后162元，平均每次降价百分之几？",
-          demo: null,
+          demo: 'growth',
           recall: { q: "某产品原价100元，连续两次降价10%，现价是多少？", answer: "81元", hint: "100×0.9×0.9=81。" },
           practice: [
             { q: "某商品原价200元，两次降价后现价162元，平均每次降价的百分率是多少？", answer: "10%", hint: "设降价率是x：200(1-x)²=162，(1-x)²=0.81。", level: "基础" },
@@ -80,7 +81,7 @@ const GRADE9_CONTENT = {
           method: "滑杆看抛物线法",
           explainBack: "“a管开口方向和大小；顶点式y=a(x-h)²+k，顶点是(h,k)。”",
           tryIt: "画一画y=x²、y=2x²、y=-x²的图象，比一比谁的口张得大；再求一求y=-x²+4x-3的开口方向和对称轴。",
-          demo: 'function',
+          demo: 'parabola',
           recall: { q: "抛物线y=2(x-1)²+3的顶点坐标是多少？", answer: "(1,3)", hint: "顶点式y=a(x-h)²+k，顶点是(h,k)。" },
           practice: [
             { q: "抛物线y=-x²+4x-3的开口方向和对称轴。", answer: "开口向下，对称轴x=2", hint: "a=-1<0，开口向下；对称轴x=-b/2a=2。", level: "基础" },
@@ -100,7 +101,7 @@ const GRADE9_CONTENT = {
           method: "交点即根法",
           explainBack: "“抛物线与x轴的交点横坐标就是方程的根；顶点处取最值。”",
           tryIt: "算一算y=x²-4x+3与x轴有几个交点；再解一解利润问题：每件利润30元，每天卖80件，每涨1元少卖4件，涨几元利润最大？",
-          demo: null,
+          demo: 'parabola',
           recall: { q: "抛物线y=x²-4x+3与x轴有几个交点？", answer: "2个", hint: "Δ=16-12=4>0。" },
           practice: [
             { q: "求抛物线y=x²-2x-8与x轴交点的横坐标。", answer: "4和-2", hint: "令y=0，解x²-2x-8=0。", level: "基础" },
@@ -126,7 +127,7 @@ const GRADE9_CONTENT = {
           method: "钉住一点转",
           explainBack: "“旋转只变位置不改形状；转180°重合就是中心对称。”",
           tryIt: "把一张纸上的三角形绕一个点旋转90°，看看对应点到旋转中心的距离变了没有；再找一找哪些图形是中心对称图形。",
-          demo: null,
+          demo: 'spin',
           recall: { q: "正方形绕它的中心旋转多少度能与自身重合？", answer: "90°（或180°、270°）", hint: "正方形有4条对称轴，旋转90°就重合。" },
           practice: [
             { q: "点A(2,3)绕原点旋转180°后，对应点的坐标是多少？", answer: "(-2,-3)", hint: "绕原点旋转180°，横、纵坐标都变号。", level: "基础" },
@@ -152,7 +153,7 @@ const GRADE9_CONTENT = {
           method: "站圆上看弦法",
           explainBack: "“圆周角是圆心角的一半；垂直于弦的直径平分弦。”",
           tryIt: "画一个圆，量一量同一条弧所对的圆心角和圆周角；再画一条弦，过圆心作它的垂线，看看弦是不是被平分了。",
-          demo: null,
+          demo: 'circangle',
           recall: { q: "圆心角∠AOB=80°，它所对弧上的圆周角是多少度？", answer: "40°", hint: "圆周角是圆心角的一半。" },
           practice: [
             { q: "半径是5的圆中，一条弦长8，这条弦到圆心的距离是多少？", answer: "3", hint: "弦的一半是4，√(5²-4²)=3。", level: "基础" },
@@ -172,7 +173,7 @@ const GRADE9_CONTENT = {
           method: "距离比半径法",
           explainBack: "“d<r相交，d=r相切，d>r相离；切线过切点与半径垂直。”",
           tryIt: "画一个圆，画一条直线，量一量圆心到直线的距离，判断直线和圆的位置关系；再从圆外一点引两条切线，量一量切线长。",
-          demo: null,
+          demo: 'tangent',
           recall: { q: "圆的半径是4，圆心到一条直线的距离是4，这条直线和圆是什么关系？", answer: "相切", hint: "d=r。" },
           practice: [
             { q: "圆的半径是6，圆心到直线的距离是3，直线和圆有几个交点？", answer: "2个", hint: "d<r，直线和圆相交。", level: "基础" },
@@ -192,7 +193,7 @@ const GRADE9_CONTENT = {
           method: "几分之几法",
           explainBack: "“弧长是圆周长的几分之几；扇形面积是圆面积的几分之几。”",
           tryIt: "算一算半径6、圆心角60°的扇形的弧长和面积；再算一算底面半径3、母线长5的圆锥的侧面积。",
-          demo: null,
+          demo: 'sector',
           recall: { q: "半径6、圆心角60°的扇形，弧长是多少？", answer: "2π", hint: "l=60×π×6÷180。" },
           practice: [
             { q: "半径是10、圆心角是90°的扇形面积是多少？", answer: "25π", hint: "S=90×π×10²÷360。", level: "基础" },
@@ -218,7 +219,7 @@ const GRADE9_CONTENT = {
           method: "长期频率法",
           explainBack: "“概率是长期频率；每次试验都是独立的。”",
           tryIt: "抛10次硬币，数一数正面几次；再想一想：袋子里3个红球、2个白球，摸到红球的概率是多少？",
-          demo: null,
+          demo: 'coin',
           recall: { q: "一个袋子里有3个红球、2个白球，摸出一个球，摸到红球的概率是多少？", answer: "3/5", hint: "3个红球，一共5个球。" },
           practice: [
             { q: "掷一枚骰子，掷出偶数的概率是多少？", answer: "1/2", hint: "偶数有2、4、6三个，一共6个面。", level: "基础" },
@@ -238,7 +239,7 @@ const GRADE9_CONTENT = {
           method: "摆出来数清法",
           explainBack: "“列表画树，把所有可能摆出来数；试验越多，频率越稳。”",
           tryIt: "掷两枚硬币，画树状图列出所有结果；再掷两枚骰子，数一数点数和是7的有几种组合。",
-          demo: null,
+          demo: 'tree',
           recall: { q: "掷两枚硬币，用树状图列一列，一共有几种可能的结果？", answer: "4种：正正、正反、反正、反反", hint: "第一枚2种，第二枚2种，2×2=4。" },
           practice: [
             { q: "同时掷两枚硬币，两枚都是正面的概率是多少？", answer: "1/4", hint: "4种等可能结果里，只有正正1种。", level: "基础" },
@@ -264,7 +265,7 @@ const GRADE9_CONTENT = {
           method: "乘积一定法",
           explainBack: "“xy=k，乘积一定；图象是双曲线，关于原点对称。”",
           tryIt: "画一画y=6/x和y=-6/x的图象；再算一算：点(2,3)在y=k/x上，k是多少？点(-2,-3)在不在同一条曲线上？",
-          demo: 'function',
+          demo: 'hyperbola',
           recall: { q: "点(2,3)在反比例函数y=k/x的图象上，k是多少？", answer: "6", hint: "k=xy=2×3。" },
           practice: [
             { q: "反比例函数y=6/x的图象在第几象限？", answer: "第一、三象限", hint: "k=6>0，图象在第一、三象限。", level: "基础" },
@@ -290,7 +291,7 @@ const GRADE9_CONTENT = {
           method: "按比例放大法",
           explainBack: "“周长比等于相似比，面积比等于相似比的平方。”",
           tryIt: "量一量照片和底片的对应边，算一算相似比；再算一算：相似比2:3的两个三角形，面积比是多少？",
-          demo: null,
+          demo: 'similar',
           recall: { q: "两个相似三角形的相似比是2:3，它们的面积比是多少？", answer: "4:9", hint: "面积比是相似比的平方。" },
           practice: [
             { q: "两个相似多边形的相似比是1:2，小多边形的周长是10，大多边形的周长是多少？", answer: "20", hint: "周长比等于相似比。", level: "基础" },
@@ -310,7 +311,7 @@ const GRADE9_CONTENT = {
           method: "影子测高法",
           explainBack: "“两角相等就能判定相似；周长比是相似比，面积比是相似比的平方。”",
           tryIt: "同一时刻，量一量自己的影子和旗杆的影子，算一算旗杆有多高；再判断：两边成比例、夹角相等，两个三角形相似吗？",
-          demo: null,
+          demo: 'shadow',
           recall: { q: "△ABC∽△DEF，AB=6，DE=9，BC=8，EF是多少？", answer: "12", hint: "6:9=8:EF。" },
           practice: [
             { q: "△ABC∽△DEF，相似比是2:5，△ABC的周长是12，△DEF的周长是多少？", answer: "30", hint: "周长比等于相似比：12×5÷2=30。", level: "基础" },
@@ -336,7 +337,7 @@ const GRADE9_CONTENT = {
           method: "角定比值定法",
           explainBack: "“sin是对边比斜边，cos是邻边比斜边，tan是对边比邻边。”",
           tryIt: "在Rt△ABC中，∠C=90°，AC=3，BC=4，算一算sin A、cos A、tan A；再背一背30°、45°、60°的三角函数值。",
-          demo: null,
+          demo: 'trig',
           recall: { q: "直角三角形中，∠A=30°，斜边是10，∠A的对边长是多少？", answer: "5", hint: "sin30°=对边/斜边=1/2。" },
           practice: [
             { q: "在Rt△ABC中，∠C=90°，AC=3，BC=4，求sin A和tan A的值。", answer: "sin A=4/5，tan A=4/3", hint: "斜边AB=5；sin A=BC/AB，tan A=BC/AC。", level: "基础" },
@@ -356,7 +357,7 @@ const GRADE9_CONTENT = {
           method: "画图选函数法",
           explainBack: "“已知什么、求什么，就选哪个三角函数；仰角俯角都是和水平线的夹角。”",
           tryIt: "站在操场上，测一测看旗杆顶的仰角，再算一算旗杆有多高；画一个坡度1:1的坡，算一算坡面长4√2米时铅直高度是多少。",
-          demo: null,
+          demo: 'slope',
           recall: { q: "站在地面看10米高的楼顶，仰角是30°，你离楼底多远？", answer: "约17.3米", hint: "tan30°=10÷距离，距离=10÷(√3/3)=10√3。" },
           practice: [
             { q: "在Rt△ABC中，∠C=90°，∠A=30°，斜边AB=8，求BC的长。", answer: "4", hint: "sin30°=BC/8=1/2。", level: "基础" },
@@ -382,7 +383,7 @@ const GRADE9_CONTENT = {
           method: "三个方向看影子法",
           explainBack: "“主视图从前看，左视图从左看，俯视图从上看；长对正、高平齐、宽相等。”",
           tryIt: "拿一个圆柱和一个长方体，画一画它们的三视图；再用手电筒照一个物体，看看影子怎么随着灯光位置变。",
-          demo: null,
+          demo: 'project',
           recall: { q: "一个正方体的主视图、左视图、俯视图分别是什么图形？", answer: "都是正方形", hint: "从哪个方向看都是正方形。" },
           practice: [
             { q: "一个圆柱的主视图是什么图形？俯视图呢？", answer: "主视图是长方形，俯视图是圆形", hint: "从前面看是长方形，从上面看是圆形。", level: "基础" },

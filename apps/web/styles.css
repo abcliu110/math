@@ -97,6 +97,11 @@ body[data-view="demo-trisides"] #demos, body[data-view="demo-congruent"] #demos,
 body[data-view="demo-algarea"] #demos, body[data-view="demo-algfrac"] #demos, body[data-view="demo-eqsieve"] #demos,
 body[data-view="demo-radical"] #demos, body[data-view="demo-pythag"] #demos, body[data-view="demo-pargram"] #demos,
 body[data-view="demo-specialquad"] #demos, body[data-view="demo-datastats"] #demos,
+body[data-view="demo-quad"] #demos, body[data-view="demo-growth"] #demos, body[data-view="demo-parabola"] #demos,
+body[data-view="demo-spin"] #demos, body[data-view="demo-circangle"] #demos, body[data-view="demo-tangent"] #demos,
+body[data-view="demo-sector"] #demos, body[data-view="demo-coin"] #demos, body[data-view="demo-tree"] #demos,
+body[data-view="demo-hyperbola"] #demos, body[data-view="demo-similar"] #demos, body[data-view="demo-shadow"] #demos,
+body[data-view="demo-trig"] #demos, body[data-view="demo-slope"] #demos, body[data-view="demo-project"] #demos,
 body[data-view="why"] #why, body[data-view="review"] #review,
 body[data-view="progress"] #review, body[data-view="lab"] #lab{display:block}
 .path-detail{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-top:16px}

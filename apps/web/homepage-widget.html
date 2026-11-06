@@ -104,6 +104,11 @@ body[data-view="demo-trisides"] #demos, body[data-view="demo-congruent"] #demos,
 body[data-view="demo-algarea"] #demos, body[data-view="demo-algfrac"] #demos, body[data-view="demo-eqsieve"] #demos,
 body[data-view="demo-radical"] #demos, body[data-view="demo-pythag"] #demos, body[data-view="demo-pargram"] #demos,
 body[data-view="demo-specialquad"] #demos, body[data-view="demo-datastats"] #demos,
+body[data-view="demo-quad"] #demos, body[data-view="demo-growth"] #demos, body[data-view="demo-parabola"] #demos,
+body[data-view="demo-spin"] #demos, body[data-view="demo-circangle"] #demos, body[data-view="demo-tangent"] #demos,
+body[data-view="demo-sector"] #demos, body[data-view="demo-coin"] #demos, body[data-view="demo-tree"] #demos,
+body[data-view="demo-hyperbola"] #demos, body[data-view="demo-similar"] #demos, body[data-view="demo-shadow"] #demos,
+body[data-view="demo-trig"] #demos, body[data-view="demo-slope"] #demos, body[data-view="demo-project"] #demos,
 body[data-view="why"] #why, body[data-view="review"] #review,
 body[data-view="progress"] #review, body[data-view="lab"] #lab{display:block}
 .path-detail{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-top:16px}
@@ -811,7 +816,7 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid{gr
       <span class="brand-text"><strong>数学小宇宙</strong><small>小学 1–6 · 初中 7–9 · 动手玩懂数学</small></span>
     </button>
     <h1 class="crumb-title" id="crumbTitle" aria-label="当前位置">数学</h1>
-    <div class="progress-chip" id="progressChip" title="已体验的演示">已体验 <b id="progressCount">0 / 109</b> 个演示</div>
+    <div class="progress-chip" id="progressChip" title="已体验的演示">已体验 <b id="progressCount">0 / 124</b> 个演示</div>
   </div>
 </header>
 
@@ -875,10 +880,10 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid{gr
     </div>
     <h3 class="panel-group-label">工具箱</h3>
     <div class="panels four">
-      <button class="panel" type="button" data-nav-key="demos"><span class="panel-icon" aria-hidden="true">✦</span><b>互动演示</b><span class="panel-sub">分数、天平、函数、十格阵，还有一到八年级实验都能玩</span><span class="panel-prog"><i id="panelDemoProg" style="width:0%"></i></span><span class="panel-tx" id="panelDemoTx">109 个演示 · 0 已体验</span></button>
+      <button class="panel" type="button" data-nav-key="demos"><span class="panel-icon" aria-hidden="true">✦</span><b>互动演示</b><span class="panel-sub">分数、天平、函数、十格阵，还有一到九年级实验都能玩</span><span class="panel-prog"><i id="panelDemoProg" style="width:0%"></i></span><span class="panel-tx" id="panelDemoTx">124 个演示 · 0 已体验</span></button>
       <button class="panel" type="button" data-nav-key="lab"><span class="panel-icon" aria-hidden="true">🧪</span><b>数学实验室</b><span class="panel-sub">没有题目，随便玩：分数、十格阵、天平、函数</span><span class="panel-tx">4 个自由玩小站 · 不评分</span></button>
       <button class="panel" type="button" data-nav-key="review"><span class="panel-icon" aria-hidden="true">✎</span><b>错题本</b><span class="panel-sub">错题连当时的图一起存</span><span class="panel-tx">还没有错题</span></button>
-      <button class="panel" type="button" data-nav-key="progress"><span class="panel-icon" aria-hidden="true">●</span><b>我的进度</b><span class="panel-sub">玩过的演示点亮一格</span><span class="panel-prog"><i id="panelProgFill" style="width:0%"></i></span><span class="panel-tx" id="panelProgTx">0 / 109 个演示</span></button>
+      <button class="panel" type="button" data-nav-key="progress"><span class="panel-icon" aria-hidden="true">●</span><b>我的进度</b><span class="panel-sub">玩过的演示点亮一格</span><span class="panel-prog"><i id="panelProgFill" style="width:0%"></i></span><span class="panel-tx" id="panelProgTx">0 / 124 个演示</span></button>
     </div>
   </section>
 
@@ -1027,6 +1032,21 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid{gr
       <button class="panel" type="button" data-nav-key="demo-pargram"><span class="panel-icon" aria-hidden="true">▱</span><b>平行四边形：推一推</b><span class="panel-sub">推一推，对角线还是互相平分</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">8 年级 · 平行四边形</span></button>
       <button class="panel" type="button" data-nav-key="demo-specialquad"><span class="panel-icon" aria-hidden="true">▧</span><b>特殊的平行四边形：加条件变身</b><span class="panel-sub">加一个直角变矩形，再加邻边相等变正方形</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">8 年级 · 平行四边形</span></button>
       <button class="panel" type="button" data-nav-key="demo-datastats"><span class="panel-icon" aria-hidden="true">▮</span><b>数据的分析：算一算</b><span class="panel-sub">加一个 100，平均数跑了，中位数没动</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">8 年级 · 数据的分析</span></button>
+      <button class="panel" type="button" data-nav-key="demo-quad"><span class="panel-icon" aria-hidden="true">x²</span><b>一元二次方程：配方法</b><span class="panel-sub">x²+6x−7=0，补一块 3×3 的正方形</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">9 年级 · 一元二次方程</span></button>
+      <button class="panel" type="button" data-nav-key="demo-growth"><span class="panel-icon" aria-hidden="true">↗</span><b>增长率与韦达定理</b><span class="panel-sub">100 元涨两年是 121 元，不是 120 元</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">9 年级 · 一元二次方程</span></button>
+      <button class="panel" type="button" data-nav-key="demo-parabola"><span class="panel-icon" aria-hidden="true">⌒</span><b>二次函数：抛物线</b><span class="panel-sub">拖 a、h、k，看开口、顶点和交点怎么走</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">9 年级 · 二次函数</span></button>
+      <button class="panel" type="button" data-nav-key="demo-spin"><span class="panel-icon" aria-hidden="true">↻</span><b>旋转与中心对称</b><span class="panel-sub">钉住一点转，转 180° 就和原来重合</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">9 年级 · 旋转</span></button>
+      <button class="panel" type="button" data-nav-key="demo-circangle"><span class="panel-icon" aria-hidden="true">○</span><b>圆：圆周角</b><span class="panel-sub">站在圆上看，角永远是圆心角的一半</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">9 年级 · 圆</span></button>
+      <button class="panel" type="button" data-nav-key="demo-tangent"><span class="panel-icon" aria-hidden="true">—○</span><b>直线和圆、切线长</b><span class="panel-sub">d 比 r 大就碰不上，等于 r 就刚好碰一下</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">9 年级 · 圆</span></button>
+      <button class="panel" type="button" data-nav-key="demo-sector"><span class="panel-icon" aria-hidden="true">◔</span><b>弧长、扇形与圆锥</b><span class="panel-sub">弧是圆周的几分之几，面积也是</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">9 年级 · 圆</span></button>
+      <button class="panel" type="button" data-nav-key="demo-coin"><span class="panel-icon" aria-hidden="true">●</span><b>随机事件与概率</b><span class="panel-sub">抛 100 次，正面慢慢贴近一半</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">9 年级 · 概率初步</span></button>
+      <button class="panel" type="button" data-nav-key="demo-tree"><span class="panel-icon" aria-hidden="true">⑃</span><b>树状图求概率</b><span class="panel-sub">分支一层一层长出来，数清楚就不会漏</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">9 年级 · 概率初步</span></button>
+      <button class="panel" type="button" data-nav-key="demo-hyperbola"><span class="panel-icon" aria-hidden="true">～</span><b>反比例函数：双曲线</b><span class="panel-sub">xy 的乘积一定，矩形面积永远是 |k|</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">9 年级 · 反比例函数</span></button>
+      <button class="panel" type="button" data-nav-key="demo-similar"><span class="panel-icon" aria-hidden="true">△</span><b>相似与位似</b><span class="panel-sub">边长乘 2，面积乘 4</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">9 年级 · 相似</span></button>
+      <button class="panel" type="button" data-nav-key="demo-shadow"><span class="panel-icon" aria-hidden="true">☀</span><b>相似三角形：影子测高</b><span class="panel-sub">你的影子 2 米，旗杆的影子 12 米</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">9 年级 · 相似</span></button>
+      <button class="panel" type="button" data-nav-key="demo-trig"><span class="panel-icon" aria-hidden="true">∠</span><b>锐角三角函数</b><span class="panel-sub">角一定，比值就一定，三角形大小没关系</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">9 年级 · 锐角三角函数</span></button>
+      <button class="panel" type="button" data-nav-key="demo-slope"><span class="panel-icon" aria-hidden="true">⛰</span><b>仰角、俯角与坡度</b><span class="panel-sub">视线和水平线的夹角，才是仰角</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">9 年级 · 锐角三角函数</span></button>
+      <button class="panel" type="button" data-nav-key="demo-project"><span class="panel-icon" aria-hidden="true">▣</span><b>投影与三视图</b><span class="panel-sub">三个方向的影子合起来，立体形状就定了</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">9 年级 · 投影与视图</span></button>
       <button class="panel" type="button" data-nav-key="why"><span class="panel-icon" aria-hidden="true">？</span><b>为什么小实验</b><span class="panel-sub">进位、分数除法、面积公式</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">3 个小实验</span></button>
     </div>
 
@@ -3422,6 +3442,270 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid{gr
         <p id="dsMsg">方差是“离平均数有多远”的平均：离得越远，波动越大。</p>
         <p class="demo-foot">成功标准：说出“平均数怕极端值，中位数不怕；方差越小越稳定”。</p>
         <p class="why"><b>为什么？</b>平均数怕极端值：一个 100 分能拉高全班平均分；中位数不怕，因为它只看中间。方差是“离平均数有多远”的平均——离得越远，波动越大。</p>
+      </article>
+
+      <article class="demo-card" id="demo-quad">
+        <p class="demo-tag">9 年级 · 一元二次方程</p>
+        <h3>一元二次方程：配方法、公式法、判别式</h3>
+        <p>配方法是“补一块正方形”；判别式是“先看有没有解”的红绿灯。选一道题，再换一种解法，看答案是不是同一个。</p>
+        <div class="control-row"><span>选一道题</span><div class="seg" id="qqProbSeg"></div></div>
+        <div class="control-row"><span>怎么解</span><div class="seg" id="qqModeSeg"></div></div>
+        <p class="func-eq" id="qqRead"></p>
+        <p id="qqMsg"></p>
+        <p class="demo-foot">成功标准：说出“配方法是补一块正方形；Δ&lt;0 没有实数根”。</p>
+        <p class="why"><b>为什么？</b>公式法就是配方法配出来的通用答案。判别式是根号里的数：是负的，开不出来，就没有实数根。</p>
+      </article>
+
+      <article class="demo-card" id="demo-growth">
+        <p class="demo-tag">9 年级 · 一元二次方程</p>
+        <h3>增长率与韦达定理：利滚利</h3>
+        <p>连续两次增长是乘两次 (1+x)，不是 (1+2x)。根的和与积就藏在系数里，不用解方程也知道。</p>
+        <div class="control-row"><span>玩什么</span><div class="seg" id="gwModeSeg"></div></div>
+        <div id="gwGrowthBox">
+          <div class="control-row"><span>每年增长率</span><div class="seg"><button type="button" id="gwXMinus">−</button><span class="arr-tx" id="gwXTx">x = 10%</span><button type="button" id="gwXPlus">＋</button></div></div>
+        </div>
+        <div id="gwVietaBox" hidden>
+          <div class="control-row"><span>选一个方程</span><div class="seg" id="gwVietaSeg"></div></div>
+        </div>
+        <p class="func-eq" id="gwRead"></p>
+        <p id="gwMsg"></p>
+        <p class="demo-foot">成功标准：说出“连续两次增长是平方；根的和与积藏在系数里”。</p>
+        <p class="why"><b>为什么？</b>第一年乘 (1+x)，第二年再乘 (1+x)，所以是平方。韦达定理是把根加起来、乘起来，结果正好是系数变的。</p>
+      </article>
+
+      <article class="demo-card" id="demo-parabola">
+        <p class="demo-tag">9 年级 · 二次函数</p>
+        <h3>二次函数：抛物线滑杆</h3>
+        <p>顶点式 y=a(x−h)²+k：a 管开口方向和大小，(h,k) 就是顶点。拖一拖，看顶点走、开口变、和 x 轴的交点跟着变。</p>
+        <div class="control-row"><span>玩什么</span><div class="seg" id="ppModeSeg"></div></div>
+        <div id="ppParaBox">
+          <div class="control-row"><span>a（开口）</span><div class="seg"><button type="button" id="ppAMinus">−</button><span class="arr-tx" id="ppATx">a = 1</span><button type="button" id="ppAPlus">＋</button></div></div>
+          <div class="control-row"><span>h（左右）</span><div class="seg"><button type="button" id="ppHMinus">−</button><span class="arr-tx" id="ppHTx">h = 0</span><button type="button" id="ppHPlus">＋</button></div></div>
+          <div class="control-row"><span>k（上下）</span><div class="seg"><button type="button" id="ppKMinus">−</button><span class="arr-tx" id="ppKTx">k = 0</span><button type="button" id="ppKPlus">＋</button></div></div>
+          <svg id="ppSvg" viewBox="0 0 640 360" role="img" aria-label="抛物线图象"></svg>
+        </div>
+        <div id="ppProfitBox" hidden>
+          <div class="control-row"><span>涨价几元</span><div class="seg"><button type="button" id="ppXMinus">−</button><span class="arr-tx" id="ppXTx">涨 15 元</span><button type="button" id="ppXPlus">＋</button></div></div>
+          <svg id="ppProfitSvg" viewBox="0 0 640 360" role="img" aria-label="利润随涨价变化的图象"></svg>
+        </div>
+        <p class="func-eq" id="ppRead"></p>
+        <p id="ppMsg"></p>
+        <p class="demo-foot">成功标准：说出“a 管开口，顶点是 (h,k)；顶点处取最值”。</p>
+        <p class="why"><b>为什么？</b>抛物线是“对称的弯”：顶点是最高点（或最低点），左右两边照镜子。y=0 的点就是方程的解——图象和方程是同一件事的两种说法。</p>
+      </article>
+
+      <article class="demo-card" id="demo-spin">
+        <p class="demo-tag">9 年级 · 旋转</p>
+        <h3>旋转与中心对称：钉住一点转</h3>
+        <p>旋转只改变位置，不改变形状和大小。转 180° 后和原来重合，就是中心对称。换个图形，看它转多少度能和自己重合。</p>
+        <div class="control-row"><span>转哪个图形</span><div class="seg" id="snShapeSeg"></div></div>
+        <div class="control-row"><span>旋转角</span><div class="seg"><button type="button" id="snAngMinus">−</button><span class="arr-tx" id="snAngTx">转 90°</span><button type="button" id="snAngPlus">＋</button></div></div>
+        <div class="btn-row"><button class="btn small primary" id="snHalfBtn" type="button">转 180° 看中心对称</button></div>
+        <svg id="snSvg" viewBox="0 0 400 400" role="img" aria-label="图形绕中心旋转"></svg>
+        <p class="func-eq" id="snRead"></p>
+        <p id="snMsg"></p>
+        <p class="demo-foot">成功标准：说出“旋转只变位置不改形状；转 180° 重合就是中心对称”。</p>
+        <p class="why"><b>为什么？</b>旋转是“钉住一点转”：钉子不动，离钉子越远的点走过的弧越长，但图形本身一点没变。正方形转 90° 就重合，等边三角形要转 120°。</p>
+      </article>
+
+      <article class="demo-card" id="demo-circangle">
+        <p class="demo-tag">9 年级 · 圆</p>
+        <h3>圆：圆周角是圆心角的一半</h3>
+        <p>点 C 在圆上走，圆心角 ∠AOB 不动，圆周角 ∠ACB 始终是它的一半。点 C 走到另一段弧上，角就变大了。</p>
+        <div class="control-row"><span>玩什么</span><div class="seg" id="cjModeSeg"></div></div>
+        <div id="cjAngleBox">
+          <div class="control-row"><span>点 C 在哪段弧上</span><div class="seg" id="cjCPosSeg"></div></div>
+          <svg id="cjSvg" viewBox="0 0 400 400" role="img" aria-label="圆周角和圆心角"></svg>
+        </div>
+        <div id="cjChordBox" hidden>
+          <div class="control-row"><span>弦长</span><div class="seg"><button type="button" id="cjChordMinus">−</button><span class="arr-tx" id="cjChordTx">弦长 8</span><button type="button" id="cjChordPlus">＋</button></div></div>
+          <svg id="cjChordSvg" viewBox="0 0 400 400" role="img" aria-label="垂径定理"></svg>
+        </div>
+        <p class="func-eq" id="cjRead"></p>
+        <p id="cjMsg"></p>
+        <p class="demo-foot">成功标准：说出“圆周角是圆心角的一半；垂直于弦的直径平分弦”。</p>
+        <p class="why"><b>为什么？</b>站在圆上看一条弦，视角只有站在圆心看的一半。垂径定理是因为圆是轴对称图形：直径是它的对称轴，弦被对称轴平分。</p>
+      </article>
+
+      <article class="demo-card" id="demo-tangent">
+        <p class="demo-tag">9 年级 · 圆</p>
+        <h3>直线和圆、切线长</h3>
+        <p>圆心到直线的距离 d 和半径 r 一比，位置关系就定了：d&lt;r 相交，d=r 相切，d&gt;r 相离。切线过切点，一定和半径垂直。</p>
+        <div class="control-row"><span>玩什么</span><div class="seg" id="tgModeSeg"></div></div>
+        <div id="tgLineBox">
+          <div class="control-row"><span>圆心到直线的距离 d（r=4）</span><div class="seg"><button type="button" id="tgDMinus">−</button><span class="arr-tx" id="tgDTx">d = 5</span><button type="button" id="tgDPlus">＋</button></div></div>
+          <svg id="tgSvg" viewBox="0 0 400 360" role="img" aria-label="直线和圆的位置关系"></svg>
+        </div>
+        <div id="tgTanBox" hidden>
+          <div class="control-row"><span>圆外一点 P 到圆心的距离（r=4）</span><div class="seg"><button type="button" id="tgOPMinus">−</button><span class="arr-tx" id="tgOPTx">OP = 5</span><button type="button" id="tgOPPlus">＋</button></div></div>
+          <svg id="tgTanSvg" viewBox="0 0 400 360" role="img" aria-label="从圆外一点引两条切线"></svg>
+        </div>
+        <p class="func-eq" id="tgRead"></p>
+        <p id="tgMsg"></p>
+        <p class="demo-foot">成功标准：说出“d&lt;r 相交，d=r 相切，d&gt;r 相离；切线长相等”。</p>
+        <p class="why"><b>为什么？</b>切线是“刚好碰一下”的直线——半径指向切点，切线必须和它垂直，不然就会穿进圆里。两条切线长相等，是因为它们和两条半径构成两个全等的直角三角形。</p>
+      </article>
+
+      <article class="demo-card" id="demo-sector">
+        <p class="demo-tag">9 年级 · 圆</p>
+        <h3>弧长、扇形与圆锥</h3>
+        <p>弧长是圆周长的几分之几，扇形面积是圆面积的几分之几。圆锥的侧面摊开是扇形，扇形的弧长正好围成底面圆。</p>
+        <div class="control-row"><span>玩什么</span><div class="seg" id="sfModeSeg"></div></div>
+        <div id="sfSectorBox">
+          <div class="control-row"><span>半径 r</span><div class="seg"><button type="button" id="sfRMinus">−</button><span class="arr-tx" id="sfRTx">r = 6</span><button type="button" id="sfRPlus">＋</button></div></div>
+          <div class="control-row"><span>圆心角 n</span><div class="seg"><button type="button" id="sfNMinus">−</button><span class="arr-tx" id="sfNTx">n = 60°</span><button type="button" id="sfNPlus">＋</button></div></div>
+          <svg id="sfSvg" viewBox="0 0 400 400" role="img" aria-label="扇形"></svg>
+        </div>
+        <div id="sfConeBox" hidden>
+          <div class="control-row"><span>底面半径 r（母线 l=5）</span><div class="seg"><button type="button" id="sfCRMinus">−</button><span class="arr-tx" id="sfCRTx">r = 3</span><button type="button" id="sfCRPlus">＋</button></div></div>
+          <svg id="sfConeSvg" viewBox="0 0 400 400" role="img" aria-label="圆锥侧面展开成扇形"></svg>
+        </div>
+        <p class="func-eq" id="sfRead"></p>
+        <p id="sfMsg"></p>
+        <p class="demo-foot">成功标准：说出“弧长是圆周长的几分之几；扇形面积是圆面积的几分之几”。</p>
+        <p class="why"><b>为什么？</b>圆心角占 360° 的几分之几，弧就占圆周长的几分之几。扇形面积是 (1/2)lr——扇形可以看成无数个小三角形拼起来，底是弧长，高是半径，面积是底乘高除以 2。</p>
+      </article>
+
+      <article class="demo-card" id="demo-coin">
+        <p class="demo-tag">9 年级 · 概率初步</p>
+        <h3>随机事件与概率：抛硬币、摸红球</h3>
+        <p>概率是“长期来看会发生多少次”。抛 10 次和抛 100 次比一比，正面频率是不是越来越贴近 1/2。</p>
+        <div class="control-row"><span>玩什么</span><div class="seg" id="cfModeSeg"></div></div>
+        <div id="cfCoinBox">
+          <div class="btn-row">
+            <button class="btn small primary" id="cfToss10" type="button">抛 10 次</button>
+            <button class="btn small primary" id="cfToss100" type="button">抛 100 次</button>
+            <button class="btn small ghost" id="cfReset" type="button">重新开始</button>
+          </div>
+        </div>
+        <div id="cfBallBox" hidden>
+          <div class="btn-row">
+            <button class="btn small primary" id="cfDrawBtn" type="button">摸一个球</button>
+            <button class="btn small ghost" id="cfDrawReset" type="button">重新开始</button>
+          </div>
+        </div>
+        <p class="func-eq" id="cfRead"></p>
+        <p id="cfMsg"></p>
+        <p class="demo-foot">成功标准：说出“概率是长期频率；每次试验都是独立的”。</p>
+        <p class="why"><b>为什么？</b>抛硬币 1000 次，正面大约 500 次——频率越抛越接近 1/2。连续 3 次正面，下一次还是 1/2 是正面，前面不影响后面。</p>
+      </article>
+
+      <article class="demo-card" id="demo-tree">
+        <p class="demo-tag">9 年级 · 概率初步</p>
+        <h3>树状图求概率：摆出来数清楚</h3>
+        <p>列表和画树是“把所有可能都摆出来数”——数清楚了，概率就不会漏、不会重。点“长出下一层”，分支一步一步长出来。</p>
+        <div class="control-row"><span>算什么</span><div class="seg" id="twScenSeg"></div></div>
+        <div class="btn-row">
+          <button class="btn small primary" id="twNextBtn" type="button">长出下一层</button>
+          <button class="btn small ghost" id="twResetBtn" type="button">重新开始</button>
+        </div>
+        <p class="func-eq" id="twRead"></p>
+        <p id="twMsg"></p>
+        <p class="demo-foot">成功标准：说出“列表画树，把所有可能摆出来数；试验越多，频率越稳”。</p>
+        <p class="why"><b>为什么？</b>点数和是 7 有 6 种组合，和是 2 只有 1 种——11 种和数不是等可能的。先数清“所有等可能结果”，再数“合要求的有几种”。</p>
+      </article>
+
+      <article class="demo-card" id="demo-hyperbola">
+        <p class="demo-tag">9 年级 · 反比例函数</p>
+        <h3>反比例函数：双曲线</h3>
+        <p>y=k/x 是“乘积一定”：xy=k。拖 k 看双曲线在哪个象限、张得多开；动一动曲线上的点 P，它向两轴作垂线围成的矩形面积永远是 |k|。</p>
+        <div class="control-row"><span>k</span><div class="seg"><button type="button" id="hbKMinus">−</button><span class="arr-tx" id="hbKTx">k = 6</span><button type="button" id="hbKPlus">＋</button></div></div>
+        <div class="control-row"><span>点 P 的横坐标 x</span><div class="seg"><button type="button" id="hbXMinus">−</button><span class="arr-tx" id="hbXTx">x = 2</span><button type="button" id="hbXPlus">＋</button></div></div>
+        <svg id="hbSvg" viewBox="0 0 640 360" role="img" aria-label="反比例函数双曲线"></svg>
+        <p class="func-eq" id="hbRead"></p>
+        <p id="hbMsg"></p>
+        <p class="demo-foot">成功标准：说出“xy=k，乘积一定；图象是双曲线，关于原点对称”。</p>
+        <p class="why"><b>为什么？</b>长方形面积固定，长变大宽就变小；所以图象是两条弯弯的曲线，越靠近轴越贴近轴，永远碰不到轴。x=0 时 y 没意义，图象永远过不了原点。</p>
+      </article>
+
+      <article class="demo-card" id="demo-similar">
+        <p class="demo-tag">9 年级 · 相似</p>
+        <h3>相似与位似：按比例放大</h3>
+        <p>相似是“按比例放大缩小”：边长乘 k，周长乘 k，面积乘 k²。位似是“从一个点出发放大”，像投影仪，光源就是位似中心。</p>
+        <div class="control-row"><span>玩什么</span><div class="seg" id="siModeSeg"></div></div>
+        <div class="control-row"><span>放大几倍 k</span><div class="seg"><button type="button" id="siKMinus">−</button><span class="arr-tx" id="siKTx">k = 2</span><button type="button" id="siKPlus">＋</button></div></div>
+        <svg id="siSvg" viewBox="0 0 640 360" role="img" aria-label="相似放大和位似"></svg>
+        <p class="func-eq" id="siRead"></p>
+        <p id="siMsg"></p>
+        <p class="demo-foot">成功标准：说出“周长比等于相似比，面积比等于相似比的平方”。</p>
+        <p class="why"><b>为什么？</b>长和宽都乘了 k，面积就乘了 k²。矩形要长宽比相同才相似，长方形和正方形就不相似。</p>
+      </article>
+
+      <article class="demo-card" id="demo-shadow">
+        <p class="demo-tag">9 年级 · 相似</p>
+        <h3>相似三角形：影子测高、AA 判定</h3>
+        <p>同一时刻太阳光是平行的，旗杆和人、影子构成两个相似三角形。AA 就够了：两个角定了，第三个角也被 180° 定了，形状就锁死了。</p>
+        <div class="control-row"><span>玩什么</span><div class="seg" id="swModeSeg"></div></div>
+        <div id="swShadowBox">
+          <div class="control-row"><span>你的影子长几米（你高 1.6 米，旗杆影子 12 米）</span><div class="seg"><button type="button" id="swSMinus">−</button><span class="arr-tx" id="swSTx">2 米</span><button type="button" id="swSPlus">＋</button></div></div>
+          <svg id="swSvg" viewBox="0 0 640 360" role="img" aria-label="影子测高"></svg>
+        </div>
+        <div id="swAABox" hidden>
+          <div class="control-row"><span>∠A</span><div class="seg"><button type="button" id="swAMinus">−</button><span class="arr-tx" id="swATx">∠A = 50°</span><button type="button" id="swAPlus">＋</button></div></div>
+          <svg id="swAASvg" viewBox="0 0 640 360" role="img" aria-label="两角相等判定相似"></svg>
+        </div>
+        <p class="func-eq" id="swRead"></p>
+        <p id="swMsg"></p>
+        <p class="demo-foot">成功标准：说出“两角相等就能判定相似；影子比就是高度比”。</p>
+        <p class="why"><b>为什么？</b>太阳光平行，两个三角形的角对应相等，所以相似。两边成比例还要夹角相等，不然形状还能晃。</p>
+      </article>
+
+      <article class="demo-card" id="demo-trig">
+        <p class="demo-tag">9 年级 · 锐角三角函数</p>
+        <h3>锐角三角函数：角定，比值定</h3>
+        <p>sin 是对边比斜边，cos 是邻边比斜边，tan 是对边比邻边。把三角形放大缩小，角不变，三个比值一个都不变。</p>
+        <div class="control-row"><span>∠A</span><div class="seg"><button type="button" id="tjAngMinus">−</button><span class="arr-tx" id="tjAngTx">∠A = 30°</span><button type="button" id="tjAngPlus">＋</button></div></div>
+        <div class="control-row"><span>特殊角</span><div class="seg" id="tjSpecialSeg"></div></div>
+        <svg id="tjSvg" viewBox="0 0 640 360" role="img" aria-label="直角三角形三角函数"></svg>
+        <p class="func-eq" id="tjRead"></p>
+        <p id="tjMsg"></p>
+        <p class="demo-foot">成功标准：说出“sin 是对边比斜边，cos 是邻边比斜边，tan 是对边比邻边”。</p>
+        <p class="why"><b>为什么？</b>sin²+cos²=1，是因为对边²+邻边²=斜边²（勾股定理），两边同除以斜边²。角度翻倍，比值不翻倍：sin60°=√3/2，不是 1。</p>
+      </article>
+
+      <article class="demo-card" id="demo-slope">
+        <p class="demo-tag">9 年级 · 锐角三角函数</p>
+        <h3>仰角、俯角与坡度：解直角三角形</h3>
+        <p>仰角俯角都是“视线和水平线的夹角”。坡度是“铅直高度比水平距离”——1:2 的坡，走 2 米水平才爬 1 米高。</p>
+        <div class="control-row"><span>玩什么</span><div class="seg" id="soModeSeg"></div></div>
+        <div id="soElevBox">
+          <div class="control-row"><span>仰角</span><div class="seg" id="soAngSeg"></div></div>
+          <div class="control-row"><span>你离楼底几米</span><div class="seg"><button type="button" id="soDMinus">−</button><span class="arr-tx" id="soDTx">20 米</span><button type="button" id="soDPlus">＋</button></div></div>
+          <svg id="soSvg" viewBox="0 0 640 360" role="img" aria-label="仰角看楼顶"></svg>
+        </div>
+        <div id="soSlopeBox" hidden>
+          <div class="control-row"><span>坡比（铅直高度 : 水平距离）</span><div class="seg" id="soRatioSeg"></div></div>
+          <div class="control-row"><span>铅直高度</span><div class="seg"><button type="button" id="soHMinus">−</button><span class="arr-tx" id="soHTx">4 米</span><button type="button" id="soHPlus">＋</button></div></div>
+          <svg id="soSlopeSvg" viewBox="0 0 640 360" role="img" aria-label="坡度"></svg>
+        </div>
+        <p class="func-eq" id="soRead"></p>
+        <p id="soMsg"></p>
+        <p class="demo-foot">成功标准：说出“已知什么、求什么，就选哪个三角函数；仰角俯角都是和水平线的夹角”。</p>
+        <p class="why"><b>为什么？</b>选三角函数就是看“已知什么、求什么”：已知对边求斜边用正弦，已知邻边求斜边用余弦。坡度越大坡越陡。</p>
+      </article>
+
+      <article class="demo-card" id="demo-project">
+        <p class="demo-tag">9 年级 · 投影与视图</p>
+        <h3>投影与三视图：三个方向的影子</h3>
+        <p>阳光是平行投影，影子方向相同；灯光是中心投影，影子向外发散。三视图是“三个方向的影子”：主视图看高和长，俯视图看长和宽，左视图看宽和高。</p>
+        <div class="control-row"><span>玩什么</span><div class="seg" id="pjModeSeg"></div></div>
+        <div id="pjSunBox">
+          <div class="control-row"><span>物体高几米</span><div class="seg"><button type="button" id="pjHMinus">−</button><span class="arr-tx" id="pjHTx">4 米</span><button type="button" id="pjHPlus">＋</button></div></div>
+          <div class="control-row"><span>太阳高度角</span><div class="seg" id="pjAngSeg"></div></div>
+          <svg id="pjSvg" viewBox="0 0 640 360" role="img" aria-label="平行投影"></svg>
+        </div>
+        <div id="pjLampBox" hidden>
+          <div class="control-row"><span>灯离物体几米（灯高 6 米，物体高 2 米）</span><div class="seg"><button type="button" id="pjDMinus">−</button><span class="arr-tx" id="pjDTx">2 米</span><button type="button" id="pjDPlus">＋</button></div></div>
+          <svg id="pjLampSvg" viewBox="0 0 640 360" role="img" aria-label="中心投影"></svg>
+        </div>
+        <div id="pjSolidBox" hidden>
+          <div class="control-row"><span>看哪个立体图形</span><div class="seg" id="pjSolidSeg"></div></div>
+          <svg id="pjSolidSvg" viewBox="0 0 640 360" role="img" aria-label="三视图"></svg>
+        </div>
+        <p class="func-eq" id="pjRead"></p>
+        <p id="pjMsg"></p>
+        <p class="demo-foot">成功标准：说出“主视图从前看，左视图从左看，俯视图从上看；长对正、高平齐、宽相等”。</p>
+        <p class="why"><b>为什么？</b>三个视图看的是同一个物体的同一条边，所以长对正、高平齐、宽相等。俯视图是从上面往下看，从下面看叫仰视图。</p>
       </article>
 
 
@@ -6978,9 +7262,10 @@ const GRADE8_CONTENT = {
    投影与视图。注意：2024 年修订版把章节重新编号（九下变为 31–34 章，
    概率初步移到九下），但主题顺序基本一致；本书按 A 版旧章节顺序写。共 9 个教学单元、16 条
    知识点。每条知识点：怎么做、为什么、容易错、看图学、动手试一试、讲回来、
-   先考一考、练一练（基础 → 提高）、奥数挑战。演示关联：二次函数、反比例
-   函数用函数演示（function）——演示本身是 y=kx+b 的滑杆，链接的用意是
-   “拖滑杆看图象变”的思路，二次函数/反比例函数的图象不是直线；其余为 null。 */
+   先考一考、练一练（基础 → 提高）、奥数挑战。演示关联：16 条知识点各有实验，
+   其中 9.3/9.4 共用抛物线演示（parabola，顶点式滑杆 + 交点即根 + 利润最值），
+   9.11 用双曲线演示（hyperbola，k 滑杆 + 矩形面积 |k|）；线性函数演示
+   （function，y=kx+b）只在 8 年级复用，9 年级不再用它冒充二次函数/反比例函数。 */
 const GRADE9_CONTENT = {
   grade: 9,
   edition: "A",
@@ -7001,7 +7286,7 @@ const GRADE9_CONTENT = {
           method: "配方法拼图",
           explainBack: "“配方法是补一块正方形；判别式先看有没有解。”",
           tryIt: "用配方法解x²+6x-7=0，再用公式法解一遍，比一比；算一算x²-4x+5=0的判别式，看看有没有实数根。",
-          demo: null,
+          demo: 'quad',
           recall: { q: "方程x²=9的解是多少？是x=3，还是x=±3？", answer: "x=±3", hint: "3²=9，(-3)²=9。" },
           practice: [
             { q: "解方程：x²-5x+6=0（用因式分解法）。", answer: "x=2或x=3", hint: "x²-5x+6=(x-2)(x-3)。", level: "基础" },
@@ -7026,7 +7311,7 @@ const GRADE9_CONTENT = {
           method: "利滚利法",
           explainBack: "“连续两次增长是平方；根的和与积藏在系数里。”",
           tryIt: "算一算：100元连续两次涨10%是多少？再算一算：200元两次降价后162元，平均每次降价百分之几？",
-          demo: null,
+          demo: 'growth',
           recall: { q: "某产品原价100元，连续两次降价10%，现价是多少？", answer: "81元", hint: "100×0.9×0.9=81。" },
           practice: [
             { q: "某商品原价200元，两次降价后现价162元，平均每次降价的百分率是多少？", answer: "10%", hint: "设降价率是x：200(1-x)²=162，(1-x)²=0.81。", level: "基础" },
@@ -7052,7 +7337,7 @@ const GRADE9_CONTENT = {
           method: "滑杆看抛物线法",
           explainBack: "“a管开口方向和大小；顶点式y=a(x-h)²+k，顶点是(h,k)。”",
           tryIt: "画一画y=x²、y=2x²、y=-x²的图象，比一比谁的口张得大；再求一求y=-x²+4x-3的开口方向和对称轴。",
-          demo: 'function',
+          demo: 'parabola',
           recall: { q: "抛物线y=2(x-1)²+3的顶点坐标是多少？", answer: "(1,3)", hint: "顶点式y=a(x-h)²+k，顶点是(h,k)。" },
           practice: [
             { q: "抛物线y=-x²+4x-3的开口方向和对称轴。", answer: "开口向下，对称轴x=2", hint: "a=-1<0，开口向下；对称轴x=-b/2a=2。", level: "基础" },
@@ -7072,7 +7357,7 @@ const GRADE9_CONTENT = {
           method: "交点即根法",
           explainBack: "“抛物线与x轴的交点横坐标就是方程的根；顶点处取最值。”",
           tryIt: "算一算y=x²-4x+3与x轴有几个交点；再解一解利润问题：每件利润30元，每天卖80件，每涨1元少卖4件，涨几元利润最大？",
-          demo: null,
+          demo: 'parabola',
           recall: { q: "抛物线y=x²-4x+3与x轴有几个交点？", answer: "2个", hint: "Δ=16-12=4>0。" },
           practice: [
             { q: "求抛物线y=x²-2x-8与x轴交点的横坐标。", answer: "4和-2", hint: "令y=0，解x²-2x-8=0。", level: "基础" },
@@ -7098,7 +7383,7 @@ const GRADE9_CONTENT = {
           method: "钉住一点转",
           explainBack: "“旋转只变位置不改形状；转180°重合就是中心对称。”",
           tryIt: "把一张纸上的三角形绕一个点旋转90°，看看对应点到旋转中心的距离变了没有；再找一找哪些图形是中心对称图形。",
-          demo: null,
+          demo: 'spin',
           recall: { q: "正方形绕它的中心旋转多少度能与自身重合？", answer: "90°（或180°、270°）", hint: "正方形有4条对称轴，旋转90°就重合。" },
           practice: [
             { q: "点A(2,3)绕原点旋转180°后，对应点的坐标是多少？", answer: "(-2,-3)", hint: "绕原点旋转180°，横、纵坐标都变号。", level: "基础" },
@@ -7124,7 +7409,7 @@ const GRADE9_CONTENT = {
           method: "站圆上看弦法",
           explainBack: "“圆周角是圆心角的一半；垂直于弦的直径平分弦。”",
           tryIt: "画一个圆，量一量同一条弧所对的圆心角和圆周角；再画一条弦，过圆心作它的垂线，看看弦是不是被平分了。",
-          demo: null,
+          demo: 'circangle',
           recall: { q: "圆心角∠AOB=80°，它所对弧上的圆周角是多少度？", answer: "40°", hint: "圆周角是圆心角的一半。" },
           practice: [
             { q: "半径是5的圆中，一条弦长8，这条弦到圆心的距离是多少？", answer: "3", hint: "弦的一半是4，√(5²-4²)=3。", level: "基础" },
@@ -7144,7 +7429,7 @@ const GRADE9_CONTENT = {
           method: "距离比半径法",
           explainBack: "“d<r相交，d=r相切，d>r相离；切线过切点与半径垂直。”",
           tryIt: "画一个圆，画一条直线，量一量圆心到直线的距离，判断直线和圆的位置关系；再从圆外一点引两条切线，量一量切线长。",
-          demo: null,
+          demo: 'tangent',
           recall: { q: "圆的半径是4，圆心到一条直线的距离是4，这条直线和圆是什么关系？", answer: "相切", hint: "d=r。" },
           practice: [
             { q: "圆的半径是6，圆心到直线的距离是3，直线和圆有几个交点？", answer: "2个", hint: "d<r，直线和圆相交。", level: "基础" },
@@ -7164,7 +7449,7 @@ const GRADE9_CONTENT = {
           method: "几分之几法",
           explainBack: "“弧长是圆周长的几分之几；扇形面积是圆面积的几分之几。”",
           tryIt: "算一算半径6、圆心角60°的扇形的弧长和面积；再算一算底面半径3、母线长5的圆锥的侧面积。",
-          demo: null,
+          demo: 'sector',
           recall: { q: "半径6、圆心角60°的扇形，弧长是多少？", answer: "2π", hint: "l=60×π×6÷180。" },
           practice: [
             { q: "半径是10、圆心角是90°的扇形面积是多少？", answer: "25π", hint: "S=90×π×10²÷360。", level: "基础" },
@@ -7190,7 +7475,7 @@ const GRADE9_CONTENT = {
           method: "长期频率法",
           explainBack: "“概率是长期频率；每次试验都是独立的。”",
           tryIt: "抛10次硬币，数一数正面几次；再想一想：袋子里3个红球、2个白球，摸到红球的概率是多少？",
-          demo: null,
+          demo: 'coin',
           recall: { q: "一个袋子里有3个红球、2个白球，摸出一个球，摸到红球的概率是多少？", answer: "3/5", hint: "3个红球，一共5个球。" },
           practice: [
             { q: "掷一枚骰子，掷出偶数的概率是多少？", answer: "1/2", hint: "偶数有2、4、6三个，一共6个面。", level: "基础" },
@@ -7210,7 +7495,7 @@ const GRADE9_CONTENT = {
           method: "摆出来数清法",
           explainBack: "“列表画树，把所有可能摆出来数；试验越多，频率越稳。”",
           tryIt: "掷两枚硬币，画树状图列出所有结果；再掷两枚骰子，数一数点数和是7的有几种组合。",
-          demo: null,
+          demo: 'tree',
           recall: { q: "掷两枚硬币，用树状图列一列，一共有几种可能的结果？", answer: "4种：正正、正反、反正、反反", hint: "第一枚2种，第二枚2种，2×2=4。" },
           practice: [
             { q: "同时掷两枚硬币，两枚都是正面的概率是多少？", answer: "1/4", hint: "4种等可能结果里，只有正正1种。", level: "基础" },
@@ -7236,7 +7521,7 @@ const GRADE9_CONTENT = {
           method: "乘积一定法",
           explainBack: "“xy=k，乘积一定；图象是双曲线，关于原点对称。”",
           tryIt: "画一画y=6/x和y=-6/x的图象；再算一算：点(2,3)在y=k/x上，k是多少？点(-2,-3)在不在同一条曲线上？",
-          demo: 'function',
+          demo: 'hyperbola',
           recall: { q: "点(2,3)在反比例函数y=k/x的图象上，k是多少？", answer: "6", hint: "k=xy=2×3。" },
           practice: [
             { q: "反比例函数y=6/x的图象在第几象限？", answer: "第一、三象限", hint: "k=6>0，图象在第一、三象限。", level: "基础" },
@@ -7262,7 +7547,7 @@ const GRADE9_CONTENT = {
           method: "按比例放大法",
           explainBack: "“周长比等于相似比，面积比等于相似比的平方。”",
           tryIt: "量一量照片和底片的对应边，算一算相似比；再算一算：相似比2:3的两个三角形，面积比是多少？",
-          demo: null,
+          demo: 'similar',
           recall: { q: "两个相似三角形的相似比是2:3，它们的面积比是多少？", answer: "4:9", hint: "面积比是相似比的平方。" },
           practice: [
             { q: "两个相似多边形的相似比是1:2，小多边形的周长是10，大多边形的周长是多少？", answer: "20", hint: "周长比等于相似比。", level: "基础" },
@@ -7282,7 +7567,7 @@ const GRADE9_CONTENT = {
           method: "影子测高法",
           explainBack: "“两角相等就能判定相似；周长比是相似比，面积比是相似比的平方。”",
           tryIt: "同一时刻，量一量自己的影子和旗杆的影子，算一算旗杆有多高；再判断：两边成比例、夹角相等，两个三角形相似吗？",
-          demo: null,
+          demo: 'shadow',
           recall: { q: "△ABC∽△DEF，AB=6，DE=9，BC=8，EF是多少？", answer: "12", hint: "6:9=8:EF。" },
           practice: [
             { q: "△ABC∽△DEF，相似比是2:5，△ABC的周长是12，△DEF的周长是多少？", answer: "30", hint: "周长比等于相似比：12×5÷2=30。", level: "基础" },
@@ -7308,7 +7593,7 @@ const GRADE9_CONTENT = {
           method: "角定比值定法",
           explainBack: "“sin是对边比斜边，cos是邻边比斜边，tan是对边比邻边。”",
           tryIt: "在Rt△ABC中，∠C=90°，AC=3，BC=4，算一算sin A、cos A、tan A；再背一背30°、45°、60°的三角函数值。",
-          demo: null,
+          demo: 'trig',
           recall: { q: "直角三角形中，∠A=30°，斜边是10，∠A的对边长是多少？", answer: "5", hint: "sin30°=对边/斜边=1/2。" },
           practice: [
             { q: "在Rt△ABC中，∠C=90°，AC=3，BC=4，求sin A和tan A的值。", answer: "sin A=4/5，tan A=4/3", hint: "斜边AB=5；sin A=BC/AB，tan A=BC/AC。", level: "基础" },
@@ -7328,7 +7613,7 @@ const GRADE9_CONTENT = {
           method: "画图选函数法",
           explainBack: "“已知什么、求什么，就选哪个三角函数；仰角俯角都是和水平线的夹角。”",
           tryIt: "站在操场上，测一测看旗杆顶的仰角，再算一算旗杆有多高；画一个坡度1:1的坡，算一算坡面长4√2米时铅直高度是多少。",
-          demo: null,
+          demo: 'slope',
           recall: { q: "站在地面看10米高的楼顶，仰角是30°，你离楼底多远？", answer: "约17.3米", hint: "tan30°=10÷距离，距离=10÷(√3/3)=10√3。" },
           practice: [
             { q: "在Rt△ABC中，∠C=90°，∠A=30°，斜边AB=8，求BC的长。", answer: "4", hint: "sin30°=BC/8=1/2。", level: "基础" },
@@ -7354,7 +7639,7 @@ const GRADE9_CONTENT = {
           method: "三个方向看影子法",
           explainBack: "“主视图从前看，左视图从左看，俯视图从上看；长对正、高平齐、宽相等。”",
           tryIt: "拿一个圆柱和一个长方体，画一画它们的三视图；再用手电筒照一个物体，看看影子怎么随着灯光位置变。",
-          demo: null,
+          demo: 'project',
           recall: { q: "一个正方体的主视图、左视图、俯视图分别是什么图形？", answer: "都是正方形", hint: "从哪个方向看都是正方形。" },
           practice: [
             { q: "一个圆柱的主视图是什么图形？俯视图呢？", answer: "主视图是长方形，俯视图是圆形", hint: "从前面看是长方形，从上面看是圆形。", level: "基础" },
@@ -7423,7 +7708,7 @@ const GRADES = {
 };
 
 /* ---------- 进度（原型：记演示是否玩过） ----------
-   98 个演示全都计入：4 个经典演示 + 13 个一年级实验 + 15 个二年级实验 + 14 个三年级实验 + 16 个四年级实验 + 11 个五年级实验 + 12 个六年级实验 + 13 个七年级实验 + 11 个八年级实验 = 109 个。
+   124 个演示全都计入：4 个经典演示 + 13 个一年级实验 + 15 个二年级实验 + 14 个三年级实验 + 16 个四年级实验 + 11 个五年级实验 + 12 个六年级实验 + 13 个七年级实验 + 11 个八年级实验 + 15 个九年级实验 = 124 个。
    首页却写着“4 个演示”，演示页上却是 17 张卡，数字对不上
    （2026-11-06 真机审计第 6 条）。 */
 const tried = new Set();
@@ -7445,7 +7730,9 @@ const ALL_DEMOS = ['tenframe', 'fraction', 'balance', 'function',
   'numline', 'powerup', 'monomial', 'liketerms', 'meetline', 'lineseg', 'anglepair',
   'vertangle', 'parangles', 'roots', 'coordplane', 'ineqline', 'histogram',
   'trisides', 'congruent', 'foldmirror', 'algarea', 'algfrac', 'eqsieve',
-  'radical', 'pythag', 'pargram', 'specialquad', 'datastats'];
+  'radical', 'pythag', 'pargram', 'specialquad', 'datastats',
+  'quad', 'growth', 'parabola', 'spin', 'circangle', 'tangent', 'sector', 'coin',
+  'tree', 'hyperbola', 'similar', 'shadow', 'trig', 'slope', 'project'];
 // 刷新后进度还在：已体验的演示存在本地（只存本机，不上传）。
 try { JSON.parse(lsGet('math-tried-demos-v1') || '[]').forEach(k => tried.add(k)); } catch (e) {}
 function renderTried() {
@@ -7609,7 +7896,7 @@ function renderUnit(g, ui) {
   pointDetail.querySelectorAll('[data-point]').forEach(btn =>
     btn.addEventListener('click', () => navGo('point-' + btn.dataset.point)));
 }
-const DEMO_LABEL = { fraction: '去玩分数演示', tenframe: '去玩十格阵', balance: '去玩天平演示', function: '去玩函数演示', count: '去玩数一数', position: '去玩转身找左右', split: '去玩分一分', addsub: '去玩合起来拿走', solids: '去玩立体图形', bundle: '去玩捆小棒', clock: '去玩拨时钟', tangram: '去玩七巧板', sort: '去玩分类分一分', hundred: '去玩百数表', shop: '去玩开小店', place: '去玩数位块', pattern: '去玩找规律', ruler: '去玩尺子量一量', estimate: '去玩先估后算', angle: '去玩转一转角', array: '去玩点阵乘法', observe: '去玩换个方向看', time: '去玩拨时钟（时和分）', share: '去玩轮流分一分', motion: '去玩折一折转一转', mixop: '去玩先算哪一堆', remain: '去玩装一包装不满', thousand: '去玩数轴找近似数', weight: '去玩天平称一称', chart: '去玩投票变条形图', logic: '去玩排除格推理', pair: '去玩搭配连一连', elapsed: '去玩时间轴走一走', verify: '去玩算回去验算', units: '去玩单位楼梯', times: '去玩条形复制', splitmul: '去玩面积切一切', rectsq: '去玩拉一拉变正方形', venn: '去玩韦恩图拖人', compass: '去玩指南针转一转', divplace: '去玩按数位分一分', stattable: '去玩复式统计表', fourgrid: '去玩四格面积模型', area: '去玩铺方砖数面积', calendar: '去玩日历翻一翻', decimal: '去玩十分条比大小', bignum: '去玩大数数轴', field: '去玩足球场拼一拼', protractor: '去玩量角器', areamodel: '去玩面积模型', parallelogram: '去玩平行四边形', trialdiv: '去玩试商调商', baraxis: '去玩条形图轴', teatime: '去玩沏茶排一排', zerodiv: '去玩除以0', laws: '去玩运算定律', placeslider: '去玩数位滑块', tearangle: '去玩撕角拼平角', decadd: '去玩小数加减对齐', moveshape: '去玩图形平移', average: '去玩削峰填谷', chickenrabbit: '去玩鸡兔同笼', decmul: '去玩单位正方形', gridpos: '去玩数对点一点', decdiv: '去玩两数同乘', prob: '去玩摸球模拟', polyarea: '去玩切一刀变长方形', planttree: '去玩种树数间隔', factor: '去玩拼长方形', cuboid: '去玩分层装块', fracadd: '去玩先重切再数', rotate: '去玩绕钉旋转', findbad: '去玩三组称找次品', radar: '去玩雷达找地方', ratio: '去玩比条分一分', circle: '去玩绕绳量圆', percent: '去玩百分条', fan: '去玩扇形转一转', lsquare: '去玩一层层包正方形', thermo: '去玩温度计比一比', negmul: '去玩负数乘法规律', discount: '去玩打折算一算', cylinder: '去玩倒沙装满圆柱', pigeon: '去玩鸽子找洞', conceptmap: '去玩认出老办法', numline: '去玩数轴标一点', powerup: '去玩对折纸和科学记数法', monomial: '去玩拆零件看系数次数', liketerms: '去玩合并同类项', meetline: '去玩相向而行', lineseg: '去玩直线射线线段', anglepair: '去玩余角补角拼一拼', vertangle: '去玩对顶角转一转', parangles: '去玩平行线截角', roots: '去玩开方机器', coordplane: '去玩坐标平面点一点', ineqline: '去玩不等式画数轴', histogram: '去玩直方图分组', trisides: '去玩三边围不围', congruent: '去玩全等判定拼一拼', foldmirror: '去玩对折看对称', algarea: '去玩面积模型算整式', algfrac: '去玩分式约分', eqsieve: '去玩分式方程过筛子', radical: '去玩二次根式化简', pythag: '去玩勾股定理面积拼图', pargram: '去玩平行四边形推一推', specialquad: '去玩加条件变特殊', datastats: '去玩数据分析算一算' };
+const DEMO_LABEL = { fraction: '去玩分数演示', tenframe: '去玩十格阵', balance: '去玩天平演示', function: '去玩函数演示', count: '去玩数一数', position: '去玩转身找左右', split: '去玩分一分', addsub: '去玩合起来拿走', solids: '去玩立体图形', bundle: '去玩捆小棒', clock: '去玩拨时钟', tangram: '去玩七巧板', sort: '去玩分类分一分', hundred: '去玩百数表', shop: '去玩开小店', place: '去玩数位块', pattern: '去玩找规律', ruler: '去玩尺子量一量', estimate: '去玩先估后算', angle: '去玩转一转角', array: '去玩点阵乘法', observe: '去玩换个方向看', time: '去玩拨时钟（时和分）', share: '去玩轮流分一分', motion: '去玩折一折转一转', mixop: '去玩先算哪一堆', remain: '去玩装一包装不满', thousand: '去玩数轴找近似数', weight: '去玩天平称一称', chart: '去玩投票变条形图', logic: '去玩排除格推理', pair: '去玩搭配连一连', elapsed: '去玩时间轴走一走', verify: '去玩算回去验算', units: '去玩单位楼梯', times: '去玩条形复制', splitmul: '去玩面积切一切', rectsq: '去玩拉一拉变正方形', venn: '去玩韦恩图拖人', compass: '去玩指南针转一转', divplace: '去玩按数位分一分', stattable: '去玩复式统计表', fourgrid: '去玩四格面积模型', area: '去玩铺方砖数面积', calendar: '去玩日历翻一翻', decimal: '去玩十分条比大小', bignum: '去玩大数数轴', field: '去玩足球场拼一拼', protractor: '去玩量角器', areamodel: '去玩面积模型', parallelogram: '去玩平行四边形', trialdiv: '去玩试商调商', baraxis: '去玩条形图轴', teatime: '去玩沏茶排一排', zerodiv: '去玩除以0', laws: '去玩运算定律', placeslider: '去玩数位滑块', tearangle: '去玩撕角拼平角', decadd: '去玩小数加减对齐', moveshape: '去玩图形平移', average: '去玩削峰填谷', chickenrabbit: '去玩鸡兔同笼', decmul: '去玩单位正方形', gridpos: '去玩数对点一点', decdiv: '去玩两数同乘', prob: '去玩摸球模拟', polyarea: '去玩切一刀变长方形', planttree: '去玩种树数间隔', factor: '去玩拼长方形', cuboid: '去玩分层装块', fracadd: '去玩先重切再数', rotate: '去玩绕钉旋转', findbad: '去玩三组称找次品', radar: '去玩雷达找地方', ratio: '去玩比条分一分', circle: '去玩绕绳量圆', percent: '去玩百分条', fan: '去玩扇形转一转', lsquare: '去玩一层层包正方形', thermo: '去玩温度计比一比', negmul: '去玩负数乘法规律', discount: '去玩打折算一算', cylinder: '去玩倒沙装满圆柱', pigeon: '去玩鸽子找洞', conceptmap: '去玩认出老办法', numline: '去玩数轴标一点', powerup: '去玩对折纸和科学记数法', monomial: '去玩拆零件看系数次数', liketerms: '去玩合并同类项', meetline: '去玩相向而行', lineseg: '去玩直线射线线段', anglepair: '去玩余角补角拼一拼', vertangle: '去玩对顶角转一转', parangles: '去玩平行线截角', roots: '去玩开方机器', coordplane: '去玩坐标平面点一点', ineqline: '去玩不等式画数轴', histogram: '去玩直方图分组', trisides: '去玩三边围不围', congruent: '去玩全等判定拼一拼', foldmirror: '去玩对折看对称', algarea: '去玩面积模型算整式', algfrac: '去玩分式约分', eqsieve: '去玩分式方程过筛子', radical: '去玩二次根式化简', pythag: '去玩勾股定理面积拼图', pargram: '去玩平行四边形推一推', specialquad: '去玩加条件变特殊', datastats: '去玩数据分析算一算', quad: '去玩一元二次方程', growth: '去玩利滚利和韦达', parabola: '去玩抛物线滑杆', spin: '去玩旋转和中心对称', circangle: '去玩圆周角', tangent: '去玩直线和圆切线', sector: '去玩扇形和圆锥', coin: '去玩抛硬币摸红球', tree: '去玩树状图数一数', hyperbola: '去玩双曲线', similar: '去玩相似放大', shadow: '去玩影子测高', trig: '去玩锐角三角函数', slope: '去玩仰角和坡度', project: '去玩投影和三视图' };
 /* 分步评分：多步骤题拆成一步一步对。steps 是可选字段，没有 steps 的题照旧渲染。
    自评不是机器判题：每一步的对错都是学生自己标的，丢分报告只是把你标错的步骤列出来。 */
 function practiceStepsHtml(q, i, pointId) {
@@ -7859,7 +8146,9 @@ const DEMO_GRADES = { tenframe: [1, 2], fraction: [3, 4, 5, 6], balance: [5, 6, 
   numline: [7], powerup: [7], monomial: [7], liketerms: [7], meetline: [7], lineseg: [7], anglepair: [7],
   vertangle: [7], parangles: [7], roots: [7], coordplane: [7], ineqline: [7], histogram: [7],
   trisides: [8], congruent: [8], foldmirror: [8], algarea: [8], algfrac: [8], eqsieve: [8],
-  radical: [8], pythag: [8], pargram: [8], specialquad: [8], datastats: [8] };
+  radical: [8], pythag: [8], pargram: [8], specialquad: [8], datastats: [8],
+  quad: [9], growth: [9], parabola: [9], spin: [9], circangle: [9], tangent: [9], sector: [9], coin: [9],
+  tree: [9], hyperbola: [9], similar: [9], shadow: [9], trig: [9], slope: [9], project: [9] };
 function renderProgress() {
   const card = document.getElementById('progressCard');
   if (!card) return;
@@ -8357,6 +8646,21 @@ const NAV_DEFS = {
   'demo-pargram': { crumbs: ['数学', '互动演示', '平行四边形：推一推'], target: 'demo-pargram' },
   'demo-specialquad': { crumbs: ['数学', '互动演示', '特殊的平行四边形：加条件变身'], target: 'demo-specialquad' },
   'demo-datastats': { crumbs: ['数学', '互动演示', '数据的分析：算一算'], target: 'demo-datastats' },
+  'demo-quad': { crumbs: ['数学', '互动演示', '一元二次方程：配方法、判别式'], target: 'demo-quad' },
+  'demo-growth': { crumbs: ['数学', '互动演示', '增长率与韦达定理'], target: 'demo-growth' },
+  'demo-parabola': { crumbs: ['数学', '互动演示', '二次函数：抛物线'], target: 'demo-parabola' },
+  'demo-spin': { crumbs: ['数学', '互动演示', '旋转与中心对称'], target: 'demo-spin' },
+  'demo-circangle': { crumbs: ['数学', '互动演示', '圆：圆周角与垂径定理'], target: 'demo-circangle' },
+  'demo-tangent': { crumbs: ['数学', '互动演示', '直线和圆、切线长'], target: 'demo-tangent' },
+  'demo-sector': { crumbs: ['数学', '互动演示', '弧长、扇形与圆锥'], target: 'demo-sector' },
+  'demo-coin': { crumbs: ['数学', '互动演示', '随机事件与概率'], target: 'demo-coin' },
+  'demo-tree': { crumbs: ['数学', '互动演示', '树状图求概率'], target: 'demo-tree' },
+  'demo-hyperbola': { crumbs: ['数学', '互动演示', '反比例函数：双曲线'], target: 'demo-hyperbola' },
+  'demo-similar': { crumbs: ['数学', '互动演示', '相似与位似'], target: 'demo-similar' },
+  'demo-shadow': { crumbs: ['数学', '互动演示', '相似三角形：影子测高'], target: 'demo-shadow' },
+  'demo-trig': { crumbs: ['数学', '互动演示', '锐角三角函数'], target: 'demo-trig' },
+  'demo-slope': { crumbs: ['数学', '互动演示', '仰角、俯角与坡度'], target: 'demo-slope' },
+  'demo-project': { crumbs: ['数学', '互动演示', '投影与三视图'], target: 'demo-project' },
   why:        { crumbs: ['数学', '互动演示', '为什么小实验'], target: 'why' },
   lab:        { crumbs: ['数学', '数学实验室'], target: 'lab' },
   review:     { crumbs: ['数学', '错题本'], target: 'review', action: renderWrongBook },
@@ -8434,7 +8738,7 @@ function viewForKey(key) {
   if (key === 'path') return 'path';
   if (key.startsWith('path-step-')) return 'path-step';
   if (key === 'demos') return 'demos';
-  if (key === 'demo-tenframe' || key === 'demo-fraction' || key === 'demo-balance' || key === 'demo-function' || key === 'demo-count' || key === 'demo-position' || key === 'demo-split' || key === 'demo-addsub' || key === 'demo-solids' || key === 'demo-bundle' || key === 'demo-clock' || key === 'demo-tangram' || key === 'demo-sort' || key === 'demo-hundred' || key === 'demo-shop' || key === 'demo-place' || key === 'demo-pattern' || key === 'demo-ruler' || key === 'demo-estimate' || key === 'demo-angle' || key === 'demo-array' || key === 'demo-observe' || key === 'demo-time' || key === 'demo-share' || key === 'demo-motion' || key === 'demo-mixop' || key === 'demo-remain' || key === 'demo-thousand' || key === 'demo-weight' || key === 'demo-chart' || key === 'demo-logic' || key === 'demo-pair' || key === 'demo-elapsed' || key === 'demo-verify' || key === 'demo-units' || key === 'demo-times' || key === 'demo-splitmul' || key === 'demo-rectsq' || key === 'demo-venn' || key === 'demo-compass' || key === 'demo-divplace' || key === 'demo-stattable' || key === 'demo-fourgrid' || key === 'demo-area' || key === 'demo-calendar' || key === 'demo-decimal' || key === 'demo-bignum' || key === 'demo-field' || key === 'demo-protractor' || key === 'demo-areamodel' || key === 'demo-parallelogram' || key === 'demo-trialdiv' || key === 'demo-baraxis' || key === 'demo-teatime' || key === 'demo-zerodiv' || key === 'demo-laws' || key === 'demo-placeslider' || key === 'demo-tearangle' || key === 'demo-decadd' || key === 'demo-moveshape' || key === 'demo-average' || key === 'demo-chickenrabbit' || key === 'demo-decmul' || key === 'demo-gridpos' || key === 'demo-decdiv' || key === 'demo-prob' || key === 'demo-polyarea' || key === 'demo-planttree' || key === 'demo-factor' || key === 'demo-cuboid' || key === 'demo-fracadd' || key === 'demo-rotate' || key === 'demo-findbad' || key === 'demo-radar' || key === 'demo-ratio' || key === 'demo-circle' || key === 'demo-percent' || key === 'demo-fan' || key === 'demo-lsquare' || key === 'demo-thermo' || key === 'demo-negmul' || key === 'demo-discount' || key === 'demo-cylinder' || key === 'demo-pigeon' || key === 'demo-numline' || key === 'demo-powerup' || key === 'demo-monomial' || key === 'demo-liketerms' || key === 'demo-meetline' || key === 'demo-lineseg' || key === 'demo-anglepair' || key === 'demo-vertangle' || key === 'demo-parangles' || key === 'demo-roots' || key === 'demo-coordplane' || key === 'demo-ineqline' || key === 'demo-histogram' || key === 'demo-trisides' || key === 'demo-congruent' || key === 'demo-foldmirror' || key === 'demo-algarea' || key === 'demo-algfrac' || key === 'demo-eqsieve' || key === 'demo-radical' || key === 'demo-pythag' || key === 'demo-pargram' || key === 'demo-specialquad' || key === 'demo-datastats') return key;
+  if (key === 'demo-tenframe' || key === 'demo-fraction' || key === 'demo-balance' || key === 'demo-function' || key === 'demo-count' || key === 'demo-position' || key === 'demo-split' || key === 'demo-addsub' || key === 'demo-solids' || key === 'demo-bundle' || key === 'demo-clock' || key === 'demo-tangram' || key === 'demo-sort' || key === 'demo-hundred' || key === 'demo-shop' || key === 'demo-place' || key === 'demo-pattern' || key === 'demo-ruler' || key === 'demo-estimate' || key === 'demo-angle' || key === 'demo-array' || key === 'demo-observe' || key === 'demo-time' || key === 'demo-share' || key === 'demo-motion' || key === 'demo-mixop' || key === 'demo-remain' || key === 'demo-thousand' || key === 'demo-weight' || key === 'demo-chart' || key === 'demo-logic' || key === 'demo-pair' || key === 'demo-elapsed' || key === 'demo-verify' || key === 'demo-units' || key === 'demo-times' || key === 'demo-splitmul' || key === 'demo-rectsq' || key === 'demo-venn' || key === 'demo-compass' || key === 'demo-divplace' || key === 'demo-stattable' || key === 'demo-fourgrid' || key === 'demo-area' || key === 'demo-calendar' || key === 'demo-decimal' || key === 'demo-bignum' || key === 'demo-field' || key === 'demo-protractor' || key === 'demo-areamodel' || key === 'demo-parallelogram' || key === 'demo-trialdiv' || key === 'demo-baraxis' || key === 'demo-teatime' || key === 'demo-zerodiv' || key === 'demo-laws' || key === 'demo-placeslider' || key === 'demo-tearangle' || key === 'demo-decadd' || key === 'demo-moveshape' || key === 'demo-average' || key === 'demo-chickenrabbit' || key === 'demo-decmul' || key === 'demo-gridpos' || key === 'demo-decdiv' || key === 'demo-prob' || key === 'demo-polyarea' || key === 'demo-planttree' || key === 'demo-factor' || key === 'demo-cuboid' || key === 'demo-fracadd' || key === 'demo-rotate' || key === 'demo-findbad' || key === 'demo-radar' || key === 'demo-ratio' || key === 'demo-circle' || key === 'demo-percent' || key === 'demo-fan' || key === 'demo-lsquare' || key === 'demo-thermo' || key === 'demo-negmul' || key === 'demo-discount' || key === 'demo-cylinder' || key === 'demo-pigeon' || key === 'demo-numline' || key === 'demo-powerup' || key === 'demo-monomial' || key === 'demo-liketerms' || key === 'demo-meetline' || key === 'demo-lineseg' || key === 'demo-anglepair' || key === 'demo-vertangle' || key === 'demo-parangles' || key === 'demo-roots' || key === 'demo-coordplane' || key === 'demo-ineqline' || key === 'demo-histogram' || key === 'demo-trisides' || key === 'demo-congruent' || key === 'demo-foldmirror' || key === 'demo-algarea' || key === 'demo-algfrac' || key === 'demo-eqsieve' || key === 'demo-radical' || key === 'demo-pythag' || key === 'demo-pargram' || key === 'demo-specialquad' || key === 'demo-datastats' || key === 'demo-quad' || key === 'demo-growth' || key === 'demo-parabola' || key === 'demo-spin' || key === 'demo-circangle' || key === 'demo-tangent' || key === 'demo-sector' || key === 'demo-coin' || key === 'demo-tree' || key === 'demo-hyperbola' || key === 'demo-similar' || key === 'demo-shadow' || key === 'demo-trig' || key === 'demo-slope' || key === 'demo-project') return key;
   if (key === 'why') return 'why';
   if (key === 'lab') return 'lab';
   if (key === 'review') return 'review';
@@ -8478,7 +8782,7 @@ function applyView() {
   const stepN = view === 'path-step' ? key.slice('path-step-'.length) : null;
   [...pathPanelsEl.children].forEach(el => { el.hidden = !!(stepN && el.id !== 'step-' + stepN); });
   // 互动演示：列表留演示面板；叶子只留该演示卡片；为什么小实验只留 #why 区
-  const demoLeaf = view === 'demo-tenframe' || view === 'demo-fraction' || view === 'demo-balance' || view === 'demo-function' || view === 'demo-count' || view === 'demo-position' || view === 'demo-split' || view === 'demo-addsub' || view === 'demo-solids' || view === 'demo-bundle' || view === 'demo-clock' || view === 'demo-tangram' || view === 'demo-sort' || view === 'demo-hundred' || view === 'demo-shop' || view === 'demo-place' || view === 'demo-pattern' || view === 'demo-ruler' || view === 'demo-estimate' || view === 'demo-angle' || view === 'demo-array' || view === 'demo-observe' || view === 'demo-time' || view === 'demo-share' || view === 'demo-motion' || view === 'demo-mixop' || view === 'demo-remain' || view === 'demo-thousand' || view === 'demo-weight' || view === 'demo-chart' || view === 'demo-logic' || view === 'demo-pair' || view === 'demo-elapsed' || view === 'demo-verify' || view === 'demo-units' || view === 'demo-times' || view === 'demo-splitmul' || view === 'demo-rectsq' || view === 'demo-venn' || view === 'demo-compass' || view === 'demo-divplace' || view === 'demo-stattable' || view === 'demo-fourgrid' || view === 'demo-area' || view === 'demo-calendar' || view === 'demo-decimal' || view === 'demo-bignum' || view === 'demo-field' || view === 'demo-protractor' || view === 'demo-areamodel' || view === 'demo-parallelogram' || view === 'demo-trialdiv' || view === 'demo-baraxis' || view === 'demo-teatime' || view === 'demo-zerodiv' || view === 'demo-laws' || view === 'demo-placeslider' || view === 'demo-tearangle' || view === 'demo-decadd' || view === 'demo-moveshape' || view === 'demo-average' || view === 'demo-chickenrabbit' || view === 'demo-decmul' || view === 'demo-gridpos' || view === 'demo-decdiv' || view === 'demo-prob' || view === 'demo-polyarea' || view === 'demo-planttree' || view === 'demo-factor' || view === 'demo-cuboid' || view === 'demo-fracadd' || view === 'demo-rotate' || view === 'demo-findbad' || view === 'demo-radar' || view === 'demo-ratio' || view === 'demo-circle' || view === 'demo-percent' || view === 'demo-fan' || view === 'demo-lsquare' || view === 'demo-thermo' || view === 'demo-negmul' || view === 'demo-discount' || view === 'demo-cylinder' || view === 'demo-pigeon' || view === 'demo-numline' || view === 'demo-powerup' || view === 'demo-monomial' || view === 'demo-liketerms' || view === 'demo-meetline' || view === 'demo-lineseg' || view === 'demo-anglepair' || view === 'demo-vertangle' || view === 'demo-parangles' || view === 'demo-roots' || view === 'demo-coordplane' || view === 'demo-ineqline' || view === 'demo-histogram' || view === 'demo-trisides' || view === 'demo-congruent' || view === 'demo-foldmirror' || view === 'demo-algarea' || view === 'demo-algfrac' || view === 'demo-eqsieve' || view === 'demo-radical' || view === 'demo-pythag' || view === 'demo-pargram' || view === 'demo-specialquad' || view === 'demo-datastats';
+  const demoLeaf = view === 'demo-tenframe' || view === 'demo-fraction' || view === 'demo-balance' || view === 'demo-function' || view === 'demo-count' || view === 'demo-position' || view === 'demo-split' || view === 'demo-addsub' || view === 'demo-solids' || view === 'demo-bundle' || view === 'demo-clock' || view === 'demo-tangram' || view === 'demo-sort' || view === 'demo-hundred' || view === 'demo-shop' || view === 'demo-place' || view === 'demo-pattern' || view === 'demo-ruler' || view === 'demo-estimate' || view === 'demo-angle' || view === 'demo-array' || view === 'demo-observe' || view === 'demo-time' || view === 'demo-share' || view === 'demo-motion' || view === 'demo-mixop' || view === 'demo-remain' || view === 'demo-thousand' || view === 'demo-weight' || view === 'demo-chart' || view === 'demo-logic' || view === 'demo-pair' || view === 'demo-elapsed' || view === 'demo-verify' || view === 'demo-units' || view === 'demo-times' || view === 'demo-splitmul' || view === 'demo-rectsq' || view === 'demo-venn' || view === 'demo-compass' || view === 'demo-divplace' || view === 'demo-stattable' || view === 'demo-fourgrid' || view === 'demo-area' || view === 'demo-calendar' || view === 'demo-decimal' || view === 'demo-bignum' || view === 'demo-field' || view === 'demo-protractor' || view === 'demo-areamodel' || view === 'demo-parallelogram' || view === 'demo-trialdiv' || view === 'demo-baraxis' || view === 'demo-teatime' || view === 'demo-zerodiv' || view === 'demo-laws' || view === 'demo-placeslider' || view === 'demo-tearangle' || view === 'demo-decadd' || view === 'demo-moveshape' || view === 'demo-average' || view === 'demo-chickenrabbit' || view === 'demo-decmul' || view === 'demo-gridpos' || view === 'demo-decdiv' || view === 'demo-prob' || view === 'demo-polyarea' || view === 'demo-planttree' || view === 'demo-factor' || view === 'demo-cuboid' || view === 'demo-fracadd' || view === 'demo-rotate' || view === 'demo-findbad' || view === 'demo-radar' || view === 'demo-ratio' || view === 'demo-circle' || view === 'demo-percent' || view === 'demo-fan' || view === 'demo-lsquare' || view === 'demo-thermo' || view === 'demo-negmul' || view === 'demo-discount' || view === 'demo-cylinder' || view === 'demo-pigeon' || view === 'demo-numline' || view === 'demo-powerup' || view === 'demo-monomial' || view === 'demo-liketerms' || view === 'demo-meetline' || view === 'demo-lineseg' || view === 'demo-anglepair' || view === 'demo-vertangle' || view === 'demo-parangles' || view === 'demo-roots' || view === 'demo-coordplane' || view === 'demo-ineqline' || view === 'demo-histogram' || view === 'demo-trisides' || view === 'demo-congruent' || view === 'demo-foldmirror' || view === 'demo-algarea' || view === 'demo-algfrac' || view === 'demo-eqsieve' || view === 'demo-radical' || view === 'demo-pythag' || view === 'demo-pargram' || view === 'demo-specialquad' || view === 'demo-datastats' || view === 'demo-quad' || view === 'demo-growth' || view === 'demo-parabola' || view === 'demo-spin' || view === 'demo-circangle' || view === 'demo-tangent' || view === 'demo-sector' || view === 'demo-coin' || view === 'demo-tree' || view === 'demo-hyperbola' || view === 'demo-similar' || view === 'demo-shadow' || view === 'demo-trig' || view === 'demo-slope' || view === 'demo-project';
   setHidden(demosSec, !(view === 'demos' || demoLeaf));
   setHidden(demoPanelsEl, view !== 'demos');
   setHidden(demoGridEl, !demoLeaf); // 演示卡片网格只在某一个演示的叶子视图里出现，列表视图只留演示面板
@@ -16778,6 +17082,1097 @@ function dsRender() {
   document.getElementById('dsOutBtn').addEventListener('click', function () { dsOutlier = !dsOutlier; markTried('datastats'); dsRender(); });
   document.getElementById('dsReset').addEventListener('click', function () { dsVals = [2, 3, 3, 5, 7]; dsOutlier = false; markTried('datastats'); dsRender(); });
   dsRender();
+})();
+
+/* ---------- 九年级实验（15 个新演示，124 个演示） ----------
+   每个实验一个认知动作：滑杆/步进改一个量，图和数立刻跟着变；不评分。 */
+function g9El(tag, attrs) {
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = document.createElementNS(NS, tag);
+  Object.keys(attrs || {}).forEach(function (k) { el.setAttribute(k, attrs[k]); });
+  return el;
+}
+function g9Clear(svg) { while (svg.firstChild) svg.removeChild(svg.firstChild); }
+function g9SvgText(svg, x, y, txt, size, fill, anchor) {
+  const t = g9El('text', { x: x, y: y, 'font-size': size || 15, fill: fill || '#1e293b', 'text-anchor': anchor || 'middle' });
+  t.textContent = txt; svg.appendChild(t); return t;
+}
+function g9SvgLine(svg, x1, y1, x2, y2, stroke, w, dash) {
+  const l = g9El('line', { x1: x1, y1: y1, x2: x2, y2: y2, stroke: stroke || '#1e293b', 'stroke-width': w || 2 });
+  if (dash) l.setAttribute('stroke-dasharray', dash);
+  svg.appendChild(l); return l;
+}
+
+/* ---------- demo-quad · 9.1 解一元二次方程（方法：配方法拼图 + 判别式红绿灯） ----------
+   三道题：x²−5x+6=0（Δ=1，根 2、3）、x²+6x−7=0（Δ=64，根 1、−7）、
+   x²−4x+5=0（Δ=−4，没有实数根）。根由公式法算出，代回去验算用数值代入验。 */
+const QQ_PROBS = [
+  { eq: 'x²−5x+6=0', a: 1, b: -5, c: 6, comp: '(x−2.5)²=0.25', fac: '(x−2)(x−3)=0' },
+  { eq: 'x²+6x−7=0', a: 1, b: 6, c: -7, comp: '(x+3)²=16', fac: '(x−1)(x+7)=0' },
+  { eq: 'x²−4x+5=0', a: 1, b: -4, c: 5, comp: '(x−2)²=−1', fac: '分解不了（没有实数根）' }
+];
+let qqProb = 0, qqMode = 'complete';
+function qqRoots(p) {
+  const d = p.b * p.b - 4 * p.a * p.c;
+  if (d < 0) return { d: d, roots: null };
+  const s = Math.sqrt(d);
+  return { d: d, roots: [(-p.b - s) / (2 * p.a), (-p.b + s) / (2 * p.a)] };
+}
+function qqRender() {
+  document.querySelectorAll('#qqProbSeg [data-qq-prob]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(+btn.dataset.qqProb === qqProb));
+  });
+  document.querySelectorAll('#qqModeSeg [data-qq-mode]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(btn.dataset.qqMode === qqMode));
+  });
+  const p = QQ_PROBS[qqProb];
+  const r = qqRoots(p);
+  const light = r.d > 0 ? '绿灯' : (r.d === 0 ? '黄灯' : '红灯');
+  let read = '', msg = '';
+  if (qqMode === 'complete') {
+    read = p.eq + '：配方得 ' + p.comp + '。';
+    msg = r.roots
+      ? '补上缺的那一块正方形：' + p.comp + '，开平方得 x=' + fmtNum(r.roots[0]) + ' 或 x=' + fmtNum(r.roots[1]) + '。'
+      : '配方得 (x−2)²=−1：平方不可能是负数，所以没有实数根。';
+  } else if (qqMode === 'formula') {
+    read = p.eq + '：Δ=b²−4ac=' + r.d + '（' + light + '）。';
+    msg = r.roots
+      ? 'Δ=' + r.d + ' > 0，有两个不相等的实数根：x=' + fmtNum(r.roots[0]) + ' 或 x=' + fmtNum(r.roots[1]) + '。'
+      : 'Δ=' + r.d + ' < 0，根号里是负数，开不出来，没有实数根。';
+  } else if (qqMode === 'factor') {
+    read = p.eq + '：因式分解得 ' + p.fac + '。';
+    msg = r.roots
+      ? '乘积是 0，括号里必有一个是 0：x=' + fmtNum(r.roots[0]) + ' 或 x=' + fmtNum(r.roots[1]) + '。先化成一边=0 才能这样拆。'
+      : '它分解不了：Δ<0，没有实数根，乘积永远拆不出两个一次因式。';
+  } else {
+    if (!r.roots) { read = p.eq + '：Δ=' + r.d + ' < 0，没有实数根，没什么可代的。'; msg = '先看判别式：没有实数根，就不用代了。'; }
+    else {
+      const chk = r.roots.map(function (x) { return fmtNum(p.a * x * x + p.b * x + p.c); });
+      read = p.eq + '：把 x=' + fmtNum(r.roots[0]) + ' 代回去得 ' + chk[0] + '，把 x=' + fmtNum(r.roots[1]) + ' 代回去得 ' + chk[1] + '。';
+      msg = '两个根代回去都是 0，根是对的。配方、公式、因式分解，三种解法是同一个答案。';
+    }
+  }
+  document.getElementById('qqRead').textContent = read;
+  document.getElementById('qqMsg').textContent = msg;
+}
+(function qqInit() {
+  const probSeg = document.getElementById('qqProbSeg');
+  QQ_PROBS.forEach(function (p, i) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = p.eq; b.dataset.qqProb = String(i);
+    b.addEventListener('click', function () { qqProb = i; markTried('quad'); qqRender(); });
+    probSeg.appendChild(b);
+  });
+  const modeSeg = document.getElementById('qqModeSeg');
+  [['complete', '配方法'], ['formula', '公式法 · 判别式'], ['factor', '因式分解法'], ['check', '代回去验算']].forEach(function (m) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = m[1]; b.dataset.qqMode = m[0];
+    b.addEventListener('click', function () { qqMode = m[0]; markTried('quad'); qqRender(); });
+    modeSeg.appendChild(b);
+  });
+  qqRender();
+})();
+
+/* ---------- demo-growth · 9.2 增长率与韦达定理（方法：利滚利法） ----------
+   利滚利：100 元每年涨 x%，两年是 100(1+x)²。韦达：三道题，和与积藏在系数里，
+   x₁²+x₂²=(x₁+x₂)²−2x₁x₂，不用解方程。 */
+const GW_VIETA = [
+  { eq: 'x²−3x+1=0', sum: 3, prod: 1 },
+  { eq: 'x²−5x+6=0', sum: 5, prod: 6 },
+  { eq: 'x²−2x−3=0', sum: 2, prod: -3 }
+];
+let gwMode = 'growth', gwX = 10, gwVieta = 0;
+function gwRender() {
+  document.querySelectorAll('#gwModeSeg [data-gw-mode]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(btn.dataset.gwMode === gwMode));
+  });
+  document.querySelectorAll('#gwVietaSeg [data-gw-vieta]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(+btn.dataset.gwVieta === gwVieta));
+  });
+  document.getElementById('gwGrowthBox').hidden = gwMode !== 'growth';
+  document.getElementById('gwVietaBox').hidden = gwMode !== 'vieta';
+  document.getElementById('gwXTx').textContent = 'x = ' + gwX + '%';
+  let read = '', msg = '';
+  if (gwMode === 'growth') {
+    const y1 = 100 * (1 + gwX / 100), y2 = 100 * (1 + gwX / 100) * (1 + gwX / 100);
+    read = '100 元每年涨 ' + gwX + '%：第一年 ' + fmtNum(y1) + ' 元，第二年 ' + fmtNum(y2) + ' 元。';
+    msg = '100×(1+' + gwX + '%)²=' + fmtNum(y2) + ' 元；写成 100×(1+2×' + gwX + '%)=' + fmtNum(100 * (1 + 2 * gwX / 100)) + ' 元就错了——第二年是在第一年的基础上再涨。';
+  } else {
+    const v = GW_VIETA[gwVieta];
+    const sq = v.sum * v.sum - 2 * v.prod;
+    read = v.eq + '：x₁+x₂=' + v.sum + '，x₁x₂=' + v.prod + '。';
+    msg = '不解方程：x₁²+x₂²=(x₁+x₂)²−2x₁x₂=' + v.sum + '²−2×(' + v.prod + ')=' + sq + '。';
+  }
+  document.getElementById('gwRead').textContent = read;
+  document.getElementById('gwMsg').textContent = msg;
+}
+(function gwInit() {
+  const modeSeg = document.getElementById('gwModeSeg');
+  [['growth', '利滚利'], ['vieta', '韦达定理']].forEach(function (m) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = m[1]; b.dataset.gwMode = m[0];
+    b.addEventListener('click', function () { gwMode = m[0]; markTried('growth'); gwRender(); });
+    modeSeg.appendChild(b);
+  });
+  const vietaSeg = document.getElementById('gwVietaSeg');
+  GW_VIETA.forEach(function (v, i) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = v.eq; b.dataset.gwVieta = String(i);
+    b.addEventListener('click', function () { gwVieta = i; markTried('growth'); gwRender(); });
+    vietaSeg.appendChild(b);
+  });
+  document.getElementById('gwXMinus').addEventListener('click', function () { gwX = Math.max(0, gwX - 1); markTried('growth'); gwRender(); });
+  document.getElementById('gwXPlus').addEventListener('click', function () { gwX = Math.min(20, gwX + 1); markTried('growth'); gwRender(); });
+  gwRender();
+})();
+
+/* ---------- demo-parabola · 9.3/9.4 二次函数的图象、性质与应用（方法：滑杆看抛物线法） ----------
+   顶点式 y=a(x−h)²+k：a 管开口，(h,k) 是顶点；交点横坐标就是方程的根，顶点处取最值。
+   利润模式用一道算对的题：每件利润 10 元，每天卖 80 件，每涨 1 元少卖 2 件，
+   利润=(10+x)(80−2x)=−2x²+60x+800，顶点 x=15，最大利润 1250 元。
+   （注意：9.4 练一练原题 (30+x)(80−4x) 的顶点其实在 x=−5，不在 x=5，
+   这里不用那道题的数字，只教“顶点处取最值”的方法。） */
+let ppMode = 'para', ppA = 1, ppH = 0, ppK = 0, ppX = 15;
+function ppDrawPara() {
+  const svg = document.getElementById('ppSvg');
+  g9Clear(svg);
+  const px = function (x) { return 320 + x * 50; }, py = function (y) { return 180 - y * 20; };
+  g9SvgLine(svg, 20, 180, 620, 180, '#94a3b8', 2);
+  g9SvgLine(svg, 320, 20, 320, 340, '#94a3b8', 2);
+  g9SvgText(svg, 612, 168, 'x', 15, '#64748b');
+  g9SvgText(svg, 332, 30, 'y', 15, '#64748b');
+  g9SvgLine(svg, px(ppH), 20, px(ppH), 340, '#f59e0b', 2, '6 4');
+  let d = '';
+  for (let x = -6; x <= 6.01; x += 0.1) {
+    const y = ppA * (x - ppH) * (x - ppH) + ppK;
+    if (y < -8.5 || y > 8.5) { if (d) { svg.appendChild(g9El('path', { d: d, fill: 'none', stroke: '#2563eb', 'stroke-width': 3 })); d = ''; } continue; }
+    d += (d ? ' L' : 'M') + px(x).toFixed(1) + ',' + py(y).toFixed(1);
+  }
+  if (d) svg.appendChild(g9El('path', { d: d, fill: 'none', stroke: '#2563eb', 'stroke-width': 3 }));
+  const v = g9El('circle', { cx: px(ppH), cy: py(ppK), r: 8, fill: '#ff8a3d', stroke: '#fff', 'stroke-width': 2 });
+  svg.appendChild(v);
+  g9SvgText(svg, px(ppH) + 8, py(ppK) - 12, '顶点(' + ppH + ',' + ppK + ')', 15, '#c2410c', 'start');
+}
+function ppDrawProfit() {
+  const svg = document.getElementById('ppProfitSvg');
+  g9Clear(svg);
+  const px = function (x) { return 40 + x * 28; }, py = function (p) { return 330 - p / 1400 * 300; };
+  g9SvgLine(svg, 40, 330, 620, 330, '#94a3b8', 2);
+  g9SvgLine(svg, 40, 30, 40, 330, '#94a3b8', 2);
+  g9SvgText(svg, 612, 318, '涨价 x 元', 14, '#64748b', 'end');
+  g9SvgText(svg, 48, 44, '利润（元）', 14, '#64748b', 'start');
+  let d = '';
+  for (let x = 0; x <= 20.01; x += 0.5) {
+    const p = (10 + x) * (80 - 2 * x);
+    d += (d ? ' L' : 'M') + px(x).toFixed(1) + ',' + py(p).toFixed(1);
+  }
+  svg.appendChild(g9El('path', { d: d, fill: 'none', stroke: '#2563eb', 'stroke-width': 3 }));
+  const p = (10 + ppX) * (80 - 2 * ppX);
+  const dot = g9El('circle', { cx: px(ppX), cy: py(p), r: 8, fill: '#ff8a3d', stroke: '#fff', 'stroke-width': 2 });
+  svg.appendChild(dot);
+  const top = g9El('circle', { cx: px(15), cy: py(1250), r: 8, fill: '#16a34a', stroke: '#fff', 'stroke-width': 2 });
+  svg.appendChild(top);
+  g9SvgText(svg, px(15) + 8, py(1250) - 12, '最高点 (15, 1250)', 15, '#15803d', 'start');
+}
+function ppRender() {
+  document.querySelectorAll('#ppModeSeg [data-pp-mode]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(btn.dataset.ppMode === ppMode));
+  });
+  document.getElementById('ppParaBox').hidden = ppMode !== 'para';
+  document.getElementById('ppProfitBox').hidden = ppMode !== 'profit';
+  document.getElementById('ppATx').textContent = 'a = ' + fmtNum(ppA);
+  document.getElementById('ppHTx').textContent = 'h = ' + ppH;
+  document.getElementById('ppKTx').textContent = 'k = ' + ppK;
+  document.getElementById('ppXTx').textContent = '涨 ' + ppX + ' 元';
+  let read = '', msg = '';
+  if (ppMode === 'para') {
+    ppDrawPara();
+    const open = ppA > 0 ? '开口向上' : '开口向下';
+    const wide = Math.abs(ppA) > 1 ? '|a| 大，开口收得紧' : (Math.abs(ppA) < 1 ? '|a| 小，开口张得开' : '开口不宽不窄');
+    let inter = '';
+    const disc = -ppK / ppA;
+    if (disc < 0) inter = '与 x 轴没有交点（Δ<0，方程没有实数根）';
+    else if (disc === 0) inter = '与 x 轴相切于 (' + ppH + ',0)（Δ=0，只有一个根）';
+    else {
+      const s = Math.sqrt(disc);
+      inter = '与 x 轴交于 (' + fmtNum(ppH - s) + ',0) 和 (' + fmtNum(ppH + s) + ',0)（Δ>0，两个根）';
+    }
+    read = 'y=' + fmtNum(ppA) + '(x−(' + ppH + '))²+(' + ppK + ')：' + open + '，对称轴 x=' + ppH + '，顶点 (' + ppH + ',' + ppK + ')。';
+    msg = wide + '；' + inter + '；' + (ppA > 0 ? '顶点处取最小值 ' + ppK : '顶点处取最大值 ' + ppK) + '。';
+  } else {
+    ppDrawProfit();
+    const p = (10 + ppX) * (80 - 2 * ppX);
+    read = '涨 ' + ppX + ' 元：每件利润 ' + (10 + ppX) + ' 元，每天卖 ' + (80 - 2 * ppX) + ' 件，总利润 ' + p + ' 元。';
+    msg = ppX === 15
+      ? '涨 15 元时利润最大，最大利润 1250 元：利润=(10+x)(80−2x)=−2x²+60x+800，顶点横坐标 x=15。涨价不是越多越好，涨多了卖得少。'
+      : '利润=(10+x)(80−2x)=−2x²+60x+800；顶点在 x=15，最大利润 1250 元。现在是 ' + p + ' 元，比最高点少 ' + (1250 - p) + ' 元。';
+  }
+  document.getElementById('ppRead').textContent = read;
+  document.getElementById('ppMsg').textContent = msg;
+}
+(function ppInit() {
+  const modeSeg = document.getElementById('ppModeSeg');
+  [['para', '抛物线'], ['profit', '利润最高点']].forEach(function (m) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = m[1]; b.dataset.ppMode = m[0];
+    b.addEventListener('click', function () { ppMode = m[0]; markTried('parabola'); ppRender(); });
+    modeSeg.appendChild(b);
+  });
+  document.getElementById('ppAMinus').addEventListener('click', function () { ppA = Math.max(-2, ppA - 0.5); if (ppA === 0) ppA = -0.5; markTried('parabola'); ppRender(); });
+  document.getElementById('ppAPlus').addEventListener('click', function () { ppA = Math.min(2, ppA + 0.5); if (ppA === 0) ppA = 0.5; markTried('parabola'); ppRender(); });
+  document.getElementById('ppHMinus').addEventListener('click', function () { ppH = Math.max(-3, ppH - 1); markTried('parabola'); ppRender(); });
+  document.getElementById('ppHPlus').addEventListener('click', function () { ppH = Math.min(3, ppH + 1); markTried('parabola'); ppRender(); });
+  document.getElementById('ppKMinus').addEventListener('click', function () { ppK = Math.max(-4, ppK - 1); markTried('parabola'); ppRender(); });
+  document.getElementById('ppKPlus').addEventListener('click', function () { ppK = Math.min(4, ppK + 1); markTried('parabola'); ppRender(); });
+  document.getElementById('ppXMinus').addEventListener('click', function () { ppX = Math.max(0, ppX - 1); markTried('parabola'); ppRender(); });
+  document.getElementById('ppXPlus').addEventListener('click', function () { ppX = Math.min(20, ppX + 1); markTried('parabola'); ppRender(); });
+  ppRender();
+})();
+
+/* ---------- demo-spin · 9.5 图形的旋转与中心对称（方法：钉住一点转） ----------
+   绕中心转：对应点到中心的距离不变。三角形转 90° 不重合，正方形转 90° 重合，
+   等边三角形转 120° 重合；转 180° 重合就是中心对称。 */
+const SN_SHAPES = [
+  { name: '三角形', pts: [[-80, 40], [80, 40], [0, -70]], back: '转 360° 才重合' },
+  { name: '正方形', pts: [[-60, -60], [60, -60], [60, 60], [-60, 60]], back: '转 90° 就重合' },
+  { name: '等边三角形', pts: [[0, -70], [61, 35], [-61, 35]], back: '转 120° 就重合' }
+];
+let snShape = 1, snAng = 90;
+function snRot(pt, deg) {
+  const r = deg * Math.PI / 180, c = Math.cos(r), s = Math.sin(r);
+  return [pt[0] * c - pt[1] * s, pt[0] * s + pt[1] * c];
+}
+function snRender() {
+  document.querySelectorAll('#snShapeSeg [data-sn-shape]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(+btn.dataset.snShape === snShape));
+  });
+  document.getElementById('snAngTx').textContent = '转 ' + snAng + '°';
+  const shape = SN_SHAPES[snShape];
+  const svg = document.getElementById('snSvg');
+  g9Clear(svg);
+  const cx = 200, cy = 200;
+  const poly = function (pts, fill, stroke) {
+    const p = g9El('polygon', { points: pts.map(function (q) { return (cx + q[0]) + ',' + (cy + q[1]); }).join(' '), fill: fill, stroke: stroke, 'stroke-width': 3 });
+    svg.appendChild(p);
+  };
+  poly(shape.pts, '#f1f5f9', '#94a3b8');
+  poly(shape.pts.map(function (q) { return snRot(q, snAng); }), '#dbeafe', '#2563eb');
+  const o = g9El('circle', { cx: cx, cy: cy, r: 7, fill: '#ff8a3d', stroke: '#fff', 'stroke-width': 2 });
+  svg.appendChild(o);
+  g9SvgText(svg, cx + 12, cy - 10, '旋转中心 O', 15, '#c2410c', 'start');
+  const a0 = shape.pts[0], a1 = snRot(a0, snAng);
+  g9SvgLine(svg, cx, cy, cx + a0[0], cy + a0[1], '#94a3b8', 2, '5 4');
+  g9SvgLine(svg, cx, cy, cx + a1[0], cy + a1[1], '#2563eb', 2, '5 4');
+  const d = Math.sqrt(a0[0] * a0[0] + a0[1] * a0[1]);
+  const coinc = (snShape === 1 && snAng % 90 === 0 && snAng !== 0) || (snShape === 2 && snAng % 120 === 0 && snAng !== 0);
+  let read = shape.name + '绕中心 O 转 ' + snAng + '°：对应点到 O 的距离都是 ' + fmtNum(d) + '，转前转后距离没变。';
+  let msg = '';
+  if (snAng === 180) msg = '转 180° 后，对应点连线都经过 O、被 O 平分——这就是中心对称。';
+  else if (snAng === 0) msg = '还没转。点一点“＋”，看图形怎么转。';
+  else if (coinc) msg = shape.name + '转 ' + snAng + '° 就和原来重合了（' + shape.back + '）。';
+  else msg = shape.name + '转 ' + snAng + '° 还没和原来重合（' + shape.back + '）；但形状和大小一点没变。';
+  document.getElementById('snRead').textContent = read;
+  document.getElementById('snMsg').textContent = msg;
+}
+(function snInit() {
+  const shapeSeg = document.getElementById('snShapeSeg');
+  SN_SHAPES.forEach(function (sh, i) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = sh.name; b.dataset.snShape = String(i);
+    b.addEventListener('click', function () { snShape = i; markTried('spin'); snRender(); });
+    shapeSeg.appendChild(b);
+  });
+  document.getElementById('snAngMinus').addEventListener('click', function () { snAng = (snAng + 330) % 360; markTried('spin'); snRender(); });
+  document.getElementById('snAngPlus').addEventListener('click', function () { snAng = (snAng + 30) % 360; markTried('spin'); snRender(); });
+  document.getElementById('snHalfBtn').addEventListener('click', function () { snAng = 180; markTried('spin'); snRender(); });
+  snRender();
+})();
+
+/* ---------- demo-circangle · 9.6 圆的有关性质（方法：站圆上看弦法） ----------
+   A 在 150°、B 在 30°，圆心角 ∠AOB=120°；点 C 在优弧上走，圆周角永远是 60°，
+   走到劣弧上就变成 120°。垂径模式：r=5，弦 8→距 3，弦 6→距 4（3-4-5）。 */
+let cjMode = 'angle', cjCPos = 0, cjChord = 8;
+const CJ_CPOS = [
+  { name: '优弧上 · 210°', ang: 210, expect: 60 },
+  { name: '优弧上 · 250°', ang: 250, expect: 60 },
+  { name: '优弧上 · 290°', ang: 290, expect: 60 },
+  { name: '劣弧上 · 90°', ang: 90, expect: 120 }
+];
+function cjPt(ang, r) {
+  const rad = ang * Math.PI / 180;
+  return [200 + r * Math.cos(rad), 200 - r * Math.sin(rad)];
+}
+function cjAngleAt(c, a, b) {
+  const v1 = [a[0] - c[0], a[1] - c[1]], v2 = [b[0] - c[0], b[1] - c[1]];
+  const dot = v1[0] * v2[0] + v1[1] * v2[1];
+  const n1 = Math.sqrt(v1[0] * v1[0] + v1[1] * v1[1]), n2 = Math.sqrt(v2[0] * v2[0] + v2[1] * v2[1]);
+  return Math.acos(Math.max(-1, Math.min(1, dot / (n1 * n2)))) * 180 / Math.PI;
+}
+function cjDrawAngle() {
+  const svg = document.getElementById('cjSvg');
+  g9Clear(svg);
+  svg.appendChild(g9El('circle', { cx: 200, cy: 200, r: 120, fill: 'none', stroke: '#2563eb', 'stroke-width': 3 }));
+  const A = cjPt(150, 120), B = cjPt(30, 120), C = cjPt(CJ_CPOS[cjCPos].ang, 120);
+  g9SvgLine(svg, 200, 200, A[0], A[1], '#94a3b8', 2);
+  g9SvgLine(svg, 200, 200, B[0], B[1], '#94a3b8', 2);
+  g9SvgLine(svg, C[0], C[1], A[0], A[1], '#2563eb', 3);
+  g9SvgLine(svg, C[0], C[1], B[0], B[1], '#2563eb', 3);
+  [[200, 200, 'O'], [A[0], A[1], 'A'], [B[0], B[1], 'B'], [C[0], C[1], 'C']].forEach(function (p) {
+    svg.appendChild(g9El('circle', { cx: p[0], cy: p[1], r: 6, fill: '#ff8a3d', stroke: '#fff', 'stroke-width': 2 }));
+    g9SvgText(svg, p[0] + 12, p[1] - 8, p[2], 16, '#1e293b', 'start');
+  });
+  return cjAngleAt(C, A, B);
+}
+function cjDrawChord() {
+  const svg = document.getElementById('cjChordSvg');
+  g9Clear(svg);
+  const cx = 200, cy = 200, R = 120, scale = R / 5;
+  svg.appendChild(g9El('circle', { cx: cx, cy: cy, r: R, fill: 'none', stroke: '#2563eb', 'stroke-width': 3 }));
+  const half = cjChord / 2, d = Math.sqrt(25 - half * half);
+  const y = cy - d * scale;
+  const x1 = cx - half * scale, x2 = cx + half * scale;
+  g9SvgLine(svg, x1, y, x2, y, '#2563eb', 3);
+  g9SvgLine(svg, cx, cy - R, cx, cy + R, '#f59e0b', 2, '6 4');
+  g9SvgLine(svg, cx, cy, cx, y, '#ef4444', 3);
+  svg.appendChild(g9El('circle', { cx: cx, cy: cy, r: 6, fill: '#ff8a3d', stroke: '#fff', 'stroke-width': 2 }));
+  g9SvgText(svg, cx + 12, cy + 6, 'O', 16, '#1e293b', 'start');
+  g9SvgText(svg, (x1 + x2) / 2, y - 10, '弦长 ' + cjChord, 15, '#1e293b');
+  g9SvgText(svg, cx + 10, (cy + y) / 2, '距 ' + fmtNum(d), 15, '#dc2626', 'start');
+  return d;
+}
+function cjRender() {
+  document.querySelectorAll('#cjModeSeg [data-cj-mode]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(btn.dataset.cjMode === cjMode));
+  });
+  document.querySelectorAll('#cjCPosSeg [data-cj-cpos]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(+btn.dataset.cjCpos === cjCPos));
+  });
+  document.getElementById('cjAngleBox').hidden = cjMode !== 'angle';
+  document.getElementById('cjChordBox').hidden = cjMode !== 'chord';
+  document.getElementById('cjChordTx').textContent = '弦长 ' + cjChord;
+  let read = '', msg = '';
+  if (cjMode === 'angle') {
+    const ang = cjDrawAngle();
+    read = '圆心角 ∠AOB=120°，点 C 在' + CJ_CPOS[cjCPos].name + '，圆周角 ∠ACB=' + Math.round(ang) + '°。';
+    msg = cjCPos < 3
+      ? '点 C 在优弧上怎么走，∠ACB 都是 60°——同弧所对的圆周角相等，都是圆心角的一半。'
+      : '点 C 走到了劣弧上：它看的是另一条弧，∠ACB 变成 120°，是 240° 圆心角的一半。';
+  } else {
+    const d = cjDrawChord();
+    read = '半径 5，弦长 ' + cjChord + '，弦到圆心的距离是 ' + fmtNum(d) + '。';
+    msg = '直径垂直于弦，弦被平分成两段：' + fmtNum(cjChord / 2) + '²+' + fmtNum(d) + '²=5²，勾股定理算出来的。注意：平分弦的直径垂直于弦，前提是这条弦不是直径。';
+  }
+  document.getElementById('cjRead').textContent = read;
+  document.getElementById('cjMsg').textContent = msg;
+}
+(function cjInit() {
+  const modeSeg = document.getElementById('cjModeSeg');
+  [['angle', '圆周角'], ['chord', '垂径定理']].forEach(function (m) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = m[1]; b.dataset.cjMode = m[0];
+    b.addEventListener('click', function () { cjMode = m[0]; markTried('circangle'); cjRender(); });
+    modeSeg.appendChild(b);
+  });
+  const cposSeg = document.getElementById('cjCPosSeg');
+  CJ_CPOS.forEach(function (c, i) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = c.name; b.dataset.cjCpos = String(i);
+    b.addEventListener('click', function () { cjCPos = i; markTried('circangle'); cjRender(); });
+    cposSeg.appendChild(b);
+  });
+  document.getElementById('cjChordMinus').addEventListener('click', function () { cjChord = cjChord === 8 ? 6 : 8; markTried('circangle'); cjRender(); });
+  document.getElementById('cjChordPlus').addEventListener('click', function () { cjChord = cjChord === 8 ? 6 : 8; markTried('circangle'); cjRender(); });
+  cjRender();
+})();
+
+/* ---------- demo-tangent · 9.7 点、直线和圆的位置关系（方法：距离比半径法） ----------
+   r=4：d=5 相离（0 个交点）、d=4 相切（1 个）、d=3 相交（2 个）。
+   切线长：OP=5 时 PA=PB=3（3-4-5）；OP=10 时是 √84≈9.17。 */
+let tgMode = 'line', tgD = 5, tgOP = 5;
+function tgDrawLine() {
+  const svg = document.getElementById('tgSvg');
+  g9Clear(svg);
+  const cx = 200, cy = 180, R = 100, scale = 25;
+  svg.appendChild(g9El('circle', { cx: cx, cy: cy, r: R, fill: 'none', stroke: '#2563eb', 'stroke-width': 3 }));
+  const ly = cy - tgD * scale;
+  g9SvgLine(svg, 40, ly, 360, ly, '#ef4444', 3);
+  g9SvgLine(svg, cx, cy, cx, ly, '#94a3b8', 2, '5 4');
+  svg.appendChild(g9El('circle', { cx: cx, cy: cy, r: 6, fill: '#ff8a3d', stroke: '#fff', 'stroke-width': 2 }));
+  g9SvgText(svg, cx + 12, cy + 6, 'O', 16, '#1e293b', 'start');
+  g9SvgText(svg, 350, ly - 10, 'd=' + tgD, 15, '#dc2626', 'end');
+  g9SvgText(svg, cx, cy + R + 24, 'r=4', 15, '#1e293b');
+}
+function tgDrawTan() {
+  const svg = document.getElementById('tgTanSvg');
+  g9Clear(svg);
+  const cx = 160, cy = 180, scale = 25, R = 4 * scale;
+  const px = cx + tgOP * scale;
+  const L = Math.sqrt(tgOP * tgOP - 16);
+  const tx = 16 / tgOP, ty = 4 * L / tgOP;
+  svg.appendChild(g9El('circle', { cx: cx, cy: cy, r: R, fill: 'none', stroke: '#2563eb', 'stroke-width': 3 }));
+  [[tx, ty], [tx, -ty]].forEach(function (t) {
+    const x = cx + t[0] * scale, y = cy - t[1] * scale;
+    g9SvgLine(svg, cx, cy, x, y, '#94a3b8', 2);
+    g9SvgLine(svg, px, cy, x, y, '#ef4444', 3);
+    svg.appendChild(g9El('circle', { cx: x, cy: y, r: 6, fill: '#ff8a3d', stroke: '#fff', 'stroke-width': 2 }));
+  });
+  g9SvgLine(svg, cx, cy, px, cy, '#94a3b8', 2, '5 4');
+  svg.appendChild(g9El('circle', { cx: cx, cy: cy, r: 6, fill: '#ff8a3d', stroke: '#fff', 'stroke-width': 2 }));
+  svg.appendChild(g9El('circle', { cx: px, cy: cy, r: 7, fill: '#16a34a', stroke: '#fff', 'stroke-width': 2 }));
+  g9SvgText(svg, cx - 12, cy + 6, 'O', 16, '#1e293b', 'end');
+  g9SvgText(svg, px + 10, cy + 6, 'P', 16, '#1e293b', 'start');
+  return L;
+}
+function tgRender() {
+  document.querySelectorAll('#tgModeSeg [data-tg-mode]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(btn.dataset.tgMode === tgMode));
+  });
+  document.getElementById('tgLineBox').hidden = tgMode !== 'line';
+  document.getElementById('tgTanBox').hidden = tgMode !== 'tan';
+  document.getElementById('tgDTx').textContent = 'd = ' + tgD;
+  document.getElementById('tgOPTx').textContent = 'OP = ' + tgOP;
+  let read = '', msg = '';
+  if (tgMode === 'line') {
+    tgDrawLine();
+    if (tgD > 4) { read = 'r=4，d=' + tgD + '：d>r，直线和圆相离，0 个交点。'; msg = '直线离得太远，碰不上圆。再往下挪 1 格，d=4，就刚好碰一下。'; }
+    else if (tgD === 4) { read = 'r=4，d=4：d=r，直线和圆相切，1 个交点（切点）。'; msg = '刚好碰一下：这条直线过切点、和半径垂直，就是切线。再往下挪，就穿进圆里了。'; }
+    else { read = 'r=4，d=' + tgD + '：d<r，直线和圆相交，2 个交点。'; msg = '直线穿进圆里了，有两个交点。d 越小，圆里那段弦越长。'; }
+  } else {
+    const L = tgDrawTan();
+    read = 'r=4，OP=' + tgOP + '：从 P 引两条切线，切线长 PA=PB=' + fmtNum(L) + '。';
+    msg = 'PA²+4²=' + tgOP + '²，PA=√(' + (tgOP * tgOP - 16) + ')=' + fmtNum(L) + '。两条切线和两条半径构成两个全等的直角三角形，所以切线长相等。';
+  }
+  document.getElementById('tgRead').textContent = read;
+  document.getElementById('tgMsg').textContent = msg;
+}
+(function tgInit() {
+  const modeSeg = document.getElementById('tgModeSeg');
+  [['line', '直线和圆'], ['tan', '切线长']].forEach(function (m) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = m[1]; b.dataset.tgMode = m[0];
+    b.addEventListener('click', function () { tgMode = m[0]; markTried('tangent'); tgRender(); });
+    modeSeg.appendChild(b);
+  });
+  document.getElementById('tgDMinus').addEventListener('click', function () { tgD = Math.max(0, tgD - 1); markTried('tangent'); tgRender(); });
+  document.getElementById('tgDPlus').addEventListener('click', function () { tgD = Math.min(7, tgD + 1); markTried('tangent'); tgRender(); });
+  document.getElementById('tgOPMinus').addEventListener('click', function () { tgOP = Math.max(5, tgOP - 1); markTried('tangent'); tgRender(); });
+  document.getElementById('tgOPPlus').addEventListener('click', function () { tgOP = Math.min(10, tgOP + 1); markTried('tangent'); tgRender(); });
+  tgRender();
+})();
+
+/* ---------- demo-sector · 9.8 弧长和扇形面积（方法：几分之几法） ----------
+   扇形：l=nπr/180，S=nπr²/360；默认 r=6、n=60°：弧长 2π，面积 6π。
+   圆锥：母线 l=5，底面半径 r=3：侧面积 πrl=15π，展开扇形圆心角 216°。 */
+let sfMode = 'sector', sfR = 6, sfN = 60, sfCR = 3;
+function sfDrawSector() {
+  const svg = document.getElementById('sfSvg');
+  g9Clear(svg);
+  const cx = 200, cy = 200, R = 130;
+  const a = sfN * Math.PI / 180;
+  const x = cx + R * Math.cos(a), y = cy - R * Math.sin(a);
+  const large = sfN > 180 ? 1 : 0;
+  svg.appendChild(g9El('path', { d: 'M' + cx + ',' + cy + ' L' + (cx + R) + ',' + cy + ' A' + R + ',' + R + ' 0 ' + large + ' 0 ' + x.toFixed(1) + ',' + y.toFixed(1) + ' Z', fill: '#dbeafe', stroke: '#2563eb', 'stroke-width': 3 }));
+  g9SvgText(svg, cx + 60, cy + 24, 'n=' + sfN + '°', 15, '#1e293b');
+  g9SvgText(svg, cx + R / 2, cy + 18, 'r=' + sfR, 15, '#1e293b');
+}
+function sfDrawCone() {
+  const svg = document.getElementById('sfConeSvg');
+  g9Clear(svg);
+  const cx = 200, cy = 200, R = 130;
+  const n = 360 * sfCR / 5, a = n * Math.PI / 180;
+  const x = cx + R * Math.cos(a), y = cy - R * Math.sin(a);
+  const large = n > 180 ? 1 : 0;
+  svg.appendChild(g9El('path', { d: 'M' + cx + ',' + cy + ' L' + (cx + R) + ',' + cy + ' A' + R + ',' + R + ' 0 ' + large + ' 0 ' + x.toFixed(1) + ',' + y.toFixed(1) + ' Z', fill: '#fef3c7', stroke: '#d97706', 'stroke-width': 3 }));
+  g9SvgText(svg, cx + 52, cy + 24, 'n=' + fmtNum(n) + '°', 15, '#1e293b');
+  g9SvgText(svg, cx + R / 2, cy + 18, 'l=5', 15, '#1e293b');
+}
+function sfRender() {
+  document.querySelectorAll('#sfModeSeg [data-sf-mode]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(btn.dataset.sfMode === sfMode));
+  });
+  document.getElementById('sfSectorBox').hidden = sfMode !== 'sector';
+  document.getElementById('sfConeBox').hidden = sfMode !== 'cone';
+  document.getElementById('sfRTx').textContent = 'r = ' + sfR;
+  document.getElementById('sfNTx').textContent = 'n = ' + sfN + '°';
+  document.getElementById('sfCRTx').textContent = 'r = ' + sfCR;
+  let read = '', msg = '';
+  if (sfMode === 'sector') {
+    sfDrawSector();
+    const l = sfN * Math.PI * sfR / 180, s = sfN * Math.PI * sfR * sfR / 360;
+    read = 'r=' + sfR + '，n=' + sfN + '°：弧长 l=' + fmtNum(l) + '（' + sfN + 'π×' + sfR + '÷180=' + fmtNum(sfN * sfR / 180) + 'π），扇形面积 S=' + fmtNum(s) + '。';
+    msg = '圆心角占 360° 的 ' + fmtNum(sfN / 360) + '，弧长就是圆周长的 ' + fmtNum(sfN / 360) + '，面积就是圆面积的 ' + fmtNum(sfN / 360) + '。扇形面积也可以算 (1/2)lr。';
+  } else {
+    sfDrawCone();
+    const n = 360 * sfCR / 5;
+    read = '圆锥：底面半径 ' + sfCR + '，母线 l=5，侧面积=πrl=' + (sfCR * 5) + 'π≈' + fmtNum(sfCR * 5 * Math.PI) + '。';
+    msg = '侧面摊开是扇形：扇形的弧长=底面圆的周长 2π×' + sfCR + '=' + (2 * sfCR) + 'π，圆心角 n=360°×' + sfCR + '÷5=' + fmtNum(n) + '°。';
+  }
+  document.getElementById('sfRead').textContent = read;
+  document.getElementById('sfMsg').textContent = msg;
+}
+(function sfInit() {
+  const modeSeg = document.getElementById('sfModeSeg');
+  [['sector', '扇形'], ['cone', '圆锥展开']].forEach(function (m) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = m[1]; b.dataset.sfMode = m[0];
+    b.addEventListener('click', function () { sfMode = m[0]; markTried('sector'); sfRender(); });
+    modeSeg.appendChild(b);
+  });
+  document.getElementById('sfRMinus').addEventListener('click', function () { sfR = Math.max(3, sfR - 1); markTried('sector'); sfRender(); });
+  document.getElementById('sfRPlus').addEventListener('click', function () { sfR = Math.min(10, sfR + 1); markTried('sector'); sfRender(); });
+  document.getElementById('sfNMinus').addEventListener('click', function () { sfN = Math.max(30, sfN - 30); markTried('sector'); sfRender(); });
+  document.getElementById('sfNPlus').addEventListener('click', function () { sfN = Math.min(360, sfN + 30); markTried('sector'); sfRender(); });
+  document.getElementById('sfCRMinus').addEventListener('click', function () { sfCR = Math.max(2, sfCR - 1); markTried('sector'); sfRender(); });
+  document.getElementById('sfCRPlus').addEventListener('click', function () { sfCR = Math.min(5, sfCR + 1); markTried('sector'); sfRender(); });
+  sfRender();
+})();
+
+/* ---------- demo-coin · 9.9 随机事件与概率（方法：长期频率法） ----------
+   抛硬币：次数越多，正面频率越贴近 1/2。摸红球：3 红 2 白，摸到红球的概率是 3/5。 */
+let cfMode = 'coin', cfToss = 0, cfHeads = 0, cfDraws = 0, cfReds = 0;
+function cfRender() {
+  document.querySelectorAll('#cfModeSeg [data-cf-mode]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(btn.dataset.cfMode === cfMode));
+  });
+  document.getElementById('cfCoinBox').hidden = cfMode !== 'coin';
+  document.getElementById('cfBallBox').hidden = cfMode !== 'ball';
+  let read = '', msg = '';
+  if (cfMode === 'coin') {
+    if (cfToss === 0) { read = '还没抛。点“抛 10 次”或“抛 100 次”。'; msg = '抛硬币 1000 次，正面大约 500 次——频率越抛越接近 1/2。'; }
+    else {
+      const f = cfHeads / cfToss;
+      read = '抛了 ' + cfToss + ' 次，正面 ' + cfHeads + ' 次，频率是 ' + fmtNum(f) + '。';
+      msg = cfToss < 100
+        ? '只抛了 ' + cfToss + ' 次，频率 ' + fmtNum(f) + ' 离 1/2 还有点远——次数少，波动大。再抛 100 次试试。'
+        : '抛了 ' + cfToss + ' 次，频率 ' + fmtNum(f) + '，越来越贴近 1/2。概率不是“下一次一定怎么样”，而是“很多次下来大概怎么样”。';
+    }
+  } else {
+    if (cfDraws === 0) { read = '袋子里 3 个红球、2 个白球。摸到红球的概率是 3/5=0.6。'; msg = '点“摸一个球”，摸完放回去再摸。'; }
+    else {
+      read = '摸了 ' + cfDraws + ' 次，红球 ' + cfReds + ' 次，频率是 ' + fmtNum(cfReds / cfDraws) + '；理论概率是 3/5=0.6。';
+      msg = '摸得越多，频率越接近 3/5。每次摸之前，红球还是 3 个、白球还是 2 个——前面摸到什么，不影响下一次。';
+    }
+  }
+  document.getElementById('cfRead').textContent = read;
+  document.getElementById('cfMsg').textContent = msg;
+}
+(function cfInit() {
+  const modeSeg = document.getElementById('cfModeSeg');
+  [['coin', '抛硬币'], ['ball', '摸红球']].forEach(function (m) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = m[1]; b.dataset.cfMode = m[0];
+    b.addEventListener('click', function () { cfMode = m[0]; markTried('coin'); cfRender(); });
+    modeSeg.appendChild(b);
+  });
+  document.getElementById('cfToss10').addEventListener('click', function () {
+    for (let i = 0; i < 10; i++) { cfToss++; if (Math.random() < 0.5) cfHeads++; }
+    markTried('coin'); cfRender();
+  });
+  document.getElementById('cfToss100').addEventListener('click', function () {
+    for (let i = 0; i < 100; i++) { cfToss++; if (Math.random() < 0.5) cfHeads++; }
+    markTried('coin'); cfRender();
+  });
+  document.getElementById('cfReset').addEventListener('click', function () { cfToss = 0; cfHeads = 0; markTried('coin'); cfRender(); });
+  document.getElementById('cfDrawBtn').addEventListener('click', function () {
+    cfDraws++; if (Math.random() < 0.6) cfReds++;
+    markTried('coin'); cfRender();
+  });
+  document.getElementById('cfDrawReset').addEventListener('click', function () { cfDraws = 0; cfReds = 0; markTried('coin'); cfRender(); });
+  cfRender();
+})();
+
+/* ---------- demo-tree · 9.10 列举法求概率（方法：摆出来数清法） ----------
+   两枚硬币 4 种结果，两正 1/4；两枚骰子 36 种，和为 7 有 6 种，概率 1/6；
+   1、2、3、4 抽两张（不放回）6 种组合，两张都奇数 1 种，概率 1/6。 */
+const TW_SCEN = [
+  { name: '两枚硬币', levels: [['正面', '反面'], ['正正', '正反', '反正', '反反']], total: '4 种', fav: '两枚都是正面：1 种，概率 1/4' },
+  { name: '两枚骰子 · 和为 7', levels: [['1', '2', '3', '4', '5', '6'], ['(1,6)', '(2,5)', '(3,4)', '(4,3)', '(5,2)', '(6,1)']], total: '36 种', fav: '点数和是 7：6 种，概率 6/36=1/6' },
+  { name: '抽两张卡片', levels: [['1', '2', '3', '4'], ['(1,2)', '(1,3)', '(1,4)', '(2,3)', '(2,4)', '(3,4)']], total: '6 种组合', fav: '两张都是奇数：(1,3) 只有 1 种，概率 1/6' }
+];
+let twScen = 0, twStep = 0;
+function twRender() {
+  document.querySelectorAll('#twScenSeg [data-tw-scen]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(+btn.dataset.twScen === twScen));
+  });
+  const sc = TW_SCEN[twScen];
+  let read = '', msg = '';
+  if (twStep === 0) { read = sc.name + '：先想一想，第一步有几种可能？点“长出下一层”。'; msg = '列表和画树是“把所有可能都摆出来数”——数清楚了，概率就不会漏、不会重。'; }
+  else if (twStep === 1) { read = sc.name + '：第一层长出来了——' + sc.levels[0].join('、') + '。再点一次，第二层长出来。'; msg = '第一步有 ' + sc.levels[0].length + ' 种可能，每一种下面再分叉。'; }
+  else {
+    read = sc.name + '：一共 ' + sc.total + '：' + sc.levels[1].join('、') + '。' + sc.fav + '。';
+    msg = twScen === 1
+      ? '点数和有 2~12 共 11 种，但它们不是等可能的：和是 7 有 6 种组合，和是 2 只有 1 种。'
+      : '先数清“所有等可能结果”，再数“合要求的有几种”，一除就是概率。';
+  }
+  document.getElementById('twRead').textContent = read;
+  document.getElementById('twMsg').textContent = msg;
+}
+(function twInit() {
+  const scenSeg = document.getElementById('twScenSeg');
+  TW_SCEN.forEach(function (sc, i) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = sc.name; b.dataset.twScen = String(i);
+    b.addEventListener('click', function () { twScen = i; twStep = 0; markTried('tree'); twRender(); });
+    scenSeg.appendChild(b);
+  });
+  document.getElementById('twNextBtn').addEventListener('click', function () { twStep = Math.min(2, twStep + 1); markTried('tree'); twRender(); });
+  document.getElementById('twResetBtn').addEventListener('click', function () { twStep = 0; markTried('tree'); twRender(); });
+  twRender();
+})();
+
+/* ---------- demo-hyperbola · 9.11 反比例函数（方法：乘积一定法） ----------
+   y=k/x：k>0 在一、三象限，k<0 在二、四象限；点 P 向两轴作垂线，矩形面积永远是 |k|。
+   默认 k=6、x=2：P(2,3)，面积 6；点 (−2,−3) 也在同一条曲线上。 */
+const HB_KS = [-12, -8, -6, -4, -2, 2, 4, 6, 8, 12];
+let hbKi = 7, hbX = 2;
+function hbDraw() {
+  const svg = document.getElementById('hbSvg');
+  g9Clear(svg);
+  const k = HB_KS[hbKi];
+  const px = function (x) { return 320 + x * 50; }, py = function (y) { return 180 - y * 20; };
+  g9SvgLine(svg, 20, 180, 620, 180, '#94a3b8', 2);
+  g9SvgLine(svg, 320, 20, 320, 340, '#94a3b8', 2);
+  g9SvgText(svg, 612, 168, 'x', 15, '#64748b');
+  g9SvgText(svg, 332, 30, 'y', 15, '#64748b');
+  [[-6, -0.3], [0.3, 6]].forEach(function (rg) {
+    let d = '';
+    for (let x = rg[0]; x <= rg[1]; x += 0.1) {
+      const y = k / x;
+      if (y < -8.5 || y > 8.5) continue;
+      d += (d ? ' L' : 'M') + px(x).toFixed(1) + ',' + py(y).toFixed(1);
+    }
+    if (d) svg.appendChild(g9El('path', { d: d, fill: 'none', stroke: '#2563eb', 'stroke-width': 3 }));
+  });
+  const y = k / hbX;
+  const rx = Math.min(px(0), px(hbX)), rw = Math.abs(px(hbX) - px(0));
+  const ry = Math.min(py(0), py(y)), rh = Math.abs(py(y) - py(0));
+  svg.appendChild(g9El('rect', { x: rx, y: ry, width: rw, height: rh, fill: '#fef3c7', stroke: '#d97706', 'stroke-width': 2 }));
+  g9SvgLine(svg, px(hbX), py(0), px(hbX), py(y), '#d97706', 2, '5 4');
+  g9SvgLine(svg, px(0), py(y), px(hbX), py(y), '#d97706', 2, '5 4');
+  svg.appendChild(g9El('circle', { cx: px(hbX), cy: py(y), r: 8, fill: '#ff8a3d', stroke: '#fff', 'stroke-width': 2 }));
+  g9SvgText(svg, px(hbX) + 10, py(y) - 10, 'P(' + hbX + ',' + fmtNum(y) + ')', 15, '#c2410c', 'start');
+}
+function hbRender() {
+  const k = HB_KS[hbKi];
+  document.getElementById('hbKTx').textContent = 'k = ' + k;
+  document.getElementById('hbXTx').textContent = 'x = ' + hbX;
+  hbDraw();
+  const y = k / hbX;
+  const quad = k > 0 ? '第一、三象限' : '第二、四象限';
+  const trend = k > 0 ? '在每个象限内，y 随 x 增大而减小' : '在每个象限内，y 随 x 增大而增大';
+  const read = 'y=' + k + '/x：图象在' + quad + '；点 P(' + hbX + ',' + fmtNum(y) + ')，矩形面积 |xy|=' + Math.abs(hbX * y) + '=|k|。';
+  const msg = trend + '。点 (' + (-hbX) + ',' + fmtNum(-y) + ') 也在同一条曲线上——横纵坐标乘积也是 ' + k + '，双曲线关于原点对称。';
+  document.getElementById('hbRead').textContent = read;
+  document.getElementById('hbMsg').textContent = msg;
+}
+(function hbInit() {
+  document.getElementById('hbKMinus').addEventListener('click', function () { hbKi = Math.max(0, hbKi - 1); markTried('hyperbola'); hbRender(); });
+  document.getElementById('hbKPlus').addEventListener('click', function () { hbKi = Math.min(HB_KS.length - 1, hbKi + 1); markTried('hyperbola'); hbRender(); });
+  document.getElementById('hbXMinus').addEventListener('click', function () { hbX = hbX - 1; if (hbX === 0) hbX = -1; if (hbX < -6) hbX = -6; markTried('hyperbola'); hbRender(); });
+  document.getElementById('hbXPlus').addEventListener('click', function () { hbX = hbX + 1; if (hbX === 0) hbX = 1; if (hbX > 6) hbX = 6; markTried('hyperbola'); hbRender(); });
+  hbRender();
+})();
+
+/* ---------- demo-similar · 9.12 图形的相似与位似（方法：按比例放大法） ----------
+   原三角形 3-4-5（周长 12，面积 6）：放大 k 倍，边长 ×k，周长 ×k，面积 ×k²。
+   位似：OA=2，OA′=2k；k=3 时面积 5×9=45（9.12 奥数题）。 */
+const SI_KS = [1, 1.5, 2, 2.5, 3];
+let siMode = 'similar', siKi = 2;
+function siDraw() {
+  const svg = document.getElementById('siSvg');
+  g9Clear(svg);
+  const k = SI_KS[siKi];
+  const tri = function (ox, oy, s, fill, stroke) {
+    const pts = [[ox, oy], [ox + 3 * s, oy], [ox, oy - 4 * s]];
+    svg.appendChild(g9El('polygon', { points: pts.map(function (q) { return q[0] + ',' + q[1]; }).join(' '), fill: fill, stroke: stroke, 'stroke-width': 3 }));
+    return pts;
+  };
+  if (siMode === 'similar') {
+    tri(80, 300, 20, '#f1f5f9', '#94a3b8');
+    g9SvgText(svg, 140, 322, '3-4-5', 15, '#64748b');
+    tri(360, 300, 20 * k, '#dbeafe', '#2563eb');
+    g9SvgText(svg, 360 + 3 * 20 * k / 2, 322, fmtNum(3 * k) + '-' + fmtNum(4 * k) + '-' + fmtNum(5 * k), 15, '#1e293b');
+    g9SvgText(svg, 360, 60, '放大 ' + fmtNum(k) + ' 倍', 16, '#1e293b');
+  } else {
+    const ox = 320, oy = 180;
+    svg.appendChild(g9El('circle', { cx: ox, cy: oy, r: 7, fill: '#ff8a3d', stroke: '#fff', 'stroke-width': 2 }));
+    g9SvgText(svg, ox + 12, oy - 10, '位似中心 O', 15, '#c2410c', 'start');
+    const A = [ox + 40, oy + 30], B = [ox + 100, oy + 30], C = [ox + 40, oy - 50];
+    const sc = function (p) { return [ox + (p[0] - ox) * k, oy + (p[1] - oy) * k]; };
+    [A, B, C].forEach(function (p) { g9SvgLine(svg, ox, oy, sc(p)[0], sc(p)[1], '#94a3b8', 2, '5 4'); });
+    const poly = function (pts, fill, stroke) {
+      svg.appendChild(g9El('polygon', { points: pts.map(function (q) { return q[0] + ',' + q[1]; }).join(' '), fill: fill, stroke: stroke, 'stroke-width': 3 }));
+    };
+    poly([A, B, C], '#f1f5f9', '#94a3b8');
+    poly([sc(A), sc(B), sc(C)], '#dbeafe', '#2563eb');
+    g9SvgText(svg, A[0] + 8, A[1] + 16, 'A', 15, '#1e293b', 'start');
+    g9SvgText(svg, sc(A)[0] + 8, sc(A)[1] + 16, "A'", 15, '#1e293b', 'start');
+  }
+}
+function siRender() {
+  document.querySelectorAll('#siModeSeg [data-si-mode]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(btn.dataset.siMode === siMode));
+  });
+  document.getElementById('siKTx').textContent = 'k = ' + fmtNum(SI_KS[siKi]);
+  siDraw();
+  const k = SI_KS[siKi];
+  let read = '', msg = '';
+  if (siMode === 'similar') {
+    read = '3-4-5 的三角形放大 ' + fmtNum(k) + ' 倍：边长是 ' + fmtNum(3 * k) + '、' + fmtNum(4 * k) + '、' + fmtNum(5 * k) + '，周长 ' + fmtNum(12 * k) + '（×' + fmtNum(k) + '），面积 ' + fmtNum(6 * k * k) + '（×' + fmtNum(k * k) + '）。';
+    msg = '周长比等于相似比，面积比等于相似比的平方：长和宽都乘了 ' + fmtNum(k) + '，面积就乘了 ' + fmtNum(k) + '²=' + fmtNum(k * k) + '。';
+  } else {
+    read = '位似中心 O，OA=2，放大 ' + fmtNum(k) + ' 倍：OA′=' + fmtNum(2 * k) + '，面积比是 ' + fmtNum(k * k) + '。';
+    msg = k === 3
+      ? '△ABC 与 △DEF 位似，OA=2，OD=6，相似比是 3，△ABC 的面积是 5，△DEF 的面积是 5×9=45。'
+      : '位似是特殊的相似：对应点连线都交于位似中心 O。对应点到 O 的距离也成比例。';
+  }
+  document.getElementById('siRead').textContent = read;
+  document.getElementById('siMsg').textContent = msg;
+}
+(function siInit() {
+  const modeSeg = document.getElementById('siModeSeg');
+  [['similar', '相似放大'], ['homothety', '位似']].forEach(function (m) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = m[1]; b.dataset.siMode = m[0];
+    b.addEventListener('click', function () { siMode = m[0]; markTried('similar'); siRender(); });
+    modeSeg.appendChild(b);
+  });
+  document.getElementById('siKMinus').addEventListener('click', function () { siKi = Math.max(0, siKi - 1); markTried('similar'); siRender(); });
+  document.getElementById('siKPlus').addEventListener('click', function () { siKi = Math.min(SI_KS.length - 1, siKi + 1); markTried('similar'); siRender(); });
+  siRender();
+})();
+
+/* ---------- demo-shadow · 9.13 相似三角形（方法：影子测高法） ----------
+   影子测高：你高 1.6 米，影子 s 米，旗杆影子 12 米，旗杆高 1.6×12÷s；
+   s=2 时是 9.6 米。AA 判定：∠B=60° 固定，∠A 可调，第三个角被 180° 定住。 */
+let swMode = 'shadow', swS = 2, swA = 50;
+function swDrawShadow() {
+  const svg = document.getElementById('swSvg');
+  g9Clear(svg);
+  const H = 19.2 / swS;
+  const gy = 300, sc = 12;
+  g9SvgLine(svg, 30, gy, 620, gy, '#1e293b', 3);
+  const personX = 150, poleX = 430;
+  const ph = 1.6 * sc, poleH = H * sc;
+  g9SvgLine(svg, personX, gy, personX, gy - ph, '#2563eb', 5);
+  g9SvgLine(svg, poleX, gy, poleX, gy - poleH, '#2563eb', 5);
+  g9SvgLine(svg, personX, gy, personX + swS * sc, gy, '#f59e0b', 4);
+  g9SvgLine(svg, poleX, gy, poleX + 12 * sc, gy, '#f59e0b', 4);
+  g9SvgLine(svg, personX, gy - ph, personX + swS * sc, gy, '#94a3b8', 2, '5 4');
+  g9SvgLine(svg, poleX, gy - poleH, poleX + 12 * sc, gy, '#94a3b8', 2, '5 4');
+  g9SvgText(svg, personX, gy + 22, '你 1.6 米', 14, '#1e293b');
+  g9SvgText(svg, poleX, gy + 22, '旗杆', 14, '#1e293b');
+  g9SvgText(svg, personX + swS * sc / 2, gy - 12, '影 ' + swS + ' 米', 14, '#b45309');
+  g9SvgText(svg, poleX + 12 * sc / 2, gy - 12, '影 12 米', 14, '#b45309');
+  g9SvgText(svg, 320, 40, '太阳光是平行的', 16, '#64748b');
+}
+function swDrawAA() {
+  const svg = document.getElementById('swAASvg');
+  g9Clear(svg);
+  const B = 60, C = 180 - swA - B;
+  const draw = function (ox, base, fill, stroke) {
+    const b = base * Math.sin(B * Math.PI / 180) / Math.sin(C * Math.PI / 180);
+    const ax = ox + b * Math.cos(swA * Math.PI / 180), ay = 300 - b * Math.sin(swA * Math.PI / 180);
+    svg.appendChild(g9El('polygon', { points: ox + ',300 ' + (ox + base) + ',300 ' + ax.toFixed(1) + ',' + ay.toFixed(1), fill: fill, stroke: stroke, 'stroke-width': 3 }));
+    g9SvgText(svg, ox + 14, 288, '∠A=' + swA + '°', 14, '#1e293b', 'start');
+    g9SvgText(svg, ox + base - 14, 288, '∠B=60°', 14, '#1e293b', 'end');
+    g9SvgText(svg, ax, ay - 10, '∠C=' + C + '°', 14, '#1e293b');
+  };
+  draw(60, 200, '#dbeafe', '#2563eb');
+  draw(380, 120, '#fef3c7', '#d97706');
+  g9SvgText(svg, 320, 40, '两个角相等，第三个角也被 180° 定住了', 16, '#64748b');
+}
+function swRender() {
+  document.querySelectorAll('#swModeSeg [data-sw-mode]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(btn.dataset.swMode === swMode));
+  });
+  document.getElementById('swShadowBox').hidden = swMode !== 'shadow';
+  document.getElementById('swAABox').hidden = swMode !== 'aa';
+  document.getElementById('swSTx').textContent = swS + ' 米';
+  document.getElementById('swATx').textContent = '∠A = ' + swA + '°';
+  let read = '', msg = '';
+  if (swMode === 'shadow') {
+    swDrawShadow();
+    const H = 19.2 / swS;
+    read = '你高 1.6 米，影子 ' + swS + ' 米；旗杆影子 12 米，旗杆高 1.6×12÷' + swS + '=' + fmtNum(H) + ' 米。';
+    msg = '同一时刻太阳光平行，两个三角形相似：高度比=影子比。你的影子越短，算出的旗杆越高——因为比值 12÷' + swS + ' 变大了。';
+  } else {
+    swDrawAA();
+    read = '△ABC：∠A=' + swA + '°，∠B=60°，∠C=' + (180 - swA - 60) + '°；另一个三角形也有 ∠A=' + swA + '° 和 ∠B=60°。';
+    msg = '两个角相等，第三个角也被 180° 定住了，形状锁死——两个三角形相似（AA）。只有一边成比例、没有夹角，判定不了。';
+  }
+  document.getElementById('swRead').textContent = read;
+  document.getElementById('swMsg').textContent = msg;
+}
+(function swInit() {
+  const modeSeg = document.getElementById('swModeSeg');
+  [['shadow', '影子测高'], ['aa', 'AA 判定']].forEach(function (m) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = m[1]; b.dataset.swMode = m[0];
+    b.addEventListener('click', function () { swMode = m[0]; markTried('shadow'); swRender(); });
+    modeSeg.appendChild(b);
+  });
+  document.getElementById('swSMinus').addEventListener('click', function () { swS = Math.max(1, swS - 1); markTried('shadow'); swRender(); });
+  document.getElementById('swSPlus').addEventListener('click', function () { swS = Math.min(4, swS + 1); markTried('shadow'); swRender(); });
+  document.getElementById('swAMinus').addEventListener('click', function () { swA = Math.max(30, swA - 10); markTried('shadow'); swRender(); });
+  document.getElementById('swAPlus').addEventListener('click', function () { swA = Math.min(70, swA + 10); markTried('shadow'); swRender(); });
+  swRender();
+})();
+
+/* ---------- demo-trig · 9.14 锐角三角函数（方法：角定比值定法） ----------
+   斜边固定 10：∠A=30° 时对边 5、邻边约 8.66；sin²+cos²=1。
+   特殊角：sin30°=1/2，sin45°=cos45°=√2/2，sin60°=√3/2。 */
+const TJ_EXACT = {
+  30: 'sin30°=1/2，cos30°=√3/2，tan30°=√3/3',
+  45: 'sin45°=cos45°=√2/2，tan45°=1',
+  60: 'sin60°=√3/2，cos60°=1/2，tan60°=√3'
+};
+let tjAng = 30;
+function tjRender() {
+  document.querySelectorAll('#tjSpecialSeg [data-tj-ang]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(+btn.dataset.tjAng === tjAng));
+  });
+  document.getElementById('tjAngTx').textContent = '∠A = ' + tjAng + '°';
+  const svg = document.getElementById('tjSvg');
+  g9Clear(svg);
+  const rad = tjAng * Math.PI / 180;
+  const opp = 10 * Math.sin(rad), adj = 10 * Math.cos(rad), sc = 22;
+  const cx = 140, gy = 300;
+  const ax = cx + adj * sc, by = gy - opp * sc;
+  svg.appendChild(g9El('polygon', { points: cx + ',' + gy + ' ' + ax.toFixed(1) + ',' + gy + ' ' + cx + ',' + by.toFixed(1), fill: '#dbeafe', stroke: '#2563eb', 'stroke-width': 3 }));
+  g9SvgLine(svg, cx, gy - 18, cx + 18, gy - 18, '#94a3b8', 2);
+  g9SvgLine(svg, cx + 18, gy - 18, cx + 18, gy, '#94a3b8', 2);
+  g9SvgText(svg, cx - 12, (gy + by) / 2, '对边 ' + fmtNum(opp), 15, '#1e293b', 'end');
+  g9SvgText(svg, (cx + ax) / 2, gy + 22, '邻边 ' + fmtNum(adj), 15, '#1e293b');
+  g9SvgText(svg, (cx + ax) / 2 + 10, (gy + by) / 2 - 10, '斜边 10', 15, '#1e293b', 'start');
+  g9SvgText(svg, ax + 12, gy - 6, 'A', 16, '#1e293b', 'start');
+  g9SvgText(svg, cx - 12, by - 6, 'B', 16, '#1e293b', 'end');
+  g9SvgText(svg, cx - 12, gy + 6, 'C', 16, '#1e293b', 'end');
+  const s = Math.sin(rad), c = Math.cos(rad), t = Math.tan(rad);
+  const read = '∠A=' + tjAng + '°，斜边 10：对边 ' + fmtNum(opp) + '，邻边 ' + fmtNum(adj) + '；sin A=' + fmtNum(s) + '，cos A=' + fmtNum(c) + '，tan A=' + fmtNum(t) + '。';
+  const msg = 'sin²A+cos²A=' + fmtNum(s * s + c * c) + '（永远是 1）。' + (TJ_EXACT[tjAng] ? TJ_EXACT[tjAng] + '。' : '把三角形放大一倍，角不变，三个比值一个都不变。');
+  document.getElementById('tjRead').textContent = read;
+  document.getElementById('tjMsg').textContent = msg;
+}
+(function tjInit() {
+  const specialSeg = document.getElementById('tjSpecialSeg');
+  [30, 45, 60].forEach(function (a) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = a + '°'; b.dataset.tjAng = String(a);
+    b.addEventListener('click', function () { tjAng = a; markTried('trig'); tjRender(); });
+    specialSeg.appendChild(b);
+  });
+  document.getElementById('tjAngMinus').addEventListener('click', function () { tjAng = Math.max(15, tjAng - 15); markTried('trig'); tjRender(); });
+  document.getElementById('tjAngPlus').addEventListener('click', function () { tjAng = Math.min(75, tjAng + 15); markTried('trig'); tjRender(); });
+  tjRender();
+})();
+
+/* ---------- demo-slope · 9.15 解直角三角形及其应用（方法：画图选函数法） ----------
+   仰角：楼高=距离×tan(仰角)；默认 20 米、30°，楼高约 11.55 米。
+   坡度：坡比 1:1、铅直高度 4 米时水平距离 4 米，坡面长 4√2 米≈5.66 米。 */
+let soMode = 'elev', soAng = 30, soD = 20, soRatio = 1, soH = 4;
+function soDrawElev() {
+  const svg = document.getElementById('soSvg');
+  g9Clear(svg);
+  const h = soD * Math.tan(soAng * Math.PI / 180);
+  const gy = 300, ox = 80, tx = ox + soD * 10, sc = 4;
+  g9SvgLine(svg, 30, gy, 620, gy, '#1e293b', 3);
+  g9SvgLine(svg, tx, gy, tx, gy - h * sc, '#2563eb', 5);
+  g9SvgLine(svg, ox, gy, tx, gy, '#94a3b8', 2, '5 4');
+  g9SvgLine(svg, ox, gy, tx, gy - h * sc, '#ef4444', 3);
+  svg.appendChild(g9El('circle', { cx: ox, cy: gy, r: 7, fill: '#ff8a3d', stroke: '#fff', 'stroke-width': 2 }));
+  g9SvgText(svg, ox, gy + 22, '你', 15, '#1e293b');
+  g9SvgText(svg, tx, gy + 22, '楼', 15, '#1e293b');
+  g9SvgText(svg, (ox + tx) / 2, gy - 12, '仰角 ' + soAng + '°', 15, '#dc2626');
+  g9SvgText(svg, tx + 12, gy - h * sc / 2, fmtNum(h) + ' 米', 15, '#1e293b', 'start');
+  g9SvgText(svg, (ox + tx) / 2, gy + 40, '距离 ' + soD + ' 米', 14, '#64748b');
+  return h;
+}
+function soDrawSlope() {
+  const svg = document.getElementById('soSlopeSvg');
+  g9Clear(svg);
+  const horiz = soH * soRatio, len = Math.sqrt(soH * soH + horiz * horiz);
+  const gy = 300, ox = 80, sc = 20;
+  g9SvgLine(svg, 30, gy, 620, gy, '#1e293b', 3);
+  svg.appendChild(g9El('polygon', { points: ox + ',' + gy + ' ' + (ox + horiz * sc) + ',' + gy + ' ' + (ox + horiz * sc) + ',' + (gy - soH * sc), fill: '#dbeafe', stroke: '#2563eb', 'stroke-width': 3 }));
+  g9SvgText(svg, ox + horiz * sc / 2, gy + 22, '水平 ' + fmtNum(horiz) + ' 米', 14, '#1e293b');
+  g9SvgText(svg, ox + horiz * sc + 10, gy - soH * sc / 2, '铅直 ' + soH + ' 米', 14, '#1e293b', 'start');
+  g9SvgText(svg, ox + horiz * sc / 2 - 10, gy - soH * sc / 2 - 8, '坡面 ' + fmtNum(len) + ' 米', 14, '#1e293b', 'end');
+  g9SvgText(svg, 320, 40, '坡度 1:' + soRatio + '，坡度越大坡越陡', 16, '#64748b');
+  return { horiz: horiz, len: len };
+}
+function soRender() {
+  document.querySelectorAll('#soModeSeg [data-so-mode]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(btn.dataset.soMode === soMode));
+  });
+  document.querySelectorAll('#soAngSeg [data-so-ang]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(+btn.dataset.soAng === soAng));
+  });
+  document.querySelectorAll('#soRatioSeg [data-so-ratio]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(+btn.dataset.soRatio === soRatio));
+  });
+  document.getElementById('soElevBox').hidden = soMode !== 'elev';
+  document.getElementById('soSlopeBox').hidden = soMode !== 'slope';
+  document.getElementById('soDTx').textContent = soD + ' 米';
+  document.getElementById('soHTx').textContent = soH + ' 米';
+  let read = '', msg = '';
+  if (soMode === 'elev') {
+    const h = soDrawElev();
+    read = '仰角 ' + soAng + '°，你离楼底 ' + soD + ' 米：楼高=' + soD + '×tan' + soAng + '°=' + fmtNum(h) + ' 米。';
+    msg = '仰角是视线和水平线的夹角。已知邻边（距离）求对边（楼高），用正切。';
+  } else {
+    const r = soDrawSlope();
+    read = '坡度 1:' + soRatio + '，铅直高度 ' + soH + ' 米：水平距离 ' + fmtNum(r.horiz) + ' 米，坡面长 ' + fmtNum(r.len) + ' 米。';
+    msg = soRatio === 1 && soH === 4
+      ? '坡面长是 4√2 米≈5.66 米：4²+4²=32，√32=4√2。坡度=铅直高度÷水平距离，越大越陡。'
+      : '坡度=铅直高度÷水平距离=1:' + soRatio + '。走 ' + fmtNum(r.horiz) + ' 米水平才爬 ' + soH + ' 米高。';
+  }
+  document.getElementById('soRead').textContent = read;
+  document.getElementById('soMsg').textContent = msg;
+}
+(function soInit() {
+  const modeSeg = document.getElementById('soModeSeg');
+  [['elev', '仰角测高'], ['slope', '坡度']].forEach(function (m) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = m[1]; b.dataset.soMode = m[0];
+    b.addEventListener('click', function () { soMode = m[0]; markTried('slope'); soRender(); });
+    modeSeg.appendChild(b);
+  });
+  const angSeg = document.getElementById('soAngSeg');
+  [30, 45, 60].forEach(function (a) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = a + '°'; b.dataset.soAng = String(a);
+    b.addEventListener('click', function () { soAng = a; markTried('slope'); soRender(); });
+    angSeg.appendChild(b);
+  });
+  const ratioSeg = document.getElementById('soRatioSeg');
+  [1, 2, 3].forEach(function (r) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = '1:' + r; b.dataset.soRatio = String(r);
+    b.addEventListener('click', function () { soRatio = r; markTried('slope'); soRender(); });
+    ratioSeg.appendChild(b);
+  });
+  document.getElementById('soDMinus').addEventListener('click', function () { soD = Math.max(10, soD - 5); markTried('slope'); soRender(); });
+  document.getElementById('soDPlus').addEventListener('click', function () { soD = Math.min(40, soD + 5); markTried('slope'); soRender(); });
+  document.getElementById('soHMinus').addEventListener('click', function () { soH = Math.max(2, soH - 1); markTried('slope'); soRender(); });
+  document.getElementById('soHPlus').addEventListener('click', function () { soH = Math.min(8, soH + 1); markTried('slope'); soRender(); });
+  soRender();
+})();
+
+/* ---------- demo-project · 9.16 投影与视图（方法：三个方向看影子法） ----------
+   阳光：影长=高÷tan(太阳高度角)；默认高 4 米、45°，影长 4 米。
+   灯光：灯高 6 米、物体高 2 米，灯离物体 d 米，影长 d/2 米。
+   三视图：圆柱主/左是长方形、俯是圆形；长方体 6×3×4：主 6×4、左 3×4、俯 6×3。 */
+let pjMode = 'sun', pjH = 4, pjAng = 45, pjD = 2, pjSolid = 0;
+const PJ_SOLIDS = [
+  { name: '圆柱', main: '长方形', left: '长方形', top: '圆形' },
+  { name: '长方体（长 6、宽 3、高 4）', main: '长方形 6×4', left: '长方形 3×4', top: '长方形 6×3' },
+  { name: '正方体', main: '正方形', left: '正方形', top: '正方形' }
+];
+function pjDrawSun() {
+  const svg = document.getElementById('pjSvg');
+  g9Clear(svg);
+  const shadow = pjH / Math.tan(pjAng * Math.PI / 180);
+  const gy = 300, sc = 30, ox = 300;
+  g9SvgLine(svg, 30, gy, 620, gy, '#1e293b', 3);
+  g9SvgLine(svg, ox, gy, ox, gy - pjH * sc, '#2563eb', 5);
+  g9SvgLine(svg, ox, gy, ox + shadow * sc, gy, '#f59e0b', 4);
+  const tan = Math.tan(pjAng * Math.PI / 180);
+  g9SvgLine(svg, ox - 80, gy - pjH * sc - 80 * tan, ox + shadow * sc, gy, '#94a3b8', 2, '5 4');
+  g9SvgText(svg, ox, gy + 22, '物体 ' + pjH + ' 米', 14, '#1e293b');
+  g9SvgText(svg, ox + shadow * sc / 2, gy - 12, '影长 ' + fmtNum(shadow) + ' 米', 14, '#b45309');
+  g9SvgText(svg, 320, 40, '阳光是平行投影，影子方向相同', 16, '#64748b');
+  return shadow;
+}
+function pjDrawLamp() {
+  const svg = document.getElementById('pjLampSvg');
+  g9Clear(svg);
+  const gy = 300, sc = 30, lx = 80, ly = gy - 6 * sc;
+  const ox = lx + pjD * sc, shadow = pjD / 2;
+  g9SvgLine(svg, 30, gy, 620, gy, '#1e293b', 3);
+  svg.appendChild(g9El('circle', { cx: lx, cy: ly, r: 10, fill: '#f59e0b', stroke: '#fff', 'stroke-width': 2 }));
+  g9SvgText(svg, lx, ly - 16, '灯（高 6 米）', 14, '#b45309');
+  g9SvgLine(svg, ox, gy, ox, gy - 2 * sc, '#2563eb', 5);
+  g9SvgLine(svg, ox, gy, ox + shadow * sc, gy, '#f59e0b', 4);
+  g9SvgLine(svg, lx, ly, ox + shadow * sc, gy, '#94a3b8', 2, '5 4');
+  g9SvgText(svg, ox, gy + 22, '物体 2 米', 14, '#1e293b');
+  g9SvgText(svg, ox + shadow * sc / 2, gy - 12, '影长 ' + fmtNum(shadow) + ' 米', 14, '#b45309');
+  g9SvgText(svg, 320, 40, '灯光是中心投影，影子向外发散', 16, '#64748b');
+  return shadow;
+}
+function pjDrawSolid() {
+  const svg = document.getElementById('pjSolidSvg');
+  g9Clear(svg);
+  const drawBox = function (ox, label, kind, w, h) {
+    g9SvgText(svg, ox + 70, 60, label, 16, '#1e293b');
+    if (kind === 'circle') svg.appendChild(g9El('circle', { cx: ox + 70, cy: 160, r: 50, fill: '#dbeafe', stroke: '#2563eb', 'stroke-width': 3 }));
+    else svg.appendChild(g9El('rect', { x: ox + 70 - w / 2, y: 160 - h / 2, width: w, height: h, fill: '#dbeafe', stroke: '#2563eb', 'stroke-width': 3 }));
+  };
+  if (pjSolid === 0) { drawBox(20, '主视图', 'rect', 90, 130); drawBox(230, '左视图', 'rect', 90, 130); drawBox(440, '俯视图', 'circle'); }
+  else if (pjSolid === 1) { drawBox(20, '主视图', 'rect', 120, 80); drawBox(230, '左视图', 'rect', 60, 80); drawBox(440, '俯视图', 'rect', 120, 60); }
+  else { drawBox(20, '主视图', 'rect', 100, 100); drawBox(230, '左视图', 'rect', 100, 100); drawBox(440, '俯视图', 'rect', 100, 100); }
+  g9SvgText(svg, 320, 280, '长对正、高平齐、宽相等', 16, '#64748b');
+}
+function pjRender() {
+  document.querySelectorAll('#pjModeSeg [data-pj-mode]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(btn.dataset.pjMode === pjMode));
+  });
+  document.querySelectorAll('#pjAngSeg [data-pj-ang]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(+btn.dataset.pjAng === pjAng));
+  });
+  document.querySelectorAll('#pjSolidSeg [data-pj-solid]').forEach(function (btn) {
+    btn.setAttribute('aria-pressed', String(+btn.dataset.pjSolid === pjSolid));
+  });
+  document.getElementById('pjSunBox').hidden = pjMode !== 'sun';
+  document.getElementById('pjLampBox').hidden = pjMode !== 'lamp';
+  document.getElementById('pjSolidBox').hidden = pjMode !== 'solid';
+  document.getElementById('pjHTx').textContent = pjH + ' 米';
+  document.getElementById('pjDTx').textContent = pjD + ' 米';
+  let read = '', msg = '';
+  if (pjMode === 'sun') {
+    const shadow = pjDrawSun();
+    read = '物体高 ' + pjH + ' 米，太阳高度角 ' + pjAng + '°：影长=' + pjH + '÷tan' + pjAng + '°=' + fmtNum(shadow) + ' 米。';
+    msg = '平行投影：太阳光是平行的，影子方向相同。太阳越高，影子越短。';
+  } else if (pjMode === 'lamp') {
+    const shadow = pjDrawLamp();
+    read = '灯高 6 米，物体高 2 米，灯离物体 ' + pjD + ' 米：影长 ' + fmtNum(shadow) + ' 米。';
+    msg = '中心投影：灯光从一点发散，影子向外发散。灯离物体越远，影子越长。';
+  } else {
+    pjDrawSolid();
+    const s = PJ_SOLIDS[pjSolid];
+    read = s.name + '：主视图是' + s.main + '，左视图是' + s.left + '，俯视图是' + s.top + '。';
+    msg = '三个视图合起来，立体形状就定了：主视图看高和长，俯视图看长和宽，左视图看宽和高。';
+  }
+  document.getElementById('pjRead').textContent = read;
+  document.getElementById('pjMsg').textContent = msg;
+}
+(function pjInit() {
+  const modeSeg = document.getElementById('pjModeSeg');
+  [['sun', '阳光投影'], ['lamp', '灯光投影'], ['solid', '三视图']].forEach(function (m) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = m[1]; b.dataset.pjMode = m[0];
+    b.addEventListener('click', function () { pjMode = m[0]; markTried('project'); pjRender(); });
+    modeSeg.appendChild(b);
+  });
+  const angSeg = document.getElementById('pjAngSeg');
+  [30, 45, 60].forEach(function (a) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = a + '°'; b.dataset.pjAng = String(a);
+    b.addEventListener('click', function () { pjAng = a; markTried('project'); pjRender(); });
+    angSeg.appendChild(b);
+  });
+  const solidSeg = document.getElementById('pjSolidSeg');
+  PJ_SOLIDS.forEach(function (s, i) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = s.name.split('（')[0]; b.dataset.pjSolid = String(i);
+    b.addEventListener('click', function () { pjSolid = i; markTried('project'); pjRender(); });
+    solidSeg.appendChild(b);
+  });
+  document.getElementById('pjHMinus').addEventListener('click', function () { pjH = Math.max(2, pjH - 1); markTried('project'); pjRender(); });
+  document.getElementById('pjHPlus').addEventListener('click', function () { pjH = Math.min(6, pjH + 1); markTried('project'); pjRender(); });
+  document.getElementById('pjDMinus').addEventListener('click', function () { pjD = Math.max(1, pjD - 1); markTried('project'); pjRender(); });
+  document.getElementById('pjDPlus').addEventListener('click', function () { pjD = Math.min(4, pjD + 1); markTried('project'); pjRender(); });
+  pjRender();
 })();
 
 </script>
