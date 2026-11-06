@@ -145,6 +145,19 @@ const GRADE4_CONTENT = { grade: 4, edition: 'A', units: [
     { id: '4.11', title: '小数的意义和性质', subtitle: '小数的意义、小数点移动、化简', how: '小数就是分母是10、100、1000的分数。', why: '0.5=0.50，是因为把每个十分之一再切成10个百分之一。', wrong: '0.5比0.50小', wrongWhy: '5个十分之一就是50个百分之一。', visual: '数位滑块。', method: '数位滑块', explainBack: '0.5和0.50一样。', tryIt: '在数位表上滑一滑：2.4乘10。', demo: 'placeslider', recall: { q: '0.5和0.50，哪个大？', answer: '一样大', hint: '把每个十分之一切成10个百分之一' }, practice: [{ q: '3.5×10是多少？3.5÷10呢？', answer: '35；0.35', hint: '乘10数字向左移一位', level: '基础' }, { q: '一个小数的小数点向右移动两位后是36，原来的小数是多少？', answer: '0.36', hint: '小数点向右移两位是乘100', level: '提高' }] },
   ] },
 ] };
+
+// 桩里的五年级内容：只留点进实验要用的三个点（5.1 新演示、5.14 复用 observe、5.5 复用 balance）。
+const GRADE5_CONTENT = { grade: 5, edition: 'A', units: [
+  { unit: '小数乘法', term: '上', points: [
+    { id: '5.1', title: '小数乘法', subtitle: '小数乘整数、小数乘小数、积的近似值', how: '先当整数乘，再点小数点。', why: '十分之一乘十分之一是百分之一。', wrong: '0.3×0.4=1.2', wrongWhy: '0.3×0.4 是 0.4 的一部分。', visual: '单位正方形重叠。', method: '单位正方形重叠', explainBack: '0.3 是 3 个十分之一。', tryIt: '画一个正方形涂一涂。', demo: 'decmul', recall: { q: '0.3×0.4 是比 0.4 大，还是比 0.4 小？', answer: '比 0.4 小，是 0.12', hint: '是 0.4 的十分之三' }, practice: [{ q: '0.5×0.6 = ?', answer: '0.3', hint: '5×6=30', level: '基础' }, { q: '2.4×0.5 = ?', answer: '1.2', hint: '24×5=120', level: '提高' }] },
+  ] },
+  { unit: '观察物体（三）', term: '下', points: [
+    { id: '5.14', title: '观察物体（三）', subtitle: '一个方向看不全，要三个方向', how: '三个方向合起来才能确定。', why: '一个方向只能看到一面。', wrong: '从前面看是 2 个正方形，就以为只有一种摆法', wrongWhy: '后面可以藏、上面可以摞。', visual: '猜积木。', method: '三视图定形', explainBack: '一个方向看不全。', tryIt: '摆 3 个小正方体。', demo: 'observe', recall: { q: '从前面看是 2 个正方形，这个立体图形有几种可能？', answer: '不止一种', hint: '后面藏几个看不出来' }, practice: [{ q: '从左面看是 1 个正方形，从前面看是 2 个正方形，最少用几个小正方体？', answer: '2 个', hint: '并排摆 2 个', level: '基础' }, { q: '从上面看是 4 个正方形（2 行 2 列），从前面看是 2 个正方形，最少用几个小正方体？', answer: '4 个', hint: '每个格子至少 1 个', level: '提高' }] },
+  ] },
+  { unit: '简易方程', term: '上', points: [
+    { id: '5.5', title: '简易方程', subtitle: '用字母表示数、解方程', how: '字母 x 是一个还不知道的数。', why: '等式是一架天平。', wrong: 'x+5=x5', wrongWhy: 'x+5 是那个数加 5。', visual: '天平。', method: '天平解方程', explainBack: '两边都拿走 5。', tryIt: '在天平上摆一摆。', demo: 'balance', recall: { q: 'x+5 是什么意思？', answer: '一个不知道的数加 5', hint: 'x 是一个数' }, practice: [{ q: 'x+5=12，x 是几？', answer: '7', hint: '两边同时减 5', level: '基础' }, { q: '2x+3=11，x 是几？', answer: '4', hint: '先减 3 再除以 2', level: '提高' }] },
+  ] },
+] };
 const lsData = {};
 const localStorageStub = { getItem(k) { return lsData[k] || null; }, setItem(k, v) { lsData[k] = String(v); } };
 
@@ -167,7 +180,7 @@ seedSeg('sortRuleSeg', 'sort-rule', ['color', 'shape']);
 // ---------- load the real app.js ----------
 const root = require('path').resolve(__dirname, '..');
 const src = fs.readFileSync(root + '/apps/web/app.js', 'utf8');
-const sandbox = { document: documentStub, window: windowStub, console, setTimeout, Math, JSON, Object, Array, String, Number, parseInt, parseFloat, isNaN, GRADE3_CONTENT, GRADE1_CONTENT, GRADE2_CONTENT, GRADE4_CONTENT, localStorage: localStorageStub };
+const sandbox = { document: documentStub, window: windowStub, console, setTimeout, Math, JSON, Object, Array, String, Number, parseInt, parseFloat, isNaN, GRADE3_CONTENT, GRADE1_CONTENT, GRADE2_CONTENT, GRADE4_CONTENT, GRADE5_CONTENT, localStorage: localStorageStub };
 vm.createContext(sandbox);
 try {
   vm.runInContext(src, sandbox, { filename: 'app.js' });
@@ -290,7 +303,7 @@ const bCell0 = byId.tfB.children[0];
 click(bCell0);
 check('tenframe: click B cell moves one to fill ten', byId.tfEq.textContent === '9 + 4 = 13');
 check('tenframe note explains 10+3', byId.tfNote.textContent.includes('10 + 3 = 13'));
-check('demo counter counts a played demo', byId.progressCount.textContent === '1 / 62' &&
+check('demo counter counts a played demo', byId.progressCount.textContent === '1 / 73' &&
   JSON.parse(lsData['math-tried-demos-v1'] || '[]').includes('tenframe'));
 sandbox.tfSetProblem('sub', 0);
 check('tenframe sub initial equation', byId.tfEq.textContent === '13 − 5 = ?');
@@ -519,7 +532,7 @@ click(byId.countRowA.children[0]);
 check('count: click a dot counts it', byId.countCount.textContent.includes('数到了第 1 个'));
 click(byId.countCompare);
 check('count: 5 vs 7 -> below has 2 more', byId.countResult.textContent.includes('下面多 2 个'));
-check('G1 demos count toward the 62-demo progress', g1ProgBefore === '4 / 62' && byId.progressCount.textContent === '5 / 62');
+check('G1 demos count toward the 73-demo progress', g1ProgBefore === '4 / 73' && byId.progressCount.textContent === '5 / 73');
 click(byId.countAMinus); click(byId.countAMinus);
 check('count: minus twice -> 3', byId.countReadA.textContent === '3 个');
 
@@ -695,7 +708,7 @@ check('ruler: eraser is 3 cm', byId.rulReadout.textContent.includes('3 厘米'))
 click(byId.rulFromBtn);
 check('ruler: measuring from 1 over-reads by 1', byId.rulMsg.textContent.includes('多算1厘米'));
 check('ruler: meter strip is 100 cm squares', byId.rulMeter.children.length === 100);
-check('G2 demos count toward the 62-demo progress', g2ProgBefore === '17 / 62' && byId.progressCount.textContent === '18 / 62');
+check('G2 demos count toward the 73-demo progress', g2ProgBefore === '17 / 73' && byId.progressCount.textContent === '18 / 73');
 
 // 2.2 先估后算
 click(byId.estProbSeg.children[1]); // 26+38
@@ -835,7 +848,7 @@ check('grade-2.js: all 16 points map to the right experiment',
 const labelSrc2 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
 check('DEMO_LABEL covers all 15 new demos',
   G2_DEMOS.every(k => labelSrc2.includes(k + ':')));
-check('G2: all 15 new demos tried by now', byId.progressCount.textContent === '32 / 62');
+check('G2: all 15 new demos tried by now', byId.progressCount.textContent === '32 / 73');
 
 // ---------- 12. 全站布局改版（2026-11-06 真机审计） ----------
 // CSS：顶栏实底不透光，模式栏不吸顶，演示单列，知识点页窄栏
@@ -888,7 +901,7 @@ navGo('progress');
 check('progress: per-grade rows with real numbers',
   byId.progressCard.innerHTML.includes('1 年级') && byId.progressCard.innerHTML.includes('3 年级') &&
   byId.progressCard.innerHTML.includes('演示') && byId.progressCard.innerHTML.includes('已练'));
-check('progress: 32 of 62 demos tried by now', byId.progressCount.textContent === '32 / 62');
+check('progress: 32 of 73 demos tried by now', byId.progressCount.textContent === '32 / 73');
 // 首页不显示孤零零的“数学”面包屑，子页面显示完整面包屑
 navGo('home');
 check('home hides the lone crumb title', byId.crumbTitle.hidden === true);
@@ -925,7 +938,7 @@ check('elapsed: jump to the whole hour lands on 8:00', byId.elReadout.textConten
 for (let i = 0; i < 6; i++) click(byId.elPlus10);
 click(byId.elPlus5);
 check('elapsed: 7:30 -> 9:05 is 1 hour 35 minutes', byId.elMsg.textContent.includes('1 小时 35 分'));
-check('G3 demos count toward the 62-demo progress', g3ProgBefore === '32 / 62' && byId.progressCount.textContent === '33 / 62');
+check('G3 demos count toward the 73-demo progress', g3ProgBefore === '32 / 73' && byId.progressCount.textContent === '33 / 73');
 
 // 3.2 算一算，再算回去
 for (let i = 0; i < 4; i++) click(byId.vfNext);
@@ -1049,7 +1062,7 @@ check('grade-3.js: all 16 points map to the right experiment',
 const labelSrc3 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
 check('DEMO_LABEL covers all 14 new demos',
   G3_DEMOS.every(k => labelSrc3.includes(k + ':')));
-check('G3: all 14 new demos tried by now', byId.progressCount.textContent === '46 / 62');
+check('G3: all 14 new demos tried by now', byId.progressCount.textContent === '46 / 73');
 
 
 // ---------- 11d. 四年级实验（16 个新演示 + 4.17 复用换个方向看） ----------
@@ -1082,7 +1095,7 @@ click(byId.bnRound);
 check('bignum: 62850 rounds to 6 wan', byId.bnMsg.textContent.includes('约是 6万'));
 click(byId.bnProbSeg.children[2]); // 75000
 check('bignum: 75000 sits on the halfway mark', byId.bnNear.textContent.includes('正好在半点上'));
-check('G4 demos count toward the 62-demo progress', g4ProgBefore === '46 / 62' && byId.progressCount.textContent === '47 / 62');
+check('G4 demos count toward the 73-demo progress', g4ProgBefore === '46 / 73' && byId.progressCount.textContent === '47 / 73');
 
 // 4.2 足球场拼一拼
 check('field: 1 field is 1 hectare, 10000 square meters', byId.fdReadout.textContent.includes('1 公顷') && byId.fdReadout.textContent.includes('10000 平方米'));
@@ -1230,7 +1243,142 @@ check('grade-4.js: all 17 points map to the right experiment',
 const labelSrc4 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
 check('DEMO_LABEL covers all 16 new demos',
   G4_DEMOS.every(k => labelSrc4.includes(k + ':')));
-check('G4: all 16 new demos tried by now', byId.progressCount.textContent === '62 / 62');
+check('G4: all 16 new demos tried by now', byId.progressCount.textContent === '62 / 73');
+
+
+// ---------- 6. grade 5 ----------
+const g5ProgBefore = byId.progressCount.textContent;
+
+// 5.1 小数乘法：单位正方形
+check('decmul: 0.3x0.4 is 0.12', byId.dmRead.textContent.includes('0.12'));
+click(byId.dmAPlus); // 0.4x0.4
+check('decmul: 0.4x0.4 is 0.16', byId.dmRead.textContent.includes('0.16'));
+click(byId.dmProbSeg.children[1]); // 0.2x0.5
+check('decmul: 0.2x0.5 is 0.10, that is 0.1', byId.dmRead.textContent.includes('0.10') && byId.dmRead.textContent.includes('0.1'));
+click(byId.dmProbSeg.children[2]); // 0.6x0.7
+check('decmul: 0.6x0.7 is 0.42', byId.dmRead.textContent.includes('0.42'));
+check('G5 demos count toward the 73-demo progress', g5ProgBefore === '62 / 73' && byId.progressCount.textContent === '63 / 73');
+
+// 5.2 位置：数对
+click(byId.gpGrid.children[8]); // row 1, col 2 -> (3,2)
+check('gridpos: clicking the (3,2) cell says (3,2)', byId.gpRead.textContent.includes('(3,2)'));
+click(byId.gpModeSeg.children[1]); // 考一考
+click(byId.gpTargetSeg.children[1]); // (2,3)
+click(byId.gpGrid.children[8]); // (3,2) is wrong for (2,3)
+check('gridpos: (3,2) is not (2,3)', byId.gpRead.textContent.includes('不对'));
+click(byId.gpGrid.children[13]); // row 2, col 1 -> (2,3)
+check('gridpos: (2,3) found in quiz mode', byId.gpRead.textContent.includes('对了'));
+
+// 5.3 小数除法：两数同乘
+check('decdiv: divisor not an integer yet at x1', byId.ddRead.textContent.includes('还不是整数'));
+click(byId.ddScaleSeg.children[1]); // x10
+check('decdiv: 2.4/0.6 becomes 24/6 = 4', byId.ddRead.textContent.includes('24÷6=4'));
+click(byId.ddProbSeg.children[2]); // 0.35/0.7
+click(byId.ddScaleSeg.children[1]); // x10
+check('decdiv: 0.35/0.7 becomes 3.5/7 = 0.5', byId.ddRead.textContent.includes('3.5÷7=0.5'));
+
+// 5.4 可能性：摸球模拟
+check('prob: 3 red of 10 is 3/10', byId.pbRead.textContent.includes('3/10'));
+click(byId.pbHundred);
+check('prob: 100 draws counted', byId.pbRead.textContent.includes('一共摸了 100 次'));
+click(byId.pbCompSeg.children[1]); // 5 红 5 蓝
+check('prob: 5 red of 10 is 5/10', byId.pbRead.textContent.includes('5/10'));
+click(byId.pbReset);
+check('prob: reset back to the start', byId.pbRead.textContent.includes('5/10') && !byId.pbRead.textContent.includes('一共摸了'));
+
+// 5.6 多边形的面积：切一刀
+check('polyarea: parallelogram 6x4 is 24', byId.paRead.textContent.includes('24 平方厘米'));
+click(byId.paShapeSeg.children[1]); // 三角形
+check('polyarea: triangle 6x4 is 12', byId.paRead.textContent.includes('12 平方厘米'));
+click(byId.paShapeSeg.children[2]); // 梯形
+check('polyarea: trapezoid (3+6)x4/2 is 18', byId.paRead.textContent.includes('18 平方厘米'));
+check('polyarea: top-base row shows for trapezoid', byId.paTopRow.hidden === false);
+click(byId.paShapeSeg.children[0]); // 平行四边形
+click(byId.paCut);
+check('polyarea: cut and slide makes a rectangle', byId.paMsg.textContent.includes('长方形') && byId.paRead.textContent.includes('24 平方厘米'));
+
+// 5.7 植树问题
+check('planttree: 100m every 10m, both ends, 11 trees', byId.ptRead.textContent.includes('11 棵'));
+click(byId.ptModeSeg.children[1]); // 一端种
+check('planttree: one end not planted is 10 trees', byId.ptRead.textContent.includes('10 棵'));
+click(byId.ptModeSeg.children[2]); // 围成一圈
+check('planttree: a circle is 10 trees', byId.ptRead.textContent.includes('10 棵'));
+click(byId.ptModeSeg.children[0]); // 两端都种
+click(byId.ptLenSeg.children[0]); // 60 米
+check('planttree: 60m every 10m, both ends, 7 trees', byId.ptRead.textContent.includes('7 棵'));
+check('planttree: 7 tree dots shown', byId.ptRow.children.filter(c => c.classList.contains('pt-on')).length === 7);
+
+// 5.8 因数与倍数
+check('factor: factors of 12 are 1, 2, 3, 4, 6, 12', byId.fcRead.textContent.includes('1、2、3、4、6、12'));
+click(byId.fcNumSeg.children[4]); // 13
+check('factor: 13 is prime', byId.fcKind.textContent.includes('质数'));
+click(byId.fcNumSeg.children[5]); // 17
+check('factor: 17 is prime', byId.fcKind.textContent.includes('质数'));
+click(byId.fcNumSeg.children[2]); // 24
+check('factor: factors of 24 are 1, 2, 3, 4, 6, 8, 12, 24', byId.fcRead.textContent.includes('1、2、3、4、6、8、12、24'));
+
+// 5.9 长方体和正方体
+check('cuboid: 5x4x3 is 60 cubic cm', byId.cbRead.textContent.includes('60 立方厘米'));
+check('cuboid: surface area is 94 square cm', byId.cbMsg.textContent.includes('94 平方厘米'));
+click(byId.cbLMinus); // 4x4x3
+check('cuboid: 4x4x3 is 48 cubic cm, surface 80', byId.cbRead.textContent.includes('48 立方厘米') && byId.cbMsg.textContent.includes('80 平方厘米'));
+click(byId.cbLPlus); // back to 5x4x3
+click(byId.cbWPlus); click(byId.cbHPlus); click(byId.cbHPlus); // 5x5x5
+check('cuboid: 5x5x5 is a cube', byId.cbMsg.textContent.includes('正方体'));
+
+// 5.11 分数的加法和减法
+check('fracadd: 1/2+1/3 is 5/6', byId.faRead.textContent.includes('5/6'));
+click(byId.faASeg.children[2]); // 2/3
+click(byId.faBSeg.children[1]); // 1/4
+check('fracadd: 2/3+1/4 is 11/12', byId.faRead.textContent.includes('11/12'));
+click(byId.faASeg.children[1]); // 1/3
+click(byId.faBSeg.children[2]); // 1/6
+check('fracadd: 1/3+1/6 is 3/6, that is 1/2', byId.faRead.textContent.includes('3/6') && byId.faRead.textContent.includes('1/2'));
+
+// 5.12 图形的运动（三）
+check('rotate: starts unrotated', byId.rtRead.textContent.includes('还没有转'));
+click(byId.rtCw);
+check('rotate: 90 degrees clockwise', byId.rtRead.textContent.includes('转了 90°'));
+click(byId.rtCw);
+check('rotate: 180 degrees total', byId.rtRead.textContent.includes('转了 180°'));
+click(byId.rtCcw);
+check('rotate: back to 90 degrees', byId.rtRead.textContent.includes('转了 90°'));
+click(byId.rtReset);
+check('rotate: reset to the start', byId.rtRead.textContent.includes('还没有转'));
+
+// 5.13 找次品
+check('findbad: 9 coins, one lighter', byId.fbRead.textContent.includes('9 个'));
+click(byId.fbWeighAB); // round 0: light coin is 8, in group C
+check('findbad: A and B balance, the bad one is in group C', byId.fbRead.textContent.includes('C 组'));
+click(byId.fbWeighPair); // weigh 7 and 8
+check('findbad: coin 8 is the light one, found in 2 weighings', byId.fbRead.textContent.includes('第 8 个') && byId.fbRead.textContent.includes('2 次'));
+click(byId.fbNew); // round 1: light coin is 2, in group A
+click(byId.fbWeighAB);
+check('findbad: group A is lighter', byId.fbRead.textContent.includes('A 组轻了'));
+click(byId.fbWeighPair); // weigh 1 and 2
+check('findbad: coin 2 is the light one', byId.fbRead.textContent.includes('第 2 个'));
+
+// 知识点页 → 实验的链接（桩里的 grade-5.js）+ 真实 grade-5.js 的映射
+navGo('point-5.1');
+check('point 5.1 links the decimal-multiplication experiment', pointDetail.innerHTML.includes('去玩单位正方形') && pointDetail.innerHTML.includes('data-demo-link="demo-decmul"'));
+navGo('point-5.14');
+check('point 5.14 reuses the observe experiment', pointDetail.innerHTML.includes('去玩换个方向看') && pointDetail.innerHTML.includes('data-demo-link="demo-observe"'));
+navGo('point-5.5');
+sandbox.goDemoFromHere('demo-balance');
+check('G5 demo from point keeps point as parent', byId.crumbTitle.innerHTML.includes('简易方程'));
+sandbox.navBackFn();
+check('G5 back from demo returns to point page', pointDetail.innerHTML.includes('简易方程'));
+const g5src = fs.readFileSync(root + '/content/grades/grade-5.js', 'utf8');
+const g5ids = [...g5src.matchAll(/id: "([0-9.]+)"/g)].map(m => m[1]);
+const g5demos = [...g5src.matchAll(/demo: (?:"([a-z]+)"|null)/g)].map(m => m[1] || null);
+const g5expected = {'5.1':'decmul','5.2':'gridpos','5.3':'decdiv','5.4':'prob','5.5':'balance','5.6':'polyarea','5.7':'planttree','5.14':'observe','5.8':'factor','5.9':'cuboid','5.10':'fraction','5.11':'fracadd','5.12':'rotate','5.13':'findbad'};
+check('grade-5.js: all 14 points map to the right experiment',
+  g5ids.length === 14 && g5ids.every((id, i) => g5demos[i] === g5expected[id]));
+const G5_DEMOS = ['decmul', 'gridpos', 'decdiv', 'prob', 'polyarea', 'planttree', 'factor', 'cuboid', 'fracadd', 'rotate', 'findbad'];
+const labelSrc5 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
+check('DEMO_LABEL covers all 11 new demos',
+  G5_DEMOS.every(k => labelSrc5.includes(k + ':')));
+check('G5: all 11 new demos tried by now', byId.progressCount.textContent === '73 / 73');
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
