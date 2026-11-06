@@ -254,7 +254,7 @@ const GRADE9_CONTENT = { grade: 9, edition: 'A', units: [
   ] },
   { unit: '二次函数', term: '上', points: [
     { id: '9.3', title: '二次函数的图象和性质', subtitle: '抛物线、开口方向、对称轴、顶点、顶点式', how: '二次函数 y=ax²+bx+c 的图象是抛物线。', why: '抛物线是“对称的弯”。', wrong: '顶点式 y=a(x-h)²+k 的顶点是 (-h,k)', wrongWhy: '顶点是 (h,k)。', visual: '抛物线滑杆。', method: '滑杆看抛物线法', explainBack: 'a 管开口方向和大小。', tryIt: '画一画 y=x²、y=2x²、y=-x² 的图象。', demo: 'parabola', recall: { q: '抛物线 y=2(x-1)²+3 的顶点坐标是多少？', answer: '(1,3)', hint: '顶点式' }, practice: [{ q: '抛物线 y=-x²+4x-3 的开口方向和对称轴。', answer: '开口向下，对称轴 x=2', hint: 'a=-1', level: '基础' }, { q: '求抛物线 y=x²-2x-3 的顶点坐标和与 x 轴的交点。', answer: '顶点 (1,-4)，与 x 轴交于 (3,0) 和 (-1,0)', hint: '顶点横坐标 x=1', level: '提高' }] },
-    { id: '9.4', title: '二次函数与方程及应用', subtitle: '图象与 x 轴的交点、最值问题', how: '抛物线与 x 轴的交点横坐标就是方程的根。', why: 'y=0 的点就是方程的解。', wrong: '抛物线与 x 轴没有交点，方程就有两个根', wrongWhy: '没有交点，Δ<0，没有实数根。', visual: '抛物线上下移动。', method: '交点即根法', explainBack: '抛物线与 x 轴的交点横坐标就是方程的根。', tryIt: '算一算 y=x²-4x+3 与 x 轴有几个交点。', demo: 'parabola', recall: { q: '抛物线 y=x²-4x+3 与 x 轴有几个交点？', answer: '2 个', hint: 'Δ=4>0' }, practice: [{ q: '求抛物线 y=x²-2x-8 与 x 轴交点的横坐标。', answer: '4 和 -2', hint: '令 y=0', level: '基础' }, { q: '某商品每件利润 30 元，每天可卖 80 件；每涨价 1 元，每天少卖 4 件。涨价几元时每天总利润最大？', answer: '涨价 5 元，最大利润 2100 元', hint: '顶点', level: '提高' }] },
+    { id: '9.4', title: '二次函数与方程及应用', subtitle: '图象与 x 轴的交点、最值问题', how: '抛物线与 x 轴的交点横坐标就是方程的根。', why: 'y=0 的点就是方程的解。', wrong: '抛物线与 x 轴没有交点，方程就有两个根', wrongWhy: '没有交点，Δ<0，没有实数根。', visual: '抛物线上下移动。', method: '交点即根法', explainBack: '抛物线与 x 轴的交点横坐标就是方程的根。', tryIt: '算一算 y=x²-4x+3 与 x 轴有几个交点。', demo: 'parabola', recall: { q: '抛物线 y=x²-4x+3 与 x 轴有几个交点？', answer: '2 个', hint: 'Δ=4>0' }, practice: [{ q: '求抛物线 y=x²-2x-8 与 x 轴交点的横坐标。', answer: '4 和 -2', hint: '令 y=0', level: '基础' }, { q: '某商品每件利润 30 元，每天可卖 80 件；每涨价 1 元，每天少卖 2 件。涨价几元时每天总利润最大？', answer: '涨价 5 元，最大利润 2450 元', hint: '顶点', level: '提高' }] },
   ] },
   { unit: '旋转', term: '上', points: [
     { id: '9.5', title: '图形的旋转与中心对称', subtitle: '旋转、旋转角、中心对称、中心对称图形', how: '旋转是绕一个定点、按一个方向、转一个角度。', why: '旋转是钉住一点转。', wrong: '旋转后图形变大了', wrongWhy: '旋转只改变位置。', visual: '旋转动画。', method: '钉住一点转', explainBack: '旋转只变位置不改形状。', tryIt: '把三角形绕一个点旋转 90°。', demo: 'spin', recall: { q: '正方形绕它的中心旋转多少度能与自身重合？', answer: '90°', hint: '360°÷4' }, practice: [{ q: '点 A(2,3) 绕原点旋转 180° 后，对应点的坐标是多少？', answer: '(-2,-3)', hint: '横、纵坐标都变号', level: '基础' }, { q: '等边三角形绕它的中心旋转多少度能与自身重合？', answer: '120°', hint: '360°÷3', level: '提高' }] },
@@ -2321,6 +2321,10 @@ check('grade-9.js: all 16 points map to the right experiment',
   g9ids.length === 16 && g9ids.every((id, i) => g9demos[i] === g9expected[id]));
 check('grade-9.js: 9.3/9.11 no longer point at the linear function demo',
   !g9src.includes("demo: 'function'"));
+// 9.4 利润题：旧答案 (30+x)(80-4x) 顶点在 x=-5，2100 元不是最大值；已改成少卖 2 件，顶点 x=5、最大 2450 元。
+const m94 = g9src.match(/id: "9\.4"[\s\S]*?最大利润(\d+)元/);
+check('grade-9.js: 9.4 利润题答案是 2450 元（(30+5)×(80-10) 重算）',
+  m94 && m94[1] === '2450' && (30 + 5) * (80 - 2 * 5) === 2450 && !g9src.includes('2100元'));
 const G9_DEMOS = ['quad', 'growth', 'parabola', 'spin', 'circangle', 'tangent', 'sector', 'coin', 'tree', 'hyperbola', 'similar', 'shadow', 'trig', 'slope', 'project'];
 const labelSrc9 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
 check('DEMO_LABEL covers all 15 new demos',
