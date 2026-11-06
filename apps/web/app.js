@@ -134,6 +134,149 @@ function duePointIds() {
   const now = Date.now();
   return Object.keys(reviewStore).filter(id => reviewStore[id] && reviewStore[id].due <= now);
 }
+
+/* ---------- 参数化出题 qgen（参考 kenowong/math-mastery 的 qgen(n) 模式） ----------
+   题目由参数生成、答案由构造过程算出：同一题型每次数字不同，答案不是写死的。
+   题型来源只取内容文件里已有的 practice 原题（题面、知识点归属、难度都照原题），
+   不新编未经核验的题型；原题全部保留，生成题只是“换数字再练一遍”。
+   每道生成题返回 { type, pointId, level, q, answer, hint }，和 practice 题同形，
+   所以练一练 / 混着练 / 模拟测都能直接复用同一套自评和复习库。
+   不重复：每个题型记最近 8 个数字组合（qgenRecent），短期内不出现完全相同的组合；
+   组合池很小（最少也有 60 多种）时，50 次都撞上就直接返回最后一道，不死循环。
+   数字与答案的核验逻辑（分数通分约分、方程代回、十进制小数位数）写在各 gen 里，
+   工具 smoke.js 对每种题型做 20 次生成 + 独立重算答案的检查。 */
+function qgenGcd(a, b) { a = Math.abs(a); b = Math.abs(b); while (b) { const t = a % b; a = b; b = t; } return a || 1; }
+function qgenFracText(n, d) { const g = qgenGcd(n, d); n /= g; d /= g; return d === 1 ? String(n) : n + '/' + d; }
+function qgenInt(lo, hi) { return lo + Math.floor(Math.random() * (hi - lo + 1)); }
+function qgenSigned(n) { return n >= 0 ? '+' + n : String(n); }
+const QGEN_DEFS = {
+  // 1.15 100以内加减法（一）· 基础：原题“算一算47+8：个位7+8满10了，怎么办？”
+  'add-2d-1d': { pointId: '1.15', level: '基础', gen: function () {
+    let a, b;
+    do { a = qgenInt(11, 99); b = qgenInt(2, 9); } while ((a % 10) + b < 10);
+    return { key: a + '+' + b, q: '算一算 ' + a + ' + ' + b + ' = ？', answer: String(a + b),
+      hint: '个位 ' + (a % 10) + ' + ' + b + ' = ' + ((a % 10) + b) + '，满十向十位进 1。' };
+  } },
+  // 2.2 100以内加减法（二）· 基础：原题“算一算36+24。”
+  'add-2d-carry': { pointId: '2.2', level: '基础', gen: function () {
+    let a, b;
+    do { a = qgenInt(12, 89); b = qgenInt(12, 89); } while ((a % 10) + (b % 10) < 10);
+    return { key: a + '+' + b, q: '算一算 ' + a + ' + ' + b + ' = ？', answer: String(a + b),
+      hint: '个位 ' + (a % 10) + ' + ' + (b % 10) + ' = ' + ((a % 10) + (b % 10)) + '，满十进 1；十位再加进来的 1。' };
+  } },
+  // 3.2 万以内加减法 · 基础：原题“书架上有456本书，又买来278本，一共有多少本？”
+  'add-3d': { pointId: '3.2', level: '基础', gen: function () {
+    const a = qgenInt(102, 989), b = qgenInt(102, 989);
+    return { key: a + '+' + b, q: '算一算 ' + a + ' + ' + b + ' = ？', answer: String(a + b),
+      hint: '从个位加起，哪一位满十就向前面进 1；也可以用减法验算：和减一个加数等于另一个加数。' };
+  } },
+  // 3.11 两位数乘两位数 · 基础：原题“每盒装24支笔，买13盒一共多少支？”
+  'mul-2d': { pointId: '3.11', level: '基础', gen: function () {
+    const a = qgenInt(12, 89), b = qgenInt(12, 89);
+    const ones = b % 10, tens = Math.floor(b / 10) * 10;
+    return { key: a + 'x' + b, q: '每盒装 ' + a + ' 支笔，买 ' + b + ' 盒一共多少支？', answer: (a * b) + '支',
+      hint: '先算 ' + a + ' × ' + ones + ' = ' + (a * ones) + '，再算 ' + a + ' × ' + tens + ' = ' + (a * tens) + '，加起来。' };
+  } },
+  // 3.12 面积 · 基础：原题“一块长方形黑板长4米，宽2米，它的面积是多少？周长是多少？”
+  'rect-area': { pointId: '3.12', level: '基础', gen: function () {
+    const a = qgenInt(3, 12), b = qgenInt(2, 9);
+    return { key: a + 'x' + b, q: '一块长方形黑板长 ' + a + ' 米，宽 ' + b + ' 米，它的面积是多少？周长是多少？',
+      answer: '面积 ' + (a * b) + ' 平方米，周长 ' + (2 * (a + b)) + ' 米',
+      hint: '面积 = 长 × 宽 = ' + a + ' × ' + b + '；周长 = (长 + 宽) × 2。' };
+  } },
+  // 5.11 分数的加法和减法 · 提高：原题“1/2+1/3=？”（异分母相加，和不超过 1）
+  'frac-add': { pointId: '5.11', level: '提高', gen: function () {
+    let d1, d2, n1, n2;
+    do {
+      d1 = qgenInt(2, 9); d2 = qgenInt(2, 9);
+      n1 = qgenInt(1, d1 - 1); n2 = qgenInt(1, d2 - 1);
+    } while (d1 === d2 || n1 * d2 + n2 * d1 > d1 * d2);
+    const num = n1 * d2 + n2 * d1, den = d1 * d2;
+    return { key: n1 + '/' + d1 + '+' + n2 + '/' + d2,
+      q: '算一算：' + n1 + '/' + d1 + ' + ' + n2 + '/' + d2 + ' = ？',
+      answer: qgenFracText(num, den),
+      hint: '先通分：' + n1 + '/' + d1 + ' = ' + (n1 * d2) + '/' + den + '，' + n2 + '/' + d2 + ' = ' + (n2 * d1) + '/' + den + '，再把分子加起来' + (qgenGcd(num, den) > 1 ? '，最后约分' : '') + '。' };
+  } },
+  // 5.1 小数乘法 · 基础：原题“0.3×0.4 是比 0.4 大，还是比 0.4 小？”
+  // 整数算：0.A × 0.B = (A×B)/100，A、B 是 2–9 的一位小数，不用浮点算小数。
+  'dec-mul': { pointId: '5.1', level: '基础', gen: function () {
+    const A = qgenInt(2, 9), B = qgenInt(2, 9);
+    const p = A * B;
+    const ans = p < 10 ? '0.0' + p : (p % 10 === 0 ? '0.' + (p / 10) : '0.' + p);
+    return { key: A + 'x' + B, q: '算一算：0.' + A + ' × 0.' + B + ' = ？', answer: ans,
+      hint: '先算 ' + A + ' × ' + B + ' = ' + p + '，再数小数位数：两个一位小数，积是两位小数。' };
+  } },
+  // 7.6 解一元一次方程 · 基础：原题“解方程：3x-5=7。”（ax+b=c，解 x 是整数，由 a、x、b 倒推 c）
+  'eq-2step': { pointId: '7.6', level: '基础', gen: function () {
+    const a = qgenInt(2, 9), x = qgenInt(2, 12), b = qgenInt(1, 20);
+    const c = a * x + b;
+    return { key: a + 'x+' + b + '=' + c, q: '解方程：' + a + 'x + ' + b + ' = ' + c + '。', answer: 'x = ' + x,
+      hint: '先把 +' + b + ' 移到右边变 −' + b + '：' + a + 'x = ' + c + ' − ' + b + ' = ' + (a * x) + '；再两边同时除以 ' + a + '。' };
+  } },
+  // 6.1 分数乘法 · 基础：原题“算一算：3/4 × 2/5 = ？（可以约分）”
+  'frac-mul': { pointId: '6.1', level: '基础', gen: function () {
+    const d1 = qgenInt(2, 9), n1 = qgenInt(1, d1 - 1);
+    const d2 = qgenInt(2, 9), n2 = qgenInt(1, d2 - 1);
+    return { key: n1 + '/' + d1 + 'x' + n2 + '/' + d2,
+      q: '算一算：' + n1 + '/' + d1 + ' × ' + n2 + '/' + d2 + ' = ？（可以约分）',
+      answer: qgenFracText(n1 * n2, d1 * d2),
+      hint: '分子乘分子是 ' + (n1 * n2) + '，分母乘分母是 ' + (d1 * d2) + '，再约分。' };
+  } },
+  // 9.1 解一元二次方程 · 基础：原题“解方程：x²-5x+6=0（用因式分解法）。”
+  // 先定两个整数根 r、s（都不为 0、不相等、和不为 0），再由 b=-(r+s)、c=r·s 倒推方程，代回必成立。
+  'quad-factor': { pointId: '9.1', level: '基础', gen: function () {
+    let r, s;
+    do { r = qgenInt(-9, 9); s = qgenInt(-9, 9); } while (r === 0 || s === 0 || r === s || r + s === 0);
+    const b = -(r + s), c = r * s;
+    const lo = Math.min(r, s), hi = Math.max(r, s);
+    return { key: lo + ',' + hi,
+      q: '解方程：x²' + qgenSigned(b) + 'x' + qgenSigned(c) + ' = 0（用因式分解法）。',
+      answer: 'x = ' + lo + ' 或 x = ' + hi,
+      hint: '找两个数，相加得 ' + (-b) + '、相乘得 ' + c + '：是 ' + lo + ' 和 ' + hi + '。' };
+  } },
+};
+const QGEN_BY_POINT = {};
+Object.keys(QGEN_DEFS).forEach(function (t) { QGEN_BY_POINT[QGEN_DEFS[t].pointId] = t; });
+var qgenRecent = {}; // type -> 最近 8 个数字组合的 key
+function qgenGenerate(type) {
+  const def = QGEN_DEFS[type];
+  if (!def) return null;
+  const seen = qgenRecent[type] || (qgenRecent[type] = []);
+  for (let t = 0; t < 50; t++) {
+    const item = def.gen();
+    if (seen.indexOf(item.key) < 0) {
+      seen.push(item.key);
+      if (seen.length > 8) seen.shift();
+      return { type: type, pointId: def.pointId, level: def.level, q: item.q, answer: item.answer, hint: item.hint };
+    }
+  }
+  const item = def.gen();
+  return { type: type, pointId: def.pointId, level: def.level, q: item.q, answer: item.answer, hint: item.hint };
+}
+function qgenForPoint(pointId) {
+  const t = QGEN_BY_POINT[pointId];
+  return t ? qgenGenerate(t) : null;
+}
+/* 练一练里的换数字同类题：和原题同一套自评（索引固定用 'g'，自评键是 pointId + ':g'，
+   点“看答案”才出现自评行，和原题一样）。点“换一题”只换这一块的内容，不动原题。 */
+function qgenInnerHtml(pid) {
+  const gq = qgenForPoint(pid);
+  if (!gq) return '<p class="muted">换数字再练：这条暂时没有换数字的题。</p>';
+  return '<p><span class="pill">换数字再练</span> ' + (gq.level ? '<span class="pill">' + esc(gq.level) + '</span> ' : '') + esc(gq.q) + '</p>' +
+    '<p class="muted">同一题型，数字换过了——和上面原题是同类题，不是新题型。</p>' +
+    '<button class="btn ghost small qa-btn" type="button" data-hint="g">要提示</button><p class="hint" data-hint-t="g" hidden>提示：' + esc(gq.hint) + '</p>' +
+    '<button class="btn ghost small qa-btn" type="button" data-qa="g">看答案</button>' +
+    '<p class="qa-a" data-qa-a="g" hidden>答案：' + esc(gq.answer) + '</p>' +
+    '<div class="qa-mark" data-qa-mark="g" data-point="' + esc(pid) + '" hidden>' +
+    '<p>你答对了吗？ <button class="btn small" type="button" data-mark="right">答对了</button> <button class="btn small" type="button" data-mark="wrong">答错了</button></p>' +
+    '<p>答之前有把握吗？ <button class="btn small" type="button" data-conf="yes">有把握</button> <button class="btn small" type="button" data-conf="no">没把握</button></p>' +
+    '<p class="qa-a" data-qa-saved="g" hidden></p></div>' +
+    '<button class="btn ghost small qa-btn" type="button" data-qgen-again="1">换一题（数字不一样，同类题）</button>';
+}
+function qgenBlockHtml(pid) {
+  if (!QGEN_BY_POINT[pid]) return '';
+  return '<div class="qa qgen" data-qgen-box="1">' + qgenInnerHtml(pid) + '</div>';
+}
 function shuffle(arr) {
   const a = arr.slice();
   for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; }
@@ -362,7 +505,7 @@ function renderPoint(id) {
       '<p>你答对了吗？ <button class="btn small" type="button" data-mark="right">答对了</button> <button class="btn small" type="button" data-mark="wrong">答错了</button></p>' +
       '<p>答之前有把握吗？ <button class="btn small" type="button" data-conf="yes">有把握</button> <button class="btn small" type="button" data-conf="no">没把握</button></p>' +
       '<p class="qa-a" data-qa-saved="' + i + '" hidden></p></div></div>'
-    ).join('') + '</div>' + olympiadHtml + pagerHtml;
+    ).join('') + qgenBlockHtml(id) + '</div>' + olympiadHtml + pagerHtml;
   pointDetail.innerHTML = html;
   pointDetail.querySelectorAll('[data-demo-link]').forEach(el =>
     el.addEventListener('click', () => goDemoFromHere(el.dataset.demoLink)));
@@ -386,11 +529,15 @@ function renderMix(g) {
   if (!gd) return;
   const picks = shuffle(gd.units.filter(u => u.points.length)).slice(0, 5).map(u => {
     const p = u.points[Math.floor(Math.random() * u.points.length)];
+    // 一半概率用换数字的同类题（该知识点有参数化题型时）：混着练的题本来就每次重抽，
+    // 换数字的题也一样，每次数字都不同；题面带“换数字再练”药丸，一眼能认出来。
+    const gq = qgenForPoint(p.id);
+    if (gq && Math.random() < 0.5) return { point: p, q: gq, qgen: true };
     return { point: p, q: p.practice[Math.floor(Math.random() * p.practice.length)] };
   });
   currentPointId = null;
-  pointDetail.innerHTML = '<h3>混着练</h3><p class="muted">5 道题，来自 5 个不同单元——混着练比一个单元一个单元刷记得更牢。答完对答案，再告诉我对错和把握。</p>' + picks.map((pk, i) =>
-    '<div class="point-sec"><h4>' + esc(pk.point.id) + ' · ' + esc(pk.point.title) + '</h4><p>' + (pk.q.level ? '<span class="pill">' + esc(pk.q.level) + '</span> ' : '') + esc(pk.q.q) + '</p>' +
+  pointDetail.innerHTML = '<h3>混着练</h3><p class="muted">5 道题，来自 5 个不同单元——混着练比一个单元一个单元刷记得更牢。答完对答案，再告诉我对错和把握。带“换数字再练”的题是同类题换了数字，答案是现算的。</p>' + picks.map((pk, i) =>
+    '<div class="point-sec"><h4>' + esc(pk.point.id) + ' · ' + esc(pk.point.title) + '</h4><p>' + (pk.qgen ? '<span class="pill">换数字再练</span> ' : '') + (pk.q.level ? '<span class="pill">' + esc(pk.q.level) + '</span> ' : '') + esc(pk.q.q) + '</p>' +
     '<button class="btn ghost small qa-btn" type="button" data-qa="' + i + '">看答案</button>' +
     '<p class="qa-a" data-qa-a="' + i + '" hidden>答案：' + esc(pk.q.answer) + '（提示：' + esc(pk.q.hint) + '）</p>' +
     practiceStepsHtml(pk.q, i, pk.point.id) +
@@ -440,7 +587,8 @@ function renderReview() {
 }
 /* ---------- 模拟测（低压力自测，不是高压考试） ----------
    定位是“检验自己学到哪了”：5 道题，10 分钟，考完才给答案。
-   出题只复用各年级内容文件里已有的 practice 题目（q/answer/hint/level），不新编题。
+   出题只复用各年级内容文件里已有的 practice 题目（q/answer/hint/level），不新编题；
+   一半概率用换数字的同类题（qgen：同一题型、数字现生成、答案现算），题面和原题同属一个知识点。
    考试中不显示提示和答案：没有“要提示”按钮，没有“看答案”，解析也不出现；
    有 steps 的题复用分步计分 UI（每步“看这一步”+ 对/错自评），没 steps 的题整题自评。
    计时用 setTimeout 链（不用 setInterval：smoke 沙箱只提供 setTimeout）。
@@ -467,20 +615,27 @@ function learnedPointIds() {
   allPoints().forEach(p => { if (p.demo && tried.has(p.demo)) ids.add(p.id); });
   return ids;
 }
+/* 模拟测抽题：原题和换数字同类题各一半概率（该知识点有参数化题型时），
+   换数字的题答案是现算的，考完报告里照常显示答案；自评、错题进复习都不变。 */
+function pickExamQuestion(p) {
+  const gq = qgenForPoint(p.id);
+  if (gq && Math.random() < 0.5) return gq;
+  return p.practice[Math.floor(Math.random() * p.practice.length)];
+}
 function pickExamQuestions() {
   const learned = shuffle([...learnedPointIds()].map(id => findPoint(id)).filter(f => f).map(f => f.point));
   const qs = [];
   const used = new Set();
   learned.forEach(p => {
     if (qs.length >= EXAM_COUNT) return;
-    qs.push({ pointId: p.id, title: p.title, q: p.practice[Math.floor(Math.random() * p.practice.length)] });
+    qs.push({ pointId: p.id, title: p.title, q: pickExamQuestion(p) });
     used.add(p.id);
   });
   const fromLearned = qs.length;
   if (qs.length < EXAM_COUNT) {
     shuffle(allPoints().filter(p => !used.has(p.id))).forEach(p => {
       if (qs.length >= EXAM_COUNT) return;
-      qs.push({ pointId: p.id, title: p.title, q: p.practice[Math.floor(Math.random() * p.practice.length)] });
+      qs.push({ pointId: p.id, title: p.title, q: pickExamQuestion(p) });
     });
   }
   return { qs: shuffle(qs), fromLearned };
@@ -1156,6 +1311,17 @@ if (pointDetail) pointDetail.addEventListener('click', e => {
     const mark = pointDetail.querySelector('[data-qa-mark="' + i + '"]');
     if (ans) { ans.hidden = !ans.hidden; qaBtn.textContent = ans.hidden ? '看答案' : '收起答案'; }
     if (mark) mark.hidden = ans ? ans.hidden : true;
+    return;
+  }
+  // 换数字再练 · 换一题：只重画这一块（换一组数字），原题不动；旧的自评先清掉，
+  // 不然新题一点“答对了”会直接用上一题的“有把握没”把分记下来。
+  const qgenBtn = e.target.closest('[data-qgen-again]');
+  if (qgenBtn) {
+    const box = pointDetail.querySelector('[data-qgen-box]');
+    if (box && currentPointId) {
+      delete qaState[currentPointId + ':g'];
+      box.innerHTML = qgenInnerHtml(currentPointId);
+    }
     return;
   }
   const stepReveal = e.target.closest('[data-step-reveal]');

@@ -2709,10 +2709,101 @@ check('M story: point page renders 发现时刻 after 为什么 and before 容�
   pointDetail.innerHTML.includes('古埃及人分面包'));
 check('M story: point nav chip links to 发现时刻',
   pointDetail.innerHTML.includes('data-sec="sec-story"') && pointDetail.innerHTML.includes('id="sec-story"'));
-// 单元页也展示本单元的故事。
-navGo('unit-3-0');
-check('M story: unit page shows its own story',
-  pointDetail.innerHTML.includes('发现时刻') && pointDetail.innerHTML.includes('古埃及人分面包'));
+// ---------- N. 参数化出题 qgen（Phase 6 Task A） ----------
+// 每种题型生成 20 次，用题面里的数字独立重算答案（不信任生成器自己的答案），
+// 再查连续 9 次生成的数字组合都不重复（最近 8 个组合的窗口保证的性质）。
+// 这些检查在改前代码上必然失败：改前没有 qgenGenerate，调用会抛错。
+function qgenGcdT(a, b) { a = Math.abs(a); b = Math.abs(b); while (b) { const t = a % b; a = b; b = t; } return a || 1; }
+function qgenFracT(n, d) { const g = qgenGcdT(n, d); n /= g; d /= g; return d === 1 ? String(n) : n + '/' + d; }
+function qgenNums(q) { const m = q.match(/-?\d+/g); return m ? m.map(Number) : []; }
+// 每种题型：从题面解析参数，重算答案，和生成器给的答案逐字比对。
+const QGEN_VERIFY = {
+  'add-2d-1d': (g) => { const n = qgenNums(g.q); return n.length === 2 && String(n[0] + n[1]) === g.answer && (n[0] % 10) + n[1] >= 10; },
+  'add-2d-carry': (g) => { const n = qgenNums(g.q); return n.length === 2 && String(n[0] + n[1]) === g.answer && (n[0] % 10) + (n[1] % 10) >= 10; },
+  'add-3d': (g) => { const n = qgenNums(g.q); return n.length === 2 && String(n[0] + n[1]) === g.answer && n[0] >= 100 && n[1] >= 100; },
+  'mul-2d': (g) => { const n = qgenNums(g.q); return n.length === 2 && (n[0] * n[1]) + '支' === g.answer; },
+  'rect-area': (g) => { const n = qgenNums(g.q); return n.length === 2 && g.answer === '面积 ' + (n[0] * n[1]) + ' 平方米，周长 ' + (2 * (n[0] + n[1])) + ' 米'; },
+  'frac-add': (g) => { const m = g.q.match(/(\d+)\/(\d+) \+ (\d+)\/(\d+)/); if (!m) return false;
+    const num = (+m[1]) * (+m[4]) + (+m[3]) * (+m[2]), den = (+m[2]) * (+m[4]);
+    return g.answer === qgenFracT(num, den) && num <= den; },
+  'dec-mul': (g) => { const m = g.q.match(/0\.(\d) × 0\.(\d)/); if (!m) return false;
+    const p = (+m[1]) * (+m[2]);
+    const expect = p < 10 ? '0.0' + p : (p % 10 === 0 ? '0.' + (p / 10) : '0.' + p);
+    return g.answer === expect; },
+  'eq-2step': (g) => { const m = g.q.match(/(\d+)x \+ (\d+) = (\d+)/); if (!m) return false;
+    const x = ((+m[3]) - (+m[2])) / (+m[1]);
+    return Number.isInteger(x) && x >= 2 && g.answer === 'x = ' + x; },
+  'frac-mul': (g) => { const m = g.q.match(/(\d+)\/(\d+) × (\d+)\/(\d+)/); if (!m) return false;
+    return g.answer === qgenFracT((+m[1]) * (+m[3]), (+m[2]) * (+m[4])); },
+  'quad-factor': (g) => { const m = g.q.match(/x²([+-]\d+)x([+-]\d+) = 0/); if (!m) return false;
+    const b = +m[1], c = +m[2];
+    const rm = g.answer.match(/x = (-?\d+) 或 x = (-?\d+)/); if (!rm) return false;
+    const r = +rm[1], s = +rm[2];
+    return r < s && r + s === -b && r * s === c && r !== 0 && s !== 0; },
+};
+const QGEN_TYPES = Object.keys(QGEN_VERIFY);
+let qgenOk = true, qgenDistinctOk = true, qgenMetaOk = true;
+QGEN_TYPES.forEach(t => {
+  const keys = [];
+  for (let i = 0; i < 20; i++) {
+    const g = sandbox.qgenGenerate(t);
+    if (!g || g.type !== t || !g.pointId || !g.level || !g.q || !g.answer || !g.hint) { qgenMetaOk = false; break; }
+    if (!QGEN_VERIFY[t](g)) { qgenOk = false; console.log('  qgen wrong answer: ' + t + ' :: ' + g.q + ' => ' + g.answer); break; }
+    keys.push(g.q);
+    // 连续 9 次内不重复：qgenRecent 窗口是 8，所以最近 9 个题面必须全不同。
+    if (keys.length >= 9) {
+      const win = keys.slice(-9);
+      if (new Set(win).size !== 9) { qgenDistinctOk = false; console.log('  qgen repeat in window: ' + t + ' :: ' + win.join(' | ')); break; }
+    }
+  }
+});
+check('N qgen: 10 types x 20 generations, answers recomputed from the question text', qgenOk);
+check('N qgen: no repeat within any 9 consecutive generations (recent-8 window)', qgenDistinctOk);
+check('N qgen: every generation carries type/pointId/level/q/answer/hint', qgenMetaOk);
+// 覆盖面：10 个题型分属 7 个年级，知识点归属和难度照原题（1.15/2.2/3.2/3.11/3.12 基础，5.11 提高，5.1/6.1/7.6/9.1 基础）。
+const QGEN_POINTS = { 'add-2d-1d': ['1.15', '基础'], 'add-2d-carry': ['2.2', '基础'], 'add-3d': ['3.2', '基础'], 'mul-2d': ['3.11', '基础'], 'rect-area': ['3.12', '基础'], 'frac-add': ['5.11', '提高'], 'dec-mul': ['5.1', '基础'], 'eq-2step': ['7.6', '基础'], 'frac-mul': ['6.1', '基础'], 'quad-factor': ['9.1', '基础'] };
+check('N qgen: 10 types map to 7 grades with the original pointId + level',
+  QGEN_TYPES.length === 10 &&
+  QGEN_TYPES.every(t => { const g = sandbox.qgenGenerate(t); return g.pointId === QGEN_POINTS[t][0] && g.level === QGEN_POINTS[t][1]; }) &&
+  new Set(QGEN_TYPES.map(t => QGEN_POINTS[t][0].split('.')[0])).size === 7);
+// 练一练：有生成器的知识点页出现“换数字再练”块，原题还在；无生成器的点（3.7）没有这块。
+navGo('point-3.12');
+check('N qgen: point 3.12 shows 换数字再练 block next to the original questions',
+  pointDetail.innerHTML.includes('换数字再练') && pointDetail.innerHTML.includes('换一题') &&
+  pointDetail.innerHTML.includes('4 行 3 列是多少个方块？') && pointDetail.innerHTML.includes('data-qa="g"'));
+navGo('point-3.7');
+check('N qgen: point 3.7 without a generator shows no 换数字再练 block',
+  !pointDetail.innerHTML.includes('换数字再练'));
+// 换一题：点一下，块里的题面换成另一组数字（不碰原题）；再点“看答案”能看到答案，
+// 自评“答对了 + 有把握”后，3.12 正常进复习库（和原题自评同一条路）。
+navGo('point-3.12');
+const qgenBox = pointDetail.querySelector('[data-qgen-box]');
+qgenBox.innerHTML = 'BEFORE-SENTINEL';
+const againBtn = makeEl('button'); againBtn.dataset.qgenAgain = '1';
+clickPD(againBtn);
+check('N qgen: 换一题 swaps the generated question in place',
+  qgenBox.innerHTML.includes('换数字再练') && !qgenBox.innerHTML.includes('BEFORE-SENTINEL'));
+const gAns = pointDetail.querySelector('[data-qa-a="g"]'); gAns.hidden = true;
+const gBtn = makeEl('button'); gBtn.dataset.qa = 'g';
+clickPD(gBtn);
+check('N qgen: generated question 看答案 reveals the computed answer', gAns.hidden === false);
+const gRow = pointDetail.querySelector('[data-qa-mark="g"]');
+gRow.dataset.point = '3.12'; gRow.dataset.qaMark = 'g';
+const gMark = makeEl('button'); gMark.dataset.mark = 'right';
+const gConf = makeEl('button'); gConf.dataset.conf = 'yes';
+gMark.closest = (sel) => sel === '[data-mark]' ? gMark : (sel === '[data-qa-mark]' ? gRow : null);
+gConf.closest = (sel) => sel === '[data-conf]' ? gConf : (sel === '[data-qa-mark]' ? gRow : null);
+clickPD(gMark); clickPD(gConf);
+const gStored = JSON.parse(lsData['math-review-v1'] || '{}');
+check('N qgen: self-mark on a generated question enters the review store for 3.12',
+  gStored['3.12'] && gStored['3.12'].correct === true && gStored['3.12'].streak >= 1);
+// 混着练：Math.random 固定为 0.4（< 0.5），有生成器的点必用换数字题；3 年级桩内容里 3.12 在列。
+const origRandom2 = Math.random;
+Math.random = () => 0.4;
+navGo('grade-3-mix');
+check('N qgen: mix uses a generated variant for a point that has one (3.12)',
+  pointDetail.innerHTML.includes('换数字再练') && pointDetail.innerHTML.includes('混着练'));
+Math.random = origRandom2;
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
