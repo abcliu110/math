@@ -3752,5 +3752,79 @@ check('sims: all 8 sims are in the tried list',
   SIMS.every(k => triedAtEnd13.includes(k)) && triedAtEnd13.length === triedAtStart13.length + 8);
 
 
+// ---------- 实验放哪里（设计文档 docs/design/experiment-placement-20261106.md） ----------
+// 注册表是唯一事实来源：点页、单元页、年级页都从 animsForPoint / animsForUnit 读。
+// 每条都带 typeof 守卫：改前代码没有这些函数，守卫让它报 FAIL 而不是整个测试崩掉。
+// 注意：桩内容（stub）只有一部分知识点（1.9 / 1.1 / 3.7 / 3.12 等），
+// 所以行为检查用桩里有的点；真实一年级的 18 个动画与各单元数用下面的静态校验（读真实文件）来锁。
+const hasAnims = typeof sandbox.animsForPoint === 'function' && typeof sandbox.animsForUnit === 'function';
+check('anims: 1.9 has thirteen once + maketen',
+  hasAnims && JSON.stringify(sandbox.animsForPoint('1.9')) === JSON.stringify(['thirteen', 'maketen']));
+check('anims: 3.7 has fraction + 3 sims',
+  hasAnims && JSON.stringify(sandbox.animsForPoint('3.7')) === JSON.stringify(['fraction', 'fraceq', 'buildfrac', 'fracnumline']));
+check('anims: 3.12 has area + areabuild + maxarea from the lab question',
+  hasAnims && JSON.stringify(sandbox.animsForPoint('3.12')) === JSON.stringify(['area', 'areabuild', 'maxarea']));
+check('anims: 1.1 has count + numplay',
+  hasAnims && JSON.stringify(sandbox.animsForPoint('1.1')) === JSON.stringify(['count', 'numplay']));
+check('anims: unknown point has none', hasAnims && sandbox.animsForPoint('9.99').length === 0);
+check('anims: stub unit 1-0 （进位加法） has 2', hasAnims && sandbox.animsForUnit(1, 0).length === 2);
+check('anims: stub unit 1-2 （准备课） has 2', hasAnims && sandbox.animsForUnit(1, 2).length === 2);
+// 静态校验：按真实 grade-1.js 的 demo 字段 + app.js 里的 SIM_LINKS + LAB_QUESTIONS
+// 算出一年级每点动画，去重后应为 18 个，各单元动画数应为 [2,1,2,1,2,2,1,2,1,2,1,1,1,1,2]。
+// （改前代码里没有 SIM_LINKS / LAB_QUESTIONS 的注册表逻辑，正则取不到就报 FAIL。）
+const g1src2 = fs.readFileSync(root + '/content/grades/grade-1.js', 'utf8');
+const g1ids2 = [...g1src2.matchAll(/id: "([0-9.]+)"/g)].map(m => m[1]);
+const g1demos2 = [...g1src2.matchAll(/demo: (?:'([a-z]+)'|null)/g)].map(m => m[1] || null);
+const simLinksSrc = src.match(/var SIM_LINKS = (\{[\s\S]*?\n\});/);
+const labQsSrc = src.match(/var LAB_QUESTIONS = (\[[\s\S]*?\n\]);/);
+const simLinks = simLinksSrc ? eval('(' + simLinksSrc[1] + ')') : null;
+const labQs = labQsSrc ? eval('(' + labQsSrc[1] + ')') : null;
+let g1UnitCounts = null, g1Distinct = -1;
+if (simLinks && labQs && g1ids2.length === 16) {
+  const unitIdx = [...g1src2.matchAll(/unit: "([^"]+)"/g)].map(m => m.index);
+  const pointIdx = [...g1src2.matchAll(/id: "([0-9.]+)"/g)].map(m => m.index);
+  const unitSets = unitIdx.map(() => new Set());
+  const allSet = new Set();
+  pointIdx.forEach((pIdx, i) => {
+    let ui = 0;
+    unitIdx.forEach((uix, k) => { if (uix < pIdx) ui = k; });
+    const keys = [];
+    const push = k => { if (k && keys.indexOf(k) < 0) keys.push(k); };
+    push(g1demos2[i]);
+    (simLinks[g1ids2[i]] || []).forEach(push);
+    labQs.forEach(q => { if (q.demo && q.points && q.points.indexOf(g1ids2[i]) >= 0) push(q.demo); });
+    keys.forEach(k => { unitSets[ui].add(k); allSet.add(k); });
+  });
+  g1UnitCounts = unitSets.map(s => s.size);
+  g1Distinct = allSet.size;
+}
+check('anims: real grade-1 has 18 distinct animations', g1Distinct === 18);
+check('anims: real grade-1 unit animation counts',
+  JSON.stringify(g1UnitCounts) === JSON.stringify([2, 1, 2, 1, 2, 2, 1, 2, 1, 2, 1, 1, 1, 1, 2]));
+navGo('point-3.7');
+check('point page: animation group shows sim tags + demo button',
+  pointDetail.innerHTML.includes('这个点的动画') && pointDetail.innerHTML.includes('【模拟】') &&
+  pointDetail.innerHTML.includes('去玩分数演示') && pointDetail.innerHTML.includes('去玩分数相等'));
+navGo('point-1.9');
+check('point page: 1.9 shows experiment tag for thirteen',
+  pointDetail.innerHTML.includes('【实验】') && pointDetail.innerHTML.includes('去玩13有几种凑法') &&
+  pointDetail.innerHTML.includes('去玩凑十装满'));
+navGo('unit-1-0');
+check('unit page: animation list for the unit',
+  pointDetail.innerHTML.includes('本单元的动画') && pointDetail.innerHTML.includes('去玩13有几种凑法') &&
+  pointDetail.innerHTML.includes('去玩凑十装满'));
+navGo('grade-1');
+check('grade page: unit card shows animation count',
+  gradeDetail.innerHTML.includes('动画 2 个'));
+// 实验室进演示，返回回实验室（改前走 navGo，返回落到演示总站）。
+navGo('lab');
+sandbox.labEnterQuestion('q-monty');
+check('lab: entering a demo question keeps lab as parent',
+  byId.crumbTitle.innerHTML.includes('数学实验室'));
+sandbox.navBackFn();
+check('lab: back from the demo returns to the lab',
+  byId.lab.hidden === false && byId.demos.hidden === true);
+navGo('home');
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

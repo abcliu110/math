@@ -963,7 +963,7 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
     <h3 class="panel-group-label">工具箱</h3>
     <div class="panels four">
       <button class="panel" type="button" data-nav-key="demos"><span class="panel-icon" aria-hidden="true">✦</span><b>互动演示</b><span class="panel-sub">分数、天平、函数、十格阵，还有一到九年级实验都能玩</span><span class="panel-prog"><i id="panelDemoProg" style="width:0%"></i></span><span class="panel-tx" id="panelDemoTx">141 个演示 · 0 已体验</span></button>
-      <button class="panel" type="button" data-nav-key="lab"><span class="panel-icon" aria-hidden="true">🧪</span><b>数学实验室</b><span class="panel-sub">没有题目，随便玩：分数、十格阵、天平、函数</span><span class="panel-tx">4 个自由玩小站 · 不评分</span></button>
+      <button class="panel" type="button" data-nav-key="lab"><span class="panel-icon" aria-hidden="true">🧪</span><b>数学实验室</b><span class="panel-sub">先选一个问题，再去工作间里摆弄</span><span class="panel-tx">13 个问题 · 自由玩 / 挑战</span></button>
       <button class="panel" type="button" data-nav-key="review"><span class="panel-icon" aria-hidden="true">✎</span><b>错题本</b><span class="panel-sub">错题连当时的图一起存</span><span class="panel-tx">还没有错题</span></button>
       <button class="panel" type="button" data-nav-key="progress"><span class="panel-icon" aria-hidden="true">●</span><b>我的进度</b><span class="panel-sub">玩过的演示点亮一格</span><span class="panel-prog"><i id="panelProgFill" style="width:0%"></i></span><span class="panel-tx" id="panelProgTx">0 / 141 个演示</span></button>
     </div>
@@ -1007,7 +1007,7 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
   <!-- Featured demos -->
   <section id="demos" class="section wrap">
     <h2>互动演示</h2>
-    <p class="section-sub">点一块面板进一个演示，都是我们自己画的图、自己写的例子。能点的都请点一点、拖一拖。一到九年级的实验也都在里面，顶上 8 个是创意实验，接着 8 个是互动模拟：先猜，再玩，再想明白。</p>
+    <p class="section-sub">点一块面板进一个演示，都是我们自己画的图、自己写的例子。能点的都请点一点、拖一拖。一到九年级的实验也都在里面，顶上 9 个是创意实验，接着 8 个是互动模拟：先猜，再玩，再想明白。</p>
 <p class="panel-group-label" id="creativeLabel">创意实验 · 先猜，再玩，再想明白</p>
     <div class="panels" id="creativePanels" aria-label="创意实验面板">
       <button class="panel" type="button" data-nav-key="demo-thirteen"><span class="panel-icon" aria-hidden="true">13</span><b>13有几种凑法？</b><span class="panel-sub">1 年级的加法也能做实验：13 能拆成几种？先猜，再找全</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1 年级 · 加法</span></button>
@@ -1031,6 +1031,7 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
       <button class="panel" type="button" data-nav-key="demo-numplay"><span class="panel-icon" aria-hidden="true">7</span><b>数一数：一个数，五种样子</b><span class="panel-sub">圆点、十格阵、数字、数轴、汉字——改一个，五个一起变</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1 年级 · 数的认识</span></button>
       <button class="panel" type="button" data-nav-key="demo-fracnumline"><span class="panel-icon" aria-hidden="true">→</span><b>分数变数线</b><span class="panel-sub">圆饼展开成距离：3/4 落在数轴哪里？先猜</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">3–5 年级 · 分数</span></button>
     </div>
+<p class="panel-group-label" id="demoLabel">演示 · 先看明白</p>
     <div class="panels" id="demoPanels" aria-label="互动演示面板">
       <button class="panel" type="button" data-nav-key="demo-tenframe"><span class="panel-icon" aria-hidden="true">▦</span><b>十格阵凑十</b><span class="panel-sub">点 1 个凑成 10，9+4 就好算了</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">1–2 年级 · 加减法</span></button>
       <button class="panel" type="button" data-nav-key="demo-fraction"><span class="panel-icon" aria-hidden="true">3/4</span><b>分数切一切</b><span class="panel-sub">切饼、落数轴，3/4 = 6/8</span><span class="panel-prog"><i style="width:0%"></i></span><span class="panel-tx">3–5 年级 · 分数</span></button>
@@ -8841,8 +8842,9 @@ function selectGrade(g) {
         // 编号是主题标签（3.15a/3.15b 是拆分的两个点），和知识点页的编号一致，不再让读者按卡片数数。
         const cp = unitCheckpoint(g, i);
         const status = cp ? (cp.lit ? '✓ 已点亮 · ' + cp.badge : '闯关 ' + cp.done + ' / ' + cp.total) : '';
+        const animN = animsForUnit(g, i).length;
         return '<button class="unit unit-btn' + (cp && cp.lit ? ' cp-lit' : '') + '" type="button" data-unit="' + i + '"><b>' + esc(u.points.length === 1 ? u.points[0].id + ' · ' + u.unit : u.points[0].id + '–' + u.points[u.points.length - 1].id + ' · ' + u.unit) + '</b><p>' + esc(u.term) + ' · ' + u.points.length + ' 个知识点</p>' +
-        '<span class="pill">内容已完成</span>' + (status ? '<span class="pill">' + esc(status) + '</span>' : '') + '</button>';
+        '<span class="pill">内容已完成</span><span class="pill">动画 ' + animN + ' 个</span>' + (status ? '<span class="pill">' + esc(status) + '</span>' : '') + '</button>';
       }).join('') + '</div>';
     gradeDetail.querySelectorAll('[data-unit]').forEach(btn =>
       btn.addEventListener('click', () => navGo('unit-' + g + '-' + btn.dataset.unit)));
@@ -8907,8 +8909,15 @@ function renderUnit(g, ui) {
     '<p class="muted">顺序只是建议：这一站做完就点亮，想先去别的站也可以直接点。</p>' +
     '<div class="btn-row"><button class="btn ghost" type="button" data-cp-link="1">去闯关路看看</button></div></div>' : '';
   const storyBox = u.story ? '<div class="point-sec story"><h4>发现时刻</h4><p>' + esc(u.story) + '</p></div>' : '';
+  // 本单元的动画：闯关任务"玩一玩本单元的演示"的落点就在这里——每点一行，点一个就去玩。
+  const animsBox = '<div class="point-sec"><h4>本单元的动画</h4><p class="muted">每个知识点有哪些动画（演示 / 模拟 / 实验），点一个就去玩；做完回来，单元还是这个单元。</p>' +
+    u.points.map(p => {
+      const a = animsForPoint(p.id);
+      return '<div class="unit-anim-row"><b>' + esc(p.id) + ' · ' + esc(p.title) + '</b> ' +
+        (a.length ? a.map(k => animBtnHtml(k, 'btn small ghost')).join(' ') : '<span class="muted">暂无动画</span>') + '</div>';
+    }).join('') + '</div>';
   pointDetail.innerHTML =
-    '<h3>' + esc(u.unit) + '</h3><p class="muted">' + esc(u.term) + ' · ' + u.points.length + ' 个知识点 · 点一条进内容。</p>' + storyBox + cpBox +
+    '<h3>' + esc(u.unit) + '</h3><p class="muted">' + esc(u.term) + ' · ' + u.points.length + ' 个知识点 · 点一条进内容。</p>' + storyBox + cpBox + animsBox +
     '<div class="unit-list">' + u.points.map(p =>
       '<button class="unit unit-btn" type="button" data-point="' + esc(p.id) + '"><b>' + esc(p.id) + ' · ' + esc(p.title) + '</b><p>' + esc(p.subtitle) + '</p>' +
       '<span class="pill">' + esc(p.method) + '</span></button>'
@@ -8917,8 +8926,62 @@ function renderUnit(g, ui) {
     btn.addEventListener('click', () => navGo('point-' + btn.dataset.point)));
   pointDetail.querySelectorAll('[data-cp-link]').forEach(btn =>
     btn.addEventListener('click', () => navGo('checkpoint')));
+  pointDetail.querySelectorAll('[data-demo-link]').forEach(el =>
+    el.addEventListener('click', () => goDemoFromHere(el.dataset.demoLink)));
 }
 const DEMO_LABEL = { fraction: '去玩分数演示', tenframe: '去玩十格阵', balance: '去玩天平演示', function: '去玩函数演示', count: '去玩数一数', position: '去玩转身找左右', split: '去玩分一分', addsub: '去玩合起来拿走', solids: '去玩立体图形', bundle: '去玩捆小棒', clock: '去玩拨时钟', tangram: '去玩七巧板', sort: '去玩分类分一分', hundred: '去玩百数表', shop: '去玩开小店', place: '去玩数位块', pattern: '去玩找规律', ruler: '去玩尺子量一量', estimate: '去玩先估后算', angle: '去玩转一转角', array: '去玩点阵乘法', observe: '去玩换个方向看', time: '去玩拨时钟（时和分）', share: '去玩轮流分一分', motion: '去玩折一折转一转', mixop: '去玩先算哪一堆', remain: '去玩装一包装不满', thousand: '去玩数轴找近似数', weight: '去玩天平称一称', chart: '去玩投票变条形图', logic: '去玩排除格推理', pair: '去玩搭配连一连', elapsed: '去玩时间轴走一走', verify: '去玩算回去验算', units: '去玩单位楼梯', times: '去玩条形复制', splitmul: '去玩面积切一切', rectsq: '去玩拉一拉变正方形', venn: '去玩韦恩图拖人', compass: '去玩指南针转一转', divplace: '去玩按数位分一分', stattable: '去玩复式统计表', fourgrid: '去玩四格面积模型', area: '去玩铺方砖数面积', calendar: '去玩日历翻一翻', decimal: '去玩十分条比大小', bignum: '去玩大数数轴', field: '去玩足球场拼一拼', protractor: '去玩量角器', areamodel: '去玩面积模型', parallelogram: '去玩平行四边形', trialdiv: '去玩试商调商', baraxis: '去玩条形图轴', teatime: '去玩沏茶排一排', zerodiv: '去玩除以0', laws: '去玩运算定律', placeslider: '去玩数位滑块', tearangle: '去玩撕角拼平角', decadd: '去玩小数加减对齐', moveshape: '去玩图形平移', average: '去玩削峰填谷', chickenrabbit: '去玩鸡兔同笼', decmul: '去玩单位正方形', gridpos: '去玩数对点一点', decdiv: '去玩两数同乘', prob: '去玩摸球模拟', polyarea: '去玩切一刀变长方形', planttree: '去玩种树数间隔', factor: '去玩拼长方形', cuboid: '去玩分层装块', fracadd: '去玩先重切再数', rotate: '去玩绕钉旋转', findbad: '去玩三组称找次品', radar: '去玩雷达找地方', ratio: '去玩比条分一分', circle: '去玩绕绳量圆', percent: '去玩百分条', fan: '去玩扇形转一转', lsquare: '去玩一层层包正方形', thermo: '去玩温度计比一比', negmul: '去玩负数乘法规律', discount: '去玩打折算一算', cylinder: '去玩倒沙装满圆柱', pigeon: '去玩鸽子找洞', conceptmap: '去玩认出老办法', numline: '去玩数轴标一点', powerup: '去玩对折纸和科学记数法', monomial: '去玩拆零件看系数次数', liketerms: '去玩合并同类项', meetline: '去玩相向而行', lineseg: '去玩直线射线线段', anglepair: '去玩余角补角拼一拼', vertangle: '去玩对顶角转一转', parangles: '去玩平行线截角', roots: '去玩开方机器', coordplane: '去玩坐标平面点一点', ineqline: '去玩不等式画数轴', histogram: '去玩直方图分组', trisides: '去玩三边围不围', congruent: '去玩全等判定拼一拼', foldmirror: '去玩对折看对称', algarea: '去玩面积模型算整式', algfrac: '去玩分式约分', eqsieve: '去玩分式方程过筛子', radical: '去玩二次根式化简', pythag: '去玩勾股定理面积拼图', pargram: '去玩平行四边形推一推', specialquad: '去玩加条件变特殊', datastats: '去玩数据分析算一算', quad: '去玩一元二次方程', growth: '去玩利滚利和韦达', parabola: '去玩抛物线滑杆', spin: '去玩旋转和中心对称', circangle: '去玩圆周角', tangent: '去玩直线和圆切线', sector: '去玩扇形和圆锥', coin: '去玩抛硬币摸红球', tree: '去玩树状图数一数', hyperbola: '去玩双曲线', similar: '去玩相似放大', shadow: '去玩影子测高', trig: '去玩锐角三角函数', slope: '去玩仰角和坡度', project: '去玩投影和三视图', twentyfour: '去玩24点拼一拼', monty: '去玩三门问题', maxarea: '去玩周长面积最大', matches: '去玩火柴棒', mobius: '去玩莫比乌斯带', shopweek: '去玩开店一周', fairgame: '去玩公平游戏', makerule: '去玩造规律', thirteen: '去玩13有几种凑法', maketen: '去玩凑十装满', areamul: '去玩面积模型乘法', fraceq: '去玩分数相等', buildfrac: '去玩造分数', areabuild: '去玩面积建造者', quadmorph: '去玩四边形变形', numplay: '去玩一个数五种样子', fracnumline: '去玩分数变数线' };
+/* ---------- 一个点的全部动画（实验放哪里的答案） ----------
+   动画 = 所有能上手玩的东西（总称）；演示 = 看明白的工具（124 + 4 旗舰）；
+   模拟 = 一个概念一种玩法（8 个）；实验 = 一个问题（9 个创意 + 实验室问题）。
+   一个点有哪些动画，只从这里算，不手写两份：
+     p.demo（内容文件里的主演示）
+     + SIM_LINKS（模拟 → 知识点，只写核对过标题的）
+     + LAB_QUESTIONS 里 points 含该点的演示型问题（实验的家在实验室，点上是第二个门）
+   点页、单元页、年级页都读同一份注册表；演示页下阶段也从注册表生成（见设计文档）。 */
+var CREATIVE_DEMOS = ['thirteen', 'twentyfour', 'monty', 'maxarea', 'matches', 'mobius', 'shopweek', 'fairgame', 'makerule'];
+var SIM_DEMOS = ['maketen', 'areamul', 'fraceq', 'buildfrac', 'areabuild', 'quadmorph', 'numplay', 'fracnumline'];
+function animKind(key) {
+  if (CREATIVE_DEMOS.indexOf(key) >= 0) return '实验';
+  if (SIM_DEMOS.indexOf(key) >= 0) return '模拟';
+  return '演示';
+}
+var SIM_LINKS = {
+  '1.9': ['maketen'],
+  '1.1': ['numplay'],
+  '1.7': ['numplay'],
+  '3.11': ['areamul'],
+  '3.7': ['fraceq', 'buildfrac', 'fracnumline'],
+  '5.10': ['fraceq', 'buildfrac', 'fracnumline'],
+  '3.12': ['areabuild'],
+  '5.6': ['areabuild'],
+  '4.5': ['quadmorph'],
+  '8.13': ['quadmorph'],
+};
+function animsForPoint(id) {
+  const f = findPoint(id);
+  if (!f) return [];
+  const keys = [];
+  const push = k => { if (k && keys.indexOf(k) < 0) keys.push(k); };
+  if (f.point.demo) push(f.point.demo);
+  (SIM_LINKS[id] || []).forEach(push);
+  // 实验室问题：points 含该点的演示型问题也算该点的实验（bench 型没有独立卡片，进不了点页）。
+  if (typeof LAB_QUESTIONS !== 'undefined') {
+    LAB_QUESTIONS.forEach(q => { if (q.demo && q.points && q.points.indexOf(id) >= 0) push(q.demo); });
+  }
+  return keys;
+}
+function animsForUnit(g, ui) {
+  const gd = gradeData(g);
+  if (!gd || !gd.units[ui]) return [];
+  const keys = [];
+  gd.units[ui].points.forEach(p => animsForPoint(p.id).forEach(k => { if (keys.indexOf(k) < 0) keys.push(k); }));
+  return keys;
+}
+function animBtnHtml(key, cls) {
+  const kind = animKind(key);
+  const tag = kind === '演示' ? '' : '【' + kind + '】';
+  return '<button class="' + (cls || 'btn primary') + '" type="button" data-demo-link="demo-' + esc(key) + '">' + tag + (DEMO_LABEL[key] || '去玩演示') + '</button>';
+}
 /* 分步评分：多步骤题拆成一步一步对。steps 是可选字段，没有 steps 的题照旧渲染。
    自评不是机器判题：每一步的对错都是学生自己标的，丢分报告只是把你标错的步骤列出来。 */
 function practiceStepsHtml(q, i, pointId) {
@@ -8969,6 +9032,7 @@ function renderPoint(id) {
   if (!f) return;
   const p = f.point;
   currentPointId = id;
+  const anims = animsForPoint(id);
   const recallHtml = p.recall
     ? '<div class="point-sec recall" id="sec-recall"><h4>先考一考（先想，再往下看）</h4><p>' + esc(p.recall.q) + '</p>' +
       '<button class="btn ghost small qa-btn" type="button" data-recall="1">想好了，看答案</button>' +
@@ -9008,7 +9072,7 @@ function renderPoint(id) {
     '<div class="point-sec warn" id="sec-wrong"><h4>容易错</h4><p>错法：' + esc(p.wrong) + '</p><p>为什么错：' + esc(p.wrongWhy) + '</p></div>' +
     '<div class="point-sec" id="sec-visual"><h4>看图学</h4><p>' + esc(p.visual) + '</p></div>' +
     '<div class="point-sec" id="sec-try"><h4>动手试一试</h4><p>' + esc(p.tryIt) + '</p>' +
-    (p.demo ? '<div class="btn-row"><button class="btn primary" type="button" data-demo-link="demo-' + esc(p.demo) + '">' + (DEMO_LABEL[p.demo] || '去玩演示') + '</button></div>' : '') + '</div>' +
+    (anims.length ? '<p class="muted">这个点的动画（演示 / 模拟 / 实验），每种方法一个：</p><div class="btn-row">' + anims.map(k => animBtnHtml(k)).join('') + '</div>' : '') + '</div>' +
     // 讲回来只包一层引号：内容文件里的 explainBack 本身已经带了 “ ”，
     // 以前这里又包了一层，全站 142 条都显示成 ““… ””（2026-11-06 真机审计第 10 条）。
     '<div class="point-sec talk" id="sec-talk"><h4>讲回来</h4><p>' + esc(p.explainBack) + '</p></div>' +
@@ -10414,6 +10478,7 @@ const creativePanelsEl = document.getElementById('creativePanels');
 const creativeLabelEl = document.getElementById('creativeLabel');
 const simPanelsEl = document.getElementById('simPanels');
 const simLabelEl = document.getElementById('simLabel');
+const demoLabelEl = document.getElementById('demoLabel');
 const demoGridEl = document.getElementById('demoGrid');
 const whySec = document.getElementById('why');
 const labSec = document.getElementById('lab');
@@ -10500,6 +10565,7 @@ function applyView() {
   setHidden(creativeLabelEl, view !== 'demos');
   setHidden(simPanelsEl, view !== 'demos');
   setHidden(simLabelEl, view !== 'demos');
+  setHidden(demoLabelEl, view !== 'demos');
   setHidden(demoGridEl, !demoLeaf); // 演示卡片网格只在某一个演示的叶子视图里出现，列表视图只留演示面板
   setHidden(demosSec.querySelector('h2'), demoLeaf);
   setHidden(demosSec.querySelector('.section-sub'), demoLeaf);
@@ -11775,7 +11841,7 @@ function labEnterQuestion(qid) {
     labChallengeAttempts.push(qid);
     labTrace('挑战：开始做「' + q.title + '」', true);
   }
-  if (q.demo) { navGo('demo-' + q.demo); return; }
+  if (q.demo) { goDemoFromHere('demo-' + q.demo); return; } // 演示压在实验室上面，返回回实验室（以前走 navGo，返回落到演示总站）
   // 工作间问题：留在实验室，摆好这道题的架势（给的是题面，不是答案）。
   if (q.bench === 'fracadd') {
     labFaA = { n: 1, d: 2 }; labFaB = { n: 1, d: 3 }; labFaTouched = { A: false, B: false }; labFaRender();
