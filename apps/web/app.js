@@ -54,25 +54,32 @@ const GRADES = {
 /* ---------- 进度（原型：只记三个演示是否玩过） ---------- */
 const tried = new Set();
 const FLAGSHIP = ['fraction', 'balance', 'function'];
+// 刷新后进度还在：已体验的演示存在本地（只存本机，不上传）。
+try { JSON.parse(lsGet('math-tried-demos-v1') || '[]').forEach(k => tried.add(k)); } catch (e) {}
+function renderTried() {
+  document.getElementById('progressCount').textContent = tried.size + ' / 3';
+  document.getElementById('progressFill').style.width = (tried.size / 3 * 100) + '%';
+  const pf = document.getElementById('panelProgFill');
+  if (pf) pf.style.width = (tried.size / 3 * 100) + '%';
+  const pt = document.getElementById('panelProgTx');
+  if (pt) pt.textContent = tried.size + ' / 3 个演示';
+  const dp = document.getElementById('panelDemoProg');
+  if (dp) dp.style.width = (tried.size / 3 * 100) + '%';
+  const dt = document.getElementById('panelDemoTx');
+  if (dt) dt.textContent = '3 个演示 · ' + tried.size + ' 已体验';
+  document.getElementById('progressText').textContent =
+    tried.size === 3 ? '三个演示都玩过了！下一步可以选一个年级做完整单元。'
+    : '已体验 ' + tried.size + ' / 3 个演示，继续玩剩下的吧。';
+}
 function markTried(key) {
   if (!FLAGSHIP.includes(key)) return; // “为什么”小实验不计入 3 个招牌演示的进度
   if (!tried.has(key)) {
     tried.add(key);
-    document.getElementById('progressCount').textContent = tried.size + ' / 3';
-    document.getElementById('progressFill').style.width = (tried.size / 3 * 100) + '%';
-    const pf = document.getElementById('panelProgFill');
-    if (pf) pf.style.width = (tried.size / 3 * 100) + '%';
-    const pt = document.getElementById('panelProgTx');
-    if (pt) pt.textContent = tried.size + ' / 3 个演示';
-    const dp = document.getElementById('panelDemoProg');
-    if (dp) dp.style.width = (tried.size / 3 * 100) + '%';
-    const dt = document.getElementById('panelDemoTx');
-    if (dt) dt.textContent = '3 个演示 · ' + tried.size + ' 已体验';
-    document.getElementById('progressText').textContent =
-      tried.size === 3 ? '三个演示都玩过了！下一步可以选一个年级做完整单元。'
-      : '已体验 ' + tried.size + ' / 3 个演示，继续玩剩下的吧。';
+    lsSet('math-tried-demos-v1', JSON.stringify([...tried]));
+    renderTried();
   }
 }
+renderTried();
 
 /* ---------- 第 3 轮学习技巧落到内容里（提取、间隔、交叉、渐撤、反馈、校准） ----------
    只记在本地（localStorage；打不开就只记在内存里，不上传、不建账号）。
@@ -204,9 +211,10 @@ function renderPoint(id) {
     '<div class="point-sec talk"><h4>讲回来</h4><p>“' + esc(p.explainBack) + '”</p></div>' +
     '<div class="point-sec"><h4>练一练</h4><p class="muted">第一道题提示直接给，第二道题先自己做，卡住了再点“要提示”。答完先对答案，再告诉我你答对没、有把握没——答错的和没把握的，明天会回来找你。</p>' + p.practice.map((q, i) =>
       '<div class="qa"><p>' + (i + 1) + '. ' + esc(q.q) + '</p>' +
+      (i === 0 ? '<p class="hint">提示：' + esc(q.hint) + '</p>' : '') +
       (i === 1 ? '<button class="btn ghost small qa-btn" type="button" data-hint="' + i + '">要提示</button><p class="hint" data-hint-t="' + i + '" hidden>提示：' + esc(q.hint) + '</p>' : '') +
       '<button class="btn ghost small qa-btn" type="button" data-qa="' + i + '">看答案</button>' +
-      '<p class="qa-a" data-qa-a="' + i + '" hidden>答案：' + esc(q.answer) + (i === 0 ? '（提示：' + esc(q.hint) + '）' : '') + '</p>' +
+      '<p class="qa-a" data-qa-a="' + i + '" hidden>答案：' + esc(q.answer) + '</p>' +
       '<div class="qa-mark" data-qa-mark="' + i + '" data-point="' + esc(id) + '" hidden>' +
       '<p>你答对了吗？ <button class="btn small" type="button" data-mark="right">答对了</button> <button class="btn small" type="button" data-mark="wrong">答错了</button></p>' +
       '<p>答之前有把握吗？ <button class="btn small" type="button" data-conf="yes">有把握</button> <button class="btn small" type="button" data-conf="no">没把握</button></p>' +
@@ -631,11 +639,13 @@ const footerEl = document.getElementById('pageFooter');
 function viewForKey(key) {
   if (key === 'home') return 'home';
   if (key === 'grades') return 'grades';
+  // 注意顺序：'grade-3-mix' / 'grade-3-review' 也以 'grade-' 开头，必须先精确匹配，
+  // 否则会被下面的 startsWith('grade-') 吞掉，混着练和今天复习就会显示成年级详情（2026-11-06 真机测出）。
+  if (key === 'grade-3-mix') return 'mix';
+  if (key === 'grade-3-review') return 'review';
   if (key.startsWith('grade-')) return 'grade-detail';
   if (key.startsWith('unit-')) return 'unit-detail';
   if (key.startsWith('point-')) return 'point-detail';
-  if (key === 'grade-3-mix') return 'mix';
-  if (key === 'grade-3-review') return 'review';
   if (key === 'dimensions') return 'dimensions';
   if (key.startsWith('dim-')) return 'dim-detail';
   if (key === 'path') return 'path';
@@ -760,7 +770,18 @@ function navGo(key) {
     if (parent) {
       const pdef = NAV_DEFS[parent];
       if (top.key === parent) { navStack.push(entry); }
-      else { navStack = [navStack[0], { key: parent, crumbs: pdef.crumbs, target: pdef.target }, entry]; }
+      else {
+        // 跨分支跳进来时重建完整祖先链：只补一级父级会让栈比面包屑少一级，
+        // 点面包屑的中间级就会跳错（2026-11-06 真机测出：单元页点“3 年级”没反应）。
+        const chain = [entry];
+        let k = parent;
+        while (k) {
+          const d = NAV_DEFS[k];
+          chain.unshift({ key: k, crumbs: d.crumbs, target: d.target });
+          k = parentOf(k);
+        }
+        navStack = [navStack[0], ...chain];
+      }
     } else { navStack.push(entry); }
     enterNavEntry(navStack[navStack.length - 1]);
   }
