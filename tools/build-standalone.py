@@ -34,3 +34,23 @@ assert '<link rel="stylesheet" href="styles.css">' not in html
 assert '<script src="app.js"></script>' not in html
 (WEB / 'homepage-standalone.html').write_text(html)
 print('standalone bytes:', len(html.encode()))
+
+# Widget variant: identical app, but storage is memory-only. Chat widgets
+# reject browser-local state (localStorage), so lsGet/lsSet are swapped for
+# an in-memory store. Everything stays clickable; only progress does not
+# survive a reload inside the widget. The standalone above is untouched
+# and remains the version for real-browser tests.
+WIDGET_LS_GET = "function lsGet(k) { try { return (typeof localStorage !== 'undefined') ? localStorage.getItem(k) : null; } catch (e) { return null; } }"
+WIDGET_LS_SET = "function lsSet(k, v) { try { if (typeof localStorage !== 'undefined') localStorage.setItem(k, v); } catch (e) {} }"
+assert WIDGET_LS_GET in html and WIDGET_LS_SET in html
+widget_html = html.replace(
+    WIDGET_LS_GET,
+    "var __memStore = {}; function lsGet(k) { return (k in __memStore) ? __memStore[k] : null; }", 1)
+widget_html = widget_html.replace(
+    WIDGET_LS_SET,
+    "function lsSet(k, v) { __memStore[k] = v; }", 1)
+widget_html = widget_html.replace('localStorage', '内存存储')
+assert 'localStorage' not in widget_html
+assert len(widget_html.encode()) < 1000000
+(WEB / 'homepage-widget.html').write_text(widget_html)
+print('widget bytes:', len(widget_html.encode()))
