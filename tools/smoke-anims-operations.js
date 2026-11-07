@@ -1,6 +1,6 @@
 // Smoke tests for apps/web/anims-operations.js (no DOM: a tiny fake DOM stub).
 // Run: node tools/smoke-anims-operations.js
-// Checks: 10 registry anims present with valid fields, points exist in the
+// Checks: 15 registry anims present with valid fields, points exist in the
 // real grade files, keys do not collide with hand-wired demos or band anims,
 // no forbidden script-close tag or braces inside strings, each render runs
 // in the stub without throwing, tiers + discovery are wired, and each
@@ -119,12 +119,17 @@ const EXPECTED = [
   { key: 'op-bracket', grade: 4, kind: '模拟', points: ['4.9'] },
   { key: 'op-assoc', grade: 4, kind: '模拟', points: ['4.10'] },
   { key: 'op-maketen', grade: 2, kind: '模拟', points: ['1.9', '2.3'] },
-  { key: 'op-powroot', grade: 8, kind: '模拟', points: ['8.5', '8.10'] }
+  { key: 'op-powroot', grade: 8, kind: '模拟', points: ['8.5', '8.10'] },
+  { key: 'op-addlen', grade: 2, kind: '模拟', points: ['1.15', '2.2'] },
+  { key: 'op-compare', grade: 1, kind: '模拟', points: ['1.1'] },
+  { key: 'op-nine', grade: 2, kind: '模拟', points: ['2.5'] },
+  { key: 'op-comden', grade: 5, kind: '实验', points: ['5.11'] },
+  { key: 'op-decbreak', grade: 4, kind: '实验', points: ['4.13'] }
 ];
 
 // ---------- static checks ----------
-check('registry has exactly the 10 operations anims',
-  Object.keys(REG).length === 10 && EXPECTED.every(function (e) { return !!REG[e.key]; }));
+check('registry has exactly the 15 operations anims',
+  Object.keys(REG).length === 15 && EXPECTED.every(function (e) { return !!REG[e.key]; }));
 EXPECTED.forEach(function (e) {
   const a = REG[e.key] || {};
   check(e.key + ': fields valid',
@@ -194,6 +199,11 @@ check('arith: associative + subtraction contrast',
   25 + 17 + 13 === 55 && (10 - 3) - 2 === 5 && 10 - (3 - 2) === 9);
 check('arith: make-ten / break-ten', 8 + 5 === 13 && 13 - 5 === 8 && 9 + 6 === 15);
 check('arith: powers and roots', 3 * 3 === 9 && 5 * 5 * 5 === 125 && 7 * 7 === 49 && 12 * 12 === 144);
+check('arith: length addition', 7 + 5 === 12 && 23 + 15 === 38 && 38 + 27 === 65);
+check('arith: comparison differences', 7 - 5 === 2 && 12 - 8 === 4 && 15 - 9 === 6);
+check('arith: nine times table', 9 * 1 === 9 && 9 * 2 === 18 && 9 * 3 === 27 && 9 * 4 === 36 && 9 * 5 === 45 && 9 * 6 === 54 && 9 * 7 === 63 && 9 * 8 === 72 && 9 * 9 === 81);
+check('arith: common denominators', (1 * 3 + 1 * 2) / 6 === 5 / 6 && (3 * 8 / 4 - 1 * 8 / 2) / 8 === 1 / 4 && (2 * 12 / 3 + 1 * 12 / 6) / 12 === 5 / 6);
+check('arith: decimal subtraction by breaking', Math.abs(5.3 - 2.86 - 2.44) < 1e-9 && Math.abs(4.2 - 1.75 - 2.45) < 1e-9 && Math.abs(7.05 - 3.48 - 3.57) < 1e-9);
 
 // ---------- render helpers ----------
 function renderAnim(key) {
@@ -455,6 +465,137 @@ function tierCount(k) { const t = tiersByKey[k]; return t ? t.doneLog.length : -
   for (let i = 0; i < 4; i++) click(K + '-s-plus'); // s=7
   click(K + '-verify');
   check(K + ': square root of 49 is 7, all tiers done', (txt(K + '-msg') || '').indexOf('√49 = 7') >= 0 && tierCount(K) === 3);
+})();
+
+// ---------- (11) op-addlen ----------
+(function () {
+  const K = 'op-addlen';
+  const host = renderAnim(K);
+  check(K + ': title + first problem shown', host.innerHTML.indexOf('长度条相加') >= 0 && host.innerHTML.indexOf('7 + 5') >= 0);
+  click(K + '-guess-1'); // 11 is wrong for 7+5
+  check(K + ': wrong guess is refused', (txt(K + '-msg') || '').indexOf('不是 11') >= 0);
+  click(K + '-guess-0'); // 12
+  check(K + ': right guess accepted', (txt(K + '-msg') || '').indexOf('猜对了') >= 0);
+  click(K + '-join');
+  check(K + ': 7+5 joins to 12, one ten + two ones', (txt(K + '-eq') || '').indexOf('7 + 5 = 12') >= 0 && has(K + '-bars', '一共 12 个格') && hasTier(K, 0));
+  click(K + '-level-1'); // 23+15
+  click(K + '-guess-0'); // 38
+  click(K + '-join');
+  check(K + ': 23+15 joins to 38', (txt(K + '-eq') || '').indexOf('23 + 15 = 38') >= 0 && hasTier(K, 1));
+  click(K + '-level-2'); // 38+27
+  click(K + '-guess-0'); // 65
+  click(K + '-join');
+  check(K + ': 38+27 joins to 65, all tiers done', (txt(K + '-eq') || '').indexOf('38 + 27 = 65') >= 0 && tierCount(K) === 3);
+})();
+
+// ---------- (12) op-compare ----------
+(function () {
+  const K = 'op-compare';
+  const host = renderAnim(K);
+  check(K + ': title + first problem shown', host.innerHTML.indexOf('比多少') >= 0 && host.innerHTML.indexOf('7 比 5') >= 0);
+  click(K + '-guess-1'); // 3 is wrong for 7 vs 5
+  check(K + ': wrong guess is refused', (txt(K + '-msg') || '').indexOf('不是多 3 个') >= 0);
+  click(K + '-guess-0'); // 2
+  check(K + ': right guess accepted', (txt(K + '-msg') || '').indexOf('猜对了') >= 0);
+  for (let i = 0; i < 5; i++) click(K + '-pair');
+  check(K + ': 7 vs 5 pairs out, 2 left over', (txt(K + '-msg') || '').indexOf('配完了') >= 0 && (txt(K + '-msg') || '').indexOf('多 2') >= 0 && hasTier(K, 0));
+  click(K + '-level-1'); // 12 vs 8
+  click(K + '-guess-0'); // 4
+  for (let i = 0; i < 8; i++) click(K + '-pair');
+  check(K + ': 12 vs 8 pairs out, 4 left over', (txt(K + '-msg') || '').indexOf('多 4') >= 0 && hasTier(K, 1));
+  click(K + '-level-2'); // 15 vs 9
+  click(K + '-guess-0'); // 6
+  for (let i = 0; i < 9; i++) click(K + '-pair');
+  check(K + ': 15 vs 9 pairs out, 6 left over, all tiers done', (txt(K + '-msg') || '').indexOf('多 6') >= 0 && tierCount(K) === 3);
+})();
+
+// ---------- (13) op-nine ----------
+(function () {
+  const K = 'op-nine';
+  const host = renderAnim(K);
+  check(K + ': title + first question shown', host.innerHTML.indexOf('9 的口诀有规律') >= 0 && host.innerHTML.indexOf('十位上的数') >= 0);
+  click(K + '-row-2');
+  check(K + ': 9x2 splits into tens 1, ones 8', (txt(K + '-row-read') || '').indexOf('9×2=18') >= 0 && (txt(K + '-row-read') || '').indexOf('十位 1，个位 8') >= 0);
+  click(K + '-guess-1'); // tens getting smaller is wrong
+  check(K + ': wrong pattern is refused', (txt(K + '-msg') || '').indexOf('不是') >= 0);
+  click(K + '-guess-0'); // tens grow by 1
+  check(K + ': right pattern accepted', (txt(K + '-msg') || '').indexOf('猜对了') >= 0);
+  click(K + '-reveal');
+  check(K + ': tens 0,1,2,3 revealed, tier done', (txt(K + '-reveal-tx') || '').indexOf('十位：0、1、2、3') >= 0 && hasTier(K, 0));
+  click(K + '-level-1'); // 9x5..9x9, ones shrink
+  click(K + '-row-7');
+  check(K + ': 9x7 splits into tens 6, ones 3', (txt(K + '-row-read') || '').indexOf('9×7=63') >= 0 && (txt(K + '-row-read') || '').indexOf('6 + 3 = 9') >= 0);
+  click(K + '-guess-1'); // ones getting smaller
+  click(K + '-reveal');
+  check(K + ': ones 5,4,3,2,1 revealed, tier done', (txt(K + '-reveal-tx') || '').indexOf('个位：5、4、3、2、1') >= 0 && hasTier(K, 1));
+  click(K + '-level-2'); // digit sums are all 9
+  click(K + '-guess-0'); // 9
+  click(K + '-reveal');
+  check(K + ': every row sums to 9, all tiers done', (txt(K + '-reveal-tx') || '').indexOf('每一行都是 9') >= 0 && tierCount(K) === 3);
+})();
+
+// ---------- (14) op-comden ----------
+(function () {
+  const K = 'op-comden';
+  const host = renderAnim(K);
+  check(K + ': title + first problem shown', host.innerHTML.indexOf('通分') >= 0 && host.innerHTML.indexOf('1/2 + 1/3') >= 0);
+  click(K + '-guess-1'); // 2/5 is the naive wrong answer
+  check(K + ': naive guess is refused', (txt(K + '-msg') || '').indexOf('不是 2/5') >= 0);
+  click(K + '-guess-0'); // 5/6
+  check(K + ': right guess accepted', (txt(K + '-msg') || '').indexOf('猜对了') >= 0);
+  click(K + '-cuta-0'); // cut 1/2 into 2
+  click(K + '-cutb-0'); // cut 1/3 into 3
+  check(K + ': mismatched cuts do not fit', (txt(K + '-msg') || '').indexOf('拼不到一起') >= 0);
+  click(K + '-cuta-2'); // cut 1/2 into 6
+  click(K + '-cutb-1'); // cut 1/3 into 6
+  check(K + ': matching cuts line up', (txt(K + '-msg') || '').indexOf('可以合起来了') >= 0);
+  click(K + '-count');
+  check(K + ': 1/2+1/3 counts to 5/6, tier done', has(K + '-bars', '5/6') && hasTier(K, 0));
+  click(K + '-level-1'); // 3/4-1/2: cut both into 4
+  click(K + '-guess-0'); // 1/4
+  click(K + '-cuta-0');
+  click(K + '-cutb-1');
+  click(K + '-count');
+  check(K + ': 3/4-1/2 counts to 1/4, tier done', has(K + '-bars', '1/4') && hasTier(K, 1));
+  click(K + '-level-2'); // 2/3+1/6: cut both into 6
+  click(K + '-guess-0'); // 5/6
+  click(K + '-cuta-1');
+  click(K + '-cutb-0');
+  click(K + '-count');
+  check(K + ': 2/3+1/6 counts to 5/6, all tiers done', has(K + '-bars', '5/6') && tierCount(K) === 3);
+})();
+
+// ---------- (15) op-decbreak ----------
+(function () {
+  const K = 'op-decbreak';
+  const host = renderAnim(K);
+  check(K + ': title + first problem shown', host.innerHTML.indexOf('小数减法') >= 0 && host.innerHTML.indexOf('5.3 − 2.86') >= 0);
+  click(K + '-guess-1'); // 2.54 is wrong for 5.3-2.86
+  check(K + ': wrong guess is refused', (txt(K + '-msg') || '').indexOf('不是 2.54') >= 0);
+  click(K + '-guess-0'); // 2.44
+  check(K + ': right guess accepted', (txt(K + '-msg') || '').indexOf('猜对了') >= 0);
+  click(K + '-subtract'); // too early: hundredths are short
+  check(K + ': subtracting early is refused, hundredths short', (txt(K + '-msg') || '').indexOf('不够减') >= 0);
+  click(K + '-smash-tenth');
+  check(K + ': smashing a tenth makes 10 hundredths', has(K + '-counts', '0.1 有 2 个') && has(K + '-counts', '0.01 有 10 个'));
+  click(K + '-smash-whole');
+  check(K + ': smashing a whole makes 12 tenths', has(K + '-counts', '整体 4 个') && has(K + '-counts', '0.1 有 12 个'));
+  click(K + '-subtract');
+  check(K + ': 5.3-2.86 breaks to 2.44, tier done', (txt(K + '-result') || '').indexOf('5.3 − 2.86 = 2.44') >= 0 && hasTier(K, 0));
+  click(K + '-level-1'); // 4.2-1.75
+  click(K + '-guess-0'); // 2.45
+  click(K + '-smash-tenth');
+  click(K + '-smash-whole');
+  click(K + '-subtract');
+  check(K + ': 4.2-1.75 breaks to 2.45, tier done', (txt(K + '-result') || '').indexOf('4.2 − 1.75 = 2.45') >= 0 && hasTier(K, 1));
+  click(K + '-level-2'); // 7.05-3.48: whole first (no tenths to smash), then a tenth
+  click(K + '-guess-0'); // 3.57
+  click(K + '-smash-tenth'); // no tenths yet: refused with a hint
+  check(K + ': smashing a tenth with none is refused', (txt(K + '-msg') || '').indexOf('没有 0.1 可以敲了') >= 0);
+  click(K + '-smash-whole');
+  click(K + '-smash-tenth');
+  click(K + '-subtract');
+  check(K + ': 7.05-3.48 breaks to 3.57, all tiers done', (txt(K + '-result') || '').indexOf('7.05 − 3.48 = 3.57') >= 0 && tierCount(K) === 3);
 })();
 
 // ---------- wiring: tiers + discovery + markTried for every anim ----------
