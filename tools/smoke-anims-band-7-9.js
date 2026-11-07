@@ -1,4 +1,4 @@
-// Smoke tests for apps/web/anims-band-7-9.js (7.1–8.16, 74 animations).
+// Smoke tests for apps/web/anims-band-7-9.js (7.1–9.16, 100 animations).
 // Minimal DOM stub + real registerAnim in a vm; no app.js needed because
 // render() guards its app.js helpers with typeof checks — the stub versions
 // below record calls so wiring (tiers / discovery / markTried) is verified.
@@ -104,6 +104,11 @@ const g8src = fs.readFileSync(path.join(root, 'content/grades/grade-8.js'), 'utf
 const g8ids = new Set();
 while ((m = idRe.exec(g8src)) !== null) g8ids.add(m[1]);
 
+// ---------- grade-9 point ids (must really exist) ----------
+const g9src = fs.readFileSync(path.join(root, 'content/grades/grade-9.js'), 'utf8');
+const g9ids = new Set();
+while ((m = idRe.exec(g9src)) !== null) g9ids.add(m[1]);
+
 const EXPECTED = [
   ['m71-numline', '7.1', '数轴距离法', '模拟'],
   ['m71-scene', '7.1', '真实情境法', '实验'],
@@ -179,20 +184,46 @@ const EXPECTED = [
   ['m815-ineq', '8.15', '方程与不等式的图像解法', '模拟'],
   ['m816-var', '8.16', '方差是距离的平均法', '模拟'],
   ['m816-mode', '8.16', '众数看频数峰法', '模拟'],
+  ['m91-tiles', '9.1', '配方法拼图法', '模拟'],
+  ['m91-mid', '9.1', '中点±偏差法', '演示'],
+  ['m93-plot', '9.3', '描点连线法', '模拟'],
+  ['m93-vertex', '9.3', 'b 的轨迹法', '模拟'],
+  ['m93-forms', '9.3', '三种形式互化法', '演示'],
+  ['m94-flight', '9.4', '抛物线运动轨迹法', '模拟'],
+  ['m95-coord', '9.5', '坐标旋转法', '模拟'],
+  ['m95-life', '9.5', '生活旋转法', '实验'],
+  ['m96-isos', '9.6', '等腰三角形证明法', '演示'],
+  ['m96-thales', '9.6', '直径对直角法', '模拟'],
+  ['m97-centers', '9.7', '外心内心作图法', '模拟'],
+  ['m97-shortest', '9.7', '最短距离证切线法', '模拟'],
+  ['m98-rearrange', '9.8', '扇形切分重排法', '模拟'],
+  ['m99-sort', '9.9', '事件分类法', '实验'],
+  ['m99-indep', '9.9', '独立性法', '模拟'],
+  ['m910-table', '9.10', '列表法', '演示'],
+  ['m911-life', '9.11', '生活反比例法', '模拟'],
+  ['m911-vs', '9.11', '正比例对比法', '模拟'],
+  ['m912-scale', '9.12', '地图比例尺法', '模拟'],
+  ['m913-parallel', '9.13', '平行线截比例法', '模拟'],
+  ['m913-thales', '9.13', '泰勒斯量金字塔法', '实验'],
+  ['m914-unit', '9.14', '单位圆法', '模拟'],
+  ['m915-depress', '9.15', '俯角法', '模拟'],
+  ['m915-twice', '9.15', '两次测量塔高法', '模拟'],
+  ['m916-build', '9.16', '三视图搭积木法', '实验'],
+  ['m916-net', '9.16', '展开图法', '模拟'],
 ];
-check('74 animations registered', Object.keys(REG).length === 74);
+check('100 animations registered', Object.keys(REG).length === 100);
 EXPECTED.forEach(function (e) {
   const a = REG[e[0]];
   check(e[0] + ' registered with title/grade/kind/points',
-    !!a && a.title.indexOf(e[2]) === 0 && a.grade === (e[1].split('.')[0] === '7' ? 7 : 8) && a.kind === e[3] &&
+    !!a && a.title.indexOf(e[2]) === 0 && a.grade === Number(e[1].split('.')[0]) && a.kind === e[3] &&
     JSON.stringify(a.points) === JSON.stringify([e[1]]) &&
-    typeof a.render === 'function' && (g7ids.has(e[1]) || g8ids.has(e[1])));
+    typeof a.render === 'function' && (g7ids.has(e[1]) || g8ids.has(e[1]) || g9ids.has(e[1])));
 });
 
 // 改前代码（空骨架）上：上面的注册检查会 FAIL，这里直接退出，
 // 后面的走查不再跑——否则 childByText 会拿到 undefined 而抛错，
 // 那就不是“干净失败”而是整脚本崩掉。
-if (Object.keys(REG).length !== 74) {
+if (Object.keys(REG).length !== 100) {
   console.log('\nsmoke-anims-band-7-9: ' + pass + ' passed, ' + fail + ' failed (registry incomplete, play-throughs skipped)');
   process.exit(1);
 }
@@ -439,12 +470,88 @@ check('m816-var: variance of 1,3,5,7 is 5', msgOf('m816-var').indexOf('方差是
 click(gid('m816-mode-g0')); click(gid('m816-mode-bars'));
 check('m816-mode: mode is 155', msgOf('m816-mode').indexOf('众数是 155') >= 0);
 
+// 9.1
+click(gid('m91-tiles-g0')); click(gid('m91-tiles-fill'));
+check('m91-tiles: (x+2)^2 = 9 gives x = 1 or -5', msgOf('m91-tiles').indexOf('(x＋2)²＝9') >= 0 && msgOf('m91-tiles').indexOf('你猜对了') >= 0);
+click(gid('m91-mid-g0')); click(gid('m91-mid-solve'));
+check('m91-mid: midpoint 2.5, deviation 0.5, roots 2 and 3', msgOf('m91-mid').indexOf('x＝2 或 x＝3') >= 0 && msgOf('m91-mid').indexOf('你猜对了') >= 0);
+// 9.3
+click(gid('m93-plot-g0')); click(gid('m93-plot-plot'));
+check('m93-plot: y=x^2 at x=2 is 4', msgOf('m93-plot').indexOf('(2，4)') >= 0 && msgOf('m93-plot').indexOf('你猜对了') >= 0);
+click(gid('m93-vertex-g0')); input(gid('m93-vertex-slider'), '2');
+check('m93-vertex: b=2 gives vertex (-1, 0)', msgOf('m93-vertex').indexOf('(-1，0)') >= 0 && msgOf('m93-vertex').indexOf('你猜对了') >= 0);
+click(gid('m93-forms-g0')); click(gid('m93-forms-convert'));
+check('m93-forms: x^2-3x+2 vertex form (x-1.5)^2-0.25', gid('m93-forms-forms').textContent.indexOf('(x－1.5)²－0.25') >= 0 && msgOf('m93-forms').indexOf('你猜对了') >= 0);
+// 9.4
+click(gid('m94-flight-g0')); click(gid('m94-flight-peak'));
+check('m94-flight: -x^2+4x peaks at 4 m', msgOf('m94-flight').indexOf('最高 4 米') >= 0 && msgOf('m94-flight').indexOf('你猜对了') >= 0);
+// 9.5
+click(gid('m95-coord-g0')); click(gid('m95-coord-turn'));
+check('m95-coord: (2,1) rotated 90 deg to (-1,2)', msgOf('m95-coord').indexOf('(-1，2)') >= 0 && msgOf('m95-coord').indexOf('你猜对了') >= 0);
+click(gid('m95-life-g0'));
+click(gid('m95-life-turn')); click(gid('m95-life-turn')); click(gid('m95-life-turn')); click(gid('m95-life-turn'));
+check('m95-life: 4-blade windmill back after 4 turns of 90 deg', msgOf('m95-life').indexOf('回到原样') >= 0 && msgOf('m95-life').indexOf('你猜对了') >= 0);
+// 9.6
+click(gid('m96-isos-g0')); click(gid('m96-isos-move'));
+check('m96-isos: C at 230 deg, angle ACB = 60 deg', msgOf('m96-isos').indexOf('60°') >= 0 && msgOf('m96-isos').indexOf('你猜对了') >= 0);
+click(gid('m96-thales-g0')); click(gid('m96-thales-c0'));
+check('m96-thales: angle subtended by diameter is 90 deg', msgOf('m96-thales').indexOf('90°') >= 0 && msgOf('m96-thales').indexOf('你猜对了') >= 0);
+// 9.7
+click(gid('m97-centers-g0')); click(gid('m97-centers-draw'));
+check('m97-centers: circumcenter of 3-4-5 is (2, 1.5)', gid('m97-centers-svg').innerHTML.indexOf('外心 (2，1.5)') >= 0 && msgOf('m97-centers').indexOf('你猜对了') >= 0);
+click(gid('m97-shortest-g0')); click(gid('m97-shortest-t0'));
+check('m97-shortest: OP=5, r=4, shortest PT = 1', msgOf('m97-shortest').indexOf('最短') >= 0 && msgOf('m97-shortest').indexOf('你猜对了') >= 0);
+// 9.8
+click(gid('m98-rearrange-g0')); click(gid('m98-rearrange-cut'));
+check('m98-rearrange: sector r=6 rearranged area 6pi', msgOf('m98-rearrange').indexOf('6π') >= 0 && msgOf('m98-rearrange').indexOf('你猜对了') >= 0);
+// 9.9
+click(gid('m99-sort-g0')); click(gid('m99-sort-put'));
+check('m99-sort: sun rising in east is a certain event', msgOf('m99-sort').indexOf('必然事件') >= 0 && msgOf('m99-sort').indexOf('你猜对了') >= 0);
+click(gid('m99-indep-g0')); click(gid('m99-indep-toss'));
+check('m99-indep: after 3 heads, next head still 1/2', msgOf('m99-indep').indexOf('还是 1/2') >= 0 && msgOf('m99-indep').indexOf('你猜对了') >= 0);
+// 9.10
+click(gid('m910-table-g0')); click(gid('m910-table-draw'));
+check('m910-table: sum 7 has 6 of 36, probability 1/6', msgOf('m910-table').indexOf('6 个') >= 0 && msgOf('m910-table').indexOf('1/6') >= 0 && msgOf('m910-table').indexOf('你猜对了') >= 0);
+// 9.11
+click(gid('m911-life-g0')); input(gid('m911-life-slider'), '60');
+check('m911-life: 60 km at 60 km/h takes 1 h', msgOf('m911-life').indexOf('t＝1') >= 0 && msgOf('m911-life').indexOf('你猜对了') >= 0);
+click(gid('m911-vs-g0')); input(gid('m911-vs-slider'), '2');
+check('m911-vs: at x=2, 2x=4 beats 6/x=3', msgOf('m911-vs').indexOf('正比例大') >= 0 && msgOf('m911-vs').indexOf('你猜对了') >= 0);
+// 9.12
+click(gid('m912-scale-g0')); click(gid('m912-scale-calc'));
+check('m912-scale: 4 cm at 1:50000 is 2 km', msgOf('m912-scale').indexOf('2 千米') >= 0 && msgOf('m912-scale').indexOf('你猜对了') >= 0);
+// 9.13
+click(gid('m913-parallel-g0')); input(gid('m913-parallel-slider'), '2');
+check('m913-parallel: AD=2, AB=6, AC=9 gives AE=3', msgOf('m913-parallel').indexOf('AE＝9×1/3＝3') >= 0 && msgOf('m913-parallel').indexOf('你猜对了') >= 0);
+click(gid('m913-thales-g0')); click(gid('m913-thales-sun'));
+check('m913-thales: 1 m stick, 1.5 m shadow, 12 m pole shadow gives 8 m', msgOf('m913-thales').indexOf('8 米') >= 0 && msgOf('m913-thales').indexOf('你猜对了') >= 0);
+// 9.14
+click(gid('m914-unit-g0')); input(gid('m914-unit-slider'), '30');
+check('m914-unit: sin30 = 1/2', msgOf('m914-unit').indexOf('sin30°＝1/2') >= 0 && msgOf('m914-unit').indexOf('你猜对了') >= 0);
+// 9.15
+click(gid('m915-depress-g0')); click(gid('m915-depress-look'));
+check('m915-depress: 20 m building, 45 deg depression, 20 m away', msgOf('m915-depress').indexOf('20 米') >= 0 && msgOf('m915-depress').indexOf('你猜对了') >= 0);
+click(gid('m915-twice-g0')); click(gid('m915-twice-measure'));
+check('m915-twice: 30 to 45 deg over 20 m gives tower about 27.32 m', msgOf('m915-twice').indexOf('27.32') >= 0 && msgOf('m915-twice').indexOf('你猜对了') >= 0);
+// 9.16
+click(gid('m916-build-g0'));
+(function () {
+  const kids = gid('m916-build-stacks').children;
+  const byIdIn = function (id) { return kids.find(function (c) { return c.id === id; }); };
+  click(byIdIn('m916-build-add-0')); click(byIdIn('m916-build-add-0'));
+  click(byIdIn('m916-build-add-1')); click(byIdIn('m916-build-add-2'));
+})();
+click(gid('m916-build-check'));
+check('m916-build: stacks 2/1/1 match the three views', msgOf('m916-build').indexOf('对上了') >= 0 && msgOf('m916-build').indexOf('你猜对了') >= 0);
+click(gid('m916-net-g0')); click(gid('m916-net-fold'));
+check('m916-net: 1-4-1 net folds into a cube', msgOf('m916-net').indexOf('正好 6 个面') >= 0 && msgOf('m916-net').indexOf('你猜对了') >= 0);
+
 // ---------- discovery + markTried wiring ----------
 gid('m71-numline-find').value = '绝对值就是距离，没有负号';
 click(gid('m71-numline-find-save'));
 check('discovery: finding is recorded via wireDiscovery stub',
   gid('m71-numline-find-saved').textContent.indexOf('绝对值就是距离') >= 0);
-check('markTried called for completed animations', triedKeys.length >= 70 &&
+check('markTried called for completed animations', triedKeys.length >= 93 &&
   triedKeys.indexOf('m71-numline') >= 0 && triedKeys.indexOf('m78-count') >= 0 &&
   triedKeys.indexOf('m79-joint') >= 0 && triedKeys.indexOf('m716-dotvs') >= 0 &&
   triedKeys.indexOf('m81-ext') >= 0 && triedKeys.indexOf('m82-move') >= 0 &&
@@ -459,7 +566,20 @@ check('markTried called for completed animations', triedKeys.length >= 70 &&
   triedKeys.indexOf('m812-mid') >= 0 && triedKeys.indexOf('m813-cut') >= 0 &&
   triedKeys.indexOf('m814-machine') >= 0 && triedKeys.indexOf('m814-carnival') >= 0 &&
   triedKeys.indexOf('m815-two') >= 0 && triedKeys.indexOf('m815-ineq') >= 0 &&
-  triedKeys.indexOf('m816-var') >= 0 && triedKeys.indexOf('m816-mode') >= 0);
+  triedKeys.indexOf('m816-var') >= 0 && triedKeys.indexOf('m816-mode') >= 0 &&
+  triedKeys.indexOf('m91-tiles') >= 0 && triedKeys.indexOf('m91-mid') >= 0 &&
+  triedKeys.indexOf('m93-plot') >= 0 && triedKeys.indexOf('m93-vertex') >= 0 &&
+  triedKeys.indexOf('m93-forms') >= 0 && triedKeys.indexOf('m94-flight') >= 0 &&
+  triedKeys.indexOf('m95-coord') >= 0 && triedKeys.indexOf('m95-life') >= 0 &&
+  triedKeys.indexOf('m96-isos') >= 0 && triedKeys.indexOf('m96-thales') >= 0 &&
+  triedKeys.indexOf('m97-centers') >= 0 && triedKeys.indexOf('m97-shortest') >= 0 &&
+  triedKeys.indexOf('m98-rearrange') >= 0 && triedKeys.indexOf('m99-sort') >= 0 &&
+  triedKeys.indexOf('m99-indep') >= 0 && triedKeys.indexOf('m910-table') >= 0 &&
+  triedKeys.indexOf('m911-life') >= 0 && triedKeys.indexOf('m911-vs') >= 0 &&
+  triedKeys.indexOf('m912-scale') >= 0 && triedKeys.indexOf('m913-parallel') >= 0 &&
+  triedKeys.indexOf('m913-thales') >= 0 && triedKeys.indexOf('m914-unit') >= 0 &&
+  triedKeys.indexOf('m915-depress') >= 0 && triedKeys.indexOf('m915-twice') >= 0 &&
+  triedKeys.indexOf('m916-build') >= 0 && triedKeys.indexOf('m916-net') >= 0);
 check('tiers.done fired for level 0 of every animation',
   EXPECTED.every(function (e) { return tiersDone.indexOf(e[0] + ':0') >= 0; }));
 
@@ -501,6 +621,36 @@ check('math: rhombus 6x8/2 = 24, 10x24/2 = 120, 9x12/2 = 54',
 check('math: drink shortest: sqrt(113) ~ 10.63, sqrt(136) ~ 11.66, sqrt(130) ~ 11.40',
   Math.abs(Math.sqrt(113) - 10.630) < 0.001 && Math.abs(Math.sqrt(136) - 11.662) < 0.001 &&
   Math.abs(Math.sqrt(130) - 11.402) < 0.001);
+check('math: midpoint-deviation: 2.5^2-0.5^2=6, 4^2-2^2=12, (-3)^2-1^2=8',
+  2.5 * 2.5 - 0.5 * 0.5 === 6 && 4 * 4 - 2 * 2 === 12 && 9 - 1 === 8);
+check('math: completing square: (x+2)^2=9 gives 1/-5, (x-3)^2=1 gives 4/2, (x+5)^2=4 gives -3/-7',
+  -2 + 3 === 1 && -2 - 3 === -5 && 3 + 1 === 4 && 3 - 1 === 2 && -5 + 2 === -3 && -5 - 2 === -7);
+check('math: vertex trace: b=2 vertex (-1,0), b=4 vertex (-2,-3), trace y=-x^2+1',
+  -2 / 2 === -1 && 1 - 4 / 4 === 0 && -4 / 2 === -2 && 1 - 16 / 4 === -3);
+check('math: forms: (x-1.5)^2-0.25 = x^2-3x+2, 2(x-2)^2-2 = 2x^2-8x+6',
+  (function (x) { return (x - 1.5) * (x - 1.5) - 0.25 === x * x - 3 * x + 2; })(5) &&
+  (function (x) { return 2 * (x - 2) * (x - 2) - 2 === 2 * x * x - 8 * x + 6; })(5));
+check('math: flight: -0.2*9+1.2*3+2 = 3.8, lands at 3+sqrt(19) ~ 7.36',
+  -0.2 * 9 + 1.2 * 3 + 2 === 3.8 && Math.abs(3 + Math.sqrt(19) - 7.359) < 0.001);
+check('math: Thales shadow: 2/3*220.5 = 147, 1.5/2*40 = 30, 1/1.5*12 = 8',
+  2 / 3 * 220.5 === 147 && 1.5 / 2 * 40 === 30 && 1 / 1.5 * 12 === 8);
+check('math: two-measure tower: 20*tan30*tan45/(tan45-tan30) ~ 27.32, 10*tan30*tan60/(tan60-tan30) = 5*sqrt(3)',
+  Math.abs(20 * Math.tan(30 * Math.PI / 180) * 1 / (1 - Math.tan(30 * Math.PI / 180)) - 27.32) < 0.01 &&
+  Math.abs(10 * Math.tan(30 * Math.PI / 180) * Math.tan(60 * Math.PI / 180) / (Math.tan(60 * Math.PI / 180) - Math.tan(30 * Math.PI / 180)) - 5 * Math.sqrt(3)) < 0.01);
+check('math: depression: 30/tan30 ~ 51.96, 30/tan60 ~ 17.32, tangent length sqrt(25-9) = 4',
+  Math.abs(30 / Math.tan(30 * Math.PI / 180) - 51.96) < 0.01 &&
+  Math.abs(30 / Math.tan(60 * Math.PI / 180) - 17.32) < 0.01 && Math.sqrt(25 - 9) === 4);
+check('math: two dice sums: 7 has 6, 2 has 1, 11 has 2 of 36',
+  (function () {
+    let c7 = 0, c2 = 0, c11 = 0;
+    for (let i = 1; i <= 6; i++) for (let j = 1; j <= 6; j++) {
+      if (i + j === 7) c7++; if (i + j === 2) c2++; if (i + j === 11) c11++;
+    }
+    return c7 === 6 && c2 === 1 && c11 === 2;
+  })());
+check('math: sector rearrange: arc 2pi, base pi, areas 6pi/4pi/10pi for r=6/4/10',
+  Math.abs(60 * Math.PI * 6 / 180 - 2 * Math.PI) < 1e-9 && Math.abs(90 * Math.PI * 4 / 180 - 2 * Math.PI) < 1e-9 &&
+  Math.abs(36 * Math.PI * 10 / 180 - 2 * Math.PI) < 1e-9);
 
 console.log('\nsmoke-anims-band-7-9: ' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);
