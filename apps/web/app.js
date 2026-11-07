@@ -1310,7 +1310,11 @@ function renderProgress() {
 const INQUIRY_KEY = 'math-inquiry-v1';
 const WEEK_MS = 7 * 86400000;
 function fmtDate(ts) {
+  // 没时间戳的旧记录返回空，不写 NaN（挑战报告存的是 at 不是 ts，旧代码
+  // 在这里画出过“NaN-NaN-NaN”）。
+  if (ts === undefined || ts === null) return '';
   const d = new Date(ts);
+  if (isNaN(d.getTime())) return '';
   return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
 }
 /* 家长端每次都从存储现读，不用内存里的 reviewStore：
@@ -1337,14 +1341,95 @@ function taskTitle(taskId) {
   const t = INQUIRY_TASKS.find(x => x.id === taskId);
   return t ? t.title : '探究作业';
 }
+/* 挑战报告一行：发现 + 错因 + 卡住的步骤 + 用时。inquiryListHtml 和实验痕迹共用。
+   报告存的是 discovery/causes/at/lostSteps（批 5 以前 inquiryListHtml 只认
+   text/ts，所以报告在家长端是个空壳：标题“探究作业”、日期 NaN、没字）。 */
+function labReportRowHtml(e) {
+  const titles = (e.pointIds || []).map(function (pid) {
+    const f = findPoint(pid);
+    return pid + ' ' + (f ? f.point.title : '');
+  }).join('、') || '实验室挑战';
+  const bits = [];
+  if (e.discovery) bits.push('发现：' + e.discovery);
+  if (e.causes && e.causes.length) bits.push('错因：' + e.causes.join('、'));
+  if (e.lostSteps && e.lostSteps.length) bits.push('卡在：' + e.lostSteps.map(function (s) { return s.label; }).join('、'));
+  if (e.usedMs) bits.push('用了 ' + fmtClock(e.usedMs));
+  return '<li><b>挑战报告 · ' + esc(titles) + '</b><small>' + fmtDate(e.ts || e.at) + ' · 实验室挑战</small><p>' +
+    esc(bits.length ? bits.join('；') : '交了卷，没写发现也没选错因。') + '</p></li>';
+}
 function inquiryListHtml(list, emptyText) {
   if (!list.length) return '<p class="muted">' + esc(emptyText) + '</p>';
   return '<ul class="wrong-list">' + list.slice().reverse().map(e => {
+    if (e.kind === 'lab-challenge-report') return labReportRowHtml(e);
     const kind = e.kind === 'teach' ? '小老师讲题' : e.kind === 'discovery' ? '我的发现' : '探究作业';
     const title = e.kind === 'teach' ? (e.question || '没写题目') : e.kind === 'discovery' ? demoName(e.demo) : taskTitle(e.taskId);
     const demo = e.demo ? '用了动画：' + demoName(e.demo) : '没用演示';
-    return '<li><b>' + esc(kind) + ' · ' + esc(title) + '</b><small>' + fmtDate(e.ts) + ' · ' + esc(demo) + '</small><p>' + esc(e.text || '') + '</p></li>';
+    return '<li><b>' + esc(kind) + ' · ' + esc(title) + '</b><small>' + fmtDate(e.ts || e.at) + ' · ' + esc(demo) + '</small><p>' + esc(e.text || '') + '</p></li>';
   }).join('') + '</ul>';
+}
+/* ---------- 批 5：家长端看体检表 + 错因分布 + 发现 + 痕迹 ----------
+   只读已有的两把钥匙，不新开存储键：math-inquiry-v1（挑战报告/发现/作业，
+   带 at/ts 时间戳）+ math-lab-proc-v1（跨次统计：每道挑战题考过几次、
+   最近得分、上次用时）。报告单上那句“家长能在‘家长看这里’看到”以前
+   是空话——报告在家长端是个空壳；批 5 让它真正显示出来。 */
+const LAB_CAUSES = ['算错了', '概念没弄清', '步骤漏了', '看错题', '没思路', '粗心写错'];
+function labReports() {
+  return loadInquiry().filter(function (e) { return e.kind === 'lab-challenge-report'; });
+}
+function labReportTime(e) {
+  if (e && typeof e.at === 'number') return e.at;
+  if (e && typeof e.ts === 'number') return e.ts;
+  return 0;
+}
+/* 错因分布：挑战报告里选过的 6 个标签各被选了几次。只列选过的，没选过的
+   不占位置；一份报告可以选多个错因，同一个错因在多份报告里出现就累加。 */
+function labCauseDistHtml(reports) {
+  const counts = {};
+  (reports || []).forEach(function (e) {
+    (e.causes || []).forEach(function (c) { counts[c] = (counts[c] || 0) + 1; });
+  });
+  const rows = LAB_CAUSES.filter(function (c) { return counts[c]; })
+    .map(function (c) { return '<li>' + esc(c) + ' ×' + counts[c] + '</li>'; });
+  if (!rows.length) return '<p class="muted">还没选过错因：交卷报告单里选一个错因，就会记在这里。</p>';
+  return '<p class="muted">挑战报告里选过的错因（同一份报告可以选多个）。</p><ul>' + rows.join('') + '</ul>';
+}
+/* 孩子的发现一句话：实验室的发现（kind discovery）+ 挑战报告里写的那句，
+   新的在前。来源写演示名或知识点，不写“探究作业”这种笼统词。 */
+function labDiscoveryHtml(inq) {
+  const items = [];
+  (inq || []).forEach(function (e) {
+    if (e.kind === 'discovery' && e.text) {
+      items.push({ at: labReportTime(e), text: e.text, src: e.demo ? demoName(e.demo) : '实验室' });
+    } else if (e.kind === 'lab-challenge-report' && e.discovery) {
+      const pid = (e.pointIds || [])[0] || '';
+      const f = pid ? findPoint(pid) : null;
+      items.push({ at: labReportTime(e), text: e.discovery, src: pid ? pid + ' ' + (f ? f.point.title : '') : '实验室挑战' });
+    }
+  });
+  items.sort(function (a, b) { return b.at - a.at; });
+  if (!items.length) return '<p class="muted">还没有写过发现：实验室里做完挑战，在报告单里写一句发现，就会记在这里。</p>';
+  return '<ul class="wrong-list">' + items.map(function (it) {
+    return '<li><b>' + esc(it.src) + '</b><small>' + (it.at ? fmtDate(it.at) : '') + '</small><p>' + esc(it.text) + '</p></li>';
+  }).join('') + '</ul>';
+}
+/* 实验痕迹：每道挑战题考过几次、最近一次多少分（跨次统计）+ 按时间排的
+   挑战记录（新的在前）。只读 math-lab-proc-v1 + math-inquiry-v1。 */
+function labTraceHtml(reports, hist) {
+  const sorted = (reports || []).slice().sort(function (a, b) { return labReportTime(b) - labReportTime(a); });
+  let html = '';
+  const ids = Object.keys(hist || {}).sort(function (a, b) { return ((hist[b] || {}).lastAt || 0) - ((hist[a] || {}).lastAt || 0); });
+  if (ids.length) {
+    html += '<p class="muted">每道挑战题考过几次、最近一次多少分：</p><ul>' + ids.map(function (labId) {
+      const e = hist[labId] || {};
+      const q = LAB_QUESTIONS.find(function (x) { return x.qid === labId; });
+      const title = q ? q.title : labId;
+      return '<li>' + esc(title) + '：考过 ' + (e.attempts || 0) + ' 次，最近一次 ' + (e.lastScore || 0) + ' / ' + (e.max || 0) +
+        (e.lastUsedMs ? '，用了 ' + fmtClock(e.lastUsedMs) : '') + '。</li>';
+    }).join('') + '</ul>';
+  }
+  if (!sorted.length) { html += '<p class="muted">还没有交过挑战报告。</p>'; return html; }
+  html += '<p class="muted">最近的挑战记录（新的在前）：</p><ul class="wrong-list">' + sorted.map(labReportRowHtml).join('') + '</ul>';
+  return html;
 }
 function renderParent() {
   const card = document.getElementById('parentCard');
@@ -1353,8 +1438,9 @@ function renderParent() {
   const ids = Object.keys(store);
   const triedKeys = loadTriedKeys();
   const inq = loadInquiry();
+  const proc = procHistLoad();
   let html = '<h3>家长看这里</h3><p class="muted">只看这台设备上已经存下来的练习记录，不登录、不上传。下面所有数字都是从记录里数出来的。</p>';
-  if (!ids.length && !triedKeys.length && !inq.length) {
+  if (!ids.length && !triedKeys.length && !inq.length && !Object.keys(proc).length) {
     html += '<div class="point-sec"><p>还没有记录，先去练一练。练过题、玩过动画、交过探究作业，这里才会有内容。</p></div>' +
       '<div class="btn-row"><button class="btn primary" type="button" data-parent-grades="1">选一个年级开始</button></div>';
     card.innerHTML = html;
@@ -1383,6 +1469,8 @@ function renderParent() {
     if (unknown) html += '<p>还有 ' + unknown + ' 条在内容里找不到对应的知识点，没算进上面。</p>';
   }
   html += '<p>演示一共玩过 ' + triedKeys.length + ' / ' + ALL_DEMOS.length + ' 个。演示只记总数、不记哪天玩的，所以这一项没法按周分开算。</p></div>';
+  // 批 5 体检表：和错题本顶部同一张表（哪一步总丢分、重灾区），家长不用去错题本翻。
+  html += '<div class="point-sec"><h4>哪一步总丢分（最近 7 天）</h4>' + labHealthHtml() + '</div>';
   // ② 困难提醒：上次答错的 + 答对了但没把握的，各自写清楚下一步练什么。
   const wrongIds = ids.filter(id => store[id] && store[id].correct === false);
   const lowConfIds = ids.filter(id => store[id] && store[id].correct === true && store[id].confident === false);
@@ -1426,8 +1514,16 @@ function renderParent() {
     });
   }
   html += '</div>';
-  // ④ 孩子交的探究作业。
-  html += '<div class="point-sec"><h4>孩子交的探究作业</h4>' + inquiryListHtml(inq, '还没有交过探究作业。') + '</div>';
+  // 批 5 错因分布：孩子自己在挑战报告里选的 6 个标签（和上面按知识点 wrong 文本
+  // 分组不同，这是孩子自己认的错因）。
+  html += '<div class="point-sec"><h4>错因分布</h4>' + labCauseDistHtml(labReports()) + '</div>';
+  // 批 5 孩子的发现：实验室的发现 + 挑战报告里写的那句，新的在前。
+  html += '<div class="point-sec"><h4>孩子的发现</h4>' + labDiscoveryHtml(inq) + '</div>';
+  // 批 5 实验痕迹：每道挑战题考过几次 + 按时间排的挑战记录。
+  html += '<div class="point-sec"><h4>实验痕迹</h4>' + labTraceHtml(labReports(), proc) + '</div>';
+  // ④ 孩子交的探究作业。发现和挑战报告各有自己的栏目，这里只留作业和小老师讲题，不重复列。
+  const homework = inq.filter(function (e) { return e.kind !== 'discovery' && e.kind !== 'lab-challenge-report'; });
+  html += '<div class="point-sec"><h4>孩子交的探究作业</h4>' + inquiryListHtml(homework, '还没有交过探究作业。') + '</div>';
   card.innerHTML = html;
   card.querySelectorAll('[data-point]').forEach(btn => btn.addEventListener('click', () => navGo('point-' + btn.dataset.point)));
 }
@@ -3308,7 +3404,8 @@ function labRenderBal() {
     if (w.dataset.labW === 'R' && labBalR > 0) labBalR--;
     labRenderBal();
   }));
-  document.getElementById('labBalEq').textContent = '左 ' + labBalL + ' ＝ 右 ' + labBalR;
+  // 标签里的比较符号跟着实际比，不是写死的“＝”（2026-11-07 复测：不平衡时也写“＝”，下面却说左边重）。
+  document.getElementById('labBalEq').textContent = '左 ' + labBalL + (labBalL === labBalR ? ' ＝ ' : labBalL > labBalR ? ' ＞ ' : ' ＜ ') + '右 ' + labBalR;
   document.getElementById('labBalMsg').textContent =
     labBalL === labBalR ? '天平平了，左右一样重。' :
     labBalL > labBalR ? '左边重 ' + (labBalL - labBalR) + '，天平向左歪了。试试右边再加几个。' :
@@ -5439,7 +5536,7 @@ function labWbRender() {
   });
   document.getElementById('labWbLeftWeights').innerHTML = labWbWeightsHtml(labWbL, 33);
   document.getElementById('labWbRightWeights').innerHTML = labWbWeightsHtml(labWbR, 233);
-  document.getElementById('labWbEq').textContent = '左 ' + labFracStr(L.n, L.d) + ' ＝ 右 ' + labFracStr(R.n, R.d);
+  document.getElementById('labWbEq').textContent = '左 ' + labFracStr(L.n, L.d) + (equal ? ' ＝ ' : lNum > rNum ? ' ＞ ' : ' ＜ ') + '右 ' + labFracStr(R.n, R.d);
   document.getElementById('labWbList').textContent = '左盘：' + labWbListText(labWbL) + '　右盘：' + labWbListText(labWbR);
   let msg;
   if (equal) {
@@ -6391,7 +6488,7 @@ function worldPlayRender() {
       setTx('worldFracOut', '还没拼。点「拼一拼」让模型算出错拼与正拼。');
     }
   }
-  setTx('worldBalEq', '左 ' + d.balance.Lstr + ' ＝ 右 ' + d.balance.Rstr);
+  setTx('worldBalEq', '左 ' + d.balance.Lstr + (d.balance.equal ? ' ＝ ' : d.balance.leftHeavy ? ' ＞ ' : ' ＜ ') + '右 ' + d.balance.Rstr);
   setTx('worldBalMsg', d.balance.equal
     ? '平了！两边都是 ' + d.balance.Lstr + '。'
     : '还不平：' + (d.balance.leftHeavy ? '左边重 ' : '右边重 ') + d.balance.diffStr + '。');

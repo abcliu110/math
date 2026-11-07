@@ -1684,6 +1684,83 @@ async function main() {
         (!ghost || ghost.display === 'none');
       note(report.pass ? 'RESULT: PASS — shelf weight lands on the pan, but a weight already on the pan does not drag (no ghost, balance unchanged): by design'
         : 'RESULT: FAIL — pan weight moved or the shelf weight did not land (see notes above)');
+    } else if (scenario === 'bal-label') {
+      // 批 5 小修：天平标签的“＝”是写死的分隔符，不平衡时也写“＝”。
+      // 随便压站（整数）+ 天平站（分数）+ 台面状态行都应按实际比较显示 ＞/＜/＝。
+      // 复现：新 profile 默认左 5 右 3（左重），旧代码标签是“左 5 ＝ 右 3”。
+      await enterLab();
+      const eq0 = await evaljs(`(function(){var e=document.getElementById('labBalEq');return e?e.textContent:'';})()`);
+      note('labBalEq initial: ' + eq0);
+      await evaljs(`(function(){var b=document.getElementById('labBalAddR');if(b)b.click();})()`);
+      await sleep(200);
+      const eq1 = await evaljs(`(function(){var e=document.getElementById('labBalEq');return e?e.textContent:'';})()`);
+      note('labBalEq after +1 right (5 vs 4): ' + eq1);
+      await evaljs(`(function(){var b=document.getElementById('labBalAddR');if(b){b.click();b.click();}})()`);
+      await sleep(200);
+      const eq2 = await evaljs(`(function(){var e=document.getElementById('labBalEq');return e?e.textContent:'';})()`);
+      note('labBalEq after +3 right (5 vs 6): ' + eq2);
+      await evaljs(`(function(){var b=document.getElementById('labBalSubR');if(b)b.click();})()`);
+      await sleep(200);
+      const eq3 = await evaljs(`(function(){var e=document.getElementById('labBalEq');return e?e.textContent:'';})()`);
+      note('labBalEq after -1 right (5 vs 5): ' + eq3);
+      // 分数天平站：清空重来（左 1/2）+ 拖 1/6 上左盘 → 左 2/3 右 0，站内标签应为“左 2/3 ＞ 右 0”。
+      await evaljs(`document.getElementById('worldBalCard').classList.remove('collapsed')`);
+      await sleep(200);
+      await evaljs(`(function(){var b=document.querySelector('[data-world="bal-clear"]');if(b)b.click();})()`);
+      await sleep(200);
+      const [chip, dropL] = await centers('[data-drag-chip="weight"][data-qty="1/6"]', '#worldBalDropL');
+      await drag(chip.cx, chip.cy, dropL.cx, dropL.cy, 12, 40);
+      await sleep(300);
+      const st = await labState();
+      const svgTexts = await evaljs(`(function(){return [...document.querySelectorAll('#worldBalSvg text')].map(function(t){return t.textContent;});})()`);
+      const benchEq = await evaljs(`(function(){var e=document.getElementById('worldBalEq');return e?e.textContent:'';})()`);
+      note('after drag: bal L=' + st.balL + ' R=' + st.balR + ' svgTexts=' + JSON.stringify(svgTexts) + ' benchEq=' + benchEq);
+      const fracLabel = (svgTexts || []).find(function (t) { return t.indexOf('左 ') === 0; }) || '';
+      note('station fraction label: ' + fracLabel);
+      report.pass = eq0 === '左 5 ＞ 右 3' && eq1 === '左 5 ＞ 右 4' && eq2 === '左 5 ＜ 右 6' && eq3 === '左 5 ＝ 右 5' &&
+        st.balL === '2/3' && fracLabel.indexOf('＞') >= 0 && benchEq.indexOf('＞') >= 0;
+      note(report.pass ? 'RESULT: PASS — balance labels follow the real comparison (＞/＜/＝)' : 'RESULT: FAIL — a balance label still uses ＝ when unbalanced (see notes above)');
+    } else if (scenario === 'parent-batch5') {
+      // 批 5：家长端应有体检表 + 错因分布（6 标签）+ 孩子的发现 + 实验痕迹；
+      // 挑战报告在家长端现在是空壳（“探究作业 · 探究作业”、日期 NaN-NaN-NaN、没字）。
+      // 先往 localStorage 写两份挑战报告 + 一条发现 + 跨次统计，再进家长端读。
+      await evaljs(`(function(){
+        var now = Date.now();
+        localStorage.setItem('math-inquiry-v1', JSON.stringify([
+          { kind: 'lab-challenge-report', qids: ['q-balfrac'], pointIds: ['5.5'],
+            lostSteps: [{ lab: 'q-balfrac', step: 'equal', label: '让天平两边相等' }],
+            discovery: '天平两边一样重才会平', causes: ['步骤漏了', '算错了'], usedMs: 83000, at: now - 3600000 },
+          { kind: 'lab-challenge-report', qids: ['q-fracadd'], pointIds: ['5.11'],
+            lostSteps: [{ lab: 'q-fracadd', step: 'add', label: '先通分再相加' }],
+            discovery: '', causes: ['步骤漏了'], usedMs: 45000, at: now - 86400000 },
+          { kind: 'discovery', taskId: 'thirteen', text: '13 能拆成好多对', demo: 'thirteen', ts: now - 7200000 },
+          { kind: 'teach', question: '23×14 怎么算', text: '先拆 10 和 4', ts: now - 172800000 }
+        ]));
+        localStorage.setItem('math-lab-proc-v1', JSON.stringify({
+          'q-balfrac': { attempts: 3, lastScore: 2, max: 3, lost: { equal: 2 }, lastAt: now - 3600000, lastUsedMs: 83000, lastErr: [] },
+          'q-fracadd': { attempts: 1, lastScore: 1, max: 2, lost: { add: 1 }, lastAt: now - 86400000, lastUsedMs: 45000, lastErr: [] }
+        }));
+        localStorage.setItem('math-review-v1', JSON.stringify({
+          '5.5': { last: now - 3600000, correct: false, confident: false, streak: 0, due: now }
+        }));
+        localStorage.setItem('math-tried-demos-v1', JSON.stringify(['tenframe']));
+      })()`);
+      await evaljs(`(function(){ if (typeof navGo === 'function') navGo('parent'); })()`);
+      await sleep(400);
+      const html = await evaljs(`(function(){var c=document.getElementById('parentCard');return c?c.innerHTML:'';})()`);
+      note('parentCard length: ' + (html ? html.length : 0));
+      const checks = {
+        health: html.indexOf('哪一步总丢分') >= 0,
+        reportKind: html.indexOf('挑战报告') >= 0,
+        discovery: html.indexOf('天平两边一样重才会平') >= 0 && html.indexOf('13 能拆成好多对') >= 0,
+        noNaN: html.indexOf('NaN') < 0,
+        causeDist: html.indexOf('步骤漏了 ×2') >= 0,
+        trace: html.indexOf('实验痕迹') >= 0 && html.indexOf('考过 3 次') >= 0,
+        teachStillThere: html.indexOf('小老师讲题') >= 0 && html.indexOf('23×14 怎么算') >= 0,
+      };
+      note('checks: ' + JSON.stringify(checks));
+      report.pass = Object.keys(checks).every(function (k) { return checks[k]; });
+      note(report.pass ? 'RESULT: PASS — parent shows health table + cause distribution + discoveries + trace, challenge reports render fully' : 'RESULT: FAIL — parent is missing batch-5 sections or a challenge report renders empty (see checks above)');
     } else {
       console.log('unknown scenario: ' + scenario);
       cleanup();

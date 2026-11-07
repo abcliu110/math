@@ -1229,7 +1229,7 @@
     }
     if (which === 'balance') {
       return {
-        title: '天平', state: '左 ' + d.balance.Lstr + ' ＝ 右 ' + d.balance.Rstr + (d.balance.equal ? '（平了）' : '（还不平）'),
+        title: '天平', state: '左 ' + d.balance.Lstr + (d.balance.equal ? ' ＝ ' : d.balance.leftHeavy ? ' ＞ ' : ' ＜ ') + '右 ' + d.balance.Rstr + (d.balance.equal ? '（平了）' : '（还不平）'),
         props: [],
       };
     }

@@ -345,7 +345,7 @@
     svg.appendChild(el('text', {
       x: 170, y: 95, 'font-size': 13, 'text-anchor': 'middle', 'font-weight': 700,
       fill: derived.balance.equal ? '#4ade80' : '#fdba74',
-      textContent: '左 ' + derived.balance.Lstr + ' ＝ 右 ' + derived.balance.Rstr,
+      textContent: '左 ' + derived.balance.Lstr + (derived.balance.equal ? ' ＝ ' : derived.balance.leftHeavy ? ' ＞ ' : ' ＜ ') + '右 ' + derived.balance.Rstr,
     }));
     // clear hit
     svg.appendChild(chipBtn(270, 28, '清空', { 'data-bal-clear': '1' }, false, false));

@@ -725,9 +725,9 @@ click(labCell);
 check('lab ten-frame: click a cell adds one', byId.labTfEq.textContent === '1 + 0 = 1');
 click(labCell);
 check('lab ten-frame: click again removes it', byId.labTfEq.textContent === '0 + 0 = 0');
-check('lab balance initial equation', byId.labBalEq.textContent === '左 5 ＝ 右 3');
+check('lab balance initial equation', byId.labBalEq.textContent === '左 5 ＞ 右 3');
 click(byId.labBalAddR);
-check('lab balance: add right weight updates equation', byId.labBalEq.textContent === '左 5 ＝ 右 4');
+check('lab balance: add right weight updates equation', byId.labBalEq.textContent === '左 5 ＞ 右 4');
 const labK = byId.labFuncKRange; labK.value = '-1';
 (labK._handlers.input || []).forEach(f => f({ target: labK }));
 check('lab function: k slider updates equation', Number(byId.labFuncK.textContent) === -1);
@@ -3607,6 +3607,81 @@ check('K parent: empty data says so honestly, no invented numbers',
   byId.parentCard.innerHTML.includes('还没有记录，先去练一练') &&
   !byId.parentCard.innerHTML.includes('这 7 天一共练了'));
 
+// ---------- K2. 家长端批 5：体检表 + 错因分布 + 发现 + 痕迹 ----------
+// 挑战报告在家长端原来是空壳：kind 落到“探究作业”、日期是 NaN-NaN-NaN、
+// 发现和错因都没字（lab-challenge-report 存的是 discovery/causes/at，
+// inquiryListHtml 只认 text/ts）。下面的检查在旧代码上应干净失败。
+// 先存下四个键、结尾恢复：K2 的种子不能漏到后面的 history 检查里
+// （它读 math-lab-proc-v1 里 q-fracadd 的 attempts，种子会让它变成 2）。
+const k2Before = {
+  review: lsData['math-review-v1'], tried: lsData['math-tried-demos-v1'],
+  inq: lsData['math-inquiry-v1'], proc: lsData['math-lab-proc-v1'],
+};
+const now5 = Date.now();
+lsData['math-review-v1'] = JSON.stringify({
+  '5.5': { last: now5 - 3600000, correct: false, confident: false, streak: 0, due: now5 },
+});
+lsData['math-tried-demos-v1'] = JSON.stringify(['tenframe']);
+const rep5a = { kind: 'lab-challenge-report', qids: ['q-balfrac'], pointIds: ['5.5'],
+  lostSteps: [{ lab: 'q-balfrac', step: 'equal', label: '让天平两边相等' }],
+  discovery: '天平两边一样重才会平', causes: ['步骤漏了', '算错了'], usedMs: 83000, at: now5 - 3600000 };
+const rep5b = { kind: 'lab-challenge-report', qids: ['q-fracadd'], pointIds: ['5.11'],
+  lostSteps: [{ lab: 'q-fracadd', step: 'add', label: '先通分再相加' }],
+  discovery: '', causes: ['步骤漏了'], usedMs: 45000, at: now5 - 86400000 };
+lsData['math-inquiry-v1'] = JSON.stringify([rep5a, rep5b,
+  { kind: 'discovery', taskId: 'thirteen', text: '13 能拆成好多对', demo: 'thirteen', ts: now5 - 7200000 },
+  { kind: 'teach', question: '23×14 怎么算', text: '先拆 10 和 4', ts: now5 - 172800000 },
+]);
+lsData['math-lab-proc-v1'] = JSON.stringify({
+  'q-balfrac': { attempts: 3, lastScore: 2, max: 3, lost: { equal: 2 }, lastAt: now5 - 3600000, lastUsedMs: 83000, lastErr: [] },
+  'q-fracadd': { attempts: 1, lastScore: 1, max: 2, lost: { add: 1 }, lastAt: now5 - 86400000, lastUsedMs: 45000, lastErr: [] },
+});
+check('K2 fmtDate: missing timestamp renders empty, never NaN',
+  sandbox.fmtDate(undefined) === '' && sandbox.fmtDate(null) === '' && !sandbox.fmtDate(undefined).includes('NaN'));
+check('K2 inquiry list: lab challenge report renders as 挑战报告 with discovery + causes + lost step + time',
+  sandbox.inquiryListHtml([rep5a], '空').includes('挑战报告') &&
+  sandbox.inquiryListHtml([rep5a], '空').includes('天平两边一样重才会平') &&
+  sandbox.inquiryListHtml([rep5a], '空').includes('步骤漏了') &&
+  sandbox.inquiryListHtml([rep5a], '空').includes('让天平两边相等') &&
+  sandbox.inquiryListHtml([rep5a], '空').includes('01:23') &&
+  !sandbox.inquiryListHtml([rep5a], '空').includes('NaN') &&
+  !sandbox.inquiryListHtml([rep5a], '空').includes('探究作业'));
+check('K2 cause distribution: counts the 6 tags, only chosen ones listed',
+  typeof sandbox.labCauseDistHtml === 'function' &&
+  sandbox.labCauseDistHtml([rep5a, rep5b]).includes('步骤漏了 ×2') &&
+  sandbox.labCauseDistHtml([rep5a, rep5b]).includes('算错了 ×1') &&
+  !sandbox.labCauseDistHtml([rep5a, rep5b]).includes('没思路') &&
+  sandbox.labCauseDistHtml([]).includes('还没选过错因'));
+check('K2 discoveries: lab report discovery + demo discovery, newest first',
+  typeof sandbox.labDiscoveryHtml === 'function' &&
+  sandbox.labDiscoveryHtml(JSON.parse(lsData['math-inquiry-v1'])).includes('天平两边一样重才会平') &&
+  sandbox.labDiscoveryHtml(JSON.parse(lsData['math-inquiry-v1'])).includes('13 能拆成好多对') &&
+  sandbox.labDiscoveryHtml(JSON.parse(lsData['math-inquiry-v1'])).indexOf('天平两边一样重才会平') <
+  sandbox.labDiscoveryHtml(JSON.parse(lsData['math-inquiry-v1'])).indexOf('13 能拆成好多对'));
+check('K2 trace: per-point attempts + dated list, newest first',
+  typeof sandbox.labTraceHtml === 'function' &&
+  sandbox.labTraceHtml([rep5a, rep5b], JSON.parse(lsData['math-lab-proc-v1'])).includes('考过 3 次') &&
+  sandbox.labTraceHtml([rep5a, rep5b], JSON.parse(lsData['math-lab-proc-v1'])).indexOf('让天平两边相等') <
+  sandbox.labTraceHtml([rep5a, rep5b], JSON.parse(lsData['math-lab-proc-v1'])).indexOf('先通分再相加') &&
+  sandbox.labTraceHtml([], {}).includes('还没有'));
+navGo('parent');
+check('K2 parent: health table + cause distribution + discoveries + trace sections all render',
+  byId.parentCard.innerHTML.includes('哪一步总丢分') &&
+  byId.parentCard.innerHTML.includes('错因分布') &&
+  byId.parentCard.innerHTML.includes('孩子的发现') &&
+  byId.parentCard.innerHTML.includes('实验痕迹') &&
+  byId.parentCard.innerHTML.includes('挑战报告') &&
+  byId.parentCard.innerHTML.includes('让天平两边相等') &&
+  !byId.parentCard.innerHTML.includes('NaN'));
+check('K2 parent: teach + task submissions still listed under 探究作业',
+  byId.parentCard.innerHTML.includes('小老师讲题') && byId.parentCard.innerHTML.includes('23×14 怎么算'));
+lsData['math-review-v1'] = k2Before.review; lsData['math-tried-demos-v1'] = k2Before.tried;
+lsData['math-inquiry-v1'] = k2Before.inq; lsData['math-lab-proc-v1'] = k2Before.proc;
+if (lsData['math-review-v1'] === undefined) delete lsData['math-review-v1'];
+if (lsData['math-tried-demos-v1'] === undefined) delete lsData['math-tried-demos-v1'];
+if (lsData['math-inquiry-v1'] === undefined) delete lsData['math-inquiry-v1'];
+if (lsData['math-lab-proc-v1'] === undefined) delete lsData['math-lab-proc-v1'];
+
 // ---------- L. checkpoint / 闯关路 ----------
 const checkpointDetail = byId.checkpointDetail;
 function clickCp(el) { (checkpointDetail._handlers.click || []).forEach(f => f({ target: el })); }
@@ -4533,7 +4608,8 @@ if (typeof sandbox.labSetMode === 'function') {
   // 天平组合台：左盘 1/2，右边空——差 1/2，整数砝码凑不出；右盘再加 1/2 就平了。
   click(byId.labWbF2);
   check('lab2: balance bench names the 1/2 gap and says integers cannot make it',
-    byId.labWbEq.textContent.includes('1/2') && byId.labWbMsg.textContent.includes('重 1/2') &&
+    byId.labWbEq.textContent.includes('1/2') && byId.labWbEq.textContent.includes('＞') &&
+    byId.labWbMsg.textContent.includes('重 1/2') &&
     byId.labWbMsg.textContent.includes('凑不出 1/2') &&
     byId.labWbMsg.textContent.includes('分数砝码'));
   click(byId.labWbPanR); click(byId.labWbF2);
@@ -4544,7 +4620,8 @@ if (typeof sandbox.labSetMode === 'function') {
     byId.labWbMsg.textContent.includes('右边重 1'));
   click(byId.labWbClear);
   check('lab2: balance bench clears both pans',
-    byId.labWbEq.textContent.includes('左 0') && byId.labWbEq.textContent.includes('右 0'));
+    byId.labWbEq.textContent.includes('左 0') && byId.labWbEq.textContent.includes('右 0') &&
+    byId.labWbEq.textContent.includes('＝'));
   // 托盘 + 数轴：1/2 上数轴，再放 1，两点差 1/2；7 放不下，留在托盘里；托盘最多 3 个。
   sandbox.labTrayAdd({ kind: 'frac', n: 1, d: 2, src: 'test' });
   check('lab2: tray holds a fraction chip',
