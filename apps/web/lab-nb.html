@@ -198,6 +198,8 @@ const TYPES={
  line:{label:'折线统计图',group:'统计',prefix:'折线图',defaults:{y1:3,y2:6,y3:4},fields:[{k:'y1',label:'第一年（万元）',min:0,max:12},{k:'y2',label:'第二年（万元）',min:0,max:12},{k:'y3',label:'第三年（万元）',min:0,max:12}],size:()=>[220,190]},
  cage:{label:'鸡兔笼',group:'数与运算',prefix:'鸡兔笼',defaults:{heads:35,legs:94,rabbits:0},fields:[{k:'heads',label:'头（总数）',min:1,max:60},{k:'legs',label:'腿（总数）',min:0,max:200,step:2},{k:'rabbits',label:'兔（只）',min:0,max:60}],size:()=>[220,150]},
  pair:{label:'数对',group:'关系',prefix:'数对',defaults:{x:3,y:2},fields:[{k:'x',label:'第几列（x）',min:0,max:8},{k:'y',label:'第几行（y）',min:0,max:8}],size:()=>[240,240]},
+ shape:{label:'图形（平移、旋转、对称）',group:'图形',prefix:'图形',defaults:{dx:0,rot:0,mirror:0},fields:[{k:'dx',label:'向右平移（格）',min:0,max:6},{k:'rot',label:'旋转（度，逆时针）',min:0,max:270,step:90},{k:'mirror',label:'轴对称（0 不做，1 做）',min:0,max:1}],size:()=>[260,190]},
+ solid:{label:'立体图形（观察）',group:'图形',prefix:'立体图形',defaults:{view:0},fields:[{k:'view',label:'看的方向（0 正面，1 侧面，2 上面）',min:0,max:2}],size:()=>[240,190]},
  numline:{label:'数轴',group:'关系',prefix:'数轴',accepts:'value',defaults:{min:0,max:2},
    fields:[{k:'min',label:'最左',min:-10,max:10},{k:'max',label:'最右',min:-9,max:20}],size:()=>[460,118]},
  balance:{label:'天平',group:'关系',prefix:'天平',accepts:'value',slots:true,defaults:{},fields:[],size:()=>[340,200]},
@@ -210,6 +212,8 @@ const TYPES={
    fields:[{k:'times',label:'一次掷几回',min:10,max:2000,step:10}],actions:[{id:'roll',label:'🎲 掷'},{id:'reset',label:'清零'}],size:()=>[320,210]},
 };
 const GROUP_ORDER=['数与运算','分数','关系','函数','图形','统计','概率'];
+/* 立体图形：每行是一排（y），每个数是这一格上摞的小方块个数（x 从左到右）。 */
+const SOLID_H=[[2,1],[1,0]];
 
 /* ========== 世界：一张台面 = 物体 + 连线（场景图） ========== */
 let S=blankScene(); // {entities:{id:{id,type,name,x,y,props}}, links:[{id,from,to,slot}], seq:{}}
@@ -280,6 +284,11 @@ function evaluate(s){
       else if(d.value.d===1)sig('ok',`${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`);
       else sig('warn',`除不尽：${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`)}
     if(e.type==='angle'){const k=e.props.deg;const kind=k===0?'零度角':k<90?'锐角':k===90?'直角':k<180?'钝角':k===180?'平角':'大于平角';sig(k===90?'ok':'info',`${k}°：${kind}`)}
+    if(e.type==='shape'){const {dx,rot,mirror}=e.props;sig('info',`${dx?'向右平移 '+dx+' 格':'没有平移'}，${rot?'旋转 '+rot+'°':'没有旋转'}，${mirror?'做了轴对称':'没有轴对称'}`)}
+    if(e.type==='solid'){const hs=SOLID_H,v=e.props.view;
+      if(v===0){const cols=hs[0].map((_,x)=>Math.max(...hs.map(r=>r[x])));sig('info',`正面看到 ${cols.length} 列，高 ${cols.join('、')}`)}
+      else if(v===1){const rows=hs.map(r=>Math.max(...r));sig('info',`侧面看到 ${rows.length} 列，高 ${rows.join('、')}`)}
+      else{const n=hs.flat().filter(x=>x>0).length;sig('info',`上面看到 ${n} 个小方块`)}}
     if(e.type==='cage'){const {heads,legs,rabbits}=e.props;const c=heads-rabbits,got=4*rabbits+2*c;
       if(c<0)sig('err','兔不能比头还多');else if(got===legs)sig('ok',`头、腿都对：兔 ${rabbits} 只，鸡 ${c} 只`);else sig('warn',`腿 ${got}，要 ${legs}：${got>legs?'腿多了 '+(got-legs):'还差 '+(legs-got)}`)}
     if(e.type==='pair'){const {x,y}=e.props;sig('info',`(${x}, ${y})：第 ${x} 列，第 ${y} 行`)}
@@ -424,7 +433,19 @@ const DRAW={
  num:(e,d,w,h)=>`<text class="big" x="${w/2}" y="${h/2+14}" text-anchor="middle" font-size="28">${e.props.v}</text>`,
  frac:(e,d,w)=>{const {n,d:dd}=e.props,rows=Math.max(1,Math.ceil(n/dd)),bw=w-24,sw=bw/dd;let s=`<text class="big" x="${w-12}" y="18" text-anchor="end" font-size="14">${n}/${dd}</text>`;
    for(let r=0;r<rows;r++)for(let i=0;i<dd;i++){const k=r*dd+i+1;s+=`<rect class="seg-cell" data-seg="${k}" x="${12+i*sw}" y="${28+r*28}" width="${sw}" height="22" fill="${k<=n?'#ff9f43':'#fff'}" stroke="#5b6778" stroke-width="1"/>`}return s},
- cage:(e,d,w,h)=>{const {heads,legs,rabbits}=e.props,c=heads-rabbits;
+ shape:(e,d,w,h)=>{const {dx,rot,mirror}=e.props,S=14,ox=70,oy=h-40;const cells=[[0,0],[0,1],[0,2],[1,2]];
+   const xf=(px,py)=>{let x=px,y=py;if(mirror)x=-x;for(let i=0;i<rot/90;i++){const t=x;x=-y;y=t}return [x+dx,y]};
+   const sq=(cx,cy,fill,op)=>`<rect x="${ox+cx*S-S/2}" y="${oy-cy*S-S/2}" width="${S}" height="${S}" fill="${fill}" stroke="#1d2633" opacity="${op}"/>`;
+   let s=`<line x1="${ox}" y1="20" x2="${ox}" y2="${oy+10}" stroke="#94a3b8" stroke-dasharray="4 3"/>`;
+   cells.forEach(([x,y])=>{s+=sq(x+0.5,y+0.5,'#e2e8f0',0.9)});
+   cells.forEach(([x,y])=>{const [tx,ty]=xf(x+0.5,y+0.5);s+=sq(tx,ty,'#ff9f43',0.9)});
+   return s+`<text class="ink" x="${w/2}" y="${h-8}" text-anchor="middle" font-size="12">灰：原来的图形　橙：变换后</text>`},
+solid:(e,d,w,h)=>{const hs=SOLID_H,v=e.props.view,S=24,ox=50,oy=h-40;let s='';
+   if(v===0){const cols=hs[0].map((_,x)=>Math.max(...hs.map(r=>r[x])));cols.forEach((ht,x)=>{for(let k=0;k<ht;k++)s+=`<rect x="${ox+x*S}" y="${oy-(k+1)*S}" width="${S}" height="${S}" fill="#7dd3fc" stroke="#1d2633"/>`})}
+   else if(v===1){const rows=hs.map(r=>Math.max(...r));rows.forEach((ht,x)=>{for(let k=0;k<ht;k++)s+=`<rect x="${ox+x*S}" y="${oy-(k+1)*S}" width="${S}" height="${S}" fill="#fca5a5" stroke="#1d2633"/>`})}
+   else{hs.forEach((r,y)=>r.forEach((ht,x)=>{if(ht>0)s+=`<rect x="${ox+x*S}" y="${oy-(y+1)*S}" width="${S}" height="${S}" fill="#86efac" stroke="#1d2633"/>`}))}
+   return s+`<text class="ink" x="${w/2}" y="${h-8}" text-anchor="middle" font-size="12">${['从正面看','从侧面看','从上面看'][v]}</text>`},
+cage:(e,d,w,h)=>{const {heads,legs,rabbits}=e.props,c=heads-rabbits;
    return `<text class="big" x="${w/2}" y="48" text-anchor="middle" font-size="16">兔 ${rabbits} 只 · 鸡 ${c} 只</text><text class="ink" x="${w/2}" y="78" text-anchor="middle" font-size="14">头 ${heads} · 腿 ${4*rabbits+2*c} / ${legs}</text>`},
  pair:(e,d,w,h)=>{const {x,y}=e.props,c=24,x0=30,y0=h-30;let s='';
    for(let i=0;i<=8;i++){s+=`<line x1="${x0+i*c}" y1="${y0}" x2="${x0+i*c}" y2="${y0-8*c}" stroke="#cbd5e1"/><line x1="${x0}" y1="${y0-i*c}" x2="${x0+8*c}" y2="${y0-i*c}" stroke="#cbd5e1"/>`}
@@ -878,6 +899,35 @@ const P48=[
          {label:'行调到 4，找到 (5, 4)',score:2,hint:'把“第几行”调到 4',target:T45('pair'),check:(s,D)=>{const p=s.entities[byType(s,'pair')].props;return p.x===5&&p.y===4}}]},
 ];
 P48.forEach(p=>XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
+
+/* ========== 第三期收尾：大数、优化、图形的运动、观察物体 ========== */
+const P49=[
+ {id:'g4_1',grade:4,domain:'数与代数',tools:'数字卡 · 乘法器',title:'大数的认识：1 亿是多少个 1 万相乘？',q:'1 亿 = 1 万 × 1 万。万级和亿级的数，就是几个“万”和几个“亿”。',why:'10000 × 10000 = 100000000，即 1 亿。',
+  build:s=>{addEnt(s,'num',60,60,{v:10000});addEnt(s,'num',60,170,{v:10000});addEnt(s,'mul',330,110)},
+  steps:[{label:'把两个 1 万都连到乘法器',score:1,hint:'拖两个数的蓝点到乘法器',target:T45('mul'),check:(s,D)=>P45H.cnt(s,D,'mul',2)},
+         {label:'算出 1 亿（100000000）',score:2,hint:'看乘法器的读数',target:T45('mul'),check:(s,D)=>P45H.val(s,D,'mul',Q(100000000))}]},
+ {id:'g4_8',grade:4,domain:'数与代数',tools:'数字卡 · 合并器',title:'优化：沏茶要烧水 15 分钟，沏茶要 1 分钟，最少要几分钟？',q:'烧水的时候，可以洗杯子、拿茶叶，这些事和烧水同时做，不用等。',why:'烧水 15 分钟，其余的事都在烧水时做完，沏茶 1 分钟：最少 15 + 1 = 16 分钟。',
+  build:s=>{addEnt(s,'num',60,60,{v:15});addEnt(s,'num',60,170,{v:1});addEnt(s,'adder',330,110)},
+  steps:[{label:'把烧水和沏茶的时间都连到合并器',score:1,hint:'拖两个数的蓝点到合并器',target:T45('adder'),check:(s,D)=>P45H.cnt(s,D,'adder',2)},
+         {label:'最少要 16 分钟',score:2,hint:'看合并器的读数',target:T45('adder'),check:(s,D)=>P45H.val(s,D,'adder',Q(16))}]},
+ {id:'g4_14',grade:4,domain:'图形与几何',tools:'图形',title:'图形的运动：先向右平移 3 格，再做轴对称',q:'平移只改位置，不改形状和大小；轴对称是以一条线为轴，翻到另一边。',why:'平移：每个点都向右走相同的格数。轴对称：对应点到对称轴的距离相等。',
+  build:s=>{addEnt(s,'shape',200,60,{dx:0,rot:0,mirror:0})},
+  steps:[{label:'向右平移 3 格',score:1,hint:'点图形卡，在属性卡里把“向右平移”调到 3',target:T45('shape'),check:(s,D)=>s.entities[byType(s,'shape')].props.dx===3},
+         {label:'再做轴对称',score:2,hint:'把“轴对称”调到 1',target:T45('shape'),check:(s,D)=>s.entities[byType(s,'shape')].props.mirror===1}]},
+ {id:'g5_12',grade:5,domain:'图形与几何',tools:'图形',title:'图形的运动：把图形旋转 90°，再旋转 90°',q:'旋转要说清三件事：绕哪一点、往哪个方向、转多少度。',why:'转 90° 是一个直角；再转 90°，一共转 180°。',
+  build:s=>{addEnt(s,'shape',200,60,{dx:0,rot:0,mirror:0})},
+  steps:[{label:'旋转 90°',score:1,hint:'把“旋转”调到 90',target:T45('shape'),check:(s,D)=>s.entities[byType(s,'shape')].props.rot===90},
+         {label:'一共旋转 180°',score:2,hint:'把“旋转”调到 180',target:T45('shape'),check:(s,D)=>s.entities[byType(s,'shape')].props.rot===180}]},
+ {id:'g4_17',grade:4,domain:'图形与几何',tools:'立体图形',title:'观察物体：从侧面和正面看，看到的样子一样吗？',q:'先切到侧面看，再切回正面看，比一比看到几列、每列多高。',why:'从不同方向看，同一个物体看到的形状可能不同。',
+  build:s=>{addEnt(s,'solid',200,60,{view:0})},
+  steps:[{label:'切到侧面看',score:1,hint:'点立体图形卡，把“看的方向”调到 1（侧面）',target:T45('solid'),check:(s,D)=>s.entities[byType(s,'solid')].props.view===1},
+         {label:'切回正面：正面看到 2 列，高 2、1',score:2,hint:'把“看的方向”调回 0（正面）',target:T45('solid'),check:(s,D)=>{const v=byType(s,'solid');return (D[v].sig||[]).some(x=>x.tx==='正面看到 2 列，高 2、1')}}]},
+ {id:'g5_14',grade:5,domain:'图形与几何',tools:'立体图形',title:'观察物体（三）：从上面看，看到几个小方块？',q:'从上面看，只看每一格有没有方块，不看高矮。',why:'从上面看到的是每一格有没有方块：一共 3 格有方块。',
+  build:s=>{addEnt(s,'solid',200,60,{view:0})},
+  steps:[{label:'切到上面看',score:1,hint:'把“看的方向”调到 2（上面）',target:T45('solid'),check:(s,D)=>s.entities[byType(s,'solid')].props.view===2},
+         {label:'上面看到 3 个小方块',score:2,hint:'看立体图形下面的文字',target:T45('solid'),check:(s,D)=>{const v=byType(s,'solid');return (D[v].sig||[]).some(x=>x.tx==='上面看到 3 个小方块')}}]},
+];
+P49.forEach(p=>XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
 
 function startXp(id,m){xp=XP.find(x=>x.id===id);if(!xp)return;mode=m;S=blankScene();xp.build(S);undoSt=[];redoSt=[];sel=null;cardOpen=false;
   run={steps:xp.steps.map((s,i)=>({i,done:false})),ops:0,errors:0,t0:Date.now(),finished:false};$('title').textContent=xp.title;
