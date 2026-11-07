@@ -5414,7 +5414,7 @@ registerAnim({
   sub: '只给俯视图和主视图，搭法不止一种：有的格子必须摞高，有的格子可高可低。最少几个？最多几个？',
   grade: 4,
   kind: '实验',
-  points: ['4.17'],
+  points: ['4.17', '5.14'],
   render: function (el) {
     var K = 'm417-infer';
     var LEVELS = [

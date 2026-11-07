@@ -524,6 +524,7 @@ var SIM_LINKS = {
    第一个是 4.16 鸡兔同笼：4 种方法各一个动画，旧的 chickenrabbit（腿数滑杆步进版）照旧排第一个。 */
 var METHOD_DEMOS = {
   '4.16': ['crslider', 'crdraw', 'crlist', 'crgolden'],
+  '4.9': ['mixop'],
 };
 function animsForPoint(id) {
   const f = findPoint(id);

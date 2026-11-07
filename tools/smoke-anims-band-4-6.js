@@ -187,7 +187,7 @@ const EXPECTED = {
   'm417-views': { grade: 4, kind: '演示', points: ['4.17'], title: '三个方向看，对一对' },
   'm417-layers': { grade: 4, kind: '演示', points: ['4.17'], title: '一层一层数' },
   'm417-build': { grade: 4, kind: '实验', points: ['4.17'], title: '搭一搭：照着视图搭出来' },
-  'm417-infer': { grade: 4, kind: '实验', points: ['4.17'], title: '两张图，推出最少和最多' },
+  'm417-infer': { grade: 4, kind: '实验', points: ['4.17', '5.14'], title: '两张图，推出最少和最多' },
 };
 const KEYS = Object.keys(EXPECTED);
 

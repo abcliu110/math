@@ -152,6 +152,9 @@ const GRADE4_CONTENT = { grade: 4, edition: 'A', units: [
   { unit: '三位数乘两位数', term: '上', points: [
     { id: '4.4', title: '三位数乘两位数', subtitle: '竖式、积的变化规律、速度×时间=路程', how: '123×45，先拆45=40+5。', why: '乘法是面积。', wrong: '123×45=123×4+123×5', wrongWhy: '45里的4是40。', visual: '面积模型。', method: '面积模型拆两边', explainBack: '45是40和5。', tryIt: '在面积图上算一算125×16。', demo: 'areamodel', recall: { q: '算123×45时，123×4这一步对吗？', answer: '不对；4是40', hint: '45的4在十位上' }, practice: [{ q: '一辆汽车每小时行65千米，4小时行多少千米？', answer: '260千米', hint: '路程=速度×时间', level: '基础' }, { q: '算一算138×24。', answer: '3312', hint: '138×20=2760，138×4=552', level: '提高' }] },
   ] },
+  { unit: '四则运算', term: '下', points: [
+    { id: '4.9', title: '四则运算', subtitle: '运算顺序、括号、0的运算', how: '算式里有加减乘除，先算乘除、后算加减；有括号先算括号里面的。', why: '乘法是“加了好几次”，要先算成一堆。', wrong: '5÷0=5；算式从左往右算就行。', wrongWhy: '5÷0在问“什么数乘0等于5”，没有这样的数。', visual: '逆算检查：“什么数乘0等于5？”', method: '逆运算证伪', explainBack: '除以0没有答案，因为没有数乘0是5。', tryIt: '算一算12+8×2和（12+8）×2。', demo: 'zerodiv', recall: { q: '5÷0等于0吗？等于5吗？到底是多少？', answer: '都不是；5÷0没有答案', hint: '除法在问“什么数乘0等于5”' }, practice: [{ q: '算一算12+8×2：先算什么？结果是多少？', answer: '先算8×2=16，再算12+16=28', hint: '先乘除，后加减。', level: '基础' }, { q: '算一算（12+8）×2。', answer: '40', hint: '先算括号里面的。', level: '提高' }] },
+  ] },
   { unit: '观察物体（二）', term: '下', points: [
     { id: '4.17', title: '观察物体（二）', subtitle: '从三个方向看组合体', how: '从前面、左面、上面三个方向看。', why: '一个方向只能看到一面。', wrong: '从前面看有3个正方形，就以为一共只有3个', wrongWhy: '后面可能还藏着。', visual: '搭一搭再转一转。', method: '三视图+逐层数', explainBack: '从前面看是3个，不等于一共3个。', tryIt: '用4个小正方体摆一个图形。', demo: 'observe', recall: { q: '从上面看是2个正方形，从前面看也是2个正方形，最少用几个小正方体？', answer: '2个', hint: '并排摆2个' }, practice: [{ q: '3个小正方体排成一排，从左面看是几个正方形？', answer: '1个', hint: '后面的都被第一个挡住了', level: '基础' }, { q: '从前面看是2个正方形，从上面看是3个正方形，最少用几个小正方体？', answer: '3个', hint: '上面3个格子，每个格子至少1个', level: '提高' }] },
   ] },
@@ -4289,6 +4292,10 @@ check('anims: 3.7 has fraction + 3 sims',
   hasAnims && JSON.stringify(sandbox.animsForPoint('3.7')) === JSON.stringify(['fraction', 'fraceq', 'buildfrac', 'fracnumline', 'm37-div']));
 check('anims: 3.12 has area + areabuild + maxarea from the lab question',
   hasAnims && JSON.stringify(sandbox.animsForPoint('3.12')) === JSON.stringify(['area', 'areabuild', 'maxarea', 'm312-cut', 'm312-unit']));
+check('anims: 4.9 has zerodiv + mixop (METHOD_DEMOS dual-mount) + lab questions + op-bracket',
+  hasAnims && JSON.stringify(sandbox.animsForPoint('4.9')) === JSON.stringify(['zerodiv', 'mixop', 'twentyfour', 'matches', 'op-bracket']));
+check('anims: 5.14 has observe + m417-infer (dual-mount from 4.17) + 3 new',
+  hasAnims && JSON.stringify(sandbox.animsForPoint('5.14')) === JSON.stringify(['observe', 'm417-infer', 'm514-guess', 'm514-three', 'm514-nums']));
 check('anims: 1.1 has count + numplay + m1a-pair (registry)',
   hasAnims && JSON.stringify(sandbox.animsForPoint('1.1')) === JSON.stringify(['count', 'numplay', 'm1a-pair']));
 check('checkpoint: 1.1 counts 3 animations from the registry (count + numplay + m1a-pair), not 1 from p.demo',
