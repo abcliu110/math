@@ -118,7 +118,7 @@ const EXPECTED = [
   { key: 'op-fracwrong', grade: 5, kind: '实验', points: ['5.11'] },
   { key: 'op-bracket', grade: 4, kind: '模拟', points: ['4.9'] },
   { key: 'op-assoc', grade: 4, kind: '模拟', points: ['4.10'] },
-  { key: 'op-maketen', grade: 2, kind: '模拟', points: ['2.3'] },
+  { key: 'op-maketen', grade: 2, kind: '模拟', points: ['1.9', '2.3'] },
   { key: 'op-powroot', grade: 8, kind: '模拟', points: ['8.5', '8.10'] }
 ];
 

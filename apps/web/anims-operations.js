@@ -988,7 +988,7 @@ registerAnim({
   sub: '8+5：把圆点拖进盒子凑满 10。13−5：先把 3 拿走剩下 10，再拿走 2。',
   grade: 2,
   kind: '模拟',
-  points: ['2.3'],
+  points: ['1.9', '2.3'],
   group: 'operations',
   render: function (el) {
     var K = 'op-maketen';
