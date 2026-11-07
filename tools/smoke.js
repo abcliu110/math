@@ -4298,6 +4298,8 @@ check('anims: 4.9 has zerodiv + mixop (METHOD_DEMOS dual-mount) + lab questions 
   hasAnims && JSON.stringify(sandbox.animsForPoint('4.9')) === JSON.stringify(['zerodiv', 'mixop', 'twentyfour', 'matches', 'op-bracket']));
 check('anims: 5.14 has observe + m417-infer (dual-mount from 4.17) + 3 new',
   hasAnims && JSON.stringify(sandbox.animsForPoint('5.14')) === JSON.stringify(['observe', 'm417-infer', 'm514-guess', 'm514-three', 'm514-nums']));
+check('anims: 2.3 has tenframe + place (METHOD_DEMOS dual-mount from 1.15) + op-vertical + op-maketen',
+  hasAnims && JSON.stringify(sandbox.animsForPoint('2.3')) === JSON.stringify(['tenframe', 'place', 'op-vertical', 'op-maketen']));
 check('anims: 1.1 has count + numplay + m1a-pair (registry)',
   hasAnims && JSON.stringify(sandbox.animsForPoint('1.1')) === JSON.stringify(['count', 'numplay', 'm1a-pair']));
 check('checkpoint: 1.1 counts 3 animations from the registry (count + numplay + m1a-pair), not 1 from p.demo',

@@ -525,6 +525,7 @@ var SIM_LINKS = {
 var METHOD_DEMOS = {
   '4.16': ['crslider', 'crdraw', 'crlist', 'crgolden'],
   '4.9': ['mixop'],
+  '2.3': ['place'],
 };
 function animsForPoint(id) {
   const f = findPoint(id);
