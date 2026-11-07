@@ -189,7 +189,7 @@ const TYPES={
  adder:{label:'合并器',group:'数与运算',prefix:'合并器',out:'value',accepts:'value',defaults:{},fields:[],size:()=>[170,84]},
  mul:{label:'乘法器',group:'数与运算',prefix:'乘法器',out:'value',accepts:'value',defaults:{},fields:[],size:()=>[170,84]},
  div:{label:'除法器',group:'数与运算',prefix:'除法器',out:'value',accepts:'value',slots:true,defaults:{},fields:[],size:()=>[200,110]},
- money:{label:'人民币',group:'数与运算',prefix:'人民币',out:'value',defaults:{yuan:1,jiao:0},fields:[{k:'yuan',label:'元',min:0,max:99},{k:'jiao',label:'角',min:0,max:9}],size:()=>[170,62]},
+ money:{label:'人民币',group:'数与运算',prefix:'人民币',out:'value',defaults:{yuan:1,jiao:0,fen:0},fields:[{k:'yuan',label:'元',min:0,max:99},{k:'jiao',label:'角',min:0,max:9},{k:'fen',label:'分',min:0,max:9}],size:()=>[190,62]},
  clock:{label:'钟面',group:'图形',prefix:'钟面',defaults:{h:3,m:0},fields:[{k:'h',label:'时（几点）',min:1,max:12},{k:'m',label:'分',min:0,max:55,step:5}],size:()=>[180,200]},
  numline:{label:'数轴',group:'关系',prefix:'数轴',accepts:'value',defaults:{min:0,max:2},
    fields:[{k:'min',label:'最左',min:-10,max:10},{k:'max',label:'最右',min:-9,max:20}],size:()=>[460,118]},
@@ -253,7 +253,7 @@ function evaluate(s){
   const val=id=>{if(id in vals)return vals[id];if(busy[id])return null;busy[id]=1;const e=E[id];let v=null;
     if(e.type==='num')v=Q(e.props.v);else if(e.type==='frac')v=Q(e.props.n,e.props.d);
     else if(e.type==='adder'){v=Q(0);for(const l of inputs(s,id)){const x=val(l.from);if(x)v=qadd(v,x)}}
-    else if(e.type==='money')v=Q(e.props.yuan*10+e.props.jiao,10);
+    else if(e.type==='money')v=Q(e.props.yuan*100+e.props.jiao*10+(e.props.fen||0),100);
     else if(e.type==='mul'){v=Q(1);let any=false;for(const l of inputs(s,id)){const x=val(l.from);if(x){v=Q(v.n*x.n,v.d*x.d);any=true}}if(!any)v=null}
     else if(e.type==='div'){const L=inputs(s,id).find(l=>l.slot==='L'),R=inputs(s,id).find(l=>l.slot==='R');const a=L&&val(L.from),b=R&&val(R.from);v=(a&&b&&b.n!==0)?Q(a.n*b.d,a.d*b.n):null}
     return vals[id]=v};
@@ -272,7 +272,9 @@ function evaluate(s){
       else if(b.n===0)sig('err','除数不能是 0');
       else if(d.value.d===1)sig('ok',`${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`);
       else sig('warn',`除不尽：${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`)}
-    if(e.type==='clock'){const {h,m}=e.props;sig('info',`现在是 ${h}:${String(m).padStart(2,'0')}`)}
+    if(e.type==='clock'){const {h,m}=e.props;sig('info',`现在是 ${h}:${String(m).padStart(2,'0')}`);
+      const cl=Object.values(E).filter(x=>x.type==='clock');
+      if(cl.length===2&&cl[0].id===id){const t=c=>((c.props.h%12)*60+c.props.m);const mins=((t(cl[1])-t(cl[0]))%720+720)%720;sig('ok',`两个钟相差 ${mins} 分钟`)}}
     if(e.type==='numline'){const {min,max}=e.props;d.pts=inputs(s,id).map(l=>({from:l.from,v:val(l.from)})).filter(p=>p.v);
       d.pts.forEach(p=>{p.out=qnum(p.v)<min||qnum(p.v)>max;if(p.out)sig('err',`${qs(p.v)} 放不下：数轴只从 ${min} 到 ${max}`)});
       const ins=d.pts.filter(p=>!p.out);
@@ -406,7 +408,7 @@ const DRAW={
  num:(e,d,w,h)=>`<text class="big" x="${w/2}" y="${h/2+14}" text-anchor="middle" font-size="28">${e.props.v}</text>`,
  frac:(e,d,w)=>{const {n,d:dd}=e.props,rows=Math.max(1,Math.ceil(n/dd)),bw=w-24,sw=bw/dd;let s=`<text class="big" x="${w-12}" y="18" text-anchor="end" font-size="14">${n}/${dd}</text>`;
    for(let r=0;r<rows;r++)for(let i=0;i<dd;i++){const k=r*dd+i+1;s+=`<rect class="seg-cell" data-seg="${k}" x="${12+i*sw}" y="${28+r*28}" width="${sw}" height="22" fill="${k<=n?'#ff9f43':'#fff'}" stroke="#5b6778" stroke-width="1"/>`}return s},
- money:(e,d,w,h)=>`<text class="big" x="${w/2}" y="${h/2+12}" text-anchor="middle" font-size="22">${e.props.yuan} 元 ${e.props.jiao} 角</text>`,
+ money:(e,d,w,h)=>`<text class="big" x="${w/2}" y="${h/2+12}" text-anchor="middle" font-size="22">${e.props.yuan} 元 ${e.props.jiao} 角 ${e.props.fen||0} 分</text>`,
  clock:(e,d,w,h)=>{const {h:hr,m}=e.props,cx=w/2,cy=h/2+10,R=70;const ha=((hr%12)+m/60)*30-90,ma=m*6-90;const P=(a,r)=>[cx+Math.cos(a*Math.PI/180)*r,cy+Math.sin(a*Math.PI/180)*r];
    let s=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="#fff" stroke="#5b6778" stroke-width="2"/>`;
    for(let i=0;i<12;i++){const [x1,y1]=P(i*30-90,R-6),[x2,y2]=P(i*30-90,R-1);s+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#5b6778"/>`}
@@ -663,6 +665,47 @@ function woSteps(p){
 }
 WPO.forEach(p=>XP.push({id:p.id,title:p.title,domain:'应用题',grade:p.grade,tools:p.kind==='money-add'?'人民币 · 合并器':'人民币 · 数轴',q:p.title,why:p.why,build:woBuild({kind:p.kind,a:p.a,b:p.b}),steps:woSteps({kind:p.kind,a:p.a,b:p.b})}));
 WPT.forEach(p=>XP.push({id:p.id,title:p.title,domain:'应用题',grade:p.grade,tools:'钟面',q:p.title,why:p.why,build:woBuild({kind:'clock'}),steps:woSteps({kind:'clock',a:p.a,b:p.b})}));
+
+/* ========== 第三期：一年级知识点实验（用现有器材）+ 钟面时间差 ========== */
+const P3=[
+ {id:'g1p04',point:'1.4',grade:1,domain:'数与代数',tools:'数字卡 · 数轴',kind:'diff',nums:[5,2],ans:3,title:'5 − 2 = ?（5 以内减法）',q:'桌上有 5 支笔，拿走 2 支，还剩几支？用数轴看两点的距离。',why:'减法是拿走一些，剩下的就是两点之间的距离：5 − 2 = 3。'},
+ {id:'g1p06',point:'1.6',grade:1,domain:'数与代数',tools:'数字卡 · 合并器',kind:'sum',nums:[3,2,4],ans:9,title:'连加：3 + 2 + 4 = ?',q:'一个一个往上加，或者先加前两个再加第三个，结果一样。',why:'连加就是一堆一堆往上加：3 + 2 + 4 = 9。'},
+ {id:'g1p07',point:'1.7',grade:1,domain:'数与代数',tools:'数字卡 · 合并器',kind:'sum',nums:[10,3],ans:13,title:'10 加几：10 + 3 = ?',q:'10 就是 1 捆小棒，再加 3 根，是几根？',why:'10 + 3 = 13，13 里的 1 是 1 个十。'},
+ {id:'g1p08',point:'1.8',grade:1,domain:'图形与几何',tools:'钟面',kind:'clock',a:4,title:'整时：把钟面拨到 4 点整',q:'整时的时候，分针指着 12，时针指着几，就是几点。',why:'4 点整：时针指 4，分针指 12。'},
+ {id:'g1p09',point:'1.9',grade:1,domain:'数与代数',tools:'数字卡 · 合并器',kind:'sum',nums:[9,4],ans:13,title:'凑十法：9 + 4 = ?',q:'9 加几，先从 4 里拿 1 个给 9，凑成 10，再加剩下的。',why:'9 + 4 = (9 + 1) + 3 = 13。'},
+ {id:'g1p11',point:'1.11',grade:1,domain:'数与代数',tools:'数字卡 · 数轴',kind:'diff',nums:[13,5],ans:8,title:'破十法：13 − 5 = ?',q:'13 拆成 10 和 3：10 − 5 = 5，再加 3，是几？用数轴量两点的距离。',why:'13 − 5 = 8，因为 13 − 3 = 10，10 − 2 = 8。'},
+ {id:'g1p14',point:'1.14',grade:1,domain:'数与代数',tools:'人民币 · 合并器',kind:'sum',money:[[1,5],[2,3]],ans:38,title:'1 元 5 角 + 2 元 3 角 = ?',q:'元和元相加，角和角相加；角满 10 角，就进 1 元。',why:'1.5 + 2.3 = 3.8 元，即 3 元 8 角。'},
+ {id:'g1p15',point:'1.15',grade:1,domain:'数与代数',tools:'数字卡 · 合并器',kind:'sum',nums:[38,47],ans:85,title:'进位加：38 + 47 = ?',q:'个位 8 + 7 = 15，满 10 向十位进 1。',why:'38 + 47 = 85。个位进位是把 10 个一换成 1 个十。'},
+ {id:'wt06',point:'应用',grade:2,domain:'图形与几何',tools:'钟面 × 2',kind:'clock2',start:[8,0],end:[9,30],ans:90,title:'从 8 点到 9 点 30 分，过了几分钟？',q:'先拨好开始的钟，再拨结束的钟，看两个钟之间相差多少分钟。',why:'8 点到 9 点是 60 分钟，再过 30 分钟，一共 90 分钟。'},
+ {id:'wt07',point:'应用',grade:2,domain:'图形与几何',tools:'钟面 × 2',kind:'clock2',start:[2,15],end:[4,45],ans:150,title:'从 2 点 15 分到 4 点 45 分，过了几分钟？',q:'先拨好开始的钟，再拨结束的钟，看两个钟之间相差多少分钟。',why:'2:15 到 4:15 是 120 分钟，再过 30 分钟，一共 150 分钟。'},
+];
+function p3Count(p){return p.nums?p.nums.length:(p.money?p.money.length:0)}
+function p3Build(p){return function(s){
+  if(p.kind==='clock'){addEnt(s,'clock',240,40,{h:1,m:0});return}
+  if(p.kind==='clock2'){addEnt(s,'clock',200,40,{h:1,m:0});addEnt(s,'clock',420,40,{h:1,m:0});return}
+  if(p.money){p.money.forEach((q,i)=>addEnt(s,'money',60,60+i*110,{yuan:q[0],jiao:q[1]}));addEnt(s,'adder',330,110);return}
+  p.nums.forEach((v,i)=>addEnt(s,'num',60+(i%2)*0,60+i*110,{v}));
+  if(p.kind==='sum')addEnt(s,'adder',330,110);
+  else addEnt(s,'numline',120,340,{min:0,max:Math.max(...p.nums)+2});
+}}
+function p3Steps(p){
+  if(p.kind==='clock')return[
+    {label:'把时针指到 '+p.a+' 点',score:1,hint:'点钟面卡，在属性卡里把“时”调到 '+p.a,target:s=>byType(s,'clock'),check:s=>{const c=byType(s,'clock');return !!c&&s.entities[c].props.h===p.a}},
+    {label:'分针指到 12，是整时',score:2,hint:'把“分”调到 0',target:s=>byType(s,'clock'),check:s=>{const c=byType(s,'clock');return !!c&&s.entities[c].props.h===p.a&&s.entities[c].props.m===0}}];
+  if(p.kind==='clock2'){const ck=(s,i)=>Object.values(s.entities).filter(e=>e.type==='clock')[i];
+    return[
+      {label:'第一个钟拨到开始的时刻',score:1,hint:'第一个钟：时 '+p.start[0]+'，分 '+p.start[1],target:s=>byType(s,'clock'),check:s=>{const c=ck(s,0);return !!c&&c.props.h===p.start[0]&&c.props.m===p.start[1]}},
+      {label:'第二个钟拨到结束的时刻',score:1,hint:'第二个钟：时 '+p.end[0]+'，分 '+p.end[1],target:s=>byType(s,'clock'),check:s=>{const c=ck(s,1);return !!c&&c.props.h===p.end[0]&&c.props.m===p.end[1]}},
+      {label:'看两个钟相差多少分钟',score:2,hint:'看钟面下面的“相差”',target:s=>byType(s,'clock'),check:(s,D)=>{const c=Object.values(s.entities).filter(e=>e.type==='clock');return c.length===2&&(D[c[0].id].sig||[]).some(x=>x.tx==='两个钟相差 '+p.ans+' 分钟')}}];}
+  const cnt=p3Count(p);
+  if(p.kind==='sum')return[
+    {label:'把数都连到合并器',score:1,hint:'拖数的蓝点到合并器',target:s=>byType(s,'adder'),check:(s,D)=>{const ad=byType(s,'adder');return !!ad&&inputs(s,ad).length>=cnt}},
+    {label:'合并器算出的和就是答案',score:2,hint:'看合并器的读数',target:s=>byType(s,'adder'),check:(s,D)=>{const ad=byType(s,'adder');return !!ad&&!!D[ad].value&&qeq(D[ad].value,p.money?Q(p.ans,10):Q(p.ans))}}];
+  return[
+    {label:'把两个数都连到数轴',score:1,hint:'拖两个数的蓝点到数轴',target:s=>byType(s,'numline'),check:(s,D)=>{const nl=byType(s,'numline');return !!nl&&inputs(s,nl).length>=2}},
+    {label:'数轴上两点的距离就是答案',score:2,hint:'看数轴下面的“相差”',target:s=>byType(s,'numline'),check:(s,D)=>{const nl=byType(s,'numline');if(!nl)return false;const vs=inputs(s,nl).map(l=>D[l.from]&&D[l.from].value).filter(Boolean);return vs.length>=2&&Math.abs(qnum(vs[0])-qnum(vs[1]))===p.ans}}];
+}
+P3.forEach(p=>XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p3Build(p),steps:p3Steps(p)}));
 
 function startXp(id,m){xp=XP.find(x=>x.id===id);if(!xp)return;mode=m;S=blankScene();xp.build(S);undoSt=[];redoSt=[];sel=null;cardOpen=false;
   run={steps:xp.steps.map((s,i)=>({i,done:false})),ops:0,errors:0,t0:Date.now(),finished:false};$('title').textContent=xp.title;
