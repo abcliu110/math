@@ -5540,3 +5540,2869 @@ registerAnim({
     draw();
   }
 });
+
+/* 5.1 小数乘法：跳过单位正方形重叠（已有 decmul，5.1 点页主演示）；做计数单位换算、估算定小数点。 */
+registerAnim({
+  key: 'm51-units',
+  title: '计数单位换算',
+  sub: '0.3 是 3 个 0.1，0.4 是 4 个 0.1，3×4=12 个 0.01，所以是 0.12——小数点的位置是计数单位相乘决定的。',
+  grade: 5,
+  kind: '模拟',
+  points: ['5.1'],
+  render: function (el) {
+    var K = 'm51-units';
+    var LEVELS = [
+      { label: '基础', a: 3, b: 4, pa: '0.3', pb: '0.4', prod: '0.12', opts: ['0.12', '1.2', '0.012'], ans: 0 },
+      { label: '提高', a: 2, b: 5, pa: '0.2', pb: '0.5', prod: '0.1', opts: ['0.1', '1.0', '0.01'], ans: 0 },
+      { label: '挑战', a: 6, b: 7, pa: '0.6', pb: '0.7', prod: '0.42', opts: ['0.42', '4.2', '0.042'], ans: 0 }
+    ];
+    var li = 0, guessed = -1, tiers = null;
+    el.innerHTML =
+      '<p class="demo-tag">模拟 · 5 年级 · 小数乘法</p>' +
+      '<h3>计数单位换算</h3>' +
+      '<p>小数乘法不用背小数点往哪点：把两个因数拆成计数单位，个数一乘，单位一乘，答案自己出来。</p>' +
+      '<p id="' + K + '-q-tx"></p>' +
+      '<p>第 1 步 · 先猜：积是多少？</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-guess-a" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-b" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-c" type="button"></button></div>' +
+      '<p>第 2 步 · 玩一玩：点“拆成计数单位”，看个数和单位怎么乘。</p>' +
+      '<div class="btn-row"><button class="btn small primary" id="' + K + '-split" type="button">拆成计数单位</button></div>' +
+      '<p id="' + K + '-msg">先猜一猜，再点“拆成计数单位”。</p>' +
+      '<p>换一档：</p><div class="btn-row">' +
+      '<button class="btn small ghost" id="' + K + '-level-0" type="button">基础 · 0.3×0.4</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-1" type="button">提高 · 0.2×0.5</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-2" type="button">挑战 · 0.6×0.7</button></div>' +
+      '<div class="tier-row" id="' + K + '-tiers"></div>' +
+      '<div class="find-row"><label>说一说你的发现：<input type="text" id="' + K + '-find" placeholder="我发现……"></label><button class="btn small primary" id="' + K + '-find-save" type="button">记下来</button></div>' +
+      '<p id="' + K + '-find-saved"></p>' +
+      '<p class="demo-foot">成功标准：三档都说得出“个数相乘，0.1×0.1=0.01，小数点是算出来的”。</p>';
+    function gid(id) { return document.getElementById(id); }
+    function msg(t) { var m = gid(K + '-msg'); if (m) m.textContent = t; }
+    function draw() {
+      var L = LEVELS[li];
+      var q = gid(K + '-q-tx');
+      if (q) q.textContent = L.pa + ' × ' + L.pb + ' = ？';
+      var g = gid(K + '-guess-a'); if (g) g.textContent = L.opts[0];
+      g = gid(K + '-guess-b'); if (g) g.textContent = L.opts[1];
+      g = gid(K + '-guess-c'); if (g) g.textContent = L.opts[2];
+    }
+    function setLevel(i) {
+      li = i; guessed = -1;
+      for (var k = 0; k < 3; k++) {
+        var b = gid(K + '-level-' + k);
+        if (b) b.setAttribute('aria-pressed', String(k === i));
+      }
+      draw();
+      msg('先猜一猜，再点“拆成计数单位”。');
+    }
+    gid(K + '-guess-a').addEventListener('click', function () { guessed = 0; msg('你猜 ' + LEVELS[li].opts[0] + '。点“拆成计数单位”验证一下。'); });
+    gid(K + '-guess-b').addEventListener('click', function () { guessed = 1; msg('你猜 ' + LEVELS[li].opts[1] + '。点“拆成计数单位”验证一下。'); });
+    gid(K + '-guess-c').addEventListener('click', function () { guessed = 2; msg('你猜 ' + LEVELS[li].opts[2] + '。点“拆成计数单位”验证一下。'); });
+    gid(K + '-split').addEventListener('click', function () {
+      var L = LEVELS[li];
+      var n = L.a * L.b;
+      var extra = li === 1 ? '10 个 0.01 就是 0.10，也就是 0.1。' : '';
+      var ok = guessed === L.ans;
+      msg(L.pa + ' 是 ' + L.a + ' 个 0.1，' + L.pb + ' 是 ' + L.b + ' 个 0.1；' +
+        L.a + '×' + L.b + '=' + n + ' 个 0.01，0.1×0.1=0.01，所以是 ' + L.prod + '。' + extra +
+        (guessed < 0 ? '下次先猜一猜再拆。' : ok ? '你猜对了。' : '你猜的是 ' + L.opts[guessed] + '，再想想小数点为什么点在这里。'));
+      if (ok) {
+        if (tiers) tiers.done(li);
+        if (typeof markTried === 'function') markTried(K);
+      }
+    });
+    gid(K + '-level-0').addEventListener('click', function () { setLevel(0); });
+    gid(K + '-level-1').addEventListener('click', function () { setLevel(1); });
+    gid(K + '-level-2').addEventListener('click', function () { setLevel(2); });
+    if (typeof makeTiers === 'function') {
+      tiers = makeTiers(gid(K + '-tiers'),
+        ['基础：0.3×0.4=0.12', '提高：0.2×0.5=0.1', '挑战：0.6×0.7=0.42'], K);
+    }
+    if (typeof wireDiscovery === 'function') {
+      wireDiscovery(K, K + '-find', K + '-find-save', K + '-find-saved');
+    }
+    gid(K + '-level-0').setAttribute('aria-pressed', 'true');
+    draw();
+  }
+});
+registerAnim({
+  key: 'm51-estimate',
+  title: '估算定小数点',
+  sub: '先按整数乘，再用估算判断积的数量级：积在 4 附近，就不可能是 45.6，也不是 0.456。',
+  grade: 5,
+  kind: '模拟',
+  points: ['5.1'],
+  render: function (el) {
+    var K = 'm51-estimate';
+    var LEVELS = [
+      { label: '基础', a: '2.4', b: '1.9', est: '2×2=4', prod: '4.56', opts: ['4.56', '45.6', '0.456'], ans: 0 },
+      { label: '提高', a: '3.2', b: '2.5', est: '3×2.5=7.5', prod: '8', opts: ['8', '80', '0.8'], ans: 0 },
+      { label: '挑战', a: '0.48', b: '3.1', est: '0.5×3=1.5', prod: '1.488', opts: ['1.488', '14.88', '0.1488'], ans: 0 }
+    ];
+    var li = 0, guessed = -1, tiers = null;
+    el.innerHTML =
+      '<p class="demo-tag">模拟 · 5 年级 · 小数乘法</p>' +
+      '<h3>估算定小数点</h3>' +
+      '<p>小数点点错一位，答案就差 10 倍。先估一估积在哪个数量级，再点小数点，就点不错了。</p>' +
+      '<p id="' + K + '-q-tx"></p>' +
+      '<p>第 1 步 · 先猜：小数点点在哪？</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-guess-a" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-b" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-c" type="button"></button></div>' +
+      '<p>第 2 步 · 玩一玩：先估算，再点小数点。</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-est" type="button">先估算</button>' +
+      '<button class="btn small primary" id="' + K + '-place" type="button">点小数点</button></div>' +
+      '<p id="' + K + '-msg">先猜一猜，再点“先估算”。</p>' +
+      '<p>换一档：</p><div class="btn-row">' +
+      '<button class="btn small ghost" id="' + K + '-level-0" type="button">基础 · 2.4×1.9</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-1" type="button">提高 · 3.2×2.5</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-2" type="button">挑战 · 0.48×3.1</button></div>' +
+      '<div class="tier-row" id="' + K + '-tiers"></div>' +
+      '<div class="find-row"><label>说一说你的发现：<input type="text" id="' + K + '-find" placeholder="我发现……"></label><button class="btn small primary" id="' + K + '-find-save" type="button">记下来</button></div>' +
+      '<p id="' + K + '-find-saved"></p>' +
+      '<p class="demo-foot">成功标准：三档都说得出“先估数量级，再点小数点”。</p>';
+    function gid(id) { return document.getElementById(id); }
+    function msg(t) { var m = gid(K + '-msg'); if (m) m.textContent = t; }
+    function draw() {
+      var L = LEVELS[li];
+      var q = gid(K + '-q-tx');
+      if (q) q.textContent = L.a + ' × ' + L.b + ' = ？';
+      var g = gid(K + '-guess-a'); if (g) g.textContent = L.opts[0];
+      g = gid(K + '-guess-b'); if (g) g.textContent = L.opts[1];
+      g = gid(K + '-guess-c'); if (g) g.textContent = L.opts[2];
+    }
+    function setLevel(i) {
+      li = i; guessed = -1;
+      for (var k = 0; k < 3; k++) {
+        var b = gid(K + '-level-' + k);
+        if (b) b.setAttribute('aria-pressed', String(k === i));
+      }
+      draw();
+      msg('先猜一猜，再点“先估算”。');
+    }
+    gid(K + '-guess-a').addEventListener('click', function () { guessed = 0; msg('你猜 ' + LEVELS[li].opts[0] + '。点“先估算”验证一下。'); });
+    gid(K + '-guess-b').addEventListener('click', function () { guessed = 1; msg('你猜 ' + LEVELS[li].opts[1] + '。点“先估算”验证一下。'); });
+    gid(K + '-guess-c').addEventListener('click', function () { guessed = 2; msg('你猜 ' + LEVELS[li].opts[2] + '。点“先估算”验证一下。'); });
+    gid(K + '-est').addEventListener('click', function () {
+      var L = LEVELS[li];
+      msg(L.a + ' × ' + L.b + ' 估算：' + L.est + '。积就在 ' + L.est.split('=')[1] + ' 附近。');
+    });
+    gid(K + '-place').addEventListener('click', function () {
+      var L = LEVELS[li];
+      var ok = guessed === L.ans;
+      msg('按整数乘，再点上小数点：' + L.a + '×' + L.b + '=' + L.prod + '。估算说积在 ' + L.est.split('=')[1] + ' 附近，' + L.prod + ' 正好对得上。' +
+        (guessed < 0 ? '下次先猜一猜再点。' : ok ? '你猜对了。' : '你猜的是 ' + L.opts[guessed] + '，和估算的数量级对不上。'));
+      if (ok) {
+        if (tiers) tiers.done(li);
+        if (typeof markTried === 'function') markTried(K);
+      }
+    });
+    gid(K + '-level-0').addEventListener('click', function () { setLevel(0); });
+    gid(K + '-level-1').addEventListener('click', function () { setLevel(1); });
+    gid(K + '-level-2').addEventListener('click', function () { setLevel(2); });
+    if (typeof makeTiers === 'function') {
+      tiers = makeTiers(gid(K + '-tiers'),
+        ['基础：2.4×1.9=4.56', '提高：3.2×2.5=8', '挑战：0.48×3.1=1.488'], K);
+    }
+    if (typeof wireDiscovery === 'function') {
+      wireDiscovery(K, K + '-find', K + '-find-save', K + '-find-saved');
+    }
+    gid(K + '-level-0').setAttribute('aria-pressed', 'true');
+    draw();
+  }
+});
+/* 5.2 位置：跳过坐标网格描点（已有 gridpos，5.2 点页主演示）；gridpos 的“考一考”只是找点，没有藏船开炮，做军舰游戏；再做平移看数对变化。 */
+registerAnim({
+  key: 'm52-ship',
+  title: '军舰游戏猜船',
+  sub: '网格上藏了一条船，报数对开炮：打中、打偏、船沉了——列行颠倒，炮就打空了。',
+  grade: 5,
+  kind: '实验',
+  points: ['5.2'],
+  render: function (el) {
+    var K = 'm52-ship';
+    var LEVELS = [
+      { label: '基础', ship: [[3, 2], [4, 2]], dir: '横着', opts: ['横着', '竖着'], ans: 0 },
+      { label: '提高', ship: [[2, 3], [2, 4]], dir: '竖着', opts: ['横着', '竖着'], ans: 1 },
+      { label: '挑战', ship: [[5, 1], [5, 2], [5, 3]], dir: '竖着', opts: ['横着', '竖着'], ans: 1 }
+    ];
+    var li = 0, guessed = -1, fired = {}, hits = 0, shots = 0, sunk = false, tiers = null;
+    el.innerHTML =
+      '<p class="demo-tag">实验 · 5 年级 · 位置</p>' +
+      '<h3>军舰游戏猜船</h3>' +
+      '<p>6 列 5 行的海面上藏了一条船。报数对开炮：先数列，再数行，(3,2) 和 (2,3) 是两个地方。</p>' +
+      '<p>第 1 步 · 先猜：船是横着的，还是竖着的？</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-guess-h" type="button">横着</button>' +
+      '<button class="btn small primary" id="' + K + '-guess-v" type="button">竖着</button></div>' +
+      '<p>第 2 步 · 玩一玩：点一个格子开炮。</p>' +
+      '<div id="' + K + '-grid"></div>' +
+      '<p id="' + K + '-msg">先猜一猜，再点格子开炮。</p>' +
+      '<p>换一档：</p><div class="btn-row">' +
+      '<button class="btn small ghost" id="' + K + '-level-0" type="button">基础 · 2 格船</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-1" type="button">提高 · 2 格船</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-2" type="button">挑战 · 3 格船</button></div>' +
+      '<div class="tier-row" id="' + K + '-tiers"></div>' +
+      '<div class="find-row"><label>说一说你的发现：<input type="text" id="' + K + '-find" placeholder="我发现……"></label><button class="btn small primary" id="' + K + '-find-save" type="button">记下来</button></div>' +
+      '<p id="' + K + '-find-saved"></p>' +
+      '<p class="demo-foot">成功标准：三档都说得出“先列后行，顺序错了炮就打空”。</p>';
+    function gid(id) { return document.getElementById(id); }
+    function msg(t) { var m = gid(K + '-msg'); if (m) m.textContent = t; }
+    function isShip(c, r) {
+      var s = LEVELS[li].ship;
+      for (var i = 0; i < s.length; i++) if (s[i][0] === c && s[i][1] === r) return true;
+      return false;
+    }
+    function buildGrid() {
+      var s = '';
+      for (var r = 1; r <= 5; r++) {
+        s += '<div>';
+        for (var c = 1; c <= 6; c++) {
+          s += '<button class="btn small ghost" id="' + K + '-c-' + c + '-' + r + '" type="button" style="width:34px">(' + c + ',' + r + ')</button>';
+        }
+        s += '</div>';
+      }
+      var g = gid(K + '-grid');
+      if (g) g.innerHTML = s;
+      for (var r2 = 1; r2 <= 5; r2++) {
+        for (var c2 = 1; c2 <= 6; c2++) {
+          (function (cc, rr) {
+            var b = gid(K + '-c-' + cc + '-' + rr);
+            if (b) b.addEventListener('click', function () { fire(cc, rr); });
+          })(c2, r2);
+        }
+      }
+    }
+    function fire(c, r) {
+      if (sunk) { msg('船已经沉了，换一档再玩一局。'); return; }
+      var key = c + ',' + r;
+      if (fired[key]) { msg('(' + c + ',' + r + ') 这里开过炮了，换个地方。'); return; }
+      fired[key] = true; shots++;
+      if (isShip(c, r)) {
+        hits++;
+        var b = gid(K + '-c-' + c + '-' + r);
+        if (b) b.textContent = '打中';
+        if (hits >= LEVELS[li].ship.length) {
+          sunk = true;
+          var ok = guessed === LEVELS[li].ans;
+          msg('打中了！(' + c + ',' + r + ') 有船。船沉了！一共开了 ' + shots + ' 炮。船是' + LEVELS[li].dir + '的。' +
+            (guessed < 0 ? '下次先猜一猜方向再开炮。' : ok ? '你猜对了。' : '你猜的是' + LEVELS[li].opts[guessed] + '。'));
+          if (ok) {
+            if (tiers) tiers.done(li);
+            if (typeof markTried === 'function') markTried(K);
+          }
+        } else {
+          msg('打中了！(' + c + ',' + r + ') 有船，还差 ' + (LEVELS[li].ship.length - hits) + ' 格。');
+          if (typeof markTried === 'function') markTried(K);
+        }
+      } else {
+        var b2 = gid(K + '-c-' + c + '-' + r);
+        if (b2) b2.textContent = '空';
+        msg('没打中：(' + c + ',' + r + ') 是空的——先数列，再数行，(3,2) 和 (2,3) 不是一个地方。');
+      }
+    }
+    function setLevel(i) {
+      li = i; guessed = -1; fired = {}; hits = 0; shots = 0; sunk = false;
+      for (var k = 0; k < 3; k++) {
+        var b = gid(K + '-level-' + k);
+        if (b) b.setAttribute('aria-pressed', String(k === i));
+      }
+      for (var r = 1; r <= 5; r++) {
+        for (var c = 1; c <= 6; c++) {
+          var cell = gid(K + '-c-' + c + '-' + r);
+          if (cell) cell.textContent = '(' + c + ',' + r + ')';
+        }
+      }
+      msg('先猜一猜，再点格子开炮。');
+    }
+    gid(K + '-guess-h').addEventListener('click', function () { guessed = 0; msg('你猜船是横着的。开炮验证一下。'); });
+    gid(K + '-guess-v').addEventListener('click', function () { guessed = 1; msg('你猜船是竖着的。开炮验证一下。'); });
+    gid(K + '-level-0').addEventListener('click', function () { setLevel(0); });
+    gid(K + '-level-1').addEventListener('click', function () { setLevel(1); });
+    gid(K + '-level-2').addEventListener('click', function () { setLevel(2); });
+    if (typeof makeTiers === 'function') {
+      tiers = makeTiers(gid(K + '-tiers'),
+        ['基础：打沉 2 格横船', '提高：打沉 2 格竖船', '挑战：打沉 3 格竖船'], K);
+    }
+    if (typeof wireDiscovery === 'function') {
+      wireDiscovery(K, K + '-find', K + '-find-save', K + '-find-saved');
+    }
+    gid(K + '-level-0').setAttribute('aria-pressed', 'true');
+    buildGrid();
+  }
+});
+registerAnim({
+  key: 'm52-shift',
+  title: '平移看数对变化',
+  sub: '点向右移，列数加、行数不变；向上移，行数加、列数不变——移一移，数对的含义就出来了。',
+  grade: 5,
+  kind: '模拟',
+  points: ['5.2'],
+  render: function (el) {
+    var K = 'm52-shift';
+    var LEVELS = [
+      { label: '基础', dx: 2, dy: 0, target: [4, 2], q: '向右移 2 格，哪个数变？', opts: ['列数 +2', '行数 +2'], ans: 0 },
+      { label: '提高', dx: 0, dy: 3, target: [2, 5], q: '向上移 3 格，哪个数变？', opts: ['列数 +3', '行数 +3'], ans: 1 },
+      { label: '挑战', dx: 2, dy: 1, target: [4, 3], q: '先向右 2 格，再向上 1 格，数对是？', opts: ['(4,3)', '(3,4)'], ans: 0 }
+    ];
+    var li = 0, col = 2, row = 2, guessed = -1, tiers = null;
+    el.innerHTML =
+      '<p class="demo-tag">模拟 · 5 年级 · 位置</p>' +
+      '<h3>平移看数对变化</h3>' +
+      '<p>行从下往上数。起点是 (2,2)。移一移，看看数对里哪个数变了、哪个没动。</p>' +
+      '<p id="' + K + '-q-tx"></p>' +
+      '<p>第 1 步 · 先猜：按问题猜一猜。</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-guess-a" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-b" type="button"></button></div>' +
+      '<p>第 2 步 · 玩一玩：移一移，再点“到站了吗”。</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-left" type="button">向左</button>' +
+      '<button class="btn small primary" id="' + K + '-right" type="button">向右</button>' +
+      '<button class="btn small primary" id="' + K + '-up" type="button">向上</button>' +
+      '<button class="btn small primary" id="' + K + '-down" type="button">向下</button>' +
+      '<button class="btn small primary" id="' + K + '-check" type="button">到站了吗</button></div>' +
+      '<div id="' + K + '-grid"></div>' +
+      '<p id="' + K + '-pos"></p>' +
+      '<p id="' + K + '-msg">先猜一猜，再移一移。</p>' +
+      '<p>换一档：</p><div class="btn-row">' +
+      '<button class="btn small ghost" id="' + K + '-level-0" type="button">基础 · 向右 2 格</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-1" type="button">提高 · 向上 3 格</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-2" type="button">挑战 · 右 2 上 1</button></div>' +
+      '<div class="tier-row" id="' + K + '-tiers"></div>' +
+      '<div class="find-row"><label>说一说你的发现：<input type="text" id="' + K + '-find" placeholder="我发现……"></label><button class="btn small primary" id="' + K + '-find-save" type="button">记下来</button></div>' +
+      '<p id="' + K + '-find-saved"></p>' +
+      '<p class="demo-foot">成功标准：三档都说得出“左右移变列数，上下移变行数”。</p>';
+    function gid(id) { return document.getElementById(id); }
+    function msg(t) { var m = gid(K + '-msg'); if (m) m.textContent = t; }
+    function draw() {
+      var L = LEVELS[li];
+      var q = gid(K + '-q-tx');
+      if (q) q.textContent = '目标：(' + L.target[0] + ',' + L.target[1] + ')。' + L.q;
+      var g = gid(K + '-guess-a'); if (g) g.textContent = L.opts[0];
+      g = gid(K + '-guess-b'); if (g) g.textContent = L.opts[1];
+      var s = '';
+      for (var r = 5; r >= 1; r--) {
+        s += '<div>';
+        for (var c = 1; c <= 6; c++) {
+          s += '<span style="display:inline-block;width:26px;height:26px;border:1px solid #666;text-align:center;background:' + ((c === col && r === row) ? '#f97316' : '#fff') + '">' + ((c === col && r === row) ? '●' : '') + '</span>';
+        }
+        s += ' 第 ' + r + ' 行</div>';
+      }
+      var gr = gid(K + '-grid');
+      if (gr) gr.innerHTML = s;
+      var p = gid(K + '-pos');
+      if (p) p.textContent = '现在在 (' + col + ',' + row + ')：第 ' + col + ' 列第 ' + row + ' 行。';
+    }
+    function move(dc, dr) {
+      col = Math.max(1, Math.min(6, col + dc));
+      row = Math.max(1, Math.min(5, row + dr));
+      draw();
+    }
+    function setLevel(i) {
+      li = i; col = 2; row = 2; guessed = -1;
+      for (var k = 0; k < 3; k++) {
+        var b = gid(K + '-level-' + k);
+        if (b) b.setAttribute('aria-pressed', String(k === i));
+      }
+      draw();
+      msg('先猜一猜，再移一移。');
+    }
+    gid(K + '-guess-a').addEventListener('click', function () { guessed = 0; msg('你猜 ' + LEVELS[li].opts[0] + '。移一移验证一下。'); });
+    gid(K + '-guess-b').addEventListener('click', function () { guessed = 1; msg('你猜 ' + LEVELS[li].opts[1] + '。移一移验证一下。'); });
+    gid(K + '-left').addEventListener('click', function () { move(-1, 0); });
+    gid(K + '-right').addEventListener('click', function () { move(1, 0); });
+    gid(K + '-up').addEventListener('click', function () { move(0, 1); });
+    gid(K + '-down').addEventListener('click', function () { move(0, -1); });
+    gid(K + '-check').addEventListener('click', function () {
+      var L = LEVELS[li];
+      var ok = guessed === L.ans;
+      if (col === L.target[0] && row === L.target[1]) {
+        msg('到了！(' + col + ',' + row + ')：' + (L.dx !== 0 && L.dy === 0 ? '列数从 2 变成 ' + col + '，行数还是 2，没动。' : L.dx === 0 && L.dy !== 0 ? '行数从 2 变成 ' + row + '，列数还是 2，没动。' : '列数变成 ' + col + '，行数变成 ' + row + '。') +
+          (guessed < 0 ? '下次先猜一猜再移。' : ok ? '你猜对了。' : '你猜的是 ' + L.opts[guessed] + '。'));
+        if (ok) {
+          if (tiers) tiers.done(li);
+          if (typeof markTried === 'function') markTried(K);
+        }
+      } else {
+        msg('还没到：现在是 (' + col + ',' + row + ')，目标是 (' + L.target[0] + ',' + L.target[1] + ')。再移一移。');
+      }
+    });
+    gid(K + '-level-0').addEventListener('click', function () { setLevel(0); });
+    gid(K + '-level-1').addEventListener('click', function () { setLevel(1); });
+    gid(K + '-level-2').addEventListener('click', function () { setLevel(2); });
+    if (typeof makeTiers === 'function') {
+      tiers = makeTiers(gid(K + '-tiers'),
+        ['基础：(2,2)→(4,2)', '提高：(2,2)→(2,5)', '挑战：(2,2)→(4,3)'], K);
+    }
+    if (typeof wireDiscovery === 'function') {
+      wireDiscovery(K, K + '-find', K + '-find-save', K + '-find-saved');
+    }
+    gid(K + '-level-0').setAttribute('aria-pressed', 'true');
+    draw();
+  }
+});
+
+/* 5.4 可能性：跳过先模拟 100 次（已有 prob，5.4 点页主演示）和公平游戏设计（已有 fairgame，实验室问题挂在 5.4 点页）；做转盘面积定概率。 */
+registerAnim({
+  key: 'm54-wheel',
+  title: '转盘面积定概率',
+  sub: '概率就是颜色占转盘的几分之几：扇形越大，指针停在那里的可能性越大。改扇形大小，概率跟着变。',
+  grade: 5,
+  kind: '模拟',
+  points: ['5.4'],
+  render: function (el) {
+    var K = 'm54-wheel';
+    var LEVELS = [
+      { label: '基础', red: 1, exp: 5, opts: ['5 次', '10 次', '15 次'], ans: 0 },
+      { label: '提高', red: 2, exp: 10, opts: ['5 次', '10 次', '15 次'], ans: 1 },
+      { label: '挑战', red: 3, exp: 15, opts: ['5 次', '10 次', '15 次'], ans: 2 }
+    ];
+    var li = 0, red = 1, guessed = -1, spins = 0, redHits = 0, tiers = null;
+    el.innerHTML =
+      '<p class="demo-tag">模拟 · 5 年级 · 可能性</p>' +
+      '<h3>转盘面积定概率</h3>' +
+      '<p>转盘切成 4 份，红色占几份，指针停在红色的可能性就是几分之几。先猜转 20 次大概几次停在红色，再转一转。</p>' +
+      '<p id="' + K + '-q-tx"></p>' +
+      '<p>第 1 步 · 先猜：转 20 次，几次停在红色？</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-guess-a" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-b" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-c" type="button"></button></div>' +
+      '<p>第 2 步 · 玩一玩：改改红色占几份，再转 20 次。</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small ghost" id="' + K + '-red-1" type="button">红 1 份</button>' +
+      '<button class="btn small ghost" id="' + K + '-red-2" type="button">红 2 份</button>' +
+      '<button class="btn small ghost" id="' + K + '-red-3" type="button">红 3 份</button>' +
+      '<button class="btn small primary" id="' + K + '-spin" type="button">转 20 次</button></div>' +
+      '<div id="' + K + '-wheel"></div>' +
+      '<p id="' + K + '-prob"></p>' +
+      '<p id="' + K + '-msg">先猜一猜，再点“转 20 次”。</p>' +
+      '<p>换一档：</p><div class="btn-row">' +
+      '<button class="btn small ghost" id="' + K + '-level-0" type="button">基础 · 红 1 份</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-1" type="button">提高 · 红 2 份</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-2" type="button">挑战 · 红 3 份</button></div>' +
+      '<div class="tier-row" id="' + K + '-tiers"></div>' +
+      '<div class="find-row"><label>说一说你的发现：<input type="text" id="' + K + '-find" placeholder="我发现……"></label><button class="btn small primary" id="' + K + '-find-save" type="button">记下来</button></div>' +
+      '<p id="' + K + '-find-saved"></p>' +
+      '<p class="demo-foot">成功标准：三档都说得出“红色占几分之几，可能性就是几分之几”。</p>';
+    function gid(id) { return document.getElementById(id); }
+    function msg(t) { var m = gid(K + '-msg'); if (m) m.textContent = t; }
+    function sector(cx, cy, r, a0, a1) {
+      var x0 = cx + r * Math.cos(a0 * Math.PI / 180), y0 = cy + r * Math.sin(a0 * Math.PI / 180);
+      var x1 = cx + r * Math.cos(a1 * Math.PI / 180), y1 = cy + r * Math.sin(a1 * Math.PI / 180);
+      return 'M' + cx + ' ' + cy + ' L' + x0.toFixed(1) + ' ' + y0.toFixed(1) + ' A' + r + ' ' + r + ' 0 0 1 ' + x1.toFixed(1) + ' ' + y1.toFixed(1) + ' Z';
+    }
+    function draw() {
+      var L = LEVELS[li];
+      var q = gid(K + '-q-tx');
+      if (q) q.textContent = '红色占 ' + L.red + ' 份，转 20 次，几次停在红色？';
+      var g = gid(K + '-guess-a'); if (g) g.textContent = L.opts[0];
+      g = gid(K + '-guess-b'); if (g) g.textContent = L.opts[1];
+      g = gid(K + '-guess-c'); if (g) g.textContent = L.opts[2];
+      var s = '<svg width="220" height="220" viewBox="0 0 220 220" role="img" aria-label="四等分转盘"><circle cx="110" cy="110" r="90" fill="#fff" stroke="#78716c" stroke-width="2"/>';
+      s += '<path d="' + sector(110, 110, 90, -90, -90 + red * 90) + '" fill="#f97316"/>';
+      for (var i = 1; i < 4; i++) {
+        var a = (-90 + i * 90) * Math.PI / 180;
+        s += '<line x1="110" y1="110" x2="' + (110 + 90 * Math.cos(a)).toFixed(1) + '" y2="' + (110 + 90 * Math.sin(a)).toFixed(1) + '" stroke="#78716c" stroke-width="1"/>';
+      }
+      s += '</svg>';
+      var w = gid(K + '-wheel');
+      if (w) w.innerHTML = s;
+      var p = gid(K + '-prob');
+      if (p) p.textContent = '红色占转盘的 ' + red + '/4，指针停在红色的可能性是 ' + red + '/4。';
+    }
+    function setRed(n) {
+      red = n;
+      spins = 0; redHits = 0;
+      draw();
+      msg('红色改成 ' + n + ' 份了，可能性变成 ' + n + '/4。转 20 次试试。');
+    }
+    function setLevel(i) {
+      li = i; guessed = -1; spins = 0; redHits = 0;
+      red = LEVELS[i].red;
+      for (var k = 0; k < 3; k++) {
+        var b = gid(K + '-level-' + k);
+        if (b) b.setAttribute('aria-pressed', String(k === i));
+      }
+      draw();
+      msg('先猜一猜，再点“转 20 次”。');
+    }
+    gid(K + '-guess-a').addEventListener('click', function () { guessed = 0; msg('你猜 5 次。转 20 次验证一下。'); });
+    gid(K + '-guess-b').addEventListener('click', function () { guessed = 1; msg('你猜 10 次。转 20 次验证一下。'); });
+    gid(K + '-guess-c').addEventListener('click', function () { guessed = 2; msg('你猜 15 次。转 20 次验证一下。'); });
+    gid(K + '-red-1').addEventListener('click', function () { setRed(1); });
+    gid(K + '-red-2').addEventListener('click', function () { setRed(2); });
+    gid(K + '-red-3').addEventListener('click', function () { setRed(3); });
+    gid(K + '-spin').addEventListener('click', function () {
+      var L = LEVELS[li];
+      var n = 0;
+      for (var i = 0; i < 20; i++) if (Math.random() < red / 4) n++;
+      spins += 20; redHits += n;
+      var ok = guessed === L.ans;
+      msg('转了 20 次，红色停了 ' + n + ' 次；按 ' + red + '/4 算，大约是 ' + Math.round(20 * red / 4) + ' 次。' +
+        (guessed < 0 ? '下次先猜一猜再转。' : ok ? '你猜对了。' : '你猜的是 ' + L.opts[guessed] + '，大约应该是 ' + L.exp + ' 次。'));
+      if (ok) {
+        if (tiers) tiers.done(li);
+        if (typeof markTried === 'function') markTried(K);
+      }
+    });
+    gid(K + '-level-0').addEventListener('click', function () { setLevel(0); });
+    gid(K + '-level-1').addEventListener('click', function () { setLevel(1); });
+    gid(K + '-level-2').addEventListener('click', function () { setLevel(2); });
+    if (typeof makeTiers === 'function') {
+      tiers = makeTiers(gid(K + '-tiers'),
+        ['基础：红 1/4，大约 5 次', '提高：红 2/4，大约 10 次', '挑战：红 3/4，大约 15 次'], K);
+    }
+    if (typeof wireDiscovery === 'function') {
+      wireDiscovery(K, K + '-find', K + '-find-save', K + '-find-saved');
+    }
+    gid(K + '-level-0').setAttribute('aria-pressed', 'true');
+    draw();
+  }
+});
+/* 5.5 简易方程：跳过天平两边同动（已有 balance 旗舰演示，5.5 点页主演示）；做卡片隔离法、条形图列方程、倒推猜数。 */
+registerAnim({
+  key: 'm55-cards',
+  title: '卡片隔离法',
+  sub: '把 x 卡片单独留在天平一边：加相反的牌抵消，再除以系数——图画牌慢慢变成数字和字母，代数符号是后长出来的。',
+  grade: 5,
+  kind: '实验',
+  points: ['5.5'],
+  render: function (el) {
+    var K = 'm55-cards';
+    var LEVELS = [
+      { label: '基础', eq: 'x + 3 = 8', opts: ['4', '5', '6'], ans: 1, x: 5, acts: ['两边同时拿走 3'], done: 'x = 5', mid: '' },
+      { label: '提高', eq: 'x + 5 = 12', opts: ['6', '7', '8'], ans: 1, x: 7, acts: ['两边同时拿走 5'], done: 'x = 7', mid: '' },
+      { label: '挑战', eq: '2x + 4 = 10', opts: ['2', '3', '4'], ans: 1, x: 3, acts: ['两边同时拿走 4', '两边同时分成 2 份'], done: 'x = 3', mid: '还剩 2x = 6，再分成 2 份。' }
+    ];
+    var li = 0, guessed = -1, step = 0, tiers = null;
+    el.innerHTML =
+      '<p class="demo-tag">实验 · 5 年级 · 简易方程</p>' +
+      '<h3>卡片隔离法</h3>' +
+      '<p>天平左边是 x 卡片和数字牌，右边是数字牌。目标：让 x 一个人留在左边。只能两边一起动。</p>' +
+      '<p id="' + K + '-q-tx"></p>' +
+      '<p>第 1 步 · 先猜：x 是几？</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-guess-a" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-b" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-c" type="button"></button></div>' +
+      '<p>第 2 步 · 玩一玩：按顺序点“两边同动”的牌。</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-act-0" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-act-1" type="button"></button>' +
+      '<button class="btn small ghost" id="' + K + '-trap" type="button">只拿走一边（错的）</button></div>' +
+      '<p id="' + K + '-msg">先猜一猜，再点牌。</p>' +
+      '<p>换一档：</p><div class="btn-row">' +
+      '<button class="btn small ghost" id="' + K + '-level-0" type="button">基础 · x+3=8</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-1" type="button">提高 · x+5=12</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-2" type="button">挑战 · 2x+4=10</button></div>' +
+      '<div class="tier-row" id="' + K + '-tiers"></div>' +
+      '<div class="find-row"><label>说一说你的发现：<input type="text" id="' + K + '-find" placeholder="我发现……"></label><button class="btn small primary" id="' + K + '-find-save" type="button">记下来</button></div>' +
+      '<p id="' + K + '-find-saved"></p>' +
+      '<p class="demo-foot">成功标准：三档都说得出“两边同动，x 才能单独留下来”。</p>';
+    function gid(id) { return document.getElementById(id); }
+    function msg(t) { var m = gid(K + '-msg'); if (m) m.textContent = t; }
+    function draw() {
+      var L = LEVELS[li];
+      var q = gid(K + '-q-tx');
+      if (q) q.textContent = L.eq + '：x 是几？';
+      var g = gid(K + '-guess-a'); if (g) g.textContent = L.opts[0];
+      g = gid(K + '-guess-b'); if (g) g.textContent = L.opts[1];
+      g = gid(K + '-guess-c'); if (g) g.textContent = L.opts[2];
+      var a0 = gid(K + '-act-0'); if (a0) a0.textContent = L.acts[0];
+      var a1 = gid(K + '-act-1');
+      if (a1) { a1.textContent = L.acts[1] || '（没有第二步）'; a1.hidden = !L.acts[1]; }
+    }
+    function setLevel(i) {
+      li = i; guessed = -1; step = 0;
+      for (var k = 0; k < 3; k++) {
+        var b = gid(K + '-level-' + k);
+        if (b) b.setAttribute('aria-pressed', String(k === i));
+      }
+      draw();
+      msg('先猜一猜，再点牌。');
+    }
+    gid(K + '-guess-a').addEventListener('click', function () { guessed = 0; msg('你猜 x = ' + LEVELS[li].opts[0] + '。点牌验证一下。'); });
+    gid(K + '-guess-b').addEventListener('click', function () { guessed = 1; msg('你猜 x = ' + LEVELS[li].opts[1] + '。点牌验证一下。'); });
+    gid(K + '-guess-c').addEventListener('click', function () { guessed = 2; msg('你猜 x = ' + LEVELS[li].opts[2] + '。点牌验证一下。'); });
+    gid(K + '-trap').addEventListener('click', function () {
+      msg('天平翘了！只拿走一边的牌，等式就坏了——两边要一起动，天平才平着。');
+    });
+    gid(K + '-act-0').addEventListener('click', function () {
+      var L = LEVELS[li];
+      if (step !== 0) { msg('这一步已经做过了，点下一步。'); return; }
+      step = 1;
+      if (L.acts.length === 1) {
+        finish();
+      } else {
+        msg(L.mid);
+      }
+    });
+    gid(K + '-act-1').addEventListener('click', function () {
+      var L = LEVELS[li];
+      if (!L.acts[1]) { msg('这一档没有第二步。'); return; }
+      if (step !== 1) { msg('先做第一步：' + L.acts[0] + '。'); return; }
+      step = 2;
+      finish();
+    });
+    function finish() {
+      var L = LEVELS[li];
+      var ok = guessed === L.ans;
+      msg('x 一个人留在左边了：' + L.done + '。' +
+        (guessed < 0 ? '下次先猜一猜再点牌。' : ok ? '你猜对了。' : '你猜的是 x = ' + L.opts[guessed] + '，实际是 x = ' + L.x + '。'));
+      if (ok) {
+        if (tiers) tiers.done(li);
+        if (typeof markTried === 'function') markTried(K);
+      }
+    }
+    gid(K + '-level-0').addEventListener('click', function () { setLevel(0); });
+    gid(K + '-level-1').addEventListener('click', function () { setLevel(1); });
+    gid(K + '-level-2').addEventListener('click', function () { setLevel(2); });
+    if (typeof makeTiers === 'function') {
+      tiers = makeTiers(gid(K + '-tiers'),
+        ['基础：x+3=8，x=5', '提高：x+5=12，x=7', '挑战：2x+4=10，x=3'], K);
+    }
+    if (typeof wireDiscovery === 'function') {
+      wireDiscovery(K, K + '-find', K + '-find-save', K + '-find-saved');
+    }
+    gid(K + '-level-0').setAttribute('aria-pressed', 'true');
+    draw();
+  }
+});
+registerAnim({
+  key: 'm55-bar',
+  title: '条形图列方程',
+  sub: '未知量画成一条不知道多长的条，已知量画成定长的条：条与条的等长关系，直接写成方程。',
+  grade: 5,
+  kind: '模拟',
+  points: ['5.5'],
+  render: function (el) {
+    var K = 'm55-bar';
+    var LEVELS = [
+      { label: '基础', desc: '一条不知道多长的条，加上一条 5 厘米的条，和一条 12 厘米的条一样长。', eq: 'x + 5 = 12', x: 7, opts: ['5', '7', '12'], ans: 1, bars: [7, 5, 12] },
+      { label: '提高', desc: '两条一样长、不知道多长的条，加上一条 4 厘米的条，和一条 14 厘米的条一样长。', eq: '2x + 4 = 14', x: 5, opts: ['4', '5', '6'], ans: 1, bars: [5, 5, 4, 14] },
+      { label: '挑战', desc: '一条短条，加上两条和它一样长的短条，一共 15 厘米。', eq: 'x + 2x = 15', x: 5, opts: ['3', '5', '6'], ans: 1, bars: [5, 5, 5, 15] }
+    ];
+    var li = 0, guessed = -1, drawn = false, written = false, tiers = null;
+    el.innerHTML =
+      '<p class="demo-tag">模拟 · 5 年级 · 简易方程</p>' +
+      '<h3>条形图列方程</h3>' +
+      '<p>先画条，再列式：不知道多长的条就是 x，条和条一样长，就是等号。</p>' +
+      '<p id="' + K + '-q-tx"></p>' +
+      '<p>第 1 步 · 先猜：x 是几？</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-guess-a" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-b" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-c" type="button"></button></div>' +
+      '<p>第 2 步 · 玩一玩：画条、列式、解出来。</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-draw" type="button">画条</button>' +
+      '<button class="btn small primary" id="' + K + '-write" type="button">列式</button>' +
+      '<button class="btn small primary" id="' + K + '-solve" type="button">解出来</button></div>' +
+      '<div id="' + K + '-bars"></div>' +
+      '<p id="' + K + '-msg">先猜一猜，再点“画条”。</p>' +
+      '<p>换一档：</p><div class="btn-row">' +
+      '<button class="btn small ghost" id="' + K + '-level-0" type="button">基础 · x+5=12</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-1" type="button">提高 · 2x+4=14</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-2" type="button">挑战 · x+2x=15</button></div>' +
+      '<div class="tier-row" id="' + K + '-tiers"></div>' +
+      '<div class="find-row"><label>说一说你的发现：<input type="text" id="' + K + '-find" placeholder="我发现……"></label><button class="btn small primary" id="' + K + '-find-save" type="button">记下来</button></div>' +
+      '<p id="' + K + '-find-saved"></p>' +
+      '<p class="demo-foot">成功标准：三档都说得出“条一样长就是等号，先画条再列式”。</p>';
+    function gid(id) { return document.getElementById(id); }
+    function msg(t) { var m = gid(K + '-msg'); if (m) m.textContent = t; }
+    function draw() {
+      var L = LEVELS[li];
+      var q = gid(K + '-q-tx');
+      if (q) q.textContent = L.desc;
+      var g = gid(K + '-guess-a'); if (g) g.textContent = L.opts[0];
+      g = gid(K + '-guess-b'); if (g) g.textContent = L.opts[1];
+      g = gid(K + '-guess-c'); if (g) g.textContent = L.opts[2];
+      var bb = gid(K + '-bars');
+      if (bb) bb.innerHTML = '';
+    }
+    function setLevel(i) {
+      li = i; guessed = -1; drawn = false; written = false;
+      for (var k = 0; k < 3; k++) {
+        var b = gid(K + '-level-' + k);
+        if (b) b.setAttribute('aria-pressed', String(k === i));
+      }
+      draw();
+      msg('先猜一猜，再点“画条”。');
+    }
+    gid(K + '-guess-a').addEventListener('click', function () { guessed = 0; msg('你猜 x = ' + LEVELS[li].opts[0] + '。画条验证一下。'); });
+    gid(K + '-guess-b').addEventListener('click', function () { guessed = 1; msg('你猜 x = ' + LEVELS[li].opts[1] + '。画条验证一下。'); });
+    gid(K + '-guess-c').addEventListener('click', function () { guessed = 2; msg('你猜 x = ' + LEVELS[li].opts[2] + '。画条验证一下。'); });
+    gid(K + '-draw').addEventListener('click', function () {
+      var L = LEVELS[li];
+      drawn = true;
+      var s = '';
+      for (var i = 0; i < L.bars.length; i++) {
+        var n = L.bars[i];
+        var label = i < L.bars.length - 1 ? (n === L.x ? 'x（不知道多长）' : String(n)) : '一共 ' + n;
+        var color = i < L.bars.length - 1 ? (n === L.x ? '#fde68a' : '#93c5fd') : '#86efac';
+        s += '<div style="margin:4px 0"><span style="display:inline-block;width:' + (n * 16) + 'px;height:20px;background:' + color + ';border:1px solid #666"></span> ' + label + '</div>';
+      }
+      var bb = gid(K + '-bars');
+      if (bb) bb.innerHTML = s;
+      msg('条画好了：黄条是 x，蓝条是已知的数，绿条是总数。黄条加蓝条，和绿条一样长。');
+    });
+    gid(K + '-write').addEventListener('click', function () {
+      if (!drawn) { msg('先点“画条”。'); return; }
+      written = true;
+      msg('条一样长就是等号，列式：' + LEVELS[li].eq + '。');
+    });
+    gid(K + '-solve').addEventListener('click', function () {
+      var L = LEVELS[li];
+      if (!written) { msg('先点“列式”。'); return; }
+      var ok = guessed === L.ans;
+      msg(L.eq + '，解得 x = ' + L.x + '。' +
+        (guessed < 0 ? '下次先猜一猜再画条。' : ok ? '你猜对了。' : '你猜的是 x = ' + L.opts[guessed] + '，实际是 x = ' + L.x + '。'));
+      if (ok) {
+        if (tiers) tiers.done(li);
+        if (typeof markTried === 'function') markTried(K);
+      }
+    });
+    gid(K + '-level-0').addEventListener('click', function () { setLevel(0); });
+    gid(K + '-level-1').addEventListener('click', function () { setLevel(1); });
+    gid(K + '-level-2').addEventListener('click', function () { setLevel(2); });
+    if (typeof makeTiers === 'function') {
+      tiers = makeTiers(gid(K + '-tiers'),
+        ['基础：x+5=12，x=7', '提高：2x+4=14，x=5', '挑战：x+2x=15，x=5'], K);
+    }
+    if (typeof wireDiscovery === 'function') {
+      wireDiscovery(K, K + '-find', K + '-find-save', K + '-find-saved');
+    }
+    gid(K + '-level-0').setAttribute('aria-pressed', 'true');
+    draw();
+  }
+});
+registerAnim({
+  key: 'm55-back',
+  title: '倒推猜数',
+  sub: 'x+5=12，倒着想“哪个数加 5 得 12”：12−5=7。一路倒回去，方程就解出来了。',
+  grade: 5,
+  kind: '模拟',
+  points: ['5.5'],
+  render: function (el) {
+    var K = 'm55-back';
+    var LEVELS = [
+      { label: '基础', eq: 'x + 5 = 12', opts: ['7', '17', '5'], ans: 0, x: 7, rev: ['12 − 5 = 7'] },
+      { label: '提高', eq: 'x − 3 = 9', opts: ['6', '12', '3'], ans: 1, x: 12, rev: ['9 + 3 = 12'] },
+      { label: '挑战', eq: '2x + 3 = 11', opts: ['4', '7', '5'], ans: 0, x: 4, rev: ['11 − 3 = 8', '8 ÷ 2 = 4'] }
+    ];
+    var li = 0, guessed = -1, step = 0, tiers = null;
+    el.innerHTML =
+      '<p class="demo-tag">模拟 · 5 年级 · 简易方程</p>' +
+      '<h3>倒推猜数</h3>' +
+      '<p>方程是顺着算的，解方程是倒着想的：最后一步是什么运算，就先反着做那一步。</p>' +
+      '<p id="' + K + '-q-tx"></p>' +
+      '<p>第 1 步 · 先猜：x 是几？</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-guess-a" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-b" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-c" type="button"></button></div>' +
+      '<p>第 2 步 · 玩一玩：一步一步倒回去。</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-rev-0" type="button">倒回一步</button>' +
+      '<button class="btn small primary" id="' + K + '-rev-1" type="button">再倒一步</button></div>' +
+      '<p id="' + K + '-msg">先猜一猜，再点“倒回一步”。</p>' +
+      '<p>换一档：</p><div class="btn-row">' +
+      '<button class="btn small ghost" id="' + K + '-level-0" type="button">基础 · x+5=12</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-1" type="button">提高 · x−3=9</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-2" type="button">挑战 · 2x+3=11</button></div>' +
+      '<div class="tier-row" id="' + K + '-tiers"></div>' +
+      '<div class="find-row"><label>说一说你的发现：<input type="text" id="' + K + '-find" placeholder="我发现……"></label><button class="btn small primary" id="' + K + '-find-save" type="button">记下来</button></div>' +
+      '<p id="' + K + '-find-saved"></p>' +
+      '<p class="demo-foot">成功标准：三档都说得出“倒着想：加变减，减变加，乘变除”。</p>';
+    function gid(id) { return document.getElementById(id); }
+    function msg(t) { var m = gid(K + '-msg'); if (m) m.textContent = t; }
+    function draw() {
+      var L = LEVELS[li];
+      var q = gid(K + '-q-tx');
+      if (q) q.textContent = L.eq + '：x 是几？';
+      var g = gid(K + '-guess-a'); if (g) g.textContent = L.opts[0];
+      g = gid(K + '-guess-b'); if (g) g.textContent = L.opts[1];
+      g = gid(K + '-guess-c'); if (g) g.textContent = L.opts[2];
+      var r1 = gid(K + '-rev-1');
+      if (r1) r1.hidden = L.rev.length < 2;
+    }
+    function finish() {
+      var L = LEVELS[li];
+      var ok = guessed === L.ans;
+      msg('倒回：' + L.rev.join('；') + '。倒到底了：x = ' + L.x + '。' +
+        (guessed < 0 ? '下次先猜一猜再倒推。' : ok ? '你猜对了。' : '你猜的是 x = ' + L.opts[guessed] + '，实际是 x = ' + L.x + '。'));
+      if (ok) {
+        if (tiers) tiers.done(li);
+        if (typeof markTried === 'function') markTried(K);
+      }
+    }
+    function setLevel(i) {
+      li = i; guessed = -1; step = 0;
+      for (var k = 0; k < 3; k++) {
+        var b = gid(K + '-level-' + k);
+        if (b) b.setAttribute('aria-pressed', String(k === i));
+      }
+      draw();
+      msg('先猜一猜，再点“倒回一步”。');
+    }
+    gid(K + '-guess-a').addEventListener('click', function () { guessed = 0; msg('你猜 x = ' + LEVELS[li].opts[0] + '。倒回去验证一下。'); });
+    gid(K + '-guess-b').addEventListener('click', function () { guessed = 1; msg('你猜 x = ' + LEVELS[li].opts[1] + '。倒回去验证一下。'); });
+    gid(K + '-guess-c').addEventListener('click', function () { guessed = 2; msg('你猜 x = ' + LEVELS[li].opts[2] + '。倒回去验证一下。'); });
+    gid(K + '-rev-0').addEventListener('click', function () {
+      var L = LEVELS[li];
+      if (step !== 0) { msg('这一步已经倒过了。'); return; }
+      step = 1;
+      if (L.rev.length === 1) {
+        msg('倒回一步：' + L.rev[0] + '，所以 x = ' + L.x + '。');
+        finish();
+      } else {
+        msg('先倒最后一步：' + L.rev[0] + '。再倒一步。');
+      }
+    });
+    gid(K + '-rev-1').addEventListener('click', function () {
+      var L = LEVELS[li];
+      if (L.rev.length < 2) { msg('这一档只有一步。'); return; }
+      if (step !== 1) { msg('先倒第一步。'); return; }
+      step = 2;
+      msg('再倒一步：' + L.rev[1] + '，所以 x = ' + L.x + '。');
+      finish();
+    });
+    gid(K + '-level-0').addEventListener('click', function () { setLevel(0); });
+    gid(K + '-level-1').addEventListener('click', function () { setLevel(1); });
+    gid(K + '-level-2').addEventListener('click', function () { setLevel(2); });
+    if (typeof makeTiers === 'function') {
+      tiers = makeTiers(gid(K + '-tiers'),
+        ['基础：x+5=12，x=7', '提高：x−3=9，x=12', '挑战：2x+3=11，x=4'], K);
+    }
+    if (typeof wireDiscovery === 'function') {
+      wireDiscovery(K, K + '-find', K + '-find-save', K + '-find-saved');
+    }
+    gid(K + '-level-0').setAttribute('aria-pressed', 'true');
+    draw();
+  }
+});
+
+/* 5.6 多边形的面积：跳过切一刀平移（已有 polyarea，5.6 点页主演示）；polyarea 的三角形模式只有一句话“两个一样的三角形能拼成平行四边形”，没有真的拼，做两个三角形拼；再做方格纸数格子。areabuild（模拟，挂在 5.6 点页）是面积建造者，不覆盖这两个。 */
+registerAnim({
+  key: 'm56-twotri',
+  title: '两个三角形拼平行四边形',
+  sub: '两个一模一样的三角形，翻一个拼过去，就是一个平行四边形——一个三角形是它的一半，所以底×高要除以 2。',
+  grade: 5,
+  kind: '模拟',
+  points: ['5.6'],
+  render: function (el) {
+    var K = 'm56-twotri';
+    var LEVELS = [
+      { label: '基础', b: 6, h: 4, area: 12, opts: ['24', '12', '6'], ans: 1 },
+      { label: '提高', b: 8, h: 3, area: 12, opts: ['24', '12', '8'], ans: 1 },
+      { label: '挑战', b: 5, h: 6, area: 15, opts: ['30', '15', '10'], ans: 1 }
+    ];
+    var li = 0, guessed = -1, joined = false, tiers = null;
+    el.innerHTML =
+      '<p class="demo-tag">模拟 · 5 年级 · 多边形的面积</p>' +
+      '<h3>两个三角形拼平行四边形</h3>' +
+      '<p>三角形面积为什么要除以 2？拼一拼就知道了：两个一样的三角形，拼成一个平行四边形。</p>' +
+      '<p id="' + K + '-q-tx"></p>' +
+      '<p>第 1 步 · 先猜：一个三角形的面积是几？</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-guess-a" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-b" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-c" type="button"></button></div>' +
+      '<p>第 2 步 · 玩一玩：点“拼起来”，看两个三角形怎么变成平行四边形。</p>' +
+      '<div class="btn-row"><button class="btn small primary" id="' + K + '-join" type="button">拼起来</button></div>' +
+      '<div id="' + K + '-pic"></div>' +
+      '<p id="' + K + '-msg">先猜一猜，再点“拼起来”。</p>' +
+      '<p>换一档：</p><div class="btn-row">' +
+      '<button class="btn small ghost" id="' + K + '-level-0" type="button">基础 · 底 6 高 4</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-1" type="button">提高 · 底 8 高 3</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-2" type="button">挑战 · 底 5 高 6</button></div>' +
+      '<div class="tier-row" id="' + K + '-tiers"></div>' +
+      '<div class="find-row"><label>说一说你的发现：<input type="text" id="' + K + '-find" placeholder="我发现……"></label><button class="btn small primary" id="' + K + '-find-save" type="button">记下来</button></div>' +
+      '<p id="' + K + '-find-saved"></p>' +
+      '<p class="demo-foot">成功标准：三档都说得出“两个三角形拼成平行四边形，一个就是一半”。</p>';
+    function gid(id) { return document.getElementById(id); }
+    function msg(t) { var m = gid(K + '-msg'); if (m) m.textContent = t; }
+    function draw() {
+      var L = LEVELS[li];
+      var q = gid(K + '-q-tx');
+      if (q) q.textContent = '底 ' + L.b + ' 厘米、高 ' + L.h + ' 厘米的三角形，面积是几平方厘米？';
+      var g = gid(K + '-guess-a'); if (g) g.textContent = L.opts[0];
+      g = gid(K + '-guess-b'); if (g) g.textContent = L.opts[1];
+      g = gid(K + '-guess-c'); if (g) g.textContent = L.opts[2];
+      var s = 24, w = L.b * s, h = L.h * s;
+      var pic = '';
+      if (!joined) {
+        pic = '<svg width="340" height="200" viewBox="0 0 340 200" role="img" aria-label="两个一样的三角形">' +
+          '<polygon points="20,170 ' + (20 + w) + ',170 20,' + (170 - h) + '" fill="#93c5fd" stroke="#2563eb" stroke-width="2"/>' +
+          '<polygon points="' + (40 + w) + ',170 ' + (40 + 2 * w) + ',170 ' + (40 + 2 * w) + ',' + (170 - h) + '" fill="#fde68a" stroke="#b45309" stroke-width="2"/>' +
+          '<text x="20" y="195" font-size="12" fill="#57534e">三角形 1</text>' +
+          '<text x="' + (40 + w) + '" y="195" font-size="12" fill="#57534e">三角形 2（翻过来就能拼）</text></svg>';
+      } else {
+        pic = '<svg width="340" height="200" viewBox="0 0 340 200" role="img" aria-label="拼成的平行四边形">' +
+          '<polygon points="20,170 ' + (20 + w) + ',170 ' + (20 + w + 40) + ',' + (170 - h) + ' 60,' + (170 - h) + '" fill="#86efac" stroke="#15803d" stroke-width="2"/>' +
+          '<line x1="60" y1="' + (170 - h) + '" x2="' + (20 + w) + '" y2="170" stroke="#15803d" stroke-width="2" stroke-dasharray="5 3"/>' +
+          '<text x="20" y="195" font-size="12" fill="#57534e">平行四边形：底 ' + L.b + '，高 ' + L.h + '，面积 ' + (L.b * L.h) + '</text></svg>';
+      }
+      var p = gid(K + '-pic');
+      if (p) p.innerHTML = pic;
+    }
+    function setLevel(i) {
+      li = i; guessed = -1; joined = false;
+      for (var k = 0; k < 3; k++) {
+        var b = gid(K + '-level-' + k);
+        if (b) b.setAttribute('aria-pressed', String(k === i));
+      }
+      draw();
+      msg('先猜一猜，再点“拼起来”。');
+    }
+    gid(K + '-guess-a').addEventListener('click', function () { guessed = 0; msg('你猜 ' + LEVELS[li].opts[0] + '。点“拼起来”验证一下。'); });
+    gid(K + '-guess-b').addEventListener('click', function () { guessed = 1; msg('你猜 ' + LEVELS[li].opts[1] + '。点“拼起来”验证一下。'); });
+    gid(K + '-guess-c').addEventListener('click', function () { guessed = 2; msg('你猜 ' + LEVELS[li].opts[2] + '。点“拼起来”验证一下。'); });
+    gid(K + '-join').addEventListener('click', function () {
+      var L = LEVELS[li];
+      joined = true;
+      draw();
+      var ok = guessed === L.ans;
+      msg('拼好了：两个三角形拼成了一个平行四边形，底 ' + L.b + '、高 ' + L.h + '，面积 ' + L.b + '×' + L.h + '=' + (L.b * L.h) + '；一个三角形就是它的一半，' + (L.b * L.h) + '÷2=' + L.area + '。' +
+        (guessed < 0 ? '下次先猜一猜再拼。' : ok ? '你猜对了。' : '你猜的是 ' + L.opts[guessed] + '，实际是 ' + L.area + '。'));
+      if (ok) {
+        if (tiers) tiers.done(li);
+        if (typeof markTried === 'function') markTried(K);
+      }
+    });
+    gid(K + '-level-0').addEventListener('click', function () { setLevel(0); });
+    gid(K + '-level-1').addEventListener('click', function () { setLevel(1); });
+    gid(K + '-level-2').addEventListener('click', function () { setLevel(2); });
+    if (typeof makeTiers === 'function') {
+      tiers = makeTiers(gid(K + '-tiers'),
+        ['基础：6×4÷2=12', '提高：8×3÷2=12', '挑战：5×6÷2=15'], K);
+    }
+    if (typeof wireDiscovery === 'function') {
+      wireDiscovery(K, K + '-find', K + '-find-save', K + '-find-saved');
+    }
+    gid(K + '-level-0').setAttribute('aria-pressed', 'true');
+    draw();
+  }
+});
+registerAnim({
+  key: 'm56-grid',
+  title: '方格纸数格子',
+  sub: '不背公式，先在方格纸上数图形占了几格：每一行都是 6 格，4 行就是 24 格——斜边当高，数出来的格子会对不上。',
+  grade: 5,
+  kind: '模拟',
+  points: ['5.6'],
+  render: function (el) {
+    var K = 'm56-grid';
+    var LEVELS = [
+      { label: '基础', b: 6, h: 4, s: 5, area: 24, wrong: 30, opts: ['24', '30', '20'], ans: 0 },
+      { label: '提高', b: 5, h: 3, s: 4, area: 15, wrong: 20, opts: ['15', '20', '12'], ans: 0 },
+      { label: '挑战', b: 8, h: 2, s: 3, area: 16, wrong: 24, opts: ['16', '24', '10'], ans: 0 }
+    ];
+    var li = 0, guessed = -1, tiers = null;
+    el.innerHTML =
+      '<p class="demo-tag">模拟 · 5 年级 · 多边形的面积</p>' +
+      '<h3>方格纸数格子</h3>' +
+      '<p>平行四边形放在方格纸上：底是几格，高是几格？斜边可不是高——用斜边算，数出来的格子会对不上。</p>' +
+      '<p id="' + K + '-q-tx"></p>' +
+      '<p>第 1 步 · 先猜：这个平行四边形的面积是几平方厘米？（一格是 1 平方厘米）</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-guess-a" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-b" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-c" type="button"></button></div>' +
+      '<p>第 2 步 · 玩一玩：点“数格子”，一行一行数。</p>' +
+      '<div class="btn-row"><button class="btn small primary" id="' + K + '-count" type="button">数格子</button></div>' +
+      '<div id="' + K + '-pic"></div>' +
+      '<p id="' + K + '-msg">先猜一猜，再点“数格子”。</p>' +
+      '<p>换一档：</p><div class="btn-row">' +
+      '<button class="btn small ghost" id="' + K + '-level-0" type="button">基础 · 底 6 高 4</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-1" type="button">提高 · 底 5 高 3</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-2" type="button">挑战 · 底 8 高 2</button></div>' +
+      '<div class="tier-row" id="' + K + '-tiers"></div>' +
+      '<div class="find-row"><label>说一说你的发现：<input type="text" id="' + K + '-find" placeholder="我发现……"></label><button class="btn small primary" id="' + K + '-find-save" type="button">记下来</button></div>' +
+      '<p id="' + K + '-find-saved"></p>' +
+      '<p class="demo-foot">成功标准：三档都说得出“数格子得面积，斜边不是高”。</p>';
+    function gid(id) { return document.getElementById(id); }
+    function msg(t) { var m = gid(K + '-msg'); if (m) m.textContent = t; }
+    function draw() {
+      var L = LEVELS[li];
+      var q = gid(K + '-q-tx');
+      if (q) q.textContent = '底 ' + L.b + ' 厘米，高 ' + L.h + ' 厘米，斜边 ' + L.s + ' 厘米。面积是几？';
+      var g = gid(K + '-guess-a'); if (g) g.textContent = L.opts[0];
+      g = gid(K + '-guess-b'); if (g) g.textContent = L.opts[1];
+      g = gid(K + '-guess-c'); if (g) g.textContent = L.opts[2];
+      var u = 26, W = (L.b + 2) * u + 20, H = (L.h + 1) * u + 20;
+      var s = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="方格纸上的平行四边形">';
+      for (var gx = 0; gx <= L.b + 2; gx++) {
+        s += '<line x1="' + (10 + gx * u) + '" y1="10" x2="' + (10 + gx * u) + '" y2="' + (10 + (L.h + 1) * u) + '" stroke="#d6d3d1" stroke-width="1"/>';
+      }
+      for (var gy = 0; gy <= L.h + 1; gy++) {
+        s += '<line x1="10" y1="' + (10 + gy * u) + '" x2="' + (10 + (L.b + 2) * u) + '" y2="' + (10 + gy * u) + '" stroke="#d6d3d1" stroke-width="1"/>';
+      }
+      var x0 = 10 + u, y0 = 10 + L.h * u;
+      s += '<polygon points="' + x0 + ',' + y0 + ' ' + (x0 + L.b * u) + ',' + y0 + ' ' + (x0 + L.b * u - u) + ',10 ' + (x0 - u) + ',10" fill="#dbeafe" fill-opacity="0.7" stroke="#2563eb" stroke-width="2"/>';
+      s += '<text x="10" y="' + (H - 4) + '" font-size="12" fill="#57534e">底 ' + L.b + ' 厘米，高 ' + L.h + ' 厘米，斜边 ' + L.s + ' 厘米</text></svg>';
+      var p = gid(K + '-pic');
+      if (p) p.innerHTML = s;
+    }
+    function setLevel(i) {
+      li = i; guessed = -1;
+      for (var k = 0; k < 3; k++) {
+        var b = gid(K + '-level-' + k);
+        if (b) b.setAttribute('aria-pressed', String(k === i));
+      }
+      draw();
+      msg('先猜一猜，再点“数格子”。');
+    }
+    gid(K + '-guess-a').addEventListener('click', function () { guessed = 0; msg('你猜 ' + LEVELS[li].opts[0] + '。点“数格子”验证一下。'); });
+    gid(K + '-guess-b').addEventListener('click', function () { guessed = 1; msg('你猜 ' + LEVELS[li].opts[1] + '。点“数格子”验证一下。'); });
+    gid(K + '-guess-c').addEventListener('click', function () { guessed = 2; msg('你猜 ' + LEVELS[li].opts[2] + '。点“数格子”验证一下。'); });
+    gid(K + '-count').addEventListener('click', function () {
+      var L = LEVELS[li];
+      var ok = guessed === L.ans;
+      msg('一行一行数：每一行都是 ' + L.b + ' 格（两头两个半格拼成 1 格），' + L.h + ' 行就是 ' + L.b + '×' + L.h + '=' + L.area + ' 格，面积是 ' + L.area + ' 平方厘米。斜边 ' + L.s + ' 不是高，用它算的 ' + L.b + '×' + L.s + '=' + L.wrong + ' 是错的，数出来的格子对不上。' +
+        (guessed < 0 ? '下次先猜一猜再数。' : ok ? '你猜对了。' : '你猜的是 ' + L.opts[guessed] + '，数出来是 ' + L.area + ' 格。'));
+      if (ok) {
+        if (tiers) tiers.done(li);
+        if (typeof markTried === 'function') markTried(K);
+      }
+    });
+    gid(K + '-level-0').addEventListener('click', function () { setLevel(0); });
+    gid(K + '-level-1').addEventListener('click', function () { setLevel(1); });
+    gid(K + '-level-2').addEventListener('click', function () { setLevel(2); });
+    if (typeof makeTiers === 'function') {
+      tiers = makeTiers(gid(K + '-tiers'),
+        ['基础：6×4=24', '提高：5×3=15', '挑战：8×2=16'], K);
+    }
+    if (typeof wireDiscovery === 'function') {
+      wireDiscovery(K, K + '-find', K + '-find-save', K + '-find-saved');
+    }
+    gid(K + '-level-0').setAttribute('aria-pressed', 'true');
+    draw();
+  }
+});
+/* 5.7 植树问题：跳过拖树数间隔（已有 planttree，5.7 点页主演示）；做化繁为简、一一对应解释“多 1”、迁移到敲钟/车站/路灯。 */
+registerAnim({
+  key: 'm57-small',
+  title: '化繁为简',
+  sub: '100 米画不下，先拿 20 米画图找规律，再回头解 100 米——复杂问题先变简单，是通用解法。',
+  grade: 5,
+  kind: '模拟',
+  points: ['5.7'],
+  render: function (el) {
+    var K = 'm57-small';
+    var LEVELS = [
+      { label: '基础', sp: 10, len: 100, trees: 11, q: '100 米，每 10 米种一棵，两端都种，要几棵？', opts: ['10 棵', '11 棵', '12 棵'], ans: 1,
+        rows: [['20 米', 2, 3], ['50 米', 5, 6], ['100 米', 10, 11]], small: '20 米：2 个间隔，3 棵树。' },
+      { label: '提高', sp: 5, len: 100, trees: 21, q: '100 米，每 5 米种一棵，两端都种，要几棵？', opts: ['20 棵', '21 棵', '22 棵'], ans: 1,
+        rows: [['20 米', 4, 5], ['50 米', 10, 11], ['100 米', 20, 21]], small: '20 米：4 个间隔，5 棵树。' },
+      { label: '挑战', sp: 5, len: 20, trees: 5, q: '20 米，每 5 米种一棵，两端都种，要几棵？', opts: ['4 棵', '5 棵', '6 棵'], ans: 1,
+        rows: [['10 米', 2, 3], ['20 米', 4, 5], ['100 米', 20, 21]], small: '10 米：2 个间隔，3 棵树。' }
+    ];
+    var li = 0, guessed = -1, sawSmall = false, tiers = null;
+    el.innerHTML =
+      '<p class="demo-tag">模拟 · 5 年级 · 植树问题</p>' +
+      '<h3>化繁为简</h3>' +
+      '<p>大数画不下，就先变小：20 米画得下，规律找出来，再回头解大数。</p>' +
+      '<p id="' + K + '-q-tx"></p>' +
+      '<p>第 1 步 · 先猜：按问题猜一猜。</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-guess-a" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-b" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-c" type="button"></button></div>' +
+      '<p>第 2 步 · 玩一玩：先画小的，再看规律表。</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-small" type="button">先画小的</button>' +
+      '<button class="btn small primary" id="' + K + '-table" type="button">看规律表</button></div>' +
+      '<p id="' + K + '-msg">先猜一猜，再点“先画小的”。</p>' +
+      '<p>换一档：</p><div class="btn-row">' +
+      '<button class="btn small ghost" id="' + K + '-level-0" type="button">基础 · 100 米每 10 米</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-1" type="button">提高 · 100 米每 5 米</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-2" type="button">挑战 · 20 米每 5 米</button></div>' +
+      '<div class="tier-row" id="' + K + '-tiers"></div>' +
+      '<div class="find-row"><label>说一说你的发现：<input type="text" id="' + K + '-find" placeholder="我发现……"></label><button class="btn small primary" id="' + K + '-find-save" type="button">记下来</button></div>' +
+      '<p id="' + K + '-find-saved"></p>' +
+      '<p class="demo-foot">成功标准：三档都说得出“先变小找规律，再回头解大数”。</p>';
+    function gid(id) { return document.getElementById(id); }
+    function msg(t) { var m = gid(K + '-msg'); if (m) m.textContent = t; }
+    function draw() {
+      var L = LEVELS[li];
+      var q = gid(K + '-q-tx');
+      if (q) q.textContent = L.q;
+      var g = gid(K + '-guess-a'); if (g) g.textContent = L.opts[0];
+      g = gid(K + '-guess-b'); if (g) g.textContent = L.opts[1];
+      g = gid(K + '-guess-c'); if (g) g.textContent = L.opts[2];
+    }
+    function setLevel(i) {
+      li = i; guessed = -1; sawSmall = false;
+      for (var k = 0; k < 3; k++) {
+        var b = gid(K + '-level-' + k);
+        if (b) b.setAttribute('aria-pressed', String(k === i));
+      }
+      draw();
+      msg('先猜一猜，再点“先画小的”。');
+    }
+    gid(K + '-guess-a').addEventListener('click', function () { guessed = 0; msg('你猜 ' + LEVELS[li].opts[0] + '。先画小的验证一下。'); });
+    gid(K + '-guess-b').addEventListener('click', function () { guessed = 1; msg('你猜 ' + LEVELS[li].opts[1] + '。先画小的验证一下。'); });
+    gid(K + '-guess-c').addEventListener('click', function () { guessed = 2; msg('你猜 ' + LEVELS[li].opts[2] + '。先画小的验证一下。'); });
+    gid(K + '-small').addEventListener('click', function () {
+      sawSmall = true;
+      msg('小的画好了：' + LEVELS[li].small + '间隔数加 1 就是棵数。再看规律表。');
+    });
+    gid(K + '-table').addEventListener('click', function () {
+      var L = LEVELS[li];
+      if (!sawSmall) { msg('先点“先画小的”。'); return; }
+      var rows = '';
+      for (var i = 0; i < L.rows.length; i++) {
+        rows += L.rows[i][0] + '：' + L.rows[i][1] + ' 个间隔，' + L.rows[i][2] + ' 棵树；';
+      }
+      var ok = guessed === L.ans;
+      msg('规律表：' + rows + '间隔数加 1 就是棵数，所以 ' + L.len + ' 米要 ' + L.trees + ' 棵树。' +
+        (guessed < 0 ? '下次先猜一猜再画。' : ok ? '你猜对了。' : '你猜的是 ' + L.opts[guessed] + '，表上是 ' + L.trees + ' 棵。'));
+      if (ok) {
+        if (tiers) tiers.done(li);
+        if (typeof markTried === 'function') markTried(K);
+      }
+    });
+    gid(K + '-level-0').addEventListener('click', function () { setLevel(0); });
+    gid(K + '-level-1').addEventListener('click', function () { setLevel(1); });
+    gid(K + '-level-2').addEventListener('click', function () { setLevel(2); });
+    if (typeof makeTiers === 'function') {
+      tiers = makeTiers(gid(K + '-tiers'),
+        ['基础：100 米每 10 米，11 棵', '提高：100 米每 5 米，21 棵', '挑战：20 米每 5 米，5 棵'], K);
+    }
+    if (typeof wireDiscovery === 'function') {
+      wireDiscovery(K, K + '-find', K + '-find-save', K + '-find-saved');
+    }
+    gid(K + '-level-0').setAttribute('aria-pressed', 'true');
+    draw();
+  }
+});
+registerAnim({
+  key: 'm57-pair',
+  title: '一一对应解释“多 1”',
+  sub: '一棵树对一个间隔排下去，最后一棵树后面没有间隔——“多出来的 1”就是它，不是口诀，是数出来的。',
+  grade: 5,
+  kind: '演示',
+  points: ['5.7'],
+  render: function (el) {
+    var K = 'm57-pair';
+    var LEVELS = [
+      { label: '基础', n: 5, trees: 6, opts: ['5 棵', '6 棵', '7 棵'], ans: 1 },
+      { label: '提高', n: 8, trees: 9, opts: ['8 棵', '9 棵', '10 棵'], ans: 1 },
+      { label: '挑战', n: 3, trees: 4, opts: ['3 棵', '4 棵', '5 棵'], ans: 1 }
+    ];
+    var li = 0, guessed = -1, paired = 0, tiers = null;
+    el.innerHTML =
+      '<p class="demo-tag">演示 · 5 年级 · 植树问题</p>' +
+      '<h3>一一对应解释“多 1”</h3>' +
+      '<p>两端都种，为什么棵数比间隔数多 1？一棵树对一个间隔，配下去就看到了。</p>' +
+      '<p id="' + K + '-q-tx"></p>' +
+      '<p>第 1 步 · 先猜：有几个间隔，要种几棵树？</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-guess-a" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-b" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-c" type="button"></button></div>' +
+      '<p>第 2 步 · 玩一玩：点“配一对”，一棵树对一个间隔。</p>' +
+      '<div class="btn-row"><button class="btn small primary" id="' + K + '-pair" type="button">配一对</button></div>' +
+      '<div id="' + K + '-row"></div>' +
+      '<p id="' + K + '-msg">先猜一猜，再点“配一对”。</p>' +
+      '<p>换一档：</p><div class="btn-row">' +
+      '<button class="btn small ghost" id="' + K + '-level-0" type="button">基础 · 5 个间隔</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-1" type="button">提高 · 8 个间隔</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-2" type="button">挑战 · 3 个间隔</button></div>' +
+      '<div class="tier-row" id="' + K + '-tiers"></div>' +
+      '<div class="find-row"><label>说一说你的发现：<input type="text" id="' + K + '-find" placeholder="我发现……"></label><button class="btn small primary" id="' + K + '-find-save" type="button">记下来</button></div>' +
+      '<p id="' + K + '-find-saved"></p>' +
+      '<p class="demo-foot">成功标准：三档都说得出“最后一棵树没有间隔，多出来的 1 就是它”。</p>';
+    function gid(id) { return document.getElementById(id); }
+    function msg(t) { var m = gid(K + '-msg'); if (m) m.textContent = t; }
+    function draw() {
+      var L = LEVELS[li];
+      var q = gid(K + '-q-tx');
+      if (q) q.textContent = L.n + ' 个间隔，两端都种，要几棵树？';
+      var g = gid(K + '-guess-a'); if (g) g.textContent = L.opts[0];
+      g = gid(K + '-guess-b'); if (g) g.textContent = L.opts[1];
+      g = gid(K + '-guess-c'); if (g) g.textContent = L.opts[2];
+      var s = '';
+      for (var i = 0; i < L.trees; i++) {
+        var hasPair = i < paired;
+        s += '<span style="display:inline-block;width:30px;height:30px;border:1px solid #666;text-align:center;background:' + (hasPair ? '#86efac' : '#fff') + '">树</span>';
+        if (i < L.n) s += '<span style="display:inline-block;width:22px;text-align:center;color:' + (hasPair ? '#15803d' : '#999') + '">⌒</span>';
+      }
+      var r = gid(K + '-row');
+      if (r) r.innerHTML = s;
+    }
+    function setLevel(i) {
+      li = i; guessed = -1; paired = 0;
+      for (var k = 0; k < 3; k++) {
+        var b = gid(K + '-level-' + k);
+        if (b) b.setAttribute('aria-pressed', String(k === i));
+      }
+      draw();
+      msg('先猜一猜，再点“配一对”。');
+    }
+    gid(K + '-guess-a').addEventListener('click', function () { guessed = 0; msg('你猜 ' + LEVELS[li].opts[0] + '。配一对验证一下。'); });
+    gid(K + '-guess-b').addEventListener('click', function () { guessed = 1; msg('你猜 ' + LEVELS[li].opts[1] + '。配一对验证一下。'); });
+    gid(K + '-guess-c').addEventListener('click', function () { guessed = 2; msg('你猜 ' + LEVELS[li].opts[2] + '。配一对验证一下。'); });
+    gid(K + '-pair').addEventListener('click', function () {
+      var L = LEVELS[li];
+      if (paired >= L.n) { msg('已经配完了：' + L.n + ' 个间隔都配上了。'); return; }
+      paired++;
+      draw();
+      if (paired < L.n) {
+        msg('配了 ' + paired + ' 对：' + paired + ' 棵树对 ' + paired + ' 个间隔。继续配。');
+      } else {
+        var ok = guessed === L.ans;
+        msg('配了 ' + L.n + ' 对，还剩 1 棵树没有间隔——多出来的 1 就是它。所以 ' + L.n + ' 个间隔要 ' + L.trees + ' 棵树。' +
+          (guessed < 0 ? '下次先猜一猜再配。' : ok ? '你猜对了。' : '你猜的是 ' + L.opts[guessed] + '，数出来是 ' + L.trees + ' 棵。'));
+        if (ok) {
+          if (tiers) tiers.done(li);
+          if (typeof markTried === 'function') markTried(K);
+        }
+      }
+    });
+    gid(K + '-level-0').addEventListener('click', function () { setLevel(0); });
+    gid(K + '-level-1').addEventListener('click', function () { setLevel(1); });
+    gid(K + '-level-2').addEventListener('click', function () { setLevel(2); });
+    if (typeof makeTiers === 'function') {
+      tiers = makeTiers(gid(K + '-tiers'),
+        ['基础：5 个间隔，6 棵树', '提高：8 个间隔，9 棵树', '挑战：3 个间隔，4 棵树'], K);
+    }
+    if (typeof wireDiscovery === 'function') {
+      wireDiscovery(K, K + '-find', K + '-find-save', K + '-find-saved');
+    }
+    gid(K + '-level-0').setAttribute('aria-pressed', 'true');
+    draw();
+  }
+});
+registerAnim({
+  key: 'm57-transfer',
+  title: '迁移到敲钟车站路灯',
+  sub: '车站是树，站距是间隔；钟声是树，两声之间是间隔——同结构换个情境，再算一次。',
+  grade: 5,
+  kind: '实验',
+  points: ['5.7'],
+  render: function (el) {
+    var K = 'm57-transfer';
+    var LEVELS = [
+      { label: '基础', ctx: '车站', q: '5 个站距，每站距 3 分钟，从第一站到最后一站要几分钟？', opts: ['12 分钟', '15 分钟', '18 分钟'], ans: 1, why: '车站是树，站距是间隔：5 个间隔 × 3 分钟 = 15 分钟。' },
+      { label: '提高', ctx: '敲钟', q: '敲 5 下，每两下之间 3 秒，一共几秒？', opts: ['9 秒', '12 秒', '15 秒'], ans: 1, why: '钟声是树，两声之间是间隔：5 下只有 4 个间隔，4 × 3 秒 = 12 秒。' },
+      { label: '挑战', ctx: '路灯', q: '10 盏路灯，每两盏之间 20 米，第一盏到最后一盏几米？', opts: ['180 米', '200 米', '220 米'], ans: 0, why: '路灯是树，灯距是间隔：10 盏只有 9 个间隔，9 × 20 米 = 180 米。' }
+    ];
+    var li = 0, guessed = -1, tiers = null;
+    el.innerHTML =
+      '<p class="demo-tag">实验 · 5 年级 · 植树问题</p>' +
+      '<h3>迁移到敲钟车站路灯</h3>' +
+      '<p>植树问题不只长在路上：车站、钟声、路灯里都有它。先认出哪个是“树”、哪个是“间隔”，再算。</p>' +
+      '<p id="' + K + '-q-tx"></p>' +
+      '<p>第 1 步 · 先猜：按问题猜一猜。</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-guess-a" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-b" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-c" type="button"></button></div>' +
+      '<p>第 2 步 · 玩一玩：点“换个样子”，看树和间隔藏在哪。</p>' +
+      '<div class="btn-row"><button class="btn small primary" id="' + K + '-swap" type="button">换个样子</button></div>' +
+      '<p id="' + K + '-msg">先猜一猜，再点“换个样子”。</p>' +
+      '<p>换一档：</p><div class="btn-row">' +
+      '<button class="btn small ghost" id="' + K + '-level-0" type="button">基础 · 车站</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-1" type="button">提高 · 敲钟</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-2" type="button">挑战 · 路灯</button></div>' +
+      '<div class="tier-row" id="' + K + '-tiers"></div>' +
+      '<div class="find-row"><label>说一说你的发现：<input type="text" id="' + K + '-find" placeholder="我发现……"></label><button class="btn small primary" id="' + K + '-find-save" type="button">记下来</button></div>' +
+      '<p id="' + K + '-find-saved"></p>' +
+      '<p class="demo-foot">成功标准：三档都说得出“先认树和间隔，再数间隔个数”。</p>';
+    function gid(id) { return document.getElementById(id); }
+    function msg(t) { var m = gid(K + '-msg'); if (m) m.textContent = t; }
+    function draw() {
+      var L = LEVELS[li];
+      var q = gid(K + '-q-tx');
+      if (q) q.textContent = L.ctx + '：' + L.q;
+      var g = gid(K + '-guess-a'); if (g) g.textContent = L.opts[0];
+      g = gid(K + '-guess-b'); if (g) g.textContent = L.opts[1];
+      g = gid(K + '-guess-c'); if (g) g.textContent = L.opts[2];
+    }
+    function setLevel(i) {
+      li = i; guessed = -1;
+      for (var k = 0; k < 3; k++) {
+        var b = gid(K + '-level-' + k);
+        if (b) b.setAttribute('aria-pressed', String(k === i));
+      }
+      draw();
+      msg('先猜一猜，再点“换个样子”。');
+    }
+    gid(K + '-guess-a').addEventListener('click', function () { guessed = 0; msg('你猜 ' + LEVELS[li].opts[0] + '。点“换个样子”验证一下。'); });
+    gid(K + '-guess-b').addEventListener('click', function () { guessed = 1; msg('你猜 ' + LEVELS[li].opts[1] + '。点“换个样子”验证一下。'); });
+    gid(K + '-guess-c').addEventListener('click', function () { guessed = 2; msg('你猜 ' + LEVELS[li].opts[2] + '。点“换个样子”验证一下。'); });
+    gid(K + '-swap').addEventListener('click', function () {
+      var L = LEVELS[li];
+      var ok = guessed === L.ans;
+      msg(L.why + (guessed < 0 ? '下次先猜一猜再换样子。' : ok ? '你猜对了。' : '你猜的是 ' + L.opts[guessed] + '，再数一数有几个间隔。'));
+      if (ok) {
+        if (tiers) tiers.done(li);
+        if (typeof markTried === 'function') markTried(K);
+      }
+    });
+    gid(K + '-level-0').addEventListener('click', function () { setLevel(0); });
+    gid(K + '-level-1').addEventListener('click', function () { setLevel(1); });
+    gid(K + '-level-2').addEventListener('click', function () { setLevel(2); });
+    if (typeof makeTiers === 'function') {
+      tiers = makeTiers(gid(K + '-tiers'),
+        ['基础：车站 15 分钟', '提高：敲钟 12 秒', '挑战：路灯 180 米'], K);
+    }
+    if (typeof wireDiscovery === 'function') {
+      wireDiscovery(K, K + '-find', K + '-find-save', K + '-find-saved');
+    }
+    gid(K + '-level-0').setAttribute('aria-pressed', 'true');
+    draw();
+  }
+});
+
+/* 5.8 因数与倍数：跳过矩形阵列拼长方形（已有 factor，5.8 点页主演示）；factor 只有长方形和因数表，没有下注选数的游戏，做因数游戏；再做埃拉托斯特尼筛法。 */
+registerAnim({
+  key: 'm58-game',
+  title: '因数游戏',
+  sub: '轮流选数：你得这个数，对手得它所有因数（不含它本身）的分——因数多的数看着大，实际是陷阱。',
+  grade: 5,
+  kind: '实验',
+  points: ['5.8'],
+  render: function (el) {
+    var K = 'm58-game';
+    var LEVELS = [
+      { label: '基础', n: 12, you: 12, opp: 16, factors: '1、2、3、4、6', q: '选 12，你得 12 分，对手得几分？', opts: ['12 分', '16 分', '7 分'], ans: 1,
+        verdict: '对手 16 分，比你还多 4 分——12 的因数太多，看着大，实际亏了。' },
+      { label: '提高', n: 7, you: 7, opp: 1, factors: '1', q: '选 7，你得 7 分，对手得几分？', opts: ['1 分', '7 分', '8 分'], ans: 0,
+        verdict: '对手只有 1 分——7 是质数，只有一个真因数 1，选它最划算。' },
+      { label: '挑战', n: 8, you: 8, opp: 7, factors: '1、2、4', q: '选 8，你得 8 分，对手得几分？', opts: ['15 分', '7 分', '8 分'], ans: 1,
+        verdict: '对手 7 分，你 8 分，只赚 1 分——选数之前，先想想它有几个因数。' }
+    ];
+    var li = 0, guessed = -1, tiers = null;
+    el.innerHTML =
+      '<p class="demo-tag">实验 · 5 年级 · 因数与倍数</p>' +
+      '<h3>因数游戏</h3>' +
+      '<p>选一个数，你得这个数的分，对手得它所有因数（不含它本身）的分。数越大越好吗？先算算这笔买卖。</p>' +
+      '<p id="' + K + '-q-tx"></p>' +
+      '<p>第 1 步 · 先猜：对手得几分？</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-guess-a" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-b" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-c" type="button"></button></div>' +
+      '<p>第 2 步 · 玩一玩：点“算一算”，看对手拿走多少分。</p>' +
+      '<div class="btn-row"><button class="btn small primary" id="' + K + '-calc" type="button">算一算</button></div>' +
+      '<p id="' + K + '-msg">先猜一猜，再点“算一算”。</p>' +
+      '<p>换一档：</p><div class="btn-row">' +
+      '<button class="btn small ghost" id="' + K + '-level-0" type="button">基础 · 选 12</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-1" type="button">提高 · 选 7</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-2" type="button">挑战 · 选 8</button></div>' +
+      '<div class="tier-row" id="' + K + '-tiers"></div>' +
+      '<div class="find-row"><label>说一说你的发现：<input type="text" id="' + K + '-find" placeholder="我发现……"></label><button class="btn small primary" id="' + K + '-find-save" type="button">记下来</button></div>' +
+      '<p id="' + K + '-find-saved"></p>' +
+      '<p class="demo-foot">成功标准：三档都说得出“选数之前，先数它有几个因数”。</p>';
+    function gid(id) { return document.getElementById(id); }
+    function msg(t) { var m = gid(K + '-msg'); if (m) m.textContent = t; }
+    function draw() {
+      var L = LEVELS[li];
+      var q = gid(K + '-q-tx');
+      if (q) q.textContent = L.q;
+      var g = gid(K + '-guess-a'); if (g) g.textContent = L.opts[0];
+      g = gid(K + '-guess-b'); if (g) g.textContent = L.opts[1];
+      g = gid(K + '-guess-c'); if (g) g.textContent = L.opts[2];
+    }
+    function setLevel(i) {
+      li = i; guessed = -1;
+      for (var k = 0; k < 3; k++) {
+        var b = gid(K + '-level-' + k);
+        if (b) b.setAttribute('aria-pressed', String(k === i));
+      }
+      draw();
+      msg('先猜一猜，再点“算一算”。');
+    }
+    gid(K + '-guess-a').addEventListener('click', function () { guessed = 0; msg('你猜对手得 ' + LEVELS[li].opts[0] + '。算一算验证一下。'); });
+    gid(K + '-guess-b').addEventListener('click', function () { guessed = 1; msg('你猜对手得 ' + LEVELS[li].opts[1] + '。算一算验证一下。'); });
+    gid(K + '-guess-c').addEventListener('click', function () { guessed = 2; msg('你猜对手得 ' + LEVELS[li].opts[2] + '。算一算验证一下。'); });
+    gid(K + '-calc').addEventListener('click', function () {
+      var L = LEVELS[li];
+      var ok = guessed === L.ans;
+      msg('选 ' + L.n + '：你得 ' + L.you + ' 分；' + L.n + ' 的因数（不含它本身）是 ' + L.factors + '，加起来是 ' + L.opp + ' 分，对手得 ' + L.opp + ' 分。' + L.verdict +
+        (guessed < 0 ? '下次先猜一猜再算。' : ok ? '你猜对了。' : '你猜的是 ' + L.opts[guessed] + '，实际是 ' + L.opp + ' 分。'));
+      if (ok) {
+        if (tiers) tiers.done(li);
+        if (typeof markTried === 'function') markTried(K);
+      }
+    });
+    gid(K + '-level-0').addEventListener('click', function () { setLevel(0); });
+    gid(K + '-level-1').addEventListener('click', function () { setLevel(1); });
+    gid(K + '-level-2').addEventListener('click', function () { setLevel(2); });
+    if (typeof makeTiers === 'function') {
+      tiers = makeTiers(gid(K + '-tiers'),
+        ['基础：选 12，对手 16 分', '提高：选 7，对手 1 分', '挑战：选 8，对手 7 分'], K);
+    }
+    if (typeof wireDiscovery === 'function') {
+      wireDiscovery(K, K + '-find', K + '-find-save', K + '-find-saved');
+    }
+    gid(K + '-level-0').setAttribute('aria-pressed', 'true');
+    draw();
+  }
+});
+registerAnim({
+  key: 'm58-sieve',
+  title: '埃拉托斯特尼筛法',
+  sub: '一张百数表，先划 2 的倍数、再划 3 的倍数……没被划掉的就是质数；划到 7 就可以停了。',
+  grade: 5,
+  kind: '实验',
+  points: ['5.8'],
+  render: function (el) {
+    var K = 'm58-sieve';
+    var LEVELS = [
+      { label: '基础', q: '1 是质数吗？', opts: ['是', '不是'], ans: 1 },
+      { label: '提高', q: '筛完 1 到 100，剩下几个质数？', opts: ['24 个', '25 个', '26 个'], ans: 1 },
+      { label: '挑战', q: '为什么划到 7 就停？', opts: ['7×7=49，下一个 11×11=121 大于 100', '7 是最大的质数', '划不动了'], ans: 0 }
+    ];
+    var li = 0, guessed = -1, step = 0, crossed = {}, tiers = null;
+    el.innerHTML =
+      '<p class="demo-tag">实验 · 5 年级 · 因数与倍数</p>' +
+      '<h3>埃拉托斯特尼筛法</h3>' +
+      '<p>1 到 100 的数排好：先划掉 1，再按顺序划掉 2、3、5、7 的倍数（质数本身留下）。筛子筛完，剩下的就是质数。</p>' +
+      '<p id="' + K + '-q-tx"></p>' +
+      '<p>第 1 步 · 先猜：按问题猜一猜。</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-guess-a" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-b" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-c" type="button"></button></div>' +
+      '<p>第 2 步 · 玩一玩：按顺序划，划完点“数一数”。</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-s-1" type="button">划掉 1</button>' +
+      '<button class="btn small primary" id="' + K + '-s-2" type="button">划 2 的倍数</button>' +
+      '<button class="btn small primary" id="' + K + '-s-3" type="button">划 3 的倍数</button>' +
+      '<button class="btn small primary" id="' + K + '-s-5" type="button">划 5 的倍数</button>' +
+      '<button class="btn small primary" id="' + K + '-s-7" type="button">划 7 的倍数</button>' +
+      '<button class="btn small primary" id="' + K + '-count" type="button">数一数</button></div>' +
+      '<div id="' + K + '-grid"></div>' +
+      '<p id="' + K + '-msg">先猜一猜，再按顺序划。</p>' +
+      '<p>换一档：</p><div class="btn-row">' +
+      '<button class="btn small ghost" id="' + K + '-level-0" type="button">基础 · 1 是质数吗</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-1" type="button">提高 · 剩下几个质数</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-2" type="button">挑战 · 为什么停在 7</button></div>' +
+      '<div class="tier-row" id="' + K + '-tiers"></div>' +
+      '<div class="find-row"><label>说一说你的发现：<input type="text" id="' + K + '-find" placeholder="我发现……"></label><button class="btn small primary" id="' + K + '-find-save" type="button">记下来</button></div>' +
+      '<p id="' + K + '-find-saved"></p>' +
+      '<p class="demo-foot">成功标准：三档都说得出“划到 7 就停，剩下 25 个质数”。</p>';
+    function gid(id) { return document.getElementById(id); }
+    function msg(t) { var m = gid(K + '-msg'); if (m) m.textContent = t; }
+    function buildGrid() {
+      var s = '';
+      for (var r = 0; r < 10; r++) {
+        s += '<div>';
+        for (var c = 1; c <= 10; c++) {
+          var n = r * 10 + c;
+          s += '<span id="' + K + '-n-' + n + '" style="display:inline-block;width:26px;height:26px;border:1px solid #999;text-align:center;background:#fff">' + n + '</span>';
+        }
+        s += '</div>';
+      }
+      var g = gid(K + '-grid');
+      if (g) g.innerHTML = s;
+    }
+    function cross(p) {
+      for (var m = p * 2; m <= 100; m += p) {
+        if (!crossed[m]) {
+          crossed[m] = true;
+          var cell = gid(K + '-n-' + m);
+          if (cell) { cell.textContent = '×'; cell.style.background = '#e5e7eb'; }
+        }
+      }
+    }
+    function draw() {
+      var L = LEVELS[li];
+      var q = gid(K + '-q-tx');
+      if (q) q.textContent = L.q;
+      var g = gid(K + '-guess-a'); if (g) g.textContent = L.opts[0];
+      g = gid(K + '-guess-b'); if (g) g.textContent = L.opts[1];
+      g = gid(K + '-guess-c'); if (g) g.textContent = L.opts[2];
+    }
+    function setLevel(i) {
+      li = i; guessed = -1; step = 0; crossed = {};
+      for (var k = 0; k < 3; k++) {
+        var b = gid(K + '-level-' + k);
+        if (b) b.setAttribute('aria-pressed', String(k === i));
+      }
+      buildGrid();
+      draw();
+      msg('先猜一猜，再按顺序划。');
+    }
+    gid(K + '-guess-a').addEventListener('click', function () { guessed = 0; msg('你猜 ' + LEVELS[li].opts[0] + '。划完验证一下。'); });
+    gid(K + '-guess-b').addEventListener('click', function () { guessed = 1; msg('你猜 ' + LEVELS[li].opts[1] + '。划完验证一下。'); });
+    gid(K + '-guess-c').addEventListener('click', function () { guessed = 2; msg('你猜 ' + LEVELS[li].opts[2] + '。划完验证一下。'); });
+    gid(K + '-s-1').addEventListener('click', function () {
+      if (step !== 0) { msg('1 已经划过了，按顺序往下划。'); return; }
+      step = 1;
+      crossed[1] = true;
+      var cell = gid(K + '-n-1');
+      if (cell) { cell.textContent = '×'; cell.style.background = '#e5e7eb'; }
+      msg('1 划掉了：1 只有一个因数，既不是质数，也不是合数。');
+    });
+    gid(K + '-s-2').addEventListener('click', function () {
+      if (step !== 1) { msg('先划掉 1，再划 2 的倍数。'); return; }
+      step = 2; cross(2);
+      msg('2 的倍数划掉了，2 本身留下：2 是质数。');
+    });
+    gid(K + '-s-3').addEventListener('click', function () {
+      if (step !== 2) { msg('先划 2 的倍数，再划 3 的倍数。'); return; }
+      step = 3; cross(3);
+      msg('3 的倍数划掉了，3 本身留下。');
+    });
+    gid(K + '-s-5').addEventListener('click', function () {
+      if (step !== 3) { msg('先划 3 的倍数，再划 5 的倍数。'); return; }
+      step = 4; cross(5);
+      msg('5 的倍数划掉了，5 本身留下。');
+    });
+    gid(K + '-s-7').addEventListener('click', function () {
+      if (step !== 4) { msg('先划 5 的倍数，再划 7 的倍数。'); return; }
+      step = 5; cross(7);
+      msg('7 的倍数划掉了，7 本身留下。划到 7 就可以停了：下一个质数是 11，11×11=121，已经大于 100 了。');
+    });
+    gid(K + '-count').addEventListener('click', function () {
+      if (step < 5) { msg('先把 1、2、3、5、7 的倍数都划掉，再数。'); return; }
+      var left = [];
+      for (var n = 2; n <= 100; n++) if (!crossed[n]) left.push(n);
+      var ok = guessed === LEVELS[li].ans;
+      msg('剩下 ' + left.length + ' 个质数：' + left.join('、') + '。' +
+        (guessed < 0 ? '下次先猜一猜再筛。' : ok ? '你猜对了。' : '你猜的是 ' + LEVELS[li].opts[guessed] + '，数出来是 ' + left.length + ' 个。'));
+      if (ok) {
+        if (tiers) tiers.done(li);
+        if (typeof markTried === 'function') markTried(K);
+      }
+    });
+    gid(K + '-level-0').addEventListener('click', function () { setLevel(0); });
+    gid(K + '-level-1').addEventListener('click', function () { setLevel(1); });
+    gid(K + '-level-2').addEventListener('click', function () { setLevel(2); });
+    if (typeof makeTiers === 'function') {
+      tiers = makeTiers(gid(K + '-tiers'),
+        ['基础：1 不是质数', '提高：剩下 25 个质数', '挑战：11×11=121 大于 100'], K);
+    }
+    if (typeof wireDiscovery === 'function') {
+      wireDiscovery(K, K + '-find', K + '-find-save', K + '-find-saved');
+    }
+    gid(K + '-level-0').setAttribute('aria-pressed', 'true');
+    buildGrid();
+    draw();
+  }
+});
+/* 5.9 长方体和正方体：跳过分层装块数体积（已有 cuboid，5.9 点页主演示）；cuboid 只有一层格子，没有展开图，做展开图折叠；再做拆面算表面积。 */
+registerAnim({
+  key: 'm59-net',
+  title: '展开图折叠',
+  sub: '把盒子剪开展平，6 个面排开：相对的面一模一样。再一片一片折回去，看面是怎么拼成盒子的。',
+  grade: 5,
+  kind: '模拟',
+  points: ['5.9'],
+  render: function (el) {
+    var K = 'm59-net';
+    var LEVELS = [
+      { label: '基础', l: 5, w: 4, h: 3, surf: 94, opts: ['94 平方厘米', '60 平方厘米', '120 平方厘米'], ans: 0 },
+      { label: '提高', l: 4, w: 4, h: 4, surf: 96, opts: ['96 平方厘米', '64 平方厘米', '128 平方厘米'], ans: 0 },
+      { label: '挑战', l: 6, w: 3, h: 2, surf: 72, opts: ['72 平方厘米', '36 平方厘米', '108 平方厘米'], ans: 0 }
+    ];
+    var li = 0, guessed = -1, folded = 0, tiers = null;
+    var FACES = [
+      { name: '下面', pair: '上下' }, { name: '前面', pair: '前后' }, { name: '上面', pair: '上下' },
+      { name: '后面', pair: '前后' }, { name: '左面', pair: '左右' }, { name: '右面', pair: '左右' }
+    ];
+    el.innerHTML =
+      '<p class="demo-tag">模拟 · 5 年级 · 长方体和正方体</p>' +
+      '<h3>展开图折叠</h3>' +
+      '<p>一张展开图，6 个面。点“折一片”，看它们一片一片立起来折成盒子：相对的面，颜色一样、大小一样。</p>' +
+      '<p id="' + K + '-q-tx"></p>' +
+      '<p>第 1 步 · 先猜：这个盒子的表面积是几平方厘米？</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-guess-a" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-b" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-c" type="button"></button></div>' +
+      '<p>第 2 步 · 玩一玩：点“折一片”，6 个面一片一片立起来。</p>' +
+      '<div class="btn-row"><button class="btn small primary" id="' + K + '-fold" type="button">折一片</button></div>' +
+      '<div id="' + K + '-net"></div>' +
+      '<p id="' + K + '-msg">先猜一猜，再点“折一片”。</p>' +
+      '<p>换一档：</p><div class="btn-row">' +
+      '<button class="btn small ghost" id="' + K + '-level-0" type="button">基础 · 长 5 宽 4 高 3</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-1" type="button">提高 · 棱长 4 的正方体</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-2" type="button">挑战 · 长 6 宽 3 高 2</button></div>' +
+      '<div class="tier-row" id="' + K + '-tiers"></div>' +
+      '<div class="find-row"><label>说一说你的发现：<input type="text" id="' + K + '-find" placeholder="我发现……"></label><button class="btn small primary" id="' + K + '-find-save" type="button">记下来</button></div>' +
+      '<p id="' + K + '-find-saved"></p>' +
+      '<p class="demo-foot">成功标准：三档都说得出“相对的面一模一样，表面积是三对面加起来”。</p>';
+    function gid(id) { return document.getElementById(id); }
+    function msg(t) { var m = gid(K + '-msg'); if (m) m.textContent = t; }
+    function faceSize(L, pair) {
+      if (pair === '前后') return L.l + '×' + L.h;
+      if (pair === '左右') return L.w + '×' + L.h;
+      return L.l + '×' + L.w;
+    }
+    function faceArea(L, pair) {
+      if (pair === '前后') return L.l * L.h;
+      if (pair === '左右') return L.w * L.h;
+      return L.l * L.w;
+    }
+    function drawNet() {
+      var L = LEVELS[li];
+      var colors = { '前后': '#93c5fd', '左右': '#86efac', '上下': '#fde68a' };
+      var cells = [
+        { f: 0, x: 1, y: 0 }, { f: 1, x: 1, y: 1 }, { f: 2, x: 1, y: 2 },
+        { f: 3, x: 1, y: 3 }, { f: 4, x: 0, y: 1 }, { f: 5, x: 2, y: 1 }
+      ];
+      var s = '<svg width="300" height="260" viewBox="0 0 300 260" role="img" aria-label="长方体展开图">';
+      for (var i = 0; i < cells.length; i++) {
+        var c = cells[i], F = FACES[c.f];
+        var done = i < folded;
+        s += '<rect x="' + (20 + c.x * 70) + '" y="' + (10 + c.y * 55) + '" width="66" height="51" rx="4" fill="' + colors[F.pair] + '" fill-opacity="' + (done ? '1' : '0.45') + '" stroke="#57534e" stroke-width="2"/>';
+        s += '<text x="' + (53 + c.x * 70) + '" y="' + (30 + c.y * 55) + '" font-size="12" text-anchor="middle" fill="#1e293b">' + F.name + '</text>';
+        s += '<text x="' + (53 + c.x * 70) + '" y="' + (48 + c.y * 55) + '" font-size="11" text-anchor="middle" fill="#57534e">' + faceSize(L, F.pair) + '</text>';
+      }
+      s += '</svg>';
+      var n = gid(K + '-net');
+      if (n) n.innerHTML = s;
+    }
+    function draw() {
+      var L = LEVELS[li];
+      var q = gid(K + '-q-tx');
+      if (q) q.textContent = '长 ' + L.l + ' 厘米、宽 ' + L.w + ' 厘米、高 ' + L.h + ' 厘米的盒子，表面积是几平方厘米？';
+      var g = gid(K + '-guess-a'); if (g) g.textContent = L.opts[0];
+      g = gid(K + '-guess-b'); if (g) g.textContent = L.opts[1];
+      g = gid(K + '-guess-c'); if (g) g.textContent = L.opts[2];
+      drawNet();
+    }
+    function setLevel(i) {
+      li = i; guessed = -1; folded = 0;
+      for (var k = 0; k < 3; k++) {
+        var b = gid(K + '-level-' + k);
+        if (b) b.setAttribute('aria-pressed', String(k === i));
+      }
+      draw();
+      msg('先猜一猜，再点“折一片”。');
+    }
+    gid(K + '-guess-a').addEventListener('click', function () { guessed = 0; msg('你猜 ' + LEVELS[li].opts[0] + '。折一折验证一下。'); });
+    gid(K + '-guess-b').addEventListener('click', function () { guessed = 1; msg('你猜 ' + LEVELS[li].opts[1] + '。折一折验证一下。'); });
+    gid(K + '-guess-c').addEventListener('click', function () { guessed = 2; msg('你猜 ' + LEVELS[li].opts[2] + '。折一折验证一下。'); });
+    gid(K + '-fold').addEventListener('click', function () {
+      var L = LEVELS[li];
+      if (folded >= 6) { msg('已经折好了。'); return; }
+      var F = FACES[folded];
+      folded++;
+      drawNet();
+      if (folded < 6) {
+        msg('折起了' + F.name + '（' + faceSize(L, F.pair) + '，' + faceArea(L, F.pair) + ' 平方厘米）。已折 ' + folded + '/6 个面。');
+      } else {
+        var ok = guessed === L.ans;
+        msg('折好了：相对的面一模一样——前后都是 ' + faceSize(L, '前后') + '，左右都是 ' + faceSize(L, '左右') + '，上下都是 ' + faceSize(L, '上下') + '。表面积 = 2×(' + faceArea(L, '上下') + '+' + faceArea(L, '前后') + '+' + faceArea(L, '左右') + ') = ' + L.surf + ' 平方厘米。' +
+          (guessed < 0 ? '下次先猜一猜再折。' : ok ? '你猜对了。' : '你猜的是 ' + L.opts[guessed] + '，实际是 ' + L.surf + ' 平方厘米。'));
+        if (ok) {
+          if (tiers) tiers.done(li);
+          if (typeof markTried === 'function') markTried(K);
+        }
+      }
+    });
+    gid(K + '-level-0').addEventListener('click', function () { setLevel(0); });
+    gid(K + '-level-1').addEventListener('click', function () { setLevel(1); });
+    gid(K + '-level-2').addEventListener('click', function () { setLevel(2); });
+    if (typeof makeTiers === 'function') {
+      tiers = makeTiers(gid(K + '-tiers'),
+        ['基础：5×4×3，94 平方厘米', '提高：棱长 4，96 平方厘米', '挑战：6×3×2，72 平方厘米'], K);
+    }
+    if (typeof wireDiscovery === 'function') {
+      wireDiscovery(K, K + '-find', K + '-find-save', K + '-find-saved');
+    }
+    gid(K + '-level-0').setAttribute('aria-pressed', 'true');
+    draw();
+  }
+});
+registerAnim({
+  key: 'm59-surface',
+  title: '拆面算表面积',
+  sub: '长方体 6 个面分三对：前后、左右、上下，每对算一个再乘 2；正方体 6 个面全一样，算一个乘 6。',
+  grade: 5,
+  kind: '演示',
+  points: ['5.9'],
+  render: function (el) {
+    var K = 'm59-surface';
+    var LEVELS = [
+      { label: '基础', l: 5, w: 4, h: 3, pairs: [['前后', 15, 30], ['左右', 12, 24], ['上下', 20, 40]], total: 94, opts: ['94', '60', '120'], ans: 0 },
+      { label: '提高', l: 4, w: 4, h: 4, pairs: [['前后', 16, 32], ['左右', 16, 32], ['上下', 16, 32]], total: 96, opts: ['96', '64', '128'], ans: 0 },
+      { label: '挑战', l: 6, w: 3, h: 2, pairs: [['前后', 12, 24], ['左右', 6, 12], ['上下', 18, 36]], total: 72, opts: ['72', '36', '108'], ans: 0 }
+    ];
+    var li = 0, guessed = -1, donePairs = {}, tiers = null;
+    el.innerHTML =
+      '<p class="demo-tag">演示 · 5 年级 · 长方体和正方体</p>' +
+      '<h3>拆面算表面积</h3>' +
+      '<p>表面积不用 6 个面一个一个加：相对的面一模一样，三对面，每对算一个再乘 2。</p>' +
+      '<p id="' + K + '-q-tx"></p>' +
+      '<p>第 1 步 · 先猜：表面积是几平方厘米？</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-guess-a" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-b" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-c" type="button"></button></div>' +
+      '<p>第 2 步 · 玩一玩：一对一对算，再加起来。</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-p-0" type="button">算前后</button>' +
+      '<button class="btn small primary" id="' + K + '-p-1" type="button">算左右</button>' +
+      '<button class="btn small primary" id="' + K + '-p-2" type="button">算上下</button>' +
+      '<button class="btn small primary" id="' + K + '-sum" type="button">加起来</button></div>' +
+      '<p id="' + K + '-msg">先猜一猜，再一对一对算。</p>' +
+      '<p>换一档：</p><div class="btn-row">' +
+      '<button class="btn small ghost" id="' + K + '-level-0" type="button">基础 · 长 5 宽 4 高 3</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-1" type="button">提高 · 棱长 4 的正方体</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-2" type="button">挑战 · 长 6 宽 3 高 2</button></div>' +
+      '<div class="tier-row" id="' + K + '-tiers"></div>' +
+      '<div class="find-row"><label>说一说你的发现：<input type="text" id="' + K + '-find" placeholder="我发现……"></label><button class="btn small primary" id="' + K + '-find-save" type="button">记下来</button></div>' +
+      '<p id="' + K + '-find-saved"></p>' +
+      '<p class="demo-foot">成功标准：三档都说得出“每对算一个乘 2，三对加起来”。</p>';
+    function gid(id) { return document.getElementById(id); }
+    function msg(t) { var m = gid(K + '-msg'); if (m) m.textContent = t; }
+    function draw() {
+      var L = LEVELS[li];
+      var q = gid(K + '-q-tx');
+      if (q) q.textContent = '长 ' + L.l + ' 厘米、宽 ' + L.w + ' 厘米、高 ' + L.h + ' 厘米，表面积是几平方厘米？';
+      var g = gid(K + '-guess-a'); if (g) g.textContent = L.opts[0];
+      g = gid(K + '-guess-b'); if (g) g.textContent = L.opts[1];
+      g = gid(K + '-guess-c'); if (g) g.textContent = L.opts[2];
+    }
+    function setLevel(i) {
+      li = i; guessed = -1; donePairs = {};
+      for (var k = 0; k < 3; k++) {
+        var b = gid(K + '-level-' + k);
+        if (b) b.setAttribute('aria-pressed', String(k === i));
+      }
+      draw();
+      msg('先猜一猜，再一对一对算。');
+    }
+    function pairText(L, i) {
+      var p = L.pairs[i];
+      var dims = i === 0 ? L.l + '×' + L.h : i === 1 ? L.w + '×' + L.h : L.l + '×' + L.w;
+      return p[0] + '两个面：一个是 ' + dims + '=' + p[1] + ' 平方厘米，两个就是 ' + p[1] + '×2=' + p[2] + ' 平方厘米。';
+    }
+    gid(K + '-guess-a').addEventListener('click', function () { guessed = 0; msg('你猜 ' + LEVELS[li].opts[0] + '。一对一对算验证一下。'); });
+    gid(K + '-guess-b').addEventListener('click', function () { guessed = 1; msg('你猜 ' + LEVELS[li].opts[1] + '。一对一对算验证一下。'); });
+    gid(K + '-guess-c').addEventListener('click', function () { guessed = 2; msg('你猜 ' + LEVELS[li].opts[2] + '。一对一对算验证一下。'); });
+    gid(K + '-p-0').addEventListener('click', function () { donePairs[0] = true; msg(pairText(LEVELS[li], 0)); });
+    gid(K + '-p-1').addEventListener('click', function () { donePairs[1] = true; msg(pairText(LEVELS[li], 1)); });
+    gid(K + '-p-2').addEventListener('click', function () { donePairs[2] = true; msg(pairText(LEVELS[li], 2)); });
+    gid(K + '-sum').addEventListener('click', function () {
+      var L = LEVELS[li];
+      if (!donePairs[0] || !donePairs[1] || !donePairs[2]) { msg('三对都要先算一遍，再加起来。'); return; }
+      var ok = guessed === L.ans;
+      msg('加起来：' + L.pairs[0][2] + '+' + L.pairs[1][2] + '+' + L.pairs[2][2] + '=' + L.total + ' 平方厘米。' +
+        (guessed < 0 ? '下次先猜一猜再算。' : ok ? '你猜对了。' : '你猜的是 ' + L.opts[guessed] + '，实际是 ' + L.total + ' 平方厘米。'));
+      if (ok) {
+        if (tiers) tiers.done(li);
+        if (typeof markTried === 'function') markTried(K);
+      }
+    });
+    gid(K + '-level-0').addEventListener('click', function () { setLevel(0); });
+    gid(K + '-level-1').addEventListener('click', function () { setLevel(1); });
+    gid(K + '-level-2').addEventListener('click', function () { setLevel(2); });
+    if (typeof makeTiers === 'function') {
+      tiers = makeTiers(gid(K + '-tiers'),
+        ['基础：5×4×3，94 平方厘米', '提高：棱长 4，96 平方厘米', '挑战：6×3×2，72 平方厘米'], K);
+    }
+    if (typeof wireDiscovery === 'function') {
+      wireDiscovery(K, K + '-find', K + '-find-save', K + '-find-saved');
+    }
+    gid(K + '-level-0').setAttribute('aria-pressed', 'true');
+    draw();
+  }
+});
+
+/* 5.10 分数的意义和性质：4 种方法全跳过——分数墙重切、分子分母同乘除已有 fraceq（模拟，SIM_LINKS 挂在 5.10 点页）；数轴上的分数点已有 fracnumline（模拟，同挂）；切饼/分物已有 buildfrac（模拟，同挂）+ fraceq 的圆饼；点页主演示 fraction 也是分数模型。本点不新增。 */
+/* 5.11 分数的加法和减法：跳过先重切、再数（已有 fracadd，5.11 点页主演示）；做最小公分母 LCD、分子加分子错误按钮。 */
+registerAnim({
+  key: 'm511-lcd',
+  title: '最小公分母',
+  sub: '分母 8 和 24，先找最小公倍数 24，再把两个分数都换成以 24 为分母的等值分数，然后分子相加。',
+  grade: 5,
+  kind: '模拟',
+  points: ['5.11'],
+  render: function (el) {
+    var K = 'm511-lcd';
+    var LEVELS = [
+      { label: '基础', a: [1, 8], b: [1, 24], lcm: 24, an: 3, bn: 1, sum: '4/24', red: '1/6', opts: ['8', '24', '16'], ans: 1 },
+      { label: '提高', a: [3, 8], b: [5, 24], lcm: 24, an: 9, bn: 5, sum: '14/24', red: '7/12', opts: ['8', '24', '12'], ans: 1 },
+      { label: '挑战', a: [5, 6], b: [3, 8], lcm: 24, an: 20, bn: 9, sum: '29/24', red: '1又5/24', opts: ['12', '24', '48'], ans: 1 }
+    ];
+    var li = 0, guessed = -1, sawLcm = false, sawConv = false, tiers = null;
+    el.innerHTML =
+      '<p class="demo-tag">模拟 · 5 年级 · 分数的加法和减法</p>' +
+      '<h3>最小公分母</h3>' +
+      '<p>分母不一样，不能直接加：先找最小公倍数当公分母，两个分数都换过去，再加分子。</p>' +
+      '<p id="' + K + '-q-tx"></p>' +
+      '<p>第 1 步 · 先猜：最小公分母是几？</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-guess-a" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-b" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-c" type="button"></button></div>' +
+      '<p>第 2 步 · 玩一玩：找最小公倍数，换分母，再加分子。</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-lcm" type="button">找最小公倍数</button>' +
+      '<button class="btn small primary" id="' + K + '-conv" type="button">换分母</button>' +
+      '<button class="btn small primary" id="' + K + '-add" type="button">分子相加</button></div>' +
+      '<p id="' + K + '-msg">先猜一猜，再点“找最小公倍数”。</p>' +
+      '<p>换一档：</p><div class="btn-row">' +
+      '<button class="btn small ghost" id="' + K + '-level-0" type="button">基础 · 1/8+1/24</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-1" type="button">提高 · 3/8+5/24</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-2" type="button">挑战 · 5/6+3/8</button></div>' +
+      '<div class="tier-row" id="' + K + '-tiers"></div>' +
+      '<div class="find-row"><label>说一说你的发现：<input type="text" id="' + K + '-find" placeholder="我发现……"></label><button class="btn small primary" id="' + K + '-find-save" type="button">记下来</button></div>' +
+      '<p id="' + K + '-find-saved"></p>' +
+      '<p class="demo-foot">成功标准：三档都说得出“先找最小公倍数，再换分母加分子”。</p>';
+    function gid(id) { return document.getElementById(id); }
+    function msg(t) { var m = gid(K + '-msg'); if (m) m.textContent = t; }
+    function frac(fr) { return fr[0] + '/' + fr[1]; }
+    function draw() {
+      var L = LEVELS[li];
+      var q = gid(K + '-q-tx');
+      if (q) q.textContent = frac(L.a) + ' + ' + frac(L.b) + ' = ？';
+      var g = gid(K + '-guess-a'); if (g) g.textContent = L.opts[0];
+      g = gid(K + '-guess-b'); if (g) g.textContent = L.opts[1];
+      g = gid(K + '-guess-c'); if (g) g.textContent = L.opts[2];
+    }
+    function setLevel(i) {
+      li = i; guessed = -1; sawLcm = false; sawConv = false;
+      for (var k = 0; k < 3; k++) {
+        var b = gid(K + '-level-' + k);
+        if (b) b.setAttribute('aria-pressed', String(k === i));
+      }
+      draw();
+      msg('先猜一猜，再点“找最小公倍数”。');
+    }
+    gid(K + '-guess-a').addEventListener('click', function () { guessed = 0; msg('你猜最小公分母是 ' + LEVELS[li].opts[0] + '。找一找验证一下。'); });
+    gid(K + '-guess-b').addEventListener('click', function () { guessed = 1; msg('你猜最小公分母是 ' + LEVELS[li].opts[1] + '。找一找验证一下。'); });
+    gid(K + '-guess-c').addEventListener('click', function () { guessed = 2; msg('你猜最小公分母是 ' + LEVELS[li].opts[2] + '。找一找验证一下。'); });
+    gid(K + '-lcm').addEventListener('click', function () {
+      var L = LEVELS[li];
+      sawLcm = true;
+      msg(L.a[1] + ' 的倍数：' + L.a[1] + '、' + (L.a[1] * 2) + '、' + (L.a[1] * 3) + '……；' + L.b[1] + ' 的倍数：' + L.b[1] + '、' + (L.b[1] * 2) + '……最小的公共倍数是 ' + L.lcm + '。');
+    });
+    gid(K + '-conv').addEventListener('click', function () {
+      var L = LEVELS[li];
+      if (!sawLcm) { msg('先点“找最小公倍数”。'); return; }
+      sawConv = true;
+      msg(frac(L.a) + ' = ' + L.an + '/' + L.lcm + '，' + frac(L.b) + ' = ' + L.bn + '/' + L.lcm + '——分子分母同时乘同一个数，分数大小不变。');
+    });
+    gid(K + '-add').addEventListener('click', function () {
+      var L = LEVELS[li];
+      if (!sawConv) { msg('先点“换分母”。'); return; }
+      var ok = guessed === L.ans;
+      msg(L.an + '/' + L.lcm + ' + ' + L.bn + '/' + L.lcm + ' = ' + L.sum + '，也就是 ' + L.red + '。分母一样了，才能数分子。' +
+        (guessed < 0 ? '下次先猜一猜再找。' : ok ? '你猜对了。' : '你猜的最小公分母是 ' + L.opts[guessed] + '，实际是 ' + L.lcm + '。'));
+      if (ok) {
+        if (tiers) tiers.done(li);
+        if (typeof markTried === 'function') markTried(K);
+      }
+    });
+    gid(K + '-level-0').addEventListener('click', function () { setLevel(0); });
+    gid(K + '-level-1').addEventListener('click', function () { setLevel(1); });
+    gid(K + '-level-2').addEventListener('click', function () { setLevel(2); });
+    if (typeof makeTiers === 'function') {
+      tiers = makeTiers(gid(K + '-tiers'),
+        ['基础：1/8+1/24=1/6', '提高：3/8+5/24=7/12', '挑战：5/6+3/8=1又5/24'], K);
+    }
+    if (typeof wireDiscovery === 'function') {
+      wireDiscovery(K, K + '-find', K + '-find-save', K + '-find-saved');
+    }
+    gid(K + '-level-0').setAttribute('aria-pressed', 'true');
+    draw();
+  }
+});
+registerAnim({
+  key: 'm511-trap',
+  title: '分子加分子是错的',
+  sub: '1/2+1/3，分子加分子、分母加分母得 2/5——可是 2/5 比 1/2 还小，加了一个正数，和怎么比原来还小？',
+  grade: 5,
+  kind: '实验',
+  points: ['5.11'],
+  render: function (el) {
+    var K = 'm511-trap';
+    var LEVELS = [
+      { label: '基础', a: [1, 2], b: [1, 3], wrong: '2/5', right: '5/6', opts: ['2/5', '5/6', '1/5'], ans: 1 },
+      { label: '提高', a: [1, 2], b: [1, 4], wrong: '2/6', right: '3/4', opts: ['2/6', '3/4', '1/6'], ans: 1 },
+      { label: '挑战', a: [2, 3], b: [1, 4], wrong: '3/7', right: '11/12', opts: ['3/7', '11/12', '1/7'], ans: 1 }
+    ];
+    var li = 0, guessed = -1, sawWrong = false, tiers = null;
+    el.innerHTML =
+      '<p class="demo-tag">实验 · 5 年级 · 分数的加法和减法</p>' +
+      '<h3>分子加分子是错的</h3>' +
+      '<p>分数加法最容易掉的坑：分子加分子、分母加分母。点一下这个错按钮，看它错在哪。</p>' +
+      '<p id="' + K + '-q-tx"></p>' +
+      '<p>第 1 步 · 先猜：等于几？</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-guess-a" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-b" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-c" type="button"></button></div>' +
+      '<p>第 2 步 · 玩一玩：先点错按钮，再点对的办法。</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small ghost" id="' + K + '-wrong" type="button">分子加分子，分母加分母（错的）</button>' +
+      '<button class="btn small primary" id="' + K + '-right" type="button">先重切再数（对的）</button></div>' +
+      '<div id="' + K + '-bars"></div>' +
+      '<p id="' + K + '-msg">先猜一猜，再点错按钮试试。</p>' +
+      '<p>换一档：</p><div class="btn-row">' +
+      '<button class="btn small ghost" id="' + K + '-level-0" type="button">基础 · 1/2+1/3</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-1" type="button">提高 · 1/2+1/4</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-2" type="button">挑战 · 2/3+1/4</button></div>' +
+      '<div class="tier-row" id="' + K + '-tiers"></div>' +
+      '<div class="find-row"><label>说一说你的发现：<input type="text" id="' + K + '-find" placeholder="我发现……"></label><button class="btn small primary" id="' + K + '-find-save" type="button">记下来</button></div>' +
+      '<p id="' + K + '-find-saved"></p>' +
+      '<p class="demo-foot">成功标准：三档都说得出“分母不一样，先重切再数，不能分子分母各加各的”。</p>';
+    function gid(id) { return document.getElementById(id); }
+    function msg(t) { var m = gid(K + '-msg'); if (m) m.textContent = t; }
+    function frac(fr) { return fr[0] + '/' + fr[1]; }
+    function bar(n, d, color, label) {
+      var w = Math.round(n / d * 260);
+      return '<div style="margin:4px 0"><span style="display:inline-block;width:' + w + 'px;height:20px;background:' + color + ';border:1px solid #666"></span> ' + label + '</div>';
+    }
+    function draw() {
+      var L = LEVELS[li];
+      var q = gid(K + '-q-tx');
+      if (q) q.textContent = frac(L.a) + ' + ' + frac(L.b) + ' = ？';
+      var g = gid(K + '-guess-a'); if (g) g.textContent = L.opts[0];
+      g = gid(K + '-guess-b'); if (g) g.textContent = L.opts[1];
+      g = gid(K + '-guess-c'); if (g) g.textContent = L.opts[2];
+      var bb = gid(K + '-bars');
+      if (bb) bb.innerHTML = bar(L.a[0], L.a[1], '#93c5fd', frac(L.a)) + bar(L.b[0], L.b[1], '#fde68a', frac(L.b));
+    }
+    function setLevel(i) {
+      li = i; guessed = -1; sawWrong = false;
+      for (var k = 0; k < 3; k++) {
+        var b = gid(K + '-level-' + k);
+        if (b) b.setAttribute('aria-pressed', String(k === i));
+      }
+      draw();
+      msg('先猜一猜，再点错按钮试试。');
+    }
+    gid(K + '-guess-a').addEventListener('click', function () { guessed = 0; msg('你猜 ' + LEVELS[li].opts[0] + '。点错按钮试试。'); });
+    gid(K + '-guess-b').addEventListener('click', function () { guessed = 1; msg('你猜 ' + LEVELS[li].opts[1] + '。点错按钮试试。'); });
+    gid(K + '-guess-c').addEventListener('click', function () { guessed = 2; msg('你猜 ' + LEVELS[li].opts[2] + '。点错按钮试试。'); });
+    gid(K + '-wrong').addEventListener('click', function () {
+      var L = LEVELS[li];
+      sawWrong = true;
+      var wp = L.wrong.split('/');
+      var bb = gid(K + '-bars');
+      if (bb) bb.innerHTML = bar(L.a[0], L.a[1], '#93c5fd', frac(L.a)) + bar(L.b[0], L.b[1], '#fde68a', frac(L.b)) + bar(+wp[0], +wp[1], '#fca5a5', '错答案 ' + L.wrong);
+      msg('分子加分子、分母加分母，得 ' + L.wrong + '。可是 ' + L.wrong + ' 比 ' + frac(L.a) + ' 还小——加了一个正数，和怎么比原来还小？这条红条当场露馅了。');
+    });
+    gid(K + '-right').addEventListener('click', function () {
+      var L = LEVELS[li];
+      if (!sawWrong) { msg('先点错按钮，看它错在哪。'); return; }
+      var rp = L.right.split('/');
+      var bb = gid(K + '-bars');
+      if (bb) bb.innerHTML = bar(L.a[0], L.a[1], '#93c5fd', frac(L.a)) + bar(L.b[0], L.b[1], '#fde68a', frac(L.b)) + bar(+rp[0], +rp[1], '#86efac', '正确答案 ' + L.right);
+      var ok = guessed === L.ans;
+      msg('先重切再数：两个分数切成一样的小份，数一数，得 ' + L.right + '。拼完的条比 ' + frac(L.a) + ' 长，这才对——加了东西，和要变大。' +
+        (guessed < 0 ? '下次先猜一猜再点。' : ok ? '你猜对了。' : '你猜的是 ' + L.opts[guessed] + '，实际是 ' + L.right + '。'));
+      if (ok) {
+        if (tiers) tiers.done(li);
+        if (typeof markTried === 'function') markTried(K);
+      }
+    });
+    gid(K + '-level-0').addEventListener('click', function () { setLevel(0); });
+    gid(K + '-level-1').addEventListener('click', function () { setLevel(1); });
+    gid(K + '-level-2').addEventListener('click', function () { setLevel(2); });
+    if (typeof makeTiers === 'function') {
+      tiers = makeTiers(gid(K + '-tiers'),
+        ['基础：1/2+1/3=5/6', '提高：1/2+1/4=3/4', '挑战：2/3+1/4=11/12'], K);
+    }
+    if (typeof wireDiscovery === 'function') {
+      wireDiscovery(K, K + '-find', K + '-find-save', K + '-find-saved');
+    }
+    gid(K + '-level-0').setAttribute('aria-pressed', 'true');
+    draw();
+  }
+});
+/* 5.12 图形的运动（三）：跳过绕钉旋转 + 角度盘（已有 rotate，5.12 点页主演示；rotate 的文字提到了分针 12→3 是 90°，但没有钟表操作）；做三要素齐全才转得动、钟表指针看旋转。 */
+registerAnim({
+  key: 'm512-three',
+  title: '三要素齐全才转得动',
+  sub: '在软件里转图形，必须先定中心、再选方向、再输角度，缺一个都转不成——三要素是操作逼出来的，不是背出来的。',
+  grade: 5,
+  kind: '模拟',
+  points: ['5.12'],
+  render: function (el) {
+    var K = 'm512-three';
+    var LEVELS = [
+      { label: '基础', c: '中心点', d: '顺时针', a: 90 },
+      { label: '提高', c: '顶点', d: '逆时针', a: 90 },
+      { label: '挑战', c: '中心点', d: '顺时针', a: 180 }
+    ];
+    var li = 0, guessed = -1, center = '', dir = '', ang = 0, tiers = null;
+    el.innerHTML =
+      '<p class="demo-tag">模拟 · 5 年级 · 图形的运动（三）</p>' +
+      '<h3>三要素齐全才转得动</h3>' +
+      '<p>旋转有三件事：绕哪个中心转、往哪个方向转、转多少度。缺一个，图形就转不成。</p>' +
+      '<p>第 1 步 · 先猜：只定角度，不定中心，能转吗？</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-guess-yes" type="button">能</button>' +
+      '<button class="btn small primary" id="' + K + '-guess-no" type="button">不能</button></div>' +
+      '<p>第 2 步 · 玩一玩：三个都定好，再点“转一转”。</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small ghost" id="' + K + '-c-center" type="button">中心：形心</button>' +
+      '<button class="btn small ghost" id="' + K + '-c-vertex" type="button">中心：顶点</button>' +
+      '<button class="btn small ghost" id="' + K + '-d-cw" type="button">方向：顺时针</button>' +
+      '<button class="btn small ghost" id="' + K + '-d-ccw" type="button">方向：逆时针</button>' +
+      '<button class="btn small ghost" id="' + K + '-a-90" type="button">角度：90°</button>' +
+      '<button class="btn small ghost" id="' + K + '-a-180" type="button">角度：180°</button>' +
+      '<button class="btn small primary" id="' + K + '-turn" type="button">转一转</button></div>' +
+      '<div id="' + K + '-pic"></div>' +
+      '<p id="' + K + '-msg">先猜一猜，再把三个要素定好。</p>' +
+      '<p>换一档：</p><div class="btn-row">' +
+      '<button class="btn small ghost" id="' + K + '-level-0" type="button">基础 · 绕形心顺时针 90°</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-1" type="button">提高 · 绕顶点逆时针 90°</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-2" type="button">挑战 · 绕形心顺时针 180°</button></div>' +
+      '<div class="tier-row" id="' + K + '-tiers"></div>' +
+      '<div class="find-row"><label>说一说你的发现：<input type="text" id="' + K + '-find" placeholder="我发现……"></label><button class="btn small primary" id="' + K + '-find-save" type="button">记下来</button></div>' +
+      '<p id="' + K + '-find-saved"></p>' +
+      '<p class="demo-foot">成功标准：三档都说得出“中心、方向、角度，缺一个都转不成”。</p>';
+    function gid(id) { return document.getElementById(id); }
+    function msg(t) { var m = gid(K + '-msg'); if (m) m.textContent = t; }
+    function draw(deg) {
+      var L = LEVELS[li];
+      var cx = 160, cy = center === '顶点' ? 60 : 127;
+      var s = '<svg width="320" height="220" viewBox="0 0 320 220" role="img" aria-label="三角形旋转">' +
+        '<polygon points="160,60 220,160 100,160" fill="#dbeafe" stroke="#2563eb" stroke-width="2" transform="rotate(' + deg + ' ' + cx + ' ' + cy + ')"/>' +
+        '<circle cx="' + cx + '" cy="' + cy + '" r="5" fill="#dc2626"/>' +
+        '<text x="170" y="' + (cy - 7) + '" font-size="12" fill="#57534e">中心</text>' +
+        '<text x="10" y="210" font-size="12" fill="#57534e">目标：绕' + L.c + L.d + '转 ' + L.a + '°</text></svg>';
+      var p = gid(K + '-pic');
+      if (p) p.innerHTML = s;
+    }
+    function setLevel(i) {
+      li = i; guessed = -1; center = ''; dir = ''; ang = 0;
+      for (var k = 0; k < 3; k++) {
+        var b = gid(K + '-level-' + k);
+        if (b) b.setAttribute('aria-pressed', String(k === i));
+      }
+      draw(0);
+      msg('先猜一猜，再把三个要素定好。');
+    }
+    gid(K + '-guess-yes').addEventListener('click', function () { guessed = 0; msg('你猜能转。把三个要素定好，点“转一转”试试。'); });
+    gid(K + '-guess-no').addEventListener('click', function () { guessed = 1; msg('你猜不能转。把三个要素定好，点“转一转”试试。'); });
+    gid(K + '-c-center').addEventListener('click', function () { center = '中心点'; msg('中心定好了：形心。'); });
+    gid(K + '-c-vertex').addEventListener('click', function () { center = '顶点'; msg('中心定好了：顶点。'); });
+    gid(K + '-d-cw').addEventListener('click', function () { dir = '顺时针'; msg('方向定好了：顺时针。'); });
+    gid(K + '-d-ccw').addEventListener('click', function () { dir = '逆时针'; msg('方向定好了：逆时针。'); });
+    gid(K + '-a-90').addEventListener('click', function () { ang = 90; msg('角度定好了：90°。'); });
+    gid(K + '-a-180').addEventListener('click', function () { ang = 180; msg('角度定好了：180°。'); });
+    gid(K + '-turn').addEventListener('click', function () {
+      var L = LEVELS[li];
+      var missing = [];
+      if (!center) missing.push('中心');
+      if (!dir) missing.push('方向');
+      if (!ang) missing.push('角度');
+      if (missing.length) {
+        msg('转不成：还缺' + missing.join('、') + '。三个要素齐了才能转。');
+        return;
+      }
+      var deg = dir === '顺时针' ? ang : -ang;
+      draw(deg);
+      var match = center === L.c && dir === L.d && ang === L.a;
+      var ok = guessed === 1;
+      msg('绕' + center + dir + '转了 ' + ang + '°：还是原来的三角形，边长、角度一点没变。' +
+        (match ? '和目标一样。' : '和目标不一样：目标是绕' + L.c + L.d + '转 ' + L.a + '°，再调一调。') +
+        (guessed < 0 ? '' : ok ? '你猜对了：只定角度确实转不成。' : '你猜的是能转——刚才缺要素的时候，是不是转不成？'));
+      if (ok && match) {
+        if (tiers) tiers.done(li);
+        if (typeof markTried === 'function') markTried(K);
+      } else if (match) {
+        if (typeof markTried === 'function') markTried(K);
+      }
+    });
+    gid(K + '-level-0').addEventListener('click', function () { setLevel(0); });
+    gid(K + '-level-1').addEventListener('click', function () { setLevel(1); });
+    gid(K + '-level-2').addEventListener('click', function () { setLevel(2); });
+    if (typeof makeTiers === 'function') {
+      tiers = makeTiers(gid(K + '-tiers'),
+        ['基础：绕形心顺时针 90°', '提高：绕顶点逆时针 90°', '挑战：绕形心顺时针 180°'], K);
+    }
+    if (typeof wireDiscovery === 'function') {
+      wireDiscovery(K, K + '-find', K + '-find-save', K + '-find-saved');
+    }
+    gid(K + '-level-0').setAttribute('aria-pressed', 'true');
+    draw(0);
+  }
+});
+registerAnim({
+  key: 'm512-clock',
+  title: '钟表指针看旋转',
+  sub: '分针从 12 走到 3，是顺时针 90°；走到 6，是 180°。信号旗从一个字母转到另一个字母，也是一次旋转。',
+  grade: 5,
+  kind: '演示',
+  points: ['5.12'],
+  render: function (el) {
+    var K = 'm512-clock';
+    var LEVELS = [
+      { label: '基础', from: 12, to: 3, deg: 90, opts: ['30°', '90°', '180°'], ans: 1 },
+      { label: '提高', from: 12, to: 6, deg: 180, opts: ['90°', '180°', '270°'], ans: 1 },
+      { label: '挑战', from: 3, to: 9, deg: 180, opts: ['90°', '180°', '360°'], ans: 1 }
+    ];
+    var li = 0, guessed = -1, tiers = null;
+    el.innerHTML =
+      '<p class="demo-tag">演示 · 5 年级 · 图形的运动（三）</p>' +
+      '<h3>钟表指针看旋转</h3>' +
+      '<p>生活里到处是旋转：钟表指针转一圈是 360°，一格是 30°。先认生活里的旋转，再画几何里的旋转。</p>' +
+      '<p id="' + K + '-q-tx"></p>' +
+      '<p>第 1 步 · 先猜：分针转了几度？</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-guess-a" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-b" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-c" type="button"></button></div>' +
+      '<p>第 2 步 · 玩一玩：点“拨分针”，看它转到哪。</p>' +
+      '<div class="btn-row"><button class="btn small primary" id="' + K + '-dial" type="button">拨分针</button></div>' +
+      '<div id="' + K + '-clock"></div>' +
+      '<p id="' + K + '-msg">先猜一猜，再点“拨分针”。</p>' +
+      '<p>换一档：</p><div class="btn-row">' +
+      '<button class="btn small ghost" id="' + K + '-level-0" type="button">基础 · 12→3</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-1" type="button">提高 · 12→6</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-2" type="button">挑战 · 3→9</button></div>' +
+      '<div class="tier-row" id="' + K + '-tiers"></div>' +
+      '<div class="find-row"><label>说一说你的发现：<input type="text" id="' + K + '-find" placeholder="我发现……"></label><button class="btn small primary" id="' + K + '-find-save" type="button">记下来</button></div>' +
+      '<p id="' + K + '-find-saved"></p>' +
+      '<p class="demo-foot">成功标准：三档都说得出“分针走一格 30°，顺时针转”。</p>';
+    function gid(id) { return document.getElementById(id); }
+    function msg(t) { var m = gid(K + '-msg'); if (m) m.textContent = t; }
+    function handAngle(n) { return (n % 12) * 30; }
+    function drawFace(to) {
+      var s = '<svg width="220" height="220" viewBox="0 0 220 220" role="img" aria-label="钟面">';
+      s += '<circle cx="110" cy="110" r="95" fill="#fff" stroke="#334155" stroke-width="3"/>';
+      for (var i = 0; i < 12; i++) {
+        var a = i * 30 * Math.PI / 180;
+        var x1 = 110 + 82 * Math.sin(a), y1 = 110 - 82 * Math.cos(a);
+        var x2 = 110 + 90 * Math.sin(a), y2 = 110 - 90 * Math.cos(a);
+        s += '<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '" stroke="#334155" stroke-width="3"/>';
+        var num = i === 0 ? 12 : i;
+        var nx = 110 + 66 * Math.sin(a), ny = 110 - 66 * Math.cos(a) + 5;
+        s += '<text x="' + nx.toFixed(1) + '" y="' + ny.toFixed(1) + '" font-size="15" text-anchor="middle" fill="#1e293b">' + num + '</text>';
+      }
+      if (to !== null) {
+        s += '<line x1="110" y1="110" x2="110" y2="30" stroke="#dc2626" stroke-width="4" stroke-linecap="round" transform="rotate(' + handAngle(to) + ' 110 110)"/>';
+      }
+      s += '<circle cx="110" cy="110" r="5" fill="#334155"/></svg>';
+      var c = gid(K + '-clock');
+      if (c) c.innerHTML = s;
+    }
+    function draw() {
+      var L = LEVELS[li];
+      var q = gid(K + '-q-tx');
+      if (q) q.textContent = '分针从 ' + L.from + ' 走到 ' + L.to + '，顺时针转了几度？';
+      var g = gid(K + '-guess-a'); if (g) g.textContent = L.opts[0];
+      g = gid(K + '-guess-b'); if (g) g.textContent = L.opts[1];
+      g = gid(K + '-guess-c'); if (g) g.textContent = L.opts[2];
+      drawFace(L.from);
+    }
+    function setLevel(i) {
+      li = i; guessed = -1;
+      for (var k = 0; k < 3; k++) {
+        var b = gid(K + '-level-' + k);
+        if (b) b.setAttribute('aria-pressed', String(k === i));
+      }
+      draw();
+      msg('先猜一猜，再点“拨分针”。');
+    }
+    gid(K + '-guess-a').addEventListener('click', function () { guessed = 0; msg('你猜 ' + LEVELS[li].opts[0] + '。拨一下验证。'); });
+    gid(K + '-guess-b').addEventListener('click', function () { guessed = 1; msg('你猜 ' + LEVELS[li].opts[1] + '。拨一下验证。'); });
+    gid(K + '-guess-c').addEventListener('click', function () { guessed = 2; msg('你猜 ' + LEVELS[li].opts[2] + '。拨一下验证。'); });
+    gid(K + '-dial').addEventListener('click', function () {
+      var L = LEVELS[li];
+      drawFace(L.to);
+      var ok = guessed === L.ans;
+      var steps = L.deg / 30;
+      msg('分针从 ' + L.from + ' 走到 ' + L.to + '，走了 ' + steps + ' 格，一格 30°，顺时针转了 ' + L.deg + '°。' +
+        (guessed < 0 ? '下次先猜一猜再拨。' : ok ? '你猜对了。' : '你猜的是 ' + L.opts[guessed] + '，实际是 ' + L.deg + '°。'));
+      if (ok) {
+        if (tiers) tiers.done(li);
+        if (typeof markTried === 'function') markTried(K);
+      }
+    });
+    gid(K + '-level-0').addEventListener('click', function () { setLevel(0); });
+    gid(K + '-level-1').addEventListener('click', function () { setLevel(1); });
+    gid(K + '-level-2').addEventListener('click', function () { setLevel(2); });
+    if (typeof makeTiers === 'function') {
+      tiers = makeTiers(gid(K + '-tiers'),
+        ['基础：12→3 是 90°', '提高：12→6 是 180°', '挑战：3→9 是 180°'], K);
+    }
+    if (typeof wireDiscovery === 'function') {
+      wireDiscovery(K, K + '-find', K + '-find-save', K + '-find-saved');
+    }
+    gid(K + '-level-0').setAttribute('aria-pressed', 'true');
+    draw();
+  }
+});
+
+/* 5.13 折线统计图、找次品：跳过三组称找次品（已有 findbad，5.13 点页主演示）；做斜率即变化、画图列表比方案、自己画折线图。 */
+registerAnim({
+  key: 'm513-slope',
+  title: '斜率即变化',
+  sub: '两段线一样高，陡的那段长得更快——变化看斜率，数值看高度，两件事分开读。',
+  grade: 5,
+  kind: '模拟',
+  points: ['5.13'],
+  render: function (el) {
+    var K = 'm513-slope';
+    var DATA = [20, 40, 55, 70, 100, 110];
+    var SEGS = {
+      '1→2': { rise: 20, run: 1, rate: 20 },
+      '2→3': { rise: 15, run: 1, rate: 15 },
+      '3→4': { rise: 15, run: 1, rate: 15 },
+      '4→5': { rise: 30, run: 1, rate: 30 },
+      '5→6': { rise: 10, run: 1, rate: 10 },
+      '2→4': { rise: 30, run: 2, rate: 15 }
+    };
+    var LEVELS = [
+      { label: '基础', q: '哪一段涨得最多？', opts: ['2→3 月', '4→5 月', '5→6 月'], ans: 1 },
+      { label: '提高', q: '哪一段涨得最快？', opts: ['2→4 月', '4→5 月', '1→2 月'], ans: 1 },
+      { label: '挑战', q: '2→4 月和 4→5 月都涨了 30 元，谁涨得快？', opts: ['2→4 月', '4→5 月', '一样快'], ans: 1 }
+    ];
+    var li = 0, guessed = -1, picked = '', tiers = null;
+    el.innerHTML =
+      '<p class="demo-tag">模拟 · 5 年级 · 折线统计图</p>' +
+      '<h3>斜率即变化</h3>' +
+      '<p>小明 1 到 6 月的存钱：20、40、55、70、100、110 元。线爬得越高是钱越多，线越陡是长得越快——两件事别混了。</p>' +
+      '<p id="' + K + '-q-tx"></p>' +
+      '<p>第 1 步 · 先猜：按问题猜一猜。</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-guess-a" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-b" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-c" type="button"></button></div>' +
+      '<p>第 2 步 · 玩一玩：点一段线，看它涨了多少、花了几个月，再点“比一比”。</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small ghost" id="' + K + '-seg-12" type="button">1→2 月</button>' +
+      '<button class="btn small ghost" id="' + K + '-seg-23" type="button">2→3 月</button>' +
+      '<button class="btn small ghost" id="' + K + '-seg-34" type="button">3→4 月</button>' +
+      '<button class="btn small ghost" id="' + K + '-seg-45" type="button">4→5 月</button>' +
+      '<button class="btn small ghost" id="' + K + '-seg-56" type="button">5→6 月</button>' +
+      '<button class="btn small ghost" id="' + K + '-seg-24" type="button">2→4 月</button>' +
+      '<button class="btn small primary" id="' + K + '-compare" type="button">比一比</button></div>' +
+      '<div id="' + K + '-chart"></div>' +
+      '<p id="' + K + '-msg">先猜一猜，再点一段线。</p>' +
+      '<p>换一档：</p><div class="btn-row">' +
+      '<button class="btn small ghost" id="' + K + '-level-0" type="button">基础 · 涨得最多</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-1" type="button">提高 · 涨得最快</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-2" type="button">挑战 · 一样高谁快</button></div>' +
+      '<div class="tier-row" id="' + K + '-tiers"></div>' +
+      '<div class="find-row"><label>说一说你的发现：<input type="text" id="' + K + '-find" placeholder="我发现……"></label><button class="btn small primary" id="' + K + '-find-save" type="button">记下来</button></div>' +
+      '<p id="' + K + '-find-saved"></p>' +
+      '<p class="demo-foot">成功标准：三档都说得出“涨多少看高度，涨多快看斜率”。</p>';
+    function gid(id) { return document.getElementById(id); }
+    function msg(t) { var m = gid(K + '-msg'); if (m) m.textContent = t; }
+    function drawChart() {
+      var pts = [];
+      for (var i = 0; i < DATA.length; i++) pts.push((40 + i * 44) + ',' + (180 - DATA[i] * 1.2));
+      var s = '<svg width="320" height="200" viewBox="0 0 320 200" role="img" aria-label="存钱折线图">';
+      s += '<line x1="30" y1="180" x2="300" y2="180" stroke="#78716c" stroke-width="2"/>';
+      s += '<line x1="30" y1="20" x2="30" y2="180" stroke="#78716c" stroke-width="2"/>';
+      s += '<polyline points="' + pts.join(' ') + '" fill="none" stroke="#2563eb" stroke-width="3"/>';
+      for (var j = 0; j < DATA.length; j++) {
+        var x = 40 + j * 44, y = 180 - DATA[j] * 1.2;
+        s += '<circle cx="' + x + '" cy="' + y.toFixed(1) + '" r="5" fill="#f97316"/>';
+        s += '<text x="' + x + '" y="196" font-size="11" text-anchor="middle" fill="#57534e">' + (j + 1) + '月</text>';
+        s += '<text x="' + x + '" y="' + (y - 10).toFixed(1) + '" font-size="11" text-anchor="middle" fill="#57534e">' + DATA[j] + '</text>';
+      }
+      s += '</svg>';
+      var c = gid(K + '-chart');
+      if (c) c.innerHTML = s;
+    }
+    function draw() {
+      var L = LEVELS[li];
+      var q = gid(K + '-q-tx');
+      if (q) q.textContent = L.q;
+      var g = gid(K + '-guess-a'); if (g) g.textContent = L.opts[0];
+      g = gid(K + '-guess-b'); if (g) g.textContent = L.opts[1];
+      g = gid(K + '-guess-c'); if (g) g.textContent = L.opts[2];
+      drawChart();
+    }
+    function setLevel(i) {
+      li = i; guessed = -1; picked = '';
+      for (var k = 0; k < 3; k++) {
+        var b = gid(K + '-level-' + k);
+        if (b) b.setAttribute('aria-pressed', String(k === i));
+      }
+      draw();
+      msg('先猜一猜，再点一段线。');
+    }
+    function pickSeg(name) {
+      var s = SEGS[name];
+      picked = name;
+      msg(name + ' 月：涨了 ' + s.rise + ' 元，花了 ' + s.run + ' 个月，平均每月涨 ' + s.rate + ' 元。线越陡，每月涨得越多。');
+    }
+    gid(K + '-guess-a').addEventListener('click', function () { guessed = 0; msg('你猜 ' + LEVELS[li].opts[0] + '。点一段线验证一下。'); });
+    gid(K + '-guess-b').addEventListener('click', function () { guessed = 1; msg('你猜 ' + LEVELS[li].opts[1] + '。点一段线验证一下。'); });
+    gid(K + '-guess-c').addEventListener('click', function () { guessed = 2; msg('你猜 ' + LEVELS[li].opts[2] + '。点一段线验证一下。'); });
+    gid(K + '-seg-12').addEventListener('click', function () { pickSeg('1→2'); });
+    gid(K + '-seg-23').addEventListener('click', function () { pickSeg('2→3'); });
+    gid(K + '-seg-34').addEventListener('click', function () { pickSeg('3→4'); });
+    gid(K + '-seg-45').addEventListener('click', function () { pickSeg('4→5'); });
+    gid(K + '-seg-56').addEventListener('click', function () { pickSeg('5→6'); });
+    gid(K + '-seg-24').addEventListener('click', function () { pickSeg('2→4'); });
+    gid(K + '-compare').addEventListener('click', function () {
+      var ok = guessed === LEVELS[li].ans;
+      var verdict = li === 0 ? '4→5 月涨了 30 元，是涨得最多的一段。'
+        : li === 1 ? '4→5 月每月涨 30 元，是涨得最快的一段。'
+        : '两段都涨了 30 元，一样高；但 4→5 月只花了 1 个月，2→4 月花了 2 个月，所以 4→5 月快。';
+      msg(verdict + (guessed < 0 ? '下次先猜一猜再比。' : ok ? '你猜对了。' : '你猜的是 ' + LEVELS[li].opts[guessed] + '。'));
+      if (ok) {
+        if (tiers) tiers.done(li);
+        if (typeof markTried === 'function') markTried(K);
+      }
+    });
+    gid(K + '-level-0').addEventListener('click', function () { setLevel(0); });
+    gid(K + '-level-1').addEventListener('click', function () { setLevel(1); });
+    gid(K + '-level-2').addEventListener('click', function () { setLevel(2); });
+    if (typeof makeTiers === 'function') {
+      tiers = makeTiers(gid(K + '-tiers'),
+        ['基础：4→5 月涨 30 元', '提高：4→5 月最快', '挑战：一样高，4→5 月快'], K);
+    }
+    if (typeof wireDiscovery === 'function') {
+      wireDiscovery(K, K + '-find', K + '-find-save', K + '-find-saved');
+    }
+    gid(K + '-level-0').setAttribute('aria-pressed', 'true');
+    draw();
+  }
+});
+registerAnim({
+  key: 'm513-table',
+  title: '画图列表比方案',
+  sub: '先从 5 个零件画示意图找规律，再列表：2–3 个 1 次、4–9 个 2 次、10–27 个 3 次——次数表自己长出来。',
+  grade: 5,
+  kind: '演示',
+  points: ['5.13'],
+  render: function (el) {
+    var K = 'm513-table';
+    var LEVELS = [
+      { label: '基础', n: 5, times: 2, opts: ['1 次', '2 次', '3 次'], ans: 1, chain: '5 个分成 2、2、1：先称 2 对 2，平了就是剩下的 1 个，不平就再称轻的那 2 个。最多 2 次。' },
+      { label: '提高', n: 27, times: 3, opts: ['2 次', '3 次', '4 次'], ans: 1, chain: '27 个分成 9、9、9：每次范围缩到三分之一，27→9→3→1，一共 3 次。' },
+      { label: '挑战', n: 81, times: 4, opts: ['3 次', '4 次', '5 次'], ans: 1, chain: '81 个分成 27、27、27：每次范围缩到三分之一，81→27→9→3→1，一共 4 次。' }
+    ];
+    var li = 0, guessed = -1, sawDraw = false, tiers = null;
+    el.innerHTML =
+      '<p class="demo-tag">演示 · 5 年级 · 找次品</p>' +
+      '<h3>画图列表比方案</h3>' +
+      '<p>找次品不用一个一个试：先从 5 个画图找规律，再把次数列成表，27 个、81 个要几次，表上直接读。</p>' +
+      '<p id="' + K + '-q-tx"></p>' +
+      '<p>第 1 步 · 先猜：最少要称几次？</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-guess-a" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-b" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-c" type="button"></button></div>' +
+      '<p>第 2 步 · 玩一玩：画一画分法，再看次数表。</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-draw" type="button">画一画</button>' +
+      '<button class="btn small primary" id="' + K + '-list" type="button">列表</button></div>' +
+      '<p id="' + K + '-msg">先猜一猜，再点“画一画”。</p>' +
+      '<p>换一档：</p><div class="btn-row">' +
+      '<button class="btn small ghost" id="' + K + '-level-0" type="button">基础 · 5 个</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-1" type="button">提高 · 27 个</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-2" type="button">挑战 · 81 个</button></div>' +
+      '<div class="tier-row" id="' + K + '-tiers"></div>' +
+      '<div class="find-row"><label>说一说你的发现：<input type="text" id="' + K + '-find" placeholder="我发现……"></label><button class="btn small primary" id="' + K + '-find-save" type="button">记下来</button></div>' +
+      '<p id="' + K + '-find-saved"></p>' +
+      '<p class="demo-foot">成功标准：三档都说得出“每次范围缩到三分之一，次数表是 3 的倍数长出来的”。</p>';
+    function gid(id) { return document.getElementById(id); }
+    function msg(t) { var m = gid(K + '-msg'); if (m) m.textContent = t; }
+    function draw() {
+      var L = LEVELS[li];
+      var q = gid(K + '-q-tx');
+      if (q) q.textContent = L.n + ' 个零件里有 1 个次品（轻一点），最少要称几次？';
+      var g = gid(K + '-guess-a'); if (g) g.textContent = L.opts[0];
+      g = gid(K + '-guess-b'); if (g) g.textContent = L.opts[1];
+      g = gid(K + '-guess-c'); if (g) g.textContent = L.opts[2];
+    }
+    function setLevel(i) {
+      li = i; guessed = -1; sawDraw = false;
+      for (var k = 0; k < 3; k++) {
+        var b = gid(K + '-level-' + k);
+        if (b) b.setAttribute('aria-pressed', String(k === i));
+      }
+      draw();
+      msg('先猜一猜，再点“画一画”。');
+    }
+    gid(K + '-guess-a').addEventListener('click', function () { guessed = 0; msg('你猜 ' + LEVELS[li].opts[0] + '。画一画验证一下。'); });
+    gid(K + '-guess-b').addEventListener('click', function () { guessed = 1; msg('你猜 ' + LEVELS[li].opts[1] + '。画一画验证一下。'); });
+    gid(K + '-guess-c').addEventListener('click', function () { guessed = 2; msg('你猜 ' + LEVELS[li].opts[2] + '。画一画验证一下。'); });
+    gid(K + '-draw').addEventListener('click', function () {
+      sawDraw = true;
+      msg(LEVELS[li].chain);
+    });
+    gid(K + '-list').addEventListener('click', function () {
+      var L = LEVELS[li];
+      if (!sawDraw) { msg('先点“画一画”。'); return; }
+      var ok = guessed === L.ans;
+      msg('次数表：2–3 个要 1 次，4–9 个要 2 次，10–27 个要 3 次，28–81 个要 4 次。所以 ' + L.n + ' 个最少要称 ' + L.times + ' 次。' +
+        (guessed < 0 ? '下次先猜一猜再列表。' : ok ? '你猜对了。' : '你猜的是 ' + L.opts[guessed] + '，表上是 ' + L.times + ' 次。'));
+      if (ok) {
+        if (tiers) tiers.done(li);
+        if (typeof markTried === 'function') markTried(K);
+      }
+    });
+    gid(K + '-level-0').addEventListener('click', function () { setLevel(0); });
+    gid(K + '-level-1').addEventListener('click', function () { setLevel(1); });
+    gid(K + '-level-2').addEventListener('click', function () { setLevel(2); });
+    if (typeof makeTiers === 'function') {
+      tiers = makeTiers(gid(K + '-tiers'),
+        ['基础：5 个 2 次', '提高：27 个 3 次', '挑战：81 个 4 次'], K);
+    }
+    if (typeof wireDiscovery === 'function') {
+      wireDiscovery(K, K + '-find', K + '-find-save', K + '-find-saved');
+    }
+    gid(K + '-level-0').setAttribute('aria-pressed', 'true');
+    draw();
+  }
+});
+registerAnim({
+  key: 'm513-draw',
+  title: '自己画折线图',
+  sub: '画自己身高、每月存钱的折线图，找哪一段最陡、哪一年长得最快——自己的数据读起来才有感觉。',
+  grade: 5,
+  kind: '实验',
+  points: ['5.13'],
+  render: function (el) {
+    var K = 'm513-draw';
+    var LEVELS = [
+      { label: '基础', name: '身高', unit: '厘米', data: [110, 116, 121, 127, 133, 140], labels: ['7 岁', '8 岁', '9 岁', '10 岁', '11 岁', '12 岁'], steep: '11→12 岁', rise: 7, opts: ['10→11 岁', '11→12 岁', '7→8 岁'], ans: 1 },
+      { label: '提高', name: '存钱', unit: '元', data: [10, 20, 35, 40, 60, 65], labels: ['1 月', '2 月', '3 月', '4 月', '5 月', '6 月'], steep: '4→5 月', rise: 20, opts: ['2→3 月', '4→5 月', '1→2 月'], ans: 1 },
+      { label: '挑战', name: '小树高', unit: '厘米', data: [30, 45, 55, 80, 95, 100], labels: ['1 年', '2 年', '3 年', '4 年', '5 年', '6 年'], steep: '3→4 年', rise: 25, opts: ['1→2 年', '3→4 年', '5→6 年'], ans: 1 }
+    ];
+    var li = 0, guessed = -1, plotted = 0, tiers = null;
+    el.innerHTML =
+      '<p class="demo-tag">实验 · 5 年级 · 折线统计图</p>' +
+      '<h3>自己画折线图</h3>' +
+      '<p>数据是自己的，图才有意思：一个点一个点描上去，再找哪一段最陡。</p>' +
+      '<p id="' + K + '-q-tx"></p>' +
+      '<p>第 1 步 · 先猜：哪一段最陡？</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-guess-a" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-b" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-c" type="button"></button></div>' +
+      '<p>第 2 步 · 玩一玩：画下一个点，6 个点画完，找最陡的一段。</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-plot" type="button">画下一个点</button>' +
+      '<button class="btn small primary" id="' + K + '-steep" type="button">找最陡的一段</button></div>' +
+      '<div id="' + K + '-chart"></div>' +
+      '<p id="' + K + '-msg">先猜一猜，再点“画下一个点”。</p>' +
+      '<p>换一档：</p><div class="btn-row">' +
+      '<button class="btn small ghost" id="' + K + '-level-0" type="button">基础 · 身高</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-1" type="button">提高 · 存钱</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-2" type="button">挑战 · 小树高</button></div>' +
+      '<div class="tier-row" id="' + K + '-tiers"></div>' +
+      '<div class="find-row"><label>说一说你的发现：<input type="text" id="' + K + '-find" placeholder="我发现……"></label><button class="btn small primary" id="' + K + '-find-save" type="button">记下来</button></div>' +
+      '<p id="' + K + '-find-saved"></p>' +
+      '<p class="demo-foot">成功标准：三档都说得出“最陡的一段就是变化最快的一段”。</p>';
+    function gid(id) { return document.getElementById(id); }
+    function msg(t) { var m = gid(K + '-msg'); if (m) m.textContent = t; }
+    function drawChart() {
+      var L = LEVELS[li];
+      var max = 0;
+      for (var i = 0; i < L.data.length; i++) if (L.data[i] > max) max = L.data[i];
+      var s = '<svg width="320" height="200" viewBox="0 0 320 200" role="img" aria-label="' + L.name + '折线图">';
+      s += '<line x1="30" y1="180" x2="300" y2="180" stroke="#78716c" stroke-width="2"/>';
+      s += '<line x1="30" y1="20" x2="30" y2="180" stroke="#78716c" stroke-width="2"/>';
+      var pts = [];
+      for (var j = 0; j < plotted; j++) {
+        var x = 40 + j * 44, y = 180 - L.data[j] / max * 150;
+        pts.push(x + ',' + y.toFixed(1));
+      }
+      if (pts.length > 1) s += '<polyline points="' + pts.join(' ') + '" fill="none" stroke="#2563eb" stroke-width="3"/>';
+      for (var k = 0; k < plotted; k++) {
+        var x2 = 40 + k * 44, y2 = 180 - L.data[k] / max * 150;
+        s += '<circle cx="' + x2 + '" cy="' + y2.toFixed(1) + '" r="5" fill="#f97316"/>';
+        s += '<text x="' + x2 + '" y="196" font-size="11" text-anchor="middle" fill="#57534e">' + L.labels[k] + '</text>';
+        s += '<text x="' + x2 + '" y="' + (y2 - 10).toFixed(1) + '" font-size="11" text-anchor="middle" fill="#57534e">' + L.data[k] + '</text>';
+      }
+      s += '</svg>';
+      var c = gid(K + '-chart');
+      if (c) c.innerHTML = s;
+    }
+    function draw() {
+      var L = LEVELS[li];
+      var q = gid(K + '-q-tx');
+      if (q) q.textContent = L.name + '：' + L.labels.join('、') + '分别是 ' + L.data.join('、') + ' ' + L.unit + '。哪一段最陡？';
+      var g = gid(K + '-guess-a'); if (g) g.textContent = L.opts[0];
+      g = gid(K + '-guess-b'); if (g) g.textContent = L.opts[1];
+      g = gid(K + '-guess-c'); if (g) g.textContent = L.opts[2];
+      drawChart();
+    }
+    function setLevel(i) {
+      li = i; guessed = -1; plotted = 0;
+      for (var k = 0; k < 3; k++) {
+        var b = gid(K + '-level-' + k);
+        if (b) b.setAttribute('aria-pressed', String(k === i));
+      }
+      draw();
+      msg('先猜一猜，再点“画下一个点”。');
+    }
+    gid(K + '-guess-a').addEventListener('click', function () { guessed = 0; msg('你猜 ' + LEVELS[li].opts[0] + ' 最陡。画点验证一下。'); });
+    gid(K + '-guess-b').addEventListener('click', function () { guessed = 1; msg('你猜 ' + LEVELS[li].opts[1] + ' 最陡。画点验证一下。'); });
+    gid(K + '-guess-c').addEventListener('click', function () { guessed = 2; msg('你猜 ' + LEVELS[li].opts[2] + ' 最陡。画点验证一下。'); });
+    gid(K + '-plot').addEventListener('click', function () {
+      var L = LEVELS[li];
+      if (plotted >= L.data.length) { msg('6 个点都画完了，点“找最陡的一段”。'); return; }
+      plotted++;
+      drawChart();
+      msg('画了 ' + plotted + ' 个点：' + L.labels[plotted - 1] + '是 ' + L.data[plotted - 1] + ' ' + L.unit + '。');
+    });
+    gid(K + '-steep').addEventListener('click', function () {
+      var L = LEVELS[li];
+      if (plotted < L.data.length) { msg('先把 6 个点都画完。'); return; }
+      var ok = guessed === L.ans;
+      msg('最陡的一段是 ' + L.steep + '，涨了 ' + L.rise + ' ' + L.unit + '，比别段都多。' +
+        (guessed < 0 ? '下次先猜一猜再画。' : ok ? '你猜对了。' : '你猜的是 ' + L.opts[guessed] + '，最陡的是 ' + L.steep + '。'));
+      if (ok) {
+        if (tiers) tiers.done(li);
+        if (typeof markTried === 'function') markTried(K);
+      }
+    });
+    gid(K + '-level-0').addEventListener('click', function () { setLevel(0); });
+    gid(K + '-level-1').addEventListener('click', function () { setLevel(1); });
+    gid(K + '-level-2').addEventListener('click', function () { setLevel(2); });
+    if (typeof makeTiers === 'function') {
+      tiers = makeTiers(gid(K + '-tiers'),
+        ['基础：身高 11→12 岁最陡', '提高：存钱 4→5 月最陡', '挑战：小树 3→4 年最陡'], K);
+    }
+    if (typeof wireDiscovery === 'function') {
+      wireDiscovery(K, K + '-find', K + '-find-save', K + '-find-saved');
+    }
+    gid(K + '-level-0').setAttribute('aria-pressed', 'true');
+    draw();
+  }
+});
+
+/* 5.14 观察物体（三）：observe（2.6 的演示，5.14 点页主演示）只给了一个固定积木堆的三视图，没有猜、没有搭、没有数字法；m417-build（4.17 点页）是给两张图照着搭，m417-infer（4.17 点页）是两张图推最少/最多——本点的“最少/最多摆法”与 m417-infer 实质相同，跳过（挂在 4.17 点页，5.14 点页看不到）；做搭积木猜视图、三视图互推、俯视图数字法。 */
+registerAnim({
+  key: 'm514-guess',
+  title: '搭积木猜视图',
+  sub: '只给前面一个视图，先猜有几种摆法，动手搭出来，再看上面和左面验证猜想——一个方向看不全，视图就是用来排除猜想的。',
+  grade: 5,
+  kind: '实验',
+  points: ['5.14'],
+  render: function (el) {
+    var K = 'm514-guess';
+    var LEVELS = [
+      { label: '基础', front: [2, 1], alts: [
+        { '0,0': 2, '1,0': 1 }, { '0,1': 2, '1,0': 1 }, { '0,0': 1, '0,1': 2, '1,0': 1 } ] },
+      { label: '提高', front: [1, 2, 1], alts: [
+        { '0,0': 1, '1,0': 2, '2,0': 1 }, { '0,0': 1, '1,1': 2, '2,0': 1 }, { '0,1': 1, '1,0': 2, '2,1': 1 } ] },
+      { label: '挑战', front: [3, 1], alts: [
+        { '0,0': 3, '1,0': 1 }, { '0,1': 3, '1,1': 1 }, { '0,0': 2, '0,1': 3, '1,0': 1 } ] }
+    ];
+    var li = 0, guessed = -1, alt = 0, tiers = null;
+    el.innerHTML =
+      '<p class="demo-tag">实验 · 5 年级 · 观察物体（三）</p>' +
+      '<h3>搭积木猜视图</h3>' +
+      '<p>只给你前面看的一张图：它长什么样？不止一种。换一种摆法，前面还是一样，上面可就不一样了。</p>' +
+      '<p id="' + K + '-q-tx"></p>' +
+      '<p>第 1 步 · 先猜：只看前面，能确定它长什么样吗？</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-guess-yes" type="button">能</button>' +
+      '<button class="btn small primary" id="' + K + '-guess-no" type="button">不能</button></div>' +
+      '<p>第 2 步 · 玩一玩：换一种摆法，再看上面验证。</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-alt" type="button">换一种摆法</button>' +
+      '<button class="btn small primary" id="' + K + '-top" type="button">看上面</button></div>' +
+      '<div id="' + K + '-views"></div>' +
+      '<p id="' + K + '-msg">先猜一猜，再点“换一种摆法”。</p>' +
+      '<p>换一档：</p><div class="btn-row">' +
+      '<button class="btn small ghost" id="' + K + '-level-0" type="button">基础 · 前面 [2,1]</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-1" type="button">提高 · 前面 [1,2,1]</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-2" type="button">挑战 · 前面 [3,1]</button></div>' +
+      '<div class="tier-row" id="' + K + '-tiers"></div>' +
+      '<div class="find-row"><label>说一说你的发现：<input type="text" id="' + K + '-find" placeholder="我发现……"></label><button class="btn small primary" id="' + K + '-find-save" type="button">记下来</button></div>' +
+      '<p id="' + K + '-find-saved"></p>' +
+      '<p class="demo-foot">成功标准：三档都说得出“一个方向看不全，换个方向才能排除猜想”。</p>';
+    function gid(id) { return document.getElementById(id); }
+    function msg(t) { var m = gid(K + '-msg'); if (m) m.textContent = t; }
+    function hAt(st, x, z) { return st[x + ',' + z] || 0; }
+    function gridHtml(rows) {
+      var s = '';
+      for (var i = 0; i < rows.length; i++) {
+        s += '<div>';
+        for (var j = 0; j < rows[i].length; j++) {
+          s += '<span style="display:inline-block;width:22px;height:22px;border:1px solid #666;background:' + (rows[i][j] ? '#93c5fd' : '#fff') + '"></span>';
+        }
+        s += '</div>';
+      }
+      return s;
+    }
+    function frontRows(st) {
+      var hs = [];
+      for (var x = 0; x < 3; x++) hs.push(Math.max(hAt(st, x, 0), hAt(st, x, 1), hAt(st, x, 2)));
+      var maxH = Math.max(hs[0], hs[1], hs[2]);
+      var out = [];
+      for (var l = maxH; l >= 1; l--) {
+        var r = [];
+        for (var k = 0; k < 3; k++) r.push(hs[k] >= l ? 1 : 0);
+        out.push(r);
+      }
+      return out;
+    }
+    function topRows(st) {
+      var rows = [];
+      for (var z = 2; z >= 0; z--) {
+        var row = [];
+        for (var x = 0; x < 3; x++) row.push(hAt(st, x, z) > 0 ? 1 : 0);
+        rows.push(row);
+      }
+      return rows;
+    }
+    function draw() {
+      var L = LEVELS[li];
+      var q = gid(K + '-q-tx');
+      if (q) q.textContent = '前面看是 [' + L.front.join(',') + ']，第 ' + (alt + 1) + ' 种摆法。';
+      var st = L.alts[alt];
+      var v = gid(K + '-views');
+      if (v) v.innerHTML = '<p>前面看：</p>' + gridHtml(frontRows(st)) + '<p>上面看：</p>' + gridHtml(topRows(st));
+    }
+    function setLevel(i) {
+      li = i; guessed = -1; alt = 0;
+      for (var k = 0; k < 3; k++) {
+        var b = gid(K + '-level-' + k);
+        if (b) b.setAttribute('aria-pressed', String(k === i));
+      }
+      draw();
+      msg('先猜一猜，再点“换一种摆法”。');
+    }
+    gid(K + '-guess-yes').addEventListener('click', function () { guessed = 0; msg('你猜能确定。换一种摆法试试，前面变没变？'); });
+    gid(K + '-guess-no').addEventListener('click', function () { guessed = 1; msg('你猜不能确定。换一种摆法试试，前面变没变？'); });
+    gid(K + '-alt').addEventListener('click', function () {
+      var L = LEVELS[li];
+      alt = (alt + 1) % L.alts.length;
+      draw();
+      msg('第 ' + (alt + 1) + ' 种摆法：前面看还是 [' + L.front.join(',') + ']，一点没变。光看前面，分不出这几种摆法。');
+    });
+    gid(K + '-top').addEventListener('click', function () {
+      var L = LEVELS[li];
+      var ok = guessed === 1;
+      msg('前面一样，上面不一样——摆法换了，俯视图上的格子位置就变了。一个方向看不全，要三个方向合起来才定得住。' +
+        (guessed < 0 ? '下次先猜一猜再换摆法。' : ok ? '你猜对了。' : '你猜的是能确定——前面一样，摆法却不一样。'));
+      if (ok) {
+        if (tiers) tiers.done(li);
+        if (typeof markTried === 'function') markTried(K);
+      }
+    });
+    gid(K + '-level-0').addEventListener('click', function () { setLevel(0); });
+    gid(K + '-level-1').addEventListener('click', function () { setLevel(1); });
+    gid(K + '-level-2').addEventListener('click', function () { setLevel(2); });
+    if (typeof makeTiers === 'function') {
+      tiers = makeTiers(gid(K + '-tiers'),
+        ['基础：前面 [2,1] 不止一种摆法', '提高：前面 [1,2,1] 不止一种摆法', '挑战：前面 [3,1] 不止一种摆法'], K);
+    }
+    if (typeof wireDiscovery === 'function') {
+      wireDiscovery(K, K + '-find', K + '-find-save', K + '-find-saved');
+    }
+    gid(K + '-level-0').setAttribute('aria-pressed', 'true');
+    draw();
+  }
+});
+registerAnim({
+  key: 'm514-three',
+  title: '三视图互推',
+  sub: '前面定长和高、上面定长和宽、左面定宽和高——三个方向各管两条边，合起来才定得住。',
+  grade: 5,
+  kind: '演示',
+  points: ['5.14'],
+  render: function (el) {
+    var K = 'm514-three';
+    var LEVELS = [
+      { label: '基础', l: 3, w: 2, h: 2 },
+      { label: '提高', l: 4, w: 2, h: 3 },
+      { label: '挑战', l: 2, w: 3, h: 2 }
+    ];
+    var li = 0, guessed = -1, lit = {}, tiers = null;
+    el.innerHTML =
+      '<p class="demo-tag">演示 · 5 年级 · 观察物体（三）</p>' +
+      '<h3>三视图互推</h3>' +
+      '<p>一个长方体，长、宽、高三条边。每个方向只能看到两条边：前面看长和高，上面看长和宽，左面看宽和高。</p>' +
+      '<p>第 1 步 · 先猜：一个方向能定住几条边？</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-guess-a" type="button">1 条</button>' +
+      '<button class="btn small primary" id="' + K + '-guess-b" type="button">2 条</button>' +
+      '<button class="btn small primary" id="' + K + '-guess-c" type="button">3 条</button></div>' +
+      '<p>第 2 步 · 玩一玩：三个方向都量一量，看三条边什么时候全定住。</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-v-front" type="button">从前面量</button>' +
+      '<button class="btn small primary" id="' + K + '-v-top" type="button">从上面量</button>' +
+      '<button class="btn small primary" id="' + K + '-v-left" type="button">从左面量</button></div>' +
+      '<p id="' + K + '-dims"></p>' +
+      '<p id="' + K + '-msg">先猜一猜，再三个方向都量一量。</p>' +
+      '<p>换一档：</p><div class="btn-row">' +
+      '<button class="btn small ghost" id="' + K + '-level-0" type="button">基础 · 长 3 宽 2 高 2</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-1" type="button">提高 · 长 4 宽 2 高 3</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-2" type="button">挑战 · 长 2 宽 3 高 2</button></div>' +
+      '<div class="tier-row" id="' + K + '-tiers"></div>' +
+      '<div class="find-row"><label>说一说你的发现：<input type="text" id="' + K + '-find" placeholder="我发现……"></label><button class="btn small primary" id="' + K + '-find-save" type="button">记下来</button></div>' +
+      '<p id="' + K + '-find-saved"></p>' +
+      '<p class="demo-foot">成功标准：三档都说得出“一个方向定两条边，三个方向合起来才定得住”。</p>';
+    function gid(id) { return document.getElementById(id); }
+    function msg(t) { var m = gid(K + '-msg'); if (m) m.textContent = t; }
+    function drawDims() {
+      var L = LEVELS[li];
+      var d = gid(K + '-dims');
+      if (d) d.textContent = '长：' + (lit.len ? L.l : '？') + '　宽：' + (lit.wid ? L.w : '？') + '　高：' + (lit.hei ? L.h : '？');
+    }
+    function checkDone() {
+      if (lit.len && lit.wid && lit.hei) {
+        var L = LEVELS[li];
+        var ok = guessed === 1;
+        msg('三条边都定住了：长 ' + L.l + '、宽 ' + L.w + '、高 ' + L.h + '。三个方向各管两条边，合起来才定得住。' +
+          (guessed < 0 ? '下次先猜一猜再量。' : ok ? '你猜对了。' : '你猜的是 ' + (guessed + 1) + ' 条，一个方向定住的是 2 条。'));
+        if (ok) {
+          if (tiers) tiers.done(li);
+          if (typeof markTried === 'function') markTried(K);
+        }
+      }
+    }
+    function setLevel(i) {
+      li = i; guessed = -1; lit = {};
+      for (var k = 0; k < 3; k++) {
+        var b = gid(K + '-level-' + k);
+        if (b) b.setAttribute('aria-pressed', String(k === i));
+      }
+      drawDims();
+      msg('先猜一猜，再三个方向都量一量。');
+    }
+    gid(K + '-guess-a').addEventListener('click', function () { guessed = 0; msg('你猜 1 条。量一量验证一下。'); });
+    gid(K + '-guess-b').addEventListener('click', function () { guessed = 1; msg('你猜 2 条。量一量验证一下。'); });
+    gid(K + '-guess-c').addEventListener('click', function () { guessed = 2; msg('你猜 3 条。量一量验证一下。'); });
+    gid(K + '-v-front').addEventListener('click', function () {
+      var L = LEVELS[li];
+      lit.len = true; lit.hei = true;
+      drawDims();
+      msg('前面定住了长和高：长 ' + L.l + '，高 ' + L.h + '；宽还不知道。');
+      checkDone();
+    });
+    gid(K + '-v-top').addEventListener('click', function () {
+      var L = LEVELS[li];
+      lit.len = true; lit.wid = true;
+      drawDims();
+      msg('上面定住了长和宽：长 ' + L.l + '，宽 ' + L.w + '；高还不知道。');
+      checkDone();
+    });
+    gid(K + '-v-left').addEventListener('click', function () {
+      var L = LEVELS[li];
+      lit.wid = true; lit.hei = true;
+      drawDims();
+      msg('左面定住了宽和高：宽 ' + L.w + '，高 ' + L.h + '；长还不知道。');
+      checkDone();
+    });
+    gid(K + '-level-0').addEventListener('click', function () { setLevel(0); });
+    gid(K + '-level-1').addEventListener('click', function () { setLevel(1); });
+    gid(K + '-level-2').addEventListener('click', function () { setLevel(2); });
+    if (typeof makeTiers === 'function') {
+      tiers = makeTiers(gid(K + '-tiers'),
+        ['基础：长 3 宽 2 高 2', '提高：长 4 宽 2 高 3', '挑战：长 2 宽 3 高 2'], K);
+    }
+    if (typeof wireDiscovery === 'function') {
+      wireDiscovery(K, K + '-find', K + '-find-save', K + '-find-saved');
+    }
+    gid(K + '-level-0').setAttribute('aria-pressed', 'true');
+    drawDims();
+  }
+});
+registerAnim({
+  key: 'm514-nums',
+  title: '俯视图数字法',
+  sub: '俯视图方格里写数字，数字就是那个位置摞了几层——照着数字搭，前面和左面自然对上。',
+  grade: 5,
+  kind: '实验',
+  points: ['5.14'],
+  render: function (el) {
+    var K = 'm514-nums';
+    var LEVELS = [
+      { label: '基础', cells: { '0,0': 1, '1,0': 2, '0,1': 1 }, total: 4, front: [1, 2], left: [2, 1], opts: ['3 个', '4 个', '5 个'], ans: 1 },
+      { label: '提高', cells: { '0,0': 2, '1,0': 1, '2,0': 1, '1,1': 3 }, total: 7, front: [2, 3, 1], left: [2, 3], opts: ['6 个', '7 个', '8 个'], ans: 1 },
+      { label: '挑战', cells: { '0,0': 1, '1,0': 1, '2,0': 2, '0,1': 2, '1,1': 1 }, total: 7, front: [2, 1, 2], left: [2, 2], opts: ['6 个', '7 个', '8 个'], ans: 1 }
+    ];
+    var li = 0, guessed = -1, tiers = null;
+    el.innerHTML =
+      '<p class="demo-tag">实验 · 5 年级 · 观察物体（三）</p>' +
+      '<h3>俯视图数字法</h3>' +
+      '<p>俯视图每个格子里写一个数字：数字就是那个位置摞了几层。照着数字搭，前面和左面自然对上。</p>' +
+      '<p id="' + K + '-q-tx"></p>' +
+      '<p>第 1 步 · 先猜：一共几个小正方体？</p>' +
+      '<div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-guess-a" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-b" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-c" type="button"></button></div>' +
+      '<p>第 2 步 · 玩一玩：点“照着数字搭”，看前面和左面是不是对得上。</p>' +
+      '<div class="btn-row"><button class="btn small primary" id="' + K + '-build" type="button">照着数字搭</button></div>' +
+      '<div id="' + K + '-top"></div>' +
+      '<p id="' + K + '-msg">先猜一猜，再点“照着数字搭”。</p>' +
+      '<p>换一档：</p><div class="btn-row">' +
+      '<button class="btn small ghost" id="' + K + '-level-0" type="button">基础 · 3 格</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-1" type="button">提高 · 4 格</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-2" type="button">挑战 · 5 格</button></div>' +
+      '<div class="tier-row" id="' + K + '-tiers"></div>' +
+      '<div class="find-row"><label>说一说你的发现：<input type="text" id="' + K + '-find" placeholder="我发现……"></label><button class="btn small primary" id="' + K + '-find-save" type="button">记下来</button></div>' +
+      '<p id="' + K + '-find-saved"></p>' +
+      '<p class="demo-foot">成功标准：三档都说得出“格子里的数字就是摞的层数，加起来就是总数”。</p>';
+    function gid(id) { return document.getElementById(id); }
+    function msg(t) { var m = gid(K + '-msg'); if (m) m.textContent = t; }
+    function hAt(st, x, z) { return st[x + ',' + z] || 0; }
+    function draw() {
+      var L = LEVELS[li];
+      var q = gid(K + '-q-tx');
+      if (q) q.textContent = '俯视图：格子里的数字是摞的层数。一共几个小正方体？';
+      var g = gid(K + '-guess-a'); if (g) g.textContent = L.opts[0];
+      g = gid(K + '-guess-b'); if (g) g.textContent = L.opts[1];
+      g = gid(K + '-guess-c'); if (g) g.textContent = L.opts[2];
+      var s = '<p>俯视图（上面看）：</p>';
+      for (var z = 2; z >= 0; z--) {
+        s += '<div>';
+        for (var x = 0; x < 3; x++) {
+          var n = hAt(L.cells, x, z);
+          s += '<span style="display:inline-block;width:30px;height:30px;border:1px solid #666;text-align:center;background:' + (n ? '#fde68a' : '#fff') + '">' + (n || '') + '</span>';
+        }
+        s += '</div>';
+      }
+      var t = gid(K + '-top');
+      if (t) t.innerHTML = s;
+    }
+    function setLevel(i) {
+      li = i; guessed = -1;
+      for (var k = 0; k < 3; k++) {
+        var b = gid(K + '-level-' + k);
+        if (b) b.setAttribute('aria-pressed', String(k === i));
+      }
+      draw();
+      msg('先猜一猜，再点“照着数字搭”。');
+    }
+    gid(K + '-guess-a').addEventListener('click', function () { guessed = 0; msg('你猜 ' + LEVELS[li].opts[0] + '。照着数字搭验证一下。'); });
+    gid(K + '-guess-b').addEventListener('click', function () { guessed = 1; msg('你猜 ' + LEVELS[li].opts[1] + '。照着数字搭验证一下。'); });
+    gid(K + '-guess-c').addEventListener('click', function () { guessed = 2; msg('你猜 ' + LEVELS[li].opts[2] + '。照着数字搭验证一下。'); });
+    gid(K + '-build').addEventListener('click', function () {
+      var L = LEVELS[li];
+      var parts = [];
+      for (var z = 0; z < 3; z++) {
+        for (var x = 0; x < 3; x++) {
+          var n = hAt(L.cells, x, z);
+          if (n) parts.push('(' + x + ',' + z + ') 摞 ' + n + ' 个');
+        }
+      }
+      var ok = guessed === L.ans;
+      msg('照着数字搭：' + parts.join('；') + '。加起来一共 ' + L.total + ' 个：前面看是 [' + L.front.join(',') + ']，左面看是 [' + L.left.join(',') + ']，都对上了。' +
+        (guessed < 0 ? '下次先猜一猜再搭。' : ok ? '你猜对了。' : '你猜的是 ' + L.opts[guessed] + '，数出来是 ' + L.total + ' 个。'));
+      if (ok) {
+        if (tiers) tiers.done(li);
+        if (typeof markTried === 'function') markTried(K);
+      }
+    });
+    gid(K + '-level-0').addEventListener('click', function () { setLevel(0); });
+    gid(K + '-level-1').addEventListener('click', function () { setLevel(1); });
+    gid(K + '-level-2').addEventListener('click', function () { setLevel(2); });
+    if (typeof makeTiers === 'function') {
+      tiers = makeTiers(gid(K + '-tiers'),
+        ['基础：一共 4 个', '提高：一共 7 个', '挑战：一共 7 个'], K);
+    }
+    if (typeof wireDiscovery === 'function') {
+      wireDiscovery(K, K + '-find', K + '-find-save', K + '-find-saved');
+    }
+    gid(K + '-level-0').setAttribute('aria-pressed', 'true');
+    draw();
+  }
+});

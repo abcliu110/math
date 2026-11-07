@@ -1,4 +1,4 @@
-// Smoke tests for apps/web/anims-band-4-6.js (5.3 / 6.9 / 6.10, 11 anims + 4.1–4.8, 21 anims + 4.9–4.17, 18 anims = 50).
+// Smoke tests for apps/web/anims-band-4-6.js (5.3 / 6.9 / 6.10, 11 anims + 4.1–4.8, 21 anims + 4.9–4.17, 18 anims + 5.1/5.2/5.4–5.14, 27 anims = 77).
 // Run: node tools/smoke-anims-band-4-6.js
 // Minimal DOM stub (same shape as tools/smoke.js); render runs in a vm with
 // stubbed app.js helpers (makeTiers / wireDiscovery / markTried) so the band
@@ -114,6 +114,33 @@ const EXPECTED = {
   'm53-scale': { grade: 5, kind: '模拟', points: ['5.3'], title: '两数同乘，商不动' },
   'm53-numline': { grade: 5, kind: '模拟', points: ['5.3'], title: '数轴分一分' },
   'm53-remainder': { grade: 5, kind: '实验', points: ['5.3'], title: '竖式余数追踪' },
+  'm51-units': { grade: 5, kind: '模拟', points: ['5.1'], title: '计数单位换算' },
+  'm51-estimate': { grade: 5, kind: '模拟', points: ['5.1'], title: '估算定小数点' },
+  'm52-ship': { grade: 5, kind: '实验', points: ['5.2'], title: '军舰游戏猜船' },
+  'm52-shift': { grade: 5, kind: '模拟', points: ['5.2'], title: '平移看数对变化' },
+  'm54-wheel': { grade: 5, kind: '模拟', points: ['5.4'], title: '转盘面积定概率' },
+  'm55-cards': { grade: 5, kind: '实验', points: ['5.5'], title: '卡片隔离法' },
+  'm55-bar': { grade: 5, kind: '模拟', points: ['5.5'], title: '条形图列方程' },
+  'm55-back': { grade: 5, kind: '模拟', points: ['5.5'], title: '倒推猜数' },
+  'm56-twotri': { grade: 5, kind: '模拟', points: ['5.6'], title: '两个三角形拼平行四边形' },
+  'm56-grid': { grade: 5, kind: '模拟', points: ['5.6'], title: '方格纸数格子' },
+  'm57-small': { grade: 5, kind: '模拟', points: ['5.7'], title: '化繁为简' },
+  'm57-pair': { grade: 5, kind: '演示', points: ['5.7'], title: '一一对应解释“多 1”' },
+  'm57-transfer': { grade: 5, kind: '实验', points: ['5.7'], title: '迁移到敲钟车站路灯' },
+  'm58-game': { grade: 5, kind: '实验', points: ['5.8'], title: '因数游戏' },
+  'm58-sieve': { grade: 5, kind: '实验', points: ['5.8'], title: '埃拉托斯特尼筛法' },
+  'm59-net': { grade: 5, kind: '模拟', points: ['5.9'], title: '展开图折叠' },
+  'm59-surface': { grade: 5, kind: '演示', points: ['5.9'], title: '拆面算表面积' },
+  'm511-lcd': { grade: 5, kind: '模拟', points: ['5.11'], title: '最小公分母' },
+  'm511-trap': { grade: 5, kind: '实验', points: ['5.11'], title: '分子加分子是错的' },
+  'm512-three': { grade: 5, kind: '模拟', points: ['5.12'], title: '三要素齐全才转得动' },
+  'm512-clock': { grade: 5, kind: '演示', points: ['5.12'], title: '钟表指针看旋转' },
+  'm513-slope': { grade: 5, kind: '模拟', points: ['5.13'], title: '斜率即变化' },
+  'm513-table': { grade: 5, kind: '演示', points: ['5.13'], title: '画图列表比方案' },
+  'm513-draw': { grade: 5, kind: '实验', points: ['5.13'], title: '自己画折线图' },
+  'm514-guess': { grade: 5, kind: '实验', points: ['5.14'], title: '搭积木猜视图' },
+  'm514-three': { grade: 5, kind: '演示', points: ['5.14'], title: '三视图互推' },
+  'm514-nums': { grade: 5, kind: '实验', points: ['5.14'], title: '俯视图数字法' },
   'm69-pattern': { grade: 6, kind: '实验', points: ['6.9'], title: '数列规律逼出负负得正' },
   'm69-flip': { grade: 6, kind: '模拟', points: ['6.9'], title: '数轴翻面' },
   'm69-distrib': { grade: 6, kind: '实验', points: ['6.9'], title: '分配律证明负负得正' },
@@ -185,7 +212,7 @@ check('band file top level only calls registerAnim (no app.js identifiers)',
   bandSrc.indexOf('NAV_DEFS') < 0);
 
 // ---------- 1. registration ----------
-check('50 anims registered', KEYS.every(function (k) { return !!R[k]; }));
+check('77 anims registered', KEYS.every(function (k) { return !!R[k]; }));
 KEYS.forEach(function (k) {
   const a = R[k] || {};
   const e = EXPECTED[k];
@@ -205,6 +232,9 @@ const g6 = fs.readFileSync(path.join(root, 'content/grades/grade-6.js'), 'utf8')
   check('point ' + id + ' exists in grade-4.js', g4.indexOf('"' + id + '"') >= 0);
 });
 check('point 5.3 exists in grade-5.js', g5.indexOf('"5.3"') >= 0);
+['5.1', '5.2', '5.4', '5.5', '5.6', '5.7', '5.8', '5.9', '5.10', '5.11', '5.12', '5.13', '5.14'].forEach(function (id) {
+  check('point ' + id + ' exists in grade-5.js', g5.indexOf('"' + id + '"') >= 0);
+});
 check('point 6.9 exists in grade-6.js', g6.indexOf('"6.9"') >= 0);
 check('point 6.10 exists in grade-6.js', g6.indexOf('"6.10"') >= 0);
 
@@ -255,6 +285,433 @@ click('m53-remainder-next');
 click('m53-remainder-next');
 check('m53-remainder: 1÷6 cycle is 6 (from 2nd digit)',
   text('m53-remainder-msg').indexOf('循环节是 6') >= 0);
+
+// ---------- 5.1 ----------
+click('m51-units-guess-a');
+click('m51-units-split');
+check('m51-units: 0.3x0.4 is 12 hundredths = 0.12',
+  text('m51-units-msg').indexOf('12 个 0.01') >= 0 &&
+  text('m51-units-msg').indexOf('你猜对了') >= 0);
+click('m51-units-level-2');
+click('m51-units-guess-a');
+click('m51-units-split');
+check('m51-units: 0.6x0.7 is 42 hundredths = 0.42',
+  text('m51-units-msg').indexOf('42 个 0.01') >= 0);
+
+click('m51-estimate-guess-a');
+click('m51-estimate-est');
+check('m51-estimate: 2.4x1.9 estimates to about 4',
+  text('m51-estimate-msg').indexOf('2×2=4') >= 0);
+click('m51-estimate-place');
+check('m51-estimate: 2.4x1.9 = 4.56',
+  text('m51-estimate-msg').indexOf('4.56') >= 0 &&
+  text('m51-estimate-msg').indexOf('你猜对了') >= 0);
+click('m51-estimate-level-2');
+click('m51-estimate-guess-a');
+click('m51-estimate-est');
+click('m51-estimate-place');
+check('m51-estimate: 0.48x3.1 = 1.488',
+  text('m51-estimate-msg').indexOf('1.488') >= 0);
+
+// ---------- 5.2 ----------
+click('m52-ship-guess-h');
+click('m52-ship-c-3-2');
+check('m52-ship: hit at (3,2)',
+  text('m52-ship-msg').indexOf('打中了') >= 0);
+click('m52-ship-c-4-2');
+check('m52-ship: ship sinks after 2 hits',
+  text('m52-ship-msg').indexOf('船沉了') >= 0 &&
+  text('m52-ship-msg').indexOf('你猜对了') >= 0);
+click('m52-ship-level-2');
+click('m52-ship-guess-v');
+click('m52-ship-c-5-1');
+click('m52-ship-c-5-2');
+click('m52-ship-c-5-3');
+check('m52-ship: 3-cell vertical ship sinks',
+  text('m52-ship-msg').indexOf('船沉了') >= 0);
+
+click('m52-shift-guess-a');
+click('m52-shift-right');
+click('m52-shift-right');
+click('m52-shift-check');
+check('m52-shift: right 2 from (2,2) reaches (4,2)',
+  text('m52-shift-msg').indexOf('(4,2)') >= 0 &&
+  text('m52-shift-msg').indexOf('你猜对了') >= 0);
+click('m52-shift-level-1');
+click('m52-shift-guess-b');
+click('m52-shift-up');
+click('m52-shift-up');
+click('m52-shift-up');
+click('m52-shift-check');
+check('m52-shift: up 3 from (2,2) reaches (2,5)',
+  text('m52-shift-msg').indexOf('(2,5)') >= 0);
+
+// ---------- 5.4 ----------
+click('m54-wheel-guess-a');
+click('m54-wheel-spin');
+check('m54-wheel: red 1/4, about 5 reds in 20 spins',
+  text('m54-wheel-msg').indexOf('大约是 5 次') >= 0 &&
+  text('m54-wheel-msg').indexOf('你猜对了') >= 0);
+click('m54-wheel-red-3');
+check('m54-wheel: red 3/4 updates probability text',
+  text('m54-wheel-prob').indexOf('3/4') >= 0);
+click('m54-wheel-level-1');
+click('m54-wheel-guess-b');
+click('m54-wheel-spin');
+check('m54-wheel: red 2/4, about 10 reds in 20 spins',
+  text('m54-wheel-msg').indexOf('大约是 10 次') >= 0);
+
+// ---------- 5.5 ----------
+click('m55-cards-guess-b');
+click('m55-cards-trap');
+check('m55-cards: one-sided move tilts the balance',
+  text('m55-cards-msg').indexOf('翘了') >= 0);
+click('m55-cards-act-0');
+check('m55-cards: x+3=8 gives x=5',
+  text('m55-cards-msg').indexOf('x = 5') >= 0 &&
+  text('m55-cards-msg').indexOf('你猜对了') >= 0);
+click('m55-cards-level-2');
+click('m55-cards-guess-b');
+click('m55-cards-act-0');
+check('m55-cards: 2x+4=10 first step leaves 2x=6',
+  text('m55-cards-msg').indexOf('2x = 6') >= 0);
+click('m55-cards-act-1');
+check('m55-cards: 2x+4=10 gives x=3',
+  text('m55-cards-msg').indexOf('x = 3') >= 0 &&
+  text('m55-cards-msg').indexOf('你猜对了') >= 0);
+
+click('m55-bar-guess-b');
+click('m55-bar-draw');
+click('m55-bar-write');
+check('m55-bar: bars give equation x+5=12',
+  text('m55-bar-msg').indexOf('x + 5 = 12') >= 0);
+click('m55-bar-solve');
+check('m55-bar: x+5=12 gives x=7',
+  text('m55-bar-msg').indexOf('x = 7') >= 0 &&
+  text('m55-bar-msg').indexOf('你猜对了') >= 0);
+click('m55-bar-level-2');
+click('m55-bar-guess-b');
+click('m55-bar-draw');
+click('m55-bar-write');
+click('m55-bar-solve');
+check('m55-bar: x+2x=15 gives x=5',
+  text('m55-bar-msg').indexOf('x = 5') >= 0);
+
+click('m55-back-guess-a');
+click('m55-back-rev-0');
+check('m55-back: x+5=12 reverses to 12-5=7',
+  text('m55-back-msg').indexOf('12 − 5 = 7') >= 0 &&
+  text('m55-back-msg').indexOf('你猜对了') >= 0);
+click('m55-back-level-2');
+click('m55-back-guess-a');
+click('m55-back-rev-0');
+check('m55-back: 2x+3=11 first reverse is 11-3=8',
+  text('m55-back-msg').indexOf('11 − 3 = 8') >= 0);
+click('m55-back-rev-1');
+check('m55-back: 2x+3=11 gives x=4',
+  text('m55-back-msg').indexOf('x = 4') >= 0 &&
+  text('m55-back-msg').indexOf('你猜对了') >= 0);
+
+// ---------- 5.6 ----------
+click('m56-twotri-guess-b');
+click('m56-twotri-join');
+check('m56-twotri: two 6x4 triangles make 24, one is 12',
+  text('m56-twotri-msg').indexOf('24÷2=12') >= 0 &&
+  text('m56-twotri-msg').indexOf('你猜对了') >= 0);
+click('m56-twotri-level-2');
+click('m56-twotri-guess-b');
+click('m56-twotri-join');
+check('m56-twotri: 5x6 triangle is 15',
+  text('m56-twotri-msg').indexOf('30÷2=15') >= 0);
+
+click('m56-grid-guess-a');
+click('m56-grid-count');
+check('m56-grid: 6x4 counts 24 squares, slant 5 is not the height',
+  text('m56-grid-msg').indexOf('24 格') >= 0 &&
+  text('m56-grid-msg').indexOf('斜边 5 不是高') >= 0 &&
+  text('m56-grid-msg').indexOf('你猜对了') >= 0);
+click('m56-grid-level-1');
+click('m56-grid-guess-a');
+click('m56-grid-count');
+check('m56-grid: 5x3 counts 15 squares',
+  text('m56-grid-msg').indexOf('15 格') >= 0);
+
+// ---------- 5.7 ----------
+click('m57-small-guess-b');
+click('m57-small-small');
+click('m57-small-table');
+check('m57-small: 100m every 10m is 11 trees',
+  text('m57-small-msg').indexOf('11 棵树') >= 0 &&
+  text('m57-small-msg').indexOf('你猜对了') >= 0);
+click('m57-small-level-1');
+click('m57-small-guess-b');
+click('m57-small-small');
+click('m57-small-table');
+check('m57-small: 100m every 5m is 21 trees',
+  text('m57-small-msg').indexOf('21 棵树') >= 0);
+
+click('m57-pair-guess-b');
+click('m57-pair-pair');
+click('m57-pair-pair');
+click('m57-pair-pair');
+click('m57-pair-pair');
+click('m57-pair-pair');
+check('m57-pair: 5 intervals need 6 trees, last tree has no interval',
+  text('m57-pair-msg').indexOf('多出来的 1') >= 0 &&
+  text('m57-pair-msg').indexOf('你猜对了') >= 0);
+click('m57-pair-level-1');
+click('m57-pair-guess-b');
+for (let i = 0; i < 8; i++) click('m57-pair-pair');
+check('m57-pair: 8 intervals need 9 trees',
+  text('m57-pair-msg').indexOf('9 棵树') >= 0);
+
+click('m57-transfer-guess-b');
+click('m57-transfer-swap');
+check('m57-transfer: 5 station gaps x 3 min = 15 min',
+  text('m57-transfer-msg').indexOf('15 分钟') >= 0 &&
+  text('m57-transfer-msg').indexOf('你猜对了') >= 0);
+click('m57-transfer-level-1');
+click('m57-transfer-guess-b');
+click('m57-transfer-swap');
+check('m57-transfer: 5 bell strikes have 4 gaps x 3s = 12s',
+  text('m57-transfer-msg').indexOf('12 秒') >= 0);
+click('m57-transfer-level-2');
+click('m57-transfer-guess-a');
+click('m57-transfer-swap');
+check('m57-transfer: 10 lamps have 9 gaps x 20m = 180m',
+  text('m57-transfer-msg').indexOf('180 米') >= 0);
+
+// ---------- 5.8 ----------
+click('m58-game-guess-b');
+click('m58-game-calc');
+check('m58-game: picking 12 gives opponent 16 factor points',
+  text('m58-game-msg').indexOf('16 分') >= 0 &&
+  text('m58-game-msg').indexOf('你猜对了') >= 0);
+click('m58-game-level-1');
+click('m58-game-guess-a');
+click('m58-game-calc');
+check('m58-game: picking prime 7 gives opponent only 1 point',
+  text('m58-game-msg').indexOf('只有 1 分') >= 0);
+
+click('m58-sieve-guess-b');
+click('m58-sieve-s-1');
+click('m58-sieve-s-2');
+click('m58-sieve-s-3');
+click('m58-sieve-s-5');
+click('m58-sieve-s-7');
+click('m58-sieve-count');
+check('m58-sieve: 25 primes remain from 1 to 100',
+  text('m58-sieve-msg').indexOf('25 个质数') >= 0 &&
+  text('m58-sieve-msg').indexOf('你猜对了') >= 0);
+click('m58-sieve-level-2');
+click('m58-sieve-guess-a');
+click('m58-sieve-s-1');
+click('m58-sieve-s-2');
+click('m58-sieve-s-3');
+click('m58-sieve-s-5');
+click('m58-sieve-s-7');
+click('m58-sieve-count');
+check('m58-sieve: stop at 7 because 11x11=121 exceeds 100',
+  text('m58-sieve-msg').indexOf('25 个质数') >= 0);
+
+// ---------- 5.9 ----------
+click('m59-net-guess-a');
+click('m59-net-fold');
+click('m59-net-fold');
+click('m59-net-fold');
+click('m59-net-fold');
+click('m59-net-fold');
+click('m59-net-fold');
+check('m59-net: 5x4x3 surface is 94',
+  text('m59-net-msg').indexOf('94 平方厘米') >= 0 &&
+  text('m59-net-msg').indexOf('你猜对了') >= 0);
+click('m59-net-level-1');
+click('m59-net-guess-a');
+click('m59-net-fold');
+click('m59-net-fold');
+click('m59-net-fold');
+click('m59-net-fold');
+click('m59-net-fold');
+click('m59-net-fold');
+check('m59-net: cube edge 4 surface is 96',
+  text('m59-net-msg').indexOf('96 平方厘米') >= 0);
+
+click('m59-surface-guess-a');
+click('m59-surface-p-0');
+click('m59-surface-p-1');
+click('m59-surface-p-2');
+click('m59-surface-sum');
+check('m59-surface: 5x4x3 pairs 30+24+40 = 94',
+  text('m59-surface-msg').indexOf('30+24+40=94') >= 0 &&
+  text('m59-surface-msg').indexOf('你猜对了') >= 0);
+click('m59-surface-level-2');
+click('m59-surface-guess-a');
+click('m59-surface-p-0');
+click('m59-surface-p-1');
+click('m59-surface-p-2');
+click('m59-surface-sum');
+check('m59-surface: 6x3x2 pairs 24+12+36 = 72',
+  text('m59-surface-msg').indexOf('24+12+36=72') >= 0);
+
+// ---------- 5.11 ----------
+click('m511-lcd-guess-b');
+click('m511-lcd-lcm');
+click('m511-lcd-conv');
+click('m511-lcd-add');
+check('m511-lcd: 1/8+1/24 = 4/24 = 1/6',
+  text('m511-lcd-msg').indexOf('4/24') >= 0 &&
+  text('m511-lcd-msg').indexOf('你猜对了') >= 0);
+click('m511-lcd-level-2');
+click('m511-lcd-guess-b');
+click('m511-lcd-lcm');
+click('m511-lcd-conv');
+click('m511-lcd-add');
+check('m511-lcd: 5/6+3/8 = 29/24',
+  text('m511-lcd-msg').indexOf('29/24') >= 0);
+
+click('m511-trap-guess-b');
+click('m511-trap-wrong');
+check('m511-trap: wrong 2/5 is smaller than 1/2',
+  text('m511-trap-msg').indexOf('比 1/2 还小') >= 0);
+click('m511-trap-right');
+check('m511-trap: 1/2+1/3 = 5/6',
+  text('m511-trap-msg').indexOf('5/6') >= 0 &&
+  text('m511-trap-msg').indexOf('你猜对了') >= 0);
+click('m511-trap-level-1');
+click('m511-trap-guess-b');
+click('m511-trap-wrong');
+click('m511-trap-right');
+check('m511-trap: 1/2+1/4 = 3/4',
+  text('m511-trap-msg').indexOf('3/4') >= 0);
+
+// ---------- 5.12 ----------
+click('m512-three-guess-no');
+click('m512-three-turn');
+check('m512-three: cannot rotate with elements missing',
+  text('m512-three-msg').indexOf('还缺') >= 0);
+click('m512-three-c-center');
+click('m512-three-d-cw');
+click('m512-three-a-90');
+click('m512-three-turn');
+check('m512-three: center+clockwise+90 rotates the triangle',
+  text('m512-three-msg').indexOf('90°') >= 0 &&
+  text('m512-three-msg').indexOf('你猜对了') >= 0);
+click('m512-three-level-1');
+click('m512-three-guess-no');
+click('m512-three-c-vertex');
+click('m512-three-d-ccw');
+click('m512-three-a-90');
+click('m512-three-turn');
+check('m512-three: vertex+counterclockwise+90 rotates the triangle',
+  text('m512-three-msg').indexOf('逆时针') >= 0 &&
+  text('m512-three-msg').indexOf('90°') >= 0);
+
+click('m512-clock-guess-b');
+click('m512-clock-dial');
+check('m512-clock: minute hand 12 to 3 is 90 degrees',
+  text('m512-clock-msg').indexOf('90°') >= 0 &&
+  text('m512-clock-msg').indexOf('你猜对了') >= 0);
+click('m512-clock-level-1');
+click('m512-clock-guess-b');
+click('m512-clock-dial');
+check('m512-clock: minute hand 12 to 6 is 180 degrees',
+  text('m512-clock-msg').indexOf('180°') >= 0);
+
+// ---------- 5.13 ----------
+click('m513-slope-guess-b');
+click('m513-slope-seg-45');
+check('m513-slope: Apr to May rises 30 in 1 month',
+  text('m513-slope-msg').indexOf('30 元') >= 0);
+click('m513-slope-compare');
+check('m513-slope: Apr to May rises the most',
+  text('m513-slope-msg').indexOf('4→5 月涨了 30 元') >= 0 &&
+  text('m513-slope-msg').indexOf('你猜对了') >= 0);
+click('m513-slope-level-2');
+click('m513-slope-guess-b');
+click('m513-slope-seg-24');
+click('m513-slope-seg-45');
+click('m513-slope-compare');
+check('m513-slope: same rise 30, Apr to May is faster',
+  text('m513-slope-msg').indexOf('一样高') >= 0 &&
+  text('m513-slope-msg').indexOf('4→5 月快') >= 0);
+
+click('m513-table-guess-b');
+click('m513-table-draw');
+click('m513-table-list');
+check('m513-table: 5 parts need 2 weighings',
+  text('m513-table-msg').indexOf('5 个最少要称 2 次') >= 0 &&
+  text('m513-table-msg').indexOf('你猜对了') >= 0);
+click('m513-table-level-1');
+click('m513-table-guess-b');
+click('m513-table-draw');
+click('m513-table-list');
+check('m513-table: 27 parts need 3 weighings',
+  text('m513-table-msg').indexOf('27 个最少要称 3 次') >= 0);
+click('m513-table-level-2');
+click('m513-table-guess-b');
+click('m513-table-draw');
+click('m513-table-list');
+check('m513-table: 81 parts need 4 weighings',
+  text('m513-table-msg').indexOf('81 个最少要称 4 次') >= 0);
+
+click('m513-draw-guess-b');
+click('m513-draw-plot');
+click('m513-draw-plot');
+click('m513-draw-plot');
+click('m513-draw-plot');
+click('m513-draw-plot');
+click('m513-draw-plot');
+click('m513-draw-steep');
+check('m513-draw: height steepest at 11 to 12 years',
+  text('m513-draw-msg').indexOf('11→12 岁') >= 0 &&
+  text('m513-draw-msg').indexOf('你猜对了') >= 0);
+click('m513-draw-level-1');
+click('m513-draw-guess-b');
+click('m513-draw-plot');
+click('m513-draw-plot');
+click('m513-draw-plot');
+click('m513-draw-plot');
+click('m513-draw-plot');
+click('m513-draw-plot');
+click('m513-draw-steep');
+check('m513-draw: savings steepest at Apr to May',
+  text('m513-draw-msg').indexOf('4→5 月') >= 0);
+
+// ---------- 5.14 ----------
+click('m514-guess-guess-no');
+click('m514-guess-alt');
+click('m514-guess-top');
+check('m514-guess: same front view, different top view',
+  text('m514-guess-msg').indexOf('前面一样') >= 0 &&
+  text('m514-guess-msg').indexOf('你猜对了') >= 0);
+click('m514-guess-level-1');
+click('m514-guess-guess-no');
+click('m514-guess-alt');
+click('m514-guess-alt');
+click('m514-guess-top');
+check('m514-guess: front [1,2,1] also has several arrangements',
+  text('m514-guess-msg').indexOf('前面一样') >= 0);
+
+click('m514-three-guess-b');
+click('m514-three-v-front');
+check('m514-three: front fixes length and height, width unknown',
+  text('m514-three-msg').indexOf('宽还不知道') >= 0);
+click('m514-three-v-top');
+click('m514-three-v-left');
+check('m514-three: three views fix length 3, width 2, height 2',
+  text('m514-three-msg').indexOf('长 3') >= 0 &&
+  text('m514-three-msg').indexOf('你猜对了') >= 0);
+
+click('m514-nums-guess-b');
+click('m514-nums-build');
+check('m514-nums: top-view numbers add to 4 cubes',
+  text('m514-nums-msg').indexOf('一共 4 个') >= 0 &&
+  text('m514-nums-msg').indexOf('你猜对了') >= 0);
+click('m514-nums-level-1');
+click('m514-nums-guess-b');
+click('m514-nums-build');
+check('m514-nums: top-view numbers add to 7 cubes',
+  text('m514-nums-msg').indexOf('一共 7 个') >= 0);
 
 click('m69-pattern-guess-plus');
 for (let i = 0; i < 5; i++) click('m69-pattern-next');
