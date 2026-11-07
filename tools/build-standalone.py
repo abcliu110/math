@@ -95,9 +95,12 @@ assert 'localStorage' not in widget_html
 # Widget 体积上限：1MB 是 7587ba3 自设的 guard，没有任何平台文档说 widget
 # 不能超过 1MB；7 年级上线（98 个演示）时 standalone 已到 1076KB，任何一个
 # 年级的增量都会撞线。1.5MB 是第二次放宽（133 个演示 + 实验室工作间时
-# standalone 已到 1514KB）。再放宽到 2MB（仍能拦住失控增长）：第 3 阶段
-# 互动模拟和第 4 阶段运算动画还会再加内容，2MB 够它们用；如果哪天真撞线，
-# 再评估是拆包还是继续放宽，不要为了凑数字删内容。
-assert len(widget_html.encode()) < 2000000
+# standalone 已到 1514KB）。2MB 是第三次放宽（互动模拟和第 4 阶段运算动画）。
+# 第四次放宽到 3MB（2026-11-07）：157 个动画时 widget 1,921,754；加 24 个
+# G7 动画后 widget 约 2,078,800，已超 2MB（那批因此没能生成 widget）。
+# 按每动画约 6–11KB 计，3MB 够再做约 110 个动画（约 4–5 批）；全部 494 个
+# 方法做完 widget 可能到约 6MB，到时再评估是继续放宽还是拆包，不要为了
+# 凑数字删内容。
+assert len(widget_html.encode()) < 3000000
 (WEB / 'homepage-widget.html').write_text(widget_html, encoding='utf-8')
 print('widget bytes:', len(widget_html.encode()))

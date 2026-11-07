@@ -1032,7 +1032,7 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
       <span class="brand-text"><strong>数学小宇宙</strong><small>小学 1–6 · 初中 7–9 · 动手玩懂数学</small></span>
     </button>
     <h1 class="crumb-title" id="crumbTitle" aria-label="当前位置">数学</h1>
-    <div class="progress-chip" id="progressChip" title="已体验的动画">已体验 <b id="progressCount">0 / 146</b> 个动画</div>
+    <div class="progress-chip" id="progressChip" title="已体验的动画">已体验 <b id="progressCount">0 / 157</b> 个动画</div>
   </div>
 </header>
 
@@ -1098,10 +1098,10 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
     </div>
     <h3 class="panel-group-label">工具箱</h3>
     <div class="panels four">
-      <button class="panel" type="button" data-nav-key="demos"><span class="panel-icon" aria-hidden="true">✦</span><b>动画</b><span class="panel-sub">分数、天平、函数、十格阵，还有一到九年级实验都能玩</span><span class="panel-prog"><i id="panelDemoProg" style="width:0%"></i></span><span class="panel-tx" id="panelDemoTx">146 个动画 · 0 已体验</span></button>
+      <button class="panel" type="button" data-nav-key="demos"><span class="panel-icon" aria-hidden="true">✦</span><b>动画</b><span class="panel-sub">分数、天平、函数、十格阵，还有一到九年级实验都能玩</span><span class="panel-prog"><i id="panelDemoProg" style="width:0%"></i></span><span class="panel-tx" id="panelDemoTx">157 个动画 · 0 已体验</span></button>
       <button class="panel" type="button" data-nav-key="lab"><span class="panel-icon" aria-hidden="true">🧪</span><b>数学实验室</b><span class="panel-sub">选问题 → 工作间摆弄 → 世界模型算后果（像 NB）</span><span class="panel-tx">14 问题 · MathWorld</span></button>
       <button class="panel" type="button" data-nav-key="review"><span class="panel-icon" aria-hidden="true">✎</span><b>错题本</b><span class="panel-sub">错题连当时的图一起存</span><span class="panel-tx">还没有错题</span></button>
-      <button class="panel" type="button" data-nav-key="progress"><span class="panel-icon" aria-hidden="true">●</span><b>我的进度</b><span class="panel-sub">玩过的动画点亮一格</span><span class="panel-prog"><i id="panelProgFill" style="width:0%"></i></span><span class="panel-tx" id="panelProgTx">0 / 146 个动画</span></button>
+      <button class="panel" type="button" data-nav-key="progress"><span class="panel-icon" aria-hidden="true">●</span><b>我的进度</b><span class="panel-sub">玩过的动画点亮一格</span><span class="panel-prog"><i id="panelProgFill" style="width:0%"></i></span><span class="panel-tx" id="panelProgTx">0 / 157 个动画</span></button>
     </div>
   </section>
 
@@ -15469,7 +15469,7 @@ const GRADES = {
 };
 
 /* ---------- 进度（原型：记演示是否玩过） ----------
-   146 个动画全都计入：4 个经典演示 + 13 个一年级实验 + 15 个二年级实验 + 14 个三年级实验 + 20 个四年级实验（16 个 + 鸡兔同笼 4 种方法） + 11 个五年级实验 + 12 个六年级实验 + 13 个七年级实验 + 11 个八年级实验 + 15 个九年级实验 + 9 个创意实验 + 8 个互动模拟 + 1 个注册表动画（一一对应配对法） = 146 个。
+   157 个动画全都计入：4 个经典演示 + 13 个一年级实验 + 15 个二年级实验 + 14 个三年级实验 + 20 个四年级实验（16 个 + 鸡兔同笼 4 种方法） + 11 个五年级实验 + 12 个六年级实验 + 13 个七年级实验 + 11 个八年级实验 + 15 个九年级实验 + 9 个创意实验 + 8 个互动模拟 + 1 个注册表动画（一一对应配对法）+ 11 个注册表动画（5.3 小数除法 3 个、6.9 负负得正 4 个、6.10 百分数（二）4 个） = 157 个。
    首页却写着“4 个演示”，演示页上却是 17 张卡，数字对不上
    （2026-11-06 真机审计第 6 条）。 */
 const tried = new Set();
