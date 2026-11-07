@@ -72,9 +72,9 @@ check('rotate handle: putting rect/line/balance on auto-expands its station card
 // 5) Balance beam really tilts and really transitions
 check('tilt scale: MathWorld tilts at least 6 deg when unbalanced (1/2 diff was 1.5 deg, invisible)',
   mw.includes('6 + Math.min(9,') && mw.includes('Math.sign(balDiffNum)'));
-check('tilt scale: free-play and combo balances use the same minimum-visible scale',
+check('tilt scale: free-play balance keeps the minimum-visible scale (combo bench is gone)',
   app.includes('6 + Math.min(9, Math.abs(labBalDiff) * 2)') &&
-  app.includes('6 + Math.min(9, Math.abs(labWbDiff) * 2)'));
+  app.indexOf('labWbDiff') === -1 && mw.includes('6 + Math.min(9,'));
 check('tilt transition: apparatus beam has no transform attribute left (it snapped + doubled the angle)',
   app2.indexOf("transform: 'rotate(' + tilt + ' 170 110)'") === -1 &&
   app2.indexOf("beam.setAttribute('transform'") === -1);
@@ -83,16 +83,20 @@ check('tilt transition: apparatus beam animates by rAF interpolation (balAnimate
   app2.includes("balBeamEl.style.transform = 'rotate(' + lastBalTilt + 'deg)'") &&
   app2.indexOf('void beam.getBoundingClientRect()') === -1 &&
   app2.indexOf("beam.style.transition = 'transform .35s ease'") === -1);
-check('tilt transition: lab beams (combo + free-play) animate by rAF interpolation (labBeamAnim), 500ms',
-  app.includes('function labBeamAnim(') && app.includes("labBeamAnim('combo', tilt") &&
+check('tilt transition: lab beams (free-play + bench) animate by rAF interpolation (labBeamAnim), 500ms',
+  app.includes('function labBeamAnim(') && app.indexOf("labBeamAnim('combo', tilt") === -1 &&
   app.includes("labBeamAnim('free', tilt") && app.includes('/ 500)') &&
   app.indexOf("beam.style.transform = 'rotate(' + tilt + 'deg)'") === -1);
+check('merge: station balance weights and numline points carry their piece id and delete by take',
+  app2.includes("'data-bal-weight': w.id") && app2.includes("'data-numline-piece': p.id || ''") &&
+  app2.includes("emit({ type: 'take', pieceId: balW.val })") && app2.includes("emit({ type: 'take', pieceId: nlPt.val })"));
 check('tilt transition: bench-canvas beam draws at the interpolated offset (beam ids on line/pans)',
   app.includes('worldBenchBeamLine') && app.includes('worldBenchPanL') && app.includes('worldBenchPanR') &&
   app.includes("labBeamAnim('bench',") && app.includes('benchBeamApply'));
 check('tilt transition: CSS no longer pretends to transition the lab beams',
   (function () {
-    const i = css.indexOf('#labBeamGroup, #labWbBeam');
+    if (css.indexOf('#labWbBeam') !== -1) return false; // 组合台的梁已删
+    const i = css.indexOf('#labBeamGroup');
     if (i === -1) return false;
     const seg = css.slice(i, css.indexOf('}', i));
     return seg.indexOf('transition') === -1 && seg.includes('transform-origin:160px 70px');
@@ -125,15 +129,15 @@ check('layout: drop-hot outline style exists',
   css.includes('.bench-drop-hot') && css.includes('outline:3px dashed #f59e0b'));
 
 // 9) Text folds away by default
-check('folds: signals log, traces, tool stations, bench help start hidden',
+check('folds: signals log, traces, free-play cards, bench help start hidden',
   html.includes('id="worldDerivedOut" class="world-signals" aria-live="polite" hidden') &&
   html.includes('id="labTraceBody" hidden') &&
-  html.includes('id="labToolsGrid" hidden') &&
+  html.includes('id="labWorkbench" hidden') &&
   html.includes('id="labBenchHelp" class="lab-help" hidden'));
-check('folds: labVisualFolds wires all four folds + top-bar help',
+check('folds: labVisualFolds wires the three folds + top-bar help (tools fold is gone)',
   app.includes('labVisualFolds') && app.includes("wireFold('worldSignalsFold', 'worldDerivedOut')") &&
   app.includes("wireFold('labTraceFold', 'labTraceBody')") &&
-  app.includes("wireFold('labToolsFold', 'labToolsGrid')") &&
+  app.indexOf("wireFold('labToolsFold', 'labToolsGrid')") === -1 &&
   app.includes("wireFold('labTopHelp', 'labBenchHelp')"));
 check('folds: trace title shows the count',
   app.includes("title.textContent = '实验记录（' + labTraceLog.length + ' 条）'"));

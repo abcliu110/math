@@ -120,8 +120,9 @@ check('app: zoom clamp takes the min/max of both bounds (both regimes)',
 // removes by click. Free dragging lives on the bench. Do not "fix" this by
 // giving pan weights a drag attribute — dragging one off a pan has no intent.
 check('apparatus: pan weights are drawn without a drag attribute (by design, see comment)',
-  ap.includes('盘上画出来的砝码是死的') && ap.includes('没有 data-drag-weight') &&
-  seg(ap, 'function drawPan(', 2600).indexOf("'data-drag-weight'") === -1);
+  ap.includes('盘上的砝码拖不动') && ap.includes('没有 data-drag-weight') &&
+  seg(ap, 'function drawPan(', 2600).indexOf("'data-drag-weight':") === -1 &&
+  seg(ap, 'function drawPan(', 2600).indexOf("'data-bal-weight':") !== -1);
 
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

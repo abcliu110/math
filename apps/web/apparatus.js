@@ -239,7 +239,8 @@
     return ids.map(function (id) {
       const p = world.pieces[id];
       if (!p) return null;
-      return p.kind === 'frac' ? { n: p.n, d: p.d, label: qStr(p) } : { n: p.v, d: 1, label: String(p.v) };
+      // id 一起带上：点盘上的砝码按零件 id 拿掉（第 6 批），不是按渲染序号。
+      return p.kind === 'frac' ? { n: p.n, d: p.d, label: qStr(p), id: id } : { n: p.v, d: 1, label: String(p.v), id: id };
     }).filter(Boolean);
   }
 
@@ -314,22 +315,25 @@
         'data-bal-pan': side,
       }));
       weights.forEach(function (w, i) {
-        // 盘上画出来的砝码是死的（只有 rect + text，没有 data-drag-weight）：
-        // 按住盘上的砝码拖不动——这是站的既定交互，不是 bug，别“修”它。
-        // 站里加砝码走上面的砝码行（拖到盘上）或虚线落点框，拿走点“清空重来”；
-        // 组合台那边是 +1/−1 按钮和点按删除。要拖动的砝码去台面天平。
-        // （2026-11-07 复测有人当 bug 报过：查过 git 历史，data-drag-weight
-        // 从 MathWorld 0.8（c605db7）起就只在砝码行上，盘上砝码从来没拖过。）
+        // 盘上的砝码拖不动（只有 rect + text，没有 data-drag-weight）：
+        // 按住拖是站的既定交互，不是 bug，别“修”它（2026-11-07 复测有人当
+        // bug 报过：data-drag-weight 从 MathWorld 0.8（c605db7）起就只在
+        // 砝码行上，盘上砝码从来没拖过）。但点一下可以拿走：组合台删了，
+        // 它那边的“点按删除”要有人接——点盘上的砝码按零件 id 拿掉
+        // （data-bal-weight 是零件 id，不是渲染序号；见 bind 里的 take 分支）。
+        // 站里加砝码走上面的砝码行（拖到盘上）或虚线落点框；要拖动的砝码去台面天平。
         const bx = cx - 28 + (i % 3) * 18;
         const by = 132 - Math.floor(i / 3) * 16;
         pan.appendChild(el('rect', {
           x: bx, y: by, width: 16, height: 14, rx: 2,
           fill: w.d === 1 ? '#94a3b8' : '#fb923c',
           stroke: '#cbd5e1', 'stroke-width': 1,
+          'data-bal-weight': w.id, style: 'cursor:pointer',
         }));
         pan.appendChild(el('text', {
           x: bx + 8, y: by + 11, 'font-size': 8, 'text-anchor': 'middle',
           fill: '#0f172a', textContent: w.label,
+          'data-bal-weight': w.id, style: 'cursor:pointer',
         }));
       });
       pan.appendChild(el('text', {
@@ -420,11 +424,15 @@
         fill: i === 0 ? '#fb923c' : '#60a5fa',
         stroke: '#fff', 'stroke-width': 3,
         'data-numline-pt': String(i),
-        style: 'cursor:grab',
+        // 点一下按零件 id 拿掉这个点（第 6 批：组合台的点按删除并到这里，
+        // 不再按渲染序号删）。旧保存的点没有 id，属性为空，点它不拿（只画点）。
+        'data-numline-piece': p.id || '',
+        style: 'cursor:pointer',
       }));
       svg.appendChild(el('text', {
         x: xx, y: y - 18, 'font-size': 12, 'text-anchor': 'middle', 'font-weight': 700,
         fill: '#f8fafc', textContent: qStr(p),
+        'data-numline-piece': p.id || '', style: 'cursor:pointer',
       }));
     });
     if (world.meta && world.meta.lastNumlineReject) {
@@ -1099,6 +1107,21 @@
       }
       if (closestData(t, ['data-nl-clear'])) {
         emit({ type: 'numlineClear' });
+        return;
+      }
+      // 点按删除（第 6 批）：盘上的砝码 / 数轴上的点按零件 id 拿掉，不是按
+      // 渲染序号删——组合台就是按序号删才删错项（删了本地数组，世界里的还在，
+      // 再放一个点就复活）。拿掉走 MathWorld 的 take：天平盘数组和数轴点
+      // 数组都按 id 清。拖放结束的 click 落在共同祖先上，不会误触这里
+      // （closestData 只往上找，点不是祖先）。
+      const balW = closestData(t, ['data-bal-weight']);
+      if (balW && balW.val && lastWorld) {
+        emit({ type: 'take', pieceId: balW.val });
+        return;
+      }
+      const nlPt = closestData(t, ['data-numline-piece']);
+      if (nlPt && nlPt.val && lastWorld) {
+        emit({ type: 'take', pieceId: nlPt.val });
         return;
       }
       const animal = closestData(t, ['data-ck-animal']);

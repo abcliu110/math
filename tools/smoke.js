@@ -720,17 +720,37 @@ check('lab view: lab section visible, hero + demos hidden',
 check('lab fraction initial readout', byId.labFracText.textContent === '3/4');
 click(byId.labFracDenomSeg.children[4]);
 check('lab fraction: denominator 8 updates readout', byId.labFracText.textContent === '3/8');
-const labCell = byId.labTfA.children[0];
-click(labCell);
-check('lab ten-frame: click a cell adds one', byId.labTfEq.textContent === '1 + 0 = 1');
-click(labCell);
-check('lab ten-frame: click again removes it', byId.labTfEq.textContent === '0 + 0 = 0');
+// ten-frame now lives on the bench (world tenframe + inspector), not in a tool card:
+// put it on the bench, set A=1, check the inspector, mint the sum to the tray.
+sandbox.labWorld = sandbox.MathWorld.apply(sandbox.labWorld, { type: 'benchTenframeToggle' }).world;
+sandbox.labWorld = sandbox.MathWorld.apply(sandbox.labWorld, { type: 'tenframeSet', side: 'A', n: 1 }).world;
+sandbox.worldInspectSel = { apparatus: 'tenframe' };
+sandbox.worldInspectorRender();
+check('lab ten-frame: inspector shows A=1 and the mint action',
+  byId.worldBenchInspector.innerHTML.indexOf('A 1 个') >= 0 &&
+  byId.worldBenchInspector.innerHTML.indexOf('把个数放到托盘') >= 0);
+const tfMintBtn = makeEl('button');
+tfMintBtn.dataset.inspAction = '0'; tfMintBtn.setAttribute('data-insp-action', '0');
+(byId.worldBenchInspector._handlers.click || []).forEach(f => f({ target: tfMintBtn }));
+check('lab ten-frame: mint action puts the sum on the tray',
+  sandbox.labWorld.tray.length === 1 &&
+  sandbox.MathWorld.Q.str(sandbox.MathWorld.Q.fromPiece(sandbox.labWorld.pieces[sandbox.labWorld.tray[0]])) === '1');
+// clean up: tray empty again, ten-frame off the bench, A back to 0.
+sandbox.labWorld = sandbox.MathWorld.apply(sandbox.labWorld, { type: 'trayClear' }).world;
+sandbox.labWorld = sandbox.MathWorld.apply(sandbox.labWorld, { type: 'tenframeSet', side: 'A', n: 0 }).world;
+sandbox.labWorld = sandbox.MathWorld.apply(sandbox.labWorld, { type: 'benchTenframeToggle' }).world;
+sandbox.worldInspectSel = null;
 check('lab balance initial equation', byId.labBalEq.textContent === '左 5 ＞ 右 3');
 click(byId.labBalAddR);
 check('lab balance: add right weight updates equation', byId.labBalEq.textContent === '左 5 ＞ 右 4');
-const labK = byId.labFuncKRange; labK.value = '-1';
-(labK._handlers.input || []).forEach(f => f({ target: labK }));
-check('lab function: k slider updates equation', Number(byId.labFuncK.textContent) === -1);
+// function free-play now lives in the world station (#worldFnCard), not in a tool card:
+// drag the world k slider to -1, the equation follows.
+const labK = byId.worldFnKRange; labK.value = '-1';
+labK.dataset.worldRange = 'k'; labK.setAttribute('data-world-range', 'k');
+(byId.labMwWorkbench._handlers.input || []).forEach(f => f({ target: labK }));
+check('lab function: world k slider updates the equation', byId.worldFnMsg.textContent.indexOf('y = -1x + 8') >= 0);
+sandbox.labWorld = sandbox.MathWorld.apply(sandbox.labWorld, { type: 'linefnSet', k: 2 }).world;
+sandbox.worldPlayRender();
 sandbox.navBackFn();
 check('back from lab returns home', byId.hero.hidden === false && byId.lab.hidden === true);
 
@@ -1189,7 +1209,8 @@ if (typeof sandbox.labWorldSave === 'function' && sandbox.labWorld) {
 // (b) 进题重设（seedQuestion）+ 同步的“全新世界只带回台面”把长方形/天平洗回默认值。
 // 下面三条在改前代码上干净失败：1a 是空世界（rect 宽 1、台面 0、天平空），
 // 1b/1c 是长方形宽被重设回 1、天平被重设回 1/2。
-if (typeof sandbox.labWorldSave === 'function' && typeof sandbox.labWbRender === 'function') {
+// 第 6 批：labWbRender / labSyncBalanceToWorld 已删，入口改成 labSeedWorld。
+if (typeof sandbox.labWorldSave === 'function' && typeof sandbox.labSeedWorld === 'function') {
   // 摆一个有内容的世界：台上 2 和 5、长方形宽 4、天平左 1/2 + 1/4，保存。
   const wFix = sandbox.MathWorld.create({
     rect: { perim: 20, w: 4 },
@@ -1201,10 +1222,10 @@ if (typeof sandbox.labWorldSave === 'function' && typeof sandbox.labWbRender ===
   const mkFix5 = sandbox.benchRun({ type: 'makePiece', piece: { kind: 'num', v: 5 } });
   if (mkFix5) sandbox.benchRun({ type: 'benchPut', pieceId: mkFix5.pieceId });
   sandbox.labWorldSave();
-  // 1a：模拟刷新——世界变量清掉，再走加载时的 labWbRender。
+  // 1a（第 6 批）：模拟刷新——世界变量清掉，再走加载时的 labSeedWorld（恢复自动保存）。
   sandbox.labWorld = null; sandbox.mwPlay = null;
-  sandbox.labWbRender();
-  check('lab autosave survives load-time legacy render (bench 2+5, rect w=4, balance L 1/2+1/4 kept)',
+  sandbox.labSeedWorld(null);
+  check('lab autosave survives load-time restore (bench 2+5, rect w=4, balance L 1/2+1/4 kept)',
     !!sandbox.labWorld && sandbox.labWorld.rect.w === 4 &&
     sandbox.labWorld.balance.L.length === 2 &&
     sandbox.MathWorld.derived(sandbox.labWorld).bench.count === 2);
@@ -1214,28 +1235,26 @@ if (typeof sandbox.labWorldSave === 'function' && typeof sandbox.labWbRender ===
   check('lab autosave survives entering a question (rect width kept, not reseeded to 1)',
     !!sandbox.labWorld && sandbox.labWorld.rect.w === 4);
   sandbox.labRestoredFlag = false;
-  // 1c：模拟刷新后进天平题——legacy 重设（左 1/2）也要让路，保存的 1/2+1/4 和宽 4 都在。
+  // 1c（第 6 批）：模拟刷新后进天平题——题目的种子（左 1/2）也要让路，保存的 1/2+1/4 和宽 4 都在。
   sandbox.labWorld = null; sandbox.mwPlay = null; sandbox.labRestoredFlag = false;
   sandbox.labEnterQuestion('q-balfrac');
   check('lab autosave survives entering balance question (legacy reset skipped, saved values kept)',
     !!sandbox.labWorld && sandbox.labWorld.rect.w === 4 &&
-    sandbox.labWorld.balance.L.length === 2 && sandbox.labWbL.length === 2);
+    sandbox.labWorld.balance.L.length === 2);
   sandbox.labRestoredFlag = false;
-  // 1d：同步只换自己的器材——天平同步后，长方形宽 4、分数板、直线都不动。
-  sandbox.labWbL = [{ kind: 'frac', n: 1, d: 2 }]; sandbox.labWbR = [{ kind: 'num', v: 3 }];
-  sandbox.labSyncBalanceToWorld();
-  check('lab balance sync keeps other apparatus (rect w=4, fracboard 1/2+1/3, linefn k=2)',
+  // 1d（第 6 批）：改天平只动天平——往左盘加 1/2，长方形宽 4、分数板、直线都不动。
+  sandbox.worldPlayApply({ type: 'balanceAddQty', side: 'L', qty: { n: 1, d: 2 } });
+  check('lab balance change keeps other apparatus (rect w=4, fracboard 1/2+1/3, linefn k=2)',
     !!sandbox.labWorld && sandbox.labWorld.rect.w === 4 &&
     sandbox.labWorld.fracboard.A.n === 1 && sandbox.labWorld.fracboard.A.d === 2 &&
     sandbox.labWorld.linefn.k === 2 &&
     sandbox.MathWorld.derived(sandbox.labWorld).bench.count === 2);
-  // 收尾：天平 legacy 数组和世界恢复成空盘，别影响后面的 lab2 天平检查（它默认空盘起手）。
-  sandbox.labWbL = []; sandbox.labWbR = [];
-  sandbox.labSyncBalanceToWorld();
+  // 收尾：天平恢复成空盘，别影响后面的 lab2 天平检查（它默认空盘起手）。
+  sandbox.worldPlayApply({ type: 'balanceClear' });
 }
-// 2026-11-07 复测修（第 2 阶段后）：进天平题台面就画天平；值没变别重建天平；
-// 组合台的盘子跟世界走。下面每条在改前代码上干净失败。
-if (typeof sandbox.labEnterQuestion === 'function' && typeof sandbox.labSyncBalanceToWorld === 'function') {
+// 2026-11-07 复测修（第 2 阶段后）：进天平题台面就画天平；重画不能换 piece id；
+// 天平站跟世界走。第 6 批：同步层已删，下面每条测的是世界本身。
+if (typeof sandbox.labEnterQuestion === 'function' && typeof sandbox.worldPlayApply === 'function') {
   // 修 2：之前放过长方形（benchShowBalance=false），天平也不在台面上
   // （benchBalance=false，默认台面是空的）。进天平题要把天平放上台 + 切回
   // 天平视图，不然台面还停在坐标系，盘子画不出来、砝码拖上去落不到盘上。
@@ -1245,33 +1264,24 @@ if (typeof sandbox.labEnterQuestion === 'function' && typeof sandbox.labSyncBala
   check('lab entering balance question puts the balance on the bench and switches to the balance view (was coord after rect)',
     sandbox.benchShowBalance === true && sandbox.benchPreferredView === null &&
     sandbox.labWorld && sandbox.labWorld.benchBalance === true);
-  // 修 3a：值没变再同步一次，piece id 不能换（旧代码无条件重建，id 全换——
-  // create 的 id 是 Date.now+随机数，两次重建一定不一样）。
-  sandbox.labWbL = [{ kind: 'frac', n: 1, d: 2 }]; sandbox.labWbR = [{ kind: 'num', v: 3 }];
-  sandbox.labSyncBalanceToWorld();
+  // 修 3a（第 6 批）：重画台面不能换 piece id——同步层已删，没有重建的路。
+  sandbox.worldPlayApply({ type: 'balanceClear' });
+  sandbox.worldPlayApply({ type: 'balanceAddQty', side: 'L', qty: { n: 1, d: 2 } });
+  sandbox.worldPlayApply({ type: 'balanceAddQty', side: 'R', qty: { n: 3, d: 1 } });
   const balIdsBefore = (sandbox.labWorld.balance.L || []).concat(sandbox.labWorld.balance.R || []).slice();
-  sandbox.labSyncBalanceToWorld();
+  sandbox.worldPlayRender();
   const balIdsAfter = (sandbox.labWorld.balance.L || []).concat(sandbox.labWorld.balance.R || []);
-  check('lab balance sync is a no-op when values are unchanged (piece ids kept)',
+  check('lab re-render keeps balance piece ids (no sync layer to rebuild them)',
     balIdsBefore.length === 2 && balIdsAfter.length === 2 &&
     balIdsBefore.every(function (id, i) { return id === balIdsAfter[i]; }));
-  // 修 3b：世界右盘有 1/6，旧数组还是空（stale）→ 同步后旧数组要有 1/6，世界不动。
-  if (typeof sandbox.labWbSyncFromWorld === 'function') {
-    const wSync = sandbox.MathWorld.create({ balance: { L: [{ n: 1, d: 2 }], R: [{ n: 1, d: 6 }] } });
-    sandbox.labWorld = wSync; sandbox.mwPlay = wSync;
-    sandbox.labWbL = [{ kind: 'frac', n: 1, d: 2 }]; sandbox.labWbR = [];
-    sandbox.labWbLastBal = null;
-    sandbox.labWbSyncFromWorld();
-    check('lab combo follows the world (stale right pan refreshed from world, world unchanged)',
-      sandbox.labWbR.length === 1 && sandbox.labWbR[0].n === 1 && sandbox.labWbR[0].d === 6 &&
-      sandbox.labWorld.balance.R.length === 1);
-  } else {
-    check('lab combo follows the world (stale right pan refreshed from world, world unchanged)', false);
-  }
+  // 修 3b（第 6 批）：天平站跟世界走——世界右盘有 1/6，站上就要显示 1/6，世界不动。
+  const wSync = sandbox.MathWorld.create({ balance: { L: [{ n: 1, d: 2 }], R: [{ n: 1, d: 6 }] } });
+  sandbox.labWorld = wSync; sandbox.mwPlay = wSync;
+  sandbox.worldPlayRender();
+  check('lab station balance follows the world (right pan 1/6 shown, world unchanged)',
+    byId.worldBalEq.textContent.includes('右 1/6') && sandbox.labWorld.balance.R.length === 1);
   // 收尾：恢复空盘，别影响后面的 lab2 天平检查。
-  sandbox.labWbL = []; sandbox.labWbR = [];
-  sandbox.labSyncBalanceToWorld();
-  sandbox.labWbLastBal = null;
+  sandbox.worldPlayApply({ type: 'balanceClear' });
 }
 // 2026-11-07 复测修：学生界面不出现任何 goalMet/函数名/调试字样。
 if (typeof sandbox.worldPlayRender === 'function') {
@@ -1868,20 +1878,18 @@ if (typeof sandbox.worldBenchRender === 'function' && typeof sandbox.benchRun ==
   sandbox.mwPlay = sandbox.labWorld;
   sandbox.worldInspectSelect(null);
 }
-// 4d. 组合台改完要进自动保存（旧代码：labWbRender 只同步不保存，刷新后左盘归零）。
-if (typeof sandbox.labWbRender === 'function' && typeof sandbox.labWorldSave === 'function') {
+// 4d（第 6 批）：天平站改完要进自动保存——世界一变就保存，刷新后左盘还在。
+if (typeof sandbox.worldPlayApply === 'function' && typeof sandbox.labWorldSave === 'function') {
   const wCombo4 = sandbox.MathWorld.create({ balance: { L: [], R: [] } });
   sandbox.labWorld = wCombo4; sandbox.mwPlay = wCombo4;
   sandbox.labWorldSave(); // 基线：空盘已保存
-  sandbox.labWbL = [{ kind: 'num', v: 1 }]; sandbox.labWbR = [];
-  sandbox.labWbRender();
+  sandbox.worldPlayApply({ type: 'balanceAddQty', side: 'L', qty: { n: 1, d: 1 } });
   const savedCombo4 = JSON.parse(lsData['math-lab-world-v1'] || 'null');
-  check('lab combo bench persists across reload (left pan 1 saved, not lost on refresh)',
+  check('lab balance station persists across reload (left pan 1 saved, not lost on refresh)',
     !!savedCombo4 && savedCombo4.balance && savedCombo4.balance.L.length === 1 &&
     sandbox.MathWorld.derived(savedCombo4).balance.Lstr === '1');
   // 收尾：盘子清掉并存回，别影响后面的检查。
-  sandbox.labWbL = []; sandbox.labWbR = [];
-  sandbox.labWbRender();
+  sandbox.worldPlayApply({ type: 'balanceClear' });
   sandbox.labWorld = sandbox.MathWorld.create({});
   sandbox.mwPlay = sandbox.labWorld;
 }
@@ -2052,7 +2060,8 @@ check('Apparatus paints fraction SVG children',
 check('Apparatus paints balance + linefn SVG',
   byId.worldBalSvg.children.length > 0 && byId.worldFnSvg.children.length > 0);
 navGo('home');
-check('function tables include x=4', htmlText.includes('<td id="y4">') && htmlText.includes('<td id="labY4">'));
+// 第 6 批：lab-function 小站已删（它的 y 表随之没了）；函数演示的 y 表还在。
+check('function tables include x=4', htmlText.includes('<td id="y4">') && htmlText.indexOf('labY4') === -1);
 // 今天复习首页入口
 check("viewForKey('today-review') is review", sandbox.viewForKey('today-review') === 'review');
 navGo('today-review');
@@ -3734,6 +3743,47 @@ check('K3 save: a genuinely different report still saves as a second entry',
 lsData['math-inquiry-v1'] = k3Before.inq;
 if (lsData['math-inquiry-v1'] === undefined) delete lsData['math-inquiry-v1'];
 
+// ---------- K4. 批 6：合并双 DOM（旧托盘/组合台/工具站并进 MathWorld）----------
+// 旧代码有两套状态：世界 MathWorld + legacy 数组（labTray/labWbL/labFaA/
+// labLinePts/labTfA/labFunc 滑杆），中间夹着 labWbSyncFromWorld、
+// labSeedLegacyFromWorld、labSync*ToWorld 三层同步补丁。合并后世界是唯一的
+// 真源：托盘就是 w.tray，组合台不存在了（功能在世界站里），十格阵/函数站
+// 的自由玩也并进台面/世界站。下面的检查在旧代码上应干净失败。
+check('K4 merge: the Phase-2 combo sync patch is gone (no labWbSyncFromWorld, no labBalKey)',
+  typeof sandbox.labWbSyncFromWorld === 'undefined' && typeof sandbox.labBalKey === 'undefined');
+check('K4 merge: the legacy reverse-sync is gone (no labSeedLegacyFromWorld)',
+  typeof sandbox.labSeedLegacyFromWorld === 'undefined');
+check('K4 merge: the legacy combo benches are gone (no labWb/labFa/labLine render or state)',
+  typeof sandbox.labWbRender === 'undefined' && typeof sandbox.labWbL === 'undefined' &&
+  typeof sandbox.labFaRender === 'undefined' && typeof sandbox.labFaA === 'undefined' &&
+  typeof sandbox.labLineRender === 'undefined' && typeof sandbox.labLinePts === 'undefined' &&
+  typeof sandbox.labLineRemove === 'undefined');
+check('K4 merge: the legacy ten-frame / function stations are gone (no labTf/labFunc state)',
+  typeof sandbox.labTfRender === 'undefined' && typeof sandbox.labTfA === 'undefined' &&
+  typeof sandbox.drawLabFunc === 'undefined');
+check('K4 merge: the legacy tray array is gone (no labTray / labTrayAdd)',
+  typeof sandbox.labTray === 'undefined' && typeof sandbox.labTrayAdd === 'undefined');
+// labTraySend 是新的（按 piece id 送世界托盘），不是 legacy 的按序号送组合台。
+// 托盘从世界读：往世界托盘里放一个 1/2，labTrayRender 就该画出它；
+// 旧 labTrayRender 只读空的 legacy 数组，画不出东西。
+sandbox.labWorld = sandbox.MathWorld.apply(sandbox.labWorld, { type: 'trayAdd', piece: { kind: 'frac', n: 1, d: 2 } }).world;
+sandbox.labTrayRender();
+const k4Tray = byId.labTray;
+check('K4 tray: renders the world tray (one 1/2 chip with send buttons)',
+  k4Tray.children.length === 1 && k4Tray.children[0].textContent.indexOf('1/2') >= 0 &&
+  k4Tray.children[0].children.length >= 4);
+const k4AddBtn = (k4Tray.children[0] ? k4Tray.children[0].children.filter(function (b) { return b.textContent === '加'; }) : [])[0];
+if (k4AddBtn) click(k4AddBtn);
+check('K4 tray: send to the fraction board sets fracboard A from the tray piece (by id)',
+  sandbox.labWorld.fracboard.A.n === 1 && sandbox.labWorld.fracboard.A.d === 2 &&
+  sandbox.labWorld.tray.length === 0);
+sandbox.labWorld = sandbox.MathWorld.apply(sandbox.labWorld, { type: 'trayAdd', piece: { kind: 'num', v: 5 } }).world;
+sandbox.labTrayRender();
+const k4XBtn = (byId.labTray.children[0] ? byId.labTray.children[0].children.filter(function (b) { return b.textContent === '×'; }) : [])[0];
+if (k4XBtn) click(k4XBtn);
+check('K4 tray: × takes the piece off the tray by id (world tray empty again)',
+  sandbox.labWorld.tray.length === 0);
+
 // ---------- L. checkpoint / 闯关路 ----------
 const checkpointDetail = byId.checkpointDetail;
 function clickCp(el) { (checkpointDetail._handlers.click || []).forEach(f => f({ target: el })); }
@@ -4621,9 +4671,9 @@ check('creative: all 8 creative demos are in the tried list',
 // 改前没有 labSetMode / 托盘 / 组合台 / 问题入口，相关函数不存在、按钮没有绑定——
 // 每个检查都先确认函数存在（不存在就只记一条失败，不让整轮崩掉），再断言行为。
 check('lab2: mode toggle + workbench functions exist',
-  typeof sandbox.labSetMode === 'function' && typeof sandbox.labTrayAdd === 'function' &&
-  typeof sandbox.labFracAdd === 'function' && typeof sandbox.labEnterQuestion === 'function' &&
-  typeof sandbox.labSubmitChallenge === 'function');
+  typeof sandbox.labSetMode === 'function' && typeof sandbox.labTrayRender === 'function' &&
+  typeof sandbox.labTraySend === 'function' && typeof sandbox.labEnterQuestion === 'function' &&
+  typeof sandbox.labSubmitChallenge === 'function' && typeof sandbox.worldPlayApply === 'function');
 if (typeof sandbox.labSetMode === 'function') {
   // 模式切换：挑战模式给 #lab 加 lab-challenge（提示藏起来），交卷盒出现；切回自由玩还原。
   sandbox.labSetMode('challenge');
@@ -4643,70 +4693,76 @@ if (typeof sandbox.labSetMode === 'function') {
   check('lab2: challenge attempts list live as questions are entered, before submitting',
     byId.labChallengeReport.innerHTML.includes('分母不一样') &&
     !byId.labChallengeReport.innerHTML.includes('还没在挑战模式里做过题'));
-  // 分数加法台：默认 1/2+1/3，错拼 2/5、正确 5/6，错拼的条比正确的短。
-  click(byId.labFaAdd);
-  check('lab2: fraction bench shows naive 2/5 vs correct 5/6 and the gap',
-    byId.labFracAddOut.textContent.includes('2/5') && byId.labFracAddOut.textContent.includes('5/6') &&
-    byId.labFracAddOut.textContent.includes('少了') &&
-    parseFloat(byId.labFracNaiveBar.style.width) < parseFloat(byId.labFracCorrectBar.style.width));
-  // 和超过 1：3/4+2/3=17/12，正确的条越过 1 的刻度线。
-  sandbox.labFaSet('A', 2, 2); sandbox.labFaSet('B', 1, 0);
-  click(byId.labFaAdd);
-  check('lab2: fraction bench overflow past 1 (3/4+2/3=17/12)',
-    byId.labFracAddOut.textContent.includes('17/12') && byId.labFracAddOut.textContent.includes('5/7') &&
-    parseFloat(byId.labFracCorrectBar.style.width) > parseFloat(byId.labFracOneMarkA.style.left));
-  sandbox.labFaA = { n: 1, d: 2 }; sandbox.labFaB = { n: 1, d: 3 };
-  sandbox.labFaTouched = { A: false, B: false }; sandbox.labFaRender();
-  // 天平组合台：左盘 1/2，右边空——差 1/2，整数砝码凑不出；右盘再加 1/2 就平了。
-  click(byId.labWbF2);
-  check('lab2: balance bench names the 1/2 gap and says integers cannot make it',
-    byId.labWbEq.textContent.includes('1/2') && byId.labWbEq.textContent.includes('＞') &&
-    byId.labWbMsg.textContent.includes('重 1/2') &&
-    byId.labWbMsg.textContent.includes('凑不出 1/2') &&
-    byId.labWbMsg.textContent.includes('分数砝码'));
-  click(byId.labWbPanR); click(byId.labWbF2);
-  check('lab2: balance bench balances when both pans are 1/2',
-    byId.labWbMsg.textContent.includes('平了'));
-  click(byId.labWbIntPlus);
-  check('lab2: balance bench tilts by an integer difference',
-    byId.labWbMsg.textContent.includes('右边重 1'));
-  click(byId.labWbClear);
-  check('lab2: balance bench clears both pans',
-    byId.labWbEq.textContent.includes('左 0') && byId.labWbEq.textContent.includes('右 0') &&
-    byId.labWbEq.textContent.includes('＝'));
+  // 分数板（世界站）：默认 1/2+1/3，错拼 2/5、正确 5/6，错拼的条比正确的短。
+  sandbox.worldPlayApply({ type: 'fracCombine' });
+  check('lab2: fraction board shows naive 2/5 vs correct 5/6 and the gap',
+    byId.worldFracOut.textContent.includes('2/5') && byId.worldFracOut.textContent.includes('5/6') &&
+    byId.worldFracOut.textContent.includes('差 13/30') &&
+    parseFloat(byId.worldFracNaive.style.width) < parseFloat(byId.worldFracTrue.style.width));
+  // 和超过 1：3/4+2/3=17/12（错拼 5/7），正确的条几乎拉满（95.2%）。
+  sandbox.worldPlayApply({ type: 'fracboardSet', side: 'A', n: 3, d: 4 });
+  sandbox.worldPlayApply({ type: 'fracboardSet', side: 'B', n: 2, d: 3 });
+  sandbox.worldPlayApply({ type: 'fracCombine' });
+  check('lab2: fraction board overflow past 1 (3/4+2/3=17/12)',
+    byId.worldFracOut.textContent.includes('17/12') && byId.worldFracOut.textContent.includes('5/7') &&
+    parseFloat(byId.worldFracTrue.style.width) > 90);
+  sandbox.worldPlayApply({ type: 'fracboardSet', side: 'A', n: 1, d: 2 });
+  sandbox.worldPlayApply({ type: 'fracboardSet', side: 'B', n: 1, d: 3 });
+  // 天平站（世界站）：左盘先放 1/2，右边空——差 1/2；右盘再加 1/2 就平了。
+  sandbox.worldPlayApply({ type: 'balanceAddQty', side: 'L', qty: { n: 1, d: 2 } });
+  check('lab2: balance station names the 1/2 gap',
+    byId.worldBalEq.textContent.includes('左 1/2') && byId.worldBalEq.textContent.includes('＞') &&
+    byId.worldBalEq.textContent.includes('右 0') &&
+    byId.worldBalMsg.textContent.includes('左边重 1/2'));
+  sandbox.worldPlayApply({ type: 'balanceAddQty', side: 'R', qty: { n: 1, d: 2 } });
+  check('lab2: balance station balances when both pans are 1/2',
+    byId.worldBalMsg.textContent.includes('平了'));
+  sandbox.worldPlayApply({ type: 'balanceAddQty', side: 'R', qty: { n: 1, d: 1 } });
+  check('lab2: balance station tilts by an integer difference',
+    byId.worldBalMsg.textContent.includes('右边重 1'));
+  sandbox.worldPlayApply({ type: 'balanceClear' });
+  check('lab2: balance station clears both pans',
+    byId.worldBalEq.textContent.includes('左 0') && byId.worldBalEq.textContent.includes('右 0') &&
+    byId.worldBalEq.textContent.includes('＝'));
+  sandbox.worldPlayApply({ type: 'balanceAddQty', side: 'L', qty: { n: 1, d: 2 } });
   // 托盘 + 数轴：1/2 上数轴，再放 1，两点差 1/2；7 放不下，留在托盘里；托盘最多 3 个。
-  sandbox.labTrayAdd({ kind: 'frac', n: 1, d: 2, src: 'test' });
+  sandbox.worldPlayApply({ type: 'trayAdd', piece: { kind: 'frac', n: 1, d: 2 } });
   check('lab2: tray holds a fraction chip',
-    sandbox.labTray.length === 1 && byId.labTray.children.length === 1 &&
+    sandbox.labWorld.tray.length === 1 && byId.labTray.children.length === 1 &&
     byId.labTray.children[0].textContent.includes('1/2'));
-  sandbox.labTraySend(0, 'line');
+  sandbox.labTraySend(sandbox.labWorld.tray[0], 'numline');
   check('lab2: tray chip lands on the number line',
-    sandbox.labLinePts.length === 1 && sandbox.labTray.length === 0 &&
-    byId.labLineMsg.textContent.includes('1/2'));
-  sandbox.labTrayAdd({ kind: 'num', v: 1, src: 'test' });
-  sandbox.labTraySend(0, 'line');
+    sandbox.MathWorld.derived(sandbox.labWorld).numline.pts.length === 1 && sandbox.labWorld.tray.length === 0 &&
+    byId.worldLineMsg.textContent.includes('1/2'));
+  sandbox.worldPlayApply({ type: 'trayAdd', piece: { kind: 'num', v: 1 } });
+  sandbox.labTraySend(sandbox.labWorld.tray[0], 'numline');
   check('lab2: two points on the line show their distance 1/2',
-    sandbox.labLinePts.length === 2 && byId.labLineMsg.textContent.includes('差 1/2'));
-  sandbox.labTrayAdd({ kind: 'num', v: 7, src: 'test' });
-  sandbox.labTraySend(0, 'line');
+    sandbox.MathWorld.derived(sandbox.labWorld).numline.pts.length === 2 &&
+    sandbox.MathWorld.derived(sandbox.labWorld).numline.gapStr === '1/2');
+  sandbox.worldPlayApply({ type: 'trayAdd', piece: { kind: 'num', v: 7 } });
+  sandbox.labTraySend(sandbox.labWorld.tray[0], 'numline');
   check('lab2: 7 does not fit on the 0-2 line and stays in the tray',
-    sandbox.labLinePts.length === 2 && sandbox.labTray.length === 1 &&
-    byId.labLineMsg.textContent.includes('放不下'));
-  sandbox.labTrayAdd({ kind: 'frac', n: 1, d: 3, src: 'test' });
-  sandbox.labTrayAdd({ kind: 'num', v: 2, src: 'test' });
+    sandbox.MathWorld.derived(sandbox.labWorld).numline.pts.length === 2 && sandbox.labWorld.tray.length === 1 &&
+    byId.worldLineMsg.textContent.includes('越界被拒绝'));
+  sandbox.worldPlayApply({ type: 'trayAdd', piece: { kind: 'frac', n: 1, d: 3 } });
+  sandbox.worldPlayApply({ type: 'trayAdd', piece: { kind: 'num', v: 2 } });
   check('lab2: tray caps at 3, the 4th value is refused',
-    sandbox.labTray.length === 3 &&
-    sandbox.labTrayAdd({ kind: 'frac', n: 1, d: 4, src: 'test' }) === false &&
-    byId.labTrayMsg.textContent.includes('托盘满了'));
-  sandbox.labTray = []; sandbox.labTrayRender();
-  sandbox.labLinePts = []; sandbox.labLineRender();
-  // 小站往托盘送数：十格阵放 7 个点，点“放到托盘”，托盘里就是 7。
-  for (let i = 0; i < 7; i++) sandbox.labTfToggle('A', i);
-  click(byId.labTfToTray);
-  check('lab2: ten-frame station sends its total 7 to the tray',
-    sandbox.labTray.length === 1 && sandbox.labTray[0].v === 7);
-  sandbox.labTray = []; sandbox.labTrayRender();
-  for (let i = 0; i < 7; i++) sandbox.labTfToggle('A', i);
+    sandbox.labWorld.tray.length === 3 &&
+    sandbox.MathWorld.apply(sandbox.labWorld, { type: 'trayAdd', piece: { kind: 'frac', n: 1, d: 4 } }).ok === false);
+  sandbox.labWorld = sandbox.MathWorld.apply(sandbox.labWorld, { type: 'trayClear' }).world;
+  sandbox.labWorld = sandbox.MathWorld.apply(sandbox.labWorld, { type: 'numlineClear' }).world;
+  sandbox.labTrayRender(); sandbox.worldPlayRender();
+  // 十格阵上台面：放 7 个点，检查器里“把个数放到托盘”，托盘里就是 7。
+  sandbox.worldPlayApply({ type: 'benchTenframeToggle' });
+  sandbox.worldPlayApply({ type: 'tenframeSet', side: 'A', n: 7 });
+  sandbox.worldPlayApply({ type: 'tenframeMint' });
+  check('lab2: ten-frame on the bench sends its total 7 to the tray',
+    sandbox.labWorld.tray.length === 1 &&
+    sandbox.MathWorld.Q.str(sandbox.MathWorld.Q.fromPiece(sandbox.labWorld.pieces[sandbox.labWorld.tray[0]])) === '7');
+  sandbox.labWorld = sandbox.MathWorld.apply(sandbox.labWorld, { type: 'trayClear' }).world;
+  sandbox.labWorld = sandbox.MathWorld.apply(sandbox.labWorld, { type: 'tenframeSet', side: 'A', n: 0 }).world;
+  sandbox.labWorld = sandbox.MathWorld.apply(sandbox.labWorld, { type: 'benchTenframeToggle' }).world;
+  sandbox.labTrayRender();
   // 挑战交卷：先进两道工作间问题（分数加法 + 天平），自由玩里进问题不记；打分交卷后，
   // 答错的 5.11 进复习库，报告点名 5.11；5.5 答对了，不在丢分报告里。
   const chReviewBefore = lsData['math-review-v1'];
@@ -4715,7 +4771,8 @@ if (typeof sandbox.labSetMode === 'function') {
   check('lab2: entering workbench questions in challenge mode records attempts',
     sandbox.labChallengeAttempts.includes('q-fracadd') && sandbox.labChallengeAttempts.includes('q-balfrac') &&
     byId.labCurrentQ.textContent.includes('天平一边放 1/2') &&
-    sandbox.labWbL.length === 1 && sandbox.labWbL[0].n === 1 && sandbox.labWbL[0].d === 2);
+    sandbox.labWorld.balance.L.length === 1 &&
+    sandbox.MathWorld.Q.str(sandbox.MathWorld.Q.fromPiece(sandbox.labWorld.pieces[sandbox.labWorld.balance.L[0]])) === '1/2');
   // The last question clicked above is q-balfrac, so the panel shows its procedure.
   check('lab2: challenge question shows an exam-mode procedure panel with no checklist',
     byId.worldProcOut.innerHTML.includes('天平上的分数') && byId.worldProcOut.innerHTML.includes('考试（无提示）') &&
@@ -4749,7 +4806,7 @@ if (typeof sandbox.labSetMode === 'function') {
   sandbox.syncReviewFromStorage();
   sandbox.labChallengeAttempts = []; sandbox.labChallengeMarks = {};
   sandbox.labSetMode('free');
-  sandbox.labWbL = []; sandbox.labWbR = []; sandbox.labWbRender();
+  sandbox.worldPlayApply({ type: 'balanceClear' });
   // 跨次统计：考试结果写进历史；同一份报告不重复记；面板显示次数与最常丢的一步。
   const procRep = { labId: 'q-fracadd', title: '分数相加', mode: 'exam', score: 2, max: 4, done: false, opCount: 3, lost: ['把合起来的结果做成一块分数'], lines: [
     { id: 'combine', label: '把 1/2 和 1/3 合到一起', points: 1, got: true },
@@ -4789,6 +4846,9 @@ if (typeof sandbox.labSetMode === 'function') {
     JSON.parse(lsData['math-bench-v1'] || '[]').length === benchCountNow);
   check('bench: chips draw a fraction bar', byId.worldBenchShelf.innerHTML.includes('bench-svg'));
   // 视图：直线放上台，台子自动变成坐标系，并画出直线
+  // （先把十格阵拿下台面：十格阵和直线没有共同视图，自动视图会变成算式——
+  // 第 6 批进 q-numline 会把十格阵放上台面，前面那道题留下的。）
+  if (sandbox.labWorld && sandbox.labWorld.benchTenframe) sandbox.benchRun({ type: 'benchTenframeToggle' });
   sandbox.benchRun({ type: 'benchLineToggle' });
   sandbox.worldBenchRender();
   check('bench view: a line on the bench shows the coordinate system and draws it',

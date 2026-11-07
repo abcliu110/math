@@ -648,7 +648,10 @@
         if (w.numline.pts.length >= 2) {
           return { world: world, ok: false, reason: 'numline-full' };
         }
-        w.numline.pts.push(Q.reduce(qty));
+        // 点上记下零件 id：删点时按 id 拿，不是按渲染序号拿（组合台的教训：
+        // 渲染序号删只动了本地数组，世界里的点还在，再放一个点就复活）。
+        const pt = Q.reduce(qty);
+        w.numline.pts.push({ n: pt.n, d: pt.d, id: id });
         w.meta.lastNumlineReject = false;
         removeFromSlots(w, id);
         setPieceAt(w, id, 'numline');
@@ -674,7 +677,21 @@
     if (type === 'take') {
       const id = intent.pieceId;
       if (!id || !w.pieces[id]) return { world: world, ok: false, reason: 'no-piece' };
+      const at = w.pieces[id].at;
       removeFromSlots(w, id);
+      if (at === 'numline') {
+        // 数轴上的点是值数组 w.numline.pts：按零件 id 拿掉对应的那一个点。
+        // 两个 1/2 叠在一起时按值拿会拿错，按 id 拿才拿得准。
+        const qi = w.numline.pts.findIndex(function (p) { return p && p.id === id; });
+        if (qi >= 0) w.numline.pts.splice(qi, 1);
+        else {
+          // 旧保存的点没有 id：按值拿掉一个（值相同，拿掉哪一个结果都一样）。
+          const q = Q.fromPiece(w.pieces[id]);
+          const vi = w.numline.pts.findIndex(function (p) { return p && Q.eq(p, q); });
+          if (vi >= 0) w.numline.pts.splice(vi, 1);
+        }
+        w.meta.lastNumlineReject = false;
+      }
       setPieceAt(w, id, 'free');
       return { world: w, ok: true };
     }
@@ -1256,6 +1273,9 @@
           prop('A', 'A 的个数', world.tenframe.A, 0, 10, 1, { type: 'tenframeSet', side: 'A', field: 'n' }),
           prop('B', 'B 的个数', world.tenframe.B, 0, 10, 1, { type: 'tenframeSet', side: 'B', field: 'n' }),
         ],
+        // 动作：把两边个数做成一个数零件放到托盘（第 6 批：旧十格阵小站的
+        // “把个数放到托盘”并进检查器，intent tenframeMint 本来就在模型里）。
+        actions: [{ label: '把个数放到托盘', intent: { type: 'tenframeMint' } }],
       };
     }
     if (which === 'datatable') {

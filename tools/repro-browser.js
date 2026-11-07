@@ -165,6 +165,33 @@ async function labState() {
   })()`);
 }
 
+// 第 6 批：托盘状态（世界里的 tray，按 id 读出每个零件的值）+ 按文字找托盘按钮。
+async function trayState() {
+  return evaljs(`(function(){
+    if (typeof labWorld === 'undefined' || !labWorld) return null;
+    return JSON.stringify(labWorld.tray.map(function(id){
+      var p = labWorld.pieces[id];
+      return p ? MathWorld.Q.str(MathWorld.Q.fromPiece(p)) : '?';
+    }));
+  })()`);
+}
+async function trayBtn(text) {
+  await evaljs(`(function(){
+    var b=[...document.querySelectorAll('#labTray button')].find(function(x){return x.textContent===` + JSON.stringify(text) + `;});
+    if(b) b.scrollIntoView({block:'center',behavior:'instant'});
+  })()`);
+  await sleep(300);
+  return evaljs(`(function(){
+    var b=[...document.querySelectorAll('#labTray button')].find(function(x){return x.textContent===` + JSON.stringify(text) + `;});
+    if(!b) return null;
+    var r=b.getBoundingClientRect();
+    return {x:r.x+r.width/2,y:r.y+r.height/2};
+  })()`);
+}
+async function numlinePts() {
+  return evaljs(`JSON.stringify(MathWorld.derived(labWorld).numline.pts)`);
+}
+
 async function main() {
   // 1. 直接用 file:// 加载独立文件（见文件头注释：http://127.0.0.1 会被
   // Chrome 155 的 LNA 检查拦住；独立文件自包含，无网络请求）。
@@ -272,8 +299,13 @@ async function main() {
     } else if (scenario === 'bal-inspect-zero') {
       // 复测 (c)：左盘放 1、右盘放 1/6，点左盘合计打开那件砝码的检查器，
       // 把它的值改成 0——右盘的 1/6 不该跟着变 0。
+      // 第 6 批：实验室默认世界左盘就是 1/2（MathWorld 0.8 的设计；以前
+      // 加载时 legacy 空数组会把它洗掉，那是双 DOM 同步的副作用，合并后
+      // 没了）。所以先清空双盘再摆数，别假设进门就是空盘。
       await enterLab();
       await evaljs(`(function(){var b=document.querySelector('[data-bench="balance"]');if(b)b.click();})()`);
+      await sleep(300);
+      await evaljs(`(function(){ if (typeof worldPlayApply === 'function') worldPlayApply({type:'balanceClear'}); })()`);
       await sleep(300);
       const [chip1, chipF, view] = await centers(
         '#worldBenchBox [data-bench="make"][data-kind="num"][data-n="1"]',
@@ -347,27 +379,6 @@ async function main() {
       note('after rect off: goldRect=' + hasRectAfter + ' line=' + hasLineAfter);
       report.pass = hasRectBefore && hasLineBefore && !hasRectAfter && hasLineAfter;
       note(report.pass ? 'RESULT: PASS — rect gone, line stays' : 'RESULT: FAIL — rect still drawn or line lost');
-    } else if (scenario === 'combo-persist') {
-      // 复测 4(d)：组合台左盘加 1，刷新后左盘还是 1（以前变 0）。
-      await enterLab();
-      // 组合台在“更多器材”折叠区里（#labWorkbench hidden），先点折叠按钮展开
-      await evaljs(`(function(){var f=document.getElementById('labMoreFold');if(f)f.click();})()`);
-      await sleep(300);
-      const [plus] = await centers('#labWbIntPlus');
-      await clickAt(plus.cx, plus.cy);
-      await sleep(300);
-      const before = await evaljs(`document.getElementById('labWbList').textContent`);
-      note('before reload: combo list = ' + before);
-      await send('Page.reload', { ignoreCache: true });
-      await sleep(2500);
-      await enterLab();
-      await evaljs(`(function(){var f=document.getElementById('labMoreFold');if(f)f.click();})()`);
-      await sleep(300);
-      const after = await evaljs(`document.getElementById('labWbList').textContent`);
-      const st = await labState();
-      note('after reload: combo list = ' + after + ' world bal L=' + st.balL);
-      report.pass = before.indexOf('左盘：1') >= 0 && after.indexOf('左盘：1') >= 0 && st.balL === '1';
-      note(report.pass ? 'RESULT: PASS — combo left pan persists' : 'RESULT: FAIL — combo left pan lost on refresh');
     } else if (scenario === 'rect-refresh') {
       await enterLab();
       await evaljs(`(function(){var b=document.querySelector('[data-bench="rect"]');if(b)b.click();})()`);
@@ -850,26 +861,51 @@ async function main() {
       report.pass = viewState.showBal === true && dropAt === 'balance.R';
       note(report.pass ? 'RESULT: PASS — bench is in balance view and the pan accepts drops'
         : 'RESULT: FAIL — bench is NOT in balance view after the exam flow (showBal=' + viewState.showBal + ', dropAt=' + dropAt + ')');
-    } else if (scenario === 'combo-sync') {
-      // 复测 b5c48b96 第 3 项：站里拖了砝码，组合台的盘子显示还是旧值（stale），
-      // 刷新后按世界重摆，看起来像“右盘没保存”。修后：站里一改天平，组合台
-      // 的显示就该跟着世界走，不用等刷新、不用点组合台。
+    } else if (scenario === 'line-del-id') {
+      // 第 6 批：数轴上的点按零件 id 删（批 6 前是按渲染序号删本地数组，
+      // 世界里的点还在，再放一个点就复活——line-del-stale 复现过）。
+      // 放两个相同的 1/2，点掉一个应只剩一个；点掉剩下的应全空；
+      // 再放一个 1，删掉的 1/2 不能复活。
       await enterLab();
-      await evaljs(`document.getElementById('worldBalCard').classList.remove('collapsed')`);
+      await evaljs(`document.getElementById('worldLineCard').classList.remove('collapsed')`);
       await sleep(200);
-      await evaljs(`(function(){var f=document.getElementById('labMoreFold');if(f)f.click();})()`);
+      const [chip12, dropL] = await centers(
+        '#worldBenchBox [data-bench="make"][data-kind="frac"][data-n="1"][data-d="2"]', '#worldLineDrop');
+      await drag(chip12.cx, chip12.cy, dropL.cx, dropL.cy, 12, 40);
       await sleep(300);
-      const comboBefore = await evaljs(`document.getElementById('labWbList').textContent`);
-      note('combo list before station drag: ' + comboBefore);
-      const [chipS, dropR] = await centers('[data-drag-chip="weight"][data-qty="1/6"]', '#worldBalDropR');
-      if (chipS && dropR) await drag(chipS.cx, chipS.cy, dropR.cx, dropR.cy, 12, 40);
-      await sleep(400);
-      const st = await labState();
-      const comboAfter = await evaljs(`document.getElementById('labWbList').textContent`);
-      note('after station drag 1/6 to right: world bal L=' + st.balL + ' R=' + st.balR + ' | combo list = ' + comboAfter);
-      report.pass = st.balR === '1/6' && comboAfter.indexOf('右盘：1/6') >= 0;
-      note(report.pass ? 'RESULT: PASS — combo display follows the world immediately'
-        : 'RESULT: FAIL — combo display is stale (does not match the world)');
+      const pts1 = await numlinePts();
+      note('after 1/2 to numline: pts=' + pts1);
+      const [chip12b, dropL2] = await centers(
+        '#worldBenchBox [data-bench="make"][data-kind="frac"][data-n="1"][data-d="2"]', '#worldLineDrop');
+      await drag(chip12b.cx, chip12b.cy, dropL2.cx, dropL2.cy, 12, 40);
+      await sleep(300);
+      const pts2 = await numlinePts();
+      note('after a second 1/2: pts=' + pts2);
+      // 点掉一个 1/2（两个点重叠，点中心打中的是上面那个，剩一个就行）。
+      const [pt1] = await centers('#worldLineSvg [data-numline-piece]');
+      note('first point center: ' + JSON.stringify(pt1));
+      if (pt1) { await clickAt(pt1.cx, pt1.cy); await sleep(300); }
+      const pts3 = await numlinePts();
+      note('after clicking one 1/2 away: pts=' + pts3);
+      const [pt2] = await centers('#worldLineSvg [data-numline-piece]');
+      if (pt2) { await clickAt(pt2.cx, pt2.cy); await sleep(300); }
+      const pts4 = await numlinePts();
+      note('after clicking the last 1/2 away: pts=' + pts4);
+      // 再放一个 1：删掉的 1/2 不能复活。
+      const [chip1, dropL3] = await centers(
+        '#worldBenchBox [data-bench="make"][data-kind="num"][data-n="1"]', '#worldLineDrop');
+      await drag(chip1.cx, chip1.cy, dropL3.cx, dropL3.cy, 12, 40);
+      await sleep(300);
+      const pts5 = await numlinePts();
+      note('after 1 to numline: pts=' + pts5);
+      // 点带随机 id，只比值（n/d）。
+      const valStr = (s) => JSON.parse(s).map(function (p) { return p.n + '/' + p.d; }).join(',');
+      report.pass = valStr(pts1) === '1/2' &&
+        valStr(pts2) === '1/2,1/2' &&
+        valStr(pts3) === '1/2' && valStr(pts4) === '' &&
+        valStr(pts5) === '1/1';
+      note(report.pass ? 'RESULT: PASS — numline points delete by piece id, exactly the clicked one, no resurrection'
+        : 'RESULT: FAIL — delete removed the wrong point or a deleted point came back (see pts above)');
     } else if (scenario === 'exam-exit') {
       // 复测 b5c48b96 第 4 项：考完回自由玩，流程面板还留着“考试进行中”。
       // 走完考试（进挑战 → 天平题 → 站拖 1/6 → 交卷 → 答错了 → 提交报告），
@@ -932,7 +968,7 @@ async function main() {
         var c=document.elementFromPoint(Math.round(window.innerWidth/2),Math.round(window.innerHeight/2));
         return { scrollY: Math.round(window.scrollY),
           benchView: r('#worldBenchView'), panL: r('#worldBenchPanL'), panR: r('#worldBenchPanR'),
-          comboBal: r('#lab-balance2'), comboLine: r('#lab-numline'),
+          moreArea: r('#labWorkbench'),
           centerEl: c?(c.tagName+(c.id?'#'+c.id:'')):'(none)' };
       })()`);
       const [peekBtn] = await centers('#labReportPeek');
@@ -1824,6 +1860,247 @@ async function main() {
       report.pass = sheetShown === true && count1 === 1 && count2 === 1 && st1.disabled === true;
       note(report.pass ? 'RESULT: PASS — one report saved, save button disabled after save, preview+reopen cannot save a duplicate'
         : 'RESULT: FAIL — duplicate report saved (count ' + count1 + ' -> ' + count2 + ') or save button still enabled after save');
+    } else if (scenario === 'tray-world') {
+      // 第 6 批：托盘就是世界里的 tray。十格阵 mint 7 → 托盘；7 上数轴被拒；
+      // × 按 id 拿掉；分数饼 1/2 → 托盘 → 分数板 A；1/4 → 右盘；
+      // 托盘满 3 个后第 4 个进不来；刷新后托盘还在。
+      await enterLab();
+      await evaljs(`(function(){var f=document.getElementById('labMoreFold');if(f)f.click();})()`);
+      await sleep(300);
+      await evaljs(`(function(){var b=document.querySelector('[data-bench="tenframe"]');if(b)b.click();})()`);
+      await sleep(400);
+      await evaljs(`(function(){ if (typeof worldInspectSelect === 'function') worldInspectSelect({apparatus:'tenframe'}); })()`);
+      await sleep(300);
+      await evaljs(`(function(){
+        var rng=document.querySelector('#worldBenchInspector input[data-insp="0"]');
+        if(!rng) return 'no-range';
+        rng.value='7'; rng.dispatchEvent(new Event('input',{bubbles:true}));
+        return 'range-set-7';
+      })()`);
+      await sleep(400);
+      const tf7 = await labState();
+      note('ten-frame A=7: tf=' + tf7.tf);
+      await evaljs(`(function(){var b=document.querySelector('#worldBenchInspector [data-insp-action="0"]');if(b)b.click();})()`);
+      await sleep(300);
+      const tray1 = await trayState();
+      note('after mint 7: tray=' + tray1);
+      // 7 上数轴：越界被拒，留在托盘里。
+      const lineBtn = await trayBtn('线');
+      if (lineBtn) { await clickAt(lineBtn.x, lineBtn.y); await sleep(300); }
+      const tray2 = await trayState();
+      const rej = await evaljs(`(function(){return !!(labWorld.meta && labWorld.meta.lastNumlineReject);})()`);
+      const ptsAfter7 = await numlinePts();
+      note('after sending 7 to numline: tray=' + tray2 + ' rejected=' + rej + ' pts=' + ptsAfter7);
+      // × 按 id 拿掉 7。
+      const xBtn = await trayBtn('×');
+      if (xBtn) { await clickAt(xBtn.x, xBtn.y); await sleep(300); }
+      const tray3 = await trayState();
+      note('after taking 7 off the tray: tray=' + tray3);
+      // 分数饼 1/2 → 托盘 → 分数板 A。
+      await evaljs(`(function(){var b=[...document.querySelectorAll('#labFracDenomSeg button')].find(function(x){return x.textContent==='2';});if(b)b.click();})()`);
+      await evaljs(`(function(){var r=document.getElementById('labFracNumRange');r.value='1';r.dispatchEvent(new Event('input',{bubbles:true}));})()`);
+      await evaljs(`(function(){var b=document.getElementById('labFracToTray');if(b)b.click();})()`);
+      await sleep(300);
+      const tray4 = await trayState();
+      note('after pie 1/2 to tray: tray=' + tray4);
+      const addBtn = await trayBtn('加');
+      if (addBtn) { await clickAt(addBtn.x, addBtn.y); await sleep(300); }
+      const faA = await evaljs(`JSON.stringify(labWorld.fracboard.A)`);
+      const tray5 = await trayState();
+      note('after sending 1/2 to fracboard: A=' + faA + ' tray=' + tray5);
+      // 分数饼 1/4 → 托盘 → 右盘。
+      await evaljs(`(function(){var b=[...document.querySelectorAll('#labFracDenomSeg button')].find(function(x){return x.textContent==='4';});if(b)b.click();})()`);
+      await evaljs(`(function(){var r=document.getElementById('labFracNumRange');r.value='1';r.dispatchEvent(new Event('input',{bubbles:true}));})()`);
+      await evaljs(`(function(){var b=document.getElementById('labFracToTray');if(b)b.click();})()`);
+      await sleep(300);
+      const rBtn = await trayBtn('右盘');
+      if (rBtn) { await clickAt(rBtn.x, rBtn.y); await sleep(300); }
+      const stR = await labState();
+      note('after sending 1/4 to right pan: bal R=' + stR.balR + ' tray=' + await trayState());
+      // 托盘满 3 个：第 4 个进不来。先装满：饼 1/2、饼 1/3、随便压左边 1。
+      await evaljs(`(function(){var b=[...document.querySelectorAll('#labFracDenomSeg button')].find(function(x){return x.textContent==='2';});if(b)b.click();})()`);
+      await evaljs(`(function(){var b=document.getElementById('labFracToTray');if(b)b.click();})()`);
+      await sleep(200);
+      await evaljs(`(function(){var b=[...document.querySelectorAll('#labFracDenomSeg button')].find(function(x){return x.textContent==='3';});if(b)b.click();})()`);
+      await evaljs(`(function(){var b=document.getElementById('labFracToTray');if(b)b.click();})()`);
+      await sleep(200);
+      await evaljs(`(function(){var b=document.getElementById('labBalReset');if(b)b.click();})()`);
+      await evaljs(`(function(){var b=document.getElementById('labBalAddL');if(b)b.click();})()`);
+      await evaljs(`(function(){var b=document.getElementById('labBalToTray');if(b)b.click();})()`);
+      await sleep(300);
+      const trayFull = await trayState();
+      note('tray full (3): ' + trayFull);
+      await evaljs(`(function(){var b=[...document.querySelectorAll('#labFracDenomSeg button')].find(function(x){return x.textContent==='4';});if(b)b.click();})()`);
+      await evaljs(`(function(){var b=document.getElementById('labFracToTray');if(b)b.click();})()`);
+      await sleep(300);
+      const trayStill3 = await trayState();
+      const fullMsg = await evaljs(`(function(){var m=document.getElementById('labTrayMsg');return m?m.textContent:'';})()`);
+      note('after 4th send attempt: tray=' + trayStill3 + ' msg=' + fullMsg);
+      // 刷新：托盘还在。
+      await send('Page.reload', { ignoreCache: true });
+      await sleep(2500);
+      await enterLab();
+      await sleep(300);
+      const trayAfter = await trayState();
+      note('after refresh: tray=' + trayAfter);
+      report.pass = tf7.tf === '7+0=7' && tray1 === '["7"]' &&
+        tray2 === '["7"]' && rej === true && ptsAfter7 === '[]' &&
+        tray3 === '[]' && tray4 === '["1/2"]' &&
+        faA === '{"n":1,"d":2}' && tray5 === '[]' &&
+        stR.balR === '1/4' &&
+        trayFull === '["1/2","1/3","1"]' && trayStill3 === '["1/2","1/3","1"]' &&
+        trayAfter === '["1/2","1/3","1"]';
+      note(report.pass ? 'RESULT: PASS — world tray: mint, reject, take by id, send to fracboard/balance, cap 3, persists across refresh'
+        : 'RESULT: FAIL — tray flow broken (see notes above)');
+    } else if (scenario === 'bal-del-id') {
+      // 第 6 批：站里盘上的砝码按零件 id 点按删除（组合台按渲染序号删错项
+      // 的教训）。右盘先放 1/6 + 1/4（=5/12），点掉 1/6 那块，
+      // 右盘只剩 1/4，世界和站上显示一致。
+      await enterLab();
+      await evaljs(`document.getElementById('worldBalCard').classList.remove('collapsed')`);
+      await sleep(200);
+      await evaljs(`(function(){var b=document.querySelector('[data-world="bal-clear"]');if(b)b.click();})()`);
+      await sleep(200);
+      const [c6, dR] = await centers('[data-drag-chip="weight"][data-qty="1/6"]', '#worldBalDropR');
+      await drag(c6.cx, c6.cy, dR.cx, dR.cy, 12, 40);
+      await sleep(300);
+      const [c4, dR2] = await centers('[data-drag-chip="weight"][data-qty="1/4"]', '#worldBalDropR');
+      await drag(c4.cx, c4.cy, dR2.cx, dR2.cy, 12, 40);
+      await sleep(300);
+      const before = await labState();
+      note('before delete: bal L=' + before.balL + ' R=' + before.balR);
+      // 找出 1/6 那块的零件 id，按 id 点它。
+      const id16 = await evaljs(`(function(){
+        var r=labWorld.balance.R;
+        for (var i=0;i<r.length;i++){var p=labWorld.pieces[r[i]];if(p&&p.kind==='frac'&&p.n===1&&p.d===6)return r[i];}
+        return null;
+      })()`);
+      note('piece id of the 1/6 weight: ' + id16);
+      const [w6] = await centers('#worldBalSvg [data-bal-weight="' + id16 + '"]');
+      note('1/6 weight center: ' + JSON.stringify(w6));
+      if (w6) { await clickAt(w6.cx, w6.cy); await sleep(300); }
+      const after = await labState();
+      const rLen = await evaljs(`labWorld.balance.R.length`);
+      const svgTexts = await evaljs(`(function(){return [...document.querySelectorAll('#worldBalSvg text')].map(function(t){return t.textContent;});})()`);
+      const benchEq = await evaljs(`(function(){var e=document.getElementById('worldBalEq');return e?e.textContent:'';})()`);
+      note('after clicking the 1/6 weight away: bal L=' + after.balL + ' R=' + after.balR + ' R pieces=' + rLen + ' svgTexts=' + JSON.stringify(svgTexts) + ' benchEq=' + benchEq);
+      report.pass = before.balR === '5/12' && id16 !== null &&
+        after.balR === '1/4' && rLen === 1 && benchEq.indexOf('右 1/4') >= 0;
+      note(report.pass ? 'RESULT: PASS — clicking the 1/6 weight removes exactly that piece by id, right pan is 1/4 only'
+        : 'RESULT: FAIL — delete removed the wrong weight or the world and the station disagree');
+    } else if (scenario === 'q-numline-tf') {
+      // 第 6 批：进 q-numline，十格阵自动上台面（A=7）；检查器“把个数放到
+      // 托盘”→ 托盘里是 7；7 上数轴被拒（越界，目标就是试拒绝）；再放
+      // 1/2 和 1 上数轴，两点差 1/2，题目的两步都走完。
+      await enterLab();
+      await evaljs(`(function(){var f=document.getElementById('labMoreFold');if(f)f.click();})()`);
+      await sleep(300);
+      await evaljs(`(function(){var b=document.getElementById('labQ-numline');if(b)b.click();})()`);
+      await sleep(400);
+      const st0 = await labState();
+      note('after entering q-numline: benchTenframe=' + st0.benchTenframe + ' tf=' + st0.tf);
+      await evaljs(`(function(){ if (typeof worldInspectSelect === 'function') worldInspectSelect({apparatus:'tenframe'}); })()`);
+      await sleep(300);
+      const mintBtn = await evaljs(`(function(){var b=document.querySelector('#worldBenchInspector [data-insp-action="0"]');return b?b.textContent:null;})()`);
+      note('inspector mint action: ' + mintBtn);
+      await evaljs(`(function(){var b=document.querySelector('#worldBenchInspector [data-insp-action="0"]');if(b)b.click();})()`);
+      await sleep(300);
+      const tray1 = await trayState();
+      note('after mint: tray=' + tray1);
+      const lineBtn = await trayBtn('线');
+      if (lineBtn) { await clickAt(lineBtn.x, lineBtn.y); await sleep(300); }
+      const rej = await evaljs(`(function(){return !!(labWorld.meta && labWorld.meta.lastNumlineReject);})()`);
+      const tray2 = await trayState();
+      note('after sending 7 to numline: rejected=' + rej + ' tray=' + tray2);
+      // 7 拿掉，换 1/2 和 1 上数轴。
+      const xBtn = await trayBtn('×');
+      if (xBtn) { await clickAt(xBtn.x, xBtn.y); await sleep(300); }
+      await evaljs(`(function(){var b=[...document.querySelectorAll('#labFracDenomSeg button')].find(function(x){return x.textContent==='2';});if(b)b.click();})()`);
+      await evaljs(`(function(){var r=document.getElementById('labFracNumRange');r.value='1';r.dispatchEvent(new Event('input',{bubbles:true}));})()`);
+      await evaljs(`(function(){var b=document.getElementById('labFracToTray');if(b)b.click();})()`);
+      await sleep(200);
+      const lb1 = await trayBtn('线');
+      if (lb1) { await clickAt(lb1.x, lb1.y); await sleep(300); }
+      await evaljs(`(function(){var b=document.getElementById('labBalReset');if(b)b.click();})()`);
+      await evaljs(`(function(){var b=document.getElementById('labBalAddL');if(b)b.click();})()`);
+      await evaljs(`(function(){var b=document.getElementById('labBalToTray');if(b)b.click();})()`);
+      await sleep(200);
+      const lb2 = await trayBtn('线');
+      if (lb2) { await clickAt(lb2.x, lb2.y); await sleep(300); }
+      const pts = await numlinePts();
+      const gap = await evaljs(`MathWorld.derived(labWorld).numline.gapStr`);
+      note('after 1/2 and 1 on the line: pts=' + pts + ' gap=' + gap);
+      const valStr = (s) => JSON.parse(s).map(function (p) { return p.n + '/' + p.d; }).join(',');
+      report.pass = st0.benchTenframe === true && st0.tf === '7+0=7' &&
+        mintBtn !== null && mintBtn.indexOf('放到托盘') >= 0 &&
+        tray1 === '["7"]' && rej === true && tray2 === '["7"]' &&
+        valStr(pts) === '1/2,1/1' && gap === '1/2';
+      note(report.pass ? 'RESULT: PASS — q-numline puts the ten-frame on the bench, mint works, out-of-range is rejected, two points show the 1/2 gap'
+        : 'RESULT: FAIL — q-numline flow broken (see notes above)');
+    } else if (scenario === 'fn-send-y') {
+      // 第 6 批：旧函数小站“把 y 放到托盘”并到世界函数站。k=3、b=4 → y=10
+      // 进托盘；再过两点画 k=0.25 的线 → y=0.5 不是整数，送不进托盘。
+      await enterLab();
+      await evaljs(`document.getElementById('worldFnCard').classList.remove('collapsed')`);
+      await sleep(200);
+      await evaljs(`(function(){
+        var k=document.getElementById('worldFnKRange');k.value='3';k.dispatchEvent(new Event('input',{bubbles:true}));
+        var b=document.getElementById('worldFnBRange');b.value='4';b.dispatchEvent(new Event('input',{bubbles:true}));
+        return 'set';
+      })()`);
+      await sleep(400);
+      const msg1 = await evaljs(`(function(){var e=document.getElementById('worldFnMsg');return e?e.textContent:'';})()`);
+      note('after k=3 b=4: ' + msg1);
+      const [sendBtn] = await centers('[data-world="fn-send-y"]');
+      note('fn-send-y button: ' + JSON.stringify(sendBtn));
+      if (sendBtn) { await clickAt(sendBtn.cx, sendBtn.cy); await sleep(300); }
+      const tray1 = await trayState();
+      note('after sending y: tray=' + tray1);
+      // 过两点 (0,0) 和 (4,1)：k=0.25，y=0.5，不是整数。
+      await evaljs(`(function(){
+        document.getElementById('worldFnX1').value='0'; document.getElementById('worldFnY1').value='0';
+        document.getElementById('worldFnX2').value='4'; document.getElementById('worldFnY2').value='1';
+        var b=document.querySelector('[data-world="fn-2pt"]'); if(b) b.click();
+        return 'set-2pt';
+      })()`);
+      await sleep(400);
+      const msg2 = await evaljs(`(function(){var e=document.getElementById('worldFnMsg');return e?e.textContent:'';})()`);
+      note('after two points (0,0)-(4,1): ' + msg2);
+      const [sendBtn2] = await centers('[data-world="fn-send-y"]');
+      if (sendBtn2) { await clickAt(sendBtn2.cx, sendBtn2.cy); await sleep(300); }
+      const tray2 = await trayState();
+      note('after trying to send y=0.5: tray=' + tray2);
+      report.pass = msg1.indexOf('y=10') >= 0 && tray1 === '["10"]' &&
+        msg2.indexOf('y=0.5') >= 0 && tray2 === '["10"]';
+      note(report.pass ? 'RESULT: PASS — fn-send-y puts integer y=10 on the tray and refuses non-integer y=0.5'
+        : 'RESULT: FAIL — fn-send-y broken (see notes above)');
+    } else if (scenario === 'pie-bal-tray') {
+      // 第 6 批：两个自由玩小站往世界托盘送数。分数饼 1/2 + 随便压左边 1，
+      // 都进托盘；刷新后托盘里还是这两个。
+      await enterLab();
+      await evaljs(`(function(){var f=document.getElementById('labMoreFold');if(f)f.click();})()`);
+      await sleep(300);
+      await evaljs(`(function(){var b=[...document.querySelectorAll('#labFracDenomSeg button')].find(function(x){return x.textContent==='2';});if(b)b.click();})()`);
+      await evaljs(`(function(){var r=document.getElementById('labFracNumRange');r.value='1';r.dispatchEvent(new Event('input',{bubbles:true}));})()`);
+      await evaljs(`(function(){var b=document.getElementById('labFracToTray');if(b)b.click();})()`);
+      await sleep(300);
+      const tray1 = await trayState();
+      note('after pie 1/2 to tray: tray=' + tray1);
+      await evaljs(`(function(){var b=document.getElementById('labBalReset');if(b)b.click();})()`);
+      await evaljs(`(function(){var b=document.getElementById('labBalAddL');if(b)b.click();})()`);
+      await evaljs(`(function(){var b=document.getElementById('labBalToTray');if(b)b.click();})()`);
+      await sleep(300);
+      const tray2 = await trayState();
+      note('after free-play balance left=1 to tray: tray=' + tray2);
+      await send('Page.reload', { ignoreCache: true });
+      await sleep(2500);
+      await enterLab();
+      await sleep(300);
+      const tray3 = await trayState();
+      note('after refresh: tray=' + tray3);
+      report.pass = tray1 === '["1/2"]' && tray2 === '["1/2","1"]' && tray3 === '["1/2","1"]';
+      note(report.pass ? 'RESULT: PASS — pie + free-play balance send into the world tray and survive refresh'
+        : 'RESULT: FAIL — station sends did not land in the tray or did not persist');
     } else {
       console.log('unknown scenario: ' + scenario);
       cleanup();

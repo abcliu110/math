@@ -79,10 +79,13 @@ check('report: submitting clears the peek class from the sheet as well',
 check('report: entering the balance question puts the balance on the bench and switches to the balance view',
   app.includes('进天平题，台面就画天平') && app.includes('benchShowBalance = true; benchPreferredView = null;') &&
   app.includes("if (labWorld && !labWorld.benchBalance) benchRun({ type: 'benchBalanceToggle' });"));
-check('combo: combo display follows the world when the balance changes elsewhere',
-  app.includes('function labWbSyncFromWorld()') && app.includes('labWbSyncFromWorld(); // 组合台的盘子跟世界走') && app.includes('function labBalKey()'));
-check('combo: balance sync is a no-op when values are unchanged (keeps piece ids)',
-  app.includes('if (labBalKey() === newKey) return;'));
+// 第 6 批：组合台已删，同步补丁随之删掉——托盘和天平站直接读世界，
+// 世界一变就重画（worldPlayRender 里调 labTrayRender）。
+check('merge: combo sync patch is gone, the tray follows the world on every render',
+  app.indexOf('function labWbSyncFromWorld()') === -1 && app.indexOf('function labBalKey()') === -1 &&
+  app.includes("labTrayRender(); // 托盘就是世界里的 tray"));
+check('merge: station weights delete by piece id (take intent), not by render index',
+  app.includes("if (intent.type === 'take')") && app.includes("worldPlayApply(intent, '拿下来了')"));
 check('report: submitting unhides the box even if the student collapsed it',
   app.includes('// 交卷了，报告盒子要看得见：之前学生可能把它收起来了。') && app.includes("box.hidden = false;"));
 

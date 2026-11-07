@@ -529,5 +529,48 @@ let bal2 = MW.apply(MW.LAB_SEEDS['q-balfrac'](), { type: 'procedureStart', labId
 bal2 = MW.apply(bal2, { type: 'balanceClear' }).world;
 check('clearing balance does not earn steps', MW.procedureReport(bal2).score === 0);
 
+// 批 6：合并双 DOM——数轴上的点按零件 id 删（组合台按渲染序号删的教训：
+// 点删只动了本地数组，世界里的点还在，再送一个数就复活，见 repro line-del-stale）。
+// 十格阵检查器多一个“把个数放到托盘”动作（tenframeMint 已在模型里，一直没接上 UI）。
+// 下面的检查在旧代码上应干净失败：旧 take 不动 numline.pts，旧 inspect('tenframe') 没有 actions。
+let nl6 = MW.create({ numline: { min: 0, max: 2 } });
+const nl6a = MW.apply(nl6, { type: 'makePiece', piece: { kind: 'frac', n: 1, d: 2 } });
+nl6 = MW.apply(nl6a.world, { type: 'place', pieceId: nl6a.pieceId, target: 'numline' }).world;
+const nl6b = MW.apply(nl6, { type: 'makePiece', piece: { kind: 'num', v: 1 } });
+nl6 = MW.apply(nl6b.world, { type: 'place', pieceId: nl6b.pieceId, target: 'numline' }).world;
+check('numline place records the piece id on the point (not just the value)',
+  nl6.numline.pts.length === 2 && nl6.numline.pts[0].id === nl6a.pieceId && nl6.numline.pts[1].id === nl6b.pieceId);
+const nl6take = MW.apply(nl6, { type: 'take', pieceId: nl6a.pieceId });
+check('take removes a numline point by piece id: the other point stays, the taken piece is free',
+  nl6take.ok === true && nl6take.world.numline.pts.length === 1 &&
+  nl6take.world.numline.pts[0].id === nl6b.pieceId && MW.Q.str(nl6take.world.numline.pts[0]) === '1' &&
+  nl6take.world.pieces[nl6a.pieceId].at === 'free');
+// 两个值相同的点：按 id 拿只拿走被点的那一个零件，数轴上还剩一个。
+let nl6c = MW.create({ numline: { min: 0, max: 2 } });
+const nl6c1 = MW.apply(nl6c, { type: 'makePiece', piece: { kind: 'frac', n: 1, d: 2 } });
+nl6c = MW.apply(nl6c1.world, { type: 'place', pieceId: nl6c1.pieceId, target: 'numline' }).world;
+const nl6c2 = MW.apply(nl6c, { type: 'makePiece', piece: { kind: 'frac', n: 1, d: 2 } });
+nl6c = MW.apply(nl6c2.world, { type: 'place', pieceId: nl6c2.pieceId, target: 'numline' }).world;
+const nl6ct = MW.apply(nl6c, { type: 'take', pieceId: nl6c2.pieceId });
+check('take with two identical points removes exactly the clicked piece (by id)',
+  nl6ct.ok === true && nl6ct.world.numline.pts.length === 1 &&
+  nl6ct.world.numline.pts[0].id === nl6c1.pieceId &&
+  nl6ct.world.pieces[nl6c2.pieceId].at === 'free' && nl6ct.world.pieces[nl6c1.pieceId].at === 'numline');
+// 天平砝码按 id 拿：左盘 1/2 + 右盘 1/6、1/4，拿掉 1/6，右盘只剩 1/4。
+let bal6 = MW.LAB_SEEDS['q-balfrac']();
+bal6 = MW.apply(bal6, { type: 'balanceAddQty', side: 'R', qty: Q.of(1, 6) }).world;
+bal6 = MW.apply(bal6, { type: 'balanceAddQty', side: 'R', qty: Q.of(1, 4) }).world;
+const bal6R = bal6.balance.R.slice();
+const bal6take = MW.apply(bal6, { type: 'take', pieceId: bal6R[0] });
+check('take removes a balance weight by piece id: the other weight stays on the pan',
+  bal6take.ok === true && bal6take.world.balance.R.length === 1 &&
+  bal6take.world.balance.R[0] === bal6R[1] &&
+  MW.Q.str(MW.derived(bal6take.world).balance.R) === '1/4' &&
+  bal6take.world.pieces[bal6R[0]].at === 'free');
+const insTf6 = MW.inspect(MW.create({ tenframe: { A: 7, B: 0 } }), { apparatus: 'tenframe' });
+check('tenframe inspector offers a mint-to-tray action',
+  insTf6 && insTf6.actions && insTf6.actions.length === 1 &&
+  insTf6.actions[0].intent.type === 'tenframeMint');
+
 console.log('\nmath-world: ' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);
