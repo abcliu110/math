@@ -5309,6 +5309,13 @@ function p3Steps(p){
     {label:&#x27;数轴上两点的距离就是答案&#x27;,score:2,hint:&#x27;看数轴下面的“相差”&#x27;,target:s=&gt;byType(s,&#x27;numline&#x27;),check:(s,D)=&gt;{const nl=byType(s,&#x27;numline&#x27;);if(!nl)return false;const vs=inputs(s,nl).map(l=&gt;D[l.from]&amp;&amp;D[l.from].value).filter(Boolean);return vs.length&gt;=2&amp;&amp;Math.abs(qnum(vs[0])-qnum(vs[1]))===p.ans}}];
 }
 P3.forEach(p=&gt;XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p3Build(p),steps:p3Steps(p)}));
+/* 一年级补充（能用现有器材的）：1.1 比多少、1.3 分与合、1.13 百以内数比大小 */
+const P3B=[
+ {id:&#x27;g1p01&#x27;,point:&#x27;1.1&#x27;,grade:1,domain:&#x27;数与代数&#x27;,tools:&#x27;数字卡 · 数轴&#x27;,kind:&#x27;diff&#x27;,nums:[7,5],ans:2,title:&#x27;比多少：7 个和 5 个，多几个？&#x27;,q:&#x27;一个对一个连线，多出来的就是差。用数轴看两点的距离。&#x27;,why:&#x27;7 − 5 = 2，多 2 个。&#x27;},
+ {id:&#x27;g1p03&#x27;,point:&#x27;1.3&#x27;,grade:1,domain:&#x27;数与代数&#x27;,tools:&#x27;数字卡 · 合并器&#x27;,kind:&#x27;sum&#x27;,nums:[2,3],ans:5,title:&#x27;分与合：2 和 3 合起来是几？&#x27;,q:&#x27;5 可以分成 2 和 3，反过来 2 和 3 合起来就是 5。&#x27;,why:&#x27;整体不变，变的只是两部分：2 + 3 = 5。&#x27;},
+ {id:&#x27;g1p13&#x27;,point:&#x27;1.13&#x27;,grade:1,domain:&#x27;数与代数&#x27;,tools:&#x27;数字卡 · 数轴&#x27;,kind:&#x27;diff&#x27;,nums:[46,38],ans:8,title:&#x27;比大小：46 和 38，相差几？&#x27;,q:&#x27;先比十位：4 个十比 3 个十大。两点的距离就是相差的数。&#x27;,why:&#x27;46 − 38 = 8。十位大的数就大。&#x27;},
+];
+P3B.forEach(p=&gt;XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p3Build(p),steps:p3Steps(p)}));
 
 function startXp(id,m){xp=XP.find(x=&gt;x.id===id);if(!xp)return;mode=m;S=blankScene();xp.build(S);undoSt=[];redoSt=[];sel=null;cardOpen=false;
   run={steps:xp.steps.map((s,i)=&gt;({i,done:false})),ops:0,errors:0,t0:Date.now(),finished:false};$(&#x27;title&#x27;).textContent=xp.title;
