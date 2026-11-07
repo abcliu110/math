@@ -4808,6 +4808,10 @@ const TYPES={
  sim:{label:&#x27;相似图形（放大缩小）&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;相似图形&#x27;,defaults:{k:1},fields:[{k:&#x27;k&#x27;,label:&#x27;相似比（放大几倍）&#x27;,min:1,max:3}],size:()=&gt;[260,190]},
  pyth:{label:&#x27;直角三角形（勾股定理）&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;直角三角形&#x27;,defaults:{a:3,b:2},fields:[{k:&#x27;a&#x27;,label:&#x27;直角边 a&#x27;,min:1,max:12},{k:&#x27;b&#x27;,label:&#x27;直角边 b&#x27;,min:1,max:12}],size:()=&gt;[240,190]},
  trig:{label:&#x27;锐角三角函数&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;三角函数&#x27;,defaults:{deg:45},fields:[{k:&#x27;deg&#x27;,label:&#x27;锐角（度）&#x27;,min:5,max:85,step:5}],size:()=&gt;[240,190]},
+ bag:{label:&#x27;摸球（红、白）&#x27;,group:&#x27;概率&#x27;,prefix:&#x27;袋子&#x27;,defaults:{red:2,white:2},fields:[{k:&#x27;red&#x27;,label:&#x27;红球（个）&#x27;,min:0,max:10},{k:&#x27;white&#x27;,label:&#x27;白球（个）&#x27;,min:0,max:10}],size:()=&gt;[220,160]},
+ cang:{label:&#x27;圆周角与圆心角&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;圆&#x27;,defaults:{c:120},fields:[{k:&#x27;c&#x27;,label:&#x27;圆心角（度）&#x27;,min:10,max:170,step:10}],size:()=&gt;[220,200]},
+ congr:{label:&#x27;全等三角形（三边）&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;全等&#x27;,defaults:{a:4,b:4,c:5},fields:[{k:&#x27;a&#x27;,label:&#x27;第二个三角形：边 1&#x27;,min:1,max:12},{k:&#x27;b&#x27;,label:&#x27;边 2&#x27;,min:1,max:12},{k:&#x27;c&#x27;,label:&#x27;边 3&#x27;,min:1,max:12}],size:()=&gt;[240,190]},
+ tangent:{label:&#x27;直线和圆的位置&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;直线圆&#x27;,defaults:{d:5,r:3},fields:[{k:&#x27;d&#x27;,label:&#x27;圆心到直线的距离&#x27;,min:0,max:8},{k:&#x27;r&#x27;,label:&#x27;半径&#x27;,min:1,max:6}],size:()=&gt;[240,190]},
  parab:{label:&#x27;二次函数 y = ax² + bx + c&#x27;,group:&#x27;函数&#x27;,prefix:&#x27;抛物线&#x27;,defaults:{a:1,b:-2,c:0},fields:[{k:&#x27;a&#x27;,label:&#x27;a&#x27;,min:-3,max:3},{k:&#x27;b&#x27;,label:&#x27;b&#x27;,min:-6,max:6},{k:&#x27;c&#x27;,label:&#x27;c&#x27;,min:-6,max:6}],size:()=&gt;[240,190]},
  hyper:{label:&#x27;反比例 y = k/x&#x27;,group:&#x27;函数&#x27;,prefix:&#x27;反比例&#x27;,defaults:{k:2},fields:[{k:&#x27;k&#x27;,label:&#x27;k&#x27;,min:-8,max:8}],size:()=&gt;[240,190]},
  ineq:{label:&#x27;不等式的解集（数轴）&#x27;,group:&#x27;关系&#x27;,prefix:&#x27;解集&#x27;,defaults:{b:2,op:1},fields:[{k:&#x27;b&#x27;,label:&#x27;边界（数）&#x27;,min:-6,max:6},{k:&#x27;op&#x27;,label:&#x27;方向（0：x＜，1：x＞）&#x27;,min:0,max:1}],size:()=&gt;[300,110]},
@@ -4895,6 +4899,13 @@ function evaluate(s){
       else if(d.value.d===1)sig(&#x27;ok&#x27;,`${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`);
       else sig(&#x27;warn&#x27;,`除不尽：${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`)}
     if(e.type===&#x27;angle&#x27;){const k=e.props.deg;const kind=k===0?&#x27;零度角&#x27;:k&lt;90?&#x27;锐角&#x27;:k===90?&#x27;直角&#x27;:k&lt;180?&#x27;钝角&#x27;:k===180?&#x27;平角&#x27;:&#x27;大于平角&#x27;;sig(k===90?&#x27;ok&#x27;:&#x27;info&#x27;,`${k}°：${kind}`)}
+    if(e.type===&#x27;bag&#x27;){const {red,white}=e.props,t=red+white;
+      if(t===0)sig(&#x27;info&#x27;,&#x27;袋子里没有球&#x27;);
+      else{const g=(x,y)=&gt;y?g(y,x%y):x;const k=g(red,t)||1;const n=red/k,dn=t/k;sig(red&gt;0?&#x27;ok&#x27;:&#x27;info&#x27;,`P(红) = ${n}/${dn}`)}}
+    if(e.type===&#x27;cang&#x27;){const c=e.props.c;sig(&#x27;ok&#x27;,`圆周角 ${c/2}°（圆心角 ${c}° 的一半）`)}
+    if(e.type===&#x27;congr&#x27;){const x=[3,4,5],y=[e.props.a,e.props.b,e.props.c];const same=[...x].sort().join()===[...y].sort().join();
+      sig(same?&#x27;ok&#x27;:&#x27;info&#x27;,same?&#x27;三边对应相等，全等（SSS）&#x27;:&#x27;三边不一样，不全等&#x27;)}
+    if(e.type===&#x27;tangent&#x27;){const {d,r}=e.props;sig(d&gt;r?&#x27;info&#x27;:d===r?&#x27;ok&#x27;:&#x27;warn&#x27;,d&gt;r?&#x27;直线和圆相离（d &gt; r）&#x27;:d===r?&#x27;直线和圆相切（d = r）&#x27;:&#x27;直线和圆相交（d &lt; r）&#x27;)}
     if(e.type===&#x27;sim&#x27;){const k=e.props.k;sig(&#x27;info&#x27;,`相似比 1 : ${k}，面积比 1 : ${k*k}`)}
     if(e.type===&#x27;pyth&#x27;){const {a,b}=e.props,c=Math.sqrt(a*a+b*b);const ci=Number.isInteger(c);sig(ci?&#x27;ok&#x27;:&#x27;info&#x27;,ci?`斜边 ${c}，是勾股数`:`斜边 ${c.toFixed(2)}（不是整数）`)}
     if(e.type===&#x27;trig&#x27;){const r=e.props.deg*Math.PI/180;sig(&#x27;info&#x27;,`∠${e.props.deg}°：sin = ${Math.sin(r).toFixed(2)}，cos = ${Math.cos(r).toFixed(2)}，tan = ${Math.tan(r).toFixed(2)}`)}
@@ -5058,7 +5069,14 @@ const DRAW={
  num:(e,d,w,h)=&gt;`&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;${h/2+14}&quot; text-anchor=&quot;middle&quot; font-size=&quot;28&quot;&gt;${e.props.v}&lt;/text&gt;`,
  frac:(e,d,w)=&gt;{const {n,d:dd}=e.props,rows=Math.max(1,Math.ceil(n/dd)),bw=w-24,sw=bw/dd;let s=`&lt;text class=&quot;big&quot; x=&quot;${w-12}&quot; y=&quot;18&quot; text-anchor=&quot;end&quot; font-size=&quot;14&quot;&gt;${n}/${dd}&lt;/text&gt;`;
    for(let r=0;r&lt;rows;r++)for(let i=0;i&lt;dd;i++){const k=r*dd+i+1;s+=`&lt;rect class=&quot;seg-cell&quot; data-seg=&quot;${k}&quot; x=&quot;${12+i*sw}&quot; y=&quot;${28+r*28}&quot; width=&quot;${sw}&quot; height=&quot;22&quot; fill=&quot;${k&lt;=n?&#x27;#ff9f43&#x27;:&#x27;#fff&#x27;}&quot; stroke=&quot;#5b6778&quot; stroke-width=&quot;1&quot;/&gt;`}return s},
- sim:(e,d,w,h)=&gt;{const k=e.props.k,ox=20,oy=h-20;
+ bag:(e,d,w,h)=&gt;{const {red,white}=e.props;let s=&#x27;&#x27;;for(let i=0;i&lt;red;i++)s+=`&lt;circle cx=&quot;${30+i*22}&quot; cy=&quot;${h/2-10}&quot; r=&quot;8&quot; fill=&quot;#ef4444&quot; stroke=&quot;#1d2633&quot;/&gt;`;for(let i=0;i&lt;white;i++)s+=`&lt;circle cx=&quot;${30+i*22}&quot; cy=&quot;${h/2+20}&quot; r=&quot;8&quot; fill=&quot;#fff&quot; stroke=&quot;#1d2633&quot;/&gt;`;return s+`&lt;text class=&quot;ink&quot; x=&quot;${w/2}&quot; y=&quot;${h-10}&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot;&gt;红 ${red} · 白 ${white}&lt;/text&gt;`},
+cang:(e,d,w,h)=&gt;{const c=e.props.c,R=70,cx=w/2,cy=h/2,rad=x=&gt;x*Math.PI/180;const A=[cx+R,cy];const B=[cx+R*Math.cos(rad(c)),cy-R*Math.sin(rad(c))];const P=[cx-R*Math.cos(rad(c/2)),cy+R*Math.sin(rad(c/2))];
+   return `&lt;circle cx=&quot;${cx}&quot; cy=&quot;${cy}&quot; r=&quot;${R}&quot; fill=&quot;none&quot; stroke=&quot;#1d2633&quot; stroke-width=&quot;2&quot;/&gt;&lt;line x1=&quot;${cx}&quot; y1=&quot;${cy}&quot; x2=&quot;${B[0]}&quot; y2=&quot;${B[1]}&quot; stroke=&quot;#94a3b8&quot; stroke-dasharray=&quot;4 3&quot;/&gt;&lt;line x1=&quot;${cx}&quot; y1=&quot;${cy}&quot; x2=&quot;${A[0]}&quot; y2=&quot;${A[1]}&quot; stroke=&quot;#94a3b8&quot; stroke-dasharray=&quot;4 3&quot;/&gt;&lt;line x1=&quot;${P[0]}&quot; y1=&quot;${P[1]}&quot; x2=&quot;${A[0]}&quot; y2=&quot;${A[1]}&quot; stroke=&quot;#ff9f43&quot; stroke-width=&quot;2&quot;/&gt;&lt;line x1=&quot;${P[0]}&quot; y1=&quot;${P[1]}&quot; x2=&quot;${B[0]}&quot; y2=&quot;${B[1]}&quot; stroke=&quot;#ff9f43&quot; stroke-width=&quot;2&quot;/&gt;&lt;text class=&quot;ink&quot; x=&quot;${cx}&quot; y=&quot;${h-8}&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot;&gt;圆心角 ${c}°&lt;/text&gt;`},
+congr:(e,d,w,h)=&gt;{const y=[e.props.a,e.props.b,e.props.c],S=12,x0=20,yb=h-30;const tri=(a,b,c,ox)=&gt;{const A=[ox,yb],B=[ox+a*S,yb];const cx2=(c*c+a*a-b*b)/(2*a),cy2=c*c-cx2*cx2;if(cy2&lt;=0)return &#x27;&lt;text class=&quot;ink&quot; x=&quot;&#x27;+(ox+10)+&#x27;&quot; y=&quot;60&quot; font-size=&quot;12&quot;&gt;画不出这个三角形&lt;/text&gt;&#x27;;const C=[ox+cx2*S,yb-Math.sqrt(cy2)*S];return `&lt;polygon points=&quot;${A[0]},${A[1]} ${B[0]},${B[1]} ${C[0].toFixed(1)},${C[1].toFixed(1)}&quot; fill=&quot;#ddd6fe&quot; stroke=&quot;#5b21b6&quot; stroke-width=&quot;2&quot;/&gt;`};
+   return tri(3,4,5,x0)+tri(y[0],y[1],y[2],x0+130)},
+tangent:(e,d,w,h)=&gt;{const {d:dd,r}=e.props,cx=w/2,cy=h/2+10,R=r*12;const ly=cy-dd*12;
+   return `&lt;circle cx=&quot;${cx}&quot; cy=&quot;${cy}&quot; r=&quot;${R}&quot; fill=&quot;#e0f2fe&quot; stroke=&quot;#0369a1&quot; stroke-width=&quot;2&quot;/&gt;&lt;line x1=&quot;10&quot; y1=&quot;${ly}&quot; x2=&quot;${w-10}&quot; y2=&quot;${ly}&quot; stroke=&quot;#7c3aed&quot; stroke-width=&quot;2&quot;/&gt;&lt;circle cx=&quot;${cx}&quot; cy=&quot;${cy}&quot; r=&quot;3&quot; fill=&quot;#0369a1&quot;/&gt;&lt;text class=&quot;ink&quot; x=&quot;${w/2}&quot; y=&quot;${h-6}&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot;&gt;d=${dd}  r=${r}&lt;/text&gt;`},
+sim:(e,d,w,h)=&gt;{const k=e.props.k,ox=20,oy=h-20;
    return `&lt;rect x=&quot;${ox}&quot; y=&quot;${oy-30}&quot; width=&quot;40&quot; height=&quot;30&quot; fill=&quot;#e0f2fe&quot; stroke=&quot;#0369a1&quot; stroke-width=&quot;2&quot;/&gt;&lt;rect x=&quot;${ox+70}&quot; y=&quot;${oy-30*k}&quot; width=&quot;${40*k}&quot; height=&quot;${30*k}&quot; fill=&quot;#fde68a&quot; stroke=&quot;#92400e&quot; stroke-width=&quot;2&quot;/&gt;&lt;text class=&quot;ink&quot; x=&quot;${ox+20}&quot; y=&quot;${oy+14}&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot;&gt;原图&lt;/text&gt;&lt;text class=&quot;ink&quot; x=&quot;${ox+70+20*k}&quot; y=&quot;${oy+14}&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot;&gt;${k} 倍&lt;/text&gt;`},
 pyth:(e,d,w,h)=&gt;{const {a,b}=e.props,S=12,x0=40,y0=h-30;const px=x0+a*S,py=y0-b*S;const c=Math.sqrt(a*a+b*b);
    return `&lt;polygon points=&quot;${x0},${y0} ${px},${y0} ${x0},${py}&quot; fill=&quot;#dcfce7&quot; stroke=&quot;#166534&quot; stroke-width=&quot;2&quot;/&gt;&lt;rect x=&quot;${x0}&quot; y=&quot;${y0-10}&quot; width=&quot;10&quot; height=&quot;10&quot; fill=&quot;none&quot; stroke=&quot;#166534&quot;/&gt;&lt;text class=&quot;ink&quot; x=&quot;${(x0+px)/2}&quot; y=&quot;${y0+14}&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot;&gt;a=${a}&lt;/text&gt;&lt;text class=&quot;ink&quot; x=&quot;${x0-8}&quot; y=&quot;${(y0+py)/2}&quot; text-anchor=&quot;end&quot; font-size=&quot;12&quot;&gt;b=${b}&lt;/text&gt;&lt;text class=&quot;ink&quot; x=&quot;${(px+x0)/2+8}&quot; y=&quot;${(py+y0)/2-6}&quot; font-size=&quot;12&quot;&gt;c=${Number.isInteger(c)?c:c.toFixed(2)}&lt;/text&gt;`},
@@ -5676,6 +5694,27 @@ const P10=[
          {label:&#x27;sin 30° = 0.50&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;trig&#x27;),check:(s,D)=&gt;{const x=byType(s,&#x27;trig&#x27;);return (D[x].sig||[]).some(t=&gt;t.tx.includes(&#x27;sin = 0.50&#x27;))}}]},
 ];
 P10.forEach(p=&gt;XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
+
+/* ========== 初中第三批：摸球概率、圆周角、全等三角形、直线和圆 ========== */
+const P11=[
+ {id:&#x27;g9_bag&#x27;,grade:9,domain:&#x27;统计与概率&#x27;,tools:&#x27;摸球袋&#x27;,title:&#x27;随机事件：袋子里 3 个红球、1 个白球，摸到红球的概率是几？&#x27;,q:&#x27;概率 = 想要的情况数 ÷ 所有可能的情况数。&#x27;,why:&#x27;一共 4 个球，红球 3 个，P(红) = 3/4。&#x27;,
+  build:s=&gt;{addEnt(s,&#x27;bag&#x27;,200,60,{red:2,white:2})},
+  steps:[{label:&#x27;把红球调成 3 个，白球调成 1 个&#x27;,score:1,hint:&#x27;点摸球袋卡，把红球调到 3、白球调到 1&#x27;,target:T45(&#x27;bag&#x27;),check:(s,D)=&gt;{const p=s.entities[byType(s,&#x27;bag&#x27;)].props;return p.red===3&amp;&amp;p.white===1}},
+         {label:&#x27;P(红) = 3/4&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;bag&#x27;),check:(s,D)=&gt;{const b=byType(s,&#x27;bag&#x27;);return (D[b].sig||[]).some(x=&gt;x.tx===&#x27;P(红) = 3/4&#x27;)}}]},
+ {id:&#x27;g9_6&#x27;,grade:9,domain:&#x27;图形与几何&#x27;,tools:&#x27;圆周角&#x27;,title:&#x27;圆周角：圆心角是 80°，同弧所对的圆周角是几度？&#x27;,q:&#x27;同弧所对的圆周角等于圆心角的一半。&#x27;,why:&#x27;80° ÷ 2 = 40°。&#x27;,
+  build:s=&gt;{addEnt(s,&#x27;cang&#x27;,200,60,{c:120})},
+  steps:[{label:&#x27;把圆心角调到 80°&#x27;,score:1,hint:&#x27;点圆卡，把圆心角调到 80&#x27;,target:T45(&#x27;cang&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;cang&#x27;)].props.c===80},
+         {label:&#x27;圆周角是 40°&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;cang&#x27;),check:(s,D)=&gt;{const c=byType(s,&#x27;cang&#x27;);return (D[c].sig||[]).some(x=&gt;x.tx.includes(&#x27;圆周角 40°&#x27;))}}]},
+ {id:&#x27;g8_2&#x27;,grade:8,domain:&#x27;图形与几何&#x27;,tools:&#x27;全等三角形&#x27;,title:&#x27;全等三角形（SSS）：三边分别是 3、4、5 的两个三角形全等吗？&#x27;,q:&#x27;三边对应相等的两个三角形全等，简写 SSS。&#x27;,why:&#x27;两个三角形的三条边分别相等（3、4、5），所以全等。&#x27;,
+  build:s=&gt;{addEnt(s,&#x27;congr&#x27;,200,60,{a:4,b:4,c:5})},
+  steps:[{label:&#x27;第二个三角形的边 1 调成 3&#x27;,score:1,hint:&#x27;点全等卡，把“边 1”调到 3，“边 2”调到 4&#x27;,target:T45(&#x27;congr&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;congr&#x27;)].props.a===3&amp;&amp;s.entities[byType(s,&#x27;congr&#x27;)].props.b===4},
+         {label:&#x27;三边对应相等，全等（SSS）&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;congr&#x27;),check:(s,D)=&gt;{const c=byType(s,&#x27;congr&#x27;);return (D[c].sig||[]).some(x=&gt;x.tx===&#x27;三边对应相等，全等（SSS）&#x27;)}}]},
+ {id:&#x27;g9_7&#x27;,grade:9,domain:&#x27;图形与几何&#x27;,tools:&#x27;直线和圆&#x27;,title:&#x27;直线和圆相切：圆心到直线的距离 d 等于半径 r 时，是什么位置？&#x27;,q:&#x27;d &gt; r 相离，d = r 相切，d &lt; r 相交。&#x27;,why:&#x27;d = r 时，直线和圆只有一个公共点，叫相切。&#x27;,
+  build:s=&gt;{addEnt(s,&#x27;tangent&#x27;,200,60,{d:5,r:3})},
+  steps:[{label:&#x27;把圆心到直线的距离调到 3&#x27;,score:1,hint:&#x27;点直线圆卡，把 d 调到 3&#x27;,target:T45(&#x27;tangent&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;tangent&#x27;)].props.d===3},
+         {label:&#x27;直线和圆相切&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;tangent&#x27;),check:(s,D)=&gt;{const t=byType(s,&#x27;tangent&#x27;);return (D[t].sig||[]).some(x=&gt;x.tx===&#x27;直线和圆相切（d = r）&#x27;)}}]},
+];
+P11.forEach(p=&gt;XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
 
 function startXp(id,m){xp=XP.find(x=&gt;x.id===id);if(!xp)return;mode=m;S=blankScene();xp.build(S);undoSt=[];redoSt=[];sel=null;cardOpen=false;
   run={steps:xp.steps.map((s,i)=&gt;({i,done:false})),ops:0,errors:0,t0:Date.now(),finished:false};$(&#x27;title&#x27;).textContent=xp.title;
@@ -50515,7 +50554,7 @@ const LAB_POINT_XP = {
   '4.16':'g4_16','4.17':'g4_17',
   '5.1':'g5_1','5.2':'g5_2','5.3':'g5_3','5.4':'g5_4','5.5':'g5_5','5.6':'g5_6','5.7':'g5_7','5.8':'g5_8',
   '5.9':'g5_9','5.10':'g5_10','5.11':'g5_11','5.12':'g5_12','5.13':'g5_13','5.14':'g5_14',
-  '7.6':'g7_eq','7.7':'g7_eq','7.15':'g7_ineq','8.11':'g8_11','9.3':'g9_parab','9.11':'g8_hyper','9.12':'g9_12','9.14':'g9_14',
+  '7.6':'g7_eq','7.7':'g7_eq','8.2':'g8_2','9.6':'g9_6','9.7':'g9_7','9.9':'g9_bag','9.10':'g9_bag','7.15':'g7_ineq','8.11':'g8_11','9.3':'g9_parab','9.11':'g8_hyper','9.12':'g9_12','9.14':'g9_14',
   '6.1':'g6_1','6.2':'g6_2','6.3':'g6_3','6.4':'g6_4','6.5':'g6_5','6.6':'g6_6','6.7':'g6_7','6.8':'g6_8',
   '6.9':'g6_9','6.10':'g6_10','6.11':'g6_11','6.12':'g6_12','6.13':'g6_13',
 };

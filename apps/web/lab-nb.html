@@ -205,6 +205,10 @@ const TYPES={
  sim:{label:'相似图形（放大缩小）',group:'图形',prefix:'相似图形',defaults:{k:1},fields:[{k:'k',label:'相似比（放大几倍）',min:1,max:3}],size:()=>[260,190]},
  pyth:{label:'直角三角形（勾股定理）',group:'图形',prefix:'直角三角形',defaults:{a:3,b:2},fields:[{k:'a',label:'直角边 a',min:1,max:12},{k:'b',label:'直角边 b',min:1,max:12}],size:()=>[240,190]},
  trig:{label:'锐角三角函数',group:'图形',prefix:'三角函数',defaults:{deg:45},fields:[{k:'deg',label:'锐角（度）',min:5,max:85,step:5}],size:()=>[240,190]},
+ bag:{label:'摸球（红、白）',group:'概率',prefix:'袋子',defaults:{red:2,white:2},fields:[{k:'red',label:'红球（个）',min:0,max:10},{k:'white',label:'白球（个）',min:0,max:10}],size:()=>[220,160]},
+ cang:{label:'圆周角与圆心角',group:'图形',prefix:'圆',defaults:{c:120},fields:[{k:'c',label:'圆心角（度）',min:10,max:170,step:10}],size:()=>[220,200]},
+ congr:{label:'全等三角形（三边）',group:'图形',prefix:'全等',defaults:{a:4,b:4,c:5},fields:[{k:'a',label:'第二个三角形：边 1',min:1,max:12},{k:'b',label:'边 2',min:1,max:12},{k:'c',label:'边 3',min:1,max:12}],size:()=>[240,190]},
+ tangent:{label:'直线和圆的位置',group:'图形',prefix:'直线圆',defaults:{d:5,r:3},fields:[{k:'d',label:'圆心到直线的距离',min:0,max:8},{k:'r',label:'半径',min:1,max:6}],size:()=>[240,190]},
  parab:{label:'二次函数 y = ax² + bx + c',group:'函数',prefix:'抛物线',defaults:{a:1,b:-2,c:0},fields:[{k:'a',label:'a',min:-3,max:3},{k:'b',label:'b',min:-6,max:6},{k:'c',label:'c',min:-6,max:6}],size:()=>[240,190]},
  hyper:{label:'反比例 y = k/x',group:'函数',prefix:'反比例',defaults:{k:2},fields:[{k:'k',label:'k',min:-8,max:8}],size:()=>[240,190]},
  ineq:{label:'不等式的解集（数轴）',group:'关系',prefix:'解集',defaults:{b:2,op:1},fields:[{k:'b',label:'边界（数）',min:-6,max:6},{k:'op',label:'方向（0：x＜，1：x＞）',min:0,max:1}],size:()=>[300,110]},
@@ -292,6 +296,13 @@ function evaluate(s){
       else if(d.value.d===1)sig('ok',`${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`);
       else sig('warn',`除不尽：${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`)}
     if(e.type==='angle'){const k=e.props.deg;const kind=k===0?'零度角':k<90?'锐角':k===90?'直角':k<180?'钝角':k===180?'平角':'大于平角';sig(k===90?'ok':'info',`${k}°：${kind}`)}
+    if(e.type==='bag'){const {red,white}=e.props,t=red+white;
+      if(t===0)sig('info','袋子里没有球');
+      else{const g=(x,y)=>y?g(y,x%y):x;const k=g(red,t)||1;const n=red/k,dn=t/k;sig(red>0?'ok':'info',`P(红) = ${n}/${dn}`)}}
+    if(e.type==='cang'){const c=e.props.c;sig('ok',`圆周角 ${c/2}°（圆心角 ${c}° 的一半）`)}
+    if(e.type==='congr'){const x=[3,4,5],y=[e.props.a,e.props.b,e.props.c];const same=[...x].sort().join()===[...y].sort().join();
+      sig(same?'ok':'info',same?'三边对应相等，全等（SSS）':'三边不一样，不全等')}
+    if(e.type==='tangent'){const {d,r}=e.props;sig(d>r?'info':d===r?'ok':'warn',d>r?'直线和圆相离（d > r）':d===r?'直线和圆相切（d = r）':'直线和圆相交（d < r）')}
     if(e.type==='sim'){const k=e.props.k;sig('info',`相似比 1 : ${k}，面积比 1 : ${k*k}`)}
     if(e.type==='pyth'){const {a,b}=e.props,c=Math.sqrt(a*a+b*b);const ci=Number.isInteger(c);sig(ci?'ok':'info',ci?`斜边 ${c}，是勾股数`:`斜边 ${c.toFixed(2)}（不是整数）`)}
     if(e.type==='trig'){const r=e.props.deg*Math.PI/180;sig('info',`∠${e.props.deg}°：sin = ${Math.sin(r).toFixed(2)}，cos = ${Math.cos(r).toFixed(2)}，tan = ${Math.tan(r).toFixed(2)}`)}
@@ -455,7 +466,14 @@ const DRAW={
  num:(e,d,w,h)=>`<text class="big" x="${w/2}" y="${h/2+14}" text-anchor="middle" font-size="28">${e.props.v}</text>`,
  frac:(e,d,w)=>{const {n,d:dd}=e.props,rows=Math.max(1,Math.ceil(n/dd)),bw=w-24,sw=bw/dd;let s=`<text class="big" x="${w-12}" y="18" text-anchor="end" font-size="14">${n}/${dd}</text>`;
    for(let r=0;r<rows;r++)for(let i=0;i<dd;i++){const k=r*dd+i+1;s+=`<rect class="seg-cell" data-seg="${k}" x="${12+i*sw}" y="${28+r*28}" width="${sw}" height="22" fill="${k<=n?'#ff9f43':'#fff'}" stroke="#5b6778" stroke-width="1"/>`}return s},
- sim:(e,d,w,h)=>{const k=e.props.k,ox=20,oy=h-20;
+ bag:(e,d,w,h)=>{const {red,white}=e.props;let s='';for(let i=0;i<red;i++)s+=`<circle cx="${30+i*22}" cy="${h/2-10}" r="8" fill="#ef4444" stroke="#1d2633"/>`;for(let i=0;i<white;i++)s+=`<circle cx="${30+i*22}" cy="${h/2+20}" r="8" fill="#fff" stroke="#1d2633"/>`;return s+`<text class="ink" x="${w/2}" y="${h-10}" text-anchor="middle" font-size="12">红 ${red} · 白 ${white}</text>`},
+cang:(e,d,w,h)=>{const c=e.props.c,R=70,cx=w/2,cy=h/2,rad=x=>x*Math.PI/180;const A=[cx+R,cy];const B=[cx+R*Math.cos(rad(c)),cy-R*Math.sin(rad(c))];const P=[cx-R*Math.cos(rad(c/2)),cy+R*Math.sin(rad(c/2))];
+   return `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="#1d2633" stroke-width="2"/><line x1="${cx}" y1="${cy}" x2="${B[0]}" y2="${B[1]}" stroke="#94a3b8" stroke-dasharray="4 3"/><line x1="${cx}" y1="${cy}" x2="${A[0]}" y2="${A[1]}" stroke="#94a3b8" stroke-dasharray="4 3"/><line x1="${P[0]}" y1="${P[1]}" x2="${A[0]}" y2="${A[1]}" stroke="#ff9f43" stroke-width="2"/><line x1="${P[0]}" y1="${P[1]}" x2="${B[0]}" y2="${B[1]}" stroke="#ff9f43" stroke-width="2"/><text class="ink" x="${cx}" y="${h-8}" text-anchor="middle" font-size="12">圆心角 ${c}°</text>`},
+congr:(e,d,w,h)=>{const y=[e.props.a,e.props.b,e.props.c],S=12,x0=20,yb=h-30;const tri=(a,b,c,ox)=>{const A=[ox,yb],B=[ox+a*S,yb];const cx2=(c*c+a*a-b*b)/(2*a),cy2=c*c-cx2*cx2;if(cy2<=0)return '<text class="ink" x="'+(ox+10)+'" y="60" font-size="12">画不出这个三角形</text>';const C=[ox+cx2*S,yb-Math.sqrt(cy2)*S];return `<polygon points="${A[0]},${A[1]} ${B[0]},${B[1]} ${C[0].toFixed(1)},${C[1].toFixed(1)}" fill="#ddd6fe" stroke="#5b21b6" stroke-width="2"/>`};
+   return tri(3,4,5,x0)+tri(y[0],y[1],y[2],x0+130)},
+tangent:(e,d,w,h)=>{const {d:dd,r}=e.props,cx=w/2,cy=h/2+10,R=r*12;const ly=cy-dd*12;
+   return `<circle cx="${cx}" cy="${cy}" r="${R}" fill="#e0f2fe" stroke="#0369a1" stroke-width="2"/><line x1="10" y1="${ly}" x2="${w-10}" y2="${ly}" stroke="#7c3aed" stroke-width="2"/><circle cx="${cx}" cy="${cy}" r="3" fill="#0369a1"/><text class="ink" x="${w/2}" y="${h-6}" text-anchor="middle" font-size="12">d=${dd}  r=${r}</text>`},
+sim:(e,d,w,h)=>{const k=e.props.k,ox=20,oy=h-20;
    return `<rect x="${ox}" y="${oy-30}" width="40" height="30" fill="#e0f2fe" stroke="#0369a1" stroke-width="2"/><rect x="${ox+70}" y="${oy-30*k}" width="${40*k}" height="${30*k}" fill="#fde68a" stroke="#92400e" stroke-width="2"/><text class="ink" x="${ox+20}" y="${oy+14}" text-anchor="middle" font-size="12">原图</text><text class="ink" x="${ox+70+20*k}" y="${oy+14}" text-anchor="middle" font-size="12">${k} 倍</text>`},
 pyth:(e,d,w,h)=>{const {a,b}=e.props,S=12,x0=40,y0=h-30;const px=x0+a*S,py=y0-b*S;const c=Math.sqrt(a*a+b*b);
    return `<polygon points="${x0},${y0} ${px},${y0} ${x0},${py}" fill="#dcfce7" stroke="#166534" stroke-width="2"/><rect x="${x0}" y="${y0-10}" width="10" height="10" fill="none" stroke="#166534"/><text class="ink" x="${(x0+px)/2}" y="${y0+14}" text-anchor="middle" font-size="12">a=${a}</text><text class="ink" x="${x0-8}" y="${(y0+py)/2}" text-anchor="end" font-size="12">b=${b}</text><text class="ink" x="${(px+x0)/2+8}" y="${(py+y0)/2-6}" font-size="12">c=${Number.isInteger(c)?c:c.toFixed(2)}</text>`},
@@ -1073,6 +1091,27 @@ const P10=[
          {label:'sin 30° = 0.50',score:2,hint:'看下面的文字',target:T45('trig'),check:(s,D)=>{const x=byType(s,'trig');return (D[x].sig||[]).some(t=>t.tx.includes('sin = 0.50'))}}]},
 ];
 P10.forEach(p=>XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
+
+/* ========== 初中第三批：摸球概率、圆周角、全等三角形、直线和圆 ========== */
+const P11=[
+ {id:'g9_bag',grade:9,domain:'统计与概率',tools:'摸球袋',title:'随机事件：袋子里 3 个红球、1 个白球，摸到红球的概率是几？',q:'概率 = 想要的情况数 ÷ 所有可能的情况数。',why:'一共 4 个球，红球 3 个，P(红) = 3/4。',
+  build:s=>{addEnt(s,'bag',200,60,{red:2,white:2})},
+  steps:[{label:'把红球调成 3 个，白球调成 1 个',score:1,hint:'点摸球袋卡，把红球调到 3、白球调到 1',target:T45('bag'),check:(s,D)=>{const p=s.entities[byType(s,'bag')].props;return p.red===3&&p.white===1}},
+         {label:'P(红) = 3/4',score:2,hint:'看下面的文字',target:T45('bag'),check:(s,D)=>{const b=byType(s,'bag');return (D[b].sig||[]).some(x=>x.tx==='P(红) = 3/4')}}]},
+ {id:'g9_6',grade:9,domain:'图形与几何',tools:'圆周角',title:'圆周角：圆心角是 80°，同弧所对的圆周角是几度？',q:'同弧所对的圆周角等于圆心角的一半。',why:'80° ÷ 2 = 40°。',
+  build:s=>{addEnt(s,'cang',200,60,{c:120})},
+  steps:[{label:'把圆心角调到 80°',score:1,hint:'点圆卡，把圆心角调到 80',target:T45('cang'),check:(s,D)=>s.entities[byType(s,'cang')].props.c===80},
+         {label:'圆周角是 40°',score:2,hint:'看下面的文字',target:T45('cang'),check:(s,D)=>{const c=byType(s,'cang');return (D[c].sig||[]).some(x=>x.tx.includes('圆周角 40°'))}}]},
+ {id:'g8_2',grade:8,domain:'图形与几何',tools:'全等三角形',title:'全等三角形（SSS）：三边分别是 3、4、5 的两个三角形全等吗？',q:'三边对应相等的两个三角形全等，简写 SSS。',why:'两个三角形的三条边分别相等（3、4、5），所以全等。',
+  build:s=>{addEnt(s,'congr',200,60,{a:4,b:4,c:5})},
+  steps:[{label:'第二个三角形的边 1 调成 3',score:1,hint:'点全等卡，把“边 1”调到 3，“边 2”调到 4',target:T45('congr'),check:(s,D)=>s.entities[byType(s,'congr')].props.a===3&&s.entities[byType(s,'congr')].props.b===4},
+         {label:'三边对应相等，全等（SSS）',score:2,hint:'看下面的文字',target:T45('congr'),check:(s,D)=>{const c=byType(s,'congr');return (D[c].sig||[]).some(x=>x.tx==='三边对应相等，全等（SSS）')}}]},
+ {id:'g9_7',grade:9,domain:'图形与几何',tools:'直线和圆',title:'直线和圆相切：圆心到直线的距离 d 等于半径 r 时，是什么位置？',q:'d > r 相离，d = r 相切，d < r 相交。',why:'d = r 时，直线和圆只有一个公共点，叫相切。',
+  build:s=>{addEnt(s,'tangent',200,60,{d:5,r:3})},
+  steps:[{label:'把圆心到直线的距离调到 3',score:1,hint:'点直线圆卡，把 d 调到 3',target:T45('tangent'),check:(s,D)=>s.entities[byType(s,'tangent')].props.d===3},
+         {label:'直线和圆相切',score:2,hint:'看下面的文字',target:T45('tangent'),check:(s,D)=>{const t=byType(s,'tangent');return (D[t].sig||[]).some(x=>x.tx==='直线和圆相切（d = r）')}}]},
+];
+P11.forEach(p=>XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
 
 function startXp(id,m){xp=XP.find(x=>x.id===id);if(!xp)return;mode=m;S=blankScene();xp.build(S);undoSt=[];redoSt=[];sel=null;cardOpen=false;
   run={steps:xp.steps.map((s,i)=>({i,done:false})),ops:0,errors:0,t0:Date.now(),finished:false};$('title').textContent=xp.title;
