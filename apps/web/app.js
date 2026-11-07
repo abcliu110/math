@@ -1973,7 +1973,9 @@ const NAV_DEFS = {
   'demo-numplay': { crumbs: ['数学', '动画', '数一数：一个数，五种样子'], target: 'demo-numplay' },
   'demo-fracnumline': { crumbs: ['数学', '动画', '分数变数线'], target: 'demo-fracnumline' },
   why:        { crumbs: ['数学', '动画', '为什么小实验'], target: 'why' },
-  lab:        { crumbs: ['数学', '数学实验室'], target: 'lab' },
+  lab:        { crumbs: ['数学', '数学实验室'], target: 'lab', action: () => { if (typeof worldPlayRender === 'function') worldPlayRender(); } },
+  // world 入口已并入实验室（NB 用法）；旧链接/书签仍进 lab。
+  world:      { crumbs: ['数学', '数学实验室'], target: 'lab', action: () => { if (typeof worldPlayRender === 'function') worldPlayRender(); } },
   review:     { crumbs: ['数学', '错题本'], target: 'review', action: renderWrongBook },
   'today-review': { crumbs: ['数学', '今天复习'], target: 'grades', action: renderReview },
   progress:   { crumbs: ['数学', '我的进度'], target: 'progressCard', action: renderProgress },
@@ -2065,7 +2067,7 @@ function viewForKey(key) {
   if (key === 'demos') return 'demos';
   if (key === 'demo-tenframe' || key === 'demo-fraction' || key === 'demo-balance' || key === 'demo-function' || key === 'demo-count' || key === 'demo-position' || key === 'demo-split' || key === 'demo-addsub' || key === 'demo-solids' || key === 'demo-bundle' || key === 'demo-clock' || key === 'demo-tangram' || key === 'demo-sort' || key === 'demo-hundred' || key === 'demo-shop' || key === 'demo-place' || key === 'demo-pattern' || key === 'demo-ruler' || key === 'demo-estimate' || key === 'demo-angle' || key === 'demo-array' || key === 'demo-observe' || key === 'demo-time' || key === 'demo-share' || key === 'demo-motion' || key === 'demo-mixop' || key === 'demo-remain' || key === 'demo-thousand' || key === 'demo-weight' || key === 'demo-chart' || key === 'demo-logic' || key === 'demo-pair' || key === 'demo-elapsed' || key === 'demo-verify' || key === 'demo-units' || key === 'demo-times' || key === 'demo-splitmul' || key === 'demo-rectsq' || key === 'demo-venn' || key === 'demo-compass' || key === 'demo-divplace' || key === 'demo-stattable' || key === 'demo-fourgrid' || key === 'demo-area' || key === 'demo-calendar' || key === 'demo-decimal' || key === 'demo-bignum' || key === 'demo-field' || key === 'demo-protractor' || key === 'demo-areamodel' || key === 'demo-parallelogram' || key === 'demo-trialdiv' || key === 'demo-baraxis' || key === 'demo-teatime' || key === 'demo-zerodiv' || key === 'demo-laws' || key === 'demo-placeslider' || key === 'demo-tearangle' || key === 'demo-decadd' || key === 'demo-moveshape' || key === 'demo-average' || key === 'demo-chickenrabbit' || key === 'demo-crslider' || key === 'demo-crdraw' || key === 'demo-crlist' || key === 'demo-crgolden' || key === 'demo-decmul' || key === 'demo-gridpos' || key === 'demo-decdiv' || key === 'demo-prob' || key === 'demo-polyarea' || key === 'demo-planttree' || key === 'demo-factor' || key === 'demo-cuboid' || key === 'demo-fracadd' || key === 'demo-rotate' || key === 'demo-findbad' || key === 'demo-radar' || key === 'demo-ratio' || key === 'demo-circle' || key === 'demo-percent' || key === 'demo-fan' || key === 'demo-lsquare' || key === 'demo-thermo' || key === 'demo-negmul' || key === 'demo-discount' || key === 'demo-cylinder' || key === 'demo-pigeon' || key === 'demo-numline' || key === 'demo-powerup' || key === 'demo-monomial' || key === 'demo-liketerms' || key === 'demo-meetline' || key === 'demo-lineseg' || key === 'demo-anglepair' || key === 'demo-vertangle' || key === 'demo-parangles' || key === 'demo-roots' || key === 'demo-coordplane' || key === 'demo-ineqline' || key === 'demo-histogram' || key === 'demo-trisides' || key === 'demo-congruent' || key === 'demo-foldmirror' || key === 'demo-algarea' || key === 'demo-algfrac' || key === 'demo-eqsieve' || key === 'demo-radical' || key === 'demo-pythag' || key === 'demo-pargram' || key === 'demo-specialquad' || key === 'demo-datastats' || key === 'demo-quad' || key === 'demo-growth' || key === 'demo-parabola' || key === 'demo-spin' || key === 'demo-circangle' || key === 'demo-tangent' || key === 'demo-sector' || key === 'demo-coin' || key === 'demo-tree' || key === 'demo-hyperbola' || key === 'demo-similar' || key === 'demo-shadow' || key === 'demo-trig' || key === 'demo-slope' || key === 'demo-project' || key === 'demo-twentyfour' || key === 'demo-monty' || key === 'demo-maxarea' || key === 'demo-matches' || key === 'demo-mobius' || key === 'demo-shopweek' || key === 'demo-fairgame' || key === 'demo-makerule' || key === 'demo-thirteen' || key === 'demo-maketen' || key === 'demo-areamul' || key === 'demo-fraceq' || key === 'demo-buildfrac' || key === 'demo-areabuild' || key === 'demo-quadmorph' || key === 'demo-numplay' || key === 'demo-fracnumline') return key;
   if (key === 'why') return 'why';
-  if (key === 'lab') return 'lab';
+  if (key === 'lab' || key === 'world') return 'lab'; // world 已并入实验室
   if (key === 'review') return 'review';
   if (key === 'progress') return 'progress';
   if (key === 'parent') return 'parent';
@@ -2125,7 +2127,7 @@ function applyView() {
   setHidden(demosSec.querySelector('.section-sub'), demoLeaf);
   [...demoGridEl.children].forEach(el => { el.hidden = demoLeaf && el.id !== view; });
   setHidden(whySec, view !== 'why');
-  // 数学实验室：只有进实验室才显示整个 #lab 区
+  // 数学实验室：只有进实验室才显示整个 #lab 区（世界模型验收台已并入）
   setHidden(labSec, view !== 'lab');
   // 复习与进度：错题本只留错题卡片，我的进度只留进度卡片，家长端只留家长卡片；
   // 今天复习不留 #review 区（它的列表在 pointDetail 里）。
@@ -3089,16 +3091,574 @@ drawLabFunc();
    (3) 规则引擎——放不下的数放不下（数轴只到 2、托盘最多 3 个、负数不能上天平），
    规则是撞出来的，不是念出来的。四个小站原样保留，只是多了“放到托盘”的口子。 */
 
-/* ---------- 小值：分数按 [n, d] 对算，整数就是分母为 1 的分数 ---------- */
-function labFracReduce(n, d) { const g = gcd(Math.abs(n), d); return { n: n / g, d: d / g }; }
-function labFracStr(n, d) { const r = labFracReduce(n, d); return r.d === 1 ? String(r.n) : r.n + '/' + r.d; }
+/* ---------- 小值：优先走 MathWorld.Q（世界模型），没有模型时回退本地实现 ---------- */
+var labWorld = null;
+var mwPlay = null; // 与 labWorld 同一份；验收台控件读写它
+var labWorldQid = null;
+function labHasWorld() { return typeof MathWorld !== 'undefined' && MathWorld && MathWorld.Q; }
+function labFracReduce(n, d) {
+  if (labHasWorld()) return MathWorld.Q.of(n, d);
+  const g = gcd(Math.abs(n), d); return { n: n / g, d: d / g };
+}
+function labFracStr(n, d) {
+  if (labHasWorld()) return MathWorld.Q.str({ n: n, d: d });
+  const r = labFracReduce(n, d); return r.d === 1 ? String(r.n) : r.n + '/' + r.d;
+}
 function labFracAddF(a, b) {
+  if (labHasWorld()) return MathWorld.Q.add(a, b);
   const l = a.d * b.d / gcd(a.d, b.d);
   return labFracReduce(a.n * (l / a.d) + b.n * (l / b.d), l);
 }
 function labValFrac(v) { return v.kind === 'frac' ? labFracReduce(v.n, v.d) : { n: v.v, d: 1 }; }
 function labValNum(v) { return v.kind === 'frac' ? v.n / v.d : v.v; }
 function labValLabel(v) { return v.kind === 'frac' ? labFracStr(v.n, v.d) : String(v.v); }
+function labSeedWorld(qid) {
+  if (!labHasWorld()) { labWorld = null; mwPlay = null; labWorldQid = null; return; }
+  labWorldQid = qid || null;
+  if (qid && MathWorld.LAB_SEEDS[qid]) labWorld = MathWorld.LAB_SEEDS[qid]();
+  else {
+    labWorld = MathWorld.create({
+      fracboard: { A: { n: 1, d: 2 }, B: { n: 1, d: 3 } },
+      balance: { L: [{ n: 1, d: 2 }], R: [] },
+      chicken: { targetHeads: 35, targetLegs: 94, rabbits: 0 },
+      numline: { min: 0, max: 2 },
+      linefn: { k: 2, b: 8 },
+    });
+  }
+  mwPlay = labWorld; // 实验室与验收台共用同一世界
+  benchRestore(); // 台面上的数跨题保留
+}
+/* ---------- 实验流程（NB 式步骤打分）：练习有提示，挑战无提示 ---------- */
+var labProcSnap = {}; // qid -> 最近一次流程报告，挑战交卷时写进报告
+var LAB_REASON_TEXT = {
+  'frac-not-combined': '还没拼，先点「拼一拼」',
+  'tray-full': '托盘满了',
+  'numline-out-of-range': '超出数轴范围',
+  'numline-full': '数轴上已经有两个点',
+  'balance-no-negative': '天平不放负数',
+  'fracboard-needs-frac': '分数板只收分数',
+  'rabbit-range': '兔子数超出范围',
+  'no-chicken': '还没有鸡兔题',
+  'no-piece': '没有这个零件',
+  'unknown-target': '不认识的放置位置',
+  'tenframe-empty': '十格阵是空的',
+  'tenframe-range': '十格阵每格只能 0 到 10',
+  'already-on-bench': '这个数已经在台上了',
+  'piece-locked': '这个数正占着数轴或分数板，先拿下来',
+  'bench-full': '台子满了（最多 6 个），先拿走一个',
+  'not-on-bench': '台上没有这个数',
+  'merge-needs-two': '合并至少要选两个数',
+  'split-range': '拆份数要在 2 到 6 之间',
+};
+function worldPlayStartProcedure(qid, mode) {
+  const w = worldPlayEnsure();
+  if (!w || !MathWorld.LAB_PROCEDURES || !MathWorld.LAB_PROCEDURES[qid]) return;
+  const res = MathWorld.apply(w, { type: 'procedureStart', labId: qid, mode: mode });
+  labWorld = res.world;
+  mwPlay = res.world;
+}
+/* Sync helpers rebuild labWorld from the legacy arrays. Keep the running procedure. */
+/* 跨次统计：只记挑战（考试）交卷的结果，和 NB 的“考试分数”一致。 */
+var LAB_PROC_KEY = 'math-lab-proc-v1';
+var labProcRecorded = {}; // 同一份报告只记一次（交卷按钮可能被点多次）
+function procHistLoad() {
+  try { return JSON.parse(localStorage.getItem(LAB_PROC_KEY) || '{}') || {}; } catch (e) { return {}; }
+}
+function procHistSave(h) {
+  try { localStorage.setItem(LAB_PROC_KEY, JSON.stringify(h)); } catch (e) { /* 存不下就不记 */ }
+}
+function procHistRecord(rep) {
+  if (!rep || !rep.opCount) return;
+  const key = rep.labId + ':' + rep.score + ':' + rep.opCount + ':' + rep.lost.join('|');
+  if (labProcRecorded[key]) return;
+  labProcRecorded[key] = true;
+  const h = procHistLoad();
+  const e = h[rep.labId] || { attempts: 0, lastScore: 0, max: rep.max, lost: {} };
+  e.attempts += 1;
+  e.lastScore = rep.score;
+  e.max = rep.max;
+  e.lastAt = Date.now();
+  rep.lines.forEach(function (l) {
+    if (!l.got) e.lost[l.id] = (e.lost[l.id] || 0) + 1;
+  });
+  h[rep.labId] = e;
+  procHistSave(h);
+}
+function procHistSummaryHtml(labId) {
+  const e = procHistLoad()[labId];
+  if (!e) return '<p class="muted">还没有考试记录。挑战模式交卷后，这里会记下每一步的丢分次数。</p>';
+  let html = '<p class="muted">考过 ' + e.attempts + ' 次，最近一次 ' + e.lastScore + ' / ' + e.max + '。</p>';
+  const ids = Object.keys(e.lost).sort(function (a, b) { return e.lost[b] - e.lost[a]; });
+  const def = MathWorld.LAB_PROCEDURES && MathWorld.LAB_PROCEDURES[labId];
+  if (ids.length && def) {
+    const step = def.steps.find(function (s) { return s.id === ids[0]; });
+    html += '<p class="muted">总丢分最多：' + esc(step ? step.label : ids[0]) + '（丢了 ' + e.lost[ids[0]] + ' 次）</p>';
+  }
+  return html;
+}
+function labCarryProcedure(prev, next) {
+  if (prev && prev.bench && prev.bench.length) {
+    next.bench = prev.bench.slice();
+    prev.bench.forEach(function (id) { if (prev.pieces[id]) next.pieces[id] = prev.pieces[id]; });
+  }
+  if (prev && prev.procedure) {
+    next.procedure = prev.procedure;
+    next.steps = prev.steps || {};
+    next.errors = prev.errors || [];
+    next.ops = prev.ops || [];
+  }
+  return next;
+}
+function renderProcedurePanel(w) {
+  const box = document.getElementById('worldProcOut');
+  if (!box) return;
+  const rep = MathWorld.procedureReport ? MathWorld.procedureReport(w) : null;
+  if (!rep) {
+    box.innerHTML = '<p class="muted">还没开始实验流程。选一个工作间题，就会按步骤打分。</p>';
+    return;
+  }
+  labProcSnap[rep.labId] = rep;
+  box.innerHTML = procReportHtml(rep) + '<div class="proc-history">' + procHistSummaryHtml(rep.labId) + '</div>';
+}
+function procReportHtml(rep) {
+  const exam = rep.mode === 'exam';
+  let html = '<p><b>' + esc(rep.title) + '</b> · ' + (exam ? '考试（无提示）' : '练习（有提示）') + '</p>';
+  html += '<p>得分 ' + rep.score + ' / ' + rep.max + (rep.done ? '，全部完成' : '') + '</p>';
+  // Exam mode hides the checklist until submit, so the student is not steered step by step.
+  if (!exam) {
+    html += '<ul class="proc-steps">';
+    rep.lines.forEach(function (l) {
+      html += '<li>' + (l.got ? '✓ ' : '○ ') + esc(l.label) + '（' + l.points + ' 分）</li>';
+    });
+    html += '</ul>';
+  }
+  if (rep.nextHint) html += '<p>下一步：' + esc(rep.nextHint) + '</p>';
+  if (rep.errorCount) {
+    html += '<p class="muted">失败的操作 ' + rep.errorCount + ' 次：' +
+      esc(rep.errorReasons.map(function (r) { return LAB_REASON_TEXT[r] || r; }).join('；')) + '</p>';
+  }
+  html += '<p class="muted">操作 ' + rep.opCount + ' 步</p>';
+  return html;
+}
+function procSnapHtml(rep) {
+  return '<p>流程得分 ' + rep.score + ' / ' + rep.max +
+    (rep.lost.length ? '，丢在：' + esc(rep.lost.join('、')) : '，全部完成') + '</p>';
+}
+/* ---------- 实验台：拿数放上台，合并、拆分、看合计（计算全部由模型完成） ---------- */
+var benchSel = {}; // 台上被选中的数的 id
+function benchMsg(text, ok) {
+  const el = document.getElementById('worldBenchMsg');
+  if (!el) return;
+  el.textContent = (ok === false ? '不行：' : '') + text;
+  el.style.color = ok === false ? '#b91c1c' : '';
+}
+/* 实验台的动作不计入流程：先把流程状态拿掉再执行，结束后放回去，
+   这样挑战模式里摆弄台子不会增加操作数或错误数。 */
+function benchRun(intent) {
+  const w = worldPlayEnsure();
+  if (!w) return null;
+  const saved = { procedure: w.procedure, steps: w.steps, errors: w.errors, ops: w.ops };
+  const base = Object.assign({}, w);
+  delete base.procedure; delete base.steps; delete base.errors; delete base.ops;
+  const res = MathWorld.apply(base, intent);
+  if (saved.procedure) Object.assign(res.world, saved);
+  labWorld = res.world;
+  mwPlay = res.world;
+  if (res.ok) benchSave();
+  return res;
+}
+function benchApply(intent, okText) {
+  const res = benchRun(intent);
+  if (!res) return false;
+  benchMsg(res.ok ? okText : (LAB_REASON_TEXT[res.reason] || res.reason), res.ok);
+  worldPlayRender();
+  return res.ok;
+}
+/* 分数条：每个单位画一条，分成 d 段，涂 n 段。分母太大或数太大时只显示数字。 */
+function benchPieceSvg(q) {
+  const n = q.n, d = q.d, x = n / d;
+  if (x <= 0 || d > 8 || x > 3) return '';
+  const bars = Math.max(1, Math.ceil(x));
+  const W = 44, H = 16, gap = 4, sw = W / d;
+  const width = bars * (W + gap) - gap;
+  let s = '<svg class="bench-svg" viewBox="0 0 ' + width + ' ' + H + '" width="' + width + '" height="' + H + '" aria-hidden="true">';
+  for (let u = 0; u < bars; u++) {
+    const filled = Math.max(0, Math.min(d, n - u * d));
+    for (let i = 0; i < d; i++) {
+      s += '<rect x="' + (u * (W + gap) + i * sw) + '" y="0" width="' + sw + '" height="' + H +
+        '" fill="' + (i < filled ? '#fb923c' : '#e2e8f0') + '" stroke="#94a3b8" stroke-width="1"/>';
+    }
+  }
+  return s + '</svg>';
+}
+/* 台面的数存在本机，刷新或换题后自动放回台上。 */
+var BENCH_KEY = 'math-bench-v1';
+function benchSave() {
+  if (!labWorld || !labHasWorld()) return;
+  const items = MathWorld.derived(labWorld).bench.items.map(function (it) { return { n: it.q.n, d: it.q.d }; });
+  try { localStorage.setItem(BENCH_KEY, JSON.stringify(items)); } catch (e) { /* 存不下就不存 */ }
+}
+function benchStored() {
+  try { return JSON.parse(localStorage.getItem(BENCH_KEY) || '[]') || []; } catch (e) { return []; }
+}
+function benchRestore() {
+  if (!labWorld || !labHasWorld()) return;
+  if (MathWorld.derived(labWorld).bench.count) return;
+  benchStored().forEach(function (s) {
+    const piece = s.d === 1 ? { kind: 'num', v: s.n } : { kind: 'frac', n: s.n, d: s.d };
+    const mk = benchRun({ type: 'makePiece', piece: piece });
+    if (mk) benchRun({ type: 'benchPut', pieceId: mk.pieceId });
+  });
+}
+/* 实验台视图：坐标系 / 数轴 / 分数条 / 算式，由 BenchViews.chooseView 选。学生点按钮可以指定。 */
+var benchPreferredView = null;
+function bvX(x) { return 30 + (x + 1) * 57.5; } // 坐标系 x 范围 -1 到 7
+function bvY(y) { return 230 - (y + 2) * (200 / 14); } // 坐标系 y 范围 -2 到 12
+function benchViewSvg(view, items, lineOn, lf, bal) {
+  let s = '';
+  if (view === 'coord') {
+    for (let i = -1; i <= 7; i++) {
+      s += '<line x1="' + bvX(i) + '" y1="' + bvY(-2) + '" x2="' + bvX(i) + '" y2="' + bvY(12) + '" stroke="#e2e8f0"/>';
+      s += '<text x="' + bvX(i) + '" y="' + (bvY(0) + 16) + '" font-size="11" text-anchor="middle" fill="#64748b">' + i + '</text>';
+    }
+    for (let j = -2; j <= 12; j += 2) {
+      s += '<line x1="' + bvX(-1) + '" y1="' + bvY(j) + '" x2="' + bvX(7) + '" y2="' + bvY(j) + '" stroke="#e2e8f0"/>';
+    }
+    for (let j = -2; j <= 12; j += 2) {
+      s += '<text x="' + (bvX(-1) - 6) + '" y="' + (bvY(j) + 4) + '" font-size="11" text-anchor="end" fill="#64748b">' + j + '</text>';
+    }
+    s += '<line x1="' + bvX(-1) + '" y1="' + bvY(0) + '" x2="' + bvX(7) + '" y2="' + bvY(0) + '" stroke="#334155" stroke-width="2"/>';
+    s += '<line x1="' + bvX(0) + '" y1="' + bvY(-2) + '" x2="' + bvX(0) + '" y2="' + bvY(12) + '" stroke="#334155" stroke-width="2"/>';
+    if (lineOn) {
+      const pts = [];
+      for (let x = -1; x <= 7.001; x += 0.25) {
+        const y = lf.k * x + lf.b;
+        if (y >= -2 && y <= 12) pts.push(bvX(x).toFixed(1) + ',' + bvY(y).toFixed(1));
+      }
+      if (pts.length > 1) s += '<polyline points="' + pts.join(' ') + '" fill="none" stroke="#ea580c" stroke-width="3"/>';
+    }
+    items.forEach(function (it) {
+      const x = it.q.n / it.q.d;
+      if (x < -1 || x > 7) return;
+      s += '<circle cx="' + bvX(x) + '" cy="' + bvY(0) + '" r="6" fill="#2563eb"/>' +
+        '<text x="' + bvX(x) + '" y="' + (bvY(0) - 10) + '" font-size="12" text-anchor="middle" fill="#1e3a8a">' + it.str + '</text>';
+    });
+  } else if (view === 'numline') {
+    s += '<line x1="' + bvX(-1) + '" y1="120" x2="' + bvX(7) + '" y2="120" stroke="#334155" stroke-width="2"/>';
+    for (let i = -1; i <= 7; i++) {
+      s += '<line x1="' + bvX(i) + '" y1="114" x2="' + bvX(i) + '" y2="126" stroke="#334155"/>';
+      s += '<text x="' + bvX(i) + '" y="144" font-size="11" text-anchor="middle" fill="#64748b">' + i + '</text>';
+    }
+    items.forEach(function (it) {
+      const x = it.q.n / it.q.d;
+      if (x < -1 || x > 7) return;
+      s += '<circle cx="' + bvX(x) + '" cy="120" r="6" fill="#2563eb"/>' +
+        '<text x="' + bvX(x) + '" y="100" font-size="12" text-anchor="middle" fill="#1e3a8a">' + it.str + '</text>';
+    });
+  } else if (view === 'fracbar') {
+    items.forEach(function (it, i) {
+      const n = it.q.n, d = it.q.d;
+      const y0 = 20 + i * 40;
+      const bars = Math.max(1, Math.min(7, Math.ceil(n / d)));
+      if (d <= 12) {
+        const sw = 60 / d;
+        for (let u = 0; u < bars; u++) {
+          const filled = Math.max(0, Math.min(d, n - u * d));
+          for (let k = 0; k < d; k++) {
+            s += '<rect x="' + (30 + u * 66 + k * sw) + '" y="' + y0 + '" width="' + sw + '" height="28" fill="' +
+              (k < filled ? '#fb923c' : '#e2e8f0') + '" stroke="#94a3b8"/>';
+          }
+        }
+      }
+      s += '<text x="' + (30 + bars * 66 + 8) + '" y="' + (y0 + 19) + '" font-size="14" font-weight="700" fill="#0f172a">' + it.str + '</text>';
+    });
+  } else if (view === 'balance') {
+    // 天平：支点在中间，左盘、右盘写出它们的值；不平时横梁向重的一边倾斜。
+    const tilt = bal.equal ? 0 : (bal.leftHeavy ? 22 : -22);
+    const leftY = 130 + tilt, rightY = 130 - tilt;
+    s += '<polygon points="240,150 280,150 260,120" fill="#334155"/>';
+    s += '<line x1="90" y1="' + leftY + '" x2="430" y2="' + rightY + '" stroke="#334155" stroke-width="4"/>';
+    s += '<line x1="260" y1="120" x2="260" y2="60" stroke="#334155" stroke-width="3"/>';
+    s += '<rect x="60" y="' + leftY + '" width="100" height="40" fill="#fde68a" stroke="#92400e"/>';
+    s += '<rect x="380" y="' + rightY + '" width="100" height="40" fill="#fde68a" stroke="#92400e"/>';
+    s += '<text x="110" y="' + (leftY + 26) + '" font-size="16" text-anchor="middle" fill="#0f172a">' + bal.Lstr + '</text>';
+    s += '<text x="430" y="' + (rightY + 26) + '" font-size="16" text-anchor="middle" fill="#0f172a">' + bal.Rstr + '</text>';
+    s += '<text x="260" y="220" font-size="16" text-anchor="middle" fill="' + (bal.equal ? '#15803d' : '#b91c1c') + '">' +
+      (bal.equal ? '平衡' : (bal.leftHeavy ? '左边重' : '右边重')) + '</text>';
+  } else {
+    let y = 40;
+    if (lineOn) { s += '<text x="30" y="' + y + '" font-size="16" fill="#0f172a">y = ' + lf.k + 'x + ' + lf.b + '</text>'; y += 34; }
+    items.forEach(function (it) { s += '<text x="30" y="' + y + '" font-size="16" fill="#0f172a">x = ' + it.str + '</text>'; y += 34; });
+    if (!lineOn && !items.length) s += '<text x="30" y="40" font-size="14" fill="#64748b">台上还没有东西</text>';
+  }
+  return s;
+}
+function worldBenchRender() {
+  const shelf = document.getElementById('worldBenchShelf');
+  if (!shelf || !labHasWorld()) return;
+  const w = worldPlayEnsure();
+  if (!w) return;
+  const bv = MathWorld.derived(w).bench;
+  Object.keys(benchSel).forEach(function (id) {
+    if (!bv.items.some(function (it) { return it.id === id; })) delete benchSel[id];
+  });
+  shelf.innerHTML = bv.items.length
+    ? bv.items.map(function (it) {
+        const on = !!benchSel[it.id];
+        return '<button type="button" class="bench-chip' + (on ? ' is-picked' : '') +
+          '" data-bench="pick" data-id="' + esc(it.id) + '" aria-pressed="' + on + '">' +
+          benchPieceSvg(it.q) + '<span>' + esc(it.str) + '</span></button>';
+      }).join('')
+    : '<p class="muted">台面是空的。从上面的零件盒拿一个数放上来。</p>';
+  const sum = document.getElementById('worldBenchSum');
+  if (sum) {
+    sum.textContent = '台上合计：' + bv.totalStr + '（' + bv.count + ' 个）' +
+      (bv.mixedDen ? '；分母不同，不能直接把分子相加' : '');
+  }
+  // 视图：台上的对象决定显示什么，学生可以在共同视图里指定。
+  const w2 = labWorld;
+  const lineOn = !!(w2 && w2.benchLine);
+  const balOn = !!(w2 && w2.benchBalance);
+  const objs = BenchViews.benchObjects(bv.items, lineOn, balOn);
+  const ch = BenchViews.chooseView(objs, benchPreferredView);
+  const vbox = document.getElementById('worldBenchViews');
+  if (vbox) {
+    vbox.innerHTML = ch.views.map(function (v) {
+      return '<button type="button" class="btn small ' + (v === ch.view ? 'primary' : 'ghost') +
+        '" data-bench="view" data-view="' + v + '">' + BenchViews.VIEW_LABEL[v] + '</button>';
+    }).join('') + '<span class="muted">现在是：' + BenchViews.VIEW_LABEL[ch.view] + '</span>';
+  }
+  const svg = document.getElementById('worldBenchView');
+  if (svg) {
+    svg.innerHTML = benchViewSvg(ch.view, bv.items, lineOn, w2 ? w2.linefn : { k: 0, b: 0 },
+      w2 ? MathWorld.derived(w2).balance : null);
+  }
+  const lineBtn = document.querySelector('[data-bench="line"]');
+  if (lineBtn) lineBtn.setAttribute('aria-pressed', String(lineOn));
+  const balBtn = document.querySelector('[data-bench="balance"]');
+  if (balBtn) balBtn.setAttribute('aria-pressed', String(balOn));
+  // 直线在台上、且看的是坐标系时，可以直接在台上调 k 和 b。
+  if (vbox && lineOn && ch.view === 'coord' && w2) {
+    vbox.innerHTML += '<span class="muted">直线：k = ' + w2.linefn.k + '，b = ' + w2.linefn.b + '</span>' +
+      '<button type="button" class="btn small ghost" data-bench="lk-">k −1</button>' +
+      '<button type="button" class="btn small ghost" data-bench="lk+">k +1</button>' +
+      '<button type="button" class="btn small ghost" data-bench="lb-">b −1</button>' +
+      '<button type="button" class="btn small ghost" data-bench="lb+">b +1</button>';
+  }
+}
+(function worldBenchBind() {
+  const card = document.getElementById('worldBenchCard');
+  if (!card) return;
+  card.addEventListener('click', function (e) {
+    const b = e.target.closest('[data-bench]');
+    if (!b) return;
+    const op = b.getAttribute('data-bench');
+    if (op === 'make') {
+      const kind = b.getAttribute('data-kind');
+      const n = parseInt(b.getAttribute('data-n'), 10);
+      const d = parseInt(b.getAttribute('data-d'), 10);
+      const piece = kind === 'frac' ? { kind: 'frac', n: n, d: d } : { kind: 'num', v: n };
+      const mk = benchRun({ type: 'makePiece', piece: piece });
+      if (!mk) return;
+      benchApply({ type: 'benchPut', pieceId: mk.pieceId }, '放上台：' + (kind === 'frac' ? n + '/' + d : String(n)));
+      return;
+    }
+    if (op === 'pick') {
+      // 原地切换，不重建台面：快速连点时不会点到已被替换掉的旧按钮。
+      const id = b.getAttribute('data-id');
+      if (benchSel[id]) delete benchSel[id]; else benchSel[id] = true;
+      b.classList.toggle('is-picked', !!benchSel[id]);
+      b.setAttribute('aria-pressed', String(!!benchSel[id]));
+      return;
+    }
+    if (op === 'merge') {
+      const ids = Object.keys(benchSel);
+      if (ids.length < 2) { benchMsg('先在台上选中两个以上的数，再合并。', false); return; }
+      if (benchApply({ type: 'benchMerge', ids: ids }, '合并好了，看台上合计')) benchSel = {};
+      worldBenchRender();
+      return;
+    }
+    if (op === 'split') {
+      const ids = Object.keys(benchSel);
+      if (ids.length !== 1) { benchMsg('拆开只能选一个数。', false); return; }
+      const k = parseInt(document.getElementById('worldBenchK').value, 10) || 3;
+      if (benchApply({ type: 'benchSplit', pieceId: ids[0], k: k }, '平均拆成 ' + k + ' 份')) benchSel = {};
+      worldBenchRender();
+      return;
+    }
+    if (op === 'balance') {
+      benchRun({ type: 'benchBalanceToggle' });
+      benchMsg(labWorld && labWorld.benchBalance ? '天平放上了台面' : '天平拿下了台面', true);
+      worldPlayRender();
+      return;
+    }
+    if (op === 'lk-' || op === 'lk+' || op === 'lb-' || op === 'lb+') {
+      const lf = labWorld.linefn;
+      const delta = op.slice(-1) === '+' ? 1 : -1;
+      const intent = op[1] === 'k' ? { type: 'linefnSet', k: lf.k + delta } : { type: 'linefnSet', b: lf.b + delta };
+      return worldPlayApply(intent, '直线改成 y = ' + (op[1] === 'k' ? lf.k + delta : lf.k) + 'x + ' + (op[1] === 'b' ? lf.b + delta : lf.b));
+    }
+    if (op === 'view') {
+      benchPreferredView = b.getAttribute('data-view');
+      worldBenchRender();
+      return;
+    }
+    if (op === 'line') {
+      benchRun({ type: 'benchLineToggle' });
+      benchMsg(labWorld && labWorld.benchLine ? '直线放上了台面，台子切到坐标系' : '直线拿下了台面', true);
+      worldPlayRender();
+      return;
+    }
+    if (op === 'clear') {
+      const w = worldPlayEnsure();
+      if (!w) return;
+      MathWorld.derived(w).bench.items.forEach(function (it) { benchRun({ type: 'benchTake', pieceId: it.id }); });
+      benchSel = {};
+      benchMsg('台面清空了。', true);
+      worldPlayRender();
+    }
+  });
+})();
+/* 把台上的数放到器材上（天平左右盘、数轴）。返回是否成功。 */
+function benchDropTargetAt(x, y) {
+  const el = document.elementFromPoint ? document.elementFromPoint(x, y) : null;
+  const t = el && el.closest ? el.closest('[data-drop]') : null;
+  return t ? t.getAttribute('data-drop') : null;
+}
+function benchPlaceOn(pieceId, target, label) {
+  const res = benchRun({ type: 'place', pieceId: pieceId, target: target });
+  const names = { 'balance.L': '左盘', 'balance.R': '右盘', 'numline': '数轴' };
+  benchMsg(res.ok ? label + ' 放到' + (names[target] || target)
+    : (LAB_REASON_TEXT[res.reason] || res.reason), res.ok);
+  return res.ok;
+}
+/* 实验台拖拽：从零件盒拖到台面放上；从台面拖到“拖到这里拿走”取下。
+   用指针事件，平板和触屏也能拖。移动不到 6 像素算点击，走原来的 click。 */
+(function worldBenchDrag() {
+  const card = document.getElementById('worldBenchCard');
+  if (!card) return;
+  let drag = null;
+  let suppressClick = false;
+  let ghost = null;
+  function ghostShow(text) {
+    if (!ghost) {
+      ghost = document.createElement('div');
+      ghost.id = 'worldBenchGhost';
+      document.body.appendChild(ghost);
+    }
+    ghost.textContent = text;
+    ghost.hidden = false;
+  }
+  function ghostMove(x, y) { if (ghost) { ghost.style.left = (x + 12) + 'px'; ghost.style.top = (y + 12) + 'px'; } }
+  function ghostHide() { if (ghost) ghost.hidden = true; }
+  function inside(el, x, y) {
+    if (!el || !el.getBoundingClientRect) return false;
+    const r = el.getBoundingClientRect();
+    return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+  }
+  card.addEventListener('pointerdown', function (e) {
+    if (e.button !== undefined && e.button !== 0) return;
+    const b = e.target.closest('[data-bench="make"],[data-bench="pick"]');
+    if (!b) return;
+    const isMake = b.getAttribute('data-bench') === 'make';
+    drag = {
+      from: b,
+      spec: isMake ? { kind: b.getAttribute('data-kind'), n: parseInt(b.getAttribute('data-n'), 10), d: parseInt(b.getAttribute('data-d'), 10) } : null,
+      id: isMake ? null : b.getAttribute('data-id'),
+      x0: e.clientX, y0: e.clientY, moved: false,
+    };
+  });
+  document.addEventListener('pointermove', function (e) {
+    if (!drag) return;
+    if (!drag.moved) {
+      if (Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) < 6) return;
+      drag.moved = true;
+      ghostShow(drag.from.textContent.trim());
+    }
+    ghostMove(e.clientX, e.clientY);
+  });
+  document.addEventListener('pointerup', function (e) {
+    const d = drag;
+    drag = null;
+    ghostHide();
+    if (!d || !d.moved) return;
+    suppressClick = true;
+    setTimeout(function () { suppressClick = false; }, 0);
+    const shelf = document.getElementById('worldBenchShelf');
+    const trash = document.getElementById('worldBenchTrash');
+    const target = benchDropTargetAt(e.clientX, e.clientY);
+    if (target) {
+      if (d.spec) {
+        const piece = d.spec.kind === 'frac' ? { kind: 'frac', n: d.spec.n, d: d.spec.d } : { kind: 'num', v: d.spec.n };
+        const mk = benchRun({ type: 'makePiece', piece: piece });
+        if (mk) {
+          const ok = benchPlaceOn(mk.pieceId, target, d.from.textContent.trim());
+          if (!ok) benchRun({ type: 'benchPut', pieceId: mk.pieceId }); // 放不下就放回台面，不让它消失
+        }
+      } else {
+        benchPlaceOn(d.id, target, '台上的数');
+      }
+      worldPlayRender();
+      return;
+    }
+    if (d.spec && inside(shelf, e.clientX, e.clientY)) {
+      const piece = d.spec.kind === 'frac' ? { kind: 'frac', n: d.spec.n, d: d.spec.d } : { kind: 'num', v: d.spec.n };
+      const mk = benchRun({ type: 'makePiece', piece: piece });
+      if (mk) benchApply({ type: 'benchPut', pieceId: mk.pieceId }, '放上台：' + d.from.textContent.trim());
+    } else if (!d.spec && inside(trash, e.clientX, e.clientY)) {
+      benchRun({ type: 'benchTake', pieceId: d.id });
+      benchSel = {};
+      benchMsg('拿走了一个数。', true);
+      worldPlayRender();
+    }
+  });
+  // 拖完之后的那一下 click 不再触发按钮动作。
+  card.addEventListener('click', function (e) {
+    if (suppressClick) { e.stopPropagation(); e.preventDefault(); }
+  }, true);
+})();
+function labSyncFracBoardToWorld() {
+  if (!labHasWorld()) return;
+  const prevMeta = (labWorld && labWorld.meta) ? labWorld.meta : {};
+  labWorld = labCarryProcedure(labWorld, MathWorld.create({ fracboard: { A: { n: labFaA.n, d: labFaA.d }, B: { n: labFaB.n, d: labFaB.d } } }));
+  labWorld.meta = Object.assign({}, prevMeta);
+  mwPlay = labWorld;
+}
+function labSyncBalanceToWorld() {
+  if (!labHasWorld()) return;
+  const prevMeta = (labWorld && labWorld.meta) ? labWorld.meta : {};
+  const toQ = (v) => v.kind === 'frac' ? { n: v.n, d: v.d } : { n: v.v, d: 1 };
+  labWorld = labCarryProcedure(labWorld, MathWorld.create({ balance: { L: labWbL.map(toQ), R: labWbR.map(toQ) } }));
+  labWorld.meta = Object.assign({}, prevMeta);
+  mwPlay = labWorld;
+}
+function labSyncLinefnToWorld() {
+  if (!labHasWorld()) return;
+  const kEl = document.getElementById('labFuncKRange');
+  const bEl = document.getElementById('labFuncBRange');
+  labWorld = labCarryProcedure(labWorld, MathWorld.create({
+    linefn: { k: kEl ? parseFloat(kEl.value) : 2, b: bEl ? parseFloat(bEl.value) : 8 },
+  }));
+  mwPlay = labWorld;
+}
+function labAutoMarkBench(qid) {
+  if (!labHasWorld() || !MathWorld.LAB_GOALS[qid]) return undefined;
+  if (qid === 'q-fracadd') labSyncFracBoardToWorld();
+  else if (qid === 'q-balfrac') labSyncBalanceToWorld();
+  else if (qid === 'q-funcline') labSyncLinefnToWorld();
+  else if (qid === 'q-numline') {
+    // Goal is "7 rejected on [0,2]": probe with a fresh world attempt.
+    let w = MathWorld.create({ numline: { min: 0, max: 2 } });
+    const mk = MathWorld.apply(w, { type: 'makePiece', piece: { kind: 'num', v: 7 } });
+    const bad = MathWorld.apply(mk.world, { type: 'place', pieceId: mk.pieceId, target: 'numline' });
+    labWorld = labCarryProcedure(labWorld, bad.world); // 保留本题的流程面板
+    mwPlay = labWorld;
+  } else if (qid === 'q-chicken') {
+    if (!labWorld || !labWorld.chicken) labSeedWorld('q-chicken');
+  }
+  if (!labWorld) return undefined;
+  return MathWorld.goalMet(labWorld, MathWorld.LAB_GOALS[qid]);
+}
 
 /* ---------- 托盘：最多 3 个值，四个小站往里放，组合台往外拿 ---------- */
 var labTray = []; // {kind:'frac', n, d, src} 或 {kind:'num', v, src}
@@ -3211,15 +3771,26 @@ function labFaRender() {
   document.getElementById('labFracAddOut').textContent = '还没拼。先调两个分数，再点“拼一拼”。';
 }
 function labFracAdd() {
+  labSyncFracBoardToWorld();
   const aL = labFracStr(labFaA.n, labFaA.d), bL = labFracStr(labFaB.n, labFaB.d);
-  const naive = labFracReduce(labFaA.n + labFaB.n, labFaA.d + labFaB.d);
-  const l = labFaA.d * labFaB.d / gcd(labFaA.d, labFaB.d);
-  const aN = labFaA.n * (l / labFaA.d), bN = labFaB.n * (l / labFaB.d);
-  const sum = labFracReduce(aN + bN, l);
-  const naiveL = labFracStr(naive.n, naive.d), sumL = labFracStr(sum.n, sum.d);
-  const gap = labFracReduce(sum.n * naive.d - naive.n * sum.d, sum.d * naive.d);
-  const gapL = labFracStr(gap.n, gap.d);
-  const correctNum = sum.n / sum.d, naiveNum = naive.n / naive.d;
+  let naive, sum, gap, naiveL, sumL, gapL, correctNum, naiveNum, aN, bN, l;
+  if (labHasWorld() && labWorld) {
+    const d = MathWorld.derived(labWorld);
+    naive = d.fracboard.naive; sum = d.fracboard.trueSum; gap = d.fracboard.gap;
+    naiveL = d.fracboard.naiveStr; sumL = d.fracboard.trueStr; gapL = d.fracboard.gapStr;
+    correctNum = sum.n / sum.d; naiveNum = naive.n / naive.d;
+    l = labFaA.d * labFaB.d / gcd(labFaA.d, labFaB.d);
+    aN = labFaA.n * (l / labFaA.d); bN = labFaB.n * (l / labFaB.d);
+  } else {
+    naive = labFracReduce(labFaA.n + labFaB.n, labFaA.d + labFaB.d);
+    l = labFaA.d * labFaB.d / gcd(labFaA.d, labFaB.d);
+    aN = labFaA.n * (l / labFaA.d); bN = labFaB.n * (l / labFaB.d);
+    sum = labFracReduce(aN + bN, l);
+    naiveL = labFracStr(naive.n, naive.d); sumL = labFracStr(sum.n, sum.d);
+    gap = labFracReduce(sum.n * naive.d - naive.n * sum.d, sum.d * naive.d);
+    gapL = labFracStr(gap.n, gap.d);
+    correctNum = sum.n / sum.d; naiveNum = naive.n / naive.d;
+  }
   const scale = Math.max(1.25, correctNum * 1.05);
   document.getElementById('labFracNaiveBar').style.width = (naiveNum / scale * 100) + '%';
   document.getElementById('labFracCorrectBar').style.width = (correctNum / scale * 100) + '%';
@@ -3234,6 +3805,10 @@ function labFracAdd() {
     out = '按分子加分子、分母加分母拼出来 ' + naiveL + '——可是 ' + aL + ' 的格子和 ' + bL + ' 的格子大小不一样，拼不到一块，少了 ' + gapL + '。把 ' + aL + ' 切成 ' + labFracStr(aN, l) + '，' + bL + ' 切成 ' + labFracStr(bN, l) + '，' + labFracStr(aN, l) + ' + ' + labFracStr(bN, l) + ' = ' + sumL + '，这才是对的。';
   }
   document.getElementById('labFracAddOut').textContent = out;
+  if (labHasWorld() && labWorld) {
+    labWorld.meta = labWorld.meta || {};
+    labWorld.meta.fracAdded = true;
+  }
   labTrace('分数加法台：' + aL + ' + ' + bL + ' = ' + sumL + '（错拼 ' + naiveL + ' 拼不上）', true);
 }
 [['labFaANMinus', 'A', -1, 0], ['labFaANPlus', 'A', 1, 0], ['labFaADMinus', 'A', 0, -1], ['labFaADPlus', 'A', 0, 1],
@@ -3261,16 +3836,25 @@ function labWbListText(arr) {
   return arr.length ? arr.map(labValLabel).join(' + ') : '空';
 }
 function labWbRender() {
-  const L = labWbSum('L'), R = labWbSum('R');
+  labSyncBalanceToWorld();
+  let L, R, tilt, equal;
+  if (labHasWorld() && labWorld) {
+    const d = MathWorld.derived(labWorld);
+    L = d.balance.L; R = d.balance.R; tilt = d.balance.tilt; equal = d.balance.equal;
+  } else {
+    L = labWbSum('L'); R = labWbSum('R');
+    const lNum0 = L.n / L.d, rNum0 = R.n / R.d;
+    tilt = Math.max(-15, Math.min(15, (rNum0 - lNum0) * 3));
+    equal = L.n * R.d === R.n * L.d;
+  }
   const lNum = L.n / L.d, rNum = R.n / R.d;
-  const tilt = Math.max(-15, Math.min(15, (rNum - lNum) * 3));
   document.getElementById('labWbBeam').setAttribute('transform', 'rotate(' + tilt + ' 160 70)');
   document.getElementById('labWbLeftWeights').innerHTML = labWbWeightsHtml(labWbL, 33);
   document.getElementById('labWbRightWeights').innerHTML = labWbWeightsHtml(labWbR, 233);
   document.getElementById('labWbEq').textContent = '左 ' + labFracStr(L.n, L.d) + ' ＝ 右 ' + labFracStr(R.n, R.d);
   document.getElementById('labWbList').textContent = '左盘：' + labWbListText(labWbL) + '　右盘：' + labWbListText(labWbR);
   let msg;
-  if (L.n * R.d === R.n * L.d) {
+  if (equal) {
     msg = '平了！左盘和右盘都是 ' + labFracStr(L.n, L.d) + '。';
   } else {
     const diff = labFracReduce(Math.abs(L.n * R.d - R.n * L.d), L.d * R.d);
@@ -3316,6 +3900,24 @@ document.getElementById('labWbSvg').addEventListener('click', e => {
 /* ---------- 数轴组合台：0 到 2，托盘里的数落在哪，两点之间差多少 ---------- */
 var labLinePts = []; // 最多 2 个 {n, d}
 function labLinePlace(v) {
+  if (labHasWorld()) {
+    let w = labWorld || MathWorld.create({ numline: { min: 0, max: 2 } });
+    const mk = MathWorld.apply(w, {
+      type: 'makePiece',
+      piece: v.kind === 'frac' ? { kind: 'frac', n: v.n, d: v.d } : { kind: 'num', v: v.v },
+    });
+    const res = MathWorld.apply(mk.world, { type: 'place', pieceId: mk.pieceId, target: 'numline' });
+    labWorld = res.world;
+    if (!res.ok) {
+      document.getElementById('labLineMsg').textContent = labValLabel(v) + ' 放不下：这条数轴只到 2，' + labValLabel(v) + ' 在 2 外面。';
+      labTrace('数轴放不下 ' + labValLabel(v) + '（只到 2）', false);
+      return false;
+    }
+    labLinePts = (MathWorld.derived(labWorld).numline.pts || []).map(p => ({ n: p.n, d: p.d }));
+    labLineRender();
+    labTrace('数轴上放了 ' + labValLabel(v), true);
+    return true;
+  }
   const f = labValFrac(v);
   const num = f.n / f.d;
   if (num < 0 || num > 2) {
@@ -3380,14 +3982,29 @@ var LAB_QUESTIONS = [
   { qid: 'q-shopweek', title: '开店一周', demo: 'shopweek', points: ['6.6'], primary: '6.6' },
   { qid: 'q-fairgame', title: '公平游戏', demo: 'fairgame', points: ['5.4'], primary: '5.4' },
   { qid: 'q-makerule', title: '造规律', demo: 'makerule', points: ['1.16'], primary: '1.16' },
-  { qid: 'q-fracadd', title: '分母不一样，分数能直接加吗？', bench: 'fracadd', points: ['5.11'], primary: '5.11' },
-  { qid: 'q-balfrac', title: '天平一边放 1/2', bench: 'balfrac', points: ['5.5'], primary: '5.5' },
-  { qid: 'q-numline', title: '7 在数轴上是哪里？', bench: 'numline', points: ['1.9'], primary: '1.9' },
-  { qid: 'q-funcline', title: 'k 变成负数，直线往哪倒？', bench: 'funcline', points: ['8.15'], primary: '8.15' },
+  { qid: 'q-fracadd', title: '分母不一样，分数能直接加吗？', bench: 'fracadd', station: 'worldFracCard', points: ['5.11'], primary: '5.11' },
+  { qid: 'q-balfrac', title: '天平一边放 1/2', bench: 'balfrac', station: 'worldBalCard', points: ['5.5'], primary: '5.5' },
+  { qid: 'q-numline', title: '7 在数轴上是哪里？', bench: 'numline', station: 'worldLineCard', points: ['1.9'], primary: '1.9' },
+  { qid: 'q-funcline', title: 'k 变成负数，直线往哪倒？', bench: 'funcline', station: 'worldFnCard', points: ['8.15'], primary: '8.15' },
+  { qid: 'q-chicken', title: '头 35，腿 94：鸡兔各几只？', bench: 'chicken', station: 'worldChickenCard', points: ['5.5'], primary: '5.5' },
 ];
 var labMode = 'free'; // 自由玩 | 挑战（本节课有效，不存档）
 var labChallengeAttempts = []; // 挑战模式里点开过的问题 id（去重）
 var labChallengeMarks = {}; // qid -> true 答对 / false 答错
+function labFocusStation(stationId) {
+  ['worldFracCard', 'worldBalCard', 'worldChickenCard', 'worldLineCard', 'worldFnCard'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('lab-mw-focus', id === stationId);
+  });
+  const target = document.getElementById(stationId) || document.getElementById('labMwWorkbench');
+  if (target && typeof target.scrollIntoView === 'function') {
+    try { target.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) { /* smoke stub */ }
+  }
+}
+function labSetCurrentQ(text) {
+  const el = document.getElementById('labCurrentQ');
+  if (el) el.textContent = text;
+}
 function labEnterQuestion(qid) {
   const q = LAB_QUESTIONS.find(x => x.qid === qid);
   if (!q) return;
@@ -3395,20 +4012,41 @@ function labEnterQuestion(qid) {
     labChallengeAttempts.push(qid);
     labTrace('挑战：开始做「' + q.title + '」', true);
   }
-  if (q.demo) { goDemoFromHere('demo-' + q.demo); return; } // 演示压在实验室上面，返回回实验室（以前走 navGo，返回落到演示总站）
-  // 工作间问题：留在实验室，摆好这道题的架势（给的是题面，不是答案）。
+  if (q.demo) { goDemoFromHere('demo-' + q.demo); return; } // 演示压在实验室上面，返回回实验室
+  // 工作间问题：留在实验室；局面种进共享 MathWorld，高亮对应台子。
+  labSeedWorld(qid);
   if (q.bench === 'fracadd') {
     labFaA = { n: 1, d: 2 }; labFaB = { n: 1, d: 3 }; labFaTouched = { A: false, B: false }; labFaRender();
-    document.getElementById('labCurrentQ').textContent = '当前问题：分母不一样，分数能直接加吗？——先猜 1/2+1/3 是多少，再点“拼一拼”。';
+    labSetCurrentQ('当前问题：分母不一样，分数能直接加吗？——在上面分数板调好，点「拼一拼」。');
   } else if (q.bench === 'balfrac') {
     labWbL = [{ kind: 'frac', n: 1, d: 2 }]; labWbR = []; labWbRender();
-    document.getElementById('labCurrentQ').textContent = '当前问题：天平一边放 1/2，另一边要放多少才平？——左盘已经放了 1/2，右边你来配。';
+    labSetCurrentQ('当前问题：天平一边放 1/2，另一边要放多少才平？——左盘已有 1/2，右边你来配。');
   } else if (q.bench === 'numline') {
-    document.getElementById('labCurrentQ').textContent = '当前问题：十格阵里的 7 个，放在这条 0 到 2 的数轴上是哪里？——先猜放不放得下，再去十格阵站放 7 个点、送到托盘、放到数轴上。';
+    if (labHasWorld()) {
+      labTfA = 7; labTfB = 0;
+      labTfCells.A.forEach((c, i) => c.classList.toggle('filled', i < 7));
+      labTfCells.B.forEach(c => c.classList.remove('filled'));
+      labTfRender();
+    }
+    labSetCurrentQ('当前问题：7 能放进 0～2 的数轴吗？——先猜，再在数轴台点「放上 7」。');
   } else if (q.bench === 'funcline') {
-    document.getElementById('labCurrentQ').textContent = '当前问题：k 变成负数，直线往哪倒？b 变成 0 呢？——去函数站拖一拖 k 和 b。';
+    labSetCurrentQ('当前问题：k 变成负数，直线往哪倒？——拖一次函数台的 k / b。');
+  } else if (q.bench === 'chicken') {
+    labSetCurrentQ('当前问题：头 35，腿 94——拖兔的只数，头和腿都要对上。');
   }
+  // 练习模式（自由玩里的题）有提示；挑战模式无提示，交卷时才看丢分。
+  if (q.bench) worldPlayStartProcedure(qid, labMode === 'challenge' ? 'exam' : 'practice');
+  labFocusStation(q.station);
+  if (typeof worldPlayRender === 'function') worldPlayRender();
   labTrace('开始做「' + q.title + '」', true);
+}
+function labFreePlay() {
+  labSeedWorld(null);
+  labFocusStation(null);
+  labSetCurrentQ('当前问题：自由玩——随便改零件，右侧看 MathWorld 算出的后果。');
+  if (typeof worldPlayRender === 'function') worldPlayRender();
+  labTrace('自由玩：进入工作间', true);
+  labFocusStation('worldFracCard');
 }
 function labSetMode(m) {
   labMode = m;
@@ -3428,16 +4066,31 @@ function labSubmitChallenge() {
     box.innerHTML = '<p>还没在挑战模式里做过题，先选一个问题。</p>';
     return;
   }
-  let html = '<p>挑战里做过的题（' + labChallengeAttempts.length + ' 道）：给每一道打个分，再点“提交报告”。</p>';
+  // Bench questions: auto-score from MathWorld goals when possible.
+  labChallengeAttempts.forEach(qid => {
+    if (labChallengeMarks[qid] !== undefined) return;
+    const auto = labAutoMarkBench(qid);
+    if (auto === true || auto === false) labChallengeMarks[qid] = auto;
+  });
+  if (labWorld && typeof worldPlayRender === 'function') worldPlayRender(); // 自动判分会重建世界，刷新面板
+  let html = '<p>挑战里做过的题（' + labChallengeAttempts.length + ' 道）：工作间题目由世界模型自动判；演示题仍可自评。</p>';
   labChallengeAttempts.forEach(qid => {
     const q = LAB_QUESTIONS.find(x => x.qid === qid);
     const f = findPoint(q.primary);
     const title = f ? f.point.title : q.primary;
     const mk = labChallengeMarks[qid];
-    html += '<div class="point-sec"><h4>' + esc(q.title) + '</h4><p class="muted">用到：' + esc(q.primary) + ' ' + esc(title) + '</p>' +
-      '<p>你答对了吗？ <button class="btn small" type="button" data-lab-mark="right" data-lab-q="' + qid + '"' + (mk === true ? ' aria-pressed="true"' : '') + '>答对了</button> ' +
-      '<button class="btn small" type="button" data-lab-mark="wrong" data-lab-q="' + qid + '"' + (mk === false ? ' aria-pressed="true"' : '') + '>答错了</button></p>' +
-      (mk === undefined ? '<p class="muted">还没打分。</p>' : '<p>记下了：' + (mk ? '答对了。' : '答错了。') + '</p>') + '</div>';
+    const auto = !!(q.bench && labHasWorld() && MathWorld.LAB_GOALS[qid]);
+    html += '<div class="point-sec"><h4>' + esc(q.title) + '</h4><p class="muted">用到：' + esc(q.primary) + ' ' + esc(title) +
+      (auto ? ' · 世界模型自动判' : '') + '</p>';
+    if (auto && mk !== undefined) {
+      html += '<p>世界模型判定：' + (mk ? '达成目标。' : '还没达成目标。') + '</p>';
+    } else {
+      html += '<p>你答对了吗？ <button class="btn small" type="button" data-lab-mark="right" data-lab-q="' + qid + '"' + (mk === true ? ' aria-pressed="true"' : '') + '>答对了</button> ' +
+        '<button class="btn small" type="button" data-lab-mark="wrong" data-lab-q="' + qid + '"' + (mk === false ? ' aria-pressed="true"' : '') + '>答错了</button></p>' +
+        (mk === undefined ? '<p class="muted">还没打分。</p>' : '<p>记下了：' + (mk ? '答对了。' : '答错了。') + '</p>');
+    }
+    if (labProcSnap[qid]) html += procSnapHtml(labProcSnap[qid]);
+    html += '</div>';
   });
   html += '<div class="btn-row"><button class="btn small primary" id="labChallengeFinish" type="button">提交报告</button></div><p id="labChallengeDone"></p>';
   box.innerHTML = html;
@@ -3458,6 +4111,9 @@ function labFinishChallenge() {
     if (done) done.textContent = '还有 ' + unmarked.length + ' 道没打分，先打分再交卷。';
     return;
   }
+  labChallengeAttempts.forEach(qid => {
+    if (labProcSnap[qid] && labProcSnap[qid].mode === 'exam') procHistRecord(labProcSnap[qid]);
+  });
   const wrong = labChallengeAttempts.filter(qid => labChallengeMarks[qid] === false);
   wrong.forEach(qid => {
     const q = LAB_QUESTIONS.find(x => x.qid === qid);
@@ -3486,6 +4142,8 @@ LAB_QUESTIONS.forEach(q => {
   const btn = document.getElementById('labQ-' + q.qid.slice(2));
   if (btn) btn.addEventListener('click', () => labEnterQuestion(q.qid));
 });
+const labFreePlayBtn = document.getElementById('labFreePlayBtn');
+if (labFreePlayBtn) labFreePlayBtn.addEventListener('click', labFreePlay);
 document.getElementById('labChallengeSubmit').addEventListener('click', labSubmitChallenge);
 document.getElementById('labTraceClear').addEventListener('click', () => {
   labTraceLog.length = 0;
@@ -3496,6 +4154,309 @@ labTrayRender();
 labFaRender();
 labWbRender();
 labLineRender();
+
+/* ================= 实验室内 MathWorld 工作间（只调 MathWorld；与 labWorld 同一份） ================= */
+function worldPlayEnsure() {
+  if (typeof MathWorld === 'undefined' || !MathWorld) return null;
+  if (labWorld) { mwPlay = labWorld; return mwPlay; }
+  if (!mwPlay) {
+    labSeedWorld(null);
+  }
+  return mwPlay;
+}
+function worldPlayMsg(text, ok) {
+  const el = document.getElementById('worldIntentMsg');
+  if (!el) return;
+  el.hidden = false;
+  el.textContent = (ok === false ? '拒绝：' : ok === true ? '成功：' : '') + text;
+  el.style.borderColor = ok === false ? '#f87171' : (ok === true ? '#4ade80' : '#fdba74');
+}
+function worldPlayRender() {
+  const w = worldPlayEnsure();
+  const ver = document.getElementById('worldVer');
+  if (ver) ver.textContent = (typeof MathWorld !== 'undefined' && MathWorld.version) ? MathWorld.version : '未加载';
+  if (!w) {
+    worldPlayMsg('MathWorld 未加载，请确认 math-world.js 已引入。', false);
+    return;
+  }
+  const d = MathWorld.derived(w);
+  const setTx = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
+  setTx('worldFaAN', w.fracboard.A.n);
+  setTx('worldFaAD', w.fracboard.A.d);
+  setTx('worldFaBN', w.fracboard.B.n);
+  setTx('worldFaBD', w.fracboard.B.d);
+  const faN = document.getElementById('worldFaNRange');
+  const faBN = document.getElementById('worldFaBNRange');
+  if (faN && !(typeof Apparatus !== 'undefined' && Apparatus.isDragging && Apparatus.isDragging())) faN.value = String(w.fracboard.A.n);
+  if (faBN && !(typeof Apparatus !== 'undefined' && Apparatus.isDragging && Apparatus.isDragging())) faBN.value = String(w.fracboard.B.n);
+  const scale = Math.max(1.25, (d.fracboard.trueSum.n / d.fracboard.trueSum.d) * 1.05 || 1.25);
+  const naiveEl = document.getElementById('worldFracNaive');
+  const trueEl = document.getElementById('worldFracTrue');
+  if (naiveEl && trueEl) {
+    if (w.meta && w.meta.fracAdded) {
+      naiveEl.style.width = ((d.fracboard.naive.n / d.fracboard.naive.d) / scale * 100) + '%';
+      trueEl.style.width = ((d.fracboard.trueSum.n / d.fracboard.trueSum.d) / scale * 100) + '%';
+      setTx('worldFracOut',
+        '错拼 ' + d.fracboard.naiveStr + '，正确 ' + d.fracboard.trueStr +
+        '（差 ' + d.fracboard.gapStr + '）。goalMet(fracExplored)=' +
+        MathWorld.goalMet(w, MathWorld.LAB_GOALS['q-fracadd']));
+    } else {
+      naiveEl.style.width = '0%'; trueEl.style.width = '0%';
+      setTx('worldFracOut', '还没拼。点「拼一拼」让模型算出错拼与正拼。');
+    }
+  }
+  setTx('worldBalEq', '左 ' + d.balance.Lstr + ' ＝ 右 ' + d.balance.Rstr);
+  setTx('worldBalMsg', d.balance.equal
+    ? '平了！goalMet(balanceEqual)=true'
+    : '还不平（tilt=' + d.balance.tilt.toFixed(1) + '）。goalMet(balanceEqual)=false');
+  const ck = d.chicken;
+  setTx('worldCkRabbits', String(ck ? ck.rabbits : 0));
+  setTx('worldCkRead', ck
+    ? ('鸡 ' + ck.chickens + ' 只，兔 ' + ck.rabbits + ' 只，腿 ' + ck.legs + '（目标 ' + ck.targetLegs + '）。')
+    : '');
+  setTx('worldCkMsg', ck && ck.solved
+    ? '解出了！goalMet(chickenSolved)=true'
+    : (ck && !ck.feasible
+      ? '这道题无解：' + (ck.infeasibleReason === 'odd-legs' ? '腿的总数是奇数，凑不出来'
+        : ck.infeasibleReason === 'legs-too-few' ? '腿数比全是鸡时还少'
+        : ck.infeasibleReason === 'legs-too-many' ? '腿数比全是兔时还多' : '数据有问题')
+      : '还没解出。goalMet(chickenSolved)=false'));
+  const ckRange = document.getElementById('worldCkRange');
+  const dragging = typeof Apparatus !== 'undefined' && Apparatus.isDragging && Apparatus.isDragging();
+  if (ckRange && ck && !dragging) ckRange.value = String(ck.rabbits);
+  const pts = d.numline.pts.map(p => MathWorld.Q.str(p)).join('、') || '无';
+  setTx('worldLineMsg',
+    '点：' + pts + (w.meta && w.meta.lastNumlineReject ? ' · 最近一次越界被拒绝' : ''));
+  const kEl = document.getElementById('worldFnKRange');
+  const bEl = document.getElementById('worldFnBRange');
+  if (kEl && !dragging) kEl.value = String(w.linefn.k);
+  if (bEl && !dragging) bEl.value = String(w.linefn.b);
+  setTx('worldFnK', String(w.linefn.k));
+  setTx('worldFnB', String(w.linefn.b));
+  setTx('worldFnMsg',
+    'y = ' + w.linefn.k + 'x + ' + w.linefn.b + '；当 x=2，y=' + d.linefn.yAt2 +
+    '。goalMet(k=-1)=' + MathWorld.goalMet(w, MathWorld.LAB_GOALS['q-funcline']));
+  renderProcedurePanel(w);
+  worldBenchRender();
+  const dice = d.dice;
+  const diceBox = document.getElementById('worldDiceBtns');
+  if (diceBox) {
+    diceBox.innerHTML = dice.sums.map(function (s) {
+      return '<button type="button" class="btn small ' + (s.who === 'A' ? 'primary' : 'ghost') +
+        '" data-world="dice-toggle" data-sum="' + s.sum + '" aria-label="点数和 ' + s.sum + '，' + s.ways +
+        ' 种，归 ' + s.who + '">' + s.sum + '（' + s.ways + '/36）→ ' + s.who + '</button>';
+    }).join('');
+  }
+  setTx('worldDiceOut', 'A 得 ' + dice.pAStr + '，B 得 ' + dice.pBStr + '。');
+  setTx('worldDiceMsg', MathWorld.goalMet(w, MathWorld.LAB_GOALS['q-fairgame'])
+    ? '公平了！goalMet(diceFair)=true'
+    : dice.signals[0].text + '。goalMet(diceFair)=false');
+  const rect = d.rect;
+  setTx('worldRectOut', '宽 ' + rect.w + '，长 ' + rect.h + '；周长 ' + rect.perim + '，面积 ' + rect.area +
+    (rect.isSquare ? '（正方形）' : '') + '。');
+  setTx('worldRectMsg', (MathWorld.goalMet(w, MathWorld.LAB_GOALS['q-maxarea'])
+    ? '面积最大了！goalMet(rectMaxArea)=true'
+    : rect.signals[0].text + '。goalMet(rectMaxArea)=false'));
+  const sigLines = (d.signals || []).map(function (s) {
+    return '[' + s.level + '] ' + s.domain + ': ' + s.text;
+  });
+  setTx('worldDerivedOut', (sigLines.length ? sigLines : ['（世界还没有信号）']).concat([
+    '---',
+    'balance L=' + d.balance.Lstr + ' R=' + d.balance.Rstr + ' diff=' + d.balance.diffStr,
+    'frac naive=' + d.fracboard.naiveStr + ' true=' + d.fracboard.trueStr + ' combined=' + !!d.fracboard.combined,
+    'chicken legGap=' + (ck ? ck.legGap : '-') + ' solved=' + (ck ? ck.solved : '-'),
+    'numline pts=[' + pts + '] reject=' + !!(w.meta && w.meta.lastNumlineReject),
+    'linefn k=' + w.linefn.k + ' b=' + w.linefn.b,
+    'pieces=' + d.pieceCount + ' tray=' + d.trayCount + ' · MathWorld ' + (MathWorld.version || ''),
+  ]).join('\n'));
+  if (typeof Apparatus !== 'undefined' && Apparatus && typeof Apparatus.render === 'function') {
+    Apparatus.render(w, d);
+  }
+}
+function worldPlayApply(intent, okText, failText) {
+  const w = worldPlayEnsure();
+  if (!w) return;
+  const res = MathWorld.apply(w, intent);
+  mwPlay = res.world;
+  labWorld = res.world;
+  worldPlayMsg(res.ok ? (okText || intent.type) : (failText || res.reason || 'failed'), res.ok);
+  worldPlayRender();
+}
+function worldPlayBumpFrac(side, which, delta) {
+  const w = worldPlayEnsure();
+  if (!w) return;
+  const f = Object.assign({}, w.fracboard[side]);
+  if (which === 'n') f.n = Math.max(0, Math.min(8, f.n + delta));
+  else f.d = Math.max(2, Math.min(8, f.d + delta));
+  if (f.n > f.d) f.n = f.d;
+  worldPlayApply({ type: 'fracboardSet', side: side, n: f.n, d: f.d }, 'fracboard ' + side + '=' + MathWorld.Q.str(f));
+}
+(function worldPlayBind() {
+  const root = document.getElementById('labMwWorkbench') || document.getElementById('lab');
+  if (!root) return;
+  if (typeof Apparatus !== 'undefined' && Apparatus && typeof Apparatus.bind === 'function') {
+    Apparatus.bind(root, function (intent) {
+      if (!intent) return;
+      if (intent.type === 'fracboardSet') {
+        return worldPlayApply(intent, 'fracboard ' + intent.side + '=' + intent.n + '/' + intent.d);
+      }
+      if (intent.type === 'balanceAddQty') {
+        return worldPlayApply(intent, (intent.side === 'R' ? '右盘' : '左盘') + ' +' + MathWorld.Q.str(intent.qty));
+      }
+      if (intent.type === 'chickenSetRabbits') {
+        return worldPlayApply(intent, '兔=' + intent.rabbits);
+      }
+      if (intent.type === 'linefnSet') {
+        const bits = [];
+        if (intent.k !== undefined) bits.push('k=' + intent.k);
+        if (intent.b !== undefined) bits.push('b=' + intent.b);
+        return worldPlayApply(intent, bits.join(' '));
+      }
+      if (intent.type === 'numlineClear') {
+        return worldPlayApply(intent, '数轴已清空');
+      }
+      if (intent.type === 'ui-frac-add') {
+        return worldPlayApply({ type: 'fracCombine' }, '拼一拼：法则算出错拼与正拼');
+      }
+      if (intent.type === 'ui-bal-clear') {
+        let w = worldPlayEnsure();
+        w = MathWorld.apply(w, { type: 'balanceClear' }).world;
+        w = MathWorld.apply(w, { type: 'balanceAddQty', side: 'L', qty: { n: 1, d: 2 } }).world;
+        mwPlay = w; labWorld = w;
+        worldPlayMsg('天平已重置为左盘 1/2', true);
+        worldPlayRender();
+        return;
+      }
+      if (intent.type === 'ui-place-num' && intent.qty) {
+        const piece = intent.qty.d === 1
+          ? { kind: 'num', v: intent.qty.n }
+          : { kind: 'frac', n: intent.qty.n, d: intent.qty.d };
+        const w = worldPlayEnsure();
+        const mk = MathWorld.apply(w, { type: 'makePiece', piece: piece });
+        mwPlay = mk.world; labWorld = mk.world;
+        const label = MathWorld.Q.str(intent.qty);
+        return worldPlayApply(
+          { type: 'place', pieceId: mk.pieceId, target: 'numline' },
+          '数轴放上 ' + label,
+          label + ' 放不下（只到 2）'
+        );
+      }
+    });
+  }
+  root.addEventListener('click', function (e) {
+    const btn = e.target.closest('[data-world]');
+    if (!btn) return;
+    const op = btn.getAttribute('data-world');
+    if (op === 'fa-an-') return worldPlayBumpFrac('A', 'n', -1);
+    if (op === 'fa-an+') return worldPlayBumpFrac('A', 'n', 1);
+    if (op === 'fa-ad-') return worldPlayBumpFrac('A', 'd', -1);
+    if (op === 'fa-ad+') return worldPlayBumpFrac('A', 'd', 1);
+    if (op === 'fa-bn-') return worldPlayBumpFrac('B', 'n', -1);
+    if (op === 'fa-bn+') return worldPlayBumpFrac('B', 'n', 1);
+    if (op === 'fa-bd-') return worldPlayBumpFrac('B', 'd', -1);
+    if (op === 'fa-bd+') return worldPlayBumpFrac('B', 'd', 1);
+    if (op === 'fa-ad-set' || op === 'fa-bd-set') {
+      const side = op === 'fa-ad-set' ? 'A' : 'B';
+      const dd = parseInt(btn.getAttribute('data-d'), 10);
+      if (!dd) return;
+      const w = worldPlayEnsure();
+      if (!w) return;
+      let n = w.fracboard[side].n;
+      if (n > dd) n = dd;
+      return worldPlayApply(
+        { type: 'fracboardSet', side: side, n: n, d: dd },
+        'fracboard ' + side + '=' + n + '/' + dd
+      );
+    }
+    if (op === 'dice-toggle') {
+      const s = parseInt(btn.getAttribute('data-sum'), 10);
+      return worldPlayApply({ type: 'diceToggle', sum: s }, '点数和 ' + s + ' 换了一边', '点数和只能在 2 到 12 之间');
+    }
+    if (op === 'rect-w-' || op === 'rect-w+') {
+      const cur = MathWorld.derived(worldPlayEnsure()).rect;
+      const nw = op === 'rect-w+' ? cur.w + 1 : cur.w - 1;
+      return worldPlayApply({ type: 'rectSet', w: nw }, '宽改成 ' + nw, '宽只能在 1 到 ' + (cur.perim / 2 - 1) + ' 之间');
+    }
+    if (op === 'fn-2pt') {
+      const num = function (id) { return parseFloat(document.getElementById(id).value); };
+      return worldPlayApply(
+        { type: 'linefnFromPoints', x1: num('worldFnX1'), y1: num('worldFnY1'), x2: num('worldFnX2'), y2: num('worldFnY2') },
+        '过两点的直线已画好',
+        '两点定不出一次函数（x 相同是竖线，或数没填全）'
+      );
+    }
+    if (op === 'fa-mint') {
+      return worldPlayApply({ type: 'fracMint' }, '做成一块分数零件，可以拖到天平或数轴', '先点「拼一拼」，才能做成零件');
+    }
+    if (op === 'fa-add') {
+      return worldPlayApply({ type: 'fracCombine' }, '拼一拼：法则算出错拼与正拼');
+    }
+    if (op === 'bal-r-14') return worldPlayApply({ type: 'balanceAddQty', side: 'R', qty: { n: 1, d: 4 } }, '右盘 +1/4');
+    if (op === 'bal-r-12') return worldPlayApply({ type: 'balanceAddQty', side: 'R', qty: { n: 1, d: 2 } }, '右盘 +1/2');
+    if (op === 'bal-clear') {
+      let w = worldPlayEnsure();
+      w = MathWorld.apply(w, { type: 'balanceClear' }).world;
+      w = MathWorld.apply(w, { type: 'balanceAddQty', side: 'L', qty: { n: 1, d: 2 } }).world;
+      mwPlay = w; labWorld = w;
+      worldPlayMsg('天平已重置为左盘 1/2', true);
+      worldPlayRender();
+      return;
+    }
+    if (op === 'ck-' || op === 'ck+' || op === 'ck-solve') {
+      const w = worldPlayEnsure();
+      if (!w || !w.chicken) return;
+      let r = w.chicken.rabbits | 0;
+      if (op === 'ck-') r = Math.max(0, r - 1);
+      else if (op === 'ck+') r = Math.min(w.chicken.targetHeads, r + 1);
+      else r = 12;
+      return worldPlayApply({ type: 'chickenSetRabbits', rabbits: r }, '兔=' + r);
+    }
+    if (op === 'nl-7' || op === 'nl-1' || op === 'nl-half') {
+      const piece = op === 'nl-7' ? { kind: 'num', v: 7 }
+        : op === 'nl-1' ? { kind: 'num', v: 1 }
+        : { kind: 'frac', n: 1, d: 2 };
+      const w = worldPlayEnsure();
+      const mk = MathWorld.apply(w, { type: 'makePiece', piece: piece });
+      mwPlay = mk.world; labWorld = mk.world;
+      const label = piece.kind === 'frac' ? (piece.n + '/' + piece.d) : String(piece.v);
+      return worldPlayApply(
+        { type: 'place', pieceId: mk.pieceId, target: 'numline' },
+        '数轴放上 ' + label,
+        label + ' 放不下（只到 2）'
+      );
+    }
+    if (op === 'nl-clear') return worldPlayApply({ type: 'numlineClear' }, '数轴已清空');
+  });
+  root.addEventListener('input', function (e) {
+    const fracEl = e.target.closest('[data-frac-range]');
+    if (fracEl) {
+      const side = fracEl.getAttribute('data-frac-range');
+      const n = parseInt(fracEl.value, 10);
+      const w = worldPlayEnsure();
+      if (!w || !side || !w.fracboard[side]) return;
+      const d = w.fracboard[side].d;
+      return worldPlayApply(
+        { type: 'fracboardSet', side: side, n: Math.max(0, Math.min(d, n)), d: d },
+        'fracboard ' + side + '=' + n + '/' + d
+      );
+    }
+    const el = e.target.closest('[data-world-range]');
+    if (!el) return;
+    const which = el.getAttribute('data-world-range');
+    const val = parseFloat(el.value);
+    if (which === 'k') return worldPlayApply({ type: 'linefnSet', k: val }, 'k=' + val);
+    if (which === 'b') return worldPlayApply({ type: 'linefnSet', b: val }, 'b=' + val);
+    if (which === 'rabbits') {
+      return worldPlayApply(
+        { type: 'chickenSetRabbits', rabbits: Math.round(val) },
+        '兔=' + Math.round(val)
+      );
+    }
+  });
+})();
+if (typeof location !== 'undefined' && /(?:\?|&)world=1(?:&|$)/.test(location.search || '')) {
+  setTimeout(function () { if (typeof navGo === 'function') navGo('lab'); }, 0);
+}
 
 /* ================= 互动模拟（PhET 式单概念模拟） ================= */
 
@@ -8286,13 +9247,23 @@ let crProbIdx = 0;
 let crRabbits = 0;
 function crRender() {
   const p = CR_PROBS[crProbIdx];
-  const chickens = p.heads - crRabbits;
-  const legs = chickens * 2 + crRabbits * 4;
+  let chickens, legs, solved;
+  if (typeof MathWorld !== 'undefined' && MathWorld) {
+    let w = MathWorld.create({
+      chicken: { targetHeads: p.heads, targetLegs: p.legs, rabbits: crRabbits },
+    });
+    const d = MathWorld.derived(w).chicken;
+    chickens = d.chickens; legs = d.legs; solved = d.solved;
+  } else {
+    chickens = p.heads - crRabbits;
+    legs = chickens * 2 + crRabbits * 4;
+    solved = legs === p.legs;
+  }
   document.getElementById('crRead').textContent = '鸡 ' + chickens + ' 只，兔 ' + crRabbits + ' 只，一共 ' + legs + ' 条腿（目标 ' + p.legs + ' 条）。';
   document.getElementById('crRabbitTx').textContent = '兔 ' + crRabbits + ' 只';
   document.getElementById('crFill').style.width = Math.round(legs / (p.heads * 4) * 100) + '%';
   const diff = p.legs - legs;
-  document.getElementById('crMsg').textContent = diff === 0
+  document.getElementById('crMsg').textContent = solved
     ? '对了！兔 ' + crRabbits + ' 只，鸡 ' + chickens + ' 只——验算：' + chickens + '×2+' + crRabbits + '×4=' + legs + '。'
     : diff > 0
       ? '还差 ' + diff + ' 条腿：每换一只兔多 2 条腿，还要换 ' + (diff / 2) + ' 只兔。'

@@ -96,8 +96,9 @@ const documentStub = {
   querySelector(sel) { return registry.find(e => matchSel(e, sel)) || makeEl('div'); },
   querySelectorAll(sel) { return registry.filter(e => matchSel(e, sel)); },
   body: makeEl('body'),
+  addEventListener() {},
 };
-const windowStub = { scrollTo() {}, setTimeout, document: documentStub };
+const windowStub = { scrollTo() {}, setTimeout, addEventListener() {}, document: documentStub };
 
 // ---------- stub grade content (small but schema-faithful) ----------
 const GRADE3_CONTENT = { grade: 3, edition: 'A', units: [
@@ -302,15 +303,26 @@ seedSeg('splitTotalSeg', 'split-total', ['3', '4', '5']);
 seedSeg('addsubModeSeg', 'addsub-mode', ['add', 'sub']);
 seedSeg('sortRuleSeg', 'sort-rule', ['color', 'shape']);
 
-// ---------- load the real app.js ----------
+// ---------- load MathWorld then the real app.js ----------
 const root = require('path').resolve(__dirname, '..');
+const worldSrc = fs.readFileSync(root + '/apps/web/math-world.js', 'utf8');
+const apparatusSrc = fs.readFileSync(root + '/apps/web/apparatus.js', 'utf8');
 const src = fs.readFileSync(root + '/apps/web/app.js', 'utf8');
 const sandbox = { document: documentStub, window: windowStub, console, setTimeout, Math, JSON, Object, Array, String, Number, parseInt, parseFloat, isNaN, GRADE3_CONTENT, GRADE1_CONTENT, GRADE2_CONTENT, GRADE4_CONTENT, GRADE5_CONTENT, GRADE6_CONTENT, GRADE7_CONTENT, GRADE8_CONTENT, GRADE9_CONTENT, localStorage: localStorageStub };
 vm.createContext(sandbox);
 try {
+  vm.runInContext(worldSrc, sandbox, { filename: 'math-world.js' });
+  vm.runInContext(fs.readFileSync(root + '/apps/web/bench-views.js', 'utf8'), sandbox, { filename: 'bench-views.js' });
+  sandbox.BenchViews = windowStub.BenchViews || sandbox.BenchViews || (sandbox.globalThis && sandbox.globalThis.BenchViews);
+  // math-world attaches to window (windowStub) when present.
+  sandbox.MathWorld = windowStub.MathWorld || sandbox.MathWorld || sandbox.globalThis && sandbox.globalThis.MathWorld;
+  vm.runInContext(apparatusSrc, sandbox, { filename: 'apparatus.js' });
+  sandbox.Apparatus = windowStub.Apparatus || sandbox.Apparatus;
   vm.runInContext(src, sandbox, { filename: 'app.js' });
   console.log('LOAD OK');
 } catch (e) { console.log('LOAD FAILED: ' + e.message); process.exit(1); }
+check('MathWorld available in app sandbox', !!(sandbox.MathWorld || windowStub.MathWorld));
+check('Apparatus available in app sandbox', !!(sandbox.Apparatus || windowStub.Apparatus));
 
 const navGo = sandbox.navGo;
 const gradeDetail = byId.gradeDetail;
@@ -1112,10 +1124,54 @@ check('layout CSS: point page is a narrow centered column',
 // index.html：首页 9 块面板分两组，含今天复习入口和闯关路入口；函数表有 x=4
 const htmlText = fs.readFileSync(root + '/apps/web/index.html', 'utf8');
 const panelsSec = htmlText.split('id="panels"')[1].split('</section>')[0];
-check('home: 9 panels in two groups incl. 今天复习 and 闯关路',
+check('home: 9 panels in two groups incl. 今天复习、闯关路、数学实验室',
   (panelsSec.match(/data-nav-key="/g) || []).length === 9 && panelsSec.includes('data-nav-key="today-review"') &&
-  panelsSec.includes('data-nav-key="checkpoint"') &&
+  panelsSec.includes('data-nav-key="checkpoint"') && panelsSec.includes('data-nav-key="lab"') &&
+  !panelsSec.includes('data-nav-key="world"') &&
   panelsSec.includes('开始学') && panelsSec.includes('工具箱'));
+check("viewForKey('world') redirects to lab (NB)", sandbox.viewForKey('world') === 'lab');
+navGo('world');
+check('world bookmark opens lab with MathWorld workbench',
+  byId.lab.hidden === false && byId.panels.hidden === true && documentStub.body.dataset.view === 'lab');
+if (typeof sandbox.worldPlayRender === 'function') sandbox.worldPlayRender();
+check('lab MathWorld workbench uses shared world',
+  !!sandbox.MathWorld && (byId.worldDerivedOut.textContent.includes('frac') ||
+    byId.worldDerivedOut.textContent.includes('balance') ||
+    byId.worldDerivedOut.textContent.includes('MathWorld')));
+check('lab HTML hosts MathWorld workbench',
+  htmlText.includes('id="labMwWorkbench"') && htmlText.includes('data-world="fa-add"') &&
+  htmlText.includes('id="worldFnCard"') && !htmlText.includes('id="world" class="section'));
+check('lab HTML hosts SVG apparatus mounts',
+  htmlText.includes('id="worldFracSvg"') && htmlText.includes('id="worldBalSvg"') &&
+  htmlText.includes('id="worldCkSvg"') && htmlText.includes('id="worldLineSvg"') &&
+  htmlText.includes('id="worldFnSvg"') && htmlText.includes('apparatus.js'));
+if (typeof sandbox.worldPlayRender === 'function') sandbox.worldPlayRender();
+check('lab HTML hosts procedure panel and fraction-mint button',
+  htmlText.includes('id="worldProcOut"') && htmlText.includes('data-world="fa-mint"'));
+check('lab HTML hosts the dice card with the sum buttons container',
+  htmlText.includes('id="worldDiceCard"') && htmlText.includes('id="worldDiceBtns"'));
+check('lab HTML: question chooser is inside the bench, above every instrument',
+  htmlText.indexOf('id="labMwWorkbench"') < htmlText.indexOf('class="bench-choose"') &&
+  htmlText.indexOf('class="bench-choose"') < htmlText.indexOf('id="labQuestions"') &&
+  htmlText.indexOf('id="labQuestions"') < htmlText.indexOf('id="worldFracCard"'));
+check('lab HTML: bench pieces can be dropped on the balance pans and the number line',
+  htmlText.includes('data-drop="balance.L"') && htmlText.includes('data-drop="balance.R"') &&
+  htmlText.includes('data-drop="numline"'));
+check('lab HTML hosts the rectangle card with width buttons',
+  htmlText.includes('id="worldRectCard"') && htmlText.includes('data-world="rect-w+"') &&
+  htmlText.includes('data-world="rect-w-"'));
+check('lab HTML hosts the two-point line control and the bench trash zone',
+  htmlText.includes('data-world="fn-2pt"') && htmlText.includes('id="worldFnX1"') &&
+  htmlText.includes('id="worldBenchTrash"'));
+check('lab HTML hosts the bench card with shelf, merge, split, and clear',
+  htmlText.includes('id="worldBenchCard"') && htmlText.includes('id="worldBenchShelf"') &&
+  htmlText.includes('data-bench="merge"') && htmlText.includes('data-bench="split"') &&
+  htmlText.includes('data-bench="clear"'));
+check('Apparatus paints fraction SVG children',
+  !!sandbox.Apparatus && byId.worldFracSvg.children.length > 0);
+check('Apparatus paints balance + linefn SVG',
+  byId.worldBalSvg.children.length > 0 && byId.worldFnSvg.children.length > 0);
+navGo('home');
 check('function tables include x=4', htmlText.includes('<td id="y4">') && htmlText.includes('<td id="labY4">'));
 // 今天复习首页入口
 check("viewForKey('today-review') is review", sandbox.viewForKey('today-review') === 'review');
@@ -3463,6 +3519,10 @@ if (typeof sandbox.labSetMode === 'function') {
     sandbox.labChallengeAttempts.includes('q-fracadd') && sandbox.labChallengeAttempts.includes('q-balfrac') &&
     byId.labCurrentQ.textContent.includes('天平一边放 1/2') &&
     sandbox.labWbL.length === 1 && sandbox.labWbL[0].n === 1 && sandbox.labWbL[0].d === 2);
+  // The last question clicked above is q-balfrac, so the panel shows its procedure.
+  check('lab2: challenge question shows an exam-mode procedure panel with no checklist',
+    byId.worldProcOut.innerHTML.includes('天平上的分数') && byId.worldProcOut.innerHTML.includes('考试（无提示）') &&
+    !byId.worldProcOut.innerHTML.includes('proc-steps'));
   sandbox.labSetMode('free');
   click(byId['labQ-numline']);
   check('lab2: entering a question in free mode records no attempt',
@@ -3485,6 +3545,56 @@ if (typeof sandbox.labSetMode === 'function') {
   sandbox.labChallengeAttempts = []; sandbox.labChallengeMarks = {};
   sandbox.labSetMode('free');
   sandbox.labWbL = []; sandbox.labWbR = []; sandbox.labWbRender();
+  // 跨次统计：考试结果写进历史；同一份报告不重复记；面板显示次数与最常丢的一步。
+  const procRep = { labId: 'q-fracadd', title: '分数相加', mode: 'exam', score: 2, max: 4, done: false, opCount: 3, lost: ['把合起来的结果做成一块分数'], lines: [
+    { id: 'combine', label: '把 1/2 和 1/3 合到一起', points: 1, got: true },
+    { id: 'mint', label: '把合起来的结果做成一块分数', points: 2, got: false },
+    { id: 'contrast', label: '看见错拼 2/5 与正确和 5/6 的差别', points: 1, got: true } ] };
+  sandbox.procHistRecord(procRep);
+  sandbox.procHistRecord(procRep);
+  const hist = JSON.parse(lsData['math-lab-proc-v1'] || '{}');
+  check('history: exam result stored once with attempts and lost counts',
+    hist['q-fracadd'] && hist['q-fracadd'].attempts === 1 && hist['q-fracadd'].lost.mint === 1);
+  check('history: summary names the most-lost step',
+    sandbox.procHistSummaryHtml('q-fracadd').includes('考过 1 次') &&
+    sandbox.procHistSummaryHtml('q-fracadd').includes('做成一块分数'));
+  // 数轴题交卷后，自动判分重建世界，流程面板仍然在。
+  sandbox.labSetMode('challenge');
+  sandbox.labEnterQuestion('q-numline');
+  sandbox.labSubmitChallenge();
+  check('numline panel keeps its procedure after challenge auto-mark',
+    byId.worldProcOut.innerHTML.includes('数轴上的数'));
+  sandbox.labSetMode('free');
+  // 实验台动作不计入挑战流程：不增加操作数，也不计失败。
+  sandbox.labSetMode('challenge');
+  sandbox.labEnterQuestion('q-fracadd');
+  const opsBeforeBench = (sandbox.labWorld.ops || []).length;
+  const benchMk = sandbox.benchRun({ type: 'makePiece', piece: { kind: 'frac', n: 1, d: 2 } });
+  sandbox.benchRun({ type: 'benchPut', pieceId: benchMk.pieceId });
+  sandbox.benchRun({ type: 'benchPut', pieceId: 'no-such-piece' });
+  check('bench: bench moves do not add exam ops or errors, and keep the procedure',
+    (sandbox.labWorld.ops || []).length === opsBeforeBench && (sandbox.labWorld.errors || []).length === 0 &&
+    !!sandbox.labWorld.procedure && sandbox.labWorld.bench.length === 1);
+  sandbox.labSetMode('free');
+  // 台面跨题保留：换一道题，台上的数还在，并且存进了本机。
+  const benchCountNow = sandbox.labWorld.bench.length;
+  sandbox.labEnterQuestion('q-numline');
+  check('bench: pieces stay on the bench when the question changes',
+    benchCountNow >= 1 && sandbox.labWorld.bench.length === benchCountNow &&
+    JSON.parse(lsData['math-bench-v1'] || '[]').length === benchCountNow);
+  check('bench: chips draw a fraction bar', byId.worldBenchShelf.innerHTML.includes('bench-svg'));
+  // 视图：直线放上台，台子自动变成坐标系，并画出直线
+  sandbox.benchRun({ type: 'benchLineToggle' });
+  sandbox.worldBenchRender();
+  check('bench view: a line on the bench shows the coordinate system and draws it',
+    byId.worldBenchViews.innerHTML.includes('坐标系') && byId.worldBenchView.innerHTML.includes('<polyline'));
+  sandbox.benchRun({ type: 'benchLineToggle' });
+  sandbox.worldBenchRender();
+  check('bench view: taking the line off the bench goes back to the number line or fraction bars',
+    !byId.worldBenchView.innerHTML.includes('<polyline'));
+  check('lab HTML hosts the bench view canvas and the line button',
+    htmlText.includes('id="worldBenchView"') && htmlText.includes('data-bench="line"') &&
+    htmlText.includes('src="bench-views.js"'));
   // 实验记录：记一条，再点“清空记录”，记录就没了（改前没有清空按钮）。
   sandbox.labTrace('测试记录：1/2+1/3', true);
   check('lab2: trace list shows a logged attempt',

@@ -21,9 +21,9 @@ import re
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-CSS = (ROOT / 'apps' / 'web' / 'styles.css').read_text()
-JS = (ROOT / 'apps' / 'web' / 'app.js').read_text()
-HTML = (ROOT / 'apps' / 'web' / 'index.html').read_text()
+CSS = (ROOT / 'apps' / 'web' / 'styles.css').read_text(encoding='utf-8')
+JS = (ROOT / 'apps' / 'web' / 'app.js').read_text(encoding='utf-8')
+HTML = (ROOT / 'apps' / 'web' / 'index.html').read_text(encoding='utf-8')
 
 # view -> sections the CSS allowlist re-shows for it
 allowed = {}
