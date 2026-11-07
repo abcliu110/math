@@ -3535,9 +3535,13 @@ function worldBenchRender() {
 })();
 /* 把台上的数放到器材上（天平左右盘、数轴）。返回是否成功。 */
 function benchDropTargetAt(x, y) {
-  const el = document.elementFromPoint ? document.elementFromPoint(x, y) : null;
-  const t = el && el.closest ? el.closest('[data-drop]') : null;
-  return t ? t.getAttribute('data-drop') : null;
+  // 按矩形判断落点，不用 elementFromPoint（图形层可能盖在落点上面）。
+  const nodes = document.querySelectorAll('[data-drop]');
+  for (let i = 0; i < nodes.length; i++) {
+    const r = nodes[i].getBoundingClientRect();
+    if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return nodes[i].getAttribute('data-drop');
+  }
+  return null;
 }
 function benchPlaceOn(pieceId, target, label) {
   const res = benchRun({ type: 'place', pieceId: pieceId, target: target });
