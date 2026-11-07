@@ -248,15 +248,15 @@
       x1: 170, y1: 220, x2: 170, y2: 110, stroke: '#cbd5e1', 'stroke-width': 5,
     }));
     const beam = el('g', {
-      transform: 'rotate(' + tilt + ' 170 110)',
       style: 'transition:transform .2s ease',
     });
     // 梁要“转过去”而不是“跳过去”：整幅 SVG 每次重建，写在 transform
-    // 属性上的过渡永远跑不起来。先按上一次的角画出来（无过渡），强制
-    // 重排，再用 style.transform 缓动到新角度。
+    // 属性上的过渡永远跑不起来，而且属性和 style.transform 会叠加成双倍角
+    // （2026-11-07 复测：点一下就到满倾斜，一次中间角度都没有）。所以角度
+    // 只走 style.transform 一条路：先按上一次的角画出来（无过渡），强制重排，
+    // 再用 style.transform 缓动到新角度；第一次画或角度没变就直接写到位。
     if (beam.style && typeof window !== 'undefined' && window.requestAnimationFrame
       && lastBalTilt !== null && lastBalTilt !== tilt) {
-      beam.setAttribute('transform', 'rotate(' + lastBalTilt + ' 170 110)');
       beam.style.transformBox = 'view-box';
       beam.style.transformOrigin = '170px 110px';
       beam.style.transition = 'none';
@@ -266,6 +266,10 @@
         beam.style.transition = 'transform .35s ease';
         beam.style.transform = 'rotate(' + tilt + 'deg)';
       });
+    } else if (beam.style) {
+      beam.style.transformBox = 'view-box';
+      beam.style.transformOrigin = '170px 110px';
+      beam.style.transform = 'rotate(' + tilt + 'deg)';
     }
     lastBalTilt = tilt;
     beam.appendChild(el('line', {

@@ -3439,6 +3439,14 @@
   <section id="lab" class="section wrap">
     <h2>数学实验室 · 一间工作间</h2>
     <p class="section-sub">选一个问题，在工作间里摆弄器材；世界模型立刻算出后果。</p>
+    <div class="lab-topbar" id="labTopBar">
+      <span class="lab-topbar-title">数学实验室</span>
+      <span class="lab-topbar-sub">一张会算的桌子</span>
+      <span class="lab-topbar-sp"></span>
+      <button class="btn small ghost" type="button" id="labTopSave">保存台面</button>
+      <button class="btn small ghost" type="button" id="labTopClear">全部拿走</button>
+      <button class="btn small ghost" type="button" id="labTopHelp" aria-expanded="false">怎么玩 ▸</button>
+    </div>
     <div class="lab-mode-row">
       <span>模式：</span>
       <div class="seg" id="labModeSeg">
@@ -3568,7 +3576,7 @@
         <article class="demo-card" id="worldBenchCard">
           <p class="demo-tag">实验台 · bench</p>
           <h3>把数放上台子，拼一拼、分一分</h3>
-          <p>先从零件盒拿一个数放到台上（台子最多 6 个）。选中两个以上可以合并；选中一个可以平均拆成几份。合计和分母是否相同都由模型算出。点一个数，看它的属性。</p>
+          <p id="labBenchHelp" class="lab-help" hidden>先从零件盒拿一个数放到台上（台子最多 6 个）。选中两个以上可以合并；选中一个可以平均拆成几份。合计和分母是否相同都由模型算出。点一个数，看它的属性。</p>
           <div class="world-bench-body">
             <div class="world-bench-canvas">
               <div id="worldBenchShelf" class="bench-shelf" aria-live="polite"></div>
@@ -3758,8 +3766,8 @@
       </div>
       <aside class="world-panel demo-card" aria-live="polite">
         <p class="demo-tag">台面在说什么</p>
-        <h3>每动一下，世界就说一句</h3>
-        <div id="worldDerivedOut" class="world-signals" aria-live="polite"></div>
+        <h3>每动一下，世界就说一句 <button class="station-fold" type="button" id="worldSignalsFold" aria-expanded="false" aria-label="收起或展开台面信号">▸</button></h3>
+        <div id="worldDerivedOut" class="world-signals" aria-live="polite" hidden></div>
         <div id="worldProcOut" class="world-proc" aria-live="polite"><p class="muted">还没开始实验流程。选一个工作间题，就会按步骤打分。</p></div>
         <p class="muted">MathWorld <span id="worldVer">—</span> · 挑战交卷时工作间题自动判</p>
       </aside>
@@ -3844,13 +3852,15 @@
       <div id="labChallengeReport"></div>
     </div>
     <div class="lab-traces">
-      <h3>实验记录</h3>
+      <h3><span id="labTraceTitle">实验记录</span> <button class="station-fold" type="button" id="labTraceFold" aria-expanded="false" aria-label="收起或展开实验记录">▸</button></h3>
       <p class="muted">这节课试过的方法和错过的地方都在这里（只记在本机，不上传）。错题本身会进错题本。</p>
-      <ul id="labTraceList"></ul>
-      <div class="btn-row"><button class="btn small ghost" id="labTraceClear" type="button">清空记录</button></div>
+      <div id="labTraceBody" hidden>
+        <ul id="labTraceList"></ul>
+        <div class="btn-row"><button class="btn small ghost" id="labTraceClear" type="button">清空记录</button></div>
+      </div>
     </div>
-    <h3>四个工具小站</h3>
-    <div class="lab-grid">
+    <h3>四个工具小站 <button class="station-fold" type="button" id="labToolsFold" aria-expanded="false" aria-label="收起或展开四个工具小站">▸</button></h3>
+    <div class="lab-grid" id="labToolsGrid" hidden>
       <!-- 分数自由玩：复用分数演示的切饼 + 数轴画法，没有目标分数 -->
       <article class="demo-card" id="lab-fraction">
         <p class="demo-tag">自由玩 · 3–5 年级 · 分数</p>

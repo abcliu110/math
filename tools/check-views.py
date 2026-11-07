@@ -257,6 +257,9 @@ for _need in ('id="worldBenchBox"', 'id="worldBenchInspector"',
               'id="labWhyBtn"', 'id="labDiscoveryBtn"', 'id="labWhyBox"',
               'id="labSaveBtn"', 'id="labSaveName"', 'id="labSavedList"',
               'id="labChooseCurrent"', 'id="labChooseFold"', 'id="labMoreFold"',
+              'id="labTopBar"', 'id="labTopSave"', 'id="labTopClear"', 'id="labTopHelp"',
+              'id="labBenchHelp"', 'id="worldSignalsFold"', 'id="labTraceFold"',
+              'id="labTraceTitle"', 'id="labTraceBody"', 'id="labToolsFold"', 'id="labToolsGrid"',
               'class="station-fold"', 'class="rot-handle"', 'class="world-signals"'):
     if _need not in _lab:
         errors.append(f"lab section is missing {_need}")

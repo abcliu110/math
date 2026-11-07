@@ -122,7 +122,11 @@
     const L = sumPan(w.balance.L, w.pieces);
     const R = sumPan(w.balance.R, w.pieces);
     const balDiff = Q.sub(L, R); // >0 left heavier
-    const tilt = Math.max(-15, Math.min(15, -Q.toNumber(balDiff) * 3));
+    // 梁要一眼看得出歪：分数差 1/2 按旧式只歪 1.5°，真机上看着就是平的
+    // （2026-11-07 复测：左 5/4 对右 3/4，梁保持水平）。不平时至少歪 6°，
+    // 差越大越歪，最多 15°；真天平本来也不是按重量差成比例歪的，歪到头就停。
+    const balDiffNum = Q.toNumber(balDiff);
+    const tilt = balDiffNum === 0 ? 0 : -Math.sign(balDiffNum) * Math.min(15, 6 + Math.min(9, Math.abs(balDiffNum) * 2));
     const balEq = Q.eq(L, R);
 
     const tfSum = (w.tenframe.A | 0) + (w.tenframe.B | 0);

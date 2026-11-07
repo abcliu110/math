@@ -3173,11 +3173,21 @@ document.getElementById('labTfReset').addEventListener('click', () => {
 });
 labTfRender();
 
-/* 天平自由玩：两边砝码随便加减（按钮或点砝码），横梁按重量差实时倾斜 */
-let labBalL = 5, labBalR = 3;
+/* 天平自由玩：两边砝码随便加减（按钮或点砝码），横梁按重量差实时倾斜。
+   状态进自动保存（math-lab-bal-v1），刷新后左 7 不会变回左 5（2026-11-07 复测）。 */
+var labBalSaved = null;
+try { labBalSaved = JSON.parse(lsGet('math-lab-bal-v1') || 'null'); } catch (e) { labBalSaved = null; }
+let labBalL = (labBalSaved && typeof labBalSaved.L === 'number') ? Math.max(0, Math.min(10, labBalSaved.L)) : 5,
+  labBalR = (labBalSaved && typeof labBalSaved.R === 'number') ? Math.max(0, Math.min(10, labBalSaved.R)) : 3;
 function labRenderBal() {
-  const tilt = Math.max(-15, Math.min(15, (labBalR - labBalL) * 3));
-  document.getElementById('labBeamGroup').setAttribute('transform', 'rotate(' + tilt + ' 160 70)');
+  // 差 1 只歪 3° 太小看不出；不平时至少歪 6°（和 MathWorld.derived 同一个刻度）。
+  const labBalDiff = labBalR - labBalL;
+  const tilt = labBalDiff === 0 ? 0 : Math.sign(labBalDiff) * Math.min(15, 6 + Math.min(9, Math.abs(labBalDiff) * 2));
+  try { lsSet('math-lab-bal-v1', JSON.stringify({ L: labBalL, R: labBalR })); } catch (e) {}
+  // 梁是“转过去”不是“跳过去”：只改 CSS transform，.35s 过渡在 styles.css 里。
+  // 以前是 setAttribute('transform', ...) 直接改属性，过渡永远跑不起来（2026-11-07 复测：点一下就满倾斜）。
+  const beam = document.getElementById('labBeamGroup');
+  if (beam && beam.style) beam.style.transform = 'rotate(' + tilt + 'deg)';
   let left = '', right = '';
   for (let i = 0; i < labBalL; i++) {
     left += '<rect x="' + (33 + (i % 5) * 13) + '" y="' + (76 + Math.floor(i / 5) * 13) + '" width="11" height="11" rx="2" fill="#2563eb" data-lab-w="L" style="cursor:pointer"/>';
@@ -3586,6 +3596,29 @@ function benchApply(intent, okText) {
   worldPlayRender();
   return res.ok;
 }
+/* 台面清空（台面上的数全拿走）：顶栏“全部拿走”和台面里的“全部拿走”是同一个动作。 */
+function labClearBench() {
+  const w = worldPlayEnsure();
+  if (!w) return;
+  MathWorld.derived(w).bench.items.forEach(function (it) { benchRun({ type: 'benchTake', pieceId: it.id }); });
+  benchSel = {};
+  worldInspectSelect(null); // 台面清空了，检查器回到“台面现状”，别留孤儿面板
+  benchMsg('台面清空了。', true);
+  worldPlayRender();
+}
+/* 画布里的旋转手柄（⟳）：长方形被选中时浮在它的右上角，点它转 90°（和检查器里的转 90° 是同一个动作）。 */
+(function labBenchRotateBind() {
+  const svg = document.getElementById('worldBenchView');
+  if (!svg || svg._rotateBound || !svg.addEventListener) return;
+  svg._rotateBound = true;
+  svg.addEventListener('click', function (e) {
+    const h = e.target && e.target.closest ? e.target.closest('[data-bench-rotate]') : null;
+    if (!h) return;
+    const w = worldPlayEnsure();
+    if (!w) return;
+    worldPlayApply({ type: 'rectSet', w: w.rect.perim / 2 - w.rect.w }, '转了 90°');
+  });
+})();
 /* 分数条：每个单位画一条，分成 d 段，涂 n 段。分母太大或数太大时只显示数字。 */
 function benchPieceSvg(q) {
   const n = q.n, d = q.d, x = n / d;
@@ -3622,11 +3655,37 @@ function benchRestore() {
     if (mk) benchRun({ type: 'benchPut', pieceId: mk.pieceId });
   });
 }
+/* 台面上的数画成看得见的卡片（有颜色、有形状），不再是 "x = 5" 的文字行。
+   整数蓝卡，分数橙卡；卡片只画值，合计写在下面的字里。 */
+function benchChipsSvg(items, y0, w, h) {
+  let s = '';
+  (items || []).forEach(function (it, i) {
+    const x = 20 + i * (w + 8);
+    const isFrac = it.q.d !== 1;
+    s += '<rect x="' + x + '" y="' + y0 + '" width="' + w + '" height="' + h + '" rx="8" fill="' + (isFrac ? '#fb923c' : '#2563eb') + '" stroke="#f8fafc" stroke-width="2"/>';
+    s += '<text x="' + (x + w / 2) + '" y="' + (y0 + h / 2 + 5) + '" font-size="15" font-weight="700" text-anchor="middle" fill="#f8fafc">' + it.str + '</text>';
+  });
+  return s;
+}
+/* 台上合计（精确分数，不用浮点）：卡片下面的“合计：…”用它。 */
+function benchChipsTotal(items) {
+  let n = 0, d = 1;
+  (items || []).forEach(function (it) {
+    const g = gcd(d, it.q.d);
+    const l = d * it.q.d / g;
+    n = n * (l / d) + it.q.n * (l / it.q.d);
+    d = l;
+  });
+  const g2 = gcd(Math.abs(n), d);
+  n /= g2; d /= g2;
+  return d === 1 ? String(n) : n + '/' + d;
+}
 /* 实验台视图：坐标系 / 数轴 / 分数条 / 算式，由 BenchViews.chooseView 选。学生点按钮可以指定。 */
 var benchPreferredView = null;
+var benchShowBalance = true; // 天平在台上时台面先画天平；学生点了别的视图按钮才切走
 function bvX(x) { return 30 + (x + 1) * 57.5; } // 坐标系 x 范围 -1 到 7
 function bvY(y) { return 230 - (y + 2) * (200 / 14); } // 坐标系 y 范围 -2 到 12
-function benchViewSvg(view, items, lineOn, lf, bal, rect) {
+function benchViewSvg(view, items, lineOn, lf, bal, rect, rectSelected) {
   let s = '';
   if (view === 'coord') {
     for (let i = -1; i <= 7; i++) {
@@ -3658,6 +3717,11 @@ function benchViewSvg(view, items, lineOn, lf, bal, rect) {
       s += '<circle cx="' + bvX(rect.w) + '" cy="' + bvY(rect.h) + '" r="4" fill="#92400e"/>';
       s += '<text x="' + bvX(rect.w) + '" y="' + (bvY(rect.h) - 8) + '" font-size="11" text-anchor="middle" fill="#92400e">(' +
         rect.w + ',' + rect.h + ')</text>';
+      // 旋转手柄（NB 式：选中的物体上面浮一个 ⟳）：长方形被选中时才出现，点它转 90°。
+      if (rectSelected) {
+        const hx = bvX(rect.w) + 16, hy = bvY(rect.h) - 16;
+        s += '<g data-bench-rotate="rect" style="cursor:pointer"><circle cx="' + hx + '" cy="' + hy + '" r="13" fill="#f97316" stroke="#f8fafc" stroke-width="2"/><text x="' + hx + '" y="' + (hy + 5) + '" font-size="15" text-anchor="middle" fill="#f8fafc">⟳</text></g>';
+      }
     }
     items.forEach(function (it) {
       const x = it.q.n / it.q.d;
@@ -3695,23 +3759,33 @@ function benchViewSvg(view, items, lineOn, lf, bal, rect) {
       s += '<text x="' + (30 + bars * 66 + 8) + '" y="' + (y0 + 19) + '" font-size="14" font-weight="700" fill="#f8fafc">' + it.str + '</text>';
     });
   } else if (view === 'balance') {
-    // 天平：支点在中间，左盘、右盘写出它们的值；不平时横梁向重的一边倾斜。
+    // 天平：台上的数先画成一排卡片（上面），天平画在下面——盘子看得见，盘子里的值也看得见。
+    // 天平整体下移 40：卡片行占 y 10–50，梁在 y 170 上下。
+    s += benchChipsSvg(items, 10, 64, 40);
     const tilt = bal.equal ? 0 : (bal.leftHeavy ? 22 : -22);
-    const leftY = 130 + tilt, rightY = 130 - tilt;
-    s += '<polygon points="240,150 280,150 260,120" fill="#cbd5e1"/>';
+    const leftY = 170 + tilt, rightY = 170 - tilt;
+    s += '<polygon points="240,190 280,190 260,160" fill="#cbd5e1"/>';
     s += '<line x1="90" y1="' + leftY + '" x2="430" y2="' + rightY + '" stroke="#cbd5e1" stroke-width="4"/>';
-    s += '<line x1="260" y1="120" x2="260" y2="60" stroke="#cbd5e1" stroke-width="3"/>';
+    s += '<line x1="260" y1="160" x2="260" y2="100" stroke="#cbd5e1" stroke-width="3"/>';
     s += '<rect x="60" y="' + leftY + '" width="100" height="40" fill="#fde68a" stroke="#92400e"/>';
     s += '<rect x="380" y="' + rightY + '" width="100" height="40" fill="#fde68a" stroke="#92400e"/>';
     s += '<text x="110" y="' + (leftY + 26) + '" font-size="16" text-anchor="middle" fill="#0f172a">' + bal.Lstr + '</text>';
     s += '<text x="430" y="' + (rightY + 26) + '" font-size="16" text-anchor="middle" fill="#0f172a">' + bal.Rstr + '</text>';
-    s += '<text x="260" y="220" font-size="16" text-anchor="middle" fill="' + (bal.equal ? '#4ade80' : '#fca5a5') + '">' +
+    s += '<text x="260" y="252" font-size="16" text-anchor="middle" fill="' + (bal.equal ? '#4ade80' : '#fca5a5') + '">' +
       (bal.equal ? '平衡' : (bal.leftHeavy ? '左边重' : '右边重')) + '</text>';
   } else {
-    let y = 40;
-    if (lineOn) { s += '<text x="30" y="' + y + '" font-size="16" fill="#f8fafc">y = ' + lf.k + 'x + ' + lf.b + '</text>'; y += 34; }
-    items.forEach(function (it) { s += '<text x="30" y="' + y + '" font-size="16" fill="#f8fafc">x = ' + it.str + '</text>'; y += 34; });
-    if (!lineOn && !items.length) s += '<text x="30" y="40" font-size="14" fill="#94a3b8">台上还没有东西</text>';
+    // 算式视图也不再是光秃秃的 "x = 5" 文字行：数画成卡片，合计和直线写在下面一行。
+    if (!items.length && !lineOn) {
+      s += '<text x="30" y="40" font-size="14" fill="#94a3b8">台上还没有东西</text>';
+    } else {
+      s += benchChipsSvg(items, 24, 72, 48);
+      let y = 24 + 48 + 34;
+      if (items.length) {
+        s += '<text x="20" y="' + y + '" font-size="16" fill="#f8fafc">合计：' + benchChipsTotal(items) + '</text>';
+        y += 34;
+      }
+      if (lineOn) { s += '<text x="20" y="' + y + '" font-size="16" fill="#f8fafc">y = ' + lf.k + 'x + ' + lf.b + '</text>'; }
+    }
   }
   return s;
 }
@@ -3744,23 +3818,39 @@ function worldBenchRender() {
   }
   // 视图：台上的对象决定显示什么，学生可以在共同视图里指定。
   // 一次只画一个坐标系（数轴是一维，坐标系是二维，长方形画在坐标系格子上）。
+  // 天平例外：天平在台上时，台面先画天平（盘子看得见，盘子就是落点）——
+  // 不然数 + 天平的共同视图只剩“算式”，台面就只剩 "x = 5" 的文字行（2026-11-07 复测）。
+  // 学生点了别的视图按钮才切走；再点“天平”按钮就回来。
   const w2 = labWorld;
   const lineOn = !!(w2 && w2.benchLine);
   const balOn = !!(w2 && w2.benchBalance);
   const rectOn = !!(w2 && w2.benchRect);
   const objs = BenchViews.benchObjects(bv.items, lineOn, balOn, rectOn);
   const ch = BenchViews.chooseView(objs, benchPreferredView);
+  let canvasView = ch.view;
+  if (balOn && benchShowBalance) canvasView = 'balance';
+  // 长方形在台上、学生没手动选视图时默认看坐标系：长方形只画在坐标系里，
+  // 而数 + 长方形的共同视图默认是数轴——不改的话长方形永远画不出来
+  // （2026-11-07 复测：检查器显示 6×4、面积 24，台面上从来不画成形状）。
+  else if (!benchPreferredView && rectOn) canvasView = 'coord';
   const vbox = document.getElementById('worldBenchViews');
   if (vbox) {
-    vbox.innerHTML = ch.views.map(function (v) {
-      return '<button type="button" class="btn small ' + (v === ch.view ? 'primary' : 'ghost') +
+    let btns = '';
+    if (balOn) {
+      btns += '<button type="button" class="btn small ' + (canvasView === 'balance' ? 'primary' : 'ghost') +
+        '" data-bench="view" data-view="balance">天平</button>';
+    }
+    btns += ch.views.map(function (v) {
+      return '<button type="button" class="btn small ' + (v === canvasView ? 'primary' : 'ghost') +
         '" data-bench="view" data-view="' + v + '">' + BenchViews.VIEW_LABEL[v] + '</button>';
-    }).join('') + '<span class="muted">现在是：' + BenchViews.VIEW_LABEL[ch.view] + '</span>';
+    }).join('');
+    vbox.innerHTML = btns + '<span class="muted">现在是：' + BenchViews.VIEW_LABEL[canvasView] + '</span>';
   }
   const svg = document.getElementById('worldBenchView');
   if (svg) {
-    svg.innerHTML = benchViewSvg(ch.view, bv.items, lineOn, w2 ? w2.linefn : { k: 0, b: 0 },
-      w2 ? MathWorld.derived(w2).balance : null, w2 ? MathWorld.derived(w2).rect : null);
+    svg.innerHTML = benchViewSvg(canvasView, bv.items, lineOn, w2 ? w2.linefn : { k: 0, b: 0 },
+      w2 ? MathWorld.derived(w2).balance : null, w2 ? MathWorld.derived(w2).rect : null,
+      !!(worldInspectSel && worldInspectSel.apparatus === 'rect'));
   }
   const lineBtn = document.querySelector('[data-bench="line"]');
   if (lineBtn) lineBtn.setAttribute('aria-pressed', String(lineOn));
@@ -3769,7 +3859,7 @@ function worldBenchRender() {
   const rectBtn = document.querySelector('[data-bench="rect"]');
   if (rectBtn) rectBtn.setAttribute('aria-pressed', String(rectOn));
   // 直线在台上、且看的是坐标系时，可以直接在台上调 k 和 b。
-  if (vbox && lineOn && ch.view === 'coord' && w2) {
+  if (vbox && lineOn && canvasView === 'coord' && w2) {
     vbox.innerHTML += '<span class="muted">直线：k = ' + w2.linefn.k + '，b = ' + w2.linefn.b + '</span>' +
       '<button type="button" class="btn small ghost" data-bench="lk-">k −1</button>' +
       '<button type="button" class="btn small ghost" data-bench="lk+">k +1</button>' +
@@ -3836,14 +3926,14 @@ function worldBenchRender() {
     if (op === 'balance') {
       benchRun({ type: 'benchBalanceToggle' });
       benchMsg(labWorld && labWorld.benchBalance ? '天平放上了台面' : '天平拿下了台面', true);
-      if (labWorld && labWorld.benchBalance) worldInspectSelect({ apparatus: 'balance' });
+      if (labWorld && labWorld.benchBalance) { benchShowBalance = true; benchPreferredView = null; worldInspectSelect({ apparatus: 'balance' }); labExpandStation('worldBalCard'); }
       worldPlayRender();
       return;
     }
     if (op === 'rect') {
       benchRun({ type: 'benchRectToggle' });
       benchMsg(labWorld && labWorld.benchRect ? '长方形放上了台面，台子切到坐标系格子' : '长方形拿下了台面', true);
-      if (labWorld && labWorld.benchRect) worldInspectSelect({ apparatus: 'rect' });
+      if (labWorld && labWorld.benchRect) { benchPreferredView = null; worldInspectSelect({ apparatus: 'rect' }); labExpandStation('worldRectCard'); }
       worldPlayRender();
       return;
     }
@@ -3854,32 +3944,28 @@ function worldBenchRender() {
       return worldPlayApply(intent, '直线改成 y = ' + (op[1] === 'k' ? lf.k + delta : lf.k) + 'x + ' + (op[1] === 'b' ? lf.b + delta : lf.b));
     }
     if (op === 'view') {
-      benchPreferredView = b.getAttribute('data-view');
+      const v = b.getAttribute('data-view');
+      if (v === 'balance') benchShowBalance = true; // 再点“天平”就回到天平视图
+      else { benchShowBalance = false; benchPreferredView = v; }
       worldBenchRender();
       return;
     }
     if (op === 'line') {
       benchRun({ type: 'benchLineToggle' });
       benchMsg(labWorld && labWorld.benchLine ? '直线放上了台面，台子切到坐标系' : '直线拿下了台面', true);
-      if (labWorld && labWorld.benchLine) worldInspectSelect({ apparatus: 'linefn' });
+      if (labWorld && labWorld.benchLine) { benchPreferredView = null; worldInspectSelect({ apparatus: 'linefn' }); labExpandStation('worldFnCard'); }
       worldPlayRender();
       return;
     }
     if (op === 'clear') {
-      const w = worldPlayEnsure();
-      if (!w) return;
-      MathWorld.derived(w).bench.items.forEach(function (it) { benchRun({ type: 'benchTake', pieceId: it.id }); });
-      benchSel = {};
-      worldInspectSelect(null); // 台面清空了，检查器回到“台面现状”，别留孤儿面板
-      benchMsg('台面清空了。', true);
-      worldPlayRender();
+      labClearBench();
     }
   });
 })();
 /* 零件盒：每种器材配一张小图（NB 的器材架是图 + 名字，不是文字芯片）。
    图是按器材现画的 SVG：数字卡画卡片、分数画条、砝码画砝码、长方形画框、直线画线、天平画天平。 */
 (function labPartIcons() {
-  const box = document.getElementById('labPartBox');
+  const box = document.getElementById('worldBenchBox');
   if (!box) return;
   function numIcon(n) {
     return '<svg width="30" height="24" viewBox="0 0 30 24" aria-hidden="true"><rect x="2" y="2" width="26" height="20" rx="4" fill="#1a2438" stroke="#e2e8f0" stroke-width="2"/><text x="15" y="17" font-size="12" text-anchor="middle" fill="#f8fafc" font-weight="700">' + n + '</text></svg>';
@@ -3968,6 +4054,34 @@ function labExpandChoose() {
     moreFold.setAttribute('aria-expanded', String(hidden));
   });
 })();
+/* ---------- 实验室的折叠与顶栏：大段说明和日志默认收起来，不堆在台面周围 ---------- */
+(function labVisualFolds() {
+  function flipArrow(t, show) {
+    const arrow = show ? '▾' : '▸';
+    if (/^[▾▸]/.test(t)) return t.replace(/^[▾▸]/, arrow);
+    if (/[▾▸]$/.test(t)) return t.replace(/[▾▸]$/, arrow);
+    return t;
+  }
+  function wireFold(btnId, bodyId) {
+    const btn = document.getElementById(btnId);
+    const body = document.getElementById(bodyId);
+    if (!btn || !body) return;
+    btn.addEventListener('click', function () {
+      const show = body.hidden; // 现在收着 → 点开；现在开着 → 收起
+      body.hidden = !show;
+      btn.setAttribute('aria-expanded', String(show));
+      btn.textContent = flipArrow(btn.textContent, show);
+    });
+  }
+  wireFold('worldSignalsFold', 'worldDerivedOut'); // “台面在说什么”日志默认收起
+  wireFold('labTraceFold', 'labTraceBody'); // 实验记录默认收起
+  wireFold('labToolsFold', 'labToolsGrid'); // 四个工具小站默认收起
+  wireFold('labTopHelp', 'labBenchHelp'); // 台面说明：顶栏“怎么玩”点开
+  const saveBtn = document.getElementById('labTopSave');
+  if (saveBtn) saveBtn.addEventListener('click', function () { labSaveBench(); });
+  const clearBtn = document.getElementById('labTopClear');
+  if (clearBtn) clearBtn.addEventListener('click', function () { labClearBench(); });
+})();
 /* 把台上的数放到器材上（天平左右盘、数轴）。返回是否成功。 */
 function benchDropTargetAt(x, y) {
   // 按矩形判断落点，不用 elementFromPoint（图形层可能盖在落点上面）。
@@ -3981,6 +4095,21 @@ function benchDropTargetAt(x, y) {
       const vy = ((y - r.top) / r.height) * 250;
       if (vx >= 24 && vx <= 136 && vy >= 80 && vy <= 190) return 'balance.L';
       if (vx >= 204 && vx <= 316 && vy >= 80 && vy <= 190) return 'balance.R';
+    }
+  }
+  // 台面画布上的天平盘也是落点：台面正画着天平时，盘子是两个黄色矩形
+  // （左盘 x 60–160、右盘 x 380–480，y 随倾斜在 148–232 之间；viewBox 520x260）。
+  // 只在台面确实画着天平时才认，不然坐标系里的长方形会被误认成盘子。
+  if (typeof labWorld !== 'undefined' && labWorld && labWorld.benchBalance && benchShowBalance) {
+    const benchSvg = document.getElementById('worldBenchView');
+    if (benchSvg && benchSvg.getBoundingClientRect) {
+      const r2 = benchSvg.getBoundingClientRect();
+      if (r2.width > 0 && r2.height > 0 && x >= r2.left && x <= r2.right && y >= r2.top && y <= r2.bottom) {
+        const vx2 = ((x - r2.left) / r2.width) * 520;
+        const vy2 = ((y - r2.top) / r2.height) * 260;
+        if (vx2 >= 50 && vx2 <= 170 && vy2 >= 140 && vy2 <= 240) return 'balance.L';
+        if (vx2 >= 370 && vx2 <= 490 && vy2 >= 140 && vy2 <= 240) return 'balance.R';
+      }
     }
   }
   const nodes = document.querySelectorAll('[data-drop]');
@@ -4021,6 +4150,35 @@ function benchPlaceOn(pieceId, target, label) {
     const r = el.getBoundingClientRect();
     return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
   }
+  // 拖动时落点发光：天平盘变亮、台面画布 / 零件架 / 删除框描虚线框。
+  // 旧代码拖动全程没有任何落点提示（2026-11-07 复测：盘子亮起没看到）。
+  function benchDropHotClear() {
+    document.querySelectorAll('#worldBenchView.bench-drop-hot, #worldBenchShelf.bench-drop-hot, #worldBenchTrash.bench-drop-hot').forEach(function (el) { el.classList.remove('bench-drop-hot'); });
+    const balSvg = document.getElementById('worldBalSvg');
+    if (balSvg) balSvg.querySelectorAll('[data-bal-pan].is-hot').forEach(function (el) { el.classList.remove('is-hot'); });
+    document.querySelectorAll('.apparatus-drop.is-hot').forEach(function (el) { el.classList.remove('is-hot'); });
+  }
+  function benchDropHot(x, y) {
+    benchDropHotClear();
+    const target = benchDropTargetAt(x, y);
+    if (target === 'balance.L' || target === 'balance.R') {
+      const balSvg = document.getElementById('worldBalSvg');
+      const pan = balSvg && balSvg.querySelector('[data-bal-pan="' + target.slice(-1) + '"]');
+      if (pan) pan.classList.add('is-hot');
+      return;
+    }
+    if (target) {
+      const node = document.querySelector('[data-drop="' + target + '"]');
+      if (node) node.classList.add('is-hot');
+      return;
+    }
+    const benchView = document.getElementById('worldBenchView');
+    const shelf = document.getElementById('worldBenchShelf');
+    const trash = document.getElementById('worldBenchTrash');
+    if (benchView && inside(benchView, x, y)) benchView.classList.add('bench-drop-hot');
+    else if (shelf && inside(shelf, x, y)) shelf.classList.add('bench-drop-hot');
+    else if (trash && inside(trash, x, y)) trash.classList.add('bench-drop-hot');
+  }
   card.addEventListener('pointerdown', function (e) {
     if (e.button !== undefined && e.button !== 0) return;
     const b = e.target.closest('[data-bench="make"],[data-bench="pick"]');
@@ -4041,16 +4199,19 @@ function benchPlaceOn(pieceId, target, label) {
       ghostShow(drag.from.textContent.trim());
     }
     ghostMove(e.clientX, e.clientY);
+    benchDropHot(e.clientX, e.clientY);
   });
   document.addEventListener('pointerup', function (e) {
     const d = drag;
     drag = null;
     ghostHide();
+    benchDropHotClear();
     if (!d || !d.moved) return;
     suppressClick = true;
     setTimeout(function () { suppressClick = false; }, 0);
     const shelf = document.getElementById('worldBenchShelf');
     const trash = document.getElementById('worldBenchTrash');
+    const benchView = document.getElementById('worldBenchView');
     const target = benchDropTargetAt(e.clientX, e.clientY);
     if (target) {
       if (d.spec) {
@@ -4066,7 +4227,9 @@ function benchPlaceOn(pieceId, target, label) {
       worldPlayRender();
       return;
     }
-    if (d.spec && inside(shelf, e.clientX, e.clientY)) {
+    // 台面画布本身就是落点：旧代码只认零件架那一行芯片，拖到台面网格上
+    // 什么都不发生（2026-11-07 桌面复测：拖 1/2 到网格上放不上去）。
+    if (d.spec && (inside(shelf, e.clientX, e.clientY) || inside(benchView, e.clientX, e.clientY))) {
       const piece = d.spec.kind === 'frac' ? { kind: 'frac', n: d.spec.n, d: d.spec.d } : { kind: 'num', v: d.spec.n };
       const mk = benchRun({ type: 'makePiece', piece: piece });
       if (mk) benchApply({ type: 'benchPut', pieceId: mk.pieceId }, '放上台：' + d.from.textContent.trim());
@@ -4488,11 +4651,14 @@ function labWbRender() {
   } else {
     L = labWbSum('L'); R = labWbSum('R');
     const lNum0 = L.n / L.d, rNum0 = R.n / R.d;
-    tilt = Math.max(-15, Math.min(15, (rNum0 - lNum0) * 3));
+    const labWbDiff = rNum0 - lNum0;
+    tilt = labWbDiff === 0 ? 0 : Math.sign(labWbDiff) * Math.min(15, 6 + Math.min(9, Math.abs(labWbDiff) * 2));
     equal = L.n * R.d === R.n * L.d;
   }
   const lNum = L.n / L.d, rNum = R.n / R.d;
-  document.getElementById('labWbBeam').setAttribute('transform', 'rotate(' + tilt + ' 160 70)');
+  // 梁是“转过去”不是“跳过去”：只改 CSS transform，.35s 过渡在 styles.css 里（和上面 labRenderBal 同一个道理）。
+  const beam = document.getElementById('labWbBeam');
+  if (beam && beam.style) beam.style.transform = 'rotate(' + tilt + 'deg)';
   document.getElementById('labWbLeftWeights').innerHTML = labWbWeightsHtml(labWbL, 33);
   document.getElementById('labWbRightWeights').innerHTML = labWbWeightsHtml(labWbR, 233);
   document.getElementById('labWbEq').textContent = '左 ' + labFracStr(L.n, L.d) + ' ＝ 右 ' + labFracStr(R.n, R.d);
@@ -5031,6 +5197,8 @@ document.getElementById('labTraceClear').addEventListener('click', () => {
   labTraceLog.length = 0;
   const ul = document.getElementById('labTraceList');
   if (ul) ul.innerHTML = '';
+  const title = document.getElementById('labTraceTitle');
+  if (title) title.textContent = '实验记录（0 条）';
 });
 // 加载时先恢复自动保存（labSeedWorld(null)）：不然下面的 labWbRender →
 // labSyncBalanceToWorld 会在 labWorld 还是空时 create 一个全新世界、把
@@ -15143,6 +15311,8 @@ function labTrace(text, ok) {
   if (labTraceLog.length > 40) labTraceLog.shift();
   const ul = document.getElementById('labTraceList');
   if (ul) ul.innerHTML = labTraceLog.slice(-12).map(function (e) { return '<li>' + (e.ok ? '✓ ' : '✗ ') + esc(e.text) + '</li>'; }).join('');
+  const title = document.getElementById('labTraceTitle');
+  if (title) title.textContent = '实验记录（' + labTraceLog.length + ' 条）';
 }
 
 /* ---------- 创意实验 1：24点（4–5 年级，自由组合） ----------
