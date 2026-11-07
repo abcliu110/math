@@ -43,6 +43,7 @@
 
   var lastWorld = null;
   var lastDerived = null;
+  var lastBalTilt = null; // 上一次天平梁的倾斜角（做倾斜过渡用）
   var onIntent = null;
   var drag = null; // { kind, ... }
   var ghostEl = null;
@@ -100,8 +101,8 @@
       const filled = i < n;
       g.appendChild(el('rect', {
         x: x0 + i * unit + 1, y: y0 + 2, width: Math.max(2, unit - 2), height: H - 4, rx: 4,
-        fill: filled ? (opts.color || '#fb923c') : '#e2e8f0',
-        stroke: filled ? (opts.stroke || '#c2410c') : '#cbd5e1',
+        fill: filled ? (opts.color || '#fb923c') : '#263449',
+        stroke: filled ? (opts.stroke || '#c2410c') : '#475569',
         'stroke-width': 1,
         'data-frac-seg': String(i),
         'data-frac-side': opts.side || '',
@@ -117,12 +118,12 @@
       style: 'cursor:ew-resize',
     }));
     g.appendChild(el('text', {
-      x: 8, y: y0 + 26, 'font-size': 14, 'font-weight': 700, fill: '#64748b',
+      x: 8, y: y0 + 26, 'font-size': 14, 'font-weight': 700, fill: '#94a3b8',
       textContent: opts.side || '',
     }));
     g.appendChild(el('text', {
       x: x0 + W + 10, y: y0 + 26, 'font-size': 16, 'font-weight': 700,
-      fill: '#0f172a', textContent: qStr(frac),
+      fill: '#f8fafc', textContent: qStr(frac),
     }));
     host.appendChild(g);
     return { x0: x0, W: W, y0: y0, H: H, side: opts.side, d: d };
@@ -168,7 +169,7 @@
       const scale = Math.max(1.15, qNum(derived.fracboard.trueSum) * 1.05);
       const trackW = 200;
       svg.appendChild(el('text', {
-        x: 36, y: 210, 'font-size': 11, fill: '#b91c1c',
+        x: 36, y: 210, 'font-size': 11, fill: '#fca5a5',
         textContent: '错 ' + derived.fracboard.naiveStr,
       }));
       // keep compact comparison above add button area — draw at top right
@@ -188,13 +189,13 @@
     Object.keys(dataAttrs || {}).forEach(function (k) { g.setAttribute(k, dataAttrs[k]); });
     g.appendChild(el('rect', {
       x: 0, y: 0, width: 54, height: 28, rx: 8,
-      fill: primary ? '#ea580c' : (active ? '#ffedd5' : '#fff'),
+      fill: primary ? '#ea580c' : (active ? '#ffedd5' : '#1a2438'),
       stroke: primary ? '#c2410c' : (active ? '#f97316' : '#94a3b8'),
       'stroke-width': 2,
     }));
     g.appendChild(el('text', {
       x: 27, y: 19, 'font-size': 11, 'text-anchor': 'middle', 'font-weight': 700,
-      fill: primary ? '#fff' : '#0f172a', textContent: label,
+      fill: primary ? '#fff' : (active ? '#0f172a' : '#e2e8f0'), textContent: label,
       style: 'pointer-events:none',
     }));
     return g;
@@ -234,7 +235,7 @@
     const tilt = derived.balance.tilt || 0;
     // shelf
     svg.appendChild(el('text', {
-      x: 12, y: 18, 'font-size': 12, fill: '#64748b',
+      x: 12, y: 18, 'font-size': 12, fill: '#94a3b8',
       textContent: '拖砝码到左盘 / 右盘',
     }));
     [['1/2', '1/2'], ['1/3', '1/3'], ['1/4', '1/4'], ['1/6', '1/6'], ['1', '1']].forEach(function (w, i) {
@@ -244,30 +245,47 @@
       x1: 20, y1: 220, x2: 320, y2: 220, stroke: '#94a3b8', 'stroke-width': 4,
     }));
     svg.appendChild(el('line', {
-      x1: 170, y1: 220, x2: 170, y2: 110, stroke: '#334155', 'stroke-width': 5,
+      x1: 170, y1: 220, x2: 170, y2: 110, stroke: '#cbd5e1', 'stroke-width': 5,
     }));
     const beam = el('g', {
       transform: 'rotate(' + tilt + ' 170 110)',
       style: 'transition:transform .2s ease',
     });
+    // 梁要“转过去”而不是“跳过去”：整幅 SVG 每次重建，写在 transform
+    // 属性上的过渡永远跑不起来。先按上一次的角画出来（无过渡），强制
+    // 重排，再用 style.transform 缓动到新角度。
+    if (beam.style && typeof window !== 'undefined' && window.requestAnimationFrame
+      && lastBalTilt !== null && lastBalTilt !== tilt) {
+      beam.setAttribute('transform', 'rotate(' + lastBalTilt + ' 170 110)');
+      beam.style.transformBox = 'view-box';
+      beam.style.transformOrigin = '170px 110px';
+      beam.style.transition = 'none';
+      beam.style.transform = 'rotate(' + lastBalTilt + 'deg)';
+      if (beam.getBoundingClientRect) void beam.getBoundingClientRect();
+      window.requestAnimationFrame(function () {
+        beam.style.transition = 'transform .35s ease';
+        beam.style.transform = 'rotate(' + tilt + 'deg)';
+      });
+    }
+    lastBalTilt = tilt;
     beam.appendChild(el('line', {
-      x1: 50, y1: 110, x2: 290, y2: 110, stroke: '#334155', 'stroke-width': 5,
+      x1: 50, y1: 110, x2: 290, y2: 110, stroke: '#cbd5e1', 'stroke-width': 5,
       'stroke-linecap': 'round',
     }));
     function drawPan(cx, weights, side, fill) {
       const pan = el('g', { 'data-bal-pan': side });
       pan.appendChild(el('line', {
-        x1: cx, y1: 110, x2: cx, y2: 145, stroke: '#64748b', 'stroke-width': 3,
+        x1: cx, y1: 110, x2: cx, y2: 145, stroke: '#94a3b8', 'stroke-width': 3,
       }));
       // big hit target
       pan.appendChild(el('ellipse', {
         cx: cx, cy: 158, rx: 48, ry: 22,
-        fill: fill, stroke: '#64748b', 'stroke-width': 2,
+        fill: fill, stroke: '#94a3b8', 'stroke-width': 2,
         'data-bal-pan': side,
       }));
       pan.appendChild(el('path', {
         d: 'M' + (cx - 36) + ' 145 Q' + cx + ' 175 ' + (cx + 36) + ' 145 Z',
-        fill: fill, stroke: '#64748b', 'stroke-width': 2,
+        fill: fill, stroke: '#94a3b8', 'stroke-width': 2,
         'data-bal-pan': side,
       }));
       weights.forEach(function (w, i) {
@@ -276,7 +294,7 @@
         pan.appendChild(el('rect', {
           x: bx, y: by, width: 16, height: 14, rx: 2,
           fill: w.d === 1 ? '#94a3b8' : '#fb923c',
-          stroke: '#334155', 'stroke-width': 1,
+          stroke: '#cbd5e1', 'stroke-width': 1,
         }));
         pan.appendChild(el('text', {
           x: bx + 8, y: by + 11, 'font-size': 8, 'text-anchor': 'middle',
@@ -284,7 +302,7 @@
         }));
       });
       pan.appendChild(el('text', {
-        x: cx, y: 198, 'font-size': 12, 'text-anchor': 'middle', fill: '#64748b',
+        x: cx, y: 198, 'font-size': 12, 'text-anchor': 'middle', fill: '#94a3b8',
         textContent: side === 'L' ? '左盘' : '右盘',
       }));
       return pan;
@@ -295,7 +313,7 @@
     svg.appendChild(el('circle', { cx: 170, cy: 110, r: 7, fill: '#f97316' }));
     svg.appendChild(el('text', {
       x: 170, y: 95, 'font-size': 13, 'text-anchor': 'middle', 'font-weight': 700,
-      fill: derived.balance.equal ? '#15803d' : '#9a3412',
+      fill: derived.balance.equal ? '#4ade80' : '#fdba74',
       textContent: '左 ' + derived.balance.Lstr + ' ＝ 右 ' + derived.balance.Rstr,
     }));
     // clear hit
@@ -313,7 +331,7 @@
     function vOf(x) { return min + ((x - x0) / (x1 - x0)) * span; }
 
     svg.appendChild(el('text', {
-      x: 12, y: 18, 'font-size': 12, fill: '#64748b',
+      x: 12, y: 18, 'font-size': 12, fill: '#94a3b8',
       textContent: '拖下面的数到数轴上（只到 ' + max + '）',
     }));
     [['7', '7'], ['1', '1'], ['1/2', '1/2'], ['0', '0'], ['2', '2']].forEach(function (w, i) {
@@ -337,28 +355,28 @@
     // axis ray + arrow (textbook number line)
     svg.appendChild(el('rect', {
       x: x0 - 10, y: y - 24, width: (x1 - x0) + 36, height: 48, rx: 10,
-      fill: '#f8fafc', stroke: '#e2e8f0', 'stroke-width': 1,
+      fill: '#0b1220', stroke: '#334155', 'stroke-width': 1,
       'data-numline-track': '1',
     }));
     svg.appendChild(el('line', {
-      x1: x0, y1: y, x2: x1, y2: y, stroke: '#334155', 'stroke-width': 3,
+      x1: x0, y1: y, x2: x1, y2: y, stroke: '#cbd5e1', 'stroke-width': 3,
       'stroke-linecap': 'round', 'data-numline-track': '1',
     }));
     svg.appendChild(el('polygon', {
       points: (x1 + 2) + ',' + y + ' ' + (x1 - 12) + ',' + (y - 8) + ' ' + (x1 - 12) + ',' + (y + 8),
-      fill: '#334155', 'data-numline-track': '1',
+      fill: '#cbd5e1', 'data-numline-track': '1',
     }));
     for (let t = min; t <= max + 1e-9; t += 0.5) {
       const xx = xOf(t);
       const major = Math.abs(t - Math.round(t)) < 1e-9;
       svg.appendChild(el('line', {
         x1: xx, y1: y - (major ? 10 : 6), x2: xx, y2: y + (major ? 10 : 6),
-        stroke: '#334155', 'stroke-width': major ? 2.5 : 1.5,
+        stroke: '#cbd5e1', 'stroke-width': major ? 2.5 : 1.5,
       }));
       if (major) {
         svg.appendChild(el('text', {
           x: xx, y: y + 28, 'font-size': 14, 'text-anchor': 'middle', 'font-weight': 700,
-          fill: '#0f172a', textContent: String(Math.round(t)),
+          fill: '#f8fafc', textContent: String(Math.round(t)),
         }));
       }
     }
@@ -373,7 +391,7 @@
       }));
       svg.appendChild(el('text', {
         x: xx, y: y - 18, 'font-size': 12, 'text-anchor': 'middle', 'font-weight': 700,
-        fill: '#0f172a', textContent: qStr(p),
+        fill: '#f8fafc', textContent: qStr(p),
       }));
     });
     if (world.meta && world.meta.lastNumlineReject) {
@@ -381,7 +399,7 @@
         x: 70, y: 62, width: 200, height: 20, rx: 8, fill: '#fee2e2', stroke: '#f87171',
       }));
       svg.appendChild(el('text', {
-        x: 170, y: 76, 'font-size': 12, 'text-anchor': 'middle', fill: '#b91c1c',
+        x: 170, y: 76, 'font-size': 12, 'text-anchor': 'middle', fill: '#fca5a5',
         textContent: '越界：放不进这条数轴',
       }));
     }
@@ -443,7 +461,7 @@
       svg.appendChild(animalIcon('chicken', 16 + col * (s + 2), 14 + row * (s + 2), s, idx));
     }
     svg.appendChild(el('text', {
-      x: 170, y: 155, 'font-size': 12, 'text-anchor': 'middle', fill: '#9a3412',
+      x: 170, y: 155, 'font-size': 12, 'text-anchor': 'middle', fill: '#fdba74',
       textContent: '点一只鸡→变兔；点一只兔→变鸡。或拖滑杆。',
     }));
     // slider
@@ -451,15 +469,15 @@
     const tHeads = Math.max(1, ck.targetHeads);
     const thumbX = trackX + (ck.rabbits / tHeads) * trackW;
     svg.appendChild(el('text', {
-      x: trackX, y: trackY - 10, 'font-size': 12, fill: '#64748b', textContent: '兔 0',
+      x: trackX, y: trackY - 10, 'font-size': 12, fill: '#94a3b8', textContent: '兔 0',
     }));
     svg.appendChild(el('text', {
-      x: trackX + trackW, y: trackY - 10, 'font-size': 12, 'text-anchor': 'end', fill: '#64748b',
+      x: trackX + trackW, y: trackY - 10, 'font-size': 12, 'text-anchor': 'end', fill: '#94a3b8',
       textContent: '兔 ' + tHeads,
     }));
     svg.appendChild(el('rect', {
       x: trackX, y: trackY - 6, width: trackW, height: 12, rx: 6,
-      fill: '#e2e8f0', 'data-ck-track': '1',
+      fill: '#334155', 'data-ck-track': '1',
     }));
     svg.appendChild(el('circle', {
       cx: thumbX, cy: trackY, r: 14,
@@ -469,7 +487,7 @@
     const ok = ck.solved;
     svg.appendChild(el('text', {
       x: 170, y: 215, 'font-size': 14, 'text-anchor': 'middle', 'font-weight': 700,
-      fill: ok ? '#15803d' : '#9a3412',
+      fill: ok ? '#4ade80' : '#fdba74',
       textContent: '鸡 ' + ck.chickens + ' · 兔 ' + ck.rabbits + ' · 腿 ' + ck.legs + ' / ' + ck.targetLegs,
     }));
     svg._ckMap = { trackX: trackX, trackW: trackW, targetHeads: tHeads };
@@ -488,9 +506,9 @@
     function yFrom(py) { return yMin + (H - bottom - py) / (H - top - bottom) * (yMax - yMin); }
     function xFrom(px) { return xMin + (px - left) / (W - left - right) * (xMax - xMin); }
 
-    svg.appendChild(el('rect', { x: 0, y: 0, width: W, height: H, fill: '#fff', rx: 10 }));
+    svg.appendChild(el('rect', { x: 0, y: 0, width: W, height: H, fill: '#0b1220', rx: 10 }));
     svg.appendChild(el('text', {
-      x: W / 2, y: 16, 'font-size': 12, 'text-anchor': 'middle', fill: '#64748b',
+      x: W / 2, y: 16, 'font-size': 12, 'text-anchor': 'middle', fill: '#94a3b8',
       textContent: '拖蓝点改截距 b · 拖橙点改斜率（经 (2,y)）',
     }));
 
@@ -498,56 +516,56 @@
     for (let xi = xMin; xi <= xMax; xi++) {
       svg.appendChild(el('line', {
         x1: X(xi), y1: Y(yMin), x2: X(xi), y2: Y(yMax),
-        stroke: '#e2e8f0', 'stroke-width': 1,
+        stroke: '#263449', 'stroke-width': 1,
       }));
     }
     for (let yi = -10; yi <= 20; yi += 5) {
       svg.appendChild(el('line', {
         x1: X(xMin), y1: Y(yi), x2: X(xMax), y2: Y(yi),
-        stroke: '#e2e8f0', 'stroke-width': 1,
+        stroke: '#263449', 'stroke-width': 1,
       }));
     }
 
     // axes through origin (explicit — not "thicker grid")
     svg.appendChild(el('line', {
       x1: X(xMin), y1: Y(0), x2: X(xMax), y2: Y(0),
-      stroke: '#334155', 'stroke-width': 2.5, 'stroke-linecap': 'round',
+      stroke: '#cbd5e1', 'stroke-width': 2.5, 'stroke-linecap': 'round',
     }));
     svg.appendChild(el('line', {
       x1: X(0), y1: Y(yMin), x2: X(0), y2: Y(yMax),
-      stroke: '#334155', 'stroke-width': 2.5, 'stroke-linecap': 'round',
+      stroke: '#cbd5e1', 'stroke-width': 2.5, 'stroke-linecap': 'round',
     }));
     // arrows
     svg.appendChild(el('polygon', {
       points: X(xMax) + ',' + Y(0) + ' ' + (X(xMax) - 10) + ',' + (Y(0) - 5) + ' ' + (X(xMax) - 10) + ',' + (Y(0) + 5),
-      fill: '#334155',
+      fill: '#cbd5e1',
     }));
     svg.appendChild(el('polygon', {
       points: X(0) + ',' + Y(yMax) + ' ' + (X(0) - 5) + ',' + (Y(yMax) + 10) + ' ' + (X(0) + 5) + ',' + (Y(yMax) + 10),
-      fill: '#334155',
+      fill: '#cbd5e1',
     }));
     svg.appendChild(el('text', {
-      x: X(xMax) - 12, y: Y(0) - 10, 'font-size': 13, fill: '#64748b', textContent: 'x',
+      x: X(xMax) - 12, y: Y(0) - 10, 'font-size': 13, fill: '#94a3b8', textContent: 'x',
     }));
     svg.appendChild(el('text', {
-      x: X(0) + 10, y: Y(yMax) + 14, 'font-size': 13, fill: '#64748b', textContent: 'y',
+      x: X(0) + 10, y: Y(yMax) + 14, 'font-size': 13, fill: '#94a3b8', textContent: 'y',
     }));
     // tick labels
     for (let xi = -4; xi <= 5; xi++) {
       if (xi === 0) continue;
       svg.appendChild(el('text', {
-        x: X(xi), y: Y(0) + 16, 'font-size': 11, 'text-anchor': 'middle', fill: '#64748b',
+        x: X(xi), y: Y(0) + 16, 'font-size': 11, 'text-anchor': 'middle', fill: '#94a3b8',
         textContent: String(xi),
       }));
     }
     svg.appendChild(el('text', {
-      x: X(0) - 10, y: Y(0) + 14, 'font-size': 11, 'text-anchor': 'end', fill: '#64748b',
+      x: X(0) - 10, y: Y(0) + 14, 'font-size': 11, 'text-anchor': 'end', fill: '#94a3b8',
       textContent: '0',
     }));
     for (let yi = -10; yi <= 20; yi += 5) {
       if (yi === 0) continue;
       svg.appendChild(el('text', {
-        x: X(0) - 8, y: Y(yi) + 4, 'font-size': 11, 'text-anchor': 'end', fill: '#64748b',
+        x: X(0) - 8, y: Y(yi) + 4, 'font-size': 11, 'text-anchor': 'end', fill: '#94a3b8',
         textContent: String(yi),
       }));
     }
@@ -568,7 +586,7 @@
       'data-fn-handle': 'b', style: 'cursor:ns-resize',
     }));
     svg.appendChild(el('text', {
-      x: X(0) + 12, y: Y(b) - 8, 'font-size': 13, fill: '#1d4ed8', 'font-weight': 700,
+      x: X(0) + 12, y: Y(b) - 8, 'font-size': 13, fill: '#93c5fd', 'font-weight': 700,
       textContent: '(0, ' + b + ')',
     }));
 
@@ -580,14 +598,14 @@
       'data-fn-handle': 'k', style: 'cursor:grab',
     }));
     svg.appendChild(el('text', {
-      x: X(2) + 12, y: Y(yAt2) + 4, 'font-size': 12, fill: '#c2410c', 'font-weight': 700,
+      x: X(2) + 12, y: Y(yAt2) + 4, 'font-size': 12, fill: '#fdba74', 'font-weight': 700,
       textContent: '(2, ' + yAt2 + ')',
     }));
 
     const ks = k === 1 ? 'x' : k === -1 ? '-x' : (k + 'x');
     const bs = b >= 0 ? ' + ' + b : ' − ' + (-b);
     svg.appendChild(el('text', {
-      x: 12, y: H - 10, 'font-size': 14, 'font-weight': 700, fill: '#0f172a',
+      x: 12, y: H - 10, 'font-size': 14, 'font-weight': 700, fill: '#f8fafc',
       textContent: 'y = ' + ks + bs,
     }));
     svg._fnMap = { X: X, Y: Y, xFrom: xFrom, yFrom: yFrom, k: k, b: b, yMin: yMin, yMax: yMax };
@@ -647,8 +665,34 @@
     return null;
   }
 
+  // 天平盘的几何落点：盘子本身就是落点（NB 式）。viewBox 340x250，
+  // 左盘中心 x=80、右盘中心 x=260，盘面约在 y 80-190。
+  function panHitAt(clientX, clientY) {
+    const svg = document.getElementById('worldBalSvg');
+    if (!svg || !svg.getBoundingClientRect) return null;
+    const r = svg.getBoundingClientRect();
+    if (!r.width || !r.height) return null;
+    if (clientX < r.left || clientX > r.right || clientY < r.top || clientY > r.bottom) return null;
+    const vx = ((clientX - r.left) / r.width) * 340;
+    const vy = ((clientY - r.top) / r.height) * 250;
+    if (vx >= 24 && vx <= 136 && vy >= 80 && vy <= 190) return 'L';
+    if (vx >= 204 && vx <= 316 && vy >= 80 && vy <= 190) return 'R';
+    return null;
+  }
+
   function hitAt(clientX, clientY, names) {
     hideGhost();
+    // 几何优先：盘子本身就是落点。elementsFromPoint 在内嵌浏览器里
+    // 不可靠（缩放/滚动时失效），旧代码只有虚线框能接住、盘子图片
+    // 接不住（2026-11-07 复测）。旧的“天平 SVG 内任意点都算盘”
+    // 兜底也一并去掉：落在砝码架/文字上不再算放到盘里。
+    if (names.indexOf('data-bal-pan') >= 0) {
+      const side = panHitAt(clientX, clientY);
+      if (side) {
+        const svg = document.getElementById('worldBalSvg');
+        return { el: svg, attr: 'data-bal-pan', val: side };
+      }
+    }
     // Prefer geometry hit for HTML drop docks — elementsFromPoint fails when
     // the page is scaled/scrolled inside embedded browsers.
     if (names.indexOf('data-drop') >= 0) {
@@ -663,15 +707,7 @@
       const hit = closestData(stack[i], names);
       if (hit) return hit;
     }
-    // SVG pan / numline geometry fallback
-    if (names.indexOf('data-bal-pan') >= 0) {
-      const svg = document.getElementById('worldBalSvg');
-      if (svg && pointInRect(clientX, clientY, svg, 0)) {
-        const r = svg.getBoundingClientRect();
-        const mid = r.left + r.width / 2;
-        return { el: svg, attr: 'data-bal-pan', val: clientX < mid ? 'L' : 'R' };
-      }
-    }
+    // SVG numline geometry fallback
     if (names.indexOf('data-numline-track') >= 0) {
       const svg = document.getElementById('worldLineSvg');
       const wide = document.getElementById('worldLineDrop');
@@ -687,10 +723,23 @@
     if (typeof document === 'undefined') return;
     const nodes = document.querySelectorAll('.apparatus-drop.is-hot');
     for (let i = 0; i < nodes.length; i++) nodes[i].classList.remove('is-hot');
+    const balSvg = document.getElementById('worldBalSvg');
+    if (balSvg) {
+      const pans = balSvg.querySelectorAll('[data-bal-pan].is-hot');
+      for (let i = 0; i < pans.length; i++) pans[i].classList.remove('is-hot');
+    }
   }
 
   function markDropHot(clientX, clientY) {
     clearDropHot();
+    // 盘子本身就是落点：拖到盘子上方时盘子先亮起来。
+    const side = panHitAt(clientX, clientY);
+    if (side) {
+      const svg = document.getElementById('worldBalSvg');
+      const pan = svg && svg.querySelector('[data-bal-pan="' + side + '"]');
+      if (pan) pan.classList.add('is-hot');
+      return;
+    }
     const hit = dropAt(clientX, clientY);
     if (hit) hit.el.classList.add('is-hot');
   }
@@ -814,8 +863,8 @@
       if (drag.pointerId != null && e.pointerId !== drag.pointerId) return;
 
       if (drag.kind === 'weight' || drag.kind === 'num') {
-        showGhost(drag.label, e.clientX, e.clientY);
         markDropHot(e.clientX, e.clientY);
+        showGhost(drag.label, e.clientX, e.clientY);
         return;
       }
 

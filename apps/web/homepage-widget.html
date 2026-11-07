@@ -1022,6 +1022,88 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
 .m1a-pair-dot.picked{outline:3px solid #f59e0b}
 .m1a-pair-dot.paired{background:#dcfce7;border-color:#15803d;color:#15803d}
 .m1a-pair-dot.left-over{outline:3px solid #ef4444;background:#fee2e2}
+
+/* ---------- 数学实验室 · 视觉大改：深色工作间（NB 式） ----------
+   台面是一间深色工作间：画布近黑、器材亮色、文字只剩关键数字。
+   全部以 #lab / #labMwWorkbench 为作用域，不动其它页面的浅色主题。 */
+#lab .world-layout { display:grid; grid-template-columns:minmax(0,1fr); gap:14px; background:#0b1220; border-radius:18px; padding:16px; color:#e2e8f0; margin:12px 0 24px; }
+#lab .lab-mode-row { background:#0f172a; border-radius:12px; padding:8px 12px; color:#e2e8f0; }
+#lab .lab-mode-row .btn.ghost { background:transparent; border-color:#475569; color:#e2e8f0; }
+#lab .lab-mode-row #labModeTx { color:#94a3b8; }
+#lab .world-intent { background:#451a03; border:1px solid #92400e; color:#ffedd5; }
+#labMwWorkbench .muted { color:#94a3b8; }
+#labMwWorkbench .demo-card { background:#1a2438; border:2px solid #2b3a55; color:#e2e8f0; position:relative; }
+#labMwWorkbench .demo-card h3 { color:#f8fafc; }
+#labMwWorkbench .demo-card .demo-tag { color:#94a3b8; }
+#labMwWorkbench .demo-card .btn.ghost { background:transparent; border-color:#475569; color:#e2e8f0; }
+#labMwWorkbench .demo-card input[type="number"], #labMwWorkbench .demo-card input[type="text"], #labMwWorkbench .demo-card select { background:#0f172a; border-color:#475569; color:#f8fafc; }
+#labMwWorkbench .demo-card.is-selected { outline:3px solid #e2e8f0; outline-offset:2px; box-shadow:0 0 0 6px rgba(226,232,240,.15); }
+/* 器材站两列排，实验台横跨整行占主区域 */
+#labMwWorkbench .world-stations { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+#labMwWorkbench #worldBenchCard { grid-column:1 / -1; background:#0f172a; }
+@media (max-width:1024px) { #labMwWorkbench .world-stations { grid-template-columns:1fr; } }
+/* 题目选择：折起来只剩一行（进题后自动收起，台面占主区域） */
+.bench-choose-head { display:flex; align-items:center; gap:8px; }
+.bench-choose-head h3 { margin:0; flex:0 0 auto; color:#f8fafc; }
+#labChooseCurrent { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#94a3b8; }
+.bench-choose.collapsed > :not(.bench-choose-head) { display:none; }
+#labMwWorkbench .lab-q { background:#1a2438; border-color:#2b3a55; color:#e2e8f0; }
+#labMwWorkbench .lab-q .btn.ghost { border-color:#475569; color:#e2e8f0; background:transparent; }
+#lab .lab-q-filter input[type="search"], #lab .lab-q-filter select { background:#0f172a; border-color:#475569; color:#f8fafc; }
+/* 器材站折叠：只留标题行，点 ▸ 展开 */
+.station-fold { flex:0 0 auto; width:44px; height:44px; border-radius:50%; border:2px solid #475569; background:#0f172a; color:#e2e8f0; font-size:18px; line-height:1; cursor:pointer; }
+#labMwWorkbench .demo-card > .station-fold { position:absolute; top:10px; right:10px; z-index:2; }
+#labMwWorkbench .demo-card.collapsed > :not(.demo-tag):not(h3):not(.station-fold):not(.rot-handle) { display:none; }
+#labMwWorkbench .demo-card.collapsed { padding-bottom:12px; }
+/* 旋转手柄：选中长方形时才出现在卡片上方（NB 走访 §2） */
+.rot-handle { display:none; position:absolute; top:-16px; left:50%; transform:translateX(-50%); width:44px; height:44px; border-radius:50%; border:3px solid #e2e8f0; background:#f97316; color:#fff; font-size:22px; line-height:1; cursor:pointer; z-index:3; box-shadow:0 4px 12px rgba(0,0,0,.45); }
+#worldRectCard.is-selected .rot-handle { display:flex; align-items:center; justify-content:center; }
+/* 画布：深色 + 淡淡的网格（NB 的大黑画布） */
+#worldBenchCard .bench-view { background-color:#0b1220; background-image:linear-gradient(rgba(148,163,184,.13) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,.13) 1px, transparent 1px); background-size:28px 28px; border-radius:12px; }
+#labMwWorkbench .bench-shelf { background:#0b1220; border:2px dashed #334155; }
+#labMwWorkbench .bench-chip { background:#1a2438; border:2px solid #475569; color:#f8fafc; border-radius:12px; }
+#labMwWorkbench .bench-chip.is-picked { border-color:#e2e8f0; background:#334155; box-shadow:0 0 0 3px rgba(226,232,240,.25); }
+#labMwWorkbench .bench-chip-name { color:#94a3b8; }
+#labMwWorkbench .bench-trash { border-color:#7f1d1d; color:#fca5a5; background:transparent; }
+/* 选中零件的竖条小工具栏（NB 走访 §2：设置 / 删除贴在物体旁边） */
+.bench-tools { display:inline-flex; flex-direction:column; gap:4px; vertical-align:middle; }
+.bench-tools .btn { min-width:44px; min-height:44px; padding:4px 8px; }
+/* 零件盒：两列器材图 + 名字，不再是文字芯片 */
+#labMwWorkbench .part-box { background:#0f172a; border:2px solid #263449; border-radius:12px; padding:10px; }
+#labMwWorkbench .part-group { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+#labMwWorkbench .part-group .part-label { grid-column:1 / -1; color:#94a3b8; }
+#labMwWorkbench .part-chip { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; min-height:64px; min-width:0; background:#1a2438; border:2px solid #334155; border-radius:12px; color:#f8fafc; font-size:14px; font-weight:700; padding:8px 4px; }
+#labMwWorkbench .part-chip[data-bench="rect"], #labMwWorkbench .part-chip[data-bench="line"], #labMwWorkbench .part-chip[data-bench="balance"] { grid-column:1 / -1; flex-direction:row; min-height:52px; }
+#labMwWorkbench .part-chip[aria-pressed="true"] { border-color:#f59e0b; background:#451a03; }
+#labMwWorkbench .part-chip .part-ico { display:block; flex:none; }
+/* 检查器：深色设置卡（NB 走访 §2 的形态） */
+#labMwWorkbench .bench-inspector { background:#451a03; border-color:#f59e0b; color:#ffedd5; }
+#labMwWorkbench .bench-inspector .muted { color:#fdba74; }
+#labMwWorkbench .bench-inspector input[type="number"], #labMwWorkbench .bench-inspector input[type="text"] { background:#0f172a; border-color:#475569; color:#f8fafc; }
+#labMwWorkbench .bench-inspector .btn.ghost { border-color:#92400e; color:#ffedd5; background:transparent; }
+#labMwWorkbench .insp-row label { color:#ffedd5; }
+/* 器材 SVG：深底 + 亮色线条（画在白纸上的改成画在黑板上） */
+#labMwWorkbench .apparatus-svg { background:#0f172a; border-color:#263449; }
+#labMwWorkbench .apparatus-chip { background:#1a2438; border-color:#ea580c; color:#fdba74; }
+#labMwWorkbench .apparatus-chip[data-world] { border-color:#475569; background:#1a2438; color:#e2e8f0; }
+#labMwWorkbench .apparatus-drop { background:#0f172a; border-color:#475569; color:#94a3b8; }
+#labMwWorkbench .apparatus-drop.is-hot { border-color:#f97316; background:#451a03; color:#fdba74; }
+#labMwWorkbench .apparatus-svg [data-bal-pan].is-hot ellipse { stroke:#f97316; stroke-width:3; fill:#451a03; }
+/* 台面在说什么：紧凑的状态小标签，不再是一大块黑底文字 */
+#lab .world-panel { position:static; background:#0f172a; border:2px solid #263449; }
+#lab .world-panel h3, #lab .world-panel p { color:#e2e8f0; }
+#lab .world-panel .muted { color:#94a3b8; }
+.world-signals { display:flex; flex-wrap:wrap; gap:6px; margin:0; }
+.world-signal { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:999px; font-size:13px; font-weight:700; background:#1a2438; border:1px solid #334155; color:#e2e8f0; }
+.world-signal.ok { background:#14532d; border-color:#22c55e; color:#bbf7d0; }
+.world-signal.warn { background:#451a03; border-color:#f59e0b; color:#fde68a; }
+.world-signal.error { background:#450a0a; border-color:#ef4444; color:#fecaca; }
+/* 拖动残影：大一点、亮一点，拖起来看得见 */
+.apparatus-ghost { font-size:16px; padding:10px 16px; }
+#worldBenchGhost { font-size:16px; padding:10px 16px; }
+/* 为什么 / 我的发现：深色小卡片 */
+#lab .lab-why-box { background:#0f172a; border-color:#263449; color:#e2e8f0; }
+#lab .lab-why-box p { color:#e2e8f0; }
 </style>
 </head>
 <body>
@@ -4456,7 +4538,7 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
   <!-- 数学实验室（NB 用法）：选问题 → 留在工作间 → MathWorld 算后果；自由玩/挑战同一套器材 -->
   <section id="lab" class="section wrap">
     <h2>数学实验室 · 一间工作间</h2>
-    <p class="section-sub">像 NB 实验室那样用：先选问题（或自由玩），在下面工作间里摆弄器材；对错、歪平、解没解出，都由 <code>MathWorld</code> 立刻算出来。工作间题留在本页；创意动画题打开后点「← 返回」仍回实验室。</p>
+    <p class="section-sub">选一个问题，在工作间里摆弄器材；世界模型立刻算出后果。</p>
     <div class="lab-mode-row">
       <span>模式：</span>
       <div class="seg" id="labModeSeg">
@@ -4476,11 +4558,14 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
     <p id="worldIntentMsg" class="world-intent" hidden>还没有操作。</p>
 
     <h3 id="labMwTitle">实验台（所有器材都在这里，上面选实验）</h3>
-    <p class="muted">拖砝码、拖数块、拖滑杆、拖图上的点——松手后世界模型立刻算后果。</p>
     <div class="world-layout" id="labMwWorkbench">
       <div class="bench-choose">
-    <h3>先选一个问题</h3>
-    <p class="muted">每个问题都是一次实验：先猜，再动手，最后说出你发现了什么。标了“用到”的知识点，是这个问题背后真正用到的数学。</p>
+    <div class="bench-choose-head">
+      <h3>先选一个问题</h3>
+      <span id="labChooseCurrent" class="muted"></span>
+      <button class="station-fold" type="button" id="labChooseFold" aria-expanded="true" aria-label="收起或展开问题列表">▾</button>
+    </div>
+    <p class="muted">每个问题都是一次实验：先猜，再动手，最后说出你发现了什么。</p>
     <div class="lab-q-filter" role="search">
       <input type="search" id="labQSearch" placeholder="搜问题或知识点，比如“分数”“鸡兔”" aria-label="搜索问题">
       <select id="labQGrade" aria-label="按年级筛选">
@@ -4643,7 +4728,8 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
           </div>
           <div id="labSavedList" class="lab-saved-list" aria-live="polite"></div>
         </article>
-        <article class="demo-card" id="worldFracCard">
+        <article class="demo-card collapsed" id="worldFracCard">
+          <button class="station-fold" type="button" aria-expanded="false" aria-label="收起或展开分数板">▸</button>
           <p class="demo-tag">分数板 · fracboard</p>
           <h3>1/2 + 1/3 能直接加吗？</h3>
           <p>拖滑杆改分子；点分母芯片；再点「拼一拼」。</p>
@@ -4671,7 +4757,8 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
           </div>
           <p id="worldFracOut">还没拼。</p>
         </article>
-        <article class="demo-card" id="worldBalCard">
+        <article class="demo-card collapsed" id="worldBalCard">
+          <button class="station-fold" type="button" aria-expanded="false" aria-label="收起或展开天平">▸</button>
           <p class="demo-tag">天平 · balance</p>
           <h3>一边 1/2，另一边怎么平？</h3>
           <p>按住砝码拖到左盘或右盘（下面两个大落点）。</p>
@@ -4693,7 +4780,8 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
           <p class="balance-eq" id="worldBalEq">左 1/2 ＝ 右 0</p>
           <p id="worldBalMsg">左边重。把两个 1/4 拖到右盘。</p>
         </article>
-        <article class="demo-card" id="worldChickenCard">
+        <article class="demo-card collapsed" id="worldChickenCard">
+          <button class="station-fold" type="button" aria-expanded="false" aria-label="收起或展开鸡兔同笼">▸</button>
           <p class="demo-tag">鸡兔同笼 · chicken</p>
           <h3>头 35，腿 94</h3>
           <p>拖滑杆换兔；或点笼子里的鸡/兔。</p>
@@ -4708,7 +4796,8 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
           <p id="worldCkRead">鸡 35 只，兔 0 只，腿 70（目标 94）。</p>
           <p id="worldCkMsg">还没解出。</p>
         </article>
-        <article class="demo-card" id="worldLineCard">
+        <article class="demo-card collapsed" id="worldLineCard">
+          <button class="station-fold" type="button" aria-expanded="false" aria-label="收起或展开数轴">▸</button>
           <p class="demo-tag">数轴 · numline</p>
           <h3>7 能放进 0～2 吗？</h3>
           <p>按住数块拖到下面的数轴落点。</p>
@@ -4726,7 +4815,8 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
           </div>
           <p id="worldLineMsg">数轴上还没有点。</p>
         </article>
-        <article class="demo-card" id="worldFnCard">
+        <article class="demo-card collapsed" id="worldFnCard">
+          <button class="station-fold" type="button" aria-expanded="false" aria-label="收起或展开一次函数">▸</button>
           <p class="demo-tag">一次函数 · linefn</p>
           <h3>k 变成负数，直线往哪倒？</h3>
           <p>拖滑杆，或拖图上的蓝点（b）/ 橙点（斜率）。</p>
@@ -4743,7 +4833,9 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
           </div>
           <p id="worldFnMsg">y = 2x + 8；当 x=2，y=12。</p>
         </article>
-        <article class="demo-card" id="worldRectCard">
+        <article class="demo-card collapsed" id="worldRectCard">
+          <button class="station-fold" type="button" aria-expanded="false" aria-label="收起或展开长方形">▸</button>
+          <button class="rot-handle" type="button" data-world="rect-rotate" aria-label="长方形转 90°" title="转 90°（宽 ↔ 长）">⟳</button>
           <p class="demo-tag">长方形 · 周长一定</p>
           <h3>周长 20，宽多少时面积最大？</h3>
           <p>只调宽，长会自动算出来。试一试，找到面积最大的那一个。</p>
@@ -4754,7 +4846,8 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
           <p id="worldRectOut">宽 1，长 9；周长 20，面积 9。</p>
           <p id="worldRectMsg" class="muted"></p>
         </article>
-        <article class="demo-card" id="worldDiceCard">
+        <article class="demo-card collapsed" id="worldDiceCard">
+          <button class="station-fold" type="button" aria-expanded="false" aria-label="收起或展开两个骰子">▸</button>
           <p class="demo-tag">概率 · 两个骰子</p>
           <h3>两个骰子的点数之和，怎么分才公平？</h3>
           <p>点一个和，就把它在 A 和 B 之间换一边。两个骰子一共 36 种结果，每个和的方法数都算给你看。</p>
@@ -4766,7 +4859,7 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
       <aside class="world-panel demo-card" aria-live="polite">
         <p class="demo-tag">台面在说什么</p>
         <h3>每动一下，世界就说一句</h3>
-        <pre id="worldDerivedOut" class="world-derived">动一动台面，世界就会说话。</pre>
+        <div id="worldDerivedOut" class="world-signals" aria-live="polite"></div>
         <div id="worldProcOut" class="world-proc" aria-live="polite"><p class="muted">还没开始实验流程。选一个工作间题，就会按步骤打分。</p></div>
         <p class="muted">MathWorld <span id="worldVer">—</span> · 挑战交卷时工作间题自动判</p>
       </aside>
@@ -4778,9 +4871,9 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
     </div>
     <div id="labWhyBox" class="lab-why-box" hidden></div>
 
-    <h3>更多器材（托盘 · 组合台）</h3>
-    <p class="muted">托盘是共用零件盒：小站做出来的数和分数可以先放到托盘里，再送到组合台上用。托盘最多放 3 个。</p>
-    <div class="lab-workbench" id="labWorkbench">
+    <h3>更多器材（托盘 · 组合台） <button class="station-fold" type="button" id="labMoreFold" aria-expanded="false" aria-label="收起或展开更多器材">▸</button></h3>
+    <p class="muted" id="labMoreHint" hidden>托盘是共用零件盒：小站做出来的数和分数可以先放到托盘里，再送到组合台上用。托盘最多放 3 个。</p>
+    <div class="lab-workbench" id="labWorkbench" hidden>
       <p><b>托盘</b> <span class="muted">（点一个数块下面的“加 / 平 / 线”，把它送到对应的组合台）</span></p>
       <div class="lab-tray" id="labTray"></div>
       <p id="labTrayMsg">托盘是空的。去下面的四个小站玩一玩，点“放到托盘”，就能把数带上来。</p>
@@ -41615,6 +41708,7 @@ registerAnim({
 
   var lastWorld = null;
   var lastDerived = null;
+  var lastBalTilt = null; // 上一次天平梁的倾斜角（做倾斜过渡用）
   var onIntent = null;
   var drag = null; // { kind, ... }
   var ghostEl = null;
@@ -41672,8 +41766,8 @@ registerAnim({
       const filled = i < n;
       g.appendChild(el('rect', {
         x: x0 + i * unit + 1, y: y0 + 2, width: Math.max(2, unit - 2), height: H - 4, rx: 4,
-        fill: filled ? (opts.color || '#fb923c') : '#e2e8f0',
-        stroke: filled ? (opts.stroke || '#c2410c') : '#cbd5e1',
+        fill: filled ? (opts.color || '#fb923c') : '#263449',
+        stroke: filled ? (opts.stroke || '#c2410c') : '#475569',
         'stroke-width': 1,
         'data-frac-seg': String(i),
         'data-frac-side': opts.side || '',
@@ -41689,12 +41783,12 @@ registerAnim({
       style: 'cursor:ew-resize',
     }));
     g.appendChild(el('text', {
-      x: 8, y: y0 + 26, 'font-size': 14, 'font-weight': 700, fill: '#64748b',
+      x: 8, y: y0 + 26, 'font-size': 14, 'font-weight': 700, fill: '#94a3b8',
       textContent: opts.side || '',
     }));
     g.appendChild(el('text', {
       x: x0 + W + 10, y: y0 + 26, 'font-size': 16, 'font-weight': 700,
-      fill: '#0f172a', textContent: qStr(frac),
+      fill: '#f8fafc', textContent: qStr(frac),
     }));
     host.appendChild(g);
     return { x0: x0, W: W, y0: y0, H: H, side: opts.side, d: d };
@@ -41740,7 +41834,7 @@ registerAnim({
       const scale = Math.max(1.15, qNum(derived.fracboard.trueSum) * 1.05);
       const trackW = 200;
       svg.appendChild(el('text', {
-        x: 36, y: 210, 'font-size': 11, fill: '#b91c1c',
+        x: 36, y: 210, 'font-size': 11, fill: '#fca5a5',
         textContent: '错 ' + derived.fracboard.naiveStr,
       }));
       // keep compact comparison above add button area — draw at top right
@@ -41760,13 +41854,13 @@ registerAnim({
     Object.keys(dataAttrs || {}).forEach(function (k) { g.setAttribute(k, dataAttrs[k]); });
     g.appendChild(el('rect', {
       x: 0, y: 0, width: 54, height: 28, rx: 8,
-      fill: primary ? '#ea580c' : (active ? '#ffedd5' : '#fff'),
+      fill: primary ? '#ea580c' : (active ? '#ffedd5' : '#1a2438'),
       stroke: primary ? '#c2410c' : (active ? '#f97316' : '#94a3b8'),
       'stroke-width': 2,
     }));
     g.appendChild(el('text', {
       x: 27, y: 19, 'font-size': 11, 'text-anchor': 'middle', 'font-weight': 700,
-      fill: primary ? '#fff' : '#0f172a', textContent: label,
+      fill: primary ? '#fff' : (active ? '#0f172a' : '#e2e8f0'), textContent: label,
       style: 'pointer-events:none',
     }));
     return g;
@@ -41806,7 +41900,7 @@ registerAnim({
     const tilt = derived.balance.tilt || 0;
     // shelf
     svg.appendChild(el('text', {
-      x: 12, y: 18, 'font-size': 12, fill: '#64748b',
+      x: 12, y: 18, 'font-size': 12, fill: '#94a3b8',
       textContent: '拖砝码到左盘 / 右盘',
     }));
     [['1/2', '1/2'], ['1/3', '1/3'], ['1/4', '1/4'], ['1/6', '1/6'], ['1', '1']].forEach(function (w, i) {
@@ -41816,30 +41910,47 @@ registerAnim({
       x1: 20, y1: 220, x2: 320, y2: 220, stroke: '#94a3b8', 'stroke-width': 4,
     }));
     svg.appendChild(el('line', {
-      x1: 170, y1: 220, x2: 170, y2: 110, stroke: '#334155', 'stroke-width': 5,
+      x1: 170, y1: 220, x2: 170, y2: 110, stroke: '#cbd5e1', 'stroke-width': 5,
     }));
     const beam = el('g', {
       transform: 'rotate(' + tilt + ' 170 110)',
       style: 'transition:transform .2s ease',
     });
+    // 梁要“转过去”而不是“跳过去”：整幅 SVG 每次重建，写在 transform
+    // 属性上的过渡永远跑不起来。先按上一次的角画出来（无过渡），强制
+    // 重排，再用 style.transform 缓动到新角度。
+    if (beam.style && typeof window !== 'undefined' && window.requestAnimationFrame
+      && lastBalTilt !== null && lastBalTilt !== tilt) {
+      beam.setAttribute('transform', 'rotate(' + lastBalTilt + ' 170 110)');
+      beam.style.transformBox = 'view-box';
+      beam.style.transformOrigin = '170px 110px';
+      beam.style.transition = 'none';
+      beam.style.transform = 'rotate(' + lastBalTilt + 'deg)';
+      if (beam.getBoundingClientRect) void beam.getBoundingClientRect();
+      window.requestAnimationFrame(function () {
+        beam.style.transition = 'transform .35s ease';
+        beam.style.transform = 'rotate(' + tilt + 'deg)';
+      });
+    }
+    lastBalTilt = tilt;
     beam.appendChild(el('line', {
-      x1: 50, y1: 110, x2: 290, y2: 110, stroke: '#334155', 'stroke-width': 5,
+      x1: 50, y1: 110, x2: 290, y2: 110, stroke: '#cbd5e1', 'stroke-width': 5,
       'stroke-linecap': 'round',
     }));
     function drawPan(cx, weights, side, fill) {
       const pan = el('g', { 'data-bal-pan': side });
       pan.appendChild(el('line', {
-        x1: cx, y1: 110, x2: cx, y2: 145, stroke: '#64748b', 'stroke-width': 3,
+        x1: cx, y1: 110, x2: cx, y2: 145, stroke: '#94a3b8', 'stroke-width': 3,
       }));
       // big hit target
       pan.appendChild(el('ellipse', {
         cx: cx, cy: 158, rx: 48, ry: 22,
-        fill: fill, stroke: '#64748b', 'stroke-width': 2,
+        fill: fill, stroke: '#94a3b8', 'stroke-width': 2,
         'data-bal-pan': side,
       }));
       pan.appendChild(el('path', {
         d: 'M' + (cx - 36) + ' 145 Q' + cx + ' 175 ' + (cx + 36) + ' 145 Z',
-        fill: fill, stroke: '#64748b', 'stroke-width': 2,
+        fill: fill, stroke: '#94a3b8', 'stroke-width': 2,
         'data-bal-pan': side,
       }));
       weights.forEach(function (w, i) {
@@ -41848,7 +41959,7 @@ registerAnim({
         pan.appendChild(el('rect', {
           x: bx, y: by, width: 16, height: 14, rx: 2,
           fill: w.d === 1 ? '#94a3b8' : '#fb923c',
-          stroke: '#334155', 'stroke-width': 1,
+          stroke: '#cbd5e1', 'stroke-width': 1,
         }));
         pan.appendChild(el('text', {
           x: bx + 8, y: by + 11, 'font-size': 8, 'text-anchor': 'middle',
@@ -41856,7 +41967,7 @@ registerAnim({
         }));
       });
       pan.appendChild(el('text', {
-        x: cx, y: 198, 'font-size': 12, 'text-anchor': 'middle', fill: '#64748b',
+        x: cx, y: 198, 'font-size': 12, 'text-anchor': 'middle', fill: '#94a3b8',
         textContent: side === 'L' ? '左盘' : '右盘',
       }));
       return pan;
@@ -41867,7 +41978,7 @@ registerAnim({
     svg.appendChild(el('circle', { cx: 170, cy: 110, r: 7, fill: '#f97316' }));
     svg.appendChild(el('text', {
       x: 170, y: 95, 'font-size': 13, 'text-anchor': 'middle', 'font-weight': 700,
-      fill: derived.balance.equal ? '#15803d' : '#9a3412',
+      fill: derived.balance.equal ? '#4ade80' : '#fdba74',
       textContent: '左 ' + derived.balance.Lstr + ' ＝ 右 ' + derived.balance.Rstr,
     }));
     // clear hit
@@ -41885,7 +41996,7 @@ registerAnim({
     function vOf(x) { return min + ((x - x0) / (x1 - x0)) * span; }
 
     svg.appendChild(el('text', {
-      x: 12, y: 18, 'font-size': 12, fill: '#64748b',
+      x: 12, y: 18, 'font-size': 12, fill: '#94a3b8',
       textContent: '拖下面的数到数轴上（只到 ' + max + '）',
     }));
     [['7', '7'], ['1', '1'], ['1/2', '1/2'], ['0', '0'], ['2', '2']].forEach(function (w, i) {
@@ -41909,28 +42020,28 @@ registerAnim({
     // axis ray + arrow (textbook number line)
     svg.appendChild(el('rect', {
       x: x0 - 10, y: y - 24, width: (x1 - x0) + 36, height: 48, rx: 10,
-      fill: '#f8fafc', stroke: '#e2e8f0', 'stroke-width': 1,
+      fill: '#0b1220', stroke: '#334155', 'stroke-width': 1,
       'data-numline-track': '1',
     }));
     svg.appendChild(el('line', {
-      x1: x0, y1: y, x2: x1, y2: y, stroke: '#334155', 'stroke-width': 3,
+      x1: x0, y1: y, x2: x1, y2: y, stroke: '#cbd5e1', 'stroke-width': 3,
       'stroke-linecap': 'round', 'data-numline-track': '1',
     }));
     svg.appendChild(el('polygon', {
       points: (x1 + 2) + ',' + y + ' ' + (x1 - 12) + ',' + (y - 8) + ' ' + (x1 - 12) + ',' + (y + 8),
-      fill: '#334155', 'data-numline-track': '1',
+      fill: '#cbd5e1', 'data-numline-track': '1',
     }));
     for (let t = min; t <= max + 1e-9; t += 0.5) {
       const xx = xOf(t);
       const major = Math.abs(t - Math.round(t)) < 1e-9;
       svg.appendChild(el('line', {
         x1: xx, y1: y - (major ? 10 : 6), x2: xx, y2: y + (major ? 10 : 6),
-        stroke: '#334155', 'stroke-width': major ? 2.5 : 1.5,
+        stroke: '#cbd5e1', 'stroke-width': major ? 2.5 : 1.5,
       }));
       if (major) {
         svg.appendChild(el('text', {
           x: xx, y: y + 28, 'font-size': 14, 'text-anchor': 'middle', 'font-weight': 700,
-          fill: '#0f172a', textContent: String(Math.round(t)),
+          fill: '#f8fafc', textContent: String(Math.round(t)),
         }));
       }
     }
@@ -41945,7 +42056,7 @@ registerAnim({
       }));
       svg.appendChild(el('text', {
         x: xx, y: y - 18, 'font-size': 12, 'text-anchor': 'middle', 'font-weight': 700,
-        fill: '#0f172a', textContent: qStr(p),
+        fill: '#f8fafc', textContent: qStr(p),
       }));
     });
     if (world.meta && world.meta.lastNumlineReject) {
@@ -41953,7 +42064,7 @@ registerAnim({
         x: 70, y: 62, width: 200, height: 20, rx: 8, fill: '#fee2e2', stroke: '#f87171',
       }));
       svg.appendChild(el('text', {
-        x: 170, y: 76, 'font-size': 12, 'text-anchor': 'middle', fill: '#b91c1c',
+        x: 170, y: 76, 'font-size': 12, 'text-anchor': 'middle', fill: '#fca5a5',
         textContent: '越界：放不进这条数轴',
       }));
     }
@@ -42015,7 +42126,7 @@ registerAnim({
       svg.appendChild(animalIcon('chicken', 16 + col * (s + 2), 14 + row * (s + 2), s, idx));
     }
     svg.appendChild(el('text', {
-      x: 170, y: 155, 'font-size': 12, 'text-anchor': 'middle', fill: '#9a3412',
+      x: 170, y: 155, 'font-size': 12, 'text-anchor': 'middle', fill: '#fdba74',
       textContent: '点一只鸡→变兔；点一只兔→变鸡。或拖滑杆。',
     }));
     // slider
@@ -42023,15 +42134,15 @@ registerAnim({
     const tHeads = Math.max(1, ck.targetHeads);
     const thumbX = trackX + (ck.rabbits / tHeads) * trackW;
     svg.appendChild(el('text', {
-      x: trackX, y: trackY - 10, 'font-size': 12, fill: '#64748b', textContent: '兔 0',
+      x: trackX, y: trackY - 10, 'font-size': 12, fill: '#94a3b8', textContent: '兔 0',
     }));
     svg.appendChild(el('text', {
-      x: trackX + trackW, y: trackY - 10, 'font-size': 12, 'text-anchor': 'end', fill: '#64748b',
+      x: trackX + trackW, y: trackY - 10, 'font-size': 12, 'text-anchor': 'end', fill: '#94a3b8',
       textContent: '兔 ' + tHeads,
     }));
     svg.appendChild(el('rect', {
       x: trackX, y: trackY - 6, width: trackW, height: 12, rx: 6,
-      fill: '#e2e8f0', 'data-ck-track': '1',
+      fill: '#334155', 'data-ck-track': '1',
     }));
     svg.appendChild(el('circle', {
       cx: thumbX, cy: trackY, r: 14,
@@ -42041,7 +42152,7 @@ registerAnim({
     const ok = ck.solved;
     svg.appendChild(el('text', {
       x: 170, y: 215, 'font-size': 14, 'text-anchor': 'middle', 'font-weight': 700,
-      fill: ok ? '#15803d' : '#9a3412',
+      fill: ok ? '#4ade80' : '#fdba74',
       textContent: '鸡 ' + ck.chickens + ' · 兔 ' + ck.rabbits + ' · 腿 ' + ck.legs + ' / ' + ck.targetLegs,
     }));
     svg._ckMap = { trackX: trackX, trackW: trackW, targetHeads: tHeads };
@@ -42060,9 +42171,9 @@ registerAnim({
     function yFrom(py) { return yMin + (H - bottom - py) / (H - top - bottom) * (yMax - yMin); }
     function xFrom(px) { return xMin + (px - left) / (W - left - right) * (xMax - xMin); }
 
-    svg.appendChild(el('rect', { x: 0, y: 0, width: W, height: H, fill: '#fff', rx: 10 }));
+    svg.appendChild(el('rect', { x: 0, y: 0, width: W, height: H, fill: '#0b1220', rx: 10 }));
     svg.appendChild(el('text', {
-      x: W / 2, y: 16, 'font-size': 12, 'text-anchor': 'middle', fill: '#64748b',
+      x: W / 2, y: 16, 'font-size': 12, 'text-anchor': 'middle', fill: '#94a3b8',
       textContent: '拖蓝点改截距 b · 拖橙点改斜率（经 (2,y)）',
     }));
 
@@ -42070,56 +42181,56 @@ registerAnim({
     for (let xi = xMin; xi <= xMax; xi++) {
       svg.appendChild(el('line', {
         x1: X(xi), y1: Y(yMin), x2: X(xi), y2: Y(yMax),
-        stroke: '#e2e8f0', 'stroke-width': 1,
+        stroke: '#263449', 'stroke-width': 1,
       }));
     }
     for (let yi = -10; yi <= 20; yi += 5) {
       svg.appendChild(el('line', {
         x1: X(xMin), y1: Y(yi), x2: X(xMax), y2: Y(yi),
-        stroke: '#e2e8f0', 'stroke-width': 1,
+        stroke: '#263449', 'stroke-width': 1,
       }));
     }
 
     // axes through origin (explicit — not "thicker grid")
     svg.appendChild(el('line', {
       x1: X(xMin), y1: Y(0), x2: X(xMax), y2: Y(0),
-      stroke: '#334155', 'stroke-width': 2.5, 'stroke-linecap': 'round',
+      stroke: '#cbd5e1', 'stroke-width': 2.5, 'stroke-linecap': 'round',
     }));
     svg.appendChild(el('line', {
       x1: X(0), y1: Y(yMin), x2: X(0), y2: Y(yMax),
-      stroke: '#334155', 'stroke-width': 2.5, 'stroke-linecap': 'round',
+      stroke: '#cbd5e1', 'stroke-width': 2.5, 'stroke-linecap': 'round',
     }));
     // arrows
     svg.appendChild(el('polygon', {
       points: X(xMax) + ',' + Y(0) + ' ' + (X(xMax) - 10) + ',' + (Y(0) - 5) + ' ' + (X(xMax) - 10) + ',' + (Y(0) + 5),
-      fill: '#334155',
+      fill: '#cbd5e1',
     }));
     svg.appendChild(el('polygon', {
       points: X(0) + ',' + Y(yMax) + ' ' + (X(0) - 5) + ',' + (Y(yMax) + 10) + ' ' + (X(0) + 5) + ',' + (Y(yMax) + 10),
-      fill: '#334155',
+      fill: '#cbd5e1',
     }));
     svg.appendChild(el('text', {
-      x: X(xMax) - 12, y: Y(0) - 10, 'font-size': 13, fill: '#64748b', textContent: 'x',
+      x: X(xMax) - 12, y: Y(0) - 10, 'font-size': 13, fill: '#94a3b8', textContent: 'x',
     }));
     svg.appendChild(el('text', {
-      x: X(0) + 10, y: Y(yMax) + 14, 'font-size': 13, fill: '#64748b', textContent: 'y',
+      x: X(0) + 10, y: Y(yMax) + 14, 'font-size': 13, fill: '#94a3b8', textContent: 'y',
     }));
     // tick labels
     for (let xi = -4; xi <= 5; xi++) {
       if (xi === 0) continue;
       svg.appendChild(el('text', {
-        x: X(xi), y: Y(0) + 16, 'font-size': 11, 'text-anchor': 'middle', fill: '#64748b',
+        x: X(xi), y: Y(0) + 16, 'font-size': 11, 'text-anchor': 'middle', fill: '#94a3b8',
         textContent: String(xi),
       }));
     }
     svg.appendChild(el('text', {
-      x: X(0) - 10, y: Y(0) + 14, 'font-size': 11, 'text-anchor': 'end', fill: '#64748b',
+      x: X(0) - 10, y: Y(0) + 14, 'font-size': 11, 'text-anchor': 'end', fill: '#94a3b8',
       textContent: '0',
     }));
     for (let yi = -10; yi <= 20; yi += 5) {
       if (yi === 0) continue;
       svg.appendChild(el('text', {
-        x: X(0) - 8, y: Y(yi) + 4, 'font-size': 11, 'text-anchor': 'end', fill: '#64748b',
+        x: X(0) - 8, y: Y(yi) + 4, 'font-size': 11, 'text-anchor': 'end', fill: '#94a3b8',
         textContent: String(yi),
       }));
     }
@@ -42140,7 +42251,7 @@ registerAnim({
       'data-fn-handle': 'b', style: 'cursor:ns-resize',
     }));
     svg.appendChild(el('text', {
-      x: X(0) + 12, y: Y(b) - 8, 'font-size': 13, fill: '#1d4ed8', 'font-weight': 700,
+      x: X(0) + 12, y: Y(b) - 8, 'font-size': 13, fill: '#93c5fd', 'font-weight': 700,
       textContent: '(0, ' + b + ')',
     }));
 
@@ -42152,14 +42263,14 @@ registerAnim({
       'data-fn-handle': 'k', style: 'cursor:grab',
     }));
     svg.appendChild(el('text', {
-      x: X(2) + 12, y: Y(yAt2) + 4, 'font-size': 12, fill: '#c2410c', 'font-weight': 700,
+      x: X(2) + 12, y: Y(yAt2) + 4, 'font-size': 12, fill: '#fdba74', 'font-weight': 700,
       textContent: '(2, ' + yAt2 + ')',
     }));
 
     const ks = k === 1 ? 'x' : k === -1 ? '-x' : (k + 'x');
     const bs = b >= 0 ? ' + ' + b : ' − ' + (-b);
     svg.appendChild(el('text', {
-      x: 12, y: H - 10, 'font-size': 14, 'font-weight': 700, fill: '#0f172a',
+      x: 12, y: H - 10, 'font-size': 14, 'font-weight': 700, fill: '#f8fafc',
       textContent: 'y = ' + ks + bs,
     }));
     svg._fnMap = { X: X, Y: Y, xFrom: xFrom, yFrom: yFrom, k: k, b: b, yMin: yMin, yMax: yMax };
@@ -42219,8 +42330,34 @@ registerAnim({
     return null;
   }
 
+  // 天平盘的几何落点：盘子本身就是落点（NB 式）。viewBox 340x250，
+  // 左盘中心 x=80、右盘中心 x=260，盘面约在 y 80-190。
+  function panHitAt(clientX, clientY) {
+    const svg = document.getElementById('worldBalSvg');
+    if (!svg || !svg.getBoundingClientRect) return null;
+    const r = svg.getBoundingClientRect();
+    if (!r.width || !r.height) return null;
+    if (clientX < r.left || clientX > r.right || clientY < r.top || clientY > r.bottom) return null;
+    const vx = ((clientX - r.left) / r.width) * 340;
+    const vy = ((clientY - r.top) / r.height) * 250;
+    if (vx >= 24 && vx <= 136 && vy >= 80 && vy <= 190) return 'L';
+    if (vx >= 204 && vx <= 316 && vy >= 80 && vy <= 190) return 'R';
+    return null;
+  }
+
   function hitAt(clientX, clientY, names) {
     hideGhost();
+    // 几何优先：盘子本身就是落点。elementsFromPoint 在内嵌浏览器里
+    // 不可靠（缩放/滚动时失效），旧代码只有虚线框能接住、盘子图片
+    // 接不住（2026-11-07 复测）。旧的“天平 SVG 内任意点都算盘”
+    // 兜底也一并去掉：落在砝码架/文字上不再算放到盘里。
+    if (names.indexOf('data-bal-pan') >= 0) {
+      const side = panHitAt(clientX, clientY);
+      if (side) {
+        const svg = document.getElementById('worldBalSvg');
+        return { el: svg, attr: 'data-bal-pan', val: side };
+      }
+    }
     // Prefer geometry hit for HTML drop docks — elementsFromPoint fails when
     // the page is scaled/scrolled inside embedded browsers.
     if (names.indexOf('data-drop') >= 0) {
@@ -42235,15 +42372,7 @@ registerAnim({
       const hit = closestData(stack[i], names);
       if (hit) return hit;
     }
-    // SVG pan / numline geometry fallback
-    if (names.indexOf('data-bal-pan') >= 0) {
-      const svg = document.getElementById('worldBalSvg');
-      if (svg && pointInRect(clientX, clientY, svg, 0)) {
-        const r = svg.getBoundingClientRect();
-        const mid = r.left + r.width / 2;
-        return { el: svg, attr: 'data-bal-pan', val: clientX < mid ? 'L' : 'R' };
-      }
-    }
+    // SVG numline geometry fallback
     if (names.indexOf('data-numline-track') >= 0) {
       const svg = document.getElementById('worldLineSvg');
       const wide = document.getElementById('worldLineDrop');
@@ -42259,10 +42388,23 @@ registerAnim({
     if (typeof document === 'undefined') return;
     const nodes = document.querySelectorAll('.apparatus-drop.is-hot');
     for (let i = 0; i < nodes.length; i++) nodes[i].classList.remove('is-hot');
+    const balSvg = document.getElementById('worldBalSvg');
+    if (balSvg) {
+      const pans = balSvg.querySelectorAll('[data-bal-pan].is-hot');
+      for (let i = 0; i < pans.length; i++) pans[i].classList.remove('is-hot');
+    }
   }
 
   function markDropHot(clientX, clientY) {
     clearDropHot();
+    // 盘子本身就是落点：拖到盘子上方时盘子先亮起来。
+    const side = panHitAt(clientX, clientY);
+    if (side) {
+      const svg = document.getElementById('worldBalSvg');
+      const pan = svg && svg.querySelector('[data-bal-pan="' + side + '"]');
+      if (pan) pan.classList.add('is-hot');
+      return;
+    }
     const hit = dropAt(clientX, clientY);
     if (hit) hit.el.classList.add('is-hot');
   }
@@ -42386,8 +42528,8 @@ registerAnim({
       if (drag.pointerId != null && e.pointerId !== drag.pointerId) return;
 
       if (drag.kind === 'weight' || drag.kind === 'num') {
-        showGhost(drag.label, e.clientX, e.clientY);
         markDropHot(e.clientX, e.clientY);
+        showGhost(drag.label, e.clientX, e.clientY);
         return;
       }
 
@@ -46154,7 +46296,7 @@ function benchPieceSvg(q) {
     const filled = Math.max(0, Math.min(d, n - u * d));
     for (let i = 0; i < d; i++) {
       s += '<rect x="' + (u * (W + gap) + i * sw) + '" y="0" width="' + sw + '" height="' + H +
-        '" fill="' + (i < filled ? '#fb923c' : '#e2e8f0') + '" stroke="#94a3b8" stroke-width="1"/>';
+        '" fill="' + (i < filled ? '#fb923c' : '#263449') + '" stroke="#94a3b8" stroke-width="1"/>';
     }
   }
   return s + '</svg>';
@@ -46186,17 +46328,17 @@ function benchViewSvg(view, items, lineOn, lf, bal, rect) {
   let s = '';
   if (view === 'coord') {
     for (let i = -1; i <= 7; i++) {
-      s += '<line x1="' + bvX(i) + '" y1="' + bvY(-2) + '" x2="' + bvX(i) + '" y2="' + bvY(12) + '" stroke="#e2e8f0"/>';
-      s += '<text x="' + bvX(i) + '" y="' + (bvY(0) + 16) + '" font-size="11" text-anchor="middle" fill="#64748b">' + i + '</text>';
+      s += '<line x1="' + bvX(i) + '" y1="' + bvY(-2) + '" x2="' + bvX(i) + '" y2="' + bvY(12) + '" stroke="#263449"/>';
+      s += '<text x="' + bvX(i) + '" y="' + (bvY(0) + 16) + '" font-size="11" text-anchor="middle" fill="#94a3b8">' + i + '</text>';
     }
     for (let j = -2; j <= 12; j += 2) {
-      s += '<line x1="' + bvX(-1) + '" y1="' + bvY(j) + '" x2="' + bvX(7) + '" y2="' + bvY(j) + '" stroke="#e2e8f0"/>';
+      s += '<line x1="' + bvX(-1) + '" y1="' + bvY(j) + '" x2="' + bvX(7) + '" y2="' + bvY(j) + '" stroke="#263449"/>';
     }
     for (let j = -2; j <= 12; j += 2) {
-      s += '<text x="' + (bvX(-1) - 6) + '" y="' + (bvY(j) + 4) + '" font-size="11" text-anchor="end" fill="#64748b">' + j + '</text>';
+      s += '<text x="' + (bvX(-1) - 6) + '" y="' + (bvY(j) + 4) + '" font-size="11" text-anchor="end" fill="#94a3b8">' + j + '</text>';
     }
-    s += '<line x1="' + bvX(-1) + '" y1="' + bvY(0) + '" x2="' + bvX(7) + '" y2="' + bvY(0) + '" stroke="#334155" stroke-width="2"/>';
-    s += '<line x1="' + bvX(0) + '" y1="' + bvY(-2) + '" x2="' + bvX(0) + '" y2="' + bvY(12) + '" stroke="#334155" stroke-width="2"/>';
+    s += '<line x1="' + bvX(-1) + '" y1="' + bvY(0) + '" x2="' + bvX(7) + '" y2="' + bvY(0) + '" stroke="#cbd5e1" stroke-width="2"/>';
+    s += '<line x1="' + bvX(0) + '" y1="' + bvY(-2) + '" x2="' + bvX(0) + '" y2="' + bvY(12) + '" stroke="#cbd5e1" stroke-width="2"/>';
     if (lineOn) {
       const pts = [];
       for (let x = -1; x <= 7.001; x += 0.25) {
@@ -46219,19 +46361,19 @@ function benchViewSvg(view, items, lineOn, lf, bal, rect) {
       const x = it.q.n / it.q.d;
       if (x < -1 || x > 7) return;
       s += '<circle cx="' + bvX(x) + '" cy="' + bvY(0) + '" r="6" fill="#2563eb"/>' +
-        '<text x="' + bvX(x) + '" y="' + (bvY(0) - 10) + '" font-size="12" text-anchor="middle" fill="#1e3a8a">' + it.str + '</text>';
+        '<text x="' + bvX(x) + '" y="' + (bvY(0) - 10) + '" font-size="12" text-anchor="middle" fill="#93c5fd">' + it.str + '</text>';
     });
   } else if (view === 'numline') {
-    s += '<line x1="' + bvX(-1) + '" y1="120" x2="' + bvX(7) + '" y2="120" stroke="#334155" stroke-width="2"/>';
+    s += '<line x1="' + bvX(-1) + '" y1="120" x2="' + bvX(7) + '" y2="120" stroke="#cbd5e1" stroke-width="2"/>';
     for (let i = -1; i <= 7; i++) {
-      s += '<line x1="' + bvX(i) + '" y1="114" x2="' + bvX(i) + '" y2="126" stroke="#334155"/>';
-      s += '<text x="' + bvX(i) + '" y="144" font-size="11" text-anchor="middle" fill="#64748b">' + i + '</text>';
+      s += '<line x1="' + bvX(i) + '" y1="114" x2="' + bvX(i) + '" y2="126" stroke="#cbd5e1"/>';
+      s += '<text x="' + bvX(i) + '" y="144" font-size="11" text-anchor="middle" fill="#94a3b8">' + i + '</text>';
     }
     items.forEach(function (it) {
       const x = it.q.n / it.q.d;
       if (x < -1 || x > 7) return;
       s += '<circle cx="' + bvX(x) + '" cy="120" r="6" fill="#2563eb"/>' +
-        '<text x="' + bvX(x) + '" y="100" font-size="12" text-anchor="middle" fill="#1e3a8a">' + it.str + '</text>';
+        '<text x="' + bvX(x) + '" y="100" font-size="12" text-anchor="middle" fill="#93c5fd">' + it.str + '</text>';
     });
   } else if (view === 'fracbar') {
     items.forEach(function (it, i) {
@@ -46244,30 +46386,30 @@ function benchViewSvg(view, items, lineOn, lf, bal, rect) {
           const filled = Math.max(0, Math.min(d, n - u * d));
           for (let k = 0; k < d; k++) {
             s += '<rect x="' + (30 + u * 66 + k * sw) + '" y="' + y0 + '" width="' + sw + '" height="28" fill="' +
-              (k < filled ? '#fb923c' : '#e2e8f0') + '" stroke="#94a3b8"/>';
+              (k < filled ? '#fb923c' : '#263449') + '" stroke="#94a3b8"/>';
           }
         }
       }
-      s += '<text x="' + (30 + bars * 66 + 8) + '" y="' + (y0 + 19) + '" font-size="14" font-weight="700" fill="#0f172a">' + it.str + '</text>';
+      s += '<text x="' + (30 + bars * 66 + 8) + '" y="' + (y0 + 19) + '" font-size="14" font-weight="700" fill="#f8fafc">' + it.str + '</text>';
     });
   } else if (view === 'balance') {
     // 天平：支点在中间，左盘、右盘写出它们的值；不平时横梁向重的一边倾斜。
     const tilt = bal.equal ? 0 : (bal.leftHeavy ? 22 : -22);
     const leftY = 130 + tilt, rightY = 130 - tilt;
-    s += '<polygon points="240,150 280,150 260,120" fill="#334155"/>';
-    s += '<line x1="90" y1="' + leftY + '" x2="430" y2="' + rightY + '" stroke="#334155" stroke-width="4"/>';
-    s += '<line x1="260" y1="120" x2="260" y2="60" stroke="#334155" stroke-width="3"/>';
+    s += '<polygon points="240,150 280,150 260,120" fill="#cbd5e1"/>';
+    s += '<line x1="90" y1="' + leftY + '" x2="430" y2="' + rightY + '" stroke="#cbd5e1" stroke-width="4"/>';
+    s += '<line x1="260" y1="120" x2="260" y2="60" stroke="#cbd5e1" stroke-width="3"/>';
     s += '<rect x="60" y="' + leftY + '" width="100" height="40" fill="#fde68a" stroke="#92400e"/>';
     s += '<rect x="380" y="' + rightY + '" width="100" height="40" fill="#fde68a" stroke="#92400e"/>';
     s += '<text x="110" y="' + (leftY + 26) + '" font-size="16" text-anchor="middle" fill="#0f172a">' + bal.Lstr + '</text>';
     s += '<text x="430" y="' + (rightY + 26) + '" font-size="16" text-anchor="middle" fill="#0f172a">' + bal.Rstr + '</text>';
-    s += '<text x="260" y="220" font-size="16" text-anchor="middle" fill="' + (bal.equal ? '#15803d' : '#b91c1c') + '">' +
+    s += '<text x="260" y="220" font-size="16" text-anchor="middle" fill="' + (bal.equal ? '#4ade80' : '#fca5a5') + '">' +
       (bal.equal ? '平衡' : (bal.leftHeavy ? '左边重' : '右边重')) + '</text>';
   } else {
     let y = 40;
-    if (lineOn) { s += '<text x="30" y="' + y + '" font-size="16" fill="#0f172a">y = ' + lf.k + 'x + ' + lf.b + '</text>'; y += 34; }
-    items.forEach(function (it) { s += '<text x="30" y="' + y + '" font-size="16" fill="#0f172a">x = ' + it.str + '</text>'; y += 34; });
-    if (!lineOn && !items.length) s += '<text x="30" y="40" font-size="14" fill="#64748b">台上还没有东西</text>';
+    if (lineOn) { s += '<text x="30" y="' + y + '" font-size="16" fill="#f8fafc">y = ' + lf.k + 'x + ' + lf.b + '</text>'; y += 34; }
+    items.forEach(function (it) { s += '<text x="30" y="' + y + '" font-size="16" fill="#f8fafc">x = ' + it.str + '</text>'; y += 34; });
+    if (!lineOn && !items.length) s += '<text x="30" y="40" font-size="14" fill="#94a3b8">台上还没有东西</text>';
   }
   return s;
 }
@@ -46287,7 +46429,10 @@ function worldBenchRender() {
           '" data-bench="pick" data-id="' + esc(it.id) + '" aria-pressed="' + on + '"' +
           ' title="' + esc(it.name || it.str) + '">' +
           benchPieceSvg(it.q) + '<span>' + esc(it.str) + '</span>' +
-          (it.name && it.name !== it.str ? '<span class="bench-chip-name">' + esc(it.name) + '</span>' : '') + '</button>';
+          (it.name && it.name !== it.str ? '<span class="bench-chip-name">' + esc(it.name) + '</span>' : '') + '</button>' +
+          (on ? '<span class="bench-tools" role="group" aria-label="已选零件的操作">' +
+            '<button type="button" class="btn small ghost" data-bench="sel-inspect" data-id="' + esc(it.id) + '" title="设置这个零件">⚙</button>' +
+            '<button type="button" class="btn small ghost" data-bench="sel-remove" data-id="' + esc(it.id) + '" title="拿走这个零件">✕</button></span>' : '');
       }).join('')
     : '<p class="muted">台面是空的。从上面的零件盒拿一个数放上来。</p>';
   const sum = document.getElementById('worldBenchSum');
@@ -46357,6 +46502,20 @@ function worldBenchRender() {
       worldInspectSelect({ piece: id });
       return;
     }
+    if (op === 'sel-inspect') {
+      const id = b.getAttribute('data-id');
+      if (id) { benchSel[id] = true; worldInspectSelect({ piece: id }); worldBenchRender(); }
+      return;
+    }
+    if (op === 'sel-remove') {
+      const id = b.getAttribute('data-id');
+      if (id) {
+        delete benchSel[id];
+        benchApply({ type: 'benchTake', pieceId: id }, '拿走了');
+        worldInspectSelect(null); // 零件没了，检查器别留孤儿面板
+      }
+      return;
+    }
     if (op === 'merge') {
       const ids = Object.keys(benchSel);
       if (ids.length < 2) { benchMsg('先在台上选中两个以上的数，再合并。', false); return; }
@@ -46415,9 +46574,113 @@ function worldBenchRender() {
     }
   });
 })();
+/* 零件盒：每种器材配一张小图（NB 的器材架是图 + 名字，不是文字芯片）。
+   图是按器材现画的 SVG：数字卡画卡片、分数画条、砝码画砝码、长方形画框、直线画线、天平画天平。 */
+(function labPartIcons() {
+  const box = document.getElementById('labPartBox');
+  if (!box) return;
+  function numIcon(n) {
+    return '<svg width="30" height="24" viewBox="0 0 30 24" aria-hidden="true"><rect x="2" y="2" width="26" height="20" rx="4" fill="#1a2438" stroke="#e2e8f0" stroke-width="2"/><text x="15" y="17" font-size="12" text-anchor="middle" fill="#f8fafc" font-weight="700">' + n + '</text></svg>';
+  }
+  function fracIcon(n, d) {
+    let s = '<svg width="30" height="24" viewBox="0 0 30 24" aria-hidden="true">';
+    const sw = 26 / d;
+    for (let i = 0; i < d; i++) {
+      s += '<rect x="' + (2 + i * sw).toFixed(1) + '" y="7" width="' + sw.toFixed(1) + '" height="10" fill="' + (i < n ? '#fb923c' : '#1a2438') + '" stroke="#94a3b8" stroke-width="1"/>';
+    }
+    return s + '</svg>';
+  }
+  const weightIcon = '<svg width="30" height="24" viewBox="0 0 30 24" aria-hidden="true"><path d="M11 3 h8 v4 h-8 z" fill="#94a3b8"/><path d="M7 7 h16 l3 13 a3 3 0 0 1 -3 4 h-16 a3 3 0 0 1 -3 -4 z" fill="#fb923c" stroke="#c2410c" stroke-width="1.5"/></svg>';
+  const rectIcon = '<svg width="30" height="24" viewBox="0 0 30 24" aria-hidden="true"><rect x="3" y="5" width="24" height="14" rx="2" fill="#fde68a" fill-opacity="0.7" stroke="#92400e" stroke-width="2"/></svg>';
+  const lineIcon = '<svg width="30" height="24" viewBox="0 0 30 24" aria-hidden="true"><line x1="4" y1="20" x2="26" y2="4" stroke="#ea580c" stroke-width="3" stroke-linecap="round"/><circle cx="11" cy="14" r="3" fill="#2563eb" stroke="#fff" stroke-width="1.5"/><circle cx="19" cy="9" r="3" fill="#2563eb" stroke="#fff" stroke-width="1.5"/></svg>';
+  const balIcon = '<svg width="30" height="24" viewBox="0 0 30 24" aria-hidden="true"><line x1="15" y1="4" x2="15" y2="20" stroke="#cbd5e1" stroke-width="2"/><line x1="4" y1="7" x2="26" y2="7" stroke="#cbd5e1" stroke-width="2"/><path d="M2 8 Q4 14 6 8 Z" fill="#e2e8f0" stroke="#94a3b8"/><path d="M24 8 Q26 14 28 8 Z" fill="#e2e8f0" stroke="#94a3b8"/></svg>';
+  box.querySelectorAll('.part-chip').forEach(function (btn) {
+    if (btn.querySelector('.part-ico')) return;
+    let svg = null;
+    if (btn.hasAttribute('data-drag-weight')) svg = weightIcon;
+    else if (btn.getAttribute('data-bench') === 'rect') svg = rectIcon;
+    else if (btn.getAttribute('data-bench') === 'line') svg = lineIcon;
+    else if (btn.getAttribute('data-bench') === 'balance') svg = balIcon;
+    else if (btn.getAttribute('data-kind') === 'num') svg = numIcon(btn.getAttribute('data-n'));
+    else if (btn.getAttribute('data-kind') === 'frac') svg = fracIcon(parseInt(btn.getAttribute('data-n'), 10), parseInt(btn.getAttribute('data-d'), 10));
+    if (!svg) return;
+    const span = document.createElement('span');
+    span.className = 'part-ico';
+    span.setAttribute('aria-hidden', 'true');
+    span.innerHTML = svg;
+    btn.insertBefore(span, btn.firstChild);
+  });
+})();
+/* 实验室折叠：器材站默认收起只留标题行，题目列表进题后收起，
+   更多器材默认收起。进题时对应台子自动展开（台面占主区域）。 */
+function labExpandStation(stationId) {
+  const card = document.getElementById(stationId);
+  if (!card) return;
+  card.classList.remove('collapsed');
+  const fold = card.querySelector('.station-fold');
+  if (fold) { fold.textContent = '▾'; fold.setAttribute('aria-expanded', 'true'); }
+}
+function labSetChooseCurrent(text) {
+  const el = document.getElementById('labChooseCurrent');
+  if (el) el.textContent = text || '';
+}
+function labCollapseChoose() {
+  const box = document.querySelector('#labMwWorkbench .bench-choose');
+  const fold = document.getElementById('labChooseFold');
+  if (box) box.classList.add('collapsed');
+  if (fold) { fold.textContent = '▸'; fold.setAttribute('aria-expanded', 'false'); }
+}
+function labExpandChoose() {
+  const box = document.querySelector('#labMwWorkbench .bench-choose');
+  const fold = document.getElementById('labChooseFold');
+  if (box) box.classList.remove('collapsed');
+  if (fold) { fold.textContent = '▾'; fold.setAttribute('aria-expanded', 'true'); }
+}
+(function labStationFolds() {
+  const wb = document.getElementById('labMwWorkbench');
+  if (wb) wb.addEventListener('click', function (e) {
+    const f = e.target.closest('.station-fold');
+    if (!f) return;
+    const card = f.closest('.demo-card');
+    if (!card) return;
+    const collapsed = card.classList.toggle('collapsed');
+    f.textContent = collapsed ? '▸' : '▾';
+    f.setAttribute('aria-expanded', String(!collapsed));
+  });
+  const chooseFold = document.getElementById('labChooseFold');
+  if (chooseFold) chooseFold.addEventListener('click', function () {
+    const box = document.querySelector('#labMwWorkbench .bench-choose');
+    if (!box) return;
+    const collapsed = box.classList.toggle('collapsed');
+    chooseFold.textContent = collapsed ? '▸' : '▾';
+    chooseFold.setAttribute('aria-expanded', String(!collapsed));
+  });
+  const moreFold = document.getElementById('labMoreFold');
+  if (moreFold) moreFold.addEventListener('click', function () {
+    const hint = document.getElementById('labMoreHint');
+    const body = document.getElementById('labWorkbench');
+    const hidden = body ? body.hidden : true;
+    if (hint) hint.hidden = !hidden;
+    if (body) body.hidden = !hidden;
+    moreFold.textContent = hidden ? '▾' : '▸';
+    moreFold.setAttribute('aria-expanded', String(hidden));
+  });
+})();
 /* 把台上的数放到器材上（天平左右盘、数轴）。返回是否成功。 */
 function benchDropTargetAt(x, y) {
   // 按矩形判断落点，不用 elementFromPoint（图形层可能盖在落点上面）。
+  // 几何优先：天平盘本身就是落点（NB 式）。旧代码只认虚线框
+  // [data-drop]，落在盘子图片上什么都不发生（2026-11-07 复测）。
+  const bal = document.getElementById('worldBalSvg');
+  if (bal && bal.getBoundingClientRect) {
+    const r = bal.getBoundingClientRect();
+    if (r.width > 0 && r.height > 0 && x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+      const vx = ((x - r.left) / r.width) * 340;
+      const vy = ((y - r.top) / r.height) * 250;
+      if (vx >= 24 && vx <= 136 && vy >= 80 && vy <= 190) return 'balance.L';
+      if (vx >= 204 && vx <= 316 && vy >= 80 && vy <= 190) return 'balance.R';
+    }
+  }
   const nodes = document.querySelectorAll('[data-drop]');
   for (let i = 0; i < nodes.length; i++) {
     const r = nodes[i].getBoundingClientRect();
@@ -47071,10 +47334,11 @@ var labMode = 'free'; // 自由玩 | 挑战（本节课有效，不存档）
 var labChallengeAttempts = []; // 挑战模式里点开过的问题 id（去重）
 var labChallengeMarks = {}; // qid -> true 答对 / false 答错
 function labFocusStation(stationId) {
-  ['worldFracCard', 'worldBalCard', 'worldChickenCard', 'worldLineCard', 'worldFnCard'].forEach(id => {
+  ['worldFracCard', 'worldBalCard', 'worldChickenCard', 'worldLineCard', 'worldFnCard', 'worldRectCard', 'worldDiceCard'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.classList.toggle('lab-mw-focus', id === stationId);
   });
+  if (stationId) labExpandStation(stationId); // 进题的台子自动展开，别的仍收着
   const target = document.getElementById(stationId) || document.getElementById('labMwWorkbench');
   if (target && typeof target.scrollIntoView === 'function') {
     try { target.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) { /* smoke stub */ }
@@ -47139,6 +47403,8 @@ function labEnterQuestion(qid) {
   // 练习模式（自由玩里的题）有提示；挑战模式无提示，交卷时才看丢分。
   if (q.bench) worldPlayStartProcedure(qid, labMode === 'challenge' ? 'exam' : 'practice');
   labFocusStation(q.station);
+  labCollapseChoose(); // 进题了，问题列表收起来，台面占主区域
+  labSetChooseCurrent('当前：' + q.title);
   if (typeof worldPlayRender === 'function') worldPlayRender();
   labTrace('开始做「' + q.title + '」', true);
 }
@@ -47149,6 +47415,7 @@ function labFreePlay() {
   if (typeof worldPlayRender === 'function') worldPlayRender();
   labTrace('自由玩：进入工作间', true);
   labFocusStation('worldFracCard');
+  labSetChooseCurrent('');
 }
 function labSetMode(m) {
   labMode = m;
@@ -47186,6 +47453,8 @@ function labExitPractice() {
   }
   labWorldQid = null;
   labSetCurrentQ('当前问题：还没选。先在下面选一个「工作间」题，或点「不选题，直接进工作间」。');
+  labExpandChoose(); // 退出练习，问题列表重新展开，方便再选一题
+  labSetChooseCurrent('');
   if (typeof worldPlayRender === 'function') worldPlayRender();
   labTrace('退出练习', true);
 }
@@ -47571,12 +47840,16 @@ function worldPlayRender() {
   setTx('worldRectMsg', rect.signals[0].text + '。');
   // 台面在说什么：只给学生看的信号（天平平没平、错拼差多少、腿差几条），
   // 不再倒调试用的内部状态（goalMet、diff、pieceCount 都不出现）。
-  const sigLines = (d.signals || []).map(function (s) {
-    return (s.level === 'ok' ? '✓ ' : s.level === 'error' ? '✗ ' : s.level === 'warn' ? '⚠ ' : '· ') + s.text;
-  });
-  setTx('worldDerivedOut', (sigLines.length ? sigLines : ['动一动台面，世界就会说话。']).concat([
-    '台上 ' + d.bench.count + ' 个数，合计 ' + d.bench.totalStr + '；托盘 ' + d.trayCount + ' 个。',
-  ]).join('\n'));
+  // 信号只剩紧凑的小标签（NB 式：关键数字浮在台面上，不是一大块文字）。
+  const sigBox = document.getElementById('worldDerivedOut');
+  if (sigBox) {
+    const chips = (d.signals || []).map(function (s) {
+      return '<span class="world-signal ' + (s.level || 'info') + '">' +
+        (s.level === 'ok' ? '✓ ' : s.level === 'error' ? '✗ ' : s.level === 'warn' ? '⚠ ' : '· ') + esc(s.text) + '</span>';
+    });
+    chips.push('<span class="world-signal">台上 ' + d.bench.count + ' 个数，合计 ' + esc(d.bench.totalStr) + '；托盘 ' + d.trayCount + ' 个。</span>');
+    sigBox.innerHTML = chips.length ? chips.join('') : '<span class="world-signal">动一动台面，世界就会说话。</span>';
+  }
   worldInspectorRender();
   if (typeof Apparatus !== 'undefined' && Apparatus && typeof Apparatus.render === 'function') {
     Apparatus.render(w, d);
@@ -47686,6 +47959,11 @@ function worldPlayBumpFrac(side, which, delta) {
       const cur = MathWorld.derived(worldPlayEnsure()).rect;
       const nw = op === 'rect-w+' ? cur.w + 1 : cur.w - 1;
       return worldPlayApply({ type: 'rectSet', w: nw }, '宽改成 ' + nw, '宽只能在 1 到 ' + (cur.perim / 2 - 1) + ' 之间');
+    }
+    if (op === 'rect-rotate') {
+      const w = worldPlayEnsure();
+      if (!w) return;
+      return worldPlayApply({ type: 'rectSet', w: w.rect.perim / 2 - w.rect.w }, '转了 90°');
     }
     if (op === 'fn-2pt') {
       const num = function (id) { return parseFloat(document.getElementById(id).value); };

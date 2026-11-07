@@ -1015,3 +1015,85 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
 .m1a-pair-dot.picked{outline:3px solid #f59e0b}
 .m1a-pair-dot.paired{background:#dcfce7;border-color:#15803d;color:#15803d}
 .m1a-pair-dot.left-over{outline:3px solid #ef4444;background:#fee2e2}
+
+/* ---------- 数学实验室 · 视觉大改：深色工作间（NB 式） ----------
+   台面是一间深色工作间：画布近黑、器材亮色、文字只剩关键数字。
+   全部以 #lab / #labMwWorkbench 为作用域，不动其它页面的浅色主题。 */
+#lab .world-layout { display:grid; grid-template-columns:minmax(0,1fr); gap:14px; background:#0b1220; border-radius:18px; padding:16px; color:#e2e8f0; margin:12px 0 24px; }
+#lab .lab-mode-row { background:#0f172a; border-radius:12px; padding:8px 12px; color:#e2e8f0; }
+#lab .lab-mode-row .btn.ghost { background:transparent; border-color:#475569; color:#e2e8f0; }
+#lab .lab-mode-row #labModeTx { color:#94a3b8; }
+#lab .world-intent { background:#451a03; border:1px solid #92400e; color:#ffedd5; }
+#labMwWorkbench .muted { color:#94a3b8; }
+#labMwWorkbench .demo-card { background:#1a2438; border:2px solid #2b3a55; color:#e2e8f0; position:relative; }
+#labMwWorkbench .demo-card h3 { color:#f8fafc; }
+#labMwWorkbench .demo-card .demo-tag { color:#94a3b8; }
+#labMwWorkbench .demo-card .btn.ghost { background:transparent; border-color:#475569; color:#e2e8f0; }
+#labMwWorkbench .demo-card input[type="number"], #labMwWorkbench .demo-card input[type="text"], #labMwWorkbench .demo-card select { background:#0f172a; border-color:#475569; color:#f8fafc; }
+#labMwWorkbench .demo-card.is-selected { outline:3px solid #e2e8f0; outline-offset:2px; box-shadow:0 0 0 6px rgba(226,232,240,.15); }
+/* 器材站两列排，实验台横跨整行占主区域 */
+#labMwWorkbench .world-stations { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+#labMwWorkbench #worldBenchCard { grid-column:1 / -1; background:#0f172a; }
+@media (max-width:1024px) { #labMwWorkbench .world-stations { grid-template-columns:1fr; } }
+/* 题目选择：折起来只剩一行（进题后自动收起，台面占主区域） */
+.bench-choose-head { display:flex; align-items:center; gap:8px; }
+.bench-choose-head h3 { margin:0; flex:0 0 auto; color:#f8fafc; }
+#labChooseCurrent { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#94a3b8; }
+.bench-choose.collapsed > :not(.bench-choose-head) { display:none; }
+#labMwWorkbench .lab-q { background:#1a2438; border-color:#2b3a55; color:#e2e8f0; }
+#labMwWorkbench .lab-q .btn.ghost { border-color:#475569; color:#e2e8f0; background:transparent; }
+#lab .lab-q-filter input[type="search"], #lab .lab-q-filter select { background:#0f172a; border-color:#475569; color:#f8fafc; }
+/* 器材站折叠：只留标题行，点 ▸ 展开 */
+.station-fold { flex:0 0 auto; width:44px; height:44px; border-radius:50%; border:2px solid #475569; background:#0f172a; color:#e2e8f0; font-size:18px; line-height:1; cursor:pointer; }
+#labMwWorkbench .demo-card > .station-fold { position:absolute; top:10px; right:10px; z-index:2; }
+#labMwWorkbench .demo-card.collapsed > :not(.demo-tag):not(h3):not(.station-fold):not(.rot-handle) { display:none; }
+#labMwWorkbench .demo-card.collapsed { padding-bottom:12px; }
+/* 旋转手柄：选中长方形时才出现在卡片上方（NB 走访 §2） */
+.rot-handle { display:none; position:absolute; top:-16px; left:50%; transform:translateX(-50%); width:44px; height:44px; border-radius:50%; border:3px solid #e2e8f0; background:#f97316; color:#fff; font-size:22px; line-height:1; cursor:pointer; z-index:3; box-shadow:0 4px 12px rgba(0,0,0,.45); }
+#worldRectCard.is-selected .rot-handle { display:flex; align-items:center; justify-content:center; }
+/* 画布：深色 + 淡淡的网格（NB 的大黑画布） */
+#worldBenchCard .bench-view { background-color:#0b1220; background-image:linear-gradient(rgba(148,163,184,.13) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,.13) 1px, transparent 1px); background-size:28px 28px; border-radius:12px; }
+#labMwWorkbench .bench-shelf { background:#0b1220; border:2px dashed #334155; }
+#labMwWorkbench .bench-chip { background:#1a2438; border:2px solid #475569; color:#f8fafc; border-radius:12px; }
+#labMwWorkbench .bench-chip.is-picked { border-color:#e2e8f0; background:#334155; box-shadow:0 0 0 3px rgba(226,232,240,.25); }
+#labMwWorkbench .bench-chip-name { color:#94a3b8; }
+#labMwWorkbench .bench-trash { border-color:#7f1d1d; color:#fca5a5; background:transparent; }
+/* 选中零件的竖条小工具栏（NB 走访 §2：设置 / 删除贴在物体旁边） */
+.bench-tools { display:inline-flex; flex-direction:column; gap:4px; vertical-align:middle; }
+.bench-tools .btn { min-width:44px; min-height:44px; padding:4px 8px; }
+/* 零件盒：两列器材图 + 名字，不再是文字芯片 */
+#labMwWorkbench .part-box { background:#0f172a; border:2px solid #263449; border-radius:12px; padding:10px; }
+#labMwWorkbench .part-group { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+#labMwWorkbench .part-group .part-label { grid-column:1 / -1; color:#94a3b8; }
+#labMwWorkbench .part-chip { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; min-height:64px; min-width:0; background:#1a2438; border:2px solid #334155; border-radius:12px; color:#f8fafc; font-size:14px; font-weight:700; padding:8px 4px; }
+#labMwWorkbench .part-chip[data-bench="rect"], #labMwWorkbench .part-chip[data-bench="line"], #labMwWorkbench .part-chip[data-bench="balance"] { grid-column:1 / -1; flex-direction:row; min-height:52px; }
+#labMwWorkbench .part-chip[aria-pressed="true"] { border-color:#f59e0b; background:#451a03; }
+#labMwWorkbench .part-chip .part-ico { display:block; flex:none; }
+/* 检查器：深色设置卡（NB 走访 §2 的形态） */
+#labMwWorkbench .bench-inspector { background:#451a03; border-color:#f59e0b; color:#ffedd5; }
+#labMwWorkbench .bench-inspector .muted { color:#fdba74; }
+#labMwWorkbench .bench-inspector input[type="number"], #labMwWorkbench .bench-inspector input[type="text"] { background:#0f172a; border-color:#475569; color:#f8fafc; }
+#labMwWorkbench .bench-inspector .btn.ghost { border-color:#92400e; color:#ffedd5; background:transparent; }
+#labMwWorkbench .insp-row label { color:#ffedd5; }
+/* 器材 SVG：深底 + 亮色线条（画在白纸上的改成画在黑板上） */
+#labMwWorkbench .apparatus-svg { background:#0f172a; border-color:#263449; }
+#labMwWorkbench .apparatus-chip { background:#1a2438; border-color:#ea580c; color:#fdba74; }
+#labMwWorkbench .apparatus-chip[data-world] { border-color:#475569; background:#1a2438; color:#e2e8f0; }
+#labMwWorkbench .apparatus-drop { background:#0f172a; border-color:#475569; color:#94a3b8; }
+#labMwWorkbench .apparatus-drop.is-hot { border-color:#f97316; background:#451a03; color:#fdba74; }
+#labMwWorkbench .apparatus-svg [data-bal-pan].is-hot ellipse { stroke:#f97316; stroke-width:3; fill:#451a03; }
+/* 台面在说什么：紧凑的状态小标签，不再是一大块黑底文字 */
+#lab .world-panel { position:static; background:#0f172a; border:2px solid #263449; }
+#lab .world-panel h3, #lab .world-panel p { color:#e2e8f0; }
+#lab .world-panel .muted { color:#94a3b8; }
+.world-signals { display:flex; flex-wrap:wrap; gap:6px; margin:0; }
+.world-signal { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:999px; font-size:13px; font-weight:700; background:#1a2438; border:1px solid #334155; color:#e2e8f0; }
+.world-signal.ok { background:#14532d; border-color:#22c55e; color:#bbf7d0; }
+.world-signal.warn { background:#451a03; border-color:#f59e0b; color:#fde68a; }
+.world-signal.error { background:#450a0a; border-color:#ef4444; color:#fecaca; }
+/* 拖动残影：大一点、亮一点，拖起来看得见 */
+.apparatus-ghost { font-size:16px; padding:10px 16px; }
+#worldBenchGhost { font-size:16px; padding:10px 16px; }
+/* 为什么 / 我的发现：深色小卡片 */
+#lab .lab-why-box { background:#0f172a; border-color:#263449; color:#e2e8f0; }
+#lab .lab-why-box p { color:#e2e8f0; }

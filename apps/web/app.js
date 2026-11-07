@@ -3596,7 +3596,7 @@ function benchPieceSvg(q) {
     const filled = Math.max(0, Math.min(d, n - u * d));
     for (let i = 0; i < d; i++) {
       s += '<rect x="' + (u * (W + gap) + i * sw) + '" y="0" width="' + sw + '" height="' + H +
-        '" fill="' + (i < filled ? '#fb923c' : '#e2e8f0') + '" stroke="#94a3b8" stroke-width="1"/>';
+        '" fill="' + (i < filled ? '#fb923c' : '#263449') + '" stroke="#94a3b8" stroke-width="1"/>';
     }
   }
   return s + '</svg>';
@@ -3628,17 +3628,17 @@ function benchViewSvg(view, items, lineOn, lf, bal, rect) {
   let s = '';
   if (view === 'coord') {
     for (let i = -1; i <= 7; i++) {
-      s += '<line x1="' + bvX(i) + '" y1="' + bvY(-2) + '" x2="' + bvX(i) + '" y2="' + bvY(12) + '" stroke="#e2e8f0"/>';
-      s += '<text x="' + bvX(i) + '" y="' + (bvY(0) + 16) + '" font-size="11" text-anchor="middle" fill="#64748b">' + i + '</text>';
+      s += '<line x1="' + bvX(i) + '" y1="' + bvY(-2) + '" x2="' + bvX(i) + '" y2="' + bvY(12) + '" stroke="#263449"/>';
+      s += '<text x="' + bvX(i) + '" y="' + (bvY(0) + 16) + '" font-size="11" text-anchor="middle" fill="#94a3b8">' + i + '</text>';
     }
     for (let j = -2; j <= 12; j += 2) {
-      s += '<line x1="' + bvX(-1) + '" y1="' + bvY(j) + '" x2="' + bvX(7) + '" y2="' + bvY(j) + '" stroke="#e2e8f0"/>';
+      s += '<line x1="' + bvX(-1) + '" y1="' + bvY(j) + '" x2="' + bvX(7) + '" y2="' + bvY(j) + '" stroke="#263449"/>';
     }
     for (let j = -2; j <= 12; j += 2) {
-      s += '<text x="' + (bvX(-1) - 6) + '" y="' + (bvY(j) + 4) + '" font-size="11" text-anchor="end" fill="#64748b">' + j + '</text>';
+      s += '<text x="' + (bvX(-1) - 6) + '" y="' + (bvY(j) + 4) + '" font-size="11" text-anchor="end" fill="#94a3b8">' + j + '</text>';
     }
-    s += '<line x1="' + bvX(-1) + '" y1="' + bvY(0) + '" x2="' + bvX(7) + '" y2="' + bvY(0) + '" stroke="#334155" stroke-width="2"/>';
-    s += '<line x1="' + bvX(0) + '" y1="' + bvY(-2) + '" x2="' + bvX(0) + '" y2="' + bvY(12) + '" stroke="#334155" stroke-width="2"/>';
+    s += '<line x1="' + bvX(-1) + '" y1="' + bvY(0) + '" x2="' + bvX(7) + '" y2="' + bvY(0) + '" stroke="#cbd5e1" stroke-width="2"/>';
+    s += '<line x1="' + bvX(0) + '" y1="' + bvY(-2) + '" x2="' + bvX(0) + '" y2="' + bvY(12) + '" stroke="#cbd5e1" stroke-width="2"/>';
     if (lineOn) {
       const pts = [];
       for (let x = -1; x <= 7.001; x += 0.25) {
@@ -3661,19 +3661,19 @@ function benchViewSvg(view, items, lineOn, lf, bal, rect) {
       const x = it.q.n / it.q.d;
       if (x < -1 || x > 7) return;
       s += '<circle cx="' + bvX(x) + '" cy="' + bvY(0) + '" r="6" fill="#2563eb"/>' +
-        '<text x="' + bvX(x) + '" y="' + (bvY(0) - 10) + '" font-size="12" text-anchor="middle" fill="#1e3a8a">' + it.str + '</text>';
+        '<text x="' + bvX(x) + '" y="' + (bvY(0) - 10) + '" font-size="12" text-anchor="middle" fill="#93c5fd">' + it.str + '</text>';
     });
   } else if (view === 'numline') {
-    s += '<line x1="' + bvX(-1) + '" y1="120" x2="' + bvX(7) + '" y2="120" stroke="#334155" stroke-width="2"/>';
+    s += '<line x1="' + bvX(-1) + '" y1="120" x2="' + bvX(7) + '" y2="120" stroke="#cbd5e1" stroke-width="2"/>';
     for (let i = -1; i <= 7; i++) {
-      s += '<line x1="' + bvX(i) + '" y1="114" x2="' + bvX(i) + '" y2="126" stroke="#334155"/>';
-      s += '<text x="' + bvX(i) + '" y="144" font-size="11" text-anchor="middle" fill="#64748b">' + i + '</text>';
+      s += '<line x1="' + bvX(i) + '" y1="114" x2="' + bvX(i) + '" y2="126" stroke="#cbd5e1"/>';
+      s += '<text x="' + bvX(i) + '" y="144" font-size="11" text-anchor="middle" fill="#94a3b8">' + i + '</text>';
     }
     items.forEach(function (it) {
       const x = it.q.n / it.q.d;
       if (x < -1 || x > 7) return;
       s += '<circle cx="' + bvX(x) + '" cy="120" r="6" fill="#2563eb"/>' +
-        '<text x="' + bvX(x) + '" y="100" font-size="12" text-anchor="middle" fill="#1e3a8a">' + it.str + '</text>';
+        '<text x="' + bvX(x) + '" y="100" font-size="12" text-anchor="middle" fill="#93c5fd">' + it.str + '</text>';
     });
   } else if (view === 'fracbar') {
     items.forEach(function (it, i) {
@@ -3686,30 +3686,30 @@ function benchViewSvg(view, items, lineOn, lf, bal, rect) {
           const filled = Math.max(0, Math.min(d, n - u * d));
           for (let k = 0; k < d; k++) {
             s += '<rect x="' + (30 + u * 66 + k * sw) + '" y="' + y0 + '" width="' + sw + '" height="28" fill="' +
-              (k < filled ? '#fb923c' : '#e2e8f0') + '" stroke="#94a3b8"/>';
+              (k < filled ? '#fb923c' : '#263449') + '" stroke="#94a3b8"/>';
           }
         }
       }
-      s += '<text x="' + (30 + bars * 66 + 8) + '" y="' + (y0 + 19) + '" font-size="14" font-weight="700" fill="#0f172a">' + it.str + '</text>';
+      s += '<text x="' + (30 + bars * 66 + 8) + '" y="' + (y0 + 19) + '" font-size="14" font-weight="700" fill="#f8fafc">' + it.str + '</text>';
     });
   } else if (view === 'balance') {
     // 天平：支点在中间，左盘、右盘写出它们的值；不平时横梁向重的一边倾斜。
     const tilt = bal.equal ? 0 : (bal.leftHeavy ? 22 : -22);
     const leftY = 130 + tilt, rightY = 130 - tilt;
-    s += '<polygon points="240,150 280,150 260,120" fill="#334155"/>';
-    s += '<line x1="90" y1="' + leftY + '" x2="430" y2="' + rightY + '" stroke="#334155" stroke-width="4"/>';
-    s += '<line x1="260" y1="120" x2="260" y2="60" stroke="#334155" stroke-width="3"/>';
+    s += '<polygon points="240,150 280,150 260,120" fill="#cbd5e1"/>';
+    s += '<line x1="90" y1="' + leftY + '" x2="430" y2="' + rightY + '" stroke="#cbd5e1" stroke-width="4"/>';
+    s += '<line x1="260" y1="120" x2="260" y2="60" stroke="#cbd5e1" stroke-width="3"/>';
     s += '<rect x="60" y="' + leftY + '" width="100" height="40" fill="#fde68a" stroke="#92400e"/>';
     s += '<rect x="380" y="' + rightY + '" width="100" height="40" fill="#fde68a" stroke="#92400e"/>';
     s += '<text x="110" y="' + (leftY + 26) + '" font-size="16" text-anchor="middle" fill="#0f172a">' + bal.Lstr + '</text>';
     s += '<text x="430" y="' + (rightY + 26) + '" font-size="16" text-anchor="middle" fill="#0f172a">' + bal.Rstr + '</text>';
-    s += '<text x="260" y="220" font-size="16" text-anchor="middle" fill="' + (bal.equal ? '#15803d' : '#b91c1c') + '">' +
+    s += '<text x="260" y="220" font-size="16" text-anchor="middle" fill="' + (bal.equal ? '#4ade80' : '#fca5a5') + '">' +
       (bal.equal ? '平衡' : (bal.leftHeavy ? '左边重' : '右边重')) + '</text>';
   } else {
     let y = 40;
-    if (lineOn) { s += '<text x="30" y="' + y + '" font-size="16" fill="#0f172a">y = ' + lf.k + 'x + ' + lf.b + '</text>'; y += 34; }
-    items.forEach(function (it) { s += '<text x="30" y="' + y + '" font-size="16" fill="#0f172a">x = ' + it.str + '</text>'; y += 34; });
-    if (!lineOn && !items.length) s += '<text x="30" y="40" font-size="14" fill="#64748b">台上还没有东西</text>';
+    if (lineOn) { s += '<text x="30" y="' + y + '" font-size="16" fill="#f8fafc">y = ' + lf.k + 'x + ' + lf.b + '</text>'; y += 34; }
+    items.forEach(function (it) { s += '<text x="30" y="' + y + '" font-size="16" fill="#f8fafc">x = ' + it.str + '</text>'; y += 34; });
+    if (!lineOn && !items.length) s += '<text x="30" y="40" font-size="14" fill="#94a3b8">台上还没有东西</text>';
   }
   return s;
 }
@@ -3729,7 +3729,10 @@ function worldBenchRender() {
           '" data-bench="pick" data-id="' + esc(it.id) + '" aria-pressed="' + on + '"' +
           ' title="' + esc(it.name || it.str) + '">' +
           benchPieceSvg(it.q) + '<span>' + esc(it.str) + '</span>' +
-          (it.name && it.name !== it.str ? '<span class="bench-chip-name">' + esc(it.name) + '</span>' : '') + '</button>';
+          (it.name && it.name !== it.str ? '<span class="bench-chip-name">' + esc(it.name) + '</span>' : '') + '</button>' +
+          (on ? '<span class="bench-tools" role="group" aria-label="已选零件的操作">' +
+            '<button type="button" class="btn small ghost" data-bench="sel-inspect" data-id="' + esc(it.id) + '" title="设置这个零件">⚙</button>' +
+            '<button type="button" class="btn small ghost" data-bench="sel-remove" data-id="' + esc(it.id) + '" title="拿走这个零件">✕</button></span>' : '');
       }).join('')
     : '<p class="muted">台面是空的。从上面的零件盒拿一个数放上来。</p>';
   const sum = document.getElementById('worldBenchSum');
@@ -3799,6 +3802,20 @@ function worldBenchRender() {
       worldInspectSelect({ piece: id });
       return;
     }
+    if (op === 'sel-inspect') {
+      const id = b.getAttribute('data-id');
+      if (id) { benchSel[id] = true; worldInspectSelect({ piece: id }); worldBenchRender(); }
+      return;
+    }
+    if (op === 'sel-remove') {
+      const id = b.getAttribute('data-id');
+      if (id) {
+        delete benchSel[id];
+        benchApply({ type: 'benchTake', pieceId: id }, '拿走了');
+        worldInspectSelect(null); // 零件没了，检查器别留孤儿面板
+      }
+      return;
+    }
     if (op === 'merge') {
       const ids = Object.keys(benchSel);
       if (ids.length < 2) { benchMsg('先在台上选中两个以上的数，再合并。', false); return; }
@@ -3857,9 +3874,113 @@ function worldBenchRender() {
     }
   });
 })();
+/* 零件盒：每种器材配一张小图（NB 的器材架是图 + 名字，不是文字芯片）。
+   图是按器材现画的 SVG：数字卡画卡片、分数画条、砝码画砝码、长方形画框、直线画线、天平画天平。 */
+(function labPartIcons() {
+  const box = document.getElementById('labPartBox');
+  if (!box) return;
+  function numIcon(n) {
+    return '<svg width="30" height="24" viewBox="0 0 30 24" aria-hidden="true"><rect x="2" y="2" width="26" height="20" rx="4" fill="#1a2438" stroke="#e2e8f0" stroke-width="2"/><text x="15" y="17" font-size="12" text-anchor="middle" fill="#f8fafc" font-weight="700">' + n + '</text></svg>';
+  }
+  function fracIcon(n, d) {
+    let s = '<svg width="30" height="24" viewBox="0 0 30 24" aria-hidden="true">';
+    const sw = 26 / d;
+    for (let i = 0; i < d; i++) {
+      s += '<rect x="' + (2 + i * sw).toFixed(1) + '" y="7" width="' + sw.toFixed(1) + '" height="10" fill="' + (i < n ? '#fb923c' : '#1a2438') + '" stroke="#94a3b8" stroke-width="1"/>';
+    }
+    return s + '</svg>';
+  }
+  const weightIcon = '<svg width="30" height="24" viewBox="0 0 30 24" aria-hidden="true"><path d="M11 3 h8 v4 h-8 z" fill="#94a3b8"/><path d="M7 7 h16 l3 13 a3 3 0 0 1 -3 4 h-16 a3 3 0 0 1 -3 -4 z" fill="#fb923c" stroke="#c2410c" stroke-width="1.5"/></svg>';
+  const rectIcon = '<svg width="30" height="24" viewBox="0 0 30 24" aria-hidden="true"><rect x="3" y="5" width="24" height="14" rx="2" fill="#fde68a" fill-opacity="0.7" stroke="#92400e" stroke-width="2"/></svg>';
+  const lineIcon = '<svg width="30" height="24" viewBox="0 0 30 24" aria-hidden="true"><line x1="4" y1="20" x2="26" y2="4" stroke="#ea580c" stroke-width="3" stroke-linecap="round"/><circle cx="11" cy="14" r="3" fill="#2563eb" stroke="#fff" stroke-width="1.5"/><circle cx="19" cy="9" r="3" fill="#2563eb" stroke="#fff" stroke-width="1.5"/></svg>';
+  const balIcon = '<svg width="30" height="24" viewBox="0 0 30 24" aria-hidden="true"><line x1="15" y1="4" x2="15" y2="20" stroke="#cbd5e1" stroke-width="2"/><line x1="4" y1="7" x2="26" y2="7" stroke="#cbd5e1" stroke-width="2"/><path d="M2 8 Q4 14 6 8 Z" fill="#e2e8f0" stroke="#94a3b8"/><path d="M24 8 Q26 14 28 8 Z" fill="#e2e8f0" stroke="#94a3b8"/></svg>';
+  box.querySelectorAll('.part-chip').forEach(function (btn) {
+    if (btn.querySelector('.part-ico')) return;
+    let svg = null;
+    if (btn.hasAttribute('data-drag-weight')) svg = weightIcon;
+    else if (btn.getAttribute('data-bench') === 'rect') svg = rectIcon;
+    else if (btn.getAttribute('data-bench') === 'line') svg = lineIcon;
+    else if (btn.getAttribute('data-bench') === 'balance') svg = balIcon;
+    else if (btn.getAttribute('data-kind') === 'num') svg = numIcon(btn.getAttribute('data-n'));
+    else if (btn.getAttribute('data-kind') === 'frac') svg = fracIcon(parseInt(btn.getAttribute('data-n'), 10), parseInt(btn.getAttribute('data-d'), 10));
+    if (!svg) return;
+    const span = document.createElement('span');
+    span.className = 'part-ico';
+    span.setAttribute('aria-hidden', 'true');
+    span.innerHTML = svg;
+    btn.insertBefore(span, btn.firstChild);
+  });
+})();
+/* 实验室折叠：器材站默认收起只留标题行，题目列表进题后收起，
+   更多器材默认收起。进题时对应台子自动展开（台面占主区域）。 */
+function labExpandStation(stationId) {
+  const card = document.getElementById(stationId);
+  if (!card) return;
+  card.classList.remove('collapsed');
+  const fold = card.querySelector('.station-fold');
+  if (fold) { fold.textContent = '▾'; fold.setAttribute('aria-expanded', 'true'); }
+}
+function labSetChooseCurrent(text) {
+  const el = document.getElementById('labChooseCurrent');
+  if (el) el.textContent = text || '';
+}
+function labCollapseChoose() {
+  const box = document.querySelector('#labMwWorkbench .bench-choose');
+  const fold = document.getElementById('labChooseFold');
+  if (box) box.classList.add('collapsed');
+  if (fold) { fold.textContent = '▸'; fold.setAttribute('aria-expanded', 'false'); }
+}
+function labExpandChoose() {
+  const box = document.querySelector('#labMwWorkbench .bench-choose');
+  const fold = document.getElementById('labChooseFold');
+  if (box) box.classList.remove('collapsed');
+  if (fold) { fold.textContent = '▾'; fold.setAttribute('aria-expanded', 'true'); }
+}
+(function labStationFolds() {
+  const wb = document.getElementById('labMwWorkbench');
+  if (wb) wb.addEventListener('click', function (e) {
+    const f = e.target.closest('.station-fold');
+    if (!f) return;
+    const card = f.closest('.demo-card');
+    if (!card) return;
+    const collapsed = card.classList.toggle('collapsed');
+    f.textContent = collapsed ? '▸' : '▾';
+    f.setAttribute('aria-expanded', String(!collapsed));
+  });
+  const chooseFold = document.getElementById('labChooseFold');
+  if (chooseFold) chooseFold.addEventListener('click', function () {
+    const box = document.querySelector('#labMwWorkbench .bench-choose');
+    if (!box) return;
+    const collapsed = box.classList.toggle('collapsed');
+    chooseFold.textContent = collapsed ? '▸' : '▾';
+    chooseFold.setAttribute('aria-expanded', String(!collapsed));
+  });
+  const moreFold = document.getElementById('labMoreFold');
+  if (moreFold) moreFold.addEventListener('click', function () {
+    const hint = document.getElementById('labMoreHint');
+    const body = document.getElementById('labWorkbench');
+    const hidden = body ? body.hidden : true;
+    if (hint) hint.hidden = !hidden;
+    if (body) body.hidden = !hidden;
+    moreFold.textContent = hidden ? '▾' : '▸';
+    moreFold.setAttribute('aria-expanded', String(hidden));
+  });
+})();
 /* 把台上的数放到器材上（天平左右盘、数轴）。返回是否成功。 */
 function benchDropTargetAt(x, y) {
   // 按矩形判断落点，不用 elementFromPoint（图形层可能盖在落点上面）。
+  // 几何优先：天平盘本身就是落点（NB 式）。旧代码只认虚线框
+  // [data-drop]，落在盘子图片上什么都不发生（2026-11-07 复测）。
+  const bal = document.getElementById('worldBalSvg');
+  if (bal && bal.getBoundingClientRect) {
+    const r = bal.getBoundingClientRect();
+    if (r.width > 0 && r.height > 0 && x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+      const vx = ((x - r.left) / r.width) * 340;
+      const vy = ((y - r.top) / r.height) * 250;
+      if (vx >= 24 && vx <= 136 && vy >= 80 && vy <= 190) return 'balance.L';
+      if (vx >= 204 && vx <= 316 && vy >= 80 && vy <= 190) return 'balance.R';
+    }
+  }
   const nodes = document.querySelectorAll('[data-drop]');
   for (let i = 0; i < nodes.length; i++) {
     const r = nodes[i].getBoundingClientRect();
@@ -4513,10 +4634,11 @@ var labMode = 'free'; // 自由玩 | 挑战（本节课有效，不存档）
 var labChallengeAttempts = []; // 挑战模式里点开过的问题 id（去重）
 var labChallengeMarks = {}; // qid -> true 答对 / false 答错
 function labFocusStation(stationId) {
-  ['worldFracCard', 'worldBalCard', 'worldChickenCard', 'worldLineCard', 'worldFnCard'].forEach(id => {
+  ['worldFracCard', 'worldBalCard', 'worldChickenCard', 'worldLineCard', 'worldFnCard', 'worldRectCard', 'worldDiceCard'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.classList.toggle('lab-mw-focus', id === stationId);
   });
+  if (stationId) labExpandStation(stationId); // 进题的台子自动展开，别的仍收着
   const target = document.getElementById(stationId) || document.getElementById('labMwWorkbench');
   if (target && typeof target.scrollIntoView === 'function') {
     try { target.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) { /* smoke stub */ }
@@ -4581,6 +4703,8 @@ function labEnterQuestion(qid) {
   // 练习模式（自由玩里的题）有提示；挑战模式无提示，交卷时才看丢分。
   if (q.bench) worldPlayStartProcedure(qid, labMode === 'challenge' ? 'exam' : 'practice');
   labFocusStation(q.station);
+  labCollapseChoose(); // 进题了，问题列表收起来，台面占主区域
+  labSetChooseCurrent('当前：' + q.title);
   if (typeof worldPlayRender === 'function') worldPlayRender();
   labTrace('开始做「' + q.title + '」', true);
 }
@@ -4591,6 +4715,7 @@ function labFreePlay() {
   if (typeof worldPlayRender === 'function') worldPlayRender();
   labTrace('自由玩：进入工作间', true);
   labFocusStation('worldFracCard');
+  labSetChooseCurrent('');
 }
 function labSetMode(m) {
   labMode = m;
@@ -4628,6 +4753,8 @@ function labExitPractice() {
   }
   labWorldQid = null;
   labSetCurrentQ('当前问题：还没选。先在下面选一个「工作间」题，或点「不选题，直接进工作间」。');
+  labExpandChoose(); // 退出练习，问题列表重新展开，方便再选一题
+  labSetChooseCurrent('');
   if (typeof worldPlayRender === 'function') worldPlayRender();
   labTrace('退出练习', true);
 }
@@ -5013,12 +5140,16 @@ function worldPlayRender() {
   setTx('worldRectMsg', rect.signals[0].text + '。');
   // 台面在说什么：只给学生看的信号（天平平没平、错拼差多少、腿差几条），
   // 不再倒调试用的内部状态（goalMet、diff、pieceCount 都不出现）。
-  const sigLines = (d.signals || []).map(function (s) {
-    return (s.level === 'ok' ? '✓ ' : s.level === 'error' ? '✗ ' : s.level === 'warn' ? '⚠ ' : '· ') + s.text;
-  });
-  setTx('worldDerivedOut', (sigLines.length ? sigLines : ['动一动台面，世界就会说话。']).concat([
-    '台上 ' + d.bench.count + ' 个数，合计 ' + d.bench.totalStr + '；托盘 ' + d.trayCount + ' 个。',
-  ]).join('\n'));
+  // 信号只剩紧凑的小标签（NB 式：关键数字浮在台面上，不是一大块文字）。
+  const sigBox = document.getElementById('worldDerivedOut');
+  if (sigBox) {
+    const chips = (d.signals || []).map(function (s) {
+      return '<span class="world-signal ' + (s.level || 'info') + '">' +
+        (s.level === 'ok' ? '✓ ' : s.level === 'error' ? '✗ ' : s.level === 'warn' ? '⚠ ' : '· ') + esc(s.text) + '</span>';
+    });
+    chips.push('<span class="world-signal">台上 ' + d.bench.count + ' 个数，合计 ' + esc(d.bench.totalStr) + '；托盘 ' + d.trayCount + ' 个。</span>');
+    sigBox.innerHTML = chips.length ? chips.join('') : '<span class="world-signal">动一动台面，世界就会说话。</span>';
+  }
   worldInspectorRender();
   if (typeof Apparatus !== 'undefined' && Apparatus && typeof Apparatus.render === 'function') {
     Apparatus.render(w, d);
@@ -5128,6 +5259,11 @@ function worldPlayBumpFrac(side, which, delta) {
       const cur = MathWorld.derived(worldPlayEnsure()).rect;
       const nw = op === 'rect-w+' ? cur.w + 1 : cur.w - 1;
       return worldPlayApply({ type: 'rectSet', w: nw }, '宽改成 ' + nw, '宽只能在 1 到 ' + (cur.perim / 2 - 1) + ' 之间');
+    }
+    if (op === 'rect-rotate') {
+      const w = worldPlayEnsure();
+      if (!w) return;
+      return worldPlayApply({ type: 'rectSet', w: w.rect.perim / 2 - w.rect.w }, '转了 90°');
     }
     if (op === 'fn-2pt') {
       const num = function (id) { return parseFloat(document.getElementById(id).value); };

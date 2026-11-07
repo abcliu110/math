@@ -1164,9 +1164,11 @@ navGo('world');
 check('world bookmark opens lab with MathWorld workbench',
   byId.lab.hidden === false && byId.panels.hidden === true && documentStub.body.dataset.view === 'lab');
 if (typeof sandbox.worldPlayRender === 'function') sandbox.worldPlayRender();
+// 视觉大改后信号写成 innerHTML 的小标签（不再是 textContent 的文本行），
+// 所以这里读 innerHTML；真机上两者都含“台上/合计”。
 check('lab MathWorld workbench uses shared world',
-  !!sandbox.MathWorld && byId.worldDerivedOut.textContent.includes('台上') &&
-    byId.worldDerivedOut.textContent.includes('合计'));
+  !!sandbox.MathWorld && byId.worldDerivedOut.innerHTML.includes('台上') &&
+    byId.worldDerivedOut.innerHTML.includes('合计'));
 // v0.9 addendum (NB 走访 §7)：整个世界自动保存，刷新后直接回来，不让学生丢东西
 if (typeof sandbox.labWorldSave === 'function' && sandbox.labWorld) {
   sandbox.labWorldSave();

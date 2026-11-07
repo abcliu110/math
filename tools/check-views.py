@@ -255,7 +255,9 @@ for _need in ('id="worldBenchBox"', 'id="worldBenchInspector"',
               'id="labQSearch"', 'id="labQGrade"', 'id="labQEmpty"',
               'id="labQCount"', 'id="labPracticeMenu"',
               'id="labWhyBtn"', 'id="labDiscoveryBtn"', 'id="labWhyBox"',
-              'id="labSaveBtn"', 'id="labSaveName"', 'id="labSavedList"'):
+              'id="labSaveBtn"', 'id="labSaveName"', 'id="labSavedList"',
+              'id="labChooseCurrent"', 'id="labChooseFold"', 'id="labMoreFold"',
+              'class="station-fold"', 'class="rot-handle"', 'class="world-signals"'):
     if _need not in _lab:
         errors.append(f"lab section is missing {_need}")
 for _grp in ('>数<', '>分数<', '>形<', '>量<', '>关系<'):
