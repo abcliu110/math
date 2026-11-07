@@ -1622,6 +1622,88 @@ if (typeof sandbox.labFilterQuestions === 'function') {
     if (i >= 0) registry.splice(i, 1);
   });
 }
+// 2026-11-07 第 3 阶段批 1：找实验按章节（章节 = 知识点所在的单元）。
+// 旧代码没有 labChapterOptions/labChapterOf：下面每一项在改前代码上都干净失败。
+check('lab chapter options lists the units the questions use',
+  typeof sandbox.labChapterOptions === 'function' &&
+  (byId.labQGrade.value = 'all', sandbox.labChapterOptions(),
+    byId.labQChapter.innerHTML.indexOf('简易方程') >= 0 &&
+    byId.labQChapter.innerHTML.indexOf('5年级上 · 简易方程') >= 0 &&
+    byId.labQChapter.innerHTML.indexOf('9年级') >= 0));
+check('lab chapter options narrow to the selected grade',
+  typeof sandbox.labChapterOptions === 'function' &&
+  (byId.labQGrade.value = '5', sandbox.labChapterOptions(),
+    byId.labQChapter.innerHTML.indexOf('简易方程') >= 0 &&
+    byId.labQChapter.innerHTML.indexOf('9年级') === -1 &&
+    byId.labQChapter.innerHTML.indexOf('1年级') === -1));
+check('lab chapter selection resets when the grade no longer has it',
+  typeof sandbox.labChapterOptions === 'function' &&
+  (sandbox.labChapterSel = '5|简易方程', byId.labQGrade.value = '5', sandbox.labChapterOptions(),
+    sandbox.labChapterSel === '5|简易方程' &&
+    (byId.labQGrade.value = '1', sandbox.labChapterOptions(), sandbox.labChapterSel === 'all')));
+if (typeof sandbox.labFilterQuestions === 'function') {
+  const labQBox2 = documentStub.getElementById('labQuestions');
+  function seedLabQCard2(suffix) {
+    const card = makeEl('div');
+    card.className = 'lab-q';
+    card.parentNode = labQBox2;
+    const btn = makeEl('button');
+    btn.id = 'labQ-' + suffix;
+    card.querySelector = function (sel) { return sel.indexOf('labQ-') >= 0 ? btn : null; };
+    return card;
+  }
+  const cardMax2 = seedLabQCard2('maxarea');
+  const cardFrac2 = seedLabQCard2('fracadd');
+  const cardBal2 = seedLabQCard2('balfrac');
+  byId.labQSearch.value = '';
+  byId.labQGrade.value = 'all';
+  sandbox.labQDomain = 'all';
+  sandbox.labChapterSel = '5|简易方程';
+  sandbox.labFilterQuestions();
+  check('lab question filter by chapter keeps only that unit (5.5 简易方程）',
+    cardMax2.style.display === 'none' && cardFrac2.style.display === 'none' && cardBal2.style.display !== 'none');
+  check('lab question count follows the chapter filter',
+    byId.labQCount.textContent === '找到 1 个问题');
+  sandbox.labChapterSel = 'all';
+  sandbox.labFilterQuestions();
+  [cardMax2, cardFrac2, cardBal2].forEach(function (c) {
+    const i = registry.indexOf(c);
+    if (i >= 0) registry.splice(i, 1);
+  });
+}
+// 2026-11-07 第 3 阶段批 1：分享实验配置（世界就是一串 JSON）。
+// 旧代码没有 labWorldNormalize/labShareExport/labShareImport：下面每一项在改前代码上都干净失败。
+check('lab world normalize accepts a fresh world and rejects garbage',
+  typeof sandbox.labWorldNormalize === 'function' &&
+  !!sandbox.labWorldNormalize(sandbox.MathWorld.create({})) &&
+  sandbox.labWorldNormalize({}) === null &&
+  sandbox.labWorldNormalize(null) === null &&
+  sandbox.labWorldNormalize('not a world') === null);
+check('lab share export writes the whole world as JSON into the box',
+  typeof sandbox.labShareExport === 'function' &&
+  (sandbox.labShareExport(), byId.labShareBox.hidden === false &&
+    (function () { try { const w = JSON.parse(byId.labShareText.value); return !!w.pieces && Array.isArray(w.bench) && !!w.balance; } catch (e) { return false; } })()));
+check('lab share import applies a valid config and refuses garbage without touching the bench',
+  typeof sandbox.labShareImport === 'function' &&
+  (function () {
+    const w = JSON.parse(byId.labShareText.value);
+    w.rect.w = 5;
+    byId.labShareText.value = JSON.stringify(w);
+    sandbox.labShareImport();
+    const okImport = sandbox.labWorld && sandbox.labWorld.rect && sandbox.labWorld.rect.w === 5 &&
+      byId.labShareMsg.textContent.indexOf('已导入') >= 0;
+    byId.labShareText.value = 'not json{';
+    sandbox.labShareImport();
+    const okGarbage = sandbox.labWorld.rect.w === 5 && byId.labShareMsg.textContent.indexOf('看不懂') >= 0;
+    byId.labShareText.value = '';
+    sandbox.labShareImport();
+    const okEmpty = byId.labShareMsg.textContent.indexOf('空的') >= 0;
+    return okImport && okGarbage && okEmpty;
+  })());
+check('lab share copy falls back to a manual-copy message with no clipboard',
+  typeof sandbox.labShareCopy === 'function' &&
+  (byId.labShareText.value = '{"pieces":{}}', sandbox.labShareCopy(),
+    byId.labShareMsg.textContent.indexOf('复制失败') >= 0));
 // 2026-11-07 复测修：台面卡片在 DOM 里就是工作间第一张，不靠 order:-1 视觉置顶。
 check('lab HTML: bench card is first in DOM inside the workbench stations',
   htmlText.indexOf('id="worldBenchCard"') < htmlText.indexOf('id="worldFracCard"'));

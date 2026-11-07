@@ -51969,16 +51969,23 @@ function labWorldSave() {
   if (!labWorld || !labHasWorld()) return;
   try { localStorage.setItem(LAB_WORLD_KEY, JSON.stringify(labWorld)); } catch (e) { /* 存不下就不存 */ }
 }
-function labWorldRestore() {
-  let w = null;
-  try { w = JSON.parse(localStorage.getItem(LAB_WORLD_KEY) || 'null'); } catch (e) { w = null; }
+/* 世界 JSON 的形状检查 + 补齐：自动保存、分享导入两条路共用。
+   形状不对（缺 pieces/bench/balance.L/fracboard/linefn/rect）就返回 null，
+   调用方不改台面、只报一句话。 */
+function labWorldNormalize(w) {
   if (!w || typeof w !== 'object' || !w.pieces || typeof w.pieces !== 'object' ||
       !Array.isArray(w.bench) || !w.balance || !Array.isArray(w.balance.L) ||
       !w.fracboard || !w.linefn || !w.rect) return null;
+  if (typeof MathWorld === 'undefined' || !MathWorld || !MathWorld.create) return null;
   // 缺的顶层字段用空世界补齐（旧版本存的世界没有 benchRect 等字段）。
   const fresh = MathWorld.create({});
   Object.keys(fresh).forEach(function (k) { if (w[k] === undefined) w[k] = fresh[k]; });
   return w;
+}
+function labWorldRestore() {
+  let w = null;
+  try { w = JSON.parse(localStorage.getItem(LAB_WORLD_KEY) || 'null'); } catch (e) { w = null; }
+  return labWorldNormalize(w);
 }
 function labDefaultsLoad() {
   try { return JSON.parse(localStorage.getItem(LAB_DEFAULTS_KEY) || '{}') || {}; } catch (e) { return {}; }
@@ -53848,6 +53855,48 @@ function labDeleteSaved(i) {
   labSavedSave(list);
   labSavedRender();
 }
+/* 分享实验配置：台面就是整个世界，一串 JSON 复制走、粘回来就能复现同一个台面。
+   导出写进框里；复制走剪贴板（没有剪贴板就让学生手动选）；导入先验形状，
+   看不懂就原样不动、只报一句话。 */
+function labShareMsg(text) {
+  const msg = document.getElementById('labShareMsg');
+  if (msg) msg.textContent = text;
+}
+function labShareExport() {
+  const w = worldPlayEnsure();
+  const box = document.getElementById('labShareBox');
+  const text = document.getElementById('labShareText');
+  if (!w) { labShareMsg('台面还没建好，先放点东西再分享。'); return; }
+  if (box) box.hidden = false;
+  if (text) text.value = JSON.stringify(w);
+  labShareMsg('这串配置就是现在这个台面的样子：复制发给别人，对方粘到这里点“导入配置”，台面就一样了。');
+}
+function labShareCopy() {
+  const text = document.getElementById('labShareText');
+  if (!text || !text.value) { labShareMsg('先点“分享配置”，把台面写进框里再复制。'); return; }
+  function done(ok) { labShareMsg(ok ? '已复制：发给别人，对方粘到配置框里点“导入配置”就行。' : '复制失败：手动选中框里的配置复制。'); }
+  if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text.value).then(function () { done(true); }, function () { done(false); });
+  } else if (typeof document !== 'undefined' && document.execCommand) {
+    try { if (text.select) text.select(); done(document.execCommand('copy')); } catch (e) { done(false); }
+  } else { done(false); }
+}
+function labShareImport() {
+  const text = document.getElementById('labShareText');
+  if (!text || !text.value.trim()) { labShareMsg('框里是空的：先粘贴别人发来的配置再点导入。'); return; }
+  let parsed = null;
+  try { parsed = JSON.parse(text.value); } catch (e) { parsed = null; }
+  const norm = labWorldNormalize(parsed);
+  if (!norm) { labShareMsg('这串配置看不懂：是不是复制的时候少了一截？台面没动。'); return; }
+  // 导入的配置里若挂着考试流程，照刷新那条路结束它（导入发生在自由玩）。
+  const w = (norm.procedure && norm.procedure.mode === 'exam') ? MathWorld.apply(norm, { type: 'procedureEnd' }).world : norm;
+  labWorld = w; mwPlay = w;
+  labSeedLegacyFromWorld(w);
+  labWorldSave();
+  benchSave();
+  if (typeof worldPlayRender === 'function') worldPlayRender();
+  labShareMsg('已导入：台面和分享时一模一样了。');
+}
 function labSavedRender() {
   const box = document.getElementById('labSavedList');
   if (!box) return;
@@ -53873,10 +53922,43 @@ function labQuestionsEnhance() {
     card.appendChild(p);
   });
 }
+/* 找实验按章节：章节就是知识点所在的单元（findPoint 给的 unit），
+   下拉框只列 14 道题真正用到的章节，不列空章节；年级一换，章节跟着换。 */
+function labChapterOf(q) {
+  if (!q || !q.primary) return null;
+  const f = findPoint(q.primary);
+  if (!f || !f.unit) return null;
+  return { key: f.grade + '|' + f.unit.unit, label: f.grade + '年级' + (f.unit.term || '') + ' · ' + f.unit.unit, grade: f.grade, unitIndex: f.unitIndex };
+}
+var labChapterSel = 'all'; // 状态变量不用 labQChapter：那是下拉框的 id，同名 var 会盖掉元素
+function labChapterOptions() {
+  const sel = document.getElementById('labQChapter');
+  if (!sel) return;
+  const gEl = document.getElementById('labQGrade');
+  const g = gEl ? gEl.value : 'all';
+  const seen = {};
+  const list = [];
+  LAB_QUESTIONS.forEach(function (q) {
+    const c = labChapterOf(q);
+    if (!c) return;
+    if (g !== 'all' && c.grade !== parseInt(g, 10)) return;
+    if (seen[c.key]) return;
+    seen[c.key] = true;
+    list.push(c);
+  });
+  list.sort(function (a, b) { return a.grade - b.grade || a.unitIndex - b.unitIndex; });
+  const keep = labChapterSel;
+  sel.innerHTML = '<option value="all">全部章节</option>' + list.map(function (c) {
+    return '<option value="' + esc(c.key) + '">' + esc(c.label) + '</option>';
+  }).join('');
+  labChapterSel = (keep !== 'all' && list.some(function (c) { return c.key === keep; })) ? keep : 'all';
+  sel.value = labChapterSel;
+}
 function labFilterQuestions() {
   const q = (document.getElementById('labQSearch').value || '').trim().toLowerCase();
   const gEl = document.getElementById('labQGrade');
   const g = gEl ? gEl.value : 'all';
+  const ch = labChapterSel;
   let shown = 0;
   const cards = document.querySelectorAll('#labQuestions .lab-q');
   // 卡片按它自己的按钮配题目（labQ-<后缀> ↔ q-<后缀>），不用位置配对：
@@ -53890,6 +53972,7 @@ function labFilterQuestions() {
     const hay = (qq.title + ' ' + qq.primary).toLowerCase();
     const ok = (!q || hay.indexOf(q) >= 0) &&
       (g === 'all' || grade === parseInt(g, 10)) &&
+      (ch === 'all' || ((labChapterOf(qq) || {}).key === ch)) &&
       (labQDomain === 'all' || qq.domain === labQDomain);
     card.style.display = ok ? '' : 'none';
     if (ok) shown++;
@@ -53909,10 +53992,15 @@ function labFilterQuestions() {
   bind('labWhyBtn', labShowWhy);
   bind('labDiscoveryBtn', labShowDiscovery);
   bind('labSaveBtn', labSaveBench);
+  bind('labShareBtn', labShareExport);
+  bind('labShareCopy', labShareCopy);
+  bind('labShareImport', labShareImport);
   const search = document.getElementById('labQSearch');
   if (search) search.addEventListener('input', labFilterQuestions);
   const grade = document.getElementById('labQGrade');
-  if (grade) grade.addEventListener('change', labFilterQuestions);
+  if (grade) grade.addEventListener('change', function () { labChapterOptions(); labFilterQuestions(); });
+  const chapter = document.getElementById('labQChapter');
+  if (chapter) chapter.addEventListener('change', function () { labChapterSel = chapter.value; labFilterQuestions(); });
   document.querySelectorAll('[data-lab-domain]').forEach(function (b) {
     b.addEventListener('click', function () {
       labQDomain = b.getAttribute('data-lab-domain');
@@ -53931,6 +54019,7 @@ function labFilterQuestions() {
     if (d) labDeleteSaved(parseInt(d.getAttribute('data-lab-saved-del'), 10));
   });
   labQuestionsEnhance();
+  labChapterOptions();
   labSavedRender();
   labPracticeMenuSync();
 })();
