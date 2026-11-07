@@ -4796,6 +4796,9 @@ const TYPES={
  clock:{label:&#x27;钟面&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;钟面&#x27;,defaults:{h:3,m:0},fields:[{k:&#x27;h&#x27;,label:&#x27;时（几点）&#x27;,min:1,max:12},{k:&#x27;m&#x27;,label:&#x27;分&#x27;,min:0,max:55,step:5}],size:()=&gt;[180,200]},
  angle:{label:&#x27;角&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;角&#x27;,defaults:{deg:90},fields:[{k:&#x27;deg&#x27;,label:&#x27;度数（0 到 180）&#x27;,min:0,max:180,step:5}],size:()=&gt;[200,160]},
  bars:{label:&#x27;条形统计图&#x27;,group:&#x27;统计&#x27;,prefix:&#x27;统计图&#x27;,defaults:{a:4,b:6,c:3},fields:[{k:&#x27;a&#x27;,label:&#x27;一班（人）&#x27;,min:0,max:30},{k:&#x27;b&#x27;,label:&#x27;二班（人）&#x27;,min:0,max:30},{k:&#x27;c&#x27;,label:&#x27;三班（人）&#x27;,min:0,max:30}],size:()=&gt;[220,190]},
+ tri:{label:&#x27;三角形&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;三角形&#x27;,defaults:{a:30,b:40},fields:[{k:&#x27;a&#x27;,label:&#x27;第一个角（度）&#x27;,min:1,max:150},{k:&#x27;b&#x27;,label:&#x27;第二个角（度）&#x27;,min:1,max:150}],size:()=&gt;[240,170]},
+ para:{label:&#x27;平行四边形&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;平行四边形&#x27;,defaults:{base:6,h:4},fields:[{k:&#x27;base&#x27;,label:&#x27;底（格）&#x27;,min:1,max:12},{k:&#x27;h&#x27;,label:&#x27;高（格）&#x27;,min:1,max:12}],size:()=&gt;[240,170]},
+ line:{label:&#x27;折线统计图&#x27;,group:&#x27;统计&#x27;,prefix:&#x27;折线图&#x27;,defaults:{y1:3,y2:6,y3:4},fields:[{k:&#x27;y1&#x27;,label:&#x27;第一年（万元）&#x27;,min:0,max:12},{k:&#x27;y2&#x27;,label:&#x27;第二年（万元）&#x27;,min:0,max:12},{k:&#x27;y3&#x27;,label:&#x27;第三年（万元）&#x27;,min:0,max:12}],size:()=&gt;[220,190]},
  numline:{label:&#x27;数轴&#x27;,group:&#x27;关系&#x27;,prefix:&#x27;数轴&#x27;,accepts:&#x27;value&#x27;,defaults:{min:0,max:2},
    fields:[{k:&#x27;min&#x27;,label:&#x27;最左&#x27;,min:-10,max:10},{k:&#x27;max&#x27;,label:&#x27;最右&#x27;,min:-9,max:20}],size:()=&gt;[460,118]},
  balance:{label:&#x27;天平&#x27;,group:&#x27;关系&#x27;,prefix:&#x27;天平&#x27;,accepts:&#x27;value&#x27;,slots:true,defaults:{},fields:[],size:()=&gt;[340,200]},
@@ -4878,6 +4881,9 @@ function evaluate(s){
       else if(d.value.d===1)sig(&#x27;ok&#x27;,`${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`);
       else sig(&#x27;warn&#x27;,`除不尽：${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`)}
     if(e.type===&#x27;angle&#x27;){const k=e.props.deg;const kind=k===0?&#x27;零度角&#x27;:k&lt;90?&#x27;锐角&#x27;:k===90?&#x27;直角&#x27;:k&lt;180?&#x27;钝角&#x27;:k===180?&#x27;平角&#x27;:&#x27;大于平角&#x27;;sig(k===90?&#x27;ok&#x27;:&#x27;info&#x27;,`${k}°：${kind}`)}
+    if(e.type===&#x27;tri&#x27;){const {a,b}=e.props,c=180-a-b;if(c&gt;0)sig(&#x27;ok&#x27;,`第三个角是 ${c}°，三个角加起来是 180°`);else sig(&#x27;err&#x27;,`两个角已经 ${a+b}°，超过 180°，画不出三角形`)}
+    if(e.type===&#x27;para&#x27;){const {base,h}=e.props;sig(&#x27;info&#x27;,`面积 = 底 × 高 = ${base} × ${h} = ${base*h}`)}
+    if(e.type===&#x27;line&#x27;){const {y1,y2,y3}=e.props;const d12=y2-y1,d23=y3-y2;sig(&#x27;info&#x27;,`第二年比第一年${d12&gt;=0?&#x27;多&#x27;:&#x27;少&#x27;} ${Math.abs(d12)} 万元`);sig(&#x27;info&#x27;,`第三年比第二年${d23&gt;=0?&#x27;多&#x27;:&#x27;少&#x27;} ${Math.abs(d23)} 万元`)}
     if(e.type===&#x27;bars&#x27;){const {a,b,c}=e.props;const vals=[[&#x27;一班&#x27;,a],[&#x27;二班&#x27;,b],[&#x27;三班&#x27;,c]];const mx=Math.max(a,b,c);const top=vals.filter(v=&gt;v[1]===mx).map(v=&gt;v[0]).join(&#x27;、&#x27;);sig(&#x27;info&#x27;,`最多：${top}（${mx} 人）`);
       if(b&gt;a)sig(&#x27;info&#x27;,`二班比一班多 ${b-a} 人`);else if(a&gt;b)sig(&#x27;info&#x27;,`一班比二班多 ${a-b} 人`)}
     if(e.type===&#x27;clock&#x27;){const {h,m}=e.props;sig(&#x27;info&#x27;,`现在是 ${h}:${String(m).padStart(2,&#x27;0&#x27;)}`);
@@ -5016,7 +5022,17 @@ const DRAW={
  num:(e,d,w,h)=&gt;`&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;${h/2+14}&quot; text-anchor=&quot;middle&quot; font-size=&quot;28&quot;&gt;${e.props.v}&lt;/text&gt;`,
  frac:(e,d,w)=&gt;{const {n,d:dd}=e.props,rows=Math.max(1,Math.ceil(n/dd)),bw=w-24,sw=bw/dd;let s=`&lt;text class=&quot;big&quot; x=&quot;${w-12}&quot; y=&quot;18&quot; text-anchor=&quot;end&quot; font-size=&quot;14&quot;&gt;${n}/${dd}&lt;/text&gt;`;
    for(let r=0;r&lt;rows;r++)for(let i=0;i&lt;dd;i++){const k=r*dd+i+1;s+=`&lt;rect class=&quot;seg-cell&quot; data-seg=&quot;${k}&quot; x=&quot;${12+i*sw}&quot; y=&quot;${28+r*28}&quot; width=&quot;${sw}&quot; height=&quot;22&quot; fill=&quot;${k&lt;=n?&#x27;#ff9f43&#x27;:&#x27;#fff&#x27;}&quot; stroke=&quot;#5b6778&quot; stroke-width=&quot;1&quot;/&gt;`}return s},
- angle:(e,d,w,h)=&gt;{const k=e.props.deg,x0=40,y0=h-30,R=120,rad=k*Math.PI/180;const x2=x0+Math.cos(rad)*R,y2=y0-Math.sin(rad)*R;
+ tri:(e,d,w,h)=&gt;{const {a,b}=e.props,x0=30,x1=w-30,yb=h-30,L=x1-x0;let s=`&lt;line x1=&quot;${x0}&quot; y1=&quot;${yb}&quot; x2=&quot;${x1}&quot; y2=&quot;${yb}&quot; stroke=&quot;#1d2633&quot; stroke-width=&quot;2&quot;/&gt;`;
+   const A=a*Math.PI/180,B=b*Math.PI/180;
+   if(a+b&lt;180){const t=L/(Math.cos(A)+Math.sin(A)*Math.cos(B)/Math.sin(B));const px=x0+t*Math.cos(A),py=yb-t*Math.sin(A);
+     s+=`&lt;polygon points=&quot;${x0},${yb} ${x1},${yb} ${px.toFixed(1)},${py.toFixed(1)}&quot; fill=&quot;#fde68a&quot; stroke=&quot;#92400e&quot; stroke-width=&quot;2&quot;/&gt;&lt;text class=&quot;big&quot; x=&quot;${x0+8}&quot; y=&quot;${yb-6}&quot; font-size=&quot;12&quot;&gt;${a}°&lt;/text&gt;&lt;text class=&quot;big&quot; x=&quot;${x1-38}&quot; y=&quot;${yb-6}&quot; font-size=&quot;12&quot;&gt;${b}°&lt;/text&gt;`}
+   return s},
+ para:(e,d,w,h)=&gt;{const {base,h:ht}=e.props,u=12,x0=40,yb=h-30,sl=24,bw=base*u,hh=ht*u;
+   return `&lt;polygon points=&quot;${x0},${yb} ${x0+bw},${yb} ${x0+bw+sl},${yb-hh} ${x0+sl},${yb-hh}&quot; fill=&quot;#c7f9cc&quot; stroke=&quot;#166534&quot; stroke-width=&quot;2&quot;/&gt;&lt;line x1=&quot;${x0+sl}&quot; y1=&quot;${yb-hh}&quot; x2=&quot;${x0+sl}&quot; y2=&quot;${yb}&quot; stroke=&quot;#166534&quot; stroke-dasharray=&quot;4 3&quot;/&gt;&lt;text class=&quot;ink&quot; x=&quot;${w/2}&quot; y=&quot;20&quot; text-anchor=&quot;middle&quot; font-size=&quot;13&quot;&gt;面积 ${base*ht}&lt;/text&gt;`},
+ line:(e,d,w,h)=&gt;{const vals=[e.props.y1,e.props.y2,e.props.y3],base=h-30,xs=[50,w/2,w-50];
+   const pts=vals.map((v,i)=&gt;`${xs[i]},${base-v*12}`).join(&#x27; &#x27;);let s=`&lt;polyline points=&quot;${pts}&quot; fill=&quot;none&quot; stroke=&quot;#3b9cff&quot; stroke-width=&quot;3&quot;/&gt;&lt;line x1=&quot;20&quot; y1=&quot;${base}&quot; x2=&quot;${w-20}&quot; y2=&quot;${base}&quot; stroke=&quot;#1d2633&quot;/&gt;`;
+   vals.forEach((v,i)=&gt;{s+=`&lt;circle cx=&quot;${xs[i]}&quot; cy=&quot;${base-v*12}&quot; r=&quot;4&quot; fill=&quot;#3b9cff&quot;/&gt;&lt;text class=&quot;ink&quot; x=&quot;${xs[i]}&quot; y=&quot;${base-v*12-8}&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot;&gt;${v}&lt;/text&gt;&lt;text class=&quot;ink&quot; x=&quot;${xs[i]}&quot; y=&quot;${base+14}&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot;&gt;第${i+1}年&lt;/text&gt;`});return s},
+angle:(e,d,w,h)=&gt;{const k=e.props.deg,x0=40,y0=h-30,R=120,rad=k*Math.PI/180;const x2=x0+Math.cos(rad)*R,y2=y0-Math.sin(rad)*R;
    return `&lt;line x1=&quot;${x0}&quot; y1=&quot;${y0}&quot; x2=&quot;${x0+R}&quot; y2=&quot;${y0}&quot; stroke=&quot;#1d2633&quot; stroke-width=&quot;3&quot;/&gt;&lt;line x1=&quot;${x0}&quot; y1=&quot;${y0}&quot; x2=&quot;${x2}&quot; y2=&quot;${y2}&quot; stroke=&quot;#ff9f43&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;${x0}&quot; cy=&quot;${y0}&quot; r=&quot;3&quot; fill=&quot;#1d2633&quot;/&gt;&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;34&quot; text-anchor=&quot;middle&quot; font-size=&quot;18&quot;&gt;${k}°&lt;/text&gt;`},
  bars:(e,d,w,h)=&gt;{const names=[&#x27;一班&#x27;,&#x27;二班&#x27;,&#x27;三班&#x27;],vals=[e.props.a,e.props.b,e.props.c],base=h-30;let s=&#x27;&#x27;;
    vals.forEach((v,i)=&gt;{const bh=v*4,x=30+i*60;s+=`&lt;rect x=&quot;${x}&quot; y=&quot;${base-bh}&quot; width=&quot;40&quot; height=&quot;${bh}&quot; fill=&quot;#3b9cff&quot; stroke=&quot;#1d2633&quot;/&gt;&lt;text class=&quot;ink&quot; x=&quot;${x+20}&quot; y=&quot;${base-bh-4}&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot;&gt;${v}&lt;/text&gt;&lt;text class=&quot;ink&quot; x=&quot;${x+20}&quot; y=&quot;${base+14}&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot;&gt;${names[i]}&lt;/text&gt;`});
@@ -5421,6 +5437,27 @@ const P46=[
          {label:&#x27;调 x，天平平了（x = 5）&#x27;,score:2,hint:&#x27;点中间那张数字卡，把值调到 5，看天平&#x27;,target:T45(&#x27;balance&#x27;),check:(s,D)=&gt;{const b=byType(s,&#x27;balance&#x27;);const xn=Object.values(s.entities).filter(e=&gt;e.type===&#x27;num&#x27;)[1];return D[b].equal&amp;&amp;!!xn&amp;&amp;xn.props.v===5}}]},
 ];
 P46.forEach(p=&gt;XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
+
+/* ========== 第三期补充：平行四边形、三角形、折线统计图、公顷换算 ========== */
+const P47=[
+ {id:&#x27;g4_5&#x27;,grade:4,domain:&#x27;图形与几何&#x27;,tools:&#x27;平行四边形&#x27;,title:&#x27;平行四边形面积：底 8、高 4，面积是几？&#x27;,q:&#x27;平行四边形的面积 = 底 × 高。高要从底边上一点垂直量到对边。&#x27;,why:&#x27;8 × 4 = 32。平行四边形可以切开拼成长方形，面积不变。&#x27;,
+  build:s=&gt;{addEnt(s,&#x27;para&#x27;,200,60,{base:6,h:4})},
+  steps:[{label:&#x27;把底调到 8&#x27;,score:1,hint:&#x27;点平行四边形卡，在属性卡里把底调到 8&#x27;,target:T45(&#x27;para&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;para&#x27;)].props.base===8},
+         {label:&#x27;面积是 32&#x27;,score:2,hint:&#x27;看卡片上的面积&#x27;,target:T45(&#x27;para&#x27;),check:(s,D)=&gt;{const p=s.entities[byType(s,&#x27;para&#x27;)].props;return p.base*p.h===32}}]},
+ {id:&#x27;g4_12&#x27;,grade:4,domain:&#x27;图形与几何&#x27;,tools:&#x27;三角形&#x27;,title:&#x27;三角形内角和：两个角是 60° 和 70°，第三个角是几度？&#x27;,q:&#x27;三角形的三个角加起来是 180°。先把前两个角调好，看第三个角。&#x27;,why:&#x27;180 − 60 − 70 = 50°。&#x27;,
+  build:s=&gt;{addEnt(s,&#x27;tri&#x27;,200,60,{a:30,b:40})},
+  steps:[{label:&#x27;把两个角调到 60° 和 70°&#x27;,score:1,hint:&#x27;点三角形卡，把两个角分别调到 60 和 70&#x27;,target:T45(&#x27;tri&#x27;),check:(s,D)=&gt;{const p=s.entities[byType(s,&#x27;tri&#x27;)].props;return p.a===60&amp;&amp;p.b===70}},
+         {label:&#x27;第三个角是 50°&#x27;,score:2,hint:&#x27;看三角形下面的文字&#x27;,target:T45(&#x27;tri&#x27;),check:(s,D)=&gt;{const t=byType(s,&#x27;tri&#x27;);return (D[t].sig||[]).some(x=&gt;x.tx===&#x27;第三个角是 50°，三个角加起来是 180°&#x27;)}}]},
+ {id:&#x27;g5_13&#x27;,grade:5,domain:&#x27;统计与概率&#x27;,tools:&#x27;折线统计图&#x27;,title:&#x27;折线统计图：第二年比第一年多多少？&#x27;,q:&#x27;折线越往上，数量越多。两年之间的差，就是两个点的高度差。&#x27;,why:&#x27;第一年 3 万元，第二年 9 万元，多 6 万元。&#x27;,
+  build:s=&gt;{addEnt(s,&#x27;line&#x27;,200,60,{y1:3,y2:6,y3:4})},
+  steps:[{label:&#x27;把第二年调到 9 万元&#x27;,score:1,hint:&#x27;点折线图卡，在属性卡里把第二年调到 9&#x27;,target:T45(&#x27;line&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;line&#x27;)].props.y2===9},
+         {label:&#x27;第二年比第一年多 6 万元&#x27;,score:2,hint:&#x27;看折线图下面的文字&#x27;,target:T45(&#x27;line&#x27;),check:(s,D)=&gt;{const l=byType(s,&#x27;line&#x27;);return (D[l].sig||[]).some(x=&gt;x.tx===&#x27;第二年比第一年多 6 万元&#x27;)}}]},
+ {id:&#x27;g4_2&#x27;,grade:4,domain:&#x27;数与代数&#x27;,tools:&#x27;数字卡 · 乘法器&#x27;,title:&#x27;公顷：3 公顷 = 多少平方米？&#x27;,q:&#x27;1 公顷 = 10000 平方米。3 公顷就是 3 个 10000。&#x27;,why:&#x27;3 × 10000 = 30000 平方米。&#x27;,
+  build:s=&gt;{addEnt(s,&#x27;num&#x27;,60,60,{v:3});addEnt(s,&#x27;num&#x27;,60,170,{v:10000});addEnt(s,&#x27;mul&#x27;,330,110)},
+  steps:[{label:&#x27;把 3 和 10000 都连到乘法器&#x27;,score:1,hint:&#x27;拖两个数的蓝点到乘法器&#x27;,target:T45(&#x27;mul&#x27;),check:(s,D)=&gt;P45H.cnt(s,D,&#x27;mul&#x27;,2)},
+         {label:&#x27;3 公顷是 30000 平方米&#x27;,score:2,hint:&#x27;看乘法器的读数&#x27;,target:T45(&#x27;mul&#x27;),check:(s,D)=&gt;P45H.val(s,D,&#x27;mul&#x27;,Q(30000))}]},
+];
+P47.forEach(p=&gt;XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
 
 function startXp(id,m){xp=XP.find(x=&gt;x.id===id);if(!xp)return;mode=m;S=blankScene();xp.build(S);undoSt=[];redoSt=[];sel=null;cardOpen=false;
   run={steps:xp.steps.map((s,i)=&gt;({i,done:false})),ops:0,errors:0,t0:Date.now(),finished:false};$(&#x27;title&#x27;).textContent=xp.title;
