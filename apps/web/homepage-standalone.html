@@ -4805,6 +4805,9 @@ const TYPES={
  solid:{label:&#x27;立体图形（观察）&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;立体图形&#x27;,defaults:{view:0},fields:[{k:&#x27;view&#x27;,label:&#x27;看的方向（0 正面，1 侧面，2 上面）&#x27;,min:0,max:2}],size:()=&gt;[240,190]},
  circle:{label:&#x27;圆&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;圆&#x27;,defaults:{r:2},fields:[{k:&#x27;r&#x27;,label:&#x27;半径（厘米）&#x27;,min:1,max:10}],size:()=&gt;[200,200]},
  pie:{label:&#x27;扇形统计图&#x27;,group:&#x27;统计&#x27;,prefix:&#x27;扇形图&#x27;,defaults:{a:40,b:30,c:30},fields:[{k:&#x27;a&#x27;,label:&#x27;一班（%）&#x27;,min:0,max:100,step:5},{k:&#x27;b&#x27;,label:&#x27;二班（%）&#x27;,min:0,max:100,step:5},{k:&#x27;c&#x27;,label:&#x27;三班（%）&#x27;,min:0,max:100,step:5}],size:()=&gt;[220,220]},
+ parab:{label:&#x27;二次函数 y = ax² + bx + c&#x27;,group:&#x27;函数&#x27;,prefix:&#x27;抛物线&#x27;,defaults:{a:1,b:-2,c:0},fields:[{k:&#x27;a&#x27;,label:&#x27;a&#x27;,min:-3,max:3},{k:&#x27;b&#x27;,label:&#x27;b&#x27;,min:-6,max:6},{k:&#x27;c&#x27;,label:&#x27;c&#x27;,min:-6,max:6}],size:()=&gt;[240,190]},
+ hyper:{label:&#x27;反比例 y = k/x&#x27;,group:&#x27;函数&#x27;,prefix:&#x27;反比例&#x27;,defaults:{k:2},fields:[{k:&#x27;k&#x27;,label:&#x27;k&#x27;,min:-8,max:8}],size:()=&gt;[240,190]},
+ ineq:{label:&#x27;不等式的解集（数轴）&#x27;,group:&#x27;关系&#x27;,prefix:&#x27;解集&#x27;,defaults:{b:2,op:1},fields:[{k:&#x27;b&#x27;,label:&#x27;边界（数）&#x27;,min:-6,max:6},{k:&#x27;op&#x27;,label:&#x27;方向（0：x＜，1：x＞）&#x27;,min:0,max:1}],size:()=&gt;[300,110]},
  numline:{label:&#x27;数轴&#x27;,group:&#x27;关系&#x27;,prefix:&#x27;数轴&#x27;,accepts:&#x27;value&#x27;,defaults:{min:0,max:2},
    fields:[{k:&#x27;min&#x27;,label:&#x27;最左&#x27;,min:-10,max:10},{k:&#x27;max&#x27;,label:&#x27;最右&#x27;,min:-9,max:20}],size:()=&gt;[460,118]},
  balance:{label:&#x27;天平&#x27;,group:&#x27;关系&#x27;,prefix:&#x27;天平&#x27;,accepts:&#x27;value&#x27;,slots:true,defaults:{},fields:[],size:()=&gt;[340,200]},
@@ -4889,6 +4892,13 @@ function evaluate(s){
       else if(d.value.d===1)sig(&#x27;ok&#x27;,`${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`);
       else sig(&#x27;warn&#x27;,`除不尽：${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`)}
     if(e.type===&#x27;angle&#x27;){const k=e.props.deg;const kind=k===0?&#x27;零度角&#x27;:k&lt;90?&#x27;锐角&#x27;:k===90?&#x27;直角&#x27;:k&lt;180?&#x27;钝角&#x27;:k===180?&#x27;平角&#x27;:&#x27;大于平角&#x27;;sig(k===90?&#x27;ok&#x27;:&#x27;info&#x27;,`${k}°：${kind}`)}
+    if(e.type===&#x27;parab&#x27;){const {a,b,c}=e.props;
+      if(a===0)sig(&#x27;err&#x27;,&#x27;二次项系数 a 不能是 0（那就成了一次函数）&#x27;);
+      else{const vx=-b/(2*a),vy=c-b*b/(4*a);const f=n=&gt;Number.isInteger(n)?String(n):n.toFixed(2);
+        sig(&#x27;ok&#x27;,`顶点 (${f(vx)}, ${f(vy)})`);
+        const D=b*b-4*a*c;sig(&#x27;info&#x27;,D&gt;0?&#x27;图像和 x 轴有两个交点&#x27;:D===0?&#x27;顶点正好在 x 轴上&#x27;:&#x27;图像和 x 轴没有交点&#x27;)}}
+    if(e.type===&#x27;hyper&#x27;){const k=e.props.k;if(k===0)sig(&#x27;err&#x27;,&#x27;k 不能是 0&#x27;);else sig(&#x27;info&#x27;,`过点 (2, ${Number.isInteger(k/2)?k/2:(k/2).toFixed(2)})`)}
+    if(e.type===&#x27;ineq&#x27;){const {b,op}=e.props;sig(&#x27;info&#x27;,`解集：x ${op?&#x27;＞&#x27;:&#x27;＜&#x27;} ${b}`)}
     if(e.type===&#x27;circle&#x27;){const r=e.props.r;sig(&#x27;info&#x27;,`半径 ${r} 厘米：周长 ${(2*3.14*r).toFixed(2)} 厘米，面积 ${(3.14*r*r).toFixed(2)} 平方厘米`)}
     if(e.type===&#x27;pie&#x27;){const {a,b,c}=e.props,t=a+b+c;
       sig(t===100?&#x27;ok&#x27;:&#x27;warn&#x27;,t===100?&#x27;三个班合起来是 100%&#x27;:`三个班合起来是 ${t}%，应该是 100%`);
@@ -5042,7 +5052,17 @@ const DRAW={
  num:(e,d,w,h)=&gt;`&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;${h/2+14}&quot; text-anchor=&quot;middle&quot; font-size=&quot;28&quot;&gt;${e.props.v}&lt;/text&gt;`,
  frac:(e,d,w)=&gt;{const {n,d:dd}=e.props,rows=Math.max(1,Math.ceil(n/dd)),bw=w-24,sw=bw/dd;let s=`&lt;text class=&quot;big&quot; x=&quot;${w-12}&quot; y=&quot;18&quot; text-anchor=&quot;end&quot; font-size=&quot;14&quot;&gt;${n}/${dd}&lt;/text&gt;`;
    for(let r=0;r&lt;rows;r++)for(let i=0;i&lt;dd;i++){const k=r*dd+i+1;s+=`&lt;rect class=&quot;seg-cell&quot; data-seg=&quot;${k}&quot; x=&quot;${12+i*sw}&quot; y=&quot;${28+r*28}&quot; width=&quot;${sw}&quot; height=&quot;22&quot; fill=&quot;${k&lt;=n?&#x27;#ff9f43&#x27;:&#x27;#fff&#x27;}&quot; stroke=&quot;#5b6778&quot; stroke-width=&quot;1&quot;/&gt;`}return s},
- circle:(e,d,w,h)=&gt;{const R=e.props.r*9,cx=w/2,cy=h/2;return `&lt;circle cx=&quot;${cx}&quot; cy=&quot;${cy}&quot; r=&quot;${R}&quot; fill=&quot;#e0f2fe&quot; stroke=&quot;#0369a1&quot; stroke-width=&quot;2&quot;/&gt;&lt;line x1=&quot;${cx}&quot; y1=&quot;${cy}&quot; x2=&quot;${cx+R}&quot; y2=&quot;${cy}&quot; stroke=&quot;#0369a1&quot; stroke-width=&quot;2&quot;/&gt;&lt;circle cx=&quot;${cx}&quot; cy=&quot;${cy}&quot; r=&quot;3&quot; fill=&quot;#0369a1&quot;/&gt;&lt;text class=&quot;ink&quot; x=&quot;${cx+R/2}&quot; y=&quot;${cy-6}&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot;&gt;r=${e.props.r}&lt;/text&gt;`},
+ parab:(e,d,w,h)=&gt;{const {a,b,c}=e.props,cx=w/2,cy=h/2,sx=20,sy=10;let pts=[];
+   for(let x=-4;x&lt;=4.001;x+=0.2){const y=a*x*x+b*x+c;if(Math.abs(y)&lt;=8)pts.push((cx+x*sx).toFixed(1)+&#x27;,&#x27;+(cy-y*sy).toFixed(1))}
+   return `&lt;line x1=&quot;20&quot; y1=&quot;${cy}&quot; x2=&quot;${w-20}&quot; y2=&quot;${cy}&quot; stroke=&quot;#94a3b8&quot;/&gt;&lt;line x1=&quot;${cx}&quot; y1=&quot;15&quot; x2=&quot;${cx}&quot; y2=&quot;${h-15}&quot; stroke=&quot;#94a3b8&quot;/&gt;`+(pts.length&gt;1?`&lt;polyline points=&quot;${pts.join(&#x27; &#x27;)}&quot; fill=&quot;none&quot; stroke=&quot;#7c3aed&quot; stroke-width=&quot;3&quot;/&gt;`:&#x27;&#x27;)},
+hyper:(e,d,w,h)=&gt;{const k=e.props.k,cx=w/2,cy=h/2,sx=20,sy=10;const br=[[],[]];
+   for(let x=-4;x&lt;=4.001;x+=0.1){if(Math.abs(x)&lt;0.05)continue;const y=k/x;if(Math.abs(y)&lt;=8)br[x&lt;0?0:1].push((cx+x*sx).toFixed(1)+&#x27;,&#x27;+(cy-y*sy).toFixed(1))}
+   return `&lt;line x1=&quot;20&quot; y1=&quot;${cy}&quot; x2=&quot;${w-20}&quot; y2=&quot;${cy}&quot; stroke=&quot;#94a3b8&quot;/&gt;&lt;line x1=&quot;${cx}&quot; y1=&quot;15&quot; x2=&quot;${cx}&quot; y2=&quot;${h-15}&quot; stroke=&quot;#94a3b8&quot;/&gt;`+br.map(p=&gt;p.length&gt;1?`&lt;polyline points=&quot;${p.join(&#x27; &#x27;)}&quot; fill=&quot;none&quot; stroke=&quot;#e11d48&quot; stroke-width=&quot;3&quot;/&gt;`:&#x27;&#x27;).join(&#x27;&#x27;)},
+ineq:(e,d,w,h)=&gt;{const {b,op}=e.props,y=h/2,X=v=&gt;20+(v+6)/12*(w-40);let s=`&lt;line x1=&quot;20&quot; y1=&quot;${y}&quot; x2=&quot;${w-20}&quot; y2=&quot;${y}&quot; stroke=&quot;#1d2633&quot; stroke-width=&quot;2&quot;/&gt;`;
+   for(let i=-6;i&lt;=6;i++)s+=`&lt;line x1=&quot;${X(i)}&quot; y1=&quot;${y-5}&quot; x2=&quot;${X(i)}&quot; y2=&quot;${y+5}&quot; stroke=&quot;#1d2633&quot;/&gt;&lt;text class=&quot;ink&quot; x=&quot;${X(i)}&quot; y=&quot;${y+20}&quot; text-anchor=&quot;middle&quot; font-size=&quot;11&quot;&gt;${i}&lt;/text&gt;`;
+   const x0=X(b),x1=op?w-20:20;s+=`&lt;line x1=&quot;${x0}&quot; y1=&quot;${y}&quot; x2=&quot;${x1}&quot; y2=&quot;${y}&quot; stroke=&quot;#16a34a&quot; stroke-width=&quot;5&quot;/&gt;&lt;circle cx=&quot;${x0}&quot; cy=&quot;${y}&quot; r=&quot;6&quot; fill=&quot;#fff&quot; stroke=&quot;#16a34a&quot; stroke-width=&quot;3&quot;/&gt;`;
+   return s+`&lt;text class=&quot;ink&quot; x=&quot;${w/2}&quot; y=&quot;20&quot; text-anchor=&quot;middle&quot; font-size=&quot;13&quot;&gt;x ${op?&#x27;＞&#x27;:&#x27;＜&#x27;} ${b}&lt;/text&gt;`},
+circle:(e,d,w,h)=&gt;{const R=e.props.r*9,cx=w/2,cy=h/2;return `&lt;circle cx=&quot;${cx}&quot; cy=&quot;${cy}&quot; r=&quot;${R}&quot; fill=&quot;#e0f2fe&quot; stroke=&quot;#0369a1&quot; stroke-width=&quot;2&quot;/&gt;&lt;line x1=&quot;${cx}&quot; y1=&quot;${cy}&quot; x2=&quot;${cx+R}&quot; y2=&quot;${cy}&quot; stroke=&quot;#0369a1&quot; stroke-width=&quot;2&quot;/&gt;&lt;circle cx=&quot;${cx}&quot; cy=&quot;${cy}&quot; r=&quot;3&quot; fill=&quot;#0369a1&quot;/&gt;&lt;text class=&quot;ink&quot; x=&quot;${cx+R/2}&quot; y=&quot;${cy-6}&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot;&gt;r=${e.props.r}&lt;/text&gt;`},
 pie:(e,d,w,h)=&gt;{const vals=[[&#x27;一班&#x27;,e.props.a,&#x27;#fb923c&#x27;],[&#x27;二班&#x27;,e.props.b,&#x27;#60a5fa&#x27;],[&#x27;三班&#x27;,e.props.c,&#x27;#4ade80&#x27;]],cx=w/2,cy=h/2-6,R=80;let ang=-90,s=&#x27;&#x27;;
    vals.forEach(([nm,p,col])=&gt;{const sw=p*3.6;if(sw&lt;=0)return;const a1=ang*Math.PI/180,a2=(ang+sw)*Math.PI/180;const x1=cx+R*Math.cos(a1),y1=cy+R*Math.sin(a1),x2=cx+R*Math.cos(a2),y2=cy+R*Math.sin(a2);
      s+=`&lt;path d=&quot;M${cx},${cy} L${x1.toFixed(1)},${y1.toFixed(1)} A${R},${R} 0 ${sw&gt;180?1:0} 1 ${x2.toFixed(1)},${y2.toFixed(1)} Z&quot; fill=&quot;${col}&quot; stroke=&quot;#1d2633&quot;/&gt;`;
@@ -5606,6 +5626,27 @@ const P7=[
          {label:&#x27;三班调到 40%，合计 100%，一班是 144°&#x27;,score:2,hint:&#x27;把“三班”调到 40，看下面的文字&#x27;,target:T45(&#x27;pie&#x27;),check:(s,D)=&gt;{const p=byType(s,&#x27;pie&#x27;);return D[p].sig.some(x=&gt;x.tx===&#x27;三个班合起来是 100%&#x27;)&amp;&amp;D[p].sig.some(x=&gt;x.tx===&#x27;一班 对应圆心角 144°&#x27;)}}]},
 ];
 P7.forEach(p=&gt;XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
+
+/* ========== 初中第一批：方程的天平、不等式的解集、反比例、二次函数 ========== */
+const P8=[
+ {id:&#x27;g7_eq&#x27;,grade:7,domain:&#x27;数与代数&#x27;,tools:&#x27;天平 · 数字卡&#x27;,title:&#x27;一元一次方程：2x + 3 = 11，x 是几？&#x27;,q:&#x27;两个 x 和 3 放左盘，11 放右盘。调 x，让天平平了，x 就是解。&#x27;,why:&#x27;2x + 3 = 11，两边都减 3 得 2x = 8，所以 x = 4。&#x27;,
+  build:s=&gt;{addEnt(s,&#x27;num&#x27;,60,40,{v:1});addEnt(s,&#x27;num&#x27;,60,130,{v:1});addEnt(s,&#x27;num&#x27;,60,220,{v:3});addEnt(s,&#x27;num&#x27;,60,310,{v:11});addEnt(s,&#x27;balance&#x27;,300,150)},
+  steps:[{label:&#x27;x、x、3 放左盘，11 放右盘&#x27;,score:1,hint:&#x27;拖蓝点：两个 x 和 3 到天平左边，11 到右边&#x27;,target:T45(&#x27;balance&#x27;),check:(s,D)=&gt;{const b=byType(s,&#x27;balance&#x27;);return D[b].Ln.length&gt;=3&amp;&amp;D[b].Rn.length&gt;=1}},
+         {label:&#x27;把两个 x 都调到 4，天平平了&#x27;,score:2,hint:&#x27;点两张 x 的数字卡，把值调到 4&#x27;,target:T45(&#x27;balance&#x27;),check:(s,D)=&gt;{const b=byType(s,&#x27;balance&#x27;);const nums=Object.values(s.entities).filter(e=&gt;e.type===&#x27;num&#x27;);return D[b].equal&amp;&amp;nums[0].props.v===4&amp;&amp;nums[1].props.v===4}}]},
+ {id:&#x27;g7_ineq&#x27;,grade:7,domain:&#x27;数与代数&#x27;,tools:&#x27;不等式（数轴）&#x27;,title:&#x27;不等式：x 的解集 x &lt; −1，在数轴上怎么画？&#x27;,q:&#x27;解集在数轴上：边界点用空心圆，方向看符号。&#x27;,why:&#x27;x &lt; −1：从 −1 往左画，不包括 −1。&#x27;,
+  build:s=&gt;{addEnt(s,&#x27;ineq&#x27;,200,60,{b:2,op:1})},
+  steps:[{label:&#x27;方向调成 x＜（向左）&#x27;,score:1,hint:&#x27;点解集卡，在属性卡里把方向调到 0&#x27;,target:T45(&#x27;ineq&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;ineq&#x27;)].props.op===0},
+         {label:&#x27;边界调成 −1，解集是 x ＜ −1&#x27;,score:2,hint:&#x27;把边界调到 −1&#x27;,target:T45(&#x27;ineq&#x27;),check:(s,D)=&gt;{const e=byType(s,&#x27;ineq&#x27;);return (D[e].sig||[]).some(x=&gt;x.tx===&#x27;解集：x ＜ -1&#x27;)}}]},
+ {id:&#x27;g8_hyper&#x27;,grade:8,domain:&#x27;函数&#x27;,tools:&#x27;反比例函数&#x27;,title:&#x27;反比例：k = 4 时，图像经过点 (2, 2) 吗？&#x27;,q:&#x27;反比例函数 y = k/x，把 x = 2 代入：y = k/2。&#x27;,why:&#x27;k = 4 时，y = 4/2 = 2，过点 (2, 2)。&#x27;,
+  build:s=&gt;{addEnt(s,&#x27;hyper&#x27;,200,60,{k:2})},
+  steps:[{label:&#x27;把 k 调成 4&#x27;,score:1,hint:&#x27;点反比例卡，在属性卡里把 k 调到 4&#x27;,target:T45(&#x27;hyper&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;hyper&#x27;)].props.k===4},
+         {label:&#x27;图像过点 (2, 2)&#x27;,score:2,hint:&#x27;看反比例卡下面的文字&#x27;,target:T45(&#x27;hyper&#x27;),check:(s,D)=&gt;{const h=byType(s,&#x27;hyper&#x27;);return (D[h].sig||[]).some(x=&gt;x.tx===&#x27;过点 (2, 2)&#x27;)}}]},
+ {id:&#x27;g9_parab&#x27;,grade:9,domain:&#x27;函数&#x27;,tools:&#x27;二次函数&#x27;,title:&#x27;二次函数：y = x² − 4x 的顶点在哪里？&#x27;,q:&#x27;顶点的横坐标 x = −b/(2a)，代入求纵坐标。这里 a = 1，b = −4。&#x27;,why:&#x27;x = 4/2 = 2，y = 4 − 8 = −4，顶点 (2, −4)。&#x27;,
+  build:s=&gt;{addEnt(s,&#x27;parab&#x27;,200,60,{a:1,b:-2,c:0})},
+  steps:[{label:&#x27;把 b 调成 −4&#x27;,score:1,hint:&#x27;点二次函数卡，把 b 调到 −4&#x27;,target:T45(&#x27;parab&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;parab&#x27;)].props.b===-4},
+         {label:&#x27;顶点是 (2, −4)&#x27;,score:2,hint:&#x27;看二次函数卡下面的文字&#x27;,target:T45(&#x27;parab&#x27;),check:(s,D)=&gt;{const p=byType(s,&#x27;parab&#x27;);return (D[p].sig||[]).some(x=&gt;x.tx===&#x27;顶点 (2, -4)&#x27;)}}]},
+];
+P8.forEach(p=&gt;XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
 
 function startXp(id,m){xp=XP.find(x=&gt;x.id===id);if(!xp)return;mode=m;S=blankScene();xp.build(S);undoSt=[];redoSt=[];sel=null;cardOpen=false;
   run={steps:xp.steps.map((s,i)=&gt;({i,done:false})),ops:0,errors:0,t0:Date.now(),finished:false};$(&#x27;title&#x27;).textContent=xp.title;
