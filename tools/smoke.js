@@ -4281,10 +4281,10 @@ check('sims: all 8 sims are in the tried list',
 // 注册表是唯一事实来源：点页、单元页、年级页都从 animsForPoint / animsForUnit 读。
 // 每条都带 typeof 守卫：改前代码没有这些函数，守卫让它报 FAIL 而不是整个测试崩掉。
 // 注意：桩内容（stub）只有一部分知识点（1.9 / 1.1 / 3.7 / 3.12 等），
-// 所以行为检查用桩里有的点；真实一年级的 18 个动画与各单元数用下面的静态校验（读真实文件）来锁。
+// 所以行为检查用桩里有的点；真实一年级的 46 个动画与各单元数用下面的静态校验（读真实文件）来锁。
 const hasAnims = typeof sandbox.animsForPoint === 'function' && typeof sandbox.animsForUnit === 'function';
-check('anims: 1.9 has thirteen once + maketen + op-maketen',
-  hasAnims && JSON.stringify(sandbox.animsForPoint('1.9')) === JSON.stringify(['thirteen', 'maketen', 'op-maketen']));
+check('anims: 1.9 has thirteen once + maketen + 3 new + op-maketen',
+  hasAnims && JSON.stringify(sandbox.animsForPoint('1.9')) === JSON.stringify(['thirteen', 'maketen', 'm19-split', 'm19-line', 'm19-poker', 'op-maketen']));
 check('anims: 3.7 has fraction + 3 sims',
   hasAnims && JSON.stringify(sandbox.animsForPoint('3.7')) === JSON.stringify(['fraction', 'fraceq', 'buildfrac', 'fracnumline', 'm37-div']));
 check('anims: 3.12 has area + areabuild + maxarea from the lab question',
@@ -4294,12 +4294,13 @@ check('anims: 1.1 has count + numplay + m1a-pair (registry)',
 check('checkpoint: 1.1 counts 3 animations from the registry (count + numplay + m1a-pair), not 1 from p.demo',
   hasAnims && sandbox.unitCheckpoint(1, 2).demosTotal === 3);
 check('anims: unknown point has none', hasAnims && sandbox.animsForPoint('9.99').length === 0);
-check('anims: stub unit 1-0 （进位加法） has 3', hasAnims && sandbox.animsForUnit(1, 0).length === 3);
+check('anims: stub unit 1-0 （进位加法） has 6', hasAnims && sandbox.animsForUnit(1, 0).length === 6);
 check('anims: stub unit 1-2 （准备课） has 3', hasAnims && sandbox.animsForUnit(1, 2).length === 3);
 // 静态校验：按真实 grade-1.js 的 demo 字段 + app.js 里的 SIM_LINKS + LAB_QUESTIONS
 // + 注册表（四个 anims 文件里的 registerAnim points）算出一年级每点动画，
-// 去重后应为 20 个，各单元动画数应为 [3,1,2,1,2,2,1,3,1,2,1,1,1,1,2]
-// （1.9 所在单元多了注册表的 op-maketen）。
+// 去重后应为 46 个，各单元动画数应为 [3,3,5,3,5,3,2,6,1,4,2,4,2,3,4]
+// （1.9 所在单元多了注册表的 op-maketen + 3 个新动画 m19-*；
+// 1.2/1.3/1.4/1.5/1.6/1.7/1.8/1.11/1.12/1.13/1.14/1.15/1.16 各多了新动画）。
 // （准备课多了注册表的 m1a-pair）。
 // （改前代码里没有 SIM_LINKS / LAB_QUESTIONS 的注册表逻辑，正则取不到就报 FAIL。）
 // 注册表第五路：读四个 anims 文件里的 registerAnim(points)，按 key 归到各点。
@@ -4344,9 +4345,9 @@ if (simLinks && labQs && g1ids2.length === 16) {
   g1UnitCounts = unitSets.map(s => s.size);
   g1Distinct = allSet.size;
 }
-check('anims: real grade-1 has 20 distinct animations', g1Distinct === 20);
+check('anims: real grade-1 has 46 distinct animations', g1Distinct === 46);
 check('anims: real grade-1 unit animation counts',
-  JSON.stringify(g1UnitCounts) === JSON.stringify([3, 1, 2, 1, 2, 2, 1, 3, 1, 2, 1, 1, 1, 1, 2]));
+  JSON.stringify(g1UnitCounts) === JSON.stringify([3, 3, 5, 3, 5, 3, 2, 6, 1, 4, 2, 4, 2, 3, 4]));
 
 // ---------- 14. 鸡兔同笼：一个点，四种方法（4.16） ----------
 // 改前没有这 4 个动画：函数不存在、卡片和面板没有、METHOD_DEMOS 没有。

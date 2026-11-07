@@ -169,7 +169,13 @@ const NEW_KEYS = ['m33-ladder', 'm33-estimate', 'm33-ruler',
   'm36-drag', 'm36-nest', 'm37-div', 'm38-three',
   'm310-trial', 'm310-check', 'm311-dots',
   'm312-cut', 'm312-unit', 'm313-leap',
-  'm314-money', 'm314-zoom', 'm314-frac'];
+  'm314-money', 'm314-zoom', 'm314-frac',
+  'm12-map', 'm12-hunt', 'm13-friend', 'm14-inverse', 'm14-line',
+  'm15-bag', 'm15-home', 'm16-five', 'm16-ten', 'm16-fingers',
+  'm17-line', 'm18-day', 'm19-split', 'm19-line', 'm19-poker',
+  'm111-flat', 'm111-add', 'm112-venn',
+  'm113-chart', 'm113-line', 'm113-abacus',
+  'm114-ways', 'm115-tens', 'm115-jump', 'm116-diff', 'm116-action'];
 const EXPECTED = {
   'm33-ladder': { title: '单位楼梯装填', kind: '模拟', points: ['3.3'] },
   'm33-estimate': { title: '实测估测', kind: '实验', points: ['3.3'] },
@@ -207,10 +213,36 @@ const EXPECTED = {
   'm314-money': { title: '钱币元角分', kind: '演示', points: ['3.14'] },
   'm314-zoom': { title: '数轴放大镜', kind: '模拟', points: ['3.14'] },
   'm314-frac': { title: '分数改写小数', kind: '演示', points: ['3.14'] },
+  'm12-map': { title: '教室地图找位置', kind: '模拟', points: ['1.2'], grade: 1 },
+  'm12-hunt': { title: '方位寻宝', kind: '实验', points: ['1.2'], grade: 1 },
+  'm13-friend': { title: '找朋友凑5', kind: '模拟', points: ['1.3'], grade: 1 },
+  'm14-inverse': { title: '加法验算减法', kind: '模拟', points: ['1.4'], grade: 1 },
+  'm14-line': { title: '数线前进后退', kind: '模拟', points: ['1.4'], grade: 1 },
+  'm15-bag': { title: '摸袋猜形', kind: '实验', points: ['1.5'], grade: 1 },
+  'm15-home': { title: '家里找图形', kind: '模拟', points: ['1.5'], grade: 1 },
+  'm16-five': { title: '十格阵：5再加几', kind: '模拟', points: ['1.6'], grade: 1 },
+  'm16-ten': { title: '谁和我凑满10', kind: '模拟', points: ['1.6'], grade: 1 },
+  'm16-fingers': { title: '手指算6到10', kind: '模拟', points: ['1.6'], grade: 1 },
+  'm17-line': { title: '数线找11到20', kind: '模拟', points: ['1.7'], grade: 1 },
+  'm18-day': { title: '一日作息时间轴', kind: '实验', points: ['1.8'], grade: 1 },
+  'm19-split': { title: '拆数口诀凑十', kind: '模拟', points: ['1.9'], grade: 1 },
+  'm19-line': { title: '数线接着数', kind: '模拟', points: ['1.9'], grade: 1 },
+  'm19-poker': { title: '翻牌找朋友凑10', kind: '实验', points: ['1.9'], grade: 1 },
+  'm111-flat': { title: '平十法', kind: '模拟', points: ['1.11'], grade: 1 },
+  'm111-add': { title: '想加算减', kind: '模拟', points: ['1.11'], grade: 1 },
+  'm112-venn': { title: '维恩图分一分', kind: '模拟', points: ['1.12'], grade: 1 },
+  'm113-chart': { title: '百数表找规律', kind: '模拟', points: ['1.13'], grade: 1 },
+  'm113-line': { title: '数线比大小', kind: '模拟', points: ['1.13'], grade: 1 },
+  'm113-abacus': { title: '计数器拨珠', kind: '模拟', points: ['1.13'], grade: 1 },
+  'm114-ways': { title: '凑钱有多少种', kind: '实验', points: ['1.14'], grade: 1 },
+  'm115-tens': { title: '整十数先行', kind: '模拟', points: ['1.15'], grade: 1 },
+  'm115-jump': { title: '数线跳十跳一', kind: '模拟', points: ['1.15'], grade: 1 },
+  'm116-diff': { title: '数列差分找规律', kind: '模拟', points: ['1.16'], grade: 1 },
+  'm116-action': { title: '动作规律接龙', kind: '实验', points: ['1.16'], grade: 1 },
 };
-check('registry has all 14 new keys + m1a-pair example',
+check('registry has all 36 G3 keys + 26 G1 keys + m1a-pair example',
   NEW_KEYS.every(function (k) { return !!REG[k]; }) && !!REG['m1a-pair'] &&
-  Object.keys(REG).length === 37);
+  Object.keys(REG).length === 63);
 
 // ---------- per-animation: registration + render + tiers + discovery ----------
 NEW_KEYS.forEach(function (key) {
@@ -227,7 +259,7 @@ NEW_KEYS.forEach(function (key) {
     return;
   }
   check(key + ': title/kind/grade/points match spec',
-    a.title === exp.title && a.kind === exp.kind && a.grade === 3 &&
+    a.title === exp.title && a.kind === exp.kind && a.grade === (exp.grade || 3) &&
     JSON.stringify(a.points) === JSON.stringify(exp.points) &&
     a.points.every(function (p) { return pointIds.has(p); }) &&
     typeof a.sub === 'string' && a.sub.length > 0);
@@ -931,6 +963,255 @@ click('m314-frac-write');
 check('m314-frac L2: 0.6 equals 0.60, trailing zero changes nothing',
   (txt('m314-frac-msg') || '').indexOf('末尾的 0 不改变大小') >= 0 &&
   tiersDoneFor('m314-frac', 2));
+
+// ---------- G1 flows (1.2–1.16, batch 3) ----------
+// m12-map: flower at row 1 col 2 = 上面一排中间
+renderAnim('m12-map');
+click('m12-map-g-1');
+click('m12-map-say');
+check('m12-map L0: flower at row 1 col 2, guessed right',
+  (txt('m12-map-msg') || '').indexOf('对了') >= 0 &&
+  (txt('m12-map-msg') || '').indexOf('上面一排中间') >= 0 &&
+  tiersDoneFor('m12-map', 0) && triedKeys.indexOf('m12-map') >= 0);
+// m12-hunt: forward twice reaches the treasure; a wrong step sends the walker home
+renderAnim('m12-hunt');
+click('m12-hunt-g-0');
+click('m12-hunt-fwd');
+click('m12-hunt-fwd');
+check('m12-hunt L0: two steps forward finds the treasure',
+  (txt('m12-hunt-msg') || '').indexOf('找到宝藏了') >= 0 &&
+  (txt('m12-hunt-msg') || '').indexOf('第 1 排第 2 个') >= 0 &&
+  tiersDoneFor('m12-hunt', 0) && triedKeys.indexOf('m12-hunt') >= 0);
+renderAnim('m12-hunt');
+click('m12-hunt-left');
+check('m12-hunt L0: wrong first step returns to start',
+  (txt('m12-hunt-msg') || '').indexOf('回到起点重走') >= 0);
+// m13-friend: 2 + 3 = 5; wrong pair 2 + 1 = 3 is short of 5
+renderAnim('m13-friend');
+click('m13-friend-g-2');
+click('m13-friend-pair');
+check('m13-friend L0: 2 + 3 = 5',
+  (txt('m13-friend-msg') || '').indexOf('2 + 3 = 5') >= 0 &&
+  tiersDoneFor('m13-friend', 0) && triedKeys.indexOf('m13-friend') >= 0);
+renderAnim('m13-friend');
+click('m13-friend-g-0');
+click('m13-friend-pair');
+check('m13-friend L0: 2 + 1 = 3 is short of 5',
+  (txt('m13-friend-msg') || '').indexOf('还差 2 才到 5') >= 0);
+// m14-inverse: 5 - 2 = 3 because 3 + 2 = 5
+renderAnim('m14-inverse');
+click('m14-inverse-g-1');
+click('m14-inverse-check');
+check('m14-inverse L0: 3 + 2 = 5 checks 5 - 2 = 3',
+  (txt('m14-inverse-msg') || '').indexOf('3 + 2 = 5') >= 0 &&
+  tiersDoneFor('m14-inverse', 0) && triedKeys.indexOf('m14-inverse') >= 0);
+// m14-line: 2 + 2 lands on 4; 3 + 0 stays put
+renderAnim('m14-line');
+click('m14-line-g-1');
+click('m14-line-walk');
+click('m14-line-walk');
+check('m14-line L0: 2 + 2 lands on 4',
+  (txt('m14-line-msg') || '').indexOf('2 + 2 = 4') >= 0 &&
+  tiersDoneFor('m14-line', 0) && triedKeys.indexOf('m14-line') >= 0);
+click('m14-line-level-2');
+click('m14-line-g-1');
+click('m14-line-walk');
+check('m14-line L2: 3 + 0 stays at 3',
+  (txt('m14-line-msg') || '').indexOf('3 + 0 = 3') >= 0 &&
+  (txt('m14-line-msg') || '').indexOf('原地不动') >= 0 &&
+  tiersDoneFor('m14-line', 2));
+// m15-bag: round flat face = cylinder
+renderAnim('m15-bag');
+click('m15-bag-g-1');
+click('m15-bag-reveal');
+check('m15-bag L0: round flat face is a cylinder',
+  (txt('m15-bag-msg') || '').indexOf('圆柱') >= 0 &&
+  tiersDoneFor('m15-bag', 0) && triedKeys.indexOf('m15-bag') >= 0);
+// m15-home: the can is the cylinder
+renderAnim('m15-home');
+click('m15-home-o-1');
+check('m15-home L0: can is the cylinder',
+  (txt('m15-home-msg') || '').indexOf('找对了') >= 0 &&
+  (txt('m15-home-msg') || '').indexOf('易拉罐是圆柱') >= 0 &&
+  tiersDoneFor('m15-home', 0) && triedKeys.indexOf('m15-home') >= 0);
+// m16-five: 6 = 5 + 1, no counting from 1
+renderAnim('m16-five');
+click('m16-five-g-0');
+click('m16-five-add');
+check('m16-five L0: 6 = 5 + 1',
+  (txt('m16-five-msg') || '').indexOf('6 = 5 + 1') >= 0 &&
+  tiersDoneFor('m16-five', 0) && triedKeys.indexOf('m16-five') >= 0);
+// m16-ten: 7 + 3 = 10
+renderAnim('m16-ten');
+click('m16-ten-g-1');
+click('m16-ten-add');
+click('m16-ten-add');
+click('m16-ten-add');
+check('m16-ten L0: 7 + 3 = 10',
+  (txt('m16-ten-msg') || '').indexOf('7 + 3 = 10') >= 0 &&
+  tiersDoneFor('m16-ten', 0) && triedKeys.indexOf('m16-ten') >= 0);
+// m16-fingers: 7 = 5 + 2 with fingers
+renderAnim('m16-fingers');
+click('m16-fingers-g-1');
+click('m16-fingers-f-0');
+click('m16-fingers-f-1');
+click('m16-fingers-count');
+check('m16-fingers L0: 7 = 5 + 2',
+  (txt('m16-fingers-msg') || '').indexOf('7 = 5 + 2') >= 0 &&
+  tiersDoneFor('m16-fingers', 0) && triedKeys.indexOf('m16-fingers') >= 0);
+// m17-line: 13 = 10 + 3 on the number line
+renderAnim('m17-line');
+click('m17-line-g-1');
+click('m17-line-jump');
+click('m17-line-jump');
+click('m17-line-jump');
+check('m17-line L0: 13 = 10 + 3',
+  (txt('m17-line-msg') || '').indexOf('13 = 10 + 3') >= 0 &&
+  tiersDoneFor('m17-line', 0) && triedKeys.indexOf('m17-line') >= 0);
+// m18-day: getting up at 7 in the morning
+renderAnim('m18-day');
+click('m18-day-g-1');
+click('m18-day-stick');
+check('m18-day L0: getting up is 7 in the morning',
+  (txt('m18-day-msg') || '').indexOf('贴对了') >= 0 &&
+  (txt('m18-day-msg') || '').indexOf('早上 7 点') >= 0 &&
+  tiersDoneFor('m18-day', 0) && triedKeys.indexOf('m18-day') >= 0);
+// m19-split: 9 + 6 = 9 + 1 + 5 = 10 + 5 = 15
+renderAnim('m19-split');
+click('m19-split-g-0');
+click('m19-split-do');
+check('m19-split L0: 9 + 6 = 10 + 5 = 15',
+  (txt('m19-split-msg') || '').indexOf('10 + 5 = 15') >= 0 &&
+  tiersDoneFor('m19-split', 0) && triedKeys.indexOf('m19-split') >= 0);
+// m19-line: count on from 9 by 4 to 13
+renderAnim('m19-line');
+click('m19-line-g-1');
+click('m19-line-count');
+click('m19-line-count');
+click('m19-line-count');
+click('m19-line-count');
+check('m19-line L0: 9 + 4 = 13',
+  (txt('m19-line-msg') || '').indexOf('9 + 4 = 13') >= 0 &&
+  tiersDoneFor('m19-line', 0) && triedKeys.indexOf('m19-line') >= 0);
+// m19-poker: 6 + 4 = 10
+renderAnim('m19-poker');
+click('m19-poker-g-1');
+click('m19-poker-flip');
+check('m19-poker L0: 6 + 4 = 10',
+  (txt('m19-poker-msg') || '').indexOf('6 + 4 = 10') >= 0 &&
+  tiersDoneFor('m19-poker', 0) && triedKeys.indexOf('m19-poker') >= 0);
+// m111-flat: 13 - 5 = 8 in two steps (13 - 3 = 10, 10 - 2 = 8)
+renderAnim('m111-flat');
+click('m111-flat-g-1');
+click('m111-flat-step1');
+click('m111-flat-step2');
+check('m111-flat L0: 13 - 5 = 8 via 10',
+  (txt('m111-flat-msg') || '').indexOf('13 − 5 = 8') >= 0 &&
+  tiersDoneFor('m111-flat', 0) && triedKeys.indexOf('m111-flat') >= 0);
+// m111-add: 13 - 5 = 8 because 5 + 8 = 13, count back 12, 11, 10, 9, 8
+renderAnim('m111-add');
+click('m111-add-g-1');
+click('m111-add-think');
+check('m111-add L0: 5 + 8 = 13, count back lands on 8',
+  (txt('m111-add-msg') || '').indexOf('5 + 8 = 13') >= 0 &&
+  (txt('m111-add-msg') || '').indexOf('12、11、10、9、8') >= 0 &&
+  tiersDoneFor('m111-add', 0) && triedKeys.indexOf('m111-add') >= 0);
+// m112-venn: red circle goes in the overlap
+renderAnim('m112-venn');
+click('m112-venn-g-0');
+click('m112-venn-put');
+check('m112-venn L0: red circle goes in the overlap',
+  (txt('m112-venn-msg') || '').indexOf('放对了') >= 0 &&
+  tiersDoneFor('m112-venn', 0) && triedKeys.indexOf('m112-venn') >= 0);
+// m113-chart: hidden number is 23, rows go +1
+renderAnim('m113-chart');
+click('m113-chart-g-1');
+click('m113-chart-reveal');
+check('m113-chart L0: hidden number is 23, rows go +1',
+  (txt('m113-chart-msg') || '').indexOf('藏起来的数是 23') >= 0 &&
+  (txt('m113-chart-msg') || '').indexOf('横着每次多 1') >= 0 &&
+  tiersDoneFor('m113-chart', 0) && triedKeys.indexOf('m113-chart') >= 0);
+// m113-line: 46 is right of 38, so 46 is bigger
+renderAnim('m113-line');
+click('m113-line-g-0');
+click('m113-line-place');
+check('m113-line L0: 46 is bigger than 38',
+  (txt('m113-line-msg') || '').indexOf('46 大') >= 0 &&
+  tiersDoneFor('m113-line', 0) && triedKeys.indexOf('m113-line') >= 0);
+// m113-abacus: 4 tens beads + 6 ones beads = 46
+renderAnim('m113-abacus');
+click('m113-abacus-g-1');
+click('m113-abacus-tens');
+click('m113-abacus-tens');
+click('m113-abacus-tens');
+click('m113-abacus-tens');
+click('m113-abacus-ones');
+click('m113-abacus-ones');
+click('m113-abacus-ones');
+click('m113-abacus-ones');
+click('m113-abacus-ones');
+click('m113-abacus-ones');
+click('m113-abacus-done');
+check('m113-abacus L0: 4 tens + 6 ones = 46',
+  (txt('m113-abacus-msg') || '').indexOf('拨对了') >= 0 &&
+  (txt('m113-abacus-msg') || '').indexOf('就是 46') >= 0 &&
+  tiersDoneFor('m113-abacus', 0) && triedKeys.indexOf('m113-abacus') >= 0);
+// m114-ways: 1 yuan as 2 x 5 jiao, then as 10 x 1 jiao
+renderAnim('m114-ways');
+click('m114-ways-c-1');
+click('m114-ways-c-1');
+click('m114-ways-finish');
+check('m114-ways L0: first way is 2 x 5 jiao',
+  (txt('m114-ways-msg') || '').indexOf('第 1 种凑法') >= 0);
+for (let i = 0; i < 10; i++) click('m114-ways-c-2');
+click('m114-ways-finish');
+check('m114-ways L0: second way is 10 x 1 jiao',
+  (txt('m114-ways-msg') || '').indexOf('第 2 种凑法') >= 0 &&
+  (txt('m114-ways-msg') || '').indexOf('10 角 = 1 元') >= 0 &&
+  tiersDoneFor('m114-ways', 0) && triedKeys.indexOf('m114-ways') >= 0);
+// m115-tens: 35 + 20 = 55, tens first
+renderAnim('m115-tens');
+click('m115-tens-g-0');
+click('m115-tens-step1');
+click('m115-tens-step2');
+check('m115-tens L0: 35 + 20 = 55',
+  (txt('m115-tens-msg') || '').indexOf('35 + 20 = 55') >= 0 &&
+  tiersDoneFor('m115-tens', 0) && triedKeys.indexOf('m115-tens') >= 0);
+// m115-jump: 23 + 15 = 38, jump 10 then 5 ones
+renderAnim('m115-jump');
+click('m115-jump-g-2');
+click('m115-jump-ten');
+click('m115-jump-one');
+click('m115-jump-one');
+click('m115-jump-one');
+click('m115-jump-one');
+click('m115-jump-one');
+click('m115-jump-check');
+check('m115-jump L0: 23 + 15 = 38',
+  (txt('m115-jump-msg') || '').indexOf('23 + 15 = 38') >= 0 &&
+  tiersDoneFor('m115-jump', 0) && triedKeys.indexOf('m115-jump') >= 0);
+// m116-diff: next is 10 (+2 each time); challenge level next is 16 (+1, +2, +3, +4, +5)
+renderAnim('m116-diff');
+click('m116-diff-g-1');
+click('m116-diff-reveal');
+check('m116-diff L0: next is 10, +2 each time',
+  (txt('m116-diff-msg') || '').indexOf('下一个是 10') >= 0 &&
+  (txt('m116-diff-msg') || '').indexOf('每次多 2') >= 0 &&
+  tiersDoneFor('m116-diff', 0) && triedKeys.indexOf('m116-diff') >= 0);
+click('m116-diff-level-1');
+click('m116-diff-g-1');
+click('m116-diff-reveal');
+check('m116-diff L1: 1, 2, 4, 7, 11, next is 16',
+  (txt('m116-diff-msg') || '').indexOf('下一个是 16') >= 0 &&
+  (txt('m116-diff-msg') || '').indexOf('差 1、2、3、4、5') >= 0 &&
+  tiersDoneFor('m116-diff', 1));
+// m116-action: next action is clap
+renderAnim('m116-action');
+click('m116-action-g-0');
+click('m116-action-do');
+check('m116-action L0: next action is clap',
+  (txt('m116-action-msg') || '').indexOf('下一个是拍手') >= 0 &&
+  tiersDoneFor('m116-action', 0) && triedKeys.indexOf('m116-action') >= 0);
 
 console.log('\nsmoke-anims-band-1-3: ' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);
