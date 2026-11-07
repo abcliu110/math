@@ -1433,6 +1433,127 @@ if (typeof sandbox.benchViewSvg === 'function' && typeof sandbox.worldBenchRende
   sandbox.labRestoredFlag = false;
   delete lsData['math-bench-v1'];
 }
+// Phase 3 batch 2: ten-frame / datatable / spinner on the bench.
+// 下面每条在改前代码上干净失败：旧代码没有这三个器材（没有 bench 开关、
+// 没有 benchViewSvg 分支、没有检查器动作按钮），新代码要全通。
+if (typeof sandbox.benchViewSvg === 'function' && typeof sandbox.worldBenchRender === 'function') {
+  // 1. 十格阵画法：两排格子 + 合计行，整张图可点（pick-tenframe）。
+  const tfSvg = sandbox.benchViewSvg('tenframe', [], false, { k: 0, b: 0 }, null, null, false, null,
+    { tenframe: { A: 3, B: 4, sum: 7 }, datatable: { rows: [], total: 0 }, spinner: { sectors: 4, last: null, counts: [], total: 0 } });
+  check('lab ten-frame view draws two rows of cells and the sum (A 3 + B 4 = 7)',
+    tfSvg.indexOf('A：3 个') >= 0 && tfSvg.indexOf('B：4 个') >= 0 && tfSvg.indexOf('合计：3 + 4 = 7') >= 0);
+  check('lab ten-frame view is clickable as one apparatus (pick-tenframe)',
+    tfSvg.indexOf('data-bench="pick-tenframe"') >= 0);
+  const tfFilled = (tfSvg.match(/fill="#fb923c"/g) || []).length;
+  check('lab ten-frame view fills exactly the counted cells (3 + 4 = 7 orange)',
+    tfFilled === 7);
+  // 2. 数据表画法：两列表 + 合计行，整张表可点（pick-datatable）。
+  const dtSvg = sandbox.benchViewSvg('datatable', [], false, { k: 0, b: 0 }, null, null, false, null,
+    { tenframe: { A: 0, B: 0, sum: 0 }, datatable: { rows: [{ label: 'A', n: 5 }, { label: 'B', n: 3 }], total: 8 }, spinner: { sectors: 4, last: null, counts: [], total: 0 } });
+  check('lab datatable view draws the table with rows and the total (A 5, B 3, 合计 8)',
+    dtSvg.indexOf('结果') >= 0 && dtSvg.indexOf('次数') >= 0 && dtSvg.indexOf('合计') >= 0 &&
+    dtSvg.indexOf('>5<') >= 0 && dtSvg.indexOf('>3<') >= 0 && dtSvg.indexOf('>8<') >= 0);
+  check('lab datatable view is clickable as one apparatus (pick-datatable)',
+    dtSvg.indexOf('data-bench="pick-datatable"') >= 0);
+  // 3. 转盘画法：扇形轮 + 指针 + 上次结果 + “转一转”按钮（data-bench="spin"）。
+  const spSvg = sandbox.benchViewSvg('spinner', [], false, { k: 0, b: 0 }, null, null, false, null,
+    { tenframe: { A: 0, B: 0, sum: 0 }, datatable: { rows: [], total: 0 }, spinner: { sectors: 4, last: 1, counts: [0, 2, 0, 0], total: 2 } });
+  check('lab spinner view draws the wheel, the last result and the spin button',
+    spSvg.indexOf('data-bench="pick-spinner"') >= 0 && spSvg.indexOf('data-bench="spin"') >= 0 &&
+    spSvg.indexOf('转一转') >= 0 && spSvg.indexOf('转了 2 次') >= 0);
+  check('lab spinner view shows the last sector in the center (last=1 is 蓝）',
+    spSvg.indexOf('>蓝<') >= 0 && (spSvg.match(/<path d="M 190 130/g) || []).length === 4);
+  // 透明底：三个新器材的组里都要有一张透明背景矩形，行间/格间/轮角的空隙也能点。
+  // 没它时包围盒中心落在空白处，点下去打在 SVG 背景上、委托找不到 data-bench
+  // （本地真机 tenframe-bench 场景复现：点一次检查器不动）。
+  check('lab new apparatus groups have a transparent background rect (gaps are clickable)',
+    tfSvg.indexOf('fill="transparent"') >= 0 &&
+    dtSvg.indexOf('fill="transparent"') >= 0 &&
+    spSvg.indexOf('fill="transparent"') >= 0);
+  // 4. 零件盒按钮：点“十格阵（拿上台）”→ 开关打开、检查器出十格阵的属性。
+  const wB2 = sandbox.MathWorld.create({});
+  sandbox.labWorld = wB2; sandbox.mwPlay = wB2;
+  const tfBtn = makeEl('button');
+  tfBtn.dataset.bench = 'tenframe';
+  tfBtn.setAttribute('data-bench', 'tenframe');
+  const cardHandlersB2 = byId.worldBenchCard._handlers && byId.worldBenchCard._handlers.click;
+  if (cardHandlersB2) cardHandlersB2.forEach(function (fn) {
+    fn({ target: tfBtn, stopPropagation: function () {}, preventDefault: function () {} });
+  });
+  check('lab parts-box ten-frame button puts the ten-frame on the bench',
+    !!sandbox.labWorld && sandbox.labWorld.benchTenframe === true);
+  check('lab inspector opens for the ten-frame (A/B counts)',
+    String(byId.worldBenchInspector.innerHTML).indexOf('十格阵') >= 0 &&
+    String(byId.worldBenchInspector.innerHTML).indexOf('A 的个数') >= 0);
+  // 点画布上的十格阵本体（pick-tenframe）→ 选中切回十格阵；再点一次取消选中。
+  // 前置断言：点之前必须是选中的（旧代码上选择根本没设过，空转通过不算）。
+  const tfG = makeEl('g');
+  tfG.dataset.bench = 'pick-tenframe';
+  tfG.setAttribute('data-bench', 'pick-tenframe');
+  const wasSelTf = !!sandbox.worldInspectSel && sandbox.worldInspectSel.apparatus === 'tenframe';
+  if (cardHandlersB2) cardHandlersB2.forEach(function (fn) {
+    fn({ target: tfG, stopPropagation: function () {}, preventDefault: function () {} });
+  });
+  check('lab canvas ten-frame deselects on second click (toggle)',
+    wasSelTf && !sandbox.worldInspectSel);
+  if (cardHandlersB2) cardHandlersB2.forEach(function (fn) {
+    fn({ target: tfG, stopPropagation: function () {}, preventDefault: function () {} });
+  });
+  check('lab canvas ten-frame reselects (pick-tenframe)',
+    !!sandbox.worldInspectSel && sandbox.worldInspectSel.apparatus === 'tenframe');
+  // 5. 检查器动作按钮：转盘“转一转”转一次记一次；数据表“加一行”多一行。
+  sandbox.benchRun({ type: 'benchSpinnerToggle' });
+  sandbox.worldInspectSelect({ apparatus: 'spinner' });
+  check('lab inspector shows the spinner spin action',
+    String(byId.worldBenchInspector.innerHTML).indexOf('转一转') >= 0 &&
+    String(byId.worldBenchInspector.innerHTML).indexOf('data-insp-action="0"') >= 0);
+  const spinAct = makeEl('button');
+  spinAct.dataset.inspAction = '0';
+  spinAct.setAttribute('data-insp-action', '0');
+  const inspHandlersB2 = byId.worldBenchInspector._handlers && byId.worldBenchInspector._handlers.click;
+  if (inspHandlersB2) inspHandlersB2.forEach(function (fn) {
+    fn({ target: spinAct, stopPropagation: function () {}, preventDefault: function () {} });
+  });
+  check('lab inspector spin action spins once and counts it',
+    !!sandbox.labWorld && sandbox.labWorld.spinner && sandbox.labWorld.spinner.last !== null &&
+    sandbox.labWorld.spinner.counts.reduce(function (a, c) { return a + c; }, 0) === 1);
+  sandbox.benchRun({ type: 'benchDatatableToggle' });
+  sandbox.worldInspectSelect({ apparatus: 'datatable' });
+  check('lab inspector shows the datatable add-row action',
+    String(byId.worldBenchInspector.innerHTML).indexOf('加一行') >= 0);
+  const addRowAct = makeEl('button');
+  addRowAct.dataset.inspAction = '0';
+  addRowAct.setAttribute('data-insp-action', '0');
+  if (inspHandlersB2) inspHandlersB2.forEach(function (fn) {
+    fn({ target: addRowAct, stopPropagation: function () {}, preventDefault: function () {} });
+  });
+  check('lab inspector add-row action adds one row (A/B -> A/B/C)',
+    !!sandbox.labWorld && sandbox.labWorld.datatable && sandbox.labWorld.datatable.rows.length === 3 &&
+    sandbox.labWorld.datatable.rows[2].label === 'C');
+  // 6. 孤儿守卫：选中转盘后把它拿下台面 → 检查器要跟着关（不是等全部拿走）。
+  //    旧代码上 benchSpinnerToggle 是空操作、也没有转盘守卫，选择一直留着。
+  sandbox.worldInspectSelect({ apparatus: 'spinner' });
+  sandbox.benchRun({ type: 'benchSpinnerToggle' });
+  sandbox.worldPlayRender();
+  check('lab inspector closes when the spinner is taken off the bench (orphan guard)',
+    !sandbox.worldInspectSel);
+  sandbox.benchRun({ type: 'benchSpinnerToggle' }); // 收尾：转盘放回台面，继续下面的清空测试
+  // 7. 全部拿走：三个器材的开关都要关掉，检查器回到台面现状。
+  //    先确认三个开关确实开着（旧代码上这里就是 false，整段干净失败），再清。
+  check('lab new apparatus toggles are on before clear-all',
+    !!sandbox.labWorld && sandbox.labWorld.benchTenframe === true &&
+    sandbox.labWorld.benchDatatable === true && sandbox.labWorld.benchSpinner === true);
+  sandbox.worldInspectSelect({ apparatus: 'spinner' });
+  sandbox.labClearBench();
+  check('lab clear-all takes the ten-frame, datatable and spinner off the bench',
+    !!sandbox.labWorld && sandbox.labWorld.benchTenframe === false && sandbox.labWorld.benchDatatable === false && sandbox.labWorld.benchSpinner === false);
+  check('lab inspector closes on clear-all for the new apparatus', !sandbox.worldInspectSel);
+  // 收尾：世界恢复成空的，别让后面的测试捡到转盘/数据表的状态。
+  sandbox.labWorld = sandbox.MathWorld.create({});
+  sandbox.mwPlay = sandbox.labWorld;
+  sandbox.labRestoredFlag = false;
+  delete lsData['math-bench-v1'];
+}
 // 2026-11-07 复测修（第 4 批）：第 3 批后拖放全断、手柄刷新后消失、手柄盖标签、
 // “全部拿走”后天平还画着、长方形拿下台面后还画着、组合台不保存。
 // 下面每条在改前代码上干净失败。特别注意第 1 条：桩的 vm 上下文里严格模式

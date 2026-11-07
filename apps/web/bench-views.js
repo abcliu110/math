@@ -23,22 +23,31 @@
     frac: { def: 'fracbar', views: ['fracbar', 'numline', 'coord', 'formula'] },
     balance: { def: 'balance', views: ['balance', 'formula'] },
     rect: { def: 'coord', views: ['coord', 'formula'] },
+    // 十格阵/数据表/转盘是离散格子（数格子）和记录/随机，不是坐标系：
+    // 各自只有一个自己的画法 + 算式（NB §5：离散格子不是坐标系，别硬套轴）。
+    tenframe: { def: 'tenframe', views: ['tenframe', 'formula'] },
+    datatable: { def: 'datatable', views: ['datatable', 'formula'] },
+    spinner: { def: 'spinner', views: ['spinner', 'formula'] },
   };
-  const VIEW_LABEL = { coord: '坐标系', numline: '数轴', fracbar: '分数条', balance: '天平', formula: '算式' };
+  const VIEW_LABEL = { coord: '坐标系', numline: '数轴', fracbar: '分数条', balance: '天平', formula: '算式', tenframe: '十格阵', datatable: '数据表', spinner: '转盘' };
 
   function viewsFor(kind) {
     return OBJECT_VIEWS[kind] ? OBJECT_VIEWS[kind].views.slice() : ['formula'];
   }
 
   // 台上的数（来自实验台的 items）加上直线（如果直线放在台上）变成对象列表。
-  // 整数是 num，其余是 frac。长方形在台上时也算一个对象（画在坐标系格子上）。
-  function benchObjects(items, lineOn, balanceOn, rectOn) {
+  // 整数是 num，其余是 frac。长方形/十格阵/数据表/转盘在台上时也各算一个对象
+  // （长方形画在坐标系格子上；后三者各自有自己的画法）。
+  function benchObjects(items, lineOn, balanceOn, rectOn, tenframeOn, datatableOn, spinnerOn) {
     const objs = (items || []).map(function (it) {
       return { kind: (it.q && it.q.d === 1) ? 'num' : 'frac', id: it.id, str: it.str };
     });
     if (lineOn) objs.push({ kind: 'line', id: 'line', str: '直线' });
     if (balanceOn) objs.push({ kind: 'balance', id: 'balance', str: '天平' });
     if (rectOn) objs.push({ kind: 'rect', id: 'rect', str: '长方形' });
+    if (tenframeOn) objs.push({ kind: 'tenframe', id: 'tenframe', str: '十格阵' });
+    if (datatableOn) objs.push({ kind: 'datatable', id: 'datatable', str: '数据表' });
+    if (spinnerOn) objs.push({ kind: 'spinner', id: 'spinner', str: '转盘' });
     return objs;
   }
 

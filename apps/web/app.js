@@ -3728,6 +3728,9 @@ function labClearBench() {
   if (worldPlayEnsure().benchBalance) benchRun({ type: 'benchBalanceToggle' });
   if (worldPlayEnsure().benchRect) benchRun({ type: 'benchRectToggle' });
   if (worldPlayEnsure().benchLine) benchRun({ type: 'benchLineToggle' });
+  if (worldPlayEnsure().benchTenframe) benchRun({ type: 'benchTenframeToggle' });
+  if (worldPlayEnsure().benchDatatable) benchRun({ type: 'benchDatatableToggle' });
+  if (worldPlayEnsure().benchSpinner) benchRun({ type: 'benchSpinnerToggle' });
   benchSel = {};
   worldInspectSelect(null); // 台面清空了，检查器回到“台面现状”，别留孤儿面板
   benchMsg('台面清空了。', true);
@@ -3808,7 +3811,7 @@ var benchPreferredView = (benchViewSaved && typeof benchViewSaved.preferred === 
 var benchShowBalance = !(benchViewSaved && benchViewSaved.showBalance === false); // 天平在台上时台面先画天平；学生点了别的视图按钮才切走
 function bvX(x) { return 30 + (x + 1) * 57.5; } // 坐标系 x 范围 -1 到 7
 function bvY(y) { return 230 - (y + 2) * (200 / 14); } // 坐标系 y 范围 -2 到 12
-function benchViewSvg(view, items, lineOn, lf, bal, rect, rectSelected, beamOffset) {
+function benchViewSvg(view, items, lineOn, lf, bal, rect, rectSelected, beamOffset, extra) {
   let s = '';
   if (view === 'coord') {
     for (let i = -1; i <= 7; i++) {
@@ -3924,6 +3927,78 @@ function benchViewSvg(view, items, lineOn, lf, bal, rect, rectSelected, beamOffs
     s += '<text id="worldBenchPanRText" data-bench="pick-pan" data-side="R" style="cursor:pointer" x="430" y="' + (rightY + 26) + '" font-size="16" text-anchor="middle" fill="#0f172a">' + bal.Rstr + '</text>';
     s += '<text x="260" y="252" font-size="16" text-anchor="middle" fill="' + (bal.equal ? '#4ade80' : '#fca5a5') + '">' +
       (bal.equal ? '平衡' : (bal.leftHeavy ? '左边重' : '右边重')) + '</text>';
+  } else if (view === 'tenframe') {
+    // 十格阵：两排格子，每排 5 列 × 2 行（格子 26px），A 在上 B 在下，填了的格子是橙色。
+    // 点整张图选中十格阵（检查器跟过来改 A/B 的个数）；格子本身不在这儿点——
+    // 台面上的十格阵是“看合计”的，改个数去检查器（和天平砝码一个道理：看在这儿，改在检查器）。
+    const tf = (extra && extra.tenframe) || { A: 0, B: 0, sum: 0 };
+    s += '<g data-bench="pick-tenframe" style="cursor:pointer">';
+    // 透明底：整张图都能点，不只格子本身——包围盒中心正好落在两排格子之间
+    // 的空隙里，点那里会打在 SVG 背景上、委托找不到 data-bench（本地真机复现）。
+    // transparent 是画出来的填充（不是 fill="none"），能接事件。
+    s += '<rect x="30" y="14" width="170" height="210" fill="transparent"/>';
+    [['A', tf.A, 30], ['B', tf.B, 122]].forEach(function (row) {
+      const label = row[0], n = row[1], y0 = row[2];
+      s += '<text x="40" y="' + (y0 - 8) + '" font-size="14" fill="#f8fafc">' + label + '：' + n + ' 个</text>';
+      for (let c = 0; c < 10; c++) {
+        const cx = 40 + (c % 5) * 28, cy = y0 + Math.floor(c / 5) * 28;
+        s += '<rect x="' + cx + '" y="' + cy + '" width="26" height="26" fill="' +
+          (c < n ? '#fb923c' : '#263449') + '" stroke="#94a3b8"/>';
+      }
+    });
+    s += '<text x="40" y="216" font-size="16" fill="#f8fafc">合计：' + tf.A + ' + ' + tf.B + ' = ' + tf.sum + '</text>';
+    s += '</g>';
+  } else if (view === 'datatable') {
+    // 数据表：两列的表（结果 | 次数），一行一个结果，最后一行是合计。
+    // 点整张表选中数据表（检查器里改每行的数、加行/删行）。
+    const dt = (extra && extra.datatable) || { rows: [], total: 0 };
+    s += '<g data-bench="pick-datatable" style="cursor:pointer">';
+    // 透明底：行与行之间的空隙也要能点（和十格阵同一个道理）。
+    s += '<rect x="30" y="14" width="400" height="' + (70 + dt.rows.length * 30) + '" fill="transparent"/>';
+    s += '<text x="60" y="36" font-size="14" font-weight="700" fill="#94a3b8">结果</text>';
+    s += '<text x="260" y="36" font-size="14" font-weight="700" fill="#94a3b8">次数</text>';
+    s += '<line x1="40" y1="46" x2="420" y2="46" stroke="#475569"/>';
+    dt.rows.forEach(function (r, i) {
+      const y = 76 + i * 30;
+      s += '<text x="60" y="' + y + '" font-size="16" fill="#f8fafc">' + esc(r.label) + '</text>';
+      s += '<text x="260" y="' + y + '" font-size="16" fill="#f8fafc">' + r.n + '</text>';
+    });
+    const ty = 76 + dt.rows.length * 30;
+    s += '<line x1="40" y1="' + (ty - 12) + '" x2="420" y2="' + (ty - 12) + '" stroke="#475569"/>';
+    s += '<text x="60" y="' + (ty + 14) + '" font-size="16" font-weight="700" fill="#f8fafc">合计</text>';
+    s += '<text x="260" y="' + (ty + 14) + '" font-size="16" font-weight="700" fill="#f8fafc">' + dt.total + '</text>';
+    s += '</g>';
+  } else if (view === 'spinner') {
+    // 转盘：扇形轮（颜色和名字按 MathWorld 的顺序取前 N 个），顶上有指针，
+    // 圆心写上次转到的结果；右边的“转一转”按钮点一下就转一次、记一次。
+    const sp = (extra && extra.spinner) || { sectors: 4, last: null, counts: [], total: 0 };
+    const n = Math.max(2, sp.sectors | 0);
+    const cx = 190, cy = 130, r = 85;
+    s += '<g data-bench="pick-spinner" style="cursor:pointer">';
+    // 透明底：轮子是圆的，包围盒四角是空的——点角落也要能选中转盘。
+    s += '<rect x="' + (cx - r - 10) + '" y="' + (cy - r - 10) + '" width="' + (2 * r + 20) + '" height="' + (2 * r + 20) + '" fill="transparent"/>';
+    for (let i = 0; i < n; i++) {
+      const a0 = -Math.PI / 2 + (i / n) * Math.PI * 2;
+      const a1 = -Math.PI / 2 + ((i + 1) / n) * Math.PI * 2;
+      const x0 = cx + r * Math.cos(a0), y0 = cy + r * Math.sin(a0);
+      const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
+      const large = (a1 - a0) > Math.PI ? 1 : 0;
+      s += '<path d="M ' + cx + ' ' + cy + ' L ' + x0.toFixed(1) + ' ' + y0.toFixed(1) +
+        ' A ' + r + ' ' + r + ' 0 ' + large + ' 1 ' + x1.toFixed(1) + ' ' + y1.toFixed(1) +
+        ' Z" fill="' + MathWorld.SPINNER_COLORS[i] + '" stroke="#0f172a" stroke-width="2"/>';
+      const am = (a0 + a1) / 2;
+      const lx = cx + 55 * Math.cos(am), ly = cy + 55 * Math.sin(am);
+      s += '<text x="' + lx.toFixed(1) + '" y="' + (ly + 5).toFixed(1) + '" font-size="15" font-weight="700" text-anchor="middle" fill="#f8fafc">' +
+        MathWorld.SPINNER_LABELS[i] + '</text>';
+    }
+    s += '<circle cx="' + cx + '" cy="' + cy + '" r="26" fill="#0f172a" stroke="#cbd5e1" stroke-width="2"/>';
+    s += '<text x="' + cx + '" y="' + (cy + 6) + '" font-size="18" font-weight="700" text-anchor="middle" fill="#f8fafc">' +
+      (sp.last === null ? '?' : MathWorld.SPINNER_LABELS[sp.last]) + '</text>';
+    s += '</g>';
+    s += '<polygon points="' + cx + ',28 ' + (cx - 9) + ',46 ' + (cx + 9) + ',46" fill="#f8fafc"/>';
+    s += '<g data-bench="spin" style="cursor:pointer"><rect x="330" y="108" width="140" height="44" rx="8" fill="#f97316"/>' +
+      '<text x="400" y="136" font-size="18" font-weight="700" text-anchor="middle" fill="#f8fafc">转一转</text></g>';
+    s += '<text x="400" y="180" font-size="14" text-anchor="middle" fill="#94a3b8">转了 ' + sp.total + ' 次</text>';
   } else {
     // 算式视图也不再是光秃秃的 "x = 5" 文字行：数画成卡片，合计和直线写在下面一行。
     if (!items.length && !lineOn) {
@@ -3976,7 +4051,10 @@ function worldBenchRender() {
   const lineOn = !!(w2 && w2.benchLine);
   const balOn = !!(w2 && w2.benchBalance);
   const rectOn = !!(w2 && w2.benchRect);
-  const objs = BenchViews.benchObjects(bv.items, lineOn, balOn, rectOn);
+  const tfOn = !!(w2 && w2.benchTenframe);
+  const dtOn = !!(w2 && w2.benchDatatable);
+  const spOn = !!(w2 && w2.benchSpinner);
+  const objs = BenchViews.benchObjects(bv.items, lineOn, balOn, rectOn, tfOn, dtOn, spOn);
   const ch = BenchViews.chooseView(objs, benchPreferredView);
   let canvasView = ch.view;
   if (balOn && benchShowBalance) canvasView = 'balance';
@@ -3984,6 +4062,12 @@ function worldBenchRender() {
   // 而数 + 长方形的共同视图默认是数轴——不改的话长方形永远画不出来
   // （2026-11-07 复测：检查器显示 6×4、面积 24，台面上从来不画成形状）。
   else if (!benchPreferredView && rectOn) canvasView = 'coord';
+  // 十格阵/数据表/转盘同理：各有自己的画法，学生没选视图时默认看它——
+  // 不然数 + 十格阵的共同视图是数轴，十格阵永远画不出来。优先级按放上台面的
+  // 器材排：长方形 > 十格阵 > 数据表 > 转盘；视图按钮里随时能切走。
+  else if (!benchPreferredView && tfOn) canvasView = 'tenframe';
+  else if (!benchPreferredView && dtOn) canvasView = 'datatable';
+  else if (!benchPreferredView && spOn) canvasView = 'spinner';
   // 视图选择进自动保存：刷新后回到学生上次看的视图（见 benchPreferredView 的声明处）。
   try { lsSet('math-lab-benchview-v1', JSON.stringify({ preferred: benchPreferredView, showBalance: benchShowBalance })); } catch (e) {}
   const vbox = document.getElementById('worldBenchViews');
@@ -4004,9 +4088,13 @@ function worldBenchRender() {
     // 长方形只在它在台上时才传进去画：derived.rect 永远存在（世界总有一把尺），
     // 不按 benchRect 守门的话，拿下台面后坐标系里还画着它（2026-11-07 复测）。
     // 直线是另外传 lineOn 守门的，长方形之前漏了这一层。
+    // 十格阵/数据表/转盘的画法数据（格子数、表行、扇区）也只在台上时才有意义，
+    // 但 derived 里永远有它们的值——画不画由 canvasView 决定，不用再守门。
+    const d2 = w2 ? MathWorld.derived(w2) : null;
     svg.innerHTML = benchViewSvg(canvasView, bv.items, lineOn, w2 ? w2.linefn : { k: 0, b: 0 },
       w2 ? MathWorld.derived(w2).balance : null, (w2 && rectOn) ? MathWorld.derived(w2).rect : null,
-      !!(worldInspectSel && worldInspectSel.apparatus === 'rect'), benchBeamCur());
+      !!(worldInspectSel && worldInspectSel.apparatus === 'rect'), benchBeamCur(),
+      d2 ? { tenframe: d2.tenframe, datatable: d2.datatable, spinner: d2.spinner } : null);
   }
   // 台面天平的梁：画完按当前插值角起动画（labBeamAnim），500ms 转到目标角。
   if (canvasView === 'balance' && w2) {
@@ -4019,6 +4107,12 @@ function worldBenchRender() {
   if (balBtn) balBtn.setAttribute('aria-pressed', String(balOn));
   const rectBtn = document.querySelector('[data-bench="rect"]');
   if (rectBtn) rectBtn.setAttribute('aria-pressed', String(rectOn));
+  const tfBtn = document.querySelector('[data-bench="tenframe"]');
+  if (tfBtn) tfBtn.setAttribute('aria-pressed', String(tfOn));
+  const dtBtn = document.querySelector('[data-bench="datatable"]');
+  if (dtBtn) dtBtn.setAttribute('aria-pressed', String(dtOn));
+  const spBtn = document.querySelector('[data-bench="spinner"]');
+  if (spBtn) spBtn.setAttribute('aria-pressed', String(spOn));
   // 直线在台上、且看的是坐标系时，可以直接在台上调 k 和 b。
   if (vbox && lineOn && canvasView === 'coord' && w2) {
     vbox.innerHTML += '<span class="muted">直线：k = ' + w2.linefn.k + '，b = ' + w2.linefn.b + '</span>' +
@@ -4129,6 +4223,35 @@ function worldBenchRender() {
       worldPlayRender();
       return;
     }
+    if (op === 'tenframe' || op === 'datatable' || op === 'spinner') {
+      // 十格阵/数据表/转盘上台面：和长方形一个做法——开关、切到它自己的画法、
+      // 检查器跟过来。十格阵/数据表/转盘没有小站卡片，所以不 labExpandStation。
+      const type = op === 'tenframe' ? 'benchTenframeToggle' : op === 'datatable' ? 'benchDatatableToggle' : 'benchSpinnerToggle';
+      const label = op === 'tenframe' ? '十格阵' : op === 'datatable' ? '数据表' : '转盘';
+      const view = op === 'tenframe' ? '十格阵' : op === 'datatable' ? '数据表' : '转盘';
+      benchRun({ type: type });
+      const flag = op === 'tenframe' ? labWorld.benchTenframe : op === 'datatable' ? labWorld.benchDatatable : labWorld.benchSpinner;
+      benchMsg(flag ? label + '放上了台面，台子切到' + view : label + '拿下了台面', true);
+      if (flag) { benchPreferredView = null; benchShowBalance = false; worldInspectSelect({ apparatus: op }); }
+      worldPlayRender();
+      return;
+    }
+    if (op === 'pick-tenframe' || op === 'pick-datatable' || op === 'pick-spinner') {
+      // 画布上画出来的十格阵/数据表/转盘本体：点它选中这件器材（和 pick-rect 一样，
+      // 器材路径，不是零件的 pick——它们没有 piece id）。再点一次取消选中。
+      const which = op.slice(5); // 'tenframe' | 'datatable' | 'spinner'
+      if (worldInspectSel && worldInspectSel.apparatus === which) worldInspectSelect(null);
+      else worldInspectSelect({ apparatus: which });
+      worldBenchRender();
+      return;
+    }
+    if (op === 'spin') {
+      // 转盘上的“转一转”按钮：转一次、记一次，提示说这次转到了哪个扇区。
+      worldPlayApply({ type: 'spinnerSpin' });
+      const sp = labWorld && labWorld.spinner;
+      if (sp && sp.last !== null) benchMsg('转到「' + MathWorld.SPINNER_LABELS[sp.last] + '」', true);
+      return;
+    }
     if (op === 'lk-' || op === 'lk+' || op === 'lb-' || op === 'lb+') {
       const lf = labWorld.linefn;
       const delta = op.slice(-1) === '+' ? 1 : -1;
@@ -4174,6 +4297,14 @@ function worldBenchRender() {
   const rectIcon = '<svg width="30" height="24" viewBox="0 0 30 24" aria-hidden="true"><rect x="3" y="5" width="24" height="14" rx="2" fill="#fde68a" fill-opacity="0.7" stroke="#92400e" stroke-width="2"/></svg>';
   const lineIcon = '<svg width="30" height="24" viewBox="0 0 30 24" aria-hidden="true"><line x1="4" y1="20" x2="26" y2="4" stroke="#ea580c" stroke-width="3" stroke-linecap="round"/><circle cx="11" cy="14" r="3" fill="#2563eb" stroke="#fff" stroke-width="1.5"/><circle cx="19" cy="9" r="3" fill="#2563eb" stroke="#fff" stroke-width="1.5"/></svg>';
   const balIcon = '<svg width="30" height="24" viewBox="0 0 30 24" aria-hidden="true"><line x1="15" y1="4" x2="15" y2="20" stroke="#cbd5e1" stroke-width="2"/><line x1="4" y1="7" x2="26" y2="7" stroke="#cbd5e1" stroke-width="2"/><path d="M2 8 Q4 14 6 8 Z" fill="#e2e8f0" stroke="#94a3b8"/><path d="M24 8 Q26 14 28 8 Z" fill="#e2e8f0" stroke="#94a3b8"/></svg>';
+  // 十格阵：5 列 × 2 行的小格子（前 3 格填橙色）；数据表：两列的表；
+  // 转盘：四色扇形轮（颜色按 MathWorld 的扇区顺序取前 4 个）。
+  const tfIcon = '<svg width="30" height="24" viewBox="0 0 30 24" aria-hidden="true">' +
+    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(function (c) {
+      return '<rect x="' + (2 + (c % 5) * 5.6) + '" y="' + (2 + Math.floor(c / 5) * 10) + '" width="5" height="9" fill="' + (c < 3 ? '#fb923c' : '#1a2438') + '" stroke="#94a3b8" stroke-width="0.8"/>';
+    }).join('') + '</svg>';
+  const dtIcon = '<svg width="30" height="24" viewBox="0 0 30 24" aria-hidden="true"><rect x="2" y="2" width="26" height="20" rx="2" fill="#1a2438" stroke="#94a3b8" stroke-width="1.5"/><line x1="15" y1="2" x2="15" y2="22" stroke="#94a3b8" stroke-width="1.5"/><line x1="2" y1="9" x2="28" y2="9" stroke="#94a3b8" stroke-width="1"/><line x1="2" y1="15" x2="28" y2="15" stroke="#94a3b8" stroke-width="1"/></svg>';
+  const spIcon = '<svg width="30" height="24" viewBox="0 0 30 24" aria-hidden="true"><circle cx="15" cy="12" r="10" fill="#ef4444"/><path d="M15 12 L15 2 A10 10 0 0 1 25 12 Z" fill="#3b82f6"/><path d="M15 12 L25 12 A10 10 0 0 1 15 22 Z" fill="#22c55e"/><path d="M15 12 L15 22 A10 10 0 0 1 5 12 Z" fill="#eab308"/><circle cx="15" cy="12" r="2.5" fill="#0f172a" stroke="#f8fafc" stroke-width="1"/></svg>';
   box.querySelectorAll('.part-chip').forEach(function (btn) {
     if (btn.querySelector('.part-ico')) return;
     let svg = null;
@@ -4181,6 +4312,9 @@ function worldBenchRender() {
     else if (btn.getAttribute('data-bench') === 'rect') svg = rectIcon;
     else if (btn.getAttribute('data-bench') === 'line') svg = lineIcon;
     else if (btn.getAttribute('data-bench') === 'balance') svg = balIcon;
+    else if (btn.getAttribute('data-bench') === 'tenframe') svg = tfIcon;
+    else if (btn.getAttribute('data-bench') === 'datatable') svg = dtIcon;
+    else if (btn.getAttribute('data-bench') === 'spinner') svg = spIcon;
     else if (btn.getAttribute('data-kind') === 'num') svg = numIcon(btn.getAttribute('data-n'));
     else if (btn.getAttribute('data-kind') === 'frac') svg = fracIcon(parseInt(btn.getAttribute('data-n'), 10), parseInt(btn.getAttribute('data-d'), 10));
     if (!svg) return;
@@ -4476,6 +4610,9 @@ function worldInspectorRender() {
   if (worldInspectSel && worldInspectSel.apparatus === 'rect' && !w.benchRect) worldInspectSel = null;
   if (worldInspectSel && worldInspectSel.apparatus === 'linefn' && !w.benchLine) worldInspectSel = null;
   if (worldInspectSel && worldInspectSel.apparatus === 'balance' && !w.benchBalance) worldInspectSel = null;
+  if (worldInspectSel && worldInspectSel.apparatus === 'tenframe' && !w.benchTenframe) worldInspectSel = null;
+  if (worldInspectSel && worldInspectSel.apparatus === 'datatable' && !w.benchDatatable) worldInspectSel = null;
+  if (worldInspectSel && worldInspectSel.apparatus === 'spinner' && !w.benchSpinner) worldInspectSel = null;
   if (hadSel && !worldInspectSel && typeof document !== 'undefined' && document.querySelectorAll) {
     document.querySelectorAll('#labMwWorkbench .demo-card.is-selected').forEach(function (el) { el.classList.remove('is-selected'); });
   }
@@ -4518,6 +4655,13 @@ function worldInspectorRender() {
       '<button type="button" class="btn small ghost" data-insp-step="' + i + '" data-d="-1" aria-label="' + esc(p.label) + '减">−</button>' +
       '<button type="button" class="btn small ghost" data-insp-step="' + i + '" data-d="1" aria-label="' + esc(p.label) + '加">+</button></div>';
   });
+  // 动作按钮：不是属性，是“做一下”（转盘转一转、数据表加一行/删一行）。
+  // 动作发 intent，和滑杆一样走世界；转盘转完要报这次转到了哪个扇区。
+  if (insp.actions && insp.actions.length) {
+    html += '<div class="insp-row">' + insp.actions.map(function (a, i) {
+      return '<button type="button" class="btn small primary" data-insp-action="' + i + '">' + esc(a.label) + '</button>';
+    }).join('') + '</div>';
+  }
   box.innerHTML = html;
   box._insp = insp; // 当前检查器对应的属性表（控件事件用它发 intent）
 }
@@ -4558,6 +4702,8 @@ function worldInspectorApply(idx, rawVal) {
   if (it.type === 'rectSet') return worldPlayApply({ type: 'rectSet', w: v }, '宽改成 ' + v);
   if (it.type === 'chickenSetRabbits') return worldPlayApply({ type: 'chickenSetRabbits', rabbits: v }, '兔=' + v);
   if (it.type === 'tenframeSet') return worldPlayApply({ type: 'tenframeSet', side: it.side, n: v }, '十格阵 ' + it.side + '=' + v);
+  if (it.type === 'datatableSet') return worldPlayApply({ type: 'datatableSet', row: it.row, n: v }, '数据表 ' + (it.row + 1) + ' 行=' + v);
+  if (it.type === 'spinnerSetSectors') return worldPlayApply({ type: 'spinnerSetSectors', n: v }, '扇区改成 ' + v + ' 个');
 }
 (function worldInspectorBind() {
   const box = document.getElementById('worldBenchInspector');
@@ -4601,6 +4747,21 @@ function worldInspectorApply(idx, rawVal) {
       }
       if (t0.hasAttribute('data-insp-default') && worldInspectSel && worldInspectSel.apparatus) { labSaveApparatusDefault(worldInspectSel.apparatus); return; }
       if (t0.hasAttribute('data-insp-reset') && worldInspectSel && worldInspectSel.apparatus) { labResetApparatus(worldInspectSel.apparatus); return; }
+    }
+    // 动作按钮（转盘转一转、数据表加行/删行）：发 intent；转盘转完报这次的结果。
+    const a = e.target && e.target.closest ? e.target.closest('[data-insp-action]') : null;
+    if (a) {
+      const idx = parseInt(a.getAttribute('data-insp-action'), 10);
+      const insp = box._insp;
+      if (!insp || !insp.actions[idx]) return;
+      const act = insp.actions[idx];
+      worldPlayApply(act.intent);
+      if (act.intent.type === 'spinnerSpin') {
+        const sp = labWorld && labWorld.spinner;
+        if (sp && sp.last !== null) benchMsg('转到「' + MathWorld.SPINNER_LABELS[sp.last] + '」', true);
+      } else if (act.intent.type === 'datatableAddRow') benchMsg('加了一行', true);
+      else if (act.intent.type === 'datatableDelRow') benchMsg('删了一行', true);
+      return;
     }
     const b = e.target && e.target.closest ? e.target.closest('[data-insp-step]') : null;
     if (!b) return;
@@ -5313,7 +5474,11 @@ function labSaveBench() {
     name: name, at: Date.now(),
     bench: d.bench.items.map(function (it) { return { n: it.q.n, d: it.q.d }; }),
     line: !!w.benchLine, balance: !!w.benchBalance, rect: !!w.benchRect,
+    tenframe: !!w.benchTenframe, datatable: !!w.benchDatatable, spinner: !!w.benchSpinner,
     k: w.linefn.k, b: w.linefn.b, rectW: w.rect.w,
+    tfA: w.tenframe.A, tfB: w.tenframe.B,
+    dtRows: (w.datatable.rows || []).map(function (r) { return { label: r.label, n: r.n | 0 }; }),
+    spSectors: w.spinner.sectors, spCounts: (w.spinner.counts || []).slice(), spLast: w.spinner.last,
   };
   const list = labSavedLoad();
   list.unshift(snap);
@@ -5337,8 +5502,29 @@ function labLoadSaved(i) {
   if (!!w.benchLine !== !!s.line) benchRun({ type: 'benchLineToggle' });
   if (!!w.benchBalance !== !!s.balance) benchRun({ type: 'benchBalanceToggle' });
   if (!!w.benchRect !== !!s.rect) benchRun({ type: 'benchRectToggle' });
+  if (!!w.benchTenframe !== !!s.tenframe) benchRun({ type: 'benchTenframeToggle' });
+  if (!!w.benchDatatable !== !!s.datatable) benchRun({ type: 'benchDatatableToggle' });
+  if (!!w.benchSpinner !== !!s.spinner) benchRun({ type: 'benchSpinnerToggle' });
   worldPlayApply({ type: 'linefnSet', k: s.k, b: s.b }, '直线恢复成 y = ' + s.k + 'x + ' + s.b);
   worldPlayApply({ type: 'rectSet', w: s.rectW }, '长方形宽恢复成 ' + s.rectW);
+  // 十格阵/数据表/转盘的状态也按快照恢复（老快照没有这些字段时跳过，不报错）。
+  // 十格阵：A/B 各一个数；数据表：先把行数对齐（加行/删行），再逐行改数；
+  // 转盘：先改扇区数（次数会清零），再把次数和上次结果整体写回去。
+  if (typeof s.tfA === 'number' && typeof s.tfB === 'number') {
+    worldPlayApply({ type: 'tenframeSet', side: 'A', n: s.tfA });
+    worldPlayApply({ type: 'tenframeSet', side: 'B', n: s.tfB });
+  }
+  if (Array.isArray(s.dtRows)) {
+    while (worldPlayEnsure().datatable.rows.length < s.dtRows.length) benchRun({ type: 'datatableAddRow' });
+    while (worldPlayEnsure().datatable.rows.length > s.dtRows.length) benchRun({ type: 'datatableDelRow', row: worldPlayEnsure().datatable.rows.length - 1 });
+    s.dtRows.forEach(function (r, i) {
+      if (typeof r.n === 'number') benchRun({ type: 'datatableSet', row: i, n: r.n });
+    });
+  }
+  if (typeof s.spSectors === 'number') {
+    worldPlayApply({ type: 'spinnerSetSectors', n: s.spSectors });
+    if (Array.isArray(s.spCounts)) worldPlayApply({ type: 'spinnerSetCounts', counts: s.spCounts, last: s.spLast === undefined ? null : s.spLast });
+  }
   benchSel = {};
   worldInspectSelect(null);
   labTrace('打开保存的台面「' + s.name + '」', true);

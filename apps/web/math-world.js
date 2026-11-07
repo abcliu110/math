@@ -7,7 +7,7 @@
    reports the score, the lost steps and the failed actions.
    v0.9: one persistent world — seedQuestion re-seeds only the question's own
    apparatus, so the bench survives switching questions. A categorized parts
-   box (PART_BOX: 数/分数/形/量/关系）, a bench rect toggle, setPiece (change
+   box (PART_BOX: 数/分数/形/量/关系/数据）, a bench rect toggle, setPiece (change
    a piece's value in place), and inspect() — every object reports its 2–4
    adjustable properties, so the UI can show them next to the object
    (NB-style: a resistor has a resistance, a fraction bar has a
@@ -67,6 +67,11 @@
 
   function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
 
+  /* 转盘扇区：名字和颜色固定按这个顺序排，扇区数 2–8 只取前 N 个；
+     扇区数一改，名字和颜色跟着换，之前记的次数清零（不是同一轮实验了）。 */
+  const SPINNER_LABELS = ['红', '蓝', '绿', '黄', '紫', '橙', '粉', '青'];
+  const SPINNER_COLORS = ['#ef4444', '#3b82f6', '#22c55e', '#eab308', '#a855f7', '#f97316', '#ec4899', '#06b6d4'];
+
   function emptyWorld(extra) {
     const w = {
       pieces: {},
@@ -84,6 +89,13 @@
       benchLine: false, // 直线（linefn）是否放在实验台上
       benchBalance: false, // 天平是否放在实验台上（视图里显示天平）
       benchRect: false, // 长方形是否放在实验台上（视图里画在坐标系格子上）
+      benchTenframe: false, // 十格阵是否放在实验台上（离散格子视图里画两排格子）
+      benchDatatable: false, // 数据表是否放在实验台上（数据表视图里画表格）
+      benchSpinner: false, // 转盘是否放在实验台上（转盘视图里画扇形轮）
+      // 数据表：记数的表，一行一个结果 + 次数（转盘/摸球/投票的结果都往这里记）。
+      datatable: { rows: [{ label: 'A', n: 0 }, { label: 'B', n: 0 }] },
+      // 转盘：扇区数 2–8，名字固定按颜色排；转一次记一次结果（last 是扇区下标）。
+      spinner: { sectors: 4, last: null, counts: [0, 0, 0, 0] },
       rect: { perim: 20, w: 1 }, // 周长一定的长方形：只调宽，长 = 周长/2 - 宽
     };
     if (extra) Object.keys(extra).forEach(function (k) { w[k] = extra[k]; });
@@ -277,6 +289,18 @@
       signals.push({ domain: 'tenframe', level: 'info', code: 'sum', text: '十格阵合计 ' + tfSum });
     }
 
+    const dtTotal = (w.datatable && w.datatable.rows || []).reduce(function (s, r) { return s + (r.n | 0); }, 0);
+    const sp = w.spinner || { sectors: 4, last: null, counts: [] };
+    const spTotal = (sp.counts || []).reduce(function (s, c) { return s + (c | 0); }, 0);
+    if (spTotal > 0) {
+      let best = 0;
+      (sp.counts || []).forEach(function (c, i) { if ((c | 0) > ((sp.counts[best]) | 0)) best = i; });
+      signals.push({
+        domain: 'spinner', level: 'info', code: 'spun',
+        text: '转盘转了 ' + spTotal + ' 次，最多的是 ' + SPINNER_LABELS[best] + '（' + (sp.counts[best] | 0) + ' 次）',
+      });
+    }
+
     return {
       balance: {
         L: L, R: R, tilt: tilt, equal: balEq,
@@ -284,6 +308,8 @@
         diff: balDiff, diffStr: Q.str(Q.abs(balDiff)),
         leftHeavy: Q.cmp(L, R) > 0, rightHeavy: Q.cmp(L, R) < 0,
       },
+      datatable: { rows: (w.datatable && w.datatable.rows || []).map(function (r) { return { label: r.label, n: r.n | 0 }; }), total: dtTotal },
+      spinner: { sectors: sp.sectors | 0, last: sp.last, lastLabel: sp.last === null ? null : SPINNER_LABELS[sp.last], counts: (sp.counts || []).slice(), total: spTotal },
       tenframe: {
         A: w.tenframe.A | 0, B: w.tenframe.B | 0, sum: tfSum,
         fullA: (w.tenframe.A | 0) === 10, fullB: (w.tenframe.B | 0) === 10,
@@ -827,6 +853,80 @@
       w.benchRect = !w.benchRect;
       return { world: w, ok: true };
     }
+    /* 十格阵 / 数据表 / 转盘拿上台面或拿下来：本体是 tenframe / datatable /
+       spinner 的状态，这里只记在不在台上（和直线/天平/长方形一个做法）。 */
+    if (type === 'benchTenframeToggle') {
+      w.benchTenframe = !w.benchTenframe;
+      return { world: w, ok: true };
+    }
+    if (type === 'benchDatatableToggle') {
+      w.benchDatatable = !w.benchDatatable;
+      return { world: w, ok: true };
+    }
+    if (type === 'benchSpinnerToggle') {
+      w.benchSpinner = !w.benchSpinner;
+      return { world: w, ok: true };
+    }
+
+    /* 数据表：改一行里的数（0–99 的整数）；加行最多 6 行，行名按 A–F 顺延；
+       删行至少留 1 行。行名是固定的字母，改数才是这个表的玩法。 */
+    if (type === 'datatableSet') {
+      const rows = w.datatable && w.datatable.rows;
+      if (!rows || !Number.isInteger(intent.row) || !rows[intent.row]) return { world: world, ok: false, reason: 'no-row' };
+      const n = intent.n | 0;
+      if (!Number.isInteger(intent.n) || n < 0 || n > 99) return { world: world, ok: false, reason: 'datatable-range' };
+      rows[intent.row].n = n;
+      return { world: w, ok: true };
+    }
+    if (type === 'datatableAddRow') {
+      const rows = w.datatable && w.datatable.rows;
+      if (!rows || rows.length >= 6) return { world: world, ok: false, reason: 'datatable-full' };
+      const used = {};
+      rows.forEach(function (r) { used[r.label] = true; });
+      // 行名取第一个没被占的字母（A–F）。
+      const label = ['A', 'B', 'C', 'D', 'E', 'F'].find(function (c) { return !used[c]; }) || 'A';
+      rows.push({ label: label, n: 0 });
+      return { world: w, ok: true };
+    }
+    if (type === 'datatableDelRow') {
+      const rows = w.datatable && w.datatable.rows;
+      if (!rows || rows.length <= 1 || !Number.isInteger(intent.row) || !rows[intent.row]) return { world: world, ok: false, reason: 'no-row' };
+      rows.splice(intent.row, 1);
+      return { world: w, ok: true };
+    }
+
+    /* 转盘：扇区数 2–8，只取前 N 个名字/颜色；扇区数一改，之前记的次数清零。
+       转一次：随机落一个扇区，记一次（last 是扇区下标，counts 里 +1）。 */
+    if (type === 'spinnerSetSectors') {
+      const n = intent.n | 0;
+      if (!Number.isInteger(intent.n) || n < 2 || n > 8) return { world: world, ok: false, reason: 'spinner-range' };
+      w.spinner.sectors = n;
+      w.spinner.last = null;
+      w.spinner.counts = [];
+      for (let i = 0; i < n; i++) w.spinner.counts.push(0);
+      return { world: w, ok: true };
+    }
+    if (type === 'spinnerSpin') {
+      const n = (w.spinner && w.spinner.sectors | 0) || 4;
+      const idx = Math.floor(Math.random() * n);
+      w.spinner.last = idx;
+      w.spinner.counts[idx] = (w.spinner.counts[idx] | 0) + 1;
+      pushLog(w, 'spinner ' + SPINNER_LABELS[idx], true);
+      return { world: w, ok: true, sector: idx };
+    }
+    /* 转盘记数整体恢复（“我的实验”快照用）：次数数组 + 上次结果。
+       转盘只能随机转，次数是历史，不能靠转出来——快照恢复要这个口子。 */
+    if (type === 'spinnerSetCounts') {
+      const n = (w.spinner && w.spinner.sectors | 0) || 4;
+      if (!Array.isArray(intent.counts) || intent.counts.length !== n) return { world: world, ok: false, reason: 'spinner-counts' };
+      for (let i = 0; i < n; i++) {
+        if (!Number.isInteger(intent.counts[i]) || intent.counts[i] < 0 || intent.counts[i] > 999) return { world: world, ok: false, reason: 'spinner-counts' };
+      }
+      if (intent.last !== null && (!Number.isInteger(intent.last) || intent.last < 0 || intent.last >= n)) return { world: world, ok: false, reason: 'spinner-counts' };
+      w.spinner.counts = intent.counts.slice();
+      w.spinner.last = intent.last === undefined ? null : intent.last;
+      return { world: w, ok: true };
+    }
 
     /* 改台上一个零件的值（就地改，不换位置、不换 id）。不合法的值调不出来：
        分子不能是负数，分母只能是 2 到 8（分母 0 在 Q.of 里抛错，由 apply 接住）。
@@ -1146,6 +1246,34 @@
         ],
       };
     }
+    if (which === 'datatable') {
+      // 数据表：一行一个数（滑杆改），加行/删行是动作按钮，不占属性位。
+      const rows = (world.datatable && world.datatable.rows) || [];
+      const total = rows.reduce(function (s, r) { return s + (r.n | 0); }, 0);
+      return {
+        title: '数据表', state: '共 ' + rows.length + ' 行，合计 ' + total,
+        props: rows.map(function (r, i) {
+          return prop('r' + i, r.label + ' 的次数', r.n | 0, 0, 99, 1, { type: 'datatableSet', row: i, field: 'n' });
+        }),
+        // 加行/删行是动作按钮，不占属性位；只剩 1 行时不给删（表不能空）。
+        actions: rows.length > 1
+          ? [{ label: '加一行', intent: { type: 'datatableAddRow' } },
+             { label: '删最后一行', intent: { type: 'datatableDelRow', row: rows.length - 1 } }]
+          : [{ label: '加一行', intent: { type: 'datatableAddRow' } }],
+      };
+    }
+    if (which === 'spinner') {
+      const sp = world.spinner || { sectors: 4, last: null, counts: [] };
+      const total = (sp.counts || []).reduce(function (s, c) { return s + (c | 0); }, 0);
+      return {
+        title: '转盘', state: (sp.sectors | 0) + ' 个扇区，转了 ' + total + ' 次' +
+          (sp.last === null ? '，还没转过' : '，上次是 ' + SPINNER_LABELS[sp.last]),
+        props: [
+          prop('sectors', '扇区数', sp.sectors | 0, 2, 8, 1, { type: 'spinnerSetSectors' }),
+        ],
+        actions: [{ label: '转一转', intent: { type: 'spinnerSpin' } }],
+      };
+    }
     return null;
   }
 
@@ -1155,7 +1283,8 @@
   const PART_BOX = [
     { group: 'num', label: '数', parts: [
       { kind: 'num', v: 1 }, { kind: 'num', v: 2 }, { kind: 'num', v: 3 },
-      { kind: 'num', v: 5 }, { kind: 'num', v: 10 } ] },
+      { kind: 'num', v: 5 }, { kind: 'num', v: 10 },
+      { kind: 'tool', id: 'tenframe' } ] }, // 十格阵：数 0–10 的格子，凑十用
     { group: 'frac', label: '分数', parts: [
       { kind: 'frac', n: 1, d: 2 }, { kind: 'frac', n: 1, d: 3 },
       { kind: 'frac', n: 1, d: 4 }, { kind: 'frac', n: 1, d: 6 },
@@ -1168,6 +1297,8 @@
       { kind: 'weight', n: 1, d: 1 } ] },
     { group: 'relation', label: '关系', parts: [
       { kind: 'tool', id: 'line' }, { kind: 'tool', id: 'balance' } ] },
+    { group: 'data', label: '数据', parts: [ // 统计与概率：记数的表 + 随机转盘
+      { kind: 'tool', id: 'datatable' }, { kind: 'tool', id: 'spinner' } ] },
   ];
 
   const LAB_GOALS = {
@@ -1189,6 +1320,8 @@
     seedQuestion: seedQuestion,
     inspect: inspect,
     PART_BOX: PART_BOX,
+    SPINNER_LABELS: SPINNER_LABELS, // 转盘扇区名（红/蓝/绿/黄/紫/橙/粉/青，按扇区数取前 N 个）
+    SPINNER_COLORS: SPINNER_COLORS, // 和名字一一对应的扇区颜色
     LAB_SEED_SPECS: LAB_SEED_SPECS,
     LAB_SEEDS: LAB_SEEDS,
     LAB_GOALS: LAB_GOALS,

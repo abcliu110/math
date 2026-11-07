@@ -151,6 +151,10 @@ async function labState() {
       balL: d.balance.Lstr, balR: d.balance.Rstr, balEqual: d.balance.equal,
       rect: labWorld.rect ? labWorld.rect.w + 'x' + (labWorld.rect.perim / 2 - labWorld.rect.w) + ' (perim ' + labWorld.rect.perim + ')' : null,
       benchRect: !!labWorld.benchRect, benchBalance: !!labWorld.benchBalance,
+      benchTenframe: !!labWorld.benchTenframe, benchDatatable: !!labWorld.benchDatatable, benchSpinner: !!labWorld.benchSpinner,
+      tf: labWorld.tenframe ? labWorld.tenframe.A + '+' + labWorld.tenframe.B + '=' + d.tenframe.sum : null,
+      dt: d.datatable ? d.datatable.rows.map(function (r) { return r.label + ':' + r.n; }).join(',') + ' total=' + d.datatable.total : null,
+      sp: d.spinner ? 'sectors=' + d.spinner.sectors + ' last=' + d.spinner.lastLabel + ' total=' + d.spinner.total : null,
       inspectSel: (typeof worldInspectSel !== 'undefined' && worldInspectSel) ? JSON.stringify(worldInspectSel) : null,
       benchView: (function(){ var v=document.getElementById('worldBenchViews'); return v ? v.textContent : ''; })(),
     };
@@ -980,6 +984,162 @@ async function main() {
       report.pass = during === true && after.hasExamLine === false && after.procMode !== 'exam';
       note(report.pass ? 'RESULT: PASS — no stale 考试进行中 after refresh mid-exam'
         : 'RESULT: FAIL — stale 考试进行中 remains after refresh mid-exam');
+    } else if (scenario === 'tenframe-bench') {
+      // Phase 3 batch 2：十格阵上台面。点零件盒的“十格阵（拿上台）”→
+      // 台面切到十格阵画法、检查器出 A/B 个数；滑杆改 A=4 → 画布和合计
+      // 跟着变；点画布上的十格阵本体 → 选中开关；刷新 → 还在台上。
+      await enterLab();
+      await evaljs(`(function(){var b=document.querySelector('[data-bench="tenframe"]');if(b)b.click();})()`);
+      await sleep(400);
+      const afterPut = await labState();
+      note('after putting ten-frame on bench: ' + JSON.stringify(afterPut));
+      const canvas1 = await evaljs(`(function(){var v=document.getElementById('worldBenchView');return v?v.innerHTML.indexOf('pick-tenframe')>=0:false;})()`);
+      const insp1 = await evaljs(`(function(){var b=document.getElementById('worldBenchInspector');return b?b.textContent.slice(0,60):'';})()`);
+      note('canvas draws ten-frame: ' + canvas1 + ' | inspector: ' + insp1);
+      // 滑杆改 A=4（检查器第 0 个属性）
+      const setRes = await evaljs(`(function(){
+        var rng=document.querySelector('#worldBenchInspector input[data-insp="0"]');
+        if(!rng) return 'no-range';
+        rng.value='4'; rng.dispatchEvent(new Event('input',{bubbles:true}));
+        return 'range-set-4';
+      })()`);
+      note('slider set A: ' + setRes);
+      await sleep(400);
+      const afterSet = await labState();
+      note('after setting A=4: ' + JSON.stringify(afterSet));
+      const canvas2 = await evaljs(`(function(){var v=document.getElementById('worldBenchView');return v?v.innerHTML.indexOf('A：4 个')>=0&&v.innerHTML.indexOf('合计：4 + 0 = 4')>=0:false;})()`);
+      note('canvas shows A 4 and sum 4: ' + canvas2);
+      // 点画布上的十格阵本体 → 取消选中；再点一次 → 重新选中。
+      const [tfG] = await centers('#worldBenchView [data-bench="pick-tenframe"]');
+      if (tfG) { await clickAt(tfG.cx, tfG.cy); await sleep(300); }
+      const selOff = await labState();
+      note('after clicking canvas ten-frame once: inspectSel=' + selOff.inspectSel);
+      if (tfG) { await clickAt(tfG.cx, tfG.cy); await sleep(300); }
+      const selOn = await labState();
+      note('after clicking canvas ten-frame again: inspectSel=' + selOn.inspectSel);
+      // 刷新：自动保存的世界要把十格阵（开关 + A=4）带回来。
+      await send('Page.reload', { ignoreCache: true });
+      await sleep(2500);
+      await enterLab();
+      await sleep(300);
+      const afterRefresh = await labState();
+      note('after refresh: ' + JSON.stringify(afterRefresh));
+      const canvas3 = await evaljs(`(function(){var v=document.getElementById('worldBenchView');return v?v.innerHTML.indexOf('A：4 个')>=0:false;})()`);
+      note('canvas still shows A 4 after refresh: ' + canvas3);
+      report.pass = afterPut.benchTenframe === true && canvas1 === true &&
+        insp1.indexOf('十格阵') >= 0 && afterSet.tf === '4+0=4' && canvas2 === true &&
+        selOff.inspectSel === null && selOn.inspectSel !== null &&
+        selOn.inspectSel.indexOf('tenframe') >= 0 &&
+        afterRefresh.benchTenframe === true && afterRefresh.tf === '4+0=4' && canvas3 === true;
+      note(report.pass ? 'RESULT: PASS — ten-frame on bench, inspector live, canvas toggle, survives refresh'
+        : 'RESULT: FAIL — ten-frame bench flow broken (see notes above)');
+      // 收尾：十格阵拿下台面，别影响后面的场景。
+      await evaljs(`(function(){var b=document.querySelector('[data-bench="tenframe"]');if(b)b.click();})()`);
+      await sleep(300);
+    } else if (scenario === 'datatable-bench') {
+      // Phase 3 batch 2：数据表上台面。点“数据表（拿上台）”→ 台面切到
+      // 数据表画法、检查器出每行的数；滑杆改 A=5 → 表和合计跟着变；
+      // 检查器“加一行” → 多一行 C；刷新 → 表（开关 + 行 + 数）都在。
+      await enterLab();
+      await evaljs(`(function(){var b=document.querySelector('[data-bench="datatable"]');if(b)b.click();})()`);
+      await sleep(400);
+      const afterPut = await labState();
+      note('after putting datatable on bench: ' + JSON.stringify(afterPut));
+      const canvas1 = await evaljs(`(function(){var v=document.getElementById('worldBenchView');return v?v.innerHTML.indexOf('pick-datatable')>=0&&v.innerHTML.indexOf('结果')>=0:false;})()`);
+      const insp1 = await evaljs(`(function(){var b=document.getElementById('worldBenchInspector');return b?b.textContent.slice(0,60):'';})()`);
+      note('canvas draws datatable: ' + canvas1 + ' | inspector: ' + insp1);
+      const setRes = await evaljs(`(function(){
+        var rng=document.querySelector('#worldBenchInspector input[data-insp="0"]');
+        if(!rng) return 'no-range';
+        rng.value='5'; rng.dispatchEvent(new Event('input',{bubbles:true}));
+        return 'range-set-5';
+      })()`);
+      note('slider set A row: ' + setRes);
+      await sleep(400);
+      const afterSet = await labState();
+      note('after setting A=5: ' + JSON.stringify(afterSet));
+      // 检查器“加一行”（第 0 个动作按钮）
+      const addRes = await evaljs(`(function(){
+        var b=document.querySelector('#worldBenchInspector [data-insp-action="0"]');
+        if(!b) return 'no-action-btn';
+        b.click(); return 'clicked-add-row';
+      })()`);
+      note('add-row action: ' + addRes);
+      await sleep(400);
+      const afterAdd = await labState();
+      note('after add row: ' + JSON.stringify(afterAdd));
+      await send('Page.reload', { ignoreCache: true });
+      await sleep(2500);
+      await enterLab();
+      await sleep(300);
+      const afterRefresh = await labState();
+      note('after refresh: ' + JSON.stringify(afterRefresh));
+      report.pass = afterPut.benchDatatable === true && canvas1 === true &&
+        insp1.indexOf('数据表') >= 0 && afterSet.dt === 'A:5,B:0 total=5' &&
+        addRes === 'clicked-add-row' && afterAdd.dt === 'A:5,B:0,C:0 total=5' &&
+        afterRefresh.benchDatatable === true && afterRefresh.dt === 'A:5,B:0,C:0 total=5';
+      note(report.pass ? 'RESULT: PASS — datatable on bench, inspector live, add-row works, survives refresh'
+        : 'RESULT: FAIL — datatable bench flow broken (see notes above)');
+      await evaljs(`(function(){var b=document.querySelector('[data-bench="datatable"]');if(b)b.click();})()`);
+      await sleep(300);
+    } else if (scenario === 'spinner-spin') {
+      // Phase 3 batch 2：转盘上台面。点“转盘（拿上台）”→ 台面切到转盘
+      // 画法（4 个扇区 + “转一转”按钮）；点画布上的“转一转” → 转一次
+      // 记一次、圆心出现结果；检查器再转一次 → 共 2 次；扇区改 6 个 →
+      // 次数清零、6 个扇区；刷新 → 转盘（开关 + 6 扇区）还在。
+      await enterLab();
+      await evaljs(`(function(){var b=document.querySelector('[data-bench="spinner"]');if(b)b.click();})()`);
+      await sleep(400);
+      const afterPut = await labState();
+      note('after putting spinner on bench: ' + JSON.stringify(afterPut));
+      const canvas1 = await evaljs(`(function(){var v=document.getElementById('worldBenchView');var h=v?v.innerHTML:'';return { pick: h.indexOf('pick-spinner')>=0, spinBtn: h.indexOf('data-bench="spin"')>=0, sectors: (h.match(/<path d="M 190 130/g)||[]).length };})()`);
+      note('canvas draws spinner: ' + JSON.stringify(canvas1));
+      // 点画布上的“转一转”按钮（真鼠标点击，不是 JS 直接调）
+      const [spinBtn] = await centers('#worldBenchView [data-bench="spin"]');
+      note('spin button center: ' + JSON.stringify(spinBtn));
+      if (spinBtn) { await clickAt(spinBtn.cx, spinBtn.cy); await sleep(400); }
+      const afterSpin1 = await labState();
+      const toast1 = await evaljs(`(function(){var m=document.getElementById('worldBenchMsg');return m?m.textContent:'';})()`);
+      note('after canvas spin: ' + JSON.stringify(afterSpin1) + ' toast=' + toast1);
+      // 检查器“转一转”动作按钮再转一次
+      const insp1 = await evaljs(`(function(){var b=document.getElementById('worldBenchInspector');return b?b.textContent.slice(0,60):'';})()`);
+      note('inspector: ' + insp1);
+      const spinRes = await evaljs(`(function(){
+        var b=document.querySelector('#worldBenchInspector [data-insp-action="0"]');
+        if(!b) return 'no-action-btn';
+        b.click(); return 'clicked-spin';
+      })()`);
+      note('inspector spin action: ' + spinRes);
+      await sleep(400);
+      const afterSpin2 = await labState();
+      note('after inspector spin: ' + JSON.stringify(afterSpin2));
+      // 扇区改 6 个（检查器第 0 个属性是扇区数滑杆）
+      const setRes = await evaljs(`(function(){
+        var rng=document.querySelector('#worldBenchInspector input[data-insp="0"]');
+        if(!rng) return 'no-range';
+        rng.value='6'; rng.dispatchEvent(new Event('input',{bubbles:true}));
+        return 'sectors-set-6';
+      })()`);
+      note('sectors set: ' + setRes);
+      await sleep(400);
+      const afterSectors = await labState();
+      const canvas2 = await evaljs(`(function(){var v=document.getElementById('worldBenchView');var h=v?v.innerHTML:'';return (h.match(/<path d="M 190 130/g)||[]).length;})()`);
+      note('after sectors=6: ' + JSON.stringify(afterSectors) + ' sector paths on canvas=' + canvas2);
+      await send('Page.reload', { ignoreCache: true });
+      await sleep(2500);
+      await enterLab();
+      await sleep(300);
+      const afterRefresh = await labState();
+      note('after refresh: ' + JSON.stringify(afterRefresh));
+      report.pass = afterPut.benchSpinner === true && canvas1.pick === true && canvas1.spinBtn === true && canvas1.sectors === 4 &&
+        afterSpin1.sp !== null && afterSpin1.sp.indexOf('total=1') >= 0 && toast1.indexOf('转到') >= 0 &&
+        spinRes === 'clicked-spin' && afterSpin2.sp !== null && afterSpin2.sp.indexOf('total=2') >= 0 &&
+        afterSectors.sp !== null && afterSectors.sp.indexOf('sectors=6') >= 0 && afterSectors.sp.indexOf('total=0') >= 0 && canvas2 === 6 &&
+        afterRefresh.benchSpinner === true && afterRefresh.sp !== null && afterRefresh.sp.indexOf('sectors=6') >= 0;
+      note(report.pass ? 'RESULT: PASS — spinner on bench, canvas + inspector spin, sectors live, survives refresh'
+        : 'RESULT: FAIL — spinner bench flow broken (see notes above)');
+      await evaljs(`(function(){var b=document.querySelector('[data-bench="spinner"]');if(b)b.click();})()`);
+      await sleep(300);
     } else {
       console.log('unknown scenario: ' + scenario);
       cleanup();

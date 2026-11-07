@@ -80,5 +80,31 @@ check('a student cannot pick a view no object on the bench can draw',
 check('balance has its own button: the union leaves balance out (no duplicate 天平 button)',
   BV.chooseView([BAL]).views.indexOf('balance') === -1 && BV.chooseView([BAL]).view === 'balance');
 
+// Phase 3 batch 2: ten-frame / datatable / spinner are bench objects with their own views
+const TF = { kind: 'tenframe' }, DT = { kind: 'datatable' }, SP = { kind: 'spinner' };
+check('benchObjects adds the ten-frame, the datatable and the spinner when they are on the bench',
+  (function () {
+    const o = BV.benchObjects([], false, false, false, true, true, true);
+    return o.length === 3 && o[0].kind === 'tenframe' && o[1].kind === 'datatable' && o[2].kind === 'spinner';
+  })());
+check('benchObjects adds nothing when the three are off the bench',
+  BV.benchObjects([], false, false, false, false, false, false).length === 0);
+check('a ten-frame alone shows the ten-frame view', BV.chooseView([TF]).view === 'tenframe');
+check('a datatable alone shows the datatable view', BV.chooseView([DT]).view === 'datatable');
+check('a spinner alone shows the spinner view', BV.chooseView([SP]).view === 'spinner');
+check('a ten-frame plus a number falls back to the formula view (they share no picture)',
+  BV.chooseView([TF, NUM]).view === 'formula');
+check('a datatable plus a spinner falls back to the formula view',
+  BV.chooseView([DT, SP]).view === 'formula');
+check('the ten-frame, datatable and spinner views are offered as buttons (union)',
+  (function () {
+    const vs = BV.chooseView([TF, DT, SP]).views;
+    return vs.indexOf('tenframe') >= 0 && vs.indexOf('datatable') >= 0 && vs.indexOf('spinner') >= 0 && vs.indexOf('formula') >= 0;
+  })());
+check('a student can pick the ten-frame view when it is on the bench',
+  BV.chooseView([TF, NUM], 'tenframe').view === 'tenframe');
+check('the new view labels are 十格阵 / 数据表 / 转盘',
+  BV.VIEW_LABEL.tenframe === '十格阵' && BV.VIEW_LABEL.datatable === '数据表' && BV.VIEW_LABEL.spinner === '转盘');
+
 console.log('\nbench-views: ' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

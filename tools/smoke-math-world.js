@@ -398,9 +398,11 @@ let ins9P = MW.inspect(sp9Set.world, { piece: sp9Mk.pieceId });
 check('bench fraction inspector: numerator and denominator', ins9P && ins9P.title === '分数条' && ins9P.props.length === 2 && ins9P.state === '3/4');
 
 // v0.9: PART_BOX — five domain groups, no junk drawer
-check('PART_BOX has five groups: 数/分数/形/量/关系',
-  MW.PART_BOX && MW.PART_BOX.length === 5 &&
-  MW.PART_BOX.map(function (g) { return g.label; }).join('') === '数分数形量关系');
+// Phase 3 batch 2: six groups — 数据（统计与概率：数据表、转盘）是新加的领域，
+// 不是杂物：数/分数/形/量/关系五组原样，数据表和转盘不该塞进“数”里。
+check('PART_BOX has six groups: 数/分数/形/量/关系/数据',
+  MW.PART_BOX && MW.PART_BOX.length === 6 &&
+  MW.PART_BOX.map(function (g) { return g.label; }).join('') === '数分数形量关系数据');
 check('PART_BOX number cards include 10', MW.PART_BOX[0].parts.some(function (p) { return p.kind === 'num' && p.v === 10; }));
 check('PART_BOX fraction bars include 2/3 and 3/4',
   MW.PART_BOX[1].parts.some(function (p) { return p.kind === 'frac' && p.n === 2 && p.d === 3; }));
@@ -409,6 +411,87 @@ check('PART_BOX shape group holds the rectangle tool',
 check('PART_BOX measure group holds weights', MW.PART_BOX[3].parts.every(function (p) { return p.kind === 'weight'; }));
 check('PART_BOX relation group holds the line and the balance',
   MW.PART_BOX[4].parts.map(function (p) { return p.id; }).join(',') === 'line,balance');
+check('PART_BOX number group holds the ten-frame tool',
+  MW.PART_BOX[0].parts.some(function (p) { return p.kind === 'tool' && p.id === 'tenframe'; }));
+check('PART_BOX data group holds the datatable and the spinner',
+  MW.PART_BOX[5] && MW.PART_BOX[5].parts.map(function (p) { return p.id; }).join(',') === 'datatable,spinner');
+
+// Phase 3 batch 2: ten-frame / datatable / spinner on the bench
+let b2 = MW.create();
+check('empty world: ten-frame/datatable/spinner are off the bench, datatable has rows A/B, spinner has 4 sectors',
+  b2.benchTenframe === false && b2.benchDatatable === false && b2.benchSpinner === false &&
+  b2.datatable && b2.datatable.rows.length === 2 && b2.datatable.rows[0].label === 'A' && b2.datatable.rows[0].n === 0 &&
+  b2.spinner && b2.spinner.sectors === 4 && b2.spinner.last === null && b2.spinner.counts.join(',') === '0,0,0,0');
+b2 = MW.apply(b2, { type: 'benchTenframeToggle' }).world;
+b2 = MW.apply(b2, { type: 'benchDatatableToggle' }).world;
+b2 = MW.apply(b2, { type: 'benchSpinnerToggle' }).world;
+check('bench toggles put the three apparatus on the bench',
+  b2.benchTenframe === true && b2.benchDatatable === true && b2.benchSpinner === true);
+b2 = MW.apply(b2, { type: 'benchTenframeToggle' }).world;
+check('bench toggle again takes the ten-frame off the bench', b2.benchTenframe === false);
+
+let b2d = MW.apply(MW.create(), { type: 'datatableSet', row: 0, n: 7 }).world;
+check('datatableSet changes one row only',
+  b2d.datatable && b2d.datatable.rows[0].n === 7 && b2d.datatable.rows[1].n === 0);
+check('datatableSet rejects a missing row and an out-of-range count',
+  MW.apply(MW.create(), { type: 'datatableSet', row: 9, n: 1 }).ok === false &&
+  MW.apply(MW.create(), { type: 'datatableSet', row: 0, n: 100 }).ok === false &&
+  MW.apply(MW.create(), { type: 'datatableSet', row: 0, n: -1 }).ok === false);
+b2d = MW.apply(b2d, { type: 'datatableAddRow' }).world;
+check('datatableAddRow adds row C with 0',
+  b2d.datatable && b2d.datatable.rows.length === 3 && b2d.datatable.rows[2].label === 'C' && b2d.datatable.rows[2].n === 0);
+b2d = MW.apply(b2d, { type: 'datatableDelRow', row: 2 }).world;
+check('datatableDelRow removes the last row', b2d.datatable && b2d.datatable.rows.length === 2);
+const b2one = MW.apply(MW.create(), { type: 'datatableDelRow', row: 1 }).world;
+check('datatableDelRow refuses to empty the table (one row left)',
+  b2one.datatable && b2one.datatable.rows.length === 1 &&
+  MW.apply(b2one, { type: 'datatableDelRow', row: 0 }).ok === false);
+let b2max = MW.create();
+for (let i = 0; i < 4; i++) b2max = MW.apply(b2max, { type: 'datatableAddRow' }).world;
+check('datatable holds at most 6 rows', b2max.datatable && b2max.datatable.rows.length === 6 &&
+  MW.apply(b2max, { type: 'datatableAddRow' }).ok === false);
+check('derived datatable totals the rows',
+  (function () { const d = MW.derived(MW.apply(MW.create(), { type: 'datatableSet', row: 0, n: 7 }).world); return d.datatable && d.datatable.total === 7; })());
+
+let b2s = MW.apply(MW.create(), { type: 'spinnerSetSectors', n: 6 }).world;
+check('spinnerSetSectors changes the sector count and clears the counts',
+  b2s.spinner && b2s.spinner.sectors === 6 && b2s.spinner.counts.join(',') === '0,0,0,0,0,0' && b2s.spinner.last === null);
+check('spinnerSetSectors rejects 1 and 9 sectors',
+  MW.apply(MW.create(), { type: 'spinnerSetSectors', n: 1 }).ok === false &&
+  MW.apply(MW.create(), { type: 'spinnerSetSectors', n: 9 }).ok === false);
+b2s = MW.apply(b2s, { type: 'spinnerSpin' }).world;
+check('spinnerSpin lands on one sector and counts it once',
+  b2s.spinner && b2s.spinner.last !== null && b2s.spinner.last >= 0 && b2s.spinner.last < 6 &&
+  b2s.spinner.counts[b2s.spinner.last] === 1 &&
+  b2s.spinner.counts.reduce(function (a, c) { return a + c; }, 0) === 1);
+check('derived spinner reports the last label and the total',
+  (function () { const d = MW.derived(b2s); return d.spinner && d.spinner.total === 1 && d.spinner.lastLabel === MW.SPINNER_LABELS[b2s.spinner.last]; })());
+b2s = MW.apply(b2s, { type: 'spinnerSetCounts', counts: [2, 0, 1, 0, 0, 0], last: 2 }).world;
+check('spinnerSetCounts restores counts and the last result',
+  b2s.spinner && b2s.spinner.counts.join(',') === '2,0,1,0,0,0' && b2s.spinner.last === 2);
+check('spinnerSetCounts rejects a wrong-length or out-of-range array',
+  MW.apply(MW.create(), { type: 'spinnerSetCounts', counts: [1, 2], last: null }).ok === false &&
+  MW.apply(MW.create(), { type: 'spinnerSetCounts', counts: [0, 0, 0, -1], last: null }).ok === false);
+check('spinner labels and colors are exported in matching order',
+  MW.SPINNER_LABELS && MW.SPINNER_LABELS.length === 8 && MW.SPINNER_LABELS[0] === '红' &&
+  MW.SPINNER_COLORS && MW.SPINNER_COLORS.length === 8 && MW.SPINNER_COLORS[0] === '#ef4444');
+
+let b2i = MW.apply(MW.create(), { type: 'datatableSet', row: 0, n: 7 }).world;
+b2i = MW.apply(b2i, { type: 'datatableAddRow' }).world;
+const insDt = MW.inspect(b2i, { apparatus: 'datatable' });
+check('datatable inspector: one prop per row plus add/delete actions',
+  insDt && insDt.title === '数据表' && insDt.state === '共 3 行，合计 7' &&
+  insDt.props.length === 3 && insDt.props[0].intent.type === 'datatableSet' && insDt.props[0].intent.row === 0 &&
+  insDt.actions && insDt.actions.length === 2 && insDt.actions[0].label === '加一行' &&
+  insDt.actions[1].intent.type === 'datatableDelRow');
+const insDt1 = MW.inspect(b2one, { apparatus: 'datatable' });
+check('datatable inspector with one row offers no delete action',
+  insDt1 && insDt1.actions && insDt1.actions.length === 1 && insDt1.actions[0].label === '加一行');
+const insSp = MW.inspect(MW.create(), { apparatus: 'spinner' });
+check('spinner inspector: sector-count prop plus a spin action',
+  insSp && insSp.title === '转盘' && insSp.props.length === 1 &&
+  insSp.props[0].intent.type === 'spinnerSetSectors' && insSp.props[0].min === 2 && insSp.props[0].max === 8 &&
+  insSp.actions && insSp.actions.length === 1 && insSp.actions[0].intent.type === 'spinnerSpin');
 
 // v0.9: procedure steps name their bench card (next-step highlight target)
 check('procedure steps carry a target card',
