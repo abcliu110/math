@@ -175,7 +175,14 @@ const NEW_KEYS = ['m33-ladder', 'm33-estimate', 'm33-ruler',
   'm17-line', 'm18-day', 'm19-split', 'm19-line', 'm19-poker',
   'm111-flat', 'm111-add', 'm112-venn',
   'm113-chart', 'm113-line', 'm113-abacus',
-  'm114-ways', 'm115-tens', 'm115-jump', 'm116-diff', 'm116-action'];
+  'm114-ways', 'm115-tens', 'm115-jump', 'm116-diff', 'm116-action',
+  'm113-bundle',
+  'm21-body', 'm21-seg', 'm22-blocks', 'm22-jump',
+  'm24-fold', 'm24-overlap', 'm25-area', 'm25-recite',
+  'm26-build', 'm27-elapsed', 'm215-lines',
+  'm214a-tally', 'm214a-picto', 'm28-verse', 'm29-mirror',
+  'm210-story', 'm211-jump', 'm211-vert', 'm211-ceil',
+  'm212-blocks', 'm212-abacus', 'm213-est', 'm214b-sudoku'];
 const EXPECTED = {
   'm33-ladder': { title: '单位楼梯装填', kind: '模拟', points: ['3.3'] },
   'm33-estimate': { title: '实测估测', kind: '实验', points: ['3.3'] },
@@ -239,10 +246,34 @@ const EXPECTED = {
   'm115-jump': { title: '数线跳十跳一', kind: '模拟', points: ['1.15'], grade: 1 },
   'm116-diff': { title: '数列差分找规律', kind: '模拟', points: ['1.16'], grade: 1 },
   'm116-action': { title: '动作规律接龙', kind: '实验', points: ['1.16'], grade: 1 },
+  'm113-bundle': { title: '捆小棒组成两位数', kind: '模拟', points: ['1.13'], grade: 1 },
+  'm21-body': { title: '身体尺量一量', kind: '实验', points: ['2.1'], grade: 2 },
+  'm21-seg': { title: '线段三要素', kind: '演示', points: ['2.1'], grade: 2 },
+  'm22-blocks': { title: '数位块凑整分解', kind: '模拟', points: ['2.2'], grade: 2 },
+  'm22-jump': { title: '数轴跳数', kind: '模拟', points: ['2.2'], grade: 2 },
+  'm24-fold': { title: '折纸得直角', kind: '实验', points: ['2.4'], grade: 2 },
+  'm24-overlap': { title: '叠合比角', kind: '模拟', points: ['2.4'], grade: 2 },
+  'm25-area': { title: '面积模型拆一拆', kind: '模拟', points: ['2.5'], grade: 2 },
+  'm25-recite': { title: '口诀递推', kind: '模拟', points: ['2.5'], grade: 2 },
+  'm26-build': { title: '按视图搭积木', kind: '实验', points: ['2.6'], grade: 2 },
+  'm27-elapsed': { title: '时间轴量经过时间', kind: '模拟', points: ['2.7'], grade: 2 },
+  'm215-lines': { title: '连线图数一数', kind: '模拟', points: ['2.15'], grade: 2 },
+  'm214a-tally': { title: '正字计数', kind: '模拟', points: ['2.14a'], grade: 2 },
+  'm214a-picto': { title: '象形图变条形图', kind: '演示', points: ['2.14a'], grade: 2 },
+  'm28-verse': { title: '口诀求商', kind: '模拟', points: ['2.8'], grade: 2 },
+  'm29-mirror': { title: '镜面照一照', kind: '模拟', points: ['2.9'], grade: 2 },
+  'm210-story': { title: '故事变算式', kind: '模拟', points: ['2.10'], grade: 2 },
+  'm211-jump': { title: '数轴跳格分一分', kind: '模拟', points: ['2.11'], grade: 2 },
+  'm211-vert': { title: '除法竖式四步', kind: '模拟', points: ['2.11'], grade: 2 },
+  'm211-ceil': { title: '余下的人也要坐船', kind: '实验', points: ['2.11'], grade: 2 },
+  'm212-blocks': { title: '千方块拼一拼', kind: '模拟', points: ['2.12'], grade: 2 },
+  'm212-abacus': { title: '计数器拨珠到一万', kind: '模拟', points: ['2.12'], grade: 2 },
+  'm213-est': { title: '苹果作基准猜重量', kind: '实验', points: ['2.13'], grade: 2 },
+  'm214b-sudoku': { title: '四宫格找唯一', kind: '实验', points: ['2.14b'], grade: 2 },
 };
-check('registry has all 36 G3 keys + 26 G1 keys + m1a-pair example',
+check('registry has all 36 G3 keys + 26 G1 keys + 24 G2 keys + m113-bundle + m1a-pair example',
   NEW_KEYS.every(function (k) { return !!REG[k]; }) && !!REG['m1a-pair'] &&
-  Object.keys(REG).length === 63);
+  Object.keys(REG).length === 87);
 
 // ---------- per-animation: registration + render + tiers + discovery ----------
 NEW_KEYS.forEach(function (key) {
@@ -1212,6 +1243,328 @@ click('m116-action-do');
 check('m116-action L0: next action is clap',
   (txt('m116-action-msg') || '').indexOf('下一个是拍手') >= 0 &&
   tiersDoneFor('m116-action', 0) && triedKeys.indexOf('m116-action') >= 0);
+
+
+// ---------- batch 4: G2 (23 anims) + m113-bundle ----------
+// m113-bundle: 24 = 2 bundles + 4 sticks; challenge 99 = 9 bundles + 9 sticks
+renderAnim('m113-bundle');
+click('m113-bundle-g-1');
+click('m113-bundle-add10'); click('m113-bundle-add10');
+for (let i = 0; i < 4; i++) click('m113-bundle-add1');
+click('m113-bundle-check');
+check('m113-bundle L0: 24 = 2 bundles + 4 sticks',
+  (txt('m113-bundle-msg') || '').indexOf('24 = 2 捆 + 4 根') >= 0 &&
+  (txt('m113-bundle-msg') || '').indexOf('你猜对了') >= 0 &&
+  tiersDoneFor('m113-bundle', 0) && triedKeys.indexOf('m113-bundle') >= 0);
+click('m113-bundle-level-2');
+click('m113-bundle-g-1');
+for (let i = 0; i < 9; i++) click('m113-bundle-add10');
+for (let i = 0; i < 9; i++) click('m113-bundle-add1');
+click('m113-bundle-check');
+check('m113-bundle L2: 99 = 9 bundles + 9 sticks',
+  (txt('m113-bundle-msg') || '').indexOf('99 = 9 捆 + 9 根') >= 0 &&
+  tiersDoneFor('m113-bundle', 2));
+
+// m21-body: same desk, 5 zha x 18 cm = 90 cm, 6 zha x 15 cm = 90 cm
+renderAnim('m21-body');
+click('m21-body-g-1');
+click('m21-body-m-a'); click('m21-body-m-b');
+click('m21-body-check');
+check('m21-body L0: 5 zha x 18 cm = 90 cm, 6 zha x 15 cm = 90 cm',
+  (txt('m21-body-msg') || '').indexOf('5 拃 × 18 厘米 = 90 厘米') >= 0 &&
+  (txt('m21-body-msg') || '').indexOf('6 拃 × 15 厘米 = 90 厘米') >= 0 &&
+  tiersDoneFor('m21-body', 0) && triedKeys.indexOf('m21-body') >= 0);
+click('m21-body-level-2');
+click('m21-body-g-1');
+click('m21-body-m-a'); click('m21-body-m-b');
+click('m21-body-check');
+check('m21-body L2: corridor 12 steps x 50 cm = 600 cm',
+  (txt('m21-body-msg') || '').indexOf('600 厘米') >= 0 &&
+  tiersDoneFor('m21-body', 2));
+
+// m21-seg: 3 points = 3 segments AB, BC, AC; 5 points = 10
+renderAnim('m21-seg');
+click('m21-seg-g-1');
+for (let i = 0; i < 3; i++) click('m21-seg-draw');
+click('m21-seg-check');
+check('m21-seg L0: 3 points = 3 segments AB, BC, AC',
+  (txt('m21-seg-msg') || '').indexOf('一共 3 条线段：AB、BC、AC') >= 0 &&
+  tiersDoneFor('m21-seg', 0) && triedKeys.indexOf('m21-seg') >= 0);
+click('m21-seg-level-2');
+click('m21-seg-g-2');
+for (let i = 0; i < 10; i++) click('m21-seg-draw');
+click('m21-seg-check');
+check('m21-seg L2: 5 points = 10 segments',
+  (txt('m21-seg-msg') || '').indexOf('一共 10 条线段') >= 0 &&
+  tiersDoneFor('m21-seg', 2));
+
+// m22-blocks: 48+31 = 79 via 50+30-2+1; 64+28 = 92
+renderAnim('m22-blocks');
+click('m22-blocks-g-1');
+click('m22-blocks-s-0'); click('m22-blocks-s-1'); click('m22-blocks-s-2');
+click('m22-blocks-check');
+check('m22-blocks L0: 48+31 = 79',
+  (txt('m22-blocks-msg') || '').indexOf('48+31=79') >= 0 &&
+  tiersDoneFor('m22-blocks', 0) && triedKeys.indexOf('m22-blocks') >= 0);
+click('m22-blocks-level-2');
+click('m22-blocks-g-1');
+click('m22-blocks-s-0'); click('m22-blocks-s-1'); click('m22-blocks-s-2');
+click('m22-blocks-check');
+check('m22-blocks L2: 64+28 = 92',
+  (txt('m22-blocks-msg') || '').indexOf('64+28=92') >= 0 &&
+  tiersDoneFor('m22-blocks', 2));
+
+// m22-jump: 48 jumps to 50 (+2), 31 jumps to 30 (-1)
+renderAnim('m22-jump');
+click('m22-jump-g-0');
+click('m22-jump-j-a'); click('m22-jump-j-b');
+click('m22-jump-check');
+check('m22-jump L0: 48+31 = 79 via jumps',
+  (txt('m22-jump-msg') || '').indexOf('48+31=79') >= 0 &&
+  (txt('m22-jump-msg') || '').indexOf('48 跳到 50') >= 0 &&
+  tiersDoneFor('m22-jump', 0) && triedKeys.indexOf('m22-jump') >= 0);
+
+// m24-fold: paper folded twice is a right angle; scissors angle is 40 deg
+renderAnim('m24-fold');
+click('m24-fold-g-0');
+click('m24-fold-f-0'); click('m24-fold-f-1'); click('m24-fold-f-2');
+click('m24-fold-check');
+check('m24-fold L0: folded right angle matches book corner',
+  (txt('m24-fold-msg') || '').indexOf('书角是直角') >= 0 &&
+  tiersDoneFor('m24-fold', 0) && triedKeys.indexOf('m24-fold') >= 0);
+click('m24-fold-level-2');
+click('m24-fold-g-1');
+click('m24-fold-f-0'); click('m24-fold-f-1'); click('m24-fold-f-2');
+click('m24-fold-check');
+check('m24-fold L2: scissors angle is 40 deg, smaller than right angle',
+  (txt('m24-fold-msg') || '').indexOf('只有 40 度') >= 0 &&
+  tiersDoneFor('m24-fold', 2));
+
+// m24-overlap: 50 deg beats 30 deg by 20; equal 45 deg angles match
+renderAnim('m24-overlap');
+click('m24-overlap-g-1');
+click('m24-overlap-s-0'); click('m24-overlap-s-1'); click('m24-overlap-s-2');
+click('m24-overlap-check');
+check('m24-overlap L0: B bigger, 50 deg beats 30 deg by 20',
+  (txt('m24-overlap-msg') || '').indexOf('B 大：50 度比 30 度大 20 度') >= 0 &&
+  tiersDoneFor('m24-overlap', 0) && triedKeys.indexOf('m24-overlap') >= 0);
+click('m24-overlap-level-2');
+click('m24-overlap-g-2');
+click('m24-overlap-s-0'); click('m24-overlap-s-1'); click('m24-overlap-s-2');
+click('m24-overlap-check');
+check('m24-overlap L2: both 45 deg, same size, side length irrelevant',
+  (txt('m24-overlap-msg') || '').indexOf('一样大：都是 45 度') >= 0 &&
+  tiersDoneFor('m24-overlap', 2));
+
+// m25-area: 7x6 = 5x6 + 2x6 = 30+12 = 42
+renderAnim('m25-area');
+click('m25-area-g-1');
+click('m25-area-cut'); click('m25-area-calc-l'); click('m25-area-calc-r');
+click('m25-area-check');
+check('m25-area L0: 7x6 = 30+12 = 42',
+  (txt('m25-area-msg') || '').indexOf('7×6=42') >= 0 &&
+  (txt('m25-area-msg') || '').indexOf('30+12=42') >= 0 &&
+  tiersDoneFor('m25-area', 0) && triedKeys.indexOf('m25-area') >= 0);
+
+// m25-recite: three-five-fifteen, three-six-eighteen (+3)
+renderAnim('m25-recite');
+click('m25-recite-g-1');
+click('m25-recite-s-0'); click('m25-recite-s-1'); click('m25-recite-s-2');
+click('m25-recite-check');
+check('m25-recite L0: three-six-eighteen, 15+3 = 18',
+  (txt('m25-recite-msg') || '').indexOf('三六十八') >= 0 &&
+  tiersDoneFor('m25-recite', 0) && triedKeys.indexOf('m25-recite') >= 0);
+
+// m26-build: front 3 / top 3 / left 1 with 3 cubes; L1 needs 4
+renderAnim('m26-build');
+click('m26-build-g-1');
+click('m26-build-c-0'); click('m26-build-c-1'); click('m26-build-c-2');
+click('m26-build-check');
+check('m26-build L0: 3 cubes, front 3 top 3 left 1',
+  (txt('m26-build-msg') || '').indexOf('搭对了') >= 0 &&
+  (txt('m26-build-msg') || '').indexOf('一共 3 块') >= 0 &&
+  tiersDoneFor('m26-build', 0) && triedKeys.indexOf('m26-build') >= 0);
+click('m26-build-level-1');
+click('m26-build-g-1');
+click('m26-build-c-0'); click('m26-build-c-1'); click('m26-build-c-1'); click('m26-build-c-2');
+click('m26-build-check');
+check('m26-build L1: 4 cubes, middle stack 2 high',
+  (txt('m26-build-msg') || '').indexOf('一共 4 块') >= 0 &&
+  tiersDoneFor('m26-build', 1));
+
+// m27-elapsed: 7:15 to 7:45 is 30 min; 8:20 to 9:05 is 45 min
+renderAnim('m27-elapsed');
+click('m27-elapsed-g-1');
+click('m27-elapsed-go'); click('m27-elapsed-go');
+click('m27-elapsed-check');
+check('m27-elapsed L0: 7:15 to 7:45 is 30 minutes',
+  (txt('m27-elapsed-msg') || '').indexOf('一共 30 分钟') >= 0 &&
+  tiersDoneFor('m27-elapsed', 0) && triedKeys.indexOf('m27-elapsed') >= 0);
+click('m27-elapsed-level-1');
+click('m27-elapsed-g-1');
+click('m27-elapsed-go'); click('m27-elapsed-go');
+click('m27-elapsed-check');
+check('m27-elapsed L1: 8:20 to 9:05 is 45 minutes',
+  (txt('m27-elapsed-msg') || '').indexOf('一共 45 分钟') >= 0 &&
+  tiersDoneFor('m27-elapsed', 1));
+
+// m215-lines: 3 shirts x 2 pants = 6 lines
+renderAnim('m215-lines');
+click('m215-lines-g-1');
+click('m215-lines-s-0'); click('m215-lines-p-0');
+click('m215-lines-s-0'); click('m215-lines-p-1');
+click('m215-lines-s-1'); click('m215-lines-p-0');
+click('m215-lines-s-1'); click('m215-lines-p-1');
+click('m215-lines-s-2'); click('m215-lines-p-0');
+click('m215-lines-s-2'); click('m215-lines-p-1');
+click('m215-lines-check');
+check('m215-lines L0: 3 shirts x 2 pants = 6',
+  (txt('m215-lines-msg') || '').indexOf('3 件上衣 × 2 条裤子 = 6 种穿法') >= 0 &&
+  tiersDoneFor('m215-lines', 0) && triedKeys.indexOf('m215-lines') >= 0);
+
+// m214a-tally: 12 votes = 2 zheng + 2 strokes
+renderAnim('m214a-tally');
+click('m214a-tally-g-1');
+click('m214a-tally-five'); click('m214a-tally-five');
+click('m214a-tally-one'); click('m214a-tally-one');
+click('m214a-tally-check');
+check('m214a-tally L0: 12 votes = 2 zheng + 2 strokes',
+  (txt('m214a-tally-msg') || '').indexOf('12 票 = 2 个“正” + 2 画') >= 0 &&
+  tiersDoneFor('m214a-tally', 0) && triedKeys.indexOf('m214a-tally') >= 0);
+
+// m214a-picto: apple 4 vs banana 3, apple more by 1
+renderAnim('m214a-picto');
+click('m214a-picto-g-0');
+click('m214a-picto-stack'); click('m214a-picto-tobar');
+click('m214a-picto-check');
+check('m214a-picto L0: apple 4, banana 3, apple more by 1',
+  (txt('m214a-picto-msg') || '').indexOf('苹果多 1 个') >= 0 &&
+  tiersDoneFor('m214a-picto', 0) && triedKeys.indexOf('m214a-picto') >= 0);
+
+// m28-verse: 12/3 = 4 via three-four-twelve
+renderAnim('m28-verse');
+click('m28-verse-g-1');
+click('m28-verse-v-1');
+click('m28-verse-check');
+check('m28-verse L0: 12/3 = 4, three-four-twelve',
+  (txt('m28-verse-msg') || '').indexOf('12÷3=4') >= 0 &&
+  tiersDoneFor('m28-verse', 0) && triedKeys.indexOf('m28-verse') >= 0);
+
+// m29-mirror: 3 mirrors left-right; ri stays ri
+renderAnim('m29-mirror');
+click('m29-mirror-g-1');
+click('m29-mirror-mirror');
+click('m29-mirror-check');
+check('m29-mirror L0: 3 flips left-right in the mirror',
+  (txt('m29-mirror-msg') || '').indexOf('左右翻过来的 3') >= 0 &&
+  tiersDoneFor('m29-mirror', 0) && triedKeys.indexOf('m29-mirror') >= 0);
+click('m29-mirror-level-2');
+click('m29-mirror-g-0');
+click('m29-mirror-mirror');
+click('m29-mirror-check');
+check('m29-mirror L2: symmetric ri stays ri',
+  (txt('m29-mirror-msg') || '').indexOf('还是“日”') >= 0 &&
+  tiersDoneFor('m29-mirror', 2));
+
+// m210-story: 3x4+2 = 14, multiply pile first
+renderAnim('m210-story');
+click('m210-story-g-1');
+click('m210-story-mul'); click('m210-story-add');
+click('m210-story-check');
+check('m210-story L0: 3x4+2 = 14',
+  (txt('m210-story-msg') || '').indexOf('3×4+2=14') >= 0 &&
+  tiersDoneFor('m210-story', 0) && triedKeys.indexOf('m210-story') >= 0);
+
+// m211-jump: 17/5 = 3 rem 2, three jumps of 5
+renderAnim('m211-jump');
+click('m211-jump-g-1');
+click('m211-jump-jump'); click('m211-jump-jump'); click('m211-jump-jump');
+click('m211-jump-check');
+check('m211-jump L0: 17/5 = 3 rem 2',
+  (txt('m211-jump-msg') || '').indexOf('17÷5=3……2') >= 0 &&
+  tiersDoneFor('m211-jump', 0) && triedKeys.indexOf('m211-jump') >= 0);
+
+// m211-vert: 17/5 vertical, four steps
+renderAnim('m211-vert');
+click('m211-vert-g-1');
+click('m211-vert-s-0'); click('m211-vert-s-1'); click('m211-vert-s-2'); click('m211-vert-s-3');
+click('m211-vert-check');
+check('m211-vert L0: 17/5 = 3 rem 2, remainder smaller than divisor',
+  (txt('m211-vert-msg') || '').indexOf('17÷5=3……2') >= 0 &&
+  tiersDoneFor('m211-vert', 0) && triedKeys.indexOf('m211-vert') >= 0);
+
+// m211-ceil: 17 people, 5 per boat, 4 boats (round up)
+renderAnim('m211-ceil');
+click('m211-ceil-g-1');
+click('m211-ceil-fill'); click('m211-ceil-fill'); click('m211-ceil-fill');
+click('m211-ceil-rest');
+click('m211-ceil-check');
+check('m211-ceil L0: 17 people need 4 boats',
+  (txt('m211-ceil-msg') || '').indexOf('一共 4 条') >= 0 &&
+  tiersDoneFor('m211-ceil', 0) && triedKeys.indexOf('m211-ceil') >= 0);
+
+// m212-blocks: 10 hundreds = 1 thousand; 2500 = 2 thousands + 5 hundreds
+renderAnim('m212-blocks');
+click('m212-blocks-g-1');
+click('m212-blocks-h10');
+click('m212-blocks-check');
+check('m212-blocks L0: 10 hundreds = 1 thousand',
+  (txt('m212-blocks-msg') || '').indexOf('10 个 100 = 1 个 1000') >= 0 &&
+  tiersDoneFor('m212-blocks', 0) && triedKeys.indexOf('m212-blocks') >= 0);
+click('m212-blocks-level-1');
+click('m212-blocks-g-1');
+click('m212-blocks-h10'); click('m212-blocks-h10');
+for (let i = 0; i < 5; i++) click('m212-blocks-h1');
+click('m212-blocks-check');
+check('m212-blocks L1: 25 hundreds = 2 thousands + 5 hundreds = 2500',
+  (txt('m212-blocks-msg') || '').indexOf('2 个 1000 + 5 个 100 = 2500') >= 0 &&
+  tiersDoneFor('m212-blocks', 1));
+
+// m212-abacus: 1000 is 1 bead on thousands; 9999 + 1 = 10000
+renderAnim('m212-abacus');
+click('m212-abacus-g-1');
+click('m212-abacus-d-th');
+click('m212-abacus-check');
+check('m212-abacus L0: 1000 is 1 bead on thousands',
+  (txt('m212-abacus-msg') || '').indexOf('千位 1 颗') >= 0 &&
+  tiersDoneFor('m212-abacus', 0) && triedKeys.indexOf('m212-abacus') >= 0);
+click('m212-abacus-level-2');
+click('m212-abacus-g-1');
+click('m212-abacus-d-o');
+click('m212-abacus-check');
+check('m212-abacus L2: 9999 + 1 = 10000, ten-thousands appears',
+  (txt('m212-abacus-msg') || '').indexOf('是 10000') >= 0 &&
+  (txt('m212-abacus-msg') || '').indexOf('万位出现 1') >= 0 &&
+  tiersDoneFor('m212-abacus', 2));
+
+// m213-est: schoolbag 1500 g = 10 apples
+renderAnim('m213-est');
+click('m213-est-g-1');
+click('m213-est-weigh');
+click('m213-est-check');
+check('m213-est L0: schoolbag 1500 g = 10 apples',
+  (txt('m213-est-msg') || '').indexOf('150×10=1500') >= 0 &&
+  tiersDoneFor('m213-est', 0) && triedKeys.indexOf('m213-est') >= 0);
+
+// m214b-sudoku: row 0 misses 4; challenge fills two blanks (1 and 4)
+renderAnim('m214b-sudoku');
+click('m214b-sudoku-g-2');
+click('m214b-sudoku-c-0-3');
+click('m214b-sudoku-d-4');
+click('m214b-sudoku-check');
+check('m214b-sudoku L0: row 0 misses 4',
+  (txt('m214b-sudoku-msg') || '').indexOf('第一行缺的是 4') >= 0 &&
+  tiersDoneFor('m214b-sudoku', 0) && triedKeys.indexOf('m214b-sudoku') >= 0);
+click('m214b-sudoku-level-2');
+click('m214b-sudoku-g-0');
+click('m214b-sudoku-c-1-2');
+click('m214b-sudoku-d-1');
+click('m214b-sudoku-c-3-0');
+click('m214b-sudoku-d-4');
+click('m214b-sudoku-check');
+check('m214b-sudoku L2: two blanks filled (1 and 4)',
+  (txt('m214b-sudoku-msg') || '').indexOf('两个空都填对了') >= 0 &&
+  tiersDoneFor('m214b-sudoku', 2));
 
 console.log('\nsmoke-anims-band-1-3: ' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

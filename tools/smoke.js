@@ -4305,10 +4305,11 @@ check('anims: stub unit 1-0 （进位加法） has 6', hasAnims && sandbox.anims
 check('anims: stub unit 1-2 （准备课） has 3', hasAnims && sandbox.animsForUnit(1, 2).length === 3);
 // 静态校验：按真实 grade-1.js 的 demo 字段 + app.js 里的 SIM_LINKS + LAB_QUESTIONS
 // + 注册表（四个 anims 文件里的 registerAnim points）算出一年级每点动画，
-// 去重后应为 46 个，各单元动画数应为 [3,3,5,3,5,3,2,6,1,4,2,4,2,3,4]
+// 去重后应为 47 个，各单元动画数应为 [3,3,5,3,5,3,2,6,1,4,2,5,2,3,4]
 // （1.9 所在单元多了注册表的 op-maketen + 3 个新动画 m19-*；
 // 1.2/1.3/1.4/1.5/1.6/1.7/1.8/1.11/1.12/1.13/1.14/1.15/1.16 各多了新动画）。
 // （准备课多了注册表的 m1a-pair）。
+// （2026-11-07 第四批：m113-bundle 挂在 1.13，1.13 所在单元 4→5，总数 46→47。）
 // （改前代码里没有 SIM_LINKS / LAB_QUESTIONS 的注册表逻辑，正则取不到就报 FAIL。）
 // 注册表第五路：读四个 anims 文件里的 registerAnim(points)，按 key 归到各点。
 // （文件不存在时跳过——改前代码上没有这些文件，静态校验按 18 个算，19 的断言干净失败。）
@@ -4352,9 +4353,9 @@ if (simLinks && labQs && g1ids2.length === 16) {
   g1UnitCounts = unitSets.map(s => s.size);
   g1Distinct = allSet.size;
 }
-check('anims: real grade-1 has 46 distinct animations', g1Distinct === 46);
+check('anims: real grade-1 has 47 distinct animations', g1Distinct === 47);
 check('anims: real grade-1 unit animation counts',
-  JSON.stringify(g1UnitCounts) === JSON.stringify([3, 3, 5, 3, 5, 3, 2, 6, 1, 4, 2, 4, 2, 3, 4]));
+  JSON.stringify(g1UnitCounts) === JSON.stringify([3, 3, 5, 3, 5, 3, 2, 6, 1, 4, 2, 5, 2, 3, 4]));
 
 // ---------- 14. 鸡兔同笼：一个点，四种方法（4.16） ----------
 // 改前没有这 4 个动画：函数不存在、卡片和面板没有、METHOD_DEMOS 没有。
