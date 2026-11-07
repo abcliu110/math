@@ -52310,6 +52310,11 @@ function benchViewSvg(view, items, lineOn, lf, bal, rect, rectSelected, beamOffs
         '" height="' + (bvY(0) - bvY(rect.h)) + '" fill="#fde68a" fill-opacity="0.7" stroke="#92400e" stroke-width="2"/>';
       s += '<text x="' + bvX(rect.w / 2) + '" y="' + bvY(rect.h / 2) + '" font-size="13" text-anchor="middle" fill="#92400e">' +
         rect.w + '×' + rect.h + '＝' + rect.area + '</text>';
+      // 顶点圆点：可见 r=4，下垫透明 r=12 命中圆。复测 4489f21 第 4 项：圆点只有约 8px，
+      // 点偏几像素就落到长方形外的空白网格上、检查器不动（本地真机复现没复现到，
+      // 但命中区小是实打实的）；数轴圆点早就是这个做法（透明大圆垫着，点偏也算），
+      // 这里照抄 rgba(255,255,255,0.001)——fill="none" 在 visiblePainted 下不接事件。
+      s += '<circle cx="' + bvX(rect.w) + '" cy="' + bvY(rect.h) + '" r="12" fill="rgba(255,255,255,0.001)"/>';
       s += '<circle cx="' + bvX(rect.w) + '" cy="' + bvY(rect.h) + '" r="4" fill="#92400e"/>';
       // 顶点标签向左伸（text-anchor=end，右端停在顶点左侧 6 单位）：手柄在顶点右上方，
       // 标签再怎么宽也不会伸到手柄下面去（2026-11-07 复测：手柄盖住“(4,6)”后半截，

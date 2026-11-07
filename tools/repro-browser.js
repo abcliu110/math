@@ -387,15 +387,31 @@ async function main() {
       })()`);
       const postW = await labState();
       note('post-refresh: ' + JSON.stringify(post) + ' rect=' + postW.rect + ' benchRect=' + postW.benchRect);
-      // 刷新后手柄本来就不在（没选中）：点长方形本体，看能不能选中、出手柄
+      // 刷新后手柄本来就不在（没选中）：点长方形本体，看能不能选中、出手柄。
+      // 先等页面滚动停稳再量坐标：刷新后 navGo 的平滑滚动还在走时，量的坐标是
+      // 半路的，隔几百毫秒再点就脱靶（实测：elementFromPoint 还是对的，点下去
+      // 却打在空白 SVG 上；9×1 的长方形只有约 29px 高，滚一点就脱靶）。
+      // 量完立刻点，中间不隔 sleep。
+      for (let i = 0; i < 10; i++) {
+        const y1 = await evaljs(`window.scrollY`);
+        await sleep(200);
+        const y2 = await evaljs(`window.scrollY`);
+        if (y1 === y2) break;
+      }
+      await installProbe();
+      await clearProbe();
       const rectBox = await evaljs(`(function(){
         var rc=document.querySelector('#worldBenchView rect[fill="#fde68a"]');
         if(!rc) return null;
         rc.scrollIntoView({block:'center',behavior:'instant'});
         var b=rc.getBoundingClientRect();
-        return {x:b.x+b.width/2,y:b.y+b.height/2};
+        var cx=b.x+b.width/2, cy=b.y+b.height/2;
+        var top=document.elementFromPoint(cx,cy);
+        var chain=[]; var el=top;
+        while(el&&chain.length<6){chain.push(el.tagName+(el.getAttribute&&el.getAttribute('data-bench')?' data-bench='+el.getAttribute('data-bench'):'')+(el.getAttribute&&el.getAttribute('fill')?' fill='+el.getAttribute('fill'):'')+(el.textContent&&el.children.length===0?' text='+el.textContent.slice(0,12):'')); el=el.parentNode;}
+        return {x:cx,y:cy, topChain: chain};
       })()`);
-      await sleep(300);
+      note('body-center topmost chain: ' + JSON.stringify(rectBox && rectBox.topChain));
       if (rectBox) {
         await clickAt(rectBox.x, rectBox.y);
         await sleep(300);
@@ -404,6 +420,7 @@ async function main() {
           return { handle: !!h, sel: (typeof worldInspectSel!=='undefined'&&worldInspectSel)?JSON.stringify(worldInspectSel):null };
         })()`);
         note('post-refresh rect-body click: ' + JSON.stringify(postClick));
+        note('probe events:\n' + (await probeLog()));
         report.pass = postClick.handle === true;
       } else {
         report.pass = false;
@@ -454,6 +471,168 @@ async function main() {
       // 提示“天平已重置为左盘 1/2”。断言按设计值写。
       report.pass = before.balR === '1/6' && after.balL === '1/2' && after.balR === '0';
       note(report.pass ? 'RESULT: PASS — balance reset to left 1/2' : 'RESULT: FAIL — balance did not reset (or setup failed)');
+    } else if (scenario === 'rect-vertex') {
+      // 复测第 4 批第 4 项（部分失败）：刷新后点长方形红色顶点圆点，
+      // 检查器不从数字卡切回长方形（本体和 (w,h) 标签点开都正常）。
+      await enterLab();
+      await evaljs(`(function(){var b=document.querySelector('[data-bench="rect"]');if(b)b.click();})()`);
+      await sleep(300);
+      await evaljs(`(function(){var b=document.querySelector('#worldBenchBox [data-bench="make"][data-kind="num"][data-n="5"]');if(b)b.click();})()`);
+      await sleep(400);
+      const setup = await evaljs(`(function(){
+        var g=document.querySelector('#worldBenchView [data-bench="pick-rect"]');
+        var dot=g?g.querySelector('circle'):null;
+        var dots=[...document.querySelectorAll('#worldBenchView [data-bench="pick"]')].map(function(e){return e.textContent.trim();});
+        return { rectGroup: !!g, vertexDot: !!dot, dotFill: dot?dot.getAttribute('fill'):null, dotR: dot?dot.getAttribute('r'):null,
+          numDots: dots, view: (document.getElementById('worldBenchViews')||{}).textContent || '' };
+      })()`);
+      note('setup: ' + JSON.stringify(setup));
+      // 先点数轴/坐标系里的 5 圆点，让检查器显示 数字卡·5
+      const dot5 = await evaljs(`(function(){
+        var gs=[...document.querySelectorAll('#worldBenchView [data-bench="pick"]')];
+        var g=gs.find(function(e){return e.textContent.trim()==='5';});
+        if(!g) return null;
+        g.scrollIntoView({block:'center',behavior:'instant'});
+        var b=g.getBoundingClientRect();
+        return {x:b.x+b.width/2,y:b.y+b.height/2};
+      })()`);
+      note('num-5 dot center: ' + JSON.stringify(dot5));
+      if (dot5) { await clickAt(dot5.x, dot5.y); await sleep(300); }
+      const inspBefore = await evaljs(`(function(){var b=document.getElementById('worldBenchInspector');return b?b.textContent.slice(0,60):'';})()`);
+      note('inspector before vertex click: ' + inspBefore);
+      // 顶点圆点中心 + 该点最上层元素
+      const vtx = await evaljs(`(function(){
+        var dot=document.querySelector('#worldBenchView [data-bench="pick-rect"] circle');
+        if(!dot) return null;
+        dot.scrollIntoView({block:'center',behavior:'instant'});
+        var b=dot.getBoundingClientRect();
+        var cx=b.x+b.width/2, cy=b.y+b.height/2;
+        var top=document.elementFromPoint(cx,cy);
+        return {x:cx,y:cy, top: top ? top.tagName + (top.getAttribute('data-bench')?' data-bench='+top.getAttribute('data-bench'):'') + (top.getAttribute('fill')?' fill='+top.getAttribute('fill'):'') : null,
+          topOuter: top && top.parentNode ? top.parentNode.tagName + (top.parentNode.getAttribute&&top.parentNode.getAttribute('data-bench')?' data-bench='+top.parentNode.getAttribute('data-bench'):'') : null};
+      })()`);
+      await sleep(300);
+      note('vertex dot center + topmost: ' + JSON.stringify(vtx));
+      await installProbe();
+      await clearProbe();
+      if (vtx) { await clickAt(vtx.x, vtx.y); await sleep(300); }
+      const after = await evaljs(`(function(){
+        var b=document.getElementById('worldBenchInspector');
+        return { insp: b?b.textContent.slice(0,60):'',
+          sel: (typeof worldInspectSel!=='undefined'&&worldInspectSel)?JSON.stringify(worldInspectSel):null };
+      })()`);
+      note('after vertex click: ' + JSON.stringify(after));
+      note('probe events:\n' + (await probeLog()));
+      report.pass = after.sel && after.sel.indexOf('"apparatus":"rect"') >= 0;
+      note(report.pass ? 'RESULT: PASS — vertex dot switches inspector to the rectangle' : 'RESULT: FAIL — inspector did not switch to the rectangle');
+      if (!report.pass) { console.log('SCENARIO ' + scenario + ': FAIL'); cleanup(); process.exit(1); }
+      // 第二阶段：刷新后重走复测的确切顺序——点本体（应能选中）、点手柄转一次、
+      // 再点 5 圆点（检查器切到数字卡·5），最后点顶点圆点（应切回长方形）。
+      await send('Page.reload', { ignoreCache: true });
+      await sleep(2500);
+      await enterLab();
+      const post = await evaljs(`(function(){
+        var g=document.querySelector('#worldBenchView [data-bench="pick-rect"]');
+        var dot=g?g.querySelector('circle'):null;
+        return { rectGroup: !!g, vertexDot: !!dot,
+          sel: (typeof worldInspectSel!=='undefined'&&worldInspectSel)?JSON.stringify(worldInspectSel):null,
+          view: (document.getElementById('worldBenchViews')||{}).textContent || '' };
+      })()`);
+      note('post-refresh: ' + JSON.stringify(post));
+      const bodyBox = await evaljs(`(function(){
+        var rc=document.querySelector('#worldBenchView [data-bench="pick-rect"] rect');
+        if(!rc) return null;
+        rc.scrollIntoView({block:'center',behavior:'instant'});
+        var b=rc.getBoundingClientRect();
+        return {x:b.x+b.width/2,y:b.y+b.height/2};
+      })()`);
+      await sleep(300);
+      if (bodyBox) { await clickAt(bodyBox.x, bodyBox.y); await sleep(300); }
+      const afterBody = await evaljs(`(function(){return { sel: (typeof worldInspectSel!=='undefined'&&worldInspectSel)?JSON.stringify(worldInspectSel):null, handle: !!document.querySelector('[data-bench-rotate]') };})()`);
+      note('post-refresh rect-body click: ' + JSON.stringify(afterBody));
+      // 点 5 圆点 → 检查器切到数字卡·5
+      const dot5b = await evaljs(`(function(){
+        var gs=[...document.querySelectorAll('#worldBenchView [data-bench="pick"]')];
+        var g=gs.find(function(e){return e.textContent.trim()==='5';});
+        if(!g) return null;
+        g.scrollIntoView({block:'center',behavior:'instant'});
+        var b=g.getBoundingClientRect();
+        return {x:b.x+b.width/2,y:b.y+b.height/2};
+      })()`);
+      if (dot5b) { await clickAt(dot5b.x, dot5b.y); await sleep(300); }
+      const insp5 = await evaljs(`(function(){var b=document.getElementById('worldBenchInspector');return b?b.textContent.slice(0,40):'';})()`);
+      note('inspector after 5-dot click (post-refresh): ' + insp5);
+      const vtx2 = await evaljs(`(function(){
+        var dot=document.querySelector('#worldBenchView [data-bench="pick-rect"] circle');
+        if(!dot) return null;
+        dot.scrollIntoView({block:'center',behavior:'instant'});
+        var b=dot.getBoundingClientRect();
+        var cx=b.x+b.width/2, cy=b.y+b.height/2;
+        var top=document.elementFromPoint(cx,cy);
+        return {x:cx,y:cy, top: top ? top.tagName + (top.getAttribute('data-bench')?' data-bench='+top.getAttribute('data-bench'):'') + (top.getAttribute('fill')?' fill='+top.getAttribute('fill'):'') + (top.getAttribute('data-id')?' data-id='+top.getAttribute('data-id'):'') : null};
+      })()`);
+      await sleep(300);
+      note('post-refresh vertex dot center + topmost: ' + JSON.stringify(vtx2));
+      await installProbe();
+      await clearProbe();
+      if (vtx2) { await clickAt(vtx2.x, vtx2.y); await sleep(300); }
+      const after2 = await evaljs(`(function(){
+        var b=document.getElementById('worldBenchInspector');
+        return { insp: b?b.textContent.slice(0,60):'',
+          sel: (typeof worldInspectSel!=='undefined'&&worldInspectSel)?JSON.stringify(worldInspectSel):null };
+      })()`);
+      note('post-refresh after vertex click: ' + JSON.stringify(after2));
+      note('probe events:\n' + (await probeLog()));
+      report.pass = after2.sel && after2.sel.indexOf('"apparatus":"rect"') >= 0;
+      note(report.pass ? 'RESULT: PASS — post-refresh vertex dot switches inspector to the rectangle' : 'RESULT: FAIL — post-refresh vertex dot did not switch the inspector');
+      if (!report.pass) { console.log('SCENARIO ' + scenario + ': FAIL'); cleanup(); process.exit(1); }
+      // 第三阶段：复测的确切几何——宽 4（4×6），点手柄转成 6×4，再点 5 圆点，
+      // 最后点顶点圆点（6×4 的顶点在 (6,4)，离数轴上的 5 圆点更近）。
+      await evaljs(`(function(){ if (typeof worldPlayApply === 'function') worldPlayApply({type:'rectSet', w:4}, ''); })()`);
+      await sleep(400);
+      const handleBox = await evaljs(`(function(){
+        var h=document.querySelector('[data-bench-rotate]');
+        if(!h) return null;
+        h.scrollIntoView({block:'center',behavior:'instant'});
+        var b=h.getBoundingClientRect();
+        return {x:b.x+b.width/2,y:b.y+b.height/2};
+      })()`);
+      await sleep(300);
+      if (handleBox) { await clickAt(handleBox.x, handleBox.y); await sleep(300); }
+      const afterHandle = await labState();
+      note('after handle click: rect=' + afterHandle.rect);
+      const dot5c = await evaljs(`(function(){
+        var gs=[...document.querySelectorAll('#worldBenchView [data-bench="pick"]')];
+        var g=gs.find(function(e){return e.textContent.trim()==='5';});
+        if(!g) return null;
+        g.scrollIntoView({block:'center',behavior:'instant'});
+        var b=g.getBoundingClientRect();
+        return {x:b.x+b.width/2,y:b.y+b.height/2};
+      })()`);
+      if (dot5c) { await clickAt(dot5c.x, dot5c.y); await sleep(300); }
+      const vtx3 = await evaljs(`(function(){
+        var dot=document.querySelector('#worldBenchView [data-bench="pick-rect"] circle');
+        if(!dot) return null;
+        dot.scrollIntoView({block:'center',behavior:'instant'});
+        var b=dot.getBoundingClientRect();
+        var cx=b.x+b.width/2, cy=b.y+b.height/2;
+        var top=document.elementFromPoint(cx,cy);
+        return {x:cx,y:cy, top: top ? top.tagName + (top.getAttribute('data-bench')?' data-bench='+top.getAttribute('data-bench'):'') + (top.getAttribute('fill')?' fill='+top.getAttribute('fill'):'') : null};
+      })()`);
+      await sleep(300);
+      note('6x4 vertex dot center + topmost: ' + JSON.stringify(vtx3));
+      await installProbe();
+      await clearProbe();
+      if (vtx3) { await clickAt(vtx3.x, vtx3.y); await sleep(300); }
+      const after3 = await evaljs(`(function(){
+        var b=document.getElementById('worldBenchInspector');
+        return { insp: b?b.textContent.slice(0,60):'',
+          sel: (typeof worldInspectSel!=='undefined'&&worldInspectSel)?JSON.stringify(worldInspectSel):null };
+      })()`);
+      note('6x4 after vertex click: ' + JSON.stringify(after3));
+      note('probe events:\n' + (await probeLog()));
+      report.pass = after3.sel && after3.sel.indexOf('"apparatus":"rect"') >= 0;
+      note(report.pass ? 'RESULT: PASS — 6x4 vertex dot switches inspector to the rectangle' : 'RESULT: FAIL — 6x4 vertex dot did not switch the inspector');
     } else {
       console.log('unknown scenario: ' + scenario);
       cleanup();

@@ -1426,6 +1426,43 @@ if (typeof sandbox.benchViewSvg === 'function' && typeof sandbox.worldBenchRende
   }
   check('lab rect handle does not cover the (w,h) label (handle left edge past label right edge)',
     !!handleM4 && !!labelM4 && noOverlap4);
+  // 顶点圆点命中区：可见 r=4，下垫透明 r>=10 命中圆（复测 4489f21 第 4 项：
+  // 圆点只有约 8px，点偏几像素就落到空白网格上、检查器不动；数轴圆点/手柄
+  // 早就是透明大圆垫着）。命中圆必须和可见圆同心，且是真能接事件的画法
+  // （rgba 0.001，不是 fill="none"）。
+  const vtxM4 = rectSvg4.match(/<circle cx="([\d.]+)" cy="([\d.]+)" r="4" fill="#92400e"\/>/);
+  const vtxHits4 = [...rectSvg4.matchAll(/<circle cx="([\d.]+)" cy="([\d.]+)" r="(\d+)" fill="rgba\(255,255,255,0\.001\)"\/>/g)];
+  let vtxHitOk4 = false;
+  if (vtxM4) {
+    vtxHitOk4 = vtxHits4.some(function (m) {
+      return m[1] === vtxM4[1] && m[2] === vtxM4[2] && parseFloat(m[3]) >= 10;
+    });
+  }
+  check('lab rect vertex dot has a transparent hit circle (r>=10) at the same center',
+    !!vtxM4 && vtxHitOk4);
+  // 点顶点圆点（圆点本身，closest 上走到 pick-rect 组）→ 检查器从数字卡切回长方形。
+  // 复测 4489f21 第 4 项的确切顺序：先点 5 圆点（检查器停在数字卡·5），再点顶点圆点。
+  const wVtx4 = sandbox.MathWorld.create({ rect: { perim: 20, w: 4 } });
+  sandbox.labWorld = wVtx4; sandbox.mwPlay = wVtx4;
+  sandbox.benchRun({ type: 'benchRectToggle' });
+  const mk5v4 = sandbox.benchRun({ type: 'makePiece', piece: { kind: 'num', v: 5 } });
+  if (mk5v4) sandbox.benchRun({ type: 'benchPut', pieceId: mk5v4.pieceId });
+  if (mk5v4) sandbox.worldInspectSelect({ piece: mk5v4.pieceId });
+  const beforeVtx4 = String(byId.worldBenchInspector.innerHTML).indexOf('数字卡') >= 0;
+  const rectG4b = makeEl('g');
+  rectG4b.dataset.bench = 'pick-rect';
+  rectG4b.setAttribute('data-bench', 'pick-rect');
+  const vtxDot4 = makeEl('circle');
+  vtxDot4.closest = (sel) => sel === '[data-bench]' ? rectG4b : null;
+  const cardHandlersVtx4 = byId.worldBenchCard._handlers && byId.worldBenchCard._handlers.click;
+  if (cardHandlersVtx4) cardHandlersVtx4.forEach(function (fn) {
+    fn({ target: vtxDot4, stopPropagation: function () {}, preventDefault: function () {} });
+  });
+  check('lab rect vertex dot click switches inspector from the number card back to the rect',
+    beforeVtx4 && !!sandbox.worldInspectSel && sandbox.worldInspectSel.apparatus === 'rect' &&
+    String(byId.worldBenchInspector.innerHTML).indexOf('长方形') >= 0);
+  sandbox.worldInspectSelect(null);
+  sandbox.benchRun({ type: 'benchRectToggle' }); // 收尾：长方形拿下台面
   // 点长方形本体（假 <g data-bench="pick-rect">）→ 选中长方形、检查器打开、重画出手柄。
   // 旧代码：本体没有 pick，点什么都没发生，检查器一直空着。
   const wRect4 = sandbox.MathWorld.create({ rect: { perim: 20, w: 4 } });
