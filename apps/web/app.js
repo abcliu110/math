@@ -1142,12 +1142,54 @@ function reviewItemHtml(id, pill) {
   const f = findPoint(id);
   const title = f ? f.point.title : id;
   const st = reviewStore[id];
-  return '<button class="unit unit-btn" type="button" data-point="' + esc(id) + '"><b>' + esc(id) + ' · ' + esc(title) + '</b><p>' + (st.correct ? '上次答对' : '上次答错') + ' · ' + (st.confident ? '有把握' : '没把握') + '</p><span class="pill">' + pill + '</span></button>';
+  return '<button class="unit unit-btn" type="button" data-point="' + esc(id) + '"><b>' + esc(id) + ' · ' + esc(title) + '</b><p>' + (st.correct ? '上次答对' : '上次答错') + ' · ' + (st.confident ? '有把握' : '没把握') + (labLostText(st) ? ' · ' + esc(labLostText(st)) : '') + '</p><span class="pill">' + pill + '</span></button>';
+}
+/* 错题本里“卡在哪一步”的那行字：最近一次挑战里丢的步骤（labFinishChallenge 写进 reviewStore）。 */
+function labLostText(st) {
+  if (!st || !st.labLost || !st.labLost.length) return '';
+  return '卡在：' + st.labLost.map(function (x) { return x.label; }).join('、');
+}
+/* 哪一步总丢分（NB §6 #44 综合统计）：只统计最近 7 天里交过卷的挑战题，
+   按知识点 × 步骤聚合。数据来自 math-lab-proc-v1（挑战交卷时记的跨次统计）。 */
+function labHealthHtml() {
+  const h = procHistLoad();
+  const now = Date.now();
+  const WEEK = 7 * 86400000;
+  const stepRows = [];
+  const pointRows = {};
+  Object.keys(h).forEach(function (labId) {
+    const e = h[labId];
+    if (!e || !e.lastAt || e.lastAt < now - WEEK) return; // 7 天里没交过卷的题不算
+    const q = LAB_QUESTIONS.find(function (x) { return x.qid === labId; });
+    const primary = q ? q.primary : labId;
+    const f = q ? findPoint(q.primary) : null;
+    const title = f ? f.point.title : (q ? q.title : labId);
+    const def = MathWorld.LAB_PROCEDURES && MathWorld.LAB_PROCEDURES[labId];
+    Object.keys(e.lost || {}).forEach(function (stepId) {
+      const n = e.lost[stepId];
+      const step = def ? def.steps.find(function (s) { return s.id === stepId; }) : null;
+      stepRows.push({ label: step ? step.label : stepId, point: primary, title: title, count: n });
+      pointRows[primary] = (pointRows[primary] || 0) + n;
+    });
+  });
+  if (!stepRows.length) return '<p class="muted">挑战模式交卷后，这里会统计最近 7 天里交过卷的题：哪一步丢分最多。</p>';
+  stepRows.sort(function (a, b) { return b.count - a.count; });
+  const topSteps = stepRows.slice(0, 3);
+  const topPoints = Object.keys(pointRows).map(function (k) { return { point: k, count: pointRows[k] }; })
+    .sort(function (a, b) { return b.count - a.count; }).slice(0, 3);
+  let html = '<p class="muted">只统计最近 7 天里交过卷的挑战题。</p>' +
+    '<table class="lab-health-table"><tr><th>总丢分最多的步骤</th><th>知识点</th><th>丢了几次</th></tr>' +
+    topSteps.map(function (r) { return '<tr><td>' + esc(r.label) + '</td><td>' + esc(r.point + ' ' + r.title) + '</td><td>' + r.count + ' 次</td></tr>'; }).join('') + '</table>';
+  html += '<p class="muted">重灾区：' + topPoints.map(function (r) {
+    const f = findPoint(r.point);
+    return esc(r.point + ' ' + (f ? f.point.title : '') + '（' + r.count + ' 次）');
+  }).join('、') + '。</p>';
+  return html;
 }
 function renderWrongBook() {
   syncReviewFromStorage(); // 打开就重读：别的标签页记的题，这边也要立刻看到
   const wrong = Object.keys(reviewStore).filter(id => reviewStore[id] && reviewStore[id].correct === false);
-  let html = '<h3>错题本</h3>';
+  let html = '<h3>错题本</h3><div class="point-sec"><h4>哪一步总丢分（最近 7 天）</h4>' + labHealthHtml() + '</div>';
   if (!wrong.length) {
     html += '<p class="muted">还没有错题。练一练里答错的题会自动记到这里，点一条回去重练。</p>';
   } else {
@@ -1156,7 +1198,7 @@ function renderWrongBook() {
       const title = f ? f.point.title : id;
       const st = reviewStore[id];
       const when = st.due <= Date.now() ? '今天复习' : '明天回来';
-      return '<li><button class="unit unit-btn" type="button" data-point="' + esc(id) + '"><b>' + esc(id) + ' · ' + esc(title) + '</b><small>上次答错 · ' + when + '</small></button></li>';
+      return '<li><button class="unit unit-btn" type="button" data-point="' + esc(id) + '"><b>' + esc(id) + ' · ' + esc(title) + '</b><small>上次答错 · ' + when + (labLostText(st) ? ' · ' + esc(labLostText(st)) : '') + '</small></button></li>';
     }).join('') + '</ul>';
   }
   const due = duePointIds();
@@ -3529,7 +3571,7 @@ function procHistLoad() {
 function procHistSave(h) {
   try { localStorage.setItem(LAB_PROC_KEY, JSON.stringify(h)); } catch (e) { /* 存不下就不记 */ }
 }
-function procHistRecord(rep) {
+function procHistRecord(rep, usedMs) {
   if (!rep || !rep.opCount) return;
   const key = rep.labId + ':' + rep.score + ':' + rep.opCount + ':' + rep.lost.join('|');
   if (labProcRecorded[key]) return;
@@ -3540,6 +3582,8 @@ function procHistRecord(rep) {
   e.lastScore = rep.score;
   e.max = rep.max;
   e.lastAt = Date.now();
+  e.lastUsedMs = usedMs || 0; // 最近一次交卷用了多久（§6 #43 单次成绩详情：用时）
+  e.lastErr = (rep.errorReasons || []).slice(0, 5);
   rep.lines.forEach(function (l) {
     if (!l.got) e.lost[l.id] = (e.lost[l.id] || 0) + 1;
   });
@@ -3549,7 +3593,8 @@ function procHistRecord(rep) {
 function procHistSummaryHtml(labId) {
   const e = procHistLoad()[labId];
   if (!e) return '<p class="muted">还没有考试记录。挑战模式交卷后，这里会记下每一步的丢分次数。</p>';
-  let html = '<p class="muted">考过 ' + e.attempts + ' 次，最近一次 ' + e.lastScore + ' / ' + e.max + '。</p>';
+  let html = '<p class="muted">考过 ' + e.attempts + ' 次，最近一次 ' + e.lastScore + ' / ' + e.max +
+    (e.lastUsedMs ? '，用了 ' + fmtClock(e.lastUsedMs) : '') + '。</p>';
   const ids = Object.keys(e.lost).sort(function (a, b) { return e.lost[b] - e.lost[a]; });
   const def = MathWorld.LAB_PROCEDURES && MathWorld.LAB_PROCEDURES[labId];
   if (ids.length && def) {
@@ -3582,6 +3627,12 @@ function renderProcedurePanel(w) {
     return;
   }
   labProcSnap[rep.labId] = rep;
+  // 考试模式：交卷前不给任何提示、分数和历史——干净台面，交卷后才看每一步的得分。
+  // （历史里“总丢分最多”那一步也是提示，考试时一起藏起来。）
+  if (rep.mode === 'exam' && !labChallengeSubmitted) {
+    box.innerHTML = '<p><b>' + esc(rep.title) + '</b> · 考试（无提示）</p><p class="muted">考试进行中，做完点“交卷”，交卷后看每一步的得分。</p>';
+    return;
+  }
   box.innerHTML = procReportHtml(rep) + '<div class="proc-history">' + procHistSummaryHtml(rep.labId) + '</div>';
   // 练习模式：下一步在台面上高亮出来（NB 式“每步提醒”——高亮在卡片上，不在角落一行字）。
   if (rep.mode === 'practice') {
@@ -5034,6 +5085,59 @@ function labFreePlay() {
   labFocusStation('worldFracCard');
   labSetChooseCurrent('');
 }
+/* ---------- 挑战模式计时器（10 分钟，复用模拟测的设计） ----------
+   进挑战模式开始计时，退出挑战 / 交卷停表；时间到了自动交卷。
+   计时用 setTimeout 链（不用 setInterval：smoke 沙箱只提供 setTimeout），
+   和模拟测的 examTick 同一个写法。离开实验室页面时钟照样走——考试就是这样。 */
+var labExam = null; // { startedAt, deadline, seq }
+var labExamSeq = 0;
+var labExamUsedMs = 0; // 本轮挑战交卷时用了多久（写进跨次统计和报告单）
+function labExamStart() {
+  labExamSeq++;
+  labExam = { startedAt: Date.now(), deadline: Date.now() + EXAM_MS, seq: labExamSeq };
+  labExamUsedMs = 0;
+  labExamShow();
+  labExamTick(labExam.seq);
+}
+function labExamStop() {
+  if (labExam) labExamUsedMs = Date.now() - labExam.startedAt;
+  labExam = null;
+  labExamSeq++;
+  const t = document.getElementById('labExamTimer');
+  if (t) t.hidden = true;
+}
+function labExamShow() {
+  const t = document.getElementById('labExamTimer');
+  if (!t || !labExam) return;
+  t.hidden = false;
+  t.textContent = '还剩 ' + fmtClock(labExam.deadline - Date.now());
+}
+function labExamTick(seq) {
+  if (!labExam || labExam.seq !== seq || labMode !== 'challenge') return;
+  const left = labExam.deadline - Date.now();
+  const t = document.getElementById('labExamTimer');
+  if (left <= 0) {
+    if (t) t.textContent = '时间到了';
+    labExamTimeout();
+    return;
+  }
+  if (t) t.textContent = '还剩 ' + fmtClock(left);
+  setTimeout(function () { labExamTick(seq); }, 1000);
+}
+function labExamTimeout() {
+  labExamUsedMs = labExam ? Date.now() - labExam.startedAt : 0;
+  labExam = null;
+  labExamSeq++;
+  if (labChallengeAttempts.length) {
+    labTrace('时间到了，自动交卷', false);
+    labSubmitChallenge();
+    const done = document.getElementById('labChallengeDone');
+    if (done) done.textContent = '时间到了，已自动交卷。' + (done.textContent ? ' ' + done.textContent : '');
+  } else {
+    const box = document.getElementById('labChallengeReport');
+    if (box) box.innerHTML = '<p>时间到了，还没做题。重新选一题，或者退出挑战。</p>';
+  }
+}
 function labSetMode(m) {
   labMode = m;
   const lab = document.getElementById('lab');
@@ -5042,7 +5146,8 @@ function labSetMode(m) {
   document.getElementById('labModeFree').setAttribute('aria-pressed', String(m === 'free'));
   document.getElementById('labModeChallenge').setAttribute('aria-pressed', String(m === 'challenge'));
   document.getElementById('labChallengeBox').hidden = (m !== 'challenge');
-  if (m === 'challenge') labChallengeRenderLive(); // 进挑战模式就把已做的题列出来，不用等交卷
+  if (m === 'challenge') { if (!labExam) labExamStart(); labChallengeRenderLive(); } // 进挑战模式就把已做的题列出来，不用等交卷
+  else labExamStop(); // 退出挑战停表；再进挑战重新计 10 分钟
   document.getElementById('labModeTx').textContent = m === 'challenge'
     ? '挑战模式：没有提示，做完点“交卷”，答错的进今天复习。'
     : '自由玩：随便试，提示都在。';
@@ -5259,6 +5364,14 @@ function labFilterQuestions() {
 function labSubmitChallenge() {
   const box = document.getElementById('labChallengeReport');
   labChallengeSubmitted = true; // 从这里起盒子里是打分界面，实时列表不再覆盖它
+  labExamStop(); // 交卷停表（做题的时间到此为止，剩下的打分不计时）
+  // 交卷了，报告盒子要看得见：之前学生可能把它收起来了。
+  if (box) {
+    box.hidden = false;
+    box.classList.remove('lab-report-peek');
+    const fold = document.getElementById('labReportFold');
+    if (fold) { fold.textContent = '收起报告'; fold.setAttribute('aria-expanded', 'true'); }
+  }
   if (!labChallengeAttempts.length) {
     box.innerHTML = '<p>还没在挑战模式里做过题，先选一个问题。</p>';
     return;
@@ -5309,12 +5422,23 @@ function labFinishChallenge() {
     return;
   }
   labChallengeAttempts.forEach(qid => {
-    if (labProcSnap[qid] && labProcSnap[qid].mode === 'exam') procHistRecord(labProcSnap[qid]);
+    if (labProcSnap[qid] && labProcSnap[qid].mode === 'exam') procHistRecord(labProcSnap[qid], labExamUsedMs);
   });
   const wrong = labChallengeAttempts.filter(qid => labChallengeMarks[qid] === false);
   wrong.forEach(qid => {
     const q = LAB_QUESTIONS.find(x => x.qid === qid);
     recordAttempt(q.primary, false, false);
+    // 丢的是哪一步写进错题本：只记最近一次挑战里丢的步骤（最多 5 条），重练时直接看到卡在哪。
+    const rep = labProcSnap[qid];
+    if (rep && rep.lines) {
+      const lost = rep.lines.filter(function (l) { return !l.got; }).slice(0, 5).map(function (l) {
+        return { lab: qid, step: l.id, label: l.label, at: Date.now() };
+      });
+      if (lost.length) {
+        const st = reviewStore[q.primary];
+        if (st) { st.labLost = lost; saveReview(); }
+      }
+    }
   });
   labChallengeAttempts.filter(qid => labChallengeMarks[qid] === true).forEach(qid => {
     const q = LAB_QUESTIONS.find(x => x.qid === qid);
@@ -5324,15 +5448,130 @@ function labFinishChallenge() {
   if (!wrong.length) {
     summary = '全对，思路很稳。';
   } else {
+    // 丢分报告点名丢在哪一步，不只点名知识点。
     summary = '丢分报告：你卡在 ' + wrong.map(qid => {
       const q = LAB_QUESTIONS.find(x => x.qid === qid);
       const f = findPoint(q.primary);
-      return q.primary + ' ' + (f ? f.point.title : '');
+      const rep = labProcSnap[qid];
+      const steps = rep && rep.lost && rep.lost.length ? '（' + rep.lost.join('、') + '）' : '';
+      return q.primary + ' ' + (f ? f.point.title : '') + steps;
     }).join('、') + '——回去把这几条再练一遍。';
   }
   if (done) done.textContent = summary;
   labTrace('挑战交卷：' + summary, !wrong.length);
+  labReportShow(wrong);
 }
+
+/* ---------- 交卷报告单（NB §6 #45/46/47：我的发现一句话 + 错因标签；快速预览；顶部下滑关闭） ---------- */
+var labReportCtx = null; // { wrong: [qid], pointIds: [primary], lostSteps: [{lab, step, label}] }
+function labReportShow(wrong) {
+  const sheet = document.getElementById('labReportSheet');
+  if (!sheet) return;
+  const lostSteps = [];
+  const pointIds = [];
+  wrong.forEach(function (qid) {
+    const q = LAB_QUESTIONS.find(function (x) { return x.qid === qid; });
+    if (q && pointIds.indexOf(q.primary) === -1) pointIds.push(q.primary);
+    const rep = labProcSnap[qid];
+    if (rep && rep.lines) rep.lines.filter(function (l) { return !l.got; }).forEach(function (l) {
+      lostSteps.push({ lab: qid, step: l.id, label: l.label });
+    });
+  });
+  labReportCtx = { wrong: wrong.slice(), pointIds: pointIds, lostSteps: lostSteps, usedMs: labExamUsedMs };
+  const input = document.getElementById('labReportDiscovery');
+  if (input) input.value = '';
+  document.querySelectorAll('#labReportCauses .lab-cause').forEach(function (b) { b.setAttribute('aria-pressed', 'false'); });
+  const saved = document.getElementById('labReportSaved');
+  if (saved) saved.textContent = '';
+  sheet.hidden = false;
+  sheet.style.transform = '';
+  const back = document.getElementById('labReportBack');
+  if (back) back.hidden = true;
+}
+(function labReportBarBind() {
+  const fold = document.getElementById('labReportFold');
+  const peek = document.getElementById('labReportPeek');
+  const box = document.getElementById('labChallengeReport');
+  if (fold && box) fold.addEventListener('click', function () {
+    const hidden = box.hidden;
+    box.hidden = !hidden;
+    fold.textContent = hidden ? '收起报告' : '展开报告';
+    fold.setAttribute('aria-expanded', String(hidden));
+  });
+  if (peek && box) {
+    // 按住看台面：按住藏报告，松开回来（NB §6 #37）。
+    const on = function (e) { if (e && e.preventDefault) e.preventDefault(); box.classList.add('lab-report-peek'); };
+    const off = function () { box.classList.remove('lab-report-peek'); };
+    peek.addEventListener('pointerdown', on);
+    peek.addEventListener('pointerup', off);
+    peek.addEventListener('pointerleave', off);
+    peek.addEventListener('pointercancel', off);
+  }
+})();
+(function labReportSheetBind() {
+  const sheet = document.getElementById('labReportSheet');
+  if (!sheet) return;
+  document.querySelectorAll('#labReportCauses .lab-cause').forEach(function (b) {
+    b.addEventListener('click', function () {
+      b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed') !== 'true'));
+    });
+  });
+  const save = document.getElementById('labReportSave');
+  if (save) save.addEventListener('click', function () {
+    const input = document.getElementById('labReportDiscovery');
+    const text = input ? input.value.trim() : '';
+    const causes = [];
+    document.querySelectorAll('#labReportCauses .lab-cause[aria-pressed="true"]').forEach(function (b) {
+      causes.push(b.getAttribute('data-cause'));
+    });
+    const note = document.getElementById('labReportSaved');
+    if (!text && !causes.length) {
+      if (note) note.textContent = '先写一句发现，或选一个错因。';
+      return;
+    }
+    const list = loadInquiry();
+    list.push({ kind: 'lab-challenge-report', qids: labReportCtx ? labReportCtx.wrong : [],
+      pointIds: labReportCtx ? labReportCtx.pointIds : [],
+      lostSteps: labReportCtx ? labReportCtx.lostSteps : [],
+      discovery: text, causes: causes, usedMs: labReportCtx ? labReportCtx.usedMs : 0, at: Date.now() });
+    saveInquiry(list);
+    if (note) note.textContent = '记下来了，家长能在“家长看这里”看到。';
+    labTrace('交卷报告：' + (text || causes.join('、')), true);
+  });
+  // 快速预览（NB §6 #46）：不关报告单，只看一眼台面；点“回到报告”回来。
+  const preview = document.getElementById('labReportPreview');
+  const back = document.getElementById('labReportBack');
+  if (preview && back) {
+    preview.addEventListener('click', function () { sheet.hidden = true; back.hidden = false; });
+    back.addEventListener('click', function () { sheet.hidden = false; back.hidden = true; });
+  }
+  // 顶部下滑关闭（NB §6 #47）：按住把手往下拉 60px 以上就关掉；没拉够就弹回去。键盘回车/空格也能关。
+  const handle = document.getElementById('labReportHandle');
+  if (handle) {
+    let startY = null, dy = 0;
+    handle.addEventListener('pointerdown', function (e) {
+      startY = e.clientY; dy = 0;
+      if (handle.setPointerCapture) { try { handle.setPointerCapture(e.pointerId); } catch (err) {} }
+    });
+    handle.addEventListener('pointermove', function (e) {
+      if (startY === null) return;
+      dy = Math.max(0, e.clientY - startY);
+      sheet.style.transform = dy ? 'translateY(' + dy + 'px)' : '';
+    });
+    const end = function () {
+      if (startY === null) return;
+      sheet.style.transform = '';
+      if (dy > 60) { sheet.hidden = true; }
+      startY = null; dy = 0;
+    };
+    handle.addEventListener('pointerup', end);
+    handle.addEventListener('pointercancel', end);
+    handle.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { if (e.preventDefault) e.preventDefault(); sheet.hidden = true; }
+    });
+  }
+})();
+
 document.getElementById('labModeFree').addEventListener('click', () => labSetMode('free'));
 document.getElementById('labModeChallenge').addEventListener('click', () => labSetMode('challenge'));
 LAB_QUESTIONS.forEach(q => {

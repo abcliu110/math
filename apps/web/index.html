@@ -3454,6 +3454,7 @@
         <button class="btn small ghost" id="labModeChallenge" type="button" aria-pressed="false">挑战模式</button>
       </div>
       <span id="labModeTx">自由玩：随便试，提示都在。</span>
+      <span id="labExamTimer" class="exam-timer" hidden>还剩 10:00</span>
       <button class="btn small ghost" type="button" id="labFreePlayBtn">不选题，直接进工作间</button>
       <span class="btn-row" id="labPracticeMenu" aria-label="练习菜单">
         <button class="btn small ghost" type="button" id="labMenuReset">重置练习</button>
@@ -3849,7 +3850,29 @@
       <h3>挑战交卷</h3>
       <p class="muted">挑战模式里做过的问题都在这里。给每一道打个分（答对 / 答错），再点“提交报告”——答错的会进今天复习。</p>
       <div class="btn-row"><button class="btn small primary" id="labChallengeSubmit" type="button">交卷</button></div>
+      <div class="btn-row lab-report-bar">
+        <button class="btn small ghost" type="button" id="labReportFold" aria-expanded="true">收起报告</button>
+        <button class="btn small ghost" type="button" id="labReportPeek">按住看台面</button>
+      </div>
       <div id="labChallengeReport"></div>
+      <div id="labReportSheet" class="lab-report-sheet" hidden>
+        <div class="lab-report-handle" id="labReportHandle" role="button" tabindex="0" aria-label="下滑关闭报告"><span class="lab-report-grip">⋯</span> 下滑关闭</div>
+        <h4>交卷报告</h4>
+        <p class="muted">写一句你的发现，再选一个这次主要卡在哪。</p>
+        <div class="btn-row"><input type="text" id="labReportDiscovery" placeholder="我发现……" aria-label="我的发现一句话" style="flex:1;min-width:160px">
+        <button type="button" class="btn small primary" id="labReportSave">记下来</button>
+        <button type="button" class="btn small ghost" id="labReportPreview">快速预览</button></div>
+        <div class="btn-row lab-cause-row" id="labReportCauses" aria-label="错因标签">
+          <button type="button" class="btn small ghost lab-cause" data-cause="算错了" aria-pressed="false">算错了</button>
+          <button type="button" class="btn small ghost lab-cause" data-cause="概念没弄清" aria-pressed="false">概念没弄清</button>
+          <button type="button" class="btn small ghost lab-cause" data-cause="步骤漏了" aria-pressed="false">步骤漏了</button>
+          <button type="button" class="btn small ghost lab-cause" data-cause="看错题" aria-pressed="false">看错题</button>
+          <button type="button" class="btn small ghost lab-cause" data-cause="没思路" aria-pressed="false">没思路</button>
+          <button type="button" class="btn small ghost lab-cause" data-cause="粗心写错" aria-pressed="false">粗心写错</button>
+        </div>
+        <p id="labReportSaved" class="muted"></p>
+      </div>
+      <div class="btn-row"><button class="btn small ghost" type="button" id="labReportBack" hidden>回到报告</button></div>
     </div>
     <div class="lab-traces">
       <h3><span id="labTraceTitle">实验记录</span> <button class="station-fold" type="button" id="labTraceFold" aria-expanded="false" aria-label="收起或展开实验记录">▸</button></h3>
