@@ -130,6 +130,8 @@ body[data-view="exam"] #exam, body[data-view="inquiry"] #inquiry, body[data-view
 .world-panel{position:sticky;top:88px}
 .lab-mw-focus{outline:2px solid #f97316;outline-offset:2px;box-shadow:0 0 0 4px rgba(249,115,22,.18)}
 .apparatus-svg{width:100%;height:auto;display:block;margin:8px 0 12px;background:#fff;border:1px solid var(--line);border-radius:12px;touch-action:none}
+/* 拖动时别让浏览器选中文字：快拖砝码/数字时，选区会抢走指针（2026-11-07 复测）。 */
+.apparatus-svg,.apparatus-drop,.bench-chip,[data-drag-weight],[data-drag-num]{user-select:none;-webkit-user-select:none}
 .apparatus-ghost{position:fixed;z-index:9999;display:none;pointer-events:none;padding:6px 10px;border-radius:8px;background:#fff7ed;border:2px solid #ea580c;color:#9a3412;font-weight:700;font-size:14px;box-shadow:0 8px 20px rgba(15,23,42,.18)}
 .apparatus-dock{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
 .apparatus-chip{appearance:none;border:2px solid #ea580c;background:#fff7ed;color:#9a3412;border-radius:10px;padding:8px 12px;font-weight:700;font-size:14px;cursor:grab;user-select:none;touch-action:none;-webkit-user-select:none}
@@ -931,8 +933,8 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
 #worldBenchGhost { position: fixed; z-index: 9999; pointer-events: none; padding: 6px 12px; border-radius: 999px; background: #1e3a8a; color: #fff; font-weight: 700; box-shadow: 0 4px 12px rgba(0,0,0,.25); }
 #worldBenchGhost[hidden] { display: none; }
 
-/* 实验台放在工作间最上面，不用往下翻就能看到台上的数。 */
-#worldBenchCard { order: -1; }
+/* 实验台放在工作间最上面，不用往下翻就能看到台上的数。
+   （2026-11-07 复测修：台面卡片已移到 DOM 最前，不再靠 order:-1 视觉置顶。） */
 
 /* 实验台最上方：题目选择，横跨整块台子 */
 .bench-choose { grid-column: 1 / -1; order: -2; }

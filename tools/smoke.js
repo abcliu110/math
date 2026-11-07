@@ -86,6 +86,13 @@ function matchSel(e, sel) {
     while (p) { if (p === byId[dm[1]]) return true; p = p.parentNode; }
     return false;
   }
+  // '#labQuestions .lab-q'：实验室问题卡片（按父容器 + 类名配对，供 labFilterQuestions 检查用）。
+  if (sel === '#labQuestions .lab-q') {
+    if (!(e.className || '').split(' ').includes('lab-q')) return false;
+    let p = e.parentNode;
+    while (p) { if (p === byId.labQuestions) return true; p = p.parentNode; }
+    return false;
+  }
   return false;
 }
 const byId = {};
@@ -1167,6 +1174,126 @@ if (typeof sandbox.labWorldSave === 'function' && sandbox.labWorld) {
   check('lab restore brings the saved world back',
     !!restoredWorld && restoredWorld.linefn && restoredWorld.linefn.k === 2 && Array.isArray(restoredWorld.bench));
 }
+// 2026-11-07 复测修：刷新后进实验室，摆过的数、改过的器材值要全回来。
+// 根因有二：(a) 加载时 labWbRender → labSyncBalanceToWorld 在 labWorld 为空时
+// create 全新世界，之后再也不恢复，labWorldSave 还把空世界存回去毁掉保存；
+// (b) 进题重设（seedQuestion）+ 同步的“全新世界只带回台面”把长方形/天平洗回默认值。
+// 下面三条在改前代码上干净失败：1a 是空世界（rect 宽 1、台面 0、天平空），
+// 1b/1c 是长方形宽被重设回 1、天平被重设回 1/2。
+if (typeof sandbox.labWorldSave === 'function' && typeof sandbox.labWbRender === 'function') {
+  // 摆一个有内容的世界：台上 2 和 5、长方形宽 4、天平左 1/2 + 1/4，保存。
+  const wFix = sandbox.MathWorld.create({
+    rect: { perim: 20, w: 4 },
+    balance: { L: [{ n: 1, d: 2 }, { n: 1, d: 4 }], R: [] },
+  });
+  sandbox.labWorld = wFix; sandbox.mwPlay = wFix;
+  const mkFix2 = sandbox.benchRun({ type: 'makePiece', piece: { kind: 'num', v: 2 } });
+  if (mkFix2) sandbox.benchRun({ type: 'benchPut', pieceId: mkFix2.pieceId });
+  const mkFix5 = sandbox.benchRun({ type: 'makePiece', piece: { kind: 'num', v: 5 } });
+  if (mkFix5) sandbox.benchRun({ type: 'benchPut', pieceId: mkFix5.pieceId });
+  sandbox.labWorldSave();
+  // 1a：模拟刷新——世界变量清掉，再走加载时的 labWbRender。
+  sandbox.labWorld = null; sandbox.mwPlay = null;
+  sandbox.labWbRender();
+  check('lab autosave survives load-time legacy render (bench 2+5, rect w=4, balance L 1/2+1/4 kept)',
+    !!sandbox.labWorld && sandbox.labWorld.rect.w === 4 &&
+    sandbox.labWorld.balance.L.length === 2 &&
+    sandbox.MathWorld.derived(sandbox.labWorld).bench.count === 2);
+  // 1b：模拟刷新后直接进题——保存的长方形宽 4 不能被 seedQuestion 重设回 1。
+  sandbox.labWorld = null; sandbox.mwPlay = null; sandbox.labRestoredFlag = false;
+  sandbox.labSeedWorld('q-maxarea');
+  check('lab autosave survives entering a question (rect width kept, not reseeded to 1)',
+    !!sandbox.labWorld && sandbox.labWorld.rect.w === 4);
+  sandbox.labRestoredFlag = false;
+  // 1c：模拟刷新后进天平题——legacy 重设（左 1/2）也要让路，保存的 1/2+1/4 和宽 4 都在。
+  sandbox.labWorld = null; sandbox.mwPlay = null; sandbox.labRestoredFlag = false;
+  sandbox.labEnterQuestion('q-balfrac');
+  check('lab autosave survives entering balance question (legacy reset skipped, saved values kept)',
+    !!sandbox.labWorld && sandbox.labWorld.rect.w === 4 &&
+    sandbox.labWorld.balance.L.length === 2 && sandbox.labWbL.length === 2);
+  sandbox.labRestoredFlag = false;
+  // 1d：同步只换自己的器材——天平同步后，长方形宽 4、分数板、直线都不动。
+  sandbox.labWbL = [{ kind: 'frac', n: 1, d: 2 }]; sandbox.labWbR = [{ kind: 'num', v: 3 }];
+  sandbox.labSyncBalanceToWorld();
+  check('lab balance sync keeps other apparatus (rect w=4, fracboard 1/2+1/3, linefn k=2)',
+    !!sandbox.labWorld && sandbox.labWorld.rect.w === 4 &&
+    sandbox.labWorld.fracboard.A.n === 1 && sandbox.labWorld.fracboard.A.d === 2 &&
+    sandbox.labWorld.linefn.k === 2 &&
+    sandbox.MathWorld.derived(sandbox.labWorld).bench.count === 2);
+  // 收尾：天平 legacy 数组和世界恢复成空盘，别影响后面的 lab2 天平检查（它默认空盘起手）。
+  sandbox.labWbL = []; sandbox.labWbR = [];
+  sandbox.labSyncBalanceToWorld();
+}
+// 2026-11-07 复测修：学生界面不出现任何 goalMet/函数名/调试字样。
+if (typeof sandbox.worldPlayRender === 'function') {
+  sandbox.worldPlayRender();
+  const studentTexts = ['worldBalMsg', 'worldFnMsg', 'worldDiceMsg', 'worldRectMsg', 'worldCkMsg', 'worldFracOut']
+    .map(function (id) { return byId[id] ? (byId[id].textContent || '') : ''; }).join('\n');
+  check('lab student UI shows no goalMet/debug strings',
+    studentTexts.indexOf('goalMet') === -1 && studentTexts.indexOf('tilt=') === -1);
+  check('lab student UI: balance message is plain words',
+    byId.worldBalMsg.textContent.indexOf('平了') >= 0 || byId.worldBalMsg.textContent.indexOf('还不平') >= 0);
+}
+// 2026-11-07 复测修：台面清空 / 大器材拿下台面后，检查器回到“台面现状”，不留孤儿面板。
+if (typeof sandbox.worldInspectSelect === 'function' && typeof sandbox.benchRun === 'function') {
+  // 选中长方形检查器，再把它拿下台面 → 选择要清掉（旧代码：守卫缺失，选择留在那）。
+  sandbox.benchRun({ type: 'benchRectToggle' });
+  sandbox.worldInspectSelect({ apparatus: 'rect' });
+  check('lab inspector opens for rect on bench', !!sandbox.worldInspectSel);
+  sandbox.benchRun({ type: 'benchRectToggle' });
+  sandbox.worldPlayRender();
+  check('lab inspector closes when rect is taken off the bench', !sandbox.worldInspectSel);
+  // 选中长方形检查器，点“全部拿走”（data-bench="clear"）→ 选择要清掉（旧代码：clear 分支不关检查器）。
+  sandbox.benchRun({ type: 'benchRectToggle' });
+  sandbox.worldInspectSelect({ apparatus: 'rect' });
+  const clearBtn = makeEl('button');
+  clearBtn.dataset.bench = 'clear';
+  clearBtn.setAttribute('data-bench', 'clear');
+  const benchCardHandlers = byId.worldBenchCard._handlers && byId.worldBenchCard._handlers.click;
+  if (benchCardHandlers) benchCardHandlers.forEach(function (fn) { fn({ target: clearBtn }); });
+  check('lab inspector closes on clear-all (bench emptied, inspector back to bench status)', !sandbox.worldInspectSel);
+  sandbox.benchRun({ type: 'benchRectToggle' }); // 收尾：把长方形拿下台面，恢复默认状态
+}
+// 2026-11-07 复测修：问题计数按卡片自己的按钮配题，不按位置配对；计数以可见卡片为准。
+// 旧代码位置配对：卡片顺序一错位就藏错卡、计数撒谎（14 张卡写 13）。下面用打乱的卡片 + 领域筛选验：
+// 3 张卡按 maxarea / fracadd / balfrac 的顺序放，筛“数与代数”应留 fracadd、balfrac，藏 maxarea；
+// 旧代码按位置配 LAB_QUESTIONS[0..2]（thirteen / twentyfour / monty），会留 maxarea、藏 balfrac。
+if (typeof sandbox.labFilterQuestions === 'function') {
+  const labQBox = documentStub.getElementById('labQuestions');
+  function seedLabQCard(suffix) {
+    const card = makeEl('div');
+    card.className = 'lab-q';
+    card.parentNode = labQBox;
+    const btn = makeEl('button');
+    btn.id = 'labQ-' + suffix;
+    card.querySelector = function (sel) { return sel.indexOf('labQ-') >= 0 ? btn : null; };
+    return card;
+  }
+  const cardMax = seedLabQCard('maxarea');
+  const cardFrac = seedLabQCard('fracadd');
+  const cardBal = seedLabQCard('balfrac');
+  byId.labQSearch.value = '';
+  byId.labQGrade.value = 'all';
+  sandbox.labQDomain = '数与代数';
+  sandbox.labFilterQuestions();
+  check('lab question filter pairs cards by their own button, not by position',
+    cardMax.style.display === 'none' && cardFrac.style.display !== 'none' && cardBal.style.display !== 'none');
+  check('lab question count counts visible cards',
+    byId.labQCount.textContent === '找到 2 个问题');
+  sandbox.labQDomain = 'all';
+  sandbox.labFilterQuestions();
+  check('lab question filter clears count when all cards are visible',
+    byId.labQCount.textContent === '');
+  [cardMax, cardFrac, cardBal].forEach(function (c) {
+    const i = registry.indexOf(c);
+    if (i >= 0) registry.splice(i, 1);
+  });
+}
+// 2026-11-07 复测修：台面卡片在 DOM 里就是工作间第一张，不靠 order:-1 视觉置顶。
+check('lab HTML: bench card is first in DOM inside the workbench stations',
+  htmlText.indexOf('id="worldBenchCard"') < htmlText.indexOf('id="worldFracCard"'));
+check('lab CSS: no order:-1 visual-first hack for the bench card',
+  !cssText.includes('#worldBenchCard { order: -1; }'));
 // v0.9 addendum (NB 走访 §2)：设置卡——作为默认 / 恢复初始值，存在本地
 if (typeof sandbox.labDefaultsSave === 'function') {
   sandbox.labDefaultsSave({ linefn: { k: 3, b: 5 } });

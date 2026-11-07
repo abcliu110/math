@@ -21,6 +21,21 @@ assert(/data-drag-chip/.test(ap), 'bind handles data-drag-chip');
 assert(/data-drop/.test(ap), 'bind resolves data-drop');
 assert(/pendingN|pendingR|pendingK/.test(ap), 'SVG handles commit on pointerup');
 assert(/version: '0\.3\.0'/.test(ap), 'apparatus version 0.3.0');
+// 2026-11-07 复测修：快拖砝码/数字时指针一出元素就丢事件，浏览器当成选文字。
+// 指针捕获要在被拖的元素本身（不是根节点），拖动中禁掉 selectstart。
+assert(/captureEl: wt\.el/.test(ap), 'SVG weight drag captures the pointer on the weight itself');
+assert(/captureOn\(wt\.el, e\.pointerId\)/.test(ap), 'SVG weight drag requests capture on the weight');
+assert(/captureEl: nm\.el/.test(ap), 'SVG number drag captures the pointer on the number itself');
+assert(/captureOn\(nm\.el, e\.pointerId\)/.test(ap), 'SVG number drag requests capture on the number');
+assert(/addEventListener\('selectstart'/.test(ap) && /if \(drag\) e\.preventDefault\(\)/.test(ap),
+  'selectstart is suppressed while dragging');
+// 2026-11-07 复测修：器材/台面禁选文字（快拖不再选中文字）。
+assert(/\[data-drag-weight\],\[data-drag-num\]\{user-select:none/.test(css) ||
+  /\[data-drag-weight\][\s\S]{0,120}user-select:\s*none/.test(css),
+  'drag weights/numbers are unselectable');
+assert(/\.bench-chip[^{]*\{[^}]*user-select:\s*none/.test(css) ||
+  /\.bench-chip,\[data-drag-weight\]/.test(css),
+  'bench chips are unselectable');
 
 assert(/data-drag-chip="weight"/.test(html), 'balance HTML weight chips');
 assert(/data-drop="balance\.L"/.test(html), 'balance left drop');

@@ -2107,9 +2107,9 @@ const NAV_DEFS = {
   'demo-numplay': { crumbs: ['数学', '动画', '数一数：一个数，五种样子'], target: 'demo-numplay' },
   'demo-fracnumline': { crumbs: ['数学', '动画', '分数变数线'], target: 'demo-fracnumline' },
   why:        { crumbs: ['数学', '动画', '为什么小实验'], target: 'why' },
-  lab:        { crumbs: ['数学', '数学实验室'], target: 'lab', action: () => { if (typeof worldPlayRender === 'function') worldPlayRender(); } },
+  lab:        { crumbs: ['数学', '数学实验室'], target: 'lab', action: () => { if (!labWorld && typeof labSeedWorld === 'function') labSeedWorld(null); if (typeof labFilterQuestions === 'function') labFilterQuestions(); if (typeof worldPlayRender === 'function') worldPlayRender(); } },
   // world 入口已并入实验室（NB 用法）；旧链接/书签仍进 lab。
-  world:      { crumbs: ['数学', '数学实验室'], target: 'lab', action: () => { if (typeof worldPlayRender === 'function') worldPlayRender(); } },
+  world:      { crumbs: ['数学', '数学实验室'], target: 'lab', action: () => { if (!labWorld && typeof labSeedWorld === 'function') labSeedWorld(null); if (typeof labFilterQuestions === 'function') labFilterQuestions(); if (typeof worldPlayRender === 'function') worldPlayRender(); } },
   review:     { crumbs: ['数学', '错题本'], target: 'review', action: renderWrongBook },
   'today-review': { crumbs: ['数学', '今天复习'], target: 'grades', action: renderReview },
   progress:   { crumbs: ['数学', '我的进度'], target: 'progressCard', action: renderProgress },
@@ -3226,7 +3226,7 @@ drawLabFunc();
 
 /* ================= 数学实验室 · 一间工作间（第二阶段） =================
    一张桌子：托盘（共用零件盒）+ 3 个组合台（分数加法 / 天平 / 数轴）
-   + 13 个问题入口（9 个创意实验 + 4 个工作间问题）+ 自由玩/挑战两种模式 + 实验记录。
+   + 14 个问题入口（9 个创意实验 + 5 个工作间问题）+ 自由玩/挑战两种模式 + 实验记录。
    技术只用三件小东西（按“数学应该更简单”的要求）：
    (1) 数字引擎——分数全按 [分子, 分母] 对算，绝不用 0.333 这类浮点近似；
    (2) 几何引擎——SVG 按坐标画（天平横梁旋转、数轴落点都是坐标算出来的）；
@@ -3256,7 +3256,15 @@ function labValNum(v) { return v.kind === 'frac' ? v.n / v.d : v.v; }
 function labValLabel(v) { return v.kind === 'frac' ? labFracStr(v.n, v.d) : String(v.v); }
 /* 一间世界换题：世界只建一次，换题只重设本题的器材（MathWorld.seedQuestion），
    台面上的数、托盘、骰子、流程全部保留。第一次进实验室（还没有世界）才建一个
-   默认世界。旧行为是每题一个全新世界，台面只能靠 localStorage 从头捡回来。 */
+   默认世界。旧行为是每题一个全新世界，台面只能靠 localStorage 从头捡回来。
+   2026-11-07 复测修（自动保存失效的根因）：加载时 legacy 小站的渲染
+   （labWbRender → labSyncBalanceToWorld）会在 labWorld 还是空时直接
+   MathWorld.create 一个全新世界赋给 labWorld，之后 worldPlayEnsure 见
+   labWorld 已存在就再也不恢复，进实验室后 labWorldSave 还会把空世界存回去、
+   把保存毁掉；而且旧的同步是“全新世界 + 只带回台面”，会把长方形/分数板/
+   直线全洗回默认值。所以恢复必须发生在任何同步之前：这里先恢复，legacy
+   数组再从世界反向取数；刚恢复的世界，下一次进题不重设器材（保存的值为准），只保护一次。 */
+var labRestoredFlag = false; // 刚从自动保存恢复：下一次进题不重设器材，labEnterQuestion 用掉后清掉
 function labSeedWorld(qid) {
   if (!labHasWorld()) { labWorld = null; mwPlay = null; labWorldQid = null; return; }
   labWorldQid = qid || null;
@@ -3264,7 +3272,8 @@ function labSeedWorld(qid) {
     // 上次没做完的世界直接回来（自动保存），不让学生丢东西；没有才建新的。
     labWorld = labWorldRestore();
     if (labWorld) {
-      if (qid && MathWorld.seedQuestion) labWorld = MathWorld.seedQuestion(labWorld, qid);
+      labRestoredFlag = true; // 这次恢复的器材值，进题时不许重设洗掉
+      labSeedLegacyFromWorld(labWorld); // legacy 小站的数组/滑杆先按世界摆好，不然同步会写回默认值
     } else if (qid && MathWorld.LAB_SEEDS[qid]) labWorld = MathWorld.LAB_SEEDS[qid]();
     else {
       labWorld = MathWorld.create({
@@ -3275,13 +3284,46 @@ function labSeedWorld(qid) {
         linefn: { k: 2, b: 8 },
       });
     }
-  } else if (qid && MathWorld.seedQuestion) {
+  } else if (qid && MathWorld.seedQuestion && !labRestoredFlag) {
     labWorld = MathWorld.seedQuestion(labWorld, qid);
   }
   if (qid) labApplyDefaults(qid); // 这道题存过的器材默认值先摆好
   mwPlay = labWorld; // 实验室与验收台共用同一世界
   benchRestore(); // 台面上的数跨题保留（换题后世界里已有，restore 是空操作）
   labWorldSave();
+}
+/* 从恢复的世界反向给 legacy 小站摆数：天平砝码、分数板、十格阵、函数滑杆。
+   不做这一步，加载时 labWbRender → labSyncBalanceToWorld 会把 legacy 的
+   默认值（天平两边空）写回世界，刚恢复的器材值就没了。 */
+function labSeedLegacyFromWorld(w) {
+  if (!w || !labHasWorld()) return;
+  function pieceVal(id) {
+    const p = w.pieces && w.pieces[id];
+    if (!p) return null;
+    const q = MathWorld.Q.fromPiece(p);
+    return q.d === 1 ? { kind: 'num', v: q.n } : { kind: 'frac', n: q.n, d: q.d };
+  }
+  if (w.balance) {
+    labWbL = (w.balance.L || []).map(pieceVal).filter(function (v) { return !!v; });
+    labWbR = (w.balance.R || []).map(pieceVal).filter(function (v) { return !!v; });
+  }
+  if (w.fracboard) {
+    labFaA = { n: w.fracboard.A.n, d: w.fracboard.A.d };
+    labFaB = { n: w.fracboard.B.n, d: w.fracboard.B.d };
+  }
+  if (w.tenframe) {
+    labTfA = w.tenframe.A | 0; labTfB = w.tenframe.B | 0;
+    if (typeof labTfCells !== 'undefined' && labTfCells && labTfCells.A) {
+      labTfCells.A.forEach(function (c, i) { c.classList.toggle('filled', i < labTfA); });
+      labTfCells.B.forEach(function (c, i) { c.classList.toggle('filled', i < labTfB); });
+    }
+  }
+  if (w.linefn) {
+    const kEl = document.getElementById('labFuncKRange');
+    const bEl = document.getElementById('labFuncBRange');
+    if (kEl) kEl.value = String(w.linefn.k);
+    if (bEl) bEl.value = String(w.linefn.b);
+  }
 }
 /* ---------- 台面自动保存 + 器材默认值（NB 走访补记 §2/§7） ----------
    NB 的教训：误点撤销后标签页跳走，未保存的台面直接丢了（保存要登录）。
@@ -3808,6 +3850,7 @@ function worldBenchRender() {
       if (!w) return;
       MathWorld.derived(w).bench.items.forEach(function (it) { benchRun({ type: 'benchTake', pieceId: it.id }); });
       benchSel = {};
+      worldInspectSelect(null); // 台面清空了，检查器回到“台面现状”，别留孤儿面板
       benchMsg('台面清空了。', true);
       worldPlayRender();
     }
@@ -3942,7 +3985,15 @@ function worldInspectorRender() {
   if (!box || !labHasWorld() || worldInspDrag) return;
   const w = worldPlayEnsure();
   if (!w) return;
+  const hadSel = worldInspectSel;
   if (worldInspectSel && worldInspectSel.piece && !w.pieces[worldInspectSel.piece]) worldInspectSel = null;
+  // 大器材被拿下台面时，选中的检查器也要跟着关掉，不然留一个孤儿面板（2026-11-07 复测）。
+  if (worldInspectSel && worldInspectSel.apparatus === 'rect' && !w.benchRect) worldInspectSel = null;
+  if (worldInspectSel && worldInspectSel.apparatus === 'linefn' && !w.benchLine) worldInspectSel = null;
+  if (worldInspectSel && worldInspectSel.apparatus === 'balance' && !w.benchBalance) worldInspectSel = null;
+  if (hadSel && !worldInspectSel && typeof document !== 'undefined' && document.querySelectorAll) {
+    document.querySelectorAll('#labMwWorkbench .demo-card.is-selected').forEach(function (el) { el.classList.remove('is-selected'); });
+  }
   const insp = worldInspectSel ? MathWorld.inspect(w, worldInspectSel) : null;
   if (!insp) {
     // 没选中东西：显示台面现状（合计、分母、几个数），不是空文案。
@@ -4076,28 +4127,38 @@ function worldInspectorApply(idx, rawVal) {
     worldInspectorApply(idx, p.value + d * p.step);
   });
 })();
+/* legacy 小站 → 世界：只换自己那件器材，别的器材原样保留。
+   旧写法是 create 一个全新世界再 labCarryProcedure（只带回台面+流程），
+   等于把长方形/天平/直线/分数板全洗回默认值——加载时 labWbRender 一跑，
+   刚恢复的自动保存就没了（2026-11-07 复测：长方形回宽 1 的根因之二）。
+   所以这里原地改：分数板只换 fracboard，天平只换 balance，直线只换 linefn。 */
 function labSyncFracBoardToWorld() {
   if (!labHasWorld()) return;
-  const prevMeta = (labWorld && labWorld.meta) ? labWorld.meta : {};
-  labWorld = labCarryProcedure(labWorld, MathWorld.create({ fracboard: { A: { n: labFaA.n, d: labFaA.d }, B: { n: labFaB.n, d: labFaB.d } } }));
-  labWorld.meta = Object.assign({}, prevMeta);
+  if (!labWorld) labSeedWorld(null); // 世界还没建：先恢复保存（不然 create 一个新世界会把保存洗掉）
+  if (!labWorld) return;
+  labWorld.fracboard = MathWorld.create({ fracboard: { A: { n: labFaA.n, d: labFaA.d }, B: { n: labFaB.n, d: labFaB.d } } }).fracboard;
   mwPlay = labWorld;
 }
 function labSyncBalanceToWorld() {
   if (!labHasWorld()) return;
-  const prevMeta = (labWorld && labWorld.meta) ? labWorld.meta : {};
+  if (!labWorld) labSeedWorld(null); // 世界还没建：先恢复保存（不然 create 一个新世界会把保存洗掉）
+  if (!labWorld) return;
   const toQ = (v) => v.kind === 'frac' ? { n: v.n, d: v.d } : { n: v.v, d: 1 };
-  labWorld = labCarryProcedure(labWorld, MathWorld.create({ balance: { L: labWbL.map(toQ), R: labWbR.map(toQ) } }));
-  labWorld.meta = Object.assign({}, prevMeta);
+  const next = MathWorld.create({ balance: { L: labWbL.map(toQ), R: labWbR.map(toQ) } });
+  (labWorld.balance.L || []).concat(labWorld.balance.R || []).forEach(function (id) { delete labWorld.pieces[id]; });
+  labWorld.balance = next.balance;
+  Object.assign(labWorld.pieces, next.pieces);
   mwPlay = labWorld;
 }
 function labSyncLinefnToWorld() {
   if (!labHasWorld()) return;
+  if (!labWorld) labSeedWorld(null); // 世界还没建：先恢复保存（不然 create 一个新世界会把保存洗掉）
+  if (!labWorld) return;
   const kEl = document.getElementById('labFuncKRange');
   const bEl = document.getElementById('labFuncBRange');
-  labWorld = labCarryProcedure(labWorld, MathWorld.create({
+  labWorld.linefn = MathWorld.create({
     linefn: { k: kEl ? parseFloat(kEl.value) : 2, b: bEl ? parseFloat(bEl.value) : 8 },
-  }));
+  }).linefn;
   mwPlay = labWorld;
 }
 function labAutoMarkBench(qid) {
@@ -4430,7 +4491,7 @@ document.getElementById('labLineSvg').addEventListener('click', e => {
 });
 document.getElementById('labLineClear').addEventListener('click', () => { labLinePts = []; labLineRender(); });
 
-/* ---------- 13 个问题入口 + 自由玩 / 挑战两种模式 + 交卷报告 ---------- */
+/* ---------- 14 个问题入口 + 自由玩 / 挑战两种模式 + 交卷报告 ---------- */
 var LAB_QUESTIONS = [
   { qid: 'q-thirteen', title: '13 有几种凑法？', demo: 'thirteen', points: ['1.6', '1.9', '1.11'], primary: '1.9', domain: '数与代数' },
   { qid: 'q-twentyfour', title: '24 点', demo: 'twentyfour', points: ['4.9'], primary: '4.9', domain: '数与代数' },
@@ -4494,14 +4555,17 @@ function labEnterQuestion(qid) {
   if (q.demo) { goDemoFromHere('demo-' + q.demo); return; } // 演示压在实验室上面，返回回实验室
   // 工作间问题：留在实验室；局面种进共享 MathWorld，高亮对应台子。
   labSeedWorld(qid);
+  // 刚从自动保存恢复：器材值以保存的为准，这一次进题不重设（legacy 小站也不重设）；只保护一次。
+  const keepSaved = labRestoredFlag;
+  labRestoredFlag = false;
   if (q.bench === 'fracadd') {
-    labFaA = { n: 1, d: 2 }; labFaB = { n: 1, d: 3 }; labFaTouched = { A: false, B: false }; labFaRender();
+    if (!keepSaved) { labFaA = { n: 1, d: 2 }; labFaB = { n: 1, d: 3 }; labFaTouched = { A: false, B: false }; labFaRender(); }
     labSetCurrentQ('当前问题：分母不一样，分数能直接加吗？——在上面分数板调好，点「拼一拼」。');
   } else if (q.bench === 'balfrac') {
-    labWbL = [{ kind: 'frac', n: 1, d: 2 }]; labWbR = []; labWbRender();
+    if (!keepSaved) { labWbL = [{ kind: 'frac', n: 1, d: 2 }]; labWbR = []; labWbRender(); }
     labSetCurrentQ('当前问题：天平一边放 1/2，另一边要放多少才平？——左盘已有 1/2，右边你来配。');
   } else if (q.bench === 'numline') {
-    if (labHasWorld()) {
+    if (!keepSaved && labHasWorld()) {
       labTfA = 7; labTfB = 0;
       labTfCells.A.forEach((c, i) => c.classList.toggle('filled', i < 7));
       labTfCells.B.forEach(c => c.classList.remove('filled'));
@@ -4692,9 +4756,13 @@ function labFilterQuestions() {
   const g = gEl ? gEl.value : 'all';
   let shown = 0;
   const cards = document.querySelectorAll('#labQuestions .lab-q');
-  LAB_QUESTIONS.forEach(function (qq, i) {
-    const card = cards[i];
-    if (!card) return;
+  // 卡片按它自己的按钮配题目（labQ-<后缀> ↔ q-<后缀>），不用位置配对：
+  // 卡片顺序和题目数组一旦错位，位置配对会藏错卡、计数也会撒谎（2026-11-07 复测：14 张卡，计数写 13）。
+  cards.forEach(function (card) {
+    const btn = card.querySelector('[id^="labQ-"]');
+    const qid = btn && btn.id ? ('q-' + btn.id.slice(5)) : null;
+    const qq = qid ? LAB_QUESTIONS.find(function (x) { return x.qid === qid; }) : null;
+    if (!qq) { card.style.display = ''; shown++; return; } // 没有对应的题目定义：照常显示，计入总数
     const grade = parseInt(String(qq.primary).split('.')[0], 10);
     const hay = (qq.title + ' ' + qq.primary).toLowerCase();
     const ok = (!q || hay.indexOf(q) >= 0) &&
@@ -4706,7 +4774,8 @@ function labFilterQuestions() {
   const empty = document.getElementById('labQEmpty');
   if (empty) empty.hidden = shown > 0;
   const count = document.getElementById('labQCount');
-  if (count) count.textContent = shown === LAB_QUESTIONS.length ? '' : '找到 ' + shown + ' 个问题';
+  // 计数以肉眼可见的卡片数为准（shown 就是可见数），全部可见时不显示计数。
+  if (count) count.textContent = shown === cards.length ? '' : '找到 ' + shown + ' 个问题';
 }
 (function labBenchExtrasBind() {
   const bind = function (id, fn) { const el = document.getElementById(id); if (el) el.addEventListener('click', fn); };
@@ -4833,6 +4902,10 @@ document.getElementById('labTraceClear').addEventListener('click', () => {
   const ul = document.getElementById('labTraceList');
   if (ul) ul.innerHTML = '';
 });
+// 加载时先恢复自动保存（labSeedWorld(null)）：不然下面的 labWbRender →
+// labSyncBalanceToWorld 会在 labWorld 还是空时 create 一个全新世界、把
+// math-lab-world-v1 里的器材值洗掉（2026-11-07 复测：刷新后台面空、长方形回宽 1、天平清零的根因）。
+labSeedWorld(null);
 labTrayRender();
 labFaRender();
 labWbRender();
@@ -4880,9 +4953,9 @@ function worldPlayRender() {
       naiveEl.style.width = ((d.fracboard.naive.n / d.fracboard.naive.d) / scale * 100) + '%';
       trueEl.style.width = ((d.fracboard.trueSum.n / d.fracboard.trueSum.d) / scale * 100) + '%';
       setTx('worldFracOut',
+        (MathWorld.goalMet(w, MathWorld.LAB_GOALS['q-fracadd']) ? '拼对了！' : '') +
         '错拼 ' + d.fracboard.naiveStr + '，正确 ' + d.fracboard.trueStr +
-        '（差 ' + d.fracboard.gapStr + '）。goalMet(fracExplored)=' +
-        MathWorld.goalMet(w, MathWorld.LAB_GOALS['q-fracadd']));
+        '（差 ' + d.fracboard.gapStr + '）。');
     } else {
       naiveEl.style.width = '0%'; trueEl.style.width = '0%';
       setTx('worldFracOut', '还没拼。点「拼一拼」让模型算出错拼与正拼。');
@@ -4890,20 +4963,21 @@ function worldPlayRender() {
   }
   setTx('worldBalEq', '左 ' + d.balance.Lstr + ' ＝ 右 ' + d.balance.Rstr);
   setTx('worldBalMsg', d.balance.equal
-    ? '平了！goalMet(balanceEqual)=true'
-    : '还不平（tilt=' + d.balance.tilt.toFixed(1) + '）。goalMet(balanceEqual)=false');
+    ? '平了！两边都是 ' + d.balance.Lstr + '。'
+    : '还不平：' + (d.balance.leftHeavy ? '左边重 ' : '右边重 ') + d.balance.diffStr + '。');
   const ck = d.chicken;
   setTx('worldCkRabbits', String(ck ? ck.rabbits : 0));
   setTx('worldCkRead', ck
     ? ('鸡 ' + ck.chickens + ' 只，兔 ' + ck.rabbits + ' 只，腿 ' + ck.legs + '（目标 ' + ck.targetLegs + '）。')
     : '');
   setTx('worldCkMsg', ck && ck.solved
-    ? '解出了！goalMet(chickenSolved)=true'
+    ? '解出了！鸡 ' + ck.chickens + ' 只，兔 ' + ck.rabbits + ' 只，腿正好 ' + ck.legs + ' 条。'
     : (ck && !ck.feasible
       ? '这道题无解：' + (ck.infeasibleReason === 'odd-legs' ? '腿的总数是奇数，凑不出来'
         : ck.infeasibleReason === 'legs-too-few' ? '腿数比全是鸡时还少'
         : ck.infeasibleReason === 'legs-too-many' ? '腿数比全是兔时还多' : '数据有问题')
-      : '还没解出。goalMet(chickenSolved)=false'));
+      : '还没解出。' + (ck ? (ck.headGap !== 0 ? '头' + (ck.headGap > 0 ? '还少 ' : '多了 ') + Math.abs(ck.headGap) + ' 个。'
+        : '头对了，腿' + (ck.legGap > 0 ? '还少 ' : '多了 ') + Math.abs(ck.legGap) + ' 条。') : '')));
   const ckRange = document.getElementById('worldCkRange');
   const dragging = typeof Apparatus !== 'undefined' && Apparatus.isDragging && Apparatus.isDragging();
   if (ckRange && ck && !dragging) ckRange.value = String(ck.rabbits);
@@ -4917,8 +4991,8 @@ function worldPlayRender() {
   setTx('worldFnK', String(w.linefn.k));
   setTx('worldFnB', String(w.linefn.b));
   setTx('worldFnMsg',
-    'y = ' + w.linefn.k + 'x + ' + w.linefn.b + '；当 x=2，y=' + d.linefn.yAt2 +
-    '。goalMet(k=-1)=' + MathWorld.goalMet(w, MathWorld.LAB_GOALS['q-funcline']));
+    'y = ' + w.linefn.k + 'x + ' + w.linefn.b + '；当 x=2，y=' + d.linefn.yAt2 + '。' +
+    (w.linefn.k === -1 ? '斜率是 −1。' : w.linefn.k > 0 ? '斜率是正的，线往上走。' : w.linefn.k < 0 ? '斜率是负的，线往下走。' : '斜率是 0，线是平的。'));
   renderProcedurePanel(w);
   worldBenchRender();
   const dice = d.dice;
@@ -4931,15 +5005,11 @@ function worldPlayRender() {
     }).join('');
   }
   setTx('worldDiceOut', 'A 得 ' + dice.pAStr + '，B 得 ' + dice.pBStr + '。');
-  setTx('worldDiceMsg', MathWorld.goalMet(w, MathWorld.LAB_GOALS['q-fairgame'])
-    ? '公平了！goalMet(diceFair)=true'
-    : dice.signals[0].text + '。goalMet(diceFair)=false');
+  setTx('worldDiceMsg', dice.signals[0].text + '。');
   const rect = d.rect;
   setTx('worldRectOut', '宽 ' + rect.w + '，长 ' + rect.h + '；周长 ' + rect.perim + '，面积 ' + rect.area +
     (rect.isSquare ? '（正方形）' : '') + '。');
-  setTx('worldRectMsg', (MathWorld.goalMet(w, MathWorld.LAB_GOALS['q-maxarea'])
-    ? '面积最大了！goalMet(rectMaxArea)=true'
-    : rect.signals[0].text + '。goalMet(rectMaxArea)=false'));
+  setTx('worldRectMsg', rect.signals[0].text + '。');
   // 台面在说什么：只给学生看的信号（天平平没平、错拼差多少、腿差几条），
   // 不再倒调试用的内部状态（goalMet、diff、pieceCount 都不出现）。
   const sigLines = (d.signals || []).map(function (s) {

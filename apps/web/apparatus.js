@@ -763,10 +763,11 @@
       if (wt) {
         drag = {
           kind: 'weight', qty: wt.val, label: wt.val, pointerId: e.pointerId,
-          captureEl: root, sourceEl: wt.el,
+          // 指针捕获在砝码本身（不是根节点）：快拖时指针一出砝码就丢事件，浏览器就当成选文字了（2026-11-07 复测）。
+          captureEl: wt.el, sourceEl: wt.el,
         };
         showGhost(wt.val, e.clientX, e.clientY);
-        captureOn(root, e.pointerId);
+        captureOn(wt.el, e.pointerId);
         e.preventDefault();
         return;
       }
@@ -775,10 +776,10 @@
       if (nm) {
         drag = {
           kind: 'num', qty: nm.val, label: nm.val, pointerId: e.pointerId,
-          captureEl: root, sourceEl: nm.el,
+          captureEl: nm.el, sourceEl: nm.el,
         };
         showGhost(nm.val, e.clientX, e.clientY);
-        captureOn(root, e.pointerId);
+        captureOn(nm.el, e.pointerId);
         e.preventDefault();
         return;
       }
@@ -920,6 +921,8 @@
     root.addEventListener('pointermove', onMove);
     root.addEventListener('pointerup', onUp);
     root.addEventListener('pointercancel', onUp);
+    // 快拖时浏览器会把指针移动当成选文字：拖动中禁掉选区，拖完恢复（2026-11-07 复测：快拖砝码只选中文字）。
+    root.addEventListener('selectstart', function (e) { if (drag) e.preventDefault(); });
     // Capture lost cases still finish via window.
     window.addEventListener('pointerup', onUp);
     window.addEventListener('pointercancel', onUp);
