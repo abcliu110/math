@@ -4794,6 +4794,8 @@ const TYPES={
  div:{label:&#x27;除法器&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;除法器&#x27;,out:&#x27;value&#x27;,accepts:&#x27;value&#x27;,slots:true,defaults:{},fields:[],size:()=&gt;[200,110]},
  money:{label:&#x27;人民币&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;人民币&#x27;,out:&#x27;value&#x27;,defaults:{yuan:1,jiao:0,fen:0},fields:[{k:&#x27;yuan&#x27;,label:&#x27;元&#x27;,min:0,max:99},{k:&#x27;jiao&#x27;,label:&#x27;角&#x27;,min:0,max:9},{k:&#x27;fen&#x27;,label:&#x27;分&#x27;,min:0,max:9}],size:()=&gt;[190,62]},
  clock:{label:&#x27;钟面&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;钟面&#x27;,defaults:{h:3,m:0},fields:[{k:&#x27;h&#x27;,label:&#x27;时（几点）&#x27;,min:1,max:12},{k:&#x27;m&#x27;,label:&#x27;分&#x27;,min:0,max:55,step:5}],size:()=&gt;[180,200]},
+ angle:{label:&#x27;角&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;角&#x27;,defaults:{deg:90},fields:[{k:&#x27;deg&#x27;,label:&#x27;度数（0 到 180）&#x27;,min:0,max:180,step:5}],size:()=&gt;[200,160]},
+ bars:{label:&#x27;条形统计图&#x27;,group:&#x27;统计&#x27;,prefix:&#x27;统计图&#x27;,defaults:{a:4,b:6,c:3},fields:[{k:&#x27;a&#x27;,label:&#x27;一班（人）&#x27;,min:0,max:30},{k:&#x27;b&#x27;,label:&#x27;二班（人）&#x27;,min:0,max:30},{k:&#x27;c&#x27;,label:&#x27;三班（人）&#x27;,min:0,max:30}],size:()=&gt;[220,190]},
  numline:{label:&#x27;数轴&#x27;,group:&#x27;关系&#x27;,prefix:&#x27;数轴&#x27;,accepts:&#x27;value&#x27;,defaults:{min:0,max:2},
    fields:[{k:&#x27;min&#x27;,label:&#x27;最左&#x27;,min:-10,max:10},{k:&#x27;max&#x27;,label:&#x27;最右&#x27;,min:-9,max:20}],size:()=&gt;[460,118]},
  balance:{label:&#x27;天平&#x27;,group:&#x27;关系&#x27;,prefix:&#x27;天平&#x27;,accepts:&#x27;value&#x27;,slots:true,defaults:{},fields:[],size:()=&gt;[340,200]},
@@ -4805,7 +4807,7 @@ const TYPES={
  dice:{label:&#x27;两个骰子&#x27;,group:&#x27;概率&#x27;,prefix:&#x27;骰子&#x27;,defaults:{times:100,counts:null},
    fields:[{k:&#x27;times&#x27;,label:&#x27;一次掷几回&#x27;,min:10,max:2000,step:10}],actions:[{id:&#x27;roll&#x27;,label:&#x27;🎲 掷&#x27;},{id:&#x27;reset&#x27;,label:&#x27;清零&#x27;}],size:()=&gt;[320,210]},
 };
-const GROUP_ORDER=[&#x27;数与运算&#x27;,&#x27;分数&#x27;,&#x27;关系&#x27;,&#x27;函数&#x27;,&#x27;图形&#x27;,&#x27;概率&#x27;];
+const GROUP_ORDER=[&#x27;数与运算&#x27;,&#x27;分数&#x27;,&#x27;关系&#x27;,&#x27;函数&#x27;,&#x27;图形&#x27;,&#x27;统计&#x27;,&#x27;概率&#x27;];
 
 /* ========== 世界：一张台面 = 物体 + 连线（场景图） ========== */
 let S=blankScene(); // {entities:{id:{id,type,name,x,y,props}}, links:[{id,from,to,slot}], seq:{}}
@@ -4875,6 +4877,9 @@ function evaluate(s){
       else if(b.n===0)sig(&#x27;err&#x27;,&#x27;除数不能是 0&#x27;);
       else if(d.value.d===1)sig(&#x27;ok&#x27;,`${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`);
       else sig(&#x27;warn&#x27;,`除不尽：${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`)}
+    if(e.type===&#x27;angle&#x27;){const k=e.props.deg;const kind=k===0?&#x27;零度角&#x27;:k&lt;90?&#x27;锐角&#x27;:k===90?&#x27;直角&#x27;:k&lt;180?&#x27;钝角&#x27;:k===180?&#x27;平角&#x27;:&#x27;大于平角&#x27;;sig(k===90?&#x27;ok&#x27;:&#x27;info&#x27;,`${k}°：${kind}`)}
+    if(e.type===&#x27;bars&#x27;){const {a,b,c}=e.props;const vals=[[&#x27;一班&#x27;,a],[&#x27;二班&#x27;,b],[&#x27;三班&#x27;,c]];const mx=Math.max(a,b,c);const top=vals.filter(v=&gt;v[1]===mx).map(v=&gt;v[0]).join(&#x27;、&#x27;);sig(&#x27;info&#x27;,`最多：${top}（${mx} 人）`);
+      if(b&gt;a)sig(&#x27;info&#x27;,`二班比一班多 ${b-a} 人`);else if(a&gt;b)sig(&#x27;info&#x27;,`一班比二班多 ${a-b} 人`)}
     if(e.type===&#x27;clock&#x27;){const {h,m}=e.props;sig(&#x27;info&#x27;,`现在是 ${h}:${String(m).padStart(2,&#x27;0&#x27;)}`);
       const cl=Object.values(E).filter(x=&gt;x.type===&#x27;clock&#x27;);
       if(cl.length===2&amp;&amp;cl[0].id===id){const t=c=&gt;((c.props.h%12)*60+c.props.m);const mins=((t(cl[1])-t(cl[0]))%720+720)%720;sig(&#x27;ok&#x27;,`两个钟相差 ${mins} 分钟`)}}
@@ -5011,7 +5016,12 @@ const DRAW={
  num:(e,d,w,h)=&gt;`&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;${h/2+14}&quot; text-anchor=&quot;middle&quot; font-size=&quot;28&quot;&gt;${e.props.v}&lt;/text&gt;`,
  frac:(e,d,w)=&gt;{const {n,d:dd}=e.props,rows=Math.max(1,Math.ceil(n/dd)),bw=w-24,sw=bw/dd;let s=`&lt;text class=&quot;big&quot; x=&quot;${w-12}&quot; y=&quot;18&quot; text-anchor=&quot;end&quot; font-size=&quot;14&quot;&gt;${n}/${dd}&lt;/text&gt;`;
    for(let r=0;r&lt;rows;r++)for(let i=0;i&lt;dd;i++){const k=r*dd+i+1;s+=`&lt;rect class=&quot;seg-cell&quot; data-seg=&quot;${k}&quot; x=&quot;${12+i*sw}&quot; y=&quot;${28+r*28}&quot; width=&quot;${sw}&quot; height=&quot;22&quot; fill=&quot;${k&lt;=n?&#x27;#ff9f43&#x27;:&#x27;#fff&#x27;}&quot; stroke=&quot;#5b6778&quot; stroke-width=&quot;1&quot;/&gt;`}return s},
- money:(e,d,w,h)=&gt;`&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;${h/2+12}&quot; text-anchor=&quot;middle&quot; font-size=&quot;22&quot;&gt;${e.props.yuan} 元 ${e.props.jiao} 角 ${e.props.fen||0} 分&lt;/text&gt;`,
+ angle:(e,d,w,h)=&gt;{const k=e.props.deg,x0=40,y0=h-30,R=120,rad=k*Math.PI/180;const x2=x0+Math.cos(rad)*R,y2=y0-Math.sin(rad)*R;
+   return `&lt;line x1=&quot;${x0}&quot; y1=&quot;${y0}&quot; x2=&quot;${x0+R}&quot; y2=&quot;${y0}&quot; stroke=&quot;#1d2633&quot; stroke-width=&quot;3&quot;/&gt;&lt;line x1=&quot;${x0}&quot; y1=&quot;${y0}&quot; x2=&quot;${x2}&quot; y2=&quot;${y2}&quot; stroke=&quot;#ff9f43&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;${x0}&quot; cy=&quot;${y0}&quot; r=&quot;3&quot; fill=&quot;#1d2633&quot;/&gt;&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;34&quot; text-anchor=&quot;middle&quot; font-size=&quot;18&quot;&gt;${k}°&lt;/text&gt;`},
+ bars:(e,d,w,h)=&gt;{const names=[&#x27;一班&#x27;,&#x27;二班&#x27;,&#x27;三班&#x27;],vals=[e.props.a,e.props.b,e.props.c],base=h-30;let s=&#x27;&#x27;;
+   vals.forEach((v,i)=&gt;{const bh=v*4,x=30+i*60;s+=`&lt;rect x=&quot;${x}&quot; y=&quot;${base-bh}&quot; width=&quot;40&quot; height=&quot;${bh}&quot; fill=&quot;#3b9cff&quot; stroke=&quot;#1d2633&quot;/&gt;&lt;text class=&quot;ink&quot; x=&quot;${x+20}&quot; y=&quot;${base-bh-4}&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot;&gt;${v}&lt;/text&gt;&lt;text class=&quot;ink&quot; x=&quot;${x+20}&quot; y=&quot;${base+14}&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot;&gt;${names[i]}&lt;/text&gt;`});
+   return s+`&lt;line x1=&quot;20&quot; y1=&quot;${base}&quot; x2=&quot;${w-20}&quot; y2=&quot;${base}&quot; stroke=&quot;#1d2633&quot;/&gt;`},
+money:(e,d,w,h)=&gt;`&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;${h/2+12}&quot; text-anchor=&quot;middle&quot; font-size=&quot;22&quot;&gt;${e.props.yuan} 元 ${e.props.jiao} 角 ${e.props.fen||0} 分&lt;/text&gt;`,
  clock:(e,d,w,h)=&gt;{const {h:hr,m}=e.props,cx=w/2,cy=h/2+10,R=70;const ha=((hr%12)+m/60)*30-90,ma=m*6-90;const P=(a,r)=&gt;[cx+Math.cos(a*Math.PI/180)*r,cy+Math.sin(a*Math.PI/180)*r];
    let s=`&lt;circle cx=&quot;${cx}&quot; cy=&quot;${cy}&quot; r=&quot;${R}&quot; fill=&quot;#fff&quot; stroke=&quot;#5b6778&quot; stroke-width=&quot;2&quot;/&gt;`;
    for(let i=0;i&lt;12;i++){const [x1,y1]=P(i*30-90,R-6),[x2,y2]=P(i*30-90,R-1);s+=`&lt;line x1=&quot;${x1}&quot; y1=&quot;${y1}&quot; x2=&quot;${x2}&quot; y2=&quot;${y2}&quot; stroke=&quot;#5b6778&quot;/&gt;`}
@@ -5394,6 +5404,23 @@ const P45=[
          {label:&#x27;和是 3/5&#x27;,score:2,hint:&#x27;看合并器的读数&#x27;,target:T45(&#x27;adder&#x27;),check:(s,D)=&gt;P45H.val(s,D,&#x27;adder&#x27;,Q(3,5))}]},
 ];
 P45.forEach(p=&gt;XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
+
+/* ========== 第三期补充：角的度量、条形统计图、简易方程（用天平） ========== */
+const P46=[
+ {id:&#x27;g4_3&#x27;,grade:4,domain:&#x27;图形与几何&#x27;,tools:&#x27;角&#x27;,title:&#x27;角的度量：把角调成直角，再调成钝角&#x27;,q:&#x27;直角是 90°；钝角比直角大，比平角小（小于 180°）。&#x27;,why:&#x27;角的大小看两条边张开的程度。90° 是直角，91° 到 179° 是钝角。&#x27;,
+  build:s=&gt;{addEnt(s,&#x27;angle&#x27;,200,60,{deg:30})},
+  steps:[{label:&#x27;把角调到 90°（直角）&#x27;,score:1,hint:&#x27;点角卡，在属性卡里把度数调到 90&#x27;,target:T45(&#x27;angle&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;angle&#x27;)].props.deg===90},
+         {label:&#x27;再调成钝角（大于 90°，小于 180°）&#x27;,score:2,hint:&#x27;把度数调到 90 以上、180 以下&#x27;,target:T45(&#x27;angle&#x27;),check:(s,D)=&gt;{const k=s.entities[byType(s,&#x27;angle&#x27;)].props.deg;return k&gt;90&amp;&amp;k&lt;180}}]},
+ {id:&#x27;g4_7&#x27;,grade:4,domain:&#x27;统计与概率&#x27;,tools:&#x27;条形统计图&#x27;,title:&#x27;条形统计图：二班比一班多几人？&#x27;,q:&#x27;一班 12 人，二班要比一班多 6 人，看柱子的高低比较。&#x27;,why:&#x27;条形的高低表示人数的多少，两个柱子的高度差就是相差的人数。&#x27;,
+  build:s=&gt;{addEnt(s,&#x27;bars&#x27;,200,60,{a:4,b:6,c:3})},
+  steps:[{label:&#x27;把一班的人数调成 12&#x27;,score:1,hint:&#x27;点统计图卡，在属性卡里把“一班”调到 12&#x27;,target:T45(&#x27;bars&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;bars&#x27;)].props.a===12},
+         {label:&#x27;二班比一班多 6 人&#x27;,score:2,hint:&#x27;把“二班”调到 18，看下面的文字&#x27;,target:T45(&#x27;bars&#x27;),check:(s,D)=&gt;{const b=byType(s,&#x27;bars&#x27;);return (D[b].sig||[]).some(x=&gt;x.tx===&#x27;二班比一班多 6 人&#x27;)}}]},
+ {id:&#x27;g5_5&#x27;,grade:5,domain:&#x27;数与代数&#x27;,tools:&#x27;天平 · 数字卡&#x27;,title:&#x27;简易方程：x + 3 = 8，x 是几？&#x27;,q:&#x27;把左边的 3 和 x 放在左盘，右边的 8 放在右盘。调 x，让天平平了，x 就是答案。&#x27;,why:&#x27;x + 3 = 8，两边都减 3，得 x = 5。天平平，就是两边相等。&#x27;,
+  build:s=&gt;{addEnt(s,&#x27;num&#x27;,60,40,{v:3});addEnt(s,&#x27;num&#x27;,60,150,{v:1});addEnt(s,&#x27;num&#x27;,60,260,{v:8});addEnt(s,&#x27;balance&#x27;,300,130)},
+  steps:[{label:&#x27;3 和 x 放左盘，8 放右盘&#x27;,score:1,hint:&#x27;拖蓝点：3 和 x 到天平左边，8 到右边&#x27;,target:T45(&#x27;balance&#x27;),check:(s,D)=&gt;{const b=byType(s,&#x27;balance&#x27;);return D[b].Ln.length&gt;=2&amp;&amp;D[b].Rn.length&gt;=1}},
+         {label:&#x27;调 x，天平平了（x = 5）&#x27;,score:2,hint:&#x27;点中间那张数字卡，把值调到 5，看天平&#x27;,target:T45(&#x27;balance&#x27;),check:(s,D)=&gt;{const b=byType(s,&#x27;balance&#x27;);const xn=Object.values(s.entities).filter(e=&gt;e.type===&#x27;num&#x27;)[1];return D[b].equal&amp;&amp;!!xn&amp;&amp;xn.props.v===5}}]},
+];
+P46.forEach(p=&gt;XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
 
 function startXp(id,m){xp=XP.find(x=&gt;x.id===id);if(!xp)return;mode=m;S=blankScene();xp.build(S);undoSt=[];redoSt=[];sel=null;cardOpen=false;
   run={steps:xp.steps.map((s,i)=&gt;({i,done:false})),ops:0,errors:0,t0:Date.now(),finished:false};$(&#x27;title&#x27;).textContent=xp.title;

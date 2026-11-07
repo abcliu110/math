@@ -191,6 +191,8 @@ const TYPES={
  div:{label:'除法器',group:'数与运算',prefix:'除法器',out:'value',accepts:'value',slots:true,defaults:{},fields:[],size:()=>[200,110]},
  money:{label:'人民币',group:'数与运算',prefix:'人民币',out:'value',defaults:{yuan:1,jiao:0,fen:0},fields:[{k:'yuan',label:'元',min:0,max:99},{k:'jiao',label:'角',min:0,max:9},{k:'fen',label:'分',min:0,max:9}],size:()=>[190,62]},
  clock:{label:'钟面',group:'图形',prefix:'钟面',defaults:{h:3,m:0},fields:[{k:'h',label:'时（几点）',min:1,max:12},{k:'m',label:'分',min:0,max:55,step:5}],size:()=>[180,200]},
+ angle:{label:'角',group:'图形',prefix:'角',defaults:{deg:90},fields:[{k:'deg',label:'度数（0 到 180）',min:0,max:180,step:5}],size:()=>[200,160]},
+ bars:{label:'条形统计图',group:'统计',prefix:'统计图',defaults:{a:4,b:6,c:3},fields:[{k:'a',label:'一班（人）',min:0,max:30},{k:'b',label:'二班（人）',min:0,max:30},{k:'c',label:'三班（人）',min:0,max:30}],size:()=>[220,190]},
  numline:{label:'数轴',group:'关系',prefix:'数轴',accepts:'value',defaults:{min:0,max:2},
    fields:[{k:'min',label:'最左',min:-10,max:10},{k:'max',label:'最右',min:-9,max:20}],size:()=>[460,118]},
  balance:{label:'天平',group:'关系',prefix:'天平',accepts:'value',slots:true,defaults:{},fields:[],size:()=>[340,200]},
@@ -202,7 +204,7 @@ const TYPES={
  dice:{label:'两个骰子',group:'概率',prefix:'骰子',defaults:{times:100,counts:null},
    fields:[{k:'times',label:'一次掷几回',min:10,max:2000,step:10}],actions:[{id:'roll',label:'🎲 掷'},{id:'reset',label:'清零'}],size:()=>[320,210]},
 };
-const GROUP_ORDER=['数与运算','分数','关系','函数','图形','概率'];
+const GROUP_ORDER=['数与运算','分数','关系','函数','图形','统计','概率'];
 
 /* ========== 世界：一张台面 = 物体 + 连线（场景图） ========== */
 let S=blankScene(); // {entities:{id:{id,type,name,x,y,props}}, links:[{id,from,to,slot}], seq:{}}
@@ -272,6 +274,9 @@ function evaluate(s){
       else if(b.n===0)sig('err','除数不能是 0');
       else if(d.value.d===1)sig('ok',`${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`);
       else sig('warn',`除不尽：${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`)}
+    if(e.type==='angle'){const k=e.props.deg;const kind=k===0?'零度角':k<90?'锐角':k===90?'直角':k<180?'钝角':k===180?'平角':'大于平角';sig(k===90?'ok':'info',`${k}°：${kind}`)}
+    if(e.type==='bars'){const {a,b,c}=e.props;const vals=[['一班',a],['二班',b],['三班',c]];const mx=Math.max(a,b,c);const top=vals.filter(v=>v[1]===mx).map(v=>v[0]).join('、');sig('info',`最多：${top}（${mx} 人）`);
+      if(b>a)sig('info',`二班比一班多 ${b-a} 人`);else if(a>b)sig('info',`一班比二班多 ${a-b} 人`)}
     if(e.type==='clock'){const {h,m}=e.props;sig('info',`现在是 ${h}:${String(m).padStart(2,'0')}`);
       const cl=Object.values(E).filter(x=>x.type==='clock');
       if(cl.length===2&&cl[0].id===id){const t=c=>((c.props.h%12)*60+c.props.m);const mins=((t(cl[1])-t(cl[0]))%720+720)%720;sig('ok',`两个钟相差 ${mins} 分钟`)}}
@@ -408,7 +413,12 @@ const DRAW={
  num:(e,d,w,h)=>`<text class="big" x="${w/2}" y="${h/2+14}" text-anchor="middle" font-size="28">${e.props.v}</text>`,
  frac:(e,d,w)=>{const {n,d:dd}=e.props,rows=Math.max(1,Math.ceil(n/dd)),bw=w-24,sw=bw/dd;let s=`<text class="big" x="${w-12}" y="18" text-anchor="end" font-size="14">${n}/${dd}</text>`;
    for(let r=0;r<rows;r++)for(let i=0;i<dd;i++){const k=r*dd+i+1;s+=`<rect class="seg-cell" data-seg="${k}" x="${12+i*sw}" y="${28+r*28}" width="${sw}" height="22" fill="${k<=n?'#ff9f43':'#fff'}" stroke="#5b6778" stroke-width="1"/>`}return s},
- money:(e,d,w,h)=>`<text class="big" x="${w/2}" y="${h/2+12}" text-anchor="middle" font-size="22">${e.props.yuan} 元 ${e.props.jiao} 角 ${e.props.fen||0} 分</text>`,
+ angle:(e,d,w,h)=>{const k=e.props.deg,x0=40,y0=h-30,R=120,rad=k*Math.PI/180;const x2=x0+Math.cos(rad)*R,y2=y0-Math.sin(rad)*R;
+   return `<line x1="${x0}" y1="${y0}" x2="${x0+R}" y2="${y0}" stroke="#1d2633" stroke-width="3"/><line x1="${x0}" y1="${y0}" x2="${x2}" y2="${y2}" stroke="#ff9f43" stroke-width="3"/><circle cx="${x0}" cy="${y0}" r="3" fill="#1d2633"/><text class="big" x="${w/2}" y="34" text-anchor="middle" font-size="18">${k}°</text>`},
+ bars:(e,d,w,h)=>{const names=['一班','二班','三班'],vals=[e.props.a,e.props.b,e.props.c],base=h-30;let s='';
+   vals.forEach((v,i)=>{const bh=v*4,x=30+i*60;s+=`<rect x="${x}" y="${base-bh}" width="40" height="${bh}" fill="#3b9cff" stroke="#1d2633"/><text class="ink" x="${x+20}" y="${base-bh-4}" text-anchor="middle" font-size="12">${v}</text><text class="ink" x="${x+20}" y="${base+14}" text-anchor="middle" font-size="12">${names[i]}</text>`});
+   return s+`<line x1="20" y1="${base}" x2="${w-20}" y2="${base}" stroke="#1d2633"/>`},
+money:(e,d,w,h)=>`<text class="big" x="${w/2}" y="${h/2+12}" text-anchor="middle" font-size="22">${e.props.yuan} 元 ${e.props.jiao} 角 ${e.props.fen||0} 分</text>`,
  clock:(e,d,w,h)=>{const {h:hr,m}=e.props,cx=w/2,cy=h/2+10,R=70;const ha=((hr%12)+m/60)*30-90,ma=m*6-90;const P=(a,r)=>[cx+Math.cos(a*Math.PI/180)*r,cy+Math.sin(a*Math.PI/180)*r];
    let s=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="#fff" stroke="#5b6778" stroke-width="2"/>`;
    for(let i=0;i<12;i++){const [x1,y1]=P(i*30-90,R-6),[x2,y2]=P(i*30-90,R-1);s+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#5b6778"/>`}
@@ -791,6 +801,23 @@ const P45=[
          {label:'和是 3/5',score:2,hint:'看合并器的读数',target:T45('adder'),check:(s,D)=>P45H.val(s,D,'adder',Q(3,5))}]},
 ];
 P45.forEach(p=>XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
+
+/* ========== 第三期补充：角的度量、条形统计图、简易方程（用天平） ========== */
+const P46=[
+ {id:'g4_3',grade:4,domain:'图形与几何',tools:'角',title:'角的度量：把角调成直角，再调成钝角',q:'直角是 90°；钝角比直角大，比平角小（小于 180°）。',why:'角的大小看两条边张开的程度。90° 是直角，91° 到 179° 是钝角。',
+  build:s=>{addEnt(s,'angle',200,60,{deg:30})},
+  steps:[{label:'把角调到 90°（直角）',score:1,hint:'点角卡，在属性卡里把度数调到 90',target:T45('angle'),check:(s,D)=>s.entities[byType(s,'angle')].props.deg===90},
+         {label:'再调成钝角（大于 90°，小于 180°）',score:2,hint:'把度数调到 90 以上、180 以下',target:T45('angle'),check:(s,D)=>{const k=s.entities[byType(s,'angle')].props.deg;return k>90&&k<180}}]},
+ {id:'g4_7',grade:4,domain:'统计与概率',tools:'条形统计图',title:'条形统计图：二班比一班多几人？',q:'一班 12 人，二班要比一班多 6 人，看柱子的高低比较。',why:'条形的高低表示人数的多少，两个柱子的高度差就是相差的人数。',
+  build:s=>{addEnt(s,'bars',200,60,{a:4,b:6,c:3})},
+  steps:[{label:'把一班的人数调成 12',score:1,hint:'点统计图卡，在属性卡里把“一班”调到 12',target:T45('bars'),check:(s,D)=>s.entities[byType(s,'bars')].props.a===12},
+         {label:'二班比一班多 6 人',score:2,hint:'把“二班”调到 18，看下面的文字',target:T45('bars'),check:(s,D)=>{const b=byType(s,'bars');return (D[b].sig||[]).some(x=>x.tx==='二班比一班多 6 人')}}]},
+ {id:'g5_5',grade:5,domain:'数与代数',tools:'天平 · 数字卡',title:'简易方程：x + 3 = 8，x 是几？',q:'把左边的 3 和 x 放在左盘，右边的 8 放在右盘。调 x，让天平平了，x 就是答案。',why:'x + 3 = 8，两边都减 3，得 x = 5。天平平，就是两边相等。',
+  build:s=>{addEnt(s,'num',60,40,{v:3});addEnt(s,'num',60,150,{v:1});addEnt(s,'num',60,260,{v:8});addEnt(s,'balance',300,130)},
+  steps:[{label:'3 和 x 放左盘，8 放右盘',score:1,hint:'拖蓝点：3 和 x 到天平左边，8 到右边',target:T45('balance'),check:(s,D)=>{const b=byType(s,'balance');return D[b].Ln.length>=2&&D[b].Rn.length>=1}},
+         {label:'调 x，天平平了（x = 5）',score:2,hint:'点中间那张数字卡，把值调到 5，看天平',target:T45('balance'),check:(s,D)=>{const b=byType(s,'balance');const xn=Object.values(s.entities).filter(e=>e.type==='num')[1];return D[b].equal&&!!xn&&xn.props.v===5}}]},
+];
+P46.forEach(p=>XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
 
 function startXp(id,m){xp=XP.find(x=>x.id===id);if(!xp)return;mode=m;S=blankScene();xp.build(S);undoSt=[];redoSt=[];sel=null;cardOpen=false;
   run={steps:xp.steps.map((s,i)=>({i,done:false})),ops:0,errors:0,t0:Date.now(),finished:false};$('title').textContent=xp.title;
