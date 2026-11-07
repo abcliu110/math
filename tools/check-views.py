@@ -30,6 +30,16 @@ allowed = {}
 for view, section in re.findall(r'body\[data-view="([^"]+)"\]\s+(#\w+)', CSS):
     allowed.setdefault(view, set()).add(section)
 
+# Prefix rules (e.g. body[data-view^="demo-"] #demos) cover every view
+# with that prefix — registry anims need no per-view allowlist rule.
+prefix_allowed = re.findall(r'body\[data-view\^="([^"]+)"\]\s+(#\w+)', CSS)
+
+
+def is_allowed(view, section):
+    if section in allowed.get(view, set()):
+        return True
+    return any(view.startswith(p) and s == section for p, s in prefix_allowed)
+
 # Which section each view needs (mirrors applyView() in app.js).
 NEED = {
     'grades': '#grades', 'grade-detail': '#grades', 'unit-detail': '#grades',
@@ -46,8 +56,126 @@ for k in demo_keys:
     NEED[k] = '#demos'
 
 errors = []
+# ---------- Animation registry (§5.1) ----------
+# New animations register in apps/web/anims-*.js via registerAnim(...);
+# each key needs render/points/title/sub/grade/kind, every point id must
+# really exist in its grade file, keys must not repeat or collide with
+# the 145 hand-wired demos, and each registry view needs #demos
+# (covered by the ^= prefix rule, not by a per-view rule).
+REGISTRY_FILES = ['anims-registry.js', 'anims-band-1-3.js', 'anims-band-4-6.js',
+                  'anims-band-7-9.js', 'anims-operations.js']
+registry_keys = []
+
+
+def extract_register_calls(src):
+    # registerAnim({...}) — balanced braces, string-aware. Only a call
+    # counts: the definition `function registerAnim(a)` and mentions in
+    # comments have something other than '{' after the '('.
+    calls = []
+    i = 0
+    while True:
+        j = src.find('registerAnim(', i)
+        if j < 0:
+            break
+        k = j + len('registerAnim(')
+        while k < len(src) and src[k] in ' \t\r\n':
+            k += 1
+        if k >= len(src) or src[k] != '{':
+            i = j + 1
+            continue
+        depth = 0
+        p = k
+        quote = None
+        esc = False
+        while p < len(src):
+            ch = src[p]
+            if quote:
+                if esc:
+                    esc = False
+                elif ch == '\\':
+                    esc = True
+                elif ch == quote:
+                    quote = None
+            else:
+                if ch in ('"', "'"):
+                    quote = ch
+                elif ch == '{':
+                    depth += 1
+                elif ch == '}':
+                    depth -= 1
+                    if depth == 0:
+                        break
+            p += 1
+        calls.append(src[k:p + 1])
+        i = p + 1
+    return calls
+
+
+def reg_field(block, name):
+    m = re.search(name + r"\s*:\s*['\"]([^'\"]+)['\"]", block)
+    return m.group(1) if m else None
+
+
+# Point ids per grade file (grade-3.js uses single quotes, the rest double;
+# ids like 3.15a carry a letter).
+grade_points = {}
+for g in range(1, 10):
+    gsrc = (ROOT / 'content' / 'grades' / ('grade-%d.js' % g)).read_text(encoding='utf-8')
+    grade_points[g] = set(re.findall(r"id\s*:\s*['\"](\d+\.\d+[a-z]?)['\"]", gsrc))
+old_bare_keys = set(k[5:] for k in demo_keys)
+for rf in REGISTRY_FILES:
+    rpath = ROOT / 'apps' / 'web' / rf
+    if not rpath.exists():
+        errors.append(f"registry file {rf} is missing")
+        continue
+    rsrc = rpath.read_text(encoding='utf-8')
+    for block in extract_register_calls(rsrc):
+        key = reg_field(block, 'key')
+        if not key:
+            errors.append(f"{rf}: registerAnim call without a key")
+            continue
+        registry_keys.append(key)
+        if not re.fullmatch(r'[a-z0-9]+(-[a-z0-9]+)*', key):
+            errors.append(f"registry {key!r}: key must be lowercase alphanumerics + hyphens")
+        if key in old_bare_keys:
+            errors.append(f"registry {key!r}: collides with a hand-wired demo key")
+        if not reg_field(block, 'title'):
+            errors.append(f"registry {key!r}: missing title")
+        if not reg_field(block, 'sub'):
+            errors.append(f"registry {key!r}: missing sub")
+        if reg_field(block, 'kind') not in ('演示', '模拟', '实验'):
+            errors.append(f"registry {key!r}: kind must be 演示 / 模拟 / 实验, got {reg_field(block, 'kind')!r}")
+        gm = re.search(r"grade\s*:\s*(\d+)", block)
+        if not gm or not (1 <= int(gm.group(1)) <= 9):
+            errors.append(f"registry {key!r}: grade must be an integer 1–9")
+        pm = re.search(r"points\s*:\s*\[([^\]]*)\]", block)
+        if not pm:
+            errors.append(f"registry {key!r}: missing points")
+        else:
+            pids = re.findall(r"['\"]([^'\"]+)['\"]", pm.group(1))
+            if not pids:
+                errors.append(f"registry {key!r}: points is empty")
+            for pid in pids:
+                m = re.fullmatch(r'(\d+)\.\d+[a-z]?', pid)
+                if not m:
+                    errors.append(f"registry {key!r}: bad point id {pid!r}")
+                elif pid not in grade_points.get(int(m.group(1)), set()):
+                    errors.append(f"registry {key!r}: point {pid!r} does not exist in grade-{m.group(1)}.js")
+        grp = reg_field(block, 'group')
+        if grp is not None and grp != 'operations':
+            errors.append(f"registry {key!r}: group may only be 'operations'")
+        if not re.search(r"render\s*:", block):
+            errors.append(f"registry {key!r}: missing render function")
+        NEED['demo-' + key] = '#demos'
+for k in sorted(set(k for k in registry_keys if registry_keys.count(k) > 1)):
+    errors.append(f"registry key {k!r} is registered more than once")
+if 'id="demo-anim"' not in HTML:
+    errors.append('registry generic card id="demo-anim" is missing from index.html')
+if 'id="animDirectory"' not in HTML:
+    errors.append('registry directory container id="animDirectory" is missing from index.html')
+
 for view, section in sorted(NEED.items()):
-    if section not in allowed.get(view, set()):
+    if not is_allowed(view, section):
         errors.append(f"view {view!r} needs {section} but the CSS allowlist "
                       f"has no body[data-view=\"{view}\"] {section} rule")
 for k in demo_keys:
@@ -125,4 +253,5 @@ if errors:
         print('  - ' + e)
     sys.exit(1)
 print(f"check-views OK: {len(NEED)} views wired, {len(demo_keys)} demos "
-      f"({', '.join(demo_keys)})")
+      f"({', '.join(demo_keys)}) + {len(registry_keys)} registry anims "
+      f"({', '.join(sorted(set(registry_keys)))})")

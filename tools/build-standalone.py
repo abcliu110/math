@@ -28,6 +28,19 @@ for gfile in sorted(p.name for p in (ROOT / 'content' / 'grades').glob('grade-*.
     else:
         html = html.replace(tag + '\n', '', 1)
     assert tag not in html
+# Animation registry + band files must inline before math-world.js and app.js,
+# in the same order as the <script> tags in index.html.
+for rfile in ['anims-registry.js', 'anims-band-1-3.js', 'anims-band-4-6.js',
+              'anims-band-7-9.js', 'anims-operations.js']:
+    r_path = WEB / rfile
+    r_tag = '<script src="' + rfile + '"></script>'
+    if r_path.exists():
+        rjs = r_path.read_text(encoding='utf-8')
+        assert '</script>' not in rjs
+        html = html.replace(r_tag, '<script>\n' + rjs + '\n</script>', 1)
+    else:
+        html = html.replace(r_tag + '\n', '', 1)
+    assert r_tag not in html
 # MathWorld model + Apparatus views must load before app.js.
 mw_path = WEB / 'math-world.js'
 mw_tag = '<script src="math-world.js"></script>'

@@ -52,7 +52,7 @@ const GRADES = {
 };
 
 /* ---------- 进度（原型：记演示是否玩过） ----------
-   145 个动画全都计入：4 个经典演示 + 13 个一年级实验 + 15 个二年级实验 + 14 个三年级实验 + 20 个四年级实验（16 个 + 鸡兔同笼 4 种方法） + 11 个五年级实验 + 12 个六年级实验 + 13 个七年级实验 + 11 个八年级实验 + 15 个九年级实验 + 9 个创意实验 + 8 个互动模拟 = 145 个。
+   146 个动画全都计入：4 个经典演示 + 13 个一年级实验 + 15 个二年级实验 + 14 个三年级实验 + 20 个四年级实验（16 个 + 鸡兔同笼 4 种方法） + 11 个五年级实验 + 12 个六年级实验 + 13 个七年级实验 + 11 个八年级实验 + 15 个九年级实验 + 9 个创意实验 + 8 个互动模拟 + 1 个注册表动画（一一对应配对法） = 146 个。
    首页却写着“4 个演示”，演示页上却是 17 张卡，数字对不上
    （2026-11-06 真机审计第 6 条）。 */
 const tried = new Set();
@@ -78,6 +78,12 @@ const ALL_DEMOS = ['tenframe', 'fraction', 'balance', 'function',
   'quad', 'growth', 'parabola', 'spin', 'circangle', 'tangent', 'sector', 'coin',
   'tree', 'hyperbola', 'similar', 'shadow', 'trig', 'slope', 'project',
   'twentyfour', 'monty', 'maxarea', 'matches', 'mobius', 'shopweek', 'fairgame', 'makerule', 'thirteen', 'maketen', 'areamul', 'fraceq', 'buildfrac', 'areabuild', 'quadmorph', 'numplay', 'fracnumline'];
+// 注册表动画也计入“已体验”：band 文件在 app.js 之前加载，ANIM_REGISTRY 已就位；
+// 不加这一行，markTried(key) 会被 ALL_DEMOS 的门禁静默丢掉，闯关站的
+// demosDone 也永远对不上 animsForUnit 算出的 demosTotal。
+if (typeof ANIM_REGISTRY !== 'undefined') {
+  Object.keys(ANIM_REGISTRY).forEach(k => { if (ALL_DEMOS.indexOf(k) < 0) ALL_DEMOS.push(k); });
+}
 // 刷新后进度还在：已体验的演示存在本地（只存本机，不上传）。
 try { JSON.parse(lsGet('math-tried-demos-v1') || '[]').forEach(k => tried.add(k)); } catch (e) {}
 // 已体验演示的唯一事实来源：内存里的 tried 集合。启动时从存储读一次，
@@ -496,6 +502,8 @@ const DEMO_LABEL = { fraction: '去玩分数演示', tenframe: '去玩十格阵'
 var CREATIVE_DEMOS = ['thirteen', 'twentyfour', 'monty', 'maxarea', 'matches', 'mobius', 'shopweek', 'fairgame', 'makerule'];
 var SIM_DEMOS = ['maketen', 'areamul', 'fraceq', 'buildfrac', 'areabuild', 'quadmorph', 'numplay', 'fracnumline'];
 function animKind(key) {
+  const ra = registryAnim(key);
+  if (ra) return ra.kind;
   if (CREATIVE_DEMOS.indexOf(key) >= 0) return '实验';
   if (SIM_DEMOS.indexOf(key) >= 0) return '模拟';
   return '演示';
@@ -529,6 +537,14 @@ function animsForPoint(id) {
   if (typeof LAB_QUESTIONS !== 'undefined') {
     LAB_QUESTIONS.forEach(q => { if (q.demo && q.points && q.points.indexOf(id) >= 0) push(q.demo); });
   }
+  // 注册表动画（第五路）：points 含该点的动画。点页、单元页、年级页的
+  // “动画 N 个”计数都从这里算，所以新动画不用另改计数。
+  if (typeof ANIM_REGISTRY !== 'undefined') {
+    Object.keys(ANIM_REGISTRY).forEach(k => {
+      const a = ANIM_REGISTRY[k];
+      if (a && a.points && a.points.indexOf(id) >= 0) push(k);
+    });
+  }
   return keys;
 }
 function animsForUnit(g, ui) {
@@ -541,7 +557,111 @@ function animsForUnit(g, ui) {
 function animBtnHtml(key, cls) {
   const kind = animKind(key);
   const tag = kind === '演示' ? '' : '【' + kind + '】';
-  return '<button class="' + (cls || 'btn primary') + '" type="button" data-demo-link="demo-' + esc(key) + '">' + tag + (DEMO_LABEL[key] || '去玩演示') + '</button>';
+  const ra = registryAnim(key);
+  return '<button class="' + (cls || 'btn primary') + '" type="button" data-demo-link="demo-' + esc(key) + '">' + tag + (ra ? '去玩' + ra.title : (DEMO_LABEL[key] || '去玩演示')) + '</button>';
+}
+/* ---------- 注册表动画的通用接线（§5.1） ----------
+   旧演示的 145 条手写接线一律不动；下面这几个函数是新动画的唯一接线点：
+   registryAnim(key) 接受裸 key 或 'demo-' + key，返回注册项或 null；
+   navDefFor(key) 在 NAV_DEFS 查不到时给注册表动画兜底一个面包屑定义，
+   其它 key 原样走 NAV_DEFS，查不到返回 null（navGo 仍会直接返回）。 */
+function registryAnim(key) {
+  if (typeof ANIM_REGISTRY === 'undefined' || typeof key !== 'string') return null;
+  const bare = key.indexOf('demo-') === 0 ? key.slice(5) : key;
+  return ANIM_REGISTRY[bare] || null;
+}
+function isRegistryAnimView(key) {
+  return typeof key === 'string' && key.indexOf('demo-') === 0 && !!registryAnim(key);
+}
+function navDefFor(key) {
+  if (NAV_DEFS[key]) return NAV_DEFS[key];
+  const a = registryAnim(key);
+  if (a) return { crumbs: ['数学', '动画', a.title], target: key };
+  return null;
+}
+/* 每个演示在哪个年级出现：旧演示查 DEMO_GRADES，注册表动画读注册项的 grade。 */
+function demoGradesOf(k) {
+  if (DEMO_GRADES[k]) return DEMO_GRADES[k];
+  const a = registryAnim(k);
+  return a ? [a.grade] : [];
+}
+/* 注册表动画的通用卡片：进入视图时把该动画的 render 画进 #demo-anim（每次进入都重画）。
+   render 出错也不能拖垮导航：抓住，留一句提示，记一条 console.error。 */
+function renderRegistryAnim(bareKey) {
+  const a = (typeof ANIM_REGISTRY !== 'undefined') ? ANIM_REGISTRY[bareKey] : null;
+  const card = document.getElementById('demo-anim');
+  if (!card) return;
+  if (!a || typeof a.render !== 'function') { card.innerHTML = '<p class="muted">这个动画还没有内容。</p>'; return; }
+  card.innerHTML = '';
+  try { a.render(card); } catch (e) {
+    if (typeof console !== 'undefined' && console.error) console.error('[anims-registry] render failed for ' + bareKey + ': ' + (e && e.message));
+    card.innerHTML = '<p class="muted">这个动画暂时打不开，换一个试试。</p>';
+  }
+}
+/* 动画总目录（演示页）：注册表动画按 年级 → 单元 → 知识点 分组，数据从
+   grade-*.js + 注册表现算，不手写；另设“运算动画”一组（group 为
+   'operations' 的动画只进这一组，不进年级分组）。旧的 145 个静态面板一律不动。
+   只在列表视图（view==='demos'）显示，见 applyView 里的 setHidden。
+   点击走事件委托：[data-demo-link] 进动画，[data-anim-filter] 换年级筛选。 */
+let animDirFilter = 'all'; // 'all' | 年级数字（字符串） | 'operations'
+let animDirBound = false;
+function renderAnimDirectory() {
+  const box = document.getElementById('animDirectory');
+  if (!box) return;
+  const keys = (typeof ANIM_REGISTRY !== 'undefined') ? Object.keys(ANIM_REGISTRY) : [];
+  const ops = keys.filter(k => ANIM_REGISTRY[k].group === 'operations');
+  const rest = keys.filter(k => ANIM_REGISTRY[k].group !== 'operations');
+  // 点 → 该点的注册表动画（按注册顺序）。
+  const byPoint = {};
+  rest.forEach(k => {
+    (ANIM_REGISTRY[k].points || []).forEach(pid => {
+      (byPoint[pid] = byPoint[pid] || []).push(k);
+    });
+  });
+  function animDirBtn(k) {
+    const a = ANIM_REGISTRY[k];
+    const tag = a.kind === '演示' ? '' : '【' + a.kind + '】';
+    return '<button class="btn small ghost" type="button" data-demo-link="demo-' + esc(k) + '">' + tag + '去玩' + esc(a.title) + '</button>';
+  }
+  let groupsHtml = '';
+  for (let g = 1; g <= 9; g++) {
+    if (animDirFilter !== 'all' && animDirFilter !== String(g)) continue;
+    const gd = gradeData(g);
+    if (!gd) continue;
+    let gHtml = '';
+    gd.units.forEach(u => {
+      let uHtml = '';
+      u.points.forEach(p => {
+        const ks = byPoint[p.id] || [];
+        if (!ks.length) return;
+        uHtml += '<div class="anim-dir-row"><b>' + esc(p.id) + ' · ' + esc(p.title) + '</b> ' + ks.map(animDirBtn).join(' ') + '</div>';
+      });
+      if (uHtml) gHtml += '<div class="anim-dir-unit"><h5>' + esc(u.unit) + '</h5>' + uHtml + '</div>';
+    });
+    if (gHtml) groupsHtml += '<div class="anim-dir-grade"><h4>' + g + ' 年级</h4>' + gHtml + '</div>';
+  }
+  if (animDirFilter === 'all' || animDirFilter === 'operations') {
+    if (ops.length) {
+      groupsHtml += '<div class="anim-dir-grade"><h4>运算动画</h4>' +
+        ops.map(k => '<div class="anim-dir-row">' + animDirBtn(k) + ' <span class="muted">' + esc(ANIM_REGISTRY[k].sub) + '</span></div>').join('') + '</div>';
+    }
+  }
+  const filters = [['all', '全部'], ['operations', '运算动画']];
+  for (let g = 1; g <= 9; g++) filters.push([String(g), g + ' 年级']);
+  box.innerHTML = '<h3>新动画总目录</h3>' +
+    '<p class="muted">注册表里的动画（' + keys.length + ' 个），按年级 → 单元 → 知识点分组；点一个就去玩。下面的面板是原来的 145 个演示。</p>' +
+    '<div class="btn-row">' + filters.map(f =>
+      '<button class="btn small' + (animDirFilter === f[0] ? ' primary' : ' ghost') + '" type="button" data-anim-filter="' + f[0] + '">' + f[1] + '</button>'
+    ).join('') + '</div>' + (groupsHtml || '<p class="muted">这个筛选下没有新动画。</p>');
+  if (!animDirBound) {
+    animDirBound = true;
+    box.addEventListener('click', e => {
+      const link = e.target.closest ? e.target.closest('[data-demo-link]') : null;
+      if (link) { goDemoFromHere(link.dataset.demoLink); return; }
+      const f = e.target.closest ? e.target.closest('[data-anim-filter]') : null;
+      if (f) { animDirFilter = f.dataset.animFilter; renderAnimDirectory(); }
+    });
+  }
 }
 /* 分步评分：多步骤题拆成一步一步对。steps 是可选字段，没有 steps 的题照旧渲染。
    自评不是机器判题：每一步的对错都是学生自己标的，丢分报告只是把你标错的步骤列出来。 */
@@ -657,7 +777,7 @@ function renderPoint(id) {
 /* 从知识点页进演示：演示压在当前栈顶，返回回知识点页（而不是跳去演示总站）。
    从演示总站进演示还是走 navGo，父级仍是演示总站。 */
 function goDemoFromHere(demoKey) {
-  const def = NAV_DEFS[demoKey];
+  const def = navDefFor(demoKey);
   if (!def) return;
   const top = navStack[navStack.length - 1];
   const entry = { key: demoKey, crumbs: top.crumbs.concat([def.crumbs[def.crumbs.length - 1]]), target: def.target };
@@ -1114,7 +1234,7 @@ function renderProgress() {
     gd.units.forEach(u => u.points.forEach(p => ids.push(p.id)));
     const done = ids.filter(id => reviewStore[id]).length;
     const mast = ids.filter(id => reviewStore[id] && reviewStore[id].streak >= 2).length;
-    const demosInGrade = ALL_DEMOS.filter(k => (DEMO_GRADES[k] || []).includes(g));
+    const demosInGrade = ALL_DEMOS.filter(k => demoGradesOf(k).includes(g));
     const demosDone = demosInGrade.filter(k => tried.has(k)).length;
     const litUnits = gd.units.filter((u, ui) => { const cp = unitCheckpoint(g, ui); return cp && cp.lit; }).length;
     const pct = total ? Math.round(done / total * 100) : 0;
@@ -2050,6 +2170,8 @@ const simPanelsEl = document.getElementById('simPanels');
 const simLabelEl = document.getElementById('simLabel');
 const demoLabelEl = document.getElementById('demoLabel');
 const demoGridEl = document.getElementById('demoGrid');
+const animCardEl = document.getElementById('demo-anim'); // 注册表动画的通用卡片
+const animDirEl = document.getElementById('animDirectory'); // 注册表动画的总目录
 const whySec = document.getElementById('why');
 const labSec = document.getElementById('lab');
 const reviewSec = document.getElementById('review');
@@ -2080,6 +2202,8 @@ function viewForKey(key) {
   if (key.startsWith('path-step-')) return 'path-step';
   if (key === 'demos') return 'demos';
   if (key === 'demo-tenframe' || key === 'demo-fraction' || key === 'demo-balance' || key === 'demo-function' || key === 'demo-count' || key === 'demo-position' || key === 'demo-split' || key === 'demo-addsub' || key === 'demo-solids' || key === 'demo-bundle' || key === 'demo-clock' || key === 'demo-tangram' || key === 'demo-sort' || key === 'demo-hundred' || key === 'demo-shop' || key === 'demo-place' || key === 'demo-pattern' || key === 'demo-ruler' || key === 'demo-estimate' || key === 'demo-angle' || key === 'demo-array' || key === 'demo-observe' || key === 'demo-time' || key === 'demo-share' || key === 'demo-motion' || key === 'demo-mixop' || key === 'demo-remain' || key === 'demo-thousand' || key === 'demo-weight' || key === 'demo-chart' || key === 'demo-logic' || key === 'demo-pair' || key === 'demo-elapsed' || key === 'demo-verify' || key === 'demo-units' || key === 'demo-times' || key === 'demo-splitmul' || key === 'demo-rectsq' || key === 'demo-venn' || key === 'demo-compass' || key === 'demo-divplace' || key === 'demo-stattable' || key === 'demo-fourgrid' || key === 'demo-area' || key === 'demo-calendar' || key === 'demo-decimal' || key === 'demo-bignum' || key === 'demo-field' || key === 'demo-protractor' || key === 'demo-areamodel' || key === 'demo-parallelogram' || key === 'demo-trialdiv' || key === 'demo-baraxis' || key === 'demo-teatime' || key === 'demo-zerodiv' || key === 'demo-laws' || key === 'demo-placeslider' || key === 'demo-tearangle' || key === 'demo-decadd' || key === 'demo-moveshape' || key === 'demo-average' || key === 'demo-chickenrabbit' || key === 'demo-crslider' || key === 'demo-crdraw' || key === 'demo-crlist' || key === 'demo-crgolden' || key === 'demo-decmul' || key === 'demo-gridpos' || key === 'demo-decdiv' || key === 'demo-prob' || key === 'demo-polyarea' || key === 'demo-planttree' || key === 'demo-factor' || key === 'demo-cuboid' || key === 'demo-fracadd' || key === 'demo-rotate' || key === 'demo-findbad' || key === 'demo-radar' || key === 'demo-ratio' || key === 'demo-circle' || key === 'demo-percent' || key === 'demo-fan' || key === 'demo-lsquare' || key === 'demo-thermo' || key === 'demo-negmul' || key === 'demo-discount' || key === 'demo-cylinder' || key === 'demo-pigeon' || key === 'demo-numline' || key === 'demo-powerup' || key === 'demo-monomial' || key === 'demo-liketerms' || key === 'demo-meetline' || key === 'demo-lineseg' || key === 'demo-anglepair' || key === 'demo-vertangle' || key === 'demo-parangles' || key === 'demo-roots' || key === 'demo-coordplane' || key === 'demo-ineqline' || key === 'demo-histogram' || key === 'demo-trisides' || key === 'demo-congruent' || key === 'demo-foldmirror' || key === 'demo-algarea' || key === 'demo-algfrac' || key === 'demo-eqsieve' || key === 'demo-radical' || key === 'demo-pythag' || key === 'demo-pargram' || key === 'demo-specialquad' || key === 'demo-datastats' || key === 'demo-quad' || key === 'demo-growth' || key === 'demo-parabola' || key === 'demo-spin' || key === 'demo-circangle' || key === 'demo-tangent' || key === 'demo-sector' || key === 'demo-coin' || key === 'demo-tree' || key === 'demo-hyperbola' || key === 'demo-similar' || key === 'demo-shadow' || key === 'demo-trig' || key === 'demo-slope' || key === 'demo-project' || key === 'demo-twentyfour' || key === 'demo-monty' || key === 'demo-maxarea' || key === 'demo-matches' || key === 'demo-mobius' || key === 'demo-shopweek' || key === 'demo-fairgame' || key === 'demo-makerule' || key === 'demo-thirteen' || key === 'demo-maketen' || key === 'demo-areamul' || key === 'demo-fraceq' || key === 'demo-buildfrac' || key === 'demo-areabuild' || key === 'demo-quadmorph' || key === 'demo-numplay' || key === 'demo-fracnumline') return key;
+  // 注册表动画：view 就是 key 本身（demo-<裸key>），不用再逐条手写。
+  if (isRegistryAnimView(key)) return key;
   if (key === 'why') return 'why';
   if (key === 'lab' || key === 'world') return 'lab'; // world 已并入实验室
   if (key === 'review') return 'review';
@@ -2128,7 +2252,7 @@ function applyView() {
   const stepN = view === 'path-step' ? key.slice('path-step-'.length) : null;
   [...pathPanelsEl.children].forEach(el => { el.hidden = !!(stepN && el.id !== 'step-' + stepN); });
   // 互动演示：列表留演示面板；叶子只留该演示卡片；为什么小实验只留 #why 区
-  const demoLeaf = view === 'demo-tenframe' || view === 'demo-fraction' || view === 'demo-balance' || view === 'demo-function' || view === 'demo-count' || view === 'demo-position' || view === 'demo-split' || view === 'demo-addsub' || view === 'demo-solids' || view === 'demo-bundle' || view === 'demo-clock' || view === 'demo-tangram' || view === 'demo-sort' || view === 'demo-hundred' || view === 'demo-shop' || view === 'demo-place' || view === 'demo-pattern' || view === 'demo-ruler' || view === 'demo-estimate' || view === 'demo-angle' || view === 'demo-array' || view === 'demo-observe' || view === 'demo-time' || view === 'demo-share' || view === 'demo-motion' || view === 'demo-mixop' || view === 'demo-remain' || view === 'demo-thousand' || view === 'demo-weight' || view === 'demo-chart' || view === 'demo-logic' || view === 'demo-pair' || view === 'demo-elapsed' || view === 'demo-verify' || view === 'demo-units' || view === 'demo-times' || view === 'demo-splitmul' || view === 'demo-rectsq' || view === 'demo-venn' || view === 'demo-compass' || view === 'demo-divplace' || view === 'demo-stattable' || view === 'demo-fourgrid' || view === 'demo-area' || view === 'demo-calendar' || view === 'demo-decimal' || view === 'demo-bignum' || view === 'demo-field' || view === 'demo-protractor' || view === 'demo-areamodel' || view === 'demo-parallelogram' || view === 'demo-trialdiv' || view === 'demo-baraxis' || view === 'demo-teatime' || view === 'demo-zerodiv' || view === 'demo-laws' || view === 'demo-placeslider' || view === 'demo-tearangle' || view === 'demo-decadd' || view === 'demo-moveshape' || view === 'demo-average' || view === 'demo-chickenrabbit' || view === 'demo-crslider' || view === 'demo-crdraw' || view === 'demo-crlist' || view === 'demo-crgolden' || view === 'demo-decmul' || view === 'demo-gridpos' || view === 'demo-decdiv' || view === 'demo-prob' || view === 'demo-polyarea' || view === 'demo-planttree' || view === 'demo-factor' || view === 'demo-cuboid' || view === 'demo-fracadd' || view === 'demo-rotate' || view === 'demo-findbad' || view === 'demo-radar' || view === 'demo-ratio' || view === 'demo-circle' || view === 'demo-percent' || view === 'demo-fan' || view === 'demo-lsquare' || view === 'demo-thermo' || view === 'demo-negmul' || view === 'demo-discount' || view === 'demo-cylinder' || view === 'demo-pigeon' || view === 'demo-numline' || view === 'demo-powerup' || view === 'demo-monomial' || view === 'demo-liketerms' || view === 'demo-meetline' || view === 'demo-lineseg' || view === 'demo-anglepair' || view === 'demo-vertangle' || view === 'demo-parangles' || view === 'demo-roots' || view === 'demo-coordplane' || view === 'demo-ineqline' || view === 'demo-histogram' || view === 'demo-trisides' || view === 'demo-congruent' || view === 'demo-foldmirror' || view === 'demo-algarea' || view === 'demo-algfrac' || view === 'demo-eqsieve' || view === 'demo-radical' || view === 'demo-pythag' || view === 'demo-pargram' || view === 'demo-specialquad' || view === 'demo-datastats' || view === 'demo-quad' || view === 'demo-growth' || view === 'demo-parabola' || view === 'demo-spin' || view === 'demo-circangle' || view === 'demo-tangent' || view === 'demo-sector' || view === 'demo-coin' || view === 'demo-tree' || view === 'demo-hyperbola' || view === 'demo-similar' || view === 'demo-shadow' || view === 'demo-trig' || view === 'demo-slope' || view === 'demo-project' || view === 'demo-twentyfour' || view === 'demo-monty' || view === 'demo-maxarea' || view === 'demo-matches' || view === 'demo-mobius' || view === 'demo-shopweek' || view === 'demo-fairgame' || view === 'demo-makerule' || view === 'demo-thirteen' || view === 'demo-maketen' || view === 'demo-areamul' || view === 'demo-fraceq' || view === 'demo-buildfrac' || view === 'demo-areabuild' || view === 'demo-quadmorph' || view === 'demo-numplay' || view === 'demo-fracnumline';
+  const demoLeaf = view === 'demo-tenframe' || view === 'demo-fraction' || view === 'demo-balance' || view === 'demo-function' || view === 'demo-count' || view === 'demo-position' || view === 'demo-split' || view === 'demo-addsub' || view === 'demo-solids' || view === 'demo-bundle' || view === 'demo-clock' || view === 'demo-tangram' || view === 'demo-sort' || view === 'demo-hundred' || view === 'demo-shop' || view === 'demo-place' || view === 'demo-pattern' || view === 'demo-ruler' || view === 'demo-estimate' || view === 'demo-angle' || view === 'demo-array' || view === 'demo-observe' || view === 'demo-time' || view === 'demo-share' || view === 'demo-motion' || view === 'demo-mixop' || view === 'demo-remain' || view === 'demo-thousand' || view === 'demo-weight' || view === 'demo-chart' || view === 'demo-logic' || view === 'demo-pair' || view === 'demo-elapsed' || view === 'demo-verify' || view === 'demo-units' || view === 'demo-times' || view === 'demo-splitmul' || view === 'demo-rectsq' || view === 'demo-venn' || view === 'demo-compass' || view === 'demo-divplace' || view === 'demo-stattable' || view === 'demo-fourgrid' || view === 'demo-area' || view === 'demo-calendar' || view === 'demo-decimal' || view === 'demo-bignum' || view === 'demo-field' || view === 'demo-protractor' || view === 'demo-areamodel' || view === 'demo-parallelogram' || view === 'demo-trialdiv' || view === 'demo-baraxis' || view === 'demo-teatime' || view === 'demo-zerodiv' || view === 'demo-laws' || view === 'demo-placeslider' || view === 'demo-tearangle' || view === 'demo-decadd' || view === 'demo-moveshape' || view === 'demo-average' || view === 'demo-chickenrabbit' || view === 'demo-crslider' || view === 'demo-crdraw' || view === 'demo-crlist' || view === 'demo-crgolden' || view === 'demo-decmul' || view === 'demo-gridpos' || view === 'demo-decdiv' || view === 'demo-prob' || view === 'demo-polyarea' || view === 'demo-planttree' || view === 'demo-factor' || view === 'demo-cuboid' || view === 'demo-fracadd' || view === 'demo-rotate' || view === 'demo-findbad' || view === 'demo-radar' || view === 'demo-ratio' || view === 'demo-circle' || view === 'demo-percent' || view === 'demo-fan' || view === 'demo-lsquare' || view === 'demo-thermo' || view === 'demo-negmul' || view === 'demo-discount' || view === 'demo-cylinder' || view === 'demo-pigeon' || view === 'demo-numline' || view === 'demo-powerup' || view === 'demo-monomial' || view === 'demo-liketerms' || view === 'demo-meetline' || view === 'demo-lineseg' || view === 'demo-anglepair' || view === 'demo-vertangle' || view === 'demo-parangles' || view === 'demo-roots' || view === 'demo-coordplane' || view === 'demo-ineqline' || view === 'demo-histogram' || view === 'demo-trisides' || view === 'demo-congruent' || view === 'demo-foldmirror' || view === 'demo-algarea' || view === 'demo-algfrac' || view === 'demo-eqsieve' || view === 'demo-radical' || view === 'demo-pythag' || view === 'demo-pargram' || view === 'demo-specialquad' || view === 'demo-datastats' || view === 'demo-quad' || view === 'demo-growth' || view === 'demo-parabola' || view === 'demo-spin' || view === 'demo-circangle' || view === 'demo-tangent' || view === 'demo-sector' || view === 'demo-coin' || view === 'demo-tree' || view === 'demo-hyperbola' || view === 'demo-similar' || view === 'demo-shadow' || view === 'demo-trig' || view === 'demo-slope' || view === 'demo-project' || view === 'demo-twentyfour' || view === 'demo-monty' || view === 'demo-maxarea' || view === 'demo-matches' || view === 'demo-mobius' || view === 'demo-shopweek' || view === 'demo-fairgame' || view === 'demo-makerule' || view === 'demo-thirteen' || view === 'demo-maketen' || view === 'demo-areamul' || view === 'demo-fraceq' || view === 'demo-buildfrac' || view === 'demo-areabuild' || view === 'demo-quadmorph' || view === 'demo-numplay' || view === 'demo-fracnumline' || isRegistryAnimView(view);
   setHidden(demosSec, !(view === 'demos' || demoLeaf));
   setHidden(demoPanelsEl, view !== 'demos');
   setHidden(creativePanelsEl, view !== 'demos');
@@ -2136,10 +2260,11 @@ function applyView() {
   setHidden(simPanelsEl, view !== 'demos');
   setHidden(simLabelEl, view !== 'demos');
   setHidden(demoLabelEl, view !== 'demos');
+  setHidden(animDirEl, view !== 'demos'); // 总目录只在演示列表视图出现
   setHidden(demoGridEl, !demoLeaf); // 演示卡片网格只在某一个演示的叶子视图里出现，列表视图只留演示面板
   setHidden(demosSec.querySelector('h2'), demoLeaf);
   setHidden(demosSec.querySelector('.section-sub'), demoLeaf);
-  [...demoGridEl.children].forEach(el => { el.hidden = demoLeaf && el.id !== view; });
+  [...demoGridEl.children].forEach(el => { el.hidden = demoLeaf && (el.id === 'demo-anim' ? !isRegistryAnimView(view) : el.id !== view); });
   setHidden(whySec, view !== 'why');
   // 数学实验室：只有进实验室才显示整个 #lab 区（世界模型验收台已并入）
   setHidden(labSec, view !== 'lab');
@@ -2165,8 +2290,10 @@ function applyView() {
 }
 
 function enterNavEntry(entry) {
-  const def = NAV_DEFS[entry.key] || {};
+  const def = navDefFor(entry.key) || {};
   if (def.action) def.action();
+  // 注册表动画：进入视图时重画通用卡片（每次进入都重画，状态新鲜）。
+  if (isRegistryAnimView(entry.key)) renderRegistryAnim(entry.key.slice(5));
   // 一次只显示一个视图，内容都在页顶，不再按目标滚动。
   // 直接跳到顶（不用平滑滚动）：平滑滚动中标题会从吸顶栏底下滑过，看着像被栏遮住。
   window.scrollTo({ top: 0, behavior: 'auto' });
@@ -2205,7 +2332,7 @@ function parentOf(key) {
   return null;
 }
 function navGo(key) {
-  const def = NAV_DEFS[key];
+  const def = navDefFor(key);
   if (!def) return;
   const top = navStack[navStack.length - 1];
   if (key === 'home') { navStack = [navStack[0]]; enterNavEntry(navStack[0]); }
@@ -2303,6 +2430,7 @@ document.querySelectorAll('[data-nav-key]').forEach(el =>
 document.getElementById('modeGrade').addEventListener('click', () => setModeView('grade'));
 document.getElementById('modeDim').addEventListener('click', () => setModeView('dimension'));
 renderNav();
+renderAnimDirectory(); // 演示页总目录：注册表动画按点分组（只在 view==='demos' 时显示）
 renderTried(); // 首次刷新进度：这时 reviewStore 和 progressCardEl 都已初始化
 renderWrongBook(); // 首页错题本卡片和面板条数一进页面就是真实的，不是占位示例。
 

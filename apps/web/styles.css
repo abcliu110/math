@@ -119,6 +119,7 @@ body[data-view="demo-crslider"] #demos,
 body[data-view="demo-crdraw"] #demos,
 body[data-view="demo-crlist"] #demos,
 body[data-view="demo-crgolden"] #demos,
+body[data-view^="demo-"] #demos,
 body[data-view="why"] #why, body[data-view="review"] #review,
 body[data-view="progress"] #review, body[data-view="parent"] #review, body[data-view="lab"] #lab,
 body[data-view="exam"] #exam, body[data-view="inquiry"] #inquiry, body[data-view="checkpoint"] #checkpoint{display:block}
@@ -942,3 +943,15 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
 .bench-choose .lab-q p { margin: 0 0 6px; font-size: 13px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .bench-choose .lab-q .muted { display: none; }
 .bench-choose .lab-q .btn { font-size: 12px; }
+
+/* 动画总目录（注册表）：演示页里 JS 生成的分组列表 */
+.anim-dir-grade{margin:14px 0}
+.anim-dir-grade h4{margin:10px 0 4px}
+.anim-dir-unit h5{margin:8px 0 2px;color:#475569}
+.anim-dir-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:4px 0}
+/* 注册表动画：m1a-pair 一一对应配对法——两排圆点，配成一对变绿、剩下变红框 */
+.m1a-pair-row{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0;min-height:44px}
+.m1a-pair-dot{width:40px;height:40px;border-radius:50%;border:2px solid #c2410c;background:#fff3e6;color:#c2410c;font-size:16px;cursor:pointer}
+.m1a-pair-dot-bottom{border-color:#1d4ed8;background:#dbeafe;color:#1d4ed8}
+.m1a-pair-dot.picked{outline:3px solid #f59e0b}
+.m1a-pair-dot.paired{background:#dcfce7;border-color:#15803d;color:#15803d}

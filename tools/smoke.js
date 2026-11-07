@@ -302,6 +302,15 @@ function seedSeg(segId, attr, values) {
 seedSeg('splitTotalSeg', 'split-total', ['3', '4', '5']);
 seedSeg('addsubModeSeg', 'addsub-mode', ['add', 'sub']);
 seedSeg('sortRuleSeg', 'sort-rule', ['color', 'shape']);
+// 注册表通用卡片 + 一张旧卡片挂进 demoGrid：桩不解析 index.html，
+// applyView 的逐卡片 hidden 逻辑在桩里否则没有 children 可设。
+// id 要手动补上（真实 DOM 里 id 来自 HTML，桩元素默认没有 id 属性）。
+const animCardSeed = documentStub.getElementById('demo-anim');
+animCardSeed.id = 'demo-anim';
+documentStub.getElementById('demoGrid').appendChild(animCardSeed);
+const oldCardSeed = documentStub.getElementById('demo-tenframe');
+oldCardSeed.id = 'demo-tenframe';
+documentStub.getElementById('demoGrid').appendChild(oldCardSeed);
 
 // ---------- load MathWorld then the real app.js ----------
 const root = require('path').resolve(__dirname, '..');
@@ -318,6 +327,12 @@ try {
   sandbox.MathWorld = windowStub.MathWorld || sandbox.MathWorld || sandbox.globalThis && sandbox.globalThis.MathWorld;
   vm.runInContext(apparatusSrc, sandbox, { filename: 'apparatus.js' });
   sandbox.Apparatus = windowStub.Apparatus || sandbox.Apparatus;
+  // 动画注册表（§5.1）：band 文件在 app.js 之前加载；文件不存在时跳过，
+  // 这样新检查在改前代码上干净失败而不是整个测试崩掉。
+  ['anims-registry.js', 'anims-band-1-3.js', 'anims-band-4-6.js', 'anims-band-7-9.js', 'anims-operations.js'].forEach(f => {
+    const p = root + '/apps/web/' + f;
+    if (fs.existsSync(p)) vm.runInContext(fs.readFileSync(p, 'utf8'), sandbox, { filename: f });
+  });
   vm.runInContext(src, sandbox, { filename: 'app.js' });
   console.log('LOAD OK');
 } catch (e) { console.log('LOAD FAILED: ' + e.message); process.exit(1); }
@@ -564,7 +579,7 @@ const bCell0 = byId.tfB.children[0];
 click(bCell0);
 check('tenframe: click B cell moves one to fill ten', byId.tfEq.textContent === '9 + 4 = 13');
 check('tenframe note explains 10+3', byId.tfNote.textContent.includes('10 + 3 = 13'));
-check('demo counter counts a played demo', byId.progressCount.textContent === '1 / 145' &&
+check('demo counter counts a played demo', byId.progressCount.textContent === '1 / 146' &&
   JSON.parse(lsData['math-tried-demos-v1'] || '[]').includes('tenframe'));
 sandbox.tfSetProblem('sub', 0);
 check('tenframe sub initial equation', byId.tfEq.textContent === '13 − 5 = ?');
@@ -794,7 +809,7 @@ click(byId.countRowA.children[0]);
 check('count: click a dot counts it', byId.countCount.textContent.includes('数到了第 1 个'));
 click(byId.countCompare);
 check('count: 5 vs 7 -> below has 2 more', byId.countResult.textContent.includes('下面多 2 个'));
-check('G1 demos count toward the 145-demo progress', g1ProgBefore === '4 / 145' && byId.progressCount.textContent === '5 / 145');
+check('G1 demos count toward the 146-demo progress', g1ProgBefore === '4 / 146' && byId.progressCount.textContent === '5 / 146');
 click(byId.countAMinus); click(byId.countAMinus);
 check('count: minus twice -> 3', byId.countReadA.textContent === '3 个');
 
@@ -970,7 +985,7 @@ check('ruler: eraser is 3 cm', byId.rulReadout.textContent.includes('3 厘米'))
 click(byId.rulFromBtn);
 check('ruler: measuring from 1 over-reads by 1', byId.rulMsg.textContent.includes('多算1厘米'));
 check('ruler: meter strip is 100 cm squares', byId.rulMeter.children.length === 100);
-check('G2 demos count toward the 145-demo progress', g2ProgBefore === '17 / 145' && byId.progressCount.textContent === '18 / 145');
+check('G2 demos count toward the 146-demo progress', g2ProgBefore === '17 / 146' && byId.progressCount.textContent === '18 / 146');
 
 // 2.2 先估后算
 click(byId.estProbSeg.children[1]); // 26+38
@@ -1110,7 +1125,7 @@ check('grade-2.js: all 16 points map to the right experiment',
 const labelSrc2 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
 check('DEMO_LABEL covers all 15 new demos',
   G2_DEMOS.every(k => labelSrc2.includes(k + ':')));
-check('G2: all 15 new demos tried by now', byId.progressCount.textContent === '32 / 145');
+check('G2: all 15 new demos tried by now', byId.progressCount.textContent === '32 / 146');
 
 // ---------- 12. 全站布局改版（2026-11-06 真机审计） ----------
 // CSS：顶栏实底不透光，模式栏不吸顶，演示单列，知识点页窄栏
@@ -1208,7 +1223,7 @@ navGo('progress');
 check('progress: per-grade rows with real numbers',
   byId.progressCard.innerHTML.includes('1 年级') && byId.progressCard.innerHTML.includes('3 年级') &&
   byId.progressCard.innerHTML.includes('动画') && byId.progressCard.innerHTML.includes('已练'));
-check('progress: 32 of 145 demos tried by now', byId.progressCount.textContent === '32 / 145');
+check('progress: 32 of 145 demos tried by now', byId.progressCount.textContent === '32 / 146');
 // 首页不显示孤零零的“数学”面包屑，子页面显示完整面包屑
 navGo('home');
 check('home hides the lone crumb title', byId.crumbTitle.hidden === true);
@@ -1245,7 +1260,7 @@ check('elapsed: jump to the whole hour lands on 8:00', byId.elReadout.textConten
 for (let i = 0; i < 6; i++) click(byId.elPlus10);
 click(byId.elPlus5);
 check('elapsed: 7:30 -> 9:05 is 1 hour 35 minutes', byId.elMsg.textContent.includes('1 小时 35 分'));
-check('G3 demos count toward the 145-demo progress', g3ProgBefore === '32 / 145' && byId.progressCount.textContent === '33 / 145');
+check('G3 demos count toward the 146-demo progress', g3ProgBefore === '32 / 146' && byId.progressCount.textContent === '33 / 146');
 
 // 3.2 算一算，再算回去
 for (let i = 0; i < 4; i++) click(byId.vfNext);
@@ -1369,7 +1384,7 @@ check('grade-3.js: all 16 points map to the right experiment',
 const labelSrc3 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
 check('DEMO_LABEL covers all 14 new demos',
   G3_DEMOS.every(k => labelSrc3.includes(k + ':')));
-check('G3: all 14 new demos tried by now', byId.progressCount.textContent === '46 / 145');
+check('G3: all 14 new demos tried by now', byId.progressCount.textContent === '46 / 146');
 
 
 // ---------- 11d. 四年级实验（16 个新演示 + 4.17 复用换个方向看） ----------
@@ -1402,7 +1417,7 @@ click(byId.bnRound);
 check('bignum: 62850 rounds to 6 wan', byId.bnMsg.textContent.includes('约是 6万'));
 click(byId.bnProbSeg.children[2]); // 75000
 check('bignum: 75000 sits on the halfway mark', byId.bnNear.textContent.includes('正好在半点上'));
-check('G4 demos count toward the 145-demo progress', g4ProgBefore === '46 / 145' && byId.progressCount.textContent === '47 / 145');
+check('G4 demos count toward the 146-demo progress', g4ProgBefore === '46 / 146' && byId.progressCount.textContent === '47 / 146');
 
 // 4.2 足球场拼一拼
 check('field: 1 field is 1 hectare, 10000 square meters', byId.fdReadout.textContent.includes('1 公顷') && byId.fdReadout.textContent.includes('10000 平方米'));
@@ -1550,7 +1565,7 @@ check('grade-4.js: all 17 points map to the right experiment',
 const labelSrc4 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
 check('DEMO_LABEL covers all 16 new demos',
   G4_DEMOS.every(k => labelSrc4.includes(k + ':')));
-check('G4: all 16 new demos tried by now', byId.progressCount.textContent === '62 / 145');
+check('G4: all 16 new demos tried by now', byId.progressCount.textContent === '62 / 146');
 
 
 // ---------- 6. grade 5 ----------
@@ -1564,7 +1579,7 @@ click(byId.dmProbSeg.children[1]); // 0.2x0.5
 check('decmul: 0.2x0.5 is 0.10, that is 0.1', byId.dmRead.textContent.includes('0.10') && byId.dmRead.textContent.includes('0.1'));
 click(byId.dmProbSeg.children[2]); // 0.6x0.7
 check('decmul: 0.6x0.7 is 0.42', byId.dmRead.textContent.includes('0.42'));
-check('G5 demos count toward the 145-demo progress', g5ProgBefore === '62 / 145' && byId.progressCount.textContent === '63 / 145');
+check('G5 demos count toward the 146-demo progress', g5ProgBefore === '62 / 146' && byId.progressCount.textContent === '63 / 146');
 
 // 5.2 位置：数对
 click(byId.gpGrid.children[8]); // row 1, col 2 -> (3,2)
@@ -1685,7 +1700,7 @@ const G5_DEMOS = ['decmul', 'gridpos', 'decdiv', 'prob', 'polyarea', 'planttree'
 const labelSrc5 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
 check('DEMO_LABEL covers all 11 new demos',
   G5_DEMOS.every(k => labelSrc5.includes(k + ':')));
-check('G5: all 11 new demos tried by now', byId.progressCount.textContent === '73 / 145');
+check('G5: all 11 new demos tried by now', byId.progressCount.textContent === '73 / 146');
 
 
 // ---------- 7. grade 6 ----------
@@ -1700,7 +1715,7 @@ check('radar: direction only is a ray with countless points', byId.rdRead.textCo
 click(byId.rdModeSeg.children[0]); // 方向+距离
 click(byId.rdDirSeg.children[1]); // 北偏西
 check('radar: north-west 40 degrees', byId.rdRead.textContent.includes('北偏西 40°'));
-check('G6 demos count toward the 145-demo progress', g6ProgBefore === '73 / 145' && byId.progressCount.textContent === '74 / 145');
+check('G6 demos count toward the 146-demo progress', g6ProgBefore === '73 / 146' && byId.progressCount.textContent === '74 / 146');
 
 // 6.4 比：比条
 check('ratio: 2:3 of 50 is 20 and 30', byId.raRead.textContent.includes('20 元') && byId.raRead.textContent.includes('30 元'));
@@ -1811,7 +1826,7 @@ const G6_DEMOS = ['radar', 'ratio', 'circle', 'percent', 'fan', 'lsquare', 'ther
 const labelSrc6 = src.match(/const DEMO_LABEL = \{([^}]*)\}/)[1];
 check('DEMO_LABEL covers all 12 new demos',
   G6_DEMOS.every(k => labelSrc6.includes(k + ':')));
-check('G6: all 12 new demos tried by now', byId.progressCount.textContent === '85 / 145');
+check('G6: all 12 new demos tried by now', byId.progressCount.textContent === '85 / 146');
 
 // ---------- 8. grade 7 ----------
 const g7ProgBefore = byId.progressCount.textContent;
@@ -1826,7 +1841,7 @@ click(byId.nlBMinus); click(byId.nlBMinus); // b=5
 check('numline: -4+5 walks to 1', byId.nlRead.textContent.includes('−4 + 5') && byId.nlRead.textContent.includes('停在 1'));
 click(byId.nlAMinus); // a=-5
 check('numline: -5+5 walks to 0', byId.nlRead.textContent.includes('−5 + 5') && byId.nlRead.textContent.includes('停在 0'));
-check('G7 demos count toward the 145-demo progress', g7ProgBefore === '85 / 145' && byId.progressCount.textContent === '86 / 145');
+check('G7 demos count toward the 146-demo progress', g7ProgBefore === '85 / 146' && byId.progressCount.textContent === '86 / 146');
 
 // 7.3 乘方与科学记数法
 check('powerup: 10 folds is 1024x, 102.4mm', byId.puRead.textContent.includes('1024') && byId.puRead.textContent.includes('102.4 毫米'));
@@ -1988,11 +2003,11 @@ check('DEMO_LABEL covers all 13 new demos',
   G7_DEMOS.every(k => labelSrc7.includes(k + ':')));
 check('viewForKey covers all 13 new demos',
   G7_DEMOS.every(k => sandbox.viewForKey('demo-' + k) === 'demo-' + k));
-check('G7: all 13 new demos tried by now', byId.progressCount.textContent === '98 / 145');
+check('G7: all 13 new demos tried by now', byId.progressCount.textContent === '98 / 146');
 
 
-// ---------- 8. 八年级实验（11 个新演示，145 个动画） ----------
-check('G8 start: progress is 98 / 145 before any G8 demo is tried', byId.progressCount.textContent === '98 / 145');
+// ---------- 8. 八年级实验（11 个新演示，146 个动画） ----------
+check('G8 start: progress is 98 / 146 before any G8 demo is tried', byId.progressCount.textContent === '98 / 146');
 
 navGo('demo-trisides');
 check('trisides renders: 3-4-5 closes, angles sum to 180°',
@@ -2004,7 +2019,7 @@ click(byId.tsModeSeg.children[1]); // 多边形内角和
 check('trisides polygon: pentagon interior sum 540°', byId.tsRead.textContent.includes('540°'));
 click(byId.tsNPlus); // 6 边形
 check('trisides polygon: hexagon interior sum 720°', byId.tsRead.textContent.includes('720°'));
-check('G8: trisides counts toward the 145-demo progress', byId.progressCount.textContent === '99 / 145');
+check('G8: trisides counts toward the 146-demo progress', byId.progressCount.textContent === '99 / 146');
 
 navGo('demo-congruent');
 check('congruent renders: SSS 5-6-7 always congruent',
@@ -2021,7 +2036,7 @@ click(byId.cgCondSeg.children[6]); // AAA
 check('congruent AAA: same shape, size can differ', byId.cgRead.textContent.includes('AAA 不能判定全等'));
 click(byId.cgScalePlus); // ×2
 check('congruent AAA: scale ×2 shown', byId.cgRead.textContent.includes('×2'));
-check('G8: congruent counts toward the 145-demo progress', byId.progressCount.textContent === '100 / 145');
+check('G8: congruent counts toward the 146-demo progress', byId.progressCount.textContent === '100 / 146');
 
 navGo('demo-foldmirror');
 check('foldmirror renders: isosceles triangle fold prompt',
@@ -2046,7 +2061,7 @@ check('foldmirror isosceles: base 70°, top 40°',
 click(byId.fmIsoFoldBtn);
 check('foldmirror isosceles fold: the three lines coincide',
   byId.fmRead.textContent.includes('三线合一'));
-check('G8: foldmirror counts toward the 145-demo progress', byId.progressCount.textContent === '101 / 145');
+check('G8: foldmirror counts toward the 146-demo progress', byId.progressCount.textContent === '101 / 146');
 
 navGo('demo-algarea');
 check('algarea renders: a³·a² = a⁵, exponents add',
@@ -2072,7 +2087,7 @@ check('algarea factor: 1×1 and 1+1 both miss for x²+5x+6',
 click(byId.aaF1Plus); click(byId.aaF2Plus); click(byId.aaF2Plus); // 2, 3
 check('algarea factor: (2,3) solves x²+5x+6 = (x+2)(x+3)',
   byId.aaRead.textContent.includes('x²+5x+6 = (x+2)(x+3)'));
-check('G8: algarea counts toward the 145-demo progress', byId.progressCount.textContent === '102 / 145');
+check('G8: algarea counts toward the 146-demo progress', byId.progressCount.textContent === '102 / 146');
 
 navGo('demo-algfrac');
 check('algfrac renders: 12a²b/4ab prompt with remaining factors',
@@ -2095,7 +2110,7 @@ check('algfrac zero: x=0, denominator x−2 = -2, fraction defined',
 click(byId.afXPlus); click(byId.afXPlus); // x=2
 check('algfrac zero: x=2, denominator 0, fraction undefined',
   byId.afRead.textContent.includes('分母 x−2 = 0') && byId.afRead.textContent.includes('没有意义'));
-check('G8: algfrac counts toward the 145-demo progress', byId.progressCount.textContent === '103 / 145');
+check('G8: algfrac counts toward the 146-demo progress', byId.progressCount.textContent === '103 / 146');
 
 navGo('demo-eqsieve');
 check('eqsieve renders: 2/(x−3) = 1/(x+1)',
@@ -2114,7 +2129,7 @@ check('eqsieve problem 2: 1/(x−1) = 2/(x²−1)',
 click(byId.esStep3);
 check('eqsieve problem 2: x=1 is extraneous, no solution',
   byId.esLine3.textContent.includes('增根') && byId.esLine3.textContent.includes('无解'));
-check('G8: eqsieve counts toward the 145-demo progress', byId.progressCount.textContent === '104 / 145');
+check('G8: eqsieve counts toward the 146-demo progress', byId.progressCount.textContent === '104 / 146');
 
 navGo('demo-radical');
 check('radical renders: simplify √12, largest square factor prompt',
@@ -2130,7 +2145,7 @@ click(byId.rxModeSeg.children[1]); // 合并同类
 check('radical combine: √8 + √2 = 3√2', byId.rxRead.textContent.includes('3√2'));
 click(byId.rxPairSeg.children[3]); // √5, √3
 check('radical combine: √5 and √3 cannot merge', byId.rxRead.textContent.includes('合不了'));
-check('G8: radical counts toward the 145-demo progress', byId.progressCount.textContent === '105 / 145');
+check('G8: radical counts toward the 146-demo progress', byId.progressCount.textContent === '105 / 146');
 
 navGo('demo-pythag');
 check('pythag renders: 3²+4² = 5² by areas',
@@ -2144,7 +2159,7 @@ check('pythag check: 5-12-13 is a right triangle',
 click(byId.pyCheckSeg.children[1]); // 3, 4, 6
 check('pythag check: 3-4-6 is not (25 ≠ 36)',
   byId.pyRead.textContent.includes('不是直角三角形') && byId.pyRead.textContent.includes('≠ 36'));
-check('G8: pythag counts toward the 145-demo progress', byId.progressCount.textContent === '106 / 145');
+check('G8: pythag counts toward the 146-demo progress', byId.progressCount.textContent === '106 / 146');
 
 navGo('demo-pargram');
 check('pargram renders: AB = CD = 11, diagonals bisect each other',
@@ -2158,7 +2173,7 @@ check('pargram judge: two pairs of equal opposite sides proves a parallelogram',
 click(byId.pgmJudgeSeg.children[3]); // 一组对边平行、另一组对边相等
 check('pargram judge: that may be an isosceles trapezoid, not a parallelogram',
   byId.pgmRead.textContent.includes('等腰梯形') && byId.pgmRead.textContent.includes('不能判定'));
-check('G8: pargram counts toward the 145-demo progress', byId.progressCount.textContent === '107 / 145');
+check('G8: pargram counts toward the 146-demo progress', byId.progressCount.textContent === '107 / 146');
 
 navGo('demo-specialquad');
 check('specialquad renders: plain parallelogram',
@@ -2173,7 +2188,7 @@ check('specialquad: add equal adjacent sides → rhombus, area 6×8÷2 = 24',
 click(byId.spRectBtn); // 两个条件都加
 check('specialquad: both conditions → square, area 36',
   byId.spRead.textContent.includes('正方形') && byId.spRead.textContent.includes('面积 36'));
-check('G8: specialquad counts toward the 145-demo progress', byId.progressCount.textContent === '108 / 145');
+check('G8: specialquad counts toward the 146-demo progress', byId.progressCount.textContent === '108 / 146');
 
 navGo('demo-datastats');
 check('datastats renders: 2,3,3,5,7 — mean 4, median 3, mode 3, variance 3.2',
@@ -2194,7 +2209,7 @@ check('datastats compare: same mean 9, group 甲 has smaller variance, more stab
 click(byId.dsPairSeg.children[1]); // 丙 / 丁
 check('datastats compare: group 丙 variance 0, most stable',
   byId.dsRead.textContent.includes('丙更稳定'));
-check('G8: all 11 new demos tried by now', byId.progressCount.textContent === '109 / 145');
+check('G8: all 11 new demos tried by now', byId.progressCount.textContent === '109 / 146');
 
 // 知识点页 → 实验的链接（桩里的 grade-8.js）+ 真实 grade-8.js 的映射
 const G8_LINKS = [
@@ -2231,8 +2246,8 @@ check('viewForKey covers all 11 new demos',
   G8_DEMOS.every(k => sandbox.viewForKey('demo-' + k) === 'demo-' + k));
 
 
-// ---------- 9. 九年级实验（15 个新演示，145 个动画） ----------
-check('G9 start: progress is 109 / 145 before any G9 demo is tried', byId.progressCount.textContent === '109 / 145');
+// ---------- 9. 九年级实验（15 个新演示，146 个动画） ----------
+check('G9 start: progress is 109 / 146 before any G9 demo is tried', byId.progressCount.textContent === '109 / 146');
 
 navGo('demo-quad');
 check('quad renders: x²−5x+6=0 completes to (x−2.5)²=0.25',
@@ -2251,7 +2266,7 @@ click(byId.qqModeSeg.children[3]); // 代回去验算
 check('quad check: x=1 and x=-7 both substitute to 0',
   byId.qqRead.textContent.includes('x=1') && byId.qqRead.textContent.includes('x=-7') &&
   byId.qqRead.textContent.includes('得 0'));
-check('G9: quad counts toward the 145-demo progress', byId.progressCount.textContent === '110 / 145');
+check('G9: quad counts toward the 146-demo progress', byId.progressCount.textContent === '110 / 146');
 
 navGo('demo-growth');
 check('growth renders: 100 yuan at 10% for 2 years is 121',
@@ -2266,7 +2281,7 @@ check('growth vieta: x²−3x+1=0, sum 3, product 1, squares sum 7',
 click(byId.gwVietaSeg.children[1]); // x²−5x+6=0
 check('growth vieta: x²−5x+6=0, squares sum 13',
   byId.gwMsg.textContent.includes('=13'));
-check('G9: growth counts toward the 145-demo progress', byId.progressCount.textContent === '111 / 145');
+check('G9: growth counts toward the 146-demo progress', byId.progressCount.textContent === '111 / 146');
 
 navGo('demo-parabola');
 check('parabola renders: y=x², vertex (0,0), tangent to x-axis',
@@ -2284,7 +2299,7 @@ check('parabola profit: raise 5 yuan, max profit 2450',
 click(byId.ppXMinus); // 4 元
 check('parabola profit: raise 4 yuan, profit 2448',
   byId.ppRead.textContent.includes('总利润 2448 元'));
-check('G9: parabola counts toward the 145-demo progress', byId.progressCount.textContent === '112 / 145');
+check('G9: parabola counts toward the 146-demo progress', byId.progressCount.textContent === '112 / 146');
 
 navGo('demo-spin');
 check('spin renders: square rotates 90°, distance from O unchanged',
@@ -2302,7 +2317,7 @@ click(byId.snShapeSeg.children[2]); // 等边三角形
 click(byId.snAngPlus); click(byId.snAngPlus); click(byId.snAngPlus); click(byId.snAngPlus); // 180→300
 check('spin: equilateral at 300° does not coincide (needs 120° steps)',
   byId.snMsg.textContent.includes('还没和原来重合'));
-check('G9: spin counts toward the 145-demo progress', byId.progressCount.textContent === '113 / 145');
+check('G9: spin counts toward the 146-demo progress', byId.progressCount.textContent === '113 / 146');
 
 navGo('demo-circangle');
 check('circangle renders: central 120°, inscribed 60°',
@@ -2316,7 +2331,7 @@ check('circangle chord: r=5, chord 8, distance 3',
 click(byId.cjChordPlus); // 弦 6
 check('circangle chord: chord 6, distance 4',
   byId.cjRead.textContent.includes('弦长 6') && byId.cjRead.textContent.includes('距离是 4'));
-check('G9: circangle counts toward the 145-demo progress', byId.progressCount.textContent === '114 / 145');
+check('G9: circangle counts toward the 146-demo progress', byId.progressCount.textContent === '114 / 146');
 
 navGo('demo-tangent');
 check('tangent renders: r=4, d=5, separate, 0 intersections',
@@ -2333,7 +2348,7 @@ check('tangent length: OP=5, PA=PB=3',
 click(byId.tgOPPlus); // OP=6
 check('tangent length: OP=6, PA=PB=4.47',
   byId.tgRead.textContent.includes('PA=PB=4.47'));
-check('G9: tangent counts toward the 145-demo progress', byId.progressCount.textContent === '115 / 145');
+check('G9: tangent counts toward the 146-demo progress', byId.progressCount.textContent === '115 / 146');
 
 navGo('demo-sector');
 check('sector renders: r=6, n=60°, arc 6.28, area 18.85',
@@ -2347,7 +2362,7 @@ check('sector cone: r=3, l=5, lateral area 15π, angle 216°',
 click(byId.sfCRPlus); // r=4
 check('sector cone: r=4, lateral area 20π, angle 288°',
   byId.sfRead.textContent.includes('20π') && byId.sfMsg.textContent.includes('288°'));
-check('G9: sector counts toward the 145-demo progress', byId.progressCount.textContent === '116 / 145');
+check('G9: sector counts toward the 146-demo progress', byId.progressCount.textContent === '116 / 146');
 
 navGo('demo-coin');
 check('coin renders: no tosses yet',
@@ -2362,7 +2377,7 @@ check('coin ball: red probability 3/5',
   byId.cfRead.textContent.includes('3/5=0.6'));
 click(byId.cfDrawBtn);
 check('coin ball: one draw counted', byId.cfRead.textContent.includes('摸了 1 次'));
-check('G9: coin counts toward the 145-demo progress', byId.progressCount.textContent === '117 / 145');
+check('G9: coin counts toward the 146-demo progress', byId.progressCount.textContent === '117 / 146');
 
 navGo('demo-tree');
 check('tree renders: prompt to grow the next level',
@@ -2381,7 +2396,7 @@ click(byId.twScenSeg.children[2]); // 抽两张卡片
 click(byId.twNextBtn); click(byId.twNextBtn);
 check('tree cards: 6 combinations, both odd 1/6',
   byId.twRead.textContent.includes('6 种组合') && byId.twRead.textContent.includes('概率 1/6'));
-check('G9: tree counts toward the 145-demo progress', byId.progressCount.textContent === '118 / 145');
+check('G9: tree counts toward the 146-demo progress', byId.progressCount.textContent === '118 / 146');
 
 navGo('demo-hyperbola');
 check('hyperbola renders: k=6 in quadrants I/III, P(2,3), area 6',
@@ -2393,7 +2408,7 @@ check('hyperbola: k=4, P(2,2), area 4',
 click(byId.hbKMinus); click(byId.hbKMinus); // k=-2
 check('hyperbola: k=-2 in quadrants II/IV, P(2,-1)',
   byId.hbRead.textContent.includes('第二、四象限') && byId.hbRead.textContent.includes('P(2,-1)'));
-check('G9: hyperbola counts toward the 145-demo progress', byId.progressCount.textContent === '119 / 145');
+check('G9: hyperbola counts toward the 146-demo progress', byId.progressCount.textContent === '119 / 146');
 
 navGo('demo-similar');
 check('similar renders: 3-4-5 scaled ×2 is 6-8-10, perimeter 24, area 24',
@@ -2409,7 +2424,7 @@ check('similar homothety: OA=2, k=2.5, OA′=5',
 click(byId.siKPlus); // k=3
 check('similar homothety: k=3, area 5×9=45',
   byId.siMsg.textContent.includes('5×9=45'));
-check('G9: similar counts toward the 145-demo progress', byId.progressCount.textContent === '120 / 145');
+check('G9: similar counts toward the 146-demo progress', byId.progressCount.textContent === '120 / 146');
 
 navGo('demo-shadow');
 check('shadow renders: your shadow 2m, pole 9.6m',
@@ -2423,7 +2438,7 @@ check('shadow AA: ∠A=50°, ∠B=60°, ∠C=70°',
 click(byId.swAMinus); // ∠A=40°
 check('shadow AA: ∠A=40°, ∠C=80°',
   byId.swRead.textContent.includes('∠C=80°'));
-check('G9: shadow counts toward the 145-demo progress', byId.progressCount.textContent === '121 / 145');
+check('G9: shadow counts toward the 146-demo progress', byId.progressCount.textContent === '121 / 146');
 
 navGo('demo-trig');
 check('trig renders: ∠A=30°, opposite 5, adjacent 8.66, sin 0.5',
@@ -2436,7 +2451,7 @@ check('trig 45°: tan A=1, sin45°=cos45°=√2/2',
 click(byId.tjSpecialSeg.children[2]); // 60°
 check('trig 60°: sin60°=√3/2, opposite 8.66',
   byId.tjMsg.textContent.includes('sin60°=√3/2') && byId.tjRead.textContent.includes('对边 8.66'));
-check('G9: trig counts toward the 145-demo progress', byId.progressCount.textContent === '122 / 145');
+check('G9: trig counts toward the 146-demo progress', byId.progressCount.textContent === '122 / 146');
 
 navGo('demo-slope');
 check('slope renders: elevation 30°, 20m away, tower 11.55m',
@@ -2450,7 +2465,7 @@ check('slope grade: 1:1, height 4m, slope face 4√2 ≈ 5.66m',
 click(byId.soRatioSeg.children[1]); // 1:2
 check('slope grade: 1:2, height 4m, horizontal 8m, slope face 8.94m',
   byId.soRead.textContent.includes('水平距离 8 米') && byId.soRead.textContent.includes('坡面长 8.94 米'));
-check('G9: slope counts toward the 145-demo progress', byId.progressCount.textContent === '123 / 145');
+check('G9: slope counts toward the 146-demo progress', byId.progressCount.textContent === '123 / 146');
 
 navGo('demo-project');
 check('project renders: 4m object, sun 45°, shadow 4m',
@@ -2472,7 +2487,7 @@ click(byId.pjSolidSeg.children[1]); // 长方体
 check('project views: cuboid 6×3×4, front 6×4, left 3×4, top 6×3',
   byId.pjRead.textContent.includes('主视图是长方形 6×4') && byId.pjRead.textContent.includes('左视图是长方形 3×4') &&
   byId.pjRead.textContent.includes('俯视图是长方形 6×3'));
-check('G9: all 15 new demos tried by now', byId.progressCount.textContent === '124 / 145');
+check('G9: all 15 new demos tried by now', byId.progressCount.textContent === '124 / 146');
 
 // 知识点页 → 实验的链接（桩里的 grade-9.js）+ 真实 grade-9.js 的映射
 const G9_LINKS = [
@@ -2665,7 +2680,7 @@ check('K parent: week summary counts 3 practiced this week (old 1.1 excluded)',
 check('K parent: week summary groups by grade/unit',
   byId.parentCard.innerHTML.includes('3 年级') && byId.parentCard.innerHTML.includes('1 年级'));
 check('K parent: demos counted from stored tried list, honestly not weekly',
-  byId.parentCard.innerHTML.includes('演示一共玩过 2 / 145 个') && byId.parentCard.innerHTML.includes('没法按周分开算'));
+  byId.parentCard.innerHTML.includes('演示一共玩过 2 / 146 个') && byId.parentCard.innerHTML.includes('没法按周分开算'));
 check('K parent: difficulty lists the wrong point and the low-confidence point',
   byId.parentCard.innerHTML.includes('3.7') && byId.parentCard.innerHTML.includes('上次答错了') &&
   byId.parentCard.innerHTML.includes('3.12') && byId.parentCard.innerHTML.includes('没把握'));
@@ -2957,11 +2972,11 @@ lsData['math-tried-demos-v1'] = JSON.stringify(simTried);
 sandbox.renderTried();
 navGo('parent');
 check('counter: topbar, panels, progress and parent agree after another tab writes',
-  byId.progressCount.textContent.includes(nTried + ' / 145') &&
-  byId.panelProgTx.textContent.includes(nTried + ' / 145') &&
+  byId.progressCount.textContent.includes(nTried + ' / 146') &&
+  byId.panelProgTx.textContent.includes(nTried + ' / 146') &&
   byId.panelDemoTx.textContent.includes(nTried + ' 已体验') &&
-  byId.progressText.textContent.includes('已体验 ' + nTried + ' / 145') &&
-  byId.parentCard.innerHTML.includes('演示一共玩过 ' + nTried + ' / 145 个'));
+  byId.progressText.textContent.includes('已体验 ' + nTried + ' / 146') &&
+  byId.parentCard.innerHTML.includes('演示一共玩过 ' + nTried + ' / 146 个'));
 lsData['math-tried-demos-v1'] = JSON.stringify(triedBefore);
 sandbox.renderTried();
 navGo('home');
@@ -3155,7 +3170,7 @@ check('review: recordAttempt syncs first, another tab\'s entry survives',
 lsData['math-review-v1'] = raBefore;
 if (typeof sandbox.syncReviewFromStorage === 'function') sandbox.syncReviewFromStorage();
 
-// ---------- 11. 创意实验（8 个新演示，145 个动画） ----------
+// ---------- 11. 创意实验（8 个新演示，146 个动画） ----------
 const CREATIVE = ['thirteen', 'twentyfour', 'monty', 'maxarea', 'matches', 'mobius', 'shopweek', 'fairgame', 'makerule'];
 check('creative: DEMO_LABEL covers all 8 creative demos',
   CREATIVE.every(k => labelSrc9.includes(k + ':')));
@@ -4122,16 +4137,33 @@ check('anims: 3.7 has fraction + 3 sims',
   hasAnims && JSON.stringify(sandbox.animsForPoint('3.7')) === JSON.stringify(['fraction', 'fraceq', 'buildfrac', 'fracnumline']));
 check('anims: 3.12 has area + areabuild + maxarea from the lab question',
   hasAnims && JSON.stringify(sandbox.animsForPoint('3.12')) === JSON.stringify(['area', 'areabuild', 'maxarea']));
-check('anims: 1.1 has count + numplay',
-  hasAnims && JSON.stringify(sandbox.animsForPoint('1.1')) === JSON.stringify(['count', 'numplay']));
-check('checkpoint: 1.1 counts 2 animations from the registry (count + numplay), not 1 from p.demo',
-  hasAnims && sandbox.unitCheckpoint(1, 2).demosTotal === 2);
+check('anims: 1.1 has count + numplay + m1a-pair (registry)',
+  hasAnims && JSON.stringify(sandbox.animsForPoint('1.1')) === JSON.stringify(['count', 'numplay', 'm1a-pair']));
+check('checkpoint: 1.1 counts 3 animations from the registry (count + numplay + m1a-pair), not 1 from p.demo',
+  hasAnims && sandbox.unitCheckpoint(1, 2).demosTotal === 3);
 check('anims: unknown point has none', hasAnims && sandbox.animsForPoint('9.99').length === 0);
 check('anims: stub unit 1-0 （进位加法） has 2', hasAnims && sandbox.animsForUnit(1, 0).length === 2);
-check('anims: stub unit 1-2 （准备课） has 2', hasAnims && sandbox.animsForUnit(1, 2).length === 2);
+check('anims: stub unit 1-2 （准备课） has 3', hasAnims && sandbox.animsForUnit(1, 2).length === 3);
 // 静态校验：按真实 grade-1.js 的 demo 字段 + app.js 里的 SIM_LINKS + LAB_QUESTIONS
-// 算出一年级每点动画，去重后应为 18 个，各单元动画数应为 [2,1,2,1,2,2,1,2,1,2,1,1,1,1,2]。
+// + 注册表（四个 anims 文件里的 registerAnim points）算出一年级每点动画，
+// 去重后应为 19 个，各单元动画数应为 [3,1,2,1,2,2,1,2,1,2,1,1,1,1,2]
+// （准备课多了注册表的 m1a-pair）。
 // （改前代码里没有 SIM_LINKS / LAB_QUESTIONS 的注册表逻辑，正则取不到就报 FAIL。）
+// 注册表第五路：读四个 anims 文件里的 registerAnim(points)，按 key 归到各点。
+// （文件不存在时跳过——改前代码上没有这些文件，静态校验按 18 个算，19 的断言干净失败。）
+const regByPoint = {};
+['anims-band-1-3.js', 'anims-band-4-6.js', 'anims-band-7-9.js', 'anims-operations.js'].forEach(f => {
+  const p = root + '/apps/web/' + f;
+  if (!fs.existsSync(p)) return;
+  const t = fs.readFileSync(p, 'utf8');
+  const rkeys = [...t.matchAll(/key\s*:\s*'([^']+)'/g)].map(m => m[1]);
+  const rpts = [...t.matchAll(/points\s*:\s*\[([^\]]*)\]/g)].map(m => m[1]);
+  rkeys.forEach((k, i) => {
+    [...(rpts[i] || '').matchAll(/'([0-9.]+[a-z]?)'/g)].forEach(mm => {
+      (regByPoint[mm[1]] = regByPoint[mm[1]] || []).push(k);
+    });
+  });
+});
 const g1src2 = fs.readFileSync(root + '/content/grades/grade-1.js', 'utf8');
 const g1ids2 = [...g1src2.matchAll(/id: "([0-9.]+)"/g)].map(m => m[1]);
 const g1demos2 = [...g1src2.matchAll(/demo: (?:'([a-z]+)'|null)/g)].map(m => m[1] || null);
@@ -4153,14 +4185,15 @@ if (simLinks && labQs && g1ids2.length === 16) {
     push(g1demos2[i]);
     (simLinks[g1ids2[i]] || []).forEach(push);
     labQs.forEach(q => { if (q.demo && q.points && q.points.indexOf(g1ids2[i]) >= 0) push(q.demo); });
+    (regByPoint[g1ids2[i]] || []).forEach(push);
     keys.forEach(k => { unitSets[ui].add(k); allSet.add(k); });
   });
   g1UnitCounts = unitSets.map(s => s.size);
   g1Distinct = allSet.size;
 }
-check('anims: real grade-1 has 18 distinct animations', g1Distinct === 18);
+check('anims: real grade-1 has 19 distinct animations', g1Distinct === 19);
 check('anims: real grade-1 unit animation counts',
-  JSON.stringify(g1UnitCounts) === JSON.stringify([2, 1, 2, 1, 2, 2, 1, 2, 1, 2, 1, 1, 1, 1, 2]));
+  JSON.stringify(g1UnitCounts) === JSON.stringify([3, 1, 2, 1, 2, 2, 1, 2, 1, 2, 1, 1, 1, 1, 2]));
 
 // ---------- 14. 鸡兔同笼：一个点，四种方法（4.16） ----------
 // 改前没有这 4 个动画：函数不存在、卡片和面板没有、METHOD_DEMOS 没有。
@@ -4346,6 +4379,114 @@ check('lab: entering a demo question keeps lab as parent',
 sandbox.navBackFn();
 check('lab: back from the demo returns to the lab',
   byId.lab.hidden === false && byId.demos.hidden === true);
+// ---------- 15. 动画注册表（§5.1） ----------
+// 改前代码没有 ANIM_REGISTRY / navDefFor / isRegistryAnimView：
+// hasRegistry 守卫让每条检查报 FAIL 而不是整个测试崩掉；band 文件
+// 不存在时加载步骤会跳过（见文件头的加载块）。
+const hasRegistry = typeof sandbox.ANIM_REGISTRY === 'object' && sandbox.ANIM_REGISTRY !== null &&
+  typeof sandbox.registerAnim === 'function' && typeof sandbox.navDefFor === 'function' &&
+  typeof sandbox.isRegistryAnimView === 'function' && typeof sandbox.renderRegistryAnim === 'function';
+check('registry: ANIM_REGISTRY has m1a-pair', hasRegistry && !!sandbox.ANIM_REGISTRY['m1a-pair']);
+check('registry: m1a-pair fields (kind/grade/points)', hasRegistry &&
+  sandbox.ANIM_REGISTRY['m1a-pair'].kind === '实验' && sandbox.ANIM_REGISTRY['m1a-pair'].grade === 1 &&
+  JSON.stringify(sandbox.ANIM_REGISTRY['m1a-pair'].points) === JSON.stringify(['1.1']));
+check("registry: viewForKey('demo-m1a-pair') is itself",
+  hasRegistry && sandbox.viewForKey('demo-m1a-pair') === 'demo-m1a-pair');
+check("registry: viewForKey('demo-nope') falls back to home",
+  hasRegistry && sandbox.viewForKey('demo-nope') === 'home');
+check("registry: animsForPoint('1.1') includes m1a-pair",
+  hasRegistry && sandbox.animsForPoint('1.1').indexOf('m1a-pair') >= 0);
+check("registry: animKind('m1a-pair') is 实验",
+  hasRegistry && sandbox.animKind('m1a-pair') === '实验');
+check('registry: navDefFor returns 数学/动画/title crumbs',
+  hasRegistry && JSON.stringify(sandbox.navDefFor('demo-m1a-pair').crumbs) === JSON.stringify(['数学', '动画', '一一对应配对法']) &&
+  sandbox.navDefFor('demo-m1a-pair').target === 'demo-m1a-pair');
+check('registry: navDefFor unknown key returns null',
+  hasRegistry && sandbox.navDefFor('demo-nope') === null);
+check('registry: navDefFor still returns the old def for demo-fraction',
+  hasRegistry && sandbox.navDefFor('demo-fraction').crumbs.join('/') === '数学/动画/分数切一切');
+// 点页 1.1 出注册表动画的按钮。
+navGo('point-1.1');
+check('registry: point 1.1 page offers 去玩一一对应配对法',
+  hasRegistry && pointDetail.innerHTML.includes('去玩一一对应配对法') &&
+  pointDetail.innerHTML.includes('data-demo-link="demo-m1a-pair"'));
+// 进注册表动画：通用卡片画出来，旧卡片藏起来，总目录藏起来。
+navGo('demo-m1a-pair');
+check('registry: entering a registry anim renders the generic card',
+  hasRegistry && byId['demo-anim'].hidden === false &&
+  byId['demo-anim'].innerHTML.includes('一一对应配对法') &&
+  byId['demo-tenframe'].hidden === true &&
+  byId.animDirectory.hidden === true &&
+  documentStub.body.dataset.view === 'demo-m1a-pair');
+check('registry: breadcrumb shows 数学/动画/一一对应配对法',
+  hasRegistry && byId.crumbTitle.innerHTML.includes('一一对应配对法'));
+// 我的发现进 math-inquiry-v1。注意顺序：必须在第一次进入后立刻测——
+// 桩里重复进入会给同一个保存按钮再绑一次处理器，第一个写成功、后面的
+// 读到已清空的输入又把文案盖回去；真实浏览器每次重建 DOM，不会有这问题。
+// 整段包在 hasRegistry 里：改前代码没跑过 render，桩里根本没有这些元素，
+// 直接碰 byId['m1a-pair-find'] 会抛错而不是干净失败。
+if (hasRegistry) {
+  byId['m1a-pair-find'].value = '剩下的就是多出来的';
+  click(byId['m1a-pair-find-save']);
+}
+check('registry: m1a-pair discovery saved',
+  hasRegistry && byId['m1a-pair-find-saved'].textContent.includes('记下来了'));
+check('registry: m1a-pair discovery stored in math-inquiry-v1',
+  hasRegistry && JSON.parse(lsData['math-inquiry-v1'] || '[]').some(e => e && e.kind === 'discovery' && e.text === '剩下的就是多出来的'));
+// 旧演示视图下通用卡片必须隐藏，不能留空卡。
+navGo('demo-tenframe');
+check('registry: generic card hidden on an old demo view',
+  hasRegistry && byId['demo-anim'].hidden === true && byId['demo-tenframe'].hidden === false);
+// 从演示总站进注册表动画：父级仍是演示总站，返回回演示总站。
+navGo('demos');
+navGo('demo-m1a-pair');
+check('registry: entering from the demos list keeps demos as parent',
+  hasRegistry && byId.crumbTitle.innerHTML.includes('动画'));
+sandbox.navBackFn();
+check('registry: back from a registry anim returns to the demos list',
+  hasRegistry && byId.demos.hidden === false && byId.demoGrid.hidden === true);
+// 玩一局：先猜上面多，再连 3 对（基础 5 比 3），出“上面多出 2 个”，基础档打勾，进度 +1。
+navGo('demo-m1a-pair');
+const regTriedBefore = parseInt((byId.progressCount.textContent.match(/^(\d+) \/ 146/) || [])[1] || '0', 10);
+if (hasRegistry) {
+  click(byId['m1a-pair-guess-top']);
+  for (let i = 0; i < 3; i++) {
+    click(byId['m1a-pair-top'].children[i]);
+    click(byId['m1a-pair-bottom'].children[i]);
+  }
+}
+check('registry: m1a-pair round verdict says 上面多出 2 个',
+  hasRegistry && byId['m1a-pair-msg'].textContent.includes('上面多出 2 个'));
+check('registry: m1a-pair 基础 tier ticked',
+  hasRegistry && byId['m1a-pair-tiers'].children[0].textContent.includes('✓'));
+const regTriedAfter = parseInt((byId.progressCount.textContent.match(/^(\d+) \/ 146/) || [])[1] || '0', 10);
+check('registry: finishing a round counts toward tried progress',
+  hasRegistry && regTriedAfter === regTriedBefore + 1);
+// 总目录：只在演示列表视图出现，按年级 → 单元 → 知识点分组；年级筛选能藏起别的年级；条目能点进动画。
+navGo('demos');
+check('registry: directory lists m1a-pair under 1 年级/准备课',
+  hasRegistry && byId.animDirectory.hidden === false &&
+  byId.animDirectory.innerHTML.includes('一一对应配对法') &&
+  byId.animDirectory.innerHTML.includes('准备课') &&
+  byId.animDirectory.innerHTML.includes('data-demo-link="demo-m1a-pair"'));
+if (hasRegistry) {
+  const dirFilterBtn = makeEl('button'); dirFilterBtn.dataset.animFilter = '2';
+  (byId.animDirectory._handlers.click || []).forEach(fn => fn({ target: dirFilterBtn }));
+}
+check('registry: directory grade filter hides other grades',
+  hasRegistry && byId.animDirectory.innerHTML.indexOf('一一对应配对法') < 0);
+if (hasRegistry) {
+  const dirAllBtn = makeEl('button'); dirAllBtn.dataset.animFilter = 'all';
+  (byId.animDirectory._handlers.click || []).forEach(fn => fn({ target: dirAllBtn }));
+}
+check('registry: directory filter back to all shows m1a-pair again',
+  hasRegistry && byId.animDirectory.innerHTML.includes('一一对应配对法'));
+if (hasRegistry) {
+  const dirEntryBtn = makeEl('button'); dirEntryBtn.dataset.demoLink = 'demo-m1a-pair';
+  (byId.animDirectory._handlers.click || []).forEach(fn => fn({ target: dirEntryBtn }));
+}
+check('registry: directory entry navigates to the anim',
+  hasRegistry && documentStub.body.dataset.view === 'demo-m1a-pair');
 navGo('home');
 
 console.log(`\n${pass} passed, ${fail} failed`);
