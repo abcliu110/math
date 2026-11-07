@@ -933,6 +933,7 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
 .lab-report-handle{text-align:center;color:var(--muted);font-size:13px;padding:8px 0 4px;cursor:grab;touch-action:none;user-select:none}
 .lab-report-grip{display:block;font-size:18px;line-height:1;letter-spacing:4px}
 .lab-cause[aria-pressed="true"]{border-color:#2563eb;background:#dbeafe;color:#1e3a8a}
+#labReportSave:disabled{opacity:.45;cursor:default}
 /* 哪一步总丢分：错题本顶部的体检表 */
 .lab-health-table{width:100%;border-collapse:collapse;margin:8px 0;font-size:14px}
 .lab-health-table th,.lab-health-table td{border:1px solid var(--line);padding:6px 8px;text-align:left}
@@ -55007,6 +55008,9 @@ function labReportShow(wrong) {
   document.querySelectorAll('#labReportCauses .lab-cause').forEach(function (b) { b.setAttribute('aria-pressed', 'false'); });
   const saved = document.getElementById('labReportSaved');
   if (saved) saved.textContent = '';
+  // 新一轮交卷重新打开报告单：保存按钮恢复可点（上一份已存的报告不影响这一份）。
+  const saveBtn = document.getElementById('labReportSave');
+  if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '记下来'; }
   sheet.hidden = false;
   sheet.style.transform = '';
   const back = document.getElementById('labReportBack');
@@ -55068,6 +55072,25 @@ function labReportShow(wrong) {
     peek.addEventListener('lostpointercapture', off);
   }
 })();
+// 交卷报告去重：同一份报告（同题 + 同丢步 + 同发现 + 同错因 + 同用时）只存一份。
+// 保存→预览→回到报告再点“记下来”是同一份提交（labReportCtx 没变，usedMs 也一样），
+// 必须拦下来；新一轮挑战会生成新的 labReportCtx（usedMs 不同），
+// 写不同发现的第二次提交不受影响。lostSteps 跟着同一份提交走，也放进比对里。
+function labReportDup(list, e) {
+  const key = function (x) {
+    return JSON.stringify([
+      (x.qids || []).slice().sort(),
+      (x.pointIds || []).slice().sort(),
+      (x.lostSteps || []).map(function (l) { return l.lab + ':' + l.step; }).sort(),
+      x.discovery || '',
+      (x.causes || []).slice().sort(),
+      x.usedMs || 0,
+    ]);
+  };
+  return (list || []).some(function (x) {
+    return x && x.kind === 'lab-challenge-report' && key(x) === key(e);
+  });
+}
 (function labReportSheetBind() {
   const sheet = document.getElementById('labReportSheet');
   if (!sheet) return;
@@ -55089,13 +55112,23 @@ function labReportShow(wrong) {
       if (note) note.textContent = '先写一句发现，或选一个错因。';
       return;
     }
-    const list = loadInquiry();
-    list.push({ kind: 'lab-challenge-report', qids: labReportCtx ? labReportCtx.wrong : [],
+    const entry = { kind: 'lab-challenge-report', qids: labReportCtx ? labReportCtx.wrong : [],
       pointIds: labReportCtx ? labReportCtx.pointIds : [],
       lostSteps: labReportCtx ? labReportCtx.lostSteps : [],
-      discovery: text, causes: causes, usedMs: labReportCtx ? labReportCtx.usedMs : 0, at: Date.now() });
+      discovery: text, causes: causes, usedMs: labReportCtx ? labReportCtx.usedMs : 0, at: Date.now() };
+    const list = loadInquiry();
+    if (labReportDup(list, entry)) {
+      // 同一份报告已经记下来了（保存→预览→回到报告再点）：不再存第二份。
+      if (note) note.textContent = '这份报告已经记下来了。';
+      save.disabled = true;
+      save.textContent = '已记下来';
+      return;
+    }
+    list.push(entry);
     saveInquiry(list);
     if (note) note.textContent = '记下来了，家长能在“家长看这里”看到。';
+    save.disabled = true;
+    save.textContent = '已记下来';
     labTrace('交卷报告：' + (text || causes.join('、')), true);
   });
   // 快速预览（NB §6 #46）：不关报告单，只看一眼台面；点“回到报告”回来。

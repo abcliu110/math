@@ -1761,6 +1761,69 @@ async function main() {
       note('checks: ' + JSON.stringify(checks));
       report.pass = Object.keys(checks).every(function (k) { return checks[k]; });
       note(report.pass ? 'RESULT: PASS — parent shows health table + cause distribution + discoveries + trace, challenge reports render fully' : 'RESULT: FAIL — parent is missing batch-5 sections or a challenge report renders empty (see checks above)');
+    } else if (scenario === 'report-dupes') {
+      // 批 5 复测 abe77c77：交卷报告保存后“记下来”仍可点，预览→回到报告
+      // 再点一次就存了两份完全相同的挑战报告，错因分布也翻倍。
+      // 走真流程：进挑战 → 天平题 → 右盘放 1/6 → 交卷 → 答错了 → 提交报告
+      // → 写发现、选两个错因 → 记下来 → 预览 → 回到报告 → 再记下来，
+      // 数 math-inquiry-v1 里同发现的挑战报告有几份（应为 1 份），
+      // 且第一次保存后“记下来”按钮应已禁用。
+      const DISCOVERY = '只放 1/6 不够，右边还要再加 1/3 才能平。';
+      const countReports = async () => evaljs(`(function(){
+        var list = [];
+        try { list = JSON.parse(localStorage.getItem('math-inquiry-v1') || '[]'); } catch (e) {}
+        return list.filter(function (e) { return e.kind === 'lab-challenge-report' && e.discovery === ` + JSON.stringify(DISCOVERY) + `; }).length;
+      })()`);
+      const saveState = async () => evaljs(`(function(){
+        var b = document.getElementById('labReportSave');
+        var n = document.getElementById('labReportSaved');
+        var s = document.getElementById('labReportSheet');
+        return { disabled: b ? b.disabled : null, note: n ? n.textContent : '', sheetHidden: s ? s.hidden : null };
+      })()`);
+      await enterLab();
+      await evaljs(`(function(){var b=document.getElementById('labModeChallenge');if(b)b.click();})()`);
+      await sleep(300);
+      await evaljs(`(function(){var b=document.getElementById('labQ-balfrac');if(b)b.click();})()`);
+      await sleep(400);
+      await evaljs(`document.getElementById('worldBalCard').classList.remove('collapsed')`);
+      await sleep(200);
+      const [chipS, dropR] = await centers('[data-drag-chip="weight"][data-qty="1/6"]', '#worldBalDropR');
+      if (chipS && dropR) await drag(chipS.cx, chipS.cy, dropR.cx, dropR.cy, 12, 40);
+      await evaljs(`(function(){var b=document.getElementById('labChallengeSubmit');if(b)b.click();})()`);
+      await sleep(300);
+      await evaljs(`(function(){var b=document.querySelector('[data-lab-mark="wrong"]');if(b)b.click();})()`);
+      await sleep(200);
+      await evaljs(`(function(){var b=document.getElementById('labChallengeFinish');if(b)b.click();})()`);
+      await sleep(400);
+      const sheetShown = await evaljs(`(function(){var s=document.getElementById('labReportSheet');return s?!s.hidden:null;})()`);
+      note('report sheet shown after submit: ' + sheetShown);
+      await evaljs(`(function(){var i=document.getElementById('labReportDiscovery');if(i)i.value=` + JSON.stringify(DISCOVERY) + `;})()`);
+      await evaljs(`(function(){var b=document.querySelector('#labReportCauses .lab-cause[data-cause="概念没弄清"]');if(b)b.click();})()`);
+      await evaljs(`(function(){var b=document.querySelector('#labReportCauses .lab-cause[data-cause="步骤漏了"]');if(b)b.click();})()`);
+      await sleep(200);
+      const pressed = await evaljs(`(function(){return [...document.querySelectorAll('#labReportCauses .lab-cause[aria-pressed="true"]')].map(function(b){return b.getAttribute('data-cause');});})()`);
+      note('causes pressed: ' + JSON.stringify(pressed));
+      await evaljs(`(function(){var b=document.getElementById('labReportSave');if(b)b.click();})()`);
+      await sleep(300);
+      const count1 = await countReports();
+      const st1 = await saveState();
+      note('after 1st save: count=' + count1 + ' ' + JSON.stringify(st1));
+      await evaljs(`(function(){var b=document.getElementById('labReportPreview');if(b)b.click();})()`);
+      await sleep(200);
+      const backVisible = await evaljs(`(function(){var s=document.getElementById('labReportSheet');var b=document.getElementById('labReportBack');return { sheetHidden: s?s.hidden:null, backHidden: b?b.hidden:null };})()`);
+      note('after preview: ' + JSON.stringify(backVisible));
+      await evaljs(`(function(){var b=document.getElementById('labReportBack');if(b)b.click();})()`);
+      await sleep(200);
+      const sheetBack = await evaljs(`(function(){var s=document.getElementById('labReportSheet');return s?!s.hidden:null;})()`);
+      note('sheet shown again after 回到报告: ' + sheetBack);
+      await evaljs(`(function(){var b=document.getElementById('labReportSave');if(b)b.click();})()`);
+      await sleep(300);
+      const count2 = await countReports();
+      const st2 = await saveState();
+      note('after 2nd save attempt: count=' + count2 + ' ' + JSON.stringify(st2));
+      report.pass = sheetShown === true && count1 === 1 && count2 === 1 && st1.disabled === true;
+      note(report.pass ? 'RESULT: PASS — one report saved, save button disabled after save, preview+reopen cannot save a duplicate'
+        : 'RESULT: FAIL — duplicate report saved (count ' + count1 + ' -> ' + count2 + ') or save button still enabled after save');
     } else {
       console.log('unknown scenario: ' + scenario);
       cleanup();

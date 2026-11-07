@@ -926,6 +926,7 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
 .lab-report-handle{text-align:center;color:var(--muted);font-size:13px;padding:8px 0 4px;cursor:grab;touch-action:none;user-select:none}
 .lab-report-grip{display:block;font-size:18px;line-height:1;letter-spacing:4px}
 .lab-cause[aria-pressed="true"]{border-color:#2563eb;background:#dbeafe;color:#1e3a8a}
+#labReportSave:disabled{opacity:.45;cursor:default}
 /* 哪一步总丢分：错题本顶部的体检表 */
 .lab-health-table{width:100%;border-collapse:collapse;margin:8px 0;font-size:14px}
 .lab-health-table th,.lab-health-table td{border:1px solid var(--line);padding:6px 8px;text-align:left}

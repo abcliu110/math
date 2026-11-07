@@ -3682,6 +3682,58 @@ if (lsData['math-tried-demos-v1'] === undefined) delete lsData['math-tried-demos
 if (lsData['math-inquiry-v1'] === undefined) delete lsData['math-inquiry-v1'];
 if (lsData['math-lab-proc-v1'] === undefined) delete lsData['math-lab-proc-v1'];
 
+// ---------- K3. 交卷报告去重（批 5 复测 abe77c77）：保存→预览→回到报告
+// 再点“记下来”会存两份完全相同的挑战报告，错因分布也翻倍。
+// 修法：保存后禁用按钮 + 保存处按内容去重（同题+同丢步+同发现+同错因+同用时）。
+// 不同发现的第二次提交不受影响。下面的检查在旧代码上应干净失败
+// （旧代码没有 labReportDup，按钮也不会禁用）。
+const k3Before = { inq: lsData['math-inquiry-v1'] };
+delete lsData['math-inquiry-v1'];
+const repDupBase = { kind: 'lab-challenge-report', qids: ['q-balfrac'], pointIds: ['5.5'],
+  lostSteps: [{ lab: 'q-balfrac', step: 'equal', label: '让天平两边相等' }],
+  discovery: '只放 1/6 不够，右边还要再加 1/3 才能平。', causes: ['概念没弄清', '步骤漏了'], usedMs: 99000, at: 1000 };
+check('K3 dup: identical report (same qids/lostSteps/discovery/causes/usedMs) is a duplicate',
+  typeof sandbox.labReportDup === 'function' && sandbox.labReportDup([repDupBase], Object.assign({}, repDupBase, { at: 2000 })));
+check('K3 dup: different discovery / causes / usedMs / qids / lostSteps are NOT duplicates; other kinds ignored',
+  typeof sandbox.labReportDup === 'function' &&
+  !sandbox.labReportDup([repDupBase], Object.assign({}, repDupBase, { discovery: '另一句发现' })) &&
+  !sandbox.labReportDup([repDupBase], Object.assign({}, repDupBase, { causes: ['步骤漏了'] })) &&
+  !sandbox.labReportDup([repDupBase], Object.assign({}, repDupBase, { usedMs: 99001 })) &&
+  !sandbox.labReportDup([repDupBase], Object.assign({}, repDupBase, { qids: ['q-fracadd'] })) &&
+  !sandbox.labReportDup([repDupBase], Object.assign({}, repDupBase, { lostSteps: [] })) &&
+  !sandbox.labReportDup([], repDupBase) &&
+  !sandbox.labReportDup([{ kind: 'discovery', text: '只放 1/6 不够，右边还要再加 1/3 才能平。' }], repDupBase));
+// 桩里走一遍真保存流程：设 ctx + 写发现 → 点保存 → 再点一次 → 新一轮交卷 → 写另一句发现 → 点保存。
+// （labReportDiscovery/labReportSaved 只在保存处理里才读，加载时没建出来，先用 getElementById 建。）
+const k3Input = documentStub.getElementById('labReportDiscovery');
+const k3Save = byId.labReportSave;
+const k3Note = documentStub.getElementById('labReportSaved');
+sandbox.labReportCtx = { wrong: ['q-balfrac'], pointIds: ['5.5'],
+  lostSteps: [{ lab: 'q-balfrac', step: 'equal', label: '让天平两边相等' }], usedMs: 99000 };
+k3Input.value = '只放 1/6 不够，右边还要再加 1/3 才能平。';
+click(k3Save);
+const k3AfterSave1 = JSON.parse(lsData['math-inquiry-v1'] || '[]');
+check('K3 save: first save stores one lab-challenge-report and disables the button',
+  k3AfterSave1.length === 1 && k3AfterSave1[0].kind === 'lab-challenge-report' &&
+  k3AfterSave1[0].discovery === '只放 1/6 不够，右边还要再加 1/3 才能平。' &&
+  k3Save.disabled === true && k3Save.textContent === '已记下来' &&
+  k3Note.textContent.includes('记下来了'));
+click(k3Save);
+const k3AfterSave2 = JSON.parse(lsData['math-inquiry-v1'] || '[]');
+check('K3 save: saving the same report again does not store a second copy',
+  k3AfterSave2.length === 1 && k3Note.textContent.includes('已经记下来了'));
+sandbox.labReportShow(['q-balfrac']);
+check('K3 save: a fresh submission re-enables the save button and clears the input',
+  k3Save.disabled === false && k3Save.textContent === '记下来' &&
+  k3Input.value === '');
+k3Input.value = '这次我发现天平要两边一样重。';
+click(k3Save);
+const k3AfterSave3 = JSON.parse(lsData['math-inquiry-v1'] || '[]');
+check('K3 save: a genuinely different report still saves as a second entry',
+  k3AfterSave3.length === 2 && k3AfterSave3[1].discovery === '这次我发现天平要两边一样重。');
+lsData['math-inquiry-v1'] = k3Before.inq;
+if (lsData['math-inquiry-v1'] === undefined) delete lsData['math-inquiry-v1'];
+
 // ---------- L. checkpoint / 闯关路 ----------
 const checkpointDetail = byId.checkpointDetail;
 function clickCp(el) { (checkpointDetail._handlers.click || []).forEach(f => f({ target: el })); }

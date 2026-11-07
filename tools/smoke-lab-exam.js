@@ -101,6 +101,11 @@ check('report sheet: shown after submit with lost steps + used time in context',
   app.includes('function labReportShow(wrong)') && app.includes("labReportCtx = { wrong: wrong.slice(), pointIds: pointIds, lostSteps: lostSteps, usedMs: labExamUsedMs };"));
 check('report sheet: save writes a lab-challenge-report into inquiry',
   app.includes("kind: 'lab-challenge-report'") && app.includes('saveInquiry(list);'));
+check('report sheet: duplicate save blocked — same report deduped at save time (批 5 复测 abe77c77)',
+  app.includes('function labReportDup(list, e)') && app.includes('if (labReportDup(list, entry))'));
+check('report sheet: save button disabled after saving, re-enabled for a fresh submission',
+  app.includes("save.disabled = true;") && app.includes("save.textContent = '已记下来';") &&
+  app.includes("saveBtn.disabled = false; saveBtn.textContent = '记下来';"));
 check('report sheet: quick preview hides the sheet, “回到报告” brings it back',
   app.includes("preview.addEventListener('click', function () { sheet.hidden = true; back.hidden = false; });") && app.includes("back.addEventListener('click', function () { sheet.hidden = false; back.hidden = true; });"));
 check('report sheet: drag the handle down 60px to close (keyboard Enter/Space too)',
