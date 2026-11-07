@@ -43349,7 +43349,7 @@ registerAnim({
 <script>
 /* anims-operations.js：运算动画（注册表）；每加一个动画调一次 registerAnim，格式见 anims-registry.js 的文件头注释，另写 group: 'operations'；本文件顶层只能调 registerAnim，不能引用 app.js 的标识符。
    第 1 批 10 个动画，对应第 10 轮调研“ Biggest opportunities ”的 10 个空白机会；
-   第 2 批补 11 个领域里还缺的方法，每种方法一个（分两小批交）；跳过的方法写在各动画段首。
+   第 2 批补 11 个领域里还缺的方法，每种方法一个（分两小批交）；第 2 小批收尾：op-storyex、op-addswap、op-vertmul、op-numtalk；跳过的方法写在各动画段首。
    与已有演示的关系写在每个动画的副文和段首注释里：已有演示只扩展，不重复做。
    约定：字符串里不写花括号，render 里不出现 script 结束标签；所有 id 以动画 key 为前缀。 */
 
@@ -45399,6 +45399,637 @@ registerAnim({
     if (typeof makeTiers === 'function') {
       tiers = makeTiers(gid(K + '-tiers'),
         ['基础：5.3−2.86=2.44', '提高：4.2−1.75=2.45', '挑战：7.05−3.48=3.57'], K);
+    }
+    if (typeof wireDiscovery === 'function') {
+      wireDiscovery(K, K + '-find', K + '-find-save', K + '-find-saved');
+    }
+    setLevel(0);
+  }
+});
+
+/* (16) op-storyex：从故事列算式。已有 mixop 是“算式给出来，先算哪一堆”；op-bracket 是“算式给出来，括号套在哪”；
+   m210-story（2.10）是固定模板“每份数×份数+零头”，点两下按钮算式就自己出来了，学生从来不用选数、选运算、定顺序。
+   本动画反过来：故事只给文字，哪个数先算、列成什么算式，由学生自己从故事里找数、选运算、排顺序，列错了算式会告诉你错在哪。 */
+registerAnim({
+  key: 'op-storyex',
+  title: '从故事列算式：数在哪，算式就在哪',
+  sub: '故事只给文字：哪个数是每份数、哪个数先算、要不要括号，都由你从故事里找出来，列成算式再算。',
+  grade: 4,
+  kind: '模拟',
+  points: ['4.9'],
+  group: 'operations',
+  render: function (el) {
+    var K = 'op-storyex';
+    var OPS = ['+', '−', '×', '÷'];
+    var LEVELS = [
+      { label: '基础', story: '小明有 4 包彩笔，每包 6 支，又买了 5 支。一共有几支？',
+        chips: [5, 4, 6], nums: [4, 6, 5], ops: ['×', '+'],
+        numHints: ['先放包数 4', '再放每包的支数 6', '最后放又买的 5 支'],
+        opHints: ['先算 4 包一共有几支，要用乘法', '又买了 5 支，要加上'],
+        guess: [29, 24, 30], guessAns: 0,
+        guessWhy: ['', '24 是忘了又买的 5 支', '30 是把 5 当成每包的支数了，5×6=30'],
+        evalSteps: '4×6=24，再加 5，是 29。', bracket: false },
+      { label: '提高', story: '合唱队原来有 4 组，每组 5 人，又来了 2 组。现在一共几人？',
+        chips: [5, 4, 2], nums: [4, 2, 5], ops: ['+', '×'],
+        numHints: ['先放原来的组数 4', '再放又来的组数 2', '最后放每组的人数 5'],
+        opHints: ['先把两组人数合起来，要用加法', '每组 5 人，合起来一共几组，要用乘法'],
+        guess: [30, 14, 20], guessAns: 0,
+        guessWhy: ['', '14 是忘了加括号：4+2×5 先算 2×5=10，再算 4+10=14', '20 是只算了原来的 4 组，忘了新来的 2 组'],
+        evalSteps: '(4+2)=6，6×5=30。', evalNoBracket: '4+2×5：先算 2×5=10，再算 4+10=14。', bracket: true },
+      { label: '挑战', story: '小红有 96 元，买了 3 个书包，每个 24 元。还剩几元？',
+        chips: [24, 96, 3], nums: [96, 3, 24], ops: ['−', '×'],
+        numHints: ['先放一共的钱 96 元', '再放书包的个数 3', '最后放每个书包的价钱 24 元'],
+        opHints: ['买书包花了钱，要从 96 里减去', '3 个书包，每个 24 元，要用乘法'],
+        guess: [24, 72, 216], guessAns: 0,
+        guessWhy: ['', '72 是只算了 3 个书包的钱，忘了从 96 里减去', '216 是先减后乘错了顺序：(96−24)×3=216'],
+        evalSteps: '3×24=72，96−72=24。', bracket: false }
+    ];
+    var li = 0, guessed = -1, nFill = [null, null, null], oFill = [null, null], bracketOn = null, tiers = null;
+    function gid(id) { return document.getElementById(id); }
+    function msg(t) { var m = gid(K + '-msg'); if (m) m.textContent = t; }
+    function lv() { return LEVELS[li]; }
+    function exprHtml() {
+      var L = lv();
+      var h = '';
+      if (L.bracket) h += '<span id="' + K + '-br0" style="visibility:hidden">(</span>';
+      h += '<span id="' + K + '-slot-n0">？</span> <span id="' + K + '-slot-o0">？</span> <span id="' + K + '-slot-n1">？</span>';
+      if (L.bracket) h += '<span id="' + K + '-br1" style="visibility:hidden">)</span>';
+      h += ' <span id="' + K + '-slot-o1">？</span> <span id="' + K + '-slot-n2">？</span> = ?';
+      return h;
+    }
+    function showSlots() {
+      for (var i = 0; i < 3; i++) {
+        var s = gid(K + '-slot-n' + i);
+        if (s) s.textContent = nFill[i] === null ? '？' : String(nFill[i]);
+      }
+      for (var j = 0; j < 2; j++) {
+        var o = gid(K + '-slot-o' + j);
+        if (o) o.textContent = oFill[j] === null ? '？' : oFill[j];
+      }
+      if (lv().bracket) {
+        var vis = bracketOn ? 'visible' : 'hidden';
+        var b0 = gid(K + '-br0'); if (b0) b0.style.visibility = vis;
+        var b1 = gid(K + '-br1'); if (b1) b1.style.visibility = vis;
+      }
+    }
+    function resetFills() {
+      nFill = [null, null, null]; oFill = [null, null]; bracketOn = null;
+      var ex = gid(K + '-expr'); if (ex) ex.innerHTML = exprHtml();
+      var box = gid(K + '-nums');
+      if (box) {
+        var h = '';
+        for (var i = 0; i < 3; i++) {
+          h += '<button class="btn small" id="' + K + '-num-' + i + '" type="button">' + lv().chips[i] + '</button>';
+        }
+        box.innerHTML = h;
+        for (var j = 0; j < 3; j++) {
+          (function (jj) {
+            gid(K + '-num-' + jj).addEventListener('click', function () { onNum(lv().chips[jj], gid(K + '-num-' + jj)); });
+          })(j);
+        }
+      }
+      var br = gid(K + '-bracket-row');
+      if (br) {
+        if (lv().bracket) {
+          br.innerHTML = '<p>又来的组要和原来的组合起来，先算 4+2：要不要加括号？</p>' +
+            '<div class="btn-row"><button class="btn small primary" id="' + K + '-br-yes" type="button">要加括号</button>' +
+            '<button class="btn small primary" id="' + K + '-br-no" type="button">不用括号</button></div>';
+          gid(K + '-br-yes').addEventListener('click', function () { onBracket(true); });
+          gid(K + '-br-no').addEventListener('click', function () { onBracket(false); });
+        } else br.innerHTML = '';
+      }
+      var ev = gid(K + '-eval'); if (ev) ev.textContent = '';
+      showSlots();
+    }
+    function setLevel(i) {
+      li = i; guessed = -1;
+      var L = LEVELS[i];
+      var st = gid(K + '-story'); if (st) st.textContent = '故事：' + L.story;
+      for (var g = 0; g < 3; g++) {
+        var gb = gid(K + '-guess-' + g);
+        if (gb) gb.textContent = String(L.guess[g]);
+      }
+      for (var k = 0; k < 3; k++) {
+        var b = gid(K + '-level-' + k);
+        if (b) b.setAttribute('aria-pressed', String(k === i));
+      }
+      resetFills();
+      msg('第 1 步 · 先猜一个答案；第 2 步 · 从故事里找数，列成算式。');
+    }
+    function onGuess(i) {
+      var L = lv();
+      guessed = i;
+      if (i === L.guessAns) msg('猜对了：答案是 ' + L.guess[i] + '。再列算式验证。');
+      else msg('不是 ' + L.guess[i] + '：' + L.guessWhy[i] + '。再想想，列算式验证。');
+    }
+    function onNum(v, btn) {
+      var L = lv();
+      var slot = -1;
+      for (var i = 0; i < 3; i++) { if (nFill[i] === null) { slot = i; break; } }
+      if (slot < 0) { msg('数都放好了，该选运算符号了。'); return; }
+      if (v !== L.nums[slot]) { msg('不对：' + L.numHints[slot] + '。这个数 ' + v + ' 应该放在后面。'); return; }
+      nFill[slot] = v;
+      if (btn) btn.disabled = true;
+      showSlots();
+      msg(slot < 2 ? '放好了。' + L.numHints[slot + 1] + '。' : '三个数都放好了，该选运算符号了。');
+    }
+    function onOp(op) {
+      var L = lv();
+      var slot = -1;
+      for (var i = 0; i < 2; i++) { if (oFill[i] === null) { slot = i; break; } }
+      if (slot < 0) { msg('运算符号都选好了，点“算一算”。'); return; }
+      if (op !== L.ops[slot]) { msg('不对：' + L.opHints[slot] + '。'); return; }
+      oFill[slot] = op;
+      showSlots();
+      msg(slot < 1 ? '选好了。' + L.opHints[slot + 1] + '。' : '算式列好了，点“算一算”。');
+    }
+    function onBracket(yes) {
+      var L = lv();
+      bracketOn = yes;
+      showSlots();
+      if (yes) msg('括起来了：' + L.nums[0] + '+' + L.nums[1] + ' 先合起来，再乘 ' + L.nums[2] + '。点“算一算”。');
+      else msg('不括：那就按 ' + L.nums[0] + '+' + L.nums[1] + '×' + L.nums[2] + ' 直接算——算一算就知道对不对。');
+    }
+    function calc() {
+      var L = lv();
+      for (var i = 0; i < 3; i++) { if (nFill[i] === null) { msg('数还没放完：' + L.numHints[i] + '。'); return; } }
+      for (var j = 0; j < 2; j++) { if (oFill[j] === null) { msg('运算符号还没选完：' + L.opHints[j] + '。'); return; } }
+      if (L.bracket && bracketOn === null) { msg('先决定：要不要把前两个数括起来？'); return; }
+      var ev = gid(K + '-eval');
+      if (L.bracket && !bracketOn) {
+        if (ev) ev.textContent = L.evalNoBracket;
+        msg('算出来是 14，可是不对：又来的 2 组每组也是 5 人，要先把 4 组和 2 组合起来——括起来再算。');
+        return;
+      }
+      if (ev) ev.textContent = L.evalSteps;
+      msg('列对了，也算对了：' + L.evalSteps + '算式是故事的简写，故事里哪个数先算，算式里就先算哪个。');
+      if (tiers) tiers.done(li);
+      if (typeof markTried === 'function') markTried(K);
+    }
+    el.innerHTML =
+      '<p class="demo-tag">模拟 · 4 年级 · 四则运算</p>' +
+      '<h3>从故事列算式：数在哪，算式就在哪</h3>' +
+      '<p>算式不是天上掉下来的，它是故事的简写。故事里的数，一个一个找出来；哪个先算，就先把它排好；算式列对了，答案自己就出来了。</p>' +
+      '<p id="' + K + '-story"></p>' +
+      '<p>第 1 步 · 先猜：</p><div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-guess-0" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-1" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-2" type="button"></button></div>' +
+      '<p>第 2 步 · 列算式：先点故事里的数，再点运算符号。</p>' +
+      '<p class="func-eq" id="' + K + '-expr"></p>' +
+      '<p>故事里的数：</p><div class="btn-row" id="' + K + '-nums"></div>' +
+      '<p>运算符号：</p><div class="btn-row">' +
+      '<button class="btn small" id="' + K + '-op-0" type="button">+</button>' +
+      '<button class="btn small" id="' + K + '-op-1" type="button">−</button>' +
+      '<button class="btn small" id="' + K + '-op-2" type="button">×</button>' +
+      '<button class="btn small" id="' + K + '-op-3" type="button">÷</button></div>' +
+      '<div id="' + K + '-bracket-row"></div>' +
+      '<div class="btn-row"><button class="btn small primary" id="' + K + '-calc" type="button">算一算</button>' +
+      '<button class="btn small ghost" id="' + K + '-reset" type="button">重列</button></div>' +
+      '<p id="' + K + '-eval"></p>' +
+      '<p id="' + K + '-msg">先猜，再列算式。</p>' +
+      '<p>换一档：</p><div class="btn-row">' +
+      '<button class="btn small ghost" id="' + K + '-level-0" type="button">基础 · 彩笔</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-1" type="button">提高 · 合唱队</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-2" type="button">挑战 · 买书包</button></div>' +
+      '<div class="tier-row" id="' + K + '-tiers"></div>' +
+      '<div class="find-row"><label>说一说你的发现：<input type="text" id="' + K + '-find" placeholder="我发现……"></label><button class="btn small primary" id="' + K + '-find-save" type="button">记下来</button></div>' +
+      '<p id="' + K + '-find-saved"></p>' +
+      '<p class="demo-foot">成功标准：三档的算式都自己列对、算对，并且能说出“故事里哪个数先算，算式里就先算哪个”。</p>';
+    gid(K + '-guess-0').addEventListener('click', function () { onGuess(0); });
+    gid(K + '-guess-1').addEventListener('click', function () { onGuess(1); });
+    gid(K + '-guess-2').addEventListener('click', function () { onGuess(2); });
+    for (var oi = 0; oi < 4; oi++) {
+      (function (oo) {
+        gid(K + '-op-' + oo).addEventListener('click', function () { onOp(OPS[oo]); });
+      })(oi);
+    }
+    gid(K + '-calc').addEventListener('click', calc);
+    gid(K + '-reset').addEventListener('click', function () { resetFills(); msg('重列：数和符号都清空了，再从故事里找。'); });
+    gid(K + '-level-0').addEventListener('click', function () { setLevel(0); });
+    gid(K + '-level-1').addEventListener('click', function () { setLevel(1); });
+    gid(K + '-level-2').addEventListener('click', function () { setLevel(2); });
+    if (typeof makeTiers === 'function') {
+      tiers = makeTiers(gid(K + '-tiers'),
+        ['基础：列出 4×6+5', '提高：列出 (4+2)×5', '挑战：列出 96−3×24'], K);
+    }
+    if (typeof wireDiscovery === 'function') {
+      wireDiscovery(K, K + '-find', K + '-find-save', K + '-find-saved');
+    }
+    setLevel(0);
+  }
+});
+
+/* (17) op-addswap：加法交换律数线版。已有 laws 的交换律是乘法点阵转方向（3×4 转成 4×3），没有加法，更没有数线；
+   op-assoc 讲的是结合律（先合哪两个）。本动画只做加法交换律一件事：在数线上走两段，先走 a 再走 b，和先走 b 再走 a，落在同一个点。 */
+registerAnim({
+  key: 'op-addswap',
+  title: '加法交换律：数线上走两段，落点一样',
+  sub: '3+5，先走 3 再走 5，落在 8；先走 5 再走 3，也落在 8。换个顺序走，落点不变。',
+  grade: 4,
+  kind: '模拟',
+  points: ['4.10'],
+  group: 'operations',
+  render: function (el) {
+    var K = 'op-addswap';
+    var LEVELS = [
+      { label: '基础', a: 3, b: 5, total: 8, max: 10 },
+      { label: '提高', a: 7, b: 4, total: 11, max: 14 },
+      { label: '挑战', a: 12, b: 8, total: 20, max: 22 }
+    ];
+    var li = 0, guessed = -1, sawA = false, sawB = false, tiers = null;
+    function gid(id) { return document.getElementById(id); }
+    function msg(t) { var m = gid(K + '-msg'); if (m) m.textContent = t; }
+    function lv() { return LEVELS[li]; }
+    function x(n) { return 30 + Math.round(n / lv().max * 480); }
+    function arc(x0, x1, h, color) {
+      var mx = Math.round((x0 + x1) / 2);
+      return '<path d="M ' + x0 + ' 110 Q ' + mx + ' ' + (110 - h) + ' ' + x1 + ' 110" fill="none" stroke="' + color + '" stroke-width="3"/>';
+    }
+    function svgHtml() {
+      var L = lv();
+      var h = '<svg width="540" height="140" viewBox="0 0 540 140">';
+      h += '<line x1="20" y1="110" x2="520" y2="110" stroke="#334155" stroke-width="2"/>';
+      for (var n = 0; n <= L.max; n++) {
+        h += '<line x1="' + x(n) + '" y1="104" x2="' + x(n) + '" y2="116" stroke="#334155" stroke-width="2"/>';
+        if (L.max <= 14 || n % 2 === 0) h += '<text x="' + x(n) + '" y="132" font-size="12" text-anchor="middle">' + n + '</text>';
+      }
+      if (sawA) {
+        h += arc(x(0), x(L.a), 42, '#2563eb');
+        h += arc(x(L.a), x(L.total), 42, '#16a34a');
+      }
+      if (sawB) {
+        h += arc(x(0), x(L.b), 72, '#ea580c');
+        h += arc(x(L.b), x(L.total), 72, '#9333ea');
+      }
+      if (sawA || sawB) {
+        h += '<circle cx="' + x(L.total) + '" cy="110" r="7" fill="#dc2626"/>';
+        h += '<text x="' + x(L.total) + '" y="92" font-size="14" text-anchor="middle" fill="#dc2626">' + L.total + '</text>';
+      }
+      return h + '</svg>';
+    }
+    function draw() { var s = gid(K + '-svg'); if (s) s.innerHTML = svgHtml(); }
+    function landTx() {
+      var L = lv();
+      return (sawA ? '路线一落点：' + L.total + '。' : '路线一还没走。') + (sawB ? '路线二落点：' + L.total + '。' : '路线二还没走。');
+    }
+    function showLand() { var t = gid(K + '-land'); if (t) t.textContent = landTx(); }
+    function setLevel(i) {
+      li = i; guessed = -1; sawA = false; sawB = false;
+      var L = LEVELS[i];
+      var eq = gid(K + '-eq'); if (eq) eq.textContent = L.a + ' + ' + L.b + ' = ?';
+      for (var k = 0; k < 3; k++) {
+        var b = gid(K + '-level-' + k);
+        if (b) b.setAttribute('aria-pressed', String(k === i));
+      }
+      draw(); showLand();
+      msg('第 1 步 · 先猜：先走 ' + L.a + ' 再走 ' + L.b + '，和先走 ' + L.b + ' 再走 ' + L.a + '，落在同一个点吗？');
+    }
+    function onGuess(same) {
+      guessed = same;
+      msg(same ? '你猜落在同一个点。走两条路线验证。' : '你猜落在不同的点。走两条路线验证。');
+    }
+    function walk(route) {
+      var L = lv();
+      if (route === 'a') {
+        sawA = true;
+        msg('路线一：从 0 出发，先走 ' + L.a + '，到了 ' + L.a + '；再走 ' + L.b + '，落在 ' + L.total + '。');
+      } else {
+        sawB = true;
+        msg('路线二：从 0 出发，先走 ' + L.b + '，到了 ' + L.b + '；再走 ' + L.a + '，落在 ' + L.total + '。');
+      }
+      draw(); showLand();
+      if (sawA && sawB) {
+        var verdict = '两条路线都落在 ' + L.total + '：' + L.a + '+' + L.b + '=' + L.total + '，' + L.b + '+' + L.a + '=' + L.total + '。先走谁、后走谁，落点一样——加法交换位置，和不变。';
+        msg((guessed === false ? '你刚才猜落在不同的点，其实' : '你猜对了：') + verdict);
+        if (tiers) tiers.done(li);
+        if (typeof markTried === 'function') markTried(K);
+      }
+    }
+    el.innerHTML =
+      '<p class="demo-tag">模拟 · 4 年级 · 运算定律</p>' +
+      '<h3>加法交换律：数线上走两段，落点一样</h3>' +
+      '<p>加法就是在数线上走路：3+5，是从 0 出发先走 3，再走 5；5+3，是先走 5，再走 3。两条路走法不一样，落点却在同一个地方。</p>' +
+      '<p class="func-eq" id="' + K + '-eq">3 + 5 = ?</p>' +
+      '<div id="' + K + '-svg"></div>' +
+      '<p>第 1 步 · 先猜：</p><div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-guess-same" type="button">落在同一个点</button>' +
+      '<button class="btn small primary" id="' + K + '-guess-diff" type="button">落在不同的点</button></div>' +
+      '<p>第 2 步 · 两条路线都走一遍：</p><div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-walk-a" type="button">路线一：先走前面的数，再走后面的数</button>' +
+      '<button class="btn small primary" id="' + K + '-walk-b" type="button">路线二：先走后面的数，再走前面的数</button></div>' +
+      '<p id="' + K + '-land"></p>' +
+      '<p id="' + K + '-msg">先猜，再走两条路线。</p>' +
+      '<p>换一档：</p><div class="btn-row">' +
+      '<button class="btn small ghost" id="' + K + '-level-0" type="button">基础 · 3+5</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-1" type="button">提高 · 7+4</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-2" type="button">挑战 · 12+8</button></div>' +
+      '<div class="tier-row" id="' + K + '-tiers"></div>' +
+      '<div class="find-row"><label>说一说你的发现：<input type="text" id="' + K + '-find" placeholder="我发现……"></label><button class="btn small primary" id="' + K + '-find-save" type="button">记下来</button></div>' +
+      '<p id="' + K + '-find-saved"></p>' +
+      '<p class="demo-foot">成功标准：三档的两条路线都走过，并且能说出“加法换个顺序走，落点一样”。</p>';
+    gid(K + '-guess-same').addEventListener('click', function () { onGuess(true); });
+    gid(K + '-guess-diff').addEventListener('click', function () { onGuess(false); });
+    gid(K + '-walk-a').addEventListener('click', function () { walk('a'); });
+    gid(K + '-walk-b').addEventListener('click', function () { walk('b'); });
+    gid(K + '-level-0').addEventListener('click', function () { setLevel(0); });
+    gid(K + '-level-1').addEventListener('click', function () { setLevel(1); });
+    gid(K + '-level-2').addEventListener('click', function () { setLevel(2); });
+    if (typeof makeTiers === 'function') {
+      tiers = makeTiers(gid(K + '-tiers'),
+        ['基础：3+5 两条路线', '提高：7+4 两条路线', '挑战：12+8 两条路线'], K);
+    }
+    if (typeof wireDiscovery === 'function') {
+      wireDiscovery(K, K + '-find', K + '-find-save', K + '-find-saved');
+    }
+    setLevel(0);
+  }
+});
+
+/* (18) op-vertmul：两位数乘两位数竖式我来搭。已有 op-vertical 是加减竖式亲手搭；
+   m44-vertical 是三位数乘两位数的竖式对照（竖式各行已经写好，点一行亮一块面积图），学生不用写一个数字；
+   除法竖式已有 m211-vert/divplace/op-overshoot。本动画补最后一块：两位数乘两位数的竖式，每一步的数字都由学生自己填——先乘个位、再乘十位错一位、最后相加，进位的小数字也要自己写。 */
+registerAnim({
+  key: 'op-vertmul',
+  title: '竖式我来搭：两位数乘两位数',
+  sub: '23×14：先乘个位 4，再乘十位 1 错开一位，最后相加——每个数字都由你点出来填上去。',
+  grade: 4,
+  kind: '模拟',
+  points: ['4.4'],
+  group: 'operations',
+  render: function (el) {
+    var K = 'op-vertmul';
+    var LEVELS = [
+      { label: '基础', a: 21, b: 13, row1: 63, row2: 21, ans: 273, steps: [
+        { prompt: '第 1 行 · 个位：1×3=3，先写第一行个位。', fill: 'r1-o', ans: 3, hint: '1×3=3。' },
+        { prompt: '第 1 行 · 十位：2×3=6，第一行是 63。', fill: 'r1-t', ans: 6, hint: '2×3=6。' },
+        { prompt: '第 2 行 · 乘的是十位上的 1，也就是 10：第二行要错开一位，个位写 0 占位。', fill: 'r2-o', ans: 0, hint: '乘的是十位上的 1，也就是 10，第二行往左错一位，个位写 0。' },
+        { prompt: '第 2 行 · 十位写几？21×1=21。', fill: 'r2-t', ans: 1, hint: '21×1=21，十位是 1。' },
+        { prompt: '第 2 行 · 百位写几？', fill: 'r2-h', ans: 2, hint: '21×1=21，百位是 2。' },
+        { prompt: '相加 · 个位：3+0=？', fill: 's-o', ans: 3, hint: '3+0=3。' },
+        { prompt: '相加 · 十位：6+1=？', fill: 's-t', ans: 7, hint: '6+1=7。' },
+        { prompt: '相加 · 百位：0+2=？', fill: 's-h', ans: 2, hint: '0+2=2。' }
+      ] },
+      { label: '提高', a: 23, b: 14, row1: 92, row2: 23, ans: 322, steps: [
+        { prompt: '第 1 行 · 个位：3×4=12，个位写几？', fill: 'r1-o', ans: 2, hint: '3×4=12，个位写 2。' },
+        { prompt: '满十进 1：进位的小 1 写在十位上面，点数字 1。', fill: 'mc', ans: 1, hint: '3×4=12，满了十，要往十位进 1。' },
+        { prompt: '第 1 行 · 十位：2×4=8，再加进来的 1，是几？', fill: 'r1-t', ans: 9, hint: '2×4=8，再加进来的 1，是 9。' },
+        { prompt: '第 2 行 · 乘的是十位上的 1，也就是 10：第二行要错开一位，个位写 0 占位。', fill: 'r2-o', ans: 0, hint: '乘的是十位上的 1，也就是 10，第二行往左错一位，个位写 0。' },
+        { prompt: '第 2 行 · 十位写几？23×1=23。', fill: 'r2-t', ans: 3, hint: '23×1=23，十位是 3。' },
+        { prompt: '第 2 行 · 百位写几？', fill: 'r2-h', ans: 2, hint: '23×1=23，百位是 2。' },
+        { prompt: '相加 · 个位：2+0=？', fill: 's-o', ans: 2, hint: '2+0=2。' },
+        { prompt: '相加 · 十位：9+3=12，十位写几？', fill: 's-t', ans: 2, hint: '9+3=12，十位写 2。' },
+        { prompt: '满十进 1：进位的小 1 写在百位上面，点数字 1。', fill: 'ac', ans: 1, hint: '十位满了十，往百位进 1。' },
+        { prompt: '相加 · 百位：0+2，再加进来的 1，是几？', fill: 's-h', ans: 3, hint: '0+2=2，再加进来的 1，是 3。' }
+      ] },
+      { label: '挑战', a: 36, b: 25, row1: 180, row2: 72, ans: 900, steps: [
+        { prompt: '第 1 行 · 个位：6×5=30，个位写几？', fill: 'r1-o', ans: 0, hint: '6×5=30，个位写 0。' },
+        { prompt: '满三十进 3：进位的小 3 写在十位上面，点数字 3。', fill: 'mc', ans: 3, hint: '6×5=30，满了三十，要往十位进 3。' },
+        { prompt: '第 1 行 · 十位：3×5=15，再加进来的 3，是 18，十位写几？', fill: 'r1-t', ans: 8, hint: '3×5=15，再加进来的 3，是 18，十位写 8。' },
+        { prompt: '第 1 行 · 百位写几？第一行是 180。', fill: 'r1-h', ans: 1, hint: '3×5+3=18，百位是 1。' },
+        { prompt: '第 2 行 · 乘的是十位上的 2，也就是 20：第二行要错开一位，个位写 0 占位。', fill: 'r2-o', ans: 0, hint: '乘的是十位上的 2，也就是 20，第二行往左错一位，个位写 0。' },
+        { prompt: '第 2 行 · 十位写几？36×2=72。', fill: 'r2-t', ans: 2, hint: '36×2=72，十位是 2。' },
+        { prompt: '第 2 行 · 百位写几？', fill: 'r2-h', ans: 7, hint: '36×2=72，百位是 7。' },
+        { prompt: '相加 · 个位：0+0=？', fill: 's-o', ans: 0, hint: '0+0=0。' },
+        { prompt: '相加 · 十位：8+2=10，十位写几？', fill: 's-t', ans: 0, hint: '8+2=10，十位写 0。' },
+        { prompt: '满十进 1：进位的小 1 写在百位上面，点数字 1。', fill: 'ac', ans: 1, hint: '十位满了十，往百位进 1。' },
+        { prompt: '相加 · 百位：1+7，再加进来的 1，是几？', fill: 's-h', ans: 9, hint: '1+7=8，再加进来的 1，是 9。' }
+      ] }
+    ];
+    var li = 0, si = 0, tiers = null;
+    function gid(id) { return document.getElementById(id); }
+    function msg(t) { var m = gid(K + '-msg'); if (m) m.textContent = t; }
+    function cell(id, v, small) {
+      var st = 'display:inline-block;width:36px;text-align:center;font-size:26px;';
+      if (small) st += 'font-size:16px;color:#dc2626;';
+      return '<span id="' + K + '-' + id + '" style="' + st + '">' + v + '</span>';
+    }
+    function blankCell() {
+      return '<span style="display:inline-block;width:36px;text-align:center;font-size:26px">&nbsp;</span>';
+    }
+    function boardHtml() {
+      var L = LEVELS[li];
+      var a = String(L.a), b = String(L.b);
+      var r1h = L.row1 >= 100 ? '？' : '';
+      return '<div style="font-size:26px;line-height:1.4">' +
+        '<div>' + blankCell() + cell('ac', '&nbsp;', true) + cell('mc', '&nbsp;', true) + blankCell() + '</div>' +
+        '<div>' + blankCell() + blankCell() + cell('a-t', a[0]) + cell('a-o', a[1]) + '</div>' +
+        '<div>' + cell('sign', '×') + blankCell() + cell('b-t', b[0]) + cell('b-o', b[1]) + '</div>' +
+        '<div style="border-top:3px solid #1e293b;width:150px"></div>' +
+        '<div>' + blankCell() + cell('r1-h', r1h) + cell('r1-t', '？') + cell('r1-o', '？') + '</div>' +
+        '<div>' + blankCell() + cell('r2-h', '？') + cell('r2-t', '？') + cell('r2-o', '？') + '</div>' +
+        '<div style="border-top:3px solid #1e293b;width:150px"></div>' +
+        '<div>' + blankCell() + cell('s-h', '？') + cell('s-t', '？') + cell('s-o', '？') + '</div></div>' +
+        '<p id="' + K + '-anote"></p>';
+    }
+    function askStep() {
+      var L = LEVELS[li];
+      if (si >= L.steps.length) return;
+      msg('第 ' + (si + 1) + ' 步 · ' + L.steps[si].prompt);
+    }
+    function setLevel(i) {
+      li = i; si = 0;
+      var box = gid(K + '-board'); if (box) box.innerHTML = boardHtml();
+      for (var k = 0; k < 3; k++) {
+        var b = gid(K + '-level-' + k);
+        if (b) b.setAttribute('aria-pressed', String(k === i));
+      }
+      var eq = gid(K + '-eq'); if (eq) eq.textContent = LEVELS[i].a + ' × ' + LEVELS[i].b + ' = ?';
+      askStep();
+    }
+    function onDigit(d) {
+      var L = LEVELS[li];
+      if (si >= L.steps.length) { msg('这道题已经搭完了，换一档试试。'); return; }
+      var st = L.steps[si];
+      if (d !== st.ans) { msg('不对：' + st.hint); return; }
+      var slot = gid(K + '-' + st.fill);
+      if (slot) { slot.textContent = String(d); slot.style.color = '#15803d'; }
+      if (st.fill === 'r2-o') {
+        var an = gid(K + '-anote');
+        if (an) an.textContent = '第二行错开一位：乘的是十位上的数，也就是整十数。';
+      }
+      si++;
+      if (si >= L.steps.length) {
+        msg('搭完了：' + L.a + ' × ' + L.b + ' = ' + L.ans + '。竖式是你一步一步搭出来的。');
+        if (tiers) tiers.done(li);
+        if (typeof markTried === 'function') markTried(K);
+      } else askStep();
+    }
+    var pad = '';
+    for (var d = 0; d <= 9; d++) {
+      pad += '<button class="btn small" id="' + K + '-d' + d + '" type="button">' + d + '</button>';
+    }
+    el.innerHTML =
+      '<p class="demo-tag">模拟 · 4 年级 · 三位数乘两位数</p>' +
+      '<h3>竖式我来搭：两位数乘两位数</h3>' +
+      '<p>乘法竖式也是搭出来的：先乘个位上的数，写出第一行；再乘十位上的数，第二行要错开一位；最后两行相加。每个数字都由你点出来填上去，填错了，它会告诉你为什么不对。</p>' +
+      '<p class="func-eq" id="' + K + '-eq">21 × 13 = ?</p>' +
+      '<div id="' + K + '-board"></div>' +
+      '<p id="' + K + '-msg">先看第一步，再点下面的数字。</p>' +
+      '<p>点数字填空：</p><div class="btn-row">' + pad + '</div>' +
+      '<p>换一档：</p><div class="btn-row">' +
+      '<button class="btn small ghost" id="' + K + '-level-0" type="button">基础 · 21×13</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-1" type="button">提高 · 23×14</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-2" type="button">挑战 · 36×25</button></div>' +
+      '<div class="tier-row" id="' + K + '-tiers"></div>' +
+      '<div class="find-row"><label>说一说你的发现：<input type="text" id="' + K + '-find" placeholder="我发现……"></label><button class="btn small primary" id="' + K + '-find-save" type="button">记下来</button></div>' +
+      '<p id="' + K + '-find-saved"></p>' +
+      '<p class="demo-foot">成功标准：三档竖式都亲手搭完，并且能说出“第二行为什么错开一位”。竖式第二行错开一位，就是因为乘的是十位上的数——面积图里那块也是这么分的（见 4.4 竖式和面积图对上号）。</p>';
+    for (var dd = 0; dd <= 9; dd++) {
+      (function (n) {
+        gid(K + '-d' + n).addEventListener('click', function () { onDigit(n); });
+      })(dd);
+    }
+    gid(K + '-level-0').addEventListener('click', function () { setLevel(0); });
+    gid(K + '-level-1').addEventListener('click', function () { setLevel(1); });
+    gid(K + '-level-2').addEventListener('click', function () { setLevel(2); });
+    if (typeof makeTiers === 'function') {
+      tiers = makeTiers(gid(K + '-tiers'),
+        ['基础：搭出 21×13', '提高：搭出 23×14', '挑战：搭出 36×25'], K);
+    }
+    if (typeof wireDiscovery === 'function') {
+      wireDiscovery(K, K + '-find', K + '-find-save', K + '-find-saved');
+    }
+    setLevel(0);
+  }
+});
+
+/* (19) op-numtalk：数谈比策略。已有 op-estimate 是先估后算；op-transform 是一道题只用一种变形（398+456 凑整，或 16×25 翻倍减半），
+   算完就完了。本动画缺的那块是“几种策略并排比较”：同一道题，凑整、拆数、翻倍减半各算一遍，放在一起比一比哪种快、为什么。 */
+registerAnim({
+  key: 'op-numtalk',
+  title: '数谈：同一道题，三种算法比一比',
+  sub: '48+37，凑整、拆数、凑十三种算法都算一遍：答案一样吗？哪种最快，为什么？',
+  grade: 4,
+  kind: '模拟',
+  points: ['4.10'],
+  group: 'operations',
+  render: function (el) {
+    var K = 'op-numtalk';
+    var NAMES = ['A', 'B', 'C'];
+    var LEVELS = [
+      { label: '基础', expr: '48 + 37', ans: 85,
+        guess: [85, 75, 95], guessAns: 0,
+        guessWhy: ['', '75 是把 37 看成 27 了，少算了 10', '95 是把 48 看成 58 了，多算了 10'],
+        strats: [
+          { name: '凑整', desc: '把 37 凑成整十 40', steps: ['48 + 40 = 88', '88 − 3 = 85'], tag: '2 步，有整十数' },
+          { name: '拆数', desc: '把 37 拆成 30 和 7', steps: ['48 + 30 = 78', '78 + 7 = 85'], tag: '2 步，分两次加' },
+          { name: '凑十', desc: '从 37 里拿 2 给 48 凑成 50', steps: ['48 + 2 = 50', '50 + 35 = 85'], tag: '2 步，先凑出整十' }
+        ],
+        votes: ['你选了凑整：把一个数凑成整十，剩下的就好算了。', '你选了拆数：把数拆成整十加几，每一步都小小的。', '你选了凑十：先凑出一个整十数，后面加起来不用进位。'],
+        verdict: '三种策略答案都是 85，都只用了两步。凑整最不容易错——40 是整十数，48+40 一眼就是 88；拆数最稳，每一步都不大；凑十最顺手——50+35 不用进位。' },
+      { label: '提高', expr: '25 × 16', ans: 400,
+        guess: [400, 320, 416], guessAns: 0,
+        guessWhy: ['', '320 是只算了 20×16，忘了 5×16=80', '416 是多算了一个 16'],
+        strats: [
+          { name: '翻倍减半', desc: '25 翻倍是 50，16 减半是 8', steps: ['25 × 16 = 50 × 8', '50 × 8 = 400'], tag: '2 步，50×8 一眼出' },
+          { name: '拆数', desc: '把 16 拆成 4×4', steps: ['25 × 4 = 100', '100 × 4 = 400'], tag: '2 步，先凑出 100' },
+          { name: '分配', desc: '把 16 拆成 10 和 6', steps: ['25 × 10 = 250', '25 × 6 = 150', '250 + 150 = 400'], tag: '3 步，要算两次再相加' }
+        ],
+        votes: ['你选了翻倍减半：25 翻倍成 50，50×8 是整十乘法，一眼出答案。', '你选了拆数：先凑出 100，再乘 4，100 特别好乘。', '你选了分配：拆成 10 和 6 两部分，虽然多算一步，但每一步都好想。'],
+        verdict: '三种策略答案都是 400。翻倍减半最快——50×8 是整十乘法；拆数也快，先凑出 100；分配最慢，要算两次乘法再相加。' },
+      { label: '挑战', expr: '102 × 35', ans: 3570,
+        guess: [3570, 3500, 3670], guessAns: 0,
+        guessWhy: ['', '3500 是只算了 100×35，忘了 2×35=70', '3670 是多加了 100'],
+        strats: [
+          { name: '凑整拆开', desc: '把 102 拆成 100 和 2', steps: ['100 × 35 = 3500', '2 × 35 = 70', '3500 + 70 = 3570'], tag: '3 步，两次乘法再相加' },
+          { name: '拆数连乘', desc: '把 35 拆成 5×7', steps: ['102 × 5 = 510', '510 × 7 = 3570'], tag: '2 步，510×7 一步出' },
+          { name: '翻倍减半', desc: '102 减半是 51，35 翻倍是 70', steps: ['102 × 35 = 51 × 70', '51 × 70 = 3570'], tag: '2 步，51×7 再添 0' }
+        ],
+        votes: ['你选了凑整拆开：102 拆成 100+2 谁都会，虽然多算一步，但最不容易想错。', '你选了拆数连乘：35 拆成 5×7，510×7 一步就出答案。', '你选了翻倍减半：51×70 只要算 51×7 再添一个 0。'],
+        verdict: '三种策略答案都是 3570。翻倍减半和拆数连乘都只用了两步；凑整拆开要算三次，最慢——但它最不容易想错，102 拆成 100+2 谁都会。' }
+    ];
+    var li = 0, guessed = -1, seen = [false, false, false], tiers = null;
+    function gid(id) { return document.getElementById(id); }
+    function msg(t) { var m = gid(K + '-msg'); if (m) m.textContent = t; }
+    function lv() { return LEVELS[li]; }
+    function colHtml(i) {
+      var s = lv().strats[i];
+      if (!seen[i]) return '<p><b>' + NAMES[i] + ' · ' + s.name + '</b>（' + s.desc + '）</p><p>还没算。</p>';
+      return '<p><b>' + NAMES[i] + ' · ' + s.name + '</b>（' + s.desc + '）</p><p>' + s.steps.join('；') + '</p><p>' + s.tag + '</p>';
+    }
+    function setLevel(i) {
+      li = i; guessed = -1; seen = [false, false, false];
+      var L = LEVELS[i];
+      var eq = gid(K + '-eq'); if (eq) eq.textContent = L.expr + ' = ?';
+      for (var g = 0; g < 3; g++) {
+        var gb = gid(K + '-guess-' + g);
+        if (gb) gb.textContent = String(L.guess[g]);
+      }
+      for (var s = 0; s < 3; s++) {
+        var box = gid(K + '-col-' + s);
+        if (box) box.innerHTML = colHtml(s);
+        var cb = gid(K + '-calc-' + s);
+        if (cb) cb.textContent = '算一算 ' + NAMES[s] + ' · ' + L.strats[s].name;
+      }
+      for (var k = 0; k < 3; k++) {
+        var b = gid(K + '-level-' + k);
+        if (b) b.setAttribute('aria-pressed', String(k === i));
+      }
+      msg('第 1 步 · 先猜：' + L.expr + ' 等于几？再用三种策略各算一遍。');
+    }
+    function onGuess(i) {
+      var L = lv();
+      guessed = i;
+      if (i === L.guessAns) msg('猜对了：答案是 ' + L.guess[i] + '。再用三种策略各算一遍，比一比。');
+      else msg('不是 ' + L.guess[i] + '：' + L.guessWhy[i] + '。再想想，用三种策略各算一遍。');
+    }
+    function calcStrat(i) {
+      var L = lv(), s = L.strats[i];
+      seen[i] = true;
+      var box = gid(K + '-col-' + i);
+      if (box) box.innerHTML = colHtml(i);
+      msg(s.name + '算完了：' + s.steps.join('，') + '。');
+      if (seen[0] && seen[1] && seen[2]) msg('三种策略都算完了：答案都是 ' + L.ans + '。现在投票：你觉得哪种最快？');
+    }
+    function vote(i) {
+      var L = lv();
+      if (!(seen[0] && seen[1] && seen[2])) { msg('先把三种策略都算一遍，再投票。'); return; }
+      msg(L.votes[i] + L.verdict);
+      if (tiers) tiers.done(li);
+      if (typeof markTried === 'function') markTried(K);
+    }
+    el.innerHTML =
+      '<p class="demo-tag">模拟 · 4 年级 · 运算定律</p>' +
+      '<h3>数谈：同一道题，三种算法比一比</h3>' +
+      '<p>同一道题不止一种算法。三种策略各算一遍，放在一起比一比：答案一样吗？哪种用的步数最少？哪种最不容易错？没有唯一的标准答案，说出你的理由就行。</p>' +
+      '<p class="func-eq" id="' + K + '-eq">48 + 37 = ?</p>' +
+      '<p>第 1 步 · 先猜：</p><div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-guess-0" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-1" type="button"></button>' +
+      '<button class="btn small primary" id="' + K + '-guess-2" type="button"></button></div>' +
+      '<p>第 2 步 · 三种策略各算一遍：</p>' +
+      '<div id="' + K + '-col-0"></div><div class="btn-row"><button class="btn small primary" id="' + K + '-calc-0" type="button"></button></div>' +
+      '<div id="' + K + '-col-1"></div><div class="btn-row"><button class="btn small primary" id="' + K + '-calc-1" type="button"></button></div>' +
+      '<div id="' + K + '-col-2"></div><div class="btn-row"><button class="btn small primary" id="' + K + '-calc-2" type="button"></button></div>' +
+      '<p>第 3 步 · 投票：哪种最快？</p><div class="btn-row">' +
+      '<button class="btn small primary" id="' + K + '-vote-0" type="button">我觉得 A 最快</button>' +
+      '<button class="btn small primary" id="' + K + '-vote-1" type="button">我觉得 B 最快</button>' +
+      '<button class="btn small primary" id="' + K + '-vote-2" type="button">我觉得 C 最快</button></div>' +
+      '<p id="' + K + '-msg">先猜，再把三种策略各算一遍。</p>' +
+      '<p>换一档：</p><div class="btn-row">' +
+      '<button class="btn small ghost" id="' + K + '-level-0" type="button">基础 · 48+37</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-1" type="button">提高 · 25×16</button>' +
+      '<button class="btn small ghost" id="' + K + '-level-2" type="button">挑战 · 102×35</button></div>' +
+      '<div class="tier-row" id="' + K + '-tiers"></div>' +
+      '<div class="find-row"><label>说一说你的发现：<input type="text" id="' + K + '-find" placeholder="我发现……"></label><button class="btn small primary" id="' + K + '-find-save" type="button">记下来</button></div>' +
+      '<p id="' + K + '-find-saved"></p>' +
+      '<p class="demo-foot">成功标准：三档的三种策略都算过、投过票，并且能说出“同一种题，不同策略的快慢不一样”。</p>';
+    gid(K + '-guess-0').addEventListener('click', function () { onGuess(0); });
+    gid(K + '-guess-1').addEventListener('click', function () { onGuess(1); });
+    gid(K + '-guess-2').addEventListener('click', function () { onGuess(2); });
+    gid(K + '-calc-0').addEventListener('click', function () { calcStrat(0); });
+    gid(K + '-calc-1').addEventListener('click', function () { calcStrat(1); });
+    gid(K + '-calc-2').addEventListener('click', function () { calcStrat(2); });
+    gid(K + '-vote-0').addEventListener('click', function () { vote(0); });
+    gid(K + '-vote-1').addEventListener('click', function () { vote(1); });
+    gid(K + '-vote-2').addEventListener('click', function () { vote(2); });
+    gid(K + '-level-0').addEventListener('click', function () { setLevel(0); });
+    gid(K + '-level-1').addEventListener('click', function () { setLevel(1); });
+    gid(K + '-level-2').addEventListener('click', function () { setLevel(2); });
+    if (typeof makeTiers === 'function') {
+      tiers = makeTiers(gid(K + '-tiers'),
+        ['基础：48+37 三种算法', '提高：25×16 三种算法', '挑战：102×35 三种算法'], K);
     }
     if (typeof wireDiscovery === 'function') {
       wireDiscovery(K, K + '-find', K + '-find-save', K + '-find-saved');

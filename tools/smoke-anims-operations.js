@@ -1,6 +1,6 @@
 // Smoke tests for apps/web/anims-operations.js (no DOM: a tiny fake DOM stub).
 // Run: node tools/smoke-anims-operations.js
-// Checks: 15 registry anims present with valid fields, points exist in the
+// Checks: 19 registry anims present with valid fields, points exist in the
 // real grade files, keys do not collide with hand-wired demos or band anims,
 // no forbidden script-close tag or braces inside strings, each render runs
 // in the stub without throwing, tiers + discovery are wired, and each
@@ -124,12 +124,16 @@ const EXPECTED = [
   { key: 'op-compare', grade: 1, kind: '模拟', points: ['1.1'] },
   { key: 'op-nine', grade: 2, kind: '模拟', points: ['2.5'] },
   { key: 'op-comden', grade: 5, kind: '实验', points: ['5.11'] },
-  { key: 'op-decbreak', grade: 4, kind: '实验', points: ['4.13'] }
+  { key: 'op-decbreak', grade: 4, kind: '实验', points: ['4.13'] },
+  { key: 'op-storyex', grade: 4, kind: '模拟', points: ['4.9'] },
+  { key: 'op-addswap', grade: 4, kind: '模拟', points: ['4.10'] },
+  { key: 'op-vertmul', grade: 4, kind: '模拟', points: ['4.4'] },
+  { key: 'op-numtalk', grade: 4, kind: '模拟', points: ['4.10'] }
 ];
 
 // ---------- static checks ----------
-check('registry has exactly the 15 operations anims',
-  Object.keys(REG).length === 15 && EXPECTED.every(function (e) { return !!REG[e.key]; }));
+check('registry has exactly the 19 operations anims',
+  Object.keys(REG).length === 19 && EXPECTED.every(function (e) { return !!REG[e.key]; }));
 EXPECTED.forEach(function (e) {
   const a = REG[e.key] || {};
   check(e.key + ': fields valid',
@@ -204,6 +208,19 @@ check('arith: comparison differences', 7 - 5 === 2 && 12 - 8 === 4 && 15 - 9 ===
 check('arith: nine times table', 9 * 1 === 9 && 9 * 2 === 18 && 9 * 3 === 27 && 9 * 4 === 36 && 9 * 5 === 45 && 9 * 6 === 54 && 9 * 7 === 63 && 9 * 8 === 72 && 9 * 9 === 81);
 check('arith: common denominators', (1 * 3 + 1 * 2) / 6 === 5 / 6 && (3 * 8 / 4 - 1 * 8 / 2) / 8 === 1 / 4 && (2 * 12 / 3 + 1 * 12 / 6) / 12 === 5 / 6);
 check('arith: decimal subtraction by breaking', Math.abs(5.3 - 2.86 - 2.44) < 1e-9 && Math.abs(4.2 - 1.75 - 2.45) < 1e-9 && Math.abs(7.05 - 3.48 - 3.57) < 1e-9);
+check('arith: story to expression',
+  4 * 6 + 5 === 29 && (4 + 2) * 5 === 30 && 4 + 2 * 5 === 14 && 96 - 3 * 24 === 24 &&
+  3 * 24 === 72 && (96 - 24) * 3 === 216 && 5 * 6 === 30 && 4 * 5 === 20);
+check('arith: addition swap on the number line',
+  3 + 5 === 8 && 5 + 3 === 8 && 7 + 4 === 11 && 4 + 7 === 11 && 12 + 8 === 20 && 8 + 12 === 20);
+check('arith: two-digit by two-digit verticals',
+  21 * 3 === 63 && 21 * 10 === 210 && 21 * 13 === 273 &&
+  23 * 4 === 92 && 23 * 10 === 230 && 23 * 14 === 322 &&
+  36 * 5 === 180 && 36 * 20 === 720 && 36 * 25 === 900);
+check('arith: number-talk strategies',
+  48 + 37 === 85 && 48 + 40 - 3 === 85 && 48 + 30 + 7 === 85 && 48 + 2 + 35 === 85 &&
+  25 * 16 === 400 && 50 * 8 === 400 && 25 * 4 * 4 === 400 && 25 * 10 + 25 * 6 === 400 &&
+  102 * 35 === 3570 && 100 * 35 + 2 * 35 === 3570 && 102 * 5 * 7 === 3570 && 51 * 70 === 3570);
 
 // ---------- render helpers ----------
 function renderAnim(key) {
@@ -596,6 +613,129 @@ function tierCount(k) { const t = tiersByKey[k]; return t ? t.doneLog.length : -
   click(K + '-smash-tenth');
   click(K + '-subtract');
   check(K + ': 7.05-3.48 breaks to 3.57, all tiers done', (txt(K + '-result') || '').indexOf('7.05 − 3.48 = 3.57') >= 0 && tierCount(K) === 3);
+})();
+
+// ---------- (16) op-storyex ----------
+(function () {
+  const K = 'op-storyex';
+  const host = renderAnim(K);
+  check(K + ': title + first story shown', host.innerHTML.indexOf('从故事列算式') >= 0 && host.innerHTML.indexOf('彩笔') >= 0);
+  click(K + '-guess-1'); // 24 is wrong for 4x6+5 (forgot the extra 5)
+  check(K + ': wrong guess is refused', (txt(K + '-msg') || '').indexOf('忘了又买的 5 支') >= 0);
+  click(K + '-guess-0'); // 29
+  check(K + ': right guess accepted', (txt(K + '-msg') || '').indexOf('猜对了') >= 0);
+  click(K + '-num-0'); // chip 5 goes to slot 0 which wants 4: refused
+  check(K + ': wrong number for the slot is refused', (txt(K + '-msg') || '').indexOf('先放包数 4') >= 0);
+  click(K + '-num-1'); // 4
+  check(K + ': first number 4 placed', txt(K + '-slot-n0') === '4');
+  click(K + '-op-0'); // + goes to op slot 0 which wants x: refused
+  check(K + ': wrong operation is refused', (txt(K + '-msg') || '').indexOf('要用乘法') >= 0);
+  click(K + '-op-2'); // x
+  click(K + '-num-2'); // 6
+  click(K + '-op-0'); // +
+  click(K + '-num-0'); // 5
+  click(K + '-calc');
+  check(K + ': 4x6+5 builds to 29, tier done', (txt(K + '-eval') || '').indexOf('4×6=24') >= 0 && hasTier(K, 0));
+  click(K + '-level-1'); // (4+2)x5: chips [5,4,2]
+  click(K + '-guess-0'); // 30
+  click(K + '-num-1'); // 4
+  click(K + '-op-0'); // +
+  click(K + '-num-2'); // 2
+  click(K + '-op-2'); // x
+  click(K + '-num-0'); // 5
+  click(K + '-br-no'); // no brackets: 4+2x5 = 14
+  click(K + '-calc');
+  check(K + ': without brackets 4+2x5 is 14, not tiered', (txt(K + '-eval') || '').indexOf('4+2×5') >= 0 && !hasTier(K, 1));
+  click(K + '-br-yes'); // add brackets
+  click(K + '-calc');
+  check(K + ': (4+2)x5 builds to 30, tier done', (txt(K + '-eval') || '').indexOf('(4+2)=6') >= 0 && hasTier(K, 1));
+  click(K + '-level-2'); // 96-3x24: chips [24,96,3]
+  click(K + '-guess-0'); // 24
+  click(K + '-num-1'); // 96
+  click(K + '-op-1'); // -
+  click(K + '-num-2'); // 3
+  click(K + '-op-2'); // x
+  click(K + '-num-0'); // 24
+  click(K + '-calc');
+  check(K + ': 96-3x24 builds to 24, all tiers done', (txt(K + '-eval') || '').indexOf('3×24=72') >= 0 && tierCount(K) === 3);
+})();
+
+// ---------- (17) op-addswap ----------
+(function () {
+  const K = 'op-addswap';
+  const host = renderAnim(K);
+  check(K + ': title + first problem shown', host.innerHTML.indexOf('加法交换律') >= 0 && host.innerHTML.indexOf('3 + 5') >= 0);
+  click(K + '-guess-diff'); // different landing points is wrong
+  check(K + ': wrong guess is recorded', (txt(K + '-msg') || '').indexOf('不同的点') >= 0);
+  click(K + '-walk-a');
+  check(K + ': route one lands on 8', (txt(K + '-land') || '').indexOf('路线一落点：8') >= 0);
+  click(K + '-walk-b');
+  check(K + ': both routes land on 8, tier done', (txt(K + '-msg') || '').indexOf('都落在 8') >= 0 && hasTier(K, 0));
+  click(K + '-level-1'); // 7+4
+  click(K + '-walk-a');
+  click(K + '-walk-b');
+  check(K + ': 7+4 both routes land on 11, tier done', (txt(K + '-msg') || '').indexOf('都落在 11') >= 0 && hasTier(K, 1));
+  click(K + '-level-2'); // 12+8
+  click(K + '-walk-a');
+  click(K + '-walk-b');
+  check(K + ': 12+8 both routes land on 20, all tiers done', (txt(K + '-msg') || '').indexOf('都落在 20') >= 0 && tierCount(K) === 3);
+})();
+
+// ---------- (18) op-vertmul ----------
+(function () {
+  const K = 'op-vertmul';
+  renderAnim(K);
+  click(K + '-d4'); // wrong first digit for 1x3=3
+  check(K + ': wrong digit is refused with a hint', (txt(K + '-msg') || '').indexOf('不对') >= 0);
+  [3, 6, 0, 1, 2, 3, 7, 2].forEach(function (d) { click(K + '-d' + d); });
+  check(K + ': 21x13 built to 273', (txt(K + '-msg') || '').indexOf('273') >= 0 && hasTier(K, 0));
+  click(K + '-level-1'); // 23x14: 2,1,9,0,3,2,2,2,1,3
+  [2, 1, 9, 0, 3, 2, 2, 2, 1, 3].forEach(function (d) { click(K + '-d' + d); });
+  check(K + ': 23x14 built to 322', (txt(K + '-msg') || '').indexOf('322') >= 0 && hasTier(K, 1));
+  click(K + '-level-2'); // 36x25: 0,3,8,1,0,2,7,0,0,1,9
+  [0, 3, 8, 1, 0, 2, 7, 0, 0, 1, 9].forEach(function (d) { click(K + '-d' + d); });
+  check(K + ': 36x25 built to 900, all tiers done', (txt(K + '-msg') || '').indexOf('900') >= 0 && tierCount(K) === 3);
+})();
+
+// ---------- (19) op-numtalk ----------
+(function () {
+  const K = 'op-numtalk';
+  const host = renderAnim(K);
+  check(K + ': title + first problem shown', host.innerHTML.indexOf('数谈') >= 0 && host.innerHTML.indexOf('48 + 37') >= 0);
+  click(K + '-guess-1'); // 75 is wrong for 48+37
+  check(K + ': wrong guess is refused', (txt(K + '-msg') || '').indexOf('看成 27') >= 0);
+  click(K + '-guess-0'); // 85
+  check(K + ': right guess accepted', (txt(K + '-msg') || '').indexOf('猜对了') >= 0);
+  click(K + '-vote-0'); // voting before computing all three is refused
+  check(K + ': voting early is refused', (txt(K + '-msg') || '').indexOf('先把三种策略都算一遍') >= 0);
+  click(K + '-calc-0');
+  check(K + ': rounding strategy gives 48+40=88', has(K + '-col-0', '48 + 40 = 88'));
+  click(K + '-calc-1');
+  check(K + ': splitting strategy gives 48+30=78', has(K + '-col-1', '48 + 30 = 78'));
+  click(K + '-calc-2');
+  check(K + ': make-ten strategy gives 48+2=50', has(K + '-col-2', '48 + 2 = 50'));
+  click(K + '-vote-0');
+  check(K + ': vote for rounding compares all three to 85, tier done', (txt(K + '-msg') || '').indexOf('凑整') >= 0 && (txt(K + '-msg') || '').indexOf('都是 85') >= 0 && hasTier(K, 0));
+  click(K + '-level-1'); // 25x16
+  click(K + '-guess-0'); // 400
+  click(K + '-calc-0');
+  check(K + ': halving-doubling gives 50x8=400', has(K + '-col-0', '50 × 8 = 400'));
+  click(K + '-calc-1');
+  check(K + ': splitting gives 25x4=100', has(K + '-col-1', '25 × 4 = 100'));
+  click(K + '-calc-2');
+  check(K + ': distributing gives 25x10=250', has(K + '-col-2', '25 × 10 = 250'));
+  click(K + '-vote-1');
+  check(K + ': vote for splitting, tier done', (txt(K + '-msg') || '').indexOf('拆数') >= 0 && hasTier(K, 1));
+  click(K + '-level-2'); // 102x35
+  click(K + '-guess-0'); // 3570
+  click(K + '-calc-0');
+  check(K + ': rounding-split gives 100x35=3500', has(K + '-col-0', '100 × 35 = 3500'));
+  click(K + '-calc-1');
+  check(K + ': splitting gives 102x5=510', has(K + '-col-1', '102 × 5 = 510'));
+  click(K + '-calc-2');
+  check(K + ': halving-doubling gives 51x70=3570', has(K + '-col-2', '51 × 70 = 3570'));
+  click(K + '-vote-2');
+  check(K + ': vote for halving-doubling, all tiers done', (txt(K + '-msg') || '').indexOf('翻倍减半') >= 0 && tierCount(K) === 3);
 })();
 
 // ---------- wiring: tiers + discovery + markTried for every anim ----------
