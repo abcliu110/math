@@ -3648,11 +3648,19 @@ function benchApply(intent, okText) {
   worldPlayRender();
   return res.ok;
 }
-/* 台面清空（台面上的数全拿走）：顶栏“全部拿走”和台面里的“全部拿走”是同一个动作。 */
+/* 台面清空（台面上的数全拿走）：顶栏“全部拿走”和台面里的“全部拿走”是同一个动作。
+   “全部”就是全部：散数拿走，大器材（天平/长方形/直线）也拿下台面，不然台面上
+   还画着天平砝码，按钮却说“台面清空了”（2026-11-07 复测）。注意只拿下台面，
+   不清站里的状态：天平盘上的砝码还在站里（站里有自己的“清空重来”），
+   再把天平放回台面它们还会回来——“拿走”不是“删除”。 */
 function labClearBench() {
   const w = worldPlayEnsure();
   if (!w) return;
   MathWorld.derived(w).bench.items.forEach(function (it) { benchRun({ type: 'benchTake', pieceId: it.id }); });
+  // benchRun 每次都会换掉 labWorld 对象，所以每项都读现世界再判断，别用旧引用。
+  if (worldPlayEnsure().benchBalance) benchRun({ type: 'benchBalanceToggle' });
+  if (worldPlayEnsure().benchRect) benchRun({ type: 'benchRectToggle' });
+  if (worldPlayEnsure().benchLine) benchRun({ type: 'benchLineToggle' });
   benchSel = {};
   worldInspectSelect(null); // 台面清空了，检查器回到“台面现状”，别留孤儿面板
   benchMsg('台面清空了。', true);
@@ -3758,18 +3766,30 @@ function benchViewSvg(view, items, lineOn, lf, bal, rect, rectSelected, beamOffs
     }
     if (rect) {
       // 长方形画在坐标系格子上：左下角在 (0,0)，宽 w、长 h，面积写在里面，顶点标出来。
+      // 整个形状包在 pick-rect 里：点本体/顶点/标签都能选中它（刷新后也要能点——
+      // 2026-11-07 复测：刷新后长方形只剩形状，点本体、顶点、“(w,h)”全没反应，
+      // 检查器一直空着，手柄也不画；原因是批 3 只给卡片/圆点/分数条包了 pick，
+      // 漏了坐标系里的长方形）。手柄不在这个组里（它在选中后才画，委托里先判 rotate）。
+      s += '<g data-bench="pick-rect" style="cursor:pointer">';
       s += '<rect x="' + bvX(0) + '" y="' + bvY(rect.h) + '" width="' + (bvX(rect.w) - bvX(0)) +
         '" height="' + (bvY(0) - bvY(rect.h)) + '" fill="#fde68a" fill-opacity="0.7" stroke="#92400e" stroke-width="2"/>';
       s += '<text x="' + bvX(rect.w / 2) + '" y="' + bvY(rect.h / 2) + '" font-size="13" text-anchor="middle" fill="#92400e">' +
         rect.w + '×' + rect.h + '＝' + rect.area + '</text>';
       s += '<circle cx="' + bvX(rect.w) + '" cy="' + bvY(rect.h) + '" r="4" fill="#92400e"/>';
-      s += '<text x="' + bvX(rect.w) + '" y="' + (bvY(rect.h) - 8) + '" font-size="11" text-anchor="middle" fill="#92400e">(' +
+      // 顶点标签向左伸（text-anchor=end，右端停在顶点左侧 6 单位）：手柄在顶点右上方，
+      // 标签再怎么宽也不会伸到手柄下面去（2026-11-07 复测：手柄盖住“(4,6)”后半截，
+      // 点看得见的“(4,”字形触发了旋转）。标签本身就是 pick-rect 的一部分，点它选中长方形。
+      s += '<text x="' + (bvX(rect.w) - 6) + '" y="' + (bvY(rect.h) - 8) + '" font-size="11" text-anchor="end" fill="#92400e">(' +
         rect.w + ',' + rect.h + ')</text>';
+      s += '</g>';
       // 旋转手柄（NB 式：选中的物体上面浮一个 ⟳）：长方形被选中时才出现，点它转 90°。
-      // 点击区比看得见的圆大一圈（透明圆 r=20 垫在下面）：手柄小，点偏几像素也要能转。
+      // 点击区比看得见的圆大一圈（透明圆垫在下面）：手柄小，点偏几像素也要能转。
+      // 手柄中心在顶点右上方 28 单位、透明圆 r=16：它的左缘（顶点 +12）永远在标签
+      // 右缘（顶点 −6）之外，两者不再重叠（旧值 +16/−16、r=20 时左缘是顶点 −4，
+      // 正好盖住向右伸的标签）。
       if (rectSelected) {
-        const hx = bvX(rect.w) + 16, hy = bvY(rect.h) - 16;
-        s += '<g data-bench-rotate="rect" style="cursor:pointer"><circle cx="' + hx + '" cy="' + hy + '" r="20" fill="transparent"/><circle cx="' + hx + '" cy="' + hy + '" r="13" fill="#f97316" stroke="#f8fafc" stroke-width="2"/><text x="' + hx + '" y="' + (hy + 5) + '" font-size="15" text-anchor="middle" fill="#f8fafc">⟳</text></g>';
+        const hx = bvX(rect.w) + 28, hy = bvY(rect.h) - 28;
+        s += '<g data-bench-rotate="rect" style="cursor:pointer"><circle cx="' + hx + '" cy="' + hy + '" r="16" fill="transparent"/><circle cx="' + hx + '" cy="' + hy + '" r="13" fill="#f97316" stroke="#f8fafc" stroke-width="2"/><text x="' + hx + '" y="' + (hy + 5) + '" font-size="15" text-anchor="middle" fill="#f8fafc">⟳</text></g>';
       }
     }
     items.forEach(function (it) {
@@ -3909,8 +3929,11 @@ function worldBenchRender() {
   }
   const svg = document.getElementById('worldBenchView');
   if (svg) {
+    // 长方形只在它在台上时才传进去画：derived.rect 永远存在（世界总有一把尺），
+    // 不按 benchRect 守门的话，拿下台面后坐标系里还画着它（2026-11-07 复测）。
+    // 直线是另外传 lineOn 守门的，长方形之前漏了这一层。
     svg.innerHTML = benchViewSvg(canvasView, bv.items, lineOn, w2 ? w2.linefn : { k: 0, b: 0 },
-      w2 ? MathWorld.derived(w2).balance : null, w2 ? MathWorld.derived(w2).rect : null,
+      w2 ? MathWorld.derived(w2).balance : null, (w2 && rectOn) ? MathWorld.derived(w2).rect : null,
       !!(worldInspectSel && worldInspectSel.apparatus === 'rect'), benchBeamCur());
   }
   // 台面天平的梁：画完按当前插值角起动画（labBeamAnim），500ms 转到目标角。
@@ -3969,6 +3992,16 @@ function worldBenchRender() {
       b.classList.toggle('is-picked', !!benchSel[id]);
       b.setAttribute('aria-pressed', String(!!benchSel[id]));
       worldInspectSelect({ piece: id });
+      return;
+    }
+    if (op === 'pick-rect') {
+      // 坐标系里画出来的长方形本体/顶点/(w,h) 标签：点它选中长方形（器材路径，
+      // 不是零件的 pick——长方形没有 piece id，走 {apparatus:'rect'}）。
+      // 选中后要重画台面，手柄才画出来（worldInspectSelect 只换检查器，不重画画布）。
+      // 再点一次取消选中，和零件的 pick 一样是开关。
+      if (worldInspectSel && worldInspectSel.apparatus === 'rect') worldInspectSelect(null);
+      else worldInspectSelect({ apparatus: 'rect' });
+      worldBenchRender();
       return;
     }
     if (op === 'pick-pan') {
@@ -4719,6 +4752,20 @@ document.getElementById('labFaAdd').addEventListener('click', labFracAdd);
 /* ---------- 天平组合台：分数砝码 + 整数砝码，横梁按重量差实时倾斜 ---------- */
 var labWbL = [], labWbR = []; // 每边一串小值 {kind:'frac',n,d} 或 {kind:'num',v}
 var labWbPan = 'L';
+// 从现世界重取组合台的盘子状态：世界是唯一的真源，站里拖放会改它，
+// 组合台自己的数组只在加载时摆过一次；加减之前不重取，旧数组同步回去会把
+// 站里刚拖上去的砝码洗掉（2026-11-07 复测的盘子状态问题同根）。
+function labWbFromWorld() {
+  if (!labWorld || !labWorld.balance) return;
+  function pv(id) {
+    const p = labWorld.pieces && labWorld.pieces[id];
+    if (!p) return null;
+    const q = MathWorld.Q.fromPiece(p);
+    return q.d === 1 ? { kind: 'num', v: q.n } : { kind: 'frac', n: q.n, d: q.d };
+  }
+  labWbL = (labWorld.balance.L || []).map(pv).filter(function (v) { return !!v; });
+  labWbR = (labWorld.balance.R || []).map(pv).filter(function (v) { return !!v; });
+}
 function labWbSum(pan) {
   let s = { n: 0, d: 1 };
   (pan === 'L' ? labWbL : labWbR).forEach(v => { s = labFracAddF(s, labValFrac(v)); });
@@ -4737,6 +4784,10 @@ function labWbListText(arr) {
 }
 function labWbRender() {
   labSyncBalanceToWorld();
+  // 组合台改完世界要存下来：以前只同步不保存，刷新后左盘归零（2026-11-07 复测：
+  // 组合台左 1 → 左 0，台面上的数却能保存——台面走 worldPlayRender 里保存，
+  // 组合台走 labWbRender，没人保存）。加载时调一次也无妨（写回同一份状态）。
+  if (typeof labWorldSave === 'function') labWorldSave();
   let L, R, tilt, equal;
   if (labHasWorld() && labWorld) {
     const d = MathWorld.derived(labWorld);
@@ -4771,6 +4822,7 @@ function labWbRender() {
   document.getElementById('labWbMsg').textContent = msg;
 }
 function labWbAdd(v, pan) {
+  labWbFromWorld(); // 先按现世界摆好，再加新的（不然旧数组会把站里拖上去的砝码洗掉）
   (pan === 'L' ? labWbL : labWbR).push(v);
   labWbRender();
   labTrace('天平组合台：' + (pan === 'L' ? '左盘' : '右盘') + '加了 ' + labValLabel(v), true);
@@ -4781,6 +4833,7 @@ function labWbSetPan(pan) {
   document.getElementById('labWbPanR').setAttribute('aria-pressed', String(pan === 'R'));
 }
 function labWbIntMinus() {
+  labWbFromWorld(); // 先按现世界摆好，再拿掉一个
   const arr = labWbPan === 'L' ? labWbL : labWbR;
   for (let i = arr.length - 1; i >= 0; i--) {
     if (arr[i].kind === 'num') { arr.splice(i, 1); labWbRender(); return; }

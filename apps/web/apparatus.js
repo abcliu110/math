@@ -44,6 +44,12 @@
   var lastWorld = null;
   var lastDerived = null;
   var lastBalTilt = null; // 天平梁当前画出来的倾斜角（rAF 插值的当前位置）
+  var onIntent = null; // 器材发出的意图（balanceAddQty/fracboardSet/...）交给谁：
+  // bind(root, handler) 时由调用方登记；emit() 只在它是函数时才调。
+  // 注意：这行必须在——2026-11-07 第 2 批改梁动画变量块时误删了它，
+  // 此后 bind() 里的 `onIntent = handler` 在严格模式下抛 ReferenceError，
+  // worldPlayBind 整个死掉，器材站的拖放/点击全没装上（真机复测站拖 8 次全失败、
+  // 清空重来点不动；测试桩的 vm 上下文里严格模式未声明赋值不抛错，所以桩全过）。
   var balBeamEl = null; // 最近一次画出的梁节点（rAF 动画每帧写它）
   var balAnimTarget = null, balAnimRaf = 0, balAnimFrom = 0, balAnimStart = 0;
   /* 梁的平滑过渡：rAF 插值驱动，500ms 从旧角转到新角。

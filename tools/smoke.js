@@ -1393,6 +1393,123 @@ if (typeof sandbox.benchViewSvg === 'function' && typeof sandbox.worldBenchRende
   sandbox.labRestoredFlag = false;
   delete lsData['math-bench-v1'];
 }
+// 2026-11-07 复测修（第 4 批）：第 3 批后拖放全断、手柄刷新后消失、手柄盖标签、
+// “全部拿走”后天平还画着、长方形拿下台面后还画着、组合台不保存。
+// 下面每条在改前代码上干净失败。特别注意第 1 条：桩的 vm 上下文里严格模式
+// 未声明赋值不抛错（悄悄创一个全局），所以“器材站拖放能跑”在桩里永远是通的；
+// 真机 Chrome 里 bind() 直接抛 ReferenceError，整个器材站绑定没装上，
+// 站拖放、清空重来、以及 worldPlayBind 之后的 8 个模拟 tier 绑定全死。
+// 所以第 1 条判据有两条：源码里 onIntent 必须声明；加载后它不能漏成全局。
+if (typeof sandbox.Apparatus !== 'undefined') {
+  check('lab apparatus declares its intent callback (var onIntent) — batch 2 deleted it, bind threw in real browsers',
+    /var\s+onIntent\s*=/.test(apparatusSrc));
+  check('lab apparatus bind does not leak an implicit global onIntent (strict-mode ReferenceError in real browsers)',
+    typeof sandbox.onIntent === 'undefined');
+}
+// 2. 长方形本体能点（pick-rect）+ 手柄/标签不重叠：直接验 benchViewSvg 画出来的串，
+// 再走一次台面点击委托（点本体 → 选中长方形、检查器打开、重画出手柄）。
+if (typeof sandbox.benchViewSvg === 'function' && typeof sandbox.worldBenchRender === 'function') {
+  const rectSvg4 = sandbox.benchViewSvg('coord', [], false, { k: 0, b: 0 }, null, { w: 4, h: 6, area: 24 }, true, null);
+  check('lab coord rect body is clickable after refresh (pick-rect group wraps the shape)',
+    rectSvg4.indexOf('data-bench="pick-rect"') >= 0);
+  // 手柄透明圆 vs (w,h) 标签：手柄左缘要在标签右缘之外（x 轴上分开，与 y 无关）。
+  // 旧值：手柄 (bvX+16, bvY-16) r=20，标签 anchor=middle 在 (bvX, bvY-8)——
+  // 手柄左缘 bvX-4，标签右缘约 bvX+18，重叠；新值：手柄 (bvX+28, bvY-28) r=16，
+  // 标签 anchor=end、右缘 bvX-6——手柄左缘 bvX+12，分开。
+  const handleM4 = rectSvg4.match(/data-bench-rotate="rect"[^>]*><circle cx="([\d.]+)" cy="([\d.]+)" r="(\d+)"/);
+  const labelM4 = rectSvg4.match(/<text x="([\d.]+)" y="([\d.]+)"[^>]*text-anchor="(middle|end)"[^>]*>\((\d+),(\d+)\)<\/text>/);
+  let noOverlap4 = false;
+  if (handleM4 && labelM4) {
+    const handleLeft4 = parseFloat(handleM4[1]) - parseFloat(handleM4[3]);
+    const labelRight4 = labelM4[3] === 'end' ? parseFloat(labelM4[1]) : parseFloat(labelM4[1]) + 18;
+    noOverlap4 = handleLeft4 > labelRight4;
+  }
+  check('lab rect handle does not cover the (w,h) label (handle left edge past label right edge)',
+    !!handleM4 && !!labelM4 && noOverlap4);
+  // 点长方形本体（假 <g data-bench="pick-rect">）→ 选中长方形、检查器打开、重画出手柄。
+  // 旧代码：本体没有 pick，点什么都没发生，检查器一直空着。
+  const wRect4 = sandbox.MathWorld.create({ rect: { perim: 20, w: 4 } });
+  sandbox.labWorld = wRect4; sandbox.mwPlay = wRect4;
+  sandbox.benchRun({ type: 'benchRectToggle' });
+  sandbox.worldInspectSelect(null);
+  const rectG4 = makeEl('g');
+  rectG4.dataset.bench = 'pick-rect';
+  rectG4.setAttribute('data-bench', 'pick-rect');
+  const cardHandlers4 = byId.worldBenchCard._handlers && byId.worldBenchCard._handlers.click;
+  if (cardHandlers4) cardHandlers4.forEach(function (fn) {
+    fn({ target: rectG4, stopPropagation: function () {}, preventDefault: function () {} });
+  });
+  check('lab coord rect body selects rect on click (inspector opens, handle drawn)',
+    !!sandbox.worldInspectSel && sandbox.worldInspectSel.apparatus === 'rect' &&
+    String(byId.worldBenchInspector.innerHTML).indexOf('长方形') >= 0 &&
+    String(byId.worldBenchView.innerHTML).indexOf('data-bench-rotate') >= 0);
+  sandbox.worldInspectSelect(null);
+  sandbox.benchRun({ type: 'benchRectToggle' }); // 收尾：长方形拿下台面
+}
+// 4a. “全部拿走”：散数 + 天平/长方形/直线都下台（旧代码：只拿散数，天平砝码还画着，
+//    按钮却说“台面清空了”）。站里的天平砝码不动——拿下台面不是删除。
+if (typeof sandbox.labClearBench === 'function' && typeof sandbox.benchRun === 'function') {
+  const wClear4 = sandbox.MathWorld.create({
+    rect: { perim: 20, w: 4 }, balance: { L: [{ n: 1, d: 2 }], R: [] },
+  });
+  sandbox.labWorld = wClear4; sandbox.mwPlay = wClear4;
+  sandbox.benchRun({ type: 'benchBalanceToggle' });
+  sandbox.benchRun({ type: 'benchRectToggle' });
+  sandbox.benchRun({ type: 'benchLineToggle' });
+  const mkC4 = sandbox.benchRun({ type: 'makePiece', piece: { kind: 'num', v: 2 } });
+  if (mkC4) sandbox.benchRun({ type: 'benchPut', pieceId: mkC4.pieceId });
+  const clearBtn4 = makeEl('button');
+  clearBtn4.dataset.bench = 'clear';
+  clearBtn4.setAttribute('data-bench', 'clear');
+  const cardHandlers4b = byId.worldBenchCard._handlers && byId.worldBenchCard._handlers.click;
+  if (cardHandlers4b) cardHandlers4b.forEach(function (fn) {
+    fn({ target: clearBtn4, stopPropagation: function () {}, preventDefault: function () {} });
+  });
+  check('lab clear-all takes apparatus off the bench too (balance/rect/line off, bench empty)',
+    !!sandbox.labWorld && !sandbox.labWorld.benchBalance && !sandbox.labWorld.benchRect && !sandbox.labWorld.benchLine &&
+    sandbox.MathWorld.derived(sandbox.labWorld).bench.count === 0);
+  check('lab clear-all keeps the station balance weights (off the bench is not delete)',
+    !!sandbox.labWorld && sandbox.labWorld.balance.L.length === 1);
+  sandbox.labWorld = sandbox.MathWorld.create({});
+  sandbox.mwPlay = sandbox.labWorld;
+  sandbox.worldInspectSelect(null);
+}
+// 4b. 长方形拿下台面后，坐标系里不能再画它（旧代码：调用处传无条件的 derived.rect；
+//    直线在台上时视图留在坐标系，金色长方形就一直画着）。
+if (typeof sandbox.worldBenchRender === 'function' && typeof sandbox.benchRun === 'function') {
+  const wRb4 = sandbox.MathWorld.create({ rect: { perim: 20, w: 4 } });
+  sandbox.labWorld = wRb4; sandbox.mwPlay = wRb4;
+  sandbox.benchRun({ type: 'benchRectToggle' });
+  sandbox.benchRun({ type: 'benchLineToggle' }); // 直线在台上，视图留在坐标系
+  sandbox.worldBenchRender();
+  const drawnOn4 = String(byId.worldBenchView.innerHTML).indexOf('#fde68a') >= 0;
+  sandbox.benchRun({ type: 'benchRectToggle' }); // 长方形拿下台面
+  sandbox.worldBenchRender();
+  const drawnOff4 = String(byId.worldBenchView.innerHTML).indexOf('#fde68a') >= 0;
+  check('lab rect drawn while on the bench, gone after taking it off (line keeps coord view)',
+    drawnOn4 && !drawnOff4);
+  sandbox.benchRun({ type: 'benchLineToggle' }); // 收尾：直线也拿下
+  sandbox.labWorld = sandbox.MathWorld.create({});
+  sandbox.mwPlay = sandbox.labWorld;
+  sandbox.worldInspectSelect(null);
+}
+// 4d. 组合台改完要进自动保存（旧代码：labWbRender 只同步不保存，刷新后左盘归零）。
+if (typeof sandbox.labWbRender === 'function' && typeof sandbox.labWorldSave === 'function') {
+  const wCombo4 = sandbox.MathWorld.create({ balance: { L: [], R: [] } });
+  sandbox.labWorld = wCombo4; sandbox.mwPlay = wCombo4;
+  sandbox.labWorldSave(); // 基线：空盘已保存
+  sandbox.labWbL = [{ kind: 'num', v: 1 }]; sandbox.labWbR = [];
+  sandbox.labWbRender();
+  const savedCombo4 = JSON.parse(lsData['math-lab-world-v1'] || 'null');
+  check('lab combo bench persists across reload (left pan 1 saved, not lost on refresh)',
+    !!savedCombo4 && savedCombo4.balance && savedCombo4.balance.L.length === 1 &&
+    sandbox.MathWorld.derived(savedCombo4).balance.Lstr === '1');
+  // 收尾：盘子清掉并存回，别影响后面的检查。
+  sandbox.labWbL = []; sandbox.labWbR = [];
+  sandbox.labWbRender();
+  sandbox.labWorld = sandbox.MathWorld.create({});
+  sandbox.mwPlay = sandbox.labWorld;
+}
 // 2026-11-07 复测修：问题计数按卡片自己的按钮配题，不按位置配对；计数以可见卡片为准。
 // 旧代码位置配对：卡片顺序一错位就藏错卡、计数撒谎（14 张卡写 13）。下面用打乱的卡片 + 领域筛选验：
 // 3 张卡按 maxarea / fracadd / balfrac 的顺序放，筛“数与代数”应留 fracadd、balfrac，藏 maxarea；
