@@ -202,6 +202,9 @@ const TYPES={
  solid:{label:'立体图形（观察）',group:'图形',prefix:'立体图形',defaults:{view:0},fields:[{k:'view',label:'看的方向（0 正面，1 侧面，2 上面）',min:0,max:2}],size:()=>[240,190]},
  circle:{label:'圆',group:'图形',prefix:'圆',defaults:{r:2},fields:[{k:'r',label:'半径（厘米）',min:1,max:10}],size:()=>[200,200]},
  pie:{label:'扇形统计图',group:'统计',prefix:'扇形图',defaults:{a:40,b:30,c:30},fields:[{k:'a',label:'一班（%）',min:0,max:100,step:5},{k:'b',label:'二班（%）',min:0,max:100,step:5},{k:'c',label:'三班（%）',min:0,max:100,step:5}],size:()=>[220,220]},
+ sim:{label:'相似图形（放大缩小）',group:'图形',prefix:'相似图形',defaults:{k:1},fields:[{k:'k',label:'相似比（放大几倍）',min:1,max:3}],size:()=>[260,190]},
+ pyth:{label:'直角三角形（勾股定理）',group:'图形',prefix:'直角三角形',defaults:{a:3,b:2},fields:[{k:'a',label:'直角边 a',min:1,max:12},{k:'b',label:'直角边 b',min:1,max:12}],size:()=>[240,190]},
+ trig:{label:'锐角三角函数',group:'图形',prefix:'三角函数',defaults:{deg:45},fields:[{k:'deg',label:'锐角（度）',min:5,max:85,step:5}],size:()=>[240,190]},
  parab:{label:'二次函数 y = ax² + bx + c',group:'函数',prefix:'抛物线',defaults:{a:1,b:-2,c:0},fields:[{k:'a',label:'a',min:-3,max:3},{k:'b',label:'b',min:-6,max:6},{k:'c',label:'c',min:-6,max:6}],size:()=>[240,190]},
  hyper:{label:'反比例 y = k/x',group:'函数',prefix:'反比例',defaults:{k:2},fields:[{k:'k',label:'k',min:-8,max:8}],size:()=>[240,190]},
  ineq:{label:'不等式的解集（数轴）',group:'关系',prefix:'解集',defaults:{b:2,op:1},fields:[{k:'b',label:'边界（数）',min:-6,max:6},{k:'op',label:'方向（0：x＜，1：x＞）',min:0,max:1}],size:()=>[300,110]},
@@ -289,6 +292,9 @@ function evaluate(s){
       else if(d.value.d===1)sig('ok',`${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`);
       else sig('warn',`除不尽：${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`)}
     if(e.type==='angle'){const k=e.props.deg;const kind=k===0?'零度角':k<90?'锐角':k===90?'直角':k<180?'钝角':k===180?'平角':'大于平角';sig(k===90?'ok':'info',`${k}°：${kind}`)}
+    if(e.type==='sim'){const k=e.props.k;sig('info',`相似比 1 : ${k}，面积比 1 : ${k*k}`)}
+    if(e.type==='pyth'){const {a,b}=e.props,c=Math.sqrt(a*a+b*b);const ci=Number.isInteger(c);sig(ci?'ok':'info',ci?`斜边 ${c}，是勾股数`:`斜边 ${c.toFixed(2)}（不是整数）`)}
+    if(e.type==='trig'){const r=e.props.deg*Math.PI/180;sig('info',`∠${e.props.deg}°：sin = ${Math.sin(r).toFixed(2)}，cos = ${Math.cos(r).toFixed(2)}，tan = ${Math.tan(r).toFixed(2)}`)}
     if(e.type==='parab'){const {a,b,c}=e.props;
       if(a===0)sig('err','二次项系数 a 不能是 0（那就成了一次函数）');
       else{const vx=-b/(2*a),vy=c-b*b/(4*a);const f=n=>Number.isInteger(n)?String(n):n.toFixed(2);
@@ -449,7 +455,13 @@ const DRAW={
  num:(e,d,w,h)=>`<text class="big" x="${w/2}" y="${h/2+14}" text-anchor="middle" font-size="28">${e.props.v}</text>`,
  frac:(e,d,w)=>{const {n,d:dd}=e.props,rows=Math.max(1,Math.ceil(n/dd)),bw=w-24,sw=bw/dd;let s=`<text class="big" x="${w-12}" y="18" text-anchor="end" font-size="14">${n}/${dd}</text>`;
    for(let r=0;r<rows;r++)for(let i=0;i<dd;i++){const k=r*dd+i+1;s+=`<rect class="seg-cell" data-seg="${k}" x="${12+i*sw}" y="${28+r*28}" width="${sw}" height="22" fill="${k<=n?'#ff9f43':'#fff'}" stroke="#5b6778" stroke-width="1"/>`}return s},
- parab:(e,d,w,h)=>{const {a,b,c}=e.props,cx=w/2,cy=h/2,sx=20,sy=10;let pts=[];
+ sim:(e,d,w,h)=>{const k=e.props.k,ox=20,oy=h-20;
+   return `<rect x="${ox}" y="${oy-30}" width="40" height="30" fill="#e0f2fe" stroke="#0369a1" stroke-width="2"/><rect x="${ox+70}" y="${oy-30*k}" width="${40*k}" height="${30*k}" fill="#fde68a" stroke="#92400e" stroke-width="2"/><text class="ink" x="${ox+20}" y="${oy+14}" text-anchor="middle" font-size="12">原图</text><text class="ink" x="${ox+70+20*k}" y="${oy+14}" text-anchor="middle" font-size="12">${k} 倍</text>`},
+pyth:(e,d,w,h)=>{const {a,b}=e.props,S=12,x0=40,y0=h-30;const px=x0+a*S,py=y0-b*S;const c=Math.sqrt(a*a+b*b);
+   return `<polygon points="${x0},${y0} ${px},${y0} ${x0},${py}" fill="#dcfce7" stroke="#166534" stroke-width="2"/><rect x="${x0}" y="${y0-10}" width="10" height="10" fill="none" stroke="#166534"/><text class="ink" x="${(x0+px)/2}" y="${y0+14}" text-anchor="middle" font-size="12">a=${a}</text><text class="ink" x="${x0-8}" y="${(y0+py)/2}" text-anchor="end" font-size="12">b=${b}</text><text class="ink" x="${(px+x0)/2+8}" y="${(py+y0)/2-6}" font-size="12">c=${Number.isInteger(c)?c:c.toFixed(2)}</text>`},
+trig:(e,d,w,h)=>{const r=e.props.deg*Math.PI/180,x0=30,y0=h-30,adj=130,opp=Math.min(120,adj*Math.tan(r));
+   return `<polygon points="${x0},${y0} ${x0+adj},${y0} ${x0+adj},${y0-opp}" fill="#fef3c7" stroke="#92400e" stroke-width="2"/><text class="ink" x="${x0+12}" y="${y0-8}" font-size="13">${e.props.deg}°</text>`},
+parab:(e,d,w,h)=>{const {a,b,c}=e.props,cx=w/2,cy=h/2,sx=20,sy=10;let pts=[];
    for(let x=-4;x<=4.001;x+=0.2){const y=a*x*x+b*x+c;if(Math.abs(y)<=8)pts.push((cx+x*sx).toFixed(1)+','+(cy-y*sy).toFixed(1))}
    return `<line x1="20" y1="${cy}" x2="${w-20}" y2="${cy}" stroke="#94a3b8"/><line x1="${cx}" y1="15" x2="${cx}" y2="${h-15}" stroke="#94a3b8"/>`+(pts.length>1?`<polyline points="${pts.join(' ')}" fill="none" stroke="#7c3aed" stroke-width="3"/>`:'')},
 hyper:(e,d,w,h)=>{const k=e.props.k,cx=w/2,cy=h/2,sx=20,sy=10;const br=[[],[]];
@@ -1044,6 +1056,23 @@ const P8=[
          {label:'顶点是 (2, −4)',score:2,hint:'看二次函数卡下面的文字',target:T45('parab'),check:(s,D)=>{const p=byType(s,'parab');return (D[p].sig||[]).some(x=>x.tx==='顶点 (2, -4)')}}]},
 ];
 P8.forEach(p=>XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
+
+/* ========== 初中第二批：相似、勾股定理、锐角三角函数 ========== */
+const P10=[
+ {id:'g9_12',grade:9,domain:'图形与几何',tools:'相似图形',title:'相似：把图形放大 2 倍，面积变成几倍？',q:'相似图形的边长比是 1 : 2，面积比是边长比的平方：1 : 4。',why:'边长扩大 2 倍，面积扩大 2 × 2 = 4 倍。',
+  build:s=>{addEnt(s,'sim',200,50,{k:1})},
+  steps:[{label:'把相似比调到 2（放大 2 倍）',score:1,hint:'点相似图形卡，把相似比调到 2',target:T45('sim'),check:(s,D)=>s.entities[byType(s,'sim')].props.k===2},
+         {label:'面积比是 1 : 4',score:2,hint:'看下面的文字',target:T45('sim'),check:(s,D)=>{const x=byType(s,'sim');return (D[x].sig||[]).some(t=>t.tx==='相似比 1 : 2，面积比 1 : 4')}}]},
+ {id:'g8_11',grade:8,domain:'图形与几何',tools:'直角三角形',title:'勾股定理：直角边 3 和 4，斜边是几？',q:'勾股定理：两直角边的平方和等于斜边的平方，a² + b² = c²。',why:'3² + 4² = 9 + 16 = 25，c = 5。这组数叫勾股数。',
+  build:s=>{addEnt(s,'pyth',200,50,{a:3,b:2})},
+  steps:[{label:'把两条直角边调成 3 和 4',score:1,hint:'点直角三角形卡，把 b 调到 4',target:T45('pyth'),check:(s,D)=>{const p=s.entities[byType(s,'pyth')].props;return p.a===3&&p.b===4}},
+         {label:'斜边是 5，是勾股数',score:2,hint:'看下面的文字',target:T45('pyth'),check:(s,D)=>{const x=byType(s,'pyth');return (D[x].sig||[]).some(t=>t.tx==='斜边 5，是勾股数')}}]},
+ {id:'g9_14',grade:9,domain:'图形与几何',tools:'锐角三角函数',title:'锐角三角函数：∠30° 的正弦是几？',q:'正弦 = 对边 ÷ 斜边。30° 的正弦是 0.5（就是 1/2）。',why:'sin 30° = 1/2，在直角三角形里，对边是斜边的一半。',
+  build:s=>{addEnt(s,'trig',200,50,{deg:45})},
+  steps:[{label:'把锐角调到 30°',score:1,hint:'点三角函数卡，把锐角调到 30',target:T45('trig'),check:(s,D)=>s.entities[byType(s,'trig')].props.deg===30},
+         {label:'sin 30° = 0.50',score:2,hint:'看下面的文字',target:T45('trig'),check:(s,D)=>{const x=byType(s,'trig');return (D[x].sig||[]).some(t=>t.tx.includes('sin = 0.50'))}}]},
+];
+P10.forEach(p=>XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
 
 function startXp(id,m){xp=XP.find(x=>x.id===id);if(!xp)return;mode=m;S=blankScene();xp.build(S);undoSt=[];redoSt=[];sel=null;cardOpen=false;
   run={steps:xp.steps.map((s,i)=>({i,done:false})),ops:0,errors:0,t0:Date.now(),finished:false};$('title').textContent=xp.title;

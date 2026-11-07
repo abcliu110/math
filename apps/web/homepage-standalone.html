@@ -4805,6 +4805,9 @@ const TYPES={
  solid:{label:&#x27;立体图形（观察）&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;立体图形&#x27;,defaults:{view:0},fields:[{k:&#x27;view&#x27;,label:&#x27;看的方向（0 正面，1 侧面，2 上面）&#x27;,min:0,max:2}],size:()=&gt;[240,190]},
  circle:{label:&#x27;圆&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;圆&#x27;,defaults:{r:2},fields:[{k:&#x27;r&#x27;,label:&#x27;半径（厘米）&#x27;,min:1,max:10}],size:()=&gt;[200,200]},
  pie:{label:&#x27;扇形统计图&#x27;,group:&#x27;统计&#x27;,prefix:&#x27;扇形图&#x27;,defaults:{a:40,b:30,c:30},fields:[{k:&#x27;a&#x27;,label:&#x27;一班（%）&#x27;,min:0,max:100,step:5},{k:&#x27;b&#x27;,label:&#x27;二班（%）&#x27;,min:0,max:100,step:5},{k:&#x27;c&#x27;,label:&#x27;三班（%）&#x27;,min:0,max:100,step:5}],size:()=&gt;[220,220]},
+ sim:{label:&#x27;相似图形（放大缩小）&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;相似图形&#x27;,defaults:{k:1},fields:[{k:&#x27;k&#x27;,label:&#x27;相似比（放大几倍）&#x27;,min:1,max:3}],size:()=&gt;[260,190]},
+ pyth:{label:&#x27;直角三角形（勾股定理）&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;直角三角形&#x27;,defaults:{a:3,b:2},fields:[{k:&#x27;a&#x27;,label:&#x27;直角边 a&#x27;,min:1,max:12},{k:&#x27;b&#x27;,label:&#x27;直角边 b&#x27;,min:1,max:12}],size:()=&gt;[240,190]},
+ trig:{label:&#x27;锐角三角函数&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;三角函数&#x27;,defaults:{deg:45},fields:[{k:&#x27;deg&#x27;,label:&#x27;锐角（度）&#x27;,min:5,max:85,step:5}],size:()=&gt;[240,190]},
  parab:{label:&#x27;二次函数 y = ax² + bx + c&#x27;,group:&#x27;函数&#x27;,prefix:&#x27;抛物线&#x27;,defaults:{a:1,b:-2,c:0},fields:[{k:&#x27;a&#x27;,label:&#x27;a&#x27;,min:-3,max:3},{k:&#x27;b&#x27;,label:&#x27;b&#x27;,min:-6,max:6},{k:&#x27;c&#x27;,label:&#x27;c&#x27;,min:-6,max:6}],size:()=&gt;[240,190]},
  hyper:{label:&#x27;反比例 y = k/x&#x27;,group:&#x27;函数&#x27;,prefix:&#x27;反比例&#x27;,defaults:{k:2},fields:[{k:&#x27;k&#x27;,label:&#x27;k&#x27;,min:-8,max:8}],size:()=&gt;[240,190]},
  ineq:{label:&#x27;不等式的解集（数轴）&#x27;,group:&#x27;关系&#x27;,prefix:&#x27;解集&#x27;,defaults:{b:2,op:1},fields:[{k:&#x27;b&#x27;,label:&#x27;边界（数）&#x27;,min:-6,max:6},{k:&#x27;op&#x27;,label:&#x27;方向（0：x＜，1：x＞）&#x27;,min:0,max:1}],size:()=&gt;[300,110]},
@@ -4892,6 +4895,9 @@ function evaluate(s){
       else if(d.value.d===1)sig(&#x27;ok&#x27;,`${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`);
       else sig(&#x27;warn&#x27;,`除不尽：${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`)}
     if(e.type===&#x27;angle&#x27;){const k=e.props.deg;const kind=k===0?&#x27;零度角&#x27;:k&lt;90?&#x27;锐角&#x27;:k===90?&#x27;直角&#x27;:k&lt;180?&#x27;钝角&#x27;:k===180?&#x27;平角&#x27;:&#x27;大于平角&#x27;;sig(k===90?&#x27;ok&#x27;:&#x27;info&#x27;,`${k}°：${kind}`)}
+    if(e.type===&#x27;sim&#x27;){const k=e.props.k;sig(&#x27;info&#x27;,`相似比 1 : ${k}，面积比 1 : ${k*k}`)}
+    if(e.type===&#x27;pyth&#x27;){const {a,b}=e.props,c=Math.sqrt(a*a+b*b);const ci=Number.isInteger(c);sig(ci?&#x27;ok&#x27;:&#x27;info&#x27;,ci?`斜边 ${c}，是勾股数`:`斜边 ${c.toFixed(2)}（不是整数）`)}
+    if(e.type===&#x27;trig&#x27;){const r=e.props.deg*Math.PI/180;sig(&#x27;info&#x27;,`∠${e.props.deg}°：sin = ${Math.sin(r).toFixed(2)}，cos = ${Math.cos(r).toFixed(2)}，tan = ${Math.tan(r).toFixed(2)}`)}
     if(e.type===&#x27;parab&#x27;){const {a,b,c}=e.props;
       if(a===0)sig(&#x27;err&#x27;,&#x27;二次项系数 a 不能是 0（那就成了一次函数）&#x27;);
       else{const vx=-b/(2*a),vy=c-b*b/(4*a);const f=n=&gt;Number.isInteger(n)?String(n):n.toFixed(2);
@@ -5052,7 +5058,13 @@ const DRAW={
  num:(e,d,w,h)=&gt;`&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;${h/2+14}&quot; text-anchor=&quot;middle&quot; font-size=&quot;28&quot;&gt;${e.props.v}&lt;/text&gt;`,
  frac:(e,d,w)=&gt;{const {n,d:dd}=e.props,rows=Math.max(1,Math.ceil(n/dd)),bw=w-24,sw=bw/dd;let s=`&lt;text class=&quot;big&quot; x=&quot;${w-12}&quot; y=&quot;18&quot; text-anchor=&quot;end&quot; font-size=&quot;14&quot;&gt;${n}/${dd}&lt;/text&gt;`;
    for(let r=0;r&lt;rows;r++)for(let i=0;i&lt;dd;i++){const k=r*dd+i+1;s+=`&lt;rect class=&quot;seg-cell&quot; data-seg=&quot;${k}&quot; x=&quot;${12+i*sw}&quot; y=&quot;${28+r*28}&quot; width=&quot;${sw}&quot; height=&quot;22&quot; fill=&quot;${k&lt;=n?&#x27;#ff9f43&#x27;:&#x27;#fff&#x27;}&quot; stroke=&quot;#5b6778&quot; stroke-width=&quot;1&quot;/&gt;`}return s},
- parab:(e,d,w,h)=&gt;{const {a,b,c}=e.props,cx=w/2,cy=h/2,sx=20,sy=10;let pts=[];
+ sim:(e,d,w,h)=&gt;{const k=e.props.k,ox=20,oy=h-20;
+   return `&lt;rect x=&quot;${ox}&quot; y=&quot;${oy-30}&quot; width=&quot;40&quot; height=&quot;30&quot; fill=&quot;#e0f2fe&quot; stroke=&quot;#0369a1&quot; stroke-width=&quot;2&quot;/&gt;&lt;rect x=&quot;${ox+70}&quot; y=&quot;${oy-30*k}&quot; width=&quot;${40*k}&quot; height=&quot;${30*k}&quot; fill=&quot;#fde68a&quot; stroke=&quot;#92400e&quot; stroke-width=&quot;2&quot;/&gt;&lt;text class=&quot;ink&quot; x=&quot;${ox+20}&quot; y=&quot;${oy+14}&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot;&gt;原图&lt;/text&gt;&lt;text class=&quot;ink&quot; x=&quot;${ox+70+20*k}&quot; y=&quot;${oy+14}&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot;&gt;${k} 倍&lt;/text&gt;`},
+pyth:(e,d,w,h)=&gt;{const {a,b}=e.props,S=12,x0=40,y0=h-30;const px=x0+a*S,py=y0-b*S;const c=Math.sqrt(a*a+b*b);
+   return `&lt;polygon points=&quot;${x0},${y0} ${px},${y0} ${x0},${py}&quot; fill=&quot;#dcfce7&quot; stroke=&quot;#166534&quot; stroke-width=&quot;2&quot;/&gt;&lt;rect x=&quot;${x0}&quot; y=&quot;${y0-10}&quot; width=&quot;10&quot; height=&quot;10&quot; fill=&quot;none&quot; stroke=&quot;#166534&quot;/&gt;&lt;text class=&quot;ink&quot; x=&quot;${(x0+px)/2}&quot; y=&quot;${y0+14}&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot;&gt;a=${a}&lt;/text&gt;&lt;text class=&quot;ink&quot; x=&quot;${x0-8}&quot; y=&quot;${(y0+py)/2}&quot; text-anchor=&quot;end&quot; font-size=&quot;12&quot;&gt;b=${b}&lt;/text&gt;&lt;text class=&quot;ink&quot; x=&quot;${(px+x0)/2+8}&quot; y=&quot;${(py+y0)/2-6}&quot; font-size=&quot;12&quot;&gt;c=${Number.isInteger(c)?c:c.toFixed(2)}&lt;/text&gt;`},
+trig:(e,d,w,h)=&gt;{const r=e.props.deg*Math.PI/180,x0=30,y0=h-30,adj=130,opp=Math.min(120,adj*Math.tan(r));
+   return `&lt;polygon points=&quot;${x0},${y0} ${x0+adj},${y0} ${x0+adj},${y0-opp}&quot; fill=&quot;#fef3c7&quot; stroke=&quot;#92400e&quot; stroke-width=&quot;2&quot;/&gt;&lt;text class=&quot;ink&quot; x=&quot;${x0+12}&quot; y=&quot;${y0-8}&quot; font-size=&quot;13&quot;&gt;${e.props.deg}°&lt;/text&gt;`},
+parab:(e,d,w,h)=&gt;{const {a,b,c}=e.props,cx=w/2,cy=h/2,sx=20,sy=10;let pts=[];
    for(let x=-4;x&lt;=4.001;x+=0.2){const y=a*x*x+b*x+c;if(Math.abs(y)&lt;=8)pts.push((cx+x*sx).toFixed(1)+&#x27;,&#x27;+(cy-y*sy).toFixed(1))}
    return `&lt;line x1=&quot;20&quot; y1=&quot;${cy}&quot; x2=&quot;${w-20}&quot; y2=&quot;${cy}&quot; stroke=&quot;#94a3b8&quot;/&gt;&lt;line x1=&quot;${cx}&quot; y1=&quot;15&quot; x2=&quot;${cx}&quot; y2=&quot;${h-15}&quot; stroke=&quot;#94a3b8&quot;/&gt;`+(pts.length&gt;1?`&lt;polyline points=&quot;${pts.join(&#x27; &#x27;)}&quot; fill=&quot;none&quot; stroke=&quot;#7c3aed&quot; stroke-width=&quot;3&quot;/&gt;`:&#x27;&#x27;)},
 hyper:(e,d,w,h)=&gt;{const k=e.props.k,cx=w/2,cy=h/2,sx=20,sy=10;const br=[[],[]];
@@ -5647,6 +5659,23 @@ const P8=[
          {label:&#x27;顶点是 (2, −4)&#x27;,score:2,hint:&#x27;看二次函数卡下面的文字&#x27;,target:T45(&#x27;parab&#x27;),check:(s,D)=&gt;{const p=byType(s,&#x27;parab&#x27;);return (D[p].sig||[]).some(x=&gt;x.tx===&#x27;顶点 (2, -4)&#x27;)}}]},
 ];
 P8.forEach(p=&gt;XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
+
+/* ========== 初中第二批：相似、勾股定理、锐角三角函数 ========== */
+const P10=[
+ {id:&#x27;g9_12&#x27;,grade:9,domain:&#x27;图形与几何&#x27;,tools:&#x27;相似图形&#x27;,title:&#x27;相似：把图形放大 2 倍，面积变成几倍？&#x27;,q:&#x27;相似图形的边长比是 1 : 2，面积比是边长比的平方：1 : 4。&#x27;,why:&#x27;边长扩大 2 倍，面积扩大 2 × 2 = 4 倍。&#x27;,
+  build:s=&gt;{addEnt(s,&#x27;sim&#x27;,200,50,{k:1})},
+  steps:[{label:&#x27;把相似比调到 2（放大 2 倍）&#x27;,score:1,hint:&#x27;点相似图形卡，把相似比调到 2&#x27;,target:T45(&#x27;sim&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;sim&#x27;)].props.k===2},
+         {label:&#x27;面积比是 1 : 4&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;sim&#x27;),check:(s,D)=&gt;{const x=byType(s,&#x27;sim&#x27;);return (D[x].sig||[]).some(t=&gt;t.tx===&#x27;相似比 1 : 2，面积比 1 : 4&#x27;)}}]},
+ {id:&#x27;g8_11&#x27;,grade:8,domain:&#x27;图形与几何&#x27;,tools:&#x27;直角三角形&#x27;,title:&#x27;勾股定理：直角边 3 和 4，斜边是几？&#x27;,q:&#x27;勾股定理：两直角边的平方和等于斜边的平方，a² + b² = c²。&#x27;,why:&#x27;3² + 4² = 9 + 16 = 25，c = 5。这组数叫勾股数。&#x27;,
+  build:s=&gt;{addEnt(s,&#x27;pyth&#x27;,200,50,{a:3,b:2})},
+  steps:[{label:&#x27;把两条直角边调成 3 和 4&#x27;,score:1,hint:&#x27;点直角三角形卡，把 b 调到 4&#x27;,target:T45(&#x27;pyth&#x27;),check:(s,D)=&gt;{const p=s.entities[byType(s,&#x27;pyth&#x27;)].props;return p.a===3&amp;&amp;p.b===4}},
+         {label:&#x27;斜边是 5，是勾股数&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;pyth&#x27;),check:(s,D)=&gt;{const x=byType(s,&#x27;pyth&#x27;);return (D[x].sig||[]).some(t=&gt;t.tx===&#x27;斜边 5，是勾股数&#x27;)}}]},
+ {id:&#x27;g9_14&#x27;,grade:9,domain:&#x27;图形与几何&#x27;,tools:&#x27;锐角三角函数&#x27;,title:&#x27;锐角三角函数：∠30° 的正弦是几？&#x27;,q:&#x27;正弦 = 对边 ÷ 斜边。30° 的正弦是 0.5（就是 1/2）。&#x27;,why:&#x27;sin 30° = 1/2，在直角三角形里，对边是斜边的一半。&#x27;,
+  build:s=&gt;{addEnt(s,&#x27;trig&#x27;,200,50,{deg:45})},
+  steps:[{label:&#x27;把锐角调到 30°&#x27;,score:1,hint:&#x27;点三角函数卡，把锐角调到 30&#x27;,target:T45(&#x27;trig&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;trig&#x27;)].props.deg===30},
+         {label:&#x27;sin 30° = 0.50&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;trig&#x27;),check:(s,D)=&gt;{const x=byType(s,&#x27;trig&#x27;);return (D[x].sig||[]).some(t=&gt;t.tx.includes(&#x27;sin = 0.50&#x27;))}}]},
+];
+P10.forEach(p=&gt;XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
 
 function startXp(id,m){xp=XP.find(x=&gt;x.id===id);if(!xp)return;mode=m;S=blankScene();xp.build(S);undoSt=[];redoSt=[];sel=null;cardOpen=false;
   run={steps:xp.steps.map((s,i)=&gt;({i,done:false})),ops:0,errors:0,t0:Date.now(),finished:false};$(&#x27;title&#x27;).textContent=xp.title;
@@ -50486,6 +50515,7 @@ const LAB_POINT_XP = {
   '4.16':'g4_16','4.17':'g4_17',
   '5.1':'g5_1','5.2':'g5_2','5.3':'g5_3','5.4':'g5_4','5.5':'g5_5','5.6':'g5_6','5.7':'g5_7','5.8':'g5_8',
   '5.9':'g5_9','5.10':'g5_10','5.11':'g5_11','5.12':'g5_12','5.13':'g5_13','5.14':'g5_14',
+  '7.6':'g7_eq','7.7':'g7_eq','7.15':'g7_ineq','8.11':'g8_11','9.3':'g9_parab','9.11':'g8_hyper','9.12':'g9_12','9.14':'g9_14',
   '6.1':'g6_1','6.2':'g6_2','6.3':'g6_3','6.4':'g6_4','6.5':'g6_5','6.6':'g6_6','6.7':'g6_7','6.8':'g6_8',
   '6.9':'g6_9','6.10':'g6_10','6.11':'g6_11','6.12':'g6_12','6.13':'g6_13',
 };
