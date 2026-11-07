@@ -4159,9 +4159,9 @@ const hasAnims = typeof sandbox.animsForPoint === 'function' && typeof sandbox.a
 check('anims: 1.9 has thirteen once + maketen + op-maketen',
   hasAnims && JSON.stringify(sandbox.animsForPoint('1.9')) === JSON.stringify(['thirteen', 'maketen', 'op-maketen']));
 check('anims: 3.7 has fraction + 3 sims',
-  hasAnims && JSON.stringify(sandbox.animsForPoint('3.7')) === JSON.stringify(['fraction', 'fraceq', 'buildfrac', 'fracnumline']));
+  hasAnims && JSON.stringify(sandbox.animsForPoint('3.7')) === JSON.stringify(['fraction', 'fraceq', 'buildfrac', 'fracnumline', 'm37-div']));
 check('anims: 3.12 has area + areabuild + maxarea from the lab question',
-  hasAnims && JSON.stringify(sandbox.animsForPoint('3.12')) === JSON.stringify(['area', 'areabuild', 'maxarea']));
+  hasAnims && JSON.stringify(sandbox.animsForPoint('3.12')) === JSON.stringify(['area', 'areabuild', 'maxarea', 'm312-cut', 'm312-unit']));
 check('anims: 1.1 has count + numplay + m1a-pair (registry)',
   hasAnims && JSON.stringify(sandbox.animsForPoint('1.1')) === JSON.stringify(['count', 'numplay', 'm1a-pair']));
 check('checkpoint: 1.1 counts 3 animations from the registry (count + numplay + m1a-pair), not 1 from p.demo',
