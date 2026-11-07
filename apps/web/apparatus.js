@@ -709,6 +709,30 @@
     return null;
   }
 
+  // 台面画布里的天平盘的几何落点（和 app.js 的 benchDropTargetAt 同一组数）：
+  // 画布盘是 <rect id="worldBenchPanL/R">，没有 data-bal-pan，只能按当前
+  // viewBox 几何判定（缩放/平移后 viewBox 会变，所以读实时的 viewBox.baseVal，
+  // 和 benchSvgPoint 一个换算法）。只在台面确实画着天平时才认（两个盘节点
+  // 都在才算画着），不然坐标系里的长方形会被误认成盘子。
+  // 根因（2026-11-07 批 3 复测）：砝码拖放的落点判定只认站天平 #worldBalSvg
+  // 和 HTML 落点框，台面画布盘从来不在判定里——量砝码拖 5 次都悄悄落空，
+  // 而分数芯片走 app.js 的 benchDropTargetAt（认画布盘）所以一次就落。
+  function benchCanvasPanHitAt(clientX, clientY) {
+    if (typeof document === 'undefined') return null;
+    if (!document.getElementById('worldBenchPanL') || !document.getElementById('worldBenchPanR')) return null;
+    const svg = document.getElementById('worldBenchView');
+    if (!svg || !svg.getBoundingClientRect) return null;
+    const r = svg.getBoundingClientRect();
+    if (!r.width || !r.height) return null;
+    const vb = (svg.viewBox && svg.viewBox.baseVal && svg.viewBox.baseVal.width)
+      ? svg.viewBox.baseVal : { x: 0, y: 0, width: 520, height: 260 };
+    const vx = vb.x + ((clientX - r.left) / r.width) * vb.width;
+    const vy = vb.y + ((clientY - r.top) / r.height) * vb.height;
+    if (vx >= 46 && vx <= 174 && vy >= 136 && vy <= 244) return 'L';
+    if (vx >= 366 && vx <= 494 && vy >= 136 && vy <= 244) return 'R';
+    return null;
+  }
+
   function hitAt(clientX, clientY, names) {
     hideGhost();
     // 几何优先：盘子本身就是落点。elementsFromPoint 在内嵌浏览器里
@@ -720,6 +744,12 @@
       if (side) {
         const svg = document.getElementById('worldBalSvg');
         return { el: svg, attr: 'data-bal-pan', val: side };
+      }
+      // 台面画布盘：站天平认不到的点，再按画布盘的几何判定一次。
+      const benchSide = benchCanvasPanHitAt(clientX, clientY);
+      if (benchSide) {
+        const pan = document.getElementById(benchSide === 'L' ? 'worldBenchPanL' : 'worldBenchPanR');
+        return { el: pan, attr: 'data-bal-pan', val: benchSide };
       }
     }
     // Prefer geometry hit for HTML drop docks — elementsFromPoint fails when
@@ -757,6 +787,11 @@
       const pans = balSvg.querySelectorAll('[data-bal-pan].is-hot');
       for (let i = 0; i < pans.length; i++) pans[i].classList.remove('is-hot');
     }
+    // 台面画布盘的亮起也要清掉（markDropHot 里会给它加 is-hot）。
+    const panL = document.getElementById('worldBenchPanL');
+    const panR = document.getElementById('worldBenchPanR');
+    if (panL) panL.classList.remove('is-hot');
+    if (panR) panR.classList.remove('is-hot');
   }
 
   function markDropHot(clientX, clientY) {
@@ -766,6 +801,13 @@
     if (side) {
       const svg = document.getElementById('worldBalSvg');
       const pan = svg && svg.querySelector('[data-bal-pan="' + side + '"]');
+      if (pan) pan.classList.add('is-hot');
+      return;
+    }
+    // 台面画布盘：拖到它上面时画布盘自己亮起来（不是远处的站盘）。
+    const benchSide = benchCanvasPanHitAt(clientX, clientY);
+    if (benchSide) {
+      const pan = document.getElementById(benchSide === 'L' ? 'worldBenchPanL' : 'worldBenchPanR');
       if (pan) pan.classList.add('is-hot');
       return;
     }

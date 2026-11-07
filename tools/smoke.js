@@ -1327,6 +1327,17 @@ if (typeof sandbox.worldBenchRender === 'function' && typeof sandbox.benchRun ==
   });
   check('lab rect handle rotates via card delegation after refresh (4x6 -> 6x4)',
     !!sandbox.labWorld && sandbox.labWorld.rect.w === 6);
+  // 批 3 复测“小毛病”的结论（手算 + 真机包围盒核对）：点按“转 90°”是宽↔长互换，
+  // 角度（= 网格长方形在画布上的倾斜）不动——互换本身就是 90° 旋转（长轴 148°→58°）。
+  // “互换 + 角度+90”是转两次：1×9 点按会变成竖着的细条（包围盒 35×1272），
+  // 顶点圆点/手柄掉到画布外（rect-vertex 失败）。下面这条在“转两次”的代码上干净失败。
+  const w58 = sandbox.MathWorld.create({ rect: { perim: 20, w: 1, angle: 58 } });
+  sandbox.labWorld = w58; sandbox.mwPlay = w58;
+  if (cardHandlers) cardHandlers.forEach(function (fn) {
+    fn({ target: handle, stopPropagation: function () {}, preventDefault: function () {} });
+  });
+  check('lab rect handle click swaps w/h but keeps the angle (1x9 at 58deg -> 9x1 at 58deg)',
+    !!sandbox.labWorld && sandbox.labWorld.rect.w === 9 && sandbox.labWorld.rect.angle === 58);
   sandbox.worldInspectSelect(null);
   sandbox.labRestoredFlag = false; // 恢复标志只保护一次，别带到后面的进题测试里
   sandbox.benchRun({ type: 'benchRectToggle' }); // 收尾：长方形拿下台面

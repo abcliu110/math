@@ -1136,6 +1136,9 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
 /* 旧的发光是深棕 #451a03 填在深色底 #0f172a 上——盘子反而变暗了，真机看不见
    （2026-11-07 复测：拿着砝码悬停，盘子没有高亮）。改成亮琥珀 + 橙光晕。 */
 #labMwWorkbench .apparatus-svg [data-bal-pan].is-hot { filter:drop-shadow(0 0 8px rgba(249,115,22,.9)); }
+/* 台面画布盘的亮起：砝码拖到画布盘上时盘子自己亮起来（和站盘同款琥珀 + 橙光晕）。
+   画布盘是 <rect>，没有 data-bal-pan，用 id 认。 */
+#worldBenchPanL.is-hot, #worldBenchPanR.is-hot { fill:#fbbf24; stroke:#f97316; stroke-width:4; filter:drop-shadow(0 0 8px rgba(249,115,22,.9)); }
 /* 台面在说什么：紧凑的状态小标签，不再是一大块黑底文字 */
 #lab .world-panel { position:static; background:#0f172a; border:2px solid #263449; }
 #lab .world-panel h3, #lab .world-panel p { color:#e2e8f0; }

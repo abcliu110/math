@@ -1183,17 +1183,19 @@ async function main() {
       const after = await labState();
       const inspAngle = await evaljs(`(function(){var r=document.querySelector('#worldBenchInspector input[data-insp="1"]');return r?r.value:'';})()`);
       note('after drag: rect=' + after.rect + ' angle=' + after.rectAngle + ' inspector angle slider=' + inspAngle);
-      // 拖完再点一下手柄：90° 互换还在
+      // 拖完再点一下手柄：90° 互换还在（宽↔长，角度不动——互换本身就是 90° 旋转，
+      // 长轴 148°→58°；“互换 + 角度+90”是转两次，1×9 会变成竖细条，见 rect-click-geo）。
       const [h2] = await centers('[data-bench-rotate]');
       if (h2) { await clickAt(h2.cx, h2.cy); await sleep(300); }
       const afterClick = await labState();
-      note('after handle click: rect=' + afterClick.rect + ' angle=' + afterClick.rectAngle);
+      note('after handle click: rect=' + afterClick.rect + ' angle=' + afterClick.rectAngle + ' (angle stays ' + after.rectAngle + ')');
       report.pass = geo !== null && before.rectAngle === 0 &&
         after.rectAngle !== null && after.rectAngle >= 70 && after.rectAngle <= 110 &&
         after.rect === '1x9 (perim 20)' &&
         inspAngle !== '' && Math.abs(parseInt(inspAngle, 10) - after.rectAngle) <= 1 &&
-        afterClick.rect === '9x1 (perim 20)';
-      note(report.pass ? 'RESULT: PASS — handle drag rotates ~90°, dims/area unchanged, click-swap still works'
+        afterClick.rect === '9x1 (perim 20)' &&
+        afterClick.rectAngle === after.rectAngle;
+      note(report.pass ? 'RESULT: PASS — handle drag rotates ~90°, dims/area unchanged, click-swap still works and keeps the angle'
         : 'RESULT: FAIL — rotate drag broken (see notes above)');
     } else if (scenario === 'zoom-drop') {
       // Phase 3 batch 3：放大到约 195% 再平移，让右盘回到视野里，然后
@@ -1409,6 +1411,102 @@ async function main() {
         m.box.bottom > m.box.top;
       note(report.pass ? 'RESULT: PASS — at 820px the parts box stacks below the canvas, no horizontal overflow'
         : 'RESULT: FAIL — parts box does not stack or the page overflows at 820px');
+    } else if (scenario === 'weight-drag') {
+      // 批 3 复测主缺陷：量组（砝码图标）的 1/6 拖不到台面天平盘上，
+      // 而分数 1/6 芯片一次就落。待查根因：砝码走 apparatus.js 的
+      // hitAt（只认站天平 #worldBalSvg 和 HTML 落点框），台面画布盘
+      // 是 SVG 矩形、没有 data-bal-pan，落点判定认不出来。
+      await enterLab();
+      // 天平上台面 + 切到天平视图
+      await evaljs(`(function(){var b=document.querySelector('[data-bench="balance"]');if(b)b.click();})()`);
+      await sleep(300);
+      // 站里清空重来：左 1/2、右 0——从已知状态开始算增量。
+      await evaljs(`(function(){var b=document.querySelector('[data-world="bal-clear"]');if(b)b.click();})()`);
+      await sleep(300);
+      const before = await labState();
+      note('before: bal L=' + before.balL + ' R=' + before.balR);
+      await installProbe();
+      const [wt6, view] = await centers('#worldBenchBox [data-drag-weight="1/6"]', '#worldBenchView');
+      // 台面 viewBox 520x260，右盘 x 380–480、y 148–232 → 中心 (430,190)
+      const pxR = view.x + (430 / 520) * view.w;
+      const py = view.y + (190 / 260) * view.h;
+      note('weight 1/6 center: ' + JSON.stringify(wt6) + '  bench view: ' + JSON.stringify(view) + '  panR target: ' + Math.round(pxR) + ',' + Math.round(py));
+      await clearProbe();
+      await drag(wt6.cx, wt6.cy, pxR, py, 12, 40);
+      await sleep(300);
+      const mid = await labState();
+      note('after 1/6 to R: bal L=' + mid.balL + ' R=' + mid.balR + ' bench=' + mid.benchTotal);
+      note('probe events:\n' + (await probeLog()));
+      // 再拖一个量砝码 1/2 到左盘（中心 (110,190)），两盘都覆盖。
+      const [wt2] = await centers('#worldBenchBox [data-drag-weight="1/2"]');
+      const pxL = view.x + (110 / 520) * view.w;
+      note('weight 1/2 center: ' + JSON.stringify(wt2) + '  panL target: ' + Math.round(pxL) + ',' + Math.round(py));
+      await drag(wt2.cx, wt2.cy, pxL, py, 12, 40);
+      await sleep(300);
+      const after = await labState();
+      note('after 1/2 to L: bal L=' + after.balL + ' R=' + after.balR + ' bench=' + after.benchTotal);
+      const q = (s) => { if (s == null) return NaN; if (String(s).indexOf('/') >= 0) { const p = String(s).split('/'); return (+p[0]) / (+p[1]); } return +s; };
+      const dR = q(mid.balR) - q(before.balR);
+      const dL = q(after.balL) - q(mid.balL);
+      note('delta R=' + dR + ' (expect 1/6)  delta L=' + dL + ' (expect 1/2)');
+      // 195% 下再拖一个量砝码 1/4 到右盘（复测里 195% 下小缝和移后都不行）。
+      // 先放大再平移（和 zoom-drop 同一路：把右盘拖进视野），再按当前 viewBox 换算落点。
+      for (let i = 0; i < 3; i++) {
+        await evaljs(`(function(){var b=document.querySelector('[data-bench="zoom-in"]');if(b)b.click();})()`);
+        await sleep(200);
+      }
+      const zoomed = await labState();
+      note('after 3x zoom-in: label=' + zoomed.zoomLabel + ' viewBox=' + zoomed.viewBox);
+      await centers('#worldBenchView');
+      const panGeo = await evaljs(`(function(){
+        var svg=document.getElementById('worldBenchView');
+        var r=svg.getBoundingClientRect(); var vb=svg.viewBox.baseVal;
+        function toView(sx,sy){ return { x: r.x+((sx-vb.x)/vb.width)*r.width, y: r.y+((sy-vb.y)/vb.height)*r.height }; }
+        return { from: toView(340,180), to: toView(200,130) };
+      })()`);
+      await drag(panGeo.from.x, panGeo.from.y, panGeo.to.x, panGeo.to.y, 12, 40);
+      await sleep(300);
+      const vbNow = await evaljs(`(function(){var svg=document.getElementById('worldBenchView');var vb=svg.viewBox.baseVal;return {x:vb.x,y:vb.y,w:vb.width,h:vb.height};})()`);
+      const [wt4, view2] = await centers('#worldBenchBox [data-drag-weight="1/4"]', '#worldBenchView');
+      const tx = view2.x + ((430 - vbNow.x) / vbNow.w) * view2.w;
+      const ty = view2.y + ((190 - vbNow.y) / vbNow.h) * view2.h;
+      note('zoomed weight 1/4 center: ' + JSON.stringify(wt4) + '  panR target: ' + Math.round(tx) + ',' + Math.round(ty) + ' viewBox=' + JSON.stringify(vbNow));
+      const beforeZoom = await labState();
+      await drag(wt4.cx, wt4.cy, tx, ty, 12, 40);
+      await sleep(300);
+      const afterZoom = await labState();
+      note('after 1/4 to R at 195%: bal R=' + afterZoom.balR + ' (was ' + beforeZoom.balR + ')');
+      const dRz = q(afterZoom.balR) - q(beforeZoom.balR);
+      note('delta R at 195%=' + dRz + ' (expect 1/4)');
+      report.pass = Math.abs(dR - 1 / 6) < 1e-9 && Math.abs(dL - 1 / 2) < 1e-9 &&
+        zoomed.zoomLabel === '195%' && Math.abs(dRz - 1 / 4) < 1e-9;
+      note(report.pass ? 'RESULT: PASS — both weights landed on the bench pans' : 'RESULT: FAIL — weight(s) did not land on the pan(s)');
+    } else if (scenario === 'rect-click-geo') {
+      // 点按“转 90°”是宽↔长互换（角度不动，互换本身就是 90° 旋转）：1×9 点按后
+      // 画出来的长方形应该是横着的（宽 > 高）。如果是竖着的（高 > 宽），说明
+      // 点按给角度加了 90°、把形状转了两次，是错的（2026-11-07 实测：竖细条 35×1272）。
+      await enterLab();
+      await evaljs(`(function(){var b=document.querySelector('[data-bench="rect"]');if(b)b.click();})()`);
+      await sleep(300);
+      const before = await evaljs(`(function(){
+        var r=document.querySelector('#worldBenchView [data-bench="pick-rect"] rect');
+        if(!r) return null;
+        var b=r.getBoundingClientRect();
+        return { w: Math.round(b.width), h: Math.round(b.height) };
+      })()`);
+      note('1x9 @0deg rect bbox: ' + JSON.stringify(before));
+      const [h] = await centers('[data-bench-rotate]');
+      if (h) { await clickAt(h.cx, h.cy); await sleep(300); }
+      const after = await evaljs(`(function(){
+        var r=document.querySelector('#worldBenchView [data-bench="pick-rect"] rect');
+        if(!r) return null;
+        var b=r.getBoundingClientRect();
+        var rc=(typeof labWorld!=='undefined'&&labWorld&&labWorld.rect)?labWorld.rect:null;
+        return { w: Math.round(b.width), h: Math.round(b.height), angle: rc?rc.angle:null, dims: rc?rc.w+'x'+(rc.perim/2-rc.w):null };
+      })()`);
+      note('after handle click rect bbox: ' + JSON.stringify(after));
+      report.pass = after && after.w > after.h;
+      note(report.pass ? 'RESULT: PASS — clicked rect lies horizontal (wide bar)' : 'RESULT: FAIL — clicked rect stands vertical (tall sliver): the click double-rotated it');
     } else {
       console.log('unknown scenario: ' + scenario);
       cleanup();

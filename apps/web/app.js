@@ -4220,6 +4220,12 @@ function worldBenchRender() {
     // 而卡片委托是台面上所有按钮都在走的路；和检查器里的“转 90°”是同一个动作）。
     // 拖完手柄紧接着会来一个 click：那次不是点，是拖的尾巴，吞掉
     // （rectRotateDragged 在 worldBenchRotateDrag 里置起，见那一节）。
+    // “转 90°” = 宽 ↔ 长互换，角度不动：互换本身就是 90° 旋转（长轴方向转 90°）。
+    // 角度是“网格长方形在画布上的倾斜”，拖手柄/滑杆改它；点按只换宽长。
+    // 别再给角度 +90°：那是转两次——1×9 点按会变成竖着的细条（真机包围盒 35×1272），
+    // 长轴根本没动（θ=0 时 1×9 竖条 → 9×1 还是竖条），顶点圆点/手柄掉到画布外
+    // （2026-11-07：按批 3 复测“小毛病”的字面意思改过一次，rect-vertex 当场失败，
+    // 包围盒证实后已改回；复测说的“角度停在 58°”不是毛病——点按后长轴确实在 58°）。
     const h = e.target && e.target.closest ? e.target.closest('[data-bench-rotate]') : null;
     if (h) {
       if (rectRotateDragged) { rectRotateDragged = false; return; }
