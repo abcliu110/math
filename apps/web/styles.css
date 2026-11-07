@@ -1076,6 +1076,9 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
 #labMwWorkbench .bench-shelf { background:#0b1220; border:2px dashed #334155; }
 #labMwWorkbench .bench-chip { background:#1a2438; border:2px solid #475569; color:#f8fafc; border-radius:12px; }
 #labMwWorkbench .bench-chip.is-picked { border-color:#e2e8f0; background:#334155; box-shadow:0 0 0 3px rgba(226,232,240,.25); }
+/* 画布上选中的卡片/圆点也要看得出来（和上面那行芯片的白边框一个意思） */
+#worldBenchView g.is-picked > rect { stroke:#facc15; stroke-width:4; }
+#worldBenchView g.is-picked > circle { stroke:#facc15; stroke-width:3; }
 #labMwWorkbench .bench-chip-name { color:#94a3b8; }
 #labMwWorkbench .bench-trash { border-color:#7f1d1d; color:#fca5a5; background:transparent; }
 /* 选中零件的竖条小工具栏（NB 走访 §2：设置 / 删除贴在物体旁边） */

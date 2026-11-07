@@ -3658,19 +3658,6 @@ function labClearBench() {
   benchMsg('台面清空了。', true);
   worldPlayRender();
 }
-/* 画布里的旋转手柄（⟳）：长方形被选中时浮在它的右上角，点它转 90°（和检查器里的转 90° 是同一个动作）。 */
-(function labBenchRotateBind() {
-  const svg = document.getElementById('worldBenchView');
-  if (!svg || svg._rotateBound || !svg.addEventListener) return;
-  svg._rotateBound = true;
-  svg.addEventListener('click', function (e) {
-    const h = e.target && e.target.closest ? e.target.closest('[data-bench-rotate]') : null;
-    if (!h) return;
-    const w = worldPlayEnsure();
-    if (!w) return;
-    worldPlayApply({ type: 'rectSet', w: w.rect.perim / 2 - w.rect.w }, '转了 90°');
-  });
-})();
 /* 分数条：每个单位画一条，分成 d 段，涂 n 段。分母太大或数太大时只显示数字。 */
 function benchPieceSvg(q) {
   const n = q.n, d = q.d, x = n / d;
@@ -3714,8 +3701,12 @@ function benchChipsSvg(items, y0, w, h) {
   (items || []).forEach(function (it, i) {
     const x = 20 + i * (w + 8);
     const isFrac = it.q.d !== 1;
-    s += '<rect x="' + x + '" y="' + y0 + '" width="' + w + '" height="' + h + '" rx="8" fill="' + (isFrac ? '#fb923c' : '#2563eb') + '" stroke="#f8fafc" stroke-width="2"/>';
-    s += '<text x="' + (x + w / 2) + '" y="' + (y0 + h / 2 + 5) + '" font-size="15" font-weight="700" text-anchor="middle" fill="#f8fafc">' + it.str + '</text>';
+    // 卡片本身就能点（和上面那行芯片按钮一样）：点它选中这个数、检查器跟过来，
+    // 拖它也能放到盘上/拿走。画布上的卡片以前是死的，点它什么都不发生
+    // （2026-11-07 复测：点画布上的“5”，检查器一直停在通用提示）。
+    s += '<g data-bench="pick" data-id="' + esc(it.id) + '" style="cursor:pointer">' +
+      '<rect x="' + x + '" y="' + y0 + '" width="' + w + '" height="' + h + '" rx="8" fill="' + (isFrac ? '#fb923c' : '#2563eb') + '" stroke="#f8fafc" stroke-width="2"/>' +
+      '<text x="' + (x + w / 2) + '" y="' + (y0 + h / 2 + 5) + '" font-size="15" font-weight="700" text-anchor="middle" fill="#f8fafc">' + it.str + '</text></g>';
   });
   return s;
 }
@@ -3775,16 +3766,20 @@ function benchViewSvg(view, items, lineOn, lf, bal, rect, rectSelected, beamOffs
       s += '<text x="' + bvX(rect.w) + '" y="' + (bvY(rect.h) - 8) + '" font-size="11" text-anchor="middle" fill="#92400e">(' +
         rect.w + ',' + rect.h + ')</text>';
       // 旋转手柄（NB 式：选中的物体上面浮一个 ⟳）：长方形被选中时才出现，点它转 90°。
+      // 点击区比看得见的圆大一圈（透明圆 r=20 垫在下面）：手柄小，点偏几像素也要能转。
       if (rectSelected) {
         const hx = bvX(rect.w) + 16, hy = bvY(rect.h) - 16;
-        s += '<g data-bench-rotate="rect" style="cursor:pointer"><circle cx="' + hx + '" cy="' + hy + '" r="13" fill="#f97316" stroke="#f8fafc" stroke-width="2"/><text x="' + hx + '" y="' + (hy + 5) + '" font-size="15" text-anchor="middle" fill="#f8fafc">⟳</text></g>';
+        s += '<g data-bench-rotate="rect" style="cursor:pointer"><circle cx="' + hx + '" cy="' + hy + '" r="20" fill="transparent"/><circle cx="' + hx + '" cy="' + hy + '" r="13" fill="#f97316" stroke="#f8fafc" stroke-width="2"/><text x="' + hx + '" y="' + (hy + 5) + '" font-size="15" text-anchor="middle" fill="#f8fafc">⟳</text></g>';
       }
     }
     items.forEach(function (it) {
       const x = it.q.n / it.q.d;
       if (x < -1 || x > 7) return;
-      s += '<circle cx="' + bvX(x) + '" cy="' + bvY(0) + '" r="6" fill="#2563eb"/>' +
-        '<text x="' + bvX(x) + '" y="' + (bvY(0) - 10) + '" font-size="12" text-anchor="middle" fill="#93c5fd">' + it.str + '</text>';
+      // 圆点本身就能点（透明大圆垫着，点偏也算）：点它选中这个数、检查器跟过来。
+      s += '<g data-bench="pick" data-id="' + esc(it.id) + '" style="cursor:pointer">' +
+        '<circle cx="' + bvX(x) + '" cy="' + bvY(0) + '" r="12" fill="transparent"/>' +
+        '<circle cx="' + bvX(x) + '" cy="' + bvY(0) + '" r="6" fill="#2563eb"/>' +
+        '<text x="' + bvX(x) + '" y="' + (bvY(0) - 10) + '" font-size="12" text-anchor="middle" fill="#93c5fd">' + it.str + '</text></g>';
     });
   } else if (view === 'numline') {
     s += '<line x1="' + bvX(-1) + '" y1="120" x2="' + bvX(7) + '" y2="120" stroke="#cbd5e1" stroke-width="2"/>';
@@ -3795,25 +3790,29 @@ function benchViewSvg(view, items, lineOn, lf, bal, rect, rectSelected, beamOffs
     items.forEach(function (it) {
       const x = it.q.n / it.q.d;
       if (x < -1 || x > 7) return;
-      s += '<circle cx="' + bvX(x) + '" cy="120" r="6" fill="#2563eb"/>' +
-        '<text x="' + bvX(x) + '" y="100" font-size="12" text-anchor="middle" fill="#93c5fd">' + it.str + '</text>';
+      s += '<g data-bench="pick" data-id="' + esc(it.id) + '" style="cursor:pointer">' +
+        '<circle cx="' + bvX(x) + '" cy="120" r="12" fill="transparent"/>' +
+        '<circle cx="' + bvX(x) + '" cy="120" r="6" fill="#2563eb"/>' +
+        '<text x="' + bvX(x) + '" y="100" font-size="12" text-anchor="middle" fill="#93c5fd">' + it.str + '</text></g>';
     });
   } else if (view === 'fracbar') {
     items.forEach(function (it, i) {
       const n = it.q.n, d = it.q.d;
       const y0 = 20 + i * 40;
       const bars = Math.max(1, Math.min(7, Math.ceil(n / d)));
+      let g = '';
       if (d <= 12) {
         const sw = 60 / d;
         for (let u = 0; u < bars; u++) {
           const filled = Math.max(0, Math.min(d, n - u * d));
           for (let k = 0; k < d; k++) {
-            s += '<rect x="' + (30 + u * 66 + k * sw) + '" y="' + y0 + '" width="' + sw + '" height="28" fill="' +
+            g += '<rect x="' + (30 + u * 66 + k * sw) + '" y="' + y0 + '" width="' + sw + '" height="28" fill="' +
               (k < filled ? '#fb923c' : '#263449') + '" stroke="#94a3b8"/>';
           }
         }
       }
-      s += '<text x="' + (30 + bars * 66 + 8) + '" y="' + (y0 + 19) + '" font-size="14" font-weight="700" fill="#f8fafc">' + it.str + '</text>';
+      g += '<text x="' + (30 + bars * 66 + 8) + '" y="' + (y0 + 19) + '" font-size="14" font-weight="700" fill="#f8fafc">' + it.str + '</text>';
+      s += '<g data-bench="pick" data-id="' + esc(it.id) + '" style="cursor:pointer">' + g + '</g>';
     });
   } else if (view === 'balance') {
     // 天平：台上的数先画成一排卡片（上面），天平画在下面——盘子看得见，盘子里的值也看得见。
@@ -3829,8 +3828,8 @@ function benchViewSvg(view, items, lineOn, lf, bal, rect, rectSelected, beamOffs
     s += '<line x1="260" y1="160" x2="260" y2="100" stroke="#cbd5e1" stroke-width="3"/>';
     s += '<rect id="worldBenchPanL" x="60" y="' + leftY + '" width="100" height="40" fill="#fde68a" stroke="#92400e"/>';
     s += '<rect id="worldBenchPanR" x="380" y="' + rightY + '" width="100" height="40" fill="#fde68a" stroke="#92400e"/>';
-    s += '<text id="worldBenchPanLText" x="110" y="' + (leftY + 26) + '" font-size="16" text-anchor="middle" fill="#0f172a">' + bal.Lstr + '</text>';
-    s += '<text id="worldBenchPanRText" x="430" y="' + (rightY + 26) + '" font-size="16" text-anchor="middle" fill="#0f172a">' + bal.Rstr + '</text>';
+    s += '<text id="worldBenchPanLText" data-bench="pick-pan" data-side="L" style="cursor:pointer" x="110" y="' + (leftY + 26) + '" font-size="16" text-anchor="middle" fill="#0f172a">' + bal.Lstr + '</text>';
+    s += '<text id="worldBenchPanRText" data-bench="pick-pan" data-side="R" style="cursor:pointer" x="430" y="' + (rightY + 26) + '" font-size="16" text-anchor="middle" fill="#0f172a">' + bal.Rstr + '</text>';
     s += '<text x="260" y="252" font-size="16" text-anchor="middle" fill="' + (bal.equal ? '#4ade80' : '#fca5a5') + '">' +
       (bal.equal ? '平衡' : (bal.leftHeavy ? '左边重' : '右边重')) + '</text>';
   } else {
@@ -3938,6 +3937,15 @@ function worldBenchRender() {
   const card = document.getElementById('worldBenchCard');
   if (!card) return;
   card.addEventListener('click', function (e) {
+    // 画布里的旋转手柄（⟳）：走卡片上的委托，不再给 SVG 单独绑一次性的监听
+    // （2026-11-07 复测：刷新后手柄点不动——SVG 上的 IIFE 绑定在真机刷新后不可靠，
+    // 而卡片委托是台面上所有按钮都在走的路；和检查器里的“转 90°”是同一个动作）。
+    const h = e.target && e.target.closest ? e.target.closest('[data-bench-rotate]') : null;
+    if (h) {
+      const w = worldPlayEnsure();
+      if (w && w.rect) worldPlayApply({ type: 'rectSet', w: w.rect.perim / 2 - w.rect.w }, '转了 90°');
+      return;
+    }
     const b = e.target.closest('[data-bench]');
     if (!b) return;
     const op = b.getAttribute('data-bench');
@@ -3954,11 +3962,23 @@ function worldBenchRender() {
     if (op === 'pick') {
       // 原地切换，不重建台面：快速连点时不会点到已被替换掉的旧按钮。
       // 点整体 = 选中：检查器跟过来，显示这个零件的属性。
+      // 画布上画出来的卡片/圆点（SVG <g data-bench="pick">）也走这里——台面上的数
+      // 不能只有上面那行小芯片能点（2026-11-07 复测：点画布上的“5”检查器一直不出来）。
       const id = b.getAttribute('data-id');
       if (benchSel[id]) delete benchSel[id]; else benchSel[id] = true;
       b.classList.toggle('is-picked', !!benchSel[id]);
       b.setAttribute('aria-pressed', String(!!benchSel[id]));
       worldInspectSelect({ piece: id });
+      return;
+    }
+    if (op === 'pick-pan') {
+      // 盘子里的合计数字：点它就看这个盘上最后放的那件砝码的属性（盘上没有单独的
+      // 卡片可点，合计就是那件/那几件砝码的代表）。盘空了就什么都不做。
+      const side = b.getAttribute('data-side') === 'R' ? 'R' : 'L';
+      const w = worldPlayEnsure();
+      const ids = w && w.balance ? w.balance[side] : null;
+      const id = ids && ids.length ? ids[ids.length - 1] : null;
+      if (id) worldInspectSelect({ piece: id });
       return;
     }
     if (op === 'sel-inspect') {

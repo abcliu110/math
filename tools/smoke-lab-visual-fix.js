@@ -55,8 +55,12 @@ check('bench balance: balance branch draws the chips row on top',
 // 4) Rotate handle on the bench canvas
 check('rotate handle: coord branch draws a ⟳ handle above the selected rect',
   app.includes('data-bench-rotate="rect"'));
-check('rotate handle: labBenchRotateBind wires the click to the rect swap',
-  app.includes('labBenchRotateBind') && app.includes("data-bench-rotate") && app.includes("rectSet"));
+// 4) Rotate handle on the bench canvas — 第 3 批：SVG 上的 IIFE 一次性绑定在真机刷新后
+//    不可靠，改走卡片上的委托（和所有台面按钮同一条路）；这里只认委托里有这条分支，
+//    并且旧的 IIFE 已经删掉（不留两条路，否则一点就转两次、等于没转）。
+check('rotate handle: card delegation wires the handle click to the rect swap',
+  app.includes("closest('[data-bench-rotate]')") && app.includes("rectSet") &&
+  app.indexOf('labBenchRotateBind') === -1);
 check('rotate handle: putting rect/line/balance on auto-expands its station card',
   app.includes("labExpandStation('worldRectCard')") && app.includes("labExpandStation('worldBalCard')") &&
   app.includes("labExpandStation('worldFnCard')"));

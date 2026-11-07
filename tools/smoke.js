@@ -25,7 +25,7 @@ const registry = [];
 function camelData(attr) { return attr.slice(5).replace(/-([a-z])/g, (_, c) => c.toUpperCase()); }
 function makeEl(tag) {
   const el = {
-    tagName: (tag || 'div').toUpperCase(),
+    tagName: (tag || 'div').toUpperCase(), nodeType: 1,
     children: [], dataset: {}, style: {}, hidden: false, _handlers: {},
     className: '', textContent: '', innerHTML: '', parentNode: null, _qs: {},
     classList: { _s: new Set(),
@@ -72,6 +72,7 @@ function matchSel(e, sel) {
   if (sel === '[data-mix-again]') return d('mixAgain');
   if (sel === '[data-g-mix]') return d('gMix');
   if (sel === '[data-g-review]') return d('gReview');
+  if (sel === '[data-drop]') return d('drop'); // 器材落点（天平/数轴虚线框）：apparatus.js dropAt 用它找落点
   if (sel === '[data-demo-link]') return d('demoLink');
   if (sel === '.prereq-step') return (e.className || '').split(' ').includes('prereq-step');
   // Descendant attribute selectors like '#sortRuleSeg [data-sort-rule]':
@@ -1261,6 +1262,136 @@ if (typeof sandbox.worldInspectSelect === 'function' && typeof sandbox.benchRun 
   if (benchCardHandlers) benchCardHandlers.forEach(function (fn) { fn({ target: clearBtn }); });
   check('lab inspector closes on clear-all (bench emptied, inspector back to bench status)', !sandbox.worldInspectSel);
   sandbox.benchRun({ type: 'benchRectToggle' }); // 收尾：把长方形拿下台面，恢复默认状态
+}
+// 2026-11-07 复测修（第 3 批）：刷新后长方形 ⟳ 手柄点不动、站里砝码拖 8 次都放不进虚线区、
+// 点画布上的数检查器不出来。下面每条在改前代码上干净失败。
+// 1. 手柄：走卡片上的委托（和所有台面按钮同一条路），不再依赖 SVG 上一次性的 IIFE 绑定。
+if (typeof sandbox.worldBenchRender === 'function' && typeof sandbox.benchRun === 'function') {
+  const wRot = sandbox.MathWorld.create({ rect: { perim: 20, w: 4 } });
+  sandbox.labWorld = wRot; sandbox.mwPlay = wRot;
+  sandbox.benchRun({ type: 'benchRectToggle' });
+  sandbox.worldInspectSelect({ apparatus: 'rect' });
+  sandbox.labWorldSave();
+  delete lsData['math-bench-v1']; // 台面是空的，别让旧的台面保存混进来
+  // 模拟刷新：世界变量清掉、走加载路径恢复，长方形 4×6 还在。
+  sandbox.labWorld = null; sandbox.mwPlay = null;
+  sandbox.labSeedWorld(null);
+  check('lab rect survives refresh before handle test (4x6 restored)',
+    !!sandbox.labWorld && sandbox.labWorld.rect.w === 4 && sandbox.labWorld.benchRect);
+  const handle = makeEl('g');
+  handle.dataset.benchRotate = 'rect';
+  handle.setAttribute('data-bench-rotate', 'rect');
+  const cardHandlers = byId.worldBenchCard._handlers && byId.worldBenchCard._handlers.click;
+  if (cardHandlers) cardHandlers.forEach(function (fn) {
+    fn({ target: handle, stopPropagation: function () {}, preventDefault: function () {} });
+  });
+  check('lab rect handle rotates via card delegation after refresh (4x6 -> 6x4)',
+    !!sandbox.labWorld && sandbox.labWorld.rect.w === 6);
+  sandbox.worldInspectSelect(null);
+  sandbox.labRestoredFlag = false; // 恢复标志只保护一次，别带到后面的进题测试里
+  sandbox.benchRun({ type: 'benchRectToggle' }); // 收尾：长方形拿下台面
+}
+// 2. 站里拖放：合成输入的 pointerup 可能带错 pointerId、甚至坐标是 (0,0)，
+//    这两种情况都不能直接丢弃；上一次拖放卡住也不能挡住下一次。
+if (sandbox.Apparatus && byId.labMwWorkbench._handlers) {
+  const wBal = sandbox.MathWorld.create({});
+  sandbox.labWorld = wBal; sandbox.mwPlay = wBal;
+  const dropL = makeEl('div');
+  dropL.dataset.drop = 'balance.L';
+  dropL.setAttribute('data-drop', 'balance.L');
+  dropL.getBoundingClientRect = function () {
+    return { left: 100, top: 200, right: 300, bottom: 260, width: 200, height: 60 };
+  };
+  function fakePtrEvt(target, x, y, pid) {
+    return { target: target, clientX: x, clientY: y, pointerId: pid,
+      stopPropagation: function () {}, preventDefault: function () {} };
+  }
+  function appDrag(chip, moves, up) {
+    const h = byId.labMwWorkbench._handlers;
+    (h.pointerdown || []).forEach(function (fn) { fn(fakePtrEvt(chip, moves[0][0], moves[0][1], moves[0][2])); });
+    moves.slice(1).forEach(function (m) {
+      (h.pointermove || []).forEach(function (fn) { fn(fakePtrEvt(chip, m[0], m[1], m[2])); });
+    });
+    (h.pointerup || []).forEach(function (fn) { fn(fakePtrEvt(chip, up[0], up[1], up[2])); });
+  }
+  function balChip(qty, label) {
+    const c = makeEl('button');
+    c.setAttribute('data-drag-chip', 'weight');
+    c.setAttribute('data-qty', qty);
+    c.textContent = label;
+    return c;
+  }
+  // 2a：按下/移动是 pointerId 5，松手是 pointerId 7——旧代码直接 return，1 落不进左盘。
+  appDrag(balChip('1', '1'), [[150, 150, 5], [200, 230, 5]], [200, 230, 7]);
+  check('lab station drag lands when pointerup carries a different pointerId (1 -> left pan)',
+    sandbox.labWorld.balance.L.length === 1);
+  // 2b：松手坐标是 (0,0)——旧代码 hitAt(0,0) 找不到落点；新代码用最后一次 move 的位置。
+  appDrag(balChip('1/2', '1/2'), [[150, 150, 5], [200, 230, 5]], [0, 0, 5]);
+  check('lab station drag lands when pointerup reports (0,0) (1/2 -> left pan via last move)',
+    sandbox.labWorld.balance.L.length === 2);
+  // 2c：上一次拖放没收到 pointerup、drag 卡住了——新按下要先清掉旧的，再拖新的。
+  //    旧代码：新按下被挡，松手时掉的是卡住的那个 1/3（总数 11/6）；新代码掉 1/4（总数 7/4）。
+  const h2 = byId.labMwWorkbench._handlers;
+  (h2.pointerdown || []).forEach(function (fn) { fn(fakePtrEvt(balChip('1/3', '1/3'), 150, 150, 5)); });
+  appDrag(balChip('1/4', '1/4'), [[150, 150, 5], [200, 230, 5]], [200, 230, 5]);
+  check('lab station drag recovers after a stuck drag (left total 7/4, not 11/6)',
+    sandbox.MathWorld.derived(sandbox.labWorld).balance.Lstr === '7/4');
+  // 收尾：天平清掉、落点元素移出注册表，别影响后面的测试。
+  sandbox.labWorld = sandbox.MathWorld.apply(sandbox.labWorld, { type: 'balanceClear' }).world;
+  sandbox.mwPlay = sandbox.labWorld;
+  const dropIdx = registry.indexOf(dropL);
+  if (dropIdx >= 0) registry.splice(dropIdx, 1);
+}
+// 3. 画布上的数能点：benchViewSvg 画出的卡片/圆点带 data-bench="pick"；
+//    盘上合计数字带 data-bench="pick-pan"，点它看盘上最后那件砝码。
+if (typeof sandbox.benchViewSvg === 'function' && typeof sandbox.worldBenchRender === 'function') {
+  const wPick = sandbox.MathWorld.create({});
+  sandbox.labWorld = wPick; sandbox.mwPlay = wPick;
+  const mk5 = sandbox.benchRun({ type: 'makePiece', piece: { kind: 'num', v: 5 } });
+  if (mk5) sandbox.benchRun({ type: 'benchPut', pieceId: mk5.pieceId });
+  const bvItems = sandbox.MathWorld.derived(sandbox.labWorld).bench.items;
+  const balSvg = sandbox.benchViewSvg('balance', bvItems, false, { k: 0, b: 0 },
+    sandbox.MathWorld.derived(sandbox.labWorld).balance, null, false, null);
+  check('lab bench canvas cards carry pick (canvas number is clickable)',
+    balSvg.indexOf('data-bench="pick"') >= 0 && balSvg.indexOf('data-id="' + bvItems[0].id + '"') >= 0);
+  const coordSvg = sandbox.benchViewSvg('coord', bvItems, false, { k: 0, b: 0 }, null, null, false, null);
+  check('lab coord view dots carry pick', coordSvg.indexOf('data-bench="pick"') >= 0);
+  // 点画布上的卡片（假 <g>，带 data-bench="pick"）→ 检查器要出“数字卡· 5”。
+  const cardG = makeEl('g');
+  cardG.dataset.bench = 'pick';
+  cardG.setAttribute('data-bench', 'pick');
+  cardG.setAttribute('data-id', bvItems[0].id);
+  const cardHandlers3 = byId.worldBenchCard._handlers && byId.worldBenchCard._handlers.click;
+  if (cardHandlers3) cardHandlers3.forEach(function (fn) {
+    fn({ target: cardG, stopPropagation: function () {}, preventDefault: function () {} });
+  });
+  check('lab inspector opens for canvas number card (数字卡· 5)',
+    String(byId.worldBenchInspector.innerHTML).indexOf('数字卡') >= 0);
+  // 盘上合计：左盘放 1/2，点左盘合计 → 检查器出那件 1/2 的属性（分数条· 1/2）。
+  sandbox.benchRun({ type: 'benchBalanceToggle' });
+  const addL = sandbox.MathWorld.apply(sandbox.labWorld, { type: 'balanceAddQty', side: 'L', qty: { n: 1, d: 2 } });
+  sandbox.labWorld = addL.world; sandbox.mwPlay = addL.world;
+  const panTx = makeEl('text');
+  panTx.dataset.bench = 'pick-pan';
+  panTx.setAttribute('data-bench', 'pick-pan');
+  panTx.setAttribute('data-side', 'L');
+  if (cardHandlers3) cardHandlers3.forEach(function (fn) {
+    fn({ target: panTx, stopPropagation: function () {}, preventDefault: function () {} });
+  });
+  check('lab inspector opens for pan total (分数条· 1/2 on left pan)',
+    String(byId.worldBenchInspector.innerHTML).indexOf('分数条') >= 0 &&
+    String(byId.worldBenchInspector.innerHTML).indexOf('1/2') >= 0);
+  // 收尾：把“5”拿下台面（benchSave 会把空台面存回去，别让后面的进题测试
+  // 在 benchRestore 里又捡回来）、天平清掉并拿下台面、检查器关掉、世界恢复成空的。
+  sandbox.worldInspectSelect(null);
+  if (mk5) sandbox.benchRun({ type: 'benchTake', pieceId: mk5.pieceId });
+  sandbox.labWorld = sandbox.MathWorld.apply(sandbox.labWorld, { type: 'balanceClear' }).world;
+  sandbox.mwPlay = sandbox.labWorld;
+  sandbox.benchRun({ type: 'benchBalanceToggle' });
+  sandbox.labWorld = sandbox.MathWorld.create({});
+  sandbox.mwPlay = sandbox.labWorld;
+  sandbox.labRestoredFlag = false;
+  delete lsData['math-bench-v1'];
 }
 // 2026-11-07 复测修：问题计数按卡片自己的按钮配题，不按位置配对；计数以可见卡片为准。
 // 旧代码位置配对：卡片顺序一错位就藏错卡、计数撒谎（14 张卡写 13）。下面用打乱的卡片 + 领域筛选验：

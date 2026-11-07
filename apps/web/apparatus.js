@@ -796,7 +796,9 @@
     root._apparatusBound = true;
 
     function onDown(e) {
-      if (drag) return;
+      // 上一次拖放的 pointerup 丢了（合成输入、切后台），drag 还卡着：新按下就是新手势，
+      // 先把旧的清掉，别让这次拖放直接被无声忽略（2026-11-07 复测：站里拖 8 次都没注册）。
+      if (drag) endDragSession(e);
       const t = e.target;
       if (!t) return;
 
@@ -808,6 +810,7 @@
         drag = {
           kind: kind, qty: qty, label: qty, pointerId: e.pointerId,
           sourceEl: chip.el, captureEl: chip.el,
+          lastX: e.clientX, lastY: e.clientY,
         };
         chip.el.classList.add('is-dragging');
         showGhost(qty, e.clientX, e.clientY);
@@ -837,6 +840,7 @@
           kind: 'weight', qty: wt.val, label: wt.val, pointerId: e.pointerId,
           // 指针捕获在砝码本身（不是根节点）：快拖时指针一出砝码就丢事件，浏览器就当成选文字了（2026-11-07 复测）。
           captureEl: wt.el, sourceEl: wt.el,
+          lastX: e.clientX, lastY: e.clientY,
         };
         showGhost(wt.val, e.clientX, e.clientY);
         captureOn(wt.el, e.pointerId);
@@ -849,6 +853,7 @@
         drag = {
           kind: 'num', qty: nm.val, label: nm.val, pointerId: e.pointerId,
           captureEl: nm.el, sourceEl: nm.el,
+          lastX: e.clientX, lastY: e.clientY,
         };
         showGhost(nm.val, e.clientX, e.clientY);
         captureOn(nm.el, e.pointerId);
@@ -884,6 +889,9 @@
     function onMove(e) {
       if (!drag) return;
       if (drag.pointerId != null && e.pointerId !== drag.pointerId) return;
+      // 记下最后一次移动的位置：松手事件坐标不可用时（合成输入常给 (0,0)），
+      // 落点就用它——快拖松手时指针本来就在落点上。
+      drag.lastX = e.clientX; drag.lastY = e.clientY;
 
       if (drag.kind === 'weight' || drag.kind === 'num') {
         markDropHot(e.clientX, e.clientY);
@@ -939,12 +947,17 @@
 
     function onUp(e) {
       if (!drag) return;
-      if (drag.pointerId != null && e.pointerId !== drag.pointerId) return;
       const finished = endDragSession(e);
       if (!finished) return;
+      // 落点坐标：合成输入的 pointerup 可能带错 pointerId、甚至坐标是 (0,0)，
+      // 这两种情况都不能直接丢弃——同一时间只有一个拖放，松手就是这次拖放的结束。
+      // 坐标不可用时用拖动中最后一次 move 的位置（快拖松手时指针本来就在落点上）。
+      let x = e.clientX, y = e.clientY;
+      if (x == null || y == null || (x === 0 && y === 0)) { x = finished.lastX; y = finished.lastY; }
+      if (x == null || y == null) return;
 
       if (finished.kind === 'weight') {
-        const drop = hitAt(e.clientX, e.clientY, ['data-drop', 'data-bal-pan']);
+        const drop = hitAt(x, y, ['data-drop', 'data-bal-pan']);
         if (!drop) return;
         const qty = parseQty(finished.qty);
         let side = null;
@@ -956,10 +969,10 @@
       }
 
       if (finished.kind === 'num') {
-        const drop = hitAt(e.clientX, e.clientY, ['data-drop', 'data-numline-track', 'data-numline-pt']);
+        const drop = hitAt(x, y, ['data-drop', 'data-numline-track', 'data-numline-pt']);
         const svg = document.getElementById('worldLineSvg');
         const underSvg = !drop && svg && document.elementsFromPoint
-          ? document.elementsFromPoint(e.clientX, e.clientY).some(function (n) { return svg.contains(n); })
+          ? document.elementsFromPoint(x, y).some(function (n) { return svg.contains(n); })
           : false;
         if (drop || underSvg) placeNumOnLine(parseQty(finished.qty));
         return;
