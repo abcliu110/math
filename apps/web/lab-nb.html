@@ -205,6 +205,11 @@ const TYPES={
  sim:{label:'相似图形（放大缩小）',group:'图形',prefix:'相似图形',defaults:{k:1},fields:[{k:'k',label:'相似比（放大几倍）',min:1,max:3}],size:()=>[260,190]},
  pyth:{label:'直角三角形（勾股定理）',group:'图形',prefix:'直角三角形',defaults:{a:3,b:2},fields:[{k:'a',label:'直角边 a',min:1,max:12},{k:'b',label:'直角边 b',min:1,max:12}],size:()=>[240,190]},
  trig:{label:'锐角三角函数',group:'图形',prefix:'三角函数',defaults:{deg:45},fields:[{k:'deg',label:'锐角（度）',min:5,max:85,step:5}],size:()=>[240,190]},
+ sys:{label:'二元一次方程组（x + y = 10，x − y = 4）',group:'数与运算',prefix:'方程组',defaults:{x:0,y:0},fields:[{k:'x',label:'x',min:-10,max:20},{k:'y',label:'y',min:-10,max:20}],size:()=>[260,140]},
+ quad:{label:'一元二次方程 x² + bx + c = 0',group:'数与运算',prefix:'方程',defaults:{b:0,c:0},fields:[{k:'b',label:'b',min:-10,max:10},{k:'c',label:'c',min:-10,max:10}],size:()=>[260,140]},
+ afrac:{label:'分式 n / d',group:'分数',prefix:'分式',defaults:{n:6,d:4},fields:[{k:'n',label:'分子 n',min:-12,max:12},{k:'d',label:'分母 d',min:-6,max:6}],size:()=>[220,130]},
+ radical:{label:'二次根式 √n',group:'数与运算',prefix:'根式',defaults:{n:8},fields:[{k:'n',label:'被开方数 n',min:1,max:50}],size:()=>[220,120]},
+ parlines:{label:'平行线与截线（角）',group:'图形',prefix:'平行线',defaults:{a:40},fields:[{k:'a',label:'截线与直线的夹角（度）',min:10,max:170,step:10}],size:()=>[240,190]},
  bag:{label:'摸球（红、白）',group:'概率',prefix:'袋子',defaults:{red:2,white:2},fields:[{k:'red',label:'红球（个）',min:0,max:10},{k:'white',label:'白球（个）',min:0,max:10}],size:()=>[220,160]},
  cang:{label:'圆周角与圆心角',group:'图形',prefix:'圆',defaults:{c:120},fields:[{k:'c',label:'圆心角（度）',min:10,max:170,step:10}],size:()=>[220,200]},
  congr:{label:'全等三角形（三边）',group:'图形',prefix:'全等',defaults:{a:4,b:4,c:5},fields:[{k:'a',label:'第二个三角形：边 1',min:1,max:12},{k:'b',label:'边 2',min:1,max:12},{k:'c',label:'边 3',min:1,max:12}],size:()=>[240,190]},
@@ -296,6 +301,16 @@ function evaluate(s){
       else if(d.value.d===1)sig('ok',`${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`);
       else sig('warn',`除不尽：${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`)}
     if(e.type==='angle'){const k=e.props.deg;const kind=k===0?'零度角':k<90?'锐角':k===90?'直角':k<180?'钝角':k===180?'平角':'大于平角';sig(k===90?'ok':'info',`${k}°：${kind}`)}
+    if(e.type==='sys'){const {x,y}=e.props;const ok1=x+y===10,ok2=x-y===4;
+      if(ok1&&ok2)sig('ok',`两个方程都成立：x = ${x}，y = ${y}`);
+      else sig('info',`x + y = ${x+y}（要 10），x − y = ${x-y}（要 4）`)}
+    if(e.type==='quad'){const {b,c}=e.props,D0=b*b-4*c;const f=n=>Number.isInteger(n)?String(n):n.toFixed(2);
+      if(D0<0)sig('info','判别式 < 0：没有实数根');
+      else{const r1=(-b+Math.sqrt(D0))/2,r2=(-b-Math.sqrt(D0))/2;const rs=[r1,r2].sort((p,q)=>p-q);sig('ok',D0===0?`两个根相等：${f(rs[0])}`:`根：${f(rs[0])}、${f(rs[1])}`)}}
+    if(e.type==='afrac'){const {n,d}=e.props;if(d===0)sig('err','分母是 0，分式没有意义');else{const g=(x,y)=>y?g(y,x%y):Math.abs(x);const k=g(n,d)||1;let nu=n/k,de=d/k;if(de<0){nu=-nu;de=-de}sig('ok',`值 = ${de===1?nu:nu+'/'+de}`)}}
+    if(e.type==='radical'){const n=e.props.n;let kk=1,mm=n;for(let k=Math.floor(Math.sqrt(n));k>=2;k--){if(n%(k*k)===0){kk=k;mm=n/(k*k);break}}
+      sig(kk===1?'info':'ok',kk===1?`√${n} 已经是最简二次根式`:`√${n} = ${mm===1?kk:kk+'√'+mm}`)}
+    if(e.type==='parlines'){const a=e.props.a;sig('ok',`同旁内角 ${180-a}°，同位角 ${a}°`)}
     if(e.type==='bag'){const {red,white}=e.props,t=red+white;
       if(t===0)sig('info','袋子里没有球');
       else{const g=(x,y)=>y?g(y,x%y):x;const k=g(red,t)||1;const n=red/k,dn=t/k;sig(red>0?'ok':'info',`P(红) = ${n}/${dn}`)}}
@@ -466,7 +481,13 @@ const DRAW={
  num:(e,d,w,h)=>`<text class="big" x="${w/2}" y="${h/2+14}" text-anchor="middle" font-size="28">${e.props.v}</text>`,
  frac:(e,d,w)=>{const {n,d:dd}=e.props,rows=Math.max(1,Math.ceil(n/dd)),bw=w-24,sw=bw/dd;let s=`<text class="big" x="${w-12}" y="18" text-anchor="end" font-size="14">${n}/${dd}</text>`;
    for(let r=0;r<rows;r++)for(let i=0;i<dd;i++){const k=r*dd+i+1;s+=`<rect class="seg-cell" data-seg="${k}" x="${12+i*sw}" y="${28+r*28}" width="${sw}" height="22" fill="${k<=n?'#ff9f43':'#fff'}" stroke="#5b6778" stroke-width="1"/>`}return s},
- bag:(e,d,w,h)=>{const {red,white}=e.props;let s='';for(let i=0;i<red;i++)s+=`<circle cx="${30+i*22}" cy="${h/2-10}" r="8" fill="#ef4444" stroke="#1d2633"/>`;for(let i=0;i<white;i++)s+=`<circle cx="${30+i*22}" cy="${h/2+20}" r="8" fill="#fff" stroke="#1d2633"/>`;return s+`<text class="ink" x="${w/2}" y="${h-10}" text-anchor="middle" font-size="12">红 ${red} · 白 ${white}</text>`},
+ sys:(e,d,w,h)=>{const {x,y}=e.props;return `<text class="big" x="16" y="48" font-size="18">x + y = 10</text><text class="big" x="16" y="82" font-size="18">x − y = 4</text><text class="ink" x="16" y="118" font-size="14">代入 x = ${x}，y = ${y}</text>`},
+quad:(e,d,w,h)=>{const {b,c}=e.props;const D0=b*b-4*c;const txt=D0<0?'没有实数根':`判别式 = ${D0}`;return `<text class="big" x="16" y="48" font-size="18">x² ${b<0?'− '+(-b):'+ '+b}x ${c<0?'− '+(-c):'+ '+c} = 0</text><text class="ink" x="16" y="92" font-size="14">${txt}</text>`},
+afrac:(e,d,w,h)=>{const {n,d:dd}=e.props;return `<text class="big" x="${w/2}" y="62" text-anchor="middle" font-size="26">${n}</text><line x1="${w/2-40}" y1="72" x2="${w/2+40}" y2="72" stroke="#1d2633" stroke-width="2"/><text class="big" x="${w/2}" y="104" text-anchor="middle" font-size="26">${dd}</text>`},
+radical:(e,d,w,h)=>`<text class="big" x="${w/2}" y="${h/2+10}" text-anchor="middle" font-size="28">√${e.props.n}</text>`,
+parlines:(e,d,w,h)=>{const a=e.props.a*Math.PI/180;const y1=h*0.35,y2=h*0.7,cx=w/2;const dx=60,dy=(y2-y1)*0.9;
+   return `<line x1="20" y1="${y1}" x2="${w-20}" y2="${y1}" stroke="#1d2633" stroke-width="2"/><line x1="20" y1="${y2}" x2="${w-20}" y2="${y2}" stroke="#1d2633" stroke-width="2"/><line x1="${cx-dx}" y1="${y1-dy/2}" x2="${cx+dx}" y2="${y2+dy/2}" stroke="#ff9f43" stroke-width="2"/><text class="ink" x="${cx}" y="${h-8}" text-anchor="middle" font-size="12">截线与直线的夹角 ${e.props.a}°</text>`},
+bag:(e,d,w,h)=>{const {red,white}=e.props;let s='';for(let i=0;i<red;i++)s+=`<circle cx="${30+i*22}" cy="${h/2-10}" r="8" fill="#ef4444" stroke="#1d2633"/>`;for(let i=0;i<white;i++)s+=`<circle cx="${30+i*22}" cy="${h/2+20}" r="8" fill="#fff" stroke="#1d2633"/>`;return s+`<text class="ink" x="${w/2}" y="${h-10}" text-anchor="middle" font-size="12">红 ${red} · 白 ${white}</text>`},
 cang:(e,d,w,h)=>{const c=e.props.c,R=70,cx=w/2,cy=h/2,rad=x=>x*Math.PI/180;const A=[cx+R,cy];const B=[cx+R*Math.cos(rad(c)),cy-R*Math.sin(rad(c))];const P=[cx-R*Math.cos(rad(c/2)),cy+R*Math.sin(rad(c/2))];
    return `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="#1d2633" stroke-width="2"/><line x1="${cx}" y1="${cy}" x2="${B[0]}" y2="${B[1]}" stroke="#94a3b8" stroke-dasharray="4 3"/><line x1="${cx}" y1="${cy}" x2="${A[0]}" y2="${A[1]}" stroke="#94a3b8" stroke-dasharray="4 3"/><line x1="${P[0]}" y1="${P[1]}" x2="${A[0]}" y2="${A[1]}" stroke="#ff9f43" stroke-width="2"/><line x1="${P[0]}" y1="${P[1]}" x2="${B[0]}" y2="${B[1]}" stroke="#ff9f43" stroke-width="2"/><text class="ink" x="${cx}" y="${h-8}" text-anchor="middle" font-size="12">圆心角 ${c}°</text>`},
 congr:(e,d,w,h)=>{const y=[e.props.a,e.props.b,e.props.c],S=12,x0=20,yb=h-30;const tri=(a,b,c,ox)=>{const A=[ox,yb],B=[ox+a*S,yb];const cx2=(c*c+a*a-b*b)/(2*a),cy2=c*c-cx2*cx2;if(cy2<=0)return '<text class="ink" x="'+(ox+10)+'" y="60" font-size="12">画不出这个三角形</text>';const C=[ox+cx2*S,yb-Math.sqrt(cy2)*S];return `<polygon points="${A[0]},${A[1]} ${B[0]},${B[1]} ${C[0].toFixed(1)},${C[1].toFixed(1)}" fill="#ddd6fe" stroke="#5b21b6" stroke-width="2"/>`};
@@ -1112,6 +1133,31 @@ const P11=[
          {label:'直线和圆相切',score:2,hint:'看下面的文字',target:T45('tangent'),check:(s,D)=>{const t=byType(s,'tangent');return (D[t].sig||[]).some(x=>x.tx==='直线和圆相切（d = r）')}}]},
 ];
 P11.forEach(p=>XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
+
+/* ========== 初中第四批：二元一次方程组、一元二次方程、分式、二次根式、平行线与角 ========== */
+const P12=[
+ {id:'g7_sys',grade:7,domain:'数与代数',tools:'方程组',title:'二元一次方程组：x + y = 10，x − y = 4，x、y 各是几？',q:'把两个方程看成同时成立。x 和 y 都要让两个式子都对。',why:'两式相加得 2x = 14，x = 7；再代入得 y = 3。',
+  build:s=>{addEnt(s,'sys',200,60,{x:0,y:0})},
+  steps:[{label:'把 x 调到 7',score:1,hint:'点方程组卡，把 x 调到 7',target:T45('sys'),check:(s,D)=>s.entities[byType(s,'sys')].props.x===7},
+         {label:'y = 3，两个方程都成立',score:2,hint:'把 y 调到 3，看下面的文字',target:T45('sys'),check:(s,D)=>{const x=byType(s,'sys');return s.entities[x].props.y===3&&(D[x].sig||[]).some(t=>t.tx==='两个方程都成立：x = 7，y = 3')}}]},
+ {id:'g9_quad',grade:9,domain:'数与代数',tools:'一元二次方程',title:'一元二次方程：x² − 5x + 6 = 0，两个根是几？',q:'先调 b = −5，再调 c = 6。看判别式和两个根。',why:'x² − 5x + 6 = (x − 2)(x − 3) = 0，根是 2 和 3。',
+  build:s=>{addEnt(s,'quad',200,60,{b:0,c:0})},
+  steps:[{label:'把 b 调到 −5',score:1,hint:'点方程卡，把 b 调到 −5',target:T45('quad'),check:(s,D)=>s.entities[byType(s,'quad')].props.b===-5},
+         {label:'把 c 调到 6，根是 2 和 3',score:2,hint:'把 c 调到 6，看下面的文字',target:T45('quad'),check:(s,D)=>{const q=byType(s,'quad');return s.entities[q].props.c===6&&(D[q].sig||[]).some(t=>t.tx==='根：2、3')}}]},
+ {id:'g8_afrac',grade:8,domain:'数与代数',tools:'分式',title:'分式：分母是几时，分式没有意义？',q:'分式的分母不能是 0。把分母调到 0 看看会怎样，再调回 4。',why:'分母是 0 时，除法没有意义，所以分式没有意义。',
+  build:s=>{addEnt(s,'afrac',200,60,{n:6,d:4})},
+  steps:[{label:'把分母调到 0',score:1,hint:'点分式卡，把分母 d 调到 0',target:T45('afrac'),check:(s,D)=>s.entities[byType(s,'afrac')].props.d===0},
+         {label:'分母调回 4，值是 3/2',score:2,hint:'把分母调回 4，看下面的文字',target:T45('afrac'),check:(s,D)=>{const a=byType(s,'afrac');return s.entities[a].props.d===4&&(D[a].sig||[]).some(t=>t.tx==='值 = 3/2')}}]},
+ {id:'g8_rad',grade:8,domain:'数与代数',tools:'二次根式',title:'二次根式：√12 能化简成几？',q:'把被开方数里的平方因数拿出来：12 = 4 × 3，√4 = 2。',why:'√12 = √(4 × 3) = 2√3。',
+  build:s=>{addEnt(s,'radical',200,60,{n:8})},
+  steps:[{label:'把被开方数调到 12',score:1,hint:'点根式卡，把 n 调到 12',target:T45('radical'),check:(s,D)=>s.entities[byType(s,'radical')].props.n===12},
+         {label:'√12 = 2√3',score:2,hint:'看下面的文字',target:T45('radical'),check:(s,D)=>{const r=byType(s,'radical');return (D[r].sig||[]).some(t=>t.tx==='√12 = 2√3')}}]},
+ {id:'g7_par',grade:7,domain:'图形与几何',tools:'平行线与截线',title:'平行线：两条平行线被截线所截，同旁内角是几度？',q:'两直线平行，同旁内角互补（加起来 180°）。',why:'同旁内角 = 180° − 70° = 110°。',
+  build:s=>{addEnt(s,'parlines',200,60,{a:40})},
+  steps:[{label:'把夹角调到 70°',score:1,hint:'点平行线卡，把夹角调到 70',target:T45('parlines'),check:(s,D)=>s.entities[byType(s,'parlines')].props.a===70},
+         {label:'同旁内角是 110°',score:2,hint:'看下面的文字',target:T45('parlines'),check:(s,D)=>{const p=byType(s,'parlines');return (D[p].sig||[]).some(t=>t.tx.includes('同旁内角 110°'))}}]},
+];
+P12.forEach(p=>XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
 
 function startXp(id,m){xp=XP.find(x=>x.id===id);if(!xp)return;mode=m;S=blankScene();xp.build(S);undoSt=[];redoSt=[];sel=null;cardOpen=false;
   run={steps:xp.steps.map((s,i)=>({i,done:false})),ops:0,errors:0,t0:Date.now(),finished:false};$('title').textContent=xp.title;
