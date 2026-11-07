@@ -516,7 +516,7 @@ window.addEventListener('pointerup',ev=>{if(!tileDrag)return;const td=tileDrag;t
 /* ========== 实验库（左） + 步骤 ========== */
 function hist(){try{return JSON.parse(localStorage.getItem(LS.hist))||{}}catch(e){return{}}}
 let openXp=null;
-function renderXpList(){const doms=['全部','数与代数','图形与几何','统计与概率'];const q=libQ;
+function renderXpList(){const doms=['全部','数与代数','图形与几何','统计与概率','应用题'];const q=libQ;
   let h=`<input class="search" id="xpSearch" placeholder="搜实验 / 知识点" value="${esc(q)}"><div class="chips">${doms.map(d=>`<span class="chip${libFilter===d?' on':''}" data-dom="${d}">${d}</span>`).join('')}</div>`;
   const H=hist();
   XP.filter(x=>(libFilter==='全部'||x.domain===libFilter)&&(!q||(x.title+x.tools+x.q).includes(q))).forEach(x=>{const hs=H[x.id];
@@ -535,6 +535,44 @@ function renderSteps(){const p=$('paneSteps');if(!run){p.innerHTML=`<div class="
 document.querySelector('.tabs').onclick=ev=>{const b=ev.target.closest('button');if(!b)return;showTab(b.dataset.tab)};
 function showTab(t){document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));$('paneLib').style.display=t==='lib'?'block':'none';$('paneSteps').style.display=t==='steps'?'block':'none'}
 $('toggleLeft').onclick=()=>{$('left').classList.toggle('closed');setTimeout(render,220)};
+
+/* ========== 应用题（第一期）：已知数放成数字卡，用合并器求和、用数轴求相差。 ========== */
+const WP=[
+ {id:'wp01',grade:1,kind:'add',a:5,b:3,title:'树上有 5 只鸟，又飞来 3 只，一共几只？',why:'把两部分合在一起用加法：5 + 3 = 8。'},
+ {id:'wp02',grade:1,kind:'add',a:6,b:7,title:'池塘里有 6 只鸭子，又来了 7 只，现在有几只？',why:'原来的和后来的合在一起：6 + 7 = 13。'},
+ {id:'wp03',grade:1,kind:'add',a:5,b:6,title:'小猫吃了 5 条鱼，又吃了 6 条，一共吃了几条？',why:'两次吃的合起来：5 + 6 = 11。'},
+ {id:'wp04',grade:1,kind:'add',a:4,b:9,title:'停车场有 4 辆车，又开来 9 辆，一共几辆？',why:'4 + 9 = 13。先把 9 拆成 6 和 3，4 + 6 = 10，再加 3。'},
+ {id:'wp05',grade:1,kind:'add',a:7,b:8,title:'小明有 7 颗糖，妈妈又给他 8 颗，一共几颗？',why:'7 + 8 = 15。'},
+ {id:'wp06',grade:1,kind:'diff',a:9,b:2,title:'盒子里有 9 个球，拿走 2 个，还剩几个？',why:'拿走几个，就是从 9 里减去 2：9 − 2 = 7。数轴上两点的距离就是这个差。'},
+ {id:'wp07',grade:1,kind:'diff',a:6,b:4,title:'红花 6 朵，黄花 4 朵，红花比黄花多几朵？',why:'比多少就是求两数的差：6 − 4 = 2。'},
+ {id:'wp08',grade:1,kind:'diff',a:14,b:8,title:'桌上有 14 个杯子，收走 8 个，还剩几个？',why:'14 − 8 = 6。'},
+ {id:'wp09',grade:1,kind:'diff',a:20,b:9,title:'池塘里有 20 只鸭子，飞走 9 只，还剩几只？',why:'20 − 9 = 11。'},
+ {id:'wp10',grade:1,kind:'diff',a:8,b:5,title:'草地上有 8 只羊，跑走 5 只，还剩几只？',why:'8 − 5 = 3。'},
+ {id:'wp11',grade:2,kind:'add',a:16,b:9,title:'妈妈买了 16 个包子，爸爸买了 9 个包子，一共几个？',why:'16 + 9 = 25。先凑整十：16 + 4 = 20，再加 5。'},
+ {id:'wp12',grade:2,kind:'add',a:26,b:31,title:'二年级有 26 人，三年级有 31 人，两个年级一共几人？',why:'26 + 31 = 57。个位和个位相加，十位和十位相加。'},
+ {id:'wp13',grade:2,kind:'add',a:35,b:28,title:'花园里有 35 朵花，又种了 28 朵，一共几朵？',why:'35 + 28 = 63。'},
+ {id:'wp14',grade:2,kind:'add',a:42,b:36,title:'图书角有 42 本书，又捐来 36 本，现在有几本？',why:'42 + 36 = 78。'},
+ {id:'wp15',grade:2,kind:'diff',a:15,b:11,title:'小华跳绳 15 下，小丽跳绳 11 下，小华比小丽多跳几下？',why:'15 − 11 = 4。'},
+ {id:'wp16',grade:2,kind:'diff',a:40,b:15,title:'小刚有 40 张卡片，送给小明 15 张，还剩几张？',why:'40 − 15 = 25。'},
+ {id:'wp17',grade:2,kind:'diff',a:50,b:18,title:'一根绳子 50 厘米，剪掉 18 厘米，还剩几厘米？',why:'50 − 18 = 32。'},
+ {id:'wp18',grade:2,kind:'diff',a:18,b:12,title:'红气球 18 个，黄气球 12 个，红气球比黄气球多几个？',why:'18 − 12 = 6。'},
+ {id:'wp19',grade:2,kind:'diff',a:19,b:8,title:'小车上有 19 人，下车 8 人，还剩几人？',why:'19 − 8 = 11。'},
+ {id:'wp20',grade:2,kind:'diff',a:52,b:47,title:'一班 52 人，二班 47 人，两班相差几人？',why:'52 − 47 = 5。两班相差，就是两个数的距离。'},
+];
+function wpAnswer(p){return p.kind==='add'?p.a+p.b:Math.abs(p.a-p.b)}
+function wpBuild(p){return function(s){
+  if(p.kind==='add'){addEnt(s,'num',60,60,{v:p.a});addEnt(s,'num',60,170,{v:p.b});addEnt(s,'adder',330,110);}
+  else{addEnt(s,'num',60,60,{v:p.a});addEnt(s,'num',60,170,{v:p.b});addEnt(s,'numline',120,340,{min:0,max:Math.max(p.a,p.b)+2});}
+}}
+function wpSteps(p){const ans=wpAnswer(p);
+  if(p.kind==='add')return[
+    {label:'把两个数都连到合并器',score:1,hint:'拖数字卡右边的蓝点到合并器',target:s=>byType(s,'adder'),check:(s,D)=>{const ad=byType(s,'adder');return !!ad&&inputs(s,ad).length>=2}},
+    {label:'合并器算出的和就是答案',score:2,hint:'看合并器的读数，和题目对照',target:s=>byType(s,'adder'),check:(s,D)=>{const ad=byType(s,'adder');return !!ad&&!!D[ad].value&&qeq(D[ad].value,Q(ans))}}];
+  return[
+    {label:'把两个数都连到数轴',score:1,hint:'拖两个数字卡的蓝点到数轴',target:s=>byType(s,'numline'),check:(s,D)=>{const nl=byType(s,'numline');return !!nl&&inputs(s,nl).length>=2}},
+    {label:'数轴上两点相差的数，就是答案',score:2,hint:'看数轴下面的“相差”',target:s=>byType(s,'numline'),check:(s,D)=>{const nl=byType(s,'numline');if(!nl)return false;const vs=inputs(s,nl).map(l=>D[l.from]&&D[l.from].value).filter(Boolean);return vs.length>=2&&Math.abs(qnum(vs[0])-qnum(vs[1]))===ans}}];
+}
+WP.forEach(p=>XP.push({id:p.id,title:p.title,domain:'应用题',grade:p.grade,tools:p.kind==='add'?'数字卡 · 合并器':'数字卡 · 数轴',q:p.title,why:p.why,build:wpBuild(p),steps:wpSteps(p)}));
 
 function startXp(id,m){xp=XP.find(x=>x.id===id);if(!xp)return;mode=m;S=blankScene();xp.build(S);undoSt=[];redoSt=[];sel=null;cardOpen=false;
   run={steps:xp.steps.map((s,i)=>({i,done:false})),ops:0,errors:0,t0:Date.now(),finished:false};$('title').textContent=xp.title;

@@ -5119,7 +5119,7 @@ window.addEventListener(&#x27;pointerup&#x27;,ev=&gt;{if(!tileDrag)return;const 
 /* ========== 实验库（左） + 步骤 ========== */
 function hist(){try{return JSON.parse(内存存储.getItem(LS.hist))||{}}catch(e){return{}}}
 let openXp=null;
-function renderXpList(){const doms=[&#x27;全部&#x27;,&#x27;数与代数&#x27;,&#x27;图形与几何&#x27;,&#x27;统计与概率&#x27;];const q=libQ;
+function renderXpList(){const doms=[&#x27;全部&#x27;,&#x27;数与代数&#x27;,&#x27;图形与几何&#x27;,&#x27;统计与概率&#x27;,&#x27;应用题&#x27;];const q=libQ;
   let h=`&lt;input class=&quot;search&quot; id=&quot;xpSearch&quot; placeholder=&quot;搜实验 / 知识点&quot; value=&quot;${esc(q)}&quot;&gt;&lt;div class=&quot;chips&quot;&gt;${doms.map(d=&gt;`&lt;span class=&quot;chip${libFilter===d?&#x27; on&#x27;:&#x27;&#x27;}&quot; data-dom=&quot;${d}&quot;&gt;${d}&lt;/span&gt;`).join(&#x27;&#x27;)}&lt;/div&gt;`;
   const H=hist();
   XP.filter(x=&gt;(libFilter===&#x27;全部&#x27;||x.domain===libFilter)&amp;&amp;(!q||(x.title+x.tools+x.q).includes(q))).forEach(x=&gt;{const hs=H[x.id];
@@ -5138,6 +5138,44 @@ function renderSteps(){const p=$(&#x27;paneSteps&#x27;);if(!run){p.innerHTML=`&l
 document.querySelector(&#x27;.tabs&#x27;).onclick=ev=&gt;{const b=ev.target.closest(&#x27;button&#x27;);if(!b)return;showTab(b.dataset.tab)};
 function showTab(t){document.querySelectorAll(&#x27;.tabs button&#x27;).forEach(b=&gt;b.classList.toggle(&#x27;on&#x27;,b.dataset.tab===t));$(&#x27;paneLib&#x27;).style.display=t===&#x27;lib&#x27;?&#x27;block&#x27;:&#x27;none&#x27;;$(&#x27;paneSteps&#x27;).style.display=t===&#x27;steps&#x27;?&#x27;block&#x27;:&#x27;none&#x27;}
 $(&#x27;toggleLeft&#x27;).onclick=()=&gt;{$(&#x27;left&#x27;).classList.toggle(&#x27;closed&#x27;);setTimeout(render,220)};
+
+/* ========== 应用题（第一期）：已知数放成数字卡，用合并器求和、用数轴求相差。 ========== */
+const WP=[
+ {id:&#x27;wp01&#x27;,grade:1,kind:&#x27;add&#x27;,a:5,b:3,title:&#x27;树上有 5 只鸟，又飞来 3 只，一共几只？&#x27;,why:&#x27;把两部分合在一起用加法：5 + 3 = 8。&#x27;},
+ {id:&#x27;wp02&#x27;,grade:1,kind:&#x27;add&#x27;,a:6,b:7,title:&#x27;池塘里有 6 只鸭子，又来了 7 只，现在有几只？&#x27;,why:&#x27;原来的和后来的合在一起：6 + 7 = 13。&#x27;},
+ {id:&#x27;wp03&#x27;,grade:1,kind:&#x27;add&#x27;,a:5,b:6,title:&#x27;小猫吃了 5 条鱼，又吃了 6 条，一共吃了几条？&#x27;,why:&#x27;两次吃的合起来：5 + 6 = 11。&#x27;},
+ {id:&#x27;wp04&#x27;,grade:1,kind:&#x27;add&#x27;,a:4,b:9,title:&#x27;停车场有 4 辆车，又开来 9 辆，一共几辆？&#x27;,why:&#x27;4 + 9 = 13。先把 9 拆成 6 和 3，4 + 6 = 10，再加 3。&#x27;},
+ {id:&#x27;wp05&#x27;,grade:1,kind:&#x27;add&#x27;,a:7,b:8,title:&#x27;小明有 7 颗糖，妈妈又给他 8 颗，一共几颗？&#x27;,why:&#x27;7 + 8 = 15。&#x27;},
+ {id:&#x27;wp06&#x27;,grade:1,kind:&#x27;diff&#x27;,a:9,b:2,title:&#x27;盒子里有 9 个球，拿走 2 个，还剩几个？&#x27;,why:&#x27;拿走几个，就是从 9 里减去 2：9 − 2 = 7。数轴上两点的距离就是这个差。&#x27;},
+ {id:&#x27;wp07&#x27;,grade:1,kind:&#x27;diff&#x27;,a:6,b:4,title:&#x27;红花 6 朵，黄花 4 朵，红花比黄花多几朵？&#x27;,why:&#x27;比多少就是求两数的差：6 − 4 = 2。&#x27;},
+ {id:&#x27;wp08&#x27;,grade:1,kind:&#x27;diff&#x27;,a:14,b:8,title:&#x27;桌上有 14 个杯子，收走 8 个，还剩几个？&#x27;,why:&#x27;14 − 8 = 6。&#x27;},
+ {id:&#x27;wp09&#x27;,grade:1,kind:&#x27;diff&#x27;,a:20,b:9,title:&#x27;池塘里有 20 只鸭子，飞走 9 只，还剩几只？&#x27;,why:&#x27;20 − 9 = 11。&#x27;},
+ {id:&#x27;wp10&#x27;,grade:1,kind:&#x27;diff&#x27;,a:8,b:5,title:&#x27;草地上有 8 只羊，跑走 5 只，还剩几只？&#x27;,why:&#x27;8 − 5 = 3。&#x27;},
+ {id:&#x27;wp11&#x27;,grade:2,kind:&#x27;add&#x27;,a:16,b:9,title:&#x27;妈妈买了 16 个包子，爸爸买了 9 个包子，一共几个？&#x27;,why:&#x27;16 + 9 = 25。先凑整十：16 + 4 = 20，再加 5。&#x27;},
+ {id:&#x27;wp12&#x27;,grade:2,kind:&#x27;add&#x27;,a:26,b:31,title:&#x27;二年级有 26 人，三年级有 31 人，两个年级一共几人？&#x27;,why:&#x27;26 + 31 = 57。个位和个位相加，十位和十位相加。&#x27;},
+ {id:&#x27;wp13&#x27;,grade:2,kind:&#x27;add&#x27;,a:35,b:28,title:&#x27;花园里有 35 朵花，又种了 28 朵，一共几朵？&#x27;,why:&#x27;35 + 28 = 63。&#x27;},
+ {id:&#x27;wp14&#x27;,grade:2,kind:&#x27;add&#x27;,a:42,b:36,title:&#x27;图书角有 42 本书，又捐来 36 本，现在有几本？&#x27;,why:&#x27;42 + 36 = 78。&#x27;},
+ {id:&#x27;wp15&#x27;,grade:2,kind:&#x27;diff&#x27;,a:15,b:11,title:&#x27;小华跳绳 15 下，小丽跳绳 11 下，小华比小丽多跳几下？&#x27;,why:&#x27;15 − 11 = 4。&#x27;},
+ {id:&#x27;wp16&#x27;,grade:2,kind:&#x27;diff&#x27;,a:40,b:15,title:&#x27;小刚有 40 张卡片，送给小明 15 张，还剩几张？&#x27;,why:&#x27;40 − 15 = 25。&#x27;},
+ {id:&#x27;wp17&#x27;,grade:2,kind:&#x27;diff&#x27;,a:50,b:18,title:&#x27;一根绳子 50 厘米，剪掉 18 厘米，还剩几厘米？&#x27;,why:&#x27;50 − 18 = 32。&#x27;},
+ {id:&#x27;wp18&#x27;,grade:2,kind:&#x27;diff&#x27;,a:18,b:12,title:&#x27;红气球 18 个，黄气球 12 个，红气球比黄气球多几个？&#x27;,why:&#x27;18 − 12 = 6。&#x27;},
+ {id:&#x27;wp19&#x27;,grade:2,kind:&#x27;diff&#x27;,a:19,b:8,title:&#x27;小车上有 19 人，下车 8 人，还剩几人？&#x27;,why:&#x27;19 − 8 = 11。&#x27;},
+ {id:&#x27;wp20&#x27;,grade:2,kind:&#x27;diff&#x27;,a:52,b:47,title:&#x27;一班 52 人，二班 47 人，两班相差几人？&#x27;,why:&#x27;52 − 47 = 5。两班相差，就是两个数的距离。&#x27;},
+];
+function wpAnswer(p){return p.kind===&#x27;add&#x27;?p.a+p.b:Math.abs(p.a-p.b)}
+function wpBuild(p){return function(s){
+  if(p.kind===&#x27;add&#x27;){addEnt(s,&#x27;num&#x27;,60,60,{v:p.a});addEnt(s,&#x27;num&#x27;,60,170,{v:p.b});addEnt(s,&#x27;adder&#x27;,330,110);}
+  else{addEnt(s,&#x27;num&#x27;,60,60,{v:p.a});addEnt(s,&#x27;num&#x27;,60,170,{v:p.b});addEnt(s,&#x27;numline&#x27;,120,340,{min:0,max:Math.max(p.a,p.b)+2});}
+}}
+function wpSteps(p){const ans=wpAnswer(p);
+  if(p.kind===&#x27;add&#x27;)return[
+    {label:&#x27;把两个数都连到合并器&#x27;,score:1,hint:&#x27;拖数字卡右边的蓝点到合并器&#x27;,target:s=&gt;byType(s,&#x27;adder&#x27;),check:(s,D)=&gt;{const ad=byType(s,&#x27;adder&#x27;);return !!ad&amp;&amp;inputs(s,ad).length&gt;=2}},
+    {label:&#x27;合并器算出的和就是答案&#x27;,score:2,hint:&#x27;看合并器的读数，和题目对照&#x27;,target:s=&gt;byType(s,&#x27;adder&#x27;),check:(s,D)=&gt;{const ad=byType(s,&#x27;adder&#x27;);return !!ad&amp;&amp;!!D[ad].value&amp;&amp;qeq(D[ad].value,Q(ans))}}];
+  return[
+    {label:&#x27;把两个数都连到数轴&#x27;,score:1,hint:&#x27;拖两个数字卡的蓝点到数轴&#x27;,target:s=&gt;byType(s,&#x27;numline&#x27;),check:(s,D)=&gt;{const nl=byType(s,&#x27;numline&#x27;);return !!nl&amp;&amp;inputs(s,nl).length&gt;=2}},
+    {label:&#x27;数轴上两点相差的数，就是答案&#x27;,score:2,hint:&#x27;看数轴下面的“相差”&#x27;,target:s=&gt;byType(s,&#x27;numline&#x27;),check:(s,D)=&gt;{const nl=byType(s,&#x27;numline&#x27;);if(!nl)return false;const vs=inputs(s,nl).map(l=&gt;D[l.from]&amp;&amp;D[l.from].value).filter(Boolean);return vs.length&gt;=2&amp;&amp;Math.abs(qnum(vs[0])-qnum(vs[1]))===ans}}];
+}
+WP.forEach(p=&gt;XP.push({id:p.id,title:p.title,domain:&#x27;应用题&#x27;,grade:p.grade,tools:p.kind===&#x27;add&#x27;?&#x27;数字卡 · 合并器&#x27;:&#x27;数字卡 · 数轴&#x27;,q:p.title,why:p.why,build:wpBuild(p),steps:wpSteps(p)}));
 
 function startXp(id,m){xp=XP.find(x=&gt;x.id===id);if(!xp)return;mode=m;S=blankScene();xp.build(S);undoSt=[];redoSt=[];sel=null;cardOpen=false;
   run={steps:xp.steps.map((s,i)=&gt;({i,done:false})),ops:0,errors:0,t0:Date.now(),finished:false};$(&#x27;title&#x27;).textContent=xp.title;
