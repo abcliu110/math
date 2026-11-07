@@ -37,13 +37,13 @@ check('bench chips: formula branch draws chips, no bare x = lines',
 check('bench rect: rect on bench defaults to the coord view (rect only draws there)',
   app.includes("else if (!benchPreferredView && rectOn) canvasView = 'coord';"));
 check('bench rect: putting rect/line/balance on returns to the auto view',
-  app.includes("benchPreferredView = null; worldInspectSelect({ apparatus: 'rect' })") &&
-  app.includes("benchPreferredView = null; worldInspectSelect({ apparatus: 'linefn' })") &&
+  app.includes("benchPreferredView = null; benchShowBalance = false; worldInspectSelect({ apparatus: 'rect' })") &&
+  app.includes("benchPreferredView = null; benchShowBalance = false; worldInspectSelect({ apparatus: 'linefn' })") &&
   app.includes('benchShowBalance = true; benchPreferredView = null;'));
 
 // 3) Balance draws on the bench
 check('bench balance: benchShowBalance override + 天平 button',
-  app.includes('var benchShowBalance = true') &&
+  app.includes('var benchShowBalance = !(benchViewSaved && benchViewSaved.showBalance === false)') &&
   app.includes("if (balOn && benchShowBalance) canvasView = 'balance';") &&
   app.includes('data-view="balance">天平</button>'));
 check('bench balance: balance branch draws the chips row on top',
@@ -70,12 +70,25 @@ check('tilt scale: free-play and combo balances use the same minimum-visible sca
 check('tilt transition: apparatus beam has no transform attribute left (it snapped + doubled the angle)',
   app2.indexOf("transform: 'rotate(' + tilt + ' 170 110)'") === -1 &&
   app2.indexOf("beam.setAttribute('transform'") === -1);
-check('tilt transition: apparatus beam still goes through style.transform + rAF',
-  app2.includes('lastBalTilt') && app2.includes('requestAnimationFrame') &&
-  app2.includes("beam.style.transform = 'rotate(' + tilt + 'deg)'"));
-check('tilt transition: legacy stations use style.transform + CSS transition',
-  app.includes("beam.style.transform = 'rotate(' + tilt + 'deg)'") &&
-  css.includes('#labBeamGroup, #labWbBeam') && css.includes('transition:transform'));
+check('tilt transition: apparatus beam animates by rAF interpolation (balAnimateTo), not the detached-node reflow trick',
+  app2.includes('function balAnimateTo(') && app2.includes('requestAnimationFrame') &&
+  app2.includes("balBeamEl.style.transform = 'rotate(' + lastBalTilt + 'deg)'") &&
+  app2.indexOf('void beam.getBoundingClientRect()') === -1 &&
+  app2.indexOf("beam.style.transition = 'transform .35s ease'") === -1);
+check('tilt transition: lab beams (combo + free-play) animate by rAF interpolation (labBeamAnim), 500ms',
+  app.includes('function labBeamAnim(') && app.includes("labBeamAnim('combo', tilt") &&
+  app.includes("labBeamAnim('free', tilt") && app.includes('/ 500)') &&
+  app.indexOf("beam.style.transform = 'rotate(' + tilt + 'deg)'") === -1);
+check('tilt transition: bench-canvas beam draws at the interpolated offset (beam ids on line/pans)',
+  app.includes('worldBenchBeamLine') && app.includes('worldBenchPanL') && app.includes('worldBenchPanR') &&
+  app.includes("labBeamAnim('bench',") && app.includes('benchBeamApply'));
+check('tilt transition: CSS no longer pretends to transition the lab beams',
+  (function () {
+    const i = css.indexOf('#labBeamGroup, #labWbBeam');
+    if (i === -1) return false;
+    const seg = css.slice(i, css.indexOf('}', i));
+    return seg.indexOf('transition') === -1 && seg.includes('transform-origin:160px 70px');
+  })());
 
 // 6) Pan hover glow is actually bright (old fill #451a03 on dark #0f172a made the pan darker)
 check('pan glow: is-hot pan is bright amber, not dark brown',
@@ -91,8 +104,8 @@ check('pan glow: bench drags highlight the drop target while moving',
 check('bench drop: dragging onto the bench canvas puts the piece on the bench',
   app.includes("inside(benchView, e.clientX, e.clientY)"));
 check('bench drop: bench-canvas balance pans are drop targets too',
-  app.includes("getElementById('worldBenchView')") && app.includes("vx2 >= 50 && vx2 <= 170") &&
-  app.includes("vx2 >= 370 && vx2 <= 490"));
+  app.includes("getElementById('worldBenchView')") && app.includes("vx2 >= 46 && vx2 <= 174") &&
+  app.includes("vx2 >= 366 && vx2 <= 494"));
 
 // 8) Bench fills the main area at desktop width (was ~1100px centered in 1920px)
 check('layout: lab breaks out of the 1120px wrap to 1600px',
@@ -131,6 +144,25 @@ check('clear bench: labClearBench exists and the clear op calls it',
 check('balance persist: free-play balance saves to math-lab-bal-v1 and restores it',
   app.includes("'math-lab-bal-v1'") && app.includes('labBalSaved') &&
   app.includes("lsSet('math-lab-bal-v1', JSON.stringify({ L: labBalL, R: labBalR }))"));
+
+// 13) Bench view survives a refresh (retest: after refresh the 坐标系 button was gone,
+// the rectangle + its handle unreachable even after re-placing it, while the status
+// line still claimed the bench was on the coordinate grid)
+check('bench view: view choice is saved to math-lab-benchview-v1 and restored on load',
+  app.includes("'math-lab-benchview-v1'") &&
+  app.includes("lsSet('math-lab-benchview-v1', JSON.stringify({ preferred: benchPreferredView, showBalance: benchShowBalance }))") &&
+  app.includes("JSON.parse(lsGet('math-lab-benchview-v1')"));
+check('bench view: placing the rectangle or the line actually leaves the balance view (the message promises 坐标系)',
+  app.includes("benchPreferredView = null; benchShowBalance = false; worldInspectSelect({ apparatus: 'rect' })") &&
+  app.includes("benchPreferredView = null; benchShowBalance = false; worldInspectSelect({ apparatus: 'linefn' })"));
+
+// 14) Quick drags register (retest: two fast 1/6 drags did not register; a slow drag did)
+check('quick drag: bench pointerup counts as a drag when the release point is far from the press point',
+  app.includes('Math.hypot(e.clientX - d.x0, e.clientY - d.y0) >= 6'));
+check('quick drag: drop targets have slack (station pans + dashed zones)',
+  app2.includes('pointInRect(clientX, clientY, nodes[i], 10)') &&
+  app2.includes("vx >= 20 && vx <= 140 && vy >= 76 && vy <= 194") &&
+  app2.includes("vx >= 200 && vx <= 320 && vy >= 76 && vy <= 194"));
 
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

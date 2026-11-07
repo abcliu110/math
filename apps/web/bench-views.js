@@ -46,22 +46,33 @@
   // 1. 所有对象都支持的视图叫"共同视图"（按第一个对象的偏好排序）。
   // 2. 如果第一个对象的默认视图在共同视图里，就用它（一条直线 + 数 -> 坐标系）。
   // 3. 否则用共同视图里偏好最高的那个。
-  // 4. 学生指定的视图只要在共同视图里，就优先（preferred）。
+  // 4. 学生指定的视图只要在并集里，就优先（preferred）。
   // 5. 没有共同视图时用算式（算式对所有对象都成立，所以正常不会走到这里）。
+  // 6. views 是"可点的视图按钮" = 台上任一物体能画的视图的并集（天平除外——
+  //    天平有自己的按钮和 benchShowBalance 开关，app.js 里单独加）。并集不是
+  //    交集：数 + 长方形 + 天平时交集只剩算式，坐标系按钮就没了，长方形刷新
+  //    后够不着（2026-11-07 复测）。并集里点的视图只画它能画的东西（和点
+  //    “天平”按钮时数/长方形暂时不画一个道理），切回来东西都在。
   function chooseView(objects, preferred) {
     const objs = (objects || []).filter(function (o) { return OBJECT_VIEWS[o.kind]; });
-    if (!objs.length) return { view: 'formula', reason: 'empty', label: VIEW_LABEL.formula, views: ['formula'] };
+    if (!objs.length) return { view: 'formula', reason: 'empty', label: VIEW_LABEL.formula, views: ['formula'], common: ['formula'] };
     let common = OBJECT_VIEWS[objs[0].kind].views.slice();
+    let union = [];
+    objs.forEach(function (o) {
+      OBJECT_VIEWS[o.kind].views.forEach(function (v) {
+        if (v !== 'balance' && union.indexOf(v) === -1) union.push(v);
+      });
+    });
     objs.forEach(function (o) {
       const vs = OBJECT_VIEWS[o.kind].views;
       common = common.filter(function (v) { return vs.indexOf(v) >= 0; });
     });
     if (!common.length) common = ['formula'];
     let view, reason;
-    if (preferred && common.indexOf(preferred) >= 0) { view = preferred; reason = 'chosen'; }
+    if (preferred && union.indexOf(preferred) >= 0) { view = preferred; reason = 'chosen'; }
     else if (common.indexOf(OBJECT_VIEWS[objs[0].kind].def) >= 0) { view = OBJECT_VIEWS[objs[0].kind].def; reason = 'default'; }
     else { view = common[0]; reason = 'common'; }
-    return { view: view, reason: reason, label: VIEW_LABEL[view], views: common };
+    return { view: view, reason: reason, label: VIEW_LABEL[view], views: union, common: common };
   }
 
   const api = { OBJECT_VIEWS: OBJECT_VIEWS, VIEW_LABEL: VIEW_LABEL, viewsFor: viewsFor, benchObjects: benchObjects, chooseView: chooseView };

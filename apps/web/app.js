@@ -3173,6 +3173,55 @@ document.getElementById('labTfReset').addEventListener('click', () => {
 });
 labTfRender();
 
+/* 梁的平滑过渡：rAF 插值驱动，500ms 从旧角转到新角。
+   根因（2026-11-07 复测，两次真机都失败）：CSS transition 在 SVG 上靠不住——
+   (a) 台面画布每 render 都 innerHTML 重建，梁是新节点，生下来就是最终角，
+   过渡没有“旧状态”可转；(b) 组合台、随便压两根梁虽然节点常驻、CSS 里也有
+   .35s 过渡，但真机逐帧采样（每 140ms 采 1.2s）一次中间角度都没抓到。
+   所以过渡不再靠 CSS：角度存在 JS 变量里，每帧写到节点上；节点被重建时，
+   新节点按当前插值角画，不会跳变。没有 rAF 的环境（测试 stub）直接画到位。
+   key 区分三根梁：bench（台面画布）、combo（组合台）、free（随便压）。 */
+var labBeamAnimState = {};
+function labBeamAnim(key, target, apply) {
+  const st = labBeamAnimState[key] || (labBeamAnimState[key] = { cur: null, target: null, from: 0, start: 0, raf: 0 });
+  const raf = (typeof window !== 'undefined' && window.requestAnimationFrame) ? window.requestAnimationFrame.bind(window) : null;
+  const caf = (typeof window !== 'undefined' && window.cancelAnimationFrame) ? window.cancelAnimationFrame.bind(window) : null;
+  if (!raf) { st.cur = target; st.target = target; apply(target); return; }
+  if (st.cur === null || st.cur === undefined) { st.cur = target; st.target = target; apply(target); return; }
+  apply(st.cur); // 节点可能刚重建：先按当前插值角画到位，不跳变
+  if (st.target === target) return; // 目标没变，动画（如在跑）继续往同一目标走
+  st.from = st.cur; st.target = target; st.start = Date.now();
+  if (st.raf && caf) caf(st.raf);
+  function step() {
+    const t = Math.min(1, (Date.now() - st.start) / 500);
+    const e = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; // easeInOut
+    st.cur = st.from + (st.target - st.from) * e;
+    apply(st.cur);
+    if (t < 1) st.raf = raf(step);
+    else { st.raf = 0; st.cur = st.target; apply(st.cur); }
+  }
+  st.raf = raf(step);
+}
+function benchBeamCur() {
+  const st = labBeamAnimState.bench;
+  return (st && st.cur !== null && st.cur !== undefined) ? st.cur : null;
+}
+/* 台面画布上的梁：把当前插值角写到刚重建好的梁/盘节点上（只改 y，不重建 SVG）。 */
+function benchBeamApply(offset) {
+  const line = document.getElementById('worldBenchBeamLine');
+  if (!line) return;
+  const leftY = 170 + offset, rightY = 170 - offset;
+  line.setAttribute('y1', String(leftY));
+  line.setAttribute('y2', String(rightY));
+  const panL = document.getElementById('worldBenchPanL');
+  const panR = document.getElementById('worldBenchPanR');
+  const txtL = document.getElementById('worldBenchPanLText');
+  const txtR = document.getElementById('worldBenchPanRText');
+  if (panL) panL.setAttribute('y', String(leftY));
+  if (panR) panR.setAttribute('y', String(rightY));
+  if (txtL) txtL.setAttribute('y', String(leftY + 26));
+  if (txtR) txtR.setAttribute('y', String(rightY + 26));
+}
 /* 天平自由玩：两边砝码随便加减（按钮或点砝码），横梁按重量差实时倾斜。
    状态进自动保存（math-lab-bal-v1），刷新后左 7 不会变回左 5（2026-11-07 复测）。 */
 var labBalSaved = null;
@@ -3184,10 +3233,13 @@ function labRenderBal() {
   const labBalDiff = labBalR - labBalL;
   const tilt = labBalDiff === 0 ? 0 : Math.sign(labBalDiff) * Math.min(15, 6 + Math.min(9, Math.abs(labBalDiff) * 2));
   try { lsSet('math-lab-bal-v1', JSON.stringify({ L: labBalL, R: labBalR })); } catch (e) {}
-  // 梁是“转过去”不是“跳过去”：只改 CSS transform，.35s 过渡在 styles.css 里。
-  // 以前是 setAttribute('transform', ...) 直接改属性，过渡永远跑不起来（2026-11-07 复测：点一下就满倾斜）。
-  const beam = document.getElementById('labBeamGroup');
-  if (beam && beam.style) beam.style.transform = 'rotate(' + tilt + 'deg)';
+  // 梁是“转过去”不是“跳过去”：rAF 插值 500ms（labBeamAnim）。
+  // 以前是 setAttribute('transform', ...) 直接改属性，过渡永远跑不起来（2026-11-07 复测：点一下就满倾斜）；
+  // 后来改 style.transform + CSS 过渡，真机逐帧采样还是一次中间角度都没抓到，所以也改走 labBeamAnim。
+  labBeamAnim('free', tilt, function (a) {
+    const beam = document.getElementById('labBeamGroup');
+    if (beam && beam.style) beam.style.transform = 'rotate(' + a + 'deg)';
+  });
   let left = '', right = '';
   for (let i = 0; i < labBalL; i++) {
     left += '<rect x="' + (33 + (i % 5) * 13) + '" y="' + (76 + Math.floor(i / 5) * 13) + '" width="11" height="11" rx="2" fill="#2563eb" data-lab-w="L" style="cursor:pointer"/>';
@@ -3681,11 +3733,16 @@ function benchChipsTotal(items) {
   return d === 1 ? String(n) : n + '/' + d;
 }
 /* 实验台视图：坐标系 / 数轴 / 分数条 / 算式，由 BenchViews.chooseView 选。学生点按钮可以指定。 */
-var benchPreferredView = null;
-var benchShowBalance = true; // 天平在台上时台面先画天平；学生点了别的视图按钮才切走
+/* 台面视图选择进自动保存（math-lab-benchview-v1）：刷新后回到学生上次看的视图
+   （长方形在坐标系里），而不是一律回天平（2026-11-07 复测：刷新后坐标系按钮
+   消失、长方形够不着）。 */
+var benchViewSaved = null;
+try { benchViewSaved = JSON.parse(lsGet('math-lab-benchview-v1') || 'null'); } catch (e) { benchViewSaved = null; }
+var benchPreferredView = (benchViewSaved && typeof benchViewSaved.preferred === 'string') ? benchViewSaved.preferred : null;
+var benchShowBalance = !(benchViewSaved && benchViewSaved.showBalance === false); // 天平在台上时台面先画天平；学生点了别的视图按钮才切走
 function bvX(x) { return 30 + (x + 1) * 57.5; } // 坐标系 x 范围 -1 到 7
 function bvY(y) { return 230 - (y + 2) * (200 / 14); } // 坐标系 y 范围 -2 到 12
-function benchViewSvg(view, items, lineOn, lf, bal, rect, rectSelected) {
+function benchViewSvg(view, items, lineOn, lf, bal, rect, rectSelected, beamOffset) {
   let s = '';
   if (view === 'coord') {
     for (let i = -1; i <= 7; i++) {
@@ -3762,15 +3819,18 @@ function benchViewSvg(view, items, lineOn, lf, bal, rect, rectSelected) {
     // 天平：台上的数先画成一排卡片（上面），天平画在下面——盘子看得见，盘子里的值也看得见。
     // 天平整体下移 40：卡片行占 y 10–50，梁在 y 170 上下。
     s += benchChipsSvg(items, 10, 64, 40);
-    const tilt = bal.equal ? 0 : (bal.leftHeavy ? 22 : -22);
+    // 梁的倾斜角是“上下 22px 的位移”：画在当前插值角上（beamOffset），没有才用目标角。
+    // 台面画布每 render 都 innerHTML 重建，梁是新节点——不按插值角画，动画每 render 就跳变一次。
+    const tilt = (beamOffset === null || beamOffset === undefined)
+      ? (bal.equal ? 0 : (bal.leftHeavy ? 22 : -22)) : beamOffset;
     const leftY = 170 + tilt, rightY = 170 - tilt;
     s += '<polygon points="240,190 280,190 260,160" fill="#cbd5e1"/>';
-    s += '<line x1="90" y1="' + leftY + '" x2="430" y2="' + rightY + '" stroke="#cbd5e1" stroke-width="4"/>';
+    s += '<line id="worldBenchBeamLine" x1="90" y1="' + leftY + '" x2="430" y2="' + rightY + '" stroke="#cbd5e1" stroke-width="4"/>';
     s += '<line x1="260" y1="160" x2="260" y2="100" stroke="#cbd5e1" stroke-width="3"/>';
-    s += '<rect x="60" y="' + leftY + '" width="100" height="40" fill="#fde68a" stroke="#92400e"/>';
-    s += '<rect x="380" y="' + rightY + '" width="100" height="40" fill="#fde68a" stroke="#92400e"/>';
-    s += '<text x="110" y="' + (leftY + 26) + '" font-size="16" text-anchor="middle" fill="#0f172a">' + bal.Lstr + '</text>';
-    s += '<text x="430" y="' + (rightY + 26) + '" font-size="16" text-anchor="middle" fill="#0f172a">' + bal.Rstr + '</text>';
+    s += '<rect id="worldBenchPanL" x="60" y="' + leftY + '" width="100" height="40" fill="#fde68a" stroke="#92400e"/>';
+    s += '<rect id="worldBenchPanR" x="380" y="' + rightY + '" width="100" height="40" fill="#fde68a" stroke="#92400e"/>';
+    s += '<text id="worldBenchPanLText" x="110" y="' + (leftY + 26) + '" font-size="16" text-anchor="middle" fill="#0f172a">' + bal.Lstr + '</text>';
+    s += '<text id="worldBenchPanRText" x="430" y="' + (rightY + 26) + '" font-size="16" text-anchor="middle" fill="#0f172a">' + bal.Rstr + '</text>';
     s += '<text x="260" y="252" font-size="16" text-anchor="middle" fill="' + (bal.equal ? '#4ade80' : '#fca5a5') + '">' +
       (bal.equal ? '平衡' : (bal.leftHeavy ? '左边重' : '右边重')) + '</text>';
   } else {
@@ -3833,6 +3893,8 @@ function worldBenchRender() {
   // 而数 + 长方形的共同视图默认是数轴——不改的话长方形永远画不出来
   // （2026-11-07 复测：检查器显示 6×4、面积 24，台面上从来不画成形状）。
   else if (!benchPreferredView && rectOn) canvasView = 'coord';
+  // 视图选择进自动保存：刷新后回到学生上次看的视图（见 benchPreferredView 的声明处）。
+  try { lsSet('math-lab-benchview-v1', JSON.stringify({ preferred: benchPreferredView, showBalance: benchShowBalance })); } catch (e) {}
   const vbox = document.getElementById('worldBenchViews');
   if (vbox) {
     let btns = '';
@@ -3850,7 +3912,12 @@ function worldBenchRender() {
   if (svg) {
     svg.innerHTML = benchViewSvg(canvasView, bv.items, lineOn, w2 ? w2.linefn : { k: 0, b: 0 },
       w2 ? MathWorld.derived(w2).balance : null, w2 ? MathWorld.derived(w2).rect : null,
-      !!(worldInspectSel && worldInspectSel.apparatus === 'rect'));
+      !!(worldInspectSel && worldInspectSel.apparatus === 'rect'), benchBeamCur());
+  }
+  // 台面天平的梁：画完按当前插值角起动画（labBeamAnim），500ms 转到目标角。
+  if (canvasView === 'balance' && w2) {
+    const bal = MathWorld.derived(w2).balance;
+    labBeamAnim('bench', bal.equal ? 0 : (bal.leftHeavy ? 22 : -22), benchBeamApply);
   }
   const lineBtn = document.querySelector('[data-bench="line"]');
   if (lineBtn) lineBtn.setAttribute('aria-pressed', String(lineOn));
@@ -3933,7 +4000,7 @@ function worldBenchRender() {
     if (op === 'rect') {
       benchRun({ type: 'benchRectToggle' });
       benchMsg(labWorld && labWorld.benchRect ? '长方形放上了台面，台子切到坐标系格子' : '长方形拿下了台面', true);
-      if (labWorld && labWorld.benchRect) { benchPreferredView = null; worldInspectSelect({ apparatus: 'rect' }); labExpandStation('worldRectCard'); }
+      if (labWorld && labWorld.benchRect) { benchPreferredView = null; benchShowBalance = false; worldInspectSelect({ apparatus: 'rect' }); labExpandStation('worldRectCard'); }
       worldPlayRender();
       return;
     }
@@ -3953,7 +4020,7 @@ function worldBenchRender() {
     if (op === 'line') {
       benchRun({ type: 'benchLineToggle' });
       benchMsg(labWorld && labWorld.benchLine ? '直线放上了台面，台子切到坐标系' : '直线拿下了台面', true);
-      if (labWorld && labWorld.benchLine) { benchPreferredView = null; worldInspectSelect({ apparatus: 'linefn' }); labExpandStation('worldFnCard'); }
+      if (labWorld && labWorld.benchLine) { benchPreferredView = null; benchShowBalance = false; worldInspectSelect({ apparatus: 'linefn' }); labExpandStation('worldFnCard'); }
       worldPlayRender();
       return;
     }
@@ -4093,8 +4160,9 @@ function benchDropTargetAt(x, y) {
     if (r.width > 0 && r.height > 0 && x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
       const vx = ((x - r.left) / r.width) * 340;
       const vy = ((y - r.top) / r.height) * 250;
-      if (vx >= 24 && vx <= 136 && vy >= 80 && vy <= 190) return 'balance.L';
-      if (vx >= 204 && vx <= 316 && vy >= 80 && vy <= 190) return 'balance.R';
+      // 盘子落点留一点余量（快拖松手时指针可能差几像素）：和 apparatus.js 的 panHitAt 同一组数。
+      if (vx >= 20 && vx <= 140 && vy >= 76 && vy <= 194) return 'balance.L';
+      if (vx >= 200 && vx <= 320 && vy >= 76 && vy <= 194) return 'balance.R';
     }
   }
   // 台面画布上的天平盘也是落点：台面正画着天平时，盘子是两个黄色矩形
@@ -4107,8 +4175,8 @@ function benchDropTargetAt(x, y) {
       if (r2.width > 0 && r2.height > 0 && x >= r2.left && x <= r2.right && y >= r2.top && y <= r2.bottom) {
         const vx2 = ((x - r2.left) / r2.width) * 520;
         const vy2 = ((y - r2.top) / r2.height) * 260;
-        if (vx2 >= 50 && vx2 <= 170 && vy2 >= 140 && vy2 <= 240) return 'balance.L';
-        if (vx2 >= 370 && vx2 <= 490 && vy2 >= 140 && vy2 <= 240) return 'balance.R';
+        if (vx2 >= 46 && vx2 <= 174 && vy2 >= 136 && vy2 <= 244) return 'balance.L';
+        if (vx2 >= 366 && vx2 <= 494 && vy2 >= 136 && vy2 <= 244) return 'balance.R';
       }
     }
   }
@@ -4206,7 +4274,12 @@ function benchPlaceOn(pieceId, target, label) {
     drag = null;
     ghostHide();
     benchDropHotClear();
-    if (!d || !d.moved) return;
+    if (!d) return;
+    // 快拖也算拖：只看松手时指针离按下时够不够远，不依赖中间有没有收到
+    // pointermove（很快的一甩可能收不到 move 事件，旧代码就当成点击、什么都不放，
+    // 2026-11-07 复测：两次快速拖 1/6 没注册，慢拖就能放进去）。
+    const wasDrag = d.moved || Math.hypot(e.clientX - d.x0, e.clientY - d.y0) >= 6;
+    if (!wasDrag) return;
     suppressClick = true;
     setTimeout(function () { suppressClick = false; }, 0);
     const shelf = document.getElementById('worldBenchShelf');
@@ -4656,9 +4729,12 @@ function labWbRender() {
     equal = L.n * R.d === R.n * L.d;
   }
   const lNum = L.n / L.d, rNum = R.n / R.d;
-  // 梁是“转过去”不是“跳过去”：只改 CSS transform，.35s 过渡在 styles.css 里（和上面 labRenderBal 同一个道理）。
-  const beam = document.getElementById('labWbBeam');
-  if (beam && beam.style) beam.style.transform = 'rotate(' + tilt + 'deg)';
+  // 梁是“转过去”不是“跳过去”：rAF 插值 500ms（labBeamAnim）。CSS transition 在
+  // SVG 上两次真机都没跑出可见过渡，改由 JS 每帧写角度（见 labBeamAnim 的注释）。
+  labBeamAnim('combo', tilt, function (a) {
+    const beam = document.getElementById('labWbBeam');
+    if (beam && beam.style) beam.style.transform = 'rotate(' + a + 'deg)';
+  });
   document.getElementById('labWbLeftWeights').innerHTML = labWbWeightsHtml(labWbL, 33);
   document.getElementById('labWbRightWeights').innerHTML = labWbWeightsHtml(labWbR, 233);
   document.getElementById('labWbEq').textContent = '左 ' + labFracStr(L.n, L.d) + ' ＝ 右 ' + labFracStr(R.n, R.d);

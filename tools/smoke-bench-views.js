@@ -63,5 +63,22 @@ check('benchObjects adds the rectangle when it is on the bench',
   BV.benchObjects([], false, false, true)[0].kind === 'rect');
 check('chooseView always returns exactly one view', typeof BV.chooseView([NUM, FRAC, LINE]).view === 'string');
 
+// 2026-11-07 复测：台上有数 + 长方形 + 天平时，视图按钮是交集（只剩算式），
+// 刷新后坐标系按钮消失、长方形够不着。按钮列表改成并集：任一物体能画的视图都能点。
+const BAL = { kind: 'balance' };
+check('view buttons are the union, not the intersection: num + rect + balance still offers 坐标系',
+  BV.chooseView([NUM, RECT, BAL]).views.indexOf('coord') >= 0);
+check('view buttons: num + rect + balance offers every view any of them can draw',
+  (function () {
+    const vs = BV.chooseView([NUM, RECT, BAL]).views;
+    return vs.indexOf('numline') >= 0 && vs.indexOf('coord') >= 0 && vs.indexOf('fracbar') >= 0 && vs.indexOf('formula') >= 0;
+  })());
+check('a student can pick 坐标系 when num + rect + balance are on the bench (it is in the union)',
+  BV.chooseView([NUM, RECT, BAL], 'coord').view === 'coord');
+check('a student cannot pick a view no object on the bench can draw',
+  BV.chooseView([RECT], 'numline').view === 'coord');
+check('balance has its own button: the union leaves balance out (no duplicate 天平 button)',
+  BV.chooseView([BAL]).views.indexOf('balance') === -1 && BV.chooseView([BAL]).view === 'balance');
+
 console.log('\nbench-views: ' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

@@ -80,12 +80,12 @@ check('drop: bench drag checks the balance pans by geometry first',
   })());
 check('drop: apparatus drag checks the pans by geometry first (panHitAt)',
   app2.includes('function panHitAt') && app2.includes("return { el: svg, attr: 'data-bal-pan', val: side };"));
-check('drop: pan hit boxes match the drawn pans (viewBox 340x250, L x24-136, R x204-316, y80-190)',
+check('drop: pan hit boxes match the drawn pans (viewBox 340x250, L x20-140, R x200-320, y76-194)',
   (function () {
     const m = app2.match(/vx >= (\d+) && vx <= (\d+) && vy >= (\d+) && vy <= (\d+)\) return 'L'/);
     const n = app2.match(/vx >= (\d+) && vx <= (\d+) && vy >= (\d+) && vy <= (\d+)\) return 'R'/);
-    return !!m && !!n && m[1] === '24' && m[2] === '136' && m[3] === '80' && m[4] === '190' &&
-      n[1] === '204' && n[2] === '316' && n[3] === '80' && n[4] === '190';
+    return !!m && !!n && m[1] === '20' && m[2] === '140' && m[3] === '76' && m[4] === '194' &&
+      n[1] === '200' && n[2] === '320' && n[3] === '76' && n[4] === '194';
   })());
 check('drop: the old "anywhere in the balance SVG counts as a pan" fallback is gone',
   app2.indexOf("val: clientX < mid ? 'L' : 'R'") === -1);
@@ -95,9 +95,10 @@ check('drop: ghost is bigger and bolder than before',
   css.includes('#worldBenchGhost { font-size:16px') && css.includes('.apparatus-ghost { font-size:16px'));
 
 // 6) Balance beam tilts smoothly (no more jump)
-check('tilt: beam transition animates from the previous tilt via rAF',
-  app2.includes('lastBalTilt') && app2.includes('requestAnimationFrame') &&
-  app2.includes("beam.style.transform = 'rotate(' + tilt + 'deg)'"));
+check('tilt: beam transition is driven by rAF interpolation, not a CSS transition',
+  app2.includes('balAnimateTo') && app2.includes('requestAnimationFrame') &&
+  app2.includes("balBeamEl.style.transform = 'rotate(' + lastBalTilt + 'deg)'") &&
+  app2.indexOf("beam.style.transition = 'transform .35s ease'") === -1);
 
 // 7) Minimal text: signals are compact chips, not a block of text
 check('signals: worldDerivedOut is a chip strip, not a <pre> of lines',

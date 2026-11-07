@@ -1057,7 +1057,10 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
 .lab-topbar .btn.ghost { background:transparent; color:#e2e8f0; border-color:#475569; }
 .lab-topbar .btn.ghost:hover { border-color:#94a3b8; }
 /* 天平梁是“转过去”不是“跳过去”：用 CSS transform + 过渡，JS 只改角度 */
-#labBeamGroup, #labWbBeam { transition:transform .35s ease; transform-box:view-box; transform-origin:160px 70px; }
+#labBeamGroup, #labWbBeam { transform-box:view-box; transform-origin:160px 70px; }
+/* 注意：这两根梁不要挂 transition——过渡由 JS 的 labBeamAnim 用 rAF 插值驱动
+   （500ms，每帧写角度）。CSS transition 在 SVG 上两次真机都没跑出可见过渡，
+   叠在 rAF 循环上面还会让每一帧的改动都再缓动一次、拖出残影。 */
 /* 台面画布里的旋转手柄（⟳）：点它长方形转 90° */
 .bench-view [data-bench-rotate] { cursor:pointer; }
 /* 器材站折叠：只留标题行，点 ▸ 展开 */

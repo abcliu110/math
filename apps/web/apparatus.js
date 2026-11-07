@@ -43,8 +43,34 @@
 
   var lastWorld = null;
   var lastDerived = null;
-  var lastBalTilt = null; // 上一次天平梁的倾斜角（做倾斜过渡用）
-  var onIntent = null;
+  var lastBalTilt = null; // 天平梁当前画出来的倾斜角（rAF 插值的当前位置）
+  var balBeamEl = null; // 最近一次画出的梁节点（rAF 动画每帧写它）
+  var balAnimTarget = null, balAnimRaf = 0, balAnimFrom = 0, balAnimStart = 0;
+  /* 梁的平滑过渡：rAF 插值驱动，500ms 从旧角转到新角。
+     根因（2026-11-07 复测）：旧写法先按旧角画、强制重排、再 rAF 里改 transition +
+     新角——但重排发生在节点挂到 SVG 之前（getBoundingClientRect 对未挂载节点
+     是空操作），浏览器第一次画这个节点就是最终角，过渡永远跑不起来；而且
+     renderAll 每次都重建整幅 SVG，新节点生下来就是最终角。所以过渡改由 JS
+     插值驱动：角度存在 lastBalTilt 里，每帧写到当前梁节点上；重建时新节点按
+     当前插值角画，不会跳变。没有 rAF 的环境（测试 stub）直接画到位。 */
+  function balAnimateTo(target) {
+    if (typeof window === 'undefined' || !window.requestAnimationFrame) { lastBalTilt = target; return; }
+    if (lastBalTilt === null) { lastBalTilt = target; return; }
+    if (balAnimTarget === target && balAnimRaf) return; // 已在往这个目标转
+    balAnimTarget = target;
+    if (lastBalTilt === target) return;
+    if (balAnimRaf && window.cancelAnimationFrame) window.cancelAnimationFrame(balAnimRaf);
+    balAnimFrom = lastBalTilt; balAnimStart = Date.now();
+    function step() {
+      const t = Math.min(1, (Date.now() - balAnimStart) / 500);
+      const e = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; // easeInOut
+      lastBalTilt = balAnimFrom + (target - balAnimFrom) * e;
+      if (balBeamEl && balBeamEl.style) balBeamEl.style.transform = 'rotate(' + lastBalTilt + 'deg)';
+      if (t < 1) balAnimRaf = window.requestAnimationFrame(step);
+      else { balAnimRaf = 0; lastBalTilt = target; if (balBeamEl && balBeamEl.style) balBeamEl.style.transform = 'rotate(' + target + 'deg)'; }
+    }
+    balAnimRaf = window.requestAnimationFrame(step);
+  }
   var drag = null; // { kind, ... }
   var ghostEl = null;
 
@@ -247,31 +273,20 @@
     svg.appendChild(el('line', {
       x1: 170, y1: 220, x2: 170, y2: 110, stroke: '#cbd5e1', 'stroke-width': 5,
     }));
-    const beam = el('g', {
-      style: 'transition:transform .2s ease',
-    });
+    const beam = el('g', {});
+    beam.style.transformBox = 'view-box';
+    beam.style.transformOrigin = '170px 110px';
     // 梁要“转过去”而不是“跳过去”：整幅 SVG 每次重建，写在 transform
     // 属性上的过渡永远跑不起来，而且属性和 style.transform 会叠加成双倍角
-    // （2026-11-07 复测：点一下就到满倾斜，一次中间角度都没有）。所以角度
-    // 只走 style.transform 一条路：先按上一次的角画出来（无过渡），强制重排，
-    // 再用 style.transform 缓动到新角度；第一次画或角度没变就直接写到位。
-    if (beam.style && typeof window !== 'undefined' && window.requestAnimationFrame
-      && lastBalTilt !== null && lastBalTilt !== tilt) {
-      beam.style.transformBox = 'view-box';
-      beam.style.transformOrigin = '170px 110px';
-      beam.style.transition = 'none';
-      beam.style.transform = 'rotate(' + lastBalTilt + 'deg)';
-      if (beam.getBoundingClientRect) void beam.getBoundingClientRect();
-      window.requestAnimationFrame(function () {
-        beam.style.transition = 'transform .35s ease';
-        beam.style.transform = 'rotate(' + tilt + 'deg)';
-      });
-    } else if (beam.style) {
-      beam.style.transformBox = 'view-box';
-      beam.style.transformOrigin = '170px 110px';
-      beam.style.transform = 'rotate(' + tilt + 'deg)';
-    }
-    lastBalTilt = tilt;
+    // （2026-11-07 复测：点一下就到满倾斜，一次中间角度都没有）。角度只走
+    // style.transform 一条路，画在当前插值角上（lastBalTilt），过渡由下面的
+    // balAnimateTo 用 rAF 插值驱动（500ms）。旧的“先按旧角画、重排、再 rAF
+    // 里改 transition + 新角”写法有个 bug：重排发生在节点挂到 SVG 之前，
+    // getBoundingClientRect 对未挂载节点是空操作，浏览器第一次画这个节点
+    // 就是最终角——所以 0–120ms 的帧已经是最终角。
+    if (beam.style) beam.style.transform = 'rotate(' + (lastBalTilt === null ? tilt : lastBalTilt) + 'deg)';
+    if (lastBalTilt === null) lastBalTilt = tilt;
+    balBeamEl = beam;
     beam.appendChild(el('line', {
       x1: 50, y1: 110, x2: 290, y2: 110, stroke: '#cbd5e1', 'stroke-width': 5,
       'stroke-linecap': 'round',
@@ -322,6 +337,8 @@
     }));
     // clear hit
     svg.appendChild(chipBtn(270, 28, '清空', { 'data-bal-clear': '1' }, false, false));
+    // 梁画完再起动画：节点已挂到 SVG 上，rAF 插值每帧写当前角（见 balAnimateTo）。
+    balAnimateTo(tilt);
   }
 
   /* ---------- Number line with drag chips ---------- */
@@ -662,7 +679,8 @@
     if (typeof document === 'undefined') return null;
     const nodes = document.querySelectorAll('[data-drop]');
     for (let i = 0; i < nodes.length; i++) {
-      if (pointInRect(clientX, clientY, nodes[i], 6)) {
+      // 落点留 10px 余量：快拖松手时指针可能差几像素（2026-11-07 复测：两次快速拖 1/6 没注册）。
+      if (pointInRect(clientX, clientY, nodes[i], 10)) {
         return { el: nodes[i], attr: 'data-drop', val: nodes[i].getAttribute('data-drop') };
       }
     }
@@ -670,7 +688,8 @@
   }
 
   // 天平盘的几何落点：盘子本身就是落点（NB 式）。viewBox 340x250，
-  // 左盘中心 x=80、右盘中心 x=260，盘面约在 y 80-190。
+  // 左盘中心 x=80、右盘中心 x=260，盘面约在 y 80-190。落点比盘子本身
+  // 宽 4 个单位：快拖松手差几像素也能接住（和 app.js 的 benchDropTargetAt 同一组数）。
   function panHitAt(clientX, clientY) {
     const svg = document.getElementById('worldBalSvg');
     if (!svg || !svg.getBoundingClientRect) return null;
@@ -679,8 +698,8 @@
     if (clientX < r.left || clientX > r.right || clientY < r.top || clientY > r.bottom) return null;
     const vx = ((clientX - r.left) / r.width) * 340;
     const vy = ((clientY - r.top) / r.height) * 250;
-    if (vx >= 24 && vx <= 136 && vy >= 80 && vy <= 190) return 'L';
-    if (vx >= 204 && vx <= 316 && vy >= 80 && vy <= 190) return 'R';
+    if (vx >= 20 && vx <= 140 && vy >= 76 && vy <= 194) return 'L';
+    if (vx >= 200 && vx <= 320 && vy >= 76 && vy <= 194) return 'R';
     return null;
   }
 
