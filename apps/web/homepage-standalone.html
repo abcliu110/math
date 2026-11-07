@@ -4686,6 +4686,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 #card{position:absolute;display:none;width:250px;background:#0f141cf2;border:1px solid var(--line);border-radius:12px;padding:12px;box-shadow:0 10px 28px #000a}
 #card h4{margin:0 0 8px;font-size:13px;color:var(--mut);font-weight:500}
 #card .state{font-size:20px;font-weight:700;margin-bottom:8px}
+#card .derived{font-size:12px;color:var(--mut);margin:6px 0 2px;padding:6px 8px;border-radius:8px;background:#ffffff0d}
 #card .why-err{color:#ff8a8a;font-size:12px;margin-top:10px;padding:6px 8px;border-radius:8px;background:#3a1c1c}
 .fld{margin:8px 0}.fld label{display:flex;justify-content:space-between;font-size:12px;color:var(--mut)}
 .fld .ctl{display:flex;align-items:center;gap:6px;margin-top:4px}
@@ -5050,7 +5051,8 @@ const $=id=&gt;document.getElementById(id);
 
 function commit(a,opt={}){
   const snap=JSON.stringify(S);const r=act(a);
-  if(!r.ok){toast(r.why,true);if(run)run.errors++;showCardWhy(r.why);render();return r}
+  // 滑杆、数字框拖过头（set）不是数学错，不计入考试的&quot;被拒绝&quot;次数。
+  if(!r.ok){toast(r.why,true);if(run&amp;&amp;a.t!==&#x27;set&#x27;)run.errors++;showCardWhy(r.why);render();return r}
   clearCardWhy();
   if(!opt.coalesce||lastCo!==opt.coalesce){undoSt.push(snap);if(undoSt.length&gt;80)undoSt.shift();redoSt=[]}
   lastCo=opt.coalesce||null;
@@ -5226,10 +5228,17 @@ function placeFloat(){const tl=$(&#x27;tools&#x27;),cd=$(&#x27;card&#x27;);const
 }
 function stateLine(e){const d=D[e.id]||{};if(d.value)return qs(d.value);if(e.type===&#x27;fn&#x27;)return&#x27;y = &#x27;+fx(e.props.k,e.props.b);if(e.type===&#x27;rect&#x27;)return`${e.props.w} × ${e.props.h} = ${e.props.w*e.props.h}`;
   if(e.type===&#x27;balance&#x27;)return`${d.L?qs(d.L):0} : ${d.R?qs(d.R):0}`;if(e.type===&#x27;numline&#x27;)return`${e.props.min} 到 ${e.props.max}`;if(e.type===&#x27;dice&#x27;)return`${d.tot||0} 回`;return TYPES[e.type].label}
+/* 卡内只读推导值。圆的 π 与台面信号一致（默认 3.14）。 */
+function derivedLines(e){const p=e.props;const n=x=&gt;String(+x.toFixed(2));
+  if(e.type===&#x27;circle&#x27;){const r=p.r;return[`周长 ${n(2*3.14*r)} 厘米，面积 ${n(3.14*r*r)} 平方厘米`]}
+  if(e.type===&#x27;tri&#x27;){const c=180-p.a-p.b;return[c&gt;0?`第三个角是 ${c}°`:`两个角已经 ${p.a+p.b}°，超过 180°，画不出三角形`]}
+  return[]}
 function buildCard(e){const cd=$(&#x27;card&#x27;),T=TYPES[e.type];cd.dataset.for=e.id;cd.dataset.v=JSON.stringify(e.props)+e.name;
   let h=`&lt;h4&gt;${T.label} · 设置&lt;/h4&gt;&lt;input class=&quot;name&quot; data-name value=&quot;${esc(e.name)}&quot;&gt;&lt;div class=&quot;state&quot;&gt;${esc(stateLine(e))}&lt;/div&gt;`;
   for(const f of T.fields){const v=e.props[f.k];h+=`&lt;div class=&quot;fld&quot;&gt;&lt;label&gt;&lt;span&gt;${f.label}&lt;/span&gt;&lt;/label&gt;&lt;div class=&quot;ctl&quot;&gt;&lt;button class=&quot;pm&quot; data-pm=&quot;${f.k}&quot; data-dv=&quot;-${f.step||1}&quot;&gt;−&lt;/button&gt;&lt;input type=&quot;range&quot; data-f=&quot;${f.k}&quot; min=&quot;${f.min}&quot; max=&quot;${f.max}&quot; step=&quot;${f.step||1}&quot; value=&quot;${v}&quot;&gt;&lt;button class=&quot;pm&quot; data-pm=&quot;${f.k}&quot; data-dv=&quot;${f.step||1}&quot;&gt;+&lt;/button&gt;&lt;input type=&quot;number&quot; data-fn=&quot;${f.k}&quot; value=&quot;${v}&quot;&gt;&lt;/div&gt;&lt;/div&gt;`}
   if(!T.fields.length)h+=`&lt;div class=&quot;muted&quot; style=&quot;font-size:12px&quot;&gt;${T.accepts===&#x27;fn&#x27;?&#x27;它显示连进来的直线。&#x27;:&#x27;它的值由连进来的器材决定，拖别的器材的蓝点连过来。&#x27;}&lt;/div&gt;`;
+  // 只读推导值：由属性算出来，不能改，让学生在卡上直接看到。
+  const dv=derivedLines(e);if(dv.length)h+=`&lt;div class=&quot;derived&quot;&gt;${dv.map(t=&gt;`&lt;div&gt;${esc(t)}&lt;/div&gt;`).join(&#x27;&#x27;)}&lt;/div&gt;`;
   const ins=inputs(S,e.id);if(ins.length)h+=`&lt;div class=&quot;muted&quot; style=&quot;font-size:12px;margin-top:8px&quot;&gt;连进来的：${ins.map(l=&gt;esc(S.entities[l.from].name)+(l.slot?`（${l.slot===&#x27;L&#x27;?&#x27;左&#x27;:&#x27;右&#x27;}盘）`:&#x27;&#x27;)).join(&#x27;、&#x27;)}&lt;/div&gt;`;
   h+=`&lt;div class=&quot;card-row&quot;&gt;${(T.actions||[]).map(a=&gt;`&lt;button class=&quot;btn pri&quot; data-act=&quot;${a.id}&quot;&gt;${a.label}&lt;/button&gt;`).join(&#x27;&#x27;)}${T.fields.length?&#x27;&lt;button class=&quot;btn&quot; data-act=&quot;reset&quot;&gt;恢复初始值&lt;/button&gt;&#x27;:&#x27;&#x27;}&lt;button class=&quot;btn&quot; data-act=&quot;del&quot;&gt;删除&lt;/button&gt;&lt;/div&gt;`;
   cd.innerHTML=h}
@@ -5267,7 +5276,7 @@ svg.addEventListener(&#x27;pointerup&#x27;,ev=&gt;{if(!drag)return;const d=drag;
     else if(Math.hypot(ev.clientX-d.sx,ev.clientY-d.sy)&gt;6)toast(&#x27;松手的地方没有器材：把线拖到另一个器材上&#x27;,true);render()}
   else if(d.m===&#x27;pan&#x27;)render()});
 svg.addEventListener(&#x27;wheel&#x27;,ev=&gt;{ev.preventDefault();zoomAt(ev.deltaY&lt;0?1.1:1/1.1,ev.clientX,ev.clientY)},{passive:false});
-function zoomAt(f,cx,cy){const r=svg.getBoundingClientRect();cx=cx??r.left+r.width/2;cy=cy??r.top+r.height/2;const z=Math.max(.5,Math.min(2.5,view.z*f));const k=z/view.z;view.x=cx-r.left-(cx-r.left-view.x)*k;view.y=cy-r.top-(cy-r.top-view.y)*k;view.z=z;render()}
+function zoomAt(f,cx,cy){const r=svg.getBoundingClientRect();cx=cx??r.left+r.width/2;cy=cy??r.top+r.height/2;const z=Math.max(.5,Math.min(4,view.z*f));const k=z/view.z;view.x=cx-r.left-(cx-r.left-view.x)*k;view.y=cy-r.top-(cy-r.top-view.y)*k;view.z=z;render()}
 function fit(){const es=Object.values(S.entities);if(!es.length){view={x:40,y:30,z:1};render();return}let a=1e9,b=1e9,c=-1e9,d=-1e9;es.forEach(e=&gt;{const [w,h]=size(e);a=Math.min(a,e.x);b=Math.min(b,e.y);c=Math.max(c,e.x+w);d=Math.max(d,e.y+h+60)});
   const W=svg.clientWidth,H=svg.clientHeight,z=Math.max(.5,Math.min(1.4,Math.min((W-80)/(c-a),(H-80)/(d-b))));view={z,x:(W-(c-a)*z)/2-a*z,y:(H-(d-b)*z)/2-b*z};render()}
 $(&#x27;zIn&#x27;).onclick=()=&gt;zoomAt(1.15);$(&#x27;zOut&#x27;).onclick=()=&gt;zoomAt(1/1.15);$(&#x27;zFit&#x27;).onclick=fit;
@@ -5882,7 +5891,7 @@ let toastT;function toast(t,err){const el=$(&#x27;toast&#x27;);el.textContent=t;
 window.addEventListener(&#x27;resize&#x27;,render);
 renderLib();renderXpList();goFree();
 // 知识点页发来 openXp：直接进入对应实验（练习模式，有提示）。
-window.addEventListener(&#x27;message&#x27;,e=&gt;{const d=e.data;if(!d||d.type!==&#x27;openXp&#x27;)return;const xp=XP.find(x=&gt;x.id===d.id);if(xp)startXp(xp.id,&#x27;practice&#x27;)});
+window.addEventListener(&#x27;message&#x27;,e=&gt;{if(e.source!==window.parent)return;const d=e.data;if(!d||d.type!==&#x27;openXp&#x27;)return;const xp=XP.find(x=&gt;x.id===d.id);if(xp)startXp(xp.id,&#x27;practice&#x27;)});
 window.__lab={get S(){return S},act,evaluate,commit,startXp,XP,get run(){return run},submitExam,goFree};
 &lt;/script&gt;
 &lt;/body&gt;

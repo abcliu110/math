@@ -83,6 +83,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 #card{position:absolute;display:none;width:250px;background:#0f141cf2;border:1px solid var(--line);border-radius:12px;padding:12px;box-shadow:0 10px 28px #000a}
 #card h4{margin:0 0 8px;font-size:13px;color:var(--mut);font-weight:500}
 #card .state{font-size:20px;font-weight:700;margin-bottom:8px}
+#card .derived{font-size:12px;color:var(--mut);margin:6px 0 2px;padding:6px 8px;border-radius:8px;background:#ffffff0d}
 #card .why-err{color:#ff8a8a;font-size:12px;margin-top:10px;padding:6px 8px;border-radius:8px;background:#3a1c1c}
 .fld{margin:8px 0}.fld label{display:flex;justify-content:space-between;font-size:12px;color:var(--mut)}
 .fld .ctl{display:flex;align-items:center;gap:6px;margin-top:4px}
@@ -447,7 +448,8 @@ const $=id=>document.getElementById(id);
 
 function commit(a,opt={}){
   const snap=JSON.stringify(S);const r=act(a);
-  if(!r.ok){toast(r.why,true);if(run)run.errors++;showCardWhy(r.why);render();return r}
+  // 滑杆、数字框拖过头（set）不是数学错，不计入考试的"被拒绝"次数。
+  if(!r.ok){toast(r.why,true);if(run&&a.t!=='set')run.errors++;showCardWhy(r.why);render();return r}
   clearCardWhy();
   if(!opt.coalesce||lastCo!==opt.coalesce){undoSt.push(snap);if(undoSt.length>80)undoSt.shift();redoSt=[]}
   lastCo=opt.coalesce||null;
@@ -623,10 +625,17 @@ function placeFloat(){const tl=$('tools'),cd=$('card');const e=sel&&S.entities[s
 }
 function stateLine(e){const d=D[e.id]||{};if(d.value)return qs(d.value);if(e.type==='fn')return'y = '+fx(e.props.k,e.props.b);if(e.type==='rect')return`${e.props.w} × ${e.props.h} = ${e.props.w*e.props.h}`;
   if(e.type==='balance')return`${d.L?qs(d.L):0} : ${d.R?qs(d.R):0}`;if(e.type==='numline')return`${e.props.min} 到 ${e.props.max}`;if(e.type==='dice')return`${d.tot||0} 回`;return TYPES[e.type].label}
+/* 卡内只读推导值。圆的 π 与台面信号一致（默认 3.14）。 */
+function derivedLines(e){const p=e.props;const n=x=>String(+x.toFixed(2));
+  if(e.type==='circle'){const r=p.r;return[`周长 ${n(2*3.14*r)} 厘米，面积 ${n(3.14*r*r)} 平方厘米`]}
+  if(e.type==='tri'){const c=180-p.a-p.b;return[c>0?`第三个角是 ${c}°`:`两个角已经 ${p.a+p.b}°，超过 180°，画不出三角形`]}
+  return[]}
 function buildCard(e){const cd=$('card'),T=TYPES[e.type];cd.dataset.for=e.id;cd.dataset.v=JSON.stringify(e.props)+e.name;
   let h=`<h4>${T.label} · 设置</h4><input class="name" data-name value="${esc(e.name)}"><div class="state">${esc(stateLine(e))}</div>`;
   for(const f of T.fields){const v=e.props[f.k];h+=`<div class="fld"><label><span>${f.label}</span></label><div class="ctl"><button class="pm" data-pm="${f.k}" data-dv="-${f.step||1}">−</button><input type="range" data-f="${f.k}" min="${f.min}" max="${f.max}" step="${f.step||1}" value="${v}"><button class="pm" data-pm="${f.k}" data-dv="${f.step||1}">+</button><input type="number" data-fn="${f.k}" value="${v}"></div></div>`}
   if(!T.fields.length)h+=`<div class="muted" style="font-size:12px">${T.accepts==='fn'?'它显示连进来的直线。':'它的值由连进来的器材决定，拖别的器材的蓝点连过来。'}</div>`;
+  // 只读推导值：由属性算出来，不能改，让学生在卡上直接看到。
+  const dv=derivedLines(e);if(dv.length)h+=`<div class="derived">${dv.map(t=>`<div>${esc(t)}</div>`).join('')}</div>`;
   const ins=inputs(S,e.id);if(ins.length)h+=`<div class="muted" style="font-size:12px;margin-top:8px">连进来的：${ins.map(l=>esc(S.entities[l.from].name)+(l.slot?`（${l.slot==='L'?'左':'右'}盘）`:'')).join('、')}</div>`;
   h+=`<div class="card-row">${(T.actions||[]).map(a=>`<button class="btn pri" data-act="${a.id}">${a.label}</button>`).join('')}${T.fields.length?'<button class="btn" data-act="reset">恢复初始值</button>':''}<button class="btn" data-act="del">删除</button></div>`;
   cd.innerHTML=h}
@@ -664,7 +673,7 @@ svg.addEventListener('pointerup',ev=>{if(!drag)return;const d=drag;drag=null;svg
     else if(Math.hypot(ev.clientX-d.sx,ev.clientY-d.sy)>6)toast('松手的地方没有器材：把线拖到另一个器材上',true);render()}
   else if(d.m==='pan')render()});
 svg.addEventListener('wheel',ev=>{ev.preventDefault();zoomAt(ev.deltaY<0?1.1:1/1.1,ev.clientX,ev.clientY)},{passive:false});
-function zoomAt(f,cx,cy){const r=svg.getBoundingClientRect();cx=cx??r.left+r.width/2;cy=cy??r.top+r.height/2;const z=Math.max(.5,Math.min(2.5,view.z*f));const k=z/view.z;view.x=cx-r.left-(cx-r.left-view.x)*k;view.y=cy-r.top-(cy-r.top-view.y)*k;view.z=z;render()}
+function zoomAt(f,cx,cy){const r=svg.getBoundingClientRect();cx=cx??r.left+r.width/2;cy=cy??r.top+r.height/2;const z=Math.max(.5,Math.min(4,view.z*f));const k=z/view.z;view.x=cx-r.left-(cx-r.left-view.x)*k;view.y=cy-r.top-(cy-r.top-view.y)*k;view.z=z;render()}
 function fit(){const es=Object.values(S.entities);if(!es.length){view={x:40,y:30,z:1};render();return}let a=1e9,b=1e9,c=-1e9,d=-1e9;es.forEach(e=>{const [w,h]=size(e);a=Math.min(a,e.x);b=Math.min(b,e.y);c=Math.max(c,e.x+w);d=Math.max(d,e.y+h+60)});
   const W=svg.clientWidth,H=svg.clientHeight,z=Math.max(.5,Math.min(1.4,Math.min((W-80)/(c-a),(H-80)/(d-b))));view={z,x:(W-(c-a)*z)/2-a*z,y:(H-(d-b)*z)/2-b*z};render()}
 $('zIn').onclick=()=>zoomAt(1.15);$('zOut').onclick=()=>zoomAt(1/1.15);$('zFit').onclick=fit;
@@ -1279,7 +1288,7 @@ let toastT;function toast(t,err){const el=$('toast');el.textContent=t;el.classNa
 window.addEventListener('resize',render);
 renderLib();renderXpList();goFree();
 // 知识点页发来 openXp：直接进入对应实验（练习模式，有提示）。
-window.addEventListener('message',e=>{const d=e.data;if(!d||d.type!=='openXp')return;const xp=XP.find(x=>x.id===d.id);if(xp)startXp(xp.id,'practice')});
+window.addEventListener('message',e=>{if(e.source!==window.parent)return;const d=e.data;if(!d||d.type!=='openXp')return;const xp=XP.find(x=>x.id===d.id);if(xp)startXp(xp.id,'practice')});
 window.__lab={get S(){return S},act,evaluate,commit,startXp,XP,get run(){return run},submitExam,goFree};
 </script>
 </body>
