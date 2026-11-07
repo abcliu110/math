@@ -83,6 +83,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 #card{position:absolute;display:none;width:250px;background:#0f141cf2;border:1px solid var(--line);border-radius:12px;padding:12px;box-shadow:0 10px 28px #000a}
 #card h4{margin:0 0 8px;font-size:13px;color:var(--mut);font-weight:500}
 #card .state{font-size:20px;font-weight:700;margin-bottom:8px}
+#card .why-err{color:#ff8a8a;font-size:12px;margin-top:10px;padding:6px 8px;border-radius:8px;background:#3a1c1c}
 .fld{margin:8px 0}.fld label{display:flex;justify-content:space-between;font-size:12px;color:var(--mut)}
 .fld .ctl{display:flex;align-items:center;gap:6px;margin-top:4px}
 .fld input[type=range]{flex:1;accent-color:var(--acc)}
@@ -439,22 +440,29 @@ const byType=(s,t)=>{for(const id in s.entities)if(s.entities[id].type===t)retur
 
 /* ========== 运行状态 ========== */
 const LS={free:'nb-lab-free-v1',hist:'nb-lab-exam-v1',find:'nb-lab-find-v1'};
+const PR='nb-lab-practice-v1'; // 练习进度：中途离开再回来，接着做
 let mode='free',xp=null,run=null,D={},sel=null,selLink=null,cardOpen=false;
 let view={x:40,y:30,z:1},undoSt=[],redoSt=[],timerId=null,libFilter='全部',libQ='';
 const $=id=>document.getElementById(id);
 
 function commit(a,opt={}){
   const snap=JSON.stringify(S);const r=act(a);
-  if(!r.ok){toast(r.why,true);if(run)run.errors++;render();return r}
+  if(!r.ok){toast(r.why,true);if(run)run.errors++;showCardWhy(r.why);render();return r}
+  clearCardWhy();
   if(!opt.coalesce||lastCo!==opt.coalesce){undoSt.push(snap);if(undoSt.length>80)undoSt.shift();redoSt=[]}
   lastCo=opt.coalesce||null;
   if(run&&!opt.silent){run.ops++;track()}
   afterChange();return r;
 }
 let lastCo=null;
-function afterChange(){D=evaluate(S);if(mode==='free')localStorage.setItem(LS.free,JSON.stringify(S));render()}
+function afterChange(){D=evaluate(S);if(mode==='free')localStorage.setItem(LS.free,JSON.stringify(S));
+  if(mode==='practice'&&xp&&run&&!run.finished)localStorage.setItem(PR,JSON.stringify({id:xp.id,S,steps:run.steps.map(s=>s.done),ops:run.ops}));
+  render()}
+/* 设置卡里的拒绝原因：留在卡上，直到下一次成功操作。 */
+function showCardWhy(why){const c=$('card');if(!c||c.style.display==='none')return;let el=c.querySelector('.why-err');if(!el){el=document.createElement('div');el.className='why-err';c.appendChild(el)}el.textContent='不行：'+why}
+function clearCardWhy(){const c=$('card');const el=c&&c.querySelector('.why-err');if(el)el.remove()}
 function track(){const D2=evaluate(S);for(const st of run.steps){if(st.done)continue;if(xp.steps[st.i].check(S,D2)){st.done=true;st.op=run.ops;if(mode==='practice')toast('✓ '+xp.steps[st.i].label)}else break}
-  if(mode==='practice'&&run.steps.every(s=>s.done)&&!run.finished){run.finished=true;setTimeout(practiceDone,500)}}
+  if(mode==='practice'&&run.steps.every(s=>s.done)&&!run.finished){run.finished=true;localStorage.removeItem(PR);setTimeout(practiceDone,500)}}
 
 /* ========== 画台面 ========== */
 function render(){
@@ -609,7 +617,8 @@ function placeFloat(){const tl=$('tools'),cd=$('card');const e=sel&&S.entities[s
   const T=TYPES[e.type];tl.innerHTML=`<button data-tool="card" title="设置">⚙</button><button data-tool="dup" title="复制">📋</button>${T.rotate?'<button data-tool="rotate" title="转 90°">🔄</button>':''}<button data-tool="del" title="删除">🗑</button>`;
   tl.style.display='flex';tl.style.left=Math.min(W-44,sx+12)+'px';tl.style.top=Math.max(8,sy)+'px';
   if(!cardOpen){cd.style.display='none';return}
-  let left=sx+56;if(left+250>W)left=Math.max(8,view.x+e.x*view.z-262);cd.style.left=left+'px';cd.style.top=Math.max(8,Math.min(H-320,sy))+'px';cd.style.display='block';
+  // 设置卡停靠在台面右上角，不跟着器材跑，不盖住台面上的东西。
+  cd.style.left=Math.max(8,W-262)+'px';cd.style.top='12px';cd.style.maxHeight=Math.max(200,H-24)+'px';cd.style.overflowY='auto';cd.style.display='block';
   if(cd.dataset.for!==e.id||cd.dataset.v!==JSON.stringify(e.props)+e.name)buildCard(e);
 }
 function stateLine(e){const d=D[e.id]||{};if(d.value)return qs(d.value);if(e.type==='fn')return'y = '+fx(e.props.k,e.props.b);if(e.type==='rect')return`${e.props.w} × ${e.props.h} = ${e.props.w*e.props.h}`;
@@ -1231,7 +1240,9 @@ const P14=[
 P14.forEach(p=>XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
 
 function startXp(id,m){xp=XP.find(x=>x.id===id);if(!xp)return;mode=m;S=blankScene();xp.build(S);undoSt=[];redoSt=[];sel=null;cardOpen=false;
-  run={steps:xp.steps.map((s,i)=>({i,done:false})),ops:0,errors:0,t0:Date.now(),finished:false};$('title').textContent=xp.title;
+  run={steps:xp.steps.map((s,i)=>({i,done:false})),ops:0,errors:0,t0:Date.now(),finished:false};
+  if(m==='practice'){try{const sv=JSON.parse(localStorage.getItem(PR)||'null');if(sv&&sv.id===id&&sv.S){S=sv.S;run.ops=sv.ops||0;(sv.steps||[]).forEach((d,i)=>{if(run.steps[i])run.steps[i].done=!!d});toast('接着上次做：已完成的步骤保留')}}catch(e){localStorage.removeItem(PR)}}
+  $('title').textContent=xp.title;
   D=evaluate(S);setModeUi();showTab('steps');fit();if(m==='exam')startTimer();toast(m==='exam'?'考试开始：没有提示，10 分钟':'练习：跟着左边的步骤做，下一步要动的器材会发光')}
 function setModeUi(){document.querySelectorAll('#modeSeg button').forEach(b=>b.classList.toggle('on',b.dataset.mode===mode));
   $('timer').style.display=$('submit').style.display=mode==='exam'?'inline-block':'none';$('menuBtn').style.display=mode==='practice'?'inline-block':'none';

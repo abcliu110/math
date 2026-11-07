@@ -4686,6 +4686,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 #card{position:absolute;display:none;width:250px;background:#0f141cf2;border:1px solid var(--line);border-radius:12px;padding:12px;box-shadow:0 10px 28px #000a}
 #card h4{margin:0 0 8px;font-size:13px;color:var(--mut);font-weight:500}
 #card .state{font-size:20px;font-weight:700;margin-bottom:8px}
+#card .why-err{color:#ff8a8a;font-size:12px;margin-top:10px;padding:6px 8px;border-radius:8px;background:#3a1c1c}
 .fld{margin:8px 0}.fld label{display:flex;justify-content:space-between;font-size:12px;color:var(--mut)}
 .fld .ctl{display:flex;align-items:center;gap:6px;margin-top:4px}
 .fld input[type=range]{flex:1;accent-color:var(--acc)}
@@ -5042,22 +5043,29 @@ const byType=(s,t)=&gt;{for(const id in s.entities)if(s.entities[id].type===t)re
 
 /* ========== 运行状态 ========== */
 const LS={free:&#x27;nb-lab-free-v1&#x27;,hist:&#x27;nb-lab-exam-v1&#x27;,find:&#x27;nb-lab-find-v1&#x27;};
+const PR=&#x27;nb-lab-practice-v1&#x27;; // 练习进度：中途离开再回来，接着做
 let mode=&#x27;free&#x27;,xp=null,run=null,D={},sel=null,selLink=null,cardOpen=false;
 let view={x:40,y:30,z:1},undoSt=[],redoSt=[],timerId=null,libFilter=&#x27;全部&#x27;,libQ=&#x27;&#x27;;
 const $=id=&gt;document.getElementById(id);
 
 function commit(a,opt={}){
   const snap=JSON.stringify(S);const r=act(a);
-  if(!r.ok){toast(r.why,true);if(run)run.errors++;render();return r}
+  if(!r.ok){toast(r.why,true);if(run)run.errors++;showCardWhy(r.why);render();return r}
+  clearCardWhy();
   if(!opt.coalesce||lastCo!==opt.coalesce){undoSt.push(snap);if(undoSt.length&gt;80)undoSt.shift();redoSt=[]}
   lastCo=opt.coalesce||null;
   if(run&amp;&amp;!opt.silent){run.ops++;track()}
   afterChange();return r;
 }
 let lastCo=null;
-function afterChange(){D=evaluate(S);if(mode===&#x27;free&#x27;)内存存储.setItem(LS.free,JSON.stringify(S));render()}
+function afterChange(){D=evaluate(S);if(mode===&#x27;free&#x27;)内存存储.setItem(LS.free,JSON.stringify(S));
+  if(mode===&#x27;practice&#x27;&amp;&amp;xp&amp;&amp;run&amp;&amp;!run.finished)内存存储.setItem(PR,JSON.stringify({id:xp.id,S,steps:run.steps.map(s=&gt;s.done),ops:run.ops}));
+  render()}
+/* 设置卡里的拒绝原因：留在卡上，直到下一次成功操作。 */
+function showCardWhy(why){const c=$(&#x27;card&#x27;);if(!c||c.style.display===&#x27;none&#x27;)return;let el=c.querySelector(&#x27;.why-err&#x27;);if(!el){el=document.createElement(&#x27;div&#x27;);el.className=&#x27;why-err&#x27;;c.appendChild(el)}el.textContent=&#x27;不行：&#x27;+why}
+function clearCardWhy(){const c=$(&#x27;card&#x27;);const el=c&amp;&amp;c.querySelector(&#x27;.why-err&#x27;);if(el)el.remove()}
 function track(){const D2=evaluate(S);for(const st of run.steps){if(st.done)continue;if(xp.steps[st.i].check(S,D2)){st.done=true;st.op=run.ops;if(mode===&#x27;practice&#x27;)toast(&#x27;✓ &#x27;+xp.steps[st.i].label)}else break}
-  if(mode===&#x27;practice&#x27;&amp;&amp;run.steps.every(s=&gt;s.done)&amp;&amp;!run.finished){run.finished=true;setTimeout(practiceDone,500)}}
+  if(mode===&#x27;practice&#x27;&amp;&amp;run.steps.every(s=&gt;s.done)&amp;&amp;!run.finished){run.finished=true;内存存储.removeItem(PR);setTimeout(practiceDone,500)}}
 
 /* ========== 画台面 ========== */
 function render(){
@@ -5212,7 +5220,8 @@ function placeFloat(){const tl=$(&#x27;tools&#x27;),cd=$(&#x27;card&#x27;);const
   const T=TYPES[e.type];tl.innerHTML=`&lt;button data-tool=&quot;card&quot; title=&quot;设置&quot;&gt;⚙&lt;/button&gt;&lt;button data-tool=&quot;dup&quot; title=&quot;复制&quot;&gt;📋&lt;/button&gt;${T.rotate?&#x27;&lt;button data-tool=&quot;rotate&quot; title=&quot;转 90°&quot;&gt;🔄&lt;/button&gt;&#x27;:&#x27;&#x27;}&lt;button data-tool=&quot;del&quot; title=&quot;删除&quot;&gt;🗑&lt;/button&gt;`;
   tl.style.display=&#x27;flex&#x27;;tl.style.left=Math.min(W-44,sx+12)+&#x27;px&#x27;;tl.style.top=Math.max(8,sy)+&#x27;px&#x27;;
   if(!cardOpen){cd.style.display=&#x27;none&#x27;;return}
-  let left=sx+56;if(left+250&gt;W)left=Math.max(8,view.x+e.x*view.z-262);cd.style.left=left+&#x27;px&#x27;;cd.style.top=Math.max(8,Math.min(H-320,sy))+&#x27;px&#x27;;cd.style.display=&#x27;block&#x27;;
+  // 设置卡停靠在台面右上角，不跟着器材跑，不盖住台面上的东西。
+  cd.style.left=Math.max(8,W-262)+&#x27;px&#x27;;cd.style.top=&#x27;12px&#x27;;cd.style.maxHeight=Math.max(200,H-24)+&#x27;px&#x27;;cd.style.overflowY=&#x27;auto&#x27;;cd.style.display=&#x27;block&#x27;;
   if(cd.dataset.for!==e.id||cd.dataset.v!==JSON.stringify(e.props)+e.name)buildCard(e);
 }
 function stateLine(e){const d=D[e.id]||{};if(d.value)return qs(d.value);if(e.type===&#x27;fn&#x27;)return&#x27;y = &#x27;+fx(e.props.k,e.props.b);if(e.type===&#x27;rect&#x27;)return`${e.props.w} × ${e.props.h} = ${e.props.w*e.props.h}`;
@@ -5834,7 +5843,9 @@ const P14=[
 P14.forEach(p=&gt;XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
 
 function startXp(id,m){xp=XP.find(x=&gt;x.id===id);if(!xp)return;mode=m;S=blankScene();xp.build(S);undoSt=[];redoSt=[];sel=null;cardOpen=false;
-  run={steps:xp.steps.map((s,i)=&gt;({i,done:false})),ops:0,errors:0,t0:Date.now(),finished:false};$(&#x27;title&#x27;).textContent=xp.title;
+  run={steps:xp.steps.map((s,i)=&gt;({i,done:false})),ops:0,errors:0,t0:Date.now(),finished:false};
+  if(m===&#x27;practice&#x27;){try{const sv=JSON.parse(内存存储.getItem(PR)||&#x27;null&#x27;);if(sv&amp;&amp;sv.id===id&amp;&amp;sv.S){S=sv.S;run.ops=sv.ops||0;(sv.steps||[]).forEach((d,i)=&gt;{if(run.steps[i])run.steps[i].done=!!d});toast(&#x27;接着上次做：已完成的步骤保留&#x27;)}}catch(e){内存存储.removeItem(PR)}}
+  $(&#x27;title&#x27;).textContent=xp.title;
   D=evaluate(S);setModeUi();showTab(&#x27;steps&#x27;);fit();if(m===&#x27;exam&#x27;)startTimer();toast(m===&#x27;exam&#x27;?&#x27;考试开始：没有提示，10 分钟&#x27;:&#x27;练习：跟着左边的步骤做，下一步要动的器材会发光&#x27;)}
 function setModeUi(){document.querySelectorAll(&#x27;#modeSeg button&#x27;).forEach(b=&gt;b.classList.toggle(&#x27;on&#x27;,b.dataset.mode===mode));
   $(&#x27;timer&#x27;).style.display=$(&#x27;submit&#x27;).style.display=mode===&#x27;exam&#x27;?&#x27;inline-block&#x27;:&#x27;none&#x27;;$(&#x27;menuBtn&#x27;).style.display=mode===&#x27;practice&#x27;?&#x27;inline-block&#x27;:&#x27;none&#x27;;
