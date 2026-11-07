@@ -711,6 +711,28 @@ function adjacentPoints(id) {
   if (i < 0) return { prev: null, next: null };
   return { prev: order[i - 1] || null, next: order[i + 1] || null };
 }
+/* 知识点 → 实验台上的实验（lab-nb.html 的 XP id）。页面上点“去实验台做这一题”就打开它。 */
+const LAB_POINT_XP = {
+  '1.1':'g1p01','1.3':'g1p03','1.4':'g1p04','1.6':'g1p06','1.7':'g1p07','1.8':'g1p08','1.9':'g1p09',
+  '1.11':'g1p11','1.13':'g1p13','1.14':'g1p14','1.15':'g1p15',
+  '4.1':'g4_1','4.2':'g4_2','4.3':'g4_3','4.4':'g4_4','4.5':'g4_5','4.6':'g4_6','4.7':'g4_7','4.8':'g4_8',
+  '4.9':'g4_9','4.10':'g4_10','4.11':'g4_11','4.12':'g4_12','4.13':'g4_13','4.14':'g4_14','4.15':'g4_15',
+  '4.16':'g4_16','4.17':'g4_17',
+  '5.1':'g5_1','5.2':'g5_2','5.3':'g5_3','5.4':'g5_4','5.5':'g5_5','5.6':'g5_6','5.7':'g5_7','5.8':'g5_8',
+  '5.9':'g5_9','5.10':'g5_10','5.11':'g5_11','5.12':'g5_12','5.13':'g5_13','5.14':'g5_14',
+};
+function labPointButtonHtml(pointId) {
+  const xp = LAB_POINT_XP[pointId];
+  return xp ? '<p><button class="btn small" type="button" data-lab-xp="' + xp + '">去实验台做这一题</button></p>' : '';
+}
+/* 切到实验室，再让实验台（iframe）打开这个实验。iframe 刚切过来时要等一下才能收到消息。 */
+function openLabExperiment(xpId) {
+  navGo('lab');
+  setTimeout(function () {
+    const f = document.getElementById('labNbFrame');
+    if (f && f.contentWindow) f.contentWindow.postMessage({ type: 'openXp', id: xpId }, '*');
+  }, 400);
+}
 function renderPoint(id) {
   const f = findPoint(id);
   if (!f) return;
@@ -755,7 +777,7 @@ function renderPoint(id) {
     (f.unit.story ? '<div class="point-sec story" id="sec-story"><h4>发现时刻</h4><p>' + esc(f.unit.story) + '</p></div>' : '') +
     '<div class="point-sec warn" id="sec-wrong"><h4>容易错</h4><p>错法：' + esc(p.wrong) + '</p><p>为什么错：' + esc(p.wrongWhy) + '</p></div>' +
     '<div class="point-sec" id="sec-visual"><h4>看图学</h4><p>' + esc(p.visual) + '</p></div>' +
-    '<div class="point-sec" id="sec-try"><h4>动手试一试</h4><p>' + esc(p.tryIt) + '</p>' +
+    '<div class="point-sec" id="sec-try"><h4>动手试一试</h4><p>' + esc(p.tryIt) + '</p>' + labPointButtonHtml(p.id || id) +
     (anims.length ? '<p class="muted">这个点的动画（演示 / 模拟 / 实验），每种方法一个：</p><div class="btn-row">' + anims.map(k => animBtnHtml(k)).join('') + '</div>' : '') + '</div>' +
     // 讲回来只包一层引号：内容文件里的 explainBack 本身已经带了 “ ”，
     // 以前这里又包了一层，全站 142 条都显示成 ““… ””（2026-11-06 真机审计第 10 条）。
@@ -774,6 +796,7 @@ function renderPoint(id) {
       '<p class="qa-a" data-qa-saved="' + i + '" hidden></p></div></div>'
     ).join('') + qgenBlockHtml(id) + '</div>' + olympiadHtml + pagerHtml;
   pointDetail.innerHTML = html;
+  pointDetail.querySelectorAll('[data-lab-xp]').forEach(el => el.addEventListener('click', () => openLabExperiment(el.dataset.labXp)));
   pointDetail.querySelectorAll('[data-demo-link]').forEach(el =>
     el.addEventListener('click', () => goDemoFromHere(el.dataset.demoLink)));
 }

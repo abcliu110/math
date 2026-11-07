@@ -966,6 +966,8 @@ $('findBtn').onclick=()=>{const a=JSON.parse(localStorage.getItem(LS.find)||'[]'
 let toastT;function toast(t,err){const el=$('toast');el.textContent=t;el.className=err?'err':'';el.style.display='block';clearTimeout(toastT);toastT=setTimeout(()=>el.style.display='none',2600)}
 window.addEventListener('resize',render);
 renderLib();renderXpList();goFree();
+// 知识点页发来 openXp：直接进入对应实验（练习模式，有提示）。
+window.addEventListener('message',e=>{const d=e.data;if(!d||d.type!=='openXp')return;const xp=XP.find(x=>x.id===d.id);if(xp)startXp(xp.id,'practice')});
 window.__lab={get S(){return S},act,evaluate,commit,startXp,XP,get run(){return run},submitExam,goFree};
 </script>
 </body>
