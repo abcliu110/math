@@ -1,4 +1,4 @@
-// Smoke tests for apps/web/anims-band-7-9.js (7.1–7.16, 48 animations).
+// Smoke tests for apps/web/anims-band-7-9.js (7.1–8.16, 74 animations).
 // Minimal DOM stub + real registerAnim in a vm; no app.js needed because
 // render() guards its app.js helpers with typeof checks — the stub versions
 // below record calls so wiring (tiers / discovery / markTried) is verified.
@@ -99,6 +99,11 @@ let m;
 const idRe = /id\s*:\s*["'](\d+\.\d+[a-z]?)["']/g;
 while ((m = idRe.exec(g7src)) !== null) g7ids.add(m[1]);
 
+// ---------- grade-8 point ids (must really exist) ----------
+const g8src = fs.readFileSync(path.join(root, 'content/grades/grade-8.js'), 'utf8');
+const g8ids = new Set();
+while ((m = idRe.exec(g8src)) !== null) g8ids.add(m[1]);
+
 const EXPECTED = [
   ['m71-numline', '7.1', '数轴距离法', '模拟'],
   ['m71-scene', '7.1', '真实情境法', '实验'],
@@ -148,20 +153,46 @@ const EXPECTED = [
   ['m716-bins', '7.16', '分桶计数法', '实验'],
   ['m716-sample', '7.16', '随机抽样模拟法', '模拟'],
   ['m716-dotvs', '7.16', '点图 vs 直方图对比法', '模拟'],
+  ['m81-ext', '8.1', '外角等于两内角和法', '演示'],
+  ['m82-move', '8.2', '刚性变换叠合法', '模拟'],
+  ['m83-trace', '8.3', '镜面描迹法', '模拟'],
+  ['m83-drink', '8.3', '将军饮马最短路径法', '模拟'],
+  ['m84-sas', '8.4', '作辅助线证底角法', '演示'],
+  ['m84-two', '8.4', '分类讨论两解法', '演示'],
+  ['m85-rules', '8.5', '法则表推导法', '演示'],
+  ['m86-foil', '8.6', '分配律展开法', '演示'],
+  ['m86-quick', '8.6', '数字速算法', '演示'],
+  ['m87-tiles', '8.7', '代数块拼长方形法', '模拟'],
+  ['m87-gcf', '8.7', '先提公因式再套公式法', '演示'],
+  ['m87-zero', '8.7', '从图像零点读因式法', '模拟'],
+  ['m88-factor', '8.8', '先因式分解再约分法', '演示'],
+  ['m88-lcd', '8.8', '通分找最简公分母法', '演示'],
+  ['m89-graph', '8.9', '分式方程图像法', '模拟'],
+  ['m810-area', '8.10', '面积边长法', '演示'],
+  ['m811-water', '8.11', '水演示体积守恒法', '实验'],
+  ['m811-sim', '8.11', '相似证明法', '演示'],
+  ['m812-mid', '8.12', '中点四边形法', '模拟'],
+  ['m813-cut', '8.13', '菱形面积切四块法', '演示'],
+  ['m814-machine', '8.14', '输入输出机器法', '演示'],
+  ['m814-carnival', '8.14', '看动画画图法', '实验'],
+  ['m815-two', '8.15', '两点定直线法', '演示'],
+  ['m815-ineq', '8.15', '方程与不等式的图像解法', '模拟'],
+  ['m816-var', '8.16', '方差是距离的平均法', '模拟'],
+  ['m816-mode', '8.16', '众数看频数峰法', '模拟'],
 ];
-check('48 animations registered', Object.keys(REG).length === 48);
+check('74 animations registered', Object.keys(REG).length === 74);
 EXPECTED.forEach(function (e) {
   const a = REG[e[0]];
   check(e[0] + ' registered with title/grade/kind/points',
-    !!a && a.title.indexOf(e[2]) === 0 && a.grade === 7 && a.kind === e[3] &&
+    !!a && a.title.indexOf(e[2]) === 0 && a.grade === (e[1].split('.')[0] === '7' ? 7 : 8) && a.kind === e[3] &&
     JSON.stringify(a.points) === JSON.stringify([e[1]]) &&
-    typeof a.render === 'function' && g7ids.has(e[1]));
+    typeof a.render === 'function' && (g7ids.has(e[1]) || g8ids.has(e[1])));
 });
 
 // 改前代码（空骨架）上：上面的注册检查会 FAIL，这里直接退出，
 // 后面的走查不再跑——否则 childByText 会拿到 undefined 而抛错，
 // 那就不是“干净失败”而是整脚本崩掉。
-if (Object.keys(REG).length !== 48) {
+if (Object.keys(REG).length !== 74) {
   console.log('\nsmoke-anims-band-7-9: ' + pass + ' passed, ' + fail + ' failed (registry incomplete, play-throughs skipped)');
   process.exit(1);
 }
@@ -338,15 +369,97 @@ check('m716-sample: 3 draws of n=3, first mean 143.0, spread 12.7',
   msgOf('m716-sample').indexOf('12.7') >= 0 && msgOf('m716-sample').indexOf('晃得厉害') >= 0);
 click(gid('m716-dotvs-g0')); click(gid('m716-dotvs-show-btn'));
 check('m716-dotvs: 110 has 4 dots', msgOf('m716-dotvs').indexOf('4 个点') >= 0);
+// 8.1
+click(gid('m81-ext-g0')); click(gid('m81-ext-extend'));
+check('m81-ext: exterior 110 = 50 + 60', msgOf('m81-ext').indexOf('110°') >= 0 && msgOf('m81-ext').indexOf('你猜对了') >= 0);
+// 8.2
+click(gid('m82-move-g0'));
+click(gid('m82-move-move')); click(gid('m82-move-move')); click(gid('m82-move-move'));
+check('m82-move: 3 shifts coincide', msgOf('m82-move').indexOf('重合了') >= 0 && msgOf('m82-move').indexOf('你猜对了') >= 0);
+// 8.3
+click(gid('m83-trace-g0')); input(gid('m83-trace-slider-x'), '60'); input(gid('m83-trace-slider-y'), '100');
+check('m83-trace: A(60, 100) mirrors to (340, 100)', msgOf('m83-trace').indexOf('(340, 100)') >= 0 && msgOf('m83-trace').indexOf('你猜对了') >= 0);
+click(gid('m83-drink-g1')); click(gid('m83-drink-p1'));
+check('m83-drink: P at x = 6, AP + PB = 10.6', msgOf('m83-drink').indexOf('AP ＋ PB ＝ 10.6') >= 0 && msgOf('m83-drink').indexOf('最短') >= 0);
+// 8.4
+click(gid('m84-sas-g0')); click(gid('m84-sas-show'));
+check('m84-sas: SAS gives base angles 70', msgOf('m84-sas').indexOf('∠B ＝ ∠C ＝ 70°') >= 0);
+click(gid('m84-two-g1')); click(gid('m84-two-show'));
+check('m84-two: 50 or 130 degrees', msgOf('m84-two').indexOf('50°') >= 0 && msgOf('m84-two').indexOf('130°') >= 0);
+// 8.5
+click(gid('m85-rules-g0')); click(gid('m85-rules-expand'));
+check('m85-rules: (2a)^3 = 8a^3', gid('m85-rules-steps').textContent.indexOf('(2a)³ ＝ 8a³') >= 0 && msgOf('m85-rules').indexOf('你猜对了') >= 0);
+// 8.6
+click(gid('m86-foil-g0')); click(gid('m86-foil-expand'));
+check('m86-foil: (x+3)(x-3) = x^2 - 9', gid('m86-foil-terms').textContent.indexOf('(x ＋ 3)(x − 3) ＝ x² − 9') >= 0 && msgOf('m86-foil').indexOf('抵消') >= 0);
+click(gid('m86-quick-g0')); click(gid('m86-quick-split'));
+check('m86-quick: 101 x 99 = 9999', gid('m86-quick-steps').textContent.indexOf('＝ 9999') >= 0);
+// 8.7
+click(gid('m87-tiles-g0')); click(gid('m87-tiles-build'));
+check('m87-tiles: x^2+5x+6 = (x+2)(x+3)', msgOf('m87-tiles').indexOf('拼满了') >= 0 && msgOf('m87-tiles').indexOf('(x ＋ 2)(x ＋ 3)') >= 0);
+click(gid('m87-gcf-g0')); click(gid('m87-gcf-s0'));
+check('m87-gcf: 2x^2-8 = 2(x+2)(x-2)', msgOf('m87-gcf').indexOf('2(x ＋ 2)(x − 2)') >= 0);
+click(gid('m87-zero-g0')); click(gid('m87-zero-draw'));
+check('m87-zero: roots 2 and 3 give (x-2)(x-3)', msgOf('m87-zero').indexOf('(x − 2)(x − 3)') >= 0);
+// 8.8
+click(gid('m88-factor-g0')); click(gid('m88-factor-s0'));
+check('m88-factor: (x^2-9)/(x+3) = x-3', msgOf('m88-factor').indexOf('x − 3') >= 0);
+click(gid('m88-lcd-g0')); click(gid('m88-lcd-go'));
+check('m88-lcd: 1/x + 1/(2x) = 3/(2x)', gid('m88-lcd-steps').textContent.indexOf('3/(2x)') >= 0);
+// 8.9
+click(gid('m89-graph-g0')); click(gid('m89-graph-draw'));
+check('m89-graph: y=1/x meets y=1 at (1, 1)', msgOf('m89-graph').indexOf('(1, 1)') >= 0);
+// 8.10
+click(gid('m810-area-g0')); click(gid('m810-area-split'));
+check('m810-area: sqrt(12) = 2 sqrt(3)', msgOf('m810-area').indexOf('√12 ＝ √(4 × 3) ＝ 2√3') >= 0);
+// 8.11
+click(gid('m811-water-g0')); input(gid('m811-water-pour'), '100');
+check('m811-water: 9 + 16 = 25 fills exactly', msgOf('m811-water').indexOf('正好倒满') >= 0 && msgOf('m811-water').indexOf('9 ＋ 16 ＝ 25') >= 0);
+click(gid('m811-sim-g0')); click(gid('m811-sim-show'));
+check('m811-sim: projections 1.8 and 3.2', msgOf('m811-sim').indexOf('1.8') >= 0 && msgOf('m811-sim').indexOf('3.2') >= 0);
+// 8.12
+click(gid('m812-mid-g0')); click(gid('m812-mid-dplus')); click(gid('m812-mid-measure'));
+check('m812-mid: opposite sides equal after dragging D', msgOf('m812-mid').indexOf('对边相等') >= 0 && msgOf('m812-mid').indexOf('你猜对了') >= 0);
+// 8.13
+click(gid('m813-cut-g0')); click(gid('m813-cut-cut'));
+check('m813-cut: rhombus area 24 = 6x8/2', msgOf('m813-cut').indexOf('6 × 8 ÷ 2 ＝ 24') >= 0);
+// 8.14
+click(gid('m814-machine-g0')); click(gid('m814-machine-run'));
+check('m814-machine: input 3 outputs 6', gid('m814-machine-steps').textContent.indexOf('输出 6') >= 0);
+click(gid('m814-carnival-g0')); input(gid('m814-carnival-time'), '4');
+check('m814-carnival: ball peaks at 20 m, parabola', msgOf('m814-carnival').indexOf('20 米') >= 0 && msgOf('m814-carnival').indexOf('抛物线') >= 0);
+// 8.15
+click(gid('m815-two-g0')); click(gid('m815-two-h0')); click(gid('m815-two-draw'));
+check('m815-two: through (0,3)(1,5) is y = 2x + 3', msgOf('m815-two').indexOf('y ＝ 2x ＋ 3') >= 0);
+click(gid('m815-ineq-g0')); click(gid('m815-ineq-h0')); click(gid('m815-ineq-draw'));
+check('m815-ineq: y=2x-4 zero at x = 2', msgOf('m815-ineq').indexOf('x ＝ 2') >= 0);
+// 8.16
+click(gid('m816-var-g0')); click(gid('m816-var-show'));
+check('m816-var: variance of 1,3,5,7 is 5', msgOf('m816-var').indexOf('方差是 5') >= 0 && gid('m816-var-calc').textContent.indexOf('＝ 5') >= 0);
+click(gid('m816-mode-g0')); click(gid('m816-mode-bars'));
+check('m816-mode: mode is 155', msgOf('m816-mode').indexOf('众数是 155') >= 0);
 
 // ---------- discovery + markTried wiring ----------
 gid('m71-numline-find').value = '绝对值就是距离，没有负号';
 click(gid('m71-numline-find-save'));
 check('discovery: finding is recorded via wireDiscovery stub',
   gid('m71-numline-find-saved').textContent.indexOf('绝对值就是距离') >= 0);
-check('markTried called for completed animations', triedKeys.length >= 44 &&
+check('markTried called for completed animations', triedKeys.length >= 70 &&
   triedKeys.indexOf('m71-numline') >= 0 && triedKeys.indexOf('m78-count') >= 0 &&
-  triedKeys.indexOf('m79-joint') >= 0 && triedKeys.indexOf('m716-dotvs') >= 0);
+  triedKeys.indexOf('m79-joint') >= 0 && triedKeys.indexOf('m716-dotvs') >= 0 &&
+  triedKeys.indexOf('m81-ext') >= 0 && triedKeys.indexOf('m82-move') >= 0 &&
+  triedKeys.indexOf('m83-trace') >= 0 && triedKeys.indexOf('m83-drink') >= 0 &&
+  triedKeys.indexOf('m84-sas') >= 0 && triedKeys.indexOf('m84-two') >= 0 &&
+  triedKeys.indexOf('m85-rules') >= 0 && triedKeys.indexOf('m86-foil') >= 0 &&
+  triedKeys.indexOf('m86-quick') >= 0 && triedKeys.indexOf('m87-tiles') >= 0 &&
+  triedKeys.indexOf('m87-gcf') >= 0 && triedKeys.indexOf('m87-zero') >= 0 &&
+  triedKeys.indexOf('m88-factor') >= 0 && triedKeys.indexOf('m88-lcd') >= 0 &&
+  triedKeys.indexOf('m89-graph') >= 0 && triedKeys.indexOf('m810-area') >= 0 &&
+  triedKeys.indexOf('m811-water') >= 0 && triedKeys.indexOf('m811-sim') >= 0 &&
+  triedKeys.indexOf('m812-mid') >= 0 && triedKeys.indexOf('m813-cut') >= 0 &&
+  triedKeys.indexOf('m814-machine') >= 0 && triedKeys.indexOf('m814-carnival') >= 0 &&
+  triedKeys.indexOf('m815-two') >= 0 && triedKeys.indexOf('m815-ineq') >= 0 &&
+  triedKeys.indexOf('m816-var') >= 0 && triedKeys.indexOf('m816-mode') >= 0);
 check('tiers.done fired for level 0 of every animation',
   EXPECTED.every(function (e) { return tiersDone.indexOf(e[0] + ':0') >= 0; }));
 
@@ -366,6 +479,28 @@ check('math: histogram bins sum to 12 students', 3 + 4 + 4 + 1 === 12);
 check('math: dot plot counts sum to 15 students', 1 + 2 + 3 + 4 + 2 + 2 + 1 === 15);
 check('math: population mean (138+142+145+147+150+152+155+158+160+163)/10 = 151',
   (138 + 142 + 145 + 147 + 150 + 152 + 155 + 158 + 160 + 163) / 10 === 151);
+check('math: 3-4-5 water: 9 + 16 = 25', 3 * 3 + 4 * 4 === 5 * 5);
+check('math: 5-12-13 water: 25 + 144 = 169', 5 * 5 + 12 * 12 === 13 * 13);
+check('math: 8-15-17 water: 64 + 225 = 289', 8 * 8 + 15 * 15 === 17 * 17);
+check('math: altitude 3x4/5 = 2.4, projections 9/5 + 16/5 = 5', 3 * 4 / 5 === 2.4 && 9 / 5 + 16 / 5 === 5);
+check('math: 101x99 = (100+1)(100-1) = 9999', 101 * 99 === 100 * 100 - 1);
+check('math: 98x102 = 9996, 47x53 = 2491', 98 * 102 === 10000 - 4 && 47 * 53 === 2500 - 9);
+check('math: (x+2)(x+3) = x^2+5x+6, (x+3)(x+5) = x^2+8x+15',
+  2 + 3 === 5 && 2 * 3 === 6 && 3 + 5 === 8 && 3 * 5 === 15);
+check('math: variance of 1,3,5,7 is 5', (9 + 1 + 1 + 9) / 4 === 5);
+check('math: variance of 3,3,5,5 is 1, of 2,4,4,6 is 2',
+  (1 + 1 + 1 + 1) / 4 === 1 && (4 + 0 + 0 + 4) / 4 === 2);
+check('math: 1/(x+1)+1/(x-1) = 2x/(x^2-1) at x=2: 1/3+1 = 4/3',
+  Math.abs(1 / 3 + 1 - 4 / 3) < 1e-9);
+check('math: 2/x = x-1 at x=2 and x=-1', 2 / 2 === 2 - 1 && 2 / -1 === -1 - 1);
+check('math: midpoint quad sides sqrt(10.25) and sqrt(8.5) pair up',
+  Math.abs(Math.sqrt(10.25) - Math.sqrt(2.5 * 2.5 + 2 * 2)) < 1e-9 &&
+  Math.abs(Math.sqrt(8.5) - Math.sqrt(2.5 * 2.5 + 1.5 * 1.5)) < 1e-9);
+check('math: rhombus 6x8/2 = 24, 10x24/2 = 120, 9x12/2 = 54',
+  6 * 8 / 2 === 24 && 10 * 24 / 2 === 120 && 9 * 12 / 2 === 54);
+check('math: drink shortest: sqrt(113) ~ 10.63, sqrt(136) ~ 11.66, sqrt(130) ~ 11.40',
+  Math.abs(Math.sqrt(113) - 10.630) < 0.001 && Math.abs(Math.sqrt(136) - 11.662) < 0.001 &&
+  Math.abs(Math.sqrt(130) - 11.402) < 0.001);
 
 console.log('\nsmoke-anims-band-7-9: ' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);
