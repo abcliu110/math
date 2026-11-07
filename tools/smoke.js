@@ -4301,8 +4301,8 @@ check('anims: 3.7 has fraction + 3 sims',
   hasAnims && JSON.stringify(sandbox.animsForPoint('3.7')) === JSON.stringify(['fraction', 'fraceq', 'buildfrac', 'fracnumline', 'm37-div']));
 check('anims: 3.12 has area + areabuild + maxarea from the lab question',
   hasAnims && JSON.stringify(sandbox.animsForPoint('3.12')) === JSON.stringify(['area', 'areabuild', 'maxarea', 'm312-cut', 'm312-unit']));
-check('anims: 4.9 has zerodiv + mixop (METHOD_DEMOS dual-mount) + lab questions + op-bracket',
-  hasAnims && JSON.stringify(sandbox.animsForPoint('4.9')) === JSON.stringify(['zerodiv', 'mixop', 'twentyfour', 'matches', 'op-bracket']));
+check('anims: 4.9 has zerodiv + mixop (METHOD_DEMOS dual-mount) + lab questions + op-bracket + op-storyex',
+  hasAnims && JSON.stringify(sandbox.animsForPoint('4.9')) === JSON.stringify(['zerodiv', 'mixop', 'twentyfour', 'matches', 'op-bracket', 'op-storyex']));
 check('anims: 5.14 has observe + m417-infer (dual-mount from 4.17) + 3 new',
   hasAnims && JSON.stringify(sandbox.animsForPoint('5.14')) === JSON.stringify(['observe', 'm417-infer', 'm514-guess', 'm514-three', 'm514-nums']));
 check('anims: 2.3 has tenframe + place (METHOD_DEMOS dual-mount from 1.15) + op-vertical + op-maketen',
