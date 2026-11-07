@@ -4808,6 +4808,10 @@ const TYPES={
  sim:{label:&#x27;相似图形（放大缩小）&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;相似图形&#x27;,defaults:{k:1},fields:[{k:&#x27;k&#x27;,label:&#x27;相似比（放大几倍）&#x27;,min:1,max:3}],size:()=&gt;[260,190]},
  pyth:{label:&#x27;直角三角形（勾股定理）&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;直角三角形&#x27;,defaults:{a:3,b:2},fields:[{k:&#x27;a&#x27;,label:&#x27;直角边 a&#x27;,min:1,max:12},{k:&#x27;b&#x27;,label:&#x27;直角边 b&#x27;,min:1,max:12}],size:()=&gt;[240,190]},
  trig:{label:&#x27;锐角三角函数&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;三角函数&#x27;,defaults:{deg:45},fields:[{k:&#x27;deg&#x27;,label:&#x27;锐角（度）&#x27;,min:5,max:85,step:5}],size:()=&gt;[240,190]},
+ fact:{label:&#x27;因式分解 x² + bx + c&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;因式&#x27;,defaults:{b:0,c:0},fields:[{k:&#x27;b&#x27;,label:&#x27;b&#x27;,min:-10,max:10},{k:&#x27;c&#x27;,label:&#x27;c&#x27;,min:-10,max:10}],size:()=&gt;[260,120]},
+ sqsum:{label:&#x27;乘法公式 (a + b)²&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;公式&#x27;,defaults:{a:1,b:1},fields:[{k:&#x27;a&#x27;,label:&#x27;a&#x27;,min:0,max:9},{k:&#x27;b&#x27;,label:&#x27;b&#x27;,min:0,max:9}],size:()=&gt;[260,120]},
+ isotri:{label:&#x27;等腰三角形（顶角）&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;等腰三角形&#x27;,defaults:{apex:40},fields:[{k:&#x27;apex&#x27;,label:&#x27;顶角（度）&#x27;,min:10,max:150,step:10}],size:()=&gt;[240,170]},
+ data:{label:&#x27;数据的分析（三个数）&#x27;,group:&#x27;统计&#x27;,prefix:&#x27;数据&#x27;,defaults:{a:6,b:8,c:10},fields:[{k:&#x27;a&#x27;,label:&#x27;数 1&#x27;,min:0,max:20},{k:&#x27;b&#x27;,label:&#x27;数 2&#x27;,min:0,max:20},{k:&#x27;c&#x27;,label:&#x27;数 3&#x27;,min:0,max:20}],size:()=&gt;[240,120]},
  sys:{label:&#x27;二元一次方程组（x + y = 10，x − y = 4）&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;方程组&#x27;,defaults:{x:0,y:0},fields:[{k:&#x27;x&#x27;,label:&#x27;x&#x27;,min:-10,max:20},{k:&#x27;y&#x27;,label:&#x27;y&#x27;,min:-10,max:20}],size:()=&gt;[260,140]},
  quad:{label:&#x27;一元二次方程 x² + bx + c = 0&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;方程&#x27;,defaults:{b:0,c:0},fields:[{k:&#x27;b&#x27;,label:&#x27;b&#x27;,min:-10,max:10},{k:&#x27;c&#x27;,label:&#x27;c&#x27;,min:-10,max:10}],size:()=&gt;[260,140]},
  afrac:{label:&#x27;分式 n / d&#x27;,group:&#x27;分数&#x27;,prefix:&#x27;分式&#x27;,defaults:{n:6,d:4},fields:[{k:&#x27;n&#x27;,label:&#x27;分子 n&#x27;,min:-12,max:12},{k:&#x27;d&#x27;,label:&#x27;分母 d&#x27;,min:-6,max:6}],size:()=&gt;[220,130]},
@@ -4904,6 +4908,12 @@ function evaluate(s){
       else if(d.value.d===1)sig(&#x27;ok&#x27;,`${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`);
       else sig(&#x27;warn&#x27;,`除不尽：${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`)}
     if(e.type===&#x27;angle&#x27;){const k=e.props.deg;const kind=k===0?&#x27;零度角&#x27;:k&lt;90?&#x27;锐角&#x27;:k===90?&#x27;直角&#x27;:k&lt;180?&#x27;钝角&#x27;:k===180?&#x27;平角&#x27;:&#x27;大于平角&#x27;;sig(k===90?&#x27;ok&#x27;:&#x27;info&#x27;,`${k}°：${kind}`)}
+    if(e.type===&#x27;fact&#x27;){const {b,c}=e.props;let f=null;for(let p=-10;p&lt;=10&amp;&amp;!f;p++)for(let q=p;q&lt;=10&amp;&amp;!f;q++)if(p+q===b&amp;&amp;p*q===c)f=[p,q];
+      if(f)sig(&#x27;ok&#x27;,`x² ${b&lt;0?&#x27;− &#x27;+(-b):&#x27;+ &#x27;+b}x ${c&lt;0?&#x27;− &#x27;+(-c):&#x27;+ &#x27;+c} = (x ${f[0]&lt;0?&#x27;− &#x27;+(-f[0]):&#x27;+ &#x27;+f[0]})(x ${f[1]&lt;0?&#x27;− &#x27;+(-f[1]):&#x27;+ &#x27;+f[1]})`.replace(/\(x \+ (-?\d+)\)/,(m,z)=&gt;m));
+      else sig(&#x27;info&#x27;,&#x27;在整数范围内分解不了&#x27;)}
+    if(e.type===&#x27;sqsum&#x27;){const {a,b}=e.props;sig(&#x27;ok&#x27;,`(${a}+${b})² = ${(a+b)*(a+b)}，展开：${a*a} + ${2*a*b} + ${b*b}`)}
+    if(e.type===&#x27;isotri&#x27;){const base=(180-e.props.apex)/2;sig(&#x27;ok&#x27;,`底角 ${base}°（两个底角相等，三个角加起来 180°）`)}
+    if(e.type===&#x27;data&#x27;){const v=[e.props.a,e.props.b,e.props.c].sort((p,q)=&gt;p-q);const mean=(v[0]+v[1]+v[2])/3;sig(&#x27;ok&#x27;,`平均数 ${Number.isInteger(mean)?mean:mean.toFixed(2)}，中位数 ${v[1]}`)}
     if(e.type===&#x27;sys&#x27;){const {x,y}=e.props;const ok1=x+y===10,ok2=x-y===4;
       if(ok1&amp;&amp;ok2)sig(&#x27;ok&#x27;,`两个方程都成立：x = ${x}，y = ${y}`);
       else sig(&#x27;info&#x27;,`x + y = ${x+y}（要 10），x − y = ${x-y}（要 4）`)}
@@ -5084,7 +5094,11 @@ const DRAW={
  num:(e,d,w,h)=&gt;`&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;${h/2+14}&quot; text-anchor=&quot;middle&quot; font-size=&quot;28&quot;&gt;${e.props.v}&lt;/text&gt;`,
  frac:(e,d,w)=&gt;{const {n,d:dd}=e.props,rows=Math.max(1,Math.ceil(n/dd)),bw=w-24,sw=bw/dd;let s=`&lt;text class=&quot;big&quot; x=&quot;${w-12}&quot; y=&quot;18&quot; text-anchor=&quot;end&quot; font-size=&quot;14&quot;&gt;${n}/${dd}&lt;/text&gt;`;
    for(let r=0;r&lt;rows;r++)for(let i=0;i&lt;dd;i++){const k=r*dd+i+1;s+=`&lt;rect class=&quot;seg-cell&quot; data-seg=&quot;${k}&quot; x=&quot;${12+i*sw}&quot; y=&quot;${28+r*28}&quot; width=&quot;${sw}&quot; height=&quot;22&quot; fill=&quot;${k&lt;=n?&#x27;#ff9f43&#x27;:&#x27;#fff&#x27;}&quot; stroke=&quot;#5b6778&quot; stroke-width=&quot;1&quot;/&gt;`}return s},
- sys:(e,d,w,h)=&gt;{const {x,y}=e.props;return `&lt;text class=&quot;big&quot; x=&quot;16&quot; y=&quot;48&quot; font-size=&quot;18&quot;&gt;x + y = 10&lt;/text&gt;&lt;text class=&quot;big&quot; x=&quot;16&quot; y=&quot;82&quot; font-size=&quot;18&quot;&gt;x − y = 4&lt;/text&gt;&lt;text class=&quot;ink&quot; x=&quot;16&quot; y=&quot;118&quot; font-size=&quot;14&quot;&gt;代入 x = ${x}，y = ${y}&lt;/text&gt;`},
+ fact:(e,d,w,h)=&gt;{const {b,c}=e.props;return `&lt;text class=&quot;big&quot; x=&quot;16&quot; y=&quot;48&quot; font-size=&quot;18&quot;&gt;x² ${b&lt;0?&#x27;− &#x27;+(-b):&#x27;+ &#x27;+b}x ${c&lt;0?&#x27;− &#x27;+(-c):&#x27;+ &#x27;+c}&lt;/text&gt;&lt;text class=&quot;ink&quot; x=&quot;16&quot; y=&quot;88&quot; font-size=&quot;14&quot;&gt;${d.sig&amp;&amp;d.sig[0]?d.sig[0].tx:&#x27;&#x27;}&lt;/text&gt;`},
+sqsum:(e,d,w,h)=&gt;{const {a,b}=e.props;return `&lt;text class=&quot;big&quot; x=&quot;16&quot; y=&quot;48&quot; font-size=&quot;20&quot;&gt;(${a} + ${b})² = ${(a+b)*(a+b)}&lt;/text&gt;&lt;text class=&quot;ink&quot; x=&quot;16&quot; y=&quot;86&quot; font-size=&quot;14&quot;&gt;展开：${a*a} + ${2*a*b} + ${b*b}&lt;/text&gt;`},
+isotri:(e,d,w,h)=&gt;{const base=(180-e.props.apex)/2;return DRAW.tri({props:{a:base,b:base}},d,w,h)},
+data:(e,d,w,h)=&gt;{const vs=[e.props.a,e.props.b,e.props.c];let s=&#x27;&#x27;;vs.forEach((v,i)=&gt;{const bh=v*5,x=30+i*70;s+=`&lt;rect x=&quot;${x}&quot; y=&quot;${h-30-bh}&quot; width=&quot;46&quot; height=&quot;${bh}&quot; fill=&quot;#60a5fa&quot; stroke=&quot;#1d2633&quot;/&gt;&lt;text class=&quot;ink&quot; x=&quot;${x+23}&quot; y=&quot;${h-30-bh-4}&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot;&gt;${v}&lt;/text&gt;`});return s+`&lt;line x1=&quot;20&quot; y1=&quot;${h-30}&quot; x2=&quot;${w-20}&quot; y2=&quot;${h-30}&quot; stroke=&quot;#1d2633&quot;/&gt;`},
+sys:(e,d,w,h)=&gt;{const {x,y}=e.props;return `&lt;text class=&quot;big&quot; x=&quot;16&quot; y=&quot;48&quot; font-size=&quot;18&quot;&gt;x + y = 10&lt;/text&gt;&lt;text class=&quot;big&quot; x=&quot;16&quot; y=&quot;82&quot; font-size=&quot;18&quot;&gt;x − y = 4&lt;/text&gt;&lt;text class=&quot;ink&quot; x=&quot;16&quot; y=&quot;118&quot; font-size=&quot;14&quot;&gt;代入 x = ${x}，y = ${y}&lt;/text&gt;`},
 quad:(e,d,w,h)=&gt;{const {b,c}=e.props;const D0=b*b-4*c;const txt=D0&lt;0?&#x27;没有实数根&#x27;:`判别式 = ${D0}`;return `&lt;text class=&quot;big&quot; x=&quot;16&quot; y=&quot;48&quot; font-size=&quot;18&quot;&gt;x² ${b&lt;0?&#x27;− &#x27;+(-b):&#x27;+ &#x27;+b}x ${c&lt;0?&#x27;− &#x27;+(-c):&#x27;+ &#x27;+c} = 0&lt;/text&gt;&lt;text class=&quot;ink&quot; x=&quot;16&quot; y=&quot;92&quot; font-size=&quot;14&quot;&gt;${txt}&lt;/text&gt;`},
 afrac:(e,d,w,h)=&gt;{const {n,d:dd}=e.props;return `&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;62&quot; text-anchor=&quot;middle&quot; font-size=&quot;26&quot;&gt;${n}&lt;/text&gt;&lt;line x1=&quot;${w/2-40}&quot; y1=&quot;72&quot; x2=&quot;${w/2+40}&quot; y2=&quot;72&quot; stroke=&quot;#1d2633&quot; stroke-width=&quot;2&quot;/&gt;&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;104&quot; text-anchor=&quot;middle&quot; font-size=&quot;26&quot;&gt;${dd}&lt;/text&gt;`},
 radical:(e,d,w,h)=&gt;`&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;${h/2+10}&quot; text-anchor=&quot;middle&quot; font-size=&quot;28&quot;&gt;√${e.props.n}&lt;/text&gt;`,
@@ -5761,6 +5775,31 @@ const P12=[
          {label:&#x27;同旁内角是 110°&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;parlines&#x27;),check:(s,D)=&gt;{const p=byType(s,&#x27;parlines&#x27;);return (D[p].sig||[]).some(t=&gt;t.tx.includes(&#x27;同旁内角 110°&#x27;))}}]},
 ];
 P12.forEach(p=&gt;XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
+
+/* ========== 初中第五批：因式分解、乘法公式、等腰三角形、平行四边形、数据的分析 ========== */
+const P13=[
+ {id:&#x27;g8_fact&#x27;,grade:8,domain:&#x27;数与代数&#x27;,tools:&#x27;因式分解&#x27;,title:&#x27;因式分解：x² + 5x + 6 = ?&#x27;,q:&#x27;找两个数，它们的和是 5，积是 6。&#x27;,why:&#x27;2 + 3 = 5，2 × 3 = 6，所以 x² + 5x + 6 = (x + 2)(x + 3)。&#x27;,
+  build:s=&gt;{addEnt(s,&#x27;fact&#x27;,200,60,{b:0,c:0})},
+  steps:[{label:&#x27;把 b 调到 5&#x27;,score:1,hint:&#x27;点因式分解卡，把 b 调到 5&#x27;,target:T45(&#x27;fact&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;fact&#x27;)].props.b===5},
+         {label:&#x27;把 c 调到 6，分解成 (x + 2)(x + 3)&#x27;,score:2,hint:&#x27;把 c 调到 6，看下面的文字&#x27;,target:T45(&#x27;fact&#x27;),check:(s,D)=&gt;{const f=byType(s,&#x27;fact&#x27;);return s.entities[f].props.c===6&amp;&amp;(D[f].sig||[]).some(t=&gt;t.tx.includes(&#x27;(x + 2)(x + 3)&#x27;))}}]},
+ {id:&#x27;g8_sq&#x27;,grade:8,domain:&#x27;数与代数&#x27;,tools:&#x27;乘法公式&#x27;,title:&#x27;完全平方公式：(a + b)² 当 a = 3，b = 2 时是几？&#x27;,q:&#x27;(a + b)² = a² + 2ab + b²。先算 a + b，再平方，两种算法结果一样。&#x27;,why:&#x27;(3 + 2)² = 25，展开 9 + 12 + 4 = 25。&#x27;,
+  build:s=&gt;{addEnt(s,&#x27;sqsum&#x27;,200,60,{a:1,b:1})},
+  steps:[{label:&#x27;把 a 调到 3，b 调到 2&#x27;,score:1,hint:&#x27;点乘法公式卡，把 a 调到 3，b 调到 2&#x27;,target:T45(&#x27;sqsum&#x27;),check:(s,D)=&gt;{const p=s.entities[byType(s,&#x27;sqsum&#x27;)].props;return p.a===3&amp;&amp;p.b===2}},
+         {label:&#x27;(3 + 2)² = 25&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;sqsum&#x27;),check:(s,D)=&gt;{const q=byType(s,&#x27;sqsum&#x27;);return (D[q].sig||[]).some(t=&gt;t.tx.includes(&#x27;(3+2)² = 25&#x27;))}}]},
+ {id:&#x27;g8_iso&#x27;,grade:8,domain:&#x27;图形与几何&#x27;,tools:&#x27;等腰三角形&#x27;,title:&#x27;等腰三角形：顶角是 40°，底角是几度？&#x27;,q:&#x27;等腰三角形两个底角相等，三个角加起来是 180°。&#x27;,why:&#x27;底角 = (180° − 40°) ÷ 2 = 70°。&#x27;,
+  build:s=&gt;{addEnt(s,&#x27;isotri&#x27;,200,60,{apex:60})},
+  steps:[{label:&#x27;把顶角调到 40°&#x27;,score:1,hint:&#x27;点等腰三角形卡，把顶角调到 40&#x27;,target:T45(&#x27;isotri&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;isotri&#x27;)].props.apex===40},
+         {label:&#x27;底角是 70°&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;isotri&#x27;),check:(s,D)=&gt;{const t=byType(s,&#x27;isotri&#x27;);return (D[t].sig||[]).some(x=&gt;x.tx.startsWith(&#x27;底角 70°&#x27;))}}]},
+ {id:&#x27;g8_para&#x27;,grade:8,domain:&#x27;图形与几何&#x27;,tools:&#x27;平行线与截线&#x27;,title:&#x27;平行四边形：相邻的两个角一个是 70°，另一个是几度？&#x27;,q:&#x27;平行四边形的邻角互补：两个相邻的角加起来是 180°。&#x27;,why:&#x27;180° − 70° = 110°。&#x27;,
+  build:s=&gt;{addEnt(s,&#x27;parlines&#x27;,200,60,{a:40})},
+  steps:[{label:&#x27;把一个角调到 70°&#x27;,score:1,hint:&#x27;点平行线卡，把角调到 70&#x27;,target:T45(&#x27;parlines&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;parlines&#x27;)].props.a===70},
+         {label:&#x27;邻角是 110°&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;parlines&#x27;),check:(s,D)=&gt;{const p=byType(s,&#x27;parlines&#x27;);return (D[p].sig||[]).some(t=&gt;t.tx.includes(&#x27;同旁内角 110°&#x27;))}}]},
+ {id:&#x27;g8_data&#x27;,grade:8,domain:&#x27;统计与概率&#x27;,tools:&#x27;数据的分析&#x27;,title:&#x27;数据的分析：6、8、12 的平均数和中位数各是多少？&#x27;,q:&#x27;平均数 = 总和 ÷ 个数；中位数是按大小排好后中间的那个数。&#x27;,why:&#x27;平均数 26 ÷ 3 ≈ 8.67，中位数是 8。&#x27;,
+  build:s=&gt;{addEnt(s,&#x27;data&#x27;,200,60,{a:6,b:8,c:10})},
+  steps:[{label:&#x27;把第三个数调到 12&#x27;,score:1,hint:&#x27;点数据卡，把数 3 调到 12&#x27;,target:T45(&#x27;data&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;data&#x27;)].props.c===12},
+         {label:&#x27;平均数 8.67，中位数 8&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;data&#x27;),check:(s,D)=&gt;{const d=byType(s,&#x27;data&#x27;);return (D[d].sig||[]).some(t=&gt;t.tx===&#x27;平均数 8.67，中位数 8&#x27;)}}]},
+];
+P13.forEach(p=&gt;XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
 
 function startXp(id,m){xp=XP.find(x=&gt;x.id===id);if(!xp)return;mode=m;S=blankScene();xp.build(S);undoSt=[];redoSt=[];sel=null;cardOpen=false;
   run={steps:xp.steps.map((s,i)=&gt;({i,done:false})),ops:0,errors:0,t0:Date.now(),finished:false};$(&#x27;title&#x27;).textContent=xp.title;
@@ -50600,7 +50639,7 @@ const LAB_POINT_XP = {
   '4.16':'g4_16','4.17':'g4_17',
   '5.1':'g5_1','5.2':'g5_2','5.3':'g5_3','5.4':'g5_4','5.5':'g5_5','5.6':'g5_6','5.7':'g5_7','5.8':'g5_8',
   '5.9':'g5_9','5.10':'g5_10','5.11':'g5_11','5.12':'g5_12','5.13':'g5_13','5.14':'g5_14',
-  '7.6':'g7_eq','7.7':'g7_eq','7.11':'g7_par','7.14':'g7_sys','8.8':'g8_afrac','8.10':'g8_rad','9.1':'g9_quad','8.2':'g8_2','9.6':'g9_6','9.7':'g9_7','9.9':'g9_bag','9.10':'g9_bag','7.15':'g7_ineq','8.11':'g8_11','9.3':'g9_parab','9.11':'g8_hyper','9.12':'g9_12','9.14':'g9_14',
+  '7.6':'g7_eq','7.7':'g7_eq','7.11':'g7_par','8.4':'g8_iso','8.6':'g8_sq','8.7':'g8_fact','8.12':'g8_para','8.16':'g8_data','7.14':'g7_sys','8.8':'g8_afrac','8.10':'g8_rad','9.1':'g9_quad','8.2':'g8_2','9.6':'g9_6','9.7':'g9_7','9.9':'g9_bag','9.10':'g9_bag','7.15':'g7_ineq','8.11':'g8_11','9.3':'g9_parab','9.11':'g8_hyper','9.12':'g9_12','9.14':'g9_14',
   '6.1':'g6_1','6.2':'g6_2','6.3':'g6_3','6.4':'g6_4','6.5':'g6_5','6.6':'g6_6','6.7':'g6_7','6.8':'g6_8',
   '6.9':'g6_9','6.10':'g6_10','6.11':'g6_11','6.12':'g6_12','6.13':'g6_13',
 };

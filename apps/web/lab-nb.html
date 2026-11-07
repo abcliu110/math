@@ -205,6 +205,10 @@ const TYPES={
  sim:{label:'相似图形（放大缩小）',group:'图形',prefix:'相似图形',defaults:{k:1},fields:[{k:'k',label:'相似比（放大几倍）',min:1,max:3}],size:()=>[260,190]},
  pyth:{label:'直角三角形（勾股定理）',group:'图形',prefix:'直角三角形',defaults:{a:3,b:2},fields:[{k:'a',label:'直角边 a',min:1,max:12},{k:'b',label:'直角边 b',min:1,max:12}],size:()=>[240,190]},
  trig:{label:'锐角三角函数',group:'图形',prefix:'三角函数',defaults:{deg:45},fields:[{k:'deg',label:'锐角（度）',min:5,max:85,step:5}],size:()=>[240,190]},
+ fact:{label:'因式分解 x² + bx + c',group:'数与运算',prefix:'因式',defaults:{b:0,c:0},fields:[{k:'b',label:'b',min:-10,max:10},{k:'c',label:'c',min:-10,max:10}],size:()=>[260,120]},
+ sqsum:{label:'乘法公式 (a + b)²',group:'数与运算',prefix:'公式',defaults:{a:1,b:1},fields:[{k:'a',label:'a',min:0,max:9},{k:'b',label:'b',min:0,max:9}],size:()=>[260,120]},
+ isotri:{label:'等腰三角形（顶角）',group:'图形',prefix:'等腰三角形',defaults:{apex:40},fields:[{k:'apex',label:'顶角（度）',min:10,max:150,step:10}],size:()=>[240,170]},
+ data:{label:'数据的分析（三个数）',group:'统计',prefix:'数据',defaults:{a:6,b:8,c:10},fields:[{k:'a',label:'数 1',min:0,max:20},{k:'b',label:'数 2',min:0,max:20},{k:'c',label:'数 3',min:0,max:20}],size:()=>[240,120]},
  sys:{label:'二元一次方程组（x + y = 10，x − y = 4）',group:'数与运算',prefix:'方程组',defaults:{x:0,y:0},fields:[{k:'x',label:'x',min:-10,max:20},{k:'y',label:'y',min:-10,max:20}],size:()=>[260,140]},
  quad:{label:'一元二次方程 x² + bx + c = 0',group:'数与运算',prefix:'方程',defaults:{b:0,c:0},fields:[{k:'b',label:'b',min:-10,max:10},{k:'c',label:'c',min:-10,max:10}],size:()=>[260,140]},
  afrac:{label:'分式 n / d',group:'分数',prefix:'分式',defaults:{n:6,d:4},fields:[{k:'n',label:'分子 n',min:-12,max:12},{k:'d',label:'分母 d',min:-6,max:6}],size:()=>[220,130]},
@@ -301,6 +305,12 @@ function evaluate(s){
       else if(d.value.d===1)sig('ok',`${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`);
       else sig('warn',`除不尽：${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`)}
     if(e.type==='angle'){const k=e.props.deg;const kind=k===0?'零度角':k<90?'锐角':k===90?'直角':k<180?'钝角':k===180?'平角':'大于平角';sig(k===90?'ok':'info',`${k}°：${kind}`)}
+    if(e.type==='fact'){const {b,c}=e.props;let f=null;for(let p=-10;p<=10&&!f;p++)for(let q=p;q<=10&&!f;q++)if(p+q===b&&p*q===c)f=[p,q];
+      if(f)sig('ok',`x² ${b<0?'− '+(-b):'+ '+b}x ${c<0?'− '+(-c):'+ '+c} = (x ${f[0]<0?'− '+(-f[0]):'+ '+f[0]})(x ${f[1]<0?'− '+(-f[1]):'+ '+f[1]})`.replace(/\(x \+ (-?\d+)\)/,(m,z)=>m));
+      else sig('info','在整数范围内分解不了')}
+    if(e.type==='sqsum'){const {a,b}=e.props;sig('ok',`(${a}+${b})² = ${(a+b)*(a+b)}，展开：${a*a} + ${2*a*b} + ${b*b}`)}
+    if(e.type==='isotri'){const base=(180-e.props.apex)/2;sig('ok',`底角 ${base}°（两个底角相等，三个角加起来 180°）`)}
+    if(e.type==='data'){const v=[e.props.a,e.props.b,e.props.c].sort((p,q)=>p-q);const mean=(v[0]+v[1]+v[2])/3;sig('ok',`平均数 ${Number.isInteger(mean)?mean:mean.toFixed(2)}，中位数 ${v[1]}`)}
     if(e.type==='sys'){const {x,y}=e.props;const ok1=x+y===10,ok2=x-y===4;
       if(ok1&&ok2)sig('ok',`两个方程都成立：x = ${x}，y = ${y}`);
       else sig('info',`x + y = ${x+y}（要 10），x − y = ${x-y}（要 4）`)}
@@ -481,7 +491,11 @@ const DRAW={
  num:(e,d,w,h)=>`<text class="big" x="${w/2}" y="${h/2+14}" text-anchor="middle" font-size="28">${e.props.v}</text>`,
  frac:(e,d,w)=>{const {n,d:dd}=e.props,rows=Math.max(1,Math.ceil(n/dd)),bw=w-24,sw=bw/dd;let s=`<text class="big" x="${w-12}" y="18" text-anchor="end" font-size="14">${n}/${dd}</text>`;
    for(let r=0;r<rows;r++)for(let i=0;i<dd;i++){const k=r*dd+i+1;s+=`<rect class="seg-cell" data-seg="${k}" x="${12+i*sw}" y="${28+r*28}" width="${sw}" height="22" fill="${k<=n?'#ff9f43':'#fff'}" stroke="#5b6778" stroke-width="1"/>`}return s},
- sys:(e,d,w,h)=>{const {x,y}=e.props;return `<text class="big" x="16" y="48" font-size="18">x + y = 10</text><text class="big" x="16" y="82" font-size="18">x − y = 4</text><text class="ink" x="16" y="118" font-size="14">代入 x = ${x}，y = ${y}</text>`},
+ fact:(e,d,w,h)=>{const {b,c}=e.props;return `<text class="big" x="16" y="48" font-size="18">x² ${b<0?'− '+(-b):'+ '+b}x ${c<0?'− '+(-c):'+ '+c}</text><text class="ink" x="16" y="88" font-size="14">${d.sig&&d.sig[0]?d.sig[0].tx:''}</text>`},
+sqsum:(e,d,w,h)=>{const {a,b}=e.props;return `<text class="big" x="16" y="48" font-size="20">(${a} + ${b})² = ${(a+b)*(a+b)}</text><text class="ink" x="16" y="86" font-size="14">展开：${a*a} + ${2*a*b} + ${b*b}</text>`},
+isotri:(e,d,w,h)=>{const base=(180-e.props.apex)/2;return DRAW.tri({props:{a:base,b:base}},d,w,h)},
+data:(e,d,w,h)=>{const vs=[e.props.a,e.props.b,e.props.c];let s='';vs.forEach((v,i)=>{const bh=v*5,x=30+i*70;s+=`<rect x="${x}" y="${h-30-bh}" width="46" height="${bh}" fill="#60a5fa" stroke="#1d2633"/><text class="ink" x="${x+23}" y="${h-30-bh-4}" text-anchor="middle" font-size="12">${v}</text>`});return s+`<line x1="20" y1="${h-30}" x2="${w-20}" y2="${h-30}" stroke="#1d2633"/>`},
+sys:(e,d,w,h)=>{const {x,y}=e.props;return `<text class="big" x="16" y="48" font-size="18">x + y = 10</text><text class="big" x="16" y="82" font-size="18">x − y = 4</text><text class="ink" x="16" y="118" font-size="14">代入 x = ${x}，y = ${y}</text>`},
 quad:(e,d,w,h)=>{const {b,c}=e.props;const D0=b*b-4*c;const txt=D0<0?'没有实数根':`判别式 = ${D0}`;return `<text class="big" x="16" y="48" font-size="18">x² ${b<0?'− '+(-b):'+ '+b}x ${c<0?'− '+(-c):'+ '+c} = 0</text><text class="ink" x="16" y="92" font-size="14">${txt}</text>`},
 afrac:(e,d,w,h)=>{const {n,d:dd}=e.props;return `<text class="big" x="${w/2}" y="62" text-anchor="middle" font-size="26">${n}</text><line x1="${w/2-40}" y1="72" x2="${w/2+40}" y2="72" stroke="#1d2633" stroke-width="2"/><text class="big" x="${w/2}" y="104" text-anchor="middle" font-size="26">${dd}</text>`},
 radical:(e,d,w,h)=>`<text class="big" x="${w/2}" y="${h/2+10}" text-anchor="middle" font-size="28">√${e.props.n}</text>`,
@@ -1158,6 +1172,31 @@ const P12=[
          {label:'同旁内角是 110°',score:2,hint:'看下面的文字',target:T45('parlines'),check:(s,D)=>{const p=byType(s,'parlines');return (D[p].sig||[]).some(t=>t.tx.includes('同旁内角 110°'))}}]},
 ];
 P12.forEach(p=>XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
+
+/* ========== 初中第五批：因式分解、乘法公式、等腰三角形、平行四边形、数据的分析 ========== */
+const P13=[
+ {id:'g8_fact',grade:8,domain:'数与代数',tools:'因式分解',title:'因式分解：x² + 5x + 6 = ?',q:'找两个数，它们的和是 5，积是 6。',why:'2 + 3 = 5，2 × 3 = 6，所以 x² + 5x + 6 = (x + 2)(x + 3)。',
+  build:s=>{addEnt(s,'fact',200,60,{b:0,c:0})},
+  steps:[{label:'把 b 调到 5',score:1,hint:'点因式分解卡，把 b 调到 5',target:T45('fact'),check:(s,D)=>s.entities[byType(s,'fact')].props.b===5},
+         {label:'把 c 调到 6，分解成 (x + 2)(x + 3)',score:2,hint:'把 c 调到 6，看下面的文字',target:T45('fact'),check:(s,D)=>{const f=byType(s,'fact');return s.entities[f].props.c===6&&(D[f].sig||[]).some(t=>t.tx.includes('(x + 2)(x + 3)'))}}]},
+ {id:'g8_sq',grade:8,domain:'数与代数',tools:'乘法公式',title:'完全平方公式：(a + b)² 当 a = 3，b = 2 时是几？',q:'(a + b)² = a² + 2ab + b²。先算 a + b，再平方，两种算法结果一样。',why:'(3 + 2)² = 25，展开 9 + 12 + 4 = 25。',
+  build:s=>{addEnt(s,'sqsum',200,60,{a:1,b:1})},
+  steps:[{label:'把 a 调到 3，b 调到 2',score:1,hint:'点乘法公式卡，把 a 调到 3，b 调到 2',target:T45('sqsum'),check:(s,D)=>{const p=s.entities[byType(s,'sqsum')].props;return p.a===3&&p.b===2}},
+         {label:'(3 + 2)² = 25',score:2,hint:'看下面的文字',target:T45('sqsum'),check:(s,D)=>{const q=byType(s,'sqsum');return (D[q].sig||[]).some(t=>t.tx.includes('(3+2)² = 25'))}}]},
+ {id:'g8_iso',grade:8,domain:'图形与几何',tools:'等腰三角形',title:'等腰三角形：顶角是 40°，底角是几度？',q:'等腰三角形两个底角相等，三个角加起来是 180°。',why:'底角 = (180° − 40°) ÷ 2 = 70°。',
+  build:s=>{addEnt(s,'isotri',200,60,{apex:60})},
+  steps:[{label:'把顶角调到 40°',score:1,hint:'点等腰三角形卡，把顶角调到 40',target:T45('isotri'),check:(s,D)=>s.entities[byType(s,'isotri')].props.apex===40},
+         {label:'底角是 70°',score:2,hint:'看下面的文字',target:T45('isotri'),check:(s,D)=>{const t=byType(s,'isotri');return (D[t].sig||[]).some(x=>x.tx.startsWith('底角 70°'))}}]},
+ {id:'g8_para',grade:8,domain:'图形与几何',tools:'平行线与截线',title:'平行四边形：相邻的两个角一个是 70°，另一个是几度？',q:'平行四边形的邻角互补：两个相邻的角加起来是 180°。',why:'180° − 70° = 110°。',
+  build:s=>{addEnt(s,'parlines',200,60,{a:40})},
+  steps:[{label:'把一个角调到 70°',score:1,hint:'点平行线卡，把角调到 70',target:T45('parlines'),check:(s,D)=>s.entities[byType(s,'parlines')].props.a===70},
+         {label:'邻角是 110°',score:2,hint:'看下面的文字',target:T45('parlines'),check:(s,D)=>{const p=byType(s,'parlines');return (D[p].sig||[]).some(t=>t.tx.includes('同旁内角 110°'))}}]},
+ {id:'g8_data',grade:8,domain:'统计与概率',tools:'数据的分析',title:'数据的分析：6、8、12 的平均数和中位数各是多少？',q:'平均数 = 总和 ÷ 个数；中位数是按大小排好后中间的那个数。',why:'平均数 26 ÷ 3 ≈ 8.67，中位数是 8。',
+  build:s=>{addEnt(s,'data',200,60,{a:6,b:8,c:10})},
+  steps:[{label:'把第三个数调到 12',score:1,hint:'点数据卡，把数 3 调到 12',target:T45('data'),check:(s,D)=>s.entities[byType(s,'data')].props.c===12},
+         {label:'平均数 8.67，中位数 8',score:2,hint:'看下面的文字',target:T45('data'),check:(s,D)=>{const d=byType(s,'data');return (D[d].sig||[]).some(t=>t.tx==='平均数 8.67，中位数 8')}}]},
+];
+P13.forEach(p=>XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
 
 function startXp(id,m){xp=XP.find(x=>x.id===id);if(!xp)return;mode=m;S=blankScene();xp.build(S);undoSt=[];redoSt=[];sel=null;cardOpen=false;
   run={steps:xp.steps.map((s,i)=>({i,done:false})),ops:0,errors:0,t0:Date.now(),finished:false};$('title').textContent=xp.title;
