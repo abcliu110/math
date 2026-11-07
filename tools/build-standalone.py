@@ -101,6 +101,10 @@ assert 'localStorage' not in widget_html
 # 按每动画约 6–11KB 计，3MB 够再做约 110 个动画（约 4–5 批）；全部 494 个
 # 方法做完 widget 可能到约 6MB，到时再评估是继续放宽还是拆包，不要为了
 # 凑数字删内容。
-assert len(widget_html.encode()) < 3000000
+# 第五次放宽到 6MB（2026-11-07）：8 年级 26 个动画后 widget 达 3,019,367，
+# 已超 3MB。剩余约 320 个方法、约 150 个动画，按每动画约 6–11KB 计还需
+# 约 1.5MB，做完约 4.5MB，6MB 够覆盖并留余量；到时再评估是继续放宽还是
+# 拆包，不要为了凑数字删内容。
+assert len(widget_html.encode()) < 6000000
 (WEB / 'homepage-widget.html').write_text(widget_html, encoding='utf-8')
 print('widget bytes:', len(widget_html.encode()))
