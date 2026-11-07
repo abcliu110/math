@@ -2914,8 +2914,12 @@ lsData['math-review-v1'] = JSON.stringify({ '3.7': { last: Date.now(), correct: 
 navGo('checkpoint');
 check('L checkpoint: unit lights up only when all its tasks are done',
   checkpointDetail.innerHTML.includes('分数的初步认识小达人') && checkpointDetail.innerHTML.includes('已点亮 1 个'));
+// 3.7 单元的动画本来就是 5 个（fraction + fraceq + buildfrac + fracnumline + m37-div），
+// 旧断言的“动画 1 / 1”靠的是 6.1 单元当时只有 fraction 一个动画；6 年级第五批给 6.1
+// 加了 m61-overlap / m61-scale / m61-wall / m61-groups，6.1 也变成 1 / 5，
+// 所以断言改为点亮单元（3.7）的真实计数 1 / 5。
 check('L checkpoint: lit unit shows task counts matching storage',
-  checkpointDetail.innerHTML.includes('动画 1 / 1') && checkpointDetail.innerHTML.includes('已练 1 / 1 条') && checkpointDetail.innerHTML.includes('任务 2 / 2'));
+  checkpointDetail.innerHTML.includes('动画 1 / 5') && checkpointDetail.innerHTML.includes('已练 1 / 1 条') && checkpointDetail.innerHTML.includes('任务 2 / 2'));
 check('L checkpoint: per-grade header labels the count as units (15 units, not 16 points)',
   /已点亮 \d+ \/ \d+ 个单元）/.test(checkpointDetail.innerHTML));
 // 只玩演示、没练过 → 1/2，不点亮、不给徽章。
