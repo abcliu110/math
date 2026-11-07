@@ -2632,7 +2632,16 @@ function renderBalance() {
   const eq = document.getElementById('balanceEq');
   const msg = document.getElementById('balanceMsg');
   const beam = document.getElementById('beamGroup');
-  beam.setAttribute('transform', 'rotate(' + balTilt + ' 160 70)');
+  // 梁是“转过去”不是“跳过去”（第 3 阶段）：和实验室三根梁一样走 labBeamAnim，
+  // 500ms 插值写 style.transform；transform 属性要拿掉，属性和样式同时在会打架
+  // （批 1 的教训）。支点在 CSS 里（#beamGroup，transform-origin:160px 70px）。
+  if (beam) {
+    beam.removeAttribute('transform');
+    labBeamAnim('p2', balTilt, function (deg) {
+      const b = document.getElementById('beamGroup');
+      if (b) b.style.transform = 'rotate(' + deg + 'deg)';
+    });
+  }
   const a = balEq.a, b = balEq.b, c = balEq.c, x = (c - b) / a;
   const x0 = 38 - (a - 3) * 10; // x 方块居中摆（a=3 时和原来一模一样）
   let left = '', right = '';
@@ -3223,8 +3232,11 @@ labTfRender();
    所以过渡不再靠 CSS：角度存在 JS 变量里，每帧写到节点上；节点被重建时，
    新节点按当前插值角画，不会跳变。没有 rAF 的环境（测试 stub）直接画到位。
    key 区分三根梁：bench（台面画布）、combo（组合台）、free（随便压）。 */
-var labBeamAnimState = {};
+var labBeamAnimState = labBeamAnimState || {}; // 不直接 = {}：P2 演示的 renderBalance 在加载时
+// 就调 labBeamAnim（2699 行），那时这行还没执行到——直接赋值会把加载时建好的
+// p2 状态清掉，第一次点按钮梁就跳变而不是转过去。
 function labBeamAnim(key, target, apply) {
+  if (!labBeamAnimState) labBeamAnimState = {}; // 同上：加载时调用，声明还没赋值
   const st = labBeamAnimState[key] || (labBeamAnimState[key] = { cur: null, target: null, from: 0, start: 0, raf: 0 });
   const raf = (typeof window !== 'undefined' && window.requestAnimationFrame) ? window.requestAnimationFrame.bind(window) : null;
   const caf = (typeof window !== 'undefined' && window.cancelAnimationFrame) ? window.cancelAnimationFrame.bind(window) : null;
@@ -3474,6 +3486,8 @@ function labWorldNormalize(w) {
   // 缺的顶层字段用空世界补齐（旧版本存的世界没有 benchRect 等字段）。
   const fresh = MathWorld.create({});
   Object.keys(fresh).forEach(function (k) { if (w[k] === undefined) w[k] = fresh[k]; });
+  // 子字段也要补：旧保存的 rect 没有 angle（第 3 阶段才有），缺了就回 0°。
+  if (typeof w.rect.angle !== 'number') w.rect.angle = 0;
   return w;
 }
 function labWorldRestore() {
@@ -3503,6 +3517,7 @@ function labApplyDefaults(qid) {
     if (typeof defs.linefn.b === 'number') ap({ type: 'linefnSet', b: defs.linefn.b });
   }
   if (spec.rect && defs.rect && typeof defs.rect.w === 'number') ap({ type: 'rectSet', w: defs.rect.w });
+  if (spec.rect && defs.rect && typeof defs.rect.angle === 'number') ap({ type: 'rectRotate', deg: defs.rect.angle });
   if (spec.chicken && defs.chicken && typeof defs.chicken.rabbits === 'number') ap({ type: 'chickenSetRabbits', rabbits: defs.chicken.rabbits });
   if (spec.tenframe && defs.tenframe) {
     if (typeof defs.tenframe.A === 'number') ap({ type: 'tenframeSet', side: 'A', n: defs.tenframe.A });
@@ -3517,7 +3532,7 @@ function labSaveApparatusDefault(key) {
   const d = labDefaultsLoad();
   if (key === 'fracboard') d.fracboard = { A: { n: w.fracboard.A.n, d: w.fracboard.A.d }, B: { n: w.fracboard.B.n, d: w.fracboard.B.d } };
   if (key === 'linefn') d.linefn = { k: w.linefn.k, b: w.linefn.b };
-  if (key === 'rect') d.rect = { perim: w.rect.perim, w: w.rect.w };
+  if (key === 'rect') d.rect = { perim: w.rect.perim, w: w.rect.w, angle: w.rect.angle };
   if (key === 'chicken' && w.chicken) d.chicken = { rabbits: w.chicken.rabbits };
   if (key === 'tenframe') d.tenframe = { A: w.tenframe.A, B: w.tenframe.B };
   labDefaultsSave(d);
@@ -3541,7 +3556,10 @@ function labResetApparatus(key) {
     worldPlayApply({ type: 'linefnSet', k: seed.k }, '直线 k 回到 ' + seed.k);
     worldPlayApply({ type: 'linefnSet', b: seed.b }, '直线 b 回到 ' + seed.b);
   }
-  if (key === 'rect') worldPlayApply({ type: 'rectSet', w: seed.w }, '长方形宽回到 ' + seed.w);
+  if (key === 'rect') {
+    worldPlayApply({ type: 'rectSet', w: seed.w }, '长方形宽回到 ' + seed.w);
+    worldPlayApply({ type: 'rectRotate', deg: typeof seed.angle === 'number' ? seed.angle : 0 }, '长方形角度回到 ' + (typeof seed.angle === 'number' ? seed.angle : 0) + '°');
+  }
   if (key === 'chicken') worldPlayApply({ type: 'chickenSetRabbits', rabbits: seed.rabbits }, '兔的只数回到 ' + seed.rabbits);
   if (key === 'tenframe') {
     worldPlayApply({ type: 'tenframeSet', side: 'A', n: seed.A }, '十格阵 A 回到 ' + seed.A);
@@ -3809,8 +3827,64 @@ var benchViewSaved = null;
 try { benchViewSaved = JSON.parse(lsGet('math-lab-benchview-v1') || 'null'); } catch (e) { benchViewSaved = null; }
 var benchPreferredView = (benchViewSaved && typeof benchViewSaved.preferred === 'string') ? benchViewSaved.preferred : null;
 var benchShowBalance = !(benchViewSaved && benchViewSaved.showBalance === false); // 天平在台上时台面先画天平；学生点了别的视图按钮才切走
+/* 台面画布缩放/平移（第 3 阶段，NB 底栏 50–400%）：画布是 svg#worldBenchView，
+   viewBox 520×260。zoom 是倍率（0.5–4），(benchPanX, benchPanY) 是视口中心
+   （SVG 坐标）。缩放只改 viewBox，不动图里任何东西的坐标——拖放落点、
+   手柄位置都按 viewBox 换算，不用改画法。状态进同一个 benchview 保存。 */
+var benchZoom = (benchViewSaved && typeof benchViewSaved.zoom === 'number')
+  ? Math.max(0.5, Math.min(4, benchViewSaved.zoom)) : 1;
+var benchPanX = (benchViewSaved && typeof benchViewSaved.cx === 'number') ? benchViewSaved.cx : 260;
+var benchPanY = (benchViewSaved && typeof benchViewSaved.cy === 'number') ? benchViewSaved.cy : 130;
+function benchZoomViewBox(z, cx, cy) {
+  const w = 520 / z, h = 260 / z;
+  return (cx - w / 2) + ' ' + (cy - h / 2) + ' ' + w + ' ' + h;
+}
+function benchZoomClamp() {
+  // 视口不能滑出画布：中心只能在 [w/2, 520-w/2] × [h/2, 260-h/2] 里。
+  // zoom=1 时 w=520，中心锁死在 (260,130)，拖不动——这就是对的。
+  const w = 520 / benchZoom, h = 260 / benchZoom;
+  benchPanX = Math.max(w / 2, Math.min(520 - w / 2, benchPanX));
+  benchPanY = Math.max(h / 2, Math.min(260 - h / 2, benchPanY));
+}
+function benchZoomApply() {
+  benchZoomClamp();
+  const svg = (typeof document !== 'undefined') ? document.getElementById('worldBenchView') : null;
+  if (!svg) return;
+  svg.setAttribute('viewBox', benchZoomViewBox(benchZoom, benchPanX, benchPanY));
+  // 放大后画布是工作区：触屏在画布上拖是平移，不是滚页面（zoom=1 时不动，
+  // 页面还能正常滚）。手柄自己有 touch-action:none，不受这条影响。
+  svg.style.touchAction = (benchZoom > 1) ? 'none' : '';
+  const lab = (typeof document !== 'undefined') ? document.querySelector('[data-bench-zoom-label]') : null;
+  if (lab) lab.textContent = Math.round(benchZoom * 100) + '%';
+}
+function benchZoomSave() {
+  try { lsSet('math-lab-benchview-v1', JSON.stringify({ preferred: benchPreferredView, showBalance: benchShowBalance, zoom: benchZoom, cx: benchPanX, cy: benchPanY })); } catch (e) {}
+}
+// 视口坐标 → SVG 坐标：按当前 viewBox 换算（缩放后 520×260 的老算法就错了）。
+// viewBox 读不到（测试桩）就按默认 520×260 算。
+function benchSvgPoint(clientX, clientY) {
+  const svg = (typeof document !== 'undefined') ? document.getElementById('worldBenchView') : null;
+  if (!svg || !svg.getBoundingClientRect) return null;
+  const r = svg.getBoundingClientRect();
+  if (!r.width || !r.height) return null;
+  const vb = (svg.viewBox && svg.viewBox.baseVal && svg.viewBox.baseVal.width)
+    ? svg.viewBox.baseVal : { x: 0, y: 0, width: 520, height: 260 };
+  return { x: vb.x + ((clientX - r.left) / r.width) * vb.width,
+    y: vb.y + ((clientY - r.top) / r.height) * vb.height };
+}
 function bvX(x) { return 30 + (x + 1) * 57.5; } // 坐标系 x 范围 -1 到 7
 function bvY(y) { return 230 - (y + 2) * (200 / 14); } // 坐标系 y 范围 -2 到 12
+function bvRectCenter(rect) { return { x: bvX(rect.w / 2), y: bvY(rect.h / 2) }; }
+// 顶点绕中心转 deg 度后的位置（SVG rotate 是顺时针为正，y 朝下，所以
+// 旋转矩阵和 <g transform="rotate(deg cx cy)"> 是一套：
+// rx = dx*cos - dy*sin，ry = dx*sin + dy*cos）。手柄和拖拽都用它算位置。
+function bvRectVertex(rect, deg) {
+  const c = bvRectCenter(rect);
+  const dx = bvX(rect.w) - c.x, dy = bvY(rect.h) - c.y;
+  const rad = (deg || 0) * Math.PI / 180;
+  const cos = Math.cos(rad), sin = Math.sin(rad);
+  return { x: c.x + dx * cos - dy * sin, y: c.y + dx * sin + dy * cos };
+}
 function benchViewSvg(view, items, lineOn, lf, bal, rect, rectSelected, beamOffset, extra) {
   let s = '';
   if (view === 'coord') {
@@ -3840,7 +3914,10 @@ function benchViewSvg(view, items, lineOn, lf, bal, rect, rectSelected, beamOffs
       // 2026-11-07 复测：刷新后长方形只剩形状，点本体、顶点、“(w,h)”全没反应，
       // 检查器一直空着，手柄也不画；原因是批 3 只给卡片/圆点/分数条包了 pick，
       // 漏了坐标系里的长方形）。手柄不在这个组里（它在选中后才画，委托里先判 rotate）。
-      s += '<g data-bench="pick-rect" style="cursor:pointer">';
+      // 整个组按 rect.angle 绕中心转：宽/长/面积都不变，只有朝向变（第 3 阶段）。
+      const rc = bvRectCenter(rect);
+      const rDeg = rect.angle || 0;
+      s += '<g data-bench="pick-rect" style="cursor:pointer" transform="rotate(' + rDeg + ' ' + rc.x + ' ' + rc.y + ')">';
       s += '<rect x="' + bvX(0) + '" y="' + bvY(rect.h) + '" width="' + (bvX(rect.w) - bvX(0)) +
         '" height="' + (bvY(0) - bvY(rect.h)) + '" fill="#fde68a" fill-opacity="0.7" stroke="#92400e" stroke-width="2"/>';
       s += '<text x="' + bvX(rect.w / 2) + '" y="' + bvY(rect.h / 2) + '" font-size="13" text-anchor="middle" fill="#92400e">' +
@@ -3857,14 +3934,16 @@ function benchViewSvg(view, items, lineOn, lf, bal, rect, rectSelected, beamOffs
       s += '<text x="' + (bvX(rect.w) - 6) + '" y="' + (bvY(rect.h) - 8) + '" font-size="11" text-anchor="end" fill="#92400e">(' +
         rect.w + ',' + rect.h + ')</text>';
       s += '</g>';
-      // 旋转手柄（NB 式：选中的物体上面浮一个 ⟳）：长方形被选中时才出现，点它转 90°。
+      // 旋转手柄（NB 式：选中的物体上面浮一个 ⟳）：长方形被选中时才出现。
+      // 点它转 90°（宽 ↔ 长互换，老行为）；拖它绕中心转任意角度（第 3 阶段）。
       // 点击区比看得见的圆大一圈（透明圆垫在下面）：手柄小，点偏几像素也要能转。
-      // 手柄中心在顶点右上方 28 单位、透明圆 r=16：它的左缘（顶点 +12）永远在标签
+      // 手柄中心在转过的顶点右上方 28 单位、透明圆 r=16：它的左缘（顶点 +12）永远在标签
       // 右缘（顶点 −6）之外，两者不再重叠（旧值 +16/−16、r=20 时左缘是顶点 −4，
-      // 正好盖住向右伸的标签）。
+      // 正好盖住向右伸的标签）。touch-action:none：触屏拖手柄不滚页面。
       if (rectSelected) {
-        const hx = bvX(rect.w) + 28, hy = bvY(rect.h) - 28;
-        s += '<g data-bench-rotate="rect" style="cursor:pointer"><circle cx="' + hx + '" cy="' + hy + '" r="16" fill="transparent"/><circle cx="' + hx + '" cy="' + hy + '" r="13" fill="#f97316" stroke="#f8fafc" stroke-width="2"/><text x="' + hx + '" y="' + (hy + 5) + '" font-size="15" text-anchor="middle" fill="#f8fafc">⟳</text></g>';
+        const rv = bvRectVertex(rect, rDeg);
+        const hx = rv.x + 28, hy = rv.y - 28;
+        s += '<g data-bench-rotate="rect" style="cursor:pointer;touch-action:none"><circle cx="' + hx.toFixed(1) + '" cy="' + hy.toFixed(1) + '" r="16" fill="transparent"/><circle cx="' + hx.toFixed(1) + '" cy="' + hy.toFixed(1) + '" r="13" fill="#f97316" stroke="#f8fafc" stroke-width="2"/><text x="' + hx.toFixed(1) + '" y="' + (hy + 5).toFixed(1) + '" font-size="15" text-anchor="middle" fill="#f8fafc">⟳</text></g>';
       }
     }
     items.forEach(function (it) {
@@ -4069,7 +4148,8 @@ function worldBenchRender() {
   else if (!benchPreferredView && dtOn) canvasView = 'datatable';
   else if (!benchPreferredView && spOn) canvasView = 'spinner';
   // 视图选择进自动保存：刷新后回到学生上次看的视图（见 benchPreferredView 的声明处）。
-  try { lsSet('math-lab-benchview-v1', JSON.stringify({ preferred: benchPreferredView, showBalance: benchShowBalance })); } catch (e) {}
+  // 缩放/平移也一起存（benchZoomSave）：刷新后回到上次的倍率和位置。
+  benchZoomSave();
   const vbox = document.getElementById('worldBenchViews');
   if (vbox) {
     let btns = '';
@@ -4081,6 +4161,12 @@ function worldBenchRender() {
       return '<button type="button" class="btn small ' + (v === canvasView ? 'primary' : 'ghost') +
         '" data-bench="view" data-view="' + v + '">' + BenchViews.VIEW_LABEL[v] + '</button>';
     }).join('');
+    // 缩放（第 3 阶段，NB 底栏 50–400%）：− / ＋ 按 1.25 倍进，复位回 100%。
+    btns += '<span class="muted">缩放</span>' +
+      '<button type="button" class="btn small ghost" data-bench="zoom-out" aria-label="缩小">−</button>' +
+      '<span class="muted" data-bench-zoom-label>' + Math.round(benchZoom * 100) + '%</span>' +
+      '<button type="button" class="btn small ghost" data-bench="zoom-in" aria-label="放大">＋</button>' +
+      '<button type="button" class="btn small ghost" data-bench="zoom-reset">复位</button>';
     vbox.innerHTML = btns + '<span class="muted">现在是：' + BenchViews.VIEW_LABEL[canvasView] + '</span>';
   }
   const svg = document.getElementById('worldBenchView');
@@ -4095,6 +4181,9 @@ function worldBenchRender() {
       w2 ? MathWorld.derived(w2).balance : null, (w2 && rectOn) ? MathWorld.derived(w2).rect : null,
       !!(worldInspectSel && worldInspectSel.apparatus === 'rect'), benchBeamCur(),
       d2 ? { tenframe: d2.tenframe, datatable: d2.datatable, spinner: d2.spinner } : null);
+    // 画布重画不碰 svg 元素本身的属性，但 viewBox 还是每次都按当前缩放重算一次——
+    // 别的代码（比如浏览器还原）动了属性也不会把缩放弄丢。
+    benchZoomApply();
   }
   // 台面天平的梁：画完按当前插值角起动画（labBeamAnim），500ms 转到目标角。
   if (canvasView === 'balance' && w2) {
@@ -4129,8 +4218,11 @@ function worldBenchRender() {
     // 画布里的旋转手柄（⟳）：走卡片上的委托，不再给 SVG 单独绑一次性的监听
     // （2026-11-07 复测：刷新后手柄点不动——SVG 上的 IIFE 绑定在真机刷新后不可靠，
     // 而卡片委托是台面上所有按钮都在走的路；和检查器里的“转 90°”是同一个动作）。
+    // 拖完手柄紧接着会来一个 click：那次不是点，是拖的尾巴，吞掉
+    // （rectRotateDragged 在 worldBenchRotateDrag 里置起，见那一节）。
     const h = e.target && e.target.closest ? e.target.closest('[data-bench-rotate]') : null;
     if (h) {
+      if (rectRotateDragged) { rectRotateDragged = false; return; }
       const w = worldPlayEnsure();
       if (w && w.rect) worldPlayApply({ type: 'rectSet', w: w.rect.perim / 2 - w.rect.w }, '转了 90°');
       return;
@@ -4138,6 +4230,19 @@ function worldBenchRender() {
     const b = e.target.closest('[data-bench]');
     if (!b) return;
     const op = b.getAttribute('data-bench');
+    // 缩放按钮（第 3 阶段）：− / ＋ 按 1.25 倍进，夹在 50–400% 之间；
+    // 凑近 100% 就贴上去，复位回 100% + 中心回正。
+    if (op === 'zoom-in' || op === 'zoom-out' || op === 'zoom-reset') {
+      if (op === 'zoom-reset') { benchZoom = 1; benchPanX = 260; benchPanY = 130; }
+      else {
+        benchZoom = op === 'zoom-in' ? benchZoom * 1.25 : benchZoom / 1.25;
+        benchZoom = Math.max(0.5, Math.min(4, benchZoom));
+        if (Math.abs(benchZoom - 1) < 0.05) benchZoom = 1;
+      }
+      benchZoomApply();
+      benchZoomSave();
+      return;
+    }
     if (op === 'make') {
       const kind = b.getAttribute('data-kind');
       const n = parseInt(b.getAttribute('data-n'), 10);
@@ -4219,7 +4324,12 @@ function worldBenchRender() {
     if (op === 'rect') {
       benchRun({ type: 'benchRectToggle' });
       benchMsg(labWorld && labWorld.benchRect ? '长方形放上了台面，台子切到坐标系格子' : '长方形拿下了台面', true);
-      if (labWorld && labWorld.benchRect) { benchPreferredView = null; benchShowBalance = false; worldInspectSelect({ apparatus: 'rect' }); labExpandStation('worldRectCard'); }
+      // 提示说“切到坐标系格子”，画布就要真切过去（2026-11-07 复测 8e38f4c：
+      // 加器材时提示说切了，画布却没动，要手动点视图按钮——原来这里把
+      // benchPreferredView 置 null，自动链又把台面散数排在前面）。打开时把
+      // 视图钉到坐标系，拿下时还给自动链，别一直钉着。
+      if (labWorld && labWorld.benchRect) { benchPreferredView = 'coord'; benchShowBalance = false; worldInspectSelect({ apparatus: 'rect' }); labExpandStation('worldRectCard'); }
+      else benchPreferredView = null;
       worldPlayRender();
       return;
     }
@@ -4232,7 +4342,9 @@ function worldBenchRender() {
       benchRun({ type: type });
       const flag = op === 'tenframe' ? labWorld.benchTenframe : op === 'datatable' ? labWorld.benchDatatable : labWorld.benchSpinner;
       benchMsg(flag ? label + '放上了台面，台子切到' + view : label + '拿下了台面', true);
-      if (flag) { benchPreferredView = null; benchShowBalance = false; worldInspectSelect({ apparatus: op }); }
+      // 和长方形一个道理：提示说切到，画布就要真切过去（复测 8e38f4c 毛病①）。
+      if (flag) { benchPreferredView = op === 'tenframe' ? 'tenframe' : op === 'datatable' ? 'table' : 'spin'; benchShowBalance = false; worldInspectSelect({ apparatus: op }); }
+      else benchPreferredView = null;
       worldPlayRender();
       return;
     }
@@ -4268,7 +4380,8 @@ function worldBenchRender() {
     if (op === 'line') {
       benchRun({ type: 'benchLineToggle' });
       benchMsg(labWorld && labWorld.benchLine ? '直线放上了台面，台子切到坐标系' : '直线拿下了台面', true);
-      if (labWorld && labWorld.benchLine) { benchPreferredView = null; benchShowBalance = false; worldInspectSelect({ apparatus: 'linefn' }); labExpandStation('worldFnCard'); }
+      if (labWorld && labWorld.benchLine) { benchPreferredView = 'coord'; benchShowBalance = false; worldInspectSelect({ apparatus: 'linefn' }); labExpandStation('worldFnCard'); }
+      else benchPreferredView = null;
       worldPlayRender();
       return;
     }
@@ -4427,16 +4540,12 @@ function benchDropTargetAt(x, y) {
   // 台面画布上的天平盘也是落点：台面正画着天平时，盘子是两个黄色矩形
   // （左盘 x 60–160、右盘 x 380–480，y 随倾斜在 148–232 之间；viewBox 520x260）。
   // 只在台面确实画着天平时才认，不然坐标系里的长方形会被误认成盘子。
+  // 坐标按当前 viewBox 换算（benchSvgPoint）：缩放后固定 520×260 的算法会错位。
   if (typeof labWorld !== 'undefined' && labWorld && labWorld.benchBalance && benchShowBalance) {
-    const benchSvg = document.getElementById('worldBenchView');
-    if (benchSvg && benchSvg.getBoundingClientRect) {
-      const r2 = benchSvg.getBoundingClientRect();
-      if (r2.width > 0 && r2.height > 0 && x >= r2.left && x <= r2.right && y >= r2.top && y <= r2.bottom) {
-        const vx2 = ((x - r2.left) / r2.width) * 520;
-        const vy2 = ((y - r2.top) / r2.height) * 260;
-        if (vx2 >= 46 && vx2 <= 174 && vy2 >= 136 && vy2 <= 244) return 'balance.L';
-        if (vx2 >= 366 && vx2 <= 494 && vy2 >= 136 && vy2 <= 244) return 'balance.R';
-      }
+    const p = benchSvgPoint(x, y);
+    if (p) {
+      if (p.x >= 46 && p.x <= 174 && p.y >= 136 && p.y <= 244) return 'balance.L';
+      if (p.x >= 366 && p.x <= 494 && p.y >= 136 && p.y <= 244) return 'balance.R';
     }
   }
   const nodes = document.querySelectorAll('[data-drop]');
@@ -4577,6 +4686,138 @@ function benchPlaceOn(pieceId, target, label) {
     if (suppressClick) { e.stopPropagation(); e.preventDefault(); }
   }, true);
 })();
+/* 长方形手柄拖拽旋转（第 3 阶段）：点手柄 = 转 90°（宽 ↔ 长，老行为），
+   拖手柄 = 绕中心转任意角度。拖的时候只改画布上的 transform（不进世界），
+   松开才一次提交 rectRotate——每动一下都进世界的话，台面 innerHTML 重建
+   会把手柄节点换掉，拖拽就断了（和梁动画一个道理：动画期间只改 DOM）。
+   角度按指针相对长方形中心的方向算（SVG 坐标，顺时针为正，和 rotate 一致）。 */
+var rectRotateDragged = false; // 拖完紧接着会来一个 click：那次 click 不是点，要吞掉
+(function worldBenchRotateDrag() {
+  const card = document.getElementById('worldBenchCard');
+  if (!card) return;
+  let rot = null;
+  // 拖的时候画布上的角度也要实时跟：pick-rect 组和手柄都按新角度摆，
+  // 检查器里的角度数字也实时跟（滑杆/数字输入/加粗数字三处）。
+  function liveAngle(deg) {
+    const svg = document.getElementById('worldBenchView');
+    if (!svg) return;
+    const w = worldPlayEnsure();
+    if (!w || !w.rect) return;
+    const r = MathWorld.derived(w).rect;
+    const c = bvRectCenter(r);
+    const g = svg.querySelector('[data-bench="pick-rect"]');
+    if (g) g.setAttribute('transform', 'rotate(' + deg + ' ' + c.x + ' ' + c.y + ')');
+    const v = bvRectVertex(r, deg);
+    const h = svg.querySelector('[data-bench-rotate]');
+    if (h) h.setAttribute('transform', 'translate(' + (v.x + 28 - rot.hx0).toFixed(1) + ' ' + (v.y - 28 - rot.hy0).toFixed(1) + ')');
+    if (worldInspectSel && worldInspectSel.apparatus === 'rect') {
+      const box = document.getElementById('worldBenchInspector');
+      if (box) {
+        const rng = box.querySelector('[data-insp="1"]');
+        if (rng) rng.value = String(deg);
+        const num = box.querySelector('[data-insp-num="1"]');
+        if (num) num.value = String(deg);
+        const row = num && num.closest ? num.closest('.insp-row') : null;
+        const b = row && row.querySelector('label b');
+        if (b) b.textContent = String(deg);
+      }
+    }
+  }
+  card.addEventListener('pointerdown', function (e) {
+    if (e.button !== undefined && e.button !== 0) return;
+    const h = e.target && e.target.closest ? e.target.closest('[data-bench-rotate]') : null;
+    if (!h) return;
+    const w = worldPlayEnsure();
+    if (!w || !w.rect) return;
+    const r = MathWorld.derived(w).rect;
+    const c = bvRectCenter(r);
+    const p = benchSvgPoint(e.clientX, e.clientY);
+    if (!p) return;
+    const v = bvRectVertex(r, r.angle);
+    rot = {
+      cx: c.x, cy: c.y,
+      deg0: r.angle,
+      th0: Math.atan2(p.y - c.y, p.x - c.x),
+      x0: e.clientX, y0: e.clientY, moved: false, deg: r.angle,
+      hx0: v.x + 28, hy0: v.y - 28,
+    };
+    try { if (h.setPointerCapture) h.setPointerCapture(e.pointerId); } catch (err) {}
+  });
+  document.addEventListener('pointermove', function (e) {
+    if (!rot) return;
+    if (!rot.moved) {
+      if (Math.hypot(e.clientX - rot.x0, e.clientY - rot.y0) < 6) return;
+      rot.moved = true;
+    }
+    const p = benchSvgPoint(e.clientX, e.clientY);
+    if (!p) return;
+    // 指针方向差：过 ±180° 边界时要折回 [−180°, 180°]，不然从 179° 拖到 −179°
+    // 会被算成转了 −358° 而不是 +2°。
+    let dth = Math.atan2(p.y - rot.cy, p.x - rot.cx) - rot.th0;
+    while (dth > Math.PI) dth -= 2 * Math.PI;
+    while (dth < -Math.PI) dth += 2 * Math.PI;
+    rot.deg = ((Math.round(rot.deg0 + dth * 180 / Math.PI) % 360) + 360) % 360;
+    liveAngle(rot.deg);
+  });
+  function endRot(commit) {
+    if (!rot) return;
+    const deg = rot.deg, moved = rot.moved;
+    rot = null;
+    if (commit && moved) {
+      worldPlayApply({ type: 'rectRotate', deg: deg }, '转到 ' + deg + '°');
+      rectRotateDragged = true;
+      setTimeout(function () { rectRotateDragged = false; }, 0);
+    }
+  }
+  document.addEventListener('pointerup', function () { endRot(true); });
+  document.addEventListener('pointercancel', function () { endRot(false); });
+})();
+/* 台面画布平移（第 3 阶段）：放大后（zoom>1）拖画布空白处平移视口。
+   画布空白 = 在 svg 里、又不在任何 [data-bench] / 手柄上（网格线、轴标签、
+   空地都算空白）。6 像素以内算点击，不动。平移按“指针在屏幕上走了多远”算：
+   按下时的屏幕坐标 + 按下时的中心，屏幕位移 ×（viewBox 宽 / 屏幕宽）=
+   SVG 位移，中心跟着指针反向走——坐标系本身不动，所以是 1:1。
+   别按 SVG 坐标的连续差分算：每动一下 viewBox 就跟着动，差分是在两个
+   不同的坐标系里量的，实测拖 50 个单位中心只走 25（半速）。
+   zoom=1 时中心锁死在 (260,130)，拖了也白拖。 */
+(function worldBenchPan() {
+  const card = document.getElementById('worldBenchCard');
+  if (!card) return;
+  let pan = null;
+  card.addEventListener('pointerdown', function (e) {
+    if (e.button !== undefined && e.button !== 0) return;
+    if (benchZoom <= 1) return; // 没放大不用平移
+    const svg = document.getElementById('worldBenchView');
+    if (!svg || !svg.contains || !svg.contains(e.target)) return;
+    if (e.target.closest && e.target.closest('[data-bench],[data-bench-rotate]')) return;
+    if (!benchSvgPoint(e.clientX, e.clientY)) return; // 点在画布外就别开始
+    pan = { x0: e.clientX, y0: e.clientY, cx0: benchPanX, cy0: benchPanY, moved: false };
+  });
+  document.addEventListener('pointermove', function (e) {
+    if (!pan) return;
+    if (!pan.moved) {
+      if (Math.hypot(e.clientX - pan.x0, e.clientY - pan.y0) < 6) return;
+      pan.moved = true;
+    }
+    const svg = document.getElementById('worldBenchView');
+    if (!svg || !svg.getBoundingClientRect) return;
+    const r = svg.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    const vb = (svg.viewBox && svg.viewBox.baseVal && svg.viewBox.baseVal.width)
+      ? svg.viewBox.baseVal : { width: 520, height: 260 };
+    benchPanX = pan.cx0 - (e.clientX - pan.x0) * (vb.width / r.width);
+    benchPanY = pan.cy0 - (e.clientY - pan.y0) * (vb.height / r.height);
+    benchZoomApply();
+  });
+  function endPan() {
+    if (!pan) return;
+    const moved = pan.moved;
+    pan = null;
+    if (moved) benchZoomSave();
+  }
+  document.addEventListener('pointerup', endPan);
+  document.addEventListener('pointercancel', endPan);
+})();
 /* ---------- 检查器：点一个物体，它的属性就贴在台面旁边（NB 式） ----------
    每个物体 2–4 个属性（MathWorld.inspect 给出标题、当前状态、属性表和合法范围）；
    滑杆 + 数字输入双通道，改完世界立刻重算并画出来。拖滑杆时不重建检查器，
@@ -4700,6 +4941,7 @@ function worldInspectorApply(idx, rawVal) {
     return worldPlayApply(o, it.field + '=' + v);
   }
   if (it.type === 'rectSet') return worldPlayApply({ type: 'rectSet', w: v }, '宽改成 ' + v);
+  if (it.type === 'rectRotate') return worldPlayApply({ type: 'rectRotate', deg: v }, '转到 ' + v + '°');
   if (it.type === 'chickenSetRabbits') return worldPlayApply({ type: 'chickenSetRabbits', rabbits: v }, '兔=' + v);
   if (it.type === 'tenframeSet') return worldPlayApply({ type: 'tenframeSet', side: it.side, n: v }, '十格阵 ' + it.side + '=' + v);
   if (it.type === 'datatableSet') return worldPlayApply({ type: 'datatableSet', row: it.row, n: v }, '数据表 ' + (it.row + 1) + ' 行=' + v);

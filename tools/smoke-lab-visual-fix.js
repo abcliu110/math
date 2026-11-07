@@ -36,9 +36,13 @@ check('bench chips: formula branch draws chips, no bare x = lines',
   })());
 check('bench rect: rect on bench defaults to the coord view (rect only draws there)',
   app.includes("else if (!benchPreferredView && rectOn) canvasView = 'coord';"));
-check('bench rect: putting rect/line/balance on returns to the auto view',
-  app.includes("benchPreferredView = null; benchShowBalance = false; worldInspectSelect({ apparatus: 'rect' })") &&
-  app.includes("benchPreferredView = null; benchShowBalance = false; worldInspectSelect({ apparatus: 'linefn' })") &&
+// 第 3 批 + 复测 8e38f4c 毛病①：提示说“切到坐标系格子”，画布就要真切过去——
+// 旧做法是把 benchPreferredView 置 null、让自动链决定，结果台面有散数时画布
+// 根本不动。现在打开器材时把视图钉到它自己的视图（长方形/直线 → 坐标系），
+// 拿下时才还给自动链；天平还是老样子（benchShowBalance = true）。
+check('bench rect: putting rect/line on pins the view to coord (retest quirk ①)',
+  app.includes("benchPreferredView = 'coord'; benchShowBalance = false; worldInspectSelect({ apparatus: 'rect' })") &&
+  app.includes("benchPreferredView = 'coord'; benchShowBalance = false; worldInspectSelect({ apparatus: 'linefn' })") &&
   app.includes('benchShowBalance = true; benchPreferredView = null;'));
 
 // 3) Balance draws on the bench
@@ -108,8 +112,11 @@ check('pan glow: bench drags highlight the drop target while moving',
 check('bench drop: dragging onto the bench canvas puts the piece on the bench',
   app.includes("inside(benchView, e.clientX, e.clientY)"));
 check('bench drop: bench-canvas balance pans are drop targets too',
-  app.includes("getElementById('worldBenchView')") && app.includes("vx2 >= 46 && vx2 <= 174") &&
-  app.includes("vx2 >= 366 && vx2 <= 494"));
+  // 第 3 批：落点换算改走 benchSvgPoint（按当前 viewBox 换算，缩放后固定
+  // 520×260 的算法会错位），盘子范围还是左 46–174、右 366–494。
+  app.includes('const p = benchSvgPoint(x, y);') &&
+  app.includes('p.x >= 46 && p.x <= 174 && p.y >= 136 && p.y <= 244') &&
+  app.includes('p.x >= 366 && p.x <= 494 && p.y >= 136 && p.y <= 244'));
 
 // 8) Bench fills the main area at desktop width (was ~1100px centered in 1920px)
 check('layout: lab breaks out of the 1120px wrap to 1600px',
@@ -154,11 +161,14 @@ check('balance persist: free-play balance saves to math-lab-bal-v1 and restores 
 // line still claimed the bench was on the coordinate grid)
 check('bench view: view choice is saved to math-lab-benchview-v1 and restored on load',
   app.includes("'math-lab-benchview-v1'") &&
-  app.includes("lsSet('math-lab-benchview-v1', JSON.stringify({ preferred: benchPreferredView, showBalance: benchShowBalance }))") &&
+  // 第 3 批：保存改走 benchZoomSave，视图 + 缩放/平移一起存（zoom/cx/cy）。
+  app.includes("lsSet('math-lab-benchview-v1', JSON.stringify({ preferred: benchPreferredView, showBalance: benchShowBalance, zoom: benchZoom, cx: benchPanX, cy: benchPanY }))") &&
   app.includes("JSON.parse(lsGet('math-lab-benchview-v1')"));
 check('bench view: placing the rectangle or the line actually leaves the balance view (the message promises 坐标系)',
-  app.includes("benchPreferredView = null; benchShowBalance = false; worldInspectSelect({ apparatus: 'rect' })") &&
-  app.includes("benchPreferredView = null; benchShowBalance = false; worldInspectSelect({ apparatus: 'linefn' })"));
+  // 第 3 批 + 复测 8e38f4c 毛病①：不是“回到自动链”，是把视图钉到坐标系——
+  // 自动链会把台面散数排在前面，钉 null 画布就不动，提示就成了假话。
+  app.includes("benchPreferredView = 'coord'; benchShowBalance = false; worldInspectSelect({ apparatus: 'rect' })") &&
+  app.includes("benchPreferredView = 'coord'; benchShowBalance = false; worldInspectSelect({ apparatus: 'linefn' })"));
 
 // 14) Quick drags register (retest: two fast 1/6 drags did not register; a slow drag did)
 check('quick drag: bench pointerup counts as a drag when the release point is far from the press point',

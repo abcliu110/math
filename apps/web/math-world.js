@@ -96,7 +96,7 @@
       datatable: { rows: [{ label: 'A', n: 0 }, { label: 'B', n: 0 }] },
       // 转盘：扇区数 2–8，名字固定按颜色排；转一次记一次结果（last 是扇区下标）。
       spinner: { sectors: 4, last: null, counts: [0, 0, 0, 0] },
-      rect: { perim: 20, w: 1 }, // 周长一定的长方形：只调宽，长 = 周长/2 - 宽
+      rect: { perim: 20, w: 1, angle: 0 }, // 周长一定的长方形：只调宽，长 = 周长/2 - 宽；angle 是画出来的朝向（0–359°，转多少面积都不变）
     };
     if (extra) Object.keys(extra).forEach(function (k) { w[k] = extra[k]; });
     return w;
@@ -526,6 +526,7 @@
     }
     return {
       perim: perim, w: w, h: h, area: area,
+      angle: ((r.angle | 0) % 360 + 360) % 360, // 画出来的朝向（只影响画法，不影响宽/长/面积）
       isSquare: w === h,
       best: { w: bw, h: bh, area: bestArea },
       signals: signals,
@@ -985,6 +986,15 @@
       return { world: w, ok: true };
     }
 
+    /* 长方形转任意角度：只改画出来的朝向，宽/长/面积/最大面积全不动。
+       角度归一到 0–359；不是整数就拒绝（和 rectSet 一个规矩）。 */
+    if (type === 'rectRotate') {
+      const deg = intent.deg;
+      if (typeof deg !== 'number' || !isFinite(deg) || Math.floor(deg) !== deg) return { world: world, ok: false, reason: 'bad-number' };
+      w.rect.angle = ((deg % 360) + 360) % 360;
+      return { world: w, ok: true };
+    }
+
     /* 过两点定直线：k = Δy/Δx，b = y1 - k·x1。 */
     if (type === 'linefnFromPoints') {
       const x1 = +intent.x1, y1 = +intent.y1, x2 = +intent.x2, y2 = +intent.y2;
@@ -1084,6 +1094,7 @@
     if (seed.rect) {
       if (seed.rect.perim !== undefined) w.rect.perim = seed.rect.perim | 0;
       if (seed.rect.w !== undefined) w.rect.w = seed.rect.w | 0;
+      if (seed.rect.angle !== undefined) w.rect.angle = ((seed.rect.angle | 0) % 360 + 360) % 360;
     }
     if (seed.numline) {
       if (seed.numline.min !== undefined) w.numline.min = +seed.numline.min;
@@ -1101,7 +1112,7 @@
     'q-numline': { tenframe: { A: 7, B: 0 }, numline: { min: 0, max: 2 } },
     'q-funcline': { linefn: { k: 2, b: 8 } },
     'q-chicken': { chicken: { targetHeads: 35, targetLegs: 94, rabbits: 0 } },
-    'q-maxarea': { rect: { perim: 20, w: 1 } },
+    'q-maxarea': { rect: { perim: 20, w: 1, angle: 0 } },
     'q-fairgame': {},
   };
 
@@ -1203,8 +1214,9 @@
     if (which === 'rect') {
       const r = d.rect;
       return {
-        title: '长方形（周长 ' + r.perim + '）', state: '宽 ' + r.w + '，长 ' + r.h + '，面积 ' + r.area,
-        props: [prop('w', '宽', r.w, 1, r.perim / 2 - 1, 1, { type: 'rectSet', field: 'w' })],
+        title: '长方形（周长 ' + r.perim + '）', state: '宽 ' + r.w + '，长 ' + r.h + '，面积 ' + r.area + '，角度 ' + r.angle + '°',
+        props: [prop('w', '宽', r.w, 1, r.perim / 2 - 1, 1, { type: 'rectSet', field: 'w' }),
+          prop('angle', '角度', r.angle, 0, 359, 1, { type: 'rectRotate', field: 'angle' })],
       };
     }
     if (which === 'chicken') {

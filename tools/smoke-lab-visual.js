@@ -114,8 +114,9 @@ check('signals: no debug internals leak into the student view',
 
 // 8) Rect shared state (retest question): ONE rect in the world, by design —
 // emptyWorld holds it once; the q-maxarea seed only sets its starting value.
+// 第 3 批：rect 多了一个 angle 字段（0–359°，只改朝向），字面量跟着改，个数还是 2。
 check('rect: the world holds exactly one rectangle (bench rect == maxarea station rect)',
-  (mw.match(/rect: \{ perim: 20, w: 1 \}/g) || []).length === 2 &&
+  (mw.match(/rect: \{ perim: 20, w: 1, angle: 0 \}/g) || []).length === 2 &&
   mw.includes('if (seed.rect) {') && !/rect2|maxareaRect|secondRect/.test(mw));
 
 console.log(fail === 0 ? ('smoke-lab-visual OK: ' + pass + '/' + pass) : ('smoke-lab-visual FAILED: ' + pass + ' passed, ' + fail + ' failed'));

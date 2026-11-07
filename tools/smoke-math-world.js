@@ -389,9 +389,34 @@ check('linefn inspector: k and b, with ranges', ins9 && ins9.props.length === 2 
   ins9.props[1].key === 'b' && ins9.props[1].min === 0 && ins9.props[1].max === 15);
 check('linefn inspector state shows the formula', ins9.state === 'y = 2x + 8');
 let ins9R = MW.inspect(MW.LAB_SEEDS['q-maxarea'](), { apparatus: 'rect' });
-check('rect inspector: only width is adjustable, length follows', ins9R && ins9R.props.length === 1 &&
-  ins9R.props[0].key === 'w' && ins9R.props[0].min === 1 && ins9R.props[0].max === 9);
-check('rect inspector state shows width, length and area', ins9R.state === '宽 1，长 9，面积 9');
+// Phase 3 batch 3: 长方形除了宽，还能调角度（0–359°，只改画出来的朝向，
+// 宽/长/面积都不动）——“只能调宽”是旧行为，批 3 改掉它。
+check('rect inspector: width + angle are adjustable (angle 0–359)', ins9R && ins9R.props.length === 2 &&
+  ins9R.props[0].key === 'w' && ins9R.props[0].min === 1 && ins9R.props[0].max === 9 &&
+  ins9R.props[1].key === 'angle' && ins9R.props[1].min === 0 && ins9R.props[1].max === 359);
+check('rect inspector state shows width, length, area and angle', ins9R.state === '宽 1，长 9，面积 9，角度 0°');
+
+// Phase 3 batch 3: rectRotate — 任意角度，只改朝向
+check('rect default angle is 0', MW.create().rect.angle === 0);
+let rt3 = MW.apply(MW.create(), { type: 'rectRotate', deg: 45 });
+check('rectRotate 45: angle is 45, width/length/area unchanged',
+  rt3.ok && MW.derived(rt3.world).rect.angle === 45 && MW.derived(rt3.world).rect.w === 1 &&
+  MW.derived(rt3.world).rect.h === 9 && MW.derived(rt3.world).rect.area === 9);
+let rt3b = MW.apply(rt3.world, { type: 'rectRotate', deg: 370 });
+check('rectRotate 370 normalizes to 10', rt3b.ok && MW.derived(rt3b.world).rect.angle === 10);
+let rt3c = MW.apply(rt3.world, { type: 'rectRotate', deg: -30 });
+check('rectRotate -30 normalizes to 330', rt3c.ok && MW.derived(rt3c.world).rect.angle === 330);
+let rt3d = MW.apply(MW.create(), { type: 'rectRotate', deg: 45.5 });
+check('rectRotate non-integer is rejected', rt3d.ok === false && rt3d.reason === 'bad-number');
+let rt3e = MW.apply(MW.create(), { type: 'rectRotate', deg: '45' });
+check('rectRotate non-number is rejected', rt3e.ok === false && rt3e.reason === 'bad-number');
+let rt3seed = MW.create({ rect: { perim: 20, w: 4, angle: 200 } });
+check('create seed angle is kept (200)', MW.derived(rt3seed).rect.angle === 200);
+let rt3seed2 = MW.create({ rect: { perim: 20, w: 4, angle: -10 } });
+check('create seed angle normalizes (-10 -> 350)', MW.derived(rt3seed2).rect.angle === 350);
+let rt3g = MW.apply(MW.apply(MW.create(), { type: 'rectRotate', deg: 45 }).world, { type: 'rectSet', w: 4 });
+check('rectSet keeps the angle (45) and recomputes area (4x6=24)',
+  rt3g.ok && MW.derived(rt3g.world).rect.angle === 45 && MW.derived(rt3g.world).rect.area === 24);
 let ins9F = MW.inspect(MW.LAB_SEEDS['q-fracadd'](), { apparatus: 'fracboard' });
 check('fracboard inspector: 4 props (A/B numerator/denominator)', ins9F && ins9F.props.length === 4);
 let ins9P = MW.inspect(sp9Set.world, { piece: sp9Mk.pieceId });

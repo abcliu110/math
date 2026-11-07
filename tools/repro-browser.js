@@ -150,7 +150,11 @@ async function labState() {
       benchCount: d.bench.count, benchTotal: d.bench.totalStr,
       balL: d.balance.Lstr, balR: d.balance.Rstr, balEqual: d.balance.equal,
       rect: labWorld.rect ? labWorld.rect.w + 'x' + (labWorld.rect.perim / 2 - labWorld.rect.w) + ' (perim ' + labWorld.rect.perim + ')' : null,
+      rectAngle: labWorld.rect ? labWorld.rect.angle : null, // 第 3 批：长方形朝向
       benchRect: !!labWorld.benchRect, benchBalance: !!labWorld.benchBalance,
+      // 第 3 批：画布 viewBox + 缩放标签（缩放/平移场景断言用）。
+      viewBox: (function(){ var s=document.getElementById('worldBenchView'); if(!s||!s.viewBox||!s.viewBox.baseVal) return null; var v=s.viewBox.baseVal; return Math.round(v.x)+' '+Math.round(v.y)+' '+Math.round(v.width)+' '+Math.round(v.height); })(),
+      zoomLabel: (function(){ var l=document.querySelector('[data-bench-zoom-label]'); return l?l.textContent:''; })(),
       benchTenframe: !!labWorld.benchTenframe, benchDatatable: !!labWorld.benchDatatable, benchSpinner: !!labWorld.benchSpinner,
       tf: labWorld.tenframe ? labWorld.tenframe.A + '+' + labWorld.tenframe.B + '=' + d.tenframe.sum : null,
       dt: d.datatable ? d.datatable.rows.map(function (r) { return r.label + ':' + r.n; }).join(',') + ' total=' + d.datatable.total : null,
@@ -1140,6 +1144,271 @@ async function main() {
         : 'RESULT: FAIL — spinner bench flow broken (see notes above)');
       await evaljs(`(function(){var b=document.querySelector('[data-bench="spinner"]');if(b)b.click();})()`);
       await sleep(300);
+    } else if (scenario === 'rect-rotate-drag') {
+      // Phase 3 batch 3：拖手柄转任意角度。1×9 长方形，手柄在右上顶点外；
+      // 绕中心顺时针拖 ~90° → 角度 ≈90°、宽/长/面积不动，检查器角度数字
+      // 实时跟；拖完那一下 click 不能再触发 90° 互换（长方形不能变成 9×1）；
+      // 之后再点一下手柄，90° 互换还在（1×9 → 9×1）。
+      await enterLab();
+      await evaljs(`(function(){var b=document.querySelector('[data-bench="rect"]');if(b)b.click();})()`);
+      await sleep(300);
+      await evaljs(`(function(){ if (typeof worldInspectSelect === 'function') worldInspectSelect({apparatus:'rect'}); })()`);
+      await sleep(300);
+      // 先把手柄滚进视野，再量几何：目标点在 SVG 坐标里算好再换算到视口
+      // （画布宽高比万一不是 2:1，视口里直接转 90° 在 SVG 里就不是 90°）。
+      await centers('[data-bench-rotate]');
+      const geo = await evaljs(`(function(){
+        var svg=document.getElementById('worldBenchView');
+        if(!svg) return null;
+        var r=svg.getBoundingClientRect();
+        var vb=svg.viewBox.baseVal;
+        var d=MathWorld.derived(labWorld).rect;
+        var h=document.querySelector('[data-bench-rotate]');
+        if(!h) return null;
+        var hr=h.getBoundingClientRect();
+        function toSvg(vx,vy){ return { x: vb.x+((vx-r.x)/r.width)*vb.width, y: vb.y+((vy-r.y)/r.height)*vb.height }; }
+        function toView(sx,sy){ return { x: r.x+((sx-vb.x)/vb.width)*r.width, y: r.y+((sy-vb.y)/vb.height)*r.height }; }
+        var cs={ x: 30+(d.w/2+1)*57.5, y: 230-(d.h/2+2)*(200/14) };
+        var hs=toSvg(hr.x+hr.width/2, hr.y+hr.height/2);
+        var ox=hs.x-cs.x, oy=hs.y-cs.y;
+        var tSvg={ x: cs.x-oy, y: cs.y+ox }; // 顺时针 90°：(x,y) -> (-y,x)
+        return { center: toView(cs.x,cs.y), handle: { x: hr.x+hr.width/2, y: hr.y+hr.height/2 },
+          target: toView(tSvg.x,tSvg.y), rect: { w:d.w, h:d.h, angle:d.angle, area:d.area } };
+      })()`);
+      note('geometry: ' + JSON.stringify(geo));
+      const before = await labState();
+      note('before: rect=' + before.rect + ' angle=' + before.rectAngle);
+      if (geo) await drag(geo.handle.x, geo.handle.y, geo.target.x, geo.target.y, 16, 30);
+      await sleep(400);
+      const after = await labState();
+      const inspAngle = await evaljs(`(function(){var r=document.querySelector('#worldBenchInspector input[data-insp="1"]');return r?r.value:'';})()`);
+      note('after drag: rect=' + after.rect + ' angle=' + after.rectAngle + ' inspector angle slider=' + inspAngle);
+      // 拖完再点一下手柄：90° 互换还在
+      const [h2] = await centers('[data-bench-rotate]');
+      if (h2) { await clickAt(h2.cx, h2.cy); await sleep(300); }
+      const afterClick = await labState();
+      note('after handle click: rect=' + afterClick.rect + ' angle=' + afterClick.rectAngle);
+      report.pass = geo !== null && before.rectAngle === 0 &&
+        after.rectAngle !== null && after.rectAngle >= 70 && after.rectAngle <= 110 &&
+        after.rect === '1x9 (perim 20)' &&
+        inspAngle !== '' && Math.abs(parseInt(inspAngle, 10) - after.rectAngle) <= 1 &&
+        afterClick.rect === '9x1 (perim 20)';
+      note(report.pass ? 'RESULT: PASS — handle drag rotates ~90°, dims/area unchanged, click-swap still works'
+        : 'RESULT: FAIL — rotate drag broken (see notes above)');
+    } else if (scenario === 'zoom-drop') {
+      // Phase 3 batch 3：放大到约 195% 再平移，让右盘回到视野里，然后
+      // 从零件盒拖 1/6 到右盘——落点要按当前 viewBox 换算，固定 520×260
+      // 的老算法在这个倍率下会打偏。同时验 benchSvgPoint 本身：画布视口
+      // 中心对应的 SVG 点就是 viewBox 中心。
+      await enterLab();
+      await evaljs(`(function(){var b=document.querySelector('[data-bench="balance"]');if(b)b.click();})()`);
+      await sleep(300);
+      for (let i = 0; i < 3; i++) {
+        await evaljs(`(function(){var b=document.querySelector('[data-bench="zoom-in"]');if(b)b.click();})()`);
+        await sleep(200);
+      }
+      const zoom1 = await labState();
+      note('after 3x zoom-in: label=' + zoom1.zoomLabel + ' viewBox=' + zoom1.viewBox);
+      const pt = await evaljs(`(function(){
+        var svg=document.getElementById('worldBenchView');
+        var r=svg.getBoundingClientRect();
+        var p=benchSvgPoint(r.x+r.width/2, r.y+r.height/2);
+        var vb=svg.viewBox.baseVal;
+        return { p: p, center: { x: vb.x+vb.width/2, y: vb.y+vb.height/2 } };
+      })()`);
+      note('benchSvgPoint at viewport centre: ' + JSON.stringify(pt));
+      const ptOk = pt && pt.p && Math.abs(pt.p.x - pt.center.x) < 2 && Math.abs(pt.p.y - pt.center.y) < 2;
+      // 平移：把右盘（SVG 430,190）拖进视野中心附近。从 SVG (340,180)
+      // 拖到 (200,130)：指针左移 140、上移 50，中心就向右/下移 140/50
+      // （260,130 → 400,180，再夹到 387,180）。
+      // 先把画布滚进视野再量坐标：不滚的话画布在折叠线下，量出来的视口
+      // 坐标会落在视口外面（y=1946），按下去根本不是画布。
+      await centers('#worldBenchView');
+      const panGeo = await evaljs(`(function(){
+        var svg=document.getElementById('worldBenchView');
+        var r=svg.getBoundingClientRect(); var vb=svg.viewBox.baseVal;
+        function toView(sx,sy){ return { x: r.x+((sx-vb.x)/vb.width)*r.width, y: r.y+((sy-vb.y)/vb.height)*r.height }; }
+        return { from: toView(340,180), to: toView(200,130) };
+      })()`);
+      note('pan drag: ' + JSON.stringify(panGeo));
+      await drag(panGeo.from.x, panGeo.from.y, panGeo.to.x, panGeo.to.y, 12, 40);
+      await sleep(300);
+      const afterPan = await labState();
+      note('after pan: label=' + afterPan.zoomLabel + ' viewBox=' + afterPan.viewBox);
+      // 右盘中心（SVG 430,190）按当前 viewBox 换算到视口，再拖 1/6 过去。
+      // 先把芯片和画布一起量（一次滚动，坐标不打架）。
+      const vbNow = await evaljs(`(function(){var svg=document.getElementById('worldBenchView');var vb=svg.viewBox.baseVal;return {x:vb.x,y:vb.y,w:vb.width,h:vb.height};})()`);
+      const [chip, view] = await centers(
+        '#worldBenchBox [data-bench="make"][data-kind="frac"][data-n="1"][data-d="6"]', '#worldBenchView');
+      const tx = view.x + ((430 - vbNow.x) / vbNow.w) * view.w;
+      const ty = view.y + ((190 - vbNow.y) / vbNow.h) * view.h;
+      note('right pan target: ' + Math.round(tx) + ',' + Math.round(ty) + ' view=' + JSON.stringify(view));
+      const before = await labState();
+      await drag(chip.cx, chip.cy, tx, ty, 12, 40);
+      await sleep(300);
+      const after = await labState();
+      note('before: bal R=' + before.balR + ' bench=' + before.benchTotal + ' | after: bal R=' + after.balR + ' bench=' + after.benchTotal);
+      report.pass = zoom1.zoomLabel === '195%' && ptOk &&
+        afterPan.viewBox !== null && after.balR !== before.balR;
+      note(report.pass ? 'RESULT: PASS — zoom-aware drop lands on the right pan at 195% after panning'
+        : 'RESULT: FAIL — zoomed drop missed (see notes above)');
+    } else if (scenario === 'zoom-pan') {
+      // Phase 3 batch 3：放大后拖画布空白处平移；拖得再远也不能滑出画布；
+      // 倍率和中心刷新后还在；复位回 100%；100% 时拖不动。
+      await enterLab();
+      await evaljs(`(function(){var b=document.querySelector('[data-bench="zoom-in"]');if(b)b.click();})()`);
+      await sleep(200);
+      await evaljs(`(function(){var b=document.querySelector('[data-bench="zoom-in"]');if(b)b.click();})()`);
+      await sleep(300);
+      const z1 = await labState();
+      note('after 2x zoom-in: label=' + z1.zoomLabel + ' viewBox=' + z1.viewBox);
+      // 平移一小段：从 SVG (100,60) 拖到 (150,60)，中心 260 → 210（1:1 时）。
+      // 先把画布滚进视野再量坐标（不滚量出来的起点在视口外，按下去不是画布）。
+      await centers('#worldBenchView');
+      const pan1 = await evaljs(`(function(){
+        var svg=document.getElementById('worldBenchView');
+        var r=svg.getBoundingClientRect(); var vb=svg.viewBox.baseVal;
+        function toView(sx,sy){ return { x: r.x+((sx-vb.x)/vb.width)*r.width, y: r.y+((sy-vb.y)/vb.height)*r.height }; }
+        return { from: toView(100,60), to: toView(150,60) };
+      })()`);
+      await drag(pan1.from.x, pan1.from.y, pan1.to.x, pan1.to.y, 10, 40);
+      await sleep(300);
+      const z2 = await labState();
+      note('after small pan: label=' + z2.zoomLabel + ' viewBox=' + z2.viewBox);
+      // 刷新：倍率和中心要带回来
+      await send('Page.reload', { ignoreCache: true });
+      await sleep(2500);
+      await enterLab();
+      await sleep(300);
+      const z3 = await labState();
+      note('after refresh: label=' + z3.zoomLabel + ' viewBox=' + z3.viewBox);
+      // 往右猛拖 300：中心夹到右缘，viewBox 不能滑出画布（x>=0，右缘<=520）
+      await centers('#worldBenchView');
+      const pan2 = await evaljs(`(function(){
+        var svg=document.getElementById('worldBenchView');
+        var r=svg.getBoundingClientRect(); var vb=svg.viewBox.baseVal;
+        function toView(sx,sy){ return { x: r.x+((sx-vb.x)/vb.width)*r.width, y: r.y+((sy-vb.y)/vb.height)*r.height }; }
+        return { from: toView(100,60), to: toView(400,60) };
+      })()`);
+      await drag(pan2.from.x, pan2.from.y, pan2.to.x, pan2.to.y, 10, 30);
+      await sleep(300);
+      const z4 = await labState();
+      note('after big pan: label=' + z4.zoomLabel + ' viewBox=' + z4.viewBox);
+      const vb4 = z4.viewBox ? z4.viewBox.split(' ').map(Number) : null;
+      // 复位回 100%，再拖一次：100% 时中心锁死，拖了也白拖
+      await evaljs(`(function(){var b=document.querySelector('[data-bench="zoom-reset"]');if(b)b.click();})()`);
+      await sleep(300);
+      const z5 = await labState();
+      note('after reset: label=' + z5.zoomLabel + ' viewBox=' + z5.viewBox);
+      await centers('#worldBenchView');
+      const pan3 = await evaljs(`(function(){
+        var svg=document.getElementById('worldBenchView');
+        var r=svg.getBoundingClientRect(); var vb=svg.viewBox.baseVal;
+        function toView(sx,sy){ return { x: r.x+((sx-vb.x)/vb.width)*r.width, y: r.y+((sy-vb.y)/vb.height)*r.height }; }
+        return { from: toView(100,60), to: toView(200,60) };
+      })()`);
+      await drag(pan3.from.x, pan3.from.y, pan3.to.x, pan3.to.y, 10, 40);
+      await sleep(300);
+      const z6 = await labState();
+      note('after pan at 100%: label=' + z6.zoomLabel + ' viewBox=' + z6.viewBox);
+      report.pass = z1.zoomLabel === '156%' && z1.viewBox === '94 47 333 166' &&
+        z2.viewBox === '44 47 333 166' && // 1:1：拖 50 个单位，中心 260 → 210
+        z3.zoomLabel === '156%' && z3.viewBox === z2.viewBox &&
+        vb4 !== null && vb4[0] >= 0 && vb4[0] + vb4[2] <= 520 &&
+        z5.zoomLabel === '100%' && z5.viewBox === '0 0 520 260' &&
+        z6.viewBox === '0 0 520 260';
+      note(report.pass ? 'RESULT: PASS — pan moves the view, clamps at the edge, persists across refresh, reset + 100% lock work'
+        : 'RESULT: FAIL — zoom/pan broken (see notes above)');
+    } else if (scenario === 'quirk1-view') {
+      // 复测 8e38f4c 毛病①：台面上有散数时加十格阵，提示说“切到十格阵”，
+      // 画布就要真切过去（旧代码把 benchPreferredView 置 null，自动链把散数
+      // 排在前面，画布停在数轴上）。再拿下十格阵，画布回到自动链（数轴）。
+      await enterLab();
+      await evaljs(`(function(){var b=document.querySelector('#worldBenchBox [data-bench="make"][data-kind="num"][data-n="5"]');if(b)b.click();})()`);
+      await sleep(200);
+      await evaljs(`(function(){var b=document.querySelector('#worldBenchBox [data-bench="make"][data-kind="num"][data-n="3"]');if(b)b.click();})()`);
+      await sleep(300);
+      const before = await labState();
+      note('before ten-frame: bench=' + before.benchTotal + ' view=' + before.benchView);
+      await evaljs(`(function(){var b=document.querySelector('[data-bench="tenframe"]');if(b)b.click();})()`);
+      await sleep(400);
+      const afterOn = await labState();
+      const canvasOn = await evaljs(`(function(){var v=document.getElementById('worldBenchView');return v?v.innerHTML.indexOf('pick-tenframe')>=0:false;})()`);
+      note('after ten-frame on: view=' + afterOn.benchView + ' canvas draws ten-frame=' + canvasOn);
+      await evaljs(`(function(){var b=document.querySelector('[data-bench="tenframe"]');if(b)b.click();})()`);
+      await sleep(400);
+      const afterOff = await labState();
+      note('after ten-frame off: view=' + afterOff.benchView);
+      report.pass = before.benchTotal === '8' && before.benchView.indexOf('现在是：数轴') >= 0 &&
+        afterOn.benchView.indexOf('现在是：十格阵') >= 0 && canvasOn === true &&
+        afterOff.benchView.indexOf('现在是：数轴') >= 0;
+      note(report.pass ? 'RESULT: PASS — canvas really switches to ten-frame with numbers on the bench, back to auto when off'
+        : 'RESULT: FAIL — canvas did not switch (see notes above)');
+    } else if (scenario === 'p2-beam') {
+      // Phase 3 batch 3：P2 演示梁也走 labBeamAnim。点“只左边 −5”，
+      // 梁要在约 500ms 里从 0° 平滑转到 −12°（中间帧有 −2° 到 −10° 之间的角度），
+      // 不能一下跳到 −12°。
+      await evaljs(`(function(){ if (typeof navGo === 'function') navGo('demo-balance'); })()`);
+      await sleep(500);
+      const beam0 = await evaljs(`(function(){
+        var b=document.getElementById('beamGroup');
+        if(!b) return null;
+        b.scrollIntoView({block:'center',behavior:'instant'});
+        var cs=getComputedStyle(b).transform;
+        return { transform: cs, style: b.style.transform };
+      })()`);
+      await sleep(300);
+      note('beam before: ' + JSON.stringify(beam0));
+      const [wrongBtn] = await centers('#balWrong');
+      if (wrongBtn) await clickAt(wrongBtn.cx, wrongBtn.cy);
+      const samples = [];
+      for (let i = 0; i < 10; i++) {
+        await sleep(60);
+        const a = await evaljs(`(function(){
+          var b=document.getElementById('beamGroup');
+          if(!b) return null;
+          var m=getComputedStyle(b).transform;
+          if(!m || m==='none') return 0;
+          var mm=m.match(/matrix\\(([^)]+)\\)/);
+          if(!mm) return null;
+          var v=mm[1].split(',').map(Number);
+          return Math.atan2(v[1], v[0])*180/Math.PI;
+        })()`);
+        samples.push(a === null || a === undefined ? null : Math.round(a * 10) / 10);
+      }
+      note('beam angle samples (~60ms apart): ' + JSON.stringify(samples));
+      const mid = samples.filter(function (a) { return a !== null && a < -1 && a > -11; });
+      const fin = samples[samples.length - 1];
+      report.pass = beam0 !== null && mid.length >= 1 && fin !== null && fin <= -11 && fin >= -13;
+      note(report.pass ? 'RESULT: PASS — P2 beam animates smoothly 0° → −12° (intermediate frames seen)'
+        : 'RESULT: FAIL — P2 beam snapped or did not reach −12°');
+    } else if (scenario === 'bench-820') {
+      // 顺带修：~820px 下台面/器材架的堆叠（云端浏览器改不了视口）。
+      // 820px 时 .world-bench-body 只有一列（≤1024px 媒体查询）：右边的
+      // 零件盒（#worldBenchBox，在 .world-bench-side 里）叠到画布列下面，
+      // 不横向溢出。注意别量 #worldBenchShelf——那是画布列里的一条虚线
+      // 放置条，本来就在 svg 上面，不是零件盒。
+      await send('Emulation.setDeviceMetricsOverride', { width: 820, height: 1000, deviceScaleFactor: 1, mobile: false });
+      await sleep(300);
+      await send('Page.reload', { ignoreCache: true });
+      await sleep(2500);
+      await enterLab();
+      await sleep(400);
+      const m = await evaljs(`(function(){
+        var c=document.getElementById('worldBenchView');
+        var s=document.getElementById('worldBenchBox');
+        if(!c||!s) return null;
+        var cr=c.getBoundingClientRect(), sr=s.getBoundingClientRect();
+        return { innerW: window.innerWidth, scrollW: document.documentElement.scrollWidth,
+          canvas: { top: Math.round(cr.top), bottom: Math.round(cr.bottom), left: Math.round(cr.left), right: Math.round(cr.right) },
+          box: { top: Math.round(sr.top), bottom: Math.round(sr.bottom), left: Math.round(sr.left), right: Math.round(sr.right) } };
+      })()`);
+      note('820px layout: ' + JSON.stringify(m));
+      report.pass = m !== null && m.scrollW <= 821 &&
+        m.box.top >= m.canvas.bottom - 2 && m.box.left >= 0 && m.box.right <= 820 &&
+        m.box.bottom > m.box.top;
+      note(report.pass ? 'RESULT: PASS — at 820px the parts box stacks below the canvas, no horizontal overflow'
+        : 'RESULT: FAIL — parts box does not stack or the page overflows at 820px');
     } else {
       console.log('unknown scenario: ' + scenario);
       cleanup();
