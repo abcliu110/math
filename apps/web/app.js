@@ -3630,6 +3630,28 @@ function procHistRecord(rep, usedMs) {
   h[rep.labId] = e;
   procHistSave(h);
 }
+/* 实验台（NB 式）考试结果：iframe 里的 lab-nb.html 发来 labNbExam 消息，记入同一份跨次统计。 */
+function labNbRecord(p) {
+  if (!p || !p.lines || !p.lines.length) return;
+  procHistRecord({
+    labId: 'nb:' + p.labId,
+    title: p.title,
+    mode: 'exam',
+    score: p.score,
+    max: p.max,
+    opCount: p.opCount,
+    done: p.score === p.max,
+    lines: p.lines,
+    lost: p.lines.filter(function (l) { return !l.got; }).map(function (l) { return l.id; }),
+    errorCount: 0,
+    errorReasons: [],
+  });
+}
+window.addEventListener('message', function (e) {
+  const f = document.getElementById('labNbFrame');
+  if (!e.data || e.data.type !== 'labNbExam' || !f || e.source !== f.contentWindow) return;
+  labNbRecord(e.data.payload);
+});
 function procHistSummaryHtml(labId) {
   const e = procHistLoad()[labId];
   if (!e) return '<p class="muted">还没有考试记录。挑战模式交卷后，这里会记下每一步的丢分次数。</p>';

@@ -4820,6 +4820,12 @@ if (typeof sandbox.labSetMode === 'function') {
   check('history: summary names the most-lost step',
     sandbox.procHistSummaryHtml('q-fracadd').includes('考过 1 次') &&
     sandbox.procHistSummaryHtml('q-fracadd').includes('做成一块分数'));
+  // 实验台（NB 式）考试结果：labNbRecord 记入同一份统计，键带 nb: 前缀。
+  sandbox.labNbRecord({ labId: 'frac-add', title: '分数相加', score: 3, max: 4, opCount: 5,
+    lines: [{ id: '把 1/2 和 1/3 合到一起', got: true }, { id: '做成分数零件', got: false }] });
+  const nbHist = JSON.parse(lsData['math-lab-proc-v1'] || '{}');
+  check('nb bench exam result is recorded in the shared history under nb:',
+    !!nbHist['nb:frac-add'] && nbHist['nb:frac-add'].attempts === 1 && nbHist['nb:frac-add'].lost['做成分数零件'] === 1);
   // 数轴题交卷后，自动判分重建世界，流程面板仍然在。
   sandbox.labSetMode('challenge');
   sandbox.labEnterQuestion('q-numline');

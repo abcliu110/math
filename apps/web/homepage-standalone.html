@@ -5158,6 +5158,8 @@ function score(){return xp.steps.reduce((a,s,i)=&gt;a+(run.steps[i].done?s.score
 function practiceDone(){modal(`&lt;h3&gt;练习完成 🎉&lt;/h3&gt;&lt;p&gt;${xp.steps.length} 步全部做对，用了 ${run.ops} 次操作${run.errors?`，有 ${run.errors} 次被台面拒绝`:&#x27;&#x27;}。&lt;/p&gt;&lt;div class=&quot;q&quot;&gt;&lt;b&gt;为什么&lt;/b&gt;&lt;div&gt;${esc(xp.why)}&lt;/div&gt;&lt;/div&gt;&lt;div style=&quot;display:flex;gap:8px&quot;&gt;&lt;button class=&quot;btn&quot; data-m=&quot;re&quot;&gt;再练一次&lt;/button&gt;&lt;button class=&quot;btn pri&quot; data-m=&quot;exam&quot;&gt;进入考试&lt;/button&gt;&lt;button class=&quot;btn&quot; data-m=&quot;lib&quot;&gt;返回实验库&lt;/button&gt;&lt;/div&gt;`)}
 function submitExam(auto){if(mode!==&#x27;exam&#x27;||!run)return;clearInterval(timerId);timerId=null;const tot=xp.steps.reduce((a,s)=&gt;a+s.score,0),sc=score();const used=Math.round((Date.now()-run.t0)/1000);
   const H=hist(),h=H[xp.id]||{n:0,lost:{}};h.n++;h.last=`${sc}/${tot}`;xp.steps.forEach((s,i)=&gt;{if(!run.steps[i].done)h.lost[s.label]=(h.lost[s.label]||0)+1});const w=Object.entries(h.lost).sort((a,b)=&gt;b[1]-a[1])[0];h.worst=w?w[0]:&#x27;&#x27;;H[xp.id]=h;localStorage.setItem(LS.hist,JSON.stringify(H));
+  // 把考试结果交给主应用（跨次统计）：主页面收到 labNbExam 消息后记入 math-lab-proc-v1。
+  try{window.parent&amp;&amp;window.parent!==window&amp;&amp;window.parent.postMessage({type:&#x27;labNbExam&#x27;,payload:{labId:xp.id,title:xp.title,score:sc,max:tot,opCount:run.ops,lines:xp.steps.map((s,i)=&gt;({id:s.label,got:!!run.steps[i].done}))}},&#x27;*&#x27;)}catch(e){}
   const lost=xp.steps.filter((s,i)=&gt;!run.steps[i].done);
   modal(`&lt;h3&gt;${auto?&#x27;时间到，&#x27;:&#x27;&#x27;}考试报告&lt;/h3&gt;&lt;div class=&quot;score&quot;&gt;${sc}&lt;span class=&quot;muted&quot; style=&quot;font-size:18px&quot;&gt; / ${tot}&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;muted&quot;&gt;用时 ${Math.floor(used/60)} 分 ${used%60} 秒 · 操作 ${run.ops} 次 · 被拒绝 ${run.errors} 次&lt;/div&gt;
    &lt;ul class=&quot;rep&quot;&gt;${xp.steps.map((s,i)=&gt;`&lt;li class=&quot;${run.steps[i].done?&#x27;&#x27;:&#x27;lost&#x27;}&quot;&gt;&lt;span&gt;${run.steps[i].done?&#x27;✓&#x27;:&#x27;×&#x27;} ${esc(s.label)}&lt;/span&gt;&lt;span&gt;${run.steps[i].done?s.score:0}/${s.score}&lt;/span&gt;&lt;/li&gt;`).join(&#x27;&#x27;)}&lt;/ul&gt;
@@ -52883,6 +52885,28 @@ function procHistRecord(rep, usedMs) {
   h[rep.labId] = e;
   procHistSave(h);
 }
+/* 实验台（NB 式）考试结果：iframe 里的 lab-nb.html 发来 labNbExam 消息，记入同一份跨次统计。 */
+function labNbRecord(p) {
+  if (!p || !p.lines || !p.lines.length) return;
+  procHistRecord({
+    labId: 'nb:' + p.labId,
+    title: p.title,
+    mode: 'exam',
+    score: p.score,
+    max: p.max,
+    opCount: p.opCount,
+    done: p.score === p.max,
+    lines: p.lines,
+    lost: p.lines.filter(function (l) { return !l.got; }).map(function (l) { return l.id; }),
+    errorCount: 0,
+    errorReasons: [],
+  });
+}
+window.addEventListener('message', function (e) {
+  const f = document.getElementById('labNbFrame');
+  if (!e.data || e.data.type !== 'labNbExam' || !f || e.source !== f.contentWindow) return;
+  labNbRecord(e.data.payload);
+});
 function procHistSummaryHtml(labId) {
   const e = procHistLoad()[labId];
   if (!e) return '<p class="muted">还没有考试记录。挑战模式交卷后，这里会记下每一步的丢分次数。</p>';
