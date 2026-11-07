@@ -4790,6 +4790,10 @@ const TYPES={
    fields:[{k:&#x27;n&#x27;,label:&#x27;分子（涂几份）&#x27;,min:0,max:24},{k:&#x27;d&#x27;,label:&#x27;分母（平均分成几份）&#x27;,min:1,max:12}],
    size:e=&gt;[176,34+Math.max(1,Math.ceil(e.props.n/e.props.d))*28]},
  adder:{label:&#x27;合并器&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;合并器&#x27;,out:&#x27;value&#x27;,accepts:&#x27;value&#x27;,defaults:{},fields:[],size:()=&gt;[170,84]},
+ mul:{label:&#x27;乘法器&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;乘法器&#x27;,out:&#x27;value&#x27;,accepts:&#x27;value&#x27;,defaults:{},fields:[],size:()=&gt;[170,84]},
+ div:{label:&#x27;除法器&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;除法器&#x27;,out:&#x27;value&#x27;,accepts:&#x27;value&#x27;,slots:true,defaults:{},fields:[],size:()=&gt;[200,110]},
+ money:{label:&#x27;人民币&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;人民币&#x27;,out:&#x27;value&#x27;,defaults:{yuan:1,jiao:0},fields:[{k:&#x27;yuan&#x27;,label:&#x27;元&#x27;,min:0,max:99},{k:&#x27;jiao&#x27;,label:&#x27;角&#x27;,min:0,max:9}],size:()=&gt;[170,62]},
+ clock:{label:&#x27;钟面&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;钟面&#x27;,defaults:{h:3,m:0},fields:[{k:&#x27;h&#x27;,label:&#x27;时（几点）&#x27;,min:1,max:12},{k:&#x27;m&#x27;,label:&#x27;分&#x27;,min:0,max:55,step:5}],size:()=&gt;[180,200]},
  numline:{label:&#x27;数轴&#x27;,group:&#x27;关系&#x27;,prefix:&#x27;数轴&#x27;,accepts:&#x27;value&#x27;,defaults:{min:0,max:2},
    fields:[{k:&#x27;min&#x27;,label:&#x27;最左&#x27;,min:-10,max:10},{k:&#x27;max&#x27;,label:&#x27;最右&#x27;,min:-9,max:20}],size:()=&gt;[460,118]},
  balance:{label:&#x27;天平&#x27;,group:&#x27;关系&#x27;,prefix:&#x27;天平&#x27;,accepts:&#x27;value&#x27;,slots:true,defaults:{},fields:[],size:()=&gt;[340,200]},
@@ -4838,7 +4842,8 @@ function act(a){
     if(reach(s,a.to,a.from))return{ok:0,why:&#x27;不能连成一个圈&#x27;};
     if(to.type===&#x27;balance&#x27;&amp;&amp;inputs(s,a.to).filter(l=&gt;l.slot===a.slot).length&gt;=5)return{ok:0,why:&#x27;一个盘最多放 5 个&#x27;};
     if(to.type===&#x27;numline&#x27;&amp;&amp;inputs(s,a.to).length&gt;=6)return{ok:0,why:&#x27;数轴上最多 6 个点&#x27;};
-    addLink(s,a.from,a.to,to.type===&#x27;balance&#x27;?a.slot:null);return{ok:1}}
+    if(to.type===&#x27;div&#x27;&amp;&amp;inputs(s,a.to).some(l=&gt;l.slot===a.slot))return{ok:0,why:a.slot===&#x27;L&#x27;?&#x27;左边已经有被除数了&#x27;:&#x27;右边已经有除数了&#x27;};
+    addLink(s,a.from,a.to,(to.type===&#x27;balance&#x27;||to.type===&#x27;div&#x27;)?a.slot:null);return{ok:1}}
   case &#x27;roll&#x27;:{const e=E[a.id];const c=e.props.counts||Array(13).fill(0);for(let i=0;i&lt;e.props.times;i++){c[1+Math.ceil(Math.random()*6)+Math.ceil(Math.random()*6)-1]++}e.props.counts=c;return{ok:1}}
   case &#x27;segclick&#x27;:{const p=E[a.id].props;p.n=(p.n===a.k?a.k-1:a.k);return{ok:1}}
   }}catch(err){return{ok:0,why:&#x27;这个数不合法&#x27;}}
@@ -4851,6 +4856,9 @@ function evaluate(s){
   const val=id=&gt;{if(id in vals)return vals[id];if(busy[id])return null;busy[id]=1;const e=E[id];let v=null;
     if(e.type===&#x27;num&#x27;)v=Q(e.props.v);else if(e.type===&#x27;frac&#x27;)v=Q(e.props.n,e.props.d);
     else if(e.type===&#x27;adder&#x27;){v=Q(0);for(const l of inputs(s,id)){const x=val(l.from);if(x)v=qadd(v,x)}}
+    else if(e.type===&#x27;money&#x27;)v=Q(e.props.yuan*10+e.props.jiao,10);
+    else if(e.type===&#x27;mul&#x27;){v=Q(1);let any=false;for(const l of inputs(s,id)){const x=val(l.from);if(x){v=Q(v.n*x.n,v.d*x.d);any=true}}if(!any)v=null}
+    else if(e.type===&#x27;div&#x27;){const L=inputs(s,id).find(l=&gt;l.slot===&#x27;L&#x27;),R=inputs(s,id).find(l=&gt;l.slot===&#x27;R&#x27;);const a=L&amp;&amp;val(L.from),b=R&amp;&amp;val(R.from);v=(a&amp;&amp;b&amp;&amp;b.n!==0)?Q(a.n*b.d,a.d*b.n):null}
     return vals[id]=v};
   for(const id in E){const e=E[id],d=D[id]={read:[],sig:[]};
     const sig=(lv,tx)=&gt;d.sig.push({lv,tx});
@@ -4859,6 +4867,15 @@ function evaluate(s){
     if(e.type===&#x27;adder&#x27;){const ins=inputs(s,id).map(l=&gt;val(l.from)).filter(Boolean);d.terms=ins;
       if(!ins.length)sig(&#x27;info&#x27;,&#x27;把几个数连进来，这里算它们的和&#x27;);
       else{const ds=[...new Set(ins.map(q=&gt;q.d))];if(ds.length&gt;1){const L=ds.reduce(lcm);sig(&#x27;info&#x27;,`分母不同：都换成 ${L} 份再加`)}}}
+    if(e.type===&#x27;mul&#x27;){const ins=inputs(s,id).map(l=&gt;val(l.from)).filter(Boolean);d.terms=ins;
+      if(!ins.length)sig(&#x27;info&#x27;,&#x27;把几个数连进来，这里算它们的积（几个 × 几个）&#x27;);
+      else if(ins.length&gt;=2&amp;&amp;d.value)sig(&#x27;info&#x27;,`${ins.map(qs).join(&#x27; × &#x27;)} = ${qs(d.value)}`)}
+    if(e.type===&#x27;div&#x27;){const L=inputs(s,id).find(l=&gt;l.slot===&#x27;L&#x27;),R=inputs(s,id).find(l=&gt;l.slot===&#x27;R&#x27;);const a=L&amp;&amp;val(L.from),b=R&amp;&amp;val(R.from);d.a=a;d.b=b;
+      if(!a||!b)sig(&#x27;info&#x27;,&#x27;左边放被除数（总数），右边放除数（分成几份）&#x27;);
+      else if(b.n===0)sig(&#x27;err&#x27;,&#x27;除数不能是 0&#x27;);
+      else if(d.value.d===1)sig(&#x27;ok&#x27;,`${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`);
+      else sig(&#x27;warn&#x27;,`除不尽：${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`)}
+    if(e.type===&#x27;clock&#x27;){const {h,m}=e.props;sig(&#x27;info&#x27;,`现在是 ${h}:${String(m).padStart(2,&#x27;0&#x27;)}`)}
     if(e.type===&#x27;numline&#x27;){const {min,max}=e.props;d.pts=inputs(s,id).map(l=&gt;({from:l.from,v:val(l.from)})).filter(p=&gt;p.v);
       d.pts.forEach(p=&gt;{p.out=qnum(p.v)&lt;min||qnum(p.v)&gt;max;if(p.out)sig(&#x27;err&#x27;,`${qs(p.v)} 放不下：数轴只从 ${min} 到 ${max}`)});
       const ins=d.pts.filter(p=&gt;!p.out);
@@ -4972,7 +4989,7 @@ function render(){
 }
 function nextTarget(){if(mode!==&#x27;practice&#x27;||!run)return null;const st=run.steps.find(s=&gt;!s.done);return st?xp.steps[st.i].target(S):null}
 function size(e){return TYPES[e.type].size(e)}
-function anchorIn(l){const e=S.entities[l.to];const [w,h]=size(e);if(e.type===&#x27;balance&#x27;){const t=(D[e.id]||{}).tilt||0,dy=Math.sin(t*Math.PI/180)*120;return l.slot===&#x27;L&#x27;?[e.x+50,e.y+112-dy]:[e.x+w-50,e.y+112+dy]}return[e.x,e.y+h/2]}
+function anchorIn(l){const e=S.entities[l.to];const [w,h]=size(e);if(e.type===&#x27;div&#x27;)return l.slot===&#x27;L&#x27;?[e.x,e.y+h*0.3]:[e.x,e.y+h*0.7];if(e.type===&#x27;balance&#x27;){const t=(D[e.id]||{}).tilt||0,dy=Math.sin(t*Math.PI/180)*120;return l.slot===&#x27;L&#x27;?[e.x+50,e.y+112-dy]:[e.x+w-50,e.y+112+dy]}return[e.x,e.y+h/2]}
 function anchorOut(id){const e=S.entities[id],[w,h]=size(e);return[e.x+w,e.y+h/2]}
 function linkSvg(l){if(!S.entities[l.from]||!S.entities[l.to])return&#x27;&#x27;;const [x1,y1]=anchorOut(l.from),[x2,y2]=anchorIn(l);const c=Math.max(40,Math.abs(x2-x1)/2);
   const d=`M${x1},${y1} C${x1+c},${y1} ${x2-c},${y2} ${x2},${y2}`;return`&lt;path class=&quot;linkhit&quot; data-link=&quot;${l.id}&quot; d=&quot;${d}&quot;/&gt;&lt;path class=&quot;link${selLink===l.id?&#x27; sel&#x27;:&#x27;&#x27;}&quot; d=&quot;${d}&quot;/&gt;`}
@@ -4981,7 +4998,7 @@ function entSvg(e,d,isNext){const T=TYPES[e.type],[w,h]=size(e);const lv=d.sig.s
   let g=`&lt;g class=&quot;ent${sel===e.id?&#x27; sel&#x27;:&#x27;&#x27;}${lv}${isNext?&#x27; is-next&#x27;:&#x27;&#x27;}&quot; data-ent=&quot;${e.id}&quot; transform=&quot;translate(${e.x},${e.y})&quot;&gt;`;
   g+=`&lt;rect class=&quot;ent-body&quot; width=&quot;${w}&quot; height=&quot;${h}&quot; rx=&quot;10&quot; filter=&quot;url(#sh)&quot;/&gt;&lt;text class=&quot;ttl&quot; x=&quot;10&quot; y=&quot;17&quot;&gt;${esc(e.name)}&lt;/text&gt;`;
   g+=DRAW[e.type](e,d,w,h);
-  if(T.accepts&amp;&amp;e.type!==&#x27;balance&#x27;)g+=`&lt;circle class=&quot;port-in&quot; cx=&quot;0&quot; cy=&quot;${h/2}&quot; r=&quot;6&quot;/&gt;`;
+  if(T.accepts&amp;&amp;!T.slots)g+=`&lt;circle class=&quot;port-in&quot; cx=&quot;0&quot; cy=&quot;${h/2}&quot; r=&quot;6&quot;/&gt;`;
   if(T.out)g+=`&lt;circle class=&quot;port-out&quot; data-port=&quot;${e.id}&quot; cx=&quot;${w}&quot; cy=&quot;${h/2}&quot; r=&quot;7&quot;/&gt;`;
   if(sel===e.id)g+=`&lt;rect class=&quot;selbox&quot; x=&quot;-6&quot; y=&quot;-6&quot; width=&quot;${w+12}&quot; height=&quot;${h+12}&quot; rx=&quot;12&quot;/&gt;`;
   // 信号条：错了台面自己说
@@ -4992,6 +5009,14 @@ const DRAW={
  num:(e,d,w,h)=&gt;`&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;${h/2+14}&quot; text-anchor=&quot;middle&quot; font-size=&quot;28&quot;&gt;${e.props.v}&lt;/text&gt;`,
  frac:(e,d,w)=&gt;{const {n,d:dd}=e.props,rows=Math.max(1,Math.ceil(n/dd)),bw=w-24,sw=bw/dd;let s=`&lt;text class=&quot;big&quot; x=&quot;${w-12}&quot; y=&quot;18&quot; text-anchor=&quot;end&quot; font-size=&quot;14&quot;&gt;${n}/${dd}&lt;/text&gt;`;
    for(let r=0;r&lt;rows;r++)for(let i=0;i&lt;dd;i++){const k=r*dd+i+1;s+=`&lt;rect class=&quot;seg-cell&quot; data-seg=&quot;${k}&quot; x=&quot;${12+i*sw}&quot; y=&quot;${28+r*28}&quot; width=&quot;${sw}&quot; height=&quot;22&quot; fill=&quot;${k&lt;=n?&#x27;#ff9f43&#x27;:&#x27;#fff&#x27;}&quot; stroke=&quot;#5b6778&quot; stroke-width=&quot;1&quot;/&gt;`}return s},
+ money:(e,d,w,h)=&gt;`&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;${h/2+12}&quot; text-anchor=&quot;middle&quot; font-size=&quot;22&quot;&gt;${e.props.yuan} 元 ${e.props.jiao} 角&lt;/text&gt;`,
+ clock:(e,d,w,h)=&gt;{const {h:hr,m}=e.props,cx=w/2,cy=h/2+10,R=70;const ha=((hr%12)+m/60)*30-90,ma=m*6-90;const P=(a,r)=&gt;[cx+Math.cos(a*Math.PI/180)*r,cy+Math.sin(a*Math.PI/180)*r];
+   let s=`&lt;circle cx=&quot;${cx}&quot; cy=&quot;${cy}&quot; r=&quot;${R}&quot; fill=&quot;#fff&quot; stroke=&quot;#5b6778&quot; stroke-width=&quot;2&quot;/&gt;`;
+   for(let i=0;i&lt;12;i++){const [x1,y1]=P(i*30-90,R-6),[x2,y2]=P(i*30-90,R-1);s+=`&lt;line x1=&quot;${x1}&quot; y1=&quot;${y1}&quot; x2=&quot;${x2}&quot; y2=&quot;${y2}&quot; stroke=&quot;#5b6778&quot;/&gt;`}
+   const [hx,hy]=P(ha,R*0.5),[mx,my]=P(ma,R*0.8);s+=`&lt;line x1=&quot;${cx}&quot; y1=&quot;${cy}&quot; x2=&quot;${hx}&quot; y2=&quot;${hy}&quot; stroke=&quot;#1d2633&quot; stroke-width=&quot;5&quot;/&gt;&lt;line x1=&quot;${cx}&quot; y1=&quot;${cy}&quot; x2=&quot;${mx}&quot; y2=&quot;${my}&quot; stroke=&quot;#ff9f43&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;${cx}&quot; cy=&quot;${cy}&quot; r=&quot;3&quot; fill=&quot;#1d2633&quot;/&gt;`;
+   return s},
+mul:(e,d,w,h)=&gt;{const t=d.terms||[];const ex=t.length?t.map(qs).join(&#x27; × &#x27;):&#x27;空&#x27;;return`&lt;text class=&quot;ink&quot; x=&quot;${w/2}&quot; y=&quot;42&quot; text-anchor=&quot;middle&quot; font-size=&quot;13&quot;&gt;${esc(ex)}&lt;/text&gt;&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;70&quot; text-anchor=&quot;middle&quot; font-size=&quot;22&quot;&gt;= ${d.value?qs(d.value):0}&lt;/text&gt;`},
+ div:(e,d,w,h)=&gt;`&lt;circle class=&quot;port-in&quot; cx=&quot;0&quot; cy=&quot;${h*0.3}&quot; r=&quot;6&quot;/&gt;&lt;circle class=&quot;port-in&quot; cx=&quot;0&quot; cy=&quot;${h*0.7}&quot; r=&quot;6&quot;/&gt;&lt;text class=&quot;ink&quot; x=&quot;${w/2}&quot; y=&quot;40&quot; text-anchor=&quot;middle&quot; font-size=&quot;13&quot;&gt;被除数 ${d.a?qs(d.a):&#x27;?&#x27;}&lt;/text&gt;&lt;text class=&quot;ink&quot; x=&quot;${w/2}&quot; y=&quot;60&quot; text-anchor=&quot;middle&quot; font-size=&quot;13&quot;&gt;除数 ${d.b?qs(d.b):&#x27;?&#x27;}&lt;/text&gt;&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;${h-12}&quot; text-anchor=&quot;middle&quot; font-size=&quot;20&quot;&gt;= ${d.value?qs(d.value):&#x27;?&#x27;}&lt;/text&gt;`,
  adder:(e,d,w,h)=&gt;{const t=d.terms||[];const ex=t.length?t.map(qs).join(&#x27; + &#x27;):&#x27;空&#x27;;return`&lt;text class=&quot;ink&quot; x=&quot;${w/2}&quot; y=&quot;42&quot; text-anchor=&quot;middle&quot; font-size=&quot;13&quot;&gt;${esc(ex)}&lt;/text&gt;&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;70&quot; text-anchor=&quot;middle&quot; font-size=&quot;22&quot;&gt;= ${d.value?qs(d.value):0}&lt;/text&gt;`},
  numline:(e,d,w)=&gt;{const {min,max}=e.props,x0=24,x1=w-24,X=v=&gt;x0+(v-min)/(max-min)*(x1-x0),y=72;let L=1;(d.pts||[]).forEach(p=&gt;{if(p.v.d&lt;=12)L=lcm(L,p.v.d)});if(L&gt;12||(max-min)*L&gt;60)L=1;
    let s=`&lt;line x1=&quot;${x0-10}&quot; y1=&quot;${y}&quot; x2=&quot;${x1+12}&quot; y2=&quot;${y}&quot; stroke=&quot;#334&quot; stroke-width=&quot;2&quot;/&gt;&lt;path d=&quot;M${x1+12},${y-5}L${x1+20},${y}L${x1+12},${y+5}Z&quot; fill=&quot;#334&quot;/&gt;`;
@@ -5176,6 +5201,71 @@ function wpSteps(p){const ans=wpAnswer(p);
     {label:&#x27;数轴上两点相差的数，就是答案&#x27;,score:2,hint:&#x27;看数轴下面的“相差”&#x27;,target:s=&gt;byType(s,&#x27;numline&#x27;),check:(s,D)=&gt;{const nl=byType(s,&#x27;numline&#x27;);if(!nl)return false;const vs=inputs(s,nl).map(l=&gt;D[l.from]&amp;&amp;D[l.from].value).filter(Boolean);return vs.length&gt;=2&amp;&amp;Math.abs(qnum(vs[0])-qnum(vs[1]))===ans}}];
 }
 WP.forEach(p=&gt;XP.push({id:p.id,title:p.title,domain:&#x27;应用题&#x27;,grade:p.grade,tools:p.kind===&#x27;add&#x27;?&#x27;数字卡 · 合并器&#x27;:&#x27;数字卡 · 数轴&#x27;,q:p.title,why:p.why,build:wpBuild(p),steps:wpSteps(p)}));
+
+/* ========== 应用题（第二期）：乘法器、除法器。除法的被除数连左边，除数连右边。 ========== */
+const WPM=[
+ {id:&#x27;wm01&#x27;,grade:2,kind:&#x27;mul&#x27;,a:6,b:3,title:&#x27;每盒有 6 支铅笔，3 盒一共几支？&#x27;,why:&#x27;每盒的数量相同，求几盒一共几个，用乘法：6 × 3 = 18。&#x27;},
+ {id:&#x27;wm02&#x27;,grade:2,kind:&#x27;mul&#x27;,a:4,b:5,title:&#x27;每个小朋友分 4 颗糖，5 个小朋友一共要几颗？&#x27;,why:&#x27;4 × 5 = 20。每人 4 颗，5 人就是 5 个 4。&#x27;},
+ {id:&#x27;wm03&#x27;,grade:2,kind:&#x27;mul&#x27;,a:8,b:4,title:&#x27;一排有 8 个座位，一共 4 排，一共有几个座位？&#x27;,why:&#x27;8 × 4 = 32。&#x27;},
+ {id:&#x27;wm04&#x27;,grade:3,kind:&#x27;mul&#x27;,a:12,b:7,title:&#x27;一箱有 12 瓶水，买了 7 箱，一共几瓶？&#x27;,why:&#x27;12 × 7 = 84。可以拆开算：10 × 7 + 2 × 7 = 70 + 14。&#x27;},
+ {id:&#x27;wm05&#x27;,grade:3,kind:&#x27;mul&#x27;,a:9,b:6,title:&#x27;每本书 9 元，买 6 本一共多少钱？&#x27;,why:&#x27;9 × 6 = 54。&#x27;},
+ {id:&#x27;wd01&#x27;,grade:2,kind:&#x27;div&#x27;,a:12,b:3,title:&#x27;12 个苹果平均分给 3 人，每人几个？&#x27;,why:&#x27;把 12 平均分成 3 份，每份是 12 ÷ 3 = 4。&#x27;},
+ {id:&#x27;wd02&#x27;,grade:2,kind:&#x27;div&#x27;,a:15,b:5,title:&#x27;15 颗糖，每 5 颗装一袋，可以装几袋？&#x27;,why:&#x27;看 15 里面有几个 5：15 ÷ 5 = 3。&#x27;},
+ {id:&#x27;wd03&#x27;,grade:2,kind:&#x27;div&#x27;,a:20,b:4,title:&#x27;20 支铅笔平均分给 4 个小朋友，每人几支？&#x27;,why:&#x27;20 ÷ 4 = 5。&#x27;},
+ {id:&#x27;wd04&#x27;,grade:3,kind:&#x27;div&#x27;,a:48,b:6,title:&#x27;48 个鸡蛋，每 6 个一盒，能装几盒？&#x27;,why:&#x27;48 ÷ 6 = 8。&#x27;},
+ {id:&#x27;wd05&#x27;,grade:3,kind:&#x27;div&#x27;,a:63,b:7,title:&#x27;63 元平均买 7 本书，每本多少钱？&#x27;,why:&#x27;63 ÷ 7 = 9。&#x27;},
+];
+function wmAnswer(p){return p.kind===&#x27;mul&#x27;?p.a*p.b:p.a/p.b}
+function wmBuild(p){return function(s){
+  addEnt(s,&#x27;num&#x27;,60,60,{v:p.a});addEnt(s,&#x27;num&#x27;,60,170,{v:p.b});
+  if(p.kind===&#x27;mul&#x27;)addEnt(s,&#x27;mul&#x27;,330,110);else addEnt(s,&#x27;div&#x27;,330,100);
+}}
+function wmSteps(p){const ans=wmAnswer(p);
+  if(p.kind===&#x27;mul&#x27;)return[
+    {label:&#x27;把两个数都连到乘法器&#x27;,score:1,hint:&#x27;拖数字卡右边的蓝点到乘法器&#x27;,target:s=&gt;byType(s,&#x27;mul&#x27;),check:(s,D)=&gt;{const m=byType(s,&#x27;mul&#x27;);return !!m&amp;&amp;inputs(s,m).length&gt;=2}},
+    {label:&#x27;乘法器算出的积就是答案&#x27;,score:2,hint:&#x27;看乘法器的读数，和题目对照&#x27;,target:s=&gt;byType(s,&#x27;mul&#x27;),check:(s,D)=&gt;{const m=byType(s,&#x27;mul&#x27;);return !!m&amp;&amp;!!D[m].value&amp;&amp;qeq(D[m].value,Q(ans))}}];
+  return[
+    {label:&#x27;把被除数连到除法器左边（总数）&#x27;,score:1,hint:&#x27;拖数字卡的蓝点到除法器的上半边&#x27;,target:s=&gt;byType(s,&#x27;div&#x27;),check:(s,D)=&gt;{const dv=byType(s,&#x27;div&#x27;);return !!dv&amp;&amp;inputs(s,dv).some(l=&gt;l.slot===&#x27;L&#x27;&amp;&amp;qeq(D[l.from].value,Q(p.a)))}},
+    {label:&#x27;把除数连到除法器右边（分成几份）&#x27;,score:1,hint:&#x27;拖另一个数字卡到除法器的下半边&#x27;,target:s=&gt;byType(s,&#x27;div&#x27;),check:(s,D)=&gt;{const dv=byType(s,&#x27;div&#x27;);return !!dv&amp;&amp;inputs(s,dv).some(l=&gt;l.slot===&#x27;R&#x27;&amp;&amp;qeq(D[l.from].value,Q(p.b)))}},
+    {label:&#x27;除法器算出的商就是答案&#x27;,score:2,hint:&#x27;看除法器下面的得数&#x27;,target:s=&gt;byType(s,&#x27;div&#x27;),check:(s,D)=&gt;{const dv=byType(s,&#x27;div&#x27;);return !!dv&amp;&amp;!!D[dv].value&amp;&amp;qeq(D[dv].value,Q(ans))}}];
+}
+WPM.forEach(p=&gt;XP.push({id:p.id,title:p.title,domain:&#x27;应用题&#x27;,grade:p.grade,tools:p.kind===&#x27;mul&#x27;?&#x27;数字卡 · 乘法器&#x27;:&#x27;数字卡 · 除法器&#x27;,q:p.title,why:p.why,build:wmBuild(p),steps:wmSteps(p)}));
+
+/* ========== 应用题（第二期）：人民币（元、角），钟面（拨到几点）。 ========== */
+const WPO=[
+ {id:&#x27;wo01&#x27;,grade:2,kind:&#x27;money-add&#x27;,a:[3,5],b:[6,0],title:&#x27;一支笔 3 元 5 角，一本书 6 元，买这两样一共多少钱？&#x27;,why:&#x27;3 元 5 角 = 3.5 元，3.5 + 6 = 9.5 元，就是 9 元 5 角。&#x27;},
+ {id:&#x27;wo02&#x27;,grade:2,kind:&#x27;money-add&#x27;,a:[2,0],b:[4,5],title:&#x27;一块橡皮 2 元，一把尺子 4 元 5 角，一共多少钱？&#x27;,why:&#x27;2 + 4.5 = 6.5 元，就是 6 元 5 角。&#x27;},
+ {id:&#x27;wo03&#x27;,grade:2,kind:&#x27;money-diff&#x27;,a:[10,0],b:[6,5],title:&#x27;小明有 10 元，买玩具用了 6 元 5 角，还剩多少钱？&#x27;,why:&#x27;10 − 6.5 = 3.5 元，即 3 元 5 角。数轴上两点的距离就是剩下的钱。&#x27;},
+ {id:&#x27;wo04&#x27;,grade:2,kind:&#x27;money-add&#x27;,a:[5,5],b:[1,5],title:&#x27;一个本子 5 元 5 角，一支笔 1 元 5 角，一共多少钱？&#x27;,why:&#x27;5.5 + 1.5 = 7 元。&#x27;},
+];
+const WPT=[
+ {id:&#x27;wt01&#x27;,grade:2,a:3,b:2,title:&#x27;现在是 3 点，过 2 小时是几点？&#x27;,why:&#x27;3 + 2 = 5，时针从 3 走到 5。&#x27;},
+ {id:&#x27;wt02&#x27;,grade:2,a:9,b:4,title:&#x27;现在是 9 点，过 4 小时是几点？&#x27;,why:&#x27;9 + 4 = 13，超过 12 就从头数：13 − 12 = 1 点。&#x27;},
+ {id:&#x27;wt03&#x27;,grade:2,a:7,b:5,title:&#x27;现在是 7 点，再过 5 小时是几点？&#x27;,why:&#x27;7 + 5 = 12，就是 12 点。&#x27;},
+ {id:&#x27;wt04&#x27;,grade:2,a:10,b:3,title:&#x27;现在是 10 点，过 3 小时是几点？&#x27;,why:&#x27;10 + 3 = 13，就是 1 点。&#x27;},
+ {id:&#x27;wt05&#x27;,grade:2,a:2,b:8,title:&#x27;现在是 2 点，过 8 小时是几点？&#x27;,why:&#x27;2 + 8 = 10，就是 10 点。&#x27;},
+];
+function woCents(q){return q[0]*10+q[1]}
+function woBuild(p){return function(s){
+  if(p.kind===&#x27;clock&#x27;){addEnt(s,&#x27;clock&#x27;,240,40,{h:1,m:0});return}
+  addEnt(s,&#x27;money&#x27;,60,60,{yuan:p.a[0],jiao:p.a[1]});addEnt(s,&#x27;money&#x27;,60,170,{yuan:p.b[0],jiao:p.b[1]});
+  if(p.kind===&#x27;money-add&#x27;)addEnt(s,&#x27;adder&#x27;,330,110);else addEnt(s,&#x27;numline&#x27;,120,340,{min:0,max:12});
+}}
+function woSteps(p){
+  if(p.kind===&#x27;clock&#x27;){const ans=((p.a-1+p.b)%12)+1;return[
+    {label:&#x27;把钟面的时针拨到开始的时刻&#x27;,score:1,hint:&#x27;点钟面卡，在属性卡里把“时”调到 &#x27;+p.a,target:s=&gt;byType(s,&#x27;clock&#x27;),check:s=&gt;{const c=byType(s,&#x27;clock&#x27;);return !!c&amp;&amp;s.entities[c].props.h===p.a}},
+    {label:&#x27;再拨到过了几小时以后的时刻&#x27;,score:2,hint:&#x27;从开始的时刻往后数 &#x27;+p.b+&#x27; 个小时&#x27;,target:s=&gt;byType(s,&#x27;clock&#x27;),check:s=&gt;{const c=byType(s,&#x27;clock&#x27;);return !!c&amp;&amp;s.entities[c].props.h===ans}}]}
+  const total=woCents(p.a)+woCents(p.b);
+  if(p.kind===&#x27;money-add&#x27;)return[
+    {label:&#x27;把两样东西的钱都连到合并器&#x27;,score:1,hint:&#x27;拖两个人民币的蓝点到合并器&#x27;,target:s=&gt;byType(s,&#x27;adder&#x27;),check:(s,D)=&gt;{const ad=byType(s,&#x27;adder&#x27;);return !!ad&amp;&amp;inputs(s,ad).length&gt;=2}},
+    {label:&#x27;合并器算出的总价就是答案&#x27;,score:2,hint:&#x27;看合并器的读数，注意角和元&#x27;,target:s=&gt;byType(s,&#x27;adder&#x27;),check:(s,D)=&gt;{const ad=byType(s,&#x27;adder&#x27;);return !!ad&amp;&amp;!!D[ad].value&amp;&amp;qeq(D[ad].value,Q(total,10))}}];
+  const gap=Math.abs(woCents(p.a)-woCents(p.b));
+  return[
+    {label:&#x27;把两个钱数都连到数轴&#x27;,score:1,hint:&#x27;拖两个人民币的蓝点到数轴&#x27;,target:s=&gt;byType(s,&#x27;numline&#x27;),check:(s,D)=&gt;{const nl=byType(s,&#x27;numline&#x27;);return !!nl&amp;&amp;inputs(s,nl).length&gt;=2}},
+    {label:&#x27;数轴上两点相差的钱，就是答案&#x27;,score:2,hint:&#x27;看数轴下面的“相差”&#x27;,target:s=&gt;byType(s,&#x27;numline&#x27;),check:(s,D)=&gt;{const nl=byType(s,&#x27;numline&#x27;);if(!nl)return false;const vs=inputs(s,nl).map(l=&gt;D[l.from]&amp;&amp;D[l.from].value).filter(Boolean);return vs.length&gt;=2&amp;&amp;Math.abs(qnum(vs[0])-qnum(vs[1]))===gap/10}}];
+}
+WPO.forEach(p=&gt;XP.push({id:p.id,title:p.title,domain:&#x27;应用题&#x27;,grade:p.grade,tools:p.kind===&#x27;money-add&#x27;?&#x27;人民币 · 合并器&#x27;:&#x27;人民币 · 数轴&#x27;,q:p.title,why:p.why,build:woBuild({kind:p.kind,a:p.a,b:p.b}),steps:woSteps({kind:p.kind,a:p.a,b:p.b})}));
+WPT.forEach(p=&gt;XP.push({id:p.id,title:p.title,domain:&#x27;应用题&#x27;,grade:p.grade,tools:&#x27;钟面&#x27;,q:p.title,why:p.why,build:woBuild({kind:&#x27;clock&#x27;}),steps:woSteps({kind:&#x27;clock&#x27;,a:p.a,b:p.b})}));
 
 function startXp(id,m){xp=XP.find(x=&gt;x.id===id);if(!xp)return;mode=m;S=blankScene();xp.build(S);undoSt=[];redoSt=[];sel=null;cardOpen=false;
   run={steps:xp.steps.map((s,i)=&gt;({i,done:false})),ops:0,errors:0,t0:Date.now(),finished:false};$(&#x27;title&#x27;).textContent=xp.title;

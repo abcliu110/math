@@ -187,6 +187,10 @@ const TYPES={
    fields:[{k:'n',label:'分子（涂几份）',min:0,max:24},{k:'d',label:'分母（平均分成几份）',min:1,max:12}],
    size:e=>[176,34+Math.max(1,Math.ceil(e.props.n/e.props.d))*28]},
  adder:{label:'合并器',group:'数与运算',prefix:'合并器',out:'value',accepts:'value',defaults:{},fields:[],size:()=>[170,84]},
+ mul:{label:'乘法器',group:'数与运算',prefix:'乘法器',out:'value',accepts:'value',defaults:{},fields:[],size:()=>[170,84]},
+ div:{label:'除法器',group:'数与运算',prefix:'除法器',out:'value',accepts:'value',slots:true,defaults:{},fields:[],size:()=>[200,110]},
+ money:{label:'人民币',group:'数与运算',prefix:'人民币',out:'value',defaults:{yuan:1,jiao:0},fields:[{k:'yuan',label:'元',min:0,max:99},{k:'jiao',label:'角',min:0,max:9}],size:()=>[170,62]},
+ clock:{label:'钟面',group:'图形',prefix:'钟面',defaults:{h:3,m:0},fields:[{k:'h',label:'时（几点）',min:1,max:12},{k:'m',label:'分',min:0,max:55,step:5}],size:()=>[180,200]},
  numline:{label:'数轴',group:'关系',prefix:'数轴',accepts:'value',defaults:{min:0,max:2},
    fields:[{k:'min',label:'最左',min:-10,max:10},{k:'max',label:'最右',min:-9,max:20}],size:()=>[460,118]},
  balance:{label:'天平',group:'关系',prefix:'天平',accepts:'value',slots:true,defaults:{},fields:[],size:()=>[340,200]},
@@ -235,7 +239,8 @@ function act(a){
     if(reach(s,a.to,a.from))return{ok:0,why:'不能连成一个圈'};
     if(to.type==='balance'&&inputs(s,a.to).filter(l=>l.slot===a.slot).length>=5)return{ok:0,why:'一个盘最多放 5 个'};
     if(to.type==='numline'&&inputs(s,a.to).length>=6)return{ok:0,why:'数轴上最多 6 个点'};
-    addLink(s,a.from,a.to,to.type==='balance'?a.slot:null);return{ok:1}}
+    if(to.type==='div'&&inputs(s,a.to).some(l=>l.slot===a.slot))return{ok:0,why:a.slot==='L'?'左边已经有被除数了':'右边已经有除数了'};
+    addLink(s,a.from,a.to,(to.type==='balance'||to.type==='div')?a.slot:null);return{ok:1}}
   case 'roll':{const e=E[a.id];const c=e.props.counts||Array(13).fill(0);for(let i=0;i<e.props.times;i++){c[1+Math.ceil(Math.random()*6)+Math.ceil(Math.random()*6)-1]++}e.props.counts=c;return{ok:1}}
   case 'segclick':{const p=E[a.id].props;p.n=(p.n===a.k?a.k-1:a.k);return{ok:1}}
   }}catch(err){return{ok:0,why:'这个数不合法'}}
@@ -248,6 +253,9 @@ function evaluate(s){
   const val=id=>{if(id in vals)return vals[id];if(busy[id])return null;busy[id]=1;const e=E[id];let v=null;
     if(e.type==='num')v=Q(e.props.v);else if(e.type==='frac')v=Q(e.props.n,e.props.d);
     else if(e.type==='adder'){v=Q(0);for(const l of inputs(s,id)){const x=val(l.from);if(x)v=qadd(v,x)}}
+    else if(e.type==='money')v=Q(e.props.yuan*10+e.props.jiao,10);
+    else if(e.type==='mul'){v=Q(1);let any=false;for(const l of inputs(s,id)){const x=val(l.from);if(x){v=Q(v.n*x.n,v.d*x.d);any=true}}if(!any)v=null}
+    else if(e.type==='div'){const L=inputs(s,id).find(l=>l.slot==='L'),R=inputs(s,id).find(l=>l.slot==='R');const a=L&&val(L.from),b=R&&val(R.from);v=(a&&b&&b.n!==0)?Q(a.n*b.d,a.d*b.n):null}
     return vals[id]=v};
   for(const id in E){const e=E[id],d=D[id]={read:[],sig:[]};
     const sig=(lv,tx)=>d.sig.push({lv,tx});
@@ -256,6 +264,15 @@ function evaluate(s){
     if(e.type==='adder'){const ins=inputs(s,id).map(l=>val(l.from)).filter(Boolean);d.terms=ins;
       if(!ins.length)sig('info','把几个数连进来，这里算它们的和');
       else{const ds=[...new Set(ins.map(q=>q.d))];if(ds.length>1){const L=ds.reduce(lcm);sig('info',`分母不同：都换成 ${L} 份再加`)}}}
+    if(e.type==='mul'){const ins=inputs(s,id).map(l=>val(l.from)).filter(Boolean);d.terms=ins;
+      if(!ins.length)sig('info','把几个数连进来，这里算它们的积（几个 × 几个）');
+      else if(ins.length>=2&&d.value)sig('info',`${ins.map(qs).join(' × ')} = ${qs(d.value)}`)}
+    if(e.type==='div'){const L=inputs(s,id).find(l=>l.slot==='L'),R=inputs(s,id).find(l=>l.slot==='R');const a=L&&val(L.from),b=R&&val(R.from);d.a=a;d.b=b;
+      if(!a||!b)sig('info','左边放被除数（总数），右边放除数（分成几份）');
+      else if(b.n===0)sig('err','除数不能是 0');
+      else if(d.value.d===1)sig('ok',`${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`);
+      else sig('warn',`除不尽：${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`)}
+    if(e.type==='clock'){const {h,m}=e.props;sig('info',`现在是 ${h}:${String(m).padStart(2,'0')}`)}
     if(e.type==='numline'){const {min,max}=e.props;d.pts=inputs(s,id).map(l=>({from:l.from,v:val(l.from)})).filter(p=>p.v);
       d.pts.forEach(p=>{p.out=qnum(p.v)<min||qnum(p.v)>max;if(p.out)sig('err',`${qs(p.v)} 放不下：数轴只从 ${min} 到 ${max}`)});
       const ins=d.pts.filter(p=>!p.out);
@@ -369,7 +386,7 @@ function render(){
 }
 function nextTarget(){if(mode!=='practice'||!run)return null;const st=run.steps.find(s=>!s.done);return st?xp.steps[st.i].target(S):null}
 function size(e){return TYPES[e.type].size(e)}
-function anchorIn(l){const e=S.entities[l.to];const [w,h]=size(e);if(e.type==='balance'){const t=(D[e.id]||{}).tilt||0,dy=Math.sin(t*Math.PI/180)*120;return l.slot==='L'?[e.x+50,e.y+112-dy]:[e.x+w-50,e.y+112+dy]}return[e.x,e.y+h/2]}
+function anchorIn(l){const e=S.entities[l.to];const [w,h]=size(e);if(e.type==='div')return l.slot==='L'?[e.x,e.y+h*0.3]:[e.x,e.y+h*0.7];if(e.type==='balance'){const t=(D[e.id]||{}).tilt||0,dy=Math.sin(t*Math.PI/180)*120;return l.slot==='L'?[e.x+50,e.y+112-dy]:[e.x+w-50,e.y+112+dy]}return[e.x,e.y+h/2]}
 function anchorOut(id){const e=S.entities[id],[w,h]=size(e);return[e.x+w,e.y+h/2]}
 function linkSvg(l){if(!S.entities[l.from]||!S.entities[l.to])return'';const [x1,y1]=anchorOut(l.from),[x2,y2]=anchorIn(l);const c=Math.max(40,Math.abs(x2-x1)/2);
   const d=`M${x1},${y1} C${x1+c},${y1} ${x2-c},${y2} ${x2},${y2}`;return`<path class="linkhit" data-link="${l.id}" d="${d}"/><path class="link${selLink===l.id?' sel':''}" d="${d}"/>`}
@@ -378,7 +395,7 @@ function entSvg(e,d,isNext){const T=TYPES[e.type],[w,h]=size(e);const lv=d.sig.s
   let g=`<g class="ent${sel===e.id?' sel':''}${lv}${isNext?' is-next':''}" data-ent="${e.id}" transform="translate(${e.x},${e.y})">`;
   g+=`<rect class="ent-body" width="${w}" height="${h}" rx="10" filter="url(#sh)"/><text class="ttl" x="10" y="17">${esc(e.name)}</text>`;
   g+=DRAW[e.type](e,d,w,h);
-  if(T.accepts&&e.type!=='balance')g+=`<circle class="port-in" cx="0" cy="${h/2}" r="6"/>`;
+  if(T.accepts&&!T.slots)g+=`<circle class="port-in" cx="0" cy="${h/2}" r="6"/>`;
   if(T.out)g+=`<circle class="port-out" data-port="${e.id}" cx="${w}" cy="${h/2}" r="7"/>`;
   if(sel===e.id)g+=`<rect class="selbox" x="-6" y="-6" width="${w+12}" height="${h+12}" rx="12"/>`;
   // 信号条：错了台面自己说
@@ -389,6 +406,14 @@ const DRAW={
  num:(e,d,w,h)=>`<text class="big" x="${w/2}" y="${h/2+14}" text-anchor="middle" font-size="28">${e.props.v}</text>`,
  frac:(e,d,w)=>{const {n,d:dd}=e.props,rows=Math.max(1,Math.ceil(n/dd)),bw=w-24,sw=bw/dd;let s=`<text class="big" x="${w-12}" y="18" text-anchor="end" font-size="14">${n}/${dd}</text>`;
    for(let r=0;r<rows;r++)for(let i=0;i<dd;i++){const k=r*dd+i+1;s+=`<rect class="seg-cell" data-seg="${k}" x="${12+i*sw}" y="${28+r*28}" width="${sw}" height="22" fill="${k<=n?'#ff9f43':'#fff'}" stroke="#5b6778" stroke-width="1"/>`}return s},
+ money:(e,d,w,h)=>`<text class="big" x="${w/2}" y="${h/2+12}" text-anchor="middle" font-size="22">${e.props.yuan} 元 ${e.props.jiao} 角</text>`,
+ clock:(e,d,w,h)=>{const {h:hr,m}=e.props,cx=w/2,cy=h/2+10,R=70;const ha=((hr%12)+m/60)*30-90,ma=m*6-90;const P=(a,r)=>[cx+Math.cos(a*Math.PI/180)*r,cy+Math.sin(a*Math.PI/180)*r];
+   let s=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="#fff" stroke="#5b6778" stroke-width="2"/>`;
+   for(let i=0;i<12;i++){const [x1,y1]=P(i*30-90,R-6),[x2,y2]=P(i*30-90,R-1);s+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#5b6778"/>`}
+   const [hx,hy]=P(ha,R*0.5),[mx,my]=P(ma,R*0.8);s+=`<line x1="${cx}" y1="${cy}" x2="${hx}" y2="${hy}" stroke="#1d2633" stroke-width="5"/><line x1="${cx}" y1="${cy}" x2="${mx}" y2="${my}" stroke="#ff9f43" stroke-width="3"/><circle cx="${cx}" cy="${cy}" r="3" fill="#1d2633"/>`;
+   return s},
+mul:(e,d,w,h)=>{const t=d.terms||[];const ex=t.length?t.map(qs).join(' × '):'空';return`<text class="ink" x="${w/2}" y="42" text-anchor="middle" font-size="13">${esc(ex)}</text><text class="big" x="${w/2}" y="70" text-anchor="middle" font-size="22">= ${d.value?qs(d.value):0}</text>`},
+ div:(e,d,w,h)=>`<circle class="port-in" cx="0" cy="${h*0.3}" r="6"/><circle class="port-in" cx="0" cy="${h*0.7}" r="6"/><text class="ink" x="${w/2}" y="40" text-anchor="middle" font-size="13">被除数 ${d.a?qs(d.a):'?'}</text><text class="ink" x="${w/2}" y="60" text-anchor="middle" font-size="13">除数 ${d.b?qs(d.b):'?'}</text><text class="big" x="${w/2}" y="${h-12}" text-anchor="middle" font-size="20">= ${d.value?qs(d.value):'?'}</text>`,
  adder:(e,d,w,h)=>{const t=d.terms||[];const ex=t.length?t.map(qs).join(' + '):'空';return`<text class="ink" x="${w/2}" y="42" text-anchor="middle" font-size="13">${esc(ex)}</text><text class="big" x="${w/2}" y="70" text-anchor="middle" font-size="22">= ${d.value?qs(d.value):0}</text>`},
  numline:(e,d,w)=>{const {min,max}=e.props,x0=24,x1=w-24,X=v=>x0+(v-min)/(max-min)*(x1-x0),y=72;let L=1;(d.pts||[]).forEach(p=>{if(p.v.d<=12)L=lcm(L,p.v.d)});if(L>12||(max-min)*L>60)L=1;
    let s=`<line x1="${x0-10}" y1="${y}" x2="${x1+12}" y2="${y}" stroke="#334" stroke-width="2"/><path d="M${x1+12},${y-5}L${x1+20},${y}L${x1+12},${y+5}Z" fill="#334"/>`;
@@ -573,6 +598,71 @@ function wpSteps(p){const ans=wpAnswer(p);
     {label:'数轴上两点相差的数，就是答案',score:2,hint:'看数轴下面的“相差”',target:s=>byType(s,'numline'),check:(s,D)=>{const nl=byType(s,'numline');if(!nl)return false;const vs=inputs(s,nl).map(l=>D[l.from]&&D[l.from].value).filter(Boolean);return vs.length>=2&&Math.abs(qnum(vs[0])-qnum(vs[1]))===ans}}];
 }
 WP.forEach(p=>XP.push({id:p.id,title:p.title,domain:'应用题',grade:p.grade,tools:p.kind==='add'?'数字卡 · 合并器':'数字卡 · 数轴',q:p.title,why:p.why,build:wpBuild(p),steps:wpSteps(p)}));
+
+/* ========== 应用题（第二期）：乘法器、除法器。除法的被除数连左边，除数连右边。 ========== */
+const WPM=[
+ {id:'wm01',grade:2,kind:'mul',a:6,b:3,title:'每盒有 6 支铅笔，3 盒一共几支？',why:'每盒的数量相同，求几盒一共几个，用乘法：6 × 3 = 18。'},
+ {id:'wm02',grade:2,kind:'mul',a:4,b:5,title:'每个小朋友分 4 颗糖，5 个小朋友一共要几颗？',why:'4 × 5 = 20。每人 4 颗，5 人就是 5 个 4。'},
+ {id:'wm03',grade:2,kind:'mul',a:8,b:4,title:'一排有 8 个座位，一共 4 排，一共有几个座位？',why:'8 × 4 = 32。'},
+ {id:'wm04',grade:3,kind:'mul',a:12,b:7,title:'一箱有 12 瓶水，买了 7 箱，一共几瓶？',why:'12 × 7 = 84。可以拆开算：10 × 7 + 2 × 7 = 70 + 14。'},
+ {id:'wm05',grade:3,kind:'mul',a:9,b:6,title:'每本书 9 元，买 6 本一共多少钱？',why:'9 × 6 = 54。'},
+ {id:'wd01',grade:2,kind:'div',a:12,b:3,title:'12 个苹果平均分给 3 人，每人几个？',why:'把 12 平均分成 3 份，每份是 12 ÷ 3 = 4。'},
+ {id:'wd02',grade:2,kind:'div',a:15,b:5,title:'15 颗糖，每 5 颗装一袋，可以装几袋？',why:'看 15 里面有几个 5：15 ÷ 5 = 3。'},
+ {id:'wd03',grade:2,kind:'div',a:20,b:4,title:'20 支铅笔平均分给 4 个小朋友，每人几支？',why:'20 ÷ 4 = 5。'},
+ {id:'wd04',grade:3,kind:'div',a:48,b:6,title:'48 个鸡蛋，每 6 个一盒，能装几盒？',why:'48 ÷ 6 = 8。'},
+ {id:'wd05',grade:3,kind:'div',a:63,b:7,title:'63 元平均买 7 本书，每本多少钱？',why:'63 ÷ 7 = 9。'},
+];
+function wmAnswer(p){return p.kind==='mul'?p.a*p.b:p.a/p.b}
+function wmBuild(p){return function(s){
+  addEnt(s,'num',60,60,{v:p.a});addEnt(s,'num',60,170,{v:p.b});
+  if(p.kind==='mul')addEnt(s,'mul',330,110);else addEnt(s,'div',330,100);
+}}
+function wmSteps(p){const ans=wmAnswer(p);
+  if(p.kind==='mul')return[
+    {label:'把两个数都连到乘法器',score:1,hint:'拖数字卡右边的蓝点到乘法器',target:s=>byType(s,'mul'),check:(s,D)=>{const m=byType(s,'mul');return !!m&&inputs(s,m).length>=2}},
+    {label:'乘法器算出的积就是答案',score:2,hint:'看乘法器的读数，和题目对照',target:s=>byType(s,'mul'),check:(s,D)=>{const m=byType(s,'mul');return !!m&&!!D[m].value&&qeq(D[m].value,Q(ans))}}];
+  return[
+    {label:'把被除数连到除法器左边（总数）',score:1,hint:'拖数字卡的蓝点到除法器的上半边',target:s=>byType(s,'div'),check:(s,D)=>{const dv=byType(s,'div');return !!dv&&inputs(s,dv).some(l=>l.slot==='L'&&qeq(D[l.from].value,Q(p.a)))}},
+    {label:'把除数连到除法器右边（分成几份）',score:1,hint:'拖另一个数字卡到除法器的下半边',target:s=>byType(s,'div'),check:(s,D)=>{const dv=byType(s,'div');return !!dv&&inputs(s,dv).some(l=>l.slot==='R'&&qeq(D[l.from].value,Q(p.b)))}},
+    {label:'除法器算出的商就是答案',score:2,hint:'看除法器下面的得数',target:s=>byType(s,'div'),check:(s,D)=>{const dv=byType(s,'div');return !!dv&&!!D[dv].value&&qeq(D[dv].value,Q(ans))}}];
+}
+WPM.forEach(p=>XP.push({id:p.id,title:p.title,domain:'应用题',grade:p.grade,tools:p.kind==='mul'?'数字卡 · 乘法器':'数字卡 · 除法器',q:p.title,why:p.why,build:wmBuild(p),steps:wmSteps(p)}));
+
+/* ========== 应用题（第二期）：人民币（元、角），钟面（拨到几点）。 ========== */
+const WPO=[
+ {id:'wo01',grade:2,kind:'money-add',a:[3,5],b:[6,0],title:'一支笔 3 元 5 角，一本书 6 元，买这两样一共多少钱？',why:'3 元 5 角 = 3.5 元，3.5 + 6 = 9.5 元，就是 9 元 5 角。'},
+ {id:'wo02',grade:2,kind:'money-add',a:[2,0],b:[4,5],title:'一块橡皮 2 元，一把尺子 4 元 5 角，一共多少钱？',why:'2 + 4.5 = 6.5 元，就是 6 元 5 角。'},
+ {id:'wo03',grade:2,kind:'money-diff',a:[10,0],b:[6,5],title:'小明有 10 元，买玩具用了 6 元 5 角，还剩多少钱？',why:'10 − 6.5 = 3.5 元，即 3 元 5 角。数轴上两点的距离就是剩下的钱。'},
+ {id:'wo04',grade:2,kind:'money-add',a:[5,5],b:[1,5],title:'一个本子 5 元 5 角，一支笔 1 元 5 角，一共多少钱？',why:'5.5 + 1.5 = 7 元。'},
+];
+const WPT=[
+ {id:'wt01',grade:2,a:3,b:2,title:'现在是 3 点，过 2 小时是几点？',why:'3 + 2 = 5，时针从 3 走到 5。'},
+ {id:'wt02',grade:2,a:9,b:4,title:'现在是 9 点，过 4 小时是几点？',why:'9 + 4 = 13，超过 12 就从头数：13 − 12 = 1 点。'},
+ {id:'wt03',grade:2,a:7,b:5,title:'现在是 7 点，再过 5 小时是几点？',why:'7 + 5 = 12，就是 12 点。'},
+ {id:'wt04',grade:2,a:10,b:3,title:'现在是 10 点，过 3 小时是几点？',why:'10 + 3 = 13，就是 1 点。'},
+ {id:'wt05',grade:2,a:2,b:8,title:'现在是 2 点，过 8 小时是几点？',why:'2 + 8 = 10，就是 10 点。'},
+];
+function woCents(q){return q[0]*10+q[1]}
+function woBuild(p){return function(s){
+  if(p.kind==='clock'){addEnt(s,'clock',240,40,{h:1,m:0});return}
+  addEnt(s,'money',60,60,{yuan:p.a[0],jiao:p.a[1]});addEnt(s,'money',60,170,{yuan:p.b[0],jiao:p.b[1]});
+  if(p.kind==='money-add')addEnt(s,'adder',330,110);else addEnt(s,'numline',120,340,{min:0,max:12});
+}}
+function woSteps(p){
+  if(p.kind==='clock'){const ans=((p.a-1+p.b)%12)+1;return[
+    {label:'把钟面的时针拨到开始的时刻',score:1,hint:'点钟面卡，在属性卡里把“时”调到 '+p.a,target:s=>byType(s,'clock'),check:s=>{const c=byType(s,'clock');return !!c&&s.entities[c].props.h===p.a}},
+    {label:'再拨到过了几小时以后的时刻',score:2,hint:'从开始的时刻往后数 '+p.b+' 个小时',target:s=>byType(s,'clock'),check:s=>{const c=byType(s,'clock');return !!c&&s.entities[c].props.h===ans}}]}
+  const total=woCents(p.a)+woCents(p.b);
+  if(p.kind==='money-add')return[
+    {label:'把两样东西的钱都连到合并器',score:1,hint:'拖两个人民币的蓝点到合并器',target:s=>byType(s,'adder'),check:(s,D)=>{const ad=byType(s,'adder');return !!ad&&inputs(s,ad).length>=2}},
+    {label:'合并器算出的总价就是答案',score:2,hint:'看合并器的读数，注意角和元',target:s=>byType(s,'adder'),check:(s,D)=>{const ad=byType(s,'adder');return !!ad&&!!D[ad].value&&qeq(D[ad].value,Q(total,10))}}];
+  const gap=Math.abs(woCents(p.a)-woCents(p.b));
+  return[
+    {label:'把两个钱数都连到数轴',score:1,hint:'拖两个人民币的蓝点到数轴',target:s=>byType(s,'numline'),check:(s,D)=>{const nl=byType(s,'numline');return !!nl&&inputs(s,nl).length>=2}},
+    {label:'数轴上两点相差的钱，就是答案',score:2,hint:'看数轴下面的“相差”',target:s=>byType(s,'numline'),check:(s,D)=>{const nl=byType(s,'numline');if(!nl)return false;const vs=inputs(s,nl).map(l=>D[l.from]&&D[l.from].value).filter(Boolean);return vs.length>=2&&Math.abs(qnum(vs[0])-qnum(vs[1]))===gap/10}}];
+}
+WPO.forEach(p=>XP.push({id:p.id,title:p.title,domain:'应用题',grade:p.grade,tools:p.kind==='money-add'?'人民币 · 合并器':'人民币 · 数轴',q:p.title,why:p.why,build:woBuild({kind:p.kind,a:p.a,b:p.b}),steps:woSteps({kind:p.kind,a:p.a,b:p.b})}));
+WPT.forEach(p=>XP.push({id:p.id,title:p.title,domain:'应用题',grade:p.grade,tools:'钟面',q:p.title,why:p.why,build:woBuild({kind:'clock'}),steps:woSteps({kind:'clock',a:p.a,b:p.b})}));
 
 function startXp(id,m){xp=XP.find(x=>x.id===id);if(!xp)return;mode=m;S=blankScene();xp.build(S);undoSt=[];redoSt=[];sel=null;cardOpen=false;
   run={steps:xp.steps.map((s,i)=>({i,done:false})),ops:0,errors:0,t0:Date.now(),finished:false};$('title').textContent=xp.title;
