@@ -31,7 +31,9 @@ check('timer: setTimeout chain (no setInterval — smoke sandbox only has setTim
 check('timer: tick is guarded by challenge mode + seq',
   app.includes("labExam.seq !== seq || labMode !== 'challenge'"));
 check('timer: entering challenge starts the clock, leaving stops it',
-  app.includes("if (m === 'challenge') { if (!labExam) labExamStart();") && app.includes('else labExamStop();'));
+  app.includes("if (m === 'challenge') { if (!labExam) labExamStart();") && app.includes('labExamStop(); // 退出挑战停表'));
+check('timer: leaving challenge ends the exam procedure (no stale “考试进行中” in free play)',
+  app.includes('退出挑战：考试流程到此结束') && app.includes("labWorld.procedure.mode === 'exam'") && app.includes("MathWorld.apply(labWorld, { type: 'procedureEnd' })"));
 check('timer: timeout auto-submits when questions were attempted',
   app.includes('labExamTimeout') && app.includes("if (labChallengeAttempts.length) {") && app.includes("labTrace('时间到了，自动交卷', false);"));
 check('timer: submitting stops the clock (marking is not timed)',
@@ -58,8 +60,23 @@ check('report: fold + peek buttons exist in the challenge box',
   html.includes('id="labReportFold"') && html.includes('id="labReportPeek"'));
 check('report: fold toggles the report box hidden + button text',
   app.includes("box.hidden = !hidden;") && app.includes("fold.textContent = hidden ? '收起报告' : '展开报告';"));
-check('report: peek hides the box while held (pointerdown/up/leave/cancel)',
+check('report: peek hides the box while held (pointerdown/up/cancel)',
   app.includes("box.classList.add('lab-report-peek')") && app.includes("peek.addEventListener('pointerdown', on)") && app.includes("peek.addEventListener('pointercancel', off)") && css.includes('#labChallengeReport.lab-report-peek'));
+check('report: peek hides the report sheet too (it also covers the bench)',
+  app.includes("sheet.classList.add('lab-report-peek')") && css.includes('#labReportSheet.lab-report-peek'));
+check('report: peek never triggers touch scrolling (touch-action:none + pointer capture)',
+  css.includes('#labReportPeek{touch-action:none') && app.includes('peek.setPointerCapture'));
+check('report: peek has no pointerleave off-trigger (a mouse pointerleave fires when touch starts and would un-hide the report mid-hold)',
+  !app.includes("peek.addEventListener('pointerleave', off)") && app.includes("peek.addEventListener('lostpointercapture', off)"));
+check('report: submitting clears the peek class from the sheet as well',
+  app.includes("sheet.classList.remove('lab-report-peek')"));
+check('report: entering the balance question puts the balance on the bench and switches to the balance view',
+  app.includes('进天平题，台面就画天平') && app.includes('benchShowBalance = true; benchPreferredView = null;') &&
+  app.includes("if (labWorld && !labWorld.benchBalance) benchRun({ type: 'benchBalanceToggle' });"));
+check('combo: combo display follows the world when the balance changes elsewhere',
+  app.includes('function labWbSyncFromWorld()') && app.includes('labWbSyncFromWorld(); // 组合台的盘子跟世界走') && app.includes('function labBalKey()'));
+check('combo: balance sync is a no-op when values are unchanged (keeps piece ids)',
+  app.includes('if (labBalKey() === newKey) return;'));
 check('report: submitting unhides the box even if the student collapsed it',
   app.includes('// 交卷了，报告盒子要看得见：之前学生可能把它收起来了。') && app.includes("box.hidden = false;"));
 

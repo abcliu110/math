@@ -3489,6 +3489,9 @@
         <option value="8">8 年级</option>
         <option value="9">9 年级</option>
       </select>
+      <select id="labQChapter" aria-label="按章节筛选">
+        <option value="all">全部章节</option>
+      </select>
       <span class="btn-row" id="labQDomains">
         <button type="button" class="btn small primary" data-lab-domain="all">全部领域</button>
         <button type="button" class="btn small ghost" data-lab-domain="数与代数">数与代数</button>
@@ -3634,6 +3637,16 @@
           <div class="control-row">
             <input type="text" id="labSaveName" placeholder="给这个台面起个名字" aria-label="台面名字" style="flex:1;min-width:140px">
             <button class="btn small ghost" type="button" id="labSaveBtn">保存台面</button>
+            <button class="btn small ghost" type="button" id="labShareBtn">分享配置</button>
+          </div>
+          <div id="labShareBox" class="lab-share-box" hidden>
+            <p class="muted">这串配置就是现在这个台面的样子：复制发给别人，对方粘到这里点“导入配置”，台面就一样了。</p>
+            <textarea id="labShareText" aria-label="实验配置" spellcheck="false"></textarea>
+            <div class="btn-row">
+              <button class="btn small primary" type="button" id="labShareCopy">复制配置</button>
+              <button class="btn small ghost" type="button" id="labShareImport">导入配置</button>
+            </div>
+            <p id="labShareMsg" class="muted"></p>
           </div>
           <div id="labSavedList" class="lab-saved-list" aria-live="polite"></div>
         </article>

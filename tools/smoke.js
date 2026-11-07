@@ -1233,6 +1233,46 @@ if (typeof sandbox.labWorldSave === 'function' && typeof sandbox.labWbRender ===
   sandbox.labWbL = []; sandbox.labWbR = [];
   sandbox.labSyncBalanceToWorld();
 }
+// 2026-11-07 复测修（第 2 阶段后）：进天平题台面就画天平；值没变别重建天平；
+// 组合台的盘子跟世界走。下面每条在改前代码上干净失败。
+if (typeof sandbox.labEnterQuestion === 'function' && typeof sandbox.labSyncBalanceToWorld === 'function') {
+  // 修 2：之前放过长方形（benchShowBalance=false），天平也不在台面上
+  // （benchBalance=false，默认台面是空的）。进天平题要把天平放上台 + 切回
+  // 天平视图，不然台面还停在坐标系，盘子画不出来、砝码拖上去落不到盘上。
+  sandbox.benchShowBalance = false; sandbox.benchPreferredView = 'coord';
+  if (sandbox.labWorld) sandbox.labWorld.benchBalance = false;
+  sandbox.labEnterQuestion('q-balfrac');
+  check('lab entering balance question puts the balance on the bench and switches to the balance view (was coord after rect)',
+    sandbox.benchShowBalance === true && sandbox.benchPreferredView === null &&
+    sandbox.labWorld && sandbox.labWorld.benchBalance === true);
+  // 修 3a：值没变再同步一次，piece id 不能换（旧代码无条件重建，id 全换——
+  // create 的 id 是 Date.now+随机数，两次重建一定不一样）。
+  sandbox.labWbL = [{ kind: 'frac', n: 1, d: 2 }]; sandbox.labWbR = [{ kind: 'num', v: 3 }];
+  sandbox.labSyncBalanceToWorld();
+  const balIdsBefore = (sandbox.labWorld.balance.L || []).concat(sandbox.labWorld.balance.R || []).slice();
+  sandbox.labSyncBalanceToWorld();
+  const balIdsAfter = (sandbox.labWorld.balance.L || []).concat(sandbox.labWorld.balance.R || []);
+  check('lab balance sync is a no-op when values are unchanged (piece ids kept)',
+    balIdsBefore.length === 2 && balIdsAfter.length === 2 &&
+    balIdsBefore.every(function (id, i) { return id === balIdsAfter[i]; }));
+  // 修 3b：世界右盘有 1/6，旧数组还是空（stale）→ 同步后旧数组要有 1/6，世界不动。
+  if (typeof sandbox.labWbSyncFromWorld === 'function') {
+    const wSync = sandbox.MathWorld.create({ balance: { L: [{ n: 1, d: 2 }], R: [{ n: 1, d: 6 }] } });
+    sandbox.labWorld = wSync; sandbox.mwPlay = wSync;
+    sandbox.labWbL = [{ kind: 'frac', n: 1, d: 2 }]; sandbox.labWbR = [];
+    sandbox.labWbLastBal = null;
+    sandbox.labWbSyncFromWorld();
+    check('lab combo follows the world (stale right pan refreshed from world, world unchanged)',
+      sandbox.labWbR.length === 1 && sandbox.labWbR[0].n === 1 && sandbox.labWbR[0].d === 6 &&
+      sandbox.labWorld.balance.R.length === 1);
+  } else {
+    check('lab combo follows the world (stale right pan refreshed from world, world unchanged)', false);
+  }
+  // 收尾：恢复空盘，别影响后面的 lab2 天平检查。
+  sandbox.labWbL = []; sandbox.labWbR = [];
+  sandbox.labSyncBalanceToWorld();
+  sandbox.labWbLastBal = null;
+}
 // 2026-11-07 复测修：学生界面不出现任何 goalMet/函数名/调试字样。
 if (typeof sandbox.worldPlayRender === 'function') {
   sandbox.worldPlayRender();
@@ -4171,6 +4211,14 @@ if (typeof sandbox.labSetMode === 'function') {
   check('lab2: challenge question shows an exam-mode procedure panel with no checklist',
     byId.worldProcOut.innerHTML.includes('天平上的分数') && byId.worldProcOut.innerHTML.includes('考试（无提示）') &&
     !byId.worldProcOut.innerHTML.includes('proc-steps'));
+  // 2026-11-07 复测修（第 2 阶段后）：退出挑战要结束考试流程，不然流程面板一直挂着“考试进行中”。
+  // 下面在改前代码上干净失败：旧代码 labSetMode('free') 只停表，不结束流程、不重算。
+  check('lab2: exam panel shows “考试进行中” while in challenge',
+    byId.worldProcOut.innerHTML.includes('考试进行中'));
+  sandbox.labSetMode('free');
+  check('lab2: leaving challenge ends the exam procedure, no stale “考试进行中” in free play',
+    !(sandbox.labWorld && sandbox.labWorld.procedure && sandbox.labWorld.procedure.mode === 'exam') &&
+    !byId.worldProcOut.innerHTML.includes('考试进行中'));
   sandbox.labSetMode('free');
   click(byId['labQ-numline']);
   check('lab2: entering a question in free mode records no attempt',

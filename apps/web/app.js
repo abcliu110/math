@@ -4613,11 +4613,31 @@ function labSyncBalanceToWorld() {
   if (!labWorld) labSeedWorld(null); // 世界还没建：先恢复保存（不然 create 一个新世界会把保存洗掉）
   if (!labWorld) return;
   const toQ = (v) => v.kind === 'frac' ? { n: v.n, d: v.d } : { n: v.v, d: 1 };
-  const next = MathWorld.create({ balance: { L: labWbL.map(toQ), R: labWbR.map(toQ) } });
+  const newL = labWbL.map(toQ), newR = labWbR.map(toQ);
+  // 值没变就别重建天平：重建会换掉砝码的 piece id，检查器里选中的砝码就掉了，
+  // 台面上的盘子卡片也丢选中态。组合台按世界刷新显示时值经常是一样的
+  // （labWbSyncFromWorld 刚刷过旧数组），这时同步本该是空操作。
+  const newKey = newL.map(function (v) { return v.n + '/' + v.d; }).sort().join(',') + '|' +
+    newR.map(function (v) { return v.n + '/' + v.d; }).sort().join(',');
+  if (labBalKey() === newKey) return;
+  const next = MathWorld.create({ balance: { L: newL, R: newR } });
   (labWorld.balance.L || []).concat(labWorld.balance.R || []).forEach(function (id) { delete labWorld.pieces[id]; });
   labWorld.balance = next.balance;
   Object.assign(labWorld.pieces, next.pieces);
   mwPlay = labWorld;
+}
+/* 天平砝码值（排好序的 n/d 串）：比两个天平是不是同一组砝码，不比 piece id。 */
+function labBalVals(ids) {
+  return (ids || []).map(function (id) {
+    const p = labWorld.pieces && labWorld.pieces[id];
+    if (!p) return '?';
+    const q = MathWorld.Q.fromPiece(p);
+    return q.n + '/' + q.d;
+  }).sort().join(',');
+}
+function labBalKey() {
+  if (!labWorld || !labWorld.balance) return '';
+  return labBalVals(labWorld.balance.L) + '|' + labBalVals(labWorld.balance.R);
 }
 function labSyncLinefnToWorld() {
   if (!labHasWorld()) return;
@@ -4837,6 +4857,20 @@ function labWbWeightsHtml(arr, x0) {
 }
 function labWbListText(arr) {
   return arr.length ? arr.map(labValLabel).join(' + ') : '空';
+}
+var labWbLastBal = null; // 上次同步到组合台的天平状态（各盘砝码值），变了才重画组合台
+function labWbSyncFromWorld() {
+  // 组合台的盘子要跟世界走：天平是 bench/station/combo 共享的一只（w.balance），
+  // 站/台面改了天平，组合台的旧数组 labWbL/labWbR 就 stale 了——显示还停在旧值，
+  // 刷新后按世界重摆，看起来就像“右盘没保存”（2026-11-07 复测：组合台右盘 1/6 → 1/2，
+  // 左盘恰好一样所以“保住了”，右盘不一样所以“丢了”；其实是显示 stale，不是保存丢了）。
+  // 只在天平真的变了时同步，不然每次重算都跑一次组合台渲染。
+  if (!labHasWorld() || !labWorld || !labWorld.balance) return;
+  const key = labBalKey();
+  if (key === labWbLastBal) return;
+  labWbLastBal = key;
+  labWbFromWorld(); // 旧数组按世界刷新（不然 labWbRender 的同步会把旧值写回世界）
+  labWbRender(); // 同步（此时旧数组=世界，同步是空操作）+ 保存 + 重画 + 梁跟过去
 }
 function labWbRender() {
   labSyncBalanceToWorld();
@@ -5059,6 +5093,15 @@ function labEnterQuestion(qid) {
     labSetCurrentQ('当前问题：分母不一样，分数能直接加吗？——在上面分数板调好，点「拼一拼」。');
   } else if (q.bench === 'balfrac') {
     if (!keepSaved) { labWbL = [{ kind: 'frac', n: 1, d: 2 }]; labWbR = []; labWbRender(); }
+    // 进天平题，台面就画天平：视图是跟上次走的，之前放过长方形/切过别的视图，
+    // 台面还停在坐标系，天平盘子画不出来，砝码拖上去也落不到盘上、只能落成散数
+    // （2026-11-07 复测：器材盒 1/6 拖到“台面右盘”没上盘，落成了台上的数）。
+    // 光设视图还不够：天平得先在台面上——默认台面是空的（benchBalance=false），
+    // 没放天平就没有天平视图可画，盘子也不认落点。进题就把天平放上台
+    // （已在台上就不用动，toggle 会把它拿下来，所以先判一下）。
+    // 学生之后点别的视图按钮照样能切走、点天平器材能拿下台，这里只管进题那一下。
+    benchShowBalance = true; benchPreferredView = null;
+    if (labWorld && !labWorld.benchBalance) benchRun({ type: 'benchBalanceToggle' });
     labSetCurrentQ('当前问题：天平一边放 1/2，另一边要放多少才平？——左盘已有 1/2，右边你来配。');
   } else if (q.bench === 'numline') {
     if (!keepSaved && labHasWorld()) {
@@ -5152,7 +5195,17 @@ function labSetMode(m) {
   document.getElementById('labModeChallenge').setAttribute('aria-pressed', String(m === 'challenge'));
   document.getElementById('labChallengeBox').hidden = (m !== 'challenge');
   if (m === 'challenge') { if (!labExam) labExamStart(); labChallengeRenderLive(); } // 进挑战模式就把已做的题列出来，不用等交卷
-  else labExamStop(); // 退出挑战停表；再进挑战重新计 10 分钟
+  else {
+    labExamStop(); // 退出挑战停表；再进挑战重新计 10 分钟
+    // 退出挑战：考试流程到此结束，不然流程面板一直挂着“考试进行中”
+    // （2026-11-07 复测：考完回自由玩还留着这行，下次重算又把它画出来）。
+    // 只结束考试流程，练习流程不动；重算一次面板，行就清掉了。
+    if (labWorld && labWorld.procedure && labWorld.procedure.mode === 'exam') {
+      const r = MathWorld.apply(labWorld, { type: 'procedureEnd' });
+      labWorld = r.world; mwPlay = r.world;
+    }
+    if (labWorld && typeof worldPlayRender === 'function') worldPlayRender();
+  }
   document.getElementById('labModeTx').textContent = m === 'challenge'
     ? '挑战模式：没有提示，做完点“交卷”，答错的进今天复习。'
     : '自由玩：随便试，提示都在。';
@@ -5374,6 +5427,8 @@ function labSubmitChallenge() {
   if (box) {
     box.hidden = false;
     box.classList.remove('lab-report-peek');
+    const sheet = document.getElementById('labReportSheet');
+    if (sheet) sheet.classList.remove('lab-report-peek');
     const fold = document.getElementById('labReportFold');
     if (fold) { fold.textContent = '收起报告'; fold.setAttribute('aria-expanded', 'true'); }
   }
@@ -5497,6 +5552,7 @@ function labReportShow(wrong) {
   const fold = document.getElementById('labReportFold');
   const peek = document.getElementById('labReportPeek');
   const box = document.getElementById('labChallengeReport');
+  const sheet = document.getElementById('labReportSheet');
   if (fold && box) fold.addEventListener('click', function () {
     const hidden = box.hidden;
     box.hidden = !hidden;
@@ -5505,12 +5561,30 @@ function labReportShow(wrong) {
   });
   if (peek && box) {
     // 按住看台面：按住藏报告，松开回来（NB §6 #37）。
-    const on = function (e) { if (e && e.preventDefault) e.preventDefault(); box.classList.add('lab-report-peek'); };
-    const off = function () { box.classList.remove('lab-report-peek'); };
+    // 藏的是丢分报告 + 交卷报告单两个——只藏一个，另一个还挡着台面
+    // （2026-11-07 复测：鼠标按住时报告单一点没藏，台面露不出来）。
+    // 触屏上 preventDefault 拦不住滚动：按钮得有 touch-action:none（见 CSS），
+    // 不然一滑就 pointercancel、报告立刻回来，页面还往上滚（同次复测）。
+    // 再加 pointer capture：指针挪出按钮一点点也不丢 pointerup。
+    const on = function (e) {
+      if (e && e.preventDefault) e.preventDefault();
+      if (e && peek.setPointerCapture) { try { peek.setPointerCapture(e.pointerId); } catch (err) {} }
+      box.classList.add('lab-report-peek');
+      if (sheet) sheet.classList.add('lab-report-peek');
+    };
+    const off = function () {
+      box.classList.remove('lab-report-peek');
+      if (sheet) sheet.classList.remove('lab-report-peek');
+    };
     peek.addEventListener('pointerdown', on);
     peek.addEventListener('pointerup', off);
-    peek.addEventListener('pointerleave', off);
+    // 没有 pointerleave：它会误触发——触屏按下去那一刻，浏览器认为鼠标
+    // 悬停结束，会给按钮发一个 pointerleave（pointerType=mouse），off 就把
+    // 刚加上的 class 又摘了，报告在触屏按住时永远藏不住（本地 repro 探针
+    // 实测：pointerdown(touch) 后立刻 pointerleave(mouse)，class 为空）。
+    // 松开只认 pointerup / pointercancel；capture 保证挪出按钮也收得到。
     peek.addEventListener('pointercancel', off);
+    peek.addEventListener('lostpointercapture', off);
   }
 })();
 (function labReportSheetBind() {
@@ -5717,6 +5791,7 @@ function worldPlayRender() {
   if (typeof Apparatus !== 'undefined' && Apparatus && typeof Apparatus.render === 'function') {
     Apparatus.render(w, d);
   }
+  labWbSyncFromWorld(); // 组合台的盘子跟世界走（天平是共享的一只，见 labWbSyncFromWorld）
   labWorldSave(); // 每次重算后自动保存整个世界（NB 的教训：未保存的台面经不起导航）
 }
 function worldPlayApply(intent, okText, failText) {

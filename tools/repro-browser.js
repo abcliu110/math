@@ -86,6 +86,14 @@ async function clickAt(x, y) {
   await mouse('mouseReleased', x, y);
   await sleep(150);
 }
+// 触屏按住：Input.dispatchTouchEvent（真触屏输入路径）。pointerdown 上
+// preventDefault 拦不住触屏滚动——要拦滚动得靠 CSS touch-action:none，
+// 这正是“按住看台面”在真机上只滚页面、不藏报告的疑点。
+async function touch(type, x, y) {
+  await send('Input.dispatchTouchEvent', {
+    type, touchPoints: type === 'touchEnd' ? [] : [{ x: Math.round(x), y: Math.round(y), id: 1 }],
+  });
+}
 async function rectOf(sel) {
   // 先滚到可见（block:center），再读视口坐标：CDP 鼠标事件用的是视口
   // 坐标，元素在视口外时事件根本落不到它身上（target 会是 <html>）。
@@ -633,6 +641,260 @@ async function main() {
       note('probe events:\n' + (await probeLog()));
       report.pass = after3.sel && after3.sel.indexOf('"apparatus":"rect"') >= 0;
       note(report.pass ? 'RESULT: PASS — 6x4 vertex dot switches inspector to the rectangle' : 'RESULT: FAIL — 6x4 vertex dot did not switch the inspector');
+    } else if (scenario === 'partsbox-after-exam') {
+      // 复测 b5c48b96 的确切顺序：先放长方形（顶点圆点那项），再进挑战做天平题
+      // （清空重来 → 站拖 1/6 到右盘 → 交卷 → 答错了 → 提交报告），关报告单、
+      // 退出挑战、站拖放几次，最后器材盒快拖 1/6 到台面右盘——复测里这一步断了，
+      // 但干净自由玩状态下 partsbox-drag 是通的，所以失败一定和考试后的状态有关。
+      await enterLab();
+      await evaljs(`(function(){var b=document.querySelector('[data-bench="rect"]');if(b)b.click();})()`);
+      await sleep(300);
+      await evaljs(`(function(){var b=document.getElementById('labModeChallenge');if(b)b.click();})()`);
+      await sleep(300);
+      await evaljs(`(function(){var b=document.getElementById('labQ-balfrac');if(b)b.click();})()`);
+      await sleep(400);
+      await evaljs(`document.getElementById('worldBalCard').classList.remove('collapsed')`);
+      await sleep(200);
+      const [clearBtn] = await centers('[data-world="bal-clear"]');
+      if (clearBtn) { await clickAt(clearBtn.cx, clearBtn.cy); await sleep(300); }
+      await installProbe();
+      const [chipS, dropR] = await centers('[data-drag-chip="weight"][data-qty="1/6"]', '#worldBalDropR');
+      note('station chip 1/6: ' + JSON.stringify(chipS) + '  dropR: ' + JSON.stringify(dropR));
+      await clearProbe();
+      if (chipS && dropR) await drag(chipS.cx, chipS.cy, dropR.cx, dropR.cy, 12, 40);
+      const mid = await labState();
+      note('after station drag 1/6 to right: bal L=' + mid.balL + ' R=' + mid.balR);
+      await evaljs(`(function(){var b=document.getElementById('labChallengeSubmit');if(b)b.click();})()`);
+      await sleep(300);
+      await evaljs(`(function(){var b=document.querySelector('[data-lab-mark="wrong"]');if(b)b.click();})()`);
+      await sleep(200);
+      await evaljs(`(function(){var b=document.getElementById('labChallengeFinish');if(b)b.click();})()`);
+      await sleep(400);
+      const sheetOpen = await evaljs(`(function(){var s=document.getElementById('labReportSheet');return s?!s.hidden:null;})()`);
+      note('report sheet open after submit: ' + sheetOpen);
+      await evaljs(`(function(){var s=document.getElementById('labReportSheet');if(s)s.hidden=true;})()`);
+      await evaljs(`(function(){var b=document.getElementById('labModeFree');if(b)b.click();})()`);
+      await sleep(300);
+      // 回归第 1 项：站拖放几次（1/6、1、1/2 到左右盘）
+      const [chipA, dropL] = await centers('[data-drag-chip="weight"][data-qty="1/6"]', '#worldBalDropL');
+      if (chipA && dropL) await drag(chipA.cx, chipA.cy, dropL.cx, dropL.cy, 12, 40);
+      const [chipB, dropR2] = await centers('[data-drag-chip="weight"][data-qty="1"]', '#worldBalDropR');
+      if (chipB && dropR2) await drag(chipB.cx, chipB.cy, dropR2.cx, dropR2.cy, 12, 40);
+      const afterStation = await labState();
+      note('after regression station drags: bal L=' + afterStation.balL + ' R=' + afterStation.balR);
+      // 回归第 2 项：器材盒快拖 1/6 到台面右盘
+      await evaljs(`(function(){var b=document.querySelector('[data-bench="balance"]');if(b)b.click();})()`);
+      await sleep(300);
+      const viewState = await evaljs(`(function(){return { showBal: (typeof benchShowBalance!=='undefined'?benchShowBalance:null), benchBal: !!(typeof labWorld!=='undefined'&&labWorld&&labWorld.benchBalance), viewText: (document.getElementById('worldBenchViews')||{}).textContent||'', hasPanR: !!document.getElementById('worldBenchPanR') };})()`);
+      note('bench state before partsbox drag: ' + JSON.stringify(viewState));
+      const [chip, view] = await centers('#worldBenchBox [data-bench="make"][data-kind="frac"][data-n="1"][data-d="6"]', '#worldBenchView');
+      const px = view.x + (430 / 520) * view.w;
+      const py = view.y + (190 / 260) * view.h;
+      const dropAt = await evaljs(`(function(){return (typeof benchDropTargetAt==='function') ? benchDropTargetAt(${Math.round(px)}, ${Math.round(py)}) : 'no-fn';})()`);
+      note('benchDropTargetAt at release point (' + Math.round(px) + ',' + Math.round(py) + '): ' + dropAt);
+      const before = await labState();
+      note('before: bench=' + before.benchTotal + ' bal R=' + before.balR);
+      await installProbe();
+      await clearProbe();
+      await drag(chip.cx, chip.cy, px, py, 12, 40);
+      const ghost = await evaljs(`(function(){var g=document.getElementById('worldBenchGhost');return g?{hidden:g.hidden,text:g.textContent}:null;})()`);
+      note('bench ghost: ' + JSON.stringify(ghost));
+      const after = await labState();
+      note('after: bench=' + after.benchTotal + ' bal R=' + after.balR);
+      note('probe events:\n' + (await probeLog()));
+      report.pass = after.balR !== before.balR || after.benchTotal !== before.benchTotal;
+      note(report.pass ? 'RESULT: PASS — 1/6 landed after the exam flow' : 'RESULT: FAIL — partsbox drag did not land after the exam flow');
+    } else if (scenario === 'peek-hold') {
+      // 复测 b5c48b96：按住“按住看台面”两次，按住期间只把页面往上滚了 200–350px，
+      // 报告单完全没藏起来、台面也没露出来。先走到交卷后的状态（丢分报告 +
+      // 报告单都开着），再分别用鼠标和触屏按住，看按住期间两个报告是不是都藏了、
+      // 触屏按住会不会滚页面、松开是不是都回来。
+      await enterLab();
+      await evaljs(`(function(){var b=document.getElementById('labModeChallenge');if(b)b.click();})()`);
+      await sleep(300);
+      await evaljs(`(function(){var b=document.getElementById('labQ-balfrac');if(b)b.click();})()`);
+      await sleep(400);
+      await evaljs(`document.getElementById('worldBalCard').classList.remove('collapsed')`);
+      await sleep(200);
+      const [clearBtn] = await centers('[data-world="bal-clear"]');
+      if (clearBtn) { await clickAt(clearBtn.cx, clearBtn.cy); await sleep(300); }
+      const [chipS, dropR] = await centers('[data-drag-chip="weight"][data-qty="1/6"]', '#worldBalDropR');
+      if (chipS && dropR) await drag(chipS.cx, chipS.cy, dropR.cx, dropR.cy, 12, 40);
+      await evaljs(`(function(){var b=document.getElementById('labChallengeSubmit');if(b)b.click();})()`);
+      await sleep(300);
+      await evaljs(`(function(){var b=document.querySelector('[data-lab-mark="wrong"]');if(b)b.click();})()`);
+      await sleep(200);
+      await evaljs(`(function(){var b=document.getElementById('labChallengeFinish');if(b)b.click();})()`);
+      await sleep(400);
+      const peekState = async () => evaljs(`(function(){
+        var box=document.getElementById('labChallengeReport');
+        var sheet=document.getElementById('labReportSheet');
+        return { boxDisplay: box?getComputedStyle(box).display:null, sheetDisplay: sheet?getComputedStyle(sheet).display:null,
+          sheetHidden: sheet?sheet.hidden:null, scrollY: Math.round(window.scrollY) };
+      })()`);
+      const [peekBtn] = await centers('#labReportPeek');
+      note('peek button: ' + JSON.stringify(peekBtn));
+      const before = await peekState();
+      note('before hold: ' + JSON.stringify(before));
+      // 鼠标按住
+      await installProbe();
+      await mouse('mousePressed', peekBtn.cx, peekBtn.cy);
+      await sleep(700);
+      const heldMouse = await peekState();
+      note('while holding (mouse): ' + JSON.stringify(heldMouse));
+      await mouse('mouseReleased', peekBtn.cx, peekBtn.cy);
+      await sleep(200);
+      const afterMouse = await peekState();
+      note('after mouse release: ' + JSON.stringify(afterMouse));
+      // 触屏按住 + 往上滑（复测里页面往上滚了 200–350px）
+      // 调试：按钮自己的 pointerdown/touchstart 监听到底收不收得到触屏事件。
+      await evaljs(`(function(){
+        window.__touchTest = [];
+        var b = document.getElementById('labReportPeek');
+        ['pointerdown','touchstart','pointerup','pointercancel','pointerleave'].forEach(function(t){
+          b.addEventListener(t, function(e){ window.__touchTest.push(t + ' ptrType=' + (e.pointerType||'-') + ' pid=' + (e.pointerId==null?'-':e.pointerId)); });
+        });
+      })()`);
+      await touch('touchStart', peekBtn.cx, peekBtn.cy);
+      await sleep(300);
+      const touchTest = await evaljs(`window.__touchTest ? window.__touchTest.join(' | ') : '(none)'`);
+      note('button-level touch events: ' + touchTest);
+      const clsAfterStart = await evaljs(`(function(){var b=document.getElementById('labChallengeReport');var s=document.getElementById('labReportSheet');return {boxCls:b?b.className:'',sheetCls:s?s.className:''};})()`);
+      note('touch classes right after touchStart: ' + JSON.stringify(clsAfterStart));
+      for (let i = 1; i <= 5; i++) { await touch('touchMove', peekBtn.cx, peekBtn.cy - i * 40); await sleep(80); }
+      const clsAfterMove = await evaljs(`(function(){var b=document.getElementById('labChallengeReport');var s=document.getElementById('labReportSheet');return {boxCls:b?b.className:'',sheetCls:s?s.className:''};})()`);
+      note('touch classes after moves: ' + JSON.stringify(clsAfterMove));
+      const heldTouch = await peekState();
+      note('while holding (touch, moved up 200px): ' + JSON.stringify(heldTouch));
+      await touch('touchEnd', peekBtn.cx, peekBtn.cy - 200);
+      await sleep(200);
+      const afterTouch = await peekState();
+      note('after touch release: ' + JSON.stringify(afterTouch));
+      note('probe events:\n' + (await probeLog()));
+      const mouseOk = heldMouse.boxDisplay === 'none' && heldMouse.sheetDisplay === 'none';
+      const touchOk = heldTouch.boxDisplay === 'none' && heldTouch.sheetDisplay === 'none' &&
+        Math.abs(heldTouch.scrollY - heldMouse.scrollY) < 10;
+      // 注意：藏报告会让页面变短，scroll anchoring 会把 scrollY 从 3760 拉到
+      // 3462——鼠标按住时也是 3462，这是藏报告的正常锚定，不是触屏滚动。
+      // 触屏滚动的原 bug 是 scrollY 往上 +172px；所以拿触屏和鼠标的按住值比，
+      // 不拿按住前比。松开后 scrollY 回到 3760 也证明没滚。
+      const restoreOk = afterMouse.boxDisplay !== 'none' && afterMouse.sheetDisplay !== 'none' &&
+        afterTouch.boxDisplay !== 'none' && afterTouch.sheetDisplay !== 'none';
+      report.pass = mouseOk && touchOk && restoreOk;
+      note('mouse-hold hides both: ' + mouseOk + ' | touch-hold hides both + no scroll: ' + touchOk + ' | release restores: ' + restoreOk);
+      note(report.pass ? 'RESULT: PASS — peek hides the reports while held, no scroll, restores on release'
+        : 'RESULT: FAIL — peek does not hide the reports while held (or scrolls / does not restore)');
+    } else if (scenario === 'partsbox-noview') {
+      // 复测 b5c48b96 的关键疑点：顶点圆点那项先放了长方形（benchShowBalance=false），
+      // 之后进天平题、交卷、退出挑战——进题并不把 benchShowBalance 设回 true。
+      // 所以台面可能一直停在坐标系视图（长方形），根本没画天平；测试员拖 1/6 去
+      // “台面的天平右盘”时，落点判定里就没有台面盘子可认。本场景复现这条路：
+      // 走完考试流程后**不点**天平器材/天平视图按钮，直接拖 1/6 到台面盘子坐标，
+      // 看台面到底画的是什么、落点判定返回什么、拖放落到哪。
+      await enterLab();
+      await evaljs(`(function(){var b=document.querySelector('[data-bench="rect"]');if(b)b.click();})()`);
+      await sleep(300);
+      await evaljs(`(function(){var b=document.getElementById('labModeChallenge');if(b)b.click();})()`);
+      await sleep(300);
+      await evaljs(`(function(){var b=document.getElementById('labQ-balfrac');if(b)b.click();})()`);
+      await sleep(400);
+      await evaljs(`document.getElementById('worldBalCard').classList.remove('collapsed')`);
+      await sleep(200);
+      const [clearBtn] = await centers('[data-world="bal-clear"]');
+      if (clearBtn) { await clickAt(clearBtn.cx, clearBtn.cy); await sleep(300); }
+      const [chipS, dropR] = await centers('[data-drag-chip="weight"][data-qty="1/6"]', '#worldBalDropR');
+      if (chipS && dropR) await drag(chipS.cx, chipS.cy, dropR.cx, dropR.cy, 12, 40);
+      await evaljs(`(function(){var b=document.getElementById('labChallengeSubmit');if(b)b.click();})()`);
+      await sleep(300);
+      await evaljs(`(function(){var b=document.querySelector('[data-lab-mark="wrong"]');if(b)b.click();})()`);
+      await sleep(200);
+      await evaljs(`(function(){var b=document.getElementById('labChallengeFinish');if(b)b.click();})()`);
+      await sleep(400);
+      await evaljs(`(function(){var s=document.getElementById('labReportSheet');if(s)s.hidden=true;})()`);
+      await evaljs(`(function(){var b=document.getElementById('labModeFree');if(b)b.click();})()`);
+      await sleep(300);
+      const viewState = await evaljs(`(function(){
+        var btns=[...document.querySelectorAll('#worldBenchViews button')].map(function(b){return b.textContent.trim()+(b.className.indexOf('primary')>=0?'(当前)':'');});
+        return { showBal: (typeof benchShowBalance!=='undefined'?benchShowBalance:null),
+          prefView: (typeof benchPreferredView!=='undefined'?benchPreferredView:null),
+          benchBal: !!(typeof labWorld!=='undefined'&&labWorld&&labWorld.benchBalance),
+          benchRect: !!(typeof labWorld!=='undefined'&&labWorld&&labWorld.benchRect),
+          viewBtns: btns, hasPanR: !!document.getElementById('worldBenchPanR'),
+          benchSvgHasPan: (document.getElementById('worldBenchView')||{innerHTML:''}).innerHTML.indexOf('worldBenchPanR')>=0 };
+      })()`);
+      note('bench view after exam flow (no balance click): ' + JSON.stringify(viewState));
+      const [chip, view] = await centers('#worldBenchBox [data-bench="make"][data-kind="frac"][data-n="1"][data-d="6"]', '#worldBenchView');
+      const px = view.x + (430 / 520) * view.w;
+      const py = view.y + (190 / 260) * view.h;
+      const dropAt = await evaljs(`(function(){return (typeof benchDropTargetAt==='function') ? benchDropTargetAt(${Math.round(px)}, ${Math.round(py)}) : 'no-fn';})()`);
+      note('benchDropTargetAt at bench-pan coords (' + Math.round(px) + ',' + Math.round(py) + '): ' + dropAt);
+      const before = await labState();
+      note('before: bench=' + before.benchTotal + ' bal R=' + before.balR);
+      await installProbe();
+      await clearProbe();
+      await drag(chip.cx, chip.cy, px, py, 12, 40);
+      const after = await labState();
+      const toast = await evaljs(`(function(){var m=document.getElementById('worldBenchMsg');return m?m.textContent:'';})()`);
+      note('after drag to bench-pan coords: bench=' + after.benchTotal + ' bal R=' + after.balR + ' toast=' + toast);
+      note('probe events:\n' + (await probeLog()));
+      // 结论：台面没画天平时，拖到“盘子坐标”只能落成散数（或什么都不发生），
+      // 盘子本身认不到——这就是复测里“台面天平视图不接受任何砝码落下”的样子。
+      report.pass = viewState.showBal === true && dropAt === 'balance.R';
+      note(report.pass ? 'RESULT: PASS — bench is in balance view and the pan accepts drops'
+        : 'RESULT: FAIL — bench is NOT in balance view after the exam flow (showBal=' + viewState.showBal + ', dropAt=' + dropAt + ')');
+    } else if (scenario === 'combo-sync') {
+      // 复测 b5c48b96 第 3 项：站里拖了砝码，组合台的盘子显示还是旧值（stale），
+      // 刷新后按世界重摆，看起来像“右盘没保存”。修后：站里一改天平，组合台
+      // 的显示就该跟着世界走，不用等刷新、不用点组合台。
+      await enterLab();
+      await evaljs(`document.getElementById('worldBalCard').classList.remove('collapsed')`);
+      await sleep(200);
+      await evaljs(`(function(){var f=document.getElementById('labMoreFold');if(f)f.click();})()`);
+      await sleep(300);
+      const comboBefore = await evaljs(`document.getElementById('labWbList').textContent`);
+      note('combo list before station drag: ' + comboBefore);
+      const [chipS, dropR] = await centers('[data-drag-chip="weight"][data-qty="1/6"]', '#worldBalDropR');
+      if (chipS && dropR) await drag(chipS.cx, chipS.cy, dropR.cx, dropR.cy, 12, 40);
+      await sleep(400);
+      const st = await labState();
+      const comboAfter = await evaljs(`document.getElementById('labWbList').textContent`);
+      note('after station drag 1/6 to right: world bal L=' + st.balL + ' R=' + st.balR + ' | combo list = ' + comboAfter);
+      report.pass = st.balR === '1/6' && comboAfter.indexOf('右盘：1/6') >= 0;
+      note(report.pass ? 'RESULT: PASS — combo display follows the world immediately'
+        : 'RESULT: FAIL — combo display is stale (does not match the world)');
+    } else if (scenario === 'exam-exit') {
+      // 复测 b5c48b96 第 4 项：考完回自由玩，流程面板还留着“考试进行中”。
+      // 走完考试（进挑战 → 天平题 → 站拖 1/6 → 交卷 → 答错了 → 提交报告），
+      // 退出挑战，看流程面板里还有没有“考试进行中”。
+      await enterLab();
+      await evaljs(`(function(){var b=document.getElementById('labModeChallenge');if(b)b.click();})()`);
+      await sleep(300);
+      await evaljs(`(function(){var b=document.getElementById('labQ-balfrac');if(b)b.click();})()`);
+      await sleep(400);
+      const during = await evaljs(`(function(){var b=document.getElementById('worldProcOut');return b?b.innerHTML.indexOf('考试进行中')>=0:false;})()`);
+      note('procedure panel during exam shows 考试进行中: ' + during);
+      await evaljs(`document.getElementById('worldBalCard').classList.remove('collapsed')`);
+      await sleep(200);
+      const [chipS, dropR] = await centers('[data-drag-chip="weight"][data-qty="1/6"]', '#worldBalDropR');
+      if (chipS && dropR) await drag(chipS.cx, chipS.cy, dropR.cx, dropR.cy, 12, 40);
+      await evaljs(`(function(){var b=document.getElementById('labChallengeSubmit');if(b)b.click();})()`);
+      await sleep(300);
+      await evaljs(`(function(){var b=document.querySelector('[data-lab-mark="wrong"]');if(b)b.click();})()`);
+      await sleep(200);
+      await evaljs(`(function(){var b=document.getElementById('labChallengeFinish');if(b)b.click();})()`);
+      await sleep(400);
+      await evaljs(`(function(){var b=document.getElementById('labModeFree');if(b)b.click();})()`);
+      await sleep(400);
+      const after = await evaljs(`(function(){
+        var b=document.getElementById('worldProcOut');
+        return { hasExamLine: b?b.innerHTML.indexOf('考试进行中')>=0:null,
+          procMode: (typeof labWorld!=='undefined'&&labWorld&&labWorld.procedure)?labWorld.procedure.mode:null,
+          text: b?b.textContent.slice(0,80):'' };
+      })()`);
+      note('after exiting challenge: ' + JSON.stringify(after));
+      report.pass = during === true && after.hasExamLine === false && after.procMode !== 'exam';
+      note(report.pass ? 'RESULT: PASS — no stale 考试进行中 after leaving challenge'
+        : 'RESULT: FAIL — stale 考试进行中 remains in free play');
     } else {
       console.log('unknown scenario: ' + scenario);
       cleanup();
