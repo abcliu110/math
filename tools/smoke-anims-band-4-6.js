@@ -1,4 +1,4 @@
-// Smoke tests for apps/web/anims-band-4-6.js (5.3 / 6.9 / 6.10, 11 anims + 4.1–4.8, 21 anims = 32).
+// Smoke tests for apps/web/anims-band-4-6.js (5.3 / 6.9 / 6.10, 11 anims + 4.1–4.8, 21 anims + 4.9–4.17, 18 anims = 50).
 // Run: node tools/smoke-anims-band-4-6.js
 // Minimal DOM stub (same shape as tools/smoke.js); render runs in a vm with
 // stubbed app.js helpers (makeTiers / wireDiscovery / markTried) so the band
@@ -143,6 +143,24 @@ const EXPECTED = {
   'm48-cakes': { grade: 4, kind: '实验', points: ['4.8'], title: '烙饼交替烙法' },
   'm48-horse': { grade: 4, kind: '实验', points: ['4.8'], title: '田忌赛马排序博弈' },
   'm48-critical': { grade: 4, kind: '演示', points: ['4.8'], title: '总时间由最长的链决定' },
+  'm410-area': { grade: 4, kind: '模拟', points: ['4.10'], title: '切长方形，分配律看得见' },
+  'm410-factor': { grade: 4, kind: '模拟', points: ['4.10'], title: '合起来再算：反向分配' },
+  'm411-money': { grade: 4, kind: '演示', points: ['4.11'], title: '钱里找小数：元角分' },
+  'm411-zoom': { grade: 4, kind: '模拟', points: ['4.11'], title: '数轴放大镜：0.3 和 0.30 是同一个点' },
+  'm412-threecopy': { grade: 4, kind: '演示', points: ['4.12'], title: '三个三角形拼一条直线' },
+  'm412-drag': { grade: 4, kind: '模拟', points: ['4.12'], title: '拖顶点，角变了，和还是 180°' },
+  'm413-money': { grade: 4, kind: '演示', points: ['4.13'], title: '用钱算小数加减' },
+  'm413-bars': { grade: 4, kind: '模拟', points: ['4.13'], title: '十分条百分条拼起来加' },
+  'm413-units': { grade: 4, kind: '模拟', points: ['4.13'], title: '小数加减，想成整数加减' },
+  'm414-plot': { grade: 4, kind: '实验', points: ['4.14'], title: '找点，定点，连起来' },
+  'm414-count': { grade: 4, kind: '演示', points: ['4.14'], title: '数格子：平移了几格' },
+  'm415-seesaw': { grade: 4, kind: '模拟', points: ['4.15'], title: '跷跷板：平均数就是支点' },
+  'm415-split': { grade: 4, kind: '演示', points: ['4.15'], title: '总数倒在一起，再平分' },
+  'm415-base': { grade: 4, kind: '模拟', points: ['4.15'], title: '基准数：先定一个大概，再补差' },
+  'm417-views': { grade: 4, kind: '演示', points: ['4.17'], title: '三个方向看，对一对' },
+  'm417-layers': { grade: 4, kind: '演示', points: ['4.17'], title: '一层一层数' },
+  'm417-build': { grade: 4, kind: '实验', points: ['4.17'], title: '搭一搭：照着视图搭出来' },
+  'm417-infer': { grade: 4, kind: '实验', points: ['4.17'], title: '两张图，推出最少和最多' },
 };
 const KEYS = Object.keys(EXPECTED);
 
@@ -167,7 +185,7 @@ check('band file top level only calls registerAnim (no app.js identifiers)',
   bandSrc.indexOf('NAV_DEFS') < 0);
 
 // ---------- 1. registration ----------
-check('32 anims registered', KEYS.every(function (k) { return !!R[k]; }));
+check('50 anims registered', KEYS.every(function (k) { return !!R[k]; }));
 KEYS.forEach(function (k) {
   const a = R[k] || {};
   const e = EXPECTED[k];
@@ -183,7 +201,7 @@ check('keys are bare (no demo- prefix, lowercase-hyphen)',
 const g4 = fs.readFileSync(path.join(root, 'content/grades/grade-4.js'), 'utf8');
 const g5 = fs.readFileSync(path.join(root, 'content/grades/grade-5.js'), 'utf8');
 const g6 = fs.readFileSync(path.join(root, 'content/grades/grade-6.js'), 'utf8');
-['4.1', '4.2', '4.3', '4.4', '4.5', '4.6', '4.7', '4.8'].forEach(function (id) {
+['4.1', '4.2', '4.3', '4.4', '4.5', '4.6', '4.7', '4.8', '4.9', '4.10', '4.11', '4.12', '4.13', '4.14', '4.15', '4.16', '4.17'].forEach(function (id) {
   check('point ' + id + ' exists in grade-4.js', g4.indexOf('"' + id + '"') >= 0);
 });
 check('point 5.3 exists in grade-5.js', g5.indexOf('"5.3"') >= 0);
@@ -616,6 +634,250 @@ click('m48-critical-guess-b');
 click('m48-critical-chain');
 check('m48-critical: porridge chain is 11 minutes',
   text('m48-critical-chain-tx').indexOf('煮粥 10 分钟') >= 0);
+
+// ---------- 4.10 ----------
+click('m410-area-guess-a');
+click('m410-area-cut');
+check('m410-area: 6x(4+3) cuts to 24+18=42',
+  text('m410-area-msg').indexOf('24+18=42') >= 0 &&
+  text('m410-area-msg').indexOf('你猜对了') >= 0);
+click('m410-area-level-2');
+click('m410-area-guess-a');
+click('m410-area-cut');
+check('m410-area: 12x(7+3) cuts to 84+36=120',
+  text('m410-area-msg').indexOf('84+36=120') >= 0);
+
+click('m410-factor-guess-a');
+click('m410-factor-join');
+check('m410-factor: 25x36+25x64 joins to 25x100=2500',
+  text('m410-factor-steps').indexOf('25×100 = 2500') >= 0 &&
+  text('m410-factor-msg').indexOf('对了') >= 0);
+click('m410-factor-level-2');
+click('m410-factor-guess-a');
+click('m410-factor-join');
+check('m410-factor: 125x18+125x82 joins to 125x100=12500',
+  text('m410-factor-steps').indexOf('125×100 = 12500') >= 0);
+click('m410-factor-split');
+check('m410-factor: split way also gives 12500',
+  text('m410-factor-steps').indexOf('2250+10250=12500') >= 0);
+
+// ---------- 4.11 ----------
+click('m411-money-guess-a');
+click('m411-money-open');
+check('m411-money: 1.35 yuan is 1 yuan 3 jiao 5 fen',
+  text('m411-money-msg').indexOf('1元 + 3角 + 5分') >= 0 &&
+  text('m411-money-msg').indexOf('对了') >= 0);
+click('m411-money-level-2');
+click('m411-money-guess-a');
+click('m411-money-open');
+check('m411-money: 0.75 yuan is 7 jiao 5 fen',
+  text('m411-money-msg').indexOf('7角5分') >= 0);
+
+click('m411-zoom-guess-b');
+click('m411-zoom-zoom');
+check('m411-zoom: 0.3 marked, 0.3 = 0.30',
+  text('m411-zoom-msg').indexOf('红点就是 0.3') >= 0 &&
+  text('m411-zoom-msg').indexOf('0.30 是同一个点') >= 0);
+click('m411-zoom-level-2');
+click('m411-zoom-guess-b');
+click('m411-zoom-zoom');
+check('m411-zoom: 0.05 is the middle of 0 to 0.1',
+  text('m411-zoom-msg').indexOf('红点就是 0.05') >= 0);
+
+// ---------- 4.12 ----------
+click('m412-threecopy-guess-b');
+click('m412-threecopy-assemble');
+check('m412-threecopy: 50+60+70 assembles to 180',
+  text('m412-threecopy-msg').indexOf('50° + 60° + 70° = 180°') >= 0 &&
+  text('m412-threecopy-msg').indexOf('你猜对了') >= 0);
+click('m412-threecopy-level-1');
+click('m412-threecopy-guess-b');
+click('m412-threecopy-assemble');
+check('m412-threecopy: 90+45+45 assembles to 180',
+  text('m412-threecopy-msg').indexOf('90° + 45° + 45° = 180°') >= 0);
+
+click('m412-drag-guess-same');
+click('m412-drag-next');
+check('m412-drag: new triangle still sums to 180',
+  text('m412-drag-read').indexOf('= 180°') >= 0 &&
+  text('m412-drag-msg').indexOf('还是 180°') >= 0 &&
+  text('m412-drag-msg').indexOf('你猜对了') >= 0);
+
+// ---------- 4.13 ----------
+click('m413-money-guess-a');
+click('m413-money-next');
+click('m413-money-next');
+click('m413-money-next');
+check('m413-money: 2.5+1.3 = 3.8 by yuan and jiao',
+  text('m413-money-msg').indexOf('3.8') >= 0 &&
+  text('m413-money-msg').indexOf('你猜对了') >= 0);
+click('m413-money-level-2');
+click('m413-money-guess-a');
+click('m413-money-next');
+click('m413-money-next');
+click('m413-money-next');
+click('m413-money-next');
+check('m413-money: 4.6-1.25 = 3.35 with borrow from jiao',
+  text('m413-money-msg').indexOf('3.35') >= 0);
+
+click('m413-bars-guess-a');
+click('m413-bars-join');
+check('m413-bars: 0.4+0.3 is 7 tenths = 0.7',
+  text('m413-bars-msg').indexOf('7 个 0.1 = 0.7') >= 0 &&
+  text('m413-bars-msg').indexOf('你猜对了') >= 0);
+click('m413-bars-level-2');
+click('m413-bars-guess-a');
+click('m413-bars-join');
+check('m413-bars: 0.68+0.57 regroups 100 hundredths to 1.25',
+  text('m413-bars-msg').indexOf('125 个 0.01') >= 0 &&
+  text('m413-bars-msg').indexOf('1.25') >= 0);
+
+click('m413-units-guess-a');
+click('m413-units-convert');
+check('m413-units: 0.4 is 4 tenths, 4+3=7 tenths = 0.7',
+  text('m413-units-msg').indexOf('4 个 0.1') >= 0 &&
+  text('m413-units-msg').indexOf('0.7') >= 0);
+click('m413-units-level-2');
+click('m413-units-guess-b');
+click('m413-units-convert');
+check('m413-units: 1.8 is 180 hundredths, 180-65=115 = 1.15',
+  text('m413-units-msg').indexOf('180 个 0.01') >= 0 &&
+  text('m413-units-msg').indexOf('1.15') >= 0);
+
+// ---------- 4.14 ----------
+click('m414-plot-guess-a');
+click('m414-plot-cell-3-1');
+click('m414-plot-cell-5-1');
+click('m414-plot-cell-4-3');
+click('m414-plot-join');
+check('m414-plot: shift right 2, three vertices found and joined',
+  text('m414-plot-msg').indexOf('连起来了') >= 0 &&
+  text('m414-plot-msg').indexOf('你猜对了') >= 0);
+click('m414-plot-level-2');
+click('m414-plot-guess-a');
+click('m414-plot-cell-6-1');
+click('m414-plot-cell-4-1');
+click('m414-plot-cell-5-3');
+click('m414-plot-join');
+check('m414-plot: mirror across centre, (1,1) goes to (6,1)',
+  text('m414-plot-msg').indexOf('连起来了') >= 0);
+
+click('m414-count-guess-b');
+click('m414-count-count');
+check('m414-count: shift right is 3 grids',
+  text('m414-count-msg').indexOf('3 格') >= 0 &&
+  text('m414-count-msg').indexOf('你猜对了') >= 0);
+click('m414-count-level-2');
+click('m414-count-guess-b');
+click('m414-count-count');
+check('m414-count: shift left is 4 grids',
+  text('m414-count-msg').indexOf('4 格') >= 0);
+
+// ---------- 4.15 ----------
+click('m415-seesaw-guess-b');
+click('m415-seesaw-right');
+click('m415-seesaw-right');
+click('m415-seesaw-right');
+click('m415-seesaw-right');
+click('m415-seesaw-check');
+check('m415-seesaw: fulcrum at 70 balances 60, 70, 80',
+  text('m415-seesaw-msg').indexOf('平了') >= 0 &&
+  text('m415-seesaw-msg').indexOf('你猜对了') >= 0);
+click('m415-seesaw-level-2');
+click('m415-seesaw-guess-b');
+click('m415-seesaw-right');
+click('m415-seesaw-right');
+click('m415-seesaw-right');
+click('m415-seesaw-right');
+click('m415-seesaw-right');
+click('m415-seesaw-check');
+check('m415-seesaw: fulcrum at 75 balances 55, 75, 95',
+  text('m415-seesaw-msg').indexOf('平了') >= 0);
+
+click('m415-split-guess-b');
+click('m415-split-pour');
+click('m415-split-share');
+check('m415-split: 340 split into 4 is 85 each',
+  text('m415-split-msg').indexOf('340 ÷ 4 = 85') >= 0 &&
+  text('m415-split-msg').indexOf('你猜对了') >= 0);
+click('m415-split-level-1');
+click('m415-split-guess-b');
+click('m415-split-pour');
+click('m415-split-share');
+check('m415-split: 225 split into 3 is 75 each',
+  text('m415-split-msg').indexOf('225 ÷ 3 = 75') >= 0);
+
+click('m415-base-guess-b');
+click('m415-base-pick');
+click('m415-base-calc');
+check('m415-base: base 100, mean deviation 0, mean is 100',
+  text('m415-base-msg').indexOf('平均数 = 100 + 0 = 100') >= 0 &&
+  text('m415-base-msg').indexOf('你猜对了') >= 0);
+click('m415-base-level-2');
+click('m415-base-guess-b');
+click('m415-base-pick');
+click('m415-base-calc');
+check('m415-base: base 100, mean deviation 1, mean is 101',
+  text('m415-base-msg').indexOf('平均数 = 100 + 1 = 101') >= 0);
+
+// ---------- 4.17 ----------
+click('m417-views-guess-b');
+click('m417-views-v-front');
+click('m417-views-v-left');
+click('m417-views-v-top');
+check('m417-views: three views seen, front 5, left 5, top 6',
+  text('m417-views-msg').indexOf('前面 5 个正方形') >= 0 &&
+  text('m417-views-msg').indexOf('你猜对了') >= 0);
+click('m417-views-level-1');
+click('m417-views-guess-a');
+click('m417-views-v-front');
+click('m417-views-v-left');
+click('m417-views-v-top');
+check('m417-views: level 1 front has 7 squares, top row 1',
+  text('m417-views-msg').indexOf('前面 7 个正方形') >= 0);
+
+click('m417-layers-guess-b');
+click('m417-layers-layer-1');
+click('m417-layers-layer-2');
+click('m417-layers-sum');
+check('m417-layers: 6 + 2 = 8 cubes',
+  text('m417-layers-msg').indexOf('6 + 2 = 8') >= 0 &&
+  text('m417-layers-msg').indexOf('你猜对了') >= 0);
+click('m417-layers-level-2');
+click('m417-layers-guess-b');
+click('m417-layers-layer-1');
+click('m417-layers-layer-2');
+click('m417-layers-layer-3');
+click('m417-layers-sum');
+check('m417-layers: 7 + 3 + 2 = 12 cubes',
+  text('m417-layers-msg').indexOf('7 + 3 + 2 = 12') >= 0);
+
+click('m417-build-guess-b');
+click('m417-build-cell-0-0');
+click('m417-build-cell-1-0');
+click('m417-build-cell-1-0');
+click('m417-build-cell-2-0');
+click('m417-build-cell-0-1');
+click('m417-build-cell-2-1');
+click('m417-build-check');
+check('m417-build: target stack built, views match, 6 cubes minimum',
+  text('m417-build-msg').indexOf('对上了') >= 0 &&
+  text('m417-build-msg').indexOf('你猜对了') >= 0);
+
+click('m417-infer-guess-b');
+click('m417-infer-show-min');
+click('m417-infer-show-max');
+check('m417-infer: min 4, max 5 cubes from top + front views',
+  text('m417-infer-msg').indexOf('最少 4 个') >= 0 &&
+  text('m417-infer-msg').indexOf('最多 5 个') >= 0 &&
+  text('m417-infer-msg').indexOf('你猜对了') >= 0);
+click('m417-infer-level-2');
+click('m417-infer-guess-b');
+click('m417-infer-show-min');
+click('m417-infer-show-max');
+check('m417-infer: challenge min 9, max 14 cubes',
+  text('m417-infer-msg').indexOf('最少 9 个') >= 0 &&
+  text('m417-infer-msg').indexOf('最多 14 个') >= 0);
 
 // ---------- 5. tiers + tried ----------
 KEYS.forEach(function (k) {
