@@ -73,6 +73,14 @@ html = html.replace('<script src="app.js"></script>',
                     '<script>\n' + js + '\n</script>', 1)
 assert '<link rel="stylesheet" href="styles.css">' not in html
 assert '<script src="app.js"></script>' not in html
+# 数学实验台（NB 式）：独立页面里把 lab-nb.html 内嵌进 iframe 的 srcdoc，单文件即可打开。
+lab_nb_path = WEB / 'lab-nb.html'
+lab_nb_src = 'src="lab-nb.html"'
+if lab_nb_path.exists() and lab_nb_src in html:
+    import html as _html_mod
+    nb = lab_nb_path.read_text(encoding='utf-8')
+    html = html.replace(lab_nb_src, 'srcdoc="' + _html_mod.escape(nb, quote=True) + '"', 1)
+assert lab_nb_src not in html or not lab_nb_path.exists()
 (WEB / 'homepage-standalone.html').write_text(html, encoding='utf-8')
 print('standalone bytes:', len(html.encode()))
 

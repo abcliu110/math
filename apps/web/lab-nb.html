@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>数学实验室 · 工作台</title>
+<style>
+:root{--bar:#121822;--panel:#18202c;--panel2:#202a38;--line:#2c3848;--stage:#1b2431;--grid:#232e3d;--tx:#e6ecf3;--mut:#8a98ab;--acc:#3b9cff;--ok:#2fbf71;--warn:#f0a63a;--err:#ff5b5b;--card:#f6f8fb;--ink:#1d2633}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bar);color:var(--tx);font:14px/1.45 "PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+#app{display:grid;grid-template-rows:52px 1fr;grid-template-columns:auto 1fr 248px;height:100%}
+/* 顶栏 */
+#top{grid-column:1/4;display:flex;align-items:center;gap:10px;padding:0 12px;background:var(--bar);border-bottom:1px solid var(--line)}
+#top .logo{font-weight:700;letter-spacing:.5px;margin-right:6px}
+#title{min-width:120px;max-width:340px;padding:4px 8px;border-radius:6px;outline:0;white-space:nowrap;overflow:hidden}
+#title:hover,#title:focus{background:var(--panel2)}
+.seg{display:flex;background:var(--panel2);border-radius:8px;padding:3px}
+.seg button{padding:5px 12px;border-radius:6px;color:var(--mut)}
+.seg button.on{background:var(--acc);color:#fff}
+.tb{padding:6px 10px;border-radius:7px;color:var(--mut)}.tb:hover{background:var(--panel2);color:var(--tx)}
+.tb[disabled]{opacity:.35;pointer-events:none}
+.sp{flex:1}
+#timer{font-variant-numeric:tabular-nums;padding:5px 10px;border-radius:7px;background:#2a1f1f;color:#ffb4b4;display:none}
+#submit{display:none;background:var(--err);color:#fff;padding:6px 14px;border-radius:7px;font-weight:600}
+#menuBtn{display:none}
+/* 左栏 */
+#left{grid-row:2;width:300px;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;transition:width .2s}
+#left.closed{width:0;overflow:hidden;border:0}
+.tabs{display:flex;border-bottom:1px solid var(--line)}
+.tabs button{flex:1;padding:11px 0;color:var(--mut);border-bottom:2px solid transparent}
+.tabs button.on{color:var(--tx);border-color:var(--acc)}
+.pane{flex:1;overflow:auto;padding:12px;min-height:0}
+.search{width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--tx);outline:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.chip{padding:3px 10px;border-radius:999px;background:var(--panel2);color:var(--mut);font-size:12px}
+.chip.on{background:#1f3b5c;color:#cfe6ff}
+.xp{padding:10px 12px;border-radius:10px;background:var(--panel2);margin-bottom:8px;cursor:pointer;border:1px solid transparent}
+.xp:hover{border-color:var(--line)}.xp.on{border-color:var(--acc)}
+.xp b{display:block;margin-bottom:3px}.xp small{color:var(--mut)}
+.detail{margin-top:6px;padding-top:8px;border-top:1px dashed var(--line);color:var(--mut);font-size:13px}
+.detail .row{display:flex;gap:8px;margin-top:8px}
+.btn{padding:7px 12px;border-radius:8px;background:var(--panel);border:1px solid var(--line);color:var(--tx)}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+.btn.red{background:var(--err);border-color:var(--err);color:#fff}
+.step{display:flex;gap:10px;padding:10px;border-radius:10px;margin-bottom:8px;background:var(--panel2);border:1px solid transparent}
+.step .n{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--line);font-size:12px}
+.step.done .n{background:var(--ok);color:#fff}.step.cur{border-color:var(--acc)}
+.step.cur .n{background:var(--acc);color:#fff}
+.step .hint{color:#9fd0ff;font-size:12px;margin-top:4px}
+.step .sc{margin-left:auto;color:var(--mut);font-size:12px;flex:none}
+.muted{color:var(--mut)}
+.q{padding:10px 12px;border-radius:10px;background:#1f3047;margin-bottom:12px}
+/* 舞台 */
+#stageWrap{grid-row:2;position:relative;overflow:hidden;background:var(--stage)}
+#stage{position:absolute;inset:0;width:100%;height:100%;display:block}
+#stage.panning{cursor:grabbing}
+.ent-body{fill:var(--card);stroke:#c9d3df;stroke-width:1}
+.ent.sel .ent-body{stroke:#9aa9bb}
+.ent.err .ent-body{stroke:var(--err);stroke-width:2}
+.ent.ok .ent-body{stroke:var(--ok);stroke-width:2}
+.ent.is-next .ent-body{stroke:var(--acc);stroke-width:3;animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{stroke-opacity:.35}}
+.selbox{fill:none;stroke:#cfd8e3;stroke-dasharray:5 4;stroke-width:1.5;pointer-events:none}
+.ttl{fill:#6b7889;font-size:12px}
+.big{fill:var(--ink);font-weight:700}
+.ink{fill:var(--ink)}
+.port-out{fill:var(--acc);stroke:#fff;stroke-width:2;cursor:crosshair}
+.port-out:hover{r:9}
+.port-in{fill:#fff;stroke:#9aa9bb;stroke-width:2;pointer-events:none}
+.link{fill:none;stroke:#7fc1ff;stroke-width:2.5;stroke-dasharray:7 6;animation:flow 0.9s linear infinite;pointer-events:none}
+.link.sel{stroke:#ffd166;stroke-width:3.5}
+.linkhit{fill:none;stroke:transparent;stroke-width:14;cursor:pointer}
+.templink{fill:none;stroke:#ffd166;stroke-width:2;stroke-dasharray:4 4;pointer-events:none}
+@keyframes flow{to{stroke-dashoffset:-13}}
+.flowline{stroke-dasharray:8 6;animation:flow 0.9s linear infinite}
+.seg-cell{cursor:pointer}
+.pill rect{rx:10}
+.pill text{font-size:12px}
+/* 浮动 */
+#tools{position:absolute;display:none;flex-direction:column;gap:2px;background:#0f141c;border-radius:8px;padding:4px;box-shadow:0 6px 18px #0008}
+#tools button{width:32px;height:32px;border-radius:6px;font-size:15px}
+#tools button:hover{background:var(--panel2)}
+#card{position:absolute;display:none;width:250px;background:#0f141cf2;border:1px solid var(--line);border-radius:12px;padding:12px;box-shadow:0 10px 28px #000a}
+#card h4{margin:0 0 8px;font-size:13px;color:var(--mut);font-weight:500}
+#card .state{font-size:20px;font-weight:700;margin-bottom:8px}
+.fld{margin:8px 0}.fld label{display:flex;justify-content:space-between;font-size:12px;color:var(--mut)}
+.fld .ctl{display:flex;align-items:center;gap:6px;margin-top:4px}
+.fld input[type=range]{flex:1;accent-color:var(--acc)}
+.fld input[type=number],#card .name{width:58px;padding:4px 6px;border-radius:6px;border:1px solid var(--line);background:var(--panel2);color:var(--tx);outline:0}
+#card .name{width:100%;margin-bottom:6px}
+.pm{width:26px;height:26px;border-radius:6px;background:var(--panel2)}
+.card-row{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.card-row .btn{padding:5px 9px;font-size:12px}
+#zoom{position:absolute;left:12px;bottom:12px;display:flex;gap:2px;background:#0f141cd9;border-radius:9px;padding:3px;align-items:center}
+#zoom button{min-width:30px;padding:0 6px;height:28px;border-radius:6px}#zoom button:hover{background:var(--panel2)}
+#zoom span{min-width:46px;text-align:center;font-size:12px;color:var(--mut)}
+#corner{position:absolute;right:12px;bottom:12px;display:flex;gap:8px}
+#corner .btn{background:#0f141cd9}
+#toast{position:absolute;left:50%;top:14px;transform:translateX(-50%);padding:8px 14px;border-radius:9px;background:#0f141cf0;border:1px solid var(--line);display:none;max-width:70%}
+#toast.err{border-color:var(--err);color:#ffc2c2}
+#empty{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;color:#5d6b7e;text-align:center}
+/* 器材架 */
+#lib{grid-row:2;background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+#lib .hd{padding:12px;border-bottom:1px solid var(--line)}
+#lib .body{flex:1;overflow:auto;padding:10px 12px}
+.grp{font-size:12px;color:var(--mut);margin:10px 0 6px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tile{background:var(--panel2);border-radius:10px;padding:8px 6px;text-align:center;cursor:grab;border:1px solid transparent;touch-action:none}
+.tile:hover{border-color:var(--acc)}
+.tile svg{display:block;margin:0 auto 4px}
+.tile span{font-size:12px}
+#ghost{position:fixed;pointer-events:none;display:none;padding:6px 10px;border-radius:8px;background:var(--acc);color:#fff;font-size:12px;z-index:9}
+/* 弹窗 */
+#modal{position:fixed;inset:0;background:#0009;display:none;place-items:center;z-index:10}
+#modal .box{width:min(460px,92vw);background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}
+#modal h3{margin:0 0 10px}
+.score{font-size:40px;font-weight:800}
+.rep{margin:10px 0;padding:0;list-style:none}.rep li{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)}
+.rep .lost{color:#ffb4b4}
+textarea{width:100%;min-height:90px;background:var(--panel2);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px;font:inherit}
+@media (max-width:900px){#app{grid-template-columns:auto 1fr 0}#lib{display:none}#left{width:260px}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="top">
+    <button class="tb" id="toggleLeft" title="实验库/步骤">≡</button>
+    <span class="logo">数学实验室</span>
+    <div id="title" contenteditable="true" spellcheck="false">我的实验</div>
+    <div class="seg" id="modeSeg">
+      <button data-mode="free" class="on">自由探究</button>
+      <button data-mode="practice">练习</button>
+      <button data-mode="exam">考试</button>
+    </div>
+    <button class="tb" id="menuBtn">菜单</button>
+    <span class="sp"></span>
+    <button class="tb" id="undo" title="撤销 Ctrl+Z">撤销</button>
+    <button class="tb" id="redo" title="重做 Ctrl+Y">重做</button>
+    <button class="tb" id="tidy" title="一键整理">整理</button>
+    <button class="tb" id="clear">清空台面</button>
+    <span id="timer">10:00</span>
+    <button id="submit">提交</button>
+  </header>
+
+  <aside id="left">
+    <div class="tabs"><button data-tab="lib" class="on">实验库</button><button data-tab="steps">步骤</button></div>
+    <div class="pane" id="paneLib"></div>
+    <div class="pane" id="paneSteps" style="display:none"></div>
+  </aside>
+
+  <main id="stageWrap">
+    <svg id="stage"><defs>
+      <pattern id="gridS" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="#212b39" stroke-width="1"/></pattern>
+      <pattern id="gridL" width="100" height="100" patternUnits="userSpaceOnUse"><rect width="100" height="100" fill="url(#gridS)"/><path d="M100 0H0V100" fill="none" stroke="#283446" stroke-width="1"/></pattern>
+      <filter id="sh" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000" flood-opacity=".35"/></filter>
+    </defs><rect id="bg" width="100%" height="100%" fill="url(#gridL)"/><g id="world"></g></svg>
+    <div id="empty"><div><div style="font-size:18px;margin-bottom:6px">台面是空的</div>从右边器材架拖一个器材上来，或在左边选一个实验</div></div>
+    <div id="tools"></div>
+    <div id="card"></div>
+    <div id="zoom"><button id="zOut">−</button><span id="zVal">100%</span><button id="zIn">+</button><button id="zFit" title="适应">适应</button></div>
+    <div id="corner"><button class="btn" id="whyBtn">💡 为什么</button><button class="btn" id="findBtn">📝 我的发现</button></div>
+    <div id="toast"></div>
+  </main>
+
+  <aside id="lib">
+    <div class="hd"><input class="search" id="libSearch" placeholder="搜索器材"></div>
+    <div class="body" id="libBody"></div>
+  </aside>
+</div>
+<div id="ghost"></div>
+<div id="modal"><div class="box" id="modalBox"></div></div>
+
+<script>
+'use strict';
+/* ========== 精确有理数 ========== */
+const gcd=(a,b)=>{a=Math.abs(a);b=Math.abs(b);while(b){[a,b]=[b,a%b]}return a||1};
+const lcm=(a,b)=>a/gcd(a,b)*b;
+function Q(n,d=1){if(!Number.isInteger(n)||!Number.isInteger(d)||d===0)throw new Error('bad-number');if(d<0){n=-n;d=-d}const g=gcd(n,d);return{n:n/g,d:d/g}}
+const qadd=(a,b)=>Q(a.n*b.d+b.n*a.d,a.d*b.d), qsub=(a,b)=>Q(a.n*b.d-b.n*a.d,a.d*b.d);
+const qeq=(a,b)=>a.n===b.n&&a.d===b.d, qnum=a=>a.n/a.d, qs=a=>a.d===1?String(a.n):a.n+'/'+a.d;
+
+/* ========== 器材注册表：每种器材 = 属性 + 端口 + 引擎规则 + 画法 ========== */
+const TYPES={
+ num:{label:'数字卡',group:'数与运算',prefix:'数',out:'value',defaults:{v:3},
+   fields:[{k:'v',label:'值',min:-10,max:20}],size:()=>[96,62]},
+ frac:{label:'分数条',group:'分数',prefix:'分数条',out:'value',defaults:{n:1,d:2},
+   fields:[{k:'n',label:'分子（涂几份）',min:0,max:24},{k:'d',label:'分母（平均分成几份）',min:1,max:12}],
+   size:e=>[176,34+Math.max(1,Math.ceil(e.props.n/e.props.d))*28]},
+ adder:{label:'合并器',group:'数与运算',prefix:'合并器',out:'value',accepts:'value',defaults:{},fields:[],size:()=>[170,84]},
+ numline:{label:'数轴',group:'关系',prefix:'数轴',accepts:'value',defaults:{min:0,max:2},
+   fields:[{k:'min',label:'最左',min:-10,max:10},{k:'max',label:'最右',min:-9,max:20}],size:()=>[460,118]},
+ balance:{label:'天平',group:'关系',prefix:'天平',accepts:'value',slots:true,defaults:{},fields:[],size:()=>[340,200]},
+ fn:{label:'直线',group:'函数',prefix:'直线',out:'fn',defaults:{k:2,b:1},
+   fields:[{k:'k',label:'k（斜率：x 加 1，y 加几）',min:-5,max:5},{k:'b',label:'b（和 y 轴交在哪）',min:-10,max:10}],size:()=>[160,64]},
+ coord:{label:'坐标平面',group:'函数',prefix:'坐标平面',accepts:'fn',defaults:{},fields:[],size:()=>[340,360]},
+ rect:{label:'长方形',group:'图形',prefix:'长方形',defaults:{w:4,h:3},rotate:true,
+   fields:[{k:'w',label:'宽',min:1,max:12},{k:'h',label:'长',min:1,max:12}],size:e=>[Math.max(150,e.props.w*20+40),e.props.h*20+84]},
+ dice:{label:'两个骰子',group:'概率',prefix:'骰子',defaults:{times:100,counts:null},
+   fields:[{k:'times',label:'一次掷几回',min:10,max:2000,step:10}],actions:[{id:'roll',label:'🎲 掷'},{id:'reset',label:'清零'}],size:()=>[320,210]},
+};
+const GROUP_ORDER=['数与运算','分数','关系','函数','图形','概率'];
+
+/* ========== 世界：一张台面 = 物体 + 连线（场景图） ========== */
+let S=blankScene(); // {entities:{id:{id,type,name,x,y,props}}, links:[{id,from,to,slot}], seq:{}}
+function blankScene(){return{entities:{},links:[],seq:{},nid:1}}
+const clone=o=>JSON.parse(JSON.stringify(o));
+function addEnt(s,type,x,y,props){const T=TYPES[type];const id='e'+(s.nid++);s.seq[type]=(s.seq[type]||0)+1;
+  s.entities[id]={id,type,name:T.prefix+s.seq[type],x,y,props:Object.assign(clone(T.defaults),props||{})};return id}
+function addLink(s,from,to,slot){s.links.push({id:'l'+(s.nid++),from,to,slot:slot||null})}
+const inputs=(s,id)=>s.links.filter(l=>l.to===id);
+function reach(s,a,b){const seen={};const st=[a];while(st.length){const c=st.pop();if(c===b)return true;if(seen[c])continue;seen[c]=1;s.links.filter(l=>l.from===c).forEach(l=>st.push(l.to))}return false}
+
+/* 动作（意图）。所有改动都走这里：校验 → 改 → 引擎重算。返回 {ok, why} */
+function act(a){
+  const s=S,E=s.entities;
+  try{
+  switch(a.t){
+  case 'add':{const id=addEnt(s,a.type,a.x,a.y,a.props);return{ok:1,id}}
+  case 'move':{const e=E[a.id];e.x=a.x;e.y=a.y;return{ok:1}}
+  case 'del':{if(E[a.id]){delete E[a.id];s.links=s.links.filter(l=>l.from!==a.id&&l.to!==a.id)}else s.links=s.links.filter(l=>l.id!==a.id);return{ok:1}}
+  case 'dup':{const e=E[a.id];const id=addEnt(s,e.type,e.x+30,e.y+30,clone(e.props));return{ok:1,id}}
+  case 'rename':{E[a.id].name=String(a.name).slice(0,16)||E[a.id].name;return{ok:1}}
+  case 'rotate':{const p=E[a.id].props;[p.w,p.h]=[p.h,p.w];return{ok:1}}
+  case 'reset':{E[a.id].props=clone(TYPES[E[a.id].type].defaults);return{ok:1}}
+  case 'set':{const e=E[a.id],T=TYPES[e.type],f=T.fields.find(f=>f.k===a.k);let v=Number(a.v);
+    if(!Number.isFinite(v)||!Number.isInteger(v/(f.step||1)))return{ok:0,why:'只能填整数'};
+    if(v<f.min||v>f.max)return{ok:0,why:`${f.label.replace(/（.*/,'')}只能在 ${f.min} 到 ${f.max} 之间`};
+    if(e.type==='numline'){const o=Object.assign({},e.props,{[a.k]:v});if(o.max-o.min<1)return{ok:0,why:'最右要比最左大'};if(o.max-o.min>20)return{ok:0,why:'数轴最长 20 格'}}
+    e.props[a.k]=v;return{ok:1}}
+  case 'link':{const f=E[a.from],to=E[a.to];if(!f||!to||a.from===a.to)return{ok:0,why:'连到另一个器材上'};
+    const out=TYPES[f.type].out,acc=TYPES[to.type].accepts;
+    if(!acc)return{ok:0,why:`${to.name} 不接收输入`};
+    if(out!==acc)return{ok:0,why:out==='fn'?'直线只能连到坐标平面上':`${to.name} 只接收直线，不接收数`};
+    if(s.links.some(l=>l.from===a.from&&l.to===a.to))return{ok:0,why:'已经连过了'};
+    if(reach(s,a.to,a.from))return{ok:0,why:'不能连成一个圈'};
+    if(to.type==='balance'&&inputs(s,a.to).filter(l=>l.slot===a.slot).length>=5)return{ok:0,why:'一个盘最多放 5 个'};
+    if(to.type==='numline'&&inputs(s,a.to).length>=6)return{ok:0,why:'数轴上最多 6 个点'};
+    addLink(s,a.from,a.to,to.type==='balance'?a.slot:null);return{ok:1}}
+  case 'roll':{const e=E[a.id];const c=e.props.counts||Array(13).fill(0);for(let i=0;i<e.props.times;i++){c[1+Math.ceil(Math.random()*6)+Math.ceil(Math.random()*6)-1]++}e.props.counts=c;return{ok:1}}
+  case 'segclick':{const p=E[a.id].props;p.n=(p.n===a.k?a.k-1:a.k);return{ok:1}}
+  }}catch(err){return{ok:0,why:'这个数不合法'}}
+  return{ok:0,why:'不认识的操作'};
+}
+
+/* ========== 引擎：只有这里算后果。纯函数 scene → derived ========== */
+function evaluate(s){
+  const E=s.entities,vals={},busy={},D={};
+  const val=id=>{if(id in vals)return vals[id];if(busy[id])return null;busy[id]=1;const e=E[id];let v=null;
+    if(e.type==='num')v=Q(e.props.v);else if(e.type==='frac')v=Q(e.props.n,e.props.d);
+    else if(e.type==='adder'){v=Q(0);for(const l of inputs(s,id)){const x=val(l.from);if(x)v=qadd(v,x)}}
+    return vals[id]=v};
+  for(const id in E){const e=E[id],d=D[id]={read:[],sig:[]};
+    const sig=(lv,tx)=>d.sig.push({lv,tx});
+    if(TYPES[e.type].out==='value')d.value=val(id);
+    if(e.type==='frac'){const v=d.value;if(e.props.n>e.props.d)sig('info',`比 1 大：${qs(v)} = ${Math.floor(e.props.n/e.props.d)} 又 ${e.props.n%e.props.d}/${e.props.d}`);else if(v.d!==e.props.d)sig('info',`${e.props.n}/${e.props.d} 和 ${qs(v)} 一样大`)}
+    if(e.type==='adder'){const ins=inputs(s,id).map(l=>val(l.from)).filter(Boolean);d.terms=ins;
+      if(!ins.length)sig('info','把几个数连进来，这里算它们的和');
+      else{const ds=[...new Set(ins.map(q=>q.d))];if(ds.length>1){const L=ds.reduce(lcm);sig('info',`分母不同：都换成 ${L} 份再加`)}}}
+    if(e.type==='numline'){const {min,max}=e.props;d.pts=inputs(s,id).map(l=>({from:l.from,v:val(l.from)})).filter(p=>p.v);
+      d.pts.forEach(p=>{p.out=qnum(p.v)<min||qnum(p.v)>max;if(p.out)sig('err',`${qs(p.v)} 放不下：数轴只从 ${min} 到 ${max}`)});
+      const ins=d.pts.filter(p=>!p.out);
+      if(ins.length>=2){const a=ins[0].v,b=ins[1].v,g=qsub(a,b);const gap=g.n<0?Q(-g.n,g.d):g;
+        if(gap.n===0)sig('ok',`${qs(a)} 和 ${qs(b)} 落在同一点：一样大`);else sig('info',`${E[ins[0].from].name} 和 ${E[ins[1].from].name} 相差 ${qs(gap)}`)}}
+    if(e.type==='balance'){const L=inputs(s,id).filter(l=>l.slot==='L'),R=inputs(s,id).filter(l=>l.slot==='R');
+      const sum=a=>a.reduce((t,l)=>{const v=val(l.from);return v?qadd(t,v):t},Q(0));d.L=sum(L);d.R=sum(R);d.Ln=L;d.Rn=R;
+      const df=qsub(d.L,d.R);d.tilt=-Math.max(-16,Math.min(16,qnum(df)*14));d.equal=df.n===0;
+      if(!L.length&&!R.length)sig('info','把数连到左盘或右盘');
+      else if(d.equal&&L.length&&R.length)sig('ok',`平了：左 ${qs(d.L)} = 右 ${qs(d.R)}`);
+      else{const m=df.n<0?Q(-df.n,df.d):df;sig('warn',`${df.n>0?'左':'右'}边重 ${qs(m)}`)}}
+    if(e.type==='coord'){d.fns=inputs(s,id).map(l=>E[l.from]);
+      if(!d.fns.length)sig('info','把直线连进来');
+      d.fns.forEach(f=>{const {k,b}=f.props;sig('info',`${f.name}：y = ${fx(k,b)}，${k>0?'往右上升':k<0?'往右下倒':'水平'}，过 (0, ${b})`)});
+      if(d.fns.length>=2){const [f,g]=d.fns;if(f.props.k===g.props.k)sig(f.props.b===g.props.b?'ok':'warn',f.props.b===g.props.b?'两条线重合':'k 一样：两条线平行，永远不相交');
+        else{const x=Q(g.props.b-f.props.b,f.props.k-g.props.k);const y=qadd(Q(f.props.k*x.n,x.d),Q(f.props.b));sig('ok',`交点 (${qs(x)}, ${qs(y)})`)}}}
+    if(e.type==='rect'){const {w,h}=e.props;d.per=2*(w+h);d.area=w*h;if(w===h)sig('ok',`是正方形：周长 ${d.per}，面积 ${d.area}`);else sig('info',`周长 ${d.per}，面积 ${d.area}`)}
+    if(e.type==='dice'){const c=e.props.counts;if(!c)sig('info','点“掷”开始');else{const tot=c.reduce((a,b)=>a+b,0);let best=2;for(let i=2;i<=12;i++)if(c[i]>c[best])best=i;d.tot=tot;sig('info',`掷了 ${tot} 回，出现最多的是 ${best}`)}}
+  }
+  return D;
+}
+function fx(k,b){const kx=k===0?'':k===1?'x':k===-1?'−x':(k<0?'−':'')+Math.abs(k)+'x';const bs=b===0?(kx?'':'0'):(b<0?(kx?' − ':'−')+Math.abs(b):(kx?' + ':'')+b);return kx+bs}
+
+/* ========== 实验库：实验 = 器材摆放 + 带分值的步骤（步骤是对台面状态的判定） ========== */
+const XP=[
+ {id:'fracadd',title:'分母不一样，分数能直接加吗？',domain:'数与代数',grade:5,tools:'分数条 · 合并器 · 数轴',
+  q:'有人说 1/2 + 1/3 = 2/5（分子加分子，分母加分母）。在数轴上看看对不对。',
+  why:'分数是“一份有多大”。1/2 和 1/3 的一份不一样大，不能直接数份数；都切成 6 份，就是 3/6 + 2/6 = 5/6。2/5 比 1/2 还小，加了一个数反而变小了，所以一定错。',
+  build(s){const a=addEnt(s,'frac',60,60,{n:1,d:2}),b=addEnt(s,'frac',60,190,{n:1,d:3});addEnt(s,'adder',330,110);addEnt(s,'numline',120,340,{min:0,max:2});},
+  steps:[
+   {label:'把 1/2 和 1/3 都连到合并器',score:2,hint:'拖分数条右边的蓝点，连到合并器上',target:s=>byType(s,'adder'),
+    check:(s,D)=>{const ad=byType(s,'adder');return ad&&inputs(s,ad).length>=2&&D[ad].value&&qeq(D[ad].value,Q(5,6))}},
+   {label:'把合并器连到数轴，看和落在哪',score:1,hint:'合并器的蓝点 → 数轴',target:s=>byType(s,'numline'),
+    check:s=>{const ad=byType(s,'adder'),nl=byType(s,'numline');return s.links.some(l=>l.from===ad&&l.to===nl)}},
+   {label:'再拿一张分数条，调成 2/5，也连到数轴',score:2,hint:'从右边器材架拖一张分数条；点它，在属性卡里把分子调成 2、分母调成 5',target:s=>byType(s,'numline'),
+    check:(s,D)=>{const nl=byType(s,'numline');return inputs(s,nl).some(l=>s.entities[l.from].type==='frac'&&qeq(D[l.from].value,Q(2,5)))}},
+   {label:'调一张分数条，让它和合并器落在同一点',score:2,hint:'试试分母是 6 的分数',target:s=>byType(s,'numline'),
+    check:(s,D)=>{const nl=byType(s,'numline');return inputs(s,nl).some(l=>s.entities[l.from].type==='frac'&&qeq(D[l.from].value,Q(5,6)))}},
+  ]},
+ {id:'balfrac',title:'天平左边放 3/4，右边放什么能平？',domain:'数与代数',grade:5,tools:'天平 · 分数条',
+  q:'左盘已经放了 3/4。用台上的分数条让天平平，再找一种只用一张分数条的方法。',
+  why:'天平平 = 两边一样大。1/2 + 1/4 = 2/4 + 1/4 = 3/4；6/8 也和 3/4 一样大——分子分母同时乘 2，大小不变。',
+  build(s){const b=addEnt(s,'balance',300,150);const f=addEnt(s,'frac',60,60,{n:3,d:4});addLink(s,f,b,'L');addEnt(s,'frac',60,170,{n:1,d:2});addEnt(s,'frac',60,260,{n:1,d:4});},
+  steps:[
+   {label:'把 1/2 连到右盘',score:1,hint:'把 1/2 的蓝点拖到天平的右半边',target:s=>byType(s,'balance'),
+    check:(s,D)=>{const b=byType(s,'balance');return D[b].Rn.some(l=>qeq(D[l.from].value,Q(1,2)))}},
+   {label:'让天平平',score:2,hint:'右边还差多少？看天平下面的提示',target:s=>byType(s,'balance'),
+    check:(s,D)=>{const b=byType(s,'balance');return D[b].equal&&D[b].Rn.length>0}},
+   {label:'换一种：右盘只放一张分数条也能平',score:2,hint:'先点右盘的连线删掉，再调一张分母是 8 的分数条',target:s=>byType(s,'balance'),
+    check:(s,D)=>{const b=byType(s,'balance');return D[b].equal&&D[b].Rn.length===1}},
+  ]},
+ {id:'funcline',title:'k 变成负数，直线往哪倒？',domain:'数与代数',grade:8,tools:'直线 · 坐标平面',
+  q:'y = 2x + 1 往右上升。把 k 调成负数，看看它怎么变；再让直线经过点 (2, −3)。',
+  why:'k 是“x 每加 1，y 加几”。k 是负数，x 往右走 y 就往下掉，所以直线往右下倒。过 (2, −3)：−3 = k·2 + 1，k = −2。',
+  build(s){addEnt(s,'fn',60,80,{k:2,b:1});addEnt(s,'coord',320,40);},
+  steps:[
+   {label:'把直线连到坐标平面',score:1,hint:'直线卡右边的蓝点 → 坐标平面',target:s=>byType(s,'coord'),check:s=>s.links.some(l=>s.entities[l.to].type==='coord')},
+   {label:'把 k 调成负数',score:2,hint:'点直线卡，在属性卡里拖 k',target:s=>byType(s,'fn'),check:s=>Object.values(s.entities).some(e=>e.type==='fn'&&e.props.k<0)},
+   {label:'让直线经过 (2, −3)',score:2,hint:'x = 2 时 y 要等于 −3',target:s=>byType(s,'fn'),check:s=>Object.values(s.entities).some(e=>e.type==='fn'&&e.props.k*2+e.props.b===-3&&s.links.some(l=>l.from===e.id))},
+  ]},
+ {id:'maxarea',title:'周长 20 的长方形，面积最大是多少？',domain:'图形与几何',grade:3,tools:'长方形',
+  q:'台上是 2 × 8 的长方形，周长 20。保持周长 20，换不同的宽和长，找面积最大的。',
+  why:'周长一定，长和宽加起来一定（10）。两个数和一定，越接近积越大：1×9=9，2×8=16，3×7=21，4×6=24，5×5=25。正方形最大。',
+  build(s){addEnt(s,'rect',200,80,{w:2,h:8});},
+  steps:[
+   {label:'换一个周长还是 20 的长方形',score:1,hint:'宽加 1，长就要减 1',target:s=>byType(s,'rect'),check:(s,D)=>{const r=byType(s,'rect');return D[r].per===20&&s.entities[r].props.w!==2&&s.entities[r].props.w!==8}},
+   {label:'找到面积最大的那个',score:2,hint:'比比看 3×7、4×6 和 5×5',target:s=>byType(s,'rect'),check:(s,D)=>{const r=byType(s,'rect');return D[r].per===20&&D[r].area===25}},
+  ]},
+ {id:'dice',title:'两个骰子的点数和，哪个最常出现？',domain:'统计与概率',grade:6,tools:'两个骰子',
+  q:'猜一猜：2 到 12 哪个和出现得最多？掷 100 回看看，再掷到 1000 回以上。',
+  why:'和是 7 的组合最多：1+6、2+5、3+4、4+3、5+2、6+1，一共 6 种；和是 2 只有 1+1 一种。36 种里占 6 种，所以 7 最常出现。掷得越多，柱子越接近这个形状。',
+  build(s){addEnt(s,'dice',220,90);},
+  steps:[
+   {label:'掷 100 回',score:1,hint:'点骰子，再点“掷”',target:s=>byType(s,'dice'),check:(s,D)=>{const d=byType(s,'dice');return (D[d].tot||0)>=100}},
+   {label:'一共掷到 1000 回以上，看柱子的形状',score:2,hint:'把“一次掷几回”调大',target:s=>byType(s,'dice'),check:(s,D)=>{const d=byType(s,'dice');return (D[d].tot||0)>=1000}},
+  ]},
+];
+const byType=(s,t)=>{for(const id in s.entities)if(s.entities[id].type===t)return id;return null};
+
+/* ========== 运行状态 ========== */
+const LS={free:'nb-lab-free-v1',hist:'nb-lab-exam-v1',find:'nb-lab-find-v1'};
+let mode='free',xp=null,run=null,D={},sel=null,selLink=null,cardOpen=false;
+let view={x:40,y:30,z:1},undoSt=[],redoSt=[],timerId=null,libFilter='全部',libQ='';
+const $=id=>document.getElementById(id);
+
+function commit(a,opt={}){
+  const snap=JSON.stringify(S);const r=act(a);
+  if(!r.ok){toast(r.why,true);if(run)run.errors++;render();return r}
+  if(!opt.coalesce||lastCo!==opt.coalesce){undoSt.push(snap);if(undoSt.length>80)undoSt.shift();redoSt=[]}
+  lastCo=opt.coalesce||null;
+  if(run&&!opt.silent){run.ops++;track()}
+  afterChange();return r;
+}
+let lastCo=null;
+function afterChange(){D=evaluate(S);if(mode==='free')localStorage.setItem(LS.free,JSON.stringify(S));render()}
+function track(){const D2=evaluate(S);for(const st of run.steps){if(st.done)continue;if(xp.steps[st.i].check(S,D2)){st.done=true;st.op=run.ops;if(mode==='practice')toast('✓ '+xp.steps[st.i].label)}else break}
+  if(mode==='practice'&&run.steps.every(s=>s.done)&&!run.finished){run.finished=true;setTimeout(practiceDone,500)}}
+
+/* ========== 画台面 ========== */
+function render(){
+  D=D||{};const w=$('world');let h='';
+  w.setAttribute('transform',`translate(${view.x},${view.y}) scale(${view.z})`);
+  const next=nextTarget();
+  for(const l of S.links)h+=linkSvg(l);
+  for(const id in S.entities)h+=entSvg(S.entities[id],D[id]||{read:[],sig:[]},id===next);
+  w.innerHTML=h;
+  $('empty').style.display=Object.keys(S.entities).length?'none':'grid';
+  $('zVal').textContent=Math.round(view.z*100)+'%';
+  $('undo').disabled=!undoSt.length;$('redo').disabled=!redoSt.length;
+  placeFloat();renderSteps();
+}
+function nextTarget(){if(mode!=='practice'||!run)return null;const st=run.steps.find(s=>!s.done);return st?xp.steps[st.i].target(S):null}
+function size(e){return TYPES[e.type].size(e)}
+function anchorIn(l){const e=S.entities[l.to];const [w,h]=size(e);if(e.type==='balance'){const t=(D[e.id]||{}).tilt||0,dy=Math.sin(t*Math.PI/180)*120;return l.slot==='L'?[e.x+50,e.y+112-dy]:[e.x+w-50,e.y+112+dy]}return[e.x,e.y+h/2]}
+function anchorOut(id){const e=S.entities[id],[w,h]=size(e);return[e.x+w,e.y+h/2]}
+function linkSvg(l){if(!S.entities[l.from]||!S.entities[l.to])return'';const [x1,y1]=anchorOut(l.from),[x2,y2]=anchorIn(l);const c=Math.max(40,Math.abs(x2-x1)/2);
+  const d=`M${x1},${y1} C${x1+c},${y1} ${x2-c},${y2} ${x2},${y2}`;return`<path class="linkhit" data-link="${l.id}" d="${d}"/><path class="link${selLink===l.id?' sel':''}" d="${d}"/>`}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function entSvg(e,d,isNext){const T=TYPES[e.type],[w,h]=size(e);const lv=d.sig.some(s=>s.lv==='err')?' err':(d.sig.some(s=>s.lv==='ok')?' ok':'');
+  let g=`<g class="ent${sel===e.id?' sel':''}${lv}${isNext?' is-next':''}" data-ent="${e.id}" transform="translate(${e.x},${e.y})">`;
+  g+=`<rect class="ent-body" width="${w}" height="${h}" rx="10" filter="url(#sh)"/><text class="ttl" x="10" y="17">${esc(e.name)}</text>`;
+  g+=DRAW[e.type](e,d,w,h);
+  if(T.accepts&&e.type!=='balance')g+=`<circle class="port-in" cx="0" cy="${h/2}" r="6"/>`;
+  if(T.out)g+=`<circle class="port-out" data-port="${e.id}" cx="${w}" cy="${h/2}" r="7"/>`;
+  if(sel===e.id)g+=`<rect class="selbox" x="-6" y="-6" width="${w+12}" height="${h+12}" rx="12"/>`;
+  // 信号条：错了台面自己说
+  let y=h+8;for(const s of d.sig.slice(0,3)){const col={ok:'#1e7a4b',warn:'#8a5a12',err:'#9b2c2c',info:'#2b3a4f'}[s.lv];const tw=Math.min(520,s.tx.length*12.5+20);
+    g+=`<g class="pill" transform="translate(0,${y})"><rect width="${tw}" height="22" fill="${col}" rx="11"/><text x="10" y="15" fill="#fff">${esc(s.tx)}</text></g>`;y+=26}
+  return g+'</g>'}
+const DRAW={
+ num:(e,d,w,h)=>`<text class="big" x="${w/2}" y="${h/2+14}" text-anchor="middle" font-size="28">${e.props.v}</text>`,
+ frac:(e,d,w)=>{const {n,d:dd}=e.props,rows=Math.max(1,Math.ceil(n/dd)),bw=w-24,sw=bw/dd;let s=`<text class="big" x="${w-12}" y="18" text-anchor="end" font-size="14">${n}/${dd}</text>`;
+   for(let r=0;r<rows;r++)for(let i=0;i<dd;i++){const k=r*dd+i+1;s+=`<rect class="seg-cell" data-seg="${k}" x="${12+i*sw}" y="${28+r*28}" width="${sw}" height="22" fill="${k<=n?'#ff9f43':'#fff'}" stroke="#5b6778" stroke-width="1"/>`}return s},
+ adder:(e,d,w,h)=>{const t=d.terms||[];const ex=t.length?t.map(qs).join(' + '):'空';return`<text class="ink" x="${w/2}" y="42" text-anchor="middle" font-size="13">${esc(ex)}</text><text class="big" x="${w/2}" y="70" text-anchor="middle" font-size="22">= ${d.value?qs(d.value):0}</text>`},
+ numline:(e,d,w)=>{const {min,max}=e.props,x0=24,x1=w-24,X=v=>x0+(v-min)/(max-min)*(x1-x0),y=72;let L=1;(d.pts||[]).forEach(p=>{if(p.v.d<=12)L=lcm(L,p.v.d)});if(L>12||(max-min)*L>60)L=1;
+   let s=`<line x1="${x0-10}" y1="${y}" x2="${x1+12}" y2="${y}" stroke="#334" stroke-width="2"/><path d="M${x1+12},${y-5}L${x1+20},${y}L${x1+12},${y+5}Z" fill="#334"/>`;
+   for(let k=min*L;k<=max*L;k++){const v=k/L,int=k%L===0;s+=`<line x1="${X(v)}" y1="${y-(int?8:4)}" x2="${X(v)}" y2="${y+(int?8:4)}" stroke="#334"/>`;if(int)s+=`<text class="ink" x="${X(v)}" y="${y+24}" text-anchor="middle" font-size="12">${v}</text>`}
+   const cols=['#3b9cff','#ff7a45','#2fbf71','#b36bff','#e84393','#00b8d4'];
+   (d.pts||[]).forEach((p,i)=>{const v=qnum(p.v),c=cols[i%6];if(p.out){const lx=v<min?x0-4:x1+4;s+=`<text x="${lx}" y="${y-14}" text-anchor="${v<min?'start':'end'}" font-size="12" fill="#e03131">${qs(p.v)} 放不下 ${v<min?'←':'→'}</text>`}
+     else{s+=`<circle cx="${X(v)}" cy="${y}" r="7" fill="${c}" stroke="#fff" stroke-width="2"/><text x="${X(v)}" y="${y-14-(i%2)*14}" text-anchor="middle" font-size="12" font-weight="700" fill="${c}">${qs(p.v)}</text>`}});return s},
+ balance:(e,d,w,h)=>{const t=d.tilt||0,cx=w/2,py=62,dy=Math.sin(t*Math.PI/180)*120;
+   const pan=(x,y,items,lab)=>{let s=`<line x1="${x}" y1="${y-40}" x2="${x-38}" y2="${y}" stroke="#7b8796"/><line x1="${x}" y1="${y-40}" x2="${x+38}" y2="${y}" stroke="#7b8796"/><path d="M${x-44},${y}h88a44 14 0 0 1 -88 0Z" fill="#dfe6ee" stroke="#8a97a6"/>`;
+     items.forEach((l,i)=>{const v=(D[l.from]||{}).value;s+=`<g transform="translate(${x-40+(i%3)*28},${y-16-Math.floor(i/3)*18})"><rect width="26" height="16" rx="4" fill="#ff9f43"/><text x="13" y="12" text-anchor="middle" font-size="10" fill="#fff">${v?qs(v):'?'}</text></g>`});
+     return s+`<circle class="port-in" cx="${x}" cy="${y+8}" r="6"/><text class="ttl" x="${x}" y="${y+34}" text-anchor="middle">${lab}</text>`};
+   return`<path d="M${cx-40},${h-14}h80l-30,-14h-20Z" fill="#8a97a6"/><line x1="${cx}" y1="${h-28}" x2="${cx}" y2="${py}" stroke="#8a97a6" stroke-width="6"/>
+   <g transform="rotate(${t} ${cx} ${py})"><rect x="${cx-120}" y="${py-4}" width="240" height="8" rx="4" fill="#4a5668"/></g><circle cx="${cx}" cy="${py}" r="6" fill="#2b3a4f"/>
+   ${pan(cx-120,py+50-dy,d.Ln||[],'左盘 '+(d.L?qs(d.L):0))}${pan(cx+120,py+50+dy,d.Rn||[],'右盘 '+(d.R?qs(d.R):0))}`},
+ fn:(e,d,w,h)=>`<text class="big" x="${w/2}" y="${h/2+12}" text-anchor="middle" font-size="18">y = ${esc(fx(e.props.k,e.props.b))}</text>`,
+ coord:(e,d,w,h)=>{const L=20,R=w-20,T=30,B=h-20,X=v=>L+(v+6)/12*(R-L),Y=v=>B-(v+10)/20*(B-T);let s=`<clipPath id="cp${e.id}"><rect x="${L}" y="${T}" width="${R-L}" height="${B-T}"/></clipPath>`;
+   for(let i=-6;i<=6;i++)s+=`<line x1="${X(i)}" y1="${T}" x2="${X(i)}" y2="${B}" stroke="${i?'#e3e8ef':'#334'}" stroke-width="${i?1:1.5}"/>`;
+   for(let j=-10;j<=10;j+=2)s+=`<line x1="${L}" y1="${Y(j)}" x2="${R}" y2="${Y(j)}" stroke="${j?'#e3e8ef':'#334'}" stroke-width="${j?1:1.5}"/>`;
+   for(let i=-6;i<=6;i+=2)if(i)s+=`<text class="ttl" x="${X(i)}" y="${Y(0)+14}" text-anchor="middle" font-size="10">${i}</text>`;
+   for(let j=-10;j<=10;j+=5)if(j)s+=`<text class="ttl" x="${X(0)-4}" y="${Y(j)+4}" text-anchor="end" font-size="10">${j}</text>`;
+   const cols=['#3b9cff','#ff7a45','#2fbf71','#b36bff'];(d.fns||[]).forEach((f,i)=>{const {k,b}=f.props;s+=`<line class="flowline" clip-path="url(#cp${e.id})" x1="${X(-6)}" y1="${Y(k*-6+b)}" x2="${X(6)}" y2="${Y(k*6+b)}" stroke="${cols[i%4]}" stroke-width="3"/><circle cx="${X(0)}" cy="${Y(b)}" r="4" fill="${cols[i%4]}"/>`});
+   if(xp&&xp.id==='funcline')s+=`<circle cx="${X(2)}" cy="${Y(-3)}" r="5" fill="none" stroke="#e03131" stroke-width="2"/><text x="${X(2)+8}" y="${Y(-3)+4}" font-size="11" fill="#e03131">(2, −3)</text>`;
+   return s},
+ rect:(e,d,w)=>{const {w:rw,h:rh}=e.props,ox=(w-rw*20)/2,oy=30;let s='';for(let i=0;i<rw;i++)for(let j=0;j<rh;j++)s+=`<rect x="${ox+i*20}" y="${oy+j*20}" width="20" height="20" fill="#cfe5ff" stroke="#8fb6e6"/>`;
+   return s+`<rect x="${ox}" y="${oy}" width="${rw*20}" height="${rh*20}" fill="none" stroke="#1e5aa8" stroke-width="2.5"/><text class="ink" x="${w/2}" y="${oy+rh*20+18}" text-anchor="middle" font-size="12">宽 ${rw} · 长 ${rh} · 面积 ${rw*rh} 格</text>`},
+ dice:(e,d,w,h)=>{const c=e.props.counts,L=30,R=w-14,B=h-30,T=34,bw=(R-L)/11;let s='',mx=1;if(c)for(let i=2;i<=12;i++)mx=Math.max(mx,c[i]);const tot=c?c.reduce((a,b)=>a+b,0):0;
+   for(let i=2;i<=12;i++){const x=L+(i-2)*bw;const ways=6-Math.abs(i-7);if(c){const hh=(c[i]/mx)*(B-T);s+=`<rect x="${x+3}" y="${B-hh}" width="${bw-6}" height="${hh}" fill="#3b9cff" rx="2"/>`;const th=(tot*ways/36)/mx*(B-T);s+=`<line x1="${x+2}" x2="${x+bw-2}" y1="${B-th}" y2="${B-th}" stroke="#e03131" stroke-width="2"/>`}
+     s+=`<text class="ttl" x="${x+bw/2}" y="${B+14}" text-anchor="middle" font-size="11">${i}</text>`}
+   return s+`<line x1="${L}" x2="${R}" y1="${B}" y2="${B}" stroke="#334"/>${c?`<text class="ttl" x="${w-14}" y="17" text-anchor="end" font-size="11">红线 = 按 36 种算该有多少</text>`:''}`},
+};
+
+/* ========== 浮动工具条 + 属性卡（点物体 → 旁边出设置卡） ========== */
+function placeFloat(){const tl=$('tools'),cd=$('card');const e=sel&&S.entities[sel];
+  if(!e&&!selLink){tl.style.display=cd.style.display='none';return}
+  if(selLink&&!e){tl.style.display='none';cd.style.display='none';return}
+  const [w]=size(e),sx=view.x+(e.x+w)*view.z,sy=view.y+e.y*view.z,W=$('stageWrap').clientWidth,H=$('stageWrap').clientHeight;
+  const T=TYPES[e.type];tl.innerHTML=`<button data-tool="card" title="设置">⚙</button><button data-tool="dup" title="复制">📋</button>${T.rotate?'<button data-tool="rotate" title="转 90°">🔄</button>':''}<button data-tool="del" title="删除">🗑</button>`;
+  tl.style.display='flex';tl.style.left=Math.min(W-44,sx+12)+'px';tl.style.top=Math.max(8,sy)+'px';
+  if(!cardOpen){cd.style.display='none';return}
+  let left=sx+56;if(left+250>W)left=Math.max(8,view.x+e.x*view.z-262);cd.style.left=left+'px';cd.style.top=Math.max(8,Math.min(H-320,sy))+'px';cd.style.display='block';
+  if(cd.dataset.for!==e.id||cd.dataset.v!==JSON.stringify(e.props)+e.name)buildCard(e);
+}
+function stateLine(e){const d=D[e.id]||{};if(d.value)return qs(d.value);if(e.type==='fn')return'y = '+fx(e.props.k,e.props.b);if(e.type==='rect')return`${e.props.w} × ${e.props.h} = ${e.props.w*e.props.h}`;
+  if(e.type==='balance')return`${d.L?qs(d.L):0} : ${d.R?qs(d.R):0}`;if(e.type==='numline')return`${e.props.min} 到 ${e.props.max}`;if(e.type==='dice')return`${d.tot||0} 回`;return TYPES[e.type].label}
+function buildCard(e){const cd=$('card'),T=TYPES[e.type];cd.dataset.for=e.id;cd.dataset.v=JSON.stringify(e.props)+e.name;
+  let h=`<h4>${T.label} · 设置</h4><input class="name" data-name value="${esc(e.name)}"><div class="state">${esc(stateLine(e))}</div>`;
+  for(const f of T.fields){const v=e.props[f.k];h+=`<div class="fld"><label><span>${f.label}</span></label><div class="ctl"><button class="pm" data-pm="${f.k}" data-dv="-${f.step||1}">−</button><input type="range" data-f="${f.k}" min="${f.min}" max="${f.max}" step="${f.step||1}" value="${v}"><button class="pm" data-pm="${f.k}" data-dv="${f.step||1}">+</button><input type="number" data-fn="${f.k}" value="${v}"></div></div>`}
+  if(!T.fields.length)h+=`<div class="muted" style="font-size:12px">${T.accepts==='fn'?'它显示连进来的直线。':'它的值由连进来的器材决定，拖别的器材的蓝点连过来。'}</div>`;
+  const ins=inputs(S,e.id);if(ins.length)h+=`<div class="muted" style="font-size:12px;margin-top:8px">连进来的：${ins.map(l=>esc(S.entities[l.from].name)+(l.slot?`（${l.slot==='L'?'左':'右'}盘）`:'')).join('、')}</div>`;
+  h+=`<div class="card-row">${(T.actions||[]).map(a=>`<button class="btn pri" data-act="${a.id}">${a.label}</button>`).join('')}${T.fields.length?'<button class="btn" data-act="reset">恢复初始值</button>':''}<button class="btn" data-act="del">删除</button></div>`;
+  cd.innerHTML=h}
+$('card').addEventListener('input',ev=>{const t=ev.target,id=sel;if(!id)return;
+  if(t.dataset.f){commit({t:'set',id,k:t.dataset.f,v:t.value},{coalesce:'set'+id+t.dataset.f})}
+  if(t.dataset.name!==undefined){act({t:'rename',id,name:t.value});$('card').dataset.v=JSON.stringify(S.entities[id].props)+S.entities[id].name;D=evaluate(S);render()}});
+$('card').addEventListener('change',ev=>{const t=ev.target;if(t.dataset.fn&&sel){commit({t:'set',id:sel,k:t.dataset.fn,v:t.value});$('card').dataset.v=''}});
+$('card').addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b||!sel)return;const id=sel;
+  if(b.dataset.pm){const e=S.entities[id];commit({t:'set',id,k:b.dataset.pm,v:e.props[b.dataset.pm]+Number(b.dataset.dv)})}
+  else if(b.dataset.act==='del'){commit({t:'del',id});sel=null}
+  else if(b.dataset.act==='reset')commit({t:'reset',id});
+  else if(b.dataset.act==='roll')commit({t:'roll',id});
+  render()});
+$('tools').addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b||!sel)return;const t=b.dataset.tool;
+  if(t==='card'){cardOpen=!cardOpen;$('card').dataset.v=''}else if(t==='dup'){const r=commit({t:'dup',id:sel});if(r.ok)sel=r.id}else if(t==='rotate')commit({t:'rotate',id:sel});else if(t==='del'){commit({t:'del',id:sel});sel=null}render()});
+
+/* ========== 四种手势：点整体（选中）/ 点部位（分数格）/ 拖整体（移动）/ 拖端口（连线）；拖空白 = 平移 ========== */
+const svg=$('stage');let drag=null;
+const toWorld=(cx,cy)=>{const r=svg.getBoundingClientRect();return[(cx-r.left-view.x)/view.z,(cy-r.top-view.y)/view.z]};
+svg.addEventListener('pointerdown',ev=>{const t=ev.target;svg.setPointerCapture(ev.pointerId);const [wx,wy]=toWorld(ev.clientX,ev.clientY);
+  if(t.dataset.port){drag={m:'link',from:t.dataset.port,sx:ev.clientX,sy:ev.clientY};return}
+  if(t.dataset.link){selLink=t.dataset.link;sel=null;cardOpen=false;render();return}
+  const g=t.closest('[data-ent]');
+  if(g){const e=S.entities[g.dataset.ent];drag={m:'move',id:e.id,dx:wx-e.x,dy:wy-e.y,sx:ev.clientX,sy:ev.clientY,moved:false,seg:t.dataset.seg,was:sel===e.id};if(sel!==e.id){sel=e.id;selLink=null;render()}return}
+  sel=null;selLink=null;cardOpen=false;drag={m:'pan',sx:ev.clientX,sy:ev.clientY,vx:view.x,vy:view.y};svg.classList.add('panning');render()});
+svg.addEventListener('pointermove',ev=>{if(!drag)return;const [wx,wy]=toWorld(ev.clientX,ev.clientY);
+  if(drag.m==='pan'){view.x=drag.vx+ev.clientX-drag.sx;view.y=drag.vy+ev.clientY-drag.sy;render()}
+  else if(drag.m==='move'){if(!drag.moved&&Math.hypot(ev.clientX-drag.sx,ev.clientY-drag.sy)<6)return;if(!drag.moved){undoSt.push(JSON.stringify(S));redoSt=[];drag.moved=true}
+    act({t:'move',id:drag.id,x:Math.round((wx-drag.dx)/10)*10,y:Math.round((wy-drag.dy)/10)*10});render()}
+  else if(drag.m==='link'){const [x1,y1]=anchorOut(drag.from);let p=$('world').querySelector('.templink');if(!p){p=document.createElementNS('http://www.w3.org/2000/svg','path');p.setAttribute('class','templink');$('world').appendChild(p)}p.setAttribute('d',`M${x1},${y1} L${wx},${wy}`)}});
+svg.addEventListener('pointerup',ev=>{if(!drag)return;const d=drag;drag=null;svg.classList.remove('panning');
+  if(d.m==='move'){if(d.moved){afterChange()}else if(d.seg){commit({t:'segclick',id:d.id,k:+d.seg})}else{if(d.was)cardOpen=!cardOpen;else cardOpen=true;$('card').dataset.v='';render()}}
+  else if(d.m==='link'){const el=document.elementFromPoint(ev.clientX,ev.clientY);const g=el&&el.closest&&el.closest('[data-ent]');
+    if(g&&g.dataset.ent!==d.from){const to=S.entities[g.dataset.ent];const [wx]=toWorld(ev.clientX,ev.clientY);const [w]=size(to);commit({t:'link',from:d.from,to:to.id,slot:wx<to.x+w/2?'L':'R'})}
+    else if(Math.hypot(ev.clientX-d.sx,ev.clientY-d.sy)>6)toast('松手的地方没有器材：把线拖到另一个器材上',true);render()}
+  else if(d.m==='pan')render()});
+svg.addEventListener('wheel',ev=>{ev.preventDefault();zoomAt(ev.deltaY<0?1.1:1/1.1,ev.clientX,ev.clientY)},{passive:false});
+function zoomAt(f,cx,cy){const r=svg.getBoundingClientRect();cx=cx??r.left+r.width/2;cy=cy??r.top+r.height/2;const z=Math.max(.5,Math.min(2.5,view.z*f));const k=z/view.z;view.x=cx-r.left-(cx-r.left-view.x)*k;view.y=cy-r.top-(cy-r.top-view.y)*k;view.z=z;render()}
+function fit(){const es=Object.values(S.entities);if(!es.length){view={x:40,y:30,z:1};render();return}let a=1e9,b=1e9,c=-1e9,d=-1e9;es.forEach(e=>{const [w,h]=size(e);a=Math.min(a,e.x);b=Math.min(b,e.y);c=Math.max(c,e.x+w);d=Math.max(d,e.y+h+60)});
+  const W=svg.clientWidth,H=svg.clientHeight,z=Math.max(.5,Math.min(1.4,Math.min((W-80)/(c-a),(H-80)/(d-b))));view={z,x:(W-(c-a)*z)/2-a*z,y:(H-(d-b)*z)/2-b*z};render()}
+$('zIn').onclick=()=>zoomAt(1.15);$('zOut').onclick=()=>zoomAt(1/1.15);$('zFit').onclick=fit;
+document.addEventListener('keydown',ev=>{if(ev.target.closest('input,textarea,[contenteditable]'))return;
+  if((ev.key==='Delete'||ev.key==='Backspace')&&(sel||selLink)){commit({t:'del',id:sel||selLink});sel=selLink=null;render()}
+  if((ev.ctrlKey||ev.metaKey)&&ev.key.toLowerCase()==='z'){ev.preventDefault();ev.shiftKey?redo():undo()}
+  if((ev.ctrlKey||ev.metaKey)&&ev.key.toLowerCase()==='y'){ev.preventDefault();redo()}});
+function undo(){if(!undoSt.length)return;redoSt.push(JSON.stringify(S));S=JSON.parse(undoSt.pop());if(sel&&!S.entities[sel])sel=null;afterChange()}
+function redo(){if(!redoSt.length)return;undoSt.push(JSON.stringify(S));S=JSON.parse(redoSt.pop());afterChange()}
+$('undo').onclick=undo;$('redo').onclick=redo;
+$('clear').onclick=()=>{if(!Object.keys(S.entities).length)return;undoSt.push(JSON.stringify(S));const keep=S.nid;S=blankScene();S.nid=keep;sel=null;afterChange();toast('台面已清空，可以撤销')};
+$('tidy').onclick=()=>{undoSt.push(JSON.stringify(S));let x=40,y=40,rowH=0;const W=Math.max(700,(svg.clientWidth-80)/view.z);
+  Object.values(S.entities).forEach(e=>{const [w,h]=size(e);if(x+w>W){x=40;y+=rowH+90;rowH=0}e.x=x;e.y=y;x+=w+70;rowH=Math.max(rowH,h)});afterChange();fit()};
+
+/* ========== 器材架（右） ========== */
+const ICON={num:'<rect x="6" y="8" width="36" height="26" rx="5" fill="#f6f8fb"/><text x="24" y="27" text-anchor="middle" font-size="15" font-weight="700" fill="#1d2633">3</text>',
+ frac:'<rect x="4" y="13" width="40" height="16" fill="#fff" stroke="#5b6778"/><rect x="4" y="13" width="20" height="16" fill="#ff9f43" stroke="#5b6778"/>',
+ adder:'<rect x="6" y="8" width="36" height="26" rx="5" fill="#f6f8fb"/><text x="24" y="28" text-anchor="middle" font-size="18" fill="#1d2633">Σ</text>',
+ numline:'<line x1="4" y1="24" x2="44" y2="24" stroke="#cfd8e3" stroke-width="2"/><line x1="10" y1="19" x2="10" y2="29" stroke="#cfd8e3"/><line x1="24" y1="19" x2="24" y2="29" stroke="#cfd8e3"/><line x1="38" y1="19" x2="38" y2="29" stroke="#cfd8e3"/><circle cx="31" cy="24" r="4" fill="#3b9cff"/>',
+ balance:'<line x1="24" y1="10" x2="24" y2="36" stroke="#cfd8e3" stroke-width="3"/><line x1="8" y1="12" x2="40" y2="12" stroke="#cfd8e3" stroke-width="3"/><path d="M4 26h12a6 3 0 0 1-12 0zM32 26h12a6 3 0 0 1-12 0z" fill="#cfd8e3"/>',
+ fn:'<text x="24" y="28" text-anchor="middle" font-size="12" fill="#cfd8e3">y=kx+b</text>',
+ coord:'<line x1="24" y1="4" x2="24" y2="40" stroke="#cfd8e3"/><line x1="4" y1="22" x2="44" y2="22" stroke="#cfd8e3"/><line x1="8" y1="38" x2="40" y2="6" stroke="#3b9cff" stroke-width="2"/>',
+ rect:'<rect x="8" y="10" width="32" height="22" fill="#cfe5ff" stroke="#1e5aa8" stroke-width="2"/>',
+ dice:'<rect x="6" y="12" width="16" height="16" rx="3" fill="#f6f8fb"/><rect x="26" y="12" width="16" height="16" rx="3" fill="#f6f8fb"/><circle cx="14" cy="20" r="2" fill="#1d2633"/><circle cx="30" cy="16" r="2" fill="#1d2633"/><circle cx="38" cy="24" r="2" fill="#1d2633"/>'};
+function renderLib(){const q=$('libSearch').value.trim();let h='';
+  for(const g of GROUP_ORDER){const ts=Object.keys(TYPES).filter(k=>TYPES[k].group===g&&(!q||TYPES[k].label.includes(q)||g.includes(q)));if(!ts.length)continue;
+    h+=`<div class="grp">${g}</div><div class="tiles">${ts.map(k=>`<div class="tile" data-type="${k}"><svg width="48" height="40" viewBox="0 0 48 40">${ICON[k]}</svg><span>${TYPES[k].label}</span></div>`).join('')}</div>`}
+  $('libBody').innerHTML=h||'<div class="muted">没有这个器材</div>'}
+$('libSearch').oninput=renderLib;
+let tileDrag=null;
+$('libBody').addEventListener('pointerdown',ev=>{const t=ev.target.closest('.tile');if(!t)return;ev.preventDefault();tileDrag={type:t.dataset.type,sx:ev.clientX,sy:ev.clientY};$('ghost').textContent=TYPES[t.dataset.type].label});
+window.addEventListener('pointermove',ev=>{if(!tileDrag)return;const g=$('ghost');g.style.display='block';g.style.left=ev.clientX+8+'px';g.style.top=ev.clientY+8+'px'});
+window.addEventListener('pointerup',ev=>{if(!tileDrag)return;const td=tileDrag;tileDrag=null;$('ghost').style.display='none';
+  const r=svg.getBoundingClientRect();let x,y;
+  if(ev.clientX>=r.left&&ev.clientX<=r.right&&ev.clientY>=r.top&&ev.clientY<=r.bottom&&Math.hypot(ev.clientX-td.sx,ev.clientY-td.sy)>6){[x,y]=toWorld(ev.clientX,ev.clientY)}
+  else if(Math.hypot(ev.clientX-td.sx,ev.clientY-td.sy)<=6){[x,y]=toWorld(r.left+r.width/2-80,r.top+r.height/2-60);x+=Math.random()*40;y+=Math.random()*40}else return;
+  const res=commit({t:'add',type:td.type,x:Math.round(x/10)*10,y:Math.round(y/10)*10});if(res.ok){sel=res.id;cardOpen=true;$('card').dataset.v='';render()}});
+
+/* ========== 实验库（左） + 步骤 ========== */
+function hist(){try{return JSON.parse(localStorage.getItem(LS.hist))||{}}catch(e){return{}}}
+let openXp=null;
+function renderXpList(){const doms=['全部','数与代数','图形与几何','统计与概率'];const q=libQ;
+  let h=`<input class="search" id="xpSearch" placeholder="搜实验 / 知识点" value="${esc(q)}"><div class="chips">${doms.map(d=>`<span class="chip${libFilter===d?' on':''}" data-dom="${d}">${d}</span>`).join('')}</div>`;
+  const H=hist();
+  XP.filter(x=>(libFilter==='全部'||x.domain===libFilter)&&(!q||(x.title+x.tools+x.q).includes(q))).forEach(x=>{const hs=H[x.id];
+    h+=`<div class="xp${openXp===x.id?' on':''}" data-xp="${x.id}"><b>${esc(x.title)}</b><small>${x.grade} 年级 · ${x.domain} · ${x.tools}</small>`;
+    if(openXp===x.id)h+=`<div class="detail">${esc(x.q)}<div style="margin-top:6px">共 ${x.steps.length} 步，满分 ${x.steps.reduce((a,s)=>a+s.score,0)} 分${hs?`<br>考过 ${hs.n} 次，最近 ${hs.last}，最常丢分：${esc(hs.worst||'无')}`:''}</div><div class="row"><button class="btn pri" data-start="practice">练习</button><button class="btn" data-start="exam">考试</button></div></div>`;
+    h+='</div>'});
+  $('paneLib').innerHTML=h;const s=$('xpSearch');s.oninput=()=>{libQ=s.value;renderXpList();const n=$('xpSearch');n.focus();n.setSelectionRange(n.value.length,n.value.length)}}
+$('paneLib').addEventListener('click',ev=>{const c=ev.target.closest('[data-dom]');if(c){libFilter=c.dataset.dom;renderXpList();return}
+  const st=ev.target.closest('[data-start]');if(st){startXp(openXp,st.dataset.start);return}
+  const x=ev.target.closest('[data-xp]');if(x){openXp=openXp===x.dataset.xp?null:x.dataset.xp;renderXpList()}});
+function renderSteps(){const p=$('paneSteps');if(!run){p.innerHTML=`<div class="q">自由探究：没有题，也没有分。把器材拖上台，连一连、调一调，台面会自己告诉你结果。</div><div class="muted">想按步骤做？到“实验库”选一个实验。</div>`;return}
+  const tot=xp.steps.reduce((a,s)=>a+s.score,0);let h=`<div class="q"><b>${esc(xp.title)}</b><div style="margin-top:4px">${esc(xp.q)}</div></div>`;
+  if(mode==='exam'){h+=`<div class="muted">考试：共 ${xp.steps.length} 步，满分 ${tot} 分。没有提示，做完点右上角“提交”。</div><div class="muted" style="margin-top:8px">操作 ${run.ops} 次</div>`}
+  else{const cur=run.steps.findIndex(s=>!s.done);xp.steps.forEach((s,i)=>{const done=run.steps[i].done;h+=`<div class="step${done?' done':''}${i===cur?' cur':''}"><span class="n">${done?'✓':i+1}</span><div>${esc(s.label)}${i===cur?`<div class="hint">提示：${esc(s.hint)}</div>`:''}</div><span class="sc">${s.score} 分</span></div>`})}
+  p.innerHTML=h}
+document.querySelector('.tabs').onclick=ev=>{const b=ev.target.closest('button');if(!b)return;showTab(b.dataset.tab)};
+function showTab(t){document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));$('paneLib').style.display=t==='lib'?'block':'none';$('paneSteps').style.display=t==='steps'?'block':'none'}
+$('toggleLeft').onclick=()=>{$('left').classList.toggle('closed');setTimeout(render,220)};
+
+function startXp(id,m){xp=XP.find(x=>x.id===id);if(!xp)return;mode=m;S=blankScene();xp.build(S);undoSt=[];redoSt=[];sel=null;cardOpen=false;
+  run={steps:xp.steps.map((s,i)=>({i,done:false})),ops:0,errors:0,t0:Date.now(),finished:false};$('title').textContent=xp.title;
+  D=evaluate(S);setModeUi();showTab('steps');fit();if(m==='exam')startTimer();toast(m==='exam'?'考试开始：没有提示，10 分钟':'练习：跟着左边的步骤做，下一步要动的器材会发光')}
+function setModeUi(){document.querySelectorAll('#modeSeg button').forEach(b=>b.classList.toggle('on',b.dataset.mode===mode));
+  $('timer').style.display=$('submit').style.display=mode==='exam'?'inline-block':'none';$('menuBtn').style.display=mode==='practice'?'inline-block':'none';
+  $('whyBtn').style.display=mode==='exam'?'none':'inline-block';stopTimerIf()}
+function stopTimerIf(){if(mode!=='exam'&&timerId){clearInterval(timerId);timerId=null}}
+function startTimer(){clearInterval(timerId);const end=Date.now()+600000;const tick=()=>{const ms=Math.max(0,end-Date.now());$('timer').textContent=`⏱ ${String(Math.floor(ms/60000)).padStart(2,'0')}:${String(Math.floor(ms/1000)%60).padStart(2,'0')}`;if(!ms){clearInterval(timerId);timerId=null;submitExam(true)}};tick();timerId=setInterval(tick,500)}
+function goFree(){mode='free';xp=null;run=null;sel=null;cardOpen=false;try{S=JSON.parse(localStorage.getItem(LS.free))||blankScene()}catch(e){S=blankScene()}undoSt=[];redoSt=[];$('title').textContent='我的实验';setModeUi();showTab('lib');afterChange()}
+$('modeSeg').onclick=ev=>{const b=ev.target.closest('button');if(!b)return;const m=b.dataset.mode;
+  if(m==='free'){if(mode==='exam'&&!confirm('退出考试？这次不计分。'))return;goFree();return}
+  const id=xp?xp.id:(openXp||null);if(!id){$('left').classList.remove('closed');showTab('lib');toast('先在实验库里选一个实验');return}
+  if(mode==='exam'&&m!=='exam'&&!confirm('退出考试？这次不计分。'))return;startXp(id,m)};
+$('menuBtn').onclick=()=>modal(`<h3>练习菜单</h3><div class="row" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-m="re">重置练习</button><button class="btn" data-m="exit">退出练习</button><button class="btn pri" data-m="exam">进入考试</button></div>`);
+$('submit').onclick=()=>submitExam(false);
+function score(){return xp.steps.reduce((a,s,i)=>a+(run.steps[i].done?s.score:0),0)}
+function practiceDone(){modal(`<h3>练习完成 🎉</h3><p>${xp.steps.length} 步全部做对，用了 ${run.ops} 次操作${run.errors?`，有 ${run.errors} 次被台面拒绝`:''}。</p><div class="q"><b>为什么</b><div>${esc(xp.why)}</div></div><div style="display:flex;gap:8px"><button class="btn" data-m="re">再练一次</button><button class="btn pri" data-m="exam">进入考试</button><button class="btn" data-m="lib">返回实验库</button></div>`)}
+function submitExam(auto){if(mode!=='exam'||!run)return;clearInterval(timerId);timerId=null;const tot=xp.steps.reduce((a,s)=>a+s.score,0),sc=score();const used=Math.round((Date.now()-run.t0)/1000);
+  const H=hist(),h=H[xp.id]||{n:0,lost:{}};h.n++;h.last=`${sc}/${tot}`;xp.steps.forEach((s,i)=>{if(!run.steps[i].done)h.lost[s.label]=(h.lost[s.label]||0)+1});const w=Object.entries(h.lost).sort((a,b)=>b[1]-a[1])[0];h.worst=w?w[0]:'';H[xp.id]=h;localStorage.setItem(LS.hist,JSON.stringify(H));
+  const lost=xp.steps.filter((s,i)=>!run.steps[i].done);
+  modal(`<h3>${auto?'时间到，':''}考试报告</h3><div class="score">${sc}<span class="muted" style="font-size:18px"> / ${tot}</span></div><div class="muted">用时 ${Math.floor(used/60)} 分 ${used%60} 秒 · 操作 ${run.ops} 次 · 被拒绝 ${run.errors} 次</div>
+   <ul class="rep">${xp.steps.map((s,i)=>`<li class="${run.steps[i].done?'':'lost'}"><span>${run.steps[i].done?'✓':'×'} ${esc(s.label)}</span><span>${run.steps[i].done?s.score:0}/${s.score}</span></li>`).join('')}</ul>
+   ${lost.length?`<div class="q">丢分在：${lost.map(s=>esc(s.label)).join('；')}。去练习模式把这几步再做一遍。</div>`:'<div class="q">满分！</div>'}
+   <div style="display:flex;gap:8px"><button class="btn pri" data-m="exam">再考一次</button><button class="btn" data-m="practice">回练习</button><button class="btn" data-m="lib">返回实验库</button></div>`);
+  run.finished=true}
+function modal(h){$('modalBox').innerHTML=h;$('modal').style.display='grid'}
+$('modal').onclick=ev=>{const b=ev.target.closest('[data-m]');if(ev.target===$('modal')){$('modal').style.display='none';return}if(!b)return;const m=b.dataset.m,id=xp&&xp.id;$('modal').style.display='none';
+  if(m==='re')startXp(id,'practice');else if(m==='exam')startXp(id,'exam');else if(m==='practice')startXp(id,'practice');else if(m==='exit'||m==='lib')goFree();else if(m==='savefind'){const t=$('findTx').value.trim();if(t){const a=JSON.parse(localStorage.getItem(LS.find)||'[]');a.unshift({t,at:new Date().toLocaleString(),xp:xp?xp.title:'自由探究'});localStorage.setItem(LS.find,JSON.stringify(a.slice(0,50)));toast('记下了')}}};
+$('whyBtn').onclick=()=>{if(!xp){modal('<h3>为什么</h3><p>自由探究没有标准答案。台面上的每个结果都是按数学规律算出来的——试着改一个数，猜猜会发生什么，再看看猜对没有。</p>');return}
+  if(mode==='practice'&&!run.finished){modal(`<h3>为什么</h3><p>先自己做完再看——发现之后再讲，记得更牢。</p>`);return}modal(`<h3>为什么</h3><p>${esc(xp.why)}</p>`)};
+$('findBtn').onclick=()=>{const a=JSON.parse(localStorage.getItem(LS.find)||'[]');modal(`<h3>我的发现</h3><textarea id="findTx" placeholder="我发现……"></textarea><div style="display:flex;gap:8px;margin:8px 0"><button class="btn pri" data-m="savefind">记下来</button></div>${a.slice(0,5).map(f=>`<div class="muted" style="font-size:12px;margin-top:6px">${esc(f.at)} · ${esc(f.xp)}<br><span style="color:var(--tx)">${esc(f.t)}</span></div>`).join('')}`)};
+
+let toastT;function toast(t,err){const el=$('toast');el.textContent=t;el.className=err?'err':'';el.style.display='block';clearTimeout(toastT);toastT=setTimeout(()=>el.style.display='none',2600)}
+window.addEventListener('resize',render);
+renderLib();renderXpList();goFree();
+window.__lab={get S(){return S},act,evaluate,commit,startXp,XP,get run(){return run},submitExam,goFree};
+</script>
+</body>
+</html>

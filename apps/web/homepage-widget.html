@@ -1162,6 +1162,12 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
 /* 为什么 / 我的发现：深色小卡片 */
 #lab .lab-why-box { background:#0f172a; border-color:#263449; color:#e2e8f0; }
 #lab .lab-why-box p { color:#e2e8f0; }
+
+/* 数学实验室：NB 式实验台（lab-nb.html）占满实验室页面；旧的长页面工作间先隐藏，待删除。 */
+#lab > *:not(.labnb-host):not(h2) { display: none !important; }
+#lab > h2 { display: none; }
+.labnb-host { width: 100%; height: calc(100vh - 80px); min-height: 560px; }
+.labnb-host iframe { width: 100%; height: 100%; border: 0; border-radius: 12px; background: #121822; }
 </style>
 </head>
 <body>
@@ -4595,6 +4601,584 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
 
   <!-- 数学实验室（NB 用法）：选问题 → 留在工作间 → MathWorld 算后果；自由玩/挑战同一套器材 -->
   <section id="lab" class="section wrap">
+    <div class="labnb-host"><iframe id="labNbFrame" title="数学实验台（NB 式）" srcdoc="&lt;!doctype html&gt;
+&lt;html lang=&quot;zh-CN&quot;&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1,maximum-scale=1&quot;&gt;
+&lt;title&gt;数学实验室 · 工作台&lt;/title&gt;
+&lt;style&gt;
+:root{--bar:#121822;--panel:#18202c;--panel2:#202a38;--line:#2c3848;--stage:#1b2431;--grid:#232e3d;--tx:#e6ecf3;--mut:#8a98ab;--acc:#3b9cff;--ok:#2fbf71;--warn:#f0a63a;--err:#ff5b5b;--card:#f6f8fb;--ink:#1d2633}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bar);color:var(--tx);font:14px/1.45 &quot;PingFang SC&quot;,&quot;Microsoft YaHei&quot;,&quot;Noto Sans SC&quot;,sans-serif;overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+#app{display:grid;grid-template-rows:52px 1fr;grid-template-columns:auto 1fr 248px;height:100%}
+/* 顶栏 */
+#top{grid-column:1/4;display:flex;align-items:center;gap:10px;padding:0 12px;background:var(--bar);border-bottom:1px solid var(--line)}
+#top .logo{font-weight:700;letter-spacing:.5px;margin-right:6px}
+#title{min-width:120px;max-width:340px;padding:4px 8px;border-radius:6px;outline:0;white-space:nowrap;overflow:hidden}
+#title:hover,#title:focus{background:var(--panel2)}
+.seg{display:flex;background:var(--panel2);border-radius:8px;padding:3px}
+.seg button{padding:5px 12px;border-radius:6px;color:var(--mut)}
+.seg button.on{background:var(--acc);color:#fff}
+.tb{padding:6px 10px;border-radius:7px;color:var(--mut)}.tb:hover{background:var(--panel2);color:var(--tx)}
+.tb[disabled]{opacity:.35;pointer-events:none}
+.sp{flex:1}
+#timer{font-variant-numeric:tabular-nums;padding:5px 10px;border-radius:7px;background:#2a1f1f;color:#ffb4b4;display:none}
+#submit{display:none;background:var(--err);color:#fff;padding:6px 14px;border-radius:7px;font-weight:600}
+#menuBtn{display:none}
+/* 左栏 */
+#left{grid-row:2;width:300px;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;transition:width .2s}
+#left.closed{width:0;overflow:hidden;border:0}
+.tabs{display:flex;border-bottom:1px solid var(--line)}
+.tabs button{flex:1;padding:11px 0;color:var(--mut);border-bottom:2px solid transparent}
+.tabs button.on{color:var(--tx);border-color:var(--acc)}
+.pane{flex:1;overflow:auto;padding:12px;min-height:0}
+.search{width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--tx);outline:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.chip{padding:3px 10px;border-radius:999px;background:var(--panel2);color:var(--mut);font-size:12px}
+.chip.on{background:#1f3b5c;color:#cfe6ff}
+.xp{padding:10px 12px;border-radius:10px;background:var(--panel2);margin-bottom:8px;cursor:pointer;border:1px solid transparent}
+.xp:hover{border-color:var(--line)}.xp.on{border-color:var(--acc)}
+.xp b{display:block;margin-bottom:3px}.xp small{color:var(--mut)}
+.detail{margin-top:6px;padding-top:8px;border-top:1px dashed var(--line);color:var(--mut);font-size:13px}
+.detail .row{display:flex;gap:8px;margin-top:8px}
+.btn{padding:7px 12px;border-radius:8px;background:var(--panel);border:1px solid var(--line);color:var(--tx)}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+.btn.red{background:var(--err);border-color:var(--err);color:#fff}
+.step{display:flex;gap:10px;padding:10px;border-radius:10px;margin-bottom:8px;background:var(--panel2);border:1px solid transparent}
+.step .n{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--line);font-size:12px}
+.step.done .n{background:var(--ok);color:#fff}.step.cur{border-color:var(--acc)}
+.step.cur .n{background:var(--acc);color:#fff}
+.step .hint{color:#9fd0ff;font-size:12px;margin-top:4px}
+.step .sc{margin-left:auto;color:var(--mut);font-size:12px;flex:none}
+.muted{color:var(--mut)}
+.q{padding:10px 12px;border-radius:10px;background:#1f3047;margin-bottom:12px}
+/* 舞台 */
+#stageWrap{grid-row:2;position:relative;overflow:hidden;background:var(--stage)}
+#stage{position:absolute;inset:0;width:100%;height:100%;display:block}
+#stage.panning{cursor:grabbing}
+.ent-body{fill:var(--card);stroke:#c9d3df;stroke-width:1}
+.ent.sel .ent-body{stroke:#9aa9bb}
+.ent.err .ent-body{stroke:var(--err);stroke-width:2}
+.ent.ok .ent-body{stroke:var(--ok);stroke-width:2}
+.ent.is-next .ent-body{stroke:var(--acc);stroke-width:3;animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{stroke-opacity:.35}}
+.selbox{fill:none;stroke:#cfd8e3;stroke-dasharray:5 4;stroke-width:1.5;pointer-events:none}
+.ttl{fill:#6b7889;font-size:12px}
+.big{fill:var(--ink);font-weight:700}
+.ink{fill:var(--ink)}
+.port-out{fill:var(--acc);stroke:#fff;stroke-width:2;cursor:crosshair}
+.port-out:hover{r:9}
+.port-in{fill:#fff;stroke:#9aa9bb;stroke-width:2;pointer-events:none}
+.link{fill:none;stroke:#7fc1ff;stroke-width:2.5;stroke-dasharray:7 6;animation:flow 0.9s linear infinite;pointer-events:none}
+.link.sel{stroke:#ffd166;stroke-width:3.5}
+.linkhit{fill:none;stroke:transparent;stroke-width:14;cursor:pointer}
+.templink{fill:none;stroke:#ffd166;stroke-width:2;stroke-dasharray:4 4;pointer-events:none}
+@keyframes flow{to{stroke-dashoffset:-13}}
+.flowline{stroke-dasharray:8 6;animation:flow 0.9s linear infinite}
+.seg-cell{cursor:pointer}
+.pill rect{rx:10}
+.pill text{font-size:12px}
+/* 浮动 */
+#tools{position:absolute;display:none;flex-direction:column;gap:2px;background:#0f141c;border-radius:8px;padding:4px;box-shadow:0 6px 18px #0008}
+#tools button{width:32px;height:32px;border-radius:6px;font-size:15px}
+#tools button:hover{background:var(--panel2)}
+#card{position:absolute;display:none;width:250px;background:#0f141cf2;border:1px solid var(--line);border-radius:12px;padding:12px;box-shadow:0 10px 28px #000a}
+#card h4{margin:0 0 8px;font-size:13px;color:var(--mut);font-weight:500}
+#card .state{font-size:20px;font-weight:700;margin-bottom:8px}
+.fld{margin:8px 0}.fld label{display:flex;justify-content:space-between;font-size:12px;color:var(--mut)}
+.fld .ctl{display:flex;align-items:center;gap:6px;margin-top:4px}
+.fld input[type=range]{flex:1;accent-color:var(--acc)}
+.fld input[type=number],#card .name{width:58px;padding:4px 6px;border-radius:6px;border:1px solid var(--line);background:var(--panel2);color:var(--tx);outline:0}
+#card .name{width:100%;margin-bottom:6px}
+.pm{width:26px;height:26px;border-radius:6px;background:var(--panel2)}
+.card-row{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.card-row .btn{padding:5px 9px;font-size:12px}
+#zoom{position:absolute;left:12px;bottom:12px;display:flex;gap:2px;background:#0f141cd9;border-radius:9px;padding:3px;align-items:center}
+#zoom button{min-width:30px;padding:0 6px;height:28px;border-radius:6px}#zoom button:hover{background:var(--panel2)}
+#zoom span{min-width:46px;text-align:center;font-size:12px;color:var(--mut)}
+#corner{position:absolute;right:12px;bottom:12px;display:flex;gap:8px}
+#corner .btn{background:#0f141cd9}
+#toast{position:absolute;left:50%;top:14px;transform:translateX(-50%);padding:8px 14px;border-radius:9px;background:#0f141cf0;border:1px solid var(--line);display:none;max-width:70%}
+#toast.err{border-color:var(--err);color:#ffc2c2}
+#empty{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;color:#5d6b7e;text-align:center}
+/* 器材架 */
+#lib{grid-row:2;background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+#lib .hd{padding:12px;border-bottom:1px solid var(--line)}
+#lib .body{flex:1;overflow:auto;padding:10px 12px}
+.grp{font-size:12px;color:var(--mut);margin:10px 0 6px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tile{background:var(--panel2);border-radius:10px;padding:8px 6px;text-align:center;cursor:grab;border:1px solid transparent;touch-action:none}
+.tile:hover{border-color:var(--acc)}
+.tile svg{display:block;margin:0 auto 4px}
+.tile span{font-size:12px}
+#ghost{position:fixed;pointer-events:none;display:none;padding:6px 10px;border-radius:8px;background:var(--acc);color:#fff;font-size:12px;z-index:9}
+/* 弹窗 */
+#modal{position:fixed;inset:0;background:#0009;display:none;place-items:center;z-index:10}
+#modal .box{width:min(460px,92vw);background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}
+#modal h3{margin:0 0 10px}
+.score{font-size:40px;font-weight:800}
+.rep{margin:10px 0;padding:0;list-style:none}.rep li{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)}
+.rep .lost{color:#ffb4b4}
+textarea{width:100%;min-height:90px;background:var(--panel2);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px;font:inherit}
+@media (max-width:900px){#app{grid-template-columns:auto 1fr 0}#lib{display:none}#left{width:260px}}
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div id=&quot;app&quot;&gt;
+  &lt;header id=&quot;top&quot;&gt;
+    &lt;button class=&quot;tb&quot; id=&quot;toggleLeft&quot; title=&quot;实验库/步骤&quot;&gt;≡&lt;/button&gt;
+    &lt;span class=&quot;logo&quot;&gt;数学实验室&lt;/span&gt;
+    &lt;div id=&quot;title&quot; contenteditable=&quot;true&quot; spellcheck=&quot;false&quot;&gt;我的实验&lt;/div&gt;
+    &lt;div class=&quot;seg&quot; id=&quot;modeSeg&quot;&gt;
+      &lt;button data-mode=&quot;free&quot; class=&quot;on&quot;&gt;自由探究&lt;/button&gt;
+      &lt;button data-mode=&quot;practice&quot;&gt;练习&lt;/button&gt;
+      &lt;button data-mode=&quot;exam&quot;&gt;考试&lt;/button&gt;
+    &lt;/div&gt;
+    &lt;button class=&quot;tb&quot; id=&quot;menuBtn&quot;&gt;菜单&lt;/button&gt;
+    &lt;span class=&quot;sp&quot;&gt;&lt;/span&gt;
+    &lt;button class=&quot;tb&quot; id=&quot;undo&quot; title=&quot;撤销 Ctrl+Z&quot;&gt;撤销&lt;/button&gt;
+    &lt;button class=&quot;tb&quot; id=&quot;redo&quot; title=&quot;重做 Ctrl+Y&quot;&gt;重做&lt;/button&gt;
+    &lt;button class=&quot;tb&quot; id=&quot;tidy&quot; title=&quot;一键整理&quot;&gt;整理&lt;/button&gt;
+    &lt;button class=&quot;tb&quot; id=&quot;clear&quot;&gt;清空台面&lt;/button&gt;
+    &lt;span id=&quot;timer&quot;&gt;10:00&lt;/span&gt;
+    &lt;button id=&quot;submit&quot;&gt;提交&lt;/button&gt;
+  &lt;/header&gt;
+
+  &lt;aside id=&quot;left&quot;&gt;
+    &lt;div class=&quot;tabs&quot;&gt;&lt;button data-tab=&quot;lib&quot; class=&quot;on&quot;&gt;实验库&lt;/button&gt;&lt;button data-tab=&quot;steps&quot;&gt;步骤&lt;/button&gt;&lt;/div&gt;
+    &lt;div class=&quot;pane&quot; id=&quot;paneLib&quot;&gt;&lt;/div&gt;
+    &lt;div class=&quot;pane&quot; id=&quot;paneSteps&quot; style=&quot;display:none&quot;&gt;&lt;/div&gt;
+  &lt;/aside&gt;
+
+  &lt;main id=&quot;stageWrap&quot;&gt;
+    &lt;svg id=&quot;stage&quot;&gt;&lt;defs&gt;
+      &lt;pattern id=&quot;gridS&quot; width=&quot;20&quot; height=&quot;20&quot; patternUnits=&quot;userSpaceOnUse&quot;&gt;&lt;path d=&quot;M20 0H0V20&quot; fill=&quot;none&quot; stroke=&quot;#212b39&quot; stroke-width=&quot;1&quot;/&gt;&lt;/pattern&gt;
+      &lt;pattern id=&quot;gridL&quot; width=&quot;100&quot; height=&quot;100&quot; patternUnits=&quot;userSpaceOnUse&quot;&gt;&lt;rect width=&quot;100&quot; height=&quot;100&quot; fill=&quot;url(#gridS)&quot;/&gt;&lt;path d=&quot;M100 0H0V100&quot; fill=&quot;none&quot; stroke=&quot;#283446&quot; stroke-width=&quot;1&quot;/&gt;&lt;/pattern&gt;
+      &lt;filter id=&quot;sh&quot; x=&quot;-10%&quot; y=&quot;-10%&quot; width=&quot;120%&quot; height=&quot;130%&quot;&gt;&lt;feDropShadow dx=&quot;0&quot; dy=&quot;3&quot; stdDeviation=&quot;4&quot; flood-color=&quot;#000&quot; flood-opacity=&quot;.35&quot;/&gt;&lt;/filter&gt;
+    &lt;/defs&gt;&lt;rect id=&quot;bg&quot; width=&quot;100%&quot; height=&quot;100%&quot; fill=&quot;url(#gridL)&quot;/&gt;&lt;g id=&quot;world&quot;&gt;&lt;/g&gt;&lt;/svg&gt;
+    &lt;div id=&quot;empty&quot;&gt;&lt;div&gt;&lt;div style=&quot;font-size:18px;margin-bottom:6px&quot;&gt;台面是空的&lt;/div&gt;从右边器材架拖一个器材上来，或在左边选一个实验&lt;/div&gt;&lt;/div&gt;
+    &lt;div id=&quot;tools&quot;&gt;&lt;/div&gt;
+    &lt;div id=&quot;card&quot;&gt;&lt;/div&gt;
+    &lt;div id=&quot;zoom&quot;&gt;&lt;button id=&quot;zOut&quot;&gt;−&lt;/button&gt;&lt;span id=&quot;zVal&quot;&gt;100%&lt;/span&gt;&lt;button id=&quot;zIn&quot;&gt;+&lt;/button&gt;&lt;button id=&quot;zFit&quot; title=&quot;适应&quot;&gt;适应&lt;/button&gt;&lt;/div&gt;
+    &lt;div id=&quot;corner&quot;&gt;&lt;button class=&quot;btn&quot; id=&quot;whyBtn&quot;&gt;💡 为什么&lt;/button&gt;&lt;button class=&quot;btn&quot; id=&quot;findBtn&quot;&gt;📝 我的发现&lt;/button&gt;&lt;/div&gt;
+    &lt;div id=&quot;toast&quot;&gt;&lt;/div&gt;
+  &lt;/main&gt;
+
+  &lt;aside id=&quot;lib&quot;&gt;
+    &lt;div class=&quot;hd&quot;&gt;&lt;input class=&quot;search&quot; id=&quot;libSearch&quot; placeholder=&quot;搜索器材&quot;&gt;&lt;/div&gt;
+    &lt;div class=&quot;body&quot; id=&quot;libBody&quot;&gt;&lt;/div&gt;
+  &lt;/aside&gt;
+&lt;/div&gt;
+&lt;div id=&quot;ghost&quot;&gt;&lt;/div&gt;
+&lt;div id=&quot;modal&quot;&gt;&lt;div class=&quot;box&quot; id=&quot;modalBox&quot;&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;script&gt;
+&#x27;use strict&#x27;;
+/* ========== 精确有理数 ========== */
+const gcd=(a,b)=&gt;{a=Math.abs(a);b=Math.abs(b);while(b){[a,b]=[b,a%b]}return a||1};
+const lcm=(a,b)=&gt;a/gcd(a,b)*b;
+function Q(n,d=1){if(!Number.isInteger(n)||!Number.isInteger(d)||d===0)throw new Error(&#x27;bad-number&#x27;);if(d&lt;0){n=-n;d=-d}const g=gcd(n,d);return{n:n/g,d:d/g}}
+const qadd=(a,b)=&gt;Q(a.n*b.d+b.n*a.d,a.d*b.d), qsub=(a,b)=&gt;Q(a.n*b.d-b.n*a.d,a.d*b.d);
+const qeq=(a,b)=&gt;a.n===b.n&amp;&amp;a.d===b.d, qnum=a=&gt;a.n/a.d, qs=a=&gt;a.d===1?String(a.n):a.n+&#x27;/&#x27;+a.d;
+
+/* ========== 器材注册表：每种器材 = 属性 + 端口 + 引擎规则 + 画法 ========== */
+const TYPES={
+ num:{label:&#x27;数字卡&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;数&#x27;,out:&#x27;value&#x27;,defaults:{v:3},
+   fields:[{k:&#x27;v&#x27;,label:&#x27;值&#x27;,min:-10,max:20}],size:()=&gt;[96,62]},
+ frac:{label:&#x27;分数条&#x27;,group:&#x27;分数&#x27;,prefix:&#x27;分数条&#x27;,out:&#x27;value&#x27;,defaults:{n:1,d:2},
+   fields:[{k:&#x27;n&#x27;,label:&#x27;分子（涂几份）&#x27;,min:0,max:24},{k:&#x27;d&#x27;,label:&#x27;分母（平均分成几份）&#x27;,min:1,max:12}],
+   size:e=&gt;[176,34+Math.max(1,Math.ceil(e.props.n/e.props.d))*28]},
+ adder:{label:&#x27;合并器&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;合并器&#x27;,out:&#x27;value&#x27;,accepts:&#x27;value&#x27;,defaults:{},fields:[],size:()=&gt;[170,84]},
+ numline:{label:&#x27;数轴&#x27;,group:&#x27;关系&#x27;,prefix:&#x27;数轴&#x27;,accepts:&#x27;value&#x27;,defaults:{min:0,max:2},
+   fields:[{k:&#x27;min&#x27;,label:&#x27;最左&#x27;,min:-10,max:10},{k:&#x27;max&#x27;,label:&#x27;最右&#x27;,min:-9,max:20}],size:()=&gt;[460,118]},
+ balance:{label:&#x27;天平&#x27;,group:&#x27;关系&#x27;,prefix:&#x27;天平&#x27;,accepts:&#x27;value&#x27;,slots:true,defaults:{},fields:[],size:()=&gt;[340,200]},
+ fn:{label:&#x27;直线&#x27;,group:&#x27;函数&#x27;,prefix:&#x27;直线&#x27;,out:&#x27;fn&#x27;,defaults:{k:2,b:1},
+   fields:[{k:&#x27;k&#x27;,label:&#x27;k（斜率：x 加 1，y 加几）&#x27;,min:-5,max:5},{k:&#x27;b&#x27;,label:&#x27;b（和 y 轴交在哪）&#x27;,min:-10,max:10}],size:()=&gt;[160,64]},
+ coord:{label:&#x27;坐标平面&#x27;,group:&#x27;函数&#x27;,prefix:&#x27;坐标平面&#x27;,accepts:&#x27;fn&#x27;,defaults:{},fields:[],size:()=&gt;[340,360]},
+ rect:{label:&#x27;长方形&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;长方形&#x27;,defaults:{w:4,h:3},rotate:true,
+   fields:[{k:&#x27;w&#x27;,label:&#x27;宽&#x27;,min:1,max:12},{k:&#x27;h&#x27;,label:&#x27;长&#x27;,min:1,max:12}],size:e=&gt;[Math.max(150,e.props.w*20+40),e.props.h*20+84]},
+ dice:{label:&#x27;两个骰子&#x27;,group:&#x27;概率&#x27;,prefix:&#x27;骰子&#x27;,defaults:{times:100,counts:null},
+   fields:[{k:&#x27;times&#x27;,label:&#x27;一次掷几回&#x27;,min:10,max:2000,step:10}],actions:[{id:&#x27;roll&#x27;,label:&#x27;🎲 掷&#x27;},{id:&#x27;reset&#x27;,label:&#x27;清零&#x27;}],size:()=&gt;[320,210]},
+};
+const GROUP_ORDER=[&#x27;数与运算&#x27;,&#x27;分数&#x27;,&#x27;关系&#x27;,&#x27;函数&#x27;,&#x27;图形&#x27;,&#x27;概率&#x27;];
+
+/* ========== 世界：一张台面 = 物体 + 连线（场景图） ========== */
+let S=blankScene(); // {entities:{id:{id,type,name,x,y,props}}, links:[{id,from,to,slot}], seq:{}}
+function blankScene(){return{entities:{},links:[],seq:{},nid:1}}
+const clone=o=&gt;JSON.parse(JSON.stringify(o));
+function addEnt(s,type,x,y,props){const T=TYPES[type];const id=&#x27;e&#x27;+(s.nid++);s.seq[type]=(s.seq[type]||0)+1;
+  s.entities[id]={id,type,name:T.prefix+s.seq[type],x,y,props:Object.assign(clone(T.defaults),props||{})};return id}
+function addLink(s,from,to,slot){s.links.push({id:&#x27;l&#x27;+(s.nid++),from,to,slot:slot||null})}
+const inputs=(s,id)=&gt;s.links.filter(l=&gt;l.to===id);
+function reach(s,a,b){const seen={};const st=[a];while(st.length){const c=st.pop();if(c===b)return true;if(seen[c])continue;seen[c]=1;s.links.filter(l=&gt;l.from===c).forEach(l=&gt;st.push(l.to))}return false}
+
+/* 动作（意图）。所有改动都走这里：校验 → 改 → 引擎重算。返回 {ok, why} */
+function act(a){
+  const s=S,E=s.entities;
+  try{
+  switch(a.t){
+  case &#x27;add&#x27;:{const id=addEnt(s,a.type,a.x,a.y,a.props);return{ok:1,id}}
+  case &#x27;move&#x27;:{const e=E[a.id];e.x=a.x;e.y=a.y;return{ok:1}}
+  case &#x27;del&#x27;:{if(E[a.id]){delete E[a.id];s.links=s.links.filter(l=&gt;l.from!==a.id&amp;&amp;l.to!==a.id)}else s.links=s.links.filter(l=&gt;l.id!==a.id);return{ok:1}}
+  case &#x27;dup&#x27;:{const e=E[a.id];const id=addEnt(s,e.type,e.x+30,e.y+30,clone(e.props));return{ok:1,id}}
+  case &#x27;rename&#x27;:{E[a.id].name=String(a.name).slice(0,16)||E[a.id].name;return{ok:1}}
+  case &#x27;rotate&#x27;:{const p=E[a.id].props;[p.w,p.h]=[p.h,p.w];return{ok:1}}
+  case &#x27;reset&#x27;:{E[a.id].props=clone(TYPES[E[a.id].type].defaults);return{ok:1}}
+  case &#x27;set&#x27;:{const e=E[a.id],T=TYPES[e.type],f=T.fields.find(f=&gt;f.k===a.k);let v=Number(a.v);
+    if(!Number.isFinite(v)||!Number.isInteger(v/(f.step||1)))return{ok:0,why:&#x27;只能填整数&#x27;};
+    if(v&lt;f.min||v&gt;f.max)return{ok:0,why:`${f.label.replace(/（.*/,&#x27;&#x27;)}只能在 ${f.min} 到 ${f.max} 之间`};
+    if(e.type===&#x27;numline&#x27;){const o=Object.assign({},e.props,{[a.k]:v});if(o.max-o.min&lt;1)return{ok:0,why:&#x27;最右要比最左大&#x27;};if(o.max-o.min&gt;20)return{ok:0,why:&#x27;数轴最长 20 格&#x27;}}
+    e.props[a.k]=v;return{ok:1}}
+  case &#x27;link&#x27;:{const f=E[a.from],to=E[a.to];if(!f||!to||a.from===a.to)return{ok:0,why:&#x27;连到另一个器材上&#x27;};
+    const out=TYPES[f.type].out,acc=TYPES[to.type].accepts;
+    if(!acc)return{ok:0,why:`${to.name} 不接收输入`};
+    if(out!==acc)return{ok:0,why:out===&#x27;fn&#x27;?&#x27;直线只能连到坐标平面上&#x27;:`${to.name} 只接收直线，不接收数`};
+    if(s.links.some(l=&gt;l.from===a.from&amp;&amp;l.to===a.to))return{ok:0,why:&#x27;已经连过了&#x27;};
+    if(reach(s,a.to,a.from))return{ok:0,why:&#x27;不能连成一个圈&#x27;};
+    if(to.type===&#x27;balance&#x27;&amp;&amp;inputs(s,a.to).filter(l=&gt;l.slot===a.slot).length&gt;=5)return{ok:0,why:&#x27;一个盘最多放 5 个&#x27;};
+    if(to.type===&#x27;numline&#x27;&amp;&amp;inputs(s,a.to).length&gt;=6)return{ok:0,why:&#x27;数轴上最多 6 个点&#x27;};
+    addLink(s,a.from,a.to,to.type===&#x27;balance&#x27;?a.slot:null);return{ok:1}}
+  case &#x27;roll&#x27;:{const e=E[a.id];const c=e.props.counts||Array(13).fill(0);for(let i=0;i&lt;e.props.times;i++){c[1+Math.ceil(Math.random()*6)+Math.ceil(Math.random()*6)-1]++}e.props.counts=c;return{ok:1}}
+  case &#x27;segclick&#x27;:{const p=E[a.id].props;p.n=(p.n===a.k?a.k-1:a.k);return{ok:1}}
+  }}catch(err){return{ok:0,why:&#x27;这个数不合法&#x27;}}
+  return{ok:0,why:&#x27;不认识的操作&#x27;};
+}
+
+/* ========== 引擎：只有这里算后果。纯函数 scene → derived ========== */
+function evaluate(s){
+  const E=s.entities,vals={},busy={},D={};
+  const val=id=&gt;{if(id in vals)return vals[id];if(busy[id])return null;busy[id]=1;const e=E[id];let v=null;
+    if(e.type===&#x27;num&#x27;)v=Q(e.props.v);else if(e.type===&#x27;frac&#x27;)v=Q(e.props.n,e.props.d);
+    else if(e.type===&#x27;adder&#x27;){v=Q(0);for(const l of inputs(s,id)){const x=val(l.from);if(x)v=qadd(v,x)}}
+    return vals[id]=v};
+  for(const id in E){const e=E[id],d=D[id]={read:[],sig:[]};
+    const sig=(lv,tx)=&gt;d.sig.push({lv,tx});
+    if(TYPES[e.type].out===&#x27;value&#x27;)d.value=val(id);
+    if(e.type===&#x27;frac&#x27;){const v=d.value;if(e.props.n&gt;e.props.d)sig(&#x27;info&#x27;,`比 1 大：${qs(v)} = ${Math.floor(e.props.n/e.props.d)} 又 ${e.props.n%e.props.d}/${e.props.d}`);else if(v.d!==e.props.d)sig(&#x27;info&#x27;,`${e.props.n}/${e.props.d} 和 ${qs(v)} 一样大`)}
+    if(e.type===&#x27;adder&#x27;){const ins=inputs(s,id).map(l=&gt;val(l.from)).filter(Boolean);d.terms=ins;
+      if(!ins.length)sig(&#x27;info&#x27;,&#x27;把几个数连进来，这里算它们的和&#x27;);
+      else{const ds=[...new Set(ins.map(q=&gt;q.d))];if(ds.length&gt;1){const L=ds.reduce(lcm);sig(&#x27;info&#x27;,`分母不同：都换成 ${L} 份再加`)}}}
+    if(e.type===&#x27;numline&#x27;){const {min,max}=e.props;d.pts=inputs(s,id).map(l=&gt;({from:l.from,v:val(l.from)})).filter(p=&gt;p.v);
+      d.pts.forEach(p=&gt;{p.out=qnum(p.v)&lt;min||qnum(p.v)&gt;max;if(p.out)sig(&#x27;err&#x27;,`${qs(p.v)} 放不下：数轴只从 ${min} 到 ${max}`)});
+      const ins=d.pts.filter(p=&gt;!p.out);
+      if(ins.length&gt;=2){const a=ins[0].v,b=ins[1].v,g=qsub(a,b);const gap=g.n&lt;0?Q(-g.n,g.d):g;
+        if(gap.n===0)sig(&#x27;ok&#x27;,`${qs(a)} 和 ${qs(b)} 落在同一点：一样大`);else sig(&#x27;info&#x27;,`${E[ins[0].from].name} 和 ${E[ins[1].from].name} 相差 ${qs(gap)}`)}}
+    if(e.type===&#x27;balance&#x27;){const L=inputs(s,id).filter(l=&gt;l.slot===&#x27;L&#x27;),R=inputs(s,id).filter(l=&gt;l.slot===&#x27;R&#x27;);
+      const sum=a=&gt;a.reduce((t,l)=&gt;{const v=val(l.from);return v?qadd(t,v):t},Q(0));d.L=sum(L);d.R=sum(R);d.Ln=L;d.Rn=R;
+      const df=qsub(d.L,d.R);d.tilt=-Math.max(-16,Math.min(16,qnum(df)*14));d.equal=df.n===0;
+      if(!L.length&amp;&amp;!R.length)sig(&#x27;info&#x27;,&#x27;把数连到左盘或右盘&#x27;);
+      else if(d.equal&amp;&amp;L.length&amp;&amp;R.length)sig(&#x27;ok&#x27;,`平了：左 ${qs(d.L)} = 右 ${qs(d.R)}`);
+      else{const m=df.n&lt;0?Q(-df.n,df.d):df;sig(&#x27;warn&#x27;,`${df.n&gt;0?&#x27;左&#x27;:&#x27;右&#x27;}边重 ${qs(m)}`)}}
+    if(e.type===&#x27;coord&#x27;){d.fns=inputs(s,id).map(l=&gt;E[l.from]);
+      if(!d.fns.length)sig(&#x27;info&#x27;,&#x27;把直线连进来&#x27;);
+      d.fns.forEach(f=&gt;{const {k,b}=f.props;sig(&#x27;info&#x27;,`${f.name}：y = ${fx(k,b)}，${k&gt;0?&#x27;往右上升&#x27;:k&lt;0?&#x27;往右下倒&#x27;:&#x27;水平&#x27;}，过 (0, ${b})`)});
+      if(d.fns.length&gt;=2){const [f,g]=d.fns;if(f.props.k===g.props.k)sig(f.props.b===g.props.b?&#x27;ok&#x27;:&#x27;warn&#x27;,f.props.b===g.props.b?&#x27;两条线重合&#x27;:&#x27;k 一样：两条线平行，永远不相交&#x27;);
+        else{const x=Q(g.props.b-f.props.b,f.props.k-g.props.k);const y=qadd(Q(f.props.k*x.n,x.d),Q(f.props.b));sig(&#x27;ok&#x27;,`交点 (${qs(x)}, ${qs(y)})`)}}}
+    if(e.type===&#x27;rect&#x27;){const {w,h}=e.props;d.per=2*(w+h);d.area=w*h;if(w===h)sig(&#x27;ok&#x27;,`是正方形：周长 ${d.per}，面积 ${d.area}`);else sig(&#x27;info&#x27;,`周长 ${d.per}，面积 ${d.area}`)}
+    if(e.type===&#x27;dice&#x27;){const c=e.props.counts;if(!c)sig(&#x27;info&#x27;,&#x27;点“掷”开始&#x27;);else{const tot=c.reduce((a,b)=&gt;a+b,0);let best=2;for(let i=2;i&lt;=12;i++)if(c[i]&gt;c[best])best=i;d.tot=tot;sig(&#x27;info&#x27;,`掷了 ${tot} 回，出现最多的是 ${best}`)}}
+  }
+  return D;
+}
+function fx(k,b){const kx=k===0?&#x27;&#x27;:k===1?&#x27;x&#x27;:k===-1?&#x27;−x&#x27;:(k&lt;0?&#x27;−&#x27;:&#x27;&#x27;)+Math.abs(k)+&#x27;x&#x27;;const bs=b===0?(kx?&#x27;&#x27;:&#x27;0&#x27;):(b&lt;0?(kx?&#x27; − &#x27;:&#x27;−&#x27;)+Math.abs(b):(kx?&#x27; + &#x27;:&#x27;&#x27;)+b);return kx+bs}
+
+/* ========== 实验库：实验 = 器材摆放 + 带分值的步骤（步骤是对台面状态的判定） ========== */
+const XP=[
+ {id:&#x27;fracadd&#x27;,title:&#x27;分母不一样，分数能直接加吗？&#x27;,domain:&#x27;数与代数&#x27;,grade:5,tools:&#x27;分数条 · 合并器 · 数轴&#x27;,
+  q:&#x27;有人说 1/2 + 1/3 = 2/5（分子加分子，分母加分母）。在数轴上看看对不对。&#x27;,
+  why:&#x27;分数是“一份有多大”。1/2 和 1/3 的一份不一样大，不能直接数份数；都切成 6 份，就是 3/6 + 2/6 = 5/6。2/5 比 1/2 还小，加了一个数反而变小了，所以一定错。&#x27;,
+  build(s){const a=addEnt(s,&#x27;frac&#x27;,60,60,{n:1,d:2}),b=addEnt(s,&#x27;frac&#x27;,60,190,{n:1,d:3});addEnt(s,&#x27;adder&#x27;,330,110);addEnt(s,&#x27;numline&#x27;,120,340,{min:0,max:2});},
+  steps:[
+   {label:&#x27;把 1/2 和 1/3 都连到合并器&#x27;,score:2,hint:&#x27;拖分数条右边的蓝点，连到合并器上&#x27;,target:s=&gt;byType(s,&#x27;adder&#x27;),
+    check:(s,D)=&gt;{const ad=byType(s,&#x27;adder&#x27;);return ad&amp;&amp;inputs(s,ad).length&gt;=2&amp;&amp;D[ad].value&amp;&amp;qeq(D[ad].value,Q(5,6))}},
+   {label:&#x27;把合并器连到数轴，看和落在哪&#x27;,score:1,hint:&#x27;合并器的蓝点 → 数轴&#x27;,target:s=&gt;byType(s,&#x27;numline&#x27;),
+    check:s=&gt;{const ad=byType(s,&#x27;adder&#x27;),nl=byType(s,&#x27;numline&#x27;);return s.links.some(l=&gt;l.from===ad&amp;&amp;l.to===nl)}},
+   {label:&#x27;再拿一张分数条，调成 2/5，也连到数轴&#x27;,score:2,hint:&#x27;从右边器材架拖一张分数条；点它，在属性卡里把分子调成 2、分母调成 5&#x27;,target:s=&gt;byType(s,&#x27;numline&#x27;),
+    check:(s,D)=&gt;{const nl=byType(s,&#x27;numline&#x27;);return inputs(s,nl).some(l=&gt;s.entities[l.from].type===&#x27;frac&#x27;&amp;&amp;qeq(D[l.from].value,Q(2,5)))}},
+   {label:&#x27;调一张分数条，让它和合并器落在同一点&#x27;,score:2,hint:&#x27;试试分母是 6 的分数&#x27;,target:s=&gt;byType(s,&#x27;numline&#x27;),
+    check:(s,D)=&gt;{const nl=byType(s,&#x27;numline&#x27;);return inputs(s,nl).some(l=&gt;s.entities[l.from].type===&#x27;frac&#x27;&amp;&amp;qeq(D[l.from].value,Q(5,6)))}},
+  ]},
+ {id:&#x27;balfrac&#x27;,title:&#x27;天平左边放 3/4，右边放什么能平？&#x27;,domain:&#x27;数与代数&#x27;,grade:5,tools:&#x27;天平 · 分数条&#x27;,
+  q:&#x27;左盘已经放了 3/4。用台上的分数条让天平平，再找一种只用一张分数条的方法。&#x27;,
+  why:&#x27;天平平 = 两边一样大。1/2 + 1/4 = 2/4 + 1/4 = 3/4；6/8 也和 3/4 一样大——分子分母同时乘 2，大小不变。&#x27;,
+  build(s){const b=addEnt(s,&#x27;balance&#x27;,300,150);const f=addEnt(s,&#x27;frac&#x27;,60,60,{n:3,d:4});addLink(s,f,b,&#x27;L&#x27;);addEnt(s,&#x27;frac&#x27;,60,170,{n:1,d:2});addEnt(s,&#x27;frac&#x27;,60,260,{n:1,d:4});},
+  steps:[
+   {label:&#x27;把 1/2 连到右盘&#x27;,score:1,hint:&#x27;把 1/2 的蓝点拖到天平的右半边&#x27;,target:s=&gt;byType(s,&#x27;balance&#x27;),
+    check:(s,D)=&gt;{const b=byType(s,&#x27;balance&#x27;);return D[b].Rn.some(l=&gt;qeq(D[l.from].value,Q(1,2)))}},
+   {label:&#x27;让天平平&#x27;,score:2,hint:&#x27;右边还差多少？看天平下面的提示&#x27;,target:s=&gt;byType(s,&#x27;balance&#x27;),
+    check:(s,D)=&gt;{const b=byType(s,&#x27;balance&#x27;);return D[b].equal&amp;&amp;D[b].Rn.length&gt;0}},
+   {label:&#x27;换一种：右盘只放一张分数条也能平&#x27;,score:2,hint:&#x27;先点右盘的连线删掉，再调一张分母是 8 的分数条&#x27;,target:s=&gt;byType(s,&#x27;balance&#x27;),
+    check:(s,D)=&gt;{const b=byType(s,&#x27;balance&#x27;);return D[b].equal&amp;&amp;D[b].Rn.length===1}},
+  ]},
+ {id:&#x27;funcline&#x27;,title:&#x27;k 变成负数，直线往哪倒？&#x27;,domain:&#x27;数与代数&#x27;,grade:8,tools:&#x27;直线 · 坐标平面&#x27;,
+  q:&#x27;y = 2x + 1 往右上升。把 k 调成负数，看看它怎么变；再让直线经过点 (2, −3)。&#x27;,
+  why:&#x27;k 是“x 每加 1，y 加几”。k 是负数，x 往右走 y 就往下掉，所以直线往右下倒。过 (2, −3)：−3 = k·2 + 1，k = −2。&#x27;,
+  build(s){addEnt(s,&#x27;fn&#x27;,60,80,{k:2,b:1});addEnt(s,&#x27;coord&#x27;,320,40);},
+  steps:[
+   {label:&#x27;把直线连到坐标平面&#x27;,score:1,hint:&#x27;直线卡右边的蓝点 → 坐标平面&#x27;,target:s=&gt;byType(s,&#x27;coord&#x27;),check:s=&gt;s.links.some(l=&gt;s.entities[l.to].type===&#x27;coord&#x27;)},
+   {label:&#x27;把 k 调成负数&#x27;,score:2,hint:&#x27;点直线卡，在属性卡里拖 k&#x27;,target:s=&gt;byType(s,&#x27;fn&#x27;),check:s=&gt;Object.values(s.entities).some(e=&gt;e.type===&#x27;fn&#x27;&amp;&amp;e.props.k&lt;0)},
+   {label:&#x27;让直线经过 (2, −3)&#x27;,score:2,hint:&#x27;x = 2 时 y 要等于 −3&#x27;,target:s=&gt;byType(s,&#x27;fn&#x27;),check:s=&gt;Object.values(s.entities).some(e=&gt;e.type===&#x27;fn&#x27;&amp;&amp;e.props.k*2+e.props.b===-3&amp;&amp;s.links.some(l=&gt;l.from===e.id))},
+  ]},
+ {id:&#x27;maxarea&#x27;,title:&#x27;周长 20 的长方形，面积最大是多少？&#x27;,domain:&#x27;图形与几何&#x27;,grade:3,tools:&#x27;长方形&#x27;,
+  q:&#x27;台上是 2 × 8 的长方形，周长 20。保持周长 20，换不同的宽和长，找面积最大的。&#x27;,
+  why:&#x27;周长一定，长和宽加起来一定（10）。两个数和一定，越接近积越大：1×9=9，2×8=16，3×7=21，4×6=24，5×5=25。正方形最大。&#x27;,
+  build(s){addEnt(s,&#x27;rect&#x27;,200,80,{w:2,h:8});},
+  steps:[
+   {label:&#x27;换一个周长还是 20 的长方形&#x27;,score:1,hint:&#x27;宽加 1，长就要减 1&#x27;,target:s=&gt;byType(s,&#x27;rect&#x27;),check:(s,D)=&gt;{const r=byType(s,&#x27;rect&#x27;);return D[r].per===20&amp;&amp;s.entities[r].props.w!==2&amp;&amp;s.entities[r].props.w!==8}},
+   {label:&#x27;找到面积最大的那个&#x27;,score:2,hint:&#x27;比比看 3×7、4×6 和 5×5&#x27;,target:s=&gt;byType(s,&#x27;rect&#x27;),check:(s,D)=&gt;{const r=byType(s,&#x27;rect&#x27;);return D[r].per===20&amp;&amp;D[r].area===25}},
+  ]},
+ {id:&#x27;dice&#x27;,title:&#x27;两个骰子的点数和，哪个最常出现？&#x27;,domain:&#x27;统计与概率&#x27;,grade:6,tools:&#x27;两个骰子&#x27;,
+  q:&#x27;猜一猜：2 到 12 哪个和出现得最多？掷 100 回看看，再掷到 1000 回以上。&#x27;,
+  why:&#x27;和是 7 的组合最多：1+6、2+5、3+4、4+3、5+2、6+1，一共 6 种；和是 2 只有 1+1 一种。36 种里占 6 种，所以 7 最常出现。掷得越多，柱子越接近这个形状。&#x27;,
+  build(s){addEnt(s,&#x27;dice&#x27;,220,90);},
+  steps:[
+   {label:&#x27;掷 100 回&#x27;,score:1,hint:&#x27;点骰子，再点“掷”&#x27;,target:s=&gt;byType(s,&#x27;dice&#x27;),check:(s,D)=&gt;{const d=byType(s,&#x27;dice&#x27;);return (D[d].tot||0)&gt;=100}},
+   {label:&#x27;一共掷到 1000 回以上，看柱子的形状&#x27;,score:2,hint:&#x27;把“一次掷几回”调大&#x27;,target:s=&gt;byType(s,&#x27;dice&#x27;),check:(s,D)=&gt;{const d=byType(s,&#x27;dice&#x27;);return (D[d].tot||0)&gt;=1000}},
+  ]},
+];
+const byType=(s,t)=&gt;{for(const id in s.entities)if(s.entities[id].type===t)return id;return null};
+
+/* ========== 运行状态 ========== */
+const LS={free:&#x27;nb-lab-free-v1&#x27;,hist:&#x27;nb-lab-exam-v1&#x27;,find:&#x27;nb-lab-find-v1&#x27;};
+let mode=&#x27;free&#x27;,xp=null,run=null,D={},sel=null,selLink=null,cardOpen=false;
+let view={x:40,y:30,z:1},undoSt=[],redoSt=[],timerId=null,libFilter=&#x27;全部&#x27;,libQ=&#x27;&#x27;;
+const $=id=&gt;document.getElementById(id);
+
+function commit(a,opt={}){
+  const snap=JSON.stringify(S);const r=act(a);
+  if(!r.ok){toast(r.why,true);if(run)run.errors++;render();return r}
+  if(!opt.coalesce||lastCo!==opt.coalesce){undoSt.push(snap);if(undoSt.length&gt;80)undoSt.shift();redoSt=[]}
+  lastCo=opt.coalesce||null;
+  if(run&amp;&amp;!opt.silent){run.ops++;track()}
+  afterChange();return r;
+}
+let lastCo=null;
+function afterChange(){D=evaluate(S);if(mode===&#x27;free&#x27;)内存存储.setItem(LS.free,JSON.stringify(S));render()}
+function track(){const D2=evaluate(S);for(const st of run.steps){if(st.done)continue;if(xp.steps[st.i].check(S,D2)){st.done=true;st.op=run.ops;if(mode===&#x27;practice&#x27;)toast(&#x27;✓ &#x27;+xp.steps[st.i].label)}else break}
+  if(mode===&#x27;practice&#x27;&amp;&amp;run.steps.every(s=&gt;s.done)&amp;&amp;!run.finished){run.finished=true;setTimeout(practiceDone,500)}}
+
+/* ========== 画台面 ========== */
+function render(){
+  D=D||{};const w=$(&#x27;world&#x27;);let h=&#x27;&#x27;;
+  w.setAttribute(&#x27;transform&#x27;,`translate(${view.x},${view.y}) scale(${view.z})`);
+  const next=nextTarget();
+  for(const l of S.links)h+=linkSvg(l);
+  for(const id in S.entities)h+=entSvg(S.entities[id],D[id]||{read:[],sig:[]},id===next);
+  w.innerHTML=h;
+  $(&#x27;empty&#x27;).style.display=Object.keys(S.entities).length?&#x27;none&#x27;:&#x27;grid&#x27;;
+  $(&#x27;zVal&#x27;).textContent=Math.round(view.z*100)+&#x27;%&#x27;;
+  $(&#x27;undo&#x27;).disabled=!undoSt.length;$(&#x27;redo&#x27;).disabled=!redoSt.length;
+  placeFloat();renderSteps();
+}
+function nextTarget(){if(mode!==&#x27;practice&#x27;||!run)return null;const st=run.steps.find(s=&gt;!s.done);return st?xp.steps[st.i].target(S):null}
+function size(e){return TYPES[e.type].size(e)}
+function anchorIn(l){const e=S.entities[l.to];const [w,h]=size(e);if(e.type===&#x27;balance&#x27;){const t=(D[e.id]||{}).tilt||0,dy=Math.sin(t*Math.PI/180)*120;return l.slot===&#x27;L&#x27;?[e.x+50,e.y+112-dy]:[e.x+w-50,e.y+112+dy]}return[e.x,e.y+h/2]}
+function anchorOut(id){const e=S.entities[id],[w,h]=size(e);return[e.x+w,e.y+h/2]}
+function linkSvg(l){if(!S.entities[l.from]||!S.entities[l.to])return&#x27;&#x27;;const [x1,y1]=anchorOut(l.from),[x2,y2]=anchorIn(l);const c=Math.max(40,Math.abs(x2-x1)/2);
+  const d=`M${x1},${y1} C${x1+c},${y1} ${x2-c},${y2} ${x2},${y2}`;return`&lt;path class=&quot;linkhit&quot; data-link=&quot;${l.id}&quot; d=&quot;${d}&quot;/&gt;&lt;path class=&quot;link${selLink===l.id?&#x27; sel&#x27;:&#x27;&#x27;}&quot; d=&quot;${d}&quot;/&gt;`}
+const esc=s=&gt;String(s).replace(/[&amp;&lt;&gt;&quot;]/g,c=&gt;({&#x27;&amp;&#x27;:&#x27;&amp;amp;&#x27;,&#x27;&lt;&#x27;:&#x27;&amp;lt;&#x27;,&#x27;&gt;&#x27;:&#x27;&amp;gt;&#x27;,&#x27;&quot;&#x27;:&#x27;&amp;quot;&#x27;}[c]));
+function entSvg(e,d,isNext){const T=TYPES[e.type],[w,h]=size(e);const lv=d.sig.some(s=&gt;s.lv===&#x27;err&#x27;)?&#x27; err&#x27;:(d.sig.some(s=&gt;s.lv===&#x27;ok&#x27;)?&#x27; ok&#x27;:&#x27;&#x27;);
+  let g=`&lt;g class=&quot;ent${sel===e.id?&#x27; sel&#x27;:&#x27;&#x27;}${lv}${isNext?&#x27; is-next&#x27;:&#x27;&#x27;}&quot; data-ent=&quot;${e.id}&quot; transform=&quot;translate(${e.x},${e.y})&quot;&gt;`;
+  g+=`&lt;rect class=&quot;ent-body&quot; width=&quot;${w}&quot; height=&quot;${h}&quot; rx=&quot;10&quot; filter=&quot;url(#sh)&quot;/&gt;&lt;text class=&quot;ttl&quot; x=&quot;10&quot; y=&quot;17&quot;&gt;${esc(e.name)}&lt;/text&gt;`;
+  g+=DRAW[e.type](e,d,w,h);
+  if(T.accepts&amp;&amp;e.type!==&#x27;balance&#x27;)g+=`&lt;circle class=&quot;port-in&quot; cx=&quot;0&quot; cy=&quot;${h/2}&quot; r=&quot;6&quot;/&gt;`;
+  if(T.out)g+=`&lt;circle class=&quot;port-out&quot; data-port=&quot;${e.id}&quot; cx=&quot;${w}&quot; cy=&quot;${h/2}&quot; r=&quot;7&quot;/&gt;`;
+  if(sel===e.id)g+=`&lt;rect class=&quot;selbox&quot; x=&quot;-6&quot; y=&quot;-6&quot; width=&quot;${w+12}&quot; height=&quot;${h+12}&quot; rx=&quot;12&quot;/&gt;`;
+  // 信号条：错了台面自己说
+  let y=h+8;for(const s of d.sig.slice(0,3)){const col={ok:&#x27;#1e7a4b&#x27;,warn:&#x27;#8a5a12&#x27;,err:&#x27;#9b2c2c&#x27;,info:&#x27;#2b3a4f&#x27;}[s.lv];const tw=Math.min(520,s.tx.length*12.5+20);
+    g+=`&lt;g class=&quot;pill&quot; transform=&quot;translate(0,${y})&quot;&gt;&lt;rect width=&quot;${tw}&quot; height=&quot;22&quot; fill=&quot;${col}&quot; rx=&quot;11&quot;/&gt;&lt;text x=&quot;10&quot; y=&quot;15&quot; fill=&quot;#fff&quot;&gt;${esc(s.tx)}&lt;/text&gt;&lt;/g&gt;`;y+=26}
+  return g+&#x27;&lt;/g&gt;&#x27;}
+const DRAW={
+ num:(e,d,w,h)=&gt;`&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;${h/2+14}&quot; text-anchor=&quot;middle&quot; font-size=&quot;28&quot;&gt;${e.props.v}&lt;/text&gt;`,
+ frac:(e,d,w)=&gt;{const {n,d:dd}=e.props,rows=Math.max(1,Math.ceil(n/dd)),bw=w-24,sw=bw/dd;let s=`&lt;text class=&quot;big&quot; x=&quot;${w-12}&quot; y=&quot;18&quot; text-anchor=&quot;end&quot; font-size=&quot;14&quot;&gt;${n}/${dd}&lt;/text&gt;`;
+   for(let r=0;r&lt;rows;r++)for(let i=0;i&lt;dd;i++){const k=r*dd+i+1;s+=`&lt;rect class=&quot;seg-cell&quot; data-seg=&quot;${k}&quot; x=&quot;${12+i*sw}&quot; y=&quot;${28+r*28}&quot; width=&quot;${sw}&quot; height=&quot;22&quot; fill=&quot;${k&lt;=n?&#x27;#ff9f43&#x27;:&#x27;#fff&#x27;}&quot; stroke=&quot;#5b6778&quot; stroke-width=&quot;1&quot;/&gt;`}return s},
+ adder:(e,d,w,h)=&gt;{const t=d.terms||[];const ex=t.length?t.map(qs).join(&#x27; + &#x27;):&#x27;空&#x27;;return`&lt;text class=&quot;ink&quot; x=&quot;${w/2}&quot; y=&quot;42&quot; text-anchor=&quot;middle&quot; font-size=&quot;13&quot;&gt;${esc(ex)}&lt;/text&gt;&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;70&quot; text-anchor=&quot;middle&quot; font-size=&quot;22&quot;&gt;= ${d.value?qs(d.value):0}&lt;/text&gt;`},
+ numline:(e,d,w)=&gt;{const {min,max}=e.props,x0=24,x1=w-24,X=v=&gt;x0+(v-min)/(max-min)*(x1-x0),y=72;let L=1;(d.pts||[]).forEach(p=&gt;{if(p.v.d&lt;=12)L=lcm(L,p.v.d)});if(L&gt;12||(max-min)*L&gt;60)L=1;
+   let s=`&lt;line x1=&quot;${x0-10}&quot; y1=&quot;${y}&quot; x2=&quot;${x1+12}&quot; y2=&quot;${y}&quot; stroke=&quot;#334&quot; stroke-width=&quot;2&quot;/&gt;&lt;path d=&quot;M${x1+12},${y-5}L${x1+20},${y}L${x1+12},${y+5}Z&quot; fill=&quot;#334&quot;/&gt;`;
+   for(let k=min*L;k&lt;=max*L;k++){const v=k/L,int=k%L===0;s+=`&lt;line x1=&quot;${X(v)}&quot; y1=&quot;${y-(int?8:4)}&quot; x2=&quot;${X(v)}&quot; y2=&quot;${y+(int?8:4)}&quot; stroke=&quot;#334&quot;/&gt;`;if(int)s+=`&lt;text class=&quot;ink&quot; x=&quot;${X(v)}&quot; y=&quot;${y+24}&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot;&gt;${v}&lt;/text&gt;`}
+   const cols=[&#x27;#3b9cff&#x27;,&#x27;#ff7a45&#x27;,&#x27;#2fbf71&#x27;,&#x27;#b36bff&#x27;,&#x27;#e84393&#x27;,&#x27;#00b8d4&#x27;];
+   (d.pts||[]).forEach((p,i)=&gt;{const v=qnum(p.v),c=cols[i%6];if(p.out){const lx=v&lt;min?x0-4:x1+4;s+=`&lt;text x=&quot;${lx}&quot; y=&quot;${y-14}&quot; text-anchor=&quot;${v&lt;min?&#x27;start&#x27;:&#x27;end&#x27;}&quot; font-size=&quot;12&quot; fill=&quot;#e03131&quot;&gt;${qs(p.v)} 放不下 ${v&lt;min?&#x27;←&#x27;:&#x27;→&#x27;}&lt;/text&gt;`}
+     else{s+=`&lt;circle cx=&quot;${X(v)}&quot; cy=&quot;${y}&quot; r=&quot;7&quot; fill=&quot;${c}&quot; stroke=&quot;#fff&quot; stroke-width=&quot;2&quot;/&gt;&lt;text x=&quot;${X(v)}&quot; y=&quot;${y-14-(i%2)*14}&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot; font-weight=&quot;700&quot; fill=&quot;${c}&quot;&gt;${qs(p.v)}&lt;/text&gt;`}});return s},
+ balance:(e,d,w,h)=&gt;{const t=d.tilt||0,cx=w/2,py=62,dy=Math.sin(t*Math.PI/180)*120;
+   const pan=(x,y,items,lab)=&gt;{let s=`&lt;line x1=&quot;${x}&quot; y1=&quot;${y-40}&quot; x2=&quot;${x-38}&quot; y2=&quot;${y}&quot; stroke=&quot;#7b8796&quot;/&gt;&lt;line x1=&quot;${x}&quot; y1=&quot;${y-40}&quot; x2=&quot;${x+38}&quot; y2=&quot;${y}&quot; stroke=&quot;#7b8796&quot;/&gt;&lt;path d=&quot;M${x-44},${y}h88a44 14 0 0 1 -88 0Z&quot; fill=&quot;#dfe6ee&quot; stroke=&quot;#8a97a6&quot;/&gt;`;
+     items.forEach((l,i)=&gt;{const v=(D[l.from]||{}).value;s+=`&lt;g transform=&quot;translate(${x-40+(i%3)*28},${y-16-Math.floor(i/3)*18})&quot;&gt;&lt;rect width=&quot;26&quot; height=&quot;16&quot; rx=&quot;4&quot; fill=&quot;#ff9f43&quot;/&gt;&lt;text x=&quot;13&quot; y=&quot;12&quot; text-anchor=&quot;middle&quot; font-size=&quot;10&quot; fill=&quot;#fff&quot;&gt;${v?qs(v):&#x27;?&#x27;}&lt;/text&gt;&lt;/g&gt;`});
+     return s+`&lt;circle class=&quot;port-in&quot; cx=&quot;${x}&quot; cy=&quot;${y+8}&quot; r=&quot;6&quot;/&gt;&lt;text class=&quot;ttl&quot; x=&quot;${x}&quot; y=&quot;${y+34}&quot; text-anchor=&quot;middle&quot;&gt;${lab}&lt;/text&gt;`};
+   return`&lt;path d=&quot;M${cx-40},${h-14}h80l-30,-14h-20Z&quot; fill=&quot;#8a97a6&quot;/&gt;&lt;line x1=&quot;${cx}&quot; y1=&quot;${h-28}&quot; x2=&quot;${cx}&quot; y2=&quot;${py}&quot; stroke=&quot;#8a97a6&quot; stroke-width=&quot;6&quot;/&gt;
+   &lt;g transform=&quot;rotate(${t} ${cx} ${py})&quot;&gt;&lt;rect x=&quot;${cx-120}&quot; y=&quot;${py-4}&quot; width=&quot;240&quot; height=&quot;8&quot; rx=&quot;4&quot; fill=&quot;#4a5668&quot;/&gt;&lt;/g&gt;&lt;circle cx=&quot;${cx}&quot; cy=&quot;${py}&quot; r=&quot;6&quot; fill=&quot;#2b3a4f&quot;/&gt;
+   ${pan(cx-120,py+50-dy,d.Ln||[],&#x27;左盘 &#x27;+(d.L?qs(d.L):0))}${pan(cx+120,py+50+dy,d.Rn||[],&#x27;右盘 &#x27;+(d.R?qs(d.R):0))}`},
+ fn:(e,d,w,h)=&gt;`&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;${h/2+12}&quot; text-anchor=&quot;middle&quot; font-size=&quot;18&quot;&gt;y = ${esc(fx(e.props.k,e.props.b))}&lt;/text&gt;`,
+ coord:(e,d,w,h)=&gt;{const L=20,R=w-20,T=30,B=h-20,X=v=&gt;L+(v+6)/12*(R-L),Y=v=&gt;B-(v+10)/20*(B-T);let s=`&lt;clipPath id=&quot;cp${e.id}&quot;&gt;&lt;rect x=&quot;${L}&quot; y=&quot;${T}&quot; width=&quot;${R-L}&quot; height=&quot;${B-T}&quot;/&gt;&lt;/clipPath&gt;`;
+   for(let i=-6;i&lt;=6;i++)s+=`&lt;line x1=&quot;${X(i)}&quot; y1=&quot;${T}&quot; x2=&quot;${X(i)}&quot; y2=&quot;${B}&quot; stroke=&quot;${i?&#x27;#e3e8ef&#x27;:&#x27;#334&#x27;}&quot; stroke-width=&quot;${i?1:1.5}&quot;/&gt;`;
+   for(let j=-10;j&lt;=10;j+=2)s+=`&lt;line x1=&quot;${L}&quot; y1=&quot;${Y(j)}&quot; x2=&quot;${R}&quot; y2=&quot;${Y(j)}&quot; stroke=&quot;${j?&#x27;#e3e8ef&#x27;:&#x27;#334&#x27;}&quot; stroke-width=&quot;${j?1:1.5}&quot;/&gt;`;
+   for(let i=-6;i&lt;=6;i+=2)if(i)s+=`&lt;text class=&quot;ttl&quot; x=&quot;${X(i)}&quot; y=&quot;${Y(0)+14}&quot; text-anchor=&quot;middle&quot; font-size=&quot;10&quot;&gt;${i}&lt;/text&gt;`;
+   for(let j=-10;j&lt;=10;j+=5)if(j)s+=`&lt;text class=&quot;ttl&quot; x=&quot;${X(0)-4}&quot; y=&quot;${Y(j)+4}&quot; text-anchor=&quot;end&quot; font-size=&quot;10&quot;&gt;${j}&lt;/text&gt;`;
+   const cols=[&#x27;#3b9cff&#x27;,&#x27;#ff7a45&#x27;,&#x27;#2fbf71&#x27;,&#x27;#b36bff&#x27;];(d.fns||[]).forEach((f,i)=&gt;{const {k,b}=f.props;s+=`&lt;line class=&quot;flowline&quot; clip-path=&quot;url(#cp${e.id})&quot; x1=&quot;${X(-6)}&quot; y1=&quot;${Y(k*-6+b)}&quot; x2=&quot;${X(6)}&quot; y2=&quot;${Y(k*6+b)}&quot; stroke=&quot;${cols[i%4]}&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;${X(0)}&quot; cy=&quot;${Y(b)}&quot; r=&quot;4&quot; fill=&quot;${cols[i%4]}&quot;/&gt;`});
+   if(xp&amp;&amp;xp.id===&#x27;funcline&#x27;)s+=`&lt;circle cx=&quot;${X(2)}&quot; cy=&quot;${Y(-3)}&quot; r=&quot;5&quot; fill=&quot;none&quot; stroke=&quot;#e03131&quot; stroke-width=&quot;2&quot;/&gt;&lt;text x=&quot;${X(2)+8}&quot; y=&quot;${Y(-3)+4}&quot; font-size=&quot;11&quot; fill=&quot;#e03131&quot;&gt;(2, −3)&lt;/text&gt;`;
+   return s},
+ rect:(e,d,w)=&gt;{const {w:rw,h:rh}=e.props,ox=(w-rw*20)/2,oy=30;let s=&#x27;&#x27;;for(let i=0;i&lt;rw;i++)for(let j=0;j&lt;rh;j++)s+=`&lt;rect x=&quot;${ox+i*20}&quot; y=&quot;${oy+j*20}&quot; width=&quot;20&quot; height=&quot;20&quot; fill=&quot;#cfe5ff&quot; stroke=&quot;#8fb6e6&quot;/&gt;`;
+   return s+`&lt;rect x=&quot;${ox}&quot; y=&quot;${oy}&quot; width=&quot;${rw*20}&quot; height=&quot;${rh*20}&quot; fill=&quot;none&quot; stroke=&quot;#1e5aa8&quot; stroke-width=&quot;2.5&quot;/&gt;&lt;text class=&quot;ink&quot; x=&quot;${w/2}&quot; y=&quot;${oy+rh*20+18}&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot;&gt;宽 ${rw} · 长 ${rh} · 面积 ${rw*rh} 格&lt;/text&gt;`},
+ dice:(e,d,w,h)=&gt;{const c=e.props.counts,L=30,R=w-14,B=h-30,T=34,bw=(R-L)/11;let s=&#x27;&#x27;,mx=1;if(c)for(let i=2;i&lt;=12;i++)mx=Math.max(mx,c[i]);const tot=c?c.reduce((a,b)=&gt;a+b,0):0;
+   for(let i=2;i&lt;=12;i++){const x=L+(i-2)*bw;const ways=6-Math.abs(i-7);if(c){const hh=(c[i]/mx)*(B-T);s+=`&lt;rect x=&quot;${x+3}&quot; y=&quot;${B-hh}&quot; width=&quot;${bw-6}&quot; height=&quot;${hh}&quot; fill=&quot;#3b9cff&quot; rx=&quot;2&quot;/&gt;`;const th=(tot*ways/36)/mx*(B-T);s+=`&lt;line x1=&quot;${x+2}&quot; x2=&quot;${x+bw-2}&quot; y1=&quot;${B-th}&quot; y2=&quot;${B-th}&quot; stroke=&quot;#e03131&quot; stroke-width=&quot;2&quot;/&gt;`}
+     s+=`&lt;text class=&quot;ttl&quot; x=&quot;${x+bw/2}&quot; y=&quot;${B+14}&quot; text-anchor=&quot;middle&quot; font-size=&quot;11&quot;&gt;${i}&lt;/text&gt;`}
+   return s+`&lt;line x1=&quot;${L}&quot; x2=&quot;${R}&quot; y1=&quot;${B}&quot; y2=&quot;${B}&quot; stroke=&quot;#334&quot;/&gt;${c?`&lt;text class=&quot;ttl&quot; x=&quot;${w-14}&quot; y=&quot;17&quot; text-anchor=&quot;end&quot; font-size=&quot;11&quot;&gt;红线 = 按 36 种算该有多少&lt;/text&gt;`:&#x27;&#x27;}`},
+};
+
+/* ========== 浮动工具条 + 属性卡（点物体 → 旁边出设置卡） ========== */
+function placeFloat(){const tl=$(&#x27;tools&#x27;),cd=$(&#x27;card&#x27;);const e=sel&amp;&amp;S.entities[sel];
+  if(!e&amp;&amp;!selLink){tl.style.display=cd.style.display=&#x27;none&#x27;;return}
+  if(selLink&amp;&amp;!e){tl.style.display=&#x27;none&#x27;;cd.style.display=&#x27;none&#x27;;return}
+  const [w]=size(e),sx=view.x+(e.x+w)*view.z,sy=view.y+e.y*view.z,W=$(&#x27;stageWrap&#x27;).clientWidth,H=$(&#x27;stageWrap&#x27;).clientHeight;
+  const T=TYPES[e.type];tl.innerHTML=`&lt;button data-tool=&quot;card&quot; title=&quot;设置&quot;&gt;⚙&lt;/button&gt;&lt;button data-tool=&quot;dup&quot; title=&quot;复制&quot;&gt;📋&lt;/button&gt;${T.rotate?&#x27;&lt;button data-tool=&quot;rotate&quot; title=&quot;转 90°&quot;&gt;🔄&lt;/button&gt;&#x27;:&#x27;&#x27;}&lt;button data-tool=&quot;del&quot; title=&quot;删除&quot;&gt;🗑&lt;/button&gt;`;
+  tl.style.display=&#x27;flex&#x27;;tl.style.left=Math.min(W-44,sx+12)+&#x27;px&#x27;;tl.style.top=Math.max(8,sy)+&#x27;px&#x27;;
+  if(!cardOpen){cd.style.display=&#x27;none&#x27;;return}
+  let left=sx+56;if(left+250&gt;W)left=Math.max(8,view.x+e.x*view.z-262);cd.style.left=left+&#x27;px&#x27;;cd.style.top=Math.max(8,Math.min(H-320,sy))+&#x27;px&#x27;;cd.style.display=&#x27;block&#x27;;
+  if(cd.dataset.for!==e.id||cd.dataset.v!==JSON.stringify(e.props)+e.name)buildCard(e);
+}
+function stateLine(e){const d=D[e.id]||{};if(d.value)return qs(d.value);if(e.type===&#x27;fn&#x27;)return&#x27;y = &#x27;+fx(e.props.k,e.props.b);if(e.type===&#x27;rect&#x27;)return`${e.props.w} × ${e.props.h} = ${e.props.w*e.props.h}`;
+  if(e.type===&#x27;balance&#x27;)return`${d.L?qs(d.L):0} : ${d.R?qs(d.R):0}`;if(e.type===&#x27;numline&#x27;)return`${e.props.min} 到 ${e.props.max}`;if(e.type===&#x27;dice&#x27;)return`${d.tot||0} 回`;return TYPES[e.type].label}
+function buildCard(e){const cd=$(&#x27;card&#x27;),T=TYPES[e.type];cd.dataset.for=e.id;cd.dataset.v=JSON.stringify(e.props)+e.name;
+  let h=`&lt;h4&gt;${T.label} · 设置&lt;/h4&gt;&lt;input class=&quot;name&quot; data-name value=&quot;${esc(e.name)}&quot;&gt;&lt;div class=&quot;state&quot;&gt;${esc(stateLine(e))}&lt;/div&gt;`;
+  for(const f of T.fields){const v=e.props[f.k];h+=`&lt;div class=&quot;fld&quot;&gt;&lt;label&gt;&lt;span&gt;${f.label}&lt;/span&gt;&lt;/label&gt;&lt;div class=&quot;ctl&quot;&gt;&lt;button class=&quot;pm&quot; data-pm=&quot;${f.k}&quot; data-dv=&quot;-${f.step||1}&quot;&gt;−&lt;/button&gt;&lt;input type=&quot;range&quot; data-f=&quot;${f.k}&quot; min=&quot;${f.min}&quot; max=&quot;${f.max}&quot; step=&quot;${f.step||1}&quot; value=&quot;${v}&quot;&gt;&lt;button class=&quot;pm&quot; data-pm=&quot;${f.k}&quot; data-dv=&quot;${f.step||1}&quot;&gt;+&lt;/button&gt;&lt;input type=&quot;number&quot; data-fn=&quot;${f.k}&quot; value=&quot;${v}&quot;&gt;&lt;/div&gt;&lt;/div&gt;`}
+  if(!T.fields.length)h+=`&lt;div class=&quot;muted&quot; style=&quot;font-size:12px&quot;&gt;${T.accepts===&#x27;fn&#x27;?&#x27;它显示连进来的直线。&#x27;:&#x27;它的值由连进来的器材决定，拖别的器材的蓝点连过来。&#x27;}&lt;/div&gt;`;
+  const ins=inputs(S,e.id);if(ins.length)h+=`&lt;div class=&quot;muted&quot; style=&quot;font-size:12px;margin-top:8px&quot;&gt;连进来的：${ins.map(l=&gt;esc(S.entities[l.from].name)+(l.slot?`（${l.slot===&#x27;L&#x27;?&#x27;左&#x27;:&#x27;右&#x27;}盘）`:&#x27;&#x27;)).join(&#x27;、&#x27;)}&lt;/div&gt;`;
+  h+=`&lt;div class=&quot;card-row&quot;&gt;${(T.actions||[]).map(a=&gt;`&lt;button class=&quot;btn pri&quot; data-act=&quot;${a.id}&quot;&gt;${a.label}&lt;/button&gt;`).join(&#x27;&#x27;)}${T.fields.length?&#x27;&lt;button class=&quot;btn&quot; data-act=&quot;reset&quot;&gt;恢复初始值&lt;/button&gt;&#x27;:&#x27;&#x27;}&lt;button class=&quot;btn&quot; data-act=&quot;del&quot;&gt;删除&lt;/button&gt;&lt;/div&gt;`;
+  cd.innerHTML=h}
+$(&#x27;card&#x27;).addEventListener(&#x27;input&#x27;,ev=&gt;{const t=ev.target,id=sel;if(!id)return;
+  if(t.dataset.f){commit({t:&#x27;set&#x27;,id,k:t.dataset.f,v:t.value},{coalesce:&#x27;set&#x27;+id+t.dataset.f})}
+  if(t.dataset.name!==undefined){act({t:&#x27;rename&#x27;,id,name:t.value});$(&#x27;card&#x27;).dataset.v=JSON.stringify(S.entities[id].props)+S.entities[id].name;D=evaluate(S);render()}});
+$(&#x27;card&#x27;).addEventListener(&#x27;change&#x27;,ev=&gt;{const t=ev.target;if(t.dataset.fn&amp;&amp;sel){commit({t:&#x27;set&#x27;,id:sel,k:t.dataset.fn,v:t.value});$(&#x27;card&#x27;).dataset.v=&#x27;&#x27;}});
+$(&#x27;card&#x27;).addEventListener(&#x27;click&#x27;,ev=&gt;{const b=ev.target.closest(&#x27;button&#x27;);if(!b||!sel)return;const id=sel;
+  if(b.dataset.pm){const e=S.entities[id];commit({t:&#x27;set&#x27;,id,k:b.dataset.pm,v:e.props[b.dataset.pm]+Number(b.dataset.dv)})}
+  else if(b.dataset.act===&#x27;del&#x27;){commit({t:&#x27;del&#x27;,id});sel=null}
+  else if(b.dataset.act===&#x27;reset&#x27;)commit({t:&#x27;reset&#x27;,id});
+  else if(b.dataset.act===&#x27;roll&#x27;)commit({t:&#x27;roll&#x27;,id});
+  render()});
+$(&#x27;tools&#x27;).addEventListener(&#x27;click&#x27;,ev=&gt;{const b=ev.target.closest(&#x27;button&#x27;);if(!b||!sel)return;const t=b.dataset.tool;
+  if(t===&#x27;card&#x27;){cardOpen=!cardOpen;$(&#x27;card&#x27;).dataset.v=&#x27;&#x27;}else if(t===&#x27;dup&#x27;){const r=commit({t:&#x27;dup&#x27;,id:sel});if(r.ok)sel=r.id}else if(t===&#x27;rotate&#x27;)commit({t:&#x27;rotate&#x27;,id:sel});else if(t===&#x27;del&#x27;){commit({t:&#x27;del&#x27;,id:sel});sel=null}render()});
+
+/* ========== 四种手势：点整体（选中）/ 点部位（分数格）/ 拖整体（移动）/ 拖端口（连线）；拖空白 = 平移 ========== */
+const svg=$(&#x27;stage&#x27;);let drag=null;
+const toWorld=(cx,cy)=&gt;{const r=svg.getBoundingClientRect();return[(cx-r.left-view.x)/view.z,(cy-r.top-view.y)/view.z]};
+svg.addEventListener(&#x27;pointerdown&#x27;,ev=&gt;{const t=ev.target;svg.setPointerCapture(ev.pointerId);const [wx,wy]=toWorld(ev.clientX,ev.clientY);
+  if(t.dataset.port){drag={m:&#x27;link&#x27;,from:t.dataset.port,sx:ev.clientX,sy:ev.clientY};return}
+  if(t.dataset.link){selLink=t.dataset.link;sel=null;cardOpen=false;render();return}
+  const g=t.closest(&#x27;[data-ent]&#x27;);
+  if(g){const e=S.entities[g.dataset.ent];drag={m:&#x27;move&#x27;,id:e.id,dx:wx-e.x,dy:wy-e.y,sx:ev.clientX,sy:ev.clientY,moved:false,seg:t.dataset.seg,was:sel===e.id};if(sel!==e.id){sel=e.id;selLink=null;render()}return}
+  sel=null;selLink=null;cardOpen=false;drag={m:&#x27;pan&#x27;,sx:ev.clientX,sy:ev.clientY,vx:view.x,vy:view.y};svg.classList.add(&#x27;panning&#x27;);render()});
+svg.addEventListener(&#x27;pointermove&#x27;,ev=&gt;{if(!drag)return;const [wx,wy]=toWorld(ev.clientX,ev.clientY);
+  if(drag.m===&#x27;pan&#x27;){view.x=drag.vx+ev.clientX-drag.sx;view.y=drag.vy+ev.clientY-drag.sy;render()}
+  else if(drag.m===&#x27;move&#x27;){if(!drag.moved&amp;&amp;Math.hypot(ev.clientX-drag.sx,ev.clientY-drag.sy)&lt;6)return;if(!drag.moved){undoSt.push(JSON.stringify(S));redoSt=[];drag.moved=true}
+    act({t:&#x27;move&#x27;,id:drag.id,x:Math.round((wx-drag.dx)/10)*10,y:Math.round((wy-drag.dy)/10)*10});render()}
+  else if(drag.m===&#x27;link&#x27;){const [x1,y1]=anchorOut(drag.from);let p=$(&#x27;world&#x27;).querySelector(&#x27;.templink&#x27;);if(!p){p=document.createElementNS(&#x27;http://www.w3.org/2000/svg&#x27;,&#x27;path&#x27;);p.setAttribute(&#x27;class&#x27;,&#x27;templink&#x27;);$(&#x27;world&#x27;).appendChild(p)}p.setAttribute(&#x27;d&#x27;,`M${x1},${y1} L${wx},${wy}`)}});
+svg.addEventListener(&#x27;pointerup&#x27;,ev=&gt;{if(!drag)return;const d=drag;drag=null;svg.classList.remove(&#x27;panning&#x27;);
+  if(d.m===&#x27;move&#x27;){if(d.moved){afterChange()}else if(d.seg){commit({t:&#x27;segclick&#x27;,id:d.id,k:+d.seg})}else{if(d.was)cardOpen=!cardOpen;else cardOpen=true;$(&#x27;card&#x27;).dataset.v=&#x27;&#x27;;render()}}
+  else if(d.m===&#x27;link&#x27;){const el=document.elementFromPoint(ev.clientX,ev.clientY);const g=el&amp;&amp;el.closest&amp;&amp;el.closest(&#x27;[data-ent]&#x27;);
+    if(g&amp;&amp;g.dataset.ent!==d.from){const to=S.entities[g.dataset.ent];const [wx]=toWorld(ev.clientX,ev.clientY);const [w]=size(to);commit({t:&#x27;link&#x27;,from:d.from,to:to.id,slot:wx&lt;to.x+w/2?&#x27;L&#x27;:&#x27;R&#x27;})}
+    else if(Math.hypot(ev.clientX-d.sx,ev.clientY-d.sy)&gt;6)toast(&#x27;松手的地方没有器材：把线拖到另一个器材上&#x27;,true);render()}
+  else if(d.m===&#x27;pan&#x27;)render()});
+svg.addEventListener(&#x27;wheel&#x27;,ev=&gt;{ev.preventDefault();zoomAt(ev.deltaY&lt;0?1.1:1/1.1,ev.clientX,ev.clientY)},{passive:false});
+function zoomAt(f,cx,cy){const r=svg.getBoundingClientRect();cx=cx??r.left+r.width/2;cy=cy??r.top+r.height/2;const z=Math.max(.5,Math.min(2.5,view.z*f));const k=z/view.z;view.x=cx-r.left-(cx-r.left-view.x)*k;view.y=cy-r.top-(cy-r.top-view.y)*k;view.z=z;render()}
+function fit(){const es=Object.values(S.entities);if(!es.length){view={x:40,y:30,z:1};render();return}let a=1e9,b=1e9,c=-1e9,d=-1e9;es.forEach(e=&gt;{const [w,h]=size(e);a=Math.min(a,e.x);b=Math.min(b,e.y);c=Math.max(c,e.x+w);d=Math.max(d,e.y+h+60)});
+  const W=svg.clientWidth,H=svg.clientHeight,z=Math.max(.5,Math.min(1.4,Math.min((W-80)/(c-a),(H-80)/(d-b))));view={z,x:(W-(c-a)*z)/2-a*z,y:(H-(d-b)*z)/2-b*z};render()}
+$(&#x27;zIn&#x27;).onclick=()=&gt;zoomAt(1.15);$(&#x27;zOut&#x27;).onclick=()=&gt;zoomAt(1/1.15);$(&#x27;zFit&#x27;).onclick=fit;
+document.addEventListener(&#x27;keydown&#x27;,ev=&gt;{if(ev.target.closest(&#x27;input,textarea,[contenteditable]&#x27;))return;
+  if((ev.key===&#x27;Delete&#x27;||ev.key===&#x27;Backspace&#x27;)&amp;&amp;(sel||selLink)){commit({t:&#x27;del&#x27;,id:sel||selLink});sel=selLink=null;render()}
+  if((ev.ctrlKey||ev.metaKey)&amp;&amp;ev.key.toLowerCase()===&#x27;z&#x27;){ev.preventDefault();ev.shiftKey?redo():undo()}
+  if((ev.ctrlKey||ev.metaKey)&amp;&amp;ev.key.toLowerCase()===&#x27;y&#x27;){ev.preventDefault();redo()}});
+function undo(){if(!undoSt.length)return;redoSt.push(JSON.stringify(S));S=JSON.parse(undoSt.pop());if(sel&amp;&amp;!S.entities[sel])sel=null;afterChange()}
+function redo(){if(!redoSt.length)return;undoSt.push(JSON.stringify(S));S=JSON.parse(redoSt.pop());afterChange()}
+$(&#x27;undo&#x27;).onclick=undo;$(&#x27;redo&#x27;).onclick=redo;
+$(&#x27;clear&#x27;).onclick=()=&gt;{if(!Object.keys(S.entities).length)return;undoSt.push(JSON.stringify(S));const keep=S.nid;S=blankScene();S.nid=keep;sel=null;afterChange();toast(&#x27;台面已清空，可以撤销&#x27;)};
+$(&#x27;tidy&#x27;).onclick=()=&gt;{undoSt.push(JSON.stringify(S));let x=40,y=40,rowH=0;const W=Math.max(700,(svg.clientWidth-80)/view.z);
+  Object.values(S.entities).forEach(e=&gt;{const [w,h]=size(e);if(x+w&gt;W){x=40;y+=rowH+90;rowH=0}e.x=x;e.y=y;x+=w+70;rowH=Math.max(rowH,h)});afterChange();fit()};
+
+/* ========== 器材架（右） ========== */
+const ICON={num:&#x27;&lt;rect x=&quot;6&quot; y=&quot;8&quot; width=&quot;36&quot; height=&quot;26&quot; rx=&quot;5&quot; fill=&quot;#f6f8fb&quot;/&gt;&lt;text x=&quot;24&quot; y=&quot;27&quot; text-anchor=&quot;middle&quot; font-size=&quot;15&quot; font-weight=&quot;700&quot; fill=&quot;#1d2633&quot;&gt;3&lt;/text&gt;&#x27;,
+ frac:&#x27;&lt;rect x=&quot;4&quot; y=&quot;13&quot; width=&quot;40&quot; height=&quot;16&quot; fill=&quot;#fff&quot; stroke=&quot;#5b6778&quot;/&gt;&lt;rect x=&quot;4&quot; y=&quot;13&quot; width=&quot;20&quot; height=&quot;16&quot; fill=&quot;#ff9f43&quot; stroke=&quot;#5b6778&quot;/&gt;&#x27;,
+ adder:&#x27;&lt;rect x=&quot;6&quot; y=&quot;8&quot; width=&quot;36&quot; height=&quot;26&quot; rx=&quot;5&quot; fill=&quot;#f6f8fb&quot;/&gt;&lt;text x=&quot;24&quot; y=&quot;28&quot; text-anchor=&quot;middle&quot; font-size=&quot;18&quot; fill=&quot;#1d2633&quot;&gt;Σ&lt;/text&gt;&#x27;,
+ numline:&#x27;&lt;line x1=&quot;4&quot; y1=&quot;24&quot; x2=&quot;44&quot; y2=&quot;24&quot; stroke=&quot;#cfd8e3&quot; stroke-width=&quot;2&quot;/&gt;&lt;line x1=&quot;10&quot; y1=&quot;19&quot; x2=&quot;10&quot; y2=&quot;29&quot; stroke=&quot;#cfd8e3&quot;/&gt;&lt;line x1=&quot;24&quot; y1=&quot;19&quot; x2=&quot;24&quot; y2=&quot;29&quot; stroke=&quot;#cfd8e3&quot;/&gt;&lt;line x1=&quot;38&quot; y1=&quot;19&quot; x2=&quot;38&quot; y2=&quot;29&quot; stroke=&quot;#cfd8e3&quot;/&gt;&lt;circle cx=&quot;31&quot; cy=&quot;24&quot; r=&quot;4&quot; fill=&quot;#3b9cff&quot;/&gt;&#x27;,
+ balance:&#x27;&lt;line x1=&quot;24&quot; y1=&quot;10&quot; x2=&quot;24&quot; y2=&quot;36&quot; stroke=&quot;#cfd8e3&quot; stroke-width=&quot;3&quot;/&gt;&lt;line x1=&quot;8&quot; y1=&quot;12&quot; x2=&quot;40&quot; y2=&quot;12&quot; stroke=&quot;#cfd8e3&quot; stroke-width=&quot;3&quot;/&gt;&lt;path d=&quot;M4 26h12a6 3 0 0 1-12 0zM32 26h12a6 3 0 0 1-12 0z&quot; fill=&quot;#cfd8e3&quot;/&gt;&#x27;,
+ fn:&#x27;&lt;text x=&quot;24&quot; y=&quot;28&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot; fill=&quot;#cfd8e3&quot;&gt;y=kx+b&lt;/text&gt;&#x27;,
+ coord:&#x27;&lt;line x1=&quot;24&quot; y1=&quot;4&quot; x2=&quot;24&quot; y2=&quot;40&quot; stroke=&quot;#cfd8e3&quot;/&gt;&lt;line x1=&quot;4&quot; y1=&quot;22&quot; x2=&quot;44&quot; y2=&quot;22&quot; stroke=&quot;#cfd8e3&quot;/&gt;&lt;line x1=&quot;8&quot; y1=&quot;38&quot; x2=&quot;40&quot; y2=&quot;6&quot; stroke=&quot;#3b9cff&quot; stroke-width=&quot;2&quot;/&gt;&#x27;,
+ rect:&#x27;&lt;rect x=&quot;8&quot; y=&quot;10&quot; width=&quot;32&quot; height=&quot;22&quot; fill=&quot;#cfe5ff&quot; stroke=&quot;#1e5aa8&quot; stroke-width=&quot;2&quot;/&gt;&#x27;,
+ dice:&#x27;&lt;rect x=&quot;6&quot; y=&quot;12&quot; width=&quot;16&quot; height=&quot;16&quot; rx=&quot;3&quot; fill=&quot;#f6f8fb&quot;/&gt;&lt;rect x=&quot;26&quot; y=&quot;12&quot; width=&quot;16&quot; height=&quot;16&quot; rx=&quot;3&quot; fill=&quot;#f6f8fb&quot;/&gt;&lt;circle cx=&quot;14&quot; cy=&quot;20&quot; r=&quot;2&quot; fill=&quot;#1d2633&quot;/&gt;&lt;circle cx=&quot;30&quot; cy=&quot;16&quot; r=&quot;2&quot; fill=&quot;#1d2633&quot;/&gt;&lt;circle cx=&quot;38&quot; cy=&quot;24&quot; r=&quot;2&quot; fill=&quot;#1d2633&quot;/&gt;&#x27;};
+function renderLib(){const q=$(&#x27;libSearch&#x27;).value.trim();let h=&#x27;&#x27;;
+  for(const g of GROUP_ORDER){const ts=Object.keys(TYPES).filter(k=&gt;TYPES[k].group===g&amp;&amp;(!q||TYPES[k].label.includes(q)||g.includes(q)));if(!ts.length)continue;
+    h+=`&lt;div class=&quot;grp&quot;&gt;${g}&lt;/div&gt;&lt;div class=&quot;tiles&quot;&gt;${ts.map(k=&gt;`&lt;div class=&quot;tile&quot; data-type=&quot;${k}&quot;&gt;&lt;svg width=&quot;48&quot; height=&quot;40&quot; viewBox=&quot;0 0 48 40&quot;&gt;${ICON[k]}&lt;/svg&gt;&lt;span&gt;${TYPES[k].label}&lt;/span&gt;&lt;/div&gt;`).join(&#x27;&#x27;)}&lt;/div&gt;`}
+  $(&#x27;libBody&#x27;).innerHTML=h||&#x27;&lt;div class=&quot;muted&quot;&gt;没有这个器材&lt;/div&gt;&#x27;}
+$(&#x27;libSearch&#x27;).oninput=renderLib;
+let tileDrag=null;
+$(&#x27;libBody&#x27;).addEventListener(&#x27;pointerdown&#x27;,ev=&gt;{const t=ev.target.closest(&#x27;.tile&#x27;);if(!t)return;ev.preventDefault();tileDrag={type:t.dataset.type,sx:ev.clientX,sy:ev.clientY};$(&#x27;ghost&#x27;).textContent=TYPES[t.dataset.type].label});
+window.addEventListener(&#x27;pointermove&#x27;,ev=&gt;{if(!tileDrag)return;const g=$(&#x27;ghost&#x27;);g.style.display=&#x27;block&#x27;;g.style.left=ev.clientX+8+&#x27;px&#x27;;g.style.top=ev.clientY+8+&#x27;px&#x27;});
+window.addEventListener(&#x27;pointerup&#x27;,ev=&gt;{if(!tileDrag)return;const td=tileDrag;tileDrag=null;$(&#x27;ghost&#x27;).style.display=&#x27;none&#x27;;
+  const r=svg.getBoundingClientRect();let x,y;
+  if(ev.clientX&gt;=r.left&amp;&amp;ev.clientX&lt;=r.right&amp;&amp;ev.clientY&gt;=r.top&amp;&amp;ev.clientY&lt;=r.bottom&amp;&amp;Math.hypot(ev.clientX-td.sx,ev.clientY-td.sy)&gt;6){[x,y]=toWorld(ev.clientX,ev.clientY)}
+  else if(Math.hypot(ev.clientX-td.sx,ev.clientY-td.sy)&lt;=6){[x,y]=toWorld(r.left+r.width/2-80,r.top+r.height/2-60);x+=Math.random()*40;y+=Math.random()*40}else return;
+  const res=commit({t:&#x27;add&#x27;,type:td.type,x:Math.round(x/10)*10,y:Math.round(y/10)*10});if(res.ok){sel=res.id;cardOpen=true;$(&#x27;card&#x27;).dataset.v=&#x27;&#x27;;render()}});
+
+/* ========== 实验库（左） + 步骤 ========== */
+function hist(){try{return JSON.parse(内存存储.getItem(LS.hist))||{}}catch(e){return{}}}
+let openXp=null;
+function renderXpList(){const doms=[&#x27;全部&#x27;,&#x27;数与代数&#x27;,&#x27;图形与几何&#x27;,&#x27;统计与概率&#x27;];const q=libQ;
+  let h=`&lt;input class=&quot;search&quot; id=&quot;xpSearch&quot; placeholder=&quot;搜实验 / 知识点&quot; value=&quot;${esc(q)}&quot;&gt;&lt;div class=&quot;chips&quot;&gt;${doms.map(d=&gt;`&lt;span class=&quot;chip${libFilter===d?&#x27; on&#x27;:&#x27;&#x27;}&quot; data-dom=&quot;${d}&quot;&gt;${d}&lt;/span&gt;`).join(&#x27;&#x27;)}&lt;/div&gt;`;
+  const H=hist();
+  XP.filter(x=&gt;(libFilter===&#x27;全部&#x27;||x.domain===libFilter)&amp;&amp;(!q||(x.title+x.tools+x.q).includes(q))).forEach(x=&gt;{const hs=H[x.id];
+    h+=`&lt;div class=&quot;xp${openXp===x.id?&#x27; on&#x27;:&#x27;&#x27;}&quot; data-xp=&quot;${x.id}&quot;&gt;&lt;b&gt;${esc(x.title)}&lt;/b&gt;&lt;small&gt;${x.grade} 年级 · ${x.domain} · ${x.tools}&lt;/small&gt;`;
+    if(openXp===x.id)h+=`&lt;div class=&quot;detail&quot;&gt;${esc(x.q)}&lt;div style=&quot;margin-top:6px&quot;&gt;共 ${x.steps.length} 步，满分 ${x.steps.reduce((a,s)=&gt;a+s.score,0)} 分${hs?`&lt;br&gt;考过 ${hs.n} 次，最近 ${hs.last}，最常丢分：${esc(hs.worst||&#x27;无&#x27;)}`:&#x27;&#x27;}&lt;/div&gt;&lt;div class=&quot;row&quot;&gt;&lt;button class=&quot;btn pri&quot; data-start=&quot;practice&quot;&gt;练习&lt;/button&gt;&lt;button class=&quot;btn&quot; data-start=&quot;exam&quot;&gt;考试&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;`;
+    h+=&#x27;&lt;/div&gt;&#x27;});
+  $(&#x27;paneLib&#x27;).innerHTML=h;const s=$(&#x27;xpSearch&#x27;);s.oninput=()=&gt;{libQ=s.value;renderXpList();const n=$(&#x27;xpSearch&#x27;);n.focus();n.setSelectionRange(n.value.length,n.value.length)}}
+$(&#x27;paneLib&#x27;).addEventListener(&#x27;click&#x27;,ev=&gt;{const c=ev.target.closest(&#x27;[data-dom]&#x27;);if(c){libFilter=c.dataset.dom;renderXpList();return}
+  const st=ev.target.closest(&#x27;[data-start]&#x27;);if(st){startXp(openXp,st.dataset.start);return}
+  const x=ev.target.closest(&#x27;[data-xp]&#x27;);if(x){openXp=openXp===x.dataset.xp?null:x.dataset.xp;renderXpList()}});
+function renderSteps(){const p=$(&#x27;paneSteps&#x27;);if(!run){p.innerHTML=`&lt;div class=&quot;q&quot;&gt;自由探究：没有题，也没有分。把器材拖上台，连一连、调一调，台面会自己告诉你结果。&lt;/div&gt;&lt;div class=&quot;muted&quot;&gt;想按步骤做？到“实验库”选一个实验。&lt;/div&gt;`;return}
+  const tot=xp.steps.reduce((a,s)=&gt;a+s.score,0);let h=`&lt;div class=&quot;q&quot;&gt;&lt;b&gt;${esc(xp.title)}&lt;/b&gt;&lt;div style=&quot;margin-top:4px&quot;&gt;${esc(xp.q)}&lt;/div&gt;&lt;/div&gt;`;
+  if(mode===&#x27;exam&#x27;){h+=`&lt;div class=&quot;muted&quot;&gt;考试：共 ${xp.steps.length} 步，满分 ${tot} 分。没有提示，做完点右上角“提交”。&lt;/div&gt;&lt;div class=&quot;muted&quot; style=&quot;margin-top:8px&quot;&gt;操作 ${run.ops} 次&lt;/div&gt;`}
+  else{const cur=run.steps.findIndex(s=&gt;!s.done);xp.steps.forEach((s,i)=&gt;{const done=run.steps[i].done;h+=`&lt;div class=&quot;step${done?&#x27; done&#x27;:&#x27;&#x27;}${i===cur?&#x27; cur&#x27;:&#x27;&#x27;}&quot;&gt;&lt;span class=&quot;n&quot;&gt;${done?&#x27;✓&#x27;:i+1}&lt;/span&gt;&lt;div&gt;${esc(s.label)}${i===cur?`&lt;div class=&quot;hint&quot;&gt;提示：${esc(s.hint)}&lt;/div&gt;`:&#x27;&#x27;}&lt;/div&gt;&lt;span class=&quot;sc&quot;&gt;${s.score} 分&lt;/span&gt;&lt;/div&gt;`})}
+  p.innerHTML=h}
+document.querySelector(&#x27;.tabs&#x27;).onclick=ev=&gt;{const b=ev.target.closest(&#x27;button&#x27;);if(!b)return;showTab(b.dataset.tab)};
+function showTab(t){document.querySelectorAll(&#x27;.tabs button&#x27;).forEach(b=&gt;b.classList.toggle(&#x27;on&#x27;,b.dataset.tab===t));$(&#x27;paneLib&#x27;).style.display=t===&#x27;lib&#x27;?&#x27;block&#x27;:&#x27;none&#x27;;$(&#x27;paneSteps&#x27;).style.display=t===&#x27;steps&#x27;?&#x27;block&#x27;:&#x27;none&#x27;}
+$(&#x27;toggleLeft&#x27;).onclick=()=&gt;{$(&#x27;left&#x27;).classList.toggle(&#x27;closed&#x27;);setTimeout(render,220)};
+
+function startXp(id,m){xp=XP.find(x=&gt;x.id===id);if(!xp)return;mode=m;S=blankScene();xp.build(S);undoSt=[];redoSt=[];sel=null;cardOpen=false;
+  run={steps:xp.steps.map((s,i)=&gt;({i,done:false})),ops:0,errors:0,t0:Date.now(),finished:false};$(&#x27;title&#x27;).textContent=xp.title;
+  D=evaluate(S);setModeUi();showTab(&#x27;steps&#x27;);fit();if(m===&#x27;exam&#x27;)startTimer();toast(m===&#x27;exam&#x27;?&#x27;考试开始：没有提示，10 分钟&#x27;:&#x27;练习：跟着左边的步骤做，下一步要动的器材会发光&#x27;)}
+function setModeUi(){document.querySelectorAll(&#x27;#modeSeg button&#x27;).forEach(b=&gt;b.classList.toggle(&#x27;on&#x27;,b.dataset.mode===mode));
+  $(&#x27;timer&#x27;).style.display=$(&#x27;submit&#x27;).style.display=mode===&#x27;exam&#x27;?&#x27;inline-block&#x27;:&#x27;none&#x27;;$(&#x27;menuBtn&#x27;).style.display=mode===&#x27;practice&#x27;?&#x27;inline-block&#x27;:&#x27;none&#x27;;
+  $(&#x27;whyBtn&#x27;).style.display=mode===&#x27;exam&#x27;?&#x27;none&#x27;:&#x27;inline-block&#x27;;stopTimerIf()}
+function stopTimerIf(){if(mode!==&#x27;exam&#x27;&amp;&amp;timerId){clearInterval(timerId);timerId=null}}
+function startTimer(){clearInterval(timerId);const end=Date.now()+600000;const tick=()=&gt;{const ms=Math.max(0,end-Date.now());$(&#x27;timer&#x27;).textContent=`⏱ ${String(Math.floor(ms/60000)).padStart(2,&#x27;0&#x27;)}:${String(Math.floor(ms/1000)%60).padStart(2,&#x27;0&#x27;)}`;if(!ms){clearInterval(timerId);timerId=null;submitExam(true)}};tick();timerId=setInterval(tick,500)}
+function goFree(){mode=&#x27;free&#x27;;xp=null;run=null;sel=null;cardOpen=false;try{S=JSON.parse(内存存储.getItem(LS.free))||blankScene()}catch(e){S=blankScene()}undoSt=[];redoSt=[];$(&#x27;title&#x27;).textContent=&#x27;我的实验&#x27;;setModeUi();showTab(&#x27;lib&#x27;);afterChange()}
+$(&#x27;modeSeg&#x27;).onclick=ev=&gt;{const b=ev.target.closest(&#x27;button&#x27;);if(!b)return;const m=b.dataset.mode;
+  if(m===&#x27;free&#x27;){if(mode===&#x27;exam&#x27;&amp;&amp;!confirm(&#x27;退出考试？这次不计分。&#x27;))return;goFree();return}
+  const id=xp?xp.id:(openXp||null);if(!id){$(&#x27;left&#x27;).classList.remove(&#x27;closed&#x27;);showTab(&#x27;lib&#x27;);toast(&#x27;先在实验库里选一个实验&#x27;);return}
+  if(mode===&#x27;exam&#x27;&amp;&amp;m!==&#x27;exam&#x27;&amp;&amp;!confirm(&#x27;退出考试？这次不计分。&#x27;))return;startXp(id,m)};
+$(&#x27;menuBtn&#x27;).onclick=()=&gt;modal(`&lt;h3&gt;练习菜单&lt;/h3&gt;&lt;div class=&quot;row&quot; style=&quot;display:flex;gap:8px;flex-wrap:wrap&quot;&gt;&lt;button class=&quot;btn&quot; data-m=&quot;re&quot;&gt;重置练习&lt;/button&gt;&lt;button class=&quot;btn&quot; data-m=&quot;exit&quot;&gt;退出练习&lt;/button&gt;&lt;button class=&quot;btn pri&quot; data-m=&quot;exam&quot;&gt;进入考试&lt;/button&gt;&lt;/div&gt;`);
+$(&#x27;submit&#x27;).onclick=()=&gt;submitExam(false);
+function score(){return xp.steps.reduce((a,s,i)=&gt;a+(run.steps[i].done?s.score:0),0)}
+function practiceDone(){modal(`&lt;h3&gt;练习完成 🎉&lt;/h3&gt;&lt;p&gt;${xp.steps.length} 步全部做对，用了 ${run.ops} 次操作${run.errors?`，有 ${run.errors} 次被台面拒绝`:&#x27;&#x27;}。&lt;/p&gt;&lt;div class=&quot;q&quot;&gt;&lt;b&gt;为什么&lt;/b&gt;&lt;div&gt;${esc(xp.why)}&lt;/div&gt;&lt;/div&gt;&lt;div style=&quot;display:flex;gap:8px&quot;&gt;&lt;button class=&quot;btn&quot; data-m=&quot;re&quot;&gt;再练一次&lt;/button&gt;&lt;button class=&quot;btn pri&quot; data-m=&quot;exam&quot;&gt;进入考试&lt;/button&gt;&lt;button class=&quot;btn&quot; data-m=&quot;lib&quot;&gt;返回实验库&lt;/button&gt;&lt;/div&gt;`)}
+function submitExam(auto){if(mode!==&#x27;exam&#x27;||!run)return;clearInterval(timerId);timerId=null;const tot=xp.steps.reduce((a,s)=&gt;a+s.score,0),sc=score();const used=Math.round((Date.now()-run.t0)/1000);
+  const H=hist(),h=H[xp.id]||{n:0,lost:{}};h.n++;h.last=`${sc}/${tot}`;xp.steps.forEach((s,i)=&gt;{if(!run.steps[i].done)h.lost[s.label]=(h.lost[s.label]||0)+1});const w=Object.entries(h.lost).sort((a,b)=&gt;b[1]-a[1])[0];h.worst=w?w[0]:&#x27;&#x27;;H[xp.id]=h;内存存储.setItem(LS.hist,JSON.stringify(H));
+  const lost=xp.steps.filter((s,i)=&gt;!run.steps[i].done);
+  modal(`&lt;h3&gt;${auto?&#x27;时间到，&#x27;:&#x27;&#x27;}考试报告&lt;/h3&gt;&lt;div class=&quot;score&quot;&gt;${sc}&lt;span class=&quot;muted&quot; style=&quot;font-size:18px&quot;&gt; / ${tot}&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;muted&quot;&gt;用时 ${Math.floor(used/60)} 分 ${used%60} 秒 · 操作 ${run.ops} 次 · 被拒绝 ${run.errors} 次&lt;/div&gt;
+   &lt;ul class=&quot;rep&quot;&gt;${xp.steps.map((s,i)=&gt;`&lt;li class=&quot;${run.steps[i].done?&#x27;&#x27;:&#x27;lost&#x27;}&quot;&gt;&lt;span&gt;${run.steps[i].done?&#x27;✓&#x27;:&#x27;×&#x27;} ${esc(s.label)}&lt;/span&gt;&lt;span&gt;${run.steps[i].done?s.score:0}/${s.score}&lt;/span&gt;&lt;/li&gt;`).join(&#x27;&#x27;)}&lt;/ul&gt;
+   ${lost.length?`&lt;div class=&quot;q&quot;&gt;丢分在：${lost.map(s=&gt;esc(s.label)).join(&#x27;；&#x27;)}。去练习模式把这几步再做一遍。&lt;/div&gt;`:&#x27;&lt;div class=&quot;q&quot;&gt;满分！&lt;/div&gt;&#x27;}
+   &lt;div style=&quot;display:flex;gap:8px&quot;&gt;&lt;button class=&quot;btn pri&quot; data-m=&quot;exam&quot;&gt;再考一次&lt;/button&gt;&lt;button class=&quot;btn&quot; data-m=&quot;practice&quot;&gt;回练习&lt;/button&gt;&lt;button class=&quot;btn&quot; data-m=&quot;lib&quot;&gt;返回实验库&lt;/button&gt;&lt;/div&gt;`);
+  run.finished=true}
+function modal(h){$(&#x27;modalBox&#x27;).innerHTML=h;$(&#x27;modal&#x27;).style.display=&#x27;grid&#x27;}
+$(&#x27;modal&#x27;).onclick=ev=&gt;{const b=ev.target.closest(&#x27;[data-m]&#x27;);if(ev.target===$(&#x27;modal&#x27;)){$(&#x27;modal&#x27;).style.display=&#x27;none&#x27;;return}if(!b)return;const m=b.dataset.m,id=xp&amp;&amp;xp.id;$(&#x27;modal&#x27;).style.display=&#x27;none&#x27;;
+  if(m===&#x27;re&#x27;)startXp(id,&#x27;practice&#x27;);else if(m===&#x27;exam&#x27;)startXp(id,&#x27;exam&#x27;);else if(m===&#x27;practice&#x27;)startXp(id,&#x27;practice&#x27;);else if(m===&#x27;exit&#x27;||m===&#x27;lib&#x27;)goFree();else if(m===&#x27;savefind&#x27;){const t=$(&#x27;findTx&#x27;).value.trim();if(t){const a=JSON.parse(内存存储.getItem(LS.find)||&#x27;[]&#x27;);a.unshift({t,at:new Date().toLocaleString(),xp:xp?xp.title:&#x27;自由探究&#x27;});内存存储.setItem(LS.find,JSON.stringify(a.slice(0,50)));toast(&#x27;记下了&#x27;)}}};
+$(&#x27;whyBtn&#x27;).onclick=()=&gt;{if(!xp){modal(&#x27;&lt;h3&gt;为什么&lt;/h3&gt;&lt;p&gt;自由探究没有标准答案。台面上的每个结果都是按数学规律算出来的——试着改一个数，猜猜会发生什么，再看看猜对没有。&lt;/p&gt;&#x27;);return}
+  if(mode===&#x27;practice&#x27;&amp;&amp;!run.finished){modal(`&lt;h3&gt;为什么&lt;/h3&gt;&lt;p&gt;先自己做完再看——发现之后再讲，记得更牢。&lt;/p&gt;`);return}modal(`&lt;h3&gt;为什么&lt;/h3&gt;&lt;p&gt;${esc(xp.why)}&lt;/p&gt;`)};
+$(&#x27;findBtn&#x27;).onclick=()=&gt;{const a=JSON.parse(内存存储.getItem(LS.find)||&#x27;[]&#x27;);modal(`&lt;h3&gt;我的发现&lt;/h3&gt;&lt;textarea id=&quot;findTx&quot; placeholder=&quot;我发现……&quot;&gt;&lt;/textarea&gt;&lt;div style=&quot;display:flex;gap:8px;margin:8px 0&quot;&gt;&lt;button class=&quot;btn pri&quot; data-m=&quot;savefind&quot;&gt;记下来&lt;/button&gt;&lt;/div&gt;${a.slice(0,5).map(f=&gt;`&lt;div class=&quot;muted&quot; style=&quot;font-size:12px;margin-top:6px&quot;&gt;${esc(f.at)} · ${esc(f.xp)}&lt;br&gt;&lt;span style=&quot;color:var(--tx)&quot;&gt;${esc(f.t)}&lt;/span&gt;&lt;/div&gt;`).join(&#x27;&#x27;)}`)};
+
+let toastT;function toast(t,err){const el=$(&#x27;toast&#x27;);el.textContent=t;el.className=err?&#x27;err&#x27;:&#x27;&#x27;;el.style.display=&#x27;block&#x27;;clearTimeout(toastT);toastT=setTimeout(()=&gt;el.style.display=&#x27;none&#x27;,2600)}
+window.addEventListener(&#x27;resize&#x27;,render);
+renderLib();renderXpList();goFree();
+window.__lab={get S(){return S},act,evaluate,commit,startXp,XP,get run(){return run},submitExam,goFree};
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+" loading="eager"></iframe></div>
     <h2>数学实验室 · 一间工作间</h2>
     <p class="section-sub">选一个问题，在工作间里摆弄器材；世界模型立刻算出后果。</p>
     <div class="lab-topbar" id="labTopBar">
