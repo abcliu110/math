@@ -4799,6 +4799,8 @@ const TYPES={
  tri:{label:&#x27;三角形&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;三角形&#x27;,defaults:{a:30,b:40},fields:[{k:&#x27;a&#x27;,label:&#x27;第一个角（度）&#x27;,min:1,max:150},{k:&#x27;b&#x27;,label:&#x27;第二个角（度）&#x27;,min:1,max:150}],size:()=&gt;[240,170]},
  para:{label:&#x27;平行四边形&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;平行四边形&#x27;,defaults:{base:6,h:4},fields:[{k:&#x27;base&#x27;,label:&#x27;底（格）&#x27;,min:1,max:12},{k:&#x27;h&#x27;,label:&#x27;高（格）&#x27;,min:1,max:12}],size:()=&gt;[240,170]},
  line:{label:&#x27;折线统计图&#x27;,group:&#x27;统计&#x27;,prefix:&#x27;折线图&#x27;,defaults:{y1:3,y2:6,y3:4},fields:[{k:&#x27;y1&#x27;,label:&#x27;第一年（万元）&#x27;,min:0,max:12},{k:&#x27;y2&#x27;,label:&#x27;第二年（万元）&#x27;,min:0,max:12},{k:&#x27;y3&#x27;,label:&#x27;第三年（万元）&#x27;,min:0,max:12}],size:()=&gt;[220,190]},
+ cage:{label:&#x27;鸡兔笼&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;鸡兔笼&#x27;,defaults:{heads:35,legs:94,rabbits:0},fields:[{k:&#x27;heads&#x27;,label:&#x27;头（总数）&#x27;,min:1,max:60},{k:&#x27;legs&#x27;,label:&#x27;腿（总数）&#x27;,min:0,max:200,step:2},{k:&#x27;rabbits&#x27;,label:&#x27;兔（只）&#x27;,min:0,max:60}],size:()=&gt;[220,150]},
+ pair:{label:&#x27;数对&#x27;,group:&#x27;关系&#x27;,prefix:&#x27;数对&#x27;,defaults:{x:3,y:2},fields:[{k:&#x27;x&#x27;,label:&#x27;第几列（x）&#x27;,min:0,max:8},{k:&#x27;y&#x27;,label:&#x27;第几行（y）&#x27;,min:0,max:8}],size:()=&gt;[240,240]},
  numline:{label:&#x27;数轴&#x27;,group:&#x27;关系&#x27;,prefix:&#x27;数轴&#x27;,accepts:&#x27;value&#x27;,defaults:{min:0,max:2},
    fields:[{k:&#x27;min&#x27;,label:&#x27;最左&#x27;,min:-10,max:10},{k:&#x27;max&#x27;,label:&#x27;最右&#x27;,min:-9,max:20}],size:()=&gt;[460,118]},
  balance:{label:&#x27;天平&#x27;,group:&#x27;关系&#x27;,prefix:&#x27;天平&#x27;,accepts:&#x27;value&#x27;,slots:true,defaults:{},fields:[],size:()=&gt;[340,200]},
@@ -4881,6 +4883,9 @@ function evaluate(s){
       else if(d.value.d===1)sig(&#x27;ok&#x27;,`${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`);
       else sig(&#x27;warn&#x27;,`除不尽：${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`)}
     if(e.type===&#x27;angle&#x27;){const k=e.props.deg;const kind=k===0?&#x27;零度角&#x27;:k&lt;90?&#x27;锐角&#x27;:k===90?&#x27;直角&#x27;:k&lt;180?&#x27;钝角&#x27;:k===180?&#x27;平角&#x27;:&#x27;大于平角&#x27;;sig(k===90?&#x27;ok&#x27;:&#x27;info&#x27;,`${k}°：${kind}`)}
+    if(e.type===&#x27;cage&#x27;){const {heads,legs,rabbits}=e.props;const c=heads-rabbits,got=4*rabbits+2*c;
+      if(c&lt;0)sig(&#x27;err&#x27;,&#x27;兔不能比头还多&#x27;);else if(got===legs)sig(&#x27;ok&#x27;,`头、腿都对：兔 ${rabbits} 只，鸡 ${c} 只`);else sig(&#x27;warn&#x27;,`腿 ${got}，要 ${legs}：${got&gt;legs?&#x27;腿多了 &#x27;+(got-legs):&#x27;还差 &#x27;+(legs-got)}`)}
+    if(e.type===&#x27;pair&#x27;){const {x,y}=e.props;sig(&#x27;info&#x27;,`(${x}, ${y})：第 ${x} 列，第 ${y} 行`)}
     if(e.type===&#x27;tri&#x27;){const {a,b}=e.props,c=180-a-b;if(c&gt;0)sig(&#x27;ok&#x27;,`第三个角是 ${c}°，三个角加起来是 180°`);else sig(&#x27;err&#x27;,`两个角已经 ${a+b}°，超过 180°，画不出三角形`)}
     if(e.type===&#x27;para&#x27;){const {base,h}=e.props;sig(&#x27;info&#x27;,`面积 = 底 × 高 = ${base} × ${h} = ${base*h}`)}
     if(e.type===&#x27;line&#x27;){const {y1,y2,y3}=e.props;const d12=y2-y1,d23=y3-y2;sig(&#x27;info&#x27;,`第二年比第一年${d12&gt;=0?&#x27;多&#x27;:&#x27;少&#x27;} ${Math.abs(d12)} 万元`);sig(&#x27;info&#x27;,`第三年比第二年${d23&gt;=0?&#x27;多&#x27;:&#x27;少&#x27;} ${Math.abs(d23)} 万元`)}
@@ -5022,7 +5027,12 @@ const DRAW={
  num:(e,d,w,h)=&gt;`&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;${h/2+14}&quot; text-anchor=&quot;middle&quot; font-size=&quot;28&quot;&gt;${e.props.v}&lt;/text&gt;`,
  frac:(e,d,w)=&gt;{const {n,d:dd}=e.props,rows=Math.max(1,Math.ceil(n/dd)),bw=w-24,sw=bw/dd;let s=`&lt;text class=&quot;big&quot; x=&quot;${w-12}&quot; y=&quot;18&quot; text-anchor=&quot;end&quot; font-size=&quot;14&quot;&gt;${n}/${dd}&lt;/text&gt;`;
    for(let r=0;r&lt;rows;r++)for(let i=0;i&lt;dd;i++){const k=r*dd+i+1;s+=`&lt;rect class=&quot;seg-cell&quot; data-seg=&quot;${k}&quot; x=&quot;${12+i*sw}&quot; y=&quot;${28+r*28}&quot; width=&quot;${sw}&quot; height=&quot;22&quot; fill=&quot;${k&lt;=n?&#x27;#ff9f43&#x27;:&#x27;#fff&#x27;}&quot; stroke=&quot;#5b6778&quot; stroke-width=&quot;1&quot;/&gt;`}return s},
- tri:(e,d,w,h)=&gt;{const {a,b}=e.props,x0=30,x1=w-30,yb=h-30,L=x1-x0;let s=`&lt;line x1=&quot;${x0}&quot; y1=&quot;${yb}&quot; x2=&quot;${x1}&quot; y2=&quot;${yb}&quot; stroke=&quot;#1d2633&quot; stroke-width=&quot;2&quot;/&gt;`;
+ cage:(e,d,w,h)=&gt;{const {heads,legs,rabbits}=e.props,c=heads-rabbits;
+   return `&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;48&quot; text-anchor=&quot;middle&quot; font-size=&quot;16&quot;&gt;兔 ${rabbits} 只 · 鸡 ${c} 只&lt;/text&gt;&lt;text class=&quot;ink&quot; x=&quot;${w/2}&quot; y=&quot;78&quot; text-anchor=&quot;middle&quot; font-size=&quot;14&quot;&gt;头 ${heads} · 腿 ${4*rabbits+2*c} / ${legs}&lt;/text&gt;`},
+ pair:(e,d,w,h)=&gt;{const {x,y}=e.props,c=24,x0=30,y0=h-30;let s=&#x27;&#x27;;
+   for(let i=0;i&lt;=8;i++){s+=`&lt;line x1=&quot;${x0+i*c}&quot; y1=&quot;${y0}&quot; x2=&quot;${x0+i*c}&quot; y2=&quot;${y0-8*c}&quot; stroke=&quot;#cbd5e1&quot;/&gt;&lt;line x1=&quot;${x0}&quot; y1=&quot;${y0-i*c}&quot; x2=&quot;${x0+8*c}&quot; y2=&quot;${y0-i*c}&quot; stroke=&quot;#cbd5e1&quot;/&gt;`}
+   s+=`&lt;circle cx=&quot;${x0+x*c}&quot; cy=&quot;${y0-y*c}&quot; r=&quot;7&quot; fill=&quot;#ff9f43&quot; stroke=&quot;#1d2633&quot;/&gt;&lt;text class=&quot;ink&quot; x=&quot;${x0+x*c+10}&quot; y=&quot;${y0-y*c-8}&quot; font-size=&quot;12&quot;&gt;(${x}, ${y})&lt;/text&gt;`;return s},
+tri:(e,d,w,h)=&gt;{const {a,b}=e.props,x0=30,x1=w-30,yb=h-30,L=x1-x0;let s=`&lt;line x1=&quot;${x0}&quot; y1=&quot;${yb}&quot; x2=&quot;${x1}&quot; y2=&quot;${yb}&quot; stroke=&quot;#1d2633&quot; stroke-width=&quot;2&quot;/&gt;`;
    const A=a*Math.PI/180,B=b*Math.PI/180;
    if(a+b&lt;180){const t=L/(Math.cos(A)+Math.sin(A)*Math.cos(B)/Math.sin(B));const px=x0+t*Math.cos(A),py=yb-t*Math.sin(A);
      s+=`&lt;polygon points=&quot;${x0},${yb} ${x1},${yb} ${px.toFixed(1)},${py.toFixed(1)}&quot; fill=&quot;#fde68a&quot; stroke=&quot;#92400e&quot; stroke-width=&quot;2&quot;/&gt;&lt;text class=&quot;big&quot; x=&quot;${x0+8}&quot; y=&quot;${yb-6}&quot; font-size=&quot;12&quot;&gt;${a}°&lt;/text&gt;&lt;text class=&quot;big&quot; x=&quot;${x1-38}&quot; y=&quot;${yb-6}&quot; font-size=&quot;12&quot;&gt;${b}°&lt;/text&gt;`}
@@ -5458,6 +5468,19 @@ const P47=[
          {label:&#x27;3 公顷是 30000 平方米&#x27;,score:2,hint:&#x27;看乘法器的读数&#x27;,target:T45(&#x27;mul&#x27;),check:(s,D)=&gt;P45H.val(s,D,&#x27;mul&#x27;,Q(30000))}]},
 ];
 P47.forEach(p=&gt;XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
+
+/* ========== 第三期补充：鸡兔同笼（用鸡兔笼）、位置（数对） ========== */
+const P48=[
+ {id:&#x27;g4_16&#x27;,grade:4,domain:&#x27;数与代数&#x27;,tools:&#x27;鸡兔笼&#x27;,title:&#x27;鸡兔同笼：35 个头、94 条腿，鸡兔各几只？&#x27;,q:&#x27;假设全是鸡，腿数少了，就一只一只换成兔子：每换一只，腿多 2 条。&#x27;,why:&#x27;兔 12 只、鸡 23 只：12 × 4 + 23 × 2 = 94。&#x27;,
+  build:s=&gt;{addEnt(s,&#x27;cage&#x27;,200,60,{heads:35,legs:94,rabbits:0})},
+  steps:[{label:&#x27;把兔子数调到 12&#x27;,score:1,hint:&#x27;点鸡兔笼，在属性卡里把“兔”调到 12&#x27;,target:T45(&#x27;cage&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;cage&#x27;)].props.rabbits===12},
+         {label:&#x27;头和腿都对上：鸡 23 只&#x27;,score:2,hint:&#x27;看鸡兔笼下面的文字&#x27;,target:T45(&#x27;cage&#x27;),check:(s,D)=&gt;{const c=byType(s,&#x27;cage&#x27;);return (D[c].sig||[]).some(x=&gt;x.tx===&#x27;头、腿都对：兔 12 只，鸡 23 只&#x27;)}}]},
+ {id:&#x27;g5_2&#x27;,grade:5,domain:&#x27;图形与几何&#x27;,tools:&#x27;数对&#x27;,title:&#x27;位置：(5, 4) 表示什么位置？&#x27;,q:&#x27;数对先写列，后写行：(5, 4) 是第 5 列、第 4 行。&#x27;,why:&#x27;先找第 5 列，再往上数第 4 行，交叉的地方就是 (5, 4)。&#x27;,
+  build:s=&gt;{addEnt(s,&#x27;pair&#x27;,200,40,{x:3,y:2})},
+  steps:[{label:&#x27;把列调到 5&#x27;,score:1,hint:&#x27;点数对卡，在属性卡里把“第几列”调到 5&#x27;,target:T45(&#x27;pair&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;pair&#x27;)].props.x===5},
+         {label:&#x27;行调到 4，找到 (5, 4)&#x27;,score:2,hint:&#x27;把“第几行”调到 4&#x27;,target:T45(&#x27;pair&#x27;),check:(s,D)=&gt;{const p=s.entities[byType(s,&#x27;pair&#x27;)].props;return p.x===5&amp;&amp;p.y===4}}]},
+];
+P48.forEach(p=&gt;XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
 
 function startXp(id,m){xp=XP.find(x=&gt;x.id===id);if(!xp)return;mode=m;S=blankScene();xp.build(S);undoSt=[];redoSt=[];sel=null;cardOpen=false;
   run={steps:xp.steps.map((s,i)=&gt;({i,done:false})),ops:0,errors:0,t0:Date.now(),finished:false};$(&#x27;title&#x27;).textContent=xp.title;
