@@ -34,6 +34,8 @@ check('timer: entering challenge starts the clock, leaving stops it',
   app.includes("if (m === 'challenge') { if (!labExam) labExamStart();") && app.includes('labExamStop(); // 退出挑战停表'));
 check('timer: leaving challenge ends the exam procedure (no stale “考试进行中” in free play)',
   app.includes('退出挑战：考试流程到此结束') && app.includes("labWorld.procedure.mode === 'exam'") && app.includes("MathWorld.apply(labWorld, { type: 'procedureEnd' })"));
+check('timer: refresh mid-exam ends the exam procedure on restore (no stale “考试进行中” after reload)',
+  app.includes('刷新打断考试') && app.includes("labWorld = MathWorld.apply(labWorld, { type: 'procedureEnd' }).world;"));
 check('timer: timeout auto-submits when questions were attempted',
   app.includes('labExamTimeout') && app.includes("if (labChallengeAttempts.length) {") && app.includes("labTrace('时间到了，自动交卷', false);"));
 check('timer: submitting stops the clock (marking is not timed)',
@@ -68,6 +70,10 @@ check('report: peek never triggers touch scrolling (touch-action:none + pointer 
   css.includes('#labReportPeek{touch-action:none') && app.includes('peek.setPointerCapture'));
 check('report: peek has no pointerleave off-trigger (a mouse pointerleave fires when touch starts and would un-hide the report mid-hold)',
   !app.includes("peek.addEventListener('pointerleave', off)") && app.includes("peek.addEventListener('lostpointercapture', off)"));
+check('report: peek scrolls the main bench into view while held (hiding alone only lands on the combo bench — scroll anchoring moves the viewport ~600px up)',
+  app.includes("peekScrollY = window.scrollY;") && app.includes("document.getElementById('worldBenchCard')") && app.includes("bench.scrollIntoView({ behavior: 'instant', block: 'start' });"));
+check('report: peek restores the pre-hold scroll position on release',
+  app.includes("window.scrollTo({ top: peekScrollY, behavior: 'instant' });"));
 check('report: submitting clears the peek class from the sheet as well',
   app.includes("sheet.classList.remove('lab-report-peek')"));
 check('report: entering the balance question puts the balance on the bench and switches to the balance view',

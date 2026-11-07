@@ -3380,6 +3380,15 @@ function labSeedWorld(qid) {
     labWorld = labWorldRestore();
     if (labWorld) {
       labRestoredFlag = true; // 这次恢复的器材值，进题时不许重设洗掉
+      // 刷新打断考试：恢复的世界里还挂着考试流程，但本节课的挑战
+      // （计时器、labMode、labChallengeSubmitted）都没存档，回来就是
+      // 自由玩。考试流程到此结束，不然流程面板一直挂着“考试进行中”
+      // （2026-11-07 复测 6a012392 附带发现；labSetMode('free') 正常
+      // 退出时也是这么结束的，这里补上刷新这条路）。只结束考试流程，
+      // 练习流程不动；结束完再从世界反向同步 legacy 数组。
+      if (labWorld.procedure && labWorld.procedure.mode === 'exam') {
+        labWorld = MathWorld.apply(labWorld, { type: 'procedureEnd' }).world;
+      }
       labSeedLegacyFromWorld(labWorld); // legacy 小站的数组/滑杆先按世界摆好，不然同步会写回默认值
     } else if (qid && MathWorld.LAB_SEEDS[qid]) labWorld = MathWorld.LAB_SEEDS[qid]();
     else {
@@ -5566,15 +5575,32 @@ function labReportShow(wrong) {
     // 触屏上 preventDefault 拦不住滚动：按钮得有 touch-action:none（见 CSS），
     // 不然一滑就 pointercancel、报告立刻回来，页面还往上滚（同次复测）。
     // 再加 pointer capture：指针挪出按钮一点点也不丢 pointerup。
+    // 光藏还不够：报告在台面下面，display:none 藏掉它会让页面变短，
+    // scroll anchoring 把视口往上拽（复测约 600px），露出来的是中间的
+    // 组合台，不是主台面（2026-11-07 复测 6a012392 第 1 项；本地 repro
+    // peek-bench 实测：按住时 scrollY 3760→3462，主台面还在视口上方
+    // 约 2450px）。所以按住要主动把主台面卡片带进视口，松开再回到
+    // 按住前的位置——先记 scrollY 再藏（读数在布局变之前），松开先
+    // 恢复布局再滚回去。
+    var peekScrollY = null; // 按住前的位置；null = 没在按住
     const on = function (e) {
       if (e && e.preventDefault) e.preventDefault();
       if (e && peek.setPointerCapture) { try { peek.setPointerCapture(e.pointerId); } catch (err) {} }
+      if (peekScrollY === null) {
+        peekScrollY = window.scrollY;
+        const bench = document.getElementById('worldBenchCard');
+        if (bench) bench.scrollIntoView({ behavior: 'instant', block: 'start' });
+      }
       box.classList.add('lab-report-peek');
       if (sheet) sheet.classList.add('lab-report-peek');
     };
     const off = function () {
       box.classList.remove('lab-report-peek');
       if (sheet) sheet.classList.remove('lab-report-peek');
+      if (peekScrollY !== null) {
+        window.scrollTo({ top: peekScrollY, behavior: 'instant' });
+        peekScrollY = null;
+      }
     };
     peek.addEventListener('pointerdown', on);
     peek.addEventListener('pointerup', off);

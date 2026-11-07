@@ -774,10 +774,10 @@ async function main() {
       const mouseOk = heldMouse.boxDisplay === 'none' && heldMouse.sheetDisplay === 'none';
       const touchOk = heldTouch.boxDisplay === 'none' && heldTouch.sheetDisplay === 'none' &&
         Math.abs(heldTouch.scrollY - heldMouse.scrollY) < 10;
-      // 注意：藏报告会让页面变短，scroll anchoring 会把 scrollY 从 3760 拉到
-      // 3462——鼠标按住时也是 3462，这是藏报告的正常锚定，不是触屏滚动。
-      // 触屏滚动的原 bug 是 scrollY 往上 +172px；所以拿触屏和鼠标的按住值比，
-      // 不拿按住前比。松开后 scrollY 回到 3760 也证明没滚。
+      // 注意：按住时 peek 会主动把主台面滚进视口（见 peek-bench 场景），
+      // 所以按住的 scrollY 是台面位置，不是按住前的位置；触屏滚动的原 bug
+      // 是 scrollY 往上 +172px——拿触屏和鼠标的按住值比，不拿按住前比。
+      // 松开后 scrollY 回到 3760 也证明没滚。
       const restoreOk = afterMouse.boxDisplay !== 'none' && afterMouse.sheetDisplay !== 'none' &&
         afterTouch.boxDisplay !== 'none' && afterTouch.sheetDisplay !== 'none';
       report.pass = mouseOk && touchOk && restoreOk;
@@ -895,6 +895,91 @@ async function main() {
       report.pass = during === true && after.hasExamLine === false && after.procMode !== 'exam';
       note(report.pass ? 'RESULT: PASS — no stale 考试进行中 after leaving challenge'
         : 'RESULT: FAIL — stale 考试进行中 remains in free play');
+    } else if (scenario === 'peek-bench') {
+      // 复测 6a012392 第 1 项：按住看台面藏/恢复通了，但按住时页面往上滚约 600px，
+      // 露出来的是组合台数轴（空的），不是主台面天平。本场景复现这一点：
+      // 走到交卷后状态，按住 peek 按钮，量按住期间视口里到底是哪块台面、
+      // 主台面天平的盘子在不在视口里、松开后 scrollY 回不回得来。
+      // （旧 peek-hold 只比“按住时 scrollY 动没动”，把藏报告后的 scroll
+      // anchoring 当正常——它只证明了藏/恢复，没证明露出来的是主台面。）
+      await enterLab();
+      await evaljs(`(function(){var b=document.getElementById('labModeChallenge');if(b)b.click();})()`);
+      await sleep(300);
+      await evaljs(`(function(){var b=document.getElementById('labQ-balfrac');if(b)b.click();})()`);
+      await sleep(400);
+      await evaljs(`document.getElementById('worldBalCard').classList.remove('collapsed')`);
+      await sleep(200);
+      const [clearBtn] = await centers('[data-world="bal-clear"]');
+      if (clearBtn) { await clickAt(clearBtn.cx, clearBtn.cy); await sleep(300); }
+      const [chipS, dropR] = await centers('[data-drag-chip="weight"][data-qty="1/6"]', '#worldBalDropR');
+      if (chipS && dropR) await drag(chipS.cx, chipS.cy, dropR.cx, dropR.cy, 12, 40);
+      await evaljs(`(function(){var b=document.getElementById('labChallengeSubmit');if(b)b.click();})()`);
+      await sleep(300);
+      await evaljs(`(function(){var b=document.querySelector('[data-lab-mark="wrong"]');if(b)b.click();})()`);
+      await sleep(200);
+      await evaljs(`(function(){var b=document.getElementById('labChallengeFinish');if(b)b.click();})()`);
+      await sleep(400);
+      const viewState = async () => evaljs(`(function(){
+        function r(sel){var el=document.querySelector(sel);if(!el)return null;var b=el.getBoundingClientRect();return {top:Math.round(b.top),bottom:Math.round(b.bottom),inView:b.bottom>0&&b.top<window.innerHeight};}
+        var c=document.elementFromPoint(Math.round(window.innerWidth/2),Math.round(window.innerHeight/2));
+        return { scrollY: Math.round(window.scrollY),
+          benchView: r('#worldBenchView'), panL: r('#worldBenchPanL'), panR: r('#worldBenchPanR'),
+          comboBal: r('#lab-balance2'), comboLine: r('#lab-numline'),
+          centerEl: c?(c.tagName+(c.id?'#'+c.id:'')):'(none)' };
+      })()`);
+      const [peekBtn] = await centers('#labReportPeek');
+      const before = await viewState();
+      note('before hold: ' + JSON.stringify(before));
+      await mouse('mousePressed', peekBtn.cx, peekBtn.cy);
+      await sleep(800);
+      const heldMouse = await viewState();
+      note('while holding (mouse): ' + JSON.stringify(heldMouse));
+      await mouse('mouseReleased', peekBtn.cx, peekBtn.cy);
+      await sleep(300);
+      const afterMouse = await viewState();
+      note('after mouse release: ' + JSON.stringify(afterMouse));
+      // 触屏按住同样要露主台面（云端测不了触屏，本地是唯一验证）。
+      const [peekBtn2] = await centers('#labReportPeek');
+      await touch('touchStart', peekBtn2.cx, peekBtn2.cy);
+      await sleep(700);
+      const heldTouch = await viewState();
+      note('while holding (touch): ' + JSON.stringify(heldTouch));
+      await touch('touchEnd', peekBtn2.cx, peekBtn2.cy);
+      await sleep(300);
+      const afterTouch = await viewState();
+      note('after touch release: ' + JSON.stringify(afterTouch));
+      const benchInView = (h) => h.benchView && h.benchView.inView && h.panL && h.panL.inView && h.panR && h.panR.inView;
+      const mouseOk = benchInView(heldMouse) && Math.abs(afterMouse.scrollY - before.scrollY) < 10;
+      const touchOk = benchInView(heldTouch) && Math.abs(afterTouch.scrollY - before.scrollY) < 10;
+      report.pass = mouseOk && touchOk;
+      note('mouse: bench in view while held + scroll restores: ' + mouseOk + ' | touch: ' + touchOk);
+      note(report.pass ? 'RESULT: PASS — main bench balance is in view while held (mouse + touch), scroll restores on release'
+        : 'RESULT: FAIL — while held the main bench is NOT in view (mouse scrollY ' + before.scrollY + ' -> ' + heldMouse.scrollY + ', touch -> ' + heldTouch.scrollY + ') or scroll did not restore');
+    } else if (scenario === 'exam-refresh') {
+      // 复测 6a012392 附带发现：中途刷新页面打断考试，自由玩里“台面在说什么”
+      // 仍显示“考试进行中”。进挑战 → 天平题 → 刷新 → 重进实验室，
+      // 看流程面板里还有没有“考试进行中”，世界里的流程还挂不挂着考试。
+      await enterLab();
+      await evaljs(`(function(){var b=document.getElementById('labModeChallenge');if(b)b.click();})()`);
+      await sleep(300);
+      await evaljs(`(function(){var b=document.getElementById('labQ-balfrac');if(b)b.click();})()`);
+      await sleep(400);
+      const during = await evaljs(`(function(){var b=document.getElementById('worldProcOut');return b?b.innerHTML.indexOf('考试进行中')>=0:false;})()`);
+      note('procedure panel during exam shows 考试进行中: ' + during);
+      await send('Page.reload', { ignoreCache: true });
+      await sleep(2500);
+      await enterLab();
+      await sleep(300);
+      const after = await evaljs(`(function(){
+        var b=document.getElementById('worldProcOut');
+        return { hasExamLine: b?b.innerHTML.indexOf('考试进行中')>=0:null,
+          procMode: (typeof labWorld!=='undefined'&&labWorld&&labWorld.procedure)?labWorld.procedure.mode:null,
+          text: b?b.textContent.slice(0,80):'' };
+      })()`);
+      note('after refresh + re-enter lab: ' + JSON.stringify(after));
+      report.pass = during === true && after.hasExamLine === false && after.procMode !== 'exam';
+      note(report.pass ? 'RESULT: PASS — no stale 考试进行中 after refresh mid-exam'
+        : 'RESULT: FAIL — stale 考试进行中 remains after refresh mid-exam');
     } else {
       console.log('unknown scenario: ' + scenario);
       cleanup();
