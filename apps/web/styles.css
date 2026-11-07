@@ -910,6 +910,21 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
 .lab-traces li{margin:4px 0}
 /* 挑战模式：提示藏起来，学生自己想 */
 #lab.lab-challenge .hint,#lab.lab-challenge .lab-hint{display:none}
+/* 挑战模式：干净台面——练习辅助（为什么/我的发现）收起来，只剩台面 + 交卷 */
+#lab.lab-challenge .lab-bench-foot,#lab.lab-challenge #labWhyBox{display:none}
+/* 挑战计时器：进挑战模式就显示在模式行 */
+#labExamTimer{margin-left:8px}
+/* 丢分报告：按住看台面时报告先藏起来 */
+#labChallengeReport.lab-report-peek{display:none}
+/* 交卷报告单：顶部下滑关闭，快速预览不关单只看台面 */
+.lab-report-sheet{border:2px solid var(--line);border-radius:12px;padding:0 12px 12px;background:#fff;margin:12px 0}
+.lab-report-handle{text-align:center;color:var(--muted);font-size:13px;padding:8px 0 4px;cursor:grab;touch-action:none;user-select:none}
+.lab-report-grip{display:block;font-size:18px;line-height:1;letter-spacing:4px}
+.lab-cause[aria-pressed="true"]{border-color:#2563eb;background:#dbeafe;color:#1e3a8a}
+/* 哪一步总丢分：错题本顶部的体检表 */
+.lab-health-table{width:100%;border-collapse:collapse;margin:8px 0;font-size:14px}
+.lab-health-table th,.lab-health-table td{border:1px solid var(--line);padding:6px 8px;text-align:left}
+.lab-health-table th{background:#f8fafc}
 @media (max-width:1024px){.lab-questions{grid-template-columns:1fr}}
 
 /* 互动模拟 */
