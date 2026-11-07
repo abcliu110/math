@@ -1565,7 +1565,173 @@ if (typeof sandbox.benchViewSvg === 'function' && typeof sandbox.worldBenchRende
   sandbox.labRestoredFlag = false;
   delete lsData['math-bench-v1'];
 }
-// 2026-11-07 复测修（第 4 批）：第 3 批后拖放全断、手柄刷新后消失、手柄盖标签、
+// Phase 3 batch 4: concrete↔abstract one-click switch + tidy.
+// 下面每条在改前代码上干净失败：旧代码没有 benchAbstract/benchTidy，
+// 算式视图只有“合计：…”一行，不写天平/长方形/十格阵/数据表/转盘；
+// 旧 benchZoomClamp 在缩小到 100% 以下时把中心钉死在 w/2。
+if (typeof sandbox.benchViewSvg === 'function' && typeof sandbox.worldBenchRender === 'function') {
+  // 1. 算式视图把台面写成算式：一行一个，同一组数。
+  const absItems = [
+    { id: 'p5', q: { n: 5, d: 1 }, str: '5' },
+    { id: 'p3', q: { n: 3, d: 1 }, str: '3' },
+  ];
+  const absBal = { Lstr: '1/2', Rstr: '1/3', equal: false, leftHeavy: true, rightHeavy: false };
+  const absRect = { w: 4, h: 6, area: 24, perim: 20, angle: 0 };
+  const absExtra = {
+    tenframe: { A: 3, B: 4, sum: 7 },
+    datatable: { rows: [{ label: 'A', n: 5 }, { label: 'B', n: 3 }], total: 8 },
+    spinner: { sectors: 4, last: 1, counts: [0, 2, 1, 0], total: 3 },
+  };
+  const absSvg = sandbox.benchViewSvg('formula', absItems, true, { k: 2, b: 8 }, absBal, absRect, false, null, absExtra);
+  check('lab formula view writes loose numbers as an addition (5 + 3 = 8)',
+    absSvg.indexOf('5 + 3 = 8') >= 0);
+  check('lab formula view writes the line as y = kx + b',
+    absSvg.indexOf('y = 2x + 8') >= 0);
+  check('lab formula view writes the balance as an equation (left > right)',
+    absSvg.indexOf('天平：左盘 1/2 ＞ 右盘 1/3') >= 0);
+  check('lab formula view writes the rectangle as w x h = area (perimeter)',
+    absSvg.indexOf('长方形：4 × 6 ＝ 24（周长 20）') >= 0);
+  check('lab formula view writes the ten-frame as an addition',
+    absSvg.indexOf('十格阵：3 + 4 = 7') >= 0);
+  check('lab formula view writes the datatable rows and total',
+    absSvg.indexOf('数据表：A 5 次，B 3 次，合计 8 次') >= 0);
+  check('lab formula view writes the spinner counts and total',
+    absSvg.indexOf('转盘：红 0 次，蓝 2 次，绿 1 次，黄 0 次，共 3 次') >= 0);
+  // 平的天平写 ＝；卡片还在上面，能点（检查器/拖放不断）。
+  const absBalEq = sandbox.benchViewSvg('formula', absItems, false, { k: 0, b: 0 },
+    { Lstr: '1/2', Rstr: '1/2', equal: true, leftHeavy: false, rightHeavy: false }, null, false, null, null);
+  check('lab formula view writes an equal balance with ＝',
+    absBalEq.indexOf('天平：左盘 1/2 ＝ 右盘 1/2') >= 0);
+  check('lab formula view still draws the number cards as clickable picks',
+    absSvg.indexOf('data-bench="pick"') >= 0 && absSvg.indexOf('data-id="p5"') >= 0);
+  // 2. 空台面：算式视图只写“台上还没有东西”，不写任何器材。
+  const absEmpty = sandbox.benchViewSvg('formula', [], false, { k: 0, b: 0 }, null, null, false, null, null);
+  check('lab formula view on an empty bench says the bench is empty',
+    absEmpty.indexOf('台上还没有东西') >= 0 && absEmpty.indexOf('天平：') === -1);
+  // 3. 切换按钮：点“看算式”进抽象（画算式），点“看图形”回图形（画长方形），
+  //    台面上的数一个不少，合计也不变。
+  const wB4 = sandbox.MathWorld.create({ rect: { perim: 20, w: 4 } });
+  sandbox.labWorld = wB4; sandbox.mwPlay = wB4;
+  const mk5b = sandbox.benchRun({ type: 'makePiece', piece: { kind: 'num', v: 5 } });
+  if (mk5b) sandbox.benchRun({ type: 'benchPut', pieceId: mk5b.pieceId });
+  const mk3b = sandbox.benchRun({ type: 'makePiece', piece: { kind: 'num', v: 3 } });
+  if (mk3b) sandbox.benchRun({ type: 'benchPut', pieceId: mk3b.pieceId });
+  sandbox.benchRun({ type: 'benchRectToggle' });
+  sandbox.benchAbstract = false; sandbox.benchPreferredView = null;
+  sandbox.worldBenchRender();
+  const cardHandlersB4 = byId.worldBenchCard._handlers && byId.worldBenchCard._handlers.click;
+  const togBtn = makeEl('button');
+  togBtn.dataset.bench = 'abs-toggle';
+  togBtn.setAttribute('data-bench', 'abs-toggle');
+  if (cardHandlersB4) cardHandlersB4.forEach(function (fn) {
+    fn({ target: togBtn, stopPropagation: function () {}, preventDefault: function () {} });
+  });
+  check('lab abs-toggle button switches the bench to the formula view',
+    sandbox.benchAbstract === true &&
+    String(byId.worldBenchView.innerHTML).indexOf('5 + 3 = 8') >= 0 &&
+    String(byId.worldBenchView.innerHTML).indexOf('长方形：4 × 6 ＝ 24（周长 20）') >= 0 &&
+    String(byId.worldBenchViews.innerHTML).indexOf('看图形') >= 0);
+  check('lab bench sum is unchanged by the abstract switch (still 8)',
+    String(byId.worldBenchSum.textContent).indexOf('8') >= 0);
+  if (cardHandlersB4) cardHandlersB4.forEach(function (fn) {
+    fn({ target: togBtn, stopPropagation: function () {}, preventDefault: function () {} });
+  });
+  check('lab abs-toggle button switches back to the concrete view (rectangle drawn, no equation line)',
+    sandbox.benchAbstract === false &&
+    String(byId.worldBenchView.innerHTML).indexOf('长方形：') === -1 &&
+    String(byId.worldBenchView.innerHTML).indexOf('#fde68a') >= 0 &&
+    String(byId.worldBenchViews.innerHTML).indexOf('看算式') >= 0);
+  // 4. “算式”视图按钮就是进抽象：点它进抽象，点“数轴”出来；'formula'
+  //    不能存进 benchPreferredView，不然切回来还在算式里。
+  const viewFormulaBtn = makeEl('button');
+  viewFormulaBtn.dataset.bench = 'view';
+  viewFormulaBtn.setAttribute('data-bench', 'view');
+  viewFormulaBtn.setAttribute('data-view', 'formula');
+  if (cardHandlersB4) cardHandlersB4.forEach(function (fn) {
+    fn({ target: viewFormulaBtn, stopPropagation: function () {}, preventDefault: function () {} });
+  });
+  check('lab formula view button enters abstract mode without storing formula as the preferred view',
+    sandbox.benchAbstract === true && sandbox.benchPreferredView !== 'formula');
+  const viewLineBtn = makeEl('button');
+  viewLineBtn.dataset.bench = 'view';
+  viewLineBtn.setAttribute('data-bench', 'view');
+  viewLineBtn.setAttribute('data-view', 'numline');
+  if (cardHandlersB4) cardHandlersB4.forEach(function (fn) {
+    fn({ target: viewLineBtn, stopPropagation: function () {}, preventDefault: function () {} });
+  });
+  check('lab numline view button leaves abstract mode and pins the numline view',
+    sandbox.benchAbstract === false && sandbox.benchPreferredView === 'numline');
+  // 5. 拿器材下台面不改模式：抽象时点零件盒的长方形把它拿下来，台面还是算式样子
+  //    （拿下时提示没说切视图，模式不用动）；放上器材时才退出抽象（提示说切到坐标系，画布真切过去）。
+  sandbox.benchAbstract = true;
+  const rectBtnB4 = makeEl('button');
+  rectBtnB4.dataset.bench = 'rect';
+  rectBtnB4.setAttribute('data-bench', 'rect');
+  if (cardHandlersB4) cardHandlersB4.forEach(function (fn) {
+    fn({ target: rectBtnB4, stopPropagation: function () {}, preventDefault: function () {} });
+  });
+  check('lab taking the rectangle off the bench leaves abstract mode alone',
+    sandbox.benchAbstract === true && sandbox.labWorld.benchRect === false);
+  if (cardHandlersB4) cardHandlersB4.forEach(function (fn) {
+    fn({ target: rectBtnB4, stopPropagation: function () {}, preventDefault: function () {} });
+  });
+  check('lab putting the rectangle back on the bench leaves abstract mode',
+    sandbox.benchAbstract === false && sandbox.labWorld.benchRect === true);
+  sandbox.benchPreferredView = null; sandbox.benchAbstract = false;
+  // 6. 整理用的纯函数：包围盒、适配缩放、100% 以下的 clamp。
+  const box58 = typeof sandbox.benchContentBox === 'function' ? sandbox.benchContentBox({ w: 9, h: 1, angle: 58 }) : null;
+  // 手算核对（bvX(0)=87.5，bvY(0)=201.4，中心 (346.3, 194.3)，转 58°）：
+  // 四个顶点转后 y 在 −28.9…417.5，手柄在 (517.4, 381.9) 再加 20 边，
+  // 所以包围盒 x 到 537.4、y 到 417.5——长方形连手柄一起伸出画布右和下。
+  check('lab tidy box contains a rotated 9x1 bar sticking out of the canvas (top, bottom and right)',
+    !!box58 && box58.y0 < -25 && box58.y0 > -35 && box58.y1 > 410 && box58.y1 < 425 &&
+    box58.x0 === 0 && box58.x1 > 530 && box58.x1 < 545);
+  const box46 = typeof sandbox.benchContentBox === 'function' ? sandbox.benchContentBox({ w: 4, h: 6, angle: 0 }) : null;
+  check('lab tidy box is just the canvas for a 4x6 bar at 0°',
+    !!box46 && box46.x0 === 0 && box46.y0 === 0 && box46.x1 === 520 && box46.y1 === 260);
+  const fit58 = (typeof sandbox.benchTidyFit === 'function' && box58) ? sandbox.benchTidyFit(box58) : null;
+  // 手算：包围盒 537.4×446.4，zoom = 260/446.4 ≈ 0.582，中心 ((0+537.4)/2, (−28.9+417.5)/2) ≈ (268.7, 194.3)。
+  check('lab tidy fit zooms out to fit the rotated bar (zoom < 1, centred on the box)',
+    !!fit58 && fit58.zoom > 0.57 && fit58.zoom < 0.60 && fit58.cx > 265 && fit58.cx < 272 && fit58.cy > 190 && fit58.cy < 200);
+  const fitSmall = typeof sandbox.benchTidyFit === 'function' ? sandbox.benchTidyFit({ x0: 100, y0: 100, x1: 200, y1: 150 }) : null;
+  check('lab tidy fit keeps 100% for a small box',
+    !!fitSmall && fitSmall.zoom === 1 && fitSmall.cx === 150 && fitSmall.cy === 125);
+  sandbox.benchZoom = 0.58; sandbox.benchPanX = 260; sandbox.benchPanY = 209.5;
+  sandbox.benchZoomClamp();
+  check('lab zoom clamp keeps the tidy centre when zoomed out below 100% (old clamp pinned it to the edge)',
+    sandbox.benchPanX === 260 && Math.abs(sandbox.benchPanY - 209.5) < 1e-9);
+  sandbox.benchZoom = 1; sandbox.benchPanX = 100; sandbox.benchPanY = 100;
+  sandbox.benchZoomClamp();
+  check('lab zoom clamp still locks the centre at 100%',
+    sandbox.benchPanX === 260 && sandbox.benchPanY === 130);
+  // 7. 一键整理按钮：9×1@58° + 放大 + 抽象 → 一键回自动视图、适配缩放。
+  const wTidy = sandbox.MathWorld.create({ rect: { perim: 20, w: 9, angle: 58 } });
+  sandbox.labWorld = wTidy; sandbox.mwPlay = wTidy;
+  sandbox.benchRun({ type: 'benchRectToggle' });
+  sandbox.benchAbstract = true; sandbox.benchPreferredView = 'coord';
+  sandbox.benchZoom = 1.95; sandbox.benchPanX = 260; sandbox.benchPanY = 130;
+  const tidyBtn = makeEl('button');
+  tidyBtn.dataset.bench = 'tidy';
+  tidyBtn.setAttribute('data-bench', 'tidy');
+  if (cardHandlersB4) cardHandlersB4.forEach(function (fn) {
+    fn({ target: tidyBtn, stopPropagation: function () {}, preventDefault: function () {} });
+  });
+  check('lab tidy button leaves abstract mode and fits the rotated bar (zoom out, centred)',
+    sandbox.benchAbstract === false && sandbox.benchPreferredView === null &&
+    sandbox.benchZoom > 0.57 && sandbox.benchZoom < 0.60 &&
+    sandbox.benchPanX > 265 && sandbox.benchPanX < 272 && sandbox.benchPanY > 190 && sandbox.benchPanY < 200);
+  check('lab tidy does not change the bench contents (rectangle still 9x1 at 58°)',
+    !!sandbox.labWorld && sandbox.labWorld.rect.w === 9 && sandbox.labWorld.rect.angle === 58 &&
+    sandbox.MathWorld.derived(sandbox.labWorld).rect.area === 9);
+  // 收尾：世界恢复成空的，缩放/视图状态归位，别让后面的测试捡到。
+  sandbox.labWorld = sandbox.MathWorld.create({});
+  sandbox.mwPlay = sandbox.labWorld;
+  sandbox.benchAbstract = false; sandbox.benchPreferredView = null;
+  sandbox.benchZoom = 1; sandbox.benchPanX = 260; sandbox.benchPanY = 130;
+  sandbox.worldInspectSelect(null);
+  sandbox.labRestoredFlag = false;
+  delete lsData['math-bench-v1'];
+}
 // “全部拿走”后天平还画着、长方形拿下台面后还画着、组合台不保存。
 // 下面每条在改前代码上干净失败。特别注意第 1 条：桩的 vm 上下文里严格模式
 // 未声明赋值不抛错（悄悄创一个全局），所以“器材站拖放能跑”在桩里永远是通的；

@@ -162,7 +162,8 @@ check('balance persist: free-play balance saves to math-lab-bal-v1 and restores 
 check('bench view: view choice is saved to math-lab-benchview-v1 and restored on load',
   app.includes("'math-lab-benchview-v1'") &&
   // 第 3 批：保存改走 benchZoomSave，视图 + 缩放/平移一起存（zoom/cx/cy）。
-  app.includes("lsSet('math-lab-benchview-v1', JSON.stringify({ preferred: benchPreferredView, showBalance: benchShowBalance, zoom: benchZoom, cx: benchPanX, cy: benchPanY }))") &&
+  // 第 4 批：抽象（算式）样子也一起存（abstract），刷新后回到同一副样子。
+  app.includes("lsSet('math-lab-benchview-v1', JSON.stringify({ preferred: benchPreferredView, showBalance: benchShowBalance, zoom: benchZoom, cx: benchPanX, cy: benchPanY, abstract: benchAbstract }))") &&
   app.includes("JSON.parse(lsGet('math-lab-benchview-v1')"));
 check('bench view: placing the rectangle or the line actually leaves the balance view (the message promises 坐标系)',
   // 第 3 批 + 复测 8e38f4c 毛病①：不是“回到自动链”，是把视图钉到坐标系——

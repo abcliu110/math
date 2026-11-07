@@ -1507,6 +1507,183 @@ async function main() {
       note('after handle click rect bbox: ' + JSON.stringify(after));
       report.pass = after && after.w > after.h;
       note(report.pass ? 'RESULT: PASS — clicked rect lies horizontal (wide bar)' : 'RESULT: FAIL — clicked rect stands vertical (tall sliver): the click double-rotated it');
+    } else if (scenario === 'abs-toggle') {
+      // Phase 3 batch 4：具象↔抽象一键切换。台面上有散数 5+3、天平（左 1/2、
+      // 右 0）、长方形 1×9：点“看算式”→画布变成一行行算式，数值和检查器
+      // 不变；点“看图形”→回到原来的坐标系画布，长方形还在。
+      await enterLab();
+      await evaljs(`(function(){var b=document.querySelector('[data-bench="clear"]');if(b)b.click();})()`);
+      await sleep(200);
+      await evaljs(`(function(){var b=document.querySelector('[data-world="bal-clear"]');if(b)b.click();})()`);
+      await sleep(200);
+      await evaljs(`(function(){var b=document.querySelector('#worldBenchBox [data-bench="make"][data-kind="num"][data-n="5"]');if(b)b.click();})()`);
+      await sleep(200);
+      await evaljs(`(function(){var b=document.querySelector('#worldBenchBox [data-bench="make"][data-kind="num"][data-n="3"]');if(b)b.click();})()`);
+      await sleep(200);
+      await evaljs(`(function(){var b=document.querySelector('[data-bench="balance"]');if(b)b.click();})()`);
+      await sleep(300);
+      await evaljs(`(function(){var b=document.querySelector('[data-bench="rect"]');if(b)b.click();})()`);
+      await sleep(400);
+      const before = await labState();
+      note('before toggle: bench=' + before.benchTotal + ' bal L=' + before.balL + ' R=' + before.balR + ' rect=' + before.rect + ' angle=' + before.rectAngle + ' view=' + before.benchView);
+      // 长方形尺寸从状态里读（之前场景可能改过宽），算式行按它拼。
+      const rectEq = await evaljs(`(function(){
+        var d=MathWorld.derived(labWorld).rect;
+        return '长方形：' + d.w + ' × ' + d.h + ' ＝ ' + d.area + '（周长 ' + d.perim + '）';
+      })()`);
+      note('expected rect line: ' + rectEq);
+      await evaljs(`(function(){var b=document.querySelector('[data-bench="abs-toggle"]');if(b)b.click();})()`);
+      await sleep(400);
+      const svgAbs = await evaljs(`(function(){
+        var v=document.getElementById('worldBenchView');
+        var t=document.querySelector('[data-bench="abs-toggle"]');
+        return { text: v?v.textContent:'', label: t?t.textContent:'' };
+      })()`);
+      note('abstract svg text: ' + JSON.stringify(svgAbs.text));
+      const afterAbs = await labState();
+      note('in abstract: bench=' + afterAbs.benchTotal + ' bal L=' + afterAbs.balL + ' R=' + afterAbs.balR + ' view=' + afterAbs.benchView);
+      const absOk = svgAbs.text.indexOf('5 + 3 = 8') >= 0 &&
+        svgAbs.text.indexOf('天平：左盘 1/2 ＞ 右盘 0') >= 0 &&
+        svgAbs.text.indexOf(rectEq) >= 0 &&
+        svgAbs.label === '看图形' &&
+        afterAbs.benchView.indexOf('现在是：算式') >= 0 &&
+        afterAbs.benchTotal === '8' && afterAbs.balL === '1/2' && afterAbs.balR === '0';
+      // 切回具象：算式行消失，长方形金色块回来，视图回到坐标系。
+      await evaljs(`(function(){var b=document.querySelector('[data-bench="abs-toggle"]');if(b)b.click();})()`);
+      await sleep(400);
+      const svgBack = await evaljs(`(function(){
+        var v=document.getElementById('worldBenchView');
+        var t=document.querySelector('[data-bench="abs-toggle"]');
+        return { html: v?v.innerHTML:'', label: t?t.textContent:'' };
+      })()`);
+      const afterBack = await labState();
+      note('back to concrete: view=' + afterBack.benchView + ' rect drawn=' + (svgBack.html.indexOf('#fde68a') >= 0));
+      report.pass = before.benchTotal === '8' && before.balL === '1/2' && before.balR === '0' &&
+        absOk &&
+        svgBack.html.indexOf('天平：左盘') < 0 && svgBack.html.indexOf('#fde68a') >= 0 &&
+        svgBack.label === '看算式' && afterBack.benchView.indexOf('现在是：坐标系') >= 0;
+      note(report.pass ? 'RESULT: PASS — abstract shows the equations, concrete restores the drawing, nothing changes value'
+        : 'RESULT: FAIL — toggle broken (see notes above)');
+    } else if (scenario === 'tidy-fit') {
+      // Phase 3 batch 4：复测 d9b93ef 观察（b）——1×9 长方形转到大角度后，
+      // 顶点圆点和手柄跑出可视画布。先真拖手柄转 ~58° 再点手柄换成 9×1，
+      // 验手柄确实在画布外面；再点“一键整理”，手柄要回到视野里，倍率
+      // 缩到 100% 以下，长方形本身（9×1@~58°）一点没变。
+      await enterLab();
+      await evaljs(`(function(){var b=document.querySelector('[data-bench="clear"]');if(b)b.click();})()`);
+      await sleep(200);
+      // 先把长方形归零：宽 1（→1×9）、角度 0，再真拖手柄转 58°。
+      await evaljs(`(function(){
+        if (typeof worldPlayApply === 'function') {
+          worldPlayApply({type:'rectSet', w:1});
+          worldPlayApply({type:'rectRotate', deg:0});
+        }
+      })()`);
+      await sleep(200);
+      await evaljs(`(function(){var b=document.querySelector('[data-bench="rect"]');if(b)b.click();})()`);
+      await sleep(300);
+      await evaljs(`(function(){ if (typeof worldInspectSelect === 'function') worldInspectSelect({apparatus:'rect'}); })()`);
+      await sleep(300);
+      // 先把手柄滚进视野再量几何：不滚的话手柄在折叠线下（视口 y=1568），
+      // 拖拽事件落在视口外面，根本拖不动（第一次跑 angle=0 就是这个原因）。
+      await centers('[data-bench-rotate]');
+      const geo = await evaljs(`(function(){
+        var svg=document.getElementById('worldBenchView');
+        if(!svg) return null;
+        var r=svg.getBoundingClientRect();
+        var vb=svg.viewBox.baseVal;
+        var d=MathWorld.derived(labWorld).rect;
+        var h=document.querySelector('[data-bench-rotate]');
+        if(!h) return null;
+        var hr=h.getBoundingClientRect();
+        function toSvg(vx,vy){ return { x: vb.x+((vx-r.x)/r.width)*vb.width, y: vb.y+((vy-r.y)/r.height)*vb.height }; }
+        function toView(sx,sy){ return { x: r.x+((sx-vb.x)/vb.width)*r.width, y: r.y+((sy-vb.y)/vb.height)*r.height }; }
+        var cs={ x: 30+(d.w/2+1)*57.5, y: 230-(d.h/2+2)*(200/14) };
+        var hs=toSvg(hr.x+hr.width/2, hr.y+hr.height/2);
+        var ox=hs.x-cs.x, oy=hs.y-cs.y;
+        var c=Math.cos(58*Math.PI/180), s=Math.sin(58*Math.PI/180);
+        var tSvg={ x: cs.x+ox*c-oy*s, y: cs.y+ox*s+oy*c }; // 顺时针转 58°
+        return { center: toView(cs.x,cs.y), handle: { x: hr.x+hr.width/2, y: hr.y+hr.height/2 },
+          target: toView(tSvg.x,tSvg.y), rect: { w:d.w, h:d.h, angle:d.angle } };
+      })()`);
+      note('geometry: ' + JSON.stringify(geo));
+      if (geo) await drag(geo.handle.x, geo.handle.y, geo.target.x, geo.target.y, 16, 30);
+      await sleep(400);
+      const afterDrag = await labState();
+      note('after drag: rect=' + afterDrag.rect + ' angle=' + afterDrag.rectAngle);
+      // 点手柄换成 9×1（角度不动），这就是复测里那个跑出画布的条。
+      const [h2] = await centers('[data-bench-rotate]');
+      if (h2) { await clickAt(h2.cx, h2.cy); await sleep(300); }
+      const afterClick = await labState();
+      note('after handle click: rect=' + afterClick.rect + ' angle=' + afterClick.rectAngle);
+      // 手柄现在是不是在可视画布外面（复现观察（b））？
+      const offCanvas = await evaljs(`(function(){
+        var svg=document.getElementById('worldBenchView');
+        var h=document.querySelector('[data-bench-rotate]');
+        var d=document.querySelector('#worldBenchView [data-bench="pick-rect"] circle');
+        if(!svg||!h||!d) return null;
+        var sr=svg.getBoundingClientRect(), hr=h.getBoundingClientRect(), dr=d.getBoundingClientRect();
+        function outside(r){ return r.x+r.width/2<sr.x||r.x+r.width/2>sr.x+sr.width||r.y+r.height/2<sr.y||r.y+r.height/2>sr.y+sr.height; }
+        return { handleOutside: outside(hr), dotOutside: outside(dr) };
+      })()`);
+      note('off-canvas before tidy: ' + JSON.stringify(offCanvas));
+      // 一键整理
+      await evaljs(`(function(){var b=document.querySelector('[data-bench="tidy"]');if(b)b.click();})()`);
+      await sleep(400);
+      const afterTidy = await labState();
+      const inView = await evaljs(`(function(){
+        var svg=document.getElementById('worldBenchView');
+        var h=document.querySelector('[data-bench-rotate]');
+        var d=document.querySelector('#worldBenchView [data-bench="pick-rect"] circle');
+        if(!svg||!h||!d) return null;
+        var sr=svg.getBoundingClientRect(), hr=h.getBoundingClientRect(), dr=d.getBoundingClientRect();
+        function inside(r){ var cx=r.x+r.width/2, cy=r.y+r.height/2; return cx>=sr.x&&cx<=sr.x+sr.width&&cy>=sr.y&&cy<=sr.y+sr.height; }
+        return { handleInside: inside(hr), dotInside: inside(dr) };
+      })()`);
+      note('after tidy: label=' + afterTidy.zoomLabel + ' viewBox=' + afterTidy.viewBox + ' rect=' + afterTidy.rect + ' angle=' + afterTidy.rectAngle + ' inView=' + JSON.stringify(inView));
+      const zoomPct = parseInt((afterTidy.zoomLabel || '100%').replace('%',''), 10);
+      report.pass = afterDrag.rectAngle !== null && afterDrag.rectAngle >= 40 && afterDrag.rectAngle <= 75 &&
+        afterClick.rect === '9x1 (perim 20)' && afterClick.rectAngle === afterDrag.rectAngle &&
+        offCanvas && (offCanvas.handleOutside || offCanvas.dotOutside) &&
+        zoomPct < 100 && inView && inView.handleInside && inView.dotInside &&
+        afterTidy.rect === '9x1 (perim 20)' && afterTidy.rectAngle === afterDrag.rectAngle;
+      note(report.pass ? 'RESULT: PASS — handle/dot off-canvas at a big angle, tidy fits them back in view without touching the bar'
+        : 'RESULT: FAIL — tidy did not fit the rotated bar (see notes above)');
+    } else if (scenario === 'station-pan-drag') {
+      // Phase 3 batch 4 观察（a）定性：站里盘上的砝码从来不支持拖动
+      // （git 历史：data-drag-weight 从 c605db7 起只在砝码行上）。
+      // 先拖 1/6 上左盘（这条路是通的），再按住盘上的砝码往右盘拖：
+      // 应该没有拖拽 ghost，天平数值一点不动——这是站的既定交互。
+      await enterLab();
+      await evaljs(`document.getElementById('worldBalCard').classList.remove('collapsed')`);
+      await sleep(200);
+      await evaljs(`(function(){var b=document.querySelector('[data-world="bal-clear"]');if(b)b.click();})()`);
+      await sleep(200);
+      await installProbe();
+      const [chip, dropL] = await centers('[data-drag-chip="weight"][data-qty="1/6"]', '#worldBalDropL');
+      note('chip 1/6 center: ' + JSON.stringify(chip) + '  dropL center: ' + JSON.stringify(dropL));
+      const before = await labState();
+      note('before: bal L=' + before.balL + ' R=' + before.balR);
+      await clearProbe();
+      await drag(chip.cx, chip.cy, dropL.cx, dropL.cy, 12, 40);
+      await sleep(300);
+      const afterLand = await labState();
+      note('after 1/6 lands: bal L=' + afterLand.balL + ' R=' + afterLand.balR);
+      // 盘上现在有砝码（左盘 2/3）。按住盘上第一个砝码块往右盘拖。
+      const [panW, dropR] = await centers('#worldBalSvg [data-bal-pan="L"] rect', '#worldBalDropR');
+      note('pan weight center: ' + JSON.stringify(panW) + '  dropR center: ' + JSON.stringify(dropR));
+      await clearProbe();
+      await drag(panW.cx, panW.cy, dropR.cx, dropR.cy, 12, 40);
+      const ghost = await evaljs(`(function(){var g=document.querySelector('.apparatus-ghost');return g?{display:g.style.display,text:g.textContent}:null;})()`);
+      note('ghost during/after pan-weight drag: ' + JSON.stringify(ghost));
+      const after = await labState();
+      note('after pan-weight drag: bal L=' + after.balL + ' R=' + after.balR);
+      note('probe events:\n' + (await probeLog()));
+      report.pass = afterLand.balL === '2/3' && afterLand.balR === '0' &&
+        after.balL === '2/3' && after.balR === '0' &&
+        (!ghost || ghost.display === 'none');
+      note(report.pass ? 'RESULT: PASS — shelf weight lands on the pan, but a weight already on the pan does not drag (no ghost, balance unchanged): by design'
+        : 'RESULT: FAIL — pan weight moved or the shelf weight did not land (see notes above)');
     } else {
       console.log('unknown scenario: ' + scenario);
       cleanup();

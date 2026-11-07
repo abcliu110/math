@@ -314,6 +314,12 @@
         'data-bal-pan': side,
       }));
       weights.forEach(function (w, i) {
+        // 盘上画出来的砝码是死的（只有 rect + text，没有 data-drag-weight）：
+        // 按住盘上的砝码拖不动——这是站的既定交互，不是 bug，别“修”它。
+        // 站里加砝码走上面的砝码行（拖到盘上）或虚线落点框，拿走点“清空重来”；
+        // 组合台那边是 +1/−1 按钮和点按删除。要拖动的砝码去台面天平。
+        // （2026-11-07 复测有人当 bug 报过：查过 git 历史，data-drag-weight
+        // 从 MathWorld 0.8（c605db7）起就只在砝码行上，盘上砝码从来没拖过。）
         const bx = cx - 28 + (i % 3) * 18;
         const by = 132 - Math.floor(i / 3) * 16;
         pan.appendChild(el('rect', {

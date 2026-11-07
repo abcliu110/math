@@ -47908,6 +47908,12 @@ registerAnim({
         'data-bal-pan': side,
       }));
       weights.forEach(function (w, i) {
+        // 盘上画出来的砝码是死的（只有 rect + text，没有 data-drag-weight）：
+        // 按住盘上的砝码拖不动——这是站的既定交互，不是 bug，别“修”它。
+        // 站里加砝码走上面的砝码行（拖到盘上）或虚线落点框，拿走点“清空重来”；
+        // 组合台那边是 +1/−1 按钮和点按删除。要拖动的砝码去台面天平。
+        // （2026-11-07 复测有人当 bug 报过：查过 git 历史，data-drag-weight
+        // 从 MathWorld 0.8（c605db7）起就只在砝码行上，盘上砝码从来没拖过。）
         const bx = cx - 28 + (i % 3) * 18;
         const by = 132 - Math.floor(i / 3) * 16;
         pan.appendChild(el('rect', {
@@ -52540,6 +52546,13 @@ var benchViewSaved = null;
 try { benchViewSaved = JSON.parse(lsGet('math-lab-benchview-v1') || 'null'); } catch (e) { benchViewSaved = null; }
 var benchPreferredView = (benchViewSaved && typeof benchViewSaved.preferred === 'string') ? benchViewSaved.preferred : null;
 var benchShowBalance = !(benchViewSaved && benchViewSaved.showBalance === false); // 天平在台上时台面先画天平；学生点了别的视图按钮才切走
+// 具象/抽象切换（第 3 阶段批 4，NB 转电路图/转实物图）：true = 台面画成算式
+// （同一组器材/数值，不改状态）；false = 画图形。抽象只是画法，
+// benchPreferredView/benchShowBalance 原样留着，切回来就是原来的视图。
+// 老保存里 preferred 可能是 'formula'（以前点“算式”按钮存下来的）：
+// 那就是抽象，挪到 benchAbstract 里，别让它一直占着 preferred。
+var benchAbstract = !!(benchViewSaved && benchViewSaved.abstract === true);
+if (benchPreferredView === 'formula') { benchPreferredView = null; benchAbstract = true; }
 /* 台面画布缩放/平移（第 3 阶段，NB 底栏 50–400%）：画布是 svg#worldBenchView，
    viewBox 520×260。zoom 是倍率（0.5–4），(benchPanX, benchPanY) 是视口中心
    （SVG 坐标）。缩放只改 viewBox，不动图里任何东西的坐标——拖放落点、
@@ -52553,11 +52566,17 @@ function benchZoomViewBox(z, cx, cy) {
   return (cx - w / 2) + ' ' + (cy - h / 2) + ' ' + w + ' ' + h;
 }
 function benchZoomClamp() {
-  // 视口不能滑出画布：中心只能在 [w/2, 520-w/2] × [h/2, 260-h/2] 里。
-  // zoom=1 时 w=520，中心锁死在 (260,130)，拖不动——这就是对的。
+  // 视口中心能待的区间：viewBox 比画布小时是 [w/2, 520-w/2]（视口不能滑出画布）；
+  // viewBox 比画布大时（缩小到 100% 以下）两个界反过来，区间是 [520-w/2, w/2]
+  // （视口要含住画布）。旧写法 Math.max(w/2, Math.min(520-w/2, x)) 在 w>520 时
+  // 把中心钉死在 w/2——一键整理的适配中心就被顶掉（9×1@58° 的包围盒中心 y≈210，
+  // 旧 clamp 钉到 223.5，画布顶上 14 单位被裁掉）。取两个界的 min/max，两种情况都对；
+  // w=520 时两界重合，中心还是锁死在 (260,130)，100% 锁死的老行为不变。
   const w = 520 / benchZoom, h = 260 / benchZoom;
-  benchPanX = Math.max(w / 2, Math.min(520 - w / 2, benchPanX));
-  benchPanY = Math.max(h / 2, Math.min(260 - h / 2, benchPanY));
+  const loX = Math.min(w / 2, 520 - w / 2), hiX = Math.max(w / 2, 520 - w / 2);
+  const loY = Math.min(h / 2, 260 - h / 2), hiY = Math.max(h / 2, 260 - h / 2);
+  benchPanX = Math.max(loX, Math.min(hiX, benchPanX));
+  benchPanY = Math.max(loY, Math.min(hiY, benchPanY));
 }
 function benchZoomApply() {
   benchZoomClamp();
@@ -52571,7 +52590,54 @@ function benchZoomApply() {
   if (lab) lab.textContent = Math.round(benchZoom * 100) + '%';
 }
 function benchZoomSave() {
-  try { lsSet('math-lab-benchview-v1', JSON.stringify({ preferred: benchPreferredView, showBalance: benchShowBalance, zoom: benchZoom, cx: benchPanX, cy: benchPanY })); } catch (e) {}
+  try { lsSet('math-lab-benchview-v1', JSON.stringify({ preferred: benchPreferredView, showBalance: benchShowBalance, zoom: benchZoom, cx: benchPanX, cy: benchPanY, abstract: benchAbstract })); } catch (e) {}
+}
+// 一键整理要用的内容包围盒：整张画布（0,0,520,260）并上转过的长方形
+// （四个顶点 + 手柄位置）。长方形是唯一能转出画布的东西（9 单位的条
+// 转 58° 后顶点在画布外——2026-11-07 复测：手柄跑出可视范围，缩到 51%
+// 才能点到）。别的器材都画在画布里，不用算。
+function benchContentBox(rect) {
+  let x0 = 0, y0 = 0, x1 = 520, y1 = 260;
+  if (rect) {
+    const c = bvRectCenter(rect);
+    const deg = (rect.angle || 0) * Math.PI / 180;
+    const cos = Math.cos(deg), sin = Math.sin(deg);
+    [[0, 0], [rect.w, 0], [0, rect.h], [rect.w, rect.h]].forEach(function (pt) {
+      const dx = bvX(pt[0]) - c.x, dy = bvY(pt[1]) - c.y;
+      const rx = c.x + dx * cos - dy * sin, ry = c.y + dx * sin + dy * cos;
+      if (rx < x0) x0 = rx; if (rx > x1) x1 = rx;
+      if (ry < y0) y0 = ry; if (ry > y1) y1 = ry;
+    });
+    // 手柄在转过的顶点右上方 28 单位（和 benchViewSvg 里画手柄的位置一致），
+    // 也要放进视野；留 20 单位边。
+    const rv = bvRectVertex(rect, rect.angle || 0);
+    const hx = rv.x + 28, hy = rv.y - 28;
+    if (hx + 20 > x1) x1 = hx + 20; if (hx - 20 < x0) x0 = hx - 20;
+    if (hy - 20 < y0) y0 = hy - 20; if (hy + 20 > y1) y1 = hy + 20;
+  }
+  return { x0: x0, y0: y0, x1: x1, y1: y1 };
+}
+// 包围盒 → 缩放/中心：只缩小、不放大（台面小时保持 100%），viewBox 保持 2:1。
+function benchTidyFit(box) {
+  const bw = box.x1 - box.x0, bh = box.y1 - box.y0;
+  const z = Math.max(0.5, Math.min(1, 520 / bw, 260 / bh));
+  return { zoom: z, cx: (box.x0 + box.x1) / 2, cy: (box.y0 + box.y1) / 2 };
+}
+// 一键整理（第 3 阶段批 4，NB 一键整理）：回到自动视图（抽象也先出来——
+// 整理是看台面的事），缩放按内容适配，东西都放进视野。只动视图，不动台面上的
+// 任何东西：数值、器材、顺序、检查器选中都不变。
+function benchTidy() {
+  const w2 = labWorld;
+  const balOn = !!(w2 && w2.benchBalance);
+  benchAbstract = false;
+  benchPreferredView = null;
+  benchShowBalance = balOn;
+  const d = w2 ? MathWorld.derived(w2) : null;
+  const box = benchContentBox((w2 && w2.benchRect && d) ? d.rect : null);
+  const fit = benchTidyFit(box);
+  benchZoom = fit.zoom; benchPanX = fit.cx; benchPanY = fit.cy;
+  benchMsg('台面整理好了', true);
+  worldBenchRender();
 }
 // 视口坐标 → SVG 坐标：按当前 viewBox 换算（缩放后 520×260 的老算法就错了）。
 // viewBox 读不到（测试桩）就按默认 520×260 算。
@@ -52792,17 +52858,45 @@ function benchViewSvg(view, items, lineOn, lf, bal, rect, rectSelected, beamOffs
       '<text x="400" y="136" font-size="18" font-weight="700" text-anchor="middle" fill="#f8fafc">转一转</text></g>';
     s += '<text x="400" y="180" font-size="14" text-anchor="middle" fill="#94a3b8">转了 ' + sp.total + ' 次</text>';
   } else {
-    // 算式视图也不再是光秃秃的 "x = 5" 文字行：数画成卡片，合计和直线写在下面一行。
-    if (!items.length && !lineOn) {
+    // 算式视图（抽象，第 3 阶段批 4）：台上所有东西写成算式，一行一个——和图形视图是
+    // 同一组器材/数值，只是换了种样子。卡片还画在上面（点它一样选中零件、
+    // 检查器跟过来；拖它一样能放到盘上），算式写在下面。
+    // 注意：bal/rect/extra 里的器材只在“在台上”时才传进来（调用处守门），
+    // 不在台上的不写——算式只写台面上的东西。
+    const hasAnything = items.length || lineOn || bal || rect ||
+      (extra && (extra.tenframe || extra.datatable || extra.spinner));
+    if (!hasAnything) {
       s += '<text x="30" y="40" font-size="14" fill="#94a3b8">台上还没有东西</text>';
     } else {
       s += benchChipsSvg(items, 24, 72, 48);
-      let y = 24 + 48 + 34;
+      let y = 96;
+      const formulaLine = function (text) {
+        if (y > 252) return; // 画布高 260，一行 26px，最多 7 行（96 起，末行 252）
+        s += '<text x="20" y="' + y + '" font-size="15" fill="#f8fafc">' + esc(text) + '</text>';
+        y += 26;
+      };
       if (items.length) {
-        s += '<text x="20" y="' + y + '" font-size="16" fill="#f8fafc">合计：' + benchChipsTotal(items) + '</text>';
-        y += 34;
+        formulaLine(items.map(function (it) { return it.str; }).join(' + ') + ' = ' + benchChipsTotal(items));
       }
-      if (lineOn) { s += '<text x="20" y="' + y + '" font-size="16" fill="#f8fafc">y = ' + lf.k + 'x + ' + lf.b + '</text>'; }
+      if (lineOn) { formulaLine('y = ' + lf.k + 'x + ' + lf.b); }
+      if (bal) {
+        formulaLine('天平：左盘 ' + bal.Lstr + (bal.equal ? ' ＝ ' : (bal.leftHeavy ? ' ＞ ' : ' ＜ ')) + '右盘 ' + bal.Rstr);
+      }
+      if (rect) {
+        formulaLine('长方形：' + rect.w + ' × ' + rect.h + ' ＝ ' + rect.area + '（周长 ' + rect.perim + '）');
+      }
+      if (extra && extra.tenframe) {
+        const tf = extra.tenframe;
+        formulaLine('十格阵：' + tf.A + ' + ' + tf.B + ' = ' + tf.sum);
+      }
+      if (extra && extra.datatable) {
+        const dt = extra.datatable;
+        formulaLine('数据表：' + dt.rows.map(function (r) { return r.label + ' ' + r.n + ' 次'; }).join('，') + '，合计 ' + dt.total + ' 次');
+      }
+      if (extra && extra.spinner) {
+        const sp = extra.spinner;
+        formulaLine('转盘：' + sp.counts.map(function (c, i) { return MathWorld.SPINNER_LABELS[i] + ' ' + c + ' 次'; }).join('，') + '，共 ' + sp.total + ' 次');
+      }
     }
   }
   return s;
@@ -52862,10 +52956,19 @@ function worldBenchRender() {
   else if (!benchPreferredView && spOn) canvasView = 'spinner';
   // 视图选择进自动保存：刷新后回到学生上次看的视图（见 benchPreferredView 的声明处）。
   // 缩放/平移也一起存（benchZoomSave）：刷新后回到上次的倍率和位置。
+  // 抽象（算式）只是画法，盖在自动链/手动选的视图上面：台面还是同一组器材，
+  // 只是画成算式；benchPreferredView/benchShowBalance 不动，切回来就是原样。
+  if (benchAbstract) canvasView = 'formula';
   benchZoomSave();
   const vbox = document.getElementById('worldBenchViews');
   if (vbox) {
     let btns = '';
+    // 具象↔抽象一键切换（批 4）：看算式 = 同一台面画成算式；看图形 = 回到图形。
+    // 一键整理：回到自动视图 + 按内容适配缩放，东西都放进视野。
+    btns += '<button type="button" class="btn small ' + (benchAbstract ? 'primary' : 'ghost') +
+      '" data-bench="abs-toggle" title="' + (benchAbstract ? '回到图形' : '把台面看成算式') + '">' +
+      (benchAbstract ? '看图形' : '看算式') + '</button>';
+    btns += '<button type="button" class="btn small ghost" data-bench="tidy" title="回到自动视图，把东西都放进视野">一键整理</button>';
     if (balOn) {
       btns += '<button type="button" class="btn small ' + (canvasView === 'balance' ? 'primary' : 'ghost') +
         '" data-bench="view" data-view="balance">天平</button>';
@@ -52890,10 +52993,12 @@ function worldBenchRender() {
     // 十格阵/数据表/转盘的画法数据（格子数、表行、扇区）也只在台上时才有意义，
     // 但 derived 里永远有它们的值——画不画由 canvasView 决定，不用再守门。
     const d2 = w2 ? MathWorld.derived(w2) : null;
+    // 算式（抽象）视图只写台面上的东西：天平/十格阵/数据表/转盘不在台上时不传
+    // （derived 里永远有它们的值，但台面上的才算数——长方形早就这么守门了）。
     svg.innerHTML = benchViewSvg(canvasView, bv.items, lineOn, w2 ? w2.linefn : { k: 0, b: 0 },
-      w2 ? MathWorld.derived(w2).balance : null, (w2 && rectOn) ? MathWorld.derived(w2).rect : null,
+      (w2 && balOn) ? MathWorld.derived(w2).balance : null, (w2 && rectOn) ? MathWorld.derived(w2).rect : null,
       !!(worldInspectSel && worldInspectSel.apparatus === 'rect'), benchBeamCur(),
-      d2 ? { tenframe: d2.tenframe, datatable: d2.datatable, spinner: d2.spinner } : null);
+      d2 ? { tenframe: tfOn ? d2.tenframe : null, datatable: dtOn ? d2.datatable : null, spinner: spOn ? d2.spinner : null } : null);
     // 画布重画不碰 svg 元素本身的属性，但 viewBox 还是每次都按当前缩放重算一次——
     // 别的代码（比如浏览器还原）动了属性也不会把缩放弄丢。
     benchZoomApply();
@@ -52960,6 +53065,19 @@ function worldBenchRender() {
       }
       benchZoomApply();
       benchZoomSave();
+      return;
+    }
+    // 具象↔抽象一键切换（批 4）：只改画法，不动台面上的任何东西；
+    // 切回来还是原来那个图形视图（benchPreferredView 没动过）。
+    if (op === 'abs-toggle') {
+      benchAbstract = !benchAbstract;
+      benchMsg(benchAbstract ? '现在是算式样子，数值没变' : '回到图形', true);
+      worldBenchRender();
+      return;
+    }
+    // 一键整理（批 4）：回到自动视图 + 按内容适配缩放，东西都放进视野。
+    if (op === 'tidy') {
+      benchTidy();
       return;
     }
     if (op === 'make') {
@@ -53036,7 +53154,7 @@ function worldBenchRender() {
     if (op === 'balance') {
       benchRun({ type: 'benchBalanceToggle' });
       benchMsg(labWorld && labWorld.benchBalance ? '天平放上了台面' : '天平拿下了台面', true);
-      if (labWorld && labWorld.benchBalance) { benchShowBalance = true; benchPreferredView = null; worldInspectSelect({ apparatus: 'balance' }); labExpandStation('worldBalCard'); }
+      if (labWorld && labWorld.benchBalance) { benchAbstract = false; benchShowBalance = true; benchPreferredView = null; worldInspectSelect({ apparatus: 'balance' }); labExpandStation('worldBalCard'); }
       worldPlayRender();
       return;
     }
@@ -53047,7 +53165,7 @@ function worldBenchRender() {
       // 加器材时提示说切了，画布却没动，要手动点视图按钮——原来这里把
       // benchPreferredView 置 null，自动链又把台面散数排在前面）。打开时把
       // 视图钉到坐标系，拿下时还给自动链，别一直钉着。
-      if (labWorld && labWorld.benchRect) { benchPreferredView = 'coord'; benchShowBalance = false; worldInspectSelect({ apparatus: 'rect' }); labExpandStation('worldRectCard'); }
+      if (labWorld && labWorld.benchRect) { benchAbstract = false; benchPreferredView = 'coord'; benchShowBalance = false; worldInspectSelect({ apparatus: 'rect' }); labExpandStation('worldRectCard'); }
       else benchPreferredView = null;
       worldPlayRender();
       return;
@@ -53062,7 +53180,7 @@ function worldBenchRender() {
       const flag = op === 'tenframe' ? labWorld.benchTenframe : op === 'datatable' ? labWorld.benchDatatable : labWorld.benchSpinner;
       benchMsg(flag ? label + '放上了台面，台子切到' + view : label + '拿下了台面', true);
       // 和长方形一个道理：提示说切到，画布就要真切过去（复测 8e38f4c 毛病①）。
-      if (flag) { benchPreferredView = op === 'tenframe' ? 'tenframe' : op === 'datatable' ? 'table' : 'spin'; benchShowBalance = false; worldInspectSelect({ apparatus: op }); }
+      if (flag) { benchAbstract = false; benchPreferredView = op === 'tenframe' ? 'tenframe' : op === 'datatable' ? 'table' : 'spin'; benchShowBalance = false; worldInspectSelect({ apparatus: op }); }
       else benchPreferredView = null;
       worldPlayRender();
       return;
@@ -53091,15 +53209,19 @@ function worldBenchRender() {
     }
     if (op === 'view') {
       const v = b.getAttribute('data-view');
-      if (v === 'balance') benchShowBalance = true; // 再点“天平”就回到天平视图
-      else { benchShowBalance = false; benchPreferredView = v; }
+      // “算式”就是抽象样子，不是又一个视图选择：进抽象时 benchPreferredView
+      // 不动（留着原来的图形视图），切回来还是它；别把 'formula' 存进 preferred，
+      // 不然切回来还在算式里（批 4 前点“算式”按钮就是这么存的，加载时已迁走）。
+      if (v === 'balance') { benchShowBalance = true; benchAbstract = false; } // 再点“天平”就回到天平视图
+      else if (v === 'formula') { benchShowBalance = false; benchAbstract = true; }
+      else { benchShowBalance = false; benchPreferredView = v; benchAbstract = false; }
       worldBenchRender();
       return;
     }
     if (op === 'line') {
       benchRun({ type: 'benchLineToggle' });
       benchMsg(labWorld && labWorld.benchLine ? '直线放上了台面，台子切到坐标系' : '直线拿下了台面', true);
-      if (labWorld && labWorld.benchLine) { benchPreferredView = 'coord'; benchShowBalance = false; worldInspectSelect({ apparatus: 'linefn' }); labExpandStation('worldFnCard'); }
+      if (labWorld && labWorld.benchLine) { benchAbstract = false; benchPreferredView = 'coord'; benchShowBalance = false; worldInspectSelect({ apparatus: 'linefn' }); labExpandStation('worldFnCard'); }
       else benchPreferredView = null;
       worldPlayRender();
       return;
