@@ -247,6 +247,25 @@ for sid in sorted(VIEW_SECTIONS):
                       f"{enclosing} — a hidden ancestor would blank it")
 errors.extend(_parser.problems)
 
+# Lab (MathWorld workbench) structure: the bench must stay intact — the parts
+# box has 5 domain groups, the inspector sits beside the bench, and the
+# question search/filter + save + why/discovery controls must exist.
+_lab = HTML[HTML.find('<section id="lab"'):HTML.find('<section id="why"')]
+for _need in ('id="worldBenchBox"', 'id="worldBenchInspector"',
+              'id="labQSearch"', 'id="labQGrade"', 'id="labQEmpty"',
+              'id="labQCount"', 'id="labPracticeMenu"',
+              'id="labWhyBtn"', 'id="labDiscoveryBtn"', 'id="labWhyBox"',
+              'id="labSaveBtn"', 'id="labSaveName"', 'id="labSavedList"'):
+    if _need not in _lab:
+        errors.append(f"lab section is missing {_need}")
+for _grp in ('>数<', '>分数<', '>形<', '>量<', '>关系<'):
+    if _grp not in _lab:
+        errors.append(f"parts box is missing group {_grp}")
+if _lab.count('class="part-group"') < 5:
+    errors.append("parts box must have 5 part groups (数/分数/形/量/关系)")
+if 'data-drag-weight' not in _lab:
+    errors.append("parts box is missing draggable weight chips")
+
 if errors:
     print('check-views FAILED:')
     for e in errors:

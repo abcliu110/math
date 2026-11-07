@@ -3254,21 +3254,134 @@ function labFracAddF(a, b) {
 function labValFrac(v) { return v.kind === 'frac' ? labFracReduce(v.n, v.d) : { n: v.v, d: 1 }; }
 function labValNum(v) { return v.kind === 'frac' ? v.n / v.d : v.v; }
 function labValLabel(v) { return v.kind === 'frac' ? labFracStr(v.n, v.d) : String(v.v); }
+/* 一间世界换题：世界只建一次，换题只重设本题的器材（MathWorld.seedQuestion），
+   台面上的数、托盘、骰子、流程全部保留。第一次进实验室（还没有世界）才建一个
+   默认世界。旧行为是每题一个全新世界，台面只能靠 localStorage 从头捡回来。 */
 function labSeedWorld(qid) {
   if (!labHasWorld()) { labWorld = null; mwPlay = null; labWorldQid = null; return; }
   labWorldQid = qid || null;
-  if (qid && MathWorld.LAB_SEEDS[qid]) labWorld = MathWorld.LAB_SEEDS[qid]();
-  else {
-    labWorld = MathWorld.create({
-      fracboard: { A: { n: 1, d: 2 }, B: { n: 1, d: 3 } },
-      balance: { L: [{ n: 1, d: 2 }], R: [] },
-      chicken: { targetHeads: 35, targetLegs: 94, rabbits: 0 },
-      numline: { min: 0, max: 2 },
-      linefn: { k: 2, b: 8 },
-    });
+  if (!labWorld) {
+    // 上次没做完的世界直接回来（自动保存），不让学生丢东西；没有才建新的。
+    labWorld = labWorldRestore();
+    if (labWorld) {
+      if (qid && MathWorld.seedQuestion) labWorld = MathWorld.seedQuestion(labWorld, qid);
+    } else if (qid && MathWorld.LAB_SEEDS[qid]) labWorld = MathWorld.LAB_SEEDS[qid]();
+    else {
+      labWorld = MathWorld.create({
+        fracboard: { A: { n: 1, d: 2 }, B: { n: 1, d: 3 } },
+        balance: { L: [{ n: 1, d: 2 }], R: [] },
+        chicken: { targetHeads: 35, targetLegs: 94, rabbits: 0 },
+        numline: { min: 0, max: 2 },
+        linefn: { k: 2, b: 8 },
+      });
+    }
+  } else if (qid && MathWorld.seedQuestion) {
+    labWorld = MathWorld.seedQuestion(labWorld, qid);
   }
+  if (qid) labApplyDefaults(qid); // 这道题存过的器材默认值先摆好
   mwPlay = labWorld; // 实验室与验收台共用同一世界
-  benchRestore(); // 台面上的数跨题保留
+  benchRestore(); // 台面上的数跨题保留（换题后世界里已有，restore 是空操作）
+  labWorldSave();
+}
+/* ---------- 台面自动保存 + 器材默认值（NB 走访补记 §2/§7） ----------
+   NB 的教训：误点撤销后标签页跳走，未保存的台面直接丢了（保存要登录）。
+   数学台面是本地的：整个世界每次重算后自动存进 math-lab-world-v1，
+   下次进实验室直接恢复，不让学生丢东西。台面本身另有 math-bench-v1
+   做第二份保存（只有 n/d，没有名字）。
+   器材默认值 math-lab-defaults-v1：设置卡里的“作为默认”把当前器材状态
+   存下来，下次进这道题先按默认值摆；“恢复初始值”清掉默认值并摆回
+   本题种子/出厂值。 */
+var LAB_WORLD_KEY = 'math-lab-world-v1';
+var LAB_DEFAULTS_KEY = 'math-lab-defaults-v1';
+var LAB_APPARATUS_INITIAL = {
+  fracboard: { A: { n: 1, d: 2 }, B: { n: 1, d: 3 } },
+  linefn: { k: 2, b: 8 },
+  rect: { perim: 20, w: 1 },
+  chicken: { targetHeads: 35, targetLegs: 94, rabbits: 0 },
+  tenframe: { A: 0, B: 0 },
+};
+var LAB_DEFAULTABLE = ['fracboard', 'linefn', 'rect', 'chicken', 'tenframe'];
+function labWorldSave() {
+  if (!labWorld || !labHasWorld()) return;
+  try { localStorage.setItem(LAB_WORLD_KEY, JSON.stringify(labWorld)); } catch (e) { /* 存不下就不存 */ }
+}
+function labWorldRestore() {
+  let w = null;
+  try { w = JSON.parse(localStorage.getItem(LAB_WORLD_KEY) || 'null'); } catch (e) { w = null; }
+  if (!w || typeof w !== 'object' || !w.pieces || typeof w.pieces !== 'object' ||
+      !Array.isArray(w.bench) || !w.balance || !Array.isArray(w.balance.L) ||
+      !w.fracboard || !w.linefn || !w.rect) return null;
+  // 缺的顶层字段用空世界补齐（旧版本存的世界没有 benchRect 等字段）。
+  const fresh = MathWorld.create({});
+  Object.keys(fresh).forEach(function (k) { if (w[k] === undefined) w[k] = fresh[k]; });
+  return w;
+}
+function labDefaultsLoad() {
+  try { return JSON.parse(localStorage.getItem(LAB_DEFAULTS_KEY) || '{}') || {}; } catch (e) { return {}; }
+}
+function labDefaultsSave(d) {
+  try { localStorage.setItem(LAB_DEFAULTS_KEY, JSON.stringify(d)); } catch (e) { /* 存不下就不存 */ }
+}
+/* 进题后按默认值摆器材：只动本题种子里有的器材，台面/托盘/流程不动。 */
+function labApplyDefaults(qid) {
+  if (!labWorld || !qid || !MathWorld.LAB_SEED_SPECS || !MathWorld.LAB_SEED_SPECS[qid]) return;
+  const spec = MathWorld.LAB_SEED_SPECS[qid];
+  const defs = labDefaultsLoad();
+  let w = labWorld;
+  function ap(intent) { const r = MathWorld.apply(w, intent); w = r.world; }
+  if (spec.fracboard && defs.fracboard) {
+    if (defs.fracboard.A) ap({ type: 'fracboardSet', side: 'A', n: defs.fracboard.A.n, d: defs.fracboard.A.d });
+    if (defs.fracboard.B) ap({ type: 'fracboardSet', side: 'B', n: defs.fracboard.B.n, d: defs.fracboard.B.d });
+  }
+  if (spec.linefn && defs.linefn) {
+    if (typeof defs.linefn.k === 'number') ap({ type: 'linefnSet', k: defs.linefn.k });
+    if (typeof defs.linefn.b === 'number') ap({ type: 'linefnSet', b: defs.linefn.b });
+  }
+  if (spec.rect && defs.rect && typeof defs.rect.w === 'number') ap({ type: 'rectSet', w: defs.rect.w });
+  if (spec.chicken && defs.chicken && typeof defs.chicken.rabbits === 'number') ap({ type: 'chickenSetRabbits', rabbits: defs.chicken.rabbits });
+  if (spec.tenframe && defs.tenframe) {
+    if (typeof defs.tenframe.A === 'number') ap({ type: 'tenframeSet', side: 'A', n: defs.tenframe.A });
+    if (typeof defs.tenframe.B === 'number') ap({ type: 'tenframeSet', side: 'B', n: defs.tenframe.B });
+  }
+  labWorld = w; mwPlay = w;
+}
+/* 设置卡的两个按钮：把当前器材状态存为默认值 / 清掉默认值并摆回初始值。 */
+function labSaveApparatusDefault(key) {
+  const w = worldPlayEnsure();
+  if (!w || LAB_DEFAULTABLE.indexOf(key) < 0) return;
+  const d = labDefaultsLoad();
+  if (key === 'fracboard') d.fracboard = { A: { n: w.fracboard.A.n, d: w.fracboard.A.d }, B: { n: w.fracboard.B.n, d: w.fracboard.B.d } };
+  if (key === 'linefn') d.linefn = { k: w.linefn.k, b: w.linefn.b };
+  if (key === 'rect') d.rect = { perim: w.rect.perim, w: w.rect.w };
+  if (key === 'chicken' && w.chicken) d.chicken = { rabbits: w.chicken.rabbits };
+  if (key === 'tenframe') d.tenframe = { A: w.tenframe.A, B: w.tenframe.B };
+  labDefaultsSave(d);
+  benchMsg('已设为默认值：下次进这道题先按这个摆', true);
+  worldPlayRender();
+}
+function labResetApparatus(key) {
+  const w = worldPlayEnsure();
+  if (!w || LAB_DEFAULTABLE.indexOf(key) < 0) return;
+  const d = labDefaultsLoad();
+  delete d[key];
+  labDefaultsSave(d);
+  const seed = (labWorldQid && MathWorld.LAB_SEED_SPECS && MathWorld.LAB_SEED_SPECS[labWorldQid] &&
+    MathWorld.LAB_SEED_SPECS[labWorldQid][key]) || LAB_APPARATUS_INITIAL[key];
+  if (!seed) return;
+  if (key === 'fracboard') {
+    worldPlayApply({ type: 'fracboardSet', side: 'A', n: seed.A.n, d: seed.A.d }, '分数板 A 回到 ' + seed.A.n + '/' + seed.A.d);
+    worldPlayApply({ type: 'fracboardSet', side: 'B', n: seed.B.n, d: seed.B.d }, '分数板 B 回到 ' + seed.B.n + '/' + seed.B.d);
+  }
+  if (key === 'linefn') {
+    worldPlayApply({ type: 'linefnSet', k: seed.k }, '直线 k 回到 ' + seed.k);
+    worldPlayApply({ type: 'linefnSet', b: seed.b }, '直线 b 回到 ' + seed.b);
+  }
+  if (key === 'rect') worldPlayApply({ type: 'rectSet', w: seed.w }, '长方形宽回到 ' + seed.w);
+  if (key === 'chicken') worldPlayApply({ type: 'chickenSetRabbits', rabbits: seed.rabbits }, '兔的只数回到 ' + seed.rabbits);
+  if (key === 'tenframe') {
+    worldPlayApply({ type: 'tenframeSet', side: 'A', n: seed.A }, '十格阵 A 回到 ' + seed.A);
+    worldPlayApply({ type: 'tenframeSet', side: 'B', n: seed.B }, '十格阵 B 回到 ' + seed.B);
+  }
 }
 /* ---------- 实验流程（NB 式步骤打分）：练习有提示，挑战无提示 ---------- */
 var labProcSnap = {}; // qid -> 最近一次流程报告，挑战交卷时写进报告
@@ -3354,6 +3467,8 @@ function labCarryProcedure(prev, next) {
 function renderProcedurePanel(w) {
   const box = document.getElementById('worldProcOut');
   if (!box) return;
+  // 下一步高亮先清掉，再按当前流程重算（考试模式不给高亮）。
+  document.querySelectorAll('.demo-card.is-next').forEach(function (el) { el.classList.remove('is-next'); });
   const rep = MathWorld.procedureReport ? MathWorld.procedureReport(w) : null;
   if (!rep) {
     box.innerHTML = '<p class="muted">还没开始实验流程。选一个工作间题，就会按步骤打分。</p>';
@@ -3361,6 +3476,16 @@ function renderProcedurePanel(w) {
   }
   labProcSnap[rep.labId] = rep;
   box.innerHTML = procReportHtml(rep) + '<div class="proc-history">' + procHistSummaryHtml(rep.labId) + '</div>';
+  // 练习模式：下一步在台面上高亮出来（NB 式“每步提醒”——高亮在卡片上，不在角落一行字）。
+  if (rep.mode === 'practice') {
+    const missed = rep.lines.find(function (l) { return !l.got; });
+    const def = MathWorld.LAB_PROCEDURES && MathWorld.LAB_PROCEDURES[rep.labId];
+    const step = missed && def ? def.steps.find(function (s) { return s.id === missed.id; }) : null;
+    if (step && step.target) {
+      const card = document.getElementById(step.target);
+      if (card) card.classList.add('is-next');
+    }
+  }
 }
 function procReportHtml(rep) {
   const exam = rep.mode === 'exam';
@@ -3456,7 +3581,7 @@ function benchRestore() {
 var benchPreferredView = null;
 function bvX(x) { return 30 + (x + 1) * 57.5; } // 坐标系 x 范围 -1 到 7
 function bvY(y) { return 230 - (y + 2) * (200 / 14); } // 坐标系 y 范围 -2 到 12
-function benchViewSvg(view, items, lineOn, lf, bal) {
+function benchViewSvg(view, items, lineOn, lf, bal, rect) {
   let s = '';
   if (view === 'coord') {
     for (let i = -1; i <= 7; i++) {
@@ -3477,7 +3602,17 @@ function benchViewSvg(view, items, lineOn, lf, bal) {
         const y = lf.k * x + lf.b;
         if (y >= -2 && y <= 12) pts.push(bvX(x).toFixed(1) + ',' + bvY(y).toFixed(1));
       }
-      if (pts.length > 1) s += '<polyline points="' + pts.join(' ') + '" fill="none" stroke="#ea580c" stroke-width="3"/>';
+      if (pts.length > 1) s += '<polyline class="bench-flow" points="' + pts.join(' ') + '" fill="none" stroke="#ea580c" stroke-width="3"/>';
+    }
+    if (rect) {
+      // 长方形画在坐标系格子上：左下角在 (0,0)，宽 w、长 h，面积写在里面，顶点标出来。
+      s += '<rect x="' + bvX(0) + '" y="' + bvY(rect.h) + '" width="' + (bvX(rect.w) - bvX(0)) +
+        '" height="' + (bvY(0) - bvY(rect.h)) + '" fill="#fde68a" fill-opacity="0.7" stroke="#92400e" stroke-width="2"/>';
+      s += '<text x="' + bvX(rect.w / 2) + '" y="' + bvY(rect.h / 2) + '" font-size="13" text-anchor="middle" fill="#92400e">' +
+        rect.w + '×' + rect.h + '＝' + rect.area + '</text>';
+      s += '<circle cx="' + bvX(rect.w) + '" cy="' + bvY(rect.h) + '" r="4" fill="#92400e"/>';
+      s += '<text x="' + bvX(rect.w) + '" y="' + (bvY(rect.h) - 8) + '" font-size="11" text-anchor="middle" fill="#92400e">(' +
+        rect.w + ',' + rect.h + ')</text>';
     }
     items.forEach(function (it) {
       const x = it.q.n / it.q.d;
@@ -3548,8 +3683,10 @@ function worldBenchRender() {
     ? bv.items.map(function (it) {
         const on = !!benchSel[it.id];
         return '<button type="button" class="bench-chip' + (on ? ' is-picked' : '') +
-          '" data-bench="pick" data-id="' + esc(it.id) + '" aria-pressed="' + on + '">' +
-          benchPieceSvg(it.q) + '<span>' + esc(it.str) + '</span></button>';
+          '" data-bench="pick" data-id="' + esc(it.id) + '" aria-pressed="' + on + '"' +
+          ' title="' + esc(it.name || it.str) + '">' +
+          benchPieceSvg(it.q) + '<span>' + esc(it.str) + '</span>' +
+          (it.name && it.name !== it.str ? '<span class="bench-chip-name">' + esc(it.name) + '</span>' : '') + '</button>';
       }).join('')
     : '<p class="muted">台面是空的。从上面的零件盒拿一个数放上来。</p>';
   const sum = document.getElementById('worldBenchSum');
@@ -3558,10 +3695,12 @@ function worldBenchRender() {
       (bv.mixedDen ? '；分母不同，不能直接把分子相加' : '');
   }
   // 视图：台上的对象决定显示什么，学生可以在共同视图里指定。
+  // 一次只画一个坐标系（数轴是一维，坐标系是二维，长方形画在坐标系格子上）。
   const w2 = labWorld;
   const lineOn = !!(w2 && w2.benchLine);
   const balOn = !!(w2 && w2.benchBalance);
-  const objs = BenchViews.benchObjects(bv.items, lineOn, balOn);
+  const rectOn = !!(w2 && w2.benchRect);
+  const objs = BenchViews.benchObjects(bv.items, lineOn, balOn, rectOn);
   const ch = BenchViews.chooseView(objs, benchPreferredView);
   const vbox = document.getElementById('worldBenchViews');
   if (vbox) {
@@ -3573,12 +3712,14 @@ function worldBenchRender() {
   const svg = document.getElementById('worldBenchView');
   if (svg) {
     svg.innerHTML = benchViewSvg(ch.view, bv.items, lineOn, w2 ? w2.linefn : { k: 0, b: 0 },
-      w2 ? MathWorld.derived(w2).balance : null);
+      w2 ? MathWorld.derived(w2).balance : null, w2 ? MathWorld.derived(w2).rect : null);
   }
   const lineBtn = document.querySelector('[data-bench="line"]');
   if (lineBtn) lineBtn.setAttribute('aria-pressed', String(lineOn));
   const balBtn = document.querySelector('[data-bench="balance"]');
   if (balBtn) balBtn.setAttribute('aria-pressed', String(balOn));
+  const rectBtn = document.querySelector('[data-bench="rect"]');
+  if (rectBtn) rectBtn.setAttribute('aria-pressed', String(rectOn));
   // 直线在台上、且看的是坐标系时，可以直接在台上调 k 和 b。
   if (vbox && lineOn && ch.view === 'coord' && w2) {
     vbox.innerHTML += '<span class="muted">直线：k = ' + w2.linefn.k + '，b = ' + w2.linefn.b + '</span>' +
@@ -3607,10 +3748,12 @@ function worldBenchRender() {
     }
     if (op === 'pick') {
       // 原地切换，不重建台面：快速连点时不会点到已被替换掉的旧按钮。
+      // 点整体 = 选中：检查器跟过来，显示这个零件的属性。
       const id = b.getAttribute('data-id');
       if (benchSel[id]) delete benchSel[id]; else benchSel[id] = true;
       b.classList.toggle('is-picked', !!benchSel[id]);
       b.setAttribute('aria-pressed', String(!!benchSel[id]));
+      worldInspectSelect({ piece: id });
       return;
     }
     if (op === 'merge') {
@@ -3631,6 +3774,14 @@ function worldBenchRender() {
     if (op === 'balance') {
       benchRun({ type: 'benchBalanceToggle' });
       benchMsg(labWorld && labWorld.benchBalance ? '天平放上了台面' : '天平拿下了台面', true);
+      if (labWorld && labWorld.benchBalance) worldInspectSelect({ apparatus: 'balance' });
+      worldPlayRender();
+      return;
+    }
+    if (op === 'rect') {
+      benchRun({ type: 'benchRectToggle' });
+      benchMsg(labWorld && labWorld.benchRect ? '长方形放上了台面，台子切到坐标系格子' : '长方形拿下了台面', true);
+      if (labWorld && labWorld.benchRect) worldInspectSelect({ apparatus: 'rect' });
       worldPlayRender();
       return;
     }
@@ -3648,6 +3799,7 @@ function worldBenchRender() {
     if (op === 'line') {
       benchRun({ type: 'benchLineToggle' });
       benchMsg(labWorld && labWorld.benchLine ? '直线放上了台面，台子切到坐标系' : '直线拿下了台面', true);
+      if (labWorld && labWorld.benchLine) worldInspectSelect({ apparatus: 'linefn' });
       worldPlayRender();
       return;
     }
@@ -3762,6 +3914,167 @@ function benchPlaceOn(pieceId, target, label) {
   card.addEventListener('click', function (e) {
     if (suppressClick) { e.stopPropagation(); e.preventDefault(); }
   }, true);
+})();
+/* ---------- 检查器：点一个物体，它的属性就贴在台面旁边（NB 式） ----------
+   每个物体 2–4 个属性（MathWorld.inspect 给出标题、当前状态、属性表和合法范围）；
+   滑杆 + 数字输入双通道，改完世界立刻重算并画出来。拖滑杆时不重建检查器，
+   不然滑杆会在手里消失（松手后再刷新一次）。 */
+var worldInspectSel = null; // {piece: id} 或 {apparatus: 'linefn'|'rect'|...}
+var worldInspDrag = false;
+/* 器材卡片的选中态（NB：灰色高亮框）：点中的大器材卡片描出来。 */
+var APPARATUS_CARDS = {
+  fracboard: 'worldFracCard', balance: 'worldBalCard', numline: 'worldLineCard',
+  chicken: 'worldChickenCard', linefn: 'worldFnCard', rect: 'worldRectCard',
+  dice: 'worldDiceCard',
+};
+function worldInspectSelect(sel) {
+  worldInspectSel = sel || null;
+  if (typeof document !== 'undefined' && document.querySelectorAll) {
+    document.querySelectorAll('#labMwWorkbench .demo-card.is-selected').forEach(function (el) { el.classList.remove('is-selected'); });
+    const cid = worldInspectSel && worldInspectSel.apparatus && APPARATUS_CARDS[worldInspectSel.apparatus];
+    const card = cid && document.getElementById(cid);
+    if (card) card.classList.add('is-selected');
+  }
+  worldInspectorRender();
+}
+function worldInspectorRender() {
+  const box = document.getElementById('worldBenchInspector');
+  if (!box || !labHasWorld() || worldInspDrag) return;
+  const w = worldPlayEnsure();
+  if (!w) return;
+  if (worldInspectSel && worldInspectSel.piece && !w.pieces[worldInspectSel.piece]) worldInspectSel = null;
+  const insp = worldInspectSel ? MathWorld.inspect(w, worldInspectSel) : null;
+  if (!insp) {
+    // 没选中东西：显示台面现状（合计、分母、几个数），不是空文案。
+    const d = MathWorld.derived(w);
+    box.innerHTML = '<p class="muted">点台上的一个数或一件大器材，看它的属性。台上合计 ' + d.bench.totalStr +
+      '（' + d.bench.count + ' 个）' + (d.bench.mixedDen ? '；分母不同，不能直接把分子相加' : '') + '。</p>';
+    box._insp = null;
+    return;
+  }
+  let html = '<p><b>' + esc(insp.title) + '</b> · ' + esc(insp.state) + '</p>';
+  // 设置卡（NB 走访 §2 的形态：名称 + 字段行 + 旋转角度 + 作为默认/恢复初始值）。
+  // 名字只对台上的零件（器材实例）开放；大器材是固定站位，不改名。
+  if (worldInspectSel.piece && insp.name !== undefined) {
+    html += '<div class="insp-row"><label>名字</label>' +
+      '<input type="text" data-insp-name value="' + esc(insp.name) + '" maxlength="20" aria-label="器材名字" style="flex:1;min-width:120px">' +
+      '<button type="button" class="btn small ghost" data-insp-del>删除</button></div>';
+  }
+  // 旋转只对长方形有意义：转 90° 就是宽和长互换（周长不变）。
+  if (worldInspectSel.apparatus === 'rect') {
+    const r = w.rect, h = r.perim / 2 - r.w;
+    html += '<div class="insp-row"><label>旋转</label><span>现在 ' + r.w + '×' + h + '（' + (r.w <= h ? '横着' : '竖着') + '）</span>' +
+      '<button type="button" class="btn small ghost" data-insp-rotate>转 90°（宽 ↔ 长）</button></div>';
+  }
+  if (worldInspectSel.apparatus && LAB_DEFAULTABLE.indexOf(worldInspectSel.apparatus) >= 0) {
+    html += '<div class="insp-row"><button type="button" class="btn small ghost" data-insp-default>作为默认</button>' +
+      '<button type="button" class="btn small ghost" data-insp-reset>恢复初始值</button></div>';
+  }
+  if (!insp.props.length) {
+    html += '<p class="muted">这个物体的调节就是拖拽本身：拖砝码上天平、拖点上数轴、点和数换一边。</p>';
+  }
+  insp.props.forEach(function (p, i) {
+    html += '<div class="insp-row"><label>' + esc(p.label) + ' <b>' + esc(String(p.value)) + '</b></label>' +
+      '<input type="range" min="' + p.min + '" max="' + p.max + '" step="' + p.step + '" value="' + p.value +
+      '" data-insp="' + i + '" aria-label="' + esc(p.label) + '">' +
+      '<input type="number" min="' + p.min + '" max="' + p.max + '" step="' + p.step + '" value="' + p.value +
+      '" data-insp-num="' + i + '" aria-label="' + esc(p.label) + '（输入数字）">' +
+      '<button type="button" class="btn small ghost" data-insp-step="' + i + '" data-d="-1" aria-label="' + esc(p.label) + '减">−</button>' +
+      '<button type="button" class="btn small ghost" data-insp-step="' + i + '" data-d="1" aria-label="' + esc(p.label) + '加">+</button></div>';
+  });
+  box.innerHTML = html;
+  box._insp = insp; // 当前检查器对应的属性表（控件事件用它发 intent）
+}
+function worldInspectorApply(idx, rawVal) {
+  const box = document.getElementById('worldBenchInspector');
+  const insp = box && box._insp;
+  if (!insp || !insp.props[idx]) return;
+  const p = insp.props[idx];
+  let v = Number(rawVal);
+  if (!isFinite(v)) return;
+  // 步进取整 + 夹到合法范围：不合法的值调不出来，控件本身就不让。
+  v = Math.round(v / p.step) * p.step;
+  v = Math.max(p.min, Math.min(p.max, v));
+  const it = p.intent || {};
+  if (it.type === 'setPiece') {
+    const w = worldPlayEnsure();
+    const cur = w && w.pieces[it.pieceId];
+    if (!cur) return;
+    const piece = cur.kind === 'frac'
+      ? { kind: 'frac', n: it.field === 'n' ? v : cur.n, d: it.field === 'd' ? v : cur.d }
+      : { kind: 'num', v: v };
+    benchApply({ type: 'setPiece', pieceId: it.pieceId, piece: piece },
+      '改成 ' + (piece.kind === 'frac' ? piece.n + '/' + piece.d : String(piece.v)));
+    return;
+  }
+  if (it.type === 'fracboardSet') {
+    const w = worldPlayEnsure();
+    const f = w.fracboard[it.side];
+    const n = it.field === 'n' ? v : f.n, d = it.field === 'd' ? v : f.d;
+    return worldPlayApply({ type: 'fracboardSet', side: it.side, n: n, d: d },
+      'fracboard ' + it.side + '=' + n + '/' + d);
+  }
+  if (it.type === 'linefnSet') {
+    const o = { type: 'linefnSet' };
+    o[it.field] = v;
+    return worldPlayApply(o, it.field + '=' + v);
+  }
+  if (it.type === 'rectSet') return worldPlayApply({ type: 'rectSet', w: v }, '宽改成 ' + v);
+  if (it.type === 'chickenSetRabbits') return worldPlayApply({ type: 'chickenSetRabbits', rabbits: v }, '兔=' + v);
+  if (it.type === 'tenframeSet') return worldPlayApply({ type: 'tenframeSet', side: it.side, n: v }, '十格阵 ' + it.side + '=' + v);
+}
+(function worldInspectorBind() {
+  const box = document.getElementById('worldBenchInspector');
+  if (!box) return;
+  box.addEventListener('pointerdown', function (e) {
+    if (e.target && e.target.matches && e.target.matches('[data-insp]')) worldInspDrag = true;
+  });
+  window.addEventListener('pointerup', function () {
+    if (!worldInspDrag) return;
+    worldInspDrag = false;
+    worldInspectorRender();
+  });
+  box.addEventListener('input', function (e) {
+    const t = e.target;
+    if (!t || !t.matches) return;
+    if (t.matches('[data-insp]')) worldInspectorApply(parseInt(t.getAttribute('data-insp'), 10), t.value);
+  });
+  box.addEventListener('change', function (e) {
+    const t = e.target;
+    if (!t || !t.matches) return;
+    if (t.matches('[data-insp-num]')) worldInspectorApply(parseInt(t.getAttribute('data-insp-num'), 10), t.value);
+    // 改名（NB：器材标题点改名）：改完检查器重画，名字跟零件一起存进世界。
+    if (t.matches('[data-insp-name]') && worldInspectSel && worldInspectSel.piece) {
+      benchApply({ type: 'setPiece', pieceId: worldInspectSel.piece, name: t.value }, '改名了');
+    }
+  });
+  box.addEventListener('click', function (e) {
+    // 设置卡的竖条工具栏（NB 走访 §2：删除 / 旋转 / 作为默认 / 恢复初始值）。
+    const t0 = e.target && e.target.closest ? e.target.closest('[data-insp-del],[data-insp-rotate],[data-insp-default],[data-insp-reset]') : null;
+    if (t0) {
+      if (t0.hasAttribute('data-insp-del') && worldInspectSel && worldInspectSel.piece) {
+        const id = worldInspectSel.piece;
+        worldInspectSel = null;
+        benchApply({ type: 'benchTake', pieceId: id }, '拿走了');
+        return;
+      }
+      if (t0.hasAttribute('data-insp-rotate') && worldInspectSel && worldInspectSel.apparatus === 'rect') {
+        const w2 = worldPlayEnsure();
+        if (w2) worldPlayApply({ type: 'rectSet', w: w2.rect.perim / 2 - w2.rect.w }, '转了 90°');
+        return;
+      }
+      if (t0.hasAttribute('data-insp-default') && worldInspectSel && worldInspectSel.apparatus) { labSaveApparatusDefault(worldInspectSel.apparatus); return; }
+      if (t0.hasAttribute('data-insp-reset') && worldInspectSel && worldInspectSel.apparatus) { labResetApparatus(worldInspectSel.apparatus); return; }
+    }
+    const b = e.target && e.target.closest ? e.target.closest('[data-insp-step]') : null;
+    if (!b) return;
+    const idx = parseInt(b.getAttribute('data-insp-step'), 10);
+    const insp = box._insp;
+    if (!insp || !insp.props[idx]) return;
+    const p = insp.props[idx];
+    const d = parseInt(b.getAttribute('data-d'), 10) || 0;
+    worldInspectorApply(idx, p.value + d * p.step);
+  });
 })();
 function labSyncFracBoardToWorld() {
   if (!labHasWorld()) return;
@@ -4119,20 +4432,20 @@ document.getElementById('labLineClear').addEventListener('click', () => { labLin
 
 /* ---------- 13 个问题入口 + 自由玩 / 挑战两种模式 + 交卷报告 ---------- */
 var LAB_QUESTIONS = [
-  { qid: 'q-thirteen', title: '13 有几种凑法？', demo: 'thirteen', points: ['1.6', '1.9', '1.11'], primary: '1.9' },
-  { qid: 'q-twentyfour', title: '24 点', demo: 'twentyfour', points: ['4.9'], primary: '4.9' },
-  { qid: 'q-monty', title: '换一扇门', demo: 'monty', points: ['9.9'], primary: '9.9' },
-  { qid: 'q-maxarea', title: '周长一定面积最大', demo: 'maxarea', points: ['3.12'], primary: '3.12' },
-  { qid: 'q-matches', title: '动 1 根火柴', demo: 'matches', points: ['4.9'], primary: '4.9' },
-  { qid: 'q-mobius', title: '莫比乌斯带', demo: 'mobius', points: ['6.5'], primary: '6.5' },
-  { qid: 'q-shopweek', title: '开店一周', demo: 'shopweek', points: ['6.6'], primary: '6.6' },
-  { qid: 'q-fairgame', title: '公平游戏', demo: 'fairgame', points: ['5.4'], primary: '5.4' },
-  { qid: 'q-makerule', title: '造规律', demo: 'makerule', points: ['1.16'], primary: '1.16' },
-  { qid: 'q-fracadd', title: '分母不一样，分数能直接加吗？', bench: 'fracadd', station: 'worldFracCard', points: ['5.11'], primary: '5.11' },
-  { qid: 'q-balfrac', title: '天平一边放 1/2', bench: 'balfrac', station: 'worldBalCard', points: ['5.5'], primary: '5.5' },
-  { qid: 'q-numline', title: '7 在数轴上是哪里？', bench: 'numline', station: 'worldLineCard', points: ['1.9'], primary: '1.9' },
-  { qid: 'q-funcline', title: 'k 变成负数，直线往哪倒？', bench: 'funcline', station: 'worldFnCard', points: ['8.15'], primary: '8.15' },
-  { qid: 'q-chicken', title: '头 35，腿 94：鸡兔各几只？', bench: 'chicken', station: 'worldChickenCard', points: ['5.5'], primary: '5.5' },
+  { qid: 'q-thirteen', title: '13 有几种凑法？', demo: 'thirteen', points: ['1.6', '1.9', '1.11'], primary: '1.9', domain: '数与代数' },
+  { qid: 'q-twentyfour', title: '24 点', demo: 'twentyfour', points: ['4.9'], primary: '4.9', domain: '数与代数' },
+  { qid: 'q-monty', title: '换一扇门', demo: 'monty', points: ['9.9'], primary: '9.9', domain: '统计与概率' },
+  { qid: 'q-maxarea', title: '周长一定面积最大', demo: 'maxarea', points: ['3.12'], primary: '3.12', domain: '图形与几何' },
+  { qid: 'q-matches', title: '动 1 根火柴', demo: 'matches', points: ['4.9'], primary: '4.9', domain: '数与代数' },
+  { qid: 'q-mobius', title: '莫比乌斯带', demo: 'mobius', points: ['6.5'], primary: '6.5', domain: '图形与几何' },
+  { qid: 'q-shopweek', title: '开店一周', demo: 'shopweek', points: ['6.6'], primary: '6.6', domain: '综合与实践' },
+  { qid: 'q-fairgame', title: '公平游戏', demo: 'fairgame', points: ['5.4'], primary: '5.4', domain: '统计与概率' },
+  { qid: 'q-makerule', title: '造规律', demo: 'makerule', points: ['1.16'], primary: '1.16', domain: '数与代数' },
+  { qid: 'q-fracadd', title: '分母不一样，分数能直接加吗？', bench: 'fracadd', station: 'worldFracCard', points: ['5.11'], primary: '5.11', domain: '数与代数' },
+  { qid: 'q-balfrac', title: '天平一边放 1/2', bench: 'balfrac', station: 'worldBalCard', points: ['5.5'], primary: '5.5', domain: '数与代数' },
+  { qid: 'q-numline', title: '7 在数轴上是哪里？', bench: 'numline', station: 'worldLineCard', points: ['1.9'], primary: '1.9', domain: '数与代数' },
+  { qid: 'q-funcline', title: 'k 变成负数，直线往哪倒？', bench: 'funcline', station: 'worldFnCard', points: ['8.15'], primary: '8.15', domain: '数与代数' },
+  { qid: 'q-chicken', title: '头 35，腿 94：鸡兔各几只？', bench: 'chicken', station: 'worldChickenCard', points: ['5.5'], primary: '5.5', domain: '综合与实践' },
 ];
 var labMode = 'free'; // 自由玩 | 挑战（本节课有效，不存档）
 var labChallengeAttempts = []; // 挑战模式里点开过的问题 id（去重）
@@ -4226,7 +4539,209 @@ function labSetMode(m) {
   document.getElementById('labModeTx').textContent = m === 'challenge'
     ? '挑战模式：没有提示，做完点“交卷”，答错的进今天复习。'
     : '自由玩：随便试，提示都在。';
+  labPracticeMenuSync();
 }
+/* 练习模式菜单（NB 式：练习左上角三项——重置练习 / 退出练习 / 进入挑战；
+   挑战模式右上角只有退出挑战）。 */
+function labPracticeMenuSync() {
+  const free = labMode !== 'challenge';
+  [['labMenuReset', free], ['labMenuExit', free], ['labMenuChallenge', free], ['labMenuQuitExam', !free]].forEach(function (pair) {
+    const el = document.getElementById(pair[0]);
+    if (el) el.hidden = !pair[1];
+  });
+}
+function labResetPractice() {
+  if (labWorldQid) labEnterQuestion(labWorldQid);
+  else labFreePlay();
+  labTrace('重置练习', true);
+}
+function labExitPractice() {
+  const w = worldPlayEnsure();
+  if (w && labHasWorld()) {
+    const r = MathWorld.apply(w, { type: 'procedureEnd' });
+    labWorld = r.world; mwPlay = r.world;
+  }
+  labWorldQid = null;
+  labSetCurrentQ('当前问题：还没选。先在下面选一个「工作间」题，或点「不选题，直接进工作间」。');
+  if (typeof worldPlayRender === 'function') worldPlayRender();
+  labTrace('退出练习', true);
+}
+function labEnterChallenge() {
+  labSetMode('challenge');
+  if (labWorldQid) {
+    if (labChallengeAttempts.indexOf(labWorldQid) === -1) labChallengeAttempts.push(labWorldQid);
+    labChallengeSubmitted = false;
+    labChallengeRenderLive();
+    if (labHasWorld()) worldPlayStartProcedure(labWorldQid, 'exam');
+  }
+  if (typeof worldPlayRender === 'function') worldPlayRender();
+}
+/* 台面右下角：为什么 + 我的发现（NB 式：实验目的和实验报告在右下角）。 */
+function labShowWhy() {
+  const box = document.getElementById('labWhyBox');
+  if (!box) return;
+  const q = LAB_QUESTIONS.find(function (x) { return x.qid === labWorldQid; });
+  if (!q) { box.innerHTML = '<p class="muted">先选一个问题，再看它背后的“为什么”。</p>'; box.hidden = false; return; }
+  const f = findPoint(q.primary);
+  const why = f && f.point ? (f.point.why || '') : '';
+  box.innerHTML = '<p><b>为什么：' + esc(q.title) + '</b></p><p>' + esc(why || '先动手玩一玩，规律自己会出来。') + '</p>' +
+    '<p class="muted">用到：' + esc(q.primary) + '</p>';
+  box.hidden = false;
+}
+function labShowDiscovery() {
+  const box = document.getElementById('labWhyBox');
+  if (!box) return;
+  box.innerHTML = '<p><b>我的发现</b></p><p class="muted">一句话写下你刚才发现的规律，会记进探究记录。</p>' +
+    '<div class="btn-row"><input type="text" id="labDiscoveryText" placeholder="我发现……" aria-label="我的发现" style="flex:1;min-width:160px">' +
+    '<button type="button" class="btn small primary" id="labDiscoverySave">记下来</button></div>';
+  box.hidden = false;
+  const save = document.getElementById('labDiscoverySave');
+  if (save) save.addEventListener('click', function () {
+    const t = document.getElementById('labDiscoveryText');
+    const text = t && t.value.trim();
+    if (!text) return;
+    const q = LAB_QUESTIONS.find(function (x) { return x.qid === labWorldQid; });
+    const list = loadInquiry();
+    list.push({ kind: 'lab-discovery', qid: labWorldQid, pointId: q ? q.primary : null, text: text, at: Date.now() });
+    saveInquiry(list);
+    labTrace('我的发现：' + text, true);
+    box.innerHTML = '<p>记下来了：' + esc(text) + '</p>';
+  });
+}
+/* 我的实验：把当前台面（台上的数 + 大器材 + 直线/长方形）起个名字存下来，下次直接打开。
+   键：math-lab-saved-v1（新键；只存台面快照，不存流程和错题）。 */
+var LAB_SAVED_KEY = 'math-lab-saved-v1';
+function labSavedLoad() {
+  try { const a = JSON.parse(localStorage.getItem(LAB_SAVED_KEY) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; }
+}
+function labSavedSave(list) { try { localStorage.setItem(LAB_SAVED_KEY, JSON.stringify(list)); } catch (e) { /* 存不下就不存 */ } }
+function labSaveBench() {
+  const w = worldPlayEnsure();
+  if (!w) return;
+  const nameEl = document.getElementById('labSaveName');
+  const name = (nameEl && nameEl.value.trim()) || ('台面 ' + new Date().toLocaleDateString());
+  const d = MathWorld.derived(w);
+  const snap = {
+    name: name, at: Date.now(),
+    bench: d.bench.items.map(function (it) { return { n: it.q.n, d: it.q.d }; }),
+    line: !!w.benchLine, balance: !!w.benchBalance, rect: !!w.benchRect,
+    k: w.linefn.k, b: w.linefn.b, rectW: w.rect.w,
+  };
+  const list = labSavedLoad();
+  list.unshift(snap);
+  if (list.length > 12) list.length = 12;
+  labSavedSave(list);
+  if (nameEl) nameEl.value = '';
+  labSavedRender();
+  benchMsg('已保存到“我的实验”：' + name, true);
+}
+function labLoadSaved(i) {
+  const s = labSavedLoad()[i];
+  if (!s || !labHasWorld()) return;
+  const w = worldPlayEnsure();
+  // 先清空台面，再按快照放回去（快照就是台面的样子，不用再猜）。
+  MathWorld.derived(w).bench.items.forEach(function (it) { benchRun({ type: 'benchTake', pieceId: it.id }); });
+  (s.bench || []).forEach(function (q) {
+    const piece = q.d === 1 ? { kind: 'num', v: q.n } : { kind: 'frac', n: q.n, d: q.d };
+    const mk = benchRun({ type: 'makePiece', piece: piece });
+    if (mk) benchRun({ type: 'benchPut', pieceId: mk.pieceId });
+  });
+  if (!!w.benchLine !== !!s.line) benchRun({ type: 'benchLineToggle' });
+  if (!!w.benchBalance !== !!s.balance) benchRun({ type: 'benchBalanceToggle' });
+  if (!!w.benchRect !== !!s.rect) benchRun({ type: 'benchRectToggle' });
+  worldPlayApply({ type: 'linefnSet', k: s.k, b: s.b }, '直线恢复成 y = ' + s.k + 'x + ' + s.b);
+  worldPlayApply({ type: 'rectSet', w: s.rectW }, '长方形宽恢复成 ' + s.rectW);
+  benchSel = {};
+  worldInspectSelect(null);
+  labTrace('打开保存的台面「' + s.name + '」', true);
+}
+function labDeleteSaved(i) {
+  const list = labSavedLoad();
+  list.splice(i, 1);
+  labSavedSave(list);
+  labSavedRender();
+}
+function labSavedRender() {
+  const box = document.getElementById('labSavedList');
+  if (!box) return;
+  const list = labSavedLoad();
+  box.innerHTML = list.length ? list.map(function (s, i) {
+    return '<div class="lab-saved-row"><span>' + esc(s.name) + '（' + (s.bench || []).length + ' 个数）</span>' +
+      '<button type="button" class="btn small ghost" data-lab-saved-open="' + i + '">打开</button>' +
+      '<button type="button" class="btn small ghost" data-lab-saved-del="' + i + '">删除</button></div>';
+  }).join('') : '<p class="muted">还没保存过台面。搭好一个台面，起个名字存下来，下次直接打开。</p>';
+}
+/* 找实验要快：搜索 + 年级 + 领域筛选（问题卡片上还补一行“器材/领域/知识点”）。 */
+var labQDomain = 'all';
+var LAB_BENCH_NAMES = { fracadd: '分数板', balfrac: '天平', numline: '数轴', funcline: '一次函数', chicken: '鸡兔笼' };
+function labQuestionsEnhance() {
+  const cards = document.querySelectorAll('#labQuestions .lab-q');
+  LAB_QUESTIONS.forEach(function (q, i) {
+    const card = cards[i];
+    if (!card || card.querySelector('.lab-q-meta')) return;
+    const tools = q.bench ? ('器材：' + (LAB_BENCH_NAMES[q.bench] || q.bench)) : ('演示：' + q.demo);
+    const p = document.createElement('p');
+    p.className = 'muted lab-q-meta';
+    p.textContent = tools + ' · 领域：' + q.domain + ' · ' + q.primary;
+    card.appendChild(p);
+  });
+}
+function labFilterQuestions() {
+  const q = (document.getElementById('labQSearch').value || '').trim().toLowerCase();
+  const gEl = document.getElementById('labQGrade');
+  const g = gEl ? gEl.value : 'all';
+  let shown = 0;
+  const cards = document.querySelectorAll('#labQuestions .lab-q');
+  LAB_QUESTIONS.forEach(function (qq, i) {
+    const card = cards[i];
+    if (!card) return;
+    const grade = parseInt(String(qq.primary).split('.')[0], 10);
+    const hay = (qq.title + ' ' + qq.primary).toLowerCase();
+    const ok = (!q || hay.indexOf(q) >= 0) &&
+      (g === 'all' || grade === parseInt(g, 10)) &&
+      (labQDomain === 'all' || qq.domain === labQDomain);
+    card.style.display = ok ? '' : 'none';
+    if (ok) shown++;
+  });
+  const empty = document.getElementById('labQEmpty');
+  if (empty) empty.hidden = shown > 0;
+  const count = document.getElementById('labQCount');
+  if (count) count.textContent = shown === LAB_QUESTIONS.length ? '' : '找到 ' + shown + ' 个问题';
+}
+(function labBenchExtrasBind() {
+  const bind = function (id, fn) { const el = document.getElementById(id); if (el) el.addEventListener('click', fn); };
+  bind('labMenuReset', labResetPractice);
+  bind('labMenuExit', labExitPractice);
+  bind('labMenuChallenge', labEnterChallenge);
+  bind('labMenuQuitExam', function () { labSetMode('free'); });
+  bind('labWhyBtn', labShowWhy);
+  bind('labDiscoveryBtn', labShowDiscovery);
+  bind('labSaveBtn', labSaveBench);
+  const search = document.getElementById('labQSearch');
+  if (search) search.addEventListener('input', labFilterQuestions);
+  const grade = document.getElementById('labQGrade');
+  if (grade) grade.addEventListener('change', labFilterQuestions);
+  document.querySelectorAll('[data-lab-domain]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      labQDomain = b.getAttribute('data-lab-domain');
+      document.querySelectorAll('[data-lab-domain]').forEach(function (x) {
+        x.classList.toggle('primary', x === b);
+        x.classList.toggle('ghost', x !== b);
+      });
+      labFilterQuestions();
+    });
+  });
+  const saved = document.getElementById('labSavedList');
+  if (saved) saved.addEventListener('click', function (e) {
+    const o = e.target.closest('[data-lab-saved-open]');
+    const d = e.target.closest('[data-lab-saved-del]');
+    if (o) labLoadSaved(parseInt(o.getAttribute('data-lab-saved-open'), 10));
+    if (d) labDeleteSaved(parseInt(d.getAttribute('data-lab-saved-del'), 10));
+  });
+  labQuestionsEnhance();
+  labSavedRender();
+  labPracticeMenuSync();
+})();
 function labSubmitChallenge() {
   const box = document.getElementById('labChallengeReport');
   labChallengeSubmitted = true; // 从这里起盒子里是打分界面，实时列表不再覆盖它
@@ -4425,21 +4940,19 @@ function worldPlayRender() {
   setTx('worldRectMsg', (MathWorld.goalMet(w, MathWorld.LAB_GOALS['q-maxarea'])
     ? '面积最大了！goalMet(rectMaxArea)=true'
     : rect.signals[0].text + '。goalMet(rectMaxArea)=false'));
+  // 台面在说什么：只给学生看的信号（天平平没平、错拼差多少、腿差几条），
+  // 不再倒调试用的内部状态（goalMet、diff、pieceCount 都不出现）。
   const sigLines = (d.signals || []).map(function (s) {
-    return '[' + s.level + '] ' + s.domain + ': ' + s.text;
+    return (s.level === 'ok' ? '✓ ' : s.level === 'error' ? '✗ ' : s.level === 'warn' ? '⚠ ' : '· ') + s.text;
   });
-  setTx('worldDerivedOut', (sigLines.length ? sigLines : ['（世界还没有信号）']).concat([
-    '---',
-    'balance L=' + d.balance.Lstr + ' R=' + d.balance.Rstr + ' diff=' + d.balance.diffStr,
-    'frac naive=' + d.fracboard.naiveStr + ' true=' + d.fracboard.trueStr + ' combined=' + !!d.fracboard.combined,
-    'chicken legGap=' + (ck ? ck.legGap : '-') + ' solved=' + (ck ? ck.solved : '-'),
-    'numline pts=[' + pts + '] reject=' + !!(w.meta && w.meta.lastNumlineReject),
-    'linefn k=' + w.linefn.k + ' b=' + w.linefn.b,
-    'pieces=' + d.pieceCount + ' tray=' + d.trayCount + ' · MathWorld ' + (MathWorld.version || ''),
+  setTx('worldDerivedOut', (sigLines.length ? sigLines : ['动一动台面，世界就会说话。']).concat([
+    '台上 ' + d.bench.count + ' 个数，合计 ' + d.bench.totalStr + '；托盘 ' + d.trayCount + ' 个。',
   ]).join('\n'));
+  worldInspectorRender();
   if (typeof Apparatus !== 'undefined' && Apparatus && typeof Apparatus.render === 'function') {
     Apparatus.render(w, d);
   }
+  labWorldSave(); // 每次重算后自动保存整个世界（NB 的教训：未保存的台面经不起导航）
 }
 function worldPlayApply(intent, okText, failText) {
   const w = worldPlayEnsure();

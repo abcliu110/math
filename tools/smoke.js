@@ -1150,9 +1150,29 @@ check('world bookmark opens lab with MathWorld workbench',
   byId.lab.hidden === false && byId.panels.hidden === true && documentStub.body.dataset.view === 'lab');
 if (typeof sandbox.worldPlayRender === 'function') sandbox.worldPlayRender();
 check('lab MathWorld workbench uses shared world',
-  !!sandbox.MathWorld && (byId.worldDerivedOut.textContent.includes('frac') ||
-    byId.worldDerivedOut.textContent.includes('balance') ||
-    byId.worldDerivedOut.textContent.includes('MathWorld')));
+  !!sandbox.MathWorld && byId.worldDerivedOut.textContent.includes('台上') &&
+    byId.worldDerivedOut.textContent.includes('合计'));
+// v0.9 addendum (NB 走访 §7)：整个世界自动保存，刷新后直接回来，不让学生丢东西
+if (typeof sandbox.labWorldSave === 'function' && sandbox.labWorld) {
+  sandbox.labWorldSave();
+  const savedWorld = JSON.parse(lsData['math-lab-world-v1'] || 'null');
+  check('lab autosave stores the whole world (bench + apparatus)',
+    !!savedWorld && Array.isArray(savedWorld.bench) && !!savedWorld.linefn && savedWorld.linefn.k === 2);
+  const restoredWorld = sandbox.labWorldRestore();
+  check('lab restore brings the saved world back',
+    !!restoredWorld && restoredWorld.linefn && restoredWorld.linefn.k === 2 && Array.isArray(restoredWorld.bench));
+}
+// v0.9 addendum (NB 走访 §2)：设置卡——作为默认 / 恢复初始值，存在本地
+if (typeof sandbox.labDefaultsSave === 'function') {
+  sandbox.labDefaultsSave({ linefn: { k: 3, b: 5 } });
+  check('lab defaults round-trip through localStorage',
+    JSON.parse(lsData['math-lab-defaults-v1'] || '{}').linefn.k === 3 &&
+    sandbox.labDefaultsLoad().linefn.b === 5);
+  sandbox.labDefaultsSave({});
+}
+// v0.9 addendum (NB 走访 §4)：台面上的直线是“通电的”，画出来会流动
+check('bench line draws with a flow animation when it is live on the bench',
+  sandbox.benchViewSvg('coord', [], true, { k: 2, b: 8 }, null, null).includes('bench-flow'));
 check('lab HTML hosts MathWorld workbench',
   htmlText.includes('id="labMwWorkbench"') && htmlText.includes('data-world="fa-add"') &&
   htmlText.includes('id="worldFnCard"') && !htmlText.includes('id="world" class="section'));

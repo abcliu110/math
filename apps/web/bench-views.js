@@ -1,6 +1,16 @@
 /* BenchViews — 实验台视图注册表与选择规则（纯函数，不碰 DOM）。
    台上拿什么，台子就换成能显示它的视图：
-     直线 -> 坐标系；数 -> 数轴（也能在坐标系上画成 x 轴上的点）；分数 -> 分数条。
+     直线 -> 坐标系；数 -> 数轴（也能在坐标系上画成 x 轴上的点）；分数 -> 分数条；
+     长方形 -> 坐标系格子（宽、长、面积都在格子上读）。
+   坐标系归属（只有“意思就是位置”的道具才要坐标系）：
+     一维是数轴：数、分数、小数、负数、测量（尺子本身就是一维坐标系）；
+     二维是坐标平面：函数图像、坐标点、图形（长方形的顶点和面积）；
+     十格阵/面积模型的格子是离散格子（只为数数方便，不标轴），不是坐标系；
+     不需要坐标系的：计数（十格阵、数位块、骰子点数）、天平（讲相等不是位置）、
+     分数饼/条本身（讲占比）、骰子/转盘（讲随机；分布图是总结不是道具）。
+   一次只出现一个坐标系：chooseView 永远只返回一个视图。台面本身（bench 视图）
+   一次只画一种；只有问题本身要连通两种表示时（比如分数 → 数轴），才同时
+   出现两个——那时是两张卡片各画各的，不是同一张图里叠两个坐标系。
    多个对象同时在台上时，选大家都能显示的视图。找不到共同视图就用算式，永远不空白。
    Browser: window.BenchViews. Node: module.exports. */
 (function (root) {
@@ -12,6 +22,7 @@
     num: { def: 'numline', views: ['numline', 'coord', 'fracbar', 'formula'] },
     frac: { def: 'fracbar', views: ['fracbar', 'numline', 'coord', 'formula'] },
     balance: { def: 'balance', views: ['balance', 'formula'] },
+    rect: { def: 'coord', views: ['coord', 'formula'] },
   };
   const VIEW_LABEL = { coord: '坐标系', numline: '数轴', fracbar: '分数条', balance: '天平', formula: '算式' };
 
@@ -20,13 +31,14 @@
   }
 
   // 台上的数（来自实验台的 items）加上直线（如果直线放在台上）变成对象列表。
-  // 整数是 num，其余是 frac。
-  function benchObjects(items, lineOn, balanceOn) {
+  // 整数是 num，其余是 frac。长方形在台上时也算一个对象（画在坐标系格子上）。
+  function benchObjects(items, lineOn, balanceOn, rectOn) {
     const objs = (items || []).map(function (it) {
       return { kind: (it.q && it.q.d === 1) ? 'num' : 'frac', id: it.id, str: it.str };
     });
     if (lineOn) objs.push({ kind: 'line', id: 'line', str: '直线' });
     if (balanceOn) objs.push({ kind: 'balance', id: 'balance', str: '天平' });
+    if (rectOn) objs.push({ kind: 'rect', id: 'rect', str: '长方形' });
     return objs;
   }
 

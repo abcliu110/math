@@ -107,7 +107,7 @@ check('balance diff is structured Q', (() => {
   const bd = MW.derived(bw);
   return bd.balance.diffStr === '1/2' && bd.balance.leftHeavy === true;
 })());
-check('MathWorld version is 0.8.x', String(MW.version).indexOf('0.8') === 0);
+check('MathWorld version is 0.9.x', String(MW.version).indexOf('0.9') === 0);
 
 // v0.8 直线放上实验台：只记在不在台上
 let lt = MW.create();
@@ -318,6 +318,103 @@ oo = MW.apply(oo, { type: 'fracMint' }).world;
 oor = MW.procedureReport(oo);
 check('after combine, mint credited; contrast credited too', oor.lines[1].got === true && oor.lines[2].got === true);
 check('op index is recorded for each credited step', oor.lines[1].op !== null && oor.lines[2].op !== null && oor.opCount === 3);
+
+// v0.9: one persistent world — seedQuestion only re-seeds the question's own apparatus
+let sq9 = MW.create();
+let sq9Mk1 = MW.apply(sq9, { type: 'makePiece', piece: { kind: 'frac', n: 1, d: 2 } });
+sq9 = MW.apply(sq9Mk1.world, { type: 'benchPut', pieceId: sq9Mk1.pieceId }).world;
+let sq9Mk2 = MW.apply(sq9, { type: 'makePiece', piece: { kind: 'num', v: 7 } });
+sq9 = MW.apply(sq9Mk2.world, { type: 'trayAdd', pieceId: sq9Mk2.pieceId }).world;
+sq9 = MW.apply(sq9, { type: 'linefnSet', k: -1, b: 5 }).world;
+check('seedQuestion exists', typeof MW.seedQuestion === 'function');
+let sq9b = MW.seedQuestion(sq9, 'q-fracadd');
+check('seedQuestion keeps the bench across questions', MW.derived(sq9b).bench.count === 1 && MW.derived(sq9b).bench.items[0].str === '1/2');
+check('seedQuestion keeps the tray across questions', MW.derived(sq9b).trayCount === 1);
+check('seedQuestion keeps unrelated apparatus (linefn) across questions', sq9b.linefn.k === -1 && sq9b.linefn.b === 5);
+check('seedQuestion resets the question apparatus (fracboard 1/2 + 1/3)',
+  sq9b.fracboard.A.n === 1 && sq9b.fracboard.A.d === 2 && sq9b.fracboard.B.n === 1 && sq9b.fracboard.B.d === 3);
+check('seedQuestion does not mutate the input world', sq9.linefn.k === -1 && MW.derived(sq9).bench.count === 1);
+check('seedQuestion with unknown qid returns the same world', MW.seedQuestion(sq9, 'nope') === sq9);
+
+// v0.9: reseeding the balance swaps pan pieces without leaking the old ones
+let sq9B = MW.LAB_SEEDS['q-balfrac']();
+const oldPan9 = sq9B.balance.L[0];
+sq9B = MW.seedQuestion(sq9B, 'q-balfrac');
+check('reseeding the balance drops the old pan pieces', sq9B.pieces[oldPan9] === undefined);
+check('reseeding the balance puts a fresh 1/2 on the left',
+  sq9B.balance.L.length === 1 && MW.derived(sq9B).balance.Lstr === '1/2');
+
+// v0.9: setPiece changes a piece's value in place
+let sp9 = MW.create();
+let sp9Mk = MW.apply(sp9, { type: 'makePiece', piece: { kind: 'frac', n: 1, d: 2 } });
+sp9 = MW.apply(sp9Mk.world, { type: 'benchPut', pieceId: sp9Mk.pieceId }).world;
+let sp9Set = MW.apply(sp9, { type: 'setPiece', pieceId: sp9Mk.pieceId, piece: { kind: 'frac', n: 3, d: 4 } });
+check('setPiece changes a bench fraction in place', sp9Set.ok && MW.derived(sp9Set.world).bench.items[0].str === '3/4');
+check('setPiece keeps the same piece id and slot', !!sp9Set.world.pieces[sp9Mk.pieceId] && sp9Set.world.bench[0] === sp9Mk.pieceId);
+check('setPiece refuses denominator 0', MW.apply(sp9, { type: 'setPiece', pieceId: sp9Mk.pieceId, piece: { kind: 'frac', n: 1, d: 0 } }).ok === false);
+check('setPiece refuses a negative numerator', MW.apply(sp9, { type: 'setPiece', pieceId: sp9Mk.pieceId, piece: { kind: 'frac', n: -1, d: 2 } }).ok === false);
+check('setPiece refuses a denominator above 8', MW.apply(sp9, { type: 'setPiece', pieceId: sp9Mk.pieceId, piece: { kind: 'frac', n: 1, d: 9 } }).ok === false);
+let sp9Num = MW.apply(sp9, { type: 'makePiece', piece: { kind: 'num', v: 2 } });
+sp9 = MW.apply(sp9Num.world, { type: 'place', pieceId: sp9Num.pieceId, target: 'numline' }).world;
+check('setPiece refuses a piece locked on the number line',
+  MW.apply(sp9, { type: 'setPiece', pieceId: sp9Num.pieceId, piece: { kind: 'num', v: 5 } }).reason === 'piece-locked');
+
+// v0.9 addendum (NB 走访 §2)：setPiece 改名——改称呼不动数值
+let sp9Rn = MW.apply(sp9Set.world, { type: 'setPiece', pieceId: sp9Mk.pieceId, name: '小明的第一块' });
+check('setPiece renames a bench piece without changing its value',
+  sp9Rn.ok && sp9Rn.world.pieces[sp9Mk.pieceId].name === '小明的第一块' &&
+  MW.derived(sp9Rn.world).bench.items[0].str === '3/4' && sp9Rn.world.bench[0] === sp9Mk.pieceId);
+check('benchView carries the piece name to the shelf chip',
+  MW.derived(sp9Rn.world).bench.items[0].name === '小明的第一块');
+check('inspect reports the piece name (floating label)',
+  MW.inspect(sp9Rn.world, { piece: sp9Mk.pieceId }).name === '小明的第一块');
+let sp9Rn2 = MW.apply(sp9Rn.world, { type: 'setPiece', pieceId: sp9Mk.pieceId, name: '   ' });
+check('renaming to a blank name clears back to the value label',
+  sp9Rn2.ok && !sp9Rn2.world.pieces[sp9Mk.pieceId].name &&
+  MW.inspect(sp9Rn2.world, { piece: sp9Mk.pieceId }).name === '3/4');
+let sp9Rn3 = MW.apply(sp9, { type: 'setPiece', pieceId: sp9Num.pieceId, name: '数轴上的 2' });
+check('a locked piece can still be renamed (name is not a value)',
+  sp9Rn3.ok && sp9Rn3.world.pieces[sp9Num.pieceId].name === '数轴上的 2');
+
+// v0.9: bench rect toggle
+let rt9 = MW.apply(MW.create(), { type: 'benchRectToggle' }).world;
+check('benchRectToggle puts the rectangle on the bench', rt9.benchRect === true);
+check('benchRectToggle again takes it off', MW.apply(rt9, { type: 'benchRectToggle' }).world.benchRect === false);
+
+// v0.9: inspect() — every object reports its adjustable properties
+check('inspect exists', typeof MW.inspect === 'function');
+let ins9 = MW.inspect(MW.LAB_SEEDS['q-funcline'](), { apparatus: 'linefn' });
+check('linefn inspector: k and b, with ranges', ins9 && ins9.props.length === 2 &&
+  ins9.props[0].key === 'k' && ins9.props[0].min === -3 && ins9.props[0].max === 4 &&
+  ins9.props[1].key === 'b' && ins9.props[1].min === 0 && ins9.props[1].max === 15);
+check('linefn inspector state shows the formula', ins9.state === 'y = 2x + 8');
+let ins9R = MW.inspect(MW.LAB_SEEDS['q-maxarea'](), { apparatus: 'rect' });
+check('rect inspector: only width is adjustable, length follows', ins9R && ins9R.props.length === 1 &&
+  ins9R.props[0].key === 'w' && ins9R.props[0].min === 1 && ins9R.props[0].max === 9);
+check('rect inspector state shows width, length and area', ins9R.state === '宽 1，长 9，面积 9');
+let ins9F = MW.inspect(MW.LAB_SEEDS['q-fracadd'](), { apparatus: 'fracboard' });
+check('fracboard inspector: 4 props (A/B numerator/denominator)', ins9F && ins9F.props.length === 4);
+let ins9P = MW.inspect(sp9Set.world, { piece: sp9Mk.pieceId });
+check('bench fraction inspector: numerator and denominator', ins9P && ins9P.title === '分数条' && ins9P.props.length === 2 && ins9P.state === '3/4');
+
+// v0.9: PART_BOX — five domain groups, no junk drawer
+check('PART_BOX has five groups: 数/分数/形/量/关系',
+  MW.PART_BOX && MW.PART_BOX.length === 5 &&
+  MW.PART_BOX.map(function (g) { return g.label; }).join('') === '数分数形量关系');
+check('PART_BOX number cards include 10', MW.PART_BOX[0].parts.some(function (p) { return p.kind === 'num' && p.v === 10; }));
+check('PART_BOX fraction bars include 2/3 and 3/4',
+  MW.PART_BOX[1].parts.some(function (p) { return p.kind === 'frac' && p.n === 2 && p.d === 3; }));
+check('PART_BOX shape group holds the rectangle tool',
+  MW.PART_BOX[2].parts[0].kind === 'tool' && MW.PART_BOX[2].parts[0].id === 'rect');
+check('PART_BOX measure group holds weights', MW.PART_BOX[3].parts.every(function (p) { return p.kind === 'weight'; }));
+check('PART_BOX relation group holds the line and the balance',
+  MW.PART_BOX[4].parts.map(function (p) { return p.id; }).join(',') === 'line,balance');
+
+// v0.9: procedure steps name their bench card (next-step highlight target)
+check('procedure steps carry a target card',
+  MW.LAB_PROCEDURES['q-fracadd'].steps[0].target === 'worldFracCard' &&
+  MW.LAB_PROCEDURES['q-fracadd'].steps[1].target === 'worldBenchCard' &&
+  MW.LAB_PROCEDURES['q-chicken'].steps[0].target === 'worldChickenCard');
 
 // balance: a seeded 1/2 on the left is not a step; adding right is
 let bal2 = MW.apply(MW.LAB_SEEDS['q-balfrac'](), { type: 'procedureStart', labId: 'q-balfrac', mode: 'practice' }).world;

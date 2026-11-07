@@ -943,6 +943,63 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
 .bench-choose .lab-q p { margin: 0 0 6px; font-size: 13px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .bench-choose .lab-q .muted { display: none; }
 .bench-choose .lab-q .btn { font-size: 12px; }
+.bench-choose .lab-q .lab-q-meta { display: block; font-size: 12px; }
+
+/* 找实验：搜索 + 年级 + 领域筛选 */
+.lab-q-filter { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 8px 0 4px; }
+.lab-q-filter input[type="search"] { flex: 1; min-width: 180px; min-height: 44px; border: 2px solid var(--line); border-radius: 10px; padding: 6px 10px; font-size: 14px; }
+.lab-q-filter select { min-height: 44px; border: 2px solid var(--line); border-radius: 10px; padding: 6px 8px; font-size: 14px; background: #fff; }
+
+/* 实验台：中央画布 + 一侧器材架（NB 式二分结构；窄屏上下叠） */
+.world-bench-body { display: grid; grid-template-columns: minmax(0, 1fr) 230px; gap: 16px; align-items: start; }
+.world-bench-canvas { min-width: 0; }
+.world-bench-side { min-width: 0; }
+@media (max-width: 1024px) { .world-bench-body { grid-template-columns: 1fr; } }
+
+/* 零件盒：按领域分 5 组（数/分数/形/量/关系），不做杂货铺 */
+.part-box { display: flex; flex-direction: column; gap: 12px; }
+.part-group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.part-label { font-weight: 700; font-size: 13px; color: #64748b; margin-right: 2px; }
+.part-chip { min-height: 48px; min-width: 48px; font-size: 15px; }
+
+/* 台面上的数、砝码：触摸目标 ≥48px */
+.bench-chip { min-height: 48px; }
+.bench-view { width: 100%; height: auto; }
+
+/* 检查器：贴在台面旁边，滑杆 + 数字双通道 */
+.bench-inspector { margin: 12px 0; padding: 12px 14px; border: 2px solid #fdba74; border-radius: 12px; background: #fff7ed; }
+.bench-inspector p { margin: 4px 0 8px; }
+.insp-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 8px 0; }
+.insp-row label { min-width: 90px; font-weight: 600; }
+.insp-row input[type="range"] { flex: 1; min-width: 120px; min-height: 44px; }
+.insp-row input[type="number"] { width: 76px; min-height: 44px; border: 2px solid var(--line); border-radius: 10px; padding: 6px 8px; font-size: 15px; }
+.insp-row .btn { min-height: 44px; min-width: 44px; }
+
+/* 练习模式：下一步在台面上高亮出来（不是角落一行字） */
+.demo-card.is-next { outline: 3px solid #f59e0b; outline-offset: 2px; box-shadow: 0 0 0 6px rgba(245, 158, 11, .18); }
+
+/* 后果先画出来：条的长度、梁的倾斜都有过渡动画，文字在后面解释 */
+.lab-bar { transition: width .25s ease; }
+
+/* 台面右下角：为什么 / 我的发现 */
+.lab-bench-foot { justify-content: flex-end; margin: 4px 0 16px; }
+.lab-why-box { border: 2px solid var(--line); border-radius: 12px; padding: 12px 14px; background: #fff; margin: 0 0 16px; }
+.lab-why-box p { margin: 6px 0; }
+
+/* 选中态：灰色高亮框（NB 走访 §2：点中的器材描出来） */
+.demo-card.is-selected { outline: 3px solid #64748b; outline-offset: 2px; }
+
+/* 台面上的直线是“通电的”（NB 走访 §4：通电的导线有白色虚线流动动画） */
+.bench-view .bench-flow { stroke-dasharray: 8 6; animation: bench-flow 1s linear infinite; }
+@keyframes bench-flow { to { stroke-dashoffset: -14; } }
+.bench-chip-name { font-size: 12px; color: #64748b; font-weight: 400; }
+
+/* 我的实验：保存的台面列表 */
+.lab-saved-list { margin: 8px 0; }
+.lab-saved-row { display: flex; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.lab-saved-row span { flex: 1; }
+
+/* 动画总目录（注册表）：演示页里 JS 生成的分组列表 */
 
 /* 动画总目录（注册表）：演示页里 JS 生成的分组列表 */
 .anim-dir-grade{margin:14px 0}

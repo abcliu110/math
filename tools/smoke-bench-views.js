@@ -52,5 +52,16 @@ check('benchObjects adds the balance when it is on the bench',
 const dia = BV.chooseView(BV.benchObjects([{ id: 'a', str: '1/2', q: { n: 1, d: 2 } }], true));
 check('a fraction on the bench with the line shows the coordinate system', dia.view === 'coord');
 
+// v0.9: the rectangle is a 2D-grid object; fractions can sit on the number line;
+// the bench shows exactly one coordinate system at a time.
+const RECT = { kind: 'rect' };
+check('a rectangle alone shows the coordinate system (2D grid)', BV.chooseView([RECT]).view === 'coord');
+check('a rectangle plus a number shows the coordinate system', BV.chooseView([RECT, NUM]).view === 'coord');
+check('a rectangle plus a line shows the coordinate system', BV.chooseView([RECT, LINE]).view === 'coord');
+check('a fraction can go on the number line', BV.chooseView([FRAC], 'numline').view === 'numline');
+check('benchObjects adds the rectangle when it is on the bench',
+  BV.benchObjects([], false, false, true)[0].kind === 'rect');
+check('chooseView always returns exactly one view', typeof BV.chooseView([NUM, FRAC, LINE]).view === 'string');
+
 console.log('\nbench-views: ' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

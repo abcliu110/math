@@ -5,6 +5,13 @@
    Each step is checked against the world after every action. Practice mode
    exposes a hint for the next missed step; exam mode hides hints and only
    reports the score, the lost steps and the failed actions.
+   v0.9: one persistent world — seedQuestion re-seeds only the question's own
+   apparatus, so the bench survives switching questions. A categorized parts
+   box (PART_BOX: 数/分数/形/量/关系）, a bench rect toggle, setPiece (change
+   a piece's value in place), and inspect() — every object reports its 2–4
+   adjustable properties, so the UI can show them next to the object
+   (NB-style: a resistor has a resistance, a fraction bar has a
+   numerator/denominator).
    Browser: window.MathWorld. Node: module.exports. */
 (function (root) {
   'use strict';
@@ -76,6 +83,7 @@
       dice: { A: [] }, // 两个骰子的点数之和分给 A 的那些；其余归 B
       benchLine: false, // 直线（linefn）是否放在实验台上
       benchBalance: false, // 天平是否放在实验台上（视图里显示天平）
+      benchRect: false, // 长方形是否放在实验台上（视图里画在坐标系格子上）
       rect: { perim: 20, w: 1 }, // 周长一定的长方形：只调宽，长 = 周长/2 - 宽
     };
     if (extra) Object.keys(extra).forEach(function (k) { w[k] = extra[k]; });
@@ -340,10 +348,13 @@
       title: '分数相加',
       steps: [
         { id: 'combine', label: '把 1/2 和 1/3 合到一起', points: 1, via: ['fracCombine'],
+          target: 'worldFracCard',
           check: function (w) { return !!w.fracboard.combined; } },
         { id: 'mint', label: '把合起来的结果做成一块分数', points: 2, via: ['fracMint'], after: ['combine'],
+          target: 'worldBenchCard',
           check: function (w) { return hasFracPiece(w, '5/6'); } },
         { id: 'contrast', label: '看见错拼 2/5 与正确和 5/6 的差别', points: 1, after: ['combine'],
+          target: 'worldFracCard',
           check: function (w) { return derived(w).signals.some(function (s) { return s.code === 'naive-wrong'; }); } },
       ],
     },
@@ -351,8 +362,10 @@
       title: '天平上的分数',
       steps: [
         { id: 'addRight', label: '在右边放上分数', points: 1, via: ['balanceAddQty', 'place'],
+          target: 'worldBalCard',
           check: function (w) { return w.balance.R.length > 0; } },
         { id: 'equal', label: '让天平两边相等', points: 2, via: ['balanceAddQty', 'place'], after: ['addRight'],
+          target: 'worldBalCard',
           check: function (w) { return derived(w).balance.equal; } },
       ],
     },
@@ -360,10 +373,13 @@
       title: '数轴上的数',
       steps: [
         { id: 'reject', label: '试一个超出范围的数，看数轴怎么拒绝', points: 1, via: ['place'],
+          target: 'worldLineCard',
           check: function (w) { return !!(w.meta && w.meta.lastNumlineReject); } },
         { id: 'place', label: '在数轴上放一个点', points: 1, via: ['place'],
+          target: 'worldLineCard',
           check: function (w) { return w.numline.pts.length >= 1; } },
         { id: 'gap', label: '放两个点，读出它们的距离', points: 2, via: ['place'], after: ['place'],
+          target: 'worldLineCard',
           check: function (w) { return w.numline.pts.length === 2; } },
       ],
     },
@@ -371,8 +387,10 @@
       title: '一次函数的斜率',
       steps: [
         { id: 'negative', label: '把 k 调成负数', points: 1, via: ['linefnSet'],
+          target: 'worldFnCard',
           check: function (w) { return w.linefn.k < 0; } },
         { id: 'target', label: '让 k 恰好是 -1', points: 2, via: ['linefnSet'], after: ['negative'],
+          target: 'worldFnCard',
           check: function (w) { return w.linefn.k === -1; } },
       ],
     },
@@ -380,8 +398,10 @@
       title: '鸡兔同笼',
       steps: [
         { id: 'try', label: '试一个兔子数', points: 1, via: ['chickenSetRabbits'],
+          target: 'worldChickenCard',
           check: function (w) { return !!(w.chicken && w.chicken.rabbits > 0); } },
         { id: 'solve', label: '头和腿都对上', points: 2, via: ['chickenSetRabbits'], after: ['try'],
+          target: 'worldChickenCard',
           check: function (w) { return !!(derived(w).chicken && derived(w).chicken.solved); } },
       ],
     },
@@ -489,7 +509,7 @@
     const items = ids.map(function (id) {
       const p = w.pieces[id];
       const q = p ? Q.fromPiece(p) : Q.int(0);
-      return { id: id, q: q, str: Q.str(q), kind: p ? p.kind : null };
+      return { id: id, q: q, str: Q.str(q), kind: p ? p.kind : null, name: p ? (p.name || null) : null };
     });
     let total = Q.int(0);
     items.forEach(function (it) { total = Q.add(total, it.q); });
@@ -713,6 +733,15 @@
       return { world: w, ok: true };
     }
 
+    /* End the running procedure (exit practice): steps and errors are dropped. */
+    if (type === 'procedureEnd') {
+      w.procedure = null;
+      w.steps = {};
+      w.errors = [];
+      w.ops = [];
+      return { world: w, ok: true };
+    }
+
     /* 实验台动作 */
     if (type === 'benchPut') {
       const id = intent.pieceId;
@@ -787,6 +816,47 @@
     }
     if (type === 'benchBalanceToggle') {
       w.benchBalance = !w.benchBalance;
+      return { world: w, ok: true };
+    }
+    /* 长方形拿上台面或拿下来。长方形本身是 rect（周长、宽），这里只记它在不在台上。 */
+    if (type === 'benchRectToggle') {
+      w.benchRect = !w.benchRect;
+      return { world: w, ok: true };
+    }
+
+    /* 改台上一个零件的值（就地改，不换位置、不换 id）。不合法的值调不出来：
+       分子不能是负数，分母只能是 2 到 8（分母 0 在 Q.of 里抛错，由 apply 接住）。
+       能改的是台上、托盘里、天平盘上和没放上的零件；已经占着数轴或分数板
+       的零件是锁住的（piece-locked），先拿下来才能改。 */
+    if (type === 'setPiece') {
+      const id = intent.pieceId;
+      const pc = intent.piece || {};
+      if (!id || !w.pieces[id]) return { world: world, ok: false, reason: 'no-piece' };
+      // 改名只是改称呼，不动数值：锁住的零件也可以改名（NB：器材标题点改名）。
+      if (typeof intent.name === 'string') {
+        const nm = intent.name.trim().slice(0, 20);
+        const np = Object.assign({}, w.pieces[id]);
+        if (nm) np.name = nm; else delete np.name;
+        w.pieces[id] = np;
+        pushLog(w, 'rename ' + id + ' = ' + (nm || '(默认)'), true);
+        return { world: w, ok: true };
+      }
+      const at = w.pieces[id].at;
+      if (at === 'numline' || (at && at.indexOf('fracboard') === 0)) return { world: world, ok: false, reason: 'piece-locked' };
+      let q;
+      if (pc.kind === 'frac') {
+        if (!Number.isInteger(pc.n) || !Number.isInteger(pc.d)) return { world: world, ok: false, reason: 'bad-number' };
+        if (pc.n < 0 || pc.d < 2 || pc.d > 8) return { world: world, ok: false, reason: 'bad-number' };
+        q = Q.of(pc.n, pc.d);
+      } else {
+        if (!Number.isInteger(pc.v)) return { world: world, ok: false, reason: 'bad-number' };
+        q = Q.int(pc.v);
+      }
+      const old = w.pieces[id];
+      w.pieces[id] = Object.assign({}, old, q.d === 1
+        ? { kind: 'num', v: q.n }
+        : { kind: 'frac', n: q.n, d: q.d });
+      pushLog(w, 'set ' + id + ' = ' + Q.str(q), true);
       return { world: w, ok: true };
     }
 
@@ -918,17 +988,183 @@
     return w;
   }
 
-  const LAB_SEEDS = {
-    'q-fracadd': function () { return create({ fracboard: { A: Q.of(1, 2), B: Q.of(1, 3) } }); },
-    'q-balfrac': function () { return create({ balance: { L: [Q.of(1, 2)], R: [] } }); },
-    'q-numline': function () { return create({ tenframe: { A: 7, B: 0 }, numline: { min: 0, max: 2 } }); },
-    'q-funcline': function () { return create({ linefn: { k: 2, b: 8 } }); },
-    'q-chicken': function () {
-      return create({ chicken: { targetHeads: 35, targetLegs: 94, rabbits: 0 } });
-    },
-    'q-maxarea': function () { return create({ rect: { perim: 20, w: 1 } }); },
-    'q-fairgame': function () { return create(); },
+  /* 每道工作间题只规定它自己的器材。LAB_SEEDS 是“全新世界”的快捷方式；
+     seedQuestion 是“一间世界换题”的做法：只重设本题的器材，台面上的
+     东西（bench、tray、别处零件、骰子、meta、流程）全部保留。 */
+  const LAB_SEED_SPECS = {
+    'q-fracadd': { fracboard: { A: Q.of(1, 2), B: Q.of(1, 3) } },
+    'q-balfrac': { balance: { L: [Q.of(1, 2)], R: [] } },
+    'q-numline': { tenframe: { A: 7, B: 0 }, numline: { min: 0, max: 2 } },
+    'q-funcline': { linefn: { k: 2, b: 8 } },
+    'q-chicken': { chicken: { targetHeads: 35, targetLegs: 94, rabbits: 0 } },
+    'q-maxarea': { rect: { perim: 20, w: 1 } },
+    'q-fairgame': {},
   };
+
+  const LAB_SEEDS = {};
+  Object.keys(LAB_SEED_SPECS).forEach(function (qid) {
+    LAB_SEEDS[qid] = function () { return create(LAB_SEED_SPECS[qid]); };
+  });
+
+  /* 一间世界换题：只重设本题的器材（纯函数，返回新世界，原世界不动）。
+     保留：bench、tray、骰子、meta、流程（procedure/steps/errors/ops）、
+     以及不在本题器材里的零件。重设：fracboard / balance / chicken /
+     numline（范围 + 清空点）/ linefn / rect / tenframe。 */
+  function seedQuestion(world, qid) {
+    const spec = LAB_SEED_SPECS[qid];
+    if (!spec || !world) return world;
+    const fresh = create(spec);
+    const w = deepClone(world);
+    if (spec.fracboard) {
+      w.fracboard = fresh.fracboard;
+      w.meta = Object.assign({}, w.meta, { fracAdded: false });
+    }
+    if (spec.balance) {
+      // 旧天平零件只属于天平：先清掉（台上/托盘里的零件不受影响，因为
+      // 它们的 at 不是 balance.L/R；balance 槽里的 id 不可能同时在台上）。
+      w.balance.L.concat(w.balance.R).forEach(function (id) { delete w.pieces[id]; });
+      w.balance = fresh.balance;
+      Object.keys(fresh.pieces).forEach(function (id) { w.pieces[id] = fresh.pieces[id]; });
+    }
+    if (spec.chicken) w.chicken = fresh.chicken;
+    if (spec.numline) {
+      w.numline.pts = [];
+      Object.keys(w.pieces).forEach(function (id) {
+        if (w.pieces[id].at === 'numline') w.pieces[id].at = 'free';
+      });
+      w.numline.min = fresh.numline.min;
+      w.numline.max = fresh.numline.max;
+      w.meta = Object.assign({}, w.meta, { lastNumlineReject: false });
+    }
+    if (spec.linefn) w.linefn = fresh.linefn;
+    if (spec.rect) w.rect = fresh.rect;
+    if (spec.tenframe) w.tenframe = fresh.tenframe;
+    return w;
+  }
+
+  /* 检查器：每个物体 2–4 个可调属性（NB 式：电阻有阻值，分数条有分子分母）。
+     纯函数：输入世界 + 目标，输出标题、当前状态（数字）和属性表；
+     每个属性带合法范围和要发的 intent，UI 只负责画出来和发出去。
+     目标：{ piece: id }（台上的数字卡/分数条）或
+     { apparatus: 'fracboard' | 'linefn' | 'rect' | 'chicken' |
+                 'balance' | 'numline' | 'dice' | 'tenframe' }。
+     只读物体（天平、数轴、骰子）没有可调属性，只显示当前状态——
+     它们的“调节”就是拖拽本身（拖砝码、拖点、点和数）。 */
+  function inspect(world, target) {
+    if (!world || !target) return null;
+    const d = derived(world);
+    function prop(key, label, value, min, max, step, intent) {
+      return { key: key, label: label, value: value, min: min, max: max, step: step, intent: intent };
+    }
+    if (target.piece) {
+      const p = world.pieces[target.piece];
+      if (!p) return null;
+      if (p.kind === 'frac') {
+        return {
+          title: '分数条', state: Q.str(Q.of(p.n, p.d)), name: p.name || Q.str(Q.of(p.n, p.d)),
+          props: [
+            prop('n', '分子', p.n, 0, 8, 1, { type: 'setPiece', pieceId: target.piece, field: 'n' }),
+            prop('d', '分母', p.d, 2, 8, 1, { type: 'setPiece', pieceId: target.piece, field: 'd' }),
+          ],
+        };
+      }
+      return {
+        title: '数字卡', state: String(p.v), name: p.name || String(p.v),
+        props: [prop('v', '值', p.v, -10, 30, 1, { type: 'setPiece', pieceId: target.piece, field: 'v' })],
+      };
+    }
+    const which = target.apparatus;
+    if (which === 'fracboard') {
+      const A = world.fracboard.A, B = world.fracboard.B;
+      return {
+        title: '分数板', state: Q.str(A) + ' + ' + Q.str(B) + ' = ' + Q.str(d.fracboard.trueSum),
+        props: [
+          prop('An', 'A 分子', A.n, 0, 8, 1, { type: 'fracboardSet', side: 'A', field: 'n' }),
+          prop('Ad', 'A 分母', A.d, 2, 8, 1, { type: 'fracboardSet', side: 'A', field: 'd' }),
+          prop('Bn', 'B 分子', B.n, 0, 8, 1, { type: 'fracboardSet', side: 'B', field: 'n' }),
+          prop('Bd', 'B 分母', B.d, 2, 8, 1, { type: 'fracboardSet', side: 'B', field: 'd' }),
+        ],
+      };
+    }
+    if (which === 'linefn') {
+      const lf = world.linefn;
+      return {
+        title: '函数直线', state: 'y = ' + lf.k + 'x + ' + lf.b,
+        props: [
+          prop('k', '斜率 k', lf.k, -3, 4, 0.5, { type: 'linefnSet', field: 'k' }),
+          prop('b', '截距 b', lf.b, 0, 15, 1, { type: 'linefnSet', field: 'b' }),
+        ],
+      };
+    }
+    if (which === 'rect') {
+      const r = d.rect;
+      return {
+        title: '长方形（周长 ' + r.perim + '）', state: '宽 ' + r.w + '，长 ' + r.h + '，面积 ' + r.area,
+        props: [prop('w', '宽', r.w, 1, r.perim / 2 - 1, 1, { type: 'rectSet', field: 'w' })],
+      };
+    }
+    if (which === 'chicken') {
+      const ck = d.chicken;
+      if (!ck) return null;
+      return {
+        title: '鸡兔笼', state: '鸡 ' + ck.chickens + '，兔 ' + ck.rabbits + '，腿 ' + ck.legs + ' / ' + ck.targetLegs,
+        props: [prop('rabbits', '兔的只数', ck.rabbits, 0, ck.targetHeads, 1, { type: 'chickenSetRabbits', field: 'rabbits' })],
+      };
+    }
+    if (which === 'balance') {
+      return {
+        title: '天平', state: '左 ' + d.balance.Lstr + ' ＝ 右 ' + d.balance.Rstr + (d.balance.equal ? '（平了）' : '（还不平）'),
+        props: [],
+      };
+    }
+    if (which === 'numline') {
+      return {
+        title: '数轴（' + world.numline.min + '～' + world.numline.max + '）',
+        state: d.numline.pts.length
+          ? ('点：' + d.numline.pts.map(function (p) { return Q.str(p); }).join('、'))
+          : '还没有点',
+        props: [],
+      };
+    }
+    if (which === 'dice') {
+      return {
+        title: '两个骰子', state: 'A 得 ' + d.dice.pAStr + '，B 得 ' + d.dice.pBStr + (d.dice.fair ? '（公平）' : '（不公平）'),
+        props: [],
+      };
+    }
+    if (which === 'tenframe') {
+      const sum = (world.tenframe.A | 0) + (world.tenframe.B | 0);
+      return {
+        title: '十格阵', state: 'A ' + world.tenframe.A + ' 个，B ' + world.tenframe.B + ' 个，合计 ' + sum,
+        props: [
+          prop('A', 'A 的个数', world.tenframe.A, 0, 10, 1, { type: 'tenframeSet', side: 'A', field: 'n' }),
+          prop('B', 'B 的个数', world.tenframe.B, 0, 10, 1, { type: 'tenframeSet', side: 'B', field: 'n' }),
+        ],
+      };
+    }
+    return null;
+  }
+
+  /* 零件盒：按领域分 5 组（NB 报告 §5 P0-1：数、分数、形、量、关系），不做杂货铺。
+     UI 按这个表画盒子；每个零件就是一个能直接拿上台的东西（数字卡/分数条
+     走 makePiece；砝码拖到天平盘；大器材是台面开关）。 */
+  const PART_BOX = [
+    { group: 'num', label: '数', parts: [
+      { kind: 'num', v: 1 }, { kind: 'num', v: 2 }, { kind: 'num', v: 3 },
+      { kind: 'num', v: 5 }, { kind: 'num', v: 10 } ] },
+    { group: 'frac', label: '分数', parts: [
+      { kind: 'frac', n: 1, d: 2 }, { kind: 'frac', n: 1, d: 3 },
+      { kind: 'frac', n: 1, d: 4 }, { kind: 'frac', n: 1, d: 6 },
+      { kind: 'frac', n: 2, d: 3 }, { kind: 'frac', n: 3, d: 4 } ] },
+    { group: 'shape', label: '形', parts: [
+      { kind: 'tool', id: 'rect' } ] },
+    { group: 'measure', label: '量', parts: [
+      { kind: 'weight', n: 1, d: 2 }, { kind: 'weight', n: 1, d: 3 },
+      { kind: 'weight', n: 1, d: 4 }, { kind: 'weight', n: 1, d: 6 },
+      { kind: 'weight', n: 1, d: 1 } ] },
+    { group: 'relation', label: '关系', parts: [
+      { kind: 'tool', id: 'line' }, { kind: 'tool', id: 'balance' } ] },
+  ];
 
   const LAB_GOALS = {
     'q-fracadd': { type: 'fracExplored', trueStr: '5/6' },
@@ -946,12 +1182,16 @@
     apply: apply,
     derived: derived,
     goalMet: goalMet,
+    seedQuestion: seedQuestion,
+    inspect: inspect,
+    PART_BOX: PART_BOX,
+    LAB_SEED_SPECS: LAB_SEED_SPECS,
     LAB_SEEDS: LAB_SEEDS,
     LAB_GOALS: LAB_GOALS,
     LAB_PROCEDURES: LAB_PROCEDURES,
     procedureReport: procedureReport,
     BENCH_MAX: BENCH_MAX,
-    version: '0.8.0',
+    version: '0.9.0',
   };
 
   root.MathWorld = api;

@@ -3447,6 +3447,12 @@
       </div>
       <span id="labModeTx">自由玩：随便试，提示都在。</span>
       <button class="btn small ghost" type="button" id="labFreePlayBtn">不选题，直接进工作间</button>
+      <span class="btn-row" id="labPracticeMenu" aria-label="练习菜单">
+        <button class="btn small ghost" type="button" id="labMenuReset">重置练习</button>
+        <button class="btn small ghost" type="button" id="labMenuExit">退出练习</button>
+        <button class="btn small ghost" type="button" id="labMenuChallenge">进入挑战</button>
+        <button class="btn small ghost" type="button" id="labMenuQuitExam" hidden>退出挑战</button>
+      </span>
     </div>
     <p id="labCurrentQ" class="world-intent">当前问题：还没选。先在下面选一个「工作间」题，或点「不选题，直接进工作间」。</p>
     <p id="worldIntentMsg" class="world-intent" hidden>还没有操作。</p>
@@ -3457,6 +3463,30 @@
       <div class="bench-choose">
     <h3>先选一个问题</h3>
     <p class="muted">每个问题都是一次实验：先猜，再动手，最后说出你发现了什么。标了“用到”的知识点，是这个问题背后真正用到的数学。</p>
+    <div class="lab-q-filter" role="search">
+      <input type="search" id="labQSearch" placeholder="搜问题或知识点，比如“分数”“鸡兔”" aria-label="搜索问题">
+      <select id="labQGrade" aria-label="按年级筛选">
+        <option value="all">全部年级</option>
+        <option value="1">1 年级</option>
+        <option value="2">2 年级</option>
+        <option value="3">3 年级</option>
+        <option value="4">4 年级</option>
+        <option value="5">5 年级</option>
+        <option value="6">6 年级</option>
+        <option value="7">7 年级</option>
+        <option value="8">8 年级</option>
+        <option value="9">9 年级</option>
+      </select>
+      <span class="btn-row" id="labQDomains">
+        <button type="button" class="btn small primary" data-lab-domain="all">全部领域</button>
+        <button type="button" class="btn small ghost" data-lab-domain="数与代数">数与代数</button>
+        <button type="button" class="btn small ghost" data-lab-domain="图形与几何">图形与几何</button>
+        <button type="button" class="btn small ghost" data-lab-domain="统计与概率">统计与概率</button>
+        <button type="button" class="btn small ghost" data-lab-domain="综合与实践">综合与实践</button>
+      </span>
+      <span id="labQCount" class="muted"></span>
+    </div>
+    <p id="labQEmpty" class="muted" hidden>没找到这样的问题，换个词或换个筛选试试。</p>
     <div class="lab-questions" id="labQuestions">
       <div class="lab-q">
         <p><b>13 有几种凑法？</b>先猜一个数，再在十格阵里找齐所有凑法。</p>
@@ -3635,31 +3665,65 @@
         <article class="demo-card" id="worldBenchCard">
           <p class="demo-tag">实验台 · bench</p>
           <h3>把数放上台子，拼一拼、分一分</h3>
-          <p>先从零件盒拿一个数放到台上（台子最多 6 个）。选中两个以上可以合并；选中一个可以平均拆成几份。合计和分母是否相同都由模型算出。</p>
-          <div class="btn-row" id="worldBenchBox" aria-label="零件盒">
-            <button class="btn small ghost" type="button" data-bench="make" data-kind="frac" data-n="1" data-d="2">1/2</button>
-            <button class="btn small ghost" type="button" data-bench="make" data-kind="frac" data-n="1" data-d="3">1/3</button>
-            <button class="btn small ghost" type="button" data-bench="make" data-kind="frac" data-n="1" data-d="4">1/4</button>
-            <button class="btn small ghost" type="button" data-bench="make" data-kind="frac" data-n="1" data-d="6">1/6</button>
-            <button class="btn small ghost" type="button" data-bench="make" data-kind="num" data-n="1" data-d="1">1</button>
-            <button class="btn small ghost" type="button" data-bench="make" data-kind="num" data-n="2" data-d="1">2</button>
-            <button class="btn small ghost" type="button" data-bench="line" aria-pressed="false">直线 y=kx+b（拿上台）</button>
-            <button class="btn small ghost" type="button" data-bench="balance" aria-pressed="false">天平（拿上台）</button>
+          <p>先从零件盒拿一个数放到台上（台子最多 6 个）。选中两个以上可以合并；选中一个可以平均拆成几份。合计和分母是否相同都由模型算出。点一个数，看它的属性。</p>
+          <div class="world-bench-body">
+            <div class="world-bench-canvas">
+              <div id="worldBenchShelf" class="bench-shelf" aria-live="polite"></div>
+              <div id="worldBenchTrash" class="bench-trash">拖到这里拿走</div>
+              <div id="worldBenchViews" class="btn-row" aria-label="台子的视图"></div>
+              <svg id="worldBenchView" class="bench-view" viewBox="0 0 520 260" role="img" aria-label="实验台视图"></svg>
+              <div class="control-row">
+                <label>拆成 <select id="worldBenchK" aria-label="拆成几份">
+                  <option value="2">2 份</option><option value="3" selected>3 份</option><option value="4">4 份</option><option value="6">6 份</option>
+                </select></label>
+                <button class="btn small primary" type="button" data-bench="merge">合并所选</button>
+                <button class="btn small primary" type="button" data-bench="split">拆开所选</button>
+                <button class="btn small ghost" type="button" data-bench="clear">全部拿走</button>
+              </div>
+              <p id="worldBenchSum">台上合计：0</p>
+              <p id="worldBenchMsg" class="muted"></p>
+            </div>
+            <div class="world-bench-side">
+              <div id="worldBenchBox" class="part-box" aria-label="零件盒">
+                <div class="part-group"><span class="part-label">数</span>
+                  <button class="btn small ghost part-chip" type="button" data-bench="make" data-kind="num" data-n="1" data-d="1">1</button>
+                  <button class="btn small ghost part-chip" type="button" data-bench="make" data-kind="num" data-n="2" data-d="1">2</button>
+                  <button class="btn small ghost part-chip" type="button" data-bench="make" data-kind="num" data-n="3" data-d="1">3</button>
+                  <button class="btn small ghost part-chip" type="button" data-bench="make" data-kind="num" data-n="5" data-d="1">5</button>
+                  <button class="btn small ghost part-chip" type="button" data-bench="make" data-kind="num" data-n="10" data-d="1">10</button>
+                </div>
+                <div class="part-group"><span class="part-label">分数</span>
+                  <button class="btn small ghost part-chip" type="button" data-bench="make" data-kind="frac" data-n="1" data-d="2">1/2</button>
+                  <button class="btn small ghost part-chip" type="button" data-bench="make" data-kind="frac" data-n="1" data-d="3">1/3</button>
+                  <button class="btn small ghost part-chip" type="button" data-bench="make" data-kind="frac" data-n="1" data-d="4">1/4</button>
+                  <button class="btn small ghost part-chip" type="button" data-bench="make" data-kind="frac" data-n="1" data-d="6">1/6</button>
+                  <button class="btn small ghost part-chip" type="button" data-bench="make" data-kind="frac" data-n="2" data-d="3">2/3</button>
+                  <button class="btn small ghost part-chip" type="button" data-bench="make" data-kind="frac" data-n="3" data-d="4">3/4</button>
+                </div>
+                <div class="part-group"><span class="part-label">形</span>
+                  <button class="btn small ghost part-chip" type="button" data-bench="rect" aria-pressed="false">长方形（拿上台）</button>
+                </div>
+                <div class="part-group"><span class="part-label">量</span>
+                  <button class="btn small ghost part-chip" type="button" data-drag-weight="1/2">1/2</button>
+                  <button class="btn small ghost part-chip" type="button" data-drag-weight="1/3">1/3</button>
+                  <button class="btn small ghost part-chip" type="button" data-drag-weight="1/4">1/4</button>
+                  <button class="btn small ghost part-chip" type="button" data-drag-weight="1/6">1/6</button>
+                  <button class="btn small ghost part-chip" type="button" data-drag-weight="1">1</button>
+                </div>
+                <div class="part-group"><span class="part-label">关系</span>
+                  <button class="btn small ghost part-chip" type="button" data-bench="line" aria-pressed="false">直线 y=kx+b（拿上台）</button>
+                  <button class="btn small ghost part-chip" type="button" data-bench="balance" aria-pressed="false">天平（拿上台）</button>
+                </div>
+              </div>
+              <p class="muted">砝码拖到天平盘上。点台上的数，看它的属性。</p>
+            </div>
           </div>
-          <div id="worldBenchShelf" class="bench-shelf" aria-live="polite"></div>
-          <div id="worldBenchTrash" class="bench-trash">拖到这里拿走</div>
-          <div id="worldBenchViews" class="btn-row" aria-label="台子的视图"></div>
-          <svg id="worldBenchView" class="bench-view" viewBox="0 0 520 260" role="img" aria-label="实验台视图"></svg>
+          <div id="worldBenchInspector" class="bench-inspector" aria-live="polite"><p class="muted">点台上的一个数或一件大器材，看它的属性。</p></div>
           <div class="control-row">
-            <label>拆成 <select id="worldBenchK" aria-label="拆成几份">
-              <option value="2">2 份</option><option value="3" selected>3 份</option><option value="4">4 份</option><option value="6">6 份</option>
-            </select></label>
-            <button class="btn small primary" type="button" data-bench="merge">合并所选</button>
-            <button class="btn small primary" type="button" data-bench="split">拆开所选</button>
-            <button class="btn small ghost" type="button" data-bench="clear">全部拿走</button>
+            <input type="text" id="labSaveName" placeholder="给这个台面起个名字" aria-label="台面名字" style="flex:1;min-width:140px">
+            <button class="btn small ghost" type="button" id="labSaveBtn">保存台面</button>
           </div>
-          <p id="worldBenchSum">台上合计：0</p>
-          <p id="worldBenchMsg" class="muted"></p>
+          <div id="labSavedList" class="lab-saved-list" aria-live="polite"></div>
         </article>
         <article class="demo-card" id="worldRectCard">
           <p class="demo-tag">长方形 · 周长一定</p>
@@ -3682,13 +3746,19 @@
         </article>
       </div>
       <aside class="world-panel demo-card" aria-live="polite">
-        <p class="demo-tag">派生状态 · derived</p>
-        <h3>世界此刻算出了什么</h3>
-        <pre id="worldDerivedOut" class="world-derived">（等待操作）</pre>
+        <p class="demo-tag">台面在说什么</p>
+        <h3>每动一下，世界就说一句</h3>
+        <pre id="worldDerivedOut" class="world-derived">动一动台面，世界就会说话。</pre>
         <div id="worldProcOut" class="world-proc" aria-live="polite"><p class="muted">还没开始实验流程。选一个工作间题，就会按步骤打分。</p></div>
         <p class="muted">MathWorld <span id="worldVer">—</span> · 挑战交卷时工作间题自动判</p>
       </aside>
     </div>
+
+    <div class="btn-row lab-bench-foot">
+      <button class="btn small ghost" type="button" id="labWhyBtn">为什么</button>
+      <button class="btn small ghost" type="button" id="labDiscoveryBtn">我的发现</button>
+    </div>
+    <div id="labWhyBox" class="lab-why-box" hidden></div>
 
     <h3>更多器材（托盘 · 组合台）</h3>
     <p class="muted">托盘是共用零件盒：小站做出来的数和分数可以先放到托盘里，再送到组合台上用。托盘最多放 3 个。</p>
