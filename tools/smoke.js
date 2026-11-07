@@ -192,6 +192,9 @@ const GRADE6_CONTENT = { grade: 6, edition: 'A', units: [
   { unit: '百分数（一）', term: '上', points: [
     { id: '6.6', title: '百分数（一）', subtitle: '百分数的意义、读写、分数小数互化', how: '百分数就是分母是 100 的分数。', why: '百分数是“每 100 个里有几个”。', wrong: '35% 就是 35', wrongWhy: '35% 是 35 个百分之一。', visual: '百分条。', method: '百分条', explainBack: '35% 是 35/100。', tryIt: '把 0.35 写成百分数。', demo: 'percent', recall: { q: '35% 表示什么意思？', answer: '每 100 个里有 35 个', hint: '分母是 100' }, practice: [{ q: '0.25 写成百分数是多少？', answer: '25%', hint: '0.25 是 25 个百分之一', level: '基础' }, { q: '80% 写成小数是多少？', answer: '0.8', hint: '80 个百分之一', level: '提高' }] },
   ] },
+  { unit: '负数', term: '上', points: [
+    { id: '6.8', title: '负数', subtitle: '负数的认识、负数的大小比较', how: '0 是正负的分界。', why: '负数是比 0 小的数。', wrong: '-5 比 -2 大', wrongWhy: '-5 离 0 更远。', visual: '温度计。', method: '温度计', explainBack: '零下 5 度比零下 2 度冷。', tryIt: '读一读 -3。', demo: 'thermo', recall: { q: '-5 和 -2 哪个小？', answer: '-5', hint: '离 0 更远的更小' }, practice: [{ q: '-3 的相反数是几？', answer: '3', hint: '关于 0 对称', level: '基础' }, { q: '|-4| 是几？', answer: '4', hint: '到 0 的距离', level: '提高' }] },
+  ] },
 ] };
 
 // 桩里的七年级内容：只留点进实验要用的七个点（7.1/7.2 共用 numline、7.6/7.14 复用 balance、7.7 新演示 meetline、7.13 新演示 coordplane、7.16 新演示 histogram）。
@@ -4304,6 +4307,8 @@ check('anims: 5.14 has observe + m417-infer (dual-mount from 4.17) + 3 new',
   hasAnims && JSON.stringify(sandbox.animsForPoint('5.14')) === JSON.stringify(['observe', 'm417-infer', 'm514-guess', 'm514-three', 'm514-nums']));
 check('anims: 2.3 has tenframe + place (METHOD_DEMOS dual-mount from 1.15) + op-vertical + op-maketen',
   hasAnims && JSON.stringify(sandbox.animsForPoint('2.3')) === JSON.stringify(['tenframe', 'place', 'op-vertical', 'op-maketen']));
+check('anims: 6.8 has thermo + numline (METHOD_DEMOS dual-mount from 7.1/7.2) + m68-life',
+  hasAnims && JSON.stringify(sandbox.animsForPoint('6.8')) === JSON.stringify(['thermo', 'numline', 'm68-life']));
 check('anims: 1.1 has count + numplay + m1a-pair (registry)',
   hasAnims && JSON.stringify(sandbox.animsForPoint('1.1')) === JSON.stringify(['count', 'numplay', 'm1a-pair']));
 check('checkpoint: 1.1 counts 3 animations from the registry (count + numplay + m1a-pair), not 1 from p.demo',
