@@ -4037,6 +4037,24 @@ byId.npFind.value = '同一个数，有五种样子';
 click(byId.npFindSave);
 check('sims: numplay discovery saved', byId.npFindSaved.textContent.includes('记下来了'));
 
+// 揭开按钮第一下必须有反应（真机记录：有时要点两下）。根因是两条路都能揭开，
+// 只有一条做揭示的工作：npMinus/npPlus 调 npSetN(n, false) 顺带把数揭开了，
+// 再点“揭开”正好撞上 npReveal 开头的 early-return，什么都不发生，按钮像死了一样。
+sandbox.npSetN(7, true);
+click(byId.npPlus);
+check('sims: numplay +1 while covered keeps the number covered',
+  byId.npNum.textContent === '？');
+click(byId.npReveal);
+check('sims: numplay reveal answers on the first tap after +/−',
+  byId.npMsg.textContent.includes('是 8') && byId.npNum.textContent === '8' &&
+  byId.npWhy.innerHTML.includes('8 个圆点') && byId.npWhy.hidden === false);
+// 已经揭开后再改数、再点“揭开”，也要刷新到新数（改前 early-return 让为什么还停在旧数上）。
+click(byId.npPlus);
+click(byId.npReveal);
+check('sims: numplay reveal after +/− on a revealed number follows the new number',
+  byId.npMsg.textContent.includes('是 9') && byId.npWhy.innerHTML.includes('9 个圆点') &&
+  !byId.npWhy.innerHTML.includes('8 个圆点'));
+
 // 分数变数线：1/2 猜 0.5 猜对；3/4 猜 1.0 猜长了 1/4，再猜 0.75 猜对；5/4 猜 1.25 猜对。
 check('sims: fracnumline functions exist',
   typeof sandbox.fnlSetGuess === 'function' && typeof sandbox.fnlUnfurl === 'function');

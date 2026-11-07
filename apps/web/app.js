@@ -5138,7 +5138,8 @@ function npSetN(n, cover) {
   document.getElementById('npMsg').textContent = npCovered ? '只看圆点、十格阵和数轴，猜猜是几？' : '五种样子都在这儿了。';
 }
 function npReveal() {
-  if (!npCovered) return;
+  // 不要 early-return：已经揭开时再点“揭开”也要刷新提示和“为什么”到当前数
+  // （+/− 改数后不刷新，按钮就像死了一样——这就是“有时要点两下”的根因）。
   npCovered = false;
   npRender();
   const ok = npGuessed && npGuess === npN;
@@ -5160,8 +5161,10 @@ function npReveal() {
   g.addEventListener('click', function () { npGuessed = true; document.getElementById('npGuessTx').textContent = '你猜是 ' + npGuess + '。点“揭开”看看。'; });
   document.getElementById('npReveal').addEventListener('click', function () { npReveal(); });
   document.getElementById('npNew').addEventListener('click', function () { npSetN(5 + Math.floor(Math.random() * 16), true); });
-  document.getElementById('npMinus').addEventListener('click', function () { npSetN(npN - 1, false); });
-  document.getElementById('npPlus').addEventListener('click', function () { npSetN(npN + 1, false); });
+  // +/− 只改数，不顺带揭开：盖着的时候改数，答案继续藏着，揭开才有事可做；
+  // 已经揭开时改数，仍是揭开的，点“揭开”会刷新到新数。
+  document.getElementById('npMinus').addEventListener('click', function () { npSetN(npN - 1, npCovered); });
+  document.getElementById('npPlus').addEventListener('click', function () { npSetN(npN + 1, npCovered); });
   npRender();
 })();
 
