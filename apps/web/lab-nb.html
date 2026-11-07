@@ -200,6 +200,8 @@ const TYPES={
  pair:{label:'数对',group:'关系',prefix:'数对',defaults:{x:3,y:2},fields:[{k:'x',label:'第几列（x）',min:0,max:8},{k:'y',label:'第几行（y）',min:0,max:8}],size:()=>[240,240]},
  shape:{label:'图形（平移、旋转、对称）',group:'图形',prefix:'图形',defaults:{dx:0,rot:0,mirror:0},fields:[{k:'dx',label:'向右平移（格）',min:0,max:6},{k:'rot',label:'旋转（度，逆时针）',min:0,max:270,step:90},{k:'mirror',label:'轴对称（0 不做，1 做）',min:0,max:1}],size:()=>[260,190]},
  solid:{label:'立体图形（观察）',group:'图形',prefix:'立体图形',defaults:{view:0},fields:[{k:'view',label:'看的方向（0 正面，1 侧面，2 上面）',min:0,max:2}],size:()=>[240,190]},
+ circle:{label:'圆',group:'图形',prefix:'圆',defaults:{r:2},fields:[{k:'r',label:'半径（厘米）',min:1,max:10}],size:()=>[200,200]},
+ pie:{label:'扇形统计图',group:'统计',prefix:'扇形图',defaults:{a:40,b:30,c:30},fields:[{k:'a',label:'一班（%）',min:0,max:100,step:5},{k:'b',label:'二班（%）',min:0,max:100,step:5},{k:'c',label:'三班（%）',min:0,max:100,step:5}],size:()=>[220,220]},
  numline:{label:'数轴',group:'关系',prefix:'数轴',accepts:'value',defaults:{min:0,max:2},
    fields:[{k:'min',label:'最左',min:-10,max:10},{k:'max',label:'最右',min:-9,max:20}],size:()=>[460,118]},
  balance:{label:'天平',group:'关系',prefix:'天平',accepts:'value',slots:true,defaults:{},fields:[],size:()=>[340,200]},
@@ -284,6 +286,10 @@ function evaluate(s){
       else if(d.value.d===1)sig('ok',`${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`);
       else sig('warn',`除不尽：${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`)}
     if(e.type==='angle'){const k=e.props.deg;const kind=k===0?'零度角':k<90?'锐角':k===90?'直角':k<180?'钝角':k===180?'平角':'大于平角';sig(k===90?'ok':'info',`${k}°：${kind}`)}
+    if(e.type==='circle'){const r=e.props.r;sig('info',`半径 ${r} 厘米：周长 ${(2*3.14*r).toFixed(2)} 厘米，面积 ${(3.14*r*r).toFixed(2)} 平方厘米`)}
+    if(e.type==='pie'){const {a,b,c}=e.props,t=a+b+c;
+      sig(t===100?'ok':'warn',t===100?'三个班合起来是 100%':`三个班合起来是 ${t}%，应该是 100%`);
+      sig('info',`一班 对应圆心角 ${(a*3.6).toFixed(0)}°`)}
     if(e.type==='shape'){const {dx,rot,mirror}=e.props;sig('info',`${dx?'向右平移 '+dx+' 格':'没有平移'}，${rot?'旋转 '+rot+'°':'没有旋转'}，${mirror?'做了轴对称':'没有轴对称'}`)}
     if(e.type==='solid'){const hs=SOLID_H,v=e.props.view;
       if(v===0){const cols=hs[0].map((_,x)=>Math.max(...hs.map(r=>r[x])));sig('info',`正面看到 ${cols.length} 列，高 ${cols.join('、')}`)}
@@ -433,7 +439,13 @@ const DRAW={
  num:(e,d,w,h)=>`<text class="big" x="${w/2}" y="${h/2+14}" text-anchor="middle" font-size="28">${e.props.v}</text>`,
  frac:(e,d,w)=>{const {n,d:dd}=e.props,rows=Math.max(1,Math.ceil(n/dd)),bw=w-24,sw=bw/dd;let s=`<text class="big" x="${w-12}" y="18" text-anchor="end" font-size="14">${n}/${dd}</text>`;
    for(let r=0;r<rows;r++)for(let i=0;i<dd;i++){const k=r*dd+i+1;s+=`<rect class="seg-cell" data-seg="${k}" x="${12+i*sw}" y="${28+r*28}" width="${sw}" height="22" fill="${k<=n?'#ff9f43':'#fff'}" stroke="#5b6778" stroke-width="1"/>`}return s},
- shape:(e,d,w,h)=>{const {dx,rot,mirror}=e.props,S=14,ox=70,oy=h-40;const cells=[[0,0],[0,1],[0,2],[1,2]];
+ circle:(e,d,w,h)=>{const R=e.props.r*9,cx=w/2,cy=h/2;return `<circle cx="${cx}" cy="${cy}" r="${R}" fill="#e0f2fe" stroke="#0369a1" stroke-width="2"/><line x1="${cx}" y1="${cy}" x2="${cx+R}" y2="${cy}" stroke="#0369a1" stroke-width="2"/><circle cx="${cx}" cy="${cy}" r="3" fill="#0369a1"/><text class="ink" x="${cx+R/2}" y="${cy-6}" text-anchor="middle" font-size="12">r=${e.props.r}</text>`},
+pie:(e,d,w,h)=>{const vals=[['一班',e.props.a,'#fb923c'],['二班',e.props.b,'#60a5fa'],['三班',e.props.c,'#4ade80']],cx=w/2,cy=h/2-6,R=80;let ang=-90,s='';
+   vals.forEach(([nm,p,col])=>{const sw=p*3.6;if(sw<=0)return;const a1=ang*Math.PI/180,a2=(ang+sw)*Math.PI/180;const x1=cx+R*Math.cos(a1),y1=cy+R*Math.sin(a1),x2=cx+R*Math.cos(a2),y2=cy+R*Math.sin(a2);
+     s+=`<path d="M${cx},${cy} L${x1.toFixed(1)},${y1.toFixed(1)} A${R},${R} 0 ${sw>180?1:0} 1 ${x2.toFixed(1)},${y2.toFixed(1)} Z" fill="${col}" stroke="#1d2633"/>`;
+     const mid=(ang+sw/2)*Math.PI/180;s+=`<text class="ink" x="${(cx+(R*0.6)*Math.cos(mid)).toFixed(1)}" y="${(cy+(R*0.6)*Math.sin(mid)).toFixed(1)}" text-anchor="middle" font-size="12">${nm} ${p}%</text>`;ang+=sw});
+   return s},
+shape:(e,d,w,h)=>{const {dx,rot,mirror}=e.props,S=14,ox=70,oy=h-40;const cells=[[0,0],[0,1],[0,2],[1,2]];
    const xf=(px,py)=>{let x=px,y=py;if(mirror)x=-x;for(let i=0;i<rot/90;i++){const t=x;x=-y;y=t}return [x+dx,y]};
    const sq=(cx,cy,fill,op)=>`<rect x="${ox+cx*S-S/2}" y="${oy-cy*S-S/2}" width="${S}" height="${S}" fill="${fill}" stroke="#1d2633" opacity="${op}"/>`;
    let s=`<line x1="${ox}" y1="20" x2="${ox}" y2="${oy+10}" stroke="#94a3b8" stroke-dasharray="4 3"/>`;
@@ -928,6 +940,69 @@ const P49=[
          {label:'上面看到 3 个小方块',score:2,hint:'看立体图形下面的文字',target:T45('solid'),check:(s,D)=>{const v=byType(s,'solid');return (D[v].sig||[]).some(x=>x.tx==='上面看到 3 个小方块')}}]},
 ];
 P49.forEach(p=>XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
+
+/* ========== 六年级（用现有器材能做的知识点） ========== */
+const P6=[
+ {id:'g6_1',grade:6,domain:'数与代数',tools:'分数条 · 乘法器',title:'分数乘法：2/3 × 1/2 = ?',q:'分数乘分数：分子乘分子，分母乘分母。',why:'2/3 × 1/2 = 2/6 = 1/3。',
+  build:s=>{addEnt(s,'frac',60,60,{n:2,d:3});addEnt(s,'frac',60,170,{n:1,d:2});addEnt(s,'mul',330,110)},
+  steps:[{label:'把两个分数都连到乘法器',score:1,hint:'拖两个分数条的蓝点到乘法器',target:T45('mul'),check:(s,D)=>P45H.cnt(s,D,'mul',2)},
+         {label:'积是 1/3',score:2,hint:'看乘法器的读数',target:T45('mul'),check:(s,D)=>P45H.val(s,D,'mul',Q(1,3))}]},
+ {id:'g6_2',grade:6,domain:'数与代数',tools:'分数条 · 除法器',title:'分数除法：3/4 ÷ 1/2 = ?',q:'除以一个分数，等于乘它的倒数：3/4 × 2。',why:'3/4 ÷ 1/2 = 3/4 × 2 = 3/2。',
+  build:s=>{addEnt(s,'frac',60,60,{n:3,d:4});addEnt(s,'frac',60,170,{n:1,d:2});addEnt(s,'div',330,100)},
+  steps:[{label:'3/4 接左边，1/2 接右边',score:1,hint:'被除数连上半边，除数连下半边',target:T45('div'),check:(s,D)=>P45H.slot(s,D,'div','L',Q(3,4))&&P45H.slot(s,D,'div','R',Q(1,2))},
+         {label:'商是 3/2',score:2,hint:'看除法器下面的得数',target:T45('div'),check:(s,D)=>P45H.val(s,D,'div',Q(3,2))}]},
+ {id:'g6_4',grade:6,domain:'数与代数',tools:'分数条',title:'比的基本性质：把 6:8 化简成最简单的比',q:'比的前项和后项同时乘或除以相同的数（0 除外），比值不变。',why:'6:8 = 3:4，两项都除以 2。',
+  build:s=>{addEnt(s,'frac',60,60,{n:6,d:8})},
+  steps:[{label:'前项（分子）化成 3',score:1,hint:'点分数条，把分子调到 3',target:T45('frac'),check:(s,D)=>s.entities[byType(s,'frac')].props.n===3},
+         {label:'后项（分母）化成 4，得到 3:4',score:2,hint:'把分母调到 4',target:T45('frac'),check:(s,D)=>{const f=s.entities[byType(s,'frac')].props;return f.n===3&&f.d===4}}]},
+ {id:'g6_6',grade:6,domain:'数与代数',tools:'数字卡 · 除法器',title:'百分数：30 是 120 的百分之几？',q:'求一个数是另一个数的百分之几：用 30 ÷ 120，得到的分数再化成百分数。',why:'30 ÷ 120 = 1/4 = 25%。',
+  build:s=>{addEnt(s,'num',60,60,{v:30});addEnt(s,'num',60,170,{v:120});addEnt(s,'div',330,100)},
+  steps:[{label:'30 接左边，120 接右边',score:1,hint:'被除数连上半边，除数连下半边',target:T45('div'),check:(s,D)=>P45H.slot(s,D,'div','L',Q(30))&&P45H.slot(s,D,'div','R',Q(120))},
+         {label:'商是 1/4，就是 25%',score:2,hint:'看除法器下面的得数',target:T45('div'),check:(s,D)=>P45H.val(s,D,'div',Q(1,4))}]},
+ {id:'g6_8',grade:6,domain:'数与代数',tools:'数字卡 · 数轴',title:'负数：−3 和 2 在数轴上相差几？',q:'负数在 0 的左边。数轴上两点的距离，就是它们相差的数。',why:'2 − (−3) = 5，距离是 5。',
+  build:s=>{addEnt(s,'num',60,60,{v:-3});addEnt(s,'num',60,170,{v:2});addEnt(s,'numline',120,340,{min:-5,max:5})},
+  steps:[{label:'把 −3 和 2 都连到数轴',score:1,hint:'拖两个数的蓝点到数轴',target:T45('numline'),check:(s,D)=>P45H.cnt(s,D,'numline',2)},
+         {label:'两点相差 5',score:2,hint:'看数轴下面的“相差”',target:T45('numline'),check:(s,D)=>{const nl=byType(s,'numline');const vs=inputs(s,nl).map(l=>D[l.from]&&D[l.from].value).filter(Boolean);return vs.length>=2&&Math.abs(qnum(vs[0])-qnum(vs[1]))===5}}]},
+ {id:'g6_9',grade:6,domain:'数与代数',tools:'数字卡 · 乘法器',title:'负负得正：(−3) × (−4) = ?',q:'负数乘负数，积是正数。',why:'(−3) × (−4) = 12。',
+  build:s=>{addEnt(s,'num',60,60,{v:-3});addEnt(s,'num',60,170,{v:-4});addEnt(s,'mul',330,110)},
+  steps:[{label:'把两个负数都连到乘法器',score:1,hint:'拖两个数的蓝点到乘法器',target:T45('mul'),check:(s,D)=>P45H.cnt(s,D,'mul',2)},
+         {label:'积是 12（正数）',score:2,hint:'看乘法器的读数',target:T45('mul'),check:(s,D)=>P45H.val(s,D,'mul',Q(12))}]},
+ {id:'g6_10',grade:6,domain:'数与代数',tools:'数字卡 · 分数条 · 乘法器',title:'折扣：100 元打 8 折，多少钱？',q:'8 折就是原价的 80%，也就是 4/5。',why:'100 × 4/5 = 80 元。',
+  build:s=>{addEnt(s,'num',60,60,{v:100});addEnt(s,'frac',60,170,{n:4,d:5});addEnt(s,'mul',330,110)},
+  steps:[{label:'把原价和 4/5 都连到乘法器',score:1,hint:'拖两个数的蓝点到乘法器',target:T45('mul'),check:(s,D)=>P45H.cnt(s,D,'mul',2)},
+         {label:'打折后是 80 元',score:2,hint:'看乘法器的读数',target:T45('mul'),check:(s,D)=>P45H.val(s,D,'mul',Q(80))}]},
+ {id:'g6_11',grade:6,domain:'图形与几何',tools:'数字卡 · 乘法器',title:'圆柱体积：底面积 12 平方厘米，高 5 厘米，体积是几？',q:'圆柱的体积 = 底面积 × 高。',why:'12 × 5 = 60 立方厘米。',
+  build:s=>{addEnt(s,'num',60,40,{v:12});addEnt(s,'num',60,130,{v:5});addEnt(s,'mul',330,90)},
+  steps:[{label:'底面积和高都连到乘法器',score:1,hint:'拖两个数的蓝点到乘法器',target:T45('mul'),check:(s,D)=>P45H.cnt(s,D,'mul',2)},
+         {label:'体积是 60 立方厘米',score:2,hint:'看乘法器的读数',target:T45('mul'),check:(s,D)=>P45H.val(s,D,'mul',Q(60))}]},
+ {id:'g6_12',grade:6,domain:'数与代数',tools:'数字卡 · 乘法器 · 除法器',title:'比例：2 : 3 = x : 9，x 是几？',q:'比例的基本性质：两个内项之积等于两个外项之积。2 × 9 = 3 × x。',why:'2 × 9 = 18，18 ÷ 3 = 6，所以 x = 6。',
+  build:s=>{addEnt(s,'num',60,40,{v:2});addEnt(s,'num',60,130,{v:9});addEnt(s,'num',60,260,{v:3});addEnt(s,'mul',250,80);addEnt(s,'div',450,140)},
+  steps:[{label:'2 和 9 连到乘法器，算出 18',score:1,hint:'两个数都连到乘法器',target:T45('mul'),check:(s,D)=>P45H.cnt(s,D,'mul',2)&&P45H.val(s,D,'mul',Q(18))},
+         {label:'把 18 接左边，3 接右边',score:1,hint:'乘法器连除法器左边，3 连右边',target:T45('div'),check:(s,D)=>P45H.from(s,'mul','div')&&P45H.slot(s,D,'div','R',Q(3))},
+         {label:'x 是 6',score:2,hint:'看除法器下面的得数',target:T45('div'),check:(s,D)=>P45H.val(s,D,'div',Q(6))}]},
+ {id:'g6_13',grade:6,domain:'数与代数',tools:'数字卡 · 除法器',title:'鸽巢问题：7 只鸽子飞进 3 个巢，至少有几只在同一个巢里？',q:'把 7 只鸽子平均分到 3 个巢：7 ÷ 3 = 2 余 1，所以至少有一个巢有 3 只。',why:'7 ÷ 3 = 2 余 1，余下的 1 只让一个巢多一只，所以至少 3 只。',
+  build:s=>{addEnt(s,'num',60,60,{v:7});addEnt(s,'num',60,170,{v:3});addEnt(s,'div',330,100)},
+  steps:[{label:'7 接左边，3 接右边',score:1,hint:'被除数连上半边，除数连下半边',target:T45('div'),check:(s,D)=>P45H.slot(s,D,'div','L',Q(7))&&P45H.slot(s,D,'div','R',Q(3))},
+         {label:'商 2 余 1，所以至少 3 只在一个巢',score:2,hint:'看除法器下面的得数：不是整数，说明有余数',target:T45('div'),check:(s,D)=>P45H.val(s,D,'div',Q(7,3))}]},
+];
+P6.forEach(p=>XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
+
+/* ========== 六年级：圆、扇形统计图、位置与方向 ========== */
+const P7=[
+ {id:'g6_3',grade:6,domain:'图形与几何',tools:'数对',title:'位置与方向：从原点向东 3 格、向北 2 格，到达哪个位置？',q:'用数对表示：先写向东的格数，再写向北的格数。',why:'向东 3 格、向北 2 格，就是数对 (3, 2)。',
+  build:s=>{addEnt(s,'pair',200,40,{x:0,y:0})},
+  steps:[{label:'向东走 3 格（x = 3）',score:1,hint:'点数对卡，把“第几列”调到 3',target:T45('pair'),check:(s,D)=>s.entities[byType(s,'pair')].props.x===3},
+         {label:'再向北走 2 格，到 (3, 2)',score:2,hint:'把“第几行”调到 2',target:T45('pair'),check:(s,D)=>{const p=s.entities[byType(s,'pair')].props;return p.x===3&&p.y===2}}]},
+ {id:'g6_5',grade:6,domain:'图形与几何',tools:'圆',title:'圆的周长：半径 3 厘米的圆，周长是几厘米？',q:'圆的周长 = 2 × π × 半径，π 取 3.14。',why:'2 × 3.14 × 3 = 18.84 厘米。',
+  build:s=>{addEnt(s,'circle',200,40,{r:2})},
+  steps:[{label:'把半径调到 3 厘米',score:1,hint:'点圆卡，在属性卡里把半径调到 3',target:T45('circle'),check:(s,D)=>s.entities[byType(s,'circle')].props.r===3},
+         {label:'周长是 18.84 厘米',score:2,hint:'看圆下面的文字',target:T45('circle'),check:(s,D)=>{const c=byType(s,'circle');return (D[c].sig||[]).some(x=>x.tx==='半径 3 厘米：周长 18.84 厘米，面积 28.26 平方厘米')}}]},
+ {id:'g6_7',grade:6,domain:'统计与概率',tools:'扇形统计图',title:'扇形统计图：一班占 40%，二班 20%，三班 40%，圆心角各是几度？',q:'百分比乘 3.6 就是圆心角的度数，三个百分比加起来是 100%。',why:'40% 对应 40 × 3.6 = 144°。',
+  build:s=>{addEnt(s,'pie',200,40,{a:40,b:30,c:30})},
+  steps:[{label:'把二班调到 20%（先不合计 100%）',score:1,hint:'点扇形统计图卡，把“二班”调到 20',target:T45('pie'),check:(s,D)=>s.entities[byType(s,'pie')].props.b===20},
+         {label:'三班调到 40%，合计 100%，一班是 144°',score:2,hint:'把“三班”调到 40，看下面的文字',target:T45('pie'),check:(s,D)=>{const p=byType(s,'pie');return D[p].sig.some(x=>x.tx==='三个班合起来是 100%')&&D[p].sig.some(x=>x.tx==='一班 对应圆心角 144°')}}]},
+];
+P7.forEach(p=>XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
 
 function startXp(id,m){xp=XP.find(x=>x.id===id);if(!xp)return;mode=m;S=blankScene();xp.build(S);undoSt=[];redoSt=[];sel=null;cardOpen=false;
   run={steps:xp.steps.map((s,i)=>({i,done:false})),ops:0,errors:0,t0:Date.now(),finished:false};$('title').textContent=xp.title;
