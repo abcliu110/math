@@ -4653,7 +4653,8 @@ function addExprBind(s,to,k,text){const t0=s.entities[to];if(!t0)return{ok:0,why
   const toks=exprTokens(s,text);if(!toks)return{ok:0,why:&#x27;表达式里有认不出的字&#x27;};
   const refs=toks.filter(t=&gt;t.ref!==undefined).map(t=&gt;t.ref);if(!refs.length)return{ok:0,why:&#x27;表达式里要有一个器材的名字&#x27;};
   if(refs.some(r=&gt;r===to||reachAll(s,to,r)))return{ok:0,why:&#x27;绕回来了：它的值已经依赖这个器材，不能再绑&#x27;};
-  s.binds=(s.binds||[]).filter(b=&gt;!(b.to===to&amp;&amp;b.k===k));s.binds.push({from:refs[0],to,k,expr:text,refs});return{ok:1}}
+  const old=(s.binds||[]).find(b=&gt;b.to===to&amp;&amp;b.k===k);const prev=old?old.prev:s.entities[to].props[k];
+  s.binds=(s.binds||[]).filter(b=&gt;!(b.to===to&amp;&amp;b.k===k));s.binds.push({from:refs[0],to,k,expr:text,refs,prev});return{ok:1}}
 /* 绑定同步按拓扑序做：绑定 o 的目标若能走到绑定 b 的来源，o 先算，b 再读它的值。每条绑定只写一次，没有“最多 8 遍”的上限。 */
 function syncBinds(s){if(!s.binds||!s.binds.length)return;
   const left=s.binds.slice(),order=[];
@@ -4704,8 +4705,11 @@ function actRaw(a){
     if(!TYPES[t.type].fields.some(f=&gt;f.k===a.k))return{ok:0,why:&#x27;这个器材没有这个属性&#x27;};
     if(TYPES[src.type].out!==&#x27;value&#x27;)return{ok:0,why:`${src.name} 不会出数，不能绑`};
     if(reachAll(s,a.to,a.from))return{ok:0,why:&#x27;绕回来了：它的值已经依赖这个器材，不能再绑&#x27;};
-    s.binds=(s.binds||[]).filter(b=&gt;!(b.to===a.to&amp;&amp;b.k===a.k));s.binds.push({to:a.to,k:a.k,from:a.from});return{ok:1}}
-  case &#x27;unbind&#x27;:{s.binds=(s.binds||[]).filter(b=&gt;!(b.to===a.to&amp;&amp;b.k===a.k));return{ok:1}}
+    const old=(s.binds||[]).find(b=&gt;b.to===a.to&amp;&amp;b.k===a.k);const prev=old?old.prev:t.props[a.k];
+    s.binds=(s.binds||[]).filter(b=&gt;!(b.to===a.to&amp;&amp;b.k===a.k));s.binds.push({to:a.to,k:a.k,from:a.from,prev});return{ok:1}}
+  case &#x27;unbind&#x27;:{const old=(s.binds||[]).find(b=&gt;b.to===a.to&amp;&amp;b.k===a.k);s.binds=(s.binds||[]).filter(b=&gt;!(b.to===a.to&amp;&amp;b.k===a.k));
+    if(old&amp;&amp;old.prev!==undefined&amp;&amp;E[a.to]){const F=TYPES[E[a.to].type].fields.find(f=&gt;f.k===a.k);let v=old.prev;if(F)v=Math.min(F.max,Math.max(F.min,v));E[a.to].props[a.k]=v;return{ok:1,restored:v}}
+    return{ok:1}}
   case &#x27;bindexpr&#x27;:return addExprBind(s,a.to,a.k,a.text);
   case &#x27;scale&#x27;:{const e=E[a.id];if(!e)return{ok:0,why:&#x27;没有这个器材&#x27;};e.k=Math.round(Math.min(2,Math.max(0.5,+a.k))*4)/4;return{ok:1}}
   case &#x27;roll&#x27;:{const e=E[a.id];const c=e.props.counts||Array(13).fill(0);for(let i=0;i&lt;e.props.times;i++){c[1+Math.ceil(Math.random()*6)+Math.ceil(Math.random()*6)-1]++}e.props.counts=c;return{ok:1}}
@@ -5194,7 +5198,7 @@ $(&#x27;card&#x27;).addEventListener(&#x27;click&#x27;,ev=&gt;{const b=ev.target
   if(b.dataset.exprok){const inp=$(&#x27;card&#x27;).querySelector(`[data-exprtext=&quot;${b.dataset.exprok}&quot;]`);const r=commit({t:&#x27;bindexpr&#x27;,to:id,k:b.dataset.exprok,text:inp?inp.value.trim():&#x27;&#x27;});if(r.ok){exprPick=null;$(&#x27;card&#x27;).dataset.v=&#x27;&#x27;}render();return}
   if(b.dataset.bindpick){$(&#x27;card&#x27;).dataset.v=&#x27;&#x27;;bindPick={to:id,k:b.dataset.bindpick};toast(&#x27;点一个会出数的器材（数字卡、分数条、黑箱、数据表…），把它绑到这个属性上&#x27;);render();return}
   if(b.dataset.bindfrom){commit({t:&#x27;bind&#x27;,to:id,k:b.dataset.bindk,from:b.dataset.bindfrom});bindPick=null;$(&#x27;card&#x27;).dataset.v=&#x27;&#x27;;render();return}
-  if(b.dataset.unbind){commit({t:&#x27;unbind&#x27;,to:id,k:b.dataset.unbind});render();return}
+  if(b.dataset.unbind){const r=commit({t:&#x27;unbind&#x27;,to:id,k:b.dataset.unbind});if(r.ok&amp;&amp;r.restored!==undefined)toast(&#x27;已解除，回到绑之前的 &#x27;+r.restored);render();return}
   if(b.dataset.pm){const e=S.entities[id];commit({t:&#x27;set&#x27;,id,k:b.dataset.pm,v:e.props[b.dataset.pm]+Number(b.dataset.dv)})}
   else if(b.dataset.act===&#x27;del&#x27;){commit({t:&#x27;del&#x27;,id});sel=null}
   else if(b.dataset.act===&#x27;reset&#x27;)commit({t:&#x27;reset&#x27;,id});
