@@ -220,9 +220,9 @@ const TYPES={
  solid:{ports:(p)=>{const hs=SOLID_H,v=p.view,o={};if(v===0)o.front=hs[0].map((_,x)=>Math.max(...hs.map(r=>r[x])));if(v===1)o.side=hs.map(r=>Math.max(...r));if(v===2)o.top=hs.flat().filter(x=>x>0).length;return o},label:'立体图形（观察）',group:'图形',prefix:'立体图形',defaults:{view:0},fields:[{k:'view',label:'看的方向（0 正面，1 侧面，2 上面）',min:0,max:2,choices:['正面','侧面','上面']}],size:()=>[240,190]},
  circle:{ports:(p)=>({circ:Number((2*3.14*p.r).toFixed(2)),area:Number((3.14*p.r*p.r).toFixed(2))}),label:'圆',group:'图形',prefix:'圆',defaults:{r:2},fields:[{k:'r',label:'半径（厘米）',min:1,max:10}],size:()=>[200,200]},
  pie:{ports:(p)=>({sum:p.a+p.b+p.c,angleA:Number((p.a*3.6).toFixed(0)),angleB:Number((p.b*3.6).toFixed(0)),angleC:Number((p.c*3.6).toFixed(0))}),label:'扇形统计图',group:'统计',prefix:'扇形图',defaults:{a:40,b:30,c:30},fields:[{k:'a',label:'一班（%）',min:0,max:100,step:5},{k:'b',label:'二班（%）',min:0,max:100,step:5},{k:'c',label:'三班（%）',min:0,max:100,step:5}],size:()=>[220,220]},
- sim:{ports:(p)=>({ratio:p.k,areaRatio:p.k*p.k}),label:'相似图形（放大缩小）',group:'图形',prefix:'相似图形',defaults:{k:1},fields:[{k:'k',label:'相似比（放大几倍）',min:1,max:3}],size:()=>[260,190]},
- pyth:{ports:(p)=>{const c=Math.sqrt(p.a*p.a+p.b*p.b);return{c:c,triple:Number.isInteger(c)}},label:'直角三角形（勾股定理）',group:'图形',prefix:'直角三角形',defaults:{a:3,b:2},fields:[{k:'a',label:'直角边 a',min:1,max:12},{k:'b',label:'直角边 b',min:1,max:12}],size:()=>[240,190]},
- trig:{ports:(p)=>{const r=p.deg*Math.PI/180;return{sin:Number(Math.sin(r).toFixed(2)),cos:Number(Math.cos(r).toFixed(2)),tan:Number(Math.tan(r).toFixed(2))}},label:'锐角三角函数',group:'图形',prefix:'三角函数',defaults:{deg:45},fields:[{k:'deg',label:'锐角（度）',min:5,max:85,step:5}],size:()=>[240,190]},
+ sim:{sig:(e,_d,sig)=>{const k=e.props.k;sig('info',`相似比 1 : ${k}，面积比 1 : ${k*k}`)},ports:(p)=>({ratio:p.k,areaRatio:p.k*p.k}),label:'相似图形（放大缩小）',group:'图形',prefix:'相似图形',defaults:{k:1},fields:[{k:'k',label:'相似比（放大几倍）',min:1,max:3}],size:()=>[260,190]},
+ pyth:{sig:(e,_d,sig)=>{const {a,b}=e.props,c=Math.sqrt(a*a+b*b);const ci=Number.isInteger(c);sig(ci?'ok':'info',ci?`斜边 ${c}，是勾股数`:`斜边 ${c.toFixed(2)}（不是整数）`)},ports:(p)=>{const c=Math.sqrt(p.a*p.a+p.b*p.b);return{c:c,triple:Number.isInteger(c)}},label:'直角三角形（勾股定理）',group:'图形',prefix:'直角三角形',defaults:{a:3,b:2},fields:[{k:'a',label:'直角边 a',min:1,max:12},{k:'b',label:'直角边 b',min:1,max:12}],size:()=>[240,190]},
+ trig:{sig:(e,_d,sig)=>{const r=e.props.deg*Math.PI/180;sig('info',`∠${e.props.deg}°：sin = ${Math.sin(r).toFixed(2)}，cos = ${Math.cos(r).toFixed(2)}，tan = ${Math.tan(r).toFixed(2)}`)},ports:(p)=>{const r=p.deg*Math.PI/180;return{sin:Number(Math.sin(r).toFixed(2)),cos:Number(Math.cos(r).toFixed(2)),tan:Number(Math.tan(r).toFixed(2))}},label:'锐角三角函数',group:'图形',prefix:'三角函数',defaults:{deg:45},fields:[{k:'deg',label:'锐角（度）',min:5,max:85,step:5}],size:()=>[240,190]},
  fact:{sig:(e,_d,sig)=>{const {b,c}=e.props;let f=null;for(let p=-10;p<=10&&!f;p++)for(let q=p;q<=10&&!f;q++)if(p+q===b&&p*q===c)f=[p,q]; if(f)sig('ok',`x² ${b<0?'− '+(-b):'+ '+b}x ${c<0?'− '+(-c):'+ '+c} = (x ${f[0]<0?'− '+(-f[0]):'+ '+f[0]})(x ${f[1]<0?'− '+(-f[1]):'+ '+f[1]})`.replace(/\(x \+ (-?\d+)\)/,(m,z)=>m)); else sig('info','在整数范围内分解不了')},ports:(p)=>{let f=null;for(let a=-10;a<=10&&!f;a++)for(let b=a;b<=10&&!f;b++)if(a+b===p.b&&a*b===p.c)f=[a,b];return{factors:f}},label:'因式分解 x² + bx + c',group:'数与运算',prefix:'因式',defaults:{b:0,c:0},fields:[{k:'b',label:'b',min:-10,max:10},{k:'c',label:'c',min:-10,max:10}],size:()=>[260,120]},
  sqsum:{sig:(e,_d,sig)=>{const {a,b}=e.props;sig('ok',`(${a}+${b})² = ${(a+b)*(a+b)}，展开：${a*a} + ${2*a*b} + ${b*b}`)},ports:(p)=>({terms:[p.a*p.a,2*p.a*p.b,p.b*p.b]}),label:'乘法公式 (a + b)²',group:'数与运算',prefix:'公式',defaults:{a:1,b:1},fields:[{k:'a',label:'a',min:0,max:9},{k:'b',label:'b',min:0,max:9}],size:()=>[260,120]},
  isotri:{sig:(e,_d,sig)=>{const base=(180-e.props.apex)/2;sig('ok',`底角 ${base}°（两个底角相等，三个角加起来 180°）`)},ports:(p)=>({base:(180-p.apex)/2}),label:'等腰三角形（顶角）',group:'图形',prefix:'等腰三角形',defaults:{apex:40},fields:[{k:'apex',label:'顶角（度）',min:10,max:150,step:10}],size:()=>[240,170]},
@@ -231,11 +231,11 @@ const TYPES={
  quad:{sig:(e,_d,sig)=>{const {b,c}=e.props,D0=b*b-4*c;const f=n=>Number.isInteger(n)?String(n):n.toFixed(2); if(D0<0)sig('info','判别式 < 0：没有实数根'); else{const r1=(-b+Math.sqrt(D0))/2,r2=(-b-Math.sqrt(D0))/2;const rs=[r1,r2].sort((p,q)=>p-q);sig('ok',D0===0?`两个根相等：${f(rs[0])}`:`根：${f(rs[0])}、${f(rs[1])}`)}},ports:(p)=>{const D0=p.b*p.b-4*p.c;const o={disc:D0};if(D0>=0){const r1=(-p.b+Math.sqrt(D0))/2,r2=(-p.b-Math.sqrt(D0))/2;o.roots=[r1,r2].sort((x,y)=>x-y)}else o.roots=null;return o},label:'一元二次方程 x² + bx + c = 0',group:'数与运算',prefix:'方程',defaults:{b:0,c:0},fields:[{k:'b',label:'b',min:-10,max:10},{k:'c',label:'c',min:-10,max:10}],size:()=>[260,140]},
  afrac:{sig:(e,_d,sig)=>{const {n,d}=e.props;if(d===0)sig('err','分母是 0，分式没有意义');else{const g=(x,y)=>y?g(y,x%y):Math.abs(x);const k=g(n,d)||1;let nu=n/k,de=d/k;if(de<0){nu=-nu;de=-de}sig('ok',`值 = ${de===1?nu:nu+'/'+de}`)}},ports:(p)=>(p.d!==0?{value:p.n/p.d}:{}),label:'分式 n / d',group:'分数',prefix:'分式',defaults:{n:6,d:4},fields:[{k:'n',label:'分子 n',min:-12,max:12},{k:'d',label:'分母 d',min:-6,max:6}],size:()=>[220,130]},
  radical:{ports:(p)=>{const n=p.n;let kk=1,mm=n;for(let k=Math.floor(Math.sqrt(n));k>=2;k--){if(n%(k*k)===0){kk=k;mm=n/(k*k);break}}return{kk:kk,mm:mm}},label:'二次根式 √n',group:'数与运算',prefix:'根式',defaults:{n:8},fields:[{k:'n',label:'被开方数 n',min:1,max:50}],size:()=>[220,120]},
- parlines:{ports:(p)=>({sameSide:180-p.a,corresponding:p.a}),label:'平行线与截线（角）',group:'图形',prefix:'平行线',defaults:{a:40},fields:[{k:'a',label:'截线与直线的夹角（度）',min:10,max:170,step:10}],size:()=>[240,190]},
- bag:{ports:(p)=>{const t=p.red+p.white;return{pRed:t?p.red/t:null}},label:'摸球（红、白）',group:'概率',prefix:'袋子',defaults:{red:2,white:2},fields:[{k:'red',label:'红球（个）',min:0,max:10},{k:'white',label:'白球（个）',min:0,max:10}],size:()=>[220,160]},
- cang:{ports:(p,e,E)=>{const out={inscribed:p.c/2};const ci=Object.values(E||{}).find(x=>x.type==='circle');if(ci){const r=ci.props.r;out.arc=Number((2*3.14*r*p.c/360).toFixed(2));out.sector=Number((3.14*r*r*p.c/360).toFixed(2))}return out},label:'圆周角与圆心角',group:'图形',prefix:'圆',defaults:{c:120},fields:[{k:'c',label:'圆心角（度）',min:10,max:170,step:10}],size:()=>[220,200]},
- congr:{ports:(p)=>{const x=[3,4,5],y=[p.a,p.b,p.c];const s=[...y].sort((m,n)=>m-n);return{possible:s[0]+s[1]>s[2],congruent:[...x].sort().join()===[...y].sort().join()}},label:'全等三角形（三边）',group:'图形',prefix:'全等',defaults:{a:4,b:4,c:5},fields:[{k:'a',label:'第二个三角形：边 1',min:1,max:12},{k:'b',label:'边 2',min:1,max:12},{k:'c',label:'边 3',min:1,max:12}],size:()=>[240,190]},
- tangent:{ports:(p)=>({relation:p.d>p.r?'apart':p.d===p.r?'tangent':'cross'}),label:'直线和圆的位置',group:'图形',prefix:'直线圆',defaults:{d:5,r:3},fields:[{k:'d',label:'圆心到直线的距离',min:0,max:8},{k:'r',label:'半径',min:1,max:6}],size:()=>[240,190]},
+ parlines:{sig:(e,_d,sig)=>{const a=e.props.a;sig('ok',`同旁内角 ${180-a}°，同位角 ${a}°`)},ports:(p)=>({sameSide:180-p.a,corresponding:p.a}),label:'平行线与截线（角）',group:'图形',prefix:'平行线',defaults:{a:40},fields:[{k:'a',label:'截线与直线的夹角（度）',min:10,max:170,step:10}],size:()=>[240,190]},
+ bag:{sig:(e,_d,sig)=>{const {red,white}=e.props,t=red+white; if(t===0)sig('info','袋子里没有球'); else{const g=(x,y)=>y?g(y,x%y):x;const k=g(red,t)||1;const n=red/k,dn=t/k;sig(red>0?'ok':'info',`P(红) = ${n}/${dn}`)}},ports:(p)=>{const t=p.red+p.white;return{pRed:t?p.red/t:null}},label:'摸球（红、白）',group:'概率',prefix:'袋子',defaults:{red:2,white:2},fields:[{k:'red',label:'红球（个）',min:0,max:10},{k:'white',label:'白球（个）',min:0,max:10}],size:()=>[220,160]},
+ cang:{sig:(e,_d,sig)=>{const c=e.props.c;sig('ok',`圆周角 ${c/2}°（圆心角 ${c}° 的一半）`)},ports:(p,e,E)=>{const out={inscribed:p.c/2};const ci=Object.values(E||{}).find(x=>x.type==='circle');if(ci){const r=ci.props.r;out.arc=Number((2*3.14*r*p.c/360).toFixed(2));out.sector=Number((3.14*r*r*p.c/360).toFixed(2))}return out},label:'圆周角与圆心角',group:'图形',prefix:'圆',defaults:{c:120},fields:[{k:'c',label:'圆心角（度）',min:10,max:170,step:10}],size:()=>[220,200]},
+ congr:{sig:(e,_d,sig)=>{const x=[3,4,5],y=[e.props.a,e.props.b,e.props.c];const same=[...x].sort().join()===[...y].sort().join(); const s=[...y].sort((p,q)=>p-q);if(s[0]+s[1]<=s[2])sig('err','这三条边画不出三角形：最短的两条加起来还没第三条长');else sig(same?'ok':'info',same?'三边对应相等，全等（SSS）':'三边不一样，不全等')},ports:(p)=>{const x=[3,4,5],y=[p.a,p.b,p.c];const s=[...y].sort((m,n)=>m-n);return{possible:s[0]+s[1]>s[2],congruent:[...x].sort().join()===[...y].sort().join()}},label:'全等三角形（三边）',group:'图形',prefix:'全等',defaults:{a:4,b:4,c:5},fields:[{k:'a',label:'第二个三角形：边 1',min:1,max:12},{k:'b',label:'边 2',min:1,max:12},{k:'c',label:'边 3',min:1,max:12}],size:()=>[240,190]},
+ tangent:{sig:(e,_d,sig)=>{const {d,r}=e.props;sig(d>r?'info':d===r?'ok':'warn',d>r?'直线和圆相离（d > r）':d===r?'直线和圆相切（d = r）':'直线和圆相交（d < r）')},ports:(p)=>({relation:p.d>p.r?'apart':p.d===p.r?'tangent':'cross'}),label:'直线和圆的位置',group:'图形',prefix:'直线圆',defaults:{d:5,r:3},fields:[{k:'d',label:'圆心到直线的距离',min:0,max:8},{k:'r',label:'半径',min:1,max:6}],size:()=>[240,190]},
  parab:{ports:(p)=>{const o={};if(p.a!==0){o.vx=-p.b/(2*p.a);o.vy=p.c-p.b*p.b/(4*p.a);const D0=p.b*p.b-4*p.a*p.c;o.xHits=D0>0?2:D0===0?1:0}return o},label:'二次函数 y = ax² + bx + c',group:'函数',prefix:'抛物线',defaults:{a:1,b:-2,c:0},fields:[{k:'a',label:'a',min:-3,max:3},{k:'b',label:'b',min:-6,max:6},{k:'c',label:'c',min:-6,max:6}],size:()=>[240,190]},
  hyper:{ports:(p)=>({y2:p.k/2}),label:'反比例 y = k/x',group:'函数',prefix:'反比例',defaults:{k:2},fields:[{k:'k',label:'k',min:-8,max:8}],size:()=>[240,190]},
  ineq:{ports:(p)=>({set:{op:p.op,b:p.b}}),label:'不等式的解集（数轴）',group:'关系',prefix:'解集',defaults:{b:2,op:1},fields:[{k:'b',label:'边界（数）',min:-6,max:6},{k:'op',label:'方向',min:0,max:1,choices:['x＜','x＞']}],size:()=>[300,110]},
@@ -464,17 +464,17 @@ function evaluate(s){
 
     if(e.type==='radical'){const n=e.props.n;let kk=1,mm=n;for(let k=Math.floor(Math.sqrt(n));k>=2;k--){if(n%(k*k)===0){kk=k;mm=n/(k*k);break}}
       sig(kk===1?'info':'ok',kk===1?`√${n} 已经是最简二次根式`:`√${n} = ${mm===1?kk:kk+'√'+mm}`)}
-    if(e.type==='parlines'){const a=e.props.a;sig('ok',`同旁内角 ${180-a}°，同位角 ${a}°`)}
-    if(e.type==='bag'){const {red,white}=e.props,t=red+white;
-      if(t===0)sig('info','袋子里没有球');
-      else{const g=(x,y)=>y?g(y,x%y):x;const k=g(red,t)||1;const n=red/k,dn=t/k;sig(red>0?'ok':'info',`P(红) = ${n}/${dn}`)}}
-    if(e.type==='cang'){const c=e.props.c;sig('ok',`圆周角 ${c/2}°（圆心角 ${c}° 的一半）`)}
-    if(e.type==='congr'){const x=[3,4,5],y=[e.props.a,e.props.b,e.props.c];const same=[...x].sort().join()===[...y].sort().join();
-      const s=[...y].sort((p,q)=>p-q);if(s[0]+s[1]<=s[2])sig('err','这三条边画不出三角形：最短的两条加起来还没第三条长');else sig(same?'ok':'info',same?'三边对应相等，全等（SSS）':'三边不一样，不全等')}
-    if(e.type==='tangent'){const {d,r}=e.props;sig(d>r?'info':d===r?'ok':'warn',d>r?'直线和圆相离（d > r）':d===r?'直线和圆相切（d = r）':'直线和圆相交（d < r）')}
-    if(e.type==='sim'){const k=e.props.k;sig('info',`相似比 1 : ${k}，面积比 1 : ${k*k}`)}
-    if(e.type==='pyth'){const {a,b}=e.props,c=Math.sqrt(a*a+b*b);const ci=Number.isInteger(c);sig(ci?'ok':'info',ci?`斜边 ${c}，是勾股数`:`斜边 ${c.toFixed(2)}（不是整数）`)}
-    if(e.type==='trig'){const r=e.props.deg*Math.PI/180;sig('info',`∠${e.props.deg}°：sin = ${Math.sin(r).toFixed(2)}，cos = ${Math.cos(r).toFixed(2)}，tan = ${Math.tan(r).toFixed(2)}`)}
+
+
+
+
+
+
+
+
+
+
+
     if(e.type==='parab'){const {a,b,c}=e.props;
       if(a===0)sig('err','二次项系数 a 不能是 0（那就成了一次函数）');
       else{const vx=-b/(2*a),vy=c-b*b/(4*a);const f=n=>Number.isInteger(n)?String(n):n.toFixed(2);
