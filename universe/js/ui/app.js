@@ -50,7 +50,7 @@
 
   function finish() {
     const rep = J.report(S.problem, S.run, S.scene, S.D);
-    Ev.push('finish', rep); S.clockWasRunning = S.scene.clock.running;
+    Ev.push('finish', rep); S.scene.clock.running = false;
     setTimeout(() => { UI.Panels.dialog(UI.Panels.reportHtml(rep, S.problem, 'practice')); UI.Panels.renderLeft(); }, 700);
   }
 
@@ -83,6 +83,7 @@
   // ---------- 开题 / 切模式 ----------
   function openProblem(id, mode) {
     const p = U.problemById(id); if (!p) return;
+    UI.Panels.closeDialog();
     if (S.mode === 'free') S.freeScene = snap();
     S.problem = p; S.mode = mode || 'practice'; S.scene = p.build(); S.run = J.start(p, S.mode);
     S.undo = []; S.redo = []; S.sel = null; S.selLink = null; S.inspOpen = false; S.tab = 'steps'; S.glow = [];

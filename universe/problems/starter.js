@@ -116,6 +116,7 @@
     ref: ['memory,num,op|3'],
   });
 
+  U.mkScene = mk;
   U.problems = P;
   U.problemById = (id) => P.find((p) => p.id === id);
 })(typeof globalThis !== 'undefined' ? globalThis : window);
