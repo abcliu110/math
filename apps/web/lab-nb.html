@@ -313,7 +313,8 @@ const srcsOf=b=>b.expr?b.refs:[b.from];
 // 表达式的值：按 Dd（evaluate 的结果）读来源；有一处算不出来就是 null。
 function exprValue(s,b,Dd){const toks=exprTokens(s,b.expr);if(!toks)return null;try{return evalTokens(toks,id=>{const x=Dd[id]&&qv(Dd[id]);return x||null})}catch(e){return null}}
 // 给一个字段绑表达式。返回 {ok, why}。同一字段原来的绑定会被替换。
-function addExprBind(s,to,k,text){const toks=exprTokens(s,text);if(!toks)return{ok:0,why:'表达式里有认不出的字'};
+function addExprBind(s,to,k,text){const t0=s.entities[to];if(!t0)return{ok:0,why:'没有这个器材'};if(!TYPES[t0.type].fields.some(f=>f.k===k))return{ok:0,why:'这个器材没有这个属性'};
+  const toks=exprTokens(s,text);if(!toks)return{ok:0,why:'表达式里有认不出的字'};
   const refs=toks.filter(t=>t.ref!==undefined).map(t=>t.ref);if(!refs.length)return{ok:0,why:'表达式里要有一个器材的名字'};
   if(refs.some(r=>r===to||reachAll(s,to,r)))return{ok:0,why:'绕回来了：它的值已经依赖这个器材，不能再绑'};
   s.binds=(s.binds||[]).filter(b=>!(b.to===to&&b.k===k));s.binds.push({from:refs[0],to,k,expr:text,refs});return{ok:1}}
@@ -369,6 +370,7 @@ function actRaw(a){
     if(reachAll(s,a.to,a.from))return{ok:0,why:'绕回来了：它的值已经依赖这个器材，不能再绑'};
     s.binds=(s.binds||[]).filter(b=>!(b.to===a.to&&b.k===a.k));s.binds.push({to:a.to,k:a.k,from:a.from});return{ok:1}}
   case 'unbind':{s.binds=(s.binds||[]).filter(b=>!(b.to===a.to&&b.k===a.k));return{ok:1}}
+  case 'bindexpr':return addExprBind(s,a.to,a.k,a.text);
   case 'scale':{const e=E[a.id];if(!e)return{ok:0,why:'没有这个器材'};e.k=Math.round(Math.min(2,Math.max(0.5,+a.k))*4)/4;return{ok:1}}
   case 'roll':{const e=E[a.id];const c=e.props.counts||Array(13).fill(0);for(let i=0;i<e.props.times;i++){c[1+Math.ceil(Math.random()*6)+Math.ceil(Math.random()*6)-1]++}e.props.counts=c;return{ok:1}}
   case 'segclick':{const p=E[a.id].props;p.n=(p.n===a.k?a.k-1:a.k);return{ok:1}}
@@ -604,7 +606,7 @@ const byType=(s,t)=>{for(const id in s.entities)if(s.entities[id].type===t)retur
 /* ========== 运行状态 ========== */
 const LS={free:'nb-lab-free-v1',hist:'nb-lab-exam-v1',find:'nb-lab-find-v1'};
 const PR='nb-lab-practice-v1'; // 练习进度：中途离开再回来，接着做
-let mode='free',xp=null,run=null,D={},sel=null,selLink=null,cardOpen=false,bindPick=null; // bindPick：正在等学生点一个器材，把它的值绑到 {to, k} 上
+let mode='free',xp=null,run=null,D={},sel=null,selLink=null,cardOpen=false,bindPick=null,exprPick=null; // bindPick：正在等学生点一个器材，把它的值绑到 {to, k} 上
 let view={x:40,y:30,z:1},undoSt=[],redoSt=[],timerId=null,libFilter='全部',libQ='';
 const $=id=>document.getElementById(id);
 
@@ -830,8 +832,10 @@ function derivedLines(e){const p=e.props;const n=x=>String(+x.toFixed(2));
   return[]}
 function buildCard(e){const cd=$('card'),T=viewType(e);cd.dataset.for=e.id;cd.dataset.v=JSON.stringify(e.props)+e.name;
   let h=`<h4>${T.label} · 设置</h4><input class="name" data-name value="${esc(e.name)}"><div class="state">${esc(stateLine(e))}</div>`;
-  for(const f of T.fields){const v=e.props[f.k];const bd=(S.binds||[]).find(x=>x.to===e.id&&x.k===f.k);if(bd){h+=`<div class="fld"><label><span>${f.label}</span><b>← ${esc(S.entities[bd.from].name)}</b></label><div class="ctl"><span class="muted">由它决定：${v}</span><button class="btn" data-unbind="${f.k}">解除绑定</button></div></div>`;continue}if(f.choices){h+=`<div class="fld"><label><span>${f.label}</span></label><div class="ctl seg-choice">${f.choices.map((c,i)=>`<button class="pm${v===i?' on':''}" data-pick="${f.k}" data-pv="${i}">${c}</button>`).join('')}</div></div>`;continue}h+=`<div class="fld"><label><span>${f.label}</span></label><div class="ctl"><button class="pm" data-pm="${f.k}" data-dv="-${f.step||1}">−</button><input type="range" data-f="${f.k}" min="${f.min}" max="${f.max}" step="${f.step||1}" value="${v}"><button class="pm" data-pm="${f.k}" data-dv="${f.step||1}">+</button><input type="number" data-fn="${f.k}" value="${v}"></div></div>`}
+  for(const f of T.fields){const v=e.props[f.k];const bd=(S.binds||[]).find(x=>x.to===e.id&&x.k===f.k);if(bd){h+=`<div class="fld"><label><span>${f.label}</span><b>${bd.expr?'ƒ '+esc(bd.expr):'← '+esc(S.entities[bd.from].name)}</b></label><div class="ctl"><span class="muted">由它决定：${v}</span><button class="btn" data-unbind="${f.k}">解除绑定</button></div></div>`;continue}if(f.choices){h+=`<div class="fld"><label><span>${f.label}</span></label><div class="ctl seg-choice">${f.choices.map((c,i)=>`<button class="pm${v===i?' on':''}" data-pick="${f.k}" data-pv="${i}">${c}</button>`).join('')}</div></div>`;continue}h+=`<div class="fld"><label><span>${f.label}</span></label><div class="ctl"><button class="pm" data-pm="${f.k}" data-dv="-${f.step||1}">−</button><input type="range" data-f="${f.k}" min="${f.min}" max="${f.max}" step="${f.step||1}" value="${v}"><button class="pm" data-pm="${f.k}" data-dv="${f.step||1}">+</button><input type="number" data-fn="${f.k}" value="${v}"></div></div>`}
   for(const f of T.fields){if(!(S.binds||[]).some(x=>x.to===e.id&&x.k===f.k))h+=`<button class="btn" data-bindpick="${f.k}">🔗 把「${esc(f.label.replace(/（.*/,''))}」绑到一个数</button>`}
+  for(const f of T.fields){if(f.choices||(S.binds||[]).some(x=>x.to===e.id&&x.k===f.k))continue;h+=`<button class="btn" data-exprpick="${f.k}">ƒx 写表达式</button>`;
+    if(exprPick&&exprPick.to===e.id&&exprPick.k===f.k)h+=`<div class="fld"><label><span>${esc(f.label.replace(/（.*/,''))} =</span></label><div class="ctl"><input data-exprtext="${f.k}" placeholder="例如 长 ÷ 2" style="width:150px"><button class="btn" data-exprok="${f.k}">确定</button></div></div>`}
   if(bindPick&&bindPick.to===e.id){const srcs=Object.keys(S.entities).filter(id=>id!==e.id&&TYPES[S.entities[id].type].out==='value');h+=`<div class="muted" style="font-size:12px;margin-top:6px">或直接选一个变量（点名字就绑上）：</div><div class="card-row">${srcs.map(id=>`<button class="btn" data-bindfrom="${id}" data-bindk="${bindPick.k}">${esc(S.entities[id].name)}</button>`).join('')||'<span class="muted">画布上还没有会出数的器材</span>'}</div>`}
   if(!T.fields.length)h+=`<div class="muted" style="font-size:12px">${T.accepts==='fn'?'它显示连进来的直线。':'它的值由连进来的器材决定，拖别的器材的蓝点连过来。'}</div>`;
   // 只读推导值：由属性算出来，不能改，让学生在卡上直接看到。
@@ -850,6 +854,8 @@ $('card').addEventListener('input',ev=>{const t=ev.target,id=sel;if(!id)return;
 $('card').addEventListener('change',ev=>{const t=ev.target;if(t.dataset.fn&&sel){commit({t:'set',id:sel,k:t.dataset.fn,v:t.value});$('card').dataset.v=''}});
 $('card').addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b||!sel)return;const id=sel;
   if(b.dataset.pick){commit({t:'set',id,k:b.dataset.pick,v:+b.dataset.pv});render();return}
+  if(b.dataset.exprpick){exprPick={to:id,k:b.dataset.exprpick};$('card').dataset.v='';render();return}
+  if(b.dataset.exprok){const inp=$('card').querySelector(`[data-exprtext="${b.dataset.exprok}"]`);const r=commit({t:'bindexpr',to:id,k:b.dataset.exprok,text:inp?inp.value.trim():''});if(r.ok){exprPick=null;$('card').dataset.v=''}render();return}
   if(b.dataset.bindpick){$('card').dataset.v='';bindPick={to:id,k:b.dataset.bindpick};toast('点一个会出数的器材（数字卡、分数条、黑箱、数据表…），把它绑到这个属性上');render();return}
   if(b.dataset.bindfrom){commit({t:'bind',to:id,k:b.dataset.bindk,from:b.dataset.bindfrom});bindPick=null;$('card').dataset.v='';render();return}
   if(b.dataset.unbind){commit({t:'unbind',to:id,k:b.dataset.unbind});render();return}
