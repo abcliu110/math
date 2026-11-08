@@ -4591,16 +4591,16 @@ const TYPES={
  box:{label:&#x27;黑箱（输入 → 输出）&#x27;,group:&#x27;函数&#x27;,prefix:&#x27;黑箱&#x27;,out:&#x27;value&#x27;,accepts:&#x27;value&#x27;,defaults:{a:1,b:0,rule:0},
    fields:[{k:&#x27;a&#x27;,label:&#x27;a（系数）&#x27;,min:-5,max:5},{k:&#x27;b&#x27;,label:&#x27;b&#x27;,min:-10,max:10},{k:&#x27;rule&#x27;,label:&#x27;规则&#x27;,min:0,max:2,choices:[&#x27;线性&#x27;,&#x27;平方&#x27;,&#x27;倒数&#x27;]}],size:()=&gt;[230,120]},
  // 数据表：四个数，输出合计、平均数或最大数。
- table:{label:&#x27;数据表（四个数）&#x27;,group:&#x27;统计&#x27;,prefix:&#x27;数据表&#x27;,out:&#x27;value&#x27;,accepts:&#x27;value&#x27;,dim:&#x27;count&#x27;,defaults:{a:4,b:8,c:6,d:10,which:0},
+ table:{label:&#x27;数据表（四个数）&#x27;,group:&#x27;统计&#x27;,prefix:&#x27;数据表&#x27;,out:&#x27;value&#x27;,accepts:&#x27;value&#x27;,acceptsDist:true,dim:&#x27;count&#x27;,defaults:{a:4,b:8,c:6,d:10,which:0},
    fields:[{k:&#x27;a&#x27;,label:&#x27;第 1 个数&#x27;,min:0,max:50},{k:&#x27;b&#x27;,label:&#x27;第 2 个数&#x27;,min:0,max:50},{k:&#x27;c&#x27;,label:&#x27;第 3 个数&#x27;,min:0,max:50},{k:&#x27;d&#x27;,label:&#x27;第 4 个数&#x27;,min:0,max:50},{k:&#x27;which&#x27;,label:&#x27;输出（0 合计，1 平均，2 最大）&#x27;,min:0,max:2,choices:[&#x27;合计&#x27;,&#x27;平均&#x27;,&#x27;最大&#x27;]}],size:()=&gt;[240,150]},
  // x 砝码：一个未知数。x 的值由学生设定，天平上用它参与平衡。
  sym:{label:&#x27;x 砝码（未知数）&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;x&#x27;,out:&#x27;value&#x27;,dim:&#x27;count&#x27;,defaults:{x:0},fields:[{k:&#x27;x&#x27;,label:&#x27;x 等于几&#x27;,min:-10,max:30}],size:()=&gt;[120,70]},
 };
 const GROUP_ORDER=[&#x27;数与运算&#x27;,&#x27;分数&#x27;,&#x27;关系&#x27;,&#x27;函数&#x27;,&#x27;图形&#x27;,&#x27;统计&#x27;,&#x27;概率&#x27;];
 /* 多输出端口：除了默认的输出（dy 为中点），这些器材还有额外的输出口。dy 是端口在器材上的纵坐标。 */
-const OUT_PORTS={table:[{id:&#x27;sum&#x27;,label:&#x27;合计&#x27;,dy:25},{id:&#x27;mean&#x27;,label:&#x27;平均&#x27;,dy:100},{id:&#x27;max&#x27;,label:&#x27;最大&#x27;,dy:125}],balance:[{id:&#x27;equal&#x27;,label:&#x27;平衡&#x27;,dy:170}],dice:[{id:&#x27;tot&#x27;,label:&#x27;次数&#x27;,dy:150},{id:&#x27;best&#x27;,label:&#x27;最多点数&#x27;,dy:186}]};
+const OUT_PORTS={table:[{id:&#x27;sum&#x27;,label:&#x27;合计&#x27;,dy:25},{id:&#x27;mean&#x27;,label:&#x27;平均&#x27;,dy:100},{id:&#x27;max&#x27;,label:&#x27;最大&#x27;,dy:125}],balance:[{id:&#x27;equal&#x27;,label:&#x27;平衡&#x27;,dy:170}],dice:[{id:&#x27;tot&#x27;,label:&#x27;次数&#x27;,dy:150},{id:&#x27;best&#x27;,label:&#x27;最多点数&#x27;,dy:186},{id:&#x27;dist&#x27;,label:&#x27;分布&#x27;,dy:114}]};
 // 一个输出口的类型：天平的“平衡”是 bool（是或否），其它输出口按器材类型。
-const outKind=(f,port)=&gt;(f.type===&#x27;balance&#x27;&amp;&amp;port===&#x27;equal&#x27;)?&#x27;bool&#x27;:port?&#x27;value&#x27;:TYPES[f.type].out;
+const outKind=(f,port)=&gt;(f.type===&#x27;balance&#x27;&amp;&amp;port===&#x27;equal&#x27;)?&#x27;bool&#x27;:port===&#x27;dist&#x27;?&#x27;dist&#x27;:port?&#x27;value&#x27;:TYPES[f.type].out;
 /* 立体图形：每行是一排（y），每个数是这一格上摞的小方块个数（x 从左到右）。 */
 const SOLID_H=[[2,1],[1,0]];
 
@@ -4658,6 +4658,8 @@ function addExprBind(s,to,k,text){const t0=s.entities[to];if(!t0)return{ok:0,why
   s.binds=(s.binds||[]).filter(b=&gt;!(b.to===to&amp;&amp;b.k===k));s.binds.push({from:refs[0],to,k,expr:text,refs,prev});return{ok:1}}
 /* 绑定同步按拓扑序做：绑定 o 的目标若能走到绑定 b 的来源，o 先算，b 再读它的值。每条绑定只写一次，没有“最多 8 遍”的上限。 */
 function syncBinds(s){if(!s.binds||!s.binds.length)return;
+  // 清掉已经悬空的绑定（来源或目标器材不存在，比如旧存档里的）；不然求值会读到不存在的器材。
+  s.binds=s.binds.filter(b=&gt;s.entities[b.to]&amp;&amp;srcsOf(b).every(id=&gt;s.entities[id]));if(!s.binds.length)return;
   const left=s.binds.slice(),order=[];
   while(left.length){let i=left.findIndex(b=&gt;!left.some(o=&gt;o!==b&amp;&amp;srcsOf(b).some(r=&gt;reachAll(s,o.to,r))));if(i&lt;0)i=0;order.push(left.splice(i,1)[0])}
   for(const b of order){const Dd=evaluate(s);const to=s.entities[b.to],src=b.expr?exprValue(s,b,Dd):(Dd[b.from]&amp;&amp;qv(Dd[b.from]));if(!to||!src||src.d!==1)continue;const F=TYPES[to.type].fields.find(f=&gt;f.k===b.k);if(!F||src.n&lt;F.min||src.n&gt;F.max)continue;to.props[b.k]=src.n}}
@@ -4671,7 +4673,7 @@ function actRaw(a){
   switch(a.t){
   case &#x27;add&#x27;:{const id=addEnt(s,a.type,a.x,a.y,a.props);return{ok:1,id}}
   case &#x27;move&#x27;:{const e=E[a.id];e.x=a.x;e.y=a.y;return{ok:1}}
-  case &#x27;del&#x27;:{if(E[a.id]){delete E[a.id];s.links=s.links.filter(l=&gt;l.from!==a.id&amp;&amp;l.to!==a.id)}else s.links=s.links.filter(l=&gt;l.id!==a.id);return{ok:1}}
+  case &#x27;del&#x27;:{if(E[a.id]){delete E[a.id];s.links=s.links.filter(l=&gt;l.from!==a.id&amp;&amp;l.to!==a.id);s.binds=(s.binds||[]).filter(b=&gt;b.to!==a.id&amp;&amp;!srcsOf(b).includes(a.id))}else s.links=s.links.filter(l=&gt;l.id!==a.id);return{ok:1}}
   case &#x27;dup&#x27;:{const e=E[a.id];const id=addEnt(s,e.type,e.x+30,e.y+30,clone(e.props));return{ok:1,id}}
   case &#x27;rename&#x27;:{E[a.id].name=String(a.name).slice(0,16)||E[a.id].name;return{ok:1}}
   case &#x27;rotate&#x27;:{const p=E[a.id].props;p.rot=((p.rot||0)+15)%360;return{ok:1}}
@@ -4691,7 +4693,7 @@ function actRaw(a){
   case &#x27;link&#x27;:{const f=E[a.from],to=E[a.to];if(!f||!to||a.from===a.to)return{ok:0,why:&#x27;连到另一个器材上&#x27;};
     const out=outKind(f,a.fromPort),acc=TYPES[to.type].accepts;
     if(!acc)return{ok:0,why:`${to.name} 不接收输入`};
-    if(out!==acc)return{ok:0,why:out===&#x27;fn&#x27;?&#x27;直线只能连到坐标平面上&#x27;:acc===&#x27;bool&#x27;?&#x27;判断灯只接收「平衡」（是或否）&#x27;:out===&#x27;bool&#x27;?`${to.name} 不接收「平衡」`:`${to.name} 只接收直线，不接收数`};
+    if(out!==acc&amp;&amp;!(out===&#x27;dist&#x27;&amp;&amp;TYPES[to.type].acceptsDist))return{ok:0,why:out===&#x27;fn&#x27;?&#x27;直线只能连到坐标平面上&#x27;:acc===&#x27;bool&#x27;?&#x27;判断灯只接收「平衡」（是或否）&#x27;:out===&#x27;bool&#x27;?`${to.name} 不接收「平衡」`:out===&#x27;dist&#x27;?`${to.name} 不接收分布（一批数），只有数据表能接`:`${to.name} 只接收直线，不接收数`};
     // 维度：天平不称面积、数轴不放面积；合并器只合并同一种东西。
     const fd=dimOf(s,a.from),rj=TYPES[to.type].reject;if(rj&amp;&amp;rj[fd])return{ok:0,why:rj[fd]};
     if(to.type===&#x27;adder&#x27;){const other=inputs(s,a.to).map(l=&gt;dimOf(s,l.from)).find(x=&gt;x!==fd);if(other)return{ok:0,why:`合并器只合并同一种东西：${dimLabel(fd)} 和 ${dimLabel(other)} 不能加`}}
@@ -4727,7 +4729,7 @@ function boxOut(p,x){const r=p.rule||0;if(r===0)return qadd(Q(p.a*x.n,x.d),Q(p.b
 function clockPair(E){const cl=Object.values(E).filter(x=&gt;x.type===&#x27;clock&#x27;);if(cl.length!==2)return null;const a=cl.find(c=&gt;c.name===&#x27;开始&#x27;),b=cl.find(c=&gt;c.name===&#x27;结束&#x27;);return a&amp;&amp;b?[a,b]:cl}
 function evaluate(s){
   const E=s.entities,vals={},busy={},D={};
-  const val=(id,port)=&gt;{const key=port?id+&#x27;#&#x27;+port:id;if(key in vals)return vals[key];if(busy[key])return null;busy[key]=1;const e=E[id];let v=null;
+  const val=(id,port)=&gt;{const key=port?id+&#x27;#&#x27;+port:id;if(key in vals)return vals[key];if(busy[key])return null;busy[key]=1;const e=E[id];if(!e)return null;let v=null;
     if(e.type===&#x27;num&#x27;||e.type===&#x27;var&#x27;)v=Q(e.props.v);else if(e.type===&#x27;frac&#x27;)v=Q(e.props.n,e.props.d);
     else if(e.type===&#x27;adder&#x27;){const xs=inputs(s,id).map(l=&gt;vf(l)).filter(Boolean);
       if(e.props.op===1&amp;&amp;xs.length)v=xs.slice(1).reduce((t,x)=&gt;qsub(t,x),xs[0]);else{v=Q(0);for(const x of xs)v=qadd(v,x)}}
@@ -4737,17 +4739,21 @@ function evaluate(s){
       if(!ls.length)v=Q(1);else if(!any)v=null;else v=Q(v.n*(e.props.times||1),v.d)}
     else if(e.type===&#x27;balance&#x27;&amp;&amp;port===&#x27;equal&#x27;){const Ls=inputs(s,id).filter(l=&gt;l.slot===&#x27;L&#x27;),Rs=inputs(s,id).filter(l=&gt;l.slot===&#x27;R&#x27;);const tot=ls=&gt;ls.reduce((t,l)=&gt;{const x=vf(l);return x?qadd(t,x):t},Q(0));if(Ls.length&amp;&amp;Rs.length)v={kind:&#x27;bool&#x27;,data:qeq(tot(Ls),tot(Rs))}}
     else if(e.type===&#x27;box&#x27;){const l=inputs(s,id)[0];const x=l&amp;&amp;vf(l);v=x?boxOut(e.props,x):null}
-    else if(e.type===&#x27;dice&#x27;){const c=e.props.counts;if(c&amp;&amp;c.some(x=&gt;x&gt;0)){if(port===&#x27;tot&#x27;)v=Q(c.reduce((x,y)=&gt;x+y,0));else if(port===&#x27;best&#x27;){let bi=2;for(let i=2;i&lt;=12;i++)if(c[i]&gt;c[bi])bi=i;v=Q(bi)}}}
+    else if(e.type===&#x27;dice&#x27;){const c=e.props.counts;if(port===&#x27;dist&#x27;&amp;&amp;c){v={kind:&#x27;dist&#x27;,data:c.slice()}}else if(c&amp;&amp;c.some(x=&gt;x&gt;0)){if(port===&#x27;tot&#x27;)v=Q(c.reduce((x,y)=&gt;x+y,0));else if(port===&#x27;best&#x27;){let bi=2;for(let i=2;i&lt;=12;i++)if(c[i]&gt;c[bi])bi=i;v=Q(bi)}}}
     else if(e.type===&#x27;table&#x27;){const T=tableOf(id),p=e.props;v=port===&#x27;sum&#x27;?T.sum:port===&#x27;mean&#x27;?T.mean:port===&#x27;max&#x27;?T.max:(p.which===1?T.mean:p.which===2?T.max:T.sum)}
     else if(e.type===&#x27;clock&#x27;)v=Q((e.props.h%12)*60+e.props.m);
     else if(e.type===&#x27;sym&#x27;)v=Q(e.props.x);
     else if(e.type===&#x27;div&#x27;){const L=inputs(s,id).find(l=&gt;l.slot===&#x27;L&#x27;),R=inputs(s,id).find(l=&gt;l.slot===&#x27;R&#x27;);const a=L&amp;&amp;vf(L),b=R&amp;&amp;vf(R);v=(a&amp;&amp;b&amp;&amp;b.n!==0)?(e.props.mode===1?(a.d===1&amp;&amp;b.d===1?Q(a.n%b.n):null):Q(a.n*b.d,a.d*b.n)):null}
-    return vals[key]=(v&amp;&amp;v.kind===&#x27;bool&#x27;?v:v?{kind:&#x27;num&#x27;,dim:dimOf(s,id),data:v}:null)};
+    return vals[key]=(v&amp;&amp;(v.kind===&#x27;bool&#x27;||v.kind===&#x27;dist&#x27;)?v:v?{kind:&#x27;num&#x27;,dim:dimOf(s,id),data:v}:null)};
   // val 返回带类型的 Val；valQ / vf 取出有理数 data，算术部分照旧。
   const valQ=(id,port)=&gt;{const v=val(id,port);return v?v.data:null};
   const vf=l=&gt;valQ(l.from,l.fromPort); // value flowing in on a link (a link may read one output port of its source)
   // 数据表：连进来的数依次填进 a、b、c、d（连线的先后），没连线的格子保留自己的数。合计、平均、最大都从这四个格子算。
-  const tableOf=id=&gt;{const p=E[id].props,ins=inputs(s,id).map(l=&gt;vf(l)).filter(Boolean);const slots=[Q(p.a),Q(p.b),Q(p.c),Q(p.d)].map((x,i)=&gt;ins[i]||x);const sum=slots.reduce((t,x)=&gt;qadd(t,x),Q(0));const max=slots.reduce((m,x)=&gt;qnum(x)&gt;qnum(m)?x:m);return{slots,sum,mean:Q(sum.n,sum.d*4),max}};
+  // 数据表接分布（临时映射，待 Iris 定）：四个格子依次是 总次数、最多的点数、它出现的次数、出现过的不同点数。
+  const tableOf=id=&gt;{const p=E[id].props,dl=inputs(s,id).find(l=&gt;{const v=val(l.from,l.fromPort);return v&amp;&amp;v.kind===&#x27;dist&#x27;});let slots;
+    if(dl){const c=val(dl.from,dl.fromPort).data;let tot=0,nd=0,bi=2;for(let i=0;i&lt;c.length;i++){tot+=c[i]||0;if((c[i]||0)&gt;0)nd++}for(let i=2;i&lt;=12;i++)if((c[i]||0)&gt;(c[bi]||0))bi=i;slots=[Q(tot),Q(bi),Q(c[bi]||0),Q(nd)]}
+    else{const ins=inputs(s,id).filter(l=&gt;{const v=val(l.from,l.fromPort);return v&amp;&amp;v.kind===&#x27;num&#x27;}).map(l=&gt;vf(l));slots=[Q(p.a),Q(p.b),Q(p.c),Q(p.d)].map((x,i)=&gt;ins[i]||x)}
+    const sum=slots.reduce((t,x)=&gt;qadd(t,x),Q(0));const max=slots.reduce((m,x)=&gt;qnum(x)&gt;qnum(m)?x:m);return{slots,sum,mean:Q(sum.n,sum.d*4),max}};
   for(const id in E){const e=E[id],d=D[id]={read:[],sig:[]};if(e.type===&#x27;table&#x27;)d.tab=tableOf(id);
     const sig=(lv,tx)=&gt;d.sig.push({lv,tx});
     // d.val 是带类型的值 {kind, dim, data}；qv(d) 仍是有理数 Q，页面和判分照旧读它。
@@ -5018,7 +5024,7 @@ function linkSvg(l,dep){if(!S.entities[l.from]||!S.entities[l.to])return&#x27;&#
   const d=`M${x1},${y1} C${x1+c},${y1} ${x2-c},${y2} ${x2},${y2}`;
   const inChain=!!dep&amp;&amp;[l.from,l.to].every(x=&gt;x===sel||dep.up[x]||dep.down[x]);
   // 连线上写出流过的值（有数的时候）
-  const v=l.fromPort?(D[l.from].ports||{})[l.fromPort]:D[l.from]&amp;&amp;qv(D[l.from]);const lab=typeof v===&#x27;boolean&#x27;?`&lt;text class=&quot;linkval&quot; x=&quot;${(x1+x2)/2}&quot; y=&quot;${(y1+y2)/2-7}&quot; text-anchor=&quot;middle&quot;&gt;${v?&#x27;平了&#x27;:&#x27;不平&#x27;}&lt;/text&gt;`:v?`&lt;text class=&quot;linkval&quot; x=&quot;${(x1+x2)/2}&quot; y=&quot;${(y1+y2)/2-7}&quot; text-anchor=&quot;middle&quot;&gt;${qs(v)}&lt;/text&gt;`:&#x27;&#x27;;
+  const v=l.fromPort?(D[l.from].ports||{})[l.fromPort]:D[l.from]&amp;&amp;qv(D[l.from]);const lab=(v&amp;&amp;v.kind===&#x27;dist&#x27;)?`&lt;text class=&quot;linkval&quot; x=&quot;${(x1+x2)/2}&quot; y=&quot;${(y1+y2)/2-7}&quot; text-anchor=&quot;middle&quot;&gt;共 ${v.counts.reduce((a,b)=&gt;a+b,0)} 次&lt;/text&gt;`:typeof v===&#x27;boolean&#x27;?`&lt;text class=&quot;linkval&quot; x=&quot;${(x1+x2)/2}&quot; y=&quot;${(y1+y2)/2-7}&quot; text-anchor=&quot;middle&quot;&gt;${v?&#x27;平了&#x27;:&#x27;不平&#x27;}&lt;/text&gt;`:v?`&lt;text class=&quot;linkval&quot; x=&quot;${(x1+x2)/2}&quot; y=&quot;${(y1+y2)/2-7}&quot; text-anchor=&quot;middle&quot;&gt;${qs(v)}&lt;/text&gt;`:&#x27;&#x27;;
   return`&lt;path class=&quot;linkhit&quot; data-link=&quot;${l.id}&quot; d=&quot;${d}&quot;/&gt;&lt;path class=&quot;link${selLink===l.id?&#x27; sel&#x27;:&#x27;&#x27;}${inChain?&#x27; dep&#x27;:&#x27;&#x27;}&quot; d=&quot;${d}&quot;/&gt;${lab}`}
 const esc=s=&gt;String(s).replace(/[&amp;&lt;&gt;&quot;]/g,c=&gt;({&#x27;&amp;&#x27;:&#x27;&amp;amp;&#x27;,&#x27;&lt;&#x27;:&#x27;&amp;lt;&#x27;,&#x27;&gt;&#x27;:&#x27;&amp;gt;&#x27;,&#x27;&quot;&#x27;:&#x27;&amp;quot;&#x27;}[c]));
 function entSvg(e,d,isNext,dep){const T=TYPES[e.type],[w,h]=T.size(e),kk=e.k||1;const lv=d.sig.some(s=&gt;s.lv===&#x27;err&#x27;)?&#x27; err&#x27;:(d.sig.some(s=&gt;s.lv===&#x27;ok&#x27;)?&#x27; ok&#x27;:&#x27;&#x27;);
@@ -5177,7 +5183,7 @@ function derivedLines(e){const p=e.props;const n=x=&gt;String(+x.toFixed(2));
   return[]}
 function buildCard(e){const cd=$(&#x27;card&#x27;),T=viewType(e);cd.dataset.for=e.id;cd.dataset.v=JSON.stringify(e.props)+e.name;
   let h=`&lt;h4&gt;${T.label} · 设置&lt;/h4&gt;&lt;input class=&quot;name&quot; data-name value=&quot;${esc(e.name)}&quot;&gt;&lt;div class=&quot;state&quot;&gt;${esc(stateLine(e))}&lt;/div&gt;`;
-  for(const f of T.fields){const v=e.props[f.k];const bd=(S.binds||[]).find(x=&gt;x.to===e.id&amp;&amp;x.k===f.k);if(bd){h+=`&lt;div class=&quot;fld&quot;&gt;&lt;label&gt;&lt;span&gt;${f.label}&lt;/span&gt;&lt;b&gt;${bd.expr?&#x27;ƒ &#x27;+esc(bd.expr):&#x27;← &#x27;+esc(S.entities[bd.from].name)}&lt;/b&gt;&lt;/label&gt;&lt;div class=&quot;ctl&quot;&gt;&lt;span class=&quot;muted&quot;&gt;由它决定：${v}&lt;/span&gt;&lt;button class=&quot;btn&quot; data-unbind=&quot;${f.k}&quot;&gt;解除绑定&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;`;continue}if(f.choices){h+=`&lt;div class=&quot;fld&quot;&gt;&lt;label&gt;&lt;span&gt;${f.label}&lt;/span&gt;&lt;/label&gt;&lt;div class=&quot;ctl seg-choice&quot;&gt;${f.choices.map((c,i)=&gt;`&lt;button class=&quot;pm${v===i?&#x27; on&#x27;:&#x27;&#x27;}&quot; data-pick=&quot;${f.k}&quot; data-pv=&quot;${i}&quot;&gt;${c}&lt;/button&gt;`).join(&#x27;&#x27;)}&lt;/div&gt;&lt;/div&gt;`;continue}h+=`&lt;div class=&quot;fld&quot;&gt;&lt;label&gt;&lt;span&gt;${f.label}&lt;/span&gt;&lt;/label&gt;&lt;div class=&quot;ctl&quot;&gt;&lt;button class=&quot;pm&quot; data-pm=&quot;${f.k}&quot; data-dv=&quot;-${f.step||1}&quot;&gt;−&lt;/button&gt;&lt;input type=&quot;range&quot; data-f=&quot;${f.k}&quot; min=&quot;${f.min}&quot; max=&quot;${f.max}&quot; step=&quot;${f.step||1}&quot; value=&quot;${v}&quot;&gt;&lt;button class=&quot;pm&quot; data-pm=&quot;${f.k}&quot; data-dv=&quot;${f.step||1}&quot;&gt;+&lt;/button&gt;&lt;input type=&quot;number&quot; data-fn=&quot;${f.k}&quot; value=&quot;${v}&quot;&gt;&lt;/div&gt;&lt;/div&gt;`}
+  for(const f of T.fields){const v=e.props[f.k];const bd=(S.binds||[]).find(x=&gt;x.to===e.id&amp;&amp;x.k===f.k);if(bd){h+=`&lt;div class=&quot;fld&quot;&gt;&lt;label&gt;&lt;span&gt;${f.label}&lt;/span&gt;&lt;b&gt;${bd.expr?&#x27;ƒ &#x27;+esc(bd.expr):&#x27;← &#x27;+esc((S.entities[bd.from]||{name:&#x27;（已删）&#x27;}).name)}&lt;/b&gt;&lt;/label&gt;&lt;div class=&quot;ctl&quot;&gt;&lt;span class=&quot;muted&quot;&gt;由它决定：${v}&lt;/span&gt;&lt;button class=&quot;btn&quot; data-unbind=&quot;${f.k}&quot;&gt;解除绑定&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;`;continue}if(f.choices){h+=`&lt;div class=&quot;fld&quot;&gt;&lt;label&gt;&lt;span&gt;${f.label}&lt;/span&gt;&lt;/label&gt;&lt;div class=&quot;ctl seg-choice&quot;&gt;${f.choices.map((c,i)=&gt;`&lt;button class=&quot;pm${v===i?&#x27; on&#x27;:&#x27;&#x27;}&quot; data-pick=&quot;${f.k}&quot; data-pv=&quot;${i}&quot;&gt;${c}&lt;/button&gt;`).join(&#x27;&#x27;)}&lt;/div&gt;&lt;/div&gt;`;continue}h+=`&lt;div class=&quot;fld&quot;&gt;&lt;label&gt;&lt;span&gt;${f.label}&lt;/span&gt;&lt;/label&gt;&lt;div class=&quot;ctl&quot;&gt;&lt;button class=&quot;pm&quot; data-pm=&quot;${f.k}&quot; data-dv=&quot;-${f.step||1}&quot;&gt;−&lt;/button&gt;&lt;input type=&quot;range&quot; data-f=&quot;${f.k}&quot; min=&quot;${f.min}&quot; max=&quot;${f.max}&quot; step=&quot;${f.step||1}&quot; value=&quot;${v}&quot;&gt;&lt;button class=&quot;pm&quot; data-pm=&quot;${f.k}&quot; data-dv=&quot;${f.step||1}&quot;&gt;+&lt;/button&gt;&lt;input type=&quot;number&quot; data-fn=&quot;${f.k}&quot; value=&quot;${v}&quot;&gt;&lt;/div&gt;&lt;/div&gt;`}
   for(const f of T.fields){if(!(S.binds||[]).some(x=&gt;x.to===e.id&amp;&amp;x.k===f.k))h+=`&lt;button class=&quot;btn&quot; data-bindpick=&quot;${f.k}&quot;&gt;🔗 把「${esc(f.label.replace(/（.*/,&#x27;&#x27;))}」绑到一个数&lt;/button&gt;`}
   for(const f of T.fields){if(f.choices||(S.binds||[]).some(x=&gt;x.to===e.id&amp;&amp;x.k===f.k))continue;h+=`&lt;button class=&quot;btn&quot; data-exprpick=&quot;${f.k}&quot;&gt;ƒx 写表达式&lt;/button&gt;`;
     if(exprPick&amp;&amp;exprPick.to===e.id&amp;&amp;exprPick.k===f.k)h+=`&lt;div class=&quot;fld&quot;&gt;&lt;label&gt;&lt;span&gt;${esc(f.label.replace(/（.*/,&#x27;&#x27;))} =&lt;/span&gt;&lt;/label&gt;&lt;div class=&quot;ctl&quot;&gt;&lt;input data-exprtext=&quot;${f.k}&quot; placeholder=&quot;例如 长 ÷ 2&quot; style=&quot;width:150px&quot;&gt;&lt;button class=&quot;btn&quot; data-exprok=&quot;${f.k}&quot;&gt;确定&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;`}
