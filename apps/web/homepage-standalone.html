@@ -5610,6 +5610,20 @@ const P14=[
 ];
 P14.forEach(p=&gt;XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
 
+/* ========== 初中补缺：7.4 整式、7.5 整式的加减、9.8 弧长和扇形面积 ========== */
+const P15=[
+ {id:&#x27;g7_74&#x27;,grade:7,domain:&#x27;数与代数&#x27;,tools:&#x27;乘法公式 (a + b)²&#x27;,title:&#x27;整式：把 (a + b)² 展开，是几项？&#x27;,q:&#x27;展开后的每一项都是单项式（像 a²、2ab、b²）；几个单项式相加，就是多项式。&#x27;,why:&#x27;(a + b)² = a² + 2ab + b²，有三项。a = 2、b = 3 时，展开是 4 + 12 + 9。&#x27;,
+  build:s=&gt;{addEnt(s,&#x27;sqsum&#x27;,200,50,{a:1,b:1})},
+  steps:[{label:&#x27;把 a 调到 2，b 调到 3&#x27;,score:1,hint:&#x27;点乘法公式卡，把 a 调到 2、b 调到 3&#x27;,target:T45(&#x27;sqsum&#x27;),check:(s,D)=&gt;{const p=s.entities[byType(s,&#x27;sqsum&#x27;)].props;return p.a===2&amp;&amp;p.b===3}},
+         {label:&#x27;展开是 4 + 12 + 9&#x27;,score:2,hint:&#x27;看公式卡下面的文字&#x27;,target:T45(&#x27;sqsum&#x27;),check:(s,D)=&gt;{const x=byType(s,&#x27;sqsum&#x27;);return (D[x].sig||[]).some(t=&gt;t.tx.includes(&#x27;展开：4 + 12 + 9&#x27;))}}]},
+ H14.sum({id:&#x27;g7_75&#x27;,grade:7,domain:&#x27;数与代数&#x27;,tools:&#x27;数字卡 · 合并器&#x27;,title:&#x27;整式的加减：3x + 2x 合并成几个 x？&#x27;,q:&#x27;同类项：字母和次数都相同的项可以合并。系数相加，字母不变。&#x27;,why:&#x27;3x + 2x = (3 + 2)x = 5x，合并后系数是 5。&#x27;,nums:[3,2],ans:5}),
+ {id:&#x27;g9_98&#x27;,grade:9,domain:&#x27;图形与几何&#x27;,tools:&#x27;圆 · 圆心角&#x27;,title:&#x27;弧长和扇形面积：半径 3 的圆，120° 的扇形弧长是几？&#x27;,q:&#x27;弧长 = 圆周长 × 圆心角 ÷ 360°；扇形面积 = 圆面积 × 圆心角 ÷ 360°。&#x27;,why:&#x27;半径 3 的圆周长是 18.84，120° 的弧长是 18.84 × 120 ÷ 360 = 6.28；扇形面积是 28.26 × 120 ÷ 360 = 9.42。&#x27;,
+  build:s=&gt;{addEnt(s,&#x27;circle&#x27;,60,40,{r:2});addEnt(s,&#x27;cang&#x27;,330,60,{c:90})},
+  steps:[{label:&#x27;把圆的半径调到 3&#x27;,score:1,hint:&#x27;点圆卡，把半径调到 3，看周长是 18.84&#x27;,target:T45(&#x27;circle&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;circle&#x27;)].props.r===3},
+         {label:&#x27;把圆心角调到 120°&#x27;,score:2,hint:&#x27;点圆心角卡，把圆心角调到 120&#x27;,target:T45(&#x27;cang&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;cang&#x27;)].props.c===120&amp;&amp;s.entities[byType(s,&#x27;circle&#x27;)].props.r===3}]}
+];
+P15.forEach(p=&gt;XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
+
 function startXp(id,m){xp=XP.find(x=&gt;x.id===id);if(!xp)return;mode=m;S=blankScene();xp.build(S);undoSt=[];redoSt=[];sel=null;cardOpen=false;
   run={steps:xp.steps.map((s,i)=&gt;({i,done:false})),ops:0,errors:0,t0:Date.now(),finished:false};
   if(m===&#x27;practice&#x27;){try{const sv=JSON.parse(localStorage.getItem(PR)||&#x27;null&#x27;);if(sv&amp;&amp;sv.id===id&amp;&amp;sv.S){S=sv.S;run.ops=sv.ops||0;(sv.steps||[]).forEach((d,i)=&gt;{if(run.steps[i])run.steps[i].done=!!d});toast(&#x27;接着上次做：已完成的步骤保留&#x27;)}}catch(e){localStorage.removeItem(PR)}}
@@ -47391,7 +47405,7 @@ const LAB_POINT_XP = {
   '7.1':'g7_1','7.2':'g7_2','7.3':'g7_3','7.8':'g7_8','7.9':'g7_9','7.10':'g7_10','7.12':'g7_12','7.13':'g7_13','7.16':'g7_16',
   '8.1':'g8_1','8.3':'g8_3','8.5':'g8_5','8.9':'g8_9','8.13':'g8_13','8.14':'g8_14','8.15':'g8_15',
   '9.2':'g9_2','9.4':'g9_4','9.5':'g9_5','9.13':'g9_13','9.15':'g9_15','9.16':'g9_16',
-  '7.6':'g7_eq','7.7':'g7_eq','7.11':'g7_par','8.4':'g8_iso','8.6':'g8_sq','8.7':'g8_fact','8.12':'g8_para','8.16':'g8_data','7.14':'g7_sys','8.8':'g8_afrac','8.10':'g8_rad','9.1':'g9_quad','8.2':'g8_2','9.6':'g9_6','9.7':'g9_7','9.9':'g9_bag','9.10':'g9_bag','7.15':'g7_ineq','8.11':'g8_11','9.3':'g9_parab','9.11':'g8_hyper','9.12':'g9_12','9.14':'g9_14',
+  '7.6':'g7_eq','7.7':'g7_eq','7.11':'g7_par','8.4':'g8_iso','8.6':'g8_sq','8.7':'g8_fact','8.12':'g8_para','8.16':'g8_data','7.14':'g7_sys','8.8':'g8_afrac','8.10':'g8_rad','9.1':'g9_quad','8.2':'g8_2','9.6':'g9_6','9.7':'g9_7','9.9':'g9_bag','9.10':'g9_bag','7.15':'g7_ineq','8.11':'g8_11','9.3':'g9_parab','9.11':'g8_hyper','9.12':'g9_12','9.14':'g9_14','7.4':'g7_74','7.5':'g7_75','9.8':'g9_98',
   '6.1':'g6_1','6.2':'g6_2','6.3':'g6_3','6.4':'g6_4','6.5':'g6_5','6.6':'g6_6','6.7':'g6_7','6.8':'g6_8',
   '6.9':'g6_9','6.10':'g6_10','6.11':'g6_11','6.12':'g6_12','6.13':'g6_13',
 };

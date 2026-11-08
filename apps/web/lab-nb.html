@@ -1274,6 +1274,20 @@ const P14=[
 ];
 P14.forEach(p=>XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
 
+/* ========== 初中补缺：7.4 整式、7.5 整式的加减、9.8 弧长和扇形面积 ========== */
+const P15=[
+ {id:'g7_74',grade:7,domain:'数与代数',tools:'乘法公式 (a + b)²',title:'整式：把 (a + b)² 展开，是几项？',q:'展开后的每一项都是单项式（像 a²、2ab、b²）；几个单项式相加，就是多项式。',why:'(a + b)² = a² + 2ab + b²，有三项。a = 2、b = 3 时，展开是 4 + 12 + 9。',
+  build:s=>{addEnt(s,'sqsum',200,50,{a:1,b:1})},
+  steps:[{label:'把 a 调到 2，b 调到 3',score:1,hint:'点乘法公式卡，把 a 调到 2、b 调到 3',target:T45('sqsum'),check:(s,D)=>{const p=s.entities[byType(s,'sqsum')].props;return p.a===2&&p.b===3}},
+         {label:'展开是 4 + 12 + 9',score:2,hint:'看公式卡下面的文字',target:T45('sqsum'),check:(s,D)=>{const x=byType(s,'sqsum');return (D[x].sig||[]).some(t=>t.tx.includes('展开：4 + 12 + 9'))}}]},
+ H14.sum({id:'g7_75',grade:7,domain:'数与代数',tools:'数字卡 · 合并器',title:'整式的加减：3x + 2x 合并成几个 x？',q:'同类项：字母和次数都相同的项可以合并。系数相加，字母不变。',why:'3x + 2x = (3 + 2)x = 5x，合并后系数是 5。',nums:[3,2],ans:5}),
+ {id:'g9_98',grade:9,domain:'图形与几何',tools:'圆 · 圆心角',title:'弧长和扇形面积：半径 3 的圆，120° 的扇形弧长是几？',q:'弧长 = 圆周长 × 圆心角 ÷ 360°；扇形面积 = 圆面积 × 圆心角 ÷ 360°。',why:'半径 3 的圆周长是 18.84，120° 的弧长是 18.84 × 120 ÷ 360 = 6.28；扇形面积是 28.26 × 120 ÷ 360 = 9.42。',
+  build:s=>{addEnt(s,'circle',60,40,{r:2});addEnt(s,'cang',330,60,{c:90})},
+  steps:[{label:'把圆的半径调到 3',score:1,hint:'点圆卡，把半径调到 3，看周长是 18.84',target:T45('circle'),check:(s,D)=>s.entities[byType(s,'circle')].props.r===3},
+         {label:'把圆心角调到 120°',score:2,hint:'点圆心角卡，把圆心角调到 120',target:T45('cang'),check:(s,D)=>s.entities[byType(s,'cang')].props.c===120&&s.entities[byType(s,'circle')].props.r===3}]}
+];
+P15.forEach(p=>XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
+
 function startXp(id,m){xp=XP.find(x=>x.id===id);if(!xp)return;mode=m;S=blankScene();xp.build(S);undoSt=[];redoSt=[];sel=null;cardOpen=false;
   run={steps:xp.steps.map((s,i)=>({i,done:false})),ops:0,errors:0,t0:Date.now(),finished:false};
   if(m==='practice'){try{const sv=JSON.parse(localStorage.getItem(PR)||'null');if(sv&&sv.id===id&&sv.S){S=sv.S;run.ops=sv.ops||0;(sv.steps||[]).forEach((d,i)=>{if(run.steps[i])run.steps[i].done=!!d});toast('接着上次做：已完成的步骤保留')}}catch(e){localStorage.removeItem(PR)}}
