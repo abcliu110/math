@@ -93,7 +93,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .ent.drop-ok .ent-body{stroke:#2fbf71;stroke-width:3.5}
 .ent.drop-no{opacity:.4}
 .seg-choice{display:flex;flex-wrap:wrap;gap:6px}
-.seg-choice .pm{padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:#1b2431;color:var(--tx)}
+.seg-choice .pm{padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:#1b2431;color:var(--tx);white-space:nowrap}
 .seg-choice .pm.on{border-color:var(--acc);background:#1d3a5c}
 #card .derived{font-size:12px;color:var(--mut);margin:6px 0 2px;padding:6px 8px;border-radius:8px;background:#ffffff0d}
 #card .why-err{color:#ff8a8a;font-size:12px;margin-top:10px;padding:6px 8px;border-radius:8px;background:#3a1c1c}
@@ -211,7 +211,7 @@ const TYPES={
    size:e=>[176,34+Math.max(1,Math.ceil(e.props.n/e.props.d))*28]},
  adder:{label:'合并器',group:'数与运算',prefix:'合并器',out:'value',accepts:'value',defaults:{op:0},fields:[{k:'op',label:'运算（减法：第一个数减去后面的）',min:0,max:1,choices:['加','减']}],size:()=>[170,84]},
  mul:{label:'乘法器',group:'数与运算',prefix:'乘法器',out:'value',accepts:'value',defaults:{times:1},fields:[{k:'times',label:'再乘一个数（1 是不乘）',min:1,max:10}],size:()=>[170,84]},
- div:{label:'除法器',group:'数与运算',prefix:'除法器',out:'value',accepts:'value',slots:true,defaults:{mode:0},fields:[{k:'mode',label:'算什么',min:0,max:1,choices:['商（分成几份）','余数']}],size:()=>[200,110]},
+ div:{label:'除法器',group:'数与运算',prefix:'除法器',out:'value',accepts:'value',slots:true,defaults:{mode:0},fields:[{k:'mode',label:'算什么',min:0,max:1,choices:['商','余数']}],size:()=>[200,110]},
  money:{value:(p)=>Q(p.yuan*100+p.jiao*10+(p.fen||0),100),dim:'money',label:'人民币',group:'数与运算',prefix:'人民币',out:'value',defaults:{yuan:1,jiao:0,fen:0},fields:[{k:'yuan',label:'元',min:0,max:99},{k:'jiao',label:'角',min:0,max:9},{k:'fen',label:'分',min:0,max:9}],size:()=>[190,62]},
  clock:{value:(p)=>Q((p.h%12)*60+p.m),ports:(p,e,E)=>{const o={};const cl=clockPair(E);if(cl&&cl[0].id===e.id){const t=c=>((c.props.h%12)*60+c.props.m);o.between=((t(cl[1])-t(cl[0]))%720+720)%720}return o},label:'钟面',group:'图形',prefix:'钟面',out:'value',dim:'time',defaults:{h:3,m:0},fields:[{k:'h',label:'时（几点）',min:1,max:12},{k:'m',label:'分',min:0,max:59}],size:()=>[180,200]},
  angle:{sig:(e,_d,sig)=>{const k=e.props.deg;const kind=k===0?'零度角':k<90?'锐角':k===90?'直角':k<180?'钝角':k===180?'平角':'大于平角';sig(k===90?'ok':'info',`${k}°：${kind}`)},ports:(p)=>({deg:p.deg}),label:'角',group:'图形',prefix:'角',defaults:{deg:90},fields:[{k:'deg',label:'度数（0 到 180）',min:0,max:180,step:5}],size:()=>[200,160]},

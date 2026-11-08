@@ -4429,7 +4429,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .ent.drop-ok .ent-body{stroke:#2fbf71;stroke-width:3.5}
 .ent.drop-no{opacity:.4}
 .seg-choice{display:flex;flex-wrap:wrap;gap:6px}
-.seg-choice .pm{padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:#1b2431;color:var(--tx)}
+.seg-choice .pm{padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:#1b2431;color:var(--tx);white-space:nowrap}
 .seg-choice .pm.on{border-color:var(--acc);background:#1d3a5c}
 #card .derived{font-size:12px;color:var(--mut);margin:6px 0 2px;padding:6px 8px;border-radius:8px;background:#ffffff0d}
 #card .why-err{color:#ff8a8a;font-size:12px;margin-top:10px;padding:6px 8px;border-radius:8px;background:#3a1c1c}
@@ -4547,7 +4547,7 @@ const TYPES={
    size:e=&gt;[176,34+Math.max(1,Math.ceil(e.props.n/e.props.d))*28]},
  adder:{label:&#x27;合并器&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;合并器&#x27;,out:&#x27;value&#x27;,accepts:&#x27;value&#x27;,defaults:{op:0},fields:[{k:&#x27;op&#x27;,label:&#x27;运算（减法：第一个数减去后面的）&#x27;,min:0,max:1,choices:[&#x27;加&#x27;,&#x27;减&#x27;]}],size:()=&gt;[170,84]},
  mul:{label:&#x27;乘法器&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;乘法器&#x27;,out:&#x27;value&#x27;,accepts:&#x27;value&#x27;,defaults:{times:1},fields:[{k:&#x27;times&#x27;,label:&#x27;再乘一个数（1 是不乘）&#x27;,min:1,max:10}],size:()=&gt;[170,84]},
- div:{label:&#x27;除法器&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;除法器&#x27;,out:&#x27;value&#x27;,accepts:&#x27;value&#x27;,slots:true,defaults:{mode:0},fields:[{k:&#x27;mode&#x27;,label:&#x27;算什么&#x27;,min:0,max:1,choices:[&#x27;商（分成几份）&#x27;,&#x27;余数&#x27;]}],size:()=&gt;[200,110]},
+ div:{label:&#x27;除法器&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;除法器&#x27;,out:&#x27;value&#x27;,accepts:&#x27;value&#x27;,slots:true,defaults:{mode:0},fields:[{k:&#x27;mode&#x27;,label:&#x27;算什么&#x27;,min:0,max:1,choices:[&#x27;商&#x27;,&#x27;余数&#x27;]}],size:()=&gt;[200,110]},
  money:{value:(p)=&gt;Q(p.yuan*100+p.jiao*10+(p.fen||0),100),dim:&#x27;money&#x27;,label:&#x27;人民币&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;人民币&#x27;,out:&#x27;value&#x27;,defaults:{yuan:1,jiao:0,fen:0},fields:[{k:&#x27;yuan&#x27;,label:&#x27;元&#x27;,min:0,max:99},{k:&#x27;jiao&#x27;,label:&#x27;角&#x27;,min:0,max:9},{k:&#x27;fen&#x27;,label:&#x27;分&#x27;,min:0,max:9}],size:()=&gt;[190,62]},
  clock:{value:(p)=&gt;Q((p.h%12)*60+p.m),ports:(p,e,E)=&gt;{const o={};const cl=clockPair(E);if(cl&amp;&amp;cl[0].id===e.id){const t=c=&gt;((c.props.h%12)*60+c.props.m);o.between=((t(cl[1])-t(cl[0]))%720+720)%720}return o},label:&#x27;钟面&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;钟面&#x27;,out:&#x27;value&#x27;,dim:&#x27;time&#x27;,defaults:{h:3,m:0},fields:[{k:&#x27;h&#x27;,label:&#x27;时（几点）&#x27;,min:1,max:12},{k:&#x27;m&#x27;,label:&#x27;分&#x27;,min:0,max:59}],size:()=&gt;[180,200]},
  angle:{sig:(e,_d,sig)=&gt;{const k=e.props.deg;const kind=k===0?&#x27;零度角&#x27;:k&lt;90?&#x27;锐角&#x27;:k===90?&#x27;直角&#x27;:k&lt;180?&#x27;钝角&#x27;:k===180?&#x27;平角&#x27;:&#x27;大于平角&#x27;;sig(k===90?&#x27;ok&#x27;:&#x27;info&#x27;,`${k}°：${kind}`)},ports:(p)=&gt;({deg:p.deg}),label:&#x27;角&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;角&#x27;,defaults:{deg:90},fields:[{k:&#x27;deg&#x27;,label:&#x27;度数（0 到 180）&#x27;,min:0,max:180,step:5}],size:()=&gt;[200,160]},
