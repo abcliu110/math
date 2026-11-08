@@ -11,7 +11,7 @@ js/ui/                台面、面板、应用
 packs/                器材包：core、time、stats、geometry、arith、middle、applied、numtheory、solid、angle、road、conjecture、variable、modclock、curved、eqscale（共 43 种）
 problems/             题库 64 道（starter、more、lowgrade、middle、applied、numbers、solids、angles、travel、essence、algebra、modular、curved、eqscale）
 tests/run.js          内核测试（node，118 项，含每题参考解回归）
-tests/ui.js           无头浏览器验收（playwright，24 项）
+tests/ui.js           无头浏览器验收（playwright，25 项）
 tools/check-types.js  新器材自检
 docs/                 设计文档 v2、UI 对照表、内核接口、数学本质与器材计划（essence.md）
 ```

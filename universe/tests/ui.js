@@ -87,6 +87,12 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   await p.click('#menubtn'); await p.click('[data-m="report"]'); await p.waitForTimeout(100);
   const rp = await p.locator('#dlg .box').innerText(); ok(/学习报告/.test(rp) && /1 \/ /.test(rp), '学习报告对话框有进度：' + rp.replace(/\s+/g, ' ').slice(0, 40));
   await shot('ui-report'); await p.click('#dlg-close');
+  console.log('删线');
+  await p.evaluate(() => { UI.App.openFree(); UI.App.act({ t: 'clear' }); const n = UI.App.act({ t: 'add', type: 'num', x: 100, y: 100, props: { n: 2 } }).id, o = UI.App.act({ t: 'add', type: 'op', x: 400, y: 100 }).id; UI.App.act({ t: 'link', from: n, to: o, toPort: 'a' }); });
+  await p.waitForTimeout(150);
+  const hitBb = await p.locator('path.hit').first().boundingBox(); await p.mouse.click(hitBb.x + hitBb.width / 2, hitBb.y + hitBb.height / 2); await p.waitForTimeout(100);
+  await p.click('.lbdel'); await p.waitForTimeout(100);
+  ok((await links()) === 0, '点选连线后点 ✕ 可以删除这根线');
   console.log('学生出题');
   await p.evaluate(() => { UI.App.openFree(); UI.App.act({ t: 'clear' }); for (const n of [5, 7, 2]) UI.App.act({ t: 'add', type: 'num', x: 60, y: 60 + n * 10, props: { n } }); });
   await p.click('#menubtn'); await p.click('[data-m="author"]'); await p.waitForTimeout(100);

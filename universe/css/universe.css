@@ -185,3 +185,6 @@ input, select, textarea { font: inherit; color: inherit; }
   #top { gap: 6px; padding: 0 8px; } .tbtn.hm { display: none; }
 }
 .card:hover .pl, .card.sel .pl { opacity: 1; }
+
+.lbdel{margin-left:6px;border:0;background:transparent;color:inherit;font-weight:700;cursor:pointer;padding:0 2px;border-radius:999px}
+.lbdel:hover{background:#ff4d4f33;color:#ff6b6b}
