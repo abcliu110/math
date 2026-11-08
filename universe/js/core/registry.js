@@ -79,6 +79,7 @@
     const errors = [], exempt = [];
     const err = (m) => errors.push(m);
     if (!def.label) err('缺 label');
+    if (U.checkEssence) U.checkEssence(def.essence).forEach((m) => err(m));
     if (!U.GROUPS.includes(def.group)) err('group 不在器材架分组里：' + def.group);
     if (typeof def.icon !== 'function') err('缺 icon()，器材架每个器材都要有缩略图');
     if (typeof def.size !== 'function') err('缺 size(ent)');

@@ -6,6 +6,7 @@
     id: 'stats', version: 1, needs: ['time'],
     types: {
       stats: {
+        essence: ['E11'],
         label: '统计量', prefix: '计', group: '统计与概率', grades: [5, 9], alias: ['平均数', '众数', '期望'],
         props: {
           want: { type: 'choice', label: '求什么', default: 0, choices: ['平均数', '众数', '最大次数', '中位数', '极差'] },

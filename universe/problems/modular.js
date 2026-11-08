@@ -7,7 +7,7 @@
   const has = (w, f) => w.some('modclock', (e) => f(e, (p) => w.num(e, p)));
 
   P.push({
-    id: 'week-100', title: '今天周三，100 天后是周几？', grade: 5, domain: '数与运算', points: ['余数', '周期问题'],
+    id: 'week-100', essence: ['E6', 'E5'], title: '今天周三，100 天后是周几？', grade: 5, domain: '数与运算', points: ['余数', '周期问题'],
     alias: ['星期几', '周期'], hook: '钟面 7 格，是一个星期（0 是周日），指针停在周三。让它每拍走 1 格，走满 100 拍看看停在哪。再想想：走一整圈（7 拍）和什么有关？',
     shelf: ['modclock', 'meter', 'op'],
     build: clock({ m: 7, s: 3, k: 0, mode: 0, N: 0 }),
@@ -21,7 +21,7 @@
   });
 
   P.push({
-    id: 'last-digit-cycle', title: '3 的 100 次方，个位数字是几？', grade: 6, domain: '数与运算', points: ['个位数字', '周期'],
+    id: 'last-digit-cycle', essence: ['E6'], title: '3 的 100 次方，个位数字是几？', grade: 6, domain: '数与运算', points: ['个位数字', '周期'],
     alias: ['周期', '乘方'], hook: '把钟调成“乘”：从 1 出发，每拍乘 3，只看个位（钟面 10 格）。3、9、27、81、243……个位会不会重复？多久一轮？',
     shelf: ['modclock', 'power', 'meter'],
     build: clock({ m: 10, s: 1, k: 1, mode: 1, N: 0 }),
@@ -35,7 +35,7 @@
   });
 
   P.push({
-    id: 'clock-gcd', title: '12 格的钟，步长 4 能走到几个格？', grade: 6, domain: '数与运算', points: ['最大公因数', '周期'],
+    id: 'clock-gcd', essence: ['E5', 'E2'], title: '12 格的钟，步长 4 能走到几个格？', grade: 6, domain: '数与运算', points: ['最大公因数', '周期'],
     alias: ['公因数', '余数'], hook: '12 格的钟，每拍走 4 格。会走遍所有格吗？多试几个步长，看看哪些能走遍，哪些不能。',
     shelf: ['modclock', 'numtheory', 'meter'],
     build: clock({ m: 12, s: 0, k: 0, mode: 0 }),
@@ -50,7 +50,7 @@
   });
 
   P.push({
-    id: 'coprime-all', title: '10 格的钟：哪些步长能走遍？', grade: 7, domain: '数与运算', points: ['互质', '最大公因数'],
+    id: 'coprime-all', essence: ['E2', 'E5'], title: '10 格的钟：哪些步长能走遍？', grade: 7, domain: '数与运算', points: ['互质', '最大公因数'],
     alias: ['互质', '公因数'], hook: '10 格的钟，步长从 1 到 9 都试试。哪些步长能走遍 10 个格？把能走遍的找出来，再看它们和 10 有什么共同点。',
     shelf: ['modclock', 'numtheory', 'meter'],
     build: clock({ m: 10, s: 0, k: 0, mode: 0 }),

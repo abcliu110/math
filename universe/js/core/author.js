@@ -51,7 +51,7 @@
       const v = Author.validate(spec); if (!v.ok) throw new Error(v.why);
       const T = v.target, tk = key(T), tShow = Q.show(T);
       return {
-        id: spec.id || 'my-' + Date.now().toString(36), custom: true, title: String(spec.title).trim(), grade: spec.grade || 0, domain: '我的题',
+        id: spec.id || 'my-' + Date.now().toString(36), custom: true, title: String(spec.title).trim(), grade: spec.grade || 0, domain: '我的题', essence: ['E2'],
         points: ['凑数', '四则运算'], alias: [], hook: spec.hook || '用台面上的数，连出运算，让某一台器材的结果等于 ' + tShow + '。',
         shelf: ['num', 'op', 'meter', 'compare'], spec: { title: spec.title, hook: spec.hook, target: tShow, givens: spec.givens },
         build() {

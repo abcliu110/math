@@ -5,7 +5,7 @@
   const P = [];
 
   P.push({
-    id: 'frac-compare', title: '1/2 和 3/5，谁大？', grade: 4, domain: '分数', points: ['异分母比大小', '分数条'],
+    id: 'frac-compare', essence: ['E3'], title: '1/2 和 3/5，谁大？', grade: 4, domain: '分数', points: ['异分母比大小', '分数条'],
     alias: ['比大小'], hook: '两个分数，分母不一样，眼睛看不出来。用分数条把它们“量”出来，再让比较器下结论。',
     shelf: ['num', 'fracbar', 'compare', 'op', 'meter'],
     build: mk({ ents: [
@@ -25,7 +25,7 @@
   });
 
   P.push({
-    id: 'rect-perimeter', title: '周长 20，面积最大能到多少？', grade: 5, domain: '图形', points: ['长方形面积', '周长', '最值'],
+    id: 'rect-perimeter', essence: ['E3'], title: '周长 20，面积最大能到多少？', grade: 5, domain: '图形', points: ['长方形面积', '周长', '最值'],
     alias: ['面积', '周长'], hook: '一根 20 米长的绳子围长方形。怎么围面积最大？调长和宽试试。',
     shelf: ['rect', 'meter', 'compare', 'num'],
     build: mk({ ents: [{ type: 'rect', x: 120, y: 100, role: 'r', props: { w: 8, h: 2 } }] }),
@@ -40,7 +40,7 @@
   });
 
   P.push({
-    id: 'line-through', title: '让直线 y = 2x + 1 经过点 x=3，y 是多少？', grade: 8, domain: '函数', points: ['一次函数', '代入求值'],
+    id: 'line-through', essence: ['E8'], title: '让直线 y = 2x + 1 经过点 x=3，y 是多少？', grade: 8, domain: '函数', points: ['一次函数', '代入求值'],
     alias: ['y=kx+b'], hook: '放一条直线，把 k 调成 2、b 调成 1，再用代入器看 x=3 时 y 是几。',
     shelf: ['line', 'at', 'meter', 'num'],
     build: mk({ ents: [] }),
@@ -56,7 +56,7 @@
   });
 
   P.push({
-    id: 'dice-mean', title: '两个骰子的点数和，平均是多少？', grade: 8, domain: '统计与概率', points: ['平均数', '期望', '大数规律'],
+    id: 'dice-mean', essence: ['E11', 'E7'], title: '两个骰子的点数和，平均是多少？', grade: 8, domain: '统计与概率', points: ['平均数', '期望', '大数规律'],
     alias: ['期望'], hook: '把两个骰子的和送进直方图，再用统计量算平均数。次数越多，它越稳。',
     shelf: ['dice', 'op', 'hist', 'stats', 'meter'],
     build: mk({ ents: [{ type: 'dice', x: 60, y: 60, role: 'd1' }, { type: 'dice', x: 60, y: 230, role: 'd2', props: { salt: 1 } }] }),

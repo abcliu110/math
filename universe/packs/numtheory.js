@@ -12,6 +12,7 @@
     id: 'numtheory', version: 1,
     types: {
       numtheory: {
+        essence: ['E2'],
         label: '数的性质', prefix: '性', group: '数与运算', grades: [4, 6], alias: ['质数', '合数', '因数', '最大公因数', '最小公倍数', '分解质因数'],
         props: {
           show: { type: 'choice', label: '展示', default: 0, choices: ['质因数分解', '全部因数'] },
@@ -48,6 +49,7 @@
       },
 
       sqrt: {
+        essence: ['E7'],
         label: '开方', prefix: '根', group: '数与运算', grades: [7, 9], alias: ['平方根', '立方根', '根号', '无理数'],
         props: {
           mode: { type: 'choice', label: '开什么方', default: 0, choices: ['平方根（算术）', '立方根'] },
@@ -74,6 +76,7 @@
       },
 
       power: {
+        essence: ['E6', 'E2'],
         label: '乘方', prefix: '方', group: '数与运算', grades: [6, 9], alias: ['幂', '平方', '立方', '指数', '科学记数法'],
         props: {
           e: { type: 'int', label: '几次方', default: 2, min: -10, max: 40 },

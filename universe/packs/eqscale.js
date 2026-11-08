@@ -9,6 +9,7 @@
     id: 'eqscale', version: 1,
     types: {
       eqscale: {
+        essence: ['E4'],
         label: '解方程天平', prefix: '衡', group: '关系', grades: [5, 9], alias: ['方程', '等式的性质', '解方程', '移项', '未知数'],
         props: {
           lx: { type: 'int', label: '左盘：几个盒子', default: 3, min: 0, max: 20 },

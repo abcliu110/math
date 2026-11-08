@@ -4,7 +4,7 @@
   const U = G.U, mk = U.mkScene, P = [];
   const conj = (props) => mk({ ents: [{ type: 'conjecture', x: 80, y: 80, role: 'c', props }] });
   P.push({
-    id: 'odd-sum-law', title: '前 n 个奇数的和，有什么规律？', grade: 5, domain: '关系', points: ['找规律', '猜想', '平方数'],
+    id: 'odd-sum-law', essence: ['E9', 'E8'], title: '前 n 个奇数的和，有什么规律？', grade: 5, domain: '关系', points: ['找规律', '猜想', '平方数'],
     alias: ['规律', '猜想'], hook: '1，1+3，1+3+5……和是多少？写一个关于 n 的公式，器材会把 n 从 1 试到你指定的数。注意：试了很多都对，只是证据，不是证明。',
     shelf: ['conjecture', 'meter', 'op'],
     build: conj({ law: 0, expr: '2*n', upto: 10 }),
@@ -17,7 +17,7 @@
     ref: ['conjecture|0'],
   });
   P.push({
-    id: 'polygon-law', title: 'n 边形的内角和公式是什么？', grade: 7, domain: '图形', points: ['多边形内角和', '猜想'],
+    id: 'polygon-law', essence: ['E9', 'E8'], title: 'n 边形的内角和公式是什么？', grade: 7, domain: '图形', points: ['多边形内角和', '猜想'],
     alias: ['内角和'], hook: '三角形 180°，四边形 360°，五边形 540°……写出 n 边形内角和的公式，让器材替你检验。',
     shelf: ['conjecture', 'polygon', 'meter'],
     build: conj({ law: 1, expr: '180*n', upto: 8 }),
@@ -30,7 +30,7 @@
     ref: ['conjecture|0'],
   });
   P.push({
-    id: 'euler-prime', title: 'n×n+n+41 总是质数吗？', grade: 7, domain: '关系', points: ['质数', '反例', '证明与证据'],
+    id: 'euler-prime', essence: ['E9'], title: 'n×n+n+41 总是质数吗？', grade: 7, domain: '关系', points: ['质数', '反例', '证明与证据'],
     alias: ['反例', '质数'], hook: 'n=1 时 43，n=2 时 47，n=3 时 53……都是质数。试了 30 个，全对！那它总是质数吗？把“试到”调大，看看会发生什么。',
     shelf: ['conjecture', 'numtheory', 'meter'],
     build: conj({ law: 3, expr: '', upto: 30 }),

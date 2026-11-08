@@ -7,6 +7,7 @@
     id: 'angle', version: 1,
     types: {
       angles: {
+        essence: ['E2', 'E5'],
         label: '三角形的角', prefix: '角', lint: { minProps: 2, why: '三角形只需两个角就确定第三个' }, group: '图形', grades: [4, 8], alias: ['内角和', '外角', '三角形内角和'],
         props: {
           A: { type: 'num', label: '角 A（度）', default: 50, min: 1, max: 178, step: 1 },
@@ -34,6 +35,7 @@
       },
 
       ineq: {
+        essence: ['E4', 'E8'],
         label: '不等式', prefix: '式', group: '关系', grades: [7, 9], alias: ['不等式', '解集', '最小整数解'],
         props: {
           a: { type: 'num', label: 'x 的系数 a', default: 2, min: -20, max: 20, step: 1 },
