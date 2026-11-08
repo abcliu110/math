@@ -198,17 +198,17 @@ const qsMoney=q=>(q.n/q.d).toFixed(2).replace(/\.?0+$/,'');
 
 /* ========== 器材注册表：每种器材 = 属性 + 端口 + 引擎规则 + 画法 ========== */
 const TYPES={
- var:{label:'变量 x（可改名）',group:'数与运算',prefix:'x',out:'value',defaults:{v:0},fields:[{k:'v',label:'x 的值',min:-10,max:30}],size:()=>[110,62]},
-  num:{label:'数字卡',group:'数与运算',prefix:'数',out:'value',defaults:{v:3},
+ var:{value:(p)=>Q(p.v),label:'变量 x（可改名）',group:'数与运算',prefix:'x',out:'value',defaults:{v:0},fields:[{k:'v',label:'x 的值',min:-10,max:30}],size:()=>[110,62]},
+  num:{value:(p)=>Q(p.v),label:'数字卡',group:'数与运算',prefix:'数',out:'value',defaults:{v:3},
    fields:[{k:'v',label:'值',min:-10000,max:10000}],size:()=>[96,62]},
- frac:{label:'分数条',group:'分数',prefix:'分数条',out:'value',defaults:{n:1,d:2},
+ frac:{value:(p)=>Q(p.n,p.d),label:'分数条',group:'分数',prefix:'分数条',out:'value',defaults:{n:1,d:2},
    fields:[{k:'n',label:'分子（涂几份）',min:0,max:24},{k:'d',label:'分母（平均分成几份）',min:1,max:12}],
    size:e=>[176,34+Math.max(1,Math.ceil(e.props.n/e.props.d))*28]},
  adder:{label:'合并器',group:'数与运算',prefix:'合并器',out:'value',accepts:'value',defaults:{op:0},fields:[{k:'op',label:'运算',min:0,max:1,choices:['加','减（第一个数减去后面的）']}],size:()=>[170,84]},
  mul:{label:'乘法器',group:'数与运算',prefix:'乘法器',out:'value',accepts:'value',defaults:{times:1},fields:[{k:'times',label:'再乘一个数（1 是不乘）',min:1,max:10}],size:()=>[170,84]},
  div:{label:'除法器',group:'数与运算',prefix:'除法器',out:'value',accepts:'value',slots:true,defaults:{mode:0},fields:[{k:'mode',label:'算什么',min:0,max:1,choices:['商（分成几份）','余数']}],size:()=>[200,110]},
- money:{label:'人民币',group:'数与运算',prefix:'人民币',out:'value',defaults:{yuan:1,jiao:0,fen:0},fields:[{k:'yuan',label:'元',min:0,max:99},{k:'jiao',label:'角',min:0,max:9},{k:'fen',label:'分',min:0,max:9}],size:()=>[190,62]},
- clock:{ports:(p,e,E)=>{const o={};const cl=clockPair(E);if(cl&&cl[0].id===e.id){const t=c=>((c.props.h%12)*60+c.props.m);o.between=((t(cl[1])-t(cl[0]))%720+720)%720}return o},label:'钟面',group:'图形',prefix:'钟面',out:'value',dim:'time',defaults:{h:3,m:0},fields:[{k:'h',label:'时（几点）',min:1,max:12},{k:'m',label:'分',min:0,max:59}],size:()=>[180,200]},
+ money:{value:(p)=>Q(p.yuan*100+p.jiao*10+(p.fen||0),100),label:'人民币',group:'数与运算',prefix:'人民币',out:'value',defaults:{yuan:1,jiao:0,fen:0},fields:[{k:'yuan',label:'元',min:0,max:99},{k:'jiao',label:'角',min:0,max:9},{k:'fen',label:'分',min:0,max:9}],size:()=>[190,62]},
+ clock:{value:(p)=>Q((p.h%12)*60+p.m),ports:(p,e,E)=>{const o={};const cl=clockPair(E);if(cl&&cl[0].id===e.id){const t=c=>((c.props.h%12)*60+c.props.m);o.between=((t(cl[1])-t(cl[0]))%720+720)%720}return o},label:'钟面',group:'图形',prefix:'钟面',out:'value',dim:'time',defaults:{h:3,m:0},fields:[{k:'h',label:'时（几点）',min:1,max:12},{k:'m',label:'分',min:0,max:59}],size:()=>[180,200]},
  angle:{sig:(e,_d,sig)=>{const k=e.props.deg;const kind=k===0?'零度角':k<90?'锐角':k===90?'直角':k<180?'钝角':k===180?'平角':'大于平角';sig(k===90?'ok':'info',`${k}°：${kind}`)},ports:(p)=>({deg:p.deg}),label:'角',group:'图形',prefix:'角',defaults:{deg:90},fields:[{k:'deg',label:'度数（0 到 180）',min:0,max:180,step:5}],size:()=>[200,160]},
  bars:{ports:(p)=>{const mx=Math.max(p.a,p.b,p.c);return{bMinusA:p.b-p.a,max:mx,topNames:['一班','二班','三班'].filter((_,i)=>[p.a,p.b,p.c][i]===mx).join('、')}},label:'条形统计图',group:'统计',prefix:'统计图',defaults:{a:4,b:6,c:3},fields:[{k:'a',label:'一班（人）',min:0,max:30},{k:'b',label:'二班（人）',min:0,max:30},{k:'c',label:'三班（人）',min:0,max:30}],size:()=>[220,190]},
  tri:{ports:(p)=>{const c=180-p.a-p.b;return{third:c>0?c:null}},label:'三角形',group:'图形',prefix:'三角形',defaults:{a:30,b:40},fields:[{k:'a',label:'第一个角（度）',min:1,max:150},{k:'b',label:'第二个角（度）',min:1,max:150}],size:()=>[240,170]},
@@ -246,7 +246,7 @@ const TYPES={
  fn:{label:'直线',group:'函数',prefix:'直线',out:'fn',defaults:{k:2,b:1},
    fields:[{k:'k',label:'k（斜率：x 加 1，y 加几）',min:-5,max:5},{k:'b',label:'b（和 y 轴交在哪）',min:-10,max:10}],size:()=>[160,64]},
  coord:{label:'坐标平面',group:'函数',prefix:'坐标平面',accepts:'fn',defaults:{},fields:[],size:()=>[340,360]},
- rect:{ports:(p)=>({area:p.w*p.h,peri:2*(p.w+p.h),square:p.w===p.h}),label:'长方形',group:'图形',prefix:'长方形',defaults:{w:4,h:3,rot:0},rotate:true,out:'value',dim:'area',
+ rect:{value:(p)=>Q(p.w*p.h),ports:(p)=>({area:p.w*p.h,peri:2*(p.w+p.h),square:p.w===p.h}),label:'长方形',group:'图形',prefix:'长方形',defaults:{w:4,h:3,rot:0},rotate:true,out:'value',dim:'area',
    fields:[{k:'w',label:'宽',min:1,max:12},{k:'h',label:'长',min:1,max:12},{k:'rot',label:'转角（度，0 到 359）',min:0,max:359}],
    // 尺寸按转过之后的外接框算；转角为 0 时和原来的尺寸一样。
    size:e=>{const p=e.props,gw=p.w*20,gh=p.h*20,r=(p.rot||0)*Math.PI/180,c=Math.abs(Math.cos(r)),s=Math.abs(Math.sin(r));return[Math.max(150,Math.round(gw*c+gh*s)+40),Math.round(gw*s+gh*c)+84]}},
@@ -259,7 +259,7 @@ const TYPES={
  table:{ports:(p,e,E,D)=>{const T=D[e.id].tab;return{sum:T.sum,mean:T.mean,max:T.max}},label:'数据表（四个数）',group:'统计',prefix:'数据表',out:'value',accepts:'value',acceptsDist:true,dim:'count',defaults:{a:4,b:8,c:6,d:10,which:0},
    fields:[{k:'a',label:'第 1 个数',min:0,max:50},{k:'b',label:'第 2 个数',min:0,max:50},{k:'c',label:'第 3 个数',min:0,max:50},{k:'d',label:'第 4 个数',min:0,max:50},{k:'which',label:'输出（0 合计，1 平均，2 最大）',min:0,max:2,choices:['合计','平均','最大']}],size:()=>[240,150]},
  // x 砝码：一个未知数。x 的值由学生设定，天平上用它参与平衡。
- sym:{label:'x 砝码（未知数）',group:'数与运算',prefix:'x',out:'value',dim:'count',defaults:{x:0},fields:[{k:'x',label:'x 等于几',min:-10,max:30}],size:()=>[120,70]},
+ sym:{value:(p)=>Q(p.x),label:'x 砝码（未知数）',group:'数与运算',prefix:'x',out:'value',dim:'count',defaults:{x:0},fields:[{k:'x',label:'x 等于几',min:-10,max:30}],size:()=>[120,70]},
 };
 const GROUP_ORDER=['数与运算','分数','关系','函数','图形','统计','概率'];
 /* 多输出端口：除了默认的输出（dy 为中点），这些器材还有额外的输出口。dy 是端口在器材上的纵坐标。 */
@@ -398,11 +398,10 @@ function clockPair(E){const cl=Object.values(E).filter(x=>x.type==='clock');if(c
 function evaluate(s){
   const E=s.entities,vals={},busy={},D={};
   const val=(id,port)=>{const key=port?id+'#'+port:id;if(key in vals)return vals[key];if(busy[key])return null;busy[key]=1;const e=E[id];if(!e)return null;let v=null;
-    if(e.type==='num'||e.type==='var')v=Q(e.props.v);else if(e.type==='frac')v=Q(e.props.n,e.props.d);
+    if(TYPES[e.type].value)v=TYPES[e.type].value(e.props,port);
     else if(e.type==='adder'){const raw=inputs(s,id).map(l=>vf(l));const xs=raw.filter(Boolean);
       if(raw.length&&raw.some(x=>!x))v=null;
       else if(e.props.op===1&&xs.length)v=xs.slice(1).reduce((t,x)=>qsub(t,x),xs[0]);else{v=Q(0);for(const x of xs)v=qadd(v,x)}}
-    else if(e.type==='rect')v=Q(e.props.w*e.props.h);else if(e.type==='money')v=Q(e.props.yuan*100+e.props.jiao*10+(e.props.fen||0),100);
     else if(e.type==='mul'){const ls=inputs(s,id);v=Q(1);let any=false,bad=false;for(const l of ls){const x=vf(l);if(x){v=Q(v.n*x.n,v.d*x.d);any=true}else bad=true}
       // 没连任何输入：空乘积是 1。连了线但有个算不出来：还没有结果（不静默跳过）。
       if(!ls.length)v=Q(1);else if(bad)v=null;else if(!any)v=null;else v=Q(v.n*(e.props.times||1),v.d)}
@@ -410,8 +409,6 @@ function evaluate(s){
     else if(e.type==='box'){const l=inputs(s,id)[0];const x=l&&vf(l);v=x?boxOut(e.props,x):null}
     else if(e.type==='dice'){const c=e.props.counts;if(port==='dist'&&c){v={kind:'dist',data:c.slice()}}else if(c&&c.some(x=>x>0)){if(port==='tot')v=Q(c.reduce((x,y)=>x+y,0));else if(port==='best'){let bi=2;for(let i=2;i<=12;i++)if(c[i]>c[bi])bi=i;v=Q(bi)}}}
     else if(e.type==='table'){const T=tableOf(id),p=e.props;v=port==='sum'?T.sum:port==='mean'?T.mean:port==='max'?T.max:(p.which===1?T.mean:p.which===2?T.max:T.sum)}
-    else if(e.type==='clock')v=Q((e.props.h%12)*60+e.props.m);
-    else if(e.type==='sym')v=Q(e.props.x);
     else if(e.type==='div'){const L=inputs(s,id).find(l=>l.slot==='L'),R=inputs(s,id).find(l=>l.slot==='R');const a=L&&vf(L),b=R&&vf(R);v=(a&&b&&b.n!==0)?(e.props.mode===1?(a.d===1&&b.d===1?Q(((a.n%b.n)+Math.abs(b.n))%Math.abs(b.n)):null):Q(a.n*b.d,a.d*b.n)):null}
     return vals[key]=(v&&(v.kind==='bool'||v.kind==='dist')?v:v?{kind:'num',dim:dimOf(s,id),data:v}:null)};
   // val 返回带类型的 Val；valQ / vf 取出有理数 data，算术部分照旧。
