@@ -32,4 +32,6 @@ module.exports = {
   'hexagon-angle'(h) { h.set(h.role('p'), 'n', 6); },
   'cuboid-vol'(h) { const c = h.role('c'); h.set(c, 'l', 6); h.set(c, 'w', 4); h.set(c, 'h', 3); },
   'mean-vs-median'(h) { h.set(h.role('d'), 'list', '3, 4, 4, 5, 40'); h.set(h.role('d'), 'list', '3, 4, 4, 5, 4'); },
+  'triangle-right'(h) { h.set(h.role('t'), 'B', 55); },
+  'ineq-min-int'(h) { const q = h.role('q'); h.set(q, 'a', 2); h.set(q, 'b', 1); h.set(q, 'c', 7); h.set(q, 'x', 3); h.set(q, 'x', 4); },
 };
