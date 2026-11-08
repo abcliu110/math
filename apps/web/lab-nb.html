@@ -750,8 +750,13 @@ sys:(e,d,w,h)=>{const {x,y}=e.props;return `<text class="big" x="16" y="48" font
 quad:(e,d,w,h)=>{const {b,c}=e.props;const D0=b*b-4*c;const txt=D0<0?'没有实数根':`判别式 = ${D0}`;return `<text class="big" x="16" y="48" font-size="18">x² ${b<0?'− '+(-b):'+ '+b}x ${c<0?'− '+(-c):'+ '+c} = 0</text><text class="ink" x="16" y="92" font-size="14">${txt}</text>`},
 afrac:(e,d,w,h)=>{const {n,d:dd}=e.props;return `<text class="big" x="${w/2}" y="62" text-anchor="middle" font-size="26">${n}</text><line x1="${w/2-40}" y1="72" x2="${w/2+40}" y2="72" stroke="#1d2633" stroke-width="2"/><text class="big" x="${w/2}" y="104" text-anchor="middle" font-size="26">${dd}</text>`},
 radical:(e,d,w,h)=>`<text class="big" x="${w/2}" y="${h/2+10}" text-anchor="middle" font-size="28">√${e.props.n}</text>`,
-parlines:(e,d,w,h)=>{const a=e.props.a*Math.PI/180;const y1=h*0.35,y2=h*0.7,cx=w/2;const dx=60,dy=(y2-y1)*0.9;
-   return `<line x1="20" y1="${y1}" x2="${w-20}" y2="${y1}" stroke="#1d2633" stroke-width="2"/><line x1="20" y1="${y2}" x2="${w-20}" y2="${y2}" stroke="#1d2633" stroke-width="2"/><line x1="${cx-dx}" y1="${y1-dy/2}" x2="${cx+dx}" y2="${y2+dy/2}" stroke="#ff9f43" stroke-width="2"/><text class="ink" x="${cx}" y="${h-8}" text-anchor="middle" font-size="12">截线与直线的夹角 ${e.props.a}°</text>`},
+parlines:(e,d,w,h)=>{
+   // U27：截线斜率按实际角度 a 计算，图形与角度一致。
+   const a=e.props.a*Math.PI/180,y1=h*0.35,y2=h*0.7,cx=w/2;
+   // 截线穿过两条平行线：截线长由可用宽度决定，高度差 = 截线在两直线间的投影。
+   const halfH=(y2-y1)/2,halfW=Math.abs(a)>0.001?halfH/Math.tan(a):60;
+   const dx=Math.min(halfW,cx-24),dy=dx*Math.tan(a);
+   return `<line x1="20" y1="${y1}" x2="${w-20}" y2="${y1}" stroke="#1d2633" stroke-width="2"/><line x1="20" y1="${y2}" x2="${w-20}" y2="${y2}" stroke="#1d2633" stroke-width="2"/><line x1="${cx-dx}" y1="${(y1+y2)/2-dy}" x2="${cx+dx}" y2="${(y1+y2)/2+dy}" stroke="#ff9f43" stroke-width="2"/><text class="ink" x="${cx}" y="${h-8}" text-anchor="middle" font-size="12">截线与直线的夹角 ${e.props.a}°</text>`},
 bag:(e,d,w,h)=>{const {red,white}=e.props;let s='';for(let i=0;i<red;i++)s+=`<circle cx="${30+i*22}" cy="${h/2-10}" r="8" fill="#ef4444" stroke="#1d2633"/>`;for(let i=0;i<white;i++)s+=`<circle cx="${30+i*22}" cy="${h/2+20}" r="8" fill="#fff" stroke="#1d2633"/>`;return s+`<text class="ink" x="${w/2}" y="${h-10}" text-anchor="middle" font-size="12">红 ${red} · 白 ${white}</text>`},
 cang:(e,d,w,h)=>{const c=e.props.c,R=70,cx=w/2,cy=h/2,rad=x=>x*Math.PI/180;const A=[cx+R,cy];const B=[cx+R*Math.cos(rad(c)),cy-R*Math.sin(rad(c))];const P=[cx-R*Math.cos(rad(c/2)),cy+R*Math.sin(rad(c/2))];
    return `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="#1d2633" stroke-width="2"/><line x1="${cx}" y1="${cy}" x2="${B[0]}" y2="${B[1]}" stroke="#94a3b8" stroke-dasharray="4 3"/><line x1="${cx}" y1="${cy}" x2="${A[0]}" y2="${A[1]}" stroke="#94a3b8" stroke-dasharray="4 3"/><line x1="${P[0]}" y1="${P[1]}" x2="${A[0]}" y2="${A[1]}" stroke="#ff9f43" stroke-width="2"/><line x1="${P[0]}" y1="${P[1]}" x2="${B[0]}" y2="${B[1]}" stroke="#ff9f43" stroke-width="2"/><text class="ink" x="${cx}" y="${h-8}" text-anchor="middle" font-size="12">圆心角 ${c}°</text>`},
@@ -763,8 +768,16 @@ sim:(e,d,w,h)=>{const k=e.props.k,ox=20,oy=h-20;
    return `<rect x="${ox}" y="${oy-30}" width="40" height="30" fill="#e0f2fe" stroke="#0369a1" stroke-width="2"/><rect x="${ox+70}" y="${oy-30*k}" width="${40*k}" height="${30*k}" fill="#fde68a" stroke="#92400e" stroke-width="2"/><text class="ink" x="${ox+20}" y="${oy+14}" text-anchor="middle" font-size="12">原图</text><text class="ink" x="${ox+70+20*k}" y="${oy+14}" text-anchor="middle" font-size="12">${k} 倍</text>`},
 pyth:(e,d,w,h)=>{const {a,b}=e.props,S=12,x0=40,y0=h-30;const px=x0+a*S,py=y0-b*S;const c=Math.sqrt(a*a+b*b);
    return `<polygon points="${x0},${y0} ${px},${y0} ${x0},${py}" fill="#dcfce7" stroke="#166534" stroke-width="2"/><rect x="${x0}" y="${y0-10}" width="10" height="10" fill="none" stroke="#166534"/><text class="ink" x="${(x0+px)/2}" y="${y0+14}" text-anchor="middle" font-size="12">a=${a}</text><text class="ink" x="${x0-8}" y="${(y0+py)/2}" text-anchor="end" font-size="12">b=${b}</text><text class="ink" x="${(px+x0)/2+8}" y="${(py+y0)/2-6}" font-size="12">c=${Number.isInteger(c)?c:c.toFixed(2)}</text>`},
-trig:(e,d,w,h)=>{const r=e.props.deg*Math.PI/180,x0=30,y0=h-30,adj=130,opp=Math.min(120,adj*Math.tan(r));
-   return `<polygon points="${x0},${y0} ${x0+adj},${y0} ${x0+adj},${y0-opp}" fill="#fef3c7" stroke="#92400e" stroke-width="2"/><text class="ink" x="${x0+12}" y="${y0-8}" font-size="13">${e.props.deg}°</text>`},
+trig:(e,d,w,h)=>{
+   // U27：对边按角度算（不截断），邻边按可用宽度缩放保证三角形完整显示在卡内。
+   const deg=e.props.deg,r=deg*Math.PI/180,x0=30,y0=h-30;
+   const maxAdj=w-x0-16,maxOpp=h-50;
+   const tanR=Math.tan(r);
+   // adj 和 opp 同比缩放，确保两者都在可视范围内
+   let adj=maxAdj,opp=adj*tanR;
+   if(opp>maxOpp){opp=maxOpp;adj=opp/tanR}
+   adj=Math.max(adj,10);opp=Math.max(opp,2);
+   return `<polygon points="${x0},${y0} ${(x0+adj).toFixed(1)},${y0} ${(x0+adj).toFixed(1)},${(y0-opp).toFixed(1)}" fill="#fef3c7" stroke="#92400e" stroke-width="2"/><text class="ink" x="${x0+12}" y="${y0-8}" font-size="13">${deg}°</text>`},
 parab:(e,d,w,h)=>{const {a,b,c}=e.props,cx=w/2,cy=h/2,sx=20,sy=10;let pts=[];
    for(let x=-4;x<=4.001;x+=0.2){const y=a*x*x+b*x+c;if(Math.abs(y)<=8)pts.push((cx+x*sx).toFixed(1)+','+(cy-y*sy).toFixed(1))}
    return `<line x1="20" y1="${cy}" x2="${w-20}" y2="${cy}" stroke="#94a3b8"/><line x1="${cx}" y1="15" x2="${cx}" y2="${h-15}" stroke="#94a3b8"/>`+(pts.length>1?`<polyline points="${pts.join(' ')}" fill="none" stroke="#7c3aed" stroke-width="3"/>`:'')},
@@ -879,7 +892,18 @@ function derivedLines(e){const p=e.props;const n=x=>String(+x.toFixed(2));
   if(e.type==='tri'){const c=180-p.a-p.b;return[c>0?`第三个角是 ${c}°`:p.a+p.b===180?'两个角已经是 180°，第三个角是 0°，画不出三角形':`两个角已经 ${p.a+p.b}°，超过 180°，画不出三角形`]}
   if(e.type==='cang'){const ci=Object.values(S.entities).find(x=>x.type==='circle');if(!ci)return[];const r=ci.props.r,c=p.c;return[`弧长 ${n(2*3.14*r*c/360)} 厘米，扇形面积 ${n(3.14*r*r*c/360)} 平方厘米`]}
   return[]}
-function buildCard(e){const cd=$('card'),T=viewType(e);cd.dataset.for=e.id;cd.dataset.v=JSON.stringify(e.props)+e.name;
+function buildCard(e){const cd=$('card'),T=viewType(e);
+  // U35：拖滑杆时 input 事件触发 render→buildCard，正在拖的 input 元素被销毁导致拖拽中断。
+  // 解法：如果焦点在卡内，只更新非焦点字段（状态行 + 派生行），不完整重建。
+  const focusEl=document.activeElement;const focusInCard=cd.contains(focusEl);
+  const focusKey=focusInCard&&(focusEl.dataset.f||focusEl.dataset.fn);
+  // 如果焦点字段仍有效（同一器材、同一字段），只做轻量更新。
+  if(focusInCard&&focusKey&&cd.dataset.for===e.id){
+    const stEl=cd.querySelector('.state');if(stEl)stEl.textContent=stateLine(e);
+    const dvEl=cd.querySelector('.derived');const dv=derivedLines(e);
+    if(dvEl)dvEl.innerHTML=dv.map(t=>`<div>${esc(t)}</div>`).join('');
+    return}
+  cd.dataset.for=e.id;cd.dataset.v=JSON.stringify(e.props)+e.name;
   let h=`<h4>${T.label} · 设置</h4><input class="name" data-name value="${esc(e.name)}"><div class="state">${esc(stateLine(e))}</div>`;
   for(const f of T.fields){const v=e.props[f.k];const bd=(S.binds||[]).find(x=>x.to===e.id&&x.k===f.k);
     // UI: 用 fld-label 替代 label/span，字段名更清晰

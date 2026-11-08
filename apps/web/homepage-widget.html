@@ -5087,8 +5087,13 @@ sys:(e,d,w,h)=&gt;{const {x,y}=e.props;return `&lt;text class=&quot;big&quot; x=
 quad:(e,d,w,h)=&gt;{const {b,c}=e.props;const D0=b*b-4*c;const txt=D0&lt;0?&#x27;没有实数根&#x27;:`判别式 = ${D0}`;return `&lt;text class=&quot;big&quot; x=&quot;16&quot; y=&quot;48&quot; font-size=&quot;18&quot;&gt;x² ${b&lt;0?&#x27;− &#x27;+(-b):&#x27;+ &#x27;+b}x ${c&lt;0?&#x27;− &#x27;+(-c):&#x27;+ &#x27;+c} = 0&lt;/text&gt;&lt;text class=&quot;ink&quot; x=&quot;16&quot; y=&quot;92&quot; font-size=&quot;14&quot;&gt;${txt}&lt;/text&gt;`},
 afrac:(e,d,w,h)=&gt;{const {n,d:dd}=e.props;return `&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;62&quot; text-anchor=&quot;middle&quot; font-size=&quot;26&quot;&gt;${n}&lt;/text&gt;&lt;line x1=&quot;${w/2-40}&quot; y1=&quot;72&quot; x2=&quot;${w/2+40}&quot; y2=&quot;72&quot; stroke=&quot;#1d2633&quot; stroke-width=&quot;2&quot;/&gt;&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;104&quot; text-anchor=&quot;middle&quot; font-size=&quot;26&quot;&gt;${dd}&lt;/text&gt;`},
 radical:(e,d,w,h)=&gt;`&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;${h/2+10}&quot; text-anchor=&quot;middle&quot; font-size=&quot;28&quot;&gt;√${e.props.n}&lt;/text&gt;`,
-parlines:(e,d,w,h)=&gt;{const a=e.props.a*Math.PI/180;const y1=h*0.35,y2=h*0.7,cx=w/2;const dx=60,dy=(y2-y1)*0.9;
-   return `&lt;line x1=&quot;20&quot; y1=&quot;${y1}&quot; x2=&quot;${w-20}&quot; y2=&quot;${y1}&quot; stroke=&quot;#1d2633&quot; stroke-width=&quot;2&quot;/&gt;&lt;line x1=&quot;20&quot; y1=&quot;${y2}&quot; x2=&quot;${w-20}&quot; y2=&quot;${y2}&quot; stroke=&quot;#1d2633&quot; stroke-width=&quot;2&quot;/&gt;&lt;line x1=&quot;${cx-dx}&quot; y1=&quot;${y1-dy/2}&quot; x2=&quot;${cx+dx}&quot; y2=&quot;${y2+dy/2}&quot; stroke=&quot;#ff9f43&quot; stroke-width=&quot;2&quot;/&gt;&lt;text class=&quot;ink&quot; x=&quot;${cx}&quot; y=&quot;${h-8}&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot;&gt;截线与直线的夹角 ${e.props.a}°&lt;/text&gt;`},
+parlines:(e,d,w,h)=&gt;{
+   // U27：截线斜率按实际角度 a 计算，图形与角度一致。
+   const a=e.props.a*Math.PI/180,y1=h*0.35,y2=h*0.7,cx=w/2;
+   // 截线穿过两条平行线：截线长由可用宽度决定，高度差 = 截线在两直线间的投影。
+   const halfH=(y2-y1)/2,halfW=Math.abs(a)&gt;0.001?halfH/Math.tan(a):60;
+   const dx=Math.min(halfW,cx-24),dy=dx*Math.tan(a);
+   return `&lt;line x1=&quot;20&quot; y1=&quot;${y1}&quot; x2=&quot;${w-20}&quot; y2=&quot;${y1}&quot; stroke=&quot;#1d2633&quot; stroke-width=&quot;2&quot;/&gt;&lt;line x1=&quot;20&quot; y1=&quot;${y2}&quot; x2=&quot;${w-20}&quot; y2=&quot;${y2}&quot; stroke=&quot;#1d2633&quot; stroke-width=&quot;2&quot;/&gt;&lt;line x1=&quot;${cx-dx}&quot; y1=&quot;${(y1+y2)/2-dy}&quot; x2=&quot;${cx+dx}&quot; y2=&quot;${(y1+y2)/2+dy}&quot; stroke=&quot;#ff9f43&quot; stroke-width=&quot;2&quot;/&gt;&lt;text class=&quot;ink&quot; x=&quot;${cx}&quot; y=&quot;${h-8}&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot;&gt;截线与直线的夹角 ${e.props.a}°&lt;/text&gt;`},
 bag:(e,d,w,h)=&gt;{const {red,white}=e.props;let s=&#x27;&#x27;;for(let i=0;i&lt;red;i++)s+=`&lt;circle cx=&quot;${30+i*22}&quot; cy=&quot;${h/2-10}&quot; r=&quot;8&quot; fill=&quot;#ef4444&quot; stroke=&quot;#1d2633&quot;/&gt;`;for(let i=0;i&lt;white;i++)s+=`&lt;circle cx=&quot;${30+i*22}&quot; cy=&quot;${h/2+20}&quot; r=&quot;8&quot; fill=&quot;#fff&quot; stroke=&quot;#1d2633&quot;/&gt;`;return s+`&lt;text class=&quot;ink&quot; x=&quot;${w/2}&quot; y=&quot;${h-10}&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot;&gt;红 ${red} · 白 ${white}&lt;/text&gt;`},
 cang:(e,d,w,h)=&gt;{const c=e.props.c,R=70,cx=w/2,cy=h/2,rad=x=&gt;x*Math.PI/180;const A=[cx+R,cy];const B=[cx+R*Math.cos(rad(c)),cy-R*Math.sin(rad(c))];const P=[cx-R*Math.cos(rad(c/2)),cy+R*Math.sin(rad(c/2))];
    return `&lt;circle cx=&quot;${cx}&quot; cy=&quot;${cy}&quot; r=&quot;${R}&quot; fill=&quot;none&quot; stroke=&quot;#1d2633&quot; stroke-width=&quot;2&quot;/&gt;&lt;line x1=&quot;${cx}&quot; y1=&quot;${cy}&quot; x2=&quot;${B[0]}&quot; y2=&quot;${B[1]}&quot; stroke=&quot;#94a3b8&quot; stroke-dasharray=&quot;4 3&quot;/&gt;&lt;line x1=&quot;${cx}&quot; y1=&quot;${cy}&quot; x2=&quot;${A[0]}&quot; y2=&quot;${A[1]}&quot; stroke=&quot;#94a3b8&quot; stroke-dasharray=&quot;4 3&quot;/&gt;&lt;line x1=&quot;${P[0]}&quot; y1=&quot;${P[1]}&quot; x2=&quot;${A[0]}&quot; y2=&quot;${A[1]}&quot; stroke=&quot;#ff9f43&quot; stroke-width=&quot;2&quot;/&gt;&lt;line x1=&quot;${P[0]}&quot; y1=&quot;${P[1]}&quot; x2=&quot;${B[0]}&quot; y2=&quot;${B[1]}&quot; stroke=&quot;#ff9f43&quot; stroke-width=&quot;2&quot;/&gt;&lt;text class=&quot;ink&quot; x=&quot;${cx}&quot; y=&quot;${h-8}&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot;&gt;圆心角 ${c}°&lt;/text&gt;`},
@@ -5100,8 +5105,16 @@ sim:(e,d,w,h)=&gt;{const k=e.props.k,ox=20,oy=h-20;
    return `&lt;rect x=&quot;${ox}&quot; y=&quot;${oy-30}&quot; width=&quot;40&quot; height=&quot;30&quot; fill=&quot;#e0f2fe&quot; stroke=&quot;#0369a1&quot; stroke-width=&quot;2&quot;/&gt;&lt;rect x=&quot;${ox+70}&quot; y=&quot;${oy-30*k}&quot; width=&quot;${40*k}&quot; height=&quot;${30*k}&quot; fill=&quot;#fde68a&quot; stroke=&quot;#92400e&quot; stroke-width=&quot;2&quot;/&gt;&lt;text class=&quot;ink&quot; x=&quot;${ox+20}&quot; y=&quot;${oy+14}&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot;&gt;原图&lt;/text&gt;&lt;text class=&quot;ink&quot; x=&quot;${ox+70+20*k}&quot; y=&quot;${oy+14}&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot;&gt;${k} 倍&lt;/text&gt;`},
 pyth:(e,d,w,h)=&gt;{const {a,b}=e.props,S=12,x0=40,y0=h-30;const px=x0+a*S,py=y0-b*S;const c=Math.sqrt(a*a+b*b);
    return `&lt;polygon points=&quot;${x0},${y0} ${px},${y0} ${x0},${py}&quot; fill=&quot;#dcfce7&quot; stroke=&quot;#166534&quot; stroke-width=&quot;2&quot;/&gt;&lt;rect x=&quot;${x0}&quot; y=&quot;${y0-10}&quot; width=&quot;10&quot; height=&quot;10&quot; fill=&quot;none&quot; stroke=&quot;#166534&quot;/&gt;&lt;text class=&quot;ink&quot; x=&quot;${(x0+px)/2}&quot; y=&quot;${y0+14}&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot;&gt;a=${a}&lt;/text&gt;&lt;text class=&quot;ink&quot; x=&quot;${x0-8}&quot; y=&quot;${(y0+py)/2}&quot; text-anchor=&quot;end&quot; font-size=&quot;12&quot;&gt;b=${b}&lt;/text&gt;&lt;text class=&quot;ink&quot; x=&quot;${(px+x0)/2+8}&quot; y=&quot;${(py+y0)/2-6}&quot; font-size=&quot;12&quot;&gt;c=${Number.isInteger(c)?c:c.toFixed(2)}&lt;/text&gt;`},
-trig:(e,d,w,h)=&gt;{const r=e.props.deg*Math.PI/180,x0=30,y0=h-30,adj=130,opp=Math.min(120,adj*Math.tan(r));
-   return `&lt;polygon points=&quot;${x0},${y0} ${x0+adj},${y0} ${x0+adj},${y0-opp}&quot; fill=&quot;#fef3c7&quot; stroke=&quot;#92400e&quot; stroke-width=&quot;2&quot;/&gt;&lt;text class=&quot;ink&quot; x=&quot;${x0+12}&quot; y=&quot;${y0-8}&quot; font-size=&quot;13&quot;&gt;${e.props.deg}°&lt;/text&gt;`},
+trig:(e,d,w,h)=&gt;{
+   // U27：对边按角度算（不截断），邻边按可用宽度缩放保证三角形完整显示在卡内。
+   const deg=e.props.deg,r=deg*Math.PI/180,x0=30,y0=h-30;
+   const maxAdj=w-x0-16,maxOpp=h-50;
+   const tanR=Math.tan(r);
+   // adj 和 opp 同比缩放，确保两者都在可视范围内
+   let adj=maxAdj,opp=adj*tanR;
+   if(opp&gt;maxOpp){opp=maxOpp;adj=opp/tanR}
+   adj=Math.max(adj,10);opp=Math.max(opp,2);
+   return `&lt;polygon points=&quot;${x0},${y0} ${(x0+adj).toFixed(1)},${y0} ${(x0+adj).toFixed(1)},${(y0-opp).toFixed(1)}&quot; fill=&quot;#fef3c7&quot; stroke=&quot;#92400e&quot; stroke-width=&quot;2&quot;/&gt;&lt;text class=&quot;ink&quot; x=&quot;${x0+12}&quot; y=&quot;${y0-8}&quot; font-size=&quot;13&quot;&gt;${deg}°&lt;/text&gt;`},
 parab:(e,d,w,h)=&gt;{const {a,b,c}=e.props,cx=w/2,cy=h/2,sx=20,sy=10;let pts=[];
    for(let x=-4;x&lt;=4.001;x+=0.2){const y=a*x*x+b*x+c;if(Math.abs(y)&lt;=8)pts.push((cx+x*sx).toFixed(1)+&#x27;,&#x27;+(cy-y*sy).toFixed(1))}
    return `&lt;line x1=&quot;20&quot; y1=&quot;${cy}&quot; x2=&quot;${w-20}&quot; y2=&quot;${cy}&quot; stroke=&quot;#94a3b8&quot;/&gt;&lt;line x1=&quot;${cx}&quot; y1=&quot;15&quot; x2=&quot;${cx}&quot; y2=&quot;${h-15}&quot; stroke=&quot;#94a3b8&quot;/&gt;`+(pts.length&gt;1?`&lt;polyline points=&quot;${pts.join(&#x27; &#x27;)}&quot; fill=&quot;none&quot; stroke=&quot;#7c3aed&quot; stroke-width=&quot;3&quot;/&gt;`:&#x27;&#x27;)},
@@ -5216,7 +5229,18 @@ function derivedLines(e){const p=e.props;const n=x=&gt;String(+x.toFixed(2));
   if(e.type===&#x27;tri&#x27;){const c=180-p.a-p.b;return[c&gt;0?`第三个角是 ${c}°`:p.a+p.b===180?&#x27;两个角已经是 180°，第三个角是 0°，画不出三角形&#x27;:`两个角已经 ${p.a+p.b}°，超过 180°，画不出三角形`]}
   if(e.type===&#x27;cang&#x27;){const ci=Object.values(S.entities).find(x=&gt;x.type===&#x27;circle&#x27;);if(!ci)return[];const r=ci.props.r,c=p.c;return[`弧长 ${n(2*3.14*r*c/360)} 厘米，扇形面积 ${n(3.14*r*r*c/360)} 平方厘米`]}
   return[]}
-function buildCard(e){const cd=$(&#x27;card&#x27;),T=viewType(e);cd.dataset.for=e.id;cd.dataset.v=JSON.stringify(e.props)+e.name;
+function buildCard(e){const cd=$(&#x27;card&#x27;),T=viewType(e);
+  // U35：拖滑杆时 input 事件触发 render→buildCard，正在拖的 input 元素被销毁导致拖拽中断。
+  // 解法：如果焦点在卡内，只更新非焦点字段（状态行 + 派生行），不完整重建。
+  const focusEl=document.activeElement;const focusInCard=cd.contains(focusEl);
+  const focusKey=focusInCard&amp;&amp;(focusEl.dataset.f||focusEl.dataset.fn);
+  // 如果焦点字段仍有效（同一器材、同一字段），只做轻量更新。
+  if(focusInCard&amp;&amp;focusKey&amp;&amp;cd.dataset.for===e.id){
+    const stEl=cd.querySelector(&#x27;.state&#x27;);if(stEl)stEl.textContent=stateLine(e);
+    const dvEl=cd.querySelector(&#x27;.derived&#x27;);const dv=derivedLines(e);
+    if(dvEl)dvEl.innerHTML=dv.map(t=&gt;`&lt;div&gt;${esc(t)}&lt;/div&gt;`).join(&#x27;&#x27;);
+    return}
+  cd.dataset.for=e.id;cd.dataset.v=JSON.stringify(e.props)+e.name;
   let h=`&lt;h4&gt;${T.label} · 设置&lt;/h4&gt;&lt;input class=&quot;name&quot; data-name value=&quot;${esc(e.name)}&quot;&gt;&lt;div class=&quot;state&quot;&gt;${esc(stateLine(e))}&lt;/div&gt;`;
   for(const f of T.fields){const v=e.props[f.k];const bd=(S.binds||[]).find(x=&gt;x.to===e.id&amp;&amp;x.k===f.k);
     // UI: 用 fld-label 替代 label/span，字段名更清晰
