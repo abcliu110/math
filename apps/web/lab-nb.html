@@ -207,7 +207,7 @@ const TYPES={
  adder:{label:'合并器',group:'数与运算',prefix:'合并器',out:'value',accepts:'value',defaults:{op:0},fields:[{k:'op',label:'运算',min:0,max:1,choices:['加','减（第一个数减去后面的）']}],size:()=>[170,84]},
  mul:{label:'乘法器',group:'数与运算',prefix:'乘法器',out:'value',accepts:'value',defaults:{times:1},fields:[{k:'times',label:'再乘一个数（1 是不乘）',min:1,max:10}],size:()=>[170,84]},
  div:{label:'除法器',group:'数与运算',prefix:'除法器',out:'value',accepts:'value',slots:true,defaults:{mode:0},fields:[{k:'mode',label:'算什么',min:0,max:1,choices:['商（分成几份）','余数']}],size:()=>[200,110]},
- money:{value:(p)=>Q(p.yuan*100+p.jiao*10+(p.fen||0),100),label:'人民币',group:'数与运算',prefix:'人民币',out:'value',defaults:{yuan:1,jiao:0,fen:0},fields:[{k:'yuan',label:'元',min:0,max:99},{k:'jiao',label:'角',min:0,max:9},{k:'fen',label:'分',min:0,max:9}],size:()=>[190,62]},
+ money:{value:(p)=>Q(p.yuan*100+p.jiao*10+(p.fen||0),100),dim:'money',label:'人民币',group:'数与运算',prefix:'人民币',out:'value',defaults:{yuan:1,jiao:0,fen:0},fields:[{k:'yuan',label:'元',min:0,max:99},{k:'jiao',label:'角',min:0,max:9},{k:'fen',label:'分',min:0,max:9}],size:()=>[190,62]},
  clock:{value:(p)=>Q((p.h%12)*60+p.m),ports:(p,e,E)=>{const o={};const cl=clockPair(E);if(cl&&cl[0].id===e.id){const t=c=>((c.props.h%12)*60+c.props.m);o.between=((t(cl[1])-t(cl[0]))%720+720)%720}return o},label:'钟面',group:'图形',prefix:'钟面',out:'value',dim:'time',defaults:{h:3,m:0},fields:[{k:'h',label:'时（几点）',min:1,max:12},{k:'m',label:'分',min:0,max:59}],size:()=>[180,200]},
  angle:{sig:(e,_d,sig)=>{const k=e.props.deg;const kind=k===0?'零度角':k<90?'锐角':k===90?'直角':k<180?'钝角':k===180?'平角':'大于平角';sig(k===90?'ok':'info',`${k}°：${kind}`)},ports:(p)=>({deg:p.deg}),label:'角',group:'图形',prefix:'角',defaults:{deg:90},fields:[{k:'deg',label:'度数（0 到 180）',min:0,max:180,step:5}],size:()=>[200,160]},
  bars:{sig:(e,_d,sig)=>{const {a,b,c}=e.props;const vals=[['一班',a],['二班',b],['三班',c]];const mx=Math.max(a,b,c);const top=vals.filter(v=>v[1]===mx).map(v=>v[0]).join('、');sig('info',`最多：${top}（${mx} 人）`); if(b>a)sig('info',`二班比一班多 ${b-a} 人`);else if(a>b)sig('info',`一班比二班多 ${a-b} 人`)},ports:(p)=>{const mx=Math.max(p.a,p.b,p.c);return{bMinusA:p.b-p.a,max:mx,topNames:['一班','二班','三班'].filter((_,i)=>[p.a,p.b,p.c][i]===mx).join('、')}},label:'条形统计图',group:'统计',prefix:'统计图',defaults:{a:4,b:6,c:3},fields:[{k:'a',label:'一班（人）',min:0,max:30},{k:'b',label:'二班（人）',min:0,max:30},{k:'c',label:'三班（人）',min:0,max:30}],size:()=>[220,190]},
@@ -430,7 +430,7 @@ function evaluate(s){
     if(e.type==='adder'){const raw=inputs(s,id).map(l=>vf(l));const ins=raw.filter(Boolean);d.terms=ins;
       if(raw.length&&raw.some(x=>!x))sig('warn','有个输入算不出来：先把它修好，这里才能算');
       else if(!ins.length)sig('info',e.props.op===1?'把几个数连进来，这里算它们的差（第一个数减去后面的）':'把几个数连进来，这里算它们的和');
-      else{const allM=inputs(s,id).length&&inputs(s,id).every(l=>S.entities[l.from]&&S.entities[l.from].type==='money');if(!allM){const ds=[...new Set(ins.map(q=>q.d))];if(ds.length>1){const L=ds.reduce(lcm);sig('info',e.props.op===1?`分母不同：都换成 ${L} 份再减`:`分母不同：都换成 ${L} 份再加`)}}}}
+      else{const allM=inputs(s,id).length&&inputs(s,id).every(l=>dimOf(s,l.from)==='money');if(!allM){const ds=[...new Set(ins.map(q=>q.d))];if(ds.length>1){const L=ds.reduce(lcm);sig('info',e.props.op===1?`分母不同：都换成 ${L} 份再减`:`分母不同：都换成 ${L} 份再加`)}}}}
     if(e.type==='mul'){const raw=inputs(s,id).map(l=>vf(l));const ins=raw.filter(Boolean);d.terms=ins;
       if(raw.length&&raw.some(x=>!x))sig('warn','有个输入算不出来：先把它修好，这里才能算');
       else if(!ins.length)sig('info','把几个数连进来，这里算它们的积（几个 × 几个）');
