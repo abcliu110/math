@@ -518,6 +518,7 @@ function evaluate(s){
 /* 端口的定义：从属性直接算。信号文字仍由 evaluate 上面的代码画，这里的值和文字用同一套算法。 */
 function portsFor(e,s,E,D){const p=e.props,P={};
   switch(e.type){
+  case 'dice':P.dist=p.counts?{kind:'dist',counts:p.counts.slice()}:null;break;
   case 'clock':{const cl=clockPair(E);if(cl&&cl[0].id===e.id){const t=c=>((c.props.h%12)*60+c.props.m);P.between=((t(cl[1])-t(cl[0]))%720+720)%720}break}
   case 'bars':{const mx=Math.max(p.a,p.b,p.c);P.bMinusA=p.b-p.a;P.max=mx;P.topNames=['一班','二班','三班'].filter((_,i)=>[p.a,p.b,p.c][i]===mx).join('、');break}
   case 'tri':P.third=180-p.a-p.b;break;
