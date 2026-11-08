@@ -212,15 +212,15 @@ const TYPES={
  angle:{sig:(e,_d,sig)=>{const k=e.props.deg;const kind=k===0?'零度角':k<90?'锐角':k===90?'直角':k<180?'钝角':k===180?'平角':'大于平角';sig(k===90?'ok':'info',`${k}°：${kind}`)},ports:(p)=>({deg:p.deg}),label:'角',group:'图形',prefix:'角',defaults:{deg:90},fields:[{k:'deg',label:'度数（0 到 180）',min:0,max:180,step:5}],size:()=>[200,160]},
  bars:{sig:(e,_d,sig)=>{const {a,b,c}=e.props;const vals=[['一班',a],['二班',b],['三班',c]];const mx=Math.max(a,b,c);const top=vals.filter(v=>v[1]===mx).map(v=>v[0]).join('、');sig('info',`最多：${top}（${mx} 人）`); if(b>a)sig('info',`二班比一班多 ${b-a} 人`);else if(a>b)sig('info',`一班比二班多 ${a-b} 人`)},ports:(p)=>{const mx=Math.max(p.a,p.b,p.c);return{bMinusA:p.b-p.a,max:mx,topNames:['一班','二班','三班'].filter((_,i)=>[p.a,p.b,p.c][i]===mx).join('、')}},label:'条形统计图',group:'统计',prefix:'统计图',defaults:{a:4,b:6,c:3},fields:[{k:'a',label:'一班（人）',min:0,max:30},{k:'b',label:'二班（人）',min:0,max:30},{k:'c',label:'三班（人）',min:0,max:30}],size:()=>[220,190]},
  tri:{sig:(e,_d,sig)=>{const {a,b}=e.props,c=180-a-b;if(c>0)sig('ok',`第三个角是 ${c}°，三个角加起来是 180°`);else sig('err',a+b===180?'两个角已经是 180°，第三个角是 0°，画不出三角形':`两个角已经 ${a+b}°，超过 180°，画不出三角形`)},ports:(p)=>{const c=180-p.a-p.b;return{third:c>0?c:null}},label:'三角形',group:'图形',prefix:'三角形',defaults:{a:30,b:40},fields:[{k:'a',label:'第一个角（度）',min:1,max:150},{k:'b',label:'第二个角（度）',min:1,max:150}],size:()=>[240,170]},
- para:{sig:(e,_d,sig)=>{const {base,h}=e.props;sig('info',`面积 = 底 × 高 = ${base} × ${h} = ${base*h}`)},label:'平行四边形',group:'图形',prefix:'平行四边形',defaults:{base:6,h:4},fields:[{k:'base',label:'底（格）',min:1,max:12},{k:'h',label:'高（格）',min:1,max:12}],size:()=>[240,170]},
+ para:{sig:(e,_d,sig)=>{const {base,h}=e.props;sig('info',`面积 = 底 × 高 = ${base} × ${h} = ${base*h}`)},ports:(p)=>({area:p.base*p.h,peri:2*(p.base+p.h)}),label:'平行四边形',group:'图形',prefix:'平行四边形',defaults:{base:6,h:4},fields:[{k:'base',label:'底（格）',min:1,max:12},{k:'h',label:'高（格）',min:1,max:12}],size:()=>[240,170]},
  line:{sig:(e,_d,sig)=>{const {y1,y2,y3}=e.props;const d12=y2-y1,d23=y3-y2;sig('info',`第二年比第一年${d12>=0?'多':'少'} ${Math.abs(d12)} 万元`);sig('info',`第三年比第二年${d23>=0?'多':'少'} ${Math.abs(d23)} 万元`)},ports:(p)=>({d12:p.y2-p.y1,d23:p.y3-p.y2}),label:'折线统计图',group:'统计',prefix:'折线图',defaults:{y1:3,y2:6,y3:4},fields:[{k:'y1',label:'第一年（万元）',min:0,max:12},{k:'y2',label:'第二年（万元）',min:0,max:12},{k:'y3',label:'第三年（万元）',min:0,max:12}],size:()=>[220,190]},
  cage:{ports:(p)=>{const c=p.heads-p.rabbits,got=4*p.rabbits+2*c;return{chickens:c,rabbits:p.rabbits,solved:c>=0&&got===p.legs}},label:'鸡兔笼',group:'数与运算',prefix:'鸡兔笼',defaults:{heads:35,legs:94,rabbits:0},fields:[{k:'heads',label:'头（总数）',min:1,max:60},{k:'legs',label:'腿（总数）',min:0,max:200,step:2},{k:'rabbits',label:'兔（只）',min:0,max:60}],size:()=>[220,150]},
  pair:{sig:(e,_d,sig)=>{const {x,y}=e.props;sig('info',`(${x}, ${y})：第 ${x} 列，第 ${y} 行`)},label:'数对',group:'关系',prefix:'数对',defaults:{x:3,y:2},fields:[{k:'x',label:'第几列（x）',min:0,max:8},{k:'y',label:'第几行（y）',min:0,max:8}],size:()=>[240,240]},
- shape:{ports:(p)=>({mirrored:!!p.mirror}),label:'图形（平移、旋转、对称）',group:'图形',prefix:'图形',defaults:{dx:0,rot:0,mirror:0},fields:[{k:'dx',label:'向右平移（格）',min:0,max:6},{k:'rot',label:'旋转（度，逆时针）',min:0,max:270,step:90},{k:'mirror',label:'轴对称（0 不做，1 做）',min:0,max:1,choices:['不做','做']}],size:()=>[260,190]},
- solid:{ports:(p)=>{const hs=SOLID_H,v=p.view,o={};if(v===0)o.front=hs[0].map((_,x)=>Math.max(...hs.map(r=>r[x])));if(v===1)o.side=hs.map(r=>Math.max(...r));if(v===2)o.top=hs.flat().filter(x=>x>0).length;return o},label:'立体图形（观察）',group:'图形',prefix:'立体图形',defaults:{view:0},fields:[{k:'view',label:'看的方向（0 正面，1 侧面，2 上面）',min:0,max:2,choices:['正面','侧面','上面']}],size:()=>[240,190]},
+ shape:{ports:(p)=>({mirrored:!!p.mirror}),label:'图形（平移、旋转、对称）',group:'图形',prefix:'图形',defaults:{dx:0,dy:0,rot:0,mirror:0},fields:[{k:'dx',label:'向右平移（格）',min:0,max:6},{k:'dy',label:'上下平移（格，正数向上）',min:-6,max:6},{k:'rot',label:'旋转（度，逆时针）',min:0,max:270,step:90},{k:'mirror',label:'轴对称',min:0,max:1,choices:['不做','做']}],size:()=>[260,190]},
+ solid:{ports:(p)=>{const hs=SOLID_H,v=p.view,o={};if(v===0)o.front=hs[0].map((_,x)=>Math.max(...hs.map(r=>r[x])));if(v===1)o.side=hs.map(r=>Math.max(...r));if(v===2)o.top=hs.flat().filter(x=>x>0).length;return o},label:'立体图形（观察）',group:'图形',prefix:'立体图形',defaults:{view:0},fields:[{k:'view',label:'看的方向',min:0,max:2,choices:['正面','侧面','上面']}],size:()=>[240,190]},
  circle:{sig:(e,_d,sig)=>{const r=e.props.r;sig('info',`半径 ${r} 厘米：周长 ${(2*3.14*r).toFixed(2)} 厘米，面积 ${(3.14*r*r).toFixed(2)} 平方厘米`)},ports:(p)=>({circ:Number((2*3.14*p.r).toFixed(2)),area:Number((3.14*p.r*p.r).toFixed(2))}),label:'圆',group:'图形',prefix:'圆',defaults:{r:2},fields:[{k:'r',label:'半径（厘米）',min:1,max:10}],size:()=>[200,200]},
  pie:{ports:(p)=>({sum:p.a+p.b+p.c,angleA:Number((p.a*3.6).toFixed(0)),angleB:Number((p.b*3.6).toFixed(0)),angleC:Number((p.c*3.6).toFixed(0))}),label:'扇形统计图',group:'统计',prefix:'扇形图',defaults:{a:40,b:30,c:30},fields:[{k:'a',label:'一班（%）',min:0,max:100,step:5},{k:'b',label:'二班（%）',min:0,max:100,step:5},{k:'c',label:'三班（%）',min:0,max:100,step:5}],size:()=>[220,220]},
- sim:{sig:(e,_d,sig)=>{const k=e.props.k;sig('info',`相似比 1 : ${k}，面积比 1 : ${k*k}`)},ports:(p)=>({ratio:p.k,areaRatio:p.k*p.k}),label:'相似图形（放大缩小）',group:'图形',prefix:'相似图形',defaults:{k:1},fields:[{k:'k',label:'相似比（放大几倍）',min:1,max:3}],size:()=>[260,190]},
+ sim:{sig:(e,_d,sig)=>{const k=e.props.k;sig('info',`相似比 1 : ${k}，面积比 1 : ${k*k}`)},ports:(p)=>({ratio:p.k,areaRatio:p.k*p.k}),label:'相似图形（放大缩小）',group:'图形',prefix:'相似图形',defaults:{k:1},fields:[{k:'k',label:'相似比',min:0.5,max:3,step:0.5}],size:()=>[260,190]},
  pyth:{sig:(e,_d,sig)=>{const {a,b}=e.props,c=Math.sqrt(a*a+b*b);const ci=Number.isInteger(c);sig(ci?'ok':'info',ci?`斜边 ${c}，是勾股数`:`斜边 ${c.toFixed(2)}（不是整数）`)},ports:(p)=>{const c=Math.sqrt(p.a*p.a+p.b*p.b);return{c:c,triple:Number.isInteger(c)}},label:'直角三角形（勾股定理）',group:'图形',prefix:'直角三角形',defaults:{a:3,b:2},fields:[{k:'a',label:'直角边 a',min:1,max:12},{k:'b',label:'直角边 b',min:1,max:12}],size:()=>[240,190]},
  trig:{sig:(e,_d,sig)=>{const r=e.props.deg*Math.PI/180;sig('info',`∠${e.props.deg}°：sin = ${Math.sin(r).toFixed(2)}，cos = ${Math.cos(r).toFixed(2)}，tan = ${Math.tan(r).toFixed(2)}`)},ports:(p)=>{const r=p.deg*Math.PI/180;return{sin:Number(Math.sin(r).toFixed(2)),cos:Number(Math.cos(r).toFixed(2)),tan:Number(Math.tan(r).toFixed(2))}},label:'锐角三角函数',group:'图形',prefix:'三角函数',defaults:{deg:45},fields:[{k:'deg',label:'锐角（度）',min:5,max:85,step:5}],size:()=>[240,190]},
  fact:{sig:(e,_d,sig)=>{const {b,c}=e.props;let f=null;for(let p=-10;p<=10&&!f;p++)for(let q=p;q<=10&&!f;q++)if(p+q===b&&p*q===c)f=[p,q]; if(f)sig('ok',`x² ${b<0?'− '+(-b):'+ '+b}x ${c<0?'− '+(-c):'+ '+c} = (x ${f[0]<0?'− '+(-f[0]):'+ '+f[0]})(x ${f[1]<0?'− '+(-f[1]):'+ '+f[1]})`.replace(/\(x \+ (-?\d+)\)/,(m,z)=>m)); else sig('info','在整数范围内分解不了')},ports:(p)=>{let f=null;for(let a=-10;a<=10&&!f;a++)for(let b=a;b<=10&&!f;b++)if(a+b===p.b&&a*b===p.c)f=[a,b];return{factors:f}},label:'因式分解 x² + bx + c',group:'数与运算',prefix:'因式',defaults:{b:0,c:0},fields:[{k:'b',label:'b',min:-10,max:10},{k:'c',label:'c',min:-10,max:10}],size:()=>[260,120]},
@@ -257,7 +257,7 @@ const TYPES={
    fields:[{k:'a',label:'a（系数）',min:-10,max:10},{k:'b',label:'b',min:-10,max:10},{k:'rule',label:'规则',min:0,max:2,choices:['线性','平方','倒数']}],size:()=>[230,120]},
  // 数据表：四个数，输出合计、平均数或最大数。
  table:{ports:(p,e,E,D)=>{const T=D[e.id].tab;return{sum:T.sum,mean:T.mean,max:T.max}},label:'数据表（四个数）',group:'统计',prefix:'数据表',out:'value',accepts:'value',acceptsDist:true,dim:'count',defaults:{a:4,b:8,c:6,d:10,which:0},
-   fields:[{k:'a',label:'第 1 个数',min:0,max:50},{k:'b',label:'第 2 个数',min:0,max:50},{k:'c',label:'第 3 个数',min:0,max:50},{k:'d',label:'第 4 个数',min:0,max:50},{k:'which',label:'输出（0 合计，1 平均，2 最大）',min:0,max:2,choices:['合计','平均','最大']}],size:()=>[240,150]},
+   fields:[{k:'a',label:'第 1 个数',min:0,max:50},{k:'b',label:'第 2 个数',min:0,max:50},{k:'c',label:'第 3 个数',min:0,max:50},{k:'d',label:'第 4 个数',min:0,max:50},{k:'which',label:'输出',min:0,max:2,choices:['合计','平均','最大']}],size:()=>[240,150]},
  // x 砝码：一个未知数。x 的值由学生设定，天平上用它参与平衡。
  sym:{value:(p)=>Q(p.x),label:'x 砝码（未知数）',group:'数与运算',prefix:'x',out:'value',dim:'count',defaults:{x:0},fields:[{k:'x',label:'x 等于几',min:-10,max:30}],size:()=>[120,70]},
 };
@@ -329,7 +329,7 @@ function syncBinds(s){if(!s.binds||!s.binds.length)return;
   s.binds=s.binds.filter(b=>s.entities[b.to]&&srcsOf(b).every(id=>s.entities[id]));if(!s.binds.length)return;
   const left=s.binds.slice(),order=[];
   while(left.length){let i=left.findIndex(b=>!left.some(o=>o!==b&&srcsOf(b).some(r=>reachAll(s,o.to,r))));if(i<0)i=0;order.push(left.splice(i,1)[0])}
-  for(const b of order){const Dd=evaluate(s);const to=s.entities[b.to],src=b.expr?exprValue(s,b,Dd):(Dd[b.from]&&qv(Dd[b.from]));if(!to||!src||src.d!==1)continue;const F=TYPES[to.type].fields.find(f=>f.k===b.k);if(!F||src.n<F.min||src.n>F.max)continue;to.props[b.k]=src.n}}
+  for(const b of order){const Dd=evaluate(s);const to=s.entities[b.to],src=b.expr?exprValue(s,b,Dd):(Dd[b.from]&&qv(Dd[b.from]));if(!to||!src||src.d!==1)continue;const F=TYPES[to.type].fields.find(f=>f.k===b.k);if(!F||src.n<F.min||src.n>F.max||(F.step&&src.n%F.step!==0))continue;to.props[b.k]=src.n}}
 function reach(s,a,b){const seen={};const st=[a];while(st.length){const c=st.pop();if(c===b)return true;if(seen[c])continue;seen[c]=1;s.links.filter(l=>l.from===c).forEach(l=>st.push(l.to))}return false}
 
 /* 动作（意图）。所有改动都走这里：校验 → 改 → 引擎重算。返回 {ok, why} */
@@ -361,8 +361,9 @@ function actRaw(a){
   case 'reset':{E[a.id].props=clone(TYPES[E[a.id].type].defaults);return{ok:1}}
   case 'set':{if((s.binds||[]).some(b=>b.to===a.id&&b.k===a.k))return{ok:0,why:'这个属性由别的器材决定，先点“解除”'};
     const e=E[a.id],T=TYPES[e.type],f=T.fields.find(f=>f.k===a.k);let v=Number(a.v);
-    if(!Number.isFinite(v)||!Number.isInteger(v))return{ok:0,why:'只能填整数'};
-    if(!Number.isInteger(v/(f.step||1)))return{ok:0,why:`只能填 ${(f.step||1)} 的倍数`};
+    const st=f.step||1;
+    if(Number.isInteger(st)){if(!Number.isFinite(v)||!Number.isInteger(v))return{ok:0,why:'只能填整数'};if(!Number.isInteger(v/st))return{ok:0,why:`只能填 ${st} 的倍数`}}
+    else{if(!Number.isFinite(v))return{ok:0,why:'只能填数字'};if(Math.abs(v/st-Math.round(v/st))>1e-9)return{ok:0,why:`只能填 ${st} 的倍数`}}
     if(v<f.min||v>f.max)return{ok:0,why:`${f.label.replace(/（.*/,'')}只能在 ${f.min} 到 ${f.max} 之间`};
     if(e.type==='numline'){const o=Object.assign({},e.props,{[a.k]:v});if(o.max-o.min<1)return{ok:0,why:'最右要比最左大'};if(o.max-o.min>20)return{ok:0,why:'数轴最长 20 格'}}
     e.props[a.k]=v;return{ok:1}}
@@ -375,7 +376,7 @@ function actRaw(a){
     if(to.type==='adder'&&fd){const other=inputs(s,a.to).map(l=>dimOf(s,l.from)).filter(x=>x).find(x=>x!==fd);if(other)return{ok:0,why:`合并器只合并同一种东西：${dimLabel(fd)} 和 ${dimLabel(other)} 不能加`}}
     if(a.fromPort&&!(OUT_PORTS[f.type]||[]).some(p=>p.id===a.fromPort))return{ok:0,why:'这个器材没有这个输出'};
     if(s.links.some(l=>l.from===a.from&&l.to===a.to&&(l.fromPort||null)===(a.fromPort||null)))return{ok:0,why:'已经连过了'};
-    if(reach(s,a.to,a.from))return{ok:0,why:'不能连成一个圈'};
+    if(reachAll(s,a.to,a.from))return{ok:0,why:'不能连成一个圈'};
     if(to.type==='balance'&&inputs(s,a.to).filter(l=>l.slot===a.slot).length>=5)return{ok:0,why:'一个盘最多放 5 个'};
     if(to.type==='numline'&&inputs(s,a.to).length>=6)return{ok:0,why:'数轴上最多 6 个点'};
     if(to.type==='div'&&inputs(s,a.to).some(l=>l.slot===a.slot))return{ok:0,why:a.slot==='L'?'左边已经有被除数了':'右边已经有除数了'};
@@ -437,7 +438,7 @@ function evaluate(s){
     if(e.type==='frac'){const v=qv(d);if(e.props.n>e.props.d)sig('info',`比 1 大：${qs(v)} = ${Math.floor(e.props.n/e.props.d)} 又 ${e.props.n%e.props.d}/${e.props.d}`);else if(v.d!==e.props.d)sig('info',`${e.props.n}/${e.props.d} 和 ${qs(v)} 一样大`)}
     if(e.type==='adder'){const raw=inputs(s,id).map(l=>vf(l));const ins=raw.filter(Boolean);d.terms=ins;
       if(raw.length&&raw.some(x=>!x))sig('warn','有个输入算不出来：先把它修好，这里才能算');
-      else if(!ins.length)sig('info',e.props.op===1?'把几个数连进来，这里算它们的差（第一个数减去后面的）':'把几个数连进来，这里算它们的和');
+      else if(!ins.length)sig('info',e.props.op===1?'把几个数连进来，这里算它们的差（第一个数减去后面的）':'把几个数连进来，这里算它们的合计');
       else{const allM=inputs(s,id).length&&inputs(s,id).every(l=>dimOf(s,l.from)==='money');if(!allM){const ds=[...new Set(ins.map(q=>q.d))];if(ds.length>1){const L=ds.reduce(lcm);sig('info',e.props.op===1?`分母不同：都换成 ${L} 份再减`:`分母不同：都换成 ${L} 份再加`)}}}}
     if(e.type==='mul'){const raw=inputs(s,id).map(l=>vf(l));const ins=raw.filter(Boolean);d.terms=ins;
       if(raw.length&&raw.some(x=>!x))sig('warn','有个输入算不出来：先把它修好，这里才能算');
@@ -516,7 +517,7 @@ function evaluate(s){
       d.pts.forEach(p=>{p.out=qnum(p.v)<min||qnum(p.v)>max;if(p.out)sig('err',`${qs(p.v)} 放不下：数轴只从 ${min} 到 ${max}`)});
       const ins=d.pts.filter(p=>!p.out);
       if(ins.length>=2){const a=ins[0].v,b=ins[1].v,g=qsub(a,b);const gap=g.n<0?Q(-g.n,g.d):g;
-        if(gap.n===0)sig('ok',`${qs(a)} 和 ${qs(b)} 落在同一点：一样大`);else sig('info',`${E[ins[0].from].name} 和 ${E[ins[1].from].name} 相差 ${qs(gap)}`)}}
+        if(gap.n===0)sig('ok',`${qs(a)} 和 ${qs(b)} 落在同一点：一样大`);else sig('info',`${E[ins[0].from].name} 和 ${E[ins[1].from].name} 相差 ${qs(gap)}${ins.length>2?'（只看前两个）':''}`)}}
     if(e.type==='balance'){const L=inputs(s,id).filter(l=>l.slot==='L'),R=inputs(s,id).filter(l=>l.slot==='R');
       const bad=[...L,...R].some(l=>!vf(l));d.Lbad=L.some(l=>!vf(l));d.Rbad=R.some(l=>!vf(l));
       const sum=a=>a.reduce((t,l)=>{const v=vf(l);return v?qadd(t,v):t},Q(0));d.L=sum(L);d.R=sum(R);d.Ln=L;d.Rn=R;
@@ -528,9 +529,9 @@ function evaluate(s){
       else{const m=df.n<0?Q(-df.n,df.d):df;sig('warn',`${df.n>0?'左':'右'}边重 ${qs(m)}`)}}
     if(e.type==='coord'){d.fns=inputs(s,id).map(l=>E[l.from]);
       if(!d.fns.length)sig('info','把直线连进来');
-      d.fns.forEach(f=>{const {k,b}=f.props;sig('info',`${f.name}：y = ${fx(k,b)}，${k>0?'往右上升':k<0?'往右下倒':'水平'}，过 (0, ${b})`)});
       if(d.fns.length>=2){const [f,g]=d.fns;if(f.props.k===g.props.k)sig(f.props.b===g.props.b?'ok':'warn',f.props.b===g.props.b?'两条线重合':'k 一样：两条线平行，永远不相交');
-        else{const x=Q(g.props.b-f.props.b,f.props.k-g.props.k);const y=qadd(Q(f.props.k*x.n,x.d),Q(f.props.b));sig('ok',`交点 (${qs(x)}, ${qs(y)})`)}}}
+        else{const x=Q(g.props.b-f.props.b,f.props.k-g.props.k);const y=qadd(Q(f.props.k*x.n,x.d),Q(f.props.b));sig('ok',`交点 (${qs(x)}, ${qs(y)})${d.fns.length>2?'（只算前两条）':''}`)}}
+      d.fns.forEach(f=>{const {k,b}=f.props;sig('info',`${f.name}：y = ${fx(k,b)}，${k>0?'往右上升':k<0?'往右下倒':'水平'}，过 (0, ${b})`)});}
     if(e.type==='rect'){const {w,h}=e.props;d.per=2*(w+h);d.area=w*h;if(w===h)sig('ok',`是正方形：周长 ${d.per}，面积 ${d.area}`);else sig('info',`周长 ${d.per}，面积 ${d.area}`)}
     if(e.type==='dice'){const c=e.props.counts;if(!c)sig('info','点“掷”开始');else{const tot=c.reduce((a,b)=>a+b,0);let m=0;for(let i=2;i<=12;i++)m=Math.max(m,c[i]);const bs=[];for(let i=2;i<=12;i++)if(c[i]===m)bs.push(i);d.tot=tot;sig('info',`掷了 ${tot} 回，出现最多的是 ${bs.join('、')}`)}}
   }
@@ -759,8 +760,8 @@ pie:(e,d,w,h)=>{const vals=[['一班',e.props.a,'#fb923c'],['二班',e.props.b,'
      s+=`<path d="M${cx},${cy} L${x1.toFixed(1)},${y1.toFixed(1)} A${R},${R} 0 ${sw>180?1:0} 1 ${x2.toFixed(1)},${y2.toFixed(1)} Z" fill="${col}" stroke="#1d2633"/>`;
      const mid=(ang+sw/2)*Math.PI/180;s+=`<text class="ink" x="${(cx+(R*0.6)*Math.cos(mid)).toFixed(1)}" y="${(cy+(R*0.6)*Math.sin(mid)).toFixed(1)}" text-anchor="middle" font-size="12">${nm} ${p}%</text>`;ang+=sw});
    return s},
-shape:(e,d,w,h)=>{const {dx,rot,mirror}=e.props,S=14,ox=70,oy=h-40;const cells=[[0,0],[0,1],[0,2],[1,2]];
-   const xf=(px,py)=>{let x=px,y=py;if(mirror)x=-x;for(let i=0;i<rot/90;i++){const t=x;x=-y;y=t}return [x+dx,y]};
+shape:(e,d,w,h)=>{const {dx,dy=0,rot,mirror}=e.props,S=14,ox=70,oy=h-40;const cells=[[0,0],[0,1],[0,2],[1,2]];
+   const xf=(px,py)=>{let x=px,y=py;if(mirror)x=-x;for(let i=0;i<rot/90;i++){const t=x;x=-y;y=t}return [x+dx,y+dy]};
    const sq=(cx,cy,fill,op)=>`<rect x="${ox+cx*S-S/2}" y="${oy-cy*S-S/2}" width="${S}" height="${S}" fill="${fill}" stroke="#1d2633" opacity="${op}"/>`;
    let s=`<line x1="${ox}" y1="20" x2="${ox}" y2="${oy+10}" stroke="#94a3b8" stroke-dasharray="4 3"/>`;
    cells.forEach(([x,y])=>{s+=sq(x+0.5,y+0.5,'#e2e8f0',0.9)});
@@ -843,7 +844,7 @@ function placeFloat(){const tl=$('tools'),cd=$('card');const e=sel&&S.entities[s
   if(selLink&&!e){tl.style.display='none';cd.style.display='none';return}
   const [w]=size(e),sx=view.x+(e.x+w)*view.z,sy=view.y+e.y*view.z,W=$('stageWrap').clientWidth,H=$('stageWrap').clientHeight;
   const T=TYPES[e.type];tl.innerHTML=`<button data-tool="card" title="设置">⚙</button><button data-tool="dup" title="复制">📋</button>${T.rotate?'<button data-tool="rotate" title="转 15°（卡里可以调到任意度数）">🔄</button>':''}<button data-tool="del" title="删除">🗑</button>`;
-  tl.style.display='flex';tl.style.left=Math.min(W-44,sx+12)+'px';tl.style.top=Math.max(8,sy)+'px';
+  tl.style.display='flex';tl.style.left=Math.min(W-44,sx+12)+'px';tl.style.top=Math.min(Math.max(8,sy),H-150)+'px';
   if(!cardOpen){cd.style.display='none';return}
   // 设置卡停靠在台面右上角，不跟着器材跑，不盖住台面上的东西。
   cd.style.left=Math.max(8,W-262)+'px';cd.style.top='12px';cd.style.maxHeight=Math.max(200,H-24)+'px';cd.style.overflowY='auto';cd.style.display='block';
@@ -926,13 +927,13 @@ svg.addEventListener('pointerup',ev=>{if(!drag)return;const d=drag;drag=null;svg
   if(d.m==='vtx'){if(d.moved)afterChange();return}
   if(d.m==='resize'){if(d.moved)afterChange();return}
   if(d.m==='move'&&!d.moved&&bindPick&&!d.seg){const bp=bindPick;bindPick=null;const r=commit({t:'bind',to:bp.to,k:bp.k,from:d.id});if(r.ok)toast('已绑定：'+S.entities[d.id].name+' 的值决定它');render();return}
-  if(d.m==='move'){if(d.moved){afterChange()}else if(d.seg){commit({t:'segclick',id:d.id,k:+d.seg})}else{if(d.was)cardOpen=!cardOpen;else cardOpen=true;$('card').dataset.v='';render()}}
+  if(d.m==='move'){if(d.moved){bindPick=null;afterChange()}else if(d.seg){commit({t:'segclick',id:d.id,k:+d.seg})}else{if(d.was)cardOpen=!cardOpen;else cardOpen=true;$('card').dataset.v='';render()}}
   else if(d.m==='link'){clearDrop();const el=document.elementFromPoint(ev.clientX,ev.clientY);
     // 拖到选中器材卡片上的“绑到一个数”按钮：把这个输出绑到那个属性上
     const bp=el&&el.closest&&el.closest('[data-bindpick]');if(bp&&sel){const r=commit({t:'bind',to:sel,k:bp.dataset.bindpick,from:d.from});if(r.ok)toast('已绑定');render();return}
     const g=el&&el.closest&&el.closest('[data-ent]');
     if(g&&g.dataset.ent!==d.from){const to=S.entities[g.dataset.ent];const [wx,wy]=toWorld(ev.clientX,ev.clientY);const [w,h]=size(to);commit({t:'link',from:d.from,fromPort:d.fport||null,to:to.id,slot:to.type==='div'?(wy<to.y+h/2?'L':'R'):(wx<to.x+w/2?'L':'R')})}
-    else if(Math.hypot(ev.clientX-d.sx,ev.clientY-d.sy)>6)toast('松手的地方没有器材：把线拖到另一个器材上',true);render()}
+    else if(Math.hypot(ev.clientX-d.sx,ev.clientY-d.sy)>6)toast('松手的地方没有器材：把线拖到另一个器材上',true);else toast('从端口拖到另一个器材上',true);render()}
   else if(d.m==='pan')render()});
 svg.addEventListener('wheel',ev=>{ev.preventDefault();zoomAt(ev.deltaY<0?1.1:1/1.1,ev.clientX,ev.clientY)},{passive:false});
 // 触屏双指缩放：两根手指张开、合拢改变画布比例；两指中间的内容跟着手指走，不会跑偏。
@@ -951,6 +952,8 @@ function fit(){const es=Object.values(S.entities);if(!es.length){view={x:40,y:30
 $('zIn').onclick=()=>zoomAt(1.15);$('zOut').onclick=()=>zoomAt(1/1.15);$('zFit').onclick=fit;
 document.addEventListener('keydown',ev=>{if(ev.target.closest('input,textarea,[contenteditable]'))return;
   if((ev.key==='Delete'||ev.key==='Backspace')&&(sel||selLink)){commit({t:'del',id:sel||selLink});sel=selLink=null;render()}
+  if(ev.key==='Escape'){sel=null;selLink=null;cardOpen=false;bindPick=null;exprPick=null;render()}
+  if(sel&&ev.key.startsWith('Arrow')){ev.preventDefault();const e=S.entities[sel];if(!e)return;bindPick=null;const dx=ev.key==='ArrowLeft'?-10:ev.key==='ArrowRight'?10:0,dy=ev.key==='ArrowUp'?-10:ev.key==='ArrowDown'?10:0;commit({t:'move',id:sel,x:e.x+dx,y:e.y+dy},{coalesce:'nudge'+sel})}
   if((ev.ctrlKey||ev.metaKey)&&ev.key.toLowerCase()==='z'){ev.preventDefault();ev.shiftKey?redo():undo()}
   if((ev.ctrlKey||ev.metaKey)&&ev.key.toLowerCase()==='y'){ev.preventDefault();redo()}});
 function undo(){if(!undoSt.length)return;redoSt.push(JSON.stringify(S));S=JSON.parse(undoSt.pop());if(sel&&!S.entities[sel])sel=null;afterChange()}
@@ -1268,7 +1271,7 @@ const P47=[
  {id:'g4_5',grade:4,domain:'图形与几何',tools:'平行四边形',title:'平行四边形面积：底 8、高 4，面积是几？',q:'平行四边形的面积 = 底 × 高。高要从底边上一点垂直量到对边。',why:'8 × 4 = 32。平行四边形可以切开拼成长方形，面积不变。',
   build:s=>{addEnt(s,'para',200,60,{base:6,h:4})},
   steps:[{id:'g4_5:s1',label:'把底调到 8',score:1,hint:'点平行四边形卡，在属性卡里把底调到 8',target:T45('para'),check:(s,D)=>s.entities[byType(s,'para')].props.base===8},
-         {id:'g4_5:s2',label:'面积是 32',score:2,hint:'看卡片上的面积',target:T45('para'),check:(s,D)=>{const p=s.entities[byType(s,'para')].props;return p.base*p.h===32}}]},
+         {id:'g4_5:s2',label:'面积是 32',score:2,hint:'看卡片上的面积',target:T45('para'),check:(s,D)=>D[byType(s,'para')].ports.area===32}]},
  {id:'g4_12',grade:4,domain:'图形与几何',tools:'三角形',title:'三角形内角和：两个角是 60° 和 70°，第三个角是几度？',q:'三角形的三个角加起来是 180°。先把前两个角调好，看第三个角。',why:'180 − 60 − 70 = 50°。',
   build:s=>{addEnt(s,'tri',200,60,{a:30,b:40})},
   steps:[{id:'g4_12:s1',label:'把两个角调到 60° 和 70°',score:1,hint:'点三角形卡，把两个角分别调到 60 和 70',target:T45('tri'),check:(s,D)=>{const p=s.entities[byType(s,'tri')].props;return p.a===60&&p.b===70}},
@@ -1305,10 +1308,10 @@ const P49=[
   steps:[{id:'g4_1:s0',type:'predict',expect:100000000,label:'先预测：两个 1 万相乘是多少？',score:1,hint:'1 万 × 1 万，想想是几个 1 万。写一个数再点“猜好了”。',target:T45('mul'),check:()=>false},
           {id:'g4_1:s1',label:'把两个 1 万都连到乘法器',score:1,hint:'拖两个数的蓝点到乘法器',target:T45('mul'),check:(s,D)=>P45H.cnt(s,D,'mul',2)},
          {id:'g4_1:s2',label:'算出 1 亿（100000000）',score:2,hint:'看乘法器的读数',target:T45('mul'),check:(s,D)=>P45H.val(s,D,'mul',Q(100000000))}]},
- {id:'g4_8',grade:4,domain:'数与代数',tools:'数字卡 · 合并器',title:'优化：沏茶要烧水 15 分钟，沏茶要 1 分钟，最少要几分钟？',q:'烧水的时候，可以洗杯子、拿茶叶，这些事和烧水同时做，不用等。',why:'烧水 15 分钟，其余的事都在烧水时做完，沏茶 1 分钟：最少 15 + 1 = 16 分钟。',
-  build:s=>{addEnt(s,'num',60,60,{v:15});addEnt(s,'num',60,170,{v:1});addEnt(s,'adder',330,110)},
-  steps:[{id:'g4_8:s1',label:'把烧水和沏茶的时间都连到合并器',score:1,hint:'拖两个数的蓝点到合并器',target:T45('adder'),check:(s,D)=>P45H.cnt(s,D,'adder',2)},
-         {id:'g4_8:s2',label:'最少要 16 分钟',score:2,hint:'看合并器的读数',target:T45('adder'),check:(s,D)=>P45H.val(s,D,'adder',Q(16))}]},
+ {id:'g4_8',grade:4,domain:'数与代数',tools:'数字卡 · 合并器',title:'优化：沏茶最少要几分钟？',q:'洗水壶 1 分钟、接水 1 分钟、烧水 8 分钟、洗茶杯 2 分钟、找茶叶 1 分钟、沏茶 1 分钟。烧水的时候，可以洗茶杯、找茶叶，这些事和烧水同时做，不用等。',why:'洗水壶 1 + 接水 1 + 烧水 8 + 沏茶 1 = 11 分钟；洗茶杯 2 分钟和找茶叶 1 分钟都在烧水的 8 分钟里做完了，不再另算。',
+  build:s=>{const a=addEnt(s,'num',60,40,{v:1});s.entities[a].name='洗水壶';const b=addEnt(s,'num',60,150,{v:1});s.entities[b].name='接水';const c=addEnt(s,'num',60,260,{v:8});s.entities[c].name='烧水';const d=addEnt(s,'num',60,370,{v:1});s.entities[d].name='沏茶';addEnt(s,'adder',330,200)},
+  steps:[{id:'g4_8:s1',label:'把四件要做的事都连到合并器',score:1,hint:'拖四个数的蓝点到合并器',target:T45('adder'),check:(s,D)=>P45H.cnt(s,D,'adder',4)},
+         {id:'g4_8:s2',label:'最少要 11 分钟',score:2,hint:'看合并器的读数',target:T45('adder'),check:(s,D)=>P45H.val(s,D,'adder',Q(11))}]},
  {id:'g4_14',grade:4,domain:'图形与几何',tools:'图形',title:'图形的运动：先向右平移 3 格，再做轴对称',q:'平移只改位置，不改形状和大小；轴对称是以一条线为轴，翻到另一边。',why:'平移：每个点都向右走相同的格数，形状不变。轴对称：对应点到对称轴的距离相等，因此两边一样。',
   build:s=>{addEnt(s,'shape',200,60,{dx:0,rot:0,mirror:0})},
   steps:[{id:'g4_14:s1',label:'向右平移 3 格',score:1,hint:'点图形卡，在属性卡里把“向右平移”调到 3',target:T45('shape'),check:(s,D)=>s.entities[byType(s,'shape')].props.dx===3},
@@ -1589,7 +1592,7 @@ function setModeUi(){document.querySelectorAll('#modeSeg button').forEach(b=>b.c
   $('timer').style.display=$('submit').style.display=mode==='exam'?'inline-block':'none';$('menuBtn').style.display=mode==='practice'?'inline-block':'none';
   $('whyBtn').style.display=mode==='exam'?'none':'inline-block';stopTimerIf()}
 function stopTimerIf(){if(mode!=='exam'&&timerId){clearInterval(timerId);timerId=null}}
-function startTimer(){clearInterval(timerId);const end=Date.now()+600000;const tick=()=>{const ms=Math.max(0,end-Date.now());$('timer').textContent=`⏱ ${String(Math.floor(ms/60000)).padStart(2,'0')}:${String(Math.floor(ms/1000)%60).padStart(2,'0')}`;if(!ms){clearInterval(timerId);timerId=null;submitExam(true)}};tick();timerId=setInterval(tick,500)}
+function startTimer(){clearInterval(timerId);const end=Date.now()+600000;let warned=false;const tick=()=>{const ms=Math.max(0,end-Date.now());$('timer').textContent=`⏱ ${String(Math.floor(ms/60000)).padStart(2,'0')}:${String(Math.floor(ms/1000)%60).padStart(2,'0')}`;if(!warned&&ms<=60000&&ms>0){warned=true;toast('还剩 1 分钟')};if(!ms){clearInterval(timerId);timerId=null;submitExam(true)}};tick();timerId=setInterval(tick,500)}
 function goFree(){mode='free';xp=null;run=null;sel=null;cardOpen=false;try{S=JSON.parse(localStorage.getItem(LS.free))||blankScene()}catch(e){S=blankScene()}undoSt=[];redoSt=[];$('title').textContent='我的实验';setModeUi();showTab('lib');afterChange()}
 $('modeSeg').onclick=ev=>{const b=ev.target.closest('button');if(!b)return;const m=b.dataset.mode;
   if(m==='free'){if(mode==='exam'&&!confirm('退出考试？这次不计分。'))return;goFree();return}
