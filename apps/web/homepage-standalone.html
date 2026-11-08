@@ -4590,7 +4590,7 @@ const TYPES={
  box:{label:&#x27;黑箱（输入 → 输出）&#x27;,group:&#x27;函数&#x27;,prefix:&#x27;黑箱&#x27;,out:&#x27;value&#x27;,accepts:&#x27;value&#x27;,defaults:{a:1,b:0},
    fields:[{k:&#x27;a&#x27;,label:&#x27;a（输出 = a × 输入 + b）&#x27;,min:-5,max:5},{k:&#x27;b&#x27;,label:&#x27;b&#x27;,min:-10,max:10}],size:()=&gt;[230,120]},
  // 数据表：四个数，输出合计、平均数或最大数。
- table:{label:&#x27;数据表（四个数）&#x27;,group:&#x27;统计&#x27;,prefix:&#x27;数据表&#x27;,out:&#x27;value&#x27;,dim:&#x27;count&#x27;,defaults:{a:4,b:8,c:6,d:10,which:0},
+ table:{label:&#x27;数据表（四个数）&#x27;,group:&#x27;统计&#x27;,prefix:&#x27;数据表&#x27;,out:&#x27;value&#x27;,accepts:&#x27;value&#x27;,dim:&#x27;count&#x27;,defaults:{a:4,b:8,c:6,d:10,which:0},
    fields:[{k:&#x27;a&#x27;,label:&#x27;第 1 个数&#x27;,min:0,max:50},{k:&#x27;b&#x27;,label:&#x27;第 2 个数&#x27;,min:0,max:50},{k:&#x27;c&#x27;,label:&#x27;第 3 个数&#x27;,min:0,max:50},{k:&#x27;d&#x27;,label:&#x27;第 4 个数&#x27;,min:0,max:50},{k:&#x27;which&#x27;,label:&#x27;输出（0 合计，1 平均，2 最大）&#x27;,min:0,max:2,choices:[&#x27;合计&#x27;,&#x27;平均&#x27;,&#x27;最大&#x27;]}],size:()=&gt;[240,150]},
  // x 砝码：一个未知数。x 的值由学生设定，天平上用它参与平衡。
  sym:{label:&#x27;x 砝码（未知数）&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;x&#x27;,out:&#x27;value&#x27;,dim:&#x27;count&#x27;,defaults:{x:0},fields:[{k:&#x27;x&#x27;,label:&#x27;x 等于几&#x27;,min:-10,max:30}],size:()=&gt;[120,70]},
@@ -4701,7 +4701,7 @@ function evaluate(s){
       if(!ls.length)v=Q(1);else if(!any)v=null;else v=Q(v.n*(e.props.times||1),v.d)}
     else if(e.type===&#x27;balance&#x27;&amp;&amp;port===&#x27;equal&#x27;){const Ls=inputs(s,id).filter(l=&gt;l.slot===&#x27;L&#x27;),Rs=inputs(s,id).filter(l=&gt;l.slot===&#x27;R&#x27;);const tot=ls=&gt;ls.reduce((t,l)=&gt;{const x=vf(l);return x?qadd(t,x):t},Q(0));if(Ls.length&amp;&amp;Rs.length)v={kind:&#x27;bool&#x27;,data:qeq(tot(Ls),tot(Rs))}}
     else if(e.type===&#x27;box&#x27;){const l=inputs(s,id)[0];const x=l&amp;&amp;vf(l);v=x?qadd(Q(e.props.a*x.n,x.d),Q(e.props.b)):null}
-    else if(e.type===&#x27;table&#x27;){const p=e.props,vs=[p.a,p.b,p.c,p.d],sum=vs.reduce((x,y)=&gt;x+y,0);v=port===&#x27;sum&#x27;?Q(sum):port===&#x27;mean&#x27;?Q(sum,4):port===&#x27;max&#x27;?Q(Math.max(...vs)):(p.which===1?Q(sum,4):p.which===2?Q(Math.max(...vs)):Q(sum))}
+    else if(e.type===&#x27;table&#x27;){const T=tableOf(id),p=e.props;v=port===&#x27;sum&#x27;?T.sum:port===&#x27;mean&#x27;?T.mean:port===&#x27;max&#x27;?T.max:(p.which===1?T.mean:p.which===2?T.max:T.sum)}
     else if(e.type===&#x27;clock&#x27;)v=Q((e.props.h%12)*60+e.props.m);
     else if(e.type===&#x27;sym&#x27;)v=Q(e.props.x);
     else if(e.type===&#x27;div&#x27;){const L=inputs(s,id).find(l=&gt;l.slot===&#x27;L&#x27;),R=inputs(s,id).find(l=&gt;l.slot===&#x27;R&#x27;);const a=L&amp;&amp;vf(L),b=R&amp;&amp;vf(R);v=(a&amp;&amp;b&amp;&amp;b.n!==0)?(e.props.mode===1?(a.d===1&amp;&amp;b.d===1?Q(a.n%b.n):null):Q(a.n*b.d,a.d*b.n)):null}
@@ -4709,7 +4709,9 @@ function evaluate(s){
   // val 返回带类型的 Val；valQ / vf 取出有理数 data，算术部分照旧。
   const valQ=(id,port)=&gt;{const v=val(id,port);return v?v.data:null};
   const vf=l=&gt;valQ(l.from,l.fromPort); // value flowing in on a link (a link may read one output port of its source)
-  for(const id in E){const e=E[id],d=D[id]={read:[],sig:[]};
+  // 数据表：连进来的数依次填进 a、b、c、d（连线的先后），没连线的格子保留自己的数。合计、平均、最大都从这四个格子算。
+  const tableOf=id=&gt;{const p=E[id].props,ins=inputs(s,id).map(l=&gt;vf(l)).filter(Boolean);const slots=[Q(p.a),Q(p.b),Q(p.c),Q(p.d)].map((x,i)=&gt;ins[i]||x);const sum=slots.reduce((t,x)=&gt;qadd(t,x),Q(0));const max=slots.reduce((m,x)=&gt;qnum(x)&gt;qnum(m)?x:m);return{slots,sum,mean:Q(sum.n,sum.d*4),max}};
+  for(const id in E){const e=E[id],d=D[id]={read:[],sig:[]};if(e.type===&#x27;table&#x27;)d.tab=tableOf(id);
     const sig=(lv,tx)=&gt;d.sig.push({lv,tx});
     if(TYPES[e.type].out===&#x27;value&#x27;)d.value=valQ(id);
     // d.val 是带类型的值 {kind, dim, data}；d.value 仍是有理数 Q，页面和判分照旧读它。
@@ -4733,8 +4735,8 @@ function evaluate(s){
       if(bv&amp;&amp;F&amp;&amp;(bv.d!==1||bv.n&lt;F.min||bv.n&gt;F.max))sig(&#x27;err&#x27;,`${E[b.from].name} 的值 ${qs(bv)} 不能填进「${F.label.replace(/（.*/,&#x27;&#x27;)}」`)}
     if(e.type===&#x27;box&#x27;){const l=inputs(s,id)[0];const x=l&amp;&amp;vf(l);const {a,b}=e.props;
       if(!x)sig(&#x27;info&#x27;,`把数连进黑箱：输出 = ${a} × 输入 ${b&gt;=0?&#x27;+ &#x27;+b:&#x27;− &#x27;+(-b)}`);else sig(&#x27;ok&#x27;,`输入 ${qs(x)} → 输出 ${qs(d.value)}`)}
-    if(e.type===&#x27;table&#x27;){const v4=[e.props.a,e.props.b,e.props.c,e.props.d],sum=v4.reduce((x,y)=&gt;x+y,0),mean=sum/4;
-      sig(&#x27;ok&#x27;,`数：${v4.join(&#x27;、&#x27;)}；合计 ${sum}，平均 ${Number.isInteger(mean)?mean:mean.toFixed(2)}，最大 ${Math.max(...v4)}`)}
+    if(e.type===&#x27;table&#x27;){const T=d.tab,v4=T.slots.map(qs),sum=qnum(T.sum),mean=qnum(T.mean),mx=qnum(T.max);
+      sig(&#x27;ok&#x27;,`数：${v4.join(&#x27;、&#x27;)}；合计 ${sum}，平均 ${Number.isInteger(mean)?mean:mean.toFixed(2)}，最大 ${mx}`)}
     if(e.type===&#x27;sym&#x27;)sig(&#x27;info&#x27;,`x = ${e.props.x}`);
     if(e.type===&#x27;angle&#x27;){const k=e.props.deg;const kind=k===0?&#x27;零度角&#x27;:k&lt;90?&#x27;锐角&#x27;:k===90?&#x27;直角&#x27;:k&lt;180?&#x27;钝角&#x27;:k===180?&#x27;平角&#x27;:&#x27;大于平角&#x27;;sig(k===90?&#x27;ok&#x27;:&#x27;info&#x27;,`${k}°：${kind}`)}
     if(e.type===&#x27;fact&#x27;){const {b,c}=e.props;let f=null;for(let p=-10;p&lt;=10&amp;&amp;!f;p++)for(let q=p;q&lt;=10&amp;&amp;!f;q++)if(p+q===b&amp;&amp;p*q===c)f=[p,q];
@@ -4810,11 +4812,11 @@ function evaluate(s){
     if(e.type===&#x27;dice&#x27;){const c=e.props.counts;if(!c)sig(&#x27;info&#x27;,&#x27;点“掷”开始&#x27;);else{const tot=c.reduce((a,b)=&gt;a+b,0);let best=2;for(let i=2;i&lt;=12;i++)if(c[i]&gt;c[best])best=i;d.tot=tot;sig(&#x27;info&#x27;,`掷了 ${tot} 回，出现最多的是 ${best}`)}}
   }
   // 端口：每个器材算出来的数（有名字、有值）。步骤判分读端口，不再匹配信号文字。
-  for(const id in E)D[id].ports=Object.assign(D[id].ports||{},portsFor(E[id],s,E));
+  for(const id in E)D[id].ports=Object.assign(D[id].ports||{},portsFor(E[id],s,E,D));
   return D;
 }
 /* 端口的定义：从属性直接算。信号文字仍由 evaluate 上面的代码画，这里的值和文字用同一套算法。 */
-function portsFor(e,s,E){const p=e.props,P={};
+function portsFor(e,s,E,D){const p=e.props,P={};
   switch(e.type){
   case &#x27;clock&#x27;:{const cl=clockPair(E);if(cl&amp;&amp;cl[0].id===e.id){const t=c=&gt;((c.props.h%12)*60+c.props.m);P.between=((t(cl[1])-t(cl[0]))%720+720)%720}break}
   case &#x27;bars&#x27;:{const mx=Math.max(p.a,p.b,p.c);P.bMinusA=p.b-p.a;P.max=mx;P.topNames=[&#x27;一班&#x27;,&#x27;二班&#x27;,&#x27;三班&#x27;].filter((_,i)=&gt;[p.a,p.b,p.c][i]===mx).join(&#x27;、&#x27;);break}
@@ -4842,7 +4844,7 @@ function portsFor(e,s,E){const p=e.props,P={};
   case &#x27;tangent&#x27;:P.relation=p.d&gt;p.r?&#x27;apart&#x27;:p.d===p.r?&#x27;tangent&#x27;:&#x27;cross&#x27;;break;
   case &#x27;dice&#x27;:P.tot=p.counts?p.counts.reduce((a,b)=&gt;a+b,0):0;break;
   case &#x27;angle&#x27;:P.deg=p.deg;break;
-  case &#x27;table&#x27;:{const vs=[p.a,p.b,p.c,p.d],sum=vs.reduce((x,y)=&gt;x+y,0);P.sum=Q(sum);P.mean=Q(sum,4);P.max=Q(Math.max(...vs));break}
+  case &#x27;table&#x27;:{const T=D[e.id].tab;P.sum=T.sum;P.mean=T.mean;P.max=T.max;break}
   case &#x27;afrac&#x27;:if(p.d!==0)P.value=p.n/p.d;break;
   case &#x27;radical&#x27;:{const n=p.n;let kk=1,mm=n;for(let k=Math.floor(Math.sqrt(n));k&gt;=2;k--){if(n%(k*k)===0){kk=k;mm=n/(k*k);break}}P.kk=kk;P.mm=mm;break}
   case &#x27;parlines&#x27;:P.sameSide=180-p.a;P.corresponding=p.a;break;
@@ -5105,7 +5107,7 @@ mul:(e,d,w,h)=&gt;{const t=d.terms||[];const ex=t.length?t.map(qs).join(&#x27; �
    if(xp&amp;&amp;xp.id===&#x27;funcline&#x27;)s+=`&lt;circle cx=&quot;${X(2)}&quot; cy=&quot;${Y(-3)}&quot; r=&quot;5&quot; fill=&quot;none&quot; stroke=&quot;#e03131&quot; stroke-width=&quot;2&quot;/&gt;&lt;text x=&quot;${X(2)+8}&quot; y=&quot;${Y(-3)+4}&quot; font-size=&quot;11&quot; fill=&quot;#e03131&quot;&gt;(2, −3)&lt;/text&gt;`;
    return s},
  box:(e,d,w,h)=&gt;{const {a,b}=e.props;const sigs=d.sig.filter(x=&gt;!hideSig(e,x));const sig0=sigs[0]?sigs[0].tx:&#x27;&#x27;;const rule=ruleHidden()?&#x27;y = ？&#x27;:`y = ${a}x ${b&lt;0?&#x27;− &#x27;+(-b):&#x27;+ &#x27;+b}`;return `&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;50&quot; text-anchor=&quot;middle&quot; font-size=&quot;20&quot;&gt;${rule}&lt;/text&gt;&lt;text class=&quot;ink&quot; x=&quot;${w/2}&quot; y=&quot;${h-16}&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot;&gt;${esc(sig0)}&lt;/text&gt;`},
- table:(e,d,w,h)=&gt;{const p=e.props,vs=[p.a,p.b,p.c,p.d];return vs.map((v,i)=&gt;`&lt;rect x=&quot;${14+i*56}&quot; y=&quot;40&quot; width=&quot;48&quot; height=&quot;40&quot; rx=&quot;6&quot; fill=&quot;#f6f8fb&quot; stroke=&quot;#5b6778&quot;/&gt;&lt;text x=&quot;${38+i*56}&quot; y=&quot;66&quot; text-anchor=&quot;middle&quot; font-size=&quot;18&quot; font-weight=&quot;700&quot; fill=&quot;#1d2633&quot;&gt;${v}&lt;/text&gt;`).join(&#x27;&#x27;)+`&lt;text class=&quot;ink&quot; x=&quot;${w/2}&quot; y=&quot;${h-14}&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot;&gt;${p.which===1?&#x27;平均数&#x27;:p.which===2?&#x27;最大数&#x27;:&#x27;合计&#x27;}：${d.value?qs(d.value):&#x27;&#x27;}&lt;/text&gt;`},
+ table:(e,d,w,h)=&gt;{const p=e.props,vs=d.tab?d.tab.slots:[Q(p.a),Q(p.b),Q(p.c),Q(p.d)];return vs.map((v,i)=&gt;`&lt;rect x=&quot;${14+i*56}&quot; y=&quot;40&quot; width=&quot;48&quot; height=&quot;40&quot; rx=&quot;6&quot; fill=&quot;#f6f8fb&quot; stroke=&quot;#5b6778&quot;/&gt;&lt;text x=&quot;${38+i*56}&quot; y=&quot;66&quot; text-anchor=&quot;middle&quot; font-size=&quot;18&quot; font-weight=&quot;700&quot; fill=&quot;#1d2633&quot;&gt;${qs(v)}&lt;/text&gt;`).join(&#x27;&#x27;)+`&lt;text class=&quot;ink&quot; x=&quot;${w/2}&quot; y=&quot;${h-14}&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot;&gt;${p.which===1?&#x27;平均数&#x27;:p.which===2?&#x27;最大数&#x27;:&#x27;合计&#x27;}：${d.value?qs(d.value):&#x27;&#x27;}&lt;/text&gt;`},
  sym:(e,d,w,h)=&gt;`&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;${h/2+12}&quot; text-anchor=&quot;middle&quot; font-size=&quot;30&quot; font-style=&quot;italic&quot;&gt;x = ${e.props.x}&lt;/text&gt;`,
  rect:(e,d,w,h)=&gt;{const {w:rw,h:rh}=e.props,rot=e.props.rot||0,gw=rw*20,gh=rh*20,cx=w/2,cy=(h-24)/2,x0=cx-gw/2,y0=cy-gh/2;let s=`&lt;g transform=&quot;rotate(${rot} ${cx} ${cy})&quot;&gt;`;
    for(let i=0;i&lt;rw;i++)for(let j=0;j&lt;rh;j++)s+=`&lt;rect x=&quot;${x0+i*20}&quot; y=&quot;${y0+j*20}&quot; width=&quot;20&quot; height=&quot;20&quot; fill=&quot;#cfe5ff&quot; stroke=&quot;#8fb6e6&quot;/&gt;`;

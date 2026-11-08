@@ -254,7 +254,7 @@ const TYPES={
  box:{label:'黑箱（输入 → 输出）',group:'函数',prefix:'黑箱',out:'value',accepts:'value',defaults:{a:1,b:0},
    fields:[{k:'a',label:'a（输出 = a × 输入 + b）',min:-5,max:5},{k:'b',label:'b',min:-10,max:10}],size:()=>[230,120]},
  // 数据表：四个数，输出合计、平均数或最大数。
- table:{label:'数据表（四个数）',group:'统计',prefix:'数据表',out:'value',dim:'count',defaults:{a:4,b:8,c:6,d:10,which:0},
+ table:{label:'数据表（四个数）',group:'统计',prefix:'数据表',out:'value',accepts:'value',dim:'count',defaults:{a:4,b:8,c:6,d:10,which:0},
    fields:[{k:'a',label:'第 1 个数',min:0,max:50},{k:'b',label:'第 2 个数',min:0,max:50},{k:'c',label:'第 3 个数',min:0,max:50},{k:'d',label:'第 4 个数',min:0,max:50},{k:'which',label:'输出（0 合计，1 平均，2 最大）',min:0,max:2,choices:['合计','平均','最大']}],size:()=>[240,150]},
  // x 砝码：一个未知数。x 的值由学生设定，天平上用它参与平衡。
  sym:{label:'x 砝码（未知数）',group:'数与运算',prefix:'x',out:'value',dim:'count',defaults:{x:0},fields:[{k:'x',label:'x 等于几',min:-10,max:30}],size:()=>[120,70]},
@@ -365,7 +365,7 @@ function evaluate(s){
       if(!ls.length)v=Q(1);else if(!any)v=null;else v=Q(v.n*(e.props.times||1),v.d)}
     else if(e.type==='balance'&&port==='equal'){const Ls=inputs(s,id).filter(l=>l.slot==='L'),Rs=inputs(s,id).filter(l=>l.slot==='R');const tot=ls=>ls.reduce((t,l)=>{const x=vf(l);return x?qadd(t,x):t},Q(0));if(Ls.length&&Rs.length)v={kind:'bool',data:qeq(tot(Ls),tot(Rs))}}
     else if(e.type==='box'){const l=inputs(s,id)[0];const x=l&&vf(l);v=x?qadd(Q(e.props.a*x.n,x.d),Q(e.props.b)):null}
-    else if(e.type==='table'){const p=e.props,vs=[p.a,p.b,p.c,p.d],sum=vs.reduce((x,y)=>x+y,0);v=port==='sum'?Q(sum):port==='mean'?Q(sum,4):port==='max'?Q(Math.max(...vs)):(p.which===1?Q(sum,4):p.which===2?Q(Math.max(...vs)):Q(sum))}
+    else if(e.type==='table'){const T=tableOf(id),p=e.props;v=port==='sum'?T.sum:port==='mean'?T.mean:port==='max'?T.max:(p.which===1?T.mean:p.which===2?T.max:T.sum)}
     else if(e.type==='clock')v=Q((e.props.h%12)*60+e.props.m);
     else if(e.type==='sym')v=Q(e.props.x);
     else if(e.type==='div'){const L=inputs(s,id).find(l=>l.slot==='L'),R=inputs(s,id).find(l=>l.slot==='R');const a=L&&vf(L),b=R&&vf(R);v=(a&&b&&b.n!==0)?(e.props.mode===1?(a.d===1&&b.d===1?Q(a.n%b.n):null):Q(a.n*b.d,a.d*b.n)):null}
@@ -373,7 +373,9 @@ function evaluate(s){
   // val 返回带类型的 Val；valQ / vf 取出有理数 data，算术部分照旧。
   const valQ=(id,port)=>{const v=val(id,port);return v?v.data:null};
   const vf=l=>valQ(l.from,l.fromPort); // value flowing in on a link (a link may read one output port of its source)
-  for(const id in E){const e=E[id],d=D[id]={read:[],sig:[]};
+  // 数据表：连进来的数依次填进 a、b、c、d（连线的先后），没连线的格子保留自己的数。合计、平均、最大都从这四个格子算。
+  const tableOf=id=>{const p=E[id].props,ins=inputs(s,id).map(l=>vf(l)).filter(Boolean);const slots=[Q(p.a),Q(p.b),Q(p.c),Q(p.d)].map((x,i)=>ins[i]||x);const sum=slots.reduce((t,x)=>qadd(t,x),Q(0));const max=slots.reduce((m,x)=>qnum(x)>qnum(m)?x:m);return{slots,sum,mean:Q(sum.n,sum.d*4),max}};
+  for(const id in E){const e=E[id],d=D[id]={read:[],sig:[]};if(e.type==='table')d.tab=tableOf(id);
     const sig=(lv,tx)=>d.sig.push({lv,tx});
     if(TYPES[e.type].out==='value')d.value=valQ(id);
     // d.val 是带类型的值 {kind, dim, data}；d.value 仍是有理数 Q，页面和判分照旧读它。
@@ -397,8 +399,8 @@ function evaluate(s){
       if(bv&&F&&(bv.d!==1||bv.n<F.min||bv.n>F.max))sig('err',`${E[b.from].name} 的值 ${qs(bv)} 不能填进「${F.label.replace(/（.*/,'')}」`)}
     if(e.type==='box'){const l=inputs(s,id)[0];const x=l&&vf(l);const {a,b}=e.props;
       if(!x)sig('info',`把数连进黑箱：输出 = ${a} × 输入 ${b>=0?'+ '+b:'− '+(-b)}`);else sig('ok',`输入 ${qs(x)} → 输出 ${qs(d.value)}`)}
-    if(e.type==='table'){const v4=[e.props.a,e.props.b,e.props.c,e.props.d],sum=v4.reduce((x,y)=>x+y,0),mean=sum/4;
-      sig('ok',`数：${v4.join('、')}；合计 ${sum}，平均 ${Number.isInteger(mean)?mean:mean.toFixed(2)}，最大 ${Math.max(...v4)}`)}
+    if(e.type==='table'){const T=d.tab,v4=T.slots.map(qs),sum=qnum(T.sum),mean=qnum(T.mean),mx=qnum(T.max);
+      sig('ok',`数：${v4.join('、')}；合计 ${sum}，平均 ${Number.isInteger(mean)?mean:mean.toFixed(2)}，最大 ${mx}`)}
     if(e.type==='sym')sig('info',`x = ${e.props.x}`);
     if(e.type==='angle'){const k=e.props.deg;const kind=k===0?'零度角':k<90?'锐角':k===90?'直角':k<180?'钝角':k===180?'平角':'大于平角';sig(k===90?'ok':'info',`${k}°：${kind}`)}
     if(e.type==='fact'){const {b,c}=e.props;let f=null;for(let p=-10;p<=10&&!f;p++)for(let q=p;q<=10&&!f;q++)if(p+q===b&&p*q===c)f=[p,q];
@@ -474,11 +476,11 @@ function evaluate(s){
     if(e.type==='dice'){const c=e.props.counts;if(!c)sig('info','点“掷”开始');else{const tot=c.reduce((a,b)=>a+b,0);let best=2;for(let i=2;i<=12;i++)if(c[i]>c[best])best=i;d.tot=tot;sig('info',`掷了 ${tot} 回，出现最多的是 ${best}`)}}
   }
   // 端口：每个器材算出来的数（有名字、有值）。步骤判分读端口，不再匹配信号文字。
-  for(const id in E)D[id].ports=Object.assign(D[id].ports||{},portsFor(E[id],s,E));
+  for(const id in E)D[id].ports=Object.assign(D[id].ports||{},portsFor(E[id],s,E,D));
   return D;
 }
 /* 端口的定义：从属性直接算。信号文字仍由 evaluate 上面的代码画，这里的值和文字用同一套算法。 */
-function portsFor(e,s,E){const p=e.props,P={};
+function portsFor(e,s,E,D){const p=e.props,P={};
   switch(e.type){
   case 'clock':{const cl=clockPair(E);if(cl&&cl[0].id===e.id){const t=c=>((c.props.h%12)*60+c.props.m);P.between=((t(cl[1])-t(cl[0]))%720+720)%720}break}
   case 'bars':{const mx=Math.max(p.a,p.b,p.c);P.bMinusA=p.b-p.a;P.max=mx;P.topNames=['一班','二班','三班'].filter((_,i)=>[p.a,p.b,p.c][i]===mx).join('、');break}
@@ -506,7 +508,7 @@ function portsFor(e,s,E){const p=e.props,P={};
   case 'tangent':P.relation=p.d>p.r?'apart':p.d===p.r?'tangent':'cross';break;
   case 'dice':P.tot=p.counts?p.counts.reduce((a,b)=>a+b,0):0;break;
   case 'angle':P.deg=p.deg;break;
-  case 'table':{const vs=[p.a,p.b,p.c,p.d],sum=vs.reduce((x,y)=>x+y,0);P.sum=Q(sum);P.mean=Q(sum,4);P.max=Q(Math.max(...vs));break}
+  case 'table':{const T=D[e.id].tab;P.sum=T.sum;P.mean=T.mean;P.max=T.max;break}
   case 'afrac':if(p.d!==0)P.value=p.n/p.d;break;
   case 'radical':{const n=p.n;let kk=1,mm=n;for(let k=Math.floor(Math.sqrt(n));k>=2;k--){if(n%(k*k)===0){kk=k;mm=n/(k*k);break}}P.kk=kk;P.mm=mm;break}
   case 'parlines':P.sameSide=180-p.a;P.corresponding=p.a;break;
@@ -769,7 +771,7 @@ mul:(e,d,w,h)=>{const t=d.terms||[];const ex=t.length?t.map(qs).join(' × '):'�
    if(xp&&xp.id==='funcline')s+=`<circle cx="${X(2)}" cy="${Y(-3)}" r="5" fill="none" stroke="#e03131" stroke-width="2"/><text x="${X(2)+8}" y="${Y(-3)+4}" font-size="11" fill="#e03131">(2, −3)</text>`;
    return s},
  box:(e,d,w,h)=>{const {a,b}=e.props;const sigs=d.sig.filter(x=>!hideSig(e,x));const sig0=sigs[0]?sigs[0].tx:'';const rule=ruleHidden()?'y = ？':`y = ${a}x ${b<0?'− '+(-b):'+ '+b}`;return `<text class="big" x="${w/2}" y="50" text-anchor="middle" font-size="20">${rule}</text><text class="ink" x="${w/2}" y="${h-16}" text-anchor="middle" font-size="12">${esc(sig0)}</text>`},
- table:(e,d,w,h)=>{const p=e.props,vs=[p.a,p.b,p.c,p.d];return vs.map((v,i)=>`<rect x="${14+i*56}" y="40" width="48" height="40" rx="6" fill="#f6f8fb" stroke="#5b6778"/><text x="${38+i*56}" y="66" text-anchor="middle" font-size="18" font-weight="700" fill="#1d2633">${v}</text>`).join('')+`<text class="ink" x="${w/2}" y="${h-14}" text-anchor="middle" font-size="12">${p.which===1?'平均数':p.which===2?'最大数':'合计'}：${d.value?qs(d.value):''}</text>`},
+ table:(e,d,w,h)=>{const p=e.props,vs=d.tab?d.tab.slots:[Q(p.a),Q(p.b),Q(p.c),Q(p.d)];return vs.map((v,i)=>`<rect x="${14+i*56}" y="40" width="48" height="40" rx="6" fill="#f6f8fb" stroke="#5b6778"/><text x="${38+i*56}" y="66" text-anchor="middle" font-size="18" font-weight="700" fill="#1d2633">${qs(v)}</text>`).join('')+`<text class="ink" x="${w/2}" y="${h-14}" text-anchor="middle" font-size="12">${p.which===1?'平均数':p.which===2?'最大数':'合计'}：${d.value?qs(d.value):''}</text>`},
  sym:(e,d,w,h)=>`<text class="big" x="${w/2}" y="${h/2+12}" text-anchor="middle" font-size="30" font-style="italic">x = ${e.props.x}</text>`,
  rect:(e,d,w,h)=>{const {w:rw,h:rh}=e.props,rot=e.props.rot||0,gw=rw*20,gh=rh*20,cx=w/2,cy=(h-24)/2,x0=cx-gw/2,y0=cy-gh/2;let s=`<g transform="rotate(${rot} ${cx} ${cy})">`;
    for(let i=0;i<rw;i++)for(let j=0;j<rh;j++)s+=`<rect x="${x0+i*20}" y="${y0+j*20}" width="20" height="20" fill="#cfe5ff" stroke="#8fb6e6"/>`;
