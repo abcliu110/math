@@ -210,18 +210,18 @@ const TYPES={
  clock:{label:'钟面',group:'图形',prefix:'钟面',out:'value',dim:'time',defaults:{h:3,m:0},fields:[{k:'h',label:'时（几点）',min:1,max:12},{k:'m',label:'分',min:0,max:55,step:5}],size:()=>[180,200]},
  angle:{label:'角',group:'图形',prefix:'角',defaults:{deg:90},fields:[{k:'deg',label:'度数（0 到 180）',min:0,max:180,step:5}],size:()=>[200,160]},
  bars:{label:'条形统计图',group:'统计',prefix:'统计图',defaults:{a:4,b:6,c:3},fields:[{k:'a',label:'一班（人）',min:0,max:30},{k:'b',label:'二班（人）',min:0,max:30},{k:'c',label:'三班（人）',min:0,max:30}],size:()=>[220,190]},
- tri:{label:'三角形',group:'图形',prefix:'三角形',defaults:{a:30,b:40},fields:[{k:'a',label:'第一个角（度）',min:1,max:150},{k:'b',label:'第二个角（度）',min:1,max:150}],size:()=>[240,170]},
+ tri:{ports:(p)=>({third:180-p.a-p.b}),label:'三角形',group:'图形',prefix:'三角形',defaults:{a:30,b:40},fields:[{k:'a',label:'第一个角（度）',min:1,max:150},{k:'b',label:'第二个角（度）',min:1,max:150}],size:()=>[240,170]},
  para:{label:'平行四边形',group:'图形',prefix:'平行四边形',defaults:{base:6,h:4},fields:[{k:'base',label:'底（格）',min:1,max:12},{k:'h',label:'高（格）',min:1,max:12}],size:()=>[240,170]},
- line:{label:'折线统计图',group:'统计',prefix:'折线图',defaults:{y1:3,y2:6,y3:4},fields:[{k:'y1',label:'第一年（万元）',min:0,max:12},{k:'y2',label:'第二年（万元）',min:0,max:12},{k:'y3',label:'第三年（万元）',min:0,max:12}],size:()=>[220,190]},
- cage:{label:'鸡兔笼',group:'数与运算',prefix:'鸡兔笼',defaults:{heads:35,legs:94,rabbits:0},fields:[{k:'heads',label:'头（总数）',min:1,max:60},{k:'legs',label:'腿（总数）',min:0,max:200,step:2},{k:'rabbits',label:'兔（只）',min:0,max:60}],size:()=>[220,150]},
+ line:{ports:(p)=>({d12:p.y2-p.y1,d23:p.y3-p.y2}),label:'折线统计图',group:'统计',prefix:'折线图',defaults:{y1:3,y2:6,y3:4},fields:[{k:'y1',label:'第一年（万元）',min:0,max:12},{k:'y2',label:'第二年（万元）',min:0,max:12},{k:'y3',label:'第三年（万元）',min:0,max:12}],size:()=>[220,190]},
+ cage:{ports:(p)=>{const c=p.heads-p.rabbits,got=4*p.rabbits+2*c;return{chickens:c,rabbits:p.rabbits,solved:c>=0&&got===p.legs}},label:'鸡兔笼',group:'数与运算',prefix:'鸡兔笼',defaults:{heads:35,legs:94,rabbits:0},fields:[{k:'heads',label:'头（总数）',min:1,max:60},{k:'legs',label:'腿（总数）',min:0,max:200,step:2},{k:'rabbits',label:'兔（只）',min:0,max:60}],size:()=>[220,150]},
  pair:{label:'数对',group:'关系',prefix:'数对',defaults:{x:3,y:2},fields:[{k:'x',label:'第几列（x）',min:0,max:8},{k:'y',label:'第几行（y）',min:0,max:8}],size:()=>[240,240]},
  shape:{label:'图形（平移、旋转、对称）',group:'图形',prefix:'图形',defaults:{dx:0,rot:0,mirror:0},fields:[{k:'dx',label:'向右平移（格）',min:0,max:6},{k:'rot',label:'旋转（度，逆时针）',min:0,max:270,step:90},{k:'mirror',label:'轴对称（0 不做，1 做）',min:0,max:1,choices:['不做','做']}],size:()=>[260,190]},
  solid:{label:'立体图形（观察）',group:'图形',prefix:'立体图形',defaults:{view:0},fields:[{k:'view',label:'看的方向（0 正面，1 侧面，2 上面）',min:0,max:2,choices:['正面','侧面','上面']}],size:()=>[240,190]},
- circle:{label:'圆',group:'图形',prefix:'圆',defaults:{r:2},fields:[{k:'r',label:'半径（厘米）',min:1,max:10}],size:()=>[200,200]},
- pie:{label:'扇形统计图',group:'统计',prefix:'扇形图',defaults:{a:40,b:30,c:30},fields:[{k:'a',label:'一班（%）',min:0,max:100,step:5},{k:'b',label:'二班（%）',min:0,max:100,step:5},{k:'c',label:'三班（%）',min:0,max:100,step:5}],size:()=>[220,220]},
- sim:{label:'相似图形（放大缩小）',group:'图形',prefix:'相似图形',defaults:{k:1},fields:[{k:'k',label:'相似比（放大几倍）',min:1,max:3}],size:()=>[260,190]},
- pyth:{label:'直角三角形（勾股定理）',group:'图形',prefix:'直角三角形',defaults:{a:3,b:2},fields:[{k:'a',label:'直角边 a',min:1,max:12},{k:'b',label:'直角边 b',min:1,max:12}],size:()=>[240,190]},
- trig:{label:'锐角三角函数',group:'图形',prefix:'三角函数',defaults:{deg:45},fields:[{k:'deg',label:'锐角（度）',min:5,max:85,step:5}],size:()=>[240,190]},
+ circle:{ports:(p)=>({circ:Number((2*3.14*p.r).toFixed(2)),area:Number((3.14*p.r*p.r).toFixed(2))}),label:'圆',group:'图形',prefix:'圆',defaults:{r:2},fields:[{k:'r',label:'半径（厘米）',min:1,max:10}],size:()=>[200,200]},
+ pie:{ports:(p)=>({sum:p.a+p.b+p.c,angleA:Number((p.a*3.6).toFixed(0))}),label:'扇形统计图',group:'统计',prefix:'扇形图',defaults:{a:40,b:30,c:30},fields:[{k:'a',label:'一班（%）',min:0,max:100,step:5},{k:'b',label:'二班（%）',min:0,max:100,step:5},{k:'c',label:'三班（%）',min:0,max:100,step:5}],size:()=>[220,220]},
+ sim:{ports:(p)=>({ratio:p.k,areaRatio:p.k*p.k}),label:'相似图形（放大缩小）',group:'图形',prefix:'相似图形',defaults:{k:1},fields:[{k:'k',label:'相似比（放大几倍）',min:1,max:3}],size:()=>[260,190]},
+ pyth:{ports:(p)=>{const c=Math.sqrt(p.a*p.a+p.b*p.b);return{c:c,triple:Number.isInteger(c)}},label:'直角三角形（勾股定理）',group:'图形',prefix:'直角三角形',defaults:{a:3,b:2},fields:[{k:'a',label:'直角边 a',min:1,max:12},{k:'b',label:'直角边 b',min:1,max:12}],size:()=>[240,190]},
+ trig:{ports:(p)=>{const r=p.deg*Math.PI/180;return{sin:Number(Math.sin(r).toFixed(2)),cos:Number(Math.cos(r).toFixed(2)),tan:Number(Math.tan(r).toFixed(2))}},label:'锐角三角函数',group:'图形',prefix:'三角函数',defaults:{deg:45},fields:[{k:'deg',label:'锐角（度）',min:5,max:85,step:5}],size:()=>[240,190]},
  fact:{label:'因式分解 x² + bx + c',group:'数与运算',prefix:'因式',defaults:{b:0,c:0},fields:[{k:'b',label:'b',min:-10,max:10},{k:'c',label:'c',min:-10,max:10}],size:()=>[260,120]},
  sqsum:{label:'乘法公式 (a + b)²',group:'数与运算',prefix:'公式',defaults:{a:1,b:1},fields:[{k:'a',label:'a',min:0,max:9},{k:'b',label:'b',min:0,max:9}],size:()=>[260,120]},
  isotri:{label:'等腰三角形（顶角）',group:'图形',prefix:'等腰三角形',defaults:{apex:40},fields:[{k:'apex',label:'顶角（度）',min:10,max:150,step:10}],size:()=>[240,170]},
@@ -523,22 +523,23 @@ function evaluate(s){
 }
 /* 端口的定义：从属性直接算。信号文字仍由 evaluate 上面的代码画，这里的值和文字用同一套算法。 */
 function portsFor(e,s,E,D){const p=e.props,P={};
+  if(TYPES[e.type].ports)return Object.assign(P,TYPES[e.type].ports(p,e,E,D));
   switch(e.type){
   case 'dice':P.dist=p.counts?{kind:'dist',counts:p.counts.slice()}:null;break;
   case 'clock':{const cl=clockPair(E);if(cl&&cl[0].id===e.id){const t=c=>((c.props.h%12)*60+c.props.m);P.between=((t(cl[1])-t(cl[0]))%720+720)%720}break}
   case 'bars':{const mx=Math.max(p.a,p.b,p.c);P.bMinusA=p.b-p.a;P.max=mx;P.topNames=['一班','二班','三班'].filter((_,i)=>[p.a,p.b,p.c][i]===mx).join('、');break}
-  case 'tri':P.third=180-p.a-p.b;break;
-  case 'line':P.d12=p.y2-p.y1;P.d23=p.y3-p.y2;break;
-  case 'cage':{const c=p.heads-p.rabbits,got=4*p.rabbits+2*c;P.chickens=c;P.rabbits=p.rabbits;P.solved=c>=0&&got===p.legs;break}
+
+
+
   case 'solid':{const hs=SOLID_H,v=p.view;if(v===0)P.front=hs[0].map((_,x)=>Math.max(...hs.map(r=>r[x])));if(v===1)P.side=hs.map(r=>Math.max(...r));if(v===2)P.top=hs.flat().filter(x=>x>0).length;break}
-  case 'circle':P.circ=Number((2*3.14*p.r).toFixed(2));P.area=Number((3.14*p.r*p.r).toFixed(2));break;
-  case 'pie':P.sum=p.a+p.b+p.c;P.angleA=Number((p.a*3.6).toFixed(0));break;
+
+
   case 'ineq':P.set={op:p.op,b:p.b};break;
   case 'hyper':P.y2=p.k/2;break;
   case 'parab':if(p.a!==0){P.vx=-p.b/(2*p.a);P.vy=p.c-p.b*p.b/(4*p.a);const D0=p.b*p.b-4*p.a*p.c;P.xHits=D0>0?2:D0===0?1:0}break;
-  case 'sim':P.ratio=p.k;P.areaRatio=p.k*p.k;break;
-  case 'pyth':{const c=Math.sqrt(p.a*p.a+p.b*p.b);P.c=c;P.triple=Number.isInteger(c);break}
-  case 'trig':{const r=p.deg*Math.PI/180;P.sin=Number(Math.sin(r).toFixed(2));P.cos=Number(Math.cos(r).toFixed(2));P.tan=Number(Math.tan(r).toFixed(2));break}
+
+
+
   case 'bag':{const t=p.red+p.white;P.pRed=t?p.red/t:null;break}
   case 'cang':P.inscribed=p.c/2;break;
   case 'sqsum':P.terms=[p.a*p.a,2*p.a*p.b,p.b*p.b];break;
