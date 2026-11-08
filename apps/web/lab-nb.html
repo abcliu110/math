@@ -124,6 +124,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .tile svg{display:block;margin:0 auto 4px}
 .tile span{font-size:12px}
 #ghost{position:fixed;pointer-events:none;display:none;padding:6px 10px;border-radius:8px;background:var(--acc);color:#fff;font-size:12px;z-index:9}
+.templink{pointer-events:none}
 /* 弹窗 */
 #modal{position:fixed;inset:0;background:#0009;display:none;place-items:center;z-index:10}
 #modal .box{width:min(460px,92vw);background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}
@@ -201,10 +202,10 @@ const TYPES={
    fields:[{k:'n',label:'分子（涂几份）',min:0,max:24},{k:'d',label:'分母（平均分成几份）',min:1,max:12}],
    size:e=>[176,34+Math.max(1,Math.ceil(e.props.n/e.props.d))*28]},
  adder:{label:'合并器',group:'数与运算',prefix:'合并器',out:'value',accepts:'value',defaults:{op:0},fields:[{k:'op',label:'运算',min:0,max:1,choices:['加','减（第一个数减去后面的）']}],size:()=>[170,84]},
- mul:{label:'乘法器',group:'数与运算',prefix:'乘法器',out:'value',accepts:'value',defaults:{},fields:[],size:()=>[170,84]},
- div:{label:'除法器',group:'数与运算',prefix:'除法器',out:'value',accepts:'value',slots:true,defaults:{},fields:[],size:()=>[200,110]},
+ mul:{label:'乘法器',group:'数与运算',prefix:'乘法器',out:'value',accepts:'value',defaults:{times:1},fields:[{k:'times',label:'再乘一个数（1 是不乘）',min:1,max:10}],size:()=>[170,84]},
+ div:{label:'除法器',group:'数与运算',prefix:'除法器',out:'value',accepts:'value',slots:true,defaults:{mode:0},fields:[{k:'mode',label:'算什么',min:0,max:1,choices:['商（分成几份）','余数']}],size:()=>[200,110]},
  money:{label:'人民币',group:'数与运算',prefix:'人民币',out:'value',defaults:{yuan:1,jiao:0,fen:0},fields:[{k:'yuan',label:'元',min:0,max:99},{k:'jiao',label:'角',min:0,max:9},{k:'fen',label:'分',min:0,max:9}],size:()=>[190,62]},
- clock:{label:'钟面',group:'图形',prefix:'钟面',defaults:{h:3,m:0},fields:[{k:'h',label:'时（几点）',min:1,max:12},{k:'m',label:'分',min:0,max:55,step:5}],size:()=>[180,200]},
+ clock:{label:'钟面',group:'图形',prefix:'钟面',out:'value',dim:'time',defaults:{h:3,m:0},fields:[{k:'h',label:'时（几点）',min:1,max:12},{k:'m',label:'分',min:0,max:55,step:5}],size:()=>[180,200]},
  angle:{label:'角',group:'图形',prefix:'角',defaults:{deg:90},fields:[{k:'deg',label:'度数（0 到 180）',min:0,max:180,step:5}],size:()=>[200,160]},
  bars:{label:'条形统计图',group:'统计',prefix:'统计图',defaults:{a:4,b:6,c:3},fields:[{k:'a',label:'一班（人）',min:0,max:30},{k:'b',label:'二班（人）',min:0,max:30},{k:'c',label:'三班（人）',min:0,max:30}],size:()=>[220,190]},
  tri:{label:'三角形',group:'图形',prefix:'三角形',defaults:{a:30,b:40},fields:[{k:'a',label:'第一个角（度）',min:1,max:150},{k:'b',label:'第二个角（度）',min:1,max:150}],size:()=>[240,170]},
@@ -237,7 +238,7 @@ const TYPES={
  ineq:{label:'不等式的解集（数轴）',group:'关系',prefix:'解集',defaults:{b:2,op:1},fields:[{k:'b',label:'边界（数）',min:-6,max:6},{k:'op',label:'方向（0：x＜，1：x＞）',min:0,max:1}],size:()=>[300,110]},
  numline:{label:'数轴',group:'关系',prefix:'数轴',accepts:'value',reject:{area:'数轴量的是长短和数，面积不能放上去'},defaults:{min:0,max:2},
    fields:[{k:'min',label:'最左',min:-10,max:10},{k:'max',label:'最右',min:-9,max:20}],size:()=>[460,118]},
- balance:{label:'天平',group:'关系',prefix:'天平',accepts:'value',slots:true,reject:{area:'天平称重量，不称面积'},defaults:{},fields:[],size:()=>[340,200]},
+ balance:{label:'天平',group:'关系',prefix:'天平',accepts:'value',slots:true,reject:{area:'天平称重量，不称面积',time:'天平称重量，不称时间'},defaults:{sens:14},fields:[{k:'sens',label:'灵敏度（倾斜快慢）',min:4,max:30}],size:()=>[340,200]},
  fn:{label:'直线',group:'函数',prefix:'直线',out:'fn',defaults:{k:2,b:1},
    fields:[{k:'k',label:'k（斜率：x 加 1，y 加几）',min:-5,max:5},{k:'b',label:'b（和 y 轴交在哪）',min:-10,max:10}],size:()=>[160,64]},
  coord:{label:'坐标平面',group:'函数',prefix:'坐标平面',accepts:'fn',defaults:{},fields:[],size:()=>[340,360]},
@@ -257,6 +258,8 @@ const TYPES={
  sym:{label:'x 砝码（未知数）',group:'数与运算',prefix:'x',out:'value',dim:'count',defaults:{x:0},fields:[{k:'x',label:'x 等于几',min:-10,max:30}],size:()=>[120,70]},
 };
 const GROUP_ORDER=['数与运算','分数','关系','函数','图形','统计','概率'];
+/* 多输出端口：除了默认的输出（dy 为中点），这些器材还有额外的输出口。dy 是端口在器材上的纵坐标。 */
+const OUT_PORTS={table:[{id:'sum',label:'合计',dy:25},{id:'mean',label:'平均',dy:100},{id:'max',label:'最大',dy:125}]};
 /* 立体图形：每行是一排（y），每个数是这一格上摞的小方块个数（x 从左到右）。 */
 const SOLID_H=[[2,1],[1,0]];
 
@@ -266,10 +269,10 @@ function blankScene(){return{entities:{},links:[],seq:{},nid:1}}
 const clone=o=>JSON.parse(JSON.stringify(o));
 function addEnt(s,type,x,y,props){const T=TYPES[type];const id='e'+(s.nid++);s.seq[type]=(s.seq[type]||0)+1;
   s.entities[id]={id,type,name:T.prefix+s.seq[type],x,y,props:Object.assign(clone(T.defaults),props||{})};return id}
-function addLink(s,from,to,slot){s.links.push({id:'l'+(s.nid++),from,to,slot:slot||null})}
+function addLink(s,from,to,slot,fromPort){s.links.push({id:'l'+(s.nid++),from,to,slot:slot||null,...(fromPort?{fromPort}:{})})}
 const inputs=(s,id)=>s.links.filter(l=>l.to===id);
 /* 维度：这个器材算出的数是什么东西。只有“个数”和“面积”两种需要区分；合并和比较时要求同一种。 */
-const DIM_NAME={count:'个数',area:'面积'};
+const DIM_NAME={count:'个数',area:'面积',time:'时间'};
 function dimOf(s,id){const e=s.entities[id];if(!e)return'count';if(e.type==='adder'||e.type==='mul'){const l=inputs(s,id)[0];return l?dimOf(s,l.from):'count'}return TYPES[e.type].dim||'count'}
 /* 依赖关系：连线和绑定都算。从 a 能走到 b，说明 b 的值依赖 a（或 a 绑着 b 的属性）。 */
 function reachAll(s,a,b){const seen={};const st=[a];while(st.length){const c=st.pop();if(c===b)return true;if(seen[c])continue;seen[c]=1;s.links.filter(l=>l.from===c).forEach(l=>st.push(l.to));(s.binds||[]).filter(x=>x.from===c).forEach(x=>st.push(x.to))}return false}
@@ -311,12 +314,13 @@ function actRaw(a){
     // 维度：天平不称面积、数轴不放面积；合并器只合并同一种东西。
     const fd=dimOf(s,a.from),rj=TYPES[to.type].reject;if(rj&&rj[fd])return{ok:0,why:rj[fd]};
     if(to.type==='adder'){const other=inputs(s,a.to).map(l=>dimOf(s,l.from)).find(x=>x!==fd);if(other)return{ok:0,why:`合并器只合并同一种东西：${DIM_NAME[fd]} 和 ${DIM_NAME[other]} 不能加`}}
-    if(s.links.some(l=>l.from===a.from&&l.to===a.to))return{ok:0,why:'已经连过了'};
+    if(a.fromPort&&!(OUT_PORTS[f.type]||[]).some(p=>p.id===a.fromPort))return{ok:0,why:'这个器材没有这个输出'};
+    if(s.links.some(l=>l.from===a.from&&l.to===a.to&&(l.fromPort||null)===(a.fromPort||null)))return{ok:0,why:'已经连过了'};
     if(reach(s,a.to,a.from))return{ok:0,why:'不能连成一个圈'};
     if(to.type==='balance'&&inputs(s,a.to).filter(l=>l.slot===a.slot).length>=5)return{ok:0,why:'一个盘最多放 5 个'};
     if(to.type==='numline'&&inputs(s,a.to).length>=6)return{ok:0,why:'数轴上最多 6 个点'};
     if(to.type==='div'&&inputs(s,a.to).some(l=>l.slot===a.slot))return{ok:0,why:a.slot==='L'?'左边已经有被除数了':'右边已经有除数了'};
-    addLink(s,a.from,a.to,(to.type==='balance'||to.type==='div')?a.slot:null);return{ok:1}}
+    addLink(s,a.from,a.to,(to.type==='balance'||to.type==='div')?a.slot:null,a.fromPort);return{ok:1}}
   case 'bind':{const t=E[a.to],src=E[a.from];if(!t||!src||a.to===a.from)return{ok:0,why:'绑到另一个器材上'};
     if(!TYPES[t.type].fields.some(f=>f.k===a.k))return{ok:0,why:'这个器材没有这个属性'};
     if(TYPES[src.type].out!=='value')return{ok:0,why:`${src.name} 不会出数，不能绑`};
@@ -332,36 +336,39 @@ function actRaw(a){
 /* ========== 引擎：只有这里算后果。纯函数 scene → derived ========== */
 function evaluate(s){
   const E=s.entities,vals={},busy={},D={};
-  const val=id=>{if(id in vals)return vals[id];if(busy[id])return null;busy[id]=1;const e=E[id];let v=null;
+  const val=(id,port)=>{const key=port?id+'#'+port:id;if(key in vals)return vals[key];if(busy[key])return null;busy[key]=1;const e=E[id];let v=null;
     if(e.type==='num')v=Q(e.props.v);else if(e.type==='frac')v=Q(e.props.n,e.props.d);
-    else if(e.type==='adder'){const xs=inputs(s,id).map(l=>val(l.from)).filter(Boolean);
+    else if(e.type==='adder'){const xs=inputs(s,id).map(l=>vf(l)).filter(Boolean);
       if(e.props.op===1&&xs.length)v=xs.slice(1).reduce((t,x)=>qsub(t,x),xs[0]);else{v=Q(0);for(const x of xs)v=qadd(v,x)}}
     else if(e.type==='rect')v=Q(e.props.w*e.props.h);else if(e.type==='money')v=Q(e.props.yuan*100+e.props.jiao*10+(e.props.fen||0),100);
-    else if(e.type==='mul'){v=Q(1);let any=false;for(const l of inputs(s,id)){const x=val(l.from);if(x){v=Q(v.n*x.n,v.d*x.d);any=true}}if(!any)v=null}
-    else if(e.type==='box'){const l=inputs(s,id)[0];const x=l&&val(l.from);v=x?qadd(Q(e.props.a*x.n,x.d),Q(e.props.b)):null}
-    else if(e.type==='table'){const p=e.props,vs=[p.a,p.b,p.c,p.d],sum=vs.reduce((x,y)=>x+y,0);v=p.which===1?Q(sum,4):p.which===2?Q(Math.max(...vs)):Q(sum)}
+    else if(e.type==='mul'){v=Q(1);let any=false;for(const l of inputs(s,id)){const x=vf(l);if(x){v=Q(v.n*x.n,v.d*x.d);any=true}}if(!any)v=null;else v=Q(v.n*(e.props.times||1))}
+    else if(e.type==='box'){const l=inputs(s,id)[0];const x=l&&vf(l);v=x?qadd(Q(e.props.a*x.n,x.d),Q(e.props.b)):null}
+    else if(e.type==='table'){const p=e.props,vs=[p.a,p.b,p.c,p.d],sum=vs.reduce((x,y)=>x+y,0);v=port==='sum'?Q(sum):port==='mean'?Q(sum,4):port==='max'?Q(Math.max(...vs)):(p.which===1?Q(sum,4):p.which===2?Q(Math.max(...vs)):Q(sum))}
+    else if(e.type==='clock')v=Q((e.props.h%12)*60+e.props.m);
     else if(e.type==='sym')v=Q(e.props.x);
-    else if(e.type==='div'){const L=inputs(s,id).find(l=>l.slot==='L'),R=inputs(s,id).find(l=>l.slot==='R');const a=L&&val(L.from),b=R&&val(R.from);v=(a&&b&&b.n!==0)?Q(a.n*b.d,a.d*b.n):null}
-    return vals[id]=v};
+    else if(e.type==='div'){const L=inputs(s,id).find(l=>l.slot==='L'),R=inputs(s,id).find(l=>l.slot==='R');const a=L&&vf(L),b=R&&vf(R);v=(a&&b&&b.n!==0)?(e.props.mode===1?(a.d===1&&b.d===1?Q(a.n%b.n):null):Q(a.n*b.d,a.d*b.n)):null}
+    return vals[key]=v};
+  const vf=l=>val(l.from,l.fromPort); // value flowing in on a link (a link may read one output port of its source)
   for(const id in E){const e=E[id],d=D[id]={read:[],sig:[]};
     const sig=(lv,tx)=>d.sig.push({lv,tx});
     if(TYPES[e.type].out==='value')d.value=val(id);
     if(e.type==='frac'){const v=d.value;if(e.props.n>e.props.d)sig('info',`比 1 大：${qs(v)} = ${Math.floor(e.props.n/e.props.d)} 又 ${e.props.n%e.props.d}/${e.props.d}`);else if(v.d!==e.props.d)sig('info',`${e.props.n}/${e.props.d} 和 ${qs(v)} 一样大`)}
-    if(e.type==='adder'){const ins=inputs(s,id).map(l=>val(l.from)).filter(Boolean);d.terms=ins;
+    if(e.type==='adder'){const ins=inputs(s,id).map(l=>vf(l)).filter(Boolean);d.terms=ins;
       if(!ins.length)sig('info','把几个数连进来，这里算它们的和');
       else{const ds=[...new Set(ins.map(q=>q.d))];if(ds.length>1){const L=ds.reduce(lcm);sig('info',`分母不同：都换成 ${L} 份再加`)}}}
-    if(e.type==='mul'){const ins=inputs(s,id).map(l=>val(l.from)).filter(Boolean);d.terms=ins;
+    if(e.type==='mul'){const ins=inputs(s,id).map(l=>vf(l)).filter(Boolean);d.terms=ins;
       if(!ins.length)sig('info','把几个数连进来，这里算它们的积（几个 × 几个）');
       else if(ins.length>=2&&d.value)sig('info',`${ins.map(qs).join(' × ')} = ${qs(d.value)}`)}
-    if(e.type==='div'){const L=inputs(s,id).find(l=>l.slot==='L'),R=inputs(s,id).find(l=>l.slot==='R');const a=L&&val(L.from),b=R&&val(R.from);d.a=a;d.b=b;
-      if(!a||!b)sig('info','左边放被除数（总数），右边放除数（分成几份）');
+    if(e.type==='div'){const L=inputs(s,id).find(l=>l.slot==='L'),R=inputs(s,id).find(l=>l.slot==='R');const a=L&&vf(L),b=R&&vf(R);d.a=a;d.b=b;
+      if(e.props.mode===1&&a&&b&&b.n!==0)sig(d.value?'ok':'warn',`${qs(a)} 除以 ${qs(b)}，余 ${d.value?qs(d.value):'（不是整数）'}`);
+      else if(!a||!b)sig('info','左边放被除数（总数），右边放除数（分成几份）');
       else if(b.n===0)sig('err','除数不能是 0');
       else if(d.value.d===1)sig('ok',`${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`);
       else sig('warn',`除不尽：${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`)}
     // 绑定进来的值如果不是整数或超出范围，这里说明原因（属性保持原值，不会悄悄改掉）。
     for(const b of (s.binds||[]).filter(x=>x.to===id)){const bv=val(b.from),F=TYPES[e.type].fields.find(f=>f.k===b.k);
       if(bv&&F&&(bv.d!==1||bv.n<F.min||bv.n>F.max))sig('err',`${E[b.from].name} 的值 ${qs(bv)} 不能填进「${F.label.replace(/（.*/,'')}」`)}
-    if(e.type==='box'){const l=inputs(s,id)[0];const x=l&&val(l.from);const {a,b}=e.props;
+    if(e.type==='box'){const l=inputs(s,id)[0];const x=l&&vf(l);const {a,b}=e.props;
       if(!x)sig('info',`把数连进黑箱：输出 = ${a} × 输入 ${b>=0?'+ '+b:'− '+(-b)}`);else sig('ok',`输入 ${qs(x)} → 输出 ${qs(d.value)}`)}
     if(e.type==='table'){const v4=[e.props.a,e.props.b,e.props.c,e.props.d],sum=v4.reduce((x,y)=>x+y,0),mean=sum/4;
       sig('ok',`数：${v4.join('、')}；合计 ${sum}，平均 ${Number.isInteger(mean)?mean:mean.toFixed(2)}，最大 ${Math.max(...v4)}`)}
@@ -420,14 +427,14 @@ function evaluate(s){
     if(e.type==='clock'){const {h,m}=e.props;sig('info',`现在是 ${h}:${String(m).padStart(2,'0')}`);
       const cl=Object.values(E).filter(x=>x.type==='clock');
       if(cl.length===2&&cl[0].id===id){const t=c=>((c.props.h%12)*60+c.props.m);const mins=((t(cl[1])-t(cl[0]))%720+720)%720;sig('ok',`两个钟相差 ${mins} 分钟`)}}
-    if(e.type==='numline'){const {min,max}=e.props;d.pts=inputs(s,id).map(l=>({from:l.from,v:val(l.from)})).filter(p=>p.v);
+    if(e.type==='numline'){const {min,max}=e.props;d.pts=inputs(s,id).map(l=>({from:l.from,v:vf(l)})).filter(p=>p.v);
       d.pts.forEach(p=>{p.out=qnum(p.v)<min||qnum(p.v)>max;if(p.out)sig('err',`${qs(p.v)} 放不下：数轴只从 ${min} 到 ${max}`)});
       const ins=d.pts.filter(p=>!p.out);
       if(ins.length>=2){const a=ins[0].v,b=ins[1].v,g=qsub(a,b);const gap=g.n<0?Q(-g.n,g.d):g;
         if(gap.n===0)sig('ok',`${qs(a)} 和 ${qs(b)} 落在同一点：一样大`);else sig('info',`${E[ins[0].from].name} 和 ${E[ins[1].from].name} 相差 ${qs(gap)}`)}}
     if(e.type==='balance'){const L=inputs(s,id).filter(l=>l.slot==='L'),R=inputs(s,id).filter(l=>l.slot==='R');
-      const sum=a=>a.reduce((t,l)=>{const v=val(l.from);return v?qadd(t,v):t},Q(0));d.L=sum(L);d.R=sum(R);d.Ln=L;d.Rn=R;
-      const df=qsub(d.L,d.R);d.tilt=-Math.max(-16,Math.min(16,qnum(df)*14));d.equal=df.n===0;d.ports={equal:d.equal,heavier:df.n>0?'L':df.n<0?'R':null};
+      const sum=a=>a.reduce((t,l)=>{const v=vf(l);return v?qadd(t,v):t},Q(0));d.L=sum(L);d.R=sum(R);d.Ln=L;d.Rn=R;
+      const df=qsub(d.L,d.R);d.tilt=-Math.max(-16,Math.min(16,qnum(df)*(e.props.sens||14)));d.equal=df.n===0;d.ports={equal:d.equal,heavier:df.n>0?'L':df.n<0?'R':null};
       if(!L.length&&!R.length)sig('info','把数连到左盘或右盘');
       else if(d.equal&&L.length&&R.length)sig('ok',`平了：左 ${qs(d.L)} = 右 ${qs(d.R)}`);
       else{const m=df.n<0?Q(-df.n,df.d):df;sig('warn',`${df.n>0?'左':'右'}边重 ${qs(m)}`)}}
@@ -472,6 +479,7 @@ function portsFor(e,s,E){const p=e.props,P={};
   case 'tangent':P.relation=p.d>p.r?'apart':p.d===p.r?'tangent':'cross';break;
   case 'dice':P.tot=p.counts?p.counts.reduce((a,b)=>a+b,0):0;break;
   case 'angle':P.deg=p.deg;break;
+  case 'table':{const vs=[p.a,p.b,p.c,p.d],sum=vs.reduce((x,y)=>x+y,0);P.sum=Q(sum);P.mean=Q(sum,4);P.max=Q(Math.max(...vs));break}
   case 'afrac':if(p.d!==0)P.value=p.n/p.d;break;
   case 'radical':{const n=p.n;let kk=1,mm=n;for(let k=Math.floor(Math.sqrt(n));k>=2;k--){if(n%(k*k)===0){kk=k;mm=n/(k*k);break}}P.kk=kk;P.mm=mm;break}
   case 'parlines':P.sameSide=180-p.a;P.corresponding=p.a;break;
@@ -583,23 +591,27 @@ function size(e){return TYPES[e.type].size(e)}
 // 三角形顶点的位置（相对器材左上角）：底边两端是 (30, h−30) 和 (w−30, h−30)，a、b 是两个底角。
 function triApex(a,b,w,h){const x0=30,L=w-60,yb=h-30,A=a*Math.PI/180,B=b*Math.PI/180;const t=L/(Math.cos(A)+Math.sin(A)*Math.cos(B)/Math.sin(B));return[x0+t*Math.cos(A),yb-t*Math.sin(A)]}
 function anchorIn(l){const e=S.entities[l.to];const [w,h]=size(e);if(e.type==='div')return l.slot==='L'?[e.x,e.y+h*0.3]:[e.x,e.y+h*0.7];if(e.type==='balance'){const t=(D[e.id]||{}).tilt||0,dy=Math.sin(t*Math.PI/180)*120;return l.slot==='L'?[e.x+50,e.y+112-dy]:[e.x+w-50,e.y+112+dy]}return[e.x,e.y+h/2]}
-function anchorOut(id){const e=S.entities[id],[w,h]=size(e);return[e.x+w,e.y+h/2]}
+function anchorOut(id,port){const e=S.entities[id],[w,h]=size(e);const p=port&&(OUT_PORTS[e.type]||[]).find(x=>x.id===port);return[e.x+w,e.y+(p?p.dy:h/2)]}
 /* 依赖追踪：从 id 往前（谁决定它）、往后（它决定谁）走一遍，连线和绑定都算。 */
 function depOf(id){const up={},down={};
   const walk=(next,set)=>{const st=[id];while(st.length){const c=st.pop();for(const n of next(c)){if(n!==id&&!set[n]){set[n]=1;st.push(n)}}}};
   walk(c=>S.links.filter(l=>l.to===c).map(l=>l.from).concat((S.binds||[]).filter(b=>b.to===c).map(b=>b.from)),up);
   walk(c=>S.links.filter(l=>l.from===c).map(l=>l.to).concat((S.binds||[]).filter(b=>b.from===c).map(b=>b.to)),down);
   return{up,down}}
-/* 拖连线时的兼容高亮：用一份副本试连一次（和真的连线用同一套规则），能连的器材亮绿，不能连的变暗。 */
-function dryLink(from,to,slot){const keep=S;S=clone(keep);try{return !!actRaw({t:'link',from,to,slot}).ok}catch(err){return false}finally{S=keep}}
-function markDrop(fromId,wx){document.querySelectorAll('#world [data-ent]').forEach(g=>{const id=g.dataset.ent;if(id===fromId){g.classList.remove('drop-ok','drop-no');return}
-  const e=S.entities[id];const [w]=size(e);const slot=TYPES[e.type].slots?(wx<e.x+w/2?'L':'R'):null;const ok=dryLink(fromId,id,slot);g.classList.toggle('drop-ok',ok);g.classList.toggle('drop-no',!ok)})}
-function clearDrop(){document.querySelectorAll('.drop-ok,.drop-no').forEach(x=>x.classList.remove('drop-ok','drop-no'))}
-function linkSvg(l,dep){if(!S.entities[l.from]||!S.entities[l.to])return'';const [x1,y1]=anchorOut(l.from),[x2,y2]=anchorIn(l);const c=Math.max(40,Math.abs(x2-x1)/2);
+/* 拖连线时的兼容高亮：用一份副本试连一次（和真的连线用同一套规则），能连的器材亮绿，不能连的变暗，并记下原因。 */
+let dropWhy={};
+function dryLink(from,to,slot,fport){const keep=S;S=clone(keep);try{const r=actRaw({t:'link',from,to,slot,fromPort:fport||null});return{ok:!!r.ok,why:r.why||''}}catch(err){return{ok:false,why:'这里连不上'}}finally{S=keep}}
+function markDrop(fromId,wx,fport){dropWhy={};document.querySelectorAll('#world [data-ent]').forEach(g=>{const id=g.dataset.ent;if(id===fromId){g.classList.remove('drop-ok','drop-no');return}
+  const e=S.entities[id];const [w]=size(e);const slot=TYPES[e.type].slots?(wx<e.x+w/2?'L':'R'):null;const r=dryLink(fromId,id,slot,fport);g.classList.toggle('drop-ok',r.ok);g.classList.toggle('drop-no',!r.ok);if(!r.ok)dropWhy[id]=r.why})}
+/* 拖动时，指针下面的器材如果连不上，把原因写在指针旁边。 */
+function showWhy(ev){const gh=$('ghost');if(!gh)return;const hg=document.elementsFromPoint(ev.clientX,ev.clientY).map(x=>x.closest&&x.closest('[data-ent]')).find(Boolean)||null;
+  if(hg&&dropWhy[hg.dataset.ent]){gh.textContent=dropWhy[hg.dataset.ent];gh.style.display='block';gh.style.left=(ev.clientX+14)+'px';gh.style.top=(ev.clientY+14)+'px'}else gh.style.display='none'}
+function clearDrop(){dropWhy={};document.querySelectorAll('.drop-ok,.drop-no').forEach(x=>x.classList.remove('drop-ok','drop-no'));const gh=$('ghost');if(gh)gh.style.display='none'}
+function linkSvg(l,dep){if(!S.entities[l.from]||!S.entities[l.to])return'';const [x1,y1]=anchorOut(l.from,l.fromPort),[x2,y2]=anchorIn(l);const c=Math.max(40,Math.abs(x2-x1)/2);
   const d=`M${x1},${y1} C${x1+c},${y1} ${x2-c},${y2} ${x2},${y2}`;
   const inChain=!!dep&&[l.from,l.to].every(x=>x===sel||dep.up[x]||dep.down[x]);
   // 连线上写出流过的值（有数的时候）
-  const v=D[l.from]&&D[l.from].value;const lab=v?`<text class="linkval" x="${(x1+x2)/2}" y="${(y1+y2)/2-7}" text-anchor="middle">${qs(v)}</text>`:'';
+  const v=l.fromPort?(D[l.from].ports||{})[l.fromPort]:D[l.from]&&D[l.from].value;const lab=v?`<text class="linkval" x="${(x1+x2)/2}" y="${(y1+y2)/2-7}" text-anchor="middle">${qs(v)}</text>`:'';
   return`<path class="linkhit" data-link="${l.id}" d="${d}"/><path class="link${selLink===l.id?' sel':''}${inChain?' dep':''}" d="${d}"/>${lab}`}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function entSvg(e,d,isNext,dep){const T=TYPES[e.type],[w,h]=size(e);const lv=d.sig.some(s=>s.lv==='err')?' err':(d.sig.some(s=>s.lv==='ok')?' ok':'');
@@ -609,7 +621,7 @@ function entSvg(e,d,isNext,dep){const T=TYPES[e.type],[w,h]=size(e);const lv=d.s
   g+=DRAW[e.type](e,d,w,h);
   if(T.accepts&&!T.slots)g+=`<circle class="port-in" cx="0" cy="${h/2}" r="8"/>`;
   // 端口：可见的蓝点 r=10，外面还有一圈透明的 r=26 命中区，手指好点。
-  if(T.out)g+=`<circle class="port-hit" data-port="${e.id}" cx="${w}" cy="${h/2}" r="26"/><circle class="port-out" data-port="${e.id}" cx="${w}" cy="${h/2}" r="10"/>`;
+  if(T.out)g+=`<circle class="port-hit" data-port="${e.id}" cx="${w}" cy="${h/2}" r="26"/><circle class="port-out" data-port="${e.id}" cx="${w}" cy="${h/2}" r="10"/>`;(OUT_PORTS[e.type]||[]).forEach(p=>{g+=`<circle class="port-hit" data-port="${e.id}" data-fport="${p.id}" cx="${w}" cy="${p.dy}" r="12"/><circle class="port-out" data-port="${e.id}" data-fport="${p.id}" cx="${w}" cy="${p.dy}" r="8"/><text class="ttl" x="${w-16}" y="${p.dy+4}" text-anchor="end" font-size="11">${p.label}</text>`});
   if(sel===e.id)g+=`<rect class="selbox" x="-6" y="-6" width="${w+12}" height="${h+12}" rx="12"/>`;
   // 信号条：错了台面自己说
   let y=h+8;for(const s of d.sig.slice(0,3)){const col={ok:'#1e7a4b',warn:'#8a5a12',err:'#9b2c2c',info:'#2b3a4f'}[s.lv];const tw=Math.min(520,s.tx.length*12.5+20);
@@ -747,7 +759,7 @@ function placeFloat(){const tl=$('tools'),cd=$('card');const e=sel&&S.entities[s
   cd.style.left=Math.max(8,W-262)+'px';cd.style.top='12px';cd.style.maxHeight=Math.max(200,H-24)+'px';cd.style.overflowY='auto';cd.style.display='block';
   if(cd.dataset.for!==e.id||cd.dataset.v!==JSON.stringify(e.props)+e.name)buildCard(e);
 }
-function stateLine(e){const d=D[e.id]||{};if(d.value&&e.type!=='rect')return qs(d.value);if(e.type==='fn')return'y = '+fx(e.props.k,e.props.b);if(e.type==='rect')return`${e.props.w} × ${e.props.h} = ${e.props.w*e.props.h}`;
+function stateLine(e){const d=D[e.id]||{};if(d.value&&e.type!=='rect'&&e.type!=='clock')return qs(d.value);if(e.type==='fn')return'y = '+fx(e.props.k,e.props.b);if(e.type==='rect')return`${e.props.w} × ${e.props.h} = ${e.props.w*e.props.h}`;
   if(e.type==='balance')return`${d.L?qs(d.L):0} : ${d.R?qs(d.R):0}`;if(e.type==='numline')return`${e.props.min} 到 ${e.props.max}`;if(e.type==='dice')return`${d.tot||0} 回`;return TYPES[e.type].label}
 /* 卡内只读推导值。圆的 π 与台面信号一致（默认 3.14）。 */
 function derivedLines(e){const p=e.props;const n=x=>String(+x.toFixed(2));
@@ -758,6 +770,7 @@ function buildCard(e){const cd=$('card'),T=TYPES[e.type];cd.dataset.for=e.id;cd.
   let h=`<h4>${T.label} · 设置</h4><input class="name" data-name value="${esc(e.name)}"><div class="state">${esc(stateLine(e))}</div>`;
   for(const f of T.fields){const v=e.props[f.k];const bd=(S.binds||[]).find(x=>x.to===e.id&&x.k===f.k);if(bd){h+=`<div class="fld"><label><span>${f.label}</span><b>← ${esc(S.entities[bd.from].name)}</b></label><div class="ctl"><span class="muted">由它决定：${v}</span><button class="btn" data-unbind="${f.k}">解除绑定</button></div></div>`;continue}if(f.choices){h+=`<div class="fld"><label><span>${f.label}</span></label><div class="ctl seg-choice">${f.choices.map((c,i)=>`<button class="pm${v===i?' on':''}" data-pick="${f.k}" data-pv="${i}">${c}</button>`).join('')}</div></div>`;continue}h+=`<div class="fld"><label><span>${f.label}</span></label><div class="ctl"><button class="pm" data-pm="${f.k}" data-dv="-${f.step||1}">−</button><input type="range" data-f="${f.k}" min="${f.min}" max="${f.max}" step="${f.step||1}" value="${v}"><button class="pm" data-pm="${f.k}" data-dv="${f.step||1}">+</button><input type="number" data-fn="${f.k}" value="${v}"></div></div>`}
   for(const f of T.fields){if(!(S.binds||[]).some(x=>x.to===e.id&&x.k===f.k))h+=`<button class="btn" data-bindpick="${f.k}">🔗 把「${esc(f.label.replace(/（.*/,''))}」绑到一个数</button>`}
+  if(bindPick&&bindPick.to===e.id){const srcs=Object.keys(S.entities).filter(id=>id!==e.id&&TYPES[S.entities[id].type].out==='value');h+=`<div class="muted" style="font-size:12px;margin-top:6px">或直接选一个变量（点名字就绑上）：</div><div class="card-row">${srcs.map(id=>`<button class="btn" data-bindfrom="${id}" data-bindk="${bindPick.k}">${esc(S.entities[id].name)}</button>`).join('')||'<span class="muted">画布上还没有会出数的器材</span>'}</div>`}
   if(!T.fields.length)h+=`<div class="muted" style="font-size:12px">${T.accepts==='fn'?'它显示连进来的直线。':'它的值由连进来的器材决定，拖别的器材的蓝点连过来。'}</div>`;
   // 只读推导值：由属性算出来，不能改，让学生在卡上直接看到。
   const dv=derivedLines(e);if(dv.length)h+=`<div class="derived">${dv.map(t=>`<div>${esc(t)}</div>`).join('')}</div>`;
@@ -775,7 +788,8 @@ $('card').addEventListener('input',ev=>{const t=ev.target,id=sel;if(!id)return;
 $('card').addEventListener('change',ev=>{const t=ev.target;if(t.dataset.fn&&sel){commit({t:'set',id:sel,k:t.dataset.fn,v:t.value});$('card').dataset.v=''}});
 $('card').addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b||!sel)return;const id=sel;
   if(b.dataset.pick){commit({t:'set',id,k:b.dataset.pick,v:+b.dataset.pv});render();return}
-  if(b.dataset.bindpick){bindPick={to:id,k:b.dataset.bindpick};toast('点一个会出数的器材（数字卡、分数条、黑箱、数据表…），把它绑到这个属性上');render();return}
+  if(b.dataset.bindpick){$('card').dataset.v='';bindPick={to:id,k:b.dataset.bindpick};toast('点一个会出数的器材（数字卡、分数条、黑箱、数据表…），把它绑到这个属性上');render();return}
+  if(b.dataset.bindfrom){commit({t:'bind',to:id,k:b.dataset.bindk,from:b.dataset.bindfrom});bindPick=null;$('card').dataset.v='';render();return}
   if(b.dataset.unbind){commit({t:'unbind',to:id,k:b.dataset.unbind});render();return}
   if(b.dataset.pm){const e=S.entities[id];commit({t:'set',id,k:b.dataset.pm,v:e.props[b.dataset.pm]+Number(b.dataset.dv)})}
   else if(b.dataset.act==='del'){commit({t:'del',id});sel=null}
@@ -789,7 +803,7 @@ $('tools').addEventListener('click',ev=>{const b=ev.target.closest('button');if(
 const svg=$('stage');let drag=null;
 const toWorld=(cx,cy)=>{const r=svg.getBoundingClientRect();return[(cx-r.left-view.x)/view.z,(cy-r.top-view.y)/view.z]};
 svg.addEventListener('pointerdown',ev=>{const t=ev.target;svg.setPointerCapture(ev.pointerId);const [wx,wy]=toWorld(ev.clientX,ev.clientY);
-  if(t.dataset.port){drag={m:'link',from:t.dataset.port,sx:ev.clientX,sy:ev.clientY};return}
+  if(t.dataset.port){drag={m:'link',from:t.dataset.port,fport:t.dataset.fport||null,sx:ev.clientX,sy:ev.clientY};return}
   if(t.dataset.vtx){const e=S.entities[t.dataset.vtx];if(e){drag={m:'vtx',id:e.id,sx:ev.clientX,sy:ev.clientY,moved:false};sel=e.id;selLink=null;render()}return}
   if(t.dataset.link){selLink=t.dataset.link;sel=null;cardOpen=false;render();return}
   const g=t.closest('[data-ent]');
@@ -802,7 +816,7 @@ svg.addEventListener('pointermove',ev=>{if(!drag)return;const [wx,wy]=toWorld(ev
   else if(drag.m==='vtx'){if(!drag.moved&&Math.hypot(ev.clientX-drag.sx,ev.clientY-drag.sy)<4)return;const e=S.entities[drag.id];if(!e)return;
     if(!drag.moved){undoSt.push(JSON.stringify(S));redoSt=[];drag.moved=true}
     const r=act({t:'vtx',id:e.id,lx:wx-e.x,ly:wy-e.y});if(r.ok){D=evaluate(S);render()}}
-  else if(drag.m==='link'){markDrop(drag.from,wx);const [x1,y1]=anchorOut(drag.from);let p=$('world').querySelector('.templink');if(!p){p=document.createElementNS('http://www.w3.org/2000/svg','path');p.setAttribute('class','templink');$('world').appendChild(p)}p.setAttribute('d',`M${x1},${y1} L${wx},${wy}`)}});
+  else if(drag.m==='link'){markDrop(drag.from,wx,drag.fport);showWhy(ev);const [x1,y1]=anchorOut(drag.from,drag.fport);let p=$('world').querySelector('.templink');if(!p){p=document.createElementNS('http://www.w3.org/2000/svg','path');p.setAttribute('class','templink');$('world').appendChild(p)}p.setAttribute('d',`M${x1},${y1} L${wx},${wy}`)}});
 svg.addEventListener('pointerup',ev=>{if(!drag)return;const d=drag;drag=null;svg.classList.remove('panning');
   if(d.m==='vtx'){if(d.moved)afterChange();return}
   if(d.m==='move'&&!d.moved&&bindPick&&!d.seg){const bp=bindPick;bindPick=null;const r=commit({t:'bind',to:bp.to,k:bp.k,from:d.id});if(r.ok)toast('已绑定：'+S.entities[d.id].name+' 的值决定它');render();return}
@@ -811,7 +825,7 @@ svg.addEventListener('pointerup',ev=>{if(!drag)return;const d=drag;drag=null;svg
     // 拖到选中器材卡片上的“绑到一个数”按钮：把这个输出绑到那个属性上
     const bp=el&&el.closest&&el.closest('[data-bindpick]');if(bp&&sel){const r=commit({t:'bind',to:sel,k:bp.dataset.bindpick,from:d.from});if(r.ok)toast('已绑定');render();return}
     const g=el&&el.closest&&el.closest('[data-ent]');
-    if(g&&g.dataset.ent!==d.from){const to=S.entities[g.dataset.ent];const [wx]=toWorld(ev.clientX,ev.clientY);const [w]=size(to);commit({t:'link',from:d.from,to:to.id,slot:wx<to.x+w/2?'L':'R'})}
+    if(g&&g.dataset.ent!==d.from){const to=S.entities[g.dataset.ent];const [wx]=toWorld(ev.clientX,ev.clientY);const [w]=size(to);commit({t:'link',from:d.from,fromPort:d.fport||null,to:to.id,slot:wx<to.x+w/2?'L':'R'})}
     else if(Math.hypot(ev.clientX-d.sx,ev.clientY-d.sy)>6)toast('松手的地方没有器材：把线拖到另一个器材上',true);render()}
   else if(d.m==='pan')render()});
 svg.addEventListener('wheel',ev=>{ev.preventDefault();zoomAt(ev.deltaY<0?1.1:1/1.1,ev.clientX,ev.clientY)},{passive:false});
