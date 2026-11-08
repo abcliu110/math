@@ -152,10 +152,10 @@ function check(name, ok, extra = '') { results.push(`${ok ? 'PASS' : 'FAIL'}  ${
     const attrs = await evalJs(`(function(){
       const out={};
       const m=addEnt(S,'mul',100,700,{times:3}), x1=addEnt(S,'num',100,800,{v:2}), x2=addEnt(S,'num',300,800,{v:5});
-      act({t:'link',from:x1,to:m});act({t:'link',from:x2,to:m});D=evaluate(S);out.mulTimes3=qs(D[m].value);
+      act({t:'link',from:x1,to:m});act({t:'link',from:x2,to:m});D=evaluate(S);out.mulTimes3=qs(D[m].val.data);
       const dv=addEnt(S,'div',500,700,{mode:1}), d1=addEnt(S,'num',500,800,{v:7}), d2=addEnt(S,'num',700,800,{v:3});
-      act({t:'link',from:d1,to:dv,slot:'L'});act({t:'link',from:d2,to:dv,slot:'R'});D=evaluate(S);out.divRemainder=qs(D[dv].value);
-      const cl=addEnt(S,'clock',900,700,{h:3,m:15});D=evaluate(S);out.clockOut=D[cl]&&D[cl].value?qs(D[cl].value):'none';
+      act({t:'link',from:d1,to:dv,slot:'L'});act({t:'link',from:d2,to:dv,slot:'R'});D=evaluate(S);out.divRemainder=qs(D[dv].val.data);
+      const cl=addEnt(S,'clock',900,700,{h:3,m:15});D=evaluate(S);out.clockOut=D[cl]&&D[cl].val?qs(D[cl].val.data):'none';
       const bl=addEnt(S,'balance',1100,700,{});const r1=act({t:'link',from:cl,to:bl,slot:'L'});out.clockOnBalance=r1.ok?'ALLOWED':r1.why;
       out.balanceSensDefault=S.entities[bl].props.sens;
       return JSON.stringify(out)})()`);
