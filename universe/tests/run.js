@@ -34,6 +34,11 @@ t('打包器材拒绝有状态的内部', () => {
   try { U.defineMacro('badmem', { label: '坏', essence: ['E6'], inputs: {}, outputs: { v: { id: mem, port: 'v' } }, scene: sc }); } catch (e) { threw = true; }
   truthy(threw, '应拒绝有状态器材');
 });
+t('时钟的秒是近似小数，不显示成分数', () => {
+  const sc = W.blank(); const c = W.add(sc, 'clock', 0, 0, {});
+  sc.clock.n = 782; sc.clock.t = 195.5; const D = W.evaluate(sc);
+  eq(U.showVal(D[c].out.t), '≈195.5');
+});
 console.log('器材 lint');
 for (const id of Object.keys(U.types)) t('lint ' + id, () => { const r = U.lintType(U.types[id]); eq(r.errors, [], id); });
 

@@ -22,7 +22,7 @@
         size: () => [150, 92],
         compute: (c) => {
           const k = Math.floor(c.n / c.props.every);
-          return { n: num(Q.fromNumber(k * c.props.scale + c.props.offset)), t: num(Q.fromNumber(Math.round(c.t * 1000) / 1000)) };
+          return { n: num(Q.fromNumber(k * c.props.scale + c.props.offset)), t: U.val('num', Q.fromNumber(Math.round(c.t * 1000) / 1000), { exact: false }) };
         },
         badge: (c) => (c.out.n ? '拍 ' + U.showVal(c.out.n) : ''),
         draw: (c) => {
