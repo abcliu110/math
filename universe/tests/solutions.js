@@ -34,4 +34,7 @@ module.exports = {
   'mean-vs-median'(h) { h.set(h.role('d'), 'list', '3, 4, 4, 5, 40'); h.set(h.role('d'), 'list', '3, 4, 4, 5, 4'); },
   'triangle-right'(h) { h.set(h.role('t'), 'B', 55); },
   'ineq-min-int'(h) { const q = h.role('q'); h.set(q, 'a', 2); h.set(q, 'b', 1); h.set(q, 'c', 7); h.set(q, 'x', 3); h.set(q, 'x', 4); },
+  'meet-100'(h) { const r = h.role('r'); h.set(r, 'v1', 6); h.set(r, 'v2', -4); h.run(12); },
+  'chase-30'(h) { const r = h.role('r'); h.set(r, 'v1', 7); h.set(r, 'v2', 4); h.run(12); },
+  'loop-400'(h) { const r = h.role('r'); h.set(r, 'v1', 8); h.set(r, 'v2', 6); h.run(205); },
 };
