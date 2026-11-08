@@ -5470,7 +5470,7 @@ const P45=[
   build:s=&gt;{addEnt(s,&#x27;dice&#x27;,220,90)},
   steps:[{label:&#x27;掷 100 回&#x27;,score:1,hint:&#x27;点骰子，再点“掷”&#x27;,target:T45(&#x27;dice&#x27;),check:(s,D)=&gt;(D[byType(s,&#x27;dice&#x27;)].tot||0)&gt;=100},
          {label:&#x27;7 出现的次数最多&#x27;,score:2,hint:&#x27;看柱子，7 最高&#x27;,target:T45(&#x27;dice&#x27;),check:(s,D)=&gt;{const d=byType(s,&#x27;dice&#x27;);const c=s.entities[d].props.counts;return !!c&amp;&amp;c[7]===Math.max(...c.slice(2,13))}}]},
- {id:&#x27;g5_6&#x27;,grade:5,domain:&#x27;图形与几何&#x27;,tools:&#x27;长方形&#x27;,title:&#x27;多边形面积：长 4、宽 3 的长方形面积是几？&#x27;,q:&#x27;长方形面积 = 长 × 宽。先把宽改成 4，再算面积。&#x27;,why:&#x27;4 × 3 = 12。&#x27;,
+ {id:&#x27;g5_6&#x27;,grade:5,domain:&#x27;图形与几何&#x27;,tools:&#x27;长方形&#x27;,title:&#x27;长方形面积：长 3，宽从 2 改成 4，面积是几？&#x27;,q:&#x27;长方形面积 = 长 × 宽。现在长 3、宽 2，先把宽改成 4，再算面积。&#x27;,why:&#x27;4 × 3 = 12。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;rect&#x27;,200,80,{w:2,h:3})},
   steps:[{label:&#x27;把宽改成 4&#x27;,score:1,hint:&#x27;点长方形卡，在属性卡里把宽调到 4&#x27;,target:T45(&#x27;rect&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;rect&#x27;)].props.w===4},
          {label:&#x27;面积是 12&#x27;,score:2,hint:&#x27;看长方形卡上的面积&#x27;,target:T45(&#x27;rect&#x27;),check:(s,D)=&gt;D[byType(s,&#x27;rect&#x27;)].area===12}]},

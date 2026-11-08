@@ -1134,7 +1134,7 @@ const P45=[
   build:s=>{addEnt(s,'dice',220,90)},
   steps:[{label:'掷 100 回',score:1,hint:'点骰子，再点“掷”',target:T45('dice'),check:(s,D)=>(D[byType(s,'dice')].tot||0)>=100},
          {label:'7 出现的次数最多',score:2,hint:'看柱子，7 最高',target:T45('dice'),check:(s,D)=>{const d=byType(s,'dice');const c=s.entities[d].props.counts;return !!c&&c[7]===Math.max(...c.slice(2,13))}}]},
- {id:'g5_6',grade:5,domain:'图形与几何',tools:'长方形',title:'多边形面积：长 4、宽 3 的长方形面积是几？',q:'长方形面积 = 长 × 宽。先把宽改成 4，再算面积。',why:'4 × 3 = 12。',
+ {id:'g5_6',grade:5,domain:'图形与几何',tools:'长方形',title:'长方形面积：长 3，宽从 2 改成 4，面积是几？',q:'长方形面积 = 长 × 宽。现在长 3、宽 2，先把宽改成 4，再算面积。',why:'4 × 3 = 12。',
   build:s=>{addEnt(s,'rect',200,80,{w:2,h:3})},
   steps:[{label:'把宽改成 4',score:1,hint:'点长方形卡，在属性卡里把宽调到 4',target:T45('rect'),check:(s,D)=>s.entities[byType(s,'rect')].props.w===4},
          {label:'面积是 12',score:2,hint:'看长方形卡上的面积',target:T45('rect'),check:(s,D)=>D[byType(s,'rect')].area===12}]},
