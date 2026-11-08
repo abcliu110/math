@@ -18,7 +18,8 @@ const src = fs.readFileSync(file, 'utf8');
 const quiet = process.argv.includes('--quiet');
 
 const starts = [];
-const re = /\{id:'([a-z0-9_]+)'/g;
+// 实验定义都有 grade 字段；输出口定义（如 {id:'tot',label:...}）没有，不算实验。
+const re = /\{id:'([a-z0-9_]+)',grade:/g;
 let m;
 while ((m = re.exec(src))) starts.push({ id: m[1], at: m.index });
 

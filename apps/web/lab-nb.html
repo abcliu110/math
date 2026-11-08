@@ -639,7 +639,7 @@ function clearCardWhy(){const c=$('card');const el=c&&c.querySelector('.why-err'
 function ruleHidden(){return mode!=='free'&&!(run&&run.finished)}
 const hideSig=(e,x)=>e.type==='box'&&ruleHidden()&&x.tx.includes('输出 =');
 const viewType=e=>(e.type==='box'&&ruleHidden())?{...TYPES.box,fields:[]}:TYPES[e.type];
-function track(){const D2=evaluate(S);for(const st of run.steps){if(st.done)continue;if(xp.steps[st.i].check(S,D2)){st.done=true;st.op=run.ops;if(mode==='practice')toast('✓ '+xp.steps[st.i].label)}else break}
+function track(){const D2=evaluate(S);for(const st of run.steps){if(st.done)continue;if(xp.steps[st.i].type==='predict'?st.pred!==undefined:xp.steps[st.i].check(S,D2)){st.done=true;st.op=run.ops;if(mode==='practice')toast('✓ '+xp.steps[st.i].label)}else break}
   if(mode==='practice'&&run.steps.every(s=>s.done)&&!run.finished){run.finished=true;localStorage.removeItem(PR);setTimeout(practiceDone,500)}}
 
 /* ========== 画台面 ========== */
@@ -981,7 +981,7 @@ $('paneLib').addEventListener('click',ev=>{const c=ev.target.closest('[data-dom]
 function renderSteps(){const p=$('paneSteps');if(!run){p.innerHTML=`<div class="q">自由探究：没有题，也没有分。把器材拖上台，连一连、调一调，台面会自己告诉你结果。</div><div class="muted">想按步骤做？到“实验库”选一个实验。</div>`;return}
   const tot=xp.steps.reduce((a,s)=>a+s.score,0);let h=`<div class="q"><b>${esc(xp.title)}</b><div style="margin-top:4px">${esc(xp.q)}</div></div>`;
   if(mode==='exam'){h+=`<div class="muted">考试：共 ${xp.steps.length} 步，满分 ${tot} 分。没有提示，做完点右上角“提交”。</div><div class="muted" style="margin-top:8px">操作 ${run.ops} 次</div>`}
-  else{const cur=run.steps.findIndex(s=>!s.done);xp.steps.forEach((s,i)=>{const done=run.steps[i].done;h+=`<div class="step${done?' done':''}${i===cur?' cur':''}"><span class="n">${done?'✓':i+1}</span><div>${esc(s.label)}${i===cur?`<div class="hint">提示：${esc(s.hint)}</div>`:''}</div><span class="sc">${s.score} 分</span></div>`})}
+  else{const cur=run.steps.findIndex(s=>!s.done);xp.steps.forEach((s,i)=>{const done=run.steps[i].done;h+=`<div class="step${done?' done':''}${i===cur?' cur':''}"><span class="n">${done?'✓':i+1}</span><div>${esc(s.label)}${i===cur?`<div class="hint">提示：${esc(s.hint)}</div>${s.type==='predict'?`<div class="card-row"><input data-predict-input="${i}" type="number" style="width:120px" placeholder="你的预测"><button class="btn" data-predict="${i}">猜好了</button></div>`:''}`:''}</div><span class="sc">${s.score} 分</span></div>`})}
   p.innerHTML=h}
 document.querySelector('.tabs').onclick=ev=>{const b=ev.target.closest('button');if(!b)return;showTab(b.dataset.tab)};
 function showTab(t){document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));$('paneLib').style.display=t==='lib'?'block':'none';$('paneSteps').style.display=t==='steps'?'block':'none'}
@@ -1271,7 +1271,8 @@ P48.forEach(p=>XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tool
 const P49=[
  {id:'g4_1',grade:4,domain:'数与代数',tools:'数字卡 · 乘法器',title:'大数的认识：两个 1 万相乘，得多少？',q:'1 亿 = 1 万 × 1 万。把两个 1 万连到乘法器相乘，看读数是几亿。',why:'10000 × 10000 = 100000000，即 1 亿。',
   build:s=>{addEnt(s,'num',60,60,{v:10000});addEnt(s,'num',60,170,{v:10000});addEnt(s,'mul',330,110)},
-  steps:[{id:'g4_1:s1',label:'把两个 1 万都连到乘法器',score:1,hint:'拖两个数的蓝点到乘法器',target:T45('mul'),check:(s,D)=>P45H.cnt(s,D,'mul',2)},
+  steps:[{id:'g4_1:s0',type:'predict',expect:100000000,label:'先预测：两个 1 万相乘是多少？',score:1,hint:'1 万 × 1 万，想想是几个 1 万。写一个数再点“猜好了”。',target:T45('mul'),check:()=>false},
+          {id:'g4_1:s1',label:'把两个 1 万都连到乘法器',score:1,hint:'拖两个数的蓝点到乘法器',target:T45('mul'),check:(s,D)=>P45H.cnt(s,D,'mul',2)},
          {id:'g4_1:s2',label:'算出 1 亿（100000000）',score:2,hint:'看乘法器的读数',target:T45('mul'),check:(s,D)=>P45H.val(s,D,'mul',Q(100000000))}]},
  {id:'g4_8',grade:4,domain:'数与代数',tools:'数字卡 · 合并器',title:'优化：沏茶要烧水 15 分钟，沏茶要 1 分钟，最少要几分钟？',q:'烧水的时候，可以洗杯子、拿茶叶，这些事和烧水同时做，不用等。',why:'烧水 15 分钟，其余的事都在烧水时做完，沏茶 1 分钟：最少 15 + 1 = 16 分钟。',
   build:s=>{addEnt(s,'num',60,60,{v:15});addEnt(s,'num',60,170,{v:1});addEnt(s,'adder',330,110)},
@@ -1557,7 +1558,9 @@ $('modeSeg').onclick=ev=>{const b=ev.target.closest('button');if(!b)return;const
   if(mode==='exam'&&m!=='exam'&&!confirm('退出考试？这次不计分。'))return;startXp(id,m)};
 $('menuBtn').onclick=()=>modal(`<h3>练习菜单</h3><div class="row" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-m="re">重置练习</button><button class="btn" data-m="exit">退出练习</button><button class="btn pri" data-m="exam">进入考试</button></div>`);
 $('submit').onclick=()=>submitExam(false);
-function score(){return xp.steps.reduce((a,s,i)=>a+(run.steps[i].done?s.score:0),0)}
+// 预测步骤：猜对才得分；猜错只是这一步不得分，不扣别的步。
+function score(){return xp.steps.reduce((a,s,i)=>a+(run.steps[i].done&&(s.type!=='predict'||run.steps[i].pred===s.expect)?s.score:0),0)}
+$('paneSteps').addEventListener('click',ev=>{const b=ev.target.closest('[data-predict]');if(!b||!run||!xp)return;const i=+b.dataset.predict;const inp=$('paneSteps').querySelector(`[data-predict-input="${i}"]`);if(!inp||inp.value.trim()==='')return;run.steps[i].pred=Number(inp.value);track();renderSteps();render()});
 function practiceDone(){modal(`<h3>练习完成 🎉</h3><p>${xp.steps.length} 步全部做对，用了 ${run.ops} 次操作${run.errors?`，有 ${run.errors} 次被台面拒绝`:''}。</p><div class="q"><b>为什么</b><div>${esc(xp.why)}</div></div><div style="display:flex;gap:8px"><button class="btn" data-m="re">再练一次</button><button class="btn pri" data-m="exam">进入考试</button><button class="btn" data-m="lib">返回实验库</button></div>`)}
 function submitExam(auto){if(mode!=='exam'||!run)return;clearInterval(timerId);timerId=null;const tot=xp.steps.reduce((a,s)=>a+s.score,0),sc=score();const used=Math.round((Date.now()-run.t0)/1000);
   const H=hist(),h=H[xp.id]||{n:0,lost:{}};h.n++;h.last=`${sc}/${tot}`;xp.steps.forEach((s,i)=>{if(!run.steps[i].done)h.lost[s.label]=(h.lost[s.label]||0)+1});const w=Object.entries(h.lost).sort((a,b)=>b[1]-a[1])[0];h.worst=w?w[0]:'';H[xp.id]=h;localStorage.setItem(LS.hist,JSON.stringify(H));
