@@ -216,8 +216,8 @@ const TYPES={
  line:{sig:(e,_d,sig)=>{const {y1,y2,y3}=e.props;const d12=y2-y1,d23=y3-y2;sig('info',`第二年比第一年${d12>=0?'多':'少'} ${Math.abs(d12)} 万元`);sig('info',`第三年比第二年${d23>=0?'多':'少'} ${Math.abs(d23)} 万元`)},ports:(p)=>({d12:p.y2-p.y1,d23:p.y3-p.y2}),label:'折线统计图',group:'统计',prefix:'折线图',defaults:{y1:3,y2:6,y3:4},fields:[{k:'y1',label:'第一年（万元）',min:0,max:12},{k:'y2',label:'第二年（万元）',min:0,max:12},{k:'y3',label:'第三年（万元）',min:0,max:12}],size:()=>[220,190]},
  cage:{ports:(p)=>{const c=p.heads-p.rabbits,got=4*p.rabbits+2*c;return{chickens:c,rabbits:p.rabbits,solved:c>=0&&got===p.legs}},label:'鸡兔笼',group:'数与运算',prefix:'鸡兔笼',defaults:{heads:35,legs:94,rabbits:0},fields:[{k:'heads',label:'头（总数）',min:1,max:60},{k:'legs',label:'腿（总数）',min:0,max:200,step:2},{k:'rabbits',label:'兔（只）',min:0,max:60}],size:()=>[220,150]},
  pair:{sig:(e,_d,sig)=>{const {x,y}=e.props;sig('info',`(${x}, ${y})：第 ${x} 列，第 ${y} 行`)},label:'数对',group:'关系',prefix:'数对',defaults:{x:3,y:2},fields:[{k:'x',label:'第几列（x）',min:0,max:8},{k:'y',label:'第几行（y）',min:0,max:8}],size:()=>[240,240]},
- shape:{ports:(p)=>({mirrored:!!p.mirror}),label:'图形（平移、旋转、对称）',group:'图形',prefix:'图形',defaults:{dx:0,rot:0,mirror:0},fields:[{k:'dx',label:'向右平移（格）',min:0,max:6},{k:'rot',label:'旋转（度，逆时针）',min:0,max:270,step:90},{k:'mirror',label:'轴对称（0 不做，1 做）',min:0,max:1,choices:['不做','做']}],size:()=>[260,190]},
- solid:{ports:(p)=>{const hs=SOLID_H,v=p.view,o={};if(v===0)o.front=hs[0].map((_,x)=>Math.max(...hs.map(r=>r[x])));if(v===1)o.side=hs.map(r=>Math.max(...r));if(v===2)o.top=hs.flat().filter(x=>x>0).length;return o},label:'立体图形（观察）',group:'图形',prefix:'立体图形',defaults:{view:0},fields:[{k:'view',label:'看的方向（0 正面，1 侧面，2 上面）',min:0,max:2,choices:['正面','侧面','上面']}],size:()=>[240,190]},
+ shape:{ports:(p)=>({mirrored:!!p.mirror}),label:'图形（平移、旋转、对称）',group:'图形',prefix:'图形',defaults:{dx:0,rot:0,mirror:0},fields:[{k:'dx',label:'向右平移（格）',min:0,max:6},{k:'rot',label:'旋转（度，逆时针）',min:0,max:270,step:90},{k:'mirror',label:'轴对称',min:0,max:1,choices:['不做','做']}],size:()=>[260,190]},
+ solid:{ports:(p)=>{const hs=SOLID_H,v=p.view,o={};if(v===0)o.front=hs[0].map((_,x)=>Math.max(...hs.map(r=>r[x])));if(v===1)o.side=hs.map(r=>Math.max(...r));if(v===2)o.top=hs.flat().filter(x=>x>0).length;return o},label:'立体图形（观察）',group:'图形',prefix:'立体图形',defaults:{view:0},fields:[{k:'view',label:'看的方向',min:0,max:2,choices:['正面','侧面','上面']}],size:()=>[240,190]},
  circle:{sig:(e,_d,sig)=>{const r=e.props.r;sig('info',`半径 ${r} 厘米：周长 ${(2*3.14*r).toFixed(2)} 厘米，面积 ${(3.14*r*r).toFixed(2)} 平方厘米`)},ports:(p)=>({circ:Number((2*3.14*p.r).toFixed(2)),area:Number((3.14*p.r*p.r).toFixed(2))}),label:'圆',group:'图形',prefix:'圆',defaults:{r:2},fields:[{k:'r',label:'半径（厘米）',min:1,max:10}],size:()=>[200,200]},
  pie:{ports:(p)=>({sum:p.a+p.b+p.c,angleA:Number((p.a*3.6).toFixed(0)),angleB:Number((p.b*3.6).toFixed(0)),angleC:Number((p.c*3.6).toFixed(0))}),label:'扇形统计图',group:'统计',prefix:'扇形图',defaults:{a:40,b:30,c:30},fields:[{k:'a',label:'一班（%）',min:0,max:100,step:5},{k:'b',label:'二班（%）',min:0,max:100,step:5},{k:'c',label:'三班（%）',min:0,max:100,step:5}],size:()=>[220,220]},
  sim:{sig:(e,_d,sig)=>{const k=e.props.k;sig('info',`相似比 1 : ${k}，面积比 1 : ${k*k}`)},ports:(p)=>({ratio:p.k,areaRatio:p.k*p.k}),label:'相似图形（放大缩小）',group:'图形',prefix:'相似图形',defaults:{k:1},fields:[{k:'k',label:'相似比（放大几倍）',min:1,max:3}],size:()=>[260,190]},
@@ -257,7 +257,7 @@ const TYPES={
    fields:[{k:'a',label:'a（系数）',min:-10,max:10},{k:'b',label:'b',min:-10,max:10},{k:'rule',label:'规则',min:0,max:2,choices:['线性','平方','倒数']}],size:()=>[230,120]},
  // 数据表：四个数，输出合计、平均数或最大数。
  table:{ports:(p,e,E,D)=>{const T=D[e.id].tab;return{sum:T.sum,mean:T.mean,max:T.max}},label:'数据表（四个数）',group:'统计',prefix:'数据表',out:'value',accepts:'value',acceptsDist:true,dim:'count',defaults:{a:4,b:8,c:6,d:10,which:0},
-   fields:[{k:'a',label:'第 1 个数',min:0,max:50},{k:'b',label:'第 2 个数',min:0,max:50},{k:'c',label:'第 3 个数',min:0,max:50},{k:'d',label:'第 4 个数',min:0,max:50},{k:'which',label:'输出（0 合计，1 平均，2 最大）',min:0,max:2,choices:['合计','平均','最大']}],size:()=>[240,150]},
+   fields:[{k:'a',label:'第 1 个数',min:0,max:50},{k:'b',label:'第 2 个数',min:0,max:50},{k:'c',label:'第 3 个数',min:0,max:50},{k:'d',label:'第 4 个数',min:0,max:50},{k:'which',label:'输出',min:0,max:2,choices:['合计','平均','最大']}],size:()=>[240,150]},
  // x 砝码：一个未知数。x 的值由学生设定，天平上用它参与平衡。
  sym:{value:(p)=>Q(p.x),label:'x 砝码（未知数）',group:'数与运算',prefix:'x',out:'value',dim:'count',defaults:{x:0},fields:[{k:'x',label:'x 等于几',min:-10,max:30}],size:()=>[120,70]},
 };
@@ -329,7 +329,7 @@ function syncBinds(s){if(!s.binds||!s.binds.length)return;
   s.binds=s.binds.filter(b=>s.entities[b.to]&&srcsOf(b).every(id=>s.entities[id]));if(!s.binds.length)return;
   const left=s.binds.slice(),order=[];
   while(left.length){let i=left.findIndex(b=>!left.some(o=>o!==b&&srcsOf(b).some(r=>reachAll(s,o.to,r))));if(i<0)i=0;order.push(left.splice(i,1)[0])}
-  for(const b of order){const Dd=evaluate(s);const to=s.entities[b.to],src=b.expr?exprValue(s,b,Dd):(Dd[b.from]&&qv(Dd[b.from]));if(!to||!src||src.d!==1)continue;const F=TYPES[to.type].fields.find(f=>f.k===b.k);if(!F||src.n<F.min||src.n>F.max)continue;to.props[b.k]=src.n}}
+  for(const b of order){const Dd=evaluate(s);const to=s.entities[b.to],src=b.expr?exprValue(s,b,Dd):(Dd[b.from]&&qv(Dd[b.from]));if(!to||!src||src.d!==1)continue;const F=TYPES[to.type].fields.find(f=>f.k===b.k);if(!F||src.n<F.min||src.n>F.max||(F.step&&src.n%F.step!==0))continue;to.props[b.k]=src.n}}
 function reach(s,a,b){const seen={};const st=[a];while(st.length){const c=st.pop();if(c===b)return true;if(seen[c])continue;seen[c]=1;s.links.filter(l=>l.from===c).forEach(l=>st.push(l.to))}return false}
 
 /* 动作（意图）。所有改动都走这里：校验 → 改 → 引擎重算。返回 {ok, why} */
@@ -367,7 +367,7 @@ function actRaw(a){
     if(to.type==='adder'&&fd){const other=inputs(s,a.to).map(l=>dimOf(s,l.from)).filter(x=>x).find(x=>x!==fd);if(other)return{ok:0,why:`合并器只合并同一种东西：${dimLabel(fd)} 和 ${dimLabel(other)} 不能加`}}
     if(a.fromPort&&!(OUT_PORTS[f.type]||[]).some(p=>p.id===a.fromPort))return{ok:0,why:'这个器材没有这个输出'};
     if(s.links.some(l=>l.from===a.from&&l.to===a.to&&(l.fromPort||null)===(a.fromPort||null)))return{ok:0,why:'已经连过了'};
-    if(reach(s,a.to,a.from))return{ok:0,why:'不能连成一个圈'};
+    if(reachAll(s,a.to,a.from))return{ok:0,why:'不能连成一个圈'};
     if(to.type==='balance'&&inputs(s,a.to).filter(l=>l.slot===a.slot).length>=5)return{ok:0,why:'一个盘最多放 5 个'};
     if(to.type==='numline'&&inputs(s,a.to).length>=6)return{ok:0,why:'数轴上最多 6 个点'};
     if(to.type==='div'&&inputs(s,a.to).some(l=>l.slot===a.slot))return{ok:0,why:a.slot==='L'?'左边已经有被除数了':'右边已经有除数了'};
@@ -918,13 +918,13 @@ svg.addEventListener('pointerup',ev=>{if(!drag)return;const d=drag;drag=null;svg
   if(d.m==='vtx'){if(d.moved)afterChange();return}
   if(d.m==='resize'){if(d.moved)afterChange();return}
   if(d.m==='move'&&!d.moved&&bindPick&&!d.seg){const bp=bindPick;bindPick=null;const r=commit({t:'bind',to:bp.to,k:bp.k,from:d.id});if(r.ok)toast('已绑定：'+S.entities[d.id].name+' 的值决定它');render();return}
-  if(d.m==='move'){if(d.moved){afterChange()}else if(d.seg){commit({t:'segclick',id:d.id,k:+d.seg})}else{if(d.was)cardOpen=!cardOpen;else cardOpen=true;$('card').dataset.v='';render()}}
+  if(d.m==='move'){if(d.moved){bindPick=null;afterChange()}else if(d.seg){commit({t:'segclick',id:d.id,k:+d.seg})}else{if(d.was)cardOpen=!cardOpen;else cardOpen=true;$('card').dataset.v='';render()}}
   else if(d.m==='link'){clearDrop();const el=document.elementFromPoint(ev.clientX,ev.clientY);
     // 拖到选中器材卡片上的“绑到一个数”按钮：把这个输出绑到那个属性上
     const bp=el&&el.closest&&el.closest('[data-bindpick]');if(bp&&sel){const r=commit({t:'bind',to:sel,k:bp.dataset.bindpick,from:d.from});if(r.ok)toast('已绑定');render();return}
     const g=el&&el.closest&&el.closest('[data-ent]');
     if(g&&g.dataset.ent!==d.from){const to=S.entities[g.dataset.ent];const [wx,wy]=toWorld(ev.clientX,ev.clientY);const [w,h]=size(to);commit({t:'link',from:d.from,fromPort:d.fport||null,to:to.id,slot:to.type==='div'?(wy<to.y+h/2?'L':'R'):(wx<to.x+w/2?'L':'R')})}
-    else if(Math.hypot(ev.clientX-d.sx,ev.clientY-d.sy)>6)toast('松手的地方没有器材：把线拖到另一个器材上',true);render()}
+    else if(Math.hypot(ev.clientX-d.sx,ev.clientY-d.sy)>6)toast('松手的地方没有器材：把线拖到另一个器材上',true);else toast('从端口拖到另一个器材上',true);render()}
   else if(d.m==='pan')render()});
 svg.addEventListener('wheel',ev=>{ev.preventDefault();zoomAt(ev.deltaY<0?1.1:1/1.1,ev.clientX,ev.clientY)},{passive:false});
 // 触屏双指缩放：两根手指张开、合拢改变画布比例；两指中间的内容跟着手指走，不会跑偏。
