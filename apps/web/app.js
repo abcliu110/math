@@ -1404,8 +1404,9 @@ function labReportRowHtml(e) {
   const titles = (e.pointIds || []).map(function (pid) {
     const f = findPoint(pid);
     return pid + ' ' + (f ? f.point.title : '');
-  }).join('、') || '实验室挑战';
+  }).join('、') || e.title || '实验室挑战';
   const bits = [];
+  if (typeof e.score === 'number' && typeof e.max === 'number') bits.push('得分：' + e.score + ' / ' + e.max);
   if (e.discovery) bits.push('发现：' + e.discovery);
   if (e.causes && e.causes.length) bits.push('错因：' + e.causes.join('、'));
   if (e.lostSteps && e.lostSteps.length) bits.push('卡在：' + e.lostSteps.map(function (s) { return s.label; }).join('、'));
@@ -3355,6 +3356,21 @@ function labNbRecord(p) {
     errorCount: 0,
     errorReasons: [],
   });
+  /* 同时记一条挑战报告进 math-inquiry-v1，让它出现在家长端“最近的挑战记录”
+     里（那张表只读 lab-challenge-report，不读跨次统计）。不新开存储键。 */
+  var pointId = '';
+  for (var pid in LAB_POINT_XP) { if (LAB_POINT_XP[pid] === p.labId) { pointId = pid; break; } }
+  var inqList = loadInquiry();
+  inqList.push({
+    kind: 'lab-challenge-report',
+    pointIds: pointId ? [pointId] : [],
+    title: p.title,
+    ts: Date.now(),
+    score: p.score,
+    max: p.max,
+    lostSteps: p.lines.filter(function (l) { return !l.got; }).map(function (l) { return { label: l.id }; }),
+  });
+  saveInquiry(inqList);
 }
 window.addEventListener('message', function (e) {
   const f = document.getElementById('labNbFrame');

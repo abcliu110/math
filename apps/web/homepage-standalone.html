@@ -5032,7 +5032,7 @@ function entSvg(e,d,isNext,dep){const T=TYPES[e.type],[w,h]=T.size(e),kk=e.k||1;
   let g=`&lt;g class=&quot;ent${sel===e.id?&#x27; sel&#x27;:&#x27;&#x27;}${lv}${isNext?&#x27; is-next&#x27;:&#x27;&#x27;}${dc}&quot; data-ent=&quot;${e.id}&quot; transform=&quot;translate(${e.x},${e.y}) scale(${kk})&quot;&gt;`;
   g+=`&lt;rect class=&quot;ent-body&quot; width=&quot;${w}&quot; height=&quot;${h}&quot; rx=&quot;10&quot; filter=&quot;url(#sh)&quot;/&gt;&lt;text class=&quot;ttl&quot; x=&quot;10&quot; y=&quot;17&quot;&gt;${esc(e.name)}&lt;/text&gt;`;
   g+=DRAW[e.type](e,d,w,h);
-  if(T.accepts&amp;&amp;!T.slots)g+=`&lt;circle class=&quot;port-in&quot; cx=&quot;0&quot; cy=&quot;${h/2}&quot; r=&quot;8&quot;/&gt;`;
+  if(T.accepts&amp;&amp;!T.slots)g+=`&lt;circle class=&quot;port-in&quot; cx=&quot;0&quot; cy=&quot;${h/2}&quot; r=&quot;8&quot;/&gt;&lt;circle fill=&quot;transparent&quot; cx=&quot;0&quot; cy=&quot;${h/2}&quot; r=&quot;18&quot;/&gt;`;
   // 端口：可见的蓝点 r=10，外面还有一圈透明的 r=26 命中区，手指好点。
   if(T.out)g+=`&lt;circle class=&quot;port-hit&quot; data-port=&quot;${e.id}&quot; cx=&quot;${w}&quot; cy=&quot;${h/2}&quot; r=&quot;26&quot;/&gt;&lt;circle class=&quot;port-out&quot; data-port=&quot;${e.id}&quot; cx=&quot;${w}&quot; cy=&quot;${h/2}&quot; r=&quot;10&quot;/&gt;`;(OUT_PORTS[e.type]||[]).forEach(p=&gt;{g+=`&lt;circle class=&quot;port-hit&quot; data-port=&quot;${e.id}&quot; data-fport=&quot;${p.id}&quot; cx=&quot;${w}&quot; cy=&quot;${p.dy}&quot; r=&quot;12&quot;/&gt;&lt;circle class=&quot;port-out&quot; data-port=&quot;${e.id}&quot; data-fport=&quot;${p.id}&quot; cx=&quot;${w}&quot; cy=&quot;${p.dy}&quot; r=&quot;8&quot;/&gt;&lt;text class=&quot;ttl&quot; x=&quot;${w-16}&quot; y=&quot;${p.dy+4}&quot; text-anchor=&quot;end&quot; font-size=&quot;11&quot;&gt;${p.label}&lt;/text&gt;`});
   if(sel===e.id)g+=`&lt;rect class=&quot;selbox&quot; x=&quot;-6&quot; y=&quot;-6&quot; width=&quot;${w+12}&quot; height=&quot;${h+12}&quot; rx=&quot;12&quot;/&gt;&lt;rect class=&quot;rz&quot; data-resize=&quot;${e.id}&quot; x=&quot;${w-7}&quot; y=&quot;${h-7}&quot; width=&quot;14&quot; height=&quot;14&quot; rx=&quot;3&quot;/&gt;`;
@@ -5125,7 +5125,7 @@ money:(e,d,w,h)=&gt;`&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot
    const [hx,hy]=P(ha,R*0.5),[mx,my]=P(ma,R*0.8);s+=`&lt;line x1=&quot;${cx}&quot; y1=&quot;${cy}&quot; x2=&quot;${hx}&quot; y2=&quot;${hy}&quot; stroke=&quot;#1d2633&quot; stroke-width=&quot;5&quot;/&gt;&lt;line x1=&quot;${cx}&quot; y1=&quot;${cy}&quot; x2=&quot;${mx}&quot; y2=&quot;${my}&quot; stroke=&quot;#ff9f43&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;${cx}&quot; cy=&quot;${cy}&quot; r=&quot;3&quot; fill=&quot;#1d2633&quot;/&gt;`;
    return s},
 mul:(e,d,w,h)=&gt;{const t=d.terms||[];const ex=t.length?t.map(qs).join(&#x27; × &#x27;):&#x27;空&#x27;;return`&lt;text class=&quot;ink&quot; x=&quot;${w/2}&quot; y=&quot;42&quot; text-anchor=&quot;middle&quot; font-size=&quot;13&quot;&gt;${esc(ex)}&lt;/text&gt;&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;70&quot; text-anchor=&quot;middle&quot; font-size=&quot;22&quot;&gt;= ${qv(d)?qs(qv(d)):0}&lt;/text&gt;`},
- div:(e,d,w,h)=&gt;`&lt;circle class=&quot;port-in&quot; cx=&quot;0&quot; cy=&quot;${h*0.3}&quot; r=&quot;6&quot;/&gt;&lt;circle class=&quot;port-in&quot; cx=&quot;0&quot; cy=&quot;${h*0.7}&quot; r=&quot;6&quot;/&gt;&lt;text class=&quot;ink&quot; x=&quot;${w/2}&quot; y=&quot;40&quot; text-anchor=&quot;middle&quot; font-size=&quot;13&quot;&gt;被除数 ${d.a?qs(d.a):&#x27;?&#x27;}&lt;/text&gt;&lt;text class=&quot;ink&quot; x=&quot;${w/2}&quot; y=&quot;60&quot; text-anchor=&quot;middle&quot; font-size=&quot;13&quot;&gt;除数 ${d.b?qs(d.b):&#x27;?&#x27;}&lt;/text&gt;&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;${h-12}&quot; text-anchor=&quot;middle&quot; font-size=&quot;20&quot;&gt;= ${qv(d)?qs(qv(d)):&#x27;?&#x27;}&lt;/text&gt;`,
+ div:(e,d,w,h)=&gt;`&lt;circle class=&quot;port-in&quot; cx=&quot;0&quot; cy=&quot;${h*0.3}&quot; r=&quot;6&quot;/&gt;&lt;circle fill=&quot;transparent&quot; cx=&quot;0&quot; cy=&quot;${h*0.3}&quot; r=&quot;16&quot;/&gt;&lt;circle class=&quot;port-in&quot; cx=&quot;0&quot; cy=&quot;${h*0.7}&quot; r=&quot;6&quot;/&gt;&lt;circle fill=&quot;transparent&quot; cx=&quot;0&quot; cy=&quot;${h*0.7}&quot; r=&quot;16&quot;/&gt;&lt;text class=&quot;ink&quot; x=&quot;${w/2}&quot; y=&quot;40&quot; text-anchor=&quot;middle&quot; font-size=&quot;13&quot;&gt;被除数 ${d.a?qs(d.a):&#x27;?&#x27;}&lt;/text&gt;&lt;text class=&quot;ink&quot; x=&quot;${w/2}&quot; y=&quot;60&quot; text-anchor=&quot;middle&quot; font-size=&quot;13&quot;&gt;除数 ${d.b?qs(d.b):&#x27;?&#x27;}&lt;/text&gt;&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;${h-12}&quot; text-anchor=&quot;middle&quot; font-size=&quot;20&quot;&gt;= ${qv(d)?qs(qv(d)):&#x27;?&#x27;}&lt;/text&gt;`,
  adder:(e,d,w,h)=&gt;{const t=d.terms||[];const ex=t.length?t.map(qs).join(&#x27; + &#x27;):&#x27;空&#x27;;return`&lt;text class=&quot;ink&quot; x=&quot;${w/2}&quot; y=&quot;42&quot; text-anchor=&quot;middle&quot; font-size=&quot;13&quot;&gt;${esc(ex)}&lt;/text&gt;&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;70&quot; text-anchor=&quot;middle&quot; font-size=&quot;22&quot;&gt;= ${qv(d)?qs(qv(d)):0}&lt;/text&gt;`},
  light:(e,d,w,h)=&gt;`&lt;circle cx=&quot;${w/2}&quot; cy=&quot;${h/2-8}&quot; r=&quot;22&quot; fill=&quot;${d.lit?&#x27;#ffd166&#x27;:&#x27;#cfd6df&#x27;}&quot; stroke=&quot;#5b6778&quot; stroke-width=&quot;2&quot;/&gt;&lt;text class=&quot;ink&quot; x=&quot;${w/2}&quot; y=&quot;${h-6}&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot;&gt;${d.lit?&#x27;平了&#x27;:&#x27;没平&#x27;}&lt;/text&gt;`,
  numline:(e,d,w)=&gt;{const {min,max}=e.props,x0=24,x1=w-24,X=v=&gt;x0+(v-min)/(max-min)*(x1-x0),y=72;let L=1;(d.pts||[]).forEach(p=&gt;{if(p.v.d&lt;=12)L=lcm(L,p.v.d)});if(L&gt;12||(max-min)*L&gt;60)L=1;
@@ -5137,7 +5137,7 @@ mul:(e,d,w,h)=&gt;{const t=d.terms||[];const ex=t.length?t.map(qs).join(&#x27; �
  balance:(e,d,w,h)=&gt;{const t=d.tilt||0,cx=w/2,py=62,dy=Math.sin(t*Math.PI/180)*120;
    const pan=(x,y,items,lab)=&gt;{let s=`&lt;line x1=&quot;${x}&quot; y1=&quot;${y-40}&quot; x2=&quot;${x-38}&quot; y2=&quot;${y}&quot; stroke=&quot;#7b8796&quot;/&gt;&lt;line x1=&quot;${x}&quot; y1=&quot;${y-40}&quot; x2=&quot;${x+38}&quot; y2=&quot;${y}&quot; stroke=&quot;#7b8796&quot;/&gt;&lt;path d=&quot;M${x-44},${y}h88a44 14 0 0 1 -88 0Z&quot; fill=&quot;#dfe6ee&quot; stroke=&quot;#8a97a6&quot;/&gt;`;
      items.forEach((l,i)=&gt;{const v=qv(D[l.from]||{});s+=`&lt;g transform=&quot;translate(${x-40+(i%3)*28},${y-16-Math.floor(i/3)*18})&quot;&gt;&lt;rect width=&quot;26&quot; height=&quot;16&quot; rx=&quot;4&quot; fill=&quot;#ff9f43&quot;/&gt;&lt;text x=&quot;13&quot; y=&quot;12&quot; text-anchor=&quot;middle&quot; font-size=&quot;10&quot; fill=&quot;#fff&quot;&gt;${v?qs(v):&#x27;?&#x27;}&lt;/text&gt;&lt;/g&gt;`});
-     return s+`&lt;circle class=&quot;port-in&quot; cx=&quot;${x}&quot; cy=&quot;${y+8}&quot; r=&quot;6&quot;/&gt;&lt;text class=&quot;ttl&quot; x=&quot;${x}&quot; y=&quot;${y+34}&quot; text-anchor=&quot;middle&quot;&gt;${lab}&lt;/text&gt;`};
+     return s+`&lt;circle fill=&quot;transparent&quot; cx=&quot;${x}&quot; cy=&quot;${y+8}&quot; r=&quot;16&quot;/&gt;&lt;circle class=&quot;port-in&quot; cx=&quot;${x}&quot; cy=&quot;${y+8}&quot; r=&quot;6&quot;/&gt;&lt;text class=&quot;ttl&quot; x=&quot;${x}&quot; y=&quot;${y+34}&quot; text-anchor=&quot;middle&quot;&gt;${lab}&lt;/text&gt;`};
    return`&lt;path d=&quot;M${cx-40},${h-14}h80l-30,-14h-20Z&quot; fill=&quot;#8a97a6&quot;/&gt;&lt;line x1=&quot;${cx}&quot; y1=&quot;${h-28}&quot; x2=&quot;${cx}&quot; y2=&quot;${py}&quot; stroke=&quot;#8a97a6&quot; stroke-width=&quot;6&quot;/&gt;
    &lt;g transform=&quot;rotate(${t} ${cx} ${py})&quot;&gt;&lt;rect x=&quot;${cx-120}&quot; y=&quot;${py-4}&quot; width=&quot;240&quot; height=&quot;8&quot; rx=&quot;4&quot; fill=&quot;#4a5668&quot;/&gt;&lt;/g&gt;&lt;circle cx=&quot;${cx}&quot; cy=&quot;${py}&quot; r=&quot;6&quot; fill=&quot;#2b3a4f&quot;/&gt;
    ${pan(cx-120,py+50-dy,d.Ln||[],&#x27;左盘 &#x27;+(d.L?qs(d.L):0))}${pan(cx+120,py+50+dy,d.Rn||[],&#x27;右盘 &#x27;+(d.R?qs(d.R):0))}`},
@@ -5209,7 +5209,7 @@ $(&#x27;card&#x27;).addEventListener(&#x27;click&#x27;,ev=&gt;{const b=ev.target
   if(b.dataset.exprok){const inp=$(&#x27;card&#x27;).querySelector(`[data-exprtext=&quot;${b.dataset.exprok}&quot;]`);const r=commit({t:&#x27;bindexpr&#x27;,to:id,k:b.dataset.exprok,text:inp?inp.value.trim():&#x27;&#x27;});if(r.ok){exprPick=null;$(&#x27;card&#x27;).dataset.v=&#x27;&#x27;}render();return}
   if(b.dataset.bindpick){$(&#x27;card&#x27;).dataset.v=&#x27;&#x27;;bindPick={to:id,k:b.dataset.bindpick};toast(&#x27;点一个会出数的器材（数字卡、分数条、黑箱、数据表…），把它绑到这个属性上&#x27;);render();return}
   if(b.dataset.bindfrom){commit({t:&#x27;bind&#x27;,to:id,k:b.dataset.bindk,from:b.dataset.bindfrom});bindPick=null;$(&#x27;card&#x27;).dataset.v=&#x27;&#x27;;render();return}
-  if(b.dataset.unbind){const r=commit({t:&#x27;unbind&#x27;,to:id,k:b.dataset.unbind});if(r.ok&amp;&amp;r.restored!==undefined)toast(&#x27;已解除，回到绑之前的 &#x27;+r.restored);render();return}
+  if(b.dataset.unbind){const r=commit({t:&#x27;unbind&#x27;,to:id,k:b.dataset.unbind});if(r.ok&amp;&amp;r.restored!==undefined)toast(&#x27;已解除，回到绑之前的 &#x27;+r.restored);$(&#x27;card&#x27;).dataset.v=&#x27;&#x27;;render();return}
   if(b.dataset.pm){const e=S.entities[id];commit({t:&#x27;set&#x27;,id,k:b.dataset.pm,v:e.props[b.dataset.pm]+Number(b.dataset.dv)})}
   else if(b.dataset.act===&#x27;del&#x27;){commit({t:&#x27;del&#x27;,id});sel=null}
   else if(b.dataset.act===&#x27;reset&#x27;)commit({t:&#x27;reset&#x27;,id});
@@ -48366,8 +48366,9 @@ function labReportRowHtml(e) {
   const titles = (e.pointIds || []).map(function (pid) {
     const f = findPoint(pid);
     return pid + ' ' + (f ? f.point.title : '');
-  }).join('、') || '实验室挑战';
+  }).join('、') || e.title || '实验室挑战';
   const bits = [];
+  if (typeof e.score === 'number' && typeof e.max === 'number') bits.push('得分：' + e.score + ' / ' + e.max);
   if (e.discovery) bits.push('发现：' + e.discovery);
   if (e.causes && e.causes.length) bits.push('错因：' + e.causes.join('、'));
   if (e.lostSteps && e.lostSteps.length) bits.push('卡在：' + e.lostSteps.map(function (s) { return s.label; }).join('、'));
@@ -50317,6 +50318,21 @@ function labNbRecord(p) {
     errorCount: 0,
     errorReasons: [],
   });
+  /* 同时记一条挑战报告进 math-inquiry-v1，让它出现在家长端“最近的挑战记录”
+     里（那张表只读 lab-challenge-report，不读跨次统计）。不新开存储键。 */
+  var pointId = '';
+  for (var pid in LAB_POINT_XP) { if (LAB_POINT_XP[pid] === p.labId) { pointId = pid; break; } }
+  var inqList = loadInquiry();
+  inqList.push({
+    kind: 'lab-challenge-report',
+    pointIds: pointId ? [pointId] : [],
+    title: p.title,
+    ts: Date.now(),
+    score: p.score,
+    max: p.max,
+    lostSteps: p.lines.filter(function (l) { return !l.got; }).map(function (l) { return { label: l.id }; }),
+  });
+  saveInquiry(inqList);
 }
 window.addEventListener('message', function (e) {
   const f = document.getElementById('labNbFrame');

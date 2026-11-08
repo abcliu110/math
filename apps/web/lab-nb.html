@@ -696,7 +696,7 @@ function entSvg(e,d,isNext,dep){const T=TYPES[e.type],[w,h]=T.size(e),kk=e.k||1;
   let g=`<g class="ent${sel===e.id?' sel':''}${lv}${isNext?' is-next':''}${dc}" data-ent="${e.id}" transform="translate(${e.x},${e.y}) scale(${kk})">`;
   g+=`<rect class="ent-body" width="${w}" height="${h}" rx="10" filter="url(#sh)"/><text class="ttl" x="10" y="17">${esc(e.name)}</text>`;
   g+=DRAW[e.type](e,d,w,h);
-  if(T.accepts&&!T.slots)g+=`<circle class="port-in" cx="0" cy="${h/2}" r="8"/>`;
+  if(T.accepts&&!T.slots)g+=`<circle class="port-in" cx="0" cy="${h/2}" r="8"/><circle fill="transparent" cx="0" cy="${h/2}" r="18"/>`;
   // 端口：可见的蓝点 r=10，外面还有一圈透明的 r=26 命中区，手指好点。
   if(T.out)g+=`<circle class="port-hit" data-port="${e.id}" cx="${w}" cy="${h/2}" r="26"/><circle class="port-out" data-port="${e.id}" cx="${w}" cy="${h/2}" r="10"/>`;(OUT_PORTS[e.type]||[]).forEach(p=>{g+=`<circle class="port-hit" data-port="${e.id}" data-fport="${p.id}" cx="${w}" cy="${p.dy}" r="12"/><circle class="port-out" data-port="${e.id}" data-fport="${p.id}" cx="${w}" cy="${p.dy}" r="8"/><text class="ttl" x="${w-16}" y="${p.dy+4}" text-anchor="end" font-size="11">${p.label}</text>`});
   if(sel===e.id)g+=`<rect class="selbox" x="-6" y="-6" width="${w+12}" height="${h+12}" rx="12"/><rect class="rz" data-resize="${e.id}" x="${w-7}" y="${h-7}" width="14" height="14" rx="3"/>`;
@@ -789,7 +789,7 @@ money:(e,d,w,h)=>`<text class="big" x="${w/2}" y="${h/2+12}" text-anchor="middle
    const [hx,hy]=P(ha,R*0.5),[mx,my]=P(ma,R*0.8);s+=`<line x1="${cx}" y1="${cy}" x2="${hx}" y2="${hy}" stroke="#1d2633" stroke-width="5"/><line x1="${cx}" y1="${cy}" x2="${mx}" y2="${my}" stroke="#ff9f43" stroke-width="3"/><circle cx="${cx}" cy="${cy}" r="3" fill="#1d2633"/>`;
    return s},
 mul:(e,d,w,h)=>{const t=d.terms||[];const ex=t.length?t.map(qs).join(' × '):'空';return`<text class="ink" x="${w/2}" y="42" text-anchor="middle" font-size="13">${esc(ex)}</text><text class="big" x="${w/2}" y="70" text-anchor="middle" font-size="22">= ${qv(d)?qs(qv(d)):0}</text>`},
- div:(e,d,w,h)=>`<circle class="port-in" cx="0" cy="${h*0.3}" r="6"/><circle class="port-in" cx="0" cy="${h*0.7}" r="6"/><text class="ink" x="${w/2}" y="40" text-anchor="middle" font-size="13">被除数 ${d.a?qs(d.a):'?'}</text><text class="ink" x="${w/2}" y="60" text-anchor="middle" font-size="13">除数 ${d.b?qs(d.b):'?'}</text><text class="big" x="${w/2}" y="${h-12}" text-anchor="middle" font-size="20">= ${qv(d)?qs(qv(d)):'?'}</text>`,
+ div:(e,d,w,h)=>`<circle class="port-in" cx="0" cy="${h*0.3}" r="6"/><circle fill="transparent" cx="0" cy="${h*0.3}" r="16"/><circle class="port-in" cx="0" cy="${h*0.7}" r="6"/><circle fill="transparent" cx="0" cy="${h*0.7}" r="16"/><text class="ink" x="${w/2}" y="40" text-anchor="middle" font-size="13">被除数 ${d.a?qs(d.a):'?'}</text><text class="ink" x="${w/2}" y="60" text-anchor="middle" font-size="13">除数 ${d.b?qs(d.b):'?'}</text><text class="big" x="${w/2}" y="${h-12}" text-anchor="middle" font-size="20">= ${qv(d)?qs(qv(d)):'?'}</text>`,
  adder:(e,d,w,h)=>{const t=d.terms||[];const ex=t.length?t.map(qs).join(' + '):'空';return`<text class="ink" x="${w/2}" y="42" text-anchor="middle" font-size="13">${esc(ex)}</text><text class="big" x="${w/2}" y="70" text-anchor="middle" font-size="22">= ${qv(d)?qs(qv(d)):0}</text>`},
  light:(e,d,w,h)=>`<circle cx="${w/2}" cy="${h/2-8}" r="22" fill="${d.lit?'#ffd166':'#cfd6df'}" stroke="#5b6778" stroke-width="2"/><text class="ink" x="${w/2}" y="${h-6}" text-anchor="middle" font-size="12">${d.lit?'平了':'没平'}</text>`,
  numline:(e,d,w)=>{const {min,max}=e.props,x0=24,x1=w-24,X=v=>x0+(v-min)/(max-min)*(x1-x0),y=72;let L=1;(d.pts||[]).forEach(p=>{if(p.v.d<=12)L=lcm(L,p.v.d)});if(L>12||(max-min)*L>60)L=1;
@@ -801,7 +801,7 @@ mul:(e,d,w,h)=>{const t=d.terms||[];const ex=t.length?t.map(qs).join(' × '):'�
  balance:(e,d,w,h)=>{const t=d.tilt||0,cx=w/2,py=62,dy=Math.sin(t*Math.PI/180)*120;
    const pan=(x,y,items,lab)=>{let s=`<line x1="${x}" y1="${y-40}" x2="${x-38}" y2="${y}" stroke="#7b8796"/><line x1="${x}" y1="${y-40}" x2="${x+38}" y2="${y}" stroke="#7b8796"/><path d="M${x-44},${y}h88a44 14 0 0 1 -88 0Z" fill="#dfe6ee" stroke="#8a97a6"/>`;
      items.forEach((l,i)=>{const v=qv(D[l.from]||{});s+=`<g transform="translate(${x-40+(i%3)*28},${y-16-Math.floor(i/3)*18})"><rect width="26" height="16" rx="4" fill="#ff9f43"/><text x="13" y="12" text-anchor="middle" font-size="10" fill="#fff">${v?qs(v):'?'}</text></g>`});
-     return s+`<circle class="port-in" cx="${x}" cy="${y+8}" r="6"/><text class="ttl" x="${x}" y="${y+34}" text-anchor="middle">${lab}</text>`};
+     return s+`<circle fill="transparent" cx="${x}" cy="${y+8}" r="16"/><circle class="port-in" cx="${x}" cy="${y+8}" r="6"/><text class="ttl" x="${x}" y="${y+34}" text-anchor="middle">${lab}</text>`};
    return`<path d="M${cx-40},${h-14}h80l-30,-14h-20Z" fill="#8a97a6"/><line x1="${cx}" y1="${h-28}" x2="${cx}" y2="${py}" stroke="#8a97a6" stroke-width="6"/>
    <g transform="rotate(${t} ${cx} ${py})"><rect x="${cx-120}" y="${py-4}" width="240" height="8" rx="4" fill="#4a5668"/></g><circle cx="${cx}" cy="${py}" r="6" fill="#2b3a4f"/>
    ${pan(cx-120,py+50-dy,d.Ln||[],'左盘 '+(d.L?qs(d.L):0))}${pan(cx+120,py+50+dy,d.Rn||[],'右盘 '+(d.R?qs(d.R):0))}`},
@@ -873,7 +873,7 @@ $('card').addEventListener('click',ev=>{const b=ev.target.closest('button');if(!
   if(b.dataset.exprok){const inp=$('card').querySelector(`[data-exprtext="${b.dataset.exprok}"]`);const r=commit({t:'bindexpr',to:id,k:b.dataset.exprok,text:inp?inp.value.trim():''});if(r.ok){exprPick=null;$('card').dataset.v=''}render();return}
   if(b.dataset.bindpick){$('card').dataset.v='';bindPick={to:id,k:b.dataset.bindpick};toast('点一个会出数的器材（数字卡、分数条、黑箱、数据表…），把它绑到这个属性上');render();return}
   if(b.dataset.bindfrom){commit({t:'bind',to:id,k:b.dataset.bindk,from:b.dataset.bindfrom});bindPick=null;$('card').dataset.v='';render();return}
-  if(b.dataset.unbind){const r=commit({t:'unbind',to:id,k:b.dataset.unbind});if(r.ok&&r.restored!==undefined)toast('已解除，回到绑之前的 '+r.restored);render();return}
+  if(b.dataset.unbind){const r=commit({t:'unbind',to:id,k:b.dataset.unbind});if(r.ok&&r.restored!==undefined)toast('已解除，回到绑之前的 '+r.restored);$('card').dataset.v='';render();return}
   if(b.dataset.pm){const e=S.entities[id];commit({t:'set',id,k:b.dataset.pm,v:e.props[b.dataset.pm]+Number(b.dataset.dv)})}
   else if(b.dataset.act==='del'){commit({t:'del',id});sel=null}
   else if(b.dataset.act==='reset')commit({t:'reset',id});
