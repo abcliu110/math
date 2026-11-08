@@ -65,7 +65,10 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .big{fill:var(--ink);font-weight:700}
 .ink{fill:var(--ink)}
 .port-out{fill:var(--acc);stroke:#fff;stroke-width:2;cursor:crosshair}
-.port-out:hover{r:9}
+.port-hit{fill:transparent;cursor:crosshair}
+.vtx{fill:#fff;stroke:#92400e;stroke-width:2.5;cursor:grab}
+.vtx-hit{fill:transparent;cursor:grab}
+@media (pointer:coarse){#tools button,#card .pm,#card .btn,.btn{min-width:44px;min-height:44px}}
 .port-in{fill:#fff;stroke:#9aa9bb;stroke-width:2;pointer-events:none}
 .link{fill:none;stroke:#7fc1ff;stroke-width:2.5;stroke-dasharray:7 6;animation:flow 0.9s linear infinite;pointer-events:none}
 .link.sel{stroke:#ffd166;stroke-width:3.5}
@@ -229,8 +232,10 @@ const TYPES={
  fn:{label:'直线',group:'函数',prefix:'直线',out:'fn',defaults:{k:2,b:1},
    fields:[{k:'k',label:'k（斜率：x 加 1，y 加几）',min:-5,max:5},{k:'b',label:'b（和 y 轴交在哪）',min:-10,max:10}],size:()=>[160,64]},
  coord:{label:'坐标平面',group:'函数',prefix:'坐标平面',accepts:'fn',defaults:{},fields:[],size:()=>[340,360]},
- rect:{label:'长方形',group:'图形',prefix:'长方形',defaults:{w:4,h:3},rotate:true,
-   fields:[{k:'w',label:'宽',min:1,max:12},{k:'h',label:'长',min:1,max:12}],size:e=>[Math.max(150,e.props.w*20+40),e.props.h*20+84]},
+ rect:{label:'长方形',group:'图形',prefix:'长方形',defaults:{w:4,h:3,rot:0},rotate:true,
+   fields:[{k:'w',label:'宽',min:1,max:12},{k:'h',label:'长',min:1,max:12},{k:'rot',label:'转角（度，0 到 359）',min:0,max:359}],
+   // 尺寸按转过之后的外接框算；转角为 0 时和原来的尺寸一样。
+   size:e=>{const p=e.props,gw=p.w*20,gh=p.h*20,r=(p.rot||0)*Math.PI/180,c=Math.abs(Math.cos(r)),s=Math.abs(Math.sin(r));return[Math.max(150,Math.round(gw*c+gh*s)+40),Math.round(gw*s+gh*c)+84]}},
  dice:{label:'两个骰子',group:'概率',prefix:'骰子',defaults:{times:100,counts:null},
    fields:[{k:'times',label:'一次掷几回',min:10,max:2000,step:10}],actions:[{id:'roll',label:'🎲 掷'},{id:'reset',label:'清零'}],size:()=>[320,210]},
 };
@@ -258,7 +263,13 @@ function act(a){
   case 'del':{if(E[a.id]){delete E[a.id];s.links=s.links.filter(l=>l.from!==a.id&&l.to!==a.id)}else s.links=s.links.filter(l=>l.id!==a.id);return{ok:1}}
   case 'dup':{const e=E[a.id];const id=addEnt(s,e.type,e.x+30,e.y+30,clone(e.props));return{ok:1,id}}
   case 'rename':{E[a.id].name=String(a.name).slice(0,16)||E[a.id].name;return{ok:1}}
-  case 'rotate':{const p=E[a.id].props;[p.w,p.h]=[p.h,p.w];return{ok:1}}
+  case 'rotate':{const p=E[a.id].props;p.rot=((p.rot||0)+15)%360;return{ok:1}}
+  case 'vtx':{const e=E[a.id];if(!e||e.type!=='tri')return{ok:0,why:'这里不是三角形'};const [w,h]=size(e);
+    // 拖顶点：由顶点位置反推两个底角。a 在左底角，b 在右底角。
+    let A=Math.round(Math.atan2((h-30)-a.ly,a.lx-30)*180/Math.PI),B=Math.round(Math.atan2((h-30)-a.ly,(w-30)-a.lx)*180/Math.PI);
+    A=Math.min(150,Math.max(1,A));B=Math.min(150,Math.max(1,B));
+    if(A+B>=180){const k=178/(A+B);A=Math.max(1,Math.floor(A*k));B=Math.max(1,Math.floor(B*k))}
+    e.props.a=A;e.props.b=B;return{ok:1}}
   case 'reset':{E[a.id].props=clone(TYPES[E[a.id].type].defaults);return{ok:1}}
   case 'set':{const e=E[a.id],T=TYPES[e.type],f=T.fields.find(f=>f.k===a.k);let v=Number(a.v);
     if(!Number.isFinite(v)||!Number.isInteger(v/(f.step||1)))return{ok:0,why:'只能填整数'};
@@ -481,6 +492,8 @@ function render(){
 }
 function nextTarget(){if(mode!=='practice'||!run)return null;const st=run.steps.find(s=>!s.done);return st?xp.steps[st.i].target(S):null}
 function size(e){return TYPES[e.type].size(e)}
+// 三角形顶点的位置（相对器材左上角）：底边两端是 (30, h−30) 和 (w−30, h−30)，a、b 是两个底角。
+function triApex(a,b,w,h){const x0=30,L=w-60,yb=h-30,A=a*Math.PI/180,B=b*Math.PI/180;const t=L/(Math.cos(A)+Math.sin(A)*Math.cos(B)/Math.sin(B));return[x0+t*Math.cos(A),yb-t*Math.sin(A)]}
 function anchorIn(l){const e=S.entities[l.to];const [w,h]=size(e);if(e.type==='div')return l.slot==='L'?[e.x,e.y+h*0.3]:[e.x,e.y+h*0.7];if(e.type==='balance'){const t=(D[e.id]||{}).tilt||0,dy=Math.sin(t*Math.PI/180)*120;return l.slot==='L'?[e.x+50,e.y+112-dy]:[e.x+w-50,e.y+112+dy]}return[e.x,e.y+h/2]}
 function anchorOut(id){const e=S.entities[id],[w,h]=size(e);return[e.x+w,e.y+h/2]}
 function linkSvg(l){if(!S.entities[l.from]||!S.entities[l.to])return'';const [x1,y1]=anchorOut(l.from),[x2,y2]=anchorIn(l);const c=Math.max(40,Math.abs(x2-x1)/2);
@@ -490,8 +503,9 @@ function entSvg(e,d,isNext){const T=TYPES[e.type],[w,h]=size(e);const lv=d.sig.s
   let g=`<g class="ent${sel===e.id?' sel':''}${lv}${isNext?' is-next':''}" data-ent="${e.id}" transform="translate(${e.x},${e.y})">`;
   g+=`<rect class="ent-body" width="${w}" height="${h}" rx="10" filter="url(#sh)"/><text class="ttl" x="10" y="17">${esc(e.name)}</text>`;
   g+=DRAW[e.type](e,d,w,h);
-  if(T.accepts&&!T.slots)g+=`<circle class="port-in" cx="0" cy="${h/2}" r="6"/>`;
-  if(T.out)g+=`<circle class="port-out" data-port="${e.id}" cx="${w}" cy="${h/2}" r="7"/>`;
+  if(T.accepts&&!T.slots)g+=`<circle class="port-in" cx="0" cy="${h/2}" r="8"/>`;
+  // 端口：可见的蓝点 r=10，外面还有一圈透明的 r=26 命中区，手指好点。
+  if(T.out)g+=`<circle class="port-hit" data-port="${e.id}" cx="${w}" cy="${h/2}" r="26"/><circle class="port-out" data-port="${e.id}" cx="${w}" cy="${h/2}" r="10"/>`;
   if(sel===e.id)g+=`<rect class="selbox" x="-6" y="-6" width="${w+12}" height="${h+12}" rx="12"/>`;
   // 信号条：错了台面自己说
   let y=h+8;for(const s of d.sig.slice(0,3)){const col={ok:'#1e7a4b',warn:'#8a5a12',err:'#9b2c2c',info:'#2b3a4f'}[s.lv];const tw=Math.min(520,s.tx.length*12.5+20);
@@ -561,6 +575,8 @@ tri:(e,d,w,h)=>{const {a,b}=e.props,x0=30,x1=w-30,yb=h-30,L=x1-x0;let s=`<line x
    const A=a*Math.PI/180,B=b*Math.PI/180;
    if(a+b<180){const t=L/(Math.cos(A)+Math.sin(A)*Math.cos(B)/Math.sin(B));const px=x0+t*Math.cos(A),py=yb-t*Math.sin(A);
      s+=`<polygon points="${x0},${yb} ${x1},${yb} ${px.toFixed(1)},${py.toFixed(1)}" fill="#fde68a" stroke="#92400e" stroke-width="2"/><text class="big" x="${x0+8}" y="${yb-6}" font-size="12">${a}°</text><text class="big" x="${x1-38}" y="${yb-6}" font-size="12">${b}°</text>`}
+   // 顶点把手：可以拖。两角之和超过 180° 时，把手放在 a、(179−a) 对应的位置，方便拖回来。
+   if(e.id&&e.type==='tri'){const [px,py]=triApex(a,a+b<180?b:179-a,w,h);s+=`<circle class="vtx-hit" data-vtx="${e.id}" cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="24"/><circle class="vtx" data-vtx="${e.id}" cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="10"/>`}
    return s},
  para:(e,d,w,h)=>{const {base,h:ht}=e.props,u=12,x0=40,yb=h-30,sl=24,bw=base*u,hh=ht*u;
    return `<polygon points="${x0},${yb} ${x0+bw},${yb} ${x0+bw+sl},${yb-hh} ${x0+sl},${yb-hh}" fill="#c7f9cc" stroke="#166534" stroke-width="2"/><line x1="${x0+sl}" y1="${yb-hh}" x2="${x0+sl}" y2="${yb}" stroke="#166534" stroke-dasharray="4 3"/><text class="ink" x="${w/2}" y="20" text-anchor="middle" font-size="13">面积 ${base*ht}</text>`},
@@ -603,8 +619,9 @@ mul:(e,d,w,h)=>{const t=d.terms||[];const ex=t.length?t.map(qs).join(' × '):'�
    const cols=['#3b9cff','#ff7a45','#2fbf71','#b36bff'];(d.fns||[]).forEach((f,i)=>{const {k,b}=f.props;s+=`<line class="flowline" clip-path="url(#cp${e.id})" x1="${X(-6)}" y1="${Y(k*-6+b)}" x2="${X(6)}" y2="${Y(k*6+b)}" stroke="${cols[i%4]}" stroke-width="3"/><circle cx="${X(0)}" cy="${Y(b)}" r="4" fill="${cols[i%4]}"/>`});
    if(xp&&xp.id==='funcline')s+=`<circle cx="${X(2)}" cy="${Y(-3)}" r="5" fill="none" stroke="#e03131" stroke-width="2"/><text x="${X(2)+8}" y="${Y(-3)+4}" font-size="11" fill="#e03131">(2, −3)</text>`;
    return s},
- rect:(e,d,w)=>{const {w:rw,h:rh}=e.props,ox=(w-rw*20)/2,oy=30;let s='';for(let i=0;i<rw;i++)for(let j=0;j<rh;j++)s+=`<rect x="${ox+i*20}" y="${oy+j*20}" width="20" height="20" fill="#cfe5ff" stroke="#8fb6e6"/>`;
-   return s+`<rect x="${ox}" y="${oy}" width="${rw*20}" height="${rh*20}" fill="none" stroke="#1e5aa8" stroke-width="2.5"/><text class="ink" x="${w/2}" y="${oy+rh*20+18}" text-anchor="middle" font-size="12">宽 ${rw} · 长 ${rh} · 面积 ${rw*rh} 格</text>`},
+ rect:(e,d,w,h)=>{const {w:rw,h:rh}=e.props,rot=e.props.rot||0,gw=rw*20,gh=rh*20,cx=w/2,cy=(h-24)/2,x0=cx-gw/2,y0=cy-gh/2;let s=`<g transform="rotate(${rot} ${cx} ${cy})">`;
+   for(let i=0;i<rw;i++)for(let j=0;j<rh;j++)s+=`<rect x="${x0+i*20}" y="${y0+j*20}" width="20" height="20" fill="#cfe5ff" stroke="#8fb6e6"/>`;
+   return s+`<rect x="${x0}" y="${y0}" width="${gw}" height="${gh}" fill="none" stroke="#1e5aa8" stroke-width="2.5"/></g><text class="ink" x="${w/2}" y="${h-36}" text-anchor="middle" font-size="12">宽 ${rw} · 长 ${rh} · 面积 ${rw*rh} 格${rot?' · 转 '+rot+'°':''}</text>`},
  dice:(e,d,w,h)=>{const c=e.props.counts,L=30,R=w-14,B=h-30,T=34,bw=(R-L)/11;let s='',mx=1;if(c)for(let i=2;i<=12;i++)mx=Math.max(mx,c[i]);const tot=c?c.reduce((a,b)=>a+b,0):0;
    for(let i=2;i<=12;i++){const x=L+(i-2)*bw;const ways=6-Math.abs(i-7);if(c){const hh=(c[i]/mx)*(B-T);s+=`<rect x="${x+3}" y="${B-hh}" width="${bw-6}" height="${hh}" fill="#3b9cff" rx="2"/>`;const th=(tot*ways/36)/mx*(B-T);s+=`<line x1="${x+2}" x2="${x+bw-2}" y1="${B-th}" y2="${B-th}" stroke="#e03131" stroke-width="2"/>`}
      s+=`<text class="ttl" x="${x+bw/2}" y="${B+14}" text-anchor="middle" font-size="11">${i}</text>`}
@@ -616,7 +633,7 @@ function placeFloat(){const tl=$('tools'),cd=$('card');const e=sel&&S.entities[s
   if(!e&&!selLink){tl.style.display=cd.style.display='none';return}
   if(selLink&&!e){tl.style.display='none';cd.style.display='none';return}
   const [w]=size(e),sx=view.x+(e.x+w)*view.z,sy=view.y+e.y*view.z,W=$('stageWrap').clientWidth,H=$('stageWrap').clientHeight;
-  const T=TYPES[e.type];tl.innerHTML=`<button data-tool="card" title="设置">⚙</button><button data-tool="dup" title="复制">📋</button>${T.rotate?'<button data-tool="rotate" title="转 90°">🔄</button>':''}<button data-tool="del" title="删除">🗑</button>`;
+  const T=TYPES[e.type];tl.innerHTML=`<button data-tool="card" title="设置">⚙</button><button data-tool="dup" title="复制">📋</button>${T.rotate?'<button data-tool="rotate" title="转 15°（卡里可以调到任意度数）">🔄</button>':''}<button data-tool="del" title="删除">🗑</button>`;
   tl.style.display='flex';tl.style.left=Math.min(W-44,sx+12)+'px';tl.style.top=Math.max(8,sy)+'px';
   if(!cardOpen){cd.style.display='none';return}
   // 设置卡停靠在台面右上角，不跟着器材跑，不盖住台面上的东西。
@@ -657,6 +674,7 @@ const svg=$('stage');let drag=null;
 const toWorld=(cx,cy)=>{const r=svg.getBoundingClientRect();return[(cx-r.left-view.x)/view.z,(cy-r.top-view.y)/view.z]};
 svg.addEventListener('pointerdown',ev=>{const t=ev.target;svg.setPointerCapture(ev.pointerId);const [wx,wy]=toWorld(ev.clientX,ev.clientY);
   if(t.dataset.port){drag={m:'link',from:t.dataset.port,sx:ev.clientX,sy:ev.clientY};return}
+  if(t.dataset.vtx){const e=S.entities[t.dataset.vtx];if(e){drag={m:'vtx',id:e.id,sx:ev.clientX,sy:ev.clientY,moved:false};sel=e.id;selLink=null;render()}return}
   if(t.dataset.link){selLink=t.dataset.link;sel=null;cardOpen=false;render();return}
   const g=t.closest('[data-ent]');
   if(g){const e=S.entities[g.dataset.ent];drag={m:'move',id:e.id,dx:wx-e.x,dy:wy-e.y,sx:ev.clientX,sy:ev.clientY,moved:false,seg:t.dataset.seg,was:sel===e.id};if(sel!==e.id){sel=e.id;selLink=null;render()}return}
@@ -665,8 +683,12 @@ svg.addEventListener('pointermove',ev=>{if(!drag)return;const [wx,wy]=toWorld(ev
   if(drag.m==='pan'){view.x=drag.vx+ev.clientX-drag.sx;view.y=drag.vy+ev.clientY-drag.sy;render()}
   else if(drag.m==='move'){if(!drag.moved&&Math.hypot(ev.clientX-drag.sx,ev.clientY-drag.sy)<6)return;if(!drag.moved){undoSt.push(JSON.stringify(S));redoSt=[];drag.moved=true}
     act({t:'move',id:drag.id,x:Math.round((wx-drag.dx)/10)*10,y:Math.round((wy-drag.dy)/10)*10});render()}
+  else if(drag.m==='vtx'){if(!drag.moved&&Math.hypot(ev.clientX-drag.sx,ev.clientY-drag.sy)<4)return;const e=S.entities[drag.id];if(!e)return;
+    if(!drag.moved){undoSt.push(JSON.stringify(S));redoSt=[];drag.moved=true}
+    const r=act({t:'vtx',id:e.id,lx:wx-e.x,ly:wy-e.y});if(r.ok){D=evaluate(S);render()}}
   else if(drag.m==='link'){const [x1,y1]=anchorOut(drag.from);let p=$('world').querySelector('.templink');if(!p){p=document.createElementNS('http://www.w3.org/2000/svg','path');p.setAttribute('class','templink');$('world').appendChild(p)}p.setAttribute('d',`M${x1},${y1} L${wx},${wy}`)}});
 svg.addEventListener('pointerup',ev=>{if(!drag)return;const d=drag;drag=null;svg.classList.remove('panning');
+  if(d.m==='vtx'){if(d.moved)afterChange();return}
   if(d.m==='move'){if(d.moved){afterChange()}else if(d.seg){commit({t:'segclick',id:d.id,k:+d.seg})}else{if(d.was)cardOpen=!cardOpen;else cardOpen=true;$('card').dataset.v='';render()}}
   else if(d.m==='link'){const el=document.elementFromPoint(ev.clientX,ev.clientY);const g=el&&el.closest&&el.closest('[data-ent]');
     if(g&&g.dataset.ent!==d.from){const to=S.entities[g.dataset.ent];const [wx]=toWorld(ev.clientX,ev.clientY);const [w]=size(to);commit({t:'link',from:d.from,to:to.id,slot:wx<to.x+w/2?'L':'R'})}
@@ -1288,7 +1310,20 @@ let toastT;function toast(t,err){const el=$('toast');el.textContent=t;el.classNa
 window.addEventListener('resize',render);
 renderLib();renderXpList();goFree();
 // 知识点页发来 openXp：直接进入对应实验（练习模式，有提示）。
-window.addEventListener('message',e=>{if(e.source!==window.parent)return;const d=e.data;if(!d||d.type!=='openXp')return;const xp=XP.find(x=>x.id===d.id);if(xp)startXp(xp.id,'practice')});
+// 握手：实验台加载好后先告诉父页面；父页面每收到 openXp 都回一个 openXpAck。父页面没收到回执会重发，
+// 所以同一个实验 3 秒内只开一次，免得把做了一半的台面又重置。
+function postToParent(m){try{if(window.parent&&window.parent!==window)window.parent.postMessage(m,'*')}catch(err){}}
+let lastOpenXp={id:null,t:0};
+window.addEventListener('message',e=>{if(e.source!==window.parent)return;const d=e.data;if(!d)return;
+  if(d.type!=='openXp')return;
+  const xp=XP.find(x=>x.id===d.id);
+  if(!xp){postToParent({type:'openXpAck',id:d.id,ok:false,why:'实验台里没有这个实验'});return}
+  const now=Date.now();
+  if(!(lastOpenXp.id===xp.id&&now-lastOpenXp.t<3000))startXp(xp.id,'practice');
+  lastOpenXp={id:xp.id,t:now};
+  postToParent({type:'openXpAck',id:xp.id,ok:true});
+});
+postToParent({type:'labNbReady'});
 window.__lab={get S(){return S},act,evaluate,commit,startXp,XP,get run(){return run},submitExam,goFree};
 </script>
 </body>

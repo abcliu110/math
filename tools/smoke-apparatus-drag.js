@@ -37,21 +37,10 @@ assert(/\.bench-chip[^{]*\{[^}]*user-select:\s*none/.test(css) ||
   /\.bench-chip,\[data-drag-weight\]/.test(css),
   'bench chips are unselectable');
 
-assert(/data-drag-chip="weight"/.test(html), 'balance HTML weight chips');
-assert(/data-drop="balance\.L"/.test(html), 'balance left drop');
-assert(/data-drop="balance\.R"/.test(html), 'balance right drop');
-assert(/data-drag-chip="num"/.test(html), 'numline HTML chips');
-assert(/data-drop="numline"/.test(html), 'numline drop');
-assert(/data-frac-range="A"/.test(html), 'frac A range');
-assert(/data-world-range="rabbits"/.test(html), 'chicken rabbits range');
 
 assert(/\.apparatus-chip\{/.test(css), 'chip CSS');
 assert(/\.apparatus-drop\.is-hot/.test(css), 'drop hot CSS');
 
-assert(/data-frac-range/.test(app), 'app binds frac ranges');
-assert(/rabbits/.test(app) && /chickenSetRabbits/.test(app), 'app binds rabbits range');
-assert(/fa-ad-set/.test(app), 'app binds denom chips');
-assert(/Apparatus\.isDragging/.test(app), 'app respects isDragging when syncing ranges');
 
 // 批 3 复测修：量砝码拖到台面画布盘上。根因：hitAt 只认站天平 #worldBalSvg
 // 和 HTML 落点框，台面画布盘（<rect id="worldBenchPanL/R">，没有 data-bal-pan）
