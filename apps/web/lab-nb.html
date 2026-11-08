@@ -340,7 +340,15 @@ function actRaw(a){
   switch(a.t){
   case 'add':{const id=addEnt(s,a.type,a.x,a.y,a.props);return{ok:1,id}}
   case 'move':{const e=E[a.id];e.x=a.x;e.y=a.y;return{ok:1}}
-  case 'del':{if(E[a.id]){delete E[a.id];s.links=s.links.filter(l=>l.from!==a.id&&l.to!==a.id);s.binds=(s.binds||[]).filter(b=>b.to!==a.id&&!srcsOf(b).includes(a.id))}else s.links=s.links.filter(l=>l.id!==a.id);return{ok:1}}
+  case 'del':{
+    if(E[a.id]){
+      delete E[a.id];
+      s.links=s.links.filter(l=>l.from!==a.id&&l.to!==a.id);
+      // U01 修复：删除器材时，同时删除以它为源或目标的绑定，防止崩溃
+      s.binds=(s.binds||[]).filter(b=>b.to!==a.id&&!srcsOf(b).includes(a.id));
+    }else s.links=s.links.filter(l=>l.id!==a.id);
+    return{ok:1}
+  }
   case 'dup':{const e=E[a.id];const id=addEnt(s,e.type,e.x+30,e.y+30,clone(e.props));return{ok:1,id}}
   case 'rename':{E[a.id].name=String(a.name).slice(0,16)||E[a.id].name;return{ok:1}}
   case 'rotate':{const p=E[a.id].props;p.rot=((p.rot||0)+15)%360;return{ok:1}}
