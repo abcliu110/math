@@ -4684,6 +4684,8 @@ function actRaw(a){
 }
 
 /* ========== 引擎：只有这里算后果。纯函数 scene → derived ========== */
+/* 两个钟的时间差：有名为「开始」「结束」的两个钟时，按这两个钟算（从开始到结束）；否则按放进来的先后。 */
+function clockPair(E){const cl=Object.values(E).filter(x=&gt;x.type===&#x27;clock&#x27;);if(cl.length!==2)return null;const a=cl.find(c=&gt;c.name===&#x27;开始&#x27;),b=cl.find(c=&gt;c.name===&#x27;结束&#x27;);return a&amp;&amp;b?[a,b]:cl}
 function evaluate(s){
   const E=s.entities,vals={},busy={},D={};
   const val=(id,port)=&gt;{const key=port?id+&#x27;#&#x27;+port:id;if(key in vals)return vals[key];if(busy[key])return null;busy[key]=1;const e=E[id];let v=null;
@@ -4781,8 +4783,8 @@ function evaluate(s){
     if(e.type===&#x27;bars&#x27;){const {a,b,c}=e.props;const vals=[[&#x27;一班&#x27;,a],[&#x27;二班&#x27;,b],[&#x27;三班&#x27;,c]];const mx=Math.max(a,b,c);const top=vals.filter(v=&gt;v[1]===mx).map(v=&gt;v[0]).join(&#x27;、&#x27;);sig(&#x27;info&#x27;,`最多：${top}（${mx} 人）`);
       if(b&gt;a)sig(&#x27;info&#x27;,`二班比一班多 ${b-a} 人`);else if(a&gt;b)sig(&#x27;info&#x27;,`一班比二班多 ${a-b} 人`)}
     if(e.type===&#x27;clock&#x27;){const {h,m}=e.props;sig(&#x27;info&#x27;,`现在是 ${h}:${String(m).padStart(2,&#x27;0&#x27;)}`);
-      const cl=Object.values(E).filter(x=&gt;x.type===&#x27;clock&#x27;);
-      if(cl.length===2&amp;&amp;cl[0].id===id){const t=c=&gt;((c.props.h%12)*60+c.props.m);const mins=((t(cl[1])-t(cl[0]))%720+720)%720;sig(&#x27;ok&#x27;,`两个钟相差 ${mins} 分钟`)}}
+      const cl=clockPair(E);
+      if(cl&amp;&amp;cl[0].id===id){const t=c=&gt;((c.props.h%12)*60+c.props.m);const mins=((t(cl[1])-t(cl[0]))%720+720)%720;sig(&#x27;ok&#x27;,`两个钟相差 ${mins} 分钟`)}}
     if(e.type===&#x27;numline&#x27;){const {min,max}=e.props;d.pts=inputs(s,id).map(l=&gt;({from:l.from,v:vf(l)})).filter(p=&gt;p.v);
       d.pts.forEach(p=&gt;{p.out=qnum(p.v)&lt;min||qnum(p.v)&gt;max;if(p.out)sig(&#x27;err&#x27;,`${qs(p.v)} 放不下：数轴只从 ${min} 到 ${max}`)});
       const ins=d.pts.filter(p=&gt;!p.out);
@@ -4809,7 +4811,7 @@ function evaluate(s){
 /* 端口的定义：从属性直接算。信号文字仍由 evaluate 上面的代码画，这里的值和文字用同一套算法。 */
 function portsFor(e,s,E){const p=e.props,P={};
   switch(e.type){
-  case &#x27;clock&#x27;:{const cl=Object.values(E).filter(x=&gt;x.type===&#x27;clock&#x27;);if(cl.length===2&amp;&amp;cl[0].id===e.id){const t=c=&gt;((c.props.h%12)*60+c.props.m);P.between=((t(cl[1])-t(cl[0]))%720+720)%720}break}
+  case &#x27;clock&#x27;:{const cl=clockPair(E);if(cl&amp;&amp;cl[0].id===e.id){const t=c=&gt;((c.props.h%12)*60+c.props.m);P.between=((t(cl[1])-t(cl[0]))%720+720)%720}break}
   case &#x27;bars&#x27;:{const mx=Math.max(p.a,p.b,p.c);P.bMinusA=p.b-p.a;P.max=mx;P.topNames=[&#x27;一班&#x27;,&#x27;二班&#x27;,&#x27;三班&#x27;].filter((_,i)=&gt;[p.a,p.b,p.c][i]===mx).join(&#x27;、&#x27;);break}
   case &#x27;tri&#x27;:P.third=180-p.a-p.b;break;
   case &#x27;line&#x27;:P.d12=p.y2-p.y1;P.d23=p.y3-p.y2;break;

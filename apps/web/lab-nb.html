@@ -348,6 +348,8 @@ function actRaw(a){
 }
 
 /* ========== 引擎：只有这里算后果。纯函数 scene → derived ========== */
+/* 两个钟的时间差：有名为「开始」「结束」的两个钟时，按这两个钟算（从开始到结束）；否则按放进来的先后。 */
+function clockPair(E){const cl=Object.values(E).filter(x=>x.type==='clock');if(cl.length!==2)return null;const a=cl.find(c=>c.name==='开始'),b=cl.find(c=>c.name==='结束');return a&&b?[a,b]:cl}
 function evaluate(s){
   const E=s.entities,vals={},busy={},D={};
   const val=(id,port)=>{const key=port?id+'#'+port:id;if(key in vals)return vals[key];if(busy[key])return null;busy[key]=1;const e=E[id];let v=null;
@@ -445,8 +447,8 @@ function evaluate(s){
     if(e.type==='bars'){const {a,b,c}=e.props;const vals=[['一班',a],['二班',b],['三班',c]];const mx=Math.max(a,b,c);const top=vals.filter(v=>v[1]===mx).map(v=>v[0]).join('、');sig('info',`最多：${top}（${mx} 人）`);
       if(b>a)sig('info',`二班比一班多 ${b-a} 人`);else if(a>b)sig('info',`一班比二班多 ${a-b} 人`)}
     if(e.type==='clock'){const {h,m}=e.props;sig('info',`现在是 ${h}:${String(m).padStart(2,'0')}`);
-      const cl=Object.values(E).filter(x=>x.type==='clock');
-      if(cl.length===2&&cl[0].id===id){const t=c=>((c.props.h%12)*60+c.props.m);const mins=((t(cl[1])-t(cl[0]))%720+720)%720;sig('ok',`两个钟相差 ${mins} 分钟`)}}
+      const cl=clockPair(E);
+      if(cl&&cl[0].id===id){const t=c=>((c.props.h%12)*60+c.props.m);const mins=((t(cl[1])-t(cl[0]))%720+720)%720;sig('ok',`两个钟相差 ${mins} 分钟`)}}
     if(e.type==='numline'){const {min,max}=e.props;d.pts=inputs(s,id).map(l=>({from:l.from,v:vf(l)})).filter(p=>p.v);
       d.pts.forEach(p=>{p.out=qnum(p.v)<min||qnum(p.v)>max;if(p.out)sig('err',`${qs(p.v)} 放不下：数轴只从 ${min} 到 ${max}`)});
       const ins=d.pts.filter(p=>!p.out);
@@ -473,7 +475,7 @@ function evaluate(s){
 /* 端口的定义：从属性直接算。信号文字仍由 evaluate 上面的代码画，这里的值和文字用同一套算法。 */
 function portsFor(e,s,E){const p=e.props,P={};
   switch(e.type){
-  case 'clock':{const cl=Object.values(E).filter(x=>x.type==='clock');if(cl.length===2&&cl[0].id===e.id){const t=c=>((c.props.h%12)*60+c.props.m);P.between=((t(cl[1])-t(cl[0]))%720+720)%720}break}
+  case 'clock':{const cl=clockPair(E);if(cl&&cl[0].id===e.id){const t=c=>((c.props.h%12)*60+c.props.m);P.between=((t(cl[1])-t(cl[0]))%720+720)%720}break}
   case 'bars':{const mx=Math.max(p.a,p.b,p.c);P.bMinusA=p.b-p.a;P.max=mx;P.topNames=['一班','二班','三班'].filter((_,i)=>[p.a,p.b,p.c][i]===mx).join('、');break}
   case 'tri':P.third=180-p.a-p.b;break;
   case 'line':P.d12=p.y2-p.y1;P.d23=p.y3-p.y2;break;
