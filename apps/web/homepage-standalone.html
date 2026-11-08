@@ -5507,9 +5507,9 @@ const P46=[
   steps:[{label:&#x27;把一班的人数调成 12&#x27;,score:1,hint:&#x27;点统计图卡，在属性卡里把“一班”调到 12&#x27;,target:T45(&#x27;bars&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;bars&#x27;)].props.a===12},
          {label:&#x27;二班比一班多 6 人&#x27;,score:2,hint:&#x27;把“二班”调到 18，看下面的文字&#x27;,target:T45(&#x27;bars&#x27;),check:(s,D)=&gt;{const b=byType(s,&#x27;bars&#x27;);return D[b].ports.bMinusA===6}}]},
  {id:&#x27;g5_5&#x27;,grade:5,domain:&#x27;数与代数&#x27;,tools:&#x27;天平 · 数字卡&#x27;,title:&#x27;简易方程：x + 3 = 8，x 是几？&#x27;,q:&#x27;把左边的 3 和 x 放在左盘，右边的 8 放在右盘。调 x，让天平平了，x 就是答案。&#x27;,why:&#x27;x + 3 = 8，两边都减 3，得 x = 5。天平平，就是两边相等。&#x27;,
-  build:s=&gt;{addEnt(s,&#x27;num&#x27;,60,40,{v:3});addEnt(s,&#x27;num&#x27;,60,150,{v:1});addEnt(s,&#x27;num&#x27;,60,260,{v:8});addEnt(s,&#x27;balance&#x27;,300,130)},
+  build:s=&gt;{addEnt(s,&#x27;num&#x27;,60,40,{v:3});const xid=addEnt(s,&#x27;num&#x27;,60,150,{v:1});s.entities[xid].name=&#x27;x&#x27;;addEnt(s,&#x27;num&#x27;,60,260,{v:8});addEnt(s,&#x27;balance&#x27;,300,130)},
   steps:[{label:&#x27;3 和 x 放左盘，8 放右盘&#x27;,score:1,hint:&#x27;拖蓝点：3 和 x 到天平左边，8 到右边&#x27;,target:T45(&#x27;balance&#x27;),check:(s,D)=&gt;{const b=byType(s,&#x27;balance&#x27;);return D[b].Ln.length&gt;=2&amp;&amp;D[b].Rn.length&gt;=1}},
-         {label:&#x27;调 x，天平平了（x = 5）&#x27;,score:2,hint:&#x27;点中间那张数字卡，把值调到 5，看天平&#x27;,target:T45(&#x27;balance&#x27;),check:(s,D)=&gt;{const b=byType(s,&#x27;balance&#x27;);const xn=Object.values(s.entities).filter(e=&gt;e.type===&#x27;num&#x27;)[1];return D[b].equal&amp;&amp;!!xn&amp;&amp;xn.props.v===5}}]},
+         {label:&#x27;调 x，天平平了（x = 5）&#x27;,score:2,hint:&#x27;点中间那张数字卡，把值调到 5，看天平&#x27;,target:T45(&#x27;balance&#x27;),check:(s,D)=&gt;{const b=byType(s,&#x27;balance&#x27;);const xn=Object.values(s.entities).find(e=&gt;e.type===&#x27;num&#x27;&amp;&amp;e.name===&#x27;x&#x27;);return D[b].equal&amp;&amp;!!xn&amp;&amp;xn.props.v===5}}]},
 ];
 P46.forEach(p=&gt;XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
 

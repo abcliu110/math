@@ -1171,9 +1171,9 @@ const P46=[
   steps:[{label:'把一班的人数调成 12',score:1,hint:'点统计图卡，在属性卡里把“一班”调到 12',target:T45('bars'),check:(s,D)=>s.entities[byType(s,'bars')].props.a===12},
          {label:'二班比一班多 6 人',score:2,hint:'把“二班”调到 18，看下面的文字',target:T45('bars'),check:(s,D)=>{const b=byType(s,'bars');return D[b].ports.bMinusA===6}}]},
  {id:'g5_5',grade:5,domain:'数与代数',tools:'天平 · 数字卡',title:'简易方程：x + 3 = 8，x 是几？',q:'把左边的 3 和 x 放在左盘，右边的 8 放在右盘。调 x，让天平平了，x 就是答案。',why:'x + 3 = 8，两边都减 3，得 x = 5。天平平，就是两边相等。',
-  build:s=>{addEnt(s,'num',60,40,{v:3});addEnt(s,'num',60,150,{v:1});addEnt(s,'num',60,260,{v:8});addEnt(s,'balance',300,130)},
+  build:s=>{addEnt(s,'num',60,40,{v:3});const xid=addEnt(s,'num',60,150,{v:1});s.entities[xid].name='x';addEnt(s,'num',60,260,{v:8});addEnt(s,'balance',300,130)},
   steps:[{label:'3 和 x 放左盘，8 放右盘',score:1,hint:'拖蓝点：3 和 x 到天平左边，8 到右边',target:T45('balance'),check:(s,D)=>{const b=byType(s,'balance');return D[b].Ln.length>=2&&D[b].Rn.length>=1}},
-         {label:'调 x，天平平了（x = 5）',score:2,hint:'点中间那张数字卡，把值调到 5，看天平',target:T45('balance'),check:(s,D)=>{const b=byType(s,'balance');const xn=Object.values(s.entities).filter(e=>e.type==='num')[1];return D[b].equal&&!!xn&&xn.props.v===5}}]},
+         {label:'调 x，天平平了（x = 5）',score:2,hint:'点中间那张数字卡，把值调到 5，看天平',target:T45('balance'),check:(s,D)=>{const b=byType(s,'balance');const xn=Object.values(s.entities).find(e=>e.type==='num'&&e.name==='x');return D[b].equal&&!!xn&&xn.props.v===5}}]},
 ];
 P46.forEach(p=>XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
 
