@@ -4764,7 +4764,7 @@ function evaluate(s){
     if(e.type===&#x27;adder&#x27;){const raw=inputs(s,id).map(l=&gt;vf(l));const ins=raw.filter(Boolean);d.terms=ins;
       if(raw.length&amp;&amp;raw.some(x=&gt;!x))sig(&#x27;warn&#x27;,&#x27;有个输入算不出来：先把它修好，这里才能算&#x27;);
       else if(!ins.length)sig(&#x27;info&#x27;,e.props.op===1?&#x27;把几个数连进来，这里算它们的差（第一个数减去后面的）&#x27;:&#x27;把几个数连进来，这里算它们的和&#x27;);
-      else{const ds=[...new Set(ins.map(q=&gt;q.d))];if(ds.length&gt;1){const L=ds.reduce(lcm);sig(&#x27;info&#x27;,e.props.op===1?`分母不同：都换成 ${L} 份再减`:`分母不同：都换成 ${L} 份再加`)}}}
+      else{const allM=inputs(s,id).length&amp;&amp;inputs(s,id).every(l=&gt;S.entities[l.from]&amp;&amp;S.entities[l.from].type===&#x27;money&#x27;);if(!allM){const ds=[...new Set(ins.map(q=&gt;q.d))];if(ds.length&gt;1){const L=ds.reduce(lcm);sig(&#x27;info&#x27;,e.props.op===1?`分母不同：都换成 ${L} 份再减`:`分母不同：都换成 ${L} 份再加`)}}}}
     if(e.type===&#x27;mul&#x27;){const raw=inputs(s,id).map(l=&gt;vf(l));const ins=raw.filter(Boolean);d.terms=ins;
       if(raw.length&amp;&amp;raw.some(x=&gt;!x))sig(&#x27;warn&#x27;,&#x27;有个输入算不出来：先把它修好，这里才能算&#x27;);
       else if(!ins.length)sig(&#x27;info&#x27;,&#x27;把几个数连进来，这里算它们的积（几个 × 几个）&#x27;);
@@ -4844,7 +4844,7 @@ function evaluate(s){
       if(ins.length&gt;=2){const a=ins[0].v,b=ins[1].v,g=qsub(a,b);const gap=g.n&lt;0?Q(-g.n,g.d):g;
         if(gap.n===0)sig(&#x27;ok&#x27;,`${qs(a)} 和 ${qs(b)} 落在同一点：一样大`);else sig(&#x27;info&#x27;,`${E[ins[0].from].name} 和 ${E[ins[1].from].name} 相差 ${qs(gap)}`)}}
     if(e.type===&#x27;balance&#x27;){const L=inputs(s,id).filter(l=&gt;l.slot===&#x27;L&#x27;),R=inputs(s,id).filter(l=&gt;l.slot===&#x27;R&#x27;);
-      const bad=[...L,...R].some(l=&gt;!vf(l));
+      const bad=[...L,...R].some(l=&gt;!vf(l));d.Lbad=L.some(l=&gt;!vf(l));d.Rbad=R.some(l=&gt;!vf(l));
       const sum=a=&gt;a.reduce((t,l)=&gt;{const v=vf(l);return v?qadd(t,v):t},Q(0));d.L=sum(L);d.R=sum(R);d.Ln=L;d.Rn=R;
       const df=qsub(d.L,d.R);d.tilt=bad?0:-Math.max(-16,Math.min(16,qnum(df)*(e.props.sens||14)));d.equal=!bad&amp;&amp;df.n===0;d.ports={equal:bad?null:d.equal,heavier:bad?null:(df.n&gt;0?&#x27;L&#x27;:df.n&lt;0?&#x27;R&#x27;:null)};
       if(bad)sig(&#x27;warn&#x27;,&#x27;有个盘上的数算不出来：先把它修好，天平才能称&#x27;);
@@ -5025,7 +5025,7 @@ function linkSvg(l,dep){if(!S.entities[l.from]||!S.entities[l.to])return&#x27;&#
   const d=`M${x1},${y1} C${x1+c},${y1} ${x2-c},${y2} ${x2},${y2}`;
   const inChain=!!dep&amp;&amp;[l.from,l.to].every(x=&gt;x===sel||dep.up[x]||dep.down[x]);
   // 连线上写出流过的值（有数的时候）
-  const v=l.fromPort?(D[l.from].ports||{})[l.fromPort]:D[l.from]&amp;&amp;qv(D[l.from]);const lab=(v&amp;&amp;v.kind===&#x27;dist&#x27;)?`&lt;text class=&quot;linkval&quot; x=&quot;${(x1+x2)/2}&quot; y=&quot;${(y1+y2)/2-7}&quot; text-anchor=&quot;middle&quot;&gt;共 ${v.counts.reduce((a,b)=&gt;a+b,0)} 次&lt;/text&gt;`:typeof v===&#x27;boolean&#x27;?`&lt;text class=&quot;linkval&quot; x=&quot;${(x1+x2)/2}&quot; y=&quot;${(y1+y2)/2-7}&quot; text-anchor=&quot;middle&quot;&gt;${v?&#x27;平了&#x27;:&#x27;不平&#x27;}&lt;/text&gt;`:v?`&lt;text class=&quot;linkval&quot; x=&quot;${(x1+x2)/2}&quot; y=&quot;${(y1+y2)/2-7}&quot; text-anchor=&quot;middle&quot;&gt;${qs(v)}&lt;/text&gt;`:&#x27;&#x27;;
+  const v=l.fromPort?(D[l.from].ports||{})[l.fromPort]:D[l.from]&amp;&amp;qv(D[l.from]);const lab=(v&amp;&amp;v.kind===&#x27;dist&#x27;)?`&lt;text class=&quot;linkval&quot; x=&quot;${(x1+x2)/2}&quot; y=&quot;${(y1+y2)/2-7}&quot; text-anchor=&quot;middle&quot;&gt;共 ${v.counts.reduce((a,b)=&gt;a+b,0)} 次&lt;/text&gt;`:typeof v===&#x27;boolean&#x27;?`&lt;text class=&quot;linkval&quot; x=&quot;${(x1+x2)/2}&quot; y=&quot;${(y1+y2)/2-7}&quot; text-anchor=&quot;middle&quot;&gt;${v?&#x27;平了&#x27;:&#x27;不平&#x27;}&lt;/text&gt;`:v?`&lt;text class=&quot;linkval&quot; x=&quot;${(x1+x2)/2}&quot; y=&quot;${(y1+y2)/2-7}&quot; text-anchor=&quot;middle&quot;&gt;${S.entities[l.from]&amp;&amp;S.entities[l.from].type===&#x27;money&#x27;?qsMoney(v)+&#x27;元&#x27;:qs(v)}&lt;/text&gt;`:&#x27;&#x27;;
   return`&lt;path class=&quot;linkhit&quot; data-link=&quot;${l.id}&quot; d=&quot;${d}&quot;/&gt;&lt;path class=&quot;link${selLink===l.id?&#x27; sel&#x27;:&#x27;&#x27;}${inChain?&#x27; dep&#x27;:&#x27;&#x27;}&quot; d=&quot;${d}&quot;/&gt;${lab}`}
 const esc=s=&gt;String(s).replace(/[&amp;&lt;&gt;&quot;]/g,c=&gt;({&#x27;&amp;&#x27;:&#x27;&amp;amp;&#x27;,&#x27;&lt;&#x27;:&#x27;&amp;lt;&#x27;,&#x27;&gt;&#x27;:&#x27;&amp;gt;&#x27;,&#x27;&quot;&#x27;:&#x27;&amp;quot;&#x27;}[c]));
 function entSvg(e,d,isNext,dep){const T=TYPES[e.type],[w,h]=T.size(e),kk=e.k||1;const lv=d.sig.some(s=&gt;s.lv===&#x27;err&#x27;)?&#x27; err&#x27;:(d.sig.some(s=&gt;s.lv===&#x27;ok&#x27;)?&#x27; ok&#x27;:&#x27;&#x27;);
@@ -5141,7 +5141,7 @@ mul:(e,d,w,h)=&gt;{const t=d.terms||[];const ls=inputs(S,e.id);const allM=ls.len
      return s+`&lt;circle fill=&quot;transparent&quot; cx=&quot;${x}&quot; cy=&quot;${y+8}&quot; r=&quot;16&quot;/&gt;&lt;circle class=&quot;port-in&quot; cx=&quot;${x}&quot; cy=&quot;${y+8}&quot; r=&quot;6&quot;/&gt;&lt;text class=&quot;ttl&quot; x=&quot;${x}&quot; y=&quot;${y+34}&quot; text-anchor=&quot;middle&quot;&gt;${lab}&lt;/text&gt;`};
    return`&lt;path d=&quot;M${cx-40},${h-14}h80l-30,-14h-20Z&quot; fill=&quot;#8a97a6&quot;/&gt;&lt;line x1=&quot;${cx}&quot; y1=&quot;${h-28}&quot; x2=&quot;${cx}&quot; y2=&quot;${py}&quot; stroke=&quot;#8a97a6&quot; stroke-width=&quot;6&quot;/&gt;
    &lt;g transform=&quot;rotate(${t} ${cx} ${py})&quot;&gt;&lt;rect x=&quot;${cx-120}&quot; y=&quot;${py-4}&quot; width=&quot;240&quot; height=&quot;8&quot; rx=&quot;4&quot; fill=&quot;#4a5668&quot;/&gt;&lt;/g&gt;&lt;circle cx=&quot;${cx}&quot; cy=&quot;${py}&quot; r=&quot;6&quot; fill=&quot;#2b3a4f&quot;/&gt;
-   ${pan(cx-120,py+50-dy,d.Ln||[],&#x27;左盘 &#x27;+(d.L?qs(d.L):0))}${pan(cx+120,py+50+dy,d.Rn||[],&#x27;右盘 &#x27;+(d.R?qs(d.R):0))}`},
+   ${pan(cx-120,py+50-dy,d.Ln||[],&#x27;左盘 &#x27;+(d.Lbad?&#x27;?&#x27;:(d.L?qs(d.L):0)))}${pan(cx+120,py+50+dy,d.Rn||[],&#x27;右盘 &#x27;+(d.Rbad?&#x27;?&#x27;:(d.R?qs(d.R):0)))}`},
  fn:(e,d,w,h)=&gt;`&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;${h/2+12}&quot; text-anchor=&quot;middle&quot; font-size=&quot;18&quot;&gt;y = ${esc(fx(e.props.k,e.props.b))}&lt;/text&gt;`,
  coord:(e,d,w,h)=&gt;{const L=20,R=w-20,T=30,B=h-20,X=v=&gt;L+(v+6)/12*(R-L),Y=v=&gt;B-(v+10)/20*(B-T);let s=`&lt;clipPath id=&quot;cp${e.id}&quot;&gt;&lt;rect x=&quot;${L}&quot; y=&quot;${T}&quot; width=&quot;${R-L}&quot; height=&quot;${B-T}&quot;/&gt;&lt;/clipPath&gt;`;
    for(let i=-6;i&lt;=6;i++)s+=`&lt;line x1=&quot;${X(i)}&quot; y1=&quot;${T}&quot; x2=&quot;${X(i)}&quot; y2=&quot;${B}&quot; stroke=&quot;${i?&#x27;#e3e8ef&#x27;:&#x27;#334&#x27;}&quot; stroke-width=&quot;${i?1:1.5}&quot;/&gt;`;

@@ -428,7 +428,7 @@ function evaluate(s){
     if(e.type==='adder'){const raw=inputs(s,id).map(l=>vf(l));const ins=raw.filter(Boolean);d.terms=ins;
       if(raw.length&&raw.some(x=>!x))sig('warn','有个输入算不出来：先把它修好，这里才能算');
       else if(!ins.length)sig('info',e.props.op===1?'把几个数连进来，这里算它们的差（第一个数减去后面的）':'把几个数连进来，这里算它们的和');
-      else{const ds=[...new Set(ins.map(q=>q.d))];if(ds.length>1){const L=ds.reduce(lcm);sig('info',e.props.op===1?`分母不同：都换成 ${L} 份再减`:`分母不同：都换成 ${L} 份再加`)}}}
+      else{const allM=inputs(s,id).length&&inputs(s,id).every(l=>S.entities[l.from]&&S.entities[l.from].type==='money');if(!allM){const ds=[...new Set(ins.map(q=>q.d))];if(ds.length>1){const L=ds.reduce(lcm);sig('info',e.props.op===1?`分母不同：都换成 ${L} 份再减`:`分母不同：都换成 ${L} 份再加`)}}}}
     if(e.type==='mul'){const raw=inputs(s,id).map(l=>vf(l));const ins=raw.filter(Boolean);d.terms=ins;
       if(raw.length&&raw.some(x=>!x))sig('warn','有个输入算不出来：先把它修好，这里才能算');
       else if(!ins.length)sig('info','把几个数连进来，这里算它们的积（几个 × 几个）');
@@ -508,7 +508,7 @@ function evaluate(s){
       if(ins.length>=2){const a=ins[0].v,b=ins[1].v,g=qsub(a,b);const gap=g.n<0?Q(-g.n,g.d):g;
         if(gap.n===0)sig('ok',`${qs(a)} 和 ${qs(b)} 落在同一点：一样大`);else sig('info',`${E[ins[0].from].name} 和 ${E[ins[1].from].name} 相差 ${qs(gap)}`)}}
     if(e.type==='balance'){const L=inputs(s,id).filter(l=>l.slot==='L'),R=inputs(s,id).filter(l=>l.slot==='R');
-      const bad=[...L,...R].some(l=>!vf(l));
+      const bad=[...L,...R].some(l=>!vf(l));d.Lbad=L.some(l=>!vf(l));d.Rbad=R.some(l=>!vf(l));
       const sum=a=>a.reduce((t,l)=>{const v=vf(l);return v?qadd(t,v):t},Q(0));d.L=sum(L);d.R=sum(R);d.Ln=L;d.Rn=R;
       const df=qsub(d.L,d.R);d.tilt=bad?0:-Math.max(-16,Math.min(16,qnum(df)*(e.props.sens||14)));d.equal=!bad&&df.n===0;d.ports={equal:bad?null:d.equal,heavier:bad?null:(df.n>0?'L':df.n<0?'R':null)};
       if(bad)sig('warn','有个盘上的数算不出来：先把它修好，天平才能称');
@@ -689,7 +689,7 @@ function linkSvg(l,dep){if(!S.entities[l.from]||!S.entities[l.to])return'';const
   const d=`M${x1},${y1} C${x1+c},${y1} ${x2-c},${y2} ${x2},${y2}`;
   const inChain=!!dep&&[l.from,l.to].every(x=>x===sel||dep.up[x]||dep.down[x]);
   // 连线上写出流过的值（有数的时候）
-  const v=l.fromPort?(D[l.from].ports||{})[l.fromPort]:D[l.from]&&qv(D[l.from]);const lab=(v&&v.kind==='dist')?`<text class="linkval" x="${(x1+x2)/2}" y="${(y1+y2)/2-7}" text-anchor="middle">共 ${v.counts.reduce((a,b)=>a+b,0)} 次</text>`:typeof v==='boolean'?`<text class="linkval" x="${(x1+x2)/2}" y="${(y1+y2)/2-7}" text-anchor="middle">${v?'平了':'不平'}</text>`:v?`<text class="linkval" x="${(x1+x2)/2}" y="${(y1+y2)/2-7}" text-anchor="middle">${qs(v)}</text>`:'';
+  const v=l.fromPort?(D[l.from].ports||{})[l.fromPort]:D[l.from]&&qv(D[l.from]);const lab=(v&&v.kind==='dist')?`<text class="linkval" x="${(x1+x2)/2}" y="${(y1+y2)/2-7}" text-anchor="middle">共 ${v.counts.reduce((a,b)=>a+b,0)} 次</text>`:typeof v==='boolean'?`<text class="linkval" x="${(x1+x2)/2}" y="${(y1+y2)/2-7}" text-anchor="middle">${v?'平了':'不平'}</text>`:v?`<text class="linkval" x="${(x1+x2)/2}" y="${(y1+y2)/2-7}" text-anchor="middle">${S.entities[l.from]&&S.entities[l.from].type==='money'?qsMoney(v)+'元':qs(v)}</text>`:'';
   return`<path class="linkhit" data-link="${l.id}" d="${d}"/><path class="link${selLink===l.id?' sel':''}${inChain?' dep':''}" d="${d}"/>${lab}`}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function entSvg(e,d,isNext,dep){const T=TYPES[e.type],[w,h]=T.size(e),kk=e.k||1;const lv=d.sig.some(s=>s.lv==='err')?' err':(d.sig.some(s=>s.lv==='ok')?' ok':'');
@@ -805,7 +805,7 @@ mul:(e,d,w,h)=>{const t=d.terms||[];const ls=inputs(S,e.id);const allM=ls.length
      return s+`<circle fill="transparent" cx="${x}" cy="${y+8}" r="16"/><circle class="port-in" cx="${x}" cy="${y+8}" r="6"/><text class="ttl" x="${x}" y="${y+34}" text-anchor="middle">${lab}</text>`};
    return`<path d="M${cx-40},${h-14}h80l-30,-14h-20Z" fill="#8a97a6"/><line x1="${cx}" y1="${h-28}" x2="${cx}" y2="${py}" stroke="#8a97a6" stroke-width="6"/>
    <g transform="rotate(${t} ${cx} ${py})"><rect x="${cx-120}" y="${py-4}" width="240" height="8" rx="4" fill="#4a5668"/></g><circle cx="${cx}" cy="${py}" r="6" fill="#2b3a4f"/>
-   ${pan(cx-120,py+50-dy,d.Ln||[],'左盘 '+(d.L?qs(d.L):0))}${pan(cx+120,py+50+dy,d.Rn||[],'右盘 '+(d.R?qs(d.R):0))}`},
+   ${pan(cx-120,py+50-dy,d.Ln||[],'左盘 '+(d.Lbad?'?':(d.L?qs(d.L):0)))}${pan(cx+120,py+50+dy,d.Rn||[],'右盘 '+(d.Rbad?'?':(d.R?qs(d.R):0)))}`},
  fn:(e,d,w,h)=>`<text class="big" x="${w/2}" y="${h/2+12}" text-anchor="middle" font-size="18">y = ${esc(fx(e.props.k,e.props.b))}</text>`,
  coord:(e,d,w,h)=>{const L=20,R=w-20,T=30,B=h-20,X=v=>L+(v+6)/12*(R-L),Y=v=>B-(v+10)/20*(B-T);let s=`<clipPath id="cp${e.id}"><rect x="${L}" y="${T}" width="${R-L}" height="${B-T}"/></clipPath>`;
    for(let i=-6;i<=6;i++)s+=`<line x1="${X(i)}" y1="${T}" x2="${X(i)}" y2="${B}" stroke="${i?'#e3e8ef':'#334'}" stroke-width="${i?1:1.5}"/>`;
