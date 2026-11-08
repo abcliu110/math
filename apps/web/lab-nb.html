@@ -1215,7 +1215,7 @@ P48.forEach(p=>XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tool
 
 /* ========== 第三期收尾：大数、优化、图形的运动、观察物体 ========== */
 const P49=[
- {id:'g4_1',grade:4,domain:'数与代数',tools:'数字卡 · 乘法器',title:'大数的认识：1 亿是多少个 1 万相乘？',q:'1 亿 = 1 万 × 1 万。万级和亿级的数，就是几个“万”和几个“亿”。',why:'10000 × 10000 = 100000000，即 1 亿。',
+ {id:'g4_1',grade:4,domain:'数与代数',tools:'数字卡 · 乘法器',title:'大数的认识：两个 1 万相乘，得多少？',q:'1 亿 = 1 万 × 1 万。把两个 1 万连到乘法器相乘，看读数是几亿。',why:'10000 × 10000 = 100000000，即 1 亿。',
   build:s=>{addEnt(s,'num',60,60,{v:10000});addEnt(s,'num',60,170,{v:10000});addEnt(s,'mul',330,110)},
   steps:[{label:'把两个 1 万都连到乘法器',score:1,hint:'拖两个数的蓝点到乘法器',target:T45('mul'),check:(s,D)=>P45H.cnt(s,D,'mul',2)},
          {label:'算出 1 亿（100000000）',score:2,hint:'看乘法器的读数',target:T45('mul'),check:(s,D)=>P45H.val(s,D,'mul',Q(100000000))}]},
