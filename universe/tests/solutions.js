@@ -61,4 +61,9 @@ module.exports = {
   'fold-square-half'(h) { const f = h.role('f'); h.set(f, 'fold', 1); h.set(f, 'angle', 90); },
   'fold-diagonal'(h) { const f = h.role('f'); h.set(f, 'fold', 1); h.set(f, 'angle', 45); },
   'approach-sqrt2'(h) { const k = h.role('k'); h.set(k, 'place', -1); h.set(k, 'place', -2); },
+'match-pairs'(h) { const a = h.add('array', { rows: 1, cols: 5 }), b = h.add('array', { rows: 5, cols: 1 }), c = h.add('compare'); h.link(a, c, 'a'); h.link(b, c, 'b'); },
+'count-by-match'(h) { const a = h.add('array', { rows: 3, cols: 2 }); h.link(a, h.role('show'), 'v'); },
+'no-extra-seat'(h) { const g = h.add('array', { rows: 1, cols: 5 }), s = h.add('array', { rows: 1, cols: 4 }), c = h.add('compare', { invert: true }); h.link(g, c, 'a'); h.link(s, c, 'b'); },
+'plan-breakeven'(h) { const c = h.role('c'); h.set(c, 'rate2', 0.15); },
+'plan-choose'(h) { const c = h.role('c'); h.set(c, 'x', 300); h.set(c, 'x', 600); },
 };
