@@ -4544,7 +4544,7 @@ const TYPES={
  div:{label:&#x27;除法器&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;除法器&#x27;,out:&#x27;value&#x27;,accepts:&#x27;value&#x27;,slots:true,defaults:{mode:0},fields:[{k:&#x27;mode&#x27;,label:&#x27;算什么&#x27;,min:0,max:1,choices:[&#x27;商（分成几份）&#x27;,&#x27;余数&#x27;]}],size:()=&gt;[200,110]},
  money:{label:&#x27;人民币&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;人民币&#x27;,out:&#x27;value&#x27;,defaults:{yuan:1,jiao:0,fen:0},fields:[{k:&#x27;yuan&#x27;,label:&#x27;元&#x27;,min:0,max:99},{k:&#x27;jiao&#x27;,label:&#x27;角&#x27;,min:0,max:9},{k:&#x27;fen&#x27;,label:&#x27;分&#x27;,min:0,max:9}],size:()=&gt;[190,62]},
  clock:{label:&#x27;钟面&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;钟面&#x27;,out:&#x27;value&#x27;,dim:&#x27;time&#x27;,defaults:{h:3,m:0},fields:[{k:&#x27;h&#x27;,label:&#x27;时（几点）&#x27;,min:1,max:12},{k:&#x27;m&#x27;,label:&#x27;分&#x27;,min:0,max:55,step:5}],size:()=&gt;[180,200]},
- angle:{label:&#x27;角&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;角&#x27;,defaults:{deg:90},fields:[{k:&#x27;deg&#x27;,label:&#x27;度数（0 到 180）&#x27;,min:0,max:180,step:5}],size:()=&gt;[200,160]},
+ angle:{ports:(p)=&gt;({deg:p.deg}),label:&#x27;角&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;角&#x27;,defaults:{deg:90},fields:[{k:&#x27;deg&#x27;,label:&#x27;度数（0 到 180）&#x27;,min:0,max:180,step:5}],size:()=&gt;[200,160]},
  bars:{label:&#x27;条形统计图&#x27;,group:&#x27;统计&#x27;,prefix:&#x27;统计图&#x27;,defaults:{a:4,b:6,c:3},fields:[{k:&#x27;a&#x27;,label:&#x27;一班（人）&#x27;,min:0,max:30},{k:&#x27;b&#x27;,label:&#x27;二班（人）&#x27;,min:0,max:30},{k:&#x27;c&#x27;,label:&#x27;三班（人）&#x27;,min:0,max:30}],size:()=&gt;[220,190]},
  tri:{ports:(p)=&gt;({third:180-p.a-p.b}),label:&#x27;三角形&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;三角形&#x27;,defaults:{a:30,b:40},fields:[{k:&#x27;a&#x27;,label:&#x27;第一个角（度）&#x27;,min:1,max:150},{k:&#x27;b&#x27;,label:&#x27;第二个角（度）&#x27;,min:1,max:150}],size:()=&gt;[240,170]},
  para:{label:&#x27;平行四边形&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;平行四边形&#x27;,defaults:{base:6,h:4},fields:[{k:&#x27;base&#x27;,label:&#x27;底（格）&#x27;,min:1,max:12},{k:&#x27;h&#x27;,label:&#x27;高（格）&#x27;,min:1,max:12}],size:()=&gt;[240,170]},
@@ -4559,21 +4559,21 @@ const TYPES={
  pyth:{ports:(p)=&gt;{const c=Math.sqrt(p.a*p.a+p.b*p.b);return{c:c,triple:Number.isInteger(c)}},label:&#x27;直角三角形（勾股定理）&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;直角三角形&#x27;,defaults:{a:3,b:2},fields:[{k:&#x27;a&#x27;,label:&#x27;直角边 a&#x27;,min:1,max:12},{k:&#x27;b&#x27;,label:&#x27;直角边 b&#x27;,min:1,max:12}],size:()=&gt;[240,190]},
  trig:{ports:(p)=&gt;{const r=p.deg*Math.PI/180;return{sin:Number(Math.sin(r).toFixed(2)),cos:Number(Math.cos(r).toFixed(2)),tan:Number(Math.tan(r).toFixed(2))}},label:&#x27;锐角三角函数&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;三角函数&#x27;,defaults:{deg:45},fields:[{k:&#x27;deg&#x27;,label:&#x27;锐角（度）&#x27;,min:5,max:85,step:5}],size:()=&gt;[240,190]},
  fact:{label:&#x27;因式分解 x² + bx + c&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;因式&#x27;,defaults:{b:0,c:0},fields:[{k:&#x27;b&#x27;,label:&#x27;b&#x27;,min:-10,max:10},{k:&#x27;c&#x27;,label:&#x27;c&#x27;,min:-10,max:10}],size:()=&gt;[260,120]},
- sqsum:{label:&#x27;乘法公式 (a + b)²&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;公式&#x27;,defaults:{a:1,b:1},fields:[{k:&#x27;a&#x27;,label:&#x27;a&#x27;,min:0,max:9},{k:&#x27;b&#x27;,label:&#x27;b&#x27;,min:0,max:9}],size:()=&gt;[260,120]},
+ sqsum:{ports:(p)=&gt;({terms:[p.a*p.a,2*p.a*p.b,p.b*p.b]}),label:&#x27;乘法公式 (a + b)²&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;公式&#x27;,defaults:{a:1,b:1},fields:[{k:&#x27;a&#x27;,label:&#x27;a&#x27;,min:0,max:9},{k:&#x27;b&#x27;,label:&#x27;b&#x27;,min:0,max:9}],size:()=&gt;[260,120]},
  isotri:{label:&#x27;等腰三角形（顶角）&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;等腰三角形&#x27;,defaults:{apex:40},fields:[{k:&#x27;apex&#x27;,label:&#x27;顶角（度）&#x27;,min:10,max:150,step:10}],size:()=&gt;[240,170]},
  data:{label:&#x27;数据的分析（三个数）&#x27;,group:&#x27;统计&#x27;,prefix:&#x27;数据&#x27;,defaults:{a:6,b:8,c:10},fields:[{k:&#x27;a&#x27;,label:&#x27;数 1&#x27;,min:0,max:20},{k:&#x27;b&#x27;,label:&#x27;数 2&#x27;,min:0,max:20},{k:&#x27;c&#x27;,label:&#x27;数 3&#x27;,min:0,max:20}],size:()=&gt;[240,120]},
  sys:{label:&#x27;二元一次方程组（x + y = 10，x − y = 4）&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;方程组&#x27;,defaults:{x:0,y:0},fields:[{k:&#x27;x&#x27;,label:&#x27;x&#x27;,min:-10,max:20},{k:&#x27;y&#x27;,label:&#x27;y&#x27;,min:-10,max:20}],size:()=&gt;[260,140]},
  quad:{label:&#x27;一元二次方程 x² + bx + c = 0&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;方程&#x27;,defaults:{b:0,c:0},fields:[{k:&#x27;b&#x27;,label:&#x27;b&#x27;,min:-10,max:10},{k:&#x27;c&#x27;,label:&#x27;c&#x27;,min:-10,max:10}],size:()=&gt;[260,140]},
- afrac:{label:&#x27;分式 n / d&#x27;,group:&#x27;分数&#x27;,prefix:&#x27;分式&#x27;,defaults:{n:6,d:4},fields:[{k:&#x27;n&#x27;,label:&#x27;分子 n&#x27;,min:-12,max:12},{k:&#x27;d&#x27;,label:&#x27;分母 d&#x27;,min:-6,max:6}],size:()=&gt;[220,130]},
- radical:{label:&#x27;二次根式 √n&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;根式&#x27;,defaults:{n:8},fields:[{k:&#x27;n&#x27;,label:&#x27;被开方数 n&#x27;,min:1,max:50}],size:()=&gt;[220,120]},
+ afrac:{ports:(p)=&gt;(p.d!==0?{value:p.n/p.d}:{}),label:&#x27;分式 n / d&#x27;,group:&#x27;分数&#x27;,prefix:&#x27;分式&#x27;,defaults:{n:6,d:4},fields:[{k:&#x27;n&#x27;,label:&#x27;分子 n&#x27;,min:-12,max:12},{k:&#x27;d&#x27;,label:&#x27;分母 d&#x27;,min:-6,max:6}],size:()=&gt;[220,130]},
+ radical:{ports:(p)=&gt;{const n=p.n;let kk=1,mm=n;for(let k=Math.floor(Math.sqrt(n));k&gt;=2;k--){if(n%(k*k)===0){kk=k;mm=n/(k*k);break}}return{kk:kk,mm:mm}},label:&#x27;二次根式 √n&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;根式&#x27;,defaults:{n:8},fields:[{k:&#x27;n&#x27;,label:&#x27;被开方数 n&#x27;,min:1,max:50}],size:()=&gt;[220,120]},
  parlines:{label:&#x27;平行线与截线（角）&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;平行线&#x27;,defaults:{a:40},fields:[{k:&#x27;a&#x27;,label:&#x27;截线与直线的夹角（度）&#x27;,min:10,max:170,step:10}],size:()=&gt;[240,190]},
- bag:{label:&#x27;摸球（红、白）&#x27;,group:&#x27;概率&#x27;,prefix:&#x27;袋子&#x27;,defaults:{red:2,white:2},fields:[{k:&#x27;red&#x27;,label:&#x27;红球（个）&#x27;,min:0,max:10},{k:&#x27;white&#x27;,label:&#x27;白球（个）&#x27;,min:0,max:10}],size:()=&gt;[220,160]},
- cang:{label:&#x27;圆周角与圆心角&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;圆&#x27;,defaults:{c:120},fields:[{k:&#x27;c&#x27;,label:&#x27;圆心角（度）&#x27;,min:10,max:170,step:10}],size:()=&gt;[220,200]},
+ bag:{ports:(p)=&gt;{const t=p.red+p.white;return{pRed:t?p.red/t:null}},label:&#x27;摸球（红、白）&#x27;,group:&#x27;概率&#x27;,prefix:&#x27;袋子&#x27;,defaults:{red:2,white:2},fields:[{k:&#x27;red&#x27;,label:&#x27;红球（个）&#x27;,min:0,max:10},{k:&#x27;white&#x27;,label:&#x27;白球（个）&#x27;,min:0,max:10}],size:()=&gt;[220,160]},
+ cang:{ports:(p)=&gt;({inscribed:p.c/2}),label:&#x27;圆周角与圆心角&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;圆&#x27;,defaults:{c:120},fields:[{k:&#x27;c&#x27;,label:&#x27;圆心角（度）&#x27;,min:10,max:170,step:10}],size:()=&gt;[220,200]},
  congr:{label:&#x27;全等三角形（三边）&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;全等&#x27;,defaults:{a:4,b:4,c:5},fields:[{k:&#x27;a&#x27;,label:&#x27;第二个三角形：边 1&#x27;,min:1,max:12},{k:&#x27;b&#x27;,label:&#x27;边 2&#x27;,min:1,max:12},{k:&#x27;c&#x27;,label:&#x27;边 3&#x27;,min:1,max:12}],size:()=&gt;[240,190]},
  tangent:{label:&#x27;直线和圆的位置&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;直线圆&#x27;,defaults:{d:5,r:3},fields:[{k:&#x27;d&#x27;,label:&#x27;圆心到直线的距离&#x27;,min:0,max:8},{k:&#x27;r&#x27;,label:&#x27;半径&#x27;,min:1,max:6}],size:()=&gt;[240,190]},
  parab:{label:&#x27;二次函数 y = ax² + bx + c&#x27;,group:&#x27;函数&#x27;,prefix:&#x27;抛物线&#x27;,defaults:{a:1,b:-2,c:0},fields:[{k:&#x27;a&#x27;,label:&#x27;a&#x27;,min:-3,max:3},{k:&#x27;b&#x27;,label:&#x27;b&#x27;,min:-6,max:6},{k:&#x27;c&#x27;,label:&#x27;c&#x27;,min:-6,max:6}],size:()=&gt;[240,190]},
- hyper:{label:&#x27;反比例 y = k/x&#x27;,group:&#x27;函数&#x27;,prefix:&#x27;反比例&#x27;,defaults:{k:2},fields:[{k:&#x27;k&#x27;,label:&#x27;k&#x27;,min:-8,max:8}],size:()=&gt;[240,190]},
- ineq:{label:&#x27;不等式的解集（数轴）&#x27;,group:&#x27;关系&#x27;,prefix:&#x27;解集&#x27;,defaults:{b:2,op:1},fields:[{k:&#x27;b&#x27;,label:&#x27;边界（数）&#x27;,min:-6,max:6},{k:&#x27;op&#x27;,label:&#x27;方向（0：x＜，1：x＞）&#x27;,min:0,max:1}],size:()=&gt;[300,110]},
+ hyper:{ports:(p)=&gt;({y2:p.k/2}),label:&#x27;反比例 y = k/x&#x27;,group:&#x27;函数&#x27;,prefix:&#x27;反比例&#x27;,defaults:{k:2},fields:[{k:&#x27;k&#x27;,label:&#x27;k&#x27;,min:-8,max:8}],size:()=&gt;[240,190]},
+ ineq:{ports:(p)=&gt;({set:{op:p.op,b:p.b}}),label:&#x27;不等式的解集（数轴）&#x27;,group:&#x27;关系&#x27;,prefix:&#x27;解集&#x27;,defaults:{b:2,op:1},fields:[{k:&#x27;b&#x27;,label:&#x27;边界（数）&#x27;,min:-6,max:6},{k:&#x27;op&#x27;,label:&#x27;方向（0：x＜，1：x＞）&#x27;,min:0,max:1}],size:()=&gt;[300,110]},
  light:{label:&#x27;判断灯&#x27;,group:&#x27;关系&#x27;,prefix:&#x27;判断灯&#x27;,accepts:&#x27;bool&#x27;,defaults:{},fields:[],size:()=&gt;[120,90]},
  numline:{label:&#x27;数轴&#x27;,group:&#x27;关系&#x27;,prefix:&#x27;数轴&#x27;,accepts:&#x27;value&#x27;,reject:{area:&#x27;数轴量的是长短和数，面积不能放上去&#x27;},defaults:{min:0,max:2},
    fields:[{k:&#x27;min&#x27;,label:&#x27;最左&#x27;,min:-10,max:10},{k:&#x27;max&#x27;,label:&#x27;最右&#x27;,min:-9,max:20}],size:()=&gt;[460,118]},
@@ -4870,15 +4870,15 @@ function portsFor(e,s,E,D){const p=e.props,P={};
   case &#x27;solid&#x27;:{const hs=SOLID_H,v=p.view;if(v===0)P.front=hs[0].map((_,x)=&gt;Math.max(...hs.map(r=&gt;r[x])));if(v===1)P.side=hs.map(r=&gt;Math.max(...r));if(v===2)P.top=hs.flat().filter(x=&gt;x&gt;0).length;break}
 
 
-  case &#x27;ineq&#x27;:P.set={op:p.op,b:p.b};break;
-  case &#x27;hyper&#x27;:P.y2=p.k/2;break;
+
+
   case &#x27;parab&#x27;:if(p.a!==0){P.vx=-p.b/(2*p.a);P.vy=p.c-p.b*p.b/(4*p.a);const D0=p.b*p.b-4*p.a*p.c;P.xHits=D0&gt;0?2:D0===0?1:0}break;
 
 
 
-  case &#x27;bag&#x27;:{const t=p.red+p.white;P.pRed=t?p.red/t:null;break}
-  case &#x27;cang&#x27;:P.inscribed=p.c/2;break;
-  case &#x27;sqsum&#x27;:P.terms=[p.a*p.a,2*p.a*p.b,p.b*p.b];break;
+
+
+
   case &#x27;data&#x27;:{const v=[p.a,p.b,p.c].sort((x,y)=&gt;x-y),mean=(v[0]+v[1]+v[2])/3;P.mean=mean;P.mean2=Number(mean.toFixed(2));P.median=v[1];break}
   case &#x27;quad&#x27;:{const D0=p.b*p.b-4*p.c;P.disc=D0;if(D0&gt;=0){const r1=(-p.b+Math.sqrt(D0))/2,r2=(-p.b-Math.sqrt(D0))/2;P.roots=[r1,r2].sort((x,y)=&gt;x-y)}else P.roots=null;break}
   case &#x27;sys&#x27;:P.x=p.x;P.y=p.y;P.ok=(p.x+p.y===10&amp;&amp;p.x-p.y===4);break;
@@ -4887,10 +4887,10 @@ function portsFor(e,s,E,D){const p=e.props,P={};
   case &#x27;rect&#x27;:P.area=p.w*p.h;P.peri=2*(p.w+p.h);P.square=p.w===p.h;break;
   case &#x27;tangent&#x27;:P.relation=p.d&gt;p.r?&#x27;apart&#x27;:p.d===p.r?&#x27;tangent&#x27;:&#x27;cross&#x27;;break;
   case &#x27;dice&#x27;:P.tot=p.counts?p.counts.reduce((a,b)=&gt;a+b,0):0;break;
-  case &#x27;angle&#x27;:P.deg=p.deg;break;
+
   case &#x27;table&#x27;:{const T=D[e.id].tab;P.sum=T.sum;P.mean=T.mean;P.max=T.max;break}
-  case &#x27;afrac&#x27;:if(p.d!==0)P.value=p.n/p.d;break;
-  case &#x27;radical&#x27;:{const n=p.n;let kk=1,mm=n;for(let k=Math.floor(Math.sqrt(n));k&gt;=2;k--){if(n%(k*k)===0){kk=k;mm=n/(k*k);break}}P.kk=kk;P.mm=mm;break}
+
+
   case &#x27;parlines&#x27;:P.sameSide=180-p.a;P.corresponding=p.a;break;
   case &#x27;isotri&#x27;:P.base=(180-p.apex)/2;break;
   case &#x27;shape&#x27;:P.mirrored=!!p.mirror;break;
