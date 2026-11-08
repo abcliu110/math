@@ -5202,6 +5202,8 @@ function buildCard(e){const cd=$(&#x27;card&#x27;),T=viewType(e);cd.dataset.for=
   cd.innerHTML=h}
 $(&#x27;card&#x27;).addEventListener(&#x27;input&#x27;,ev=&gt;{const t=ev.target,id=sel;if(!id)return;
   if(t.dataset.f){commit({t:&#x27;set&#x27;,id,k:t.dataset.f,v:t.value},{coalesce:&#x27;set&#x27;+id+t.dataset.f})}
+  // 数字框：输入时就生效（不用等回车）。空的或还没输完的（如只有“-”）先不处理。
+  if(t.dataset.fn&amp;&amp;t.value.trim()!==&#x27;&#x27;&amp;&amp;!isNaN(+t.value)){commit({t:&#x27;set&#x27;,id,k:t.dataset.fn,v:t.value},{coalesce:&#x27;set&#x27;+id+t.dataset.fn})}
   if(t.dataset.name!==undefined){act({t:&#x27;rename&#x27;,id,name:t.value});$(&#x27;card&#x27;).dataset.v=JSON.stringify(S.entities[id].props)+S.entities[id].name;D=evaluate(S);render()}});
 $(&#x27;card&#x27;).addEventListener(&#x27;change&#x27;,ev=&gt;{const t=ev.target;if(t.dataset.fn&amp;&amp;sel){commit({t:&#x27;set&#x27;,id:sel,k:t.dataset.fn,v:t.value});$(&#x27;card&#x27;).dataset.v=&#x27;&#x27;}});
 $(&#x27;card&#x27;).addEventListener(&#x27;click&#x27;,ev=&gt;{const b=ev.target.closest(&#x27;button&#x27;);if(!b||!sel)return;const id=sel;

@@ -866,6 +866,8 @@ function buildCard(e){const cd=$('card'),T=viewType(e);cd.dataset.for=e.id;cd.da
   cd.innerHTML=h}
 $('card').addEventListener('input',ev=>{const t=ev.target,id=sel;if(!id)return;
   if(t.dataset.f){commit({t:'set',id,k:t.dataset.f,v:t.value},{coalesce:'set'+id+t.dataset.f})}
+  // 数字框：输入时就生效（不用等回车）。空的或还没输完的（如只有“-”）先不处理。
+  if(t.dataset.fn&&t.value.trim()!==''&&!isNaN(+t.value)){commit({t:'set',id,k:t.dataset.fn,v:t.value},{coalesce:'set'+id+t.dataset.fn})}
   if(t.dataset.name!==undefined){act({t:'rename',id,name:t.value});$('card').dataset.v=JSON.stringify(S.entities[id].props)+S.entities[id].name;D=evaluate(S);render()}});
 $('card').addEventListener('change',ev=>{const t=ev.target;if(t.dataset.fn&&sel){commit({t:'set',id:sel,k:t.dataset.fn,v:t.value});$('card').dataset.v=''}});
 $('card').addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b||!sel)return;const id=sel;
