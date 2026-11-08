@@ -123,28 +123,6 @@ body[data-view^="demo-"] #demos,
 body[data-view="why"] #why, body[data-view="review"] #review,
 body[data-view="progress"] #review, body[data-view="parent"] #review, body[data-view="lab"] #lab,
 body[data-view="exam"] #exam, body[data-view="inquiry"] #inquiry, body[data-view="checkpoint"] #checkpoint{display:block}
-.world-layout{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(260px,0.8fr);gap:18px;align-items:start;margin:12px 0 24px}
-.world-stations{display:grid;gap:16px}
-.world-intent{background:#fff7ed;border:1px solid #fdba74;border-radius:12px;padding:12px 14px;color:#9a3412}
-.world-derived{white-space:pre-wrap;font-family:ui-monospace,Consolas,monospace;font-size:13px;line-height:1.45;background:#0f172a;color:#e2e8f0;border-radius:12px;padding:14px;max-height:70vh;overflow:auto;margin:0}
-.world-panel{position:sticky;top:88px}
-.lab-mw-focus{outline:2px solid #f97316;outline-offset:2px;box-shadow:0 0 0 4px rgba(249,115,22,.18)}
-.apparatus-svg{width:100%;height:auto;display:block;margin:8px 0 12px;background:#fff;border:1px solid var(--line);border-radius:12px;touch-action:none}
-/* 拖动时别让浏览器选中文字：快拖砝码/数字时，选区会抢走指针（2026-11-07 复测）。 */
-.apparatus-svg,.apparatus-drop,.bench-chip,[data-drag-weight],[data-drag-num]{user-select:none;-webkit-user-select:none}
-.apparatus-ghost{position:fixed;z-index:9999;display:none;pointer-events:none;padding:6px 10px;border-radius:8px;background:#fff7ed;border:2px solid #ea580c;color:#9a3412;font-weight:700;font-size:14px;box-shadow:0 8px 20px rgba(15,23,42,.18)}
-.apparatus-dock{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
-.apparatus-chip{appearance:none;border:2px solid #ea580c;background:#fff7ed;color:#9a3412;border-radius:10px;padding:8px 12px;font-weight:700;font-size:14px;cursor:grab;user-select:none;touch-action:none;-webkit-user-select:none}
-.apparatus-chip:active,.apparatus-chip.is-dragging{cursor:grabbing;opacity:.45}
-.apparatus-chip[data-world]{cursor:pointer;border-color:#94a3b8;background:#f8fafc;color:#334155}
-.apparatus-drops{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
-.apparatus-drop{min-height:64px;border:2px dashed #94a3b8;border-radius:12px;background:#f8fafc;color:#475569;display:flex;align-items:center;justify-content:center;text-align:center;padding:10px;font-weight:600;font-size:14px;transition:border-color .12s,background .12s,color .12s}
-.apparatus-drop-wide{width:100%}
-.apparatus-drop.is-hot{border-color:#ea580c;background:#fff7ed;color:#9a3412;border-style:solid}
-@media (max-width:900px){
-  .world-layout{grid-template-columns:1fr}
-  .world-panel{position:static}
-}
 .exam-timer{font-size:20px;font-weight:700;color:#c2410c;margin:8px 0}
 .path-detail{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-top:16px}
 .path-detail h3{margin:0 0 8px}
@@ -278,7 +256,7 @@ main{min-width:0}
 .demo-foot{color:var(--muted);font-size:14px;border-top:1px solid var(--line);padding-top:10px}
 .balance-visual{text-align:center}
 .balance-eq{font-size:22px;font-weight:800;margin:6px 0}
-#balanceMsg, #labBalMsg{min-height:44px;color:#334155}
+#balanceMsg{min-height:44px;color:#334155}
 .func-eq{font-size:19px;font-weight:700;text-align:center}
 #funcCanvas{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px;background:#fff}
 .func-table{width:100%;border-collapse:collapse;margin-top:10px;text-align:center}
@@ -299,10 +277,6 @@ main{min-width:0}
 .tf-cell.extra{background:#fecaca;border-color:#dc2626;outline:3px solid #dc2626;outline-offset:2px}
 .tf-cell.filled.extra,.tf-cell.filled.b.extra{background:#fecaca;border-color:#dc2626}
 
-.lab-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
-/* 实验室的按钮按孩子的手指放大：实验室控件最小 52px（2026-11-06 真机审计第 9 条）。 */
-.lab-grid .btn,.lab-grid .seg button{min-height:52px}
-
 /* Review */
 .review-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 /* 错题本 / 我的进度是单卡片页：以前 2 列网格里只剩一张卡，半个屏幕是白的
@@ -317,7 +291,6 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
 .prog-track i{display:block;height:100%;background:var(--orange);border-radius:999px}
 /* 闯关路：任务清单、点亮的站、徽章墙 */
 .cp-tasks{list-style:none;padding:0;margin:8px 0;display:flex;flex-direction:column;gap:4px;font-size:14px;text-align:left}
-.cp-unit.cp-lit{border-color:#f59e0b;background:#fffbeb}
 .cp-wall{display:flex;flex-wrap:wrap;gap:8px}
 .cp-badge{display:inline-block;background:#fef3c7;border:1px solid #f59e0b;border-radius:999px;padding:6px 12px;font-size:14px}
 .review-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
@@ -343,7 +316,6 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
   .panels.four{grid-template-columns:repeat(2,1fr)}
   .panels.five{grid-template-columns:repeat(3,1fr)}
   .unit-list{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .lab-grid{grid-template-columns:1fr}
   .hero{grid-template-columns:1fr;padding-top:32px}
   .btn,.seg button{min-height:52px}
   /* 窄屏顶栏不挤：1024 以下就藏品牌副标题和右上角的进度小丸，
@@ -358,7 +330,7 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
   .panel{min-height:160px;padding:18px 8px 14px}
   .crumb-title{font-size:16px}
   .crumb-title .crumb{font-size:16px}
-  .lab-grid,.unit-list,.review-grid{grid-template-columns:1fr}
+  .unit-list,.review-grid{grid-template-columns:1fr}
   .fraction-visual{flex-direction:column;text-align:center}
 }
 
@@ -494,7 +466,6 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
 .sort-trays{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:10px 0}
 .sort-tray{min-height:120px;border:2px dashed var(--line);border-radius:12px;padding:10px;background:var(--card);display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start;align-items:center}
 .sort-tray-title{width:100%;margin:0 0 4px;font-weight:700;font-size:15px;color:var(--muted)}
-.sort-total{font-size:19px;font-weight:700;text-align:center}
 
 /* Group C — Grade 1 place-value demos. Class selectors only, :root vars only.
    Orange bundle box = 1个十, blue stick = 1个一. Min touch target 44px. */
@@ -555,11 +526,6 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
 .pat-cell.pat-filled { border-color: var(--green); }
 .pat-cell.pat-in-unit { border-color: var(--orange); background: var(--blue-light); outline: 3px solid var(--orange); outline-offset: 1px; }
 .pat-shape { width: 30px; height: 30px; display: inline-block; flex: none; }
-.pat-red { background: var(--orange-dark); border-radius: 50%; }
-.pat-blue { background: var(--blue); border-radius: 50%; }
-.pat-dot { background: var(--ink); border-radius: 50%; }
-.pat-ring { border: 4px solid var(--ink); border-radius: 50%; background: var(--card); box-sizing: border-box; }
-.pat-tri { background: var(--orange); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
 .pat-choice { display: inline-flex; align-items: center; gap: 8px; }
 .pat-msg { min-height: 28px; font-weight: 700; margin: 8px 0; }
 
@@ -821,7 +787,6 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
 .rt-a { background: #38bdf8; } .rt-b { background: #f97316; }
 .cc-bar { height: 22px; border-radius: 11px; }
 .cc-rope { background: #f97316; } .cc-diam { background: #38bdf8; }
-.cc-rect { background: #dbeafe; border: 2px solid #2563eb; border-radius: 6px; margin: 12px 0 6px; }
 .fn-pie { width: 220px; height: 220px; border-radius: 50%; margin: 12px auto; border: 2px solid var(--line); }
 .fn-legend { text-align: center; }
 .fn-dot { display: inline-block; width: 14px; height: 14px; border-radius: 4px; margin: 0 4px 0 12px; vertical-align: -2px; }
@@ -877,8 +842,8 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
 .btn.fg-b{background:#dcfce7;border-color:#16a34a;font-weight:700}
 .mr-shape{font-size:26px;padding:8px 16px}
 .tf24-used{opacity:.35}
-.mo-bar,.fg-bar{height:14px;border-radius:7px;background:#e2e8f0;overflow:hidden;margin:6px 0}
-.mo-bar i,.fg-bar i{display:block;height:100%;background:#2563eb}
+.mo-bar{height:14px;border-radius:7px;background:#e2e8f0;overflow:hidden;margin:6px 0}
+.mo-bar i{display:block;height:100%;background:#2563eb}
 .mo-bar i.switch{background:#ff8a3d}
 
 /* ---------- 创意实验通用件：三档 + 我的发现 ---------- */
@@ -888,50 +853,10 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
 .find-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
 .find-row label{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .demo-card input[type=text]{min-height:48px;border:2px solid var(--line);border-radius:10px;padding:8px 12px;font-size:15px;font-family:inherit;max-width:100%}
-
-/* ---------- 数学实验室 · 一间工作间（第二阶段） ---------- */
-.lab-mode-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}
-.lab-questions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
-.lab-q{border:2px solid var(--line);border-radius:14px;padding:12px 14px;background:#fff}
-.lab-q p{margin:6px 0}
-.lab-workbench{margin:12px 0}
-.lab-tray{display:flex;gap:8px;flex-wrap:wrap;min-height:56px;border:2px dashed var(--line);border-radius:12px;padding:10px;align-items:center;background:#f8fafc}
-.lab-chip{display:inline-flex;gap:6px;align-items:center;border:2px solid #2563eb;border-radius:999px;padding:6px 8px;background:#eff6ff;font-weight:700;font-size:15px}
-.lab-chip .btn{min-height:36px;padding:4px 10px}
-.lab-bars{margin:12px 0}
-.lab-bar-row{margin:8px 0}
-.lab-bar-row>span{font-size:13px;color:var(--muted)}
-.lab-bar-track{position:relative;height:20px;background:#e2e8f0;border-radius:999px;margin-top:4px}
-.lab-bar{position:absolute;left:0;top:0;height:100%;border-radius:999px;width:0}
-.lab-bar.naive{background:#f87171}
-.lab-bar.correct{background:#22c55e}
-.lab-bar-one{position:absolute;top:-3px;bottom:-3px;width:3px;background:#334155;left:80%}
-.lab-traces ul{margin:8px 0;padding-left:20px}
-.lab-traces li{margin:4px 0}
-/* 挑战模式：提示藏起来，学生自己想 */
-#lab.lab-challenge .hint,#lab.lab-challenge .lab-hint{display:none}
-/* 挑战模式：干净台面——练习辅助（为什么/我的发现）收起来，只剩台面 + 交卷 */
-#lab.lab-challenge .lab-bench-foot,#lab.lab-challenge #labWhyBox{display:none}
-/* 挑战计时器：进挑战模式就显示在模式行 */
-#labExamTimer{margin-left:8px}
-/* 丢分报告：按住看台面时报告先藏起来 */
-#labChallengeReport.lab-report-peek{display:none}
-/* 按住看台面：报告单也要一起藏，不然台面露不出来；按钮本身不许触发触屏滚动，
-   不然 pointerdown 上 preventDefault 拦不住滚动，按住一开始就 pointercancel
-   （2026-11-07 复测：按住只滚页面，报告单一点没藏）。 */
-#labReportSheet.lab-report-peek{display:none}
-#labReportPeek{touch-action:none;user-select:none;-webkit-user-select:none}
-/* 交卷报告单：顶部下滑关闭，快速预览不关单只看台面 */
-.lab-report-sheet{border:2px solid var(--line);border-radius:12px;padding:0 12px 12px;background:#fff;margin:12px 0}
-.lab-report-handle{text-align:center;color:var(--muted);font-size:13px;padding:8px 0 4px;cursor:grab;touch-action:none;user-select:none}
-.lab-report-grip{display:block;font-size:18px;line-height:1;letter-spacing:4px}
-.lab-cause[aria-pressed="true"]{border-color:#2563eb;background:#dbeafe;color:#1e3a8a}
-#labReportSave:disabled{opacity:.45;cursor:default}
 /* 哪一步总丢分：错题本顶部的体检表 */
 .lab-health-table{width:100%;border-collapse:collapse;margin:8px 0;font-size:14px}
 .lab-health-table th,.lab-health-table td{border:1px solid var(--line);padding:6px 8px;text-align:left}
 .lab-health-table th{background:#f8fafc}
-@media (max-width:1024px){.lab-questions{grid-template-columns:1fr}}
 
 /* 互动模拟 */
 .area-grid { display: block; margin: 8px auto; max-width: 340px; width: 100%; height: auto; }
@@ -941,90 +866,7 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
 .ab-cell { width: 44px; height: 44px; border: 2px solid #d6d3d1; background: #fff; border-radius: 6px; cursor: pointer; font-size: 18px; }
 .ab-cell.filled { background: #f97316; color: #fff; border-color: #c2410c; }
 #npDots { font-size: 26px; letter-spacing: 4px; color: #ea580c; min-height: 34px; }
-
-/* 实验台：台面上的数 */
-.bench-shelf { display: flex; flex-wrap: wrap; gap: 8px; min-height: 44px; margin: 8px 0; padding: 8px; border: 2px dashed #cbd5e1; border-radius: 10px; background: #f8fafc; }
-.bench-chip { padding: 6px 12px; border: 2px solid #94a3b8; border-radius: 999px; background: #fff; font-weight: 700; cursor: pointer; }
-.bench-chip.is-picked { border-color: #2563eb; background: #dbeafe; color: #1e3a8a; }
-
-.bench-chip { display: inline-flex; align-items: center; gap: 6px; touch-action: none; }
-.bench-svg { display: block; flex: none; }
-.bench-trash { margin: 4px 0 8px; padding: 8px; border: 2px dashed #fca5a5; border-radius: 10px; color: #b91c1c; text-align: center; font-size: 14px; }
-[data-bench="make"] { touch-action: none; }
-#worldBenchGhost { position: fixed; z-index: 9999; pointer-events: none; padding: 6px 12px; border-radius: 999px; background: #1e3a8a; color: #fff; font-weight: 700; box-shadow: 0 4px 12px rgba(0,0,0,.25); }
-#worldBenchGhost[hidden] { display: none; }
-
-/* 实验台放在工作间最上面，不用往下翻就能看到台上的数。
-   （2026-11-07 复测修：台面卡片已移到 DOM 最前，不再靠 order:-1 视觉置顶。） */
-
-/* 实验台最上方：题目选择，横跨整块台子 */
-.bench-choose { grid-column: 1 / -1; order: -2; }
-
-/* 实验台顶部的题目选择：紧凑网格，不把实验台挤到页面下面 */
-.bench-choose .lab-questions { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
-.bench-choose .lab-q { padding: 8px 10px; }
-.bench-choose .lab-q p { margin: 0 0 6px; font-size: 13px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.bench-choose .lab-q .muted { display: none; }
-.bench-choose .lab-q .btn { font-size: 12px; }
-.bench-choose .lab-q .lab-q-meta { display: block; font-size: 12px; }
-
-/* 找实验：搜索 + 年级 + 领域筛选 */
-.lab-q-filter { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 8px 0 4px; }
-.lab-q-filter input[type="search"] { flex: 1; min-width: 180px; min-height: 44px; border: 2px solid var(--line); border-radius: 10px; padding: 6px 10px; font-size: 14px; }
-.lab-q-filter select { min-height: 44px; border: 2px solid var(--line); border-radius: 10px; padding: 6px 8px; font-size: 14px; background: #fff; }
-
-/* 实验台：中央画布 + 一侧器材架（NB 式二分结构；窄屏上下叠） */
-.world-bench-body { display: grid; grid-template-columns: minmax(0, 1fr) 230px; gap: 16px; align-items: start; }
-.world-bench-canvas { min-width: 0; }
-.world-bench-side { min-width: 0; }
-@media (max-width: 1024px) { .world-bench-body { grid-template-columns: 1fr; } }
-
-/* 零件盒：按领域分 5 组（数/分数/形/量/关系），不做杂货铺 */
-.part-box { display: flex; flex-direction: column; gap: 12px; }
-.part-group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-.part-label { font-weight: 700; font-size: 13px; color: #64748b; margin-right: 2px; }
-.part-chip { min-height: 48px; min-width: 48px; font-size: 15px; }
-
-/* 台面上的数、砝码：触摸目标 ≥48px */
-.bench-chip { min-height: 48px; }
-.bench-view { width: 100%; height: auto; }
-
-/* 检查器：贴在台面旁边，滑杆 + 数字双通道 */
-.bench-inspector { margin: 12px 0; padding: 12px 14px; border: 2px solid #fdba74; border-radius: 12px; background: #fff7ed; }
-.bench-inspector p { margin: 4px 0 8px; }
-.insp-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 8px 0; }
-.insp-row label { min-width: 90px; font-weight: 600; }
-.insp-row input[type="range"] { flex: 1; min-width: 120px; min-height: 44px; }
-.insp-row input[type="number"] { width: 76px; min-height: 44px; border: 2px solid var(--line); border-radius: 10px; padding: 6px 8px; font-size: 15px; }
-.insp-row .btn { min-height: 44px; min-width: 44px; }
-
-/* 练习模式：下一步在台面上高亮出来（不是角落一行字） */
-.demo-card.is-next { outline: 3px solid #f59e0b; outline-offset: 2px; box-shadow: 0 0 0 6px rgba(245, 158, 11, .18); }
-
-/* 后果先画出来：条的长度、梁的倾斜都有过渡动画，文字在后面解释 */
-.lab-bar { transition: width .25s ease; }
-
-/* 台面右下角：为什么 / 我的发现 */
-.lab-bench-foot { justify-content: flex-end; margin: 4px 0 16px; }
-.lab-why-box { border: 2px solid var(--line); border-radius: 12px; padding: 12px 14px; background: #fff; margin: 0 0 16px; }
-.lab-why-box p { margin: 6px 0; }
-
-/* 选中态：灰色高亮框（NB 走访 §2：点中的器材描出来） */
-.demo-card.is-selected { outline: 3px solid #64748b; outline-offset: 2px; }
-
-/* 台面上的直线是“通电的”（NB 走访 §4：通电的导线有白色虚线流动动画） */
-.bench-view .bench-flow { stroke-dasharray: 8 6; animation: bench-flow 1s linear infinite; }
 @keyframes bench-flow { to { stroke-dashoffset: -14; } }
-.bench-chip-name { font-size: 12px; color: #64748b; font-weight: 400; }
-
-/* 我的实验：保存的台面列表 */
-.lab-saved-list { margin: 8px 0; }
-.lab-saved-row { display: flex; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); }
-.lab-saved-row span { flex: 1; }
-
-/* 分享实验配置：配置就是一串 JSON，复制走、粘回来就能复现同一个台面 */
-.lab-share-box { margin: 8px 0; }
-.lab-share-box textarea { width: 100%; min-height: 64px; font-family: monospace; font-size: 12px; border: 2px solid var(--line); border-radius: 10px; padding: 8px; }
 
 /* 动画总目录（注册表）：演示页里 JS 生成的分组列表 */
 
@@ -1040,121 +882,12 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
 .m1a-pair-dot.picked{outline:3px solid #f59e0b}
 .m1a-pair-dot.paired{background:#dcfce7;border-color:#15803d;color:#15803d}
 .m1a-pair-dot.left-over{outline:3px solid #ef4444;background:#fee2e2}
-
-/* ---------- 数学实验室 · 视觉大改：深色工作间（NB 式） ----------
-   台面是一间深色工作间：画布近黑、器材亮色、文字只剩关键数字。
-   全部以 #lab / #labMwWorkbench 为作用域，不动其它页面的浅色主题。 */
-#lab .world-layout { display:grid; grid-template-columns:minmax(0,1fr); gap:14px; background:#0b1220; border-radius:18px; padding:16px; color:#e2e8f0; margin:12px 0 24px; }
-#lab .lab-mode-row { background:#0f172a; border-radius:12px; padding:8px 12px; color:#e2e8f0; }
-#lab .lab-mode-row .btn.ghost { background:transparent; border-color:#475569; color:#e2e8f0; }
-#lab .lab-mode-row #labModeTx { color:#94a3b8; }
-#lab .world-intent { background:#451a03; border:1px solid #92400e; color:#ffedd5; }
-#labMwWorkbench .muted { color:#94a3b8; }
-#labMwWorkbench .demo-card { background:#1a2438; border:2px solid #2b3a55; color:#e2e8f0; position:relative; }
-#labMwWorkbench .demo-card h3 { color:#f8fafc; }
-#labMwWorkbench .demo-card .demo-tag { color:#94a3b8; }
-#labMwWorkbench .demo-card .btn.ghost { background:transparent; border-color:#475569; color:#e2e8f0; }
-#labMwWorkbench .demo-card input[type="number"], #labMwWorkbench .demo-card input[type="text"], #labMwWorkbench .demo-card select { background:#0f172a; border-color:#475569; color:#f8fafc; }
-#labMwWorkbench .demo-card.is-selected { outline:3px solid #e2e8f0; outline-offset:2px; box-shadow:0 0 0 6px rgba(226,232,240,.15); }
-/* 器材站两列排，实验台横跨整行占主区域 */
-#labMwWorkbench .world-stations { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-#labMwWorkbench #worldBenchCard { grid-column:1 / -1; background:#0f172a; }
-@media (max-width:1024px) { #labMwWorkbench .world-stations { grid-template-columns:1fr; } }
-/* 题目选择：折起来只剩一行（进题后自动收起，台面占主区域） */
-.bench-choose-head { display:flex; align-items:center; gap:8px; }
-.bench-choose-head h3 { margin:0; flex:0 0 auto; color:#f8fafc; }
-#labChooseCurrent { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#94a3b8; }
-.bench-choose.collapsed > :not(.bench-choose-head) { display:none; }
-#labMwWorkbench .lab-q { background:#1a2438; border-color:#2b3a55; color:#e2e8f0; }
-#labMwWorkbench .lab-q .btn.ghost { border-color:#475569; color:#e2e8f0; background:transparent; }
-#lab .lab-q-filter input[type="search"], #lab .lab-q-filter select { background:#0f172a; border-color:#475569; color:#f8fafc; }
-/* 实验室自己的深色窄顶栏（NB 式：顶栏是深色的，标题 + 保存/清空/帮助都在上面；
-   app 全局的白顶栏不再主导实验室的第一印象） */
-.lab-topbar { display:flex; gap:8px; align-items:center; background:#0b1220; color:#e2e8f0; border-radius:12px; padding:8px 12px; margin:12px 0; }
 /* 实验室占满主区域：.wrap 全站 1120px，1920px 宽屏上台面只剩约 1100px 居中、
    两边大片空白（2026-11-07 桌面复测）。实验室单独放宽到 1600px。 */
 #lab.section.wrap { max-width:1600px; }
-/* 拖动时落点发光：台面画布 / 零件架 / 删除框被拖到时描虚线框。 */
-#worldBenchView.bench-drop-hot, #worldBenchShelf.bench-drop-hot, #worldBenchTrash.bench-drop-hot { outline:3px dashed #f59e0b; outline-offset:-3px; }
-.lab-topbar-title { font-weight:700; font-size:16px; }
-.lab-topbar-sub { color:#94a3b8; font-size:13px; }
-.lab-topbar-sp { flex:1; }
-.lab-topbar .btn.ghost { background:transparent; color:#e2e8f0; border-color:#475569; }
-.lab-topbar .btn.ghost:hover { border-color:#94a3b8; }
-/* 天平梁是“转过去”不是“跳过去”：用 CSS transform + 过渡，JS 只改角度 */
-#labBeamGroup { transform-box:view-box; transform-origin:160px 70px; }
 /* P2 演示梁 #beamGroup（viewBox 0 0 320 190，支点也是 160,70）：第 3 阶段起
    和实验室三根梁一样走 labBeamAnim（500ms 插值），不再直接改 transform 属性。 */
 #beamGroup { transform-box:view-box; transform-origin:160px 70px; }
-/* 注意：这两根梁不要挂 transition——过渡由 JS 的 labBeamAnim 用 rAF 插值驱动
-   （500ms，每帧写角度）。CSS transition 在 SVG 上两次真机都没跑出可见过渡，
-   叠在 rAF 循环上面还会让每一帧的改动都再缓动一次、拖出残影。 */
-/* 台面画布里的旋转手柄（⟳）：点它长方形转 90° */
-.bench-view [data-bench-rotate] { cursor:pointer; }
-/* 器材站折叠：只留标题行，点 ▸ 展开 */
-.station-fold { flex:0 0 auto; width:44px; height:44px; border-radius:50%; border:2px solid #475569; background:#0f172a; color:#e2e8f0; font-size:18px; line-height:1; cursor:pointer; }
-#labMwWorkbench .demo-card > .station-fold { position:absolute; top:10px; right:10px; z-index:2; }
-#labMwWorkbench .demo-card.collapsed > :not(.demo-tag):not(h3):not(.station-fold):not(.rot-handle) { display:none; }
-#labMwWorkbench .demo-card.collapsed { padding-bottom:12px; }
-/* 旋转手柄：选中长方形时才出现在卡片上方（NB 走访 §2） */
-.rot-handle { display:none; position:absolute; top:-16px; left:50%; transform:translateX(-50%); width:44px; height:44px; border-radius:50%; border:3px solid #e2e8f0; background:#f97316; color:#fff; font-size:22px; line-height:1; cursor:pointer; z-index:3; box-shadow:0 4px 12px rgba(0,0,0,.45); }
-#worldRectCard.is-selected .rot-handle { display:flex; align-items:center; justify-content:center; }
-/* 画布：深色 + 淡淡的网格（NB 的大黑画布） */
-#worldBenchCard .bench-view { background-color:#0b1220; background-image:linear-gradient(rgba(148,163,184,.13) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,.13) 1px, transparent 1px); background-size:28px 28px; border-radius:12px; }
-#labMwWorkbench .bench-shelf { background:#0b1220; border:2px dashed #334155; }
-#labMwWorkbench .bench-chip { background:#1a2438; border:2px solid #475569; color:#f8fafc; border-radius:12px; }
-#labMwWorkbench .bench-chip.is-picked { border-color:#e2e8f0; background:#334155; box-shadow:0 0 0 3px rgba(226,232,240,.25); }
-/* 画布上选中的卡片/圆点也要看得出来（和上面那行芯片的白边框一个意思） */
-#worldBenchView g.is-picked > rect { stroke:#facc15; stroke-width:4; }
-#worldBenchView g.is-picked > circle { stroke:#facc15; stroke-width:3; }
-#labMwWorkbench .bench-chip-name { color:#94a3b8; }
-#labMwWorkbench .bench-trash { border-color:#7f1d1d; color:#fca5a5; background:transparent; }
-/* 选中零件的竖条小工具栏（NB 走访 §2：设置 / 删除贴在物体旁边） */
-.bench-tools { display:inline-flex; flex-direction:column; gap:4px; vertical-align:middle; }
-.bench-tools .btn { min-width:44px; min-height:44px; padding:4px 8px; }
-/* 零件盒：两列器材图 + 名字，不再是文字芯片 */
-#labMwWorkbench .part-box { background:#0f172a; border:2px solid #263449; border-radius:12px; padding:10px; }
-#labMwWorkbench .part-group { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-#labMwWorkbench .part-group .part-label { grid-column:1 / -1; color:#94a3b8; }
-#labMwWorkbench .part-chip { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; min-height:64px; min-width:0; background:#1a2438; border:2px solid #334155; border-radius:12px; color:#f8fafc; font-size:14px; font-weight:700; padding:8px 4px; }
-#labMwWorkbench .part-chip[data-bench="rect"], #labMwWorkbench .part-chip[data-bench="line"], #labMwWorkbench .part-chip[data-bench="balance"] { grid-column:1 / -1; flex-direction:row; min-height:52px; }
-#labMwWorkbench .part-chip[aria-pressed="true"] { border-color:#f59e0b; background:#451a03; }
-#labMwWorkbench .part-chip .part-ico { display:block; flex:none; }
-/* 检查器：深色设置卡（NB 走访 §2 的形态） */
-#labMwWorkbench .bench-inspector { background:#451a03; border-color:#f59e0b; color:#ffedd5; }
-#labMwWorkbench .bench-inspector .muted { color:#fdba74; }
-#labMwWorkbench .bench-inspector input[type="number"], #labMwWorkbench .bench-inspector input[type="text"] { background:#0f172a; border-color:#475569; color:#f8fafc; }
-#labMwWorkbench .bench-inspector .btn.ghost { border-color:#92400e; color:#ffedd5; background:transparent; }
-#labMwWorkbench .insp-row label { color:#ffedd5; }
-/* 器材 SVG：深底 + 亮色线条（画在白纸上的改成画在黑板上） */
-#labMwWorkbench .apparatus-svg { background:#0f172a; border-color:#263449; }
-#labMwWorkbench .apparatus-chip { background:#1a2438; border-color:#ea580c; color:#fdba74; }
-#labMwWorkbench .apparatus-chip[data-world] { border-color:#475569; background:#1a2438; color:#e2e8f0; }
-#labMwWorkbench .apparatus-drop { background:#0f172a; border-color:#475569; color:#94a3b8; }
-#labMwWorkbench .apparatus-drop.is-hot { border-color:#f97316; background:#451a03; color:#fdba74; }
-#labMwWorkbench .apparatus-svg [data-bal-pan].is-hot ellipse,
-#labMwWorkbench .apparatus-svg [data-bal-pan].is-hot path { stroke:#f97316; stroke-width:4; fill:#fbbf24; }
-/* 旧的发光是深棕 #451a03 填在深色底 #0f172a 上——盘子反而变暗了，真机看不见
-   （2026-11-07 复测：拿着砝码悬停，盘子没有高亮）。改成亮琥珀 + 橙光晕。 */
-#labMwWorkbench .apparatus-svg [data-bal-pan].is-hot { filter:drop-shadow(0 0 8px rgba(249,115,22,.9)); }
-/* 台面画布盘的亮起：砝码拖到画布盘上时盘子自己亮起来（和站盘同款琥珀 + 橙光晕）。
-   画布盘是 <rect>，没有 data-bal-pan，用 id 认。 */
-#worldBenchPanL.is-hot, #worldBenchPanR.is-hot { fill:#fbbf24; stroke:#f97316; stroke-width:4; filter:drop-shadow(0 0 8px rgba(249,115,22,.9)); }
-/* 台面在说什么：紧凑的状态小标签，不再是一大块黑底文字 */
-#lab .world-panel { position:static; background:#0f172a; border:2px solid #263449; }
-#lab .world-panel h3, #lab .world-panel p { color:#e2e8f0; }
-#lab .world-panel .muted { color:#94a3b8; }
-.world-signals { display:flex; flex-wrap:wrap; gap:6px; margin:0; }
-.world-signal { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:999px; font-size:13px; font-weight:700; background:#1a2438; border:1px solid #334155; color:#e2e8f0; }
-.world-signal.ok { background:#14532d; border-color:#22c55e; color:#bbf7d0; }
-.world-signal.warn { background:#451a03; border-color:#f59e0b; color:#fde68a; }
-.world-signal.error { background:#450a0a; border-color:#ef4444; color:#fecaca; }
-/* 拖动残影：大一点、亮一点，拖起来看得见 */
-.apparatus-ghost { font-size:16px; padding:10px 16px; }
-#worldBenchGhost { font-size:16px; padding:10px 16px; }
-/* 为什么 / 我的发现：深色小卡片 */
-#lab .lab-why-box { background:#0f172a; border-color:#263449; color:#e2e8f0; }
-#lab .lab-why-box p { color:#e2e8f0; }
 
 /* 数学实验室：NB 式实验台（lab-nb.html）占满实验室页面；旧的长页面工作间先隐藏，待删除。 */
 #lab > *:not(.labnb-host):not(h2) { display: none !important; }

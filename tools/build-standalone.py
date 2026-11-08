@@ -28,7 +28,7 @@ for gfile in sorted(p.name for p in (ROOT / 'content' / 'grades').glob('grade-*.
     else:
         html = html.replace(tag + '\n', '', 1)
     assert tag not in html
-# Animation registry + band files must inline before math-world.js and app.js,
+# Animation registry + band files must inline before app.js,
 # in the same order as the <script> tags in index.html.
 for rfile in ['anims-registry.js', 'anims-band-1-3.js', 'anims-band-4-6.js',
               'anims-band-7-9.js', 'anims-operations.js']:
@@ -41,34 +41,6 @@ for rfile in ['anims-registry.js', 'anims-band-1-3.js', 'anims-band-4-6.js',
     else:
         html = html.replace(r_tag + '\n', '', 1)
     assert r_tag not in html
-# MathWorld model + Apparatus views must load before app.js.
-mw_path = WEB / 'math-world.js'
-mw_tag = '<script src="math-world.js"></script>'
-if mw_path.exists():
-    mw = mw_path.read_text(encoding='utf-8')
-    assert '</script>' not in mw
-    html = html.replace(mw_tag, '<script>\n' + mw + '\n</script>', 1)
-else:
-    html = html.replace(mw_tag + '\n', '', 1)
-assert mw_tag not in html
-bv_path = WEB / 'bench-views.js'
-bv_tag = '<script src="bench-views.js"></script>'
-if bv_path.exists():
-    bv = bv_path.read_text(encoding='utf-8')
-    assert '</script>' not in bv
-    html = html.replace(bv_tag, '<script>\n' + bv + '\n</script>', 1)
-else:
-    html = html.replace(bv_tag + '\n', '', 1)
-assert bv_tag not in html
-ap_path = WEB / 'apparatus.js'
-ap_tag = '<script src="apparatus.js"></script>'
-if ap_path.exists():
-    ap = ap_path.read_text(encoding='utf-8')
-    assert '</script>' not in ap
-    html = html.replace(ap_tag, '<script>\n' + ap + '\n</script>', 1)
-else:
-    html = html.replace(ap_tag + '\n', '', 1)
-assert ap_tag not in html
 html = html.replace('<script src="app.js"></script>',
                     '<script>\n' + js + '\n</script>', 1)
 assert '<link rel="stylesheet" href="styles.css">' not in html

@@ -11,8 +11,7 @@
 
 - `apps/web/index.html` — 首页：标题、年级选择器（1–9 年级）、学习路径、互动演示、进度与错题本、实验室
 - `apps/web/styles.css` — 响应式样式：桌面 ≥1024px 三栏，平板触屏大按钮，768px 以下单列
-- `apps/web/math-world.js` — **数学世界模型 V1**（纯 Model：分数/天平/数轴/十格阵/一次函数/鸡兔约束）
-- `apps/web/app.js` — 导航、年级内容、演示与实验室 UI（实验室/鸡兔真值走 MathWorld）
+- `apps/web/app.js` — 导航、年级内容、演示与实验室入口（实验室是 `lab-nb.html` 嵌进来的 NB 式实验台）
 - 设计说明：`docs/design/math-world-model-20261106.md`
 
 ### 三个互动演示（都能玩）

@@ -72,7 +72,6 @@ function matchSel(e, sel) {
   if (sel === '[data-mix-again]') return d('mixAgain');
   if (sel === '[data-g-mix]') return d('gMix');
   if (sel === '[data-g-review]') return d('gReview');
-  if (sel === '[data-drop]') return d('drop'); // 器材落点（天平/数轴虚线框）：apparatus.js dropAt 用它找落点
   if (sel === '[data-demo-link]') return d('demoLink');
   if (sel === '.prereq-step') return (e.className || '').split(' ').includes('prereq-step');
   // Descendant attribute selectors like '#sortRuleSeg [data-sort-rule]':
@@ -326,21 +325,12 @@ const oldCardSeed = documentStub.getElementById('demo-tenframe');
 oldCardSeed.id = 'demo-tenframe';
 documentStub.getElementById('demoGrid').appendChild(oldCardSeed);
 
-// ---------- load MathWorld then the real app.js ----------
+// ---------- load the animation registry then the real app.js ----------
 const root = require('path').resolve(__dirname, '..');
-const worldSrc = fs.readFileSync(root + '/apps/web/math-world.js', 'utf8');
-const apparatusSrc = fs.readFileSync(root + '/apps/web/apparatus.js', 'utf8');
 const src = fs.readFileSync(root + '/apps/web/app.js', 'utf8');
 const sandbox = { document: documentStub, window: windowStub, console, setTimeout, Math, JSON, Object, Array, String, Number, parseInt, parseFloat, isNaN, GRADE3_CONTENT, GRADE1_CONTENT, GRADE2_CONTENT, GRADE4_CONTENT, GRADE5_CONTENT, GRADE6_CONTENT, GRADE7_CONTENT, GRADE8_CONTENT, GRADE9_CONTENT, localStorage: localStorageStub };
 vm.createContext(sandbox);
 try {
-  vm.runInContext(worldSrc, sandbox, { filename: 'math-world.js' });
-  vm.runInContext(fs.readFileSync(root + '/apps/web/bench-views.js', 'utf8'), sandbox, { filename: 'bench-views.js' });
-  sandbox.BenchViews = windowStub.BenchViews || sandbox.BenchViews || (sandbox.globalThis && sandbox.globalThis.BenchViews);
-  // math-world attaches to window (windowStub) when present.
-  sandbox.MathWorld = windowStub.MathWorld || sandbox.MathWorld || sandbox.globalThis && sandbox.globalThis.MathWorld;
-  vm.runInContext(apparatusSrc, sandbox, { filename: 'apparatus.js' });
-  sandbox.Apparatus = windowStub.Apparatus || sandbox.Apparatus;
   // 动画注册表（§5.1）：band 文件在 app.js 之前加载；文件不存在时跳过，
   // 这样新检查在改前代码上干净失败而不是整个测试崩掉。
   ['anims-registry.js', 'anims-band-1-3.js', 'anims-band-4-6.js', 'anims-band-7-9.js', 'anims-operations.js'].forEach(f => {
@@ -350,8 +340,6 @@ try {
   vm.runInContext(src, sandbox, { filename: 'app.js' });
   console.log('LOAD OK');
 } catch (e) { console.log('LOAD FAILED: ' + e.message); process.exit(1); }
-check('MathWorld available in app sandbox', !!(sandbox.MathWorld || windowStub.MathWorld));
-check('Apparatus available in app sandbox', !!(sandbox.Apparatus || windowStub.Apparatus));
 
 // 动画总数是算出来的，不是写死的：145 个旧演示（注册表之前的手写演示，数已冻结——
 // 之后的新动画一律走注册表）+ 注册表里的动画数。写死一个数，下批动画一到分母就过期

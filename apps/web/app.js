@@ -497,7 +497,6 @@ const DEMO_LABEL = { fraction: '去玩分数演示', tenframe: '去玩十格阵'
      p.demo（内容文件里的主演示）
      + SIM_LINKS（模拟 → 知识点，只写核对过标题的）
      + METHOD_DEMOS（一个点多种方法：同一点的不同解法，各一个动画——第一个是 4.16 鸡兔同笼）
-     + LAB_QUESTIONS 里 points 含该点的演示型问题（实验的家在实验室，点上是第二个门）
    点页、单元页、年级页都读同一份注册表；演示页下阶段也从注册表生成（见设计文档）。 */
 var CREATIVE_DEMOS = ['thirteen', 'twentyfour', 'monty', 'maxarea', 'matches', 'mobius', 'shopweek', 'fairgame', 'makerule'];
 var SIM_DEMOS = ['maketen', 'areamul', 'fraceq', 'buildfrac', 'areabuild', 'quadmorph', 'numplay', 'fracnumline'];
@@ -536,10 +535,6 @@ function animsForPoint(id) {
   if (f.point.demo) push(f.point.demo);
   (SIM_LINKS[id] || []).forEach(push);
   (METHOD_DEMOS[id] || []).forEach(push);
-  // 实验室问题：points 含该点的演示型问题也算该点的实验（bench 型没有独立卡片，进不了点页）。
-  if (typeof LAB_QUESTIONS !== 'undefined') {
-    LAB_QUESTIONS.forEach(q => { if (q.demo && q.points && q.points.indexOf(id) >= 0) push(q.demo); });
-  }
   // 注册表动画（第五路）：points 含该点的动画。点页、单元页、年级页的
   // “动画 N 个”计数都从这里算，所以新动画不用另改计数。
   if (typeof ANIM_REGISTRY !== 'undefined') {
@@ -1226,16 +1221,11 @@ function labHealthHtml() {
   Object.keys(h).forEach(function (labId) {
     const e = h[labId];
     if (!e || !e.lastAt || e.lastAt < now - WEEK) return; // 7 天里没交过卷的题不算
-    const q = typeof LAB_QUESTIONS !== 'undefined' ? LAB_QUESTIONS.find(function (x) { return x.qid === labId; }) : null;
-    const primary = q ? q.primary : labId;
-    const f = q ? findPoint(q.primary) : null;
-    const title = f ? f.point.title : (q ? q.title : labId);
-    const def = MathWorld.LAB_PROCEDURES && MathWorld.LAB_PROCEDURES[labId];
+    // 实验台的实验没有知识点映射，按实验编号统计；步骤显示实验台里的步骤编号。
     Object.keys(e.lost || {}).forEach(function (stepId) {
       const n = e.lost[stepId];
-      const step = def ? def.steps.find(function (s) { return s.id === stepId; }) : null;
-      stepRows.push({ label: step ? step.label : stepId, point: primary, title: title, count: n });
-      pointRows[primary] = (pointRows[primary] || 0) + n;
+      stepRows.push({ label: stepId, point: labId, title: labId, count: n });
+      pointRows[labId] = (pointRows[labId] || 0) + n;
     });
   });
   if (!stepRows.length) return '<p class="muted">挑战模式交卷后，这里会统计最近 7 天里交过卷的题：哪一步丢分最多。</p>';
@@ -3310,27 +3300,6 @@ function labBeamAnim(key, target, apply) {
   }
   st.raf = raf(step);
 }
-function benchBeamCur() {
-  const st = labBeamAnimState.bench;
-  return (st && st.cur !== null && st.cur !== undefined) ? st.cur : null;
-}
-/* 台面画布上的梁：把当前插值角写到刚重建好的梁/盘节点上（只改 y，不重建 SVG）。 */
-function benchBeamApply(offset) {
-  const line = document.getElementById('worldBenchBeamLine');
-  if (!line) return;
-  const leftY = 170 + offset, rightY = 170 - offset;
-  line.setAttribute('y1', String(leftY));
-  line.setAttribute('y2', String(rightY));
-  const panL = document.getElementById('worldBenchPanL');
-  const panR = document.getElementById('worldBenchPanR');
-  const txtL = document.getElementById('worldBenchPanLText');
-  const txtR = document.getElementById('worldBenchPanRText');
-  if (panL) panL.setAttribute('y', String(leftY));
-  if (panR) panR.setAttribute('y', String(rightY));
-  if (txtL) txtL.setAttribute('y', String(leftY + 26));
-  if (txtR) txtR.setAttribute('y', String(rightY + 26));
-}
-/* 跨次统计：只记挑战（考试）交卷的结果，和 NB 的“考试分数”一致。 */
 var LAB_PROC_KEY = 'math-lab-proc-v1';
 var labProcRecorded = {}; // 同一份报告只记一次（交卷按钮可能被点多次）
 function procHistLoad() {
@@ -3386,10 +3355,8 @@ function procHistSummaryHtml(labId) {
   let html = '<p class="muted">考过 ' + e.attempts + ' 次，最近一次 ' + e.lastScore + ' / ' + e.max +
     (e.lastUsedMs ? '，用了 ' + fmtClock(e.lastUsedMs) : '') + '。</p>';
   const ids = Object.keys(e.lost).sort(function (a, b) { return e.lost[b] - e.lost[a]; });
-  const def = MathWorld.LAB_PROCEDURES && MathWorld.LAB_PROCEDURES[labId];
-  if (ids.length && def) {
-    const step = def.steps.find(function (s) { return s.id === ids[0]; });
-    html += '<p class="muted">总丢分最多：' + esc(step ? step.label : ids[0]) + '（丢了 ' + e.lost[ids[0]] + ' 次）</p>';
+  if (ids.length) {
+    html += '<p class="muted">总丢分最多：' + esc(ids[0]) + '（丢了 ' + e.lost[ids[0]] + ' 次）</p>';
   }
   return html;
 }
@@ -8232,17 +8199,9 @@ let crRabbits = 0;
 function crRender() {
   const p = CR_PROBS[crProbIdx];
   let chickens, legs, solved;
-  if (typeof MathWorld !== 'undefined' && MathWorld) {
-    let w = MathWorld.create({
-      chicken: { targetHeads: p.heads, targetLegs: p.legs, rabbits: crRabbits },
-    });
-    const d = MathWorld.derived(w).chicken;
-    chickens = d.chickens; legs = d.legs; solved = d.solved;
-  } else {
-    chickens = p.heads - crRabbits;
-    legs = chickens * 2 + crRabbits * 4;
-    solved = legs === p.legs;
-  }
+  chickens = p.heads - crRabbits;
+  legs = chickens * 2 + crRabbits * 4;
+  solved = legs === p.legs;
   document.getElementById('crRead').textContent = '鸡 ' + chickens + ' 只，兔 ' + crRabbits + ' 只，一共 ' + legs + ' 条腿（目标 ' + p.legs + ' 条）。';
   document.getElementById('crRabbitTx').textContent = '兔 ' + crRabbits + ' 只';
   document.getElementById('crFill').style.width = Math.round(legs / (p.heads * 4) * 100) + '%';

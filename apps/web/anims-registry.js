@@ -3,8 +3,7 @@
    registerAnim(...)，导航、面包屑、点页 / 单元页 / 年级页的计数、
    演示页总目录都从这张表现算，不再改 app.js / index.html / styles.css。
    加载顺序（index.html + tools/build-standalone.py）：本文件 → 四个
-   band / operations 文件 → math-world.js → bench-views.js → apparatus.js
-   → app.js。所以 band 文件在 app.js 之前加载：band 文件的顶层代码
+   band / operations 文件 → app.js。所以 band 文件在 app.js 之前加载：band 文件的顶层代码
    只能调 registerAnim，绝对不能引用 app.js 的标识符（METHOD_DEMOS、
    NAV_DEFS、animsForPoint 等在那时都不存在）；render 在进入动画视图
    时才由 app.js 调用，那时 app.js 已加载，render 里可以用 app.js 的
