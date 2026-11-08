@@ -5634,7 +5634,7 @@ const P7=[
   build:s=&gt;{addEnt(s,&#x27;circle&#x27;,200,40,{r:2})},
   steps:[{label:&#x27;把半径调到 3 厘米&#x27;,score:1,hint:&#x27;点圆卡，在属性卡里把半径调到 3&#x27;,target:T45(&#x27;circle&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;circle&#x27;)].props.r===3},
          {label:&#x27;周长是 18.84 厘米&#x27;,score:2,hint:&#x27;看圆下面的文字&#x27;,target:T45(&#x27;circle&#x27;),check:(s,D)=&gt;{const c=byType(s,&#x27;circle&#x27;);return D[c].ports.circ===18.84&amp;&amp;D[c].ports.area===28.26&amp;&amp;s.entities[c].props.r===3}}]},
- {id:&#x27;g6_7&#x27;,grade:6,domain:&#x27;统计与概率&#x27;,tools:&#x27;扇形统计图&#x27;,title:&#x27;扇形统计图：一班占 40%，二班 20%，三班 40%，圆心角各是几度？&#x27;,q:&#x27;百分比乘 3.6 就是圆心角的度数，三个百分比加起来是 100%。&#x27;,why:&#x27;40% 对应 40 × 3.6 = 144°。&#x27;,
+ {id:&#x27;g6_7&#x27;,grade:6,domain:&#x27;统计与概率&#x27;,tools:&#x27;扇形统计图&#x27;,title:&#x27;扇形统计图：一班占 40%，二班 20%，三班 40%，圆心角各是几度？&#x27;,q:&#x27;图上现在是一班 40、二班 30、三班 30，要改成题目的数。百分比乘 3.6 就是圆心角的度数，三个百分比加起来是 100%。&#x27;,why:&#x27;40% 对应 40 × 3.6 = 144°。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;pie&#x27;,200,40,{a:40,b:30,c:30})},
   steps:[{label:&#x27;把二班调到 20%（先不合计 100%）&#x27;,score:1,hint:&#x27;点扇形统计图卡，把“二班”调到 20&#x27;,target:T45(&#x27;pie&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;pie&#x27;)].props.b===20},
          {label:&#x27;三班调到 40%，合计 100%，一班是 144°&#x27;,score:2,hint:&#x27;把“三班”调到 40，看下面的文字&#x27;,target:T45(&#x27;pie&#x27;),check:(s,D)=&gt;{const p=byType(s,&#x27;pie&#x27;);return D[p].ports.sum===100&amp;&amp;D[p].ports.angleA===144}}]},
