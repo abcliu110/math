@@ -1050,7 +1050,7 @@ const P3=[
 function p3Count(p){return p.nums?p.nums.length:(p.money?p.money.length:0)}
 function p3Build(p){return function(s){
   if(p.kind==='clock'){addEnt(s,'clock',240,40,{h:1,m:0});return}
-  if(p.kind==='clock2'){addEnt(s,'clock',200,40,{h:1,m:0});addEnt(s,'clock',420,40,{h:1,m:0});return}
+  if(p.kind==='clock2'){const c1=addEnt(s,'clock',200,40,{h:1,m:0});s.entities[c1].name='开始';const c2=addEnt(s,'clock',420,40,{h:1,m:0});s.entities[c2].name='结束';return}
   if(p.money){p.money.forEach((q,i)=>addEnt(s,'money',60,60+i*110,{yuan:q[0],jiao:q[1]}));addEnt(s,'adder',330,110);return}
   p.nums.forEach((v,i)=>addEnt(s,'num',60+(i%2)*0,60+i*110,{v}));
   if(p.kind==='sum')addEnt(s,'adder',330,110);
@@ -1060,11 +1060,11 @@ function p3Steps(p){
   if(p.kind==='clock')return[
     {label:'把时针指到 '+p.a+' 点',score:1,hint:'点钟面卡，在属性卡里把“时”调到 '+p.a,target:s=>byType(s,'clock'),check:s=>{const c=byType(s,'clock');return !!c&&s.entities[c].props.h===p.a}},
     {label:'分针指到 12，是整时',score:2,hint:'把“分”调到 0',target:s=>byType(s,'clock'),check:s=>{const c=byType(s,'clock');return !!c&&s.entities[c].props.h===p.a&&s.entities[c].props.m===0}}];
-  if(p.kind==='clock2'){const ck=(s,i)=>Object.values(s.entities).filter(e=>e.type==='clock')[i];
+  if(p.kind==='clock2'){const ck=(s,name)=>Object.values(s.entities).find(e=>e.type==='clock'&&e.name===name);
     return[
-      {label:'第一个钟拨到开始的时刻',score:1,hint:'第一个钟：时 '+p.start[0]+'，分 '+p.start[1],target:s=>byType(s,'clock'),check:s=>{const c=ck(s,0);return !!c&&c.props.h===p.start[0]&&c.props.m===p.start[1]}},
-      {label:'第二个钟拨到结束的时刻',score:1,hint:'第二个钟：时 '+p.end[0]+'，分 '+p.end[1],target:s=>byType(s,'clock'),check:s=>{const c=ck(s,1);return !!c&&c.props.h===p.end[0]&&c.props.m===p.end[1]}},
-      {label:'看两个钟相差多少分钟',score:2,hint:'看钟面下面的“相差”',target:s=>byType(s,'clock'),check:(s,D)=>{const c=Object.values(s.entities).filter(e=>e.type==='clock');return c.length===2&&D[c[0].id].ports.between===p.ans}}];}
+      {label:'第一个钟拨到开始的时刻',score:1,hint:'开始的钟：时 '+p.start[0]+'，分 '+p.start[1],target:s=>byType(s,'clock'),check:s=>{const c=ck(s,'开始');return !!c&&c.props.h===p.start[0]&&c.props.m===p.start[1]}},
+      {label:'第二个钟拨到结束的时刻',score:1,hint:'结束的钟：时 '+p.end[0]+'，分 '+p.end[1],target:s=>byType(s,'clock'),check:s=>{const c=ck(s,'结束');return !!c&&c.props.h===p.end[0]&&c.props.m===p.end[1]}},
+      {label:'看两个钟相差多少分钟',score:2,hint:'看钟面下面的“相差”',target:s=>byType(s,'clock'),check:(s,D)=>{const a=ck(s,'开始'),b=ck(s,'结束'),c=Object.values(s.entities).filter(e=>e.type==='clock');return c.length===2&&!!a&&!!b&&D[a.id].ports.between===p.ans}}];}
   const cnt=p3Count(p);
   if(p.kind==='sum')return[
     {label:'把数都连到合并器',score:1,hint:'拖数的蓝点到合并器',target:s=>byType(s,'adder'),check:(s,D)=>{const ad=byType(s,'adder');return !!ad&&inputs(s,ad).length>=cnt}},

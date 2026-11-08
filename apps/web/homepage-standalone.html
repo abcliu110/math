@@ -5386,7 +5386,7 @@ const P3=[
 function p3Count(p){return p.nums?p.nums.length:(p.money?p.money.length:0)}
 function p3Build(p){return function(s){
   if(p.kind===&#x27;clock&#x27;){addEnt(s,&#x27;clock&#x27;,240,40,{h:1,m:0});return}
-  if(p.kind===&#x27;clock2&#x27;){addEnt(s,&#x27;clock&#x27;,200,40,{h:1,m:0});addEnt(s,&#x27;clock&#x27;,420,40,{h:1,m:0});return}
+  if(p.kind===&#x27;clock2&#x27;){const c1=addEnt(s,&#x27;clock&#x27;,200,40,{h:1,m:0});s.entities[c1].name=&#x27;开始&#x27;;const c2=addEnt(s,&#x27;clock&#x27;,420,40,{h:1,m:0});s.entities[c2].name=&#x27;结束&#x27;;return}
   if(p.money){p.money.forEach((q,i)=&gt;addEnt(s,&#x27;money&#x27;,60,60+i*110,{yuan:q[0],jiao:q[1]}));addEnt(s,&#x27;adder&#x27;,330,110);return}
   p.nums.forEach((v,i)=&gt;addEnt(s,&#x27;num&#x27;,60+(i%2)*0,60+i*110,{v}));
   if(p.kind===&#x27;sum&#x27;)addEnt(s,&#x27;adder&#x27;,330,110);
@@ -5396,11 +5396,11 @@ function p3Steps(p){
   if(p.kind===&#x27;clock&#x27;)return[
     {label:&#x27;把时针指到 &#x27;+p.a+&#x27; 点&#x27;,score:1,hint:&#x27;点钟面卡，在属性卡里把“时”调到 &#x27;+p.a,target:s=&gt;byType(s,&#x27;clock&#x27;),check:s=&gt;{const c=byType(s,&#x27;clock&#x27;);return !!c&amp;&amp;s.entities[c].props.h===p.a}},
     {label:&#x27;分针指到 12，是整时&#x27;,score:2,hint:&#x27;把“分”调到 0&#x27;,target:s=&gt;byType(s,&#x27;clock&#x27;),check:s=&gt;{const c=byType(s,&#x27;clock&#x27;);return !!c&amp;&amp;s.entities[c].props.h===p.a&amp;&amp;s.entities[c].props.m===0}}];
-  if(p.kind===&#x27;clock2&#x27;){const ck=(s,i)=&gt;Object.values(s.entities).filter(e=&gt;e.type===&#x27;clock&#x27;)[i];
+  if(p.kind===&#x27;clock2&#x27;){const ck=(s,name)=&gt;Object.values(s.entities).find(e=&gt;e.type===&#x27;clock&#x27;&amp;&amp;e.name===name);
     return[
-      {label:&#x27;第一个钟拨到开始的时刻&#x27;,score:1,hint:&#x27;第一个钟：时 &#x27;+p.start[0]+&#x27;，分 &#x27;+p.start[1],target:s=&gt;byType(s,&#x27;clock&#x27;),check:s=&gt;{const c=ck(s,0);return !!c&amp;&amp;c.props.h===p.start[0]&amp;&amp;c.props.m===p.start[1]}},
-      {label:&#x27;第二个钟拨到结束的时刻&#x27;,score:1,hint:&#x27;第二个钟：时 &#x27;+p.end[0]+&#x27;，分 &#x27;+p.end[1],target:s=&gt;byType(s,&#x27;clock&#x27;),check:s=&gt;{const c=ck(s,1);return !!c&amp;&amp;c.props.h===p.end[0]&amp;&amp;c.props.m===p.end[1]}},
-      {label:&#x27;看两个钟相差多少分钟&#x27;,score:2,hint:&#x27;看钟面下面的“相差”&#x27;,target:s=&gt;byType(s,&#x27;clock&#x27;),check:(s,D)=&gt;{const c=Object.values(s.entities).filter(e=&gt;e.type===&#x27;clock&#x27;);return c.length===2&amp;&amp;D[c[0].id].ports.between===p.ans}}];}
+      {label:&#x27;第一个钟拨到开始的时刻&#x27;,score:1,hint:&#x27;开始的钟：时 &#x27;+p.start[0]+&#x27;，分 &#x27;+p.start[1],target:s=&gt;byType(s,&#x27;clock&#x27;),check:s=&gt;{const c=ck(s,&#x27;开始&#x27;);return !!c&amp;&amp;c.props.h===p.start[0]&amp;&amp;c.props.m===p.start[1]}},
+      {label:&#x27;第二个钟拨到结束的时刻&#x27;,score:1,hint:&#x27;结束的钟：时 &#x27;+p.end[0]+&#x27;，分 &#x27;+p.end[1],target:s=&gt;byType(s,&#x27;clock&#x27;),check:s=&gt;{const c=ck(s,&#x27;结束&#x27;);return !!c&amp;&amp;c.props.h===p.end[0]&amp;&amp;c.props.m===p.end[1]}},
+      {label:&#x27;看两个钟相差多少分钟&#x27;,score:2,hint:&#x27;看钟面下面的“相差”&#x27;,target:s=&gt;byType(s,&#x27;clock&#x27;),check:(s,D)=&gt;{const a=ck(s,&#x27;开始&#x27;),b=ck(s,&#x27;结束&#x27;),c=Object.values(s.entities).filter(e=&gt;e.type===&#x27;clock&#x27;);return c.length===2&amp;&amp;!!a&amp;&amp;!!b&amp;&amp;D[a.id].ports.between===p.ans}}];}
   const cnt=p3Count(p);
   if(p.kind===&#x27;sum&#x27;)return[
     {label:&#x27;把数都连到合并器&#x27;,score:1,hint:&#x27;拖数的蓝点到合并器&#x27;,target:s=&gt;byType(s,&#x27;adder&#x27;),check:(s,D)=&gt;{const ad=byType(s,&#x27;adder&#x27;);return !!ad&amp;&amp;inputs(s,ad).length&gt;=cnt}},
