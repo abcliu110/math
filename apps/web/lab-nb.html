@@ -273,8 +273,20 @@ function addEnt(s,type,x,y,props){const T=TYPES[type];const id='e'+(s.nid++);s.s
 function addLink(s,from,to,slot,fromPort){s.links.push({id:'l'+(s.nid++),from,to,slot:slot||null,...(fromPort?{fromPort}:{})})}
 const inputs=(s,id)=>s.links.filter(l=>l.to===id);
 /* 维度：这个器材算出的数是什么东西。只有“个数”和“面积”两种需要区分；合并和比较时要求同一种。 */
-const DIM_NAME={count:'个数',area:'面积',time:'时间'};
-function dimOf(s,id){const e=s.entities[id];if(!e)return'count';if(e.type==='adder'||e.type==='mul'){const l=inputs(s,id)[0];return l?dimOf(s,l.from):'count'}return TYPES[e.type].dim||'count'}
+/* 维度代数：每个维度是基本量的指数表（长度 L、重量 W、钱 Y、时间 T、角度 A、比值 R）。
+   面积 = 长度²，体积 = 长度³。个数是 1（指数表为空）。乘法器的维度 = 各输入维度之积（指数相加），
+   合并器要求输入同维度，比较类器材按这张表拒绝不该放的维度。 */
+const DIM_VEC={count:{},length:{L:1},area:{L:2},volume:{L:3},weight:{W:1},money:{Y:1},time:{T:1},angle:{A:1},ratio:{R:1}};
+const DIM_NAME={count:'个数',length:'长度',area:'面积',volume:'体积',weight:'重量',money:'钱',time:'时间',angle:'角度',ratio:'比值'};
+const vecKey=v=>Object.keys(v).filter(k=>v[k]).sort().map(k=>k+v[k]).join(',')||'count';
+const vecMul=(a,b)=>{const r={...a};for(const k in b)r[k]=(r[k]||0)+b[k];for(const k in r)if(!r[k])delete r[k];return r};
+function dimName(v){const k=vecKey(v);for(const n in DIM_VEC)if(vecKey(DIM_VEC[n])===k)return n;return'other:'+k}
+function dimVec(s,id,depth=0){const e=s.entities[id];if(!e||depth>40)return{};
+  if(e.type==='adder'){const l=inputs(s,id)[0];return l?dimVec(s,l.from,depth+1):{}}
+  if(e.type==='mul'){let v={};for(const l of inputs(s,id))v=vecMul(v,dimVec(s,l.from,depth+1));return v}
+  return DIM_VEC[TYPES[e.type].dim||'count']}
+function dimOf(s,id){return dimName(dimVec(s,id))}
+function dimLabel(n){return DIM_NAME[n]||n}
 /* 依赖关系：连线和绑定都算。从 a 能走到 b，说明 b 的值依赖 a（或 a 绑着 b 的属性）。 */
 function reachAll(s,a,b){const seen={};const st=[a];while(st.length){const c=st.pop();if(c===b)return true;if(seen[c])continue;seen[c]=1;s.links.filter(l=>l.from===c).forEach(l=>st.push(l.to));(s.binds||[]).filter(x=>x.from===c).forEach(x=>st.push(x.to))}return false}
 /* 绑定同步：把绑定的值写进目标属性。改一次算几遍，直到不再变（绑定链最多 8 层）。 */
@@ -314,7 +326,7 @@ function actRaw(a){
     if(out!==acc)return{ok:0,why:out==='fn'?'直线只能连到坐标平面上':`${to.name} 只接收直线，不接收数`};
     // 维度：天平不称面积、数轴不放面积；合并器只合并同一种东西。
     const fd=dimOf(s,a.from),rj=TYPES[to.type].reject;if(rj&&rj[fd])return{ok:0,why:rj[fd]};
-    if(to.type==='adder'){const other=inputs(s,a.to).map(l=>dimOf(s,l.from)).find(x=>x!==fd);if(other)return{ok:0,why:`合并器只合并同一种东西：${DIM_NAME[fd]} 和 ${DIM_NAME[other]} 不能加`}}
+    if(to.type==='adder'){const other=inputs(s,a.to).map(l=>dimOf(s,l.from)).find(x=>x!==fd);if(other)return{ok:0,why:`合并器只合并同一种东西：${dimLabel(fd)} 和 ${dimLabel(other)} 不能加`}}
     if(a.fromPort&&!(OUT_PORTS[f.type]||[]).some(p=>p.id===a.fromPort))return{ok:0,why:'这个器材没有这个输出'};
     if(s.links.some(l=>l.from===a.from&&l.to===a.to&&(l.fromPort||null)===(a.fromPort||null)))return{ok:0,why:'已经连过了'};
     if(reach(s,a.to,a.from))return{ok:0,why:'不能连成一个圈'};
@@ -343,7 +355,9 @@ function evaluate(s){
     else if(e.type==='adder'){const xs=inputs(s,id).map(l=>vf(l)).filter(Boolean);
       if(e.props.op===1&&xs.length)v=xs.slice(1).reduce((t,x)=>qsub(t,x),xs[0]);else{v=Q(0);for(const x of xs)v=qadd(v,x)}}
     else if(e.type==='rect')v=Q(e.props.w*e.props.h);else if(e.type==='money')v=Q(e.props.yuan*100+e.props.jiao*10+(e.props.fen||0),100);
-    else if(e.type==='mul'){v=Q(1);let any=false;for(const l of inputs(s,id)){const x=vf(l);if(x){v=Q(v.n*x.n,v.d*x.d);any=true}}if(!any)v=null;else v=Q(v.n*(e.props.times||1))}
+    else if(e.type==='mul'){const ls=inputs(s,id);v=Q(1);let any=false;for(const l of ls){const x=vf(l);if(x){v=Q(v.n*x.n,v.d*x.d);any=true}}
+      // 没连任何输入：空乘积是 1。连了线但都没有值：还没有结果。有值：再乘 times（保留分母）。
+      if(!ls.length)v=Q(1);else if(!any)v=null;else v=Q(v.n*(e.props.times||1),v.d)}
     else if(e.type==='box'){const l=inputs(s,id)[0];const x=l&&vf(l);v=x?qadd(Q(e.props.a*x.n,x.d),Q(e.props.b)):null}
     else if(e.type==='table'){const p=e.props,vs=[p.a,p.b,p.c,p.d],sum=vs.reduce((x,y)=>x+y,0);v=port==='sum'?Q(sum):port==='mean'?Q(sum,4):port==='max'?Q(Math.max(...vs)):(p.which===1?Q(sum,4):p.which===2?Q(Math.max(...vs)):Q(sum))}
     else if(e.type==='clock')v=Q((e.props.h%12)*60+e.props.m);
