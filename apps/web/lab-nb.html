@@ -1306,9 +1306,9 @@ P7.forEach(p=>XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools
 /* ========== 初中第一批：方程的天平、不等式的解集、反比例、二次函数 ========== */
 const P8=[
  {id:'g7_eq',grade:7,domain:'数与代数',tools:'天平 · 数字卡',title:'一元一次方程：2x + 3 = 11，x 是几？',q:'两个 x 和 3 放左盘，11 放右盘。调 x，让天平平了，x 就是解。',why:'2x + 3 = 11，两边都减 3 得 2x = 8，所以 x = 4。',
-  build:s=>{addEnt(s,'num',60,40,{v:1});addEnt(s,'num',60,130,{v:1});addEnt(s,'num',60,220,{v:3});addEnt(s,'num',60,310,{v:11});addEnt(s,'balance',300,150)},
+  build:s=>{const x1=addEnt(s,'num',60,40,{v:1});s.entities[x1].name='x';const x2=addEnt(s,'num',60,130,{v:1});s.entities[x2].name='x';addEnt(s,'num',60,220,{v:3});addEnt(s,'num',60,310,{v:11});addEnt(s,'balance',300,150)},
   steps:[{label:'x、x、3 放左盘，11 放右盘',score:1,hint:'拖蓝点：两个 x 和 3 到天平左边，11 到右边',target:T45('balance'),check:(s,D)=>{const b=byType(s,'balance');return D[b].Ln.length>=3&&D[b].Rn.length>=1}},
-         {label:'把两个 x 都调到 4，天平平了',score:2,hint:'点两张 x 的数字卡，把值调到 4',target:T45('balance'),check:(s,D)=>{const b=byType(s,'balance');const nums=Object.values(s.entities).filter(e=>e.type==='num');return D[b].equal&&nums[0].props.v===4&&nums[1].props.v===4}}]},
+         {label:'把两个 x 都调到 4，天平平了',score:2,hint:'点两张 x 的数字卡，把值调到 4',target:T45('balance'),check:(s,D)=>{const b=byType(s,'balance');const xs=Object.values(s.entities).filter(e=>e.type==='num'&&e.name==='x');return D[b].equal&&xs.length===2&&xs.every(e=>e.props.v===4)}}]},
  {id:'g7_ineq',grade:7,domain:'数与代数',tools:'不等式（数轴）',title:'不等式：x 的解集 x < −1，在数轴上怎么画？',q:'解集在数轴上：边界点用空心圆，方向看符号。',why:'x < −1：从 −1 往左画，不包括 −1。',
   build:s=>{addEnt(s,'ineq',200,60,{b:2,op:1})},
   steps:[{label:'方向调成 x＜（向左）',score:1,hint:'点解集卡，在属性卡里把方向调到 0',target:T45('ineq'),check:(s,D)=>s.entities[byType(s,'ineq')].props.op===0},

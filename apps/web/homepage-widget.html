@@ -5642,9 +5642,9 @@ P7.forEach(p=&gt;XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,to
 /* ========== 初中第一批：方程的天平、不等式的解集、反比例、二次函数 ========== */
 const P8=[
  {id:&#x27;g7_eq&#x27;,grade:7,domain:&#x27;数与代数&#x27;,tools:&#x27;天平 · 数字卡&#x27;,title:&#x27;一元一次方程：2x + 3 = 11，x 是几？&#x27;,q:&#x27;两个 x 和 3 放左盘，11 放右盘。调 x，让天平平了，x 就是解。&#x27;,why:&#x27;2x + 3 = 11，两边都减 3 得 2x = 8，所以 x = 4。&#x27;,
-  build:s=&gt;{addEnt(s,&#x27;num&#x27;,60,40,{v:1});addEnt(s,&#x27;num&#x27;,60,130,{v:1});addEnt(s,&#x27;num&#x27;,60,220,{v:3});addEnt(s,&#x27;num&#x27;,60,310,{v:11});addEnt(s,&#x27;balance&#x27;,300,150)},
+  build:s=&gt;{const x1=addEnt(s,&#x27;num&#x27;,60,40,{v:1});s.entities[x1].name=&#x27;x&#x27;;const x2=addEnt(s,&#x27;num&#x27;,60,130,{v:1});s.entities[x2].name=&#x27;x&#x27;;addEnt(s,&#x27;num&#x27;,60,220,{v:3});addEnt(s,&#x27;num&#x27;,60,310,{v:11});addEnt(s,&#x27;balance&#x27;,300,150)},
   steps:[{label:&#x27;x、x、3 放左盘，11 放右盘&#x27;,score:1,hint:&#x27;拖蓝点：两个 x 和 3 到天平左边，11 到右边&#x27;,target:T45(&#x27;balance&#x27;),check:(s,D)=&gt;{const b=byType(s,&#x27;balance&#x27;);return D[b].Ln.length&gt;=3&amp;&amp;D[b].Rn.length&gt;=1}},
-         {label:&#x27;把两个 x 都调到 4，天平平了&#x27;,score:2,hint:&#x27;点两张 x 的数字卡，把值调到 4&#x27;,target:T45(&#x27;balance&#x27;),check:(s,D)=&gt;{const b=byType(s,&#x27;balance&#x27;);const nums=Object.values(s.entities).filter(e=&gt;e.type===&#x27;num&#x27;);return D[b].equal&amp;&amp;nums[0].props.v===4&amp;&amp;nums[1].props.v===4}}]},
+         {label:&#x27;把两个 x 都调到 4，天平平了&#x27;,score:2,hint:&#x27;点两张 x 的数字卡，把值调到 4&#x27;,target:T45(&#x27;balance&#x27;),check:(s,D)=&gt;{const b=byType(s,&#x27;balance&#x27;);const xs=Object.values(s.entities).filter(e=&gt;e.type===&#x27;num&#x27;&amp;&amp;e.name===&#x27;x&#x27;);return D[b].equal&amp;&amp;xs.length===2&amp;&amp;xs.every(e=&gt;e.props.v===4)}}]},
  {id:&#x27;g7_ineq&#x27;,grade:7,domain:&#x27;数与代数&#x27;,tools:&#x27;不等式（数轴）&#x27;,title:&#x27;不等式：x 的解集 x &lt; −1，在数轴上怎么画？&#x27;,q:&#x27;解集在数轴上：边界点用空心圆，方向看符号。&#x27;,why:&#x27;x &lt; −1：从 −1 往左画，不包括 −1。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;ineq&#x27;,200,60,{b:2,op:1})},
   steps:[{label:&#x27;方向调成 x＜（向左）&#x27;,score:1,hint:&#x27;点解集卡，在属性卡里把方向调到 0&#x27;,target:T45(&#x27;ineq&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;ineq&#x27;)].props.op===0},
