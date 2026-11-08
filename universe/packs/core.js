@@ -170,8 +170,8 @@
       line: {
         label: '直线', prefix: '线', group: '函数', grades: [7, 9], alias: ['一次函数', 'y=kx+b'],
         props: {
-          k: { type: 'num', label: '斜率 k', default: 1, min: -20, max: 20, step: 0.5 },
-          b: { type: 'num', label: '截距 b', default: 0, min: -20, max: 20, step: 0.5 },
+          k: { type: 'num', label: '斜率 k', default: 1, min: -100, max: 100, step: 0.5 },
+          b: { type: 'num', label: '截距 b', default: 0, min: -100, max: 100, step: 0.5 },
           range: { type: 'int', label: '画多大', default: 5, min: 2, max: 20 },
         },
         outputs: { f: { kind: 'fn', label: '直线' } },
@@ -180,7 +180,7 @@
         compute: (c) => ({ f: U.val('fn', { k: Q.fromNumber(c.props.k), b: Q.fromNumber(c.props.b) }) }),
         badge: (c) => (c.out.f ? U.showVal(c.out.f) : ''),
         draw: (c) => {
-          const R = c.props.range, k = c.props.k, b = c.props.b, W = c.w, H = c.h;
+          const k = c.props.k, b = c.props.b, R = Math.max(c.props.range, Math.abs(b) * 1.2, 1), W = c.w, H = c.h;
           const px = (x) => W / 2 + (x / R) * (W / 2 - 8), py = (y) => H / 2 - (y / R) * (H / 2 - 8);
           let s = K.line(8, H / 2, W - 8, H / 2, { w: 1, stroke: 'var(--dim)' }) + K.line(W / 2, 6, W / 2, H - 6, { w: 1, stroke: 'var(--dim)' });
           const y0 = k * -R + b, y1 = k * R + b;

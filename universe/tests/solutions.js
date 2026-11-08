@@ -21,4 +21,8 @@ module.exports = {
   'quad-vertex'(h) { const q = h.role('q'); h.set(q, 'b', -4); h.set(q, 'c', 3); },
   'coin-fair'(h) { const g = h.add('hist'), s = h.add('stats'); h.link(h.role('c'), g, 'v'); h.set(g, 'lo', 0); h.set(g, 'hi', 1); h.link(g, s, 'd', 'dist'); h.run(450); },
   'seq-arith-20'(h) { const s = h.role('s'); h.set(s, 'first', 3); h.set(s, 'diff', 4); h.run(19); },
+  'discount-80'(h) { const p = h.add('percent', { mode: 3 }); h.link(h.role('pct'), p, 'a'); h.link(h.role('price'), p, 'b'); },
+  'ratio-share-50'(h) { const r = h.add('ratio', { total: 50 }); h.link(h.role('a'), r, 'a'); h.link(h.role('b'), r, 'b'); },
+  'chicken-rabbit'(h) { const a = h.role('l1'), b = h.role('l2'), c = h.add('cross'); h.set(a, 'k', -1); h.set(a, 'b', 35); h.set(b, 'k', -0.5); h.set(b, 'b', 23.5); h.link(a, c, 'f'); h.link(b, c, 'g'); },
+  'bag-red-ratio'(h) { const g = h.add('hist'), s = h.add('stats'); h.link(h.role('b'), g, 'v'); h.set(g, 'lo', 0); h.set(g, 'hi', 1); h.link(g, s, 'd', 'dist'); h.run(450); },
 };

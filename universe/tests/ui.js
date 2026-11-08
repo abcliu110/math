@@ -80,6 +80,13 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   await p.evaluate(() => UI.App.openProblem('two-dice', 'practice')); await p.waitForTimeout(100);
   await shot('ui-dice-start');
 
+  console.log('学习报告');
+  await p.evaluate(() => { U.Events.clear(); U.Events.ctx = { pid: 'frac-add-unlike', mode: 'practice' }; U.Events.push('trap', { id: 'bad38' }); U.Events.push('finish', { score: 6, max: 10, traps: [], usedSec: 120 }); UI.Panels.renderLeft(); });
+  await p.click('[data-tab="lab"]'); await p.waitForTimeout(100);
+  ok(/该复习/.test(await p.locator('#leftbody').innerText()), '实验库顶部出现“该复习”');
+  await p.click('#menubtn'); await p.click('[data-m="report"]'); await p.waitForTimeout(100);
+  const rp = await p.locator('#dlg .box').innerText(); ok(/学习报告/.test(rp) && /1 \/ /.test(rp), '学习报告对话框有进度：' + rp.replace(/\s+/g, ' ').slice(0, 40));
+  await shot('ui-report'); await p.click('#dlg-close');
   ok(errs.length === 0, '控制台 0 报错' + (errs.length ? '：' + errs[0] : ''));
   console.log('\n' + pass + ' 通过，' + fail + ' 失败'); await b.close(); process.exit(fail ? 1 : 0);
 })();

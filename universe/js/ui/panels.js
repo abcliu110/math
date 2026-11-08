@@ -23,6 +23,8 @@
   function labHtml() {
     const S = UI.S, q = (S.q1 || '').trim();
     let h = '<input class="search" id="q1" placeholder="搜索题目、知识点" value="' + esc(q) + '">';
+    const rv = U.Review.summarize(U.Events.log, U.problems);
+    if (rv.due.length && !q) h += '<div class="pcard" style="margin-top:12px"><b>今天该复习 ' + rv.due.length + ' 道</b><div class="plist">' + rv.due.slice(0, 4).map((d) => '<div class="it" data-pid="' + d.pid + '" style="margin:6px 0 0"><span class="tt">' + esc(d.title) + '<br><small style="color:var(--orange)">' + esc(d.why) + '</small></span></div>').join('') + '</div></div>';
     h += '<div class="plist"><div class="grp">自由</div><div class="it' + (!S.problem ? ' cur' : '') + '" data-free="1"><span class="tt">自由探究（空台面，所有器材）</span></div>';
     const by = {};
     U.problems.filter((p) => !q || (p.title + p.domain + (p.points || []).join('') + (p.alias || []).join('')).includes(q)).forEach((p) => (by[p.domain] = by[p.domain] || []).push(p));
@@ -124,6 +126,17 @@
     return h;
   }
 
+
+  function reportDialog() {
+    const rv = U.Review.summarize(U.Events.log, U.problems), t = rv.totals;
+    let h = '<h3>学习报告</h3><div class="cmp"><div><small>做过的题</small>' + t.tried + ' / ' + t.problems + '</div><div><small>累计用时</small>' + t.minutes + ' 分钟</div><div><small>踩过的陷阱</small>' + t.trapsHit + ' 个</div><div><small>找到新做法</small>' + t.newWay + ' 次</div></div>';
+    h += '<p style="color:var(--txt3);margin:12px 0 4px">各领域进度（做过 / 全部，其中“掌握”= 满分且没踩陷阱）</p>';
+    rv.domains.forEach((d) => { const pct = d.total ? Math.round((d.done / d.total) * 100) : 0, pm = d.total ? Math.round((d.mastered / d.total) * 100) : 0; h += '<div style="margin:8px 0"><div style="display:flex;justify-content:space-between"><span>' + esc(d.domain) + '</span><span style="color:var(--txt2)">' + d.done + ' / ' + d.total + '　掌握 ' + d.mastered + '</span></div><div style="height:8px;background:var(--panel2);border-radius:4px;overflow:hidden;position:relative"><div style="position:absolute;inset:0 auto 0 0;width:' + pct + '%;background:#2b5f9e"></div><div style="position:absolute;inset:0 auto 0 0;width:' + pm + '%;background:var(--good)"></div></div></div>'; });
+    if (rv.due.length) h += '<p style="color:var(--txt3);margin:14px 0 4px">该复习的</p><div class="plist">' + rv.due.map((d) => '<div class="it" data-pid="' + d.pid + '"><span class="tt">' + esc(d.title) + '<br><small style="color:var(--orange)">' + esc(d.why) + '</small></span></div>').join('') + '</div>';
+    h += '<div class="btnrow"><button class="btn" id="dlg-close">关闭</button></div>';
+    dialog(h);
+  }
+
   // ---------- 器材架拖放 ----------
   function initShelfDrag() {
     $('#shelfbody').addEventListener('pointerdown', (ev) => {
@@ -144,5 +157,5 @@
     });
   }
 
-  UI.Panels = { renderTop, renderLeft, renderShelf, renderInsp, renderClock, dialog, closeDialog, reportHtml, initShelfDrag, renderAll() { renderTop(); renderLeft(); renderShelf(); renderInsp(); renderClock(); } };
+  UI.Panels = { renderTop, renderLeft, renderShelf, renderInsp, renderClock, dialog, closeDialog, reportHtml, reportDialog, initShelfDrag, renderAll() { renderTop(); renderLeft(); renderShelf(); renderInsp(); renderClock(); } };
 })(window);

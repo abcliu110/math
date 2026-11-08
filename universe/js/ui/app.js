@@ -144,6 +144,7 @@
       const m = e.target.closest('button'); if (!m) return;
       if (m.dataset.m === 'save') download('台面-' + new Date().toISOString().slice(0, 10) + '.json', W.save(S.scene));
       if (m.dataset.m === 'load') loadFile();
+      if (m.dataset.m === 'report') UI.Panels.reportDialog();
       if (m.dataset.m === 'export') download('学习记录.json', JSON.stringify(Ev.log, null, 1));
       if (m.dataset.m === 'clearlog') { Ev.clear(); UI.Panels.renderLeft(); say('学习记录已清除', '', 2000); }
     });
@@ -208,6 +209,8 @@
     };
     $('#dlg').addEventListener('click', (e) => {
       const t = e.target;
+      const di = t.closest('.it[data-pid]');
+      if (di) { UI.Panels.closeDialog(); openProblem(di.dataset.pid, 'practice'); return; }
       if (t.id === 'dlg' || t.id === 'dlg-close') UI.Panels.closeDialog();
       else if (t.id === 'dlg-again') { UI.Panels.closeDialog(); openProblem(S.problem.id, S.mode); }
       else if (t.id === 'dlg-next') { UI.Panels.closeDialog(); const i = U.problems.findIndex((p) => p.id === S.problem.id); openProblem(U.problems[(i + 1) % U.problems.length].id, 'practice'); }
