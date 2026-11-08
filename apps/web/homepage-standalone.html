@@ -5043,7 +5043,7 @@ function undo(){if(!undoSt.length)return;redoSt.push(JSON.stringify(S));S=JSON.p
 function redo(){if(!redoSt.length)return;undoSt.push(JSON.stringify(S));S=JSON.parse(redoSt.pop());afterChange()}
 $(&#x27;undo&#x27;).onclick=undo;$(&#x27;redo&#x27;).onclick=redo;
 $(&#x27;clear&#x27;).onclick=()=&gt;{if(!Object.keys(S.entities).length)return;undoSt.push(JSON.stringify(S));const keep=S.nid;S=blankScene();S.nid=keep;sel=null;afterChange();toast(&#x27;台面已清空，可以撤销&#x27;)};
-$(&#x27;tidy&#x27;).onclick=()=&gt;{undoSt.push(JSON.stringify(S));let x=40,y=40,rowH=0;const W=Math.max(700,(svg.clientWidth-80)/view.z);
+$(&#x27;tidy&#x27;).onclick=()=&gt;{undoSt.push(JSON.stringify(S));cardOpen=false;let x=40,y=40,rowH=0;const W=Math.max(700,(svg.clientWidth-80)/view.z);
   Object.values(S.entities).forEach(e=&gt;{const [w,h]=size(e);if(x+w&gt;W){x=40;y+=rowH+90;rowH=0}e.x=x;e.y=y;x+=w+70;rowH=Math.max(rowH,h)});afterChange();fit()};
 
 /* ========== 器材架（右） ========== */
@@ -5068,6 +5068,10 @@ window.addEventListener(&#x27;pointerup&#x27;,ev=&gt;{if(!tileDrag)return;const 
   const r=svg.getBoundingClientRect();let x,y;
   if(ev.clientX&gt;=r.left&amp;&amp;ev.clientX&lt;=r.right&amp;&amp;ev.clientY&gt;=r.top&amp;&amp;ev.clientY&lt;=r.bottom&amp;&amp;Math.hypot(ev.clientX-td.sx,ev.clientY-td.sy)&gt;6){[x,y]=toWorld(ev.clientX,ev.clientY)}
   else if(Math.hypot(ev.clientX-td.sx,ev.clientY-td.sy)&lt;=6){[x,y]=toWorld(r.left+r.width/2-80,r.top+r.height/2-60);x+=Math.random()*40;y+=Math.random()*40}else return;
+  // 落点钳在画布可见区内：器材整个在可见范围里，不会一半露在画布外面。
+  const tmp={type:td.type,props:clone(TYPES[td.type].defaults)};const [bw,bh]=size(tmp);
+  const vx0=-view.x/view.z,vx1=(r.width-view.x)/view.z,vy0=-view.y/view.z,vy1=(r.height-view.y)/view.z;
+  x=Math.min(Math.max(x,vx0+10),Math.max(vx0+10,vx1-bw-10));y=Math.min(Math.max(y,vy0+10),Math.max(vy0+10,vy1-bh-10));
   const res=commit({t:&#x27;add&#x27;,type:td.type,x:Math.round(x/10)*10,y:Math.round(y/10)*10});if(res.ok){sel=res.id;cardOpen=true;$(&#x27;card&#x27;).dataset.v=&#x27;&#x27;;render()}});
 
 /* ========== 实验库（左） + 步骤 ========== */
@@ -5076,7 +5080,7 @@ let openXp=null;
 function renderXpList(){const doms=[&#x27;全部&#x27;,&#x27;数与代数&#x27;,&#x27;图形与几何&#x27;,&#x27;统计与概率&#x27;,&#x27;应用题&#x27;];const q=libQ;
   let h=`&lt;input class=&quot;search&quot; id=&quot;xpSearch&quot; placeholder=&quot;搜实验 / 知识点&quot; value=&quot;${esc(q)}&quot;&gt;&lt;div class=&quot;chips&quot;&gt;${doms.map(d=&gt;`&lt;span class=&quot;chip${libFilter===d?&#x27; on&#x27;:&#x27;&#x27;}&quot; data-dom=&quot;${d}&quot;&gt;${d}&lt;/span&gt;`).join(&#x27;&#x27;)}&lt;/div&gt;`;
   const H=hist();
-  XP.filter(x=&gt;(libFilter===&#x27;全部&#x27;||x.domain===libFilter)&amp;&amp;(!q||(x.title+x.tools+x.q).includes(q))).forEach(x=&gt;{const hs=H[x.id];
+  XP.filter(x=&gt;(libFilter===&#x27;全部&#x27;||x.domain===libFilter)&amp;&amp;(!q||(x.id+&#x27; &#x27;+x.grade+&#x27;年级 &#x27;+x.domain+&#x27; &#x27;+x.title+x.tools+x.q).includes(q))).forEach(x=&gt;{const hs=H[x.id];
     h+=`&lt;div class=&quot;xp${openXp===x.id?&#x27; on&#x27;:&#x27;&#x27;}&quot; data-xp=&quot;${x.id}&quot;&gt;&lt;b&gt;${esc(x.title)}&lt;/b&gt;&lt;small&gt;${x.grade} 年级 · ${x.domain} · ${x.tools}&lt;/small&gt;`;
     if(openXp===x.id)h+=`&lt;div class=&quot;detail&quot;&gt;${esc(x.q)}&lt;div style=&quot;margin-top:6px&quot;&gt;共 ${x.steps.length} 步，满分 ${x.steps.reduce((a,s)=&gt;a+s.score,0)} 分${hs?`&lt;br&gt;考过 ${hs.n} 次，最近 ${hs.last}，最常丢分：${esc(hs.worst||&#x27;无&#x27;)}`:&#x27;&#x27;}&lt;/div&gt;&lt;div class=&quot;row&quot;&gt;&lt;button class=&quot;btn pri&quot; data-start=&quot;practice&quot;&gt;练习&lt;/button&gt;&lt;button class=&quot;btn&quot; data-start=&quot;exam&quot;&gt;考试&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;`;
     h+=&#x27;&lt;/div&gt;&#x27;});
@@ -5637,7 +5641,7 @@ function submitExam(auto){if(mode!==&#x27;exam&#x27;||!run)return;clearInterval(
   run.finished=true}
 function modal(h){$(&#x27;modalBox&#x27;).innerHTML=h;$(&#x27;modal&#x27;).style.display=&#x27;grid&#x27;}
 $(&#x27;modal&#x27;).onclick=ev=&gt;{const b=ev.target.closest(&#x27;[data-m]&#x27;);if(ev.target===$(&#x27;modal&#x27;)){$(&#x27;modal&#x27;).style.display=&#x27;none&#x27;;return}if(!b)return;const m=b.dataset.m,id=xp&amp;&amp;xp.id;$(&#x27;modal&#x27;).style.display=&#x27;none&#x27;;
-  if(m===&#x27;re&#x27;)startXp(id,&#x27;practice&#x27;);else if(m===&#x27;exam&#x27;)startXp(id,&#x27;exam&#x27;);else if(m===&#x27;practice&#x27;)startXp(id,&#x27;practice&#x27;);else if(m===&#x27;exit&#x27;||m===&#x27;lib&#x27;)goFree();else if(m===&#x27;savefind&#x27;){const t=$(&#x27;findTx&#x27;).value.trim();if(t){const a=JSON.parse(localStorage.getItem(LS.find)||&#x27;[]&#x27;);a.unshift({t,at:new Date().toLocaleString(),xp:xp?xp.title:&#x27;自由探究&#x27;});localStorage.setItem(LS.find,JSON.stringify(a.slice(0,50)));toast(&#x27;记下了&#x27;)}}};
+  if(m===&#x27;re&#x27;)startXp(id,&#x27;practice&#x27;);else if(m===&#x27;exam&#x27;)startXp(id,&#x27;exam&#x27;);else if(m===&#x27;practice&#x27;)startXp(id,&#x27;practice&#x27;);else if(m===&#x27;exit&#x27;||m===&#x27;lib&#x27;)goFree();else if(m===&#x27;savefind&#x27;){const t=$(&#x27;findTx&#x27;).value.trim();if(t){const a=JSON.parse(localStorage.getItem(LS.find)||&#x27;[]&#x27;);a.unshift({t,at:new Date().toLocaleString(),xp:xp?xp.title:&#x27;自由探究&#x27;});localStorage.setItem(LS.find,JSON.stringify(a.slice(0,50)));postToParent({type:&#x27;labNbDiscovery&#x27;,payload:{text:t,labId:xp?xp.id:null,title:xp?xp.title:&#x27;自由探究&#x27;}});toast(&#x27;记下了&#x27;)}}};
 $(&#x27;whyBtn&#x27;).onclick=()=&gt;{if(!xp){modal(&#x27;&lt;h3&gt;为什么&lt;/h3&gt;&lt;p&gt;自由探究没有标准答案。台面上的每个结果都是按数学规律算出来的——试着改一个数，猜猜会发生什么，再看看猜对没有。&lt;/p&gt;&#x27;);return}
   if(mode===&#x27;practice&#x27;&amp;&amp;!run.finished){modal(`&lt;h3&gt;为什么&lt;/h3&gt;&lt;p&gt;先自己做完再看——发现之后再讲，记得更牢。&lt;/p&gt;`);return}modal(`&lt;h3&gt;为什么&lt;/h3&gt;&lt;p&gt;${esc(xp.why)}&lt;/p&gt;`)};
 $(&#x27;findBtn&#x27;).onclick=()=&gt;{const a=JSON.parse(localStorage.getItem(LS.find)||&#x27;[]&#x27;);modal(`&lt;h3&gt;我的发现&lt;/h3&gt;&lt;textarea id=&quot;findTx&quot; placeholder=&quot;我发现……&quot;&gt;&lt;/textarea&gt;&lt;div style=&quot;display:flex;gap:8px;margin:8px 0&quot;&gt;&lt;button class=&quot;btn pri&quot; data-m=&quot;savefind&quot;&gt;记下来&lt;/button&gt;&lt;/div&gt;${a.slice(0,5).map(f=&gt;`&lt;div class=&quot;muted&quot; style=&quot;font-size:12px;margin-top:6px&quot;&gt;${esc(f.at)} · ${esc(f.xp)}&lt;br&gt;&lt;span style=&quot;color:var(--tx)&quot;&gt;${esc(f.t)}&lt;/span&gt;&lt;/div&gt;`).join(&#x27;&#x27;)}`)};
@@ -48124,7 +48128,7 @@ function labDiscoveryHtml(inq) {
   const items = [];
   (inq || []).forEach(function (e) {
     if (e.kind === 'discovery' && e.text) {
-      items.push({ at: labReportTime(e), text: e.text, src: e.demo ? demoName(e.demo) : '实验室' });
+      items.push({ at: labReportTime(e), text: e.text, src: e.title || (e.demo ? demoName(e.demo) : '实验室') });
     } else if (e.kind === 'lab-challenge-report' && e.discovery) {
       const pid = (e.pointIds || [])[0] || '';
       const f = pid ? findPoint(pid) : null;
@@ -48146,8 +48150,7 @@ function labTraceHtml(reports, hist) {
   if (ids.length) {
     html += '<p class="muted">每道挑战题考过几次、最近一次多少分：</p><ul>' + ids.map(function (labId) {
       const e = hist[labId] || {};
-      // 老挑战题目表已删；实验台的实验编号直接显示（标题只在实验台里有）。
-      const title = labId;
+      const title = e.title || labId;
       return '<li>' + esc(title) + '：考过 ' + (e.attempts || 0) + ' 次，最近一次 ' + (e.lastScore || 0) + ' / ' + (e.max || 0) +
         (e.lastUsedMs ? '，用了 ' + fmtClock(e.lastUsedMs) : '') + '。</li>';
     }).join('') + '</ul>';
@@ -49988,6 +49991,7 @@ function procHistRecord(rep, usedMs) {
   e.lastScore = rep.score;
   e.max = rep.max;
   e.lastAt = Date.now();
+  e.title = rep.title || e.title || rep.labId; // 标题跟着记录走，家长端显示名字而不是代号
   e.lastUsedMs = usedMs || 0; // 最近一次交卷用了多久（§6 #43 单次成绩详情：用时）
   e.lastErr = (rep.errorReasons || []).slice(0, 5);
   rep.lines.forEach(function (l) {
@@ -49996,6 +50000,18 @@ function procHistRecord(rep, usedMs) {
   h[rep.labId] = e;
   procHistSave(h);
 }
+/* 实验台（NB 式）的“我的发现”：记进家长端读的 math-inquiry-v1，带实验标题。 */
+function labNbDiscovery(p) {
+  if (!p || !p.text) return;
+  const list = loadInquiry();
+  list.push({ kind: 'discovery', taskId: p.labId ? 'nb:' + p.labId : 'nb:free', text: String(p.text).slice(0, 200), title: p.title || '实验台', ts: Date.now() });
+  saveInquiry(list.slice(-200));
+}
+window.addEventListener('message', function (e) {
+  const f = document.getElementById('labNbFrame');
+  if (!e.data || e.data.type !== 'labNbDiscovery' || !f || e.source !== f.contentWindow) return;
+  labNbDiscovery(e.data.payload);
+});
 /* 实验台（NB 式）考试结果：iframe 里的 lab-nb.html 发来 labNbExam 消息，记入同一份跨次统计。 */
 function labNbRecord(p) {
   if (!p || !p.lines || !p.lines.length) return;

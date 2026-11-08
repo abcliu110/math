@@ -707,7 +707,7 @@ function undo(){if(!undoSt.length)return;redoSt.push(JSON.stringify(S));S=JSON.p
 function redo(){if(!redoSt.length)return;undoSt.push(JSON.stringify(S));S=JSON.parse(redoSt.pop());afterChange()}
 $('undo').onclick=undo;$('redo').onclick=redo;
 $('clear').onclick=()=>{if(!Object.keys(S.entities).length)return;undoSt.push(JSON.stringify(S));const keep=S.nid;S=blankScene();S.nid=keep;sel=null;afterChange();toast('台面已清空，可以撤销')};
-$('tidy').onclick=()=>{undoSt.push(JSON.stringify(S));let x=40,y=40,rowH=0;const W=Math.max(700,(svg.clientWidth-80)/view.z);
+$('tidy').onclick=()=>{undoSt.push(JSON.stringify(S));cardOpen=false;let x=40,y=40,rowH=0;const W=Math.max(700,(svg.clientWidth-80)/view.z);
   Object.values(S.entities).forEach(e=>{const [w,h]=size(e);if(x+w>W){x=40;y+=rowH+90;rowH=0}e.x=x;e.y=y;x+=w+70;rowH=Math.max(rowH,h)});afterChange();fit()};
 
 /* ========== 器材架（右） ========== */
@@ -732,6 +732,10 @@ window.addEventListener('pointerup',ev=>{if(!tileDrag)return;const td=tileDrag;t
   const r=svg.getBoundingClientRect();let x,y;
   if(ev.clientX>=r.left&&ev.clientX<=r.right&&ev.clientY>=r.top&&ev.clientY<=r.bottom&&Math.hypot(ev.clientX-td.sx,ev.clientY-td.sy)>6){[x,y]=toWorld(ev.clientX,ev.clientY)}
   else if(Math.hypot(ev.clientX-td.sx,ev.clientY-td.sy)<=6){[x,y]=toWorld(r.left+r.width/2-80,r.top+r.height/2-60);x+=Math.random()*40;y+=Math.random()*40}else return;
+  // 落点钳在画布可见区内：器材整个在可见范围里，不会一半露在画布外面。
+  const tmp={type:td.type,props:clone(TYPES[td.type].defaults)};const [bw,bh]=size(tmp);
+  const vx0=-view.x/view.z,vx1=(r.width-view.x)/view.z,vy0=-view.y/view.z,vy1=(r.height-view.y)/view.z;
+  x=Math.min(Math.max(x,vx0+10),Math.max(vx0+10,vx1-bw-10));y=Math.min(Math.max(y,vy0+10),Math.max(vy0+10,vy1-bh-10));
   const res=commit({t:'add',type:td.type,x:Math.round(x/10)*10,y:Math.round(y/10)*10});if(res.ok){sel=res.id;cardOpen=true;$('card').dataset.v='';render()}});
 
 /* ========== 实验库（左） + 步骤 ========== */
@@ -740,7 +744,7 @@ let openXp=null;
 function renderXpList(){const doms=['全部','数与代数','图形与几何','统计与概率','应用题'];const q=libQ;
   let h=`<input class="search" id="xpSearch" placeholder="搜实验 / 知识点" value="${esc(q)}"><div class="chips">${doms.map(d=>`<span class="chip${libFilter===d?' on':''}" data-dom="${d}">${d}</span>`).join('')}</div>`;
   const H=hist();
-  XP.filter(x=>(libFilter==='全部'||x.domain===libFilter)&&(!q||(x.title+x.tools+x.q).includes(q))).forEach(x=>{const hs=H[x.id];
+  XP.filter(x=>(libFilter==='全部'||x.domain===libFilter)&&(!q||(x.id+' '+x.grade+'年级 '+x.domain+' '+x.title+x.tools+x.q).includes(q))).forEach(x=>{const hs=H[x.id];
     h+=`<div class="xp${openXp===x.id?' on':''}" data-xp="${x.id}"><b>${esc(x.title)}</b><small>${x.grade} 年级 · ${x.domain} · ${x.tools}</small>`;
     if(openXp===x.id)h+=`<div class="detail">${esc(x.q)}<div style="margin-top:6px">共 ${x.steps.length} 步，满分 ${x.steps.reduce((a,s)=>a+s.score,0)} 分${hs?`<br>考过 ${hs.n} 次，最近 ${hs.last}，最常丢分：${esc(hs.worst||'无')}`:''}</div><div class="row"><button class="btn pri" data-start="practice">练习</button><button class="btn" data-start="exam">考试</button></div></div>`;
     h+='</div>'});
@@ -1301,7 +1305,7 @@ function submitExam(auto){if(mode!=='exam'||!run)return;clearInterval(timerId);t
   run.finished=true}
 function modal(h){$('modalBox').innerHTML=h;$('modal').style.display='grid'}
 $('modal').onclick=ev=>{const b=ev.target.closest('[data-m]');if(ev.target===$('modal')){$('modal').style.display='none';return}if(!b)return;const m=b.dataset.m,id=xp&&xp.id;$('modal').style.display='none';
-  if(m==='re')startXp(id,'practice');else if(m==='exam')startXp(id,'exam');else if(m==='practice')startXp(id,'practice');else if(m==='exit'||m==='lib')goFree();else if(m==='savefind'){const t=$('findTx').value.trim();if(t){const a=JSON.parse(localStorage.getItem(LS.find)||'[]');a.unshift({t,at:new Date().toLocaleString(),xp:xp?xp.title:'自由探究'});localStorage.setItem(LS.find,JSON.stringify(a.slice(0,50)));toast('记下了')}}};
+  if(m==='re')startXp(id,'practice');else if(m==='exam')startXp(id,'exam');else if(m==='practice')startXp(id,'practice');else if(m==='exit'||m==='lib')goFree();else if(m==='savefind'){const t=$('findTx').value.trim();if(t){const a=JSON.parse(localStorage.getItem(LS.find)||'[]');a.unshift({t,at:new Date().toLocaleString(),xp:xp?xp.title:'自由探究'});localStorage.setItem(LS.find,JSON.stringify(a.slice(0,50)));postToParent({type:'labNbDiscovery',payload:{text:t,labId:xp?xp.id:null,title:xp?xp.title:'自由探究'}});toast('记下了')}}};
 $('whyBtn').onclick=()=>{if(!xp){modal('<h3>为什么</h3><p>自由探究没有标准答案。台面上的每个结果都是按数学规律算出来的——试着改一个数，猜猜会发生什么，再看看猜对没有。</p>');return}
   if(mode==='practice'&&!run.finished){modal(`<h3>为什么</h3><p>先自己做完再看——发现之后再讲，记得更牢。</p>`);return}modal(`<h3>为什么</h3><p>${esc(xp.why)}</p>`)};
 $('findBtn').onclick=()=>{const a=JSON.parse(localStorage.getItem(LS.find)||'[]');modal(`<h3>我的发现</h3><textarea id="findTx" placeholder="我发现……"></textarea><div style="display:flex;gap:8px;margin:8px 0"><button class="btn pri" data-m="savefind">记下来</button></div>${a.slice(0,5).map(f=>`<div class="muted" style="font-size:12px;margin-top:6px">${esc(f.at)} · ${esc(f.xp)}<br><span style="color:var(--tx)">${esc(f.t)}</span></div>`).join('')}`)};

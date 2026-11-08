@@ -1455,7 +1455,7 @@ function labDiscoveryHtml(inq) {
   const items = [];
   (inq || []).forEach(function (e) {
     if (e.kind === 'discovery' && e.text) {
-      items.push({ at: labReportTime(e), text: e.text, src: e.demo ? demoName(e.demo) : '实验室' });
+      items.push({ at: labReportTime(e), text: e.text, src: e.title || (e.demo ? demoName(e.demo) : '实验室') });
     } else if (e.kind === 'lab-challenge-report' && e.discovery) {
       const pid = (e.pointIds || [])[0] || '';
       const f = pid ? findPoint(pid) : null;
@@ -1477,8 +1477,7 @@ function labTraceHtml(reports, hist) {
   if (ids.length) {
     html += '<p class="muted">每道挑战题考过几次、最近一次多少分：</p><ul>' + ids.map(function (labId) {
       const e = hist[labId] || {};
-      // 老挑战题目表已删；实验台的实验编号直接显示（标题只在实验台里有）。
-      const title = labId;
+      const title = e.title || labId;
       return '<li>' + esc(title) + '：考过 ' + (e.attempts || 0) + ' 次，最近一次 ' + (e.lastScore || 0) + ' / ' + (e.max || 0) +
         (e.lastUsedMs ? '，用了 ' + fmtClock(e.lastUsedMs) : '') + '。</li>';
     }).join('') + '</ul>';
@@ -3319,6 +3318,7 @@ function procHistRecord(rep, usedMs) {
   e.lastScore = rep.score;
   e.max = rep.max;
   e.lastAt = Date.now();
+  e.title = rep.title || e.title || rep.labId; // 标题跟着记录走，家长端显示名字而不是代号
   e.lastUsedMs = usedMs || 0; // 最近一次交卷用了多久（§6 #43 单次成绩详情：用时）
   e.lastErr = (rep.errorReasons || []).slice(0, 5);
   rep.lines.forEach(function (l) {
@@ -3327,6 +3327,18 @@ function procHistRecord(rep, usedMs) {
   h[rep.labId] = e;
   procHistSave(h);
 }
+/* 实验台（NB 式）的“我的发现”：记进家长端读的 math-inquiry-v1，带实验标题。 */
+function labNbDiscovery(p) {
+  if (!p || !p.text) return;
+  const list = loadInquiry();
+  list.push({ kind: 'discovery', taskId: p.labId ? 'nb:' + p.labId : 'nb:free', text: String(p.text).slice(0, 200), title: p.title || '实验台', ts: Date.now() });
+  saveInquiry(list.slice(-200));
+}
+window.addEventListener('message', function (e) {
+  const f = document.getElementById('labNbFrame');
+  if (!e.data || e.data.type !== 'labNbDiscovery' || !f || e.source !== f.contentWindow) return;
+  labNbDiscovery(e.data.payload);
+});
 /* 实验台（NB 式）考试结果：iframe 里的 lab-nb.html 发来 labNbExam 消息，记入同一份跨次统计。 */
 function labNbRecord(p) {
   if (!p || !p.lines || !p.lines.length) return;
