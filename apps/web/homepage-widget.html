@@ -4622,11 +4622,13 @@ const DIM_NAME={count:&#x27;个数&#x27;,length:&#x27;长度&#x27;,area:&#x27;�
 const vecKey=v=&gt;Object.keys(v).filter(k=&gt;v[k]).sort().map(k=&gt;k+v[k]).join(&#x27;,&#x27;)||&#x27;count&#x27;;
 const vecMul=(a,b)=&gt;{const r={...a};for(const k in b)r[k]=(r[k]||0)+b[k];for(const k in r)if(!r[k])delete r[k];return r};
 function dimName(v){const k=vecKey(v);for(const n in DIM_VEC)if(vecKey(DIM_VEC[n])===k)return n;return&#x27;other:&#x27;+k}
-function dimVec(s,id,depth=0){const e=s.entities[id];if(!e||depth&gt;40)return{};
-  if(e.type===&#x27;adder&#x27;){const l=inputs(s,id)[0];return l?dimVec(s,l.from,depth+1):{}}
-  if(e.type===&#x27;mul&#x27;){let v={};for(const l of inputs(s,id))v=vecMul(v,dimVec(s,l.from,depth+1));return v}
+function dimVec(s,id,depth=0){const e=s.entities[id];if(!e||depth&gt;40)return null;
+  if(e.type===&#x27;adder&#x27;){const l=inputs(s,id)[0];return l?dimVec(s,l.from,depth+1):null}
+  if(e.type===&#x27;mul&#x27;){const ls=inputs(s,id);if(!ls.length)return null;let v={};for(const l of ls){const d=dimVec(s,l.from,depth+1);if(!d)return null;v=vecMul(v,d)}return v}
+  if(e.type===&#x27;div&#x27;){const L=inputs(s,id).find(l=&gt;l.slot===&#x27;L&#x27;),R=inputs(s,id).find(l=&gt;l.slot===&#x27;R&#x27;);if(!L||!R)return null;const dl=dimVec(s,L.from,depth+1),dr=dimVec(s,R.from,depth+1);if(!dl||!dr)return null;return vecKey(dl)===vecKey(dr)?{}:dl}
+  if(e.type===&#x27;box&#x27;){const l=inputs(s,id)[0];return l?dimVec(s,l.from,depth+1):null}
   return DIM_VEC[TYPES[e.type].dim||&#x27;count&#x27;]}
-function dimOf(s,id){return dimName(dimVec(s,id))}
+function dimOf(s,id){const v=dimVec(s,id);return v?dimName(v):null}
 function dimLabel(n){return DIM_NAME[n]||n}
 /* 依赖关系：连线和绑定都算。从 a 能走到 b，说明 b 的值依赖 a（或 a 绑着 b 的属性）。 */
 function reachAll(s,a,b){const seen={};const st=[a];while(st.length){const c=st.pop();if(c===b)return true;if(seen[c])continue;seen[c]=1;s.links.filter(l=&gt;l.from===c).forEach(l=&gt;st.push(l.to));(s.binds||[]).filter(x=&gt;x.from===c).forEach(x=&gt;st.push(x.to))}return false}
@@ -4698,7 +4700,7 @@ function actRaw(a){
     if(out!==acc&amp;&amp;!(out===&#x27;dist&#x27;&amp;&amp;TYPES[to.type].acceptsDist))return{ok:0,why:out===&#x27;fn&#x27;?&#x27;直线只能连到坐标平面上&#x27;:acc===&#x27;bool&#x27;?&#x27;判断灯只接收「平衡」（是或否）&#x27;:out===&#x27;bool&#x27;?`${to.name} 不接收「平衡」`:out===&#x27;dist&#x27;?`${to.name} 不接收分布（一批数），只有数据表能接`:`${to.name} 只接收直线，不接收数`};
     // 维度：天平不称面积、数轴不放面积；合并器只合并同一种东西。
     const fd=dimOf(s,a.from),rj=TYPES[to.type].reject;if(rj&amp;&amp;rj[fd])return{ok:0,why:rj[fd]};
-    if(to.type===&#x27;adder&#x27;){const other=inputs(s,a.to).map(l=&gt;dimOf(s,l.from)).find(x=&gt;x!==fd);if(other)return{ok:0,why:`合并器只合并同一种东西：${dimLabel(fd)} 和 ${dimLabel(other)} 不能加`}}
+    if(to.type===&#x27;adder&#x27;&amp;&amp;fd){const other=inputs(s,a.to).map(l=&gt;dimOf(s,l.from)).filter(x=&gt;x).find(x=&gt;x!==fd);if(other)return{ok:0,why:`合并器只合并同一种东西：${dimLabel(fd)} 和 ${dimLabel(other)} 不能加`}}
     if(a.fromPort&amp;&amp;!(OUT_PORTS[f.type]||[]).some(p=&gt;p.id===a.fromPort))return{ok:0,why:&#x27;这个器材没有这个输出&#x27;};
     if(s.links.some(l=&gt;l.from===a.from&amp;&amp;l.to===a.to&amp;&amp;(l.fromPort||null)===(a.fromPort||null)))return{ok:0,why:&#x27;已经连过了&#x27;};
     if(reach(s,a.to,a.from))return{ok:0,why:&#x27;不能连成一个圈&#x27;};
