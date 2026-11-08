@@ -368,6 +368,8 @@ function evaluate(s){
   for(const id in E){const e=E[id],d=D[id]={read:[],sig:[]};
     const sig=(lv,tx)=>d.sig.push({lv,tx});
     if(TYPES[e.type].out==='value')d.value=val(id);
+    // 带类型的值：{kind, dim, data}。data 仍是有理数 Q（引擎内部照旧读 Q）。kind 目前都是 num。
+    d.val=d.value?{kind:'num',dim:dimOf(s,id),data:d.value}:null;
     if(e.type==='frac'){const v=d.value;if(e.props.n>e.props.d)sig('info',`比 1 大：${qs(v)} = ${Math.floor(e.props.n/e.props.d)} 又 ${e.props.n%e.props.d}/${e.props.d}`);else if(v.d!==e.props.d)sig('info',`${e.props.n}/${e.props.d} 和 ${qs(v)} 一样大`)}
     if(e.type==='adder'){const ins=inputs(s,id).map(l=>vf(l)).filter(Boolean);d.terms=ins;
       if(!ins.length)sig('info','把几个数连进来，这里算它们的和');
