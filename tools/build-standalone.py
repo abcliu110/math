@@ -46,13 +46,25 @@ html = html.replace('<script src="app.js"></script>',
 assert '<link rel="stylesheet" href="styles.css">' not in html
 assert '<script src="app.js"></script>' not in html
 # 数学实验台（NB 式）：独立页面里把 lab-nb.html 内嵌进 iframe 的 srcdoc，单文件即可打开。
+import html as _html_mod
 lab_nb_path = WEB / 'lab-nb.html'
 lab_nb_src = 'src="lab-nb.html"'
-if lab_nb_path.exists() and lab_nb_src in html:
-    import html as _html_mod
-    nb = lab_nb_path.read_text(encoding='utf-8')
-    html = html.replace(lab_nb_src, 'srcdoc="' + _html_mod.escape(nb, quote=True) + '"', 1)
-assert lab_nb_src not in html or not lab_nb_path.exists()
+
+
+def inline_lab_nb(page, nb_source):
+    """Swap the lab iframe's src for an escaped srcdoc holding nb_source."""
+    if lab_nb_path.exists() and lab_nb_src in page:
+        page = page.replace(
+            lab_nb_src, 'srcdoc="' + _html_mod.escape(nb_source, quote=True) + '"', 1)
+    assert lab_nb_src not in page or not lab_nb_path.exists()
+    return page
+
+
+# 先留一份还没内嵌实验台的页面：widget 版要先对它做存储替换，再单独处理实验台，
+# 否则全局替换会改到已经内嵌进 srcdoc 的实验台脚本（见下面 widget 段）。
+html_without_lab = html
+nb_source = lab_nb_path.read_text(encoding='utf-8') if lab_nb_path.exists() else ''
+html = inline_lab_nb(html_without_lab, nb_source)
 (WEB / 'homepage-standalone.html').write_text(html, encoding='utf-8')
 print('standalone bytes:', len(html.encode()))
 
@@ -63,14 +75,38 @@ print('standalone bytes:', len(html.encode()))
 # and remains the version for real-browser tests.
 WIDGET_LS_GET = "function lsGet(k) { try { return (typeof localStorage !== 'undefined') ? localStorage.getItem(k) : null; } catch (e) { return null; } }"
 WIDGET_LS_SET = "function lsSet(k, v) { try { if (typeof localStorage !== 'undefined') localStorage.setItem(k, v); } catch (e) {} }"
-assert WIDGET_LS_GET in html and WIDGET_LS_SET in html
-widget_html = html.replace(
+assert WIDGET_LS_GET in html_without_lab and WIDGET_LS_SET in html_without_lab
+widget_html = html_without_lab.replace(
     WIDGET_LS_GET,
     "var __memStore = {}; function lsGet(k) { return (k in __memStore) ? __memStore[k] : null; }", 1)
 widget_html = widget_html.replace(
     WIDGET_LS_SET,
     "function lsSet(k, v) { __memStore[k] = v; }", 1)
+# 只改主页面脚本里剩下的 localStorage 字样（此时实验台还没内嵌）。
 widget_html = widget_html.replace('localStorage', '内存存储')
+assert 'localStorage' not in widget_html
+
+# 实验台（srcdoc 里的 lab-nb.html）不能照搬上面的字符串替换：那样会留下一堆未定义的
+# `内存存储.setItem(...)`，初始化的 afterChange() 直接抛 ReferenceError，台面空白（D01）。
+# 这里改成给实验台注入一个真正定义好的内存 Storage（__nbStore），再把它的 localStorage
+# 调用指向它。接口与 Storage 一致（getItem/setItem/removeItem/clear/key/length）。
+NB_MEM_SHIM = (
+    "<script>var __nbStore=(function(){var m={};return{"
+    "getItem:function(k){return Object.prototype.hasOwnProperty.call(m,k)?m[k]:null},"
+    "setItem:function(k,v){m[k]=String(v)},"
+    "removeItem:function(k){delete m[k]},"
+    "clear:function(){m={}},"
+    "key:function(i){return Object.keys(m)[i]||null},"
+    "get length(){return Object.keys(m).length}}})();</script>\n"
+)
+nb_widget = nb_source
+if nb_widget:
+    assert nb_widget.count('<script>') == 1, 'lab-nb.html 脚本块数量变了，检查 shim 注入位置'
+    nb_widget = nb_widget.replace('localStorage', '__nbStore')
+    nb_widget = nb_widget.replace('<script>', NB_MEM_SHIM + '<script>', 1)
+    assert 'localStorage' not in nb_widget
+widget_html = inline_lab_nb(widget_html, nb_widget)
+assert '内存存储' not in nb_widget
 assert 'localStorage' not in widget_html
 # Widget 体积上限：1MB 是 7587ba3 自设的 guard，没有任何平台文档说 widget
 # 不能超过 1MB；7 年级上线（98 个演示）时 standalone 已到 1076KB，任何一个

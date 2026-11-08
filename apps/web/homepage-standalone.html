@@ -4470,7 +4470,11 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .rep{margin:10px 0;padding:0;list-style:none}.rep li{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)}
 .rep .lost{color:#ffb4b4}
 textarea{width:100%;min-height:90px;background:var(--panel2);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px;font:inherit}
-@media (max-width:900px){#app{grid-template-columns:auto 1fr 0}#lib{display:none}#left{width:260px}}
+#libBtn{display:none}
+/* D03：窄屏不能把器材架整个藏掉（那是唯一的加器材入口），改成从右边滑出的抽屉。 */
+@media (max-width:900px){#app{grid-template-columns:auto 1fr 0}#left{width:260px}#libBtn{display:inline-block}
+  #lib{position:fixed;top:52px;right:0;bottom:0;width:min(260px,80vw);z-index:6;transform:translateX(100%);transition:transform .18s;box-shadow:-6px 0 18px #0007}
+  #lib.open{transform:none}}
 &lt;/style&gt;
 &lt;/head&gt;
 &lt;body&gt;
@@ -4490,6 +4494,7 @@ textarea{width:100%;min-height:90px;background:var(--panel2);color:var(--tx);bor
     &lt;button class=&quot;tb&quot; id=&quot;redo&quot; title=&quot;重做 Ctrl+Y&quot;&gt;重做&lt;/button&gt;
     &lt;button class=&quot;tb&quot; id=&quot;tidy&quot; title=&quot;一键整理&quot;&gt;整理&lt;/button&gt;
     &lt;button class=&quot;tb&quot; id=&quot;clear&quot;&gt;清空台面&lt;/button&gt;
+    &lt;button class=&quot;tb&quot; id=&quot;libBtn&quot; title=&quot;器材架&quot; aria-expanded=&quot;false&quot;&gt;＋ 器材&lt;/button&gt;
     &lt;span id=&quot;timer&quot;&gt;10:00&lt;/span&gt;
     &lt;button id=&quot;submit&quot;&gt;提交&lt;/button&gt;
   &lt;/header&gt;
@@ -4676,7 +4681,15 @@ function actRaw(a){
   switch(a.t){
   case &#x27;add&#x27;:{const id=addEnt(s,a.type,a.x,a.y,a.props);return{ok:1,id}}
   case &#x27;move&#x27;:{const e=E[a.id];e.x=a.x;e.y=a.y;return{ok:1}}
-  case &#x27;del&#x27;:{if(E[a.id]){delete E[a.id];s.links=s.links.filter(l=&gt;l.from!==a.id&amp;&amp;l.to!==a.id);s.binds=(s.binds||[]).filter(b=&gt;b.to!==a.id&amp;&amp;!srcsOf(b).includes(a.id))}else s.links=s.links.filter(l=&gt;l.id!==a.id);return{ok:1}}
+  case &#x27;del&#x27;:{
+    if(E[a.id]){
+      delete E[a.id];
+      s.links=s.links.filter(l=&gt;l.from!==a.id&amp;&amp;l.to!==a.id);
+      // U01 修复：删除器材时，同时删除以它为源或目标的绑定，防止崩溃
+      s.binds=(s.binds||[]).filter(b=&gt;b.to!==a.id&amp;&amp;!srcsOf(b).includes(a.id));
+    }else s.links=s.links.filter(l=&gt;l.id!==a.id);
+    return{ok:1}
+  }
   case &#x27;dup&#x27;:{const e=E[a.id];const id=addEnt(s,e.type,e.x+30,e.y+30,clone(e.props));return{ok:1,id}}
   case &#x27;rename&#x27;:{E[a.id].name=String(a.name).slice(0,16)||E[a.id].name;return{ok:1}}
   case &#x27;rotate&#x27;:{const p=E[a.id].props;p.rot=((p.rot||0)+15)%360;return{ok:1}}
@@ -4960,12 +4973,28 @@ const byType=(s,t)=&gt;{for(const id in s.entities)if(s.entities[id].type===t)re
 /* ========== 运行状态 ========== */
 const LS={free:&#x27;nb-lab-free-v1&#x27;,hist:&#x27;nb-lab-exam-v1&#x27;,find:&#x27;nb-lab-find-v1&#x27;};
 const PR=&#x27;nb-lab-practice-v1&#x27;; // 练习进度：中途离开再回来，接着做
+const EX=&#x27;nb-lab-exam-run-v1&#x27;; // 考试进度：刷新后接着考，剩余时间按截止时刻算
+// 存储兜底：浏览器禁用本地存储（隐私模式、被沙箱的 iframe）时 localStorage 访问会直接抛错，
+// 这里退回内存，保证台面照常工作，只是刷新后不保留。
+const store=(function(){try{const t=&#x27;__nb_t&#x27;;localStorage.setItem(t,&#x27;1&#x27;);localStorage.removeItem(t);return localStorage}catch(e){const m={};return{getItem:k=&gt;Object.prototype.hasOwnProperty.call(m,k)?m[k]:null,setItem:(k,v)=&gt;{m[k]=String(v)},removeItem:k=&gt;{delete m[k]}}}})();
+// 撤销/重做快照 = 台面 + 步骤完成状态。只存台面的话，撤销后步骤仍然打着 ✓（D04）。
+// 预测步不回退：预测是学生写下的，不是台面上的操作。
+function snapStr(){return JSON.stringify({S,steps:run?run.steps.map(t=&gt;({d:t.done,o:t.op})):null})}
+function loadSnap(str){const o=JSON.parse(str);if(!(o&amp;&amp;o.S)){S=o;return}S=o.S;
+  if(run&amp;&amp;xp&amp;&amp;o.steps)o.steps.forEach((t,i)=&gt;{const st=run.steps[i];if(!st||xp.steps[i].type===&#x27;predict&#x27;)return;st.done=!!t.d;if(t.o)st.op=t.o;else delete st.op})}
+// 存档含完整的 run（步骤、预测值、操作数、拒绝数、已用时间），考试再加截止时刻（D05/D06）。
+function persist(){if(!run||!xp||run.finished)return;
+  const base={id:xp.id,S,steps:run.steps.map(t=&gt;({d:t.done,o:t.op||0,p:t.pred})),ops:run.ops,errors:run.errors||0,used:Date.now()-run.t0};
+  try{if(mode===&#x27;practice&#x27;)store.setItem(PR,JSON.stringify(base));else if(mode===&#x27;exam&#x27;)store.setItem(EX,JSON.stringify({...base,end:run.end}))}catch(e){}}
+function restoreRun(sv){S=sv.S;run.ops=sv.ops||0;run.errors=sv.errors||0;if(sv.used&gt;=0)run.t0=Date.now()-sv.used;
+  (sv.steps||[]).forEach((d,i)=&gt;{const st=run.steps[i];if(!st)return;if(d&amp;&amp;typeof d===&#x27;object&#x27;){st.done=!!d.d;if(d.o)st.op=d.o;if(d.p!==undefined)st.pred=d.p}else st.done=!!d})}
+function tryRestore(sv){const S0=S;try{restoreRun(sv);evaluate(S);return true}catch(e){S=S0;run.steps.forEach(t=&gt;{t.done=false;delete t.op;delete t.pred});run.ops=0;run.errors=0;run.t0=Date.now();return false}}
 let mode=&#x27;free&#x27;,xp=null,run=null,D={},sel=null,selLink=null,cardOpen=false,bindPick=null,exprPick=null; // bindPick：正在等学生点一个器材，把它的值绑到 {to, k} 上
 let view={x:40,y:30,z:1},undoSt=[],redoSt=[],timerId=null,libFilter=&#x27;全部&#x27;,libQ=&#x27;&#x27;,xpComposing=false;
 const $=id=&gt;document.getElementById(id);
 
 function commit(a,opt={}){
-  const snap=JSON.stringify(S);const r=act(a);
+  const snap=snapStr();const r=act(a);
   // 滑杆、数字框拖过头（set）不是数学错，不计入考试的&quot;被拒绝&quot;次数。
   if(!r.ok){toast(r.why,true);if(run&amp;&amp;a.t!==&#x27;set&#x27;)run.errors++;showCardWhy(r.why);render();return r}
   clearCardWhy();
@@ -4975,8 +5004,8 @@ function commit(a,opt={}){
   afterChange();return r;
 }
 let lastCo=null;
-function afterChange(){D=evaluate(S);if(mode===&#x27;free&#x27;)localStorage.setItem(LS.free,JSON.stringify(S));
-  if(mode===&#x27;practice&#x27;&amp;&amp;xp&amp;&amp;run&amp;&amp;!run.finished)localStorage.setItem(PR,JSON.stringify({id:xp.id,S,steps:run.steps.map(s=&gt;s.done),ops:run.ops}));
+function afterChange(){D=evaluate(S);if(mode===&#x27;free&#x27;)store.setItem(LS.free,JSON.stringify(S));
+  persist();
   render()}
 /* 设置卡里的拒绝原因：留在卡上，直到下一次成功操作。 */
 function showCardWhy(why){const c=$(&#x27;card&#x27;);if(!c||c.style.display===&#x27;none&#x27;)return;let el=c.querySelector(&#x27;.why-err&#x27;);if(!el){el=document.createElement(&#x27;div&#x27;);el.className=&#x27;why-err&#x27;;c.appendChild(el)}el.textContent=&#x27;不行：&#x27;+why}
@@ -4986,7 +5015,7 @@ function ruleHidden(){return mode!==&#x27;free&#x27;&amp;&amp;!(run&amp;&amp;run
 const hideSig=(e,x)=&gt;e.type===&#x27;box&#x27;&amp;&amp;ruleHidden()&amp;&amp;x.tx.includes(&#x27;输出 =&#x27;);
 const viewType=e=&gt;(e.type===&#x27;box&#x27;&amp;&amp;ruleHidden())?{...TYPES.box,fields:[]}:TYPES[e.type];
 function track(){const D2=evaluate(S);for(const st of run.steps){if(st.done)continue;if(xp.steps[st.i].type===&#x27;predict&#x27;?st.pred!==undefined:xp.steps[st.i].check(S,D2)){st.done=true;st.op=run.ops;if(mode===&#x27;practice&#x27;)toast(&#x27;✓ &#x27;+xp.steps[st.i].label)}else break}
-  if(mode===&#x27;practice&#x27;&amp;&amp;run.steps.every(s=&gt;s.done)&amp;&amp;!run.finished){run.finished=true;localStorage.removeItem(PR);setTimeout(practiceDone,500)}}
+  if(mode===&#x27;practice&#x27;&amp;&amp;run.steps.every(s=&gt;s.done)&amp;&amp;!run.finished){run.finished=true;store.removeItem(PR);setTimeout(practiceDone,500)}}
 
 /* ========== 画台面 ========== */
 function render(){
@@ -5188,11 +5217,17 @@ function derivedLines(e){const p=e.props;const n=x=&gt;String(+x.toFixed(2));
   return[]}
 function buildCard(e){const cd=$(&#x27;card&#x27;),T=viewType(e);cd.dataset.for=e.id;cd.dataset.v=JSON.stringify(e.props)+e.name;
   let h=`&lt;h4&gt;${T.label} · 设置&lt;/h4&gt;&lt;input class=&quot;name&quot; data-name value=&quot;${esc(e.name)}&quot;&gt;&lt;div class=&quot;state&quot;&gt;${esc(stateLine(e))}&lt;/div&gt;`;
-  for(const f of T.fields){const v=e.props[f.k];const bd=(S.binds||[]).find(x=&gt;x.to===e.id&amp;&amp;x.k===f.k);if(bd){h+=`&lt;div class=&quot;fld&quot;&gt;&lt;label&gt;&lt;span&gt;${f.label}&lt;/span&gt;&lt;b&gt;${bd.expr?&#x27;ƒ &#x27;+esc(bd.expr):&#x27;← &#x27;+esc((S.entities[bd.from]||{name:&#x27;（已删）&#x27;}).name)}&lt;/b&gt;&lt;/label&gt;&lt;div class=&quot;ctl&quot;&gt;&lt;span class=&quot;muted&quot;&gt;由它决定：${v}&lt;/span&gt;&lt;button class=&quot;btn&quot; data-unbind=&quot;${f.k}&quot;&gt;解除绑定&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;`;continue}if(f.choices){h+=`&lt;div class=&quot;fld&quot;&gt;&lt;label&gt;&lt;span&gt;${f.label}&lt;/span&gt;&lt;/label&gt;&lt;div class=&quot;ctl seg-choice&quot;&gt;${f.choices.map((c,i)=&gt;`&lt;button class=&quot;pm${v===i?&#x27; on&#x27;:&#x27;&#x27;}&quot; data-pick=&quot;${f.k}&quot; data-pv=&quot;${i}&quot;&gt;${c}&lt;/button&gt;`).join(&#x27;&#x27;)}&lt;/div&gt;&lt;/div&gt;`;continue}h+=`&lt;div class=&quot;fld&quot;&gt;&lt;label&gt;&lt;span&gt;${f.label}&lt;/span&gt;&lt;/label&gt;&lt;div class=&quot;ctl&quot;&gt;&lt;button class=&quot;pm&quot; data-pm=&quot;${f.k}&quot; data-dv=&quot;-${f.step||1}&quot;&gt;−&lt;/button&gt;&lt;input type=&quot;range&quot; data-f=&quot;${f.k}&quot; min=&quot;${f.min}&quot; max=&quot;${f.max}&quot; step=&quot;${f.step||1}&quot; value=&quot;${v}&quot;&gt;&lt;button class=&quot;pm&quot; data-pm=&quot;${f.k}&quot; data-dv=&quot;${f.step||1}&quot;&gt;+&lt;/button&gt;&lt;input type=&quot;number&quot; data-fn=&quot;${f.k}&quot; value=&quot;${v}&quot;&gt;&lt;/div&gt;&lt;/div&gt;`}
-  for(const f of T.fields){if(!(S.binds||[]).some(x=&gt;x.to===e.id&amp;&amp;x.k===f.k))h+=`&lt;button class=&quot;btn&quot; data-bindpick=&quot;${f.k}&quot;&gt;🔗 把「${esc(f.label.replace(/（.*/,&#x27;&#x27;))}」绑到一个数&lt;/button&gt;`}
-  for(const f of T.fields){if(f.choices||(S.binds||[]).some(x=&gt;x.to===e.id&amp;&amp;x.k===f.k))continue;h+=`&lt;button class=&quot;btn&quot; data-exprpick=&quot;${f.k}&quot;&gt;ƒx 写表达式&lt;/button&gt;`;
-    if(exprPick&amp;&amp;exprPick.to===e.id&amp;&amp;exprPick.k===f.k)h+=`&lt;div class=&quot;fld&quot;&gt;&lt;label&gt;&lt;span&gt;${esc(f.label.replace(/（.*/,&#x27;&#x27;))} =&lt;/span&gt;&lt;/label&gt;&lt;div class=&quot;ctl&quot;&gt;&lt;input data-exprtext=&quot;${f.k}&quot; placeholder=&quot;例如 长 ÷ 2&quot; style=&quot;width:150px&quot;&gt;&lt;button class=&quot;btn&quot; data-exprok=&quot;${f.k}&quot;&gt;确定&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;`}
-  if(bindPick&amp;&amp;bindPick.to===e.id){const srcs=Object.keys(S.entities).filter(id=&gt;id!==e.id&amp;&amp;TYPES[S.entities[id].type].out===&#x27;value&#x27;);h+=`&lt;div class=&quot;muted&quot; style=&quot;font-size:12px;margin-top:6px&quot;&gt;或直接选一个变量（点名字就绑上）：&lt;/div&gt;&lt;div class=&quot;card-row&quot;&gt;${srcs.map(id=&gt;`&lt;button class=&quot;btn&quot; data-bindfrom=&quot;${id}&quot; data-bindk=&quot;${bindPick.k}&quot;&gt;${esc(S.entities[id].name)}&lt;/button&gt;`).join(&#x27;&#x27;)||&#x27;&lt;span class=&quot;muted&quot;&gt;画布上还没有会出数的器材&lt;/span&gt;&#x27;}&lt;/div&gt;`}
+  for(const f of T.fields){const v=e.props[f.k];const bd=(S.binds||[]).find(x=&gt;x.to===e.id&amp;&amp;x.k===f.k);
+    // UI: 用 fld-label 替代 label/span，字段名更清晰
+    if(bd){h+=`&lt;div class=&quot;fld&quot;&gt;&lt;div class=&quot;fld-label&quot;&gt;${esc(f.label.replace(/（.*/,&#x27;&#x27;))} &lt;span style=&quot;color:var(--acc);font-weight:600&quot;&gt;${bd.expr?&#x27;ƒ &#x27;+esc(bd.expr):&#x27;← &#x27;+esc((S.entities[bd.from]||{name:&#x27;（已删）&#x27;}).name)}&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;ctl&quot;&gt;&lt;span class=&quot;muted&quot;&gt;当前值：${v}&lt;/span&gt;&lt;button class=&quot;btn&quot; data-unbind=&quot;${f.k}&quot;&gt;解除绑定&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;`;continue}
+    if(f.choices){h+=`&lt;div class=&quot;fld&quot;&gt;&lt;div class=&quot;fld-label&quot;&gt;${esc(f.label.replace(/（.*/,&#x27;&#x27;))}&lt;/div&gt;&lt;div class=&quot;ctl seg-choice&quot;&gt;${f.choices.map((c,i)=&gt;`&lt;button class=&quot;pm${v===i?&#x27; on&#x27;:&#x27;&#x27;}&quot; data-pick=&quot;${f.k}&quot; data-pv=&quot;${i}&quot;&gt;${c}&lt;/button&gt;`).join(&#x27;&#x27;)}&lt;/div&gt;&lt;/div&gt;`;continue}
+    // 数字字段：标签 + [−][slider][+][数字框]，下方小按钮用于绑定/表达式
+    h+=`&lt;div class=&quot;fld&quot;&gt;&lt;div class=&quot;fld-label&quot;&gt;${esc(f.label.replace(/（.*/,&#x27;&#x27;))}&lt;/div&gt;&lt;div class=&quot;ctl&quot;&gt;&lt;button class=&quot;pm&quot; data-pm=&quot;${f.k}&quot; data-dv=&quot;-${f.step||1}&quot;&gt;−&lt;/button&gt;&lt;input type=&quot;range&quot; data-f=&quot;${f.k}&quot; min=&quot;${f.min}&quot; max=&quot;${f.max}&quot; step=&quot;${f.step||1}&quot; value=&quot;${v}&quot;&gt;&lt;button class=&quot;pm&quot; data-pm=&quot;${f.k}&quot; data-dv=&quot;${f.step||1}&quot;&gt;+&lt;/button&gt;&lt;input type=&quot;number&quot; data-fn=&quot;${f.k}&quot; value=&quot;${v}&quot;&gt;&lt;/div&gt;`;
+    // 绑定与表达式按钮内联在字段下方
+    h+=`&lt;div style=&quot;display:flex;gap:4px;margin-top:3px&quot;&gt;&lt;button class=&quot;btn&quot; data-bindpick=&quot;${f.k}&quot;&gt;🔗 绑定&lt;/button&gt;&lt;button class=&quot;btn&quot; data-exprpick=&quot;${f.k}&quot;&gt;ƒx 表达式&lt;/button&gt;&lt;/div&gt;`;
+    if(exprPick&amp;&amp;exprPick.to===e.id&amp;&amp;exprPick.k===f.k)h+=`&lt;div class=&quot;ctl&quot; style=&quot;margin-top:6px&quot;&gt;&lt;input data-exprtext=&quot;${f.k}&quot; placeholder=&quot;例如 长 ÷ 2&quot; style=&quot;flex:1&quot;&gt;&lt;button class=&quot;btn&quot; data-exprok=&quot;${f.k}&quot;&gt;确定&lt;/button&gt;&lt;/div&gt;`;
+    h+=`&lt;/div&gt;`}
+  if(bindPick&amp;&amp;bindPick.to===e.id){const srcs=Object.keys(S.entities).filter(id=&gt;id!==e.id&amp;&amp;TYPES[S.entities[id].type].out===&#x27;value&#x27;);h+=`&lt;div class=&quot;muted&quot; style=&quot;font-size:12px;margin-top:6px&quot;&gt;点一个数来绑：&lt;/div&gt;&lt;div class=&quot;card-row&quot;&gt;${srcs.map(id=&gt;`&lt;button class=&quot;btn&quot; data-bindfrom=&quot;${id}&quot; data-bindk=&quot;${bindPick.k}&quot;&gt;${esc(S.entities[id].name)}&lt;/button&gt;`).join(&#x27;&#x27;)||&#x27;&lt;span class=&quot;muted&quot;&gt;台面上还没有会出数的器材&lt;/span&gt;&#x27;}&lt;/div&gt;`}
   if(!T.fields.length)h+=`&lt;div class=&quot;muted&quot; style=&quot;font-size:12px&quot;&gt;${T.accepts===&#x27;fn&#x27;?&#x27;它显示连进来的直线。&#x27;:&#x27;它的值由连进来的器材决定，拖别的器材的蓝点连过来。&#x27;}&lt;/div&gt;`;
   // 只读推导值：由属性算出来，不能改，让学生在卡上直接看到。
   const dv=derivedLines(e);if(dv.length)h+=`&lt;div class=&quot;derived&quot;&gt;${dv.map(t=&gt;`&lt;div&gt;${esc(t)}&lt;/div&gt;`).join(&#x27;&#x27;)}&lt;/div&gt;`;
@@ -5239,16 +5274,16 @@ svg.addEventListener(&#x27;pointerdown&#x27;,ev=&gt;{const t=ev.target;svg.setPo
   sel=null;selLink=null;cardOpen=false;bindPick=null;drag={m:&#x27;pan&#x27;,sx:ev.clientX,sy:ev.clientY,vx:view.x,vy:view.y};svg.classList.add(&#x27;panning&#x27;);render()});
 svg.addEventListener(&#x27;pointermove&#x27;,ev=&gt;{if(!drag)return;const [wx,wy]=toWorld(ev.clientX,ev.clientY);
   if(drag.m===&#x27;pan&#x27;){view.x=drag.vx+ev.clientX-drag.sx;view.y=drag.vy+ev.clientY-drag.sy;render()}
-  else if(drag.m===&#x27;move&#x27;){if(!drag.moved&amp;&amp;Math.hypot(ev.clientX-drag.sx,ev.clientY-drag.sy)&lt;6)return;if(!drag.moved){undoSt.push(JSON.stringify(S));redoSt=[];drag.moved=true}
+  else if(drag.m===&#x27;move&#x27;){if(!drag.moved&amp;&amp;Math.hypot(ev.clientX-drag.sx,ev.clientY-drag.sy)&lt;6)return;if(!drag.moved){undoSt.push(snapStr());redoSt=[];drag.moved=true}
     const e=S.entities[drag.id];const [bw,bh]=size(e);const r=svg.getBoundingClientRect();const vx0=-view.x/view.z,vx1=(r.width-view.x)/view.z,vy0=-view.y/view.z,vy1=(r.height-view.y)/view.z;
     let nx=Math.round((wx-drag.dx)/10)*10,ny=Math.round((wy-drag.dy)/10)*10;
     nx=Math.min(Math.max(nx,vx0+10),Math.max(vx0+10,vx1-bw-10));ny=Math.min(Math.max(ny,vy0+10),Math.max(vy0+10,vy1-bh-10));
     act({t:&#x27;move&#x27;,id:drag.id,x:nx,y:ny});render()}
-  else if(drag.m===&#x27;resize&#x27;){const e=S.entities[drag.id];if(!e)return;if(!drag.moved&amp;&amp;Math.hypot(ev.clientX-drag.sx,ev.clientY-drag.sy)&lt;3)return;if(!drag.moved){undoSt.push(JSON.stringify(S));redoSt=[];drag.moved=true}
+  else if(drag.m===&#x27;resize&#x27;){const e=S.entities[drag.id];if(!e)return;if(!drag.moved&amp;&amp;Math.hypot(ev.clientX-drag.sx,ev.clientY-drag.sy)&lt;3)return;if(!drag.moved){undoSt.push(snapStr());redoSt=[];drag.moved=true}
     // 大小 = 指针到器材左边的距离 ÷ 器材的基础宽度（act 里会限制在 50% 到 200%，并按 25% 取整）
     const base=TYPES[e.type].size(e)[0];act({t:&#x27;scale&#x27;,id:e.id,k:(wx-e.x)/base});D=evaluate(S);render()}
   else if(drag.m===&#x27;vtx&#x27;){if(!drag.moved&amp;&amp;Math.hypot(ev.clientX-drag.sx,ev.clientY-drag.sy)&lt;4)return;const e=S.entities[drag.id];if(!e)return;
-    if(!drag.moved){undoSt.push(JSON.stringify(S));redoSt=[];drag.moved=true}
+    if(!drag.moved){undoSt.push(snapStr());redoSt=[];drag.moved=true}
     const kk=e.k||1;const r=act({t:&#x27;vtx&#x27;,id:e.id,lx:(wx-e.x)/kk,ly:(wy-e.y)/kk});if(r.ok){D=evaluate(S);render()}}
   else if(drag.m===&#x27;link&#x27;){markDrop(drag.from,wx,wy,drag.fport);showWhy(ev);const [x1,y1]=anchorOut(drag.from,drag.fport);let p=$(&#x27;world&#x27;).querySelector(&#x27;.templink&#x27;);if(!p){p=document.createElementNS(&#x27;http://www.w3.org/2000/svg&#x27;,&#x27;path&#x27;);p.setAttribute(&#x27;class&#x27;,&#x27;templink&#x27;);$(&#x27;world&#x27;).appendChild(p)}p.setAttribute(&#x27;d&#x27;,`M${x1},${y1} L${wx},${wy}`)}});
 svg.addEventListener(&#x27;pointerup&#x27;,ev=&gt;{if(!drag)return;const d=drag;drag=null;svg.classList.remove(&#x27;panning&#x27;);
@@ -5284,11 +5319,11 @@ document.addEventListener(&#x27;keydown&#x27;,ev=&gt;{if(ev.target.closest(&#x27
   if(sel&amp;&amp;ev.key.startsWith(&#x27;Arrow&#x27;)){ev.preventDefault();const e=S.entities[sel];if(!e)return;bindPick=null;const dx=ev.key===&#x27;ArrowLeft&#x27;?-10:ev.key===&#x27;ArrowRight&#x27;?10:0,dy=ev.key===&#x27;ArrowUp&#x27;?-10:ev.key===&#x27;ArrowDown&#x27;?10:0;commit({t:&#x27;move&#x27;,id:sel,x:e.x+dx,y:e.y+dy},{coalesce:&#x27;nudge&#x27;+sel})}
   if((ev.ctrlKey||ev.metaKey)&amp;&amp;ev.key.toLowerCase()===&#x27;z&#x27;){ev.preventDefault();ev.shiftKey?redo():undo()}
   if((ev.ctrlKey||ev.metaKey)&amp;&amp;ev.key.toLowerCase()===&#x27;y&#x27;){ev.preventDefault();redo()}});
-function undo(){if(!undoSt.length)return;redoSt.push(JSON.stringify(S));S=JSON.parse(undoSt.pop());if(sel&amp;&amp;!S.entities[sel])sel=null;afterChange()}
-function redo(){if(!redoSt.length)return;undoSt.push(JSON.stringify(S));S=JSON.parse(redoSt.pop());afterChange()}
+function undo(){if(!undoSt.length)return;redoSt.push(snapStr());loadSnap(undoSt.pop());if(sel&amp;&amp;!S.entities[sel])sel=null;afterChange()}
+function redo(){if(!redoSt.length)return;undoSt.push(snapStr());loadSnap(redoSt.pop());afterChange()}
 $(&#x27;undo&#x27;).onclick=undo;$(&#x27;redo&#x27;).onclick=redo;
-$(&#x27;clear&#x27;).onclick=()=&gt;{if(!Object.keys(S.entities).length)return;undoSt.push(JSON.stringify(S));const keep=S.nid;S=blankScene();S.nid=keep;sel=null;afterChange();toast(&#x27;台面已清空，可以撤销&#x27;)};
-$(&#x27;tidy&#x27;).onclick=()=&gt;{undoSt.push(JSON.stringify(S));cardOpen=false;let x=40,y=40,rowH=0;const W=Math.max(700,(svg.clientWidth-80)/view.z);
+$(&#x27;clear&#x27;).onclick=()=&gt;{if(!Object.keys(S.entities).length)return;undoSt.push(snapStr());const keep=S.nid;S=blankScene();S.nid=keep;sel=null;if(run)run.steps.forEach((t,i)=&gt;{if(xp.steps[i].type!==&#x27;predict&#x27;){t.done=false;delete t.op}});afterChange();toast(&#x27;台面已清空，可以撤销&#x27;)};
+$(&#x27;tidy&#x27;).onclick=()=&gt;{undoSt.push(snapStr());cardOpen=false;let x=40,y=40,rowH=0;const W=Math.max(700,(svg.clientWidth-80)/view.z);
   Object.values(S.entities).forEach(e=&gt;{const [w,h]=size(e);if(x+w&gt;W){x=40;y+=rowH+90;rowH=0}e.x=x;e.y=y;x+=w+70;rowH=Math.max(rowH,h)});afterChange();fit()};
 
 /* ========== 器材架（右） ========== */
@@ -5317,10 +5352,14 @@ window.addEventListener(&#x27;pointerup&#x27;,ev=&gt;{if(!tileDrag)return;const 
   const tmp={type:td.type,props:clone(TYPES[td.type].defaults)};const [bw,bh]=size(tmp);
   const vx0=-view.x/view.z,vx1=(r.width-view.x)/view.z,vy0=-view.y/view.z,vy1=(r.height-view.y)/view.z;
   x=Math.min(Math.max(x,vx0+10),Math.max(vx0+10,vx1-bw-10));y=Math.min(Math.max(y,vy0+10),Math.max(vy0+10,vy1-bh-10));
-  const res=commit({t:&#x27;add&#x27;,type:td.type,x:Math.round(x/10)*10,y:Math.round(y/10)*10});if(res.ok){sel=res.id;cardOpen=true;$(&#x27;card&#x27;).dataset.v=&#x27;&#x27;;render()}});
+  const res=commit({t:&#x27;add&#x27;,type:td.type,x:Math.round(x/10)*10,y:Math.round(y/10)*10});if(res.ok){sel=res.id;cardOpen=true;$(&#x27;card&#x27;).dataset.v=&#x27;&#x27;;setLibOpen(false);render()}});
+// 窄屏抽屉式器材架（D03）：点“＋ 器材”开合；点一下器材就加到台面中间，加完自动收起；Esc 也能收。
+function setLibOpen(on){$(&#x27;lib&#x27;).classList.toggle(&#x27;open&#x27;,on);$(&#x27;libBtn&#x27;).setAttribute(&#x27;aria-expanded&#x27;,on?&#x27;true&#x27;:&#x27;false&#x27;)}
+$(&#x27;libBtn&#x27;).onclick=()=&gt;setLibOpen(!$(&#x27;lib&#x27;).classList.contains(&#x27;open&#x27;));
+window.addEventListener(&#x27;keydown&#x27;,ev=&gt;{if(ev.key===&#x27;Escape&#x27;&amp;&amp;$(&#x27;lib&#x27;).classList.contains(&#x27;open&#x27;))setLibOpen(false)});
 
 /* ========== 实验库（左） + 步骤 ========== */
-function hist(){try{return JSON.parse(localStorage.getItem(LS.hist))||{}}catch(e){return{}}}
+function hist(){try{return JSON.parse(store.getItem(LS.hist))||{}}catch(e){return{}}}
 let openXp=null;
 function renderXpList(){const doms=[&#x27;全部&#x27;,&#x27;数与代数&#x27;,&#x27;图形与几何&#x27;,&#x27;统计与概率&#x27;,&#x27;应用题&#x27;];const q=libQ;
   let h=`&lt;input class=&quot;search&quot; id=&quot;xpSearch&quot; placeholder=&quot;搜实验 / 知识点&quot; value=&quot;${esc(q)}&quot;&gt;&lt;div class=&quot;chips&quot;&gt;${doms.map(d=&gt;`&lt;span class=&quot;chip${libFilter===d?&#x27; on&#x27;:&#x27;&#x27;}&quot; data-dom=&quot;${d}&quot;&gt;${d}&lt;/span&gt;`).join(&#x27;&#x27;)}&lt;/div&gt;`;
@@ -5335,9 +5374,19 @@ $(&#x27;paneLib&#x27;).addEventListener(&#x27;click&#x27;,ev=&gt;{const c=ev.tar
   const x=ev.target.closest(&#x27;[data-xp]&#x27;);if(x){openXp=openXp===x.dataset.xp?null:x.dataset.xp;renderXpList()}});
 function renderSteps(){const p=$(&#x27;paneSteps&#x27;);if(!run){p.innerHTML=`&lt;div class=&quot;q&quot;&gt;自由探究：没有题，也没有分。把器材拖上台，连一连、调一调，台面会自己告诉你结果。&lt;/div&gt;&lt;div class=&quot;muted&quot;&gt;想按步骤做？到“实验库”选一个实验。&lt;/div&gt;`;return}
   const tot=xp.steps.reduce((a,s)=&gt;a+s.score,0);let h=`&lt;div class=&quot;q&quot;&gt;&lt;b&gt;${esc(xp.title)}&lt;/b&gt;&lt;div style=&quot;margin-top:4px&quot;&gt;${esc(xp.q)}&lt;/div&gt;&lt;/div&gt;`;
-  if(mode===&#x27;exam&#x27;){h+=`&lt;div class=&quot;muted&quot;&gt;考试：共 ${xp.steps.length} 步，满分 ${tot} 分。没有提示，做完点右上角“提交”。&lt;/div&gt;&lt;div class=&quot;muted&quot; style=&quot;margin-top:8px&quot;&gt;操作 ${run.ops} 次&lt;/div&gt;`}
-  else{const cur=run.steps.findIndex(s=&gt;!s.done);xp.steps.forEach((s,i)=&gt;{const done=run.steps[i].done;h+=`&lt;div class=&quot;step${done?&#x27; done&#x27;:&#x27;&#x27;}${i===cur?&#x27; cur&#x27;:&#x27;&#x27;}&quot;&gt;&lt;span class=&quot;n&quot;&gt;${done?&#x27;✓&#x27;:i+1}&lt;/span&gt;&lt;div&gt;${esc(s.label)}${i===cur?`&lt;div class=&quot;hint&quot;&gt;提示：${esc(s.hint)}&lt;/div&gt;${s.type===&#x27;predict&#x27;?`&lt;div class=&quot;card-row&quot;&gt;&lt;input data-predict-input=&quot;${i}&quot; type=&quot;number&quot; style=&quot;width:120px&quot; placeholder=&quot;你的预测&quot;&gt;&lt;button class=&quot;btn&quot; data-predict=&quot;${i}&quot;&gt;猜好了&lt;/button&gt;&lt;/div&gt;`:&#x27;&#x27;}`:&#x27;&#x27;}&lt;/div&gt;&lt;span class=&quot;sc&quot;&gt;${s.score} 分&lt;/span&gt;&lt;/div&gt;`})}
-  p.innerHTML=h}
+  const predBox=(i,s)=&gt;`&lt;div class=&quot;card-row&quot;&gt;&lt;input data-predict-input=&quot;${i}&quot; type=&quot;number&quot; style=&quot;width:120px&quot; placeholder=&quot;你的预测&quot;&gt;&lt;button class=&quot;btn&quot; data-predict=&quot;${i}&quot;&gt;猜好了&lt;/button&gt;&lt;/div&gt;`;
+  if(mode===&#x27;exam&#x27;){h+=`&lt;div class=&quot;muted&quot;&gt;考试：共 ${xp.steps.length} 步，满分 ${tot} 分。没有提示，做完点右上角“提交”。&lt;/div&gt;`;
+    // D02：带预测步的实验在考试里也要能写预测，否则预测步永远不完成、后面的步骤全不判。
+    // 考试只给输入框，不显示提示、不显示猜对猜错。
+    const hasPred=xp.steps.some(s=&gt;s.type===&#x27;predict&#x27;),cur=run.steps.findIndex(s=&gt;!s.done),cs=cur&gt;=0?xp.steps[cur]:null;
+    if(cs&amp;&amp;cs.type===&#x27;predict&#x27;)h+=`&lt;div class=&quot;step cur&quot; style=&quot;margin-top:8px&quot;&gt;&lt;span class=&quot;n&quot;&gt;${cur+1}&lt;/span&gt;&lt;div&gt;${esc(cs.label)}${predBox(cur,cs)}&lt;/div&gt;&lt;span class=&quot;sc&quot;&gt;${cs.score} 分&lt;/span&gt;&lt;/div&gt;`;
+    else if(hasPred)h+=`&lt;div class=&quot;muted&quot; style=&quot;margin-top:8px&quot;&gt;预测已记下。&lt;/div&gt;`;
+    h+=`&lt;div class=&quot;muted&quot; style=&quot;margin-top:8px&quot;&gt;操作 ${run.ops} 次&lt;/div&gt;`}
+  else{const cur=run.steps.findIndex(s=&gt;!s.done);xp.steps.forEach((s,i)=&gt;{const done=run.steps[i].done;h+=`&lt;div class=&quot;step${done?&#x27; done&#x27;:&#x27;&#x27;}${i===cur?&#x27; cur&#x27;:&#x27;&#x27;}&quot;&gt;&lt;span class=&quot;n&quot;&gt;${done?&#x27;✓&#x27;:i+1}&lt;/span&gt;&lt;div&gt;${esc(s.label)}${i===cur?`&lt;div class=&quot;hint&quot;&gt;提示：${esc(s.hint)}&lt;/div&gt;${s.type===&#x27;predict&#x27;?predBox(i,s):&#x27;&#x27;}`:&#x27;&#x27;}&lt;/div&gt;&lt;span class=&quot;sc&quot;&gt;${s.score} 分&lt;/span&gt;&lt;/div&gt;`})}
+  // 重画步骤栏时保住预测输入框里已输入的字和焦点（D11 的一小部分）。
+  const old=p.querySelector(&#x27;[data-predict-input]&#x27;),ov=old?old.value:&#x27;&#x27;,oi=old?old.dataset.predictInput:null,hadFocus=!!old&amp;&amp;document.activeElement===old;
+  p.innerHTML=h;
+  if(oi!==null){const nw=p.querySelector(`[data-predict-input=&quot;${oi}&quot;]`);if(nw&amp;&amp;ov!==&#x27;&#x27;){nw.value=ov;if(hadFocus)nw.focus()}}}
 document.querySelector(&#x27;.tabs&#x27;).onclick=ev=&gt;{const b=ev.target.closest(&#x27;button&#x27;);if(!b)return;showTab(b.dataset.tab)};
 function showTab(t){document.querySelectorAll(&#x27;.tabs button&#x27;).forEach(b=&gt;b.classList.toggle(&#x27;on&#x27;,b.dataset.tab===t));$(&#x27;paneLib&#x27;).style.display=t===&#x27;lib&#x27;?&#x27;block&#x27;:&#x27;none&#x27;;$(&#x27;paneSteps&#x27;).style.display=t===&#x27;steps&#x27;?&#x27;block&#x27;:&#x27;none&#x27;}
 $(&#x27;toggleLeft&#x27;).onclick=()=&gt;{$(&#x27;left&#x27;).classList.toggle(&#x27;closed&#x27;);setTimeout(render,220)};
@@ -5911,17 +5960,20 @@ const P16=[
 ];
 P16.forEach(p=&gt;XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
 
-function startXp(id,m){xp=XP.find(x=&gt;x.id===id);if(!xp)return;mode=m;S=blankScene();xp.build(S);undoSt=[];redoSt=[];sel=null;cardOpen=false;
+function startXp(id,m,o){xp=XP.find(x=&gt;x.id===id);if(!xp)return;mode=m;S=blankScene();xp.build(S);undoSt=[];redoSt=[];sel=null;cardOpen=false;
   run={steps:xp.steps.map((s,i)=&gt;({i,done:false})),ops:0,errors:0,t0:Date.now(),finished:false};
-  if(m===&#x27;practice&#x27;){try{const sv=JSON.parse(localStorage.getItem(PR)||&#x27;null&#x27;);if(sv&amp;&amp;sv.id===id&amp;&amp;sv.S){S=sv.S;run.ops=sv.ops||0;(sv.steps||[]).forEach((d,i)=&gt;{if(run.steps[i])run.steps[i].done=!!d});toast(&#x27;接着上次做：已完成的步骤保留&#x27;)}}catch(e){localStorage.removeItem(PR)}}
+  let resumed=false;
+  if(m===&#x27;practice&#x27;){if(o&amp;&amp;o.fresh)store.removeItem(PR);else{try{const sv=JSON.parse(store.getItem(PR)||&#x27;null&#x27;);if(sv&amp;&amp;sv.id===id&amp;&amp;sv.S){if(tryRestore(sv))toast(&#x27;接着上次做：已完成的步骤保留&#x27;);else store.removeItem(PR)}}catch(e){store.removeItem(PR)}}}
+  if(m===&#x27;exam&#x27;&amp;&amp;o&amp;&amp;o.sv){resumed=tryRestore(o.sv);if(resumed)run.end=o.sv.end}
+  if(!resumed)store.removeItem(EX);
   $(&#x27;title&#x27;).textContent=xp.title;
-  D=evaluate(S);setModeUi();showTab(&#x27;steps&#x27;);fit();if(m===&#x27;exam&#x27;)startTimer();toast(m===&#x27;exam&#x27;?&#x27;考试开始：没有提示，10 分钟&#x27;:&#x27;练习：跟着左边的步骤做，下一步要动的器材会发光&#x27;)}
+  D=evaluate(S);setModeUi();showTab(&#x27;steps&#x27;);fit();if(m===&#x27;exam&#x27;){run.end=run.end||Date.now()+600000;persist();startTimer(run.end)}toast(resumed?&#x27;接着上次的考试，时间继续倒计时&#x27;:m===&#x27;exam&#x27;?&#x27;考试开始：没有提示，10 分钟&#x27;:&#x27;练习：跟着左边的步骤做，下一步要动的器材会发光&#x27;)}
 function setModeUi(){document.querySelectorAll(&#x27;#modeSeg button&#x27;).forEach(b=&gt;b.classList.toggle(&#x27;on&#x27;,b.dataset.mode===mode));
   $(&#x27;timer&#x27;).style.display=$(&#x27;submit&#x27;).style.display=mode===&#x27;exam&#x27;?&#x27;inline-block&#x27;:&#x27;none&#x27;;$(&#x27;menuBtn&#x27;).style.display=mode===&#x27;practice&#x27;?&#x27;inline-block&#x27;:&#x27;none&#x27;;
   $(&#x27;whyBtn&#x27;).style.display=mode===&#x27;exam&#x27;?&#x27;none&#x27;:&#x27;inline-block&#x27;;stopTimerIf()}
 function stopTimerIf(){if(mode!==&#x27;exam&#x27;&amp;&amp;timerId){clearInterval(timerId);timerId=null}}
-function startTimer(){clearInterval(timerId);const end=Date.now()+600000;let warned=false;const tick=()=&gt;{const ms=Math.max(0,end-Date.now());$(&#x27;timer&#x27;).textContent=`⏱ ${String(Math.floor(ms/60000)).padStart(2,&#x27;0&#x27;)}:${String(Math.floor(ms/1000)%60).padStart(2,&#x27;0&#x27;)}`;if(!warned&amp;&amp;ms&lt;=60000&amp;&amp;ms&gt;0){warned=true;toast(&#x27;还剩 1 分钟&#x27;)};if(!ms){clearInterval(timerId);timerId=null;submitExam(true)}};tick();timerId=setInterval(tick,500)}
-function goFree(){mode=&#x27;free&#x27;;xp=null;run=null;sel=null;cardOpen=false;try{S=JSON.parse(localStorage.getItem(LS.free))||blankScene()}catch(e){S=blankScene()}undoSt=[];redoSt=[];$(&#x27;title&#x27;).textContent=&#x27;我的实验&#x27;;setModeUi();showTab(&#x27;lib&#x27;);afterChange()}
+function startTimer(end){clearInterval(timerId);end=end||Date.now()+600000;let warned=false;const tick=()=&gt;{const ms=Math.max(0,end-Date.now());$(&#x27;timer&#x27;).textContent=`⏱ ${String(Math.floor(ms/60000)).padStart(2,&#x27;0&#x27;)}:${String(Math.floor(ms/1000)%60).padStart(2,&#x27;0&#x27;)}`;if(!warned&amp;&amp;ms&lt;=60000&amp;&amp;ms&gt;0){warned=true;toast(&#x27;还剩 1 分钟&#x27;)};if(!ms){clearInterval(timerId);timerId=null;submitExam(true)}};tick();timerId=setInterval(tick,500)}
+function goFree(){store.removeItem(EX);mode=&#x27;free&#x27;;xp=null;run=null;sel=null;cardOpen=false;try{S=JSON.parse(store.getItem(LS.free))||blankScene()}catch(e){S=blankScene()}undoSt=[];redoSt=[];$(&#x27;title&#x27;).textContent=&#x27;我的实验&#x27;;setModeUi();showTab(&#x27;lib&#x27;);afterChange()}
 $(&#x27;modeSeg&#x27;).onclick=ev=&gt;{const b=ev.target.closest(&#x27;button&#x27;);if(!b)return;const m=b.dataset.mode;
   if(m===&#x27;free&#x27;){if(mode===&#x27;exam&#x27;&amp;&amp;!confirm(&#x27;退出考试？这次不计分。&#x27;))return;goFree();return}
   const id=xp?xp.id:(openXp||null);if(!id){$(&#x27;left&#x27;).classList.remove(&#x27;closed&#x27;);showTab(&#x27;lib&#x27;);toast(&#x27;先在实验库里选一个实验&#x27;);return}
@@ -5930,7 +5982,7 @@ $(&#x27;menuBtn&#x27;).onclick=()=&gt;modal(`&lt;h3&gt;练习菜单&lt;/h3&gt;&l
 $(&#x27;submit&#x27;).onclick=()=&gt;submitExam(false);
 // 预测步骤：猜对才得分；猜错只是这一步不得分，不扣别的步。
 function score(){return xp.steps.reduce((a,s,i)=&gt;a+(run.steps[i].done&amp;&amp;(s.type!==&#x27;predict&#x27;||run.steps[i].pred===s.expect)?s.score:0),0)}
-$(&#x27;paneSteps&#x27;).addEventListener(&#x27;click&#x27;,ev=&gt;{const b=ev.target.closest(&#x27;[data-predict]&#x27;);if(!b||!run||!xp)return;const i=+b.dataset.predict;const inp=$(&#x27;paneSteps&#x27;).querySelector(`[data-predict-input=&quot;${i}&quot;]`);if(!inp||inp.value.trim()===&#x27;&#x27;)return;run.steps[i].pred=Number(inp.value);track();renderSteps();render()});
+$(&#x27;paneSteps&#x27;).addEventListener(&#x27;click&#x27;,ev=&gt;{const b=ev.target.closest(&#x27;[data-predict]&#x27;);if(!b||!run||!xp)return;const i=+b.dataset.predict;const inp=$(&#x27;paneSteps&#x27;).querySelector(`[data-predict-input=&quot;${i}&quot;]`);if(!inp||inp.value.trim()===&#x27;&#x27;)return;run.steps[i].pred=Number(inp.value);track();persist();renderSteps();render()});
 function practiceDone(){
   // A1：练习完成时把成绩交给主应用记进复习库（只发一次；没做完不记）。
   // 预测步只有猜对了才算对——练习里唯一真正的“丢分”就是猜错。
@@ -5939,8 +5991,8 @@ function practiceDone(){
   const wrongPred=xp.steps.filter((s,i)=&gt;s.type===&#x27;predict&#x27;&amp;&amp;run.steps[i].done&amp;&amp;run.steps[i].pred!==s.expect).length;
   const doneTx=wrongPred?`${xp.steps.length} 步全部做完，猜错了 ${wrongPred} 步`:`${xp.steps.length} 步全部做对`;
   modal(`&lt;h3&gt;练习完成 🎉&lt;/h3&gt;&lt;p&gt;${doneTx}，用了 ${run.ops} 次操作${run.errors?`，有 ${run.errors} 次被台面拒绝`:&#x27;&#x27;}。&lt;/p&gt;&lt;div class=&quot;q&quot;&gt;&lt;b&gt;为什么&lt;/b&gt;&lt;div&gt;${esc(xp.why)}&lt;/div&gt;&lt;/div&gt;&lt;div style=&quot;display:flex;gap:8px&quot;&gt;&lt;button class=&quot;btn&quot; data-m=&quot;re&quot;&gt;再练一次&lt;/button&gt;&lt;button class=&quot;btn pri&quot; data-m=&quot;exam&quot;&gt;进入考试&lt;/button&gt;&lt;button class=&quot;btn&quot; data-m=&quot;lib&quot;&gt;返回实验库&lt;/button&gt;&lt;/div&gt;`)}
-function submitExam(auto){if(mode!==&#x27;exam&#x27;||!run)return;clearInterval(timerId);timerId=null;const tot=xp.steps.reduce((a,s)=&gt;a+s.score,0),sc=score();const used=Math.round((Date.now()-run.t0)/1000);
-  const H=hist(),h=H[xp.id]||{n:0,lost:{}};h.n++;h.last=`${sc}/${tot}`;xp.steps.forEach((s,i)=&gt;{if(!run.steps[i].done)h.lost[s.label]=(h.lost[s.label]||0)+1});const w=Object.entries(h.lost).sort((a,b)=&gt;b[1]-a[1])[0];h.worst=w?w[0]:&#x27;&#x27;;H[xp.id]=h;localStorage.setItem(LS.hist,JSON.stringify(H));
+function submitExam(auto){if(mode!==&#x27;exam&#x27;||!run||run.finished)return;clearInterval(timerId);timerId=null;store.removeItem(EX);const tot=xp.steps.reduce((a,s)=&gt;a+s.score,0),sc=score();const used=Math.round((Date.now()-run.t0)/1000);
+  const H=hist(),h=H[xp.id]||{n:0,lost:{}};h.n++;h.last=`${sc}/${tot}`;xp.steps.forEach((s,i)=&gt;{if(!run.steps[i].done)h.lost[s.label]=(h.lost[s.label]||0)+1});const w=Object.entries(h.lost).sort((a,b)=&gt;b[1]-a[1])[0];h.worst=w?w[0]:&#x27;&#x27;;H[xp.id]=h;store.setItem(LS.hist,JSON.stringify(H));
   // 把考试结果交给主应用（跨次统计）：主页面收到 labNbExam 消息后记入 math-lab-proc-v1。
   try{window.parent&amp;&amp;window.parent!==window&amp;&amp;window.parent.postMessage({type:&#x27;labNbExam&#x27;,payload:{labId:xp.id,title:xp.title,score:sc,max:tot,opCount:run.ops,lines:xp.steps.map((s,i)=&gt;({id:s.label,got:!!run.steps[i].done}))}},&#x27;*&#x27;)}catch(e){}
   const lost=xp.steps.filter((s,i)=&gt;!run.steps[i].done);
@@ -5951,14 +6003,17 @@ function submitExam(auto){if(mode!==&#x27;exam&#x27;||!run)return;clearInterval(
   run.finished=true}
 function modal(h){$(&#x27;modalBox&#x27;).innerHTML=h;$(&#x27;modal&#x27;).style.display=&#x27;grid&#x27;}
 $(&#x27;modal&#x27;).onclick=ev=&gt;{const b=ev.target.closest(&#x27;[data-m]&#x27;);if(ev.target===$(&#x27;modal&#x27;)){$(&#x27;modal&#x27;).style.display=&#x27;none&#x27;;return}if(!b)return;const m=b.dataset.m,id=xp&amp;&amp;xp.id;$(&#x27;modal&#x27;).style.display=&#x27;none&#x27;;
-  if(m===&#x27;re&#x27;)startXp(id,&#x27;practice&#x27;);else if(m===&#x27;exam&#x27;)startXp(id,&#x27;exam&#x27;);else if(m===&#x27;practice&#x27;)startXp(id,&#x27;practice&#x27;);else if(m===&#x27;exit&#x27;||m===&#x27;lib&#x27;)goFree();else if(m===&#x27;savefind&#x27;){const t=$(&#x27;findTx&#x27;).value.trim();if(t){const a=JSON.parse(localStorage.getItem(LS.find)||&#x27;[]&#x27;);a.unshift({t,at:new Date().toLocaleString(),xp:xp?xp.title:&#x27;自由探究&#x27;});localStorage.setItem(LS.find,JSON.stringify(a.slice(0,50)));postToParent({type:&#x27;labNbDiscovery&#x27;,payload:{text:t,labId:xp?xp.id:null,title:xp?xp.title:&#x27;自由探究&#x27;}});toast(&#x27;记下了&#x27;)}}};
+  if(m===&#x27;re&#x27;)startXp(id,&#x27;practice&#x27;,{fresh:true});else if(m===&#x27;exam&#x27;)startXp(id,&#x27;exam&#x27;);else if(m===&#x27;practice&#x27;)startXp(id,&#x27;practice&#x27;);else if(m===&#x27;exit&#x27;||m===&#x27;lib&#x27;)goFree();else if(m===&#x27;savefind&#x27;){const t=$(&#x27;findTx&#x27;).value.trim();if(t){const a=JSON.parse(store.getItem(LS.find)||&#x27;[]&#x27;);a.unshift({t,at:new Date().toLocaleString(),xp:xp?xp.title:&#x27;自由探究&#x27;});store.setItem(LS.find,JSON.stringify(a.slice(0,50)));postToParent({type:&#x27;labNbDiscovery&#x27;,payload:{text:t,labId:xp?xp.id:null,title:xp?xp.title:&#x27;自由探究&#x27;}});toast(&#x27;记下了&#x27;)}}};
 $(&#x27;whyBtn&#x27;).onclick=()=&gt;{if(!xp){modal(&#x27;&lt;h3&gt;为什么&lt;/h3&gt;&lt;p&gt;自由探究没有标准答案。台面上的每个结果都是按数学规律算出来的——试着改一个数，猜猜会发生什么，再看看猜对没有。&lt;/p&gt;&#x27;);return}
   if(mode===&#x27;practice&#x27;&amp;&amp;!run.finished){modal(`&lt;h3&gt;为什么&lt;/h3&gt;&lt;p&gt;先自己做完再看——发现之后再讲，记得更牢。&lt;/p&gt;`);return}modal(`&lt;h3&gt;为什么&lt;/h3&gt;&lt;p&gt;${esc(xp.why)}&lt;/p&gt;`)};
-$(&#x27;findBtn&#x27;).onclick=()=&gt;{const a=JSON.parse(localStorage.getItem(LS.find)||&#x27;[]&#x27;);modal(`&lt;h3&gt;我的发现&lt;/h3&gt;&lt;textarea id=&quot;findTx&quot; placeholder=&quot;我发现……&quot;&gt;&lt;/textarea&gt;&lt;div style=&quot;display:flex;gap:8px;margin:8px 0&quot;&gt;&lt;button class=&quot;btn pri&quot; data-m=&quot;savefind&quot;&gt;记下来&lt;/button&gt;&lt;/div&gt;${a.slice(0,5).map(f=&gt;`&lt;div class=&quot;muted&quot; style=&quot;font-size:12px;margin-top:6px&quot;&gt;${esc(f.at)} · ${esc(f.xp)}&lt;br&gt;&lt;span style=&quot;color:var(--tx)&quot;&gt;${esc(f.t)}&lt;/span&gt;&lt;/div&gt;`).join(&#x27;&#x27;)}`)};
+$(&#x27;findBtn&#x27;).onclick=()=&gt;{const a=JSON.parse(store.getItem(LS.find)||&#x27;[]&#x27;);modal(`&lt;h3&gt;我的发现&lt;/h3&gt;&lt;textarea id=&quot;findTx&quot; placeholder=&quot;我发现……&quot;&gt;&lt;/textarea&gt;&lt;div style=&quot;display:flex;gap:8px;margin:8px 0&quot;&gt;&lt;button class=&quot;btn pri&quot; data-m=&quot;savefind&quot;&gt;记下来&lt;/button&gt;&lt;/div&gt;${a.slice(0,5).map(f=&gt;`&lt;div class=&quot;muted&quot; style=&quot;font-size:12px;margin-top:6px&quot;&gt;${esc(f.at)} · ${esc(f.xp)}&lt;br&gt;&lt;span style=&quot;color:var(--tx)&quot;&gt;${esc(f.t)}&lt;/span&gt;&lt;/div&gt;`).join(&#x27;&#x27;)}`)};
 
 let toastT;function toast(t,err){const el=$(&#x27;toast&#x27;);el.textContent=t;el.className=err?&#x27;err&#x27;:&#x27;&#x27;;el.style.display=&#x27;block&#x27;;clearTimeout(toastT);toastT=setTimeout(()=&gt;el.style.display=&#x27;none&#x27;,2600)}
 window.addEventListener(&#x27;resize&#x27;,render);
-renderLib();renderXpList();goFree();
+renderLib();renderXpList();
+function resumeExam(){try{const sv=JSON.parse(store.getItem(EX)||&#x27;null&#x27;);if(!sv||!sv.S||!(sv.end&gt;0)||!XP.find(x=&gt;x.id===sv.id)){store.removeItem(EX);return false}startXp(sv.id,&#x27;exam&#x27;,{sv});return mode===&#x27;exam&#x27;&amp;&amp;!!run}catch(e){store.removeItem(EX);return false}}
+if(!resumeExam())goFree();
+window.addEventListener(&#x27;beforeunload&#x27;,ev=&gt;{if(mode===&#x27;exam&#x27;&amp;&amp;run&amp;&amp;!run.finished){ev.preventDefault();ev.returnValue=&#x27;&#x27;}});
 // 知识点页发来 openXp：直接进入对应实验（练习模式，有提示）。
 // 握手：实验台加载好后先告诉父页面；父页面每收到 openXp 都回一个 openXpAck。父页面没收到回执会重发，
 // 所以同一个实验 3 秒内只开一次，免得把做了一半的台面又重置。
