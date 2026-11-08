@@ -221,7 +221,7 @@ const TYPES={
  line:{sig:(e,_d,sig)=>{const {y1,y2,y3}=e.props;const d12=y2-y1,d23=y3-y2;sig('info',`第二年比第一年${d12>=0?'多':'少'} ${Math.abs(d12)} 万元`);sig('info',`第三年比第二年${d23>=0?'多':'少'} ${Math.abs(d23)} 万元`)},ports:(p)=>({d12:p.y2-p.y1,d23:p.y3-p.y2}),label:'折线统计图',group:'统计',prefix:'折线图',defaults:{y1:3,y2:6,y3:4},fields:[{k:'y1',label:'第一年（万元）',min:0,max:12},{k:'y2',label:'第二年（万元）',min:0,max:12},{k:'y3',label:'第三年（万元）',min:0,max:12}],size:()=>[220,190]},
  cage:{ports:(p)=>{const c=p.heads-p.rabbits,got=4*p.rabbits+2*c;return{chickens:c,rabbits:p.rabbits,solved:c>=0&&got===p.legs}},label:'鸡兔笼',group:'数与运算',prefix:'鸡兔笼',defaults:{heads:35,legs:94,rabbits:0},fields:[{k:'heads',label:'头（总数）',min:1,max:60},{k:'legs',label:'腿（总数）',min:0,max:200,step:2},{k:'rabbits',label:'兔（只）',min:0,max:60}],size:()=>[220,150]},
  pair:{sig:(e,_d,sig)=>{const {x,y}=e.props;sig('info',`(${x}, ${y})：第 ${x} 列，第 ${y} 行`)},label:'数对',group:'关系',prefix:'数对',defaults:{x:3,y:2},fields:[{k:'x',label:'第几列（x）',min:0,max:8},{k:'y',label:'第几行（y）',min:0,max:8}],size:()=>[240,240]},
- shape:{ports:(p)=>({mirrored:!!p.mirror}),label:'图形（平移、旋转、对称）',group:'图形',prefix:'图形',defaults:{dx:0,dy:0,rot:0,mirror:0},fields:[{k:'dx',label:'向右平移（格）',min:0,max:6},{k:'dy',label:'上下平移（格，正数向上）',min:-6,max:6},{k:'rot',label:'旋转（度，逆时针）',min:0,max:270,step:90},{k:'mirror',label:'轴对称',min:0,max:1,choices:['不做','做']}],size:()=>[260,190]},
+ shape:{ports:(p)=>({mirrored:!!p.mirror}),label:'图形（平移、旋转、对称）',group:'图形',prefix:'图形',defaults:{dx:0,dy:0,rot:0,mirror:0},fields:[{k:'dx',label:'向右平移（格）',min:0,max:6},{k:'dy',label:'上下平移（格，正数向上）',min:-6,max:6},{k:'rot',label:'旋转（度，逆时针）',min:0,max:270,step:90,choices:[0,90,180,270]},{k:'mirror',label:'轴对称',min:0,max:1,choices:['不做','做']}],size:()=>[260,190]},
  solid:{ports:(p)=>{const hs=SOLID_H,v=p.view,o={};if(v===0)o.front=hs[0].map((_,x)=>Math.max(...hs.map(r=>r[x])));if(v===1)o.side=hs.map(r=>Math.max(...r));if(v===2)o.top=hs.flat().filter(x=>x>0).length;return o},label:'立体图形（观察）',group:'图形',prefix:'立体图形',defaults:{view:0},fields:[{k:'view',label:'看的方向',min:0,max:2,choices:['正面','侧面','上面']}],size:()=>[240,190]},
  circle:{sig:(e,_d,sig)=>{const r=e.props.r;sig('info',`半径 ${r} 厘米：周长 ${(2*3.14*r).toFixed(2)} 厘米，面积 ${(3.14*r*r).toFixed(2)} 平方厘米`)},ports:(p)=>({circ:Number((2*3.14*p.r).toFixed(2)),area:Number((3.14*p.r*p.r).toFixed(2))}),label:'圆',group:'图形',prefix:'圆',defaults:{r:2},fields:[{k:'r',label:'半径（厘米）',min:1,max:10}],size:()=>[200,200]},
  pie:{ports:(p)=>({sum:p.a+p.b+p.c,angleA:Number((p.a*3.6).toFixed(0)),angleB:Number((p.b*3.6).toFixed(0)),angleC:Number((p.c*3.6).toFixed(0))}),label:'扇形统计图',group:'统计',prefix:'扇形图',defaults:{a:40,b:30,c:30},fields:[{k:'a',label:'一班（%）',min:0,max:100,step:5},{k:'b',label:'二班（%）',min:0,max:100,step:5},{k:'c',label:'三班（%）',min:0,max:100,step:5}],size:()=>[220,220]},
@@ -886,12 +886,32 @@ function placeFloat(){const tl=$('tools'),cd=$('card');const e=sel&&S.entities[s
 }
 function stateLine(e){const d=D[e.id]||{};if(e.type==='money'&&qv(d))return qsMoney(qv(d))+' 元';if(qv(d)&&e.type!=='rect'&&e.type!=='clock')return qs(qv(d));if(e.type==='fn')return'y = '+fx(e.props.k,e.props.b);if(e.type==='rect')return`${e.props.w} × ${e.props.h} = ${e.props.w*e.props.h}`;
   if(e.type==='balance')return`${d.L?qs(d.L):0} : ${d.R?qs(d.R):0}`;if(e.type==='numline')return`${e.props.min} 到 ${e.props.max}`;if(e.type==='dice')return`${d.tot||0} 回`;return TYPES[e.type].label}
-/* 卡内只读推导值。圆的 π 与台面信号一致（默认 3.14）。 */
+/* 卡内只读推导值。圆的 π 与台面信号一致（默认 3.14）。
+   U77：通用化——所有器材计算出的端口值都在卡里显示，不再只覆盖 circle/tri/cang。
+   保留 circle/tri/cang 的专门措辞（带单位），其余器材用端口名映射中文。*/
+const PORT_LABEL={area:'面积',peri:'周长',third:'第三个角',arc:'弧长',sector:'扇形面积',inscribed:'圆周角',
+  circ:'周长',ratio:'相似比',areaRatio:'面积比',c:'斜边 c',triple:'是否勾股数',
+  sameSide:'同旁内角',corresponding:'同位角',base:'底角',
+  bMinusA:'二班 − 一班',max:'最大值',d12:'第二年 − 第一年',d23:'第三年 − 第二年',
+  chickens:'鸡的只数',solved:'头腿对上了',x:'x',y:'y',ok:'方程是否成立',
+  disc:'判别式',pRed:'P(红)',possible:'能否构成三角形',congruent:'是否全等',
+  relation:'相切关系',vx:'顶点 x',vy:'顶点 y',xHits:'交点个数',
+  mirrored:'已做轴对称',mean:'平均数',median:'中位数',mean2:'平均数(2位)','y2':'过点 y 值'};
 function derivedLines(e){const p=e.props;const n=x=>String(+x.toFixed(2));
   if(e.type==='circle'){const r=p.r;return[`周长 ${n(2*3.14*r)} 厘米，面积 ${n(3.14*r*r)} 平方厘米`]}
   if(e.type==='tri'){const c=180-p.a-p.b;return[c>0?`第三个角是 ${c}°`:p.a+p.b===180?'两个角已经是 180°，第三个角是 0°，画不出三角形':`两个角已经 ${p.a+p.b}°，超过 180°，画不出三角形`]}
   if(e.type==='cang'){const ci=Object.values(S.entities).find(x=>x.type==='circle');if(!ci)return[];const r=ci.props.r,c=p.c;return[`弧长 ${n(2*3.14*r*c/360)} 厘米，扇形面积 ${n(3.14*r*r*c/360)} 平方厘米`]}
-  return[]}
+  // 通用：从已经算好的 D 里读端口值显示
+  if(!D[e.id])return[];
+  const ports=D[e.id].ports||{};
+  const lines=[];
+  for(const k of Object.keys(ports)){
+    const v=ports[k];if(v===null||v===undefined)continue;
+    const label=PORT_LABEL[k]||k;
+    if(typeof v==='number'||typeof v==='boolean'){lines.push(`${label}：${typeof v==='boolean'?(v?'是':'否'):Number.isInteger(v)?v:v.toFixed(2)}`)}
+    else if(v&&typeof v==='object'&&'n' in v&&'d' in v){lines.push(`${label}：${qs(v)}`)}
+  }
+  return lines.length>4?lines.slice(0,4):lines}
 function buildCard(e){const cd=$('card'),T=viewType(e);
   // U35：拖滑杆时 input 事件触发 render→buildCard，正在拖的 input 元素被销毁导致拖拽中断。
   // 解法：如果焦点在卡内，只更新非焦点字段（状态行 + 派生行），不完整重建。
@@ -1010,7 +1030,10 @@ document.addEventListener('keydown',ev=>{if(ev.target.closest('input,textarea,[c
 function undo(){if(!undoSt.length)return;redoSt.push(snapStr());loadSnap(undoSt.pop());if(sel&&!S.entities[sel])sel=null;afterChange()}
 function redo(){if(!redoSt.length)return;undoSt.push(snapStr());loadSnap(redoSt.pop());afterChange()}
 $('undo').onclick=undo;$('redo').onclick=redo;
-$('clear').onclick=()=>{if(!Object.keys(S.entities).length)return;undoSt.push(snapStr());const keep=S.nid;S=blankScene();S.nid=keep;sel=null;if(run)run.steps.forEach((t,i)=>{if(xp.steps[i].type!=='predict'){t.done=false;delete t.op}});afterChange();toast('台面已清空，可以撤销')};
+$('clear').onclick=()=>{if(!Object.keys(S.entities).length)return;
+  // U45：考试中清空需要二次确认，自由/练习模式直接清。
+  if(mode==='exam'){if(!confirm('考试中清空台面，已完成的步骤不受影响，但场景证据没了，确认吗？'))return}
+  undoSt.push(snapStr());const keep=S.nid;S=blankScene();S.nid=keep;sel=null;if(run)run.steps.forEach((t,i)=>{if(xp.steps[i].type!=='predict'){t.done=false;delete t.op}});afterChange();toast('台面已清空，可以撤销')};
 $('tidy').onclick=()=>{undoSt.push(snapStr());cardOpen=false;let x=40,y=40,rowH=0;const W=Math.max(700,(svg.clientWidth-80)/view.z);
   Object.values(S.entities).forEach(e=>{const [w,h]=size(e);if(x+w>W){x=40;y+=rowH+90;rowH=0}e.x=x;e.y=y;x+=w+70;rowH=Math.max(rowH,h)});afterChange();fit()};
 

@@ -4558,7 +4558,7 @@ const TYPES={
  line:{sig:(e,_d,sig)=&gt;{const {y1,y2,y3}=e.props;const d12=y2-y1,d23=y3-y2;sig(&#x27;info&#x27;,`第二年比第一年${d12&gt;=0?&#x27;多&#x27;:&#x27;少&#x27;} ${Math.abs(d12)} 万元`);sig(&#x27;info&#x27;,`第三年比第二年${d23&gt;=0?&#x27;多&#x27;:&#x27;少&#x27;} ${Math.abs(d23)} 万元`)},ports:(p)=&gt;({d12:p.y2-p.y1,d23:p.y3-p.y2}),label:&#x27;折线统计图&#x27;,group:&#x27;统计&#x27;,prefix:&#x27;折线图&#x27;,defaults:{y1:3,y2:6,y3:4},fields:[{k:&#x27;y1&#x27;,label:&#x27;第一年（万元）&#x27;,min:0,max:12},{k:&#x27;y2&#x27;,label:&#x27;第二年（万元）&#x27;,min:0,max:12},{k:&#x27;y3&#x27;,label:&#x27;第三年（万元）&#x27;,min:0,max:12}],size:()=&gt;[220,190]},
  cage:{ports:(p)=&gt;{const c=p.heads-p.rabbits,got=4*p.rabbits+2*c;return{chickens:c,rabbits:p.rabbits,solved:c&gt;=0&amp;&amp;got===p.legs}},label:&#x27;鸡兔笼&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;鸡兔笼&#x27;,defaults:{heads:35,legs:94,rabbits:0},fields:[{k:&#x27;heads&#x27;,label:&#x27;头（总数）&#x27;,min:1,max:60},{k:&#x27;legs&#x27;,label:&#x27;腿（总数）&#x27;,min:0,max:200,step:2},{k:&#x27;rabbits&#x27;,label:&#x27;兔（只）&#x27;,min:0,max:60}],size:()=&gt;[220,150]},
  pair:{sig:(e,_d,sig)=&gt;{const {x,y}=e.props;sig(&#x27;info&#x27;,`(${x}, ${y})：第 ${x} 列，第 ${y} 行`)},label:&#x27;数对&#x27;,group:&#x27;关系&#x27;,prefix:&#x27;数对&#x27;,defaults:{x:3,y:2},fields:[{k:&#x27;x&#x27;,label:&#x27;第几列（x）&#x27;,min:0,max:8},{k:&#x27;y&#x27;,label:&#x27;第几行（y）&#x27;,min:0,max:8}],size:()=&gt;[240,240]},
- shape:{ports:(p)=&gt;({mirrored:!!p.mirror}),label:&#x27;图形（平移、旋转、对称）&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;图形&#x27;,defaults:{dx:0,dy:0,rot:0,mirror:0},fields:[{k:&#x27;dx&#x27;,label:&#x27;向右平移（格）&#x27;,min:0,max:6},{k:&#x27;dy&#x27;,label:&#x27;上下平移（格，正数向上）&#x27;,min:-6,max:6},{k:&#x27;rot&#x27;,label:&#x27;旋转（度，逆时针）&#x27;,min:0,max:270,step:90},{k:&#x27;mirror&#x27;,label:&#x27;轴对称&#x27;,min:0,max:1,choices:[&#x27;不做&#x27;,&#x27;做&#x27;]}],size:()=&gt;[260,190]},
+ shape:{ports:(p)=&gt;({mirrored:!!p.mirror}),label:&#x27;图形（平移、旋转、对称）&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;图形&#x27;,defaults:{dx:0,dy:0,rot:0,mirror:0},fields:[{k:&#x27;dx&#x27;,label:&#x27;向右平移（格）&#x27;,min:0,max:6},{k:&#x27;dy&#x27;,label:&#x27;上下平移（格，正数向上）&#x27;,min:-6,max:6},{k:&#x27;rot&#x27;,label:&#x27;旋转（度，逆时针）&#x27;,min:0,max:270,step:90,choices:[0,90,180,270]},{k:&#x27;mirror&#x27;,label:&#x27;轴对称&#x27;,min:0,max:1,choices:[&#x27;不做&#x27;,&#x27;做&#x27;]}],size:()=&gt;[260,190]},
  solid:{ports:(p)=&gt;{const hs=SOLID_H,v=p.view,o={};if(v===0)o.front=hs[0].map((_,x)=&gt;Math.max(...hs.map(r=&gt;r[x])));if(v===1)o.side=hs.map(r=&gt;Math.max(...r));if(v===2)o.top=hs.flat().filter(x=&gt;x&gt;0).length;return o},label:&#x27;立体图形（观察）&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;立体图形&#x27;,defaults:{view:0},fields:[{k:&#x27;view&#x27;,label:&#x27;看的方向&#x27;,min:0,max:2,choices:[&#x27;正面&#x27;,&#x27;侧面&#x27;,&#x27;上面&#x27;]}],size:()=&gt;[240,190]},
  circle:{sig:(e,_d,sig)=&gt;{const r=e.props.r;sig(&#x27;info&#x27;,`半径 ${r} 厘米：周长 ${(2*3.14*r).toFixed(2)} 厘米，面积 ${(3.14*r*r).toFixed(2)} 平方厘米`)},ports:(p)=&gt;({circ:Number((2*3.14*p.r).toFixed(2)),area:Number((3.14*p.r*p.r).toFixed(2))}),label:&#x27;圆&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;圆&#x27;,defaults:{r:2},fields:[{k:&#x27;r&#x27;,label:&#x27;半径（厘米）&#x27;,min:1,max:10}],size:()=&gt;[200,200]},
  pie:{ports:(p)=&gt;({sum:p.a+p.b+p.c,angleA:Number((p.a*3.6).toFixed(0)),angleB:Number((p.b*3.6).toFixed(0)),angleC:Number((p.c*3.6).toFixed(0))}),label:&#x27;扇形统计图&#x27;,group:&#x27;统计&#x27;,prefix:&#x27;扇形图&#x27;,defaults:{a:40,b:30,c:30},fields:[{k:&#x27;a&#x27;,label:&#x27;一班（%）&#x27;,min:0,max:100,step:5},{k:&#x27;b&#x27;,label:&#x27;二班（%）&#x27;,min:0,max:100,step:5},{k:&#x27;c&#x27;,label:&#x27;三班（%）&#x27;,min:0,max:100,step:5}],size:()=&gt;[220,220]},
@@ -5223,12 +5223,32 @@ function placeFloat(){const tl=$(&#x27;tools&#x27;),cd=$(&#x27;card&#x27;);const
 }
 function stateLine(e){const d=D[e.id]||{};if(e.type===&#x27;money&#x27;&amp;&amp;qv(d))return qsMoney(qv(d))+&#x27; 元&#x27;;if(qv(d)&amp;&amp;e.type!==&#x27;rect&#x27;&amp;&amp;e.type!==&#x27;clock&#x27;)return qs(qv(d));if(e.type===&#x27;fn&#x27;)return&#x27;y = &#x27;+fx(e.props.k,e.props.b);if(e.type===&#x27;rect&#x27;)return`${e.props.w} × ${e.props.h} = ${e.props.w*e.props.h}`;
   if(e.type===&#x27;balance&#x27;)return`${d.L?qs(d.L):0} : ${d.R?qs(d.R):0}`;if(e.type===&#x27;numline&#x27;)return`${e.props.min} 到 ${e.props.max}`;if(e.type===&#x27;dice&#x27;)return`${d.tot||0} 回`;return TYPES[e.type].label}
-/* 卡内只读推导值。圆的 π 与台面信号一致（默认 3.14）。 */
+/* 卡内只读推导值。圆的 π 与台面信号一致（默认 3.14）。
+   U77：通用化——所有器材计算出的端口值都在卡里显示，不再只覆盖 circle/tri/cang。
+   保留 circle/tri/cang 的专门措辞（带单位），其余器材用端口名映射中文。*/
+const PORT_LABEL={area:&#x27;面积&#x27;,peri:&#x27;周长&#x27;,third:&#x27;第三个角&#x27;,arc:&#x27;弧长&#x27;,sector:&#x27;扇形面积&#x27;,inscribed:&#x27;圆周角&#x27;,
+  circ:&#x27;周长&#x27;,ratio:&#x27;相似比&#x27;,areaRatio:&#x27;面积比&#x27;,c:&#x27;斜边 c&#x27;,triple:&#x27;是否勾股数&#x27;,
+  sameSide:&#x27;同旁内角&#x27;,corresponding:&#x27;同位角&#x27;,base:&#x27;底角&#x27;,
+  bMinusA:&#x27;二班 − 一班&#x27;,max:&#x27;最大值&#x27;,d12:&#x27;第二年 − 第一年&#x27;,d23:&#x27;第三年 − 第二年&#x27;,
+  chickens:&#x27;鸡的只数&#x27;,solved:&#x27;头腿对上了&#x27;,x:&#x27;x&#x27;,y:&#x27;y&#x27;,ok:&#x27;方程是否成立&#x27;,
+  disc:&#x27;判别式&#x27;,pRed:&#x27;P(红)&#x27;,possible:&#x27;能否构成三角形&#x27;,congruent:&#x27;是否全等&#x27;,
+  relation:&#x27;相切关系&#x27;,vx:&#x27;顶点 x&#x27;,vy:&#x27;顶点 y&#x27;,xHits:&#x27;交点个数&#x27;,
+  mirrored:&#x27;已做轴对称&#x27;,mean:&#x27;平均数&#x27;,median:&#x27;中位数&#x27;,mean2:&#x27;平均数(2位)&#x27;,&#x27;y2&#x27;:&#x27;过点 y 值&#x27;};
 function derivedLines(e){const p=e.props;const n=x=&gt;String(+x.toFixed(2));
   if(e.type===&#x27;circle&#x27;){const r=p.r;return[`周长 ${n(2*3.14*r)} 厘米，面积 ${n(3.14*r*r)} 平方厘米`]}
   if(e.type===&#x27;tri&#x27;){const c=180-p.a-p.b;return[c&gt;0?`第三个角是 ${c}°`:p.a+p.b===180?&#x27;两个角已经是 180°，第三个角是 0°，画不出三角形&#x27;:`两个角已经 ${p.a+p.b}°，超过 180°，画不出三角形`]}
   if(e.type===&#x27;cang&#x27;){const ci=Object.values(S.entities).find(x=&gt;x.type===&#x27;circle&#x27;);if(!ci)return[];const r=ci.props.r,c=p.c;return[`弧长 ${n(2*3.14*r*c/360)} 厘米，扇形面积 ${n(3.14*r*r*c/360)} 平方厘米`]}
-  return[]}
+  // 通用：从已经算好的 D 里读端口值显示
+  if(!D[e.id])return[];
+  const ports=D[e.id].ports||{};
+  const lines=[];
+  for(const k of Object.keys(ports)){
+    const v=ports[k];if(v===null||v===undefined)continue;
+    const label=PORT_LABEL[k]||k;
+    if(typeof v===&#x27;number&#x27;||typeof v===&#x27;boolean&#x27;){lines.push(`${label}：${typeof v===&#x27;boolean&#x27;?(v?&#x27;是&#x27;:&#x27;否&#x27;):Number.isInteger(v)?v:v.toFixed(2)}`)}
+    else if(v&amp;&amp;typeof v===&#x27;object&#x27;&amp;&amp;&#x27;n&#x27; in v&amp;&amp;&#x27;d&#x27; in v){lines.push(`${label}：${qs(v)}`)}
+  }
+  return lines.length&gt;4?lines.slice(0,4):lines}
 function buildCard(e){const cd=$(&#x27;card&#x27;),T=viewType(e);
   // U35：拖滑杆时 input 事件触发 render→buildCard，正在拖的 input 元素被销毁导致拖拽中断。
   // 解法：如果焦点在卡内，只更新非焦点字段（状态行 + 派生行），不完整重建。
@@ -5347,7 +5367,10 @@ document.addEventListener(&#x27;keydown&#x27;,ev=&gt;{if(ev.target.closest(&#x27
 function undo(){if(!undoSt.length)return;redoSt.push(snapStr());loadSnap(undoSt.pop());if(sel&amp;&amp;!S.entities[sel])sel=null;afterChange()}
 function redo(){if(!redoSt.length)return;undoSt.push(snapStr());loadSnap(redoSt.pop());afterChange()}
 $(&#x27;undo&#x27;).onclick=undo;$(&#x27;redo&#x27;).onclick=redo;
-$(&#x27;clear&#x27;).onclick=()=&gt;{if(!Object.keys(S.entities).length)return;undoSt.push(snapStr());const keep=S.nid;S=blankScene();S.nid=keep;sel=null;if(run)run.steps.forEach((t,i)=&gt;{if(xp.steps[i].type!==&#x27;predict&#x27;){t.done=false;delete t.op}});afterChange();toast(&#x27;台面已清空，可以撤销&#x27;)};
+$(&#x27;clear&#x27;).onclick=()=&gt;{if(!Object.keys(S.entities).length)return;
+  // U45：考试中清空需要二次确认，自由/练习模式直接清。
+  if(mode===&#x27;exam&#x27;){if(!confirm(&#x27;考试中清空台面，已完成的步骤不受影响，但场景证据没了，确认吗？&#x27;))return}
+  undoSt.push(snapStr());const keep=S.nid;S=blankScene();S.nid=keep;sel=null;if(run)run.steps.forEach((t,i)=&gt;{if(xp.steps[i].type!==&#x27;predict&#x27;){t.done=false;delete t.op}});afterChange();toast(&#x27;台面已清空，可以撤销&#x27;)};
 $(&#x27;tidy&#x27;).onclick=()=&gt;{undoSt.push(snapStr());cardOpen=false;let x=40,y=40,rowH=0;const W=Math.max(700,(svg.clientWidth-80)/view.z);
   Object.values(S.entities).forEach(e=&gt;{const [w,h]=size(e);if(x+w&gt;W){x=40;y+=rowH+90;rowH=0}e.x=x;e.y=y;x+=w+70;rowH=Math.max(rowH,h)});afterChange();fit()};
 
