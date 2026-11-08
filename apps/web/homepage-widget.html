@@ -4535,7 +4535,7 @@ const qeq=(a,b)=&gt;a.n===b.n&amp;&amp;a.d===b.d, qnum=a=&gt;a.n/a.d, qs=a=&gt;a
 const TYPES={
  var:{label:&#x27;变量 x（可改名）&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;x&#x27;,out:&#x27;value&#x27;,defaults:{v:0},fields:[{k:&#x27;v&#x27;,label:&#x27;x 的值&#x27;,min:-10,max:30}],size:()=&gt;[110,62]},
   num:{label:&#x27;数字卡&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;数&#x27;,out:&#x27;value&#x27;,defaults:{v:3},
-   fields:[{k:&#x27;v&#x27;,label:&#x27;值&#x27;,min:-10,max:20}],size:()=&gt;[96,62]},
+   fields:[{k:&#x27;v&#x27;,label:&#x27;值&#x27;,min:-10000,max:10000}],size:()=&gt;[96,62]},
  frac:{label:&#x27;分数条&#x27;,group:&#x27;分数&#x27;,prefix:&#x27;分数条&#x27;,out:&#x27;value&#x27;,defaults:{n:1,d:2},
    fields:[{k:&#x27;n&#x27;,label:&#x27;分子（涂几份）&#x27;,min:0,max:24},{k:&#x27;d&#x27;,label:&#x27;分母（平均分成几份）&#x27;,min:1,max:12}],
    size:e=&gt;[176,34+Math.max(1,Math.ceil(e.props.n/e.props.d))*28]},
@@ -4543,10 +4543,10 @@ const TYPES={
  mul:{label:&#x27;乘法器&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;乘法器&#x27;,out:&#x27;value&#x27;,accepts:&#x27;value&#x27;,defaults:{times:1},fields:[{k:&#x27;times&#x27;,label:&#x27;再乘一个数（1 是不乘）&#x27;,min:1,max:10}],size:()=&gt;[170,84]},
  div:{label:&#x27;除法器&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;除法器&#x27;,out:&#x27;value&#x27;,accepts:&#x27;value&#x27;,slots:true,defaults:{mode:0},fields:[{k:&#x27;mode&#x27;,label:&#x27;算什么&#x27;,min:0,max:1,choices:[&#x27;商（分成几份）&#x27;,&#x27;余数&#x27;]}],size:()=&gt;[200,110]},
  money:{label:&#x27;人民币&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;人民币&#x27;,out:&#x27;value&#x27;,defaults:{yuan:1,jiao:0,fen:0},fields:[{k:&#x27;yuan&#x27;,label:&#x27;元&#x27;,min:0,max:99},{k:&#x27;jiao&#x27;,label:&#x27;角&#x27;,min:0,max:9},{k:&#x27;fen&#x27;,label:&#x27;分&#x27;,min:0,max:9}],size:()=&gt;[190,62]},
- clock:{label:&#x27;钟面&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;钟面&#x27;,out:&#x27;value&#x27;,dim:&#x27;time&#x27;,defaults:{h:3,m:0},fields:[{k:&#x27;h&#x27;,label:&#x27;时（几点）&#x27;,min:1,max:12},{k:&#x27;m&#x27;,label:&#x27;分&#x27;,min:0,max:55,step:5}],size:()=&gt;[180,200]},
+ clock:{label:&#x27;钟面&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;钟面&#x27;,out:&#x27;value&#x27;,dim:&#x27;time&#x27;,defaults:{h:3,m:0},fields:[{k:&#x27;h&#x27;,label:&#x27;时（几点）&#x27;,min:1,max:12},{k:&#x27;m&#x27;,label:&#x27;分&#x27;,min:0,max:59}],size:()=&gt;[180,200]},
  angle:{ports:(p)=&gt;({deg:p.deg}),label:&#x27;角&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;角&#x27;,defaults:{deg:90},fields:[{k:&#x27;deg&#x27;,label:&#x27;度数（0 到 180）&#x27;,min:0,max:180,step:5}],size:()=&gt;[200,160]},
  bars:{label:&#x27;条形统计图&#x27;,group:&#x27;统计&#x27;,prefix:&#x27;统计图&#x27;,defaults:{a:4,b:6,c:3},fields:[{k:&#x27;a&#x27;,label:&#x27;一班（人）&#x27;,min:0,max:30},{k:&#x27;b&#x27;,label:&#x27;二班（人）&#x27;,min:0,max:30},{k:&#x27;c&#x27;,label:&#x27;三班（人）&#x27;,min:0,max:30}],size:()=&gt;[220,190]},
- tri:{ports:(p)=&gt;({third:180-p.a-p.b}),label:&#x27;三角形&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;三角形&#x27;,defaults:{a:30,b:40},fields:[{k:&#x27;a&#x27;,label:&#x27;第一个角（度）&#x27;,min:1,max:150},{k:&#x27;b&#x27;,label:&#x27;第二个角（度）&#x27;,min:1,max:150}],size:()=&gt;[240,170]},
+ tri:{ports:(p)=&gt;{const c=180-p.a-p.b;return{third:c&gt;0?c:null}},label:&#x27;三角形&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;三角形&#x27;,defaults:{a:30,b:40},fields:[{k:&#x27;a&#x27;,label:&#x27;第一个角（度）&#x27;,min:1,max:150},{k:&#x27;b&#x27;,label:&#x27;第二个角（度）&#x27;,min:1,max:150}],size:()=&gt;[240,170]},
  para:{label:&#x27;平行四边形&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;平行四边形&#x27;,defaults:{base:6,h:4},fields:[{k:&#x27;base&#x27;,label:&#x27;底（格）&#x27;,min:1,max:12},{k:&#x27;h&#x27;,label:&#x27;高（格）&#x27;,min:1,max:12}],size:()=&gt;[240,170]},
  line:{ports:(p)=&gt;({d12:p.y2-p.y1,d23:p.y3-p.y2}),label:&#x27;折线统计图&#x27;,group:&#x27;统计&#x27;,prefix:&#x27;折线图&#x27;,defaults:{y1:3,y2:6,y3:4},fields:[{k:&#x27;y1&#x27;,label:&#x27;第一年（万元）&#x27;,min:0,max:12},{k:&#x27;y2&#x27;,label:&#x27;第二年（万元）&#x27;,min:0,max:12},{k:&#x27;y3&#x27;,label:&#x27;第三年（万元）&#x27;,min:0,max:12}],size:()=&gt;[220,190]},
  cage:{ports:(p)=&gt;{const c=p.heads-p.rabbits,got=4*p.rabbits+2*c;return{chickens:c,rabbits:p.rabbits,solved:c&gt;=0&amp;&amp;got===p.legs}},label:&#x27;鸡兔笼&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;鸡兔笼&#x27;,defaults:{heads:35,legs:94,rabbits:0},fields:[{k:&#x27;heads&#x27;,label:&#x27;头（总数）&#x27;,min:1,max:60},{k:&#x27;legs&#x27;,label:&#x27;腿（总数）&#x27;,min:0,max:200,step:2},{k:&#x27;rabbits&#x27;,label:&#x27;兔（只）&#x27;,min:0,max:60}],size:()=&gt;[220,150]},
@@ -4568,12 +4568,12 @@ const TYPES={
  radical:{ports:(p)=&gt;{const n=p.n;let kk=1,mm=n;for(let k=Math.floor(Math.sqrt(n));k&gt;=2;k--){if(n%(k*k)===0){kk=k;mm=n/(k*k);break}}return{kk:kk,mm:mm}},label:&#x27;二次根式 √n&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;根式&#x27;,defaults:{n:8},fields:[{k:&#x27;n&#x27;,label:&#x27;被开方数 n&#x27;,min:1,max:50}],size:()=&gt;[220,120]},
  parlines:{label:&#x27;平行线与截线（角）&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;平行线&#x27;,defaults:{a:40},fields:[{k:&#x27;a&#x27;,label:&#x27;截线与直线的夹角（度）&#x27;,min:10,max:170,step:10}],size:()=&gt;[240,190]},
  bag:{ports:(p)=&gt;{const t=p.red+p.white;return{pRed:t?p.red/t:null}},label:&#x27;摸球（红、白）&#x27;,group:&#x27;概率&#x27;,prefix:&#x27;袋子&#x27;,defaults:{red:2,white:2},fields:[{k:&#x27;red&#x27;,label:&#x27;红球（个）&#x27;,min:0,max:10},{k:&#x27;white&#x27;,label:&#x27;白球（个）&#x27;,min:0,max:10}],size:()=&gt;[220,160]},
- cang:{ports:(p)=&gt;({inscribed:p.c/2}),label:&#x27;圆周角与圆心角&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;圆&#x27;,defaults:{c:120},fields:[{k:&#x27;c&#x27;,label:&#x27;圆心角（度）&#x27;,min:10,max:170,step:10}],size:()=&gt;[220,200]},
+ cang:{ports:(p,e,E)=&gt;{const out={inscribed:p.c/2};const ci=Object.values(E||{}).find(x=&gt;x.type===&#x27;circle&#x27;);if(ci){const r=ci.props.r;out.arc=Number((2*3.14*r*p.c/360).toFixed(2));out.sector=Number((3.14*r*r*p.c/360).toFixed(2))}return out},label:&#x27;圆周角与圆心角&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;圆&#x27;,defaults:{c:120},fields:[{k:&#x27;c&#x27;,label:&#x27;圆心角（度）&#x27;,min:10,max:170,step:10}],size:()=&gt;[220,200]},
  congr:{label:&#x27;全等三角形（三边）&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;全等&#x27;,defaults:{a:4,b:4,c:5},fields:[{k:&#x27;a&#x27;,label:&#x27;第二个三角形：边 1&#x27;,min:1,max:12},{k:&#x27;b&#x27;,label:&#x27;边 2&#x27;,min:1,max:12},{k:&#x27;c&#x27;,label:&#x27;边 3&#x27;,min:1,max:12}],size:()=&gt;[240,190]},
  tangent:{label:&#x27;直线和圆的位置&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;直线圆&#x27;,defaults:{d:5,r:3},fields:[{k:&#x27;d&#x27;,label:&#x27;圆心到直线的距离&#x27;,min:0,max:8},{k:&#x27;r&#x27;,label:&#x27;半径&#x27;,min:1,max:6}],size:()=&gt;[240,190]},
  parab:{label:&#x27;二次函数 y = ax² + bx + c&#x27;,group:&#x27;函数&#x27;,prefix:&#x27;抛物线&#x27;,defaults:{a:1,b:-2,c:0},fields:[{k:&#x27;a&#x27;,label:&#x27;a&#x27;,min:-3,max:3},{k:&#x27;b&#x27;,label:&#x27;b&#x27;,min:-6,max:6},{k:&#x27;c&#x27;,label:&#x27;c&#x27;,min:-6,max:6}],size:()=&gt;[240,190]},
  hyper:{ports:(p)=&gt;({y2:p.k/2}),label:&#x27;反比例 y = k/x&#x27;,group:&#x27;函数&#x27;,prefix:&#x27;反比例&#x27;,defaults:{k:2},fields:[{k:&#x27;k&#x27;,label:&#x27;k&#x27;,min:-8,max:8}],size:()=&gt;[240,190]},
- ineq:{ports:(p)=&gt;({set:{op:p.op,b:p.b}}),label:&#x27;不等式的解集（数轴）&#x27;,group:&#x27;关系&#x27;,prefix:&#x27;解集&#x27;,defaults:{b:2,op:1},fields:[{k:&#x27;b&#x27;,label:&#x27;边界（数）&#x27;,min:-6,max:6},{k:&#x27;op&#x27;,label:&#x27;方向（0：x＜，1：x＞）&#x27;,min:0,max:1}],size:()=&gt;[300,110]},
+ ineq:{ports:(p)=&gt;({set:{op:p.op,b:p.b}}),label:&#x27;不等式的解集（数轴）&#x27;,group:&#x27;关系&#x27;,prefix:&#x27;解集&#x27;,defaults:{b:2,op:1},fields:[{k:&#x27;b&#x27;,label:&#x27;边界（数）&#x27;,min:-6,max:6},{k:&#x27;op&#x27;,label:&#x27;方向&#x27;,min:0,max:1,choices:[&#x27;x＜&#x27;,&#x27;x＞&#x27;]}],size:()=&gt;[300,110]},
  light:{label:&#x27;判断灯&#x27;,group:&#x27;关系&#x27;,prefix:&#x27;判断灯&#x27;,accepts:&#x27;bool&#x27;,defaults:{},fields:[],size:()=&gt;[120,90]},
  numline:{label:&#x27;数轴&#x27;,group:&#x27;关系&#x27;,prefix:&#x27;数轴&#x27;,accepts:&#x27;value&#x27;,reject:{area:&#x27;数轴量的是长短和数，面积不能放上去&#x27;},defaults:{min:0,max:2},
    fields:[{k:&#x27;min&#x27;,label:&#x27;最左&#x27;,min:-10,max:10},{k:&#x27;max&#x27;,label:&#x27;最右&#x27;,min:-9,max:20}],size:()=&gt;[460,118]},
@@ -4686,7 +4686,8 @@ function actRaw(a){
   case &#x27;reset&#x27;:{E[a.id].props=clone(TYPES[E[a.id].type].defaults);return{ok:1}}
   case &#x27;set&#x27;:{if((s.binds||[]).some(b=&gt;b.to===a.id&amp;&amp;b.k===a.k))return{ok:0,why:&#x27;这个属性由别的器材决定，先点“解除”&#x27;};
     const e=E[a.id],T=TYPES[e.type],f=T.fields.find(f=&gt;f.k===a.k);let v=Number(a.v);
-    if(!Number.isFinite(v)||!Number.isInteger(v/(f.step||1)))return{ok:0,why:&#x27;只能填整数&#x27;};
+    if(!Number.isFinite(v)||!Number.isInteger(v))return{ok:0,why:&#x27;只能填整数&#x27;};
+    if(!Number.isInteger(v/(f.step||1)))return{ok:0,why:`只能填 ${(f.step||1)} 的倍数`};
     if(v&lt;f.min||v&gt;f.max)return{ok:0,why:`${f.label.replace(/（.*/,&#x27;&#x27;)}只能在 ${f.min} 到 ${f.max} 之间`};
     if(e.type===&#x27;numline&#x27;){const o=Object.assign({},e.props,{[a.k]:v});if(o.max-o.min&lt;1)return{ok:0,why:&#x27;最右要比最左大&#x27;};if(o.max-o.min&gt;20)return{ok:0,why:&#x27;数轴最长 20 格&#x27;}}
     e.props[a.k]=v;return{ok:1}}
@@ -4703,6 +4704,7 @@ function actRaw(a){
     if(to.type===&#x27;balance&#x27;&amp;&amp;inputs(s,a.to).filter(l=&gt;l.slot===a.slot).length&gt;=5)return{ok:0,why:&#x27;一个盘最多放 5 个&#x27;};
     if(to.type===&#x27;numline&#x27;&amp;&amp;inputs(s,a.to).length&gt;=6)return{ok:0,why:&#x27;数轴上最多 6 个点&#x27;};
     if(to.type===&#x27;div&#x27;&amp;&amp;inputs(s,a.to).some(l=&gt;l.slot===a.slot))return{ok:0,why:a.slot===&#x27;L&#x27;?&#x27;左边已经有被除数了&#x27;:&#x27;右边已经有除数了&#x27;};
+    if(to.type===&#x27;box&#x27;&amp;&amp;inputs(s,a.to).length&gt;=1)return{ok:0,why:&#x27;黑箱一次只吃一个数&#x27;};
     addLink(s,a.from,a.to,(to.type===&#x27;balance&#x27;||to.type===&#x27;div&#x27;)?a.slot:null,a.fromPort);return{ok:1}}
   case &#x27;bind&#x27;:{const t=E[a.to],src=E[a.from];if(!t||!src||a.to===a.from)return{ok:0,why:&#x27;绑到另一个器材上&#x27;};
     if(!TYPES[t.type].fields.some(f=&gt;f.k===a.k))return{ok:0,why:&#x27;这个器材没有这个属性&#x27;};
@@ -4743,7 +4745,7 @@ function evaluate(s){
     else if(e.type===&#x27;table&#x27;){const T=tableOf(id),p=e.props;v=port===&#x27;sum&#x27;?T.sum:port===&#x27;mean&#x27;?T.mean:port===&#x27;max&#x27;?T.max:(p.which===1?T.mean:p.which===2?T.max:T.sum)}
     else if(e.type===&#x27;clock&#x27;)v=Q((e.props.h%12)*60+e.props.m);
     else if(e.type===&#x27;sym&#x27;)v=Q(e.props.x);
-    else if(e.type===&#x27;div&#x27;){const L=inputs(s,id).find(l=&gt;l.slot===&#x27;L&#x27;),R=inputs(s,id).find(l=&gt;l.slot===&#x27;R&#x27;);const a=L&amp;&amp;vf(L),b=R&amp;&amp;vf(R);v=(a&amp;&amp;b&amp;&amp;b.n!==0)?(e.props.mode===1?(a.d===1&amp;&amp;b.d===1?Q(a.n%b.n):null):Q(a.n*b.d,a.d*b.n)):null}
+    else if(e.type===&#x27;div&#x27;){const L=inputs(s,id).find(l=&gt;l.slot===&#x27;L&#x27;),R=inputs(s,id).find(l=&gt;l.slot===&#x27;R&#x27;);const a=L&amp;&amp;vf(L),b=R&amp;&amp;vf(R);v=(a&amp;&amp;b&amp;&amp;b.n!==0)?(e.props.mode===1?(a.d===1&amp;&amp;b.d===1?Q(((a.n%b.n)+Math.abs(b.n))%Math.abs(b.n)):null):Q(a.n*b.d,a.d*b.n)):null}
     return vals[key]=(v&amp;&amp;(v.kind===&#x27;bool&#x27;||v.kind===&#x27;dist&#x27;)?v:v?{kind:&#x27;num&#x27;,dim:dimOf(s,id),data:v}:null)};
   // val 返回带类型的 Val；valQ / vf 取出有理数 data，算术部分照旧。
   const valQ=(id,port)=&gt;{const v=val(id,port);return v?v.data:null};
@@ -4760,8 +4762,8 @@ function evaluate(s){
     d.val=TYPES[e.type].out===&#x27;value&#x27;?val(id):null;
     if(e.type===&#x27;frac&#x27;){const v=qv(d);if(e.props.n&gt;e.props.d)sig(&#x27;info&#x27;,`比 1 大：${qs(v)} = ${Math.floor(e.props.n/e.props.d)} 又 ${e.props.n%e.props.d}/${e.props.d}`);else if(v.d!==e.props.d)sig(&#x27;info&#x27;,`${e.props.n}/${e.props.d} 和 ${qs(v)} 一样大`)}
     if(e.type===&#x27;adder&#x27;){const ins=inputs(s,id).map(l=&gt;vf(l)).filter(Boolean);d.terms=ins;
-      if(!ins.length)sig(&#x27;info&#x27;,&#x27;把几个数连进来，这里算它们的和&#x27;);
-      else{const ds=[...new Set(ins.map(q=&gt;q.d))];if(ds.length&gt;1){const L=ds.reduce(lcm);sig(&#x27;info&#x27;,`分母不同：都换成 ${L} 份再加`)}}}
+      if(!ins.length)sig(&#x27;info&#x27;,e.props.op===1?&#x27;把几个数连进来，这里算它们的差（第一个数减去后面的）&#x27;:&#x27;把几个数连进来，这里算它们的和&#x27;);
+      else{const ds=[...new Set(ins.map(q=&gt;q.d))];if(ds.length&gt;1){const L=ds.reduce(lcm);sig(&#x27;info&#x27;,e.props.op===1?`分母不同：都换成 ${L} 份再减`:`分母不同：都换成 ${L} 份再加`)}}}
     if(e.type===&#x27;mul&#x27;){const ins=inputs(s,id).map(l=&gt;vf(l)).filter(Boolean);d.terms=ins;
       if(!ins.length)sig(&#x27;info&#x27;,&#x27;把几个数连进来，这里算它们的积（几个 × 几个）&#x27;);
       else if(ins.length&gt;=2&amp;&amp;qv(d))sig(&#x27;info&#x27;,`${ins.map(qs).join(&#x27; × &#x27;)} = ${qs(qv(d))}`)}
@@ -4844,6 +4846,7 @@ function evaluate(s){
       const df=qsub(d.L,d.R);d.tilt=-Math.max(-16,Math.min(16,qnum(df)*(e.props.sens||14)));d.equal=df.n===0;d.ports={equal:d.equal,heavier:df.n&gt;0?&#x27;L&#x27;:df.n&lt;0?&#x27;R&#x27;:null};
       if(!L.length&amp;&amp;!R.length)sig(&#x27;info&#x27;,&#x27;把数连到左盘或右盘&#x27;);
       else if(d.equal&amp;&amp;L.length&amp;&amp;R.length)sig(&#x27;ok&#x27;,`平了：左 ${qs(d.L)} = 右 ${qs(d.R)}`);
+      else if(d.equal)sig(&#x27;info&#x27;,&#x27;一边是空的，另一边加起来也是 0，两边一样重&#x27;);
       else{const m=df.n&lt;0?Q(-df.n,df.d):df;sig(&#x27;warn&#x27;,`${df.n&gt;0?&#x27;左&#x27;:&#x27;右&#x27;}边重 ${qs(m)}`)}}
     if(e.type===&#x27;coord&#x27;){d.fns=inputs(s,id).map(l=&gt;E[l.from]);
       if(!d.fns.length)sig(&#x27;info&#x27;,&#x27;把直线连进来&#x27;);
@@ -5127,7 +5130,7 @@ money:(e,d,w,h)=&gt;`&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot
    return s},
 mul:(e,d,w,h)=&gt;{const t=d.terms||[];const ex=t.length?t.map(qs).join(&#x27; × &#x27;):&#x27;空&#x27;;return`&lt;text class=&quot;ink&quot; x=&quot;${w/2}&quot; y=&quot;42&quot; text-anchor=&quot;middle&quot; font-size=&quot;13&quot;&gt;${esc(ex)}&lt;/text&gt;&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;70&quot; text-anchor=&quot;middle&quot; font-size=&quot;22&quot;&gt;= ${qv(d)?qs(qv(d)):0}&lt;/text&gt;`},
  div:(e,d,w,h)=&gt;`&lt;circle class=&quot;port-in&quot; cx=&quot;0&quot; cy=&quot;${h*0.3}&quot; r=&quot;6&quot;/&gt;&lt;circle fill=&quot;transparent&quot; cx=&quot;0&quot; cy=&quot;${h*0.3}&quot; r=&quot;16&quot;/&gt;&lt;circle class=&quot;port-in&quot; cx=&quot;0&quot; cy=&quot;${h*0.7}&quot; r=&quot;6&quot;/&gt;&lt;circle fill=&quot;transparent&quot; cx=&quot;0&quot; cy=&quot;${h*0.7}&quot; r=&quot;16&quot;/&gt;&lt;text class=&quot;ink&quot; x=&quot;${w/2}&quot; y=&quot;40&quot; text-anchor=&quot;middle&quot; font-size=&quot;13&quot;&gt;被除数 ${d.a?qs(d.a):&#x27;?&#x27;}&lt;/text&gt;&lt;text class=&quot;ink&quot; x=&quot;${w/2}&quot; y=&quot;60&quot; text-anchor=&quot;middle&quot; font-size=&quot;13&quot;&gt;除数 ${d.b?qs(d.b):&#x27;?&#x27;}&lt;/text&gt;&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;${h-12}&quot; text-anchor=&quot;middle&quot; font-size=&quot;20&quot;&gt;= ${qv(d)?qs(qv(d)):&#x27;?&#x27;}&lt;/text&gt;`,
- adder:(e,d,w,h)=&gt;{const t=d.terms||[];const ex=t.length?t.map(qs).join(&#x27; + &#x27;):&#x27;空&#x27;;return`&lt;text class=&quot;ink&quot; x=&quot;${w/2}&quot; y=&quot;42&quot; text-anchor=&quot;middle&quot; font-size=&quot;13&quot;&gt;${esc(ex)}&lt;/text&gt;&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;70&quot; text-anchor=&quot;middle&quot; font-size=&quot;22&quot;&gt;= ${qv(d)?qs(qv(d)):0}&lt;/text&gt;`},
+ adder:(e,d,w,h)=&gt;{const t=d.terms||[];const ex=t.length?t.map(qs).join(e.props.op===1?&#x27; − &#x27;:&#x27; + &#x27;):&#x27;空&#x27;;return`&lt;text class=&quot;ink&quot; x=&quot;${w/2}&quot; y=&quot;42&quot; text-anchor=&quot;middle&quot; font-size=&quot;13&quot;&gt;${esc(ex)}&lt;/text&gt;&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;70&quot; text-anchor=&quot;middle&quot; font-size=&quot;22&quot;&gt;= ${qv(d)?qs(qv(d)):0}&lt;/text&gt;`},
  light:(e,d,w,h)=&gt;`&lt;circle cx=&quot;${w/2}&quot; cy=&quot;${h/2-8}&quot; r=&quot;22&quot; fill=&quot;${d.lit?&#x27;#ffd166&#x27;:&#x27;#cfd6df&#x27;}&quot; stroke=&quot;#5b6778&quot; stroke-width=&quot;2&quot;/&gt;&lt;text class=&quot;ink&quot; x=&quot;${w/2}&quot; y=&quot;${h-6}&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot;&gt;${d.lit?&#x27;平了&#x27;:&#x27;没平&#x27;}&lt;/text&gt;`,
  numline:(e,d,w)=&gt;{const {min,max}=e.props,x0=24,x1=w-24,X=v=&gt;x0+(v-min)/(max-min)*(x1-x0),y=72;let L=1;(d.pts||[]).forEach(p=&gt;{if(p.v.d&lt;=12)L=lcm(L,p.v.d)});if(L&gt;12||(max-min)*L&gt;60)L=1;
    let s=`&lt;line x1=&quot;${x0-10}&quot; y1=&quot;${y}&quot; x2=&quot;${x1+12}&quot; y2=&quot;${y}&quot; stroke=&quot;#334&quot; stroke-width=&quot;2&quot;/&gt;&lt;path d=&quot;M${x1+12},${y-5}L${x1+20},${y}L${x1+12},${y+5}Z&quot; fill=&quot;#334&quot;/&gt;`;
@@ -5181,6 +5184,7 @@ function stateLine(e){const d=D[e.id]||{};if(qv(d)&amp;&amp;e.type!==&#x27;rect&
 function derivedLines(e){const p=e.props;const n=x=&gt;String(+x.toFixed(2));
   if(e.type===&#x27;circle&#x27;){const r=p.r;return[`周长 ${n(2*3.14*r)} 厘米，面积 ${n(3.14*r*r)} 平方厘米`]}
   if(e.type===&#x27;tri&#x27;){const c=180-p.a-p.b;return[c&gt;0?`第三个角是 ${c}°`:`两个角已经 ${p.a+p.b}°，超过 180°，画不出三角形`]}
+  if(e.type===&#x27;cang&#x27;){const ci=Object.values(S.entities).find(x=&gt;x.type===&#x27;circle&#x27;);if(!ci)return[];const r=ci.props.r,c=p.c;return[`弧长 ${n(2*3.14*r*c/360)} 厘米，扇形面积 ${n(3.14*r*r*c/360)} 平方厘米`]}
   return[]}
 function buildCard(e){const cd=$(&#x27;card&#x27;),T=viewType(e);cd.dataset.for=e.id;cd.dataset.v=JSON.stringify(e.props)+e.name;
   let h=`&lt;h4&gt;${T.label} · 设置&lt;/h4&gt;&lt;input class=&quot;name&quot; data-name value=&quot;${esc(e.name)}&quot;&gt;&lt;div class=&quot;state&quot;&gt;${esc(stateLine(e))}&lt;/div&gt;`;
@@ -5513,7 +5517,7 @@ const P45=[
  {id:&#x27;g4_11&#x27;,grade:4,domain:&#x27;数与代数&#x27;,tools:&#x27;人民币&#x27;,title:&#x27;小数的意义：2.5 元 = 2 元几角？&#x27;,q:&#x27;一角是一元的十分之一，所以 0.5 元 = 5 角。&#x27;,why:&#x27;2.5 元 = 2 元 5 角。小数点后面的第一位是角。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;money&#x27;,60,60,{yuan:2,jiao:0,fen:0})},
   steps:[{id:&#x27;g4_11:s1&#x27;,label:&#x27;把“角”调到 5，看到 2.5 元&#x27;,score:1,hint:&#x27;点人民币卡，在属性卡里把“角”调到 5&#x27;,target:T45(&#x27;money&#x27;),check:(s,D)=&gt;P45H.val(s,D,&#x27;money&#x27;,Q(25,10))},
-         {id:&#x27;g4_11:s2&#x27;,label:&#x27;读出：2.5 元就是 2 元 5 角&#x27;,score:2,hint:&#x27;“角”的那一位就是小数点后面的第一位&#x27;,target:T45(&#x27;money&#x27;),check:(s,D)=&gt;P45H.val(s,D,&#x27;money&#x27;,Q(25,10))&amp;&amp;s.entities[byType(s,&#x27;money&#x27;)].props.fen===0}]},
+         {id:&#x27;g4_11:s2&#x27;,label:&#x27;读出：2.5 元就是 2 元 5 角&#x27;,score:2,hint:&#x27;“角”的那一位就是小数点后面的第一位&#x27;,target:T45(&#x27;money&#x27;),check:(s,D)=&gt;{const m=s.entities[byType(s,&#x27;money&#x27;)];return !!m&amp;&amp;m.props.yuan===2&amp;&amp;m.props.jiao===5&amp;&amp;m.props.fen===0}}]},
  {id:&#x27;g4_13&#x27;,grade:4,domain:&#x27;数与代数&#x27;,tools:&#x27;人民币 · 合并器&#x27;,title:&#x27;小数加法：2.35 + 1.5 = ?&#x27;,q:&#x27;小数点对齐：元和元、角和角、分和分相加。&#x27;,why:&#x27;2.35 + 1.5 = 3.85 元。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;money&#x27;,60,60,{yuan:2,jiao:3,fen:5});addEnt(s,&#x27;money&#x27;,60,170,{yuan:1,jiao:5,fen:0});addEnt(s,&#x27;adder&#x27;,330,110)},
   steps:[{id:&#x27;g4_13:s1&#x27;,label:&#x27;把两个数都连到合并器&#x27;,score:1,hint:&#x27;拖两个人民币的蓝点到合并器&#x27;,target:T45(&#x27;adder&#x27;),check:(s,D)=&gt;P45H.cnt(s,D,&#x27;adder&#x27;,2)},
@@ -5809,7 +5813,7 @@ const P13=[
  {id:&#x27;g8_sq&#x27;,grade:8,domain:&#x27;数与代数&#x27;,tools:&#x27;乘法公式&#x27;,title:&#x27;完全平方公式：(a + b)² 当 a = 3，b = 2 时是几？&#x27;,q:&#x27;(a + b)² = a² + 2ab + b²。先算 a + b，再平方，两种算法结果一样。&#x27;,why:&#x27;(3 + 2)² = 25，展开 9 + 12 + 4 = 25。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;sqsum&#x27;,200,60,{a:1,b:1})},
   steps:[{id:&#x27;g8_sq:s1&#x27;,label:&#x27;把 a 调到 3，b 调到 2&#x27;,score:1,hint:&#x27;点乘法公式卡，把 a 调到 3，b 调到 2&#x27;,target:T45(&#x27;sqsum&#x27;),check:(s,D)=&gt;{const p=s.entities[byType(s,&#x27;sqsum&#x27;)].props;return p.a===3&amp;&amp;p.b===2}},
-         {id:&#x27;g8_sq:s2&#x27;,label:&#x27;(3 + 2)² = 25&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;sqsum&#x27;),check:(s,D)=&gt;{const q=byType(s,&#x27;sqsum&#x27;);return s.entities[q].props.a===3&amp;&amp;s.entities[q].props.b===2}}]},
+         {id:&#x27;g8_sq:s2&#x27;,label:&#x27;(3 + 2)² = 25&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;sqsum&#x27;),check:(s,D)=&gt;{const x=byType(s,&#x27;sqsum&#x27;);const t=x&amp;&amp;D[x]&amp;&amp;D[x].ports&amp;&amp;D[x].ports.terms;return !!t&amp;&amp;t[0]===9&amp;&amp;t[1]===12&amp;&amp;t[2]===4}}]},
  {id:&#x27;g8_iso&#x27;,grade:8,domain:&#x27;图形与几何&#x27;,tools:&#x27;等腰三角形&#x27;,title:&#x27;等腰三角形：顶角是 40°，底角是几度？&#x27;,q:&#x27;等腰三角形两个底角相等，三个角加起来是 180°。&#x27;,why:&#x27;底角 = (180° − 40°) ÷ 2 = 70°。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;isotri&#x27;,200,60,{apex:60})},
   steps:[{id:&#x27;g8_iso:s1&#x27;,label:&#x27;把顶角调到 40°&#x27;,score:1,hint:&#x27;点等腰三角形卡，把顶角调到 40&#x27;,target:T45(&#x27;isotri&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;isotri&#x27;)].props.apex===40},
@@ -5865,12 +5869,13 @@ const P15=[
  {id:&#x27;g7_74&#x27;,grade:7,domain:&#x27;数与代数&#x27;,tools:&#x27;乘法公式 (a + b)²&#x27;,title:&#x27;整式：把 (a + b)² 展开，是几项？&#x27;,q:&#x27;展开后的每一项都是单项式（像 a²、2ab、b²）；几个单项式相加，就是多项式。&#x27;,why:&#x27;(a + b)² = a² + 2ab + b²，有三项。a = 2、b = 3 时，展开是 4 + 12 + 9。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;sqsum&#x27;,200,50,{a:1,b:1})},
   steps:[{id:&#x27;g7_74:s1&#x27;,label:&#x27;把 a 调到 2，b 调到 3&#x27;,score:1,hint:&#x27;点乘法公式卡，把 a 调到 2、b 调到 3&#x27;,target:T45(&#x27;sqsum&#x27;),check:(s,D)=&gt;{const p=s.entities[byType(s,&#x27;sqsum&#x27;)].props;return p.a===2&amp;&amp;p.b===3}},
-         {id:&#x27;g7_74:s2&#x27;,label:&#x27;展开是 4 + 12 + 9&#x27;,score:2,hint:&#x27;看公式卡下面的文字&#x27;,target:T45(&#x27;sqsum&#x27;),check:(s,D)=&gt;{const x=byType(s,&#x27;sqsum&#x27;);return s.entities[x].props.a===2&amp;&amp;s.entities[x].props.b===3}}]},
+         {id:&#x27;g7_74:s2&#x27;,label:&#x27;展开是 4 + 12 + 9&#x27;,score:2,hint:&#x27;看公式卡下面的文字&#x27;,target:T45(&#x27;sqsum&#x27;),check:(s,D)=&gt;{const x=byType(s,&#x27;sqsum&#x27;);const t=x&amp;&amp;D[x]&amp;&amp;D[x].ports&amp;&amp;D[x].ports.terms;return !!t&amp;&amp;t[0]===4&amp;&amp;t[1]===12&amp;&amp;t[2]===9}}]},
  H14.sum({id:&#x27;g7_75&#x27;,grade:7,domain:&#x27;数与代数&#x27;,tools:&#x27;数字卡 · 合并器&#x27;,title:&#x27;整式的加减：3x + 2x 合并成几个 x？&#x27;,q:&#x27;同类项：字母和次数都相同的项可以合并。系数相加，字母不变。&#x27;,why:&#x27;3x + 2x = (3 + 2)x = 5x，合并后系数是 5。&#x27;,nums:[3,2],ans:5}),
  {id:&#x27;g9_98&#x27;,grade:9,domain:&#x27;图形与几何&#x27;,tools:&#x27;圆 · 圆心角&#x27;,title:&#x27;弧长和扇形面积：半径 3 的圆，120° 的扇形弧长是几？&#x27;,q:&#x27;弧长 = 圆周长 × 圆心角 ÷ 360°；扇形面积 = 圆面积 × 圆心角 ÷ 360°。&#x27;,why:&#x27;半径 3 的圆周长是 18.84，120° 的弧长是 18.84 × 120 ÷ 360 = 6.28；扇形面积是 28.26 × 120 ÷ 360 = 9.42。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;circle&#x27;,60,40,{r:2});addEnt(s,&#x27;cang&#x27;,330,60,{c:90})},
   steps:[{id:&#x27;g9_98:s1&#x27;,label:&#x27;把圆的半径调到 3&#x27;,score:1,hint:&#x27;点圆卡，把半径调到 3，看周长是 18.84&#x27;,target:T45(&#x27;circle&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;circle&#x27;)].props.r===3},
-         {id:&#x27;g9_98:s2&#x27;,label:&#x27;把圆心角调到 120°&#x27;,score:2,hint:&#x27;点圆心角卡，把圆心角调到 120&#x27;,target:T45(&#x27;cang&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;cang&#x27;)].props.c===120&amp;&amp;s.entities[byType(s,&#x27;circle&#x27;)].props.r===3}]}
+         {id:&#x27;g9_98:s2&#x27;,label:&#x27;把圆心角调到 120°&#x27;,score:2,hint:&#x27;点圆心角卡，把圆心角调到 120&#x27;,target:T45(&#x27;cang&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;cang&#x27;)].props.c===120&amp;&amp;s.entities[byType(s,&#x27;circle&#x27;)].props.r===3},
+         {id:&#x27;g9_98:s3&#x27;,label:&#x27;弧长是 6.28，扇形面积是 9.42&#x27;,score:2,hint:&#x27;点圆心角卡，看推导值：弧长和扇形面积&#x27;,target:T45(&#x27;cang&#x27;),check:(s,D)=&gt;{const c=byType(s,&#x27;cang&#x27;);const P=c&amp;&amp;D[c]&amp;&amp;D[c].ports;return !!P&amp;&amp;P.arc===6.28&amp;&amp;P.sector===9.42}}]}
 ];
 P15.forEach(p=&gt;XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
 
@@ -5925,7 +5930,9 @@ function practiceDone(){
   // 预测步只有猜对了才算对——练习里唯一真正的“丢分”就是猜错。
   if(!run.practicePosted){run.practicePosted=true;const tot=xp.steps.reduce((a,s)=&gt;a+s.score,0);
     try{window.parent&amp;&amp;window.parent!==window&amp;&amp;window.parent.postMessage({type:&#x27;labNbPractice&#x27;,payload:{labId:xp.id,title:xp.title,score:score(),max:tot,opCount:run.ops,errorCount:run.errors||0,usedMs:Date.now()-run.t0,lines:xp.steps.map((s,i)=&gt;({id:s.label,got:!!run.steps[i].done&amp;&amp;(s.type!==&#x27;predict&#x27;||run.steps[i].pred===s.expect),op:run.steps[i].op||0}))}},&#x27;*&#x27;)}catch(e){}}
-  modal(`&lt;h3&gt;练习完成 🎉&lt;/h3&gt;&lt;p&gt;${xp.steps.length} 步全部做对，用了 ${run.ops} 次操作${run.errors?`，有 ${run.errors} 次被台面拒绝`:&#x27;&#x27;}。&lt;/p&gt;&lt;div class=&quot;q&quot;&gt;&lt;b&gt;为什么&lt;/b&gt;&lt;div&gt;${esc(xp.why)}&lt;/div&gt;&lt;/div&gt;&lt;div style=&quot;display:flex;gap:8px&quot;&gt;&lt;button class=&quot;btn&quot; data-m=&quot;re&quot;&gt;再练一次&lt;/button&gt;&lt;button class=&quot;btn pri&quot; data-m=&quot;exam&quot;&gt;进入考试&lt;/button&gt;&lt;button class=&quot;btn&quot; data-m=&quot;lib&quot;&gt;返回实验库&lt;/button&gt;&lt;/div&gt;`)}
+  const wrongPred=xp.steps.filter((s,i)=&gt;s.type===&#x27;predict&#x27;&amp;&amp;run.steps[i].done&amp;&amp;run.steps[i].pred!==s.expect).length;
+  const doneTx=wrongPred?`${xp.steps.length} 步全部做完，猜错了 ${wrongPred} 步`:`${xp.steps.length} 步全部做对`;
+  modal(`&lt;h3&gt;练习完成 🎉&lt;/h3&gt;&lt;p&gt;${doneTx}，用了 ${run.ops} 次操作${run.errors?`，有 ${run.errors} 次被台面拒绝`:&#x27;&#x27;}。&lt;/p&gt;&lt;div class=&quot;q&quot;&gt;&lt;b&gt;为什么&lt;/b&gt;&lt;div&gt;${esc(xp.why)}&lt;/div&gt;&lt;/div&gt;&lt;div style=&quot;display:flex;gap:8px&quot;&gt;&lt;button class=&quot;btn&quot; data-m=&quot;re&quot;&gt;再练一次&lt;/button&gt;&lt;button class=&quot;btn pri&quot; data-m=&quot;exam&quot;&gt;进入考试&lt;/button&gt;&lt;button class=&quot;btn&quot; data-m=&quot;lib&quot;&gt;返回实验库&lt;/button&gt;&lt;/div&gt;`)}
 function submitExam(auto){if(mode!==&#x27;exam&#x27;||!run)return;clearInterval(timerId);timerId=null;const tot=xp.steps.reduce((a,s)=&gt;a+s.score,0),sc=score();const used=Math.round((Date.now()-run.t0)/1000);
   const H=hist(),h=H[xp.id]||{n:0,lost:{}};h.n++;h.last=`${sc}/${tot}`;xp.steps.forEach((s,i)=&gt;{if(!run.steps[i].done)h.lost[s.label]=(h.lost[s.label]||0)+1});const w=Object.entries(h.lost).sort((a,b)=&gt;b[1]-a[1])[0];h.worst=w?w[0]:&#x27;&#x27;;H[xp.id]=h;内存存储.setItem(LS.hist,JSON.stringify(H));
   // 把考试结果交给主应用（跨次统计）：主页面收到 labNbExam 消息后记入 math-lab-proc-v1。
