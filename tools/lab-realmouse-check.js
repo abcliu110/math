@@ -165,6 +165,20 @@ function check(name, ok, extra = '') { results.push(`${ok ? 'PASS' : 'FAIL'}  ${
     check('clock gives minutes after 0:00 (3:15 = 195)', a.clockOut === '195', a.clockOut);
     check('clock refused on the balance (time is not weighed)', a.clockOnBalance.indexOf('时间') >= 0, a.clockOnBalance);
     check('balance has a sensitivity attribute, default 14', a.balanceSensDefault === 14, String(a.balanceSensDefault));
+
+    // 7. two-finger pinch on the stage zooms the view in (real touch events)
+    const zc = await evalJs('(function(){ fit(); return view.z })()');
+    await sleep(150);
+    const cen = await rectOf('#stage');
+    await send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: cen.x - 40, y: cen.y, id: 1 }, { x: cen.x + 40, y: cen.y, id: 2 }] });
+    for (let i = 1; i <= 8; i++) {
+      await send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: cen.x - 40 - 6 * i, y: cen.y, id: 1 }, { x: cen.x + 40 + 6 * i, y: cen.y, id: 2 }] });
+      await sleep(20);
+    }
+    await send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await sleep(150);
+    const zn = await evalJs('view.z');
+    check('two-finger pinch zooms the stage in', zn > zc * 1.5, `${zc.toFixed(2)} -> ${zn.toFixed(2)}`);
   } catch (e) {
     results.push('ERROR ' + e.message);
   } finally {

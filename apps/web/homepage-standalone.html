@@ -5165,6 +5165,16 @@ svg.addEventListener(&#x27;pointerup&#x27;,ev=&gt;{if(!drag)return;const d=drag;
     else if(Math.hypot(ev.clientX-d.sx,ev.clientY-d.sy)&gt;6)toast(&#x27;松手的地方没有器材：把线拖到另一个器材上&#x27;,true);render()}
   else if(d.m===&#x27;pan&#x27;)render()});
 svg.addEventListener(&#x27;wheel&#x27;,ev=&gt;{ev.preventDefault();zoomAt(ev.deltaY&lt;0?1.1:1/1.1,ev.clientX,ev.clientY)},{passive:false});
+// 触屏双指缩放：两根手指张开、合拢改变画布比例；两指中间的内容跟着手指走，不会跑偏。
+const touchPts=new Map();let pinch=null;
+function pinchStart(){const [a,b]=[...touchPts.values()];pinch={d:Math.hypot(a.x-b.x,a.y-b.y)||1,z:view.z,vx:view.x,vy:view.y,cx:(a.x+b.x)/2,cy:(a.y+b.y)/2,r:svg.getBoundingClientRect()}}
+svg.addEventListener(&#x27;pointerdown&#x27;,ev=&gt;{if(ev.pointerType===&#x27;mouse&#x27;)return;touchPts.set(ev.pointerId,{x:ev.clientX,y:ev.clientY});if(touchPts.size===2){drag=null;svg.classList.remove(&#x27;panning&#x27;);pinchStart()}});
+svg.addEventListener(&#x27;pointermove&#x27;,ev=&gt;{if(ev.pointerType===&#x27;mouse&#x27;||!touchPts.has(ev.pointerId))return;touchPts.set(ev.pointerId,{x:ev.clientX,y:ev.clientY});
+  if(!pinch||touchPts.size&lt;2)return;const [a,b]=[...touchPts.values()];const d=Math.hypot(a.x-b.x,a.y-b.y)||1;const z=Math.max(.5,Math.min(4,pinch.z*d/pinch.d));
+  const wx=(pinch.cx-pinch.r.left-pinch.vx)/pinch.z,wy=(pinch.cy-pinch.r.top-pinch.vy)/pinch.z;const mx=(a.x+b.x)/2,my=(a.y+b.y)/2;
+  view.z=z;view.x=mx-pinch.r.left-wx*z;view.y=my-pinch.r.top-wy*z;render()});
+const endTouch=ev=&gt;{if(!touchPts.has(ev.pointerId))return;touchPts.delete(ev.pointerId);if(touchPts.size&lt;2)pinch=null};
+svg.addEventListener(&#x27;pointerup&#x27;,endTouch);svg.addEventListener(&#x27;pointercancel&#x27;,endTouch);
 function zoomAt(f,cx,cy){const r=svg.getBoundingClientRect();cx=cx??r.left+r.width/2;cy=cy??r.top+r.height/2;const z=Math.max(.5,Math.min(4,view.z*f));const k=z/view.z;view.x=cx-r.left-(cx-r.left-view.x)*k;view.y=cy-r.top-(cy-r.top-view.y)*k;view.z=z;render()}
 function fit(){const es=Object.values(S.entities);if(!es.length){view={x:40,y:30,z:1};render();return}let a=1e9,b=1e9,c=-1e9,d=-1e9;es.forEach(e=&gt;{const [w,h]=size(e);a=Math.min(a,e.x);b=Math.min(b,e.y);c=Math.max(c,e.x+w);d=Math.max(d,e.y+h+60)});
   const W=svg.clientWidth,H=svg.clientHeight,z=Math.max(.5,Math.min(1.4,Math.min((W-80)/(c-a),(H-80)/(d-b))));view={z,x:(W-(c-a)*z)/2-a*z,y:(H-(d-b)*z)/2-b*z};render()}
