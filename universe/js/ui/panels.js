@@ -33,7 +33,7 @@
       h += '<div class="grp">' + esc(g) + '</div>';
       by[g].forEach((p) => {
         const hs = U.Events.history(p.id), done = hs.practice > 0 || hs.exam > 0;
-        h += '<div class="it' + (S.problem && S.problem.id === p.id ? ' cur' : '') + '" data-pid="' + p.id + '"><span class="tt">' + esc(p.title) + '</span><span class="chip">' + p.grade + ' 年级</span>' + (done ? '<span class="chip ok">已做</span>' : '') + '</div>';
+        h += '<div class="it' + (S.problem && S.problem.id === p.id ? ' cur' : '') + '" data-pid="' + p.id + '"><span class="tt">' + esc(p.title) + '</span>' + (p.grade ? '<span class="chip">' + p.grade + ' 年级</span>' : '') + (done ? '<span class="chip ok">已做</span>' : '') + (p.custom ? '<button class="tbtn" data-del="' + p.id + '" title="删除这道题" style="padding:2px 8px">✕</button>' : '') + '</div>';
       });
     }
     return h + '</div>';
@@ -127,6 +127,19 @@
   }
 
 
+
+  function authorDialog() {
+    const S = UI.S, E = S.scene.entities;
+    const nums = Object.values(E).filter((e) => e.type === 'num' && !S.scene.links.some((l) => l.to === e.id)).map((e) => (e.props.d === 1 ? e.props.n : e.props.n + '/' + e.props.d));
+    let tgt = ''; const sel = S.sel && E[S.sel] && S.D[S.sel]; if (sel) { const o = Object.values(sel.out).find((v) => v && v.kind === 'num'); if (o) tgt = U.Q.show(o.data); }
+    dialog('<h3>出一道凑数题</h3><p style="color:var(--txt2);margin-top:0">给同学几个数，再给一个目标数。同学要用运算器把这些数连起来，凑出目标。系统会先自己解一遍，解不出来的题不能发布。</p>' +
+      '<div class="row" style="margin:8px 0">题目名<input class="search" id="au-title" placeholder="例如：用 5、7、2 凑出 24"></div>' +
+      '<div class="row" style="margin:8px 0">给的数（用逗号隔开，可以写分数）<input class="search" id="au-givens" value="' + esc(nums.join(', ')) + '" placeholder="5, 7, 2"></div>' +
+      '<div class="row" style="margin:8px 0">目标数<input class="search" id="au-target" value="' + esc(tgt) + '" placeholder="24"></div>' +
+      '<div class="row" style="margin:8px 0">给同学的话（可不写）<input class="search" id="au-hook" placeholder="提示：先想想 5 + 7"></div>' +
+      '<div id="au-msg" class="warnbox" style="display:none"></div><div class="btnrow"><button class="btn pri" id="au-ok">发布到「我的题」</button><button class="btn" id="dlg-close">取消</button></div>');
+  }
+
   function reportDialog() {
     const rv = U.Review.summarize(U.Events.log, U.problems), t = rv.totals;
     let h = '<h3>学习报告</h3><div class="cmp"><div><small>做过的题</small>' + t.tried + ' / ' + t.problems + '</div><div><small>累计用时</small>' + t.minutes + ' 分钟</div><div><small>踩过的陷阱</small>' + t.trapsHit + ' 个</div><div><small>找到新做法</small>' + t.newWay + ' 次</div></div>';
@@ -157,5 +170,5 @@
     });
   }
 
-  UI.Panels = { renderTop, renderLeft, renderShelf, renderInsp, renderClock, dialog, closeDialog, reportHtml, reportDialog, initShelfDrag, renderAll() { renderTop(); renderLeft(); renderShelf(); renderInsp(); renderClock(); } };
+  UI.Panels = { renderTop, renderLeft, renderShelf, renderInsp, renderClock, dialog, closeDialog, reportHtml, reportDialog, authorDialog, initShelfDrag, renderAll() { renderTop(); renderLeft(); renderShelf(); renderInsp(); renderClock(); } };
 })(window);

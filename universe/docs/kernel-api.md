@@ -33,3 +33,10 @@ U.registerPack({ id:'mypack', types:{ foo:{
 
 ## 复习与报告 `U.Review.summarize(log, problems, now)`
 只读事件流现算，不另存。返回 `{byProblem, domains, due, totals}`。到期规则：最近一次没满分、或踩过陷阱 → 紧急；否则按 1/3/7/14 天间隔。界面：实验库顶部“今天该复习”、菜单 → 学习报告。
+
+## 学生出题 `U.Author`
+“最终检验是学生当作者”的第一步：学生出一道**凑数题**（给几个数 + 一个目标数）。
+- `validate(spec)`：系统先用精确有理数把 + − × ÷ 的所有组合解一遍，**解不出来的题不让发布**，并给出参考做法
+- `make(spec)` 生成和内置题同构的 problem；`add/remove/list/loadAll` 存在 localStorage（`universe-custom-v1`）
+- 菜单：出一道凑数题… / 导出我的题 / 导入题目（JSON 文件可发给同学）
+- 还没做：更一般的“出题”（任意目标性质、任意器材限制）、老师审核与布置。

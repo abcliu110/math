@@ -8,7 +8,7 @@
       stats: {
         label: '统计量', prefix: '计', group: '统计与概率', grades: [5, 9], alias: ['平均数', '众数', '期望'],
         props: {
-          want: { type: 'choice', label: '求什么', default: 0, choices: ['平均数', '众数', '最大次数'] },
+          want: { type: 'choice', label: '求什么', default: 0, choices: ['平均数', '众数', '最大次数', '中位数', '极差'] },
           digits: { type: 'int', label: '保留小数', default: 2, min: 0, max: 6 },
           minN: { type: 'int', label: '至少几次才算', default: 1, min: 1, max: 100000 },
         },
@@ -24,6 +24,11 @@
           let mi = 0; cs.forEach((x, i) => { if (x > cs[mi]) mi = i; });
           if (c.props.want === 1) return { v: U.val('num', Q(d.data.lo + mi)) };
           if (c.props.want === 2) return { v: U.val('num', Q(cs[mi])) };
+          if (c.props.want >= 3) {
+            const xs = []; cs.forEach((x, i) => { for (let k = 0; k < x; k++) xs.push(d.data.lo + i); });
+            if (c.props.want === 4) return { v: U.val('num', Q(xs[xs.length - 1] - xs[0])) };
+            const m = xs.length; return { v: U.val('num', m % 2 ? Q(xs[(m - 1) / 2]) : Q.div(Q(xs[m / 2 - 1] + xs[m / 2]), Q(2))) };
+          }
           let sum = 0; cs.forEach((x, i) => { sum += x * (d.data.lo + i); });
           const f = 10 ** c.props.digits;
           return { v: U.val('num', Q(Math.round((sum / tot) * f), f), { exact: false }) };

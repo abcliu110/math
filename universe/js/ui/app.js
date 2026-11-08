@@ -144,6 +144,9 @@
       const m = e.target.closest('button'); if (!m) return;
       if (m.dataset.m === 'save') download('台面-' + new Date().toISOString().slice(0, 10) + '.json', W.save(S.scene));
       if (m.dataset.m === 'load') loadFile();
+      if (m.dataset.m === 'author') UI.Panels.authorDialog();
+      if (m.dataset.m === 'myexport') download('我的题.json', U.Author.exportJson());
+      if (m.dataset.m === 'myimport') { const i = document.createElement('input'); i.type = 'file'; i.accept = '.json'; i.onchange = () => { const r = new FileReader(); r.onload = () => { try { const n = U.Author.importJson(r.result); UI.Panels.renderLeft(); say('导入了 ' + n + ' 道题，在「实验库 → 我的题」里', 'good'); } catch (e) { say('导入失败：' + e.message, 'bad', 4000); } }; r.readAsText(i.files[0]); }; i.click(); }
       if (m.dataset.m === 'report') UI.Panels.reportDialog();
       if (m.dataset.m === 'export') download('学习记录.json', JSON.stringify(Ev.log, null, 1));
       if (m.dataset.m === 'clearlog') { Ev.clear(); UI.Panels.renderLeft(); say('学习记录已清除', '', 2000); }
@@ -160,6 +163,8 @@
     const lb = $('#leftbody');
     lb.addEventListener('click', (e) => {
       const t = e.target;
+      const dl = t.closest('[data-del]');
+      if (dl) { if (S.problem && S.problem.id === dl.dataset.del) openFree(); U.Author.remove(dl.dataset.del); UI.Panels.renderLeft(); return; }
       const it = t.closest('.it');
       if (it) { if (it.dataset.free) openFree(); else openProblem(it.dataset.pid, 'practice'); $('#left').classList.remove('open'); return; }
       const pr = t.closest('[data-pred]');
@@ -209,6 +214,15 @@
     };
     $('#dlg').addEventListener('click', (e) => {
       const t = e.target;
+      if (t.id === 'au-ok') {
+        const givens = $('#au-givens').value.split(/[,，\s]+/).filter(Boolean).map((x) => { try { const q = U.Q.parse(x); return { n: q.n, d: q.d }; } catch (e) { return null; } });
+        const msg = $('#au-msg'); const show = (w) => { msg.textContent = w; msg.style.display = 'block'; };
+        if (givens.some((g) => !g)) return show('「给的数」里有写不对的：只能是整数、小数或 3/4 这样的分数');
+        const spec = { title: $('#au-title').value, hook: $('#au-hook').value, target: $('#au-target').value, givens };
+        const v = U.Author.validate(spec); if (!v.ok) return show(v.why);
+        const p = U.Author.add(spec); Ev.ctx = {}; Ev.push('author', { pid: p.id });
+        UI.Panels.closeDialog(); S.q1 = ''; UI.Panels.renderLeft(); say('已发布：' + p.title + '（可以在「实验库 → 我的题」里做，也能导出给同学）', 'good', 4500); return;
+      }
       const di = t.closest('.it[data-pid]');
       if (di) { UI.Panels.closeDialog(); openProblem(di.dataset.pid, 'practice'); return; }
       if (t.id === 'dlg' || t.id === 'dlg-close') UI.Panels.closeDialog();
@@ -230,7 +244,7 @@
   }
 
   function start() {
-    Ev.load(); UI.Stage.init(); UI.Panels.initShelfDrag(); bind(); UI.Panels.renderShelf();
+    Ev.load(); U.Author.loadAll(); UI.Stage.init(); UI.Panels.initShelfDrag(); bind(); UI.Panels.renderShelf();
     openFree(); G.requestAnimationFrame(frame);
   }
   UI.App = { act, snapshot, afterMove, openProblem, openFree, setMode, say, undo, redo, stepOnce, refresh };

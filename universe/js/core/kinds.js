@@ -37,7 +37,7 @@
   U.showVal = (v) => {
     if (!v) return '—';
     const K = U.KINDS[v.kind];
-    const s = K ? K.show(v.data) : String(v.data);
+    const s = v.kind === 'num' && v.exact === false ? Q.showDec(v.data, 4) : K ? K.show(v.data) : String(v.data);
     return (v.exact === false ? '≈' : '') + s;
   };
 })(typeof globalThis !== 'undefined' ? globalThis : window);
