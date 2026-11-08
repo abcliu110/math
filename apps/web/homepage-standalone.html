@@ -4770,7 +4770,7 @@ function evaluate(s){
       else if(ins.length&gt;=2&amp;&amp;qv(d))sig(&#x27;info&#x27;,`${ins.map(qs).join(&#x27; × &#x27;)} = ${qs(qv(d))}`)}
     if(e.type===&#x27;div&#x27;){const L=inputs(s,id).find(l=&gt;l.slot===&#x27;L&#x27;),R=inputs(s,id).find(l=&gt;l.slot===&#x27;R&#x27;);const a=L&amp;&amp;vf(L),b=R&amp;&amp;vf(R);d.a=a;d.b=b;
       if(e.props.mode===1&amp;&amp;a&amp;&amp;b&amp;&amp;b.n!==0)sig(qv(d)?&#x27;ok&#x27;:&#x27;warn&#x27;,`${qs(a)} 除以 ${qs(b)}，余 ${qv(d)?qs(qv(d)):&#x27;（不是整数）&#x27;}`);
-      else if(!a||!b)sig(&#x27;info&#x27;,&#x27;左边放被除数（总数），右边放除数（分成几份）&#x27;);
+      else if(!a||!b)sig(&#x27;info&#x27;,&#x27;上边放被除数（总数），下边放除数（分成几份）&#x27;);
       else if(b.n===0)sig(&#x27;err&#x27;,&#x27;除数不能是 0&#x27;);
       else if(qv(d).d===1)sig(&#x27;ok&#x27;,`${qs(a)} ÷ ${qs(b)} = ${qs(qv(d))}`);
       else sig(&#x27;warn&#x27;,`除不尽：${qs(a)} ÷ ${qs(b)} = ${qs(qv(d))}`)}
@@ -4820,7 +4820,7 @@ function evaluate(s){
     if(e.type===&#x27;circle&#x27;){const r=e.props.r;sig(&#x27;info&#x27;,`半径 ${r} 厘米：周长 ${(2*3.14*r).toFixed(2)} 厘米，面积 ${(3.14*r*r).toFixed(2)} 平方厘米`)}
     if(e.type===&#x27;pie&#x27;){const {a,b,c}=e.props,t=a+b+c;
       sig(t===100?&#x27;ok&#x27;:&#x27;warn&#x27;,t===100?&#x27;三个班合起来是 100%&#x27;:`三个班合起来是 ${t}%，应该是 100%`);
-      sig(&#x27;info&#x27;,`一班 对应圆心角 ${(a*3.6).toFixed(0)}°`)}
+      sig(&#x27;info&#x27;,`对应圆心角：一班 ${(a*3.6).toFixed(0)}°，二班 ${(b*3.6).toFixed(0)}°，三班 ${(c*3.6).toFixed(0)}°`)}
     if(e.type===&#x27;shape&#x27;){const {dx,rot,mirror}=e.props;sig(&#x27;info&#x27;,`${dx?&#x27;向右平移 &#x27;+dx+&#x27; 格&#x27;:&#x27;没有平移&#x27;}，${rot?&#x27;旋转 &#x27;+rot+&#x27;°&#x27;:&#x27;没有旋转&#x27;}，${mirror?&#x27;做了轴对称&#x27;:&#x27;没有轴对称&#x27;}`)}
     if(e.type===&#x27;solid&#x27;){const hs=SOLID_H,v=e.props.view;
       if(v===0){const cols=hs[0].map((_,x)=&gt;Math.max(...hs.map(r=&gt;r[x])));sig(&#x27;info&#x27;,`正面看到 ${cols.length} 列，高 ${cols.join(&#x27;、&#x27;)}`)}

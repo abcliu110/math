@@ -434,7 +434,7 @@ function evaluate(s){
       else if(ins.length>=2&&qv(d))sig('info',`${ins.map(qs).join(' × ')} = ${qs(qv(d))}`)}
     if(e.type==='div'){const L=inputs(s,id).find(l=>l.slot==='L'),R=inputs(s,id).find(l=>l.slot==='R');const a=L&&vf(L),b=R&&vf(R);d.a=a;d.b=b;
       if(e.props.mode===1&&a&&b&&b.n!==0)sig(qv(d)?'ok':'warn',`${qs(a)} 除以 ${qs(b)}，余 ${qv(d)?qs(qv(d)):'（不是整数）'}`);
-      else if(!a||!b)sig('info','左边放被除数（总数），右边放除数（分成几份）');
+      else if(!a||!b)sig('info','上边放被除数（总数），下边放除数（分成几份）');
       else if(b.n===0)sig('err','除数不能是 0');
       else if(qv(d).d===1)sig('ok',`${qs(a)} ÷ ${qs(b)} = ${qs(qv(d))}`);
       else sig('warn',`除不尽：${qs(a)} ÷ ${qs(b)} = ${qs(qv(d))}`)}
@@ -484,7 +484,7 @@ function evaluate(s){
     if(e.type==='circle'){const r=e.props.r;sig('info',`半径 ${r} 厘米：周长 ${(2*3.14*r).toFixed(2)} 厘米，面积 ${(3.14*r*r).toFixed(2)} 平方厘米`)}
     if(e.type==='pie'){const {a,b,c}=e.props,t=a+b+c;
       sig(t===100?'ok':'warn',t===100?'三个班合起来是 100%':`三个班合起来是 ${t}%，应该是 100%`);
-      sig('info',`一班 对应圆心角 ${(a*3.6).toFixed(0)}°`)}
+      sig('info',`对应圆心角：一班 ${(a*3.6).toFixed(0)}°，二班 ${(b*3.6).toFixed(0)}°，三班 ${(c*3.6).toFixed(0)}°`)}
     if(e.type==='shape'){const {dx,rot,mirror}=e.props;sig('info',`${dx?'向右平移 '+dx+' 格':'没有平移'}，${rot?'旋转 '+rot+'°':'没有旋转'}，${mirror?'做了轴对称':'没有轴对称'}`)}
     if(e.type==='solid'){const hs=SOLID_H,v=e.props.view;
       if(v===0){const cols=hs[0].map((_,x)=>Math.max(...hs.map(r=>r[x])));sig('info',`正面看到 ${cols.length} 列，高 ${cols.join('、')}`)}
