@@ -293,9 +293,11 @@ function dimLabel(n){return DIM_NAME[n]||n}
 /* 依赖关系：连线和绑定都算。从 a 能走到 b，说明 b 的值依赖 a（或 a 绑着 b 的属性）。 */
 function reachAll(s,a,b){const seen={};const st=[a];while(st.length){const c=st.pop();if(c===b)return true;if(seen[c])continue;seen[c]=1;s.links.filter(l=>l.from===c).forEach(l=>st.push(l.to));(s.binds||[]).filter(x=>x.from===c).forEach(x=>st.push(x.to))}return false}
 /* 绑定同步：把绑定的值写进目标属性。改一次算几遍，直到不再变（绑定链最多 8 层）。 */
-function syncBinds(s){if(!s.binds||!s.binds.length)return;for(let pass=0;pass<8;pass++){const Dd=evaluate(s);let changed=false;
-  for(const b of s.binds){const to=s.entities[b.to],src=Dd[b.from]&&qv(Dd[b.from]);if(!to||!src||src.d!==1)continue;const F=TYPES[to.type].fields.find(f=>f.k===b.k);if(!F||src.n<F.min||src.n>F.max)continue;if(to.props[b.k]!==src.n){to.props[b.k]=src.n;changed=true}}
-  if(!changed)break}}
+/* 绑定同步按拓扑序做：绑定 o 的目标若能走到绑定 b 的来源，o 先算，b 再读它的值。每条绑定只写一次，没有“最多 8 遍”的上限。 */
+function syncBinds(s){if(!s.binds||!s.binds.length)return;
+  const left=s.binds.slice(),order=[];
+  while(left.length){let i=left.findIndex(b=>!left.some(o=>o!==b&&reachAll(s,o.to,b.from)));if(i<0)i=0;order.push(left.splice(i,1)[0])}
+  for(const b of order){const Dd=evaluate(s);const to=s.entities[b.to],src=Dd[b.from]&&qv(Dd[b.from]);if(!to||!src||src.d!==1)continue;const F=TYPES[to.type].fields.find(f=>f.k===b.k);if(!F||src.n<F.min||src.n>F.max)continue;to.props[b.k]=src.n}}
 function reach(s,a,b){const seen={};const st=[a];while(st.length){const c=st.pop();if(c===b)return true;if(seen[c])continue;seen[c]=1;s.links.filter(l=>l.from===c).forEach(l=>st.push(l.to))}return false}
 
 /* 动作（意图）。所有改动都走这里：校验 → 改 → 引擎重算。返回 {ok, why} */
