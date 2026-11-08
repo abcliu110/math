@@ -68,7 +68,7 @@
     const allow = S.problem ? S.problem.shelf : null;
     let h = '';
     for (const g of U.GROUPS) {
-      const ts = Object.values(U.types).filter((t) => t.group === g && (!q || (t.label + t.alias.join('') + g).includes(q)));
+      const ts = Object.values(U.types).filter((t) => !t.hidden && t.group === g && (!q || (t.label + t.alias.join('') + g).includes(q)));
       if (!ts.length) continue;
       h += '<div class="grp">' + esc(g) + '</div><div class="tiles">';
       ts.forEach((t) => {
