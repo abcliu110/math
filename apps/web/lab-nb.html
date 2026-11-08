@@ -197,7 +197,8 @@ const qeq=(a,b)=>a.n===b.n&&a.d===b.d, qnum=a=>a.n/a.d, qs=a=>a.d===1?String(a.n
 
 /* ========== 器材注册表：每种器材 = 属性 + 端口 + 引擎规则 + 画法 ========== */
 const TYPES={
- num:{label:'数字卡',group:'数与运算',prefix:'数',out:'value',defaults:{v:3},
+ var:{label:'变量 x（可改名）',group:'数与运算',prefix:'x',out:'value',defaults:{v:0},fields:[{k:'v',label:'x 的值',min:-10,max:30}],size:()=>[110,62]},
+  num:{label:'数字卡',group:'数与运算',prefix:'数',out:'value',defaults:{v:3},
    fields:[{k:'v',label:'值',min:-10,max:20}],size:()=>[96,62]},
  frac:{label:'分数条',group:'分数',prefix:'分数条',out:'value',defaults:{n:1,d:2},
    fields:[{k:'n',label:'分子（涂几份）',min:0,max:24},{k:'d',label:'分母（平均分成几份）',min:1,max:12}],
@@ -389,7 +390,7 @@ function clockPair(E){const cl=Object.values(E).filter(x=>x.type==='clock');if(c
 function evaluate(s){
   const E=s.entities,vals={},busy={},D={};
   const val=(id,port)=>{const key=port?id+'#'+port:id;if(key in vals)return vals[key];if(busy[key])return null;busy[key]=1;const e=E[id];let v=null;
-    if(e.type==='num')v=Q(e.props.v);else if(e.type==='frac')v=Q(e.props.n,e.props.d);
+    if(e.type==='num'||e.type==='var')v=Q(e.props.v);else if(e.type==='frac')v=Q(e.props.n,e.props.d);
     else if(e.type==='adder'){const xs=inputs(s,id).map(l=>vf(l)).filter(Boolean);
       if(e.props.op===1&&xs.length)v=xs.slice(1).reduce((t,x)=>qsub(t,x),xs[0]);else{v=Q(0);for(const x of xs)v=qadd(v,x)}}
     else if(e.type==='rect')v=Q(e.props.w*e.props.h);else if(e.type==='money')v=Q(e.props.yuan*100+e.props.jiao*10+(e.props.fen||0),100);
@@ -695,7 +696,8 @@ function entSvg(e,d,isNext,dep){const T=TYPES[e.type],[w,h]=T.size(e),kk=e.k||1;
     g+=`<g class="pill" transform="translate(0,${y})"><rect width="${tw}" height="22" fill="${col}" rx="11"/><text x="10" y="15" fill="#fff">${esc(s.tx)}</text></g>`;y+=26}
   return g+'</g>'}
 const DRAW={
- num:(e,d,w,h)=>`<text class="big" x="${w/2}" y="${h/2+14}" text-anchor="middle" font-size="28">${e.props.v}</text>`,
+ var:(e,d,w,h)=>`<rect x="6" y="6" width="${w-12}" height="${h-12}" rx="10" fill="none" stroke="#7b5cd6" stroke-width="2" stroke-dasharray="6 4"/><text class="big" x="${w/2}" y="${h/2+10}" text-anchor="middle" font-size="24" font-style="italic" fill="#7b5cd6">x = ${e.props.v}</text>`,
+  num:(e,d,w,h)=>`<text class="big" x="${w/2}" y="${h/2+14}" text-anchor="middle" font-size="28">${e.props.v}</text>`,
  frac:(e,d,w)=>{const {n,d:dd}=e.props,rows=Math.max(1,Math.ceil(n/dd)),bw=w-24,sw=bw/dd;let s=`<text class="big" x="${w-12}" y="18" text-anchor="end" font-size="14">${n}/${dd}</text>`;
    for(let r=0;r<rows;r++)for(let i=0;i<dd;i++){const k=r*dd+i+1;s+=`<rect class="seg-cell" data-seg="${k}" x="${12+i*sw}" y="${28+r*28}" width="${sw}" height="22" fill="${k<=n?'#ff9f43':'#fff'}" stroke="#5b6778" stroke-width="1"/>`}return s},
  fact:(e,d,w,h)=>{const {b,c}=e.props;return `<text class="big" x="16" y="48" font-size="18">x² ${b<0?'− '+(-b):'+ '+b}x ${c<0?'− '+(-c):'+ '+c}</text><text class="ink" x="16" y="88" font-size="14">${d.sig&&d.sig[0]?d.sig[0].tx:''}</text>`},

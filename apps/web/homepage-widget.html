@@ -4533,7 +4533,8 @@ const qeq=(a,b)=&gt;a.n===b.n&amp;&amp;a.d===b.d, qnum=a=&gt;a.n/a.d, qs=a=&gt;a
 
 /* ========== 器材注册表：每种器材 = 属性 + 端口 + 引擎规则 + 画法 ========== */
 const TYPES={
- num:{label:&#x27;数字卡&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;数&#x27;,out:&#x27;value&#x27;,defaults:{v:3},
+ var:{label:&#x27;变量 x（可改名）&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;x&#x27;,out:&#x27;value&#x27;,defaults:{v:0},fields:[{k:&#x27;v&#x27;,label:&#x27;x 的值&#x27;,min:-10,max:30}],size:()=&gt;[110,62]},
+  num:{label:&#x27;数字卡&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;数&#x27;,out:&#x27;value&#x27;,defaults:{v:3},
    fields:[{k:&#x27;v&#x27;,label:&#x27;值&#x27;,min:-10,max:20}],size:()=&gt;[96,62]},
  frac:{label:&#x27;分数条&#x27;,group:&#x27;分数&#x27;,prefix:&#x27;分数条&#x27;,out:&#x27;value&#x27;,defaults:{n:1,d:2},
    fields:[{k:&#x27;n&#x27;,label:&#x27;分子（涂几份）&#x27;,min:0,max:24},{k:&#x27;d&#x27;,label:&#x27;分母（平均分成几份）&#x27;,min:1,max:12}],
@@ -4725,7 +4726,7 @@ function clockPair(E){const cl=Object.values(E).filter(x=&gt;x.type===&#x27;cloc
 function evaluate(s){
   const E=s.entities,vals={},busy={},D={};
   const val=(id,port)=&gt;{const key=port?id+&#x27;#&#x27;+port:id;if(key in vals)return vals[key];if(busy[key])return null;busy[key]=1;const e=E[id];let v=null;
-    if(e.type===&#x27;num&#x27;)v=Q(e.props.v);else if(e.type===&#x27;frac&#x27;)v=Q(e.props.n,e.props.d);
+    if(e.type===&#x27;num&#x27;||e.type===&#x27;var&#x27;)v=Q(e.props.v);else if(e.type===&#x27;frac&#x27;)v=Q(e.props.n,e.props.d);
     else if(e.type===&#x27;adder&#x27;){const xs=inputs(s,id).map(l=&gt;vf(l)).filter(Boolean);
       if(e.props.op===1&amp;&amp;xs.length)v=xs.slice(1).reduce((t,x)=&gt;qsub(t,x),xs[0]);else{v=Q(0);for(const x of xs)v=qadd(v,x)}}
     else if(e.type===&#x27;rect&#x27;)v=Q(e.props.w*e.props.h);else if(e.type===&#x27;money&#x27;)v=Q(e.props.yuan*100+e.props.jiao*10+(e.props.fen||0),100);
@@ -5031,7 +5032,8 @@ function entSvg(e,d,isNext,dep){const T=TYPES[e.type],[w,h]=T.size(e),kk=e.k||1;
     g+=`&lt;g class=&quot;pill&quot; transform=&quot;translate(0,${y})&quot;&gt;&lt;rect width=&quot;${tw}&quot; height=&quot;22&quot; fill=&quot;${col}&quot; rx=&quot;11&quot;/&gt;&lt;text x=&quot;10&quot; y=&quot;15&quot; fill=&quot;#fff&quot;&gt;${esc(s.tx)}&lt;/text&gt;&lt;/g&gt;`;y+=26}
   return g+&#x27;&lt;/g&gt;&#x27;}
 const DRAW={
- num:(e,d,w,h)=&gt;`&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;${h/2+14}&quot; text-anchor=&quot;middle&quot; font-size=&quot;28&quot;&gt;${e.props.v}&lt;/text&gt;`,
+ var:(e,d,w,h)=&gt;`&lt;rect x=&quot;6&quot; y=&quot;6&quot; width=&quot;${w-12}&quot; height=&quot;${h-12}&quot; rx=&quot;10&quot; fill=&quot;none&quot; stroke=&quot;#7b5cd6&quot; stroke-width=&quot;2&quot; stroke-dasharray=&quot;6 4&quot;/&gt;&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;${h/2+10}&quot; text-anchor=&quot;middle&quot; font-size=&quot;24&quot; font-style=&quot;italic&quot; fill=&quot;#7b5cd6&quot;&gt;x = ${e.props.v}&lt;/text&gt;`,
+  num:(e,d,w,h)=&gt;`&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;${h/2+14}&quot; text-anchor=&quot;middle&quot; font-size=&quot;28&quot;&gt;${e.props.v}&lt;/text&gt;`,
  frac:(e,d,w)=&gt;{const {n,d:dd}=e.props,rows=Math.max(1,Math.ceil(n/dd)),bw=w-24,sw=bw/dd;let s=`&lt;text class=&quot;big&quot; x=&quot;${w-12}&quot; y=&quot;18&quot; text-anchor=&quot;end&quot; font-size=&quot;14&quot;&gt;${n}/${dd}&lt;/text&gt;`;
    for(let r=0;r&lt;rows;r++)for(let i=0;i&lt;dd;i++){const k=r*dd+i+1;s+=`&lt;rect class=&quot;seg-cell&quot; data-seg=&quot;${k}&quot; x=&quot;${12+i*sw}&quot; y=&quot;${28+r*28}&quot; width=&quot;${sw}&quot; height=&quot;22&quot; fill=&quot;${k&lt;=n?&#x27;#ff9f43&#x27;:&#x27;#fff&#x27;}&quot; stroke=&quot;#5b6778&quot; stroke-width=&quot;1&quot;/&gt;`}return s},
  fact:(e,d,w,h)=&gt;{const {b,c}=e.props;return `&lt;text class=&quot;big&quot; x=&quot;16&quot; y=&quot;48&quot; font-size=&quot;18&quot;&gt;x² ${b&lt;0?&#x27;− &#x27;+(-b):&#x27;+ &#x27;+b}x ${c&lt;0?&#x27;− &#x27;+(-c):&#x27;+ &#x27;+c}&lt;/text&gt;&lt;text class=&quot;ink&quot; x=&quot;16&quot; y=&quot;88&quot; font-size=&quot;14&quot;&gt;${d.sig&amp;&amp;d.sig[0]?d.sig[0].tx:&#x27;&#x27;}&lt;/text&gt;`},
