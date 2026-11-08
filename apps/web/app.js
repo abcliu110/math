@@ -1224,7 +1224,7 @@ function labHealthHtml() {
     // 实验台的实验没有知识点映射，按实验编号统计；步骤显示实验台里的步骤编号。
     Object.keys(e.lost || {}).forEach(function (stepId) {
       const n = e.lost[stepId];
-      stepRows.push({ label: stepId, point: labId, title: labId, count: n });
+      stepRows.push({ label: stepId, point: labId, title: labDisplayTitle(labId, e.title), count: n });
       pointRows[labId] = (pointRows[labId] || 0) + n;
     });
   });
@@ -1237,8 +1237,7 @@ function labHealthHtml() {
     '<table class="lab-health-table"><tr><th>总丢分最多的步骤</th><th>知识点</th><th>丢了几次</th></tr>' +
     topSteps.map(function (r) { return '<tr><td>' + esc(r.label) + '</td><td>' + esc(r.point + ' ' + r.title) + '</td><td>' + r.count + ' 次</td></tr>'; }).join('') + '</table>';
   html += '<p class="muted">重灾区：' + topPoints.map(function (r) {
-    const f = findPoint(r.point);
-    return esc(r.point + ' ' + (f ? f.point.title : '') + '（' + r.count + ' 次）');
+    return esc(r.point + ' ' + labDisplayTitle(r.point, (h[r.point] || {}).title) + '（' + r.count + ' 次）');
   }).join('、') + '。</p>';
   return html;
 }
@@ -1478,7 +1477,7 @@ function labTraceHtml(reports, hist) {
   if (ids.length) {
     html += '<p class="muted">每道挑战题考过几次、最近一次多少分：</p><ul>' + ids.map(function (labId) {
       const e = hist[labId] || {};
-      const title = e.title || labId;
+      const title = labDisplayTitle(labId, e.title);
       return '<li>' + esc(title) + '：考过 ' + (e.attempts || 0) + ' 次，最近一次 ' + (e.lastScore || 0) + ' / ' + (e.max || 0) +
         (e.lastUsedMs ? '，用了 ' + fmtClock(e.lastUsedMs) : '') + '。</li>';
     }).join('') + '</ul>';
@@ -3327,6 +3326,24 @@ function procHistRecord(rep, usedMs) {
   });
   h[rep.labId] = e;
   procHistSave(h);
+}
+/* 旧记录补标题（只改显示，不改存储、不改界面）：c34e217 之前交的卷没带标题，
+   存的是 raw 代号（nb:g4_16）。显示时按实验编号反查知识点标题；查不到的
+   （非知识点实验、旧 q-* 记录）保持原样。 */
+function labPointId(labId) {
+  if (typeof labId !== 'string' || labId.indexOf('nb:') !== 0) return '';
+  const xpId = labId.slice(3);
+  for (var pid in LAB_POINT_XP) { if (LAB_POINT_XP[pid] === xpId) return pid; }
+  return '';
+}
+function labDisplayTitle(labId, storedTitle) {
+  if (storedTitle && storedTitle !== labId) return storedTitle;
+  const pid = labPointId(labId);
+  if (pid) {
+    const f = findPoint(pid);
+    if (f) return f.point.title;
+  }
+  return storedTitle || labId;
 }
 /* 实验台（NB 式）的“我的发现”：记进家长端读的 math-inquiry-v1，带实验标题。 */
 function labNbDiscovery(p) {
