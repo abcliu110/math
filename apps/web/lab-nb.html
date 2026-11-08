@@ -521,9 +521,9 @@ function evaluate(s){
       else{const m=df.n<0?Q(-df.n,df.d):df;sig('warn',`${df.n>0?'左':'右'}边重 ${qs(m)}`)}}
     if(e.type==='coord'){d.fns=inputs(s,id).map(l=>E[l.from]);
       if(!d.fns.length)sig('info','把直线连进来');
-      d.fns.forEach(f=>{const {k,b}=f.props;sig('info',`${f.name}：y = ${fx(k,b)}，${k>0?'往右上升':k<0?'往右下倒':'水平'}，过 (0, ${b})`)});
       if(d.fns.length>=2){const [f,g]=d.fns;if(f.props.k===g.props.k)sig(f.props.b===g.props.b?'ok':'warn',f.props.b===g.props.b?'两条线重合':'k 一样：两条线平行，永远不相交');
-        else{const x=Q(g.props.b-f.props.b,f.props.k-g.props.k);const y=qadd(Q(f.props.k*x.n,x.d),Q(f.props.b));sig('ok',`交点 (${qs(x)}, ${qs(y)})${d.fns.length>2?'（只算前两条）':''}`)}}}
+        else{const x=Q(g.props.b-f.props.b,f.props.k-g.props.k);const y=qadd(Q(f.props.k*x.n,x.d),Q(f.props.b));sig('ok',`交点 (${qs(x)}, ${qs(y)})${d.fns.length>2?'（只算前两条）':''}`)}}
+      d.fns.forEach(f=>{const {k,b}=f.props;sig('info',`${f.name}：y = ${fx(k,b)}，${k>0?'往右上升':k<0?'往右下倒':'水平'}，过 (0, ${b})`)});}
     if(e.type==='rect'){const {w,h}=e.props;d.per=2*(w+h);d.area=w*h;if(w===h)sig('ok',`是正方形：周长 ${d.per}，面积 ${d.area}`);else sig('info',`周长 ${d.per}，面积 ${d.area}`)}
     if(e.type==='dice'){const c=e.props.counts;if(!c)sig('info','点“掷”开始');else{const tot=c.reduce((a,b)=>a+b,0);let m=0;for(let i=2;i<=12;i++)m=Math.max(m,c[i]);const bs=[];for(let i=2;i<=12;i++)if(c[i]===m)bs.push(i);d.tot=tot;sig('info',`掷了 ${tot} 回，出现最多的是 ${bs.join('、')}`)}}
   }

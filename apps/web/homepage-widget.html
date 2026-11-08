@@ -4857,9 +4857,9 @@ function evaluate(s){
       else{const m=df.n&lt;0?Q(-df.n,df.d):df;sig(&#x27;warn&#x27;,`${df.n&gt;0?&#x27;左&#x27;:&#x27;右&#x27;}边重 ${qs(m)}`)}}
     if(e.type===&#x27;coord&#x27;){d.fns=inputs(s,id).map(l=&gt;E[l.from]);
       if(!d.fns.length)sig(&#x27;info&#x27;,&#x27;把直线连进来&#x27;);
-      d.fns.forEach(f=&gt;{const {k,b}=f.props;sig(&#x27;info&#x27;,`${f.name}：y = ${fx(k,b)}，${k&gt;0?&#x27;往右上升&#x27;:k&lt;0?&#x27;往右下倒&#x27;:&#x27;水平&#x27;}，过 (0, ${b})`)});
       if(d.fns.length&gt;=2){const [f,g]=d.fns;if(f.props.k===g.props.k)sig(f.props.b===g.props.b?&#x27;ok&#x27;:&#x27;warn&#x27;,f.props.b===g.props.b?&#x27;两条线重合&#x27;:&#x27;k 一样：两条线平行，永远不相交&#x27;);
-        else{const x=Q(g.props.b-f.props.b,f.props.k-g.props.k);const y=qadd(Q(f.props.k*x.n,x.d),Q(f.props.b));sig(&#x27;ok&#x27;,`交点 (${qs(x)}, ${qs(y)})${d.fns.length&gt;2?&#x27;（只算前两条）&#x27;:&#x27;&#x27;}`)}}}
+        else{const x=Q(g.props.b-f.props.b,f.props.k-g.props.k);const y=qadd(Q(f.props.k*x.n,x.d),Q(f.props.b));sig(&#x27;ok&#x27;,`交点 (${qs(x)}, ${qs(y)})${d.fns.length&gt;2?&#x27;（只算前两条）&#x27;:&#x27;&#x27;}`)}}
+      d.fns.forEach(f=&gt;{const {k,b}=f.props;sig(&#x27;info&#x27;,`${f.name}：y = ${fx(k,b)}，${k&gt;0?&#x27;往右上升&#x27;:k&lt;0?&#x27;往右下倒&#x27;:&#x27;水平&#x27;}，过 (0, ${b})`)});}
     if(e.type===&#x27;rect&#x27;){const {w,h}=e.props;d.per=2*(w+h);d.area=w*h;if(w===h)sig(&#x27;ok&#x27;,`是正方形：周长 ${d.per}，面积 ${d.area}`);else sig(&#x27;info&#x27;,`周长 ${d.per}，面积 ${d.area}`)}
     if(e.type===&#x27;dice&#x27;){const c=e.props.counts;if(!c)sig(&#x27;info&#x27;,&#x27;点“掷”开始&#x27;);else{const tot=c.reduce((a,b)=&gt;a+b,0);let m=0;for(let i=2;i&lt;=12;i++)m=Math.max(m,c[i]);const bs=[];for(let i=2;i&lt;=12;i++)if(c[i]===m)bs.push(i);d.tot=tot;sig(&#x27;info&#x27;,`掷了 ${tot} 回，出现最多的是 ${bs.join(&#x27;、&#x27;)}`)}}
   }
