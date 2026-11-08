@@ -209,9 +209,9 @@ const TYPES={
  frac:{value:(p)=>Q(p.n,p.d),label:'分数条',group:'分数',prefix:'分数条',out:'value',defaults:{n:1,d:2},
    fields:[{k:'n',label:'分子（涂几份）',min:0,max:24},{k:'d',label:'分母（平均分成几份）',min:1,max:12}],
    size:e=>[176,34+Math.max(1,Math.ceil(e.props.n/e.props.d))*28]},
- adder:{label:'合并器',group:'数与运算',prefix:'合并器',out:'value',accepts:'value',defaults:{op:0},fields:[{k:'op',label:'运算（减法：第一个数减去后面的）',min:0,max:1,choices:['加','减']}],size:()=>[170,84]},
- mul:{label:'乘法器',group:'数与运算',prefix:'乘法器',out:'value',accepts:'value',defaults:{times:1},fields:[{k:'times',label:'再乘一个数（1 是不乘）',min:1,max:10}],size:()=>[170,84]},
- div:{label:'除法器',group:'数与运算',prefix:'除法器',out:'value',accepts:'value',slots:true,defaults:{mode:0},fields:[{k:'mode',label:'算什么',min:0,max:1,choices:['商','余数']}],size:()=>[200,110]},
+ adder:{compute:(p,ins)=>{const raw=ins.map(i=>i.v),xs=raw.filter(Boolean);if(raw.length&&raw.some(x=>!x))return null;if(p.op===1&&xs.length)return xs.slice(1).reduce((t,x)=>qsub(t,x),xs[0]);let v=Q(0);for(const x of xs)v=qadd(v,x);return v},label:'合并器',group:'数与运算',prefix:'合并器',out:'value',accepts:'value',defaults:{op:0},fields:[{k:'op',label:'运算（减法：第一个数减去后面的）',min:0,max:1,choices:['加','减']}],size:()=>[170,84]},
+ mul:{compute:(p,ins)=>{let v=Q(1),any=false,bad=false;for(const i of ins){const x=i.v;if(x){v=Q(v.n*x.n,v.d*x.d);any=true}else bad=true}if(!ins.length)return Q(1);if(bad)return null;if(!any)return null;return Q(v.n*(p.times||1),v.d)},label:'乘法器',group:'数与运算',prefix:'乘法器',out:'value',accepts:'value',defaults:{times:1},fields:[{k:'times',label:'再乘一个数（1 是不乘）',min:1,max:10}],size:()=>[170,84]},
+ div:{compute:(p,ins)=>{const L=ins.find(i=>i.slot==='L'),R=ins.find(i=>i.slot==='R');const a=L&&L.v,b=R&&R.v;if(!(a&&b&&b.n!==0))return null;if(p.mode===1)return(a.d===1&&b.d===1)?Q(((a.n%b.n)+Math.abs(b.n))%Math.abs(b.n)):null;return Q(a.n*b.d,a.d*b.n)},label:'除法器',group:'数与运算',prefix:'除法器',out:'value',accepts:'value',slots:true,defaults:{mode:0},fields:[{k:'mode',label:'算什么',min:0,max:1,choices:['商','余数']}],size:()=>[200,110]},
  money:{value:(p)=>Q(p.yuan*100+p.jiao*10+(p.fen||0),100),dim:'money',label:'人民币',group:'数与运算',prefix:'人民币',out:'value',defaults:{yuan:1,jiao:0,fen:0},fields:[{k:'yuan',label:'元',min:0,max:99},{k:'jiao',label:'角',min:0,max:9},{k:'fen',label:'分',min:0,max:9}],size:()=>[190,62]},
  clock:{value:(p)=>Q((p.h%12)*60+p.m),ports:(p,e,E)=>{const o={};const cl=clockPair(E);if(cl&&cl[0].id===e.id){const t=c=>((c.props.h%12)*60+c.props.m);o.between=((t(cl[1])-t(cl[0]))%720+720)%720}return o},label:'钟面',group:'图形',prefix:'钟面',out:'value',dim:'time',defaults:{h:3,m:0},fields:[{k:'h',label:'时（几点）',min:1,max:12},{k:'m',label:'分',min:0,max:59}],size:()=>[180,200]},
  angle:{sig:(e,_d,sig)=>{const k=e.props.deg;const kind=k===0?'零度角':k<90?'锐角':k===90?'直角':k<180?'钝角':k===180?'平角':'大于平角';sig(k===90?'ok':'info',`${k}°：${kind}`)},ports:(p)=>({deg:p.deg}),label:'角',group:'图形',prefix:'角',defaults:{deg:90},fields:[{k:'deg',label:'度数（0 到 180）',min:0,max:180,step:5}],size:()=>[200,160]},
@@ -247,7 +247,7 @@ const TYPES={
  light:{label:'判断灯',group:'关系',prefix:'判断灯',accepts:'bool',defaults:{},fields:[],size:()=>[120,90]},
  numline:{label:'数轴',group:'关系',prefix:'数轴',accepts:'value',reject:{area:'数轴量的是长短和数，面积不能放上去'},defaults:{min:0,max:2},
    fields:[{k:'min',label:'最左',min:-10,max:10},{k:'max',label:'最右',min:-9,max:20}],size:()=>[460,118]},
- balance:{label:'天平',group:'关系',prefix:'天平',accepts:'value',slots:true,reject:{area:'天平称重量，不称面积',time:'天平称重量，不称时间'},defaults:{sens:14},fields:[{k:'sens',label:'灵敏度（倾斜快慢）',min:4,max:30}],size:()=>[340,200]},
+ balance:{compute:(p,ins,port)=>{if(port!=='equal')return null;const Ls=ins.filter(i=>i.slot==='L'),Rs=ins.filter(i=>i.slot==='R');const bad=[...Ls,...Rs].some(i=>!i.v);const tot=a=>a.reduce((t,i)=>{const x=i.v;return x?qadd(t,x):t},Q(0));return(!bad&&Ls.length&&Rs.length)?{kind:'bool',data:qeq(tot(Ls),tot(Rs))}:null},label:'天平',group:'关系',prefix:'天平',accepts:'value',slots:true,reject:{area:'天平称重量，不称面积',time:'天平称重量，不称时间'},defaults:{sens:14},fields:[{k:'sens',label:'灵敏度（倾斜快慢）',min:4,max:30}],size:()=>[340,200]},
  fn:{label:'直线',group:'函数',prefix:'直线',out:'fn',defaults:{k:2,b:1},
    fields:[{k:'k',label:'k（斜率：x 加 1，y 加几）',min:-5,max:5},{k:'b',label:'b（和 y 轴交在哪）',min:-10,max:10}],size:()=>[160,64]},
  coord:{label:'坐标平面',group:'函数',prefix:'坐标平面',accepts:'fn',defaults:{},fields:[],size:()=>[340,360]},
@@ -255,10 +255,10 @@ const TYPES={
    fields:[{k:'w',label:'宽',min:1,max:12},{k:'h',label:'长',min:1,max:12},{k:'rot',label:'转角（度，0 到 359）',min:0,max:359}],
    // 尺寸按转过之后的外接框算；转角为 0 时和原来的尺寸一样。
    size:e=>{const p=e.props,gw=p.w*20,gh=p.h*20,r=(p.rot||0)*Math.PI/180,c=Math.abs(Math.cos(r)),s=Math.abs(Math.sin(r));return[Math.max(150,Math.round(gw*c+gh*s)+40),Math.round(gw*s+gh*c)+84]}},
- dice:{ports:(p)=>({dist:p.counts?{kind:'dist',counts:p.counts.slice()}:null}),label:'两个骰子',group:'概率',prefix:'骰子',defaults:{times:100,counts:null},
+ dice:{compute:(p,ins,port)=>{const c=p.counts;if(port==='dist'&&c)return{kind:'dist',data:c.slice()};if(c&&c.some(x=>x>0)){if(port==='tot')return Q(c.reduce((x,y)=>x+y,0));if(port==='best'){let bi=2;for(let i=2;i<=12;i++)if(c[i]>c[bi])bi=i;return Q(bi)}}return null},ports:(p)=>({dist:p.counts?{kind:'dist',counts:p.counts.slice()}:null}),label:'两个骰子',group:'概率',prefix:'骰子',defaults:{times:100,counts:null},
    fields:[{k:'times',label:'一次掷几回',min:10,max:2000,step:10}],actions:[{id:'roll',label:'🎲 掷'},{id:'clear',label:'清零'}],size:()=>[320,210]},
  // 黑箱：输入一个数，按规则 y = a·x + b 输出。规则是学生要猜的东西。
- box:{label:'黑箱（输入 → 输出）',group:'函数',prefix:'黑箱',out:'value',accepts:'value',defaults:{a:1,b:0,rule:0},
+ box:{compute:(p,ins)=>{const l=ins[0],x=l&&l.v;return x?boxOut(p,x):null},label:'黑箱（输入 → 输出）',group:'函数',prefix:'黑箱',out:'value',accepts:'value',defaults:{a:1,b:0,rule:0},
    fields:[{k:'a',label:'a（系数）',min:-10,max:10},{k:'b',label:'b',min:-10,max:10},{k:'rule',label:'规则',min:0,max:2,choices:['线性','平方','倒数']}],size:()=>[230,120]},
  // 数据表：四个数，输出合计、平均数或最大数。
  table:{ports:(p,e,E,D)=>{const T=D[e.id].tab;return{sum:T.sum,mean:T.mean,max:T.max}},label:'数据表（四个数）',group:'统计',prefix:'数据表',out:'value',accepts:'value',acceptsDist:true,dim:'count',defaults:{a:4,b:8,c:6,d:10,which:0},
@@ -415,17 +415,8 @@ function evaluate(s){
   const E=s.entities,vals={},busy={},D={};
   const val=(id,port)=>{const key=port?id+'#'+port:id;if(key in vals)return vals[key];if(busy[key])return null;busy[key]=1;const e=E[id];if(!e)return null;let v=null;
     if(TYPES[e.type].value)v=TYPES[e.type].value(e.props,port);
-    else if(e.type==='adder'){const raw=inputs(s,id).map(l=>vf(l));const xs=raw.filter(Boolean);
-      if(raw.length&&raw.some(x=>!x))v=null;
-      else if(e.props.op===1&&xs.length)v=xs.slice(1).reduce((t,x)=>qsub(t,x),xs[0]);else{v=Q(0);for(const x of xs)v=qadd(v,x)}}
-    else if(e.type==='mul'){const ls=inputs(s,id);v=Q(1);let any=false,bad=false;for(const l of ls){const x=vf(l);if(x){v=Q(v.n*x.n,v.d*x.d);any=true}else bad=true}
-      // 没连任何输入：空乘积是 1。连了线但有个算不出来：还没有结果（不静默跳过）。
-      if(!ls.length)v=Q(1);else if(bad)v=null;else if(!any)v=null;else v=Q(v.n*(e.props.times||1),v.d)}
-    else if(e.type==='balance'&&port==='equal'){const Ls=inputs(s,id).filter(l=>l.slot==='L'),Rs=inputs(s,id).filter(l=>l.slot==='R');const bad=[...Ls,...Rs].some(l=>!vf(l));const tot=ls=>ls.reduce((t,l)=>{const x=vf(l);return x?qadd(t,x):t},Q(0));if(!bad&&Ls.length&&Rs.length)v={kind:'bool',data:qeq(tot(Ls),tot(Rs))}}
-    else if(e.type==='box'){const l=inputs(s,id)[0];const x=l&&vf(l);v=x?boxOut(e.props,x):null}
-    else if(e.type==='dice'){const c=e.props.counts;if(port==='dist'&&c){v={kind:'dist',data:c.slice()}}else if(c&&c.some(x=>x>0)){if(port==='tot')v=Q(c.reduce((x,y)=>x+y,0));else if(port==='best'){let bi=2;for(let i=2;i<=12;i++)if(c[i]>c[bi])bi=i;v=Q(bi)}}}
+    else if(TYPES[e.type].compute){const ins=inputs(s,id).map(l=>({v:vf(l),slot:l.slot}));v=TYPES[e.type].compute(e.props,ins,port)}
     else if(e.type==='table'){const T=tableOf(id),p=e.props;v=port==='sum'?T.sum:port==='mean'?T.mean:port==='max'?T.max:(p.which===1?T.mean:p.which===2?T.max:T.sum)}
-    else if(e.type==='div'){const L=inputs(s,id).find(l=>l.slot==='L'),R=inputs(s,id).find(l=>l.slot==='R');const a=L&&vf(L),b=R&&vf(R);v=(a&&b&&b.n!==0)?(e.props.mode===1?(a.d===1&&b.d===1?Q(((a.n%b.n)+Math.abs(b.n))%Math.abs(b.n)):null):Q(a.n*b.d,a.d*b.n)):null}
     return vals[key]=(v&&(v.kind==='bool'||v.kind==='dist')?v:v?{kind:'num',dim:dimOf(s,id),data:v}:null)};
   // val 返回带类型的 Val；valQ / vf 取出有理数 data，算术部分照旧。
   const valQ=(id,port)=>{const v=val(id,port);return v?v.data:null};
