@@ -489,7 +489,7 @@ function evaluate(s){
     if(e.type==='pie'){const {a,b,c}=e.props,t=a+b+c;
       sig(t===100?'ok':'warn',t===100?'三个班合起来是 100%':`三个班合起来是 ${t}%，应该是 100%`);
       sig('info',`对应圆心角：一班 ${(a*3.6).toFixed(0)}°，二班 ${(b*3.6).toFixed(0)}°，三班 ${(c*3.6).toFixed(0)}°`)}
-    if(e.type==='shape'){const {dx,rot,mirror}=e.props;sig('info',`${dx?'向右平移 '+dx+' 格':'没有平移'}，${rot?'旋转 '+rot+'°':'没有旋转'}，${mirror?'做了轴对称':'没有轴对称'}`)}
+    if(e.type==='shape'){const {dx,dy=0,rot,mirror}=e.props;const mv=[];if(dx)mv.push('向右平移 '+dx+' 格');if(dy>0)mv.push('向上平移 '+dy+' 格');if(dy<0)mv.push('向下平移 '+(-dy)+' 格');sig('info',`${mv.length?mv.join('，'):'没有平移'}，${rot?'旋转 '+rot+'°':'没有旋转'}，${mirror?'做了轴对称':'没有轴对称'}`)}
     if(e.type==='solid'){const hs=SOLID_H,v=e.props.view;
       if(v===0){const cols=hs[0].map((_,x)=>Math.max(...hs.map(r=>r[x])));sig('info',`正面看到 ${cols.length} 列，高 ${cols.join('、')}`)}
       else if(v===1){const rows=hs.map(r=>Math.max(...r));sig('info',`侧面看到 ${rows.length} 列，高 ${rows.join('、')}`)}
