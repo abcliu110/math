@@ -87,6 +87,7 @@
     const d = U.types[e.type], dd = S.D[e.id];
     let h = '<h4><input id="nm" value="' + esc(e.name) + '" maxlength="12"><button class="tbtn" data-close="1">✕</button></h4>';
     for (const k of Object.keys(d.props)) {
+      if (d.props[k].hidden) continue;
       const P = d.props[k], v = e.props[k], drv = dd && dd.driven[k];
       h += '<div class="row' + (drv ? ' drv' : '') + '"><label>' + esc(P.label) + '</label><div class="ctl">';
       if (drv) h += '← 由「' + esc(S.scene.entities[drv.from].name) + '」驱动 <button class="st" data-unlink="' + drv.link + '" title="断开">✕</button>';

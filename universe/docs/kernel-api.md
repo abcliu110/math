@@ -40,3 +40,4 @@ U.registerPack({ id:'mypack', types:{ foo:{
 - `make(spec)` 生成和内置题同构的 problem；`add/remove/list/loadAll` 存在 localStorage（`universe-custom-v1`）
 - 菜单：出一道凑数题… / 导出我的题 / 导入题目（JSON 文件可发给同学）
 - 还没做：更一般的“出题”（任意目标性质、任意器材限制）、老师审核与布置。
+- 属性可带 `hidden: true`：不在属性面板显示，但器材内部可用（例如天平里“盒子的真实重量”）。

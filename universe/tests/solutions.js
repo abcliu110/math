@@ -49,4 +49,7 @@ module.exports = {
   'coprime-all'(h) { const c = h.role('c'); h.set(c, 'k', 3); h.run(10); h.set(c, 'k', 7); h.run(10); h.set(c, 'k', 9); h.run(10); h.set(c, 'k', 5); h.run(3); },
   'sphere-right3'(h) { const w = h.role('w'); h.set(w, 'space', 1); h.set(w, 'A', 90); h.set(w, 'B', 90); h.set(w, 'C', 90); },
   'sphere-quarter'(h) { const w = h.role('w'); h.set(w, 'space', 1); h.set(w, 'A', 120); h.set(w, 'B', 120); h.set(w, 'C', 120); },
+  'eq-take-away'(h) { const s = h.role('s'); h.set(s, 'lc', 0); h.set(s, 'rc', 7); },
+  'eq-divide'(h) { const s = h.role('s'); h.set(s, 'lx', 1); h.set(s, 'rc', 5); },
+  'eq-both-sides'(h) { const s = h.role('s'); h.set(s, 'lx', 2); h.set(s, 'rx', 0); h.set(s, 'lc', 0); h.set(s, 'rc', 6); h.set(s, 'lx', 1); h.set(s, 'rc', 3); },
 };
