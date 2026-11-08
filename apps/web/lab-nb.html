@@ -194,6 +194,7 @@ const lcm=(a,b)=>a/gcd(a,b)*b;
 function Q(n,d=1){if(!Number.isInteger(n)||!Number.isInteger(d)||d===0)throw new Error('bad-number');if(d<0){n=-n;d=-d}const g=gcd(n,d);return{n:n/g,d:d/g}}
 const qadd=(a,b)=>Q(a.n*b.d+b.n*a.d,a.d*b.d), qsub=(a,b)=>Q(a.n*b.d-b.n*a.d,a.d*b.d);
 const qeq=(a,b)=>a.n===b.n&&a.d===b.d, qnum=a=>a.n/a.d, qs=a=>a.d===1?String(a.n):a.n+'/'+a.d;
+const qsMoney=q=>(q.n/q.d).toFixed(2).replace(/\.?0+$/,'');
 
 /* ========== 器材注册表：每种器材 = 属性 + 端口 + 引擎规则 + 画法 ========== */
 const TYPES={
@@ -398,13 +399,14 @@ function evaluate(s){
   const E=s.entities,vals={},busy={},D={};
   const val=(id,port)=>{const key=port?id+'#'+port:id;if(key in vals)return vals[key];if(busy[key])return null;busy[key]=1;const e=E[id];if(!e)return null;let v=null;
     if(e.type==='num'||e.type==='var')v=Q(e.props.v);else if(e.type==='frac')v=Q(e.props.n,e.props.d);
-    else if(e.type==='adder'){const xs=inputs(s,id).map(l=>vf(l)).filter(Boolean);
-      if(e.props.op===1&&xs.length)v=xs.slice(1).reduce((t,x)=>qsub(t,x),xs[0]);else{v=Q(0);for(const x of xs)v=qadd(v,x)}}
+    else if(e.type==='adder'){const raw=inputs(s,id).map(l=>vf(l));const xs=raw.filter(Boolean);
+      if(raw.length&&raw.some(x=>!x))v=null;
+      else if(e.props.op===1&&xs.length)v=xs.slice(1).reduce((t,x)=>qsub(t,x),xs[0]);else{v=Q(0);for(const x of xs)v=qadd(v,x)}}
     else if(e.type==='rect')v=Q(e.props.w*e.props.h);else if(e.type==='money')v=Q(e.props.yuan*100+e.props.jiao*10+(e.props.fen||0),100);
-    else if(e.type==='mul'){const ls=inputs(s,id);v=Q(1);let any=false;for(const l of ls){const x=vf(l);if(x){v=Q(v.n*x.n,v.d*x.d);any=true}}
-      // 没连任何输入：空乘积是 1。连了线但都没有值：还没有结果。有值：再乘 times（保留分母）。
-      if(!ls.length)v=Q(1);else if(!any)v=null;else v=Q(v.n*(e.props.times||1),v.d)}
-    else if(e.type==='balance'&&port==='equal'){const Ls=inputs(s,id).filter(l=>l.slot==='L'),Rs=inputs(s,id).filter(l=>l.slot==='R');const tot=ls=>ls.reduce((t,l)=>{const x=vf(l);return x?qadd(t,x):t},Q(0));if(Ls.length&&Rs.length)v={kind:'bool',data:qeq(tot(Ls),tot(Rs))}}
+    else if(e.type==='mul'){const ls=inputs(s,id);v=Q(1);let any=false,bad=false;for(const l of ls){const x=vf(l);if(x){v=Q(v.n*x.n,v.d*x.d);any=true}else bad=true}
+      // 没连任何输入：空乘积是 1。连了线但有个算不出来：还没有结果（不静默跳过）。
+      if(!ls.length)v=Q(1);else if(bad)v=null;else if(!any)v=null;else v=Q(v.n*(e.props.times||1),v.d)}
+    else if(e.type==='balance'&&port==='equal'){const Ls=inputs(s,id).filter(l=>l.slot==='L'),Rs=inputs(s,id).filter(l=>l.slot==='R');const bad=[...Ls,...Rs].some(l=>!vf(l));const tot=ls=>ls.reduce((t,l)=>{const x=vf(l);return x?qadd(t,x):t},Q(0));if(!bad&&Ls.length&&Rs.length)v={kind:'bool',data:qeq(tot(Ls),tot(Rs))}}
     else if(e.type==='box'){const l=inputs(s,id)[0];const x=l&&vf(l);v=x?boxOut(e.props,x):null}
     else if(e.type==='dice'){const c=e.props.counts;if(port==='dist'&&c){v={kind:'dist',data:c.slice()}}else if(c&&c.some(x=>x>0)){if(port==='tot')v=Q(c.reduce((x,y)=>x+y,0));else if(port==='best'){let bi=2;for(let i=2;i<=12;i++)if(c[i]>c[bi])bi=i;v=Q(bi)}}}
     else if(e.type==='table'){const T=tableOf(id),p=e.props;v=port==='sum'?T.sum:port==='mean'?T.mean:port==='max'?T.max:(p.which===1?T.mean:p.which===2?T.max:T.sum)}
@@ -426,11 +428,13 @@ function evaluate(s){
     // d.val 是带类型的值 {kind, dim, data}；qv(d) 仍是有理数 Q，页面和判分照旧读它。
     d.val=TYPES[e.type].out==='value'?val(id):null;
     if(e.type==='frac'){const v=qv(d);if(e.props.n>e.props.d)sig('info',`比 1 大：${qs(v)} = ${Math.floor(e.props.n/e.props.d)} 又 ${e.props.n%e.props.d}/${e.props.d}`);else if(v.d!==e.props.d)sig('info',`${e.props.n}/${e.props.d} 和 ${qs(v)} 一样大`)}
-    if(e.type==='adder'){const ins=inputs(s,id).map(l=>vf(l)).filter(Boolean);d.terms=ins;
-      if(!ins.length)sig('info',e.props.op===1?'把几个数连进来，这里算它们的差（第一个数减去后面的）':'把几个数连进来，这里算它们的和');
+    if(e.type==='adder'){const raw=inputs(s,id).map(l=>vf(l));const ins=raw.filter(Boolean);d.terms=ins;
+      if(raw.length&&raw.some(x=>!x))sig('warn','有个输入算不出来：先把它修好，这里才能算');
+      else if(!ins.length)sig('info',e.props.op===1?'把几个数连进来，这里算它们的差（第一个数减去后面的）':'把几个数连进来，这里算它们的和');
       else{const ds=[...new Set(ins.map(q=>q.d))];if(ds.length>1){const L=ds.reduce(lcm);sig('info',e.props.op===1?`分母不同：都换成 ${L} 份再减`:`分母不同：都换成 ${L} 份再加`)}}}
-    if(e.type==='mul'){const ins=inputs(s,id).map(l=>vf(l)).filter(Boolean);d.terms=ins;
-      if(!ins.length)sig('info','把几个数连进来，这里算它们的积（几个 × 几个）');
+    if(e.type==='mul'){const raw=inputs(s,id).map(l=>vf(l));const ins=raw.filter(Boolean);d.terms=ins;
+      if(raw.length&&raw.some(x=>!x))sig('warn','有个输入算不出来：先把它修好，这里才能算');
+      else if(!ins.length)sig('info','把几个数连进来，这里算它们的积（几个 × 几个）');
       else if(ins.length>=2&&qv(d))sig('info',`${ins.map(qs).join(' × ')} = ${qs(qv(d))}`)}
     if(e.type==='div'){const L=inputs(s,id).find(l=>l.slot==='L'),R=inputs(s,id).find(l=>l.slot==='R');const a=L&&vf(L),b=R&&vf(R);d.a=a;d.b=b;
       if(e.props.mode===1&&a&&b&&b.n!==0)sig(qv(d)?'ok':'warn',`${qs(a)} 除以 ${qs(b)}，余 ${qv(d)?qs(qv(d)):'（不是整数）'}`);
@@ -507,9 +511,11 @@ function evaluate(s){
       if(ins.length>=2){const a=ins[0].v,b=ins[1].v,g=qsub(a,b);const gap=g.n<0?Q(-g.n,g.d):g;
         if(gap.n===0)sig('ok',`${qs(a)} 和 ${qs(b)} 落在同一点：一样大`);else sig('info',`${E[ins[0].from].name} 和 ${E[ins[1].from].name} 相差 ${qs(gap)}`)}}
     if(e.type==='balance'){const L=inputs(s,id).filter(l=>l.slot==='L'),R=inputs(s,id).filter(l=>l.slot==='R');
+      const bad=[...L,...R].some(l=>!vf(l));
       const sum=a=>a.reduce((t,l)=>{const v=vf(l);return v?qadd(t,v):t},Q(0));d.L=sum(L);d.R=sum(R);d.Ln=L;d.Rn=R;
-      const df=qsub(d.L,d.R);d.tilt=-Math.max(-16,Math.min(16,qnum(df)*(e.props.sens||14)));d.equal=df.n===0;d.ports={equal:d.equal,heavier:df.n>0?'L':df.n<0?'R':null};
-      if(!L.length&&!R.length)sig('info','把数连到左盘或右盘');
+      const df=qsub(d.L,d.R);d.tilt=bad?0:-Math.max(-16,Math.min(16,qnum(df)*(e.props.sens||14)));d.equal=!bad&&df.n===0;d.ports={equal:bad?null:d.equal,heavier:bad?null:(df.n>0?'L':df.n<0?'R':null)};
+      if(bad)sig('warn','有个盘上的数算不出来：先把它修好，天平才能称');
+      else if(!L.length&&!R.length)sig('info','把数连到左盘或右盘');
       else if(d.equal&&L.length&&R.length)sig('ok',`平了：左 ${qs(d.L)} = 右 ${qs(d.R)}`);
       else if(d.equal)sig('info','一边是空的，另一边加起来也是 0，两边一样重');
       else{const m=df.n<0?Q(-df.n,df.d):df;sig('warn',`${df.n>0?'左':'右'}边重 ${qs(m)}`)}}
@@ -786,9 +792,9 @@ money:(e,d,w,h)=>`<text class="big" x="${w/2}" y="${h/2+12}" text-anchor="middle
    for(let i=0;i<12;i++){const [x1,y1]=P(i*30-90,R-6),[x2,y2]=P(i*30-90,R-1);s+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#5b6778"/>`}
    const [hx,hy]=P(ha,R*0.5),[mx,my]=P(ma,R*0.8);s+=`<line x1="${cx}" y1="${cy}" x2="${hx}" y2="${hy}" stroke="#1d2633" stroke-width="5"/><line x1="${cx}" y1="${cy}" x2="${mx}" y2="${my}" stroke="#ff9f43" stroke-width="3"/><circle cx="${cx}" cy="${cy}" r="3" fill="#1d2633"/>`;
    return s},
-mul:(e,d,w,h)=>{const t=d.terms||[];const ex=t.length?t.map(qs).join(' × '):'空';return`<text class="ink" x="${w/2}" y="42" text-anchor="middle" font-size="13">${esc(ex)}</text><text class="big" x="${w/2}" y="70" text-anchor="middle" font-size="22">= ${qv(d)?qs(qv(d)):0}</text>`},
- div:(e,d,w,h)=>`<circle class="port-in" cx="0" cy="${h*0.3}" r="6"/><circle fill="transparent" cx="0" cy="${h*0.3}" r="16"/><circle class="port-in" cx="0" cy="${h*0.7}" r="6"/><circle fill="transparent" cx="0" cy="${h*0.7}" r="16"/><text class="ink" x="${w/2}" y="40" text-anchor="middle" font-size="13">被除数 ${d.a?qs(d.a):'?'}</text><text class="ink" x="${w/2}" y="60" text-anchor="middle" font-size="13">除数 ${d.b?qs(d.b):'?'}</text><text class="big" x="${w/2}" y="${h-12}" text-anchor="middle" font-size="20">= ${qv(d)?qs(qv(d)):'?'}</text>`,
- adder:(e,d,w,h)=>{const t=d.terms||[];const ex=t.length?t.map(qs).join(e.props.op===1?' − ':' + '):'空';return`<text class="ink" x="${w/2}" y="42" text-anchor="middle" font-size="13">${esc(ex)}</text><text class="big" x="${w/2}" y="70" text-anchor="middle" font-size="22">= ${qv(d)?qs(qv(d)):0}</text>`},
+mul:(e,d,w,h)=>{const t=d.terms||[];const ls=inputs(S,e.id);const allM=ls.length&&ls.every(l=>S.entities[l.from]&&S.entities[l.from].type==='money');const f=allM?q=>qsMoney(q)+'元':qs;const ex=t.length?t.map(f).join(' × '):'空';return`<text class="ink" x="${w/2}" y="42" text-anchor="middle" font-size="13">${esc(ex)}</text><text class="big" x="${w/2}" y="70" text-anchor="middle" font-size="22">= ${qv(d)?f(qv(d)):'?'}</text>`},
+ div:(e,d,w,h)=>{const ls=inputs(S,e.id),L=ls.find(l=>l.slot==='L'),R=ls.find(l=>l.slot==='R');const mL=L&&S.entities[L.from]&&S.entities[L.from].type==='money',mR=R&&S.entities[R.from]&&S.entities[R.from].type==='money';const fA=mL?q=>qsMoney(q)+'元':qs,fB=mR?q=>qsMoney(q)+'元':qs;return`<circle class="port-in" cx="0" cy="${h*0.3}" r="6"/><circle fill="transparent" cx="0" cy="${h*0.3}" r="16"/><circle class="port-in" cx="0" cy="${h*0.7}" r="6"/><circle fill="transparent" cx="0" cy="${h*0.7}" r="16"/><text class="ink" x="${w/2}" y="40" text-anchor="middle" font-size="13">被除数 ${d.a?fA(d.a):'?'}</text><text class="ink" x="${w/2}" y="60" text-anchor="middle" font-size="13">除数 ${d.b?fB(d.b):'?'}</text><text class="big" x="${w/2}" y="${h-12}" text-anchor="middle" font-size="20">= ${qv(d)?(mL?qsMoney(qv(d))+'元':qs(qv(d))):'?'}</text>`},
+ adder:(e,d,w,h)=>{const t=d.terms||[];const ls=inputs(S,e.id);const allM=ls.length&&ls.every(l=>S.entities[l.from]&&S.entities[l.from].type==='money');const f=allM?q=>qsMoney(q)+'元':qs;const ex=t.length?t.map(f).join(e.props.op===1?' − ':' + '):'空';return`<text class="ink" x="${w/2}" y="42" text-anchor="middle" font-size="13">${esc(ex)}</text><text class="big" x="${w/2}" y="70" text-anchor="middle" font-size="22">= ${qv(d)?f(qv(d)):'?'}</text>`},
  light:(e,d,w,h)=>`<circle cx="${w/2}" cy="${h/2-8}" r="22" fill="${d.lit?'#ffd166':'#cfd6df'}" stroke="#5b6778" stroke-width="2"/><text class="ink" x="${w/2}" y="${h-6}" text-anchor="middle" font-size="12">${d.lit?'平了':'没平'}</text>`,
  numline:(e,d,w)=>{const {min,max}=e.props,x0=24,x1=w-24,X=v=>x0+(v-min)/(max-min)*(x1-x0),y=72;let L=1;(d.pts||[]).forEach(p=>{if(p.v.d<=12)L=lcm(L,p.v.d)});if(L>12||(max-min)*L>60)L=1;
    let s=`<line x1="${x0-10}" y1="${y}" x2="${x1+12}" y2="${y}" stroke="#334" stroke-width="2"/><path d="M${x1+12},${y-5}L${x1+20},${y}L${x1+12},${y+5}Z" fill="#334"/>`;
@@ -836,7 +842,7 @@ function placeFloat(){const tl=$('tools'),cd=$('card');const e=sel&&S.entities[s
   cd.style.left=Math.max(8,W-262)+'px';cd.style.top='12px';cd.style.maxHeight=Math.max(200,H-24)+'px';cd.style.overflowY='auto';cd.style.display='block';
   if(cd.dataset.for!==e.id||cd.dataset.v!==JSON.stringify(e.props)+e.name)buildCard(e);
 }
-function stateLine(e){const d=D[e.id]||{};if(qv(d)&&e.type!=='rect'&&e.type!=='clock')return qs(qv(d));if(e.type==='fn')return'y = '+fx(e.props.k,e.props.b);if(e.type==='rect')return`${e.props.w} × ${e.props.h} = ${e.props.w*e.props.h}`;
+function stateLine(e){const d=D[e.id]||{};if(e.type==='money'&&qv(d))return qsMoney(qv(d))+' 元';if(qv(d)&&e.type!=='rect'&&e.type!=='clock')return qs(qv(d));if(e.type==='fn')return'y = '+fx(e.props.k,e.props.b);if(e.type==='rect')return`${e.props.w} × ${e.props.h} = ${e.props.w*e.props.h}`;
   if(e.type==='balance')return`${d.L?qs(d.L):0} : ${d.R?qs(d.R):0}`;if(e.type==='numline')return`${e.props.min} 到 ${e.props.max}`;if(e.type==='dice')return`${d.tot||0} 回`;return TYPES[e.type].label}
 /* 卡内只读推导值。圆的 π 与台面信号一致（默认 3.14）。 */
 function derivedLines(e){const p=e.props;const n=x=>String(+x.toFixed(2));
