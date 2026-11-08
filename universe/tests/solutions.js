@@ -60,4 +60,5 @@ module.exports = {
   'counting-matching'(h) { const gr = h.role('grid'); h.set(gr, 'cols', 4); const o = h.add('op', { op: 3 }); h.link(gr, o, 'a'); h.link(h.role('half'), o, 'b'); },
   'fold-square-half'(h) { const f = h.role('f'); h.set(f, 'fold', 1); h.set(f, 'angle', 90); },
   'fold-diagonal'(h) { const f = h.role('f'); h.set(f, 'fold', 1); h.set(f, 'angle', 45); },
+  'approach-sqrt2'(h) { const k = h.role('k'); h.set(k, 'place', -1); h.set(k, 'place', -2); },
 };
