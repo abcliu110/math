@@ -229,7 +229,7 @@ const TYPES={
  data:{sig:(e,_d,sig)=>{const v=[e.props.a,e.props.b,e.props.c].sort((p,q)=>p-q);const mean=(v[0]+v[1]+v[2])/3;sig('ok',`平均数 ${Number.isInteger(mean)?mean:mean.toFixed(2)}，中位数 ${v[1]}`)},ports:(p)=>{const v=[p.a,p.b,p.c].sort((x,y)=>x-y),mean=(v[0]+v[1]+v[2])/3;return{mean:mean,mean2:Number(mean.toFixed(2)),median:v[1]}},label:'数据的分析（三个数）',group:'统计',prefix:'数据',defaults:{a:6,b:8,c:10},fields:[{k:'a',label:'数 1',min:0,max:20},{k:'b',label:'数 2',min:0,max:20},{k:'c',label:'数 3',min:0,max:20}],size:()=>[240,120]},
  sys:{sig:(e,_d,sig)=>{const {x,y}=e.props;const ok1=x+y===10,ok2=x-y===4; if(ok1&&ok2)sig('ok',`两个方程都成立：x = ${x}，y = ${y}`); else sig('info',`x + y = ${x+y}（要 10），x − y = ${x-y}（要 4）`)},ports:(p)=>({x:p.x,y:p.y,ok:(p.x+p.y===10&&p.x-p.y===4)}),label:'二元一次方程组（x + y = 10，x − y = 4）',group:'数与运算',prefix:'方程组',defaults:{x:0,y:0},fields:[{k:'x',label:'x',min:-10,max:20},{k:'y',label:'y',min:-10,max:20}],size:()=>[260,140]},
  quad:{sig:(e,_d,sig)=>{const {b,c}=e.props,D0=b*b-4*c;const f=n=>Number.isInteger(n)?String(n):n.toFixed(2); if(D0<0)sig('info','判别式 < 0：没有实数根'); else{const r1=(-b+Math.sqrt(D0))/2,r2=(-b-Math.sqrt(D0))/2;const rs=[r1,r2].sort((p,q)=>p-q);sig('ok',D0===0?`两个根相等：${f(rs[0])}`:`根：${f(rs[0])}、${f(rs[1])}`)}},ports:(p)=>{const D0=p.b*p.b-4*p.c;const o={disc:D0};if(D0>=0){const r1=(-p.b+Math.sqrt(D0))/2,r2=(-p.b-Math.sqrt(D0))/2;o.roots=[r1,r2].sort((x,y)=>x-y)}else o.roots=null;return o},label:'一元二次方程 x² + bx + c = 0',group:'数与运算',prefix:'方程',defaults:{b:0,c:0},fields:[{k:'b',label:'b',min:-10,max:10},{k:'c',label:'c',min:-10,max:10}],size:()=>[260,140]},
- afrac:{sig:(e,_d,sig)=>{const {n,d}=e.props;if(d===0)sig('err','分母是 0，分式没有意义');else{const g=(x,y)=>y?g(y,x%y):Math.abs(x);const k=g(n,d)||1;let nu=n/k,de=d/k;if(de<0){nu=-nu;de=-de}sig('ok',`值 = ${de===1?nu:nu+'/'+de}`)}},ports:(p)=>(p.d!==0?{value:p.n/p.d}:{}),label:'分式 n / d',group:'分数',prefix:'分式',defaults:{n:6,d:4},fields:[{k:'n',label:'分子 n',min:-12,max:12},{k:'d',label:'分母 d',min:-6,max:6}],size:()=>[220,130]},
+ afrac:{sig:(e,_d,sig)=>{const {n,d}=e.props;if(d===0)sig('err','分母是 0，分式没有意义');else{const g=(x,y)=>y?g(y,x%y):Math.abs(x);const k=g(n,d)||1;let nu=n/k,de=d/k;if(de<0){nu=-nu;de=-de}sig('ok',`值 = ${de===1?nu:nu+'/'+de}`)}},ports:(p)=>(p.d!==0?{value:Q(p.n,p.d)}:{}),label:'分式 n / d',group:'分数',prefix:'分式',defaults:{n:6,d:4},fields:[{k:'n',label:'分子 n',min:-12,max:12},{k:'d',label:'分母 d',min:-6,max:6}],size:()=>[220,130]},
  radical:{ports:(p)=>{const n=p.n;let kk=1,mm=n;for(let k=Math.floor(Math.sqrt(n));k>=2;k--){if(n%(k*k)===0){kk=k;mm=n/(k*k);break}}return{kk:kk,mm:mm}},label:'二次根式 √n',group:'数与运算',prefix:'根式',defaults:{n:8},fields:[{k:'n',label:'被开方数 n',min:1,max:50}],size:()=>[220,120]},
  parlines:{sig:(e,_d,sig)=>{const a=e.props.a;sig('ok',`同旁内角 ${180-a}°，同位角 ${a}°`)},ports:(p)=>({sameSide:180-p.a,corresponding:p.a}),label:'平行线与截线（角）',group:'图形',prefix:'平行线',defaults:{a:40},fields:[{k:'a',label:'截线与直线的夹角（度）',min:10,max:170,step:10}],size:()=>[240,190]},
  bag:{sig:(e,_d,sig)=>{const {red,white}=e.props,t=red+white; if(t===0)sig('info','袋子里没有球'); else{const g=(x,y)=>y?g(y,x%y):x;const k=g(red,t)||1;const n=red/k,dn=t/k;sig(red>0?'ok':'info',`P(红) = ${n}/${dn}`)}},ports:(p)=>{const t=p.red+p.white;return{pRed:t?p.red/t:null}},label:'摸球（红、白）',group:'概率',prefix:'袋子',defaults:{red:2,white:2},fields:[{k:'red',label:'红球（个）',min:0,max:10},{k:'white',label:'白球（个）',min:0,max:10}],size:()=>[220,160]},
@@ -384,7 +384,7 @@ function actRaw(a){
     return{ok:1}}
   case 'bindexpr':return addExprBind(s,a.to,a.k,a.text);
   case 'scale':{const e=E[a.id];if(!e)return{ok:0,why:'没有这个器材'};e.k=Math.round(Math.min(2,Math.max(0.5,+a.k))*4)/4;return{ok:1}}
-  case 'roll':{const e=E[a.id];const c=e.props.counts||Array(13).fill(0);for(let i=0;i<e.props.times;i++){c[1+Math.ceil(Math.random()*6)+Math.ceil(Math.random()*6)-1]++}e.props.counts=c;return{ok:1}}
+  case 'roll':{const e=E[a.id];const c=e.props.counts||Array(13).fill(0);for(let i=0;i<e.props.times;i++){c[Math.floor(Math.random()*6)+Math.floor(Math.random()*6)+2]++}e.props.counts=c;return{ok:1}}
   case 'clearCounts':{E[a.id].props.counts=null;return{ok:1}}
   case 'segclick':{const p=E[a.id].props;p.n=(p.n===a.k?a.k-1:a.k);return{ok:1}}
   }}catch(err){return{ok:0,why:'这个数不合法'}}
@@ -524,7 +524,7 @@ function evaluate(s){
       if(d.fns.length>=2){const [f,g]=d.fns;if(f.props.k===g.props.k)sig(f.props.b===g.props.b?'ok':'warn',f.props.b===g.props.b?'两条线重合':'k 一样：两条线平行，永远不相交');
         else{const x=Q(g.props.b-f.props.b,f.props.k-g.props.k);const y=qadd(Q(f.props.k*x.n,x.d),Q(f.props.b));sig('ok',`交点 (${qs(x)}, ${qs(y)})`)}}}
     if(e.type==='rect'){const {w,h}=e.props;d.per=2*(w+h);d.area=w*h;if(w===h)sig('ok',`是正方形：周长 ${d.per}，面积 ${d.area}`);else sig('info',`周长 ${d.per}，面积 ${d.area}`)}
-    if(e.type==='dice'){const c=e.props.counts;if(!c)sig('info','点“掷”开始');else{const tot=c.reduce((a,b)=>a+b,0);let best=2;for(let i=2;i<=12;i++)if(c[i]>c[best])best=i;d.tot=tot;sig('info',`掷了 ${tot} 回，出现最多的是 ${best}`)}}
+    if(e.type==='dice'){const c=e.props.counts;if(!c)sig('info','点“掷”开始');else{const tot=c.reduce((a,b)=>a+b,0);let m=0;for(let i=2;i<=12;i++)m=Math.max(m,c[i]);const bs=[];for(let i=2;i<=12;i++)if(c[i]===m)bs.push(i);d.tot=tot;sig('info',`掷了 ${tot} 回，出现最多的是 ${bs.join('、')}`)}}
   }
   // 端口：每个器材算出来的数（有名字、有值）。步骤判分读端口，不再匹配信号文字。
   for(const id in E)D[id].ports=Object.assign(D[id].ports||{},portsFor(E[id],s,E,D));
@@ -1459,7 +1459,7 @@ const P12=[
  {id:'g8_afrac',grade:8,domain:'数与代数',tools:'分式',title:'分式：分母是几时，分式没有意义？',q:'分式的分母不能是 0。把分母调到 0 看看会怎样，再调回 4。',why:'分母是 0 时，除法没有意义，所以分式没有意义。',
   build:s=>{addEnt(s,'afrac',200,60,{n:6,d:4})},
   steps:[{id:'g8_afrac:s1',label:'把分母调到 0',score:1,hint:'点分式卡，把分母 d 调到 0',target:T45('afrac'),check:(s,D)=>s.entities[byType(s,'afrac')].props.d===0},
-         {id:'g8_afrac:s2',label:'分母调回 4，值是 3/2',score:2,hint:'把分母调回 4，看下面的文字',target:T45('afrac'),check:(s,D)=>{const a=byType(s,'afrac');return s.entities[a].props.d===4&&D[a].ports.value===1.5}}]},
+         {id:'g8_afrac:s2',label:'分母调回 4，值是 3/2',score:2,hint:'把分母调回 4，看下面的文字',target:T45('afrac'),check:(s,D)=>{const a=byType(s,'afrac');return s.entities[a].props.d===4&&qeq(D[a].ports.value,Q(3,2))}}]},
  {id:'g8_rad',grade:8,domain:'数与代数',tools:'二次根式',title:'二次根式：√12 能化简成几？',q:'把被开方数里的平方因数拿出来：12 = 4 × 3，√4 = 2。',why:'√12 = √(4 × 3) = 2√3。',
   build:s=>{addEnt(s,'radical',200,60,{n:8})},
   steps:[{id:'g8_rad:s1',label:'把被开方数调到 12',score:1,hint:'点根式卡，把 n 调到 12',target:T45('radical'),check:(s,D)=>s.entities[byType(s,'radical')].props.n===12},
