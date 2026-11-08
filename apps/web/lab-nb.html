@@ -293,11 +293,35 @@ function dimLabel(n){return DIM_NAME[n]||n}
 /* 依赖关系：连线和绑定都算。从 a 能走到 b，说明 b 的值依赖 a（或 a 绑着 b 的属性）。 */
 function reachAll(s,a,b){const seen={};const st=[a];while(st.length){const c=st.pop();if(c===b)return true;if(seen[c])continue;seen[c]=1;s.links.filter(l=>l.from===c).forEach(l=>st.push(l.to));(s.binds||[]).filter(x=>x.from===c).forEach(x=>st.push(x.to))}return false}
 /* 绑定同步：把绑定的值写进目标属性。改一次算几遍，直到不再变（绑定链最多 8 层）。 */
+/* 属性表达式（最小版）：文字里可以写器材的名字、数字，以及 + − × ÷ 和括号。名字按最长匹配认。 */
+function exprTokens(s,text){const names=Object.values(s.entities).filter(e=>e.name).sort((a,b)=>b.name.length-a.name.length);const toks=[];let i=0;
+  while(i<text.length){const ch=text[i];if(/\s/.test(ch)){i++;continue}const rest=text.slice(i);const nm=names.find(n=>rest.startsWith(n.name));
+    if(nm){toks.push({ref:nm.id});i+=nm.name.length;continue}
+    let m=rest.match(/^\d+(\.\d+)?/);if(m){toks.push({num:m[0]});i+=m[0].length;continue}
+    m=rest.match(/^[+\-−×÷*\/()]/);if(m){toks.push({op:m[0]});i+=1;continue}
+    return null}
+  return toks}
+function evalTokens(toks,getVal){let p=0;
+  const factor=()=>{const t=toks[p++];if(!t)throw new Error('end');if(t.num!==undefined){const parts=t.num.split('.');const d=parts[1]?Math.pow(10,parts[1].length):1;return Q(Math.round(parseFloat(t.num)*d),d)}
+    if(t.ref!==undefined){const v=getVal(t.ref);if(!v)throw new Error('novalue');return v}
+    if(t.op==='('){const v=expr();if(!toks[p]||toks[p].op!==')')throw new Error('paren');p++;return v}
+    throw new Error('bad')};
+  const term=()=>{let v=factor();while(toks[p]&&['×','*','÷','/'].includes(toks[p].op)){const o=toks[p++].op;const w=factor();if(o==='×'||o==='*')v=Q(v.n*w.n,v.d*w.d);else{if(w.n===0)throw new Error('div0');v=Q(v.n*w.d,v.d*w.n)}}return v};
+  const expr=()=>{let v=term();while(toks[p]&&['+','-','−'].includes(toks[p].op)){const o=toks[p++].op;const w=term();v=o==='+'?qadd(v,w):qsub(v,w)}return v};
+  const r=expr();if(p!==toks.length)throw new Error('trail');return r}
+const srcsOf=b=>b.expr?b.refs:[b.from];
+// 表达式的值：按 Dd（evaluate 的结果）读来源；有一处算不出来就是 null。
+function exprValue(s,b,Dd){const toks=exprTokens(s,b.expr);if(!toks)return null;try{return evalTokens(toks,id=>{const x=Dd[id]&&qv(Dd[id]);return x||null})}catch(e){return null}}
+// 给一个字段绑表达式。返回 {ok, why}。同一字段原来的绑定会被替换。
+function addExprBind(s,to,k,text){const toks=exprTokens(s,text);if(!toks)return{ok:0,why:'表达式里有认不出的字'};
+  const refs=toks.filter(t=>t.ref!==undefined).map(t=>t.ref);if(!refs.length)return{ok:0,why:'表达式里要有一个器材的名字'};
+  if(refs.some(r=>r===to||reachAll(s,to,r)))return{ok:0,why:'绕回来了：它的值已经依赖这个器材，不能再绑'};
+  s.binds=(s.binds||[]).filter(b=>!(b.to===to&&b.k===k));s.binds.push({from:refs[0],to,k,expr:text,refs});return{ok:1}}
 /* 绑定同步按拓扑序做：绑定 o 的目标若能走到绑定 b 的来源，o 先算，b 再读它的值。每条绑定只写一次，没有“最多 8 遍”的上限。 */
 function syncBinds(s){if(!s.binds||!s.binds.length)return;
   const left=s.binds.slice(),order=[];
-  while(left.length){let i=left.findIndex(b=>!left.some(o=>o!==b&&reachAll(s,o.to,b.from)));if(i<0)i=0;order.push(left.splice(i,1)[0])}
-  for(const b of order){const Dd=evaluate(s);const to=s.entities[b.to],src=Dd[b.from]&&qv(Dd[b.from]);if(!to||!src||src.d!==1)continue;const F=TYPES[to.type].fields.find(f=>f.k===b.k);if(!F||src.n<F.min||src.n>F.max)continue;to.props[b.k]=src.n}}
+  while(left.length){let i=left.findIndex(b=>!left.some(o=>o!==b&&srcsOf(b).some(r=>reachAll(s,o.to,r))));if(i<0)i=0;order.push(left.splice(i,1)[0])}
+  for(const b of order){const Dd=evaluate(s);const to=s.entities[b.to],src=b.expr?exprValue(s,b,Dd):(Dd[b.from]&&qv(Dd[b.from]));if(!to||!src||src.d!==1)continue;const F=TYPES[to.type].fields.find(f=>f.k===b.k);if(!F||src.n<F.min||src.n>F.max)continue;to.props[b.k]=src.n}}
 function reach(s,a,b){const seen={};const st=[a];while(st.length){const c=st.pop();if(c===b)return true;if(seen[c])continue;seen[c]=1;s.links.filter(l=>l.from===c).forEach(l=>st.push(l.to))}return false}
 
 /* 动作（意图）。所有改动都走这里：校验 → 改 → 引擎重算。返回 {ok, why} */
