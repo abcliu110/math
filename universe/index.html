@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>数学小宇宙</title>
+<link rel="stylesheet" href="css/universe.css">
+</head>
+<body>
+<div id="top">
+  <button class="menu-btn" id="burger" title="实验库 / 步骤">≡</button>
+  <span class="brand">数学小宇宙</span>
+  <span class="ptitle" id="ptitle"></span>
+  <div class="seg" id="modes"><button data-mode="free">自由探究</button><button data-mode="practice">练习</button><button data-mode="exam">考试</button></div>
+  <div class="dd"><button class="tbtn" id="menubtn">菜单</button>
+    <div class="ddm" id="menu"><button data-m="save">保存台面到文件</button><button data-m="load">从文件载入台面</button><button data-m="export">导出学习记录</button><button data-m="clearlog">清除学习记录</button></div></div>
+  <span class="sp"></span>
+  <button class="tbtn pri" id="submit" style="display:none">交卷</button>
+  <button class="tbtn" id="undo">撤销</button><button class="tbtn" id="redo">重做</button>
+  <button class="tbtn hm" id="tidy">整理</button><button class="tbtn hm" id="clear">清空台面</button>
+  <button class="tbtn hm" id="shelfbtn" style="display:none">器材</button>
+</div>
+<div id="main">
+  <div id="left">
+    <div class="tabs" id="ltabs"><button data-tab="lab">实验库</button><button data-tab="steps">步骤</button></div>
+    <div class="scroll" id="leftbody"></div>
+  </div>
+  <div id="stagewrap">
+    <div id="stage"><div id="world"></div></div>
+    <div id="banner" style="display:none"></div>
+    <div id="insp"></div>
+    <div class="fab" id="zoom"><button id="zout">−</button><span class="zv" id="zv">100%</span><button id="zin">+</button><button id="zfit">适应</button></div>
+    <div class="fab" id="clockbar">
+      <button id="rew" title="回到第 0 拍">⏮</button><button id="go" class="go" title="开始 / 暂停（空格）">▶</button><button id="step1" title="走一拍">⏭</button>
+      <span class="tk" id="tk"></span>
+      <span class="rate"><button data-rate="0.5">0.5×</button><button data-rate="1">1×</button><button data-rate="4">4×</button><button data-rate="20">20×</button></span>
+    </div>
+    <div class="fab" id="fabr"><button id="why">💡 为什么</button><button id="found">📝 我的发现</button></div>
+  </div>
+  <div id="right">
+    <div class="sh" style="padding:12px;border-bottom:1px solid var(--line)"><input class="search" id="q2" placeholder="搜索器材"></div>
+    <div class="scroll" id="shelfbody"></div>
+  </div>
+</div>
+<div id="dlg"><div class="box"></div></div>
+<div id="tip"></div>
+
+<script src="js/core/rational.js"></script>
+<script src="js/core/kinds.js"></script>
+<script src="js/core/registry.js"></script>
+<script src="js/core/world.js"></script>
+<script src="js/core/kit.js"></script>
+<script src="js/core/judge.js"></script>
+<script src="js/core/events.js"></script>
+<script src="packs/core.js"></script>
+<script src="packs/time.js"></script>
+<script src="problems/starter.js"></script>
+<script src="js/ui/stage.js"></script>
+<script src="js/ui/panels.js"></script>
+<script src="js/ui/app.js"></script>
+</body>
+</html>

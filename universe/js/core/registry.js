@@ -1,0 +1,138 @@
+/* 器材注册表：一种器材 = 一个对象，加器材只改这一处。
+ *
+ * 器材合同（字段）：
+ *   label, prefix, group, grades:[最低,最高], icon(): 器材架缩略图 SVG 内容（64×44）
+ *   props:   { k: {type:'num'|'int'|'choice'|'bool'|'text', label, default, min, max, step, choices, write} }
+ *            每个可写属性自动带一个输入口 'p.<k>'：连上线就由上游驱动。
+ *   inputs:  { port: {kind, label, many} }       outputs: { port: {kind, label} }
+ *   二选一：
+ *     compute(ctx) -> { port: Val|null }          无状态：纯函数，不得改 ctx
+ *     step(ctx) -> newState （配 init(props) 和 read(ctx) -> {port: Val}）  有状态：随世界时钟走一拍
+ *   sig(ctx, say)   可选：信号条。say(level, text)，level = ok|info|warn|err|reject
+ *                   reject = 这样连/这样改不行（连线时被拒绝并说出原因）
+ *   size(ent) -> [w,h]   draw(c) -> SVG 字符串（卡片内容区）   badge(c) -> 标题右侧读数
+ */
+(function (G) {
+  'use strict';
+  const U = G.U, Q = U.Q;
+  U.types = {};
+  U.packs = {};
+  U.GROUPS = ['数与运算', '分数', '图形', '关系', '函数', '统计与概率', '时间与变化'];
+
+  const PROP_TYPES = ['num', 'int', 'choice', 'bool', 'text'];
+
+  U.define = function (id, def) {
+    def.id = id;
+    def.prefix = def.prefix || def.label;
+    def.grades = def.grades || [1, 9];
+    def.alias = def.alias || [];
+    def.props = def.props || {};
+    def.inputs = def.inputs || {};
+    def.outputs = def.outputs || {};
+    for (const k in def.props) {
+      const P = def.props[k];
+      P.k = k; P.write = P.write !== false; P.label = P.label || k;
+      if (P.type === 'num' && P.step === undefined) P.step = 1;
+    }
+    for (const k in def.inputs) { def.inputs[k].many = !!def.inputs[k].many; def.inputs[k].label = def.inputs[k].label || k; }
+    for (const k in def.outputs) { def.outputs[k].label = def.outputs[k].label || k; }
+    def.stateful = typeof def.step === 'function';
+    if (def.stateful && !def.init) def.init = () => ({});
+    U.types[id] = def;
+    return def;
+  };
+
+  U.defaultProps = (def, given) => {
+    const p = {};
+    for (const k in def.props) p[k] = given && given[k] !== undefined ? given[k] : def.props[k].default;
+    return p;
+  };
+
+  // 把任意输入变成属性合法值；不合法就说为什么（不悄悄改）
+  U.coerceProp = (P, x) => {
+    if (!P) return { ok: false, why: '没有这个属性' };
+    if (P.type === 'text') return { ok: true, v: String(x === undefined || x === null ? '' : x) };
+    if (P.type === 'bool') return { ok: true, v: !!x };
+    let v;
+    if (x && typeof x === 'object' && 'n' in x) v = x.n / x.d; else v = Number(x);
+    if (!Number.isFinite(v)) return { ok: false, why: '要填一个数' };
+    if (P.type === 'choice') {
+      if (!Number.isInteger(v) || v < 0 || v >= P.choices.length) return { ok: false, why: '只能选 ' + P.choices.join(' / ') };
+      return { ok: true, v };
+    }
+    if (P.type === 'int' && !Number.isInteger(v)) return { ok: false, why: '要填整数' };
+    if (P.min !== undefined && v < P.min) return { ok: false, why: '「' + P.label + '」最小是 ' + P.min };
+    if (P.max !== undefined && v > P.max) return { ok: false, why: '「' + P.label + '」最大是 ' + P.max };
+    return { ok: true, v };
+  };
+
+  U.registerPack = function (pack) {
+    U.packs[pack.id] = { id: pack.id, version: pack.version || 1, needs: pack.needs || [], types: [] };
+    for (const id in (pack.kinds || {})) U.defineKind(id, pack.kinds[id]);
+    for (const id in (pack.types || {})) { pack.types[id].pack = pack.id; U.define(id, pack.types[id]); U.packs[pack.id].types.push(id); }
+  };
+
+  // ---- lint：进不了注册表的器材 ----
+  const deepFreeze = (o) => { if (o && typeof o === 'object' && !Object.isFrozen(o)) { Object.freeze(o); for (const k of Object.keys(o)) deepFreeze(o[k]); } return o; };
+
+  U.lintType = function (def) {
+    const errors = [], exempt = [];
+    const err = (m) => errors.push(m);
+    if (!def.label) err('缺 label');
+    if (!U.GROUPS.includes(def.group)) err('group 不在器材架分组里：' + def.group);
+    if (typeof def.icon !== 'function') err('缺 icon()，器材架每个器材都要有缩略图');
+    if (typeof def.size !== 'function') err('缺 size(ent)');
+    if (typeof def.draw !== 'function') err('缺 draw(c)');
+    const outs = Object.keys(def.outputs);
+    if (!outs.length) err('至少要有 1 个输出口（没有输出口就是孤岛）');
+    for (const k of outs) if (!U.KINDS[def.outputs[k].kind]) err('输出口 ' + k + ' 的 kind 没注册：' + def.outputs[k].kind);
+    for (const k of Object.keys(def.inputs)) if (!U.KINDS[def.inputs[k].kind] && def.inputs[k].kind !== 'any') err('输入口 ' + k + ' 的 kind 没注册：' + def.inputs[k].kind);
+    const hasC = typeof def.compute === 'function', hasS = typeof def.step === 'function';
+    if (hasC === hasS) err('compute 和 step 必须有且只有一个');
+    if (hasS && typeof def.read !== 'function') err('有状态器材要有 read(ctx)：状态怎么变成输出');
+    for (const k in def.props) {
+      const P = def.props[k];
+      if (!PROP_TYPES.includes(P.type)) err('属性 ' + k + ' 的 type 不合法：' + P.type);
+      if (P.type === 'choice' && !(P.choices && P.choices.length)) err('属性 ' + k + ' 是 choice 但没有 choices');
+      if (P.default === undefined) err('属性 ' + k + ' 缺 default');
+      const r = U.coerceProp(P, P.default);
+      if (!r.ok) err('属性 ' + k + ' 的 default 自己就不合法：' + r.why);
+    }
+    const writable = Object.keys(def.props).filter((k) => def.props[k].write).length;
+    const need = def.lint && def.lint.minProps !== undefined ? def.lint.minProps : 3;
+    if (writable < need) err('可写属性 ' + writable + ' 个，少于 ' + need + ' 个');
+    else if (def.lint && def.lint.minProps !== undefined && def.lint.minProps < 3) {
+      if (!def.lint.why) err('豁免属性个数必须写 lint.why（理由）');
+      else exempt.push('属性 ' + writable + ' 个（要求 3）：' + def.lint.why);
+    }
+    // 实跑：单独放一台，算一遍、画一遍、画缩略图；compute 收到冻结的 ctx，改它就会抛错
+    if (!errors.length) {
+      try {
+        const icon = def.icon();
+        if (typeof icon !== 'string' || !icon.length) err('icon() 要返回 SVG 字符串');
+        const sc = U.World.blank();
+        const id = U.World.add(sc, def.id, 0, 0);
+        const D = U.World.evaluate(sc);
+        const e = sc.entities[id];
+        const sz = def.size(e);
+        if (!Array.isArray(sz) || !(sz[0] > 0) || !(sz[1] > 0)) err('size() 要返回 [宽,高]');
+        const c = { ent: e, props: D[id].props || e.props, d: D[id], out: D[id].out, state: e.state, w: sz[0], h: sz[1] - 28, t: 0, n: 0 };
+        const svg = def.draw(c);
+        if (typeof svg !== 'string') err('draw() 要返回字符串');
+        if (hasC) {
+          const inp = {}; for (const k in def.inputs) inp[k] = [];
+          const ctx = deepFreeze({ ent: JSON.parse(JSON.stringify(e)), props: Object.assign({}, e.props), inp, t: 0, n: 0, seed: 1 });
+          const ctx2 = Object.assign({}, ctx, { say() {} });
+          def.compute(ctx2);
+        }
+        if (hasS) {
+          const st = def.init(e.props);
+          const frozen = deepFreeze(JSON.parse(JSON.stringify(st)));
+          const inp = {}; for (const k in def.inputs) inp[k] = [];
+          def.step({ ent: e, props: Object.assign({}, e.props), inp, state: frozen, dt: 0.25, t: 0, n: 0, seed: 1, rand: () => 0.5, say() {} });
+        }
+      } catch (ex) { err('实跑出错：' + ex.message); }
+    }
+    return { errors, exempt };
+  };
+})(typeof globalThis !== 'undefined' ? globalThis : window);
