@@ -891,7 +891,7 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
 .m1a-pair-dot.left-over{outline:3px solid #ef4444;background:#fee2e2}
 /* 实验室占满主区域：.wrap 全站 1120px，1920px 宽屏上台面只剩约 1100px 居中、
    两边大片空白（2026-11-07 桌面复测）。实验室单独放宽到 1600px。 */
-#lab.section.wrap { max-width:1600px; }
+#lab.section.wrap { max-width:1600px; padding-bottom:28px; }
 /* P2 演示梁 #beamGroup（viewBox 0 0 320 190，支点也是 160,70）：第 3 阶段起
    和实验室三根梁一样走 labBeamAnim（500ms 插值），不再直接改 transform 属性。 */
 #beamGroup { transform-box:view-box; transform-origin:160px 70px; }
@@ -899,7 +899,7 @@ body[data-view="review"] .review-grid,body[data-view="progress"] .review-grid,bo
 /* 数学实验室：NB 式实验台（lab-nb.html）占满实验室页面；旧的长页面工作间先隐藏，待删除。 */
 #lab > *:not(.labnb-host):not(h2) { display: none !important; }
 #lab > h2 { display: none; }
-.labnb-host { width: 100%; height: calc(100vh - 80px); min-height: 560px; }
+.labnb-host { width: 100%; height: calc(100vh - 128px); min-height: 560px; margin: 0 0 28px; }
 .labnb-host iframe { width: 100%; height: 100%; border: 0; border-radius: 12px; background: #121822; }
 </style>
 </head>
