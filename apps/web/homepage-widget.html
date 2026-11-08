@@ -4422,6 +4422,15 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 #card{position:absolute;display:none;width:250px;background:#0f141cf2;border:1px solid var(--line);border-radius:12px;padding:12px;box-shadow:0 10px 28px #000a}
 #card h4{margin:0 0 8px;font-size:13px;color:var(--mut);font-weight:500}
 #card .state{font-size:20px;font-weight:700;margin-bottom:8px}
+.linkval{font-size:12px;font-weight:700;fill:#c7e6ff;paint-order:stroke;stroke:#0b1220;stroke-width:3px;pointer-events:none}
+.link.dep{stroke:#ffd166;stroke-width:3.5}
+.ent.dep-up .ent-body{stroke:#7fc1ff;stroke-width:3}
+.ent.dep-down .ent-body{stroke:#ffd166;stroke-width:3}
+.ent.drop-ok .ent-body{stroke:#2fbf71;stroke-width:3.5}
+.ent.drop-no{opacity:.4}
+.seg-choice{display:flex;flex-wrap:wrap;gap:6px}
+.seg-choice .pm{padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:#1b2431;color:var(--tx)}
+.seg-choice .pm.on{border-color:var(--acc);background:#1d3a5c}
 #card .derived{font-size:12px;color:var(--mut);margin:6px 0 2px;padding:6px 8px;border-radius:8px;background:#ffffff0d}
 #card .why-err{color:#ff8a8a;font-size:12px;margin-top:10px;padding:6px 8px;border-radius:8px;background:#3a1c1c}
 .fld{margin:8px 0}.fld label{display:flex;justify-content:space-between;font-size:12px;color:var(--mut)}
@@ -4527,7 +4536,7 @@ const TYPES={
  frac:{label:&#x27;分数条&#x27;,group:&#x27;分数&#x27;,prefix:&#x27;分数条&#x27;,out:&#x27;value&#x27;,defaults:{n:1,d:2},
    fields:[{k:&#x27;n&#x27;,label:&#x27;分子（涂几份）&#x27;,min:0,max:24},{k:&#x27;d&#x27;,label:&#x27;分母（平均分成几份）&#x27;,min:1,max:12}],
    size:e=&gt;[176,34+Math.max(1,Math.ceil(e.props.n/e.props.d))*28]},
- adder:{label:&#x27;合并器&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;合并器&#x27;,out:&#x27;value&#x27;,accepts:&#x27;value&#x27;,defaults:{},fields:[],size:()=&gt;[170,84]},
+ adder:{label:&#x27;合并器&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;合并器&#x27;,out:&#x27;value&#x27;,accepts:&#x27;value&#x27;,defaults:{op:0},fields:[{k:&#x27;op&#x27;,label:&#x27;运算&#x27;,min:0,max:1,choices:[&#x27;加&#x27;,&#x27;减（第一个数减去后面的）&#x27;]}],size:()=&gt;[170,84]},
  mul:{label:&#x27;乘法器&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;乘法器&#x27;,out:&#x27;value&#x27;,accepts:&#x27;value&#x27;,defaults:{},fields:[],size:()=&gt;[170,84]},
  div:{label:&#x27;除法器&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;除法器&#x27;,out:&#x27;value&#x27;,accepts:&#x27;value&#x27;,slots:true,defaults:{},fields:[],size:()=&gt;[200,110]},
  money:{label:&#x27;人民币&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;人民币&#x27;,out:&#x27;value&#x27;,defaults:{yuan:1,jiao:0,fen:0},fields:[{k:&#x27;yuan&#x27;,label:&#x27;元&#x27;,min:0,max:99},{k:&#x27;jiao&#x27;,label:&#x27;角&#x27;,min:0,max:9},{k:&#x27;fen&#x27;,label:&#x27;分&#x27;,min:0,max:9}],size:()=&gt;[190,62]},
@@ -4539,8 +4548,8 @@ const TYPES={
  line:{label:&#x27;折线统计图&#x27;,group:&#x27;统计&#x27;,prefix:&#x27;折线图&#x27;,defaults:{y1:3,y2:6,y3:4},fields:[{k:&#x27;y1&#x27;,label:&#x27;第一年（万元）&#x27;,min:0,max:12},{k:&#x27;y2&#x27;,label:&#x27;第二年（万元）&#x27;,min:0,max:12},{k:&#x27;y3&#x27;,label:&#x27;第三年（万元）&#x27;,min:0,max:12}],size:()=&gt;[220,190]},
  cage:{label:&#x27;鸡兔笼&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;鸡兔笼&#x27;,defaults:{heads:35,legs:94,rabbits:0},fields:[{k:&#x27;heads&#x27;,label:&#x27;头（总数）&#x27;,min:1,max:60},{k:&#x27;legs&#x27;,label:&#x27;腿（总数）&#x27;,min:0,max:200,step:2},{k:&#x27;rabbits&#x27;,label:&#x27;兔（只）&#x27;,min:0,max:60}],size:()=&gt;[220,150]},
  pair:{label:&#x27;数对&#x27;,group:&#x27;关系&#x27;,prefix:&#x27;数对&#x27;,defaults:{x:3,y:2},fields:[{k:&#x27;x&#x27;,label:&#x27;第几列（x）&#x27;,min:0,max:8},{k:&#x27;y&#x27;,label:&#x27;第几行（y）&#x27;,min:0,max:8}],size:()=&gt;[240,240]},
- shape:{label:&#x27;图形（平移、旋转、对称）&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;图形&#x27;,defaults:{dx:0,rot:0,mirror:0},fields:[{k:&#x27;dx&#x27;,label:&#x27;向右平移（格）&#x27;,min:0,max:6},{k:&#x27;rot&#x27;,label:&#x27;旋转（度，逆时针）&#x27;,min:0,max:270,step:90},{k:&#x27;mirror&#x27;,label:&#x27;轴对称（0 不做，1 做）&#x27;,min:0,max:1}],size:()=&gt;[260,190]},
- solid:{label:&#x27;立体图形（观察）&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;立体图形&#x27;,defaults:{view:0},fields:[{k:&#x27;view&#x27;,label:&#x27;看的方向（0 正面，1 侧面，2 上面）&#x27;,min:0,max:2}],size:()=&gt;[240,190]},
+ shape:{label:&#x27;图形（平移、旋转、对称）&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;图形&#x27;,defaults:{dx:0,rot:0,mirror:0},fields:[{k:&#x27;dx&#x27;,label:&#x27;向右平移（格）&#x27;,min:0,max:6},{k:&#x27;rot&#x27;,label:&#x27;旋转（度，逆时针）&#x27;,min:0,max:270,step:90},{k:&#x27;mirror&#x27;,label:&#x27;轴对称（0 不做，1 做）&#x27;,min:0,max:1,choices:[&#x27;不做&#x27;,&#x27;做&#x27;]}],size:()=&gt;[260,190]},
+ solid:{label:&#x27;立体图形（观察）&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;立体图形&#x27;,defaults:{view:0},fields:[{k:&#x27;view&#x27;,label:&#x27;看的方向（0 正面，1 侧面，2 上面）&#x27;,min:0,max:2,choices:[&#x27;正面&#x27;,&#x27;侧面&#x27;,&#x27;上面&#x27;]}],size:()=&gt;[240,190]},
  circle:{label:&#x27;圆&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;圆&#x27;,defaults:{r:2},fields:[{k:&#x27;r&#x27;,label:&#x27;半径（厘米）&#x27;,min:1,max:10}],size:()=&gt;[200,200]},
  pie:{label:&#x27;扇形统计图&#x27;,group:&#x27;统计&#x27;,prefix:&#x27;扇形图&#x27;,defaults:{a:40,b:30,c:30},fields:[{k:&#x27;a&#x27;,label:&#x27;一班（%）&#x27;,min:0,max:100,step:5},{k:&#x27;b&#x27;,label:&#x27;二班（%）&#x27;,min:0,max:100,step:5},{k:&#x27;c&#x27;,label:&#x27;三班（%）&#x27;,min:0,max:100,step:5}],size:()=&gt;[220,220]},
  sim:{label:&#x27;相似图形（放大缩小）&#x27;,group:&#x27;图形&#x27;,prefix:&#x27;相似图形&#x27;,defaults:{k:1},fields:[{k:&#x27;k&#x27;,label:&#x27;相似比（放大几倍）&#x27;,min:1,max:3}],size:()=&gt;[260,190]},
@@ -4579,7 +4588,7 @@ const TYPES={
    fields:[{k:&#x27;a&#x27;,label:&#x27;a（输出 = a × 输入 + b）&#x27;,min:-5,max:5},{k:&#x27;b&#x27;,label:&#x27;b&#x27;,min:-10,max:10}],size:()=&gt;[230,120]},
  // 数据表：四个数，输出合计、平均数或最大数。
  table:{label:&#x27;数据表（四个数）&#x27;,group:&#x27;统计&#x27;,prefix:&#x27;数据表&#x27;,out:&#x27;value&#x27;,dim:&#x27;count&#x27;,defaults:{a:4,b:8,c:6,d:10,which:0},
-   fields:[{k:&#x27;a&#x27;,label:&#x27;第 1 个数&#x27;,min:0,max:50},{k:&#x27;b&#x27;,label:&#x27;第 2 个数&#x27;,min:0,max:50},{k:&#x27;c&#x27;,label:&#x27;第 3 个数&#x27;,min:0,max:50},{k:&#x27;d&#x27;,label:&#x27;第 4 个数&#x27;,min:0,max:50},{k:&#x27;which&#x27;,label:&#x27;输出（0 合计，1 平均，2 最大）&#x27;,min:0,max:2}],size:()=&gt;[240,150]},
+   fields:[{k:&#x27;a&#x27;,label:&#x27;第 1 个数&#x27;,min:0,max:50},{k:&#x27;b&#x27;,label:&#x27;第 2 个数&#x27;,min:0,max:50},{k:&#x27;c&#x27;,label:&#x27;第 3 个数&#x27;,min:0,max:50},{k:&#x27;d&#x27;,label:&#x27;第 4 个数&#x27;,min:0,max:50},{k:&#x27;which&#x27;,label:&#x27;输出（0 合计，1 平均，2 最大）&#x27;,min:0,max:2,choices:[&#x27;合计&#x27;,&#x27;平均&#x27;,&#x27;最大&#x27;]}],size:()=&gt;[240,150]},
  // x 砝码：一个未知数。x 的值由学生设定，天平上用它参与平衡。
  sym:{label:&#x27;x 砝码（未知数）&#x27;,group:&#x27;数与运算&#x27;,prefix:&#x27;x&#x27;,out:&#x27;value&#x27;,dim:&#x27;count&#x27;,defaults:{x:0},fields:[{k:&#x27;x&#x27;,label:&#x27;x 等于几&#x27;,min:-10,max:30}],size:()=&gt;[120,70]},
 };
@@ -4661,7 +4670,8 @@ function evaluate(s){
   const E=s.entities,vals={},busy={},D={};
   const val=id=&gt;{if(id in vals)return vals[id];if(busy[id])return null;busy[id]=1;const e=E[id];let v=null;
     if(e.type===&#x27;num&#x27;)v=Q(e.props.v);else if(e.type===&#x27;frac&#x27;)v=Q(e.props.n,e.props.d);
-    else if(e.type===&#x27;adder&#x27;){v=Q(0);for(const l of inputs(s,id)){const x=val(l.from);if(x)v=qadd(v,x)}}
+    else if(e.type===&#x27;adder&#x27;){const xs=inputs(s,id).map(l=&gt;val(l.from)).filter(Boolean);
+      if(e.props.op===1&amp;&amp;xs.length)v=xs.slice(1).reduce((t,x)=&gt;qsub(t,x),xs[0]);else{v=Q(0);for(const x of xs)v=qadd(v,x)}}
     else if(e.type===&#x27;rect&#x27;)v=Q(e.props.w*e.props.h);else if(e.type===&#x27;money&#x27;)v=Q(e.props.yuan*100+e.props.jiao*10+(e.props.fen||0),100);
     else if(e.type===&#x27;mul&#x27;){v=Q(1);let any=false;for(const l of inputs(s,id)){const x=val(l.from);if(x){v=Q(v.n*x.n,v.d*x.d);any=true}}if(!any)v=null}
     else if(e.type===&#x27;box&#x27;){const l=inputs(s,id)[0];const x=l&amp;&amp;val(l.from);v=x?qadd(Q(e.props.a*x.n,x.d),Q(e.props.b)):null}
@@ -4765,8 +4775,46 @@ function evaluate(s){
     if(e.type===&#x27;rect&#x27;){const {w,h}=e.props;d.per=2*(w+h);d.area=w*h;if(w===h)sig(&#x27;ok&#x27;,`是正方形：周长 ${d.per}，面积 ${d.area}`);else sig(&#x27;info&#x27;,`周长 ${d.per}，面积 ${d.area}`)}
     if(e.type===&#x27;dice&#x27;){const c=e.props.counts;if(!c)sig(&#x27;info&#x27;,&#x27;点“掷”开始&#x27;);else{const tot=c.reduce((a,b)=&gt;a+b,0);let best=2;for(let i=2;i&lt;=12;i++)if(c[i]&gt;c[best])best=i;d.tot=tot;sig(&#x27;info&#x27;,`掷了 ${tot} 回，出现最多的是 ${best}`)}}
   }
+  // 端口：每个器材算出来的数（有名字、有值）。步骤判分读端口，不再匹配信号文字。
+  for(const id in E)D[id].ports=Object.assign(D[id].ports||{},portsFor(E[id],s,E));
   return D;
 }
+/* 端口的定义：从属性直接算。信号文字仍由 evaluate 上面的代码画，这里的值和文字用同一套算法。 */
+function portsFor(e,s,E){const p=e.props,P={};
+  switch(e.type){
+  case &#x27;clock&#x27;:{const cl=Object.values(E).filter(x=&gt;x.type===&#x27;clock&#x27;);if(cl.length===2&amp;&amp;cl[0].id===e.id){const t=c=&gt;((c.props.h%12)*60+c.props.m);P.between=((t(cl[1])-t(cl[0]))%720+720)%720}break}
+  case &#x27;bars&#x27;:{const mx=Math.max(p.a,p.b,p.c);P.bMinusA=p.b-p.a;P.max=mx;P.topNames=[&#x27;一班&#x27;,&#x27;二班&#x27;,&#x27;三班&#x27;].filter((_,i)=&gt;[p.a,p.b,p.c][i]===mx).join(&#x27;、&#x27;);break}
+  case &#x27;tri&#x27;:P.third=180-p.a-p.b;break;
+  case &#x27;line&#x27;:P.d12=p.y2-p.y1;P.d23=p.y3-p.y2;break;
+  case &#x27;cage&#x27;:{const c=p.heads-p.rabbits,got=4*p.rabbits+2*c;P.chickens=c;P.rabbits=p.rabbits;P.solved=c&gt;=0&amp;&amp;got===p.legs;break}
+  case &#x27;solid&#x27;:{const hs=SOLID_H,v=p.view;if(v===0)P.front=hs[0].map((_,x)=&gt;Math.max(...hs.map(r=&gt;r[x])));if(v===1)P.side=hs.map(r=&gt;Math.max(...r));if(v===2)P.top=hs.flat().filter(x=&gt;x&gt;0).length;break}
+  case &#x27;circle&#x27;:P.circ=Number((2*3.14*p.r).toFixed(2));P.area=Number((3.14*p.r*p.r).toFixed(2));break;
+  case &#x27;pie&#x27;:P.sum=p.a+p.b+p.c;P.angleA=Number((p.a*3.6).toFixed(0));break;
+  case &#x27;ineq&#x27;:P.set={op:p.op,b:p.b};break;
+  case &#x27;hyper&#x27;:P.y2=p.k/2;break;
+  case &#x27;parab&#x27;:if(p.a!==0){P.vx=-p.b/(2*p.a);P.vy=p.c-p.b*p.b/(4*p.a);const D0=p.b*p.b-4*p.a*p.c;P.xHits=D0&gt;0?2:D0===0?1:0}break;
+  case &#x27;sim&#x27;:P.ratio=p.k;P.areaRatio=p.k*p.k;break;
+  case &#x27;pyth&#x27;:{const c=Math.sqrt(p.a*p.a+p.b*p.b);P.c=c;P.triple=Number.isInteger(c);break}
+  case &#x27;trig&#x27;:{const r=p.deg*Math.PI/180;P.sin=Number(Math.sin(r).toFixed(2));P.cos=Number(Math.cos(r).toFixed(2));P.tan=Number(Math.tan(r).toFixed(2));break}
+  case &#x27;bag&#x27;:{const t=p.red+p.white;P.pRed=t?p.red/t:null;break}
+  case &#x27;cang&#x27;:P.inscribed=p.c/2;break;
+  case &#x27;sqsum&#x27;:P.terms=[p.a*p.a,2*p.a*p.b,p.b*p.b];break;
+  case &#x27;data&#x27;:{const v=[p.a,p.b,p.c].sort((x,y)=&gt;x-y),mean=(v[0]+v[1]+v[2])/3;P.mean=mean;P.mean2=Number(mean.toFixed(2));P.median=v[1];break}
+  case &#x27;quad&#x27;:{const D0=p.b*p.b-4*p.c;P.disc=D0;if(D0&gt;=0){const r1=(-p.b+Math.sqrt(D0))/2,r2=(-p.b-Math.sqrt(D0))/2;P.roots=[r1,r2].sort((x,y)=&gt;x-y)}else P.roots=null;break}
+  case &#x27;sys&#x27;:P.x=p.x;P.y=p.y;P.ok=(p.x+p.y===10&amp;&amp;p.x-p.y===4);break;
+  case &#x27;congr&#x27;:{const x=[3,4,5],y=[p.a,p.b,p.c];P.congruent=[...x].sort().join()===[...y].sort().join();break}
+  case &#x27;fact&#x27;:{let f=null;for(let a=-10;a&lt;=10&amp;&amp;!f;a++)for(let b=a;b&lt;=10&amp;&amp;!f;b++)if(a+b===p.b&amp;&amp;a*b===p.c)f=[a,b];P.factors=f;break}
+  case &#x27;rect&#x27;:P.area=p.w*p.h;P.peri=2*(p.w+p.h);P.square=p.w===p.h;break;
+  case &#x27;tangent&#x27;:P.relation=p.d&gt;p.r?&#x27;apart&#x27;:p.d===p.r?&#x27;tangent&#x27;:&#x27;cross&#x27;;break;
+  case &#x27;dice&#x27;:P.tot=p.counts?p.counts.reduce((a,b)=&gt;a+b,0):0;break;
+  case &#x27;angle&#x27;:P.deg=p.deg;break;
+  case &#x27;afrac&#x27;:if(p.d!==0)P.value=p.n/p.d;break;
+  case &#x27;radical&#x27;:{const n=p.n;let kk=1,mm=n;for(let k=Math.floor(Math.sqrt(n));k&gt;=2;k--){if(n%(k*k)===0){kk=k;mm=n/(k*k);break}}P.kk=kk;P.mm=mm;break}
+  case &#x27;parlines&#x27;:P.sameSide=180-p.a;P.corresponding=p.a;break;
+  case &#x27;isotri&#x27;:P.base=(180-p.apex)/2;break;
+  case &#x27;shape&#x27;:P.mirrored=!!p.mirror;break;
+  }
+  return P}
 function fx(k,b){const kx=k===0?&#x27;&#x27;:k===1?&#x27;x&#x27;:k===-1?&#x27;−x&#x27;:(k&lt;0?&#x27;−&#x27;:&#x27;&#x27;)+Math.abs(k)+&#x27;x&#x27;;const bs=b===0?(kx?&#x27;&#x27;:&#x27;0&#x27;):(b&lt;0?(kx?&#x27; − &#x27;:&#x27;−&#x27;)+Math.abs(b):(kx?&#x27; + &#x27;:&#x27;&#x27;)+b);return kx+bs}
 
 /* ========== 实验库：实验 = 器材摆放 + 带分值的步骤（步骤是对台面状态的判定） ========== */
@@ -4857,8 +4905,9 @@ function render(){
   D=D||{};const w=$(&#x27;world&#x27;);let h=&#x27;&#x27;;
   w.setAttribute(&#x27;transform&#x27;,`translate(${view.x},${view.y}) scale(${view.z})`);
   const next=nextTarget();
-  for(const l of S.links)h+=linkSvg(l);
-  for(const id in S.entities)h+=entSvg(S.entities[id],D[id]||{read:[],sig:[]},id===next);
+  const dep=sel&amp;&amp;S.entities[sel]?depOf(sel):null; // 选中一个器材时，高亮它的上游（数从哪来）和下游（数到哪去）
+  for(const l of S.links)h+=linkSvg(l,dep);
+  for(const id in S.entities)h+=entSvg(S.entities[id],D[id]||{read:[],sig:[]},id===next,dep);
   w.innerHTML=h;
   $(&#x27;empty&#x27;).style.display=Object.keys(S.entities).length?&#x27;none&#x27;:&#x27;grid&#x27;;
   $(&#x27;zVal&#x27;).textContent=Math.round(view.z*100)+&#x27;%&#x27;;
@@ -4871,11 +4920,27 @@ function size(e){return TYPES[e.type].size(e)}
 function triApex(a,b,w,h){const x0=30,L=w-60,yb=h-30,A=a*Math.PI/180,B=b*Math.PI/180;const t=L/(Math.cos(A)+Math.sin(A)*Math.cos(B)/Math.sin(B));return[x0+t*Math.cos(A),yb-t*Math.sin(A)]}
 function anchorIn(l){const e=S.entities[l.to];const [w,h]=size(e);if(e.type===&#x27;div&#x27;)return l.slot===&#x27;L&#x27;?[e.x,e.y+h*0.3]:[e.x,e.y+h*0.7];if(e.type===&#x27;balance&#x27;){const t=(D[e.id]||{}).tilt||0,dy=Math.sin(t*Math.PI/180)*120;return l.slot===&#x27;L&#x27;?[e.x+50,e.y+112-dy]:[e.x+w-50,e.y+112+dy]}return[e.x,e.y+h/2]}
 function anchorOut(id){const e=S.entities[id],[w,h]=size(e);return[e.x+w,e.y+h/2]}
-function linkSvg(l){if(!S.entities[l.from]||!S.entities[l.to])return&#x27;&#x27;;const [x1,y1]=anchorOut(l.from),[x2,y2]=anchorIn(l);const c=Math.max(40,Math.abs(x2-x1)/2);
-  const d=`M${x1},${y1} C${x1+c},${y1} ${x2-c},${y2} ${x2},${y2}`;return`&lt;path class=&quot;linkhit&quot; data-link=&quot;${l.id}&quot; d=&quot;${d}&quot;/&gt;&lt;path class=&quot;link${selLink===l.id?&#x27; sel&#x27;:&#x27;&#x27;}&quot; d=&quot;${d}&quot;/&gt;`}
+/* 依赖追踪：从 id 往前（谁决定它）、往后（它决定谁）走一遍，连线和绑定都算。 */
+function depOf(id){const up={},down={};
+  const walk=(next,set)=&gt;{const st=[id];while(st.length){const c=st.pop();for(const n of next(c)){if(n!==id&amp;&amp;!set[n]){set[n]=1;st.push(n)}}}};
+  walk(c=&gt;S.links.filter(l=&gt;l.to===c).map(l=&gt;l.from).concat((S.binds||[]).filter(b=&gt;b.to===c).map(b=&gt;b.from)),up);
+  walk(c=&gt;S.links.filter(l=&gt;l.from===c).map(l=&gt;l.to).concat((S.binds||[]).filter(b=&gt;b.from===c).map(b=&gt;b.to)),down);
+  return{up,down}}
+/* 拖连线时的兼容高亮：用一份副本试连一次（和真的连线用同一套规则），能连的器材亮绿，不能连的变暗。 */
+function dryLink(from,to,slot){const keep=S;S=clone(keep);try{return !!actRaw({t:&#x27;link&#x27;,from,to,slot}).ok}catch(err){return false}finally{S=keep}}
+function markDrop(fromId,wx){document.querySelectorAll(&#x27;#world [data-ent]&#x27;).forEach(g=&gt;{const id=g.dataset.ent;if(id===fromId){g.classList.remove(&#x27;drop-ok&#x27;,&#x27;drop-no&#x27;);return}
+  const e=S.entities[id];const [w]=size(e);const slot=TYPES[e.type].slots?(wx&lt;e.x+w/2?&#x27;L&#x27;:&#x27;R&#x27;):null;const ok=dryLink(fromId,id,slot);g.classList.toggle(&#x27;drop-ok&#x27;,ok);g.classList.toggle(&#x27;drop-no&#x27;,!ok)})}
+function clearDrop(){document.querySelectorAll(&#x27;.drop-ok,.drop-no&#x27;).forEach(x=&gt;x.classList.remove(&#x27;drop-ok&#x27;,&#x27;drop-no&#x27;))}
+function linkSvg(l,dep){if(!S.entities[l.from]||!S.entities[l.to])return&#x27;&#x27;;const [x1,y1]=anchorOut(l.from),[x2,y2]=anchorIn(l);const c=Math.max(40,Math.abs(x2-x1)/2);
+  const d=`M${x1},${y1} C${x1+c},${y1} ${x2-c},${y2} ${x2},${y2}`;
+  const inChain=!!dep&amp;&amp;[l.from,l.to].every(x=&gt;x===sel||dep.up[x]||dep.down[x]);
+  // 连线上写出流过的值（有数的时候）
+  const v=D[l.from]&amp;&amp;D[l.from].value;const lab=v?`&lt;text class=&quot;linkval&quot; x=&quot;${(x1+x2)/2}&quot; y=&quot;${(y1+y2)/2-7}&quot; text-anchor=&quot;middle&quot;&gt;${qs(v)}&lt;/text&gt;`:&#x27;&#x27;;
+  return`&lt;path class=&quot;linkhit&quot; data-link=&quot;${l.id}&quot; d=&quot;${d}&quot;/&gt;&lt;path class=&quot;link${selLink===l.id?&#x27; sel&#x27;:&#x27;&#x27;}${inChain?&#x27; dep&#x27;:&#x27;&#x27;}&quot; d=&quot;${d}&quot;/&gt;${lab}`}
 const esc=s=&gt;String(s).replace(/[&amp;&lt;&gt;&quot;]/g,c=&gt;({&#x27;&amp;&#x27;:&#x27;&amp;amp;&#x27;,&#x27;&lt;&#x27;:&#x27;&amp;lt;&#x27;,&#x27;&gt;&#x27;:&#x27;&amp;gt;&#x27;,&#x27;&quot;&#x27;:&#x27;&amp;quot;&#x27;}[c]));
-function entSvg(e,d,isNext){const T=TYPES[e.type],[w,h]=size(e);const lv=d.sig.some(s=&gt;s.lv===&#x27;err&#x27;)?&#x27; err&#x27;:(d.sig.some(s=&gt;s.lv===&#x27;ok&#x27;)?&#x27; ok&#x27;:&#x27;&#x27;);
-  let g=`&lt;g class=&quot;ent${sel===e.id?&#x27; sel&#x27;:&#x27;&#x27;}${lv}${isNext?&#x27; is-next&#x27;:&#x27;&#x27;}&quot; data-ent=&quot;${e.id}&quot; transform=&quot;translate(${e.x},${e.y})&quot;&gt;`;
+function entSvg(e,d,isNext,dep){const T=TYPES[e.type],[w,h]=size(e);const lv=d.sig.some(s=&gt;s.lv===&#x27;err&#x27;)?&#x27; err&#x27;:(d.sig.some(s=&gt;s.lv===&#x27;ok&#x27;)?&#x27; ok&#x27;:&#x27;&#x27;);
+  const dc=dep?(dep.up[e.id]?&#x27; dep-up&#x27;:dep.down[e.id]?&#x27; dep-down&#x27;:&#x27;&#x27;):&#x27;&#x27;;
+  let g=`&lt;g class=&quot;ent${sel===e.id?&#x27; sel&#x27;:&#x27;&#x27;}${lv}${isNext?&#x27; is-next&#x27;:&#x27;&#x27;}${dc}&quot; data-ent=&quot;${e.id}&quot; transform=&quot;translate(${e.x},${e.y})&quot;&gt;`;
   g+=`&lt;rect class=&quot;ent-body&quot; width=&quot;${w}&quot; height=&quot;${h}&quot; rx=&quot;10&quot; filter=&quot;url(#sh)&quot;/&gt;&lt;text class=&quot;ttl&quot; x=&quot;10&quot; y=&quot;17&quot;&gt;${esc(e.name)}&lt;/text&gt;`;
   g+=DRAW[e.type](e,d,w,h);
   if(T.accepts&amp;&amp;!T.slots)g+=`&lt;circle class=&quot;port-in&quot; cx=&quot;0&quot; cy=&quot;${h/2}&quot; r=&quot;8&quot;/&gt;`;
@@ -5027,11 +5092,16 @@ function derivedLines(e){const p=e.props;const n=x=&gt;String(+x.toFixed(2));
   return[]}
 function buildCard(e){const cd=$(&#x27;card&#x27;),T=TYPES[e.type];cd.dataset.for=e.id;cd.dataset.v=JSON.stringify(e.props)+e.name;
   let h=`&lt;h4&gt;${T.label} · 设置&lt;/h4&gt;&lt;input class=&quot;name&quot; data-name value=&quot;${esc(e.name)}&quot;&gt;&lt;div class=&quot;state&quot;&gt;${esc(stateLine(e))}&lt;/div&gt;`;
-  for(const f of T.fields){const v=e.props[f.k];const bd=(S.binds||[]).find(x=&gt;x.to===e.id&amp;&amp;x.k===f.k);if(bd){h+=`&lt;div class=&quot;fld&quot;&gt;&lt;label&gt;&lt;span&gt;${f.label}&lt;/span&gt;&lt;b&gt;← ${esc(S.entities[bd.from].name)}&lt;/b&gt;&lt;/label&gt;&lt;div class=&quot;ctl&quot;&gt;&lt;span class=&quot;muted&quot;&gt;由它决定：${v}&lt;/span&gt;&lt;button class=&quot;btn&quot; data-unbind=&quot;${f.k}&quot;&gt;解除绑定&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;`;continue}h+=`&lt;div class=&quot;fld&quot;&gt;&lt;label&gt;&lt;span&gt;${f.label}&lt;/span&gt;&lt;/label&gt;&lt;div class=&quot;ctl&quot;&gt;&lt;button class=&quot;pm&quot; data-pm=&quot;${f.k}&quot; data-dv=&quot;-${f.step||1}&quot;&gt;−&lt;/button&gt;&lt;input type=&quot;range&quot; data-f=&quot;${f.k}&quot; min=&quot;${f.min}&quot; max=&quot;${f.max}&quot; step=&quot;${f.step||1}&quot; value=&quot;${v}&quot;&gt;&lt;button class=&quot;pm&quot; data-pm=&quot;${f.k}&quot; data-dv=&quot;${f.step||1}&quot;&gt;+&lt;/button&gt;&lt;input type=&quot;number&quot; data-fn=&quot;${f.k}&quot; value=&quot;${v}&quot;&gt;&lt;/div&gt;&lt;/div&gt;`}
+  for(const f of T.fields){const v=e.props[f.k];const bd=(S.binds||[]).find(x=&gt;x.to===e.id&amp;&amp;x.k===f.k);if(bd){h+=`&lt;div class=&quot;fld&quot;&gt;&lt;label&gt;&lt;span&gt;${f.label}&lt;/span&gt;&lt;b&gt;← ${esc(S.entities[bd.from].name)}&lt;/b&gt;&lt;/label&gt;&lt;div class=&quot;ctl&quot;&gt;&lt;span class=&quot;muted&quot;&gt;由它决定：${v}&lt;/span&gt;&lt;button class=&quot;btn&quot; data-unbind=&quot;${f.k}&quot;&gt;解除绑定&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;`;continue}if(f.choices){h+=`&lt;div class=&quot;fld&quot;&gt;&lt;label&gt;&lt;span&gt;${f.label}&lt;/span&gt;&lt;/label&gt;&lt;div class=&quot;ctl seg-choice&quot;&gt;${f.choices.map((c,i)=&gt;`&lt;button class=&quot;pm${v===i?&#x27; on&#x27;:&#x27;&#x27;}&quot; data-pick=&quot;${f.k}&quot; data-pv=&quot;${i}&quot;&gt;${c}&lt;/button&gt;`).join(&#x27;&#x27;)}&lt;/div&gt;&lt;/div&gt;`;continue}h+=`&lt;div class=&quot;fld&quot;&gt;&lt;label&gt;&lt;span&gt;${f.label}&lt;/span&gt;&lt;/label&gt;&lt;div class=&quot;ctl&quot;&gt;&lt;button class=&quot;pm&quot; data-pm=&quot;${f.k}&quot; data-dv=&quot;-${f.step||1}&quot;&gt;−&lt;/button&gt;&lt;input type=&quot;range&quot; data-f=&quot;${f.k}&quot; min=&quot;${f.min}&quot; max=&quot;${f.max}&quot; step=&quot;${f.step||1}&quot; value=&quot;${v}&quot;&gt;&lt;button class=&quot;pm&quot; data-pm=&quot;${f.k}&quot; data-dv=&quot;${f.step||1}&quot;&gt;+&lt;/button&gt;&lt;input type=&quot;number&quot; data-fn=&quot;${f.k}&quot; value=&quot;${v}&quot;&gt;&lt;/div&gt;&lt;/div&gt;`}
   for(const f of T.fields){if(!(S.binds||[]).some(x=&gt;x.to===e.id&amp;&amp;x.k===f.k))h+=`&lt;button class=&quot;btn&quot; data-bindpick=&quot;${f.k}&quot;&gt;🔗 把「${esc(f.label.replace(/（.*/,&#x27;&#x27;))}」绑到一个数&lt;/button&gt;`}
   if(!T.fields.length)h+=`&lt;div class=&quot;muted&quot; style=&quot;font-size:12px&quot;&gt;${T.accepts===&#x27;fn&#x27;?&#x27;它显示连进来的直线。&#x27;:&#x27;它的值由连进来的器材决定，拖别的器材的蓝点连过来。&#x27;}&lt;/div&gt;`;
   // 只读推导值：由属性算出来，不能改，让学生在卡上直接看到。
   const dv=derivedLines(e);if(dv.length)h+=`&lt;div class=&quot;derived&quot;&gt;${dv.map(t=&gt;`&lt;div&gt;${esc(t)}&lt;/div&gt;`).join(&#x27;&#x27;)}&lt;/div&gt;`;
+  // 连出去的：这个器材的输出流到了哪里；绑出去的：它决定了哪些属性
+  const outs=S.links.filter(l=&gt;l.from===e.id).map(l=&gt;S.entities[l.to]&amp;&amp;S.entities[l.to].name).filter(Boolean);
+  const bouts=(S.binds||[]).filter(b=&gt;b.from===e.id).map(b=&gt;S.entities[b.to]&amp;&amp;`${S.entities[b.to].name} 的「${(TYPES[S.entities[b.to].type].fields.find(f=&gt;f.k===b.k)||{label:b.k}).label.replace(/（.*/,&#x27;&#x27;)}」`).filter(Boolean);
+  if(outs.length)h+=`&lt;div class=&quot;muted&quot; style=&quot;font-size:12px;margin-top:6px&quot;&gt;连出去：${outs.map(esc).join(&#x27;、&#x27;)}&lt;/div&gt;`;
+  if(bouts.length)h+=`&lt;div class=&quot;muted&quot; style=&quot;font-size:12px;margin-top:6px&quot;&gt;决定：${bouts.map(esc).join(&#x27;、&#x27;)}&lt;/div&gt;`;
   const ins=inputs(S,e.id);if(ins.length)h+=`&lt;div class=&quot;muted&quot; style=&quot;font-size:12px;margin-top:8px&quot;&gt;连进来的：${ins.map(l=&gt;esc(S.entities[l.from].name)+(l.slot?`（${l.slot===&#x27;L&#x27;?&#x27;左&#x27;:&#x27;右&#x27;}盘）`:&#x27;&#x27;)).join(&#x27;、&#x27;)}&lt;/div&gt;`;
   h+=`&lt;div class=&quot;card-row&quot;&gt;${(T.actions||[]).map(a=&gt;`&lt;button class=&quot;btn pri&quot; data-act=&quot;${a.id}&quot;&gt;${a.label}&lt;/button&gt;`).join(&#x27;&#x27;)}${T.fields.length?&#x27;&lt;button class=&quot;btn&quot; data-act=&quot;reset&quot;&gt;恢复初始值&lt;/button&gt;&#x27;:&#x27;&#x27;}&lt;button class=&quot;btn&quot; data-act=&quot;del&quot;&gt;删除&lt;/button&gt;&lt;/div&gt;`;
   cd.innerHTML=h}
@@ -5040,6 +5110,7 @@ $(&#x27;card&#x27;).addEventListener(&#x27;input&#x27;,ev=&gt;{const t=ev.target
   if(t.dataset.name!==undefined){act({t:&#x27;rename&#x27;,id,name:t.value});$(&#x27;card&#x27;).dataset.v=JSON.stringify(S.entities[id].props)+S.entities[id].name;D=evaluate(S);render()}});
 $(&#x27;card&#x27;).addEventListener(&#x27;change&#x27;,ev=&gt;{const t=ev.target;if(t.dataset.fn&amp;&amp;sel){commit({t:&#x27;set&#x27;,id:sel,k:t.dataset.fn,v:t.value});$(&#x27;card&#x27;).dataset.v=&#x27;&#x27;}});
 $(&#x27;card&#x27;).addEventListener(&#x27;click&#x27;,ev=&gt;{const b=ev.target.closest(&#x27;button&#x27;);if(!b||!sel)return;const id=sel;
+  if(b.dataset.pick){commit({t:&#x27;set&#x27;,id,k:b.dataset.pick,v:+b.dataset.pv});render();return}
   if(b.dataset.bindpick){bindPick={to:id,k:b.dataset.bindpick};toast(&#x27;点一个会出数的器材（数字卡、分数条、黑箱、数据表…），把它绑到这个属性上&#x27;);render();return}
   if(b.dataset.unbind){commit({t:&#x27;unbind&#x27;,to:id,k:b.dataset.unbind});render();return}
   if(b.dataset.pm){const e=S.entities[id];commit({t:&#x27;set&#x27;,id,k:b.dataset.pm,v:e.props[b.dataset.pm]+Number(b.dataset.dv)})}
@@ -5067,12 +5138,15 @@ svg.addEventListener(&#x27;pointermove&#x27;,ev=&gt;{if(!drag)return;const [wx,w
   else if(drag.m===&#x27;vtx&#x27;){if(!drag.moved&amp;&amp;Math.hypot(ev.clientX-drag.sx,ev.clientY-drag.sy)&lt;4)return;const e=S.entities[drag.id];if(!e)return;
     if(!drag.moved){undoSt.push(JSON.stringify(S));redoSt=[];drag.moved=true}
     const r=act({t:&#x27;vtx&#x27;,id:e.id,lx:wx-e.x,ly:wy-e.y});if(r.ok){D=evaluate(S);render()}}
-  else if(drag.m===&#x27;link&#x27;){const [x1,y1]=anchorOut(drag.from);let p=$(&#x27;world&#x27;).querySelector(&#x27;.templink&#x27;);if(!p){p=document.createElementNS(&#x27;http://www.w3.org/2000/svg&#x27;,&#x27;path&#x27;);p.setAttribute(&#x27;class&#x27;,&#x27;templink&#x27;);$(&#x27;world&#x27;).appendChild(p)}p.setAttribute(&#x27;d&#x27;,`M${x1},${y1} L${wx},${wy}`)}});
+  else if(drag.m===&#x27;link&#x27;){markDrop(drag.from,wx);const [x1,y1]=anchorOut(drag.from);let p=$(&#x27;world&#x27;).querySelector(&#x27;.templink&#x27;);if(!p){p=document.createElementNS(&#x27;http://www.w3.org/2000/svg&#x27;,&#x27;path&#x27;);p.setAttribute(&#x27;class&#x27;,&#x27;templink&#x27;);$(&#x27;world&#x27;).appendChild(p)}p.setAttribute(&#x27;d&#x27;,`M${x1},${y1} L${wx},${wy}`)}});
 svg.addEventListener(&#x27;pointerup&#x27;,ev=&gt;{if(!drag)return;const d=drag;drag=null;svg.classList.remove(&#x27;panning&#x27;);
   if(d.m===&#x27;vtx&#x27;){if(d.moved)afterChange();return}
   if(d.m===&#x27;move&#x27;&amp;&amp;!d.moved&amp;&amp;bindPick&amp;&amp;!d.seg){const bp=bindPick;bindPick=null;const r=commit({t:&#x27;bind&#x27;,to:bp.to,k:bp.k,from:d.id});if(r.ok)toast(&#x27;已绑定：&#x27;+S.entities[d.id].name+&#x27; 的值决定它&#x27;);render();return}
   if(d.m===&#x27;move&#x27;){if(d.moved){afterChange()}else if(d.seg){commit({t:&#x27;segclick&#x27;,id:d.id,k:+d.seg})}else{if(d.was)cardOpen=!cardOpen;else cardOpen=true;$(&#x27;card&#x27;).dataset.v=&#x27;&#x27;;render()}}
-  else if(d.m===&#x27;link&#x27;){const el=document.elementFromPoint(ev.clientX,ev.clientY);const g=el&amp;&amp;el.closest&amp;&amp;el.closest(&#x27;[data-ent]&#x27;);
+  else if(d.m===&#x27;link&#x27;){clearDrop();const el=document.elementFromPoint(ev.clientX,ev.clientY);
+    // 拖到选中器材卡片上的“绑到一个数”按钮：把这个输出绑到那个属性上
+    const bp=el&amp;&amp;el.closest&amp;&amp;el.closest(&#x27;[data-bindpick]&#x27;);if(bp&amp;&amp;sel){const r=commit({t:&#x27;bind&#x27;,to:sel,k:bp.dataset.bindpick,from:d.from});if(r.ok)toast(&#x27;已绑定&#x27;);render();return}
+    const g=el&amp;&amp;el.closest&amp;&amp;el.closest(&#x27;[data-ent]&#x27;);
     if(g&amp;&amp;g.dataset.ent!==d.from){const to=S.entities[g.dataset.ent];const [wx]=toWorld(ev.clientX,ev.clientY);const [w]=size(to);commit({t:&#x27;link&#x27;,from:d.from,to:to.id,slot:wx&lt;to.x+w/2?&#x27;L&#x27;:&#x27;R&#x27;})}
     else if(Math.hypot(ev.clientX-d.sx,ev.clientY-d.sy)&gt;6)toast(&#x27;松手的地方没有器材：把线拖到另一个器材上&#x27;,true);render()}
   else if(d.m===&#x27;pan&#x27;)render()});
@@ -5276,7 +5350,7 @@ function p3Steps(p){
     return[
       {label:&#x27;第一个钟拨到开始的时刻&#x27;,score:1,hint:&#x27;第一个钟：时 &#x27;+p.start[0]+&#x27;，分 &#x27;+p.start[1],target:s=&gt;byType(s,&#x27;clock&#x27;),check:s=&gt;{const c=ck(s,0);return !!c&amp;&amp;c.props.h===p.start[0]&amp;&amp;c.props.m===p.start[1]}},
       {label:&#x27;第二个钟拨到结束的时刻&#x27;,score:1,hint:&#x27;第二个钟：时 &#x27;+p.end[0]+&#x27;，分 &#x27;+p.end[1],target:s=&gt;byType(s,&#x27;clock&#x27;),check:s=&gt;{const c=ck(s,1);return !!c&amp;&amp;c.props.h===p.end[0]&amp;&amp;c.props.m===p.end[1]}},
-      {label:&#x27;看两个钟相差多少分钟&#x27;,score:2,hint:&#x27;看钟面下面的“相差”&#x27;,target:s=&gt;byType(s,&#x27;clock&#x27;),check:(s,D)=&gt;{const c=Object.values(s.entities).filter(e=&gt;e.type===&#x27;clock&#x27;);return c.length===2&amp;&amp;(D[c[0].id].sig||[]).some(x=&gt;x.tx===&#x27;两个钟相差 &#x27;+p.ans+&#x27; 分钟&#x27;)}}];}
+      {label:&#x27;看两个钟相差多少分钟&#x27;,score:2,hint:&#x27;看钟面下面的“相差”&#x27;,target:s=&gt;byType(s,&#x27;clock&#x27;),check:(s,D)=&gt;{const c=Object.values(s.entities).filter(e=&gt;e.type===&#x27;clock&#x27;);return c.length===2&amp;&amp;D[c[0].id].ports.between===p.ans}}];}
   const cnt=p3Count(p);
   if(p.kind===&#x27;sum&#x27;)return[
     {label:&#x27;把数都连到合并器&#x27;,score:1,hint:&#x27;拖数的蓝点到合并器&#x27;,target:s=&gt;byType(s,&#x27;adder&#x27;),check:(s,D)=&gt;{const ad=byType(s,&#x27;adder&#x27;);return !!ad&amp;&amp;inputs(s,ad).length&gt;=cnt}},
@@ -5381,7 +5455,7 @@ const P46=[
  {id:&#x27;g4_7&#x27;,grade:4,domain:&#x27;统计与概率&#x27;,tools:&#x27;条形统计图&#x27;,title:&#x27;条形统计图：二班比一班多几人？&#x27;,q:&#x27;一班 12 人，二班要比一班多 6 人，看柱子的高低比较。&#x27;,why:&#x27;条形的高低表示人数的多少，两个柱子的高度差就是相差的人数。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;bars&#x27;,200,60,{a:4,b:6,c:3})},
   steps:[{label:&#x27;把一班的人数调成 12&#x27;,score:1,hint:&#x27;点统计图卡，在属性卡里把“一班”调到 12&#x27;,target:T45(&#x27;bars&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;bars&#x27;)].props.a===12},
-         {label:&#x27;二班比一班多 6 人&#x27;,score:2,hint:&#x27;把“二班”调到 18，看下面的文字&#x27;,target:T45(&#x27;bars&#x27;),check:(s,D)=&gt;{const b=byType(s,&#x27;bars&#x27;);return (D[b].sig||[]).some(x=&gt;x.tx===&#x27;二班比一班多 6 人&#x27;)}}]},
+         {label:&#x27;二班比一班多 6 人&#x27;,score:2,hint:&#x27;把“二班”调到 18，看下面的文字&#x27;,target:T45(&#x27;bars&#x27;),check:(s,D)=&gt;{const b=byType(s,&#x27;bars&#x27;);return D[b].ports.bMinusA===6}}]},
  {id:&#x27;g5_5&#x27;,grade:5,domain:&#x27;数与代数&#x27;,tools:&#x27;天平 · 数字卡&#x27;,title:&#x27;简易方程：x + 3 = 8，x 是几？&#x27;,q:&#x27;把左边的 3 和 x 放在左盘，右边的 8 放在右盘。调 x，让天平平了，x 就是答案。&#x27;,why:&#x27;x + 3 = 8，两边都减 3，得 x = 5。天平平，就是两边相等。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;num&#x27;,60,40,{v:3});addEnt(s,&#x27;num&#x27;,60,150,{v:1});addEnt(s,&#x27;num&#x27;,60,260,{v:8});addEnt(s,&#x27;balance&#x27;,300,130)},
   steps:[{label:&#x27;3 和 x 放左盘，8 放右盘&#x27;,score:1,hint:&#x27;拖蓝点：3 和 x 到天平左边，8 到右边&#x27;,target:T45(&#x27;balance&#x27;),check:(s,D)=&gt;{const b=byType(s,&#x27;balance&#x27;);return D[b].Ln.length&gt;=2&amp;&amp;D[b].Rn.length&gt;=1}},
@@ -5398,11 +5472,11 @@ const P47=[
  {id:&#x27;g4_12&#x27;,grade:4,domain:&#x27;图形与几何&#x27;,tools:&#x27;三角形&#x27;,title:&#x27;三角形内角和：两个角是 60° 和 70°，第三个角是几度？&#x27;,q:&#x27;三角形的三个角加起来是 180°。先把前两个角调好，看第三个角。&#x27;,why:&#x27;180 − 60 − 70 = 50°。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;tri&#x27;,200,60,{a:30,b:40})},
   steps:[{label:&#x27;把两个角调到 60° 和 70°&#x27;,score:1,hint:&#x27;点三角形卡，把两个角分别调到 60 和 70&#x27;,target:T45(&#x27;tri&#x27;),check:(s,D)=&gt;{const p=s.entities[byType(s,&#x27;tri&#x27;)].props;return p.a===60&amp;&amp;p.b===70}},
-         {label:&#x27;第三个角是 50°&#x27;,score:2,hint:&#x27;看三角形下面的文字&#x27;,target:T45(&#x27;tri&#x27;),check:(s,D)=&gt;{const t=byType(s,&#x27;tri&#x27;);return (D[t].sig||[]).some(x=&gt;x.tx===&#x27;第三个角是 50°，三个角加起来是 180°&#x27;)}}]},
+         {label:&#x27;第三个角是 50°&#x27;,score:2,hint:&#x27;看三角形下面的文字&#x27;,target:T45(&#x27;tri&#x27;),check:(s,D)=&gt;{const t=byType(s,&#x27;tri&#x27;);return D[t].ports.third===50}}]},
  {id:&#x27;g5_13&#x27;,grade:5,domain:&#x27;统计与概率&#x27;,tools:&#x27;折线统计图&#x27;,title:&#x27;折线统计图：第二年比第一年多多少？&#x27;,q:&#x27;折线越往上，数量越多。两年之间的差，就是两个点的高度差。&#x27;,why:&#x27;第一年 3 万元，第二年 9 万元，多 6 万元。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;line&#x27;,200,60,{y1:3,y2:6,y3:4})},
   steps:[{label:&#x27;把第二年调到 9 万元&#x27;,score:1,hint:&#x27;点折线图卡，在属性卡里把第二年调到 9&#x27;,target:T45(&#x27;line&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;line&#x27;)].props.y2===9},
-         {label:&#x27;第二年比第一年多 6 万元&#x27;,score:2,hint:&#x27;看折线图下面的文字&#x27;,target:T45(&#x27;line&#x27;),check:(s,D)=&gt;{const l=byType(s,&#x27;line&#x27;);return (D[l].sig||[]).some(x=&gt;x.tx===&#x27;第二年比第一年多 6 万元&#x27;)}}]},
+         {label:&#x27;第二年比第一年多 6 万元&#x27;,score:2,hint:&#x27;看折线图下面的文字&#x27;,target:T45(&#x27;line&#x27;),check:(s,D)=&gt;{const l=byType(s,&#x27;line&#x27;);return D[l].ports.d12===6}}]},
  {id:&#x27;g4_2&#x27;,grade:4,domain:&#x27;数与代数&#x27;,tools:&#x27;数字卡 · 乘法器&#x27;,title:&#x27;公顷：3 公顷 = 多少平方米？&#x27;,q:&#x27;1 公顷 = 10000 平方米。3 公顷就是 3 个 10000。&#x27;,why:&#x27;3 × 10000 = 30000 平方米。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;num&#x27;,60,60,{v:3});addEnt(s,&#x27;num&#x27;,60,170,{v:10000});addEnt(s,&#x27;mul&#x27;,330,110)},
   steps:[{label:&#x27;把 3 和 10000 都连到乘法器&#x27;,score:1,hint:&#x27;拖两个数的蓝点到乘法器&#x27;,target:T45(&#x27;mul&#x27;),check:(s,D)=&gt;P45H.cnt(s,D,&#x27;mul&#x27;,2)},
@@ -5415,7 +5489,7 @@ const P48=[
  {id:&#x27;g4_16&#x27;,grade:4,domain:&#x27;数与代数&#x27;,tools:&#x27;鸡兔笼&#x27;,title:&#x27;鸡兔同笼：35 个头、94 条腿，鸡兔各几只？&#x27;,q:&#x27;假设全是鸡，腿数少了，就一只一只换成兔子：每换一只，腿多 2 条。&#x27;,why:&#x27;兔 12 只、鸡 23 只：12 × 4 + 23 × 2 = 94。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;cage&#x27;,200,60,{heads:35,legs:94,rabbits:0})},
   steps:[{label:&#x27;把兔子数调到 12&#x27;,score:1,hint:&#x27;点鸡兔笼，在属性卡里把“兔”调到 12&#x27;,target:T45(&#x27;cage&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;cage&#x27;)].props.rabbits===12},
-         {label:&#x27;头和腿都对上：鸡 23 只&#x27;,score:2,hint:&#x27;看鸡兔笼下面的文字&#x27;,target:T45(&#x27;cage&#x27;),check:(s,D)=&gt;{const c=byType(s,&#x27;cage&#x27;);return (D[c].sig||[]).some(x=&gt;x.tx===&#x27;头、腿都对：兔 12 只，鸡 23 只&#x27;)}}]},
+         {label:&#x27;头和腿都对上：鸡 23 只&#x27;,score:2,hint:&#x27;看鸡兔笼下面的文字&#x27;,target:T45(&#x27;cage&#x27;),check:(s,D)=&gt;{const c=byType(s,&#x27;cage&#x27;);return D[c].ports.solved&amp;&amp;D[c].ports.rabbits===12&amp;&amp;D[c].ports.chickens===23}}]},
  {id:&#x27;g5_2&#x27;,grade:5,domain:&#x27;图形与几何&#x27;,tools:&#x27;数对&#x27;,title:&#x27;位置：(5, 4) 表示什么位置？&#x27;,q:&#x27;数对先写列，后写行：(5, 4) 是第 5 列、第 4 行。&#x27;,why:&#x27;先找第 5 列，再往上数第 4 行，交叉的地方就是 (5, 4)。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;pair&#x27;,200,40,{x:3,y:2})},
   steps:[{label:&#x27;把列调到 5&#x27;,score:1,hint:&#x27;点数对卡，在属性卡里把“第几列”调到 5&#x27;,target:T45(&#x27;pair&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;pair&#x27;)].props.x===5},
@@ -5444,11 +5518,11 @@ const P49=[
  {id:&#x27;g4_17&#x27;,grade:4,domain:&#x27;图形与几何&#x27;,tools:&#x27;立体图形&#x27;,title:&#x27;观察物体：从侧面和正面看，看到的样子一样吗？&#x27;,q:&#x27;先切到侧面看，再切回正面看，比一比看到几列、每列多高。&#x27;,why:&#x27;从不同方向看，同一个物体看到的形状可能不同。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;solid&#x27;,200,60,{view:0})},
   steps:[{label:&#x27;切到侧面看&#x27;,score:1,hint:&#x27;点立体图形卡，把“看的方向”调到 1（侧面）&#x27;,target:T45(&#x27;solid&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;solid&#x27;)].props.view===1},
-         {label:&#x27;切回正面：正面看到 2 列，高 2、1&#x27;,score:2,hint:&#x27;把“看的方向”调回 0（正面）&#x27;,target:T45(&#x27;solid&#x27;),check:(s,D)=&gt;{const v=byType(s,&#x27;solid&#x27;);return (D[v].sig||[]).some(x=&gt;x.tx===&#x27;正面看到 2 列，高 2、1&#x27;)}}]},
+         {label:&#x27;切回正面：正面看到 2 列，高 2、1&#x27;,score:2,hint:&#x27;把“看的方向”调回 0（正面）&#x27;,target:T45(&#x27;solid&#x27;),check:(s,D)=&gt;{const v=byType(s,&#x27;solid&#x27;);return JSON.stringify(D[v].ports.front)===&#x27;[2,1]&#x27;}}]},
  {id:&#x27;g5_14&#x27;,grade:5,domain:&#x27;图形与几何&#x27;,tools:&#x27;立体图形&#x27;,title:&#x27;观察物体（三）：从上面看，看到几个小方块？&#x27;,q:&#x27;从上面看，只看每一格有没有方块，不看高矮。&#x27;,why:&#x27;从上面看到的是每一格有没有方块：一共 3 格有方块。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;solid&#x27;,200,60,{view:0})},
   steps:[{label:&#x27;切到上面看&#x27;,score:1,hint:&#x27;把“看的方向”调到 2（上面）&#x27;,target:T45(&#x27;solid&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;solid&#x27;)].props.view===2},
-         {label:&#x27;上面看到 3 个小方块&#x27;,score:2,hint:&#x27;看立体图形下面的文字&#x27;,target:T45(&#x27;solid&#x27;),check:(s,D)=&gt;{const v=byType(s,&#x27;solid&#x27;);return (D[v].sig||[]).some(x=&gt;x.tx===&#x27;上面看到 3 个小方块&#x27;)}}]},
+         {label:&#x27;上面看到 3 个小方块&#x27;,score:2,hint:&#x27;看立体图形下面的文字&#x27;,target:T45(&#x27;solid&#x27;),check:(s,D)=&gt;{const v=byType(s,&#x27;solid&#x27;);return D[v].ports.top===3}}]},
 ];
 P49.forEach(p=&gt;XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
 
@@ -5507,11 +5581,11 @@ const P7=[
  {id:&#x27;g6_5&#x27;,grade:6,domain:&#x27;图形与几何&#x27;,tools:&#x27;圆&#x27;,title:&#x27;圆的周长：半径 3 厘米的圆，周长是几厘米？&#x27;,q:&#x27;圆的周长 = 2 × π × 半径，π 取 3.14。&#x27;,why:&#x27;2 × 3.14 × 3 = 18.84 厘米。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;circle&#x27;,200,40,{r:2})},
   steps:[{label:&#x27;把半径调到 3 厘米&#x27;,score:1,hint:&#x27;点圆卡，在属性卡里把半径调到 3&#x27;,target:T45(&#x27;circle&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;circle&#x27;)].props.r===3},
-         {label:&#x27;周长是 18.84 厘米&#x27;,score:2,hint:&#x27;看圆下面的文字&#x27;,target:T45(&#x27;circle&#x27;),check:(s,D)=&gt;{const c=byType(s,&#x27;circle&#x27;);return (D[c].sig||[]).some(x=&gt;x.tx===&#x27;半径 3 厘米：周长 18.84 厘米，面积 28.26 平方厘米&#x27;)}}]},
+         {label:&#x27;周长是 18.84 厘米&#x27;,score:2,hint:&#x27;看圆下面的文字&#x27;,target:T45(&#x27;circle&#x27;),check:(s,D)=&gt;{const c=byType(s,&#x27;circle&#x27;);return D[c].ports.circ===18.84&amp;&amp;D[c].ports.area===28.26&amp;&amp;s.entities[c].props.r===3}}]},
  {id:&#x27;g6_7&#x27;,grade:6,domain:&#x27;统计与概率&#x27;,tools:&#x27;扇形统计图&#x27;,title:&#x27;扇形统计图：一班占 40%，二班 20%，三班 40%，圆心角各是几度？&#x27;,q:&#x27;百分比乘 3.6 就是圆心角的度数，三个百分比加起来是 100%。&#x27;,why:&#x27;40% 对应 40 × 3.6 = 144°。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;pie&#x27;,200,40,{a:40,b:30,c:30})},
   steps:[{label:&#x27;把二班调到 20%（先不合计 100%）&#x27;,score:1,hint:&#x27;点扇形统计图卡，把“二班”调到 20&#x27;,target:T45(&#x27;pie&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;pie&#x27;)].props.b===20},
-         {label:&#x27;三班调到 40%，合计 100%，一班是 144°&#x27;,score:2,hint:&#x27;把“三班”调到 40，看下面的文字&#x27;,target:T45(&#x27;pie&#x27;),check:(s,D)=&gt;{const p=byType(s,&#x27;pie&#x27;);return D[p].sig.some(x=&gt;x.tx===&#x27;三个班合起来是 100%&#x27;)&amp;&amp;D[p].sig.some(x=&gt;x.tx===&#x27;一班 对应圆心角 144°&#x27;)}}]},
+         {label:&#x27;三班调到 40%，合计 100%，一班是 144°&#x27;,score:2,hint:&#x27;把“三班”调到 40，看下面的文字&#x27;,target:T45(&#x27;pie&#x27;),check:(s,D)=&gt;{const p=byType(s,&#x27;pie&#x27;);return D[p].ports.sum===100&amp;&amp;D[p].ports.angleA===144}}]},
 ];
 P7.forEach(p=&gt;XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
 
@@ -5524,15 +5598,15 @@ const P8=[
  {id:&#x27;g7_ineq&#x27;,grade:7,domain:&#x27;数与代数&#x27;,tools:&#x27;不等式（数轴）&#x27;,title:&#x27;不等式：x 的解集 x &lt; −1，在数轴上怎么画？&#x27;,q:&#x27;解集在数轴上：边界点用空心圆，方向看符号。&#x27;,why:&#x27;x &lt; −1：从 −1 往左画，不包括 −1。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;ineq&#x27;,200,60,{b:2,op:1})},
   steps:[{label:&#x27;方向调成 x＜（向左）&#x27;,score:1,hint:&#x27;点解集卡，在属性卡里把方向调到 0&#x27;,target:T45(&#x27;ineq&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;ineq&#x27;)].props.op===0},
-         {label:&#x27;边界调成 −1，解集是 x ＜ −1&#x27;,score:2,hint:&#x27;把边界调到 −1&#x27;,target:T45(&#x27;ineq&#x27;),check:(s,D)=&gt;{const e=byType(s,&#x27;ineq&#x27;);return (D[e].sig||[]).some(x=&gt;x.tx===&#x27;解集：x ＜ -1&#x27;)}}]},
+         {label:&#x27;边界调成 −1，解集是 x ＜ −1&#x27;,score:2,hint:&#x27;把边界调到 −1&#x27;,target:T45(&#x27;ineq&#x27;),check:(s,D)=&gt;{const e=byType(s,&#x27;ineq&#x27;);return D[e].ports.set.op===0&amp;&amp;D[e].ports.set.b===-1}}]},
  {id:&#x27;g8_hyper&#x27;,grade:8,domain:&#x27;函数&#x27;,tools:&#x27;反比例函数&#x27;,title:&#x27;反比例：k = 4 时，图像经过点 (2, 2) 吗？&#x27;,q:&#x27;反比例函数 y = k/x，把 x = 2 代入：y = k/2。&#x27;,why:&#x27;k = 4 时，y = 4/2 = 2，过点 (2, 2)。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;hyper&#x27;,200,60,{k:2})},
   steps:[{label:&#x27;把 k 调成 4&#x27;,score:1,hint:&#x27;点反比例卡，在属性卡里把 k 调到 4&#x27;,target:T45(&#x27;hyper&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;hyper&#x27;)].props.k===4},
-         {label:&#x27;图像过点 (2, 2)&#x27;,score:2,hint:&#x27;看反比例卡下面的文字&#x27;,target:T45(&#x27;hyper&#x27;),check:(s,D)=&gt;{const h=byType(s,&#x27;hyper&#x27;);return (D[h].sig||[]).some(x=&gt;x.tx===&#x27;过点 (2, 2)&#x27;)}}]},
+         {label:&#x27;图像过点 (2, 2)&#x27;,score:2,hint:&#x27;看反比例卡下面的文字&#x27;,target:T45(&#x27;hyper&#x27;),check:(s,D)=&gt;{const h=byType(s,&#x27;hyper&#x27;);return D[h].ports.y2===2}}]},
  {id:&#x27;g9_parab&#x27;,grade:9,domain:&#x27;函数&#x27;,tools:&#x27;二次函数&#x27;,title:&#x27;二次函数：y = x² − 4x 的顶点在哪里？&#x27;,q:&#x27;顶点的横坐标 x = −b/(2a)，代入求纵坐标。这里 a = 1，b = −4。&#x27;,why:&#x27;x = 4/2 = 2，y = 4 − 8 = −4，顶点 (2, −4)。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;parab&#x27;,200,60,{a:1,b:-2,c:0})},
   steps:[{label:&#x27;把 b 调成 −4&#x27;,score:1,hint:&#x27;点二次函数卡，把 b 调到 −4&#x27;,target:T45(&#x27;parab&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;parab&#x27;)].props.b===-4},
-         {label:&#x27;顶点是 (2, −4)&#x27;,score:2,hint:&#x27;看二次函数卡下面的文字&#x27;,target:T45(&#x27;parab&#x27;),check:(s,D)=&gt;{const p=byType(s,&#x27;parab&#x27;);return (D[p].sig||[]).some(x=&gt;x.tx===&#x27;顶点 (2, -4)&#x27;)}}]},
+         {label:&#x27;顶点是 (2, −4)&#x27;,score:2,hint:&#x27;看二次函数卡下面的文字&#x27;,target:T45(&#x27;parab&#x27;),check:(s,D)=&gt;{const p=byType(s,&#x27;parab&#x27;);return D[p].ports.vx===2&amp;&amp;D[p].ports.vy===-4}}]},
 ];
 P8.forEach(p=&gt;XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
 
@@ -5541,15 +5615,15 @@ const P10=[
  {id:&#x27;g9_12&#x27;,grade:9,domain:&#x27;图形与几何&#x27;,tools:&#x27;相似图形&#x27;,title:&#x27;相似：把图形放大 2 倍，面积变成几倍？&#x27;,q:&#x27;相似图形的边长比是 1 : 2，面积比是边长比的平方：1 : 4。&#x27;,why:&#x27;边长扩大 2 倍，面积扩大 2 × 2 = 4 倍。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;sim&#x27;,200,50,{k:1})},
   steps:[{label:&#x27;把相似比调到 2（放大 2 倍）&#x27;,score:1,hint:&#x27;点相似图形卡，把相似比调到 2&#x27;,target:T45(&#x27;sim&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;sim&#x27;)].props.k===2},
-         {label:&#x27;面积比是 1 : 4&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;sim&#x27;),check:(s,D)=&gt;{const x=byType(s,&#x27;sim&#x27;);return (D[x].sig||[]).some(t=&gt;t.tx===&#x27;相似比 1 : 2，面积比 1 : 4&#x27;)}}]},
+         {label:&#x27;面积比是 1 : 4&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;sim&#x27;),check:(s,D)=&gt;{const x=byType(s,&#x27;sim&#x27;);return D[x].ports.ratio===2&amp;&amp;D[x].ports.areaRatio===4}}]},
  {id:&#x27;g8_11&#x27;,grade:8,domain:&#x27;图形与几何&#x27;,tools:&#x27;直角三角形&#x27;,title:&#x27;勾股定理：直角边 3 和 4，斜边是几？&#x27;,q:&#x27;勾股定理：两直角边的平方和等于斜边的平方，a² + b² = c²。&#x27;,why:&#x27;3² + 4² = 9 + 16 = 25，c = 5。这组数叫勾股数。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;pyth&#x27;,200,50,{a:3,b:2})},
   steps:[{label:&#x27;把两条直角边调成 3 和 4&#x27;,score:1,hint:&#x27;点直角三角形卡，把 b 调到 4&#x27;,target:T45(&#x27;pyth&#x27;),check:(s,D)=&gt;{const p=s.entities[byType(s,&#x27;pyth&#x27;)].props;return p.a===3&amp;&amp;p.b===4}},
-         {label:&#x27;斜边是 5，是勾股数&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;pyth&#x27;),check:(s,D)=&gt;{const x=byType(s,&#x27;pyth&#x27;);return (D[x].sig||[]).some(t=&gt;t.tx===&#x27;斜边 5，是勾股数&#x27;)}}]},
+         {label:&#x27;斜边是 5，是勾股数&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;pyth&#x27;),check:(s,D)=&gt;{const x=byType(s,&#x27;pyth&#x27;);return D[x].ports.c===5&amp;&amp;D[x].ports.triple===true}}]},
  {id:&#x27;g9_14&#x27;,grade:9,domain:&#x27;图形与几何&#x27;,tools:&#x27;锐角三角函数&#x27;,title:&#x27;锐角三角函数：∠30° 的正弦是几？&#x27;,q:&#x27;正弦 = 对边 ÷ 斜边。30° 的正弦是 0.5（就是 1/2）。&#x27;,why:&#x27;sin 30° = 1/2，在直角三角形里，对边是斜边的一半。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;trig&#x27;,200,50,{deg:45})},
   steps:[{label:&#x27;把锐角调到 30°&#x27;,score:1,hint:&#x27;点三角函数卡，把锐角调到 30&#x27;,target:T45(&#x27;trig&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;trig&#x27;)].props.deg===30},
-         {label:&#x27;sin 30° = 0.50&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;trig&#x27;),check:(s,D)=&gt;{const x=byType(s,&#x27;trig&#x27;);return (D[x].sig||[]).some(t=&gt;t.tx.includes(&#x27;sin = 0.50&#x27;))}}]},
+         {label:&#x27;sin 30° = 0.50&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;trig&#x27;),check:(s,D)=&gt;{const x=byType(s,&#x27;trig&#x27;);return D[x].ports.sin===0.5}}]},
 ];
 P10.forEach(p=&gt;XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
 
@@ -5558,19 +5632,19 @@ const P11=[
  {id:&#x27;g9_bag&#x27;,grade:9,domain:&#x27;统计与概率&#x27;,tools:&#x27;摸球袋&#x27;,title:&#x27;随机事件：袋子里 3 个红球、1 个白球，摸到红球的概率是几？&#x27;,q:&#x27;概率 = 想要的情况数 ÷ 所有可能的情况数。&#x27;,why:&#x27;一共 4 个球，红球 3 个，P(红) = 3/4。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;bag&#x27;,200,60,{red:2,white:2})},
   steps:[{label:&#x27;把红球调成 3 个，白球调成 1 个&#x27;,score:1,hint:&#x27;点摸球袋卡，把红球调到 3、白球调到 1&#x27;,target:T45(&#x27;bag&#x27;),check:(s,D)=&gt;{const p=s.entities[byType(s,&#x27;bag&#x27;)].props;return p.red===3&amp;&amp;p.white===1}},
-         {label:&#x27;P(红) = 3/4&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;bag&#x27;),check:(s,D)=&gt;{const b=byType(s,&#x27;bag&#x27;);return (D[b].sig||[]).some(x=&gt;x.tx===&#x27;P(红) = 3/4&#x27;)}}]},
+         {label:&#x27;P(红) = 3/4&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;bag&#x27;),check:(s,D)=&gt;{const b=byType(s,&#x27;bag&#x27;);return D[b].ports.pRed===0.75}}]},
  {id:&#x27;g9_6&#x27;,grade:9,domain:&#x27;图形与几何&#x27;,tools:&#x27;圆周角&#x27;,title:&#x27;圆周角：圆心角是 80°，同弧所对的圆周角是几度？&#x27;,q:&#x27;同弧所对的圆周角等于圆心角的一半。&#x27;,why:&#x27;80° ÷ 2 = 40°。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;cang&#x27;,200,60,{c:120})},
   steps:[{label:&#x27;把圆心角调到 80°&#x27;,score:1,hint:&#x27;点圆卡，把圆心角调到 80&#x27;,target:T45(&#x27;cang&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;cang&#x27;)].props.c===80},
-         {label:&#x27;圆周角是 40°&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;cang&#x27;),check:(s,D)=&gt;{const c=byType(s,&#x27;cang&#x27;);return (D[c].sig||[]).some(x=&gt;x.tx.includes(&#x27;圆周角 40°&#x27;))}}]},
+         {label:&#x27;圆周角是 40°&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;cang&#x27;),check:(s,D)=&gt;{const c=byType(s,&#x27;cang&#x27;);return D[c].ports.inscribed===40}}]},
  {id:&#x27;g8_2&#x27;,grade:8,domain:&#x27;图形与几何&#x27;,tools:&#x27;全等三角形&#x27;,title:&#x27;全等三角形（SSS）：三边分别是 3、4、5 的两个三角形全等吗？&#x27;,q:&#x27;三边对应相等的两个三角形全等，简写 SSS。&#x27;,why:&#x27;两个三角形的三条边分别相等（3、4、5），所以全等。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;congr&#x27;,200,60,{a:4,b:4,c:5})},
   steps:[{label:&#x27;第二个三角形的边 1 调成 3&#x27;,score:1,hint:&#x27;点全等卡，把“边 1”调到 3，“边 2”调到 4&#x27;,target:T45(&#x27;congr&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;congr&#x27;)].props.a===3&amp;&amp;s.entities[byType(s,&#x27;congr&#x27;)].props.b===4},
-         {label:&#x27;三边对应相等，全等（SSS）&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;congr&#x27;),check:(s,D)=&gt;{const c=byType(s,&#x27;congr&#x27;);return (D[c].sig||[]).some(x=&gt;x.tx===&#x27;三边对应相等，全等（SSS）&#x27;)}}]},
+         {label:&#x27;三边对应相等，全等（SSS）&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;congr&#x27;),check:(s,D)=&gt;{const c=byType(s,&#x27;congr&#x27;);return D[c].ports.congruent===true}}]},
  {id:&#x27;g9_7&#x27;,grade:9,domain:&#x27;图形与几何&#x27;,tools:&#x27;直线和圆&#x27;,title:&#x27;直线和圆相切：圆心到直线的距离 d 等于半径 r 时，是什么位置？&#x27;,q:&#x27;d &gt; r 相离，d = r 相切，d &lt; r 相交。&#x27;,why:&#x27;d = r 时，直线和圆只有一个公共点，叫相切。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;tangent&#x27;,200,60,{d:5,r:3})},
   steps:[{label:&#x27;把圆心到直线的距离调到 3&#x27;,score:1,hint:&#x27;点直线圆卡，把 d 调到 3&#x27;,target:T45(&#x27;tangent&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;tangent&#x27;)].props.d===3},
-         {label:&#x27;直线和圆相切&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;tangent&#x27;),check:(s,D)=&gt;{const t=byType(s,&#x27;tangent&#x27;);return (D[t].sig||[]).some(x=&gt;x.tx===&#x27;直线和圆相切（d = r）&#x27;)}}]},
+         {label:&#x27;直线和圆相切&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;tangent&#x27;),check:(s,D)=&gt;{const t=byType(s,&#x27;tangent&#x27;);return D[t].ports.relation===&#x27;tangent&#x27;}}]},
 ];
 P11.forEach(p=&gt;XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
 
@@ -5579,23 +5653,23 @@ const P12=[
  {id:&#x27;g7_sys&#x27;,grade:7,domain:&#x27;数与代数&#x27;,tools:&#x27;方程组&#x27;,title:&#x27;二元一次方程组：x + y = 10，x − y = 4，x、y 各是几？&#x27;,q:&#x27;把两个方程看成同时成立。x 和 y 都要让两个式子都对。&#x27;,why:&#x27;两式相加得 2x = 14，x = 7；再代入得 y = 3。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;sys&#x27;,200,60,{x:0,y:0})},
   steps:[{label:&#x27;把 x 调到 7&#x27;,score:1,hint:&#x27;点方程组卡，把 x 调到 7&#x27;,target:T45(&#x27;sys&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;sys&#x27;)].props.x===7},
-         {label:&#x27;y = 3，两个方程都成立&#x27;,score:2,hint:&#x27;把 y 调到 3，看下面的文字&#x27;,target:T45(&#x27;sys&#x27;),check:(s,D)=&gt;{const x=byType(s,&#x27;sys&#x27;);return s.entities[x].props.y===3&amp;&amp;(D[x].sig||[]).some(t=&gt;t.tx===&#x27;两个方程都成立：x = 7，y = 3&#x27;)}}]},
+         {label:&#x27;y = 3，两个方程都成立&#x27;,score:2,hint:&#x27;把 y 调到 3，看下面的文字&#x27;,target:T45(&#x27;sys&#x27;),check:(s,D)=&gt;{const x=byType(s,&#x27;sys&#x27;);return s.entities[x].props.y===3&amp;&amp;D[x].ports.ok===true&amp;&amp;D[x].ports.x===7}}]},
  {id:&#x27;g9_quad&#x27;,grade:9,domain:&#x27;数与代数&#x27;,tools:&#x27;一元二次方程&#x27;,title:&#x27;一元二次方程：x² − 5x + 6 = 0，两个根是几？&#x27;,q:&#x27;先调 b = −5，再调 c = 6。看判别式和两个根。&#x27;,why:&#x27;x² − 5x + 6 = (x − 2)(x − 3) = 0，根是 2 和 3。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;quad&#x27;,200,60,{b:0,c:0})},
   steps:[{label:&#x27;把 b 调到 −5&#x27;,score:1,hint:&#x27;点方程卡，把 b 调到 −5&#x27;,target:T45(&#x27;quad&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;quad&#x27;)].props.b===-5},
-         {label:&#x27;把 c 调到 6，根是 2 和 3&#x27;,score:2,hint:&#x27;把 c 调到 6，看下面的文字&#x27;,target:T45(&#x27;quad&#x27;),check:(s,D)=&gt;{const q=byType(s,&#x27;quad&#x27;);return s.entities[q].props.c===6&amp;&amp;(D[q].sig||[]).some(t=&gt;t.tx===&#x27;根：2、3&#x27;)}}]},
+         {label:&#x27;把 c 调到 6，根是 2 和 3&#x27;,score:2,hint:&#x27;把 c 调到 6，看下面的文字&#x27;,target:T45(&#x27;quad&#x27;),check:(s,D)=&gt;{const q=byType(s,&#x27;quad&#x27;);return s.entities[q].props.c===6&amp;&amp;D[q].ports.disc&gt;0&amp;&amp;D[q].ports.roots[0]===2&amp;&amp;D[q].ports.roots[1]===3}}]},
  {id:&#x27;g8_afrac&#x27;,grade:8,domain:&#x27;数与代数&#x27;,tools:&#x27;分式&#x27;,title:&#x27;分式：分母是几时，分式没有意义？&#x27;,q:&#x27;分式的分母不能是 0。把分母调到 0 看看会怎样，再调回 4。&#x27;,why:&#x27;分母是 0 时，除法没有意义，所以分式没有意义。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;afrac&#x27;,200,60,{n:6,d:4})},
   steps:[{label:&#x27;把分母调到 0&#x27;,score:1,hint:&#x27;点分式卡，把分母 d 调到 0&#x27;,target:T45(&#x27;afrac&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;afrac&#x27;)].props.d===0},
-         {label:&#x27;分母调回 4，值是 3/2&#x27;,score:2,hint:&#x27;把分母调回 4，看下面的文字&#x27;,target:T45(&#x27;afrac&#x27;),check:(s,D)=&gt;{const a=byType(s,&#x27;afrac&#x27;);return s.entities[a].props.d===4&amp;&amp;(D[a].sig||[]).some(t=&gt;t.tx===&#x27;值 = 3/2&#x27;)}}]},
+         {label:&#x27;分母调回 4，值是 3/2&#x27;,score:2,hint:&#x27;把分母调回 4，看下面的文字&#x27;,target:T45(&#x27;afrac&#x27;),check:(s,D)=&gt;{const a=byType(s,&#x27;afrac&#x27;);return s.entities[a].props.d===4&amp;&amp;D[a].ports.value===1.5}}]},
  {id:&#x27;g8_rad&#x27;,grade:8,domain:&#x27;数与代数&#x27;,tools:&#x27;二次根式&#x27;,title:&#x27;二次根式：√12 能化简成几？&#x27;,q:&#x27;把被开方数里的平方因数拿出来：12 = 4 × 3，√4 = 2。&#x27;,why:&#x27;√12 = √(4 × 3) = 2√3。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;radical&#x27;,200,60,{n:8})},
   steps:[{label:&#x27;把被开方数调到 12&#x27;,score:1,hint:&#x27;点根式卡，把 n 调到 12&#x27;,target:T45(&#x27;radical&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;radical&#x27;)].props.n===12},
-         {label:&#x27;√12 = 2√3&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;radical&#x27;),check:(s,D)=&gt;{const r=byType(s,&#x27;radical&#x27;);return (D[r].sig||[]).some(t=&gt;t.tx===&#x27;√12 = 2√3&#x27;)}}]},
+         {label:&#x27;√12 = 2√3&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;radical&#x27;),check:(s,D)=&gt;{const r=byType(s,&#x27;radical&#x27;);return D[r].ports.kk===2&amp;&amp;D[r].ports.mm===3}}]},
  {id:&#x27;g7_par&#x27;,grade:7,domain:&#x27;图形与几何&#x27;,tools:&#x27;平行线与截线&#x27;,title:&#x27;平行线：两条平行线被截线所截，同旁内角是几度？&#x27;,q:&#x27;两直线平行，同旁内角互补（加起来 180°）。&#x27;,why:&#x27;同旁内角 = 180° − 70° = 110°。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;parlines&#x27;,200,60,{a:40})},
   steps:[{label:&#x27;把夹角调到 70°&#x27;,score:1,hint:&#x27;点平行线卡，把夹角调到 70&#x27;,target:T45(&#x27;parlines&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;parlines&#x27;)].props.a===70},
-         {label:&#x27;同旁内角是 110°&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;parlines&#x27;),check:(s,D)=&gt;{const p=byType(s,&#x27;parlines&#x27;);return (D[p].sig||[]).some(t=&gt;t.tx.includes(&#x27;同旁内角 110°&#x27;))}}]},
+         {label:&#x27;同旁内角是 110°&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;parlines&#x27;),check:(s,D)=&gt;{const p=byType(s,&#x27;parlines&#x27;);return D[p].ports.sameSide===110}}]},
 ];
 P12.forEach(p=&gt;XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
 
@@ -5604,23 +5678,23 @@ const P13=[
  {id:&#x27;g8_fact&#x27;,grade:8,domain:&#x27;数与代数&#x27;,tools:&#x27;因式分解&#x27;,title:&#x27;因式分解：x² + 5x + 6 = ?&#x27;,q:&#x27;找两个数，它们的和是 5，积是 6。&#x27;,why:&#x27;2 + 3 = 5，2 × 3 = 6，所以 x² + 5x + 6 = (x + 2)(x + 3)。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;fact&#x27;,200,60,{b:0,c:0})},
   steps:[{label:&#x27;把 b 调到 5&#x27;,score:1,hint:&#x27;点因式分解卡，把 b 调到 5&#x27;,target:T45(&#x27;fact&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;fact&#x27;)].props.b===5},
-         {label:&#x27;把 c 调到 6，分解成 (x + 2)(x + 3)&#x27;,score:2,hint:&#x27;把 c 调到 6，看下面的文字&#x27;,target:T45(&#x27;fact&#x27;),check:(s,D)=&gt;{const f=byType(s,&#x27;fact&#x27;);return s.entities[f].props.c===6&amp;&amp;(D[f].sig||[]).some(t=&gt;t.tx.includes(&#x27;(x + 2)(x + 3)&#x27;))}}]},
+         {label:&#x27;把 c 调到 6，分解成 (x + 2)(x + 3)&#x27;,score:2,hint:&#x27;把 c 调到 6，看下面的文字&#x27;,target:T45(&#x27;fact&#x27;),check:(s,D)=&gt;{const f=byType(s,&#x27;fact&#x27;);return s.entities[f].props.c===6&amp;&amp;JSON.stringify(D[f].ports.factors)===&#x27;[2,3]&#x27;}}]},
  {id:&#x27;g8_sq&#x27;,grade:8,domain:&#x27;数与代数&#x27;,tools:&#x27;乘法公式&#x27;,title:&#x27;完全平方公式：(a + b)² 当 a = 3，b = 2 时是几？&#x27;,q:&#x27;(a + b)² = a² + 2ab + b²。先算 a + b，再平方，两种算法结果一样。&#x27;,why:&#x27;(3 + 2)² = 25，展开 9 + 12 + 4 = 25。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;sqsum&#x27;,200,60,{a:1,b:1})},
   steps:[{label:&#x27;把 a 调到 3，b 调到 2&#x27;,score:1,hint:&#x27;点乘法公式卡，把 a 调到 3，b 调到 2&#x27;,target:T45(&#x27;sqsum&#x27;),check:(s,D)=&gt;{const p=s.entities[byType(s,&#x27;sqsum&#x27;)].props;return p.a===3&amp;&amp;p.b===2}},
-         {label:&#x27;(3 + 2)² = 25&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;sqsum&#x27;),check:(s,D)=&gt;{const q=byType(s,&#x27;sqsum&#x27;);return (D[q].sig||[]).some(t=&gt;t.tx.includes(&#x27;(3+2)² = 25&#x27;))}}]},
+         {label:&#x27;(3 + 2)² = 25&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;sqsum&#x27;),check:(s,D)=&gt;{const q=byType(s,&#x27;sqsum&#x27;);return s.entities[q].props.a===3&amp;&amp;s.entities[q].props.b===2}}]},
  {id:&#x27;g8_iso&#x27;,grade:8,domain:&#x27;图形与几何&#x27;,tools:&#x27;等腰三角形&#x27;,title:&#x27;等腰三角形：顶角是 40°，底角是几度？&#x27;,q:&#x27;等腰三角形两个底角相等，三个角加起来是 180°。&#x27;,why:&#x27;底角 = (180° − 40°) ÷ 2 = 70°。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;isotri&#x27;,200,60,{apex:60})},
   steps:[{label:&#x27;把顶角调到 40°&#x27;,score:1,hint:&#x27;点等腰三角形卡，把顶角调到 40&#x27;,target:T45(&#x27;isotri&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;isotri&#x27;)].props.apex===40},
-         {label:&#x27;底角是 70°&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;isotri&#x27;),check:(s,D)=&gt;{const t=byType(s,&#x27;isotri&#x27;);return (D[t].sig||[]).some(x=&gt;x.tx.startsWith(&#x27;底角 70°&#x27;))}}]},
+         {label:&#x27;底角是 70°&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;isotri&#x27;),check:(s,D)=&gt;{const t=byType(s,&#x27;isotri&#x27;);return D[t].ports.base===70}}]},
  {id:&#x27;g8_para&#x27;,grade:8,domain:&#x27;图形与几何&#x27;,tools:&#x27;平行线与截线&#x27;,title:&#x27;平行四边形：相邻的两个角一个是 70°，另一个是几度？&#x27;,q:&#x27;平行四边形的邻角互补：两个相邻的角加起来是 180°。&#x27;,why:&#x27;180° − 70° = 110°。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;parlines&#x27;,200,60,{a:40})},
   steps:[{label:&#x27;把一个角调到 70°&#x27;,score:1,hint:&#x27;点平行线卡，把角调到 70&#x27;,target:T45(&#x27;parlines&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;parlines&#x27;)].props.a===70},
-         {label:&#x27;邻角是 110°&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;parlines&#x27;),check:(s,D)=&gt;{const p=byType(s,&#x27;parlines&#x27;);return (D[p].sig||[]).some(t=&gt;t.tx.includes(&#x27;同旁内角 110°&#x27;))}}]},
+         {label:&#x27;邻角是 110°&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;parlines&#x27;),check:(s,D)=&gt;{const p=byType(s,&#x27;parlines&#x27;);return D[p].ports.sameSide===110}}]},
  {id:&#x27;g8_data&#x27;,grade:8,domain:&#x27;统计与概率&#x27;,tools:&#x27;数据的分析&#x27;,title:&#x27;数据的分析：6、8、12 的平均数和中位数各是多少？&#x27;,q:&#x27;平均数 = 总和 ÷ 个数；中位数是按大小排好后中间的那个数。&#x27;,why:&#x27;平均数 26 ÷ 3 ≈ 8.67，中位数是 8。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;data&#x27;,200,60,{a:6,b:8,c:10})},
   steps:[{label:&#x27;把第三个数调到 12&#x27;,score:1,hint:&#x27;点数据卡，把数 3 调到 12&#x27;,target:T45(&#x27;data&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;data&#x27;)].props.c===12},
-         {label:&#x27;平均数 8.67，中位数 8&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;data&#x27;),check:(s,D)=&gt;{const d=byType(s,&#x27;data&#x27;);return (D[d].sig||[]).some(t=&gt;t.tx===&#x27;平均数 8.67，中位数 8&#x27;)}}]},
+         {label:&#x27;平均数 8.67，中位数 8&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;data&#x27;),check:(s,D)=&gt;{const d=byType(s,&#x27;data&#x27;);return D[d].ports.mean2===8.67&amp;&amp;D[d].ports.median===8}}]},
 ];
 P13.forEach(p=&gt;XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
 
@@ -5636,23 +5710,23 @@ const P14=[
  H14.mul({id:&#x27;g7_3&#x27;,grade:7,domain:&#x27;数与代数&#x27;,tools:&#x27;数字卡 · 乘法器&#x27;,title:&#x27;有理数乘法：(−2) × (−3) × (−4) = ?&#x27;,q:&#x27;负数的个数是奇数，积是负数。&#x27;,why:&#x27;2 × 3 × 4 = 24，三个负号，积为 −24。&#x27;,nums:[-2,-3,-4],ans:-24}),
  {id:&#x27;g7_8&#x27;,grade:7,domain:&#x27;图形与几何&#x27;,tools:&#x27;数轴&#x27;,title:&#x27;线段：A 在 2，B 在 7，线段 AB 长几？&#x27;,q:&#x27;线段的长度就是两个端点在数轴上的距离。&#x27;,why:&#x27;7 − 2 = 5。&#x27;,build:s=&gt;{addEnt(s,&#x27;numline&#x27;,120,120,{min:0,max:9});addEnt(s,&#x27;num&#x27;,60,40,{v:2});addEnt(s,&#x27;num&#x27;,60,150,{v:7})},steps:[{label:&#x27;把 A（2）和 B（7）都连到数轴&#x27;,score:1,hint:&#x27;拖两个数的蓝点到数轴&#x27;,target:T45(&#x27;numline&#x27;),check:(s,D)=&gt;P45H.cnt(s,D,&#x27;numline&#x27;,2)},{label:&#x27;线段 AB 长 5&#x27;,score:2,hint:&#x27;看数轴下面的“相差”&#x27;,target:T45(&#x27;numline&#x27;),check:(s,D)=&gt;{const nl=byType(s,&#x27;numline&#x27;);const vs=inputs(s,nl).map(l=&gt;D[l.from]&amp;&amp;D[l.from].value).filter(Boolean);return vs.length&gt;=2&amp;&amp;Math.abs(qnum(vs[0])-qnum(vs[1]))===5}}]},
  H14.sum({id:&#x27;g7_9&#x27;,grade:7,domain:&#x27;图形与几何&#x27;,tools:&#x27;数字卡 · 合并器&#x27;,title:&#x27;角：30° 和 60° 合起来，是几度？（余角）&#x27;,q:&#x27;两个角的和是 90°，它们互为余角。&#x27;,why:&#x27;30° + 60° = 90°，是直角，所以互余。&#x27;,nums:[30,60],ans:90}),
- {id:&#x27;g7_10&#x27;,grade:7,domain:&#x27;图形与几何&#x27;,tools:&#x27;平行线与截线&#x27;,title:&#x27;相交线：邻补角，一个角是 50°，它的邻补角是几度？&#x27;,q:&#x27;邻补角的和是 180°。&#x27;,why:&#x27;180° − 50° = 130°。&#x27;,build:s=&gt;{addEnt(s,&#x27;parlines&#x27;,200,60,{a:40})},steps:[{label:&#x27;把一个角调到 50°&#x27;,score:1,hint:&#x27;点平行线卡，把角调到 50&#x27;,target:T45(&#x27;parlines&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;parlines&#x27;)].props.a===50},{label:&#x27;邻补角是 130°&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;parlines&#x27;),check:(s,D)=&gt;{const p=byType(s,&#x27;parlines&#x27;);return (D[p].sig||[]).some(t=&gt;t.tx.includes(&#x27;同旁内角 130°&#x27;))}}]},
- {id:&#x27;g7_12&#x27;,grade:7,domain:&#x27;数与代数&#x27;,tools:&#x27;二次根式&#x27;,title:&#x27;实数：√16 是几？&#x27;,q:&#x27;平方等于 16 的非负数是 4，所以 √16 = 4。&#x27;,why:&#x27;4 × 4 = 16。&#x27;,build:s=&gt;{addEnt(s,&#x27;radical&#x27;,200,60,{n:8})},steps:[{label:&#x27;把被开方数调到 16&#x27;,score:1,hint:&#x27;点根式卡，把 n 调到 16&#x27;,target:T45(&#x27;radical&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;radical&#x27;)].props.n===16},{label:&#x27;√16 = 4&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;radical&#x27;),check:(s,D)=&gt;{const r=byType(s,&#x27;radical&#x27;);return (D[r].sig||[]).some(t=&gt;t.tx===&#x27;√16 = 4&#x27;)}}]},
+ {id:&#x27;g7_10&#x27;,grade:7,domain:&#x27;图形与几何&#x27;,tools:&#x27;平行线与截线&#x27;,title:&#x27;相交线：邻补角，一个角是 50°，它的邻补角是几度？&#x27;,q:&#x27;邻补角的和是 180°。&#x27;,why:&#x27;180° − 50° = 130°。&#x27;,build:s=&gt;{addEnt(s,&#x27;parlines&#x27;,200,60,{a:40})},steps:[{label:&#x27;把一个角调到 50°&#x27;,score:1,hint:&#x27;点平行线卡，把角调到 50&#x27;,target:T45(&#x27;parlines&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;parlines&#x27;)].props.a===50},{label:&#x27;邻补角是 130°&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;parlines&#x27;),check:(s,D)=&gt;{const p=byType(s,&#x27;parlines&#x27;);return D[p].ports.sameSide===130}}]},
+ {id:&#x27;g7_12&#x27;,grade:7,domain:&#x27;数与代数&#x27;,tools:&#x27;二次根式&#x27;,title:&#x27;实数：√16 是几？&#x27;,q:&#x27;平方等于 16 的非负数是 4，所以 √16 = 4。&#x27;,why:&#x27;4 × 4 = 16。&#x27;,build:s=&gt;{addEnt(s,&#x27;radical&#x27;,200,60,{n:8})},steps:[{label:&#x27;把被开方数调到 16&#x27;,score:1,hint:&#x27;点根式卡，把 n 调到 16&#x27;,target:T45(&#x27;radical&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;radical&#x27;)].props.n===16},{label:&#x27;√16 = 4&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;radical&#x27;),check:(s,D)=&gt;{const r=byType(s,&#x27;radical&#x27;);return D[r].ports.kk===4&amp;&amp;D[r].ports.mm===1}}]},
  {id:&#x27;g7_13&#x27;,grade:7,domain:&#x27;图形与几何&#x27;,tools:&#x27;数对&#x27;,title:&#x27;平面直角坐标系：点 (3, 2) 在第几列、第几行？&#x27;,q:&#x27;先看横坐标 x（第几列），再看纵坐标 y（第几行）。&#x27;,why:&#x27;(3, 2)：第 3 列，第 2 行。&#x27;,build:s=&gt;{addEnt(s,&#x27;pair&#x27;,200,40,{x:0,y:0})},steps:[{label:&#x27;横坐标 x 调到 3&#x27;,score:1,hint:&#x27;把“第几列”调到 3&#x27;,target:T45(&#x27;pair&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;pair&#x27;)].props.x===3},{label:&#x27;纵坐标 y 调到 2，点是 (3, 2)&#x27;,score:2,hint:&#x27;把“第几行”调到 2&#x27;,target:T45(&#x27;pair&#x27;),check:(s,D)=&gt;{const p=s.entities[byType(s,&#x27;pair&#x27;)].props;return p.x===3&amp;&amp;p.y===2}}]},
- {id:&#x27;g7_16&#x27;,grade:7,domain:&#x27;统计与概率&#x27;,tools:&#x27;条形统计图&#x27;,title:&#x27;统计：三个班人数 5、4、6，一共几人？直方图怎么看？&#x27;,q:&#x27;频数直方图：每组的柱子高度是这一组的个数。&#x27;,why:&#x27;5 + 4 + 6 = 15，三班人数最多。&#x27;,build:s=&gt;{addEnt(s,&#x27;bars&#x27;,200,60,{a:5,b:4,c:6})},steps:[{label:&#x27;把三个班的人数调成 5、4、6&#x27;,score:1,hint:&#x27;点统计图卡，核对三个数&#x27;,target:T45(&#x27;bars&#x27;),check:(s,D)=&gt;{const p=s.entities[byType(s,&#x27;bars&#x27;)].props;return p.a===5&amp;&amp;p.b===4&amp;&amp;p.c===6}},{label:&#x27;看文字：最多的是三班（6 人）&#x27;,score:2,hint:&#x27;看统计图下面的文字&#x27;,target:T45(&#x27;bars&#x27;),check:(s,D)=&gt;{const b=byType(s,&#x27;bars&#x27;);return (D[b].sig||[]).some(t=&gt;t.tx===&#x27;最多：三班（6 人）&#x27;)}}]},
- {id:&#x27;g8_1&#x27;,grade:8,domain:&#x27;图形与几何&#x27;,tools:&#x27;三角形&#x27;,title:&#x27;三角形：两个角是 60° 和 70°，第三个角是几度？&#x27;,q:&#x27;三角形的内角和是 180°。&#x27;,why:&#x27;180° − 60° − 70° = 50°。&#x27;,build:s=&gt;{addEnt(s,&#x27;tri&#x27;,200,60,{a:30,b:40})},steps:[{label:&#x27;把两个角调到 60° 和 70°&#x27;,score:1,hint:&#x27;点三角形卡，把两个角调到 60 和 70&#x27;,target:T45(&#x27;tri&#x27;),check:(s,D)=&gt;{const p=s.entities[byType(s,&#x27;tri&#x27;)].props;return p.a===60&amp;&amp;p.b===70}},{label:&#x27;第三个角是 50°&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;tri&#x27;),check:(s,D)=&gt;{const t=byType(s,&#x27;tri&#x27;);return (D[t].sig||[]).some(x=&gt;x.tx.includes(&#x27;第三个角是 50°&#x27;))}}]},
- {id:&#x27;g8_3&#x27;,grade:8,domain:&#x27;图形与几何&#x27;,tools:&#x27;图形&#x27;,title:&#x27;轴对称：把图形沿竖线翻过去，做轴对称&#x27;,q:&#x27;轴对称：对应点到对称轴的距离相等。&#x27;,why:&#x27;做了轴对称后，图形在对称轴另一边。&#x27;,build:s=&gt;{addEnt(s,&#x27;shape&#x27;,200,60,{dx:0,rot:0,mirror:0})},steps:[{label:&#x27;把轴对称调到 1（做）&#x27;,score:1,hint:&#x27;点图形卡，把轴对称调到 1&#x27;,target:T45(&#x27;shape&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;shape&#x27;)].props.mirror===1},{label:&#x27;看到对称后的图形&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;shape&#x27;),check:(s,D)=&gt;{const x=byType(s,&#x27;shape&#x27;);return (D[x].sig||[]).some(t=&gt;t.tx.includes(&#x27;做了轴对称&#x27;))}}]},
+ {id:&#x27;g7_16&#x27;,grade:7,domain:&#x27;统计与概率&#x27;,tools:&#x27;条形统计图&#x27;,title:&#x27;统计：三个班人数 5、4、6，一共几人？直方图怎么看？&#x27;,q:&#x27;频数直方图：每组的柱子高度是这一组的个数。&#x27;,why:&#x27;5 + 4 + 6 = 15，三班人数最多。&#x27;,build:s=&gt;{addEnt(s,&#x27;bars&#x27;,200,60,{a:5,b:4,c:6})},steps:[{label:&#x27;把三个班的人数调成 5、4、6&#x27;,score:1,hint:&#x27;点统计图卡，核对三个数&#x27;,target:T45(&#x27;bars&#x27;),check:(s,D)=&gt;{const p=s.entities[byType(s,&#x27;bars&#x27;)].props;return p.a===5&amp;&amp;p.b===4&amp;&amp;p.c===6}},{label:&#x27;看文字：最多的是三班（6 人）&#x27;,score:2,hint:&#x27;看统计图下面的文字&#x27;,target:T45(&#x27;bars&#x27;),check:(s,D)=&gt;{const b=byType(s,&#x27;bars&#x27;);return D[b].ports.topNames===&#x27;三班&#x27;&amp;&amp;D[b].ports.max===6}}]},
+ {id:&#x27;g8_1&#x27;,grade:8,domain:&#x27;图形与几何&#x27;,tools:&#x27;三角形&#x27;,title:&#x27;三角形：两个角是 60° 和 70°，第三个角是几度？&#x27;,q:&#x27;三角形的内角和是 180°。&#x27;,why:&#x27;180° − 60° − 70° = 50°。&#x27;,build:s=&gt;{addEnt(s,&#x27;tri&#x27;,200,60,{a:30,b:40})},steps:[{label:&#x27;把两个角调到 60° 和 70°&#x27;,score:1,hint:&#x27;点三角形卡，把两个角调到 60 和 70&#x27;,target:T45(&#x27;tri&#x27;),check:(s,D)=&gt;{const p=s.entities[byType(s,&#x27;tri&#x27;)].props;return p.a===60&amp;&amp;p.b===70}},{label:&#x27;第三个角是 50°&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;tri&#x27;),check:(s,D)=&gt;{const t=byType(s,&#x27;tri&#x27;);return D[t].ports.third===50}}]},
+ {id:&#x27;g8_3&#x27;,grade:8,domain:&#x27;图形与几何&#x27;,tools:&#x27;图形&#x27;,title:&#x27;轴对称：把图形沿竖线翻过去，做轴对称&#x27;,q:&#x27;轴对称：对应点到对称轴的距离相等。&#x27;,why:&#x27;做了轴对称后，图形在对称轴另一边。&#x27;,build:s=&gt;{addEnt(s,&#x27;shape&#x27;,200,60,{dx:0,rot:0,mirror:0})},steps:[{label:&#x27;把轴对称调到 1（做）&#x27;,score:1,hint:&#x27;点图形卡，把轴对称调到 1&#x27;,target:T45(&#x27;shape&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;shape&#x27;)].props.mirror===1},{label:&#x27;看到对称后的图形&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;shape&#x27;),check:(s,D)=&gt;{const x=byType(s,&#x27;shape&#x27;);return D[x].ports.mirrored===true}}]},
  H14.mul({id:&#x27;g8_5&#x27;,grade:8,domain:&#x27;数与代数&#x27;,tools:&#x27;数字卡 · 乘法器&#x27;,title:&#x27;同底数幂：2³ × 2² = ?&#x27;,q:&#x27;同底数幂相乘，底数不变，指数相加：2³ × 2² = 2⁵。&#x27;,why:&#x27;2³ = 8，2² = 4，8 × 4 = 32 = 2⁵。&#x27;,nums:[8,4],ans:32}),
  {id:&#x27;g8_9&#x27;,grade:8,domain:&#x27;数与代数&#x27;,tools:&#x27;数字卡 · 除法器&#x27;,title:&#x27;分式方程：6 ÷ 2 = x，x 是几？&#x27;,q:&#x27;把方程看成除法：x = 6 ÷ 2。&#x27;,why:&#x27;6 ÷ 2 = 3，x = 3。&#x27;,build:s=&gt;{addEnt(s,&#x27;num&#x27;,60,60,{v:6});addEnt(s,&#x27;num&#x27;,60,170,{v:2});addEnt(s,&#x27;div&#x27;,330,100)},steps:[{label:&#x27;6 接左边，2 接右边&#x27;,score:1,hint:&#x27;被除数连上半边，除数连下半边&#x27;,target:T45(&#x27;div&#x27;),check:(s,D)=&gt;P45H.slot(s,D,&#x27;div&#x27;,&#x27;L&#x27;,Q(6))&amp;&amp;P45H.slot(s,D,&#x27;div&#x27;,&#x27;R&#x27;,Q(2))},{label:&#x27;x = 3&#x27;,score:2,hint:&#x27;看除法器下面的得数&#x27;,target:T45(&#x27;div&#x27;),check:(s,D)=&gt;P45H.val(s,D,&#x27;div&#x27;,Q(3))}]},
- {id:&#x27;g8_13&#x27;,grade:8,domain:&#x27;图形与几何&#x27;,tools:&#x27;长方形&#x27;,title:&#x27;特殊的平行四边形：长和宽都是 4 的长方形是什么图形？&#x27;,q:&#x27;邻边相等的矩形是正方形。&#x27;,why:&#x27;长 4、宽 4，四条边相等，是正方形。&#x27;,build:s=&gt;{addEnt(s,&#x27;rect&#x27;,200,80,{w:4,h:3})},steps:[{label:&#x27;把长调到 4&#x27;,score:1,hint:&#x27;点长方形卡，把长调到 4&#x27;,target:T45(&#x27;rect&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;rect&#x27;)].props.h===4},{label:&#x27;它是正方形&#x27;,score:2,hint:&#x27;看长方形下面的文字&#x27;,target:T45(&#x27;rect&#x27;),check:(s,D)=&gt;{const r=byType(s,&#x27;rect&#x27;);return (D[r].sig||[]).some(t=&gt;t.tx.includes(&#x27;是正方形&#x27;))}}]},
+ {id:&#x27;g8_13&#x27;,grade:8,domain:&#x27;图形与几何&#x27;,tools:&#x27;长方形&#x27;,title:&#x27;特殊的平行四边形：长和宽都是 4 的长方形是什么图形？&#x27;,q:&#x27;邻边相等的矩形是正方形。&#x27;,why:&#x27;长 4、宽 4，四条边相等，是正方形。&#x27;,build:s=&gt;{addEnt(s,&#x27;rect&#x27;,200,80,{w:4,h:3})},steps:[{label:&#x27;把长调到 4&#x27;,score:1,hint:&#x27;点长方形卡，把长调到 4&#x27;,target:T45(&#x27;rect&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;rect&#x27;)].props.h===4},{label:&#x27;它是正方形&#x27;,score:2,hint:&#x27;看长方形下面的文字&#x27;,target:T45(&#x27;rect&#x27;),check:(s,D)=&gt;{const r=byType(s,&#x27;rect&#x27;);return D[r].ports.square===true}}]},
  {id:&#x27;g8_14&#x27;,grade:8,domain:&#x27;函数&#x27;,tools:&#x27;直线&#x27;,title:&#x27;函数：正比例 y = 2x 的图象过原点吗？&#x27;,q:&#x27;正比例函数 y = kx，常数项 b = 0。&#x27;,why:&#x27;b = 0 时，x = 0 得 y = 0，过原点。&#x27;,build:s=&gt;{addEnt(s,&#x27;fn&#x27;,60,80,{k:2,b:1});addEnt(s,&#x27;coord&#x27;,320,40)},steps:[{label:&#x27;把 b 调到 0&#x27;,score:1,hint:&#x27;点直线卡，把 b 调到 0&#x27;,target:T45(&#x27;fn&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;fn&#x27;)].props.b===0},{label:&#x27;k = 2，图象是 y = 2x（过原点）&#x27;,score:2,hint:&#x27;k 调到 2&#x27;,target:T45(&#x27;fn&#x27;),check:(s,D)=&gt;{const f=s.entities[byType(s,&#x27;fn&#x27;)].props;return f.b===0&amp;&amp;f.k===2}}]},
  {id:&#x27;g8_15&#x27;,grade:8,domain:&#x27;函数&#x27;,tools:&#x27;直线&#x27;,title:&#x27;一次函数：y = 2x + 1 与 y 轴交于哪一点？&#x27;,q:&#x27;b 是直线与 y 轴的交点的纵坐标。&#x27;,why:&#x27;x = 0 时 y = b = 1，交点 (0, 1)。&#x27;,build:s=&gt;{addEnt(s,&#x27;fn&#x27;,60,80,{k:2,b:4});addEnt(s,&#x27;coord&#x27;,320,40)},steps:[{label:&#x27;把 b 调到 1&#x27;,score:1,hint:&#x27;点直线卡，把 b 调到 1&#x27;,target:T45(&#x27;fn&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;fn&#x27;)].props.b===1},{label:&#x27;k = 2，y = 2x + 1&#x27;,score:2,hint:&#x27;k 调到 2&#x27;,target:T45(&#x27;fn&#x27;),check:(s,D)=&gt;{const f=s.entities[byType(s,&#x27;fn&#x27;)].props;return f.b===1&amp;&amp;f.k===2}}]},
  {id:&#x27;g9_2&#x27;,grade:9,domain:&#x27;数与代数&#x27;,tools:&#x27;数字卡 · 分数条 · 乘法器&#x27;,title:&#x27;增长率：100 元，每年增长 10%，两年后是几元？&#x27;,q:&#x27;每年增长 10%，就是乘 11/10，两年就乘两次 11/10。&#x27;,why:&#x27;100 × 11/10 × 11/10 = 121 元。&#x27;,build:s=&gt;{addEnt(s,&#x27;num&#x27;,60,40,{v:100});addEnt(s,&#x27;frac&#x27;,60,150,{n:11,d:10});addEnt(s,&#x27;frac&#x27;,60,260,{n:11,d:10});addEnt(s,&#x27;mul&#x27;,330,150)},steps:[{label:&#x27;把 100 和两个 11/10 都连到乘法器&#x27;,score:1,hint:&#x27;拖三个数的蓝点到乘法器&#x27;,target:T45(&#x27;mul&#x27;),check:(s,D)=&gt;P45H.cnt(s,D,&#x27;mul&#x27;,3)},{label:&#x27;两年后是 121 元&#x27;,score:2,hint:&#x27;看乘法器的读数&#x27;,target:T45(&#x27;mul&#x27;),check:(s,D)=&gt;P45H.val(s,D,&#x27;mul&#x27;,Q(121))}]},
- {id:&#x27;g9_4&#x27;,grade:9,domain:&#x27;函数&#x27;,tools:&#x27;二次函数&#x27;,title:&#x27;二次函数与 x 轴：y = x² − 4 的图象和 x 轴有几个交点？&#x27;,q:&#x27;令 y = 0，解 x² − 4 = 0。&#x27;,why:&#x27;x = ±2，有两个交点。&#x27;,build:s=&gt;{addEnt(s,&#x27;parab&#x27;,200,60,{a:1,b:-2,c:0})},steps:[{label:&#x27;把 b 调到 0&#x27;,score:1,hint:&#x27;点二次函数卡，把 b 调到 0&#x27;,target:T45(&#x27;parab&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;parab&#x27;)].props.b===0},{label:&#x27;c 调到 −4，图象和 x 轴有两个交点&#x27;,score:2,hint:&#x27;把 c 调到 −4，看下面的文字&#x27;,target:T45(&#x27;parab&#x27;),check:(s,D)=&gt;{const p=byType(s,&#x27;parab&#x27;);return s.entities[p].props.c===-4&amp;&amp;(D[p].sig||[]).some(t=&gt;t.tx===&#x27;图像和 x 轴有两个交点&#x27;)}}]},
+ {id:&#x27;g9_4&#x27;,grade:9,domain:&#x27;函数&#x27;,tools:&#x27;二次函数&#x27;,title:&#x27;二次函数与 x 轴：y = x² − 4 的图象和 x 轴有几个交点？&#x27;,q:&#x27;令 y = 0，解 x² − 4 = 0。&#x27;,why:&#x27;x = ±2，有两个交点。&#x27;,build:s=&gt;{addEnt(s,&#x27;parab&#x27;,200,60,{a:1,b:-2,c:0})},steps:[{label:&#x27;把 b 调到 0&#x27;,score:1,hint:&#x27;点二次函数卡，把 b 调到 0&#x27;,target:T45(&#x27;parab&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;parab&#x27;)].props.b===0},{label:&#x27;c 调到 −4，图象和 x 轴有两个交点&#x27;,score:2,hint:&#x27;把 c 调到 −4，看下面的文字&#x27;,target:T45(&#x27;parab&#x27;),check:(s,D)=&gt;{const p=byType(s,&#x27;parab&#x27;);return s.entities[p].props.c===-4&amp;&amp;D[p].ports.xHits===2}}]},
  {id:&#x27;g9_5&#x27;,grade:9,domain:&#x27;图形与几何&#x27;,tools:&#x27;图形&#x27;,title:&#x27;旋转与中心对称：图形绕中心旋转 180°，就是中心对称&#x27;,q:&#x27;中心对称：绕一点旋转 180°，和原来的图形重合。&#x27;,why:&#x27;旋转 180° 后图形和原来的关于中心对称。&#x27;,build:s=&gt;{addEnt(s,&#x27;shape&#x27;,200,60,{dx:0,rot:0,mirror:0})},steps:[{label:&#x27;旋转 180°&#x27;,score:1,hint:&#x27;把旋转调到 180&#x27;,target:T45(&#x27;shape&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;shape&#x27;)].props.rot===180},{label:&#x27;不平移、不翻转，只是转了 180°&#x27;,score:2,hint:&#x27;平移和轴对称都保持 0&#x27;,target:T45(&#x27;shape&#x27;),check:(s,D)=&gt;{const p=s.entities[byType(s,&#x27;shape&#x27;)].props;return p.rot===180&amp;&amp;p.dx===0&amp;&amp;p.mirror===0}}]},
  H14.mul({id:&#x27;g9_13&#x27;,grade:9,domain:&#x27;图形与几何&#x27;,tools:&#x27;数字卡 · 乘法器&#x27;,title:&#x27;相似三角形：对应边 3，相似比 2，另一个三角形的对应边是几？&#x27;,q:&#x27;相似比是对应边的比，对应边 × 相似比 = 另一条对应边。&#x27;,why:&#x27;3 × 2 = 6。&#x27;,nums:[3,2],ans:6}),
- {id:&#x27;g9_15&#x27;,grade:9,domain:&#x27;图形与几何&#x27;,tools:&#x27;锐角三角函数&#x27;,title:&#x27;解直角三角形：∠60° 的正切值约是几？&#x27;,q:&#x27;正切 = 对边 ÷ 邻边。&#x27;,why:&#x27;tan 60° ≈ 1.73。&#x27;,build:s=&gt;{addEnt(s,&#x27;trig&#x27;,200,50,{deg:45})},steps:[{label:&#x27;把锐角调到 60°&#x27;,score:1,hint:&#x27;点三角函数卡，把锐角调到 60&#x27;,target:T45(&#x27;trig&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;trig&#x27;)].props.deg===60},{label:&#x27;tan 60° ≈ 1.73&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;trig&#x27;),check:(s,D)=&gt;{const t=byType(s,&#x27;trig&#x27;);return (D[t].sig||[]).some(x=&gt;x.tx.includes(&#x27;tan = 1.73&#x27;))}}]},
- {id:&#x27;g9_16&#x27;,grade:9,domain:&#x27;图形与几何&#x27;,tools:&#x27;立体图形&#x27;,title:&#x27;投影与视图：从侧面、正面看同一个立体图形&#x27;,q:&#x27;三视图：正视图、侧视图、俯视图。&#x27;,why:&#x27;同一物体从不同方向看，形状可能不同。&#x27;,build:s=&gt;{addEnt(s,&#x27;solid&#x27;,200,60,{view:1})},steps:[{label:&#x27;切到正面&#x27;,score:1,hint:&#x27;把看的方向调到 0（正面）&#x27;,target:T45(&#x27;solid&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;solid&#x27;)].props.view===0},{label:&#x27;正面看到 2 列，高 2、1&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;solid&#x27;),check:(s,D)=&gt;{const x=byType(s,&#x27;solid&#x27;);return (D[x].sig||[]).some(t=&gt;t.tx===&#x27;正面看到 2 列，高 2、1&#x27;)}}]},
+ {id:&#x27;g9_15&#x27;,grade:9,domain:&#x27;图形与几何&#x27;,tools:&#x27;锐角三角函数&#x27;,title:&#x27;解直角三角形：∠60° 的正切值约是几？&#x27;,q:&#x27;正切 = 对边 ÷ 邻边。&#x27;,why:&#x27;tan 60° ≈ 1.73。&#x27;,build:s=&gt;{addEnt(s,&#x27;trig&#x27;,200,50,{deg:45})},steps:[{label:&#x27;把锐角调到 60°&#x27;,score:1,hint:&#x27;点三角函数卡，把锐角调到 60&#x27;,target:T45(&#x27;trig&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;trig&#x27;)].props.deg===60},{label:&#x27;tan 60° ≈ 1.73&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;trig&#x27;),check:(s,D)=&gt;{const t=byType(s,&#x27;trig&#x27;);return D[t].ports.tan===1.73}}]},
+ {id:&#x27;g9_16&#x27;,grade:9,domain:&#x27;图形与几何&#x27;,tools:&#x27;立体图形&#x27;,title:&#x27;投影与视图：从侧面、正面看同一个立体图形&#x27;,q:&#x27;三视图：正视图、侧视图、俯视图。&#x27;,why:&#x27;同一物体从不同方向看，形状可能不同。&#x27;,build:s=&gt;{addEnt(s,&#x27;solid&#x27;,200,60,{view:1})},steps:[{label:&#x27;切到正面&#x27;,score:1,hint:&#x27;把看的方向调到 0（正面）&#x27;,target:T45(&#x27;solid&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;solid&#x27;)].props.view===0},{label:&#x27;正面看到 2 列，高 2、1&#x27;,score:2,hint:&#x27;看下面的文字&#x27;,target:T45(&#x27;solid&#x27;),check:(s,D)=&gt;{const x=byType(s,&#x27;solid&#x27;);return JSON.stringify(D[x].ports.front)===&#x27;[2,1]&#x27;}}]},
 ];
 P14.forEach(p=&gt;XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
 
@@ -5661,7 +5735,7 @@ const P15=[
  {id:&#x27;g7_74&#x27;,grade:7,domain:&#x27;数与代数&#x27;,tools:&#x27;乘法公式 (a + b)²&#x27;,title:&#x27;整式：把 (a + b)² 展开，是几项？&#x27;,q:&#x27;展开后的每一项都是单项式（像 a²、2ab、b²）；几个单项式相加，就是多项式。&#x27;,why:&#x27;(a + b)² = a² + 2ab + b²，有三项。a = 2、b = 3 时，展开是 4 + 12 + 9。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;sqsum&#x27;,200,50,{a:1,b:1})},
   steps:[{label:&#x27;把 a 调到 2，b 调到 3&#x27;,score:1,hint:&#x27;点乘法公式卡，把 a 调到 2、b 调到 3&#x27;,target:T45(&#x27;sqsum&#x27;),check:(s,D)=&gt;{const p=s.entities[byType(s,&#x27;sqsum&#x27;)].props;return p.a===2&amp;&amp;p.b===3}},
-         {label:&#x27;展开是 4 + 12 + 9&#x27;,score:2,hint:&#x27;看公式卡下面的文字&#x27;,target:T45(&#x27;sqsum&#x27;),check:(s,D)=&gt;{const x=byType(s,&#x27;sqsum&#x27;);return (D[x].sig||[]).some(t=&gt;t.tx.includes(&#x27;展开：4 + 12 + 9&#x27;))}}]},
+         {label:&#x27;展开是 4 + 12 + 9&#x27;,score:2,hint:&#x27;看公式卡下面的文字&#x27;,target:T45(&#x27;sqsum&#x27;),check:(s,D)=&gt;{const x=byType(s,&#x27;sqsum&#x27;);return s.entities[x].props.a===2&amp;&amp;s.entities[x].props.b===3}}]},
  H14.sum({id:&#x27;g7_75&#x27;,grade:7,domain:&#x27;数与代数&#x27;,tools:&#x27;数字卡 · 合并器&#x27;,title:&#x27;整式的加减：3x + 2x 合并成几个 x？&#x27;,q:&#x27;同类项：字母和次数都相同的项可以合并。系数相加，字母不变。&#x27;,why:&#x27;3x + 2x = (3 + 2)x = 5x，合并后系数是 5。&#x27;,nums:[3,2],ans:5}),
  {id:&#x27;g9_98&#x27;,grade:9,domain:&#x27;图形与几何&#x27;,tools:&#x27;圆 · 圆心角&#x27;,title:&#x27;弧长和扇形面积：半径 3 的圆，120° 的扇形弧长是几？&#x27;,q:&#x27;弧长 = 圆周长 × 圆心角 ÷ 360°；扇形面积 = 圆面积 × 圆心角 ÷ 360°。&#x27;,why:&#x27;半径 3 的圆周长是 18.84，120° 的弧长是 18.84 × 120 ÷ 360 = 6.28；扇形面积是 28.26 × 120 ÷ 360 = 9.42。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;circle&#x27;,60,40,{r:2});addEnt(s,&#x27;cang&#x27;,330,60,{c:90})},

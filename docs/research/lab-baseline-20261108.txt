@@ -146,4 +146,9 @@ g9_16 | steps=2 | initial=[false,false] | sig=["solid:info:侧面看到 2 列，
 g7_74 | steps=2 | initial=[false,false] | sig=["sqsum:ok:(1+1)² = 4，展开：1 + 2 + 1"]
 g7_75 | steps=2 | initial=[false,false] | sig=["adder:info:把几个数连进来，这里算它们的和"]
 g9_98 | steps=2 | initial=[false,false] | sig=["circle:info:半径 2 厘米：周长 12.56 厘米，面积 12.56 平方厘米","cang:ok:圆周角 45°（圆心角 90° 的一半）"]
+g8_box | steps=3 | initial=[false,false,false] | sig=["box:info:把数连进黑箱：输出 = 1 × 输入 + 0"]
+g5_table | steps=2 | initial=[false,false] | sig=["table:ok:数：4、8、6、10；合计 28，平均 7，最大 10"]
+g5_sym | steps=2 | initial=[false,false] | sig=["sym:info:x = 0","balance:info:把数连到左盘或右盘"]
+g5_cmp | steps=2 | initial=[false,false] | sig=["balance:info:把数连到左盘或右盘"]
+g6_bind | steps=2 | initial=[false,false] | sig=["circle:info:半径 2 厘米：周长 12.56 厘米，面积 12.56 平方厘米"]
 BASELINE_END
