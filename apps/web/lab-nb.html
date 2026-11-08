@@ -436,11 +436,11 @@ function evaluate(s){
       else if(!ins.length)sig('info','把几个数连进来，这里算它们的积（几个 × 几个）');
       else if(ins.length>=2&&qv(d))sig('info',`${ins.map(qs).join(' × ')} = ${qs(qv(d))}`)}
     if(e.type==='div'){const L=inputs(s,id).find(l=>l.slot==='L'),R=inputs(s,id).find(l=>l.slot==='R');const a=L&&vf(L),b=R&&vf(R);d.a=a;d.b=b;
-      if(e.props.mode===1&&a&&b&&b.n!==0)sig(qv(d)?'ok':'warn',`${qs(a)} 除以 ${qs(b)}，余 ${qv(d)?qs(qv(d)):'（不是整数）'}`);
+      const mL=L&&dimOf(s,L.from)==='money',mR=R&&dimOf(s,R.from)==='money';const fA=mL?q=>qsMoney(q)+'元':qs,fB=mR?q=>qsMoney(q)+'元':qs,fRes=dimOf(s,id)==='money'?q=>qsMoney(q)+'元':qs;
+      if(e.props.mode===1&&a&&b&&b.n!==0)sig(qv(d)?'ok':'warn',`${fA(a)} 除以 ${fB(b)}，余 ${qv(d)?fRes(qv(d)):'（不是整数）'}`);
       else if(!a||!b)sig('info','上边放被除数（总数），下边放除数（分成几份）');
       else if(b.n===0)sig('err','除数不能是 0');
-      else if(qv(d).d===1)sig('ok',`${qs(a)} ÷ ${qs(b)} = ${qs(qv(d))}`);
-      else sig('warn',`除不尽：${qs(a)} ÷ ${qs(b)} = ${qs(qv(d))}`)}
+      else{const q=qv(d);let t=q.d;while(t%2===0)t/=2;while(t%5===0)t/=5;if(t===1)sig('ok',`${fA(a)} ÷ ${fB(b)} = ${fRes(q)}`);else sig('warn',`除不尽：${fA(a)} ÷ ${fB(b)} = ${fRes(q)}`)}}
     if(e.type==='light'){const l=inputs(s,id)[0],v=l&&val(l.from,l.fromPort);d.lit=!!(v&&v.kind==='bool'&&v.data);if(!l)sig('info','把天平的「平衡」连到这里');else if(!v||v.kind!=='bool')sig('info','天平两盘都要放数才会判');else sig(d.lit?'ok':'warn',d.lit?'亮：两边一样重':'灭：两边不一样重')}
     // 绑定进来的值如果不是整数或超出范围，这里说明原因（属性保持原值，不会悄悄改掉）。
     for(const b of (s.binds||[]).filter(x=>x.to===id)){const bv=valQ(b.from),F=TYPES[e.type].fields.find(f=>f.k===b.k);
