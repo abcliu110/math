@@ -125,6 +125,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .tile span{font-size:12px}
 #ghost{position:fixed;pointer-events:none;display:none;padding:6px 10px;border-radius:8px;background:var(--acc);color:#fff;font-size:12px;z-index:9}
 .templink{pointer-events:none}
+.rz{cursor:nwse-resize;fill:#fff;stroke:#2563eb;stroke-width:2}
 /* 弹窗 */
 #modal{position:fixed;inset:0;background:#0009;display:none;place-items:center;z-index:10}
 #modal .box{width:min(460px,92vw);background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}
@@ -624,7 +625,7 @@ function entSvg(e,d,isNext,dep){const T=TYPES[e.type],[w,h]=T.size(e),kk=e.k||1;
   if(T.accepts&&!T.slots)g+=`<circle class="port-in" cx="0" cy="${h/2}" r="8"/>`;
   // 端口：可见的蓝点 r=10，外面还有一圈透明的 r=26 命中区，手指好点。
   if(T.out)g+=`<circle class="port-hit" data-port="${e.id}" cx="${w}" cy="${h/2}" r="26"/><circle class="port-out" data-port="${e.id}" cx="${w}" cy="${h/2}" r="10"/>`;(OUT_PORTS[e.type]||[]).forEach(p=>{g+=`<circle class="port-hit" data-port="${e.id}" data-fport="${p.id}" cx="${w}" cy="${p.dy}" r="12"/><circle class="port-out" data-port="${e.id}" data-fport="${p.id}" cx="${w}" cy="${p.dy}" r="8"/><text class="ttl" x="${w-16}" y="${p.dy+4}" text-anchor="end" font-size="11">${p.label}</text>`});
-  if(sel===e.id)g+=`<rect class="selbox" x="-6" y="-6" width="${w+12}" height="${h+12}" rx="12"/>`;
+  if(sel===e.id)g+=`<rect class="selbox" x="-6" y="-6" width="${w+12}" height="${h+12}" rx="12"/><rect class="rz" data-resize="${e.id}" x="${w-7}" y="${h-7}" width="14" height="14" rx="3"/>`;
   // 信号条：错了台面自己说
   let y=h+8;for(const s of d.sig.slice(0,3)){const col={ok:'#1e7a4b',warn:'#8a5a12',err:'#9b2c2c',info:'#2b3a4f'}[s.lv];const tw=Math.min(520,s.tx.length*12.5+20);
     g+=`<g class="pill" transform="translate(0,${y})"><rect width="${tw}" height="22" fill="${col}" rx="11"/><text x="10" y="15" fill="#fff">${esc(s.tx)}</text></g>`;y+=26}
@@ -782,7 +783,6 @@ function buildCard(e){const cd=$('card'),T=TYPES[e.type];cd.dataset.for=e.id;cd.
   if(outs.length)h+=`<div class="muted" style="font-size:12px;margin-top:6px">连出去：${outs.map(esc).join('、')}</div>`;
   if(bouts.length)h+=`<div class="muted" style="font-size:12px;margin-top:6px">决定：${bouts.map(esc).join('、')}</div>`;
   const ins=inputs(S,e.id);if(ins.length)h+=`<div class="muted" style="font-size:12px;margin-top:8px">连进来的：${ins.map(l=>esc(S.entities[l.from].name)+(l.slot?`（${l.slot==='L'?'左':'右'}盘）`:'')).join('、')}</div>`;
-  h+=`<div class="fld"><label><span>大小</span></label><div class="ctl"><button class="pm" data-scale="-1">−</button><b>${Math.round((e.k||1)*100)}%</b><button class="pm" data-scale="1">+</button></div></div>`;
   h+=`<div class="card-row">${(T.actions||[]).map(a=>`<button class="btn pri" data-act="${a.id}">${a.label}</button>`).join('')}${T.fields.length?'<button class="btn" data-act="reset">恢复初始值</button>':''}<button class="btn" data-act="del">删除</button></div>`;
   cd.innerHTML=h}
 $('card').addEventListener('input',ev=>{const t=ev.target,id=sel;if(!id)return;
@@ -790,7 +790,6 @@ $('card').addEventListener('input',ev=>{const t=ev.target,id=sel;if(!id)return;
   if(t.dataset.name!==undefined){act({t:'rename',id,name:t.value});$('card').dataset.v=JSON.stringify(S.entities[id].props)+S.entities[id].name;D=evaluate(S);render()}});
 $('card').addEventListener('change',ev=>{const t=ev.target;if(t.dataset.fn&&sel){commit({t:'set',id:sel,k:t.dataset.fn,v:t.value});$('card').dataset.v=''}});
 $('card').addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b||!sel)return;const id=sel;
-  if(b.dataset.scale){commit({t:'scale',id,k:(S.entities[id].k||1)+0.25*Number(b.dataset.scale)});render();return}
   if(b.dataset.pick){commit({t:'set',id,k:b.dataset.pick,v:+b.dataset.pv});render();return}
   if(b.dataset.bindpick){$('card').dataset.v='';bindPick={to:id,k:b.dataset.bindpick};toast('点一个会出数的器材（数字卡、分数条、黑箱、数据表…），把它绑到这个属性上');render();return}
   if(b.dataset.bindfrom){commit({t:'bind',to:id,k:b.dataset.bindk,from:b.dataset.bindfrom});bindPick=null;$('card').dataset.v='';render();return}
@@ -807,6 +806,7 @@ $('tools').addEventListener('click',ev=>{const b=ev.target.closest('button');if(
 const svg=$('stage');let drag=null;
 const toWorld=(cx,cy)=>{const r=svg.getBoundingClientRect();return[(cx-r.left-view.x)/view.z,(cy-r.top-view.y)/view.z]};
 svg.addEventListener('pointerdown',ev=>{const t=ev.target;svg.setPointerCapture(ev.pointerId);const [wx,wy]=toWorld(ev.clientX,ev.clientY);
+  if(t.dataset.resize){const e=S.entities[t.dataset.resize];if(e){drag={m:'resize',id:e.id,sx:ev.clientX,sy:ev.clientY,moved:false};sel=e.id;selLink=null;render()}return}
   if(t.dataset.port){drag={m:'link',from:t.dataset.port,fport:t.dataset.fport||null,sx:ev.clientX,sy:ev.clientY};return}
   if(t.dataset.vtx){const e=S.entities[t.dataset.vtx];if(e){drag={m:'vtx',id:e.id,sx:ev.clientX,sy:ev.clientY,moved:false};sel=e.id;selLink=null;render()}return}
   if(t.dataset.link){selLink=t.dataset.link;sel=null;cardOpen=false;render();return}
@@ -817,12 +817,16 @@ svg.addEventListener('pointermove',ev=>{if(!drag)return;const [wx,wy]=toWorld(ev
   if(drag.m==='pan'){view.x=drag.vx+ev.clientX-drag.sx;view.y=drag.vy+ev.clientY-drag.sy;render()}
   else if(drag.m==='move'){if(!drag.moved&&Math.hypot(ev.clientX-drag.sx,ev.clientY-drag.sy)<6)return;if(!drag.moved){undoSt.push(JSON.stringify(S));redoSt=[];drag.moved=true}
     act({t:'move',id:drag.id,x:Math.round((wx-drag.dx)/10)*10,y:Math.round((wy-drag.dy)/10)*10});render()}
+  else if(drag.m==='resize'){const e=S.entities[drag.id];if(!e)return;if(!drag.moved&&Math.hypot(ev.clientX-drag.sx,ev.clientY-drag.sy)<3)return;if(!drag.moved){undoSt.push(JSON.stringify(S));redoSt=[];drag.moved=true}
+    // 大小 = 指针到器材左边的距离 ÷ 器材的基础宽度（act 里会限制在 50% 到 200%，并按 25% 取整）
+    const base=TYPES[e.type].size(e)[0];act({t:'scale',id:e.id,k:(wx-e.x)/base});D=evaluate(S);render()}
   else if(drag.m==='vtx'){if(!drag.moved&&Math.hypot(ev.clientX-drag.sx,ev.clientY-drag.sy)<4)return;const e=S.entities[drag.id];if(!e)return;
     if(!drag.moved){undoSt.push(JSON.stringify(S));redoSt=[];drag.moved=true}
     const kk=e.k||1;const r=act({t:'vtx',id:e.id,lx:(wx-e.x)/kk,ly:(wy-e.y)/kk});if(r.ok){D=evaluate(S);render()}}
   else if(drag.m==='link'){markDrop(drag.from,wx,drag.fport);showWhy(ev);const [x1,y1]=anchorOut(drag.from,drag.fport);let p=$('world').querySelector('.templink');if(!p){p=document.createElementNS('http://www.w3.org/2000/svg','path');p.setAttribute('class','templink');$('world').appendChild(p)}p.setAttribute('d',`M${x1},${y1} L${wx},${wy}`)}});
 svg.addEventListener('pointerup',ev=>{if(!drag)return;const d=drag;drag=null;svg.classList.remove('panning');
   if(d.m==='vtx'){if(d.moved)afterChange();return}
+  if(d.m==='resize'){if(d.moved)afterChange();return}
   if(d.m==='move'&&!d.moved&&bindPick&&!d.seg){const bp=bindPick;bindPick=null;const r=commit({t:'bind',to:bp.to,k:bp.k,from:d.id});if(r.ok)toast('已绑定：'+S.entities[d.id].name+' 的值决定它');render();return}
   if(d.m==='move'){if(d.moved){afterChange()}else if(d.seg){commit({t:'segclick',id:d.id,k:+d.seg})}else{if(d.was)cardOpen=!cardOpen;else cardOpen=true;$('card').dataset.v='';render()}}
   else if(d.m==='link'){clearDrop();const el=document.elementFromPoint(ev.clientX,ev.clientY);

@@ -4461,6 +4461,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .tile span{font-size:12px}
 #ghost{position:fixed;pointer-events:none;display:none;padding:6px 10px;border-radius:8px;background:var(--acc);color:#fff;font-size:12px;z-index:9}
 .templink{pointer-events:none}
+.rz{cursor:nwse-resize;fill:#fff;stroke:#2563eb;stroke-width:2}
 /* 弹窗 */
 #modal{position:fixed;inset:0;background:#0009;display:none;place-items:center;z-index:10}
 #modal .box{width:min(460px,92vw);background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}
@@ -4960,7 +4961,7 @@ function entSvg(e,d,isNext,dep){const T=TYPES[e.type],[w,h]=T.size(e),kk=e.k||1;
   if(T.accepts&amp;&amp;!T.slots)g+=`&lt;circle class=&quot;port-in&quot; cx=&quot;0&quot; cy=&quot;${h/2}&quot; r=&quot;8&quot;/&gt;`;
   // 端口：可见的蓝点 r=10，外面还有一圈透明的 r=26 命中区，手指好点。
   if(T.out)g+=`&lt;circle class=&quot;port-hit&quot; data-port=&quot;${e.id}&quot; cx=&quot;${w}&quot; cy=&quot;${h/2}&quot; r=&quot;26&quot;/&gt;&lt;circle class=&quot;port-out&quot; data-port=&quot;${e.id}&quot; cx=&quot;${w}&quot; cy=&quot;${h/2}&quot; r=&quot;10&quot;/&gt;`;(OUT_PORTS[e.type]||[]).forEach(p=&gt;{g+=`&lt;circle class=&quot;port-hit&quot; data-port=&quot;${e.id}&quot; data-fport=&quot;${p.id}&quot; cx=&quot;${w}&quot; cy=&quot;${p.dy}&quot; r=&quot;12&quot;/&gt;&lt;circle class=&quot;port-out&quot; data-port=&quot;${e.id}&quot; data-fport=&quot;${p.id}&quot; cx=&quot;${w}&quot; cy=&quot;${p.dy}&quot; r=&quot;8&quot;/&gt;&lt;text class=&quot;ttl&quot; x=&quot;${w-16}&quot; y=&quot;${p.dy+4}&quot; text-anchor=&quot;end&quot; font-size=&quot;11&quot;&gt;${p.label}&lt;/text&gt;`});
-  if(sel===e.id)g+=`&lt;rect class=&quot;selbox&quot; x=&quot;-6&quot; y=&quot;-6&quot; width=&quot;${w+12}&quot; height=&quot;${h+12}&quot; rx=&quot;12&quot;/&gt;`;
+  if(sel===e.id)g+=`&lt;rect class=&quot;selbox&quot; x=&quot;-6&quot; y=&quot;-6&quot; width=&quot;${w+12}&quot; height=&quot;${h+12}&quot; rx=&quot;12&quot;/&gt;&lt;rect class=&quot;rz&quot; data-resize=&quot;${e.id}&quot; x=&quot;${w-7}&quot; y=&quot;${h-7}&quot; width=&quot;14&quot; height=&quot;14&quot; rx=&quot;3&quot;/&gt;`;
   // 信号条：错了台面自己说
   let y=h+8;for(const s of d.sig.slice(0,3)){const col={ok:&#x27;#1e7a4b&#x27;,warn:&#x27;#8a5a12&#x27;,err:&#x27;#9b2c2c&#x27;,info:&#x27;#2b3a4f&#x27;}[s.lv];const tw=Math.min(520,s.tx.length*12.5+20);
     g+=`&lt;g class=&quot;pill&quot; transform=&quot;translate(0,${y})&quot;&gt;&lt;rect width=&quot;${tw}&quot; height=&quot;22&quot; fill=&quot;${col}&quot; rx=&quot;11&quot;/&gt;&lt;text x=&quot;10&quot; y=&quot;15&quot; fill=&quot;#fff&quot;&gt;${esc(s.tx)}&lt;/text&gt;&lt;/g&gt;`;y+=26}
@@ -5118,7 +5119,6 @@ function buildCard(e){const cd=$(&#x27;card&#x27;),T=TYPES[e.type];cd.dataset.fo
   if(outs.length)h+=`&lt;div class=&quot;muted&quot; style=&quot;font-size:12px;margin-top:6px&quot;&gt;连出去：${outs.map(esc).join(&#x27;、&#x27;)}&lt;/div&gt;`;
   if(bouts.length)h+=`&lt;div class=&quot;muted&quot; style=&quot;font-size:12px;margin-top:6px&quot;&gt;决定：${bouts.map(esc).join(&#x27;、&#x27;)}&lt;/div&gt;`;
   const ins=inputs(S,e.id);if(ins.length)h+=`&lt;div class=&quot;muted&quot; style=&quot;font-size:12px;margin-top:8px&quot;&gt;连进来的：${ins.map(l=&gt;esc(S.entities[l.from].name)+(l.slot?`（${l.slot===&#x27;L&#x27;?&#x27;左&#x27;:&#x27;右&#x27;}盘）`:&#x27;&#x27;)).join(&#x27;、&#x27;)}&lt;/div&gt;`;
-  h+=`&lt;div class=&quot;fld&quot;&gt;&lt;label&gt;&lt;span&gt;大小&lt;/span&gt;&lt;/label&gt;&lt;div class=&quot;ctl&quot;&gt;&lt;button class=&quot;pm&quot; data-scale=&quot;-1&quot;&gt;−&lt;/button&gt;&lt;b&gt;${Math.round((e.k||1)*100)}%&lt;/b&gt;&lt;button class=&quot;pm&quot; data-scale=&quot;1&quot;&gt;+&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;`;
   h+=`&lt;div class=&quot;card-row&quot;&gt;${(T.actions||[]).map(a=&gt;`&lt;button class=&quot;btn pri&quot; data-act=&quot;${a.id}&quot;&gt;${a.label}&lt;/button&gt;`).join(&#x27;&#x27;)}${T.fields.length?&#x27;&lt;button class=&quot;btn&quot; data-act=&quot;reset&quot;&gt;恢复初始值&lt;/button&gt;&#x27;:&#x27;&#x27;}&lt;button class=&quot;btn&quot; data-act=&quot;del&quot;&gt;删除&lt;/button&gt;&lt;/div&gt;`;
   cd.innerHTML=h}
 $(&#x27;card&#x27;).addEventListener(&#x27;input&#x27;,ev=&gt;{const t=ev.target,id=sel;if(!id)return;
@@ -5126,7 +5126,6 @@ $(&#x27;card&#x27;).addEventListener(&#x27;input&#x27;,ev=&gt;{const t=ev.target
   if(t.dataset.name!==undefined){act({t:&#x27;rename&#x27;,id,name:t.value});$(&#x27;card&#x27;).dataset.v=JSON.stringify(S.entities[id].props)+S.entities[id].name;D=evaluate(S);render()}});
 $(&#x27;card&#x27;).addEventListener(&#x27;change&#x27;,ev=&gt;{const t=ev.target;if(t.dataset.fn&amp;&amp;sel){commit({t:&#x27;set&#x27;,id:sel,k:t.dataset.fn,v:t.value});$(&#x27;card&#x27;).dataset.v=&#x27;&#x27;}});
 $(&#x27;card&#x27;).addEventListener(&#x27;click&#x27;,ev=&gt;{const b=ev.target.closest(&#x27;button&#x27;);if(!b||!sel)return;const id=sel;
-  if(b.dataset.scale){commit({t:&#x27;scale&#x27;,id,k:(S.entities[id].k||1)+0.25*Number(b.dataset.scale)});render();return}
   if(b.dataset.pick){commit({t:&#x27;set&#x27;,id,k:b.dataset.pick,v:+b.dataset.pv});render();return}
   if(b.dataset.bindpick){$(&#x27;card&#x27;).dataset.v=&#x27;&#x27;;bindPick={to:id,k:b.dataset.bindpick};toast(&#x27;点一个会出数的器材（数字卡、分数条、黑箱、数据表…），把它绑到这个属性上&#x27;);render();return}
   if(b.dataset.bindfrom){commit({t:&#x27;bind&#x27;,to:id,k:b.dataset.bindk,from:b.dataset.bindfrom});bindPick=null;$(&#x27;card&#x27;).dataset.v=&#x27;&#x27;;render();return}
@@ -5143,6 +5142,7 @@ $(&#x27;tools&#x27;).addEventListener(&#x27;click&#x27;,ev=&gt;{const b=ev.targe
 const svg=$(&#x27;stage&#x27;);let drag=null;
 const toWorld=(cx,cy)=&gt;{const r=svg.getBoundingClientRect();return[(cx-r.left-view.x)/view.z,(cy-r.top-view.y)/view.z]};
 svg.addEventListener(&#x27;pointerdown&#x27;,ev=&gt;{const t=ev.target;svg.setPointerCapture(ev.pointerId);const [wx,wy]=toWorld(ev.clientX,ev.clientY);
+  if(t.dataset.resize){const e=S.entities[t.dataset.resize];if(e){drag={m:&#x27;resize&#x27;,id:e.id,sx:ev.clientX,sy:ev.clientY,moved:false};sel=e.id;selLink=null;render()}return}
   if(t.dataset.port){drag={m:&#x27;link&#x27;,from:t.dataset.port,fport:t.dataset.fport||null,sx:ev.clientX,sy:ev.clientY};return}
   if(t.dataset.vtx){const e=S.entities[t.dataset.vtx];if(e){drag={m:&#x27;vtx&#x27;,id:e.id,sx:ev.clientX,sy:ev.clientY,moved:false};sel=e.id;selLink=null;render()}return}
   if(t.dataset.link){selLink=t.dataset.link;sel=null;cardOpen=false;render();return}
@@ -5153,12 +5153,16 @@ svg.addEventListener(&#x27;pointermove&#x27;,ev=&gt;{if(!drag)return;const [wx,w
   if(drag.m===&#x27;pan&#x27;){view.x=drag.vx+ev.clientX-drag.sx;view.y=drag.vy+ev.clientY-drag.sy;render()}
   else if(drag.m===&#x27;move&#x27;){if(!drag.moved&amp;&amp;Math.hypot(ev.clientX-drag.sx,ev.clientY-drag.sy)&lt;6)return;if(!drag.moved){undoSt.push(JSON.stringify(S));redoSt=[];drag.moved=true}
     act({t:&#x27;move&#x27;,id:drag.id,x:Math.round((wx-drag.dx)/10)*10,y:Math.round((wy-drag.dy)/10)*10});render()}
+  else if(drag.m===&#x27;resize&#x27;){const e=S.entities[drag.id];if(!e)return;if(!drag.moved&amp;&amp;Math.hypot(ev.clientX-drag.sx,ev.clientY-drag.sy)&lt;3)return;if(!drag.moved){undoSt.push(JSON.stringify(S));redoSt=[];drag.moved=true}
+    // 大小 = 指针到器材左边的距离 ÷ 器材的基础宽度（act 里会限制在 50% 到 200%，并按 25% 取整）
+    const base=TYPES[e.type].size(e)[0];act({t:&#x27;scale&#x27;,id:e.id,k:(wx-e.x)/base});D=evaluate(S);render()}
   else if(drag.m===&#x27;vtx&#x27;){if(!drag.moved&amp;&amp;Math.hypot(ev.clientX-drag.sx,ev.clientY-drag.sy)&lt;4)return;const e=S.entities[drag.id];if(!e)return;
     if(!drag.moved){undoSt.push(JSON.stringify(S));redoSt=[];drag.moved=true}
     const kk=e.k||1;const r=act({t:&#x27;vtx&#x27;,id:e.id,lx:(wx-e.x)/kk,ly:(wy-e.y)/kk});if(r.ok){D=evaluate(S);render()}}
   else if(drag.m===&#x27;link&#x27;){markDrop(drag.from,wx,drag.fport);showWhy(ev);const [x1,y1]=anchorOut(drag.from,drag.fport);let p=$(&#x27;world&#x27;).querySelector(&#x27;.templink&#x27;);if(!p){p=document.createElementNS(&#x27;http://www.w3.org/2000/svg&#x27;,&#x27;path&#x27;);p.setAttribute(&#x27;class&#x27;,&#x27;templink&#x27;);$(&#x27;world&#x27;).appendChild(p)}p.setAttribute(&#x27;d&#x27;,`M${x1},${y1} L${wx},${wy}`)}});
 svg.addEventListener(&#x27;pointerup&#x27;,ev=&gt;{if(!drag)return;const d=drag;drag=null;svg.classList.remove(&#x27;panning&#x27;);
   if(d.m===&#x27;vtx&#x27;){if(d.moved)afterChange();return}
+  if(d.m===&#x27;resize&#x27;){if(d.moved)afterChange();return}
   if(d.m===&#x27;move&#x27;&amp;&amp;!d.moved&amp;&amp;bindPick&amp;&amp;!d.seg){const bp=bindPick;bindPick=null;const r=commit({t:&#x27;bind&#x27;,to:bp.to,k:bp.k,from:d.id});if(r.ok)toast(&#x27;已绑定：&#x27;+S.entities[d.id].name+&#x27; 的值决定它&#x27;);render();return}
   if(d.m===&#x27;move&#x27;){if(d.moved){afterChange()}else if(d.seg){commit({t:&#x27;segclick&#x27;,id:d.id,k:+d.seg})}else{if(d.was)cardOpen=!cardOpen;else cardOpen=true;$(&#x27;card&#x27;).dataset.v=&#x27;&#x27;;render()}}
   else if(d.m===&#x27;link&#x27;){clearDrop();const el=document.elementFromPoint(ev.clientX,ev.clientY);
