@@ -37,4 +37,7 @@ module.exports = {
   'meet-100'(h) { const r = h.role('r'); h.set(r, 'v1', 6); h.set(r, 'v2', -4); h.run(12); },
   'chase-30'(h) { const r = h.role('r'); h.set(r, 'v1', 7); h.set(r, 'v2', 4); h.run(12); },
   'loop-400'(h) { const r = h.role('r'); h.set(r, 'v1', 8); h.set(r, 'v2', 6); h.run(205); },
+  'odd-sum-law'(h) { const c = h.role('c'); h.set(c, 'upto', 10); h.set(c, 'expr', 'n*n'); h.set(c, 'upto', 25); },
+  'polygon-law'(h) { const c = h.role('c'); h.set(c, 'expr', '180*(n-2)'); },
+  'euler-prime'(h) { const c = h.role('c'); h.set(c, 'upto', 45); },
 };
