@@ -145,7 +145,7 @@ g9_15 | full | 2/2 | set e1.deg=60
 g9_16 | full | 2/2 | set e1.view=0
 g7_74 | none | 0/2 | 
 g7_75 | none | 0/2 | 
-g9_98 | full | 2/2 | set e1.r=3 ; set e2.c=120
+g9_98 | full | 3/3 | set e1.r=3 ; set e2.c=120
 g8_box | full | 3/3 | link e1->e2 ; set e1.v=5
 g5_table | none | 0/2 | 
 g5_sym | none | 0/2 | 
