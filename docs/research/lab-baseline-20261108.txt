@@ -102,7 +102,7 @@ g6_5 | steps=2 | initial=[false,false] | sig=["circle:info:半径 2 厘米：周
 g6_7 | steps=2 | initial=[false,false] | sig=["pie:ok:三个班合起来是 100%","pie:info:对应圆心角：一班 144°，二班 108°，三班 108°"]
 g7_eq | steps=3 | initial=[false,false,false] | sig=["balance:info:把数连到左盘或右盘"]
 g7_ineq | steps=2 | initial=[false,false] | sig=["ineq:info:解集：x ＞ 2"]
-g8_hyper | steps=2 | initial=[false,false] | sig=["hyper:info:过点 (2, 1)"]
+g9_hyper | steps=2 | initial=[false,false] | sig=["hyper:info:过点 (2, 1)"]
 g9_parab | steps=2 | initial=[false,false] | sig=["parab:ok:顶点 (1, -1)","parab:info:图像和 x 轴有两个交点"]
 g9_12 | steps=2 | initial=[false,false] | sig=["sim:info:相似比 1 : 1，面积比 1 : 1"]
 g8_11 | steps=2 | initial=[false,false] | sig=["pyth:info:斜边 3.61（不是整数）"]

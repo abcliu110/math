@@ -624,7 +624,7 @@ const byType=(s,t)=>{for(const id in s.entities)if(s.entities[id].type===t)retur
 const LS={free:'nb-lab-free-v1',hist:'nb-lab-exam-v1',find:'nb-lab-find-v1'};
 const PR='nb-lab-practice-v1'; // 练习进度：中途离开再回来，接着做
 let mode='free',xp=null,run=null,D={},sel=null,selLink=null,cardOpen=false,bindPick=null,exprPick=null; // bindPick：正在等学生点一个器材，把它的值绑到 {to, k} 上
-let view={x:40,y:30,z:1},undoSt=[],redoSt=[],timerId=null,libFilter='全部',libQ='';
+let view={x:40,y:30,z:1},undoSt=[],redoSt=[],timerId=null,libFilter='全部',libQ='',xpComposing=false;
 const $=id=>document.getElementById(id);
 
 function commit(a,opt={}){
@@ -990,7 +990,7 @@ function renderXpList(){const doms=['全部','数与代数','图形与几何','�
     h+=`<div class="xp${openXp===x.id?' on':''}" data-xp="${x.id}"><b>${esc(x.title)}</b><small>${x.grade} 年级 · ${x.domain} · ${x.tools}</small>`;
     if(openXp===x.id)h+=`<div class="detail">${esc(x.q)}<div style="margin-top:6px">共 ${x.steps.length} 步，满分 ${x.steps.reduce((a,s)=>a+s.score,0)} 分${hs?`<br>考过 ${hs.n} 次，最近 ${hs.last}，最常丢分：${esc(hs.worst||'无')}`:''}</div><div class="row"><button class="btn pri" data-start="practice">练习</button><button class="btn" data-start="exam">考试</button></div></div>`;
     h+='</div>'});
-  $('paneLib').innerHTML=h;const s=$('xpSearch');s.oninput=()=>{libQ=s.value;renderXpList();const n=$('xpSearch');n.focus();n.setSelectionRange(n.value.length,n.value.length)}}
+  $('paneLib').innerHTML=h;const s=$('xpSearch');s.oncompositionstart=()=>{xpComposing=true};s.oncompositionend=()=>{xpComposing=false;libQ=s.value;renderXpList();const n=$('xpSearch');n.focus();n.setSelectionRange(n.value.length,n.value.length)};s.oninput=()=>{libQ=s.value;if(xpComposing)return;renderXpList();const n=$('xpSearch');n.focus();n.setSelectionRange(n.value.length,n.value.length)}}
 $('paneLib').addEventListener('click',ev=>{const c=ev.target.closest('[data-dom]');if(c){libFilter=c.dataset.dom;renderXpList();return}
   const st=ev.target.closest('[data-start]');if(st){startXp(openXp,st.dataset.start);return}
   const x=ev.target.closest('[data-xp]');if(x){openXp=openXp===x.dataset.xp?null:x.dataset.xp;renderXpList()}});
@@ -1397,10 +1397,10 @@ const P8=[
   build:s=>{addEnt(s,'ineq',200,60,{b:2,op:1})},
   steps:[{id:'g7_ineq:s1',label:'方向调成 x＜（向左）',score:1,hint:'点解集卡，在属性卡里把方向调到 0',target:T45('ineq'),check:(s,D)=>s.entities[byType(s,'ineq')].props.op===0},
          {id:'g7_ineq:s2',label:'边界调成 −1，解集是 x ＜ −1',score:2,hint:'把边界调到 −1',target:T45('ineq'),check:(s,D)=>{const e=byType(s,'ineq');return D[e].ports.set.op===0&&D[e].ports.set.b===-1}}]},
- {id:'g8_hyper',grade:8,domain:'函数',tools:'反比例函数',title:'反比例：k = 4 时，图像经过点 (2, 2) 吗？',q:'反比例函数 y = k/x，把 x = 2 代入：y = k/2。',why:'k = 4 时，y = 4/2 = 2，过点 (2, 2)。',
+ {id:'g9_hyper',grade:9,domain:'函数',tools:'反比例函数',title:'反比例：k = 4 时，图像经过点 (2, 2) 吗？',q:'反比例函数 y = k/x，把 x = 2 代入：y = k/2。',why:'k = 4 时，y = 4/2 = 2，过点 (2, 2)。',
   build:s=>{addEnt(s,'hyper',200,60,{k:2})},
-  steps:[{id:'g8_hyper:s1',label:'把 k 调成 4',score:1,hint:'点反比例卡，在属性卡里把 k 调到 4',target:T45('hyper'),check:(s,D)=>s.entities[byType(s,'hyper')].props.k===4},
-         {id:'g8_hyper:s2',label:'图像过点 (2, 2)',score:2,hint:'看反比例卡下面的文字',target:T45('hyper'),check:(s,D)=>{const h=byType(s,'hyper');return D[h].ports.y2===2}}]},
+  steps:[{id:'g9_hyper:s1',label:'把 k 调成 4',score:1,hint:'点反比例卡，在属性卡里把 k 调到 4',target:T45('hyper'),check:(s,D)=>s.entities[byType(s,'hyper')].props.k===4},
+         {id:'g9_hyper:s2',label:'图像过点 (2, 2)',score:2,hint:'看反比例卡下面的文字',target:T45('hyper'),check:(s,D)=>{const h=byType(s,'hyper');return D[h].ports.y2===2}}]},
  {id:'g9_parab',grade:9,domain:'函数',tools:'二次函数',title:'二次函数：y = x² − 4x 的顶点在哪里？',q:'顶点的横坐标 x = −b/(2a)，代入求纵坐标。这里 a = 1，b = −4。',why:'x = 4/2 = 2，y = 4 − 8 = −4，顶点 (2, −4)。',
   build:s=>{addEnt(s,'parab',200,60,{a:1,b:-2,c:0})},
   steps:[{id:'g9_parab:s1',label:'把 b 调成 −4',score:1,hint:'点二次函数卡，把 b 调到 −4',target:T45('parab'),check:(s,D)=>s.entities[byType(s,'parab')].props.b===-4},

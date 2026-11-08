@@ -4960,7 +4960,7 @@ const byType=(s,t)=&gt;{for(const id in s.entities)if(s.entities[id].type===t)re
 const LS={free:&#x27;nb-lab-free-v1&#x27;,hist:&#x27;nb-lab-exam-v1&#x27;,find:&#x27;nb-lab-find-v1&#x27;};
 const PR=&#x27;nb-lab-practice-v1&#x27;; // 练习进度：中途离开再回来，接着做
 let mode=&#x27;free&#x27;,xp=null,run=null,D={},sel=null,selLink=null,cardOpen=false,bindPick=null,exprPick=null; // bindPick：正在等学生点一个器材，把它的值绑到 {to, k} 上
-let view={x:40,y:30,z:1},undoSt=[],redoSt=[],timerId=null,libFilter=&#x27;全部&#x27;,libQ=&#x27;&#x27;;
+let view={x:40,y:30,z:1},undoSt=[],redoSt=[],timerId=null,libFilter=&#x27;全部&#x27;,libQ=&#x27;&#x27;,xpComposing=false;
 const $=id=&gt;document.getElementById(id);
 
 function commit(a,opt={}){
@@ -5326,7 +5326,7 @@ function renderXpList(){const doms=[&#x27;全部&#x27;,&#x27;数与代数&#x27;,
     h+=`&lt;div class=&quot;xp${openXp===x.id?&#x27; on&#x27;:&#x27;&#x27;}&quot; data-xp=&quot;${x.id}&quot;&gt;&lt;b&gt;${esc(x.title)}&lt;/b&gt;&lt;small&gt;${x.grade} 年级 · ${x.domain} · ${x.tools}&lt;/small&gt;`;
     if(openXp===x.id)h+=`&lt;div class=&quot;detail&quot;&gt;${esc(x.q)}&lt;div style=&quot;margin-top:6px&quot;&gt;共 ${x.steps.length} 步，满分 ${x.steps.reduce((a,s)=&gt;a+s.score,0)} 分${hs?`&lt;br&gt;考过 ${hs.n} 次，最近 ${hs.last}，最常丢分：${esc(hs.worst||&#x27;无&#x27;)}`:&#x27;&#x27;}&lt;/div&gt;&lt;div class=&quot;row&quot;&gt;&lt;button class=&quot;btn pri&quot; data-start=&quot;practice&quot;&gt;练习&lt;/button&gt;&lt;button class=&quot;btn&quot; data-start=&quot;exam&quot;&gt;考试&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;`;
     h+=&#x27;&lt;/div&gt;&#x27;});
-  $(&#x27;paneLib&#x27;).innerHTML=h;const s=$(&#x27;xpSearch&#x27;);s.oninput=()=&gt;{libQ=s.value;renderXpList();const n=$(&#x27;xpSearch&#x27;);n.focus();n.setSelectionRange(n.value.length,n.value.length)}}
+  $(&#x27;paneLib&#x27;).innerHTML=h;const s=$(&#x27;xpSearch&#x27;);s.oncompositionstart=()=&gt;{xpComposing=true};s.oncompositionend=()=&gt;{xpComposing=false;libQ=s.value;renderXpList();const n=$(&#x27;xpSearch&#x27;);n.focus();n.setSelectionRange(n.value.length,n.value.length)};s.oninput=()=&gt;{libQ=s.value;if(xpComposing)return;renderXpList();const n=$(&#x27;xpSearch&#x27;);n.focus();n.setSelectionRange(n.value.length,n.value.length)}}
 $(&#x27;paneLib&#x27;).addEventListener(&#x27;click&#x27;,ev=&gt;{const c=ev.target.closest(&#x27;[data-dom]&#x27;);if(c){libFilter=c.dataset.dom;renderXpList();return}
   const st=ev.target.closest(&#x27;[data-start]&#x27;);if(st){startXp(openXp,st.dataset.start);return}
   const x=ev.target.closest(&#x27;[data-xp]&#x27;);if(x){openXp=openXp===x.dataset.xp?null:x.dataset.xp;renderXpList()}});
@@ -5733,10 +5733,10 @@ const P8=[
   build:s=&gt;{addEnt(s,&#x27;ineq&#x27;,200,60,{b:2,op:1})},
   steps:[{id:&#x27;g7_ineq:s1&#x27;,label:&#x27;方向调成 x＜（向左）&#x27;,score:1,hint:&#x27;点解集卡，在属性卡里把方向调到 0&#x27;,target:T45(&#x27;ineq&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;ineq&#x27;)].props.op===0},
          {id:&#x27;g7_ineq:s2&#x27;,label:&#x27;边界调成 −1，解集是 x ＜ −1&#x27;,score:2,hint:&#x27;把边界调到 −1&#x27;,target:T45(&#x27;ineq&#x27;),check:(s,D)=&gt;{const e=byType(s,&#x27;ineq&#x27;);return D[e].ports.set.op===0&amp;&amp;D[e].ports.set.b===-1}}]},
- {id:&#x27;g8_hyper&#x27;,grade:8,domain:&#x27;函数&#x27;,tools:&#x27;反比例函数&#x27;,title:&#x27;反比例：k = 4 时，图像经过点 (2, 2) 吗？&#x27;,q:&#x27;反比例函数 y = k/x，把 x = 2 代入：y = k/2。&#x27;,why:&#x27;k = 4 时，y = 4/2 = 2，过点 (2, 2)。&#x27;,
+ {id:&#x27;g9_hyper&#x27;,grade:9,domain:&#x27;函数&#x27;,tools:&#x27;反比例函数&#x27;,title:&#x27;反比例：k = 4 时，图像经过点 (2, 2) 吗？&#x27;,q:&#x27;反比例函数 y = k/x，把 x = 2 代入：y = k/2。&#x27;,why:&#x27;k = 4 时，y = 4/2 = 2，过点 (2, 2)。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;hyper&#x27;,200,60,{k:2})},
-  steps:[{id:&#x27;g8_hyper:s1&#x27;,label:&#x27;把 k 调成 4&#x27;,score:1,hint:&#x27;点反比例卡，在属性卡里把 k 调到 4&#x27;,target:T45(&#x27;hyper&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;hyper&#x27;)].props.k===4},
-         {id:&#x27;g8_hyper:s2&#x27;,label:&#x27;图像过点 (2, 2)&#x27;,score:2,hint:&#x27;看反比例卡下面的文字&#x27;,target:T45(&#x27;hyper&#x27;),check:(s,D)=&gt;{const h=byType(s,&#x27;hyper&#x27;);return D[h].ports.y2===2}}]},
+  steps:[{id:&#x27;g9_hyper:s1&#x27;,label:&#x27;把 k 调成 4&#x27;,score:1,hint:&#x27;点反比例卡，在属性卡里把 k 调到 4&#x27;,target:T45(&#x27;hyper&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;hyper&#x27;)].props.k===4},
+         {id:&#x27;g9_hyper:s2&#x27;,label:&#x27;图像过点 (2, 2)&#x27;,score:2,hint:&#x27;看反比例卡下面的文字&#x27;,target:T45(&#x27;hyper&#x27;),check:(s,D)=&gt;{const h=byType(s,&#x27;hyper&#x27;);return D[h].ports.y2===2}}]},
  {id:&#x27;g9_parab&#x27;,grade:9,domain:&#x27;函数&#x27;,tools:&#x27;二次函数&#x27;,title:&#x27;二次函数：y = x² − 4x 的顶点在哪里？&#x27;,q:&#x27;顶点的横坐标 x = −b/(2a)，代入求纵坐标。这里 a = 1，b = −4。&#x27;,why:&#x27;x = 4/2 = 2，y = 4 − 8 = −4，顶点 (2, −4)。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;parab&#x27;,200,60,{a:1,b:-2,c:0})},
   steps:[{id:&#x27;g9_parab:s1&#x27;,label:&#x27;把 b 调成 −4&#x27;,score:1,hint:&#x27;点二次函数卡，把 b 调到 −4&#x27;,target:T45(&#x27;parab&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;parab&#x27;)].props.b===-4},
@@ -47699,7 +47699,7 @@ const LAB_POINT_XP = {
   '7.1':'g7_1','7.2':'g7_2','7.3':'g7_3','7.8':'g7_8','7.9':'g7_9','7.10':'g7_10','7.12':'g7_12','7.13':'g7_13','7.16':'g7_16',
   '8.1':'g8_1','8.3':'g8_3','8.5':'g8_5','8.9':'g8_9','8.13':'g8_13','8.14':'g8_14','8.15':'g8_15',
   '9.2':'g9_2','9.4':'g9_4','9.5':'g9_5','9.13':'g9_13','9.15':'g9_15','9.16':'g9_16',
-  '7.6':'g7_eq','7.7':'g7_eq','7.11':'g7_par','8.4':'g8_iso','8.6':'g8_sq','8.7':'g8_fact','8.12':'g8_para','8.16':'g8_data','7.14':'g7_sys','8.8':'g8_afrac','8.10':'g8_rad','9.1':'g9_quad','8.2':'g8_2','9.6':'g9_6','9.7':'g9_7','9.9':'g9_bag','9.10':'g9_bag','7.15':'g7_ineq','8.11':'g8_11','9.3':'g9_parab','9.11':'g8_hyper','9.12':'g9_12','9.14':'g9_14','7.4':'g7_74','7.5':'g7_75','9.8':'g9_98',
+  '7.6':'g7_eq','7.7':'g7_eq','7.11':'g7_par','8.4':'g8_iso','8.6':'g8_sq','8.7':'g8_fact','8.12':'g8_para','8.16':'g8_data','7.14':'g7_sys','8.8':'g8_afrac','8.10':'g8_rad','9.1':'g9_quad','8.2':'g8_2','9.6':'g9_6','9.7':'g9_7','9.9':'g9_bag','9.10':'g9_bag','7.15':'g7_ineq','8.11':'g8_11','9.3':'g9_parab','9.11':'g9_hyper','9.12':'g9_12','9.14':'g9_14','7.4':'g7_74','7.5':'g7_75','9.8':'g9_98',
   '6.1':'g6_1','6.2':'g6_2','6.3':'g6_3','6.4':'g6_4','6.5':'g6_5','6.6':'g6_6','6.7':'g6_7','6.8':'g6_8',
   '6.9':'g6_9','6.10':'g6_10','6.11':'g6_11','6.12':'g6_12','6.13':'g6_13',
 };
