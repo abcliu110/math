@@ -363,13 +363,15 @@ function evaluate(s){
     else if(e.type==='clock')v=Q((e.props.h%12)*60+e.props.m);
     else if(e.type==='sym')v=Q(e.props.x);
     else if(e.type==='div'){const L=inputs(s,id).find(l=>l.slot==='L'),R=inputs(s,id).find(l=>l.slot==='R');const a=L&&vf(L),b=R&&vf(R);v=(a&&b&&b.n!==0)?(e.props.mode===1?(a.d===1&&b.d===1?Q(a.n%b.n):null):Q(a.n*b.d,a.d*b.n)):null}
-    return vals[key]=v};
-  const vf=l=>val(l.from,l.fromPort); // value flowing in on a link (a link may read one output port of its source)
+    return vals[key]=(v?{kind:'num',dim:dimOf(s,id),data:v}:null)};
+  // val 返回带类型的 Val；valQ / vf 取出有理数 data，算术部分照旧。
+  const valQ=(id,port)=>{const v=val(id,port);return v?v.data:null};
+  const vf=l=>valQ(l.from,l.fromPort); // value flowing in on a link (a link may read one output port of its source)
   for(const id in E){const e=E[id],d=D[id]={read:[],sig:[]};
     const sig=(lv,tx)=>d.sig.push({lv,tx});
-    if(TYPES[e.type].out==='value')d.value=val(id);
-    // 带类型的值：{kind, dim, data}。data 仍是有理数 Q（引擎内部照旧读 Q）。kind 目前都是 num。
-    d.val=d.value?{kind:'num',dim:dimOf(s,id),data:d.value}:null;
+    if(TYPES[e.type].out==='value')d.value=valQ(id);
+    // d.val 是带类型的值 {kind, dim, data}；d.value 仍是有理数 Q，页面和判分照旧读它。
+    d.val=TYPES[e.type].out==='value'?val(id):null;
     if(e.type==='frac'){const v=d.value;if(e.props.n>e.props.d)sig('info',`比 1 大：${qs(v)} = ${Math.floor(e.props.n/e.props.d)} 又 ${e.props.n%e.props.d}/${e.props.d}`);else if(v.d!==e.props.d)sig('info',`${e.props.n}/${e.props.d} 和 ${qs(v)} 一样大`)}
     if(e.type==='adder'){const ins=inputs(s,id).map(l=>vf(l)).filter(Boolean);d.terms=ins;
       if(!ins.length)sig('info','把几个数连进来，这里算它们的和');
@@ -384,7 +386,7 @@ function evaluate(s){
       else if(d.value.d===1)sig('ok',`${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`);
       else sig('warn',`除不尽：${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`)}
     // 绑定进来的值如果不是整数或超出范围，这里说明原因（属性保持原值，不会悄悄改掉）。
-    for(const b of (s.binds||[]).filter(x=>x.to===id)){const bv=val(b.from),F=TYPES[e.type].fields.find(f=>f.k===b.k);
+    for(const b of (s.binds||[]).filter(x=>x.to===id)){const bv=valQ(b.from),F=TYPES[e.type].fields.find(f=>f.k===b.k);
       if(bv&&F&&(bv.d!==1||bv.n<F.min||bv.n>F.max))sig('err',`${E[b.from].name} 的值 ${qs(bv)} 不能填进「${F.label.replace(/（.*/,'')}」`)}
     if(e.type==='box'){const l=inputs(s,id)[0];const x=l&&vf(l);const {a,b}=e.props;
       if(!x)sig('info',`把数连进黑箱：输出 = ${a} × 输入 ${b>=0?'+ '+b:'− '+(-b)}`);else sig('ok',`输入 ${qs(x)} → 输出 ${qs(d.value)}`)}
