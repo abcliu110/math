@@ -179,6 +179,27 @@ function check(name, ok, extra = '') { results.push(`${ok ? 'PASS' : 'FAIL'}  ${
     await sleep(150);
     const zn = await evalJs('view.z');
     check('two-finger pinch zooms the stage in', zn > zc * 1.5, `${zc.toFixed(2)} -> ${zn.toFixed(2)}`);
+
+    // 8. device size: select the number card with a real click, press + twice in its card, then drag from its scaled port
+    await evalJs('(function(){ fit(); return true })()');
+    await sleep(200);
+    const pBefore = await rectOf(`circle.port-out[data-port="${I.n1}"]`);
+    const nb1 = await rectOf(`g.ent[data-ent="${I.n1}"] .ent-body`);
+    await mouse('mouseMoved', nb1.x, nb1.y); await mouse('mousePressed', nb1.x, nb1.y, 1); await mouse('mouseReleased', nb1.x, nb1.y, 0);
+    await sleep(200);
+    for (let i = 0; i < 2; i++) {
+      const up = await rectOf('#card [data-scale="1"]');
+      if (up) { await mouse('mouseMoved', up.x, up.y); await mouse('mousePressed', up.x, up.y, 1); await mouse('mouseReleased', up.x, up.y, 0); await sleep(150); }
+    }
+    const kNow = await evalJs(`S.entities['${I.n1}'].k`);
+    const pAfter = await rectOf(`circle.port-out[data-port="${I.n1}"]`);
+    check('device size: + button twice makes the number card 1.5x', kNow === 1.5, 'k=' + kNow);
+    check('device size: its output port moved out with the card', !!pAfter && !!pBefore && pAfter.x > pBefore.x + 10, pBefore && pAfter ? `${Math.round(pBefore.x)} -> ${Math.round(pAfter.x)}` : '');
+    const nbl = await rectOf(`g.ent[data-ent="${I.nl}"] .ent-body`);
+    if (pAfter && nbl) { release = await drag(pAfter.x, pAfter.y, nbl.x, nbl.y); await release(); }
+    await sleep(200);
+    const scaledLink = await evalJs(`S.links.some(l=>l.from==='${I.n1}'&&l.to==='${I.nl}')`);
+    check('device size: a link can be dragged from the scaled port', scaledLink);
   } catch (e) {
     results.push('ERROR ' + e.message);
   } finally {

@@ -4630,7 +4630,7 @@ function actRaw(a){
   case &#x27;dup&#x27;:{const e=E[a.id];const id=addEnt(s,e.type,e.x+30,e.y+30,clone(e.props));return{ok:1,id}}
   case &#x27;rename&#x27;:{E[a.id].name=String(a.name).slice(0,16)||E[a.id].name;return{ok:1}}
   case &#x27;rotate&#x27;:{const p=E[a.id].props;p.rot=((p.rot||0)+15)%360;return{ok:1}}
-  case &#x27;vtx&#x27;:{const e=E[a.id];if(!e||e.type!==&#x27;tri&#x27;)return{ok:0,why:&#x27;这里不是三角形&#x27;};const [w,h]=size(e);
+  case &#x27;vtx&#x27;:{const e=E[a.id];if(!e||e.type!==&#x27;tri&#x27;)return{ok:0,why:&#x27;这里不是三角形&#x27;};const [w,h]=TYPES[e.type].size(e);
     // 拖顶点：由顶点位置反推两个底角。a 在左底角，b 在右底角。
     let A=Math.round(Math.atan2((h-30)-a.ly,a.lx-30)*180/Math.PI),B=Math.round(Math.atan2((h-30)-a.ly,(w-30)-a.lx)*180/Math.PI);
     A=Math.min(150,Math.max(1,A));B=Math.min(150,Math.max(1,B));
@@ -4663,6 +4663,7 @@ function actRaw(a){
     if(reachAll(s,a.to,a.from))return{ok:0,why:&#x27;绕回来了：它的值已经依赖这个器材，不能再绑&#x27;};
     s.binds=(s.binds||[]).filter(b=&gt;!(b.to===a.to&amp;&amp;b.k===a.k));s.binds.push({to:a.to,k:a.k,from:a.from});return{ok:1}}
   case &#x27;unbind&#x27;:{s.binds=(s.binds||[]).filter(b=&gt;!(b.to===a.to&amp;&amp;b.k===a.k));return{ok:1}}
+  case &#x27;scale&#x27;:{const e=E[a.id];if(!e)return{ok:0,why:&#x27;没有这个器材&#x27;};e.k=Math.round(Math.min(2,Math.max(0.5,+a.k))*4)/4;return{ok:1}}
   case &#x27;roll&#x27;:{const e=E[a.id];const c=e.props.counts||Array(13).fill(0);for(let i=0;i&lt;e.props.times;i++){c[1+Math.ceil(Math.random()*6)+Math.ceil(Math.random()*6)-1]++}e.props.counts=c;return{ok:1}}
   case &#x27;segclick&#x27;:{const p=E[a.id].props;p.n=(p.n===a.k?a.k-1:a.k);return{ok:1}}
   }}catch(err){return{ok:0,why:&#x27;这个数不合法&#x27;}}
@@ -4923,11 +4924,12 @@ function render(){
   placeFloat();renderSteps();
 }
 function nextTarget(){if(mode!==&#x27;practice&#x27;||!run)return null;const st=run.steps.find(s=&gt;!s.done);return st?xp.steps[st.i].target(S):null}
-function size(e){return TYPES[e.type].size(e)}
+// 器材的大小 = 基础大小 × 大小系数 k（默认 1）。画的时候在里面按基础大小画，再整体放大或缩小。
+function size(e){const k=e.k||1,[w,h]=TYPES[e.type].size(e);return[Math.round(w*k),Math.round(h*k)]}
 // 三角形顶点的位置（相对器材左上角）：底边两端是 (30, h−30) 和 (w−30, h−30)，a、b 是两个底角。
 function triApex(a,b,w,h){const x0=30,L=w-60,yb=h-30,A=a*Math.PI/180,B=b*Math.PI/180;const t=L/(Math.cos(A)+Math.sin(A)*Math.cos(B)/Math.sin(B));return[x0+t*Math.cos(A),yb-t*Math.sin(A)]}
-function anchorIn(l){const e=S.entities[l.to];const [w,h]=size(e);if(e.type===&#x27;div&#x27;)return l.slot===&#x27;L&#x27;?[e.x,e.y+h*0.3]:[e.x,e.y+h*0.7];if(e.type===&#x27;balance&#x27;){const t=(D[e.id]||{}).tilt||0,dy=Math.sin(t*Math.PI/180)*120;return l.slot===&#x27;L&#x27;?[e.x+50,e.y+112-dy]:[e.x+w-50,e.y+112+dy]}return[e.x,e.y+h/2]}
-function anchorOut(id,port){const e=S.entities[id],[w,h]=size(e);const p=port&amp;&amp;(OUT_PORTS[e.type]||[]).find(x=&gt;x.id===port);return[e.x+w,e.y+(p?p.dy:h/2)]}
+function anchorIn(l){const e=S.entities[l.to];const [w,h]=size(e);if(e.type===&#x27;div&#x27;)return l.slot===&#x27;L&#x27;?[e.x,e.y+h*0.3]:[e.x,e.y+h*0.7];if(e.type===&#x27;balance&#x27;){const t=(D[e.id]||{}).tilt||0,dy=Math.sin(t*Math.PI/180)*120;const kk=e.k||1;return l.slot===&#x27;L&#x27;?[e.x+50*kk,e.y+(112-dy)*kk]:[e.x+w-50*kk,e.y+(112+dy)*kk]}return[e.x,e.y+h/2]}
+function anchorOut(id,port){const e=S.entities[id],[w,h]=size(e);const p=port&amp;&amp;(OUT_PORTS[e.type]||[]).find(x=&gt;x.id===port);return[e.x+w,e.y+(p?p.dy*(e.k||1):h/2)]}
 /* 依赖追踪：从 id 往前（谁决定它）、往后（它决定谁）走一遍，连线和绑定都算。 */
 function depOf(id){const up={},down={};
   const walk=(next,set)=&gt;{const st=[id];while(st.length){const c=st.pop();for(const n of next(c)){if(n!==id&amp;&amp;!set[n]){set[n]=1;st.push(n)}}}};
@@ -4950,9 +4952,9 @@ function linkSvg(l,dep){if(!S.entities[l.from]||!S.entities[l.to])return&#x27;&#
   const v=l.fromPort?(D[l.from].ports||{})[l.fromPort]:D[l.from]&amp;&amp;D[l.from].value;const lab=v?`&lt;text class=&quot;linkval&quot; x=&quot;${(x1+x2)/2}&quot; y=&quot;${(y1+y2)/2-7}&quot; text-anchor=&quot;middle&quot;&gt;${qs(v)}&lt;/text&gt;`:&#x27;&#x27;;
   return`&lt;path class=&quot;linkhit&quot; data-link=&quot;${l.id}&quot; d=&quot;${d}&quot;/&gt;&lt;path class=&quot;link${selLink===l.id?&#x27; sel&#x27;:&#x27;&#x27;}${inChain?&#x27; dep&#x27;:&#x27;&#x27;}&quot; d=&quot;${d}&quot;/&gt;${lab}`}
 const esc=s=&gt;String(s).replace(/[&amp;&lt;&gt;&quot;]/g,c=&gt;({&#x27;&amp;&#x27;:&#x27;&amp;amp;&#x27;,&#x27;&lt;&#x27;:&#x27;&amp;lt;&#x27;,&#x27;&gt;&#x27;:&#x27;&amp;gt;&#x27;,&#x27;&quot;&#x27;:&#x27;&amp;quot;&#x27;}[c]));
-function entSvg(e,d,isNext,dep){const T=TYPES[e.type],[w,h]=size(e);const lv=d.sig.some(s=&gt;s.lv===&#x27;err&#x27;)?&#x27; err&#x27;:(d.sig.some(s=&gt;s.lv===&#x27;ok&#x27;)?&#x27; ok&#x27;:&#x27;&#x27;);
+function entSvg(e,d,isNext,dep){const T=TYPES[e.type],[w,h]=T.size(e),kk=e.k||1;const lv=d.sig.some(s=&gt;s.lv===&#x27;err&#x27;)?&#x27; err&#x27;:(d.sig.some(s=&gt;s.lv===&#x27;ok&#x27;)?&#x27; ok&#x27;:&#x27;&#x27;);
   const dc=dep?(dep.up[e.id]?&#x27; dep-up&#x27;:dep.down[e.id]?&#x27; dep-down&#x27;:&#x27;&#x27;):&#x27;&#x27;;
-  let g=`&lt;g class=&quot;ent${sel===e.id?&#x27; sel&#x27;:&#x27;&#x27;}${lv}${isNext?&#x27; is-next&#x27;:&#x27;&#x27;}${dc}&quot; data-ent=&quot;${e.id}&quot; transform=&quot;translate(${e.x},${e.y})&quot;&gt;`;
+  let g=`&lt;g class=&quot;ent${sel===e.id?&#x27; sel&#x27;:&#x27;&#x27;}${lv}${isNext?&#x27; is-next&#x27;:&#x27;&#x27;}${dc}&quot; data-ent=&quot;${e.id}&quot; transform=&quot;translate(${e.x},${e.y}) scale(${kk})&quot;&gt;`;
   g+=`&lt;rect class=&quot;ent-body&quot; width=&quot;${w}&quot; height=&quot;${h}&quot; rx=&quot;10&quot; filter=&quot;url(#sh)&quot;/&gt;&lt;text class=&quot;ttl&quot; x=&quot;10&quot; y=&quot;17&quot;&gt;${esc(e.name)}&lt;/text&gt;`;
   g+=DRAW[e.type](e,d,w,h);
   if(T.accepts&amp;&amp;!T.slots)g+=`&lt;circle class=&quot;port-in&quot; cx=&quot;0&quot; cy=&quot;${h/2}&quot; r=&quot;8&quot;/&gt;`;
@@ -5116,6 +5118,7 @@ function buildCard(e){const cd=$(&#x27;card&#x27;),T=TYPES[e.type];cd.dataset.fo
   if(outs.length)h+=`&lt;div class=&quot;muted&quot; style=&quot;font-size:12px;margin-top:6px&quot;&gt;连出去：${outs.map(esc).join(&#x27;、&#x27;)}&lt;/div&gt;`;
   if(bouts.length)h+=`&lt;div class=&quot;muted&quot; style=&quot;font-size:12px;margin-top:6px&quot;&gt;决定：${bouts.map(esc).join(&#x27;、&#x27;)}&lt;/div&gt;`;
   const ins=inputs(S,e.id);if(ins.length)h+=`&lt;div class=&quot;muted&quot; style=&quot;font-size:12px;margin-top:8px&quot;&gt;连进来的：${ins.map(l=&gt;esc(S.entities[l.from].name)+(l.slot?`（${l.slot===&#x27;L&#x27;?&#x27;左&#x27;:&#x27;右&#x27;}盘）`:&#x27;&#x27;)).join(&#x27;、&#x27;)}&lt;/div&gt;`;
+  h+=`&lt;div class=&quot;fld&quot;&gt;&lt;label&gt;&lt;span&gt;大小&lt;/span&gt;&lt;/label&gt;&lt;div class=&quot;ctl&quot;&gt;&lt;button class=&quot;pm&quot; data-scale=&quot;-1&quot;&gt;−&lt;/button&gt;&lt;b&gt;${Math.round((e.k||1)*100)}%&lt;/b&gt;&lt;button class=&quot;pm&quot; data-scale=&quot;1&quot;&gt;+&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;`;
   h+=`&lt;div class=&quot;card-row&quot;&gt;${(T.actions||[]).map(a=&gt;`&lt;button class=&quot;btn pri&quot; data-act=&quot;${a.id}&quot;&gt;${a.label}&lt;/button&gt;`).join(&#x27;&#x27;)}${T.fields.length?&#x27;&lt;button class=&quot;btn&quot; data-act=&quot;reset&quot;&gt;恢复初始值&lt;/button&gt;&#x27;:&#x27;&#x27;}&lt;button class=&quot;btn&quot; data-act=&quot;del&quot;&gt;删除&lt;/button&gt;&lt;/div&gt;`;
   cd.innerHTML=h}
 $(&#x27;card&#x27;).addEventListener(&#x27;input&#x27;,ev=&gt;{const t=ev.target,id=sel;if(!id)return;
@@ -5123,6 +5126,7 @@ $(&#x27;card&#x27;).addEventListener(&#x27;input&#x27;,ev=&gt;{const t=ev.target
   if(t.dataset.name!==undefined){act({t:&#x27;rename&#x27;,id,name:t.value});$(&#x27;card&#x27;).dataset.v=JSON.stringify(S.entities[id].props)+S.entities[id].name;D=evaluate(S);render()}});
 $(&#x27;card&#x27;).addEventListener(&#x27;change&#x27;,ev=&gt;{const t=ev.target;if(t.dataset.fn&amp;&amp;sel){commit({t:&#x27;set&#x27;,id:sel,k:t.dataset.fn,v:t.value});$(&#x27;card&#x27;).dataset.v=&#x27;&#x27;}});
 $(&#x27;card&#x27;).addEventListener(&#x27;click&#x27;,ev=&gt;{const b=ev.target.closest(&#x27;button&#x27;);if(!b||!sel)return;const id=sel;
+  if(b.dataset.scale){commit({t:&#x27;scale&#x27;,id,k:(S.entities[id].k||1)+0.25*Number(b.dataset.scale)});render();return}
   if(b.dataset.pick){commit({t:&#x27;set&#x27;,id,k:b.dataset.pick,v:+b.dataset.pv});render();return}
   if(b.dataset.bindpick){$(&#x27;card&#x27;).dataset.v=&#x27;&#x27;;bindPick={to:id,k:b.dataset.bindpick};toast(&#x27;点一个会出数的器材（数字卡、分数条、黑箱、数据表…），把它绑到这个属性上&#x27;);render();return}
   if(b.dataset.bindfrom){commit({t:&#x27;bind&#x27;,to:id,k:b.dataset.bindk,from:b.dataset.bindfrom});bindPick=null;$(&#x27;card&#x27;).dataset.v=&#x27;&#x27;;render();return}
@@ -5151,7 +5155,7 @@ svg.addEventListener(&#x27;pointermove&#x27;,ev=&gt;{if(!drag)return;const [wx,w
     act({t:&#x27;move&#x27;,id:drag.id,x:Math.round((wx-drag.dx)/10)*10,y:Math.round((wy-drag.dy)/10)*10});render()}
   else if(drag.m===&#x27;vtx&#x27;){if(!drag.moved&amp;&amp;Math.hypot(ev.clientX-drag.sx,ev.clientY-drag.sy)&lt;4)return;const e=S.entities[drag.id];if(!e)return;
     if(!drag.moved){undoSt.push(JSON.stringify(S));redoSt=[];drag.moved=true}
-    const r=act({t:&#x27;vtx&#x27;,id:e.id,lx:wx-e.x,ly:wy-e.y});if(r.ok){D=evaluate(S);render()}}
+    const kk=e.k||1;const r=act({t:&#x27;vtx&#x27;,id:e.id,lx:(wx-e.x)/kk,ly:(wy-e.y)/kk});if(r.ok){D=evaluate(S);render()}}
   else if(drag.m===&#x27;link&#x27;){markDrop(drag.from,wx,drag.fport);showWhy(ev);const [x1,y1]=anchorOut(drag.from,drag.fport);let p=$(&#x27;world&#x27;).querySelector(&#x27;.templink&#x27;);if(!p){p=document.createElementNS(&#x27;http://www.w3.org/2000/svg&#x27;,&#x27;path&#x27;);p.setAttribute(&#x27;class&#x27;,&#x27;templink&#x27;);$(&#x27;world&#x27;).appendChild(p)}p.setAttribute(&#x27;d&#x27;,`M${x1},${y1} L${wx},${wy}`)}});
 svg.addEventListener(&#x27;pointerup&#x27;,ev=&gt;{if(!drag)return;const d=drag;drag=null;svg.classList.remove(&#x27;panning&#x27;);
   if(d.m===&#x27;vtx&#x27;){if(d.moved)afterChange();return}
