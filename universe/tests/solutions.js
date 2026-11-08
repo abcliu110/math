@@ -40,4 +40,11 @@ module.exports = {
   'odd-sum-law'(h) { const c = h.role('c'); h.set(c, 'upto', 10); h.set(c, 'expr', 'n*n'); h.set(c, 'upto', 25); },
   'polygon-law'(h) { const c = h.role('c'); h.set(c, 'expr', '180*(n-2)'); },
   'euler-prime'(h) { const c = h.role('c'); h.set(c, 'upto', 45); },
+  'square-expand'(h) { const v = h.role('v'); h.set(v, 'right', 'x^2+1'); h.set(v, 'right', 'x^2+2*x+1'); },
+  'diff-squares'(h) { const v = h.role('v'); h.set(v, 'right', '(x-1)*(x+1)'); },
+  'equation-vs-identity'(h) { const v = h.role('v'); h.set(v, 'left', '2*x+1'); h.set(v, 'right', '7'); },
+  'week-100'(h) { const c = h.role('c'); h.set(c, 'k', 1); h.set(c, 'N', 100); h.run(100); },
+  'last-digit-cycle'(h) { const c = h.role('c'); h.set(c, 'k', 3); h.run(100); },
+  'clock-gcd'(h) { const c = h.role('c'); h.set(c, 'k', 4); h.run(3); h.set(c, 'k', 6); h.run(2); h.set(c, 'k', 5); h.run(12); },
+  'coprime-all'(h) { const c = h.role('c'); h.set(c, 'k', 3); h.run(10); h.set(c, 'k', 7); h.run(10); h.set(c, 'k', 9); h.run(10); h.set(c, 'k', 5); h.run(3); },
 };

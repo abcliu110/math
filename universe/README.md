@@ -8,9 +8,9 @@ index.html            入口
 css/universe.css
 js/core/              内核：有理数、值类型、器材注册表、世界(场景/求值/时钟)、判分、事件流、复习、学生出题
 js/ui/                台面、面板、应用
-packs/                器材包：core、time、stats、geometry、arith、middle、applied、numtheory、solid、angle、road、conjecture（共 39 种）
-problems/             题库 38 道（starter、more、lowgrade、middle、applied、numbers、solids、angles、travel、essence）
-tests/run.js          内核测试（node，102 项，含每题参考解回归）
+packs/                器材包：core、time、stats、geometry、arith、middle、applied、numtheory、solid、angle、road、conjecture、variable、modclock（共 41 种）
+problems/             题库 45 道（starter、more、lowgrade、middle、applied、numbers、solids、angles、travel、essence、algebra、modular）
+tests/run.js          内核测试（node，111 项，含每题参考解回归）
 tests/ui.js           无头浏览器验收（playwright，24 项）
 tools/check-types.js  新器材自检
 docs/                 设计文档 v2、UI 对照表、内核接口、数学本质与器材计划（essence.md）
@@ -23,4 +23,4 @@ docs/                 设计文档 v2、UI 对照表、内核接口、数学本�
 - 新器材自检：`node tools/check-types.js`
 
 ## 现状（第一个里程碑）
-39 种器材、38 道题、练习/考试/自由三种模式。对照旧 NB 实验室的逐项状态见 `docs/ui-parity.md`，尚未做的内容见其中“没做到的”。
+41 种器材、45 道题、练习/考试/自由三种模式。对照旧 NB 实验室的逐项状态见 `docs/ui-parity.md`，尚未做的内容见其中“没做到的”。
