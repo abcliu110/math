@@ -4588,8 +4588,8 @@ const TYPES={
  dice:{label:&#x27;两个骰子&#x27;,group:&#x27;概率&#x27;,prefix:&#x27;骰子&#x27;,defaults:{times:100,counts:null},
    fields:[{k:&#x27;times&#x27;,label:&#x27;一次掷几回&#x27;,min:10,max:2000,step:10}],actions:[{id:&#x27;roll&#x27;,label:&#x27;🎲 掷&#x27;},{id:&#x27;reset&#x27;,label:&#x27;清零&#x27;}],size:()=&gt;[320,210]},
  // 黑箱：输入一个数，按规则 y = a·x + b 输出。规则是学生要猜的东西。
- box:{label:&#x27;黑箱（输入 → 输出）&#x27;,group:&#x27;函数&#x27;,prefix:&#x27;黑箱&#x27;,out:&#x27;value&#x27;,accepts:&#x27;value&#x27;,defaults:{a:1,b:0},
-   fields:[{k:&#x27;a&#x27;,label:&#x27;a（输出 = a × 输入 + b）&#x27;,min:-5,max:5},{k:&#x27;b&#x27;,label:&#x27;b&#x27;,min:-10,max:10}],size:()=&gt;[230,120]},
+ box:{label:&#x27;黑箱（输入 → 输出）&#x27;,group:&#x27;函数&#x27;,prefix:&#x27;黑箱&#x27;,out:&#x27;value&#x27;,accepts:&#x27;value&#x27;,defaults:{a:1,b:0,rule:0},
+   fields:[{k:&#x27;a&#x27;,label:&#x27;a（系数）&#x27;,min:-5,max:5},{k:&#x27;b&#x27;,label:&#x27;b&#x27;,min:-10,max:10},{k:&#x27;rule&#x27;,label:&#x27;规则&#x27;,min:0,max:2,choices:[&#x27;线性&#x27;,&#x27;平方&#x27;,&#x27;倒数&#x27;]}],size:()=&gt;[230,120]},
  // 数据表：四个数，输出合计、平均数或最大数。
  table:{label:&#x27;数据表（四个数）&#x27;,group:&#x27;统计&#x27;,prefix:&#x27;数据表&#x27;,out:&#x27;value&#x27;,accepts:&#x27;value&#x27;,dim:&#x27;count&#x27;,defaults:{a:4,b:8,c:6,d:10,which:0},
    fields:[{k:&#x27;a&#x27;,label:&#x27;第 1 个数&#x27;,min:0,max:50},{k:&#x27;b&#x27;,label:&#x27;第 2 个数&#x27;,min:0,max:50},{k:&#x27;c&#x27;,label:&#x27;第 3 个数&#x27;,min:0,max:50},{k:&#x27;d&#x27;,label:&#x27;第 4 个数&#x27;,min:0,max:50},{k:&#x27;which&#x27;,label:&#x27;输出（0 合计，1 平均，2 最大）&#x27;,min:0,max:2,choices:[&#x27;合计&#x27;,&#x27;平均&#x27;,&#x27;最大&#x27;]}],size:()=&gt;[240,150]},
@@ -4721,6 +4721,8 @@ function actRaw(a){
 
 /* ========== 引擎：只有这里算后果。纯函数 scene → derived ========== */
 function qv(x){return x&amp;&amp;x.val?x.val.data:null}
+/* 黑箱的规则库：0 线性 y = a·x + b；1 平方 y = a·x² + b；2 倒数 y = a÷x + b（x 为 0 时算不出）。 */
+function boxOut(p,x){const r=p.rule||0;if(r===0)return qadd(Q(p.a*x.n,x.d),Q(p.b));if(r===1)return qadd(Q(p.a*x.n*x.n,x.d*x.d),Q(p.b));if(x.n===0)return null;return qadd(Q(p.a*x.d,x.n),Q(p.b))}
 /* 两个钟的时间差：有名为「开始」「结束」的两个钟时，按这两个钟算（从开始到结束）；否则按放进来的先后。 */
 function clockPair(E){const cl=Object.values(E).filter(x=&gt;x.type===&#x27;clock&#x27;);if(cl.length!==2)return null;const a=cl.find(c=&gt;c.name===&#x27;开始&#x27;),b=cl.find(c=&gt;c.name===&#x27;结束&#x27;);return a&amp;&amp;b?[a,b]:cl}
 function evaluate(s){
@@ -4734,7 +4736,7 @@ function evaluate(s){
       // 没连任何输入：空乘积是 1。连了线但都没有值：还没有结果。有值：再乘 times（保留分母）。
       if(!ls.length)v=Q(1);else if(!any)v=null;else v=Q(v.n*(e.props.times||1),v.d)}
     else if(e.type===&#x27;balance&#x27;&amp;&amp;port===&#x27;equal&#x27;){const Ls=inputs(s,id).filter(l=&gt;l.slot===&#x27;L&#x27;),Rs=inputs(s,id).filter(l=&gt;l.slot===&#x27;R&#x27;);const tot=ls=&gt;ls.reduce((t,l)=&gt;{const x=vf(l);return x?qadd(t,x):t},Q(0));if(Ls.length&amp;&amp;Rs.length)v={kind:&#x27;bool&#x27;,data:qeq(tot(Ls),tot(Rs))}}
-    else if(e.type===&#x27;box&#x27;){const l=inputs(s,id)[0];const x=l&amp;&amp;vf(l);v=x?qadd(Q(e.props.a*x.n,x.d),Q(e.props.b)):null}
+    else if(e.type===&#x27;box&#x27;){const l=inputs(s,id)[0];const x=l&amp;&amp;vf(l);v=x?boxOut(e.props,x):null}
     else if(e.type===&#x27;dice&#x27;){const c=e.props.counts;if(c&amp;&amp;c.some(x=&gt;x&gt;0)){if(port===&#x27;tot&#x27;)v=Q(c.reduce((x,y)=&gt;x+y,0));else if(port===&#x27;best&#x27;){let bi=2;for(let i=2;i&lt;=12;i++)if(c[i]&gt;c[bi])bi=i;v=Q(bi)}}}
     else if(e.type===&#x27;table&#x27;){const T=tableOf(id),p=e.props;v=port===&#x27;sum&#x27;?T.sum:port===&#x27;mean&#x27;?T.mean:port===&#x27;max&#x27;?T.max:(p.which===1?T.mean:p.which===2?T.max:T.sum)}
     else if(e.type===&#x27;clock&#x27;)v=Q((e.props.h%12)*60+e.props.m);
@@ -4768,7 +4770,7 @@ function evaluate(s){
     for(const b of (s.binds||[]).filter(x=&gt;x.to===id)){const bv=valQ(b.from),F=TYPES[e.type].fields.find(f=&gt;f.k===b.k);
       if(bv&amp;&amp;F&amp;&amp;(bv.d!==1||bv.n&lt;F.min||bv.n&gt;F.max))sig(&#x27;err&#x27;,`${E[b.from].name} 的值 ${qs(bv)} 不能填进「${F.label.replace(/（.*/,&#x27;&#x27;)}」`)}
     if(e.type===&#x27;box&#x27;){const l=inputs(s,id)[0];const x=l&amp;&amp;vf(l);const {a,b}=e.props;
-      if(!x)sig(&#x27;info&#x27;,`把数连进黑箱：输出 = ${a} × 输入 ${b&gt;=0?&#x27;+ &#x27;+b:&#x27;− &#x27;+(-b)}`);else sig(&#x27;ok&#x27;,`输入 ${qs(x)} → 输出 ${qs(qv(d))}`)}
+      const bt=b&gt;=0?&#x27;+ &#x27;+b:&#x27;− &#x27;+(-b);const fx=[`输出 = ${a} × 输入 ${bt}`,`输出 = ${a} × 输入² ${bt}`,`输出 = ${a} ÷ 输入 ${bt}`][e.props.rule||0];if(!x)sig(&#x27;info&#x27;,`把数连进黑箱：${fx}`);else if(qv(d))sig(&#x27;ok&#x27;,`输入 ${qs(x)} → 输出 ${qs(qv(d))}`);else sig(&#x27;warn&#x27;,&#x27;倒数规则不能输入 0&#x27;)}
     if(e.type===&#x27;table&#x27;){const T=d.tab,v4=T.slots.map(qs),sum=qnum(T.sum),mean=qnum(T.mean),mx=qnum(T.max);
       sig(&#x27;ok&#x27;,`数：${v4.join(&#x27;、&#x27;)}；合计 ${sum}，平均 ${Number.isInteger(mean)?mean:mean.toFixed(2)}，最大 ${mx}`)}
     if(e.type===&#x27;sym&#x27;)sig(&#x27;info&#x27;,`x = ${e.props.x}`);
@@ -5141,7 +5143,7 @@ mul:(e,d,w,h)=&gt;{const t=d.terms||[];const ex=t.length?t.map(qs).join(&#x27; �
    const cols=[&#x27;#3b9cff&#x27;,&#x27;#ff7a45&#x27;,&#x27;#2fbf71&#x27;,&#x27;#b36bff&#x27;];(d.fns||[]).forEach((f,i)=&gt;{const {k,b}=f.props;s+=`&lt;line class=&quot;flowline&quot; clip-path=&quot;url(#cp${e.id})&quot; x1=&quot;${X(-6)}&quot; y1=&quot;${Y(k*-6+b)}&quot; x2=&quot;${X(6)}&quot; y2=&quot;${Y(k*6+b)}&quot; stroke=&quot;${cols[i%4]}&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;${X(0)}&quot; cy=&quot;${Y(b)}&quot; r=&quot;4&quot; fill=&quot;${cols[i%4]}&quot;/&gt;`});
    if(xp&amp;&amp;xp.id===&#x27;funcline&#x27;)s+=`&lt;circle cx=&quot;${X(2)}&quot; cy=&quot;${Y(-3)}&quot; r=&quot;5&quot; fill=&quot;none&quot; stroke=&quot;#e03131&quot; stroke-width=&quot;2&quot;/&gt;&lt;text x=&quot;${X(2)+8}&quot; y=&quot;${Y(-3)+4}&quot; font-size=&quot;11&quot; fill=&quot;#e03131&quot;&gt;(2, −3)&lt;/text&gt;`;
    return s},
- box:(e,d,w,h)=&gt;{const {a,b}=e.props;const sigs=d.sig.filter(x=&gt;!hideSig(e,x));const sig0=sigs[0]?sigs[0].tx:&#x27;&#x27;;const rule=ruleHidden()?&#x27;y = ？&#x27;:`y = ${a}x ${b&lt;0?&#x27;− &#x27;+(-b):&#x27;+ &#x27;+b}`;return `&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;50&quot; text-anchor=&quot;middle&quot; font-size=&quot;20&quot;&gt;${rule}&lt;/text&gt;&lt;text class=&quot;ink&quot; x=&quot;${w/2}&quot; y=&quot;${h-16}&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot;&gt;${esc(sig0)}&lt;/text&gt;`},
+ box:(e,d,w,h)=&gt;{const {a,b}=e.props;const sigs=d.sig.filter(x=&gt;!hideSig(e,x));const sig0=sigs[0]?sigs[0].tx:&#x27;&#x27;;const rule=ruleHidden()?&#x27;y = ？&#x27;:`y = ${a}${[&#x27;x&#x27;,&#x27;x²&#x27;,&#x27;÷x&#x27;][e.props.rule||0]} ${b&lt;0?&#x27;− &#x27;+(-b):&#x27;+ &#x27;+b}`;return `&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;50&quot; text-anchor=&quot;middle&quot; font-size=&quot;20&quot;&gt;${rule}&lt;/text&gt;&lt;text class=&quot;ink&quot; x=&quot;${w/2}&quot; y=&quot;${h-16}&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot;&gt;${esc(sig0)}&lt;/text&gt;`},
  table:(e,d,w,h)=&gt;{const p=e.props,vs=d.tab?d.tab.slots:[Q(p.a),Q(p.b),Q(p.c),Q(p.d)];return vs.map((v,i)=&gt;`&lt;rect x=&quot;${14+i*56}&quot; y=&quot;40&quot; width=&quot;48&quot; height=&quot;40&quot; rx=&quot;6&quot; fill=&quot;#f6f8fb&quot; stroke=&quot;#5b6778&quot;/&gt;&lt;text x=&quot;${38+i*56}&quot; y=&quot;66&quot; text-anchor=&quot;middle&quot; font-size=&quot;18&quot; font-weight=&quot;700&quot; fill=&quot;#1d2633&quot;&gt;${qs(v)}&lt;/text&gt;`).join(&#x27;&#x27;)+`&lt;text class=&quot;ink&quot; x=&quot;${w/2}&quot; y=&quot;${h-14}&quot; text-anchor=&quot;middle&quot; font-size=&quot;12&quot;&gt;${p.which===1?&#x27;平均数&#x27;:p.which===2?&#x27;最大数&#x27;:&#x27;合计&#x27;}：${qv(d)?qs(qv(d)):&#x27;&#x27;}&lt;/text&gt;`},
  sym:(e,d,w,h)=&gt;`&lt;text class=&quot;big&quot; x=&quot;${w/2}&quot; y=&quot;${h/2+12}&quot; text-anchor=&quot;middle&quot; font-size=&quot;30&quot; font-style=&quot;italic&quot;&gt;x = ${e.props.x}&lt;/text&gt;`,
  rect:(e,d,w,h)=&gt;{const {w:rw,h:rh}=e.props,rot=e.props.rot||0,gw=rw*20,gh=rh*20,cx=w/2,cy=(h-24)/2,x0=cx-gw/2,y0=cy-gh/2;let s=`&lt;g transform=&quot;rotate(${rot} ${cx} ${cy})&quot;&gt;`;
