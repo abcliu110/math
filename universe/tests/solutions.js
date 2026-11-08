@@ -66,4 +66,6 @@ module.exports = {
 'no-extra-seat'(h) { const g = h.add('array', { rows: 1, cols: 5 }), s = h.add('array', { rows: 1, cols: 4 }), c = h.add('compare', { invert: true }); h.link(g, c, 'a'); h.link(s, c, 'b'); },
 'plan-breakeven'(h) { const c = h.role('c'); h.set(c, 'rate2', 0.15); },
 'plan-choose'(h) { const c = h.role('c'); h.set(c, 'x', 300); h.set(c, 'x', 600); },
+  'pour-conserve'(h) { h.set(h.role('p'), 'pour', 1); },
+  'pour-two-cups'(h) { const p = h.role('p'); h.set(p, 'a', 5); h.set(p, 'pour', 1); h.set(p, 'a', 2); h.set(p, 'b', 3); h.set(p, 'b', 0); h.set(p, 'a', 0); h.set(p, 'b', 2); h.set(p, 'a', 5); },
 };
