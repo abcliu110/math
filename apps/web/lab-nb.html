@@ -233,7 +233,7 @@ const TYPES={
  parlines:{label:'平行线与截线（角）',group:'图形',prefix:'平行线',defaults:{a:40},fields:[{k:'a',label:'截线与直线的夹角（度）',min:10,max:170,step:10}],size:()=>[240,190]},
  bag:{ports:(p)=>{const t=p.red+p.white;return{pRed:t?p.red/t:null}},label:'摸球（红、白）',group:'概率',prefix:'袋子',defaults:{red:2,white:2},fields:[{k:'red',label:'红球（个）',min:0,max:10},{k:'white',label:'白球（个）',min:0,max:10}],size:()=>[220,160]},
  cang:{ports:(p,e,E)=>{const out={inscribed:p.c/2};const ci=Object.values(E||{}).find(x=>x.type==='circle');if(ci){const r=ci.props.r;out.arc=Number((2*3.14*r*p.c/360).toFixed(2));out.sector=Number((3.14*r*r*p.c/360).toFixed(2))}return out},label:'圆周角与圆心角',group:'图形',prefix:'圆',defaults:{c:120},fields:[{k:'c',label:'圆心角（度）',min:10,max:170,step:10}],size:()=>[220,200]},
- congr:{ports:(p)=>{const x=[3,4,5],y=[p.a,p.b,p.c];return{congruent:[...x].sort().join()===[...y].sort().join()}},label:'全等三角形（三边）',group:'图形',prefix:'全等',defaults:{a:4,b:4,c:5},fields:[{k:'a',label:'第二个三角形：边 1',min:1,max:12},{k:'b',label:'边 2',min:1,max:12},{k:'c',label:'边 3',min:1,max:12}],size:()=>[240,190]},
+ congr:{ports:(p)=>{const x=[3,4,5],y=[p.a,p.b,p.c];const s=[...y].sort((m,n)=>m-n);return{possible:s[0]+s[1]>s[2],congruent:[...x].sort().join()===[...y].sort().join()}},label:'全等三角形（三边）',group:'图形',prefix:'全等',defaults:{a:4,b:4,c:5},fields:[{k:'a',label:'第二个三角形：边 1',min:1,max:12},{k:'b',label:'边 2',min:1,max:12},{k:'c',label:'边 3',min:1,max:12}],size:()=>[240,190]},
  tangent:{ports:(p)=>({relation:p.d>p.r?'apart':p.d===p.r?'tangent':'cross'}),label:'直线和圆的位置',group:'图形',prefix:'直线圆',defaults:{d:5,r:3},fields:[{k:'d',label:'圆心到直线的距离',min:0,max:8},{k:'r',label:'半径',min:1,max:6}],size:()=>[240,190]},
  parab:{label:'二次函数 y = ax² + bx + c',group:'函数',prefix:'抛物线',defaults:{a:1,b:-2,c:0},fields:[{k:'a',label:'a',min:-3,max:3},{k:'b',label:'b',min:-6,max:6},{k:'c',label:'c',min:-6,max:6}],size:()=>[240,190]},
  hyper:{ports:(p)=>({y2:p.k/2}),label:'反比例 y = k/x',group:'函数',prefix:'反比例',defaults:{k:2},fields:[{k:'k',label:'k',min:-8,max:8}],size:()=>[240,190]},
@@ -250,7 +250,7 @@ const TYPES={
    // 尺寸按转过之后的外接框算；转角为 0 时和原来的尺寸一样。
    size:e=>{const p=e.props,gw=p.w*20,gh=p.h*20,r=(p.rot||0)*Math.PI/180,c=Math.abs(Math.cos(r)),s=Math.abs(Math.sin(r));return[Math.max(150,Math.round(gw*c+gh*s)+40),Math.round(gw*s+gh*c)+84]}},
  dice:{label:'两个骰子',group:'概率',prefix:'骰子',defaults:{times:100,counts:null},
-   fields:[{k:'times',label:'一次掷几回',min:10,max:2000,step:10}],actions:[{id:'roll',label:'🎲 掷'},{id:'reset',label:'清零'}],size:()=>[320,210]},
+   fields:[{k:'times',label:'一次掷几回',min:10,max:2000,step:10}],actions:[{id:'roll',label:'🎲 掷'},{id:'clear',label:'清零'}],size:()=>[320,210]},
  // 黑箱：输入一个数，按规则 y = a·x + b 输出。规则是学生要猜的东西。
  box:{label:'黑箱（输入 → 输出）',group:'函数',prefix:'黑箱',out:'value',accepts:'value',defaults:{a:1,b:0,rule:0},
    fields:[{k:'a',label:'a（系数）',min:-5,max:5},{k:'b',label:'b',min:-10,max:10},{k:'rule',label:'规则',min:0,max:2,choices:['线性','平方','倒数']}],size:()=>[230,120]},
@@ -382,6 +382,7 @@ function actRaw(a){
   case 'bindexpr':return addExprBind(s,a.to,a.k,a.text);
   case 'scale':{const e=E[a.id];if(!e)return{ok:0,why:'没有这个器材'};e.k=Math.round(Math.min(2,Math.max(0.5,+a.k))*4)/4;return{ok:1}}
   case 'roll':{const e=E[a.id];const c=e.props.counts||Array(13).fill(0);for(let i=0;i<e.props.times;i++){c[1+Math.ceil(Math.random()*6)+Math.ceil(Math.random()*6)-1]++}e.props.counts=c;return{ok:1}}
+  case 'clearCounts':{E[a.id].props.counts=null;return{ok:1}}
   case 'segclick':{const p=E[a.id].props;p.n=(p.n===a.k?a.k-1:a.k);return{ok:1}}
   }}catch(err){return{ok:0,why:'这个数不合法'}}
   return{ok:0,why:'不认识的操作'};
@@ -468,7 +469,7 @@ function evaluate(s){
       else{const g=(x,y)=>y?g(y,x%y):x;const k=g(red,t)||1;const n=red/k,dn=t/k;sig(red>0?'ok':'info',`P(红) = ${n}/${dn}`)}}
     if(e.type==='cang'){const c=e.props.c;sig('ok',`圆周角 ${c/2}°（圆心角 ${c}° 的一半）`)}
     if(e.type==='congr'){const x=[3,4,5],y=[e.props.a,e.props.b,e.props.c];const same=[...x].sort().join()===[...y].sort().join();
-      sig(same?'ok':'info',same?'三边对应相等，全等（SSS）':'三边不一样，不全等')}
+      const s=[...y].sort((p,q)=>p-q);if(s[0]+s[1]<=s[2])sig('err','这三条边画不出三角形：最短的两条加起来还没第三条长');else sig(same?'ok':'info',same?'三边对应相等，全等（SSS）':'三边不一样，不全等')}
     if(e.type==='tangent'){const {d,r}=e.props;sig(d>r?'info':d===r?'ok':'warn',d>r?'直线和圆相离（d > r）':d===r?'直线和圆相切（d = r）':'直线和圆相交（d < r）')}
     if(e.type==='sim'){const k=e.props.k;sig('info',`相似比 1 : ${k}，面积比 1 : ${k*k}`)}
     if(e.type==='pyth'){const {a,b}=e.props,c=Math.sqrt(a*a+b*b);const ci=Number.isInteger(c);sig(ci?'ok':'info',ci?`斜边 ${c}，是勾股数`:`斜边 ${c.toFixed(2)}（不是整数）`)}
@@ -492,7 +493,7 @@ function evaluate(s){
     if(e.type==='cage'){const {heads,legs,rabbits}=e.props;const c=heads-rabbits,got=4*rabbits+2*c;
       if(c<0)sig('err','兔不能比头还多');else if(got===legs)sig('ok',`头、腿都对：兔 ${rabbits} 只，鸡 ${c} 只`);else sig('warn',`腿 ${got}，要 ${legs}：${got>legs?'腿多了 '+(got-legs):'还差 '+(legs-got)}`)}
     if(e.type==='pair'){const {x,y}=e.props;sig('info',`(${x}, ${y})：第 ${x} 列，第 ${y} 行`)}
-    if(e.type==='tri'){const {a,b}=e.props,c=180-a-b;if(c>0)sig('ok',`第三个角是 ${c}°，三个角加起来是 180°`);else sig('err',`两个角已经 ${a+b}°，超过 180°，画不出三角形`)}
+    if(e.type==='tri'){const {a,b}=e.props,c=180-a-b;if(c>0)sig('ok',`第三个角是 ${c}°，三个角加起来是 180°`);else sig('err',a+b===180?'两个角已经是 180°，第三个角是 0°，画不出三角形':`两个角已经 ${a+b}°，超过 180°，画不出三角形`)}
     if(e.type==='para'){const {base,h}=e.props;sig('info',`面积 = 底 × 高 = ${base} × ${h} = ${base*h}`)}
     if(e.type==='line'){const {y1,y2,y3}=e.props;const d12=y2-y1,d23=y3-y2;sig('info',`第二年比第一年${d12>=0?'多':'少'} ${Math.abs(d12)} 万元`);sig('info',`第三年比第二年${d23>=0?'多':'少'} ${Math.abs(d23)} 万元`)}
     if(e.type==='bars'){const {a,b,c}=e.props;const vals=[['一班',a],['二班',b],['三班',c]];const mx=Math.max(a,b,c);const top=vals.filter(v=>v[1]===mx).map(v=>v[0]).join('、');sig('info',`最多：${top}（${mx} 人）`);
@@ -540,13 +541,6 @@ function portsFor(e,s,E,D){const p=e.props,P={};
 
 
   case 'parab':if(p.a!==0){P.vx=-p.b/(2*p.a);P.vy=p.c-p.b*p.b/(4*p.a);const D0=p.b*p.b-4*p.a*p.c;P.xHits=D0>0?2:D0===0?1:0}break;
-
-
-
-
-
-
-
 
 
 
@@ -847,7 +841,7 @@ function stateLine(e){const d=D[e.id]||{};if(qv(d)&&e.type!=='rect'&&e.type!=='c
 /* 卡内只读推导值。圆的 π 与台面信号一致（默认 3.14）。 */
 function derivedLines(e){const p=e.props;const n=x=>String(+x.toFixed(2));
   if(e.type==='circle'){const r=p.r;return[`周长 ${n(2*3.14*r)} 厘米，面积 ${n(3.14*r*r)} 平方厘米`]}
-  if(e.type==='tri'){const c=180-p.a-p.b;return[c>0?`第三个角是 ${c}°`:`两个角已经 ${p.a+p.b}°，超过 180°，画不出三角形`]}
+  if(e.type==='tri'){const c=180-p.a-p.b;return[c>0?`第三个角是 ${c}°`:p.a+p.b===180?'两个角已经是 180°，第三个角是 0°，画不出三角形':`两个角已经 ${p.a+p.b}°，超过 180°，画不出三角形`]}
   if(e.type==='cang'){const ci=Object.values(S.entities).find(x=>x.type==='circle');if(!ci)return[];const r=ci.props.r,c=p.c;return[`弧长 ${n(2*3.14*r*c/360)} 厘米，扇形面积 ${n(3.14*r*r*c/360)} 平方厘米`]}
   return[]}
 function buildCard(e){const cd=$('card'),T=viewType(e);cd.dataset.for=e.id;cd.dataset.v=JSON.stringify(e.props)+e.name;
@@ -872,7 +866,7 @@ $('card').addEventListener('input',ev=>{const t=ev.target,id=sel;if(!id)return;
   if(t.dataset.f){commit({t:'set',id,k:t.dataset.f,v:t.value},{coalesce:'set'+id+t.dataset.f})}
   // 数字框：输入时就生效（不用等回车）。空的或还没输完的（如只有“-”）先不处理。
   if(t.dataset.fn&&t.value.trim()!==''&&!isNaN(+t.value)){commit({t:'set',id,k:t.dataset.fn,v:t.value},{coalesce:'set'+id+t.dataset.fn})}
-  if(t.dataset.name!==undefined){act({t:'rename',id,name:t.value});$('card').dataset.v=JSON.stringify(S.entities[id].props)+S.entities[id].name;D=evaluate(S);render()}});
+  if(t.dataset.name!==undefined){const nm=String(t.value).slice(0,16)||S.entities[id].name;$('card').dataset.v=JSON.stringify(S.entities[id].props)+nm;commit({t:'rename',id,name:t.value},{coalesce:'rename'+id})}});
 $('card').addEventListener('change',ev=>{const t=ev.target;if(t.dataset.fn&&sel){commit({t:'set',id:sel,k:t.dataset.fn,v:t.value});$('card').dataset.v=''}});
 $('card').addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b||!sel)return;const id=sel;
   if(b.dataset.pick){commit({t:'set',id,k:b.dataset.pick,v:+b.dataset.pv});render();return}
@@ -885,6 +879,7 @@ $('card').addEventListener('click',ev=>{const b=ev.target.closest('button');if(!
   else if(b.dataset.act==='del'){commit({t:'del',id});sel=null}
   else if(b.dataset.act==='reset')commit({t:'reset',id});
   else if(b.dataset.act==='roll')commit({t:'roll',id});
+  else if(b.dataset.act==='clear')commit({t:'clearCounts',id});
   render()});
 $('tools').addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b||!sel)return;const t=b.dataset.tool;
   if(t==='card'){cardOpen=!cardOpen;$('card').dataset.v=''}else if(t==='dup'){const r=commit({t:'dup',id:sel});if(r.ok)sel=r.id}else if(t==='rotate')commit({t:'rotate',id:sel});else if(t==='del'){commit({t:'del',id:sel});sel=null}render()});
