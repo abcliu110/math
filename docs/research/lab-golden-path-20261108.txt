@@ -1,0 +1,154 @@
+GOLDEN_BEGIN
+fracadd | none | 0/4 | 
+balfrac | full | 3/3 | link e4->e1 R ; set e2.n=2
+funcline | full | 3/3 | link e1->e2 ; set e1.k=-5 ; set e1.k=-2
+maxarea | none | 0/2 | 
+dice | none | 0/2 | 
+wp01 | none | 0/2 | 
+wp02 | none | 0/2 | 
+wp03 | none | 0/2 | 
+wp04 | none | 0/2 | 
+wp05 | none | 0/2 | 
+wp06 | none | 0/2 | 
+wp07 | none | 0/2 | 
+wp08 | none | 0/2 | 
+wp09 | none | 0/2 | 
+wp10 | none | 0/2 | 
+wp11 | none | 0/2 | 
+wp12 | none | 0/2 | 
+wp13 | none | 0/2 | 
+wp14 | none | 0/2 | 
+wp15 | none | 0/2 | 
+wp16 | none | 0/2 | 
+wp17 | none | 0/2 | 
+wp18 | none | 0/2 | 
+wp19 | none | 0/2 | 
+wp20 | none | 0/2 | 
+wm01 | none | 0/2 | 
+wm02 | none | 0/2 | 
+wm03 | none | 0/2 | 
+wm04 | none | 0/2 | 
+wm05 | none | 0/2 | 
+wd01 | full | 3/3 | link e1->e3 L ; link e2->e3 R
+wd02 | full | 3/3 | link e1->e3 L ; link e2->e3 R
+wd03 | full | 3/3 | link e1->e3 L ; link e2->e3 R
+wd04 | full | 3/3 | link e1->e3 L ; link e2->e3 R
+wd05 | full | 3/3 | link e1->e3 L ; link e2->e3 R
+wo01 | none | 0/2 | 
+wo02 | none | 0/2 | 
+wo03 | none | 0/2 | 
+wo04 | none | 0/2 | 
+wt01 | full | 2/2 | set e1.h=3 ; set e1.h=5
+wt02 | full | 2/2 | set e1.h=9 ; set e1.h=1
+wt03 | full | 2/2 | set e1.h=7 ; set e1.h=12
+wt04 | full | 2/2 | set e1.h=10 ; set e1.h=1
+wt05 | full | 2/2 | set e1.h=2 ; set e1.h=10
+g1p04 | none | 0/2 | 
+g1p06 | none | 0/2 | 
+g1p07 | none | 0/2 | 
+g1p08 | full | 2/2 | set e1.h=4
+g1p09 | none | 0/2 | 
+g1p11 | none | 0/2 | 
+g1p14 | none | 0/2 | 
+g1p15 | none | 0/2 | 
+wt06 | partial | 1/3 | set e1.h=8
+wt07 | none | 0/3 | 
+g1p01 | none | 0/2 | 
+g1p03 | none | 0/2 | 
+g1p13 | none | 0/2 | 
+g4_4 | none | 0/2 | 
+g4_6 | none | 0/2 | 
+g4_9 | none | 0/2 | 
+g4_10 | none | 0/2 | 
+g4_11 | full | 2/2 | set e1.jiao=5
+g4_13 | none | 0/2 | 
+g4_15 | none | 0/3 | 
+g5_1 | none | 0/2 | 
+g5_3 | none | 0/2 | 
+g5_4 | none | 0/2 | 
+g5_6 | full | 2/2 | set e1.w=4
+g5_7 | none | 0/3 | 
+g5_8 | none | 0/2 | 
+g5_9 | none | 0/2 | 
+g5_10 | full | 2/2 | set e1.n=0 ; set e1.n=3
+g5_11 | none | 0/2 | 
+g4_3 | full | 2/2 | set e1.deg=90 ; set e1.deg=95
+g4_7 | full | 2/2 | set e1.a=12 ; set e1.a=0
+g5_5 | none | 0/2 | 
+g4_5 | full | 2/2 | set e1.base=8
+g4_12 | none | 0/2 | 
+g5_13 | full | 2/2 | set e1.y2=9
+g4_2 | none | 0/2 | 
+g4_16 | full | 2/2 | set e1.rabbits=12
+g5_2 | full | 2/2 | set e1.x=5 ; set e1.y=4
+g4_1 | none | 0/2 | 
+g4_8 | none | 0/2 | 
+g4_14 | full | 2/2 | set e1.dx=3 ; set e1.mirror=1
+g5_12 | full | 2/2 | set e1.rot=90 ; set e1.rot=180
+g4_17 | full | 2/2 | set e1.view=1 ; set e1.view=0
+g5_14 | full | 2/2 | set e1.view=2
+g6_1 | none | 0/2 | 
+g6_2 | none | 0/2 | 
+g6_4 | full | 2/2 | set e1.n=3 ; set e1.d=4
+g6_6 | none | 0/2 | 
+g6_8 | none | 0/2 | 
+g6_9 | none | 0/2 | 
+g6_10 | none | 0/2 | 
+g6_11 | none | 0/2 | 
+g6_12 | none | 0/3 | 
+g6_13 | none | 0/2 | 
+g6_3 | full | 2/2 | set e1.x=3 ; set e1.y=2
+g6_5 | full | 2/2 | set e1.r=3
+g6_7 | full | 2/2 | set e1.b=20 ; set e1.b=30
+g7_eq | none | 0/2 | 
+g7_ineq | full | 2/2 | set e1.op=0 ; set e1.b=-1
+g8_hyper | full | 2/2 | set e1.k=4
+g9_parab | full | 2/2 | set e1.b=-4
+g9_12 | full | 2/2 | set e1.k=2
+g8_11 | full | 2/2 | set e1.b=4
+g9_14 | full | 2/2 | set e1.deg=30
+g9_bag | none | 0/2 | 
+g9_6 | full | 2/2 | set e1.c=80
+g8_2 | full | 2/2 | set e1.a=3
+g9_7 | full | 2/2 | set e1.d=3
+g7_sys | full | 2/2 | set e1.x=7 ; set e1.y=3
+g9_quad | full | 2/2 | set e1.b=-5 ; set e1.c=6
+g8_afrac | full | 2/2 | set e1.d=0 ; set e1.d=4
+g8_rad | full | 2/2 | set e1.n=12
+g7_par | full | 2/2 | set e1.a=70
+g8_fact | full | 2/2 | set e1.b=5 ; set e1.c=6
+g8_sq | none | 0/2 | 
+g8_iso | full | 2/2 | set e1.apex=40
+g8_para | full | 2/2 | set e1.a=70
+g8_data | full | 2/2 | set e1.c=12
+g7_1 | none | 0/2 | 
+g7_2 | none | 0/2 | 
+g7_3 | none | 0/2 | 
+g7_8 | none | 0/2 | 
+g7_9 | none | 0/2 | 
+g7_10 | full | 2/2 | set e1.a=50
+g7_12 | full | 2/2 | set e1.n=16
+g7_13 | full | 2/2 | set e1.x=3 ; set e1.y=2
+g7_16 | full | 2/2 | set e1.a=5
+g8_1 | none | 0/2 | 
+g8_3 | full | 2/2 | set e1.mirror=1
+g8_5 | none | 0/2 | 
+g8_9 | none | 0/2 | 
+g8_13 | full | 2/2 | set e1.h=4
+g8_14 | full | 2/2 | set e1.b=0
+g8_15 | full | 2/2 | set e1.b=1
+g9_2 | none | 0/2 | 
+g9_4 | full | 2/2 | set e1.b=0 ; set e1.c=-4
+g9_5 | full | 2/2 | set e1.rot=180
+g9_13 | none | 0/2 | 
+g9_15 | full | 2/2 | set e1.deg=60
+g9_16 | full | 2/2 | set e1.view=0
+g7_74 | none | 0/2 | 
+g7_75 | none | 0/2 | 
+g9_98 | full | 2/2 | set e1.r=3 ; set e2.c=120
+g8_box | partial | 2/3 | link e1->e2 ; set e2.b=4
+g5_table | none | 0/2 | 
+g5_sym | none | 0/2 | 
+g5_cmp | none | 0/2 | 
+g6_bind | none | 0/2 | 
+GOLDEN_END full=61 of 152
