@@ -4825,7 +4825,7 @@ function evaluate(s){
     if(e.type===&#x27;pie&#x27;){const {a,b,c}=e.props,t=a+b+c;
       sig(t===100?&#x27;ok&#x27;:&#x27;warn&#x27;,t===100?&#x27;三个班合起来是 100%&#x27;:`三个班合起来是 ${t}%，应该是 100%`);
       sig(&#x27;info&#x27;,`对应圆心角：一班 ${(a*3.6).toFixed(0)}°，二班 ${(b*3.6).toFixed(0)}°，三班 ${(c*3.6).toFixed(0)}°`)}
-    if(e.type===&#x27;shape&#x27;){const {dx,rot,mirror}=e.props;sig(&#x27;info&#x27;,`${dx?&#x27;向右平移 &#x27;+dx+&#x27; 格&#x27;:&#x27;没有平移&#x27;}，${rot?&#x27;旋转 &#x27;+rot+&#x27;°&#x27;:&#x27;没有旋转&#x27;}，${mirror?&#x27;做了轴对称&#x27;:&#x27;没有轴对称&#x27;}`)}
+    if(e.type===&#x27;shape&#x27;){const {dx,dy=0,rot,mirror}=e.props;const mv=[];if(dx)mv.push(&#x27;向右平移 &#x27;+dx+&#x27; 格&#x27;);if(dy&gt;0)mv.push(&#x27;向上平移 &#x27;+dy+&#x27; 格&#x27;);if(dy&lt;0)mv.push(&#x27;向下平移 &#x27;+(-dy)+&#x27; 格&#x27;);sig(&#x27;info&#x27;,`${mv.length?mv.join(&#x27;，&#x27;):&#x27;没有平移&#x27;}，${rot?&#x27;旋转 &#x27;+rot+&#x27;°&#x27;:&#x27;没有旋转&#x27;}，${mirror?&#x27;做了轴对称&#x27;:&#x27;没有轴对称&#x27;}`)}
     if(e.type===&#x27;solid&#x27;){const hs=SOLID_H,v=e.props.view;
       if(v===0){const cols=hs[0].map((_,x)=&gt;Math.max(...hs.map(r=&gt;r[x])));sig(&#x27;info&#x27;,`正面看到 ${cols.length} 列，高 ${cols.join(&#x27;、&#x27;)}`)}
       else if(v===1){const rows=hs.map(r=&gt;Math.max(...r));sig(&#x27;info&#x27;,`侧面看到 ${rows.length} 列，高 ${rows.join(&#x27;、&#x27;)}`)}
