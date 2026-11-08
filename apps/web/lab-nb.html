@@ -226,18 +226,26 @@ const TYPES={
  parab:{label:'二次函数 y = ax² + bx + c',group:'函数',prefix:'抛物线',defaults:{a:1,b:-2,c:0},fields:[{k:'a',label:'a',min:-3,max:3},{k:'b',label:'b',min:-6,max:6},{k:'c',label:'c',min:-6,max:6}],size:()=>[240,190]},
  hyper:{label:'反比例 y = k/x',group:'函数',prefix:'反比例',defaults:{k:2},fields:[{k:'k',label:'k',min:-8,max:8}],size:()=>[240,190]},
  ineq:{label:'不等式的解集（数轴）',group:'关系',prefix:'解集',defaults:{b:2,op:1},fields:[{k:'b',label:'边界（数）',min:-6,max:6},{k:'op',label:'方向（0：x＜，1：x＞）',min:0,max:1}],size:()=>[300,110]},
- numline:{label:'数轴',group:'关系',prefix:'数轴',accepts:'value',defaults:{min:0,max:2},
+ numline:{label:'数轴',group:'关系',prefix:'数轴',accepts:'value',reject:{area:'数轴量的是长短和数，面积不能放上去'},defaults:{min:0,max:2},
    fields:[{k:'min',label:'最左',min:-10,max:10},{k:'max',label:'最右',min:-9,max:20}],size:()=>[460,118]},
- balance:{label:'天平',group:'关系',prefix:'天平',accepts:'value',slots:true,defaults:{},fields:[],size:()=>[340,200]},
+ balance:{label:'天平',group:'关系',prefix:'天平',accepts:'value',slots:true,reject:{area:'天平称重量，不称面积'},defaults:{},fields:[],size:()=>[340,200]},
  fn:{label:'直线',group:'函数',prefix:'直线',out:'fn',defaults:{k:2,b:1},
    fields:[{k:'k',label:'k（斜率：x 加 1，y 加几）',min:-5,max:5},{k:'b',label:'b（和 y 轴交在哪）',min:-10,max:10}],size:()=>[160,64]},
  coord:{label:'坐标平面',group:'函数',prefix:'坐标平面',accepts:'fn',defaults:{},fields:[],size:()=>[340,360]},
- rect:{label:'长方形',group:'图形',prefix:'长方形',defaults:{w:4,h:3,rot:0},rotate:true,
+ rect:{label:'长方形',group:'图形',prefix:'长方形',defaults:{w:4,h:3,rot:0},rotate:true,out:'value',dim:'area',
    fields:[{k:'w',label:'宽',min:1,max:12},{k:'h',label:'长',min:1,max:12},{k:'rot',label:'转角（度，0 到 359）',min:0,max:359}],
    // 尺寸按转过之后的外接框算；转角为 0 时和原来的尺寸一样。
    size:e=>{const p=e.props,gw=p.w*20,gh=p.h*20,r=(p.rot||0)*Math.PI/180,c=Math.abs(Math.cos(r)),s=Math.abs(Math.sin(r));return[Math.max(150,Math.round(gw*c+gh*s)+40),Math.round(gw*s+gh*c)+84]}},
  dice:{label:'两个骰子',group:'概率',prefix:'骰子',defaults:{times:100,counts:null},
    fields:[{k:'times',label:'一次掷几回',min:10,max:2000,step:10}],actions:[{id:'roll',label:'🎲 掷'},{id:'reset',label:'清零'}],size:()=>[320,210]},
+ // 黑箱：输入一个数，按规则 y = a·x + b 输出。规则是学生要猜的东西。
+ box:{label:'黑箱（输入 → 输出）',group:'函数',prefix:'黑箱',out:'value',accepts:'value',defaults:{a:1,b:0},
+   fields:[{k:'a',label:'a（输出 = a × 输入 + b）',min:-5,max:5},{k:'b',label:'b',min:-10,max:10}],size:()=>[230,120]},
+ // 数据表：四个数，输出合计、平均数或最大数。
+ table:{label:'数据表（四个数）',group:'统计',prefix:'数据表',out:'value',dim:'count',defaults:{a:4,b:8,c:6,d:10,which:0},
+   fields:[{k:'a',label:'第 1 个数',min:0,max:50},{k:'b',label:'第 2 个数',min:0,max:50},{k:'c',label:'第 3 个数',min:0,max:50},{k:'d',label:'第 4 个数',min:0,max:50},{k:'which',label:'输出（0 合计，1 平均，2 最大）',min:0,max:2}],size:()=>[240,150]},
+ // x 砝码：一个未知数。x 的值由学生设定，天平上用它参与平衡。
+ sym:{label:'x 砝码（未知数）',group:'数与运算',prefix:'x',out:'value',dim:'count',defaults:{x:0},fields:[{k:'x',label:'x 等于几',min:-10,max:30}],size:()=>[120,70]},
 };
 const GROUP_ORDER=['数与运算','分数','关系','函数','图形','统计','概率'];
 /* 立体图形：每行是一排（y），每个数是这一格上摞的小方块个数（x 从左到右）。 */
@@ -251,10 +259,20 @@ function addEnt(s,type,x,y,props){const T=TYPES[type];const id='e'+(s.nid++);s.s
   s.entities[id]={id,type,name:T.prefix+s.seq[type],x,y,props:Object.assign(clone(T.defaults),props||{})};return id}
 function addLink(s,from,to,slot){s.links.push({id:'l'+(s.nid++),from,to,slot:slot||null})}
 const inputs=(s,id)=>s.links.filter(l=>l.to===id);
+/* 维度：这个器材算出的数是什么东西。只有“个数”和“面积”两种需要区分；合并和比较时要求同一种。 */
+const DIM_NAME={count:'个数',area:'面积'};
+function dimOf(s,id){const e=s.entities[id];if(!e)return'count';if(e.type==='adder'||e.type==='mul'){const l=inputs(s,id)[0];return l?dimOf(s,l.from):'count'}return TYPES[e.type].dim||'count'}
+/* 依赖关系：连线和绑定都算。从 a 能走到 b，说明 b 的值依赖 a（或 a 绑着 b 的属性）。 */
+function reachAll(s,a,b){const seen={};const st=[a];while(st.length){const c=st.pop();if(c===b)return true;if(seen[c])continue;seen[c]=1;s.links.filter(l=>l.from===c).forEach(l=>st.push(l.to));(s.binds||[]).filter(x=>x.from===c).forEach(x=>st.push(x.to))}return false}
+/* 绑定同步：把绑定的值写进目标属性。改一次算几遍，直到不再变（绑定链最多 8 层）。 */
+function syncBinds(s){if(!s.binds||!s.binds.length)return;for(let pass=0;pass<8;pass++){const Dd=evaluate(s);let changed=false;
+  for(const b of s.binds){const to=s.entities[b.to],src=Dd[b.from]&&Dd[b.from].value;if(!to||!src||src.d!==1)continue;const F=TYPES[to.type].fields.find(f=>f.k===b.k);if(!F||src.n<F.min||src.n>F.max)continue;if(to.props[b.k]!==src.n){to.props[b.k]=src.n;changed=true}}
+  if(!changed)break}}
 function reach(s,a,b){const seen={};const st=[a];while(st.length){const c=st.pop();if(c===b)return true;if(seen[c])continue;seen[c]=1;s.links.filter(l=>l.from===c).forEach(l=>st.push(l.to))}return false}
 
 /* 动作（意图）。所有改动都走这里：校验 → 改 → 引擎重算。返回 {ok, why} */
-function act(a){
+function act(a){const r=actRaw(a);if(r.ok)syncBinds(S);return r}
+function actRaw(a){
   const s=S,E=s.entities;
   try{
   switch(a.t){
@@ -271,7 +289,8 @@ function act(a){
     if(A+B>=180){const k=178/(A+B);A=Math.max(1,Math.floor(A*k));B=Math.max(1,Math.floor(B*k))}
     e.props.a=A;e.props.b=B;return{ok:1}}
   case 'reset':{E[a.id].props=clone(TYPES[E[a.id].type].defaults);return{ok:1}}
-  case 'set':{const e=E[a.id],T=TYPES[e.type],f=T.fields.find(f=>f.k===a.k);let v=Number(a.v);
+  case 'set':{if((s.binds||[]).some(b=>b.to===a.id&&b.k===a.k))return{ok:0,why:'这个属性由别的器材决定，先点“解除”'};
+    const e=E[a.id],T=TYPES[e.type],f=T.fields.find(f=>f.k===a.k);let v=Number(a.v);
     if(!Number.isFinite(v)||!Number.isInteger(v/(f.step||1)))return{ok:0,why:'只能填整数'};
     if(v<f.min||v>f.max)return{ok:0,why:`${f.label.replace(/（.*/,'')}只能在 ${f.min} 到 ${f.max} 之间`};
     if(e.type==='numline'){const o=Object.assign({},e.props,{[a.k]:v});if(o.max-o.min<1)return{ok:0,why:'最右要比最左大'};if(o.max-o.min>20)return{ok:0,why:'数轴最长 20 格'}}
@@ -280,12 +299,21 @@ function act(a){
     const out=TYPES[f.type].out,acc=TYPES[to.type].accepts;
     if(!acc)return{ok:0,why:`${to.name} 不接收输入`};
     if(out!==acc)return{ok:0,why:out==='fn'?'直线只能连到坐标平面上':`${to.name} 只接收直线，不接收数`};
+    // 维度：天平不称面积、数轴不放面积；合并器只合并同一种东西。
+    const fd=dimOf(s,a.from),rj=TYPES[to.type].reject;if(rj&&rj[fd])return{ok:0,why:rj[fd]};
+    if(to.type==='adder'){const other=inputs(s,a.to).map(l=>dimOf(s,l.from)).find(x=>x!==fd);if(other)return{ok:0,why:`合并器只合并同一种东西：${DIM_NAME[fd]} 和 ${DIM_NAME[other]} 不能加`}}
     if(s.links.some(l=>l.from===a.from&&l.to===a.to))return{ok:0,why:'已经连过了'};
     if(reach(s,a.to,a.from))return{ok:0,why:'不能连成一个圈'};
     if(to.type==='balance'&&inputs(s,a.to).filter(l=>l.slot===a.slot).length>=5)return{ok:0,why:'一个盘最多放 5 个'};
     if(to.type==='numline'&&inputs(s,a.to).length>=6)return{ok:0,why:'数轴上最多 6 个点'};
     if(to.type==='div'&&inputs(s,a.to).some(l=>l.slot===a.slot))return{ok:0,why:a.slot==='L'?'左边已经有被除数了':'右边已经有除数了'};
     addLink(s,a.from,a.to,(to.type==='balance'||to.type==='div')?a.slot:null);return{ok:1}}
+  case 'bind':{const t=E[a.to],src=E[a.from];if(!t||!src||a.to===a.from)return{ok:0,why:'绑到另一个器材上'};
+    if(!TYPES[t.type].fields.some(f=>f.k===a.k))return{ok:0,why:'这个器材没有这个属性'};
+    if(TYPES[src.type].out!=='value')return{ok:0,why:`${src.name} 不会出数，不能绑`};
+    if(reachAll(s,a.to,a.from))return{ok:0,why:'绕回来了：它的值已经依赖这个器材，不能再绑'};
+    s.binds=(s.binds||[]).filter(b=>!(b.to===a.to&&b.k===a.k));s.binds.push({to:a.to,k:a.k,from:a.from});return{ok:1}}
+  case 'unbind':{s.binds=(s.binds||[]).filter(b=>!(b.to===a.to&&b.k===a.k));return{ok:1}}
   case 'roll':{const e=E[a.id];const c=e.props.counts||Array(13).fill(0);for(let i=0;i<e.props.times;i++){c[1+Math.ceil(Math.random()*6)+Math.ceil(Math.random()*6)-1]++}e.props.counts=c;return{ok:1}}
   case 'segclick':{const p=E[a.id].props;p.n=(p.n===a.k?a.k-1:a.k);return{ok:1}}
   }}catch(err){return{ok:0,why:'这个数不合法'}}
@@ -298,8 +326,11 @@ function evaluate(s){
   const val=id=>{if(id in vals)return vals[id];if(busy[id])return null;busy[id]=1;const e=E[id];let v=null;
     if(e.type==='num')v=Q(e.props.v);else if(e.type==='frac')v=Q(e.props.n,e.props.d);
     else if(e.type==='adder'){v=Q(0);for(const l of inputs(s,id)){const x=val(l.from);if(x)v=qadd(v,x)}}
-    else if(e.type==='money')v=Q(e.props.yuan*100+e.props.jiao*10+(e.props.fen||0),100);
+    else if(e.type==='rect')v=Q(e.props.w*e.props.h);else if(e.type==='money')v=Q(e.props.yuan*100+e.props.jiao*10+(e.props.fen||0),100);
     else if(e.type==='mul'){v=Q(1);let any=false;for(const l of inputs(s,id)){const x=val(l.from);if(x){v=Q(v.n*x.n,v.d*x.d);any=true}}if(!any)v=null}
+    else if(e.type==='box'){const l=inputs(s,id)[0];const x=l&&val(l.from);v=x?qadd(Q(e.props.a*x.n,x.d),Q(e.props.b)):null}
+    else if(e.type==='table'){const p=e.props,vs=[p.a,p.b,p.c,p.d],sum=vs.reduce((x,y)=>x+y,0);v=p.which===1?Q(sum,4):p.which===2?Q(Math.max(...vs)):Q(sum)}
+    else if(e.type==='sym')v=Q(e.props.x);
     else if(e.type==='div'){const L=inputs(s,id).find(l=>l.slot==='L'),R=inputs(s,id).find(l=>l.slot==='R');const a=L&&val(L.from),b=R&&val(R.from);v=(a&&b&&b.n!==0)?Q(a.n*b.d,a.d*b.n):null}
     return vals[id]=v};
   for(const id in E){const e=E[id],d=D[id]={read:[],sig:[]};
@@ -317,6 +348,14 @@ function evaluate(s){
       else if(b.n===0)sig('err','除数不能是 0');
       else if(d.value.d===1)sig('ok',`${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`);
       else sig('warn',`除不尽：${qs(a)} ÷ ${qs(b)} = ${qs(d.value)}`)}
+    // 绑定进来的值如果不是整数或超出范围，这里说明原因（属性保持原值，不会悄悄改掉）。
+    for(const b of (s.binds||[]).filter(x=>x.to===id)){const bv=val(b.from),F=TYPES[e.type].fields.find(f=>f.k===b.k);
+      if(bv&&F&&(bv.d!==1||bv.n<F.min||bv.n>F.max))sig('err',`${E[b.from].name} 的值 ${qs(bv)} 不能填进「${F.label.replace(/（.*/,'')}」`)}
+    if(e.type==='box'){const l=inputs(s,id)[0];const x=l&&val(l.from);const {a,b}=e.props;
+      if(!x)sig('info',`把数连进黑箱：输出 = ${a} × 输入 ${b>=0?'+ '+b:'− '+(-b)}`);else sig('ok',`输入 ${qs(x)} → 输出 ${qs(d.value)}`)}
+    if(e.type==='table'){const v4=[e.props.a,e.props.b,e.props.c,e.props.d],sum=v4.reduce((x,y)=>x+y,0),mean=sum/4;
+      sig('ok',`数：${v4.join('、')}；合计 ${sum}，平均 ${Number.isInteger(mean)?mean:mean.toFixed(2)}，最大 ${Math.max(...v4)}`)}
+    if(e.type==='sym')sig('info',`x = ${e.props.x}`);
     if(e.type==='angle'){const k=e.props.deg;const kind=k===0?'零度角':k<90?'锐角':k===90?'直角':k<180?'钝角':k===180?'平角':'大于平角';sig(k===90?'ok':'info',`${k}°：${kind}`)}
     if(e.type==='fact'){const {b,c}=e.props;let f=null;for(let p=-10;p<=10&&!f;p++)for(let q=p;q<=10&&!f;q++)if(p+q===b&&p*q===c)f=[p,q];
       if(f)sig('ok',`x² ${b<0?'− '+(-b):'+ '+b}x ${c<0?'− '+(-c):'+ '+c} = (x ${f[0]<0?'− '+(-f[0]):'+ '+f[0]})(x ${f[1]<0?'− '+(-f[1]):'+ '+f[1]})`.replace(/\(x \+ (-?\d+)\)/,(m,z)=>m));
@@ -378,7 +417,7 @@ function evaluate(s){
         if(gap.n===0)sig('ok',`${qs(a)} 和 ${qs(b)} 落在同一点：一样大`);else sig('info',`${E[ins[0].from].name} 和 ${E[ins[1].from].name} 相差 ${qs(gap)}`)}}
     if(e.type==='balance'){const L=inputs(s,id).filter(l=>l.slot==='L'),R=inputs(s,id).filter(l=>l.slot==='R');
       const sum=a=>a.reduce((t,l)=>{const v=val(l.from);return v?qadd(t,v):t},Q(0));d.L=sum(L);d.R=sum(R);d.Ln=L;d.Rn=R;
-      const df=qsub(d.L,d.R);d.tilt=-Math.max(-16,Math.min(16,qnum(df)*14));d.equal=df.n===0;
+      const df=qsub(d.L,d.R);d.tilt=-Math.max(-16,Math.min(16,qnum(df)*14));d.equal=df.n===0;d.ports={equal:d.equal,heavier:df.n>0?'L':df.n<0?'R':null};
       if(!L.length&&!R.length)sig('info','把数连到左盘或右盘');
       else if(d.equal&&L.length&&R.length)sig('ok',`平了：左 ${qs(d.L)} = 右 ${qs(d.R)}`);
       else{const m=df.n<0?Q(-df.n,df.d):df;sig('warn',`${df.n>0?'左':'右'}边重 ${qs(m)}`)}}
@@ -453,7 +492,7 @@ const byType=(s,t)=>{for(const id in s.entities)if(s.entities[id].type===t)retur
 /* ========== 运行状态 ========== */
 const LS={free:'nb-lab-free-v1',hist:'nb-lab-exam-v1',find:'nb-lab-find-v1'};
 const PR='nb-lab-practice-v1'; // 练习进度：中途离开再回来，接着做
-let mode='free',xp=null,run=null,D={},sel=null,selLink=null,cardOpen=false;
+let mode='free',xp=null,run=null,D={},sel=null,selLink=null,cardOpen=false,bindPick=null; // bindPick：正在等学生点一个器材，把它的值绑到 {to, k} 上
 let view={x:40,y:30,z:1},undoSt=[],redoSt=[],timerId=null,libFilter='全部',libQ='';
 const $=id=>document.getElementById(id);
 
@@ -619,6 +658,9 @@ mul:(e,d,w,h)=>{const t=d.terms||[];const ex=t.length?t.map(qs).join(' × '):'�
    const cols=['#3b9cff','#ff7a45','#2fbf71','#b36bff'];(d.fns||[]).forEach((f,i)=>{const {k,b}=f.props;s+=`<line class="flowline" clip-path="url(#cp${e.id})" x1="${X(-6)}" y1="${Y(k*-6+b)}" x2="${X(6)}" y2="${Y(k*6+b)}" stroke="${cols[i%4]}" stroke-width="3"/><circle cx="${X(0)}" cy="${Y(b)}" r="4" fill="${cols[i%4]}"/>`});
    if(xp&&xp.id==='funcline')s+=`<circle cx="${X(2)}" cy="${Y(-3)}" r="5" fill="none" stroke="#e03131" stroke-width="2"/><text x="${X(2)+8}" y="${Y(-3)+4}" font-size="11" fill="#e03131">(2, −3)</text>`;
    return s},
+ box:(e,d,w,h)=>{const {a,b}=e.props;const sig0=d.sig&&d.sig[0]?d.sig[0].tx:'';return `<text class="big" x="${w/2}" y="50" text-anchor="middle" font-size="20">y = ${a}x ${b<0?'− '+(-b):'+ '+b}</text><text class="ink" x="${w/2}" y="${h-16}" text-anchor="middle" font-size="12">${esc(sig0)}</text>`},
+ table:(e,d,w,h)=>{const p=e.props,vs=[p.a,p.b,p.c,p.d];return vs.map((v,i)=>`<rect x="${14+i*56}" y="40" width="48" height="40" rx="6" fill="#f6f8fb" stroke="#5b6778"/><text x="${38+i*56}" y="66" text-anchor="middle" font-size="18" font-weight="700" fill="#1d2633">${v}</text>`).join('')+`<text class="ink" x="${w/2}" y="${h-14}" text-anchor="middle" font-size="12">${p.which===1?'平均数':p.which===2?'最大数':'合计'}：${d.value?qs(d.value):''}</text>`},
+ sym:(e,d,w,h)=>`<text class="big" x="${w/2}" y="${h/2+12}" text-anchor="middle" font-size="30" font-style="italic">x = ${e.props.x}</text>`,
  rect:(e,d,w,h)=>{const {w:rw,h:rh}=e.props,rot=e.props.rot||0,gw=rw*20,gh=rh*20,cx=w/2,cy=(h-24)/2,x0=cx-gw/2,y0=cy-gh/2;let s=`<g transform="rotate(${rot} ${cx} ${cy})">`;
    for(let i=0;i<rw;i++)for(let j=0;j<rh;j++)s+=`<rect x="${x0+i*20}" y="${y0+j*20}" width="20" height="20" fill="#cfe5ff" stroke="#8fb6e6"/>`;
    return s+`<rect x="${x0}" y="${y0}" width="${gw}" height="${gh}" fill="none" stroke="#1e5aa8" stroke-width="2.5"/></g><text class="ink" x="${w/2}" y="${h-36}" text-anchor="middle" font-size="12">宽 ${rw} · 长 ${rh} · 面积 ${rw*rh} 格${rot?' · 转 '+rot+'°':''}</text>`},
@@ -640,7 +682,7 @@ function placeFloat(){const tl=$('tools'),cd=$('card');const e=sel&&S.entities[s
   cd.style.left=Math.max(8,W-262)+'px';cd.style.top='12px';cd.style.maxHeight=Math.max(200,H-24)+'px';cd.style.overflowY='auto';cd.style.display='block';
   if(cd.dataset.for!==e.id||cd.dataset.v!==JSON.stringify(e.props)+e.name)buildCard(e);
 }
-function stateLine(e){const d=D[e.id]||{};if(d.value)return qs(d.value);if(e.type==='fn')return'y = '+fx(e.props.k,e.props.b);if(e.type==='rect')return`${e.props.w} × ${e.props.h} = ${e.props.w*e.props.h}`;
+function stateLine(e){const d=D[e.id]||{};if(d.value&&e.type!=='rect')return qs(d.value);if(e.type==='fn')return'y = '+fx(e.props.k,e.props.b);if(e.type==='rect')return`${e.props.w} × ${e.props.h} = ${e.props.w*e.props.h}`;
   if(e.type==='balance')return`${d.L?qs(d.L):0} : ${d.R?qs(d.R):0}`;if(e.type==='numline')return`${e.props.min} 到 ${e.props.max}`;if(e.type==='dice')return`${d.tot||0} 回`;return TYPES[e.type].label}
 /* 卡内只读推导值。圆的 π 与台面信号一致（默认 3.14）。 */
 function derivedLines(e){const p=e.props;const n=x=>String(+x.toFixed(2));
@@ -649,7 +691,8 @@ function derivedLines(e){const p=e.props;const n=x=>String(+x.toFixed(2));
   return[]}
 function buildCard(e){const cd=$('card'),T=TYPES[e.type];cd.dataset.for=e.id;cd.dataset.v=JSON.stringify(e.props)+e.name;
   let h=`<h4>${T.label} · 设置</h4><input class="name" data-name value="${esc(e.name)}"><div class="state">${esc(stateLine(e))}</div>`;
-  for(const f of T.fields){const v=e.props[f.k];h+=`<div class="fld"><label><span>${f.label}</span></label><div class="ctl"><button class="pm" data-pm="${f.k}" data-dv="-${f.step||1}">−</button><input type="range" data-f="${f.k}" min="${f.min}" max="${f.max}" step="${f.step||1}" value="${v}"><button class="pm" data-pm="${f.k}" data-dv="${f.step||1}">+</button><input type="number" data-fn="${f.k}" value="${v}"></div></div>`}
+  for(const f of T.fields){const v=e.props[f.k];const bd=(S.binds||[]).find(x=>x.to===e.id&&x.k===f.k);if(bd){h+=`<div class="fld"><label><span>${f.label}</span><b>← ${esc(S.entities[bd.from].name)}</b></label><div class="ctl"><span class="muted">由它决定：${v}</span><button class="btn" data-unbind="${f.k}">解除绑定</button></div></div>`;continue}h+=`<div class="fld"><label><span>${f.label}</span></label><div class="ctl"><button class="pm" data-pm="${f.k}" data-dv="-${f.step||1}">−</button><input type="range" data-f="${f.k}" min="${f.min}" max="${f.max}" step="${f.step||1}" value="${v}"><button class="pm" data-pm="${f.k}" data-dv="${f.step||1}">+</button><input type="number" data-fn="${f.k}" value="${v}"></div></div>`}
+  for(const f of T.fields){if(!(S.binds||[]).some(x=>x.to===e.id&&x.k===f.k))h+=`<button class="btn" data-bindpick="${f.k}">🔗 把「${esc(f.label.replace(/（.*/,''))}」绑到一个数</button>`}
   if(!T.fields.length)h+=`<div class="muted" style="font-size:12px">${T.accepts==='fn'?'它显示连进来的直线。':'它的值由连进来的器材决定，拖别的器材的蓝点连过来。'}</div>`;
   // 只读推导值：由属性算出来，不能改，让学生在卡上直接看到。
   const dv=derivedLines(e);if(dv.length)h+=`<div class="derived">${dv.map(t=>`<div>${esc(t)}</div>`).join('')}</div>`;
@@ -661,6 +704,8 @@ $('card').addEventListener('input',ev=>{const t=ev.target,id=sel;if(!id)return;
   if(t.dataset.name!==undefined){act({t:'rename',id,name:t.value});$('card').dataset.v=JSON.stringify(S.entities[id].props)+S.entities[id].name;D=evaluate(S);render()}});
 $('card').addEventListener('change',ev=>{const t=ev.target;if(t.dataset.fn&&sel){commit({t:'set',id:sel,k:t.dataset.fn,v:t.value});$('card').dataset.v=''}});
 $('card').addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b||!sel)return;const id=sel;
+  if(b.dataset.bindpick){bindPick={to:id,k:b.dataset.bindpick};toast('点一个会出数的器材（数字卡、分数条、黑箱、数据表…），把它绑到这个属性上');render();return}
+  if(b.dataset.unbind){commit({t:'unbind',to:id,k:b.dataset.unbind});render();return}
   if(b.dataset.pm){const e=S.entities[id];commit({t:'set',id,k:b.dataset.pm,v:e.props[b.dataset.pm]+Number(b.dataset.dv)})}
   else if(b.dataset.act==='del'){commit({t:'del',id});sel=null}
   else if(b.dataset.act==='reset')commit({t:'reset',id});
@@ -678,7 +723,7 @@ svg.addEventListener('pointerdown',ev=>{const t=ev.target;svg.setPointerCapture(
   if(t.dataset.link){selLink=t.dataset.link;sel=null;cardOpen=false;render();return}
   const g=t.closest('[data-ent]');
   if(g){const e=S.entities[g.dataset.ent];drag={m:'move',id:e.id,dx:wx-e.x,dy:wy-e.y,sx:ev.clientX,sy:ev.clientY,moved:false,seg:t.dataset.seg,was:sel===e.id};if(sel!==e.id){sel=e.id;selLink=null;render()}return}
-  sel=null;selLink=null;cardOpen=false;drag={m:'pan',sx:ev.clientX,sy:ev.clientY,vx:view.x,vy:view.y};svg.classList.add('panning');render()});
+  sel=null;selLink=null;cardOpen=false;bindPick=null;drag={m:'pan',sx:ev.clientX,sy:ev.clientY,vx:view.x,vy:view.y};svg.classList.add('panning');render()});
 svg.addEventListener('pointermove',ev=>{if(!drag)return;const [wx,wy]=toWorld(ev.clientX,ev.clientY);
   if(drag.m==='pan'){view.x=drag.vx+ev.clientX-drag.sx;view.y=drag.vy+ev.clientY-drag.sy;render()}
   else if(drag.m==='move'){if(!drag.moved&&Math.hypot(ev.clientX-drag.sx,ev.clientY-drag.sy)<6)return;if(!drag.moved){undoSt.push(JSON.stringify(S));redoSt=[];drag.moved=true}
@@ -689,6 +734,7 @@ svg.addEventListener('pointermove',ev=>{if(!drag)return;const [wx,wy]=toWorld(ev
   else if(drag.m==='link'){const [x1,y1]=anchorOut(drag.from);let p=$('world').querySelector('.templink');if(!p){p=document.createElementNS('http://www.w3.org/2000/svg','path');p.setAttribute('class','templink');$('world').appendChild(p)}p.setAttribute('d',`M${x1},${y1} L${wx},${wy}`)}});
 svg.addEventListener('pointerup',ev=>{if(!drag)return;const d=drag;drag=null;svg.classList.remove('panning');
   if(d.m==='vtx'){if(d.moved)afterChange();return}
+  if(d.m==='move'&&!d.moved&&bindPick&&!d.seg){const bp=bindPick;bindPick=null;const r=commit({t:'bind',to:bp.to,k:bp.k,from:d.id});if(r.ok)toast('已绑定：'+S.entities[d.id].name+' 的值决定它');render();return}
   if(d.m==='move'){if(d.moved){afterChange()}else if(d.seg){commit({t:'segclick',id:d.id,k:+d.seg})}else{if(d.was)cardOpen=!cardOpen;else cardOpen=true;$('card').dataset.v='';render()}}
   else if(d.m==='link'){const el=document.elementFromPoint(ev.clientX,ev.clientY);const g=el&&el.closest&&el.closest('[data-ent]');
     if(g&&g.dataset.ent!==d.from){const to=S.entities[g.dataset.ent];const [wx]=toWorld(ev.clientX,ev.clientY);const [w]=size(to);commit({t:'link',from:d.from,to:to.id,slot:wx<to.x+w/2?'L':'R'})}
@@ -711,7 +757,7 @@ $('tidy').onclick=()=>{undoSt.push(JSON.stringify(S));cardOpen=false;let x=40,y=
   Object.values(S.entities).forEach(e=>{const [w,h]=size(e);if(x+w>W){x=40;y+=rowH+90;rowH=0}e.x=x;e.y=y;x+=w+70;rowH=Math.max(rowH,h)});afterChange();fit()};
 
 /* ========== 器材架（右） ========== */
-const ICON={num:'<rect x="6" y="8" width="36" height="26" rx="5" fill="#f6f8fb"/><text x="24" y="27" text-anchor="middle" font-size="15" font-weight="700" fill="#1d2633">3</text>',
+const ICON={box:'<rect x="4" y="12" width="40" height="18" rx="4" fill="#f6f8fb" stroke="#5b6778"/><text x="24" y="25" text-anchor="middle" font-size="11" fill="#1d2633">y=x</text>',table:'<rect x="4" y="12" width="40" height="18" fill="#fff" stroke="#5b6778"/><text x="24" y="25" text-anchor="middle" font-size="11" fill="#1d2633">3 5 2</text>',sym:'<text x="24" y="28" text-anchor="middle" font-size="18" font-style="italic" fill="#1d2633">x</text>',num:'<rect x="6" y="8" width="36" height="26" rx="5" fill="#f6f8fb"/><text x="24" y="27" text-anchor="middle" font-size="15" font-weight="700" fill="#1d2633">3</text>',
  frac:'<rect x="4" y="13" width="40" height="16" fill="#fff" stroke="#5b6778"/><rect x="4" y="13" width="20" height="16" fill="#ff9f43" stroke="#5b6778"/>',
  adder:'<rect x="6" y="8" width="36" height="26" rx="5" fill="#f6f8fb"/><text x="24" y="28" text-anchor="middle" font-size="18" fill="#1d2633">Σ</text>',
  numline:'<line x1="4" y1="24" x2="44" y2="24" stroke="#cfd8e3" stroke-width="2"/><line x1="10" y1="19" x2="10" y2="29" stroke="#cfd8e3"/><line x1="24" y1="19" x2="24" y2="29" stroke="#cfd8e3"/><line x1="38" y1="19" x2="38" y2="29" stroke="#cfd8e3"/><circle cx="31" cy="24" r="4" fill="#3b9cff"/>',
@@ -1287,6 +1333,32 @@ const P15=[
          {label:'把圆心角调到 120°',score:2,hint:'点圆心角卡，把圆心角调到 120',target:T45('cang'),check:(s,D)=>s.entities[byType(s,'cang')].props.c===120&&s.entities[byType(s,'circle')].props.r===3}]}
 ];
 P15.forEach(p=>XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
+
+/* ========== 新器材实验：黑箱、数据表、x 砝码、天平比较端口、绑定 ========== */
+const P16=[
+ {id:'g8_box',grade:8,domain:'函数',tools:'黑箱 · 数字卡',title:'函数：黑箱放 3 进去出 7，放 5 出 11，规律是什么？',q:'输入一个数，黑箱按规律算出输出。先找规律，再用别的数验证。',why:'输出 = 2 × 输入 + 1：3 → 7，5 → 11。规律是 y = 2x + 1。',
+  build:s=>{addEnt(s,'num',60,60,{v:3});addEnt(s,'box',300,60,{a:1,b:0})},
+  steps:[{label:'把数字卡连进黑箱',score:1,hint:'拖数字卡的蓝点到黑箱',target:T45('box'),check:(s,D)=>P45H.cnt(s,D,'box',1)},
+         {label:'输入 3 时输出 7',score:2,hint:'把黑箱的 a 调成 2，b 调成 1',target:T45('box'),check:(s,D)=>{const b=byType(s,'box');return !!D[b].value&&qeq(D[b].value,Q(7))&&inputs(s,b).some(l=>s.entities[l.from].props.v===3)}},
+         {label:'输入 5 时输出 11',score:2,hint:'把数字卡改成 5，看黑箱的输出',target:T45('box'),check:(s,D)=>{const b=byType(s,'box');return !!D[b].value&&qeq(D[b].value,Q(11))&&inputs(s,b).some(l=>s.entities[l.from].props.v===5)}}]},
+ {id:'g5_table',grade:5,domain:'统计与概率',tools:'数据表',title:'平均数：四天走了 12、8、15、9 步，平均每天走几步？',q:'平均数 = 总数 ÷ 个数。把四个数填进数据表，再选“平均”。',why:'合计 44 步，44 ÷ 4 = 11，平均每天 11 步。',
+  build:s=>{addEnt(s,'table',200,50,{a:4,b:8,c:6,d:10,which:0})},
+  steps:[{label:'把四个数改成 12、8、15、9',score:1,hint:'点数据表卡，把四个数分别调到 12、8、15、9',target:T45('table'),check:(s,D)=>{const p=s.entities[byType(s,'table')].props;return p.a===12&&p.b===8&&p.c===15&&p.d===9}},
+         {label:'输出平均数 11',score:2,hint:'把“输出”调到 1（平均）',target:T45('table'),check:(s,D)=>{const t=byType(s,'table');return s.entities[t].props.which===1&&!!D[t].value&&qeq(D[t].value,Q(11))}}]},
+ {id:'g5_sym',grade:5,domain:'数与代数',tools:'x 砝码 · 数字卡 · 天平',title:'简易方程：x + 3 = 8，x 是几？',q:'天平两边要一样重。把 x 和 3 放左盘，8 放右盘，调 x，让天平平衡。',why:'x + 3 = 8，两边同时减 3，得 x = 5。',
+  build:s=>{addEnt(s,'sym',60,60,{x:0});addEnt(s,'num',60,180,{v:3});addEnt(s,'num',360,60,{v:8});addEnt(s,'balance',200,260,{})},
+  steps:[{label:'x 和 3 放左盘，8 放右盘',score:1,hint:'把 x 和 3 的蓝点连到天平的左盘，8 连到右盘',target:T45('balance'),check:(s,D)=>{const b=byType(s,'balance');const L=inputs(s,b).filter(l=>l.slot==='L').length,R=inputs(s,b).filter(l=>l.slot==='R').length;return L>=2&&R>=1}},
+         {label:'天平平衡，x 是 5',score:2,hint:'调 x 砝码，直到天平两边一样重',target:T45('sym'),check:(s,D)=>{const x=byType(s,'sym'),b=byType(s,'balance');return s.entities[x].props.x===5&&!!D[b].ports&&D[b].ports.equal===true}}]},
+ {id:'g5_cmp',grade:5,domain:'数与代数',tools:'分数条 · 天平',title:'比较：1/2 和 1/3 哪个大？用天平比一比。',q:'天平哪边重，哪边的数就大。比较端口会告诉你哪边重。',why:'1/2 = 3/6，1/3 = 2/6，所以 1/2 更大，左盘更重。',
+  build:s=>{addEnt(s,'frac',60,60,{n:1,d:2});addEnt(s,'frac',60,180,{n:1,d:3});addEnt(s,'balance',260,100,{})},
+  steps:[{label:'把两个分数放到天平两边',score:1,hint:'把 1/2 连到左盘，1/3 连到右盘',target:T45('balance'),check:(s,D)=>{const b=byType(s,'balance');const L=inputs(s,b).filter(l=>l.slot==='L').length,R=inputs(s,b).filter(l=>l.slot==='R').length;return L>=1&&R>=1}},
+         {label:'1/2 那边重（左盘更重）',score:2,hint:'看天平的比较结果：哪一盘重',target:T45('balance'),check:(s,D)=>{const b=byType(s,'balance');return !!D[b].ports&&D[b].ports.heavier==='L'&&inputs(s,b).some(l=>l.slot==='L'&&s.entities[l.from].props.d===2)}}]},
+ {id:'g6_bind',grade:6,domain:'图形与几何',tools:'圆 · 数字卡',title:'圆：半径变了，周长和面积怎么变？',q:'圆的周长 = 2πr，面积 = πr²。把圆的半径绑到数字卡上，改数字卡，圆就跟着变。',why:'半径从 2 变到 5，周长和面积都跟着变大。绑定以后，半径不用再手调。',
+  build:s=>{addEnt(s,'num',60,60,{v:2});addEnt(s,'circle',260,40,{r:2})},
+  steps:[{label:'把圆的半径绑到数字卡上',score:1,hint:'点圆卡，点“把半径绑到一个数”，再点数字卡',target:T45('circle'),check:(s,D)=>{const c=byType(s,'circle');return (s.binds||[]).some(b=>b.to===c&&b.k==='r')}},
+         {label:'数字卡改成 5，圆的半径跟着变成 5',score:2,hint:'点数字卡，把值改成 5',target:T45('num'),check:(s,D)=>{const c=byType(s,'circle'),n=byType(s,'num');return s.entities[c].props.r===5&&s.entities[n].props.v===5}}]}
+];
+P16.forEach(p=>XP.push({id:p.id,title:p.title,domain:p.domain,grade:p.grade,tools:p.tools,q:p.q,why:p.why,build:p.build,steps:p.steps}));
 
 function startXp(id,m){xp=XP.find(x=>x.id===id);if(!xp)return;mode=m;S=blankScene();xp.build(S);undoSt=[];redoSt=[];sel=null;cardOpen=false;
   run={steps:xp.steps.map((s,i)=>({i,done:false})),ops:0,errors:0,t0:Date.now(),finished:false};
