@@ -81,7 +81,7 @@ g5_13 | full | 2/2 | set e1.y2=9
 g4_2 | none | 0/2 | 
 g4_16 | full | 2/2 | set e1.rabbits=12
 g5_2 | full | 2/2 | set e1.x=5 ; set e1.y=4
-g4_1 | none | 0/2 | 
+g4_1 | none | 0/3 | 
 g4_8 | none | 0/2 | 
 g4_14 | full | 2/2 | set e1.dx=3 ; set e1.mirror=1
 g5_12 | full | 2/2 | set e1.rot=90 ; set e1.rot=180

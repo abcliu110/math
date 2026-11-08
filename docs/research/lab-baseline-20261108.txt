@@ -81,7 +81,7 @@ g5_13 | steps=2 | initial=[false,false] | sig=["line:info:第二年比第一年�
 g4_2 | steps=2 | initial=[false,false] | sig=["mul:info:把几个数连进来，这里算它们的积（几个 × 几个）"]
 g4_16 | steps=2 | initial=[false,false] | sig=["cage:warn:腿 70，要 94：还差 24"]
 g5_2 | steps=2 | initial=[false,false] | sig=["pair:info:(3, 2)：第 3 列，第 2 行"]
-g4_1 | steps=2 | initial=[false,false] | sig=["mul:info:把几个数连进来，这里算它们的积（几个 × 几个）"]
+g4_1 | steps=3 | initial=[false,false,false] | sig=["mul:info:把几个数连进来，这里算它们的积（几个 × 几个）"]
 g4_8 | steps=2 | initial=[false,false] | sig=["adder:info:把几个数连进来，这里算它们的和"]
 g4_14 | steps=2 | initial=[false,false] | sig=["shape:info:没有平移，没有旋转，没有轴对称"]
 g5_12 | steps=2 | initial=[false,false] | sig=["shape:info:没有平移，没有旋转，没有轴对称"]
