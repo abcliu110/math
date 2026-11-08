@@ -4590,7 +4590,7 @@ const TYPES={
    fields:[{k:&#x27;times&#x27;,label:&#x27;一次掷几回&#x27;,min:10,max:2000,step:10}],actions:[{id:&#x27;roll&#x27;,label:&#x27;🎲 掷&#x27;},{id:&#x27;clear&#x27;,label:&#x27;清零&#x27;}],size:()=&gt;[320,210]},
  // 黑箱：输入一个数，按规则 y = a·x + b 输出。规则是学生要猜的东西。
  box:{label:&#x27;黑箱（输入 → 输出）&#x27;,group:&#x27;函数&#x27;,prefix:&#x27;黑箱&#x27;,out:&#x27;value&#x27;,accepts:&#x27;value&#x27;,defaults:{a:1,b:0,rule:0},
-   fields:[{k:&#x27;a&#x27;,label:&#x27;a（系数）&#x27;,min:-5,max:5},{k:&#x27;b&#x27;,label:&#x27;b&#x27;,min:-10,max:10},{k:&#x27;rule&#x27;,label:&#x27;规则&#x27;,min:0,max:2,choices:[&#x27;线性&#x27;,&#x27;平方&#x27;,&#x27;倒数&#x27;]}],size:()=&gt;[230,120]},
+   fields:[{k:&#x27;a&#x27;,label:&#x27;a（系数）&#x27;,min:-10,max:10},{k:&#x27;b&#x27;,label:&#x27;b&#x27;,min:-10,max:10},{k:&#x27;rule&#x27;,label:&#x27;规则&#x27;,min:0,max:2,choices:[&#x27;线性&#x27;,&#x27;平方&#x27;,&#x27;倒数&#x27;]}],size:()=&gt;[230,120]},
  // 数据表：四个数，输出合计、平均数或最大数。
  table:{ports:(p,e,E,D)=&gt;{const T=D[e.id].tab;return{sum:T.sum,mean:T.mean,max:T.max}},label:&#x27;数据表（四个数）&#x27;,group:&#x27;统计&#x27;,prefix:&#x27;数据表&#x27;,out:&#x27;value&#x27;,accepts:&#x27;value&#x27;,acceptsDist:true,dim:&#x27;count&#x27;,defaults:{a:4,b:8,c:6,d:10,which:0},
    fields:[{k:&#x27;a&#x27;,label:&#x27;第 1 个数&#x27;,min:0,max:50},{k:&#x27;b&#x27;,label:&#x27;第 2 个数&#x27;,min:0,max:50},{k:&#x27;c&#x27;,label:&#x27;第 3 个数&#x27;,min:0,max:50},{k:&#x27;d&#x27;,label:&#x27;第 4 个数&#x27;,min:0,max:50},{k:&#x27;which&#x27;,label:&#x27;输出（0 合计，1 平均，2 最大）&#x27;,min:0,max:2,choices:[&#x27;合计&#x27;,&#x27;平均&#x27;,&#x27;最大&#x27;]}],size:()=&gt;[240,150]},
@@ -5240,7 +5240,10 @@ svg.addEventListener(&#x27;pointerdown&#x27;,ev=&gt;{const t=ev.target;svg.setPo
 svg.addEventListener(&#x27;pointermove&#x27;,ev=&gt;{if(!drag)return;const [wx,wy]=toWorld(ev.clientX,ev.clientY);
   if(drag.m===&#x27;pan&#x27;){view.x=drag.vx+ev.clientX-drag.sx;view.y=drag.vy+ev.clientY-drag.sy;render()}
   else if(drag.m===&#x27;move&#x27;){if(!drag.moved&amp;&amp;Math.hypot(ev.clientX-drag.sx,ev.clientY-drag.sy)&lt;6)return;if(!drag.moved){undoSt.push(JSON.stringify(S));redoSt=[];drag.moved=true}
-    act({t:&#x27;move&#x27;,id:drag.id,x:Math.round((wx-drag.dx)/10)*10,y:Math.round((wy-drag.dy)/10)*10});render()}
+    const e=S.entities[drag.id];const [bw,bh]=size(e);const r=svg.getBoundingClientRect();const vx0=-view.x/view.z,vx1=(r.width-view.x)/view.z,vy0=-view.y/view.z,vy1=(r.height-view.y)/view.z;
+    let nx=Math.round((wx-drag.dx)/10)*10,ny=Math.round((wy-drag.dy)/10)*10;
+    nx=Math.min(Math.max(nx,vx0+10),Math.max(vx0+10,vx1-bw-10));ny=Math.min(Math.max(ny,vy0+10),Math.max(vy0+10,vy1-bh-10));
+    act({t:&#x27;move&#x27;,id:drag.id,x:nx,y:ny});render()}
   else if(drag.m===&#x27;resize&#x27;){const e=S.entities[drag.id];if(!e)return;if(!drag.moved&amp;&amp;Math.hypot(ev.clientX-drag.sx,ev.clientY-drag.sy)&lt;3)return;if(!drag.moved){undoSt.push(JSON.stringify(S));redoSt=[];drag.moved=true}
     // 大小 = 指针到器材左边的距离 ÷ 器材的基础宽度（act 里会限制在 50% 到 200%，并按 25% 取整）
     const base=TYPES[e.type].size(e)[0];act({t:&#x27;scale&#x27;,id:e.id,k:(wx-e.x)/base});D=evaluate(S);render()}
@@ -5541,11 +5544,11 @@ const P45=[
   build:s=&gt;{addEnt(s,&#x27;dice&#x27;,220,90)},
   steps:[{id:&#x27;g5_4:s1&#x27;,label:&#x27;掷 100 回&#x27;,score:1,hint:&#x27;点骰子，再点“掷”&#x27;,target:T45(&#x27;dice&#x27;),check:(s,D)=&gt;(D[byType(s,&#x27;dice&#x27;)].tot||0)&gt;=100},
          {id:&#x27;g5_4:s2&#x27;,label:&#x27;7 出现的次数最多&#x27;,score:2,hint:&#x27;看柱子，7 最高&#x27;,target:T45(&#x27;dice&#x27;),check:(s,D)=&gt;{const d=byType(s,&#x27;dice&#x27;);const c=s.entities[d].props.counts;return !!c&amp;&amp;c[7]===Math.max(...c.slice(2,13))}}]},
- {id:&#x27;g5_6&#x27;,grade:5,domain:&#x27;图形与几何&#x27;,tools:&#x27;长方形&#x27;,title:&#x27;长方形面积：长 3，宽从 2 改成 4，面积是几？&#x27;,q:&#x27;长方形面积 = 长 × 宽。现在长 3、宽 2，先把宽改成 4，再算面积。&#x27;,why:&#x27;4 × 3 = 12。&#x27;,
+ {id:&#x27;g3_12&#x27;,grade:3,domain:&#x27;图形与几何&#x27;,tools:&#x27;长方形&#x27;,title:&#x27;长方形面积：长 3，宽从 2 改成 4，面积是几？&#x27;,q:&#x27;长方形面积 = 长 × 宽。现在长 3、宽 2，先把宽改成 4，再算面积。&#x27;,why:&#x27;4 × 3 = 12。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;rect&#x27;,200,80,{w:2,h:3})},
-  steps:[{id:&#x27;g5_6:s0&#x27;,type:&#x27;predict&#x27;,expect:12,label:&#x27;先猜一猜：答案是多少？&#x27;,score:1,hint:&#x27;先算一算，写下你的预测，再动手做。&#x27;,target:T45(&#x27;rect&#x27;),check:()=&gt;false},
-          {id:&#x27;g5_6:s1&#x27;,label:&#x27;把宽改成 4&#x27;,score:1,hint:&#x27;点长方形卡，在属性卡里把宽调到 4&#x27;,target:T45(&#x27;rect&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;rect&#x27;)].props.w===4},
-         {id:&#x27;g5_6:s2&#x27;,label:&#x27;面积是 12&#x27;,score:2,hint:&#x27;看长方形卡上的面积&#x27;,target:T45(&#x27;rect&#x27;),check:(s,D)=&gt;D[byType(s,&#x27;rect&#x27;)].area===12}]},
+  steps:[{id:&#x27;g3_12:s0&#x27;,type:&#x27;predict&#x27;,expect:12,label:&#x27;先猜一猜：答案是多少？&#x27;,score:1,hint:&#x27;先算一算，写下你的预测，再动手做。&#x27;,target:T45(&#x27;rect&#x27;),check:()=&gt;false},
+          {id:&#x27;g3_12:s1&#x27;,label:&#x27;把宽改成 4&#x27;,score:1,hint:&#x27;点长方形卡，在属性卡里把宽调到 4&#x27;,target:T45(&#x27;rect&#x27;),check:(s,D)=&gt;s.entities[byType(s,&#x27;rect&#x27;)].props.w===4},
+         {id:&#x27;g3_12:s2&#x27;,label:&#x27;面积是 12&#x27;,score:2,hint:&#x27;看长方形卡上的面积&#x27;,target:T45(&#x27;rect&#x27;),check:(s,D)=&gt;D[byType(s,&#x27;rect&#x27;)].area===12}]},
  {id:&#x27;g5_7&#x27;,grade:5,domain:&#x27;数与代数&#x27;,tools:&#x27;除法器 · 合并器&#x27;,title:&#x27;植树问题：全长 60 米，每隔 5 米种一棵，要种几棵？&#x27;,q:&#x27;两端都种：间隔数 = 60 ÷ 5 = 12，棵数 = 间隔数 + 1。&#x27;,why:&#x27;60 ÷ 5 = 12，所以 12 + 1 = 13 棵。&#x27;,
   build:s=&gt;{addEnt(s,&#x27;num&#x27;,60,60,{v:60});addEnt(s,&#x27;num&#x27;,60,170,{v:5});addEnt(s,&#x27;div&#x27;,330,100);addEnt(s,&#x27;num&#x27;,60,280,{v:1});addEnt(s,&#x27;adder&#x27;,520,140)},
   steps:[{id:&#x27;g5_7:s1&#x27;,label:&#x27;60 接左边，5 接右边&#x27;,score:1,hint:&#x27;算出间隔数&#x27;,target:T45(&#x27;div&#x27;),check:(s,D)=&gt;P45H.slot(s,D,&#x27;div&#x27;,&#x27;L&#x27;,Q(60))&amp;&amp;P45H.slot(s,D,&#x27;div&#x27;,&#x27;R&#x27;,Q(5))},
@@ -47688,10 +47691,11 @@ function adjacentPoints(id) {
 const LAB_POINT_XP = {
   '1.1':'g1p01','1.3':'g1p03','1.4':'g1p04','1.6':'g1p06','1.7':'g1p07','1.8':'g1p08','1.9':'g1p09',
   '1.11':'g1p11','1.13':'g1p13','1.14':'g1p14','1.15':'g1p15',
+  '3.12':'g3_12',
   '4.1':'g4_1','4.2':'g4_2','4.3':'g4_3','4.4':'g4_4','4.5':'g4_5','4.6':'g4_6','4.7':'g4_7','4.8':'g4_8',
   '4.9':'g4_9','4.10':'g4_10','4.11':'g4_11','4.12':'g4_12','4.13':'g4_13','4.14':'g4_14','4.15':'g4_15',
   '4.16':'g4_16','4.17':'g4_17',
-  '5.1':'g5_1','5.2':'g5_2','5.3':'g5_3','5.4':'g5_4','5.5':'g5_5','5.6':'g5_6','5.7':'g5_7','5.8':'g5_8',
+  '5.1':'g5_1','5.2':'g5_2','5.3':'g5_3','5.4':'g5_4','5.5':'g5_5','5.7':'g5_7','5.8':'g5_8',
   '5.9':'g5_9','5.10':'g5_10','5.11':'g5_11','5.12':'g5_12','5.13':'g5_13','5.14':'g5_14',
   '7.1':'g7_1','7.2':'g7_2','7.3':'g7_3','7.8':'g7_8','7.9':'g7_9','7.10':'g7_10','7.12':'g7_12','7.13':'g7_13','7.16':'g7_16',
   '8.1':'g8_1','8.3':'g8_3','8.5':'g8_5','8.9':'g8_9','8.13':'g8_13','8.14':'g8_14','8.15':'g8_15',

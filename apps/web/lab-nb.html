@@ -254,7 +254,7 @@ const TYPES={
    fields:[{k:'times',label:'一次掷几回',min:10,max:2000,step:10}],actions:[{id:'roll',label:'🎲 掷'},{id:'clear',label:'清零'}],size:()=>[320,210]},
  // 黑箱：输入一个数，按规则 y = a·x + b 输出。规则是学生要猜的东西。
  box:{label:'黑箱（输入 → 输出）',group:'函数',prefix:'黑箱',out:'value',accepts:'value',defaults:{a:1,b:0,rule:0},
-   fields:[{k:'a',label:'a（系数）',min:-5,max:5},{k:'b',label:'b',min:-10,max:10},{k:'rule',label:'规则',min:0,max:2,choices:['线性','平方','倒数']}],size:()=>[230,120]},
+   fields:[{k:'a',label:'a（系数）',min:-10,max:10},{k:'b',label:'b',min:-10,max:10},{k:'rule',label:'规则',min:0,max:2,choices:['线性','平方','倒数']}],size:()=>[230,120]},
  // 数据表：四个数，输出合计、平均数或最大数。
  table:{ports:(p,e,E,D)=>{const T=D[e.id].tab;return{sum:T.sum,mean:T.mean,max:T.max}},label:'数据表（四个数）',group:'统计',prefix:'数据表',out:'value',accepts:'value',acceptsDist:true,dim:'count',defaults:{a:4,b:8,c:6,d:10,which:0},
    fields:[{k:'a',label:'第 1 个数',min:0,max:50},{k:'b',label:'第 2 个数',min:0,max:50},{k:'c',label:'第 3 个数',min:0,max:50},{k:'d',label:'第 4 个数',min:0,max:50},{k:'which',label:'输出（0 合计，1 平均，2 最大）',min:0,max:2,choices:['合计','平均','最大']}],size:()=>[240,150]},
@@ -904,7 +904,10 @@ svg.addEventListener('pointerdown',ev=>{const t=ev.target;svg.setPointerCapture(
 svg.addEventListener('pointermove',ev=>{if(!drag)return;const [wx,wy]=toWorld(ev.clientX,ev.clientY);
   if(drag.m==='pan'){view.x=drag.vx+ev.clientX-drag.sx;view.y=drag.vy+ev.clientY-drag.sy;render()}
   else if(drag.m==='move'){if(!drag.moved&&Math.hypot(ev.clientX-drag.sx,ev.clientY-drag.sy)<6)return;if(!drag.moved){undoSt.push(JSON.stringify(S));redoSt=[];drag.moved=true}
-    act({t:'move',id:drag.id,x:Math.round((wx-drag.dx)/10)*10,y:Math.round((wy-drag.dy)/10)*10});render()}
+    const e=S.entities[drag.id];const [bw,bh]=size(e);const r=svg.getBoundingClientRect();const vx0=-view.x/view.z,vx1=(r.width-view.x)/view.z,vy0=-view.y/view.z,vy1=(r.height-view.y)/view.z;
+    let nx=Math.round((wx-drag.dx)/10)*10,ny=Math.round((wy-drag.dy)/10)*10;
+    nx=Math.min(Math.max(nx,vx0+10),Math.max(vx0+10,vx1-bw-10));ny=Math.min(Math.max(ny,vy0+10),Math.max(vy0+10,vy1-bh-10));
+    act({t:'move',id:drag.id,x:nx,y:ny});render()}
   else if(drag.m==='resize'){const e=S.entities[drag.id];if(!e)return;if(!drag.moved&&Math.hypot(ev.clientX-drag.sx,ev.clientY-drag.sy)<3)return;if(!drag.moved){undoSt.push(JSON.stringify(S));redoSt=[];drag.moved=true}
     // 大小 = 指针到器材左边的距离 ÷ 器材的基础宽度（act 里会限制在 50% 到 200%，并按 25% 取整）
     const base=TYPES[e.type].size(e)[0];act({t:'scale',id:e.id,k:(wx-e.x)/base});D=evaluate(S);render()}
@@ -1205,11 +1208,11 @@ const P45=[
   build:s=>{addEnt(s,'dice',220,90)},
   steps:[{id:'g5_4:s1',label:'掷 100 回',score:1,hint:'点骰子，再点“掷”',target:T45('dice'),check:(s,D)=>(D[byType(s,'dice')].tot||0)>=100},
          {id:'g5_4:s2',label:'7 出现的次数最多',score:2,hint:'看柱子，7 最高',target:T45('dice'),check:(s,D)=>{const d=byType(s,'dice');const c=s.entities[d].props.counts;return !!c&&c[7]===Math.max(...c.slice(2,13))}}]},
- {id:'g5_6',grade:5,domain:'图形与几何',tools:'长方形',title:'长方形面积：长 3，宽从 2 改成 4，面积是几？',q:'长方形面积 = 长 × 宽。现在长 3、宽 2，先把宽改成 4，再算面积。',why:'4 × 3 = 12。',
+ {id:'g3_12',grade:3,domain:'图形与几何',tools:'长方形',title:'长方形面积：长 3，宽从 2 改成 4，面积是几？',q:'长方形面积 = 长 × 宽。现在长 3、宽 2，先把宽改成 4，再算面积。',why:'4 × 3 = 12。',
   build:s=>{addEnt(s,'rect',200,80,{w:2,h:3})},
-  steps:[{id:'g5_6:s0',type:'predict',expect:12,label:'先猜一猜：答案是多少？',score:1,hint:'先算一算，写下你的预测，再动手做。',target:T45('rect'),check:()=>false},
-          {id:'g5_6:s1',label:'把宽改成 4',score:1,hint:'点长方形卡，在属性卡里把宽调到 4',target:T45('rect'),check:(s,D)=>s.entities[byType(s,'rect')].props.w===4},
-         {id:'g5_6:s2',label:'面积是 12',score:2,hint:'看长方形卡上的面积',target:T45('rect'),check:(s,D)=>D[byType(s,'rect')].area===12}]},
+  steps:[{id:'g3_12:s0',type:'predict',expect:12,label:'先猜一猜：答案是多少？',score:1,hint:'先算一算，写下你的预测，再动手做。',target:T45('rect'),check:()=>false},
+          {id:'g3_12:s1',label:'把宽改成 4',score:1,hint:'点长方形卡，在属性卡里把宽调到 4',target:T45('rect'),check:(s,D)=>s.entities[byType(s,'rect')].props.w===4},
+         {id:'g3_12:s2',label:'面积是 12',score:2,hint:'看长方形卡上的面积',target:T45('rect'),check:(s,D)=>D[byType(s,'rect')].area===12}]},
  {id:'g5_7',grade:5,domain:'数与代数',tools:'除法器 · 合并器',title:'植树问题：全长 60 米，每隔 5 米种一棵，要种几棵？',q:'两端都种：间隔数 = 60 ÷ 5 = 12，棵数 = 间隔数 + 1。',why:'60 ÷ 5 = 12，所以 12 + 1 = 13 棵。',
   build:s=>{addEnt(s,'num',60,60,{v:60});addEnt(s,'num',60,170,{v:5});addEnt(s,'div',330,100);addEnt(s,'num',60,280,{v:1});addEnt(s,'adder',520,140)},
   steps:[{id:'g5_7:s1',label:'60 接左边，5 接右边',score:1,hint:'算出间隔数',target:T45('div'),check:(s,D)=>P45H.slot(s,D,'div','L',Q(60))&&P45H.slot(s,D,'div','R',Q(5))},
