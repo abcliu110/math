@@ -3394,6 +3394,33 @@ window.addEventListener('message', function (e) {
   if (!e.data || e.data.type !== 'labNbExam' || !f || e.source !== f.contentWindow) return;
   labNbRecord(e.data.payload);
 });
+/* A1 学习闭环：实验台练习完成时发来 labNbPractice，记进复习库（math-review-v1），
+   让练过的内容出现在今天复习 / 错题本 / 家长端本周小结里。不写跨次统计
+   （math-lab-proc-v1 只记考试，“考过 N 次”的含义不变）。不改界面、不改存储结构。 */
+function labNbPractice(p) {
+  if (!p || !p.lines || !p.lines.length) return;
+  var pointId = '';
+  for (var pid in LAB_POINT_XP) { if (LAB_POINT_XP[pid] === p.labId) { pointId = pid; break; } }
+  if (!pointId) return; // 非知识点实验没有知识点可复习
+  // 猜错预测步 = 当错记（明天复习，streak 清零）；做对但被拒过 = 对但不自信（明天复习）；
+  // 干净做对 = 3 天（连对 ≥2 次 → 7 天）。走 recordAttempt 现有语义。
+  var correct = p.lines.every(function (l) { return l.got; });
+  var confident = (p.errorCount || 0) === 0;
+  recordAttempt(pointId, correct, confident);
+  // 按步的成绩以附加字段存下，供以后按步显示用；现在没有任何界面读它。
+  syncReviewFromStorage();
+  var rec = reviewStore[pointId];
+  if (rec) {
+    rec.steps = {};
+    p.lines.forEach(function (l) { rec.steps[l.id] = { got: !!l.got, op: l.op || 0 }; });
+    saveReview();
+  }
+}
+window.addEventListener('message', function (e) {
+  const f = document.getElementById('labNbFrame');
+  if (!e.data || e.data.type !== 'labNbPractice' || !f || e.source !== f.contentWindow) return;
+  labNbPractice(e.data.payload);
+});
 function procHistSummaryHtml(labId) {
   const e = procHistLoad()[labId];
   if (!e) return '<p class="muted">还没有考试记录。挑战模式交卷后，这里会记下每一步的丢分次数。</p>';

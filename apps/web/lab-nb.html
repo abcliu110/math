@@ -1584,7 +1584,12 @@ $('submit').onclick=()=>submitExam(false);
 // 预测步骤：猜对才得分；猜错只是这一步不得分，不扣别的步。
 function score(){return xp.steps.reduce((a,s,i)=>a+(run.steps[i].done&&(s.type!=='predict'||run.steps[i].pred===s.expect)?s.score:0),0)}
 $('paneSteps').addEventListener('click',ev=>{const b=ev.target.closest('[data-predict]');if(!b||!run||!xp)return;const i=+b.dataset.predict;const inp=$('paneSteps').querySelector(`[data-predict-input="${i}"]`);if(!inp||inp.value.trim()==='')return;run.steps[i].pred=Number(inp.value);track();renderSteps();render()});
-function practiceDone(){modal(`<h3>练习完成 🎉</h3><p>${xp.steps.length} 步全部做对，用了 ${run.ops} 次操作${run.errors?`，有 ${run.errors} 次被台面拒绝`:''}。</p><div class="q"><b>为什么</b><div>${esc(xp.why)}</div></div><div style="display:flex;gap:8px"><button class="btn" data-m="re">再练一次</button><button class="btn pri" data-m="exam">进入考试</button><button class="btn" data-m="lib">返回实验库</button></div>`)}
+function practiceDone(){
+  // A1：练习完成时把成绩交给主应用记进复习库（只发一次；没做完不记）。
+  // 预测步只有猜对了才算对——练习里唯一真正的“丢分”就是猜错。
+  if(!run.practicePosted){run.practicePosted=true;const tot=xp.steps.reduce((a,s)=>a+s.score,0);
+    try{window.parent&&window.parent!==window&&window.parent.postMessage({type:'labNbPractice',payload:{labId:xp.id,title:xp.title,score:score(),max:tot,opCount:run.ops,errorCount:run.errors||0,usedMs:Date.now()-run.t0,lines:xp.steps.map((s,i)=>({id:s.label,got:!!run.steps[i].done&&(s.type!=='predict'||run.steps[i].pred===s.expect),op:run.steps[i].op||0}))}},'*')}catch(e){}}
+  modal(`<h3>练习完成 🎉</h3><p>${xp.steps.length} 步全部做对，用了 ${run.ops} 次操作${run.errors?`，有 ${run.errors} 次被台面拒绝`:''}。</p><div class="q"><b>为什么</b><div>${esc(xp.why)}</div></div><div style="display:flex;gap:8px"><button class="btn" data-m="re">再练一次</button><button class="btn pri" data-m="exam">进入考试</button><button class="btn" data-m="lib">返回实验库</button></div>`)}
 function submitExam(auto){if(mode!=='exam'||!run)return;clearInterval(timerId);timerId=null;const tot=xp.steps.reduce((a,s)=>a+s.score,0),sc=score();const used=Math.round((Date.now()-run.t0)/1000);
   const H=hist(),h=H[xp.id]||{n:0,lost:{}};h.n++;h.last=`${sc}/${tot}`;xp.steps.forEach((s,i)=>{if(!run.steps[i].done)h.lost[s.label]=(h.lost[s.label]||0)+1});const w=Object.entries(h.lost).sort((a,b)=>b[1]-a[1])[0];h.worst=w?w[0]:'';H[xp.id]=h;localStorage.setItem(LS.hist,JSON.stringify(H));
   // 把考试结果交给主应用（跨次统计）：主页面收到 labNbExam 消息后记入 math-lab-proc-v1。
