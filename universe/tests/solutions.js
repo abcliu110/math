@@ -52,4 +52,12 @@ module.exports = {
   'eq-take-away'(h) { const s = h.role('s'); h.set(s, 'lc', 0); h.set(s, 'rc', 7); },
   'eq-divide'(h) { const s = h.role('s'); h.set(s, 'lx', 1); h.set(s, 'rc', 5); },
   'eq-both-sides'(h) { const s = h.role('s'); h.set(s, 'lx', 2); h.set(s, 'rx', 0); h.set(s, 'lc', 0); h.set(s, 'rc', 6); h.set(s, 'lx', 1); h.set(s, 'rc', 3); },
+'para-area'(h) { const p = h.role('pg'); h.set(p, 'b', 6); h.set(p, 'h', 4); },
+'cut-invariant'(h) { h.set(h.role('pg'), 's', 8); },
+  'model-two-ways'(h) { const l1 = h.role('l1'), l2 = h.role('l2'), c = h.role('x'), heads = h.role('heads'), legs = h.role('legs'), two = h.role('two'); const o1 = h.add('op', { op: 2 }); h.link(heads, o1, 'a'); h.link(two, o1, 'b'); const o2 = h.add('op', { op: 1 }); h.link(legs, o2, 'a'); h.link(o1, o2, 'b'); const o3 = h.add('op', { op: 3 }); h.link(o2, o3, 'a'); h.link(two, o3, 'b'); h.set(l1, 'k', -1); h.set(l1, 'b', 35); h.set(l2, 'k', -0.5); h.set(l2, 'b', 23.5); h.link(l1, c, 'f'); h.link(l2, c, 'g'); },
+  'model-rent'(h) { const a = h.role('a'), b = h.role('b'), c = h.role('x'); h.set(a, 'b', 20); h.set(b, 'k', 1.5); h.link(a, c, 'f'); h.link(b, c, 'g'); },
+  'one-to-one'(h) { const ch = h.role('chairs'), g = h.role('guests'); const c = h.add('compare'); h.link(ch, c, 'a'); h.link(g, c, 'b'); h.set(ch, 'cols', 3); },
+  'counting-matching'(h) { const gr = h.role('grid'); h.set(gr, 'cols', 4); const o = h.add('op', { op: 3 }); h.link(gr, o, 'a'); h.link(h.role('half'), o, 'b'); },
+  'fold-square-half'(h) { const f = h.role('f'); h.set(f, 'fold', 1); h.set(f, 'angle', 90); },
+  'fold-diagonal'(h) { const f = h.role('f'); h.set(f, 'fold', 1); h.set(f, 'angle', 45); },
 };
