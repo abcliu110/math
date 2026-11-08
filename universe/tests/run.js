@@ -2,7 +2,8 @@
 'use strict';
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const root = path.join(__dirname, '..');
-const files = ['js/core/rational.js', 'js/core/kinds.js', 'js/core/registry.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'packs/core.js', 'packs/time.js', 'packs/stats.js', 'packs/geometry.js', 'problems/starter.js', 'problems/more.js'];
+const fsx = require('fs'), pk = (d) => fsx.readdirSync(path.join(root, d)).filter((f) => f.endsWith('.js')).sort().map((f) => d + '/' + f);
+const files = ['js/core/rational.js', 'js/core/kinds.js', 'js/core/registry.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
 const ctx = vm.createContext({ console });
 ctx.globalThis = ctx;
 for (const f of files) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f });
@@ -92,6 +93,27 @@ t('计数回路题可以通关', () => {
   for (let i = 0; i < 12; i++) J.check(p, run, s, W.tick(s));
   eq(J.score(p, run).got, J.score(p, run).max, '满分'); eq(run.finished, true);
 });
+
+console.log('参考解回归（每道题都必须能通关）');
+const SOL = require('./solutions.js');
+for (const p of U.problems) {
+  t('题目 ' + p.id + ' 有参考解且能通关', () => {
+    const fn = SOL[p.id]; if (!fn) throw new Error('缺参考解：在 tests/solutions.js 里补一条');
+    const s = p.build(), J2 = U.Judge, run = J2.start(p, 'practice');
+    J2.check(p, run, s, W.evaluate(s)); run.armed = true; run.ops = 1;
+    const chk = () => J2.check(p, run, s, W.evaluate(s));
+    const h = {
+      add(type, props) { const r = W.act(s, { t: 'add', type, x: 0, y: 0, props }); if (!r.ok) throw new Error(r.why); chk(); return r.id; },
+      link(from, to, toPort, fromPort) { const r = W.act(s, { t: 'link', from, to, toPort, fromPort }); if (!r.ok) throw new Error('连线失败：' + r.why); chk(); },
+      set(id, k, v) { const r = W.act(s, { t: 'set', id, k, v }); if (!r.ok) throw new Error(r.why); chk(); },
+      role(r) { const e = Object.values(s.entities).find((x) => x.role === r); if (!e) throw new Error('没有角色 ' + r); return e.id; },
+      run(n) { for (let i = 0; i < n; i++) { J2.check(p, run, s, W.tick(s)); } },
+    };
+    fn(h); chk();
+    const goal = p.goal || p.milestones.map((m) => m.id), miss = goal.filter((id) => !run.ms[id].done);
+    if (miss.length) throw new Error('没通过的里程碑：' + miss.join(','));
+  });
+}
 
 console.log('\n' + pass + ' 通过，' + fail + ' 失败');
 process.exit(fail ? 1 : 0);

@@ -26,3 +26,7 @@ U.registerPack({ id:'mypack', types:{ foo:{
 ## 加一道题（problems/*.js）
 `{id,title,grade,domain,points,hook,shelf,build(),predict?,milestones:[{id,say,score,when,hints:[3层],glow?}],traps,goal,why,ref}`。
 `when` 用数据形式或函数；开场已满足的里程碑必须先变假再变真才给分。
+
+## 参考解回归（新增题目必做）
+`tests/solutions.js` 里每道题一条参考解（`h.add/link/set/role/run`）。`node tests/run.js` 会逐题自动搭一遍并要求通关；缺参考解的题目直接报错。
+`tests/run.js`、`tools/check-types.js` 会自动加载 `packs/*.js` 和 `problems/*.js`；`index.html` 里的 `<script>` 仍需手动加一行。

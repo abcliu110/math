@@ -112,7 +112,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .port.ok { box-shadow: 0 0 0 5px #12a36b88; }
 .port.no { box-shadow: 0 0 0 5px #e5484d88; }
 .port:hover { transform: translate(-50%, -50%) scale(1.25); }
-.pl { position: absolute; font-size: 10px; color: #7a869c; transform: translateY(-50%); pointer-events: none; white-space: nowrap; }
+.pl { opacity: .4; transition: opacity .15s; position: absolute; font-size: 10px; color: #7a869c; transform: translateY(-50%); pointer-events: none; white-space: nowrap; }
 .pill { position: absolute; width: 92px; height: 22px; line-height: 20px; border-radius: 11px; background: #fff; color: var(--ink); border: 2px solid #aab4c8; font-size: 11px; text-align: center; transform: translateY(-50%); cursor: crosshair; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px; }
 .pill.driven { background: #dff3ea; border-color: var(--good); }
 .pill.ok { border-color: var(--good); box-shadow: 0 0 0 4px #12a36b66; }
@@ -184,3 +184,4 @@ input, select, textarea { font: inherit; color: inherit; }
   #right.open { transform: none; }
   #top { gap: 6px; padding: 0 8px; } .tbtn.hm { display: none; }
 }
+.card:hover .pl, .card.sel .pl { opacity: 1; }
