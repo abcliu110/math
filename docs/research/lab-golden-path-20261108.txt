@@ -146,9 +146,9 @@ g9_16 | full | 2/2 | set e1.view=0
 g7_74 | none | 0/2 | 
 g7_75 | none | 0/2 | 
 g9_98 | full | 2/2 | set e1.r=3 ; set e2.c=120
-g8_box | partial | 2/3 | link e1->e2 ; set e2.b=4
+g8_box | full | 3/3 | link e1->e2 ; set e1.v=5
 g5_table | none | 0/2 | 
 g5_sym | none | 0/2 | 
 g5_cmp | none | 0/2 | 
 g6_bind | none | 0/2 | 
-GOLDEN_END full=61 of 152
+GOLDEN_END full=62 of 152
