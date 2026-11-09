@@ -68,5 +68,6 @@ module.exports = {
 'plan-choose'(h) { const c = h.role('c'); h.set(c, 'x', 300); h.set(c, 'x', 600); },
   'pour-conserve'(h) { h.set(h.role('p'), 'pour', 1); },
   'pour-two-cups'(h) { const p = h.role('p'); h.set(p, 'a', 5); h.set(p, 'pour', 1); h.set(p, 'a', 2); h.set(p, 'b', 3); h.set(p, 'b', 0); h.set(p, 'a', 0); h.set(p, 'b', 2); h.set(p, 'a', 5); },
+  'car-model-proportional'(h) { const f = h.add('fit', { model: 0 }), pr = h.add('predict', { x: 5 }); h.link(h.role('data'), f, 't', 't'); h.link(f, pr, 'f', 'f'); },
   'nth-tenth'(h) { const g = h.role('g'); h.set(g, 'a', 2); h.set(g, 'b', 1); h.run(10); },
 };

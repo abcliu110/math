@@ -31,6 +31,9 @@
   R('fig.shoelace', { label: '鞋带公式：用坐标求多边形面积', essence: ['E2', 'E5'], grade: [6, 9] });
   R('tri.inequality', { label: '三角形任意两边之和大于第三边', essence: ['E2'], grade: [4, 7] });
   R('tri.pythagoras', { label: '勾股：两直角边的平方和等于斜边的平方', essence: ['E5'], grade: [8, 9] });
+  // 数据与建模（任务 C）
+  R('fit.least-squares', { label: '最小二乘：让直线与各点的偏差平方和最小', essence: ['E7', 'E8'], grade: [7, 9] });
+  R('model.predict', { label: '模型预测：把 x 代入直线，得到的是预测而不是测量', essence: ['E12'], grade: [7, 9] });
   // 兜底：器材没有更细的说法时用
   R('device.output', { label: '这台器材按它的规则算出的结果', essence: [], grade: [1, 9] });
 })(typeof globalThis !== 'undefined' ? globalThis : window);

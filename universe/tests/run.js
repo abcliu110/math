@@ -3,7 +3,7 @@
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const root = path.join(__dirname, '..');
 const fsx = require('fs'), pk = (d) => fsx.readdirSync(path.join(root, d)).filter((f) => f.endsWith('.js')).sort().map((f) => d + '/' + f);
-const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/eqn.js', 'js/core/figure.js', 'js/core/convert.js', 'js/core/registry.js', 'js/core/rules.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
+const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/eqn.js', 'js/core/table.js', 'js/core/figure.js', 'js/core/convert.js', 'js/core/registry.js', 'js/core/rules.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
 const ctx = vm.createContext({ console, TextEncoder, TextDecoder, btoa, atob });
 ctx.globalThis = ctx;
 for (const f of files) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f });
@@ -741,6 +741,48 @@ t('已有器材输出方程：变量盒输出左 = 右；解方程天平输出�
   const D = W.evaluate(sc); eq(U.KINDS.eqn.show(D[v].out.eq.data), '2x + 1 = x + 3');
   const sc2 = W.blank(); const b = W.add(sc2, 'eqscale', 0, 0, {});
   const D2 = W.evaluate(sc2); truthy(D2[b].out.eq && D2[b].out.eq.kind === 'eqn', '天平应输出方程');
+});
+console.log('数据表与拟合（C）');
+const TT = U.Table, tbl = (rows) => TT.make(['时间', '路程'], rows);
+t('正比例拟合：(1,60) (2,120) (3,180) 的 k 精确等于 60，残差为 0', () => {
+  const r = TT.fitProportional(tbl([[1, 60], [2, 120], [3, 180]]), 0, 1); eq(r.kind, 'fn'); eq(r.k, Q(60)); eq(TT.sse(r.residuals), Q(0));
+});
+t('一次拟合（带小数的测量）：系数是有理数，与手算的最小二乘完全相等', () => {
+  // 手算：n=4，Σx=10，Σy=20，Σxy=59.7，Σx²=30 → k = (4·59.7 − 10·20)/(4·30 − 100) = 97/50，b = (20 − 10·97/50)/4 = 3/20
+  const r = TT.fitLinear(tbl([[1, 2.1], [2, 3.9], [3, 6.2], [4, 7.8]]), 0, 1);
+  eq(r.kind, 'fn'); eq(r.k, Q(97, 50)); eq(r.b, Q(3, 20)); truthy(r.steps.length >= 3);
+});
+t('单位：时间 + 路程不允许；路程 ÷ 时间 得到“速度”，有中文名', () => {
+  truthy(!U.Dim.add('time', 'length').ok, '不同量纲不能相加');
+  eq(U.Dim.div('length', 'time'), 'speed'); eq(U.Dim.name('speed'), '速度');
+  eq(U.Dim.mul('speed', 'time'), 'length'); eq(U.Dim.name(U.Dim.div('weight', 'volume')), '密度');
+});
+t('数据表：文字录入、小数转精确有理数；数据不对时说明原因', () => {
+  eq(TT.parseRows('1,60;2,120').length, 2);
+  eq(TT.parseRows('0.5,1')[0][0], Q(1, 2));
+  truthy(/数不对/.test(String(thr(() => TT.parseRows('1,abc')))));
+});
+function thr(f) { try { f(); return ''; } catch (e) { return e.message; } }
+t('建模链：数据表 → 拟合器（正比例）→ 预测器，预测结果标明是预测', () => {
+  const sc = W.blank(); const d = W.add(sc, 'datatable', 0, 0, { data: '1,60;2,120;3,180', xname: '时间', yname: '路程' });
+  const f = W.add(sc, 'fit', 0, 0, { model: 0, xcol: 0, ycol: 1 }), pr = W.add(sc, 'predict', 0, 0, { x: 5, note: true });
+  W.act(sc, { t: 'link', from: d, fromPort: 't', to: f, toPort: 't' }); W.act(sc, { t: 'link', from: f, fromPort: 'f', to: pr, toPort: 'f' });
+  const D = W.evaluate(sc); eq(U.showVal(D[f].out.k), '60'); eq(U.showVal(D[pr].out.y), '300');
+  truthy(D[pr].sig.some((x) => /不是测量值/.test(x.tx)));
+  truthy(D[pr].trace.steps.some((x) => x.rule === 'model.predict'));
+});
+t('取列 → seq；取不存在的列时说明原因；散点图标出点的个数', () => {
+  const sc = W.blank(); const d = W.add(sc, 'datatable', 0, 0, { data: '1,2;3,4' }), c = W.add(sc, 'column', 0, 0, { col: 1 }), bad = W.add(sc, 'column', 0, 0, { col: 3 }), sp = W.add(sc, 'scatter', 0, 0, {});
+  W.act(sc, { t: 'link', from: d, fromPort: 't', to: c, toPort: 't' }); W.act(sc, { t: 'link', from: d, fromPort: 't', to: sp, toPort: 't' });
+  const refused = W.act(sc, { t: 'link', from: d, fromPort: 't', to: bad, toPort: 't' }); eq(refused.ok, false); truthy(/只有 2 列/.test(refused.why), refused.why);
+  const D = W.evaluate(sc); eq(D[c].out.s.data.map((q) => q.n), [2, 4]); eq(U.showVal(D[sp].out.n), '2');
+});
+t('建模题模板 lint：三步都要有里程碑；拟合最高只到 ①', () => {
+  const base = { id: 'mx', title: 't', milestones: [{ id: 'a', score: 1, when: { type: 'num', port: 'v', op: '=', value: '1' } }, { id: 'b', score: 1, when: { type: 'num', port: 'v', op: '=', value: '2' } }, { id: 'c', score: 1, when: { type: 'num', port: 'v', op: '=', value: '3' } }],
+    model: { situation: '匀速行驶', quantities: [{ name: '时间' }, { name: '路程' }], relation: 'linear', check: '预测第 5 小时', steps: { choose: 'a', function: 'b', check: 'c' } } };
+  eq(TT.lintModel(base).errors, []);
+  truthy(TT.lintModel(Object.assign({}, base, { model: Object.assign({}, base.model, { steps: { choose: 'a' } }) })).errors.some((m) => /缺少/.test(m)));
+  truthy(TT.lintModel(Object.assign({}, base, { evidence: 3 })).errors.some((m) => /①/.test(m)));
 });
 console.log('输出声明（1.2）');
 t('lint 拒绝没有声明 dim 的输出口', () => {

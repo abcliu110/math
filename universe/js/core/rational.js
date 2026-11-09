@@ -57,8 +57,8 @@
   // ---- 量纲 ----
   // key 与界面名字一一对应；null 表示“没标单位”，参与运算时让位给另一边。
   const DIM = {
-    keys: [null, 'count', 'length', 'area', 'volume', 'weight', 'money', 'time', 'ratio'],
-    names: ['无', '个数', '长度', '面积', '体积', '重量', '钱', '时间', '比值'],
+    keys: [null, 'count', 'length', 'area', 'volume', 'weight', 'money', 'time', 'ratio', 'speed', 'unitprice', 'density'],
+    names: ['无', '个数', '长度', '面积', '体积', '重量', '钱', '时间', '比值', '速度', '单价（每斤）', '密度'],
     key(i) { return DIM.keys[i] === undefined ? null : DIM.keys[i]; },
     idx(k) { const i = DIM.keys.indexOf(k === undefined ? null : k); return i < 0 ? 0 : i; },
     name(k) { if (k === null || k === undefined) return '无'; if (typeof k === 'string' && k.startsWith('other')) return '没有名字的量'; return DIM.names[DIM.idx(k)]; },
@@ -67,12 +67,12 @@
     mul(a, b) {
       if (!a) return b; if (!b) return a;
       const k = [a, b].sort().join('*');
-      const T = { 'length*length': 'area', 'area*length': 'volume', 'count*count': 'count', 'count*money': 'money', 'count*weight': 'weight', 'count*length': 'length', 'count*area': 'area', 'count*time': 'time', 'length*ratio': 'length', 'money*ratio': 'money', 'ratio*weight': 'weight', 'ratio*time': 'time', 'ratio*ratio': 'ratio', 'area*ratio': 'area', 'count*ratio': 'count' };
+      const T = { 'speed*time': 'length', 'density*volume': 'weight', 'unitprice*weight': 'money', 'length*length': 'area', 'area*length': 'volume', 'count*count': 'count', 'count*money': 'money', 'count*weight': 'weight', 'count*length': 'length', 'count*area': 'area', 'count*time': 'time', 'length*ratio': 'length', 'money*ratio': 'money', 'ratio*weight': 'weight', 'ratio*time': 'time', 'ratio*ratio': 'ratio', 'area*ratio': 'area', 'count*ratio': 'count' };
       return T[k] || 'other:' + k;
     },
     div(a, b) {
       if (!b) return a; if (a === b) return 'ratio'; if (!a) return 'other:1/' + b;
-      const T = { 'area/length': 'length', 'volume/area': 'length', 'volume/length': 'area', 'money/count': 'money', 'weight/count': 'weight', 'length/count': 'length', 'area/count': 'area', 'time/count': 'time', 'count/ratio': 'count', 'length/ratio': 'length', 'money/ratio': 'money', 'weight/ratio': 'weight', 'time/ratio': 'time' };
+      const T = { 'length/time': 'speed', 'money/weight': 'unitprice', 'weight/volume': 'density', 'length/speed': 'time', 'weight/density': 'volume', 'money/unitprice': 'weight', 'area/length': 'length', 'volume/area': 'length', 'volume/length': 'area', 'money/count': 'money', 'weight/count': 'weight', 'length/count': 'length', 'area/count': 'area', 'time/count': 'time', 'count/ratio': 'count', 'length/ratio': 'length', 'money/ratio': 'money', 'weight/ratio': 'weight', 'time/ratio': 'time' };
       return T[a + '/' + b] || 'other:' + a + '/' + b;
     },
   };

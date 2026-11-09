@@ -145,3 +145,12 @@ U.registerPack({ id:'mypack', types:{ foo:{
 - `U.Interval`：`make / contains / show / fromLinear`。
 - 器材包 `packs/algebra.js`：代数式卡、方程台（输出方程、解、解集、恒等式）、代入器、方程组台、解集数轴。变量盒与解方程天平也输出 `eqn`。
 - 数字卡可以直接接进只收多项式的口（num → poly）。
+
+## 数据、拟合与建模（任务 C）
+
+- 复合量纲：速度（长度/时间）、单价（钱/重量）、密度（重量/体积），`U.Dim.div / mul / name` 已支持，并有中文名。
+- kind `table`：`{ cols: [{name, dim}], rows: [[有理数…]] }`。`U.Table.make / parseRows`（文字录入，小数转精确有理数）。
+- `U.Table.fitProportional(t, xi, yi)`：k = Σxy / Σx²；`U.Table.fitLinear(t, xi, yi)`：正规方程，精确有理数，返回 `{kind:'fn', k, b, residuals, steps}`。`U.Table.sse`。
+- 器材包 `packs/modeling.js`：数据表（文字录入）、取列（table → seq）、散点图、拟合器（正比例 / 一次，输出 fn、k、b）、预测器（标明“这是模型给的预测，不是测量值”）。
+- 建模题模板：题目可写 `model: { situation, quantities, relation, check, steps: {choose, function, check} }`，`U.Table.lintModel` 检查三步都指向存在的里程碑；拟合最高只到证据 ①。
+- 示例题 `problems/fitting.js`（car-model-proportional），参考解在 `tests/solutions.js`。
