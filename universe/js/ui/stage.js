@@ -3,7 +3,7 @@
   'use strict';
   const U = G.U, UI = (G.UI = G.UI || {}), W = U.World, K = U.kit, Q = U.Q;
   const $ = (s) => document.querySelector(s);
-  const HD = 28, PORT_Y0 = 40, PORT_DY = 22, PILL_DY = 26, PILL_W = 92, MIN_W = 120, MIN_H = 90;
+  const L = UI.LAYOUT, HD = L.HD, PORT_Y0 = L.PORT_Y0, PORT_DY = L.PORT_DY, PILL_DY = L.PILL_DY, PILL_W = L.PILL_W, MIN_W = L.MIN_W, MIN_H = L.MIN_H;
   let stageEl, worldEl, focusEl, drag = null, linking = null, lastClick = { id: null, t: 0 }, dblKey = null, dblT = 0;
 
   const def = (e) => U.types[e.type];
@@ -107,7 +107,7 @@
   // 按内容自动选范围：内容的中心在中间，横纵两个方向都装得下，四周留一点边
   function autoView(b, w, h) {
     if (!b) return { cx: 0, cy: 0, span: 10 };
-    const span = Math.max(b.x1 - b.x0, (b.y1 - b.y0) * w / Math.max(h, 1)) * 1.15;
+    const span = Math.max(b.x1 - b.x0, (b.y1 - b.y0) * w / Math.max(h, 1)) * L.AUTO_MARGIN;
     return { cx: (b.x0 + b.x1) / 2, cy: (b.y0 + b.y1) / 2, span };
   }
   function wsView(ws, w, h, b) {
@@ -264,7 +264,7 @@
     const S = UI.S, g = geom(ws), wd = U.types[ws.type].workspace, hidden = UI.State.hiddenOf(ws);
     const pw = dims ? dims.w : g.w, ph = dims ? dims.h : g.h - HD;
     const vals = wsValues(ws, names), steps = wsSteps(ws), picks = S.wsSel || [];
-    const pos = inFocus ? '' : ' style="left:' + g.x + 'px;top:' + (g.y + g.h + 36) + 'px;width:' + g.w + 'px"';
+    const pos = inFocus ? '' : ' style="width:' + g.w + 'px"';   // 位置由 UI.Layout.placePanels 在渲染后摆好（实测尺寸）
     let h = '<div class="wsx" data-ws="' + ws.id + '"' + pos + '>';
     const D = S.wsDraw && S.wsDraw.ws === ws.id ? S.wsDraw : null;
     h += '<div class="wsx-tools">' + wd.tools.map((t) => '<button data-ws-tool="' + t.id + '" data-ws="' + ws.id + '"' + (D && D.tool === t.id ? ' class="on"' : '') + '>' + K.esc(t.label) + '</button>').join('') +
@@ -357,10 +357,10 @@
   function portPos(e, port, D, out) {
     const g = geom(e), d = def(e);
     if (out) { const i = Math.max(0, Object.keys(d.outputs).indexOf(port)); return { x: g.x + g.w, y: g.y + PORT_Y0 + i * PORT_DY }; }
-    if (W.isProp(port)) { const k = port.slice(2), ps = pillsOf(e, D), i = Math.max(0, ps.indexOf(k)); return { x: g.x - 8, y: g.y + PORT_Y0 + i * PILL_DY }; }
+    if (W.isProp(port)) { const k = port.slice(2), ps = pillsOf(e, D), i = Math.max(0, ps.indexOf(k)); return { x: g.x - L.PILL_GAP, y: g.y + PORT_Y0 + i * PILL_DY }; }
     const i = Math.max(0, Object.keys(d.inputs).indexOf(port)); return { x: g.x, y: g.y + PORT_Y0 + i * PORT_DY };
   }
-  const bez = (a, b) => { const dx = Math.max(40, Math.abs(b.x - a.x) / 2); return 'M' + a.x + ',' + a.y + ' C' + (a.x + dx) + ',' + a.y + ' ' + (b.x - dx) + ',' + b.y + ' ' + b.x + ',' + b.y; };
+  const bez = (a, b) => { const dx = Math.max(L.LINK_CURVE_MIN, Math.abs(b.x - a.x) / 2); return 'M' + a.x + ',' + a.y + ' C' + (a.x + dx) + ',' + a.y + ' ' + (b.x - dx) + ',' + b.y + ' ' + b.x + ',' + b.y; };
 
   function cardHtml(e, D, S) {
     const d = def(e), g = geom(e), dd = D[e.id], cH = g.h - HD;
@@ -373,27 +373,26 @@
     h += '<div class="hd" data-id="' + e.id + '"><span class="nm">' + K.esc(e.name) + '</span><span class="bd">' + K.esc(badge || '') + '</span></div>';
     h += '<svg class="bdy' + (d.workspace ? ' wsbody" data-wsid="' + e.id : '') + '" width="' + g.w + '" height="' + cH + '" viewBox="0 0 ' + g.w + ' ' + cH + '">' + body + '</svg>';
     Object.keys(d.inputs).forEach((k, i) => {
-      const y = PORT_Y0 - HD + i * PORT_DY + HD - 0;
-      h += '<i class="port in" data-id="' + e.id + '" data-port="' + k + '" style="left:0;top:' + (PORT_Y0 + i * PORT_DY - 0) + 'px"></i>';
-      h += '<span class="pl" style="left:12px;top:' + (PORT_Y0 + i * PORT_DY) + 'px">' + K.esc(d.inputs[k].label) + '</span>';
+      h += '<i class="port in" data-id="' + e.id + '" data-port="' + k + '" style="left:0;top:' + (PORT_Y0 + i * PORT_DY) + 'px"></i>';
+      h += '<span class="pl" style="left:' + L.PORT_LABEL_X + 'px;top:' + (PORT_Y0 + i * PORT_DY) + 'px">' + K.esc(d.inputs[k].label) + '</span>';
     });
     Object.keys(d.outputs).forEach((k, i) => {
       h += '<i class="port out" data-id="' + e.id + '" data-port="' + k + '" style="left:' + g.w + 'px;top:' + (PORT_Y0 + i * PORT_DY) + 'px;background:' + U.kindColor(d.outputs[k].kind) + '"></i>';
-      if (!d.workspace) h += '<span class="pl" style="right:12px;top:' + (PORT_Y0 + i * PORT_DY) + 'px">' + K.esc(d.outputs[k].label) + '</span>';   // 工作区的步数标在标题栏里，这里不再写（会和画布里的把手叠在一起）
+      if (!d.workspace) h += '<span class="pl" style="right:' + L.PORT_LABEL_X + 'px;top:' + (PORT_Y0 + i * PORT_DY) + 'px">' + K.esc(d.outputs[k].label) + '</span>';   // 工作区的步数标在标题栏里，这里不再写（会和画布里的把手叠在一起）
     });
     h += '<i class="rz" data-rz="' + e.id + '" title="拖动改大小；双击恢复默认"></i>';
     h += '</div>';
     // 属性药丸（在卡片左边外侧）
     pillsOf(e, D).forEach((k, i) => {
       const drv = dd.driven[k];
-      h += '<div class="pill' + (drv ? ' driven' : '') + '" data-id="' + e.id + '" data-port="p.' + k + '" style="left:' + (g.x - PILL_W - 8) + 'px;top:' + (g.y + PORT_Y0 + i * PILL_DY) + 'px">' + K.esc(d.props[k].label) + '</div>';
+      h += '<div class="pill' + (drv ? ' driven' : '') + '" data-id="' + e.id + '" data-port="p.' + k + '" style="left:' + (g.x - PILL_W - L.PILL_GAP) + 'px;top:' + (g.y + PORT_Y0 + i * PILL_DY) + 'px">' + K.esc(d.props[k].label) + '</div>';
     });
     // 信号条
     const sg = (dd.sig || []).slice().sort((a, b) => SIGLV.indexOf(a.lv) - SIGLV.indexOf(b.lv))[0];
-    if (sg && S.showSig) h += '<div class="sig ' + sg.lv + '" style="left:' + g.x + 'px;top:' + (g.y + g.h + 8) + 'px">' + K.esc(sg.tx) + '</div>';
+    if (sg && S.showSig) h += '<div class="sig ' + sg.lv + '" style="left:' + g.x + 'px;top:' + (g.y + g.h + L.SIG_GAP) + 'px">' + K.esc(sg.tx) + '</div>';
     // 选中工具条
     if (S.sel === e.id) {
-      h += '<div class="tool" style="left:' + (g.x + g.w + 14) + 'px;top:' + g.y + 'px">' +
+      h += '<div class="tool" style="left:' + (g.x + g.w + L.TOOL_GAP) + 'px;top:' + g.y + 'px">' +
         '<button data-act="insp" title="属性">' + ico('gear') + '</button><button data-act="copy" title="复制">' + ico('copy') + '</button>' +
         (def(e).stateful ? '<button data-act="resetstate" title="记忆归零">' + ico('undo') + '</button>' : '') +
         (e.type === 'gpiece' ? '<button data-act="turn" title="转 90°（R）">' + ico('turn') + '</button><button data-act="flip" title="左右翻（F）">' + ico('flip') + '</button>' : '') +
@@ -443,6 +442,7 @@
     for (const id of Object.keys(E)) if (isWsDef(E[id].type)) h += wsPanelHtml(E[id], names);
     worldEl.innerHTML = h;
     worldEl.style.transform = 'translate(' + S.view.x + 'px,' + S.view.y + 'px) scale(' + S.view.z + ')';
+    UI.Layout.placePanels(worldEl, stageEl, S.view, (id) => { const e = S.scene.entities[id]; return e ? geom(e) : null; });
     const z = $('#zv'); if (z) z.textContent = Math.round(S.view.z * 100) + '%';
     if (focusEl) { focusEl.innerHTML = focusHtml(); focusEl.style.display = UI.State.focusedId() ? '' : 'none'; }
     if (UI.App && UI.App.persistView) UI.App.persistView();   // 视图改过就存档（不进撤销）
@@ -454,7 +454,7 @@
     const S = UI.S, id = UI.State.focusedId(), e = id && S.scene.entities[id];
     if (!e || !isWsDef(e.type)) { if (id) UI.State.setFocusId(null); return ''; }
     const r = stageEl.getBoundingClientRect();
-    const W = Math.max(200, Math.round(r.width - 300 - 72)), H = Math.max(160, Math.round(r.height - 32 - 56));
+    const F = L.FOCUS, W = Math.max(F.minW, Math.round(r.width - F.side - F.padX)), H = Math.max(F.minH, Math.round(r.height - F.hdH - F.padY));
     let h = '<div class="wsf-hd" title="双击标题，或按 Esc，还原"><b>' + K.esc(e.name) + '</b><span>双击标题或按 Esc 还原</span><button data-ws-unfocus>还原</button></div>';
     h += '<div class="wsf-main"><svg class="bdy wsbody" data-wsid="' + e.id + '" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '">' + wsBody(e, W, H) + '</svg>';
     h += '<div class="wsf-side">' + wsPanelHtml(e, wsNames(), { w: W, h: H }, true) + '</div></div>';
@@ -500,25 +500,25 @@
     const S = UI.S, r = stageEl.getBoundingClientRect();
     let ids = Object.keys(S.scene.entities).filter((id) => !inWs(S.scene.entities[id]));
     let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
-    if (!ids.length) { S.view = { x: r.width / 2 - 200, y: r.height / 2 - 120, z: 1 }; return; }
+    if (!ids.length) { S.view = { x: r.width / 2 - L.EMPTY_VIEW.dx, y: r.height / 2 - L.EMPTY_VIEW.dy, z: 1 }; return; }
     ids.forEach((id) => {
-      const e = S.scene.entities[id], g = geom(e); x0 = Math.min(x0, g.x - 110); y0 = Math.min(y0, g.y); x1 = Math.max(x1, g.x + g.w + 60); y1 = Math.max(y1, g.y + g.h + 50);
-      if (isWsDef(e.type)) y1 = Math.max(y1, g.y + g.h + 36 + 420);   // 工作区底下的面板
+      const e = S.scene.entities[id], g = geom(e); x0 = Math.min(x0, g.x - L.FIT.padL); y0 = Math.min(y0, g.y); x1 = Math.max(x1, g.x + g.w + L.FIT.padR); y1 = Math.max(y1, g.y + g.h + L.FIT.padB);
+      if (isWsDef(e.type)) { const pr = UI.Layout.panelRect(id, g); y1 = Math.max(y1, pr.y + pr.h); }   // 工作区底下的面板：实测（或估计）的高度
     });
-    const z = Math.max(0.35, Math.min(1.15, Math.min((r.width - 80) / (x1 - x0), (r.height - 150) / (y1 - y0))));
-    S.view = { z, x: (r.width - (x1 - x0) * z) / 2 - x0 * z, y: Math.max(50, (r.height - (y1 - y0) * z) / 2) - y0 * z + 20 };
+    const FS = L.FIT_SCREEN, z = Math.max(L.ZOOM.fitMin, Math.min(L.ZOOM.fitMax, Math.min((r.width - 2 * FS.x) / (x1 - x0), (r.height - 2 * FS.y) / (y1 - y0))));
+    S.view = { z, x: (r.width - (x1 - x0) * z) / 2 - x0 * z, y: Math.max(L.FIT_TOP_MIN, (r.height - (y1 - y0) * z) / 2) - y0 * z + L.FIT_TOP_NUDGE };
   }
 
   function zoomAt(f, cx, cy) {
     const S = UI.S, v = S.view, r = stageEl.getBoundingClientRect();
     if (cx === undefined) { cx = r.width / 2; cy = r.height / 2; } else { cx -= r.left; cy -= r.top; }
-    const z = Math.max(0.3, Math.min(2.5, v.z * f)), k = z / v.z;
+    const z = Math.max(L.ZOOM.min, Math.min(L.ZOOM.max, v.z * f)), k = z / v.z;
     v.x = cx - (cx - v.x) * k; v.y = cy - (cy - v.y) * k; v.z = z; render();
   }
 
   // ---- 拖线时的提示 ----
   const tip = () => $('#tip');
-  function showTip(x, y, txt, good) { const t = tip(); if (!txt) { t.style.display = 'none'; return; } t.textContent = txt; t.className = good ? 'good' : ''; t.style.display = 'block'; t.style.left = x + 14 + 'px'; t.style.top = y + 14 + 'px'; }
+  function showTip(x, y, txt, good) { const t = tip(); if (!txt) { t.style.display = 'none'; return; } t.textContent = txt; t.className = good ? 'good' : ''; t.style.display = 'block'; t.style.left = x + L.TIP_OFFSET + 'px'; t.style.top = y + L.TIP_OFFSET + 'px'; }
 
   // ---- 块（§10.5.10）----
   // 选中的块：工作区里选中的（按名字找回），加上台面上选中的块卡片
@@ -553,7 +553,7 @@
     const S = UI.S, d = drag, e = S.scene.entities[d.id];
     if (!e) return;
     const mx = ev.clientX - d.sx, my = ev.clientY - d.sy;
-    if (!d.moved && Math.hypot(mx, my) < 4) return;
+    if (!d.moved && Math.hypot(mx, my) < L.DRAG_SLOP) return;
     if (!d.moved && d.v0) UI.State.setUi(S.scene.entities[d.wsId], 'view', d.v0);   // 拖动开始：把冻结的坐标范围存下来
     d.moved = true;
     d.out = !overWs(ev, d.wsId);
@@ -580,7 +580,7 @@
     e.props.dx = d.dx0; e.props.dy = d.dy0;
     if (d.out) {
       const w = toWorld(ev);
-      UI.Intent.run('drop', { id: d.id, ev, piece: true, out: { x: w.x - 40, y: w.y - 20 } });
+      UI.Intent.run('drop', { id: d.id, ev, piece: true, out: { x: w.x - L.PIECE_DROP.x, y: w.y - L.PIECE_DROP.y } });
     } else if (d.dxn || d.dyn) UI.Intent.run('piece', { ids: [d.id], what: 'move', value: { dx: d.dxn, dy: d.dyn } });
     else UI.App.refresh(false);
     // 松手后：拼对了就闪一下（判定在 wsBody 里每次重画时算，和「对齐到目标」一样用 U.Geo.assemble）
@@ -828,7 +828,7 @@
   function shapeMove(ev) {
     const S = UI.S, d = drag, E = S.scene.entities;
     const mx = ev.clientX - d.sx, my = ev.clientY - d.sy;
-    if (!d.moved && Math.hypot(mx, my) < 4) return;
+    if (!d.moved && Math.hypot(mx, my) < L.DRAG_SLOP) return;
     d.moved = true;
     const wp = worldAt(ev, d.v, d.sc), out = [];
     const put = (id, k, v) => { E[id].props[k] = v; out.push({ id, k, v }); };
@@ -923,10 +923,10 @@
     const name = S.wsSel[0], fr = wsFrame(ws, w, h), v = fr.vals.find((x) => pickOf(x) === name), fi = v && figInfo(v);
     if (!fi || !fi.f.pts || (fi.kind === 'pts' && fi.f.type === 'point')) return null;
     const xs = fi.f.pts.map((p) => Q.num(p.x)), ys = fi.f.pts.map((p) => Q.num(p.y));
-    return { name, left: fr.X((Math.min(...xs) + Math.max(...xs)) / 2), top: Math.min(fr.Y(Math.min(...ys)) + 8, h - 34) };   // 浮动工具条放在图形的下面（画布里面），不盖住标题和步数
+    return { name, left: fr.X((Math.min(...xs) + Math.max(...xs)) / 2), top: Math.min(fr.Y(Math.min(...ys)) + L.FLOAT.dy, h - L.FLOAT.h) };   // 浮动工具条放在图形的下面（画布里面），不盖住标题和步数
   }
   function floatHtml(wsId, f, ox, oy) {
-    const left = Math.max(4, ox + f.left - 72), top = Math.max(oy + 2, oy + f.top), nm = escA(f.name);
+    const left = Math.max(L.FLOAT.edge, ox + f.left - L.FLOAT.halfW), top = Math.max(oy + L.FLOAT.top, oy + f.top), nm = escA(f.name);
     return '<div class="wsx-float" style="left:' + left + 'px;top:' + top + 'px">' +
       '<button data-fig-flip="1" data-ws="' + wsId + '" data-name="' + nm + '">左右翻</button>' +
       '<button data-fig-flip="2" data-ws="' + wsId + '" data-name="' + nm + '">上下翻</button></div>';
@@ -1152,15 +1152,19 @@
   // 1.10：松手时，如果落在能装它的容器上就放进去；落在别处且原来在容器里，就取出来
   // 新加一张卡片放哪里：从想放的位置开始，往外一圈一圈找，找到和已有卡片（包括工作区底下的工具面板）都不重叠的空位
   function freeSpot(x, y, type) {
-    const E = UI.S.scene.entities, d = U.types[type], sz = d && d.size ? d.size({ props: {} }) : [150, 90], w = sz[0], h = sz[1];
-    const rects = Object.values(E).filter((e) => !e.parent).map((e) => {
-      const g = geom(e); let bottom = g.y + g.h; if (isWsDef(e.type)) bottom += 36 + 270;
-      return { x0: g.x - 12, y0: g.y - 12, x1: g.x + g.w + 12, y1: bottom + 12 };
-    });
+    const E = UI.S.scene.entities, d = U.types[type], sz = d && d.size ? d.size({ props: {} }) : L.DEFAULT_CARD, w = sz[0], h = sz[1];
+    // 占地：卡片本身，加上工作区的面板（实测的尺寸和位置，见 UI.Layout.panelRect）
+    const rects = [];
+    for (const e of Object.values(E)) {
+      if (e.parent) continue;
+      const g = geom(e), P = L.CARD_PAD;
+      rects.push({ x0: g.x - P, y0: g.y - P, x1: g.x + g.w + P, y1: g.y + g.h + P });
+      if (isWsDef(e.type)) { const p = UI.Layout.panelRect(e.id, g); rects.push({ x0: p.x - P, y0: p.y - P, x1: p.x + p.w + P, y1: p.y + p.h + P }); }
+    }
     const hit = (px, py) => rects.some((r) => px < r.x1 && px + w > r.x0 && py < r.y1 && py + h > r.y0);
     if (!hit(x, y)) return { x, y };
-    for (let ring = 1; ring <= 30; ring++) {
-      for (let i = -ring; i <= ring; i++) for (const [px, py] of [[x + i * 40, y - ring * 40], [x + i * 40, y + ring * 40], [x - ring * 40, y + i * 40], [x + ring * 40, y + i * 40]]) if (!hit(px, py)) return { x: px, y: py };
+    for (let ring = 1; ring <= L.SPOT_RINGS; ring++) {
+      for (let i = -ring; i <= ring; i++) for (const [px, py] of [[x + i * L.SPOT_STEP, y - ring * L.SPOT_STEP], [x + i * L.SPOT_STEP, y + ring * L.SPOT_STEP], [x - ring * L.SPOT_STEP, y + i * L.SPOT_STEP], [x + ring * L.SPOT_STEP, y + i * L.SPOT_STEP]]) if (!hit(px, py)) return { x: px, y: py };
     }
     return { x, y };
   }
@@ -1226,7 +1230,7 @@
     }
     if (drag.kind === 'pan') { S.view.x = drag.vx + ev.clientX - drag.sx; S.view.y = drag.vy + ev.clientY - drag.sy; render(); return; }
     if (drag.kind === 'move') {
-      if (!drag.moved && Math.hypot(ev.clientX - drag.sx, ev.clientY - drag.sy) < 4) return;
+      if (!drag.moved && Math.hypot(ev.clientX - drag.sx, ev.clientY - drag.sy) < L.DRAG_SLOP) return;
       const w = toWorld(ev);
       if (!drag.moved) { drag.moved = true; drag.before = UI.App.snapshot(); }
       drag.x1 = w.x - drag.dx; drag.y1 = w.y - drag.dy;

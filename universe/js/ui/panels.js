@@ -1,7 +1,7 @@
 /* 面板：左栏（实验库 / 步骤）、右栏器材架、属性面板、时钟条、对话框。 */
 (function (G) {
   'use strict';
-  const U = G.U, UI = (G.UI = G.UI || {}), K = U.kit, esc = K.esc;
+  const U = G.U, UI = (G.UI = G.UI || {}), K = U.kit, esc = K.esc, L = UI.LAYOUT;
   const $ = (s) => document.querySelector(s);
   let ghost = null;
 
@@ -24,7 +24,7 @@
     const S = UI.S, q = (S.q1 || '').trim();
     let h = '<input class="search" id="q1" placeholder="搜索题目、知识点" value="' + esc(q) + '">';
     const rv = U.Review.summarize(U.Events.log, U.problems);
-    if (rv.due.length && !q) h += '<div class="pcard" style="margin-top:12px"><b>今天该复习 ' + rv.due.length + ' 道</b><div class="plist">' + rv.due.slice(0, 4).map((d) => '<div class="it" data-pid="' + d.pid + '" style="margin:6px 0 0"><span class="tt">' + esc(d.title) + '<br><small style="color:var(--orange)">' + esc(d.why) + '</small></span></div>').join('') + '</div></div>';
+    if (rv.due.length && !q) h += '<div class="pcard due"><b>今天该复习 ' + rv.due.length + ' 道</b><div class="plist">' + rv.due.slice(0, 4).map((d) => '<div class="it" data-pid="' + d.pid + '" style="margin:6px 0 0"><span class="tt">' + esc(d.title) + '<br><small style="color:var(--orange)">' + esc(d.why) + '</small></span></div>').join('') + '</div></div>';
     h += '<div class="plist"><div class="grp">自由</div><div class="it' + (!S.problem ? ' cur' : '') + '" data-free="1"><span class="tt">自由探究（空台面，所有器材）</span></div>';
     const by = {};
     U.problems.filter((p) => !q || (p.title + p.domain + (p.points || []).join('') + (p.alias || []).join('')).includes(q)).forEach((p) => (by[p.domain] = by[p.domain] || []).push(p));
@@ -180,7 +180,7 @@
     h += '<div class="wb-apply">' +
       '<label>要动的项（序号，或标签）<input data-wb-field="ref" value="' + esc(dr.ref) + '" placeholder="例如 2"></label>' +
       '<label>哪一边<select data-wb-field="side">' + [['lhs', '左边'], ['rhs', '右边']].map(([v, t]) => '<option value="' + v + '"' + (v === dr.side ? ' selected' : '') + '>' + t + '</option>').join('') + '</select></label>' +
-      '<label>两边同除 / 同乘几<input data-wb-field="by" value="' + esc(dr.by) + '" placeholder="例如 3" style="width:70px"></label></div>';
+      '<label>两边同除 / 同乘几<input data-wb-field="by" value="' + esc(dr.by) + '" placeholder="例如 3" class="in-by"></label></div>';
     h += '<div class="wb-tools">' + U.Workbench.tools(cur).map((t) => '<button data-wb-tool="' + t.id + '">' + esc(t.label) + '</button>').join('') + '</div>';
     if (dr.msg) h += '<div class="wb-msg">' + esc(dr.msg) + '</div>';
     h += '<div class="wb-h">步骤</div>';
@@ -232,7 +232,7 @@
   }
   // 体检表（3.4）：输入知识点编号，看它的达成率、常踩的陷阱、自选错因和最高证据等级
   function healthDialog() {
-    dialog('<h3>知识点体检表</h3><p style="color:var(--txt3)">输入知识点编号，例如 4.6</p><div class="btnrow"><input id="hp-point" placeholder="4.6" style="width:90px"><button class="btn pri" id="hp-go">看看</button></div><div id="hp-out"></div><div class="btnrow"><button class="btn" id="dlg-close">关闭</button></div>');
+    dialog('<h3>知识点体检表</h3><p style="color:var(--txt3)">输入知识点编号，例如 4.6</p><div class="btnrow"><input id="hp-point" placeholder="4.6" class="in-type"><button class="btn pri" id="hp-go">看看</button></div><div id="hp-out"></div><div class="btnrow"><button class="btn" id="dlg-close">关闭</button></div>');
   }
   function healthOut(point) {
     const out = document.getElementById('hp-out'); if (!out) return;
@@ -257,7 +257,7 @@
     const guess = c.guess.prefill !== null ? esc(c.guess.prefill) : '没猜';
     const tried = '<div>完成的里程碑：' + (c.tried.milestones.length || '0') + ' 个</div><div>用了提示：' + c.tried.hints + ' 次</div><div>操作：' + c.tried.opsCount + ' 次</div>' + c.tried.traps.map((t) => '<div class="warnbox">⚠ ' + esc(t) + '</div>').join('');
     const found = '<div><small>证据等级：' + esc(lvl) + '</small></div><div>' + esc(c.found.wording) + '</div>';
-    const asks = '<textarea id="asks" placeholder="还想问什么？" style="width:100%;min-height:60px"></textarea>';
+    const asks = '<textarea id="asks" placeholder="还想问什么？" class="ta-note"></textarea>';
     return '<h3>实验报告：' + esc(p.title) + '</h3><div class="rep2">' + col('我猜的', '<div>' + guess + '</div>') + col('我试了什么', tried) + col('我发现了', found) + col('我还想问', asks) + '</div>' +
       '<div class="btnrow"><button class="btn" id="dlg-close">关闭</button></div>';
   }
@@ -299,7 +299,7 @@
     const rv = U.Review.summarize(U.Events.log, U.problems), t = rv.totals;
     let h = '<h3>学习报告</h3><div class="cmp"><div><small>做过的题</small>' + t.tried + ' / ' + t.problems + '</div><div><small>累计用时</small>' + t.minutes + ' 分钟</div><div><small>踩过的陷阱</small>' + t.trapsHit + ' 个</div><div><small>找到新做法</small>' + t.newWay + ' 次</div></div>';
     h += '<p style="color:var(--txt3);margin:12px 0 4px">各领域进度（做过 / 全部，其中“掌握”= 满分且没踩陷阱）</p>';
-    rv.domains.forEach((d) => { const pct = d.total ? Math.round((d.done / d.total) * 100) : 0, pm = d.total ? Math.round((d.mastered / d.total) * 100) : 0; h += '<div style="margin:8px 0"><div style="display:flex;justify-content:space-between"><span>' + esc(d.domain) + '</span><span style="color:var(--txt2)">' + d.done + ' / ' + d.total + '　掌握 ' + d.mastered + '</span></div><div style="height:8px;background:var(--panel2);border-radius:4px;overflow:hidden;position:relative"><div style="position:absolute;inset:0 auto 0 0;width:' + pct + '%;background:#2b5f9e"></div><div style="position:absolute;inset:0 auto 0 0;width:' + pm + '%;background:var(--good)"></div></div></div>'; });
+    rv.domains.forEach((d) => { const pct = d.total ? Math.round((d.done / d.total) * 100) : 0, pm = d.total ? Math.round((d.mastered / d.total) * 100) : 0; h += '<div class="prog-row"><div class="prog-head"><span>' + esc(d.domain) + '</span><span class="txt2">' + d.done + ' / ' + d.total + '　掌握 ' + d.mastered + '</span></div><div class="prog"><i class="done" style="width:' + pct + '%"></i><i class="mastered" style="width:' + pm + '%"></i></div></div>'; });
     if (rv.due.length) h += '<p style="color:var(--txt3);margin:14px 0 4px">该复习的</p><div class="plist">' + rv.due.map((d) => '<div class="it" data-pid="' + d.pid + '"><span class="tt">' + esc(d.title) + '<br><small style="color:var(--orange)">' + esc(d.why) + '</small></span></div>').join('') + '</div>';
     h += '<div class="btnrow"><button class="btn" id="dlg-close">关闭</button></div>';
     dialog(h);
@@ -311,16 +311,16 @@
       const t = ev.target.closest('.tile'); if (!t || t.classList.contains('off')) return;
       const type = t.dataset.type, sx = ev.clientX, sy = ev.clientY; let moved = false;
       const mv = (e) => {
-        if (!moved && Math.hypot(e.clientX - sx, e.clientY - sy) > 5) { moved = true; ghost = document.createElement('div'); ghost.id = 'ghost'; ghost.innerHTML = t.querySelector('svg').outerHTML; ghost.firstChild.style.cssText = 'width:96px;height:66px;background:#f4f6fb;border-radius:8px'; document.body.appendChild(ghost); }
-        if (ghost) { ghost.style.left = e.clientX - 48 + 'px'; ghost.style.top = e.clientY - 33 + 'px'; }
+        if (!moved && Math.hypot(e.clientX - sx, e.clientY - sy) > L.DRAG_SLOP) { moved = true; ghost = document.createElement('div'); ghost.id = 'ghost'; ghost.innerHTML = t.querySelector('svg').outerHTML; ghost.firstChild.classList.add('ghost-img'); ghost.firstChild.style.width = L.GHOST.w + 'px'; ghost.firstChild.style.height = L.GHOST.h + 'px'; document.body.appendChild(ghost); }
+        if (ghost) { ghost.style.left = e.clientX - L.GHOST.x + 'px'; ghost.style.top = e.clientY - L.GHOST.y + 'px'; }
       };
       const up = (e) => {
         window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up);
         if (ghost) { ghost.remove(); ghost = null; }
         const over = document.elementFromPoint(e.clientX, e.clientY);
         // 从器材架拖进台面：添加和放进容器是一个事务（P1：一次撤销回到拖动之前）
-        if (moved && over && over.closest('#stagewrap')) { const w = UI.Stage.toWorld(e); UI.Intent.run('add', { type, x: w.x - 70, y: w.y - 40, ev: e }); }
-        else if (!moved) { const r = $('#stage').getBoundingClientRect(); const w = UI.Stage.toWorld({ clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 }); const sp = UI.Stage.freeSpot(w.x - 70, w.y - 60, type); UI.Intent.run('add', { type, x: sp.x, y: sp.y, select: true }); }
+        if (moved && over && over.closest('#stagewrap')) { const w = UI.Stage.toWorld(e); UI.Intent.run('add', { type, x: w.x - L.ADD_CENTER.x, y: w.y - L.ADD_CENTER.y, ev: e }); }
+        else if (!moved) { const r = $('#stage').getBoundingClientRect(); const w = UI.Stage.toWorld({ clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 }); const sp = UI.Stage.freeSpot(w.x - L.ADD_CLICK.x, w.y - L.ADD_CLICK.y, type); UI.Intent.run('add', { type, x: sp.x, y: sp.y, select: true }); }
       };
       window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up);
     });
@@ -330,17 +330,17 @@
   function shareDialog() {
     const enc = U.Share.encode(UI.S.scene);
     if (enc.mode === 'file') { dialog('<h3>分享台面</h3><p>这个台面太大，放不进一段文字。请用菜单里的「保存台面到文件」。</p><div class="btnrow"><button class="btn" id="dlg-close">知道了</button></div>'); return; }
-    dialog('<h3>分享台面</h3><p style="color:var(--txt3);margin-top:0">复制下面这段文字，发给同学或老师。</p><textarea id="sharetext" readonly style="width:100%;height:120px;word-break:break-all">' + esc(enc.text) + '</textarea>' +
+    dialog('<h3>分享台面</h3><p style="color:var(--txt3);margin-top:0">复制下面这段文字，发给同学或老师。</p><textarea id="sharetext" readonly class="ta-long">' + esc(enc.text) + '</textarea>' +
       '<div class="btnrow"><button class="btn pri" id="dlg-copy">复制</button><button class="btn" id="dlg-close">关闭</button></div>');
   }
 
   // 我来出题：台面就是答案，学生写题目描述和一条目标，系统做出题自检
   function studentDialog() {
     dialog('<h3>我来出题</h3><p style="color:var(--txt2);margin-top:0">先在台面上搭出你的答案，再写一句题目，并说明同学要搭到什么样子。自检会看：你的台面满足目标，空台面不满足。</p>' +
-      '<textarea id="st-desc" placeholder="题目描述，例如：用两张数字卡凑出 5" style="width:100%;height:60px"></textarea>' +
-      '<div class="btnrow"><label>器材 <input id="st-type" value="num" style="width:90px"></label><label>端口 <input id="st-port" value="v" style="width:50px"></label>' +
+      '<textarea id="st-desc" placeholder="题目描述，例如：用两张数字卡凑出 5" class="ta-desc"></textarea>' +
+      '<div class="btnrow"><label>器材 <input id="st-type" value="num" class="in-type"></label><label>端口 <input id="st-port" value="v" class="in-port"></label>' +
       '<select id="st-op">' + ['=', '>', '<', '>=', '<=', '!='].map((o) => '<option>' + o + '</option>').join('') + '</select>' +
-      '<input id="st-value" placeholder="5" style="width:80px"></div>' +
+      '<input id="st-value" placeholder="5" class="in-value"></div>' +
       '<div id="st-msg" style="display:none;margin:8px 0"></div>' +
       '<div class="btnrow"><button class="btn pri" id="st-check">自检</button><button class="btn" id="dlg-close">关闭</button></div>');
   }
@@ -348,7 +348,7 @@
   // 班级看板（老师）：粘贴学生的结果码，一行一个，按题汇总达成率和常踩的坑
   function boardDialog() {
     dialog('<h3>班级看板</h3><p style="color:var(--txt3);margin-top:0">把学生交回的结果码粘贴进来，一行一个。</p>' +
-      '<textarea id="cb-codes" placeholder="每行一个结果码" style="width:100%;height:110px;word-break:break-all"></textarea>' +
+      '<textarea id="cb-codes" placeholder="每行一个结果码" class="ta-codes"></textarea>' +
       '<div class="btnrow"><button class="btn pri" id="cb-go">汇总</button><button class="btn" id="dlg-close">关闭</button></div>' +
       '<div id="cb-out"></div>');
   }

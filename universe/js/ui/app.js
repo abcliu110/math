@@ -1,7 +1,7 @@
 /* 应用：状态、唯一改动入口 act（包一层：撤销、判分、事件）、世界时钟循环、各种按钮。 */
 (function (G) {
   'use strict';
-  const U = G.U, UI = (G.UI = G.UI || {}), W = U.World, J = U.Judge, Ev = U.Events;
+  const U = G.U, UI = (G.UI = G.UI || {}), W = U.World, J = U.Judge, Ev = U.Events, L = UI.LAYOUT;
   const $ = (s) => document.querySelector(s);
   const FREE_KEY = 'universe-free-v1', NOTE_KEY = 'universe-notes-v1', SESS_KEY = 'universe-session-v1';
   const lsGet = (k) => { try { return G.localStorage.getItem(k); } catch (e) { return null; } };
@@ -379,7 +379,7 @@
       const fin = Ev.where((e) => e.type === 'finish' || e.type === 'submit'), seen = {};
       fin.forEach((e) => { const p = U.problemById(e.pid); if (p) seen[p.id] = (seen[p.id] || 0) + 1; });
       const list = Object.keys(seen).map((id) => '<div class="it" style="cursor:default"><span class="tt">' + U.kit.esc(U.problemById(id).title) + '</span><span class="chip ok">' + seen[id] + ' 次</span></div>').join('') || '<div class="empty">还没有做完的题。</div>';
-      UI.Panels.dialog('<h3>我的发现</h3><div class="plist">' + list + '</div><p style="color:var(--txt3);margin-bottom:4px">我的笔记（只存在这台设备上）</p><textarea id="notes">' + U.kit.esc(lsGet(NOTE_KEY) || '') + '</textarea><div class="btnrow"><button class="btn pri" id="dlg-note">保存</button><button class="btn" id="dlg-close">关闭</button></div>');
+      UI.Panels.dialog('<h3>我的发现</h3><div class="plist">' + list + '</div><p class="note-hint">我的笔记（只存在这台设备上）</p><textarea id="notes">' + U.kit.esc(lsGet(NOTE_KEY) || '') + '</textarea><div class="btnrow"><button class="btn pri" id="dlg-note">保存</button><button class="btn" id="dlg-close">关闭</button></div>');
     };
     $('#submit').onclick = () => {
       if (!S.run || S.run.submitted) return;
@@ -456,8 +456,8 @@
       else if (e.key === 'Escape' && UI.State.focusedId()) UI.Stage.setFocus(null);
       else if (e.key === 'Escape') { S.sel = null; S.selLink = null; UI.Panels.renderInsp(); UI.Stage.render(); }
     });
-    G.addEventListener('resize', () => { const nar = G.innerWidth <= 640; $('#shelfbtn').style.display = nar ? '' : 'none'; });
-    $('#shelfbtn').style.display = G.innerWidth <= 640 ? '' : 'none';
+    G.addEventListener('resize', () => { const nar = G.innerWidth <= L.NARROW_BP; $('#shelfbtn').style.display = nar ? '' : 'none'; UI.Stage.render(); });   // 窗口变了：面板重新摆（实测尺寸，不溢出）
+    $('#shelfbtn').style.display = G.innerWidth <= L.NARROW_BP ? '' : 'none';
   }
 
   function start() {

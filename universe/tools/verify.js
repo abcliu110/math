@@ -1,5 +1,5 @@
 /* node tools/verify.js —— 一条命令跑完全部检查，任一步失败就退出非零（不再往下跑）。
- * 顺序：tests/run.js → tools/check-types.js → tests/ui.js → tests/ui-probes.js（如果存在）→ tools/build-standalone.js → dist 文件加载检查。
+ * 顺序：tests/run.js → tools/check-types.js → tests/ui.js → tests/ui-probes.js（如果存在）→ tests/ui-layout.js → tools/build-standalone.js → dist 文件加载检查。
  * 界面测试和 dist 检查需要环境变量 PW_NODE_PATH：playwright 所在的 node_modules 目录。
  * 用法：PW_NODE_PATH=<.../node_modules> node tools/verify.js */
 'use strict';
@@ -59,6 +59,7 @@ async function checkDist() {
   }
   const pwEnv = { NODE_PATH: PW };
   if (!runScript('tests/ui.js', 'tests/ui.js', pwEnv)) bail();
+  if (!runScript('tests/ui-layout.js', 'tests/ui-layout.js', pwEnv)) bail();   // U5：布局（两种视口、右下角、台面缩放、避让）
   if (fs.existsSync(path.join(root, 'tests', 'ui-probes.js'))) {
     if (!runScript('tests/ui-probes.js', 'tests/ui-probes.js', pwEnv)) bail();
   }
