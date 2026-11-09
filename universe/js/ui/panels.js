@@ -142,8 +142,17 @@
     h += '</div>';
     if (rep.guess !== null || rep.actual !== null) h += '<div class="cmp"><div><small>你的猜想</small>' + esc(rep.guess || '没猜') + '</div><div><small>实际结果</small>' + esc(rep.actual || '—') + (rep.match === true ? ' 🎯' : '') + '</div></div>';
     rep.traps.forEach((t) => { h += '<div class="warnbox">⚠ ' + esc(t) + '</div>'; });
+    // 3.4：没达成又没有陷阱解释的里程碑，让学生选一个错因（6 个标签）
+    const missed = rep.items.filter((i) => !i.done);
+    if (missed.length && !(rep.traps && rep.traps.length)) {
+      h += '<div class="reasons"><small>没达成的，是哪里出了问题？</small>' + missed.map((i) => '<div class="rsn">' + esc(i.say) + ' <select data-reason="' + esc(i.id) + '"><option value="">选一个</option>' + U.Learning.REASONS.map((r) => '<option>' + esc(r) + '</option>').join('') + '</select></div>').join('') + '</div>';
+    }
+    // 3.4：下一步练什么（只有丢分时推荐）
+    const next = U.Learning.nextPractice(p, rep, U.problems);
+    if (next.length) h += '<p style="color:var(--txt3);margin:10px 0 4px">下一步练什么</p><div class="plist">' + next.map((n) => '<div class="it" data-pid="' + esc(n.pid) + '"><span class="tt">' + esc(n.title) + '</span></div>').join('') + '</div>';
     if (rep.newWay) h += '<div class="newway">✨ 你找到了一种参考解里没有的搭法！</div>';
-    h += '<div class="whybox">' + esc(p.why) + '</div><div class="btnrow"><button class="btn pri" id="dlg-again">再做一遍</button><button class="btn" id="dlg-next">下一题</button><button class="btn" id="dlg-inquiry">实验报告</button><button class="btn" id="dlg-close">继续玩</button></div>';
+    const back = missed.length && mode !== 'exam';
+    h += '<div class="whybox">' + esc(p.why) + '</div><div class="btnrow">' + (back ? '<button class="btn pri" id="dlg-back">回去做这一步</button><button class="btn" id="dlg-again">再做一遍</button>' : '<button class="btn pri" id="dlg-again">再做一遍</button>') + '<button class="btn" id="dlg-next">下一题</button><button class="btn" id="dlg-inquiry">实验报告</button><button class="btn" id="dlg-close">继续玩</button></div>';
     return h;
   }
 

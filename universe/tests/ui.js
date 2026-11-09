@@ -78,6 +78,9 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   ok(!(await p.locator('.step').count()), '考试模式没有步骤清单');
   await p.click('#submit'); await p.waitForTimeout(100);
   const ex = await p.locator('#dlg .box').innerText(); ok(/交卷结果/.test(ex) && /0 \/ 10/.test(ex), '空白交卷 0 分：' + ex.replace(/\s+/g, ' ').slice(0, 30));
+  ok(await p.locator('#dlg select[data-reason]').count() >= 1, '交卷后没达成的里程碑要选错因');
+  await p.selectOption('#dlg select[data-reason]', { index: 1 }); await p.waitForTimeout(80);
+  ok(await p.evaluate(() => UI.App && UI.S.scene && true), '选错因不打断界面');
   await p.click('#dlg-close');
   console.log('两骰子');
   await p.evaluate(() => UI.App.openProblem('two-dice', 'practice')); await p.waitForTimeout(100);

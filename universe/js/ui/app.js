@@ -222,6 +222,7 @@
       const rep = J.report(S.problem, S.run, S.scene, S.D); Ev.push('submit', rep);
       UI.Panels.dialog(UI.Panels.reportHtml(rep, S.problem, 'exam')); UI.Panels.renderTop();
     };
+    $('#dlg').addEventListener('change', (e) => { const t = e.target; if (t.dataset && t.dataset.reason && t.value) Ev.push('reason', { id: t.dataset.reason, label: t.value }); });
     $('#dlg').addEventListener('click', (e) => {
       const t = e.target;
       if (t.id === 'au-ok') {
@@ -246,6 +247,7 @@
         return;
       }
       if (t.id === 'dlg' || t.id === 'dlg-close') { pendingDel = null; UI.Panels.closeDialog(); }
+      else if (t.id === 'dlg-back') { const miss = (S.run && S.problem) ? S.problem.milestones.find((m) => S.run.ms[m.id] && !S.run.ms[m.id].done) : null; UI.Panels.closeDialog(); if (miss) say('回到这一步：' + miss.say, 'info', 5000); }
       else if (t.id === 'dlg-again') { UI.Panels.closeDialog(); openProblem(S.problem.id, S.mode); }
       else if (t.id === 'dlg-next') { UI.Panels.closeDialog(); const i = U.problems.findIndex((p) => p.id === S.problem.id); openProblem(U.problems[(i + 1) % U.problems.length].id, 'practice'); }
       else if (t.id === 'dlg-note') { lsSet(NOTE_KEY, $('#notes').value); UI.Panels.closeDialog(); say('笔记已保存', 'good', 1800); }
