@@ -4,7 +4,37 @@
  * 接好连线，放进工作区的 items 槽位。 */
 (function (G) {
   'use strict';
-  const U = G.U, Q = U.Q, K = U.kit;
+  const U = G.U, Q = U.Q, K = U.kit, F = U.Fig, Geo = U.Geo;
+  const isPt = (f) => !!f && f.type === 'point' && f.pts && f.pts.length === 1;
+
+  // 连线、垂线（§10.5.6 第 2 步的最小集，工作区要用它们做中线和高）。规则写在这里，内核的几何规则见 geo-rules.js。
+  U.defineRule('geo.seg', {
+    on: 'fig', label: '连线：两点连成一条线段', essence: ['E1'], grade: [4, 9], keeps: 'congruence',
+    device: 'gseg', wire: ['a', 'b'],
+    match(input) {
+      if (!isPt(input.a) || !isPt(input.b)) return '连线要两个点';
+      if (Q.num(F.d2(input.a.pts[0], input.b.pts[0])) === 0) return '连线要两个不同的点';
+    },
+    apply(input) { return { type: 'segment', pts: [input.a.pts[0], input.b.pts[0]] }; },
+    check() { return true; },
+  });
+
+  U.defineRule('geo.perp', {
+    on: 'fig', label: '垂线：过一点作线段所在直线的垂线（高）', essence: ['E1', 'E3'], grade: [7, 9], keeps: 'congruence',
+    device: 'gfoot', wire: ['p', 's'],
+    match(input) {
+      if (!isPt(input.p)) return '垂线要从一个点作';
+      const s = input.s;
+      if (!s || s.type !== 'segment') return '垂线要对着一条线段作';
+      if (Q.num(F.d2(s.pts[0], s.pts[1])) === 0) return '这条线段是一个点，作不出垂线';
+    },
+    apply(input) { const s = input.s; return { type: 'point', pts: [Geo.foot(input.p.pts[0], s.pts[0], s.pts[1])] }; },
+    check(input, out) {
+      const p = input.p.pts[0], q = out.pts[0], s = input.s;
+      const dot = Q.add(Q.mul(Q.sub(q.x, p.x), Q.sub(s.pts[1].x, s.pts[0].x)), Q.mul(Q.sub(q.y, p.y), Q.sub(s.pts[1].y, s.pts[0].y)));
+      return Q.num(dot) === 0;
+    },
+  });
 
   U.registerPack({
     id: 'workspace', version: 1, needs: ['geo'],
@@ -25,6 +55,8 @@
         workspace: {
           shows: ['fig', 'figs'],
           tools: [
+            { id: 'seg', label: '连线', rule: 'geo.seg' },
+            { id: 'perp', label: '垂线', rule: 'geo.perp' },
             { id: 'cut', label: '剪', rule: 'geo.cut' },
             { id: 'move', label: '移动', rule: 'geo.place' },
             { id: 'rot', label: '旋转', rule: 'geo.place', defaults: { turn: 1 } },

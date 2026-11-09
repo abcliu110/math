@@ -295,6 +295,55 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   await p.click('#dlg-fresh'); await p.waitForTimeout(100);
   const fresh = await p.evaluate(() => ({ mode: UI.S.mode, saved: localStorage.getItem('universe-session-v1') || '' }));
   ok(fresh.mode === 'free' && fresh.saved === '', '重新开始：回到自由探究，存档清掉：' + JSON.stringify(fresh));
+  console.log('几何工作区（只用工具和选点，不拖卡片）');
+  // 点画布上的对象（data-pick）：找一个真能点到它的位置；Shift 加选
+  const pickAt = async (name, shift) => {
+    const pt = await p.evaluate((nm) => {
+      for (const el of [...document.querySelectorAll('[data-pick]')].filter((e) => e.dataset.pick === nm)) {
+        const r = el.getBoundingClientRect(), cands = [[r.left + r.width / 2, r.top + r.height / 2]];
+        for (let i = 1; i < 10; i++) for (let j = 1; j < 10; j++) cands.push([r.left + r.width * i / 10, r.top + r.height * j / 10]);
+        for (const [x, y] of cands) { const hit = document.elementFromPoint(x, y); if (hit && hit.closest('[data-pick]') === el) return { x, y }; }
+      }
+      return null;
+    }, name);
+    if (!pt) { ok(false, '找不到可以点的对象：' + name); return; }
+    if (shift) await p.keyboard.down('Shift');
+    await p.mouse.click(pt.x, pt.y);
+    if (shift) await p.keyboard.up('Shift');
+  };
+  const wsTool = async (id) => { await p.click('[data-ws-tool="' + id + '"]'); await p.waitForTimeout(60); };
+  const wsSteps = () => p.locator('.wsx-step').count();
+  const msDone = () => p.evaluate(() => Object.fromEntries(Object.entries(UI.S.run.ms).map(([k, v]) => [k, !!v.done])));
+  const sideOfCut = (id) => p.evaluate((cid) => (UI.S.D[cid].out.a.data.pts.length === 3 ? 'a' : 'b'), id);
+
+  await p.evaluate(() => UI.App.openProblem('geo-median-area', 'practice')); await p.waitForTimeout(200);
+  ok(await p.locator('.card').count() === 1 && await p.locator('.card .bdy.wsbody').count() === 1, '工作区只占一张卡片；里面的点和图形不另外画卡片');
+  await pickAt('B'); await pickAt('C', true); await wsTool('mid');
+  ok(await wsSteps() === 1, '选 B、C，点「中点」：工作区多一步');
+  await pickAt('A'); await pickAt('M(BC)', true); await wsTool('seg');
+  await pickAt('poly(A,B,C)'); await pickAt('seg(A,M(BC))', true); await wsTool('cut');
+  const m1 = await msDone();
+  ok(m1.mid && m1.cut, '中线剪开，两块面积相等，两个里程碑都完成：' + JSON.stringify(m1));
+  ok(await wsSteps() === 3 && await p.evaluate(() => UI.S.undo.length) === 3, '步骤历史 3 步，撤销栈里只有 3 次工具动作（没有拖卡片）');
+  await shot('ui-ws-median');
+  // 做完一道题会在 700 毫秒后弹出结果对话框；等它出来再关掉，免得盖住下一道题
+  await p.waitForTimeout(900); if (await p.locator('#dlg.open').count()) await p.click('#dlg-close');
+
+  await p.evaluate(() => UI.App.openProblem('geo-pgram-cut', 'practice')); await p.waitForTimeout(200);
+  await pickAt('A'); await pickAt('B', true); await wsTool('seg');
+  await pickAt('D'); await pickAt('seg(A,B)', true); await wsTool('perp');
+  await pickAt('poly(A,B,C,D)'); await pickAt('perp(D,seg(A,B))', true); await wsTool('cut');
+  const cid = await p.evaluate(() => Object.keys(UI.S.scene.entities).find((k) => UI.S.scene.entities[k].type === 'gcut'));
+  await p.fill('[data-ws-arg="dx"]', '5');
+  await pickAt('cut:' + cid + ':' + (await sideOfCut(cid)));
+  await wsTool('move');
+  const m2 = await msDone(), dxs = await p.evaluate(() => Object.values(UI.S.scene.entities).filter((e) => e.type === 'gplace').map((e) => e.props.dx));
+  ok(m2.height && m2.cut, '从 D 作高，沿高剪开：两个里程碑完成：' + JSON.stringify(m2));
+  ok(dxs.length === 1 && dxs[0] === 5, '选剪下的三角形，点「移动」（向右 5 格）：摆放步骤的 dx 为 5');
+  // 「拼成长方形」还做不到：合并工具没有办法把目标图形接进拼合器材（见报告），这里只记下来
+  console.log('  注：几何 geo-pgram-cut 的「移动后正好拼成长方形」里程碑 = ' + m2.fit + '（只用工具做不到，待定）');
+  await shot('ui-ws-pgram');
+
   ok(errs.length === 0, '控制台 0 报错' + (errs.length ? '：' + errs[0] : ''));
   console.log('\n' + pass + ' 通过，' + fail + ' 失败'); await b.close(); process.exit(fail ? 1 : 0);
 })();

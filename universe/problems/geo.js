@@ -4,16 +4,16 @@
   'use strict';
   const U = G.U, W = U.World, F = U.Fig;
 
-  // 开场台面：几个带角色的自由点围成一个多边形，接到画板上
+  // 开场台面：一个几何工作区，里面放着几个带角色的自由点和它们围成的多边形（点和图形都画在工作区里，不是卡片）
   function board(points, extra) {
     const s = W.blank(), ids = {};
-    for (const [role, x, y] of points) { const id = W.add(s, 'gpt', 0, 0, { x, y, mark: role }); s.entities[id].role = role; ids[role] = id; }
+    const ws = W.add(s, 'gworkspace', 0, 0, { title: '几何工作区' }); s.entities[ws].role = '工作区';
+    const put = (id) => W.act(s, { t: 'put', id, parent: ws, slot: 'items' });
+    for (const [role, x, y] of points) { const id = W.add(s, 'gpt', 0, 0, { x, y, mark: role }); s.entities[id].role = role; ids[role] = id; put(id); }
     const poly = W.add(s, 'gpoly', 0, 0, {}); s.entities[poly].role = '图形';
     for (const [role] of points) W.act(s, { t: 'link', from: ids[role], fromPort: 'p', to: poly, toPort: 'pts' });
-    const b = W.add(s, 'gboard', 0, 0, {}); s.entities[b].role = '画板';
-    W.act(s, { t: 'link', from: poly, fromPort: 'f', to: b, toPort: 'figs' });
-    for (const [role] of points) W.act(s, { t: 'link', from: ids[role], fromPort: 'p', to: b, toPort: 'figs' });
-    if (extra) extra(s, ids, b);
+    put(poly);
+    if (extra) extra(s, ids, ws, put);
     W.act(s, { t: 'tidy' });
     return s;
   }
@@ -46,9 +46,9 @@
       points: ['5.6'], level: 'core', rung: 3, alias: ['平行四边形', '剪拼', '高', '移动', '粘贴'],
       hook: '沿着一条高把平行四边形剪开，把剪下的那块移过去，能不能正好拼成右边的长方形？',
       shelf: ['gseg', 'gfoot', 'gcut', 'gplace', 'gasm', 'gboard', 'figmeasure'],
-      build: () => board([['A', 0, 0], ['B', 5, 0], ['C', 7, 3], ['D', 2, 3]], (s, ids, b) => {
+      build: () => board([['A', 0, 0], ['B', 5, 0], ['C', 7, 3], ['D', 2, 3]], (s, ids, ws, put) => {
         const t = W.add(s, 'fquad', 0, 0, { ax: 2, ay: 0, bx: 7, by: 0, cx: 7, cy: 3, dx: 2, dy: 3 }); s.entities[t].role = '目标长方形';
-        W.act(s, { t: 'link', from: t, fromPort: 'f', to: b, toPort: 'figs' });
+        put(t);
       }),
       milestones: [
         { id: 'height', say: '从 D 作 AB 的垂线（高）', score: 3, glow: ['gseg', 'gfoot'], why_code: '要看垂足器材的点是不是 D',

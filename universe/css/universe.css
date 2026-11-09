@@ -232,3 +232,20 @@ table.grid { border-collapse: collapse; margin: 4px 0; }
 table.grid td { padding: 2px 3px; }
 table.grid input { width: 64px; font: inherit; }
 button.gdel { border: 0; background: none; color: var(--dim); cursor: pointer; }
+
+/* 几何工作区（§10.5，任务 H1）：画布在卡片里；面板在卡片底下 */
+.wsbody { cursor: default; }
+.wsx { position: absolute; box-sizing: border-box; background: var(--card); color: var(--ink); border-radius: 12px; padding: 8px 10px; font-size: 12px; box-shadow: 0 2px 0 #0003, 0 10px 26px #0006; border: 2px solid transparent; user-select: none; }
+.wsx button { font: inherit; font-size: 12px; padding: 3px 8px; margin: 2px 2px 2px 0; border-radius: 8px; border: 1px solid #aab4c8; background: #fff; color: var(--ink); cursor: pointer; }
+.wsx button:hover { border-color: var(--blue); }
+.wsx input[type=number] { width: 48px; font: inherit; font-size: 12px; }
+.wsx-args { margin: 4px 0; color: var(--dim); }
+.wsx-sel { margin: 6px 0 2px; color: var(--dim); }
+.wsx-foot { min-height: 16px; margin-bottom: 4px; color: var(--dim); }
+.wsx-foot.bad { color: var(--bad); font-weight: 700; }
+.wsx-h { font-weight: 700; margin-top: 8px; }
+.wsx-none { color: var(--dim); }
+.wsx-step { display: flex; justify-content: space-between; align-items: center; gap: 6px; padding: 3px 4px; border-radius: 6px; cursor: pointer; }
+.wsx-step:hover { background: #3b9bff22; }
+.wsx-step button { margin: 0; padding: 0 6px; }
+.wsx-layers label { display: inline-block; margin: 2px 8px 2px 0; }

@@ -10,6 +10,8 @@
   const S = (UI.S = {
     scene: W.blank(), D: null, sel: null, selLink: null, view: { x: 0, y: 0, z: 1 }, mode: 'free', problem: null, run: null,
     undo: [], redo: [], tab: 'lab', inspOpen: false, glow: [], showSig: true, q1: '', freeScene: null,
+    // 几何工作区（§10.5）：选中的对象（稳定名字）、隐藏的图层（器材id.口）、移动工具的参数、面板消息
+    wsSel: [], wsHidden: {}, wsArgs: { dx: '0', dy: '0' }, wsMsg: '',
   });
 
   // ---------- 提示条 ----------
@@ -135,6 +137,7 @@
     S.problem = p; S.mode = mode || 'practice'; S.scene = p.build(); S.run = J.start(p, S.mode);
     S.session = U.Session.start(p, S.mode, S.scene);
     S.undo = []; S.redo = []; S.sel = null; S.selLink = null; S.inspOpen = false; S.tab = 'steps'; S.glow = [];
+    S.wsSel = []; S.wsHidden = {}; S.wsMsg = '';
     if (!p.predict) S.run.pred_done = true;
     Ev.ctx = { pid: p.id, mode: S.mode }; Ev.push('start', {});
     S.D = W.evaluate(S.scene); UI.Stage.fit(); S.glow = glowOf();

@@ -119,6 +119,7 @@
         case 'gcut': { const f = one(id, 'f'), l = one(id, 'line'); return (port === 'a' || port === 'b') && f && l ? nameOfCut(id, port) : null; }
         case 'gplace': return port === 'f' && one(id, 'f') ? nameOfStep(id, port) : null;
         case 'gasm': return port === 'merged' && all(id, 'pieces') ? nameOfStep(id, port) : null;
+        case 'gfoot': { const p = one(id, 'p'), s = one(id, 's'); return p && s ? (port === 'p' ? 'foot(' + p + ',' + s + ')' : port === 'h' ? 'perp(' + p + ',' + s + ')' : null) : null; }
         default: return null;
       }
     };
@@ -136,6 +137,8 @@
 
   U.Names = {
     nameOfOrigin, nameOfMidpoint, nameOfSegment, nameOfIntersection, nameOfPolygon, nameOfCut, nameOfStep,
+    // 场景里所有能命名的输出口：[{ name, id, port }]（工作区用它标名字、找选中的对象）
+    list(scene) { return Array.from(indexOf(scene), ([name, hit]) => Object.assign({ name }, hit)); },
     // 找回一个名字对应的对象：{ name, id, port, ent, value }（value 为 null 表示现在算不出来）。
     // 名字不存在时返回 'missing: <名字>'，步骤可以直接把这句话说给学生。
     resolve(scene, name) {
