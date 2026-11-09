@@ -22,6 +22,11 @@
   const PROP_TYPES = ['num', 'int', 'choice', 'bool', 'text'];
 
   U.define = function (id, def) {
+    // 器材 id 必须唯一：重名时保留先定义的，记一条错误（不悄悄覆盖）
+    if (U.types[id] && U.types[id] !== def) {
+      (U.packErrors = U.packErrors || []).push('器材 id 重复：' + id + '（' + (U.types[id].pack || '?') + ' 已有，' + (def.pack || '?') + ' 又定义了一次）');
+      return U.types[id];
+    }
     def.id = id;
     def.prefix = def.prefix || def.label;
     def.grades = def.grades || [1, 9];

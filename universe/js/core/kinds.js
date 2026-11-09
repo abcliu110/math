@@ -115,6 +115,8 @@
   // 有理数可以无损进入符号数（num → real）
   U.KINDS.num.to = Object.assign({}, U.KINDS.num.to || {}, { real: (q) => R.from(q) });
 
+  // 连线气泡用的短文字：kind 可以提供 brief（例如图形只写“三角形”），否则同 showVal
+  U.briefVal = (v) => { const K = v && U.KINDS[v.kind]; return K && K.brief ? (v.exact === false ? '≈' : '') + K.brief(v.data) : U.showVal(v); };
   U.kindOK = (src, dst) => src === dst || dst === 'any' || !!(U.KINDS[src] && U.KINDS[src].to && U.KINDS[src].to[dst]);
   U.kindName = (k) => (U.KINDS[k] ? U.KINDS[k].label : k);
   U.kindColor = (k) => (U.KINDS[k] ? U.KINDS[k].color : '#94a3b8');

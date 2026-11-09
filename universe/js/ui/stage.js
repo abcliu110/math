@@ -78,7 +78,7 @@
       const sel = S.selLink === l.id, pd = bez(a, b);
       paths += '<path class="hit" data-link="' + l.id + '" d="' + pd + '"/><path class="ln' + (sel ? ' sel' : '') + '" stroke="' + col + '" d="' + pd + '"/>';
       if (S.scene.clock.running) paths += '<path class="flow" d="' + pd + '"/>';
-      lbl += '<div class="lb' + (sel ? ' sel' : '') + '" data-link="' + l.id + '" style="left:' + ((a.x + b.x) / 2) + 'px;top:' + ((a.y + b.y) / 2) + 'px">' + K.esc(v ? U.showVal(v) : '—') + (sel ? ' <button class="lbdel" data-unlink="' + l.id + '" title="删除这根线">✕</button>' : '') + '</div>';
+      lbl += '<div class="lb' + (sel ? ' sel' : '') + '" data-link="' + l.id + '" style="left:' + ((a.x + b.x) / 2) + 'px;top:' + ((a.y + b.y) / 2) + 'px">' + K.esc(v ? U.briefVal(v) : '—') + (sel ? ' <button class="lbdel" data-unlink="' + l.id + '" title="删除这根线">✕</button>' : '') + '</div>';
     }
     if (linking && linking.cur) { const F = E[linking.from]; paths += '<path class="ln" stroke="#fff" stroke-dasharray="6 6" d="' + bez(portPos(F, linking.fromPort, D, true), linking.cur) + '" fill="none"/>'; }
     return { paths, lbl };

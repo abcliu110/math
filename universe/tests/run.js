@@ -3,7 +3,7 @@
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const root = path.join(__dirname, '..');
 const fsx = require('fs'), pk = (d) => fsx.readdirSync(path.join(root, d)).filter((f) => f.endsWith('.js')).sort().map((f) => d + '/' + f);
-const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/registry.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
+const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/figure.js', 'js/core/registry.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
 const ctx = vm.createContext({ console, TextEncoder, TextDecoder, btoa, atob });
 ctx.globalThis = ctx;
 for (const f of files) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f });
@@ -473,6 +473,62 @@ t('出题自检：台面满足目标才可以发布；空台面就满足的题�
   eq(U.Share.selfCheck([{ type: 'num', port: 'v', op: '=', value: '5' }], ok).ok, true);
   eq(U.Share.selfCheck([trivial], W.blank()).ok, false, '空台面就满足的题不行');
 });
+console.log('图形对象模型');
+const Fg = U.Fig, R34 = Fg.polygon([[0, 0], [4, 0], [0, 3]]), O0 = { x: Q(0), y: Q(0) };
+t('3-4-5 直角三角形：面积 6、周长 12、斜边 5，都是精确值', () => {
+  eq(U.Real.show(Fg.area(R34)), '6'); const per = Fg.perimeter(R34); truthy(per.exact); eq(U.Real.show(per.real), '12');
+  eq(U.Real.show(Fg.len(R34.pts[1], R34.pts[2])), '5'); truthy(Fg.isRight(R34, 0)); truthy(!Fg.isRight(R34, 1));
+});
+t('边长是根号时周长精确保留：等腰直角三角形 2 + 2√2', () => {
+  const t1 = Fg.polygon([[0, 0], [2, 0], [0, 2]]); const per = Fg.perimeter(t1); truthy(per.exact); eq(U.Real.show(per.real), '4 + 2√2');
+});
+t('不同根号相加不能精确表示：周长只给近似值', () => {
+  const t2 = Fg.polygon([[0, 0], [1, 1], [3, 0]]); const per = Fg.perimeter(t2); eq(per.exact, false); truthy(Math.abs(per.approx - (3 + Math.SQRT2 + Math.sqrt(5))) < 1e-9);
+});
+t('平移、旋转、对称后全等，面积不变（不变量）', () => {
+  for (const g of [Fg.translate(R34, Q(3), Q(-2)), Fg.rotate90(R34, O0, 1), Fg.reflect(R34, O0, { x: Q(1), y: Q(1) })]) {
+    truthy(Fg.congruent(R34, g), Fg.show(g)); eq(U.Real.show(Fg.area(g)), '6');
+  }
+});
+t('关于直线 y = x 对称：(2, 0) 变成 (0, 2)', () => { const p = Fg.reflect(Fg.point(2, 0), O0, { x: Q(1), y: Q(1) }); eq(Fg.show(p), '点 (0, 2)'); });
+t('放大 2 倍：相似不全等，相似比 2，面积变 4 倍', () => {
+  const g = Fg.scale(R34, O0, Q(2)); truthy(!Fg.congruent(R34, g)); const s = Fg.similar(R34, g); truthy(s.ok); eq(U.Q.show(s.k2), '4'); eq(U.Real.show(Fg.area(g)), '24');
+});
+t('顶点顺序不同也能找到对应关系；形状不同则不相似', () => {
+  truthy(Fg.congruent(R34, Fg.polygon([[0, 3], [0, 0], [4, 0]])));
+  truthy(!Fg.similar(R34, Fg.polygon([[0, 0], [3, 0], [0, 1]])).ok);
+});
+t('圆：面积 4π、周长 4π（半径 2），精确；与另一个圆相似', () => {
+  const c = Fg.circle([0, 0], 4); eq(U.Real.show(Fg.area(c)), '4π'); eq(U.Real.show(Fg.perimeter(c).real), '4π');
+  truthy(Fg.similar(c, Fg.circle([1, 1], 9)).ok); truthy(Fg.onCircle({ x: Q(2), y: Q(0) }, c));
+});
+t('平行、垂直、点在线段上：精确判定', () => {
+  const s1 = Fg.segment([0, 0], [2, 1]), s2 = Fg.segment([1, 1], [5, 3]), s3 = Fg.segment([0, 0], [-1, 2]);
+  truthy(Fg.parallel(s1, s2)); truthy(Fg.perpendicular(s1, s3)); truthy(Fg.onSegment({ x: Q(1), y: Q(1, 2) }, s1)); truthy(!Fg.onSegment({ x: Q(3), y: Q(3, 2) }, s1));
+});
+t('图形是一种值：注册合格，存档往返后相等', () => { eq(U.lintKind(U.KINDS.fig), []); truthy(U.KINDS.fig.eq(U.KINDS.fig.parse(U.KINDS.fig.serialize(R34)), R34)); });
+t('器材连线：三角形 → 旋转 90° → 和原图比，全等；量一量面积 6', () => {
+  const sc = W.blank(); const a = W.add(sc, 'ftri', 0, 0, {}); const x = W.add(sc, 'xform', 0, 0, { mode: 1 }); const r = W.add(sc, 'figrel', 0, 0, {}); const m = W.add(sc, 'figmeasure', 0, 0, {});
+  truthy(W.act(sc, { t: 'link', from: a, fromPort: 'f', to: x, toPort: 'f' }).ok);
+  truthy(W.act(sc, { t: 'link', from: a, fromPort: 'f', to: r, toPort: 'a' }).ok); truthy(W.act(sc, { t: 'link', from: x, fromPort: 'f', to: r, toPort: 'b' }).ok);
+  truthy(W.act(sc, { t: 'link', from: x, fromPort: 'f', to: m, toPort: 'f' }).ok);
+  const D = W.evaluate(sc); eq(D[r].out.cong.data, true); eq(U.showVal(D[m].out.area), '6'); eq(U.showVal(D[m].out.right), '1');
+});
+t('器材连线：放大 3/2 倍，相似比 3/2，不全等；面积可以接进运算器继续算', () => {
+  const sc = W.blank(); const a = W.add(sc, 'fquad', 0, 0, {}); const x = W.add(sc, 'xform', 0, 0, { mode: 5, k: 3, kd: 2 }); const r = W.add(sc, 'figrel', 0, 0, {});
+  W.act(sc, { t: 'link', from: a, fromPort: 'f', to: x, toPort: 'f' }); W.act(sc, { t: 'link', from: a, fromPort: 'f', to: r, toPort: 'a' }); W.act(sc, { t: 'link', from: x, fromPort: 'f', to: r, toPort: 'b' });
+  const o = W.add(sc, 'op', 0, 0, { op: 2 }); W.act(sc, { t: 'link', from: a, fromPort: 'area', to: o, toPort: 'a' }); W.act(sc, { t: 'link', from: a, fromPort: 'area', to: o, toPort: 'b' });
+  const D = W.evaluate(sc); eq(D[r].out.cong.data, false); eq(D[r].out.sim.data, true); eq(U.showVal(D[r].out.k), '3/2'); eq(U.showVal(D[o].out.r), '144');
+});
+t('图形不能接进只收数的口：连线被拒绝并说明原因', () => {
+  const sc = W.blank(); const a = W.add(sc, 'ftri', 0, 0, {}); const o = W.add(sc, 'op', 0, 0, {});
+  const r = W.act(sc, { t: 'link', from: a, fromPort: 'f', to: o, toPort: 'a' }); eq(r.ok, false); truthy(r.why.length > 0);
+});
+t('器材 id 不能重名：重名时保留原来的，并记录错误', () => {
+  const before = U.types.num; U.define('num', Object.assign({}, U.types.num));
+  truthy(U.types.num === before, '原器材不应被覆盖'); truthy(U.packErrors.some((m) => /器材 id 重复：num/.test(m)));
+});
+t('所有内置器材包加载时没有重名', () => eq(U.packErrors.filter((m) => /器材 id 重复/.test(m) && !/：num（/.test(m)), []));
 console.log('输出声明（1.2）');
 t('lint 拒绝没有声明 dim 的输出口', () => {
   const bad = Object.assign({}, U.types.num, { outputs: { v: { kind: 'num', label: '值' } } });
