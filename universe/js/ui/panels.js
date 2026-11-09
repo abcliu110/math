@@ -138,6 +138,32 @@
     if (!tree) return;
     dialog('<h3>这个数是怎么来的</h3><div class="why-tree">' + whyNode(tree, true) + '</div><div class="btnrow"><button class="btn" id="dlg-close">知道了</button></div>');
   }
+  // 家长周报（3.1）：本周练了什么、哪里没懂、孩子的原话，以及反复出现的误解
+  function parentDialog() {
+    const w = U.Learning.parentWeek(U.Events.log, U.problems);
+    const pr = w.practiced.length ? w.practiced.map((x) => '<div class="it"><span class="tt">' + esc(x.title) + '</span><small>' + x.score + ' / ' + x.max + (x.missed.length ? '；没达成：' + esc(x.missed.join('、')) : '') + (x.traps.length ? '；踩中：' + esc(x.traps.join('、')) : '') + '</small></div>').join('') : '<p>这一周还没有做题。</p>';
+    const qs = w.quotes.length ? w.quotes.map((q) => '<div class="whybox">“' + esc(q.text) + '”</div>').join('') : '';
+    const rep = w.repeated.length ? '<div class="warnbox">反复出现的误解：' + w.repeated.map((d) => esc(d.title)).join('、') + '</div>' : '';
+    dialog('<h3>家长周报（近 7 天）</h3>' + rep + '<div class="plist">' + pr + '</div>' + qs + '<div class="btnrow"><button class="btn" id="dlg-close">关闭</button></div>');
+  }
+  // 改进清单（3.5）：按严重程度排序的规则化建议
+  function improveDialog() {
+    const list = U.Learning.improvements(U.Events.log, U.problems);
+    const rows = list.length ? list.map((x) => '<div class="it"><span class="tt">' + esc(x.title) + '</span><small>' + esc(x.advice) + '</small></div>').join('') : '<p>还没有足够的数据给出建议（每道题至少做 3 次）。</p>';
+    dialog('<h3>改进清单</h3><p style="color:var(--txt3)">给出题人看的：按严重程度排序。</p><div class="plist">' + rows + '</div><div class="btnrow"><button class="btn" id="dlg-close">关闭</button></div>');
+  }
+  // 体检表（3.4）：输入知识点编号，看它的达成率、常踩的陷阱、自选错因和最高证据等级
+  function healthDialog() {
+    dialog('<h3>知识点体检表</h3><p style="color:var(--txt3)">输入知识点编号，例如 4.6</p><div class="btnrow"><input id="hp-point" placeholder="4.6" style="width:90px"><button class="btn pri" id="hp-go">看看</button></div><div id="hp-out"></div><div class="btnrow"><button class="btn" id="dlg-close">关闭</button></div>');
+  }
+  function healthOut(point) {
+    const out = document.getElementById('hp-out'); if (!out) return;
+    if (!U.CURRICULUM[point]) { out.innerHTML = '<p>知识点表里没有“' + esc(point) + '”。</p>'; return; }
+    const h = U.Learning.healthCard(U.Events.log, U.problems, point);
+    const rows = h.rows.length ? h.rows.map((r) => '<div class="it"><span class="tt">' + esc(r.title) + '</span><small>做了 ' + r.attempts + ' 次；' + Object.keys(r.rate).map((k) => k + ' ' + Math.round(r.rate[k] * 100) + '%').join('，') + '</small></div>').join('') : '<p>这个知识点还没有做过的题。</p>';
+    const tr = h.traps.length ? h.traps.map((t) => '<div class="warnbox">⚠ ' + esc(t.text) + '（' + t.n + ' 次）</div>').join('') : '';
+    out.innerHTML = '<h4>' + esc(U.CURRICULUM[point].title) + '</h4>' + rows + tr + '<p><small>证据等级最高：' + esc(U.Evidence.LEVEL_NAME[h.topEvidence] || '') + '</small></p>';
+  }
   // 错题本（3.1）：没达成的里程碑和踩过的陷阱，点一下回到那道题
   function wrongDialog() {
     const list = U.Learning.wrongBook(U.Events.log, U.problems);
@@ -221,5 +247,5 @@
     });
   }
 
-  UI.Panels = { renderTop, renderLeft, renderShelf, renderInsp, renderClock, dialog, closeDialog, reportHtml, inquiryHtml, wrongDialog, whyDialog, reportDialog, authorDialog, initShelfDrag, renderAll() { renderTop(); renderLeft(); renderShelf(); renderInsp(); renderClock(); } };
+  UI.Panels = { renderTop, renderLeft, renderShelf, renderInsp, renderClock, dialog, closeDialog, reportHtml, inquiryHtml, wrongDialog, whyDialog, parentDialog, improveDialog, healthDialog, healthOut, reportDialog, authorDialog, initShelfDrag, renderAll() { renderTop(); renderLeft(); renderShelf(); renderInsp(); renderClock(); } };
 })(window);

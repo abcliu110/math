@@ -158,6 +158,9 @@
       if (m.dataset.m === 'myimport') { const i = document.createElement('input'); i.type = 'file'; i.accept = '.json'; i.onchange = () => { const r = new FileReader(); r.onload = () => { try { const n = U.Author.importJson(r.result); UI.Panels.renderLeft(); say('导入了 ' + n + ' 道题，在「实验库 → 我的题」里', 'good'); } catch (e) { say('导入失败：' + e.message, 'bad', 4000); } }; r.readAsText(i.files[0]); }; i.click(); }
       if (m.dataset.m === 'report') UI.Panels.reportDialog();
       if (m.dataset.m === 'wrong') UI.Panels.wrongDialog();
+      if (m.dataset.m === 'parent') UI.Panels.parentDialog();
+      if (m.dataset.m === 'improve') UI.Panels.improveDialog();
+      if (m.dataset.m === 'health') UI.Panels.healthDialog();
       if (m.dataset.m === 'export') download('学习记录.json', JSON.stringify(Ev.log, null, 1));
       if (m.dataset.m === 'clearlog') { Ev.clear(); UI.Panels.renderLeft(); say('学习记录已清除', '', 2000); }
     });
@@ -242,6 +245,7 @@
         UI.Panels.dialog(UI.Panels.inquiryHtml(r, S.problem));
         return;
       }
+      if (t.id === 'hp-go') { UI.Panels.healthOut((document.getElementById('hp-point') || {}).value || ''); return; }
       if (t.id === 'dlg-delout' || t.id === 'dlg-delall') {
         const id = pendingDel; pendingDel = null; UI.Panels.closeDialog();
         if (id && S.scene.entities[id]) { S.sel = null; act({ t: 'del', id, keep: t.id === 'dlg-delall' ? 'all' : 'out' }); }
