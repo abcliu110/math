@@ -2,6 +2,7 @@
  * 截图写到 tests/shots/。 */
 'use strict';
 const { chromium } = require('playwright');
+const G = require('./gestures');   // 手势库和不变量检查（新测试块用它）
 const path = require('path'), fs = require('fs');
 const url = 'file://' + path.join(__dirname, '..', 'index.html');
 const shots = path.join(__dirname, 'shots'); fs.mkdirSync(shots, { recursive: true });
