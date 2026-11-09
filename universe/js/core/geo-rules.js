@@ -33,6 +33,17 @@
     },
     apply(input) { return { pieces: Geo.cut(input.f, input.line.pts[0], input.line.pts[1]).pieces }; },
     check(input, out) { return Q.eq(Q.add(a2(out.pieces[0]), a2(out.pieces[1])), a2(input.f)); },
+    // 剪之前（world 的 tool 会调用）：已经剪开成块器材的步骤，它的输出口不能再剪（要用块本身的名字）
+    guard(scene, wires) {
+      for (const w of wires) {
+        if (w.r.ent.type !== 'gcut') continue;
+        if (scene.links.some((l) => l.from === w.r.id && scene.entities[l.to] && scene.entities[l.to].type === 'gpiece'))
+          return '这一块已经变成了块器材，请选块本身（名字是「step:块的编号:f」）再剪';
+      }
+      return null;
+    },
+    // 剪完之后（world 的 tool 会调用）：建两块器材，放进工作区，隐藏被剪的图形
+    after(scene, ctx) { return U.Piece.cutInto(scene, ctx); },
   });
 
   R('geo.place', {

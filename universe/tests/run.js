@@ -1542,7 +1542,7 @@ t('中线平分面积（只用动作）：中点用工具“中点”，剪用�
     D = W.evaluate(sc); areaEq(D, c.id);
   }
   eq(U.Names.resolve(sc, 'M(BC)').id, mr.id, '改顶点后名字不变');
-  eq(W.childrenOf(sc, ws).length, 2, '中点和剪都放进了工作区');
+  eq(W.childrenOf(sc, ws).length, 4, '中点、剪和两块（块器材）都放进了工作区');
 });
 t('合并与翻转：两半用工具“合并”粘回三角形（面积不变），块可以再翻转，结果有稳定名字', () => {
   const { sc, A, ws } = hw.build();
@@ -1737,6 +1737,86 @@ t('resize：整理（tidy）用实际大小排版，列与列之间不重叠', (
   W.act(sc, { t: 'resize', id: a, w: 500, h: 300 });
   W.act(sc, { t: 'tidy' });
   truthy(sc.entities[b].x >= sc.entities[a].x + 500, '第二列应在第一列的实际宽度之后');
+});
+
+console.log('剪开以后的块（§10.5.10 内核）：块器材、移动旋转翻转放缩、撤销、改顶点');
+// 同一个三角形，用线 x=1 剪开；返回两块的器材 id（按创建顺序）
+const pc = {};
+pc.cut = () => {
+  const { sc, A, B, C, ws, pt } = hw.build();
+  const P = pt('P', 1, -1), Q2 = pt('Q', 1, 5);
+  hw.seg(sc, P, { id: Q2, port: 'p' });
+  const c = W.act(sc, { t: 'tool', ws, tool: 'cut', picks: ['poly(A,B,C)', 'seg(P,Q)'] }); truthy(c.ok, c.why);
+  const pieces = Object.values(sc.entities).filter((e) => e.type === 'gpiece').map((e) => e.id);
+  return { sc, A, B, C, ws, c, pieces };
+};
+t('剪开：建两个块器材，名字是「块 1」「块 2」，各有颜色；原图隐藏；没有摆放器材', () => {
+  const { sc, ws, c, pieces } = pc.cut();
+  eq(pieces.length, 2, '应有两个块器材');
+  eq(pieces.map((id) => sc.entities[id].props.name), ['块 1', '块 2']);
+  eq(pieces.map((id) => sc.entities[id].name), ['块 1', '块 2']);
+  truthy(pieces.every((id) => /^#[0-9a-f]{6}$/i.test(sc.entities[id].props.color)), '每块都有颜色');
+  truthy(sc.entities[pieces[0]].props.color !== sc.entities[pieces[1]].props.color, '两块颜色不同');
+  eq(Object.values(sc.entities).filter((e) => e.type === 'gplace').length, 0, '剪的工具不建摆放器材');
+  eq(sc.entities[U.Names.resolve(sc, 'poly(A,B,C)').id].hidden, true, '被剪的三角形隐藏');
+  eq(sc.links.filter((l) => l.from === c.id && sc.entities[l.to].type === 'gpiece').length, 2, '剪切步骤的 a、b 各接一块');
+  eq(pieces.map((id) => W.childrenOf(sc, ws).some((e) => e.id === id)), [true, true], '两块都在工作区里');
+  const D = W.evaluate(sc);
+  truthy(pieces.every((id) => D[id].out.f && D[id].out.f.kind === 'fig'), '两块都有形状输出');
+});
+t('块的移动：移动块 2 三次，仍只有这一个块器材，每次一步；撤销最后一步回到前一个 dx', () => {
+  const { sc, pieces } = pc.cut();
+  const b2 = pieces[1], steps = [], snaps = [];
+  for (let i = 0; i < 3; i++) {
+    const before = W.save(sc);
+    const r = W.act(sc, { t: 'piece', id: b2, what: 'move', value: { dx: 5, dy: 0 } }); truthy(r.ok, r.why);
+    snaps.push(before); steps.push(r.step);
+  }
+  eq(Object.values(sc.entities).filter((e) => e.type === 'gpiece').length, 2, '仍只有两个块器材');
+  eq(steps.length, 3, '记了三步');
+  eq(sc.entities[b2].props.dx, 15);
+  const back = W.load(snaps.pop());
+  eq(back.entities[b2].props.dx, 10, '撤销最后一步，回到前一个 dx');
+});
+t('块的旋转：块 1 转 90°，输出顶点等于原顶点绕左下角逆时针转 90° 的结果', () => {
+  const { sc, pieces } = pc.cut();
+  const p1 = pieces[0];
+  const before = W.evaluate(sc)[p1].out.f.data.pts;
+  const xs = before.map((p) => p.x), ys = before.map((p) => p.y);
+  const x0 = xs.reduce((m, q) => (Q.cmp(q, m) < 0 ? q : m)), y0 = ys.reduce((m, q) => (Q.cmp(q, m) < 0 ? q : m));
+  const expect = before.map((p) => ({ x: Q.sub(x0, Q.sub(p.y, y0)), y: Q.add(y0, Q.sub(p.x, x0)) })).map((p) => Q.show(p.x) + ',' + Q.show(p.y)).sort();
+  truthy(W.act(sc, { t: 'piece', id: p1, what: 'turn', value: 1 }).ok, '转一次');
+  eq(sc.entities[p1].props.turn, 1);
+  const after = W.evaluate(sc)[p1].out.f.data.pts.map((p) => Q.show(p.x) + ',' + Q.show(p.y)).sort();
+  eq(after, expect, '旋转后的顶点');
+  truthy(W.act(sc, { t: 'piece', id: p1, what: 'turn', value: 3 }).ok, '再转三次回到 0');
+  eq(sc.entities[p1].props.turn, 0, '转满一圈（mod 360）');
+});
+t('块的翻转与放缩：翻转两次回到原样；放缩 1/2 后面积是原来的四分之一；锁住的块不能动', () => {
+  const { sc, pieces } = pc.cut();
+  const b1 = pieces[0];
+  const a2 = (id) => Q.abs(U.Fig.area2(W.evaluate(sc)[id].out.f.data));
+  const area0 = a2(b1);
+  W.act(sc, { t: 'piece', id: b1, what: 'flip', value: 1 });
+  eq(sc.entities[b1].props.flip, 1); W.act(sc, { t: 'piece', id: b1, what: 'flip', value: 1 }); eq(sc.entities[b1].props.flip, 0, '再翻一次翻回去');
+  W.act(sc, { t: 'piece', id: b1, what: 'scale', value: '1/2' });
+  eq(sc.entities[b1].props.scale, '1/2');
+  eq(Q.eq(Q.mul(a2(b1), Q(4)), area0), true, '面积变成四分之一');
+  sc.entities[b1].props.locked = true;
+  const r = W.act(sc, { t: 'piece', id: b1, what: 'move', value: { dx: 1, dy: 0 } });
+  eq(r.ok, false); truthy(/锁住/.test(r.why), r.why);
+});
+t('改原三角形的顶点：两块形状跟着变，位置和朝向（dx/dy/turn）保持不变', () => {
+  const { sc, A, pieces } = pc.cut();
+  const p1 = pieces[0];
+  W.act(sc, { t: 'piece', id: p1, what: 'move', value: { dx: 3, dy: 2 } });
+  W.act(sc, { t: 'piece', id: p1, what: 'turn', value: 1 });
+  const before = W.evaluate(sc)[p1].out.f.data.pts.map((p) => Q.show(p.x) + ',' + Q.show(p.y)).join(' ');
+  W.act(sc, { t: 'set', id: A, k: 'x', v: -3 }); W.act(sc, { t: 'set', id: A, k: 'y', v: 6 });
+  const D = W.evaluate(sc);
+  eq([sc.entities[p1].props.dx, sc.entities[p1].props.dy, sc.entities[p1].props.turn], [3, 2, 1], '属性不变');
+  truthy(D[p1].out.f && D[p1].out.f.data.pts.map((p) => Q.show(p.x) + ',' + Q.show(p.y)).join(' ') !== before, '形状变了');
+  eq(Object.values(sc.entities).filter((e) => e.type === 'gpiece').length, 2, '块仍是两个');
 });
 
 console.log('\n' + pass + ' 通过，' + fail + ' 失败');

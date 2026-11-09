@@ -320,6 +320,7 @@
     const why = rule.match ? rule.match(input, [], args) : null;
     if (typeof why === 'string') return fail(why);
     if (why === false) return fail('这一步不能用在这里');
+    if (rule.guard) { const g = rule.guard(scene, wires); if (g) return fail(g); }
     const def = U.types[rule.device], props = {};
     const raw = rule.props ? rule.props(args) : {};
     for (const k of Object.keys(raw)) {
@@ -335,13 +336,17 @@
     }
     const put = act(scene, { t: 'put', id, parent: ws.id, slot: 'items' });
     if (!put.ok) { undo(); return fail(put.why); }
-    return ok({ id, device: rule.device, rule: T.rule });
+    // 规则还要做的后续事（剪：建块器材、隐藏原图形）。guard 已经在建步骤之前检查过，这里不再失败
+    const extra = rule.after ? rule.after(scene, { id, ws, wires }) : null;
+    return ok(Object.assign({ id, device: rule.device, rule: T.rule }, extra && extra.pieces ? { pieces: extra.pieces } : {}));
   }
 
   function act(scene, a) {
     const E = scene.entities;
     switch (a.t) {
       case 'tool': return tool(scene, a);
+      // 块（§10.5.10）：改块自己的属性，一条动作记一步（撤销由界面的快照栈负责）
+      case 'piece': return U.Piece.act(scene, a);
       case 'add': {
         if (!U.types[a.type]) return fail('没有这种器材');
         const id = add(scene, a.type, a.x || 0, a.y || 0, a.props);
