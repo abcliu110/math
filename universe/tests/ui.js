@@ -68,7 +68,10 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   ok(await p.locator('#dlg.open').count() === 1, '做完后出现结果对话框');
   const txt = await p.locator('#dlg .box').innerText(); ok(/10 \/ 10/.test(txt), '满分 10/10：' + txt.replace(/\s+/g, ' ').slice(0, 60));
   ok(/11\/15/.test(txt) && /你的猜想/.test(txt), '猜想与结果并排');
-  await shot('ui-finish'); await p.click('#dlg-close');
+  await shot('ui-finish');
+  await p.click('#dlg-inquiry'); await p.waitForTimeout(100);
+  ok(await p.locator('#dlg .rep2 .pcard').count() === 4 && /实验报告/.test(await p.locator('#dlg .box').innerText()), '结果里可以打开实验报告，四栏齐全');
+  await p.click('#dlg-close');
   console.log('考试交卷');
   await p.click('[data-mode="exam"]'); await p.waitForTimeout(200);
   ok(await p.locator('#submit').isVisible(), '考试模式有交卷按钮');

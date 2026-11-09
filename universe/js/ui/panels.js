@@ -125,14 +125,25 @@
   function dialog(html) { const d = $('#dlg'); d.querySelector('.box').innerHTML = html; d.classList.add('open'); }
   function closeDialog() { $('#dlg').classList.remove('open'); }
 
-  function reportHtml(rep, p, mode) {
+  // 实验报告（2.5）：四栏。前三栏系统预填，第四栏学生自己写
+  function inquiryHtml(r, p) {
+    const c = r.cols, lvl = U.Evidence.LEVEL_NAME[c.found.evidence] || '';
+    const col = (t, body) => '<div class="pcard"><b>' + t + '</b>' + body + '</div>';
+    const guess = c.guess.prefill !== null ? esc(c.guess.prefill) : '没猜';
+    const tried = '<div>完成的里程碑：' + (c.tried.milestones.length || '0') + ' 个</div><div>用了提示：' + c.tried.hints + ' 次</div><div>操作：' + c.tried.opsCount + ' 次</div>' + c.tried.traps.map((t) => '<div class="warnbox">⚠ ' + esc(t) + '</div>').join('');
+    const found = '<div><small>证据等级：' + esc(lvl) + '</small></div><div>' + esc(c.found.wording) + '</div>';
+    const asks = '<textarea id="asks" placeholder="还想问什么？" style="width:100%;min-height:60px"></textarea>';
+    return '<h3>实验报告：' + esc(p.title) + '</h3><div class="rep2">' + col('我猜的', '<div>' + guess + '</div>') + col('我试了什么', tried) + col('我发现了', found) + col('我还想问', asks) + '</div>' +
+      '<div class="btnrow"><button class="btn" id="dlg-close">关闭</button></div>';
+  }
+    function reportHtml(rep, p, mode) {
     let h = '<h3>' + (mode === 'exam' ? '交卷结果：' : '做完了！　') + esc(p.title) + '</h3><div class="big">' + rep.score + ' / ' + rep.max + ' 分</div><div class="rep">';
     rep.items.forEach((i) => { h += '<span class="' + (i.done ? 'ok' : 'no') + '">' + (i.done ? '✓ ' : '○ ') + esc(i.say) + (i.half ? '（用了完整提示，半分）' : '') + '</span><span>' + (i.done ? (i.half ? i.score / 2 : i.score) : 0) + ' / ' + i.score + '</span>'; });
     h += '</div>';
     if (rep.guess !== null || rep.actual !== null) h += '<div class="cmp"><div><small>你的猜想</small>' + esc(rep.guess || '没猜') + '</div><div><small>实际结果</small>' + esc(rep.actual || '—') + (rep.match === true ? ' 🎯' : '') + '</div></div>';
     rep.traps.forEach((t) => { h += '<div class="warnbox">⚠ ' + esc(t) + '</div>'; });
     if (rep.newWay) h += '<div class="newway">✨ 你找到了一种参考解里没有的搭法！</div>';
-    h += '<div class="whybox">' + esc(p.why) + '</div><div class="btnrow"><button class="btn pri" id="dlg-again">再做一遍</button><button class="btn" id="dlg-next">下一题</button><button class="btn" id="dlg-close">继续玩</button></div>';
+    h += '<div class="whybox">' + esc(p.why) + '</div><div class="btnrow"><button class="btn pri" id="dlg-again">再做一遍</button><button class="btn" id="dlg-next">下一题</button><button class="btn" id="dlg-inquiry">实验报告</button><button class="btn" id="dlg-close">继续玩</button></div>';
     return h;
   }
 
@@ -180,5 +191,5 @@
     });
   }
 
-  UI.Panels = { renderTop, renderLeft, renderShelf, renderInsp, renderClock, dialog, closeDialog, reportHtml, reportDialog, authorDialog, initShelfDrag, renderAll() { renderTop(); renderLeft(); renderShelf(); renderInsp(); renderClock(); } };
+  UI.Panels = { renderTop, renderLeft, renderShelf, renderInsp, renderClock, dialog, closeDialog, reportHtml, inquiryHtml, reportDialog, authorDialog, initShelfDrag, renderAll() { renderTop(); renderLeft(); renderShelf(); renderInsp(); renderClock(); } };
 })(window);

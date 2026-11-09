@@ -235,6 +235,11 @@
       }
       const di = t.closest('.it[data-pid]');
       if (di) { UI.Panels.closeDialog(); openProblem(di.dataset.pid, 'practice'); return; }
+      if (t.id === 'dlg-inquiry' && S.problem) {
+        const r = U.Inquiry.report(U.Events.log, S.problem.id, U.problems);
+        UI.Panels.dialog(UI.Panels.inquiryHtml(r, S.problem));
+        return;
+      }
       if (t.id === 'dlg-delout' || t.id === 'dlg-delall') {
         const id = pendingDel; pendingDel = null; UI.Panels.closeDialog();
         if (id && S.scene.entities[id]) { S.sel = null; act({ t: 'del', id, keep: t.id === 'dlg-delall' ? 'all' : 'out' }); }

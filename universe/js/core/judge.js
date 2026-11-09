@@ -86,9 +86,11 @@
   }
 
   // 一种搭法的“指纹”：器材类型多重集 + 连线数。与参考解不同 → “你找到了一种新做法”
+  // 指纹 = 器材类型多重集 + 连线结构（每根线：来源器材类型.端口 → 目标器材类型.端口），与器材 id 和摆放位置无关
   function fingerprint(scene) {
-    const t = Object.values(scene.entities).map((e) => e.type).sort().join(',');
-    return t + '|' + scene.links.length;
+    const E = scene.entities, t = Object.values(E).map((e) => e.type).sort().join(',');
+    const ls = scene.links.map((l) => (E[l.from] ? E[l.from].type : '?') + '.' + l.fromPort + '>' + (E[l.to] ? E[l.to].type : '?') + '.' + l.toPort).sort().join(',');
+    return t + '|' + ls;
   }
 
   const Judge = {

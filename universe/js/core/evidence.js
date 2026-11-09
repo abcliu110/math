@@ -54,3 +54,54 @@
     },
   };
 })(typeof globalThis !== 'undefined' ? globalThis : window);
+
+/* 证明类器材的计算内核（§2.7）：每个函数是纯计算，算完把证据事件记入事件流，返回结果。
+ * 器材（参数扫描器、反例构造器、系统枚举器、证明脚手架、归纳阶梯）只负责把台面上的条件交给这里。 */
+(function (G) {
+  'use strict';
+  const U = G.U;
+  const EV = U.Evidence;
+
+  // 参数扫描器：在 [from, to] 的每个整数上检查 pred(n)。没有例外 → scan 事件（②）；找到例外 → counterexample（推翻）
+  EV.scanRange = function (from, to, pred, opts) {
+    opts = opts || {};
+    let counter = null, checked = 0;
+    for (let n = from; n <= to; n++) { checked++; if (!pred(n)) { counter = n; break; } }
+    if (counter !== null) {
+      EV.emit('counterexample', { found: true, where: 'n=' + counter, pid: opts.pid });
+      return { found: true, counter, checked };
+    }
+    EV.emit('scan', { range: [from, to], counterexamples: 0, checked, pid: opts.pid });
+    return { found: false, counter: null, checked };
+  };
+
+  // 反例构造器：在 [from, to] 里找第一个反例（找不到就是 ② 的扫描结论）
+  EV.findCounterexample = function (from, to, pred, opts) { return EV.scanRange(from, to, pred, opts); };
+
+  // 系统枚举器：列出全部情况（items），逐一检查 pred，数量与 expected 对上才是 ③
+  EV.enumerate = function (items, expected, pred, opts) {
+    opts = opts || {};
+    const bad = items.filter((x) => !pred(x));
+    const complete = items.length === expected;
+    if (bad.length) { EV.emit('counterexample', { found: true, where: String(bad[0]), pid: opts.pid }); return { complete, count: items.length, failed: bad.length, refuted: true }; }
+    EV.emit('enumerate', { count: items.length, expected, pid: opts.pid });
+    return { complete, count: items.length, failed: 0, refuted: false };
+  };
+
+  // 证明脚手架：steps 是 [{ text, ref }]，ref 指向台面上已验证的事实或已学的规律；没写 ref 的步不算填完
+  EV.proof = function (steps, opts) {
+    opts = opts || {};
+    const filled = steps.filter((s) => s && s.ref).length;
+    EV.emit('proof', { steps: steps.length, filled, pid: opts.pid });
+    return { steps: steps.length, filled, complete: steps.length > 0 && filled === steps.length };
+  };
+
+  // 归纳阶梯：base 是第一级是否成立；stepOk(k) 检查“第 k 级推出第 k+1 级”，检查 [1, upto) 的每一级
+  EV.induction = function (base, stepOk, upto, opts) {
+    opts = opts || {};
+    let step = true, failedAt = null;
+    for (let k = 1; k < upto; k++) { if (!stepOk(k)) { step = false; failedAt = k; break; } }
+    EV.emit('induction', { base: !!base, step, upto, pid: opts.pid });
+    return { base: !!base, step, failedAt, complete: !!base && step };
+  };
+})(typeof globalThis !== 'undefined' ? globalThis : window);

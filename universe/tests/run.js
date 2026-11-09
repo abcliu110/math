@@ -3,7 +3,7 @@
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const root = path.join(__dirname, '..');
 const fsx = require('fs'), pk = (d) => fsx.readdirSync(path.join(root, d)).filter((f) => f.endsWith('.js')).sort().map((f) => d + '/' + f);
-const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/registry.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
+const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/registry.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
 const ctx = vm.createContext({ console });
 ctx.globalThis = ctx;
 for (const f of files) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f });
@@ -235,6 +235,91 @@ t('陷阱 / 里程碑可以用 test 写条件（与 when 等价）', () => {
   const run = U.Judge.start(pr, 'practice'); U.Judge.check(pr, run, sc, W.evaluate(sc));
   W.act(sc, { t: 'set', id: n, k: 'n', v: 1 }); run.armed = true; run.ops = 1; U.Judge.check(pr, run, sc, W.evaluate(sc));
   truthy(run.ms.m1.done, 'test 形式的里程碑应得分');
+});
+console.log('探究数据（2.3 / 2.4 / 2.5）');
+t('搭法指纹：器材类型和线数相同，接法不同（串联 / 并联），指纹不同', () => {
+  const chain = W.blank(); const n1 = W.add(chain, 'num', 0, 0, { n: 1 }); const o1 = W.add(chain, 'op', 0, 0, { op: 0 }); const o2 = W.add(chain, 'op', 0, 0, { op: 0 });
+  W.act(chain, { t: 'link', from: n1, fromPort: 'v', to: o1, toPort: 'a' }); W.act(chain, { t: 'link', from: o1, fromPort: 'r', to: o2, toPort: 'a' });
+  const par = W.blank(); const n2 = W.add(par, 'num', 0, 0, { n: 1 }); const p1 = W.add(par, 'op', 0, 0, { op: 0 }); const p2 = W.add(par, 'op', 0, 0, { op: 0 });
+  W.act(par, { t: 'link', from: n2, fromPort: 'v', to: p1, toPort: 'a' }); W.act(par, { t: 'link', from: n2, fromPort: 'v', to: p2, toPort: 'a' });
+  truthy(U.Judge.fingerprint(chain) !== U.Judge.fingerprint(par), '串联和并联应得到不同指纹');
+});
+t('搭法指纹：同一搭法，器材 id 不同，指纹相同', () => {
+  const build = () => { const sc = W.blank(); const a = W.add(sc, 'num', 0, 0, { n: 1 }); const o = W.add(sc, 'op', 0, 0, { op: 0 }); W.act(sc, { t: 'link', from: a, fromPort: 'v', to: o, toPort: 'a' }); return sc; };
+  eq(U.Judge.fingerprint(build()), U.Judge.fingerprint(build()));
+});
+t('误解：同一知识点、同一个错误猜测出现 2 次以上才标记', () => {
+  const ev = [
+    { type: 'finish', pid: 'p1', data: { match: false, guess: '5' } },
+    { type: 'finish', pid: 'p2', data: { match: false, guess: '5' } },
+    { type: 'finish', pid: 'p3', data: { match: false, guess: '7' } },
+  ];
+  const probs = [{ id: 'p1', points: ['4.6'] }, { id: 'p2', points: ['4.6'] }, { id: 'p3', points: ['4.6'] }];
+  const m = U.Inquiry.misconceptions(ev, probs);
+  eq(m.length, 1); eq(m[0].wrongGuess, '5'); eq(m[0].count, 2);
+});
+t('实验报告四栏：猜的、试的、发现的（证据等级 + 措辞）', () => {
+  const ev = [
+    { type: 'start', pid: 'q1', data: {} },
+    { type: 'predict', pid: 'q1', data: { v: '6' } },
+    { type: 'milestone', pid: 'q1', data: { id: 'm1' } },
+    { type: 'hint', pid: 'q1', data: { id: 'm1', level: 1 } },
+    { type: 'finish', pid: 'q1', data: { match: true, guess: '6', actual: '6' } },
+    { type: 'evidence', pid: 'q1', data: { kind: 'scan', range: [1, 100], counterexamples: 0 } },
+  ];
+  const r = U.Inquiry.report(ev, 'q1', [{ id: 'q1', title: '探针题' }]);
+  eq(r.cols.guess.prefill, '6'); eq(r.cols.tried.milestones, ['m1']); eq(r.cols.tried.hints, 1);
+  eq(r.cols.found.evidence, 2); eq(r.cols.found.wording, '在 1 到 100 里没找到例外。'); truthy(r.finished);
+});
+console.log('参数化与变式（2.1）');
+t('同一个种子生成同一组数，数在范围里', () => {
+  const pr = { id: 'v', params: { total: [150, 300], per: [12, 40] } };
+  const a = U.Variants.pick(pr.params, 7), b = U.Variants.pick(pr.params, 7);
+  eq(a, b); truthy(a.total >= 150 && a.total <= 300 && a.per >= 12 && a.per <= 40);
+  truthy(U.Variants.pick(pr.params, 8).total !== a.total || U.Variants.pick(pr.params, 9).total !== a.total, '不同种子应有不同的数');
+});
+t('变式把取出的值交给 build，并带上种子 id', () => {
+  const pr = { id: 'v', params: { n: [2, 9] }, build: (vals) => ({ got: vals.n }), milestones: [] };
+  const inst = U.Variants.instantiate(pr, 3);
+  eq(inst.id, 'v#3'); eq(inst.build().got, inst.values.n);
+});
+t('参数范围写错、句子卡没有空、变式没有问法：lint 报错', () => {
+  const bad = { id: 'b', title: 't', milestones: [{ id: 'm', score: 1, when: { type: 'num', port: 'v', op: '=', value: '1' } }],
+    params: { n: [9, 2] }, explain: { form: 'cards', frame: '没有空' }, variant: { change: 'x' } };
+  const msg = U.problemLint(bad).errors.join('|');
+  truthy(/范围/.test(msg) && /空/.test(msg) && /ask/.test(msg), msg);
+});
+t('考试时长：写了用写的；没写按里程碑数 × 2，最少 3 分钟', () => {
+  eq(U.Variants.examMinutes({ exam: { minutes: 9 }, milestones: [1] }), 9);
+  eq(U.Variants.examMinutes({ milestones: [1] }), 3); eq(U.Variants.examMinutes({ milestones: [1, 2, 3, 4] }), 8);
+});
+console.log('证明计算内核（2.7）');
+t('参数扫描：没有例外 → ②；找到例外 → 推翻，并记录反例', () => {
+  U.Events.clear();
+  const ok = U.Evidence.scanRange(1, 50, (n) => n * n >= n);
+  eq(ok.found, false); eq(U.Evidence.levelOf().level, 2);
+  U.Events.clear();
+  const bad = U.Evidence.scanRange(1, 50, (n) => n !== 7);
+  eq(bad.counter, 7); eq(U.Evidence.levelOf().level, 'refuted');
+});
+t('系统枚举：列全且全部通过 → ③；列得不全 → 仍是 ①', () => {
+  U.Events.clear();
+  const items = [1, 2, 3, 4, 5, 6];
+  eq(U.Evidence.enumerate(items, 6, (x) => x > 0).complete, true); eq(U.Evidence.levelOf().level, 3);
+  U.Events.clear();
+  eq(U.Evidence.enumerate(items, 36, (x) => x > 0).complete, false); eq(U.Evidence.levelOf().level, 1);
+});
+t('证明脚手架：每一步都要有依据（ref）才算填完 → ④', () => {
+  U.Events.clear();
+  eq(U.Evidence.proof([{ text: 'a', ref: 'fact1' }, { text: 'b' }]).complete, false); eq(U.Evidence.levelOf().level, 1);
+  U.Events.clear();
+  eq(U.Evidence.proof([{ text: 'a', ref: 'fact1' }, { text: 'b', ref: 'law2' }]).complete, true); eq(U.Evidence.levelOf().level, 4);
+});
+t('归纳阶梯：起点成立，且每一级都能推下一级 → ④；某一级推不下去就指出在哪', () => {
+  U.Events.clear();
+  eq(U.Evidence.induction(true, () => true, 20).complete, true); eq(U.Evidence.levelOf().level, 4);
+  U.Events.clear();
+  const r = U.Evidence.induction(true, (k) => k !== 5, 20); eq(r.failedAt, 5); eq(r.complete, false); eq(U.Evidence.levelOf().level, 1);
 });
 console.log('输出声明（1.2）');
 t('lint 拒绝没有声明 dim 的输出口', () => {

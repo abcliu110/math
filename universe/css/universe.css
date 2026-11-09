@@ -203,3 +203,7 @@ input, select, textarea { font: inherit; color: inherit; }
 /* 1.1.1 滑杆与转盘 */
 #insp .row input.slide, #insp .row input.dial { width: 100%; margin: 4px 0; accent-color: var(--accent, #3b9bff); }
 #insp .row .ctl { flex-wrap: wrap; }
+
+/* 2.5 实验报告：四栏 */
+.rep2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 640px) { .rep2 { grid-template-columns: 1fr; } }

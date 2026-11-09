@@ -72,3 +72,11 @@ U.registerPack({ id:'mypack', types:{ foo:{
 - **证据等级**：`U.Evidence.emit(kind, data)` 由证明类器材调用，写入事件流。`U.Evidence.levelOf(events, {pid, approx})` 判定等级（① 举例、② 没找到反例、③ 穷举、④ 结构证明、refuted 已被推翻），近似值最高到 ②。`U.Evidence.wording(res)` 给出跟等级走的措辞。
 - **证据事件约定**：`counterexample {found}`、`scan {range, counterexamples}`、`enumerate {count, expected}`、`proof {steps, filled}`、`induction {base, step}`。
 - **还没做**：证明类器材本身（猜想板、参数扫描器、反例构造器、系统枚举器、证明脚手架、归纳阶梯，属于 `pack-proof`）；六级台阶和句子卡的界面；2.3 多解指纹；88 个旧实验的迁移与改写。
+- **搭法指纹（2.3）**：`U.Judge.fingerprint(scene)` = 器材类型多重集 + 每根线的“来源类型.端口 > 目标类型.端口”，与器材 id 和位置无关。完成时指纹不在 `problem.ref` 里，记为 `newWay`（你找到了一种新做法）。
+- **误解信号（2.4）**：`U.Inquiry.misconceptions(events, problems)`：同一知识点上，同一个错误猜测（finish 事件 match 为 false）出现 ≥2 次，才返回误解。
+- **实验报告（2.5）**：`U.Inquiry.report(events, pid, problems)` 返回四栏：我猜的（预填）、我试了什么（里程碑、提示、踩中的陷阱）、我发现了（证据等级与措辞，原话与笔记留给学生）、我还想问（空）。
+- **参数化与变式（2.1）**：题目可写 `params: { 名: [最小, 最大] }`，`U.Variants.instantiate(p, seed)` 按种子生成确定的一组数，`build(values)` 收到这些值。种子打散后相邻种子也得到不同的数。
+- **句子卡（2.5）**：`explain: { form: 'cards' | 'free', frame: '因为 __ × __ = __' }`，lint 检查 cards 形式至少有一个空，`U.Variants.blanks(frame)` 数空。
+- **考试时长（2.1）**：`U.Variants.examMinutes(p)`：写了 `exam.minutes` 用它；否则里程碑数 × 2 分钟，最少 3 分钟。
+- **证明计算内核（2.7）**：证明类器材只负责把台面条件交给这些纯计算函数，算完自动记入证据事件。`U.Evidence.scanRange(from, to, pred)`（参数扫描器 / 反例构造器）、`U.Evidence.enumerate(items, expected, pred)`（系统枚举器）、`U.Evidence.proof(steps)`（证明脚手架，每步要有 ref 才算填完）、`U.Evidence.induction(base, stepOk, upto)`（归纳阶梯）。找到反例即推翻。
+- **实验报告界面（2.5）**：做完一道题的结果对话框里有“实验报告”按钮，打开四栏视图（我猜的、我试了什么、我发现了、我还想问）。第四栏只在当前页面里，还没有保存。
