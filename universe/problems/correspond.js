@@ -5,7 +5,7 @@
   const arrOf = (w, e) => w.sources(e).filter((s) => s.type === 'array');
 
   P.push({
-    id: 'match-pairs', essence: ['E1', 'E2'], title: '5 个学生配 5 个座位：每人正好一个座位', grade: 2, domain: '数与运算', points: ['一一对应', '数量相等', '排队计数'],
+    id: 'match-pairs', essence: ['E1', 'E2'], title: '5 个学生配 5 个座位：每人正好一个座位', grade: 2, domain: '数与运算', points: ['1.1'], topics: ['一一对应', '数量相等', '排队计数'],
     alias: ['配对', '一一对应', '排队'], hook: '5 个学生，5 个座位。把学生排成一排，再把座位排成一排，让两排一个对一个。',
     shelf: ['num', 'array', 'compare', 'meter'],
     build: mk({ ents: [
@@ -27,7 +27,7 @@
   });
 
   P.push({
-    id: 'count-by-match', essence: ['E1', 'E2'], title: '4 个人两两握手一次（甲和乙握过，乙和甲不再算），一共握几次？', grade: 5, domain: '数与运算', points: ['配对计数', '不重复'],
+    id: 'count-by-match', essence: ['E1', 'E2'], title: '4 个人两两握手一次（甲和乙握过，乙和甲不再算），一共握几次？', grade: 5, domain: '数与运算', points: [], topics: ['配对计数', '不重复'],
     alias: ['握手', '配对计数'], hook: '4 个人，每两个人握一次手。把每一次握手，对应到一对人身上，再数一数一共几对。',
     shelf: ['num', 'array', 'meter', 'compare'],
     build: mk({ ents: [
@@ -53,7 +53,7 @@
   });
 
   P.push({
-    id: 'no-extra-seat', essence: ['E1', 'E4'], title: '5 位客人，只有 4 个座位：能一人一座吗？', grade: 3, domain: '数与运算', points: ['一一对应', '数量不等', '找不配对的'],
+    id: 'no-extra-seat', essence: ['E1', 'E4'], title: '5 位客人，只有 4 个座位：能一人一座吗？', grade: 3, domain: '数与运算', points: ['1.1'], topics: ['一一对应', '数量不等', '找不配对的'],
     alias: ['配不上', '多出一个'], hook: '5 位客人要坐 4 把椅子。试着把客人和椅子一个对一个地配起来，看看会剩下什么。',
     shelf: ['num', 'array', 'compare', 'meter'],
     build: mk({ ents: [

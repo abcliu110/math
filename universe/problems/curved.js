@@ -4,7 +4,7 @@
   const U = G.U, mk = U.mkScene, P = [];
   const cv = () => mk({ ents: [{ type: 'curved', x: 100, y: 70, role: 'w', props: { space: 0, A: 60, B: 60, C: 60 } }] });
   P.push({
-    id: 'sphere-right3', essence: ['E9', 'E5'], title: '三个角都是直角的三角形，存在吗？', grade: 8, domain: '图形', points: ['内角和', '球面三角形', '公理'],
+    id: 'sphere-right3', essence: ['E9', 'E5'], title: '三个角都是直角的三角形，存在吗？', grade: 8, domain: '图形', points: ['7.9', '4.12'], topics: ['内角和', '球面三角形', '公理'],
     alias: ['内角和', '公理'], hook: '平面上三个角加起来永远是 180°。可是想想地球：从北极往下到赤道，转 90° 走赤道四分之一圈，再转 90° 回北极——三个角都是 90°！先在平面上试着把三个角都改成 90°，看看世界怎么说，再换到球面。',
     shelf: ['curved', 'meter', 'compare'],
     build: cv(),
@@ -17,7 +17,7 @@
     traps: [], why: '“内角和 180°”不是自然定律，是平面的规则。球面上三角形的内角和大于 180°，多出的部分正比于它的面积：多出 90°，占整个球面 90/720 = 1/8。三个直角的三角形，就是把球面切成 8 份的其中一份。', ref: ['curved|0'],
   });
   P.push({
-    id: 'sphere-quarter', essence: ['E5'], title: '要占整个球面的四分之一，三个角怎么取？', grade: 9, domain: '图形', points: ['球面三角形', '角盈与面积'],
+    id: 'sphere-quarter', essence: ['E5'], title: '要占整个球面的四分之一，三个角怎么取？', grade: 9, domain: '图形', points: ['4.12', '3.12'], topics: ['球面三角形', '角盈与面积'],
     alias: ['球面'], hook: '换到球面。要让三角形占整个球面的 1/4，三个角的和应该是多少？试着让三个角相等。',
     shelf: ['curved', 'meter', 'compare'],
     build: cv(),

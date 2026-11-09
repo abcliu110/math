@@ -4,7 +4,7 @@
   const U = G.U, mk = U.mkScene, P = [];
 
   P.push({
-    id: 'model-two-ways', essence: ['E12', 'E4'], title: '鸡兔同笼：35 个头，94 条腿。先用“猜”算，再用“线”解。', grade: 8, domain: '函数', points: ['猜与验证', '二元一次方程组', '直线交点'],
+    id: 'model-two-ways', essence: ['E12', 'E4'], title: '鸡兔同笼：35 个头，94 条腿。先用“猜”算，再用“线”解。', grade: 8, domain: '函数', points: ['7.14'], topics: ['猜与验证', '二元一次方程组', '直线交点'],
     alias: ['鸡兔同笼', '建模', '方程组'], hook: '先用运算器“假设全是鸡”，算出多出来的腿，再用两条直线把同一件事画出来。两种方法必须得到同一个答案。',
     shelf: ['num', 'op', 'line', 'cross', 'meter'],
     build: mk({ ents: [
@@ -30,7 +30,7 @@
   });
 
   P.push({
-    id: 'model-rent', essence: ['E12', 'E8'], title: '电话套餐：A 月租 20 元、每分钟 0.1 元；B 无月租、每分钟 0.15 元。通话多少分钟两者一样？', grade: 7, domain: '函数', points: ['一次函数', '选变量与单位', '交点的意义'],
+    id: 'model-rent', essence: ['E12', 'E8'], title: '电话套餐：A 月租 20 元、每分钟 0.1 元；B 无月租、每分钟 0.15 元。通话多少分钟两者一样？', grade: 7, domain: '函数', points: ['8.15'], topics: ['一次函数', '选变量与单位', '交点的意义'],
     alias: ['套餐', '一次函数', '建模'], hook: '每分钟的价格太小，不好画。把横轴改成“每格 10 分钟”：每 10 分钟的钱是多少？再画两条线。',
     shelf: ['line', 'cross', 'at', 'meter'],
     build: mk({ ents: [
@@ -50,7 +50,7 @@
   });
 
   P.push({
-    id: 'one-to-one', essence: ['E1', 'E2'], title: '3 位客人，每人正好坐一把椅子：椅子要几把？', grade: 3, domain: '数与运算', points: ['一一对应', '数量相等'],
+    id: 'one-to-one', essence: ['E1', 'E2'], title: '3 位客人，每人正好坐一把椅子：椅子要几把？', grade: 3, domain: '数与运算', points: ['1.1'], topics: ['一一对应', '数量相等'],
     alias: ['对应', '椅子', '一一对应'], hook: '椅子先摆了 2 把，客人有 3 位。让每位客人对应一把椅子，把两边的数量接进比较器看看。',
     shelf: ['array', 'compare', 'num', 'meter'],
     build: mk({ ents: [
@@ -69,7 +69,7 @@
   });
 
   P.push({
-    id: 'counting-matching', essence: ['E2', 'E1'], title: '5 个人两两握手一次（甲和乙握过，乙和甲就不再算），一共握几次？', grade: 5, domain: '数与运算', points: ['配对计数', '重复计数的修正'],
+    id: 'counting-matching', essence: ['E2', 'E1'], title: '5 个人两两握手一次（甲和乙握过，乙和甲就不再算），一共握几次？', grade: 5, domain: '数与运算', points: [], topics: ['配对计数', '重复计数的修正'],
     alias: ['握手', '配对', '组合'], hook: '每人和其余 4 人各握一次手，先算“人人都握一遍”的总数。这样每次握手被数了几遍？',
     shelf: ['array', 'op', 'num', 'meter'],
     build: mk({ ents: [

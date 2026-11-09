@@ -5,7 +5,7 @@
   const pour = (props) => mk({ ents: [{ type: 'pour', x: 120, y: 80, role: 'p', props }] });
 
   P.push({
-    id: 'pour-conserve', essence: ['E5', 'E3'], title: '甲杯的水倒进乙杯，水变少了吗？', grade: 4, domain: '数与运算', points: ['守恒', '总量不变', '搬家'],
+    id: 'pour-conserve', essence: ['E5', 'E3'], title: '甲杯的水倒进乙杯，水变少了吗？', grade: 4, domain: '数与运算', points: [], topics: ['守恒', '总量不变', '搬家'],
     alias: ['守恒', '倒水', '总量'], hook: '甲杯装满 10，乙杯空着，乙杯最多装 6。把“倒水”选成“甲倒进乙”，再读“总量”和两杯各剩多少。',
     shelf: ['pour', 'num', 'compare'],
     build: pour({ A: 10, B: 6, a: 10, b: 0, pour: 0 }),
@@ -20,7 +20,7 @@
   });
 
   P.push({
-    id: 'pour-two-cups', essence: ['E5', 'E2'], title: '只用 5 升和 3 升的杯子，怎么量出 4 升？', grade: 5, domain: '数与运算', points: ['倒水', '守恒', '分解'],
+    id: 'pour-two-cups', essence: ['E5', 'E2'], title: '只用 5 升和 3 升的杯子，怎么量出 4 升？', grade: 5, domain: '数与运算', points: ['8.7'], topics: ['倒水', '守恒', '分解'],
     alias: ['倒水', '量出', '4 升'], hook: '甲杯 5 升，乙杯 3 升，杯上没有刻度。只能装满、倒空、从一个倒进另一个。想办法让甲或乙里正好剩 4 升。',
     shelf: ['pour', 'num', 'compare'],
     build: pour({ A: 5, B: 3, a: 0, b: 0, pour: 0 }),

@@ -5,7 +5,7 @@
   const P = [];
 
   P.push({
-    id: 'gcd-12-18', essence: ['E2'], title: '12 和 18 的最大公因数、最小公倍数', grade: 5, domain: '数与运算', points: ['最大公因数', '最小公倍数'],
+    id: 'gcd-12-18', essence: ['E2'], title: '12 和 18 的最大公因数、最小公倍数', grade: 5, domain: '数与运算', points: [], topics: ['最大公因数', '最小公倍数'],
     alias: ['公因数', '公倍数'], hook: '把 12 和 18 接进「数的性质」，读出两个结果，想想它们是怎么来的。',
     shelf: ['num', 'numtheory', 'meter', 'op'],
     build: mk({ ents: [{ type: 'num', x: 60, y: 60, role: 'a', props: { n: 12 } }, { type: 'num', x: 60, y: 220, role: 'b', props: { n: 18 } }] }),
@@ -20,7 +20,7 @@
   });
 
   P.push({
-    id: 'prime-91', essence: ['E2'], title: '91 是质数吗？', grade: 5, domain: '数与运算', points: ['质数与合数', '因数'],
+    id: 'prime-91', essence: ['E2'], title: '91 是质数吗？', grade: 5, domain: '数与运算', points: ['5.8'], topics: ['质数与合数', '因数'],
     alias: ['质数'], hook: '91 看起来像质数，但它真的是吗？让器材说话。',
     shelf: ['num', 'numtheory', 'divmod', 'meter'],
     build: mk({ ents: [{ type: 'num', x: 60, y: 120, role: 'n', props: { n: 91 } }] }),
@@ -35,7 +35,7 @@
   });
 
   P.push({
-    id: 'sqrt-2', essence: ['E7'], title: '面积是 2 的正方形，边长是多少？', grade: 8, domain: '数与运算', points: ['平方根', '无理数', '近似值'],
+    id: 'sqrt-2', essence: ['E7'], title: '面积是 2 的正方形，边长是多少？', grade: 8, domain: '数与运算', points: [], topics: ['平方根', '无理数', '近似值'],
     alias: ['根号2', '无理数'], hook: '边长 × 边长 = 2。把 2 放进开方器，看它是整数、分数，还是别的什么。',
     shelf: ['num', 'sqrt', 'power', 'compare', 'meter'],
     build: mk({ ents: [{ type: 'num', x: 60, y: 120, role: 'a', props: { n: 2 } }] }),
@@ -50,7 +50,7 @@
   });
 
   P.push({
-    id: 'power-2-10', essence: ['E6'], title: '2 的 10 次方，比 1000 大还是小？', grade: 7, domain: '数与运算', points: ['乘方', '增长速度'],
+    id: 'power-2-10', essence: ['E6'], title: '2 的 10 次方，比 1000 大还是小？', grade: 7, domain: '数与运算', points: ['7.3'], topics: ['乘方', '增长速度'],
     alias: ['指数'], hook: '连乘 10 个 2。再问问比较器：它超过 1000 了吗？',
     shelf: ['num', 'power', 'compare', 'meter'],
     build: mk({ ents: [{ type: 'num', x: 60, y: 60, role: 'two', props: { n: 2 } }, { type: 'num', x: 60, y: 230, role: 'k', props: { n: 1000 } }] }),

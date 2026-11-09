@@ -5,7 +5,7 @@
   const P = [];
 
   P.push({
-    id: 'linear-3x5', essence: ['E4'], title: '3x + 5 = 20，x 是多少？', grade: 7, domain: '关系', points: ['一元一次方程', '移项', '等式性质'],
+    id: 'linear-3x5', essence: ['E4'], title: '3x + 5 = 20，x 是多少？', grade: 7, domain: '关系', points: ['7.6'], topics: ['一元一次方程', '移项', '等式性质'],
     alias: ['方程'], hook: '台面上有一台解方程器。把它调成 3x + 5 = 20，看 x 是多少，再想想它是怎么算出来的。',
     shelf: ['linsolve', 'num', 'op', 'balance', 'meter'],
     build: mk({ ents: [{ type: 'linsolve', x: 120, y: 120, role: 's' }] }),
@@ -21,7 +21,7 @@
   });
 
   P.push({
-    id: 'triangle-348', essence: ['E2'], title: '3、4、8 围不成三角形。把 8 改成几就能围成？再改成直角？', grade: 6, domain: '图形', points: ['三角形三边关系', '勾股定理'],
+    id: 'triangle-348', essence: ['E2'], title: '3、4、8 围不成三角形。把 8 改成几就能围成？再改成直角？', grade: 6, domain: '图形', points: ['4.12', '8.11'], topics: ['三角形三边关系', '勾股定理'],
     alias: ['勾股'], hook: '三根小棒 3、4、8，怎么摆都围不成三角形。调第三根的长度，让它能围成，再让它变成直角三角形。',
     shelf: ['tri', 'meter'],
     build: mk({ ents: [{ type: 'tri', x: 120, y: 90, role: 't', props: { a: 3, b: 4, c: 8 } }] }),
@@ -35,7 +35,7 @@
   });
 
   P.push({
-    id: 'circle-r5', essence: ['E7'], title: '半径 5 厘米的圆，面积是多少？', grade: 6, domain: '图形', points: ['圆的面积', '圆周率'],
+    id: 'circle-r5', essence: ['E7'], title: '半径 5 厘米的圆，面积是多少？', grade: 6, domain: '图形', points: ['3.12', '6.5'], topics: ['圆的面积', '圆周率'],
     alias: ['圆'], hook: '先把半径设成 5，π 取 3.14，读出面积。再换换 π 的取法，看看差多少。',
     shelf: ['circle', 'meter', 'compare', 'num'],
     build: mk({ ents: [{ type: 'circle', x: 120, y: 90, role: 'c', props: { r: 2 } }] }),
@@ -50,7 +50,7 @@
   });
 
   P.push({
-    id: 'quad-vertex', essence: ['E10'], title: 'y = x² − 4x + 3：顶点在哪？和 x 轴交几点？', grade: 9, domain: '函数', points: ['二次函数', '顶点', '判别式'],
+    id: 'quad-vertex', essence: ['E10'], title: 'y = x² − 4x + 3：顶点在哪？和 x 轴交几点？', grade: 9, domain: '函数', points: ['9.3', '9.2'], topics: ['二次函数', '顶点', '判别式'],
     alias: ['抛物线'], hook: '把抛物线调成 y = x² − 4x + 3，读出顶点和与 x 轴的交点个数。',
     shelf: ['quad', 'meter', 'compare'],
     build: mk({ ents: [{ type: 'quad', x: 100, y: 70, role: 'q' }] }),
@@ -66,7 +66,7 @@
   });
 
   P.push({
-    id: 'coin-fair', essence: ['E11'], title: '硬币抛很多次，正面占多少？', grade: 7, domain: '统计与概率', points: ['频率与概率', '大数规律'],
+    id: 'coin-fair', essence: ['E11'], title: '硬币抛很多次，正面占多少？', grade: 7, domain: '统计与概率', points: [], topics: ['频率与概率', '大数规律'],
     alias: ['概率', '频率'], hook: '让硬币自己抛几百次。直方图要把 0（反面）和 1（正面）都装得下，再用统计量看平均数——它就是正面的比例。',
     shelf: ['coin', 'hist', 'stats', 'meter', 'clock'],
     build: mk({ ents: [{ type: 'coin', x: 60, y: 120, role: 'c' }] }),
@@ -81,7 +81,7 @@
   });
 
   P.push({
-    id: 'seq-arith-20', essence: ['E6'], title: '3、7、11、15……前 20 项加起来是多少？', grade: 8, domain: '时间与变化', points: ['等差数列', '求和'],
+    id: 'seq-arith-20', essence: ['E6'], title: '3、7、11、15……前 20 项加起来是多少？', grade: 8, domain: '时间与变化', points: [], topics: ['等差数列', '求和'],
     alias: ['等差数列', '求和'], hook: '数列器每走一拍多出一项，并算出前几项的和。设好第一项和公差，让它走到第 20 项。',
     shelf: ['seq', 'meter', 'clock', 'compare'],
     build: mk({ ents: [{ type: 'seq', x: 120, y: 90, role: 's' }] }),

@@ -4,7 +4,7 @@
   const U = G.U, mk = U.mkScene, P = [];
 
   P.push({
-    id: 'plan-breakeven', essence: ['E12', 'E8'], title: '电话套餐：甲 月租 20 元、每分钟 0.1 元；乙 无月租、每分钟 0.15 元。通话多少分钟，两个套餐一样多？', grade: 7, domain: '函数', points: ['一次函数', '交点的意义', '解方程'],
+    id: 'plan-breakeven', essence: ['E12', 'E8'], title: '电话套餐：甲 月租 20 元、每分钟 0.1 元；乙 无月租、每分钟 0.15 元。通话多少分钟，两个套餐一样多？', grade: 7, domain: '函数', points: ['8.15'], topics: ['一次函数', '交点的意义', '解方程'],
     alias: ['套餐', '一次函数', '交点', '建模'], hook: '乙的每分钟价格先被设成了 0.2，不对。把它改成 0.15，再读出“一样多”的分钟数：两条线相交的地方就是答案。',
     shelf: ['costplan', 'num'],
     build: mk({ ents: [{ type: 'costplan', x: 60, y: 60, role: 'c', props: { base1: 20, rate1: 0.1, base2: 0, rate2: 0.2, x: 0 } }] }),
@@ -19,7 +19,7 @@
   });
 
   P.push({
-    id: 'plan-choose', essence: ['E12', 'E4'], title: '同样两个套餐（甲：20 + 0.1x；乙：0.15x）。通话 300 分钟哪个便宜？通话 600 分钟呢？', grade: 7, domain: '函数', points: ['代入求值', '比较大小', '结论依赖条件'],
+    id: 'plan-choose', essence: ['E12', 'E4'], title: '同样两个套餐（甲：20 + 0.1x；乙：0.15x）。通话 300 分钟哪个便宜？通话 600 分钟呢？', grade: 7, domain: '函数', points: ['6.4'], topics: ['代入求值', '比较大小', '结论依赖条件'],
     alias: ['套餐', '比较', '代入', '建模'], hook: '先把通话设成 300 分钟，看哪个套餐的钱少；再改成 600 分钟，看结论会不会变。',
     shelf: ['costplan', 'num'],
     build: mk({ ents: [{ type: 'costplan', x: 60, y: 60, role: 'c', props: { base1: 20, rate1: 0.1, base2: 0, rate2: 0.15, x: 500 } }] }),

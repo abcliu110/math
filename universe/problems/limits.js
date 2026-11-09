@@ -3,7 +3,7 @@
   'use strict';
   const U = G.U, mk = U.mkScene, P = [];
   P.push({
-    id: 'approach-sqrt2', title: '√2 到底是多少？用取整一位一位逼近', grade: 8, domain: '数与运算', essence: ['E7', 'E3'], points: ['无理数', '近似', '逼近'],
+    id: 'approach-sqrt2', title: '√2 到底是多少？用取整一位一位逼近', grade: 8, domain: '数与运算', essence: ['E7', 'E3'], points: ['2.12'], topics: ['无理数', '近似', '逼近'],
     alias: ['开方', '近似数'], hook: '√2 写不成分数，也写不完。先用“取整”看精确到十分位，再精确到百分位，看它越来越靠近哪里。',
     shelf: ['num', 'sqrt', 'round', 'meter', 'compare'],
     build: mk({ ents: [

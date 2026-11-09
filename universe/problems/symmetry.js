@@ -8,7 +8,7 @@
   const folded = (pred) => (w) => w.some('fold', (e, d) => e.props.fold === 1 && pred(e.props, d));
 
   P.push({
-    id: 'fold-square-half', essence: ['E10'], title: '正方形纸对折，怎样折两半才完全重合？', grade: 3, domain: '图形', points: ['对折', '对称轴'],
+    id: 'fold-square-half', essence: ['E10'], title: '正方形纸对折，怎样折两半才完全重合？', grade: 3, domain: '图形', points: [], topics: ['对折', '对称轴'],
     alias: ['对折', '对称', '折痕'], hook: '一张正方形纸，沿一条直线折一次。把「折不折」改成折一次，再调折痕的方向，让两半完全重合（same=1）。',
     shelf: ['fold', 'compare'],
     build: sheet({ w: 6, ht: 6, fold: 0, angle: 30, offset: 0 }),
@@ -21,7 +21,7 @@
   });
 
   P.push({
-    id: 'fold-diagonal', essence: ['E10', 'E5'], title: '正方形沿对角线折，两半也重合吗？', grade: 6, domain: '图形', points: ['对角线', '对称', '全等三角形'],
+    id: 'fold-diagonal', essence: ['E10', 'E5'], title: '正方形沿对角线折，两半也重合吗？', grade: 6, domain: '图形', points: ['7.9', '8.3', '8.2'], topics: ['对角线', '对称', '全等三角形'],
     alias: ['对角线', '对称'], hook: '先在 30° 的折痕上折一次，看两半对不对得上；再找一个角度，让正方形的两半完全重合。',
     shelf: ['fold', 'compare'],
     build: sheet({ w: 6, ht: 6, fold: 0, angle: 30, offset: 0 }),

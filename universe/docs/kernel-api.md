@@ -154,3 +154,10 @@ U.registerPack({ id:'mypack', types:{ foo:{
 - 器材包 `packs/modeling.js`：数据表（文字录入）、取列（table → seq）、散点图、拟合器（正比例 / 一次，输出 fn、k、b）、预测器（标明“这是模型给的预测，不是测量值”）。
 - 建模题模板：题目可写 `model: { situation, quantities, relation, check, steps: {choose, function, check} }`，`U.Table.lintModel` 检查三步都指向存在的里程碑；拟合最高只到证据 ①。
 - 示例题 `problems/fitting.js`（car-model-proportional），参考解在 `tests/solutions.js`。
+
+## 知识点覆盖（任务 D）
+
+- `js/core/curriculum.js`：`U.CURRICULUM[id] = { title, subtitle, grade, unit, essences, essenceSource }`，142 个知识点。由 `node tools/extract-curriculum.js` 从 `content/grades/` 生成，不要手改。`essenceSource: 'draft'` 表示本质还是关键词草稿，待人工核对。
+- `js/core/coverage.js`：`U.CurriculumLint(p)`：题目的 points 必须都是表里的 id（错误），没有 points 只给警告。`U.Coverage.summarize(problems)` 统计按知识点、年级、本质。
+- `node tools/coverage.js` 写入 `docs/coverage.md`。
+- `tools/topic-map.js` 与 `tools/apply-topic-map.js`：把旧的主题词改写为知识点 id，原主题词保存在题目的 `topics` 字段里。

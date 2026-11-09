@@ -23,7 +23,7 @@
   const P = [];
 
   P.push({
-    id: 'frac-add-unlike', essence: ['E3'], title: '2/5 + 1/3 等于多少？', grade: 5, domain: '分数', points: ['异分母分数加法', '通分'],
+    id: 'frac-add-unlike', essence: ['E3'], title: '2/5 + 1/3 等于多少？', grade: 5, domain: '分数', points: [], topics: ['异分母分数加法', '通分'],
     alias: ['分数加法'], hook: '两个分数，分母不一样。台面上已经放好了它们，你来让它们“加”起来。',
     shelf: ['num', 'op', 'meter', 'compare'],
     build: mk({ ents: [
@@ -46,7 +46,7 @@
   });
 
   P.push({
-    id: 'balance-12', essence: ['E4'], title: '让天平平衡：右边凑出 12', grade: 3, domain: '数与运算', points: ['等式', '多种凑法'],
+    id: 'balance-12', essence: ['E4'], title: '让天平平衡：右边凑出 12', grade: 3, domain: '数与运算', points: ['7.15'], topics: ['等式', '多种凑法'],
     alias: ['天平', '凑数'], hook: '左盘有一个 12。右盘什么都没有——想办法让它平衡。凑法不止一种。',
     shelf: ['num', 'op', 'balance', 'meter'],
     build: mk({ ents: [
@@ -65,7 +65,7 @@
   });
 
   P.push({
-    id: 'two-dice', essence: ['E11'], title: '两个骰子的点数和，谁最常出现？', grade: 6, domain: '统计与概率', points: ['可能性', '频数分布', '大数规律'],
+    id: 'two-dice', essence: ['E11'], title: '两个骰子的点数和，谁最常出现？', grade: 6, domain: '统计与概率', points: ['5.4'], topics: ['可能性', '频数分布', '大数规律'],
     alias: ['骰子', '概率'], hook: '掷两个骰子，把点数加起来。哪个和最容易出现？先猜，再让它自己掷几百次。',
     shelf: ['dice', 'op', 'hist', 'clock', 'meter'],
     build: mk({ ents: [
@@ -94,7 +94,7 @@
   });
 
   P.push({
-    id: 'counter-loop', essence: ['E6'], title: '让它自己数数：1、2、3……', grade: 4, domain: '时间与变化', points: ['递推', '反馈', '数列'],
+    id: 'counter-loop', essence: ['E6'], title: '让它自己数数：1、2、3……', grade: 4, domain: '时间与变化', points: [], topics: ['递推', '反馈', '数列'],
     alias: ['计数', '迭代', '循环'], hook: '你要做一台会自己加 1 的机器。提示：它要“记住”上一次的数，再加 1，再记住……',
     shelf: ['num', 'op', 'memory', 'meter', 'clock'],
     build: mk({ ents: [

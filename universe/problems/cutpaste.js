@@ -5,7 +5,7 @@
   const para = (props) => mk({ ents: [{ type: 'parallelogram', x: 120, y: 80, role: 'pg', props }] });
 
   P.push({
-    id: 'para-area', essence: ['E5', 'E2'], title: '平行四边形的面积怎么求？', grade: 5, domain: '图形', points: ['平行四边形面积', '底乘高', '剪拼'],
+    id: 'para-area', essence: ['E5', 'E2'], title: '平行四边形的面积怎么求？', grade: 5, domain: '图形', points: ['8.12'], topics: ['平行四边形面积', '底乘高', '剪拼'],
     alias: ['平行四边形', '面积', '底乘高'], hook: '先把一端的直角三角形剪下来，平移到另一端，看看拼成了什么形状。然后把底改成 6、高改成 4，读“面积”。',
     shelf: ['parallelogram', 'meter', 'op'],
     build: para({ b: 5, h: 3, s: 2 }),
@@ -19,7 +19,7 @@
   });
 
   P.push({
-    id: 'cut-invariant', essence: ['E5', 'E2'], title: '推斜了，面积会变吗？', grade: 5, domain: '图形', points: ['不变量', '平行四边形面积', '斜与高'],
+    id: 'cut-invariant', essence: ['E5', 'E2'], title: '推斜了，面积会变吗？', grade: 5, domain: '图形', points: ['8.12'], topics: ['不变量', '平行四边形面积', '斜与高'],
     alias: ['不变量', '斜', '剪拼'], hook: '底 6、高 4，面积 24。现在把上边往右推，斜度改成 8。面积会变吗？先猜，再看读数。',
     shelf: ['parallelogram', 'meter', 'compare'],
     build: para({ b: 6, h: 4, s: 0 }),

@@ -3,7 +3,7 @@
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const root = path.join(__dirname, '..');
 const fsx = require('fs'), pk = (d) => fsx.readdirSync(path.join(root, d)).filter((f) => f.endsWith('.js')).sort().map((f) => d + '/' + f);
-const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/eqn.js', 'js/core/table.js', 'js/core/figure.js', 'js/core/convert.js', 'js/core/registry.js', 'js/core/rules.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
+const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/eqn.js', 'js/core/table.js', 'js/core/figure.js', 'js/core/convert.js', 'js/core/registry.js', 'js/core/rules.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/curriculum.js', 'js/core/coverage.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
 const ctx = vm.createContext({ console, TextEncoder, TextDecoder, btoa, atob });
 ctx.globalThis = ctx;
 for (const f of files) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f });
@@ -783,6 +783,17 @@ t('建模题模板 lint：三步都要有里程碑；拟合最高只到 ①', ()
   eq(TT.lintModel(base).errors, []);
   truthy(TT.lintModel(Object.assign({}, base, { model: Object.assign({}, base.model, { steps: { choose: 'a' } }) })).errors.some((m) => /缺少/.test(m)));
   truthy(TT.lintModel(Object.assign({}, base, { evidence: 3 })).errors.some((m) => /①/.test(m)));
+});
+console.log('知识点覆盖（D）');
+t('知识点表：142 个，编号唯一，每个年级都有', () => {
+  const ids = Object.keys(U.CURRICULUM); eq(ids.length, 142);
+  for (let g = 1; g <= 9; g++) truthy(ids.some((id) => U.CURRICULUM[id].grade === g), '年级 ' + g + ' 没有知识点');
+});
+t('所有题目的 points 都在知识点表里（0 个错误）', () => { const bad = U.problems.map((p) => [p.id, U.CurriculumLint(p).errors]).filter((x) => x[1].length); eq(bad, []); });
+t('没有对应知识点的题只给警告，不报错', () => { const p = { id: 'x', title: 't', points: [], milestones: [{ id: 'm', score: 1, when: { type: 'num', port: 'v', op: '=', value: '1' } }] }; eq(U.CurriculumLint(p).errors, []); truthy(U.CurriculumLint(p).warnings.length >= 1); });
+t('覆盖统计：有题的知识点、按年级、按本质都能算出来', () => {
+  const S = U.Coverage.summarize(U.problems);
+  eq(S.points.length, 142); truthy(S.points.some((r) => r.problems.length > 0)); eq(S.grades.length, 9); eq(S.essences.length, 12);
 });
 console.log('输出声明（1.2）');
 t('lint 拒绝没有声明 dim 的输出口', () => {

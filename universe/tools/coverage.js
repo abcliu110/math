@@ -1,0 +1,30 @@
+/* node tools/coverage.js —— 知识点覆盖报告（任务 D.2）。写入 docs/coverage.md。 */
+'use strict';
+const fs = require('fs'), path = require('path'), vm = require('vm');
+const root = path.join(__dirname, '..');
+const pk = (d) => fs.readdirSync(path.join(root, d)).filter((f) => f.endsWith('.js')).sort().map((f) => d + '/' + f);
+const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/eqn.js', 'js/core/table.js', 'js/core/figure.js', 'js/core/convert.js', 'js/core/rules.js', 'js/core/registry.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/variants.js', 'js/core/curriculum.js', 'js/core/coverage.js']
+  .concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
+const ctx = vm.createContext({ console }); ctx.globalThis = ctx;
+for (const f of files) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f });
+const U = ctx.U, S = U.Coverage.summarize(U.problems);
+const pct = (a, b) => (b ? Math.round(a / b * 100) : 0) + '%';
+const L = [];
+const today = new Date().toISOString().slice(0, 10);
+L.push('# 知识点覆盖报告', '', '> 由 `node tools/coverage.js` 生成，日期 ' + today + '。数据来自 `js/core/curriculum.js` 与 `problems/*.js`。', '');
+const pts = Object.keys(U.CURRICULUM).length;
+const covered = S.points.filter((r) => r.problems.length).length;
+L.push('## 总览', '', '- 知识点：' + pts + ' 个（设计目标 142）', '- 有题的知识点：' + covered + ' 个（' + pct(covered, pts) + '）', '- 题目：' + U.problems.length + ' 道；没有对应知识点的题：' + S.noPoint.length + ' 道', '- 没有器材的本质：' + (S.emptyEssence.join('、') || '无'), '- 没有题的本质：' + (S.emptyProblemEssence.join('、') || '无'), '');
+L.push('## 按年级', '', '| 年级 | 知识点 | 有题 | 题目数 |', '|---|---|---|---|');
+for (const g of S.grades) L.push('| ' + g.grade + ' | ' + g.points + ' | ' + g.covered + '（' + pct(g.covered, g.points) + '） | ' + g.problems + ' |');
+L.push('');
+L.push('## 按知识点', '', '| 知识点 | 年级 | 名称 | 核心 | 陷阱 | 延伸 | 最高证据 | 器材 |', '|---|---|---|---|---|---|---|---|');
+for (const r of S.points) L.push('| ' + r.id + ' | ' + r.grade + ' | ' + r.title + ' | ' + (r.core || 0) + ' | ' + (r.trap || 0) + ' | ' + (r.stretch || 0) + ' | ' + (r.best || '—') + ' | ' + (r.devices.join('、') || '—') + ' |');
+L.push('');
+L.push('## 按本质（E1–E12）', '', '| 本质 | 题目数 | 器材数 |', '|---|---|---|');
+for (const e of S.essences) L.push('| ' + e.essence + ' | ' + e.problems + ' | ' + e.devices + ' |');
+L.push('');
+L.push('## 没有题的知识点', '', S.noProblemPoints.length ? S.noProblemPoints.map((id) => id + ' ' + U.CURRICULUM[id].title).join('；') : '无', '');
+L.push('## 没有知识点的题目', '', S.noPoint.length ? S.noPoint.join('、') : '无', '');
+fs.writeFileSync(path.join(root, 'docs', 'coverage.md'), L.join('\n') + '\n', 'utf8');
+console.log('写入 docs/coverage.md：知识点 ' + pts + '，有题 ' + covered + '，题目 ' + U.problems.length + '，无知识点的题 ' + S.noPoint.length);
