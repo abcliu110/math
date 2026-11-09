@@ -28,11 +28,15 @@
   // 工作区里要显示的值：每个器材输出的 fig（没有 fig 时才用 figs），按放入的先后。key 是 器材id.口，层开关用它
   function wsValues(ws, names) {
     const S = UI.S, D = S.D || {}, shows = U.types[ws.type].workspace.shows, out = [];
+    const E = S.scene.entities, L = S.scene.links;
     for (const it of wsKids(ws)) {
+      if (it.hidden) continue;   // 被剪开的图形（entity.hidden）不画，块画在它的位置上
       const d = U.types[it.type], node = D[it.id]; if (!d || !node || !node.out) continue;
       const ports = Object.keys(d.outputs), hasFig = ports.some((p) => node.out[p] && node.out[p].kind === 'fig');
       for (const port of ports) {
         const v = node.out[port]; if (!v || !shows.includes(v.kind)) continue;
+        // 剪开的一口已经接成了块：画块（它自己会移动），不再画剪刀的原样输出
+        if (it.type === 'gcut' && L.some((l) => l.from === it.id && l.fromPort === port && E[l.to] && E[l.to].type === 'gpiece')) continue;
         const key = it.id + '.' + port, nm = names[key] || null;
         if (v.kind === 'figs') { if (hasFig) continue; v.data.forEach((f, i) => out.push({ key: key + '.' + i, name: null, label: nm || it.name, fig: f, id: it.id, port })); continue; }
         out.push({ key, name: nm, label: nm || (port === 'p' || port === 'f' ? it.name : it.name + '·' + port), fig: v.data, id: it.id, port });

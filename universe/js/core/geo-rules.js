@@ -131,6 +131,8 @@
         case 'gplace': return port === 'f' && one(id, 'f') ? nameOfStep(id, port) : null;
         case 'gasm': return port === 'merged' && all(id, 'pieces') ? nameOfStep(id, port) : null;
         case 'gfoot': { const p = one(id, 'p'), s = one(id, 's'); return p && s ? (port === 'p' ? 'foot(' + p + ',' + s + ')' : port === 'h' ? 'perp(' + p + ',' + s + ')' : null) : null; }
+        // 块（gpiece）的输出 f 用它接进来的那一口的剪切名字（cut:<id>:a / :b），即剪下的那一块
+        case 'gpiece': { const l = (into[id] || []).find((x) => x.toPort === 'f'), src = l && E[l.from]; return port === 'f' && src && src.type === 'gcut' ? get(l.from, l.fromPort) : null; }
         default: return null;
       }
     };
@@ -139,7 +141,9 @@
 
   const indexOf = (scene) => {
     const get = portNamer(scene), map = new Map();
-    for (const id of Object.keys(scene.entities)) {
+    // 块排在前面：同一个剪切名字既是剪开的那一口，也是块，名字找回的是块（块的形状带着移动）
+    const ids = Object.keys(scene.entities).sort((a, b) => (scene.entities[b].type === 'gpiece') - (scene.entities[a].type === 'gpiece'));
+    for (const id of ids) {
       const def = U.types[scene.entities[id].type]; if (!def) continue;
       for (const port of Object.keys(def.outputs)) { const n = get(id, port); if (n && !map.has(n)) map.set(n, { id, port }); }
     }
