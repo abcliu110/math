@@ -64,3 +64,11 @@ U.registerPack({ id:'mypack', types:{ foo:{
 - **器材包（1.8）**：`needs: ['core@1']` 缺失或版本太低时写入 `U.packErrors`。`U.packsFor(scene)` 给出台面需要的包。浏览器里的按需加载还没做，目前 index.html 仍一次加载全部包。
 - **近似值判分（1.9）**：数据形式的 when 里，近似值用 `=` / `!=` 会记入 `U.inexactReads`，参考解回归测试据此失败；函数形式的 when 请用 `W.near(e, port, x, tol)`。
 - **单文件版**：`node tools/build-standalone.js` 生成 `dist/universe-standalone.html`。
+
+## 第 2 阶段框架（设计 v2 第 2.1、2.7 节）
+
+- **问题结构 lint**：`U.problemLint(p)` 检查一道题的结构（id、title、里程碑、goal、台阶 rung 1–6、level、evidence、predict、claim）；`U.problemLintAll(list)` 检查整个题库，并统计函数形式条件的占比（上限 20%，超过给出警告）。错误不阻止运行，测试里题库必须 0 错误。
+- **条件写法**：里程碑和陷阱的条件可以写 `when`（数据形式，首选）或 `test`（函数）。函数形式没写 `why_code` 会得到警告。
+- **证据等级**：`U.Evidence.emit(kind, data)` 由证明类器材调用，写入事件流。`U.Evidence.levelOf(events, {pid, approx})` 判定等级（① 举例、② 没找到反例、③ 穷举、④ 结构证明、refuted 已被推翻），近似值最高到 ②。`U.Evidence.wording(res)` 给出跟等级走的措辞。
+- **证据事件约定**：`counterexample {found}`、`scan {range, counterexamples}`、`enumerate {count, expected}`、`proof {steps, filled}`、`induction {base, step}`。
+- **还没做**：证明类器材本身（猜想板、参数扫描器、反例构造器、系统枚举器、证明脚手架、归纳阶梯，属于 `pack-proof`）；六级台阶和句子卡的界面；2.3 多解指纹；88 个旧实验的迁移与改写。

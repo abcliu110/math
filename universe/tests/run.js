@@ -3,7 +3,7 @@
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const root = path.join(__dirname, '..');
 const fsx = require('fs'), pk = (d) => fsx.readdirSync(path.join(root, d)).filter((f) => f.endsWith('.js')).sort().map((f) => d + '/' + f);
-const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/registry.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
+const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/registry.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
 const ctx = vm.createContext({ console });
 ctx.globalThis = ctx;
 for (const f of files) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f });
@@ -188,6 +188,53 @@ t('单文件版能生成，并内联了器材包', () => {
   require('child_process').execFileSync(process.execPath, [path2.join(root, 'tools', 'build-standalone.js')], { stdio: 'ignore' });
   const html = fs2.readFileSync(path2.join(root, 'dist', 'universe-standalone.html'), 'utf8');
   truthy(!/<script src=/.test(html) && html.includes('tenframe'), '应没有外部脚本引用，且包含十格阵');
+});
+console.log('问题结构（2.1）');
+t('题库全部通过结构 lint（0 个错误）', () => { const r = U.problemLintAll(U.problems); eq(Object.keys(r.errors), [], '有题目结构错误'); });
+t('lint 能抓住：id 重复、goal 指向不存在的里程碑、台阶越界', () => {
+  const bad = { id: 'x', title: 't', milestones: [{ id: 'm', score: 1, when: { type: 'num', port: 'v', op: '=', value: '1' } }, { id: 'm', score: 1, when: { type: 'num', port: 'v', op: '=', value: '1' } }], goal: ['nope'], rung: 7 };
+  const msg = U.problemLint(bad).errors.join('|');
+  truthy(/重复/.test(msg) && /不存在的里程碑/.test(msg) && /rung/.test(msg), msg);
+});
+t('延伸题必须走到证明（evidence 至少 ③）；结论含“一定”时目标等级要够', () => {
+  const st = { id: 'y', title: 't', level: 'stretch', evidence: 2, milestones: [{ id: 'm', score: 1, when: { type: 'num', port: 'v', op: '=', value: '1' } }] };
+  truthy(U.problemLint(st).errors.some((m) => /延伸题/.test(m)), '延伸题证据太低应报错');
+  const cl = { id: 'z', title: 't', claim: '两个奇数的和一定是偶数', evidence: 2, milestones: [{ id: 'm', score: 1, when: { type: 'num', port: 'v', op: '=', value: '1' } }] };
+  truthy(U.problemLint(cl).errors.some((m) => /一定/.test(m)), '“一定”配 ② 应报错');
+  eq(U.problemLint(Object.assign({}, cl, { evidence: 3 })).errors, [], '证据 ③ 就通过');
+});
+t('函数形式的条件：没写 why_code 给提示，不算错误', () => {
+  const f = { id: 'w', title: 't', milestones: [{ id: 'm', score: 1, test: () => true }] };
+  const r = U.problemLint(f); eq(r.errors, []); truthy(r.warnings.some((m) => /why_code/.test(m)));
+  truthy(r.fnCount === 1);
+});
+console.log('证据等级（2.7）');
+const evReset = () => U.Events.clear();
+t('没有证据：① 举例；找到反例：已被推翻', () => {
+  evReset(); eq(U.Evidence.levelOf().level, 1);
+  U.Evidence.emit('counterexample', { found: true, where: 'n=4' }); eq(U.Evidence.levelOf().level, 'refuted');
+  eq(U.Evidence.wording(U.Evidence.levelOf()), '这个结论已被推翻：有一个反例。');
+});
+t('扫过范围且没有例外：② 没找到反例，措辞带范围', () => {
+  evReset(); U.Evidence.emit('scan', { range: [1, 1000], counterexamples: 0 });
+  const r = U.Evidence.levelOf(); eq(r.level, 2); eq(U.Evidence.wording(r), '在 1 到 1000 里没找到例外。');
+});
+t('枚举全部情况且数量对：③；证明步骤全部填完：④', () => {
+  evReset(); U.Evidence.emit('enumerate', { count: 36, expected: 36 }); eq(U.Evidence.levelOf().level, 3);
+  U.Evidence.emit('proof', { steps: 4, filled: 4 }); eq(U.Evidence.levelOf().level, 4);
+  eq(U.Evidence.wording(U.Evidence.levelOf()), '一定成立。');
+});
+t('枚举没列全（数量不对）不算 ③', () => { evReset(); U.Evidence.emit('enumerate', { count: 30, expected: 36 }); eq(U.Evidence.levelOf().level, 1); });
+t('近似值参与的结论最高只到 ②', () => {
+  evReset(); U.Evidence.emit('proof', { steps: 3, filled: 3 });
+  const r = U.Evidence.levelOf(null, { approx: true }); eq(r.level, 2); truthy(r.why.some((m) => /近似/.test(m)));
+});
+t('陷阱 / 里程碑可以用 test 写条件（与 when 等价）', () => {
+  const sc = W.blank(); const n = W.add(sc, 'num', 0, 0, { n: 0 });
+  const pr = { id: 'probe-test-alias', title: '探针', milestones: [{ id: 'm1', say: '', score: 1, test: (w) => w.some('num', (e) => e.props.n === 1) }] };
+  const run = U.Judge.start(pr, 'practice'); U.Judge.check(pr, run, sc, W.evaluate(sc));
+  W.act(sc, { t: 'set', id: n, k: 'n', v: 1 }); run.armed = true; run.ops = 1; U.Judge.check(pr, run, sc, W.evaluate(sc));
+  truthy(run.ms.m1.done, 'test 形式的里程碑应得分');
 });
 console.log('输出声明（1.2）');
 t('lint 拒绝没有声明 dim 的输出口', () => {

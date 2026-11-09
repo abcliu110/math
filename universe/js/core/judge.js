@@ -107,7 +107,7 @@
     check(problem, run, scene, D) {
       const W = makeW(scene, D, run), res = { newly: [], traps: [] };
       for (const m of problem.milestones) {
-        const st = run.ms[m.id]; if (!m._f) m._f = compile(m.when);
+        const st = run.ms[m.id]; if (!m._f) m._f = compile(m.when !== undefined ? m.when : m.test);
         let v = false; try { v = !!m._f(W); } catch (e) { v = false; }
         if (!v) st.seenFalse = true;
         else if (run.armed && st.seenFalse && !st.done) { st.done = true; st.op = run.ops; st.at = scene.clock.n; res.newly.push(m); }
@@ -115,7 +115,7 @@
       if (run.armed) {
         for (const tr of problem.traps || []) {
           if (run.trapsHit[tr.id]) continue;
-          if (!tr._f) tr._f = compile(tr.when);
+          if (!tr._f) tr._f = compile(tr.when !== undefined ? tr.when : tr.test);
           let v = false; try { v = !!tr._f(W); } catch (e) { v = false; }
           if (v) { run.trapsHit[tr.id] = { op: run.ops }; res.traps.push(tr); }
         }
