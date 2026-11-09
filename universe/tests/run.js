@@ -3,7 +3,7 @@
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const root = path.join(__dirname, '..');
 const fsx = require('fs'), pk = (d) => fsx.readdirSync(path.join(root, d)).filter((f) => f.endsWith('.js')).sort().map((f) => d + '/' + f);
-const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/ratio.js', 'js/core/form.js', 'js/core/predict.js', 'js/core/eqn.js', 'js/core/seq.js', 'js/core/table.js', 'js/core/figure.js', 'js/core/geo.js', 'js/core/convert.js', 'js/core/registry.js', 'js/core/rules.js', 'js/core/rules-exec.js', 'js/core/geo-rules.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/curriculum.js', 'js/core/coverage.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
+const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/ratio.js', 'js/core/form.js', 'js/core/predict.js', 'js/core/eqn.js', 'js/core/seq.js', 'js/core/table.js', 'js/core/figure.js', 'js/core/geo.js', 'js/core/convert.js', 'js/core/registry.js', 'js/core/rules.js', 'js/core/rules-exec.js', 'js/core/workbench.js', 'js/core/geo-rules.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/curriculum.js', 'js/core/coverage.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
 const ctx = vm.createContext({ console, TextEncoder, TextDecoder, btoa, atob });
 ctx.globalThis = ctx;
 for (const f of files) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f });
@@ -1598,6 +1598,109 @@ t('存档往返：带工作区的台面存下再读回，步骤、名字与剪�
   eq(U.Names.resolve(s2, 'M(BC)').id, U.Names.resolve(sc, 'M(BC)').id);
   areaEq(D, c.id);
 });
+
+console.log('式子工作台内核（任务 H 第 3a 步）：两边同除同乘、稳定标签、工作台');
+{
+  const N = (n) => ({ op: 'num', n: BigInt(n) }), X = { op: 'var', name: 'x' };
+  const add = (...args) => ({ op: 'add', args }), mul = (...args) => ({ op: 'mul', args });
+  const F = U.Form, FV = (f) => U.val('form', f), EV = (d) => U.val('eqn', d);
+  const ap = U.applyRule, WB = U.Workbench;
+  const cn = (s) => /[一-鿿]/.test(s || '');
+  const linEqn = () => ({ lhs: add(mul(N(3), X), N(5)), rhs: N(20), rel: '=' });
+
+  t('两边同除、两边同乘已登记，登记检查无错', () => { truthy(U.RULES['alg.divide'] && U.RULES['alg.multiply']); eq(U.ruleSpecErrors, []); });
+  t('两边同除：2x = 4 除以 2，得到 x = 2，解不变', () => {
+    const r = ap('alg.divide', EV({ lhs: mul(N(2), X), rhs: N(4), rel: '=' }), [], { by: 2 });
+    eq(r.ok, true); eq(r.kept, true); eq(F.show(r.value.data.lhs), 'x'); eq(F.show(r.value.data.rhs), '2');
+  });
+  t('两边同除以 0：被拒绝，说明原因，kept 为假', () => {
+    const r = ap('alg.divide', EV({ lhs: X, rhs: N(4), rel: '=' }), [], { by: 0 });
+    eq(r.ok, false); eq(r.kept, false); truthy(cn(r.why), r.why);
+  });
+  t('两边同乘：x = 3 乘以 2，得到 2x = 6；乘以 0 或没有给数，都被拒绝', () => {
+    const r = ap('alg.multiply', EV({ lhs: X, rhs: N(3), rel: '=' }), [], { by: 2 });
+    eq(r.ok, true); eq(r.kept, true); eq(F.show(r.value.data.lhs), '2x'); eq(F.show(r.value.data.rhs), '6');
+    const z = ap('alg.multiply', EV({ lhs: X, rhs: N(3), rel: '=' }), [], { by: 0 });
+    eq(z.ok, false); eq(z.kept, false); truthy(cn(z.why), z.why);
+    const n = ap('alg.multiply', EV({ lhs: X, rhs: N(3), rel: '=' }), [], {});
+    eq(n.ok, false); truthy(cn(n.why), n.why);
+  });
+  t('不等式两边同除以负数：不等号反向，解集不变', () => {
+    const r = ap('alg.divide', EV({ lhs: mul(N(2), X), rhs: N(4), rel: '>' }), [], { by: -2 });
+    eq(r.ok, true); eq(r.kept, true); eq(r.value.data.rel, '<');
+  });
+  t('移项打标签：移过去的 +5 带 moved#1；没有 stepIndex 时不打标签；标签不影响相等', () => {
+    const r = ap('alg.move-term', EV(linEqn()), [1], { stepIndex: 1 });
+    eq(r.kept, true); eq(F.show(r.value.data.rhs), '20 − 5');
+    eq(F.find(r.value.data.rhs, 'moved#1'), [1]); eq(F.tagOf(r.value.data.rhs, [1]), 'moved#1');
+    eq(F.find(r.value.data.rhs, 'moved#2'), null); eq(F.find(r.value.data.rhs, 'no-such'), null);
+    const plain = ap('alg.move-term', EV(linEqn()), [1], {});
+    eq(F.find(plain.value.data.rhs, 'moved#1'), null);
+    truthy(U.KINDS.form.eq(r.value.data.rhs, plain.value.data.rhs), '标签不应改变相等');
+  });
+  t('合并同类项打标签 collected#k；tagOf 对没有标签的路径返回 null', () => {
+    const r = ap('alg.collect', FV(add(mul(N(3), X), mul(N(2), X))), [], { stepIndex: 2 });
+    eq(r.kept, true); eq(F.tagOf(r.value.data, []), 'collected#2'); eq(F.tagOf(r.value.data, [0]), null);
+    eq(F.tagOf(r.value.data, [5]), null);
+  });
+
+  t('工作台 工具列表：方程四个、式子三个，标签是中文', () => {
+    eq(WB.tools(EV(linEqn())).map((x) => x.id), ['move-term', 'divide', 'multiply', 'collect']);
+    eq(WB.tools(FV(add(X, N(1)))).map((x) => x.id), ['collect', 'expand', 'reduce-fraction']);
+    truthy(WB.tools(EV(linEqn())).every((x) => cn(x.label)));
+  });
+  t('工作台 (a)：3x + 5 = 20，移项、两边同除以 3，两步，解为 x = 5', () => {
+    let s = WB.create(EV(linEqn()));
+    s = WB.step(s, 'move-term', [1], {});
+    eq(s.lastError, null); eq(s.steps.length, 1);
+    eq(F.show(s.current.data.lhs), '3x'); eq(F.value(s.current.data.rhs), U.Q(15));
+    s = WB.step(s, 'divide', null, { by: 3 });
+    eq(s.lastError, null); eq(s.steps.length, 2);
+    eq(WB.solution(s), { solved: true, x: U.Q(5) });
+    eq(WB.stepLog(s).length, 2); truthy(/^第 1 步：移项：3x \+ 5 = 20 → /.test(WB.stepLog(s)[0]), WB.stepLog(s)[0]);
+    truthy(/^第 2 步：两边同除：/.test(WB.stepLog(s)[1]), WB.stepLog(s)[1]);
+  });
+  t('工作台 (b)：撤销到第 1 步，等于走完第 1 步后的状态', () => {
+    const s1 = WB.step(WB.create(EV(linEqn())), 'move-term', [1], {});
+    const s2 = WB.step(s1, 'divide', null, { by: 3 });
+    eq(bigStr(WB.undo(s2, 1)), bigStr(s1)); eq(WB.undo(s2, 0).steps.length, 0);
+  });
+  t('工作台 (c)：两边同除以 0 被拒绝，说明原因，步骤数不变', () => {
+    const s1 = WB.step(WB.create(EV(linEqn())), 'move-term', [1], {});
+    const s2 = WB.step(s1, 'divide', null, { by: 0 });
+    eq(s2.steps.length, 1); truthy(cn(s2.lastError), s2.lastError); eq(bigStr(s2.current), bigStr(s1.current));
+  });
+  t('工作台 (d)：故意写错的规则（改掉了解）不会被记入步骤', () => {
+    const n0 = U.ruleSpecErrors.length;
+    U.defineRule('test.bad-scale', {
+      on: 'eqn', label: '错误的两边同除', essence: ['E4'], grade: [6, 9], keeps: 'equation',
+      match: () => undefined,
+      apply: (e) => ({ lhs: add(e.lhs, N(1)), rhs: e.rhs, rel: e.rel }),
+    });
+    try {
+      const s = WB.stepRule(WB.create(EV(linEqn())), 'test.bad-scale', null, {});
+      eq(s.steps.length, 0); eq(s.lastError, '这一步破坏了不变量，已拒绝');
+    } finally { delete U.RULES['test.bad-scale']; U.ruleSpecErrors.splice(n0); }
+  });
+  t('工作台 (e)：从 start 重放全部步骤，得到同一个 current', () => {
+    let s = WB.create(EV(linEqn()));
+    s = WB.step(s, 'move-term', [1], {}); s = WB.step(s, 'divide', null, { by: 3 });
+    eq(bigStr(WB.replay(s.start, s.steps).current), bigStr(s.current));
+  });
+  t('工作台：引用用标签；找不到标签、移项对右边的标签、不认识的工具，都说明原因且步骤不变', () => {
+    const s1 = WB.step(WB.create(EV(linEqn())), 'move-term', 'moved#9', {});
+    eq(s1.steps.length, 0); truthy(cn(s1.lastError), s1.lastError);
+    const s2 = WB.step(WB.step(WB.create(EV(linEqn())), 'move-term', [1], {}), 'collect', 'moved#1', {});
+    eq(s2.steps.length, 1); truthy(cn(s2.lastError), s2.lastError);
+    const s3 = WB.step(WB.create(EV(linEqn())), 'no-such-tool', [], {});
+    eq(s3.steps.length, 0); truthy(cn(s3.lastError), s3.lastError);
+  });
+  t('工作台（形式）：合并同类项后 solution 为 solved: false；未解的方程也是 solved: false', () => {
+    const f = WB.step(WB.create(FV(add(mul(N(3), X), mul(N(2), X)))), 'collect', [], {});
+    eq(F.show(f.current.data), '5x'); eq(WB.solution(f), { solved: false });
+    eq(WB.solution(WB.create(EV(linEqn()))), { solved: false });
+  });
+}
 
 console.log('\n' + pass + ' 通过，' + fail + ' 失败');
 process.exit(fail ? 1 : 0);

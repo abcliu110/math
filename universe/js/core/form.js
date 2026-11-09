@@ -1,5 +1,6 @@
 /* 形式层（任务 F，见 next-steps.md §10.3）。新 kind：form。
  * 形式是一棵式子树：{ op: 'num'|'var'|'add'|'sub'|'mul'|'div'|'pow'|'neg'|'frac'|'group', args: [form…], n?, d?, name? }。
+ * 节点可带可选的字符串 tag（稳定引用，见 tagOf / find）；tag 不参与显示和相等判断。
  * 形式不自动化简：2/4 保持 2/4，3x + 2x 保持原样。值（有理数或多项式）由 U.Form.value 随时算出，用来检查前后是否相等。
  * value 和 show 都不改变形式本身。 */
 (function (G) {
@@ -217,7 +218,26 @@
     return o;
   };
 
-  const F = { value, show, equivalent, isNormal, fromNum, fromPoly };
+  // ---- 稳定标签（§10.5.5）：节点可带可选的字符串 tag，如 'moved#1'；引用用标签，不用下标 ----
+  // tagOf：路径上节点的标签，没有则 null
+  const tagOf = (f, path) => {
+    let n = f;
+    for (const i of path || []) { if (!n || !n.args || !n.args[i]) return null; n = n.args[i]; }
+    return n && typeof n.tag === 'string' ? n.tag : null;
+  };
+  // find：按标签找节点，返回路径（先序遍历的第一个），找不到返回 null
+  const find = (f, tag) => {
+    if (typeof tag !== 'string') return null;
+    const walk = (n, path) => {
+      if (n.tag === tag) return path;
+      const a = n.args || [];
+      for (let i = 0; i < a.length; i++) { const r = walk(a[i], path.concat(i)); if (r) return r; }
+      return null;
+    };
+    return walk(f, []);
+  };
+
+  const F = { value, show, equivalent, isNormal, fromNum, fromPoly, tagOf, find };
   U.Form = F;
 
   U.defineKind('form', {

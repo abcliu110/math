@@ -32,6 +32,19 @@
   };
   const monoKey = (m) => Object.keys(m).sort().map((v) => v + '^' + m[v]).join('*');
   const num = (n) => ({ op: 'num', n: BigInt(n) });
+  // 稳定标签（§10.5.5）：规则创建的项带上 kind#stepIndex；没有 stepIndex（直接调用时）就不打标签
+  const tagNode = (node, kind, a) => (a && a.stepIndex !== undefined ? Object.assign({}, node, { tag: kind + '#' + a.stepIndex }) : node);
+  const FLIP = { '<': '>', '>': '<', '≤': '≥', '≥': '≤', '=': '=' };
+  // 规则参数里的数：整数、BigInt、{n,d}、"3" 或 "3/4"；不是数时返回 null
+  const qArg = (x) => {
+    try {
+      if (x && typeof x === 'object' && 'n' in x) return Q(BigInt(x.n), BigInt(x.d === undefined ? 1 : x.d));
+      if (typeof x === 'string') return Q.parse(x);
+      if (typeof x === 'number') return Number.isInteger(x) ? Q(BigInt(x)) : Q.fromNumber(x);
+      if (typeof x === 'bigint') return Q(x);
+    } catch (e) { return null; }
+    return null;
+  };
 
   // ---- 值 → 形式 / 方程两边 ----
   const toForm = (v) => {
@@ -57,7 +70,7 @@
     const vars = new Set([].concat(P.vars(ea.lhs), P.vars(ea.rhs), P.vars(eb.lhs), P.vars(eb.rhs)));
     if (vars.size > 1) return { same: false, why: '方程里不止一个未知数，没法比较解集' };
     const v = vars.size ? [...vars][0] : 'x';
-    if (ea.rel !== eb.rel) return { same: false, why: '不等号变了' };
+    // 不比较原始的不等号：两边同乘负数时不等号会反向，解集仍可能相同；解的形式（x rel value）由 solveLinear 统一给出
     const sa = U.Eqn.solveLinear(ea, v), sb = U.Eqn.solveLinear(eb, v);
     if (sa.kind === 'error' || sb.kind === 'error') return { same: false, why: '这个方程不是一元一次，无法比较解集' };
     if (sa.kind !== sb.kind) return { same: false, why: '变形前后的解不一样' };
@@ -207,9 +220,9 @@
       if (L.op !== 'add') return '左边只有一项，没有可以移的项';
       if (!L.args[at[0]]) return '位置不对，左边没有这一项';
     },
-    apply(eq, at) {
+    apply(eq, at, args) {
       const L = eq.lhs, i = at[0];
-      const term = L.args[i];
+      const term = tagNode(L.args[i], 'moved', args);
       const rest = L.args.filter((_, j) => j !== i);
       return {
         lhs: rest.length === 1 ? rest[0] : { op: 'add', args: rest },
@@ -218,6 +231,27 @@
       };
     },
   });
+
+  // 两边同除以 / 同乘以一个不为 0 的数：两边的解不变。不等式乘除负数时不等号反向。
+  const scaleRule = (op) => ({
+    on: 'eqn', label: op === 'divide' ? '两边同除以一个不为 0 的数，解不变' : '两边同乘以一个不为 0 的数，解不变',
+    essence: ['E4'], grade: [6, 9], keeps: 'equation',
+    match(eq, at, args) {
+      const k = qArg(args && args.by);
+      if (!k) return '请说明' + (op === 'divide' ? '除以' : '乘以') + '几（要是一个数）';
+      if (k.n === 0n) return op === 'divide' ? '不能两边同除以 0' : '两边同乘 0 会丢掉全部信息，不能这样做';
+      try { F.value(eq.lhs); F.value(eq.rhs); } catch (e) { return '方程的一边算不出来：' + e.message; }
+    },
+    apply(eq, at, args) {
+      const k = qArg(args.by);
+      const f = op === 'divide' ? Q.div(Q(1), k) : k;
+      const side = (x) => F.fromPoly(P.mul(polyOf(F.value(x)), P.const(f)));
+      const rel = k.n < 0n ? FLIP[eq.rel] : eq.rel;
+      return { lhs: side(eq.lhs), rhs: side(eq.rhs), rel };
+    },
+  });
+  R('alg.divide', scaleRule('divide'));
+  R('alg.multiply', scaleRule('multiply'));
 
   // 合并同类项：add 里的几项必须是同类项，合成一项。
   R('alg.collect', {
@@ -234,10 +268,10 @@
         if (key === null) key = k; else if (k !== key) return '这几项不是同类项，不能合并';
       }
     },
-    apply(f, at) {
+    apply(f, at, args) {
       const n = nodeAt(f, at);
       const sum = n.args.reduce((acc, t) => P.add(acc, polyOf(F.value(t))), P.const(Q(0)));
-      return setAt(f, at, F.fromPoly(sum));
+      return setAt(f, at, tagNode(F.fromPoly(sum), 'collected', args));
     },
   });
 
