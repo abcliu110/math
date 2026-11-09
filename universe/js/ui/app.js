@@ -14,6 +14,8 @@
     wsSel: [], wsHidden: {}, wsArgs: { dx: '0', dy: '0' }, wsMsg: '',
     // 工作区的坐标范围（按工作区 id 存；没有的就自动选）、专注模式的工作区 id（§10.5.8 A2–A4）
     wsView: {}, focusWs: null,
+    // 工作区里两下画线的状态（§10.5.8 B11）：{ ws, tool:'seg'|'cut', pend, cur }
+    wsDraw: null,
   });
 
   // ---------- 提示条 ----------
@@ -125,6 +127,21 @@
     saveFree(); refresh();
     return r;
   }
+  // 一串动作，其中有的要用前一个动作新建的器材的 id（画线：先建两个点，再建线段）。
+  // fn(A) 里用 A(动作) 一条条执行并记下来；任何一条不成立，整串退回原样；成功记成一步（撤销一次全撤）。
+  function build(fn) {
+    const before = snap(), rec = [];
+    const A = (a) => { const r = W.act(S.scene, a); if (!r.ok) throw { why: r.why }; rec.push(a); return r; };
+    try { fn(A); } catch (x) {
+      S.scene = W.load(before); const why = (x && x.why) || '这一步做不了';
+      say(why, 'bad', 3800); if (S.run) S.run.errors++; refresh();
+      return { ok: false, why };
+    }
+    pushUndo(before); for (const a of rec) recordSession(a);
+    if (S.run) { S.run.ops += rec.length; S.run.armed = true; }
+    saveFree(); refresh();
+    return { ok: true };
+  }
   function snapshot() { pushUndo(); }
   // 1.10：删容器时若里面有东西，先问：连里面的一起删，还是倒到台面上
   let pendingDel = null;
@@ -151,7 +168,7 @@
     S.problem = p; S.mode = mode || 'practice'; S.scene = p.build(); S.run = J.start(p, S.mode);
     S.session = U.Session.start(p, S.mode, S.scene);
     S.undo = []; S.redo = []; S.sel = null; S.selLink = null; S.inspOpen = false; S.tab = 'steps'; S.glow = [];
-    S.wsSel = []; S.wsHidden = {}; S.wsMsg = ''; S.wsView = {}; S.focusWs = null;
+    S.wsSel = []; S.wsHidden = {}; S.wsMsg = ''; S.wsView = {}; S.focusWs = null; S.wsDraw = null;
     if (!p.predict) S.run.pred_done = true;
     Ev.ctx = { pid: p.id, mode: S.mode }; Ev.push('start', {});
     S.D = W.evaluate(S.scene); UI.Stage.fit(); S.glow = glowOf();
@@ -162,7 +179,7 @@
     S.mode = 'free'; S.problem = null; S.run = null; S.session = null; Ev.ctx = {};
     let sc = null; try { sc = S.freeScene ? U.JSON.parse(S.freeScene) : U.JSON.parse(lsGet(FREE_KEY)); } catch (e) { sc = null; }
     try { S.scene = sc ? W.load(sc) : W.blank(); } catch (e) { S.scene = W.blank(); }
-    S.undo = []; S.redo = []; S.sel = null; S.selLink = null; S.glow = []; S.tab = 'lab'; S.focusWs = null; S.wsView = {};
+    S.undo = []; S.redo = []; S.sel = null; S.selLink = null; S.glow = []; S.tab = 'lab'; S.focusWs = null; S.wsView = {}; S.wsDraw = null;
     S.D = W.evaluate(S.scene); UI.Stage.fit(); refresh(); UI.Panels.renderShelf();
     say('自由探究：从右边拖器材到台面，拖蓝点连线，点 ▶ 让世界动起来', '', 4200);
   }
@@ -417,6 +434,7 @@
         const what = e.key === 'r' || e.key === 'R' ? 'turn' : 'flip';
         actMany(ids.map((id) => ({ t: 'piece', id, what, value: 1 })));
       }
+      else if (e.key === 'Escape' && S.wsDraw) UI.Stage.endDraw();
       else if (e.key === 'Escape' && S.focusWs) UI.Stage.setFocus(null);
       else if (e.key === 'Escape') { S.sel = null; S.selLink = null; UI.Panels.renderInsp(); UI.Stage.render(); }
     });
@@ -430,6 +448,6 @@
     setInterval(saveSession, 2000); G.addEventListener('pagehide', saveSession);
     offerResume();
   }
-  UI.App = { act, actMany, snapshot, afterMove, removeEntity, openProblem, openFree, setMode, say, undo, redo, stepOnce, refresh };
+  UI.App = { act, actMany, build, snapshot, afterMove, removeEntity, openProblem, openFree, setMode, say, undo, redo, stepOnce, refresh };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })(window);

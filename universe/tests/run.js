@@ -1819,5 +1819,168 @@ t('改原三角形的顶点：两块形状跟着变，位置和朝向（dx/dy/tu
   eq(Object.values(sc.entities).filter((e) => e.type === 'gpiece').length, 2, '块仍是两个');
 });
 
+console.log('合并用移动后的块、再剪一块、对齐到目标（几何工作区续）');
+// 三角形剪成两块（线 x=1），返回工作区、剪切步骤与点的构造函数
+const cutTri = () => {
+  const { sc, A, ws, pt } = hw.build();
+  const P = pt('P', 1, -1), Q2 = pt('Q', 1, 5); hw.seg(sc, P, { id: Q2, port: 'p' });
+  const c = W.act(sc, { t: 'tool', ws, tool: 'cut', picks: ['poly(A,B,C)', 'seg(P,Q)'] }); truthy(c.ok, c.why);
+  return { sc, A, ws, c, pt };
+};
+t('合并用块移动后的形状：移动块 2 后两块不再贴上，合并被拒；两块都移 3 格后，合并出的顶点是原三角形平移 3 格', () => {
+  const { sc, ws, c } = cutTri();
+  const picks = ['cut:' + c.id + ':a', 'cut:' + c.id + ':b'];
+  const m0 = W.act(sc, { t: 'tool', ws, tool: 'merge', picks }); truthy(m0.ok, '不动时两块能合回去：' + m0.why);
+  const [b1, b2] = Object.values(sc.entities).filter((e) => e.type === 'gpiece').map((e) => e.id);
+  W.act(sc, { t: 'piece', id: b2, what: 'move', value: { dx: 3, dy: 0 } });
+  const m1 = W.act(sc, { t: 'tool', ws, tool: 'merge', picks }); eq(m1.ok, false, '只动块 2，两块不再贴上'); truthy(/没有贴上/.test(m1.why), m1.why);
+  W.act(sc, { t: 'piece', id: b1, what: 'move', value: { dx: 3, dy: 0 } });
+  const m2 = W.act(sc, { t: 'tool', ws, tool: 'merge', picks }); truthy(m2.ok, m2.why);
+  const got = W.evaluate(sc)[m2.id].out.merged.data;
+  truthy(U.Fig.eq(got, U.Fig.polygon([[5, 6], [3, 0], [11, 0]])), '合并的顶点应是 (5,6)(3,0)(11,0)：' + U.Fig.show(got));
+});
+t('再剪一块：剪块 2 得到块 3、块 4（同一工作区），块 2 隐藏但留在历史里，旧的剪开步骤还在；撤销回到剪之前', () => {
+  const { sc, ws, c, pt } = cutTri();
+  const R = pt('R', 5, -1), S = pt('S', 5, 5); hw.seg(sc, R, { id: S, port: 'p' });
+  const b2 = U.Names.resolve(sc, 'cut:' + c.id + ':b').id;
+  eq(sc.entities[b2].type, 'gpiece', '块 2 是块器材');
+  const before = W.save(sc);
+  const r = W.act(sc, { t: 'tool', ws, tool: 'cut', picks: ['cut:' + c.id + ':b', 'seg(R,S)'] }); truthy(r.ok, r.why);
+  eq(r.pieces.map((id) => sc.entities[id].props.name), ['块 3', '块 4'], '新块编号接着来');
+  eq(r.pieces.map((id) => sc.entities[id].name), ['块 3', '块 4']);
+  eq(sc.entities[b2].hidden, true, '块 2 隐藏');
+  truthy(sc.entities[c.id], '旧的剪开步骤还在');
+  eq(r.pieces.map((id) => W.childrenOf(sc, ws).some((e) => e.id === id)), [true, true], '新块都在同一个工作区');
+  eq(Object.values(sc.entities).filter((e) => e.type === 'gpiece').length, 4, '一共四块（含隐藏的块 2）');
+  const r2 = W.act(sc, { t: 'tool', ws, tool: 'cut', picks: ['cut:' + c.id + ':b', 'seg(R,S)'] });
+  eq(r2.ok, false, '隐藏的块不能再剪'); truthy(/剪开过/.test(r2.why), r2.why);
+  const back = W.load(before);
+  eq(back.entities[b2].hidden, undefined, '撤销后块 2 回来');
+  eq(Object.values(back.entities).filter((e) => e.type === 'gpiece').length, 2, '撤销后只有两块');
+  eq(W.childrenOf(back, ws).length, W.childrenOf(W.load(before), ws).length);
+});
+t('对齐到目标（几何工作区续）：平行四边形沿高剪开，三角形向右移底边 AB 那么长，「对齐到目标」为真；不移或移少了为假', () => {
+  const p = U.problems.find((x) => x.id === 'geo-pgram-cut'), sc = p.build();
+  const ws = Object.values(sc.entities).find((e) => e.type === 'gworkspace').id;
+  const role = (r) => Object.values(sc.entities).find((e) => e.role === r).id;
+  const run = (tool, picks) => W.act(sc, { t: 'tool', ws, tool, picks });
+  const dx = sc.entities[role('B')].props.x - sc.entities[role('A')].props.x;
+  eq(dx, 5, '底边 AB 长 5，所以三角形要向右移 5');
+  truthy(run('seg', ['A', 'B']).ok); truthy(run('perp', ['D', 'seg(A,B)']).ok);
+  const c = run('cut', ['poly(A,B,C,D)', 'perp(D,seg(A,B))']); truthy(c.ok, c.why);
+  const pieces = Object.values(sc.entities).filter((e) => e.type === 'gpiece').map((e) => e.id);
+  const names = U.Names.list(sc), nameOf = (id) => names.find((n) => n.id === id && n.port === 'f').name;
+  const D0 = W.evaluate(sc), tri = pieces.find((id) => D0[id].out.f.data.pts.length === 3), quad = pieces.find((id) => id !== tri);
+  const fit0 = run('fit', ['目标长方形', nameOf(tri), nameOf(quad)]); truthy(fit0.ok, fit0.why);
+  eq(W.evaluate(sc)[fit0.id].out.ok.data, false, '没移，不算拼对');
+  W.act(sc, { t: 'piece', id: tri, what: 'move', value: { dx: 4, dy: 0 } });
+  const fit1 = run('fit', ['目标长方形', nameOf(tri), nameOf(quad)]); truthy(fit1.ok, fit1.why);
+  eq(W.evaluate(sc)[fit1.id].out.ok.data, false, '只移 4 格，还没拼对');
+  W.act(sc, { t: 'piece', id: tri, what: 'move', value: { dx: 1, dy: 0 } });
+  eq(sc.entities[tri].props.dx, dx, '三角形的 dx 正好是 5');
+  const fit2 = run('fit', ['目标长方形', nameOf(tri), nameOf(quad)]); truthy(fit2.ok, fit2.why);
+  eq(W.evaluate(sc)[fit2.id].out.ok.data, true, '移 5 格后对齐到目标为真');
+  eq(U.RULES['geo.fit'].device, 'gasm', '对齐到目标建的是拼合检查器材');
+  truthy(U.Fig.eq(W.evaluate(sc)[fit2.id].out.merged.data, U.Fig.polygon([[2, 0], [7, 0], [7, 3], [2, 3]])), '粘成的就是目标长方形');
+});
+
+console.log('数据形式的条件：构造、形式、步骤（任务 I）');
+t('构造查询：台面上作出 BC 的中点才算；没作、或接的不是 B 和 C，都不算', () => {
+  const pm = U.problems.find((x) => x.id === 'geo-median-area');
+  const cond = U.Judge.compile({ built: { rule: 'geo.midpoint', of: ['B', 'C'] } });
+  const scene = (ins) => {
+    const sc = pm.build(), role = (r) => Object.values(sc.entities).find((e) => e.role === r).id;
+    if (ins) {
+      const m = W.add(sc, 'gmid', 0, 0, {});
+      truthy(W.act(sc, { t: 'link', from: role(ins[0]), fromPort: 'p', to: m, toPort: 'a' }).ok, '连 a');
+      truthy(W.act(sc, { t: 'link', from: role(ins[1]), fromPort: 'p', to: m, toPort: 'b' }).ok, '连 b');
+    }
+    return sc;
+  };
+  const holds = (sc) => cond(U.Judge.makeW(sc, W.evaluate(sc), {}));
+  eq(holds(scene(null)), false, '没有中点器材');
+  eq(holds(scene(['A', 'C'])), false, '接的是 A 和 C');
+  eq(holds(scene(['B', 'C'])), true, '接的是 B 和 C');
+  eq(holds(scene(['C', 'B'])), true, '两个输入口对调也算');
+  truthy(/还没有作出/.test(U.Judge.unmetWhy({ built: { rule: 'geo.midpoint', of: ['B', 'C'] } }, scene(null), W.evaluate(scene(null)))), '未满足时给中文原因');
+});
+t('形式查询：结果是因式分解形式就过，展开的不过；没有这个角色也不过', () => {
+  const N = (n) => ({ op: 'num', n }), X = { op: 'var', name: 'x' };
+  const G1 = (a) => ({ op: 'group', args: [a] });
+  const add = (...args) => ({ op: 'add', args }), mul = (...args) => ({ op: 'mul', args });
+  const pw = (b, e) => ({ op: 'pow', args: [b, N(e)] });
+  const fac = mul(G1(add(X, N(1))), G1(add(X, N(2))));
+  const exp = add(add(pw(X, 2), mul(N(3), X)), N(2));
+  const sc = W.blank(); const ent = W.add(sc, 'algebra', 0, 0, { text: 'x + 1' }); sc.entities[ent].role = '结果';
+  const cond = U.Judge.compile({ form: { role: '结果', is: 'factored' } });
+  const holds = (f) => cond(U.Judge.makeW(sc, { [ent]: { out: { p: U.val('form', f) } } }, {}));
+  eq(holds(fac), true, '(x+1)(x+2) 是因式分解形式');
+  eq(holds(exp), false, 'x²+3x+2 是展开形式');
+  const sc2 = W.blank(); W.add(sc2, 'algebra', 0, 0, { text: 'x' });
+  eq(U.Judge.compile({ form: { role: '结果', is: 'factored' } })(U.Judge.makeW(sc2, W.evaluate(sc2), {})), false, '台面上没有“结果”角色');
+  truthy(/因式分解/.test(U.Judge.unmetWhy({ form: { role: '结果', is: 'factored' } }, sc, { [ent]: { out: { p: U.val('form', exp) } } })), '未满足时给中文原因');
+});
+t('步骤查询：用过规则且每步都保持不变量才算；场景里没有步骤记录时说明原因', () => {
+  const sc = W.blank(), cond = (c) => U.Judge.compile(c);
+  const want = { steps: { used: 'alg.factor', allKept: true } };
+  const D = W.evaluate(sc);
+  eq(cond(want)(U.Judge.makeW(sc, D, {})), false, '没有步骤记录');
+  truthy(/工作台/.test(U.Judge.unmetWhy(want, sc, D)), '原因应指出没有工作台记录');
+  sc.workbench = { steps: [{ rule: 'alg.collect', kept: true }] };
+  eq(cond(want)(U.Judge.makeW(sc, D, {})), false, '没用过 alg.factor');
+  sc.workbench = { steps: [{ rule: 'alg.factor', kept: true }, { rule: 'alg.collect', kept: false }] };
+  eq(cond(want)(U.Judge.makeW(sc, D, {})), false, '有一步没保持不变量');
+  eq(cond({ steps: { used: 'alg.factor' } })(U.Judge.makeW(sc, D, {})), true, '不要求 allKept 时只看用没用过');
+  sc.workbench = { steps: [{ rule: 'alg.factor', kept: true }] };
+  eq(cond(want)(U.Judge.makeW(sc, D, {})), true, '用过且每步都保持');
+});
+t('几何示例题的参考做法能过里程碑：中线剪开（mid 数据化，cut 仍是函数）；沿高剪开、移过去拼成长方形', () => {
+  // 中线题：B、C 的中点，连 A 到中点，沿线剪开
+  const pm = U.problems.find((x) => x.id === 'geo-median-area'), sm = pm.build(), J = U.Judge;
+  const role = (sc, r) => Object.values(sc.entities).find((e) => e.role === r).id;
+  const run1 = J.start(pm, 'practice'); J.check(pm, run1, sm, W.evaluate(sm)); run1.armed = true;
+  const step = (p, sc, run, fn) => { fn(); run.ops++; return J.check(p, run, sc, W.evaluate(sc)); };
+  const m = W.add(sm, 'gmid', 0, 0, {});
+  step(pm, sm, run1, () => { W.act(sm, { t: 'link', from: role(sm, 'B'), fromPort: 'p', to: m, toPort: 'a' }); W.act(sm, { t: 'link', from: role(sm, 'C'), fromPort: 'p', to: m, toPort: 'b' }); });
+  eq(run1.ms.mid.done, true, 'mid 数据条件应满足');
+  const l = W.add(sm, 'gseg', 0, 0, {}), c = W.add(sm, 'gcut', 0, 0, {});
+  step(pm, sm, run1, () => { W.act(sm, { t: 'link', from: role(sm, 'A'), fromPort: 'p', to: l, toPort: 'a' }); W.act(sm, { t: 'link', from: m, fromPort: 'p', to: l, toPort: 'b' }); W.act(sm, { t: 'link', from: role(sm, '图形'), fromPort: 'f', to: c, toPort: 'f' }); W.act(sm, { t: 'link', from: l, fromPort: 's', to: c, toPort: 'line' }); });
+  eq(run1.ms.cut.done, true, '中线剪开，两块面积相等');
+  eq(pm.milestones.map((x) => x.why_code || null).filter(Boolean), ['要比较剪刀两个输出块的面积'], '中线题只剩 cut 用函数（带 why_code）');
+  // 平行四边形题：从 D 作 AB 的高，沿高剪开，移过去拼成长方形
+  const pp = U.problems.find((x) => x.id === 'geo-pgram-cut'), sp = pp.build();
+  const run2 = J.start(pp, 'practice'); J.check(pp, run2, sp, W.evaluate(sp)); run2.armed = true;
+  const sg = W.add(sp, 'gseg', 0, 0, {}), ft = W.add(sp, 'gfoot', 0, 0, {}), cu = W.add(sp, 'gcut', 0, 0, {}), pl = W.add(sp, 'gplace', 0, 0, { dx: 5 }), ga = W.add(sp, 'gasm', 0, 0, {});
+  const fq = Object.values(sp.entities).find((e) => e.type === 'fquad');
+  step(pp, sp, run2, () => { W.act(sp, { t: 'link', from: role(sp, 'A'), fromPort: 'p', to: sg, toPort: 'a' }); W.act(sp, { t: 'link', from: role(sp, 'B'), fromPort: 'p', to: sg, toPort: 'b' }); W.act(sp, { t: 'link', from: role(sp, 'D'), fromPort: 'p', to: ft, toPort: 'p' }); W.act(sp, { t: 'link', from: sg, fromPort: 's', to: ft, toPort: 's' }); });
+  eq(run2.ms.height.done, true, '从 D 作 AB 的垂线');
+  step(pp, sp, run2, () => { W.act(sp, { t: 'link', from: role(sp, '图形'), fromPort: 'f', to: cu, toPort: 'f' }); W.act(sp, { t: 'link', from: ft, fromPort: 'h', to: cu, toPort: 'line' }); });
+  eq(run2.ms.cut.done, true, '沿高剪开');
+  const D2 = W.evaluate(sp), pieces = [D2[cu].out.a.data, D2[cu].out.b.data];
+  const triPort = pieces[0].pts.length === 3 ? 'a' : 'b', quadPort = triPort === 'a' ? 'b' : 'a';
+  step(pp, sp, run2, () => {
+    W.act(sp, { t: 'link', from: cu, fromPort: triPort, to: pl, toPort: 'f' });
+    W.act(sp, { t: 'link', from: cu, fromPort: quadPort, to: ga, toPort: 'pieces' });
+    W.act(sp, { t: 'link', from: pl, fromPort: 'f', to: ga, toPort: 'pieces' });
+    W.act(sp, { t: 'link', from: fq.id, fromPort: 'f', to: ga, toPort: 'target' });
+  });
+  eq(run2.ms.fit.done, true, '移过去正好拼成长方形');
+  eq(pp.milestones.filter((x) => x.why_code).map((x) => x.id), ['cut', 'fit'], '平行四边形题只剩 cut、fit 用函数');
+});
+t('lint：认数据形式的新条件；拒绝未知字段、不认识的构造、错的形式名', () => {
+  const one = (when, traps) => ({ id: 'q', title: 't', milestones: [{ id: 'm', score: 1, when }], traps: traps || [] });
+  for (const when of [{ built: { rule: 'geo.midpoint', of: ['B', 'C'] } }, { form: { role: '结果', is: 'factored' } }, { steps: { used: 'alg.factor', allKept: true } }]) {
+    const r = U.problemLint(one(when)); eq(r.errors, [], JSON.stringify(when)); eq(r.fnCount, 0);
+  }
+  truthy(U.problemLint(one({ built: { rule: 'geo.midpoint', of: ['B', 'C'], foo: 1 } })).errors.some((m) => /未知字段“foo”/.test(m)), 'built 的未知字段');
+  truthy(U.problemLint(one({ form: { role: '结果', is: 'factored', x: 2 } })).errors.some((m) => /未知字段“x”/.test(m)), 'form 的未知字段');
+  truthy(U.problemLint(one({ steps: { used: 'alg.factor', extra: true } })).errors.some((m) => /未知字段“extra”/.test(m)), 'steps 的未知字段');
+  truthy(U.problemLint(one({ built: { rule: 'geo.nope', of: ['B', 'C'] } })).errors.some((m) => /built.rule/.test(m)), '不认识的构造');
+  truthy(U.problemLint(one({ form: { role: '结果', is: 'pretty' } })).errors.some((m) => /form.is/.test(m)), '不认识的形式');
+  const tr = U.problemLint(one({ type: 'num', port: 'v', value: '1' }, [{ id: 't1', wrong: '错', when: { built: { rule: 'geo.midpoint', of: ['B', 'C'], bad: 1 } } }]));
+  truthy(tr.errors.some((m) => /未知字段“bad”/.test(m)), '陷阱里也要查');
+  eq(U.problemLint(one({ type: 'num', port: 'v', value: '1' }, [{ id: 't2', wrong: '错', when: { form: { role: '结果', is: 'factored' } } }])).errors, [], '陷阱里可以用形式查询');
+});
+
 console.log('\n' + pass + ' 通过，' + fail + ' 失败');
 process.exit(fail ? 1 : 0);

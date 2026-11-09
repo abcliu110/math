@@ -36,6 +36,7 @@
     // 剪之前（world 的 tool 会调用）：已经剪开成块器材的步骤，它的输出口不能再剪（要用块本身的名字）
     guard(scene, wires) {
       for (const w of wires) {
+        if (w.r.ent.type === 'gpiece' && w.r.ent.hidden) return '「' + w.r.ent.props.name + '」已经剪开过了，请剪它剪出来的块';
         if (w.r.ent.type !== 'gcut') continue;
         if (scene.links.some((l) => l.from === w.r.id && scene.entities[l.to] && scene.entities[l.to].type === 'gpiece'))
           return '这一块已经变成了块器材，请选块本身（名字是「step:块的编号:f」）再剪';
@@ -66,6 +67,20 @@
     },
     apply(input) { return Geo.merge(input.pieces).poly; },
     check(input, out) { return Q.eq(input.pieces.reduce((s, f) => Q.add(s, a2(f)), Q(0)), a2(out)); },
+  });
+
+  // 对齐到目标：选中的块（many，可以是一块或几块）拼起来，是否正好拼成目标图形（第一个选中的是目标，固定接在 target 口）。
+  // 建的步骤器材就是拼合检查（gasm），它的 ok 输出即结论；判定用的是 Geo.assemble（同 gasm 的计算）。
+  R('geo.fit', {
+    label: '对齐到目标：摆好的块正好拼成目标图形', essence: ['E5', 'E2'], grade: [5, 9], keeps: 'area',
+    device: 'gasm', wire: ['target'], many: 'pieces',
+    match(input) {
+      const ps = input.pieces || [];
+      if (!ps.length || !ps.every(isPoly)) return '只能拿块去对齐多边形';
+      if (!isPoly(input.target)) return '目标要是一个多边形（先选目标，再选块）';
+    },
+    apply(input) { const r = Geo.assemble(input.pieces, input.target); return { ok: r.ok, why: r.why }; },
+    check(input, out) { return typeof out.ok === 'boolean'; },
   });
 
   R('geo.midpoint', {
@@ -130,6 +145,8 @@
         case 'gcut': { const f = one(id, 'f'), l = one(id, 'line'); return (port === 'a' || port === 'b') && f && l ? nameOfCut(id, port) : null; }
         case 'gplace': return port === 'f' && one(id, 'f') ? nameOfStep(id, port) : null;
         case 'gasm': return port === 'merged' && all(id, 'pieces') ? nameOfStep(id, port) : null;
+        // 目标图形（fquad，题目里给的）用它的角色名字，让学生能选中它（对齐到目标要选目标）
+        case 'fquad': return port === 'f' && e.role ? nameOfOrigin(e.role) : null;
         case 'gfoot': { const p = one(id, 'p'), s = one(id, 's'); return p && s ? (port === 'p' ? 'foot(' + p + ',' + s + ')' : port === 'h' ? 'perp(' + p + ',' + s + ')' : null) : null; }
         // 块（gpiece）的输出 f 用它接进来的那一口的剪切名字（cut:<id>:a / :b），即剪下的那一块
         case 'gpiece': { const l = (into[id] || []).find((x) => x.toPort === 'f'), src = l && E[l.from]; return port === 'f' && src && src.type === 'gcut' ? get(l.from, l.fromPort) : null; }

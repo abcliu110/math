@@ -291,3 +291,9 @@ button.gdel { border: 0; background: none; color: var(--dim); cursor: pointer; }
 .wsx-piece { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 6px 0; font-size: 13px; }
 .wsx-piece .wsx-hint { color: var(--dim); font-size: 12px; }
 .swatch { display: inline-block; width: 14px; height: 14px; border-radius: 3px; border: 1px solid var(--line); vertical-align: middle; margin-right: 6px; }
+
+/* ---- 工作区：直接用鼠标改图形（§10.5.8 B）：选中图形旁边的浮动工具条；连线、剪按下时的样子 ---- */
+.wsx-float { position: absolute; display: flex; gap: 4px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 3px; z-index: 6; box-shadow: 0 6px 16px #0006; }
+.wsx-float button { font: inherit; font-size: 12px; padding: 3px 8px; border-radius: 8px; border: 1px solid #aab4c8; background: #fff; color: var(--ink); cursor: pointer; }
+.wsx-float button:hover { border-color: var(--blue); }
+.wsx-tools button.on { background: var(--blue); color: #fff; border-color: var(--blue); }

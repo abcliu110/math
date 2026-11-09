@@ -72,11 +72,43 @@
       }
     }
 
+    // 数据形式的新条件（任务 I）：built / form / steps，只认下面列出的字段
+    const NEW = {
+      built: { fields: ['rule', 'of'] },
+      form: { fields: ['role', 'is'] },
+      steps: { fields: ['used', 'allKept'] },
+    };
+    const lintNew = (c, where) => {
+      const pre = where + ' ' + (c.id || '') + ' ';
+      for (const key of Object.keys(NEW)) {
+        if (c[key] === undefined) continue;
+        const body = c[key];
+        if (!body || typeof body !== 'object' || Array.isArray(body)) { err(pre + key + ' 要是对象'); continue; }
+        for (const k of Object.keys(body)) if (!NEW[key].fields.includes(k)) err(pre + key + ' 里有未知字段“' + k + '”（只认 ' + NEW[key].fields.join('、') + '）');
+        if (key === 'built') {
+          const types = U.Judge ? U.Judge.BUILT_TYPE : {};
+          if (!Object.prototype.hasOwnProperty.call(types, body.rule)) err(pre + 'built.rule 只能是 ' + Object.keys(types).join(' / '));
+          if (!(Array.isArray(body.of) && body.of.length === 2 && body.of.every((n) => typeof n === 'string' && n.trim()))) err(pre + 'built.of 要是两个名字（字符串数组，长度为 2）');
+        }
+        if (key === 'form') {
+          const kinds = ['reduced-fraction', 'collected', 'factored', 'place-value'];
+          if (typeof body.role !== 'string' || !body.role.trim()) err(pre + 'form.role 要是角色名（非空文字）');
+          if (!kinds.includes(body.is)) err(pre + 'form.is 只能是 ' + kinds.join(' / '));
+        }
+        if (key === 'steps') {
+          if (typeof body.used !== 'string' || !body.used.trim()) err(pre + 'steps.used 要是规则编号（非空文字）');
+          else if (U.RULES && !U.RULES[body.used]) warn(pre + '规则“' + body.used + '”还没有注册，这个条件暂时满足不了');
+          if (body.allKept !== undefined && typeof body.allKept !== 'boolean') err(pre + 'steps.allKept 要是 true 或 false');
+        }
+      }
+    };
+
     const ids = {}; let fnCount = 0, condCount = 0;
     const checkCond = (x, where) => {
       const c = cond(x);
       if (c === undefined) { err(where + ' ' + x.id + ' 缺 when（或 test）'); return; }
       condCount++;
+      if (!isFn(c)) lintNew(Object.assign({ id: x.id }, c), where);
       if (isFn(c)) { fnCount++; if (!x.why_code) warn(where + ' ' + x.id + ' 用了函数形式，建议写 why_code 说明为什么数据写不出来'); }
     };
     (p.milestones || []).forEach((m) => {

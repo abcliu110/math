@@ -532,6 +532,102 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
     ok(await p.locator('.wsbody [data-pick="' + (await pickName(pa)) + '"]').count() === 1, '(d) 回到工作区后，画面上又有这一块');
   }
   }
+  {
+  console.log('工作区里用鼠标改图形（§10.5.8 B）');
+  // 点工作区里的图形（data-pick）：找一个真能点到它的位置
+  const pickNm = async (name, shift) => {
+    const pt = await p.evaluate((nm) => {
+      for (const el of [...document.querySelectorAll('[data-pick]')].filter((e) => e.dataset.pick === nm)) {
+        const r = el.getBoundingClientRect(), cands = [];
+        for (let i = 1; i < 10; i++) for (let j = 1; j < 10; j++) cands.push([r.left + r.width * i / 10, r.top + r.height * j / 10]);
+        for (const [x, y] of cands) { const hit = document.elementFromPoint(x, y); if (hit && hit.closest('[data-pick]') === el) return { x, y }; }
+      }
+      return null;
+    }, name);
+    if (!pt) { ok(false, '找不到可以点的对象：' + name); return false; }
+    if (shift) await p.keyboard.down('Shift');
+    await p.mouse.click(pt.x, pt.y);
+    if (shift) await p.keyboard.up('Shift');
+    await p.waitForTimeout(60); return true;
+  };
+  const wsBtn = async (id) => { await p.click('[data-ws-tool="' + id + '"]'); await p.waitForTimeout(60); };
+  const wsIdOf = () => p.evaluate(() => Object.values(UI.S.scene.entities).find((e) => U.types[e.type].workspace).id);
+
+  // (a) 自由点围成的三角形：拖一个顶点（点在工作区里），坐标跟着变（格点吸附）；撤销回到原来
+  await p.evaluate(() => { UI.App.openFree(); UI.App.act({ t: 'clear' }); }); await p.waitForTimeout(100);
+  const tri = await p.evaluate(() => {
+    const A = UI.App, ws = A.act({ t: 'add', type: 'gworkspace', x: 200, y: 80 }).id;
+    const pts = [[0, 0], [4, 0], [1, 3]].map(([x, y]) => { const id = A.act({ t: 'add', type: 'gpt', x: 0, y: 0, props: { x, y } }).id; A.act({ t: 'put', id, parent: ws, slot: 'items' }); return id; });
+    const poly = A.act({ t: 'add', type: 'gpoly', x: 0, y: 0 }).id;
+    pts.forEach((id) => A.act({ t: 'link', from: id, fromPort: 'p', to: poly, toPort: 'pts' }));
+    A.act({ t: 'put', id: poly, parent: ws, slot: 'items' });
+    return { ws, pts };
+  });
+  await p.waitForTimeout(80);
+  const xy = (id) => p.evaluate((i) => [UI.S.scene.entities[i].props.x, UI.S.scene.entities[i].props.y], id);
+  const span = await p.evaluate((ws) => UI.Stage.rangeOf(ws).span, tri.ws);
+  const wbox = await p.locator('.card[data-id="' + tri.ws + '"] svg.wsbody').boundingBox();
+  const unitA = wbox.width / span;
+  const v0 = await xy(tri.pts[2]);
+  const vh = await p.locator('.card[data-id="' + tri.ws + '"] svg.wsbody [data-drag="' + tri.pts[2] + '"]').first().boundingBox();
+  const vx0 = vh.x + vh.width / 2, vy0 = vh.y + vh.height / 2;
+  await p.mouse.move(vx0, vy0); await p.mouse.down();
+  await p.mouse.move(vx0 + 2 * unitA, vy0 - unitA, { steps: 6 }); await p.mouse.up(); await p.waitForTimeout(80);
+  const v1 = await xy(tri.pts[2]);
+  ok(v1[0] === v0[0] + 2 && v1[1] === v0[1] + 1, '(a) 拖三角形的顶点：(' + v0 + ') → (' + v1 + ')');
+  await p.click('#undo'); await p.waitForTimeout(80);
+  ok(JSON.stringify(await xy(tri.pts[2])) === JSON.stringify(v0), '(a) 撤销：顶点回到原来的坐标');
+
+  // 几何题 geo-median-area：先按原来的步骤剪开，得到两块（块带名字 cut:…）
+  await p.evaluate(() => UI.App.openProblem('geo-median-area', 'practice')); await p.waitForTimeout(200);
+  await pickNm('B'); await pickNm('C', true); await wsBtn('mid');
+  await pickNm('A'); await pickNm('M(BC)', true); await wsBtn('seg');
+  await pickNm('poly(A,B,C)'); await pickNm('seg(A,M(BC))', true); await wsBtn('cut');
+  await p.waitForTimeout(900); if (await p.locator('#dlg.open').count()) await p.click('#dlg-close');
+
+  // (b) 选中一块，拖上方的旋转把手到左边（转 90°）：块的 turn 变一格；撤销回去
+  const pieceId = await p.evaluate(() => Object.values(UI.S.scene.entities).find((e) => e.type === 'gpiece').id);
+  const pieceName = await p.evaluate((pid) => U.Names.list(UI.S.scene).find((x) => x.id === pid && x.port === 'f').name, pieceId);
+  await pickNm(pieceName); await p.waitForTimeout(80);
+  const turnOf = () => p.evaluate((pid) => UI.S.scene.entities[pid].props.turn, pieceId);
+  const t0 = await turnOf();
+  const rot = await p.locator('.card svg.wsbody [data-hdl="rot"]').first().boundingBox();
+  const pc = await p.locator('.card svg.wsbody [data-pick="' + pieceName + '"]').first().boundingBox();
+  const cxp = pc.x + pc.width / 2, cyp = pc.y + pc.height / 2;
+  await p.mouse.move(rot.x + rot.width / 2, rot.y + rot.height / 2); await p.mouse.down();
+  await p.mouse.move(cxp - 90, cyp, { steps: 8 }); await p.mouse.up(); await p.waitForTimeout(80);
+  const t1 = await turnOf();
+  ok((t1 - t0 + 4) % 4 === 1, '(b) 块：旋转把手转到 90°，turn ' + t0 + ' → ' + t1);
+  await p.click('#undo'); await p.waitForTimeout(80);
+  ok((await turnOf()) === t0, '(b) 撤销：块回到原来的转向');
+
+  // (c) 选中一个图形，浮动工具条里点「左右翻」：顶点的 x 关于图形中心翻过去
+  await p.evaluate(() => UI.App.openProblem('geo-median-area', 'practice')); await p.waitForTimeout(200);
+  await pickNm('poly(A,B,C)'); await p.waitForTimeout(80);
+  const polyId = await p.evaluate(() => U.Names.resolve(UI.S.scene, 'poly(A,B,C)').id);
+  const xsOf = () => p.evaluate((pid) => UI.S.scene.links.filter((l) => l.to === pid).map((l) => UI.S.scene.entities[l.from].props.x), polyId);
+  const xs0 = await xsOf();
+  await p.click('.wsx-float [data-fig-flip="1"]'); await p.waitForTimeout(80);
+  const xs1 = await xsOf(), mnX = Math.min(...xs0), mxX = Math.max(...xs0);
+  ok(xs1.some((x, i) => x !== xs0[i]) && xs1.every((x, i) => x === mnX + mxX - xs0[i]), '(c) 左右翻：x 关于中心翻过去 ' + xs0 + ' → ' + xs1);
+  await p.click('#undo'); await p.waitForTimeout(80);
+  ok(JSON.stringify(await xsOf()) === JSON.stringify(xs0), '(c) 撤销：回到翻之前');
+
+  // (d) 选「连线」，在画布上点两下，就画出一条线段（不需要先有两个点）；Esc 退出
+  await p.evaluate(() => UI.App.openProblem('geo-median-area', 'practice')); await p.waitForTimeout(200);
+  const wsid2 = await wsIdOf(), segN = () => p.evaluate(() => Object.values(UI.S.scene.entities).filter((e) => e.type === 'gseg').length);
+  const n0 = await segN();
+  await wsBtn('seg');
+  ok(await p.locator('[data-ws-tool="seg"].on').count() === 1, '(d) 选「连线」：工具按钮亮起，进入画线');
+  const wb2 = await p.locator('.card[data-id="' + wsid2 + '"] svg.wsbody').boundingBox();
+  await p.mouse.click(wb2.x + wb2.width * 0.12, wb2.y + wb2.height * 0.9); await p.waitForTimeout(40);
+  await p.mouse.click(wb2.x + wb2.width * 0.42, wb2.y + wb2.height * 0.9); await p.waitForTimeout(120);
+  const n1 = await segN();
+  ok(n1 === n0 + 1, '(d) 在画布上点两下：多了一条线段（' + n0 + ' → ' + n1 + '）');
+  await p.keyboard.press('Escape'); await p.waitForTimeout(60);
+  ok(await p.locator('[data-ws-tool="seg"].on').count() === 0, '(d) Esc 退出画线');
+
+  }
   ok(errs.length === 0, '控制台 0 报错' + (errs.length ? '：' + errs[0] : ''));
   console.log('\n' + pass + ' 通过，' + fail + ' 失败'); await b.close(); process.exit(fail ? 1 : 0);
 })();

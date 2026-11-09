@@ -63,6 +63,7 @@
             { id: 'flip', label: '翻转', rule: 'geo.place', defaults: { flip: 1 } },
             { id: 'merge', label: '合并', rule: 'geo.merge' },
             { id: 'mid', label: '中点', rule: 'geo.midpoint' },
+            { id: 'fit', label: '对齐到目标', rule: 'geo.fit' },
           ],
         },
         outputs: {

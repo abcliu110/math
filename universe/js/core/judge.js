@@ -5,6 +5,9 @@
  *   when 可以是函数 W=>bool，或数据形式（首选）：
  *     {type|role, port, op:'='|'>'|'<'|'>='|'<=', value}  台面上某台器材的某个输出满足条件
  *     {count:{type, ge}} / {loop:true} / {ticks:{ge}} / {all:[…]} / {any:[…]} / {not:…}
+ *     {built:{rule:'geo.midpoint', of:['B','C']}}  作出了这个构造（按角色）
+ *     {form:{role:'结果', is:'factored'}}          这个角色的结果是这种标准形式
+ *     {steps:{used:'alg.factor', allKept:true}}    用过这条规则（且每一步都保持了不变量）
  * 规则：
  *   · 开场台面里已经满足的里程碑，必须先变假、再变真才给分（开场摆好的不算分）
  *   · 第一次操作之前不给分
@@ -79,6 +82,56 @@
     return W;
   }
 
+  // 数据形式的三类新条件（任务 I）：
+  //   { built: { rule, of: [名字, 名字] } }   作没作某个构造（按角色名）
+  //   { form: { role, is } }                  某个角色的结果是不是某种标准形式
+  //   { steps: { used, allKept } }            用没用过某条规则，（可选）每一步是否都保持了不变量
+  const BUILT_TYPE = { 'geo.midpoint': 'gmid', 'geo.segment': 'gseg', 'geo.foot': 'gfoot' };
+  const FORM_LABEL = { 'reduced-fraction': '最简分数', collected: '合并同类项', factored: '因式分解', 'place-value': '位值分解' };
+  const sameSet = (a, b) => a.length === b.length && a.slice().sort().join('\u0001') === b.slice().sort().join('\u0001');
+
+  // 返回 { ok, why }：why 是给学生看的中文原因（未满足时）
+  function checkNew(c, W) {
+    const scene = W.scene, E = scene.entities;
+    if (c.built) {
+      const b = c.built, names = (b.of || []).map(String);
+      const type = BUILT_TYPE[b.rule];
+      if (!type) return { ok: false, why: '不认识的构造“' + b.rule + '”' };
+      for (const n of names) if (typeof U.Names.resolve(scene, n) === 'string') return { ok: false, why: '台面上没有名字为“' + n + '”的对象' };
+      // 每个输出口的名字（U.Names 算出来的）：'id|port' → 名字
+      const table = {};
+      for (const x of U.Names.list(scene)) table[x.id + '|' + x.port] = x.name;
+      const devs = Object.values(E).filter((e) => e.type === type);
+      if (!devs.length) return { ok: false, why: '还没有作出这个构造' };
+      const ok = devs.some((d) => {
+        const ins = Object.keys(U.types[type].inputs || {}).map((p) => {
+          const l = scene.links.find((x) => x.to === d.id && x.toPort === p);
+          return l ? table[l.from + '|' + l.fromPort] : undefined;
+        });
+        return ins.every((x) => typeof x === 'string') && sameSet(ins, names);
+      });
+      return ok ? { ok: true } : { ok: false, why: '作出了这个构造，但不是接在 ' + names.join('、') + ' 上的' };
+    }
+    if (c.form) {
+      const f = c.form, e = W.byRole(f.role);
+      if (!e) return { ok: false, why: '台面上没有角色为“' + f.role + '”的器材' };
+      let v = W.out(e);
+      if (v && v.kind !== 'form') v = U.convertVal(v, 'form');
+      if (!v || v.kind !== 'form') return { ok: false, why: '“' + f.role + '”不是代数式，没有形式可以判断' };
+      let ok = false; try { ok = !!U.Form.isNormal(v.data, f.is); } catch (err) { ok = false; }
+      return ok ? { ok: true } : { ok: false, why: '“' + f.role + '”还不是“' + (FORM_LABEL[f.is] || f.is) + '”形式' };
+    }
+    if (c.steps) {
+      const s = c.steps, st = scene.workbench;
+      if (!st || !Array.isArray(st.steps)) return { ok: false, why: '没有式子工作台的步骤记录，无法判断有没有用“' + s.used + '”' };
+      if (!st.steps.some((x) => x && x.rule === s.used)) return { ok: false, why: '还没有用规则“' + s.used + '”' };
+      if (s.allKept && !st.steps.every((x) => x && x.kept !== false)) return { ok: false, why: '有一步没有保持不变量' };
+      return { ok: true };
+    }
+    return { ok: true };
+  }
+  const isNewShape = (c) => !!c && typeof c === 'object' && (c.built !== undefined || c.form !== undefined || c.steps !== undefined);
+
   const OPS = { '=': (c) => c === 0, '>': (c) => c > 0, '<': (c) => c < 0, '>=': (c) => c >= 0, '<=': (c) => c <= 0, '!=': (c) => c !== 0 };
   function cmpVal(v, op, want) {
     if (!v) return false;
@@ -98,6 +151,7 @@
     if (c.loop) return (W) => W.hasLoop();
     if (c.ticks) return (W) => W.n >= (c.ticks.ge || 0);
     if (c.count) return (W) => W.count(c.count.type) >= (c.count.ge || 0);
+    if (isNewShape(c)) return (W) => checkNew(c, W).ok;
     if (c.type || c.role) {
       const op = c.op || '=';
       return (W) => {
@@ -118,6 +172,10 @@
 
   const Judge = {
     compile, makeW, fingerprint,
+    // 构造规则 → 器材类型（problem.js 的 lint 用它检查 built.rule）
+    BUILT_TYPE,
+    // 数据形式的新条件没满足时，给学生看的中文原因；不是新条件或已满足时返回 null
+    unmetWhy(c, scene, D) { if (!isNewShape(c)) return null; const r = checkNew(c, makeW(scene, D, {})); return r.ok ? null : r.why; },
 
     start(problem, mode) {
       const run = {
