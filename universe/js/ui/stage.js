@@ -1187,8 +1187,10 @@
     }
     return { x, y };
   }
-  function dropOnContainer(id, ev) {
+  // A：事务里的动作执行函数（拖动提交时由 tx 传入，整段拖放才是一个撤销项）；不传就单独走 act
+  function dropOnContainer(id, ev, A) {
     const S = UI.S, e = S.scene.entities[id]; if (!e) return;
+    const act = A || ((a) => UI.App.act(a));
     const t = cardUnder(ev, id, isContainer);
     const td = t ? U.types[t.type] : null;
     const slots = td && td.slots ? Object.keys(td.slots) : [];
@@ -1198,12 +1200,12 @@
         const g = geom(t); S.wsView = S.wsView || {}; if (!S.wsView[t.id]) S.wsView[t.id] = wsView(t, g.w, g.h - HD);
         const wb = document.querySelector('svg.wsbody[data-wsid="' + t.id + '"]'), fr = wsFrame(t, g.w, g.h - HD);
         const pt = wb ? worldAt(ev, fr.vw, scr(wb, fr)) : null;
-        UI.App.act({ t: 'wsdrop', id, ws: t.id, x: pt ? pt.x : undefined, y: pt ? pt.y : undefined });
+        act({ t: 'wsdrop', id, ws: t.id, x: pt ? pt.x : undefined, y: pt ? pt.y : undefined });
         return;
       }
       const accepting = slots.find((sn) => { const A = td.slots[sn].accepts; return A === '*' || A.includes(e.type); });
-      UI.App.act({ t: 'put', id, parent: t.id, slot: accepting || slots[0] });
-    } else if (e.parent) UI.App.act({ t: 'take', id });
+      act({ t: 'put', id, parent: t.id, slot: accepting || slots[0] });
+    } else if (e.parent) act({ t: 'take', id });
   }
 
   function onMove(ev) {
@@ -1230,9 +1232,10 @@
     if (drag.kind === 'rz') {
       const dx = ev.clientX - drag.sx, dy = ev.clientY - drag.sy;
       if (!drag.moved && Math.hypot(dx, dy) < 3) return;
-      if (!drag.moved) { drag.moved = true; UI.App.snapshot(); }
+      if (!drag.moved) { drag.moved = true; drag.before = UI.App.snapshot(); }
       const w = Math.max(MIN_W, Math.round(drag.w0 + dx / drag.zoom)), h = Math.max(MIN_H, Math.round(drag.h0 + dy / drag.zoom));
-      W.act(S.scene, { t: 'resize', id: drag.id, w, h }); render();
+      drag.w1 = w; drag.h1 = h;
+      UI.App.preview({ t: 'resize', id: drag.id, w, h }); render();
       showTip(ev.clientX, ev.clientY, w + ' × ' + h, true);
       return;
     }
@@ -1249,8 +1252,9 @@
     if (drag.kind === 'move') {
       if (!drag.moved && Math.hypot(ev.clientX - drag.sx, ev.clientY - drag.sy) < 4) return;
       const w = toWorld(ev);
-      if (!drag.moved) { drag.moved = true; UI.App.snapshot(); }
-      W.act(S.scene, { t: 'move', id: drag.id, x: w.x - drag.dx, y: w.y - drag.dy }); render();
+      if (!drag.moved) { drag.moved = true; drag.before = UI.App.snapshot(); }
+      drag.x1 = w.x - drag.dx; drag.y1 = w.y - drag.dy;
+      UI.App.preview({ t: 'move', id: drag.id, x: drag.x1, y: drag.y1 }); render();
       // 拖到容器上时，给容器加虚线框提示“松手放进去”
       const hov = cardUnder(ev, drag.id, isContainer);
       document.querySelectorAll('.card.droptarget').forEach((c) => c.classList.remove('droptarget'));
@@ -1271,8 +1275,16 @@
       document.querySelectorAll('.card.droptarget').forEach((c) => c.classList.remove('droptarget'));
       if (d.kind === 'piece') { pieceUp(d, ev); return; }
       if (d.kind === 'shape') { shapeUp(d, ev); return; }
-      if (d.kind === 'rz') { showTip(0, 0, ''); UI.Panels.renderInsp(); render(); if (d.moved) UI.App.afterMove(); return; }
-      if (d.kind === 'move' && d.moved) { dropOnContainer(d.id, ev); UI.App.afterMove(); }
+      if (d.kind === 'rz') {
+        showTip(0, 0, '');
+        if (d.moved) UI.App.tx('调整大小', (A) => A({ t: 'resize', id: d.id, w: d.w1, h: d.h1 }), { from: d.before });
+        UI.Panels.renderInsp(); render(); if (d.moved) UI.App.afterMove(); return;
+      }
+      // 移动（和松手放进容器）是一个事务：一次拖动只一个撤销项
+      if (d.kind === 'move' && d.moved) {
+        UI.App.tx('移动', (A) => { A({ t: 'move', id: d.id, x: d.x1, y: d.y1 }); dropOnContainer(d.id, ev, A); }, { from: d.before });
+        UI.App.afterMove();
+      }
     }
   }
 

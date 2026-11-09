@@ -102,47 +102,55 @@
   const snap = () => U.JSON.stringify(S.scene);
   function pushUndo(s) { S.undo.push(s || snap()); if (S.undo.length > 120) S.undo.shift(); S.redo = []; }
 
-  function act(a, o) {
+  // ---------- 事务（U2）----------
+  // tx(label, fn, o)：fn(A) 里用 A(动作) 依次执行；任何一步不成立，整个回滚到开头（或 o.from，拖动用），并就地提示原因。
+  // 成功：一个撤销项、一条事件（带 label）、一次存档、一次渲染。
+  // o.from：拖动时先把台面退回拖动开始前的样子（拖动中的预览不进撤销），再整体提交。
+  // o.after(r)：成功后、渲染之前调用（用来设置选中项）。返回：成功时最后一个动作的结果；失败时 { ok:false, why }。
+  function tx(label, fn, o) {
     o = o || {};
-    const before = snap();
-    const r = W.act(S.scene, a);
-    if (!r.ok) { say(r.why, 'bad', 3800); if (S.run) S.run.errors++; UI.Stage.render(); return r; }
-    pushUndo(before); recordSession(a);
-    if (o.select && r.id) { S.sel = r.id; S.selLink = null; }
-    if (a.t === 'del' && S.sel === a.id) S.sel = null;
-    if (S.run) { S.run.ops++; S.run.armed = true; }
-    if (a.t === 'link' && r.replaced) say('这个口只能接一根线，旧的线换掉了', 'warn', 2200);
-    saveFree(); refresh();
-    return r;
-  }
-  // 一串动作记成一步（撤销一次全部撤掉）；有一条不成立，整串都不做，台面退回原样（块的拖出、旋转、翻转用）
-  function actMany(list) {
-    const before = snap();
-    let r = { ok: true };
-    for (const a of list) { r = W.act(S.scene, a); if (!r.ok) break; }
-    if (!r.ok) { S.scene = W.load(before); say(r.why, 'bad', 3800); if (S.run) S.run.errors++; refresh(); return r; }
-    pushUndo(before);
-    for (const a of list) recordSession(a);
-    if (S.run) { S.run.ops += list.length; S.run.armed = true; }
-    saveFree(); refresh();
-    return r;
-  }
-  // 一串动作，其中有的要用前一个动作新建的器材的 id（画线：先建两个点，再建线段）。
-  // fn(A) 里用 A(动作) 一条条执行并记下来；任何一条不成立，整串退回原样；成功记成一步（撤销一次全撤）。
-  function build(fn) {
-    const before = snap(), rec = [];
-    const A = (a) => { const r = W.act(S.scene, a); if (!r.ok) throw { why: r.why }; rec.push(a); return r; };
+    const before = o.from !== undefined ? o.from : snap(), rec = [];
+    let last = { ok: true };
+    const A = (a) => { const r = W.act(S.scene, a); if (!r.ok) throw { why: r.why }; rec.push(a); last = r; return r; };
+    if (o.from !== undefined) S.scene = W.load(before);
     try { fn(A); } catch (x) {
-      S.scene = W.load(before); const why = (x && x.why) || '这一步做不了';
-      say(why, 'bad', 3800); if (S.run) S.run.errors++; refresh();
+      S.scene = W.load(before);
+      const why = (x && x.why) || '这一步做不了';
+      if (S.sel && !S.scene.entities[S.sel]) S.sel = null;
+      say(why, 'bad', 3800); if (S.run) S.run.errors++;
+      refresh();
       return { ok: false, why };
     }
-    pushUndo(before); for (const a of rec) recordSession(a);
+    if (!rec.length) { refresh(); return last; }
+    pushUndo(before);
+    for (const a of rec) recordSession(a);
+    Ev.push('edit', { label: label || '', n: rec.length });
     if (S.run) { S.run.ops += rec.length; S.run.armed = true; }
+    if (o.after) o.after(last);
     saveFree(); refresh();
-    return { ok: true };
+    return last;
   }
-  function snapshot() { pushUndo(); }
+  // 单个动作：老接口，失败时返回 { ok:false, why }（调用方照旧看 r.ok）
+  function act(a, o) {
+    o = o || {};
+    return tx(a.t, (A) => A(a), {
+      after: (r) => {
+        if (o.select && r.id) { S.sel = r.id; S.selLink = null; }
+        if (a.t === 'del' && S.sel === a.id) S.sel = null;
+        if (a.t === 'link' && r.replaced) say('这个口只能接一根线，旧的线换掉了', 'warn', 2200);
+      },
+    });
+  }
+  // 一串动作记成一步（撤销一次全部撤掉）；有一条不成立，整串都不做（块的拖出、旋转、翻转用）
+  function actMany(list, label) {
+    return tx(label || (list[0] && list[0].t) || '', (A) => { for (const a of list) A(a); });
+  }
+  // 一串动作，其中有的要用前一个动作新建的器材的 id（画线：先建两个点，再建线段）。fn(A) 同 tx。
+  function build(fn, label) { return tx(label || '', fn); }
+  // 拖动预览：只改台面，不进撤销、不记事件、不存档（松手时用 tx 提交）
+  function preview(a) { return W.act(S.scene, a); }
+  // 拖动开始时的台面（字符串），松手时交给 tx 的 o.from
+  function snapshot() { return snap(); }
   // 1.10：删容器时若里面有东西，先问：连里面的一起删，还是倒到台面上
   let pendingDel = null;
   function removeEntity(id) {
@@ -448,6 +456,6 @@
     setInterval(saveSession, 2000); G.addEventListener('pagehide', saveSession);
     offerResume();
   }
-  UI.App = { act, actMany, build, snapshot, afterMove, removeEntity, openProblem, openFree, setMode, say, undo, redo, stepOnce, refresh };
+  UI.App = { tx, act, actMany, build, preview, snapshot, afterMove, removeEntity, openProblem, openFree, setMode, say, undo, redo, stepOnce, refresh };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })(window);
