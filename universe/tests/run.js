@@ -1004,12 +1004,16 @@ t('多变量规则：x^2 > y 不成立时找到的组被说明；组数太多时
   const big = W.blank(); const b = W.add(big, 'scanner', 0, 0, { rule: 9, custom: 'x+y+z 是偶数', from: 1, to: 200 });
   truthy(/组数太多/.test(W.evaluate(big)[b].sig.map((x) => x.tx).join('|')));
 });
-t('后算器材（脚手架）的结论不能接到别的器材上；它不能有输入口', () => {
-  const sc = W.blank(); const sf = W.add(sc, 'scaffold', 0, 0, {}); const n = W.add(sc, 'num', 0, 0, { n: 1 }); const o = W.add(sc, 'op', 0, 0, {});
-  const r = W.act(sc, { t: 'link', from: sf, fromPort: 'lv', to: o, toPort: 'a' }); eq(r.ok, false); truthy(/不能接到别的器材上/.test(r.why));
-  const bad = U.lintType(Object.assign({}, U.types.scaffold, { inputs: { a: { kind: 'bool', label: 'x' } } }));
-  truthy(bad.errors.some((m) => /输入口/.test(m)), bad.errors.join('|'));
+t('后算器材：结论只能接后算器材；后算器材之间可以接；有记忆的器材不能接进后算器材', () => {
+  const sc = W.blank(); const sf = W.add(sc, 'scaffold', 0, 0, {}); const o = W.add(sc, 'op', 0, 0, {});
+  const r = W.act(sc, { t: 'link', from: sf, fromPort: 'lv', to: o, toPort: 'a' }); eq(r.ok, false); truthy(/只能接到别的后算器材上/.test(r.why), r.why);
+  const pc = W.add(sc, 'proofcheck', 0, 0, { want: 1 });
+  eq(W.act(sc, { t: 'link', from: sf, fromPort: 'lv', to: pc, toPort: 'lv' }).ok, true, '后算 → 后算 可以接');
+  eq(W.evaluate(sc)[pc].out.ok.data, true, '空脚手架的证据等级是 1，要求 1，够');
+  const coin = W.add(sc, 'coin', 0, 0, {}), pc2 = W.add(sc, 'proofcheck', 0, 0, { want: 1 });
+  const rc = W.act(sc, { t: 'link', from: coin, fromPort: 'v', to: pc2, toPort: 'lv' }); eq(rc.ok, false); truthy(/有记忆/.test(rc.why), rc.why);
   eq(U.lintType(U.types.scaffold).errors, []);
+  eq(U.lintType(U.types.proofcheck).errors, [], '后算器材可以有输入口，只要不是有状态的');
 });
 console.log('输出声明（1.2）');
 t('lint 拒绝没有声明 dim 的输出口', () => {

@@ -119,7 +119,7 @@
     if (typeof def.size !== 'function') err('缺 size(ent)');
     if (typeof def.draw !== 'function') err('缺 draw(c)');
     if (def.late) {
-      if (Object.keys(def.inputs).length) err('后算的器材不能有输入口（它读的是台面上的事实，不是连线）');
+      // 后算的器材的输入口只能连别的后算器材（连线规则在 world.link 里检查）；它本身不能有状态
       if (def.stateful) err('后算的器材不能同时是有状态的');
     }
     const outs = Object.keys(def.outputs);

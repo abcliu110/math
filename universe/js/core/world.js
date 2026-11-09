@@ -228,8 +228,11 @@
   function link(scene, a) {
     const E = scene.entities, F = E[a.from], T = E[a.to];
     if (!F || !T) return fail('找不到器材');
-    // 后算的器材（证明脚手架）的结论要等台面上别的器材都算完才有，不能接进别的器材
-    if (defOf(F).late) return fail(F.name + ' 的结论要等台面上的器材都算完才有，不能接到别的器材上');
+    // 后算的器材（证明脚手架之类）的结论要等台面上的普通器材都算完才有，所以只能接到别的后算器材上，
+    // 不能接到普通器材上（那样普通器材就要在后算之后再算，顺序会乱）
+    if (defOf(F).late && !defOf(T).late) return fail(F.name + ' 的结论要等台面上的器材都算完才有，只能接到别的后算器材上');
+    // 有状态器材的结论在后面才更新，后算器材读不到这一轮的结果
+    if (defOf(T).late && defOf(F).stateful) return fail(F.name + ' 有记忆，它的结论后算器材读不到');
     const fd = defOf(F), td = defOf(T);
     const fp = a.fromPort || Object.keys(fd.outputs)[0];
     const fo = fd.outputs[fp];

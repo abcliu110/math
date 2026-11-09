@@ -247,6 +247,32 @@
         draw: (c) => K.text(c.w / 2, c.h / 2 + 4, '证明', { size: 14, weight: 700 }),
       },
 
+      // ---------------- 证据检查（后算）：读证明器材的证据等级，够不够要求的等级 ----------------
+      // 后算器材只能接后算器材的输出：这里接的是脚手架（也是后算的）的 lv
+      proofcheck: {
+        essence: ['E4'],
+        label: '证据检查', prefix: '查', group: '关系', grades: [6, 9], alias: ['检查等级', '证据'],
+        late: true,
+        props: {
+          want: { type: 'int', label: '要求的证据等级', default: 4, min: 1, max: 4 },
+          label: { type: 'text', label: '标签', default: '' },
+        },
+        lint: { minProps: 2, why: '证据检查只有“要求的等级”和标签两个属性' },
+        inputs: { lv: { kind: 'num', label: '证据等级' } },
+        outputs: { ok: { dim: null, kind: 'bool', label: '够不够' } },
+        icon: () => K.text(32, 28, '≥4?', { size: 16, weight: 700 }),
+        size: () => [160, 90],
+        compute: (c) => {
+          const v = K.first(c.inp.lv);
+          if (!v || v.kind !== 'num') { c.say('info', '接一个证明脚手架的证据等级'); return {}; }
+          const ok = v.data.n / v.data.d >= c.props.want;
+          c.say(ok ? 'ok' : 'info', '证据等级 ' + Q.show(v.data) + (ok ? ' 够 ' : ' 不够 ') + c.props.want);
+          return { ok: U.val('bool', ok) };
+        },
+        badge: (c) => (c.out.ok ? (c.out.ok.data ? '够' : '不够') : ''),
+        draw: (c) => K.text(c.w / 2, c.h / 2 + 6, c.out.ok ? (c.out.ok.data ? '够' : '不够') : '…', { size: 18, weight: 700 }),
+      },
+
       // ---------------- 归纳阶梯：起点成立 + 每一级推下一级（检查 1 到 upto），全部成立 → ④ ----------------
       induction: {
         essence: ['E6', 'E4'],
