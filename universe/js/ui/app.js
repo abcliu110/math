@@ -224,13 +224,24 @@
       if (it) { if (it.dataset.free) openFree(); else openProblem(it.dataset.pid, 'practice'); $('#left').classList.remove('open'); return; }
       const pr = t.closest('[data-pred]');
       if (pr && S.run) {
-        const v = pr.dataset.pred; S.run.pred_done = true;
-        if (v !== 'skip') { S.run.pred = S.problem.predict.options[+v].v; Ev.push('predict', { v: S.run.pred }); }
+        const v = pr.dataset.pred, pd = S.problem.predict || {}, form = pd.form || 'pick';
+        const commit = (val) => { S.run.pred_done = true; S.run.pred = val; Ev.push('predict', { v: val }); };
+        if (v === 'skip') S.run.pred_done = true;
+        else if (v === 'submit') {
+          const inp = $('#predin'), s = inp ? inp.value.trim() : '';
+          if (!s) return;
+          if (form === 'number') { try { U.Q.parse(s); } catch (e) { say('请写成整数、小数或分数，比如 12、0.5、3/4', 'warn', 3000); return; } }
+          commit(s);
+        }
+        else if (form === 'place') commit(+pr.dataset.slot);
+        else if (form === 'more-less') commit(pr.dataset.cmp);
+        else commit(pd.options[+v].v);
         UI.Panels.renderLeft(); return;
       }
       if (t.closest('#hintbtn') && S.run) { const h = J.nextHint(S.problem, S.run); if (h) { Ev.push('hint', { id: h.m.id, level: h.level }); say('提示 ' + h.level + '/3：' + h.text, '', 7000); UI.Panels.renderLeft(); } else say('已经全部完成啦', 'good'); return; }
       if (t.closest('#restart') && S.problem) openProblem(S.problem.id, S.mode);
     });
+    lb.addEventListener('keydown', (e) => { if (e.target.id === 'predin' && e.key === 'Enter') { const b = lb.querySelector('[data-pred="submit"]'); if (b) b.click(); } });
     lb.addEventListener('input', (e) => { if (e.target.id === 'q1') { S.q1 = e.target.value; UI.Panels.renderLeft(); const q = $('#q1'); q.focus(); q.setSelectionRange(q.value.length, q.value.length); } });
     $('#q2').addEventListener('input', () => UI.Panels.renderShelf());
     // 属性面板

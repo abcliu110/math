@@ -51,6 +51,25 @@
     if (p.predict != null) {
       if (p.predict.form !== undefined && !P.FORMS.includes(p.predict.form)) err('predict.form 只能是 ' + P.FORMS.join(' / '));
       if (p.predict.form === undefined && !(Array.isArray(p.predict.options) && p.predict.options.length >= 2)) err('predict 要有 options（至少 2 个选项）或写 form');
+      const pr = p.predict, f = pr.form;
+      if (f === 'pick' && !(Array.isArray(pr.options) && pr.options.length >= 2)) err('pick 的 predict 要有 options（至少 2 个选项）');
+      if (f === 'place') {
+        if (!(Array.isArray(pr.slots) && pr.slots.length >= 2)) err('place 的 predict 要有 slots（至少 2 个位置）');
+        else if (!Number.isInteger(pr.answer) || pr.answer < 0 || pr.answer >= pr.slots.length) err('place 的 predict 要有 answer（slots 的下标，整数）');
+      }
+      if (f === 'more-less') {
+        if (typeof pr.ref !== 'string' || !pr.ref.trim()) err('more-less 的 predict 要有 ref（参照的东西）');
+        if (!['more', 'less', 'same'].includes(pr.answer)) err('more-less 的 predict 要有 answer，只能是 more / less / same');
+      }
+      if (f === 'number') {
+        let ok = typeof pr.answer === 'string';
+        if (ok) { try { U.Q.parse(pr.answer); } catch (e) { ok = false; } }
+        if (!ok) err('number 的 predict 要有 answer（精确数字的文字，比如 12 或 3/4）');
+      }
+      if (f === 'type') {
+        if (typeof pr.answer !== 'string' || !pr.answer.trim()) err('type 的 predict 要有 answer（非空文字）');
+        if (pr.accept !== undefined && !Array.isArray(pr.accept)) err('type 的 predict.accept 要是数组');
+      }
     }
 
     const ids = {}; let fnCount = 0, condCount = 0;

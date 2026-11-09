@@ -3,7 +3,7 @@
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const root = path.join(__dirname, '..');
 const fsx = require('fs'), pk = (d) => fsx.readdirSync(path.join(root, d)).filter((f) => f.endsWith('.js')).sort().map((f) => d + '/' + f);
-const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/ratio.js', 'js/core/eqn.js', 'js/core/seq.js', 'js/core/table.js', 'js/core/figure.js', 'js/core/convert.js', 'js/core/registry.js', 'js/core/rules.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/curriculum.js', 'js/core/coverage.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
+const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/ratio.js', 'js/core/predict.js', 'js/core/eqn.js', 'js/core/seq.js', 'js/core/table.js', 'js/core/figure.js', 'js/core/convert.js', 'js/core/registry.js', 'js/core/rules.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/curriculum.js', 'js/core/coverage.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
 const ctx = vm.createContext({ console, TextEncoder, TextDecoder, btoa, atob });
 ctx.globalThis = ctx;
 for (const f of files) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f });
@@ -1183,7 +1183,7 @@ t('W.near 带容差判断近似值：不记录', () => {
 console.log('参考解回归（每道题都必须能通关）');
 // 参考解：tests/solutions.js 加上每个年级的 tests/solutions-gN.js（内容代理分年级写，避免互相覆盖）
 const SOL = Object.assign({}, require('./solutions.js'),
-  ...fs.readdirSync(__dirname).filter((f) => /^solutions-g\d+\.js$/.test(f)).map((f) => require('./' + f)));
+  ...fs.readdirSync(__dirname).filter((f) => /^solutions-[a-z0-9-]+\.js$/.test(f)).map((f) => require('./' + f)));
 for (const p of U.problems) {
   t('题目 ' + p.id + ' 有参考解且能通关', () => {
     const fn = SOL[p.id]; if (!fn) throw new Error('缺参考解：在 tests/solutions.js 里补一条');
@@ -1205,6 +1205,36 @@ for (const p of U.problems) {
     if (miss.length) throw new Error('没通过的里程碑：' + miss.join(','));
   });
 }
+
+console.log('预测表单');
+t('预测·pick：选中正确选项通过，选错不通过', () => {
+  const p = { form: 'pick', options: [{ v: 'a', label: 'A' }, { v: 'b', label: 'B' }], answer: 'b' };
+  truthy(U.Predict.check(p, 'b').ok, '选对应通过'); truthy(!U.Predict.check(p, 'a').ok, '选错应不通过');
+});
+t('预测·place：放在正确位置通过，放错不通过', () => {
+  const p = { form: 'place', slots: ['甲', '乙', '丙'], answer: 1 };
+  truthy(U.Predict.check(p, 1).ok, '正确位置应通过'); truthy(!U.Predict.check(p, 2).ok, '错误位置应不通过');
+});
+t('预测·more-less：多 / 少 / 一样 各自只对一个', () => {
+  const p = { form: 'more-less', ref: '甲', answer: 'same' };
+  truthy(U.Predict.check(p, 'same').ok, '一样应通过');
+  truthy(!U.Predict.check(p, 'more').ok && !U.Predict.check(p, 'less').ok, '多、少都应不通过');
+});
+t('预测·number：按有理数精确比较（3/4 与 6/8 相等，0.75 也相等，0.7 不等）', () => {
+  const p = { form: 'number', answer: '3/4' };
+  truthy(U.Predict.check(p, '6/8').ok, '6/8 应等于 3/4'); truthy(U.Predict.check(p, '0.75').ok, '0.75 应等于 3/4');
+  truthy(!U.Predict.check(p, '0.7').ok, '0.7 不应等于 3/4'); truthy(!U.Predict.check(p, 'abc').ok, '乱写应不通过');
+});
+t('预测·type：去掉首尾空格后，answer 或 accept 里的任一写法通过', () => {
+  const p = { form: 'type', answer: '十二', accept: ['12', '12个'] };
+  truthy(U.Predict.check(p, ' 十二 ').ok, '标准答案应通过'); truthy(U.Predict.check(p, '12个').ok, 'accept 应通过');
+  truthy(!U.Predict.check(p, '13').ok, '其他答案应不通过');
+});
+t('预测·lint：number 没写 answer 时报错', () => {
+  const base = U.problems[0];
+  const r = U.problemLint(Object.assign({}, base, { predict: { q: '猜一猜', form: 'number' } }));
+  truthy(r.errors.some((m) => /answer/.test(m)), '应报 answer 缺失');
+});
 
 console.log('\n' + pass + ' 通过，' + fail + ' 失败');
 process.exit(fail ? 1 : 0);

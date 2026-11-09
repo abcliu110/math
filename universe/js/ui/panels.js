@@ -38,15 +38,41 @@
     }
     return h + '</div>';
   }
+  // 预测表单（未作答时）：按 form 画按钮或输入框；data-pred / data-slot / data-cmp 交给 app.js 处理
+  function predFormHtml(pr, run) {
+    const form = pr.form || 'pick', q = '<div class="q">' + esc(pr.q) + '</div>';
+    const skip = '<button data-pred="skip" style="background:none;color:var(--txt3)">先不猜，直接做</button>';
+    if (form === 'pick') return q + pr.options.map((o, i) => '<button data-pred="' + i + '"' + (String(run.pred) === String(o.v) ? ' class="picked"' : '') + '>' + esc(o.label) + '</button>').join('') + skip;
+    if (form === 'place') return q + pr.slots.map((s, i) => '<button data-pred="place" data-form="place" data-slot="' + i + '">' + esc(s) + '</button>').join('') + skip;
+    if (form === 'more-less') {
+      return q + (pr.ref ? '<div class="sub">和「' + esc(pr.ref) + '」比：</div>' : '') +
+        Object.keys(U.Predict.CMP).map((k) => '<button data-pred="cmp" data-form="more-less" data-cmp="' + k + '">' + U.Predict.CMP[k] + '</button>').join('') + skip;
+    }
+    const hint = form === 'number' ? '写数字，比如 12、0.5、3/4' : '写下你的答案';
+    return q + '<div class="predin"><input id="predin" data-form="' + form + '" placeholder="' + hint + '" autocomplete="off"><button class="btn pri" data-pred="submit" data-form="' + form + '">提交</button></div>' + skip;
+  }
+  // 学生的回答显示成文字
+  function predShown(pr, v) {
+    if (v === undefined || v === null) return '—';
+    if (pr.form === 'place') return pr.slots[v] !== undefined ? pr.slots[v] : '—';
+    if (pr.form === 'more-less') return U.Predict.CMP[v] || '—';
+    return String(v);
+  }
   function stepsHtml() {
     const S = UI.S, p = S.problem, run = S.run;
     if (!p) return '<div class="empty">现在是自由探究。<br>从右边拖器材到台面，想搭什么搭什么。<br><br>想做题，去「实验库」选一道。</div>';
     let h = '<div class="pcard"><b>' + esc(p.title) + '</b>' + esc(p.hook) + '<div class="tags">' + (p.points || []).map((x) => '<span class="chip">' + esc(x) + '</span>').join('') + '</div></div>';
     if (p.predict && !run.pred_done) {
-      h += '<div class="pred"><div class="q">' + esc(p.predict.q) + '</div>' + p.predict.options.map((o, i) => '<button data-pred="' + i + '"' + (String(run.pred) === String(o.v) ? ' class="picked"' : '') + '>' + esc(o.label) + '</button>').join('') + '<button data-pred="skip" style="background:none;color:var(--txt3)">先不猜，直接做</button></div>';
+      h += '<div class="pred">' + predFormHtml(p.predict, run) + '</div>';
     } else if (p.predict && run.pred !== undefined) {
-      const g = p.predict.options.find((o) => String(o.v) === String(run.pred));
-      h += '<div class="pcard" style="background:var(--panel2)">你的猜想：<b style="display:inline">' + esc(g ? g.label : '—') + '</b>（做完后会和结果并排对比）</div>';
+      const form = p.predict.form || 'pick';
+      if (form === 'pick') {
+        const g = p.predict.options.find((o) => String(o.v) === String(run.pred));
+        h += '<div class="pcard" style="background:var(--panel2)">你的猜想：<b style="display:inline">' + esc(g ? g.label : '—') + '</b>（做完后会和结果并排对比）</div>';
+      } else {
+        const r = U.Predict.check(p.predict, run.pred);
+        h += '<div class="pcard" style="background:var(--panel2)">你的猜想：<b style="display:inline">' + esc(predShown(p.predict, run.pred)) + '</b>　' + (r.ok ? '✓ 对了' : '✗ 不对') + '<br>' + esc(r.why) + '</div>';
+      }
     }
     if (S.mode === 'exam') {
       h += '<div class="pcard" style="background:var(--panel2)">考试模式：没有提示，没有步骤清单。搭好以后点右上角「交卷」。</div>';

@@ -67,6 +67,10 @@ input, select, textarea { font: inherit; color: inherit; }
 .pred button { display: block; width: 100%; text-align: left; padding: 8px 10px; margin-top: 6px; border-radius: 8px; background: var(--line); }
 .pred button:hover { background: #324262; }
 .pred button.picked { background: var(--blue); color: #fff; }
+.pred .sub { font-size: 13px; color: var(--txt3); margin-top: 4px; }
+.pred .predin { display: flex; gap: 6px; margin-top: 6px; }
+.pred .predin input { flex: 1; min-width: 0; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg, transparent); color: inherit; }
+.pred .predin button { width: auto; margin-top: 0; }
 .btnrow { display: flex; gap: 8px; margin: 10px 0; }
 .btn { padding: 8px 14px; border-radius: 8px; background: var(--panel2); border: 1px solid var(--line); }
 .btn:hover { border-color: var(--blue); }
