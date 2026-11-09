@@ -3,7 +3,7 @@
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const root = path.join(__dirname, '..');
 const fsx = require('fs'), pk = (d) => fsx.readdirSync(path.join(root, d)).filter((f) => f.endsWith('.js')).sort().map((f) => d + '/' + f);
-const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/ratio.js', 'js/core/predict.js', 'js/core/eqn.js', 'js/core/seq.js', 'js/core/table.js', 'js/core/figure.js', 'js/core/geo.js', 'js/core/convert.js', 'js/core/registry.js', 'js/core/rules.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/curriculum.js', 'js/core/coverage.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
+const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/ratio.js', 'js/core/form.js', 'js/core/predict.js', 'js/core/eqn.js', 'js/core/seq.js', 'js/core/table.js', 'js/core/figure.js', 'js/core/geo.js', 'js/core/convert.js', 'js/core/registry.js', 'js/core/rules.js', 'js/core/rules-exec.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/curriculum.js', 'js/core/coverage.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
 const ctx = vm.createContext({ console, TextEncoder, TextDecoder, btoa, atob });
 ctx.globalThis = ctx;
 for (const f of files) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f });
@@ -1310,6 +1310,182 @@ t('预测·lint：number 没写 answer 时报错', () => {
   const r = U.problemLint(Object.assign({}, base, { predict: { q: '猜一猜', form: 'number' } }));
   truthy(r.errors.some((m) => /answer/.test(m)), '应报 answer 缺失');
 });
+
+console.log('形式层（F）');
+{
+  const N = (n) => ({ op: 'num', n }), X = { op: 'var', name: 'x' };
+  const G1 = (a) => ({ op: 'group', args: [a] });
+  const add = (...args) => ({ op: 'add', args }), mul = (...args) => ({ op: 'mul', args });
+  const pw = (b, e) => ({ op: 'pow', args: [b, N(e)] });
+  const F = U.Form, K = U.KINDS.form;
+  const snap = (f) => bigStr(f);
+  t('形式：2/4 不约分，显示 2/4，值等于 1/2，不是最简分数', () => {
+    const f = { op: 'frac', n: 2, d: 4 };
+    eq(F.show(f), '2/4');
+    truthy(Q.eq(F.value(f), Q(1, 2)), '值应为 1/2');
+    truthy(!F.isNormal(f, 'reduced-fraction'), '2/4 不是最简');
+    truthy(F.isNormal({ op: 'frac', n: 3, d: 4 }, 'reduced-fraction'), '3/4 是最简');
+  });
+  t('形式：8 + 2 + 3 与 8 + 5 等价，显示保留顺序与括号', () => {
+    const f = add(N(8), N(2), N(3)), g = add(N(8), N(5));
+    eq(F.show(f), '8 + 2 + 3');
+    truthy(F.equivalent(f, g), '应等价');
+    eq(F.show(add(N(8), G1(add(N(2), N(3))))), '8 + (2 + 3)');
+    truthy(!F.equivalent(f, add(N(8), N(6))), '不等价的不能判等');
+  });
+  t('形式：(x+1)(x+2) 与 x² + 3x + 2 等价；前者因式分解，后者不是', () => {
+    const fac = mul(G1(add(X, N(1))), G1(add(X, N(2))));
+    const exp = add(add(pw(X, 2), mul(N(3), X)), N(2));
+    eq(F.show(fac), '(x + 1)(x + 2)');
+    eq(F.show(exp), 'x² + 3x + 2');
+    truthy(F.equivalent(fac, exp), '应等价');
+    truthy(F.isNormal(fac, 'factored'), '前者应是因式分解形式');
+    truthy(!F.isNormal(exp, 'factored'), '后者不是因式分解形式');
+    truthy(F.isNormal(exp, 'collected'), '后者已合并同类项');
+    truthy(!F.isNormal(add(mul(N(3), X), mul(N(2), X)), 'collected'), '3x + 2x 没有合并');
+  });
+  t('形式：求值不改变形式本身', () => {
+    const f = add(mul(N(3), X), mul(N(2), X));
+    const before = snap(f);
+    F.value(f, { x: Q(2) }); F.show(f); F.equivalent(f, N(5)); F.isNormal(f, 'collected');
+    eq(snap(f), before);
+    truthy(Q.eq(F.value(f, { x: Q(2) }), Q(10)), '代入 x = 2 应得 10');
+  });
+  t('形式：代入数值后得到有理数', () => {
+    const f = mul(G1(add(X, N(1))), G1(add(X, N(2))));
+    truthy(Q.eq(F.value(f, { x: Q(1, 2) }), Q(15, 4)), '(3/2)(5/2) = 15/4');
+  });
+  t('形式：存档往返（BigInt 超过 2^53）后值相等', () => {
+    const f = add({ op: 'num', n: 2n ** 70n + 1n }, { op: 'frac', n: 5, d: 7 });
+    const s = K.serialize(f), back = K.parse(s);
+    truthy(F.equivalent(back, f), '往返后值应相等');
+    eq(F.show(back), F.show(f));
+    truthy(s.includes('"$big"'), 'BigInt 应按 U.JSON 存');
+    truthy(K.eq(back, f), '结构也应相等');
+  });
+  t('形式：num 3 → 形式 → num 仍是 3', () => {
+    const v = U.convertVal(U.val('num', Q(3)), 'form');
+    truthy(v && v.kind === 'form', '应转成形式');
+    eq(F.show(v.data), '3');
+    const back = U.convertVal(v, 'num');
+    truthy(back && Q.eq(back.data, Q(3)), '应回到 3');
+  });
+  t('形式：多项式 → 形式 → 多项式 不丢信息；形式 → 数', () => {
+    const p = U.Poly.norm([{ c: Q(1), m: { x: 2 } }, { c: Q(3), m: { x: 1 } }, { c: Q(2), m: {} }]);
+    const v = U.convertVal(U.val('poly', p), 'form');
+    eq(F.show(v.data), 'x² + 3x + 2');
+    truthy(U.Poly.eq(U.convertVal(v, 'poly').data, p), '回到多项式应相等');
+    const nv = U.convertVal(U.val('form', { op: 'add', args: [N(8), N(5)] }), 'num');
+    truthy(nv && Q.eq(nv.data, Q(13)), '8 + 5 应转成 13');
+    eq(U.convertVal(U.val('form', add(X, N(1))), 'num'), null);
+  });
+  t('形式：除以字母不能化成多项式（返回 null，不抛错）', () => {
+    const f = { op: 'div', args: [X, add(X, N(1))] };
+    eq(U.KINDS.form.to.poly(f), null);
+    eq(U.KINDS.form.to.num(f), null);
+  });
+  t('形式：位值分解（300 + 20 + 5）', () => {
+    const f = add(mul(N(3), N(100)), mul(N(2), N(10)), N(5));
+    truthy(F.isNormal(f, 'place-value'), '应是位值分解');
+    eq(F.show(f), '3 × 100 + 2 × 10 + 5');
+    truthy(!F.isNormal(add(N(3), N(2)), 'place-value'), '3 + 2 不是位值分解');
+    truthy(!F.isNormal(N(350), 'place-value'), '单独的数不是和');
+  });
+  t('形式：显示 — 取负、乘法省略号、乘方', () => {
+    eq(F.show({ op: 'neg', args: [N(3)] }), '−3');
+    eq(F.show(mul(N(2), G1(add(X, N(1))))), '2(x + 1)');
+    eq(F.show(mul(N(3), X)), '3x');
+    eq(F.show(pw(N(2), 3)), '2³');
+    eq(F.show(add(N(8), { op: 'neg', args: [N(3)] })), '8 + (−3)');
+  });
+  t('形式：kind 注册合格', () => eq(U.lintKind(U.KINDS.form), []));
+}
+
+console.log('可执行规则（G）');
+{
+  const N = (n) => ({ op: 'num', n }), X = { op: 'var', name: 'x' };
+  const add = (...args) => ({ op: 'add', args }), mul = (...args) => ({ op: 'mul', args });
+  const G1 = (a) => ({ op: 'group', args: [a] });
+  const F = U.Form, FV = (f) => U.val('form', f), EV = (d) => U.val('eqn', d);
+  const ap = U.applyRule;
+  const cn = (s) => /[一-鿿]/.test(s || '');
+  // 临时登记一条规则（比如故意写错的规则），用完删掉，并清掉它造成的登记检查记录
+  const withRule = (id, def, fn) => {
+    const n0 = U.ruleSpecErrors.length;
+    U.defineRule(id, def);
+    try { fn(); } finally { delete U.RULES[id]; U.ruleSpecErrors.splice(n0); }
+  };
+  const lin = { lhs: add(mul(N(2), X), N(3)), rhs: N(7), rel: '=' };
+
+  t('可执行规则的登记项齐全，keeps 合法', () => eq(U.ruleSpecErrors, []));
+  t('登记检查：缺 match、keeps 不合法时会报错', () => {
+    const n0 = U.ruleSpecErrors.length;
+    U.defineRule('test.badspec', { on: 'form', apply: () => null, keeps: 'length' });
+    eq(U.ruleSpecErrors.length - n0, 2);
+    delete U.RULES['test.badspec']; U.ruleSpecErrors.splice(n0);
+  });
+  t('七条规则都已登记', () => { for (const id of ['arith.split', 'arith.make-ten', 'arith.commute', 'arith.reduce-fraction', 'alg.move-term', 'alg.collect', 'alg.expand']) truthy(U.RULES[id] && U.RULES[id].apply && U.RULES[id].match, id); });
+  t('未登记的规则：ok 为假，说明原因', () => { const r = ap('no.such', FV(N(3)), [], {}); eq(r.ok, false); truthy(cn(r.why), r.why); });
+
+  t('拆数：8 拆成 3 + 5，值不变；num 会先转成式子', () => {
+    const r = ap('arith.split', U.val('num', U.Q(8)), [], { parts: [3, 5] });
+    eq(r.ok, true); eq(r.kept, true); eq(r.value.kind, 'form'); eq(F.show(r.value.data), '3 + 5');
+  });
+  t('拆数：部分加起来不等于原数，被拒绝并说明', () => { const r = ap('arith.split', FV(N(8)), [], { parts: [3, 4] }); eq(r.ok, false); eq(r.kept, false); truthy(cn(r.why), r.why); });
+  t('凑十：8 + 5 → 8 + 2 + 3，值不变', () => { const r = ap('arith.make-ten', FV(add(N(8), N(5))), [], {}); eq(r.ok, true); eq(r.kept, true); eq(F.show(r.value.data), '8 + 2 + 3'); });
+  t('凑十：2 + 3 不到 10，8 + 2 已是 10，都被拒绝并说明', () => {
+    for (const f of [add(N(2), N(3)), add(N(8), N(2))]) { const r = ap('arith.make-ten', FV(f), [], {}); eq(r.ok, false); truthy(cn(r.why), r.why); }
+  });
+  t('交换律：3 + 5 → 5 + 3，值不变；单个数不能交换', () => {
+    const r = ap('arith.commute', FV(add(N(3), N(5))), [], {}); eq(r.ok, true); eq(r.kept, true); eq(F.show(r.value.data), '5 + 3');
+    const q = ap('arith.commute', FV(N(3)), [], {}); eq(q.ok, false); truthy(cn(q.why), q.why);
+  });
+  t('约分：2/4 → 1/2，值不变且是最简形式；1/2 已是最简，被拒绝', () => {
+    const r = ap('arith.reduce-fraction', FV({ op: 'frac', n: 2, d: 4 }), [], {});
+    eq(r.ok, true); eq(r.kept, true); eq(F.show(r.value.data), '1/2'); truthy(F.isNormal(r.value.data, 'reduced-fraction'));
+    const q = ap('arith.reduce-fraction', FV({ op: 'frac', n: 1, d: 2 }), [], {}); eq(q.ok, false); truthy(cn(q.why), q.why);
+  });
+  t('移项：2x + 3 = 7，3 移到右边变号成 7 − 3，解仍是 x = 2', () => {
+    const r = ap('alg.move-term', EV(lin), [1], {});
+    eq(r.ok, true); eq(r.kept, true); eq(F.show(r.value.data.lhs), '2x'); eq(F.show(r.value.data.rhs), '7 − 3');
+  });
+  t('移项：位置没指明、左边只有一项、不是方程，都被拒绝并说明', () => {
+    for (const r of [ap('alg.move-term', EV(lin), [], {}), ap('alg.move-term', EV({ lhs: X, rhs: N(2), rel: '=' }), [0], {}), ap('alg.move-term', FV(X), [0], {})]) {
+      eq(r.ok, false); eq(r.kept, false); truthy(cn(r.why), r.why);
+    }
+  });
+  t('移项：故意写错（不变号，右边加上 3）的规则，kept 为假', () => withRule('test.bad-move', {
+    on: 'eqn', label: '错误的移项', essence: ['E4'], grade: [6, 9], keeps: 'equation',
+    match: (eq, at) => (at.length === 1 && eq.lhs.op === 'add' && eq.lhs.args[at[0]] ? undefined : '位置不对'),
+    apply: (eq, at) => { const L = eq.lhs, i = at[0]; const rest = L.args.filter((_, j) => j !== i); return { lhs: rest.length === 1 ? rest[0] : { op: 'add', args: rest }, rhs: add(eq.rhs, L.args[i]), rel: eq.rel }; },
+  }, () => {
+    const r = ap('test.bad-move', EV(lin), [1], {});
+    eq(r.ok, true); eq(r.kept, false); truthy(cn(r.why), r.why);
+  }));
+  t('合并同类项：3x + 2x → 5x，值不变；3x + 2 不是同类项，被拒绝', () => {
+    const r = ap('alg.collect', FV(add(mul(N(3), X), mul(N(2), X))), [], {});
+    eq(r.ok, true); eq(r.kept, true); eq(F.show(r.value.data), '5x'); truthy(F.isNormal(r.value.data, 'collected'));
+    const q = ap('alg.collect', FV(add(mul(N(3), X), N(2))), [], {}); eq(q.ok, false); eq(q.kept, false); truthy(cn(q.why), q.why);
+  });
+  t('展开：(x+1)(x+2) → x² + 3x + 2，值不变；3x 没有括号，被拒绝', () => {
+    const r = ap('alg.expand', FV(mul(G1(add(X, N(1))), G1(add(X, N(2))))), [], {});
+    eq(r.ok, true); eq(r.kept, true); eq(F.show(r.value.data), 'x² + 3x + 2'); truthy(F.isNormal(r.value.data, 'collected'));
+    const q = ap('alg.expand', FV(mul(N(3), X)), [], {}); eq(q.ok, false); eq(q.kept, false); truthy(cn(q.why), q.why);
+  });
+  t('拆数：故意写错（3 + 5 变成 3 + 6）的规则，kept 为假', () => withRule('test.bad-split', {
+    on: 'form', label: '错误的拆数', essence: [], grade: [1, 3], keeps: 'value', match: () => undefined,
+    apply: () => add(N(3), N(6)),
+  }, () => { const r = ap('test.bad-split', FV(N(8)), [], {}); eq(r.ok, true); eq(r.kept, false); truthy(cn(r.why), r.why); }));
+  t('面积 / 全等不变量：没有 check 函数时 kept 为假并说明；有 check 且为真时保持', () => {
+    withRule('test.area-nocheck', { on: 'form', label: '面积', essence: [], grade: [1, 9], keeps: 'area', match: () => undefined, apply: (f) => f }, () => {
+      const r = ap('test.area-nocheck', FV(N(3)), [], {}); eq(r.kept, false); truthy(/check/.test(r.why), r.why);
+    });
+    withRule('test.area-check', { on: 'form', label: '面积', essence: [], grade: [1, 9], keeps: 'area', match: () => undefined, apply: (f) => f, check: () => true }, () => {
+      eq(ap('test.area-check', FV(N(3)), [], {}).kept, true);
+    });
+  });
+  t('方程规则不能用在式子上，被拒绝并说明', () => { const r = ap('alg.move-term', FV(X), [0], {}); eq(r.ok, false); truthy(cn(r.why), r.why); });
+}
 
 console.log('\n' + pass + ' 通过，' + fail + ' 失败');
 process.exit(fail ? 1 : 0);

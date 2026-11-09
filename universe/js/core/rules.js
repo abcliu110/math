@@ -8,7 +8,23 @@
 
   U.RULES = {};
   U.ruleErrors = [];
-  U.defineRule = (id, def) => { U.RULES[id] = Object.assign({ essence: [], grade: [1, 9] }, def); return U.RULES[id]; };
+  U.ruleSpecErrors = [];
+  // 可执行规则（任务 G，见 next-steps.md §10.4）：有 on / match / apply / keeps 之一的，要求四项齐全且合法。
+  // 没有这些字段的登记项照旧，不做检查。
+  U.RULE_ON = ['form', 'eqn', 'fig', 'figs'];
+  U.KEEPS = ['value', 'equation', 'area', 'congruence'];
+  U.defineRule = (id, def) => {
+    U.RULES[id] = Object.assign({ essence: [], grade: [1, 9] }, def);
+    if (def.on || def.match || def.apply || def.keeps) {
+      const bad = [];
+      if (!U.RULE_ON.includes(def.on)) bad.push('on 应为 ' + U.RULE_ON.join('/'));
+      if (typeof def.match !== 'function') bad.push('缺少 match 函数');
+      if (typeof def.apply !== 'function') bad.push('缺少 apply 函数');
+      if (!U.KEEPS.includes(def.keeps)) bad.push('keeps 应为 ' + U.KEEPS.join('/'));
+      for (const m of bad) U.ruleSpecErrors.push(id + '：' + m);
+    }
+    return U.RULES[id];
+  };
 
   const R = U.defineRule;
   // 分数与四则运算
