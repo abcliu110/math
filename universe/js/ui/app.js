@@ -196,6 +196,13 @@
     insp.addEventListener('change', (e) => {
       const t = e.target, id = S.sel; if (!id) return;
       if (t.id === 'nm') { act({ t: 'rename', id, name: t.value }); return; }
+      if (t.dataset.gridK !== undefined) {
+        // 表格式编辑：把所有格子按行收回文字，整体写回属性
+        const gk = t.dataset.gridK, rows = [];
+        insp.querySelectorAll('input[data-grid-k="' + gk + '"]').forEach((c) => { const r = +c.dataset.r; (rows[r] = rows[r] || [])[+c.dataset.c] = c.value; });
+        const r = act({ t: 'set', id, k: gk, v: U.Table.gridText(rows.filter(Boolean)) }); if (!r.ok) UI.Panels.renderInsp();
+        return;
+      }
       const k = t.dataset.k || t.dataset.fact; if (!k) return;
       let v = t.type === 'checkbox' ? t.checked : t.dataset.fact !== undefined ? t.value : t.tagName === 'SELECT' ? +t.value : t.value;
       if (t.type === 'number' && v === '') { UI.Panels.renderInsp(); return; }
@@ -203,6 +210,13 @@
     });
     insp.addEventListener('click', (e) => {
       const t = e.target, id = S.sel;
+      if (t.dataset.gridDel !== undefined) {
+        // 删除表格的一行（行号就是显示的行号，空行不在文字里）
+        const cur = U.Table.gridRows(S.scene.entities[id].props[t.dataset.target]);
+        cur.splice(+t.dataset.gridDel, 1);
+        act({ t: 'set', id, k: t.dataset.target, v: U.Table.gridText(cur) });
+        return;
+      }
       if (t.dataset.close) { S.inspOpen = false; UI.Panels.renderInsp(); UI.Stage.render(); }
       else if (t.dataset.seg !== undefined) act({ t: 'set', id, k: t.dataset.k, v: +t.dataset.seg });
       else if (t.dataset.ins !== undefined) {

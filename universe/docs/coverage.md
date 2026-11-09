@@ -6,7 +6,7 @@
 
 - 知识点：142 个（设计目标 142）
 - 有题的知识点：39 个（27%）
-- 题目：68 道；没有对应知识点的题：11 道
+- 题目：70 道；没有对应知识点的题：13 道
 - 没有器材的本质：无
 - 没有题的本质：无
 
@@ -175,14 +175,14 @@
 
 | 本质 | 题目数 | 器材数 |
 |---|---|---|
-| E1 | 6 | 6 |
-| E2 | 17 | 14 |
-| E3 | 10 | 20 |
-| E4 | 11 | 10 |
-| E5 | 13 | 12 |
-| E6 | 10 | 10 |
-| E7 | 6 | 7 |
-| E8 | 11 | 15 |
+| E1 | 6 | 8 |
+| E2 | 17 | 16 |
+| E3 | 10 | 21 |
+| E4 | 11 | 12 |
+| E5 | 13 | 14 |
+| E6 | 10 | 14 |
+| E7 | 8 | 7 |
+| E8 | 13 | 21 |
 | E9 | 4 | 2 |
 | E10 | 3 | 2 |
 | E11 | 5 | 6 |
@@ -194,5 +194,5 @@
 
 ## 没有知识点的题目
 
-counter-loop、pour-conserve、count-by-match、car-model-proportional、seq-arith-20、counting-matching、last-digit-cycle、nth-tenth、meet-100、chase-30、loop-400
+counter-loop、pour-conserve、count-by-match、car-model-proportional、seq-arith-20、taxi-model-linear、tank-model-linear-decrease、counting-matching、last-digit-cycle、nth-tenth、meet-100、chase-30、loop-400
 

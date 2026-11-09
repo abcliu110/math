@@ -8,7 +8,7 @@
   // 首批转换（只声明在 to 里，world.js 的 gather 执行）
   const toQ = (x) => (x && typeof x === 'object' && 'n' in x ? x : Q.fromNumber(+x));
   U.KINDS.num.to = Object.assign({}, U.KINDS.num.to || {}, {
-    expr: (q) => (q.n === 0 ? [] : [q]),              // 常数多项式
+    expr: (q) => U.Poly.const(q),                     // 常数多项式（代数式与多项式同表示）
   });
   U.KINDS.point.to = Object.assign({}, U.KINDS.point.to || {}, {
     fig: (p) => ({ type: 'point', pts: [{ x: p.x, y: p.y }] }),   // 点图形

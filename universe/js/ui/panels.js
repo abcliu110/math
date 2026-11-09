@@ -103,6 +103,11 @@
         catch (e) { hint = '<span class="rerr">' + esc(e.message) + '</span>'; }
         h += '<input type="text" data-k="' + k + '" class="rule-in" value="' + esc(v) + '"><div class="rsyms">' + syms.map((x) => '<button class="ins" data-ins="' + esc(x) + '" data-target="' + k + '">' + esc(x) + '</button>').join('') + '</div><div class="rhint">' + hint + '</div>';
       }
+      else if (U.controlFor(P) === 'grid') {
+        // 表格式编辑：每行一组数，格子直接改；最后一行留空用来加新行；✕ 删除这一行
+        const view = U.Table.gridView(String(v));
+        h += '<table class="grid">' + view.map((r, i) => '<tr>' + r.map((x, j) => '<td><input data-grid-k="' + k + '" data-r="' + i + '" data-c="' + j + '" value="' + esc(x) + '" placeholder="' + (j === 0 ? 'x' : 'y') + '"></td>').join('') + '<td>' + (i < view.length - 1 ? '<button class="gdel" data-grid-del="' + i + '" data-target="' + k + '" title="删除这一行">✕</button>' : '') + '</td></tr>').join('') + '</table>';
+      }
       else if (U.controlFor(P) === 'fact') {
         // 台面上的事实：列出台面上所有布尔结论和证据等级，选一条作为依据（✓ 表示现在成立）
         const facts = U.Facts.list(S.scene, S.D);

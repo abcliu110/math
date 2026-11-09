@@ -3,7 +3,7 @@
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const root = path.join(__dirname, '..');
 const fsx = require('fs'), pk = (d) => fsx.readdirSync(path.join(root, d)).filter((f) => f.endsWith('.js')).sort().map((f) => d + '/' + f);
-const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/eqn.js', 'js/core/seq.js', 'js/core/table.js', 'js/core/figure.js', 'js/core/convert.js', 'js/core/registry.js', 'js/core/rules.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/curriculum.js', 'js/core/coverage.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
+const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/ratio.js', 'js/core/eqn.js', 'js/core/seq.js', 'js/core/table.js', 'js/core/figure.js', 'js/core/convert.js', 'js/core/registry.js', 'js/core/rules.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/curriculum.js', 'js/core/coverage.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
 const ctx = vm.createContext({ console, TextEncoder, TextDecoder, btoa, atob });
 ctx.globalThis = ctx;
 for (const f of files) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f });
@@ -330,20 +330,32 @@ t('集合：去重、与顺序无关、可以比较', () => {
 });
 t('向量：逐个分量比较，显示成元组', () => { truthy(U.KINDS.vec.eq([Q(1), Q(2)], [Q(1), Q(2)])); truthy(!U.KINDS.vec.eq([Q(1), Q(2)], [Q(2), Q(1)])); eq(U.KINDS.vec.show([Q(1), Q(-2)]), '(1, -2)'); });
 t('代数式：(x+1)² = x²+2x+1，显示正确，求值正确', () => {
-  const x1 = [Q(1), Q(1)];
-  const sq = U.Expr.mul(x1, x1), rhs = [Q(1), Q(2), Q(1)];
+  const sq = U.Poly.parse('(x+1)^2'), rhs = U.Poly.parse('x^2+2x+1');
   truthy(U.KINDS.expr.eq(sq, rhs)); eq(U.KINDS.expr.show(rhs), 'x² + 2x + 1');
-  eq(U.Expr.eval(rhs, 3), 16);
-  truthy(!U.KINDS.expr.eq(U.Expr.add(sq, [Q(1)]), rhs), '加一个常数后不相等');
+  eq(U.Poly.evalQ(rhs, { x: Q(3) }), Q(16));
+  truthy(!U.KINDS.expr.eq(U.Poly.add(sq, U.Poly.const(Q(1))), rhs), '加一个常数后不相等');
 });
-t('代数式：零多项式与负系数', () => { eq(U.KINDS.expr.show([]), '0'); eq(U.KINDS.expr.show([Q(0), Q(-1)]), '−x'); });
+t('代数式：零多项式与负系数', () => { eq(U.KINDS.expr.show(U.Poly.const(Q(0))), '0'); eq(U.KINDS.expr.show(U.Poly.parse('-x')), '−x'); });
+t('代数式读数只收代数式口：多字母代入求值；少代入的字母会说明', () => {
+  const sc = W.blank(); const a = W.add(sc, 'algebra', 0, 0, { text: 'x*y+1' }), r = W.add(sc, 'exprread', 0, 0, { x: 2, y: 3 });
+  eq(W.act(sc, { t: 'link', from: a, fromPort: 'p', to: r, toPort: 'e' }).ok, true);
+  eq(U.showVal(W.evaluate(sc)[r].out.v), '7');
+  const sc2 = W.blank(); const a2 = W.add(sc2, 'algebra', 0, 0, { text: 'x*z' }), r2 = W.add(sc2, 'exprread', 0, 0, { x: 1, y: 1 });
+  const refused = W.act(sc2, { t: 'link', from: a2, fromPort: 'p', to: r2, toPort: 'e' });
+  eq(refused.ok, false); truthy(/还有字母 z/.test(refused.why), refused.why);
+});
+t('代数式可以有多个字母（任务 B 遗留：原来只支持一元）', () => {
+  const e = U.Poly.parse('x*y+1');
+  eq(U.Poly.vars(e), ['x', 'y']); eq(U.Poly.evalQ(e, { x: Q(2), y: Q(3) }), Q(7));
+  truthy(U.KINDS.expr.eq(e, U.Poly.parse('y*x+1')));
+});
 t('图：点数和边集合相同即相等，边的两端顺序不影响', () => {
   const g1 = U.Graph.of(3, [[0, 1], [2, 1]]), g2 = U.Graph.of(3, [[1, 2], [1, 0]]);
   truthy(U.KINDS.graph.eq(g1, g2)); eq(U.KINDS.graph.show(g1), '3 个点，2 条边'); eq(U.Graph.degree(g1, 1), 2);
   truthy(!U.KINDS.graph.eq(g1, U.Graph.of(4, [[0, 1], [2, 1]])), '点数不同则不等');
 });
 t('新值类型存档往返后仍然相等', () => {
-  const kinds = { set: U.SetV.of([Q(2), Q(5)]), vec: [Q(1), Q(0)], expr: [Q(1), Q(2), Q(1)], graph: U.Graph.of(3, [[0, 2]]) };
+  const kinds = { set: U.SetV.of([Q(2), Q(5)]), vec: [Q(1), Q(0)], expr: U.Poly.parse('x^2+2x+1'), graph: U.Graph.of(3, [[0, 2]]) };
   for (const k of Object.keys(kinds)) truthy(U.KINDS[k].eq(U.KINDS[k].parse(U.KINDS[k].serialize(kinds[k])), kinds[k]), k);
 });
 console.log('器材包按需加载（1.8）');
@@ -592,8 +604,8 @@ console.log('连线时的类型转换（B.1）');
 t('数字可以变成符号数、代数式；转换后精确标记和量纲照传', () => {
   const v = U.val('num', Q(3, 4), { dim: 'length' });
   const r = U.convertVal(v, 'real'); eq(r.kind, 'real'); eq(r.exact, true);
-  eq(U.convertVal(U.val('num', Q(2)), 'expr').data, [Q(2)]);
-  eq(U.convertVal(U.val('num', Q(0)), 'expr').data, []);
+  eq(U.KINDS.poly.show(U.convertVal(U.val('num', Q(2)), 'expr').data), '2');
+  eq(U.KINDS.poly.show(U.convertVal(U.val('num', Q(0)), 'expr').data), '0');
 });
 t('点 ↔ 图形（只有点图形能变回点）', () => {
   const pt = U.val('point', { x: Q(1), y: Q(2) });
@@ -621,11 +633,11 @@ t('代入：x 换成 y+1；数值代入求值', () => {
   eq(Pl.evalQ(Pl.add(Pl.pow(x, 2), Pl.mul(c(3), y)), { x: Q(2), y: Q(1) }), Q(7));
 });
 t('次数与变量', () => { eq(Pl.degree(Pl.add(Pl.pow(x, 2), y)), 2); eq(Pl.vars(Pl.add(x, y)), ['x', 'y']); });
-t('一元代数式 ↔ 多项式互转；多变量不能变回代数式', () => {
-  const e = U.convertVal(U.val('expr', [Q(1), Q(2), Q(1)]), 'poly');
+t('代数式 ↔ 多项式互转（多变量也能变）', () => {
+  const e = U.convertVal(U.val('expr', U.Poly.parse('x^2+2x+1')), 'poly');
   eq(Pl.show(e.data), 'x² + 2x + 1');
-  eq(U.convertVal(U.val('poly', Pl.add(x, y)), 'expr'), null);
-  eq(U.convertVal(U.val('poly', Pl.pow(x, 2)), 'expr').data, [Q(0), Q(0), Q(1)]);
+  eq(Pl.show(U.convertVal(U.val('poly', Pl.add(x, y)), 'expr').data), Pl.show(Pl.add(x, y)));
+  eq(Pl.show(U.convertVal(U.val('poly', Pl.pow(x, 2)), 'expr').data), 'x²');
 });
 t('存档往返与种类注册', () => { truthy(U.KINDS.poly.eq(U.KINDS.poly.parse(U.KINDS.poly.serialize(Pl.add(x, y))), Pl.add(x, y))); eq(U.lintKind(U.KINDS.poly), []); });
 console.log('方程、不等式、方程组（B.3）');
@@ -790,6 +802,49 @@ t('散点图接上拟合器后叠加直线（画面多一条线）', () => {
     return U.types.scatter.draw({ props: D[sp].props, d: D[sp], out: {}, w: 230, h: 120 });
   };
   eq((build(true).match(/<line/g) || []).length, (build(false).match(/<line/g) || []).length + 1, '接上拟合器应多画一条拟合直线');
+});
+console.log('有理式（分式）');
+t('分式种类注册合格', () => eq(U.lintKind(U.KINDS.ratio), []));
+t('分式：加、减、乘、除，交叉相乘判相等（不需要约分）', () => {
+  const R = U.Ratio, Pa = U.Poly.parse;
+  const a = R.make(Pa('1'), Pa('x')), b = R.make(Pa('1'), Pa('y'));
+  truthy(R.eq(R.add(a, b), R.make(Pa('x+y'), Pa('x*y'))), '1/x + 1/y = (x+y)/(xy)');
+  truthy(!R.eq(R.add(a, b), R.make(Pa('x+y'), Pa('x+y'))), '分母不同、结果不同');
+  truthy(R.eq(R.mul(a, R.make(Pa('x'), Pa('1'))), R.fromPoly(Pa('1'))), '1/x · x = 1');
+  truthy(R.eq(R.div(R.fromPoly(Pa('x^2-1')), R.make(Pa('x+1'), Pa('1'))), R.make(Pa('x-1'), Pa('1'))), '(x²−1) ÷ (x+1) = x−1');
+  eq(Q.show(R.evalQ(R.make(Pa('x+1'), Pa('x-1')), { x: Q(3) })), '2');
+  eq(R.evalQ(R.make(Pa('1'), Pa('x-1')), { x: Q(1) }), null, '分母为 0 的地方没有值');
+});
+t('分式的错误：分母为 0、除以 0 都会说明', () => {
+  const R = U.Ratio, Pa = U.Poly.parse;
+  let m1 = ''; try { R.make(Pa('1'), Pa('0')); } catch (e) { m1 = e.message; } truthy(/分母不能是 0/.test(m1), m1);
+  let m2 = ''; try { R.div(R.fromPoly(Pa('1')), R.fromPoly(Pa('0'))); } catch (e) { m2 = e.message; } truthy(/除数是 0/.test(m2), m2);
+});
+t('分式 ↔ 多项式：分母是常数才能化成多项式；多项式可以变成分式', () => {
+  eq(U.KINDS.poly.show(U.convertVal(U.val('ratio', U.Ratio.make(U.Poly.parse('2x+4'), U.Poly.parse('2'))), 'poly').data), 'x + 2');
+  eq(U.convertVal(U.val('ratio', U.Ratio.make(U.Poly.parse('1'), U.Poly.parse('x'))), 'poly'), null);
+  eq(U.KINDS.ratio.show(U.convertVal(U.val('poly', U.Poly.parse('x+1')), 'ratio').data), 'x + 1');
+});
+t('分式器材：分式卡 → 分式运算 → 分式读数；分母为 0 的点连线就被拒绝', () => {
+  const sc = W.blank();
+  const a = W.add(sc, 'fracnum', 0, 0, { num: '1', den: 'x' }), b = W.add(sc, 'fracnum', 0, 0, { num: '1', den: 'y' });
+  const op = W.add(sc, 'ratop', 0, 0, { op: 0 }), rd = W.add(sc, 'ratread', 0, 0, { x: 2, y: 4 });
+  eq(W.act(sc, { t: 'link', from: a, fromPort: 'f', to: op, toPort: 'a' }).ok, true);
+  eq(W.act(sc, { t: 'link', from: b, fromPort: 'f', to: op, toPort: 'b' }).ok, true);
+  eq(W.act(sc, { t: 'link', from: op, fromPort: 'r', to: rd, toPort: 'f' }).ok, true);
+  eq(U.showVal(W.evaluate(sc)[rd].out.v), '3/4');
+  const sc2 = W.blank(); const a2 = W.add(sc2, 'fracnum', 0, 0, { num: '1', den: 'x' }), rd2 = W.add(sc2, 'ratread', 0, 0, { x: 0, y: 0 });
+  const refused = W.act(sc2, { t: 'link', from: a2, fromPort: 'f', to: rd2, toPort: 'f' });
+  eq(refused.ok, false); truthy(/分母是 0/.test(refused.why), refused.why);
+});
+t('表格式编辑：文字 ↔ 格子往返；空行丢掉；改完的文字能被数据表接受', () => {
+  const view = TT.gridView('1,60;2,120');
+  eq(view.length, 3); eq(view[2], ['', '']);
+  eq(TT.gridText([['1', '60'], ['', '']]), '1,60');
+  eq(TT.gridText([['1', '60'], ['2', '120'], ['3', '180']].filter((_, i) => i !== 1)), '1,60;3,180');
+  eq(TT.gridText([['1', ' 60 '], ['2', '120']]), '1,60;2,120');
+  const sc = W.blank(); const d = W.add(sc, 'datatable', 0, 0, { data: TT.gridText([['1', '2'], ['3', '4']]) });
+  eq(W.evaluate(sc)[d].out.t.data.rows.length, 2);
 });
 t('建模题模板 lint：三步都要有里程碑；拟合最高只到 ①', () => {
   const base = { id: 'mx', title: 't', milestones: [{ id: 'a', score: 1, when: { type: 'num', port: 'v', op: '=', value: '1' } }, { id: 'b', score: 1, when: { type: 'num', port: 'v', op: '=', value: '2' } }, { id: 'c', score: 1, when: { type: 'num', port: 'v', op: '=', value: '3' } }],

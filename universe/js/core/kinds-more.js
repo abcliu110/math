@@ -72,12 +72,6 @@
     eq: (a, b) => a.length === b.length && a.every((x, i) => Q.eq(x, b[i])),
     show: (v) => '(' + v.map((x) => Q.show(x)).join(', ') + ')',
   });
-  U.defineKind('expr', {
-    label: '代数式', color: '#fb923c',
-    eq: (a, b) => Expr.eq(a, b),
-    show: (c) => Expr.show(c),
-    showApprox: (c) => Expr.show(c),
-  });
   U.defineKind('graph', {
     label: '图', color: '#c084fc',
     eq: (a, b) => Graph.eq(a, b),

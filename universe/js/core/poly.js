@@ -98,7 +98,14 @@
     showApprox: (a) => P.show(a),
     brief: (a) => P.show(a),
   });
-  // 一元代数式可以无损进入多项式；多项式只在单变量时可以变回代数式
-  U.KINDS.expr.to = Object.assign({}, U.KINDS.expr.to || {}, { poly: (c) => P.fromExpr(c) });
-  U.KINDS.poly.to = Object.assign({}, U.KINDS.poly.to || {}, { expr: (a) => P.toExpr(a) });
+  // 代数式（expr）与多项式是同一种表示，可以有多个字母，互相转换不丢信息（旧的一元系数数组已不再使用）
+  U.defineKind('expr', {
+    label: '代数式', color: '#fb923c',
+    eq: (a, b) => P.eq(a, b),
+    show: (a) => P.show(a),
+    showApprox: (a) => P.show(a),
+    brief: (a) => P.show(a),
+    to: { poly: (a) => a },
+  });
+  U.KINDS.poly.to = Object.assign({}, U.KINDS.poly.to || {}, { expr: (a) => a });
 })(typeof globalThis !== 'undefined' ? globalThis : window);

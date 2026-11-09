@@ -14,7 +14,7 @@
         essence: ['E3', 'E6'],
         label: '数据表', prefix: '表', group: '统计与概率', grades: [5, 9], alias: ['实验数据', '表格', '录入'],
         props: {
-          data: { type: 'text', label: '数据（每行 x,y；行之间用分号）', default: '1,60;2,120;3,180' },
+          data: { type: 'text', control: 'grid', label: '数据（每行 x,y；行之间用分号）', default: '1,60;2,120;3,180' },
           xname: { type: 'text', label: 'x 是什么', default: '时间' },
           yname: { type: 'text', label: 'y 是什么', default: '路程' },
         },

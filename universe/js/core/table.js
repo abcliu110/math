@@ -54,6 +54,23 @@
     },
     // 残差平方和（精确）
     sse(res) { return sum(res.map((r) => Q.mul(r, r))); },
+    // 表格式编辑（界面用）：文字 ↔ 格子。格子保留原样（不检查），检查由数据表器材负责。
+    gridRows(text) {
+      const rows = String(text || '').split(/[;；\n]/).map((p) => p.trim()).filter((p) => p !== '').map((p) => p.split(/[,，\s]+/));
+      const cols = Math.max(2, ...rows.map((r) => r.length));
+      return rows.map((r) => Array.from({ length: cols }, (_, i) => r[i] || ''));
+    },
+    // 显示用：所有行，末尾多一行空行，用来加新行
+    gridView(text) {
+      const rows = T.gridRows(text);
+      const cols = rows.length ? rows[0].length : 2;
+      return rows.concat([Array.from({ length: cols }, () => '')]);
+    },
+    // 格子 → 文字：全空的行丢掉；不完整的行原样保留（器材会报“这一行要有两个数”）
+    gridText(rows) {
+      return rows.filter((r) => r.some((x) => String(x).trim() !== ''))
+        .map((r) => r.map((x) => String(x).trim()).join(',')).join(';');
+    },
   };
   U.Table = T;
 

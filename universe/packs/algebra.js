@@ -82,6 +82,34 @@
         draw: (c) => K.text(c.w / 2, c.h / 2 + 6, c.out.eq ? U.KINDS.eqn.show(c.out.eq.data) : '…', { size: 14, weight: 700 }),
       },
 
+      // ---------------- 代数式读数：只接受代数式口，代入 x、y 两个字母后读出值（任务 B 遗留：有多个字母的代数式）----------------
+      exprread: {
+        essence: ['E8'],
+        label: '代数式读数', prefix: '读', group: '数与运算', grades: [7, 9], alias: ['代数式', '多个字母', '求值'],
+        props: {
+          x: { type: 'num', label: 'x 等于', default: 0, min: -99, max: 99, step: 1 },
+          y: { type: 'num', label: 'y 等于', default: 0, min: -99, max: 99, step: 1 },
+          label: { type: 'text', label: '标签', default: '' },
+        },
+        lint: { minProps: 2, why: '代数式读数只需要 x、y 两个代入值和标签' },
+        inputs: { e: { kind: 'expr', label: '代数式' } },
+        outputs: { v: { dim: null, kind: 'num', label: '值' } },
+        icon: () => K.text(32, 28, 'x,y', { size: 16, weight: 700 }),
+        size: () => [170, 100],
+        compute: (c) => {
+          const v = K.first(c.inp.e); if (!v || v.kind !== 'expr') { c.say('info', '接一个代数式'); return {}; }
+          const p = v.data, env = { x: Q.fromNumber(c.props.x), y: Q.fromNumber(c.props.y) };
+          const extra = P.vars(p).filter((k) => !(k in env));
+          if (extra.length) { c.say('reject', '式子里还有字母 ' + extra.join('、') + '，这台只代入 x、y'); return {}; }
+          const r = P.evalQ(p, env);
+          if (c.step) c.step(P.show(p) + '，代入 x = ' + c.props.x + '，y = ' + c.props.y + '，得 ' + Q.show(r), null, 'eq.both-sides');
+          c.say('ok', '值是 ' + Q.show(r));
+          return { v: U.val('num', r) };
+        },
+        badge: (c) => (c.out.v ? U.showVal(c.out.v) : ''),
+        draw: (c) => K.text(c.w / 2, c.h / 2 + 6, c.out.v ? Q.show(c.out.v.data) : '…', { size: 20, weight: 700 }),
+      },
+
       // ---------------- 代入器：把字母换成数，输出数（或真假）----------------
       subst: {
         essence: ['E8'],
