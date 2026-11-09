@@ -3,7 +3,7 @@
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const root = path.join(__dirname, '..');
 const fsx = require('fs'), pk = (d) => fsx.readdirSync(path.join(root, d)).filter((f) => f.endsWith('.js')).sort().map((f) => d + '/' + f);
-const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/figure.js', 'js/core/convert.js', 'js/core/registry.js', 'js/core/rules.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
+const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/figure.js', 'js/core/convert.js', 'js/core/registry.js', 'js/core/rules.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
 const ctx = vm.createContext({ console, TextEncoder, TextDecoder, btoa, atob });
 ctx.globalThis = ctx;
 for (const f of files) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f });
@@ -607,6 +607,27 @@ t('没有声明的转换被拒绝，连线时说明原因', () => {
   eq(U.kindOK('bool', 'num'), false);
 });
 t('lint：转换项必须是函数', () => eq(U.lintKind({ label: 'x', eq() {}, show() {}, serialize() {}, parse() {}, to: { real: 1 } }), ['to.real 要是转换函数']));
+console.log('多元多项式（B.2）');
+const Pl = U.Poly, x = Pl.variable('x'), y = Pl.variable('y'), one = Pl.const(Q(1));
+const c = (n, d) => Pl.const(Q(n, d || 1));
+t('规范化：(x+1)(x−1) = x² − 1；2(x+y) = 2x + 2y', () => {
+  eq(Pl.show(Pl.mul(Pl.add(x, one), Pl.sub(x, one))), 'x² − 1');
+  eq(Pl.show(Pl.mul(c(2), Pl.add(x, y))), '2x + 2y');
+});
+t('同类项合并，系数为 0 的项消失', () => { eq(Pl.show(Pl.add(Pl.add(x, y), Pl.neg(x))), 'y'); eq(Pl.show(Pl.sub(x, x)), '0'); });
+t('乘方与恒等：(x+y)² = x² + 2xy + y²', () => { eq(Pl.show(Pl.pow(Pl.add(x, y), 2)), 'x² + 2x·y + y²'); truthy(Pl.eq(Pl.pow(Pl.add(x, y), 2), Pl.add(Pl.add(Pl.pow(x, 2), Pl.mul(c(2), Pl.mul(x, y))), Pl.pow(y, 2)))); });
+t('代入：x 换成 y+1；数值代入求值', () => {
+  eq(Pl.show(Pl.subst(Pl.pow(x, 2), 'x', Pl.add(y, one))), 'y² + 2y + 1');
+  eq(Pl.evalQ(Pl.add(Pl.pow(x, 2), Pl.mul(c(3), y)), { x: Q(2), y: Q(1) }), Q(7));
+});
+t('次数与变量', () => { eq(Pl.degree(Pl.add(Pl.pow(x, 2), y)), 2); eq(Pl.vars(Pl.add(x, y)), ['x', 'y']); });
+t('一元代数式 ↔ 多项式互转；多变量不能变回代数式', () => {
+  const e = U.convertVal(U.val('expr', [Q(1), Q(2), Q(1)]), 'poly');
+  eq(Pl.show(e.data), 'x² + 2x + 1');
+  eq(U.convertVal(U.val('poly', Pl.add(x, y)), 'expr'), null);
+  eq(U.convertVal(U.val('poly', Pl.pow(x, 2)), 'expr').data, [Q(0), Q(0), Q(1)]);
+});
+t('存档往返与种类注册', () => { truthy(U.KINDS.poly.eq(U.KINDS.poly.parse(U.KINDS.poly.serialize(Pl.add(x, y))), Pl.add(x, y))); eq(U.lintKind(U.KINDS.poly), []); });
 console.log('输出声明（1.2）');
 t('lint 拒绝没有声明 dim 的输出口', () => {
   const bad = Object.assign({}, U.types.num, { outputs: { v: { kind: 'num', label: '值' } } });
