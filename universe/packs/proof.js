@@ -27,7 +27,8 @@
     '1+2+…+n 小于 n²': (n) => { let s = 0; for (let i = 1; i <= n; i++) s += i; return s < n * n; }, // 不成立：n = 1 时 1 不小于 1
     '质数 n 使 n²+2 也是质数': (n) => !isPrime(n) || isPrime(n * n + 2), // 不成立：n = 2 时 6
   };
-  const RULE_NAMES = Object.keys(RULES);
+  const RULE_NAMES = Object.keys(RULES).concat(['自己写的规则']);
+  const CUSTOM = RULE_NAMES.length - 1;   // 最后一个选项：用“自定义规则”文本框里写的规则
   // 规则的选项顺序固定：0 平方不小于本身，1 偶数（≥4）是两个质数之和，2 2ⁿ 大于 n，3 质数都是奇数，其余见上
   // 枚举器的全集（可选）
   const SETS = {
@@ -39,27 +40,29 @@
 
   // 归纳阶梯：每个式子用多项式写出 S(n)（前 n 项的和）和第 n 项 t(n)。
   // 第 k 级推第 k+1 级，就是恒等式 S(n+1) − S(n) − t(n+1) = 0，对所有 n 成立（symbolic），不靠具体数。
-  const P = U.Poly, X = P.variable('n'), C = (q) => P.const(q && q.n !== undefined ? q : Q(q)), half = (x) => P.mul(C(Q(1, 2)), x);
+  // S(n) 是前 n 项的和，t(n) 是第 n 项。式子直接写成文字（分式、指数式都可以，见 js/core/seq.js）。
   const INDUCT_DEFS = {
-    '1+3+…+(2n−1) = n²': { S: P.pow(X, 2), t: P.sub(P.mul(C(Q(2)), X), C(Q(1))) },
-    '1+2+…+n = n(n+1)/2': { S: half(P.add(P.pow(X, 2), X)), t: X },
-    '2+4+…+2n = n(n+1)': { S: P.add(P.pow(X, 2), X), t: P.mul(C(Q(2)), X) },
+    '1+3+…+(2n−1) = n²': { S: 'n^2', t: '2n-1' },
+    '1+2+…+n = n(n+1)/2': { S: 'n(n+1)/2', t: 'n' },
+    '2+4+…+2n = n(n+1)': { S: 'n(n+1)', t: '2n' },
+    '1+2+4+…+2^(n−1) = 2^n − 1': { S: '2^n-1', t: '2^(n-1)' },
   };
   const INDUCT_NAMES = Object.keys(INDUCT_DEFS);
   const atN = (poly, k) => P.evalQ(poly, { n: Q(k) });
   const INDUCT = {};
   for (const name of INDUCT_NAMES) {
-    const { S, t } = INDUCT_DEFS[name];
-    const identity = P.sub(P.sub(P.subst(S, 'n', P.add(X, C(Q(1)))), S), P.subst(t, 'n', P.add(X, C(Q(1)))));
+    const S = U.Seq.parse(INDUCT_DEFS[name].S), t = U.Seq.parse(INDUCT_DEFS[name].t);
+    const identity = U.Seq.sub(U.Seq.sub(U.Seq.shift(S), S), U.Seq.shift(t));
     INDUCT[name] = {
-      identity: identity.terms.length === 0,
-      base: () => Q.eq(atN(S, 1), atN(t, 1)),
-      step: (k) => Q.eq(Q.add(atN(S, k), atN(t, k + 1)), atN(S, k + 1)),
+      identity: identity.length === 0,
+      base: () => U.Seq.at(S, 1).n === U.Seq.at(t, 1).n && U.Seq.at(S, 1).d === U.Seq.at(t, 1).d,
+      step: (k) => U.Q.eq(U.Q.add(U.Seq.at(S, k), U.Seq.at(t, k + 1)), U.Seq.at(S, k + 1)),
     };
   }
 
   const sc = (c) => (c.props && c.props.rule ? RULE_NAMES[c.props.rule] : RULE_NAMES[0]);
-  const ruleOf = (c) => RULES[sc(c)];
+  // 规则函数：选了预设规则就用预设，选了“自己写的规则”就编译文本框里的规则（写错时抛出说明）
+  const ruleOf = (c) => (c.props.rule === CUSTOM ? U.Seq.compileRule(c.props.custom) : RULES[sc(c)]);
 
   // 扫描（纯计算，不记事件）：返回 { found, counter, checked }
   const scan = (from, to, pred) => {
@@ -101,6 +104,7 @@
         label: '参数扫描器', prefix: '扫', group: '关系', grades: [5, 9], alias: ['扫描', '试很多个', '范围'],
         props: {
           rule: { type: 'choice', label: '检查的规则', default: 0, choices: RULE_NAMES },
+          custom: { type: 'text', label: '自己写的规则（如 2n+1 是质数，或 2^n > n）', default: '2n+1 是质数' },
           from: { type: 'int', label: '从', default: 1, min: -50, max: 50 },
           to: { type: 'int', label: '到', default: 100, min: 1, max: 1000 },
         },
@@ -111,7 +115,8 @@
         icon: () => K.line(8, 30, 56, 30, { w: 2 }) + [14, 26, 38, 50].map((x) => K.circle(x, 22, 3, { fill: 'var(--accent)' })).join(''),
         size: () => [220, 120],
         compute: (c) => {
-          const r = scan(c.props.from, c.props.to, ruleOf(c));
+          let pred; try { pred = ruleOf(c); } catch (e) { c.say('reject', '规则写不对：' + e.message); return {}; }
+          const r = scan(c.props.from, c.props.to, pred);
           if (r.found) return verdict(c, { lv: num(Q(0)), refuted: U.val('bool', true), checked: num(Q(r.checked)), counter: num(Q(r.counter)), text: '在 ' + c.props.from + ' 到 ' + c.props.to + ' 里找到例外：' + r.counter + '，结论被推翻' });
           return verdict(c, { lv: num(Q(2)), refuted: U.val('bool', false), checked: num(Q(r.checked)), counter: num(Q(-1)), text: '在 ' + c.props.from + ' 到 ' + c.props.to + ' 里没找到例外（' + r.checked + ' 个）' });
         },
@@ -125,6 +130,7 @@
         label: '反例构造器', prefix: '反', group: '关系', grades: [5, 9], alias: ['反例', '推翻', '找例外'],
         props: {
           rule: { type: 'choice', label: '要推翻的规则', default: 2, choices: RULE_NAMES },
+          custom: { type: 'text', label: '自己写的规则（如 2n+1 是质数，或 2^n > n）', default: '2n+1 是质数' },
           from: { type: 'int', label: '从', default: 1, min: -50, max: 50 },
           to: { type: 'int', label: '到', default: 50, min: 1, max: 1000 },
         },
@@ -135,7 +141,8 @@
         icon: () => K.text(32, 28, '✕', { size: 26, weight: 700, fill: 'var(--bad)' }),
         size: () => [200, 110],
         compute: (c) => {
-          const r = scan(c.props.from, c.props.to, ruleOf(c));
+          let pred; try { pred = ruleOf(c); } catch (e) { c.say('reject', '规则写不对：' + e.message); return {}; }
+          const r = scan(c.props.from, c.props.to, pred);
           if (r.found) return verdict(c, { lv: num(Q(0)), refuted: U.val('bool', true), counter: num(Q(r.counter)), text: '反例找到了：' + r.counter + '，猜想被推翻' });
           return verdict(c, { lv: num(Q(2)), refuted: U.val('bool', false), counter: num(Q(-1)), text: '在范围里没有找到反例，证据到 ②' });
         },
@@ -202,22 +209,25 @@
       scaffold: {
         essence: ['E4', 'E5'],
         label: '证明脚手架', prefix: '证', group: '关系', grades: [6, 9], alias: ['证明', '推理', '步骤'],
+        late: true,
         props: {
           s1: { type: 'text', label: '第一步', default: '设 n 是偶数，写成 n = 2k' },
+          r1: { type: 'text', label: '第一步的依据（台面上选一条事实）', default: '', control: 'fact' },
           s2: { type: 'text', label: '第二步', default: 'n + 2 = 2k + 2 = 2(k + 1)' },
+          r2: { type: 'text', label: '第二步的依据（台面上选一条事实）', default: '', control: 'fact' },
           s3: { type: 'text', label: '第三步', default: '所以 n + 2 是偶数' },
+          r3: { type: 'text', label: '第三步的依据（台面上选一条事实）', default: '', control: 'fact' },
         },
-        inputs: { a: { kind: 'bool', label: '第一步的依据已验证' }, b: { kind: 'bool', label: '第二步的依据已验证' }, c: { kind: 'bool', label: '第三步的依据已验证' } },
         outputs: { lv: { dim: null, kind: 'num', label: '证据等级' }, filled: { dim: null, kind: 'num', label: '填完的步数' }, refuted: { dim: null, kind: 'bool', label: '被推翻' } },
         icon: () => [0, 1, 2].map((i) => K.rect(8 + i * 18, 14 + i * 4, 14, 14, { stroke: 'var(--ink)', r: 2 })).join(''),
         size: () => [230, 130],
         compute: (c) => {
-          const flag = (p) => { const v = K.first(c.inp[p]); return !!(v && v.kind === 'bool' && v.data); };
-          const steps = [{ text: c.props.s1, ref: flag('a') ? 'a' : '' }, { text: c.props.s2, ref: flag('b') ? 'b' : '' }, { text: c.props.s3, ref: flag('c') ? 'c' : '' }];
+          // 依据必须是台面上真正成立的事实（选出来的事实在台面上不成立，这一步不算）
+          const steps = [1, 2, 3].map((i) => ({ text: c.props['s' + i], ref: c.props['r' + i] && c.fact && c.fact(c.props['r' + i]) ? c.props['r' + i] : '' }));
           const r = E.proof(steps);
           const lv = r.complete ? 4 : 1;
           return verdict(c, { lv: num(Q(lv)), refuted: U.val('bool', false), filled: num(Q(r.filled)),
-            text: '证明：填完 ' + r.filled + ' / ' + r.steps + ' 步' + (r.complete ? '，每一步都有依据，证据到 ④' : '，还有步骤没有依据') });
+            text: '证明：填完 ' + r.filled + ' / ' + r.steps + ' 步' + (r.complete ? '，每一步的依据都是台面上成立的事实，证据到 ④' : '，还有步骤的依据没有成立') });
         },
         badge: (c) => (c.out.filled ? c.out.filled.data.n + '/3 步' : ''),
         draw: (c) => K.text(c.w / 2, c.h / 2 + 4, '证明', { size: 14, weight: 700 }),
@@ -255,4 +265,20 @@
       },
     },
   });
+  // 台面上的事实（证明脚手架的依据从这里选）：布尔输出，以及证据等级输出（≥ ② 算成立）
+  U.Facts = {
+    list(scene, D) {
+      const out = [];
+      for (const e of Object.values(scene.entities)) {
+        const node = D && D[e.id]; if (!node) continue;
+        for (const port of Object.keys(node.out || {})) {
+          const v = node.out[port];
+          if (!v) continue;
+          if (v.kind === 'bool') out.push({ key: e.id + '.' + port, label: e.name + '：' + U.kit.esc(port) + ' = ' + (v.data ? '是' : '否'), verified: v.data === true });
+          else if (v.kind === 'num' && port === 'lv') out.push({ key: e.id + '.' + port, label: e.name + '：证据等级 ' + (v.data.n / v.data.d), verified: v.data.n / v.data.d >= 2 });
+        }
+      }
+      return out;
+    },
+  };
 })(typeof globalThis !== 'undefined' ? globalThis : window);

@@ -166,15 +166,28 @@
     const done = {}; order.forEach((id) => (done[id] = 1));
     stateless.filter((id) => !done[id]).forEach((id) => D[id].sig.push({ lv: 'err', tx: '连成了没有记忆的环' }));
 
-    for (const id of order) {
+    // 事实：台面上已经算出的结论，证明器材可以引用（key = 器材id.输出口）。真：布尔输出为真，或证据等级 ≥ ②。
+    const factTrue = (key) => {
+      const cut = key.lastIndexOf('.'); if (cut < 0) return false;
+      const node = D[key.slice(0, cut)], v = node && node.out[key.slice(cut + 1)];
+      if (!v) return false;
+      if (v.kind === 'bool') return v.data === true;
+      if (v.kind === 'num') return v.data.n / v.data.d >= 2;
+      return false;
+    };
+    // late：要读别的器材结论的器材（证明脚手架），等所有普通器材算完以后再算
+    const lateIds = [];
+    const runOne = (id) => {
       const e = E[id], def = defOf(e), d = D[id];
       gather(id);
-      const ctx = { ent: e, props: d.props, inp: d.inp, t: ck.t, n: ck.n, seed: ck.seed, say: sayFor(id), kids: (slot) => childrenOf(scene, id, slot),
+      const ctx = { ent: e, props: d.props, inp: d.inp, t: ck.t, n: ck.n, seed: ck.seed, say: sayFor(id), kids: (slot) => childrenOf(scene, id, slot), fact: factTrue,
         step: (say, value, rule) => { if (rule && !U.RULES[rule]) U.ruleErrors.push(e.type + ' 用了没登记的规则 ' + rule); if (d.trace) d.trace.steps.push({ say, value: value === undefined ? null : value, rule: rule || null }); },
         because: (port, say, rule) => { if (rule && !U.RULES[rule]) U.ruleErrors.push(e.type + ' 用了没登记的规则 ' + rule); if (d.trace) d.trace.outputs[port] = { say, rule: rule || null }; } };
       try { d.out = def.compute(ctx) || {}; if (!(def.exact !== false && !d.inexact)) approx(d.out); } catch (err) { d.out = {}; d.sig.push({ lv: 'err', tx: errText(err) }); }
       if (def.sig) { try { def.sig(Object.assign({}, ctx, { out: d.out }), sayFor(id)); } catch (err) { /* 信号条出错不影响计算 */ } }
-    }
+    };
+    for (const id of order) { if (defOf(E[id]).late) lateIds.push(id); else runOne(id); }
+    for (const id of lateIds) runOne(id);
 
     // 有状态器材：此时才有输入可读
     for (const id of ids) {

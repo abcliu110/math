@@ -55,7 +55,7 @@
 
   // 把任意输入变成属性合法值；不合法就说为什么（不悄悄改）
   // 1.1.1 属性控件自动选型：按属性声明选控件；器材可用 control 覆盖，覆盖值要合法（lint 检查）。
-  const CONTROLS = { segment: ['choice'], select: ['choice'], switch: ['bool'], stepper: ['int', 'num'], slider: ['int', 'num'], dial: ['num', 'int'], expr: ['expr'], text: ['text'] };
+  const CONTROLS = { segment: ['choice'], select: ['choice'], switch: ['bool'], stepper: ['int', 'num'], slider: ['int', 'num'], dial: ['num', 'int'], expr: ['expr'], text: ['text'], fact: ['text'] };
   U.CONTROLS = CONTROLS;
   U.controlFor = (P) => {
     if (P.control) return P.control;

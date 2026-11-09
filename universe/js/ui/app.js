@@ -196,8 +196,8 @@
     insp.addEventListener('change', (e) => {
       const t = e.target, id = S.sel; if (!id) return;
       if (t.id === 'nm') { act({ t: 'rename', id, name: t.value }); return; }
-      const k = t.dataset.k; if (!k) return;
-      let v = t.type === 'checkbox' ? t.checked : t.tagName === 'SELECT' ? +t.value : t.value;
+      const k = t.dataset.k || t.dataset.fact; if (!k) return;
+      let v = t.type === 'checkbox' ? t.checked : t.dataset.fact !== undefined ? t.value : t.tagName === 'SELECT' ? +t.value : t.value;
       if (t.type === 'number' && v === '') { UI.Panels.renderInsp(); return; }
       const r = act({ t: 'set', id, k, v }); if (!r.ok) UI.Panels.renderInsp();
     });

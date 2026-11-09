@@ -95,6 +95,11 @@
       else if (U.controlFor(P) === 'segment') h += '<div class="seg">' + P.choices.map((c, i) => '<button class="sg' + (i === v ? ' on' : '') + '" data-k="' + k + '" data-seg="' + i + '">' + esc(c) + '</button>').join('') + '</div>';
       else if (P.type === 'choice') h += '<select data-k="' + k + '">' + P.choices.map((c, i) => '<option value="' + i + '"' + (i === v ? ' selected' : '') + '>' + esc(c) + '</option>').join('') + '</select>';
       else if (P.type === 'bool') h += '<input type="checkbox" data-k="' + k + '"' + (v ? ' checked' : '') + '>';
+      else if (U.controlFor(P) === 'fact') {
+        // 台面上的事实：列出台面上所有布尔结论和证据等级，选一条作为依据（✓ 表示现在成立）
+        const facts = U.Facts.list(S.scene, S.D);
+        h += '<select data-fact="' + k + '"><option value="">（不选）</option>' + facts.map((f) => '<option value="' + esc(f.key) + '"' + (f.key === v ? ' selected' : '') + '>' + esc(f.label) + (f.verified ? ' ✓' : '') + '</option>').join('') + '</select>';
+      }
       else if (P.type === 'text') h += '<input type="text" data-k="' + k + '" value="' + esc(v) + '">';
       else {
         // 1.1.1：滑杆 / 转盘（有范围时）；数字框始终在，保证能精确填数

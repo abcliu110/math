@@ -3,7 +3,7 @@
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const root = path.join(__dirname, '..');
 const fsx = require('fs'), pk = (d) => fsx.readdirSync(path.join(root, d)).filter((f) => f.endsWith('.js')).sort().map((f) => d + '/' + f);
-const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/eqn.js', 'js/core/table.js', 'js/core/figure.js', 'js/core/convert.js', 'js/core/registry.js', 'js/core/rules.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/curriculum.js', 'js/core/coverage.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
+const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/eqn.js', 'js/core/seq.js', 'js/core/table.js', 'js/core/figure.js', 'js/core/convert.js', 'js/core/registry.js', 'js/core/rules.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/curriculum.js', 'js/core/coverage.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
 const ctx = vm.createContext({ console, TextEncoder, TextDecoder, btoa, atob });
 ctx.globalThis = ctx;
 for (const f of files) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f });
@@ -808,13 +808,14 @@ t('系统枚举器：两个骰子列全 36 种，和为 7 的有 6 种 → ③�
   const o = pr('enumerator', { target: 7, expected: 36 }); eq(lvOf(o), 3); eq(o.count.data.n, 6); eq(o.total.data.n, 36);
   eq(lvOf(pr('enumerator', { target: 7, expected: 30 })), 1);
 });
-t('证明脚手架：三步都有依据 → ④；缺一步依据就只是 ①', () => {
-  const sc = W.blank(); const e = W.add(sc, 'scaffold', 0, 0, {});
-  const ok1 = W.add(sc, 'invariant', 0, 0, { change: 0, times: 2 }), ok2 = W.add(sc, 'invariant', 0, 0, { change: 0, times: 3 }), ok3 = W.add(sc, 'invariant', 0, 0, { change: 0, times: 1 });
-  W.act(sc, { t: 'link', from: ok1, fromPort: 'kept', to: e, toPort: 'a' }); W.act(sc, { t: 'link', from: ok2, fromPort: 'kept', to: e, toPort: 'b' }); W.act(sc, { t: 'link', from: ok3, fromPort: 'kept', to: e, toPort: 'c' });
+t('证明脚手架：每一步的依据从台面上选：选中的事实成立 → 填完；选的事实不成立或没选 → 不算', () => {
+  const sc = W.blank();
+  const ok1 = W.add(sc, 'invariant', 0, 0, { change: 0, times: 2 }), ok2 = W.add(sc, 'invariant', 0, 0, { change: 0, times: 3 }), bad = W.add(sc, 'invariant', 0, 0, { change: 3, times: 2 });
+  const e = W.add(sc, 'scaffold', 0, 0, { r1: ok1 + '.kept', r2: ok2 + '.kept', r3: ok1 + '.kept' });
   const D = W.evaluate(sc); eq(lvOf(D[e].out), 4); eq(D[e].out.filled.data.n, 3);
-  const sc2 = W.blank(); const e2 = W.add(sc2, 'scaffold', 0, 0, {}); const bad = W.add(sc2, 'invariant', 0, 0, { change: 3, times: 2 }); const good = W.add(sc2, 'invariant', 0, 0, { change: 0, times: 2 });
-  W.act(sc2, { t: 'link', from: good, fromPort: 'kept', to: e2, toPort: 'a' }); W.act(sc2, { t: 'link', from: bad, fromPort: 'kept', to: e2, toPort: 'b' });
+  const sc2 = W.blank();
+  const g1 = W.add(sc2, 'invariant', 0, 0, { change: 0, times: 2 }), b1 = W.add(sc2, 'invariant', 0, 0, { change: 3, times: 2 });
+  const e2 = W.add(sc2, 'scaffold', 0, 0, { r1: g1 + '.kept', r2: b1 + '.kept', r3: '' });
   const D2 = W.evaluate(sc2); eq(lvOf(D2[e2].out), 1); eq(D2[e2].out.filled.data.n, 1);
 });
 t('归纳阶梯：起点成立，每一级都能推下一级 → ④；起点没验证 → ①', () => {
@@ -848,6 +849,43 @@ t('归纳阶梯：三条求和式子的步骤都是恒等式；起点与每一�
     const sc = W.blank(); const e = W.add(sc, 'induction', 0, 0, { rule: r, upto: 30, base: true }); const D = W.evaluate(sc);
     eq(D[e].out.identity.data, true, '式子 ' + r + ' 的步骤应是恒等式'); eq(D[e].out.lv.data.n, 4);
   }
+});
+console.log('序列表达式（分式、指数式、用户规则）');
+const SQ = U.Seq;
+t('分式与恒等：n(n+1)/2 的步骤 S(n+1)−S(n) = n+1 对所有 n 成立', () => {
+  const S = SQ.parse('n(n+1)/2'), t1 = SQ.parse('n');
+  truthy(SQ.identical(SQ.sub(SQ.sub(SQ.shift(S), S), SQ.shift(t1)), []));
+  eq(SQ.at(S, 10), Q(55));
+});
+t('指数式：2^n − 1 的求和 1+2+…+2^(n−1)：步骤恒等，n=5 时是 31', () => {
+  const S = SQ.parse('2^n-1'), t1 = SQ.parse('2^(n-1)');
+  truthy(SQ.identical(SQ.sub(SQ.sub(SQ.shift(S), S), SQ.shift(t1)), []), '步骤应恒等');
+  eq(SQ.at(S, 5), Q(31)); eq(SQ.at(t1, 3), Q(4));
+});
+t('不是恒等的步骤判为不恒等：n² 与 n² + 1', () => {
+  truthy(!SQ.identical(SQ.sub(SQ.parse('n^2'), SQ.parse('n^2+1')), []));
+});
+t('用户规则：“2n+1 是质数”在 1–20 里第一个反例是 4；“n^2 是偶数”的反例是 1', () => {
+  const r1 = SQ.compileRule('2n+1 是质数'); truthy(r1(3)); truthy(!r1(4));
+  const r2 = SQ.compileRule('n^2 是偶数'); truthy(!r2(1)); truthy(r2(2));
+});
+t('用户规则：比较两个式子，2^n > n 对 n ≥ 0 成立', () => {
+  const r = SQ.compileRule('2^n > n'); truthy(r(0)); truthy(r(1)); truthy(r(10));
+});
+t('写错的规则给出说明', () => { truthy(/要写成/.test(String(thr(() => SQ.compileRule('随便写')))) ); truthy(/看不懂|多出/.test(String(thr(() => SQ.parse('2 & n'))))); });
+function thr(f) { try { f(); return ''; } catch (e) { return e.message; } }
+console.log('证明器材：自定义规则与指数式归纳');
+t('反例构造器：选“自己写的规则”，写 2n+1 是质数，在 1–20 里找到反例 4', () => {
+  const sc = W.blank(); const e = W.add(sc, 'counterex', 0, 0, { rule: 9, custom: '2n+1 是质数', from: 1, to: 20 });
+  const o = W.evaluate(sc)[e].out; eq(o.refuted.data, true); eq(o.counter.data.n, 4);
+});
+t('参数扫描器：写错的自定义规则会说明原因，不算证据', () => {
+  const sc = W.blank(); const e = W.add(sc, 'scanner', 0, 0, { rule: 9, custom: '随便写', from: 1, to: 5 });
+  const D = W.evaluate(sc); truthy(/规则写不对/.test(D[e].sig.map((x) => x.tx).join('|')));
+});
+t('归纳阶梯：指数式 1+2+…+2^(n−1) = 2^n−1 的步骤是恒等式，证到 ④', () => {
+  const sc = W.blank(); const e = W.add(sc, 'induction', 0, 0, { rule: 3, upto: 30, base: true }); const o = W.evaluate(sc)[e].out;
+  eq(o.identity.data, true); eq(o.lv.data.n, 4);
 });
 console.log('输出声明（1.2）');
 t('lint 拒绝没有声明 dim 的输出口', () => {
