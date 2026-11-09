@@ -249,3 +249,20 @@ button.gdel { border: 0; background: none; color: var(--dim); cursor: pointer; }
 .wsx-step:hover { background: #3b9bff22; }
 .wsx-step button { margin: 0; padding: 0 6px; }
 .wsx-layers label { display: inline-block; margin: 2px 8px 2px 0; }
+
+/* 式子工作台的检查器（§10.5.3）：步骤、应用到选中项、解 */
+.wb { margin-top: 12px; border-top: 1px dashed #aab4c8; padding-top: 8px; font-size: 13px; }
+.wb h5 { margin: 0 0 6px; font-size: 14px; }
+.wb-now { font-size: 15px; margin-bottom: 4px; }
+.wb-h { margin: 10px 0 4px; color: var(--txt3); font-size: 12px; }
+.wb-none { color: var(--dim); }
+.wb-terms { font-size: 12px; color: var(--txt2); line-height: 1.8; }
+.wb-term { display: inline-block; margin-right: 8px; padding: 0 6px; border-radius: 6px; background: var(--panel2); }
+.wb-apply label { display: block; margin: 4px 0; font-size: 12px; }
+.wb-apply input, .wb-apply select { font: inherit; margin-left: 6px; max-width: 130px; }
+.wb-tools { margin: 8px 0 4px; }
+.wb button { font: inherit; font-size: 12px; padding: 3px 8px; margin: 2px 4px 2px 0; border-radius: 8px; border: 1px solid #aab4c8; background: #fff; color: var(--ink); cursor: pointer; }
+.wb-step { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin: 3px 0; font-size: 12px; }
+.wb-step button { margin: 0; white-space: nowrap; }
+.wb-msg { color: var(--bad); margin: 6px 0; font-size: 12px; }
+.wb-sol { margin-top: 8px; font-size: 15px; font-weight: 700; color: var(--good); }

@@ -151,10 +151,40 @@
       }
       h += '</div></div>';
     }
+    if (e.type === 'exprbench') h += wbHtml(e, dd);
     h += '<div class="note">想让别的器材来决定「' + (Object.keys(d.props)[0] ? esc(d.props[Object.keys(d.props)[0]].label) : '') + '」？从别的器材的输出口拖一根线，放到这台器材左边出现的药丸上。</div>';
     const sg = (dd && dd.sig) || []; if (sg.length) h += '<div class="sigs">' + sg.map((s) => '<div>· ' + esc(s.tx) + '</div>').join('') + '</div>';
     h += '<div class="btnrow"><button class="btn" data-reset="1">恢复默认</button></div>';
     box.innerHTML = h; box.classList.add('open');
+  }
+
+  // ---------- 式子工作台的检查器（任务 H 第 3b 步，§10.5.3）----------
+  // 步骤历史在 U.ExprBench.states 里，不在台面上；这里只画。输入框的草稿放在 S.wbDraft[器材 id]。
+  function wbDraft(id) {
+    const S = UI.S; S.wbDraft = S.wbDraft || {};
+    return S.wbDraft[id] || (S.wbDraft[id] = { ref: '', side: 'lhs', by: '', msg: '' });
+  }
+  function wbHtml(e, dd) {
+    const eq = U.ExprBench.eqnIn(dd && dd.inp);
+    if (!eq) return '<div class="wb"><h5>式子工作台</h5><div class="wb-none">接一个方程</div><div class="note">从方程台的「方程」口拖一根线到这台器材的「方程」口。</div></div>';
+    const st = U.ExprBench.currentOf(e.id, eq), dr = wbDraft(e.id), cur = st.current;
+    const L = cur.kind === 'eqn' ? cur.data.lhs : null;
+    const terms = L ? (L.op === 'add' ? L.args : [L]) : [];
+    let h = '<div class="wb"><h5>式子工作台</h5><div class="wb-now">现在：<b>' + esc(U.ExprBench.showState(st)) + '</b></div>';
+    h += '<div class="wb-h">应用到选中项</div>';
+    h += '<div class="wb-terms">左边的项：' + terms.map((t, i) => '<span class="wb-term">' + (i + 1) + ' → ' + esc(U.Form.show(t)) + '</span>').join('') + '</div>';
+    h += '<div class="wb-apply">' +
+      '<label>要动的项（序号，或标签）<input data-wb-field="ref" value="' + esc(dr.ref) + '" placeholder="例如 2"></label>' +
+      '<label>哪一边<select data-wb-field="side">' + [['lhs', '左边'], ['rhs', '右边']].map(([v, t]) => '<option value="' + v + '"' + (v === dr.side ? ' selected' : '') + '>' + t + '</option>').join('') + '</select></label>' +
+      '<label>两边同除 / 同乘几<input data-wb-field="by" value="' + esc(dr.by) + '" placeholder="例如 3" style="width:70px"></label></div>';
+    h += '<div class="wb-tools">' + U.Workbench.tools(cur).map((t) => '<button data-wb-tool="' + t.id + '">' + esc(t.label) + '</button>').join('') + '</div>';
+    if (dr.msg) h += '<div class="wb-msg">' + esc(dr.msg) + '</div>';
+    h += '<div class="wb-h">步骤</div>';
+    const log = U.Workbench.stepLog(st);
+    h += log.length ? log.map((s, i) => '<div class="wb-step"><span>' + esc(s) + '</span><button data-wb-undo="' + (i + 1) + '">撤销到这一步</button></div>').join('') : '<div class="wb-none">还没有步骤</div>';
+    const sol = U.Workbench.solution(st);
+    if (sol.solved) h += '<div class="wb-sol">解：x = ' + esc(U.Q.show(sol.x)) + '</div>';
+    return h + '</div>';
   }
 
   // ---------- 时钟条 ----------
@@ -333,5 +363,5 @@
     $('#cb-out').innerHTML = h;
   }
 
-  UI.Panels = { renderTop, renderLeft, renderShelf, renderInsp, renderClock, shareDialog, studentDialog, boardDialog, boardOut, dialog, closeDialog, reportHtml, inquiryHtml, wrongDialog, whyDialog, parentDialog, improveDialog, healthDialog, healthOut, reportDialog, authorDialog, initShelfDrag, renderAll() { renderTop(); renderLeft(); renderShelf(); renderInsp(); renderClock(); } };
+  UI.Panels = { wbDraft, renderTop, renderLeft, renderShelf, renderInsp, renderClock, shareDialog, studentDialog, boardDialog, boardOut, dialog, closeDialog, reportHtml, inquiryHtml, wrongDialog, whyDialog, parentDialog, improveDialog, healthDialog, healthOut, reportDialog, authorDialog, initShelfDrag, renderAll() { renderTop(); renderLeft(); renderShelf(); renderInsp(); renderClock(); } };
 })(window);

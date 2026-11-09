@@ -23,8 +23,8 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   ok((await ents()) === 3, '拖 3 个器材上台面');
   await p.evaluate(() => { const S = UI.S, ids = Object.keys(S.scene.entities); UI.App.act({ t: 'set', id: ids[0], k: 'n', v: 2 }); UI.App.act({ t: 'set', id: ids[0], k: 'd', v: 5 }); UI.App.act({ t: 'set', id: ids[1], k: 'd', v: 3 }); });
   // 用鼠标连线：数1 输出口 → 运算器 甲口
-  const dragLink = async (fromId, toId, port) => {
-    const a = await p.locator('.port.out[data-id="' + fromId + '"]').boundingBox();
+  const dragLink = async (fromId, toId, port, fromPort) => {
+    const a = await p.locator('.port.out[data-id="' + fromId + '"]' + (fromPort ? '[data-port="' + fromPort + '"]' : '')).first().boundingBox();
     await p.mouse.move(a.x + 9, a.y + 9); await p.mouse.down();
     const t = await p.locator(port ? '.port.in[data-id="' + toId + '"][data-port="' + port + '"]' : '.card[data-id="' + toId + '"]').first().boundingBox();
     await p.mouse.move(t.x + t.width / 2, t.y + t.height / 2, { steps: 10 }); const tipVis = await p.locator('#tip').isVisible(); await p.mouse.up(); return tipVis;
@@ -344,6 +344,37 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   console.log('  注：几何 geo-pgram-cut 的「移动后正好拼成长方形」里程碑 = ' + m2.fit + '（只用工具做不到，待定）');
   await shot('ui-ws-pgram');
 
+  console.log('式子工作台（方程台 → 工作台，§10.5.3）');
+  await p.evaluate(() => { UI.App.openFree(); UI.App.act({ t: 'clear' }); }); await p.waitForTimeout(100);
+  await drag('algebra', 300, 180); await drag('num', 300, 400); await drag('eqdesk', 640, 240); await drag('exprbench', 640, 470);
+  const wb = await p.evaluate(() => { const E = UI.S.scene.entities, f = (t) => Object.keys(E).find((k) => E[k].type === t); return { a: f('algebra'), n: f('num'), q: f('eqdesk'), x: f('exprbench') }; });
+  const setProp = async (id, sel, v) => {
+    await p.dblclick('.card[data-id="' + id + '"] .hd'); await p.waitForTimeout(80);
+    const inp = p.locator('#insp ' + sel); await inp.fill(v); await inp.evaluate((el) => el.dispatchEvent(new Event('change', { bubbles: true }))); await p.waitForTimeout(80);
+  };
+  await setProp(wb.a, 'input[data-k="text"]', '3x+5');
+  await setProp(wb.n, 'input[type="number"][data-k="n"]', '20');
+  await setProp(wb.q, 'input[type="number"][data-k="by"]', '0');   // 方程台的「两边同时加 0」：不改方程
+  await dragLink(wb.a, wb.q, 'L'); await dragLink(wb.n, wb.q, 'R'); await dragLink(wb.q, wb.x, 'e', 'eq');
+  await p.dblclick('.card[data-id="' + wb.x + '"] .hd'); await p.waitForTimeout(120);
+  const shownEq = await p.locator('#insp .wb-now').innerText().catch(() => '');
+  ok(/3x \+ 5 = 20/.test(shownEq), '方程台接到工作台：显示 ' + shownEq.replace(/\s+/g, ' '));
+  ok(await p.locator('#insp [data-wb-tool]').count() === 4, '工作台的工具按钮来自内核（移项、两边同除、两边同乘、合并同类项）');
+  await p.fill('#insp [data-wb-field="ref"]', '2');
+  await p.click('#insp [data-wb-tool="move-term"]'); await p.waitForTimeout(100);
+  ok(await p.locator('#insp .wb-step').count() === 1, '点「移项」（第 2 项 +5）：步骤历史 1 行');
+  await p.fill('#insp [data-wb-field="by"]', '3');
+  await p.click('#insp [data-wb-tool="divide"]'); await p.waitForTimeout(100);
+  ok(await p.locator('#insp .wb-step').count() === 2, '点「两边同除」（除以 3）：步骤历史 2 行');
+  const solTxt = await p.locator('#insp .wb-sol').innerText().catch(() => '');
+  ok(/x = 5/.test(solTxt), '解行：' + solTxt);
+  ok(await p.evaluate((id) => UI.S.D[id].out.solved.data === true, wb.x), '工作台的「解出来了」输出为真');
+  await p.click('#insp [data-wb-undo="1"]'); await p.waitForTimeout(100);
+  ok(await p.locator('#insp .wb-step').count() === 1 && await p.locator('#insp .wb-sol').count() === 0, '撤销到第 1 步：只剩 1 行，解消失');
+  await p.fill('#insp [data-wb-field="by"]', '0');
+  await p.click('#insp [data-wb-tool="divide"]'); await p.waitForTimeout(100);
+  ok(/0/.test(await p.locator('#insp .wb-msg').innerText().catch(() => '')) && await p.locator('#insp .wb-step').count() === 1, '除以 0 被拒绝，并说明原因，步骤不变');
+  ok(await p.evaluate(() => Object.keys(UI.S.scene.entities).length === 4 && UI.S.scene.links.length === 3), '工作台的步骤不改台面（器材和连线数不变）');
   ok(errs.length === 0, '控制台 0 报错' + (errs.length ? '：' + errs[0] : ''));
   console.log('\n' + pass + ' 通过，' + fail + ' 失败'); await b.close(); process.exit(fail ? 1 : 0);
 })();

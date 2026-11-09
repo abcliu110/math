@@ -159,6 +159,31 @@
     openProblem(S.problem.id, m);
   }
 
+  // ---------- 式子工作台（任务 H 第 3b 步）：步骤只改工作台的状态（U.ExprBench.states），不改台面 ----------
+  function wbEqn(id) { const dd = S.D && S.D[id]; return dd ? U.ExprBench.eqnIn(dd.inp) : null; }
+  function wbStep(id, tool) {
+    const eq = wbEqn(id), dr = UI.Panels.wbDraft(id);
+    if (!eq) return;
+    const raw = (dr.ref || '').trim();
+    // 移项：序号从 1 数（左边的第几项）；标签照原样交给内核。两边同除/同乘不需要位置，只要数
+    let ref = null, args = {};
+    if (tool === 'move-term') ref = /^\d+$/.test(raw) ? +raw - 1 : (raw || null);
+    else if (tool === 'divide' || tool === 'multiply') args = { by: dr.by };
+    else ref = raw || [dr.side];   // 合并、去括号、约分：没写标签就作用在选的那一边上
+    const st = U.ExprBench.currentOf(id, eq);
+    const ns = U.Workbench.step(st, tool, ref, args);
+    if (ns.lastError) dr.msg = ns.lastError;
+    else { U.ExprBench.states[id] = { key: U.ExprBench.keyOf(eq), state: ns }; dr.msg = ''; dr.ref = ''; }
+    refresh();
+  }
+  function wbUndo(id, k) {
+    const eq = wbEqn(id); if (!eq) return;
+    const st = U.ExprBench.currentOf(id, eq);
+    U.ExprBench.states[id] = { key: U.ExprBench.keyOf(eq), state: U.Workbench.undo(st, k) };
+    UI.Panels.wbDraft(id).msg = '';
+    refresh();
+  }
+
   // ---------- 时钟 ----------
   function clockAct(a) { W.act(S.scene, a); recordSession(a); refresh(false); }
   let last = 0, acc = 0;
@@ -249,8 +274,11 @@
     $('#q2').addEventListener('input', () => UI.Panels.renderShelf());
     // 属性面板
     const insp = $('#insp');
+    // 式子工作台的输入框：只记草稿，不重画（免得输入框失去焦点）
+    insp.addEventListener('input', (e) => { if (e.target.dataset.wbField && S.sel) UI.Panels.wbDraft(S.sel)[e.target.dataset.wbField] = e.target.value; });
     insp.addEventListener('change', (e) => {
       const t = e.target, id = S.sel; if (!id) return;
+      if (t.dataset.wbField) { UI.Panels.wbDraft(id)[t.dataset.wbField] = t.value; return; }
       if (t.id === 'nm') { act({ t: 'rename', id, name: t.value }); return; }
       if (t.dataset.gridK !== undefined) {
         // 表格式编辑：把所有格子按行收回文字，整体写回属性
@@ -266,6 +294,8 @@
     });
     insp.addEventListener('click', (e) => {
       const t = e.target, id = S.sel;
+      const wb = t.closest && t.closest('[data-wb-tool],[data-wb-undo]');
+      if (wb) { if (wb.dataset.wbTool !== undefined) wbStep(id, wb.dataset.wbTool); else wbUndo(id, +wb.dataset.wbUndo); return; }
       if (t.dataset.gridDel !== undefined) {
         // 删除表格的一行（行号就是显示的行号，空行不在文字里）
         const cur = U.Table.gridRows(S.scene.entities[id].props[t.dataset.target]);
