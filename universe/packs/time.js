@@ -10,6 +10,7 @@
     id: 'time', version: 1,
     types: {
       clock: {
+        essence: ['E6'],
         label: '时钟', prefix: '钟', group: '时间与变化', grades: [1, 9],
         props: {
           every: { type: 'int', label: '几拍算一次', default: 1, min: 1, max: 100 },
@@ -21,7 +22,7 @@
         size: () => [150, 92],
         compute: (c) => {
           const k = Math.floor(c.n / c.props.every);
-          return { n: num(Q.fromNumber(k * c.props.scale + c.props.offset)), t: num(Q.fromNumber(Math.round(c.t * 1000) / 1000)) };
+          return { n: num(Q.fromNumber(k * c.props.scale + c.props.offset)), t: U.val('num', Q.fromNumber(Math.round(c.t * 1000) / 1000), { exact: false }) };
         },
         badge: (c) => (c.out.n ? '拍 ' + U.showVal(c.out.n) : ''),
         draw: (c) => {
@@ -31,6 +32,7 @@
       },
 
       memory: {
+        essence: ['E6'],
         label: '记忆器', prefix: '记', group: '时间与变化', grades: [3, 9], alias: ['寄存器', '递推', '迭代'],
         props: {
           init: { type: 'num', label: '起始值', default: 0, min: -9999, max: 9999, step: 1 },
@@ -57,6 +59,7 @@
       },
 
       dice: {
+        essence: ['E11'],
         label: '骰子', prefix: '骰', group: '统计与概率', grades: [3, 9], alias: ['随机', '概率'],
         props: {
           sides: { type: 'int', label: '几面', default: 6, min: 2, max: 20 },
@@ -86,6 +89,7 @@
       },
 
       hist: {
+        essence: ['E11', 'E7'],
         label: '直方图', prefix: '图', group: '统计与概率', grades: [3, 9], alias: ['频数', '分布', '统计'],
         props: {
           lo: { type: 'int', label: '最小值', default: 2, min: -50, max: 50 },

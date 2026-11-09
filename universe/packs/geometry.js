@@ -8,6 +8,7 @@
     id: 'geometry', version: 1,
     types: {
       fracbar: {
+        essence: ['E3'],
         label: '分数条', prefix: '条', group: '分数', grades: [3, 6], alias: ['分数', '比大小'],
         props: {
           parts: { type: 'int', label: '平均分成几份', default: 6, min: 1, max: 24 },
@@ -32,6 +33,7 @@
       },
 
       numline: {
+        essence: ['E1', 'E3'],
         label: '数轴', prefix: '轴', group: '数与运算', grades: [1, 9], alias: ['数线', '位置'],
         props: {
           lo: { type: 'num', label: '起点', default: 0, min: -100, max: 100, step: 1 },
@@ -63,6 +65,7 @@
       },
 
       rect: {
+        essence: ['E2', 'E3'],
         label: '长方形', prefix: '形', group: '图形', grades: [3, 6], alias: ['面积', '周长'],
         props: {
           w: { type: 'num', label: '长', default: 6, min: 0.5, max: 40, step: 0.5 },

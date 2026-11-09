@@ -12,6 +12,7 @@
     id: 'modclock', version: 1, needs: ['time'],
     types: {
       modclock: {
+        essence: ['E6', 'E5'],
         label: '同余钟', prefix: '钟', group: '数与运算', grades: [3, 8], alias: ['余数', '同余', '周期', '星期几', '个位数字', '循环', '最大公因数'],
         props: {
           m: { type: 'int', label: '钟面几格', default: 12, min: 2, max: 60 },

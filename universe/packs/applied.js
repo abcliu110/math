@@ -8,6 +8,7 @@
     id: 'applied', version: 1,
     types: {
       percent: {
+        essence: ['E3'],
         label: '百分数', prefix: '百', group: '数与运算', grades: [5, 6], alias: ['折扣', '打折', '增长率', '成数'],
         props: {
           mode: { type: 'choice', label: '求什么', default: 0, choices: ['甲是乙的百分之几', '乙的 甲% 是多少', '乙增加 甲%', '乙减少 甲%'] },
@@ -33,6 +34,7 @@
       },
 
       ratio: {
+        essence: ['E3', 'E12'],
         label: '比', prefix: '比', group: '数与运算', grades: [5, 6], alias: ['按比分配', '比例', '化简比'],
         props: {
           total: { type: 'num', label: '一共要分（0=不分）', default: 0, min: 0, max: 9999, step: 1 },
@@ -64,6 +66,7 @@
       },
 
       cross: {
+        essence: ['E4', 'E12'],
         label: '交点', prefix: '交', group: '函数', grades: [7, 9], alias: ['方程组', '二元一次方程组', '鸡兔同笼', '联立'],
         props: {
           range: { type: 'int', label: '画多大', default: 30, min: 2, max: 100 },
@@ -93,6 +96,7 @@
       },
 
       bag: {
+        essence: ['E11'],
         label: '摸球袋', prefix: '袋', group: '统计与概率', grades: [5, 9], alias: ['摸球', '概率', '有放回', '不放回'],
         props: {
           red: { type: 'int', label: '红球几个', default: 3, min: 0, max: 50 },

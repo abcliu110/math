@@ -13,6 +13,7 @@
     types: {
       // ---------------- 数字 ----------------
       num: {
+        essence: ['E3', 'E1'],
         label: '数字', prefix: '数', group: '分数', grades: [1, 9],
         props: {
           n: { type: 'int', label: '分子', default: 1, min: -999, max: 999 },
@@ -32,6 +33,7 @@
 
       // ---------------- 运算器 ----------------
       op: {
+        essence: ['E2'],
         label: '运算器', prefix: '算', group: '数与运算', grades: [1, 9], alias: ['加', '减', '乘', '除'],
         props: {
           op: { type: 'choice', label: '运算', default: 0, choices: OPS },
@@ -73,6 +75,7 @@
 
       // ---------------- 读数 ----------------
       meter: {
+        essence: ['E3'],
         label: '读数', prefix: '读', group: '数与运算', grades: [1, 9],
         props: {
           form: { type: 'choice', label: '写法', default: 0, choices: FORMS },
@@ -97,6 +100,7 @@
 
       // ---------------- 比较 ----------------
       compare: {
+        essence: ['E4'],
         label: '比较', prefix: '比', group: '关系', grades: [1, 9],
         props: {
           op: { type: 'choice', label: '关系', default: 0, choices: CMP },
@@ -127,6 +131,7 @@
 
       // ---------------- 天平 ----------------
       balance: {
+        essence: ['E4'],
         label: '天平', prefix: '平', group: '关系', grades: [1, 9], alias: ['方程', '等式'],
         props: {
           tol: { type: 'num', label: '允许差', default: 0, min: 0, step: 0.01 },
@@ -168,6 +173,7 @@
 
       // ---------------- 直线 ----------------
       line: {
+        essence: ['E8', 'E12'],
         label: '直线', prefix: '线', group: '函数', grades: [7, 9], alias: ['一次函数', 'y=kx+b'],
         props: {
           k: { type: 'num', label: '斜率 k', default: 1, min: -100, max: 100, step: 0.5 },
@@ -191,6 +197,7 @@
 
       // ---------------- 代入器 ----------------
       at: {
+        essence: ['E8'],
         label: '代入器', prefix: '代', group: '函数', grades: [7, 9], alias: ['求函数值'],
         lint: { minProps: 1, why: '代入器只做一件事：把 x 代进直线求 y' },
         props: { x: { type: 'num', label: 'x', default: 0, step: 1 } },

@@ -3,7 +3,7 @@
   'use strict';
   const U = G.U, mk = U.mkScene, P = [];
   P.push({
-    id: 'triangle-right', title: '一个角 35°，要让三角形是直角三角形', grade: 7, domain: '图形', points: ['三角形内角和', '直角三角形'],
+    id: 'triangle-right', essence: ['E5'], title: '一个角 35°，要让三角形是直角三角形', grade: 7, domain: '图形', points: ['三角形内角和', '直角三角形'],
     alias: ['内角和'], hook: '角 A 是 35°。把角 B 调一调，让角 C 变成 90°。先猜 B 是多少。',
     shelf: ['angles', 'meter', 'compare'],
     build: mk({ ents: [{ type: 'angles', x: 120, y: 80, role: 't', props: { A: 35, B: 60 } }] }),
@@ -16,7 +16,7 @@
     why: '三角形内角和是 180°。C = 180 − 35 − B = 90，所以 B = 55°。', ref: ['angles|0'],
   });
   P.push({
-    id: 'ineq-min-int', title: '2x + 1 > 7，最小的整数 x 是几？', grade: 8, domain: '代数', points: ['一元一次不等式', '解集'],
+    id: 'ineq-min-int', essence: ['E4', 'E8'], title: '2x + 1 > 7，最小的整数 x 是几？', grade: 8, domain: '代数', points: ['一元一次不等式', '解集'],
     alias: ['不等式'], hook: '先把不等式器材调成 2x + 1 > 7。它能试任何 x。找出分界点，再找最小的整数解——注意“>”不包括分界点本身。',
     shelf: ['ineq', 'meter', 'compare'],
     build: mk({ ents: [{ type: 'ineq', x: 120, y: 80, role: 'q', props: { a: 1, b: 0, dir: 0, c: 0, x: 0 } }] }),

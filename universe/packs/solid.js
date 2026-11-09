@@ -8,6 +8,7 @@
     id: 'solid', version: 1,
     types: {
       polygon: {
+        essence: ['E2', 'E5'],
         label: '正多边形', prefix: '边', group: '图形', grades: [4, 9], alias: ['内角和', '对角线', '多边形', '正六边形'],
         props: {
           n: { type: 'int', label: '几条边', default: 5, min: 3, max: 20 },
@@ -33,6 +34,7 @@
       },
 
       cuboid: {
+        essence: ['E2', 'E3'],
         label: '长方体', prefix: '体', group: '图形', grades: [5, 6], alias: ['体积', '表面积', '正方体', '立方体'],
         props: {
           l: { type: 'num', label: '长', default: 4, min: 0.5, max: 30, step: 0.5 },
@@ -57,6 +59,7 @@
       },
 
       data: {
+        essence: ['E11'],
         label: '数据表', prefix: '据', group: '统计与概率', grades: [3, 9], alias: ['平均数', '中位数', '众数', '极差', '一组数据'],
         props: {
           list: { type: 'text', label: '一组数（逗号隔开）', default: '3, 5, 5, 6, 9' },

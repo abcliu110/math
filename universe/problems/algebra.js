@@ -4,7 +4,7 @@
   const U = G.U, mk = U.mkScene, P = [];
   const vb = (left, right) => mk({ ents: [{ type: 'variable', x: 80, y: 80, role: 'v', props: { left, right } }] });
   P.push({
-    id: 'square-expand', title: '(x+1)² 展开，是 x²+几x+1？', grade: 7, domain: '关系', points: ['完全平方公式', '恒等式'],
+    id: 'square-expand', essence: ['E8'], title: '(x+1)² 展开，是 x²+几x+1？', grade: 7, domain: '关系', points: ['完全平方公式', '恒等式'],
     alias: ['乘法公式'], hook: '左边是 (x+1)^2，右边先写 x^2+1（很多人会这样“展开”）。看看哪些 x 让两边相等，再改右边，让所有 x 都相等（全绿）。',
     shelf: ['variable', 'meter', 'compare'],
     build: vb('(x+1)^2', 'x'),
@@ -16,7 +16,7 @@
     traps: [], why: '(x+1)² = x²+2x+1 对每个 x 都成立，这叫恒等式。x²+1 只在 x=0 时相等，那是方程。中间的 2x 是 x·1 + 1·x 两块长条。', ref: ['variable|0'],
   });
   P.push({
-    id: 'diff-squares', title: 'x²−1 能拆成两个括号相乘吗？', grade: 8, domain: '关系', points: ['平方差公式', '因式分解'],
+    id: 'diff-squares', essence: ['E8', 'E2'], title: 'x²−1 能拆成两个括号相乘吗？', grade: 8, domain: '关系', points: ['平方差公式', '因式分解'],
     alias: ['乘法公式', '因式分解'], hook: '左边 x^2-1，右边先写 (x-1)*(x-1)。改右边，让所有 x 都相等。',
     shelf: ['variable', 'meter', 'compare'],
     build: vb('x^2-1', '(x-1)*(x-1)'),
@@ -27,7 +27,7 @@
     traps: [], why: '(x−1)(x+1) = x²+x−x−1 = x²−1，中间的 +x 和 −x 抵消。这就是平方差公式。', ref: ['variable|0'],
   });
   P.push({
-    id: 'equation-vs-identity', title: '2x+1 = 7：是恒等，还是只有一个 x？', grade: 6, domain: '关系', points: ['方程的解', '字母表示数'],
+    id: 'equation-vs-identity', essence: ['E8', 'E4'], title: '2x+1 = 7：是恒等，还是只有一个 x？', grade: 6, domain: '关系', points: ['方程的解', '字母表示数'],
     alias: ['方程'], hook: '把左边设成 2*x+1，右边设成 7。哪个 x 让两边相等？它是一个“解”，不是“所有 x”。',
     shelf: ['variable', 'meter', 'compare'],
     build: vb('x', 'x'),

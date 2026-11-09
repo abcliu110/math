@@ -51,6 +51,7 @@
     id: 'conjecture', version: 1,
     types: {
       conjecture: {
+        essence: ['E9', 'E8'],
         label: '猜想与反例', prefix: '猜', group: '关系', grades: [4, 9], alias: ['猜想', '反例', '规律', '找规律', '证明'],
         props: {
           law: { type: 'choice', label: '要检验的', default: 0, choices: LAWS.map((l) => l.name) },

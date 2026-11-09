@@ -34,6 +34,7 @@
     id: 'variable', version: 1,
     types: {
       variable: {
+        essence: ['E8', 'E4'],
         label: '变量盒', prefix: '式', group: '关系', grades: [5, 9], alias: ['字母表示数', '恒等式', '方程', '代数', '整式', '乘法公式', '完全平方'],
         props: {
           left: { type: 'text', label: '左边（用 x）', default: 'x+1' },

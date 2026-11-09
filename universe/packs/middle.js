@@ -10,6 +10,7 @@
     id: 'middle', version: 1,
     types: {
       linsolve: {
+        essence: ['E4', 'E8'],
         label: '解方程', prefix: '解', group: '关系', grades: [6, 8], alias: ['一元一次方程', 'ax+b=c', '移项'],
         props: {
           a: { type: 'num', label: 'x 前面的数 a', default: 1, min: -99, max: 99, step: 1 },
@@ -31,6 +32,7 @@
       },
 
       tri: {
+        essence: ['E2', 'E5'],
         label: '三角形', prefix: '角', group: '图形', grades: [4, 9], alias: ['三边关系', '勾股', '周长', '面积'],
         props: {
           a: { type: 'num', label: '边 a', default: 3, min: 0.5, max: 50, step: 0.5 },
@@ -65,6 +67,7 @@
       },
 
       circle: {
+        essence: ['E7', 'E3'],
         label: '圆', prefix: '圆', group: '图形', grades: [6, 9], alias: ['圆周率', '周长', '面积', 'π'],
         props: {
           r: { type: 'num', label: '半径', default: 5, min: 0.5, max: 50, step: 0.5 },
@@ -86,6 +89,7 @@
       },
 
       quad: {
+        essence: ['E10', 'E8'],
         label: '抛物线', prefix: '抛', group: '函数', grades: [8, 9], alias: ['二次函数', '顶点', '判别式', 'y=ax²+bx+c'],
         props: {
           a: { type: 'num', label: 'a（x² 前）', default: 1, min: -10, max: 10, step: 1 },
@@ -116,6 +120,7 @@
       },
 
       coin: {
+        essence: ['E11'],
         label: '硬币', prefix: '币', group: '统计与概率', grades: [4, 9], alias: ['正反面', '概率', '随机'],
         props: {
           p: { type: 'num', label: '正面概率', default: 0.5, min: 0, max: 1, step: 0.05 },
@@ -141,6 +146,7 @@
       },
 
       seq: {
+        essence: ['E6'],
         label: '数列', prefix: '列', group: '时间与变化', grades: [4, 9], alias: ['等差数列', '等比数列', '求和', '规律'],
         props: {
           first: { type: 'num', label: '第一项', default: 1, min: -999, max: 999, step: 1 },
