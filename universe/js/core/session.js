@@ -12,7 +12,13 @@
       return { pid: problem.id, mode, startScene: JSON.parse(JSON.stringify(scene)), acts: [], startedAt: now === undefined ? Date.now() : now, usedMs: 0, limitSec: mode === 'exam' ? U.Variants.examMinutes(problem) * 60 : null };
     },
     // 记录一次操作（intent 是 W.act 的参数，或 {tick:true} 表示走一拍）
-    record(session, intent) { session.acts.push(intent); return session; },
+    // 连续的走一拍合并成一条 {tick:true, n}，存档不会越存越大
+    record(session, intent) {
+      const last = session.acts[session.acts.length - 1];
+      if (intent.tick && last && last.tick) last.n = (last.n || 1) + 1;
+      else session.acts.push(intent.tick ? { tick: true, n: 1 } : JSON.parse(JSON.stringify(intent)));
+      return session;
+    },
     // 考试剩余秒数（limitSec 为空表示没有时限）
     remaining(session, now) {
       if (session.limitSec === null) return null;
@@ -26,11 +32,13 @@
       return { session, event: { type: 'resume', pid: session.pid, data: { remaining: U.Session.remaining(session, t) } } };
     },
     // 重放：从开场快照出发，按顺序执行 acts，得到当前台面
-    replay(session) {
+    // onStep(sc, a)：每条生效的记录执行完后调用一次（恢复时用来重新判分）
+    replay(session, onStep) {
       const sc = JSON.parse(JSON.stringify(session.startScene));
       for (const a of session.acts) {
-        if (a.tick) { U.World.tick(sc); continue; }
-        const r = U.World.act(sc, a); if (!r.ok) continue; // 被拒绝的操作不改变台面
+        if (a.tick) { for (let i = 0; i < (a.n || 1); i++) U.World.tick(sc); }
+        else { const r = U.World.act(sc, a); if (!r.ok) continue; } // 被拒绝的操作不改变台面
+        if (onStep) onStep(sc, a);
       }
       return sc;
     },

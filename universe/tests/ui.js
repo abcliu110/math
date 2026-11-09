@@ -207,6 +207,50 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   await p.click('#insp .rsyms button[data-ins="是质数"]'); await p.waitForTimeout(120);
   ok(await p.evaluate(() => UI.S.scene.entities[window.__rs].props.custom === '2n+1是质数'), '点符号按钮，文字插入到规则里');
   ok(/看懂了/.test(await p.locator('#insp .rhint').innerText()), '写对以后显示“看懂了”');
+  console.log('分享台面');
+  await p.evaluate(() => { UI.Panels.closeDialog(); UI.App.openFree(); });
+  await p.click('#menubtn'); await p.click('[data-m="share"]'); await p.waitForTimeout(100);
+  const sh = await p.locator('#sharetext').inputValue().catch(() => '');
+  ok(sh.length > 0 && /^[A-Za-z0-9_-]+$/.test(sh), '菜单「分享台面」给出一段分享文字');
+  const cnt = await p.evaluate((t) => Object.keys(U.Share.decode(t).entities).length, sh);
+  ok(cnt === (await p.evaluate(() => Object.keys(UI.S.scene.entities).length)), '分享文字解开后器材数一致：' + cnt);
+  await p.click('#dlg-close');
+
+  console.log('我来出题');
+  await p.evaluate(() => { UI.App.act({ t: 'clear' }); UI.App.act({ t: 'add', type: 'num', x: 100, y: 100, props: { n: 5 } }); });
+  await p.click('#menubtn'); await p.click('[data-m="student"]'); await p.waitForTimeout(100);
+  await p.fill('#st-desc', '用一张数字卡搭出 5'); await p.fill('#st-value', '5'); await p.click('#st-check'); await p.waitForTimeout(80);
+  ok(/自检通过/.test(await p.locator('#st-msg').innerText()), '自检：台面满足目标、空台面不满足 → 通过');
+  await p.fill('#st-value', '7'); await p.click('#st-check'); await p.waitForTimeout(80);
+  ok(/自检没通过/.test(await p.locator('#st-msg').innerText()), '目标改成 7，台面不满足 → 说明原因');
+  await p.evaluate(() => UI.Panels.closeDialog());
+
+  console.log('班级看板');
+  const codes = await p.evaluate(() => {
+    const pid = 'frac-add-unlike', m = U.problemById(pid).milestones[0].id;
+    const mk = (done) => U.Share.resultCode(U.Share.resultFile('a1', [pid], [{ type: 'finish', pid, ts: 1, data: { items: [{ id: m, done }], traps: [] } }], '甲'));
+    return mk(true) + '\n' + mk(false) + '\nnot-a-code';
+  });
+  await p.click('#menubtn'); await p.click('[data-m="board"]'); await p.waitForTimeout(100);
+  await p.fill('#cb-codes', codes); await p.click('#cb-go'); await p.waitForTimeout(100);
+  const board = await p.locator('#cb-out').innerText();
+  ok(/共 2 份结果/.test(board) && /第 3 行/.test(board) && /50%/.test(board), '看板：2 份结果，第 3 行跳过，达成率 50%：' + board.replace(/\s+/g, ' ').slice(0, 60));
+  await p.evaluate(() => UI.Panels.closeDialog());
+
+  console.log('断点续做');
+  await p.evaluate(() => { UI.Panels.closeDialog(); UI.App.openProblem('frac-add-unlike', 'practice'); });
+  await p.waitForTimeout(150);
+  const nid = await p.evaluate(() => { const id = Object.keys(UI.S.scene.entities).find((k) => UI.S.scene.entities[k].type === 'num'); UI.App.act({ t: 'set', id, k: 'n', v: 9 }); return id; });
+  await p.waitForTimeout(2300); await p.reload(); await p.waitForTimeout(300);
+  ok(await p.locator('#dlg.open').count() === 1 && /接着做？/.test(await p.locator('#dlg .box').innerText()), '刷新后出现「接着做？」对话框');
+  await p.click('#dlg-resume'); await p.waitForTimeout(200);
+  const back = await p.evaluate((id) => ({ pid: UI.S.problem && UI.S.problem.id, mode: UI.S.mode, n: UI.S.scene.entities[id] && UI.S.scene.entities[id].props.n }), nid);
+  ok(back.pid === 'frac-add-unlike' && back.mode === 'practice' && back.n === 9, '接着做：题目、模式和改过的数都回来了：' + JSON.stringify(back));
+  await p.evaluate(() => { UI.App.act({ t: 'set', id: Object.keys(UI.S.scene.entities).find((k) => UI.S.scene.entities[k].type === 'num'), k: 'n', v: 4 }); });
+  await p.waitForTimeout(2300); await p.reload(); await p.waitForTimeout(300);
+  await p.click('#dlg-fresh'); await p.waitForTimeout(100);
+  const fresh = await p.evaluate(() => ({ mode: UI.S.mode, saved: localStorage.getItem('universe-session-v1') || '' }));
+  ok(fresh.mode === 'free' && fresh.saved === '', '重新开始：回到自由探究，存档清掉：' + JSON.stringify(fresh));
   ok(errs.length === 0, '控制台 0 报错' + (errs.length ? '：' + errs[0] : ''));
   console.log('\n' + pass + ' 通过，' + fail + ' 失败'); await b.close(); process.exit(fail ? 1 : 0);
 })();

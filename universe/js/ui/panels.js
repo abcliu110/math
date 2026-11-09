@@ -265,5 +265,47 @@
     });
   }
 
-  UI.Panels = { renderTop, renderLeft, renderShelf, renderInsp, renderClock, dialog, closeDialog, reportHtml, inquiryHtml, wrongDialog, whyDialog, parentDialog, improveDialog, healthDialog, healthOut, reportDialog, authorDialog, initShelfDrag, renderAll() { renderTop(); renderLeft(); renderShelf(); renderInsp(); renderClock(); } };
+  // 分享台面：把台面编码成一段文字（超过 8 KB 就只能存文件）
+  function shareDialog() {
+    const enc = U.Share.encode(UI.S.scene);
+    if (enc.mode === 'file') { dialog('<h3>分享台面</h3><p>这个台面太大，放不进一段文字。请用菜单里的「保存台面到文件」。</p><div class="btnrow"><button class="btn" id="dlg-close">知道了</button></div>'); return; }
+    dialog('<h3>分享台面</h3><p style="color:var(--txt3);margin-top:0">复制下面这段文字，发给同学或老师。</p><textarea id="sharetext" readonly style="width:100%;height:120px;word-break:break-all">' + esc(enc.text) + '</textarea>' +
+      '<div class="btnrow"><button class="btn pri" id="dlg-copy">复制</button><button class="btn" id="dlg-close">关闭</button></div>');
+  }
+
+  // 我来出题：台面就是答案，学生写题目描述和一条目标，系统做出题自检
+  function studentDialog() {
+    dialog('<h3>我来出题</h3><p style="color:var(--txt2);margin-top:0">先在台面上搭出你的答案，再写一句题目，并说明同学要搭到什么样子。自检会看：你的台面满足目标，空台面不满足。</p>' +
+      '<textarea id="st-desc" placeholder="题目描述，例如：用两张数字卡凑出 5" style="width:100%;height:60px"></textarea>' +
+      '<div class="btnrow"><label>器材 <input id="st-type" value="num" style="width:90px"></label><label>端口 <input id="st-port" value="v" style="width:50px"></label>' +
+      '<select id="st-op">' + ['=', '>', '<', '>=', '<=', '!='].map((o) => '<option>' + o + '</option>').join('') + '</select>' +
+      '<input id="st-value" placeholder="5" style="width:80px"></div>' +
+      '<div id="st-msg" style="display:none;margin:8px 0"></div>' +
+      '<div class="btnrow"><button class="btn pri" id="st-check">自检</button><button class="btn" id="dlg-close">关闭</button></div>');
+  }
+
+  // 班级看板（老师）：粘贴学生的结果码，一行一个，按题汇总达成率和常踩的坑
+  function boardDialog() {
+    dialog('<h3>班级看板</h3><p style="color:var(--txt3);margin-top:0">把学生交回的结果码粘贴进来，一行一个。</p>' +
+      '<textarea id="cb-codes" placeholder="每行一个结果码" style="width:100%;height:110px;word-break:break-all"></textarea>' +
+      '<div class="btnrow"><button class="btn pri" id="cb-go">汇总</button><button class="btn" id="dlg-close">关闭</button></div>' +
+      '<div id="cb-out"></div>');
+  }
+  function boardOut(text) {
+    const lines = String(text).split('\n').map((s) => s.trim()).filter(Boolean), files = [], bad = [];
+    if (!lines.length) { $('#cb-out').innerHTML = '<div class="empty">先粘贴结果码。</div>'; return; }
+    lines.forEach((l, i) => { try { files.push(U.Share.parseResult(l)); } catch (e) { bad.push(i + 1); } });
+    let h = '<p>共 ' + files.length + ' 份结果' + (bad.length ? '；第 ' + bad.join('、') + ' 行看不懂，已跳过' : '') + '</p>';
+    const sum = U.Share.classSummary(files, U.problems), ids = Object.keys(sum);
+    if (!ids.length) h += '<div class="empty">这些结果里没有做过的题。</div>';
+    ids.forEach((pid) => {
+      const p = U.problemById(pid), s = sum[pid];
+      h += '<div class="pcard"><b>' + esc(p.title) + '</b>（' + s.students + ' 人做过）' + p.milestones.map((m) => '<div>' + esc(m.say) + '：' + Math.round(s.rate[m.id] * 100) + '%</div>').join('');
+      const tr = Object.keys(s.traps); if (tr.length) h += '<div style="color:var(--txt3)">常踩的坑：' + tr.map((t) => esc(String(t)) + ' × ' + s.traps[t]).join('，') + '</div>';
+      h += '</div>';
+    });
+    $('#cb-out').innerHTML = h;
+  }
+
+  UI.Panels = { renderTop, renderLeft, renderShelf, renderInsp, renderClock, shareDialog, studentDialog, boardDialog, boardOut, dialog, closeDialog, reportHtml, inquiryHtml, wrongDialog, whyDialog, parentDialog, improveDialog, healthDialog, healthOut, reportDialog, authorDialog, initShelfDrag, renderAll() { renderTop(); renderLeft(); renderShelf(); renderInsp(); renderClock(); } };
 })(window);

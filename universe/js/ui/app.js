@@ -3,7 +3,7 @@
   'use strict';
   const U = G.U, UI = (G.UI = G.UI || {}), W = U.World, J = U.Judge, Ev = U.Events;
   const $ = (s) => document.querySelector(s);
-  const FREE_KEY = 'universe-free-v1', NOTE_KEY = 'universe-notes-v1';
+  const FREE_KEY = 'universe-free-v1', NOTE_KEY = 'universe-notes-v1', SESS_KEY = 'universe-session-v1';
   const lsGet = (k) => { try { return G.localStorage.getItem(k); } catch (e) { return null; } };
   const lsSet = (k, v) => { try { G.localStorage.setItem(k, v); } catch (e) { /* 存不下就算了 */ } };
 
@@ -48,9 +48,47 @@
     } else if (res.newly.length || res.traps.length) { /* 考试：只记，不提示 */ res.traps.forEach((t) => Ev.push('trap', { id: t.id })); }
   }
 
+  // ---------- 断点续做（U.Session）----------
+  // 未做完的题存进 localStorage；刷新或关页后，开页时问「接着做 / 重新开始」
+  const unfinished = () => !!(S.session && S.run && !S.run.reported && !S.run.submitted);
+  function saveSession() {
+    if (!unfinished()) return;
+    S.session.pred = { done: !!S.run.pred_done, v: S.run.pred };
+    lsSet(SESS_KEY, JSON.stringify(S.session));
+  }
+  function clearSession() { S.session = null; lsSet(SESS_KEY, ''); }
+  function loadSession() {
+    try { const o = JSON.parse(lsGet(SESS_KEY) || 'null'); return o && o.pid && o.startScene && U.problemById(o.pid) ? o : null; } catch (e) { return null; }
+  }
+  // 改动了整张台面（撤销、重做、载入文件）：之后的重放从这个台面开始
+  function rebaseSession() { if (S.session) { S.session.startScene = JSON.parse(snap()); S.session.acts = []; } }
+  function recordSession(a, n) { if (S.session) for (let i = 0; i < (n || 1); i++) U.Session.record(S.session, a); }
+  function offerResume() {
+    const sv = loadSession(); if (!sv) return;
+    const p = U.problemById(sv.pid);
+    UI.Panels.dialog('<h3>接着做？</h3><p>上次「' + U.kit.esc(p.title) + '」（' + (sv.mode === 'exam' ? '考试' : '练习') + '）还没做完。</p>' +
+      '<div class="btnrow"><button class="btn pri" id="dlg-resume">接着做</button><button class="btn" id="dlg-fresh">重新开始</button></div>');
+  }
+  function resumeSession() {
+    const sv = loadSession(); if (!sv) return;
+    const p = U.problemById(sv.pid), run = J.start(p, sv.mode);
+    if (!p.predict) run.pred_done = true;
+    if (sv.pred && sv.pred.done) { run.pred_done = true; if (sv.pred.v !== undefined) run.pred = sv.pred.v; }
+    let sc;
+    try { sc = U.Session.replay(sv, (cur) => { J.check(p, run, cur, W.evaluate(cur)); }); } catch (e) { clearSession(); say('上次的台面读不出来，已重新开始', 'warn', 3000); return; }
+    if (S.mode === 'free') S.freeScene = snap();
+    const r = U.Session.resume(sv);
+    S.problem = p; S.mode = sv.mode; S.run = run; S.session = sv; S.scene = sc;
+    S.undo = []; S.redo = []; S.sel = null; S.selLink = null; S.inspOpen = false; S.tab = 'steps'; S.glow = [];
+    Ev.ctx = { pid: p.id, mode: S.mode }; Ev.push('resume', r.event.data);
+    S.D = W.evaluate(S.scene); UI.Stage.fit(); S.glow = glowOf();
+    refresh(); UI.Panels.renderShelf();
+    say('接着做「' + p.title + '」', 'good', 3000);
+  }
+
   function finish() {
     const rep = J.report(S.problem, S.run, S.scene, S.D);
-    Ev.push('finish', rep); S.scene.clock.running = false;
+    Ev.push('finish', rep); S.scene.clock.running = false; clearSession();
     setTimeout(() => { UI.Panels.dialog(UI.Panels.reportHtml(rep, S.problem, 'practice')); UI.Panels.renderLeft(); }, 700);
   }
 
@@ -63,7 +101,7 @@
     const before = snap();
     const r = W.act(S.scene, a);
     if (!r.ok) { say(r.why, 'bad', 3800); if (S.run) S.run.errors++; UI.Stage.render(); return r; }
-    pushUndo(before);
+    pushUndo(before); recordSession(a);
     if (o.select && r.id) { S.sel = r.id; S.selLink = null; }
     if (a.t === 'del' && S.sel === a.id) S.sel = null;
     if (S.run) { S.run.ops++; S.run.armed = true; }
@@ -83,7 +121,7 @@
   }
   function afterMove() { saveFree(); UI.Panels.renderTop(); }
 
-  function restore(str) { S.scene = W.load(str); S.sel = null; S.selLink = null; refresh(); }
+  function restore(str) { S.scene = W.load(str); S.sel = null; S.selLink = null; rebaseSession(); refresh(); }
   function undo() { if (!S.undo.length) return; S.redo.push(snap()); restore(S.undo.pop()); saveFree(); }
   function redo() { if (!S.redo.length) return; S.undo.push(snap()); restore(S.redo.pop()); saveFree(); }
 
@@ -95,6 +133,7 @@
     UI.Panels.closeDialog();
     if (S.mode === 'free') S.freeScene = snap();
     S.problem = p; S.mode = mode || 'practice'; S.scene = p.build(); S.run = J.start(p, S.mode);
+    S.session = U.Session.start(p, S.mode, S.scene);
     S.undo = []; S.redo = []; S.sel = null; S.selLink = null; S.inspOpen = false; S.tab = 'steps'; S.glow = [];
     if (!p.predict) S.run.pred_done = true;
     Ev.ctx = { pid: p.id, mode: S.mode }; Ev.push('start', {});
@@ -103,7 +142,7 @@
     say(S.mode === 'exam' ? '考试：没有提示，搭好后点「交卷」' : '练习：跟着左边的步骤做，下一步要的器材会发光', '', 4200);
   }
   function openFree() {
-    S.mode = 'free'; S.problem = null; S.run = null; Ev.ctx = {};
+    S.mode = 'free'; S.problem = null; S.run = null; S.session = null; Ev.ctx = {};
     let sc = null; try { sc = S.freeScene ? JSON.parse(S.freeScene) : JSON.parse(lsGet(FREE_KEY)); } catch (e) { sc = null; }
     try { S.scene = sc ? W.load(sc) : W.blank(); } catch (e) { S.scene = W.blank(); }
     S.undo = []; S.redo = []; S.sel = null; S.selLink = null; S.glow = []; S.tab = 'lab';
@@ -118,7 +157,7 @@
   }
 
   // ---------- 时钟 ----------
-  function clockAct(a) { W.act(S.scene, a); refresh(false); }
+  function clockAct(a) { W.act(S.scene, a); recordSession(a); refresh(false); }
   let last = 0, acc = 0;
   function frame(ts) {
     const ck = S.scene.clock;
@@ -126,17 +165,17 @@
     if (ck.running) {
       acc += dt * ck.rate * ck.hz; const n = Math.min(Math.floor(acc), 60); acc -= Math.floor(acc);
       for (let i = 0; i < n; i++) { S.D = W.tick(S.scene); judgeNow(); }
-      if (n) { UI.Stage.render(); UI.Panels.renderClock(); }
+      if (n) { recordSession({ tick: true }, n); UI.Stage.render(); UI.Panels.renderClock(); }
     }
     G.requestAnimationFrame(frame);
   }
-  function stepOnce() { S.D = W.tick(S.scene); judgeNow(); UI.Stage.render(); UI.Panels.renderClock(); }
+  function stepOnce() { S.D = W.tick(S.scene); judgeNow(); recordSession({ tick: true }); UI.Stage.render(); UI.Panels.renderClock(); }
 
   // ---------- 文件 ----------
   function download(name, text) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'application/json' })); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); }
   function loadFile() {
     const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json,application/json';
-    inp.onchange = () => { const f = inp.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { try { pushUndo(); S.scene = W.load(r.result); S.sel = null; refresh(); UI.Stage.fit(); UI.Stage.render(); say('台面已载入', 'good'); } catch (e) { say('这个文件不是数学小宇宙的台面：' + e.message, 'bad', 4000); } }; r.readAsText(f); };
+    inp.onchange = () => { const f = inp.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { try { pushUndo(); S.scene = W.load(r.result); S.sel = null; rebaseSession(); refresh(); UI.Stage.fit(); UI.Stage.render(); say('台面已载入', 'good'); } catch (e) { say('这个文件不是数学小宇宙的台面：' + e.message, 'bad', 4000); } }; r.readAsText(f); };
     inp.click();
   }
 
@@ -153,6 +192,9 @@
       const m = e.target.closest('button'); if (!m) return;
       if (m.dataset.m === 'save') download('台面-' + new Date().toISOString().slice(0, 10) + '.json', W.save(S.scene));
       if (m.dataset.m === 'load') loadFile();
+      if (m.dataset.m === 'share') UI.Panels.shareDialog();
+      if (m.dataset.m === 'student') UI.Panels.studentDialog();
+      if (m.dataset.m === 'board') UI.Panels.boardDialog();
       if (m.dataset.m === 'author') UI.Panels.authorDialog();
       if (m.dataset.m === 'myexport') download('我的题.json', U.Author.exportJson());
       if (m.dataset.m === 'myimport') { const i = document.createElement('input'); i.type = 'file'; i.accept = '.json'; i.onchange = () => { const r = new FileReader(); r.onload = () => { try { const n = U.Author.importJson(r.result); UI.Panels.renderLeft(); say('导入了 ' + n + ' 道题，在「实验库 → 我的题」里', 'good'); } catch (e) { say('导入失败：' + e.message, 'bad', 4000); } }; r.readAsText(i.files[0]); }; i.click(); }
@@ -243,7 +285,7 @@
     };
     $('#submit').onclick = () => {
       if (!S.run || S.run.submitted) return;
-      S.run.submitted = true; S.run.finished = true;
+      S.run.submitted = true; S.run.finished = true; clearSession();
       const rep = J.report(S.problem, S.run, S.scene, S.D); Ev.push('submit', rep);
       UI.Panels.dialog(UI.Panels.reportHtml(rep, S.problem, 'exam')); UI.Panels.renderTop();
     };
@@ -267,6 +309,26 @@
         return;
       }
       if (t.id === 'hp-go') { UI.Panels.healthOut((document.getElementById('hp-point') || {}).value || ''); return; }
+      if (t.id === 'cb-go') { UI.Panels.boardOut($('#cb-codes').value); return; }
+      if (t.id === 'st-check') {
+        const msg = $('#st-msg'), show = (w) => { msg.textContent = w; msg.style.display = 'block'; };
+        const desc = $('#st-desc').value.trim(), type = $('#st-type').value.trim(), val = $('#st-value').value.trim();
+        if (!desc) return show('先写一句题目描述');
+        if (!U.types[type]) return show('没有这个器材：' + type + '（试试 num：数字卡）');
+        try { U.Q.parse(val); } catch (e) { return show('目标数值写不对：只能是整数、小数或 3/4 这样的分数'); }
+        const goal = { type, port: $('#st-port').value.trim(), op: $('#st-op').value, value: val };
+        let r; try { r = U.Share.selfCheck([goal], S.scene); } catch (e) { return show('自检没跑通：' + e.message); }
+        return show(r.ok ? '自检通过：台面满足目标，空台面不满足。' : '自检没通过：' + r.why);
+      }
+      if (t.id === 'dlg-copy') {
+        const ta = $('#sharetext'); ta.select();
+        const done = () => say('已复制到剪贴板', 'good', 1800);
+        const fallback = () => { try { document.execCommand('copy') ? done() : say('复制不了，请手动选中文字复制', 'warn', 3000); } catch (e) { say('复制不了，请手动选中文字复制', 'warn', 3000); } };
+        if (G.navigator && G.navigator.clipboard) G.navigator.clipboard.writeText(ta.value).then(done, fallback); else fallback();
+        return;
+      }
+      if (t.id === 'dlg-resume') { UI.Panels.closeDialog(); resumeSession(); return; }
+      if (t.id === 'dlg-fresh') { UI.Panels.closeDialog(); clearSession(); say('已重新开始，上次没做完的题已放下', '', 2400); return; }
       if (t.id === 'dlg-delout' || t.id === 'dlg-delall') {
         const id = pendingDel; pendingDel = null; UI.Panels.closeDialog();
         if (id && S.scene.entities[id]) { S.sel = null; act({ t: 'del', id, keep: t.id === 'dlg-delall' ? 'all' : 'out' }); }
@@ -294,6 +356,8 @@
   function start() {
     Ev.load(); U.Author.loadAll(); UI.Stage.init(); UI.Panels.initShelfDrag(); bind(); UI.Panels.renderShelf();
     openFree(); G.requestAnimationFrame(frame);
+    setInterval(saveSession, 2000); G.addEventListener('pagehide', saveSession);
+    offerResume();
   }
   UI.App = { act, snapshot, afterMove, removeEntity, openProblem, openFree, setMode, say, undo, redo, stepOnce, refresh };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();

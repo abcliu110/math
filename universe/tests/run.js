@@ -427,6 +427,19 @@ t('重放：开场快照 + 操作序列，结果与直接操作一致；被拒�
   const re = U.Session.replay(sess);
   eq(re.entities[a].props.n, 5); eq(re.links.length, 0);
 });
+t('断点续做：存成 JSON 读回后重放一致（含操作新建的器材）；连续走拍合并成一条', () => {
+  const live = W.blank(); W.add(live, 'num', 0, 0, { n: 2 });
+  const sess = U.Session.start({ id: 'x' }, 'practice', live, 0);
+  const k = W.act(live, { t: 'add', type: 'num', x: 0, y: 0, props: { n: 4 } });
+  U.Session.record(sess, { t: 'add', type: 'num', x: 0, y: 0, props: { n: 4 } });
+  W.tick(live); W.tick(live); U.Session.record(sess, { tick: true }); U.Session.record(sess, { tick: true });
+  W.act(live, { t: 'set', id: k.id, k: 'n', v: 7 }); U.Session.record(sess, { t: 'set', id: k.id, k: 'n', v: 7 });
+  eq(sess.acts.length, 3, '两次走拍应合并');
+  const back = JSON.parse(JSON.stringify(sess)); let steps = 0;
+  const re = U.Session.replay(back, () => { steps++; });
+  eq(steps, 3); eq(re.entities[k.id].props.n, 7);
+  eq(JSON.stringify(re.entities), JSON.stringify(live.entities), '重放结果应和直接操作一致');
+});
 t('考试剩余时间：刷新后从剩余时间继续，记 resume 事件', () => {
   const sess = U.Session.start({ id: 'x', milestones: [1, 2, 3] }, 'exam', W.blank(), 0);
   eq(sess.limitSec, 6 * 60);
@@ -475,6 +488,8 @@ t('作业码：往返一致；结果文件按班汇总达成率', () => {
   const f2 = U.Share.resultFile(a.id, ['p1'], [{ type: 'finish', pid: 'p1', ts: 1, data: { items: [{ id: 'm1', done: false }], traps: ['T'] } }], '乙');
   const sum = U.Share.classSummary([f1, f2], probs);
   eq(sum.p1.students, 2); eq(sum.p1.rate.m1, 0.5); eq(sum.p1.traps.T, 1);
+  const back = U.Share.parseResult(U.Share.resultCode(f1)); eq(back.student, '甲'); eq(back.results.p1.items[0].id, 'm1');
+  let bad = ''; try { U.Share.parseResult(U.Share.resultCode({ v: 1 })); } catch (e) { bad = e.message; } truthy(/不是结果码/.test(bad), bad);
 });
 t('出题自检：台面满足目标才可以发布；空台面就满足的题不行', () => {
   const goal = [{ type: 'num', port: 'v', op: '=', value: '5' }];

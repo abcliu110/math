@@ -38,6 +38,13 @@
       return Object.assign(a, { code: b64.enc(JSON.stringify(a)) });
     },
     parseAssignment(code) { return JSON.parse(b64.dec(code)); },
+    // 结果码：结果文件 → 一段 base64url 文本（老师端一行一个粘贴进来）
+    resultCode(file) { return b64.enc(JSON.stringify(file)); },
+    parseResult(code) {
+      const o = JSON.parse(b64.dec(String(code).trim()));
+      if (!o || o.v !== 1 || !o.results) throw new Error('不是结果码');
+      return o;
+    },
     // 学生交回的结果文件：该作业里每题的最近一次结果
     resultFile(aid, pids, events, student) {
       const res = {};
