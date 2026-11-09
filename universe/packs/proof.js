@@ -20,13 +20,43 @@
     '偶数（≥4）是两个质数之和': (n) => { if (n % 2 !== 0 || n < 4) return true; for (let p = 2; p <= n / 2; p++) if (isPrime(p) && isPrime(n - p)) return true; return false; },
     '2ⁿ 大于 n': (n) => n < 0 || Math.pow(2, n) > n,
     '质数都是奇数': (n) => !isPrime(n) || n % 2 === 1,                 // 不成立：2 是质数又是偶数（反例构造器能找到）
+    // 以下是后加的规则（顺序在前面的规则之后，旧存档的选项编号不变）
+    '偶数的一半也是偶数': (n) => n % 2 !== 0 || (n / 2) % 2 === 0,      // 不成立：n = 2 时一半是 1
+    '2n+1 是质数': (n) => isPrime(2 * n + 1),                           // 不成立：n = 4 时 9
+    '4n+1 是质数': (n) => isPrime(4 * n + 1),                           // 不成立：n = 2 时 9
+    '1+2+…+n 小于 n²': (n) => { let s = 0; for (let i = 1; i <= n; i++) s += i; return s < n * n; }, // 不成立：n = 1 时 1 不小于 1
+    '质数 n 使 n²+2 也是质数': (n) => !isPrime(n) || isPrime(n * n + 2), // 不成立：n = 2 时 6
   };
   const RULE_NAMES = Object.keys(RULES);
-  // 规则的选项顺序固定：0 平方不小于本身，1 偶数（≥4）是两个质数之和，2 2ⁿ 大于 n，3 质数都是奇数
-  // 枚举器的全集：两个骰子
-  const DICE = []; for (let a = 1; a <= 6; a++) for (let b = 1; b <= 6; b++) DICE.push([a, b]);
-  // 归纳阶梯的第 k 级推第 k+1 级：1 + 3 + … + (2k−1) = k²，第 k+1 级的和 = 第 k 级的和 + (2k+1)
-  const INDUCT = { '1+3+…+(2n−1) = n²': { base: () => 1 * 1 === 1, step: (k) => (k * k) + (2 * k + 1) === (k + 1) * (k + 1) } };
+  // 规则的选项顺序固定：0 平方不小于本身，1 偶数（≥4）是两个质数之和，2 2ⁿ 大于 n，3 质数都是奇数，其余见上
+  // 枚举器的全集（可选）
+  const SETS = {
+    '两个骰子（36 种）': { items: (() => { const r = []; for (let a = 1; a <= 6; a++) for (let b = 1; b <= 6; b++) r.push([a, b]); return r; })(), value: (x) => x[0] + x[1] },
+    '两枚硬币（4 种，数正面）': { items: (() => { const r = []; for (let a = 0; a <= 1; a++) for (let b = 0; b <= 1; b++) r.push([a, b]); return r; })(), value: (x) => x[0] + x[1] },
+    '三个骰子（216 种）': { items: (() => { const r = []; for (let a = 1; a <= 6; a++) for (let b = 1; b <= 6; b++) for (let c = 1; c <= 6; c++) r.push([a, b, c]); return r; })(), value: (x) => x[0] + x[1] + x[2] },
+  };
+  const SET_NAMES = Object.keys(SETS);
+
+  // 归纳阶梯：每个式子用多项式写出 S(n)（前 n 项的和）和第 n 项 t(n)。
+  // 第 k 级推第 k+1 级，就是恒等式 S(n+1) − S(n) − t(n+1) = 0，对所有 n 成立（symbolic），不靠具体数。
+  const P = U.Poly, X = P.variable('n'), C = (q) => P.const(q && q.n !== undefined ? q : Q(q)), half = (x) => P.mul(C(Q(1, 2)), x);
+  const INDUCT_DEFS = {
+    '1+3+…+(2n−1) = n²': { S: P.pow(X, 2), t: P.sub(P.mul(C(Q(2)), X), C(Q(1))) },
+    '1+2+…+n = n(n+1)/2': { S: half(P.add(P.pow(X, 2), X)), t: X },
+    '2+4+…+2n = n(n+1)': { S: P.add(P.pow(X, 2), X), t: P.mul(C(Q(2)), X) },
+  };
+  const INDUCT_NAMES = Object.keys(INDUCT_DEFS);
+  const atN = (poly, k) => P.evalQ(poly, { n: Q(k) });
+  const INDUCT = {};
+  for (const name of INDUCT_NAMES) {
+    const { S, t } = INDUCT_DEFS[name];
+    const identity = P.sub(P.sub(P.subst(S, 'n', P.add(X, C(Q(1)))), S), P.subst(t, 'n', P.add(X, C(Q(1)))));
+    INDUCT[name] = {
+      identity: identity.terms.length === 0,
+      base: () => Q.eq(atN(S, 1), atN(t, 1)),
+      step: (k) => Q.eq(Q.add(atN(S, k), atN(t, k + 1)), atN(S, k + 1)),
+    };
+  }
 
   const sc = (c) => (c.props && c.props.rule ? RULE_NAMES[c.props.rule] : RULE_NAMES[0]);
   const ruleOf = (c) => RULES[sc(c)];
@@ -118,8 +148,9 @@
         essence: ['E1', 'E2'],
         label: '系统枚举器', prefix: '枚', group: '统计与概率', grades: [5, 9], alias: ['列全', '全部情况', '枚举'],
         props: {
-          target: { type: 'int', label: '和是几', default: 7, min: 2, max: 12 },
-          expected: { type: 'int', label: '应有几种情况', default: 36, min: 1, max: 36 },
+          set: { type: 'choice', label: '全部情况', default: 0, choices: SET_NAMES },
+          target: { type: 'int', label: '和是几', default: 7, min: 0, max: 18 },
+          expected: { type: 'int', label: '应有几种情况', default: 36, min: 1, max: 216 },
           show: { type: 'bool', label: '列出每一种', default: false },
         },
         outputs: {
@@ -129,11 +160,12 @@
         icon: () => [[12, 14], [32, 14], [52, 14], [12, 30], [32, 30], [52, 30]].map(([x, y]) => K.circle(x, y, 3, { fill: 'var(--ink)' })).join(''),
         size: () => [200, 110],
         compute: (c) => {
-          const hit = DICE.filter(([a, b]) => a + b === c.props.target).length;
-          const complete = DICE.length === c.props.expected;
+          const S = SETS[SET_NAMES[c.props.set]] || SETS[SET_NAMES[0]];
+          const hit = S.items.filter((x) => S.value(x) === c.props.target).length;
+          const complete = S.items.length === c.props.expected;
           const lv = complete ? 3 : 1;
-          return verdict(c, { lv: num(Q(lv)), refuted: U.val('bool', false), count: num(Q(hit)), total: num(Q(DICE.length)),
-            text: '列出 ' + DICE.length + ' 种情况，和为 ' + c.props.target + ' 的有 ' + hit + ' 种' + (complete ? '（列全了，证据到 ③）' : '（应有 ' + c.props.expected + ' 种，没列全）') });
+          return verdict(c, { lv: num(Q(lv)), refuted: U.val('bool', false), count: num(Q(hit)), total: num(Q(S.items.length)),
+            text: '列出 ' + S.items.length + ' 种情况，' + '和为 ' + c.props.target + ' 的有 ' + hit + ' 种' + (complete ? '（列全了，证据到 ③）' : '（应有 ' + c.props.expected + ' 种，没列全）') });
         },
         badge: (c) => (c.out.count ? c.out.count.data.n + ' 种' : ''),
         draw: (c) => K.text(c.w / 2, c.h / 2 + 4, '和为 ' + c.props.target + ' 的情况', { size: 12 }),
@@ -196,28 +228,30 @@
         essence: ['E6', 'E4'],
         label: '归纳阶梯', prefix: '阶', group: '关系', grades: [7, 9], alias: ['归纳', '数学归纳法', '一级一级'],
         props: {
-          rule: { type: 'choice', label: '要证明的式子', default: 0, choices: Object.keys(INDUCT) },
+          rule: { type: 'choice', label: '要证明的式子', default: 0, choices: INDUCT_NAMES },
           upto: { type: 'int', label: '检查到第几级', default: 20, min: 2, max: 200 },
           base: { type: 'bool', label: '第一级成立（已验证）', default: true },
         },
         outputs: {
           lv: { dim: null, kind: 'num', label: '证据等级' }, refuted: { dim: null, kind: 'bool', label: '被推翻' },
           failedAt: { dim: null, kind: 'num', label: '推不下去的那一级' },
+          identity: { dim: null, kind: 'bool', label: '步骤是恒等式' },
         },
         icon: () => [0, 1, 2, 3].map((i) => K.rect(6 + i * 13, 34 - i * 8, 12, 8 + i * 8, { stroke: 'var(--ink)', r: 1 })).join(''),
         size: () => [220, 120],
         compute: (c) => {
-          const name = Object.keys(INDUCT)[c.props.rule] || Object.keys(INDUCT)[0];
+          const name = INDUCT_NAMES[c.props.rule] || INDUCT_NAMES[0];
           const d = INDUCT[name];
           const baseOk = !!c.props.base && d.base();
           const r = E.induction(baseOk, (k) => d.step(k), c.props.upto);
           const failedAt = r.failedAt === null || r.failedAt === undefined ? -1 : r.failedAt;
           const lv = r.complete ? 4 : 1;
           return verdict(c, { lv: num(Q(lv)), refuted: U.val('bool', false), failedAt: num(Q(failedAt)),
-            text: r.complete ? name + ' 对所有检查的级都成立，证据到 ④（起点与每一级推下一级都已验证）' : (baseOk ? '第 ' + failedAt + ' 级推不下去' : '起点（第一级）没有验证') });
+            identity: U.val('bool', d.identity),
+            text: r.complete ? name + ' 对所有检查的级都成立，证据到 ④（起点与每一级推下一级都已验证' + (d.identity ? '；且 S(n+1) − S(n) = 第 n+1 项 是恒等式' : '') + '）' : (baseOk ? '第 ' + failedAt + ' 级推不下去' : '起点（第一级）没有验证') });
         },
         badge: (c) => (c.out.lv ? '④' : ''),
-        draw: (c) => K.text(c.w / 2, c.h / 2 + 4, Object.keys(INDUCT)[c.props.rule] || '', { size: 11 }),
+        draw: (c) => K.text(c.w / 2, c.h / 2 + 4, INDUCT_NAMES[c.props.rule] || '', { size: 11 }),
       },
     },
   });

@@ -831,6 +831,24 @@ t('台面级证据：参数扫描得 ② 时整个台面的证据到 ②；有�
   eq(r.level, 2);
   const sc2 = W.blank(); W.add(sc2, 'counterex', 0, 0, { rule: 3, from: 1, to: 20 }); eq(U.Evidence.fromScene(W.evaluate(sc2)).level, 'refuted');
 });
+console.log('证明器材扩充');
+t('新规则：2n+1 是质数在 1–20 里的反例是 4（2·4+1 = 9）；n²+2 的反例是 2（2²+2 = 6）', () => {
+  const sc = W.blank(); const e = W.add(sc, 'counterex', 0, 0, { rule: 5, from: 1, to: 20 }); const D = W.evaluate(sc);
+  eq(D[e].out.refuted.data, true); eq(D[e].out.counter.data.n, 4);
+  const e2 = W.add(sc, 'counterex', 0, 0, { rule: 8, from: 1, to: 20 }); eq(W.evaluate(sc)[e2].out.counter.data.n, 2);
+});
+t('系统枚举器：两枚硬币的 4 种情况，正面数为 1 的有 2 种 → ③；三个骰子和为 10 有 27 种', () => {
+  const sc = W.blank(); const e = W.add(sc, 'enumerator', 0, 0, { set: 1, target: 1, expected: 4 }); const D = W.evaluate(sc);
+  eq(D[e].out.count.data.n, 2); eq(D[e].out.total.data.n, 4); eq(D[e].out.lv.data.n, 3);
+  const sc2 = W.blank(); const e2 = W.add(sc2, 'enumerator', 0, 0, { set: 2, target: 10, expected: 216 });
+  eq(W.evaluate(sc2)[e2].out.count.data.n, 27);
+});
+t('归纳阶梯：三条求和式子的步骤都是恒等式；起点与每一级都成立 → ④', () => {
+  for (const r of [0, 1, 2]) {
+    const sc = W.blank(); const e = W.add(sc, 'induction', 0, 0, { rule: r, upto: 30, base: true }); const D = W.evaluate(sc);
+    eq(D[e].out.identity.data, true, '式子 ' + r + ' 的步骤应是恒等式'); eq(D[e].out.lv.data.n, 4);
+  }
+});
 console.log('输出声明（1.2）');
 t('lint 拒绝没有声明 dim 的输出口', () => {
   const bad = Object.assign({}, U.types.num, { outputs: { v: { kind: 'num', label: '值' } } });
