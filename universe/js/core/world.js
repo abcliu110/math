@@ -228,6 +228,8 @@
   function link(scene, a) {
     const E = scene.entities, F = E[a.from], T = E[a.to];
     if (!F || !T) return fail('找不到器材');
+    // 后算的器材（证明脚手架）的结论要等台面上别的器材都算完才有，不能接进别的器材
+    if (defOf(F).late) return fail(F.name + ' 的结论要等台面上的器材都算完才有，不能接到别的器材上');
     const fd = defOf(F), td = defOf(T);
     const fp = a.fromPort || Object.keys(fd.outputs)[0];
     const fo = fd.outputs[fp];

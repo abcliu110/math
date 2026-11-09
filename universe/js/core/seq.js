@@ -128,38 +128,50 @@
     return v;
   };
 
-  // ---- 用户自己写的规则：“2n+1 是质数”“n^2+n 是偶数”“2^n > n” ----
-  // 返回判断函数 n → 真假；写错时抛出说明
+  // ---- 用户自己写的规则：“2n+1 是质数”“n^2+n 是偶数”“2^n > n”“x+y 是偶数”“x^2 > y” ----
+  // 字母就是变量：只有 n 时可以用指数式；有别的字母（x、y…）时用多项式（不能写 变量 的指数）。
+  // 返回的函数：fn.vars 是变量名（按字母顺序，只有 n 就是 ['n']）；fn(k) 或 fn({x:..,y:..}) 返回真假。
+  const PRED_WORDS = { 质数: 'prime', 素数: 'prime', 偶数: 'even', 奇数: 'odd', 完全平方数: 'square' };
+  const isPrimeInt = (x) => { if (x < 2) return false; for (let d = 2; d * d <= x; d++) if (x % d === 0) return false; return true; };
   Seq.compileRule = function (text) {
     const t = String(text).trim();
-    const pred = t.match(/^(.+?)\s*是\s*(质数|素数|偶数|奇数|完全平方数)$/);
-    if (pred) {
-      const e = Seq.parse(pred[1]);
-      const kind = pred[2];
-      return (k) => {
-        const v = Seq.at(e, k);
-        if (v.d !== 1) return false;
-        const x = v.n;
-        if (kind === '偶数') return x % 2 === 0;
-        if (kind === '奇数') return Math.abs(x) % 2 === 1;
-        if (kind === '完全平方数') return x >= 0 && Math.round(Math.sqrt(x)) ** 2 === x;
-        if (x < 2) return false;
-        for (let d = 2; d * d <= x; d++) if (x % d === 0) return false;
-        return true;
-      };
-    }
-    const rel = t.match(/^(.+?)\s*(>=|≥|<=|≤|>|<|=)\s*(.+)$/);
-    if (rel) {
-      const a = Seq.parse(rel[1]), b = Seq.parse(rel[3]), op = rel[2];
-      return (k) => {
-        const c = Q.cmp(Seq.at(a, k), Seq.at(b, k));
-        if (op === '=') return c === 0;
-        if (op === '>') return c > 0;
-        if (op === '<') return c < 0;
-        if (op === '>=' || op === '≥') return c >= 0;
-        return c <= 0;
-      };
-    }
-    throw new Error('规则要写成“式子 是质数／偶数／奇数／完全平方数”，或“式子 > 式子”这样的比较');
+    let m, kind = null, left, right = null, op = null;
+    if ((m = t.match(/^(.+?)\s*是\s*(质数|素数|偶数|奇数|完全平方数)$/))) { left = m[1]; kind = PRED_WORDS[m[2]]; }
+    else if ((m = t.match(/^(.+?)\s*(>=|≥|<=|≤|>|<|=)\s*(.+)$/))) { left = m[1]; op = m[2]; right = m[3]; }
+    else throw new Error('规则要写成“式子 是质数／偶数／奇数／完全平方数”，或“式子 > 式子”这样的比较');
+    const names = [...new Set(((left || '') + ' ' + (right || '')).match(/[a-zA-Z]/g) || [])].sort();
+    const vars = names.length ? names : ['n'];
+    const multi = !(vars.length === 1 && vars[0] === 'n');
+    const compile = (src) => (multi ? { poly: U.Poly.parse(src) } : { seq: Seq.parse(src) });
+    const A = compile(left), B = right ? compile(right) : null;
+    const value = (e, env) => {
+      if (e.seq) return Seq.at(e.seq, env.n === undefined ? 0 : env.n);
+      const qenv = {}; for (const v of vars) qenv[v] = Q(env[v]);
+      return U.Poly.evalQ(e.poly, qenv);
+    };
+    const test = (env) => {
+      const a = value(A, env);
+      if (kind) {
+        if (a.d !== 1) return false;
+        const x = a.n;
+        if (kind === 'even') return x % 2 === 0;
+        if (kind === 'odd') return Math.abs(x) % 2 === 1;
+        if (kind === 'square') return x >= 0 && Math.round(Math.sqrt(x)) ** 2 === x;
+        return isPrimeInt(x);
+      }
+      const c = Q.cmp(a, value(B, env));
+      if (op === '=') return c === 0;
+      if (op === '>') return c > 0;
+      if (op === '<') return c < 0;
+      if (op === '>=' || op === '≥') return c >= 0;
+      return c <= 0;
+    };
+    const fn = (arg) => {
+      if (typeof arg === 'number') return test(vars.length === 1 ? { [vars[0]]: arg } : { n: arg });
+      return test(arg);
+    };
+    fn.vars = vars;
+    fn.test = test;
+    return fn;
   };
 })(typeof globalThis !== 'undefined' ? globalThis : window);

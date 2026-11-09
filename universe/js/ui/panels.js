@@ -95,6 +95,14 @@
       else if (U.controlFor(P) === 'segment') h += '<div class="seg">' + P.choices.map((c, i) => '<button class="sg' + (i === v ? ' on' : '') + '" data-k="' + k + '" data-seg="' + i + '">' + esc(c) + '</button>').join('') + '</div>';
       else if (P.type === 'choice') h += '<select data-k="' + k + '">' + P.choices.map((c, i) => '<option value="' + i + '"' + (i === v ? ' selected' : '') + '>' + esc(c) + '</option>').join('') + '</select>';
       else if (P.type === 'bool') h += '<input type="checkbox" data-k="' + k + '"' + (v ? ' checked' : '') + '>';
+      else if (U.controlFor(P) === 'rule') {
+        // 规则文本框：符号按钮（插入光标处）+ 实时检查（写得对不对、有哪些变量）
+        const syms = ['n', 'x', 'y', '+', '−', '×', '^', '(', ')', '≥', '≤', '是质数', '是偶数', '是奇数', '是完全平方数'];
+        let hint = '';
+        try { const f = U.Seq.compileRule(String(v)); hint = '<span class="rok">✓ 看懂了' + (f.vars.length > 1 || f.vars[0] !== 'n' ? '，变量：' + f.vars.join('、') : '') + '</span>'; }
+        catch (e) { hint = '<span class="rerr">' + esc(e.message) + '</span>'; }
+        h += '<input type="text" data-k="' + k + '" class="rule-in" value="' + esc(v) + '"><div class="rsyms">' + syms.map((x) => '<button class="ins" data-ins="' + esc(x) + '" data-target="' + k + '">' + esc(x) + '</button>').join('') + '</div><div class="rhint">' + hint + '</div>';
+      }
       else if (U.controlFor(P) === 'fact') {
         // 台面上的事实：列出台面上所有布尔结论和证据等级，选一条作为依据（✓ 表示现在成立）
         const facts = U.Facts.list(S.scene, S.D);

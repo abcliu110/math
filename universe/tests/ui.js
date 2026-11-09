@@ -197,6 +197,16 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   await p.selectOption('#insp select[data-fact="r3"]', { value: await p.evaluate(() => window.__k1 + '.kept') }); await p.waitForTimeout(120);
   ok(await p.evaluate(() => UI.S.scene.entities[window.__sf].props.r1 === window.__k1 + '.kept' && UI.S.D[window.__sf].out.lv.data.n === 4), '选中三条成立的事实后，证明到 ④');
   await p.evaluate(() => { UI.App.act({ t: 'set', id: window.__k1, k: 'times', v: 1 }); }); await p.waitForTimeout(80);
+  console.log('规则文本框');
+  await p.evaluate(() => { UI.App.openFree(); UI.App.act({ t: 'clear' });
+    window.__rs = UI.App.act({ t: 'add', type: 'scanner', x: 300, y: 150, props: { rule: 9, custom: '2n+1', from: 1, to: 10 } }).id;
+    UI.S.sel = window.__rs; UI.S.inspOpen = true; UI.Panels.renderInsp(); });
+  await p.waitForTimeout(120);
+  ok(await p.locator('#insp .rsyms button').count() >= 10, '规则文本框下面有符号按钮');
+  ok(/不完整|没写完|多出|看不懂|要写成/.test(await p.locator('#insp .rhint').innerText()), '写不完整的规则给出实时提示');
+  await p.click('#insp .rsyms button[data-ins="是质数"]'); await p.waitForTimeout(120);
+  ok(await p.evaluate(() => UI.S.scene.entities[window.__rs].props.custom === '2n+1是质数'), '点符号按钮，文字插入到规则里');
+  ok(/看懂了/.test(await p.locator('#insp .rhint').innerText()), '写对以后显示“看懂了”');
   ok(errs.length === 0, '控制台 0 报错' + (errs.length ? '：' + errs[0] : ''));
   console.log('\n' + pass + ' 通过，' + fail + ' 失败'); await b.close(); process.exit(fail ? 1 : 0);
 })();

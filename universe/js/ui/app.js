@@ -205,6 +205,13 @@
       const t = e.target, id = S.sel;
       if (t.dataset.close) { S.inspOpen = false; UI.Panels.renderInsp(); UI.Stage.render(); }
       else if (t.dataset.seg !== undefined) act({ t: 'set', id, k: t.dataset.k, v: +t.dataset.seg });
+      else if (t.dataset.ins !== undefined) {
+        const inp = insp.querySelector('input[data-k="' + t.dataset.target + '"]'); if (!inp) return;
+        // 光标在文本框里就插在光标处；否则（点按钮时焦点已离开）插在末尾
+        const at = (document.activeElement === inp && inp.selectionStart != null) ? inp.selectionStart : inp.value.length, ins = t.dataset.ins;
+        inp.value = inp.value.slice(0, at) + ins + inp.value.slice(at);
+        act({ t: 'set', id, k: t.dataset.target, v: inp.value });
+      }
       else if (t.dataset.unlink) act({ t: 'unlink', id: t.dataset.unlink });
       else if (t.dataset.reset) act({ t: 'reset', id });
       else if (t.dataset.step) { const inp = insp.querySelector('input[type="number"][data-k="' + t.dataset.k + '"]'); const P = U.types[S.scene.entities[id].type].props[t.dataset.k]; act({ t: 'set', id, k: t.dataset.k, v: Math.round((+inp.value + (+t.dataset.step) * (P.step || 1)) * 1e6) / 1e6 }); }

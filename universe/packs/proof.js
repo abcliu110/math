@@ -64,11 +64,25 @@
   // 规则函数：选了预设规则就用预设，选了“自己写的规则”就编译文本框里的规则（写错时抛出说明）
   const ruleOf = (c) => (c.props.rule === CUSTOM ? U.Seq.compileRule(c.props.custom) : RULES[sc(c)]);
 
-  // 扫描（纯计算，不记事件）：返回 { found, counter, checked }
-  const scan = (from, to, pred) => {
+  // 扫描（纯计算，不记事件）。rule 是单变量函数 rule(k)，或多变量的编译规则（rule.vars、rule.test(env)）。
+  // 多变量：每个变量都在 [from, to] 里取值，逐组检查；组数上限 20 万。
+  const SCAN_LIMIT = 200000;
+  const scan = (from, to, rule) => {
+    const vars = rule.vars && rule.vars.length ? rule.vars : ['n'];
+    const span = to - from + 1;
+    if (span < 1) throw new Error('范围是空的：到要不小于从');
+    const total = Math.pow(span, vars.length);
+    if (total > SCAN_LIMIT) throw new Error('组数太多（' + total + ' 组，上限 ' + SCAN_LIMIT + '），请缩小范围或减少变量');
+    const check = rule.vars ? (env) => rule.test(env) : (env) => rule(env.n);
+    const env = {};
     let checked = 0;
-    for (let n = from; n <= to; n++) { checked++; if (!pred(n)) return { found: true, counter: n, checked }; }
-    return { found: false, counter: null, checked };
+    for (let i = 0; i < total; i++) {
+      let x = i;
+      for (const v of vars) { env[v] = from + (x % span); x = Math.floor(x / span); }
+      checked++;
+      if (!check(env)) return { found: true, counter: env[vars[0]], tuple: vars.map((v) => v + '=' + env[v]).join(', '), checked };
+    }
+    return { found: false, counter: null, tuple: null, checked };
   };
 
   // 结论的提示：被推翻 → 红色拒绝；证据到 ② 以上 → 绿色；其余只是信息。注意 refuted 和 lv 都是 {kind,data} 形式
@@ -104,7 +118,7 @@
         label: '参数扫描器', prefix: '扫', group: '关系', grades: [5, 9], alias: ['扫描', '试很多个', '范围'],
         props: {
           rule: { type: 'choice', label: '检查的规则', default: 0, choices: RULE_NAMES },
-          custom: { type: 'text', label: '自己写的规则（如 2n+1 是质数，或 2^n > n）', default: '2n+1 是质数' },
+          custom: { type: 'text', label: '自己写的规则', default: '2n+1 是质数', control: 'rule' },
           from: { type: 'int', label: '从', default: 1, min: -50, max: 50 },
           to: { type: 'int', label: '到', default: 100, min: 1, max: 1000 },
         },
@@ -116,8 +130,8 @@
         size: () => [220, 120],
         compute: (c) => {
           let pred; try { pred = ruleOf(c); } catch (e) { c.say('reject', '规则写不对：' + e.message); return {}; }
-          const r = scan(c.props.from, c.props.to, pred);
-          if (r.found) return verdict(c, { lv: num(Q(0)), refuted: U.val('bool', true), checked: num(Q(r.checked)), counter: num(Q(r.counter)), text: '在 ' + c.props.from + ' 到 ' + c.props.to + ' 里找到例外：' + r.counter + '，结论被推翻' });
+          let r; try { r = scan(c.props.from, c.props.to, pred); } catch (e) { c.say('reject', e.message); return {}; }
+          if (r.found) return verdict(c, { lv: num(Q(0)), refuted: U.val('bool', true), checked: num(Q(r.checked)), counter: num(Q(r.counter)), text: '在 ' + c.props.from + ' 到 ' + c.props.to + ' 里找到例外：' + (r.tuple || r.counter) + '，结论被推翻' });
           return verdict(c, { lv: num(Q(2)), refuted: U.val('bool', false), checked: num(Q(r.checked)), counter: num(Q(-1)), text: '在 ' + c.props.from + ' 到 ' + c.props.to + ' 里没找到例外（' + r.checked + ' 个）' });
         },
         badge: (c) => (c.out.lv ? '②' : ''),
@@ -130,7 +144,7 @@
         label: '反例构造器', prefix: '反', group: '关系', grades: [5, 9], alias: ['反例', '推翻', '找例外'],
         props: {
           rule: { type: 'choice', label: '要推翻的规则', default: 2, choices: RULE_NAMES },
-          custom: { type: 'text', label: '自己写的规则（如 2n+1 是质数，或 2^n > n）', default: '2n+1 是质数' },
+          custom: { type: 'text', label: '自己写的规则', default: '2n+1 是质数', control: 'rule' },
           from: { type: 'int', label: '从', default: 1, min: -50, max: 50 },
           to: { type: 'int', label: '到', default: 50, min: 1, max: 1000 },
         },
@@ -142,8 +156,8 @@
         size: () => [200, 110],
         compute: (c) => {
           let pred; try { pred = ruleOf(c); } catch (e) { c.say('reject', '规则写不对：' + e.message); return {}; }
-          const r = scan(c.props.from, c.props.to, pred);
-          if (r.found) return verdict(c, { lv: num(Q(0)), refuted: U.val('bool', true), counter: num(Q(r.counter)), text: '反例找到了：' + r.counter + '，猜想被推翻' });
+          let r; try { r = scan(c.props.from, c.props.to, pred); } catch (e) { c.say('reject', e.message); return {}; }
+          if (r.found) return verdict(c, { lv: num(Q(0)), refuted: U.val('bool', true), counter: num(Q(r.counter)), text: '反例找到了：' + (r.tuple || r.counter) + '，猜想被推翻' });
           return verdict(c, { lv: num(Q(2)), refuted: U.val('bool', false), counter: num(Q(-1)), text: '在范围里没有找到反例，证据到 ②' });
         },
         badge: (c) => (c.out.refuted && c.out.refuted.data ? '推翻' : ''),

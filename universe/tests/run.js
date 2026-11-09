@@ -887,6 +887,24 @@ t('归纳阶梯：指数式 1+2+…+2^(n−1) = 2^n−1 的步骤是恒等式，
   const sc = W.blank(); const e = W.add(sc, 'induction', 0, 0, { rule: 3, upto: 30, base: true }); const o = W.evaluate(sc)[e].out;
   eq(o.identity.data, true); eq(o.lv.data.n, 4);
 });
+console.log('规则：多变量、后算器材的安全');
+t('多变量规则：x+y 是偶数，在 1–4 里反例是 x=1, y=2', () => {
+  const sc = W.blank(); const e = W.add(sc, 'counterex', 0, 0, { rule: 9, custom: 'x+y 是偶数', from: 1, to: 4 });
+  const o = W.evaluate(sc)[e].out; eq(o.refuted.data, true); eq(o.counter.data.n, 2);
+});
+t('多变量规则：x^2 > y 不成立时找到的组被说明；组数太多时说明', () => {
+  const sc = W.blank(); const e = W.add(sc, 'scanner', 0, 0, { rule: 9, custom: 'x^2 > y', from: 1, to: 3 });
+  truthy(W.evaluate(sc)[e].out.refuted.data, '1^2 > 3 不成立');
+  const big = W.blank(); const b = W.add(big, 'scanner', 0, 0, { rule: 9, custom: 'x+y+z 是偶数', from: 1, to: 200 });
+  truthy(/组数太多/.test(W.evaluate(big)[b].sig.map((x) => x.tx).join('|')));
+});
+t('后算器材（脚手架）的结论不能接到别的器材上；它不能有输入口', () => {
+  const sc = W.blank(); const sf = W.add(sc, 'scaffold', 0, 0, {}); const n = W.add(sc, 'num', 0, 0, { n: 1 }); const o = W.add(sc, 'op', 0, 0, {});
+  const r = W.act(sc, { t: 'link', from: sf, fromPort: 'lv', to: o, toPort: 'a' }); eq(r.ok, false); truthy(/不能接到别的器材上/.test(r.why));
+  const bad = U.lintType(Object.assign({}, U.types.scaffold, { inputs: { a: { kind: 'bool', label: 'x' } } }));
+  truthy(bad.errors.some((m) => /输入口/.test(m)), bad.errors.join('|'));
+  eq(U.lintType(U.types.scaffold).errors, []);
+});
 console.log('输出声明（1.2）');
 t('lint 拒绝没有声明 dim 的输出口', () => {
   const bad = Object.assign({}, U.types.num, { outputs: { v: { kind: 'num', label: '值' } } });

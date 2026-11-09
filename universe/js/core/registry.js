@@ -55,7 +55,7 @@
 
   // 把任意输入变成属性合法值；不合法就说为什么（不悄悄改）
   // 1.1.1 属性控件自动选型：按属性声明选控件；器材可用 control 覆盖，覆盖值要合法（lint 检查）。
-  const CONTROLS = { segment: ['choice'], select: ['choice'], switch: ['bool'], stepper: ['int', 'num'], slider: ['int', 'num'], dial: ['num', 'int'], expr: ['expr'], text: ['text'], fact: ['text'] };
+  const CONTROLS = { segment: ['choice'], select: ['choice'], switch: ['bool'], stepper: ['int', 'num'], slider: ['int', 'num'], dial: ['num', 'int'], expr: ['expr'], text: ['text'], fact: ['text'], rule: ['text'] };
   U.CONTROLS = CONTROLS;
   U.controlFor = (P) => {
     if (P.control) return P.control;
@@ -118,6 +118,10 @@
     if (typeof def.icon !== 'function') err('缺 icon()，器材架每个器材都要有缩略图');
     if (typeof def.size !== 'function') err('缺 size(ent)');
     if (typeof def.draw !== 'function') err('缺 draw(c)');
+    if (def.late) {
+      if (Object.keys(def.inputs).length) err('后算的器材不能有输入口（它读的是台面上的事实，不是连线）');
+      if (def.stateful) err('后算的器材不能同时是有状态的');
+    }
     const outs = Object.keys(def.outputs);
     if (!outs.length) err('至少要有 1 个输出口（没有输出口就是孤岛）');
     for (const k of outs) if (!U.KINDS[def.outputs[k].kind]) err('输出口 ' + k + ' 的 kind 没注册：' + def.outputs[k].kind);

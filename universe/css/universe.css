@@ -214,3 +214,11 @@ input, select, textarea { font: inherit; color: inherit; }
 .why-tree .wkids { margin-left: 16px; border-left: 2px solid var(--line); padding-left: 8px; }
 .why-tree .wsteps { margin: 4px 0 4px 16px; color: var(--txt3); font-size: 13px; }
 .lb .lbwhy { margin-left: 4px; }
+
+/* 规则文本框：符号面板与实时检查 */
+#insp .rule-in { width: 100%; }
+#insp .rsyms { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+#insp .rsyms .ins { padding: 2px 6px; border-radius: 6px; background: var(--panel2); border: 1px solid var(--line); cursor: pointer; font-size: 12px; }
+#insp .rhint { font-size: 12px; margin-top: 4px; }
+#insp .rok { color: var(--good); }
+#insp .rerr { color: var(--bad); }
