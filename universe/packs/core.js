@@ -7,6 +7,26 @@
   const OPS = ['+', '−', '×', '÷'];
   const CMP = ['=', '<', '>', '≤', '≥'];
   const FORMS = ['分数', '带分数', '小数'];
+  // 来历追踪（任务 A）：把运算器的中间步骤说出来
+  const gcd = (x, y) => { x = Math.abs(x); y = Math.abs(y); while (y) { [x, y] = [y, x % y]; } return x || 1; };
+  function opTrace(c, a, b, o, r) {
+    if (!c.step) return;
+    const A = a.data, B = b.data;
+    if (o <= 1) {
+      const L = A.d * B.d / gcd(A.d, B.d), na = A.n * (L / A.d), nb = B.n * (L / B.d), sum = o ? na - nb : na + nb;
+      if (A.d !== B.d) c.step('通分：' + A.n + '/' + A.d + ' = ' + na + '/' + L + '，' + B.n + '/' + B.d + ' = ' + nb + '/' + L, null, 'frac.common-denominator');
+      c.step('分母相同，分子' + (o ? '相减' : '相加') + '：' + na + (o ? ' − ' : ' + ') + nb + ' = ' + sum + '，得 ' + sum + '/' + L, null, o ? 'op.sub' : 'frac.add');
+      if (r.d !== L || r.n !== sum) c.step('约分：' + sum + '/' + L + ' = ' + Q.show(r), null, 'frac.simplify');
+      c.because('r', o ? '大数减小数，拿走一部分' : '分母相同，分子相加', o ? 'op.sub' : 'frac.add');
+    } else if (o === 2) {
+      c.step('分子乘分子、分母乘分母：' + (A.n * B.n) + '/' + (A.d * B.d), null, 'op.mul');
+      if (r.d !== A.d * B.d) c.step('约分：得 ' + Q.show(r), null, 'frac.simplify');
+      c.because('r', '乘法：几个几相加', 'op.mul');
+    } else {
+      c.step('除以一个数，等于乘它的倒数：' + Q.show(A) + ' × ' + Q.show(Q(B.d, B.n)), null, 'op.div');
+      c.because('r', '除法：看里面有几个', 'op.div');
+    }
+  }
 
   U.registerPack({
     id: 'core', version: 1,
@@ -62,6 +82,7 @@
             if (b.data.n === 0) { c.say('err', '除数不能是 0'); return {}; }
             dim = D.div(a.dim, b.dim); r = Q.div(a.data, b.data);
           }
+          opTrace(c, a, b, o, r);
           c.say('ok', Q.show(a.data) + ' ' + OPS[o] + ' ' + Q.show(b.data) + ' = ' + Q.show(r));
           return { r: num(r, dim) };
         },
@@ -151,6 +172,10 @@
           const diff = Q.sub(sl.q, sr.q), ad = diff.n < 0 ? Q.neg(diff) : diff;
           const ok = Q.cmp(ad, Q.fromNumber(c.props.tol)) <= 0;
           c.say(ok ? 'ok' : 'info', ok ? '平衡了：' + Q.show(sl.q) + ' = ' + Q.show(sr.q) : '左 ' + Q.show(sl.q) + '，右 ' + Q.show(sr.q) + (diff.n > 0 ? '：左边重' : '：右边重'));
+          if (c.step) {
+            c.step('左边合计 ' + Q.show(sl.q) + '，右边合计 ' + Q.show(sr.q) + '，左 − 右 = ' + Q.show(diff), null, 'balance.compare');
+            c.because('ok', ok ? '两边一样重' : (diff.n > 0 ? '左边重' : '右边重'), 'balance.compare'); c.because('diff', '左边合计减右边合计', 'balance.compare');
+          }
           return { ok: U.val('bool', ok), diff: num(diff, D.add(sl.dim, sr.dim).dim) };
         },
         badge: (c) => (c.out.ok ? (c.out.ok.data ? '平衡' : '不平') : ''),

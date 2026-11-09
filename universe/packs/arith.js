@@ -52,6 +52,11 @@
           if (y === 0) { c.say('err', '除数不能是 0'); return {}; }
           const q = c.props.mode === 0 ? Math.floor(x / y) : Math.trunc(x / y), r = x - q * y;
           c.say('ok', x + ' = ' + y + ' × ' + q + ' + ' + r);
+          if (c.step) {
+            c.step('试商：' + x + ' ÷ ' + y + ' 大约是 ' + q, null, 'div.trial-quotient');
+            c.step('余数 = ' + x + ' − ' + y + ' × ' + q + ' = ' + r + '，要比除数小', null, 'div.remainder-lt-divisor');
+            c.because('q', '试商：先估一个商', 'div.trial-quotient'); c.because('r', '余数一定比除数小', 'div.remainder-lt-divisor');
+          }
           return { q: num(Q(q)), r: num(Q(r)) };
         },
         badge: (c) => c.props.label,
@@ -105,6 +110,10 @@
           if (n === null || n < 0) { c.say('reject', '数位板只接非负整数'); return {}; }
           const ds = n === 0 ? [0] : []; let m = n; while (m > 0) { ds.unshift(m % c.props.base); m = Math.floor(m / c.props.base); }
           c.say('ok', n + ' 写成 ' + c.props.base + ' 进制：' + ds.map((x) => x.toString(16).toUpperCase()).join(''));
+          if (c.step) {
+            for (let t = n; t > 0; t = Math.floor(t / c.props.base)) c.step(t + ' ÷ ' + c.props.base + ' = ' + Math.floor(t / c.props.base) + ' …… ' + (t % c.props.base) + '，这一位是 ' + (t % c.props.base).toString(16).toUpperCase(), null, 'place.carry');
+            c.because('count', '数一数一共有几位', 'place.carry'); c.because('sum', '每一位上的数字加起来', 'place.carry');
+          }
           return { count: num(Q(ds.length)), sum: num(Q(ds.reduce((s, x) => s + x, 0))) };
         },
         badge: (c) => c.props.base + ' 进制',

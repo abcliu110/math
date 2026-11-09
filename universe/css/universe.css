@@ -207,3 +207,10 @@ input, select, textarea { font: inherit; color: inherit; }
 /* 2.5 实验报告：四栏 */
 .rep2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 @media (max-width: 640px) { .rep2 { grid-template-columns: 1fr; } }
+
+/* 任务 A：来历面板 */
+.why-tree details { margin: 4px 0; }
+.why-tree summary { cursor: pointer; }
+.why-tree .wkids { margin-left: 16px; border-left: 2px solid var(--line); padding-left: 8px; }
+.why-tree .wsteps { margin: 4px 0 4px 16px; color: var(--txt3); font-size: 13px; }
+.lb .lbwhy { margin-left: 4px; }

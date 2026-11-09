@@ -116,3 +116,12 @@ U.registerPack({ id:'mypack', types:{ foo:{
 
 还没做：一般角度的旋转（只有 90° 的倍数是精确的）、把一个多边形真正切开再拼、圆和直线的交点。
 - **错题本界面（3.1）**：菜单 → 错题本，列出没达成的里程碑和踩中的陷阱，点一道题回去再做。
+
+## 来历追踪（任务 A，见 next-steps.md）
+
+- **规则登记**：`js/core/rules.js` 的 `U.RULES[id] = { label, essence, grade }`，`U.defineRule`。器材引用未登记的规则会记入 `U.ruleErrors`。
+- **trace**：`evaluate(scene)` 的 `D[id].trace = { inputs, props, steps, outputs }`，纯数据。`evaluate(scene, { trace: false })` 不记追踪，求值结果不变。
+- **器材里写步骤**：compute 的 `ctx` 有 `c.step(say, value, rule)` 与 `c.because(port, say, rule)`。已接入：运算器、带余除法、数位板、天平、三角形、量图形。
+- **来历树**：`W.explain(scene, D, id, port, depth)`，遇到有状态器材停止并标“上一拍的值”；`W.explainText(tree)` 转成几行人话。
+- **W.from(value, type, inputs)**：判断值是不是由某类器材、从这些输入算出来的（手填的同一个数不算）。
+- **界面**：连线气泡上的“？”打开来历面板，逐层展开。

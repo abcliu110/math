@@ -151,6 +151,17 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   ok(await p.evaluate(() => UI.S.scene.entities[window.__n].props.n === 7), '拖滑杆会改变属性值');
   await p.click('#insp button[data-step="1"][data-k="n"]'); await p.waitForTimeout(100);
   ok(await p.evaluate(() => UI.S.scene.entities[window.__n].props.n === 8), '+ 按钮仍然可用（取数字框的值）');
+  console.log('来历面板');
+  await p.evaluate(() => { UI.App.openFree(); UI.App.act({ t: 'clear' });
+    const a = UI.App.act({ t: 'add', type: 'num', x: 60, y: 100, props: { n: 2, d: 5 } }).id, b = UI.App.act({ t: 'add', type: 'num', x: 60, y: 260, props: { n: 1, d: 3 } }).id, o = UI.App.act({ t: 'add', type: 'op', x: 380, y: 160, props: {} }).id;
+    UI.App.act({ t: 'link', from: a, fromPort: 'v', to: o, toPort: 'a' }); const l2 = UI.App.act({ t: 'link', from: b, fromPort: 'v', to: o, toPort: 'b' });
+    window.__o = o; UI.S.sel = null; UI.S.inspOpen = false; UI.Panels.renderInsp(); });
+  await p.evaluate(() => { const o = window.__o; const out = UI.S.scene.entities[o]; UI.App.act({ t: 'add', type: 'meter', x: 640, y: 160, props: {} }); const m = Object.values(UI.S.scene.entities).find((e) => e.type === 'meter'); UI.App.act({ t: 'link', from: o, fromPort: 'r', to: m.id, toPort: 'v' }); UI.S.selLink = UI.S.scene.links[UI.S.scene.links.length - 1].id; UI.Stage.render(); });
+  await p.waitForTimeout(150);
+  await p.click('.lbwhy'); await p.waitForTimeout(100);
+  const whyTxt = await p.locator('#dlg .why-tree').innerText().catch(() => '');
+  ok(await p.locator('#dlg .why-tree details').count() >= 3 && /通分/.test(await p.locator('#dlg .why-tree').evaluate((n) => n.textContent)), '点气泡上的？，打开来历面板，一路展开到数字卡');
+  await p.evaluate(() => UI.Panels.closeDialog());
   ok(errs.length === 0, '控制台 0 报错' + (errs.length ? '：' + errs[0] : ''));
   console.log('\n' + pass + ' 通过，' + fail + ' 失败'); await b.close(); process.exit(fail ? 1 : 0);
 })();

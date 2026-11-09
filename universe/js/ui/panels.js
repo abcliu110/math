@@ -125,6 +125,19 @@
   function dialog(html) { const d = $('#dlg'); d.querySelector('.box').innerHTML = html; d.classList.add('open'); }
   function closeDialog() { $('#dlg').classList.remove('open'); }
 
+  // 来历面板（任务 A）：这个数是怎么来的，一层一层展开到源头
+  function whyNode(t, open) {
+    const rule = t.rule && U.RULES[t.rule] ? U.RULES[t.rule].label : '';
+    let h = '<details' + (open ? ' open' : '') + '><summary><b>' + esc(t.name) + '.' + esc(t.port) + ' = ' + esc(U.showVal(t.value)) + '</b>' + (t.say || rule ? '　<small>' + esc(t.say || rule) + '</small>' : '') + (t.stateful ? '　<small>［' + esc(t.note) + '］</small>' : '') + '</summary>';
+    if (t.steps.length) h += '<ul class="wsteps">' + t.steps.map((x) => '<li>' + esc(x.say) + '</li>').join('') + '</ul>';
+    if (t.from.length) h += '<div class="wkids">' + t.from.map((c) => whyNode(c, false)).join('') + '</div>';
+    return h + '</details>';
+  }
+  function whyDialog(id, port) {
+    const S = UI.S, tree = U.World.explain(S.scene, S.D, id, port);
+    if (!tree) return;
+    dialog('<h3>这个数是怎么来的</h3><div class="why-tree">' + whyNode(tree, true) + '</div><div class="btnrow"><button class="btn" id="dlg-close">知道了</button></div>');
+  }
   // 错题本（3.1）：没达成的里程碑和踩过的陷阱，点一下回到那道题
   function wrongDialog() {
     const list = U.Learning.wrongBook(U.Events.log, U.problems);
@@ -208,5 +221,5 @@
     });
   }
 
-  UI.Panels = { renderTop, renderLeft, renderShelf, renderInsp, renderClock, dialog, closeDialog, reportHtml, inquiryHtml, wrongDialog, reportDialog, authorDialog, initShelfDrag, renderAll() { renderTop(); renderLeft(); renderShelf(); renderInsp(); renderClock(); } };
+  UI.Panels = { renderTop, renderLeft, renderShelf, renderInsp, renderClock, dialog, closeDialog, reportHtml, inquiryHtml, wrongDialog, whyDialog, reportDialog, authorDialog, initShelfDrag, renderAll() { renderTop(); renderLeft(); renderShelf(); renderInsp(); renderClock(); } };
 })(window);

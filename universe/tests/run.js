@@ -3,7 +3,7 @@
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const root = path.join(__dirname, '..');
 const fsx = require('fs'), pk = (d) => fsx.readdirSync(path.join(root, d)).filter((f) => f.endsWith('.js')).sort().map((f) => d + '/' + f);
-const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/figure.js', 'js/core/registry.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
+const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/figure.js', 'js/core/registry.js', 'js/core/rules.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
 const ctx = vm.createContext({ console, TextEncoder, TextDecoder, btoa, atob });
 ctx.globalThis = ctx;
 for (const f of files) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f });
@@ -548,6 +548,46 @@ t('三边 3、4、5 的三角形输出图形，量得面积 6；三边 2、3、4
   const D = W.evaluate(sc); eq(U.showVal(D[m].out.area), '6'); eq(D[t2].out.f, undefined); truthy(D[t2].sig.some((x) => /不是有理数/.test(x.tx)));
 });
 t('折纸的纸片是图形：4×4 的正方形', () => { const sc = W.blank(); const f = W.add(sc, 'fold', 0, 0, {}); eq(U.Fig.show(W.evaluate(sc)[f].out.f.data), '四边形 (0, 0) (4, 0) (4, 4) (0, 4)'); });
+console.log('来历追踪（任务 A）');
+const frac = (a, b) => { const sc = W.blank(); const x = W.add(sc, 'num', 0, 0, { n: a[0], d: a[1] }), y = W.add(sc, 'num', 0, 0, { n: b[0], d: b[1] }), o = W.add(sc, 'op', 0, 0, { op: 0 });
+  W.act(sc, { t: 'link', from: x, fromPort: 'v', to: o, toPort: 'a' }); W.act(sc, { t: 'link', from: y, fromPort: 'v', to: o, toPort: 'b' }); return { sc, x, y, o }; };
+t('2/5 + 1/3：trace.steps 里有通分一步，规则都已登记', () => {
+  const { sc, o } = frac([2, 5], [1, 3]); const D = W.evaluate(sc);
+  const steps = D[o].trace.steps; truthy(steps.some((s) => /通分/.test(s.say)), steps.map((s) => s.say).join('|'));
+  truthy(steps.every((s) => !s.rule || U.RULES[s.rule]), '规则要登记'); eq(D[o].trace.outputs.r.rule, 'frac.add');
+});
+t('explain 能追到两张数字卡；explainText 是几行人话', () => {
+  const { sc, x, y, o } = frac([2, 5], [1, 3]); const D = W.evaluate(sc);
+  const tree = W.explain(sc, D, o, 'r'); eq(tree.from.map((c) => c.id).sort(), [x, y].sort());
+  const txt = W.explainText(tree); truthy(/通分/.test(txt) && txt.split('\n').length >= 4, txt);
+});
+t('关掉追踪：求值结果和打开时完全一样', () => {
+  const { sc } = frac([2, 5], [1, 3]); const strip = (D) => Object.keys(D).map((id) => JSON.stringify([D[id].out, D[id].sig, D[id].props, D[id].driven]));
+  eq(strip(W.evaluate(sc, { trace: false })), strip(W.evaluate(sc))); eq(W.evaluate(sc, { trace: false })[Object.keys(sc.entities)[0]].trace, null);
+});
+t('有环（经过记忆器）时 explain 不会死循环：遇到有状态器材就停，标上一拍的值', () => {
+  const sc = W.blank(); const m = W.add(sc, 'memory', 0, 0, {}), n = W.add(sc, 'num', 0, 0, { n: 1 }), o = W.add(sc, 'op', 0, 0, { op: 0 });
+  W.act(sc, { t: 'link', from: m, fromPort: 'v', to: o, toPort: 'a' }); W.act(sc, { t: 'link', from: n, fromPort: 'v', to: o, toPort: 'b' }); W.act(sc, { t: 'link', from: o, fromPort: 'r', to: m, toPort: 'in' });
+  const D = W.evaluate(sc); const tree = W.explain(sc, D, o, 'r');
+  const mem = tree.from.find((c) => c.id === m); truthy(mem && mem.stateful && mem.note === '上一拍的值');
+});
+t('W.from：同样得 6，一个是 192÷32 算的，一个是手填的 6', () => {
+  const calc = W.blank(); const a = W.add(calc, 'num', 0, 0, { n: 192 }), b = W.add(calc, 'num', 0, 0, { n: 32 }), o = W.add(calc, 'op', 0, 0, { op: 3 });
+  W.act(calc, { t: 'link', from: a, fromPort: 'v', to: o, toPort: 'a' }); W.act(calc, { t: 'link', from: b, fromPort: 'v', to: o, toPort: 'b' });
+  const hand = W.blank(); W.add(hand, 'num', 0, 0, { n: 6 });
+  const wOf = (sc) => U.Judge.makeW(sc, W.evaluate(sc), { ms: {} });
+  truthy(wOf(calc).from(6, 'op', [192, 32]), '算出来的'); truthy(!wOf(calc).from(6, 'op', [200, 32]), '输入不对'); truthy(!wOf(hand).from(6, 'op', [192, 32]), '手填的不算');
+});
+t('带余除法、数位板、天平、三角形、量图形都写了中间步骤', () => {
+  const need = { div: 'div.trial-quotient', digits: 'place.carry', balance: 'balance.compare', tri: 'tri.inequality', figmeasure: 'fig.shoelace' };
+  const probe = (type, props, feed) => { const sc = W.blank(); const e = W.add(sc, type, 0, 0, props || {}); (feed || []).forEach(([t, p, port]) => { const f = W.add(sc, t, 0, 0, p); W.act(sc, { t: 'link', from: f, fromPort: 'v', to: e, toPort: port }); }); return W.evaluate(sc)[e].trace.steps.map((s) => s.rule); };
+  const num = (n) => ['num', { n }];
+  truthy(probe('divmod', {}, [[...num(17), 'a'], [...num(5), 'b']]).includes(need.div));
+  truthy(probe('tri', { a: 3, b: 4, c: 5 }).includes('tri.pythagoras'));
+  truthy(probe('digits', {}, [[...num(13), 'v']]).includes(need.digits));
+  truthy(probe('balance', {}, [[...num(3), 'L'], [...num(3), 'R']]).includes(need.balance));
+});
+t('所有参考解跑完以后，没有器材用了没登记的规则', () => eq(U.ruleErrors, []));
 console.log('输出声明（1.2）');
 t('lint 拒绝没有声明 dim 的输出口', () => {
   const bad = Object.assign({}, U.types.num, { outputs: { v: { kind: 'num', label: '值' } } });
@@ -715,6 +755,7 @@ for (const p of U.problems) {
       run(n) { for (let i = 0; i < n; i++) { J2.check(p, run, s, W.tick(s)); } },
     };
     fn(h); chk();
+    { const strip = (D) => Object.keys(D).map((id) => JSON.stringify([D[id].out, D[id].sig, D[id].props, D[id].driven])); eq(strip(W.evaluate(s, { trace: false })), strip(W.evaluate(s)), '关掉追踪结果应一致：' + p.id); }
     if (U.inexactReads.length) throw new Error('对近似值做了精确判断（请改用 W.near 带容差）：' + JSON.stringify(U.inexactReads.slice(0, 2)));
     const goal = p.goal || p.milestones.map((m) => m.id), miss = goal.filter((id) => !run.ms[id].done);
     if (miss.length) throw new Error('没通过的里程碑：' + miss.join(','));

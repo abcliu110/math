@@ -78,7 +78,7 @@
       const sel = S.selLink === l.id, pd = bez(a, b);
       paths += '<path class="hit" data-link="' + l.id + '" d="' + pd + '"/><path class="ln' + (sel ? ' sel' : '') + '" stroke="' + col + '" d="' + pd + '"/>';
       if (S.scene.clock.running) paths += '<path class="flow" d="' + pd + '"/>';
-      lbl += '<div class="lb' + (sel ? ' sel' : '') + '" data-link="' + l.id + '" style="left:' + ((a.x + b.x) / 2) + 'px;top:' + ((a.y + b.y) / 2) + 'px">' + K.esc(v ? U.briefVal(v) : '—') + (sel ? ' <button class="lbdel" data-unlink="' + l.id + '" title="删除这根线">✕</button>' : '') + '</div>';
+      lbl += '<div class="lb' + (sel ? ' sel' : '') + '" data-link="' + l.id + '" style="left:' + ((a.x + b.x) / 2) + 'px;top:' + ((a.y + b.y) / 2) + 'px">' + K.esc(v ? U.briefVal(v) : '—') + (sel ? ' <button class="lbwhy" data-why="' + l.from + '|' + l.fromPort + '" title="这个数是怎么来的">？</button><button class="lbdel" data-unlink="' + l.id + '" title="删除这根线">✕</button>' : '') + '</div>';
     }
     if (linking && linking.cur) { const F = E[linking.from]; paths += '<path class="ln" stroke="#fff" stroke-dasharray="6 6" d="' + bez(portPos(F, linking.fromPort, D, true), linking.cur) + '" fill="none"/>'; }
     return { paths, lbl };
@@ -129,6 +129,7 @@
     }
     const ub = t.closest('[data-unlink]');
     if (ub) { S.selLink = null; UI.App.act({ t: 'unlink', id: ub.dataset.unlink }); return; }
+    if (t.closest('[data-why]')) return;
     const lb = t.closest('[data-link]');
     if (lb) { S.selLink = lb.dataset.link; S.sel = null; UI.Panels.renderInsp(); render(); return; }
     const card = t.closest('.card');
@@ -232,6 +233,8 @@
     window.addEventListener('pointerup', onUp);
     stageEl.addEventListener('wheel', (ev) => { ev.preventDefault(); zoomAt(ev.deltaY < 0 ? 1.1 : 1 / 1.1, ev.clientX, ev.clientY); }, { passive: false });
     stageEl.addEventListener('click', (ev) => {
+      const why = ev.target.closest('[data-why]');
+      if (why) { const [wid, wport] = why.dataset.why.split('|'); UI.Panels.whyDialog(wid, wport); return; }
       const b = ev.target.closest('[data-act]'); if (!b) return;
       const S = UI.S, id = S.sel; if (!id) return;
       const a = b.dataset.act;

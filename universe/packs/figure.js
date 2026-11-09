@@ -127,6 +127,13 @@
           const a = F.area(f), per = F.perimeter(f);
           const right = f.type === 'polygon' ? f.pts.filter((_, i) => F.isRight(f, i)).length : 0;
           if (f.type === 'polygon') c.say('info', '面积用“鞋带公式”精确算：各顶点坐标交叉相乘再相减，取一半');
+          if (c.step && f.type === 'polygon') {
+            const pts = f.pts; let terms = [];
+            pts.forEach((pt, i) => { const q = pts[(i + 1) % pts.length]; terms.push(Q.sub(Q.mul(pt.x, q.y), Q.mul(q.x, pt.y))); });
+            c.step('鞋带公式每一项（x₁y₂ − x₂y₁）：' + terms.map((t) => Q.show(t)).join('，'), null, 'fig.shoelace');
+            c.step('把它们加起来再取一半，面积 = ' + Q.show(a.a !== undefined ? a.a : Q.div(terms.reduce((x, y) => Q.add(x, y), Q(0)), Q(2))), null, 'fig.shoelace');
+            c.because('area', '鞋带公式：用坐标求多边形面积', 'fig.shoelace');
+          }
           if (!per.exact) c.say('warn', '有的边长是不同的根号，不能精确相加，周长给的是近似值');
           return {
             area: realToNum(a, U.Real.approx(a)),

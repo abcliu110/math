@@ -96,10 +96,11 @@
   }
 
   // ---------- 求值 ----------
-  function evaluate(scene) {
+  function evaluate(scene, opts) {
+    const TRACE = !(opts && opts.trace === false);
     const E = scene.entities, ck = scene.clock, D = {};
     const ids = Object.keys(E);
-    for (const id of ids) D[id] = { out: {}, sig: [], inp: {}, props: null, driven: {} };
+    for (const id of ids) D[id] = { out: {}, sig: [], inp: {}, props: null, driven: {}, trace: null };
     const into = {};
     for (const l of scene.links) if (E[l.from] && E[l.to]) (into[l.to] = into[l.to] || []).push(l);
     const sayFor = (id) => (lv, tx) => D[id].sig.push({ lv, tx });
@@ -124,8 +125,10 @@
       const inp = {}; for (const k of Object.keys(def.inputs)) inp[k] = [];
       const props = Object.assign({}, e.props);
       d.driven = {}; d.inexact = false;
+      const tr = TRACE ? { inputs: [], props: {}, steps: [], outputs: {} } : null;
       for (const l of (into[id] || [])) {
         const src = D[l.from], v = src ? src.out[l.fromPort] || null : null;
+        if (tr && !isProp(l.toPort)) tr.inputs.push({ port: l.toPort, from: l.from, fromPort: l.fromPort, value: v });
         if (v && v.exact === false) d.inexact = true;
         if (isProp(l.toPort)) {
           const k = l.toPort.slice(PROP.length), P = def.props[k];
@@ -140,6 +143,7 @@
         } else (inp[l.toPort] = inp[l.toPort] || []).push(v);
       }
       d.inp = inp; d.props = props;
+      if (tr) { for (const k of Object.keys(props)) tr.props[k] = d.driven[k] ? { value: props[k], driven: true, from: d.driven[k].from } : { value: props[k], driven: false }; d.trace = tr; }
     };
 
     // B. 无状态器材按拓扑序算
@@ -155,7 +159,9 @@
     for (const id of order) {
       const e = E[id], def = defOf(e), d = D[id];
       gather(id);
-      const ctx = { ent: e, props: d.props, inp: d.inp, t: ck.t, n: ck.n, seed: ck.seed, say: sayFor(id), kids: (slot) => childrenOf(scene, id, slot) };
+      const ctx = { ent: e, props: d.props, inp: d.inp, t: ck.t, n: ck.n, seed: ck.seed, say: sayFor(id), kids: (slot) => childrenOf(scene, id, slot),
+        step: (say, value, rule) => { if (rule && !U.RULES[rule]) U.ruleErrors.push(e.type + ' 用了没登记的规则 ' + rule); if (d.trace) d.trace.steps.push({ say, value: value === undefined ? null : value, rule: rule || null }); },
+        because: (port, say, rule) => { if (rule && !U.RULES[rule]) U.ruleErrors.push(e.type + ' 用了没登记的规则 ' + rule); if (d.trace) d.trace.outputs[port] = { say, rule: rule || null }; } };
       try { d.out = def.compute(ctx) || {}; if (!(def.exact !== false && !d.inexact)) approx(d.out); } catch (err) { d.out = {}; d.sig.push({ lv: 'err', tx: errText(err) }); }
       if (def.sig) { try { def.sig(Object.assign({}, ctx, { out: d.out }), sayFor(id)); } catch (err) { /* 信号条出错不影响计算 */ } }
     }
@@ -371,6 +377,33 @@
     try { const r = link(s, a); return { ok: !!r.ok, why: r.why || '' }; } catch (err) { return { ok: false, why: '这里连不上' }; }
   }
 
+  // ---------- 来历追踪（任务 A）----------
+  // 一条输出是怎么来的：沿输入一层层追到没有输入的源器材。遇到有状态器材就停，标“上一拍的值”。
+  function explain(scene, D, id, port, depth) {
+    const maxDepth = depth === undefined ? 6 : depth;
+    const walk = (id, port, d, path) => {
+      const e = scene.entities[id]; if (!e) return null;
+      const node = D[id], tr = node && node.trace, o = tr && tr.outputs[port];
+      const res = { id, name: e.name, port, value: (node && node.out[port]) || null, rule: o ? o.rule : null, say: o ? o.say : null, steps: tr ? tr.steps.slice() : [], from: [] };
+      if (defOf(e).stateful) { res.stateful = true; res.note = '上一拍的值'; return res; }
+      if (d <= 0 || path[id]) return res;
+      const next = Object.assign({}, path); next[id] = true;
+      for (const inp of (tr ? tr.inputs : [])) { const child = walk(inp.from, inp.fromPort, d - 1, next); if (child) { child.via = inp.port; res.from.push(child); } }
+      return res;
+    };
+    return walk(id, port, maxDepth, {});
+  }
+  // 来历树 → 几行人话
+  function explainText(tree, indent) {
+    indent = indent || 0;
+    const pad = '  '.repeat(indent), lines = [];
+    const rule = tree.rule && U.RULES[tree.rule] ? U.RULES[tree.rule].label : null;
+    lines.push(pad + tree.name + '.' + tree.port + ' = ' + U.showVal(tree.value) + (tree.say ? '（' + tree.say + '）' : rule ? '（' + rule + '）' : '') + (tree.stateful ? '　［' + tree.note + '］' : ''));
+    for (const st of tree.steps) lines.push(pad + '  · ' + st.say);
+    for (const c of tree.from) lines.push(explainText(c, indent + 1));
+    return lines.join('\n');
+  }
+
   // 存档迁移（1.4）：按版本逐级升级，每一级只做一件事，升完的台面 v 等于 CURRENT_V。
   //   v0/无版本 → v1：补全 clock（t、n、running、rate、hz、seed），去掉 binds 字段（绑定已是连线）
   //   v1 → v2：器材补 props 默认空对象；台面补 nid/seq
@@ -408,5 +441,5 @@
     return s;
   }
 
-  U.World = { blank, clone, add, act, evaluate, tick, rewind, dryLink, hasLoop, isStateful, save, load, migrate, CURRENT_V, createsUnsafeCycle, LOOP_WHY, PROP, isProp, childrenOf: (scene, id, slot) => childrenOf(scene, id, slot), isInside: (scene, c, anc) => isInside(scene, c, anc) };
+  U.World = { blank, clone, add, act, evaluate, explain, explainText, tick, rewind, dryLink, hasLoop, isStateful, save, load, migrate, CURRENT_V, createsUnsafeCycle, LOOP_WHY, PROP, isProp, childrenOf: (scene, id, slot) => childrenOf(scene, id, slot), isInside: (scene, c, anc) => isInside(scene, c, anc) };
 })(typeof globalThis !== 'undefined' ? globalThis : window);

@@ -37,6 +37,18 @@
       near(e, port, x, tol) { const v = W.out(e, port); return !!(v && v.kind === 'num' && Math.abs(Q.num(v.data) - x) <= tol); },
       num(e, port) { const q = W.q(e, port); return q ? Q.num(q) : null; },
       bool(e, port) { const v = W.out(e, port); return v && v.kind === 'bool' ? v.data : null; },
+      // 来历（任务 A）：这个值是不是由 type 这类器材、从这些输入算出来的。手填的同一个数不算。
+      from(val, type, inputs) {
+        const toQ = (v) => (v && v.kind === 'num' ? v.data : v && typeof v === 'object' && 'n' in v ? v : Q.fromNumber(+v));
+        const target = toQ(val), want = (inputs || []).map((x) => toQ(x));
+        const key = (q) => q.n + '/' + q.d;
+        return Object.values(E).some((ent) => {
+          if (ent.type !== type || !D[ent.id] || !D[ent.id].trace) return false;
+          if (!Object.values(D[ent.id].out).some((o) => o && o.kind === 'num' && Q.eq(o.data, target))) return false;
+          const got = D[ent.id].trace.inputs.map((i) => i.value).filter((v) => v && v.kind === 'num').map((v) => key(v.data)).sort();
+          return got.length === want.length && got.join() === want.map(key).sort().join();
+        });
+      },
       // 容器（1.10）：子实体与所在容器
       children: (e, slot) => U.World.childrenOf(scene, idOf(e), slot),
       parentOf: (e) => { const ent = E[idOf(e)]; return ent && ent.parent ? E[ent.parent] || null : null; },

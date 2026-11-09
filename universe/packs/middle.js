@@ -46,9 +46,14 @@
           const a = Q.fromNumber(c.props.a), b = Q.fromNumber(c.props.b), cc = Q.fromNumber(c.props.c);
           const ok = Q.cmp(Q.add(a, b), cc) > 0 && Q.cmp(Q.add(a, cc), b) > 0 && Q.cmp(Q.add(b, cc), a) > 0;
           const out = { ok: U.val('bool', ok), perim: num(Q.add(Q.add(a, b), cc), 'length') };
+          if (c.step) {
+            c.step('两边之和比第三边：' + Q.show(Q.add(a, b)) + ' 和 ' + Q.show(cc) + '，' + Q.show(Q.add(a, cc)) + ' 和 ' + Q.show(b) + '，' + Q.show(Q.add(b, cc)) + ' 和 ' + Q.show(a) + (ok ? '，都更大' : '，有一组不够大'), null, 'tri.inequality');
+            c.because('ok', '任意两边之和要大于第三边', 'tri.inequality');
+          }
           if (!ok) { c.say('warn', '围不起来：任意两边之和必须大于第三边'); return out; }
           const sq = [a, b, cc].map((x) => Q.mul(x, x)).sort(Q.cmp);
           out.right = U.val('bool', Q.eq(Q.add(sq[0], sq[1]), sq[2]));
+          if (c.step) { c.step('两条短边的平方和：' + Q.show(sq[0]) + ' + ' + Q.show(sq[1]) + ' = ' + Q.show(Q.add(sq[0], sq[1])) + '，最长边的平方：' + Q.show(sq[2]), null, 'tri.pythagoras'); c.because('right', '平方和等于最长边的平方，就是直角', 'tri.pythagoras'); }
           const s = Q.div(out.perim.data, Q(2)), A2 = Q.mul(Q.mul(s, Q.sub(s, a)), Q.mul(Q.sub(s, b), Q.sub(s, cc))), r = qsqrt(A2);
           out.area = r ? num(r, 'area') : num(Q.fromNumber(Math.sqrt(Q.num(A2))), 'area', false);
           const cx = Q.div(Q.sub(Q.add(Q.mul(b, b), Q.mul(cc, cc)), Q.mul(a, a)), Q.mul(Q(2), cc)), cy = qsqrt(Q.sub(Q.mul(b, b), Q.mul(cx, cx)));
