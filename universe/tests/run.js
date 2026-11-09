@@ -3,8 +3,8 @@
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const root = path.join(__dirname, '..');
 const fsx = require('fs'), pk = (d) => fsx.readdirSync(path.join(root, d)).filter((f) => f.endsWith('.js')).sort().map((f) => d + '/' + f);
-const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/registry.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/loader.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
-const ctx = vm.createContext({ console });
+const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/registry.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
+const ctx = vm.createContext({ console, TextEncoder, TextDecoder, btoa, atob });
 ctx.globalThis = ctx;
 for (const f of files) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f });
 const U = ctx.U, W = U.World, Q = U.Q;
@@ -355,6 +355,123 @@ t('已注册的包不重复加载；不认识的包报 missing', () => {
 t('台面需要的包：由器材类型反推', () => {
   const sc = W.blank(); W.add(sc, 'tenframe', 0, 0, {});
   truthy(U.packsNeeded(null, sc).includes('tenframe'));
+});
+console.log('学习数据（第 3 节）');
+const FIN = (pid, ts, ratio, extra) => Object.assign({ ts, type: 'finish', pid, data: Object.assign({ score: ratio * 10, max: 10, items: [{ id: 'm1', say: '算出来', score: 10, done: ratio >= 1, half: false }], traps: [], errors: 0 }, extra || {}) }, {});
+t('复习规则：没达成 → 明天；干净达成 → 4 天；达成且变式也对 → 7 天并标掌握', () => {
+  eq(U.Learning.nextReview({ ratio: 0.5, trapped: false, rejects: 0 }).days, 1);
+  eq(U.Learning.nextReview({ ratio: 1, trapped: false, rejects: 0 }).days, 4);
+  const v = U.Learning.nextReview({ ratio: 1, trapped: false, rejects: 0, variantOk: true }); eq(v.days, 7); eq(v.mastered, true);
+  eq(U.Learning.nextReview({ ratio: 1, trapped: false, thirdHint: true }).days, 2);
+});
+t('复习：同一陷阱第二次踩中标为反复出现', () => {
+  const probs = [{ id: 'a', title: 'A', points: ['4.6'], milestones: [] }];
+  const ev = [FIN('a', 1, 0, { traps: ['误解X'] }), FIN('a', 2, 0, { traps: ['误解X'] })];
+  const r = U.Learning.mastery(ev, probs, 3 * U.Learning.DAY);
+  truthy(r.due.some((d) => d.repeat), '应有反复出现');
+});
+t('错题本：列出没达成的里程碑和踩中的陷阱', () => {
+  const probs = [{ id: 'a', title: 'A', milestones: [] }];
+  const wb = U.Learning.wrongBook([FIN('a', 1, 0.5, { traps: ['T'] })], probs);
+  eq(wb.length, 1); eq(wb[0].traps, ['T']); eq(wb[0].missed.length, 1);
+});
+t('考试错因：有陷阱解释的不用自选；没解释的要选标签', () => {
+  const rep = { items: [{ id: 'm1', done: false }], traps: [] };
+  const r1 = U.Learning.examReport(rep, {}); eq(r1.needPick, ['m1']); eq(r1.complete, false);
+  eq(U.Learning.examReport(rep, { m1: '粗心' }).complete, true);
+  eq(U.Learning.examReport({ items: [{ id: 'm1', done: false }], traps: ['T'] }, {}).needPick, []);
+  eq(U.Learning.examReport(rep, { m1: '乱写' }).complete, false, '不在标签里不算');
+});
+t('下一步练什么：只有丢分才推荐；同知识点的陷阱题排前', () => {
+  const cur = { id: 'a', domain: 'D', points: ['4.6'] };
+  const probs = [cur, { id: 'b', domain: 'D', points: ['4.6'], level: 'core' }, { id: 'c', domain: 'D', points: ['4.6'], level: 'trap' }];
+  eq(U.Learning.nextPractice(cur, { items: [{ done: true }] }, probs), []);
+  eq(U.Learning.nextPractice(cur, { items: [{ done: false }] }, probs)[0].pid, 'c');
+});
+t('改进清单：达成率低、用第三层提示多、陷阱踩中率高，各给一条建议', () => {
+  const probs = [{ id: 'a', title: 'A', milestones: [{ id: 'm1', say: '关键步' }] }];
+  const ev = [0, 1, 2].map((i) => FIN('a', i, 0, { traps: ['T'], items: [{ id: 'm1', say: '关键步', done: false, half: false }] }));
+  const kinds = U.Learning.improvements(ev, probs).map((x) => x.kind);
+  truthy(kinds.includes('milestone-low') && kinds.includes('trap-common'), kinds.join(','));
+});
+t('体检表：里程碑达成率与证据等级', () => {
+  const probs = [{ id: 'a', title: 'A', points: ['4.6'], milestones: [{ id: 'm1', say: 's' }] }];
+  const ev = [FIN('a', 1, 1)];
+  const h = U.Learning.healthCard(ev, probs, '4.6');
+  eq(h.rows[0].rate.m1, 1); eq(h.point, '4.6');
+});
+t('家长周报：本周练过的题、孩子的原话', () => {
+  const now = 100 * U.Learning.DAY;
+  const ev = [FIN('a', now - 1000, 0.5), { ts: now - 500, type: 'explain', pid: 'a', data: { text: '因为两个数相加' } }];
+  const w = U.Learning.parentWeek(ev, [{ id: 'a', title: 'A', milestones: [] }], now);
+  eq(w.count, 1); eq(w.quotes[0].text, '因为两个数相加');
+});
+console.log('断点续做与事件压缩（3.1 / 3.2.1）');
+t('重放：开场快照 + 操作序列，结果与直接操作一致；被拒绝的操作不改台面', () => {
+  const sc = W.blank(); const a = W.add(sc, 'num', 0, 0, { n: 2 }); const o = W.add(sc, 'op', 0, 0, { op: 0 });
+  const sess = U.Session.start({ id: 'x' }, 'practice', sc, 0);
+  U.Session.record(sess, { t: 'set', id: a, k: 'n', v: 5 });
+  U.Session.record(sess, { t: 'link', from: 'nope', fromPort: 'v', to: o, toPort: 'a' }); // 会被拒绝
+  const re = U.Session.replay(sess);
+  eq(re.entities[a].props.n, 5); eq(re.links.length, 0);
+});
+t('考试剩余时间：刷新后从剩余时间继续，记 resume 事件', () => {
+  const sess = U.Session.start({ id: 'x', milestones: [1, 2, 3] }, 'exam', W.blank(), 0);
+  eq(sess.limitSec, 6 * 60);
+  eq(U.Session.remaining(sess, 60 * 1000), 5 * 60);
+  const r = U.Session.resume(sess, 120 * 1000);
+  eq(r.event.type, 'resume'); eq(r.event.data.remaining, 4 * 60); eq(U.Session.remaining(sess, 120 * 1000), 4 * 60);
+});
+t('练习没有时限', () => eq(U.Session.start({ id: 'x' }, 'practice', W.blank(), 0).limitSec, null));
+t('事件压缩：过期的事件只留每题最近一次结果，近期的全部保留', () => {
+  const now = 100 * U.Learning.DAY;
+  const log = [
+    { ts: now - 40 * U.Learning.DAY, type: 'trap', pid: 'a', data: {} },
+    { ts: now - 39 * U.Learning.DAY, type: 'finish', pid: 'a', data: {} },
+    { ts: now - 35 * U.Learning.DAY, type: 'finish', pid: 'a', data: {} },
+    { ts: now - 2 * U.Learning.DAY, type: 'trap', pid: 'a', data: {} },
+  ];
+  const kept = U.Session.compact(log, now, 30);
+  eq(kept.length, 2); eq(kept[0].type, 'finish'); eq(kept[0].ts, now - 35 * U.Learning.DAY); eq(kept[1].type, 'trap');
+});
+console.log('作者层数据（第 3.3、4.1–4.3 节）');
+t('分享：台面 → 文本 → 台面，内容一致（含中文名字）', () => {
+  const sc = W.blank(); const id = W.add(sc, 'num', 10, 20, { n: 3 }); sc.entities[id].name = '数字卡甲';
+  const enc = U.Share.encode(sc); eq(enc.mode, 'link');
+  const back = U.Share.decode(enc.text); eq(back.entities[id].name, '数字卡甲'); eq(back.entities[id].props.n, 3);
+});
+t('分享：带着打包器材一起送出去，对方能用', () => {
+  const sc = W.blank(); const a = W.add(sc, 'num', 0, 0, { n: 2 }); const b = W.add(sc, 'op', 0, 0, { op: 0 });
+  const sub = Object.assign(W.blank(), {}); const k = W.add(sub, 'num', 0, 0, { n: 0 });
+  U.defineMacro('share-probe-macro', { label: '探针宏', essence: ['E4'], inputs: {}, outputs: { v: { id: k, port: 'v' } }, scene: sub });
+  const m = W.add(sc, 'share-probe-macro', 0, 0, {});
+  const enc = U.Share.encode(sc);
+  truthy(enc.text.length > 0);
+  delete U.types['share-probe-macro']; // 模拟对方没有这个器材
+  const back = U.Share.decode(enc.text);
+  truthy(U.types['share-probe-macro'], '应登记带来的宏器材');
+});
+t('分享：超过 8 KB 改用文件（mode file）', () => {
+  const sc = W.blank(); for (let i = 0; i < 400; i++) W.add(sc, 'num', i, i, { n: i });
+  eq(U.Share.encode(sc).mode, 'file');
+});
+t('作业码：往返一致；结果文件按班汇总达成率', () => {
+  const a = U.Share.assignment('周三作业', ['p1', 'p2'], 1234);
+  eq(U.Share.parseAssignment(a.code).pids, ['p1', 'p2']);
+  const probs = [{ id: 'p1', milestones: [{ id: 'm1' }] }];
+  const f1 = U.Share.resultFile(a.id, ['p1'], [{ type: 'finish', pid: 'p1', ts: 1, data: { items: [{ id: 'm1', done: true }], traps: [] } }], '甲');
+  const f2 = U.Share.resultFile(a.id, ['p1'], [{ type: 'finish', pid: 'p1', ts: 1, data: { items: [{ id: 'm1', done: false }], traps: ['T'] } }], '乙');
+  const sum = U.Share.classSummary([f1, f2], probs);
+  eq(sum.p1.students, 2); eq(sum.p1.rate.m1, 0.5); eq(sum.p1.traps.T, 1);
+});
+t('出题自检：台面满足目标才可以发布；空台面就满足的题不行', () => {
+  const goal = [{ type: 'num', port: 'v', op: '=', value: '5' }];
+  const bad = W.blank(); W.add(bad, 'num', 0, 0, { n: 5 });
+  eq(U.Share.selfCheck(goal, W.blank()).ok, false, '台面没有满足目标');
+  const trivial = { type: 'num', port: 'v', op: '=', value: '0' };
+  const ok = W.blank(); W.add(ok, 'num', 0, 0, { n: 5 });
+  eq(U.Share.selfCheck([{ type: 'num', port: 'v', op: '=', value: '5' }], ok).ok, true);
+  eq(U.Share.selfCheck([trivial], W.blank()).ok, false, '空台面就满足的题不行');
 });
 console.log('输出声明（1.2）');
 t('lint 拒绝没有声明 dim 的输出口', () => {

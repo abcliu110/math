@@ -19,7 +19,10 @@
     });
   }
 
+  // 打包器材的定义存一份（可序列化），分享时随台面一起带走（4.3）
+  U.MACRO_SPECS = U.MACRO_SPECS || {};
   U.defineMacro = function (id, spec) {
+    U.MACRO_SPECS[id] = JSON.parse(JSON.stringify({ label: spec.label, group: spec.group, essence: spec.essence, grades: spec.grades, inputs: spec.inputs, outputs: spec.outputs, scene: spec.scene }));
     const sc = spec.scene;
     const outKinds = {}, outDims = {}, inKinds = {};
     for (const [name, ref] of Object.entries(spec.inputs)) {

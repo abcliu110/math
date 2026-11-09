@@ -82,3 +82,16 @@ U.registerPack({ id:'mypack', types:{ foo:{
 - **实验报告界面（2.5）**：做完一道题的结果对话框里有“实验报告”按钮，打开四栏视图（我猜的、我试了什么、我发现了、我还想问）。第四栏只在当前页面里，还没有保存。
 - **其余首批值类型（1.7）**：`set`（有理数的有序去重集合，`U.SetV.of / has / union / inter`）、`vec`（有理数分量的向量）、`expr`（一元多项式，`U.Expr.add / mul / eq / eval / show`，供方程和恒等式）、`graph`（n 个点的无向简单图，`U.Graph.of / degree`）。每种都有 eq / show / serialize / parse，并通过注册 lint。
 - **器材包按需加载（1.8）**：`U.PACK_FILES` 是包清单（包 id → 脚本路径）；`U.ensurePacks(ids)` 只加载还没注册的包，清单里没有的报 missing；`U.packsNeeded(problem, scene)` 由题目的 shelf 和台面的器材类型算出需要的包。index.html 目前仍一次加载全部包。
+
+## 第 3、4 节数据层（设计 v2）
+
+- **复习规则（3.2）**：`U.Learning.nextReview(r)` 只有一套规则；`U.Learning.mastery(events, problems, now)` 按每题最近一次结果给出下次复习（同一陷阱第二次踩中标“反复出现”）。
+- **错题本、考试报告、改进清单、家长周报（3.1 / 3.4 / 3.5）**：`U.Learning.wrongBook`、`examReport`（错因 6 个标签，没有陷阱解释的里程碑要学生自选）、`nextPractice`（只在丢分时推荐，陷阱题优先）、`healthCard`（体检表）、`improvements`（规则化建议）、`parentWeek`。
+- **断点续做（3.2.1）**：`U.Session.start / record / replay / remaining / resume`。开场快照 + 操作序列重放得到同一台面；考试剩余时间 = 限时 − 已用时间，刷新时记 `resume`。
+- **事件压缩（3.1）**：`U.Session.compact(log, now, days)` 过期事件只保留每题最近一次结果。
+- **台面分享（4.1）**：`U.Share.encode(scene)` → base64url 文本（含用到的打包器材定义，`U.MACRO_SPECS`）；超过 8 KB 改为文件。`U.Share.decode(text)` 登记器材并载入台面。
+- **作业（3.3）**：`U.Share.assignment(title, pids, due)` 生成作业码；`resultFile` 生成学生交回的结果；`classSummary` 按班汇总达成率与陷阱。
+- **出题自检（4.2）**：`U.Share.selfCheck(goals, opening)`：台面满足目标才可以发布，空台面不能已经满足。
+- **打包器材定义（4.3）**：`U.defineMacro` 把定义存进 `U.MACRO_SPECS`，分享时随台面带走。
+
+**仍然没有的（需要界面或内容）**：学习数据和作业的界面（做完页、错因选择、老师导入、家长端页面）；台面分享与“我的实验”的界面；学生出题的界面；预测的三种免打字形式（pick / place / more-less）的界面；证明类器材的界面与行为；88 个旧实验的迁移。
