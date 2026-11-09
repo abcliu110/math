@@ -30,6 +30,30 @@
   // 找回选中的对象：'#' 开头的按键找（实体 id 和口），其余按稳定名字找。返回和 U.Names.resolve 一样的形状
   const resolvePick = (name) => { if (name[0] !== '#') return U.Names.resolve(UI.S.scene, name); const [id, port] = name.slice(1).split('.'); const e = UI.S.scene.entities[id]; if (!e) return 'missing: ' + name; const node = (UI.S.D || {})[id]; return { name, id, port, ent: e, value: (node && node.out[port]) || null }; };
   // 工作区里要显示的值：每个器材输出的 fig（没有 fig 时才用 figs），按放入的先后。key 是 器材id.口，层开关用它
+  // ---- 学生看到的名字：只改显示；稳定名字（选中、解析用的）不变 ----
+  const TXT_W = (t) => { let w = 0; for (const ch of String(t)) w += ch.charCodeAt(0) < 128 ? 6.6 : 11.5; return Math.ceil(w) + 4; };
+  const vName = (n) => { const m = /^M\((.*)\)$/.exec(n); return m ? m[1] + '中点' : n; };
+  const joinV = (xs) => (xs.every((x) => x.length === 1) ? xs.join('') : xs.join('、'));
+  function pretty(nm) {
+    if (!nm) return null;
+    let m;
+    if ((m = /^poly\((.*)\)$/.exec(nm))) { const vs = m[1].split(',').map(vName); return (vs.length === 3 ? '三角形 ' : vs.length === 4 ? '四边形 ' : '多边形 ') + joinV(vs); }
+    if ((m = /^seg\((.*)\)$/.exec(nm))) return '线段 ' + joinV(m[1].split(',').map(vName));
+    if (/^M\(/.test(nm)) return vName(nm);
+    if (/^X\(/.test(nm)) return '交点';
+    if (/^foot\(/.test(nm)) return '垂足';
+    if (/^perp\(/.test(nm)) return '垂线段';
+    if (/^step:/.test(nm)) return '摆出来的图形';
+    if (/^cut:/.test(nm)) return '剪开的一块';
+    return nm;
+  }
+  const FIG_NAME = { polygon: '多边形', segment: '线段', circle: '圆', point: '点' };
+  // 图形的标签：块用它自己的名字；目标图形（fquad）统一叫「目标图形」；其余用学生名字，没有就按图形的种类
+  function figLabel(it, nm, fig) {
+    if (it.type === 'gpiece') return it.props.name || it.name;
+    if (it.type === 'fquad') return '目标图形';
+    return pretty(nm) || FIG_NAME[fig && fig.type] || it.name;
+  }
   function wsValues(ws, names) {
     const S = UI.S, D = S.D || {}, shows = U.types[ws.type].workspace.shows, out = [];
     const E = S.scene.entities, L = S.scene.links;
@@ -42,20 +66,28 @@
         // 剪开的一口已经接成了块：画块（它自己会移动），不再画剪刀的原样输出
         if (it.type === 'gcut' && L.some((l) => l.from === it.id && l.fromPort === port && E[l.to] && E[l.to].type === 'gpiece')) continue;
         const key = it.id + '.' + port, nm = names[key] || null;
-        if (v.kind === 'figs') { if (hasFig) continue; v.data.forEach((f, i) => out.push({ key: key + '.' + i, name: null, label: nm || it.name, fig: f, id: it.id, port })); continue; }
-        // 块（gpiece）的标签用它自己的名字（块 1、块 2），稳定名字只用来选中
-        const pl = it.type === 'gpiece' ? (it.props.name || it.name) : null;
-        out.push({ key, name: nm, label: pl || nm || (port === 'p' || port === 'f' ? it.name : it.name + '·' + port), fig: v.data, id: it.id, port });
+        if (v.kind === 'figs') { if (hasFig) continue; v.data.forEach((f, i) => out.push({ key: key + '.' + i, name: null, label: figLabel(it, nm, f), fig: f, id: it.id, port })); continue; }
+        out.push({ key, name: nm, label: figLabel(it, nm, v.data), fig: v.data, id: it.id, port });
       }
     }
     return out;
   }
+  // 工作区里的步骤：工具造出来的步骤器材（连线、中点、垂线、剪、摆放、拼合）。标题的步数和步骤清单都用它
+  const wsSteps = (ws) => wsKids(ws).filter((k) => STEP_TYPES.includes(k.type));
+  // 选中的对象显示成学生的名字（找到了用图形的标签，找不到就按名字换算）
+  const pickLabel = (x, vals) => { const v = vals.find((y) => pickOf(y) === x); return v ? v.label : pretty(x) || x; };
   const stepLabel = (st) => (st.type === 'gplace' ? (st.props.flip ? '翻转' : st.props.turn ? '旋转' : '移动') : STEP_LABEL[st.type] || st.type);
   // ---- 工作区的坐标范围（§10.5.8 A2、A3）----
   // S.wsView[id] = {cx, cy, span}：可见的横向范围是 [cx-span/2, cx+span/2]，画布上 1 个坐标单位 = w/span 像素。
   // 没存过的，按内容自动选（横纵都装得下）。一旦拖过、滚过、改过大小、点过“适应”，就存下来：
   // 之后拉大卡片只是把图画大，坐标范围不变。
   function wsVisible(ws) { const hidden = UI.S.wsHidden || {}; return wsValues(ws, wsNames()).filter((v) => !hidden[v.key] && v.fig); }
+  // 一个图形在坐标里的外框（圆按半径算）；没有点就是 null
+  function figBox(f) {
+    if (!f || !f.pts || !f.pts.length) return null;
+    const r = f.type === 'circle' ? Math.sqrt(Q.num(f.r2)) : 0, xs = f.pts.map((p) => Q.num(p.x)), ys = f.pts.map((p) => Q.num(p.y));
+    return { x0: Math.min(...xs) - r, x1: Math.max(...xs) + r, y0: Math.min(...ys) - r, y1: Math.max(...ys) + r };
+  }
   function wsBounds(vals) {
     const xs = [], ys = [];
     for (const v of vals) {
@@ -78,18 +110,76 @@
     const v = UI.S.wsView && UI.S.wsView[ws.id];
     return v || autoView(b === undefined ? wsBounds(wsVisible(ws)) : b, w, h);
   }
-  const fmtN = (n) => String(Math.round(n * 100) / 100);
+  // 范围的数取最近的 1/2：写成 −1/2、7 1/2 这样
+  const fmtHalf = (n) => { const k = Math.round(n * 2), a = Math.abs(k), whole = Math.floor(a / 2), half = a % 2; return (k < 0 ? '−' : '') + (half ? (whole ? whole + ' ' : '') + '1/2' : String(whole)); };
   function rangeText(ws, w, h) {
     const v = wsView(ws, w, h), hh = h * v.span / w / 2, hw = v.span / 2;
-    return '横向 ' + fmtN(v.cx - hw) + ' 到 ' + fmtN(v.cx + hw) + '　纵向 ' + fmtN(v.cy - hh) + ' 到 ' + fmtN(v.cy + hh);
+    return '横向 ' + fmtHalf(v.cx - hw) + ' 到 ' + fmtHalf(v.cx + hw) + '　纵向 ' + fmtHalf(v.cy - hh) + ' 到 ' + fmtHalf(v.cy + hh);
   }
 
   // 工作区的画布：把所有显示的值画在一起，按工作区的坐标范围画（范围定下来以后，卡片变大图也跟着变大）
+  // 标签：先按候选位置挑第一个“在画布里、不和已放的标签叠”的；候选都不行，就找画布里一个空的格子；实在没有，夹到画布里
+  function placeLabels(labs, w, h) {
+    const M = 3, placed = [];
+    const box = (x, y, t) => ({ x0: x, x1: x + TXT_W(t), y0: y - 11, y1: y + 3 });
+    const inside = (b) => b.x0 >= M && b.x1 <= w - M && b.y0 >= M && b.y1 <= h - M;
+    const hit = (b) => placed.some((p) => b.x0 < p.x1 && b.x1 > p.x0 && b.y0 < p.y1 && b.y1 > p.y0);
+    const pick = (L) => {
+      for (const [x, y] of L.cands) { const b = box(x, y, L.text); if (inside(b) && !hit(b)) return [x, y, b]; }
+      for (let y = 14; y <= h - 4; y += 14) for (let x = M; x <= w - TXT_W(L.text) - M; x += 18) { const b = box(x, y, L.text); if (inside(b) && !hit(b)) return [x, y, b]; }
+      const [x0, y0] = L.cands[0], b0 = box(x0, y0, L.text);
+      const dx = Math.max(M - b0.x0, Math.min(0, w - M - b0.x1)), dy = Math.max(M - b0.y0, Math.min(0, h - M - b0.y1));
+      return [x0 + dx, y0 + dy, box(x0 + dx, y0 + dy, L.text)];
+    };
+    let svg = '';
+    for (const L of labs.slice().sort((a, b) => a.prio - b.prio)) {
+      const [x, y, b] = pick(L); placed.push(b);
+      svg += '<text x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" font-size="11" font-weight="700" fill="' + L.c + '" font-family="var(--font)">' + K.esc(L.text) + '</text>';
+    }
+    return svg;
+  }
+  // 整个在坐标范围外面的图形：在画布边缘画一个箭头和名字，点一下就把范围调到它（wsFit）
+  function offArrows(fr, ws) {
+    const { vw, w, h, X, Y, vals } = fr, hw = vw.span / 2, hh = vw.span * h / w / 2, M = 6, out = [];
+    vals.forEach((v, i) => {
+      const bx = figBox(v.fig); if (!bx) return;
+      if (bx.x1 >= vw.cx - hw && bx.x0 <= vw.cx + hw && bx.y1 >= vw.cy - hh && bx.y0 <= vw.cy + hh) return;
+      const dx = X((bx.x0 + bx.x1) / 2) - w / 2, dy = Y((bx.y0 + bx.y1) / 2) - h / 2;
+      if (!dx && !dy) return;
+      const t = Math.min(dx ? (w / 2 - M - 14) / Math.abs(dx) : Infinity, dy ? (h / 2 - M - 14) / Math.abs(dy) : Infinity);
+      const ax = w / 2 + dx * t, ay = h / 2 + dy * t, ang = Math.atan2(dy, dx) * 180 / Math.PI, c = WS_COL[i % WS_COL.length];
+      const tw = TXT_W(v.label), tx = Math.max(M, Math.min(w - M - tw, ax - tw / 2)), ty = ay < h / 2 ? Math.min(h - M, ay + 26) : Math.max(M + 11, ay - 18);
+      out.push('<g data-fit-ws="' + ws.id + '" data-fit-key="' + escA(v.key) + '" style="cursor:pointer">' +
+        '<circle cx="' + ax.toFixed(1) + '" cy="' + ay.toFixed(1) + '" r="12" fill="#fff" stroke="' + c + '" stroke-width="2"/>' +
+        '<path d="M-5 -4 L5 0 L-5 4 Z" fill="' + c + '" transform="translate(' + ax.toFixed(1) + ' ' + ay.toFixed(1) + ') rotate(' + ang.toFixed(1) + ')"/>' +
+        '<text x="' + tx.toFixed(1) + '" y="' + ty.toFixed(1) + '" font-size="11" font-weight="700" fill="' + c + '" font-family="var(--font)">' + K.esc(v.label) + '</text></g>');
+    });
+    return out.join('');
+  }
+  // 坐标范围跟着内容走：新加的、挪动过的图形如果超出了范围，就自动重新适应（拖动中不做，拖动开始时范围已经冻结）
+  function checkViews() {
+    const S = UI.S; if (drag) return;
+    S.wsSig = S.wsSig || {};
+    for (const ws of Object.values(S.scene.entities)) {
+      if (!isWsDef(ws.type)) continue;
+      const vals = wsVisible(ws), prev = S.wsSig[ws.id] || {}, sig = {}, changed = [];
+      for (const v of vals) {
+        const f = v.fig, k = [f.type, (f.pts || []).map((p) => Q.show(p.x) + ',' + Q.show(p.y)).join(';'), f.r2 ? Q.show(f.r2) : ''].join('|');
+        sig[v.key] = k; if (prev[v.key] !== k) changed.push(v);
+      }
+      S.wsSig[ws.id] = sig;
+      if (!changed.length) continue;
+      const g = geom(ws), w = g.w, h = g.h - HD, vw = wsView(ws, w, h), hw = vw.span / 2, hh = vw.span * h / w / 2;
+      const out = changed.some((v) => { const bx = figBox(v.fig); return bx && (bx.x0 < vw.cx - hw || bx.x1 > vw.cx + hw || bx.y0 < vw.cy - hh || bx.y1 > vw.cy + hh); });
+      if (out) { S.wsView = S.wsView || {}; S.wsView[ws.id] = autoView(wsBounds(vals), w, h); }
+    }
+  }
   function wsBody(ws, w, h) {
     const S = UI.S, sel = new Set(S.wsSel || []), ents = S.scene.entities;
     const fr = wsFrame(ws, w, h), vals = fr.vals;
     if (!fr.b) return K.text(w / 2, h / 2, '工作区里还没有图形', { size: 12, fill: 'var(--dim)' });
     const { vw, s, X, Y } = fr;
+    const labs = [];   // 标签先收集，最后统一摆放（不叠、不出画布）
     let g = '', top = '';   // top：自由点的把手，画在所有图形的上面（图形的填充不能盖住点）
     vals.forEach((v, i) => {
       const f = v.fig; if (!f) return;
@@ -99,19 +189,23 @@
       const pk = " data-pick=\"" + escA(pickOf(v)) + "\"";
       const dg = isPc && !ent.props.locked ? ' data-drag="' + ent.id + '" data-s="' + s.toFixed(4) + '"' : '';
       const sty = isPc ? ' style="cursor:' + (ent.props.locked ? 'pointer' : 'grab') + '"' : " style=\"cursor:pointer\"";
-      let lx, ly;
+      let lx, ly, cands = [], prio = 1;
       if (f.type === 'polygon') {
         const d = f.pts.map((p, k) => (k ? 'L' : 'M') + X(Q.num(p.x)).toFixed(1) + ' ' + Y(Q.num(p.y)).toFixed(1)).join(' ') + ' Z';
         g += '<path d="' + d + '" fill="' + c + '22" stroke="' + c + '" stroke-width="' + sw + '"' + pk + dg + sty + '/>';
         lx = f.pts.reduce((a, p) => a + X(Q.num(p.x)), 0) / f.pts.length; ly = f.pts.reduce((a, p) => a + Y(Q.num(p.y)), 0) / f.pts.length;
+        const tw = TXT_W(v.label); cands = [[lx - tw / 2, ly + 4], [lx - tw / 2, ly + 18], [lx - tw / 2, ly - 10], [lx - tw / 2, ly + 32]]; prio = 2;
       } else if (f.type === 'segment') {
         const a = f.pts[0], b = f.pts[1];
         g += '<line x1="' + X(Q.num(a.x)) + '" y1="' + Y(Q.num(a.y)) + '" x2="' + X(Q.num(b.x)) + '" y2="' + Y(Q.num(b.y)) + '" stroke="' + c + '" stroke-width="' + (on ? 5 : 2.5) + '"' + (f.dash ? ' stroke-dasharray="6 4"' : '') + ' stroke-linecap="round"' + pk + sty + '/>';
         lx = (X(Q.num(a.x)) + X(Q.num(b.x))) / 2; ly = (Y(Q.num(a.y)) + Y(Q.num(b.y))) / 2;
+        const tw = TXT_W(v.label); cands = [[lx + 6, ly - 6], [lx + 6, ly + 14], [lx - tw - 6, ly - 6], [lx - tw - 6, ly + 14]];
       } else if (f.type === 'circle') {
         const cx = X(Q.num(f.pts[0].x)), cy = Y(Q.num(f.pts[0].y));
         g += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (Math.sqrt(Q.num(f.r2)) * s) + '" fill="none" stroke="' + c + '" stroke-width="' + sw + '"' + pk + sty + '/>';
         lx = cx; ly = cy;
+        const rr = Math.sqrt(Q.num(f.r2)) * s, tw = TXT_W(v.label), k = 0.71;
+        cands = [[cx - tw / 2, cy + 4], [cx + rr * k + 3, cy - rr * k], [cx - rr * k - tw - 3, cy - rr * k], [cx - tw / 2, cy - rr - 6], [cx - tw / 2, cy + rr + 14]]; prio = 3;
       } else if (f.type === 'point') {
         const px = X(Q.num(f.pts[0].x)), py = Y(Q.num(f.pts[0].y)), src = f.tag && ents[f.tag] && ents[f.tag].type === 'gpt' ? f.tag : null;
         if (src) {
@@ -119,10 +213,11 @@
           top += '<circle data-drag="' + src + '" data-kx="x" data-ky="y" data-s="' + s.toFixed(4) + '" cx="' + px + '" cy="' + py + '" r="7" fill="#fff" stroke="' + c + '" stroke-width="' + (on ? 4 : 2.5) + '" style="cursor:grab"' + pk + '/>';
         } else g += '<circle cx="' + px + '" cy="' + py + '" r="' + (on ? 6 : 4) + '" fill="' + c + '"' + pk + sty + '/>';
         lx = px + 9; ly = py - 9;
+        const tw = TXT_W(v.label); cands = [[px + 9, py - 9], [px + 9, py + 15], [px - 9 - tw, py - 9], [px - 9 - tw, py + 15]]; prio = 0;
       }
-      if (lx !== undefined) g += '<text x="' + lx.toFixed(1) + '" y="' + ly.toFixed(1) + '" font-size="11" font-weight="700" fill="' + c + '" font-family="var(--font)">' + K.esc(v.label) + '</text>';
+      if (lx !== undefined) labs.push({ text: v.label, c, cands, prio });
     });
-    return wsEdges(fr) + g + top + wsHandles(fr) + drawPreview(ws, fr);
+    return wsEdges(fr) + g + top + wsHandles(fr) + drawPreview(ws, fr) + offArrows(fr, ws) + placeLabels(labs, w, h);
   }
   // 画线时的预览：第一点（空心圈）、到光标吸附位置的虚线、光标处的吸附点
   function drawPreview(ws, fr) {
@@ -138,7 +233,7 @@
   function wsPanelHtml(ws, names, dims, inFocus) {
     const S = UI.S, g = geom(ws), wd = U.types[ws.type].workspace, hidden = S.wsHidden || {};
     const pw = dims ? dims.w : g.w, ph = dims ? dims.h : g.h - HD;
-    const kids = wsKids(ws), steps = kids.filter((k) => STEP_TYPES.includes(k.type)), vals = wsValues(ws, names), picks = S.wsSel || [];
+    const vals = wsValues(ws, names), steps = wsSteps(ws), picks = S.wsSel || [];
     const pos = inFocus ? '' : ' style="left:' + g.x + 'px;top:' + (g.y + g.h + 36) + 'px;width:' + g.w + 'px"';
     let h = '<div class="wsx" data-ws="' + ws.id + '"' + pos + '>';
     const D = S.wsDraw && S.wsDraw.ws === ws.id ? S.wsDraw : null;
@@ -146,7 +241,7 @@
       '<button data-ws-fit="' + ws.id + '" title="按内容选坐标范围，让图正好装下">适应</button></div>';
     h += '<div class="wsx-range">' + rangeText(ws, pw, ph) + '</div>';
     h += '<div class="wsx-args">移动时：向右 <input type="number" data-ws-arg="dx" value="' + escA(S.wsArgs.dx) + '"> 向上 <input type="number" data-ws-arg="dy" value="' + escA(S.wsArgs.dy) + '"></div>';
-    h += '<div class="wsx-sel">' + (D ? (D.tool === 'cut' ? '剪：选中要剪的图形，点两下画剪切线（Esc 退出）' : '连线：点两下画一条线（Esc 退出）') : picks.length ? '选中：' + picks.map((x) => K.esc(x)).join('、') : '点图形或点来选中（Shift 点可以多选）') + '</div>';
+    h += '<div class="wsx-sel">' + (D ? (D.tool === 'cut' ? '剪：选中要剪的图形，点两下画剪切线（Esc 退出）' : '连线：点两下画一条线（Esc 退出）') : picks.length ? '选中：' + picks.map((x) => K.esc(pickLabel(x, vals))).join('、') : '点图形或点来选中（Shift 点可以多选）') + '</div>';
     // 选中的块：把手在这里（旋转、翻转、属性）；拖动是直接拖图形，R、F 键同样有效
     const pcs = selPieceIds().filter((id) => S.scene.entities[id].parent === ws.id);
     if (pcs.length) h += '<div class="wsx-piece"><b>' + K.esc(pcs.length === 1 ? S.scene.entities[pcs[0]].props.name : pcs.length + ' 块') + '</b>' +
@@ -156,7 +251,7 @@
     h += '<div class="wsx-h">步骤</div>';
     if (!steps.length) h += '<div class="wsx-none">还没有步骤</div>';
     steps.forEach((st, i) => {
-      const srcs = S.scene.links.filter((l) => l.to === st.id).map((l) => names[l.from + '.' + l.fromPort] || '?');
+      const srcs = S.scene.links.filter((l) => l.to === st.id).map((l) => pretty(names[l.from + '.' + l.fromPort]) || '?');
       h += '<div class="wsx-step" data-ws-step="' + st.id + '"><span>第 ' + (i + 1) + ' 步：' + K.esc(stepLabel(st)) + '（' + K.esc(srcs.join('、')) + '）</span>' +
         '<button data-ws-del="' + st.id + '" title="删除这一步">✕</button></div>';
     });
@@ -197,7 +292,8 @@
     const c = { ent: e, props: dd.props || e.props, d: dd, out: dd.out, state: e.state, w: g.w, h: cH, t: S.scene.clock.t, n: S.scene.clock.n };
     let body = '', badge = '';
     try { body = d.workspace ? wsBody(e, g.w, cH) : d.draw(c); } catch (x) { body = K.text(g.w / 2, cH / 2, '画不出来', { fill: 'var(--bad)' }); }
-    try { badge = d.badge ? d.badge(c) : ''; } catch (x) { badge = ''; }
+    // 工作区的标题步数只数学生做的步骤（和下面的步骤清单是同一批）
+    try { badge = d.workspace ? (wsSteps(e).length ? wsSteps(e).length + ' 步' : '') : d.badge ? d.badge(c) : ''; } catch (x) { badge = ''; }
     let h = '<div class="card' + (S.sel === e.id ? ' sel' : '') + '" data-id="' + e.id + '" style="left:' + g.x + 'px;top:' + g.y + 'px;width:' + g.w + 'px;height:' + g.h + 'px">';
     h += '<div class="hd" data-id="' + e.id + '"><span class="nm">' + K.esc(e.name) + '</span><span class="bd">' + K.esc(badge || '') + '</span></div>';
     h += '<svg class="bdy' + (d.workspace ? ' wsbody" data-wsid="' + e.id : '') + '" width="' + g.w + '" height="' + cH + '" viewBox="0 0 ' + g.w + ' ' + cH + '">' + body + '</svg>';
@@ -260,6 +356,7 @@
 
   function render() {
     const S = UI.S; if (!S) return;
+    checkViews();
     const D = S.D, E = S.scene.entities;
     const lk = linksHtml(S);
     let h = '<svg id="links" width="1" height="1">' + lk.paths + '</svg>';
@@ -301,14 +398,16 @@
     render();
   }
   // 适应：按内容选一个正好装下的坐标范围（之后拉大卡片不再变）
-  function wsFit(id) {
+  // key 有值时只适应到这一个图形（超出范围的箭头用它）
+  function wsFit(id, key) {
     const S = UI.S, ws = S.scene.entities[id]; if (!ws) return;
     const sv = S.focusWs === id && focusEl ? focusEl.querySelector('svg.wsbody') : null;
     let w, h;
     if (sv) { w = +sv.getAttribute('width'); h = +sv.getAttribute('height'); }
     else { const g = geom(ws); w = g.w; h = g.h - HD; }
+    const vals = key ? wsVisible(ws).filter((v) => v.key === key) : wsVisible(ws);
     S.wsView = S.wsView || {};
-    S.wsView[id] = autoView(wsBounds(wsVisible(ws)), w, h);
+    S.wsView[id] = autoView(wsBounds(vals), w, h);
     render();
   }
   // 开始拖柄改大小：工作区先把现在看到的坐标范围存下来，之后拉大只是把图画大
@@ -732,6 +831,9 @@
   function onDown(ev) {
     const S = UI.S, t = ev.target;
     if (t.closest('.tool') || t.closest('.wsx') || t.closest('.wsx-float')) return;   // 工作区底下的面板：让浏览器照常处理按钮和输入框
+    // 超出范围的图形的箭头：点一下，范围调到它
+    const arr = t.closest('[data-fit-key]');
+    if (arr) { ev.preventDefault(); ev.stopPropagation(); wsFit(arr.dataset.fitWs, arr.dataset.fitKey); return; }
     // 专注浮层：标题双击还原；浮层里的画布和台面没有关系，照常往下处理
     const fo = t.closest('#wsfocus');
     if (fo && !t.closest('.wsbody')) { if (t.closest('.wsf-hd') && !t.closest('button') && dbl('focus-hd')) setFocus(null); return; }

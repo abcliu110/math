@@ -628,6 +628,59 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   ok(await p.locator('[data-ws-tool="seg"].on').count() === 0, '(d) Esc 退出画线');
 
   }
+  {
+    console.log('几何工作区的显示：名字、标签、视野、步数、器材架');
+    // (a) 棋盘和图层里没有内部名字 poly(，三角形显示成学生的名字
+    await p.evaluate(() => UI.App.openProblem('geo-median-area', 'practice')); await p.waitForTimeout(200);
+    const shown = await p.evaluate(() => [...document.querySelectorAll('.card svg.wsbody')].map((s) => s.textContent).join('|') + '||' + [...document.querySelectorAll('.wsx-layers')].map((s) => s.textContent).join('|'));
+    ok(!/poly\(/.test(shown) && /三角形 ABC/.test(shown), '(a) geo-median-area：棋盘和图层里没有 poly( 字样，三角形显示成「三角形 ABC」');
+    // (b) 点的名字都在卡片里面（不被卡片的边切掉）
+    const inCard = await p.evaluate(() => {
+      const card = document.querySelector('.card .bdy.wsbody').closest('.card').getBoundingClientRect();
+      const ts = [...document.querySelectorAll('.card svg.wsbody text')].filter((t) => /^[ABC]$/.test(t.textContent));
+      return ts.length === 3 && ts.every((t) => { const r = t.getBoundingClientRect(); return r.left > card.left && r.right <= card.right && r.top >= card.top; });
+    });
+    ok(inCard, '(b) 点的名字 A、B、C 都在卡片里面');
+    // (c) 圆放在坐标范围外面：自动跟着它重新适应，圆在画布里看得见
+    await p.evaluate(() => UI.App.openFree()); await p.waitForTimeout(150);
+    const wsC = await p.evaluate(() => {
+      const A = UI.App, ws = A.act({ t: 'add', type: 'gworkspace', x: 120, y: 120 }).id;
+      UI.S.wsView[ws] = { cx: -20, cy: -20, span: 8 };   // 故意把范围放在圆的外面
+      const c = A.act({ t: 'add', type: 'fcirc', x: 500, y: 120, props: { cx: 6, cy: 4, r: 2 } }).id;
+      A.act({ t: 'put', id: c, parent: ws, slot: 'items' });
+      return ws;
+    });
+    await p.waitForTimeout(80);
+    const circleVisible = await p.evaluate((ws) => {
+      const sv = document.querySelector('.card[data-id="' + ws + '"] svg.wsbody'), c = sv && sv.querySelector('circle[data-pick]');
+      if (!c) return false;
+      const a = sv.getBoundingClientRect(), b = c.getBoundingClientRect();
+      return b.width > 4 && b.left >= a.left && b.right <= a.right && b.top >= a.top && b.bottom <= a.bottom;
+    }, wsC);
+    ok(circleVisible, '(c) 圆放在范围外面：范围自动跟着它，圆在画布里看得见');
+    // (d) 器材架不列出内部器材，搜索也不列；自由点还在
+    const shelfBad = await p.evaluate(() => ['gseg', 'gcut', 'gmid', 'gint', 'gfoot', 'gplace', 'gasm', 'gboard'].filter((t) => document.querySelector('#shelfbody [data-type="' + t + '"]')));
+    ok(shelfBad.length === 0 && await p.locator('#shelfbody [data-type="gpt"]').count() === 1, '(d) 器材架里没有 gseg、gcut 等内部器材（自由点还在）' + (shelfBad.length ? '：' + shelfBad.join('、') : ''));
+    await p.evaluate(() => { const q = document.querySelector('#q2'); q.value = '连线'; q.dispatchEvent(new Event('input')); });
+    const searchBad = await p.locator('#shelfbody [data-type="gseg"]').count();
+    await p.evaluate(() => { const q = document.querySelector('#q2'); q.value = ''; q.dispatchEvent(new Event('input')); });
+    ok(searchBad === 0, '(d) 搜索「连线」时器材架也不列出 gseg');
+    // (e) 标题的步数和步骤清单的行数一样；开局没有学生的步骤
+    await p.evaluate(() => UI.App.openProblem('geo-median-area', 'practice')); await p.waitForTimeout(200);
+    const stepCheck = () => p.evaluate(() => {
+      const ws = Object.values(UI.S.scene.entities).find((e) => U.types[e.type].workspace);
+      const bd = document.querySelector('.card[data-id="' + ws.id + '"] .hd .bd').textContent.trim();
+      return { title: bd, n: parseInt(bd, 10) || 0, rows: document.querySelectorAll('.wsx-step').length, ws: ws.id };
+    });
+    const s0 = await stepCheck();
+    ok(s0.n === 0 && s0.rows === 0 && /还没有步骤/.test(await p.locator('.wsx').first().innerText()), '(e) 开局：标题不写步数，步骤清单写「还没有步骤」');
+    await p.evaluate((ws) => UI.App.act({ t: 'tool', ws, tool: 'mid', picks: ['B', 'C'], args: {} }), s0.ws); await p.waitForTimeout(60);
+    const s1 = await stepCheck();
+    ok(s1.n === 1 && s1.rows === 1, '(e) 做了一步「中点」：标题 ' + s1.title + '，清单 ' + s1.rows + ' 行');
+    await p.evaluate((ws) => UI.App.act({ t: 'tool', ws, tool: 'seg', picks: ['A', 'M(BC)'], args: {} }), s0.ws); await p.waitForTimeout(60);
+    const s2 = await stepCheck();
+    ok(s2.n === 2 && s2.rows === 2, '(e) 再做一步「连线」：标题 ' + s2.title + '，清单 ' + s2.rows + ' 行');
+  }
   ok(errs.length === 0, '控制台 0 报错' + (errs.length ? '：' + errs[0] : ''));
   console.log('\n' + pass + ' 通过，' + fail + ' 失败'); await b.close(); process.exit(fail ? 1 : 0);
 })();

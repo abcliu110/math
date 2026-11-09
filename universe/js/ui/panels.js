@@ -89,12 +89,15 @@
   }
 
   // ---------- 右栏：器材架 ----------
+  // 器材架不列出这些内部器材：工作区的工具会自己造出来（连线、中点、剪刀……），学生不用从架上拿。
+  // 器材类型还在，存档和旧题里用到它们照样能用；搜索结果里也不列。
+  const SHELF_HIDE = ['gseg', 'gmid', 'gint', 'gfoot', 'gcut', 'gplace', 'gasm', 'gboard'];
   function renderShelf() {
     const S = UI.S, q = ($('#q2') && $('#q2').value || '').trim();
     const allow = S.problem ? S.problem.shelf : null;
     let h = '';
     for (const g of U.GROUPS) {
-      const ts = Object.values(U.types).filter((t) => !t.hidden && t.group === g && (!q || (t.label + t.alias.join('') + g).includes(q)));
+      const ts = Object.values(U.types).filter((t) => !t.hidden && !SHELF_HIDE.includes(t.id) && t.group === g && (!q || (t.label + t.alias.join('') + g).includes(q)));
       if (!ts.length) continue;
       h += '<div class="grp">' + esc(g) + '</div><div class="tiles">';
       ts.forEach((t) => {
