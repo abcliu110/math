@@ -56,9 +56,11 @@
           if (!a || !b) { c.say('info', '两边都接一个分式'); return {}; }
           const op = OPS[c.props.op] || OPS[0];
           try {
-            const r = op.f(a, b);
-            if (c.step) c.step('(' + R.show(a) + ') ' + op.sym + ' (' + R.show(b) + ')  =  ' + R.show(r), null, op.rule);
-            c.say('ok', '结果 ' + R.show(r) + '（未约分）');
+            const raw = op.f(a, b), r = R.simplify(raw);
+            if (c.step) c.step('(' + R.show(a) + ') ' + op.sym + ' (' + R.show(b) + ')  =  ' + R.show(raw), null, op.rule);
+            const reduced = R.show(r) !== R.show(raw);
+            if (reduced && c.step) c.step('约分（分子分母同除以公因式）：' + R.show(r), null, 'frac.simplify');
+            c.say('ok', '结果 ' + R.show(r) + (reduced ? '（已约分）' : ''));
             return { r: U.val('ratio', r) };
           } catch (e) { c.say('reject', e.message); return {}; }
         },

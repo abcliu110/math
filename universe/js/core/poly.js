@@ -88,6 +88,88 @@
       for (const t of a.terms) { const i = t.m[v] || 0; while (out.length <= i) out.push(Q(0)); out[i] = Q.add(out[i], t.c); }
       return out;
     },
+
+    // ---- 多元整除与最大公因式（约分用）----
+    // 字典序（字母按字母顺序）下最大的那一项
+    lead(a) { let best = null; for (const t of a.terms) if (!best || cmpLex(t.m, best.m) < 0) best = t; return best; },
+    // 单项式相除：整除返回商的指数，不整除返回 null
+    monoDiv(ma, mb) {
+      const out = {};
+      for (const v of new Set([...Object.keys(ma), ...Object.keys(mb)])) {
+        const d = (ma[v] || 0) - (mb[v] || 0);
+        if (d < 0) return null;
+        if (d) out[v] = d;
+      }
+      return out;
+    },
+    // 精确整除：a = q·b 时返回 q，否则返回 null（单个除式时余数为 0 ⇔ 整除）
+    divExact(a, b) {
+      if (!b.terms.length) return null;
+      const lb = P.lead(b), q = [];
+      let r = a;
+      for (let guard = 0; r.terms.length; guard++) {
+        if (guard > 5000) return null;
+        const lr = P.lead(r), m = P.monoDiv(lr.m, lb.m);
+        if (!m) return null;
+        const term = { c: Q.div(lr.c, lb.c), m };
+        q.push(term);
+        const prod = b.terms.map((t) => { const mm = Object.assign({}, t.m); for (const v of Object.keys(term.m)) mm[v] = (mm[v] || 0) + term.m[v]; return { c: Q.mul(t.c, term.c), m: mm }; });
+        r = P.sub(r, P.norm(prod));
+      }
+      return P.norm(q);
+    },
+    degIn(a, v) { return a.terms.reduce((mx, t) => Math.max(mx, t.m[v] || 0), a.terms.length ? 0 : -1); },
+    // 按 v 的次数拆成系数（下标是次数，系数是不含 v 的多项式）
+    coeffsIn(a, v) {
+      const byPow = [];
+      for (const t of a.terms) {
+        const k = t.m[v] || 0, m = Object.assign({}, t.m); delete m[v];
+        (byPow[k] = byPow[k] || []).push({ c: t.c, m });
+      }
+      const out = [];
+      for (let k = 0; k < byPow.length; k++) out.push(P.norm(byPow[k] || []));
+      return out;
+    },
+    // 关于 v 的内容：各系数的最大公因式（常数之间的公因式视为 1，因为非零常数在 Q 上都是单位）
+    content(a, v) {
+      const cs = P.coeffsIn(a, v).filter((c) => c.terms.length);
+      if (!cs.length) return P.const(Q(1));
+      return cs.reduce((g, c) => P.gcd(g, c));
+    },
+    // 伪余数：(lc_b)^k·a 减去 ... 不做除法，所以系数仍是多项式
+    prem(a, b, v) {
+      const db = P.degIn(b, v), lb = P.coeffsIn(b, v).pop(), xv = P.variable(v);
+      let r = a;
+      while (r.terms.length && P.degIn(r, v) >= db) {
+        const dr = P.degIn(r, v), lr = P.coeffsIn(r, v).pop();
+        r = P.sub(P.mul(lb, r), P.mul(P.mul(lr, P.pow(xv, dr - db)), b));
+      }
+      return r;
+    },
+    // 首项系数化成 1（只改常数倍，不改式子本身）
+    monic(a) { if (!a.terms.length) return a; return P.mul(a, P.const(Q.div(Q(1), P.lead(a).c))); },
+    // 最大公因式（首项系数为 1）：内容的公因式 × 本原部分的公因式（本原部分用伪余数求）
+    gcd(f, g) {
+      if (!f.terms.length) return P.monic(g);
+      if (!g.terms.length) return P.monic(f);
+      const vs = [...new Set(P.vars(f).concat(P.vars(g)))].sort();
+      if (!vs.length || !P.vars(f).length || !P.vars(g).length) return P.const(Q(1));
+      const v = vs[0];
+      const cf = P.content(f, v), cg = P.content(g, v);
+      const c = P.gcd(cf, cg);
+      let a = P.divExact(f, cf), b = P.divExact(g, cg);
+      if (P.degIn(a, v) < P.degIn(b, v)) { const t = a; a = b; b = t; }
+      let gp;
+      for (;;) {
+        if (P.degIn(b, v) <= 0) { gp = P.const(Q(1)); break; }
+        const r = P.prem(a, b, v);
+        if (!r.terms.length) { gp = b; break; }
+        const pr = P.divExact(r, P.content(r, v));
+        if (!pr) { gp = P.const(Q(1)); break; }   // 不应发生；保守地当作互素
+        a = b; b = pr;
+      }
+      return P.monic(P.mul(c, gp));
+    },
   };
   U.Poly = P;
 

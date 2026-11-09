@@ -107,6 +107,20 @@
       steps.push({ say: '求根公式：(−b ± √判别式) / 2a', rule: 'eq.both-sides' });
       return { kind: 'roots', roots: [r1, r2], steps };
     },
+    // 只含一个未知数 v 的二次方程（= 0 形式）：先移项，取出 a、b、c，再用求根公式
+    solveQuadratic(e, v) {
+      if (e.rel !== '=') return { kind: 'error', why: '二次不等式暂时只能用图形看，这台器材只解二次方程' };
+      const d = Eqn.diff(e), steps = [];
+      if (P.vars(d).some((x) => x !== v) || P.degree(d) !== 2) return { kind: 'error', why: '只能解只含一个未知数 ' + v + ' 的二次方程' };
+      let a = Q(0), b = Q(0), c = Q(0);
+      for (const t of d.terms) {
+        const k = t.m[v] || 0;
+        if (k === 2) a = Q.add(a, t.c); else if (k === 1) b = Q.add(b, t.c); else c = Q.add(c, t.c);
+      }
+      steps.push({ say: '移项，得到 ' + P.show(d) + ' = 0，其中 a = ' + Q.show(a) + '，b = ' + Q.show(b) + '，c = ' + Q.show(c), rule: 'eq.both-sides' });
+      const r = Eqn.quadratic(a, b, c);
+      return Object.assign({}, r, { steps: steps.concat(r.steps || []) });
+    },
   };
   U.Eqn = Eqn;
 

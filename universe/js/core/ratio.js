@@ -1,7 +1,7 @@
 /* 有理式（分式）：分子、分母都是多项式（U.Poly，可以有多个字母）。
  * 表示：{ n: 多项式, d: 多项式 }，分母不能是 0 多项式。
- * 能做：加、减、乘、除（除数的分子不能是 0）、判断两个分式相等（交叉相乘后比较，不需要约分）、代入数值（分母为 0 时说明）。
- * 不能做：约分（需要多元多项式的最大公因式，目前没有）。约分的结果不会自动化简，学生看到的式子可能不是最简形式。 */
+ * 能做：加、减、乘、除（除数的分子不能是 0）、判断两个分式相等（交叉相乘后比较）、代入数值（分母为 0 时说明）、
+ * 约分（分子分母同除以多元最大公因式，见 U.Poly.gcd；结果的分母首项系数为 1）。 */
 (function (G) {
   'use strict';
   const U = G.U, Q = U.Q, P = U.Poly;
@@ -16,6 +16,19 @@
       return { n, d };
     },
     fromPoly(p) { return { n: p, d: ONE() }; },
+    // 分母首项系数化成 1（分子同乘同一个常数，式子的值不变）
+    normalize(a) {
+      const k = Q.div(Q(1), P.lead(a.d).c);
+      return { n: P.mul(a.n, P.const(k)), d: P.mul(a.d, P.const(k)) };
+    },
+    // 约分：分子、分母同时除以最大公因式；分子是 0 时结果是 0
+    simplify(a) {
+      if (isZero(a.n)) return { n: P.const(Q(0)), d: ONE() };
+      const g = P.gcd(a.n, a.d);
+      const n = P.divExact(a.n, g), d = P.divExact(a.d, g);
+      if (!n || !d) return R.normalize(a);
+      return R.normalize({ n, d });
+    },
     add(a, b) { return R.make(P.add(P.mul(a.n, b.d), P.mul(b.n, a.d)), P.mul(a.d, b.d)); },
     sub(a, b) { return R.make(P.sub(P.mul(a.n, b.d), P.mul(b.n, a.d)), P.mul(a.d, b.d)); },
     mul(a, b) { return R.make(P.mul(a.n, b.n), P.mul(a.d, b.d)); },
@@ -38,7 +51,8 @@
     },
     show(a) {
       if (isConst(a.d) && Q.eq(a.d.terms[0] ? a.d.terms[0].c : Q(0), Q(1))) return P.show(a.n);
-      return '(' + P.show(a.n) + ')/(' + P.show(a.d) + ')';
+      const wrap = (p) => (p.terms.length > 1 ? '(' + P.show(p) + ')' : P.show(p));
+      return wrap(a.n) + '/' + wrap(a.d);
     },
   };
   U.Ratio = R;

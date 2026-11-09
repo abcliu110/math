@@ -803,6 +803,43 @@ t('散点图接上拟合器后叠加直线（画面多一条线）', () => {
   };
   eq((build(true).match(/<line/g) || []).length, (build(false).match(/<line/g) || []).length + 1, '接上拟合器应多画一条拟合直线');
 });
+console.log('多元整除与最大公因式（约分用）');
+t('精确整除：整除返回商，不整除返回 null', () => {
+  const Pa = U.Poly.parse, P = U.Poly;
+  eq(P.show(P.divExact(Pa('x^2-y^2'), Pa('x-y'))), 'x + y');
+  eq(P.divExact(Pa('x^2+1'), Pa('x-1')), null);
+});
+t('最大公因式：一元与多元都对，首项系数为 1', () => {
+  const Pa = U.Poly.parse, P = U.Poly;
+  eq(P.show(P.gcd(Pa('x^2-1'), Pa('x+1'))), 'x + 1');
+  eq(P.show(P.gcd(Pa('x^2-y^2'), Pa('x^2+2*x*y+y^2'))), 'x + y');
+  eq(P.show(P.gcd(Pa('x^2*y-y'), Pa('x*y+y'))), 'x·y + y');
+  eq(P.show(P.gcd(Pa('x*y+x'), Pa('x*y+y'))), '1', '互素');
+  eq(P.show(P.gcd(Pa('x^2+1'), Pa('x+1'))), '1', '一元互素');
+});
+t('分式约分：分子分母同除以公因式；常数因子也约掉', () => {
+  const R = U.Ratio, Pa = U.Poly.parse;
+  eq(R.show(R.simplify(R.make(Pa('x^2-y^2'), Pa('x^2+2*x*y+y^2')))), '(x − y)/(x + y)');
+  eq(R.show(R.simplify(R.make(Pa('x^2-1'), Pa('x+1')))), 'x − 1');
+  eq(R.show(R.simplify(R.make(Pa('2'), Pa('2*x')))), '1/x');
+  eq(R.show(R.simplify(R.make(Pa('0'), Pa('x+1')))), '0');
+});
+t('分式运算器材：结果自动约分，并说明“已约分”', () => {
+  const sc = W.blank();
+  const a = W.add(sc, 'fracnum', 0, 0, { num: 'x^2-1', den: 'x+1' }), b = W.add(sc, 'fracnum', 0, 0, { num: '1', den: '1' });
+  const op = W.add(sc, 'ratop', 0, 0, { op: 2 });
+  W.act(sc, { t: 'link', from: a, fromPort: 'f', to: op, toPort: 'a' }); W.act(sc, { t: 'link', from: b, fromPort: 'f', to: op, toPort: 'b' });
+  const D = W.evaluate(sc);
+  eq(U.showVal(D[op].out.r), 'x − 1');
+  truthy(D[op].sig.some((s) => /已约分/.test(s.tx)));
+});
+t('平衡器材：二次方程给出两个精确根', () => {
+  const sc = W.blank();
+  const l = W.add(sc, 'algebra', 0, 0, { text: 'x^2-5x+6' }), r = W.add(sc, 'algebra', 0, 0, { text: '0' }), eq2 = W.add(sc, 'eqdesk', 0, 0, { rel: 0, op: 0, by: 0 });
+  W.act(sc, { t: 'link', from: l, fromPort: 'p', to: eq2, toPort: 'L' }); W.act(sc, { t: 'link', from: r, fromPort: 'p', to: eq2, toPort: 'R' });
+  const D = W.evaluate(sc);
+  eq(U.showVal(D[eq2].out.r1), '3'); eq(U.showVal(D[eq2].out.r2), '2');
+});
 console.log('有理式（分式）');
 t('分式种类注册合格', () => eq(U.lintKind(U.KINDS.ratio), []));
 t('分式：加、减、乘、除，交叉相乘判相等（不需要约分）', () => {

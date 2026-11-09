@@ -54,6 +54,8 @@
           x: { dim: null, kind: 'num', label: '解' },
           iv: { dim: null, kind: 'interval', label: '解集（区间）' },
           ident: { dim: null, kind: 'bool', label: '恒等式' },
+          r1: { dim: null, kind: 'real', label: '二次方程的第一个根（精确）' },
+          r2: { dim: null, kind: 'real', label: '二次方程的第二个根（精确）' },
         },
         icon: () => K.text(32, 28, '=', { size: 26, weight: 700 }),
         size: () => [200, 110],
@@ -74,6 +76,17 @@
           if (E.isIdentity(e)) c.say('ok', '恒等式：对所有取值都成立');
           const sol = E.solveLinear(e, c.props.var);
           if (sol.kind === 'solution') { out.x = U.val('num', sol.value); out.iv = U.val('interval', I.fromLinear(sol)); if (c.step) sol.steps.slice(1).forEach((s) => c.step(s.say, null, s.rule)); c.say('ok', c.props.var + ' ' + sol.rel + ' ' + Q.show(sol.value)); }
+          else if (sol.kind === 'error') {
+            // 不是一次式：试二次方程，给出两个精确根（可能是 1 ± √2 这样的数）
+            const q = E.solveQuadratic(e, c.props.var);
+            if (q.kind === 'roots') {
+              out.r1 = U.val('real', q.roots[0]); out.r2 = U.val('real', q.roots[1]);
+              if (c.step) q.steps.forEach((s) => c.step(s.say, null, s.rule));
+              c.say('ok', c.props.var + ' 的两个根：' + U.showVal(out.r1) + '，' + U.showVal(out.r2));
+            }
+            else if (q.kind === 'none') c.say('info', '没有实数根（判别式小于 0）');
+            // 其他情况（多个未知数、不等式）保持沉默，和原来一样：不是这台器材能解的方程
+          }
           else if (sol.kind === 'all') c.say('info', '对所有 ' + c.props.var + ' 都成立');
           else if (sol.kind === 'none') c.say('info', '无解');
           return out;
