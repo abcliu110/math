@@ -13,6 +13,8 @@
 (function (G) {
   'use strict';
   const U = G.U, Q = U.Q;
+  // 判分时读到的近似值记录在这里；参考解回归测试据此检查“没有对近似值做精确判断”
+  U.inexactReads = U.inexactReads || [];
 
   function makeW(scene, D, run) {
     const E = scene.entities;
@@ -27,9 +29,17 @@
         const p = port || Object.keys(U.types[ent.type].outputs)[0];
         return (D[id] && D[id].out[p]) || null;
       },
-      q(e, port) { const v = W.out(e, port); return v && v.kind === 'num' ? v.data : null; },
+      q(e, port) {
+        const v = W.out(e, port);
+        return v && v.kind === 'num' ? v.data : null;
+      },
+      // 近似值的容差比较（1.9）：|值 − x| ≤ tol。函数形式的 when 判近似值请用它，不要用 === 。
+      near(e, port, x, tol) { const v = W.out(e, port); return !!(v && v.kind === 'num' && Math.abs(Q.num(v.data) - x) <= tol); },
       num(e, port) { const q = W.q(e, port); return q ? Q.num(q) : null; },
       bool(e, port) { const v = W.out(e, port); return v && v.kind === 'bool' ? v.data : null; },
+      // 容器（1.10）：子实体与所在容器
+      children: (e, slot) => U.World.childrenOf(scene, idOf(e), slot),
+      parentOf: (e) => { const ent = E[idOf(e)]; return ent && ent.parent ? E[ent.parent] || null : null; },
       props: (e) => (E[idOf(e)] ? E[idOf(e)].props : null),
       linked: (a, b) => scene.links.some((l) => l.from === idOf(a) && l.to === idOf(b)),
       sources: (e) => scene.links.filter((l) => l.to === idOf(e)).map((l) => E[l.from]).filter(Boolean),
@@ -50,7 +60,11 @@
   function cmpVal(v, op, want) {
     if (!v) return false;
     if (v.kind === 'bool') return op === '=' ? v.data === want : v.data !== want;
-    if (v.kind === 'num') { let w; try { w = Q.parse(want); } catch (e) { return false; } return OPS[op](Q.cmp(v.data, w)); }
+    if (v.kind === 'num') {
+      // 1.9：近似值不能用精确相等判定（“= / !=”），要用 near 带容差
+      if (v.exact === false && (op === '=' || op === '!=')) U.inexactReads.push({ op, want });
+      let w; try { w = Q.parse(want); } catch (e) { return false; } return OPS[op](Q.cmp(v.data, w));
+    }
     return false;
   }
   function compile(c) {

@@ -188,3 +188,18 @@ input, select, textarea { font: inherit; color: inherit; }
 
 .lbdel{margin-left:6px;border:0;background:transparent;color:inherit;font-weight:700;cursor:pointer;padding:0 2px;border-radius:999px}
 .lbdel:hover{background:#ff4d4f33;color:#ff6b6b}
+
+/* 1.1.1 分段按钮（2–5 个选项的 choice） */
+#insp .seg { display: flex; gap: 4px; flex-wrap: wrap; }
+#insp .seg .sg { padding: 4px 10px; border-radius: 6px; background: var(--panel2); border: 1px solid var(--line); cursor: pointer; font-size: 13px; }
+#insp .seg .sg.on { background: var(--accent, #3b9bff); color: #fff; border-color: transparent; }
+
+/* 1.10 拖到容器上时的放入提示 */
+.card.droptarget { outline: 2px dashed var(--accent, #3b9bff); outline-offset: 4px; }
+
+/* 拖卡片时不要选中文字、不要触发浏览器自己的拖放（否则 pointermove 会被吞掉） */
+#stage .card, #stage .card * { user-select: none; -webkit-user-drag: none; }
+
+/* 1.1.1 滑杆与转盘 */
+#insp .row input.slide, #insp .row input.dial { width: 100%; margin: 4px 0; accent-color: var(--accent, #3b9bff); }
+#insp .row .ctl { flex-wrap: wrap; }

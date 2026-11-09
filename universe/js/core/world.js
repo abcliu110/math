@@ -18,13 +18,41 @@
   const clone = (s) => JSON.parse(JSON.stringify(s));
   const ok = (x) => Object.assign({ ok: true }, x || {});
   const fail = (why) => ({ ok: false, why });
+
+  // ---------- 容器与层级（1.10）----------
+  // 布局：子实体的位置由它在容器槽位里的序号决定；free = 不重排，保留拖放的位置
+  const LAYOUTS = {
+    grid2x5: (i) => ({ dx: 14 + (i % 5) * 22, dy: 40 + Math.floor(i / 5) * 22 }),
+    onAxis: (i) => ({ dx: 14 + i * 18, dy: 30 }),
+    free: null,
+  };
+  U.LAYOUTS = LAYOUTS;
+  // 直接子实体（可按槽位过滤）。顺序 = 放入的先后（对象键的插入顺序）
+  function childrenOf(scene, id, slot) {
+    return Object.values(scene.entities).filter((e) => e.parent === id && (slot === undefined || e.slot === slot));
+  }
+  // cand 是否在 anc 里面（含 cand === anc）；沿 parent 链往上走，防止成环
+  function isInside(scene, cand, anc) {
+    const seen = {}; let c = cand;
+    while (c && !seen[c]) { if (c === anc) return true; seen[c] = 1; const e = scene.entities[c]; c = e ? e.parent : null; }
+    return false;
+  }
+  // 按布局重排某个容器的所有子实体
+  function relayout(scene, pid) {
+    const p = scene.entities[pid]; if (!p) return;
+    const slots = (U.types[p.type] && U.types[p.type].slots) || {};
+    for (const sn of Object.keys(slots)) {
+      const lay = LAYOUTS[slots[sn].layout]; if (!lay) continue;
+      childrenOf(scene, pid, sn).forEach((k, i) => { const pos = lay(i); k.x = p.x + pos.dx; k.y = p.y + pos.dy; });
+    }
+  }
   const defOf = (e) => { const d = U.types[e.type]; if (!d) throw new Error('unknown-type:' + e.type); return d; };
   const errText = (err) => (err && err.message === 'overflow' ? '数太大，算不下' : err && err.message === 'bad-number' ? '这个数不合法' : err && err.message === 'div0' ? '除数不能是 0' : '算不出来');
 
   const LOOP_WHY = '这样连，数会自己追自己，永远算不完。中间放一个“记忆器”，让它一拍一拍地算。';
 
   function blank() {
-    return { v: 2, nid: 1, seq: {}, entities: {}, links: [], clock: { t: 0, n: 0, running: false, hz: 4, rate: 1, seed: 20261108 } };
+    return { v: 3, nid: 1, seq: {}, entities: {}, links: [], clock: { t: 0, n: 0, running: false, hz: 4, rate: 1, seed: 20261108 } };
   }
 
   function add(scene, type, x, y, props) {
@@ -32,7 +60,7 @@
     const id = 'e' + scene.nid++;
     scene.seq[type] = (scene.seq[type] || 0) + 1;
     const p = U.defaultProps(def, props);
-    const ent = { id, type, name: def.prefix + scene.seq[type], x: Math.round(x), y: Math.round(y), props: p, k: 1 };
+    const ent = { id, type, name: def.prefix + scene.seq[type], x: Math.round(x), y: Math.round(y), props: p, k: 1, parent: null, slot: null };
     if (def.stateful) ent.state = def.init(p);
     scene.entities[id] = ent;
     return id;
@@ -76,11 +104,17 @@
     for (const l of scene.links) if (E[l.from] && E[l.to]) (into[l.to] = into[l.to] || []).push(l);
     const sayFor = (id) => (lv, tx) => D[id].sig.push({ lv, tx });
 
+    // 1.9 精确标记：输出只要有一个上游是近似的，它也是近似的（整条链都精确才精确）
+    const approx = (out) => {
+      for (const k of Object.keys(out)) { const v = out[k]; if (v && typeof v === 'object' && v.exact !== false) out[k] = Object.assign({}, v, { exact: false }); }
+      return out;
+    };
+
     // A. 有状态器材读出输出
     for (const id of ids) {
       const e = E[id], def = defOf(e);
       if (!def.stateful) continue;
-      try { D[id].out = def.read({ ent: e, props: e.props, state: e.state, t: ck.t, n: ck.n, say: sayFor(id) }) || {}; }
+      try { D[id].out = def.read({ ent: e, props: e.props, state: e.state, t: ck.t, n: ck.n, say: sayFor(id), kids: (slot) => childrenOf(scene, id, slot) }) || {}; if (def.exact === false) approx(D[id].out); }
       catch (err) { D[id].out = {}; D[id].sig.push({ lv: 'err', tx: errText(err) }); }
     }
 
@@ -89,20 +123,20 @@
       const e = E[id], def = defOf(e), d = D[id];
       const inp = {}; for (const k of Object.keys(def.inputs)) inp[k] = [];
       const props = Object.assign({}, e.props);
-      d.driven = {};
+      d.driven = {}; d.inexact = false;
       for (const l of (into[id] || [])) {
         const src = D[l.from], v = src ? src.out[l.fromPort] || null : null;
+        if (v && v.exact === false) d.inexact = true;
         if (isProp(l.toPort)) {
           const k = l.toPort.slice(PROP.length), P = def.props[k];
           if (!P) continue;
           d.driven[k] = { from: l.from, port: l.fromPort, link: l.id };
           if (!v) continue;
-          if (P.type === 'bool' && v.kind === 'bool') props[k] = v.data;
-          else if (v.kind === 'num') {
-            const r = U.coerceProp(P, v.data);
-            if (r.ok) props[k] = r.v;
-            else d.sig.push({ lv: 'err', tx: E[l.from].name + ' 的值 ' + Q.show(v.data) + ' 不能填进「' + P.label + '」：' + r.why });
-          }
+          const K = U.KINDS[v.kind];
+          if (!K || !K.toProp) continue;
+          const r = K.toProp(v, P);
+          if (r.ok) props[k] = r.v;
+          else if (!r.silent) d.sig.push({ lv: 'err', tx: E[l.from].name + ' 的值 ' + U.showVal(v) + ' 不能填进「' + P.label + '」：' + r.why });
         } else (inp[l.toPort] = inp[l.toPort] || []).push(v);
       }
       d.inp = inp; d.props = props;
@@ -121,8 +155,8 @@
     for (const id of order) {
       const e = E[id], def = defOf(e), d = D[id];
       gather(id);
-      const ctx = { ent: e, props: d.props, inp: d.inp, t: ck.t, n: ck.n, seed: ck.seed, say: sayFor(id) };
-      try { d.out = def.compute(ctx) || {}; } catch (err) { d.out = {}; d.sig.push({ lv: 'err', tx: errText(err) }); }
+      const ctx = { ent: e, props: d.props, inp: d.inp, t: ck.t, n: ck.n, seed: ck.seed, say: sayFor(id), kids: (slot) => childrenOf(scene, id, slot) };
+      try { d.out = def.compute(ctx) || {}; if (!(def.exact !== false && !d.inexact)) approx(d.out); } catch (err) { d.out = {}; d.sig.push({ lv: 'err', tx: errText(err) }); }
       if (def.sig) { try { def.sig(Object.assign({}, ctx, { out: d.out }), sayFor(id)); } catch (err) { /* 信号条出错不影响计算 */ } }
     }
 
@@ -228,7 +262,35 @@
         const id = add(scene, a.type, a.x || 0, a.y || 0, a.props);
         return ok({ id });
       }
-      case 'move': { const e = E[a.id]; if (!e) return fail('找不到器材'); e.x = Math.round(a.x); e.y = Math.round(a.y); return ok(); }
+      case 'move': {
+        const e = E[a.id]; if (!e) return fail('找不到器材');
+        const nx = Math.round(a.x), ny = Math.round(a.y), dx = nx - e.x, dy = ny - e.y;
+        e.x = nx; e.y = ny;
+        // 1.10：移动容器时，里面的子实体跟着动（递归）
+        const moveKids = (pid) => { for (const k of childrenOf(scene, pid)) { k.x += dx; k.y += dy; moveKids(k.id); } };
+        moveKids(a.id);
+        return ok();
+      }
+      case 'put': {
+        const e = E[a.id], p = E[a.parent];
+        if (!e) return fail('找不到器材');
+        if (!p) return fail('找不到容器');
+        const pd = defOf(p), S = (pd.slots || {})[a.slot];
+        if (!S) return fail(pd.label + ' 没有这个位置');
+        if (a.parent === a.id || isInside(scene, p.id, e.id)) return fail('不能把东西放进它自己里面');
+        if (S.accepts !== '*' && !S.accepts.includes(e.type)) return fail(S.rejectWhy || (pd.label + '里只能放' + S.accepts.map((t) => (U.types[t] ? U.types[t].label : t)).join('、')));
+        const cur = childrenOf(scene, p.id, a.slot).filter((x) => x.id !== e.id);
+        if (S.max !== null && S.max !== undefined && cur.length >= S.max) return fail(S.fullWhy || (pd.label + '已经满了'));
+        e.parent = p.id; e.slot = a.slot;
+        relayout(scene, p.id);
+        return ok();
+      }
+      case 'take': {
+        const e = E[a.id]; if (!e) return fail('找不到器材');
+        if (!e.parent) return ok();
+        const old = e.parent; e.parent = null; e.slot = null; relayout(scene, old);
+        return ok();
+      }
       case 'rename': { const e = E[a.id]; if (!e) return fail('找不到器材'); const n = String(a.name || '').trim().slice(0, 12); if (!n) return fail('名字不能空着'); e.name = n; return ok(); }
       case 'set': {
         const e = E[a.id]; if (!e) return fail('找不到器材');
@@ -254,7 +316,22 @@
       }
       case 'del': {
         if (!E[a.id]) return fail('找不到器材');
-        delete E[a.id]; scene.links = scene.links.filter((l) => l.from !== a.id && l.to !== a.id);
+        // 1.10：删容器时，里面的东西默认倒到台面上（keep:'out'）；keep:'all' 连里面一起删
+        const kids = childrenOf(scene, a.id);
+        if (a.keep === 'all') {
+          const drop = (id) => { for (const k of childrenOf(scene, id)) drop(k.id); delete E[id]; };
+          const oldP = E[a.id].parent;
+          drop(a.id);
+          scene.links = scene.links.filter((l) => E[l.from] && E[l.to]);
+          if (oldP) relayout(scene, oldP);
+        } else {
+          const old = E[a.id].parent;
+          for (const k of kids) { k.parent = null; k.slot = null; }
+          delete E[a.id];
+          scene.links = scene.links.filter((l) => l.from !== a.id && l.to !== a.id);
+          if (old) relayout(scene, old);
+          return ok({ moved: kids.length });
+        }
         return ok();
       }
       case 'copy': {
@@ -294,15 +371,42 @@
     try { const r = link(s, a); return { ok: !!r.ok, why: r.why || '' }; } catch (err) { return { ok: false, why: '这里连不上' }; }
   }
 
+  // 存档迁移（1.4）：按版本逐级升级，每一级只做一件事，升完的台面 v 等于 CURRENT_V。
+  //   v0/无版本 → v1：补全 clock（t、n、running、rate、hz、seed），去掉 binds 字段（绑定已是连线）
+  //   v1 → v2：器材补 props 默认空对象；台面补 nid/seq
+  //   v2 → v3：器材补 parent / slot（容器与层级，1.10），没有容器的旧台面全部为 null
+  const CURRENT_V = 3;
+  const MIGRATIONS = {
+    1: (s) => {
+      const c = blank().clock; s.clock = Object.assign(c, s.clock || {});
+      if (s.binds) delete s.binds;
+      return s;
+    },
+    2: (s) => {
+      for (const e of Object.values(s.entities)) if (!e.props) e.props = {};
+      s.nid = s.nid || 1; s.seq = s.seq || {};
+      return s;
+    },
+    3: (s) => {
+      for (const e of Object.values(s.entities)) { if (e.parent === undefined) e.parent = null; if (e.slot === undefined) e.slot = null; }
+      return s;
+    },
+  };
+  function migrate(s) {
+    const from = s.v === undefined ? 0 : s.v;
+    if (from > CURRENT_V) throw new Error('scene-too-new:' + from);
+    for (let v = from; v < CURRENT_V; v++) { const step = MIGRATIONS[v + 1]; if (step) s = step(s); }
+    s.v = CURRENT_V;
+    return s;
+  }
   function save(scene) { return JSON.stringify(scene); }
   function load(str) {
-    const s = typeof str === 'string' ? JSON.parse(str) : str;
-    if (!s || !s.entities || !s.links) throw new Error('bad-scene');
-    if (!s.clock) s.clock = blank().clock;
-    s.v = 2;
+    const s0 = typeof str === 'string' ? JSON.parse(str) : str;
+    if (!s0 || !s0.entities || !s0.links) throw new Error('bad-scene');
+    const s = migrate(s0);
     for (const id in s.entities) if (!U.types[s.entities[id].type]) throw new Error('unknown-type:' + s.entities[id].type);
     return s;
   }
 
-  U.World = { blank, clone, add, act, evaluate, tick, rewind, dryLink, hasLoop, isStateful, save, load, createsUnsafeCycle, LOOP_WHY, PROP, isProp };
+  U.World = { blank, clone, add, act, evaluate, tick, rewind, dryLink, hasLoop, isStateful, save, load, migrate, CURRENT_V, createsUnsafeCycle, LOOP_WHY, PROP, isProp, childrenOf: (scene, id, slot) => childrenOf(scene, id, slot), isInside: (scene, c, anc) => isInside(scene, c, anc) };
 })(typeof globalThis !== 'undefined' ? globalThis : window);

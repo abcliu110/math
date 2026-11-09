@@ -13,7 +13,7 @@
           A: { type: 'num', label: '角 A（度）', default: 50, min: 1, max: 178, step: 1 },
           B: { type: 'num', label: '角 B（度）', default: 60, min: 1, max: 178, step: 1 },
         },
-        outputs: { C: { kind: 'num', label: '角 C' }, ext: { kind: 'num', label: 'C 的外角' } },
+        outputs: { C: { dim: null, kind: 'num', label: '角 C' }, ext: { dim: null, kind: 'num', label: 'C 的外角' } },
         icon: () => '<polygon points="10,38 54,38 34,8" fill="#f08a1c33" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/>',
         size: () => [220, 170],
         compute: (c) => {
@@ -44,7 +44,7 @@
           c: { type: 'num', label: '右边 c', default: 7, min: -100, max: 100, step: 1 },
           x: { type: 'num', label: '试一试 x =', default: 0, min: -100, max: 100, step: 1 },
         },
-        outputs: { ok: { kind: 'num', label: '成立吗（1/0）' }, bound: { kind: 'num', label: '分界点' } },
+        outputs: { ok: { dim: null, kind: 'num', label: '成立吗（1/0）' }, bound: { dim: null, kind: 'num', label: '分界点' } },
         icon: () => K.text(32, 26, 'ax+b>c', { size: 13, weight: 700 }),
         size: () => [260, 150],
         compute: (c) => {

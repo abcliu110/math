@@ -18,7 +18,7 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
 
   console.log('自由探究');
   // 拖「数字」「数字」「运算器」到台面
-  const drag = async (type, x, y) => { const t = p.locator('.tile[data-type="' + type + '"]'); const bb = await t.boundingBox(); await p.mouse.move(bb.x + 30, bb.y + 20); await p.mouse.down(); await p.mouse.move(x, y, { steps: 8 }); await p.mouse.up(); };
+  const drag = async (type, x, y) => { const t = p.locator('.tile[data-type="' + type + '"]'); await t.scrollIntoViewIfNeeded(); const bb = await t.boundingBox(); await p.mouse.move(bb.x + 30, bb.y + 20); await p.mouse.down(); await p.mouse.move(x, y, { steps: 8 }); await p.mouse.up(); };
   await drag('num', 450, 200); await drag('num', 450, 420); await drag('op', 800, 300);
   ok((await ents()) === 3, '拖 3 个器材上台面');
   await p.evaluate(() => { const S = UI.S, ids = Object.keys(S.scene.entities); UI.App.act({ t: 'set', id: ids[0], k: 'n', v: 2 }); UI.App.act({ t: 'set', id: ids[0], k: 'd', v: 5 }); UI.App.act({ t: 'set', id: ids[1], k: 'd', v: 3 }); });
@@ -40,7 +40,7 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   // 属性面板
   await p.dblclick('.card[data-id="' + e3 + '"] .hd'); await p.waitForTimeout(100);
   ok(await p.locator('#insp.open').count() === 1, '双击打开属性面板');
-  await p.selectOption('#insp select[data-k="op"]', '2'); await p.waitForTimeout(100);
+  await p.click('#insp .sg[data-k="op"][data-seg="2"]'); await p.waitForTimeout(100);
   const r2 = await p.evaluate((id) => U.Q.show(UI.S.D[id].out.r.data), e3);
   ok(r2 === '2/15', '改成 × 后得 ' + r2);
   await shot('ui-free');
@@ -106,6 +106,43 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   ok(/用 5、7、2 凑 24/.test(await p.locator('#ptitle').innerText()), '点开就能做');
   await p.click('[data-tab="lab"]'); await p.click('[data-del]'); await p.waitForTimeout(100);
   ok(await p.locator('#leftbody .it', { hasText: '凑 24' }).count() === 0, '可以删除自己的题');
+  // 容器：拖筹码进十格阵、满十拒绝、拖出来取出、删容器时询问
+  console.log('容器');
+  await p.evaluate(() => { UI.App.openFree(); UI.App.act({ t: 'clear' }); window.__tf = UI.App.act({ t: 'add', type: 'tenframe', x: 200, y: 200, props: {} }).id; window.__c = []; for (let i = 0; i < 11; i++) window.__c.push(UI.App.act({ t: 'add', type: 'counter', x: 40 + i * 60, y: 90, props: {} }).id); });
+  await p.waitForTimeout(200);
+  const dragCard = async (id, tx, ty) => {
+    const c = await p.locator('.card[data-id="' + id + '"] .hd').first().boundingBox();
+    await p.mouse.move(c.x + 10, c.y + 10); await p.mouse.down(); await p.mouse.move(tx, ty, { steps: 12 }); await p.mouse.up(); await p.waitForTimeout(120);
+  };
+  const tfBox = await p.locator('.card[data-id="' + (await p.evaluate(() => window.__tf)) + '"]').boundingBox();
+  await dragCard(await p.evaluate(() => window.__c[0]), tfBox.x + 60, tfBox.y + 70);
+  ok(await p.evaluate(() => UI.S.scene.entities[window.__c[0]].parent === window.__tf), '拖筹码到十格阵上，它就放进去了');
+  await dragCard(await p.evaluate(() => window.__c[0]), 60, 780);
+  ok(await p.evaluate(() => UI.S.scene.entities[window.__c[0]].parent === null), '拖出十格阵，它就取出来了');
+  await p.evaluate(() => { for (let i = 0; i < 10; i++) UI.App.act({ t: 'put', id: window.__c[i + 1], parent: window.__tf, slot: 'cells' }); });
+  await p.evaluate(() => { UI.S.inspOpen = false; UI.S.sel = null; UI.Panels.renderInsp(); });
+  await p.evaluate(() => { window.__c[0] = UI.App.act({ t: 'add', type: 'counter', x: 40, y: 300, props: {} }).id; });
+  await dragCard(await p.evaluate(() => window.__c[0]), tfBox.x + 60, tfBox.y + 70);
+  ok(/满十就要换成 1 个十/.test(await p.evaluate(() => document.querySelector('#banner').textContent)), '满十时拖入被拒绝，并说明原因');
+  await p.evaluate(() => UI.App.act({ t: 'clear' })); await p.waitForTimeout(80);
+  const tf2 = await p.evaluate(() => UI.App.act({ t: 'add', type: 'tenframe', x: 300, y: 200, props: {} }).id);
+  const cc = await p.evaluate(() => UI.App.act({ t: 'add', type: 'counter', x: 60, y: 300, props: {} }).id);
+  await p.evaluate((id) => { UI.App.act({ t: 'put', id: window.__c[0], parent: id, slot: 'cells' }); }, tf2).catch(() => {});
+  await p.evaluate((x) => { window.__k = UI.App.act({ t: 'add', type: 'counter', x: 330, y: 230, props: {} }).id; UI.App.act({ t: 'put', id: window.__k, parent: x, slot: 'cells' }); }, tf2);
+  await p.evaluate((x) => UI.App.removeEntity(x), tf2); await p.waitForTimeout(120);
+  ok(await p.locator('#dlg.open #dlg-delout').count() === 1, '删除有东西的容器时出现询问');
+  const kidId = await p.evaluate(() => window.__k);
+  await p.click('#dlg-delout'); await p.waitForTimeout(120);
+  ok(await p.evaluate((x) => !UI.S.scene.entities[x], tf2) && await p.evaluate((x) => !!UI.S.scene.entities[x], kidId), '选“倒到台面上”：容器删了，东西还在');
+  console.log('属性控件');
+  await p.evaluate(() => { UI.App.openFree(); UI.App.act({ t: 'clear' }); window.__n = UI.App.act({ t: 'add', type: 'num', x: 200, y: 200, props: { n: 3 } }).id; UI.S.sel = window.__n; UI.S.inspOpen = true; UI.Panels.renderInsp(); });
+  await p.waitForTimeout(100);
+  ok(await p.locator('#insp input[type="range"][data-k="n"]').count() === 1, '数字的分子是滑杆（有范围）');
+  await p.evaluate(() => { const r = document.querySelector('#insp input[type="range"][data-k="n"]'); r.value = '7'; r.dispatchEvent(new Event('change', { bubbles: true })); });
+  await p.waitForTimeout(100);
+  ok(await p.evaluate(() => UI.S.scene.entities[window.__n].props.n === 7), '拖滑杆会改变属性值');
+  await p.click('#insp button[data-step="1"][data-k="n"]'); await p.waitForTimeout(100);
+  ok(await p.evaluate(() => UI.S.scene.entities[window.__n].props.n === 8), '+ 按钮仍然可用（取数字框的值）');
   ok(errs.length === 0, '控制台 0 报错' + (errs.length ? '：' + errs[0] : ''));
   console.log('\n' + pass + ' 通过，' + fail + ' 失败'); await b.close(); process.exit(fail ? 1 : 0);
 })();

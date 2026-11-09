@@ -16,7 +16,7 @@
           B: { type: 'num', label: '角 B（度）', default: 60, min: 1, max: 359, step: 1 },
           C: { type: 'num', label: '角 C（度）', default: 60, min: 1, max: 359, step: 1 },
         },
-        outputs: { sum: { kind: 'num', label: '内角和' }, excess: { kind: 'num', label: '比 180° 多多少' }, frac: { kind: 'num', label: '占整个球面的几分之几' } },
+        outputs: { sum: { dim: null, kind: 'num', label: '内角和' }, excess: { dim: null, kind: 'num', label: '比 180° 多多少' }, frac: { dim: null, kind: 'num', label: '占整个球面的几分之几' } },
         icon: () => K.circle(32, 22, 16, { fill: 'none', stroke: 'var(--ink)', w: 2.5 }) + '<path d="M32 6 L48 24 L16 24 Z" fill="#f08a1c55" stroke="var(--ink)" stroke-width="2"/>',
         size: () => [250, 190],
         compute: (c) => {

@@ -13,7 +13,7 @@
           b: { type: 'num', label: '常数 b', default: 0, min: -99, max: 99, step: 1 },
           mode: { type: 'choice', label: '规则', default: 0, choices: ['a×n + b', 'a×n² + b'] },
         },
-        outputs: { v: { kind: 'num', label: '第 n 项' } },
+        outputs: { v: { dim: null, kind: 'num', label: '第 n 项' } },
         icon: () => K.text(32, 22, 'n→', { size: 18, weight: 700 }) + K.text(32, 40, 'f(n)', { size: 12, fill: 'var(--dim)' }),
         size: () => [190, 110],
         compute: (c) => {

@@ -155,6 +155,29 @@
     return null;
   }
 
+  // 指针下面（除了被拖的这张）的第一张卡片对应的实体；没有则 null
+  // 指针下面（除了被拖的这张）、满足 pred 的第一张卡片对应的实体。容器常被里面的东西盖住，所以要一层层找。
+  function cardUnder(ev, id, pred) {
+    const S = UI.S;
+    for (const n of document.elementsFromPoint(ev.clientX, ev.clientY)) {
+      const c = n.closest && n.closest('.card'); if (!c || c.dataset.id === id) continue;
+      const e = S.scene.entities[c.dataset.id]; if (e && (!pred || pred(e))) return e;
+    }
+    return null;
+  }
+  const isContainer = (e) => !!(U.types[e.type] && U.types[e.type].slots);
+  // 1.10：松手时，如果落在能装它的容器上就放进去；落在别处且原来在容器里，就取出来
+  function dropOnContainer(id, ev) {
+    const S = UI.S, e = S.scene.entities[id]; if (!e) return;
+    const t = cardUnder(ev, id, isContainer);
+    const td = t ? U.types[t.type] : null;
+    const slots = td && td.slots ? Object.keys(td.slots) : [];
+    if (t && slots.length) {
+      const accepting = slots.find((sn) => { const A = td.slots[sn].accepts; return A === '*' || A.includes(e.type); });
+      UI.App.act({ t: 'put', id, parent: t.id, slot: accepting || slots[0] });
+    } else if (e.parent) UI.App.act({ t: 'take', id });
+  }
+
   function onMove(ev) {
     const S = UI.S;
     if (linking) {
@@ -179,6 +202,10 @@
       const w = toWorld(ev);
       if (!drag.moved) { drag.moved = true; UI.App.snapshot(); }
       W.act(S.scene, { t: 'move', id: drag.id, x: w.x - drag.dx, y: w.y - drag.dy }); render();
+      // 拖到容器上时，给容器加虚线框提示“松手放进去”
+      const hov = cardUnder(ev, drag.id, isContainer);
+      document.querySelectorAll('.card.droptarget').forEach((c) => c.classList.remove('droptarget'));
+      if (hov) { const c = worldEl.querySelector('.card[data-id="' + hov.id + '"]'); if (c) c.classList.add('droptarget'); }
     }
   }
 
@@ -189,12 +216,18 @@
       if (h && (h.id !== L.from || h.port)) UI.App.act({ t: 'link', from: L.from, fromPort: L.fromPort, to: h.id, toPort: h.port || undefined }); else render();
       render(); return;
     }
-    if (drag) { const d = drag; drag = null; stageEl.classList.remove('panning'); if (d.kind === 'move' && d.moved) UI.App.afterMove(); }
+    if (drag) {
+      const d = drag; drag = null; stageEl.classList.remove('panning');
+      document.querySelectorAll('.card.droptarget').forEach((c) => c.classList.remove('droptarget'));
+      if (d.kind === 'move' && d.moved) { dropOnContainer(d.id, ev); UI.App.afterMove(); }
+    }
   }
 
   function init() {
     stageEl = $('#stage'); worldEl = $('#world');
     stageEl.addEventListener('pointerdown', onDown);
+    // 拖卡片时不让浏览器接管成“原生拖放”（否则之后的 pointermove 全被吞掉）
+    stageEl.addEventListener('dragstart', (ev) => ev.preventDefault());
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
     stageEl.addEventListener('wheel', (ev) => { ev.preventDefault(); zoomAt(ev.deltaY < 0 ? 1.1 : 1 / 1.1, ev.clientX, ev.clientY); }, { passive: false });
@@ -204,7 +237,7 @@
       const a = b.dataset.act;
       if (a === 'insp') { S.inspOpen = !S.inspOpen; UI.Panels.renderInsp(); }
       else if (a === 'copy') UI.App.act({ t: 'copy', id });
-      else if (a === 'del') { S.sel = null; UI.App.act({ t: 'del', id }); }
+      else if (a === 'del') { S.sel = null; UI.App.removeEntity(id); }
       else if (a === 'resetstate') UI.App.act({ t: 'resetstate', id });
     });
   }

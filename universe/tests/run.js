@@ -39,6 +39,175 @@ t('时钟的秒是近似小数，不显示成分数', () => {
   sc.clock.n = 782; sc.clock.t = 195.5; const D = W.evaluate(sc);
   eq(U.showVal(D[c].out.t), '≈195.5');
 });
+console.log('删除');
+t('删掉驱动属性的器材：线被清掉，属性回到手动值，台面继续求值不报错（U01）', () => {
+  const s = W.blank();
+  const src = W.act(s, { t: 'add', type: 'num', x: 0, y: 0, props: { n: 3 } }).id;
+  const op = W.act(s, { t: 'add', type: 'op', x: 0, y: 0, props: { op: 0 } }).id;
+  const out = W.act(s, { t: 'add', type: 'op', x: 0, y: 0, props: { op: 0 } }).id;
+  truthy(W.act(s, { t: 'link', from: src, fromPort: 'v', to: op, toPort: 'p.op' }).ok, '驱动连线应成功');
+  truthy(W.act(s, { t: 'link', from: op, fromPort: 'r', to: out, toPort: 'a' }).ok, '下游连线应成功');
+  eq(W.evaluate(s)[op].driven.op.from, src, '驱动前应显示来源');
+  truthy(W.act(s, { t: 'del', id: src }).ok, '删除应成功');
+  const D = W.evaluate(s);
+  eq(D[op].driven, {}, '删除后不应再显示驱动来源');
+  eq(D[op].props.op, 0, '属性应回到手动值');
+  truthy(W.act(s, { t: 'del', id: op }).ok, '删除下游器材应成功');
+  W.tick(s); W.evaluate(s);
+});
+console.log('存档迁移（1.4）');
+t('无版本的旧台面：补齐时钟，升到当前版本', () => {
+  const old = { entities: { e1: { id: 'e1', type: 'num', name: '数字卡1', x: 0, y: 0, props: { n: 2 } } }, links: [] };
+  const s = W.load(JSON.stringify(old)); eq(s.v, W.CURRENT_V); truthy(s.clock && s.clock.hz > 0, '应补齐时钟');
+});
+t('v2 台面没有容器字段：升到 v3 后 parent/slot 为 null', () => {
+  const s = W.load(JSON.stringify({ v: 2, nid: 2, seq: {}, entities: { e1: { id: 'e1', type: 'num', name: 'x', x: 0, y: 0, props: { n: 1 } } }, links: [], clock: { t: 0, n: 0, running: false, hz: 4, rate: 1, seed: 1 } }));
+  eq(s.v, 3); eq(s.entities.e1.parent, null); eq(s.entities.e1.slot, null);
+});
+t('新台面存盘再读回，内容不变', () => {
+  const sc = W.blank(); W.add(sc, 'num', 0, 0, { n: 5 });
+  eq(W.load(W.save(sc)), JSON.parse(W.save(sc)), '往返');
+});
+t('比当前版本新的台面拒绝打开，并说明版本', () => {
+  let msg = ''; try { W.load(JSON.stringify({ v: 99, entities: {}, links: [] })); } catch (e) { msg = e.message; }
+  truthy(/too-new/.test(msg), '应拒绝：' + msg);
+});
+console.log('符号精确数（1.7 real）');
+const Rl = U.Real, sh = (v) => (v === null ? 'null' : U.KINDS.real.show(v));
+t('√8 = 2√2，√(1/4) = 1/2，√9 = 3', () => { eq(sh(Rl.sqrt(Q(8))), '2√2'); eq(sh(Rl.sqrt(Q(1, 4))), '1/2'); eq(sh(Rl.sqrt(Q(9))), '3'); });
+t('√2 + √2 = 2√2；√2 + 1 = 1 + √2', () => { eq(sh(Rl.add(Rl.sqrt(Q(2)), Rl.sqrt(Q(2)))), '2√2'); eq(sh(Rl.add(Rl.sqrt(Q(2)), Rl.from(Q(1)))), '1 + √2'); });
+t('√2 · √2 = 2；√2 · 3 = 3√2', () => { eq(sh(Rl.mul(Rl.sqrt(Q(2)), Rl.sqrt(Q(2)))), '2'); eq(sh(Rl.mul(Rl.sqrt(Q(2)), Rl.from(Q(3)))), '3√2'); });
+t('不能精确表示的运算返回 null：√2 + √3，√2 · √3', () => { eq(Rl.add(Rl.sqrt(Q(2)), Rl.sqrt(Q(3))), null); eq(Rl.mul(Rl.sqrt(Q(2)), Rl.sqrt(Q(3))), null); });
+t('π：2π 可以，π·√2 不行', () => { eq(sh(Rl.mul(Rl.from(Q(2)), Rl.pi(Q(1)))), '2π'); eq(Rl.mul(Rl.pi(Q(1)), Rl.sqrt(Q(2))), null); });
+t('近似值：√2 ≈ 1.4142，显示带 ≈', () => { const v = Rl.sqrt(Q(2)); eq(U.KINDS.real.showApprox(v), '1.4142'); truthy(Math.abs(Rl.approx(v) - Math.SQRT2) < 1e-12); });
+t('相等判定：2√2 等于 √8，不等于 √2', () => { truthy(U.KINDS.real.eq(Rl.sqrt(Q(8)), Rl.mul(Rl.from(Q(2)), Rl.sqrt(Q(2))))); truthy(!U.KINDS.real.eq(Rl.sqrt(Q(8)), Rl.sqrt(Q(2)))); });
+t('存档往返：符号数读回后相等', () => { const v = Rl.add(Rl.sqrt(Q(2)), Rl.from(Q(1))); truthy(U.KINDS.real.eq(U.KINDS.real.parse(U.KINDS.real.serialize(v)), v)); });
+t('有理数可以无损进入符号数（num → real）', () => truthy(U.KINDS.num.to.real && U.kindOK('num', 'real')));
+console.log('控件自动选型（1.1.1）');
+t('选型：2–5 个选项→分段；开关；小整数→步进；大整数/有理数→滑杆；角度→转盘', () => {
+  eq(U.controlFor({ type: 'choice', choices: ['a', 'b'] }), 'segment');
+  eq(U.controlFor({ type: 'choice', choices: ['a', 'b', 'c', 'd', 'e', 'f'] }), 'select');
+  eq(U.controlFor({ type: 'bool' }), 'switch');
+  eq(U.controlFor({ type: 'int', min: 0, max: 10 }), 'stepper');
+  eq(U.controlFor({ type: 'int', min: 0, max: 100 }), 'slider');
+  eq(U.controlFor({ type: 'num' }), 'slider');
+  eq(U.controlFor({ type: 'num', dim: '角度' }), 'dial');
+});
+t('器材覆盖控件：合法覆盖通过 lint；不匹配的覆盖（开关用分段）被拒绝', () => {
+  const ok = Object.assign({}, U.types.num, { props: { n: { type: 'num', default: 1, control: 'slider', write: true }, d: { type: 'int', default: 1, write: true }, u: { type: 'bool', default: false, write: true } } });
+  const bad = Object.assign({}, U.types.num, { props: { n: { type: 'num', default: 1, control: 'segment', write: true }, d: { type: 'int', default: 1, write: true }, u: { type: 'bool', default: false, write: true } } });
+  eq(U.lintType(ok).errors.filter((m) => /control/.test(m)), [], '合法覆盖');
+  truthy(U.lintType(bad).errors.some((m) => /control=segment/.test(m)), '应拒绝不匹配的覆盖');
+});
+console.log('容器与层级（1.10）');
+const tfAct = (sc, a) => W.act(sc, a);
+t('十格阵：放入筹码后个数与还差几个凑十都由子实体算出', () => {
+  const sc = W.blank(); const tf = W.add(sc, 'tenframe', 100, 100, {});
+  const cs = [0, 1, 2].map(() => W.add(sc, 'counter', 0, 0, {}));
+  for (const c of cs) truthy(tfAct(sc, { t: 'put', id: c, parent: tf, slot: 'cells' }).ok, '放入应成功');
+  const D = W.evaluate(sc); eq(U.showVal(D[tf].out.count), '3'); eq(U.showVal(D[tf].out.left), '7');
+  eq(sc.entities[cs[0]].parent, tf); eq(sc.entities[cs[0]].slot, 'cells');
+});
+t('满十拒绝第 11 个，并说明“满十就要换成 1 个十”', () => {
+  const sc = W.blank(); const tf = W.add(sc, 'tenframe', 0, 0, {});
+  for (let i = 0; i < 10; i++) { const c = W.add(sc, 'counter', 0, 0, {}); truthy(tfAct(sc, { t: 'put', id: c, parent: tf, slot: 'cells' }).ok, '第 ' + (i + 1) + ' 个应成功'); }
+  const eleven = W.add(sc, 'counter', 0, 0, {}); const r = tfAct(sc, { t: 'put', id: eleven, parent: tf, slot: 'cells' });
+  eq(r.ok, false); truthy(/满十就要换成 1 个十/.test(r.why), r.why);
+  eq(sc.entities[eleven].parent, null, '被拒绝的器材不应进入容器');
+});
+t('类型不对的器材放不进十格阵，并说明只能放什么', () => {
+  const sc = W.blank(); const tf = W.add(sc, 'tenframe', 0, 0, {}); const n = W.add(sc, 'num', 0, 0, {});
+  const r = tfAct(sc, { t: 'put', id: n, parent: tf, slot: 'cells' }); eq(r.ok, false); truthy(/只能放/.test(r.why), r.why);
+});
+t('容器不能放进它自己里面', () => {
+  const sc = W.blank(); const tf = W.add(sc, 'tenframe', 0, 0, {});
+  const r = tfAct(sc, { t: 'put', id: tf, parent: tf, slot: 'cells' }); eq(r.ok, false); truthy(/自己里面/.test(r.why), r.why);
+});
+t('子实体按布局排列（2 行 × 5 列）', () => {
+  const sc = W.blank(); const tf = W.add(sc, 'tenframe', 100, 100, {});
+  const c1 = W.add(sc, 'counter', 0, 0, {}), c2 = W.add(sc, 'counter', 0, 0, {}), c3 = W.add(sc, 'counter', 0, 0, {});
+  [c1, c2, c3].forEach((c) => tfAct(sc, { t: 'put', id: c, parent: tf, slot: 'cells' }));
+  eq([sc.entities[c1].x, sc.entities[c1].y], [114, 140]); eq([sc.entities[c2].x, sc.entities[c2].y], [136, 140]);
+});
+t('移动容器，子实体跟着动', () => {
+  const sc = W.blank(); const tf = W.add(sc, 'tenframe', 100, 100, {}); const c1 = W.add(sc, 'counter', 0, 0, {});
+  tfAct(sc, { t: 'put', id: c1, parent: tf, slot: 'cells' });
+  const before = [sc.entities[c1].x, sc.entities[c1].y];
+  tfAct(sc, { t: 'move', id: tf, x: 300, y: 50 });
+  eq([sc.entities[c1].x, sc.entities[c1].y], [before[0] + 200, before[1] - 50]);
+});
+t('取出：子实体回到台面，个数随之变化', () => {
+  const sc = W.blank(); const tf = W.add(sc, 'tenframe', 0, 0, {}); const c1 = W.add(sc, 'counter', 0, 0, {});
+  tfAct(sc, { t: 'put', id: c1, parent: tf, slot: 'cells' }); tfAct(sc, { t: 'take', id: c1 });
+  eq(sc.entities[c1].parent, null); eq(U.showVal(W.evaluate(sc)[tf].out.count), '0');
+});
+t('删除容器：默认把里面的东西倒到台面上', () => {
+  const sc = W.blank(); const tf = W.add(sc, 'tenframe', 0, 0, {}); const c1 = W.add(sc, 'counter', 0, 0, {});
+  tfAct(sc, { t: 'put', id: c1, parent: tf, slot: 'cells' });
+  const r = tfAct(sc, { t: 'del', id: tf }); truthy(r.ok); eq(r.moved, 1);
+  truthy(sc.entities[c1], '筹码还在'); eq(sc.entities[c1].parent, null);
+});
+t('删除容器（keep:all）：里面的一起删', () => {
+  const sc = W.blank(); const tf = W.add(sc, 'tenframe', 0, 0, {}); const c1 = W.add(sc, 'counter', 0, 0, {});
+  tfAct(sc, { t: 'put', id: c1, parent: tf, slot: 'cells' }); tfAct(sc, { t: 'del', id: tf, keep: 'all' });
+  eq(sc.entities[c1], undefined);
+});
+t('复制筹码不会把它带进容器', () => {
+  const sc = W.blank(); const tf = W.add(sc, 'tenframe', 0, 0, {}); const c1 = W.add(sc, 'counter', 0, 0, {});
+  tfAct(sc, { t: 'put', id: c1, parent: tf, slot: 'cells' }); const r = tfAct(sc, { t: 'copy', id: c1 }); eq(sc.entities[r.id].parent, null);
+});
+t('容器的槽位声明合法（lint 通过）', () => eq(U.lintType(U.types.tenframe).errors, []));
+console.log('世界时钟（1.3）');
+t('确定性：同一台面、同一操作序列，随机器材的每一跳结果完全相同', () => {
+  const run = () => {
+    const sc = W.blank(); const d = W.add(sc, 'dice', 0, 0, {});
+    let trace = [];
+    for (let i = 0; i < 30; i++) { const D = W.tick(sc); trace.push(JSON.stringify(D[d].out)); }
+    return trace.join('|');
+  };
+  eq(run(), run(), '两次运行应一致');
+});
+t('骰子掷 100 次：点数都在 1–6 之间，并且不是只有一个点数', () => {
+  const sc = W.blank(); const d = W.add(sc, 'dice', 0, 0, {}); const seen = new Set();
+  for (let i = 0; i < 100; i++) { const D = W.tick(sc); const v = U.Q.num(D[d].out[Object.keys(D[d].out)[0]].data); truthy(v >= 1 && v <= 6, '点数越界：' + v); seen.add(v); }
+  truthy(seen.size >= 4, '点数太集中：' + [...seen]);
+});
+console.log('器材包（1.8）');
+t('包的依赖缺失或版本太低，记入 packErrors', () => {
+  U.registerPack({ id: 'probe-deps', version: 1, needs: ['no-such-pack@1', 'core@99'] });
+  truthy(U.packErrors.some((m) => /no-such-pack/.test(m)), '缺失的包应报错');
+  truthy(U.packErrors.some((m) => /core@99/.test(m)), '版本太低应报错');
+});
+t('按台面算需要的包：放了十格阵，就要 tenframe 包', () => {
+  const sc = W.blank(); W.add(sc, 'tenframe', 0, 0, {});
+  truthy(U.packsFor(sc).includes('tenframe'), '应包含 tenframe');
+  truthy(!U.packsFor(W.blank()).includes('tenframe'), '空台面不需要它');
+});
+t('单文件版能生成，并内联了器材包', () => {
+  const fs2 = require('fs'), path2 = require('path');
+  require('child_process').execFileSync(process.execPath, [path2.join(root, 'tools', 'build-standalone.js')], { stdio: 'ignore' });
+  const html = fs2.readFileSync(path2.join(root, 'dist', 'universe-standalone.html'), 'utf8');
+  truthy(!/<script src=/.test(html) && html.includes('tenframe'), '应没有外部脚本引用，且包含十格阵');
+});
+console.log('输出声明（1.2）');
+t('lint 拒绝没有声明 dim 的输出口', () => {
+  const bad = Object.assign({}, U.types.num, { outputs: { v: { kind: 'num', label: '值' } } });
+  truthy(U.lintType(bad).errors.some((m) => /dim/.test(m)), '应报 dim 缺失');
+});
+console.log('值类型与精确标记（1.7 / 1.9）');
+for (const id of Object.keys(U.KINDS)) t('kind 注册合格：' + id, () => eq(U.lintKind(U.KINDS[id]), [], id));
+t('存档往返：有理数读回后相等', () => { const v = Q(3, 4); truthy(U.KINDS.num.eq(U.KINDS.num.parse(U.KINDS.num.serialize(v)), v)); });
+t('精确链：精确来源 → 运算器 → 仍然精确', () => {
+  const s = W.blank(); const a = W.add(s, 'num', 0, 0, { n: 2 }); const b = W.add(s, 'num', 0, 0, { n: 3 }); const o = W.add(s, 'op', 0, 0, { op: 0 });
+  W.act(s, { t: 'link', from: a, fromPort: 'v', to: o, toPort: 'a' }); W.act(s, { t: 'link', from: b, fromPort: 'v', to: o, toPort: 'b' });
+  eq(W.evaluate(s)[o].out.r.exact, true, '精确输入应得精确输出');
+});
+t('近似链：近似来源（时钟的秒）→ 运算器 → 带 ≈', () => {
+  const s = W.blank(); const c = W.add(s, 'clock', 0, 0, {}); const n = W.add(s, 'num', 0, 0, { n: 2 }); const o = W.add(s, 'op', 0, 0, { op: 0 });
+  s.clock.t = 195.5;
+  W.act(s, { t: 'link', from: c, fromPort: 't', to: o, toPort: 'a' }); W.act(s, { t: 'link', from: n, fromPort: 'v', to: o, toPort: 'b' });
+  const r = W.evaluate(s)[o].out.r; eq(r.exact, false, '近似输入应得近似输出'); truthy(U.showVal(r).startsWith('≈'), '应显示 ≈');
+});
 console.log('器材 lint');
 for (const id of Object.keys(U.types)) t('lint ' + id, () => { const r = U.lintType(U.types[id]); eq(r.errors, [], id); });
 
@@ -156,12 +325,27 @@ t('学生出的题能被别人做通关', () => {
   J2.check(p, run, s, W.evaluate(s)); eq(run.finished, true); eq(J2.score(p, run).got, 10);
 });
 
+console.log('近似值判分（1.9）');
+t('对近似值用精确相等，会被记录（问题 lint 据此失败）', () => {
+  const sc = W.blank(); const c = W.add(sc, 'clock', 0, 0, {}); sc.clock.t = 195.5; W.evaluate(sc);
+  const pr = { id: 'probe-approx', title: '探针', milestones: [{ id: 'm1', say: '', score: 1, when: { type: 'clock', port: 't', op: '=', value: '195.5' } }] };
+  U.inexactReads.length = 0;
+  const run = U.Judge.start(pr, 'practice'); U.Judge.check(pr, run, sc, W.evaluate(sc));
+  truthy(U.inexactReads.length > 0, '精确相等判近似值应被记录');
+});
+t('W.near 带容差判断近似值：不记录', () => {
+  const sc = W.blank(); const c = W.add(sc, 'clock', 0, 0, {}); sc.clock.t = 195.5; const D = W.evaluate(sc);
+  U.inexactReads.length = 0;
+  const near = (x, tol) => Math.abs(U.Q.num(D[c].out.t.data) - x) <= tol;
+  truthy(near(195.5, 0.01)); truthy(!near(100, 0.01)); eq(U.inexactReads.length, 0);
+});
 console.log('参考解回归（每道题都必须能通关）');
 const SOL = require('./solutions.js');
 for (const p of U.problems) {
   t('题目 ' + p.id + ' 有参考解且能通关', () => {
     const fn = SOL[p.id]; if (!fn) throw new Error('缺参考解：在 tests/solutions.js 里补一条');
     const s = p.build(), J2 = U.Judge, run = J2.start(p, 'practice');
+    U.inexactReads.length = 0;
     J2.check(p, run, s, W.evaluate(s)); run.armed = true; run.ops = 1;
     const chk = () => J2.check(p, run, s, W.evaluate(s));
     const h = {
@@ -172,6 +356,7 @@ for (const p of U.problems) {
       run(n) { for (let i = 0; i < n; i++) { J2.check(p, run, s, W.tick(s)); } },
     };
     fn(h); chk();
+    if (U.inexactReads.length) throw new Error('对近似值做了精确判断（请改用 W.near 带容差）：' + JSON.stringify(U.inexactReads.slice(0, 2)));
     const goal = p.goal || p.milestones.map((m) => m.id), miss = goal.filter((id) => !run.ms[id].done);
     if (miss.length) throw new Error('没通过的里程碑：' + miss.join(','));
   });

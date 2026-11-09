@@ -16,7 +16,7 @@
           shade: { type: 'bool', label: '涂色', default: true },
         },
         inputs: { v: { kind: 'num', label: '值' } },
-        outputs: { v: { kind: 'num', label: '原样输出' } },
+        outputs: { v: { dim: null, kind: 'num', label: '原样输出' } },
         icon: () => K.rect(6, 12, 52, 20, { stroke: 'var(--ink)', r: 3, w: 2 }) + K.rect(6, 12, 26, 20, { fill: 'var(--accent)', r: 3 }) + K.line(32, 12, 32, 32, { w: 1.5 }),
         size: () => [220, 92],
         compute: (c) => { const v = K.first(c.inp.v); if (!v) { c.say('info', '接一个分数进来'); return {}; } return { v }; },
@@ -41,7 +41,7 @@
           tick: { type: 'num', label: '刻度间隔', default: 1, min: 0.01, max: 50, step: 0.25 },
         },
         inputs: { v: { kind: 'num', label: '点', many: true } },
-        outputs: { n: { kind: 'num', label: '点的个数' } },
+        outputs: { n: { dim: null, kind: 'num', label: '点的个数' } },
         icon: () => K.line(6, 26, 58, 26, { w: 2 }) + [12, 24, 36, 48].map((x) => K.line(x, 22, x, 30, { w: 1.5 })).join('') + K.circle(36, 26, 4, { fill: 'var(--accent)' }),
         size: () => [300, 110],
         compute: (c) => {
@@ -72,7 +72,7 @@
           h: { type: 'num', label: '宽', default: 4, min: 0.5, max: 40, step: 0.5 },
           grid: { type: 'bool', label: '画方格', default: true },
         },
-        outputs: { area: { kind: 'num', label: '面积' }, perim: { kind: 'num', label: '周长' } },
+        outputs: { area: { dim: null, kind: 'num', label: '面积' }, perim: { dim: null, kind: 'num', label: '周长' } },
         icon: () => K.rect(8, 10, 48, 24, { stroke: 'var(--ink)', r: 2, w: 2.5, fill: '#f08a1c33' }),
         size: () => [220, 150],
         compute: (c) => {

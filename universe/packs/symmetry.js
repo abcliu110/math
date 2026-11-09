@@ -83,7 +83,7 @@
           angle: { type: 'num', label: '折痕方向（度，0=水平，90=竖直）', default: 90, min: 0, max: 179, step: 1 },
           offset: { type: 'num', label: '折痕离中心（格）', default: 0, min: 0, max: 10, step: 1 },
         },
-        outputs: { same: { kind: 'num', label: '两半重合（1 是 0 否）' }, pairs: { kind: 'num', label: '互相对上的点对数' } },
+        outputs: { same: { dim: null, kind: 'num', label: '两半重合（1 是 0 否）' }, pairs: { dim: null, kind: 'num', label: '互相对上的点对数' } },
         icon: () => K.rect(12, 8, 40, 28, { fill: '#f08a1c55', stroke: 'var(--ink)', w: 2 }) + K.line(8, 38, 56, 6, { stroke: '#e5484d', w: 2 }),
         size: () => [300, 280],
         compute: (c) => {

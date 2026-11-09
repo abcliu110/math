@@ -16,7 +16,7 @@
           cols: { type: 'int', label: '每行几个', default: 4, min: 1, max: 12 },
           shape: { type: 'choice', label: '样子', default: 0, choices: ['圆点', '方块', '星星'] },
         },
-        outputs: { n: { kind: 'num', label: '一共' } },
+        outputs: { n: { dim: null, kind: 'num', label: '一共' } },
         icon: () => [0, 1, 2].map((r) => [0, 1, 2, 3].map((c) => K.circle(14 + c * 12, 12 + r * 10, 3.5, { fill: 'var(--accent)' })).join('')).join(''),
         size: () => [220, 160],
         compute: (c) => ({ n: num(Q(c.props.rows * c.props.cols), 'count') }),
@@ -41,7 +41,7 @@
           label: { type: 'text', label: '标签', default: '' },
         },
         inputs: { a: { kind: 'num', label: '被除数' }, b: { kind: 'num', label: '除数' } },
-        outputs: { q: { kind: 'num', label: '商' }, r: { kind: 'num', label: '余数' } },
+        outputs: { q: { dim: null, kind: 'num', label: '商' }, r: { dim: null, kind: 'num', label: '余数' } },
         icon: () => K.text(32, 28, '÷', { size: 26, weight: 700 }) + K.text(50, 38, '…', { size: 14, fill: 'var(--accent)', weight: 700 }),
         size: () => [170, 100],
         compute: (c) => {
@@ -71,7 +71,7 @@
           show: { type: 'choice', label: '写法', default: 0, choices: ['分数', '小数'] },
         },
         inputs: { v: { kind: 'num', label: '原数' } },
-        outputs: { r: { kind: 'num', label: '近似数' } },
+        outputs: { r: { dim: null, kind: 'num', label: '近似数' } },
         icon: () => K.text(32, 29, '≈', { size: 30, weight: 700 }),
         size: () => [160, 96],
         compute: (c) => {
@@ -96,7 +96,7 @@
           weights: { type: 'bool', label: '标出位值', default: true },
         },
         inputs: { v: { kind: 'num', label: '整数' } },
-        outputs: { count: { kind: 'num', label: '有几位' }, sum: { kind: 'num', label: '数字和' } },
+        outputs: { count: { dim: null, kind: 'num', label: '有几位' }, sum: { dim: null, kind: 'num', label: '数字和' } },
         icon: () => [0, 1, 2].map((i) => K.rect(8 + i * 16, 10, 14, 24, { stroke: 'var(--ink)', r: 2 }) + K.text(15 + i * 16, 28, [1, 0, 1][i], { size: 14, weight: 700 })).join(''),
         size: () => [260, 110],
         compute: (c) => {

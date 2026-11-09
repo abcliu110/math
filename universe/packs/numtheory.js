@@ -20,7 +20,7 @@
           label: { type: 'text', label: '标签', default: '' },
         },
         inputs: { a: { kind: 'num', label: '甲' }, b: { kind: 'num', label: '乙（可不接）' } },
-        outputs: { prime: { kind: 'bool', label: '甲是质数' }, count: { kind: 'num', label: '甲的因数个数' }, gcd: { kind: 'num', label: '最大公因数' }, lcm: { kind: 'num', label: '最小公倍数' } },
+        outputs: { prime: { dim: null, kind: 'bool', label: '甲是质数' }, count: { dim: null, kind: 'num', label: '甲的因数个数' }, gcd: { dim: null, kind: 'num', label: '最大公因数' }, lcm: { dim: null, kind: 'num', label: '最小公倍数' } },
         icon: () => K.text(32, 29, '质?', { size: 22, weight: 700 }),
         size: () => [230, 130],
         compute: (c) => {
@@ -57,7 +57,7 @@
           show: { type: 'choice', label: '写法', default: 0, choices: ['小数', '分数（能写成时）'] },
         },
         inputs: { v: { kind: 'num', label: '被开方数' } },
-        outputs: { r: { kind: 'num', label: '结果' }, exact: { kind: 'bool', label: '开得尽' } },
+        outputs: { r: { dim: null, kind: 'num', label: '结果' }, exact: { dim: null, kind: 'bool', label: '开得尽' } },
         icon: () => K.text(32, 30, '√', { size: 30, weight: 700 }),
         size: () => [180, 104],
         compute: (c) => {
@@ -84,7 +84,7 @@
           label: { type: 'text', label: '标签', default: '' },
         },
         inputs: { a: { kind: 'num', label: '底数' } },
-        outputs: { r: { kind: 'num', label: '结果' } },
+        outputs: { r: { dim: null, kind: 'num', label: '结果' } },
         icon: () => K.text(24, 32, 'a', { size: 26, weight: 700 }) + K.text(40, 18, 'n', { size: 16, weight: 700, fill: 'var(--accent)' }),
         size: () => [190, 100],
         compute: (c) => {

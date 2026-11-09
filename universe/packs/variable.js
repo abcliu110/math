@@ -42,7 +42,7 @@
           lo: { type: 'int', label: 'x 从', default: -10, min: -50, max: 0 },
           hi: { type: 'int', label: 'x 到', default: 10, min: 0, max: 50 },
         },
-        outputs: { hits: { kind: 'num', label: '相等的个数' }, all: { kind: 'num', label: '恒等吗（1/0）' }, first: { kind: 'num', label: '第一个相等的 x' } },
+        outputs: { hits: { dim: null, kind: 'num', label: '相等的个数' }, all: { dim: null, kind: 'num', label: '恒等吗（1/0）' }, first: { dim: null, kind: 'num', label: '第一个相等的 x' } },
         icon: () => K.text(32, 27, 'x=?', { size: 22, weight: 700, fill: 'var(--accent)' }),
         size: () => [340, 170],
         compute: (c) => {

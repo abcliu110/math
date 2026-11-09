@@ -52,3 +52,15 @@ U.registerPack({ id:'mypack', types:{ foo:{
 - 引脚器材是隐藏的（`hidden: true`），不出现在器材架上。
 
 **还没做**：学生在界面里把选中的器材封装成新器材（需要选择输入输出口的界面）；打包器材的保存（现在只在代码里定义，刷新后消失）。
+
+## 第 1 阶段内核补充（设计 v2 第 1 节）
+
+- **精确标记（1.9）**：输出值带 `exact`。上游只要有一个是近似的，下游输出也标为近似（显示 ≈）。有状态器材声明 `exact: false` 时，它的读出也是近似的。
+- **值类型（1.7）**：每种 kind 默认带 `serialize/parse`（JSON 往返）。可选 `toProp(v, P)` 决定它能不能驱动属性，`showApprox` 决定近似时的显示。`U.lintKind` 检查注册是否合格。
+- **符号精确数 real（1.7）**：`U.Real` 提供 `from / pi / sqrt / add / mul / approx / show`，值为 `{a, b, c, p}`，表示 `a + b√c + pπ`。不能精确表示的运算（如 √2 + √3）返回 `null`。
+- **属性控件（1.1.1）**：`U.controlFor(P)` 按声明选控件（choice 2–5 个 → segment，bool → switch，小整数 → stepper，其余 → slider，角度 → dial，expr → expr）。器材可用 `control` 覆盖，lint 检查覆盖是否合法。界面已实现 segment、switch、select、text；有范围的数字用滑杆（slider）、角度用转盘（dial），数字框始终保留。expr 控件还没有器材用到，暂不做界面。
+- **容器（1.10）**：器材声明 `slots: { 名: { accepts, max, layout, fullWhy?, rejectWhy? } }`。动作 `put {id, parent, slot}` 放入，`take {id}` 取出，`del {id, keep: 'out' | 'all'}` 删除容器（默认把里面的东西倒到台面上）。移动容器时子实体跟着动。布局：`grid2x5`、`onAxis`、`free`。计算时 `ctx.kids(slot)` 给出子实体。判分视图 `W.children(e, slot)`、`W.parentOf(e)`。
+- **存档迁移（1.4）**：`W.load` 按版本逐级升级，当前版本 `W.CURRENT_V = 3`（v3 增加 parent/slot）。比当前版本新的台面拒绝打开。
+- **器材包（1.8）**：`needs: ['core@1']` 缺失或版本太低时写入 `U.packErrors`。`U.packsFor(scene)` 给出台面需要的包。浏览器里的按需加载还没做，目前 index.html 仍一次加载全部包。
+- **近似值判分（1.9）**：数据形式的 when 里，近似值用 `=` / `!=` 会记入 `U.inexactReads`，参考解回归测试据此失败；函数形式的 when 请用 `W.near(e, port, x, tol)`。
+- **单文件版**：`node tools/build-standalone.js` 生成 `dist/universe-standalone.html`。

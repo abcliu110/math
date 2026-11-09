@@ -49,6 +49,19 @@
   };
 
   // 把任意输入变成属性合法值；不合法就说为什么（不悄悄改）
+  // 1.1.1 属性控件自动选型：按属性声明选控件；器材可用 control 覆盖，覆盖值要合法（lint 检查）。
+  const CONTROLS = { segment: ['choice'], select: ['choice'], switch: ['bool'], stepper: ['int', 'num'], slider: ['int', 'num'], dial: ['num', 'int'], expr: ['expr'], text: ['text'] };
+  U.CONTROLS = CONTROLS;
+  U.controlFor = (P) => {
+    if (P.control) return P.control;
+    if (P.kind === 'expr') return 'expr';
+    if (P.type === 'choice') return P.choices.length >= 2 && P.choices.length <= 5 ? 'segment' : 'select';
+    if (P.type === 'bool') return 'switch';
+    if (P.type === 'text') return 'text';
+    if (P.dim === '角度') return 'dial';
+    if (P.type === 'int' && P.min !== undefined && P.max !== undefined && P.max - P.min <= 20) return 'stepper';
+    return 'slider';
+  };
   U.coerceProp = (P, x) => {
     if (!P) return { ok: false, why: '没有这个属性' };
     if (P.type === 'text') return { ok: true, v: String(x === undefined || x === null ? '' : x) };
@@ -66,8 +79,24 @@
     return { ok: true, v };
   };
 
+  // 1.8 包的依赖：needs: ['core@1', …]。依赖缺失或版本太低，记入 U.packErrors（check-types 与测试会报）。
+  U.packErrors = [];
+  const needOK = (need, owner) => {
+    const m = /^([a-z0-9_-]+)(?:@(\d+))?$/i.exec(need);
+    if (!m) { U.packErrors.push(owner + ' 的依赖写法不对：' + need); return; }
+    const dep = U.packs[m[1]];
+    if (!dep) U.packErrors.push(owner + ' 需要的包 ' + m[1] + ' 还没加载');
+    else if (m[2] && dep.version < +m[2]) U.packErrors.push(owner + ' 需要 ' + m[1] + '@' + m[2] + '，当前只有 ' + dep.version);
+  };
+  U.packsFor = (scene) => {
+    const want = new Set();
+    const add = (pid) => { if (!pid || want.has(pid) || !U.packs[pid]) return; want.add(pid); for (const n of U.packs[pid].needs) add(String(n).split('@')[0]); };
+    for (const e of Object.values(scene.entities || {})) { const d = U.types[e.type]; if (d) add(d.pack); }
+    return [...want];
+  };
   U.registerPack = function (pack) {
     U.packs[pack.id] = { id: pack.id, version: pack.version || 1, needs: pack.needs || [], types: [] };
+    for (const n of (pack.needs || [])) needOK(n, pack.id);
     for (const id in (pack.kinds || {})) U.defineKind(id, pack.kinds[id]);
     for (const id in (pack.types || {})) { pack.types[id].pack = pack.id; U.define(id, pack.types[id]); U.packs[pack.id].types.push(id); }
   };
@@ -87,7 +116,14 @@
     const outs = Object.keys(def.outputs);
     if (!outs.length) err('至少要有 1 个输出口（没有输出口就是孤岛）');
     for (const k of outs) if (!U.KINDS[def.outputs[k].kind]) err('输出口 ' + k + ' 的 kind 没注册：' + def.outputs[k].kind);
+    for (const k of outs) if (!('dim' in def.outputs[k])) err('输出口 ' + k + ' 没有声明 dim（无量纲写 dim: null，有量纲写维度名或 \'=in\'）');
     for (const k of Object.keys(def.inputs)) if (!U.KINDS[def.inputs[k].kind] && def.inputs[k].kind !== 'any') err('输入口 ' + k + ' 的 kind 没注册：' + def.inputs[k].kind);
+    for (const sn in (def.slots || {})) {
+      const S = def.slots[sn];
+      if (!(S.accepts === '*' || Array.isArray(S.accepts))) err('槽位 ' + sn + ' 的 accepts 要是数组或 '*'');
+      if (!(S.max === null || (Number.isInteger(S.max) && S.max > 0))) err('槽位 ' + sn + ' 的 max 要是正整数或 null');
+      if (!U.LAYOUTS || !(S.layout in U.LAYOUTS)) err('槽位 ' + sn + ' 的 layout 不认识：' + S.layout);
+    }
     const hasC = typeof def.compute === 'function', hasS = typeof def.step === 'function';
     if (hasC === hasS) err('compute 和 step 必须有且只有一个');
     if (hasS && typeof def.read !== 'function') err('有状态器材要有 read(ctx)：状态怎么变成输出');
@@ -96,6 +132,10 @@
       if (!PROP_TYPES.includes(P.type)) err('属性 ' + k + ' 的 type 不合法：' + P.type);
       if (P.type === 'choice' && !(P.choices && P.choices.length)) err('属性 ' + k + ' 是 choice 但没有 choices');
       if (P.default === undefined) err('属性 ' + k + ' 缺 default');
+      if (P.control !== undefined) {
+        if (!CONTROLS[P.control]) err('属性 ' + k + ' 的 control 不认识：' + P.control);
+        else if (!CONTROLS[P.control].includes(P.type === 'choice' || P.type === 'bool' || P.type === 'text' ? P.type : (P.kind === 'expr' ? 'expr' : P.type))) err('属性 ' + k + ' 的 control=' + P.control + ' 和类型 ' + P.type + ' 不匹配');
+      }
       const r = U.coerceProp(P, P.default);
       if (!r.ok) err('属性 ' + k + ' 的 default 自己就不合法：' + r.why);
     }
@@ -117,13 +157,13 @@
         const e = sc.entities[id];
         const sz = def.size(e);
         if (!Array.isArray(sz) || !(sz[0] > 0) || !(sz[1] > 0)) err('size() 要返回 [宽,高]');
-        const c = { ent: e, props: D[id].props || e.props, d: D[id], out: D[id].out, state: e.state, w: sz[0], h: sz[1] - 28, t: 0, n: 0 };
+        const c = { ent: e, props: D[id].props || e.props, d: D[id], out: D[id].out, state: e.state, w: sz[0], h: sz[1] - 28, t: 0, n: 0, kids: () => [] };
         const svg = def.draw(c);
         if (typeof svg !== 'string') err('draw() 要返回字符串');
         if (hasC) {
           const inp = {}; for (const k in def.inputs) inp[k] = [];
           const ctx = deepFreeze({ ent: JSON.parse(JSON.stringify(e)), props: Object.assign({}, e.props), inp, t: 0, n: 0, seed: 1 });
-          const ctx2 = Object.assign({}, ctx, { say() {} });
+          const ctx2 = Object.assign({}, ctx, { say() {}, kids: () => [] });
           def.compute(ctx2);
         }
         if (hasS) {

@@ -18,7 +18,7 @@
           v2: { type: 'num', label: '乙 每拍走', default: -1, min: -50, max: 50, step: 1 },
         },
         reinit: ['len', 'loop', 'x1', 'v1', 'x2', 'v2'],
-        outputs: { gap: { kind: 'num', label: '相距' }, at: { kind: 'num', label: '相遇时刻（拍）' } },
+        outputs: { gap: { dim: null, kind: 'num', label: '相距' }, at: { dim: null, kind: 'num', label: '相遇时刻（拍）' } },
         icon: () => K.line(6, 30, 58, 30, { w: 3 }) + K.circle(18, 24, 5, { fill: 'var(--accent)' }) + K.circle(46, 24, 5, { fill: 'var(--good)' }),
         size: () => [320, 120],
         init: (p) => ({ a: Math.min(p.x1, p.len), b: Math.min(p.x2, p.len), t: 0, at: -1 }),

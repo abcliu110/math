@@ -19,7 +19,7 @@
           b: { type: 'num', label: '乙装了', default: 0, min: 0, max: 50, step: 1 },
           pour: { type: 'choice', label: '倒水', default: 0, choices: CH },
         },
-        outputs: { total: { kind: 'num', label: '总量' }, after_a: { kind: 'num', label: '甲剩' }, after_b: { kind: 'num', label: '乙剩' } },
+        outputs: { total: { dim: null, kind: 'num', label: '总量' }, after_a: { dim: null, kind: 'num', label: '甲剩' }, after_b: { dim: null, kind: 'num', label: '乙剩' } },
         icon: () => '<rect x="12" y="10" width="16" height="30" rx="3" fill="none" stroke="var(--ink)" stroke-width="2"/><rect x="14" y="22" width="12" height="16" fill="#3b9bff88"/>' +
           '<rect x="36" y="16" width="16" height="24" rx="3" fill="none" stroke="var(--ink)" stroke-width="2"/><rect x="38" y="30" width="12" height="8" fill="#3b9bff88"/>',
         size: () => [250, 200],

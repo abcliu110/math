@@ -92,10 +92,19 @@
       h += '<div class="row' + (drv ? ' drv' : '') + '"><label>' + esc(P.label) + '</label><div class="ctl">';
       if (drv) h += '← 由「' + esc(S.scene.entities[drv.from].name) + '」驱动 <button class="st" data-unlink="' + drv.link + '" title="断开">✕</button>';
       else if (!P.write) h += esc(String(v));
+      else if (U.controlFor(P) === 'segment') h += '<div class="seg">' + P.choices.map((c, i) => '<button class="sg' + (i === v ? ' on' : '') + '" data-k="' + k + '" data-seg="' + i + '">' + esc(c) + '</button>').join('') + '</div>';
       else if (P.type === 'choice') h += '<select data-k="' + k + '">' + P.choices.map((c, i) => '<option value="' + i + '"' + (i === v ? ' selected' : '') + '>' + esc(c) + '</option>').join('') + '</select>';
       else if (P.type === 'bool') h += '<input type="checkbox" data-k="' + k + '"' + (v ? ' checked' : '') + '>';
       else if (P.type === 'text') h += '<input type="text" data-k="' + k + '" value="' + esc(v) + '">';
-      else h += '<button class="st" data-step="-1" data-k="' + k + '">−</button><input type="number" data-k="' + k + '" value="' + v + '" step="' + (P.step || 1) + '"' + (P.min !== undefined ? ' min="' + P.min + '"' : '') + (P.max !== undefined ? ' max="' + P.max + '"' : '') + '><button class="st" data-step="1" data-k="' + k + '">+</button>';
+      else {
+        // 1.1.1：滑杆 / 转盘（有范围时）；数字框始终在，保证能精确填数
+        const C = U.controlFor(P);
+        const lo = P.min !== undefined ? P.min : (C === 'dial' ? 0 : undefined), hi = P.max !== undefined ? P.max : (C === 'dial' ? 360 : undefined);
+        const ranged = (C === 'slider' || C === 'dial') && lo !== undefined && hi !== undefined;
+        if (C === 'dial' && ranged) h += '<input type="range" class="dial" data-k="' + k + '" min="' + lo + '" max="' + hi + '" step="1" value="' + Number(v) + '" title="' + Number(v) + '°">';
+        else if (C === 'slider' && ranged) h += '<input type="range" class="slide" data-k="' + k + '" min="' + lo + '" max="' + hi + '" step="' + (P.type === 'int' ? 1 : 0.5) + '" value="' + Number(v) + '">';
+        h += '<button class="st" data-step="-1" data-k="' + k + '">−</button><input type="number" data-k="' + k + '" value="' + v + '" step="' + (P.step || 1) + '"' + (P.min !== undefined ? ' min="' + P.min + '"' : '') + (P.max !== undefined ? ' max="' + P.max + '"' : '') + '><button class="st" data-step="1" data-k="' + k + '">+</button>';
+      }
       h += '</div></div>';
     }
     h += '<div class="note">想让别的器材来决定「' + (Object.keys(d.props)[0] ? esc(d.props[Object.keys(d.props)[0]].label) : '') + '」？从别的器材的输出口拖一根线，放到这台器材左边出现的药丸上。</div>';

@@ -58,7 +58,7 @@
           expr: { type: 'text', label: '我的公式（用 n）', default: '2*n' },
           upto: { type: 'int', label: '试到 n =', default: 10, min: 1, max: 500 },
         },
-        outputs: { tested: { kind: 'num', label: '试了几个' }, bad: { kind: 'num', label: '第一个反例 n' }, good: { kind: 'num', label: '全对吗（1/0）' } },
+        outputs: { tested: { dim: null, kind: 'num', label: '试了几个' }, bad: { dim: null, kind: 'num', label: '第一个反例 n' }, good: { dim: null, kind: 'num', label: '全对吗（1/0）' } },
         icon: () => K.text(32, 24, 'n?', { size: 22, weight: 700, fill: 'var(--accent)' }) + K.line(12, 34, 52, 34, { w: 2 }),
         size: () => [320, 170],
         compute: (c) => {

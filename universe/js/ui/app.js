@@ -72,6 +72,15 @@
     return r;
   }
   function snapshot() { pushUndo(); }
+  // 1.10：删容器时若里面有东西，先问：连里面的一起删，还是倒到台面上
+  let pendingDel = null;
+  function removeEntity(id) {
+    const kids = U.World.childrenOf(S.scene, id);
+    if (!kids.length) return act({ t: 'del', id });
+    pendingDel = id;
+    UI.Panels.dialog('<h3>删除「' + U.kit.esc(S.scene.entities[id].name) + '」</h3><p>里面有 ' + kids.length + ' 个东西。</p>' +
+      '<div class="btnrow"><button class="btn" id="dlg-delout">只删容器，东西倒到台面上</button><button class="btn pri" id="dlg-delall">连里面的一起删</button><button class="btn" id="dlg-close">算了</button></div>');
+  }
   function afterMove() { saveFree(); UI.Panels.renderTop(); }
 
   function restore(str) { S.scene = W.load(str); S.sel = null; S.selLink = null; refresh(); }
@@ -191,9 +200,10 @@
     insp.addEventListener('click', (e) => {
       const t = e.target, id = S.sel;
       if (t.dataset.close) { S.inspOpen = false; UI.Panels.renderInsp(); UI.Stage.render(); }
+      else if (t.dataset.seg !== undefined) act({ t: 'set', id, k: t.dataset.k, v: +t.dataset.seg });
       else if (t.dataset.unlink) act({ t: 'unlink', id: t.dataset.unlink });
       else if (t.dataset.reset) act({ t: 'reset', id });
-      else if (t.dataset.step) { const inp = insp.querySelector('input[data-k="' + t.dataset.k + '"]'); const P = U.types[S.scene.entities[id].type].props[t.dataset.k]; act({ t: 'set', id, k: t.dataset.k, v: Math.round((+inp.value + (+t.dataset.step) * (P.step || 1)) * 1e6) / 1e6 }); }
+      else if (t.dataset.step) { const inp = insp.querySelector('input[type="number"][data-k="' + t.dataset.k + '"]'); const P = U.types[S.scene.entities[id].type].props[t.dataset.k]; act({ t: 'set', id, k: t.dataset.k, v: Math.round((+inp.value + (+t.dataset.step) * (P.step || 1)) * 1e6) / 1e6 }); }
     });
     // 为什么 / 我的发现 / 交卷
     $('#why').onclick = () => {
@@ -225,7 +235,12 @@
       }
       const di = t.closest('.it[data-pid]');
       if (di) { UI.Panels.closeDialog(); openProblem(di.dataset.pid, 'practice'); return; }
-      if (t.id === 'dlg' || t.id === 'dlg-close') UI.Panels.closeDialog();
+      if (t.id === 'dlg-delout' || t.id === 'dlg-delall') {
+        const id = pendingDel; pendingDel = null; UI.Panels.closeDialog();
+        if (id && S.scene.entities[id]) { S.sel = null; act({ t: 'del', id, keep: t.id === 'dlg-delall' ? 'all' : 'out' }); }
+        return;
+      }
+      if (t.id === 'dlg' || t.id === 'dlg-close') { pendingDel = null; UI.Panels.closeDialog(); }
       else if (t.id === 'dlg-again') { UI.Panels.closeDialog(); openProblem(S.problem.id, S.mode); }
       else if (t.id === 'dlg-next') { UI.Panels.closeDialog(); const i = U.problems.findIndex((p) => p.id === S.problem.id); openProblem(U.problems[(i + 1) % U.problems.length].id, 'practice'); }
       else if (t.id === 'dlg-note') { lsSet(NOTE_KEY, $('#notes').value); UI.Panels.closeDialog(); say('笔记已保存', 'good', 1800); }
@@ -235,7 +250,7 @@
       if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
       if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); }
       else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'Z'))) { e.preventDefault(); redo(); }
-      else if (e.key === 'Delete' || e.key === 'Backspace') { if (S.selLink) { const id = S.selLink; S.selLink = null; act({ t: 'unlink', id }); } else if (S.sel) act({ t: 'del', id: S.sel }); }
+      else if (e.key === 'Delete' || e.key === 'Backspace') { if (S.selLink) { const id = S.selLink; S.selLink = null; act({ t: 'unlink', id }); } else if (S.sel) removeEntity(S.sel); }
       else if (e.key === ' ') { e.preventDefault(); clockAct({ t: 'clock', running: !S.scene.clock.running }); }
       else if (e.key === 'Escape') { S.sel = null; S.selLink = null; UI.Panels.renderInsp(); UI.Stage.render(); }
     });
@@ -247,6 +262,6 @@
     Ev.load(); U.Author.loadAll(); UI.Stage.init(); UI.Panels.initShelfDrag(); bind(); UI.Panels.renderShelf();
     openFree(); G.requestAnimationFrame(frame);
   }
-  UI.App = { act, snapshot, afterMove, openProblem, openFree, setMode, say, undo, redo, stepOnce, refresh };
+  UI.App = { act, snapshot, afterMove, removeEntity, openProblem, openFree, setMode, say, undo, redo, stepOnce, refresh };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })(window);

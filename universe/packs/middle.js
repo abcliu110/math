@@ -17,7 +17,7 @@
           b: { type: 'num', label: '加上 b', default: 0, min: -99, max: 99, step: 1 },
           c: { type: 'num', label: '等于 c', default: 0, min: -999, max: 999, step: 1 },
         },
-        outputs: { x: { kind: 'num', label: 'x' }, ok: { kind: 'bool', label: '有唯一解' } },
+        outputs: { x: { dim: null, kind: 'num', label: 'x' }, ok: { dim: null, kind: 'bool', label: '有唯一解' } },
         icon: () => K.text(32, 29, 'ax+b=c', { size: 14, weight: 700 }),
         size: () => [200, 110],
         compute: (c) => {
@@ -39,7 +39,7 @@
           b: { type: 'num', label: '边 b', default: 4, min: 0.5, max: 50, step: 0.5 },
           c: { type: 'num', label: '边 c', default: 5, min: 0.5, max: 50, step: 0.5 },
         },
-        outputs: { ok: { kind: 'bool', label: '围得起来' }, right: { kind: 'bool', label: '是直角' }, perim: { kind: 'num', label: '周长' }, area: { kind: 'num', label: '面积' } },
+        outputs: { ok: { dim: null, kind: 'bool', label: '围得起来' }, right: { dim: null, kind: 'bool', label: '是直角' }, perim: { dim: null, kind: 'num', label: '周长' }, area: { dim: null, kind: 'num', label: '面积' } },
         icon: () => '<path d="M8 36 L50 36 L24 8 Z" fill="#f08a1c33" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/>',
         size: () => [220, 170],
         compute: (c) => {
@@ -74,7 +74,7 @@
           pi: { type: 'choice', label: 'π 取', default: 0, choices: ['3.14', '22/7', '3.14159…（近似）'] },
           show: { type: 'bool', label: '画直径', default: true },
         },
-        outputs: { c: { kind: 'num', label: '周长' }, area: { kind: 'num', label: '面积' } },
+        outputs: { c: { dim: null, kind: 'num', label: '周长' }, area: { dim: null, kind: 'num', label: '面积' } },
         icon: () => K.circle(32, 22, 16, { stroke: 'var(--ink)', w: 2.5, fill: '#f08a1c33' }) + K.line(16, 22, 48, 22, { w: 1.5 }),
         size: () => [200, 160],
         compute: (c) => {
@@ -96,7 +96,7 @@
           b: { type: 'num', label: 'b（x 前）', default: 0, min: -20, max: 20, step: 1 },
           c: { type: 'num', label: 'c（常数）', default: 0, min: -20, max: 20, step: 1 },
         },
-        outputs: { vx: { kind: 'num', label: '顶点 x' }, vy: { kind: 'num', label: '顶点 y' }, roots: { kind: 'num', label: '与 x 轴交点数' }, disc: { kind: 'num', label: 'b²−4ac' } },
+        outputs: { vx: { dim: null, kind: 'num', label: '顶点 x' }, vy: { dim: null, kind: 'num', label: '顶点 y' }, roots: { dim: null, kind: 'num', label: '与 x 轴交点数' }, disc: { dim: null, kind: 'num', label: 'b²−4ac' } },
         icon: () => '<path d="M10 10 Q32 56 54 10" fill="none" stroke="var(--good)" stroke-width="3"/>',
         size: () => [230, 190],
         compute: (c) => {
@@ -127,7 +127,7 @@
           every: { type: 'int', label: '几拍抛一次', default: 1, min: 1, max: 20 },
           salt: { type: 'int', label: '种子偏移', default: 0, min: 0, max: 99 },
         },
-        outputs: { v: { kind: 'num', label: '正面=1' } },
+        outputs: { v: { dim: null, kind: 'num', label: '正面=1' } },
         icon: () => K.circle(32, 22, 15, { stroke: 'var(--ink)', w: 2.5, fill: '#f5c24233' }) + K.text(32, 29, '正', { size: 16, weight: 700 }),
         size: () => [120, 100],
         init: () => ({ v: -1, flips: 0, heads: 0 }),
@@ -154,7 +154,7 @@
           mode: { type: 'choice', label: '类型', default: 0, choices: ['等差', '等比'] },
         },
         reinit: ['first', 'diff', 'mode'],
-        outputs: { v: { kind: 'num', label: '这一项' }, sum: { kind: 'num', label: '前几项的和' }, n: { kind: 'num', label: '第几项' } },
+        outputs: { v: { dim: null, kind: 'num', label: '这一项' }, sum: { dim: null, kind: 'num', label: '前几项的和' }, n: { dim: null, kind: 'num', label: '第几项' } },
         icon: () => [0, 1, 2, 3].map((i) => K.rect(8 + i * 13, 34 - 6 - i * 6, 10, 6 + i * 6, { fill: 'var(--accent)', r: 1 })).join(''),
         size: () => [200, 110],
         init: (p) => ({ k: 1, term: Q.fromNumber(p.first), sum: Q.fromNumber(p.first), past: [Q.fromNumber(p.first)] }),

@@ -15,7 +15,7 @@
           h: { type: 'num', label: '高', default: 3, min: 1, max: 20, step: 1 },
           s: { type: 'num', label: '斜度（上边右移）', default: 2, min: 0, max: 10, step: 1 },
         },
-        outputs: { area: { kind: 'num', label: '面积' }, rect_w: { kind: 'num', label: '长方形的长' } },
+        outputs: { area: { dim: null, kind: 'num', label: '面积' }, rect_w: { dim: null, kind: 'num', label: '长方形的长' } },
         icon: () => '<polygon points="16,34 40,34 52,12 28,12" fill="#f08a1c33" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/>' + K.line(34, 12, 34, 34, { w: 1.2, stroke: 'var(--accent)', dash: '3 2' }),
         size: () => [240, 190],
         compute: (c) => {

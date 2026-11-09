@@ -12,7 +12,7 @@
     U.define('pin_' + kind, {
       essence: ['E12'], label: '引脚（' + kind + '）', prefix: '脚', group: '关系', grades: [1, 1], hidden: true,
       props: { key: { type: 'text', label: '名', default: '', hidden: true } },
-      inputs: {}, outputs: { v: { kind, label: '值' } },
+      inputs: {}, outputs: { v: { dim: null, kind, label: '值' } },
       lint: { minProps: 0, why: '内部引脚，只在打包器材里出现' },
       icon: () => '<circle cx="32" cy="22" r="4"/>', size: () => [10, 10], draw: () => '',
       compute: (c) => ({ v: U.__pins[c.props.key] || null }),
@@ -21,7 +21,7 @@
 
   U.defineMacro = function (id, spec) {
     const sc = spec.scene;
-    const outKinds = {}, inKinds = {};
+    const outKinds = {}, outDims = {}, inKinds = {};
     for (const [name, ref] of Object.entries(spec.inputs)) {
       const e = sc.entities[ref.id]; if (!e) throw new Error('输入 ' + name + ' 指向的器材不在台面里');
       const d = U.types[e.type]; const kind = d.inputs[ref.port] && d.inputs[ref.port].kind;
@@ -33,12 +33,12 @@
       const d = U.types[e.type]; const o = d.outputs[ref.port];
       if (!o) throw new Error('输出 ' + name + ' 的口 ' + ref.port + ' 不存在');
       if (U.types[e.type].stateful) throw new Error('内部有状态器材，不能封装');
-      outKinds[name] = o.kind;
+      outKinds[name] = o.kind; outDims[name] = o.dim;
     }
     for (const e of Object.values(sc.entities)) if (W.isStateful(sc, e.id)) throw new Error('内部有状态器材：' + e.name);
     const ins = {}, outs = {};
     for (const k of Object.keys(inKinds)) ins[k] = { kind: inKinds[k], label: k };
-    for (const k of Object.keys(outKinds)) outs[k] = { kind: outKinds[k], label: k };
+    for (const k of Object.keys(outKinds)) outs[k] = { kind: outKinds[k], dim: outDims[k] === undefined ? null : outDims[k], label: k };
     U.define(id, {
       essence: spec.essence, label: spec.label, prefix: spec.prefix || spec.label, group: spec.group || '关系', grades: spec.grades || [1, 9],
       props: { _n: { type: 'int', label: '（封装的）', default: 0, min: 0, max: 0, hidden: true } },

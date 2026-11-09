@@ -20,7 +20,7 @@
           d: { type: 'int', label: '分母', default: 1, min: 1, max: 999 },
           unit: { type: 'choice', label: '单位', default: 0, choices: D.names },
         },
-        outputs: { v: { kind: 'num', label: '值' } },
+        outputs: { v: { dim: null, kind: 'num', label: '值' } },
         icon: () => K.frac(32, 18, Q(1, 2), 22),
         size: () => [150, 92],
         compute: (c) => ({ v: num(Q(c.props.n, c.props.d), D.key(c.props.unit)) }),
@@ -41,7 +41,7 @@
           form: { type: 'choice', label: '结果写法', default: 0, choices: FORMS },
         },
         inputs: { a: { kind: 'num', label: '甲' }, b: { kind: 'num', label: '乙' } },
-        outputs: { r: { kind: 'num', label: '结果' } },
+        outputs: { r: { dim: null, kind: 'num', label: '结果' } },
         icon: () => K.circle(32, 22, 16, { stroke: 'var(--ink)' }) + K.text(32, 29, '+', { size: 22, weight: 700 }),
         size: () => [160, 112],
         compute: (c) => {
@@ -83,7 +83,7 @@
           label: { type: 'text', label: '标签', default: '' },
         },
         inputs: { v: { kind: 'num', label: '值' } },
-        outputs: { v: { kind: 'num', label: '原样输出' } },
+        outputs: { v: { dim: null, kind: 'num', label: '原样输出' } },
         icon: () => K.rect(8, 8, 48, 28, { stroke: 'var(--ink)', r: 6 }) + K.text(32, 29, '0.5', { size: 16, weight: 700 }),
         size: () => [150, 80],
         compute: (c) => {
@@ -108,7 +108,7 @@
           invert: { type: 'bool', label: '反过来', default: false },
         },
         inputs: { a: { kind: 'num', label: '甲' }, b: { kind: 'num', label: '乙' } },
-        outputs: { ok: { kind: 'bool', label: '成立' } },
+        outputs: { ok: { dim: null, kind: 'bool', label: '成立' } },
         icon: () => K.text(32, 30, '≟', { size: 28, weight: 700 }),
         size: () => [150, 80],
         compute: (c) => {
@@ -139,7 +139,7 @@
           grid: { type: 'bool', label: '显示刻度', default: false },
         },
         inputs: { L: { kind: 'num', label: '左盘', many: true }, R: { kind: 'num', label: '右盘', many: true } },
-        outputs: { ok: { kind: 'bool', label: '平衡' }, diff: { kind: 'num', label: '左−右' } },
+        outputs: { ok: { dim: null, kind: 'bool', label: '平衡' }, diff: { dim: null, kind: 'num', label: '左−右' } },
         icon: () => K.line(32, 8, 32, 34, { w: 2 }) + K.line(10, 14, 54, 14, { w: 2.5 }) + K.line(6, 14, 14, 24, {}) + K.line(58, 14, 50, 24, {}) + K.line(16, 36, 48, 36, { w: 3 }),
         size: () => [220, 130],
         compute: (c) => {
@@ -180,7 +180,7 @@
           b: { type: 'num', label: '截距 b', default: 0, min: -100, max: 100, step: 0.5 },
           range: { type: 'int', label: '画多大', default: 5, min: 2, max: 20 },
         },
-        outputs: { f: { kind: 'fn', label: '直线' } },
+        outputs: { f: { dim: null, kind: 'fn', label: '直线' } },
         icon: () => K.line(6, 38, 58, 6, { w: 3, stroke: 'var(--good)' }) + K.line(6, 22, 58, 22, { w: 1, stroke: 'var(--dim)' }),
         size: () => [180, 150],
         compute: (c) => ({ f: U.val('fn', { k: Q.fromNumber(c.props.k), b: Q.fromNumber(c.props.b) }) }),
@@ -202,7 +202,7 @@
         lint: { minProps: 1, why: '代入器只做一件事：把 x 代进直线求 y' },
         props: { x: { type: 'num', label: 'x', default: 0, step: 1 } },
         inputs: { f: { kind: 'fn', label: '直线' } },
-        outputs: { y: { kind: 'num', label: 'y' } },
+        outputs: { y: { dim: null, kind: 'num', label: 'y' } },
         icon: () => K.text(32, 29, 'f(x)', { size: 17, weight: 700 }),
         size: () => [150, 88],
         compute: (c) => {

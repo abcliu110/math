@@ -18,7 +18,7 @@
           rc: { type: 'int', label: '右盘：砝码', default: 8, min: -50, max: 100 },
           x0: { type: 'num', label: '盒子的真实重量', default: 3, min: -50, max: 100, step: 1, hidden: true },
         },
-        outputs: { ok: { kind: 'bool', label: '平衡' }, solved: { kind: 'num', label: '盒子的重量（单独一个盒子时）' } },
+        outputs: { ok: { dim: null, kind: 'bool', label: '平衡' }, solved: { dim: null, kind: 'num', label: '盒子的重量（单独一个盒子时）' } },
         icon: () => K.line(10, 14, 54, 14, { w: 2.5 }) + K.line(32, 14, 32, 36, { w: 2 }) + K.rect(12, 16, 12, 10, { stroke: 'var(--accent)', w: 2 }) + K.line(16, 36, 48, 36, { w: 3 }),
         size: () => [300, 170],
         compute: (c) => {

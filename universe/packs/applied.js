@@ -16,7 +16,7 @@
           label: { type: 'text', label: '标签', default: '' },
         },
         inputs: { a: { kind: 'num', label: '甲' }, b: { kind: 'num', label: '乙' } },
-        outputs: { r: { kind: 'num', label: '结果' } },
+        outputs: { r: { dim: null, kind: 'num', label: '结果' } },
         icon: () => K.text(32, 29, '%', { size: 28, weight: 700, fill: 'var(--accent)' }),
         size: () => [190, 104],
         compute: (c) => {
@@ -42,7 +42,7 @@
           label: { type: 'text', label: '标签', default: '' },
         },
         inputs: { a: { kind: 'num', label: '甲' }, b: { kind: 'num', label: '乙' } },
-        outputs: { ra: { kind: 'num', label: '比的前项' }, rb: { kind: 'num', label: '比的后项' }, sa: { kind: 'num', label: '甲分到' }, sb: { kind: 'num', label: '乙分到' } },
+        outputs: { ra: { dim: null, kind: 'num', label: '比的前项' }, rb: { dim: null, kind: 'num', label: '比的后项' }, sa: { dim: null, kind: 'num', label: '甲分到' }, sb: { dim: null, kind: 'num', label: '乙分到' } },
         icon: () => K.text(32, 29, '3 : 2', { size: 18, weight: 700 }),
         size: () => [200, 120],
         compute: (c) => {
@@ -74,7 +74,7 @@
           label: { type: 'text', label: '标签', default: '' },
         },
         inputs: { f: { kind: 'fn', label: '直线 1' }, g: { kind: 'fn', label: '直线 2' } },
-        outputs: { x: { kind: 'num', label: 'x' }, y: { kind: 'num', label: 'y' }, ok: { kind: 'bool', label: '恰有一个交点' } },
+        outputs: { x: { dim: null, kind: 'num', label: 'x' }, y: { dim: null, kind: 'num', label: 'y' }, ok: { dim: null, kind: 'bool', label: '恰有一个交点' } },
         icon: () => K.line(8, 38, 56, 8, { w: 2.5, stroke: 'var(--good)' }) + K.line(8, 10, 56, 36, { w: 2.5, stroke: 'var(--accent)' }) + K.circle(32, 23, 4, { fill: '#fff', stroke: 'var(--ink)' }),
         size: () => [220, 180],
         compute: (c) => {
@@ -104,7 +104,7 @@
           replace: { type: 'bool', label: '摸完放回去', default: true },
         },
         reinit: ['red', 'white', 'replace'],
-        outputs: { v: { kind: 'num', label: '红球=1' } },
+        outputs: { v: { dim: null, kind: 'num', label: '红球=1' } },
         icon: () => '<path d="M18 14 Q32 6 46 14 L50 38 H14 Z" fill="#f08a1c33" stroke="var(--ink)" stroke-width="2.5"/>' + K.circle(28, 30, 4, { fill: 'var(--bad)' }) + K.circle(38, 30, 4, { fill: '#fff', stroke: 'var(--ink)' }),
         size: () => [150, 120],
         init: (p) => ({ r: p.red, w: p.white, v: -1, draws: 0, reds: 0 }),

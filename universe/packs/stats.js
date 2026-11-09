@@ -14,7 +14,7 @@
           minN: { type: 'int', label: '至少几次才算', default: 1, min: 1, max: 100000 },
         },
         inputs: { d: { kind: 'dist', label: '分布' } },
-        outputs: { v: { kind: 'num', label: '结果' } },
+        outputs: { v: { dim: null, kind: 'num', label: '结果' } },
         icon: () => K.text(32, 22, 'x̄', { size: 24, weight: 700 }) + K.line(12, 34, 52, 34, { w: 2 }),
         size: () => [160, 100],
         compute: (c) => {

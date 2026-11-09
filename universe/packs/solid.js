@@ -15,7 +15,7 @@
           side: { type: 'num', label: '边长', default: 4, min: 0.5, max: 50, step: 0.5 },
           diag: { type: 'bool', label: '画对角线', default: false },
         },
-        outputs: { sum: { kind: 'num', label: '内角和' }, each: { kind: 'num', label: '每个内角' }, perim: { kind: 'num', label: '周长' }, diags: { kind: 'num', label: '对角线条数' } },
+        outputs: { sum: { dim: null, kind: 'num', label: '内角和' }, each: { dim: null, kind: 'num', label: '每个内角' }, perim: { dim: null, kind: 'num', label: '周长' }, diags: { dim: null, kind: 'num', label: '对角线条数' } },
         icon: () => { const p = []; for (let i = 0; i < 6; i++) p.push((32 + 16 * Math.cos(Math.PI / 3 * i - Math.PI / 2)).toFixed(1) + ',' + (22 + 16 * Math.sin(Math.PI / 3 * i - Math.PI / 2)).toFixed(1)); return '<polygon points="' + p.join(' ') + '" fill="#f08a1c33" stroke="var(--ink)" stroke-width="2.5"/>'; },
         size: () => [210, 190],
         compute: (c) => {
@@ -41,7 +41,7 @@
           w: { type: 'num', label: '宽', default: 3, min: 0.5, max: 30, step: 0.5 },
           h: { type: 'num', label: '高', default: 2, min: 0.5, max: 30, step: 0.5 },
         },
-        outputs: { vol: { kind: 'num', label: '体积' }, surf: { kind: 'num', label: '表面积' }, edges: { kind: 'num', label: '棱总长' } },
+        outputs: { vol: { dim: null, kind: 'num', label: '体积' }, surf: { dim: null, kind: 'num', label: '表面积' }, edges: { dim: null, kind: 'num', label: '棱总长' } },
         icon: () => '<path d="M10 18 H38 V38 H10 Z M38 18 L52 10 V30 L38 38 M10 18 L24 10 H52" fill="#f08a1c33" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/>',
         size: () => [230, 170],
         compute: (c) => {
@@ -66,7 +66,7 @@
           lo: { type: 'int', label: '统计从', default: 0, min: -50, max: 50 },
           hi: { type: 'int', label: '统计到', default: 20, min: -49, max: 100 },
         },
-        outputs: { dist: { kind: 'dist', label: '分布' }, n: { kind: 'num', label: '个数' }, mean: { kind: 'num', label: '平均数' }, median: { kind: 'num', label: '中位数' } },
+        outputs: { dist: { dim: null, kind: 'dist', label: '分布' }, n: { dim: null, kind: 'num', label: '个数' }, mean: { dim: null, kind: 'num', label: '平均数' }, median: { dim: null, kind: 'num', label: '中位数' } },
         icon: () => [0, 1, 2].map((i) => K.line(10, 12 + i * 10, 54, 12 + i * 10, { w: 1.5, stroke: 'var(--dim)' })).join('') + K.text(32, 18, '3 5 9', { size: 11, weight: 700 }),
         size: () => [250, 130],
         compute: (c) => {
