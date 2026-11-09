@@ -121,6 +121,16 @@
   function onDown(ev) {
     const S = UI.S, t = ev.target;
     if (t.closest('.tool')) return;
+    // 几何画板上的自由点：直接拖动，改的是那个自由点器材的 x、y（按格点吸附）
+    const gh = t.closest('[data-drag]');
+    if (gh) {
+      const pe = S.scene.entities[gh.dataset.drag]; if (!pe) return;
+      ev.preventDefault(); ev.stopPropagation();
+      const svg = gh.closest('svg'), r = svg.getBoundingClientRect(), zoom = r.width / (+svg.getAttribute('width') || r.width);
+      const kx = gh.dataset.kx || 'x', ky = gh.dataset.ky || 'y', P = U.types[pe.type].props;
+      drag = { kind: 'gpt', id: pe.id, kx, ky, lo: [P[kx].min, P[ky].min], hi: [P[kx].max, P[ky].max], sx: ev.clientX, sy: ev.clientY, x0: pe.props[kx], y0: pe.props[ky], unit: (+gh.dataset.s) * zoom, moved: false };
+      return;
+    }
     const outp = t.closest('.port.out');
     if (outp) {
       ev.preventDefault();
@@ -197,6 +207,14 @@
       return;
     }
     if (!drag) return;
+    if (drag.kind === 'gpt') {
+      const cl = (v, i) => Math.max(drag.lo[i], Math.min(drag.hi[i], v));
+      const nx = cl(drag.x0 + Math.round((ev.clientX - drag.sx) / drag.unit), 0), ny = cl(drag.y0 - Math.round((ev.clientY - drag.sy) / drag.unit), 1);
+      const e = S.scene.entities[drag.id]; if (!e || (e.props[drag.kx] === nx && e.props[drag.ky] === ny)) return;
+      if (!drag.moved) { drag.moved = true; UI.App.snapshot(); }
+      W.act(S.scene, { t: 'set', id: drag.id, k: drag.kx, v: nx }); W.act(S.scene, { t: 'set', id: drag.id, k: drag.ky, v: ny });
+      UI.App.refresh(); return;
+    }
     if (drag.kind === 'pan') { S.view.x = drag.vx + ev.clientX - drag.sx; S.view.y = drag.vy + ev.clientY - drag.sy; render(); return; }
     if (drag.kind === 'move') {
       if (!drag.moved && Math.hypot(ev.clientX - drag.sx, ev.clientY - drag.sy) < 4) return;
@@ -221,6 +239,7 @@
       const d = drag; drag = null; stageEl.classList.remove('panning');
       document.querySelectorAll('.card.droptarget').forEach((c) => c.classList.remove('droptarget'));
       if (d.kind === 'move' && d.moved) { dropOnContainer(d.id, ev); UI.App.afterMove(); }
+      if (d.kind === 'gpt' && d.moved && S.scene.entities[d.id]) UI.App.act({ t: 'set', id: d.id, k: d.ky, v: S.scene.entities[d.id].props[d.ky] });
     }
   }
 

@@ -3,7 +3,7 @@
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const root = path.join(__dirname, '..');
 const fsx = require('fs'), pk = (d) => fsx.readdirSync(path.join(root, d)).filter((f) => f.endsWith('.js')).sort().map((f) => d + '/' + f);
-const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/ratio.js', 'js/core/predict.js', 'js/core/eqn.js', 'js/core/seq.js', 'js/core/table.js', 'js/core/figure.js', 'js/core/convert.js', 'js/core/registry.js', 'js/core/rules.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/curriculum.js', 'js/core/coverage.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
+const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/ratio.js', 'js/core/predict.js', 'js/core/eqn.js', 'js/core/seq.js', 'js/core/table.js', 'js/core/figure.js', 'js/core/geo.js', 'js/core/convert.js', 'js/core/registry.js', 'js/core/rules.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/curriculum.js', 'js/core/coverage.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
 const ctx = vm.createContext({ console, TextEncoder, TextDecoder, btoa, atob });
 ctx.globalThis = ctx;
 for (const f of files) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f });
@@ -1029,6 +1029,51 @@ t('后算器材：结论只能接后算器材；后算器材之间可以接；�
   const rc = W.act(sc, { t: 'link', from: coin, fromPort: 'v', to: pc2, toPort: 'lv' }); eq(rc.ok, false); truthy(/有记忆/.test(rc.why), rc.why);
   eq(U.lintType(U.types.scaffold).errors, []);
   eq(U.lintType(U.types.proofcheck).errors, [], '后算器材可以有输入口，只要不是有状态的');
+});
+console.log('几何构造原型：辅助线、剪切、移动、翻转、粘贴');
+const Gx = U.Geo, Pq = (x, y) => ({ x: Q(x), y: Q(y) });
+t('构造：中点、两线交点、垂足，都是精确的有理数', () => {
+  eq(U.Fig.show({ type: 'point', pts: [Gx.midpoint(Pq(1, 0), Pq(2, 3))] }), '点 (3/2, 3/2)');
+  eq(U.Fig.show({ type: 'point', pts: [Gx.lineIntersect(Pq(0, 0), Pq(3, 1), Pq(0, 2), Pq(2, 0))] }), '点 (3/2, 1/2)');
+  eq(U.Fig.show({ type: 'point', pts: [Gx.foot(Pq(1, 3), Pq(0, 0), Pq(4, 2))] }), '点 (2, 1)');
+  eq(Gx.lineIntersect(Pq(0, 0), Pq(1, 1), Pq(0, 1), Pq(1, 2)), null);
+});
+t('剪切：中线把三角形剪成面积相等的两块；没穿过图形的线剪不开', () => {
+  const tr = U.Fig.polygon([[0, 0], [6, 0], [2, 4]]); const r = Gx.cut(tr, Pq(0, 0), Gx.midpoint(Pq(6, 0), Pq(2, 4)));
+  eq(r.pieces.length, 2); truthy(U.KINDS.real.eq(U.Fig.area(r.pieces[0]), U.Fig.area(r.pieces[1])));
+  truthy(/没有穿过/.test(Gx.cut(tr, Pq(10, 10), Pq(11, 10)).why || ''), '水平线 y = 10 碰不到三角形');
+});
+t('剪切凹多边形：线穿过边界两次就能剪；四次时说明原型不支持', () => {
+  const L = U.Fig.polygon([[0, 0], [4, 0], [4, 2], [2, 2], [2, 4], [0, 4]]);
+  eq(Gx.cut(L, Pq(1, -1), Pq(1, 5)).pieces.length, 2);
+  truthy(/不止两次/.test(Gx.cut(L, Pq(0, 5), Pq(5, 0)).why || ''), '直线 x + y = 5 穿过 L 形边界四次');
+});
+t('摆放：翻转、旋转、移动后都和原来全等', () => {
+  const tr = U.Fig.polygon([[0, 0], [3, 0], [0, 1]]);
+  for (const o of [{ flip: 1 }, { flip: 2 }, { turn: 1 }, { turn: 3, dx: 4, dy: -2 }, { flip: 1, turn: 2, dx: 1 }]) truthy(U.Fig.congruent(tr, Gx.place(tr, o)), JSON.stringify(o));
+  eq(U.Fig.show(Gx.place(tr, { flip: 1 })), '三角形 (3, 0) (0, 0) (3, 1)');
+});
+t('粘贴：两块拼成一个图形，共线的点会去掉；叠在一起或没贴上会说明原因', () => {
+  const a = U.Fig.polygon([[0, 0], [2, 0], [2, 2], [0, 2]]), b = U.Fig.polygon([[2, 0], [4, 0], [4, 2], [2, 2]]);
+  const m = Gx.merge([a, b]); truthy(m.ok); eq(U.Fig.show(m.poly).split(' ')[0], '四边形'); eq(m.poly.pts.length, 4);
+  truthy(/叠/.test(Gx.merge([a, a]).why)); truthy(/没有贴上|不止一块|一个点/.test(Gx.merge([a, U.Fig.polygon([[5, 5], [6, 5], [6, 6]])]).why));
+});
+t('拼合检查：平行四边形沿高剪开，移过去正好拼成长方形；没移到位要说明', () => {
+  const pg = U.Fig.polygon([[0, 0], [5, 0], [7, 3], [2, 3]]), r = Gx.cut(pg, Pq(2, 3), Pq(2, 0));
+  const tri = r.pieces.find((p) => p.pts.length === 3), quad = r.pieces.find((p) => p.pts.length === 4), target = U.Fig.polygon([[2, 0], [7, 0], [7, 3], [2, 3]]);
+  truthy(Gx.assemble([quad, Gx.place(tri, { dx: 5 })], target).ok);
+  truthy(/叠/.test(Gx.assemble([quad, Gx.place(tri, { dx: 4 })], target).why), '只移 4 格会和另一块叠在一起');
+});
+t('器材连线：拖动自由点（改 x、y）后，中线剪开的两块仍然面积相等（不变量）', () => {
+  const p = U.problems.find((x) => x.id === 'geo-median-area'), sc = p.build();
+  const role = (r) => Object.values(sc.entities).find((e) => e.role === r).id;
+  const m = W.add(sc, 'gmid', 0, 0, {}); W.act(sc, { t: 'link', from: role('B'), fromPort: 'p', to: m, toPort: 'a' }); W.act(sc, { t: 'link', from: role('C'), fromPort: 'p', to: m, toPort: 'b' });
+  const l = W.add(sc, 'gseg', 0, 0, {}); W.act(sc, { t: 'link', from: role('A'), fromPort: 'p', to: l, toPort: 'a' }); W.act(sc, { t: 'link', from: m, fromPort: 'p', to: l, toPort: 'b' });
+  const c = W.add(sc, 'gcut', 0, 0, {}); W.act(sc, { t: 'link', from: role('图形'), fromPort: 'f', to: c, toPort: 'f' }); W.act(sc, { t: 'link', from: l, fromPort: 's', to: c, toPort: 'line' });
+  for (const [x, y] of [[0, 0], [-3, 1], [1, -5], [7, 2]]) {
+    W.act(sc, { t: 'set', id: role('A'), k: 'x', v: x }); W.act(sc, { t: 'set', id: role('A'), k: 'y', v: y });
+    const D = W.evaluate(sc); truthy(U.KINDS.real.eq(U.Fig.area(D[c].out.a.data), U.Fig.area(D[c].out.b.data)), 'A=(' + x + ',' + y + ')');
+  }
 });
 console.log('输出声明（1.2）');
 t('lint 拒绝没有声明 dim 的输出口', () => {

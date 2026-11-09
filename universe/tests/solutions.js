@@ -72,4 +72,6 @@ module.exports = {
   'taxi-model-linear'(h) { const f = h.add('fit', { model: 1 }), pr = h.add('predict', { x: 10 }); h.link(h.role('data'), f, 't', 't'); h.link(f, pr, 'f', 'f'); },
   'tank-model-linear-decrease'(h) { const f = h.add('fit', { model: 1 }), pr = h.add('predict', { x: 10 }); h.link(h.role('data'), f, 't', 't'); h.link(f, pr, 'f', 'f'); },
   'nth-tenth'(h) { const g = h.role('g'); h.set(g, 'a', 2); h.set(g, 'b', 1); h.run(10); },
+  'geo-median-area'(h) { const m = h.add('gmid'); h.link(h.role('B'), m, 'a', 'p'); h.link(h.role('C'), m, 'b', 'p'); const l = h.add('gseg'); h.link(h.role('A'), l, 'a', 'p'); h.link(m, l, 'b', 'p'); const c = h.add('gcut'); h.link(h.role('图形'), c, 'f', 'f'); h.link(l, c, 'line', 's'); },
+  'geo-pgram-cut'(h) { const ab = h.add('gseg'); h.link(h.role('A'), ab, 'a', 'p'); h.link(h.role('B'), ab, 'b', 'p'); const ft = h.add('gfoot'); h.link(h.role('D'), ft, 'p', 'p'); h.link(ab, ft, 's', 's'); const c = h.add('gcut'); h.link(h.role('图形'), c, 'f', 'f'); h.link(ft, c, 'line', 'h'); const pl = h.add('gplace', { dx: 5 }); h.link(c, pl, 'f', 'b'); const a = h.add('gasm'); h.link(c, a, 'pieces', 'a'); h.link(pl, a, 'pieces', 'f'); h.link(h.role('目标长方形'), a, 'target', 'f'); },
 };
