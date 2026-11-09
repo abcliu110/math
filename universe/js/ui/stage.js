@@ -309,11 +309,8 @@
     }
     const src = st.type === 'gcut' ? (S.scene.links.find((l) => l.to === stId && l.toPort === 'f') || {}).from : null;
     S.wsSel = [];
-    const r = UI.App.build((A) => {
-      for (const pc of pieces) A({ t: 'del', id: pc.id });
-      A({ t: 'del', id: stId });
-      if (src && E[src]) E[src].hidden = false;   // 被剪的图形重新显示（撤销时快照里已经是原来的样子）
-    });
+    // 连它剪出来的块一起删，被剪的图形重新显示（撤销时快照里已经是原来的样子）
+    const r = UI.Intent.run('delete', { step: stId, pieces: pieces.map((pc) => pc.id), src });
     if (!r.ok) setMsg(r.why, false); else setMsg('', true);
     render();
   }
@@ -342,7 +339,7 @@
       const rs = picks.map((n) => U.Names.resolve(S.scene, n));
       if (rs.every((x) => typeof x !== 'string' && x.value)) verdict = U.Geo.assemble(rs.slice(1).map((x) => x.value.data), rs[0].value.data);
     }
-    const r = UI.App.act({ t: 'tool', ws: wsId, tool, picks, args });
+    const r = UI.Intent.run('tool', { ws: wsId, tool, picks, args });
     if (r && r.ok) {
       S.wsSel = [];
       if (verdict) setMsg(verdict.ok ? verdict.why : '还没拼对：' + verdict.why, !!verdict.ok); else setMsg('', true);
@@ -581,11 +578,9 @@
     if (!d.moved) { UI.Panels.renderInsp(); render(); return; }
     e.props.dx = d.dx0; e.props.dy = d.dy0;
     if (d.out) {
-      const w = toWorld(ev), t = cardUnder(ev, d.id, isContainer), td = t ? U.types[t.type] : null;
-      const slot = td && td.slots ? Object.keys(td.slots).find((sn) => { const A = td.slots[sn].accepts; return A === '*' || A.includes(e.type); }) : null;
-      if (t && slot) UI.App.actMany([{ t: 'put', id: d.id, parent: t.id, slot }]);
-      else UI.App.actMany([{ t: 'take', id: d.id }, { t: 'move', id: d.id, x: Math.round(w.x - 40), y: Math.round(w.y - 20) }]);
-    } else if (d.dxn || d.dyn) UI.App.actMany([{ t: 'piece', id: d.id, what: 'move', value: { dx: d.dxn, dy: d.dyn } }]);
+      const w = toWorld(ev);
+      UI.Intent.run('drop', { id: d.id, ev, piece: true, out: { x: w.x - 40, y: w.y - 20 } });
+    } else if (d.dxn || d.dyn) UI.Intent.run('piece', { ids: [d.id], what: 'move', value: { dx: d.dxn, dy: d.dyn } });
     else UI.App.refresh(false);
     // 松手后：拼对了就闪一下（判定在 wsBody 里每次重画时算，和「对齐到目标」一样用 U.Geo.assemble）
     if (!d.out) S.wsFit = { ws: d.wsId, until: Date.now() + 900 };
@@ -893,27 +888,27 @@
     if (!d.moved) return render();
     const last = {};
     for (const o of d.out) last[o.id + '|' + o.k] = o;
-    const list = Object.values(last).filter((o) => o.v !== orig[o.id + '|' + o.k]).map((o) => ({ t: 'set', id: o.id, k: o.k, v: o.v }));
-    if (d.mode === 'pscale' && d.f && !Q.eq(d.f, Q(1))) list.push({ t: 'piece', id: d.id, what: 'scale', value: Q.show(d.f) });
-    if (d.mode === 'prot' && d.k % 4) list.push({ t: 'piece', id: d.id, what: 'turn', value: d.k });
-    if (d.mode === 'lrot' && modT(d.t0 + d.k) !== d.t0) list.push({ t: 'set', id: d.id, k: 'turn', v: modT(d.t0 + d.k) });
-    if (list.length) UI.App.actMany(list); else render();
+    const list = Object.values(last).filter((o) => o.v !== orig[o.id + '|' + o.k]).map((o) => ({ id: o.id, k: o.k, v: o.v }));
+    if (d.mode === 'pscale' && d.f && !Q.eq(d.f, Q(1))) list.push({ id: d.id, what: 'scale', value: Q.show(d.f) });
+    if (d.mode === 'prot' && d.k % 4) list.push({ id: d.id, what: 'turn', value: d.k });
+    if (d.mode === 'lrot' && modT(d.t0 + d.k) !== d.t0) list.push({ id: d.id, k: 'turn', v: modT(d.t0 + d.k) });
+    if (list.length) UI.Intent.run('params', { ops: list }); else render();
   }
   // 左右翻、上下翻（浮动工具条）：一次一步
   function figFlip(wsId, name, v) {
     const fi = figByName(wsId, name); if (!fi) return;
-    if (fi.kind === 'piece') return UI.App.actMany([{ t: 'piece', id: fi.ent.id, what: 'flip', value: v }]);
+    if (fi.kind === 'piece') return UI.Intent.run('piece', { ids: [fi.ent.id], what: 'flip', value: v });
     const id = fi.ent.id;
     if (fi.kind === 'place') {
       // 摆放的状态是「先翻、再转」：翻转和转动的复合，按 F_v 与 R^t 的关系算出新状态（翻转和转动互相颠倒方向）
       const cur = fi.ent.props.flip, t0 = fi.ent.props.turn;
       const st = cur === v ? { flip: 0, turn: modT(-t0) } : cur === 0 ? { flip: v, turn: modT(-t0) } : { flip: 0, turn: modT(2 - t0) };
-      return UI.App.actMany([{ t: 'set', id, k: 'flip', v: st.flip }, { t: 'set', id, k: 'turn', v: st.turn }]);
+      return UI.Intent.run('params', { ops: [{ id, k: 'flip', v: st.flip }, { id, k: 'turn', v: st.turn }] });
     }
     if (fi.kind === 'pts' && fi.f.type !== 'point') {
       const q = v === 1 ? 'x' : 'y', pts = fi.f.pts, mn = minQ(pts.map((p) => p[q])), mx = maxQ(pts.map((p) => p[q]));
-      const list = uniq(fi.verts).map((g) => ({ t: 'set', id: g, k: q, v: Q.num(Q.sub(Q.add(mn, mx), Q(UI.S.scene.entities[g].props[q]))) }));
-      return UI.App.actMany(list);
+      const list = uniq(fi.verts).map((g) => ({ id: g, k: q, v: Q.num(Q.sub(Q.add(mn, mx), Q(UI.S.scene.entities[g].props[q]))) }));
+      return UI.Intent.run('params', { ops: list });
     }
   }
   // 画布（工作区的 svg）重画：拖动和画线时只动这一块，不重画台面
@@ -1041,26 +1036,7 @@
       if (!g.ok) { setMsg(g.why, false); return render(); }
       cut = pr;
     }
-    const r = UI.App.build((A) => {
-      const ids = [a, b].map((p) => {
-        if (p.ref) return p.ref;
-        const n = A({ t: 'add', type: 'gpt', x: 0, y: 0, props: { x: p.x, y: p.y } });
-        A({ t: 'put', id: n.id, parent: ws.id, slot: 'items' });
-        return n.id;
-      });
-      const sg = A({ t: 'add', type: 'gseg', x: 0, y: 0 }).id;
-      A({ t: 'link', from: ids[0], fromPort: 'p', to: sg, toPort: 'a' });
-      A({ t: 'link', from: ids[1], fromPort: 'p', to: sg, toPort: 'b' });
-      A({ t: 'put', id: sg, parent: ws.id, slot: 'items' });
-      if (cut) {
-        const gc = A({ t: 'add', type: 'gcut', x: 0, y: 0 }).id;
-        A({ t: 'link', from: cut.id, fromPort: cut.port, to: gc, toPort: 'f' });
-        A({ t: 'link', from: sg, fromPort: 's', to: gc, toPort: 'line' });
-        A({ t: 'put', id: gc, parent: ws.id, slot: 'items' });
-        const pc = U.Piece.cutInto(S.scene, { id: gc, ws, wires: [{ r: { id: cut.id } }] });
-        if (!pc.ok) throw { why: pc.why };
-      }
-    });
+    const r = UI.Intent.run('draw', { ws: ws.id, a, b, cut });
     D.pend = null; D.cur = null;
     if (r.ok) { S.wsSel = []; S.wsMsg = ''; } else setMsg(r.why, false);
     render();
@@ -1087,7 +1063,7 @@
     // 卡片右下角的拖柄：拖动改大小；双击恢复默认大小（一次 act，可以撤销）
     const rz = t.closest('.rz');
     if (rz) {
-      if (dbl('rz:' + rz.dataset.rz)) { S.sel = rz.dataset.rz; UI.App.act({ t: 'resize', id: rz.dataset.rz, w: null, h: null }); return; }
+      if (dbl('rz:' + rz.dataset.rz)) { S.sel = rz.dataset.rz; UI.Intent.run('resize', { id: rz.dataset.rz, w: null, h: null }); return; }
       startResize(rz.dataset.rz, ev); return;
     }
     // 工作区里选中对象（点、线、图形）：Shift 点是加选
@@ -1127,7 +1103,7 @@
       stageEl.setPointerCapture && 0; render(); return;
     }
     const ub = t.closest('[data-unlink]');
-    if (ub) { S.selLink = null; UI.App.act({ t: 'unlink', id: ub.dataset.unlink }); return; }
+    if (ub) { S.selLink = null; UI.Intent.run('unlink', { id: ub.dataset.unlink }); return; }
     if (t.closest('[data-why]')) return;
     const lb = t.closest('[data-link]');
     if (lb) { S.selLink = lb.dataset.link; S.sel = null; UI.Panels.renderInsp(); render(); return; }
@@ -1187,25 +1163,25 @@
     }
     return { x, y };
   }
-  // A：事务里的动作执行函数（拖动提交时由 tx 传入，整段拖放才是一个撤销项）；不传就单独走 act
-  function dropOnContainer(id, ev, A) {
-    const S = UI.S, e = S.scene.entities[id]; if (!e) return;
-    const act = A || ((a) => UI.App.act(a));
+  // 松手时落在哪个容器上（只算结论，不动台面；动作由 UI.Intent 做）：
+  // 工作区 → { ws, x, y }（图形落在鼠标松开的位置；放进去之前先把坐标范围定下来，免得每放一个就重新缩放）；
+  // 能装它的槽位 → { parent, slot }；没有 → null。opt.piece：块拖出工作区时用，不进工作区，槽位只认明确接受它的。
+  function dropTarget(ev, id, opt) {
+    const S = UI.S, e = S.scene.entities[id]; if (!e) return null;
     const t = cardUnder(ev, id, isContainer);
     const td = t ? U.types[t.type] : null;
     const slots = td && td.slots ? Object.keys(td.slots) : [];
-    if (t && slots.length) {
-      if (isWsDef(t.type)) {
-        // 放进几何工作区：图形落在鼠标松开的位置；放进去之前先把坐标范围定下来，免得每放一个就重新缩放一次
-        const g = geom(t); S.wsView = S.wsView || {}; if (!S.wsView[t.id]) S.wsView[t.id] = wsView(t, g.w, g.h - HD);
-        const wb = document.querySelector('svg.wsbody[data-wsid="' + t.id + '"]'), fr = wsFrame(t, g.w, g.h - HD);
-        const pt = wb ? worldAt(ev, fr.vw, scr(wb, fr)) : null;
-        act({ t: 'wsdrop', id, ws: t.id, x: pt ? pt.x : undefined, y: pt ? pt.y : undefined });
-        return;
-      }
-      const accepting = slots.find((sn) => { const A = td.slots[sn].accepts; return A === '*' || A.includes(e.type); });
-      act({ t: 'put', id, parent: t.id, slot: accepting || slots[0] });
-    } else if (e.parent) act({ t: 'take', id });
+    if (!(t && slots.length)) return null;
+    const piece = !!(opt && opt.piece);
+    if (isWsDef(t.type) && !piece) {
+      const g = geom(t); S.wsView = S.wsView || {}; if (!S.wsView[t.id]) S.wsView[t.id] = wsView(t, g.w, g.h - HD);
+      const wb = document.querySelector('svg.wsbody[data-wsid="' + t.id + '"]'), fr = wsFrame(t, g.w, g.h - HD);
+      const pt = wb ? worldAt(ev, fr.vw, scr(wb, fr)) : null;
+      return { ws: t.id, x: pt ? pt.x : undefined, y: pt ? pt.y : undefined };
+    }
+    const accepting = slots.find((sn) => { const A = td.slots[sn].accepts; return A === '*' || A.includes(e.type); });
+    const slot = piece ? accepting : (accepting || slots[0]);
+    return slot ? { parent: t.id, slot } : null;
   }
 
   function onMove(ev) {
@@ -1235,7 +1211,7 @@
       if (!drag.moved) { drag.moved = true; drag.before = UI.App.snapshot(); }
       const w = Math.max(MIN_W, Math.round(drag.w0 + dx / drag.zoom)), h = Math.max(MIN_H, Math.round(drag.h0 + dy / drag.zoom));
       drag.w1 = w; drag.h1 = h;
-      UI.App.preview({ t: 'resize', id: drag.id, w, h }); render();
+      UI.Intent.preview('resize', { id: drag.id, w, h }); render();
       showTip(ev.clientX, ev.clientY, w + ' × ' + h, true);
       return;
     }
@@ -1254,7 +1230,7 @@
       const w = toWorld(ev);
       if (!drag.moved) { drag.moved = true; drag.before = UI.App.snapshot(); }
       drag.x1 = w.x - drag.dx; drag.y1 = w.y - drag.dy;
-      UI.App.preview({ t: 'move', id: drag.id, x: drag.x1, y: drag.y1 }); render();
+      UI.Intent.preview('move', { id: drag.id, x: drag.x1, y: drag.y1 }); render();
       // 拖到容器上时，给容器加虚线框提示“松手放进去”
       const hov = cardUnder(ev, drag.id, isContainer);
       document.querySelectorAll('.card.droptarget').forEach((c) => c.classList.remove('droptarget'));
@@ -1266,7 +1242,7 @@
     const S = UI.S;
     if (linking) {
       const h = hoverTarget(ev), L = linking; linking = null; showTip(0, 0, '');
-      if (h && (h.id !== L.from || h.port)) UI.App.act({ t: 'link', from: L.from, fromPort: L.fromPort, to: h.id, toPort: h.port || undefined }); else render();
+      if (h && (h.id !== L.from || h.port)) UI.Intent.run('link', { from: L.from, fromPort: L.fromPort, to: h.id, toPort: h.port || undefined }); else render();
       render(); return;
     }
     if (drag) {
@@ -1277,12 +1253,12 @@
       if (d.kind === 'shape') { shapeUp(d, ev); return; }
       if (d.kind === 'rz') {
         showTip(0, 0, '');
-        if (d.moved) UI.App.tx('调整大小', (A) => A({ t: 'resize', id: d.id, w: d.w1, h: d.h1 }), { from: d.before });
+        if (d.moved) UI.Intent.run('resize', { id: d.id, w: d.w1, h: d.h1, before: d.before });
         UI.Panels.renderInsp(); render(); if (d.moved) UI.App.afterMove(); return;
       }
       // 移动（和松手放进容器）是一个事务：一次拖动只一个撤销项
       if (d.kind === 'move' && d.moved) {
-        UI.App.tx('移动', (A) => { A({ t: 'move', id: d.id, x: d.x1, y: d.y1 }); dropOnContainer(d.id, ev, A); }, { from: d.before });
+        UI.Intent.run('move', { id: d.id, x: d.x1, y: d.y1, ev, before: d.before });
         UI.App.afterMove();
       }
     }
@@ -1337,19 +1313,19 @@
       if (pa) {
         const S = UI.S, ids = selPieceIds();
         if (pa.dataset.pieceAct === 'insp') { if (ids[0]) { S.sel = ids[0]; S.inspOpen = true; UI.Panels.renderInsp(); render(); } }
-        else UI.App.actMany(ids.map((id) => ({ t: 'piece', id, what: pa.dataset.pieceAct, value: 1 })));
+        else UI.Intent.run('piece', { ids, what: pa.dataset.pieceAct, value: 1 });
         return;
       }
       const b = ev.target.closest('[data-act]'); if (!b) return;
       const S = UI.S, id = S.sel; if (!id) return;
       const a = b.dataset.act;
-      if (a === 'turn' || a === 'flip') UI.App.actMany([{ t: 'piece', id, what: a, value: 1 }]);
+      if (a === 'turn' || a === 'flip') UI.Intent.run('piece', { ids: [id], what: a, value: 1 });
       else if (a === 'insp') { S.inspOpen = !S.inspOpen; UI.Panels.renderInsp(); }
-      else if (a === 'copy') UI.App.act({ t: 'copy', id });
-      else if (a === 'del') { S.sel = null; UI.App.removeEntity(id); }
-      else if (a === 'resetstate') UI.App.act({ t: 'resetstate', id });
+      else if (a === 'copy') UI.Intent.run('copy', { id });
+      else if (a === 'del') { S.sel = null; UI.Intent.run('delete', { id }); }
+      else if (a === 'resetstate') UI.Intent.run('resetstate', { id });
     });
   }
 
-  UI.Stage = { init, render, dropOnContainer, freeSpot, fit, zoomAt, toWorld, geom, portPos, setFocus, wsZoomAt, wsFit, selPieceIds, endDraw, rangeOf: (id) => { const ws = UI.S.scene.entities[id]; if (!ws) return null; const g = geom(ws); return wsView(ws, g.w, g.h - HD); } };
+  UI.Stage = { init, render, dropTarget, freeSpot, fit, zoomAt, toWorld, geom, portPos, setFocus, wsZoomAt, wsFit, selPieceIds, endDraw, rangeOf: (id) => { const ws = UI.S.scene.entities[id]; if (!ws) return null; const g = geom(ws); return wsView(ws, g.w, g.h - HD); } };
 })(window);

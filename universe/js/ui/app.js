@@ -151,15 +151,15 @@
   function preview(a) { return W.act(S.scene, a); }
   // 拖动开始时的台面（字符串），松手时交给 tx 的 o.from
   function snapshot() { return snap(); }
-  // 1.10：删容器时若里面有东西，先问：连里面的一起删，还是倒到台面上
+  // 1.10：删容器时若里面有东西，先问：连里面的一起删，还是倒到台面上（UI.Intent.run('delete') 在里面有东西时调用）
   let pendingDel = null;
-  function removeEntity(id) {
-    const kids = U.World.childrenOf(S.scene, id);
-    if (!kids.length) return act({ t: 'del', id });
+  function askDelete(id, n) {
     pendingDel = id;
-    UI.Panels.dialog('<h3>删除「' + U.kit.esc(S.scene.entities[id].name) + '」</h3><p>里面有 ' + kids.length + ' 个东西。</p>' +
+    UI.Panels.dialog('<h3>删除「' + U.kit.esc(S.scene.entities[id].name) + '」</h3><p>里面有 ' + n + ' 个东西。</p>' +
       '<div class="btnrow"><button class="btn" id="dlg-delout">只删容器，东西倒到台面上</button><button class="btn pri" id="dlg-delall">连里面的一起删</button><button class="btn" id="dlg-close">算了</button></div>');
   }
+  // 删除的所有入口都走这里（UI.Intent.run('delete')）；保留这个名字是给旧调用方用的
+  function removeEntity(id) { return UI.Intent.run('delete', { id }); }
   function afterMove() { saveFree(); UI.Panels.renderTop(); }
 
   function restore(str) { S.scene = W.load(str); S.sel = null; S.selLink = null; rebaseSession(); refresh(); }
@@ -224,7 +224,7 @@
   }
 
   // ---------- 时钟 ----------
-  function clockAct(a) { W.act(S.scene, a); recordSession(a); refresh(false); }
+  function clockAct(a) { W.act(S.scene, a); recordSession(a); refresh(false); }   // 时钟不是编辑：不进撤销（经 UI.Intent.clock 调用）
   let last = 0, acc = 0;
   function frame(ts) {
     const ck = S.scene.clock;
@@ -250,7 +250,7 @@
   function bind() {
     $('#modes').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) setMode(b.dataset.mode); });
     $('#undo').onclick = undo; $('#redo').onclick = redo;
-    $('#tidy').onclick = () => act({ t: 'tidy' }); $('#clear').onclick = () => { if (Object.keys(S.scene.entities).length) act({ t: 'clear' }); };
+    $('#tidy').onclick = () => UI.Intent.run('tidy'); $('#clear').onclick = () => { if (Object.keys(S.scene.entities).length) UI.Intent.run('clear'); };
     $('#burger').onclick = () => $('#left').classList.toggle('open');
     $('#shelfbtn').onclick = () => $('#right').classList.toggle('open');
     $('#menubtn').onclick = (e) => { e.stopPropagation(); $('#menu').classList.toggle('open'); };
@@ -276,10 +276,10 @@
     $('#zin').onclick = () => UI.Stage.zoomAt(1.2); $('#zout').onclick = () => UI.Stage.zoomAt(1 / 1.2);
     $('#zfit').onclick = () => { UI.Stage.fit(); UI.Stage.render(); };
     // 时钟
-    $('#go').onclick = () => clockAct({ t: 'clock', running: !S.scene.clock.running });
-    $('#step1').onclick = () => { if (S.scene.clock.running) clockAct({ t: 'clock', running: false }); stepOnce(); };
-    $('#rew').onclick = () => clockAct({ t: 'clock', rewind: true });
-    document.querySelector('#clockbar .rate').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) clockAct({ t: 'clock', rate: +b.dataset.rate }); });
+    $('#go').onclick = () => UI.Intent.clock({ running: !S.scene.clock.running });
+    $('#step1').onclick = () => { if (S.scene.clock.running) UI.Intent.clock({ running: false }); stepOnce(); };
+    $('#rew').onclick = () => UI.Intent.clock({ rewind: true });
+    document.querySelector('#clockbar .rate').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) UI.Intent.clock({ rate: +b.dataset.rate }); });
     // 左栏
     $('#ltabs').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) { S.tab = b.dataset.tab; UI.Panels.renderLeft(); } });
     const lb = $('#leftbody');
@@ -321,20 +321,20 @@
       if (t.id === 'nm') {
         // 块：名字同时写到器材名和「名字」属性上（台面卡片的标题和工作区的标签各用一个），一步改完
         const en = S.scene.entities[id];
-        if (en && en.type === 'gpiece') { const n = t.value.trim().slice(0, 12); if (!n) { UI.Panels.renderInsp(); return; } actMany([{ t: 'rename', id, name: n }, { t: 'set', id, k: 'name', v: n }]); return; }
-        act({ t: 'rename', id, name: t.value }); return;
+        if (en && en.type === 'gpiece') { const n = t.value.trim().slice(0, 12); if (!n) { UI.Panels.renderInsp(); return; } UI.Intent.run('rename', { id, name: n, alsoProp: 'name' }); return; }
+        UI.Intent.run('rename', { id, name: t.value }); return;
       }
       if (t.dataset.gridK !== undefined) {
         // 表格式编辑：把所有格子按行收回文字，整体写回属性
         const gk = t.dataset.gridK, rows = [];
         insp.querySelectorAll('input[data-grid-k="' + gk + '"]').forEach((c) => { const r = +c.dataset.r; (rows[r] = rows[r] || [])[+c.dataset.c] = c.value; });
-        const r = act({ t: 'set', id, k: gk, v: U.Table.gridText(rows.filter(Boolean)) }); if (!r.ok) UI.Panels.renderInsp();
+        const r = UI.Intent.run('set', { id, k: gk, v: U.Table.gridText(rows.filter(Boolean)) }); if (!r.ok) UI.Panels.renderInsp();
         return;
       }
       const k = t.dataset.k || t.dataset.fact; if (!k) return;
       let v = t.type === 'checkbox' ? t.checked : t.dataset.fact !== undefined ? t.value : t.tagName === 'SELECT' ? +t.value : t.value;
       if (t.type === 'number' && v === '') { UI.Panels.renderInsp(); return; }
-      const r = act({ t: 'set', id, k, v }); if (!r.ok) UI.Panels.renderInsp();
+      const r = UI.Intent.run('set', { id, k, v }); if (!r.ok) UI.Panels.renderInsp();
     });
     insp.addEventListener('click', (e) => {
       const t = e.target, id = S.sel;
@@ -344,21 +344,21 @@
         // 删除表格的一行（行号就是显示的行号，空行不在文字里）
         const cur = U.Table.gridRows(S.scene.entities[id].props[t.dataset.target]);
         cur.splice(+t.dataset.gridDel, 1);
-        act({ t: 'set', id, k: t.dataset.target, v: U.Table.gridText(cur) });
+        UI.Intent.run('set', { id, k: t.dataset.target, v: U.Table.gridText(cur) });
         return;
       }
       if (t.dataset.close) { S.inspOpen = false; UI.Panels.renderInsp(); UI.Stage.render(); }
-      else if (t.dataset.seg !== undefined) act({ t: 'set', id, k: t.dataset.k, v: +t.dataset.seg });
+      else if (t.dataset.seg !== undefined) UI.Intent.run('set', { id, k: t.dataset.k, v: +t.dataset.seg });
       else if (t.dataset.ins !== undefined) {
         const inp = insp.querySelector('input[data-k="' + t.dataset.target + '"]'); if (!inp) return;
         // 光标在文本框里就插在光标处；否则（点按钮时焦点已离开）插在末尾
         const at = (document.activeElement === inp && inp.selectionStart != null) ? inp.selectionStart : inp.value.length, ins = t.dataset.ins;
         inp.value = inp.value.slice(0, at) + ins + inp.value.slice(at);
-        act({ t: 'set', id, k: t.dataset.target, v: inp.value });
+        UI.Intent.run('set', { id, k: t.dataset.target, v: inp.value });
       }
-      else if (t.dataset.unlink) act({ t: 'unlink', id: t.dataset.unlink });
-      else if (t.dataset.reset) act({ t: 'reset', id });
-      else if (t.dataset.step) { const inp = insp.querySelector('input[type="number"][data-k="' + t.dataset.k + '"]'); const P = U.types[S.scene.entities[id].type].props[t.dataset.k]; act({ t: 'set', id, k: t.dataset.k, v: Math.round((+inp.value + (+t.dataset.step) * (P.step || 1)) * 1e6) / 1e6 }); }
+      else if (t.dataset.unlink) UI.Intent.run('unlink', { id: t.dataset.unlink });
+      else if (t.dataset.reset) UI.Intent.run('reset', { id });
+      else if (t.dataset.step) { const inp = insp.querySelector('input[type="number"][data-k="' + t.dataset.k + '"]'); const P = U.types[S.scene.entities[id].type].props[t.dataset.k]; UI.Intent.run('set', { id, k: t.dataset.k, v: Math.round((+inp.value + (+t.dataset.step) * (P.step || 1)) * 1e6) / 1e6 }); }
     });
     // 为什么 / 我的发现 / 交卷
     $('#why').onclick = () => {
@@ -419,7 +419,7 @@
       if (t.id === 'dlg-fresh') { UI.Panels.closeDialog(); clearSession(); say('已重新开始，上次没做完的题已放下', '', 2400); return; }
       if (t.id === 'dlg-delout' || t.id === 'dlg-delall') {
         const id = pendingDel; pendingDel = null; UI.Panels.closeDialog();
-        if (id && S.scene.entities[id]) { S.sel = null; act({ t: 'del', id, keep: t.id === 'dlg-delall' ? 'all' : 'out' }); }
+        if (id && S.scene.entities[id]) { S.sel = null; UI.Intent.run('delete', { id, keep: t.id === 'dlg-delall' ? 'all' : 'out' }); }
         return;
       }
       if (t.id === 'dlg' || t.id === 'dlg-close') { pendingDel = null; UI.Panels.closeDialog(); }
@@ -433,14 +433,14 @@
       if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
       if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); }
       else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'Z'))) { e.preventDefault(); redo(); }
-      else if (e.key === 'Delete' || e.key === 'Backspace') { if (S.selLink) { const id = S.selLink; S.selLink = null; act({ t: 'unlink', id }); } else if (S.sel) removeEntity(S.sel); }
-      else if (e.key === ' ') { e.preventDefault(); clockAct({ t: 'clock', running: !S.scene.clock.running }); }
+      else if (e.key === 'Delete' || e.key === 'Backspace') { if (S.selLink) { const id = S.selLink; S.selLink = null; UI.Intent.run('delete', { link: id }); } else if (S.sel) UI.Intent.run('delete', { id: S.sel }); }
+      else if (e.key === ' ') { e.preventDefault(); UI.Intent.clock({ running: !S.scene.clock.running }); }
       else if ((e.key === 'r' || e.key === 'R' || e.key === 'f' || e.key === 'F') && !e.ctrlKey && !e.metaKey && !e.altKey) {
         // 块（§10.5.10）：R 转 90°，F 左右翻，作用在选中的块上；没有选中块就什么也不做
         const ids = UI.Stage.selPieceIds(); if (!ids.length) return;
         e.preventDefault();
         const what = e.key === 'r' || e.key === 'R' ? 'turn' : 'flip';
-        actMany(ids.map((id) => ({ t: 'piece', id, what, value: 1 })));
+        UI.Intent.run('piece', { ids, what, value: 1 });
       }
       else if (e.key === 'Escape' && S.wsDraw) UI.Stage.endDraw();
       else if (e.key === 'Escape' && S.focusWs) UI.Stage.setFocus(null);
@@ -456,6 +456,6 @@
     setInterval(saveSession, 2000); G.addEventListener('pagehide', saveSession);
     offerResume();
   }
-  UI.App = { tx, act, actMany, build, preview, snapshot, afterMove, removeEntity, openProblem, openFree, setMode, say, undo, redo, stepOnce, refresh };
+  UI.App = { tx, act, actMany, build, preview, snapshot, afterMove, removeEntity, askDelete, clockAct, openProblem, openFree, setMode, say, undo, redo, stepOnce, refresh };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })(window);

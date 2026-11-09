@@ -16,6 +16,8 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   const shot = (n) => p.screenshot({ path: path.join(shots, n + '.png') });
   const ents = () => p.evaluate(() => Object.keys(UI.S.scene.entities).length);
   const links = () => p.evaluate(() => UI.S.scene.links.length);
+  // 删除的入口一致性（U3）：每个入口删完的结果记在这里，最后比较是否一致
+  const entryRes = {};
 
   console.log('自由探究');
   // 拖「数字」「数字」「运算器」到台面
@@ -187,6 +189,26 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   const kidId = await p.evaluate(() => window.__k);
   await p.click('#dlg-delout'); await p.waitForTimeout(120);
   ok(await p.evaluate((x) => !UI.S.scene.entities[x], tf2) && await p.evaluate((x) => !!UI.S.scene.entities[x], kidId), '选“倒到台面上”：容器删了，东西还在');
+  // 入口一致（U3）：删一张卡片，用键盘 Delete 或卡片工具条的「删除」按钮，结果一样：少一个、撤销一次就回去
+  console.log('删除：卡片的入口一致（U3）');
+  const cardDelete = async (how) => {
+    await p.evaluate(() => { UI.App.openFree(); UI.App.act({ t: 'clear' }); window.__del = UI.App.act({ t: 'add', type: 'num', x: 200, y: 200, props: { n: 3 } }).id; UI.S.sel = null; UI.S.selLink = null; UI.Panels.renderInsp(); UI.Stage.render(); });
+    await p.waitForTimeout(120);
+    const id = await p.evaluate(() => window.__del);
+    const before = await p.evaluate(() => ({ n: Object.keys(UI.S.scene.entities).length, undo: UI.S.undo.length, scene: JSON.stringify(UI.S.scene) }));
+    await p.click('.card[data-id="' + id + '"] .hd'); await p.waitForTimeout(80);
+    if (how === 'key') await p.keyboard.press('Delete');
+    else await p.click('.tool [data-act="del"]');
+    await p.waitForTimeout(150);
+    const mid = await p.evaluate((x) => ({ gone: !UI.S.scene.entities[x], n: Object.keys(UI.S.scene.entities).length, undo: UI.S.undo.length }), id);
+    await p.click('#undo'); await p.waitForTimeout(120);
+    const back = await p.evaluate((x) => ({ n: Object.keys(UI.S.scene.entities).length, scene: JSON.stringify(UI.S.scene), kept: !!UI.S.scene.entities[x] && UI.S.scene.entities[x].props.n === 3 }), id);
+    return { removed: mid.gone && mid.n === before.n - 1, undoDelta: mid.undo - before.undo, restored: back.scene === before.scene && back.kept };
+  };
+  entryRes.key = await cardDelete('key');
+  entryRes.button = await cardDelete('button');
+  ok(entryRes.key.removed && entryRes.key.undoDelta === 1 && entryRes.key.restored, '键盘 Delete 删卡片：少一个，撤销一次就回到删之前（' + JSON.stringify(entryRes.key) + '）');
+  ok(entryRes.button.removed && entryRes.button.undoDelta === 1 && entryRes.button.restored, '工具条「删除」删卡片：少一个，撤销一次就回到删之前（' + JSON.stringify(entryRes.button) + '）');
   console.log('属性控件');
   await p.evaluate(() => { UI.App.openFree(); UI.App.act({ t: 'clear' }); window.__n = UI.App.act({ t: 'add', type: 'num', x: 200, y: 200, props: { n: 3 } }).id; UI.S.sel = window.__n; UI.S.inspOpen = true; UI.Panels.renderInsp(); });
   await p.waitForTimeout(100);
@@ -718,6 +740,18 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
     const dm = await doneOf();
     ok(dm.mid && dm.cut && await stepRows() === 3, '中线题：选三角形和中线点「剪」：两个里程碑都完成，清单 3 行（' + JSON.stringify(dm) + '）');
     await closeReport();
+
+    // 入口一致（U3）：工作区里的「✕」删最后一步（剪）：连它剪出来的块一起删；少一步，撤销一次就回去
+    {
+      const stepsB = await stepRows(), undoB = await p.evaluate(() => UI.S.undo.length), sceneB = await p.evaluate(() => JSON.stringify(UI.S.scene));
+      await p.locator('[data-ws-del]').last().click(); await p.waitForTimeout(150);
+      const stepsA = await stepRows(), undoA = await p.evaluate(() => UI.S.undo.length);
+      await p.click('#undo'); await p.waitForTimeout(150);
+      const back = await p.evaluate(() => JSON.stringify(UI.S.scene));
+      entryRes.step = { removed: stepsA === stepsB - 1, undoDelta: undoA - undoB, restored: back === sceneB };
+      ok(entryRes.step.removed && entryRes.step.undoDelta === 1 && entryRes.step.restored, '工作区「✕」删一步：少一步，撤销一次就回到删之前（' + JSON.stringify(entryRes.step) + '）');
+      ok(JSON.stringify(entryRes.key) === JSON.stringify(entryRes.button) && JSON.stringify(entryRes.button) === JSON.stringify(entryRes.step), '删除的三个入口（键盘、工具条、工作区的 ✕）结果一致');
+    }
 
     // 平行四边形题：连线、垂线、剪、拖动块、对齐到目标，全用鼠标
     await p.evaluate(() => UI.App.openProblem('geo-pgram-cut', 'practice')); await p.waitForTimeout(200);

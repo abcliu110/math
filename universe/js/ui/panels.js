@@ -319,8 +319,8 @@
         if (ghost) { ghost.remove(); ghost = null; }
         const over = document.elementFromPoint(e.clientX, e.clientY);
         // 从器材架拖进台面：添加和放进容器是一个事务（P1：一次撤销回到拖动之前）
-        if (moved && over && over.closest('#stagewrap')) { const w = UI.Stage.toWorld(e); UI.App.tx('添加 ' + type, (A) => { const r = A({ t: 'add', type, x: w.x - 70, y: w.y - 40 }); UI.S.sel = r.id; UI.S.selLink = null; UI.Stage.dropOnContainer(r.id, e, A); }); }
-        else if (!moved) { const r = $('#stage').getBoundingClientRect(), S = UI.S; const w = UI.Stage.toWorld({ clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 }); const sp = UI.Stage.freeSpot(w.x - 70, w.y - 60, type); UI.App.act({ t: 'add', type, x: sp.x, y: sp.y }, { select: true }); }
+        if (moved && over && over.closest('#stagewrap')) { const w = UI.Stage.toWorld(e); UI.Intent.run('add', { type, x: w.x - 70, y: w.y - 40, ev: e }); }
+        else if (!moved) { const r = $('#stage').getBoundingClientRect(); const w = UI.Stage.toWorld({ clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 }); const sp = UI.Stage.freeSpot(w.x - 70, w.y - 60, type); UI.Intent.run('add', { type, x: sp.x, y: sp.y, select: true }); }
       };
       window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up);
     });
