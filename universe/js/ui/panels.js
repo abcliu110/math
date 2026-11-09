@@ -125,6 +125,14 @@
   function dialog(html) { const d = $('#dlg'); d.querySelector('.box').innerHTML = html; d.classList.add('open'); }
   function closeDialog() { $('#dlg').classList.remove('open'); }
 
+  // 错题本（3.1）：没达成的里程碑和踩过的陷阱，点一下回到那道题
+  function wrongDialog() {
+    const list = U.Learning.wrongBook(U.Events.log, U.problems);
+    if (!list.length) { dialog('<h3>错题本</h3><p>还没有错题。做题之后，没达成的地方会记在这里。</p><div class="btnrow"><button class="btn" id="dlg-close">知道了</button></div>'); return; }
+    const rows = list.map((w) => '<div class="it" data-pid="' + esc(w.pid) + '"><span class="tt">' + esc(w.title) + '</span><small>' +
+      w.missed.map((m) => '○ ' + esc(m.say)).concat(w.traps.map((t) => '⚠ ' + esc(t))).join('　') + '</small></div>').join('');
+    dialog('<h3>错题本</h3><p style="color:var(--txt3)">点一道题，回去再做一遍。</p><div class="plist">' + rows + '</div><div class="btnrow"><button class="btn" id="dlg-close">关闭</button></div>');
+  }
   // 实验报告（2.5）：四栏。前三栏系统预填，第四栏学生自己写
   function inquiryHtml(r, p) {
     const c = r.cols, lvl = U.Evidence.LEVEL_NAME[c.found.evidence] || '';
@@ -200,5 +208,5 @@
     });
   }
 
-  UI.Panels = { renderTop, renderLeft, renderShelf, renderInsp, renderClock, dialog, closeDialog, reportHtml, inquiryHtml, reportDialog, authorDialog, initShelfDrag, renderAll() { renderTop(); renderLeft(); renderShelf(); renderInsp(); renderClock(); } };
+  UI.Panels = { renderTop, renderLeft, renderShelf, renderInsp, renderClock, dialog, closeDialog, reportHtml, inquiryHtml, wrongDialog, reportDialog, authorDialog, initShelfDrag, renderAll() { renderTop(); renderLeft(); renderShelf(); renderInsp(); renderClock(); } };
 })(window);

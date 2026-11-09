@@ -81,7 +81,9 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   ok(await p.locator('#dlg select[data-reason]').count() >= 1, '交卷后没达成的里程碑要选错因');
   await p.selectOption('#dlg select[data-reason]', { index: 1 }); await p.waitForTimeout(80);
   ok(await p.evaluate(() => UI.App && UI.S.scene && true), '选错因不打断界面');
-  await p.click('#dlg-close');
+  await p.evaluate(() => UI.Panels.closeDialog()); await p.click('#menubtn'); await p.click('[data-m="wrong"]'); await p.waitForTimeout(100);
+  ok(/错题本/.test(await p.locator('#dlg .box').innerText()) && await p.locator('#dlg .it').count() >= 1, '菜单里的错题本列出做错的题');
+  await p.evaluate(() => UI.Panels.closeDialog());
   console.log('两骰子');
   await p.evaluate(() => UI.App.openProblem('two-dice', 'practice')); await p.waitForTimeout(100);
   await shot('ui-dice-start');
