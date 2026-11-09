@@ -1181,7 +1181,9 @@ t('W.near 带容差判断近似值：不记录', () => {
   truthy(near(195.5, 0.01)); truthy(!near(100, 0.01)); eq(U.inexactReads.length, 0);
 });
 console.log('参考解回归（每道题都必须能通关）');
-const SOL = require('./solutions.js');
+// 参考解：tests/solutions.js 加上每个年级的 tests/solutions-gN.js（内容代理分年级写，避免互相覆盖）
+const SOL = Object.assign({}, require('./solutions.js'),
+  ...fs.readdirSync(__dirname).filter((f) => /^solutions-g\d+\.js$/.test(f)).map((f) => require('./' + f)));
 for (const p of U.problems) {
   t('题目 ' + p.id + ' 有参考解且能通关', () => {
     const fn = SOL[p.id]; if (!fn) throw new Error('缺参考解：在 tests/solutions.js 里补一条');
