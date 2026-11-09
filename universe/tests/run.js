@@ -3,7 +3,7 @@
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const root = path.join(__dirname, '..');
 const fsx = require('fs'), pk = (d) => fsx.readdirSync(path.join(root, d)).filter((f) => f.endsWith('.js')).sort().map((f) => d + '/' + f);
-const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/registry.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
+const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/registry.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/loader.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
 const ctx = vm.createContext({ console });
 ctx.globalThis = ctx;
 for (const f of files) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f });
@@ -345,6 +345,16 @@ t('图：点数和边集合相同即相等，边的两端顺序不影响', () =>
 t('新值类型存档往返后仍然相等', () => {
   const kinds = { set: U.SetV.of([Q(2), Q(5)]), vec: [Q(1), Q(0)], expr: [Q(1), Q(2), Q(1)], graph: U.Graph.of(3, [[0, 2]]) };
   for (const k of Object.keys(kinds)) truthy(U.KINDS[k].eq(U.KINDS[k].parse(U.KINDS[k].serialize(kinds[k])), kinds[k]), k);
+});
+console.log('器材包按需加载（1.8）');
+t('清单覆盖全部内置包，每个包都有文件路径', () => { for (const id of Object.keys(U.packs)) if (id !== 'probe-deps') truthy(U.PACK_FILES[id], '缺清单：' + id); });
+t('已注册的包不重复加载；不认识的包报 missing', () => {
+  const r = U.ensurePacks(['core', 'no-such-pack']);
+  eq(r.pending, []); eq(r.missing, ['no-such-pack']);
+});
+t('台面需要的包：由器材类型反推', () => {
+  const sc = W.blank(); W.add(sc, 'tenframe', 0, 0, {});
+  truthy(U.packsNeeded(null, sc).includes('tenframe'));
 });
 console.log('输出声明（1.2）');
 t('lint 拒绝没有声明 dim 的输出口', () => {

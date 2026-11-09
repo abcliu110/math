@@ -81,3 +81,4 @@ U.registerPack({ id:'mypack', types:{ foo:{
 - **证明计算内核（2.7）**：证明类器材只负责把台面条件交给这些纯计算函数，算完自动记入证据事件。`U.Evidence.scanRange(from, to, pred)`（参数扫描器 / 反例构造器）、`U.Evidence.enumerate(items, expected, pred)`（系统枚举器）、`U.Evidence.proof(steps)`（证明脚手架，每步要有 ref 才算填完）、`U.Evidence.induction(base, stepOk, upto)`（归纳阶梯）。找到反例即推翻。
 - **实验报告界面（2.5）**：做完一道题的结果对话框里有“实验报告”按钮，打开四栏视图（我猜的、我试了什么、我发现了、我还想问）。第四栏只在当前页面里，还没有保存。
 - **其余首批值类型（1.7）**：`set`（有理数的有序去重集合，`U.SetV.of / has / union / inter`）、`vec`（有理数分量的向量）、`expr`（一元多项式，`U.Expr.add / mul / eq / eval / show`，供方程和恒等式）、`graph`（n 个点的无向简单图，`U.Graph.of / degree`）。每种都有 eq / show / serialize / parse，并通过注册 lint。
+- **器材包按需加载（1.8）**：`U.PACK_FILES` 是包清单（包 id → 脚本路径）；`U.ensurePacks(ids)` 只加载还没注册的包，清单里没有的报 missing；`U.packsNeeded(problem, scene)` 由题目的 shelf 和台面的器材类型算出需要的包。index.html 目前仍一次加载全部包。
