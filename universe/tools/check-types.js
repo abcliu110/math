@@ -3,7 +3,7 @@
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const root = path.join(__dirname, '..');
 const fsx = require('fs'), pk = (d) => fsx.readdirSync(path.join(root, d)).filter((f) => f.endsWith('.js')).sort().map((f) => d + '/' + f);
-const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/eqn.js', 'js/core/table.js', 'js/core/figure.js', 'js/core/convert.js', 'js/core/registry.js', 'js/core/rules.js', 'js/core/world.js', 'js/core/kit.js'].concat(pk('packs'));
+const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/eqn.js', 'js/core/table.js', 'js/core/figure.js', 'js/core/convert.js', 'js/core/rules.js', 'js/core/registry.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/variants.js', 'js/core/curriculum.js', 'js/core/coverage.js'].concat(pk('packs'));
 const ctx = vm.createContext({ console }); ctx.globalThis = ctx;
 for (const f of files) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f });
 const U = ctx.U; let bad = 0;

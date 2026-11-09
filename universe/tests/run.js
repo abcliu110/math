@@ -795,6 +795,42 @@ t('覆盖统计：有题的知识点、按年级、按本质都能算出来', ()
   const S = U.Coverage.summarize(U.problems);
   eq(S.points.length, 142); truthy(S.points.some((r) => r.problems.length > 0)); eq(S.grades.length, 9); eq(S.essences.length, 12);
 });
+console.log('证明类器材（2.7）');
+const pr = (type, props, feed) => { const sc = W.blank(); const e = W.add(sc, type, 0, 0, props || {}); (feed || []).forEach(([t, p2, port, fport]) => { const f = W.add(sc, t, 0, 0, p2); W.act(sc, { t: 'link', from: f, fromPort: fport || 'v', to: e, toPort: port }); }); return W.evaluate(sc)[e].out; };
+const lvOf = (o) => (o.lv ? Number(o.lv.data.n / o.lv.data.d) : null);
+t('参数扫描器：规则在范围里没有例外 → ②；没有反例，不推翻', () => {
+  const o = pr('scanner', { rule: 0, from: 1, to: 100 }); eq(lvOf(o), 2); eq(o.refuted.data, false); eq(o.checked.data.n, 100);
+});
+t('反例构造器：“质数都是奇数”在 1–50 里找到 2，结论被推翻', () => {
+  const o = pr('counterex', { rule: 3, from: 1, to: 50 }); eq(o.refuted.data, true); eq(o.counter.data.n, 2);
+});
+t('系统枚举器：两个骰子列全 36 种，和为 7 的有 6 种 → ③；应有数不对就只是 ①', () => {
+  const o = pr('enumerator', { target: 7, expected: 36 }); eq(lvOf(o), 3); eq(o.count.data.n, 6); eq(o.total.data.n, 36);
+  eq(lvOf(pr('enumerator', { target: 7, expected: 30 })), 1);
+});
+t('证明脚手架：三步都有依据 → ④；缺一步依据就只是 ①', () => {
+  const sc = W.blank(); const e = W.add(sc, 'scaffold', 0, 0, {});
+  const ok1 = W.add(sc, 'invariant', 0, 0, { change: 0, times: 2 }), ok2 = W.add(sc, 'invariant', 0, 0, { change: 0, times: 3 }), ok3 = W.add(sc, 'invariant', 0, 0, { change: 0, times: 1 });
+  W.act(sc, { t: 'link', from: ok1, fromPort: 'kept', to: e, toPort: 'a' }); W.act(sc, { t: 'link', from: ok2, fromPort: 'kept', to: e, toPort: 'b' }); W.act(sc, { t: 'link', from: ok3, fromPort: 'kept', to: e, toPort: 'c' });
+  const D = W.evaluate(sc); eq(lvOf(D[e].out), 4); eq(D[e].out.filled.data.n, 3);
+  const sc2 = W.blank(); const e2 = W.add(sc2, 'scaffold', 0, 0, {}); const bad = W.add(sc2, 'invariant', 0, 0, { change: 3, times: 2 }); const good = W.add(sc2, 'invariant', 0, 0, { change: 0, times: 2 });
+  W.act(sc2, { t: 'link', from: good, fromPort: 'kept', to: e2, toPort: 'a' }); W.act(sc2, { t: 'link', from: bad, fromPort: 'kept', to: e2, toPort: 'b' });
+  const D2 = W.evaluate(sc2); eq(lvOf(D2[e2].out), 1); eq(D2[e2].out.filled.data.n, 1);
+});
+t('归纳阶梯：起点成立，每一级都能推下一级 → ④；起点没验证 → ①', () => {
+  eq(lvOf(pr('induction', { rule: 0, upto: 20, base: true })), 4);
+  eq(lvOf(pr('induction', { rule: 0, upto: 20, base: false })), 1);
+});
+t('不变量追踪器：变换每次都不变则 kept；加上非零数则不是不变量，不给等级', () => {
+  eq(pr('invariant', { change: 0, times: 4 }).kept.data, true);
+  const o = pr('invariant', { change: 3, times: 4 }); eq(o.kept.data, false); eq(lvOf(o), 0);
+});
+t('猜想板：只记录，等级是 0 或 ①，不推翻', () => { const o = pr('conjecture_board', { ok: true }); eq(lvOf(o), 1); eq(o.refuted.data, false); });
+t('台面级证据：参数扫描得 ② 时整个台面的证据到 ②；有反例则推翻', () => {
+  const sc = W.blank(); W.add(sc, 'scanner', 0, 0, { rule: 0, from: 1, to: 20 }); const r = U.Evidence.fromScene(W.evaluate(sc));
+  eq(r.level, 2);
+  const sc2 = W.blank(); W.add(sc2, 'counterex', 0, 0, { rule: 3, from: 1, to: 20 }); eq(U.Evidence.fromScene(W.evaluate(sc2)).level, 'refuted');
+});
 console.log('输出声明（1.2）');
 t('lint 拒绝没有声明 dim 的输出口', () => {
   const bad = Object.assign({}, U.types.num, { outputs: { v: { kind: 'num', label: '值' } } });

@@ -162,6 +162,14 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   const whyTxt = await p.locator('#dlg .why-tree').innerText().catch(() => '');
   ok(await p.locator('#dlg .why-tree details').count() >= 3 && /通分/.test(await p.locator('#dlg .why-tree').evaluate((n) => n.textContent)), '点气泡上的？，打开来历面板，一路展开到数字卡');
   await p.evaluate(() => UI.Panels.closeDialog());
+  console.log('证明器材');
+  await p.evaluate(() => { UI.App.openFree(); UI.App.act({ t: 'clear' });
+    window.__pv = ['conjecture_board', 'scanner', 'counterex', 'enumerator', 'invariant', 'scaffold', 'induction'].map((t) => UI.App.act({ t: 'add', type: t, x: 80 + (window.__i = (window.__i || 0) + 1) * 0, y: 120, props: {} }).id); });
+  await p.evaluate(() => { const s = UI.App.act({ t: 'add', type: 'scanner', x: 420, y: 140, props: { rule: 0, from: 1, to: 30 } }).id; const c = UI.App.act({ t: 'add', type: 'counterex', x: 420, y: 340, props: { rule: 3, from: 1, to: 20 } }).id; window.__sc = s; window.__ce = c; });
+  await p.waitForTimeout(200);
+  ok(await p.locator('.card[data-id="' + (await p.evaluate(() => window.__sc)) + '"] svg').count() >= 0 && await p.locator('.card').count() >= 9, '证明器材可以放上台面并画出来');
+  ok(await p.evaluate(() => UI.S.D[window.__ce].out.refuted.data === true), '反例构造器找到反例并推翻');
+  ok(await p.locator('.tile[data-type="scanner"]').count() === 1, '器材架上有参数扫描器');
   ok(errs.length === 0, '控制台 0 报错' + (errs.length ? '：' + errs[0] : ''));
   console.log('\n' + pass + ' 通过，' + fail + ' 失败'); await b.close(); process.exit(fail ? 1 : 0);
 })();

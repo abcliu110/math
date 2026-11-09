@@ -8,7 +8,7 @@
 
   U.PACK_FILES = {};
   for (const f of ['core', 'time', 'stats', 'geometry', 'arith', 'middle', 'applied', 'numtheory', 'solid', 'angle', 'road',
-    'conjecture', 'variable', 'modclock', 'curved', 'eqscale', 'cutpaste', 'symmetry', 'conserve', 'nth', 'model', 'tenframe', 'figure', 'algebra', 'modeling']) {
+    'conjecture', 'variable', 'modclock', 'curved', 'eqscale', 'cutpaste', 'symmetry', 'conserve', 'nth', 'model', 'tenframe', 'figure', 'algebra', 'modeling', 'proof']) {
     U.PACK_FILES[f] = 'packs/' + f + '.js';
   }
 

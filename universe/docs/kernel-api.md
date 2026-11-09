@@ -161,3 +161,16 @@ U.registerPack({ id:'mypack', types:{ foo:{
 - `js/core/coverage.js`：`U.CurriculumLint(p)`：题目的 points 必须都是表里的 id（错误），没有 points 只给警告。`U.Coverage.summarize(problems)` 统计按知识点、年级、本质。
 - `node tools/coverage.js` 写入 `docs/coverage.md`。
 - `tools/topic-map.js` 与 `tools/apply-topic-map.js`：把旧的主题词改写为知识点 id，原主题词保存在题目的 `topics` 字段里。
+
+## 证明类器材（§2.7，packs/proof.js）
+
+器材只做台面上的计算，结论放在输出口 `lv`（证据等级 0–4）和 `refuted`（是否被推翻）里。学生不能自选等级。
+- `conjecture_board`（猜想板）：记录猜想，等级 ① 或 0，不推翻。
+- `scanner`（参数扫描器）：在 `[from, to]` 里检查规则，没有例外 → ②；有例外 → 推翻。
+- `counterex`（反例构造器）：同样的范围，找到反例就推翻并输出 `counter`。
+- `enumerator`（系统枚举器）：两个骰子的 36 种情况，和为 `target` 的数量；数量对上 `expected` → ③。
+- `invariant`（不变量追踪器）：每次变换后是否不变（`kept`），单独不给等级。
+- `scaffold`（证明脚手架）：三步推理，每步的依据来自输入口 a、b、c（bool）；全部有依据 → ④。
+- `induction`（归纳阶梯）：起点成立且每一级推下一级（检查到 `upto`）→ ④。
+- `U.Evidence.fromScene(D)`：台面上所有证明器材取最高等级；有器材推翻则为 `refuted`；近似值参与时最高到 ②。
+- 规则库 `RULES`（扫描器、反例构造器）和枚举全集、归纳式都写在 `packs/proof.js` 里；规则名就是选项。

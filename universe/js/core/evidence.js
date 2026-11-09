@@ -45,7 +45,23 @@
       return { level, refuted: false, why, range };
     },
 
-    // 措辞跟着等级走（§2.7）：① 到目前为止都对；② 在范围里没找到例外；③④ 一定成立
+      // 台面上的证明器材（packs/proof.js）输出 lv（0–4）和 refuted；取所有器材里最高的等级。
+    // D：台面的求值结果（U.World.evaluate 的返回值）；近似值参与时最高到 ②
+    fromScene(D, opts) {
+      opts = opts || {};
+      let level = 1, refuted = false; const why = [];
+      for (const id of Object.keys(D || {})) {
+        const o = D[id] && D[id].out; if (!o) continue;
+        if (o.refuted && o.refuted.data === true) { refuted = true; why.push('找到了反例'); }
+        const lv = o.lv && o.lv.kind === 'num' ? Number(o.lv.data.n / o.lv.data.d) : null;
+        if (lv !== null && lv > 0 && lv > level) { level = Math.min(4, lv); why.push('证据到 ' + ['', '①', '②', '③', '④'][Math.min(4, lv)]); }
+      }
+      if (refuted) return { level: 'refuted', refuted: true, why, range: null };
+      if (opts.approx && level > 2) { level = 2; why.push('台面上的计算是近似的，结论最高到 ②'); }
+      return { level, refuted: false, why, range: null };
+    },
+
+  // 措辞跟着等级走（§2.7）：① 到目前为止都对；② 在范围里没找到例外；③④ 一定成立
     wording(res) {
       if (res.refuted || res.level === 'refuted') return '这个结论已被推翻：有一个反例。';
       if (res.level === 1) return '到目前为止都对。';
