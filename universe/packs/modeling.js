@@ -79,10 +79,16 @@
         draw: (c) => {
           const t = tableOf({ inp: (c.d && c.d.inp) || {} }); if (!t || !t.rows.length) return K.text(c.w / 2, c.h / 2, '没有数据', { fill: 'var(--dim)' });
           const xs = t.rows.map((r) => Q.num(r[c.props.xcol])), ys = t.rows.map((r) => Q.num(r[c.props.ycol]));
-          const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+          // 叠加直线（接拟合器的 f 口）：直线在两端点的 y 也要算进坐标范围
+          const fv = K.first(c.d.inp.line), fl = fv && fv.kind === 'fn' ? fv.data : null;
+          const lineY = (x) => (fl ? Q.num(fl.k) * x + Q.num(fl.b) : null);
+          const x0 = Math.min(...xs), x1 = Math.max(...xs);
+          const yAll = ys.concat(fl ? [lineY(x0), lineY(x1)] : []);
+          const y0 = Math.min(...yAll), y1 = Math.max(...yAll);
           const sx = (v) => 20 + (x1 === x0 ? 0.5 : (v - x0) / (x1 - x0)) * (c.w - 40), sy = (v) => c.h - 20 - (y1 === y0 ? 0.5 : (v - y0) / (y1 - y0)) * (c.h - 40);
           let s = K.line(20, c.h - 20, c.w - 16, c.h - 20, { w: 1.5 }) + K.line(20, 16, 20, c.h - 20, { w: 1.5 });
-          xs.forEach((x, i) => { s += K.circle(sx(x), sy(ys[i]), 4, { fill: 'var(--accent)' }); });
+          if (fl) s += K.line(sx(x0), sy(lineY(x0)), sx(x1), sy(lineY(x1)), { w: 2, stroke: 'var(--accent)' });
+          xs.forEach((x, i) => { s += K.circle(sx(x), sy(ys[i]), 4, { fill: 'var(--ink)' }); });
           return s;
         },
       },

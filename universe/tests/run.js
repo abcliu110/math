@@ -777,6 +777,20 @@ t('取列 → seq；取不存在的列时说明原因；散点图标出点的个
   const refused = W.act(sc, { t: 'link', from: d, fromPort: 't', to: bad, toPort: 't' }); eq(refused.ok, false); truthy(/只有 2 列/.test(refused.why), refused.why);
   const D = W.evaluate(sc); eq(D[c].out.s.data.map((q) => q.n), [2, 4]); eq(U.showVal(D[sp].out.n), '2');
 });
+t('散点图接上拟合器后叠加直线（画面多一条线）', () => {
+  const build = (withFit) => {
+    const sc = W.blank(); const d = W.add(sc, 'datatable', 0, 0, { data: '1,2;2,4;3,6.5' }), sp = W.add(sc, 'scatter', 0, 0, {});
+    W.act(sc, { t: 'link', from: d, fromPort: 't', to: sp, toPort: 't' });
+    if (withFit) {
+      const f = W.add(sc, 'fit', 0, 0, { model: 1 });
+      W.act(sc, { t: 'link', from: d, fromPort: 't', to: f, toPort: 't' });
+      W.act(sc, { t: 'link', from: f, fromPort: 'f', to: sp, toPort: 'line' });
+    }
+    const D = W.evaluate(sc);
+    return U.types.scatter.draw({ props: D[sp].props, d: D[sp], out: {}, w: 230, h: 120 });
+  };
+  eq((build(true).match(/<line/g) || []).length, (build(false).match(/<line/g) || []).length + 1, '接上拟合器应多画一条拟合直线');
+});
 t('建模题模板 lint：三步都要有里程碑；拟合最高只到 ①', () => {
   const base = { id: 'mx', title: 't', milestones: [{ id: 'a', score: 1, when: { type: 'num', port: 'v', op: '=', value: '1' } }, { id: 'b', score: 1, when: { type: 'num', port: 'v', op: '=', value: '2' } }, { id: 'c', score: 1, when: { type: 'num', port: 'v', op: '=', value: '3' } }],
     model: { situation: '匀速行驶', quantities: [{ name: '时间' }, { name: '路程' }], relation: 'linear', check: '预测第 5 小时', steps: { choose: 'a', function: 'b', check: 'c' } } };
