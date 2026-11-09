@@ -266,3 +266,23 @@ button.gdel { border: 0; background: none; color: var(--dim); cursor: pointer; }
 .wb-step button { margin: 0; white-space: nowrap; }
 .wb-msg { color: var(--bad); margin: 6px 0; font-size: 12px; }
 .wb-sol { margin-top: 8px; font-size: 15px; font-weight: 700; color: var(--good); }
+
+/* ---- 改大小（§10.5.8 A1）：卡片右下角的拖柄，命中区 24 像素（手指也好按） ---- */
+.card .rz { position: absolute; right: 0; bottom: 0; width: 24px; height: 24px; cursor: nwse-resize; z-index: 3; touch-action: none; }
+.card .rz::after { content: ""; position: absolute; right: 5px; bottom: 5px; width: 10px; height: 10px; border-right: 3px solid var(--txt3, #8a97ad); border-bottom: 3px solid var(--txt3, #8a97ad); border-radius: 0 0 3px 0; }
+.card.sel .rz::after { border-color: var(--blue); }
+.card .rz:hover::after { border-color: #fff; }
+
+/* ---- 工作区：坐标范围的说明与适应按钮（§10.5.8 A2） ---- */
+.wsx-range { color: var(--dim); font-size: 11px; margin: 2px 0 4px; }
+
+/* ---- 专注模式（§10.5.8 A4）：工作区放大成覆盖台面的浮层 ---- */
+#wsfocus { position: absolute; inset: 0; z-index: 20; background: var(--bg); display: flex; flex-direction: column; padding: 12px 24px; box-sizing: border-box; cursor: default; user-select: none; }
+#wsfocus .wsf-hd { display: flex; align-items: center; gap: 12px; height: 32px; color: var(--ink); }
+#wsfocus .wsf-hd b { font-size: 16px; }
+#wsfocus .wsf-hd span { color: var(--dim); font-size: 12px; flex: 1; }
+#wsfocus .wsf-hd button { font: inherit; font-size: 12px; padding: 3px 10px; border-radius: 8px; border: 1px solid #aab4c8; background: #fff; color: var(--ink); cursor: pointer; }
+#wsfocus .wsf-main { flex: 1; min-height: 0; display: flex; gap: 24px; margin-top: 12px; }
+#wsfocus svg.wsbody { flex: none; display: block; background: var(--card); border-radius: 12px; }
+#wsfocus .wsf-side { width: 300px; flex: none; overflow: auto; }
+#wsfocus .wsf-side .wsx { position: static; width: auto; box-shadow: none; }

@@ -3,11 +3,14 @@
   'use strict';
   const U = G.U, UI = (G.UI = G.UI || {}), W = U.World, K = U.kit, Q = U.Q;
   const $ = (s) => document.querySelector(s);
-  const HD = 28, PORT_Y0 = 40, PORT_DY = 22, PILL_DY = 26, PILL_W = 92;
-  let stageEl, worldEl, drag = null, linking = null, lastClick = { id: null, t: 0 };
+  const HD = 28, PORT_Y0 = 40, PORT_DY = 22, PILL_DY = 26, PILL_W = 92, MIN_W = 120, MIN_H = 90;
+  let stageEl, worldEl, focusEl, drag = null, linking = null, lastClick = { id: null, t: 0 }, dblKey = null, dblT = 0;
 
   const def = (e) => U.types[e.type];
-  const geom = (e) => { const sz = def(e).size(e); return { x: e.x, y: e.y, w: sz[0], h: sz[1] }; };
+  // 大小：实体上的 e.w、e.h（拖柄改的）优先，没有才用器材的 size()（§10.5.8 A1）
+  const geom = (e) => { const sz = def(e).size(e); return { x: e.x, y: e.y, w: e.w > 0 ? e.w : sz[0], h: e.h > 0 ? e.h : sz[1] }; };
+  // 同一个东西 400 毫秒内按两次：返回 true，并忘掉这一次，免得第三下又算一次
+  function dbl(key) { const now = Date.now(); if (dblKey === key && now - dblT < 400) { dblKey = null; return true; } dblKey = key; dblT = now; return false; }
   const SIGLV = ['err', 'reject', 'warn', 'ok', 'info'];
 
   // ---------- 几何工作区（任务 H1，§10.5）----------
@@ -38,22 +41,47 @@
     return out;
   }
   const stepLabel = (st) => (st.type === 'gplace' ? (st.props.flip ? '翻转' : st.props.turn ? '旋转' : '移动') : STEP_LABEL[st.type] || st.type);
-  // 工作区的画布：把所有显示的值画在一起（按值的包围盒等比缩放到画布里）
-  function wsBody(ws, w, h) {
-    const S = UI.S, names = wsNames(), hidden = S.wsHidden || {}, sel = new Set(S.wsSel || []), ents = S.scene.entities;
-    const vals = wsValues(ws, names).filter((v) => !hidden[v.key]);
+  // ---- 工作区的坐标范围（§10.5.8 A2、A3）----
+  // S.wsView[id] = {cx, cy, span}：可见的横向范围是 [cx-span/2, cx+span/2]，画布上 1 个坐标单位 = w/span 像素。
+  // 没存过的，按内容自动选（横纵都装得下）。一旦拖过、滚过、改过大小、点过“适应”，就存下来：
+  // 之后拉大卡片只是把图画大，坐标范围不变。
+  function wsVisible(ws) { const hidden = UI.S.wsHidden || {}; return wsValues(ws, wsNames()).filter((v) => !hidden[v.key] && v.fig); }
+  function wsBounds(vals) {
     const xs = [], ys = [];
     for (const v of vals) {
-      const f = v.fig; if (!f) continue;
+      const f = v.fig;
       const r = f.type === 'circle' ? Math.sqrt(Q.num(f.r2)) : 0;
       for (const p of f.pts || []) { xs.push(Q.num(p.x) - r, Q.num(p.x) + r); ys.push(Q.num(p.y) - r, Q.num(p.y) + r); }
     }
-    if (!xs.length) return K.text(w / 2, h / 2, '工作区里还没有图形', { size: 12, fill: 'var(--dim)' });
+    if (!xs.length) return null;
     let x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
     if (x1 - x0 < 2) { x0 -= 1; x1 += 1; } if (y1 - y0 < 2) { y0 -= 1; y1 += 1; }
-    const pad = 16, s = Math.min((w - 2 * pad) / (x1 - x0), (h - 2 * pad) / (y1 - y0));
-    const ox = (w - (x1 - x0) * s) / 2, oy = (h - (y1 - y0) * s) / 2;
-    const X = (x) => ox + (x - x0) * s, Y = (y) => oy + (y1 - y) * s;
+    return { x0, x1, y0, y1 };
+  }
+  // 按内容自动选范围：内容的中心在中间，横纵两个方向都装得下，四周留一点边
+  function autoView(b, w, h) {
+    if (!b) return { cx: 0, cy: 0, span: 10 };
+    const span = Math.max(b.x1 - b.x0, (b.y1 - b.y0) * w / Math.max(h, 1)) * 1.15;
+    return { cx: (b.x0 + b.x1) / 2, cy: (b.y0 + b.y1) / 2, span };
+  }
+  function wsView(ws, w, h, b) {
+    const v = UI.S.wsView && UI.S.wsView[ws.id];
+    return v || autoView(b === undefined ? wsBounds(wsVisible(ws)) : b, w, h);
+  }
+  const fmtN = (n) => String(Math.round(n * 100) / 100);
+  function rangeText(ws, w, h) {
+    const v = wsView(ws, w, h), hh = h * v.span / w / 2, hw = v.span / 2;
+    return '横向 ' + fmtN(v.cx - hw) + ' 到 ' + fmtN(v.cx + hw) + '　纵向 ' + fmtN(v.cy - hh) + ' 到 ' + fmtN(v.cy + hh);
+  }
+
+  // 工作区的画布：把所有显示的值画在一起，按工作区的坐标范围画（范围定下来以后，卡片变大图也跟着变大）
+  function wsBody(ws, w, h) {
+    const S = UI.S, sel = new Set(S.wsSel || []), ents = S.scene.entities;
+    const vals = wsVisible(ws);
+    const b = wsBounds(vals);
+    if (!b) return K.text(w / 2, h / 2, '工作区里还没有图形', { size: 12, fill: 'var(--dim)' });
+    const vw = wsView(ws, w, h, b), s = w / vw.span;
+    const X = (x) => w / 2 + (x - vw.cx) * s, Y = (y) => h / 2 - (y - vw.cy) * s;
     let g = '';
     vals.forEach((v, i) => {
       const f = v.fig; if (!f) return;
@@ -86,11 +114,16 @@
     return g;
   }
   // 工作区底下的面板：工具行、选中的对象、消息、步骤历史、图层
-  function wsPanelHtml(ws, names) {
+  // dims：画布的宽高（专注模式里比卡片大）；inFocus：放在专注浮层的侧栏里，不用绝对定位
+  function wsPanelHtml(ws, names, dims, inFocus) {
     const S = UI.S, g = geom(ws), wd = U.types[ws.type].workspace, hidden = S.wsHidden || {};
+    const pw = dims ? dims.w : g.w, ph = dims ? dims.h : g.h - HD;
     const kids = wsKids(ws), steps = kids.filter((k) => STEP_TYPES.includes(k.type)), vals = wsValues(ws, names), picks = S.wsSel || [];
-    let h = '<div class="wsx" data-ws="' + ws.id + '" style="left:' + g.x + 'px;top:' + (g.y + g.h + 36) + 'px;width:' + g.w + 'px">';
-    h += '<div class="wsx-tools">' + wd.tools.map((t) => '<button data-ws-tool="' + t.id + '" data-ws="' + ws.id + '">' + K.esc(t.label) + '</button>').join('') + '</div>';
+    const pos = inFocus ? '' : ' style="left:' + g.x + 'px;top:' + (g.y + g.h + 36) + 'px;width:' + g.w + 'px"';
+    let h = '<div class="wsx" data-ws="' + ws.id + '"' + pos + '>';
+    h += '<div class="wsx-tools">' + wd.tools.map((t) => '<button data-ws-tool="' + t.id + '" data-ws="' + ws.id + '">' + K.esc(t.label) + '</button>').join('') +
+      '<button data-ws-fit="' + ws.id + '" title="按内容选坐标范围，让图正好装下">适应</button></div>';
+    h += '<div class="wsx-range">' + rangeText(ws, pw, ph) + '</div>';
     h += '<div class="wsx-args">移动时：向右 <input type="number" data-ws-arg="dx" value="' + escA(S.wsArgs.dx) + '"> 向上 <input type="number" data-ws-arg="dy" value="' + escA(S.wsArgs.dy) + '"></div>';
     h += '<div class="wsx-sel">' + (picks.length ? '选中：' + picks.map((x) => K.esc(x)).join('、') : '点图形或点来选中（Shift 点可以多选）') + '</div>';
     h += '<div class="wsx-foot' + (S.wsMsg ? ' bad' : '') + '">' + K.esc(S.wsMsg || '') + '</div>';
@@ -139,7 +172,7 @@
     try { badge = d.badge ? d.badge(c) : ''; } catch (x) { badge = ''; }
     let h = '<div class="card' + (S.sel === e.id ? ' sel' : '') + '" data-id="' + e.id + '" style="left:' + g.x + 'px;top:' + g.y + 'px;width:' + g.w + 'px;height:' + g.h + 'px">';
     h += '<div class="hd" data-id="' + e.id + '"><span class="nm">' + K.esc(e.name) + '</span><span class="bd">' + K.esc(badge || '') + '</span></div>';
-    h += '<svg class="bdy' + (d.workspace ? ' wsbody' : '') + '" width="' + g.w + '" height="' + cH + '" viewBox="0 0 ' + g.w + ' ' + cH + '">' + body + '</svg>';
+    h += '<svg class="bdy' + (d.workspace ? ' wsbody" data-wsid="' + e.id : '') + '" width="' + g.w + '" height="' + cH + '" viewBox="0 0 ' + g.w + ' ' + cH + '">' + body + '</svg>';
     Object.keys(d.inputs).forEach((k, i) => {
       const y = PORT_Y0 - HD + i * PORT_DY + HD - 0;
       h += '<i class="port in" data-id="' + e.id + '" data-port="' + k + '" style="left:0;top:' + (PORT_Y0 + i * PORT_DY - 0) + 'px"></i>';
@@ -149,6 +182,7 @@
       h += '<i class="port out" data-id="' + e.id + '" data-port="' + k + '" style="left:' + g.w + 'px;top:' + (PORT_Y0 + i * PORT_DY) + 'px;background:' + U.kindColor(d.outputs[k].kind) + '"></i>';
       h += '<span class="pl" style="right:12px;top:' + (PORT_Y0 + i * PORT_DY) + 'px">' + K.esc(d.outputs[k].label) + '</span>';
     });
+    h += '<i class="rz" data-rz="' + e.id + '" title="拖动改大小；双击恢复默认"></i>';
     h += '</div>';
     // 属性药丸（在卡片左边外侧）
     pillsOf(e, D).forEach((k, i) => {
@@ -206,6 +240,53 @@
     worldEl.innerHTML = h;
     worldEl.style.transform = 'translate(' + S.view.x + 'px,' + S.view.y + 'px) scale(' + S.view.z + ')';
     const z = $('#zv'); if (z) z.textContent = Math.round(S.view.z * 100) + '%';
+    if (focusEl) { focusEl.innerHTML = focusHtml(); focusEl.style.display = S.focusWs ? '' : 'none'; }
+  }
+
+  // ---- 专注模式（§10.5.8 A4）：工作区放大成覆盖台面的浮层，双击标题或按 Esc 还原 ----
+  function setFocus(id) { UI.S.focusWs = id || null; render(); }
+  function focusHtml() {
+    const S = UI.S, id = S.focusWs, e = id && S.scene.entities[id];
+    if (!e || !isWsDef(e.type)) { S.focusWs = null; return ''; }
+    const r = stageEl.getBoundingClientRect();
+    const W = Math.max(200, Math.round(r.width - 300 - 72)), H = Math.max(160, Math.round(r.height - 32 - 56));
+    let h = '<div class="wsf-hd" title="双击标题，或按 Esc，还原"><b>' + K.esc(e.name) + '</b><span>双击标题或按 Esc 还原</span><button data-ws-unfocus>还原</button></div>';
+    h += '<div class="wsf-main"><svg class="bdy wsbody" data-wsid="' + e.id + '" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '">' + wsBody(e, W, H) + '</svg>';
+    h += '<div class="wsf-side">' + wsPanelHtml(e, wsNames(), { w: W, h: H }, true) + '</div></div>';
+    return h;
+  }
+  // 工作区里滚轮缩放：以指针为中心，只改这个工作区的坐标范围（台面不动）
+  function wsZoomAt(wb, f, cx, cy) {
+    const S = UI.S, id = wb.dataset.wsid, ws = S.scene.entities[id]; if (!ws) return;
+    const cw = +wb.getAttribute('width'), ch = +wb.getAttribute('height');
+    const r = wb.getBoundingClientRect(), k = r.width / cw;
+    const lx = (cx - r.left) / k, ly = (cy - r.top) / k;
+    const v0 = wsView(ws, cw, ch), s0 = cw / v0.span;
+    const px = v0.cx + (lx - cw / 2) / s0, py = v0.cy - (ly - ch / 2) / s0;
+    const span = Math.max(1e-3, Math.min(1e6, v0.span / f)), s1 = cw / span;
+    S.wsView = S.wsView || {};
+    S.wsView[id] = { cx: px - (lx - cw / 2) / s1, cy: py + (ly - ch / 2) / s1, span };
+    render();
+  }
+  // 适应：按内容选一个正好装下的坐标范围（之后拉大卡片不再变）
+  function wsFit(id) {
+    const S = UI.S, ws = S.scene.entities[id]; if (!ws) return;
+    const sv = S.focusWs === id && focusEl ? focusEl.querySelector('svg.wsbody') : null;
+    let w, h;
+    if (sv) { w = +sv.getAttribute('width'); h = +sv.getAttribute('height'); }
+    else { const g = geom(ws); w = g.w; h = g.h - HD; }
+    S.wsView = S.wsView || {};
+    S.wsView[id] = autoView(wsBounds(wsVisible(ws)), w, h);
+    render();
+  }
+  // 开始拖柄改大小：工作区先把现在看到的坐标范围存下来，之后拉大只是把图画大
+  function startResize(id, ev) {
+    const S = UI.S, e = S.scene.entities[id]; if (!e) return;
+    ev.preventDefault(); ev.stopPropagation();
+    const g = geom(e);
+    if (isWsDef(e.type)) { S.wsView = S.wsView || {}; if (!S.wsView[id]) S.wsView[id] = wsView(e, g.w, g.h - HD); }
+    S.sel = id; S.selLink = null;
+    drag = { kind: 'rz', id, sx: ev.clientX, sy: ev.clientY, w0: g.w, h0: g.h, zoom: S.view.z, moved: false };
   }
 
   const toWorld = (ev) => { const r = stageEl.getBoundingClientRect(), v = UI.S.view; return { x: (ev.clientX - r.left - v.x) / v.z, y: (ev.clientY - r.top - v.y) / v.z }; };
@@ -237,6 +318,15 @@
   function onDown(ev) {
     const S = UI.S, t = ev.target;
     if (t.closest('.tool') || t.closest('.wsx')) return;   // 工作区底下的面板：让浏览器照常处理按钮和输入框
+    // 专注浮层：标题双击还原；浮层里的画布和台面没有关系，照常往下处理
+    const fo = t.closest('#wsfocus');
+    if (fo && !t.closest('.wsbody')) { if (t.closest('.wsf-hd') && !t.closest('button') && dbl('focus-hd')) setFocus(null); return; }
+    // 卡片右下角的拖柄：拖动改大小；双击恢复默认大小（一次 act，可以撤销）
+    const rz = t.closest('.rz');
+    if (rz) {
+      if (dbl('rz:' + rz.dataset.rz)) { S.sel = rz.dataset.rz; UI.App.act({ t: 'resize', id: rz.dataset.rz, w: null, h: null }); return; }
+      startResize(rz.dataset.rz, ev); return;
+    }
     // 工作区里选中对象（点、线、图形）：Shift 点是加选
     const pk = t.closest('[data-pick]');
     if (pk) wsPick(pk.dataset.pick, ev.shiftKey);
@@ -253,7 +343,15 @@
     }
     if (pk) { render(); return; }
     // 工作区的画布：点空白处取消选中，不移动工作区，也不平移台面
-    if (t.closest('.wsbody')) { if ((S.wsSel || []).length) { S.wsSel = []; render(); } return; }
+    // 工作区空白处拖动：平移这个工作区的坐标范围（不平移台面）；没有拖动就只是取消选中
+    const wb = t.closest('.wsbody');
+    if (wb) {
+      const wid = wb.dataset.wsid, ws = S.scene.entities[wid], cw = +wb.getAttribute('width'), ch = +wb.getAttribute('height');
+      const k = wb.getBoundingClientRect().width / cw;
+      if ((S.wsSel || []).length) { S.wsSel = []; render(); }
+      if (ws) drag = { kind: 'wspan', id: wid, cw, ch, k, sx: ev.clientX, sy: ev.clientY, moved: false, v0: wsView(ws, cw, ch) };
+      return;
+    }
     const outp = t.closest('.port.out');
     if (outp) {
       ev.preventDefault();
@@ -268,10 +366,16 @@
     const card = t.closest('.card');
     if (card) {
       const id = card.dataset.id; if (t.closest('.port')) return;
-      const now = Date.now();
-      if (lastClick.id === id && now - lastClick.t < 400) { S.inspOpen = true; lastClick = { id: null, t: 0 }; } else lastClick = { id, t: now };
+      const e = S.scene.entities[id];
+      if (isWsDef(e.type)) {
+        // 工作区：双击标题是专注模式（不开属性面板）
+        if (t.closest('.hd') && dbl('hd:' + id)) { setFocus(id); return; }
+      } else {
+        const now = Date.now();
+        if (lastClick.id === id && now - lastClick.t < 400) { S.inspOpen = true; lastClick = { id: null, t: 0 }; } else lastClick = { id, t: now };
+      }
       S.sel = id; S.selLink = null;
-      const w = toWorld(ev), e = S.scene.entities[id];
+      const w = toWorld(ev);
       drag = { kind: 'move', id, dx: w.x - e.x, dy: w.y - e.y, moved: false, sx: ev.clientX, sy: ev.clientY };
       UI.Panels.renderInsp(); render(); return;
     }
@@ -330,6 +434,24 @@
       return;
     }
     if (!drag) return;
+    if (drag.kind === 'rz') {
+      const dx = ev.clientX - drag.sx, dy = ev.clientY - drag.sy;
+      if (!drag.moved && Math.hypot(dx, dy) < 3) return;
+      if (!drag.moved) { drag.moved = true; UI.App.snapshot(); }
+      const w = Math.max(MIN_W, Math.round(drag.w0 + dx / drag.zoom)), h = Math.max(MIN_H, Math.round(drag.h0 + dy / drag.zoom));
+      W.act(S.scene, { t: 'resize', id: drag.id, w, h }); render();
+      showTip(ev.clientX, ev.clientY, w + ' × ' + h, true);
+      return;
+    }
+    if (drag.kind === 'wspan') {
+      const dx = ev.clientX - drag.sx, dy = ev.clientY - drag.sy;
+      if (!drag.moved && Math.hypot(dx, dy) < 4) return;
+      drag.moved = true;
+      const s0 = drag.cw / drag.v0.span;
+      S.wsView = S.wsView || {};
+      S.wsView[drag.id] = { cx: drag.v0.cx - dx / drag.k / s0, cy: drag.v0.cy + dy / drag.k / s0, span: drag.v0.span };
+      render(); return;
+    }
     if (drag.kind === 'gpt') {
       const cl = (v, i) => Math.max(drag.lo[i], Math.min(drag.hi[i], v));
       const nx = cl(drag.x0 + Math.round((ev.clientX - drag.sx) / drag.unit), 0), ny = cl(drag.y0 - Math.round((ev.clientY - drag.sy) / drag.unit), 1);
@@ -360,7 +482,9 @@
     }
     if (drag) {
       const d = drag; drag = null; stageEl.classList.remove('panning');
+      if (d.moved) dblKey = null;   // 拖动过的不算点击：下一次按不能被当成双击
       document.querySelectorAll('.card.droptarget').forEach((c) => c.classList.remove('droptarget'));
+      if (d.kind === 'rz') { showTip(0, 0, ''); UI.Panels.renderInsp(); render(); if (d.moved) UI.App.afterMove(); return; }
       if (d.kind === 'move' && d.moved) { dropOnContainer(d.id, ev); UI.App.afterMove(); }
       if (d.kind === 'gpt' && d.moved && S.scene.entities[d.id]) UI.App.act({ t: 'set', id: d.id, k: d.ky, v: S.scene.entities[d.id].props[d.ky] });
     }
@@ -368,6 +492,8 @@
 
   function init() {
     stageEl = $('#stage'); worldEl = $('#world');
+    // 专注浮层：放在台面外面（不跟着台面缩放平移），盖住整个台面
+    focusEl = document.createElement('div'); focusEl.id = 'wsfocus'; focusEl.style.display = 'none'; stageEl.appendChild(focusEl);
     stageEl.addEventListener('pointerdown', onDown);
     // 拖卡片时不让浏览器接管成“原生拖放”（否则之后的 pointermove 全被吞掉）
     stageEl.addEventListener('dragstart', (ev) => ev.preventDefault());
@@ -385,13 +511,23 @@
     });
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
-    stageEl.addEventListener('wheel', (ev) => { ev.preventDefault(); zoomAt(ev.deltaY < 0 ? 1.1 : 1 / 1.1, ev.clientX, ev.clientY); }, { passive: false });
+    // 滚轮：指在工作区上就只缩放这个工作区（§10.5.8 A3）；指在别处缩放台面；专注浮层里的其他地方不动台面
+    stageEl.addEventListener('wheel', (ev) => {
+      ev.preventDefault();
+      const f = ev.deltaY < 0 ? 1.1 : 1 / 1.1, wb = ev.target.closest && ev.target.closest('.wsbody');
+      if (wb) wsZoomAt(wb, f, ev.clientX, ev.clientY);
+      else if (!(ev.target.closest && ev.target.closest('#wsfocus'))) zoomAt(f, ev.clientX, ev.clientY);
+    }, { passive: false });
     stageEl.addEventListener('click', (ev) => {
       const why = ev.target.closest('[data-why]');
       if (why) { const [wid, wport] = why.dataset.why.split('|'); UI.Panels.whyDialog(wid, wport); return; }
       // 工作区面板：工具、步骤（点开看参数）、删除一步
       const wt = ev.target.closest('[data-ws-tool]');
       if (wt) { wsRun(wt.dataset.ws, wt.dataset.wsTool); return; }
+      const wf = ev.target.closest('[data-ws-fit]');
+      if (wf) { wsFit(wf.dataset.wsFit); return; }
+      const wu = ev.target.closest('[data-ws-unfocus]');
+      if (wu) { setFocus(null); return; }
       const wd = ev.target.closest('[data-ws-del]');
       if (wd) { UI.S.wsSel = []; UI.App.removeEntity(wd.dataset.wsDel); return; }
       const wst = ev.target.closest('[data-ws-step]');
@@ -406,5 +542,5 @@
     });
   }
 
-  UI.Stage = { init, render, fit, zoomAt, toWorld, geom, portPos };
+  UI.Stage = { init, render, fit, zoomAt, toWorld, geom, portPos, setFocus, wsZoomAt, wsFit, rangeOf: (id) => { const ws = UI.S.scene.entities[id]; if (!ws) return null; const g = geom(ws); return wsView(ws, g.w, g.h - HD); } };
 })(window);

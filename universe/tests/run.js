@@ -1702,5 +1702,42 @@ console.log('式子工作台内核（任务 H 第 3a 步）：两边同除同乘
   });
 }
 
+console.log('改大小（resize，§10.5.8 A1）');
+t('resize：写下 e.w、e.h，存档读回一样，撤销（快照还原）后回到原来的大小', () => {
+  const sc = W.blank(); const id = W.add(sc, 'num', 0, 0, { n: 1 });
+  const before = W.save(sc);
+  truthy(W.act(sc, { t: 'resize', id, w: 260, h: 190 }).ok, 'resize 应成功');
+  eq([sc.entities[id].w, sc.entities[id].h], [260, 190]);
+  const back = W.load(W.save(sc));
+  eq([back.entities[id].w, back.entities[id].h], [260, 190]);
+  const undone = W.load(before);
+  eq(undone.entities[id].w, undefined, '撤销后不应再有 w');
+});
+t('resize：w、h 取整；不是正数的拒绝，场景不变', () => {
+  const sc = W.blank(); const id = W.add(sc, 'num', 0, 0, { n: 1 });
+  W.act(sc, { t: 'resize', id, w: 200.4, h: 150.6 });
+  eq([sc.entities[id].w, sc.entities[id].h], [200, 151]);
+  for (const bad of [0, -5, NaN, 'abc', undefined]) {
+    const r = W.act(sc, { t: 'resize', id, w: bad, h: 100 });
+    eq(r.ok, false, '非法宽度 ' + String(bad) + ' 应拒绝');
+  }
+  eq([sc.entities[id].w, sc.entities[id].h], [200, 151]);
+});
+t('resize：w、h 都是 null 时清掉，回到器材的 size()；找不到器材说明原因', () => {
+  const sc = W.blank(); const id = W.add(sc, 'num', 0, 0, { n: 1 });
+  W.act(sc, { t: 'resize', id, w: 300, h: 220 });
+  truthy(W.act(sc, { t: 'resize', id, w: null, h: null }).ok, '清除应成功');
+  eq('w' in sc.entities[id] || 'h' in sc.entities[id], false, '清除后不应留着 w、h');
+  const r = W.act(sc, { t: 'resize', id: 'nope', w: 100, h: 100 });
+  eq(r.ok, false); truthy(/找不到/.test(r.why), r.why);
+});
+t('resize：整理（tidy）用实际大小排版，列与列之间不重叠', () => {
+  const sc = W.blank(); const a = W.add(sc, 'num', 0, 0, { n: 1 }); const b = W.add(sc, 'num', 0, 0, { n: 2 });
+  sc.links.push({ id: 'lx', from: a, fromPort: 'v', to: b, toPort: 'a' });
+  W.act(sc, { t: 'resize', id: a, w: 500, h: 300 });
+  W.act(sc, { t: 'tidy' });
+  truthy(sc.entities[b].x >= sc.entities[a].x + 500, '第二列应在第一列的实际宽度之后');
+});
+
 console.log('\n' + pass + ' 通过，' + fail + ' 失败');
 process.exit(fail ? 1 : 0);

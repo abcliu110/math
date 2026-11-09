@@ -375,6 +375,84 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   await p.click('#insp [data-wb-tool="divide"]'); await p.waitForTimeout(100);
   ok(/0/.test(await p.locator('#insp .wb-msg').innerText().catch(() => '')) && await p.locator('#insp .wb-step').count() === 1, '除以 0 被拒绝，并说明原因，步骤不变');
   ok(await p.evaluate(() => Object.keys(UI.S.scene.entities).length === 4 && UI.S.scene.links.length === 3), '工作台的步骤不改台面（器材和连线数不变）');
+  // ---- 改大小、专注模式、工作区缩放与适应（§10.5.8 A1–A4）----
+  {
+    console.log('改大小（拖柄，§10.5.8 A1）');
+    const sizeOf = (id) => p.evaluate((i) => { const e = UI.S.scene.entities[i]; return e.w === undefined ? null : [e.w, e.h]; }, id);
+    const dimsOf = (id) => p.evaluate((i) => UI.Stage.geom(UI.S.scene.entities[i]), id);
+    const rangeOf = (id) => p.evaluate((i) => UI.Stage.rangeOf(i), id);
+    const handleDrag = async (id, dx, dy, mid) => {
+      const hb = await p.locator('.card[data-id="' + id + '"] .rz').boundingBox();
+      const x = hb.x + hb.width / 2, y = hb.y + hb.height / 2;
+      await p.mouse.move(x, y); await p.mouse.down(); await p.mouse.move(x + dx, y + dy, { steps: 6 });
+      if (mid) await mid();
+      await p.mouse.up(); await p.waitForTimeout(60);
+    };
+    await p.evaluate(() => UI.App.openFree()); await p.waitForTimeout(150);
+    const fid = await p.evaluate(() => UI.App.act({ t: 'add', type: 'num', x: 100, y: 100, props: { n: 3 } }).id);
+    await p.waitForTimeout(80);
+    const g0 = await dimsOf(fid);
+    ok((await sizeOf(fid)) === null, '新器材没有存过大小，用器材自己的 size()');
+    let tipTxt = '', tipOn = false;
+    await handleDrag(fid, 60, 40, async () => { tipOn = await p.locator('#tip').isVisible(); tipTxt = await p.locator('#tip').innerText(); });
+    const s1 = await sizeOf(fid);
+    ok(s1 && s1[0] > g0.w + 20 && s1[1] > g0.h + 10, '普通器材：拖柄拉大，尺寸写进实体 ' + JSON.stringify(s1) + '（原来 ' + g0.w + '×' + g0.h + '）');
+    ok(tipOn && tipTxt === s1[0] + ' × ' + s1[1], '拖动时显示当前尺寸：' + tipTxt);
+    await p.click('#undo'); await p.waitForTimeout(60);
+    ok((await sizeOf(fid)) === null, '普通器材：撤销回到原来的大小');
+    await handleDrag(fid, -300, -200);
+    const smin = await sizeOf(fid);
+    ok(JSON.stringify(smin) === '[120,90]', '最小尺寸：拖到很小也只到 120 × 90：' + JSON.stringify(smin));
+    await p.dblclick('.card[data-id="' + fid + '"] .rz'); await p.waitForTimeout(80);
+    ok((await sizeOf(fid)) === null, '双击拖柄恢复默认大小');
+    await handleDrag(fid, 80, 0);
+    const sz2 = await sizeOf(fid);
+    const saved = await p.evaluate((i) => JSON.parse(U.World.save(UI.S.scene)).entities[i], fid);
+    const shared = await p.evaluate((i) => U.Share.decode(U.Share.encode(UI.S.scene).text).entities[i].w, fid);
+    ok(saved.w === sz2[0] && saved.h === sz2[1] && shared === sz2[0], '存档和分享都带上大小');
+
+    await p.evaluate(() => UI.App.openProblem('geo-median-area', 'practice')); await p.waitForTimeout(200);
+    const wid = await p.evaluate(() => Object.values(UI.S.scene.entities).find((e) => U.types[e.type].workspace).id);
+    const wg0 = await dimsOf(wid), rg0 = await rangeOf(wid);
+    await handleDrag(wid, 110, 70);
+    const ws1 = await sizeOf(wid), rg1 = await rangeOf(wid);
+    const bodyW = await p.evaluate((i) => +document.querySelector('.card[data-id="' + i + '"] svg.wsbody').getAttribute('width'), wid);
+    ok(ws1 && ws1[0] > wg0.w && bodyW === ws1[0], '工作区：拉大卡片，画布跟着变大 ' + wg0.w + ' → ' + ws1[0]);
+    ok(JSON.stringify(rg1) === JSON.stringify(rg0), '工作区：拉大时坐标范围不变');
+    await p.click('#undo'); await p.waitForTimeout(60);
+    ok((await sizeOf(wid)) === null, '工作区：撤销回到原来的大小');
+
+    console.log('专注模式（§10.5.8 A4）');
+    await p.dblclick('.card[data-id="' + wid + '"] .hd'); await p.waitForTimeout(100);
+    ok(await p.locator('#wsfocus').isVisible(), '双击工作区标题：出现专注浮层');
+    ok(await p.locator('#wsfocus .wsf-main svg.wsbody').count() === 1, '浮层里是同一个工作区的画布和面板');
+    await p.keyboard.press('Escape'); await p.waitForTimeout(60);
+    ok(!(await p.locator('#wsfocus').isVisible()), 'Esc 还原');
+    await p.dblclick('.card[data-id="' + wid + '"] .hd'); await p.waitForTimeout(100);
+    await p.dblclick('#wsfocus .wsf-hd b'); await p.waitForTimeout(100);
+    ok(!(await p.locator('#wsfocus').isVisible()), '在浮层标题上双击也还原');
+
+    console.log('工作区的缩放、平移与适应（§10.5.8 A2–A3）');
+    await p.evaluate(() => UI.App.openProblem('geo-median-area', 'practice')); await p.waitForTimeout(200);
+    const wid2 = await p.evaluate(() => Object.values(UI.S.scene.entities).find((e) => U.types[e.type].workspace).id);
+    const rangeText = () => p.locator('.wsx[data-ws="' + wid2 + '"] .wsx-range').innerText();
+    const boardView = () => p.evaluate(() => [UI.S.view.x, UI.S.view.y, UI.S.view.z]);
+    const r0 = await rangeOf(wid2), t0 = await rangeText(), v0 = await boardView();
+    const body = () => p.locator('.card[data-id="' + wid2 + '"] svg.wsbody').boundingBox();
+    const bb2 = await body();
+    await p.mouse.move(bb2.x + bb2.width / 2, bb2.y + bb2.height / 2); await p.mouse.wheel(0, -200); await p.waitForTimeout(100);
+    const r1 = await rangeOf(wid2), t1 = await rangeText(), v1 = await boardView();
+    ok(r1.span < r0.span && JSON.stringify(v1) === JSON.stringify(v0), '滚轮指在工作区上：工作区放大，台面的缩放和平移不变');
+    ok(t1 !== t0, '范围说明跟着变：' + t1.replace(/\s+/g, ' '));
+    const bb3 = await body();
+    await p.mouse.move(bb3.x + 8, bb3.y + 8); await p.mouse.down(); await p.mouse.move(bb3.x + 48, bb3.y + 8, { steps: 5 }); await p.mouse.up(); await p.waitForTimeout(60);
+    const r2 = await rangeOf(wid2), v2 = await boardView();
+    ok(r2.cx < r1.cx && r2.span === r1.span && JSON.stringify(v2) === JSON.stringify(v0), '拖工作区的空白处：内容平移，台面不动');
+    await p.click('[data-ws-fit="' + wid2 + '"]'); await p.waitForTimeout(80);
+    const r3 = await rangeOf(wid2), t3 = await rangeText();
+    ok(r3.span !== r2.span && Math.abs(r3.span - r0.span) < 1e-9 && Math.abs(r3.cx - r0.cx) < 1e-9 && Math.abs(r3.cy - r0.cy) < 1e-9, '适应：坐标范围换成按内容选的（' + t3.replace(/\s+/g, ' ') + '）');
+    ok(JSON.stringify(await boardView()) === JSON.stringify(v0), '适应只改工作区，台面不动');
+  }
   ok(errs.length === 0, '控制台 0 报错' + (errs.length ? '：' + errs[0] : ''));
   console.log('\n' + pass + ' 通过，' + fail + ' 失败'); await b.close(); process.exit(fail ? 1 : 0);
 })();

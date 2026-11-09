@@ -12,6 +12,8 @@
     undo: [], redo: [], tab: 'lab', inspOpen: false, glow: [], showSig: true, q1: '', freeScene: null,
     // 几何工作区（§10.5）：选中的对象（稳定名字）、隐藏的图层（器材id.口）、移动工具的参数、面板消息
     wsSel: [], wsHidden: {}, wsArgs: { dx: '0', dy: '0' }, wsMsg: '',
+    // 工作区的坐标范围（按工作区 id 存；没有的就自动选）、专注模式的工作区 id（§10.5.8 A2–A4）
+    wsView: {}, focusWs: null,
   });
 
   // ---------- 提示条 ----------
@@ -137,7 +139,7 @@
     S.problem = p; S.mode = mode || 'practice'; S.scene = p.build(); S.run = J.start(p, S.mode);
     S.session = U.Session.start(p, S.mode, S.scene);
     S.undo = []; S.redo = []; S.sel = null; S.selLink = null; S.inspOpen = false; S.tab = 'steps'; S.glow = [];
-    S.wsSel = []; S.wsHidden = {}; S.wsMsg = '';
+    S.wsSel = []; S.wsHidden = {}; S.wsMsg = ''; S.wsView = {}; S.focusWs = null;
     if (!p.predict) S.run.pred_done = true;
     Ev.ctx = { pid: p.id, mode: S.mode }; Ev.push('start', {});
     S.D = W.evaluate(S.scene); UI.Stage.fit(); S.glow = glowOf();
@@ -148,7 +150,7 @@
     S.mode = 'free'; S.problem = null; S.run = null; S.session = null; Ev.ctx = {};
     let sc = null; try { sc = S.freeScene ? U.JSON.parse(S.freeScene) : U.JSON.parse(lsGet(FREE_KEY)); } catch (e) { sc = null; }
     try { S.scene = sc ? W.load(sc) : W.blank(); } catch (e) { S.scene = W.blank(); }
-    S.undo = []; S.redo = []; S.sel = null; S.selLink = null; S.glow = []; S.tab = 'lab';
+    S.undo = []; S.redo = []; S.sel = null; S.selLink = null; S.glow = []; S.tab = 'lab'; S.focusWs = null; S.wsView = {};
     S.D = W.evaluate(S.scene); UI.Stage.fit(); refresh(); UI.Panels.renderShelf();
     say('自由探究：从右边拖器材到台面，拖蓝点连线，点 ▶ 让世界动起来', '', 4200);
   }
@@ -391,6 +393,7 @@
       else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'Z'))) { e.preventDefault(); redo(); }
       else if (e.key === 'Delete' || e.key === 'Backspace') { if (S.selLink) { const id = S.selLink; S.selLink = null; act({ t: 'unlink', id }); } else if (S.sel) removeEntity(S.sel); }
       else if (e.key === ' ') { e.preventDefault(); clockAct({ t: 'clock', running: !S.scene.clock.running }); }
+      else if (e.key === 'Escape' && S.focusWs) UI.Stage.setFocus(null);
       else if (e.key === 'Escape') { S.sel = null; S.selLink = null; UI.Panels.renderInsp(); UI.Stage.render(); }
     });
     G.addEventListener('resize', () => { const nar = G.innerWidth <= 640; $('#shelfbtn').style.display = nar ? '' : 'none'; });

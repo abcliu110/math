@@ -283,7 +283,7 @@
     let x = 60;
     Object.keys(cols).map(Number).sort((a, b) => a - b).forEach((c) => {
       let y = 70, wmax = 0;
-      cols[c].forEach((id) => { const e = E[id], sz = defOf(e).size(e); e.x = x; e.y = y; y += sz[1] + 70; wmax = Math.max(wmax, sz[0]); });
+      cols[c].forEach((id) => { const e = E[id], sz = e.w > 0 && e.h > 0 ? [e.w, e.h] : defOf(e).size(e); e.x = x; e.y = y; y += sz[1] + 70; wmax = Math.max(wmax, sz[0]); });
       x += wmax + 130;
     });
   }
@@ -374,6 +374,15 @@
         const e = E[a.id]; if (!e) return fail('找不到器材');
         if (!e.parent) return ok();
         const old = e.parent; e.parent = null; e.slot = null; relayout(scene, old);
+        return ok();
+      }
+      // 改大小（§10.5.8 A1）：e.w、e.h 存在实体上，优先于器材的 size()。w、h 都是 null 时清掉，恢复默认大小
+      case 'resize': {
+        const e = E[a.id]; if (!e) return fail('找不到器材');
+        if (a.w === null && a.h === null) { delete e.w; delete e.h; return ok(); }
+        const w = Math.round(a.w), h = Math.round(a.h);
+        if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) return fail('大小不对');
+        e.w = w; e.h = h;
         return ok();
       }
       case 'rename': { const e = E[a.id]; if (!e) return fail('找不到器材'); const n = String(a.name || '').trim().slice(0, 12); if (!n) return fail('名字不能空着'); e.name = n; return ok(); }
