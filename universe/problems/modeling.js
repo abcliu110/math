@@ -4,7 +4,7 @@
   const U = G.U, mk = U.mkScene, P = [];
 
   P.push({
-    id: 'model-two-ways', essence: ['E12', 'E4'], title: '鸡兔同笼：35 个头，94 条腿。先用“猜”算，再用“线”解。', grade: 8, domain: '函数', points: ['7.14'], topics: ['猜与验证', '二元一次方程组', '直线交点'],
+    id: 'model-two-ways', essence: ['E12', 'E4'], title: '鸡兔同笼：35 个头，94 条腿。先用“猜”算，再用“线”解。', grade: 8, domain: '函数', points: ['7.14', '8.15'], topics: ['猜与验证', '二元一次方程组', '直线交点'],
     alias: ['鸡兔同笼', '建模', '方程组'], hook: '先用运算器“假设全是鸡”，算出多出来的腿，再用两条直线把同一件事画出来。两种方法必须得到同一个答案。',
     shelf: ['num', 'op', 'line', 'cross', 'meter'],
     build: mk({ ents: [

@@ -5,7 +5,7 @@
   const P = [];
 
   P.push({
-    id: 'array-12', essence: ['E1', 'E2'], title: '12 个点，能排成几种整齐的队伍？', grade: 3, domain: '数与运算', points: ['5.8'], topics: ['乘法的意义', '因数', '多种排法'],
+    id: 'array-12', essence: ['E1', 'E2'], title: '12 个点，能排成几种整齐的队伍？', grade: 3, domain: '数与运算', points: ['2.5', '5.8'], topics: ['乘法的意义', '因数', '多种排法'],
     alias: ['乘法', '因数'], hook: '12 个点排成整齐的长方形队伍，每行一样多。先排出一种，再想想还有没有别的。',
     shelf: ['array', 'meter', 'num', 'op'],
     build: mk({ ents: [] }),
@@ -36,7 +36,7 @@
   });
 
   P.push({
-    id: 'round-347', essence: ['E3', 'E7'], title: '3.47 精确到十分位，是多少？', grade: 4, domain: '数与运算', points: ['2.12'], topics: ['近似数', '四舍五入'],
+    id: 'round-347', essence: ['E3', 'E7'], title: '3.47 精确到十分位，是多少？', grade: 4, domain: '数与运算', points: ['2.12', '4.1'], topics: ['近似数', '四舍五入'],
     alias: ['四舍五入'], hook: '3.47 看百分位：7，要“入”。同一个数，用不同的取整方法，结果不一样。',
     shelf: ['num', 'round', 'meter', 'compare'],
     build: mk({ ents: [{ type: 'num', x: 60, y: 120, role: 'x', props: { n: 347, d: 100 } }] }),
@@ -52,7 +52,7 @@
   });
 
   P.push({
-    id: 'binary-13', essence: ['E3', 'E6'], title: '13 用二进制怎么写？', grade: 5, domain: '数与运算', points: [], topics: ['位值', '进制'],
+    id: 'binary-13', essence: ['E3', 'E6'], title: '13 用二进制怎么写？', grade: 5, domain: '数与运算', points: ['1.13'], topics: ['位值', '进制'],
     alias: ['二进制', '进制'], hook: '十进制每满 10 进一位，二进制每满 2 进一位。把 13 放进数位板，换成二进制看看。',
     shelf: ['num', 'digits', 'meter'],
     build: mk({ ents: [{ type: 'num', x: 60, y: 120, role: 'x', props: { n: 13 } }] }),
@@ -67,7 +67,7 @@
   });
 
   P.push({
-    id: 'decimal-add', essence: ['E3'], title: '0.1 + 0.2 等于 0.3 吗？', grade: 5, domain: '数与运算', points: [], topics: ['小数加法', '等于'],
+    id: 'decimal-add', essence: ['E3'], title: '0.1 + 0.2 等于 0.3 吗？', grade: 5, domain: '数与运算', points: ['4.13'], topics: ['小数加法', '等于'],
     alias: ['小数'], hook: '有的计算机里 0.1 + 0.2 不等于 0.3。这里的数是精确的——你来验证。',
     shelf: ['num', 'op', 'compare', 'meter'],
     build: mk({ ents: [{ type: 'num', x: 60, y: 60, role: 'a', props: { n: 1, d: 10 } }, { type: 'num', x: 60, y: 200, role: 'b', props: { n: 1, d: 5 } }, { type: 'num', x: 60, y: 340, role: 'c', props: { n: 3, d: 10 } }] }),

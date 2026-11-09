@@ -30,7 +30,7 @@
     ref: ['conjecture|0'],
   });
   P.push({
-    id: 'euler-prime', essence: ['E9'], title: 'n×n+n+41 总是质数吗？', grade: 7, domain: '关系', points: [], topics: ['质数', '反例', '证明与证据'],
+    id: 'euler-prime', essence: ['E9'], title: 'n×n+n+41 总是质数吗？', grade: 7, domain: '关系', points: ['5.8'], topics: ['质数', '反例', '证明与证据'],
     alias: ['反例', '质数'], hook: 'n=1 时 43，n=2 时 47，n=3 时 53……都是质数。试了 30 个，全对！那它总是质数吗？把“试到”调大，看看会发生什么。',
     shelf: ['conjecture', 'numtheory', 'meter'],
     build: conj({ law: 3, expr: '', upto: 30 }),

@@ -17,7 +17,7 @@
     traps: [], why: '等式的性质：两边同时减去同一个数，天平仍然平衡。x + 5 = 12 两边同减 5，得 x = 7。如果只减一边，天平就歪了。', ref: ['eqscale|0'],
   });
   P.push({
-    id: 'eq-divide', essence: ['E4'], title: '两个盒子和 10 一样重。一个盒子多重？', grade: 6, domain: '关系', points: [], topics: ['等式的性质', '除以同一个数'],
+    id: 'eq-divide', essence: ['E4'], title: '两个盒子和 10 一样重。一个盒子多重？', grade: 6, domain: '关系', points: ['5.5'], topics: ['等式的性质', '除以同一个数'],
     alias: ['方程'], hook: '左盘：两个盒子。右盘：10。把两个盒子变成一个，右边也要跟着变。',
     shelf: ['eqscale', 'meter', 'compare'],
     build: sc({ lx: 2, lc: 0, rx: 0, rc: 10, x0: 5 }),
@@ -29,7 +29,7 @@
     traps: [], why: '等式的性质：两边同时除以同一个数（不为 0），等式仍然成立。2x = 10 两边都除以 2，得 x = 5。', ref: ['eqscale|0'],
   });
   P.push({
-    id: 'eq-both-sides', essence: ['E4'], title: '3 个盒子 + 2 = 1 个盒子 + 8，盒子多重？', grade: 7, domain: '关系', points: ['7.6'], topics: ['一元一次方程', '移项', '等式的性质'],
+    id: 'eq-both-sides', essence: ['E4'], title: '3 个盒子 + 2 = 1 个盒子 + 8，盒子多重？', grade: 7, domain: '关系', points: ['7.6', '5.5'], topics: ['一元一次方程', '移项', '等式的性质'],
     alias: ['方程', '移项'], hook: '两边都有盒子。先想办法让盒子只留在一边：两边同时拿走一个盒子。再拿走砝码，最后分一分。',
     shelf: ['eqscale', 'meter', 'compare'],
     build: sc({ lx: 3, lc: 2, rx: 1, rc: 8, x0: 3 }),

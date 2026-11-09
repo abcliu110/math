@@ -25,7 +25,7 @@
   });
 
   P.push({
-    id: 'rect-perimeter', essence: ['E3'], title: '周长 20，面积最大能到多少？', grade: 5, domain: '图形', points: ['3.12'], topics: ['长方形面积', '周长', '最值'],
+    id: 'rect-perimeter', essence: ['E3'], title: '周长 20，面积最大能到多少？', grade: 5, domain: '图形', points: ['3.12', '3.6'], topics: ['长方形面积', '周长', '最值'],
     alias: ['面积', '周长'], hook: '一根 20 米长的绳子围长方形。怎么围面积最大？调长和宽试试。',
     shelf: ['rect', 'meter', 'compare', 'num'],
     build: mk({ ents: [{ type: 'rect', x: 120, y: 100, role: 'r', props: { w: 8, h: 2 } }] }),
@@ -56,7 +56,7 @@
   });
 
   P.push({
-    id: 'dice-mean', essence: ['E11', 'E7'], title: '两个骰子的点数和，平均是多少？', grade: 8, domain: '统计与概率', points: ['4.15'], topics: ['平均数', '期望', '大数规律'],
+    id: 'dice-mean', essence: ['E11', 'E7'], title: '两个骰子的点数和，平均是多少？', grade: 8, domain: '统计与概率', points: ['4.15', '4.1'], topics: ['平均数', '期望', '大数规律'],
     alias: ['期望'], hook: '把两个骰子的和送进直方图，再用统计量算平均数。次数越多，它越稳。',
     shelf: ['dice', 'op', 'hist', 'stats', 'meter'],
     build: mk({ ents: [{ type: 'dice', x: 60, y: 60, role: 'd1' }, { type: 'dice', x: 60, y: 230, role: 'd2', props: { salt: 1 } }] }),

@@ -5,7 +5,7 @@
   const P = [];
 
   P.push({
-    id: 'gcd-12-18', essence: ['E2'], title: '12 和 18 的最大公因数、最小公倍数', grade: 5, domain: '数与运算', points: [], topics: ['最大公因数', '最小公倍数'],
+    id: 'gcd-12-18', essence: ['E2'], title: '12 和 18 的最大公因数、最小公倍数', grade: 5, domain: '数与运算', points: ['5.8'], topics: ['最大公因数', '最小公倍数'],
     alias: ['公因数', '公倍数'], hook: '把 12 和 18 接进「数的性质」，读出两个结果，想想它们是怎么来的。',
     shelf: ['num', 'numtheory', 'meter', 'op'],
     build: mk({ ents: [{ type: 'num', x: 60, y: 60, role: 'a', props: { n: 12 } }, { type: 'num', x: 60, y: 220, role: 'b', props: { n: 18 } }] }),
@@ -35,7 +35,7 @@
   });
 
   P.push({
-    id: 'sqrt-2', essence: ['E7'], title: '面积是 2 的正方形，边长是多少？', grade: 8, domain: '数与运算', points: [], topics: ['平方根', '无理数', '近似值'],
+    id: 'sqrt-2', essence: ['E7'], title: '面积是 2 的正方形，边长是多少？', grade: 8, domain: '数与运算', points: ['7.12', '4.1'], topics: ['平方根', '无理数', '近似值'],
     alias: ['根号2', '无理数'], hook: '边长 × 边长 = 2。把 2 放进开方器，看它是整数、分数，还是别的什么。',
     shelf: ['num', 'sqrt', 'power', 'compare', 'meter'],
     build: mk({ ents: [{ type: 'num', x: 60, y: 120, role: 'a', props: { n: 2 } }] }),

@@ -8,7 +8,7 @@
   const folded = (pred) => (w) => w.some('fold', (e, d) => e.props.fold === 1 && pred(e.props, d));
 
   P.push({
-    id: 'fold-square-half', essence: ['E10'], title: '正方形纸对折，怎样折两半才完全重合？', grade: 3, domain: '图形', points: [], topics: ['对折', '对称轴'],
+    id: 'fold-square-half', essence: ['E10'], title: '正方形纸对折，怎样折两半才完全重合？', grade: 3, domain: '图形', points: ['8.3'], topics: ['对折', '对称轴'],
     alias: ['对折', '对称', '折痕'], hook: '一张正方形纸，沿一条直线折一次。把「折不折」改成折一次，再调折痕的方向，让两半完全重合（same=1）。',
     shelf: ['fold', 'compare'],
     build: sheet({ w: 6, ht: 6, fold: 0, angle: 30, offset: 0 }),

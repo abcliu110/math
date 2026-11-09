@@ -5,7 +5,7 @@
   const P = [];
 
   P.push({
-    id: 'discount-80', essence: ['E3', 'E12'], title: '原价 80 元的书，打八折，现价多少？', grade: 6, domain: '数与运算', points: [], topics: ['百分数应用', '折扣'],
+    id: 'discount-80', essence: ['E3', 'E12'], title: '原价 80 元的书，打八折，现价多少？', grade: 6, domain: '数与运算', points: ['6.10'], topics: ['百分数应用', '折扣'],
     alias: ['折扣', '打折'], hook: '八折就是原价的 80%，也就是便宜了 20%。接上百分数器，选对“求什么”。',
     shelf: ['num', 'percent', 'meter', 'compare'],
     build: mk({ ents: [{ type: 'num', x: 60, y: 60, role: 'pct', props: { n: 20 } }, { type: 'num', x: 60, y: 210, role: 'price', props: { n: 80, unit: 6 } }] }),
@@ -36,7 +36,7 @@
   });
 
   P.push({
-    id: 'chicken-rabbit', essence: ['E12', 'E4'], title: '鸡兔同笼：35 个头，94 条腿，鸡和兔各几只？', grade: 8, domain: '函数', points: ['7.14'], topics: ['二元一次方程组', '图像法', '直线交点'],
+    id: 'chicken-rabbit', essence: ['E12', 'E4'], title: '鸡兔同笼：35 个头，94 条腿，鸡和兔各几只？', grade: 8, domain: '函数', points: ['7.14', '8.15'], topics: ['二元一次方程组', '图像法', '直线交点'],
     alias: ['鸡兔同笼', '方程组'], hook: '设鸡 x 只，兔 y 只：x + y = 35，2x + 4y = 94。每个方程都是一条直线，解就是两条线的交点。',
     shelf: ['line', 'cross', 'meter'],
     build: mk({ ents: [{ type: 'line', x: 60, y: 40, role: 'l1', props: { k: 1, b: 0 } }, { type: 'line', x: 60, y: 260, role: 'l2', props: { k: 1, b: 0 } }] }),
@@ -51,7 +51,7 @@
   });
 
   P.push({
-    id: 'bag-red-ratio', essence: ['E11'], title: '袋里 3 红 1 白，摸很多次，红球占多少？', grade: 7, domain: '统计与概率', points: [], topics: ['频率与概率', '有放回摸球'],
+    id: 'bag-red-ratio', essence: ['E11'], title: '袋里 3 红 1 白，摸很多次，红球占多少？', grade: 7, domain: '统计与概率', points: ['9.9'], topics: ['频率与概率', '有放回摸球'],
     alias: ['摸球', '概率'], hook: '每次摸一个、看完放回。摸几百次后，红球的比例会稳定在哪里？',
     shelf: ['bag', 'hist', 'stats', 'meter'],
     build: mk({ ents: [{ type: 'bag', x: 60, y: 120, role: 'b' }] }),

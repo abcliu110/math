@@ -5,7 +5,7 @@
   const P = [];
 
   P.push({
-    id: 'linear-3x5', essence: ['E4'], title: '3x + 5 = 20，x 是多少？', grade: 7, domain: '关系', points: ['7.6'], topics: ['一元一次方程', '移项', '等式性质'],
+    id: 'linear-3x5', essence: ['E4'], title: '3x + 5 = 20，x 是多少？', grade: 7, domain: '关系', points: ['7.6', '5.5'], topics: ['一元一次方程', '移项', '等式性质'],
     alias: ['方程'], hook: '台面上有一台解方程器。把它调成 3x + 5 = 20，看 x 是多少，再想想它是怎么算出来的。',
     shelf: ['linsolve', 'num', 'op', 'balance', 'meter'],
     build: mk({ ents: [{ type: 'linsolve', x: 120, y: 120, role: 's' }] }),
@@ -66,7 +66,7 @@
   });
 
   P.push({
-    id: 'coin-fair', essence: ['E11'], title: '硬币抛很多次，正面占多少？', grade: 7, domain: '统计与概率', points: [], topics: ['频率与概率', '大数规律'],
+    id: 'coin-fair', essence: ['E11'], title: '硬币抛很多次，正面占多少？', grade: 7, domain: '统计与概率', points: ['9.9', '4.1'], topics: ['频率与概率', '大数规律'],
     alias: ['概率', '频率'], hook: '让硬币自己抛几百次。直方图要把 0（反面）和 1（正面）都装得下，再用统计量看平均数——它就是正面的比例。',
     shelf: ['coin', 'hist', 'stats', 'meter', 'clock'],
     build: mk({ ents: [{ type: 'coin', x: 60, y: 120, role: 'c' }] }),

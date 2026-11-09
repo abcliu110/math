@@ -35,7 +35,7 @@
   });
 
   P.push({
-    id: 'clock-gcd', essence: ['E5', 'E2'], title: '12 格的钟，步长 4 能走到几个格？', grade: 6, domain: '数与运算', points: [], topics: ['最大公因数', '周期'],
+    id: 'clock-gcd', essence: ['E5', 'E2'], title: '12 格的钟，步长 4 能走到几个格？', grade: 6, domain: '数与运算', points: ['5.8'], topics: ['最大公因数', '周期'],
     alias: ['公因数', '余数'], hook: '12 格的钟，每拍走 4 格。会走遍所有格吗？多试几个步长，看看哪些能走遍，哪些不能。',
     shelf: ['modclock', 'numtheory', 'meter'],
     build: clock({ m: 12, s: 0, k: 0, mode: 0 }),
@@ -50,7 +50,7 @@
   });
 
   P.push({
-    id: 'coprime-all', essence: ['E2', 'E5'], title: '10 格的钟：哪些步长能走遍？', grade: 7, domain: '数与运算', points: [], topics: ['互质', '最大公因数'],
+    id: 'coprime-all', essence: ['E2', 'E5'], title: '10 格的钟：哪些步长能走遍？', grade: 7, domain: '数与运算', points: ['5.8'], topics: ['互质', '最大公因数'],
     alias: ['互质', '公因数'], hook: '10 格的钟，步长从 1 到 9 都试试。哪些步长能走遍 10 个格？把能走遍的找出来，再看它们和 10 有什么共同点。',
     shelf: ['modclock', 'numtheory', 'meter'],
     build: clock({ m: 10, s: 0, k: 0, mode: 0 }),

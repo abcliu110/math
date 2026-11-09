@@ -20,7 +20,7 @@
   });
 
   P.push({
-    id: 'cuboid-vol', essence: ['E2'], title: '长 6、宽 4、高 3 的长方体，体积和表面积？', grade: 6, domain: '图形', points: ['3.12'], topics: ['长方体体积', '表面积'],
+    id: 'cuboid-vol', essence: ['E2'], title: '长 6、宽 4、高 3 的长方体，体积和表面积？', grade: 6, domain: '图形', points: ['5.9', '3.12'], topics: ['长方体体积', '表面积'],
     alias: ['体积'], hook: '把长宽高调成 6、4、3，读出体积和表面积。再想想：哪个是“占多大地方”，哪个是“包起来要多少纸”。',
     shelf: ['cuboid', 'meter', 'op'],
     build: mk({ ents: [{ type: 'cuboid', x: 120, y: 80, role: 'c' }] }),
@@ -36,7 +36,7 @@
   });
 
   P.push({
-    id: 'mean-vs-median', essence: ['E11'], title: '一个特别大的数，把平均数拉走了', grade: 8, domain: '统计与概率', points: ['4.15'], topics: ['平均数', '中位数', '极端值'],
+    id: 'mean-vs-median', essence: ['E11'], title: '一个特别大的数，把平均数拉走了', grade: 8, domain: '统计与概率', points: ['4.15', '8.16'], topics: ['平均数', '中位数', '极端值'],
     alias: ['平均数', '中位数'], hook: '五个人月收入：3、4、4、5、40（千元）。先把这组数填进数据表，再读平均数和中位数：哪个更能代表“一般水平”？',
     shelf: ['data', 'stats', 'meter', 'compare'],
     build: mk({ ents: [{ type: 'data', x: 100, y: 100, role: 'd', props: { list: '3', lo: 0, hi: 50 } }] }),
