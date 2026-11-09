@@ -288,9 +288,60 @@
     });
   }
 
+  // ---------- 工作区的工具（任务 H1，见 next-steps.md §10.5.4）----------
+  // { t:'tool', ws, tool, picks:[稳定名字], args }：找到工具的规则，把选中的对象接进一个新的步骤器材，放进工作区。
+  // 规则声明 device（器材）、wire（固定接的口）、many（剩下的选中对象接进的口）、props(args)（器材属性）。
+  // 任何一步不成立（名字找不到、算不出来、规则不通过、接不上）都整体失败，场景不留下半截。
+  function tool(scene, a) {
+    const E = scene.entities, ws = E[a.ws];
+    if (!ws) return fail('找不到工作区');
+    const wd = defOf(ws);
+    if (!wd.workspace) return fail(ws.name + ' 不是工作区');
+    const T = (wd.workspace.tools || []).find((x) => x.id === a.tool);
+    if (!T) return fail('这个工作区没有「' + a.tool + '」这个工具');
+    const rule = U.RULES[T.rule];
+    if (!rule || !rule.device || !U.types[rule.device]) return fail('「' + T.label + '」的规则还不能建步骤：' + T.rule);
+    if (!U.Names) return fail('稳定名字没有加载');
+    const picks = Array.isArray(a.picks) ? a.picks : [];
+    const fixed = rule.wire || [];
+    const need = rule.many ? Math.max(1, fixed.length) : fixed.length;
+    if (rule.many ? picks.length < need : picks.length !== need) return fail('「' + T.label + '」要选 ' + (rule.many ? '至少 ' : '') + need + ' 个对象');
+    const wires = [];
+    for (let i = 0; i < picks.length; i++) {
+      const r = U.Names.resolve(scene, picks[i]);
+      if (typeof r === 'string') return fail(r);
+      if (!r.value) return fail('「' + picks[i] + '」现在算不出来，先看看它前面的步骤');
+      wires.push({ r, port: i < fixed.length ? fixed[i] : rule.many });
+    }
+    const input = {};
+    fixed.forEach((p, i) => { input[p] = wires[i].r.value.data; });
+    if (rule.many) input[rule.many] = wires.slice(fixed.length).map((w) => w.r.value.data);
+    const args = Object.assign({}, T.defaults || {}, a.args || {});
+    const why = rule.match ? rule.match(input, [], args) : null;
+    if (typeof why === 'string') return fail(why);
+    if (why === false) return fail('这一步不能用在这里');
+    const def = U.types[rule.device], props = {};
+    const raw = rule.props ? rule.props(args) : {};
+    for (const k of Object.keys(raw)) {
+      const r = U.coerceProp(def.props[k], raw[k]);
+      if (!r.ok) return fail(r.why);
+      props[k] = r.v;
+    }
+    const id = add(scene, rule.device, ws.x + 24, ws.y + 44, props);
+    const undo = () => { delete E[id]; scene.links = scene.links.filter((l) => l.from !== id && l.to !== id); };
+    for (const w of wires) {
+      const l = link(scene, { from: w.r.id, fromPort: w.r.port, to: id, toPort: w.port });
+      if (!l.ok) { undo(); return fail(l.why); }
+    }
+    const put = act(scene, { t: 'put', id, parent: ws.id, slot: 'items' });
+    if (!put.ok) { undo(); return fail(put.why); }
+    return ok({ id, device: rule.device, rule: T.rule });
+  }
+
   function act(scene, a) {
     const E = scene.entities;
     switch (a.t) {
+      case 'tool': return tool(scene, a);
       case 'add': {
         if (!U.types[a.type]) return fail('没有这种器材');
         const id = add(scene, a.type, a.x || 0, a.y || 0, a.props);

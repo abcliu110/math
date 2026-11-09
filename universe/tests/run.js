@@ -3,7 +3,7 @@
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const root = path.join(__dirname, '..');
 const fsx = require('fs'), pk = (d) => fsx.readdirSync(path.join(root, d)).filter((f) => f.endsWith('.js')).sort().map((f) => d + '/' + f);
-const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/ratio.js', 'js/core/form.js', 'js/core/predict.js', 'js/core/eqn.js', 'js/core/seq.js', 'js/core/table.js', 'js/core/figure.js', 'js/core/geo.js', 'js/core/convert.js', 'js/core/registry.js', 'js/core/rules.js', 'js/core/rules-exec.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/curriculum.js', 'js/core/coverage.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
+const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/ratio.js', 'js/core/form.js', 'js/core/predict.js', 'js/core/eqn.js', 'js/core/seq.js', 'js/core/table.js', 'js/core/figure.js', 'js/core/geo.js', 'js/core/convert.js', 'js/core/registry.js', 'js/core/rules.js', 'js/core/rules-exec.js', 'js/core/geo-rules.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/curriculum.js', 'js/core/coverage.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
 const ctx = vm.createContext({ console, TextEncoder, TextDecoder, btoa, atob });
 ctx.globalThis = ctx;
 for (const f of files) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f });
@@ -1486,6 +1486,118 @@ console.log('可执行规则（G）');
   });
   t('方程规则不能用在式子上，被拒绝并说明', () => { const r = ap('alg.move-term', FV(X), [0], {}); eq(r.ok, false); truthy(cn(r.why), r.why); });
 }
+
+console.log('几何工作区（任务 H1 内核）：稳定名字、几何规则、工具动作');
+// 三角形 A(2,6) B(0,0) C(8,0)，只用动作搭：自由点（带角色字母）、多边形、一个工作区
+const hw = {};
+hw.build = () => {
+  const sc = W.blank();
+  const pt = (role, x, y) => { const id = W.act(sc, { t: 'add', type: 'gpt', x: 0, y: 0, props: { x, y } }).id; sc.entities[id].role = role; return id; };
+  const A = pt('A', 2, 6), B = pt('B', 0, 0), C = pt('C', 8, 0);
+  const tri = W.act(sc, { t: 'add', type: 'gpoly', x: 0, y: 0, props: {} }).id;
+  for (const p of [A, B, C]) truthy(W.act(sc, { t: 'link', from: p, fromPort: 'p', to: tri, toPort: 'pts' }).ok, '三角形接点');
+  const ws = W.act(sc, { t: 'add', type: 'gworkspace', x: 300, y: 40, props: {} }).id;
+  return { sc, A, B, C, tri, ws, pt };
+};
+// 线段：起点是 from（id，口 p），终点是 to（{id, port}）
+hw.seg = (sc, from, to) => {
+  const id = W.act(sc, { t: 'add', type: 'gseg', x: 0, y: 0, props: {} }).id;
+  truthy(W.act(sc, { t: 'link', from, fromPort: 'p', to: id, toPort: 'a' }).ok, '线段接起点');
+  truthy(W.act(sc, { t: 'link', from: to.id, fromPort: to.port, to: id, toPort: 'b' }).ok, '线段接终点');
+  return id;
+};
+const areaEq = (D, id) => truthy(U.KINDS.real.eq(U.Fig.area(D[id].out.a.data), U.Fig.area(D[id].out.b.data)), '两半面积应相等');
+
+t('稳定名字：排序后与创建顺序无关；原点用角色字母', () => {
+  eq(U.Names.nameOfMidpoint('C', 'B'), 'M(BC)');
+  eq(U.Names.nameOfMidpoint('B', 'C'), 'M(BC)');
+  eq(U.Names.nameOfIntersection('seg(C,D)', 'seg(A,B)'), 'X(seg(A,B),seg(C,D))');
+  eq(U.Names.nameOfCut('e7', 'b'), 'cut:e7:b');
+  eq(U.Names.nameOfOrigin('A'), 'A');
+});
+t('U.Names.resolve：找不到的名字返回 missing 原因；找得到的返回对象和值', () => {
+  const { sc } = hw.build();
+  eq(U.Names.resolve(sc, 'Q9'), 'missing: Q9');
+  truthy(U.Names.resolve(sc, 'A').value, '原点 A 应能找到');
+});
+t('几何规则登记为可执行规则：spec 检查无误，keeps 与 check 对应', () => {
+  eq(U.ruleSpecErrors.filter((m) => /^geo\./.test(m)), []);
+  eq(U.RULES['geo.cut'].keeps, 'area'); eq(U.RULES['geo.merge'].keeps, 'area');
+  eq(U.RULES['geo.place'].keeps, 'congruence'); eq(U.RULES['geo.midpoint'].keeps, 'congruence');
+  const tr = U.Fig.polygon([[0, 0], [6, 0], [2, 4]]);
+  eq(U.GeoRules.run('geo.place', { f: tr }, { flip: 1, turn: 2, dx: 3 }).kept, true);
+  const seg = { a: { type: 'point', pts: [{ x: Q(0), y: Q(0) }] }, b: { type: 'point', pts: [{ x: Q(4), y: Q(2) }] } };
+  eq(U.GeoRules.run('geo.midpoint', seg, {}).kept, true, '中点两半等长');
+});
+t('中线平分面积（只用动作）：中点用工具“中点”，剪用工具“剪”；改顶点后两半面积仍相等', () => {
+  const { sc, A, B, C, tri, ws } = hw.build();
+  const m = W.act(sc, { t: 'tool', ws, tool: 'mid', picks: ['B', 'C'] }); truthy(m.ok, m.why);
+  const mr = U.Names.resolve(sc, 'M(BC)'); eq(mr.value.data.type, 'point');
+  hw.seg(sc, A, { id: mr.id, port: mr.port });
+  eq(U.Names.resolve(sc, 'seg(A,M(BC))').ent.type, 'gseg', '中线的名字应能找回');
+  const c = W.act(sc, { t: 'tool', ws, tool: 'cut', picks: ['poly(A,B,C)', 'seg(A,M(BC))'] }); truthy(c.ok, c.why);
+  let D = W.evaluate(sc); areaEq(D, c.id);
+  for (const [x, y] of [[-3, 6], [5, 1], [4, -2]]) {
+    W.act(sc, { t: 'set', id: A, k: 'x', v: x }); W.act(sc, { t: 'set', id: A, k: 'y', v: y });
+    D = W.evaluate(sc); areaEq(D, c.id);
+  }
+  eq(U.Names.resolve(sc, 'M(BC)').id, mr.id, '改顶点后名字不变');
+  eq(W.childrenOf(sc, ws).length, 2, '中点和剪都放进了工作区');
+});
+t('合并与翻转：两半用工具“合并”粘回三角形（面积不变），块可以再翻转，结果有稳定名字', () => {
+  const { sc, A, ws } = hw.build();
+  const mr = W.act(sc, { t: 'tool', ws, tool: 'mid', picks: ['B', 'C'] }); truthy(mr.ok, mr.why);
+  hw.seg(sc, A, U.Names.resolve(sc, 'M(BC)'));
+  const c = W.act(sc, { t: 'tool', ws, tool: 'cut', picks: ['poly(A,B,C)', 'seg(A,M(BC))'] }); truthy(c.ok, c.why);
+  const g = W.act(sc, { t: 'tool', ws, tool: 'merge', picks: ['cut:' + c.id + ':a', 'cut:' + c.id + ':b'] }); truthy(g.ok, g.why);
+  let D = W.evaluate(sc);
+  const merged = D[g.id].out.merged.data; eq(merged.pts.length, 3, '共线的中点应被去掉');
+  truthy(U.KINDS.real.eq(U.Fig.area(merged), U.Fig.area(U.Fig.polygon([[2, 6], [0, 0], [8, 0]]))), '合并后面积等于三角形面积');
+  const f = W.act(sc, { t: 'tool', ws, tool: 'flip', picks: ['cut:' + c.id + ':a'] }); truthy(f.ok, f.why);
+  D = W.evaluate(sc);
+  truthy(U.Fig.congruent(D[c.id].out.a.data, D[f.id].out.f.data), '翻转后的块与原来全等');
+  eq(U.Names.resolve(sc, 'step:' + f.id + ':f').id, f.id, '翻转的结果有稳定名字');
+});
+t('剪切线改到不再穿过图形：剪的那一步说明原因，后面的步骤拿不到值（不算错值）', () => {
+  const { sc, A, ws, pt } = hw.build();
+  const P = pt('P', 1, -1), Q2 = pt('Q', 1, 5);
+  hw.seg(sc, P, { id: Q2, port: 'p' });
+  const c = W.act(sc, { t: 'tool', ws, tool: 'cut', picks: ['poly(A,B,C)', 'seg(P,Q)'] }); truthy(c.ok, c.why);
+  let D = W.evaluate(sc); truthy(D[c.id].out.a && D[c.id].out.b, '线 x=1 穿过三角形，应能剪开');
+  W.act(sc, { t: 'set', id: P, k: 'x', v: 9 }); W.act(sc, { t: 'set', id: Q2, k: 'x', v: 9 });
+  D = W.evaluate(sc);
+  truthy(D[c.id].sig.some((s) => s.lv === 'warn' && /没有穿过/.test(s.tx)), '应说明线不再穿过图形');
+  eq(D[c.id].out.a, undefined, '切不开时不应输出'); eq(D[c.id].out.b, undefined);
+  const f = W.act(sc, { t: 'tool', ws, tool: 'flip', picks: ['cut:' + c.id + ':a'] });
+  eq(f.ok, false, '后面的步骤拿不到值，工具应拒绝'); truthy(/算不出来/.test(f.why), f.why);
+  truthy(A, '原点还在');
+});
+t('工具动作失败：缺少选中对象、线不穿过图形、选的不是工作区，都返回 ok 为假和原因；不留下半截步骤', () => {
+  const { sc, A, ws, pt } = hw.build();
+  const r1 = W.act(sc, { t: 'tool', ws, tool: 'mid', picks: ['B', 'ZZ'] }); eq(r1.ok, false); eq(r1.why, 'missing: ZZ');
+  const r2 = W.act(sc, { t: 'tool', ws, tool: 'mid', picks: ['B'] }); eq(r2.ok, false); truthy(/要选/.test(r2.why), r2.why);
+  const P = pt('P', 9, -1), Q2 = pt('Q', 9, 5); hw.seg(sc, P, { id: Q2, port: 'p' });
+  const r3 = W.act(sc, { t: 'tool', ws, tool: 'cut', picks: ['poly(A,B,C)', 'seg(P,Q)'] }); eq(r3.ok, false); truthy(/没有穿过/.test(r3.why), r3.why);
+  eq(W.childrenOf(sc, ws).length, 0, '失败的工具不留下步骤');
+  eq(W.act(sc, { t: 'tool', ws: A, tool: 'mid', picks: ['B', 'C'] }).ok, false, '不是工作区的器材不能用工具');
+});
+t('工作区的工具声明完整：每个工具的规则都登记过，并能建出步骤器材；工作区 lint 通过', () => {
+  for (const tl of U.types.gworkspace.workspace.tools) {
+    const r = U.RULES[tl.rule]; truthy(r && r.device && U.types[r.device], tl.id + ' 的规则不完整');
+  }
+  eq(U.lintType(U.types.gworkspace).errors, []);
+});
+t('存档往返：带工作区的台面存下再读回，步骤、名字与剪的结果都还在', () => {
+  const { sc, A, ws } = hw.build();
+  W.act(sc, { t: 'tool', ws, tool: 'mid', picks: ['B', 'C'] });
+  hw.seg(sc, A, U.Names.resolve(sc, 'M(BC)'));
+  const c = W.act(sc, { t: 'tool', ws, tool: 'cut', picks: ['poly(A,B,C)', 'seg(A,M(BC))'] }); truthy(c.ok, c.why);
+  const s2 = W.load(W.save(sc));
+  const D = W.evaluate(s2);
+  eq(W.childrenOf(s2, ws).length, W.childrenOf(sc, ws).length);
+  eq(U.Names.resolve(s2, 'M(BC)').id, U.Names.resolve(sc, 'M(BC)').id);
+  areaEq(D, c.id);
+});
 
 console.log('\n' + pass + ' 通过，' + fail + ' 失败');
 process.exit(fail ? 1 : 0);
