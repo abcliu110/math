@@ -297,3 +297,7 @@ button.gdel { border: 0; background: none; color: var(--dim); cursor: pointer; }
 .wsx-float button { font: inherit; font-size: 12px; padding: 3px 8px; border-radius: 8px; border: 1px solid #aab4c8; background: #fff; color: var(--ink); cursor: pointer; }
 .wsx-float button:hover { border-color: var(--blue); }
 .wsx-tools button.on { background: var(--blue); color: #fff; border-color: var(--blue); }
+
+/* 几何工作区（界面修正）：浮动翻转条的按钮不换行；工作区里的按钮文字不折行 */
+.wsx-float button { white-space: nowrap; }
+.wsx button { white-space: nowrap; }

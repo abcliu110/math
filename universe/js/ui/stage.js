@@ -38,7 +38,7 @@
     if (!nm) return null;
     let m;
     if ((m = /^poly\((.*)\)$/.exec(nm))) { const vs = m[1].split(',').map(vName); return (vs.length === 3 ? '三角形 ' : vs.length === 4 ? '四边形 ' : '多边形 ') + joinV(vs); }
-    if ((m = /^seg\((.*)\)$/.exec(nm))) return '线段 ' + joinV(m[1].split(',').map(vName));
+    if ((m = /^seg\((.*)\)$/.exec(nm))) return '线段 ' + m[1].split(',').map(vName).join(' 到 ');
     if (/^M\(/.test(nm)) return vName(nm);
     if (/^X\(/.test(nm)) return '交点';
     if (/^foot\(/.test(nm)) return '垂足';
@@ -76,7 +76,9 @@
   const wsSteps = (ws) => wsKids(ws).filter((k) => STEP_TYPES.includes(k.type));
   // 选中的对象显示成学生的名字（找到了用图形的标签，找不到就按名字换算）
   const pickLabel = (x, vals) => { const v = vals.find((y) => pickOf(y) === x); return v ? v.label : pretty(x) || x; };
-  const stepLabel = (st) => (st.type === 'gplace' ? (st.props.flip ? '翻转' : st.props.turn ? '旋转' : '移动') : STEP_LABEL[st.type] || st.type);
+  // 拼合器材有两种：「合并」（没有目标口）和「对齐到目标」（目标口接着目标图形）；步骤清单要分得开
+  const stepLabel = (st) => (st.type === 'gasm' && UI.S.scene.links.some((l) => l.to === st.id && l.toPort === 'target') ? '对齐到目标'
+    : st.type === 'gplace' ? (st.props.flip ? '翻转' : st.props.turn ? '旋转' : '移动') : STEP_LABEL[st.type] || st.type);
   // ---- 工作区的坐标范围（§10.5.8 A2、A3）----
   // S.wsView[id] = {cx, cy, span}：可见的横向范围是 [cx-span/2, cx+span/2]，画布上 1 个坐标单位 = w/span 像素。
   // 没存过的，按内容自动选（横纵都装得下）。一旦拖过、滚过、改过大小、点过“适应”，就存下来：
@@ -180,7 +182,7 @@
     if (!fr.b) return K.text(w / 2, h / 2, '工作区里还没有图形', { size: 12, fill: 'var(--dim)' });
     const { vw, s, X, Y } = fr;
     const labs = [];   // 标签先收集，最后统一摆放（不叠、不出画布）
-    let g = '', top = '';   // top：自由点的把手，画在所有图形的上面（图形的填充不能盖住点）
+    let g = '', top = '', hit = '';   // top：自由点的把手，画在所有图形的上面（图形的填充不能盖住点）；hit：没有别的把手的线和多边形的边，加宽的透明命中线
     vals.forEach((v, i) => {
       const f = v.fig; if (!f) return;
       // 块（§10.5.10）：用块自己的颜色；可以拖（data-drag，松手时一次 piece 移动）
@@ -189,15 +191,19 @@
       const pk = " data-pick=\"" + escA(pickOf(v)) + "\"";
       const dg = isPc && !ent.props.locked ? ' data-drag="' + ent.id + '" data-s="' + s.toFixed(4) + '"' : '';
       const sty = isPc ? ' style="cursor:' + (ent.props.locked ? 'pointer' : 'grab') + '"' : " style=\"cursor:pointer\"";
+      // 线和多边形的边：细线很难点中，所以（除了已经有把手的、块）再加一层加宽的透明线，点边就选中它
+      const fi0 = figInfo(v), wantHit = (f.type === 'polygon' || f.type === 'segment') && !(fi0 && (fi0.kind === 'pts' || fi0.kind === 'piece'));
       let lx, ly, cands = [], prio = 1;
       if (f.type === 'polygon') {
         const d = f.pts.map((p, k) => (k ? 'L' : 'M') + X(Q.num(p.x)).toFixed(1) + ' ' + Y(Q.num(p.y)).toFixed(1)).join(' ') + ' Z';
         g += '<path d="' + d + '" fill="' + c + '22" stroke="' + c + '" stroke-width="' + sw + '"' + pk + dg + sty + '/>';
+        if (wantHit) hit += '<path d="' + d + '" fill="none" stroke="transparent" stroke-width="12"' + pk + ' style="cursor:pointer"/>';
         lx = f.pts.reduce((a, p) => a + X(Q.num(p.x)), 0) / f.pts.length; ly = f.pts.reduce((a, p) => a + Y(Q.num(p.y)), 0) / f.pts.length;
         const tw = TXT_W(v.label); cands = [[lx - tw / 2, ly + 4], [lx - tw / 2, ly + 18], [lx - tw / 2, ly - 10], [lx - tw / 2, ly + 32]]; prio = 2;
       } else if (f.type === 'segment') {
         const a = f.pts[0], b = f.pts[1];
         g += '<line x1="' + X(Q.num(a.x)) + '" y1="' + Y(Q.num(a.y)) + '" x2="' + X(Q.num(b.x)) + '" y2="' + Y(Q.num(b.y)) + '" stroke="' + c + '" stroke-width="' + (on ? 5 : 2.5) + '"' + (f.dash ? ' stroke-dasharray="6 4"' : '') + ' stroke-linecap="round"' + pk + sty + '/>';
+        if (wantHit) hit += '<line x1="' + X(Q.num(a.x)) + '" y1="' + Y(Q.num(a.y)) + '" x2="' + X(Q.num(b.x)) + '" y2="' + Y(Q.num(b.y)) + '" stroke="transparent" stroke-width="14"' + pk + ' style="cursor:pointer"/>';
         lx = (X(Q.num(a.x)) + X(Q.num(b.x))) / 2; ly = (Y(Q.num(a.y)) + Y(Q.num(b.y))) / 2;
         const tw = TXT_W(v.label); cands = [[lx + 6, ly - 6], [lx + 6, ly + 14], [lx - tw - 6, ly - 6], [lx - tw - 6, ly + 14]];
       } else if (f.type === 'circle') {
@@ -217,7 +223,24 @@
       }
       if (lx !== undefined) labs.push({ text: v.label, c, cands, prio });
     });
-    return wsEdges(fr) + g + top + wsHandles(fr) + drawPreview(ws, fr) + offArrows(fr, ws) + placeLabels(labs, w, h);
+    return wsEdges(fr) + g + hit + top + wsHandles(fr) + drawPreview(ws, fr) + offArrows(fr, ws) + placeLabels(labs, w, h) + boardMsg(w, h);
+  }
+  // 画布顶部的一条消息（只占上面两行，不接收鼠标：底下的点和图形照常能点）
+  function boardMsg(w, h) {
+    const S = UI.S, t = S.wsMsg; if (!t || !(S.wsBoardUntil > Date.now())) return '';
+    const good = S.wsMsgKind === 'good', per = Math.max(8, Math.floor((w - 16) / 11)), lines = [];
+    for (let i = 0; i < t.length; i += per) lines.push(t.slice(i, i + per));
+    const L = lines.slice(0, 2), bh = L.length * 14 + 6, col = good ? '#15803d' : '#b91c1c';
+    let s = '<rect x="3" y="3" width="' + (w - 6) + '" height="' + bh + '" rx="5" fill="' + (good ? '#f0fdf4' : '#fef2f2') + '" stroke="' + col + '" stroke-width="1" pointer-events="none"/>';
+    L.forEach((ln, i) => { s += '<text x="9" y="' + (3 + 14 + i * 14) + '" font-size="11" font-weight="700" fill="' + col + '" font-family="var(--font)" pointer-events="none">' + K.esc(ln) + '</text>'; });
+    return s;
+  }
+  // 工作区的消息：文字和颜色一起设（好 / 坏）
+  // 画布上的消息留 6 秒（面板里的那一行留到下一次操作）：到点重画一次把它收掉
+  let msgTimer = 0;
+  function setMsg(text, good) {
+    const S = UI.S; S.wsMsg = text || ''; S.wsMsgKind = good ? 'good' : 'bad'; S.wsBoardUntil = Date.now() + 6000;
+    clearTimeout(msgTimer); msgTimer = setTimeout(() => { if (!drag && UI.S.wsBoardUntil <= Date.now() && UI.S.wsMsg) render(); }, 6100);
   }
   // 画线时的预览：第一点（空心圈）、到光标吸附位置的虚线、光标处的吸附点
   function drawPreview(ws, fr) {
@@ -262,15 +285,63 @@
   function wsPick(name, shift) {
     const S = UI.S, cur = S.wsSel || [];
     S.wsSel = shift ? (cur.includes(name) ? cur.filter((x) => x !== name) : cur.concat([name])) : [name];
+    S.wsMsg = '';   // 换了选择，上一条消息就不再适用
   }
-  // 点工具：把选中的对象交给世界的 t:'tool' 动作（走 act，可以撤销）；失败就把原因放在面板的消息里
+  // 删除工作区里的一步（步骤清单的 ✕）：后面的步骤还用着它的结果，就不删，并在画布上说明是哪几步；
+  // 剪开的那一步连它剪出来的块一起删，被剪的图形恢复显示
+  function delWs(stId) {
+    const S = UI.S, E = S.scene.entities, st = E[stId]; if (!st) return;
+    const ws = E[st.parent]; if (!ws) return;
+    const num = (x) => wsSteps(ws).indexOf(x) + 1;
+    const kids = S.scene.links.filter((l) => l.from === stId).map((l) => E[l.to]).filter(Boolean);
+    const pieces = st.type === 'gcut' ? kids.filter((k) => k.type === 'gpiece') : [];
+    const users = kids.filter((k) => k.type !== 'gpiece');
+    for (const pc of pieces) for (const l of S.scene.links) if (l.from === pc.id && E[l.to]) users.push(E[l.to]);
+    const uniqUsers = users.filter((u, i) => users.indexOf(u) === i && STEP_TYPES.includes(u.type));
+    if (uniqUsers.length) {
+      setMsg('这一步的结果还被第 ' + uniqUsers.map(num).join('、') + ' 步用着：先删掉那些步骤，再删这一步（撤销也能回去）', false);
+      return render();
+    }
+    const src = st.type === 'gcut' ? (S.scene.links.find((l) => l.to === stId && l.toPort === 'f') || {}).from : null;
+    S.wsSel = [];
+    const r = UI.App.build((A) => {
+      for (const pc of pieces) A({ t: 'del', id: pc.id });
+      A({ t: 'del', id: stId });
+      if (src && E[src]) E[src].hidden = false;   // 被剪的图形重新显示（撤销时快照里已经是原来的样子）
+    });
+    if (!r.ok) setMsg(r.why, false); else setMsg('', true);
+    render();
+  }
+  // 点工具：把选中的对象交给世界的 t:'tool' 动作（走 act，可以撤销）；失败就把原因放在画布上（和面板里）
   function wsRun(wsId, tool) {
-    const S = UI.S, args = {};
+    const S = UI.S, args = {}, picks = (S.wsSel || []).slice();
+    const ws = S.scene.entities[wsId], T = ws && U.types[ws.type].workspace.tools.find((x) => x.id === tool), rule = T && U.RULES[T.rule];
     // 连线、剪：没有选够两个对象，就进入「点两下画线」的模式（§10.5.8 B11）
-    if ((tool === 'seg' || tool === 'cut') && (S.wsSel || []).length !== 2) return drawMode(wsId, tool);
-    if (tool === 'move') { const n = (v) => { const k = parseInt(v, 10); return Number.isFinite(k) ? k : 0; }; args.dx = n(S.wsArgs.dx); args.dy = n(S.wsArgs.dy); }
-    const r = UI.App.act({ t: 'tool', ws: wsId, tool, picks: (S.wsSel || []).slice(), args });
-    if (r && r.ok) { S.wsSel = []; S.wsMsg = ''; } else S.wsMsg = (r && r.why) || '这一步做不了';
+    if ((tool === 'seg' || tool === 'cut') && picks.length !== 2) return drawMode(wsId, tool);
+    // 选的个数不够：先说清楚要选几个、现在选了几个（不去试，免得只在面板里说一句）
+    if (rule && rule.device) {
+      const fixed = rule.wire || [], need = rule.many ? Math.max(1, fixed.length) : fixed.length;
+      if (rule.many ? picks.length < need : picks.length !== need) {
+        setMsg('「' + T.label + '」要选 ' + (rule.many ? '至少 ' : '') + need + ' 个对象，现在选了 ' + picks.length + ' 个。点图形或点来选中，Shift 点可以多选', false);
+        return render();
+      }
+    }
+    if (tool === 'move') {
+      const n = (v) => { const k = parseInt(v, 10); return Number.isFinite(k) ? k : 0; };
+      args.dx = n(S.wsArgs.dx); args.dy = n(S.wsArgs.dy);
+      if (!args.dx && !args.dy) { setMsg('移动要有距离：直接拖动块，或者在「向右」「向上」里填几格再点移动', false); return render(); }
+    }
+    // 对齐到目标：先算结论（拼对了没有、哪里不对），结论放在画布上（建步骤的同时也说给学生听）
+    let verdict = null;
+    if (tool === 'fit' && picks.length >= 2) {
+      const rs = picks.map((n) => U.Names.resolve(S.scene, n));
+      if (rs.every((x) => typeof x !== 'string' && x.value)) verdict = U.Geo.assemble(rs.slice(1).map((x) => x.value.data), rs[0].value.data);
+    }
+    const r = UI.App.act({ t: 'tool', ws: wsId, tool, picks, args });
+    if (r && r.ok) {
+      S.wsSel = [];
+      if (verdict) setMsg(verdict.ok ? verdict.why : '还没拼对：' + verdict.why, !!verdict.ok); else setMsg('', true);
+    } else setMsg((r && r.why) || '这一步做不了', false);
     render();
   }
 
@@ -304,7 +375,7 @@
     });
     Object.keys(d.outputs).forEach((k, i) => {
       h += '<i class="port out" data-id="' + e.id + '" data-port="' + k + '" style="left:' + g.w + 'px;top:' + (PORT_Y0 + i * PORT_DY) + 'px;background:' + U.kindColor(d.outputs[k].kind) + '"></i>';
-      h += '<span class="pl" style="right:12px;top:' + (PORT_Y0 + i * PORT_DY) + 'px">' + K.esc(d.outputs[k].label) + '</span>';
+      if (!d.workspace) h += '<span class="pl" style="right:12px;top:' + (PORT_Y0 + i * PORT_DY) + 'px">' + K.esc(d.outputs[k].label) + '</span>';   // 工作区的步数标在标题栏里，这里不再写（会和画布里的把手叠在一起）
     });
     h += '<i class="rz" data-rz="' + e.id + '" title="拖动改大小；双击恢复默认"></i>';
     h += '</div>';
@@ -689,10 +760,10 @@
     const name = S.wsSel[0], fr = wsFrame(ws, w, h), v = fr.vals.find((x) => pickOf(x) === name), fi = v && figInfo(v);
     if (!fi || !fi.f.pts || (fi.kind === 'pts' && fi.f.type === 'point')) return null;
     const xs = fi.f.pts.map((p) => Q.num(p.x)), ys = fi.f.pts.map((p) => Q.num(p.y));
-    return { name, left: fr.X((Math.min(...xs) + Math.max(...xs)) / 2), top: fr.Y(Math.max(...ys)) };
+    return { name, left: fr.X((Math.min(...xs) + Math.max(...xs)) / 2), top: Math.min(fr.Y(Math.min(...ys)) + 8, h - 34) };   // 浮动工具条放在图形的下面（画布里面），不盖住标题和步数
   }
   function floatHtml(wsId, f, ox, oy) {
-    const left = Math.max(4, ox + f.left - 72), top = Math.max(oy + 2, oy + f.top - 40), nm = escA(f.name);
+    const left = Math.max(4, ox + f.left - 72), top = Math.max(oy + 2, oy + f.top), nm = escA(f.name);
     return '<div class="wsx-float" style="left:' + left + 'px;top:' + top + 'px">' +
       '<button data-fig-flip="1" data-ws="' + wsId + '" data-name="' + nm + '">左右翻</button>' +
       '<button data-fig-flip="2" data-ws="' + wsId + '" data-name="' + nm + '">上下翻</button></div>';
@@ -793,14 +864,14 @@
   function finishLine(D, a, b) {
     const S = UI.S, ws = S.scene.entities[D.ws];
     if (!ws) return endDraw();
-    if (a.x === b.x && a.y === b.y) { S.wsMsg = '两个点不能重合'; return render(); }
+    if (a.x === b.x && a.y === b.y) { setMsg('两个点不能重合', false); return render(); }
     let cut = null;
     const seg = { type: 'segment', pts: [{ x: Q(a.x), y: Q(a.y) }, { x: Q(b.x), y: Q(b.y) }] };
     if (D.tool === 'cut') {
       const sel = S.wsSel || [], pr = sel.length === 1 ? resolvePick(sel[0]) : null;
-      if (!pr || typeof pr === 'string' || !pr.value || pr.value.data.type !== 'polygon') { S.wsMsg = '剪需要先选一个多边形，再画一条线'; return render(); }
+      if (!pr || typeof pr === 'string' || !pr.value || pr.value.data.type !== 'polygon') { setMsg('剪需要先选一个多边形，再画一条线', false); return render(); }
       const g = U.GeoRules.run('geo.cut', { f: pr.value.data, line: seg }, {});
-      if (!g.ok) { S.wsMsg = g.why; return render(); }
+      if (!g.ok) { setMsg(g.why, false); return render(); }
       cut = pr;
     }
     const r = UI.App.build((A) => {
@@ -824,7 +895,7 @@
       }
     });
     D.pend = null; D.cur = null;
-    if (r.ok) { S.wsSel = []; S.wsMsg = ''; } else S.wsMsg = r.why;
+    if (r.ok) { S.wsSel = []; S.wsMsg = ''; } else setMsg(r.why, false);
     render();
   }
 
@@ -1057,7 +1128,7 @@
       const wu = ev.target.closest('[data-ws-unfocus]');
       if (wu) { setFocus(null); return; }
       const wd = ev.target.closest('[data-ws-del]');
-      if (wd) { UI.S.wsSel = []; UI.App.removeEntity(wd.dataset.wsDel); return; }
+      if (wd) { delWs(wd.dataset.wsDel); return; }
       const wst = ev.target.closest('[data-ws-step]');
       if (wst) { const S = UI.S; S.sel = wst.dataset.wsStep; S.selLink = null; S.inspOpen = true; UI.Panels.renderInsp(); render(); return; }
       // 块的把手（工作区面板里）：转 90°、左右翻、属性

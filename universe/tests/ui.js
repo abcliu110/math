@@ -681,6 +681,75 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
     const s2 = await stepCheck();
     ok(s2.n === 2 && s2.rows === 2, '(e) 再做一步「连线」：标题 ' + s2.title + '，清单 ' + s2.rows + ' 行');
   }
+  {
+    // 两道几何题只用鼠标和工具做完（不在数字框里打字）；每一步都看步骤清单、标题步数、里程碑
+    console.log('几何题：只用鼠标和工具做完 geo-median-area 与 geo-pgram-cut');
+    const clickObj = async (name, shift) => {
+      const pt = await p.evaluate((nm) => {
+        for (const el of [...document.querySelectorAll('[data-pick]')].filter((e) => e.dataset.pick === nm)) {
+          const r = el.getBoundingClientRect(), cands = [[r.left + r.width / 2, r.top + r.height / 2]];
+          for (const i of [0.02, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.98]) for (const j of [0.02, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.98]) cands.push([r.left + r.width * i, r.top + r.height * j]);
+          for (const [x, y] of cands) { const hit = document.elementFromPoint(x, y); if (hit && hit.closest('[data-pick]') === el) return { x, y }; }
+        }
+        return null;
+      }, name);
+      if (!pt) { ok(false, '能用鼠标点到：' + name); return; }
+      if (shift) await p.keyboard.down('Shift');
+      await p.mouse.click(pt.x, pt.y);
+      if (shift) await p.keyboard.up('Shift');
+      await p.waitForTimeout(60);
+    };
+    const toolBtn = async (id) => { await p.click('[data-ws-tool="' + id + '"]'); await p.waitForTimeout(80); };
+    const stepRows = () => p.locator('.wsx-step').count();
+    const titleSteps = () => p.evaluate(() => { const ws = Object.values(UI.S.scene.entities).find((e) => U.types[e.type].workspace); return document.querySelector('.card[data-id="' + ws.id + '"] .hd .bd').textContent.trim(); });
+    const doneOf = () => p.evaluate(() => Object.fromEntries(Object.entries(UI.S.run.ms).map(([k, v]) => [k, !!v.done])));
+    const closeReport = async () => { await p.waitForTimeout(900); if (await p.locator('#dlg.open').count()) await p.click('#dlg-close'); };
+
+    // 中线题：没选就点「中点」，要在画布上说明原因
+    await p.evaluate(() => UI.App.openProblem('geo-median-area', 'practice')); await p.waitForTimeout(200);
+    await toolBtn('mid');
+    ok(await p.locator('.card svg.wsbody text', { hasText: '要选 2 个对象' }).count() === 1 && await stepRows() === 0, '中线题：没选点就点「中点」，画布上写出原因，不建步骤');
+    await clickObj('B'); await clickObj('C', true); await toolBtn('mid');
+    ok(await stepRows() === 1 && (await titleSteps()) === '1 步', '中线题：选 B、C 点「中点」：清单 1 行，标题 1 步');
+    await clickObj('A'); await clickObj('M(BC)', true); await toolBtn('seg');
+    ok(await stepRows() === 2 && (await titleSteps()) === '2 步', '中线题：选 A、中点 点「连线」：清单 2 行，标题 2 步');
+    await clickObj('poly(A,B,C)'); await clickObj('seg(A,M(BC))', true); await toolBtn('cut');
+    const dm = await doneOf();
+    ok(dm.mid && dm.cut && await stepRows() === 3, '中线题：选三角形和中线点「剪」：两个里程碑都完成，清单 3 行（' + JSON.stringify(dm) + '）');
+    await closeReport();
+
+    // 平行四边形题：连线、垂线、剪、拖动块、对齐到目标，全用鼠标
+    await p.evaluate(() => UI.App.openProblem('geo-pgram-cut', 'practice')); await p.waitForTimeout(200);
+    await clickObj('A'); await clickObj('B', true); await toolBtn('seg');
+    await clickObj('D'); await clickObj('seg(A,B)', true); await toolBtn('perp');
+    const hd = await doneOf();
+    ok(hd.height === true && await stepRows() === 2, '平行四边形题：连线 AB，从 D 作垂线（高）：高的里程碑完成');
+    await clickObj('poly(A,B,C,D)'); await clickObj('perp(D,seg(A,B))', true); await toolBtn('cut');
+    await p.waitForTimeout(100);
+    const pieces = await p.evaluate(() => U.Names.list(UI.S.scene).filter((x) => x.port === 'f' && x.name.startsWith('cut:')).map((x) => ({ name: x.name, n: UI.S.D[x.id].out.f.data.pts.length })));
+    ok(pieces.length === 2 && (await doneOf()).cut, '平行四边形题：沿高剪开，得到两块：' + JSON.stringify(pieces.map((x) => x.n)));
+    // 把三角形块（三个顶点的那块）用鼠标向右拖 5 格
+    const tri = pieces.find((x) => x.n === 3).name;
+    const unit = await p.evaluate(() => { const ws = Object.values(UI.S.scene.entities).find((e) => U.types[e.type].workspace); return document.querySelector('.card[data-id="' + ws.id + '"] svg.bdy').getBoundingClientRect().width / UI.Stage.rangeOf(ws.id).span; });
+    const hit = await p.evaluate((nm) => { const el = [...document.querySelectorAll('[data-pick]')].find((e) => e.dataset.pick === nm); const r = el.getBoundingClientRect(); for (const j of [0.3, 0.5, 0.7]) for (const i of [0.3, 0.5, 0.7]) { const x = r.left + r.width * i, y = r.top + r.height * j; const h = document.elementFromPoint(x, y); if (h && h.closest('[data-pick]') === el) return { x, y }; } return null; }, tri);
+    if (!hit) ok(false, '能用鼠标按住三角形块');
+    else {
+      await p.mouse.move(hit.x, hit.y); await p.mouse.down();
+      await p.mouse.move(hit.x + 2.5 * unit, hit.y, { steps: 5 }); await p.mouse.move(hit.x + 5 * unit, hit.y, { steps: 6 });
+      await p.mouse.up(); await p.waitForTimeout(100);
+    }
+    const tdx = await p.evaluate((nm) => { const id = U.Names.resolve(UI.S.scene, nm).id; return UI.S.scene.entities[id].props.dx; }, tri);
+    const hasSel = await p.locator('.wsx-sel', { hasText: '块' }).count();
+    ok(tdx === 5 && hasSel === 1, '平行四边形题：用鼠标拖三角形块向右 5 格（dx = ' + tdx + '）');
+    // 对齐到目标：先点目标图形，再点两块，点「对齐到目标」
+    const pieceNames = pieces.map((x) => x.name);
+    await clickObj('目标长方形'); for (const n of pieceNames) await clickObj(n, true);
+    await toolBtn('fit'); await p.waitForTimeout(80);
+    const fd = await doneOf();
+    ok(fd.fit === true && await p.locator('.card svg.wsbody text', { hasText: '正好拼成' }).count() === 1, '平行四边形题：对齐到目标：拼对了，画布上写「正好拼成」，里程碑完成');
+    ok(fd.height && fd.cut && fd.fit, '平行四边形题：三个里程碑全部完成（' + JSON.stringify(fd) + '）');
+    await closeReport();
+  }
   ok(errs.length === 0, '控制台 0 报错' + (errs.length ? '：' + errs[0] : ''));
   console.log('\n' + pass + ' 通过，' + fail + ' 失败'); await b.close(); process.exit(fail ? 1 : 0);
 })();
