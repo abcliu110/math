@@ -125,3 +125,9 @@ U.registerPack({ id:'mypack', types:{ foo:{
 - **来历树**：`W.explain(scene, D, id, port, depth)`，遇到有状态器材停止并标“上一拍的值”；`W.explainText(tree)` 转成几行人话。
 - **W.from(value, type, inputs)**：判断值是不是由某类器材、从这些输入算出来的（手填的同一个数不算）。
 - **界面**：连线气泡上的“？”打开来历面板，逐层展开。
+
+## 连线时的类型转换（B.1）
+
+- `js/core/convert.js`：各 kind 的 `to[目标]` 是转换函数（lint 检查它是函数）。首批：`num → real`、`num → expr`（常数多项式）、`point → fig`、`fig(点) → point`、`seq → set`。
+- `U.convertVal(v, dst)`：执行一次转换，精确标记与量纲照传；不能转换返回 `null`。
+- 连线时 `gather` 会把输入转换成口要的 kind；转换不了的输入不送进器材，并给出“没法变成……”的信号。

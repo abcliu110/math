@@ -3,7 +3,7 @@
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const root = path.join(__dirname, '..');
 const fsx = require('fs'), pk = (d) => fsx.readdirSync(path.join(root, d)).filter((f) => f.endsWith('.js')).sort().map((f) => d + '/' + f);
-const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/figure.js', 'js/core/registry.js', 'js/core/rules.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
+const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/figure.js', 'js/core/convert.js', 'js/core/registry.js', 'js/core/rules.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
 const ctx = vm.createContext({ console, TextEncoder, TextDecoder, btoa, atob });
 ctx.globalThis = ctx;
 for (const f of files) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f });
@@ -588,6 +588,25 @@ t('带余除法、数位板、天平、三角形、量图形都写了中间步�
   truthy(probe('balance', {}, [[...num(3), 'L'], [...num(3), 'R']]).includes(need.balance));
 });
 t('所有参考解跑完以后，没有器材用了没登记的规则', () => eq(U.ruleErrors, []));
+console.log('连线时的类型转换（B.1）');
+t('数字可以变成符号数、代数式；转换后精确标记和量纲照传', () => {
+  const v = U.val('num', Q(3, 4), { dim: 'length' });
+  const r = U.convertVal(v, 'real'); eq(r.kind, 'real'); eq(r.exact, true);
+  eq(U.convertVal(U.val('num', Q(2)), 'expr').data, [Q(2)]);
+  eq(U.convertVal(U.val('num', Q(0)), 'expr').data, []);
+});
+t('点 ↔ 图形（只有点图形能变回点）', () => {
+  const pt = U.val('point', { x: Q(1), y: Q(2) });
+  const f = U.convertVal(pt, 'fig'); eq(f.kind, 'fig'); eq(f.data.type, 'point');
+  eq(U.convertVal(f, 'point').data, { x: Q(1), y: Q(2) });
+  const seg = U.Fig.segment([0, 0], [1, 1]); eq(U.convertVal(U.val('fig', seg), 'point'), null, '线段不能变成点');
+});
+t('数列变成集合（去重、排序）', () => { eq(U.convertVal(U.val('seq', [Q(3), Q(1), Q(3)]), 'set').data.map((x) => x.n), [1, 3]); });
+t('没有声明的转换被拒绝，连线时说明原因', () => {
+  eq(U.convertVal(U.val('bool', true), 'num'), null);
+  eq(U.kindOK('bool', 'num'), false);
+});
+t('lint：转换项必须是函数', () => eq(U.lintKind({ label: 'x', eq() {}, show() {}, serialize() {}, parse() {}, to: { real: 1 } }), ['to.real 要是转换函数']));
 console.log('输出声明（1.2）');
 t('lint 拒绝没有声明 dim 的输出口', () => {
   const bad = Object.assign({}, U.types.num, { outputs: { v: { kind: 'num', label: '值' } } });

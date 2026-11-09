@@ -18,6 +18,7 @@
     if (typeof def.eq !== 'function') errors.push('缺 eq');
     if (typeof def.show !== 'function') errors.push('缺 show');
     if (typeof def.serialize !== 'function' || typeof def.parse !== 'function') errors.push('缺 serialize/parse');
+    for (const k of Object.keys(def.to || {})) if (typeof def.to[k] !== 'function') errors.push('to.' + k + ' 要是转换函数');
     return errors;
   };
 

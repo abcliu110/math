@@ -140,7 +140,17 @@
           const r = K.toProp(v, P);
           if (r.ok) props[k] = r.v;
           else if (!r.silent) d.sig.push({ lv: 'err', tx: E[l.from].name + ' 的值 ' + U.showVal(v) + ' 不能填进「' + P.label + '」：' + r.why });
-        } else (inp[l.toPort] = inp[l.toPort] || []).push(v);
+        } else {
+          // B.1 连线时的类型转换：源 kind 与口要的 kind 不同，按 to 表转换（转换不了就不送进去）
+          let vv = v;
+          const want = def.inputs[l.toPort] && def.inputs[l.toPort].kind;
+          if (vv && want && vv.kind !== want && want !== 'any') {
+            const cv = U.convertVal(vv, want);
+            if (cv) vv = cv;
+            else { d.sig.push({ lv: 'err', tx: E[l.from].name + ' 的值是「' + U.kindName(vv.kind) + '」，没法变成「' + U.kindName(want) + '」' }); vv = null; }
+          }
+          (inp[l.toPort] = inp[l.toPort] || []).push(vv);
+        }
       }
       d.inp = inp; d.props = props;
       if (tr) { for (const k of Object.keys(props)) tr.props[k] = d.driven[k] ? { value: props[k], driven: true, from: d.driven[k].from } : { value: props[k], driven: false }; d.trace = tr; }
