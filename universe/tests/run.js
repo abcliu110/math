@@ -3,7 +3,7 @@
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const root = path.join(__dirname, '..');
 const fsx = require('fs'), pk = (d) => fsx.readdirSync(path.join(root, d)).filter((f) => f.endsWith('.js')).sort().map((f) => d + '/' + f);
-const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/figure.js', 'js/core/convert.js', 'js/core/registry.js', 'js/core/rules.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
+const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/eqn.js', 'js/core/figure.js', 'js/core/convert.js', 'js/core/registry.js', 'js/core/rules.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
 const ctx = vm.createContext({ console, TextEncoder, TextDecoder, btoa, atob });
 ctx.globalThis = ctx;
 for (const f of files) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f });
@@ -628,6 +628,120 @@ t('一元代数式 ↔ 多项式互转；多变量不能变回代数式', () => 
   eq(U.convertVal(U.val('poly', Pl.pow(x, 2)), 'expr').data, [Q(0), Q(0), Q(1)]);
 });
 t('存档往返与种类注册', () => { truthy(U.KINDS.poly.eq(U.KINDS.poly.parse(U.KINDS.poly.serialize(Pl.add(x, y))), Pl.add(x, y))); eq(U.lintKind(U.KINDS.poly), []); });
+console.log('方程、不等式、方程组（B.3）');
+const Eq = U.Eqn, Pm = U.Poly, X = Pm.variable('x'), Yv = Pm.variable('y'), K = (n, d) => Pm.const(Q(n, d || 1));
+const eqn = (l, r, rel) => Eq.make(l, r, rel);
+t('3x + 5 = 20：两边减 5，两边除以 3，得到 x = 5（每一步都有说明）', () => {
+  let e = eqn(Pm.add(Pm.mul(K(3), X), K(5)), K(20));
+  const s1 = Eq.apply(e, { op: 'sub', by: K(5) }); truthy(s1.say && s1.rule === 'eq.both-sides'); e = s1.eqn;
+  const s2 = Eq.apply(e, { op: 'div', by: K(3) }); e = s2.eqn;
+  const sol = Eq.solveLinear(e, 'x'); eq(sol.kind, 'solution'); eq(sol.value, Q(5));
+});
+t('−2x > 4：两边除以 −2，不等号反向，得 x < −2', () => {
+  const e = eqn(Pm.mul(K(-2), X), K(4), '>');
+  const s = Eq.apply(e, { op: 'div', by: K(-2) }); eq(s.eqn.rel, '<'); eq(s.say.includes('反向'), true);
+  const sol = Eq.solveLinear(e, 'x'); eq(sol.value, Q(-2)); eq(sol.rel, '<');
+  eq(Interval_show(sol), '(−∞, -2)');
+});
+function Interval_show(sol) { return U.Interval.show(U.Interval.fromLinear(sol)); }
+t('两边乘 0 被拒绝并说明原因；除以 0 也拒绝', () => {
+  const e = eqn(X, K(1));
+  truthy(Eq.apply(e, { op: 'mul', by: K(0) }).error.includes('乘 0'));
+  truthy(Eq.apply(e, { op: 'div', by: K(0) }).error.includes('0'));
+});
+t('x² − 2x − 1 = 0 的根精确显示为 1 + √2 和 1 − √2', () => {
+  const r = Eq.quadratic(Q(1), Q(-2), Q(-1)); eq(r.kind, 'roots');
+  eq(U.KINDS.real.show(r.roots[0]), '1 + √2'); eq(U.KINDS.real.show(r.roots[1]), '1 − √2');
+});
+t('判别式为负：无实根', () => eq(Eq.quadratic(Q(1), Q(0), Q(1)).kind, 'none'));
+t('x + y = 5, x − y = 1 解得 x = 3, y = 2（消元步骤有记录）', () => {
+  const e1 = eqn(Pm.add(X, Yv), K(5)), e2 = eqn(Pm.sub(X, Yv), K(1));
+  const r = Eq.solveSystem2(e1, e2, 'x', 'y'); eq(r.kind, 'solution'); eq(r.x, Q(3)); eq(r.y, Q(2)); truthy(r.steps.length >= 3);
+});
+t('方程组：两式成比例时没有唯一解', () => { eq(Eq.solveSystem2(eqn(Pm.add(X, Yv), K(1)), eqn(Pm.add(X, Yv), K(2)), 'x', 'y').kind, 'degenerate'); });
+t('(x+1)² = x²+2x+1 是恒等式；x² = 4 只是方程', () => {
+  truthy(Eq.isIdentity(eqn(Pm.pow(Pm.add(X, K(1)), 2), Pm.add(Pm.add(Pm.pow(X, 2), Pm.mul(K(2), X)), K(1)))));
+  truthy(!Eq.isIdentity(eqn(Pm.pow(X, 2), K(4))));
+});
+t('区间：不等式的解集可以用 interval 表示，无穷端用 null', () => {
+  const I = U.Interval.make(Q(-2), null, true, false);
+  truthy(U.Interval.contains(I, Q(0))); truthy(!U.Interval.contains(I, Q(-2)));
+  eq(U.Interval.show(I), '(-2, +∞)');
+  truthy(U.KINDS.interval.eq(I, U.Interval.make(Q(-2), null, true, false)));
+});
+t('eqn、interval 通过注册 lint，可以存档往返', () => {
+  eq(U.lintKind(U.KINDS.eqn), []); eq(U.lintKind(U.KINDS.interval), []);
+  const e = eqn(Pm.add(X, K(1)), K(3));
+  truthy(U.KINDS.eqn.eq(U.KINDS.eqn.parse(U.KINDS.eqn.serialize(e)), e));
+});
+console.log('代数式解析（B.4）');
+t('解析：2(x+y)、(x+1)(x-1)、x²、(a+b)^2、3x^2y', () => {
+  eq(U.Poly.show(U.Poly.parse('2(x+y)')), '2x + 2y');
+  eq(U.Poly.show(U.Poly.parse('(x+1)(x-1)')), 'x² − 1');
+  eq(U.Poly.show(U.Poly.parse('x²')), 'x²');
+  eq(U.Poly.show(U.Poly.parse('(a+b)^2')), 'a² + 2a·b + b²');
+  eq(U.Poly.show(U.Poly.parse('3x^2y')), '3x²·y');
+});
+t('解析：不认识的字符、括号不配对、式子是空的，都说明原因', () => {
+  truthy(/多出了|看不懂/.test(String(thr(() => U.Poly.parse('2 & 3')))));
+  truthy(/括号/.test(String(thr(() => U.Poly.parse('(x+1')))));
+  truthy(/空/.test(String(thr(() => U.Poly.parse('')))));
+});
+function thr(f) { try { f(); return ''; } catch (e) { return e.message; } }
+t('数字卡可以直接接进只收多项式的口（num → poly）', () => {
+  const r = U.convertVal(U.val('num', Q(7)), 'poly'); eq(U.Poly.show(r.data), '7');
+});
+console.log('首批器材连起来（B.4）');
+const chain = (fn) => { const sc = W.blank(); const ids = fn(sc); return { sc, ids, D: W.evaluate(sc) }; };
+const link = (sc, a, pa, b, pb) => { const r = W.act(sc, { t: 'link', from: a, fromPort: pa, to: b, toPort: pb }); if (!r.ok) throw new Error(r.why); };
+t('3x + 5 = 20：代数式卡 → 方程台（两边减 5）→ 解出 x = 5，变形步骤有追踪', () => {
+  const { D, ids } = chain((sc) => {
+    const a = W.add(sc, 'algebra', 0, 0, { text: '3x+5' }), r = W.add(sc, 'num', 0, 0, { n: 20 }), q = W.add(sc, 'eqdesk', 0, 0, { op: 1, by: 5, rel: 0 });
+    link(sc, a, 'p', q, 'L'); link(sc, r, 'v', q, 'R'); return { a, r, q };
+  });
+  eq(U.showVal(D[ids.q].out.x), '5'); truthy(D[ids.q].trace.steps.some((s) => s.rule === 'eq.both-sides'), '应有变形步骤');
+});
+t('−2x > 4：两边除以 −2 后不等号反向；解集区间为 (−∞, −2)，数轴上试 −3 在里面', () => {
+  const { D, ids } = chain((sc) => {
+    const a = W.add(sc, 'algebra', 0, 0, { text: '-2x' }), r = W.add(sc, 'num', 0, 0, { n: 4 }), q = W.add(sc, 'eqdesk', 0, 0, { op: 3, by: -2, rel: 2, var: 'x' });
+    const ax = W.add(sc, 'numline_iv', 0, 0, { probe: -3 });
+    link(sc, a, 'p', q, 'L'); link(sc, r, 'v', q, 'R'); link(sc, q, 'iv', ax, 'iv'); return { a, r, q, ax };
+  });
+  eq(U.KINDS.eqn.show(D[ids.q].out.eq.data).includes('<'), true, '不等号应反向'); eq(U.Interval.show(D[ids.q].out.iv.data), '(−∞, -2)');
+  eq(U.showVal(D[ids.ax].out.inside), '是');
+});
+t('代入器：x² − 2x − 1 把 x 换成 3 得 2', () => {
+  const { D, ids } = chain((sc) => { const a = W.add(sc, 'algebra', 0, 0, { text: 'x^2 - 2x - 1' }), s = W.add(sc, 'subst', 0, 0, { var: 'x', value: 3 }); link(sc, a, 'p', s, 'p'); return { a, s }; });
+  eq(U.showVal(D[ids.s].out.v), '2');
+});
+t('方程组台：x + y = 5 与 x − y = 1 解得 x = 3, y = 2', () => {
+  const { D, ids } = chain((sc) => {
+    const a1 = W.add(sc, 'algebra', 0, 0, { text: 'x+y' }), a2 = W.add(sc, 'algebra', 0, 0, { text: 'x-y' });
+    const n5 = W.add(sc, 'num', 0, 0, { n: 5 }), n1 = W.add(sc, 'num', 0, 0, { n: 1 });
+    const e1 = W.add(sc, 'eqdesk', 0, 0, { op: 0, by: 0 }), e2 = W.add(sc, 'eqdesk', 0, 0, { op: 0, by: 0 }), s = W.add(sc, 'system2', 0, 0, {});
+    link(sc, a1, 'p', e1, 'L'); link(sc, n5, 'v', e1, 'R'); link(sc, a2, 'p', e2, 'L'); link(sc, n1, 'v', e2, 'R');
+    link(sc, e1, 'eq', s, 'A'); link(sc, e2, 'eq', s, 'B'); return { s };
+  });
+  eq(U.showVal(D[ids.s].out.x), '3'); eq(U.showVal(D[ids.s].out.y), '2');
+});
+t('(x+1)² = x²+2x+1 是恒等式（方程台报告“恒等式”）', () => {
+  const { D, ids } = chain((sc) => {
+    const a = W.add(sc, 'algebra', 0, 0, { text: '(x+1)^2' }), b = W.add(sc, 'algebra', 0, 0, { text: 'x^2+2x+1' }), q = W.add(sc, 'eqdesk', 0, 0, { op: 0, by: 0 });
+    link(sc, a, 'p', q, 'L'); link(sc, b, 'p', q, 'R'); return { q };
+  });
+  eq(D[ids.q].out.ident.data, true);
+});
+t('数字卡可以直接接进只收多项式的口；非法式子在代数式卡上说明原因', () => {
+  const sc = W.blank(); const n = W.add(sc, 'num', 0, 0, { n: 2 }), s = W.add(sc, 'subst', 0, 0, {}); link(sc, n, 'v', s, 'p');
+  const bad = W.add(sc, 'algebra', 0, 0, { text: '(x+1' }); const D = W.evaluate(sc);
+  truthy(/括号/.test(D[bad].sig.map((x) => x.tx).join('|')), D[bad].sig.map((x) => x.tx).join('|'));
+});
+t('已有器材输出方程：变量盒输出左 = 右；解方程天平输出方程', () => {
+  const sc = W.blank(); const v = W.add(sc, 'variable', 0, 0, { left: '2x+1', right: 'x+3', lo: -2, hi: 2 });
+  const D = W.evaluate(sc); eq(U.KINDS.eqn.show(D[v].out.eq.data), '2x + 1 = x + 3');
+  const sc2 = W.blank(); const b = W.add(sc2, 'eqscale', 0, 0, {});
+  const D2 = W.evaluate(sc2); truthy(D2[b].out.eq && D2[b].out.eq.kind === 'eqn', '天平应输出方程');
+});
 console.log('输出声明（1.2）');
 t('lint 拒绝没有声明 dim 的输出口', () => {
   const bad = Object.assign({}, U.types.num, { outputs: { v: { kind: 'num', label: '值' } } });

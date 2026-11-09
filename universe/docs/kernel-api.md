@@ -137,3 +137,11 @@ U.registerPack({ id:'mypack', types:{ foo:{
 - kind `poly`：`{ terms: [ { c, m: { 变量: 指数 } } ] }`，规范化（合并同类项、去零、同次数按字典序）。一元 `expr` 可无损转换成 `poly`；只有单变量（或常数）的 `poly` 能变回 `expr`。
 - `U.Poly`：`norm / const / variable / add / sub / neg / mul / pow / subst(a, 变量, 值) / evalQ(a, env) / degree / vars / eq / show`。显示按次数降序，如 `x² − 1`、`2x·y`。
 - 分式（有理式）暂不做。
+
+## 方程、不等式、代数式（B.2–B.4）
+
+- kind `poly`（多元多项式）、`eqn`（方程/不等式 `{lhs, rhs, rel}`）、`interval`（区间，无穷端为 null）。`U.Poly.parse(text)` 解析整式（数字、字母、+ − × 空格相乘、括号、乘方 ^n 或 ²³）。
+- `U.Eqn`：`apply`（两边同时做同一件事；不等式乘除负数反向；乘除 0 拒绝）、`solveLinear`、`isIdentity`、`solveSystem2`（消元法，记步骤）、`quadratic`（精确根，用 U.Real）。
+- `U.Interval`：`make / contains / show / fromLinear`。
+- 器材包 `packs/algebra.js`：代数式卡、方程台（输出方程、解、解集、恒等式）、代入器、方程组台、解集数轴。变量盒与解方程天平也输出 `eqn`。
+- 数字卡可以直接接进只收多项式的口（num → poly）。

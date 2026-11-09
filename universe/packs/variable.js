@@ -42,7 +42,7 @@
           lo: { type: 'int', label: 'x 从', default: -10, min: -50, max: 0 },
           hi: { type: 'int', label: 'x 到', default: 10, min: 0, max: 50 },
         },
-        outputs: { hits: { dim: null, kind: 'num', label: '相等的个数' }, all: { dim: null, kind: 'num', label: '恒等吗（1/0）' }, first: { dim: null, kind: 'num', label: '第一个相等的 x' } },
+        outputs: { eq: { dim: null, kind: 'eqn', label: '方程（左 = 右）' }, hits: { dim: null, kind: 'num', label: '相等的个数' }, all: { dim: null, kind: 'num', label: '恒等吗（1/0）' }, first: { dim: null, kind: 'num', label: '第一个相等的 x' } },
         icon: () => K.text(32, 27, 'x=?', { size: 22, weight: 700, fill: 'var(--accent)' }),
         size: () => [340, 170],
         compute: (c) => {
@@ -50,6 +50,7 @@
           try { rows = scan(c.props); } catch (e) { c.say('reject', '式子有问题：' + e.message); return {}; }
           const hits = rows.filter((r) => r.ok), n = rows.length;
           const o = { hits: num(hits.length), all: num(hits.length === n ? 1 : 0) };
+          try { o.eq = U.val('eqn', U.Eqn.make(U.Poly.parse(c.props.left), U.Poly.parse(c.props.right), '=')); } catch (e) { /* 式子写不对时不输出方程 */ }
           if (hits.length) o.first = num(hits[0].x);
           c.say(hits.length === n ? 'ok' : 'info', hits.length === n ? '试了 ' + n + ' 个 x 全部相等：看起来是恒等式（但试的只是证据，要证明才算）' : hits.length ? '只有 ' + hits.length + ' 个 x 让两边相等（如 x=' + hits[0].x + '）：这是方程，不是恒等式' : '没有一个 x 能让两边相等：永远不成立');
           return o;

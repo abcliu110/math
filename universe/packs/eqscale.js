@@ -18,12 +18,14 @@
           rc: { type: 'int', label: '右盘：砝码', default: 8, min: -50, max: 100 },
           x0: { type: 'num', label: '盒子的真实重量', default: 3, min: -50, max: 100, step: 1, hidden: true },
         },
-        outputs: { ok: { dim: null, kind: 'bool', label: '平衡' }, solved: { dim: null, kind: 'num', label: '盒子的重量（单独一个盒子时）' } },
+        outputs: { eq: { dim: null, kind: 'eqn', label: '方程（左 = 右）' }, ok: { dim: null, kind: 'bool', label: '平衡' }, solved: { dim: null, kind: 'num', label: '盒子的重量（单独一个盒子时）' } },
         icon: () => K.line(10, 14, 54, 14, { w: 2.5 }) + K.line(32, 14, 32, 36, { w: 2 }) + K.rect(12, 16, 12, 10, { stroke: 'var(--accent)', w: 2 }) + K.line(16, 36, 48, 36, { w: 3 }),
         size: () => [300, 170],
         compute: (c) => {
           const p = c.props, l = p.lx * p.x0 + p.lc, r = p.rx * p.x0 + p.rc, ok = l === r;
           const o = { ok: U.val('bool', ok) };
+          const X = U.Poly.variable('x'), C = (n) => U.Poly.const(U.Q(n));
+          o.eq = U.val('eqn', U.Eqn.make(U.Poly.add(U.Poly.mul(C(p.lx), X), C(p.lc)), U.Poly.add(U.Poly.mul(C(p.rx), X), C(p.rc)), '='));
           if (!ok) { c.say('info', '天平歪了：左 ' + l + '，右 ' + r + '——你只动了一边，或者动得不一样'); return o; }
           if (p.lx === 1 && p.lc === 0 && p.rx === 0) { o.solved = num(p.rc); c.say('ok', '一个盒子 = ' + p.rc + '，解出来了！'); }
           else c.say('ok', '平衡：' + (p.lx ? p.lx + '个盒子' : '') + (p.lc ? (p.lc > 0 && p.lx ? ' + ' : ' ') + p.lc : '') + ' = ' + (p.rx ? p.rx + '个盒子' : '') + (p.rc ? (p.rc > 0 && p.rx ? ' + ' : ' ') + p.rc : ''));
