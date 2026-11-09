@@ -3,7 +3,7 @@
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const root = path.join(__dirname, '..');
 const fsx = require('fs'), pk = (d) => fsx.readdirSync(path.join(root, d)).filter((f) => f.endsWith('.js')).sort().map((f) => d + '/' + f);
-const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/registry.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
+const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/registry.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
 const ctx = vm.createContext({ console });
 ctx.globalThis = ctx;
 for (const f of files) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f });
@@ -320,6 +320,31 @@ t('归纳阶梯：起点成立，且每一级都能推下一级 → ④；某一
   eq(U.Evidence.induction(true, () => true, 20).complete, true); eq(U.Evidence.levelOf().level, 4);
   U.Events.clear();
   const r = U.Evidence.induction(true, (k) => k !== 5, 20); eq(r.failedAt, 5); eq(r.complete, false); eq(U.Evidence.levelOf().level, 1);
+});
+console.log('其余首批值类型（1.7）');
+for (const id of ['set', 'vec', 'expr', 'graph']) t('kind 注册合格：' + id, () => eq(U.lintKind(U.KINDS[id]), [], id));
+t('集合：去重、与顺序无关、可以比较', () => {
+  const a = U.SetV.of([Q(3), Q(1), Q(3)]), b = U.SetV.of([Q(1), Q(3)]);
+  eq(a.length, 2); truthy(U.KINDS.set.eq(a, b)); eq(U.KINDS.set.show(a), '{1, 3}');
+  eq(U.SetV.inter(a, U.SetV.of([Q(3), Q(5)])).length, 1);
+});
+t('向量：逐个分量比较，显示成元组', () => { truthy(U.KINDS.vec.eq([Q(1), Q(2)], [Q(1), Q(2)])); truthy(!U.KINDS.vec.eq([Q(1), Q(2)], [Q(2), Q(1)])); eq(U.KINDS.vec.show([Q(1), Q(-2)]), '(1, -2)'); });
+t('代数式：(x+1)² = x²+2x+1，显示正确，求值正确', () => {
+  const x1 = [Q(1), Q(1)];
+  const sq = U.Expr.mul(x1, x1), rhs = [Q(1), Q(2), Q(1)];
+  truthy(U.KINDS.expr.eq(sq, rhs)); eq(U.KINDS.expr.show(rhs), 'x² + 2x + 1');
+  eq(U.Expr.eval(rhs, 3), 16);
+  truthy(!U.KINDS.expr.eq(U.Expr.add(sq, [Q(1)]), rhs), '加一个常数后不相等');
+});
+t('代数式：零多项式与负系数', () => { eq(U.KINDS.expr.show([]), '0'); eq(U.KINDS.expr.show([Q(0), Q(-1)]), '−x'); });
+t('图：点数和边集合相同即相等，边的两端顺序不影响', () => {
+  const g1 = U.Graph.of(3, [[0, 1], [2, 1]]), g2 = U.Graph.of(3, [[1, 2], [1, 0]]);
+  truthy(U.KINDS.graph.eq(g1, g2)); eq(U.KINDS.graph.show(g1), '3 个点，2 条边'); eq(U.Graph.degree(g1, 1), 2);
+  truthy(!U.KINDS.graph.eq(g1, U.Graph.of(4, [[0, 1], [2, 1]])), '点数不同则不等');
+});
+t('新值类型存档往返后仍然相等', () => {
+  const kinds = { set: U.SetV.of([Q(2), Q(5)]), vec: [Q(1), Q(0)], expr: [Q(1), Q(2), Q(1)], graph: U.Graph.of(3, [[0, 2]]) };
+  for (const k of Object.keys(kinds)) truthy(U.KINDS[k].eq(U.KINDS[k].parse(U.KINDS[k].serialize(kinds[k])), kinds[k]), k);
 });
 console.log('输出声明（1.2）');
 t('lint 拒绝没有声明 dim 的输出口', () => {
