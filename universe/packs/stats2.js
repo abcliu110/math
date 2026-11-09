@@ -23,6 +23,8 @@
     types: {
       // ---------------- 复式统计表：录入二维数据，输出行合计、列合计和总数 ----------------
       twoway: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E8', 'E7'],
         label: '复式统计表', prefix: '表', group: '统计与概率', grades: [3, 9], alias: ['二维统计表', '行合计', '列合计', '总数', '统计表'],
         props: {

@@ -7,6 +7,8 @@
     id: 'road', version: 1, needs: ['time'],
     types: {
       road: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E6', 'E12'],
         label: '两辆车', prefix: '路', group: '时间与变化', grades: [4, 9], alias: ['行程', '相遇', '追及', '环形跑道', '行程问题', '速度'],
         props: {

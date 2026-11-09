@@ -41,6 +41,8 @@
     types: {
       // ---------------- 几何工作区（容器）----------------
       gworkspace: {
+        workspaceRole: 'container',
+        handles: true,
         essence: ['E1', 'E5'],
         label: '几何工作区', prefix: '工作区', group: '图形', grades: [4, 9],
         slots: {

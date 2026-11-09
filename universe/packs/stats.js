@@ -6,6 +6,8 @@
     id: 'stats', version: 1, needs: ['time'],
     types: {
       stats: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E11'],
         label: '统计量', prefix: '计', group: '统计与概率', grades: [5, 9], alias: ['平均数', '众数', '期望'],
         props: {

@@ -30,6 +30,9 @@
     id: 'exprbench', version: 1,
     types: {
       exprbench: {
+        workspaceRole: 'none',
+        handles: true,
+        inspector: 'workbench',
         essence: ['E4', 'E8'],
         label: '式子工作台', prefix: '工作台', group: '数与运算', grades: [6, 9], alias: ['解方程', '移项', '工作台'],
         props: {

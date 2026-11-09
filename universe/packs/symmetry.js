@@ -74,6 +74,8 @@
     id: 'symmetry', version: 1,
     types: {
       fold: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E10', 'E5'],
         label: '折纸', prefix: '折', group: '图形', grades: [3, 8], alias: ['对称', '对折', '折痕', '对称轴', '重合', '镜像', '对角线'],
         props: {

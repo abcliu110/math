@@ -8,6 +8,8 @@
     id: 'curved', version: 1,
     types: {
       curved: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E9', 'E5'],
         label: '三角形的世界', prefix: '界', group: '图形', grades: [6, 9], alias: ['球面', '非欧几何', '内角和', '角盈', '公理'],
         props: {

@@ -29,6 +29,8 @@
     types: {
       // ---------------- 三角形 ----------------
       ftri: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E3', 'E5'],
         label: '三角形', prefix: '三角形', group: '图形', grades: [3, 9],
         props: { ax: C(-10, 10, 0, 'A 的 x'), ay: C(-10, 10, 0, 'A 的 y'), bx: C(-10, 10, 4, 'B 的 x'), by: C(-10, 10, 0, 'B 的 y'), cx: C(-10, 10, 0, 'C 的 x'), cy: C(-10, 10, 3, 'C 的 y') },
@@ -42,6 +44,8 @@
 
       // ---------------- 四边形 ----------------
       fquad: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E3', 'E5'],
         label: '四边形', prefix: '四边形', group: '图形', grades: [3, 9],
         props: {
@@ -58,6 +62,8 @@
 
       // ---------------- 圆 ----------------
       fcirc: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E3', 'E7'],
         label: '圆', prefix: '圆', group: '图形', grades: [5, 9],
         props: { cx: C(-10, 10, 0, '圆心 x'), cy: C(-10, 10, 0, '圆心 y'), r: C(1, 10, 2, '半径') },
@@ -74,6 +80,8 @@
 
       // ---------------- 变换器 ----------------
       xform: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E5'],
         label: '图形变换', prefix: '变换', group: '图形', grades: [4, 9],
         props: {
@@ -108,6 +116,8 @@
 
       // ---------------- 量一量 ----------------
       figmeasure: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E3'],
         label: '量图形', prefix: '量', group: '图形', grades: [3, 9],
         props: {
@@ -147,6 +157,8 @@
 
       // ---------------- 图形关系 ----------------
       figrel: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E5', 'E1'],
         label: '图形关系', prefix: '关系', group: '图形', grades: [4, 9],
         props: {

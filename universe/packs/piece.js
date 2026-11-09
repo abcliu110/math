@@ -91,12 +91,12 @@
   function dropInto(scene, a) {
     const W = U.World, E = scene.entities, e = E[a.id], ws = E[a.ws];
     if (!e) return fail('找不到要放的器材');
-    if (!ws || !(U.types[ws.type] && U.types[ws.type].workspace)) return fail('这里不是工作区');
+    if (!ws || U.roleOf(ws) !== 'container') return fail('这里不是工作区');
     if (e.parent === ws.id) return ok({ already: true });
     const p = W.act(scene, { t: 'put', id: e.id, parent: ws.id, slot: 'items' });
     if (!p.ok) return p;
     const def = U.types[e.type], port = Object.keys(def.outputs).find((k) => def.outputs[k].kind === 'fig');
-    if (!port || e.type === 'gpiece' || e.type === 'gpt') return ok({ placed: e.id });
+    if (!port || U.roleOf(e) === 'piece' || U.roleOf(e) === 'point') return ok({ placed: e.id });
     // 图形口接一块：块的 dx、dy 让图形的中心落在落点上
     const piece = W.add(scene, 'gpiece', ws.x + 24, ws.y + 44, {});
     const k = (scene.seq.gpiece || 0), label = (FIG_LABEL[e.type] || def.label) + ' ' + (scene.seq[e.type] || 1);
@@ -126,6 +126,8 @@
     id: 'piece', version: 1, needs: ['geo'],
     types: {
       gpiece: {
+        workspaceRole: 'piece',
+        handles: true,
         essence: ['E2', 'E5'],
         label: '块', prefix: '块', group: '图形', grades: [5, 9],
         props: {

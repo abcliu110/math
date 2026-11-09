@@ -97,6 +97,8 @@
     types: {
       // ---------------- 猜想板：把一条发现写成“如果……那么……”，等级 ①（记录）----------------
       conjecture_board: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E1', 'E6'],
         label: '猜想板', prefix: '猜', group: '关系', grades: [5, 9], alias: ['猜想', '假设', '记下来'],
         props: {
@@ -114,6 +116,8 @@
 
       // ---------------- 参数扫描器：在 [从, 到] 的每个整数上检查规则，没有例外 → ② ----------------
       scanner: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E6', 'E8'],
         label: '参数扫描器', prefix: '扫', group: '关系', grades: [5, 9], alias: ['扫描', '试很多个', '范围'],
         props: {
@@ -140,6 +144,8 @@
 
       // ---------------- 反例构造器：在范围里找反例，找到就推翻并把它摆出来 ----------------
       counterex: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E6', 'E8'],
         label: '反例构造器', prefix: '反', group: '关系', grades: [5, 9], alias: ['反例', '推翻', '找例外'],
         props: {
@@ -166,6 +172,8 @@
 
       // ---------------- 系统枚举器：列出两个骰子的全部 36 种情况，检查和为某个数的有几种 ----------------
       enumerator: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E1', 'E2'],
         label: '系统枚举器', prefix: '枚', group: '统计与概率', grades: [5, 9], alias: ['列全', '全部情况', '枚举'],
         props: {
@@ -194,6 +202,8 @@
 
       // ---------------- 不变量追踪器：一个变换前后某个量是否不变（单独不给等级）----------------
       invariant: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E5'],
         label: '不变量追踪器', prefix: '变', group: '关系', grades: [5, 9], alias: ['不变', '守恒', '变换'],
         props: {
@@ -221,6 +231,8 @@
 
       // ---------------- 证明脚手架：三步推理，每步引用台面上已验证的事实（输入口 a、b、c），全部填完 → ④ ----------------
       scaffold: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E4', 'E5'],
         label: '证明脚手架', prefix: '证', group: '关系', grades: [6, 9], alias: ['证明', '推理', '步骤'],
         late: true,
@@ -250,6 +262,8 @@
       // ---------------- 证据检查（后算）：读证明器材的证据等级，够不够要求的等级 ----------------
       // 后算器材只能接后算器材的输出：这里接的是脚手架（也是后算的）的 lv
       proofcheck: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E4'],
         label: '证据检查', prefix: '查', group: '关系', grades: [6, 9], alias: ['检查等级', '证据'],
         late: true,
@@ -275,6 +289,8 @@
 
       // ---------------- 归纳阶梯：起点成立 + 每一级推下一级（检查 1 到 upto），全部成立 → ④ ----------------
       induction: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E6', 'E4'],
         label: '归纳阶梯', prefix: '阶', group: '关系', grades: [7, 9], alias: ['归纳', '数学归纳法', '一级一级'],
         props: {

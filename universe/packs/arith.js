@@ -9,6 +9,8 @@
     id: 'arith', version: 1,
     types: {
       array: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E1', 'E2'],
         label: '点阵', prefix: '阵', group: '数与运算', grades: [2, 4], alias: ['乘法', '排队', '行列'],
         props: {
@@ -33,6 +35,8 @@
       },
 
       divmod: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E2', 'E6'],
         label: '带余除法', prefix: '除', group: '数与运算', grades: [3, 5], alias: ['余数', '商', '分东西'],
         props: {
@@ -68,6 +72,8 @@
       },
 
       round: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E3', 'E7'],
         label: '取整', prefix: '取', group: '数与运算', grades: [3, 6], alias: ['四舍五入', '近似数', '凑整'],
         props: {
@@ -93,6 +99,8 @@
       },
 
       digits: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E3', 'E6'],
         label: '数位板', prefix: '位', group: '数与运算', grades: [1, 6], alias: ['进制', '二进制', '个十百', '位值'],
         props: {

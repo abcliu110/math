@@ -11,6 +11,7 @@
   for (const kind of Object.keys(U.KINDS)) {
     U.define('pin_' + kind, {
       essence: ['E12'], label: '引脚（' + kind + '）', prefix: '脚', group: '关系', grades: [1, 1], hidden: true,
+      workspaceRole: 'none', handles: true,
       props: { key: { type: 'text', label: '名', default: '', hidden: true } },
       inputs: {}, outputs: { v: { dim: null, kind, label: '值' } },
       lint: { minProps: 0, why: '内部引脚，只在打包器材里出现' },
@@ -44,6 +45,7 @@
     for (const k of Object.keys(outKinds)) outs[k] = { kind: outKinds[k], dim: outDims[k] === undefined ? null : outDims[k], label: k };
     U.define(id, {
       essence: spec.essence, label: spec.label, prefix: spec.prefix || spec.label, group: spec.group || '关系', grades: spec.grades || [1, 9],
+      workspaceRole: 'none', handles: true,   // 打包器材在工作区里就是普通卡片（它没有自己的角色）
       props: { _n: { type: 'int', label: '（封装的）', default: 0, min: 0, max: 0, hidden: true } },
       inputs: ins, outputs: outs,
       lint: { minProps: 0, why: '打包器材没有自己的属性，内部属性已在封装时固定' },

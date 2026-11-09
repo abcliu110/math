@@ -11,6 +11,12 @@
  *   A：clientX/clientY 和矩形的 left/top 直接相加减（ev.clientX - r.left 这种）；
  *   B：用缩放或单位做除法、乘法（/ z、* z、/ span、/ unit、* zoom 等）。
  *   这些都要改用 UI.Space 的函数。例外写在 COORD_ALLOW：文件 + 原文子串 + 原因。
+ * U7 规则（声明式角色，docs/ui-robustness.md 4.4）：界面代码（stage.js、panels.js、app.js）里不许按具体器材 id 判断：
+ *   不许 .type === '器材id'、.type !== '器材id'（含 '器材id' === x.type 的写法），也不许 case '器材id':。
+ *   器材 id 从 js/core 和 packs 载入后的 U.types 取（和 tools/check-types.js 同样的文件顺序）。
+ *   例外：FIGURE_KINDS（point、segment、polygon、circle）是图形数据的种类（f.type），不是器材；其中 polygon、circle 同时是
+ *   器材 id，所以按名字豁免。界面里判断器材，改读器材声明：workspaceRole、handles、stepLabel、splitsPieces、figEdit、
+ *   inspector、numberSource、hidden（见 js/core/registry.js）。
  * 输出每一处违规和总数；有违规就退出码 1。 */
 'use strict';
 const fs = require('fs'), path = require('path'), vm = require('vm');
@@ -121,10 +127,37 @@ for (const rel of STATE_FILES) {
   });
 }
 
+// U7：界面代码里的器材判断（见文件头）。器材 id 从 js/core 和 packs 载入后的 U.types 取（文件顺序和 tools/check-types.js 相同）
+const EQUIP_FILES = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/ratio.js', 'js/core/form.js', 'js/core/eqn.js', 'js/core/seq.js', 'js/core/table.js', 'js/core/figure.js', 'js/core/geo.js', 'js/core/convert.js', 'js/core/rules.js', 'js/core/rules-exec.js', 'js/core/workbench.js', 'js/core/geo-rules.js', 'js/core/registry.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/variants.js', 'js/core/curriculum.js', 'js/core/coverage.js']
+  .concat(fs.readdirSync(path.join(root, 'packs')).filter((f) => f.endsWith('.js')).sort().map((f) => 'packs/' + f));
+const ctx7 = vm.createContext({ console }); ctx7.globalThis = ctx7;
+for (const f of EQUIP_FILES) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx7, { filename: f });
+const FIGURE_KINDS = ['point', 'segment', 'polygon', 'circle'];   // 图形种类，见文件头
+const EQUIP = new Set(Object.keys(ctx7.U.types).filter((id) => !FIGURE_KINDS.includes(id)));
+const TYPE_CMP_A = /\btype\s*(?:===|!==|==|!=)\s*(['"])(\w+)\1/g;
+const TYPE_CMP_B = /(['"])(\w+)\1\s*(?:===|!==|==|!=)\s*[\w$.[\]]*\btype\b/g;
+const TYPE_CASE = /\bcase\s+(['"])(\w+)\1\s*:/g;
+const typeBad = [];
+for (const rel of FILES) {
+  const lines = fs.readFileSync(path.join(root, rel), 'utf8').split(/\r?\n/);
+  lines.forEach((line, i) => {
+    const t = line.trim();
+    if (!t || t.startsWith('//') || t.startsWith('*') || t.startsWith('/*')) return;
+    const hit = new Set();
+    for (const re of [TYPE_CMP_A, TYPE_CMP_B, TYPE_CASE]) {
+      let m; re.lastIndex = 0;
+      while ((m = re.exec(line))) if (EQUIP.has(m[2])) hit.add(m[2]);
+    }
+    for (const id of hit) typeBad.push(rel + ':' + (i + 1) + "  界面里按具体器材判断：type === '" + id + "'（改读器材声明）  ←  " + t.slice(0, 120));
+  });
+}
+
 const total = Object.values(counts).reduce((a, b) => a + b, 0);
 problems.forEach((p) => console.log('  ' + p));
 unreg.forEach((p) => console.log('  ' + p));
 layoutBad.forEach((p) => console.log('  ' + p));
 coordBad.forEach((p) => console.log('  ' + p));
-console.log('lint-ui：界面代码里直接写动作的地方 ' + total + ' 处（' + FILES.map((f) => path.basename(f) + ' ' + counts[f]).join('，') + '），未登记的界面状态字段 ' + unreg.length + ' 处，写死的布局数字 ' + layoutBad.length + ' 处，界面里手工换算坐标 ' + coordBad.length + ' 处' + ((total + unreg.length + layoutBad.length + coordBad.length) ? '，不合格' : '，通过'));
-process.exit(total + unreg.length + layoutBad.length + coordBad.length ? 1 : 0);
+typeBad.forEach((p) => console.log('  ' + p));
+const bad = total + unreg.length + layoutBad.length + coordBad.length + typeBad.length;
+console.log('lint-ui：界面代码里直接写动作的地方 ' + total + ' 处（' + FILES.map((f) => path.basename(f) + ' ' + counts[f]).join('，') + '），未登记的界面状态字段 ' + unreg.length + ' 处，写死的布局数字 ' + layoutBad.length + ' 处，界面里手工换算坐标 ' + coordBad.length + ' 处，界面里按具体器材判断 ' + typeBad.length + ' 处' + (bad ? '，不合格' : '，通过'));
+process.exit(bad ? 1 : 0);

@@ -11,6 +11,8 @@
     types: {
       // ---------------- 筹码（可以放进十格阵的小东西）----------------
       counter: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E1', 'E2'],
         label: '筹码', prefix: '筹', group: '数与运算', grades: [1, 2],
         props: {
@@ -30,6 +32,8 @@
 
       // ---------------- 十格阵（容器）----------------
       tenframe: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E1', 'E2'],
         label: '十格阵', prefix: '十格阵', group: '数与运算', grades: [1, 2],
         slots: {

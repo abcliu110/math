@@ -12,6 +12,8 @@
     id: 'numtheory', version: 1,
     types: {
       numtheory: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E2'],
         label: '数的性质', prefix: '性', group: '数与运算', grades: [4, 6], alias: ['质数', '合数', '因数', '最大公因数', '最小公倍数', '分解质因数'],
         props: {
@@ -49,6 +51,8 @@
       },
 
       sqrt: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E7'],
         label: '开方', prefix: '根', group: '数与运算', grades: [7, 9], alias: ['平方根', '立方根', '根号', '无理数'],
         props: {
@@ -76,6 +80,8 @@
       },
 
       power: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E6', 'E2'],
         label: '乘方', prefix: '方', group: '数与运算', grades: [6, 9], alias: ['幂', '平方', '立方', '指数', '科学记数法'],
         props: {

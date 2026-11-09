@@ -8,6 +8,8 @@
     id: 'geometry', version: 1,
     types: {
       fracbar: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E3'],
         label: '分数条', prefix: '条', group: '分数', grades: [3, 6], alias: ['分数', '比大小'],
         props: {
@@ -33,6 +35,8 @@
       },
 
       numline: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E1', 'E3'],
         label: '数轴', prefix: '轴', group: '数与运算', grades: [1, 9], alias: ['数线', '位置'],
         props: {
@@ -65,6 +69,8 @@
       },
 
       rect: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E2', 'E3'],
         label: '长方形', prefix: '形', group: '图形', grades: [3, 6], alias: ['面积', '周长'],
         props: {

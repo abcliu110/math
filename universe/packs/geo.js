@@ -19,6 +19,8 @@
     types: {
       // ---------------- 自由点：坐标是属性，可以在画板上拖 ----------------
       gpt: {
+        workspaceRole: 'point',
+        handles: true,
         essence: ['E1', 'E3'],
         label: '自由点', prefix: '点', group: '图形', grades: [4, 9],
         props: { x: { type: 'int', label: 'x', default: 0, min: -10, max: 10 }, y: { type: 'int', label: 'y', default: 0, min: -10, max: 10 }, mark: { type: 'text', label: '名字', default: '' } },
@@ -32,6 +34,10 @@
 
       // ---------------- 连线：两点连成线段 ----------------
       gseg: {
+        workspaceRole: 'step',
+        handles: true,
+        stepLabel: '连线',
+        hidden: true,
         essence: ['E1'],
         label: '连线', prefix: '线段', group: '图形', grades: [4, 9],
         props: { dash: { type: 'bool', label: '画成虚线（辅助线）', default: true }, showLen: { type: 'bool', label: '显示长度', default: true }, mark: { type: 'text', label: '名字', default: '' } },
@@ -50,6 +56,10 @@
 
       // ---------------- 中点 ----------------
       gmid: {
+        workspaceRole: 'step',
+        handles: true,
+        stepLabel: '中点',
+        hidden: true,
         essence: ['E2', 'E5'],
         label: '中点', prefix: '中点', group: '图形', grades: [5, 9], lint: ex('只由两个点决定，没有可调的属性'),
         props: {},
@@ -63,6 +73,9 @@
 
       // ---------------- 交点：两条线（看成直线）的交点 ----------------
       gint: {
+        workspaceRole: 'none',
+        handles: true,
+        hidden: true,
         essence: ['E1'],
         label: '交点', prefix: '交点', group: '图形', grades: [7, 9], lint: ex('只由两条线决定，没有可调的属性'),
         props: {},
@@ -81,6 +94,10 @@
 
       // ---------------- 垂足：过点作直线的垂线 ----------------
       gfoot: {
+        workspaceRole: 'step',
+        handles: true,
+        stepLabel: '垂线',
+        hidden: true,
         essence: ['E1', 'E3'],
         label: '垂足', prefix: '垂足', group: '图形', grades: [7, 9], lint: ex('只由一个点和一条线决定'),
         props: {},
@@ -98,6 +115,8 @@
 
       // ---------------- 围成多边形：按连线顺序把点围起来 ----------------
       gpoly: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E2'],
         label: '围成多边形', prefix: '多边形', group: '图形', grades: [4, 9], lint: ex('顶点由连进来的点决定'),
         props: {},
@@ -117,6 +136,11 @@
 
       // ---------------- 剪刀：沿一条线把多边形剪成两块 ----------------
       gcut: {
+        workspaceRole: 'step',
+        handles: true,
+        stepLabel: '剪',
+        splitsPieces: true,
+        hidden: true,
         essence: ['E2', 'E5'],
         label: '剪刀', prefix: '剪刀', group: '图形', grades: [5, 9], lint: ex('剪在哪里由连进来的线决定'),
         props: {},
@@ -137,6 +161,11 @@
 
       // ---------------- 摆放：翻转、旋转、移动一块 ----------------
       gplace: {
+        workspaceRole: 'step',
+        handles: true,
+        stepLabel: (e) => (e.props.flip ? '翻转' : e.props.turn ? '旋转' : '移动'),
+        figEdit: 'place',
+        hidden: true,
         essence: ['E5'],
         label: '摆放（翻转 / 旋转 / 移动）', prefix: '摆放', group: '图形', grades: [3, 9],
         props: {
@@ -160,6 +189,10 @@
 
       // ---------------- 拼合：这些块能不能正好拼成目标 ----------------
       gasm: {
+        workspaceRole: 'step',
+        handles: true,
+        stepLabel: (e, scene) => (scene.links.some((l) => l.to === e.id && l.toPort === 'target') ? '对齐到目标' : '合并'),
+        hidden: true,
         essence: ['E5', 'E2'],
         label: '拼合（粘贴）', prefix: '拼合', group: '图形', grades: [5, 9], lint: ex('只检查连进来的块和目标'),
         props: {},
@@ -181,6 +214,9 @@
 
       // ---------------- 几何画板：把连进来的图形画在同一个坐标系里，自由点可以拖 ----------------
       gboard: {
+        workspaceRole: 'none',
+        handles: true,
+        hidden: true,
         essence: ['E1', 'E5'],
         label: '几何画板', prefix: '画板', group: '图形', grades: [4, 9],
         props: { range: { type: 'int', label: '坐标范围（±）', default: 8, min: 4, max: 10 }, grid: { type: 'bool', label: '画格点', default: true }, title: { type: 'text', label: '标题', default: '' } },

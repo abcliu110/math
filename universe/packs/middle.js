@@ -10,6 +10,8 @@
     id: 'middle', version: 1,
     types: {
       linsolve: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E4', 'E8'],
         label: '解方程', prefix: '解', group: '关系', grades: [6, 8], alias: ['一元一次方程', 'ax+b=c', '移项'],
         props: {
@@ -32,6 +34,8 @@
       },
 
       tri: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E2', 'E5'],
         label: '三角形', prefix: '角', group: '图形', grades: [4, 9], alias: ['三边关系', '勾股', '周长', '面积'],
         props: {
@@ -75,6 +79,8 @@
       },
 
       circle: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E7', 'E3'],
         label: '圆', prefix: '圆', group: '图形', grades: [6, 9], alias: ['圆周率', '周长', '面积', 'π'],
         props: {
@@ -97,6 +103,8 @@
       },
 
       quad: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E10', 'E8'],
         label: '抛物线', prefix: '抛', group: '函数', grades: [8, 9], alias: ['二次函数', '顶点', '判别式', 'y=ax²+bx+c'],
         props: {
@@ -128,6 +136,8 @@
       },
 
       coin: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E11'],
         label: '硬币', prefix: '币', group: '统计与概率', grades: [4, 9], alias: ['正反面', '概率', '随机'],
         props: {
@@ -154,6 +164,8 @@
       },
 
       seq: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E6'],
         label: '数列', prefix: '列', group: '时间与变化', grades: [4, 9], alias: ['等差数列', '等比数列', '求和', '规律'],
         props: {

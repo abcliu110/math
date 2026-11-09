@@ -16,6 +16,8 @@
     types: {
       // ---------------- 代数式卡：输入一个式子（有字母），输出多项式 ----------------
       algebra: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E8', 'E2'],
         label: '代数式卡', prefix: '式', group: '数与运算', grades: [6, 9], alias: ['式子', '整式', '多项式'],
         props: {
@@ -40,6 +42,8 @@
 
       // ---------------- 方程台：两个式子 → 方程；两边同时做一件事 ----------------
       eqdesk: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E4', 'E8'],
         label: '方程台', prefix: '程', group: '关系', grades: [6, 9], alias: ['解方程', '等式变形'],
         props: {
@@ -97,6 +101,8 @@
 
       // ---------------- 代数式读数：只接受代数式口，代入 x、y 两个字母后读出值（任务 B 遗留：有多个字母的代数式）----------------
       exprread: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E8'],
         label: '代数式读数', prefix: '读', group: '数与运算', grades: [7, 9], alias: ['代数式', '多个字母', '求值'],
         props: {
@@ -125,6 +131,8 @@
 
       // ---------------- 代入器：把字母换成数，输出数（或真假）----------------
       subst: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E8'],
         label: '代入器', prefix: '代', group: '数与运算', grades: [6, 9], alias: ['代入', '求值'],
         props: {
@@ -151,6 +159,8 @@
 
       // ---------------- 方程组台：两个方程 → 解 ----------------
       system2: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E4', 'E8'],
         label: '方程组台', prefix: '组', group: '关系', grades: [7, 9], alias: ['二元一次', '消元'],
         props: {
@@ -178,6 +188,8 @@
 
       // ---------------- 不等式数轴：把解集画在数轴上 ----------------
       numline_iv: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E4', 'E3'],
         label: '解集数轴', prefix: '轴', group: '关系', grades: [6, 9], alias: ['不等式', '区间', '数轴'],
         props: {

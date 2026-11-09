@@ -17,6 +17,8 @@
     types: {
       // ---------------- 量角器：角的度数 → 读数与种类（锐角/直角/钝角/平角）----------------
       'protractor-read': {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E3'],
         label: '量角器', prefix: '角', group: '图形', grades: [2, 6], alias: ['量角', '角的度数', '直角', '钝角', '锐角'],
         props: {
@@ -43,6 +45,8 @@
 
       // ---------------- 圆周角：圆心角 → 圆周角（同弧所对的圆周角是圆心角的一半）----------------
       'circle-angle': {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E5'],
         label: '圆周角', prefix: '周', group: '图形', grades: [9, 9], alias: ['圆心角', '圆周角', '同弧'],
         props: {
@@ -65,6 +69,8 @@
 
       // ---------------- 特殊角的三角函数：30° / 45° / 60° → sin、cos、tan（精确值）----------------
       'trig-table': {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E3'],
         label: '特殊角的三角函数', prefix: '三', group: '图形', grades: [9, 9], alias: ['正弦', '余弦', '正切', '特殊角', 'sin', 'cos', 'tan'],
         props: {

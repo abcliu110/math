@@ -8,6 +8,8 @@
     id: 'applied', version: 1,
     types: {
       percent: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E3'],
         label: '百分数', prefix: '百', group: '数与运算', grades: [5, 6], alias: ['折扣', '打折', '增长率', '成数'],
         props: {
@@ -34,6 +36,8 @@
       },
 
       ratio: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E3', 'E12'],
         label: '比', prefix: '比', group: '数与运算', grades: [5, 6], alias: ['按比分配', '比例', '化简比'],
         props: {
@@ -66,6 +70,8 @@
       },
 
       cross: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E4', 'E12'],
         label: '交点', prefix: '交', group: '函数', grades: [7, 9], alias: ['方程组', '二元一次方程组', '鸡兔同笼', '联立'],
         props: {
@@ -96,6 +102,8 @@
       },
 
       bag: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E11'],
         label: '摸球袋', prefix: '袋', group: '统计与概率', grades: [5, 9], alias: ['摸球', '概率', '有放回', '不放回'],
         props: {

@@ -22,6 +22,8 @@
     types: {
       // ---------------- 三视图：积木排列 → 前面、侧面、上面看到的，以及总块数 ----------------
       views: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E2'],
         label: '三视图', prefix: '视', group: '图形', grades: [2, 9], alias: ['观察物体', '前面', '侧面', '上面', '投影', '视图', '积木'],
         props: {

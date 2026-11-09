@@ -17,6 +17,8 @@
     types: {
       // ---------------- 分式卡：写上分子和分母，输出分式 ----------------
       fracnum: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E8', 'E3'],
         label: '分式卡', prefix: '分', group: '数与运算', grades: [8, 9], alias: ['分式', '有理式', '分子分母'],
         props: {
@@ -40,6 +42,8 @@
 
       // ---------------- 分式运算：两个分式做加、减、乘、除 ----------------
       ratop: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E8', 'E2'],
         label: '分式运算', prefix: '运', group: '数与运算', grades: [8, 9], alias: ['分式加减', '分式乘除', '通分'],
         props: {
@@ -70,6 +74,8 @@
 
       // ---------------- 分式读数：只接分式口，代入 x、y 读出值；分母是 0 的地方没有值 ----------------
       ratread: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E8'],
         label: '分式读数', prefix: '读', group: '数与运算', grades: [8, 9], alias: ['分式求值', '代入'],
         props: {

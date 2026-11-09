@@ -7,6 +7,8 @@
     id: 'angle', version: 1,
     types: {
       angles: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E2', 'E5'],
         label: '三角形的角', prefix: '角', lint: { minProps: 2, why: '三角形只需两个角就确定第三个' }, group: '图形', grades: [4, 8], alias: ['内角和', '外角', '三角形内角和'],
         props: {
@@ -35,6 +37,8 @@
       },
 
       ineq: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E4', 'E8'],
         label: '不等式', prefix: '式', group: '关系', grades: [7, 9], alias: ['不等式', '解集', '最小整数解'],
         props: {

@@ -15,12 +15,16 @@
 
   // ---------- 几何工作区（任务 H1，§10.5）----------
   // 工作区里的器材不显示成卡片；它们输出的 fig / figs 画在工作区的画布里，带名字，可以选、可以拖（自由点）。
-  const STEP_TYPES = ['gseg', 'gmid', 'gfoot', 'gcut', 'gplace', 'gasm'];
-  const STEP_LABEL = { gseg: '连线', gmid: '中点', gfoot: '垂线', gcut: '剪', gasm: '合并' };
+  // 器材在工作区里是什么角色、叫什么、剪开要不要画块，都由器材定义声明（workspaceRole、stepLabel、splitsPieces…，见 js/core/registry.js）。
+  // 界面不认具体器材名：加一种新器材，只写它自己的声明。
+  const defOf = (e) => (e && U.types[e.type]) || {};
+  const roleOf = (e) => U.roleOf(e);
   const WS_COL = ['#3b82f6', '#f97316', '#10b981', '#a855f7', '#ef4444'];
   const escA = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   const numOf = (id) => +String(id).slice(1);
-  const isWsDef = (type) => !!(U.types[type] && U.types[type].workspace);
+  // 容器：workspaceRole 为 container 的器材。它的显示和工具写在 workspace 配置里，没写的按默认（显示图形、没有工具）
+  const isWsDef = (type) => !!(U.types[type] && U.types[type].workspaceRole === 'container');
+  const wsCfg = (type) => U.types[type].workspace || { shows: ['fig', 'figs'], tools: [] };
   // 器材是不是放在某个工作区里面（是的话不画卡片，也不画连线）
   const inWs = (e) => { const p = e.parent && UI.S.scene.entities[e.parent]; return !!(p && isWsDef(p.type)); };
   const wsKids = (ws) => Object.values(UI.S.scene.entities).filter((x) => x.parent === ws.id).sort((a, b) => numOf(a.id) - numOf(b.id));
@@ -52,12 +56,12 @@
   const FIG_NAME = { polygon: '多边形', segment: '线段', circle: '圆', point: '点' };
   // 图形的标签：块用它自己的名字；目标图形（fquad）统一叫「目标图形」；其余用学生名字，没有就按图形的种类
   function figLabel(it, nm, fig) {
-    if (it.type === 'gpiece') return it.props.name || it.name;
+    if (roleOf(it) === 'piece') return it.props.name || it.name;
     if (isTarget(it)) return '目标图形';
-    return pretty(nm) || it.name || FIG_NAME[fig && fig.type];
+    return pretty(nm) || it.name || FIG_NAME[fig && fig.type] || defOf(it).label;
   }
   function wsValues(ws, names) {
-    const S = UI.S, D = S.D || {}, shows = U.types[ws.type].workspace.shows, out = [];
+    const S = UI.S, D = S.D || {}, shows = wsCfg(ws.type).shows, out = [];
     const E = S.scene.entities, L = S.scene.links;
     for (const it of wsKids(ws)) {
       if (it.hidden) continue;   // 被剪开的图形（entity.hidden）不画，块画在它的位置上
@@ -66,7 +70,7 @@
       for (const port of ports) {
         const v = node.out[port]; if (!v || !shows.includes(v.kind)) continue;
         // 剪开的一口已经接成了块：画块（它自己会移动），不再画剪刀的原样输出
-        if (it.type === 'gcut' && L.some((l) => l.from === it.id && l.fromPort === port && E[l.to] && E[l.to].type === 'gpiece')) continue;
+        if (defOf(it).splitsPieces && L.some((l) => l.from === it.id && l.fromPort === port && E[l.to] && roleOf(E[l.to]) === 'piece')) continue;
         const key = it.id + '.' + port, nm = names[key] || null;
         if (v.kind === 'figs') { if (hasFig) continue; v.data.forEach((f, i) => out.push({ key: key + '.' + i, name: null, label: figLabel(it, nm, f), fig: f, id: it.id, port })); continue; }
         out.push({ key, name: nm, label: figLabel(it, nm, v.data), fig: v.data, id: it.id, port });
@@ -75,12 +79,12 @@
     return out;
   }
   // 工作区里的步骤：工具造出来的步骤器材（连线、中点、垂线、剪、摆放、拼合）。标题的步数和步骤清单都用它
-  const wsSteps = (ws) => wsKids(ws).filter((k) => STEP_TYPES.includes(k.type));
+  const wsSteps = (ws) => wsKids(ws).filter((k) => roleOf(k) === 'step');
   // 选中的对象显示成学生的名字（找到了用图形的标签，找不到就按名字换算）
   const pickLabel = (x, vals) => { const v = vals.find((y) => pickOf(y) === x); return v ? v.label : pretty(x) || x; };
   // 拼合器材有两种：「合并」（没有目标口）和「对齐到目标」（目标口接着目标图形）；步骤清单要分得开
-  const stepLabel = (st) => (st.type === 'gasm' && UI.S.scene.links.some((l) => l.to === st.id && l.toPort === 'target') ? '对齐到目标'
-    : st.type === 'gplace' ? (st.props.flip ? '翻转' : st.props.turn ? '旋转' : '移动') : STEP_LABEL[st.type] || st.type);
+  // 步骤清单里的名字：器材声明的 stepLabel（字符串，或 (ent, scene) => 字符串），没有就用器材名
+  const stepLabel = (st) => { const s = defOf(st).stepLabel; return typeof s === 'function' ? s(st, UI.S.scene) : s || defOf(st).label || st.type; };
   // ---- 工作区的坐标范围（§10.5.8 A2、A3）----
   // 工作区实体的 ui.view = {cx, cy, span}（见 js/ui/state.js）：可见的横向范围是 [cx-span/2, cx+span/2]，画布上 1 个坐标单位 = w/span 像素。
   // 没存过的，按内容自动选（横纵都装得下）。一旦拖过、滚过、改过大小、点过“适应”，就存下来：
@@ -192,7 +196,7 @@
     vals.forEach((v, i) => {
       const f = v.fig; if (!f) return;
       // 块（§10.5.10）：用块自己的颜色；可以拖（data-drag，松手时一次 piece 移动）
-      const ent = ents[v.id], isPc = !!ent && ent.type === 'gpiece' && v.port === 'f';
+      const ent = ents[v.id], isPc = !!ent && roleOf(ent) === 'piece' && v.port === 'f';
       const c = isPc ? (ent.props.color || WS_COL[0]) : WS_COL[i % WS_COL.length], on = sel.has(pickOf(v)), sw = on ? 4 : 2;
       const pk = " data-pick=\"" + escA(pickOf(v)) + "\"";
       const dg = isPc && !ent.props.locked ? ' data-drag="' + ent.id + '" data-s="' + s.toFixed(4) + '"' : '';
@@ -220,7 +224,7 @@
         const rr = Math.sqrt(Q.num(f.r2)) * s, tw = TXT_W(v.label), k = 0.71;
         cands = [[cx - tw / 2, cy + 4], [cx + rr * k + 3, cy - rr * k], [cx - rr * k - tw - 3, cy - rr * k], [cx - tw / 2, cy - rr - 6], [cx - tw / 2, cy + rr + 14]]; prio = 3;
       } else if (f.type === 'point') {
-        const px = X(Q.num(f.pts[0].x)), py = Y(Q.num(f.pts[0].y)), src = f.tag && ents[f.tag] && ents[f.tag].type === 'gpt' ? f.tag : null;
+        const px = X(Q.num(f.pts[0].x)), py = Y(Q.num(f.pts[0].y)), src = f.tag && roleOf(ents[f.tag]) === 'point' ? f.tag : null;
         if (src) {
           // 自由点的把手：拖动改它的 x、y（沿用 onDown 的 data-drag 机制）
           top += '<circle data-drag="' + src + '" data-kx="x" data-ky="y" data-s="' + s.toFixed(4) + '" cx="' + px + '" cy="' + py + '" r="7" fill="#fff" stroke="' + c + '" stroke-width="' + (on ? 4 : 2.5) + '" style="cursor:grab"' + pk + '/>';
@@ -261,7 +265,7 @@
   // 工作区底下的面板：工具行、选中的对象、消息、步骤历史、图层
   // dims：画布的宽高（专注模式里比卡片大）；inFocus：放在专注浮层的侧栏里，不用绝对定位
   function wsPanelHtml(ws, names, dims, inFocus) {
-    const S = UI.S, g = geom(ws), wd = U.types[ws.type].workspace, hidden = UI.State.hiddenOf(ws);
+    const S = UI.S, g = geom(ws), wd = wsCfg(ws.type), hidden = UI.State.hiddenOf(ws);
     const pw = dims ? dims.w : g.w, ph = dims ? dims.h : g.h - HD;
     const vals = wsValues(ws, names), steps = wsSteps(ws), picks = S.wsSel || [];
     const pos = inFocus ? '' : ' style="width:' + g.w + 'px"';   // 位置由 UI.Layout.placePanels 在渲染后摆好（实测尺寸）
@@ -301,15 +305,15 @@
     const ws = E[st.parent]; if (!ws) return;
     const num = (x) => wsSteps(ws).indexOf(x) + 1;
     const kids = S.scene.links.filter((l) => l.from === stId).map((l) => E[l.to]).filter(Boolean);
-    const pieces = st.type === 'gcut' ? kids.filter((k) => k.type === 'gpiece') : [];
-    const users = kids.filter((k) => k.type !== 'gpiece');
+    const pieces = defOf(st).splitsPieces ? kids.filter((k) => roleOf(k) === 'piece') : [];
+    const users = kids.filter((k) => roleOf(k) !== 'piece');
     for (const pc of pieces) for (const l of S.scene.links) if (l.from === pc.id && E[l.to]) users.push(E[l.to]);
-    const uniqUsers = users.filter((u, i) => users.indexOf(u) === i && STEP_TYPES.includes(u.type));
+    const uniqUsers = users.filter((u, i) => users.indexOf(u) === i && roleOf(u) === 'step');
     if (uniqUsers.length) {
       setMsg('这一步的结果还被第 ' + uniqUsers.map(num).join('、') + ' 步用着：先删掉那些步骤，再删这一步（撤销也能回去）', false);
       return render();
     }
-    const src = st.type === 'gcut' ? (S.scene.links.find((l) => l.to === stId && l.toPort === 'f') || {}).from : null;
+    const src = defOf(st).splitsPieces ? (S.scene.links.find((l) => l.to === stId && l.toPort === 'f') || {}).from : null;
     S.wsSel = [];
     // 连它剪出来的块一起删，被剪的图形重新显示（撤销时快照里已经是原来的样子）
     const r = UI.Intent.run('delete', { step: stId, pieces: pieces.map((pc) => pc.id), src });
@@ -319,7 +323,7 @@
   // 点工具：把选中的对象交给世界的 t:'tool' 动作（走 act，可以撤销）；失败就把原因放在画布上（和面板里）
   function wsRun(wsId, tool) {
     const S = UI.S, args = {}, picks = (S.wsSel || []).slice();
-    const ws = S.scene.entities[wsId], T = ws && U.types[ws.type].workspace.tools.find((x) => x.id === tool), rule = T && U.RULES[T.rule];
+    const ws = S.scene.entities[wsId], T = ws && wsCfg(ws.type).tools.find((x) => x.id === tool), rule = T && U.RULES[T.rule];
     // 连线、剪：没有选够两个对象，就进入「点两下画线」的模式（§10.5.8 B11）
     if ((tool === 'seg' || tool === 'cut') && picks.length !== 2) return drawMode(wsId, tool);
     // 选的个数不够：先说清楚要选几个、现在选了几个（不去试，免得只在面板里说一句）
@@ -366,21 +370,21 @@
     const d = def(e), g = geom(e), dd = D[e.id], cH = g.h - HD;
     const c = { ent: e, props: dd.props || e.props, d: dd, out: dd.out, state: e.state, w: g.w, h: cH, t: S.scene.clock.t, n: S.scene.clock.n };
     let body = '', badge = '';
-    try { body = d.workspace ? wsBody(e, g.w, cH) : d.draw(c); } catch (x) { body = K.text(g.w / 2, cH / 2, '画不出来', { fill: 'var(--bad)' }); }
+    try { body = isWsDef(e.type) ? wsBody(e, g.w, cH) : d.draw(c); } catch (x) { body = K.text(g.w / 2, cH / 2, '画不出来', { fill: 'var(--bad)' }); }
     // 工作区的标题步数只数学生做的步骤（和下面的步骤清单是同一批）
-    try { badge = d.workspace ? (wsSteps(e).length ? wsSteps(e).length + ' 步' : '') : d.badge ? d.badge(c) : ''; } catch (x) { badge = ''; }
+    try { badge = isWsDef(e.type) ? (wsSteps(e).length ? wsSteps(e).length + ' 步' : '') : d.badge ? d.badge(c) : ''; } catch (x) { badge = ''; }
     let h = '<div class="card' + (S.sel === e.id ? ' sel' : '') + '" data-id="' + e.id + '" style="left:' + g.x + 'px;top:' + g.y + 'px;width:' + g.w + 'px;height:' + g.h + 'px">';
     h += '<div class="hd" data-id="' + e.id + '"><span class="nm">' + K.esc(e.name) + '</span><span class="bd">' + K.esc(badge || '') + '</span></div>';
-    h += '<svg class="bdy' + (d.workspace ? ' wsbody" data-wsid="' + e.id : '') + '" width="' + g.w + '" height="' + cH + '" viewBox="0 0 ' + g.w + ' ' + cH + '">' + body + '</svg>';
+    h += '<svg class="bdy' + (isWsDef(e.type) ? ' wsbody" data-wsid="' + e.id : '') + '" width="' + g.w + '" height="' + cH + '" viewBox="0 0 ' + g.w + ' ' + cH + '">' + body + '</svg>';
     Object.keys(d.inputs).forEach((k, i) => {
       h += '<i class="port in" data-id="' + e.id + '" data-port="' + k + '" style="left:0;top:' + (PORT_Y0 + i * PORT_DY) + 'px"></i>';
       h += '<span class="pl" style="left:' + L.PORT_LABEL_X + 'px;top:' + (PORT_Y0 + i * PORT_DY) + 'px">' + K.esc(d.inputs[k].label) + '</span>';
     });
     Object.keys(d.outputs).forEach((k, i) => {
       h += '<i class="port out" data-id="' + e.id + '" data-port="' + k + '" style="left:' + g.w + 'px;top:' + (PORT_Y0 + i * PORT_DY) + 'px;background:' + U.kindColor(d.outputs[k].kind) + '"></i>';
-      if (!d.workspace) h += '<span class="pl" style="right:' + L.PORT_LABEL_X + 'px;top:' + (PORT_Y0 + i * PORT_DY) + 'px">' + K.esc(d.outputs[k].label) + '</span>';   // 工作区的步数标在标题栏里，这里不再写（会和画布里的把手叠在一起）
+      if (!isWsDef(e.type)) h += '<span class="pl" style="right:' + L.PORT_LABEL_X + 'px;top:' + (PORT_Y0 + i * PORT_DY) + 'px">' + K.esc(d.outputs[k].label) + '</span>';   // 工作区的步数标在标题栏里，这里不再写（会和画布里的把手叠在一起）
     });
-    h += '<i class="rz" data-rz="' + e.id + '" title="拖动改大小；双击恢复默认"></i>';
+    if (d.handles) h += '<i class="rz" data-rz="' + e.id + '" title="拖动改大小；双击恢复默认"></i>';   // 把手由器材声明（handles）
     h += '</div>';
     // 属性药丸（在卡片左边外侧）
     pillsOf(e, D).forEach((k, i) => {
@@ -395,10 +399,10 @@
       h += '<div class="tool" style="left:' + (g.x + g.w + L.TOOL_GAP) + 'px;top:' + g.y + 'px">' +
         '<button data-act="insp" title="属性">' + ico('gear') + '</button><button data-act="copy" title="复制">' + ico('copy') + '</button>' +
         (def(e).stateful ? '<button data-act="resetstate" title="记忆归零">' + ico('undo') + '</button>' : '') +
-        (e.type === 'gpiece' ? '<button data-act="turn" title="转 90°（R）">' + ico('turn') + '</button><button data-act="flip" title="左右翻（F）">' + ico('flip') + '</button>' : '') +
+        (roleOf(e) === 'piece' ? '<button data-act="turn" title="转 90°（R）">' + ico('turn') + '</button><button data-act="flip" title="左右翻（F）">' + ico('flip') + '</button>' : '') +
         '<button data-act="del" title="删除">' + ico('trash') + '</button></div>';
     }
-    if (d.workspace) { const ff = figFloat(e, g.w, cH); if (ff) h += floatHtml(e.id, ff, g.x, g.y + HD); }
+    if (isWsDef(e.type)) { const ff = figFloat(e, g.w, cH); if (ff) h += floatHtml(e.id, ff, g.x, g.y + HD); }
     return h;
   }
   const ICO = {
@@ -522,9 +526,9 @@
   // 选中的块：工作区里选中的（按名字找回），加上台面上选中的块卡片
   function selPieceIds() {
     const S = UI.S, out = [];
-    for (const n of S.wsSel || []) { const r = U.Names.resolve(S.scene, n); if (r && r.ent && r.ent.type === 'gpiece' && !out.includes(r.id)) out.push(r.id); }
+    for (const n of S.wsSel || []) { const r = U.Names.resolve(S.scene, n); if (r && r.ent && roleOf(r.ent) === 'piece' && !out.includes(r.id)) out.push(r.id); }
     const e = S.sel && S.scene.entities[S.sel];
-    if (e && e.type === 'gpiece' && !inWs(e) && !out.includes(e.id)) out.push(e.id);
+    if (e && roleOf(e) === 'piece' && !inWs(e) && !out.includes(e.id)) out.push(e.id);
     return out;
   }
   // 指针下面有没有这个工作区（卡片上的画布，或专注浮层里的画布）
@@ -613,11 +617,11 @@
   function figInfo(v) {
     const E = UI.S.scene.entities, ent = E[v.id], f = v.fig;
     if (!ent || !f) return null;
-    if (ent.type === 'gpiece') return { kind: 'piece', ent, f, verts: [], edges: [] };
-    if (ent.type === 'gplace') return { kind: 'place', ent, f, verts: [], edges: [] };
-    if (ent.type === 'gpt' && f.type === 'point') return { kind: 'pts', ent, f, verts: [ent.id], edges: [] };
+    if (roleOf(ent) === 'piece') return { kind: 'piece', ent, f, verts: [], edges: [] };
+    if (defOf(ent).figEdit === 'place') return { kind: 'place', ent, f, verts: [], edges: [] };
+    if (roleOf(ent) === 'point' && f.type === 'point') return { kind: 'pts', ent, f, verts: [ent.id], edges: [] };
     if (f.type !== 'polygon' && f.type !== 'segment') return null;
-    const srcs = uniq(UI.S.scene.links.filter((l) => l.to === ent.id && E[l.from] && E[l.from].type === 'gpt').map((l) => l.from));
+    const srcs = uniq(UI.S.scene.links.filter((l) => l.to === ent.id && E[l.from] && roleOf(E[l.from]) === 'point').map((l) => l.from));
     const verts = [];
     for (const p of f.pts) {
       const g = srcs.find((id) => Q.eq(Q(E[id].props.x), p.x) && Q.eq(Q(E[id].props.y), p.y));
@@ -778,7 +782,7 @@
   // 拼合判定（和「对齐到目标」用同一个 U.Geo.assemble）：工作区里的块拼成了目标图形，块的边线就变绿
   function fitState(ws) {
     const S = UI.S, tg = wsValues(ws, wsNames()).find((v) => isTarget(S.scene.entities[v.id]));
-    const pcs = wsKids(ws).filter((k) => k.type === 'gpiece');
+    const pcs = wsKids(ws).filter((k) => roleOf(k) === 'piece');
     if (!tg || !tg.fig || !pcs.length) return null;
     const figs = pcs.map((k) => S.D[k.id] && S.D[k.id].out.f && S.D[k.id].out.f.data);
     if (figs.some((f) => !f) || !U.Geo.assemble(figs, tg.fig).ok) return null;
@@ -1046,7 +1050,7 @@
     const gh = t.closest('[data-drag]');
     if (gh) {
       const pe = S.scene.entities[gh.dataset.drag]; if (!pe) return;
-      if (pe.type === 'gpiece') { pieceDown(pe, gh, pk, ev); return; }
+      if (roleOf(pe) === 'piece') { pieceDown(pe, gh, pk, ev); return; }
       const gwb = gh.closest('.wsbody'); if (!gwb) return;
       ev.preventDefault(); ev.stopPropagation();
       startShape(ev, gwb, gwb.dataset.wsid, 'tr', [tgt(pe.id, gh.dataset.kx || 'x', gh.dataset.ky || 'y')], { align: buildAlign(UI.S.scene.entities[gwb.dataset.wsid], [gptPt(pe.id)], [], [pe.id], null) });

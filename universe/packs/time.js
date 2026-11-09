@@ -10,6 +10,8 @@
     id: 'time', version: 1,
     types: {
       clock: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E6'],
         label: '时钟', prefix: '钟', group: '时间与变化', grades: [1, 9],
         props: {
@@ -32,6 +34,8 @@
       },
 
       memory: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E6'],
         label: '记忆器', prefix: '记', group: '时间与变化', grades: [3, 9], alias: ['寄存器', '递推', '迭代'],
         props: {
@@ -59,6 +63,8 @@
       },
 
       dice: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E11'],
         label: '骰子', prefix: '骰', group: '统计与概率', grades: [3, 9], alias: ['随机', '概率'],
         props: {
@@ -89,6 +95,8 @@
       },
 
       hist: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E11', 'E7'],
         label: '直方图', prefix: '图', group: '统计与概率', grades: [3, 9], alias: ['频数', '分布', '统计'],
         props: {

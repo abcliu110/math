@@ -331,7 +331,7 @@
       if (t.id === 'nm') {
         // 块：名字同时写到器材名和「名字」属性上（台面卡片的标题和工作区的标签各用一个），一步改完
         const en = S.scene.entities[id];
-        if (en && en.type === 'gpiece') { const n = t.value.trim().slice(0, 12); if (!n) { UI.Panels.renderInsp(); return; } UI.Intent.run('rename', { id, name: n, alsoProp: 'name' }); return; }
+        if (U.roleOf(en) === 'piece') { const n = t.value.trim().slice(0, 12); if (!n) { UI.Panels.renderInsp(); return; } UI.Intent.run('rename', { id, name: n, alsoProp: 'name' }); return; }
         UI.Intent.run('rename', { id, name: t.value }); return;
       }
       if (t.dataset.gridK !== undefined) {

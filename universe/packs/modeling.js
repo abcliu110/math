@@ -11,6 +11,8 @@
     types: {
       // ---------------- 数据表：录入实测数据，输出 table ----------------
       datatable: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E3', 'E6'],
         label: '数据表', prefix: '表', group: '统计与概率', grades: [5, 9], alias: ['实验数据', '表格', '录入'],
         props: {
@@ -38,6 +40,8 @@
 
       // ---------------- 取列：table → seq（某一列）----------------
       column: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E3'],
         label: '取列', prefix: '列', group: '统计与概率', grades: [5, 9], alias: ['一列', '取数'],
         props: {
@@ -60,6 +64,8 @@
 
       // ---------------- 散点图：画两列的点，可以叠一条直线 ----------------
       scatter: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E3', 'E7'],
         label: '散点图', prefix: '点', group: '统计与概率', grades: [5, 9], alias: ['描点', '画图'],
         props: {
@@ -95,6 +101,8 @@
 
       // ---------------- 拟合器：table → 函数（正比例或一次），输出 k、b 与函数 ----------------
       fit: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E8', 'E7'],
         label: '拟合器', prefix: '拟', group: '统计与概率', grades: [7, 9], alias: ['拟合', '最小二乘', '直线', '正比例'],
         props: {
@@ -125,6 +133,8 @@
 
       // ---------------- 预测器：函数 + 一个 x → y；说明这是模型给的预测，不是测量值 ----------------
       predict: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E8'],
         label: '预测器', prefix: '预', group: '统计与概率', grades: [7, 9], alias: ['预测', '代入'],
         props: {

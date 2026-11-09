@@ -8,6 +8,8 @@
     id: 'model', version: 1,
     types: {
       costplan: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E12', 'E8'],
         label: '套餐对比', prefix: '套', group: '关系', grades: [6, 9], alias: ['套餐', '一次函数', '交点', '建模', '月租', '电话费', '两种方案'],
         props: {

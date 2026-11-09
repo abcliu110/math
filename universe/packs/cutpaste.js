@@ -8,6 +8,8 @@
     id: 'cutpaste', version: 1,
     types: {
       parallelogram: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E5', 'E2'],
         label: '剪拼平行四边形', prefix: '平行', group: '图形', grades: [4, 6], alias: ['平行四边形', '底乘高', '剪拼', '面积'],
         props: {

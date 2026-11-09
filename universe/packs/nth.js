@@ -6,6 +6,8 @@
     id: 'nth', version: 1, needs: ['time'],
     types: {
       nth: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E6', 'E8'],
         label: '取第n项', prefix: '项', group: '时间与变化', grades: [4, 9], alias: ['通项', '第n项', '数列', '规律'],
         props: {

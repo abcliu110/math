@@ -89,15 +89,14 @@
   }
 
   // ---------- 右栏：器材架 ----------
-  // 器材架不列出这些内部器材：工作区的工具会自己造出来（连线、中点、剪刀……），学生不用从架上拿。
+  // 器材架不列出 hidden 的器材（器材定义里声明）：工作区的工具会自己造出来的步骤（连线、中点、剪刀……），学生不用从架上拿。
   // 器材类型还在，存档和旧题里用到它们照样能用；搜索结果里也不列。
-  const SHELF_HIDE = ['gseg', 'gmid', 'gint', 'gfoot', 'gcut', 'gplace', 'gasm', 'gboard'];
   function renderShelf() {
     const S = UI.S, q = ($('#q2') && $('#q2').value || '').trim();
     const allow = S.problem ? S.problem.shelf : null;
     let h = '';
     for (const g of U.GROUPS) {
-      const ts = Object.values(U.types).filter((t) => !t.hidden && !SHELF_HIDE.includes(t.id) && t.group === g && (!q || (t.label + t.alias.join('') + g).includes(q)));
+      const ts = Object.values(U.types).filter((t) => !t.hidden && t.group === g && (!q || (t.label + t.alias.join('') + g).includes(q)));
       if (!ts.length) continue;
       h += '<div class="grp">' + esc(g) + '</div><div class="tiles">';
       ts.forEach((t) => {
@@ -117,7 +116,7 @@
     let h = '<h4><input id="nm" value="' + esc(e.name) + '" maxlength="12"><button class="tbtn" data-close="1">✕</button></h4>';
     for (const k of Object.keys(d.props)) {
       if (d.props[k].hidden) continue;
-      if (e.type === 'gpiece' && k === 'name') continue;   // 块的名字就是上面的名字框（§10.5.10）
+      if (U.roleOf(e) === 'piece' && k === 'name') continue;   // 块的名字就是上面的名字框（§10.5.10）
       const P = d.props[k], v = e.props[k], drv = dd && dd.driven[k];
       h += '<div class="row' + (drv ? ' drv' : '') + '"><label>' + esc(P.label) + '</label><div class="ctl">';
       if (drv) h += '← 由「' + esc(S.scene.entities[drv.from].name) + '」驱动 <button class="st" data-unlink="' + drv.link + '" title="断开">✕</button>';
@@ -143,7 +142,7 @@
         const facts = U.Facts.list(S.scene, S.D);
         h += '<select data-fact="' + k + '"><option value="">（不选）</option>' + facts.map((f) => '<option value="' + esc(f.key) + '"' + (f.key === v ? ' selected' : '') + '>' + esc(f.label) + (f.verified ? ' ✓' : '') + '</option>').join('') + '</select>';
       }
-      else if (P.type === 'text') h += (e.type === 'gpiece' && k === 'color' ? '<i class="swatch" style="background:' + esc(v) + '"></i>' : '') + '<input type="text" data-k="' + k + '" value="' + esc(v) + '">';
+      else if (P.type === 'text') h += (U.roleOf(e) === 'piece' && k === 'color' ? '<i class="swatch" style="background:' + esc(v) + '"></i>' : '') + '<input type="text" data-k="' + k + '" value="' + esc(v) + '">';
       else {
         // 1.1.1：滑杆 / 转盘（有范围时）；数字框始终在，保证能精确填数
         const C = U.controlFor(P);
@@ -155,7 +154,7 @@
       }
       h += '</div></div>';
     }
-    if (e.type === 'exprbench') h += wbHtml(e, dd);
+    if (d.inspector === 'workbench') h += wbHtml(e, dd);
     h += '<div class="note">想让别的器材来决定「' + (Object.keys(d.props)[0] ? esc(d.props[Object.keys(d.props)[0]].label) : '') + '」？从别的器材的输出口拖一根线，放到这台器材左边出现的药丸上。</div>';
     const sg = (dd && dd.sig) || []; if (sg.length) h += '<div class="sigs">' + sg.map((s) => '<div>· ' + esc(s.tx) + '</div>').join('') + '</div>';
     h += '<div class="btnrow"><button class="btn" data-reset="1">恢复默认</button></div>';
@@ -285,7 +284,7 @@
 
   function authorDialog() {
     const S = UI.S, E = S.scene.entities;
-    const nums = Object.values(E).filter((e) => e.type === 'num' && !S.scene.links.some((l) => l.to === e.id)).map((e) => (e.props.d === 1 ? e.props.n : e.props.n + '/' + e.props.d));
+    const nums = Object.values(E).filter((e) => (U.types[e.type] || {}).numberSource && !S.scene.links.some((l) => l.to === e.id)).map((e) => (e.props.d === 1 ? e.props.n : e.props.n + '/' + e.props.d));
     let tgt = ''; const sel = S.sel && E[S.sel] && S.D[S.sel]; if (sel) { const o = Object.values(sel.out).find((v) => v && v.kind === 'num'); if (o) tgt = U.Q.show(o.data); }
     dialog('<h3>出一道凑数题</h3><p style="color:var(--txt2);margin-top:0">给同学几个数，再给一个目标数。同学要用运算器把这些数连起来，凑出目标。系统会先自己解一遍，解不出来的题不能发布。</p>' +
       '<div class="row" style="margin:8px 0">题目名<input class="search" id="au-title" placeholder="例如：用 5、7、2 凑出 24"></div>' +

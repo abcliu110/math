@@ -10,6 +10,8 @@
     id: 'conserve', version: 1,
     types: {
       pour: {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E5', 'E3'],
         label: '量杯倒水', prefix: '杯', group: '数与运算', grades: [3, 6], alias: ['守恒', '倒水', '总量', '量杯'],
         props: {

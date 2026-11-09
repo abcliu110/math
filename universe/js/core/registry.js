@@ -109,12 +109,32 @@
   // ---- lint：进不了注册表的器材 ----
   const deepFreeze = (o) => { if (o && typeof o === 'object' && !Object.isFrozen(o)) { Object.freeze(o); for (const k of Object.keys(o)) deepFreeze(o[k]); } return o; };
 
+  // 声明式角色（U7，docs/ui-robustness.md 4.4）：器材在工作区里是什么，由它自己声明，界面不认具体器材名。
+  //   workspaceRole：'container'（容器，如几何工作区，要有 slots 和 workspace 配置）、'piece'（块，可拖、可转、可翻）、
+  //                 'step'（步骤，进步骤清单，stepLabel 给清单里的名字）、'point'（自由点，图形的顶点可以拖）、'none'（普通卡片）
+  //   handles：有没有缩放把手（true / false）
+  //   其他可选声明：stepLabel（步骤名，字符串或 (ent, scene) => 字符串）、splitsPieces（剪开：输出的块在工作区里单独画）、
+  //                 figEdit（'place'：图形用摆放的把手改）、inspector（'workbench'：属性面板里附带工作台）、
+  //                 numberSource（数字来源，可以从台面上选）、hidden（不列在器材架上）
+  U.WS_ROLES = ['container', 'piece', 'step', 'point', 'none'];
+  U.roleOf = (ent) => { const d = ent && U.types[ent.type]; return (d && d.workspaceRole) || 'none'; };
+
   U.lintType = function (def) {
     const errors = [], exempt = [];
     const err = (m) => errors.push(m);
     if (!def.label) err('缺 label');
     if (U.checkEssence) U.checkEssence(def.essence).forEach((m) => err(m));
     if (!U.GROUPS.includes(def.group)) err('group 不在器材架分组里：' + def.group);
+    if (!U.WS_ROLES.includes(def.workspaceRole)) err('workspaceRole 要是 ' + U.WS_ROLES.join(' / ') + ' 之一（在工作区里是什么角色）');
+    if (typeof def.handles !== 'boolean') err('handles 要写 true 或 false（有没有缩放把手）');
+    if (def.workspaceRole === 'container' && !def.slots) err('容器（workspaceRole: container）要有 slots，放进去的东西放哪里');
+    if (def.workspace && def.workspaceRole !== 'container') err('只有 workspaceRole: container 的器材才能有 workspace 配置');
+    if (def.stepLabel !== undefined && (def.workspaceRole !== 'step' || !(typeof def.stepLabel === 'string' || typeof def.stepLabel === 'function'))) err('stepLabel 只给步骤（workspaceRole: step），且要是字符串或函数');
+    if (def.splitsPieces !== undefined && (def.workspaceRole !== 'step' || typeof def.splitsPieces !== 'boolean')) err('splitsPieces 只给步骤，且要是 true / false');
+    if (def.figEdit !== undefined && def.figEdit !== 'place') err('figEdit 目前只认 place');
+    if (def.inspector !== undefined && def.inspector !== 'workbench') err('inspector 目前只认 workbench');
+    if (def.numberSource !== undefined && typeof def.numberSource !== 'boolean') err('numberSource 要是 true / false');
+    if (def.hidden !== undefined && typeof def.hidden !== 'boolean') err('hidden 要是 true / false（不列在器材架上）');
     if (typeof def.icon !== 'function') err('缺 icon()，器材架每个器材都要有缩略图');
     if (typeof def.size !== 'function') err('缺 size(ent)');
     if (typeof def.draw !== 'function') err('缺 draw(c)');

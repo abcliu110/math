@@ -12,6 +12,8 @@
     types: {
       // ---------------- 数对：第几列、第几行，输出点 ----------------
       'pair-pos': {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E2'],
         label: '数对', prefix: '数对', group: '图形', grades: [5, 6], alias: ['位置', '列行', '第几列', '第几行'],
         props: {
@@ -33,6 +35,8 @@
 
       // ---------------- 绕点旋转：输入一个点，绕中心逆时针转 90/180/270 度，输出新点 ----------------
       'rotate-about': {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E5', 'E3'],
         label: '绕点旋转', prefix: '旋', group: '图形', grades: [5, 9], alias: ['旋转', '中心', '逆时针', '绕点'],
         props: {
@@ -66,6 +70,8 @@
 
       // ---------------- 反比例：y = k / x ----------------
       'inverse-prop': {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E3', 'E8'],
         label: '反比例', prefix: '反', group: '函数', grades: [9, 9], alias: ['反比例', 'y=k/x', '乘积', '积不变'],
         props: {
@@ -88,6 +94,8 @@
 
       // ---------------- 直线与圆：半径 r，圆心到直线的距离 d；输出 0 相离 / 1 相切 / 2 相交 ----------------
       'circle-line': {
+        workspaceRole: 'none',
+        handles: true,
         essence: ['E5', 'E3'],
         label: '直线与圆', prefix: '线', group: '图形', grades: [9, 9], alias: ['相离', '相切', '相交', '圆心到直线的距离'],
         props: {
