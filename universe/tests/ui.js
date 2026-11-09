@@ -453,6 +453,85 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
     ok(r3.span !== r2.span && Math.abs(r3.span - r0.span) < 1e-9 && Math.abs(r3.cx - r0.cx) < 1e-9 && Math.abs(r3.cy - r0.cy) < 1e-9, '适应：坐标范围换成按内容选的（' + t3.replace(/\s+/g, ' ') + '）');
     ok(JSON.stringify(await boardView()) === JSON.stringify(v0), '适应只改工作区，台面不动');
   }
+
+  {
+  console.log('块：剪开以后每一块都是器材（§10.5.10）');
+  // 块的拖动：在块的图形上找一个真能点到它的位置，拖到 target(起点) 去
+  const dragPieceTo = async (id, target) => {
+    const s = await p.evaluate((i) => {
+      const el = document.querySelector('[data-drag="' + i + '"]'); if (!el) return null;
+      const r = el.getBoundingClientRect();
+      for (let a = 1; a < 10; a++) for (let b = 1; b < 10; b++) {
+        const x = r.left + r.width * a / 10, y = r.top + r.height * b / 10, hit = document.elementFromPoint(x, y);
+        if (hit && hit.closest('[data-drag]') === el) return { x, y };
+      }
+      return null;
+    }, id);
+    if (!s) { ok(false, '找不到可以拖的块：' + id); return; }
+    const t = target(s);
+    await p.mouse.move(s.x, s.y); await p.mouse.down(); await p.mouse.move(t.x, t.y, { steps: 10 }); await p.mouse.up(); await p.waitForTimeout(100);
+  };
+  const pieceProps = (id) => p.evaluate((i) => { const e = UI.S.scene.entities[i]; return { dx: e.props.dx, dy: e.props.dy, turn: e.props.turn, flip: e.props.flip, name: e.props.name, color: e.props.color, parent: e.parent }; }, id);
+  const pieceIds = () => p.evaluate(() => Object.values(UI.S.scene.entities).filter((e) => e.type === 'gpiece').map((e) => e.id));
+  const pickName = (id) => p.evaluate((i) => U.Names.list(UI.S.scene).find((x) => x.id === i).name, id);
+  const undoLen = () => p.evaluate(() => UI.S.undo.length);
+  const dismissDlg = async () => { await p.waitForTimeout(900); if (await p.locator('#dlg.open').count()) await p.click('#dlg-close'); };
+
+  await p.evaluate(() => UI.App.openProblem('geo-median-area', 'practice')); await p.waitForTimeout(200);
+  await pickAt('B'); await pickAt('C', true); await wsTool('mid');
+  await pickAt('A'); await pickAt('M(BC)', true); await wsTool('seg');
+  await pickAt('poly(A,B,C)'); await pickAt('seg(A,M(BC))', true); await wsTool('cut');
+  await dismissDlg();
+  // (a) 剪一个三角形：两块各自有颜色和名字，被剪的三角形不画
+  const [pa, pb] = await pieceIds();
+  const pinfo = [await pieceProps(pa), await pieceProps(pb)];
+  const drawn = await p.evaluate(() => [...document.querySelectorAll('.wsbody [data-pick^="cut:"]')].map((el) => el.getAttribute('stroke')));
+  const labels = await p.evaluate(() => [...document.querySelectorAll('.wsbody text')].map((t) => t.textContent));
+  ok(pinfo[0].name === '块 1' && pinfo[1].name === '块 2' && pinfo[0].color !== pinfo[1].color, '(a) 两个块：「' + pinfo[0].name + '」「' + pinfo[1].name + '」，颜色各不相同');
+  ok(drawn.length === 2 && drawn.includes(pinfo[0].color) && drawn.includes(pinfo[1].color), '(a) 两块画在工作区里，用各自的颜色');
+  ok(labels.includes('块 1') && labels.includes('块 2'), '(a) 两块的名字标在图上');
+  ok(await p.locator('[data-pick="poly(A,B,C)"]').count() === 0 && await p.evaluate(() => Object.values(UI.S.scene.entities).some((e) => e.hidden)), '(a) 被剪的三角形不画（隐藏）');
+
+  // (b) 拖块 2 向右几格：一步；一次撤销回到原来的位置
+  const u0 = await undoLen(), b0 = await pieceProps(pb);
+  await dragPieceTo(pb, (s) => ({ x: s.x + 50, y: s.y }));
+  const b1 = await pieceProps(pb);
+  ok(b1.dx > b0.dx && b1.dx < 20 && b1.dy === b0.dy && (await undoLen()) === u0 + 1, '(b) 拖块 2：dx 从 ' + b0.dx + ' 变成 ' + b1.dx + '（几格，不是一直飞出去），撤销栈多一步');
+  await p.click('#undo'); await p.waitForTimeout(80);
+  const b2 = await pieceProps(pb);
+  ok(b2.dx === b0.dx && b2.dy === b0.dy && (await pieceIds()).length === 2, '(b) 撤销：块 2 回到原来的位置，还是同样两个块');
+
+  // (c) 选中块 1，按 R：转 90°，一步
+  await pickAt(await pickName(pa));
+  const t0 = (await pieceProps(pa)).turn, u1 = await undoLen();
+  await p.keyboard.press('r'); await p.waitForTimeout(80);
+  const t1 = (await pieceProps(pa)).turn;
+  ok(t1 === (t0 + 1) % 4 && (await undoLen()) === u1 + 1, '(c) 块 1 按 R：转 90°（' + t0 + ' → ' + t1 + '），一步');
+  await p.click('#undo'); await p.waitForTimeout(80);
+
+  // (d) 把块 1 拖出工作区（落在台面的空白处）：变成台面上的一张器材卡片；再拖回工作区，又回到画面里
+  const wsId = await p.evaluate(() => Object.values(UI.S.scene.entities).find((e) => U.types[e.type].workspace).id);
+  const emptyAt = await p.evaluate(() => {
+    const st = document.querySelector('#stage').getBoundingClientRect();
+    for (let y = st.top + 40; y < st.bottom - 40; y += 30) for (let x = st.left + 40; x < st.right - 40; x += 30) {
+      const hit = document.elementFromPoint(x, y);
+      if (hit && hit.closest('#stage') && !hit.closest('.card,.wsx,.tool,.pill,.sig,.lb,#wsfocus')) return { x, y };
+    }
+    return null;
+  });
+  if (!emptyAt) ok(false, '(d) 台面上找不到空白处');
+  else {
+    await dragPieceTo(pa, () => emptyAt);
+    const onBoard = await p.locator('.card[data-id="' + pa + '"]').count();
+    ok(onBoard === 1 && (await pieceProps(pa)).parent === null, '(d) 块 1 拖出工作区：台面上出现它的器材卡片');
+    const hd = await p.locator('.card[data-id="' + pa + '"] .hd').boundingBox();
+    const wb = await p.locator('.card[data-id="' + wsId + '"] svg.wsbody').boundingBox();
+    await p.mouse.move(hd.x + 30, hd.y + 10); await p.mouse.down();
+    await p.mouse.move(wb.x + wb.width / 2, wb.y + wb.height / 2, { steps: 12 }); await p.mouse.up(); await p.waitForTimeout(120);
+    ok((await pieceProps(pa)).parent === wsId && (await p.locator('.card[data-id="' + pa + '"]').count()) === 0 && (await pieceIds()).length === 2, '(d) 拖回工作区：又回到工作区里，还是两个块');
+    ok(await p.locator('.wsbody [data-pick="' + (await pickName(pa)) + '"]').count() === 1, '(d) 回到工作区后，画面上又有这一块');
+  }
+  }
   ok(errs.length === 0, '控制台 0 报错' + (errs.length ? '：' + errs[0] : ''));
   console.log('\n' + pass + ' 通过，' + fail + ' 失败'); await b.close(); process.exit(fail ? 1 : 0);
 })();

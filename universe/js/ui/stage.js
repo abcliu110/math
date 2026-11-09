@@ -39,7 +39,9 @@
         if (it.type === 'gcut' && L.some((l) => l.from === it.id && l.fromPort === port && E[l.to] && E[l.to].type === 'gpiece')) continue;
         const key = it.id + '.' + port, nm = names[key] || null;
         if (v.kind === 'figs') { if (hasFig) continue; v.data.forEach((f, i) => out.push({ key: key + '.' + i, name: null, label: nm || it.name, fig: f, id: it.id, port })); continue; }
-        out.push({ key, name: nm, label: nm || (port === 'p' || port === 'f' ? it.name : it.name + '·' + port), fig: v.data, id: it.id, port });
+        // 块（gpiece）的标签用它自己的名字（块 1、块 2），稳定名字只用来选中
+        const pl = it.type === 'gpiece' ? (it.props.name || it.name) : null;
+        out.push({ key, name: nm, label: pl || nm || (port === 'p' || port === 'f' ? it.name : it.name + '·' + port), fig: v.data, id: it.id, port });
       }
     }
     return out;
@@ -89,13 +91,16 @@
     let g = '';
     vals.forEach((v, i) => {
       const f = v.fig; if (!f) return;
-      const c = WS_COL[i % WS_COL.length], on = !!v.name && sel.has(v.name), sw = on ? 4 : 2;
+      // 块（§10.5.10）：用块自己的颜色；可以拖（data-drag，松手时一次 piece 移动）
+      const ent = ents[v.id], isPc = !!ent && ent.type === 'gpiece' && v.port === 'f';
+      const c = isPc ? (ent.props.color || WS_COL[0]) : WS_COL[i % WS_COL.length], on = !!v.name && sel.has(v.name), sw = on ? 4 : 2;
       const pk = v.name ? ' data-pick="' + escA(v.name) + '"' : '';
-      const sty = v.name ? ' style="cursor:pointer"' : '';
+      const dg = isPc && !ent.props.locked ? ' data-drag="' + ent.id + '" data-s="' + s.toFixed(4) + '"' : '';
+      const sty = isPc ? ' style="cursor:' + (ent.props.locked ? 'pointer' : 'grab') + '"' : v.name ? ' style="cursor:pointer"' : '';
       let lx, ly;
       if (f.type === 'polygon') {
         const d = f.pts.map((p, k) => (k ? 'L' : 'M') + X(Q.num(p.x)).toFixed(1) + ' ' + Y(Q.num(p.y)).toFixed(1)).join(' ') + ' Z';
-        g += '<path d="' + d + '" fill="' + c + '22" stroke="' + c + '" stroke-width="' + sw + '"' + pk + sty + '/>';
+        g += '<path d="' + d + '" fill="' + c + '22" stroke="' + c + '" stroke-width="' + sw + '"' + pk + dg + sty + '/>';
         lx = f.pts.reduce((a, p) => a + X(Q.num(p.x)), 0) / f.pts.length; ly = f.pts.reduce((a, p) => a + Y(Q.num(p.y)), 0) / f.pts.length;
       } else if (f.type === 'segment') {
         const a = f.pts[0], b = f.pts[1];
@@ -130,6 +135,11 @@
     h += '<div class="wsx-range">' + rangeText(ws, pw, ph) + '</div>';
     h += '<div class="wsx-args">移动时：向右 <input type="number" data-ws-arg="dx" value="' + escA(S.wsArgs.dx) + '"> 向上 <input type="number" data-ws-arg="dy" value="' + escA(S.wsArgs.dy) + '"></div>';
     h += '<div class="wsx-sel">' + (picks.length ? '选中：' + picks.map((x) => K.esc(x)).join('、') : '点图形或点来选中（Shift 点可以多选）') + '</div>';
+    // 选中的块：把手在这里（旋转、翻转、属性）；拖动是直接拖图形，R、F 键同样有效
+    const pcs = selPieceIds().filter((id) => S.scene.entities[id].parent === ws.id);
+    if (pcs.length) h += '<div class="wsx-piece"><b>' + K.esc(pcs.length === 1 ? S.scene.entities[pcs[0]].props.name : pcs.length + ' 块') + '</b>' +
+      '<button data-piece-act="turn" title="也可以按 R">转 90°</button><button data-piece-act="flip" title="也可以按 F">左右翻</button><button data-piece-act="insp">属性</button>' +
+      '<span class="wsx-hint">拖动块可以移动；拖出工作区，松手就变成台面上的器材</span></div>';
     h += '<div class="wsx-foot' + (S.wsMsg ? ' bad' : '') + '">' + K.esc(S.wsMsg || '') + '</div>';
     h += '<div class="wsx-h">步骤</div>';
     if (!steps.length) h += '<div class="wsx-none">还没有步骤</div>';
@@ -201,6 +211,7 @@
       h += '<div class="tool" style="left:' + (g.x + g.w + 14) + 'px;top:' + g.y + 'px">' +
         '<button data-act="insp" title="属性">' + ico('gear') + '</button><button data-act="copy" title="复制">' + ico('copy') + '</button>' +
         (def(e).stateful ? '<button data-act="resetstate" title="记忆归零">' + ico('undo') + '</button>' : '') +
+        (e.type === 'gpiece' ? '<button data-act="turn" title="转 90°（R）">' + ico('turn') + '</button><button data-act="flip" title="左右翻（F）">' + ico('flip') + '</button>' : '') +
         '<button data-act="del" title="删除">' + ico('trash') + '</button></div>';
     }
     return h;
@@ -210,6 +221,8 @@
     copy: '<path d="M8 8h10v12H8zM6 16H5V5h10v1" fill="none" stroke="currentColor" stroke-width="2"/>',
     trash: '<path d="M6 8h12M9 8V5h6v3M8 8l1 12h6l1-12" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>',
     undo: '<path d="M7 9H4V6M4 9a8 8 0 1 1 1 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+    turn: '<path d="M19 12a7 7 0 1 1-2.05-4.95M19 4v5h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+    flip: '<path d="M12 3v18M4 7l5 5-5 5zM20 7l-5 5 5 5z" fill="none" stroke="currentColor" stroke-width="1.8"/>',
   };
   const ico = (n) => '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">' + ICO[n] + '</svg>';
   UI.ico = ico;
@@ -319,6 +332,64 @@
   const tip = () => $('#tip');
   function showTip(x, y, txt, good) { const t = tip(); if (!txt) { t.style.display = 'none'; return; } t.textContent = txt; t.className = good ? 'good' : ''; t.style.display = 'block'; t.style.left = x + 14 + 'px'; t.style.top = y + 14 + 'px'; }
 
+  // ---- 块（§10.5.10）----
+  // 选中的块：工作区里选中的（按名字找回），加上台面上选中的块卡片
+  function selPieceIds() {
+    const S = UI.S, out = [];
+    for (const n of S.wsSel || []) { const r = U.Names.resolve(S.scene, n); if (r && r.ent && r.ent.type === 'gpiece' && !out.includes(r.id)) out.push(r.id); }
+    const e = S.sel && S.scene.entities[S.sel];
+    if (e && e.type === 'gpiece' && !inWs(e) && !out.includes(e.id)) out.push(e.id);
+    return out;
+  }
+  // 指针下面有没有这个工作区（卡片上的画布，或专注浮层里的画布）
+  function overWs(ev, wsId) {
+    return document.elementsFromPoint(ev.clientX, ev.clientY).some((n) => n.closest && (n.closest('[data-wsid="' + wsId + '"]') || n.closest('.card[data-id="' + wsId + '"]')));
+  }
+  // 按下块：拖动中只改块的 dx、dy 作预览；松手时再一次 piece 移动动作，撤销就回到原来的位置
+  function pieceDown(pe, gh, pk, ev) {
+    const S = UI.S;
+    S.sel = pe.id; S.selLink = null;
+    if (pe.props.locked) { if (pk) render(); UI.Panels.renderInsp(); return; }
+    ev.preventDefault(); ev.stopPropagation();
+    // 坐标范围在拖动开始时冻结：工作区没存过范围时是按内容自动选的，块一动内容就变，不冻结的话每动一下比例都会变
+    const svg = gh.closest('svg'), r = svg.getBoundingClientRect(), cw = +svg.getAttribute('width') || r.width, ch = +svg.getAttribute('height') || r.height;
+    const ws = S.scene.entities[pe.parent], v0 = ws ? wsView(ws, cw, ch) : null;
+    drag = { kind: 'piece', id: pe.id, wsId: pe.parent, v0, unit: v0 ? r.width / v0.span : (+gh.dataset.s) * r.width / cw, dx0: pe.props.dx, dy0: pe.props.dy, sx: ev.clientX, sy: ev.clientY, dxn: 0, dyn: 0, out: false, moved: false };
+    // 量完大小再重画：重画会换掉这个图形的 DOM，之后再量会得到 0
+    if (pk) render();
+  }
+  function pieceMove(ev) {
+    const S = UI.S, d = drag, e = S.scene.entities[d.id];
+    if (!e) return;
+    const mx = ev.clientX - d.sx, my = ev.clientY - d.sy;
+    if (!d.moved && Math.hypot(mx, my) < 4) return;
+    if (!d.moved && d.v0) { S.wsView = S.wsView || {}; S.wsView[d.wsId] = d.v0; }   // 拖动开始：把冻结的坐标范围存下来
+    d.moved = true;
+    d.out = !overWs(ev, d.wsId);
+    const cl = (v) => Math.max(-200, Math.min(200, v));
+    let nx = d.dx0, ny = d.dy0;
+    if (!d.out) { nx = cl(d.dx0 + Math.round(mx / d.unit)); ny = cl(d.dy0 - Math.round(my / d.unit)); }
+    d.dxn = nx - d.dx0; d.dyn = ny - d.dy0;
+    if (e.props.dx !== nx || e.props.dy !== ny) { e.props.dx = nx; e.props.dy = ny; UI.App.refresh(false); }
+    showTip(ev.clientX, ev.clientY, d.out ? '松手放到台面上，就变成一张器材卡片' : '向右 ' + d.dxn + ' 格，向上 ' + d.dyn + ' 格', !d.out);
+  }
+  // 松手：还在工作区里，就是一步移动；拖出了工作区，就取出来放到台面上（落在别的容器上就放进那个容器）
+  function pieceUp(d, ev) {
+    const S = UI.S, e = S.scene.entities[d.id];
+    showTip(0, 0, '');
+    if (!e) return;
+    if (!d.moved) { UI.Panels.renderInsp(); render(); return; }
+    e.props.dx = d.dx0; e.props.dy = d.dy0;
+    if (d.out) {
+      const w = toWorld(ev), t = cardUnder(ev, d.id, isContainer), td = t ? U.types[t.type] : null;
+      const slot = td && td.slots ? Object.keys(td.slots).find((sn) => { const A = td.slots[sn].accepts; return A === '*' || A.includes(e.type); }) : null;
+      if (t && slot) UI.App.actMany([{ t: 'put', id: d.id, parent: t.id, slot }]);
+      else UI.App.actMany([{ t: 'take', id: d.id }, { t: 'move', id: d.id, x: Math.round(w.x - 40), y: Math.round(w.y - 20) }]);
+    } else if (d.dxn || d.dyn) UI.App.actMany([{ t: 'piece', id: d.id, what: 'move', value: { dx: d.dxn, dy: d.dyn } }]);
+    else UI.App.refresh(false);
+    UI.Panels.renderInsp(); render();
+  }
+
   function onDown(ev) {
     const S = UI.S, t = ev.target;
     if (t.closest('.tool') || t.closest('.wsx')) return;   // 工作区底下的面板：让浏览器照常处理按钮和输入框
@@ -338,6 +409,7 @@
     const gh = t.closest('[data-drag]');
     if (gh) {
       const pe = S.scene.entities[gh.dataset.drag]; if (!pe) return;
+      if (pe.type === 'gpiece') { pieceDown(pe, gh, pk, ev); return; }
       ev.preventDefault(); ev.stopPropagation();
       const svg = gh.closest('svg'), r = svg.getBoundingClientRect(), zoom = r.width / (+svg.getAttribute('width') || r.width);
       const kx = gh.dataset.kx || 'x', ky = gh.dataset.ky || 'y', P = U.types[pe.type].props;
@@ -438,6 +510,7 @@
       return;
     }
     if (!drag) return;
+    if (drag.kind === 'piece') { pieceMove(ev); return; }
     if (drag.kind === 'rz') {
       const dx = ev.clientX - drag.sx, dy = ev.clientY - drag.sy;
       if (!drag.moved && Math.hypot(dx, dy) < 3) return;
@@ -488,6 +561,7 @@
       const d = drag; drag = null; stageEl.classList.remove('panning');
       if (d.moved) dblKey = null;   // 拖动过的不算点击：下一次按不能被当成双击
       document.querySelectorAll('.card.droptarget').forEach((c) => c.classList.remove('droptarget'));
+      if (d.kind === 'piece') { pieceUp(d, ev); return; }
       if (d.kind === 'rz') { showTip(0, 0, ''); UI.Panels.renderInsp(); render(); if (d.moved) UI.App.afterMove(); return; }
       if (d.kind === 'move' && d.moved) { dropOnContainer(d.id, ev); UI.App.afterMove(); }
       if (d.kind === 'gpt' && d.moved && S.scene.entities[d.id]) UI.App.act({ t: 'set', id: d.id, k: d.ky, v: S.scene.entities[d.id].props[d.ky] });
@@ -536,15 +610,24 @@
       if (wd) { UI.S.wsSel = []; UI.App.removeEntity(wd.dataset.wsDel); return; }
       const wst = ev.target.closest('[data-ws-step]');
       if (wst) { const S = UI.S; S.sel = wst.dataset.wsStep; S.selLink = null; S.inspOpen = true; UI.Panels.renderInsp(); render(); return; }
+      // 块的把手（工作区面板里）：转 90°、左右翻、属性
+      const pa = ev.target.closest('[data-piece-act]');
+      if (pa) {
+        const S = UI.S, ids = selPieceIds();
+        if (pa.dataset.pieceAct === 'insp') { if (ids[0]) { S.sel = ids[0]; S.inspOpen = true; UI.Panels.renderInsp(); render(); } }
+        else UI.App.actMany(ids.map((id) => ({ t: 'piece', id, what: pa.dataset.pieceAct, value: 1 })));
+        return;
+      }
       const b = ev.target.closest('[data-act]'); if (!b) return;
       const S = UI.S, id = S.sel; if (!id) return;
       const a = b.dataset.act;
-      if (a === 'insp') { S.inspOpen = !S.inspOpen; UI.Panels.renderInsp(); }
+      if (a === 'turn' || a === 'flip') UI.App.actMany([{ t: 'piece', id, what: a, value: 1 }]);
+      else if (a === 'insp') { S.inspOpen = !S.inspOpen; UI.Panels.renderInsp(); }
       else if (a === 'copy') UI.App.act({ t: 'copy', id });
       else if (a === 'del') { S.sel = null; UI.App.removeEntity(id); }
       else if (a === 'resetstate') UI.App.act({ t: 'resetstate', id });
     });
   }
 
-  UI.Stage = { init, render, fit, zoomAt, toWorld, geom, portPos, setFocus, wsZoomAt, wsFit, rangeOf: (id) => { const ws = UI.S.scene.entities[id]; if (!ws) return null; const g = geom(ws); return wsView(ws, g.w, g.h - HD); } };
+  UI.Stage = { init, render, fit, zoomAt, toWorld, geom, portPos, setFocus, wsZoomAt, wsFit, selPieceIds, rangeOf: (id) => { const ws = UI.S.scene.entities[id]; if (!ws) return null; const g = geom(ws); return wsView(ws, g.w, g.h - HD); } };
 })(window);

@@ -114,6 +114,7 @@
     let h = '<h4><input id="nm" value="' + esc(e.name) + '" maxlength="12"><button class="tbtn" data-close="1">✕</button></h4>';
     for (const k of Object.keys(d.props)) {
       if (d.props[k].hidden) continue;
+      if (e.type === 'gpiece' && k === 'name') continue;   // 块的名字就是上面的名字框（§10.5.10）
       const P = d.props[k], v = e.props[k], drv = dd && dd.driven[k];
       h += '<div class="row' + (drv ? ' drv' : '') + '"><label>' + esc(P.label) + '</label><div class="ctl">';
       if (drv) h += '← 由「' + esc(S.scene.entities[drv.from].name) + '」驱动 <button class="st" data-unlink="' + drv.link + '" title="断开">✕</button>';
@@ -139,7 +140,7 @@
         const facts = U.Facts.list(S.scene, S.D);
         h += '<select data-fact="' + k + '"><option value="">（不选）</option>' + facts.map((f) => '<option value="' + esc(f.key) + '"' + (f.key === v ? ' selected' : '') + '>' + esc(f.label) + (f.verified ? ' ✓' : '') + '</option>').join('') + '</select>';
       }
-      else if (P.type === 'text') h += '<input type="text" data-k="' + k + '" value="' + esc(v) + '">';
+      else if (P.type === 'text') h += (e.type === 'gpiece' && k === 'color' ? '<i class="swatch" style="background:' + esc(v) + '"></i>' : '') + '<input type="text" data-k="' + k + '" value="' + esc(v) + '">';
       else {
         // 1.1.1：滑杆 / 转盘（有范围时）；数字框始终在，保证能精确填数
         const C = U.controlFor(P);

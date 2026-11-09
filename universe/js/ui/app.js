@@ -113,6 +113,18 @@
     saveFree(); refresh();
     return r;
   }
+  // 一串动作记成一步（撤销一次全部撤掉）；有一条不成立，整串都不做，台面退回原样（块的拖出、旋转、翻转用）
+  function actMany(list) {
+    const before = snap();
+    let r = { ok: true };
+    for (const a of list) { r = W.act(S.scene, a); if (!r.ok) break; }
+    if (!r.ok) { S.scene = W.load(before); say(r.why, 'bad', 3800); if (S.run) S.run.errors++; refresh(); return r; }
+    pushUndo(before);
+    for (const a of list) recordSession(a);
+    if (S.run) { S.run.ops += list.length; S.run.armed = true; }
+    saveFree(); refresh();
+    return r;
+  }
   function snapshot() { pushUndo(); }
   // 1.10：删容器时若里面有东西，先问：连里面的一起删，还是倒到台面上
   let pendingDel = null;
@@ -281,7 +293,12 @@
     insp.addEventListener('change', (e) => {
       const t = e.target, id = S.sel; if (!id) return;
       if (t.dataset.wbField) { UI.Panels.wbDraft(id)[t.dataset.wbField] = t.value; return; }
-      if (t.id === 'nm') { act({ t: 'rename', id, name: t.value }); return; }
+      if (t.id === 'nm') {
+        // 块：名字同时写到器材名和「名字」属性上（台面卡片的标题和工作区的标签各用一个），一步改完
+        const en = S.scene.entities[id];
+        if (en && en.type === 'gpiece') { const n = t.value.trim().slice(0, 12); if (!n) { UI.Panels.renderInsp(); return; } actMany([{ t: 'rename', id, name: n }, { t: 'set', id, k: 'name', v: n }]); return; }
+        act({ t: 'rename', id, name: t.value }); return;
+      }
       if (t.dataset.gridK !== undefined) {
         // 表格式编辑：把所有格子按行收回文字，整体写回属性
         const gk = t.dataset.gridK, rows = [];
@@ -393,6 +410,13 @@
       else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'Z'))) { e.preventDefault(); redo(); }
       else if (e.key === 'Delete' || e.key === 'Backspace') { if (S.selLink) { const id = S.selLink; S.selLink = null; act({ t: 'unlink', id }); } else if (S.sel) removeEntity(S.sel); }
       else if (e.key === ' ') { e.preventDefault(); clockAct({ t: 'clock', running: !S.scene.clock.running }); }
+      else if ((e.key === 'r' || e.key === 'R' || e.key === 'f' || e.key === 'F') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        // 块（§10.5.10）：R 转 90°，F 左右翻，作用在选中的块上；没有选中块就什么也不做
+        const ids = UI.Stage.selPieceIds(); if (!ids.length) return;
+        e.preventDefault();
+        const what = e.key === 'r' || e.key === 'R' ? 'turn' : 'flip';
+        actMany(ids.map((id) => ({ t: 'piece', id, what, value: 1 })));
+      }
       else if (e.key === 'Escape' && S.focusWs) UI.Stage.setFocus(null);
       else if (e.key === 'Escape') { S.sel = null; S.selLink = null; UI.Panels.renderInsp(); UI.Stage.render(); }
     });
@@ -406,6 +430,6 @@
     setInterval(saveSession, 2000); G.addEventListener('pagehide', saveSession);
     offerResume();
   }
-  UI.App = { act, snapshot, afterMove, removeEntity, openProblem, openFree, setMode, say, undo, redo, stepOnce, refresh };
+  UI.App = { act, actMany, snapshot, afterMove, removeEntity, openProblem, openFree, setMode, say, undo, redo, stepOnce, refresh };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })(window);
