@@ -10,10 +10,9 @@
   const S = (UI.S = {
     scene: W.blank(), D: null, sel: null, selLink: null, view: { x: 0, y: 0, z: 1 }, mode: 'free', problem: null, run: null,
     undo: [], redo: [], tab: 'lab', inspOpen: false, glow: [], showSig: true, q1: '', freeScene: null,
-    // 几何工作区（§10.5）：选中的对象（稳定名字）、隐藏的图层（器材id.口）、移动工具的参数、面板消息
-    wsSel: [], wsHidden: {}, wsArgs: { dx: '0', dy: '0' }, wsMsg: '',
-    // 工作区的坐标范围（按工作区 id 存；没有的就自动选）、专注模式的工作区 id（§10.5.8 A2–A4）
-    wsView: {}, focusWs: null,
+    // 几何工作区（§10.5）：选中的对象（稳定名字）、移动工具的参数、面板消息
+    // 工作区的坐标范围、图层开关、专注都是视图状态，放在工作区实体的 ui 字段里（见 js/ui/state.js）
+    wsSel: [], wsArgs: { dx: '0', dy: '0' }, wsMsg: '',
     // 工作区里两下画线的状态（§10.5.8 B11）：{ ws, tool:'seg'|'cut', pend, cur }
     wsDraw: null,
   });
@@ -67,7 +66,7 @@
     try { const o = U.JSON.parse(lsGet(SESS_KEY) || 'null'); return o && o.pid && o.startScene && U.problemById(o.pid) ? o : null; } catch (e) { return null; }
   }
   // 改动了整张台面（撤销、重做、载入文件）：之后的重放从这个台面开始
-  function rebaseSession() { if (S.session) { S.session.startScene = U.JSON.parse(snap()); S.session.acts = []; } }
+  function rebaseSession() { if (S.session) { S.session.startScene = U.JSON.parse(full()); S.session.acts = []; } }
   function recordSession(a, n) { if (S.session) for (let i = 0; i < (n || 1); i++) U.Session.record(S.session, a); }
   function offerResume() {
     const sv = loadSession(); if (!sv) return;
@@ -82,7 +81,7 @@
     if (sv.pred && sv.pred.done) { run.pred_done = true; if (sv.pred.v !== undefined) run.pred = sv.pred.v; }
     let sc;
     try { sc = U.Session.replay(sv, (cur) => { J.check(p, run, cur, W.evaluate(cur)); }); } catch (e) { clearSession(); say('上次的台面读不出来，已重新开始', 'warn', 3000); return; }
-    if (S.mode === 'free') S.freeScene = snap();
+    if (S.mode === 'free') S.freeScene = full();
     const r = U.Session.resume(sv);
     S.problem = p; S.mode = sv.mode; S.run = run; S.session = sv; S.scene = sc;
     S.undo = []; S.redo = []; S.sel = null; S.selLink = null; S.inspOpen = false; S.tab = 'steps'; S.glow = [];
@@ -99,7 +98,18 @@
   }
 
   // ---------- 改动入口 ----------
-  const snap = () => U.JSON.stringify(S.scene);
+  // 撤销快照不带视图（实体的 ui）：撤销、重做、失败回滚都不把视图回退（U4，见 js/ui/state.js）
+  const snap = () => U.JSON.stringify(UI.State.stripView(S.scene));
+  // 完整的台面（带视图）：自由台面存档、断点续做的起点用它，切换模式回来、刷新后视图还在
+  const full = () => U.JSON.stringify(S.scene);
+  // 载入撤销快照：台面换成快照的，视图保留现在的（同一个实体 id）
+  function loadKeepView(str) {
+    const sc = W.load(str), cur = (S.scene && S.scene.entities) || {};
+    for (const id of Object.keys(sc.entities)) { const e = cur[id]; if (e && e.ui) sc.entities[id].ui = e.ui; }
+    return sc;
+  }
+  // 视图改了（缩放、平移、图层、专注）：不进撤销，但要存档；界面每次渲染时调用
+  function persistView() { if (UI.State.flush()) saveFree(); }
   function pushUndo(s) { S.undo.push(s || snap()); if (S.undo.length > 120) S.undo.shift(); S.redo = []; }
 
   // ---------- 事务（U2）----------
@@ -112,9 +122,9 @@
     const before = o.from !== undefined ? o.from : snap(), rec = [];
     let last = { ok: true };
     const A = (a) => { const r = W.act(S.scene, a); if (!r.ok) throw { why: r.why }; rec.push(a); last = r; return r; };
-    if (o.from !== undefined) S.scene = W.load(before);
+    if (o.from !== undefined) S.scene = loadKeepView(before);
     try { fn(A); } catch (x) {
-      S.scene = W.load(before);
+      S.scene = loadKeepView(before);
       const why = (x && x.why) || '这一步做不了';
       if (S.sel && !S.scene.entities[S.sel]) S.sel = null;
       say(why, 'bad', 3800); if (S.run) S.run.errors++;
@@ -162,7 +172,7 @@
   function removeEntity(id) { return UI.Intent.run('delete', { id }); }
   function afterMove() { saveFree(); UI.Panels.renderTop(); }
 
-  function restore(str) { S.scene = W.load(str); S.sel = null; S.selLink = null; rebaseSession(); refresh(); }
+  function restore(str) { S.scene = loadKeepView(str); S.sel = null; S.selLink = null; rebaseSession(); refresh(); }
   function undo() { if (!S.undo.length) return; S.redo.push(snap()); restore(S.undo.pop()); saveFree(); }
   function redo() { if (!S.redo.length) return; S.undo.push(snap()); restore(S.redo.pop()); saveFree(); }
 
@@ -172,11 +182,11 @@
   function openProblem(id, mode) {
     const p = U.problemById(id); if (!p) return;
     UI.Panels.closeDialog();
-    if (S.mode === 'free') S.freeScene = snap();
+    if (S.mode === 'free') S.freeScene = full();
     S.problem = p; S.mode = mode || 'practice'; S.scene = p.build(); S.run = J.start(p, S.mode);
     S.session = U.Session.start(p, S.mode, S.scene);
     S.undo = []; S.redo = []; S.sel = null; S.selLink = null; S.inspOpen = false; S.tab = 'steps'; S.glow = [];
-    S.wsSel = []; S.wsHidden = {}; S.wsMsg = ''; S.wsView = {}; S.focusWs = null; S.wsDraw = null;
+    S.wsSel = []; S.wsMsg = ''; S.wsDraw = null;
     if (!p.predict) S.run.pred_done = true;
     Ev.ctx = { pid: p.id, mode: S.mode }; Ev.push('start', {});
     S.D = W.evaluate(S.scene); UI.Stage.fit(); S.glow = glowOf();
@@ -187,7 +197,7 @@
     S.mode = 'free'; S.problem = null; S.run = null; S.session = null; Ev.ctx = {};
     let sc = null; try { sc = S.freeScene ? U.JSON.parse(S.freeScene) : U.JSON.parse(lsGet(FREE_KEY)); } catch (e) { sc = null; }
     try { S.scene = sc ? W.load(sc) : W.blank(); } catch (e) { S.scene = W.blank(); }
-    S.undo = []; S.redo = []; S.sel = null; S.selLink = null; S.glow = []; S.tab = 'lab'; S.focusWs = null; S.wsView = {}; S.wsDraw = null;
+    S.undo = []; S.redo = []; S.sel = null; S.selLink = null; S.glow = []; S.tab = 'lab'; S.wsDraw = null;
     S.D = W.evaluate(S.scene); UI.Stage.fit(); refresh(); UI.Panels.renderShelf();
     say('自由探究：从右边拖器材到台面，拖蓝点连线，点 ▶ 让世界动起来', '', 4200);
   }
@@ -443,7 +453,7 @@
         UI.Intent.run('piece', { ids, what, value: 1 });
       }
       else if (e.key === 'Escape' && S.wsDraw) UI.Stage.endDraw();
-      else if (e.key === 'Escape' && S.focusWs) UI.Stage.setFocus(null);
+      else if (e.key === 'Escape' && UI.State.focusedId()) UI.Stage.setFocus(null);
       else if (e.key === 'Escape') { S.sel = null; S.selLink = null; UI.Panels.renderInsp(); UI.Stage.render(); }
     });
     G.addEventListener('resize', () => { const nar = G.innerWidth <= 640; $('#shelfbtn').style.display = nar ? '' : 'none'; });
@@ -456,6 +466,6 @@
     setInterval(saveSession, 2000); G.addEventListener('pagehide', saveSession);
     offerResume();
   }
-  UI.App = { tx, act, actMany, build, preview, snapshot, afterMove, removeEntity, askDelete, clockAct, openProblem, openFree, setMode, say, undo, redo, stepOnce, refresh };
+  UI.App = { tx, act, actMany, build, preview, snapshot, afterMove, removeEntity, askDelete, clockAct, openProblem, openFree, setMode, say, undo, redo, stepOnce, refresh, persistView };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })(window);

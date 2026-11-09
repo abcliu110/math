@@ -1,18 +1,13 @@
 /* node tests/ui-probes.js —— 把 tools/probes/ws-drop.js 和 ws-undo.js 改写成真实鼠标的断言，用 tests/gestures.js。
  * 需要 playwright（NODE_PATH 指向它的 node_modules）。见 docs/ui-robustness.md 第 3.2 节（P1、P2）。
- * 预期失败（EXPECTED FAIL）：P2 现在应该失败，不计入失败数，输出一行 “EXPECTED FAIL P2 …”。P1 已修好（U2），是普通断言。
- * 如果预期失败的检查意外通过，输出 “UNEXPECTED PASS …” 并计入失败：修好后把它改成普通断言。 */
+ * P1 已修好（U2），P2 已修好（U4：视图在工作区实体的 ui 里，随存档保存），都是普通断言。 */
 'use strict';
 const { chromium } = require('playwright');
 const path = require('path');
 const G = require('./gestures');
 const url = 'file:///' + path.join(__dirname, '..', 'index.html').split(path.sep).join('/');
-let pass = 0, fail = 0, expected = 0;
+let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fail++; console.log('  FAIL ' + m); } };
-const expectFail = (id, broken, m) => {
-  if (broken) { expected++; console.log('  EXPECTED FAIL ' + id + '：' + m); }
-  else { fail++; console.log('  UNEXPECTED PASS ' + id + '：' + m + '（已修好，请把它改成普通断言）'); }
-};
 
 (async () => {
   const b = await chromium.launch(), p = await b.newPage({ viewport: { width: 1440, height: 900 } });
@@ -97,20 +92,60 @@ const expectFail = (id, broken, m) => {
   const outside = await p.evaluate((id) => { const e = UI.S.scene.entities[id]; return !!e && !e.parent; }, cid);
   ok(outside, '撤销一次，卡片回到工作区外面');
 
-  console.log('工作区视图（P2）');
+  console.log('工作区视图（P2，U4：视图在工作区实体的 ui 里）');
+  const viewOf = (id) => p.evaluate((id) => JSON.stringify(UI.State.viewOf(UI.S.scene.entities[id]) || null), id);
   ws = await fresh();
   await G.dragTileTo(p, 'ftri', ws);
-  await p.evaluate((ws) => { UI.S.wsView[ws] = { cx: 3, cy: 2, span: 9 }; UI.Stage.render(); }, ws);
+  await p.evaluate((ws) => { UI.State.setUi(UI.S.scene.entities[ws], 'view', { cx: 3, cy: 2, span: 9 }); UI.Stage.render(); }, ws);
   await p.waitForTimeout(150);
-  const viewBefore = await p.evaluate((ws) => JSON.stringify(UI.S.wsView[ws] || null), ws);
+  const viewBefore = await viewOf(ws);
   await p.reload(); await p.waitForTimeout(500);
   const wsAfter = await p.evaluate(() => { const e = Object.values(UI.S.scene.entities).find((x) => x.type === 'gworkspace'); return e ? e.id : null; });
-  const viewAfter = await p.evaluate((ws) => JSON.stringify((UI.S.wsView || {})[ws] || null), wsAfter);
-  expectFail('P2', viewAfter !== viewBefore, '刷新后工作区视图 ' + viewAfter + '，刷新前 ' + viewBefore + '（期望一致）');
+  const viewAfter = await viewOf(wsAfter);
+  ok(viewBefore !== 'null' && viewAfter === viewBefore, 'P2：刷新后工作区视图 ' + viewAfter + '，刷新前 ' + viewBefore + '（一致）');
+
+  console.log('视图状态（U4）：真实滚轮缩放后撤销不回退视图；图层开关刷新后保留；旧存档能打开');
+  ws = await fresh();
+  await G.dragTileTo(p, 'ftri', ws);
+  await G.assertInvariants(p, '拖入三角形（视图测试）');
+  const wb = await p.locator('svg.wsbody[data-wsid="' + ws + '"]').first().boundingBox();
+  await p.mouse.move(wb.x + wb.width / 2, wb.y + wb.height / 2);
+  await p.mouse.wheel(0, -300); await p.waitForTimeout(200);
+  const zoomed = await viewOf(ws);
+  ok(zoomed !== 'null', '滚轮缩放工作区后，视图记在工作区实体上：' + zoomed);
+  await G.assertInvariants(p, '滚轮缩放工作区');
+  const beforeUndo = await viewOf(ws);
+  await G.dragTileTo(p, 'rect', ws);   // 一个可撤销的手势
+  await G.assertInvariants(p, '拖入长方形（视图测试）');
+  await G.undo(p);
+  await G.assertInvariants(p, '撤销（视图测试）');
+  const viewUndone = await viewOf(ws);
+  ok(viewUndone === beforeUndo, '撤销一次，工作区视图不回退（撤销前 ' + beforeUndo + '，撤销后 ' + viewUndone + '）');
+
+  // 图层开关：真实点击隐藏一个图层，刷新后仍是隐藏的
+  ws = await fresh();
+  await G.dragTileTo(p, 'ftri', ws);
+  await p.locator('input[data-ws-layer]').first().uncheck(); await p.waitForTimeout(150);
+  const hiddenBefore = await p.evaluate((ws) => JSON.stringify(UI.State.hiddenOf(UI.S.scene.entities[ws])), ws);
+  ok(hiddenBefore !== '{}', '点掉一个图层，工作区记下了隐藏：' + hiddenBefore);
+  await p.reload(); await p.waitForTimeout(500);
+  const hiddenAfter = await p.evaluate(() => { const e = Object.values(UI.S.scene.entities).find((x) => x.type === 'gworkspace'); return e ? JSON.stringify(UI.State.hiddenOf(e)) : null; });
+  ok(hiddenAfter === hiddenBefore, '刷新后图层开关保持：' + hiddenAfter);
+
+  // 旧存档（v4，实体没有 ui）：能打开，不报错，版本升到 5，实体数不变
+  ws = await fresh();
+  await G.dragTileTo(p, 'ftri', ws);
+  const nOld = await ents();
+  const oldSave = await p.evaluate(() => { const sc = U.JSON.parse(U.World.save(UI.S.scene)); sc.v = 4; for (const e of Object.values(sc.entities)) delete e.ui; return U.JSON.stringify(sc); });
+  await p.evaluate((s) => localStorage.setItem('universe-free-v1', s), oldSave);
+  await p.reload(); await p.waitForTimeout(500);
+  const oldLoaded = await p.evaluate(() => ({ n: Object.keys(UI.S.scene.entities).length, v: UI.S.scene.v }));
+  ok(oldLoaded.n === nOld && oldLoaded.v === 5, '旧存档（v4）打开后实体数 ' + oldLoaded.n + '，版本 ' + oldLoaded.v + '（期望 ' + nOld + '、5）');
+  await G.assertInvariants(p, '打开旧存档');
 
   await G.assertInvariants(p, '结束检查', { skip: ['undo'] });
   ok(true, '结束时不变量成立，控制台 0 报错');
-  console.log('\n' + pass + ' 通过，' + fail + ' 失败，' + expected + ' 个预期失败（不计入失败）');
+  console.log('\n' + pass + ' 通过，' + fail + ' 失败');
   await b.close();
   process.exit(fail ? 1 : 0);
 })().catch(async (e) => { console.log('  FAIL 脚本异常：' + e.message); process.exit(1); });

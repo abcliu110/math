@@ -175,7 +175,7 @@ async function bannerText(page) {
 // 不变量检查（只读）。失败时抛出错误，信息里带 label 和最近一次手势的名字。
 //  (a) 台面上没有游离的卡片叠在容器卡片上（容器 = 器材定义里有 slots 或 workspace，或者有子实体；游离 = 没有 parent 的实体）
 //  (b) 最近一个手势最多增加一个撤销项（UI.S.undo 长度）
-//  (c) 工作区里显示的图形：标签出现在画布文字里；质心在可见范围内（范围取自 UI.S.wsView；没有记录的范围不检查）
+//  (c) 工作区里显示的图形：标签出现在画布文字里；质心在可见范围内（范围取自工作区的 ui.view；没有记录的范围不检查）
 //  (d) 没有控制台错误（attachErrorCollector 收集的）
 // opts.skip：可以跳过的检查名（只用于已登记的已知问题）：'undo' 跳过 (b)，'overlap' 跳过 (a)。两者都对应 P1。
 async function assertInvariants(page, label, opts) {
@@ -197,7 +197,7 @@ async function assertInvariants(page, label, opts) {
       if (!def || !def.workspace) continue;
       const sv = document.querySelector('svg.wsbody[data-wsid="' + e.id + '"]');
       if (!sv) continue;
-      const w = +sv.getAttribute('width'), h = +sv.getAttribute('height'), view = (S.wsView || {})[e.id] || null;
+      const w = +sv.getAttribute('width'), h = +sv.getAttribute('height'), view = UI.State.viewOf(e) || null;
       const items = [];
       for (const k of Object.values(E)) {
         if (k.parent !== e.id || k.hidden) continue;

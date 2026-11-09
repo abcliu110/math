@@ -668,7 +668,7 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
     await p.evaluate(() => UI.App.openFree()); await p.waitForTimeout(150);
     const wsC = await p.evaluate(() => {
       const A = UI.App, ws = A.act({ t: 'add', type: 'gworkspace', x: 120, y: 120 }).id;
-      UI.S.wsView[ws] = { cx: -20, cy: -20, span: 8 };   // 故意把范围放在圆的外面
+      UI.State.setUi(UI.S.scene.entities[ws], 'view', { cx: -20, cy: -20, span: 8 });   // 故意把范围放在圆的外面
       const c = A.act({ t: 'add', type: 'fcirc', x: 500, y: 120, props: { cx: 6, cy: 4, r: 2 } }).id;
       A.act({ t: 'put', id: c, parent: ws, slot: 'items' });
       return ws;
@@ -873,9 +873,9 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
     const cs = await p.evaluate((w) => Object.values(UI.S.scene.entities).filter((e) => e.type === 'gpiece' && e.parent === w).map((e) => { const f = UI.S.D[e.id].out.f.data, xs = f.pts.map((q) => U.Q.num(q.x)), ys = f.pts.map((q) => U.Q.num(q.y)); return [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2]; }), ws);
     const far = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
     ok(cs.length === 3 && far(cs[0], cs[1]) > 2 && far(cs[1], cs[2]) > 2 && far(cs[0], cs[2]) > 2, '三个图形各落在自己松手的位置，互不重叠：' + JSON.stringify(cs.map((c) => c.map((v) => +v.toFixed(1)))));
-    const v0 = await p.evaluate((w) => JSON.stringify(UI.S.wsView[w]), ws);
+    const v0 = await p.evaluate((w) => JSON.stringify(UI.State.viewOf(UI.S.scene.entities[w])), ws);
     await dropTile('fquad', 0.8, 0.8);
-    const v1 = await p.evaluate((w) => JSON.stringify(UI.S.wsView[w]), ws);
+    const v1 = await p.evaluate((w) => JSON.stringify(UI.State.viewOf(UI.S.scene.entities[w])), ws);
     ok(v0 === v1, '再放一个图形，工作区的坐标范围不变（不会每放一个就重新缩放）');
     // 点击器材架里的瓦片添加：新卡片不和工作区的卡片、工具面板重叠
     await p.locator('.tile[data-type="num"]').first().scrollIntoViewIfNeeded(); await p.locator('.tile[data-type="num"]').first().click(); await p.waitForTimeout(200);

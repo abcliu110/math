@@ -65,6 +65,25 @@ t('v2 台面没有容器字段：升到 v3 后 parent/slot 为 null', () => {
   const s = W.load(JSON.stringify({ v: 2, nid: 2, seq: {}, entities: { e1: { id: 'e1', type: 'num', name: 'x', x: 0, y: 0, props: { n: 1 } } }, links: [], clock: { t: 0, n: 0, running: false, hz: 4, rate: 1, seed: 1 } }));
   eq(s.v, W.CURRENT_V); eq(s.entities.e1.parent, null); eq(s.entities.e1.slot, null);
 });
+t('旧存档 v1–v4 都能读，升到 v5，实体补空的 ui（视图按自动适应），求值不报错', () => {
+  const clock = { t: 0, n: 0, running: false, hz: 4, rate: 1, seed: 1 };
+  const olds = [
+    { entities: { e1: { id: 'e1', type: 'num', name: 'x', x: 0, y: 0, props: { n: 1 } } }, links: [] },
+    { v: 2, nid: 2, seq: {}, entities: { e1: { id: 'e1', type: 'num', name: 'x', x: 0, y: 0, props: { n: 1 } } }, links: [], clock },
+    { v: 3, nid: 2, seq: {}, entities: { e1: { id: 'e1', type: 'num', name: 'x', x: 0, y: 0, props: { n: 1 }, parent: null, slot: null } }, links: [], clock },
+    { v: 4, nid: 2, seq: {}, entities: { e1: { id: 'e1', type: 'num', name: 'x', x: 0, y: 0, props: { n: 1 }, parent: null, slot: null } }, links: [], clock },
+  ];
+  for (const o of olds) {
+    const s = W.load(JSON.stringify(o));
+    eq(s.v, 5, '升到 v5'); eq(s.entities.e1.ui, {}, '实体补空的 ui');
+    W.evaluate(s);
+  }
+});
+t('v5 台面的视图字段存盘再读回，不丢', () => {
+  const sc = W.blank(); const id = W.add(sc, 'num', 0, 0, { n: 1 });
+  sc.entities[id].ui = { view: { cx: 1, cy: 2, span: 9 }, hiddenLayers: { 'x.0': true } };
+  eq(W.load(W.save(sc)).entities[id].ui, sc.entities[id].ui, '视图字段往返');
+});
 t('新台面存盘再读回，内容不变', () => {
   const sc = W.blank(); W.add(sc, 'num', 0, 0, { n: 5 });
   eq(W.load(W.save(sc)), JSON.parse(W.save(sc)), '往返');

@@ -502,7 +502,9 @@
   //   v0/无版本 → v1：补全 clock（t、n、running、rate、hz、seed），去掉 binds 字段（绑定已是连线）
   //   v1 → v2：器材补 props 默认空对象；台面补 nid/seq
   //   v2 → v3：器材补 parent / slot（容器与层级，1.10），没有容器的旧台面全部为 null
-  const CURRENT_V = 4;
+  //   v3 → v4：有理数的分子分母改成 BigInt
+  //   v4 → v5：器材补 ui（界面的视图状态：工作区的坐标范围、图层开关、专注，U4）；旧台面没有视图，补成空对象，即按内容自动适应
+  const CURRENT_V = 5;
   const MIGRATIONS = {
     1: (s) => {
       const c = blank().clock; s.clock = Object.assign(c, s.clock || {});
@@ -530,6 +532,10 @@
         }
       };
       conv(s);
+      return s;
+    },
+    5: (s) => {
+      for (const e of Object.values(s.entities)) if (e.ui === undefined) e.ui = {};
       return s;
     },
   };

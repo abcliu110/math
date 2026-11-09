@@ -82,10 +82,10 @@
   const stepLabel = (st) => (st.type === 'gasm' && UI.S.scene.links.some((l) => l.to === st.id && l.toPort === 'target') ? '对齐到目标'
     : st.type === 'gplace' ? (st.props.flip ? '翻转' : st.props.turn ? '旋转' : '移动') : STEP_LABEL[st.type] || st.type);
   // ---- 工作区的坐标范围（§10.5.8 A2、A3）----
-  // S.wsView[id] = {cx, cy, span}：可见的横向范围是 [cx-span/2, cx+span/2]，画布上 1 个坐标单位 = w/span 像素。
+  // 工作区实体的 ui.view = {cx, cy, span}（见 js/ui/state.js）：可见的横向范围是 [cx-span/2, cx+span/2]，画布上 1 个坐标单位 = w/span 像素。
   // 没存过的，按内容自动选（横纵都装得下）。一旦拖过、滚过、改过大小、点过“适应”，就存下来：
   // 之后拉大卡片只是把图画大，坐标范围不变。
-  function wsVisible(ws) { const hidden = UI.S.wsHidden || {}; return wsValues(ws, wsNames()).filter((v) => !hidden[v.key] && v.fig); }
+  function wsVisible(ws) { const hidden = UI.State.hiddenOf(ws); return wsValues(ws, wsNames()).filter((v) => !hidden[v.key] && v.fig); }
   // 一个图形在坐标里的外框（圆按半径算）；没有点就是 null
   function figBox(f) {
     if (!f || !f.pts || !f.pts.length) return null;
@@ -111,7 +111,7 @@
     return { cx: (b.x0 + b.x1) / 2, cy: (b.y0 + b.y1) / 2, span };
   }
   function wsView(ws, w, h, b) {
-    const v = UI.S.wsView && UI.S.wsView[ws.id];
+    const v = UI.State.viewOf(ws);
     return v || autoView(b === undefined ? wsBounds(wsVisible(ws)) : b, w, h);
   }
   // 范围的数取最近的 1/2：写成 −1/2、7 1/2 这样
@@ -166,16 +166,18 @@
     S.wsSig = S.wsSig || {};
     for (const ws of Object.values(S.scene.entities)) {
       if (!isWsDef(ws.type)) continue;
+      // 这个工作区在本次打开后第一次看到（比如刷新后）：只记下签名，不因为“都是新的”就重新适应；存下的范围保留
+      const first = !S.wsSig[ws.id];
       const vals = wsVisible(ws), prev = S.wsSig[ws.id] || {}, sig = {}, changed = [];
       for (const v of vals) {
         const f = v.fig, k = [f.type, (f.pts || []).map((p) => Q.show(p.x) + ',' + Q.show(p.y)).join(';'), f.r2 ? Q.show(f.r2) : ''].join('|');
         sig[v.key] = k; if (prev[v.key] !== k) changed.push(v);
       }
       S.wsSig[ws.id] = sig;
-      if (!changed.length) continue;
+      if (!changed.length || first) continue;
       const g = geom(ws), w = g.w, h = g.h - HD, vw = wsView(ws, w, h), hw = vw.span / 2, hh = vw.span * h / w / 2;
       const out = changed.some((v) => { const bx = figBox(v.fig); return bx && (bx.x0 < vw.cx - hw || bx.x1 > vw.cx + hw || bx.y0 < vw.cy - hh || bx.y1 > vw.cy + hh); });
-      if (out) { S.wsView = S.wsView || {}; S.wsView[ws.id] = autoView(wsBounds(vals), w, h); }
+      if (out) UI.State.setUi(ws, 'view', autoView(wsBounds(vals), w, h));
     }
   }
   function wsBody(ws, w, h) {
@@ -259,7 +261,7 @@
   // 工作区底下的面板：工具行、选中的对象、消息、步骤历史、图层
   // dims：画布的宽高（专注模式里比卡片大）；inFocus：放在专注浮层的侧栏里，不用绝对定位
   function wsPanelHtml(ws, names, dims, inFocus) {
-    const S = UI.S, g = geom(ws), wd = U.types[ws.type].workspace, hidden = S.wsHidden || {};
+    const S = UI.S, g = geom(ws), wd = U.types[ws.type].workspace, hidden = UI.State.hiddenOf(ws);
     const pw = dims ? dims.w : g.w, ph = dims ? dims.h : g.h - HD;
     const vals = wsValues(ws, names), steps = wsSteps(ws), picks = S.wsSel || [];
     const pos = inFocus ? '' : ' style="left:' + g.x + 'px;top:' + (g.y + g.h + 36) + 'px;width:' + g.w + 'px"';
@@ -283,7 +285,7 @@
       h += '<div class="wsx-step" data-ws-step="' + st.id + '"><span>第 ' + (i + 1) + ' 步：' + K.esc(stepLabel(st)) + '（' + K.esc(srcs.join('、')) + '）</span>' +
         '<button data-ws-del="' + st.id + '" title="删除这一步">✕</button></div>';
     });
-    h += '<div class="wsx-h">图层</div><div class="wsx-layers">' + (vals.length ? vals.map((v) => '<label><input type="checkbox" data-ws-layer="' + escA(v.key) + '"' + (hidden[v.key] ? '' : ' checked') + '> ' + K.esc(v.label) + '</label>').join('') : '<span class="wsx-none">没有图形</span>') + '</div>';
+    h += '<div class="wsx-h">图层</div><div class="wsx-layers">' + (vals.length ? vals.map((v) => '<label><input type="checkbox" data-ws-layer="' + escA(v.key) + '" data-ws-of="' + ws.id + '"' + (hidden[v.key] ? '' : ' checked') + '> ' + K.esc(v.label) + '</label>').join('') : '<span class="wsx-none">没有图形</span>') + '</div>';
     return h + '</div>';
   }
   // 点选：没有 Shift 就只选这一个，有 Shift 就加上 / 去掉
@@ -442,14 +444,15 @@
     worldEl.innerHTML = h;
     worldEl.style.transform = 'translate(' + S.view.x + 'px,' + S.view.y + 'px) scale(' + S.view.z + ')';
     const z = $('#zv'); if (z) z.textContent = Math.round(S.view.z * 100) + '%';
-    if (focusEl) { focusEl.innerHTML = focusHtml(); focusEl.style.display = S.focusWs ? '' : 'none'; }
+    if (focusEl) { focusEl.innerHTML = focusHtml(); focusEl.style.display = UI.State.focusedId() ? '' : 'none'; }
+    if (UI.App && UI.App.persistView) UI.App.persistView();   // 视图改过就存档（不进撤销）
   }
 
   // ---- 专注模式（§10.5.8 A4）：工作区放大成覆盖台面的浮层，双击标题或按 Esc 还原 ----
-  function setFocus(id) { UI.S.focusWs = id || null; render(); }
+  function setFocus(id) { UI.State.setFocusId(id || null); render(); }
   function focusHtml() {
-    const S = UI.S, id = S.focusWs, e = id && S.scene.entities[id];
-    if (!e || !isWsDef(e.type)) { S.focusWs = null; return ''; }
+    const S = UI.S, id = UI.State.focusedId(), e = id && S.scene.entities[id];
+    if (!e || !isWsDef(e.type)) { if (id) UI.State.setFocusId(null); return ''; }
     const r = stageEl.getBoundingClientRect();
     const W = Math.max(200, Math.round(r.width - 300 - 72)), H = Math.max(160, Math.round(r.height - 32 - 56));
     let h = '<div class="wsf-hd" title="双击标题，或按 Esc，还原"><b>' + K.esc(e.name) + '</b><span>双击标题或按 Esc 还原</span><button data-ws-unfocus>还原</button></div>';
@@ -466,21 +469,19 @@
     const v0 = wsView(ws, cw, ch), s0 = cw / v0.span;
     const px = v0.cx + (lx - cw / 2) / s0, py = v0.cy - (ly - ch / 2) / s0;
     const span = Math.max(1e-3, Math.min(1e6, v0.span / f)), s1 = cw / span;
-    S.wsView = S.wsView || {};
-    S.wsView[id] = { cx: px - (lx - cw / 2) / s1, cy: py + (ly - ch / 2) / s1, span };
+    UI.State.setUi(ws, 'view', { cx: px - (lx - cw / 2) / s1, cy: py + (ly - ch / 2) / s1, span });
     render();
   }
   // 适应：按内容选一个正好装下的坐标范围（之后拉大卡片不再变）
   // key 有值时只适应到这一个图形（超出范围的箭头用它）
   function wsFit(id, key) {
     const S = UI.S, ws = S.scene.entities[id]; if (!ws) return;
-    const sv = S.focusWs === id && focusEl ? focusEl.querySelector('svg.wsbody') : null;
+    const sv = UI.State.focusedId() === id && focusEl ? focusEl.querySelector('svg.wsbody') : null;
     let w, h;
     if (sv) { w = +sv.getAttribute('width'); h = +sv.getAttribute('height'); }
     else { const g = geom(ws); w = g.w; h = g.h - HD; }
     const vals = key ? wsVisible(ws).filter((v) => v.key === key) : wsVisible(ws);
-    S.wsView = S.wsView || {};
-    S.wsView[id] = autoView(wsBounds(vals), w, h);
+    UI.State.setUi(ws, 'view', autoView(wsBounds(vals), w, h));
     render();
   }
   // 开始拖柄改大小：工作区先把现在看到的坐标范围存下来，之后拉大只是把图画大
@@ -488,7 +489,7 @@
     const S = UI.S, e = S.scene.entities[id]; if (!e) return;
     ev.preventDefault(); ev.stopPropagation();
     const g = geom(e);
-    if (isWsDef(e.type)) { S.wsView = S.wsView || {}; if (!S.wsView[id]) S.wsView[id] = wsView(e, g.w, g.h - HD); }
+    if (isWsDef(e.type) && !UI.State.viewOf(e)) UI.State.setUi(e, 'view', wsView(e, g.w, g.h - HD));
     S.sel = id; S.selLink = null;
     drag = { kind: 'rz', id, sx: ev.clientX, sy: ev.clientY, w0: g.w, h0: g.h, zoom: S.view.z, moved: false };
   }
@@ -553,7 +554,7 @@
     if (!e) return;
     const mx = ev.clientX - d.sx, my = ev.clientY - d.sy;
     if (!d.moved && Math.hypot(mx, my) < 4) return;
-    if (!d.moved && d.v0) { S.wsView = S.wsView || {}; S.wsView[d.wsId] = d.v0; }   // 拖动开始：把冻结的坐标范围存下来
+    if (!d.moved && d.v0) UI.State.setUi(S.scene.entities[d.wsId], 'view', d.v0);   // 拖动开始：把冻结的坐标范围存下来
     d.moved = true;
     d.out = !overWs(ev, d.wsId);
     const cl = (v) => Math.max(-200, Math.min(200, v));
@@ -792,7 +793,7 @@
   function startShape(ev, wb, wsId, mode, targets, extra) {
     const S = UI.S, ws = S.scene.entities[wsId]; if (!ws) return;
     const fr = wsFrame(ws, +wb.getAttribute('width'), +wb.getAttribute('height'));
-    S.wsView = S.wsView || {}; S.wsView[wsId] = fr.vw;
+    UI.State.setUi(ws, 'view', fr.vw);
     const sc = scr(wb, fr);
     drag = Object.assign({ kind: 'shape', mode, wsId, v: fr.vw, sc, unit: sc.unit, sx: ev.clientX, sy: ev.clientY, start: worldAt(ev, fr.vw, sc), targets, moved: false, out: [], f: Q(1), k: 0, guides: [] }, extra || {});
   }
@@ -1009,7 +1010,7 @@
     const S = UI.S, D = S.wsDraw, ws = S.scene.entities[D.ws];
     if (!ws) return endDraw();
     const fr = wsFrame(ws, +wb.getAttribute('width'), +wb.getAttribute('height'));
-    S.wsView = S.wsView || {}; if (!S.wsView[D.ws]) S.wsView[D.ws] = fr.vw;   // 画线时坐标范围冻结
+    if (!UI.State.viewOf(ws)) UI.State.setUi(ws, 'view', fr.vw);   // 画线时坐标范围冻结
     const sc = scr(wb, fr), sp = snapTo(fr, worldAt(ev, fr.vw, sc), sc);
     if (!D.pend) { D.pend = sp; D.cur = sp; S.wsMsg = ''; return wsRedraw(D.ws); }
     const a = D.pend; D.pend = null; D.cur = null;
@@ -1174,7 +1175,7 @@
     if (!(t && slots.length)) return null;
     const piece = !!(opt && opt.piece);
     if (isWsDef(t.type) && !piece) {
-      const g = geom(t); S.wsView = S.wsView || {}; if (!S.wsView[t.id]) S.wsView[t.id] = wsView(t, g.w, g.h - HD);
+      const g = geom(t); if (!UI.State.viewOf(t)) UI.State.setUi(t, 'view', wsView(t, g.w, g.h - HD));
       const wb = document.querySelector('svg.wsbody[data-wsid="' + t.id + '"]'), fr = wsFrame(t, g.w, g.h - HD);
       const pt = wb ? worldAt(ev, fr.vw, scr(wb, fr)) : null;
       return { ws: t.id, x: pt ? pt.x : undefined, y: pt ? pt.y : undefined };
@@ -1220,8 +1221,7 @@
       if (!drag.moved && Math.hypot(dx, dy) < 4) return;
       drag.moved = true;
       const s0 = drag.cw / drag.v0.span;
-      S.wsView = S.wsView || {};
-      S.wsView[drag.id] = { cx: drag.v0.cx - dx / drag.k / s0, cy: drag.v0.cy + dy / drag.k / s0, span: drag.v0.span };
+      UI.State.setUi(S.scene.entities[drag.id], 'view', { cx: drag.v0.cx - dx / drag.k / s0, cy: drag.v0.cy + dy / drag.k / s0, span: drag.v0.span });
       render(); return;
     }
     if (drag.kind === 'pan') { S.view.x = drag.vx + ev.clientX - drag.sx; S.view.y = drag.vy + ev.clientY - drag.sy; render(); return; }
@@ -1275,8 +1275,11 @@
     stageEl.addEventListener('change', (ev) => {
       const l = ev.target.getAttribute && ev.target.getAttribute('data-ws-layer');
       if (l === null || l === undefined) return;
-      const S = UI.S; S.wsHidden = S.wsHidden || {};
-      if (ev.target.checked) delete S.wsHidden[l]; else S.wsHidden[l] = true;
+      const ws = UI.S.scene.entities[ev.target.getAttribute('data-ws-of')];
+      if (!ws) return;
+      const h = Object.assign({}, UI.State.hiddenOf(ws));
+      if (ev.target.checked) delete h[l]; else h[l] = true;
+      UI.State.setUi(ws, 'hiddenLayers', Object.keys(h).length ? h : null);
       render();
     });
     stageEl.addEventListener('input', (ev) => {
