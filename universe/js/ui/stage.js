@@ -117,7 +117,7 @@
   // 范围的数取最近的 1/2：写成 −1/2、7 1/2 这样
   const fmtHalf = (n) => { const k = Math.round(n * 2), a = Math.abs(k), whole = Math.floor(a / 2), half = a % 2; return (k < 0 ? '−' : '') + (half ? (whole ? whole + ' ' : '') + '1/2' : String(whole)); };
   function rangeText(ws, w, h) {
-    const v = wsView(ws, w, h), hh = h * v.span / w / 2, hw = v.span / 2;
+    const v = wsView(ws, w, h), { hw, hh } = UI.Space.halfRange(w, h, v);
     return '横向 ' + fmtHalf(v.cx - hw) + ' 到 ' + fmtHalf(v.cx + hw) + '　纵向 ' + fmtHalf(v.cy - hh) + ' 到 ' + fmtHalf(v.cy + hh);
   }
 
@@ -144,7 +144,7 @@
   }
   // 整个在坐标范围外面的图形：在画布边缘画一个箭头和名字，点一下就把范围调到它（wsFit）
   function offArrows(fr, ws) {
-    const { vw, w, h, X, Y, vals } = fr, hw = vw.span / 2, hh = vw.span * h / w / 2, M = 6, out = [];
+    const { vw, w, h, X, Y, vals } = fr, { hw, hh } = UI.Space.halfRange(w, h, vw), M = 6, out = [];
     vals.forEach((v, i) => {
       const bx = figBox(v.fig); if (!bx) return;
       if (bx.x1 >= vw.cx - hw && bx.x0 <= vw.cx + hw && bx.y1 >= vw.cy - hh && bx.y0 <= vw.cy + hh) return;
@@ -175,7 +175,7 @@
       }
       S.wsSig[ws.id] = sig;
       if (!changed.length || first) continue;
-      const g = geom(ws), w = g.w, h = g.h - HD, vw = wsView(ws, w, h), hw = vw.span / 2, hh = vw.span * h / w / 2;
+      const g = geom(ws), w = g.w, h = g.h - HD, vw = wsView(ws, w, h), { hw, hh } = UI.Space.halfRange(w, h, vw);
       const out = changed.some((v) => { const bx = figBox(v.fig); return bx && (bx.x0 < vw.cx - hw || bx.x1 > vw.cx + hw || bx.y0 < vw.cy - hh || bx.y1 > vw.cy + hh); });
       if (out) UI.State.setUi(ws, 'view', autoView(wsBounds(vals), w, h));
     }
@@ -463,13 +463,13 @@
   // 工作区里滚轮缩放：以指针为中心，只改这个工作区的坐标范围（台面不动）
   function wsZoomAt(wb, f, cx, cy) {
     const S = UI.S, id = wb.dataset.wsid, ws = S.scene.entities[id]; if (!ws) return;
-    const cw = +wb.getAttribute('width'), ch = +wb.getAttribute('height');
-    const r = wb.getBoundingClientRect(), k = r.width / cw;
-    const lx = (cx - r.left) / k, ly = (cy - r.top) / k;
-    const v0 = wsView(ws, cw, ch), s0 = cw / v0.span;
-    const px = v0.cx + (lx - cw / 2) / s0, py = v0.cy - (ly - ch / 2) / s0;
-    const span = Math.max(1e-3, Math.min(1e6, v0.span / f)), s1 = cw / span;
-    UI.State.setUi(ws, 'view', { cx: px - (lx - cw / 2) / s1, cy: py + (ly - ch / 2) / s1, span });
+    const cw = +wb.getAttribute('width'), ch = +wb.getAttribute('height'), Sp = UI.Space;
+    const local = Sp.screenToCanvas({ clientX: cx, clientY: cy }, wb.getBoundingClientRect(), cw, ch);
+    const v0 = wsView(ws, cw, ch), p = Sp.canvasToWorkspace(local, cw, ch, v0);
+    const span = UI.Space.zoomSpan(v0, f);
+    // 指针下面的那一点缩放前后位置不变：算出新范围的中心，使新范围下这一点仍然是 p
+    const q = Sp.canvasToWorkspace(local, cw, ch, { cx: 0, cy: 0, span });
+    UI.State.setUi(ws, 'view', { cx: p.x - q.x, cy: p.y - q.y, span });
     render();
   }
   // 适应：按内容选一个正好装下的坐标范围（之后拉大卡片不再变）
@@ -494,8 +494,6 @@
     drag = { kind: 'rz', id, sx: ev.clientX, sy: ev.clientY, w0: g.w, h0: g.h, zoom: S.view.z, moved: false };
   }
 
-  const toWorld = (ev) => { const r = stageEl.getBoundingClientRect(), v = UI.S.view; return { x: (ev.clientX - r.left - v.x) / v.z, y: (ev.clientY - r.top - v.y) / v.z }; };
-
   function fit() {
     const S = UI.S, r = stageEl.getBoundingClientRect();
     let ids = Object.keys(S.scene.entities).filter((id) => !inWs(S.scene.entities[id]));
@@ -506,14 +504,14 @@
       if (isWsDef(e.type)) { const pr = UI.Layout.panelRect(id, g); y1 = Math.max(y1, pr.y + pr.h); }   // 工作区底下的面板：实测（或估计）的高度
     });
     const FS = L.FIT_SCREEN, z = Math.max(L.ZOOM.fitMin, Math.min(L.ZOOM.fitMax, Math.min((r.width - 2 * FS.x) / (x1 - x0), (r.height - 2 * FS.y) / (y1 - y0))));
-    S.view = { z, x: (r.width - (x1 - x0) * z) / 2 - x0 * z, y: Math.max(L.FIT_TOP_MIN, (r.height - (y1 - y0) * z) / 2) - y0 * z + L.FIT_TOP_NUDGE };
+    const Sp = UI.Space;
+    S.view = Sp.viewAt(z, { x: x0, y: y0 }, { x: (r.width - Sp.scaleLen(x1 - x0, z)) / 2, y: Math.max(L.FIT_TOP_MIN, (r.height - Sp.scaleLen(y1 - y0, z)) / 2) + L.FIT_TOP_NUDGE });
   }
 
   function zoomAt(f, cx, cy) {
-    const S = UI.S, v = S.view, r = stageEl.getBoundingClientRect();
-    if (cx === undefined) { cx = r.width / 2; cy = r.height / 2; } else { cx -= r.left; cy -= r.top; }
-    const z = Math.max(L.ZOOM.min, Math.min(L.ZOOM.max, v.z * f)), k = z / v.z;
-    v.x = cx - (cx - v.x) * k; v.y = cy - (cy - v.y) * k; v.z = z; render();
+    const S = UI.S, r = stageEl.getBoundingClientRect();
+    const local = cx === undefined ? { x: r.width / 2, y: r.height / 2 } : UI.Space.stageLocal({ clientX: cx, clientY: cy });
+    S.view = UI.Space.zoomView(S.view, f, local, L.ZOOM); render();
   }
 
   // ---- 拖线时的提示 ----
@@ -545,7 +543,7 @@
     // 对齐准备：块的形状（拖动开始时的）和其余的顶点、边（目标图形也在里面），块自己的不算
     const pv = S.D[pe.id] && S.D[pe.id].out.f ? S.D[pe.id].out.f.data : null;
     const align = pv && ws ? buildAlign(ws, pv.pts, edgesOf(pv), [], (v) => v.id === pe.id) : null;
-    drag = { kind: 'piece', id: pe.id, wsId: pe.parent, v0, unit: v0 ? r.width / v0.span : (+gh.dataset.s) * r.width / cw, dx0: pe.props.dx, dy0: pe.props.dy, sx: ev.clientX, sy: ev.clientY, dxn: 0, dyn: 0, out: false, moved: false, align, guides: [] };
+    drag = { kind: 'piece', id: pe.id, wsId: pe.parent, v0, unit: v0 ? UI.Space.canvasOf(r, v0.span).unit : UI.Space.figUnit(r, cw, +gh.dataset.s), dx0: pe.props.dx, dy0: pe.props.dy, sx: ev.clientX, sy: ev.clientY, dxn: 0, dyn: 0, out: false, moved: false, align, guides: [] };
     // 量完大小再重画：重画会换掉这个图形的 DOM，之后再量会得到 0
     if (pk) render();
   }
@@ -560,8 +558,8 @@
     const cl = (v) => Math.max(-200, Math.min(200, v));
     let nx = d.dx0, ny = d.dy0; d.guides = [];
     if (!d.out) {
-      if (d.align) { d.align.alt = !!ev.altKey; const s = alignSolve(d.align, { x: mx / d.unit, y: -my / d.unit }, d.unit); nx = cl(d.dx0 + s.dx); ny = cl(d.dy0 + s.dy); d.guides = s.guides; }
-      else { nx = cl(d.dx0 + Math.round(mx / d.unit)); ny = cl(d.dy0 - Math.round(my / d.unit)); }
+      if (d.align) { d.align.alt = !!ev.altKey; const s = alignSolve(d.align, { x: UI.Space.pxToUnits(mx, d.unit), y: -UI.Space.pxToUnits(my, d.unit) }, d.unit); nx = cl(d.dx0 + s.dx); ny = cl(d.dy0 + s.dy); d.guides = s.guides; }
+      else { nx = cl(d.dx0 + Math.round(UI.Space.pxToUnits(mx, d.unit))); ny = cl(d.dy0 - Math.round(UI.Space.pxToUnits(my, d.unit))); }
     }
     d.dxn = nx - d.dx0; d.dyn = ny - d.dy0;
     if (e.props.dx !== nx || e.props.dy !== ny) {
@@ -579,7 +577,7 @@
     if (!d.moved) { UI.Panels.renderInsp(); render(); return; }
     e.props.dx = d.dx0; e.props.dy = d.dy0;
     if (d.out) {
-      const w = toWorld(ev);
+      const w = UI.Space.screenToStage(ev);
       UI.Intent.run('drop', { id: d.id, ev, piece: true, out: { x: w.x - L.PIECE_DROP.x, y: w.y - L.PIECE_DROP.y } });
     } else if (d.dxn || d.dyn) UI.Intent.run('piece', { ids: [d.id], what: 'move', value: { dx: d.dxn, dy: d.dyn } });
     else UI.App.refresh(false);
@@ -600,12 +598,10 @@
   const modT = (x) => ((x % 4) + 4) % 4;
   // 工作区的画布框架：可见的值、范围、像素换算。w、h 是画布的宽高（属性）
   function wsFrame(ws, w, h) {
-    const vals = wsVisible(ws), b = wsBounds(vals), vw = wsView(ws, w, h, b), s = w / vw.span;
-    return { vals, b, vw, s, w, h, X: (x) => w / 2 + (x - vw.cx) * s, Y: (y) => h / 2 - (y - vw.cy) * s };
+    const vals = wsVisible(ws), b = wsBounds(vals), vw = wsView(ws, w, h, b), s = UI.Space.perUnit(w, vw);
+    return { vals, b, vw, s, w, h, X: (x) => UI.Space.canvasX(x, w, vw), Y: (y) => UI.Space.canvasY(y, h, vw) };
   }
   // 屏幕像素 → 工作区坐标：sc.unit 是一个坐标单位占的屏幕像素（已经算进台面的缩放）
-  function scr(wb, fr) { const r = wb.getBoundingClientRect(); return { unit: r.width / fr.vw.span, cx: r.left + r.width / 2, cy: r.top + r.height / 2 }; }
-  function worldAt(ev, v, sc) { return { x: v.cx + (ev.clientX - sc.cx) / sc.unit, y: v.cy - (ev.clientY - sc.cy) / sc.unit }; }
   // 一个可以改的目标：实体 id、两个属性名（kx、ky）、原来的值、允许的范围
   function tgt(id, kx, ky) {
     const e = UI.S.scene.entities[id], P = U.types[e.type].props;
@@ -679,7 +675,7 @@
   // 求吸附后的整数平移 {dx, dy}（Tc 是没有取整的拖动量，单位是坐标单位），以及精确成立的参考线 guides
   function alignSolve(al, Tc, unit) {
     const B = al.base, O = al.others, OE = al.oedges, guides = [];
-    const pxd = (a, b) => Math.hypot(a, b) * unit;
+    const pxd = (a, b) => UI.Space.unitsToPx(Math.hypot(a, b), unit);
     let T = null;
     if (!al.alt) {
       // 1. 顶点重合：两个方向都对上（目标的坐标是整数才行），阈值内取最近的
@@ -698,17 +694,17 @@
         for (const b of B) {
           for (const v of O) {
             const vx = Q.sub(v.p.x, b.x), vy = Q.sub(v.p.y, b.y);
-            add(cx, vx, Math.abs(Q.num(vx) - Tc.x) * unit);
-            add(cy, vy, Math.abs(Q.num(vy) - Tc.y) * unit);
+            add(cx, vx, UI.Space.unitsToPx(Math.abs(Q.num(vx) - Tc.x), unit));
+            add(cy, vy, UI.Space.unitsToPx(Math.abs(Q.num(vy) - Tc.y), unit));
           }
-          add(cx, Q.neg(b.x), Math.abs(-Q.num(b.x) - Tc.x) * unit);   // 纵轴 x = 0
-          add(cy, Q.neg(b.y), Math.abs(-Q.num(b.y) - Tc.y) * unit);   // 横轴 y = 0
+          add(cx, Q.neg(b.x), UI.Space.unitsToPx(Math.abs(-Q.num(b.x) - Tc.x), unit));   // 纵轴 x = 0
+          add(cy, Q.neg(b.y), UI.Space.unitsToPx(Math.abs(-Q.num(b.y) - Tc.y), unit));   // 横轴 y = 0
         }
         for (const [i, j] of al.edges) {
           const a = B[i], b = B[j];
           for (const o of OE) {
-            if (Q.eq(a.x, b.x) && Q.eq(o.a.x, o.b.x)) add(cx, Q.sub(o.a.x, a.x), Math.abs(Q.num(Q.sub(o.a.x, a.x)) - Tc.x) * unit);
-            if (Q.eq(a.y, b.y) && Q.eq(o.a.y, o.b.y)) add(cy, Q.sub(o.a.y, a.y), Math.abs(Q.num(Q.sub(o.a.y, a.y)) - Tc.y) * unit);
+            if (Q.eq(a.x, b.x) && Q.eq(o.a.x, o.b.x)) add(cx, Q.sub(o.a.x, a.x), UI.Space.unitsToPx(Math.abs(Q.num(Q.sub(o.a.x, a.x)) - Tc.x), unit));
+            if (Q.eq(a.y, b.y) && Q.eq(o.a.y, o.b.y)) add(cy, Q.sub(o.a.y, a.y), UI.Space.unitsToPx(Math.abs(Q.num(Q.sub(o.a.y, a.y)) - Tc.y), unit));
           }
         }
         const pick = (L) => L.reduce((m, c) => (!m || c.d < m.d ? c : m), null);
@@ -741,7 +737,7 @@
         for (const o of OE) {
           const w = vsb(o.b, o.a), oa = numP(o.a), ob = numP(o.b), key = oa.x + ',' + oa.y + ',' + ob.x + ',' + ob.y;
           if (Q.eq(w.x, Q(0)) && Q.eq(w.y, Q(0))) continue;
-          const c = cr2(u, w), near = gapSeg(A, Bp, oa, ob) * unit <= ALIGN_PX;
+          const c = cr2(u, w), near = UI.Space.unitsToPx(gapSeg(A, Bp, oa, ob), unit) <= ALIGN_PX;
           if (Q.eq(c, Q(0))) {
             if (Q.eq(cr2(u, vsb(o.a, ea)), Q(0))) add('ln' + key, { k: 'ln', a: oa, b: ob, at: mid, text: '和 ' + o.name + ' 共线' });
             else if (near) add('ln' + key, { k: 'ln', a: oa, b: ob, at: mid, text: '和 ' + o.name + ' 平行' });
@@ -794,8 +790,8 @@
     const S = UI.S, ws = S.scene.entities[wsId]; if (!ws) return;
     const fr = wsFrame(ws, +wb.getAttribute('width'), +wb.getAttribute('height'));
     UI.State.setUi(ws, 'view', fr.vw);
-    const sc = scr(wb, fr);
-    drag = Object.assign({ kind: 'shape', mode, wsId, v: fr.vw, sc, unit: sc.unit, sx: ev.clientX, sy: ev.clientY, start: worldAt(ev, fr.vw, sc), targets, moved: false, out: [], f: Q(1), k: 0, guides: [] }, extra || {});
+    const sc = UI.Space.canvasOf(wb.getBoundingClientRect(), fr.vw.span);
+    drag = Object.assign({ kind: 'shape', mode, wsId, v: fr.vw, sc, unit: sc.unit, sx: ev.clientX, sy: ev.clientY, start: UI.Space.screenToWorkspace(ev, fr.vw, sc), targets, moved: false, out: [], f: Q(1), k: 0, guides: [] }, extra || {});
   }
   // 按下一个把手：边（整条边平移）、角（放缩）、旋转把手
   function startHandle(hd, ev) {
@@ -830,12 +826,12 @@
     const mx = ev.clientX - d.sx, my = ev.clientY - d.sy;
     if (!d.moved && Math.hypot(mx, my) < L.DRAG_SLOP) return;
     d.moved = true;
-    const wp = worldAt(ev, d.v, d.sc), out = [];
+    const wp = UI.Space.screenToWorkspace(ev, d.v, d.sc), out = [];
     const put = (id, k, v) => { E[id].props[k] = v; out.push({ id, k, v }); };
     let tip = '';
     if (d.mode === 'tr') {
-      let dX = Math.round(mx / d.unit), dY = -Math.round(my / d.unit), lx = -Infinity, hx = Infinity, ly = -Infinity, hy = Infinity;
-      if (d.align) { d.align.alt = !!ev.altKey; const s = alignSolve(d.align, { x: mx / d.unit, y: -my / d.unit }, d.unit); dX = s.dx; dY = s.dy; d.guides = s.guides; }
+      let dX = Math.round(UI.Space.pxToUnits(mx, d.unit)), dY = -Math.round(UI.Space.pxToUnits(my, d.unit)), lx = -Infinity, hx = Infinity, ly = -Infinity, hy = Infinity;
+      if (d.align) { d.align.alt = !!ev.altKey; const s = alignSolve(d.align, { x: UI.Space.pxToUnits(mx, d.unit), y: -UI.Space.pxToUnits(my, d.unit) }, d.unit); dX = s.dx; dY = s.dy; d.guides = s.guides; }
       for (const t of d.targets) { lx = Math.max(lx, t.lo[0] - t.x0); hx = Math.min(hx, t.hi[0] - t.x0); ly = Math.max(ly, t.lo[1] - t.y0); hy = Math.min(hy, t.hi[1] - t.y0); }
       dX = Math.max(lx, Math.min(hx, dX)); dY = Math.max(ly, Math.min(hy, dY));
       for (const t of d.targets) { put(t.id, t.kx, t.x0 + dX); put(t.id, t.ky, t.y0 + dY); }
@@ -978,40 +974,16 @@
     if (tool === 'seg') S.wsSel = [];
     render();
   }
-  // 吸附：先吸顶点（点、多边形和线段的顶点，整数坐标），再吸边上的格点，最后吸格点
+  // 吸附：算法在 UI.Space.snap（顶点、边上的格点、格点）；这里只告诉它每个顶点属于哪个自由点
   function snapTo(fr, wp, sc) {
-    const R = SNAP_PX / sc.unit, near = (x, y) => Math.hypot(x - wp.x, y - wp.y) <= R;
-    let best = null, bd = Infinity;
-    for (const v of fr.vals) {
-      const f = v.fig; if (!f || !f.pts) continue;
-      const fi = figInfo(v);
-      f.pts.forEach((p, i) => {
-        if (!Q.isInt(p.x) || !Q.isInt(p.y)) return;
-        const x = Q.num(p.x), y = Q.num(p.y), d = Math.hypot(x - wp.x, y - wp.y);
-        if (d <= R && d < bd) { bd = d; best = { x, y, ref: fi && fi.kind === 'pts' && fi.verts[i] ? fi.verts[i] : null }; }
-      });
-    }
-    if (best) return best;
-    for (const v of fr.vals) {
-      const f = v.fig; if (!f || !f.pts || (f.type !== 'polygon' && f.type !== 'segment')) continue;
-      const n = f.pts.length, m = f.type === 'polygon' ? n : 1;
-      for (let i = 0; i < m; i++) {
-        const ax = Q.num(f.pts[i].x), ay = Q.num(f.pts[i].y), bx = Q.num(f.pts[(i + 1) % n].x), by = Q.num(f.pts[(i + 1) % n].y);
-        const dx = bx - ax, dy = by - ay, L2 = dx * dx + dy * dy; if (!L2) continue;
-        const t = Math.max(0, Math.min(1, ((wp.x - ax) * dx + (wp.y - ay) * dy) / L2));
-        const rx = Math.round(ax + t * dx), ry = Math.round(ay + t * dy);
-        const on = Math.abs((rx - ax) * dy - (ry - ay) * dx) < 1e-9 && (rx - ax) * dx + (ry - ay) * dy >= -1e-9 && (rx - ax) * dx + (ry - ay) * dy <= L2 + 1e-9;
-        if (on && near(rx, ry)) return { x: rx, y: ry, ref: null };
-      }
-    }
-    return { x: Math.round(wp.x), y: Math.round(wp.y), ref: null };
+    return UI.Space.snap(fr.vals, wp, sc.unit, { px: SNAP_PX, ref: (v, i) => { const fi = figInfo(v); return fi && fi.kind === 'pts' && fi.verts[i] ? fi.verts[i] : null; } });
   }
   function drawClick(wb, ev) {
     const S = UI.S, D = S.wsDraw, ws = S.scene.entities[D.ws];
     if (!ws) return endDraw();
     const fr = wsFrame(ws, +wb.getAttribute('width'), +wb.getAttribute('height'));
     if (!UI.State.viewOf(ws)) UI.State.setUi(ws, 'view', fr.vw);   // 画线时坐标范围冻结
-    const sc = scr(wb, fr), sp = snapTo(fr, worldAt(ev, fr.vw, sc), sc);
+    const sc = UI.Space.canvasOf(wb.getBoundingClientRect(), fr.vw.span), sp = snapTo(fr, UI.Space.screenToWorkspace(ev, fr.vw, sc), sc);
     if (!D.pend) { D.pend = sp; D.cur = sp; S.wsMsg = ''; return wsRedraw(D.ws); }
     const a = D.pend; D.pend = null; D.cur = null;
     finishLine(D, a, sp);
@@ -1020,8 +992,8 @@
     const S = UI.S, D = S.wsDraw, ws = S.scene.entities[D.ws];
     const wb = [...document.querySelectorAll('svg.wsbody[data-wsid="' + D.ws + '"]')].find((el) => { const r = el.getBoundingClientRect(); return ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom; });
     if (!ws || !wb) return;
-    const fr = wsFrame(ws, +wb.getAttribute('width'), +wb.getAttribute('height')), sc = scr(wb, fr);
-    D.cur = snapTo(fr, worldAt(ev, fr.vw, sc), sc); wsRedraw(D.ws);
+    const fr = wsFrame(ws, +wb.getAttribute('width'), +wb.getAttribute('height')), sc = UI.Space.canvasOf(wb.getBoundingClientRect(), fr.vw.span);
+    D.cur = snapTo(fr, UI.Space.screenToWorkspace(ev, fr.vw, sc), sc); wsRedraw(D.ws);
   }
   // 两个点都定了：建点（不是顶点的才建）、建线段；剪的模式再建剪刀、剪开。整串是一步
   function finishLine(D, a, b) {
@@ -1092,15 +1064,14 @@
     const wb = t.closest('.wsbody');
     if (wb) {
       const wid = wb.dataset.wsid, ws = S.scene.entities[wid], cw = +wb.getAttribute('width'), ch = +wb.getAttribute('height');
-      const k = wb.getBoundingClientRect().width / cw;
       if ((S.wsSel || []).length) { S.wsSel = []; render(); }
-      if (ws) drag = { kind: 'wspan', id: wid, cw, ch, k, sx: ev.clientX, sy: ev.clientY, moved: false, v0: wsView(ws, cw, ch) };
+      if (ws) { const v0 = wsView(ws, cw, ch); drag = { kind: 'wspan', id: wid, sc: UI.Space.canvasOf(wb.getBoundingClientRect(), v0.span), sx: ev.clientX, sy: ev.clientY, moved: false, v0 }; }
       return;
     }
     const outp = t.closest('.port.out');
     if (outp) {
       ev.preventDefault();
-      linking = { from: outp.dataset.id, fromPort: outp.dataset.port, cur: toWorld(ev) };
+      linking = { from: outp.dataset.id, fromPort: outp.dataset.port, cur: UI.Space.screenToStage(ev) };
       stageEl.setPointerCapture && 0; render(); return;
     }
     const ub = t.closest('[data-unlink]');
@@ -1120,7 +1091,7 @@
         if (lastClick.id === id && now - lastClick.t < 400) { S.inspOpen = true; lastClick = { id: null, t: 0 }; } else lastClick = { id, t: now };
       }
       S.sel = id; S.selLink = null;
-      const w = toWorld(ev);
+      const w = UI.Space.screenToStage(ev);
       drag = { kind: 'move', id, dx: w.x - e.x, dy: w.y - e.y, moved: false, sx: ev.clientX, sy: ev.clientY };
       UI.Panels.renderInsp(); render(); return;
     }
@@ -1181,7 +1152,7 @@
     if (isWsDef(t.type) && !piece) {
       const g = geom(t); if (!UI.State.viewOf(t)) UI.State.setUi(t, 'view', wsView(t, g.w, g.h - HD));
       const wb = document.querySelector('svg.wsbody[data-wsid="' + t.id + '"]'), fr = wsFrame(t, g.w, g.h - HD);
-      const pt = wb ? worldAt(ev, fr.vw, scr(wb, fr)) : null;
+      const pt = wb ? UI.Space.screenToWorkspace(ev, fr.vw, UI.Space.canvasOf(wb.getBoundingClientRect(), fr.vw.span)) : null;
       return { ws: t.id, x: pt ? pt.x : undefined, y: pt ? pt.y : undefined };
     }
     const accepting = slots.find((sn) => { const A = td.slots[sn].accepts; return A === '*' || A.includes(e.type); });
@@ -1192,7 +1163,7 @@
   function onMove(ev) {
     const S = UI.S;
     if (linking) {
-      linking.cur = toWorld(ev);
+      linking.cur = UI.Space.screenToStage(ev);
       document.querySelectorAll('.port.ok,.port.no,.pill.ok,.pill.no').forEach((n) => n.classList.remove('ok', 'no'));
       const h = hoverTarget(ev);
       if (h && h.id !== linking.from || (h && h.port)) {
@@ -1214,7 +1185,7 @@
       const dx = ev.clientX - drag.sx, dy = ev.clientY - drag.sy;
       if (!drag.moved && Math.hypot(dx, dy) < 3) return;
       if (!drag.moved) { drag.moved = true; drag.before = UI.App.snapshot(); }
-      const w = Math.max(MIN_W, Math.round(drag.w0 + dx / drag.zoom)), h = Math.max(MIN_H, Math.round(drag.h0 + dy / drag.zoom));
+      const w = Math.max(MIN_W, Math.round(drag.w0 + UI.Space.stageDelta(dx, drag.zoom))), h = Math.max(MIN_H, Math.round(drag.h0 + UI.Space.stageDelta(dy, drag.zoom)));
       drag.w1 = w; drag.h1 = h;
       UI.Intent.preview('resize', { id: drag.id, w, h }); render();
       showTip(ev.clientX, ev.clientY, w + ' × ' + h, true);
@@ -1224,14 +1195,13 @@
       const dx = ev.clientX - drag.sx, dy = ev.clientY - drag.sy;
       if (!drag.moved && Math.hypot(dx, dy) < 4) return;
       drag.moved = true;
-      const s0 = drag.cw / drag.v0.span;
-      UI.State.setUi(S.scene.entities[drag.id], 'view', { cx: drag.v0.cx - dx / drag.k / s0, cy: drag.v0.cy + dy / drag.k / s0, span: drag.v0.span });
+      UI.State.setUi(S.scene.entities[drag.id], 'view', { cx: drag.v0.cx - UI.Space.pxToUnits(dx, drag.sc.unit), cy: drag.v0.cy + UI.Space.pxToUnits(dy, drag.sc.unit), span: drag.v0.span });
       render(); return;
     }
     if (drag.kind === 'pan') { S.view.x = drag.vx + ev.clientX - drag.sx; S.view.y = drag.vy + ev.clientY - drag.sy; render(); return; }
     if (drag.kind === 'move') {
       if (!drag.moved && Math.hypot(ev.clientX - drag.sx, ev.clientY - drag.sy) < L.DRAG_SLOP) return;
-      const w = toWorld(ev);
+      const w = UI.Space.screenToStage(ev);
       if (!drag.moved) { drag.moved = true; drag.before = UI.App.snapshot(); }
       drag.x1 = w.x - drag.dx; drag.y1 = w.y - drag.dy;
       UI.Intent.preview('move', { id: drag.id, x: drag.x1, y: drag.y1 }); render();
@@ -1334,5 +1304,5 @@
     });
   }
 
-  UI.Stage = { init, render, dropTarget, freeSpot, fit, zoomAt, toWorld, geom, portPos, setFocus, wsZoomAt, wsFit, selPieceIds, endDraw, rangeOf: (id) => { const ws = UI.S.scene.entities[id]; if (!ws) return null; const g = geom(ws); return wsView(ws, g.w, g.h - HD); } };
+  UI.Stage = { init, render, dropTarget, freeSpot, fit, zoomAt, geom, portPos, setFocus, wsZoomAt, wsFit, selPieceIds, endDraw, rangeOf: (id) => { const ws = UI.S.scene.entities[id]; if (!ws) return null; const g = geom(ws); return wsView(ws, g.w, g.h - HD); } };
 })(window);

@@ -355,7 +355,8 @@
       }
       case 'move': {
         const e = E[a.id]; if (!e) return fail('找不到器材');
-        const nx = Math.round(a.x), ny = Math.round(a.y), dx = nx - e.x, dy = ny - e.y;
+        // 台面卡片的位置保留到千分之一：整数取整在台面放大时会偏出 1 像素以上（缩放 250% 时 0.5 个单位 = 1.25 像素）
+        const q = (v) => Math.round(v * 1000) / 1000, nx = q(a.x), ny = q(a.y), dx = nx - e.x, dy = ny - e.y;
         e.x = nx; e.y = ny;
         // 1.10：移动容器时，里面的子实体跟着动（递归）
         const moveKids = (pid) => { for (const k of childrenOf(scene, pid)) { k.x += dx; k.y += dy; moveKids(k.id); } };

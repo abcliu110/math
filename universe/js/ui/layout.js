@@ -78,12 +78,9 @@
       const fr = f.getBoundingClientRect();
       if (fr.height && fr.top > r.top + r.height / 2) bottom = Math.max(bottom, r.bottom - fr.top + LAYOUT.BAR_GAP);
     });
-    return {
-      x0: (LAYOUT.EDGE - view.x) / view.z,
-      y0: (LAYOUT.EDGE - view.y) / view.z,
-      x1: (r.width - LAYOUT.EDGE - view.x) / view.z,
-      y1: (r.height - bottom - view.y) / view.z,
-    };
+    // 台面局部像素（离边缘 EDGE、离底部浮动条 bottom）→ 世界坐标（换算在 UI.Space 里）
+    const a = UI.Space.localToStage(view, { x: LAYOUT.EDGE, y: LAYOUT.EDGE }), b = UI.Space.localToStage(view, { x: r.width - LAYOUT.EDGE, y: r.height - bottom });
+    return { x0: a.x, y0: a.y, x1: b.x, y1: b.y };
   }
 
   // 面板相对卡片左上角的位置和实测尺寸（最近一次渲染）。键是工作区 id。

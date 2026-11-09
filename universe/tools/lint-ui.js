@@ -7,6 +7,10 @@
  *   right/bottom（含 min-/max-），或 getBoundingClientRect / offsetWidth / innerWidth / clientX 等 DOM 尺寸，或 .x/.y/.w/.h/.width/.height/.left/.top 等几何属性。
  *   布局行里 3 及以上的数字（包括 12px 这种）是违规，要改用 UI.LAYOUT（js/ui/layout.js）或实测值。0、1、2 不算。
  *   例外写在 LAYOUT_ALLOW：文件 + 原文子串，并写明原因。
+ * U6 规则（坐标换算，见 js/ui/space.js）：stage.js、panels.js、layout.js、app.js 里不许自己写屏幕坐标的换算。
+ *   A：clientX/clientY 和矩形的 left/top 直接相加减（ev.clientX - r.left 这种）；
+ *   B：用缩放或单位做除法、乘法（/ z、* z、/ span、/ unit、* zoom 等）。
+ *   这些都要改用 UI.Space 的函数。例外写在 COORD_ALLOW：文件 + 原文子串 + 原因。
  * 输出每一处违规和总数；有违规就退出码 1。 */
 'use strict';
 const fs = require('fs'), path = require('path'), vm = require('vm');
@@ -31,6 +35,18 @@ const NUM = /(?<![\w.])(\d+)(?![\w.%])|(?<![\w.])(\d+)(?=px)/g;   // 整数才�
 const LAYOUT_ALLOW = [
   ['js/ui/stage.js', '(d.corner + 2) % 4', '矩形有四个角，% 4 是角的编号，不是布局'],
 ];
+
+// U6：坐标换算（见文件头）
+const COORD_FILES = ['js/ui/stage.js', 'js/ui/panels.js', 'js/ui/layout.js', 'js/ui/app.js'];
+const COORD_A = /(?:clientX|clientY)\s*[-+]\s*[\w$.]*\.(?:left|top)\b|[\w$.]*\.(?:left|top)\s*[-+]\s*[\w$.]*(?:clientX|clientY)\b/;
+const COORD_B = /[\/*]\s*\(?\s*(?:[\w$]+\.)*(?:z|zoom|span|unit)\b|(?:^|[^\w$.])(?:[\w$]+\.)*(?:z|zoom|span|unit)\s*[\/*]/;
+// 允许的例外：[文件, 原文子串, 原因]。子串命中的那一行不查 U6。
+const COORD_ALLOW = [
+  ['js/ui/stage.js', 'Math.round(S.view.z * 100)', '缩放百分比的显示（乘 100），不是坐标换算'],
+];
+
+// 去掉字符串字面量再查 U6（HTML 片段里的 </span> 不是换算）
+const stripStr = (s) => s.replace(/'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|`(?:[^`\\]|\\.)*`/g, "''");
 
 const counts = {}, problems = [];
 for (const rel of FILES) {
@@ -69,6 +85,20 @@ for (const rel of FILES) {
   });
 }
 
+// U6：坐标换算
+const coordBad = [];
+for (const rel of COORD_FILES) {
+  const lines = fs.readFileSync(path.join(root, rel), 'utf8').split(/\r?\n/);
+  lines.forEach((line, i) => {
+    const t = line.trim();
+    if (!t || t.startsWith('//') || t.startsWith('*') || t.startsWith('/*')) return;
+    if (COORD_ALLOW.some(([f, sub]) => f === rel && line.includes(sub))) return;
+    const code = stripStr(line);
+    if (COORD_A.test(code)) coordBad.push(rel + ':' + (i + 1) + '  屏幕坐标直接减矩形的左上角（请用 UI.Space）  ←  ' + t.slice(0, 120));
+    else if (COORD_B.test(code)) coordBad.push(rel + ':' + (i + 1) + '  手工用缩放或单位换算（请用 UI.Space）  ←  ' + t.slice(0, 120));
+  });
+}
+
 // U4：读 js/ui/state.js 里的 UI.STATE_SPEC（在一个独立的沙箱里执行，不需要浏览器）
 const sandbox = {};
 vm.createContext(sandbox);
@@ -95,5 +125,6 @@ const total = Object.values(counts).reduce((a, b) => a + b, 0);
 problems.forEach((p) => console.log('  ' + p));
 unreg.forEach((p) => console.log('  ' + p));
 layoutBad.forEach((p) => console.log('  ' + p));
-console.log('lint-ui：界面代码里直接写动作的地方 ' + total + ' 处（' + FILES.map((f) => path.basename(f) + ' ' + counts[f]).join('，') + '），未登记的界面状态字段 ' + unreg.length + ' 处，写死的布局数字 ' + layoutBad.length + ' 处' + ((total + unreg.length + layoutBad.length) ? '，不合格' : '，通过'));
-process.exit(total + unreg.length + layoutBad.length ? 1 : 0);
+coordBad.forEach((p) => console.log('  ' + p));
+console.log('lint-ui：界面代码里直接写动作的地方 ' + total + ' 处（' + FILES.map((f) => path.basename(f) + ' ' + counts[f]).join('，') + '），未登记的界面状态字段 ' + unreg.length + ' 处，写死的布局数字 ' + layoutBad.length + ' 处，界面里手工换算坐标 ' + coordBad.length + ' 处' + ((total + unreg.length + layoutBad.length + coordBad.length) ? '，不合格' : '，通过'));
+process.exit(total + unreg.length + layoutBad.length + coordBad.length ? 1 : 0);
