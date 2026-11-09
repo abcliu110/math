@@ -529,6 +529,25 @@ t('器材 id 不能重名：重名时保留原来的，并记录错误', () => {
   truthy(U.types.num === before, '原器材不应被覆盖'); truthy(U.packErrors.some((m) => /器材 id 重复：num/.test(m)));
 });
 t('所有内置器材包加载时没有重名', () => eq(U.packErrors.filter((m) => /器材 id 重复/.test(m) && !/：num（/.test(m)), []));
+console.log('旧几何器材输出图形');
+const link2 = (sc, a, ap, b, bp) => truthy(W.act(sc, { t: 'link', from: a, fromPort: ap, to: b, toPort: bp }).ok, ap + '→' + bp);
+t('长方形 6×4 → 量图形：面积 24，4 个直角；旋转后与原图全等', () => {
+  const sc = W.blank(); const r = W.add(sc, 'rect', 0, 0, {}); const m = W.add(sc, 'figmeasure', 0, 0, {}); const x = W.add(sc, 'xform', 0, 0, { mode: 1 }); const q = W.add(sc, 'figrel', 0, 0, {});
+  link2(sc, r, 'f', m, 'f'); link2(sc, r, 'f', x, 'f'); link2(sc, r, 'f', q, 'a'); link2(sc, x, 'f', q, 'b');
+  const D = W.evaluate(sc); eq(U.showVal(D[m].out.area), '24'); eq(U.showVal(D[m].out.right), '4'); eq(D[q].out.cong.data, true);
+});
+t('平行四边形剪拼：剪拼前后不全等，但面积相等（面积是不变量）', () => {
+  const sc = W.blank(); const pg = W.add(sc, 'parallelogram', 0, 0, {}); const m1 = W.add(sc, 'figmeasure', 0, 0, {}); const m2 = W.add(sc, 'figmeasure', 0, 0, {}); const q = W.add(sc, 'figrel', 0, 0, {});
+  link2(sc, pg, 'f', m1, 'f'); link2(sc, pg, 'cut', m2, 'f'); link2(sc, pg, 'f', q, 'a'); link2(sc, pg, 'cut', q, 'b');
+  const D = W.evaluate(sc); eq(U.showVal(D[m1].out.area), U.showVal(D[m2].out.area)); eq(U.showVal(D[m1].out.area), '15'); eq(D[q].out.cong.data, false);
+  eq(U.showVal(D[m2].out.right), '4'); eq(U.showVal(D[m1].out.right), '0');
+});
+t('三边 3、4、5 的三角形输出图形，量得面积 6；三边 2、3、4 的顶点不是有理数，不输出图形并说明', () => {
+  const sc = W.blank(); const t1 = W.add(sc, 'tri', 0, 0, { a: 3, b: 4, c: 5 }); const m = W.add(sc, 'figmeasure', 0, 0, {}); link2(sc, t1, 'f', m, 'f');
+  const t2 = W.add(sc, 'tri', 0, 0, { a: 2, b: 3, c: 4 });
+  const D = W.evaluate(sc); eq(U.showVal(D[m].out.area), '6'); eq(D[t2].out.f, undefined); truthy(D[t2].sig.some((x) => /不是有理数/.test(x.tx)));
+});
+t('折纸的纸片是图形：4×4 的正方形', () => { const sc = W.blank(); const f = W.add(sc, 'fold', 0, 0, {}); eq(U.Fig.show(W.evaluate(sc)[f].out.f.data), '四边形 (0, 0) (4, 0) (4, 4) (0, 4)'); });
 console.log('输出声明（1.2）');
 t('lint 拒绝没有声明 dim 的输出口', () => {
   const bad = Object.assign({}, U.types.num, { outputs: { v: { kind: 'num', label: '值' } } });

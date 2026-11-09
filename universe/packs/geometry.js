@@ -72,12 +72,13 @@
           h: { type: 'num', label: '宽', default: 4, min: 0.5, max: 40, step: 0.5 },
           grid: { type: 'bool', label: '画方格', default: true },
         },
-        outputs: { area: { dim: null, kind: 'num', label: '面积' }, perim: { dim: null, kind: 'num', label: '周长' } },
+        outputs: { area: { dim: null, kind: 'num', label: '面积' }, perim: { dim: null, kind: 'num', label: '周长' }, f: { dim: null, kind: 'fig', label: '图形' } },
         icon: () => K.rect(8, 10, 48, 24, { stroke: 'var(--ink)', r: 2, w: 2.5, fill: '#f08a1c33' }),
         size: () => [220, 150],
         compute: (c) => {
           const w = Q.fromNumber(c.props.w), h = Q.fromNumber(c.props.h);
-          return { area: num(Q.mul(w, h), 'area'), perim: num(Q.mul(Q.add(w, h), Q(2)), 'length') };
+          const f = U.Fig.polygon([[Q(0), Q(0)], [w, Q(0)], [w, h], [Q(0), h]]);
+          return { area: num(Q.mul(w, h), 'area'), perim: num(Q.mul(Q.add(w, h), Q(2)), 'length'), f: U.val('fig', f) };
         },
         badge: (c) => (c.out.area ? '面积 ' + Q.showDec(c.out.area.data, 2) : ''),
         draw: (c) => {

@@ -15,13 +15,15 @@
           h: { type: 'num', label: '高', default: 3, min: 1, max: 20, step: 1 },
           s: { type: 'num', label: '斜度（上边右移）', default: 2, min: 0, max: 10, step: 1 },
         },
-        outputs: { area: { dim: null, kind: 'num', label: '面积' }, rect_w: { dim: null, kind: 'num', label: '长方形的长' } },
+        outputs: { area: { dim: null, kind: 'num', label: '面积' }, rect_w: { dim: null, kind: 'num', label: '长方形的长' }, f: { dim: null, kind: 'fig', label: '图形' }, cut: { dim: null, kind: 'fig', label: '剪拼成的长方形' } },
         icon: () => '<polygon points="16,34 40,34 52,12 28,12" fill="#f08a1c33" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/>' + K.line(34, 12, 34, 34, { w: 1.2, stroke: 'var(--accent)', dash: '3 2' }),
         size: () => [240, 190],
         compute: (c) => {
           const b = Q.fromNumber(c.props.b), h = Q.fromNumber(c.props.h);
           c.say('ok', '面积 = 底 × 高 = ' + Q.show(Q.mul(b, h)) + '。斜度只改形状，不改面积');
-          return { area: num(Q.mul(b, h), 'area'), rect_w: num(b, 'length') };
+          const s = Q.fromNumber(c.props.s);
+          const f = U.Fig.polygon([[Q(0), Q(0)], [b, Q(0)], [Q.add(b, s), h], [s, h]]), cut = U.Fig.polygon([[Q(0), Q(0)], [b, Q(0)], [b, h], [Q(0), h]]);
+          return { area: num(Q.mul(b, h), 'area'), rect_w: num(b, 'length'), f: U.val('fig', f), cut: U.val('fig', cut) };
         },
         badge: (c) => (c.out.area ? '面积 ' + Q.show(c.out.area.data) : ''),
         draw: (c) => {

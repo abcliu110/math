@@ -39,7 +39,7 @@
           b: { type: 'num', label: '边 b', default: 4, min: 0.5, max: 50, step: 0.5 },
           c: { type: 'num', label: '边 c', default: 5, min: 0.5, max: 50, step: 0.5 },
         },
-        outputs: { ok: { dim: null, kind: 'bool', label: '围得起来' }, right: { dim: null, kind: 'bool', label: '是直角' }, perim: { dim: null, kind: 'num', label: '周长' }, area: { dim: null, kind: 'num', label: '面积' } },
+        outputs: { f: { dim: null, kind: 'fig', label: '图形' }, ok: { dim: null, kind: 'bool', label: '围得起来' }, right: { dim: null, kind: 'bool', label: '是直角' }, perim: { dim: null, kind: 'num', label: '周长' }, area: { dim: null, kind: 'num', label: '面积' } },
         icon: () => '<path d="M8 36 L50 36 L24 8 Z" fill="#f08a1c33" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/>',
         size: () => [220, 170],
         compute: (c) => {
@@ -51,6 +51,9 @@
           out.right = U.val('bool', Q.eq(Q.add(sq[0], sq[1]), sq[2]));
           const s = Q.div(out.perim.data, Q(2)), A2 = Q.mul(Q.mul(s, Q.sub(s, a)), Q.mul(Q.sub(s, b), Q.sub(s, cc))), r = qsqrt(A2);
           out.area = r ? num(r, 'area') : num(Q.fromNumber(Math.sqrt(Q.num(A2))), 'area', false);
+          const cx = Q.div(Q.sub(Q.add(Q.mul(b, b), Q.mul(cc, cc)), Q.mul(a, a)), Q.mul(Q(2), cc)), cy = qsqrt(Q.sub(Q.mul(b, b), Q.mul(cx, cx)));
+          if (cy) out.f = U.val('fig', U.Fig.polygon([[Q(0), Q(0)], [cc, Q(0)], [cx, cy]]));
+          else c.say('info', '第三个顶点的坐标不是有理数（要开方），这里不输出图形');
           c.say(out.right.data ? 'ok' : 'info', out.right.data ? '直角三角形：' + sq.map((x) => Q.show(x)).join(' + ').replace(' + ', ' + ') + '（平方）' : '围得起来，但不是直角');
           return out;
         },
