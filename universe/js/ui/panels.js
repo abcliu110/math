@@ -318,8 +318,8 @@
         window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up);
         if (ghost) { ghost.remove(); ghost = null; }
         const over = document.elementFromPoint(e.clientX, e.clientY);
-        if (moved && over && over.closest('#stagewrap')) { const w = UI.Stage.toWorld(e); UI.App.act({ t: 'add', type, x: w.x - 70, y: w.y - 40 }, { select: true }); }
-        else if (!moved) { const r = $('#stage').getBoundingClientRect(), S = UI.S; const w = UI.Stage.toWorld({ clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 }); const n = Object.keys(S.scene.entities).length; UI.App.act({ t: 'add', type, x: w.x - 70 + (n % 5) * 24, y: w.y - 60 + (n % 5) * 24 }, { select: true }); }
+        if (moved && over && over.closest('#stagewrap')) { const w = UI.Stage.toWorld(e); const r = UI.App.act({ t: 'add', type, x: w.x - 70, y: w.y - 40 }, { select: true }); if (r && r.ok && r.id) UI.Stage.dropOnContainer(r.id, e); }
+        else if (!moved) { const r = $('#stage').getBoundingClientRect(), S = UI.S; const w = UI.Stage.toWorld({ clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 }); const sp = UI.Stage.freeSpot(w.x - 70, w.y - 60, type); UI.App.act({ t: 'add', type, x: sp.x, y: sp.y }, { select: true }); }
       };
       window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up);
     });

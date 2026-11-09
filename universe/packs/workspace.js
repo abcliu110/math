@@ -70,7 +70,7 @@
           n: { dim: null, kind: 'num', label: '工作区里的步骤个数' },
         },
         icon: () => K.rect(6, 8, 52, 28, { stroke: 'var(--ink)', r: 3 }) + K.line(12, 30, 30, 16, { w: 2 }) + K.line(30, 16, 50, 30, { w: 2, dash: '4 3' }),
-        size: () => [300, 220],
+        size: () => [380, 300],
         compute: (c) => ({ n: U.val('num', Q(c.kids('items').length), { dim: null }) }),
         badge: (c) => (c.out && c.out.n ? U.showVal(c.out.n) + ' 步' : ''),
         draw: (c) => K.rect(4, 4, c.w - 8, c.h - 8, { stroke: 'var(--line)', r: 4 }) +

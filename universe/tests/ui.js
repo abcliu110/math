@@ -750,6 +750,109 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
     ok(fd.height && fd.cut && fd.fit, '平行四边形题：三个里程碑全部完成（' + JSON.stringify(fd) + '）');
     await closeReport();
   }
+  {
+    // ---- 对齐线与吸附（§10.5.8 C12–C16）----
+    console.log('对齐线与吸附（§10.5.8 C）');
+    const unitOf = (ws) => p.evaluate((w) => document.querySelector('svg.wsbody[data-wsid="' + w + '"]').getBoundingClientRect().width / UI.Stage.rangeOf(w).span, ws);
+    // 拖顶点 C 水平移到 A 的竖线附近（差 2 像素，在 6 像素阈值内）；松手前读参考线，松手后读 C 的 x
+    const dragVertexNear = async (alt) => {
+      await p.evaluate(() => UI.App.openProblem('geo-median-area', 'practice')); await p.waitForTimeout(200);
+      const v = await p.evaluate(() => {
+        const S = UI.S, ws = Object.values(S.scene.entities).find((e) => U.types[e.type].workspace);
+        const g = (n) => { const r = U.Names.resolve(S.scene, n); return { id: r.id, x: Number(S.scene.entities[r.id].props.x) }; };
+        return { ws: ws.id, A: g('A'), C: g('C') };
+      });
+      const unit = await unitOf(v.ws), cb = await p.locator('circle[data-drag="' + v.C.id + '"]').first().boundingBox();
+      const sx = cb.x + cb.width / 2, sy = cb.y + cb.height / 2;
+      if (alt) await p.keyboard.down('Alt');
+      await p.mouse.move(sx, sy); await p.mouse.down();
+      await p.mouse.move(sx + (v.A.x - v.C.x) * unit + 2, sy, { steps: 8 });
+      const during = await p.evaluate(() => ({ guides: document.querySelectorAll('.wsguide').length, labels: [...document.querySelectorAll('.card svg.wsbody text')].map((t) => t.textContent) }));
+      await p.mouse.up(); if (alt) await p.keyboard.up('Alt');
+      await p.waitForTimeout(60);
+      const cx = await p.evaluate((id) => Number(UI.S.scene.entities[id].props.x), v.C.id);
+      return { during, cx, Ax: v.A.x };
+    };
+    const a1 = await dragVertexNear(false);
+    ok(a1.during.guides > 0, '(12) 拖顶点到另一顶点的竖线附近：参考线出现（.wsguide ' + a1.during.guides + ' 个）');
+    ok(a1.cx === a1.Ax, '(15) 松手后顶点的 x 等于那个顶点的 x（' + a1.cx + ' = ' + a1.Ax + '）');
+    ok(a1.during.labels.some((t) => /和/.test(t)), '(14) 参考线旁边写出关系：' + a1.during.labels.filter((t) => /和|重合/.test(t)).join('、'));
+    const a2 = await dragVertexNear(true);
+    ok(a2.during.guides === 0 && !a2.during.labels.some((t) => /和|重合/.test(t)), '(13) 按住 Alt 拖：不吸附，也不出参考线和关系文字');
+
+    // 拼合：先用工具剪出两块，再把三角形块拖到目标旁边（差 2 像素）；松手后吸附到整数位置，拼对了就变绿
+    await p.evaluate(() => UI.App.openProblem('geo-pgram-cut', 'practice')); await p.waitForTimeout(200);
+    await p.evaluate(() => {
+      const ws = Object.values(UI.S.scene.entities).find((e) => U.types[e.type].workspace).id, A = UI.App;
+      const tool = (t, picks) => A.act({ t: 'tool', ws, tool: t, picks, args: {} });
+      tool('seg', ['A', 'B']); tool('perp', ['D', 'seg(A,B)']); tool('cut', ['poly(A,B,C,D)', 'perp(D,seg(A,B))']);
+    });
+    const pw = await p.evaluate(() => Object.values(UI.S.scene.entities).find((e) => U.types[e.type].workspace).id);
+    const tri = await p.evaluate(() => Object.keys(UI.S.scene.entities).find((k) => UI.S.scene.entities[k].type === 'gpiece' && UI.S.D[k].out.f.data.pts.length === 3));
+    const unitP = await unitOf(pw);
+    const hit = await p.evaluate((id) => {
+      const el = document.querySelector('path[data-drag="' + id + '"]'); if (!el) return null;
+      const r = el.getBoundingClientRect();
+      for (const j of [0.3, 0.4, 0.5, 0.6, 0.7]) for (const i of [0.3, 0.5, 0.7]) {
+        const x = r.left + r.width * i, y = r.top + r.height * j, h = document.elementFromPoint(x, y), dg = h && h.closest('[data-drag]');
+        if (dg && dg.dataset.drag === id) return { x, y };
+      }
+      return null;
+    }, tri);
+    if (!hit) ok(false, '能用鼠标按住三角形块');
+    else {
+      await p.mouse.move(hit.x, hit.y); await p.mouse.down();
+      await p.mouse.move(hit.x + 5 * unitP + 2, hit.y, { steps: 10 }); await p.mouse.up(); await p.waitForTimeout(100);
+    }
+    const pd = await p.evaluate((id) => {
+      const el = document.querySelector('path[data-drag="' + id + '"]');
+      return { dx: UI.S.scene.entities[id].props.dx, green: !!el && el.getAttribute('stroke') === '#16a34a' };
+    }, tri);
+    ok(pd.dx === 5, '(16) 块拖到目标旁边（差 2 像素）：吸附到整数位置，dx = ' + pd.dx);
+    ok(pd.green, '(16) 拼对了：块的边线变绿（对齐到目标同一个判定）');
+  }
+  // 几何工作区：用真实鼠标从器材架拖图形进来（之前拖进去的图形没放进工作区，叠成卡片盖在上面，看起来“不见了”）
+  console.log('工作区：从器材架拖入');
+  {
+    const ws = await p.evaluate(() => { UI.App.openFree(); UI.App.act({ t: 'clear' }); UI.S.inspOpen = false; UI.S.sel = null; UI.Panels.renderInsp(); return UI.App.act({ t: 'add', type: 'gworkspace', x: 120, y: 60 }).id; });
+    await p.waitForTimeout(200);
+    const emptyHint = await p.evaluate((w) => (document.querySelector('svg.wsbody[data-wsid="' + w + '"]') || { textContent: '' }).textContent, ws);
+    ok(/拖到这里/.test(emptyHint), '空的工作区有“把图形拖到这里”的提示');
+    const dropTile = async (type, fx, fy) => {
+      const wb = await p.locator('.card[data-id="' + ws + '"] svg.wsbody').first().boundingBox();
+      const t = p.locator('.tile[data-type="' + type + '"]').first(); await t.scrollIntoViewIfNeeded(); const tb = await t.boundingBox();
+      await p.mouse.move(tb.x + 30, tb.y + 20); await p.mouse.down(); await p.mouse.move(wb.x + wb.width * fx, wb.y + wb.height * fy, { steps: 12 }); await p.mouse.up(); await p.waitForTimeout(250);
+      return wb;
+    };
+    const wb0 = await dropTile('ftri', 0.25, 0.3); await dropTile('rect', 0.7, 0.3); await dropTile('fcirc', 0.5, 0.75);
+    const st = await p.evaluate((w) => {
+      const E = UI.S.scene.entities, kids = Object.values(E).filter((e) => e.parent === w), pieces = kids.filter((e) => e.type === 'gpiece');
+      const stray = Object.values(E).filter((e) => !e.parent && e.id !== w && !/gworkspace/.test(e.type)).map((e) => e.type);
+      const svg = document.querySelector('svg.wsbody[data-wsid="' + w + '"]');
+      return { n: kids.length, pieces: pieces.map((e) => e.props.name), stray, labels: svg ? svg.textContent : '' };
+    }, ws);
+    ok(st.stray.length === 0, '三个图形都放进了工作区，台面上没有多出来的卡片' + (st.stray.length ? '：' + st.stray.join(',') : ''));
+    ok(st.pieces.length === 3 && st.pieces.join('|') === '三角形 1|长方形 1|圆 1', '图形有自己的名字（三角形 1、长方形 1、圆 1）：' + st.pieces.join('|'));
+    ok(/三角形 1/.test(st.labels) && /长方形 1/.test(st.labels) && /圆 1/.test(st.labels), '三个图形都画在工作区里，标签都看得见');
+    // 落点：三个图形的中心离鼠标松开的位置不远（各自落在自己松手的地方，不是都挤在原点）
+    const cs = await p.evaluate((w) => Object.values(UI.S.scene.entities).filter((e) => e.type === 'gpiece' && e.parent === w).map((e) => { const f = UI.S.D[e.id].out.f.data, xs = f.pts.map((q) => U.Q.num(q.x)), ys = f.pts.map((q) => U.Q.num(q.y)); return [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2]; }), ws);
+    const far = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+    ok(cs.length === 3 && far(cs[0], cs[1]) > 2 && far(cs[1], cs[2]) > 2 && far(cs[0], cs[2]) > 2, '三个图形各落在自己松手的位置，互不重叠：' + JSON.stringify(cs.map((c) => c.map((v) => +v.toFixed(1)))));
+    const v0 = await p.evaluate((w) => JSON.stringify(UI.S.wsView[w]), ws);
+    await dropTile('fquad', 0.8, 0.8);
+    const v1 = await p.evaluate((w) => JSON.stringify(UI.S.wsView[w]), ws);
+    ok(v0 === v1, '再放一个图形，工作区的坐标范围不变（不会每放一个就重新缩放）');
+    // 点击器材架里的瓦片添加：新卡片不和工作区的卡片、工具面板重叠
+    await p.locator('.tile[data-type="num"]').first().scrollIntoViewIfNeeded(); await p.locator('.tile[data-type="num"]').first().click(); await p.waitForTimeout(200);
+    const ov = await p.evaluate((w) => {
+      const r = (el) => el.getBoundingClientRect(), wsEl = document.querySelector('.card[data-id="' + w + '"]'), panel = document.querySelector('.wsx[data-wsid="' + w + '"]') || document.querySelector('.wsx');
+      const ids = Object.keys(UI.S.scene.entities).filter((k) => !UI.S.scene.entities[k].parent && k !== w); const last = document.querySelector('.card[data-id="' + ids[ids.length - 1] + '"]');
+      if (!last) return { ok: false, why: 'no card' };
+      const hit = (a, b) => a && b && !(a.right <= b.left || a.left >= b.right || a.bottom <= b.top || a.top >= b.bottom);
+      return { ok: !hit(r(last), r(wsEl)) && !(panel && hit(r(last), r(panel))) };
+    }, ws);
+    ok(ov.ok, '点击添加的新卡片不盖住工作区和它的工具面板');
+  }
   ok(errs.length === 0, '控制台 0 报错' + (errs.length ? '：' + errs[0] : ''));
   console.log('\n' + pass + ' 通过，' + fail + ' 失败'); await b.close(); process.exit(fail ? 1 : 0);
 })();

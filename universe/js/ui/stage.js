@@ -47,12 +47,14 @@
     if (/^cut:/.test(nm)) return '剪开的一块';
     return nm;
   }
+  // 题目把哪个图形当作目标：看它的角色（题目里写的 role 含“目标”），不看器材类型——普通的四边形就是四边形
+  const isTarget = (ent) => !!(ent && /目标/.test(ent.role || ''));
   const FIG_NAME = { polygon: '多边形', segment: '线段', circle: '圆', point: '点' };
   // 图形的标签：块用它自己的名字；目标图形（fquad）统一叫「目标图形」；其余用学生名字，没有就按图形的种类
   function figLabel(it, nm, fig) {
     if (it.type === 'gpiece') return it.props.name || it.name;
-    if (it.type === 'fquad') return '目标图形';
-    return pretty(nm) || FIG_NAME[fig && fig.type] || it.name;
+    if (isTarget(it)) return '目标图形';
+    return pretty(nm) || it.name || FIG_NAME[fig && fig.type];
   }
   function wsValues(ws, names) {
     const S = UI.S, D = S.D || {}, shows = U.types[ws.type].workspace.shows, out = [];
@@ -179,9 +181,11 @@
   function wsBody(ws, w, h) {
     const S = UI.S, sel = new Set(S.wsSel || []), ents = S.scene.entities;
     const fr = wsFrame(ws, w, h), vals = fr.vals;
-    if (!fr.b) return K.text(w / 2, h / 2, '工作区里还没有图形', { size: 12, fill: 'var(--dim)' });
+    if (!fr.b) return K.text(w / 2, h / 2 - 6, '把图形拖到这里', { size: 15, weight: 700, fill: 'var(--dim)' }) + K.text(w / 2, h / 2 + 16, '从右边器材架拖，或拖台面上的图形卡片', { size: 11, fill: 'var(--dim)' });
     const { vw, s, X, Y } = fr;
     const labs = [];   // 标签先收集，最后统一摆放（不叠、不出画布）
+    const gsvg = guidesSvg(drag && drag.wsId === ws.id ? drag.guides || [] : [], fr, labs);   // 拖动时的对齐参考线（C12–C14）
+    const fitOn = fitState(ws);   // 拼合正确的块变绿（C16）
     let g = '', top = '', hit = '';   // top：自由点的把手，画在所有图形的上面（图形的填充不能盖住点）；hit：没有别的把手的线和多边形的边，加宽的透明命中线
     vals.forEach((v, i) => {
       const f = v.fig; if (!f) return;
@@ -196,7 +200,8 @@
       let lx, ly, cands = [], prio = 1;
       if (f.type === 'polygon') {
         const d = f.pts.map((p, k) => (k ? 'L' : 'M') + X(Q.num(p.x)).toFixed(1) + ' ' + Y(Q.num(p.y)).toFixed(1)).join(' ') + ' Z';
-        g += '<path d="' + d + '" fill="' + c + '22" stroke="' + c + '" stroke-width="' + sw + '"' + pk + dg + sty + '/>';
+        const fit = isPc && !!fitOn && fitOn.ids.includes(ent.id);
+        g += '<path d="' + d + '" fill="' + c + '22" stroke="' + (fit ? '#16a34a' : c) + '" stroke-width="' + sw + '"' + (fit && fitOn.flash ? ' class="wsflash"' : '') + pk + dg + sty + '/>';
         if (wantHit) hit += '<path d="' + d + '" fill="none" stroke="transparent" stroke-width="12"' + pk + ' style="cursor:pointer"/>';
         lx = f.pts.reduce((a, p) => a + X(Q.num(p.x)), 0) / f.pts.length; ly = f.pts.reduce((a, p) => a + Y(Q.num(p.y)), 0) / f.pts.length;
         const tw = TXT_W(v.label); cands = [[lx - tw / 2, ly + 4], [lx - tw / 2, ly + 18], [lx - tw / 2, ly - 10], [lx - tw / 2, ly + 32]]; prio = 2;
@@ -223,7 +228,7 @@
       }
       if (lx !== undefined) labs.push({ text: v.label, c, cands, prio });
     });
-    return wsEdges(fr) + g + hit + top + wsHandles(fr) + drawPreview(ws, fr) + offArrows(fr, ws) + placeLabels(labs, w, h) + boardMsg(w, h);
+    return wsEdges(fr) + g + hit + top + wsHandles(fr) + gsvg + drawPreview(ws, fr) + offArrows(fr, ws) + placeLabels(labs, w, h) + boardMsg(w, h);
   }
   // 画布顶部的一条消息（只占上面两行，不接收鼠标：底下的点和图形照常能点）
   function boardMsg(w, h) {
@@ -539,7 +544,10 @@
     // 坐标范围在拖动开始时冻结：工作区没存过范围时是按内容自动选的，块一动内容就变，不冻结的话每动一下比例都会变
     const svg = gh.closest('svg'), r = svg.getBoundingClientRect(), cw = +svg.getAttribute('width') || r.width, ch = +svg.getAttribute('height') || r.height;
     const ws = S.scene.entities[pe.parent], v0 = ws ? wsView(ws, cw, ch) : null;
-    drag = { kind: 'piece', id: pe.id, wsId: pe.parent, v0, unit: v0 ? r.width / v0.span : (+gh.dataset.s) * r.width / cw, dx0: pe.props.dx, dy0: pe.props.dy, sx: ev.clientX, sy: ev.clientY, dxn: 0, dyn: 0, out: false, moved: false };
+    // 对齐准备：块的形状（拖动开始时的）和其余的顶点、边（目标图形也在里面），块自己的不算
+    const pv = S.D[pe.id] && S.D[pe.id].out.f ? S.D[pe.id].out.f.data : null;
+    const align = pv && ws ? buildAlign(ws, pv.pts, edgesOf(pv), [], (v) => v.id === pe.id) : null;
+    drag = { kind: 'piece', id: pe.id, wsId: pe.parent, v0, unit: v0 ? r.width / v0.span : (+gh.dataset.s) * r.width / cw, dx0: pe.props.dx, dy0: pe.props.dy, sx: ev.clientX, sy: ev.clientY, dxn: 0, dyn: 0, out: false, moved: false, align, guides: [] };
     // 量完大小再重画：重画会换掉这个图形的 DOM，之后再量会得到 0
     if (pk) render();
   }
@@ -552,8 +560,11 @@
     d.moved = true;
     d.out = !overWs(ev, d.wsId);
     const cl = (v) => Math.max(-200, Math.min(200, v));
-    let nx = d.dx0, ny = d.dy0;
-    if (!d.out) { nx = cl(d.dx0 + Math.round(mx / d.unit)); ny = cl(d.dy0 - Math.round(my / d.unit)); }
+    let nx = d.dx0, ny = d.dy0; d.guides = [];
+    if (!d.out) {
+      if (d.align) { d.align.alt = !!ev.altKey; const s = alignSolve(d.align, { x: mx / d.unit, y: -my / d.unit }, d.unit); nx = cl(d.dx0 + s.dx); ny = cl(d.dy0 + s.dy); d.guides = s.guides; }
+      else { nx = cl(d.dx0 + Math.round(mx / d.unit)); ny = cl(d.dy0 - Math.round(my / d.unit)); }
+    }
     d.dxn = nx - d.dx0; d.dyn = ny - d.dy0;
     if (e.props.dx !== nx || e.props.dy !== ny) {
       e.props.dx = nx; e.props.dy = ny;
@@ -576,6 +587,8 @@
       else UI.App.actMany([{ t: 'take', id: d.id }, { t: 'move', id: d.id, x: Math.round(w.x - 40), y: Math.round(w.y - 20) }]);
     } else if (d.dxn || d.dyn) UI.App.actMany([{ t: 'piece', id: d.id, what: 'move', value: { dx: d.dxn, dy: d.dyn } }]);
     else UI.App.refresh(false);
+    // 松手后：拼对了就闪一下（判定在 wsBody 里每次重画时算，和「对齐到目标」一样用 U.Geo.assemble）
+    if (!d.out) S.wsFit = { ws: d.wsId, until: Date.now() + 900 };
     UI.Panels.renderInsp(); render();
   }
 
@@ -627,6 +640,158 @@
     const v = wsVisible(ws).find((x) => pickOf(x) === name); return v ? figInfo(v) : null;
   }
   const moveTargets = (fi) => (fi.kind === 'place' ? [tgt(fi.ent.id, 'dx', 'dy')] : uniq(fi.verts).map((g) => tgt(g, 'x', 'y')));
+
+  // ---- 对齐线与吸附（§10.5.8 C12–C15）----
+  // 拖动整块、顶点或边时：先找吸附的整数平移量（顶点重合优先，其次各方向的顶点对齐、坐标轴、两条竖直或水平的边共线），
+  // 阈值是屏幕上的 6 像素；再按最终坐标算出精确成立的关系，画成参考线，旁边写关系。Alt 按住时不吸附、不画参考线。
+  // 自由点只存整数，拖动量本来就取整，所以吸附到整数目标时结果和取整一样；只有非整数的目标不吸附（见报告）。
+  const ALIGN_PX = 6, GUIDE_COL = '#0891b2';
+  const cr2 = (u, w) => Q.sub(Q.mul(u.x, w.y), Q.mul(u.y, w.x));
+  const dt2 = (u, w) => Q.add(Q.mul(u.x, w.x), Q.mul(u.y, w.y));
+  const vsb = (a, b) => ({ x: Q.sub(a.x, b.x), y: Q.sub(a.y, b.y) });
+  const numP = (p) => ({ x: Q.num(p.x), y: Q.num(p.y) });
+  const rnd = (v) => Q(Math.round(v) || 0);
+  const pdist = (p, a, b) => { const dx = b.x - a.x, dy = b.y - a.y, L = dx * dx + dy * dy, t = L ? Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / L)) : 0; return Math.hypot(p.x - a.x - t * dx, p.y - a.y - t * dy); };
+  const gapSeg = (a, b, c, d) => Math.min(pdist(a, c, d), pdist(b, c, d), pdist(c, a, b), pdist(d, a, b));
+  const edgesOf = (f) => (f.type === 'polygon' ? f.pts.map((_, k) => [k, (k + 1) % f.pts.length]) : f.type === 'segment' ? [[0, 1]] : []);
+  const gptPt = (id) => { const e = UI.S.scene.entities[id]; return { x: Q(e.props.x), y: Q(e.props.y) }; };
+  // 拖动前准备：动点（拖动开始时的精确坐标）、动点之间的边（下标对），其余的顶点和边（动点本身和 exclude 指的图形不算）。名字用学生看到的
+  function buildAlign(ws, base, edges, ids, exclude) {
+    const names = wsNames(), O = [], OE = [];
+    for (const v of wsVisible(ws)) {
+      if (exclude && exclude(v)) continue;
+      const fi = figInfo(v), pts = v.fig.pts || [], vid = fi && fi.kind === 'pts' ? fi.verts : null;
+      const gid = (k) => (vid ? vid[k] : null), mv = (k) => { const g = gid(k); return !!g && ids.includes(g); };
+      const nm = (k) => { const g = gid(k); return g && names[g + '.p'] ? names[g + '.p'] : null; };
+      pts.forEach((p, k) => { if (!mv(k)) O.push({ p, name: nm(k) || v.label + '的顶点' }); });
+      const n = pts.length, es = v.fig.type === 'polygon' ? pts.map((_, k) => [k, (k + 1) % n]) : v.fig.type === 'segment' ? [[0, 1]] : [];
+      for (const [a, b] of es) {
+        if (mv(a) || mv(b)) continue;
+        OE.push({ a: pts[a], b: pts[b], name: nm(a) && nm(b) ? nm(a) + nm(b) : v.label + '的边' });
+      }
+    }
+    return { base, edges, ids, others: O, oedges: OE, alt: false };
+  }
+  // 整个图形（自由点围成的，或摆放出来的）的对齐准备
+  function alignOfFig(wsId, fi) {
+    const ws = UI.S.scene.entities[wsId], ex = (v) => v.id === fi.ent.id;
+    if (fi.kind === 'place') return buildAlign(ws, fi.f.pts, edgesOf(fi.f), [], ex);
+    const ids = uniq(fi.verts), base = ids.map((g) => gptPt(g));
+    const edges = fi.edges.map(([a, b]) => [ids.indexOf(fi.verts[a]), ids.indexOf(fi.verts[b])]);
+    return buildAlign(ws, base, edges, ids, ex);
+  }
+  // 求吸附后的整数平移 {dx, dy}（Tc 是没有取整的拖动量，单位是坐标单位），以及精确成立的参考线 guides
+  function alignSolve(al, Tc, unit) {
+    const B = al.base, O = al.others, OE = al.oedges, guides = [];
+    const pxd = (a, b) => Math.hypot(a, b) * unit;
+    let T = null;
+    if (!al.alt) {
+      // 1. 顶点重合：两个方向都对上（目标的坐标是整数才行），阈值内取最近的
+      let bc = null;
+      for (const b of B) for (const v of O) {
+        const tx = Q.sub(v.p.x, b.x), ty = Q.sub(v.p.y, b.y);
+        if (!Q.isInt(tx) || !Q.isInt(ty)) continue;
+        const d = pxd(Q.num(tx) - Tc.x, Q.num(ty) - Tc.y);
+        if (d <= ALIGN_PX && (!bc || d < bc.d)) bc = { d, x: tx, y: ty };
+      }
+      if (bc) T = { x: bc.x, y: bc.y };
+      else {
+        // 2. 单方向：顶点同一竖线 / 横线、坐标轴、竖直（水平）的边共线；每个方向取最近的
+        const cx = [], cy = [];
+        const add = (L, val, d) => { if (Q.isInt(val) && d <= ALIGN_PX) L.push({ val, d }); };
+        for (const b of B) {
+          for (const v of O) {
+            const vx = Q.sub(v.p.x, b.x), vy = Q.sub(v.p.y, b.y);
+            add(cx, vx, Math.abs(Q.num(vx) - Tc.x) * unit);
+            add(cy, vy, Math.abs(Q.num(vy) - Tc.y) * unit);
+          }
+          add(cx, Q.neg(b.x), Math.abs(-Q.num(b.x) - Tc.x) * unit);   // 纵轴 x = 0
+          add(cy, Q.neg(b.y), Math.abs(-Q.num(b.y) - Tc.y) * unit);   // 横轴 y = 0
+        }
+        for (const [i, j] of al.edges) {
+          const a = B[i], b = B[j];
+          for (const o of OE) {
+            if (Q.eq(a.x, b.x) && Q.eq(o.a.x, o.b.x)) add(cx, Q.sub(o.a.x, a.x), Math.abs(Q.num(Q.sub(o.a.x, a.x)) - Tc.x) * unit);
+            if (Q.eq(a.y, b.y) && Q.eq(o.a.y, o.b.y)) add(cy, Q.sub(o.a.y, a.y), Math.abs(Q.num(Q.sub(o.a.y, a.y)) - Tc.y) * unit);
+          }
+        }
+        const pick = (L) => L.reduce((m, c) => (!m || c.d < m.d ? c : m), null);
+        const px = pick(cx), py = pick(cy);
+        T = { x: px ? px.val : rnd(Tc.x), y: py ? py.val : rnd(Tc.y) };
+      }
+    }
+    if (!T) T = { x: rnd(Tc.x), y: rnd(Tc.y) };   // Alt 或者没有吸附：和原来一样取整
+    if (!al.alt) {
+      // 3. 参考线：只画精确成立的关系（不管是不是吸附来的）；同一条线只画一次，最多 8 条
+      const P = al.base.map((b) => ({ x: Q.add(b.x, T.x), y: Q.add(b.y, T.y) }));
+      const seen = new Set(), add = (k, g) => { if (!seen.has(k) && guides.length < 8) { seen.add(k); guides.push(g); } };
+      P.forEach((p, i) => {
+        const at = numP(p);
+        for (const v of O) {
+          const sx = Q.eq(p.x, v.p.x), sy = Q.eq(p.y, v.p.y);
+          if (sx && sy) add('pt' + at.x + ',' + at.y, { k: 'pt', x: at.x, y: at.y, at, text: '顶点重合' });
+          else if (sx) add('vx' + at.x, { k: 'vl', x: at.x, at, text: '和 ' + v.name + ' 同一竖线' });
+          else if (sy) add('hy' + at.y, { k: 'hl', y: at.y, at, text: '和 ' + v.name + ' 同一横线' });
+        }
+        if (Q.eq(p.x, Q(0))) add('ax' + at.x, { k: 'vl', x: 0, at, text: '在纵轴上' });
+        if (Q.eq(p.y, Q(0))) add('ay' + at.y, { k: 'hl', y: 0, at, text: '在横轴上' });
+        // 格点：整数位置，而且拖动的鼠标本来就离这个格点很近
+        const bn = al.base[i], cx0 = Q.num(bn.x) + Tc.x, cy0 = Q.num(bn.y) + Tc.y;
+        if (Q.isInt(p.x) && Q.isInt(p.y) && pxd(cx0 - at.x, cy0 - at.y) <= ALIGN_PX) add('gp' + at.x + ',' + at.y, { k: 'pt', x: at.x, y: at.y, at, text: '格点' });
+      });
+      for (const [i, j] of al.edges) {
+        const ea = P[i], eb = P[j], u = vsb(eb, ea), A = numP(ea), Bp = numP(eb), mid = { x: (A.x + Bp.x) / 2, y: (A.y + Bp.y) / 2 };
+        if (Q.eq(u.x, Q(0)) && Q.eq(u.y, Q(0))) continue;
+        for (const o of OE) {
+          const w = vsb(o.b, o.a), oa = numP(o.a), ob = numP(o.b), key = oa.x + ',' + oa.y + ',' + ob.x + ',' + ob.y;
+          if (Q.eq(w.x, Q(0)) && Q.eq(w.y, Q(0))) continue;
+          const c = cr2(u, w), near = gapSeg(A, Bp, oa, ob) * unit <= ALIGN_PX;
+          if (Q.eq(c, Q(0))) {
+            if (Q.eq(cr2(u, vsb(o.a, ea)), Q(0))) add('ln' + key, { k: 'ln', a: oa, b: ob, at: mid, text: '和 ' + o.name + ' 共线' });
+            else if (near) add('ln' + key, { k: 'ln', a: oa, b: ob, at: mid, text: '和 ' + o.name + ' 平行' });
+          } else if (near && Q.eq(dt2(u, w), Q(0))) add('ln' + key, { k: 'ln', a: oa, b: ob, at: mid, text: '和 ' + o.name + ' 垂直' });
+        }
+      }
+      // 等距：一个动点到另外两个不同的顶点距离相等（精确相等才算）
+      const d2 = (p, q) => { const dx = Q.sub(p.x, q.x), dy = Q.sub(p.y, q.y); return Q.add(Q.mul(dx, dx), Q.mul(dy, dy)); };
+      for (const p of P) {
+        let n = 0;
+        for (let a = 0; a < O.length && n < 1; a++) for (let b = a + 1; b < O.length && n < 1; b++) {
+          if (O[a].name === O[b].name) continue;
+          const d1 = d2(p, O[a].p), e2 = d2(p, O[b].p);
+          if (Q.eq(d1, Q(0)) || !Q.eq(d1, e2)) continue;
+          add('eq' + numP(p).x + ',' + numP(p).y + O[a].name + O[b].name, { k: 'seg2', a: numP(O[a].p), b: numP(O[b].p), at: numP(p), text: '与 ' + O[a].name + '、' + O[b].name + ' 等距' });
+          n++;
+        }
+      }
+    }
+    return { dx: Q.num(T.x), dy: Q.num(T.y), guides };
+  }
+  // 参考线：细虚线画在工作区里，旁边写关系（labs 里 prio 为 -1，先摆位置）
+  const gline = (x0, y0, x1, y1) => '<line class="wsguide" x1="' + x0.toFixed(1) + '" y1="' + y0.toFixed(1) + '" x2="' + x1.toFixed(1) + '" y2="' + y1.toFixed(1) + '" stroke="' + GUIDE_COL + '" stroke-width="1.2" stroke-dasharray="5 3" pointer-events="none"/>';
+  function guidesSvg(gs, fr, labs) {
+    const { X, Y, w, h } = fr; let s = '';
+    for (const g of gs) {
+      const ax = X(g.at.x), ay = Y(g.at.y);
+      if (g.k === 'vl') s += gline(X(g.x), 0, X(g.x), h);
+      else if (g.k === 'hl') s += gline(0, Y(g.y), w, Y(g.y));
+      else if (g.k === 'ln') { const x0 = X(g.a.x), y0 = Y(g.a.y), x1 = X(g.b.x), y1 = Y(g.b.y), dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy) || 1, K = (w + h) / L; s += gline(x0 - dx * K, y0 - dy * K, x1 + dx * K, y1 + dy * K); }
+      else if (g.k === 'seg2') s += gline(X(g.a.x), Y(g.a.y), X(g.b.x), Y(g.b.y)) + gline(ax, ay, X(g.a.x), Y(g.a.y)) + gline(ax, ay, X(g.b.x), Y(g.b.y));
+      s += '<circle class="wsguide" cx="' + ax.toFixed(1) + '" cy="' + ay.toFixed(1) + '" r="' + (g.k === 'pt' ? 6 : 3) + '" fill="' + (g.k === 'pt' ? 'none' : GUIDE_COL) + '" stroke="' + GUIDE_COL + '" stroke-width="2" pointer-events="none"/>';
+      const tw = TXT_W(g.text);
+      labs.push({ text: g.text, c: GUIDE_COL, cands: [[ax + 8, ay - 8], [ax + 8, ay + 16], [ax - tw - 8, ay - 8], [ax - tw - 8, ay + 16]], prio: -1 });
+    }
+    return s;
+  }
+  // 拼合判定（和「对齐到目标」用同一个 U.Geo.assemble）：工作区里的块拼成了目标图形，块的边线就变绿
+  function fitState(ws) {
+    const S = UI.S, tg = wsValues(ws, wsNames()).find((v) => isTarget(S.scene.entities[v.id]));
+    const pcs = wsKids(ws).filter((k) => k.type === 'gpiece');
+    if (!tg || !tg.fig || !pcs.length) return null;
+    const figs = pcs.map((k) => S.D[k.id] && S.D[k.id].out.f && S.D[k.id].out.f.data);
+    if (figs.some((f) => !f) || !U.Geo.assemble(figs, tg.fig).ok) return null;
+    return { ids: pcs.map((k) => k.id), flash: !!(S.wsFit && S.wsFit.ws === ws.id && Date.now() < S.wsFit.until) };
+  }
   // 开始一次图形拖动（tr 平移、sc 放缩、rot 旋转、pscale 块放缩、prot 块旋转、lrot 摆放的旋转）。
   // 拖动时只改实体的属性做预览，松手时还原，再把整段拖动记成一步（shapeUp）。坐标范围在拖动开始时冻结。
   function startShape(ev, wb, wsId, mode, targets, extra) {
@@ -634,14 +799,15 @@
     const fr = wsFrame(ws, +wb.getAttribute('width'), +wb.getAttribute('height'));
     S.wsView = S.wsView || {}; S.wsView[wsId] = fr.vw;
     const sc = scr(wb, fr);
-    drag = Object.assign({ kind: 'shape', mode, wsId, v: fr.vw, sc, unit: sc.unit, sx: ev.clientX, sy: ev.clientY, start: worldAt(ev, fr.vw, sc), targets, moved: false, out: [], f: Q(1), k: 0 }, extra || {});
+    drag = Object.assign({ kind: 'shape', mode, wsId, v: fr.vw, sc, unit: sc.unit, sx: ev.clientX, sy: ev.clientY, start: worldAt(ev, fr.vw, sc), targets, moved: false, out: [], f: Q(1), k: 0, guides: [] }, extra || {});
   }
   // 按下一个把手：边（整条边平移）、角（放缩）、旋转把手
   function startHandle(hd, ev) {
     const S = UI.S, wb = hd.closest('.wsbody'), wsId = wb.dataset.wsid, kind = hd.dataset.hdl;
     if (kind === 'edge') {
       if (hd.dataset.pick) wsPick(hd.dataset.pick, ev.shiftKey);
-      startShape(ev, wb, wsId, 'tr', uniq(hd.dataset.gids.split(',')).map((g) => tgt(g, 'x', 'y')));
+      const gids = uniq(hd.dataset.gids.split(','));
+      startShape(ev, wb, wsId, 'tr', gids.map((g) => tgt(g, 'x', 'y')), { align: buildAlign(S.scene.entities[wsId], gids.map((g) => gptPt(g)), gids.length > 1 ? [[0, 1]] : [], gids, null) });
       render(); return;
     }
     const name = (S.wsSel || []).length === 1 ? S.wsSel[0] : null, fi = name ? figByName(wsId, name) : null;
@@ -673,6 +839,7 @@
     let tip = '';
     if (d.mode === 'tr') {
       let dX = Math.round(mx / d.unit), dY = -Math.round(my / d.unit), lx = -Infinity, hx = Infinity, ly = -Infinity, hy = Infinity;
+      if (d.align) { d.align.alt = !!ev.altKey; const s = alignSolve(d.align, { x: mx / d.unit, y: -my / d.unit }, d.unit); dX = s.dx; dY = s.dy; d.guides = s.guides; }
       for (const t of d.targets) { lx = Math.max(lx, t.lo[0] - t.x0); hx = Math.min(hx, t.hi[0] - t.x0); ly = Math.max(ly, t.lo[1] - t.y0); hy = Math.min(hy, t.hi[1] - t.y0); }
       dX = Math.max(lx, Math.min(hx, dX)); dY = Math.max(ly, Math.min(hy, dY));
       for (const t of d.targets) { put(t.id, t.kx, t.x0 + dX); put(t.id, t.ky, t.y0 + dY); }
@@ -933,14 +1100,14 @@
       if (pe.type === 'gpiece') { pieceDown(pe, gh, pk, ev); return; }
       const gwb = gh.closest('.wsbody'); if (!gwb) return;
       ev.preventDefault(); ev.stopPropagation();
-      startShape(ev, gwb, gwb.dataset.wsid, 'tr', [tgt(pe.id, gh.dataset.kx || 'x', gh.dataset.ky || 'y')]);
+      startShape(ev, gwb, gwb.dataset.wsid, 'tr', [tgt(pe.id, gh.dataset.kx || 'x', gh.dataset.ky || 'y')], { align: buildAlign(UI.S.scene.entities[gwb.dataset.wsid], [gptPt(pe.id)], [], [pe.id], null) });
       if (pk) render();   // 选中状态变了，重画（拖动数据已经记下来了）
       return;
     }
     if (pk) {
       // 整个图形可以直接拖：自由点围成的图形整体平移（每个顶点各改一次 x、y，记成一步）；摆放出来的图形改 dx、dy
       const pwb = pk.closest('.wsbody'), fi = pwb && !ev.shiftKey ? figByName(pwb.dataset.wsid, pk.dataset.pick) : null;
-      if (fi && (fi.kind === 'pts' || fi.kind === 'place')) { ev.preventDefault(); ev.stopPropagation(); startShape(ev, pwb, pwb.dataset.wsid, 'tr', moveTargets(fi)); }
+      if (fi && (fi.kind === 'pts' || fi.kind === 'place')) { ev.preventDefault(); ev.stopPropagation(); startShape(ev, pwb, pwb.dataset.wsid, 'tr', moveTargets(fi), { align: alignOfFig(pwb.dataset.wsid, fi) }); }
       render(); return;
     }
     // 工作区的画布：点空白处取消选中，不移动工作区，也不平移台面
@@ -1006,12 +1173,34 @@
   }
   const isContainer = (e) => !!(U.types[e.type] && U.types[e.type].slots);
   // 1.10：松手时，如果落在能装它的容器上就放进去；落在别处且原来在容器里，就取出来
+  // 新加一张卡片放哪里：从想放的位置开始，往外一圈一圈找，找到和已有卡片（包括工作区底下的工具面板）都不重叠的空位
+  function freeSpot(x, y, type) {
+    const E = UI.S.scene.entities, d = U.types[type], sz = d && d.size ? d.size({ props: {} }) : [150, 90], w = sz[0], h = sz[1];
+    const rects = Object.values(E).filter((e) => !e.parent).map((e) => {
+      const g = geom(e); let bottom = g.y + g.h; if (isWsDef(e.type)) bottom += 36 + 270;
+      return { x0: g.x - 12, y0: g.y - 12, x1: g.x + g.w + 12, y1: bottom + 12 };
+    });
+    const hit = (px, py) => rects.some((r) => px < r.x1 && px + w > r.x0 && py < r.y1 && py + h > r.y0);
+    if (!hit(x, y)) return { x, y };
+    for (let ring = 1; ring <= 30; ring++) {
+      for (let i = -ring; i <= ring; i++) for (const [px, py] of [[x + i * 40, y - ring * 40], [x + i * 40, y + ring * 40], [x - ring * 40, y + i * 40], [x + ring * 40, y + i * 40]]) if (!hit(px, py)) return { x: px, y: py };
+    }
+    return { x, y };
+  }
   function dropOnContainer(id, ev) {
     const S = UI.S, e = S.scene.entities[id]; if (!e) return;
     const t = cardUnder(ev, id, isContainer);
     const td = t ? U.types[t.type] : null;
     const slots = td && td.slots ? Object.keys(td.slots) : [];
     if (t && slots.length) {
+      if (isWsDef(t.type)) {
+        // 放进几何工作区：图形落在鼠标松开的位置；放进去之前先把坐标范围定下来，免得每放一个就重新缩放一次
+        const g = geom(t); S.wsView = S.wsView || {}; if (!S.wsView[t.id]) S.wsView[t.id] = wsView(t, g.w, g.h - HD);
+        const wb = document.querySelector('svg.wsbody[data-wsid="' + t.id + '"]'), fr = wsFrame(t, g.w, g.h - HD);
+        const pt = wb ? worldAt(ev, fr.vw, scr(wb, fr)) : null;
+        UI.App.act({ t: 'wsdrop', id, ws: t.id, x: pt ? pt.x : undefined, y: pt ? pt.y : undefined });
+        return;
+      }
       const accepting = slots.find((sn) => { const A = td.slots[sn].accepts; return A === '*' || A.includes(e.type); });
       UI.App.act({ t: 'put', id, parent: t.id, slot: accepting || slots[0] });
     } else if (e.parent) UI.App.act({ t: 'take', id });
@@ -1150,5 +1339,5 @@
     });
   }
 
-  UI.Stage = { init, render, fit, zoomAt, toWorld, geom, portPos, setFocus, wsZoomAt, wsFit, selPieceIds, endDraw, rangeOf: (id) => { const ws = UI.S.scene.entities[id]; if (!ws) return null; const g = geom(ws); return wsView(ws, g.w, g.h - HD); } };
+  UI.Stage = { init, render, dropOnContainer, freeSpot, fit, zoomAt, toWorld, geom, portPos, setFocus, wsZoomAt, wsFit, selPieceIds, endDraw, rangeOf: (id) => { const ws = UI.S.scene.entities[id]; if (!ws) return null; const g = geom(ws); return wsView(ws, g.w, g.h - HD); } };
 })(window);

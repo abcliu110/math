@@ -83,7 +83,43 @@
     return ok({ step: { t: 'piece', id: a.id, what: a.what, value: a.value === undefined ? null : a.value } });
   }
 
-  U.Piece = { COLORS, cutInto, act };
+  // 放进工作区的统一入口（从器材架拖、拖台面上的卡片、工具创建，都走这里）。
+  // a = { id: 要放的器材, ws: 工作区 id, x, y: 落点（工作区坐标；不给就不挪位置） }
+  // 产生图形的器材：建一块 gpiece 接在它的图形口上，块的平移让图形的中心落在 (x, y)；
+  // 器材自己在画面上隐藏（和剪开一样），避免同一个图形画两次。不产生图形的器材只是放进去。
+  const FIG_LABEL = { ftri: '三角形', fquad: '四边形', fcirc: '圆', rect: '长方形', parallelogram: '平行四边形', tri: '三角形', quad: '四边形' };
+  function dropInto(scene, a) {
+    const W = U.World, E = scene.entities, e = E[a.id], ws = E[a.ws];
+    if (!e) return fail('找不到要放的器材');
+    if (!ws || !(U.types[ws.type] && U.types[ws.type].workspace)) return fail('这里不是工作区');
+    if (e.parent === ws.id) return ok({ already: true });
+    const p = W.act(scene, { t: 'put', id: e.id, parent: ws.id, slot: 'items' });
+    if (!p.ok) return p;
+    const def = U.types[e.type], port = Object.keys(def.outputs).find((k) => def.outputs[k].kind === 'fig');
+    if (!port || e.type === 'gpiece' || e.type === 'gpt') return ok({ placed: e.id });
+    // 图形口接一块：块的 dx、dy 让图形的中心落在落点上
+    const piece = W.add(scene, 'gpiece', ws.x + 24, ws.y + 44, {});
+    const k = (scene.seq.gpiece || 0), label = (FIG_LABEL[e.type] || def.label) + ' ' + (scene.seq[e.type] || 1);
+    const pe = E[piece]; pe.name = label; pe.props.name = label; pe.props.color = COLORS[(k - 1) % COLORS.length];
+    const l = W.act(scene, { t: 'link', from: e.id, fromPort: port, to: piece, toPort: 'f' });
+    if (!l.ok) { delete E[piece]; return l; }
+    const q = W.act(scene, { t: 'put', id: piece, parent: ws.id, slot: 'items' });
+    if (!q.ok) return q;
+    e.hidden = true;
+    if (a.x !== undefined && a.y !== undefined) {
+      let D; try { D = W.evaluate(scene); } catch (err) { D = null; }
+      const v = D && D[e.id] && D[e.id].out[port], f = v && v.data;
+      if (f && f.pts && f.pts.length) {
+        const xs = f.pts.map((t) => Q.num(t.x)), ys = f.pts.map((t) => Q.num(t.y)), r = f.type === 'circle' ? Math.sqrt(Q.num(f.r2)) : 0;
+        const cx = (Math.min(...xs) - r + Math.max(...xs) + r) / 2, cy = (Math.min(...ys) - r + Math.max(...ys) + r) / 2;
+        const clamp = (n) => Math.max(-200, Math.min(200, Math.round(n)));
+        pe.props.dx = clamp(a.x - cx); pe.props.dy = clamp(a.y - cy);
+      }
+    }
+    return ok({ placed: e.id, piece });
+  }
+
+  U.Piece = { COLORS, cutInto, act, dropInto };
 
   // 块的形状：先按放缩比例放大（以左下角为中心，同摆放），再翻、转、移
   U.registerPack({

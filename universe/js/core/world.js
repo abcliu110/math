@@ -347,6 +347,7 @@
       case 'tool': return tool(scene, a);
       // 块（§10.5.10）：改块自己的属性，一条动作记一步（撤销由界面的快照栈负责）
       case 'piece': return U.Piece.act(scene, a);
+      case 'wsdrop': return U.Piece.dropInto(scene, a);
       case 'add': {
         if (!U.types[a.type]) return fail('没有这种器材');
         const id = add(scene, a.type, a.x || 0, a.y || 0, a.props);

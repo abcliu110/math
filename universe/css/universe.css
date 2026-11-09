@@ -301,3 +301,7 @@ button.gdel { border: 0; background: none; color: var(--dim); cursor: pointer; }
 /* 几何工作区（界面修正）：浮动翻转条的按钮不换行；工作区里的按钮文字不折行 */
 .wsx-float button { white-space: nowrap; }
 .wsx button { white-space: nowrap; }
+
+/* 对齐线与吸附（§10.5.8 C）：拖动时的参考线在 svg 里；拼对的块闪一下（边线变绿） */
+.wsflash { animation: wsflash .9s ease-out 1; }
+@keyframes wsflash { 0% { stroke-width: 10px; } 100% { stroke-width: 2.5px; } }
