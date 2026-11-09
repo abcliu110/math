@@ -27,7 +27,7 @@
   });
 
   P.push({
-    id: 'count-by-match', essence: ['E1', 'E2'], title: '4 个人两两握手一次（甲和乙握过，乙和甲不再算），一共握几次？', grade: 5, domain: '数与运算', points: [], topics: ['配对计数', '不重复'],
+    id: 'count-by-match', essence: ['E1', 'E2'], title: '4 个人两两握手一次（甲和乙握过，乙和甲不再算），一共握几次？', grade: 5, domain: '数与运算', points: ['5.4'], topics: ['配对计数', '不重复'],
     alias: ['握手', '配对计数'], hook: '4 个人，每两个人握一次手。把每一次握手，对应到一对人身上，再数一数一共几对。',
     shelf: ['num', 'array', 'meter', 'compare'],
     build: mk({ ents: [

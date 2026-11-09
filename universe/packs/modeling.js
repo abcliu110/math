@@ -116,7 +116,7 @@
           if (r.kind === 'error') { c.say('reject', r.why); return {}; }
           if (c.step) r.steps.forEach((s) => c.step(s.say, null, 'fit.least-squares'));
           const sse = T.sse(r.residuals);
-          c.say(sse.n === 0 ? 'ok' : 'info', (sse.n === 0 ? '数据正好在这条直线上' : '数据大致在这条直线附近，残差平方和 ' + Q.show(sse)) + '（和这些数据吻合）');
+          c.say(sse.n === 0n ? 'ok' : 'info', (sse.n === 0n ? '数据正好在这条直线上' : '数据大致在这条直线附近，残差平方和 ' + Q.show(sse)) + '（和这些数据吻合）');
           return { f: U.val('fn', { k: r.k, b: r.b }), k: U.val('num', r.k), b: U.val('num', r.b) };
         },
         badge: (c) => (c.out.f ? U.KINDS.fn.show(c.out.f.data) : ''),

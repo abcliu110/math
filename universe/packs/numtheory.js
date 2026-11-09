@@ -3,7 +3,7 @@
   'use strict';
   const U = G.U, Q = U.Q, K = U.kit;
   const num = (q, dim, exact) => U.val('num', q, { dim: dim || null, exact: exact !== false });
-  const intOf = (v) => (v && v.data.d === 1 ? v.data.n : null);
+  const intOf = (v) => (v && v.data.d === 1n ? Number(v.data.n) : null);
   const gcd = (a, b) => { while (b) { [a, b] = [b, a % b]; } return a; };
   const factor = (n) => { const f = []; for (let p = 2; p * p <= n; p++) while (n % p === 0) { f.push(p); n /= p; } if (n > 1) f.push(n); return f; };
   const divisors = (n) => { const d = []; for (let i = 1; i * i <= n; i++) if (n % i === 0) { d.push(i); if (i * i !== n) d.push(n / i); } return d.sort((x, y) => x - y); };
@@ -65,9 +65,9 @@
           const q = v.data, sq = c.props.mode === 0;
           if (sq && q.n < 0) { c.say('reject', '负数没有（实数范围的）平方根'); return {}; }
           const root = (x, k) => { const r = Math.round(Math.pow(Math.abs(x), 1 / k)); return r ** k === Math.abs(x) ? Math.sign(x) * r : null; };
-          const a = root(q.n, sq ? 2 : 3), b = root(q.d, sq ? 2 : 3);
+          const a = root(Number(q.n), sq ? 2 : 3), b = root(Number(q.d), sq ? 2 : 3);
           if (a !== null && b !== null) { c.say('ok', '开得尽：' + Q.show(Q(a, b))); return { r: num(Q(a, b), null), exact: U.val('bool', true) }; }
-          const x = sq ? Math.sqrt(q.n / q.d) : Math.cbrt(q.n / q.d);
+          const x = sq ? Math.sqrt(Q.num(q)) : Math.cbrt(Q.num(q));
           c.say('info', '开不尽：是无限不循环小数，只能取近似值 ≈ ' + x.toFixed(c.props.digits));
           return { r: num(Q.fromNumber(Math.round(x * 1e6) / 1e6), null, false), exact: U.val('bool', false) };
         },
@@ -90,7 +90,7 @@
         compute: (c) => {
           const a = K.first(c.inp.a); if (!a) { c.say('info', '接底数'); return {}; }
           const e = c.props.e; let r = Q(1);
-          if (e < 0 && a.data.n === 0) { c.say('err', '0 不能做负指数的底数'); return {}; }
+          if (e < 0 && a.data.n === 0n) { c.say('err', '0 不能做负指数的底数'); return {}; }
           for (let i = 0; i < Math.abs(e); i++) r = Q.mul(r, a.data);
           if (e < 0) r = Q.div(Q(1), r);
           c.say('ok', Q.show(a.data) + '^' + e + ' = ' + Q.show(r));

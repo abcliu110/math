@@ -4,7 +4,7 @@
   const U = G.U, mk = U.mkScene, P = [];
   const road = (props) => mk({ ents: [{ type: 'road', x: 80, y: 90, role: 'r', props }] });
   P.push({
-    id: 'meet-100', essence: ['E6', 'E12'], title: '两地相距 100，甲每拍走 6，乙每拍走 4，相向而行', grade: 4, domain: '时间与变化', points: [], topics: ['相遇问题', '速度和'],
+    id: 'meet-100', essence: ['E6', 'E12'], title: '两地相距 100，甲每拍走 6，乙每拍走 4，相向而行', grade: 4, domain: '时间与变化', points: ['4.9'], topics: ['相遇问题', '速度和'],
     alias: ['相遇', '行程'], hook: '甲从 0 出发向右，乙从 100 出发向左。先把速度调成 6 和 −4（负号表示向左），再让时钟走起来，看几拍相遇。',
     shelf: ['road', 'meter', 'op'],
     build: road({ len: 100, x1: 0, v1: 1, x2: 100, v2: -1 }),
@@ -16,7 +16,7 @@
     traps: [], why: '相向而行，每拍两人一共靠近 6+4=10，所以 100÷10=10 拍相遇。相遇问题：路程 = 速度和 × 时间。', ref: ['road|0'],
   });
   P.push({
-    id: 'chase-30', essence: ['E6', 'E12'], title: '甲在后追乙：相距 30，甲每拍 7，乙每拍 4', grade: 5, domain: '时间与变化', points: [], topics: ['追及问题', '速度差'],
+    id: 'chase-30', essence: ['E6', 'E12'], title: '甲在后追乙：相距 30，甲每拍 7，乙每拍 4', grade: 5, domain: '时间与变化', points: ['5.5'], topics: ['追及问题', '速度差'],
     alias: ['追及', '行程'], hook: '甲在 0，乙在 30，都向右走。调好速度，让时钟走起来，几拍甲追上乙？',
     shelf: ['road', 'meter', 'op'],
     build: road({ len: 200, x1: 0, v1: 1, x2: 30, v2: 1 }),
@@ -28,7 +28,7 @@
     traps: [], why: '同向追及，每拍缩短 7−4=3，要缩短 30，所以 30÷3=10 拍。追及问题：路程差 = 速度差 × 时间。', ref: ['road|0'],
   });
   P.push({
-    id: 'loop-400', essence: ['E6', 'E5'], title: '环形跑道一圈 400，两人同点同向，速度 8 和 6，几拍再相遇？', grade: 6, domain: '时间与变化', points: [], topics: ['环形跑道', '追及'],
+    id: 'loop-400', essence: ['E6', 'E5'], title: '环形跑道一圈 400，两人同点同向，速度 8 和 6，几拍再相遇？', grade: 6, domain: '时间与变化', points: ['6.5'], topics: ['环形跑道', '追及'],
     alias: ['环形', '行程'], hook: '勾选“环形跑道”，周长 400，两人同点出发，速度 8 和 6。快的人要多跑一整圈才再次碰上。',
     shelf: ['road', 'meter', 'op'],
     build: road({ len: 400, loop: true, x1: 0, v1: 1, x2: 0, v2: 1 }),

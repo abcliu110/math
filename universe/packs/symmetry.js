@@ -96,7 +96,7 @@
           c.say(same ? 'ok' : 'info', same ? '两半完全重合' : '对不上：折过去有一块错位' + (pairs ? '，但有 ' + pairs + ' 对点能对上' : ''));
           return { same: num(same), pairs: num(pairs), f: U.val('fig', U.Fig.polygon(rectPoly(p))) };
         },
-        badge: (c) => (c.props.fold === 0 ? '未折' : c.out.same && c.out.same.data.n === 1 ? '重合' : '不重合'),
+        badge: (c) => (c.props.fold === 0 ? '未折' : c.out.same && c.out.same.data.n === 1n ? '重合' : '不重合'),
         draw: (c) => {
           // 画布上方留给端口读数，下方留给折后的虚线镜像和说明文字
           const p = c.props, y0 = 84, y1 = c.h - 34;

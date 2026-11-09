@@ -16,6 +16,17 @@
   // 判分时读到的近似值记录在这里；参考解回归测试据此检查“没有对近似值做精确判断”
   U.inexactReads = U.inexactReads || [];
 
+  // 预测的回答（或标准答案）写成给人看的文字：place 是位置名，more-less 是 多/少/一样，number、type 是原文
+  function predLabel(pr, v) {
+    if (v === undefined || v === null) return null;
+    const form = pr.form || 'pick';
+    if (form === 'place') return Array.isArray(pr.slots) && pr.slots[Number(v)] !== undefined ? pr.slots[Number(v)] : null;
+    if (form === 'more-less') return Object.prototype.hasOwnProperty.call(U.Predict.CMP, v) ? U.Predict.CMP[v] : null;
+    if (form === 'number' || form === 'type') return String(v);
+    const o = (pr.options || []).find((x) => String(x.v) === String(v));
+    return o ? o.label : null;
+  }
+
   function makeW(scene, D, run) {
     const E = scene.entities;
     const idOf = (e) => (typeof e === 'string' ? e : e && e.id);
@@ -164,16 +175,20 @@
 
     report(problem, run, scene, D) {
       const sc = Judge.score(problem, run), W = makeW(scene, D, run);
+      const pr = problem.predict, isPick = !pr || (pr.form || 'pick') === 'pick';
       let actual = null;
-      if (problem.predict) {
-        try { actual = typeof problem.predict.reveal === 'function' ? problem.predict.reveal(W) : { v: problem.predict.answer, label: String(problem.predict.answer) }; } catch (e) { actual = null; }
+      if (pr) {
+        try { actual = typeof pr.reveal === 'function' ? pr.reveal(W) : { v: pr.answer, label: String(pr.answer) }; } catch (e) { actual = null; }
       }
-      const guess = run.pred === undefined ? null : (problem.predict.options || []).find((o) => String(o.v) === String(run.pred));
+      // 报告里写给人看的文字：pick 仍用选项名（原样），其他形式用 predLabel
+      const guessLabel = pr && run.pred !== undefined ? predLabel(pr, run.pred) : null;
+      const actualLabel = actual ? (isPick ? actual.label : predLabel(pr, actual.v)) : null;
+      const match = guessLabel !== null && actual ? (isPick ? String(run.pred) === String(actual.v) : U.Predict.check(pr, run.pred).ok) : null;
       return {
         score: sc.got, max: sc.max,
         items: problem.milestones.map((m) => ({ id: m.id, say: m.say, score: m.score, done: run.ms[m.id].done, half: (run.hintLevel[m.id] || 0) >= 3 })),
-        guess: guess ? guess.label : null, actual: actual ? actual.label : null,
-        match: guess && actual ? String(guess.v) === String(actual.v) : null,
+        guess: guessLabel, actual: actualLabel,
+        match,
         traps: Object.keys(run.trapsHit).map((id) => (problem.traps.find((t) => t.id === id) || {}).wrong).filter(Boolean),
         ops: run.ops, errors: run.errors, usedSec: Math.round((Date.now() - run.t0) / 1000), newWay: run.newWay,
       };

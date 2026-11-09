@@ -6,7 +6,7 @@
   U.problems.push({
     id: 'car-model-proportional',
     title: '匀速行驶的车：路程和时间有什么关系？',
-    grade: 7, domain: '建模', essence: ['E7', 'E8'], points: [],
+    grade: 7, domain: '建模', essence: ['E7', 'E8'], points: ['6.12'],
     alias: ['拟合', '正比例', '建模', '预测'],
     hook: '每隔 1 小时记一次车跑的路程。你能找到规律，并预测第 5 小时跑了多远吗？',
     shelf: ['datatable', 'fit', 'predict', 'column', 'scatter'],

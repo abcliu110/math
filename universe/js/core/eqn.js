@@ -29,7 +29,7 @@
       if (o.op === 'mul' || o.op === 'div') {
         if (!isConstPoly(byP)) return { error: '只能同时乘或除以一个数' };
         const k = constOf(byP);
-        if (k.n === 0) return { error: o.op === 'mul' ? '两边乘 0 得到 0 = 0，信息全丢了，不行' : '不能除以 0' };
+        if (k.n === 0n) return { error: o.op === 'mul' ? '两边乘 0 得到 0 = 0，信息全丢了，不行' : '不能除以 0' };
         const f = o.op === 'mul' ? (x) => P.mul(x, byP) : (x) => P.mul(x, P.const(Q(k.d, k.n)));
         const rel = k.n < 0 ? FLIP[e.rel] : e.rel;
         const say = '两边' + (o.op === 'mul' ? '同时乘' : '同时除以') + ' ' + Q.show(k) + (k.n < 0 && e.rel !== '=' ? '，不等号反向' : '');
@@ -49,7 +49,7 @@
       let a = Q(0), b = Q(0);
       for (const t of d.terms) { if (t.m[v] === 1) a = Q.add(a, t.c); else b = Q.add(b, t.c); }
       steps.push({ say: '移项，得到 ' + P.show(d) + ' ' + (e.rel === '=' ? '= 0' : e.rel + ' 0'), rule: 'eq.both-sides' });
-      if (a.n === 0) {
+      if (a.n === 0n) {
         // 没有未知数：0 rel b 是否成立
         const c = Q.cmp(Q(0), b);
         const holds = e.rel === '=' ? c === 0 : e.rel === '<' ? c < 0 : e.rel === '>' ? c > 0 : e.rel === '≤' ? c <= 0 : c >= 0;
@@ -82,7 +82,7 @@
       if (!A || !B) return { kind: 'error', why: '只能解二元一次方程组' };
       const det = Q.sub(Q.mul(A.a, B.b), Q.mul(A.b, B.a));
       steps.push({ say: '写成 ' + Q.show(A.a) + 'x + ' + Q.show(A.b) + 'y = ' + Q.show(A.c) + '，以及 ' + Q.show(B.a) + 'x + ' + Q.show(B.b) + 'y = ' + Q.show(B.c), rule: 'eq.both-sides' });
-      if (det.n === 0) {
+      if (det.n === 0n) {
         steps.push({ say: '系数成比例，消元后没有唯一解', rule: 'eq.both-sides' });
         return { kind: 'degenerate', steps };
       }

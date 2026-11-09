@@ -1,59 +1,80 @@
 /* 精确有理数 Q 与量纲代数 Dim。无 DOM，浏览器和 node 通用。
- * 规则：所有整数运算结果必须是安全整数，否则抛 'overflow'（界面显示“数太大，算不下”），
- * 绝不悄悄丢精度。 */
+ * Q 的分子 n、分母 d 都是 BigInt，且总是约分过的、d > 0。整数运算不会溢出；
+ * 需要普通数字时用 Q.num（近似）。存档用 U.JSON（BigInt 会存成 {"$big":"..."}，读回来仍是 BigInt）。 */
 (function (G) {
   'use strict';
   const U = (G.U = G.U || {});
 
-  const gcd = (a, b) => { a = Math.abs(a); b = Math.abs(b); while (b) { const t = a % b; a = b; b = t; } return a || 1; };
+  const babs = (x) => (x < 0n ? -x : x);
+  const bgcd = (a, b) => { a = babs(a); b = babs(b); while (b) { const t = a % b; a = b; b = t; } return a; };
+  // 接受 number（必须是整数）、BigInt，或十进制整数字符串（存档里读回来的）
+  const toBig = (x) => {
+    if (typeof x === 'bigint') return x;
+    if (typeof x === 'number' && Number.isInteger(x)) return BigInt(x);
+    if (typeof x === 'string' && /^-?\d+$/.test(x)) return BigInt(x);
+    throw new Error('bad-number');
+  };
 
   function Q(n, d) {
-    if (d === undefined) d = 1;
-    if (!Number.isInteger(n) || !Number.isInteger(d) || d === 0) throw new Error('bad-number');
-    if (!Number.isSafeInteger(n) || !Number.isSafeInteger(d)) throw new Error('overflow');
-    if (d < 0) { n = -n; d = -d; }
-    const g = gcd(n, d);
-    n = n / g; d = d / g;
-    if (n === 0) n = 0; // 去掉 -0
+    if (d === undefined) d = 1n;
+    n = toBig(n); d = toBig(d);
+    if (d === 0n) throw new Error('bad-number');
+    if (d < 0n) { n = -n; d = -d; }
+    const g = bgcd(n, d);
+    if (g > 1n) { n /= g; d /= g; }
     return { n, d };
   }
   Q.add = (a, b) => Q(a.n * b.d + b.n * a.d, a.d * b.d);
   Q.sub = (a, b) => Q(a.n * b.d - b.n * a.d, a.d * b.d);
   Q.mul = (a, b) => Q(a.n * b.n, a.d * b.d);
-  Q.div = (a, b) => { if (b.n === 0) throw new Error('div0'); return Q(a.n * b.d, a.d * b.n); };
+  Q.div = (a, b) => { if (b.n === 0n) throw new Error('div0'); return Q(a.n * b.d, a.d * b.n); };
   Q.neg = (a) => Q(-a.n, a.d);
+  Q.abs = (a) => (a.n < 0n ? Q.neg(a) : a);
   Q.cmp = (a, b) => {
     const x = a.n * b.d, y = b.n * a.d;
-    if (!Number.isSafeInteger(x) || !Number.isSafeInteger(y)) { const p = a.n / a.d, q = b.n / b.d; return p < q ? -1 : p > q ? 1 : 0; }
     return x < y ? -1 : x > y ? 1 : 0;
   };
   Q.eq = (a, b) => a.n === b.n && a.d === b.d;
-  Q.num = (a) => a.n / a.d;
-  Q.isInt = (a) => a.d === 1;
-  Q.show = (a) => (a.d === 1 ? String(a.n) : a.n + '/' + a.d);
-  Q.showDec = (a, k) => { const x = a.n / a.d; return Number.isInteger(x) ? String(x) : String(+x.toFixed(k === undefined ? 2 : k)); };
+  // 近似值（普通数字）。分子分母都超出普通数字范围时先整体缩小再相除。
+  Q.num = (a) => {
+    const x = Number(a.n), y = Number(a.d);
+    if (Number.isFinite(x) && Number.isFinite(y)) return x / y;
+    const k = BigInt(Math.max(a.n.toString().length, a.d.toString().length) - 300);
+    return Number(a.n / 10n ** k) / Number(a.d / 10n ** k);
+  };
+  Q.isInt = (a) => a.d === 1n;
+  Q.show = (a) => (a.d === 1n ? String(a.n) : a.n + '/' + a.d);
+  Q.showDec = (a, k) => { const x = Q.num(a); return Number.isInteger(x) ? String(x) : String(+x.toFixed(k === undefined ? 2 : k)); };
   Q.showMixed = (a) => {
-    if (a.d === 1 || Math.abs(a.n) < a.d) return Q.show(a);
-    const s = a.n < 0 ? '−' : '', n = Math.abs(a.n), w = Math.floor(n / a.d), r = n % a.d;
-    return r === 0 ? s + w : s + w + '又' + r + '/' + a.d;
+    if (a.d === 1n || babs(a.n) < a.d) return Q.show(a);
+    const s = a.n < 0n ? '−' : '', n = babs(a.n), w = n / a.d, r = n % a.d;
+    return r === 0n ? s + w : s + w + '又' + r + '/' + a.d;
   };
   Q.fromNumber = (x) => {
-    if (Number.isInteger(x)) return Q(x, 1);
+    if (Number.isInteger(x)) return Q(x, 1n);
     if (!Number.isFinite(x)) throw new Error('bad-number');
-    return Q(Math.round(x * 1e6), 1e6);
+    return Q(Math.round(x * 1e6), 1000000n);
   };
   Q.parse = (s) => {
     if (typeof s === 'number') return Q.fromNumber(s);
-    if (s && typeof s === 'object' && 'n' in s) return Q(s.n, s.d);
+    if (s && typeof s === 'object' && 'n' in s) return Q(s.n, s.d === undefined ? 1n : s.d);
     const t = String(s).trim();
     let m = /^(-?\d+)\s*\/\s*(\d+)$/.exec(t);
-    if (m) return Q(parseInt(m[1], 10), parseInt(m[2], 10));
+    if (m) return Q(BigInt(m[1]), BigInt(m[2]));
     m = /^-?\d+(\.\d+)?$/.exec(t);
     if (m) return Q.fromNumber(parseFloat(t));
     throw new Error('bad-number');
   };
+  // 存档用的 JSON：BigInt 写成 {"$big":"数字串"}，读回时还原成 BigInt
+  Q.json = {
+    replacer: (k, v) => (typeof v === 'bigint' ? { $big: v.toString() } : v),
+    reviver: (k, v) => (v && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === 1 && typeof v.$big === 'string' ? BigInt(v.$big) : v),
+  };
   U.Q = Q;
-
+  U.JSON = {
+    stringify: (v, sp) => JSON.stringify(v, Q.json.replacer, sp),
+    parse: (s) => JSON.parse(s, Q.json.reviver),
+  };
   // ---- 量纲 ----
   // key 与界面名字一一对应；null 表示“没标单位”，参与运算时让位给另一边。
   const DIM = {

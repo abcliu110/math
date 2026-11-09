@@ -109,7 +109,7 @@
           const ps = (c.inp.pts || []).filter((x) => x && x.kind === 'fig' && x.data.type === 'point').map((x) => x.data.pts[0]);
           if (ps.length < 3) { c.say('info', '至少接 3 个点（按连线的先后围起来）'); return {}; }
           const f = { type: 'polygon', pts: ps };
-          if (F.area2(f).n === 0) { c.say('warn', '这些点在一条直线上，围不成图形'); return {}; }
+          if (F.area2(f).n === 0n) { c.say('warn', '这些点在一条直线上，围不成图形'); return {}; }
           return { f: fig(f) };
         },
         draw: (c) => (c.out.f ? K.text(c.w / 2, c.h / 2 + 4, F.name(c.out.f.data), { size: 14, weight: 700 }) : ''),

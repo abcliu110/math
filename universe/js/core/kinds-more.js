@@ -19,7 +19,7 @@
 
   // 一元多项式：coeffs[i] 是 x^i 的系数（有理数）；末尾的 0 去掉
   const Expr = {
-    trim(c) { const a = c.slice(); while (a.length && a[a.length - 1].n === 0) a.pop(); return a; },
+    trim(c) { const a = c.slice(); while (a.length && a[a.length - 1].n === 0n) a.pop(); return a; },
     add(a, b) { const n = Math.max(a.length, b.length), r = []; for (let i = 0; i < n; i++) r.push(Q.add(a[i] || Q(0), b[i] || Q(0))); return Expr.trim(r); },
     mul(a, b) {
       if (!a.length || !b.length) return [];
@@ -28,13 +28,13 @@
       return Expr.trim(r);
     },
     eq(a, b) { return a.length === b.length && a.every((x, i) => Q.eq(x, b[i])); },
-    eval(c, x) { let s = 0; for (let i = c.length - 1; i >= 0; i--) s = s * x + c[i].n / c[i].d; return s; },
+    eval(c, x) { let s = 0; for (let i = c.length - 1; i >= 0; i--) s = s * x + U.Q.num(c[i]); return s; },
     show(c) {
       if (!c.length) return '0';
       const parts = [];
       for (let i = c.length - 1; i >= 0; i--) {
-        const k = c[i]; if (k.n === 0) continue;
-        const neg = k.n < 0, mag = Q(Math.abs(k.n), k.d);
+        const k = c[i]; if (k.n === 0n) continue;
+        const neg = k.n < 0n, mag = Q.abs(k);
         const coef = Q.eq(mag, Q(1)) && i > 0 ? '' : Q.show(mag);
         const pow = i === 0 ? '' : i === 1 ? 'x' : 'x' + String(i).split('').map((d) => '⁰¹²³⁴⁵⁶⁷⁸⁹'[+d]).join('');
         const term = coef + pow;

@@ -143,7 +143,7 @@
           const r = P.evalQ(p, env);
           if (c.step) c.step(P.show(p) + '，把 ' + c.props.var + ' = ' + Q.show(Q.fromNumber(c.props.value)) + ' 代入，得 ' + Q.show(r), null, 'eq.both-sides');
           c.say('ok', '值是 ' + Q.show(r));
-          return { v: U.val('num', r), zero: U.val('bool', r.n === 0) };
+          return { v: U.val('num', r), zero: U.val('bool', r.n === 0n) };
         },
         badge: (c) => (c.out.v ? U.showVal(c.out.v) : ''),
         draw: (c) => K.text(c.w / 2, c.h / 2 + 6, c.out.v ? Q.show(c.out.v.data) : '…', { size: 20, weight: 700 }),

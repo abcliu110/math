@@ -69,7 +69,7 @@
   });
 
   P.push({
-    id: 'counting-matching', essence: ['E2', 'E1'], title: '5 个人两两握手一次（甲和乙握过，乙和甲就不再算），一共握几次？', grade: 5, domain: '数与运算', points: [], topics: ['配对计数', '重复计数的修正'],
+    id: 'counting-matching', essence: ['E2', 'E1'], title: '5 个人两两握手一次（甲和乙握过，乙和甲就不再算），一共握几次？', grade: 5, domain: '数与运算', points: ['5.4'], topics: ['配对计数', '重复计数的修正'],
     alias: ['握手', '配对', '组合'], hook: '每人和其余 4 人各握一次手，先算“人人都握一遍”的总数。这样每次握手被数了几遍？',
     shelf: ['array', 'op', 'num', 'meter'],
     build: mk({ ents: [

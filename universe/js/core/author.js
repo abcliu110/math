@@ -20,8 +20,8 @@
         const b = mask ^ a; if (a < b) continue;
         for (const x of get(a).values()) for (const y of get(b).values()) {
           const cand = [[Q.add(x.q, y.q), '(' + x.e + ' + ' + y.e + ')'], [Q.mul(x.q, y.q), '(' + x.e + ' × ' + y.e + ')'], [Q.sub(x.q, y.q), '(' + x.e + ' − ' + y.e + ')'], [Q.sub(y.q, x.q), '(' + y.e + ' − ' + x.e + ')']];
-          if (y.q.n !== 0) cand.push([Q.div(x.q, y.q), '(' + x.e + ' ÷ ' + y.e + ')']);
-          if (x.q.n !== 0) cand.push([Q.div(y.q, x.q), '(' + y.e + ' ÷ ' + x.e + ')']);
+          if (y.q.n !== 0n) cand.push([Q.div(x.q, y.q), '(' + x.e + ' ÷ ' + y.e + ')']);
+          if (x.q.n !== 0n) cand.push([Q.div(y.q, x.q), '(' + y.e + ' ÷ ' + x.e + ')']);
           for (const [q, e] of cand) { const k = key(q); if (!out.has(k) && out.size < CAP) out.set(k, { q, e }); }
         }
       }

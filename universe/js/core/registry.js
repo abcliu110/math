@@ -72,7 +72,7 @@
     if (P.type === 'text') return { ok: true, v: String(x === undefined || x === null ? '' : x) };
     if (P.type === 'bool') return { ok: true, v: !!x };
     let v;
-    if (x && typeof x === 'object' && 'n' in x) v = x.n / x.d; else v = Number(x);
+    if (x && typeof x === 'object' && 'n' in x) v = U.Q.num(x); else v = Number(x);
     if (!Number.isFinite(v)) return { ok: false, why: '要填一个数' };
     if (P.type === 'choice') {
       if (!Number.isInteger(v) || v < 0 || v >= P.choices.length) return { ok: false, why: '只能选 ' + P.choices.join(' / ') };
@@ -171,13 +171,13 @@
         if (typeof svg !== 'string') err('draw() 要返回字符串');
         if (hasC) {
           const inp = {}; for (const k in def.inputs) inp[k] = [];
-          const ctx = deepFreeze({ ent: JSON.parse(JSON.stringify(e)), props: Object.assign({}, e.props), inp, t: 0, n: 0, seed: 1 });
+          const ctx = deepFreeze({ ent: U.JSON.parse(U.JSON.stringify(e)), props: Object.assign({}, e.props), inp, t: 0, n: 0, seed: 1 });
           const ctx2 = Object.assign({}, ctx, { say() {}, kids: () => [] });
           def.compute(ctx2);
         }
         if (hasS) {
           const st = def.init(e.props);
-          const frozen = deepFreeze(JSON.parse(JSON.stringify(st)));
+          const frozen = deepFreeze(U.JSON.parse(U.JSON.stringify(st)));
           const inp = {}; for (const k in def.inputs) inp[k] = [];
           def.step({ ent: e, props: Object.assign({}, e.props), inp, state: frozen, dt: 0.25, t: 0, n: 0, seed: 1, rand: () => 0.5, say() {} });
         }

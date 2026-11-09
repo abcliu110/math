@@ -12,18 +12,19 @@
   function opTrace(c, a, b, o, r) {
     if (!c.step) return;
     const A = a.data, B = b.data;
+    const an = Number(A.n), ad = Number(A.d), bn = Number(B.n), bd = Number(B.d);
     if (o <= 1) {
-      const L = A.d * B.d / gcd(A.d, B.d), na = A.n * (L / A.d), nb = B.n * (L / B.d), sum = o ? na - nb : na + nb;
-      if (A.d !== B.d) c.step('通分：' + A.n + '/' + A.d + ' = ' + na + '/' + L + '，' + B.n + '/' + B.d + ' = ' + nb + '/' + L, null, 'frac.common-denominator');
+      const L = ad * bd / gcd(ad, bd), na = an * (L / ad), nb = bn * (L / bd), sum = o ? na - nb : na + nb;
+      if (A.d !== B.d) c.step('通分：' + an + '/' + ad + ' = ' + na + '/' + L + '，' + bn + '/' + bd + ' = ' + nb + '/' + L, null, 'frac.common-denominator');
       c.step('分母相同，分子' + (o ? '相减' : '相加') + '：' + na + (o ? ' − ' : ' + ') + nb + ' = ' + sum + '，得 ' + sum + '/' + L, null, o ? 'op.sub' : 'frac.add');
-      if (r.d !== L || r.n !== sum) c.step('约分：' + sum + '/' + L + ' = ' + Q.show(r), null, 'frac.simplify');
+      if (Number(r.d) !== L || Number(r.n) !== sum) c.step('约分：' + sum + '/' + L + ' = ' + Q.show(r), null, 'frac.simplify');
       c.because('r', o ? '大数减小数，拿走一部分' : '分母相同，分子相加', o ? 'op.sub' : 'frac.add');
     } else if (o === 2) {
-      c.step('分子乘分子、分母乘分母：' + (A.n * B.n) + '/' + (A.d * B.d), null, 'op.mul');
-      if (r.d !== A.d * B.d) c.step('约分：得 ' + Q.show(r), null, 'frac.simplify');
+      c.step('分子乘分子、分母乘分母：' + (an * bn) + '/' + (ad * bd), null, 'op.mul');
+      if (Number(r.d) !== ad * bd) c.step('约分：得 ' + Q.show(r), null, 'frac.simplify');
       c.because('r', '乘法：几个几相加', 'op.mul');
     } else {
-      c.step('除以一个数，等于乘它的倒数：' + Q.show(A) + ' × ' + Q.show(Q(B.d, B.n)), null, 'op.div');
+      c.step('除以一个数，等于乘它的倒数：' + Q.show(A) + ' × ' + Q.show(Q(bd, bn)), null, 'op.div');
       c.because('r', '除法：看里面有几个', 'op.div');
     }
   }
@@ -79,7 +80,7 @@
             r = o ? Q.sub(a.data, b.data) : Q.add(a.data, b.data);
           } else if (o === 2) { dim = D.mul(a.dim, b.dim); r = Q.mul(a.data, b.data); }
           else {
-            if (b.data.n === 0) { c.say('err', '除数不能是 0'); return {}; }
+            if (b.data.n === 0n) { c.say('err', '除数不能是 0'); return {}; }
             dim = D.div(a.dim, b.dim); r = Q.div(a.data, b.data);
           }
           opTrace(c, a, b, o, r);

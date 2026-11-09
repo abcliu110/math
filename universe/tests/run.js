@@ -11,7 +11,8 @@ const U = ctx.U, W = U.World, Q = U.Q;
 
 let pass = 0, fail = 0;
 const t = (name, fn) => { try { fn(); pass++; console.log('  ok   ' + name); } catch (e) { fail++; console.log('  FAIL ' + name + '\n       ' + (e && e.message)); } };
-const eq = (a, b, m) => { if (JSON.stringify(a) !== JSON.stringify(b)) throw new Error((m || '') + ' 期望 ' + JSON.stringify(b) + ' 实际 ' + JSON.stringify(a)); };
+const bigStr = (v) => JSON.stringify(v, (k, x) => (typeof x === 'bigint' ? (Number.isSafeInteger(Number(x)) ? Number(x) : x.toString() + 'n') : x)); // BigInt 不能直接 JSON 化；小整数按数值比较
+const eq = (a, b, m) => { if (bigStr(a) !== bigStr(b)) throw new Error((m || '') + ' 期望 ' + bigStr(b) + ' 实际 ' + bigStr(a)); };
 const truthy = (x, m) => { if (!x) throw new Error(m || '应为真'); };
 
 console.log('本质');
@@ -62,7 +63,7 @@ t('无版本的旧台面：补齐时钟，升到当前版本', () => {
 });
 t('v2 台面没有容器字段：升到 v3 后 parent/slot 为 null', () => {
   const s = W.load(JSON.stringify({ v: 2, nid: 2, seq: {}, entities: { e1: { id: 'e1', type: 'num', name: 'x', x: 0, y: 0, props: { n: 1 } } }, links: [], clock: { t: 0, n: 0, running: false, hz: 4, rate: 1, seed: 1 } }));
-  eq(s.v, 3); eq(s.entities.e1.parent, null); eq(s.entities.e1.slot, null);
+  eq(s.v, W.CURRENT_V); eq(s.entities.e1.parent, null); eq(s.entities.e1.slot, null);
 });
 t('新台面存盘再读回，内容不变', () => {
   const sc = W.blank(); W.add(sc, 'num', 0, 0, { n: 5 });
@@ -162,7 +163,7 @@ t('确定性：同一台面、同一操作序列，随机器材的每一跳结�
   const run = () => {
     const sc = W.blank(); const d = W.add(sc, 'dice', 0, 0, {});
     let trace = [];
-    for (let i = 0; i < 30; i++) { const D = W.tick(sc); trace.push(JSON.stringify(D[d].out)); }
+    for (let i = 0; i < 30; i++) { const D = W.tick(sc); trace.push(U.JSON.stringify(D[d].out)); }
     return trace.join('|');
   };
   eq(run(), run(), '两次运行应一致');
@@ -589,7 +590,7 @@ t('explain 能追到两张数字卡；explainText 是几行人话', () => {
   const txt = W.explainText(tree); truthy(/通分/.test(txt) && txt.split('\n').length >= 4, txt);
 });
 t('关掉追踪：求值结果和打开时完全一样', () => {
-  const { sc } = frac([2, 5], [1, 3]); const strip = (D) => Object.keys(D).map((id) => JSON.stringify([D[id].out, D[id].sig, D[id].props, D[id].driven]));
+  const { sc } = frac([2, 5], [1, 3]); const strip = (D) => Object.keys(D).map((id) => U.JSON.stringify([D[id].out, D[id].sig, D[id].props, D[id].driven]));
   eq(strip(W.evaluate(sc, { trace: false })), strip(W.evaluate(sc))); eq(W.evaluate(sc, { trace: false })[Object.keys(sc.entities)[0]].trace, null);
 });
 t('有环（经过记忆器）时 explain 不会死循环：遇到有状态器材就停，标上一拍的值', () => {
@@ -918,7 +919,7 @@ t('覆盖统计：有题的知识点、按年级、按本质都能算出来', ()
 });
 console.log('证明类器材（2.7）');
 const pr = (type, props, feed) => { const sc = W.blank(); const e = W.add(sc, type, 0, 0, props || {}); (feed || []).forEach(([t, p2, port, fport]) => { const f = W.add(sc, t, 0, 0, p2); W.act(sc, { t: 'link', from: f, fromPort: fport || 'v', to: e, toPort: port }); }); return W.evaluate(sc)[e].out; };
-const lvOf = (o) => (o.lv ? Number(o.lv.data.n / o.lv.data.d) : null);
+const lvOf = (o) => (o.lv ? Q.num(o.lv.data) : null);
 t('参数扫描器：规则在范围里没有例外 → ②；没有反例，不推翻', () => {
   const o = pr('scanner', { rule: 0, from: 1, to: 100 }); eq(lvOf(o), 2); eq(o.refuted.data, false); eq(o.checked.data.n, 100);
 });
@@ -1099,7 +1100,24 @@ for (const id of Object.keys(U.types)) t('lint ' + id, () => { const r = U.lintT
 
 console.log('有理数');
 t('2/5+1/3=11/15', () => eq(Q.show(Q.add(Q(2, 5), Q(1, 3))), '11/15'));
-t('溢出抛错', () => { let e; try { Q.mul(Q(9e15, 1), Q(9e15, 1)); } catch (x) { e = x; } truthy(e && e.message === 'overflow'); });
+t('有理数不溢出：9e15 × 9e15 = 81 × 10^30，精确', () => { const x = Q.mul(Q(9e15, 1), Q(9e15, 1)); eq(x.n, 81n * 10n ** 30n); eq(x.d, 1n); });
+t('任务 E：40 次交点式运算（加、乘、除混用）后仍然精确，分母超过普通数字范围，eq 成立', () => {
+  let x = Q(1, 3);
+  for (let k = 0; k < 40; k++) { const a = Q(k + 2, 1000003 + k * 7919), b = Q(1, 99991 + k * 104729); x = Q.div(Q.add(x, a), Q.add(Q(2), Q.mul(x, b))); }
+  truthy(x.d > BigInt(Number.MAX_SAFE_INTEGER), '分母应该已经超过普通数字范围');
+  // 同一条链再算一遍，结果必须完全相等；近似值和浮点计算接近
+  let y = Q(1, 3), f = 1 / 3;
+  for (let k = 0; k < 40; k++) { const a = Q(k + 2, 1000003 + k * 7919), b = Q(1, 99991 + k * 104729); y = Q.div(Q.add(y, a), Q.add(Q(2), Q.mul(y, b))); f = (f + (k + 2) / (1000003 + k * 7919)) / (2 + f / (99991 + k * 104729)); }
+  truthy(Q.eq(x, y), '两次计算应相等'); truthy(Math.abs(Q.num(x) - f) < 1e-9, '近似值 ' + Q.num(x) + ' 与浮点 ' + f + ' 不接近');
+  truthy(!Q.eq(x, Q.add(x, Q(1, 10 ** 30))), '差一点点也要分得出来');
+});
+t('任务 E：存档往返（U.JSON）：BigInt 写成 {"$big"}，读回仍是相等的有理数；旧台面的普通数字 {n, d} 读进来也变成 BigInt', () => {
+  const big = Q(2n ** 80n + 1n, 3n * 7n); const sc = W.blank(); sc.extra = { q: big };
+  const back = W.load(W.save(sc)); truthy(Q.eq(back.extra.q, big), '往返后应相等'); truthy(typeof back.extra.q.n === 'bigint', '读回应是 BigInt');
+  const old = W.load(JSON.stringify({ v: 3, nid: 1, seq: {}, entities: {}, links: [], clock: { t: 0, n: 0, running: false, hz: 4, rate: 1, seed: 1 }, extra: { q: { n: 1, d: 2 } } }));
+  truthy(typeof old.extra.q.n === 'bigint' && Q.eq(old.extra.q, Q(1, 2)), '旧存档的 {n, d} 应升级为 BigInt');
+});
+t('任务 E：Q.num(1/3) 约等于 0.3333', () => { truthy(Math.abs(Q.num(Q(1, 3)) - 0.3333) < 1e-4, String(Q.num(Q(1, 3)))); });
 t('混合数', () => eq(Q.showMixed(Q(7, 3)), '2又1/3'));
 
 console.log('连线规则');
@@ -1244,7 +1262,7 @@ for (const p of U.problems) {
       run(n) { for (let i = 0; i < n; i++) { J2.check(p, run, s, W.tick(s)); } },
     };
     fn(h); chk();
-    { const strip = (D) => Object.keys(D).map((id) => JSON.stringify([D[id].out, D[id].sig, D[id].props, D[id].driven])); eq(strip(W.evaluate(s, { trace: false })), strip(W.evaluate(s)), '关掉追踪结果应一致：' + p.id); }
+    { const strip = (D) => Object.keys(D).map((id) => U.JSON.stringify([D[id].out, D[id].sig, D[id].props, D[id].driven])); eq(strip(W.evaluate(s, { trace: false })), strip(W.evaluate(s)), '关掉追踪结果应一致：' + p.id); }
     if (U.inexactReads.length) throw new Error('对近似值做了精确判断（请改用 W.near 带容差）：' + JSON.stringify(U.inexactReads.slice(0, 2)));
     const goal = p.goal || p.milestones.map((m) => m.id), miss = goal.filter((id) => !run.ms[id].done);
     if (miss.length) throw new Error('没通过的里程碑：' + miss.join(','));
@@ -1274,6 +1292,18 @@ t('预测·type：去掉首尾空格后，answer 或 accept 里的任一写法�
   const p = { form: 'type', answer: '十二', accept: ['12', '12个'] };
   truthy(U.Predict.check(p, ' 十二 ').ok, '标准答案应通过'); truthy(U.Predict.check(p, '12个').ok, 'accept 应通过');
   truthy(!U.Predict.check(p, '13').ok, '其他答案应不通过');
+});
+t('报告·预测写成文字：place 写位置名，more-less 写多/少/一样，number、type 写原文', () => {
+  const base = U.problemById('frac-add-unlike'), J = U.Judge;
+  const mk = (predict, pred) => { const p = Object.assign({}, base, { predict }); const s = p.build(); const run = J.start(p, 'practice'); run.pred = pred; return J.report(p, run, s, W.evaluate(s)); };
+  let r = mk({ form: 'place', q: '?', slots: ['甲', '乙', '丙'], answer: 1 }, 2);
+  eq([r.guess, r.actual, r.match], ['丙', '乙', false], 'place');
+  r = mk({ form: 'more-less', q: '?', ref: '甲', answer: 'less' }, 'more');
+  eq([r.guess, r.actual, r.match], ['多', '少', false], 'more-less');
+  r = mk({ form: 'number', q: '?', answer: '3/4' }, '6/8');
+  eq([r.guess, r.actual, r.match], ['6/8', '3/4', true], 'number');
+  r = mk({ form: 'type', q: '?', answer: '十二', accept: ['12'] }, '12');
+  eq([r.guess, r.actual, r.match], ['12', '十二', true], 'type');
 });
 t('预测·lint：number 没写 answer 时报错', () => {
   const base = U.problems[0];

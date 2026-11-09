@@ -41,7 +41,7 @@
     // 代入：分母为 0 时返回 null（这一点没有定义）
     evalQ(a, env) {
       const d = P.evalQ(a.d, env);
-      if (d.n === 0) return null;
+      if (d.n === 0n) return null;
       return Q.div(P.evalQ(a.n, env), d);
     },
     // 只有分母是常数时才能化成多项式

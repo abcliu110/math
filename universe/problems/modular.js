@@ -21,7 +21,7 @@
   });
 
   P.push({
-    id: 'last-digit-cycle', essence: ['E6'], title: '3 的 100 次方，个位数字是几？', grade: 6, domain: '数与运算', points: [], topics: ['个位数字', '周期'],
+    id: 'last-digit-cycle', essence: ['E6'], title: '3 的 100 次方，个位数字是几？', grade: 6, domain: '数与运算', points: ['2.11'], topics: ['个位数字', '周期'],
     alias: ['周期', '乘方'], hook: '把钟调成“乘”：从 1 出发，每拍乘 3，只看个位（钟面 10 格）。3、9、27、81、243……个位会不会重复？多久一轮？',
     shelf: ['modclock', 'power', 'meter'],
     build: clock({ m: 10, s: 1, k: 1, mode: 1, N: 0 }),

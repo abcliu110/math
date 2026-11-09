@@ -87,7 +87,7 @@
 
   // 结论的提示：被推翻 → 红色拒绝；证据到 ② 以上 → 绿色；其余只是信息。注意 refuted 和 lv 都是 {kind,data} 形式
   const verdict = (c, out) => {
-    const ref = !!(out.refuted && out.refuted.data), lv = out.lv ? Number(out.lv.data.n / out.lv.data.d) : 0;
+    const ref = !!(out.refuted && out.refuted.data), lv = out.lv ? U.Q.num(out.lv.data) : 0;
     c.say(ref ? 'warn' : lv >= 2 ? 'ok' : 'info', out.text);
     return out;
   };
@@ -265,7 +265,7 @@
         compute: (c) => {
           const v = K.first(c.inp.lv);
           if (!v || v.kind !== 'num') { c.say('info', '接一个证明脚手架的证据等级'); return {}; }
-          const ok = v.data.n / v.data.d >= c.props.want;
+          const ok = U.Q.num(v.data) >= c.props.want;
           c.say(ok ? 'ok' : 'info', '证据等级 ' + Q.show(v.data) + (ok ? ' 够 ' : ' 不够 ') + c.props.want);
           return { ok: U.val('bool', ok) };
         },
@@ -315,7 +315,7 @@
           const v = node.out[port];
           if (!v) continue;
           if (v.kind === 'bool') out.push({ key: e.id + '.' + port, label: e.name + '：' + U.kit.esc(port) + ' = ' + (v.data ? '是' : '否'), verified: v.data === true });
-          else if (v.kind === 'num' && port === 'lv') out.push({ key: e.id + '.' + port, label: e.name + '：证据等级 ' + (v.data.n / v.data.d), verified: v.data.n / v.data.d >= 2 });
+          else if (v.kind === 'num' && port === 'lv') out.push({ key: e.id + '.' + port, label: e.name + '：证据等级 ' + (U.Q.num(v.data)), verified: U.Q.num(v.data) >= 2 });
         }
       }
       return out;

@@ -15,7 +15,7 @@
   const U = G.U, Q = U.Q;
   const PROP = 'p.';
   const isProp = (p) => typeof p === 'string' && p.startsWith(PROP);
-  const clone = (s) => JSON.parse(JSON.stringify(s));
+  const clone = (s) => U.JSON.parse(U.JSON.stringify(s));
   const ok = (x) => Object.assign({ ok: true }, x || {});
   const fail = (why) => ({ ok: false, why });
 
@@ -52,7 +52,7 @@
   const LOOP_WHY = '这样连，数会自己追自己，永远算不完。中间放一个“记忆器”，让它一拍一拍地算。';
 
   function blank() {
-    return { v: 3, nid: 1, seq: {}, entities: {}, links: [], clock: { t: 0, n: 0, running: false, hz: 4, rate: 1, seed: 20261108 } };
+    return { v: CURRENT_V, nid: 1, seq: {}, entities: {}, links: [], clock: { t: 0, n: 0, running: false, hz: 4, rate: 1, seed: 20261108 } };
   }
 
   function add(scene, type, x, y, props) {
@@ -172,7 +172,7 @@
       const node = D[key.slice(0, cut)], v = node && node.out[key.slice(cut + 1)];
       if (!v) return false;
       if (v.kind === 'bool') return v.data === true;
-      if (v.kind === 'num') return v.data.n / v.data.d >= 2;
+      if (v.kind === 'num') return Q.cmp(v.data, Q(2)) >= 0;
       return false;
     };
     // late：要读别的器材结论的器材（证明脚手架），等所有普通器材算完以后再算
@@ -436,7 +436,7 @@
   //   v0/无版本 → v1：补全 clock（t、n、running、rate、hz、seed），去掉 binds 字段（绑定已是连线）
   //   v1 → v2：器材补 props 默认空对象；台面补 nid/seq
   //   v2 → v3：器材补 parent / slot（容器与层级，1.10），没有容器的旧台面全部为 null
-  const CURRENT_V = 3;
+  const CURRENT_V = 4;
   const MIGRATIONS = {
     1: (s) => {
       const c = blank().clock; s.clock = Object.assign(c, s.clock || {});
@@ -452,6 +452,20 @@
       for (const e of Object.values(s.entities)) { if (e.parent === undefined) e.parent = null; if (e.slot === undefined) e.slot = null; }
       return s;
     },
+    // v3 → v4：有理数的分子分母改成 BigInt。旧台面里 {n, d} 是普通数字，这里统一转成 BigInt（props 里的数仍是普通数字，不动）
+    4: (s) => {
+      const conv = (o) => {
+        if (!o || typeof o !== 'object') return;
+        for (const k of Object.keys(o)) {
+          const v = o[k];
+          if (!v || typeof v !== 'object') continue;
+          if (k !== 'props' && Number.isInteger(v.n) && Number.isInteger(v.d) && Object.keys(v).length === 2) o[k] = { n: BigInt(v.n), d: BigInt(v.d) };
+          else conv(v);
+        }
+      };
+      conv(s);
+      return s;
+    },
   };
   function migrate(s) {
     const from = s.v === undefined ? 0 : s.v;
@@ -460,9 +474,9 @@
     s.v = CURRENT_V;
     return s;
   }
-  function save(scene) { return JSON.stringify(scene); }
+  function save(scene) { return U.JSON.stringify(scene); }
   function load(str) {
-    const s0 = typeof str === 'string' ? JSON.parse(str) : str;
+    const s0 = typeof str === 'string' ? U.JSON.parse(str) : str;
     if (!s0 || !s0.entities || !s0.links) throw new Error('bad-scene');
     const s = migrate(s0);
     for (const id in s.entities) if (!U.types[s.entities[id].type]) throw new Error('unknown-type:' + s.entities[id].type);

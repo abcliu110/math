@@ -32,7 +32,7 @@
     fitProportional(t, xi, yi) {
       const xs = col(t, xi), ys = col(t, yi), steps = [];
       const sxy = sum(xs.map((x, i) => Q.mul(x, ys[i]))), sxx = sum(xs.map((x) => Q.mul(x, x)));
-      if (sxx.n === 0) return { kind: 'error', why: 'x 全是 0，求不出 k' };
+      if (sxx.n === 0n) return { kind: 'error', why: 'x 全是 0，求不出 k' };
       const k = Q.div(sxy, sxx);
       steps.push({ say: 'Σxy = ' + Q.show(sxy) + '，Σx² = ' + Q.show(sxx) + '，k = Σxy / Σx² = ' + Q.show(k), rule: 'eq.both-sides' });
       const residuals = xs.map((x, i) => Q.sub(ys[i], Q.mul(k, x)));
@@ -43,7 +43,7 @@
       const xs = col(t, xi), ys = col(t, yi), n = Q(xs.length), steps = [];
       const Sx = sum(xs), Sy = sum(ys), Sxy = sum(xs.map((x, i) => Q.mul(x, ys[i]))), Sxx = sum(xs.map((x) => Q.mul(x, x)));
       const den = Q.sub(Q.mul(n, Sxx), Q.mul(Sx, Sx));
-      if (den.n === 0) return { kind: 'error', why: 'x 都一样，画不出一条直线' };
+      if (den.n === 0n) return { kind: 'error', why: 'x 都一样，画不出一条直线' };
       const k = Q.div(Q.sub(Q.mul(n, Sxy), Q.mul(Sx, Sy)), den);
       const b = Q.div(Q.sub(Sy, Q.mul(k, Sx)), n);
       steps.push({ say: '数据个数 n = ' + xs.length + '，Σx = ' + Q.show(Sx) + '，Σy = ' + Q.show(Sy) + '，Σxy = ' + Q.show(Sxy) + '，Σx² = ' + Q.show(Sxx), rule: 'eq.both-sides' });

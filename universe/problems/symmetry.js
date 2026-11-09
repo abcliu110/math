@@ -4,7 +4,7 @@
   const U = G.U, mk = U.mkScene, P = [];
   const sheet = (props) => mk({ ents: [{ type: 'fold', x: 80, y: 60, role: 'f', props }] });
   // 折一次之后，两半是否重合；pred 检查折痕参数
-  const halvesMatch = (pred) => (w) => w.some('fold', (e, d) => d && d.out && d.out.same && d.out.same.data.n === 1 && pred(e.props));
+  const halvesMatch = (pred) => (w) => w.some('fold', (e, d) => d && d.out && d.out.same && d.out.same.data.n === 1n && pred(e.props));
   const folded = (pred) => (w) => w.some('fold', (e, d) => e.props.fold === 1 && pred(e.props, d));
 
   P.push({
@@ -27,7 +27,7 @@
     build: sheet({ w: 6, ht: 6, fold: 0, angle: 30, offset: 0 }),
     predict: { q: '先猜：正方形沿对角线对折，两半重合吗？', options: [{ v: 0, label: '不重合' }, { v: 1, label: '重合' }], reveal: () => ({ v: 1, label: '重合：两半是两个全等的等腰直角三角形' }) },
     milestones: [
-      { id: 'wrong', say: '30° 折一次：same=0', score: 3, when: folded((p, d) => p.angle === 30 && d.out.same.data.n === 0), hints: ['把「折不折」改成折一次。', '角度先设成 30°。', '两半对不齐，same 是 0。'] },
+      { id: 'wrong', say: '30° 折一次：same=0', score: 3, when: folded((p, d) => p.angle === 30 && d.out.same.data.n === 0n), hints: ['把「折不折」改成折一次。', '角度先设成 30°。', '两半对不齐，same 是 0。'] },
       { id: 'diag', say: '折痕 45°（对角线）：same=1', score: 7, when: halvesMatch((p) => p.angle === 45 && p.offset === 0), hints: ['折痕还是要过中心。', '正方形的对角线方向是 45°。', '角度改成 45，same 变成 1。'] },
     ],
     traps: [], why: '正方形沿对角线折，两个直角三角形全等，两半重合。对角线两边对称，这是“同样的结构换个位置”。30° 的折痕不过对称轴，两半对不上。', ref: ['fold|0'],

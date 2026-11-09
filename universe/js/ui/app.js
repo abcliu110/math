@@ -54,14 +54,14 @@
   function saveSession() {
     if (!unfinished()) return;
     S.session.pred = { done: !!S.run.pred_done, v: S.run.pred };
-    lsSet(SESS_KEY, JSON.stringify(S.session));
+    lsSet(SESS_KEY, U.JSON.stringify(S.session));
   }
   function clearSession() { S.session = null; lsSet(SESS_KEY, ''); }
   function loadSession() {
-    try { const o = JSON.parse(lsGet(SESS_KEY) || 'null'); return o && o.pid && o.startScene && U.problemById(o.pid) ? o : null; } catch (e) { return null; }
+    try { const o = U.JSON.parse(lsGet(SESS_KEY) || 'null'); return o && o.pid && o.startScene && U.problemById(o.pid) ? o : null; } catch (e) { return null; }
   }
   // 改动了整张台面（撤销、重做、载入文件）：之后的重放从这个台面开始
-  function rebaseSession() { if (S.session) { S.session.startScene = JSON.parse(snap()); S.session.acts = []; } }
+  function rebaseSession() { if (S.session) { S.session.startScene = U.JSON.parse(snap()); S.session.acts = []; } }
   function recordSession(a, n) { if (S.session) for (let i = 0; i < (n || 1); i++) U.Session.record(S.session, a); }
   function offerResume() {
     const sv = loadSession(); if (!sv) return;
@@ -93,7 +93,7 @@
   }
 
   // ---------- 改动入口 ----------
-  const snap = () => JSON.stringify(S.scene);
+  const snap = () => U.JSON.stringify(S.scene);
   function pushUndo(s) { S.undo.push(s || snap()); if (S.undo.length > 120) S.undo.shift(); S.redo = []; }
 
   function act(a, o) {
@@ -143,7 +143,7 @@
   }
   function openFree() {
     S.mode = 'free'; S.problem = null; S.run = null; S.session = null; Ev.ctx = {};
-    let sc = null; try { sc = S.freeScene ? JSON.parse(S.freeScene) : JSON.parse(lsGet(FREE_KEY)); } catch (e) { sc = null; }
+    let sc = null; try { sc = S.freeScene ? U.JSON.parse(S.freeScene) : U.JSON.parse(lsGet(FREE_KEY)); } catch (e) { sc = null; }
     try { S.scene = sc ? W.load(sc) : W.blank(); } catch (e) { S.scene = W.blank(); }
     S.undo = []; S.redo = []; S.sel = null; S.selLink = null; S.glow = []; S.tab = 'lab';
     S.D = W.evaluate(S.scene); UI.Stage.fit(); refresh(); UI.Panels.renderShelf();
@@ -304,7 +304,7 @@
     $('#dlg').addEventListener('click', (e) => {
       const t = e.target;
       if (t.id === 'au-ok') {
-        const givens = $('#au-givens').value.split(/[,，\s]+/).filter(Boolean).map((x) => { try { const q = U.Q.parse(x); return { n: q.n, d: q.d }; } catch (e) { return null; } });
+        const givens = $('#au-givens').value.split(/[,，\s]+/).filter(Boolean).map((x) => { try { const q = U.Q.parse(x); return { n: Number(q.n), d: Number(q.d) }; } catch (e) { return null; } });
         const msg = $('#au-msg'); const show = (w) => { msg.textContent = w; msg.style.display = 'block'; };
         if (givens.some((g) => !g)) return show('「给的数」里有写不对的：只能是整数、小数或 3/4 这样的分数');
         const spec = { title: $('#au-title').value, hook: $('#au-hook').value, target: $('#au-target').value, givens };

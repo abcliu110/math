@@ -7,7 +7,7 @@
   U.problems.push({
     id: 'taxi-model-linear',
     title: '出租车计价：起步价加上每千米的价格',
-    grade: 8, domain: '建模', essence: ['E7', 'E8'], points: [],
+    grade: 8, domain: '建模', essence: ['E7', 'E8'], points: ['8.15'],
     alias: ['一次函数', '建模', '预测', '起步价'],
     hook: '坐出租车，跑 1、2、3、4 千米分别付 8、11、14、17 元。你能找到计价规律，并算出跑 10 千米要付多少钱吗？',
     shelf: ['datatable', 'fit', 'predict', 'column', 'scatter'],
@@ -43,7 +43,7 @@
   U.problems.push({
     id: 'tank-model-linear-decrease',
     title: '水箱放水：剩下的水量怎么变？',
-    grade: 8, domain: '建模', essence: ['E7', 'E8'], points: [],
+    grade: 8, domain: '建模', essence: ['E7', 'E8'], points: ['8.15'],
     alias: ['一次函数', '建模', '预测', '放水', '减少'],
     hook: '水箱开始有 100 升水，每隔 2 分钟量一次剩下的水：0、2、4、6 分钟后分别剩 100、90、80、70 升。什么时候会只剩 50 升？',
     shelf: ['datatable', 'fit', 'predict', 'column', 'scatter'],

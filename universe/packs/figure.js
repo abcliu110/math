@@ -9,7 +9,7 @@
   const real = (r) => U.val('real', r, { dim: null });
   const C = (lo, hi, d, label) => ({ type: 'int', label, default: d, min: lo, max: hi });
   // 符号精确数里只有有理部分时，转成普通的数（能接进运算器）；否则给近似值
-  const realToNum = (r, approx) => (r && r.b.n === 0 && r.p.n === 0 ? num(r.a) : num(Q.fromNumber(+approx.toFixed(6)), { exact: false }));
+  const realToNum = (r, approx) => (r && r.b.n === 0n && r.p.n === 0n ? num(r.a) : num(Q.fromNumber(+approx.toFixed(6)), { exact: false }));
   const box = (f) => {
     if (!f) return [-10, -10, 10, 10];
     const xs = f.pts.map((p) => Q.num(p.x)), ys = f.pts.map((p) => Q.num(p.y)), r = f.type === 'circle' ? Math.sqrt(Q.num(f.r2)) : 0;
@@ -162,7 +162,7 @@
           const a = figOf(c, 'a'), b = figOf(c, 'b'); if (!a || !b) { c.say('info', '接两个图形进来'); return {}; }
           const s = F.similar(a, b), cong = F.congruent(a, b);
           const out = { cong: U.val('bool', cong), sim: U.val('bool', s.ok) };
-          if (s.ok) { const r = U.Real.sqrt(s.k2); out.k = r && r.b.n === 0 ? num(r.a) : num(Q.fromNumber(+Math.sqrt(Q.num(s.k2)).toFixed(6)), { exact: false }); }
+          if (s.ok) { const r = U.Real.sqrt(s.k2); out.k = r && r.b.n === 0n ? num(r.a) : num(Q.fromNumber(+Math.sqrt(Q.num(s.k2)).toFixed(6)), { exact: false }); }
           c.say(cong ? 'ok' : s.ok ? 'info' : 'warn', cong ? '对应边都相等：全等' : s.ok ? '对应边成同一个比：相似但不全等' : '找不到一种对应关系让各边成比例：不相似');
           return out;
         },

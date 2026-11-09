@@ -20,7 +20,7 @@
   const sub = (a, b) => ({ x: Q.sub(a.x, b.x), y: Q.sub(a.y, b.y) });
   const dot = (u, v) => Q.add(Q.mul(u.x, v.x), Q.mul(u.y, v.y));
   const cross = (u, v) => Q.sub(Q.mul(u.x, v.y), Q.mul(u.y, v.x));
-  const zero = (q) => q.n === 0;
+  const zero = (q) => q.n === 0n;
   const NAMES = { point: '点', segment: '线段', circle: '圆' };
   const polyName = (n) => ({ 3: '三角形', 4: '四边形', 5: '五边形', 6: '六边形' }[n] || n + ' 边形');
 
@@ -54,13 +54,13 @@
     area(f) {
       if (f.type === 'circle') return U.Real.pi(f.r2);
       const a = F.area2(f);
-      return U.Real.from(Q.div(Q(Math.abs(a.n), a.d), Q(2)));
+      return U.Real.from(Q.div(Q.abs(a), Q(2)));
     },
     // 周长：各边长度相加；不同根式相加不能精确表示时，exact 为 false，只给近似值
     perimeter(f) {
       if (f.type === 'circle') {
         const r = U.Real.sqrt(f.r2);
-        const exact = r && r.b.n === 0 ? U.Real.pi(Q.mul(Q(2), r.a)) : null;
+        const exact = r && r.b.n === 0n ? U.Real.pi(Q.mul(Q(2), r.a)) : null;
         return { exact: !!exact, real: exact, approx: 2 * Math.PI * Math.sqrt(Q.num(f.r2)) };
       }
       let sum = U.Real.from(Q(0)), ok = true, approx = 0;

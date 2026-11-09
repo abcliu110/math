@@ -3,7 +3,7 @@
   'use strict';
   const U = G.U, Q = U.Q, K = U.kit;
   const num = (q, dim) => U.val('num', q, { dim: dim || null });
-  const intOf = (v) => (v && v.data.d === 1 ? v.data.n : null);
+  const intOf = (v) => (v && v.data.d === 1n ? Number(v.data.n) : null);
 
   U.registerPack({
     id: 'arith', version: 1,
@@ -82,8 +82,8 @@
         compute: (c) => {
           const v = K.first(c.inp.v); if (!v) { c.say('info', '接一个数'); return {}; }
           const unit = c.props.place >= 0 ? Q(10 ** c.props.place) : Q(1, 10 ** -c.props.place);
-          const t = Q.div(v.data, unit), fl = Math.floor(t.n / t.d), exact = t.d === 1;
-          const k = c.props.mode === 0 ? Math.floor(t.n / t.d + 0.5) : c.props.mode === 1 ? (exact ? fl : fl + 1) : (t.n < 0 && !exact ? fl + 1 : fl);
+          const t = Q.div(v.data, unit), fl = Number(t.n >= 0n ? t.n / t.d : -((-t.n + t.d - 1n) / t.d)), exact = t.d === 1n;
+          const k = c.props.mode === 0 ? Math.floor(Q.num(t) + 0.5) : c.props.mode === 1 ? (exact ? fl : fl + 1) : (t.n < 0n && !exact ? fl + 1 : fl);
           const r = Q.mul(Q(k), unit);
           c.say('ok', Q.showDec(v.data, 4) + ' ≈ ' + Q.showDec(r, 4));
           return { r: num(r, v.dim) };

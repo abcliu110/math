@@ -9,14 +9,14 @@
   U.Session = {
     // 开题：返回一份可以存进存储的会话（台面快照只存一次）
     start(problem, mode, scene, now) {
-      return { pid: problem.id, mode, startScene: JSON.parse(JSON.stringify(scene)), acts: [], startedAt: now === undefined ? Date.now() : now, usedMs: 0, limitSec: mode === 'exam' ? U.Variants.examMinutes(problem) * 60 : null };
+      return { pid: problem.id, mode, startScene: U.JSON.parse(U.JSON.stringify(scene)), acts: [], startedAt: now === undefined ? Date.now() : now, usedMs: 0, limitSec: mode === 'exam' ? U.Variants.examMinutes(problem) * 60 : null };
     },
     // 记录一次操作（intent 是 W.act 的参数，或 {tick:true} 表示走一拍）
     // 连续的走一拍合并成一条 {tick:true, n}，存档不会越存越大
     record(session, intent) {
       const last = session.acts[session.acts.length - 1];
       if (intent.tick && last && last.tick) last.n = (last.n || 1) + 1;
-      else session.acts.push(intent.tick ? { tick: true, n: 1 } : JSON.parse(JSON.stringify(intent)));
+      else session.acts.push(intent.tick ? { tick: true, n: 1 } : U.JSON.parse(U.JSON.stringify(intent)));
       return session;
     },
     // 考试剩余秒数（limitSec 为空表示没有时限）
@@ -34,7 +34,7 @@
     // 重放：从开场快照出发，按顺序执行 acts，得到当前台面
     // onStep(sc, a)：每条生效的记录执行完后调用一次（恢复时用来重新判分）
     replay(session, onStep) {
-      const sc = JSON.parse(JSON.stringify(session.startScene));
+      const sc = U.JSON.parse(U.JSON.stringify(session.startScene));
       for (const a of session.acts) {
         if (a.tick) { for (let i = 0; i < (a.n || 1); i++) U.World.tick(sc); }
         else { const r = U.World.act(sc, a); if (!r.ok) continue; } // 被拒绝的操作不改变台面

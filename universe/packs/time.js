@@ -109,8 +109,8 @@
         step: (c) => {
           const st = c.state, counts = st.counts.slice();
           for (const v of K.nums(c.inp.v)) {
-            if (v.data.d !== 1) continue;
-            const i = v.data.n - st.lo;
+            if (v.data.d !== 1n) continue;
+            const i = Number(v.data.n) - st.lo;
             if (i >= 0 && i < counts.length) counts[i] += 1;
           }
           return { lo: st.lo, counts };

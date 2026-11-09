@@ -23,7 +23,7 @@
     // 直线 p1p2 与直线 q1q2 的交点；平行或重合返回 null
     lineIntersect(p1, p2, q1, q2) {
       const r = sub(p2, p1), s = sub(q2, q1), den = cross(r, s);
-      if (den.n === 0) return null;
+      if (den.n === 0n) return null;
       const t = Q.div(cross(sub(q1, p1), s), den);
       return { x: Q.add(p1.x, Q.mul(t, r.x)), y: Q.add(p1.y, Q.mul(t, r.y)) };
     },
@@ -56,7 +56,7 @@
       const [i1, i2] = cuts;
       const one = ring.slice(i1, i2 + 1), two = ring.slice(i2).concat(ring.slice(0, i1 + 1));
       const pieces = [one, two].map((pts) => ({ type: 'polygon', pts }));
-      if (pieces.some((q) => q.pts.length < 3 || F.area2(q).n === 0)) return { pieces: null, why: '切出来有一块是空的（线贴着边走）' };
+      if (pieces.some((q) => q.pts.length < 3 || F.area2(q).n === 0n)) return { pieces: null, why: '切出来有一块是空的（线贴着边走）' };
       return { pieces };
     },
 
@@ -69,7 +69,7 @@
       for (let i = 0; i < pts.length; i++) {
         const a = pts[i], b = pts[(i + 1) % pts.length], d = sub(b, a), L = dot(d, d);
         // 这条边内部的其他顶点，按沿边的位置排序
-        const mid = verts.filter((v) => !same(v, a) && !same(v, b) && cross(d, sub(v, a)).n === 0)
+        const mid = verts.filter((v) => !same(v, a) && !same(v, b) && cross(d, sub(v, a)).n === 0n)
           .map((v) => ({ v, t: Q.div(dot(sub(v, a), d), L) }))
           .filter((o) => Q.cmp(o.t, Q(0)) > 0 && Q.cmp(o.t, Q(1)) < 0)
           .sort((x, y) => Q.cmp(x.t, y.t));
@@ -102,9 +102,9 @@
       while (cur && !same(cur, first) && ring.length <= edges.size) { ring.push(cur); cur = next.get(key(cur)); }
       if (ring.length !== edges.size) return { ok: false, poly: null, why: '拼出来不止一块：有的块没有贴上' };
       // 去掉共线的中间点
-      const pts = ring.filter((p, i) => { const a = ring[(i + ring.length - 1) % ring.length], b = ring[(i + 1) % ring.length]; return cross(sub(p, a), sub(b, p)).n !== 0; });
+      const pts = ring.filter((p, i) => { const a = ring[(i + ring.length - 1) % ring.length], b = ring[(i + 1) % ring.length]; return cross(sub(p, a), sub(b, p)).n !== 0n; });
       const poly = { type: 'polygon', pts };
-      const area = (f) => { const a = F.area2(f); return Q.div(Q(Math.abs(a.n), a.d), Q(2)); };
+      const area = (f) => { const a = F.area2(f); return Q.div(Q.abs(a), Q(2)); };
       const sum = pieces.reduce((s, f) => Q.add(s, area(f)), Q(0));
       if (!Q.eq(area(poly), sum)) return { ok: false, poly: null, why: '面积对不上：有重叠' };
       return { ok: true, poly, why: '粘成了一个' + F.name(poly) + '，面积 ' + Q.show(sum) };
@@ -137,7 +137,7 @@
       }
       const tgt = new Set(Geo._edges(target, verts).map(([a, b]) => key(a) + '>' + key(b)));
       const left = [...count.keys()];
-      const area = (f) => { const a = F.area2(f); return Q.div(Q(Math.abs(a.n), a.d), Q(2)); };
+      const area = (f) => { const a = F.area2(f); return Q.div(Q.abs(a), Q(2)); };
       const areaSum = pieces.reduce((s, f) => Q.add(s, area(f)), Q(0)), areaT = area(target);
       const boundaryOk = left.length === tgt.size && left.every((k) => tgt.has(k));
       if (!Q.eq(areaSum, areaT)) return { ok: false, why: Q.cmp(areaSum, areaT) < 0 ? '面积不够：还有空缺' : '面积多了：有重叠或多余的块', areaSum, areaT };

@@ -4,7 +4,7 @@
   const U = G.U, Q = U.Q, K = U.kit;
   const num = (q, dim, exact) => U.val('num', q, { dim: dim || null, exact: exact !== false });
   const isqrt = (n) => { const r = Math.round(Math.sqrt(n)); return r * r === n ? r : null; };
-  const qsqrt = (q) => { const a = isqrt(q.n), b = isqrt(q.d); return q.n >= 0 && a !== null && b !== null ? Q(a, b) : null; };
+  const qsqrt = (q) => { const a = isqrt(Number(q.n)), b = isqrt(Number(q.d)); return q.n >= 0 && a !== null && b !== null ? Q(a, b) : null; };
 
   U.registerPack({
     id: 'middle', version: 1,
@@ -22,7 +22,7 @@
         size: () => [200, 110],
         compute: (c) => {
           const a = Q.fromNumber(c.props.a), b = Q.fromNumber(c.props.b), cc = Q.fromNumber(c.props.c);
-          if (a.n === 0) { c.say('warn', 'a = 0：要么无解、要么有无数个解'); return { ok: U.val('bool', false) }; }
+          if (a.n === 0n) { c.say('warn', 'a = 0：要么无解、要么有无数个解'); return { ok: U.val('bool', false) }; }
           const x = Q.div(Q.sub(cc, b), a);
           c.say('ok', 'x = (' + Q.show(cc) + ' − ' + Q.show(b) + ') ÷ ' + Q.show(a) + ' = ' + Q.show(x));
           return { x: num(x), ok: U.val('bool', true) };
@@ -109,10 +109,10 @@
         size: () => [230, 190],
         compute: (c) => {
           const a = Q.fromNumber(c.props.a), b = Q.fromNumber(c.props.b), cc = Q.fromNumber(c.props.c);
-          if (a.n === 0) { c.say('reject', 'a 不能是 0：那样就不是抛物线，是直线了'); return {}; }
+          if (a.n === 0n) { c.say('reject', 'a 不能是 0：那样就不是抛物线，是直线了'); return {}; }
           const vx = Q.neg(Q.div(b, Q.mul(Q(2), a))), vy = Q.add(Q.mul(a, Q.mul(vx, vx)), Q.add(Q.mul(b, vx), cc)), d = Q.sub(Q.mul(b, b), Q.mul(Q(4), Q.mul(a, cc)));
-          c.say('ok', '顶点 (' + Q.show(vx) + ', ' + Q.show(vy) + ')，' + (d.n > 0 ? '与 x 轴有 2 个交点' : d.n === 0 ? '刚好碰到 x 轴' : '够不着 x 轴'));
-          return { vx: num(vx), vy: num(vy), disc: num(d), roots: num(Q(d.n > 0 ? 2 : d.n === 0 ? 1 : 0)) };
+          c.say('ok', '顶点 (' + Q.show(vx) + ', ' + Q.show(vy) + ')，' + (d.n > 0 ? '与 x 轴有 2 个交点' : d.n === 0n ? '刚好碰到 x 轴' : '够不着 x 轴'));
+          return { vx: num(vx), vy: num(vy), disc: num(d), roots: num(Q(d.n > 0 ? 2 : d.n === 0n ? 1 : 0)) };
         },
         badge: (c) => (c.out.vx ? '顶点(' + U.showVal(c.out.vx) + ',' + U.showVal(c.out.vy) + ')' : ''),
         draw: (c) => {

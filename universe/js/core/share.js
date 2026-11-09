@@ -20,13 +20,13 @@
     encode(scene) {
       const macros = {};
       for (const e of Object.values(scene.entities)) if (U.MACRO_SPECS && U.MACRO_SPECS[e.type]) macros[e.type] = U.MACRO_SPECS[e.type];
-      const payload = JSON.stringify({ v: 1, scene: JSON.parse(W.save(scene)), macros });
+      const payload = U.JSON.stringify({ v: 1, scene: U.JSON.parse(W.save(scene)), macros });
       const text = b64.enc(payload);
       return text.length <= LIMIT ? { mode: 'link', text } : { mode: 'file', text: payload };
     },
     // 分享文本 → 台面（先把带来的打包器材登记好，再载入场景）
     decode(text) {
-      const obj = JSON.parse(b64.dec(text));
+      const obj = U.JSON.parse(b64.dec(text));
       if (!obj || obj.v !== 1 || !obj.scene) throw new Error('不是台面分享');
       for (const id of Object.keys(obj.macros || {})) if (!U.types[id]) U.defineMacro(id, obj.macros[id]);
       return W.load(obj.scene);

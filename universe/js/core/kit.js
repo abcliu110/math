@@ -26,8 +26,8 @@
     // 分数的竖排画法：分子 / 横线 / 分母
     frac(x, y, q, size, fill) {
       size = size || 22; fill = fill || 'var(--ink)';
-      const neg = q.n < 0, n = Math.abs(q.n);
-      if (q.d === 1) return kit.text(x, y + size * 0.35, (neg ? '−' : '') + n, { size, fill, weight: 700 });
+      const neg = q.n < 0n, n = neg ? -q.n : q.n;
+      if (q.d === 1n) return kit.text(x, y + size * 0.35, (neg ? '−' : '') + n, { size, fill, weight: 700 });
       const w = Math.max(String(n).length, String(q.d).length) * size * 0.55 + 6;
       return (neg ? kit.text(x - w / 2 - 8, y + size * 0.2, '−', { size, fill, weight: 700 }) : '') +
         kit.text(x, y - 3, n, { size: size * 0.8, fill, weight: 700 }) +

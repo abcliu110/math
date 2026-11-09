@@ -24,7 +24,7 @@
         const k = mkey(m);
         acc[k] = acc[k] ? { c: Q.add(acc[k].c, t.c), m } : { c: t.c, m };
       }
-      const terms = Object.values(acc).filter((t) => t.c.n !== 0);
+      const terms = Object.values(acc).filter((t) => t.c.n !== 0n);
       terms.sort((a, b) => deg(b.m) - deg(a.m) || cmpLex(a.m, b.m));
       return { terms };
     },
@@ -72,7 +72,7 @@
     show(a) {
       if (!a.terms.length) return '0';
       return a.terms.map((t, i) => {
-        const neg = t.c.n < 0, mag = Q(Math.abs(t.c.n), t.c.d);
+        const neg = t.c.n < 0n, mag = Q.abs(t.c);
         const vs = Object.keys(t.m).sort().map((v) => v + (t.m[v] > 1 ? sup(t.m[v]) : ''));
         const coef = Q.eq(mag, Q(1)) && vs.length ? '' : Q.show(mag);
         const body = coef + vs.join('·');

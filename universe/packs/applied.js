@@ -23,7 +23,7 @@
           const a = K.first(c.inp.a), b = K.first(c.inp.b);
           if (!a || !b) { c.say('info', '接甲和乙两个数'); return {}; }
           const m = c.props.mode, hund = Q(100);
-          if (m === 0) { if (b.data.n === 0) { c.say('err', '乙不能是 0'); return {}; } return { r: num(Q.mul(Q.div(a.data, b.data), hund)) }; }
+          if (m === 0) { if (b.data.n === 0n) { c.say('err', '乙不能是 0'); return {}; } return { r: num(Q.mul(Q.div(a.data, b.data), hund)) }; }
           const p = Q.div(a.data, hund);
           const r = m === 1 ? Q.mul(b.data, p) : m === 2 ? Q.mul(b.data, Q.add(Q(1), p)) : Q.mul(b.data, Q.sub(Q(1), p));
           c.say('ok', ['', Q.show(b.data) + ' 的 ' + Q.show(a.data) + '% = ', Q.show(b.data) + ' 增加 ' + Q.show(a.data) + '% = ', Q.show(b.data) + ' 减少 ' + Q.show(a.data) + '% = '][m] + Q.showDec(r, 3));
@@ -48,7 +48,7 @@
         compute: (c) => {
           const a = K.first(c.inp.a), b = K.first(c.inp.b);
           if (!a || !b) { c.say('info', '接甲和乙'); return {}; }
-          if (b.data.n === 0 || a.data.n < 0 || b.data.n < 0) { c.say('reject', '比的两项要是正数'); return {}; }
+          if (b.data.n === 0n || a.data.n < 0 || b.data.n < 0) { c.say('reject', '比的两项要是正数'); return {}; }
           const q = Q.div(a.data, b.data), ra = c.props.simplify ? q.n : a.data.n * b.data.d, rb = c.props.simplify ? q.d : b.data.n * a.data.d;
           const out = { ra: num(Q(ra)), rb: num(Q(rb)) };
           if (c.props.total > 0) { const T = Q.fromNumber(c.props.total), s = Q(ra + rb); out.sa = num(Q.mul(T, Q.div(Q(ra), s))); out.sb = num(Q.mul(T, Q.div(Q(rb), s))); c.say('ok', ra + ' : ' + rb + '，共 ' + (ra + rb) + ' 份，每份 ' + Q.showDec(Q.div(T, s), 3)); } else c.say('ok', ra + ' : ' + rb);
@@ -57,7 +57,7 @@
         badge: (c) => (c.out.ra ? c.out.ra.data.n + ' : ' + c.out.rb.data.n : ''),
         draw: (c) => {
           if (!c.out.ra) return K.text(c.w / 2, c.h / 2 + 8, '？', { size: 26, fill: 'var(--dim)' });
-          const ra = c.out.ra.data.n, rb = c.out.rb.data.n, tot = ra + rb, W = c.w - 24;
+          const ra = Number(c.out.ra.data.n), rb = Number(c.out.rb.data.n), tot = ra + rb, W = c.w - 24;
           let s = K.text(c.w / 2, 34, ra + ' : ' + rb, { size: 26, weight: 700 });
           if (tot <= 24) { const w = W / tot; for (let i = 0; i < tot; i++) s += K.rect(12 + i * w + 1, 52, w - 2, 22, { fill: i < ra ? 'var(--accent)' : '#6aa7ff', r: 2 }); }
           if (c.out.sa) s += K.text(12, c.h - 8, '甲 ' + Q.show(c.out.sa.data), { anchor: 'start', size: 13, weight: 700 }) + K.text(c.w - 12, c.h - 8, '乙 ' + Q.show(c.out.sb.data), { anchor: 'end', size: 13, weight: 700 });

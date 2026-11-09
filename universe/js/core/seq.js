@@ -152,8 +152,8 @@
     const test = (env) => {
       const a = value(A, env);
       if (kind) {
-        if (a.d !== 1) return false;
-        const x = a.n;
+        if (a.d !== 1n) return false;
+        const x = Number(a.n);
         if (kind === 'even') return x % 2 === 0;
         if (kind === 'odd') return Math.abs(x) % 2 === 1;
         if (kind === 'square') return x >= 0 && Math.round(Math.sqrt(x)) ** 2 === x;

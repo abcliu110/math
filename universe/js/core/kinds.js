@@ -7,8 +7,8 @@
   // 1.7：每种 kind 都要能存档、读回（默认按 JSON 往返；值只能是普通数据）
   U.defineKind = (id, def) => {
     def.id = id;
-    if (!def.serialize) def.serialize = (v) => JSON.parse(JSON.stringify(v));
-    if (!def.parse) def.parse = (s) => JSON.parse(JSON.stringify(s));
+    if (!def.serialize) def.serialize = (v) => U.JSON.parse(U.JSON.stringify(v));
+    if (!def.parse) def.parse = (s) => U.JSON.parse(U.JSON.stringify(s));
     U.KINDS[id] = def; return def;
   };
   // 注册表 lint：每种 kind 必须有 eq / show，且存档往返后相等
@@ -41,8 +41,8 @@
     eq: (a, b) => Q.eq(a.k, b.k) && Q.eq(a.b, b.b),
     show: (f) => {
       const k = f.k, b = f.b;
-      const kx = k.n === 0 ? '' : Q.eq(k, Q(1)) ? 'x' : Q.eq(k, Q(-1)) ? '−x' : (k.n < 0 ? '−' : '') + Q.show(Q(Math.abs(k.n), k.d)) + 'x';
-      const bs = b.n === 0 ? (kx ? '' : '0') : (kx ? (b.n < 0 ? ' − ' : ' + ') : (b.n < 0 ? '−' : '')) + Q.show(Q(Math.abs(b.n), b.d));
+      const kx = k.n === 0n ? '' : Q.eq(k, Q(1)) ? 'x' : Q.eq(k, Q(-1)) ? '−x' : (k.n < 0n ? '−' : '') + Q.show(Q.abs(k)) + 'x';
+      const bs = b.n === 0n ? (kx ? '' : '0') : (kx ? (b.n < 0n ? ' − ' : ' + ') : (b.n < 0n ? '−' : '')) + Q.show(Q.abs(b));
       return 'y = ' + kx + bs;
     },
   });
@@ -62,44 +62,46 @@
     pi: (q) => ({ a: Q(0), b: Q(0), c: 1, p: q }),
     // √q（q 为非负有理数）：√(n/d) = s√(r·d)/d
     sqrt(q) {
-      if (q.n < 0) return null;
-      if (q.n === 0) return R.from(Q(0));
-      const { s, r } = sqfree(q.n * q.d);
+      if (q.n < 0n) return null;
+      if (q.n === 0n) return R.from(Q(0));
+      const m = q.n * q.d;
+      if (m > BigInt(Number.MAX_SAFE_INTEGER)) return null; // 根号里的数太大，不做精确化简
+      const { s, r } = sqfree(Number(m));
       return R.norm({ a: Q(0), b: Q(s, q.d), c: r, p: Q(0) });
     },
     add(x, y) {
-      if (!(x.b.n === 0 || y.b.n === 0 || x.c === y.c)) return null;
-      const c = x.b.n !== 0 ? x.c : y.c;
+      if (!(x.b.n === 0n || y.b.n === 0n || x.c === y.c)) return null;
+      const c = x.b.n !== 0n ? x.c : y.c;
       return R.norm({ a: Q.add(x.a, y.a), b: Q.add(x.b, y.b), c, p: Q.add(x.p, y.p) });
     },
     mul(x, y) {
-      if (!(x.b.n === 0 || y.b.n === 0 || x.c === y.c)) return null;
-      const c = x.b.n !== 0 ? x.c : y.c;
-      const same = x.b.n !== 0 && y.b.n !== 0; // √c·√c = c（同一根式）
+      if (!(x.b.n === 0n || y.b.n === 0n || x.c === y.c)) return null;
+      const c = x.b.n !== 0n ? x.c : y.c;
+      const same = x.b.n !== 0n && y.b.n !== 0n; // √c·√c = c（同一根式）
       const a = Q.add(Q.mul(x.a, y.a), same ? Q.mul(Q.mul(x.b, y.b), Q(x.c)) : Q(0));
       const b = Q.add(Q.mul(x.a, y.b), Q.mul(x.b, y.a));
       // π 只能乘有理数：π·√c、π·π 不在这个形式里，返回 null
-      if (x.p.n !== 0 && (y.b.n !== 0 || y.p.n !== 0)) return null;
-      if (y.p.n !== 0 && (x.b.n !== 0 || x.p.n !== 0)) return null;
+      if (x.p.n !== 0n && (y.b.n !== 0n || y.p.n !== 0n)) return null;
+      if (y.p.n !== 0n && (x.b.n !== 0n || x.p.n !== 0n)) return null;
       const p = Q.add(Q.mul(x.a, y.p), Q.mul(x.p, y.a));
       return R.norm({ a, b, c, p });
     },
     // 规范化：根式系数为 0 时 c 归一为 1；c 是 1 时把 b 并入 a
     norm(v) {
-      if (v.b.n === 0) v.c = 1;
-      if (v.c === 1 && v.b.n !== 0) { v.a = Q.add(v.a, v.b); v.b = Q(0); }
+      if (v.b.n === 0n) v.c = 1;
+      if (v.c === 1 && v.b.n !== 0n) { v.a = Q.add(v.a, v.b); v.b = Q(0); }
       return v;
     },
-    approx: (v) => v.a.n / v.a.d + (v.b.n / v.b.d) * Math.sqrt(v.c) + (v.p.n / v.p.d) * Math.PI,
+    approx: (v) => U.Q.num(v.a) + U.Q.num(v.b) * Math.sqrt(v.c) + U.Q.num(v.p) * Math.PI,
     show(v) {
       // 每一项写成 [符号, 文字]，第一项不带前导加号，之后用 " + " 或 " − " 连接
       const terms = [];
       const term = (x, body) => {
-        if (x.n === 0) return;
-        const mag = Math.abs(x.n), coef = Q.eq(Q(mag, x.d), Q(1)) ? '' : Q.show(Q(mag, x.d));
-        terms.push({ neg: x.n < 0, text: coef + body });
+        if (x.n === 0n) return;
+        const ax = Q.abs(x), coef = Q.eq(ax, Q(1)) ? '' : Q.show(ax);
+        terms.push({ neg: x.n < 0n, text: coef + body });
       };
-      if (v.a.n !== 0) terms.push({ neg: v.a.n < 0, text: Q.show(Q(Math.abs(v.a.n), v.a.d)) });
+      if (v.a.n !== 0n) terms.push({ neg: v.a.n < 0n, text: Q.show(Q.abs(v.a)) });
       term(v.b, '√' + v.c);
       term(v.p, 'π');
       if (!terms.length) return '0';
