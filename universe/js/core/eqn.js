@@ -193,7 +193,8 @@
       return v;
     };
     const unary = () => {
-      if (peek() === '-') { i++; return P.neg(unary()); }
+      // 乘方比负号先算：-x^2 = -(x²)，负号作用在带乘方的因子上
+      if (peek() === '-') { i++; return P.neg(factor()); }
       if (peek() === '+') { i++; return unary(); }
       return primary();
     };
