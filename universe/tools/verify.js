@@ -1,5 +1,5 @@
 /* node tools/verify.js —— 一条命令跑完全部检查，任一步失败就退出非零（不再往下跑）。
- * 顺序：tests/run.js → tools/check-types.js → tests/ui.js → tests/ui-probes.js（如果存在）→ tests/ui-layout.js → tests/ui-space.js → tests/ui-roles.js → tests/ui-deps.js → tests/ui-workbench.js → tests/ui-expr.js → tests/ui-stepgraph.js → tests/ui-steps.js → tests/ui-arith.js → tests/ui-digit.js → tests/ui-data.js → tests/ui-cross.js → tests/ui-extend.js → tests/ui-select.js → tests/ui-snap.js → tests/ui-shapes.js → tests/ui-export.js → tests/ui-labels.js → tests/ui-space-focus.js → tests/ui-touch-keys.js → tests/ui-feedback.js → tests/ui-readout.js → tests/ui-robust.js → tests/ui-random.js → tests/ui-theme.js → tests/ui-perf.js → tests/ui-s105.js → tools/lint-ui.js → tools/contrast.js → tools/build-standalone.js → dist 文件加载检查。
+ * 顺序：tests/run.js → tools/check-types.js → tests/ui.js → tests/ui-probes.js（如果存在）→ tests/ui-layout.js → tests/ui-space.js → tests/ui-roles.js → tests/ui-deps.js → tests/ui-workbench.js → tests/ui-expr.js → tests/ui-stepgraph.js → tests/ui-steps.js → tests/ui-arith.js → tests/ui-digit.js → tests/ui-data.js → tests/ui-cross.js → tests/ui-cross2.js → tests/ui-extend.js → tests/ui-select.js → tests/ui-snap.js → tests/ui-shapes.js → tests/ui-export.js → tests/ui-labels.js → tests/ui-space-focus.js → tests/ui-touch-keys.js → tests/ui-feedback.js → tests/ui-readout.js → tests/ui-robust.js → tests/ui-random.js → tests/ui-theme.js → tests/ui-perf.js → tests/ui-s105.js → tools/lint-ui.js → tools/contrast.js → tools/build-standalone.js → dist 文件加载检查。
  * 界面测试和 dist 检查需要环境变量 PW_NODE_PATH：playwright 所在的 node_modules 目录。
  * 用法：PW_NODE_PATH=<.../node_modules> node tools/verify.js */
 'use strict';
@@ -71,6 +71,7 @@ async function checkDist() {
   if (!runScript('tests/ui-digit.js', 'tests/ui-digit.js', pwEnv)) bail();           // D8：数位竖式（真实鼠标：拖数字进列、退位、进位、点选；撤销；判题 digits 查询）
   if (!runScript('tests/ui-data.js', 'tests/ui-data.js', pwEnv)) bail();             // D8：数据图表台（真实鼠标和键盘：录数据、画散点图、拟合直线；删行作废；撤销）
   if (!runScript('tests/ui-cross.js', 'tests/ui-cross.js', pwEnv)) bail();      // D7：跨工作台（几何台面的面积读数接进式子工作台，S = a×h，真实鼠标代入、算出数，得到 S = 24）
+  if (!runScript('tests/ui-cross2.js', 'tests/ui-cross2.js', pwEnv)) bail();     // D7 剩余：真实鼠标写示例题（三角形的面积读数接进式子工作台，½ × a × h，代入得到 S = 12；图形改了，式子对照面积写出「对不上」）
   if (!runScript('tests/ui-extend.js', 'tests/ui-extend.js', pwEnv)) bail();   // J：二次扩域坐标（抛物线的顶点、交点在台面上精确显示）、增量求值（改无关器材求值 0 次；300 个对象增量中位数 < 16 毫秒）、文件清单一致
   if (!runScript('tests/ui-select.js', 'tests/ui-select.js', pwEnv)) bail();         // V3：工作区选择（同一位置双击依次选中重叠的图形，单击选最上面的）
   if (!runScript('tests/ui-snap.js', 'tests/ui-snap.js', pwEnv)) bail();             // V4：吸附到构造点（画线吸附到中点，背后建 gmid；拖动端点后跟着动）
