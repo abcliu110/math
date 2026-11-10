@@ -224,6 +224,9 @@
     const log = U.Workbench.stepLog(st);
     h += log.length ? st.steps.map((s, i) => '<div class="wb-step"><span>' + esc(log[i]) + '<small>' + esc(s.why) + '</small></span><button data-wb-undo="' + (i + 1) + '">撤销到这一步</button></div>').join('') : '<div class="wb-none">还没有步骤</div>';
     const sol = U.Workbench.solution(st);
+    // 几何来的式子：和几何台面的面积对照（读数变了，这里跟着变）
+    const note = eq.geo ? U.ExprBench.areaNote(st, area) : null;
+    if (note) h += '<div class="' + (note.same === false ? 'wb-msg' : 'wb-note') + '" data-wb-area="' + (note.same === null ? 'open' : note.same ? 'same' : 'off') + '">' + esc(note.text) + '</div>';
     if (sol.solved) h += '<div class="wb-sol">解：' + esc(U.Form.show(cur.data.lhs)) + ' = ' + esc(U.Q.show(sol.x)) + '</div>';
     return h + '</div>';
   }

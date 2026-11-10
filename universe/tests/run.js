@@ -2476,5 +2476,50 @@ t('J3 清单检查：packs 里有文件没登记，检查失败', () => {
   truthy(errs.some((m) => m.includes('new.js')), '应指出 new.js');
 });
 
+console.log('D7：跨工作台（分数的公式、几何的面积读数）');
+t('D7 解析：斜线是除以一个数（a/2 与 a·(1/2) 一样）', () => { eq(U.Q.show(U.Poly.evalQ(U.Poly.parse('a/2'), { a: Q(4) })), '2'); });
+t('D7 解析：½ × a × h 与 a·h/2 、(a·h)/2 、½ah 都得到 ½ah', () => {
+  const env = { a: Q(6), h: Q(4) };
+  for (const s of ['½ × a × h', 'a·h/2', '(a·h)/2', '½ah', '3/6 a h', 'a*h*1/2']) eq(U.Q.show(U.Poly.evalQ(U.Poly.parse(s), env)), '12', s);
+});
+t('D7 解析：分数系数的多项式（3/4 a 与 a 的和）', () => { eq(U.Q.show(U.Poly.evalQ(U.Poly.parse('3/4 a + a/4'), { a: Q(8) })), '8'); });
+t('D7 解析：除以 0、除以字母都说明原因', () => {
+  truthy(/0/.test(String(thr(() => U.Poly.parse('a/0')))), '除以 0 应说明');
+  truthy(/一个数/.test(String(thr(() => U.Poly.parse('a/b')))), '除以字母应说明只能除以一个数');
+  truthy(/一个数/.test(String(thr(() => U.Poly.parse('1/x')))), '1/x 不是整式');
+});
+t('D7 显示：½ah 的式子写成 1/2 乘 a 乘 h（分数照常写成 n/d，显示可以再议）', () => { const s = U.Form.show(U.Form.fromPoly(U.Poly.parse('½ah'))); truthy(/1\/2/.test(s) && /a/.test(s) && /h/.test(s), s); });
+t('D7 式子：几何的面积（12）接上 S = ½ × a × h，代入 a = 6、h = 4 后 solution 为 12', () => {
+  const fx = U.ExprBench.workEqnIn({ g: [U.val('num', Q(12), { dim: 'area' })], f: [U.val('poly', U.Poly.parse('½ × a × h'))] });
+  truthy(fx && fx.geo === true, '应是几何来的方程');
+  let st = U.Workbench.create(fx, { formula: true });
+  st = U.Workbench.step(st, 'substitute', null, { var: 'a', val: '6' }); eq(st.lastError, null, '代入 a：' + st.lastError);
+  st = U.Workbench.step(st, 'substitute', null, { var: 'h', val: '4' }); eq(st.lastError, null, '代入 h：' + st.lastError);
+  eq(U.Workbench.solution(st).x, Q(12));
+  eq(U.Workbench.stepLog(st).length, 2);
+});
+t('D7 代入和算出数能处理分数：a = 1/2、h = 4 代入 ½ × a × h，算出数得到 S = 1', () => {
+  const fx = U.ExprBench.workEqnIn({ g: [U.val('num', Q(1), { dim: 'area' })], f: [U.val('poly', U.Poly.parse('½ × a × h'))] });
+  let st = U.Workbench.create(fx, { formula: true });
+  st = U.Workbench.step(st, 'substitute', null, { var: 'a', val: '1/2' }); eq(st.lastError, null, '代入分数：' + st.lastError);
+  st = U.Workbench.step(st, 'substitute', null, { var: 'h', val: '4' }); eq(st.lastError, null, '代入 h：' + st.lastError);
+  eq(U.Workbench.solution(st).x, Q(1), '代入后右边已经是数 1（分数先乘开）');
+});
+t('D7 式子：只接几何的面积（没有公式）时没有方程', () => {
+  eq(U.ExprBench.workEqnIn({ g: [U.val('num', Q(12), { dim: 'area' })] }), null);
+});
+t('D7 读数对照：式子算出的 S 与几何的面积一致；不一致时写出两个数', () => {
+  const fx = U.ExprBench.workEqnIn({ g: [U.val('num', Q(12), { dim: 'area' })], f: [U.val('poly', U.Poly.parse('½ah'))] });
+  let st = U.Workbench.create(fx, { formula: true });
+  st = U.Workbench.step(st, 'substitute', null, { var: 'a', val: '6' });
+  st = U.Workbench.step(st, 'substitute', null, { var: 'h', val: '4' });
+  const same = U.ExprBench.areaNote(st, U.val('num', Q(12), { dim: 'area' }));
+  eq(same.same, true); truthy(/一致/.test(same.text), same.text);
+  const off = U.ExprBench.areaNote(st, U.val('num', Q(15), { dim: 'area' }));
+  eq(off.same, false); truthy(/15/.test(off.text) && /12/.test(off.text), off.text);
+  const early = U.ExprBench.areaNote(U.Workbench.create(fx, { formula: true }), U.val('num', Q(12), { dim: 'area' }));
+  eq(early.same, null); truthy(/还没有解/.test(early.text), early.text);
+});
+
 console.log('\n' + pass + ' 通过，' + fail + ' 失败');
 process.exit(fail ? 1 : 0);
