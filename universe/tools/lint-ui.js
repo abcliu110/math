@@ -21,7 +21,9 @@
 'use strict';
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const root = path.join(__dirname, '..');
-const FILES = ['js/ui/stage.js', 'js/ui/panels.js', 'js/ui/app.js'];   // intent.js 本身不在检查范围内
+// 台面按职责拆成了 stage-*.js（D4），stage.js 只是对外入口；拆出来的每个文件都要查
+const STAGE_FILES = ['js/ui/stage.js', 'js/ui/stage-core.js', 'js/ui/stage-labels.js', 'js/ui/stage-workspace.js', 'js/ui/stage-canvas.js', 'js/ui/stage-panel.js', 'js/ui/stage-cards.js', 'js/ui/stage-view.js', 'js/ui/stage-piece.js', 'js/ui/stage-shape.js', 'js/ui/stage-align.js', 'js/ui/stage-draw.js', 'js/ui/stage-drag.js', 'js/ui/stage-drop.js', 'js/ui/stage-init.js'];
+const FILES = [...STAGE_FILES, 'js/ui/panels.js', 'js/ui/app.js'];   // intent.js 本身不在检查范围内
 // 修改类动作：和 js/core/world.js 的 act 分支一致
 const MUTATING = ['add', 'clear', 'clock', 'copy', 'del', 'link', 'move', 'piece', 'put', 'rename', 'reset', 'resetstate', 'resize', 'set', 'take', 'tidy', 'tool', 'unlink', 'wsdrop'];
 // 直接调用的事务/动作入口：裸调用 act(…)，或 UI.App.act(…)；W.act、UI.Intent.* 不算
@@ -39,16 +41,16 @@ const SVG_DRAW = /<(?:line|circle|path|text|rect|polyline|polygon|svg|use|g)[\s>
 const NUM = /(?<![\w.])(\d+)(?![\w.%])|(?<![\w.])(\d+)(?=px)/g;   // 整数才查（小数多是文字或比例）；带 % 的是百分比，不查
 // 允许的例外：[文件, 原文子串, 原因]。子串命中的那一行不查布局数字。
 const LAYOUT_ALLOW = [
-  ['js/ui/stage.js', '(d.corner + 2) % 4', '矩形有四个角，% 4 是角的编号，不是布局'],
+  ['js/ui/stage-shape.js', '(d.corner + 2) % 4', '矩形有四个角，% 4 是角的编号，不是布局'],
 ];
 
 // U6：坐标换算（见文件头）
-const COORD_FILES = ['js/ui/stage.js', 'js/ui/panels.js', 'js/ui/layout.js', 'js/ui/app.js'];
+const COORD_FILES = [...STAGE_FILES, 'js/ui/panels.js', 'js/ui/layout.js', 'js/ui/app.js'];
 const COORD_A = /(?:clientX|clientY)\s*[-+]\s*[\w$.]*\.(?:left|top)\b|[\w$.]*\.(?:left|top)\s*[-+]\s*[\w$.]*(?:clientX|clientY)\b/;
 const COORD_B = /[\/*]\s*\(?\s*(?:[\w$]+\.)*(?:z|zoom|span|unit)\b|(?:^|[^\w$.])(?:[\w$]+\.)*(?:z|zoom|span|unit)\s*[\/*]/;
 // 允许的例外：[文件, 原文子串, 原因]。子串命中的那一行不查 U6。
 const COORD_ALLOW = [
-  ['js/ui/stage.js', 'Math.round(S.view.z * 100)', '缩放百分比的显示（乘 100），不是坐标换算'],
+  ['js/ui/stage-cards.js', 'Math.round(S.view.z * 100)', '缩放百分比的显示（乘 100），不是坐标换算'],
 ];
 
 // 去掉字符串字面量再查 U6（HTML 片段里的 </span> 不是换算）
@@ -110,7 +112,7 @@ const sandbox = {};
 vm.createContext(sandbox);
 vm.runInContext(fs.readFileSync(path.join(root, 'js/ui/state.js'), 'utf8'), sandbox);
 const SPEC = sandbox.UI.STATE_SPEC;
-const STATE_FILES = ['js/ui/stage.js', 'js/ui/panels.js', 'js/ui/app.js', 'js/ui/intent.js'];
+const STATE_FILES = [...STAGE_FILES, 'js/ui/panels.js', 'js/ui/app.js', 'js/ui/intent.js'];
 const FIELD = /(?:^|[^\w$])S\.([A-Za-z_]\w*)/g;   // S 是 UI.S 的别名，UI.S.xxx 也匹配
 const unreg = [];
 for (const rel of STATE_FILES) {

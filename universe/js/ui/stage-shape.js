@@ -1,0 +1,174 @@
+/* 台面（D4 拆分）：图形直接编辑：拖整个图形、拖边、放缩、旋转、左右翻转。由 stage.js 拆出，只搬代码、不改逻辑；跨文件的名字经 UI.StageCtx（SG）访问。加载顺序见 index.html。 */
+(function (G) {
+  'use strict';
+  const U = G.U, UI = (G.UI = G.UI || {}), W = U.World, K = U.kit, Q = U.Q;
+  const $ = (s) => document.querySelector(s);
+  const L = UI.LAYOUT, HD = L.HD, PORT_Y0 = L.PORT_Y0, PORT_DY = L.PORT_DY, PILL_DY = L.PILL_DY, PILL_W = L.PILL_W, MIN_W = L.MIN_W, MIN_H = L.MIN_H;
+  const SG = UI.StageCtx;
+  // ---- 工作区里直接用鼠标改图形（§10.5.8 B）----
+  // 一个图形能被怎么改，看它从哪里来：由自由点（gpt）直接围成的（kind 'pts'，改点的 x、y）；
+  // 块（'piece'，用块的动作：移、转、翻、放缩）；摆放出来的（'place'，改 dx、dy、turn、flip）。
+  // 顶点是不是自由点，靠连线查：多边形或线段的输入口接着的 gpt 器材，坐标对得上的就是它的顶点。
+  const uniq = (xs) => xs.filter((x, i) => xs.indexOf(x) === i);
+  const SCALES = ['1/2', '2/3', '1', '3/2', '2', '3'].map((s) => Q.parse(s));
+  const SNAP_PX = 9;
+  const minQ = (a) => a.reduce((m, q) => (Q.cmp(q, m) < 0 ? q : m));
+  const maxQ = (a) => a.reduce((m, q) => (Q.cmp(q, m) > 0 ? q : m));
+  const modT = (x) => ((x % 4) + 4) % 4;
+  // 屏幕像素 → 工作区坐标：sc.unit 是一个坐标单位占的屏幕像素（已经算进台面的缩放）
+  // 一个可以改的目标：实体 id、两个属性名（kx、ky）、原来的值、允许的范围
+  function tgt(id, kx, ky) {
+    const e = UI.S.scene.entities[id], P = U.types[e.type].props;
+    const rg = (k) => [P[k] && P[k].min !== undefined ? P[k].min : -1e9, P[k] && P[k].max !== undefined ? P[k].max : 1e9];
+    const a = rg(kx), b = rg(ky);
+    return { id, kx, ky, x0: e.props[kx], y0: e.props[ky], lo: [a[0], b[0]], hi: [a[1], b[1]] };
+  }
+  // 一个图形的编辑信息：kind、实体、顶点（自由点的 id）、边（顶点下标对）。不能直接改的返回 null
+  function figInfo(v) {
+    const E = UI.S.scene.entities, ent = E[v.id], f = v.fig;
+    if (!ent || !f) return null;
+    if (SG.roleOf(ent) === 'piece') return { kind: 'piece', ent, f, verts: [], edges: [] };
+    if (SG.defOf(ent).figEdit === 'place') return { kind: 'place', ent, f, verts: [], edges: [] };
+    if (SG.roleOf(ent) === 'point' && f.type === 'point') return { kind: 'pts', ent, f, verts: [ent.id], edges: [] };
+    if (f.type !== 'polygon' && f.type !== 'segment') return null;
+    const srcs = uniq(UI.S.scene.links.filter((l) => l.to === ent.id && E[l.from] && SG.roleOf(E[l.from]) === 'point').map((l) => l.from));
+    const verts = [];
+    for (const p of f.pts) {
+      const g = srcs.find((id) => Q.eq(Q(E[id].props.x), p.x) && Q.eq(Q(E[id].props.y), p.y));
+      if (!g) return null;
+      verts.push(g);
+    }
+    const n = verts.length, edges = f.type === 'polygon' ? verts.map((_, i) => [i, (i + 1) % n]) : [[0, 1]];
+    return { kind: 'pts', ent, f, verts, edges };
+  }
+  function figByName(wsId, name) {
+    const ws = UI.S.scene.entities[wsId]; if (!ws || !name) return null;
+    const v = SG.wsVisible(ws).find((x) => SG.pickOf(x) === name); return v ? figInfo(v) : null;
+  }
+  const moveTargets = (fi) => (fi.kind === 'place' ? [tgt(fi.ent.id, 'dx', 'dy')] : uniq(fi.verts).map((g) => tgt(g, 'x', 'y')));
+  // 开始一次图形拖动（tr 平移、sc 放缩、rot 旋转、pscale 块放缩、prot 块旋转、lrot 摆放的旋转）。
+  // 拖动时只改实体的属性做预览，松手时还原，再把整段拖动记成一步（shapeUp）。坐标范围在拖动开始时冻结。
+  function startShape(ev, wb, wsId, mode, targets, extra) {
+    const S = UI.S, ws = S.scene.entities[wsId]; if (!ws) return;
+    const fr = SG.wsFrame(ws, +wb.getAttribute('width'), +wb.getAttribute('height'));
+    UI.State.setUi(ws, 'view', fr.vw);
+    const sc = UI.Space.canvasOf(wb.getBoundingClientRect(), fr.vw.span);
+    SG.drag = Object.assign({ kind: 'shape', mode, wsId, v: fr.vw, sc, unit: sc.unit, sx: ev.clientX, sy: ev.clientY, start: UI.Space.screenToWorkspace(ev, fr.vw, sc), targets, moved: false, out: [], f: Q(1), k: 0, guides: [] }, extra || {});
+  }
+  // 按下一个把手：边（整条边平移）、角（放缩）、旋转把手
+  function startHandle(hd, ev) {
+    const S = UI.S, wb = hd.closest('.wsbody'), wsId = wb.dataset.wsid, kind = hd.dataset.hdl;
+    if (kind === 'edge') {
+      if (hd.dataset.pick) SG.wsPick(hd.dataset.pick, ev.shiftKey);
+      const gids = uniq(hd.dataset.gids.split(','));
+      startShape(ev, wb, wsId, 'tr', gids.map((g) => tgt(g, 'x', 'y')), { align: SG.buildAlign(S.scene.entities[wsId], gids.map((g) => SG.gptPt(g)), gids.length > 1 ? [[0, 1]] : [], gids, null) });
+      SG.render(); return;
+    }
+    const name = (S.wsSel || []).length === 1 ? S.wsSel[0] : null, fi = name ? figByName(wsId, name) : null;
+    if (!fi || !fi.f.pts) return;
+    const pts = fi.f.pts, qb = { x0: minQ(pts.map((p) => p.x)), x1: maxQ(pts.map((p) => p.x)), y0: minQ(pts.map((p) => p.y)), y1: maxQ(pts.map((p) => p.y)) };
+    const polyLike = fi.kind === 'pts' && fi.f.type !== 'point';
+    if (kind === 'corner') {
+      const corner = +hd.dataset.corner;
+      if (fi.kind === 'piece') return startShape(ev, wb, wsId, 'pscale', [], { id: fi.ent.id, s0: fi.ent.props.scale, qb, corner });
+      if (polyLike) return startShape(ev, wb, wsId, 'sc', uniq(fi.verts).map((g) => tgt(g, 'x', 'y')), { qb, corner });
+      return;
+    }
+    if (kind === 'rot') {
+      const cf = { x: (Q.num(qb.x0) + Q.num(qb.x1)) / 2, y: (Q.num(qb.y0) + Q.num(qb.y1)) / 2 };
+      const c = polyLike ? { x: Math.round(cf.x), y: Math.round(cf.y) } : cf;   // 图形的旋转中心取整数，旋转后仍然是整数坐标
+      if (fi.kind === 'piece') return startShape(ev, wb, wsId, 'prot', [], { id: fi.ent.id, t0: fi.ent.props.turn, c, qb });
+      if (fi.kind === 'place') return startShape(ev, wb, wsId, 'lrot', [], { id: fi.ent.id, t0: fi.ent.props.turn, c, qb });
+      if (polyLike) return startShape(ev, wb, wsId, 'rot', uniq(fi.verts).map((g) => tgt(g, 'x', 'y')), { c, qb });
+    }
+  }
+  // 拖动中：只改预览（实体属性），重算一次，只重画工作区
+  function shapeMove(ev) {
+    const S = UI.S, d = SG.drag, E = S.scene.entities;
+    const mx = ev.clientX - d.sx, my = ev.clientY - d.sy;
+    if (!d.moved && Math.hypot(mx, my) < L.DRAG_SLOP) return;
+    d.moved = true;
+    const wp = UI.Space.screenToWorkspace(ev, d.v, d.sc), out = [];
+    const put = (id, k, v) => { E[id].props[k] = v; out.push({ id, k, v }); };
+    let tip = '';
+    if (d.mode === 'tr') {
+      let dX = Math.round(UI.Space.pxToUnits(mx, d.unit)), dY = -Math.round(UI.Space.pxToUnits(my, d.unit)), lx = -Infinity, hx = Infinity, ly = -Infinity, hy = Infinity;
+      if (d.align) { d.align.alt = !!ev.altKey; const s = SG.alignSolve(d.align, { x: UI.Space.pxToUnits(mx, d.unit), y: -UI.Space.pxToUnits(my, d.unit) }, d.unit); dX = s.dx; dY = s.dy; d.guides = s.guides; }
+      for (const t of d.targets) { lx = Math.max(lx, t.lo[0] - t.x0); hx = Math.min(hx, t.hi[0] - t.x0); ly = Math.max(ly, t.lo[1] - t.y0); hy = Math.min(hy, t.hi[1] - t.y0); }
+      dX = Math.max(lx, Math.min(hx, dX)); dY = Math.max(ly, Math.min(hy, dY));
+      for (const t of d.targets) { put(t.id, t.kx, t.x0 + dX); put(t.id, t.ky, t.y0 + dY); }
+      tip = dX || dY ? '向右 ' + dX + ' 格，向上 ' + dY + ' 格' : '';
+    } else if (d.mode === 'sc' || d.mode === 'pscale') {
+      // 放缩：以对角为中心（按住 Alt 以中心为准）；比例吸附到 1/2、2/3、1、3/2、2、3，并且结果要是整数坐标
+      const qb = d.qb, cs = [[qb.x0, qb.y0], [qb.x1, qb.y0], [qb.x1, qb.y1], [qb.x0, qb.y1]];
+      const A = ev.altKey ? { x: Q.div(Q.add(qb.x0, qb.x1), Q(2)), y: Q.div(Q.add(qb.y0, qb.y1), Q(2)) } : { x: cs[(d.corner + 2) % 4][0], y: cs[(d.corner + 2) % 4][1] };
+      const ax = Q.num(A.x), ay = Q.num(A.y), v0x = Q.num(cs[d.corner][0]) - ax, v0y = Q.num(cs[d.corner][1]) - ay, den = v0x * v0x + v0y * v0y;
+      if (!den) return;
+      const tp = ((wp.x - ax) * v0x + (wp.y - ay) * v0y) / den;
+      const order = SCALES.slice().sort((a, b) => Math.abs(Q.num(a) - tp) - Math.abs(Q.num(b) - tp));
+      let pick = null;
+      for (const f of order) {
+        if (d.mode === 'pscale') { pick = { f, nv: [] }; break; }
+        const nv = d.targets.map((t) => ({ t, x: Q.add(A.x, Q.mul(f, Q.sub(Q(t.x0), A.x))), y: Q.add(A.y, Q.mul(f, Q.sub(Q(t.y0), A.y))) }));
+        if (nv.every((v) => Q.isInt(v.x) && Q.isInt(v.y))) { pick = { f, nv }; break; }
+      }
+      if (pick) {
+        d.f = pick.f;
+        if (d.mode === 'sc') for (const v of pick.nv) { put(v.t.id, v.t.kx, Q.num(v.x)); put(v.t.id, v.t.ky, Q.num(v.y)); }
+        else E[d.id].props.scale = Q.show(Q.mul(Q.parse(d.s0), pick.f));
+        tip = '放缩 ' + Q.show(pick.f) + ' 倍';
+      } else tip = '这个比例会得到分数坐标（自由点只存整数），先不动';
+    } else if (d.mode === 'rot' || d.mode === 'prot' || d.mode === 'lrot') {
+      // 旋转：角度吸附到 90°，逆时针为正（和摆放器材的 turn 一致）
+      const c = d.c, th0 = Math.atan2(d.start.y - c.y, d.start.x - c.x), th = Math.atan2(wp.y - c.y, wp.x - c.x);
+      const k = Math.round((th - th0) / (Math.PI / 2));
+      d.k = k;
+      if (d.mode === 'rot') {
+        for (const t of d.targets) {
+          let x = t.x0, y = t.y0;
+          for (let i = 0; i < modT(k); i++) { const dx = x - c.x, dy = y - c.y; x = c.x - dy; y = c.y + dx; }
+          put(t.id, t.kx, x); put(t.id, t.ky, y);
+        }
+      } else E[d.id].props.turn = modT(d.t0 + k);
+      tip = '转 ' + k * 90 + '°';
+    }
+    d.out = out;
+    S.D = W.evaluate(S.scene);
+    SG.wsRedraw(d.wsId);
+    if (tip) SG.showTip(ev.clientX, ev.clientY, tip, true);
+  }
+  // 松手：先把预览还原，再把这一次拖动记成一步（一次 set 或一次块的动作，撤销就回到拖之前）
+  function shapeUp(d) {
+    const E = UI.S.scene.entities;
+    SG.showTip(0, 0, '');
+    const orig = {};
+    for (const t of d.targets) { orig[t.id + '|' + t.kx] = t.x0; orig[t.id + '|' + t.ky] = t.y0; E[t.id].props[t.kx] = t.x0; E[t.id].props[t.ky] = t.y0; }
+    if (d.id && E[d.id]) { if (d.s0 !== undefined) E[d.id].props.scale = d.s0; if (d.t0 !== undefined) E[d.id].props.turn = d.t0; }
+    if (!d.moved) return SG.render();
+    const last = {};
+    for (const o of d.out) last[o.id + '|' + o.k] = o;
+    const list = Object.values(last).filter((o) => o.v !== orig[o.id + '|' + o.k]).map((o) => ({ id: o.id, k: o.k, v: o.v }));
+    if (d.mode === 'pscale' && d.f && !Q.eq(d.f, Q(1))) list.push({ id: d.id, what: 'scale', value: Q.show(d.f) });
+    if (d.mode === 'prot' && d.k % 4) list.push({ id: d.id, what: 'turn', value: d.k });
+    if (d.mode === 'lrot' && modT(d.t0 + d.k) !== d.t0) list.push({ id: d.id, k: 'turn', v: modT(d.t0 + d.k) });
+    if (list.length) UI.Intent.run('params', { ops: list }); else SG.render();
+  }
+  // 左右翻、上下翻（浮动工具条）：一次一步
+  function figFlip(wsId, name, v) {
+    const fi = figByName(wsId, name); if (!fi) return;
+    if (fi.kind === 'piece') return UI.Intent.run('piece', { ids: [fi.ent.id], what: 'flip', value: v });
+    const id = fi.ent.id;
+    if (fi.kind === 'place') {
+      // 摆放的状态是「先翻、再转」：翻转和转动的复合，按 F_v 与 R^t 的关系算出新状态（翻转和转动互相颠倒方向）
+      const cur = fi.ent.props.flip, t0 = fi.ent.props.turn;
+      const st = cur === v ? { flip: 0, turn: modT(-t0) } : cur === 0 ? { flip: v, turn: modT(-t0) } : { flip: 0, turn: modT(2 - t0) };
+      return UI.Intent.run('params', { ops: [{ id, k: 'flip', v: st.flip }, { id, k: 'turn', v: st.turn }] });
+    }
+    if (fi.kind === 'pts' && fi.f.type !== 'point') {
+      const q = v === 1 ? 'x' : 'y', pts = fi.f.pts, mn = minQ(pts.map((p) => p[q])), mx = maxQ(pts.map((p) => p[q]));
+      const list = uniq(fi.verts).map((g) => ({ id: g, k: q, v: Q.num(Q.sub(Q.add(mn, mx), Q(UI.S.scene.entities[g].props[q]))) }));
+      return UI.Intent.run('params', { ops: list });
+    }
+  }
+  Object.assign(SG, { uniq, SCALES, SNAP_PX, minQ, maxQ, modT, tgt, figInfo, figByName, moveTargets, startShape, startHandle, shapeMove, shapeUp, figFlip });
+})(window);
