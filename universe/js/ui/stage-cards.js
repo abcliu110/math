@@ -85,22 +85,51 @@
     return { paths, lbl };
   }
 
+  // 局部渲染（任务 J，§10.7）：台面分成若干段（连线、每台器材的卡片、连线的数值、每个工作区的面板），每段是 div.sec（display: contents）。
+  // 每段的 HTML 每次都算；和上次一样、而且 DOM 没有被直接改过的段就不动；不一样的才换掉它那一段。
+  // SG.redrawTotal 是累计换掉的段数（tests/ui-render.js 用它计数）。
+  const dirtySec = (el) => !!el.querySelector('.card.droptarget,.port.ok,.port.no,.pill.ok,.pill.no,[data-prev]');   // 拖动、连线时直接改过 DOM 的段，要重画
+  function syncSections(root, secs) {
+    const cache = SG.secCache || (SG.secCache = new Map());
+    for (const ch of [...root.children]) if (!ch.classList.contains('sec')) ch.remove();   // 不是段的（比如改名的输入框）跟着旧的 innerHTML 一起去掉
+    const keep = new Set();
+    let prev = null, n = 0;
+    for (const [key, html, sig = ""] of secs) {
+      keep.add(key);
+      let c = cache.get(key), el = c && c.el;
+      const attached = !!el && el.parentNode === root;
+      if (!(attached && c.html === html && c.sig === sig && !dirtySec(el))) {
+        const nel = document.createElement('div');
+        nel.className = 'sec'; nel.dataset.sec = key; nel.innerHTML = html;
+        if (attached) root.replaceChild(nel, el); else root.insertBefore(nel, prev ? prev.nextSibling : root.firstChild);
+        el = nel; n++;
+        cache.set(key, { html, sig, el });
+      }
+      const want = prev ? prev.nextSibling : root.firstChild;
+      if (want !== el) root.insertBefore(el, want);   // 段的顺序和画的顺序一样（后面的盖住前面的）
+      prev = el;
+    }
+    for (const [key, c] of [...cache]) if (!keep.has(key)) { if (c.el.parentNode === root) c.el.remove(); cache.delete(key); }
+    SG.redrawTotal = (SG.redrawTotal || 0) + n;
+    SG.lastRedraw = n;
+  }
+
   function render() {
     const S = UI.S; if (!S) return;
     SG.checkViews();
     const D = S.D, E = S.scene.entities;
     const lk = linksHtml(S);
-    let h = '<svg id="links" width="1" height="1">' + lk.paths + '</svg>';
+    const secs = [['links', '<svg id="links" width="1" height="1">' + lk.paths + '</svg>']];
     // 工作区里的器材不画卡片；工作区的选中对象只保留还存在的名字
     const names = SG.wsNames(), known = new Set(Object.values(names));
     // '#' 开头的是“实体 id + 端口”，实体删了就不再保留（否则删除工作区后选中项会残留，P11）
     S.wsSel = (S.wsSel || []).filter((n) => known.has(n) || (n[0] === '#' && !!E[n.slice(1).split('.')[0]]));
     // 台面上已经没有工作区了，工作区的消息也一起清掉（否则新建的工作区会显示旧消息，P11）
     if (S.wsMsg && !Object.values(E).some((e) => SG.isWsDef(e.type))) S.wsMsg = '';
-    for (const id of Object.keys(E)) if (!SG.inWs(E[id])) h += cardHtml(E[id], D, S);
-    h += lk.lbl;
-    for (const id of Object.keys(E)) if (SG.isWsDef(E[id].type)) h += SG.wsPanelHtml(E[id], names);
-    SG.worldEl.innerHTML = h;
+    for (const id of Object.keys(E)) if (!SG.inWs(E[id])) secs.push(['e:' + id, cardHtml(E[id], D, S)]);
+    secs.push(['labels', lk.lbl]);
+    for (const id of Object.keys(E)) if (SG.isWsDef(E[id].type)) secs.push(['p:' + id, SG.wsPanelHtml(E[id], names), String(UI.Layout.drawerOpen(id))]);   // 抽屉的展开状态不在 HTML 里（placePanels 量它的尺寸），所以放进签名
+    syncSections(SG.worldEl, secs);
     if (UI.Guide) UI.Guide.check(Object.values(E).some((x) => SG.isWsDef(x.type)));   // 2.13：第一次看到几何工作区，弹一次引导
     SG.worldEl.style.transform = 'translate(' + S.view.x + 'px,' + S.view.y + 'px) scale(' + S.view.z + ')';
     UI.Layout.placePanels(SG.worldEl, SG.stageEl, S.view, (id) => { const e = S.scene.entities[id]; return e ? SG.geom(e) : null; });

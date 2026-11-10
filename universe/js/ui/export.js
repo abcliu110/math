@@ -78,9 +78,9 @@
   // 台面：卡片（标题、标签、画布）、连线、连线上的数值
   function stageJob(bg) {
     const world = document.getElementById('world');
-    const cards = world ? [...world.querySelectorAll(':scope > .card[data-id]')] : [];
-    const links = world ? world.querySelector(':scope > svg#links') : null;
-    const labels = world ? [...world.querySelectorAll(':scope > .lb')] : [];
+    const cards = world ? [...world.querySelectorAll(':scope > .sec > .card[data-id]')] : [];
+    const links = world ? world.querySelector(':scope > .sec > svg#links') : null;
+    const labels = world ? [...world.querySelectorAll(':scope > .sec > .lb')] : [];
     if (!cards.length) throw new Error('台面上还没有东西，搭一点再导出');
 
     // 范围：卡片、连线、数值标签

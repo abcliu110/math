@@ -6,11 +6,50 @@
   'use strict';
   const U = G.U;
 
-  U.PACK_FILES = {};
-  for (const f of ['core', 'time', 'stats', 'geometry', 'arith', 'middle', 'applied', 'numtheory', 'solid', 'angle', 'road',
-    'conjecture', 'variable', 'modclock', 'curved', 'eqscale', 'cutpaste', 'symmetry', 'conserve', 'nth', 'model', 'tenframe', 'figure', 'geo', 'algebra', 'modeling', 'proof', 'ratio', 'angletrig', 'stats2', 'views', 'coordsx', 'workspace', 'exprbench', 'arithbench', 'digitbench', 'databench', 'piece', 'shapes']) {
-    U.PACK_FILES[f] = 'packs/' + f + '.js';
-  }
+  // packs:begin
+  // 由 tools/gen-manifest.js 生成：packs/ 目录里的每个文件一行。不要手改；增删 packs/ 里的文件后运行 node tools/gen-manifest.js
+  U.PACK_FILES = {
+    'algebra': 'packs/algebra.js',
+    'angle': 'packs/angle.js',
+    'angletrig': 'packs/angletrig.js',
+    'applied': 'packs/applied.js',
+    'arith': 'packs/arith.js',
+    'arithbench': 'packs/arithbench.js',
+    'conjecture': 'packs/conjecture.js',
+    'conserve': 'packs/conserve.js',
+    'coordsx': 'packs/coordsx.js',
+    'core': 'packs/core.js',
+    'curved': 'packs/curved.js',
+    'cutpaste': 'packs/cutpaste.js',
+    'databench': 'packs/databench.js',
+    'digitbench': 'packs/digitbench.js',
+    'eqscale': 'packs/eqscale.js',
+    'exprbench': 'packs/exprbench.js',
+    'figure': 'packs/figure.js',
+    'geo': 'packs/geo.js',
+    'geometry': 'packs/geometry.js',
+    'middle': 'packs/middle.js',
+    'time': 'packs/time.js',
+    'modclock': 'packs/modclock.js',
+    'model': 'packs/model.js',
+    'modeling': 'packs/modeling.js',
+    'nth': 'packs/nth.js',
+    'numtheory': 'packs/numtheory.js',
+    'piece': 'packs/piece.js',
+    'proof': 'packs/proof.js',
+    'ratio': 'packs/ratio.js',
+    'road': 'packs/road.js',
+    'workspace': 'packs/workspace.js',
+    'shapes': 'packs/shapes.js',
+    'solid': 'packs/solid.js',
+    'stats': 'packs/stats.js',
+    'stats2': 'packs/stats2.js',
+    'symmetry': 'packs/symmetry.js',
+    'tenframe': 'packs/tenframe.js',
+    'variable': 'packs/variable.js',
+    'views': 'packs/views.js',
+  };
+  // packs:end
 
   // 返回 { loaded: [已加载的], missing: [清单里没有的] }。只在浏览器里真正插入 <script>
   U.ensurePacks = function (ids) {

@@ -2404,5 +2404,47 @@ t('J3 清单检查：packs 里有文件没登记，检查失败', () => {
   truthy(errs.some((m) => m.includes('new.js')), '应指出 new.js');
 });
 
+console.log('任务 J 遗留：清单生成（tools/gen-manifest.js）');
+// 生成器不可用时，这一组测试失败，而不是让 run.js 崩掉
+let GM = null, gmErr = '';
+try { GM = require('../tools/gen-manifest.js'); } catch (e) { gmErr = e.message; }
+t('J4 生成器可以加载', () => { truthy(GM, '加载 tools/gen-manifest.js 失败：' + gmErr); });
+t('J4 生成结果和现在的 index.html、loader.js 一致（不一致就失败）', () => {
+  eq(GM ? GM.check(root) : ['生成器不可用'], []);
+});
+t('J4 生成的包列表 = packs/ 目录里的全部文件（不多不少）', () => {
+  const want = dirPacks.map((p) => p.replace(/^packs\//, '').replace(/\.js$/, ''));
+  eq(GM ? GM.packIds(root).slice().sort() : [], want.slice().sort());
+});
+t('J4 生成的加载顺序：每个包声明的依赖都排在它前面（否则注册时记下“还没加载”）', () => {
+  const ids = GM ? GM.packIds(root) : [];
+  const deps = GM ? GM.depsOf(root) : {};
+  for (const id of ids) for (const d of deps[id] || []) if (deps[d]) truthy(ids.indexOf(d) < ids.indexOf(id), id + ' 的依赖 ' + d + ' 应排在它前面');
+  truthy(ids.length > 0 && ids.some((id) => (deps[id] || []).length), '应能读到包的依赖声明');
+});
+t('J4 生成的 PACK_FILES 对每个注册的包都有路径', () => {
+  const r = GM ? GM.render(root) : null;
+  truthy(r && Object.keys(r.packFiles).length === dirPacks.length, '清单条数应等于 packs 文件数');
+  for (const id of Object.keys(U.packs)) if (id !== 'probe-deps') truthy(r.packFiles[id] === 'packs/' + id + '.js', '生成的清单缺 ' + id);
+});
+t('J4 index.html 漏掉一个 packs 脚本，检查失败并指出是哪一个', () => {
+  const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8').replace(/<script src="packs\/time\.js"><\/script>\r?\n/, '');
+  const errs = GM ? GM.check(root, { html }) : [];
+  truthy(errs.some((m) => m.includes('index.html') && m.includes('packs/time.js')), '应报错并指出 packs/time.js，实际：' + JSON.stringify(errs));
+});
+t('J4 loader.js 的清单多了一个不存在的包，检查失败并指出', () => {
+  const js = fs.readFileSync(path.join(root, 'js/core/loader.js'), 'utf8');
+  const bad = js.replace("  'core': 'packs/core.js',", "  'core': 'packs/core.js',\n  'ghost': 'packs/ghost.js',");
+  truthy(bad !== js, '测试前提：loader.js 里应有 core 的清单行');
+  const errs = GM ? GM.check(root, { loader: bad }) : [];
+  truthy(errs.some((m) => m.includes('loader.js') && m.includes('ghost')), '应报错并指出 ghost，实际：' + JSON.stringify(errs));
+});
+t('J4 生成是幂等的：对生成结果再生成，内容不变', () => {
+  const r = GM ? GM.render(root) : null;
+  const again = GM ? GM.render(root, { html: r.html, loader: r.loader }) : null;
+  eq(again ? again.html : 'x', r ? r.html : 'y');
+  eq(again ? again.loader : 'x', r ? r.loader : 'y');
+});
+
 console.log('\n' + pass + ' 通过，' + fail + ' 失败');
 process.exit(fail ? 1 : 0);
