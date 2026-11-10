@@ -113,7 +113,8 @@ input, select, textarea { font: inherit; color: inherit; }
 .card.sel { border-color: var(--blue); box-shadow: 0 0 0 3px #3b9bff44, 0 10px 26px #0006; }
 .card.sel::after { content: ""; position: absolute; inset: -9px; border: 2px dashed #fff9; border-radius: 16px; pointer-events: none; }
 .card.glow { animation: glow 1.4s ease-in-out infinite alternate; }
-.card .hd { height: 28px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; color: #5b6880; font-size: 14px; cursor: move; }
+/* 标题栏压在别的卡片的端口（z-index:2）之上：端口伸出卡片边缘，不能挡住别人的标题栏（随机测试第 188 步） */
+.card .hd { position: relative; z-index: 3; height: 28px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; color: #5b6880; font-size: 14px; cursor: move; }
 .card .hd .bd { color: var(--ink); font-weight: 700; font-size: 15px; }
 .card .bdy { display: block; cursor: move; }
 .port { position: absolute; width: 18px; height: 18px; border-radius: 50%; border: 3px solid #fff; background: var(--blue); transform: translate(-50%, -50%); cursor: crosshair; z-index: 2; box-shadow: 0 1px 4px #0006; }

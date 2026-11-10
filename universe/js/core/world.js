@@ -450,6 +450,11 @@
         const id = add(scene, e.type, e.x + 36, e.y + 36, clone(e.props));
         if (e.role) E[id].role = e.role;
         if (e.state !== undefined) E[id].state = clone(e.state);
+        // P8：工作区里的图形，复制品留在同一个工作区里（保留所属）。十格阵等其他容器的行为不变（tests/run.js 有断言）
+        if (e.parent && E[e.parent] && defOf(E[e.parent]).workspace) {
+          const r = act(scene, { t: 'put', id, parent: e.parent, slot: e.slot });
+          if (!r.ok) { delete E[id]; return r; }
+        }
         return ok({ id });
       }
       case 'reset': {

@@ -93,7 +93,10 @@
     let h = '<svg id="links" width="1" height="1">' + lk.paths + '</svg>';
     // 工作区里的器材不画卡片；工作区的选中对象只保留还存在的名字
     const names = SG.wsNames(), known = new Set(Object.values(names));
-    S.wsSel = (S.wsSel || []).filter((n) => known.has(n) || n[0] === "#");
+    // '#' 开头的是“实体 id + 端口”，实体删了就不再保留（否则删除工作区后选中项会残留，P11）
+    S.wsSel = (S.wsSel || []).filter((n) => known.has(n) || (n[0] === '#' && !!E[n.slice(1).split('.')[0]]));
+    // 台面上已经没有工作区了，工作区的消息也一起清掉（否则新建的工作区会显示旧消息，P11）
+    if (S.wsMsg && !Object.values(E).some((e) => SG.isWsDef(e.type))) S.wsMsg = '';
     for (const id of Object.keys(E)) if (!SG.inWs(E[id])) h += cardHtml(E[id], D, S);
     h += lk.lbl;
     for (const id of Object.keys(E)) if (SG.isWsDef(E[id].type)) h += SG.wsPanelHtml(E[id], names);

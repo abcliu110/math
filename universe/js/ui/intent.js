@@ -72,7 +72,20 @@
     // 拖动一个卡片：移到新位置；如果松手时落在容器上，就放进容器（一次拖动一个撤销项）
     move: {
       label: 'move',
-      fn(A, p) { A({ t: 'move', id: p.id, x: p.x, y: p.y }); putTarget(A, p.id, UI.Stage.dropTarget(p.ev, p.id)); },
+      fn(A, p) {
+        A({ t: 'move', id: p.id, x: p.x, y: p.y });
+        const tgt = UI.Stage.dropTarget(p.ev, p.id);
+        if (tgt) return putTarget(A, p.id, tgt);
+        // 松手压在容器上却放不进去（不接受它）：挪到容器旁边不重叠的空位（同一事务）。
+        // 容器自己被拖到别的卡片上，也挪开，免得把游离卡片盖住
+        const e = UI.S.scene.entities[p.id];
+        if (!e) return;
+        if (e.parent) return putTarget(A, p.id, null);   // 从容器里拖出来：取出（原来的行为）
+        const isCont = !!(U.types[e.type] && U.types[e.type].slots);
+        if (!isCont && !UI.Stage.overContainer(p.x, p.y, e.type, p.id)) return;
+        const sp = UI.Stage.freeSpot(p.x, p.y, e.type, p.id);
+        if (sp.x !== p.x || sp.y !== p.y) A({ t: 'move', id: p.id, x: sp.x, y: sp.y });
+      },
     },
     // 删除：一个器材（里面有东西时先问，见 pre）、一根线（p.link）、工作区里的一步（p.step，连它剪出来的块一起删）
     delete: {

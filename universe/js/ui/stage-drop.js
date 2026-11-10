@@ -61,8 +61,18 @@
       return { ws: t.id, x: pt ? pt.x : undefined, y: pt ? pt.y : undefined };
     }
     const accepting = slots.find((sn) => { const A = td.slots[sn].accepts; return A === '*' || A.includes(e.type); });
-    const slot = piece ? accepting : (accepting || slots[0]);
-    return slot ? { parent: t.id, slot } : null;
+    // 只放进明确接受它的槽位；不接受的器材不硬塞进去（返回 null，由调用方把它挪到台面上的空位）
+    return accepting ? { parent: t.id, slot: accepting } : null;
   }
-  Object.assign(SG, { hoverTarget, cardUnder, isContainer, freeSpot, dropTarget });
+  // 矩形 (x,y,type) 是否压在某个能装东西的容器上（不含 skipId 自己、不含已经在容器里的卡片）
+  function overContainer(x, y, type, skipId) {
+    const E = UI.S.scene.entities, d = U.types[type], sz = d && d.size ? d.size({ props: {} }) : L.DEFAULT_CARD, w = sz[0], h = sz[1];
+    for (const e of Object.values(E)) {
+      if (e.parent || e.id === skipId || !isContainer(e)) continue;
+      const g = SG.geom(e);
+      if (x < g.x + g.w && x + w > g.x && y < g.y + g.h && y + h > g.y) return true;
+    }
+    return false;
+  }
+  Object.assign(SG, { hoverTarget, cardUnder, isContainer, freeSpot, dropTarget, overContainer });
 })(window);
