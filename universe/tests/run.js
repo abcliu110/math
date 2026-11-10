@@ -1568,12 +1568,11 @@ console.log('可执行规则（G）');
     eq(s2.cols[0].digit, 5); eq(s2.cols[0].carry, 1); eq(s2.result, 85); eq(s2.steps.length, 2);
     eq(A.undo(s2, 1).result, null, '撤销到第 1 步，结果消失');
   });
-  t('竖式内核：减法 52 − 27 借位得 25；a 小于 b 与乘数超过一位被拒绝并说明', () => {
+  t('竖式内核：减法 52 − 27 借位得 25；乘数超过两位（23 × 123）被拒绝并说明', () => {
     const A = U.ArithBench;
     const d = A.step(A.step(A.currentOf({}, 'x', { a: 52, b: 27, op: 1 }), 'col', { col: 0 }), 'col', { col: 1 });
     eq(d.result, 25); eq(d.cols[0].carry, 1);
-    truthy(A.currentOf({}, 'x', { a: 27, b: 52, op: 1 }).start.error, '负数结果不做');
-    truthy(A.currentOf({}, 'x', { a: 23, b: 12, op: 2 }).start.error, '乘数超过一位不做');
+    truthy(A.currentOf({}, 'x', { a: 23, b: 123, op: 2 }).start.error, '乘数超过两位不做');
   });
   t('竖式内核：23 × 4 = 92，个位 12 写 2 进 1，十位 2 × 4 + 1 = 9', () => {
     const A = U.ArithBench;
@@ -2521,6 +2520,78 @@ t('D7 读数对照：式子算出的 S 与几何的面积一致；不一致时�
   eq(early.same, null); truthy(/还没有解/.test(early.text), early.text);
 });
 
+console.log('H4 遗留：凑整、两位数乘两位数、负数结果（竖式）');
+{
+const N = (n) => ({ op: 'num', n: BigInt(n) }), add = (...args) => ({ op: 'add', args });
+const FV = (f) => U.val('form', f), ap = U.applyRule, F = U.Form, cn = (s) => /[一-鿿]/.test(s || '');
+t('凑整：47 + 38 点选 47 凑成 50，得 47 + 3 + 35，值不变', () => {
+  const r = ap('arith.round', FV(add(N(47), N(38))), [], { near: 0 });
+  eq(r.ok, true); eq(r.kept, true); eq(F.show(r.value.data), '47 + 3 + 35');
+});
+t('凑整：点选第二个数 38 时，凑成 40，得 38 + 2 + 45', () => {
+  const r = ap('arith.round', FV(add(N(47), N(38))), [], { near: 1 });
+  eq(r.ok, true); eq(r.kept, true); eq(F.show(r.value.data), '38 + 2 + 45');
+});
+t('凑整：整十数不用凑；另一个数不比差大（47 + 2、47 + 3）都被拒绝并说明', () => {
+  for (const f of [add(N(40), N(38)), add(N(47), N(2)), add(N(47), N(3))]) {
+    const r = ap('arith.round', FV(f), [], { near: 0 }); eq(r.ok, false); eq(r.kept, false); truthy(cn(r.why), r.why);
+  }
+});
+t('凑整：不是两个数的加法、或者点选的不是第一、第二个数，都被拒绝', () => {
+  for (const [f, near] of [[N(47), 0], [add(N(47), N(38)), 2]]) {
+    const r = ap('arith.round', FV(f), [], { near }); eq(r.ok, false); truthy(cn(r.why), r.why);
+  }
+});
+t('竖式内核：47 + 38 先凑整（一步），再竖式两列，得 85；凑整要在竖式开始前', () => {
+  const A = U.ArithBench, st0 = A.currentOf({}, 'x', { a: 47, b: 38, op: 0 });
+  const rd = A.step(st0, 'round', { term: 0 });
+  eq(rd.lastError, null, rd.lastError); eq(A.showState(rd), '47 + 3 + 35'); eq(rd.steps[0].rule, 'arith.round');
+  truthy(A.step(st0, 'round', {}).lastError, '没点选要凑整的数应提示');
+  const done = A.step(A.step(rd, 'col', { col: 0 }), 'col', { col: 1 });
+  eq(done.result, 85); eq(done.steps.length, 3);
+  eq(A.stepLog(rd)[0], '第 1 步：凑整：47 + 38 = 47 + 3 + 35');
+  truthy(A.step(A.step(rd, 'col', { col: 0 }), 'round', { term: 0 }).lastError, '竖式开始后不能凑整');
+  const props = { a: 47, b: 38, op: 0 }, scene = { workbench: A.saveAction('x', props, done) };
+  eq(A.stateOf(scene, 'x', props).result, 85, '凑整的步骤存进台面后能重放');
+});
+t('两位数乘两位数：23 × 14 先算个位的部分积 92，再算十位的部分积 230，相加得 322', () => {
+  const A = U.ArithBench, st0 = A.currentOf({}, 'x', { a: 23, b: 14, op: 2 });
+  eq(st0.start.error, null);
+  truthy(A.step(st0, 'part', { digit: 1 }).lastError, '要先算个位的部分积');
+  truthy(A.step(st0, 'sum', {}).lastError, '部分积没算完，不能相加');
+  const p0 = A.step(st0, 'part', { digit: 0 }); eq(p0.lastError, null);
+  eq(p0.parts[0].value, 92);
+  const p1 = A.step(p0, 'part', { digit: 1 }); eq(p1.lastError, null);
+  eq(p1.parts[1].value, 230);
+  const s = A.step(p1, 'sum', {}); eq(s.lastError, null); eq(s.result, 322); eq(s.steps.length, 3);
+  eq(A.stepLog(s)[1], '第 2 步：十位：23 × 1 = 23，向左移一位，得 230');
+  eq(A.stepLog(s)[2], '第 3 步：相加：92 + 230 = 322');
+  truthy(A.step(s, 'part', { digit: 0 }).lastError, '相加以后不能再算部分积');
+  eq(A.undo(s, 2).result, null, '撤销到第 2 步，结果消失');
+  eq(A.resultText(s), '322');
+});
+t('两位数乘两位数只接受两位数：23 × 123、123 × 12 被拒绝并说明；被乘数三位、乘数一位仍用竖式列', () => {
+  const A = U.ArithBench;
+  truthy(A.currentOf({}, 'x', { a: 23, b: 123, op: 2 }).start.error, '乘数三位不做');
+  truthy(A.currentOf({}, 'x', { a: 123, b: 12, op: 2 }).start.error, '被乘数三位（两位数乘两位数的范围外）不做');
+  eq(A.currentOf({}, 'x', { a: 123, b: 4, op: 2 }).start.error, null);
+});
+t('负数结果：23 − 47 把大数写在上面，竖式得 24，结果 −24（精确，显示负号）', () => {
+  const A = U.ArithBench, props = { a: 23, b: 47, op: 1 };
+  const st0 = A.currentOf({}, 'x', props); eq(st0.start.error, null, '不再拒绝');
+  eq(A.showState(st0), '23 − 47'); eq(A.rowsOf(st0.start), [47, 23], '大数写在上面');
+  const d = A.step(A.step(st0, 'col', { col: 0 }), 'col', { col: 1 });
+  eq(d.lastError, null); eq(d.cols[0].digit, 4); eq(d.cols[1].digit, 2);
+  eq(d.result, -24); eq(A.resultText(d), '−24'); eq(Q.show(Q(d.result)), '-24');
+  const scene = { workbench: A.saveAction('x', props, d) };
+  eq(A.stateOf(scene, 'x', props).result, -24, '存进台面后重放仍是 −24');
+});
+t('负数结果：27 − 52 = −25，与 52 − 27 = 25 互为相反数', () => {
+  const A = U.ArithBench;
+  const d = A.step(A.step(A.currentOf({}, 'x', { a: 27, b: 52, op: 1 }), 'col', { col: 0 }), 'col', { col: 1 });
+  eq(d.result, -25); eq(d.result, -A.step(A.step(A.currentOf({}, 'x', { a: 52, b: 27, op: 1 }), 'col', { col: 0 }), 'col', { col: 1 }).result);
+});
+}
 console.log('任务 J 遗留：清单生成（tools/gen-manifest.js）');
 // 生成器不可用时，这一组测试失败，而不是让 run.js 崩掉
 let GM = null, gmErr = '';

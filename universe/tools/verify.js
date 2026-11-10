@@ -1,5 +1,5 @@
 /* node tools/verify.js —— 一条命令跑完全部检查，任一步失败就退出非零（不再往下跑）。
- * 顺序：tests/run.js → tools/check-types.js → tests/ui.js → tests/ui-probes.js（如果存在）→ tests/ui-layout.js → tests/ui-space.js → tests/ui-roles.js → tests/ui-deps.js → tests/ui-workbench.js → tests/ui-expr.js → tests/ui-stepgraph.js → tests/ui-steps.js → tests/ui-arith.js → tests/ui-digit.js → tests/ui-data.js → tests/ui-cross.js → tests/ui-cross2.js → tests/ui-extend.js → tests/ui-select.js → tests/ui-snap.js → tests/ui-shapes.js → tests/ui-export.js → tests/ui-labels.js → tests/ui-space-focus.js → tests/ui-touch-keys.js → tests/ui-feedback.js → tests/ui-readout.js → tests/ui-robust.js → tests/ui-random.js → tests/ui-theme.js → tests/ui-perf.js → tests/ui-s105.js → tests/ui-deduce.js → tests/ui-digit2.js → tests/ui-data2.js → tools/lint-ui.js → tools/contrast.js → tools/build-standalone.js → dist 文件加载检查。
+ * 顺序：tests/run.js → tools/check-types.js → tests/ui.js → tests/ui-probes.js（如果存在）→ tests/ui-layout.js → tests/ui-space.js → tests/ui-roles.js → tests/ui-deps.js → tests/ui-workbench.js → tests/ui-expr.js → tests/ui-stepgraph.js → tests/ui-steps.js → tests/ui-arith.js → tests/ui-digit.js → tests/ui-data.js → tests/ui-cross.js → tests/ui-cross2.js → tests/ui-extend.js → tests/ui-select.js → tests/ui-snap.js → tests/ui-shapes.js → tests/ui-export.js → tests/ui-labels.js → tests/ui-space-focus.js → tests/ui-touch-keys.js → tests/ui-feedback.js → tests/ui-readout.js → tests/ui-robust.js → tests/ui-random.js → tests/ui-theme.js → tests/ui-perf.js → tests/ui-s105.js → tests/ui-deduce.js → tests/ui-arith2.js → tests/ui-digit2.js → tests/ui-data2.js → tools/lint-ui.js → tools/contrast.js → tools/build-standalone.js → dist 文件加载检查。
  * 界面测试和 dist 检查需要环境变量 PW_NODE_PATH：playwright 所在的 node_modules 目录。
  * 用法：PW_NODE_PATH=<.../node_modules> node tools/verify.js */
 'use strict';
@@ -93,6 +93,7 @@ async function checkDist() {
   if (!runScript('tests/ui-deduce.js', 'tests/ui-deduce.js', pwEnv)) bail();     // 2.14b 排除表（真实鼠标）：三态格子（不是 / 是）、唯一剩下标是、同行同列变灰、按线索排完 12 步、撤销
   if (!runScript('tests/ui-digit2.js', 'tests/ui-digit2.js', pwEnv)) bail();     // D8 遗留：竖式每一列的数字池（0–9，在列的正下方）、真实鼠标拖数字、拖退位和进位到格子上、拖错有提示不写入
   if (!runScript('tests/ui-data2.js', 'tests/ui-data2.js', pwEnv)) bail();       // D8 遗留：数据图表台每个数据格的数字盘（0–9、小数点、负号、⌫、清空），只点不打字，录入、画图、拟合
+  if (!runScript('tests/ui-arith2.js', 'tests/ui-arith2.js', pwEnv)) bail();   // H4 遗留（真实鼠标）：凑整（点选、拒绝说明）、两位数乘两位数（部分积、相加、撤销）、减法负数结果（−24）
   if (!runScript('tools/lint-ui.js', 'tools/lint-ui.js')) bail();              // 界面代码的意图层、状态分层、布局数字、坐标换算、器材判断（U3–U7）
   if (!runScript('tools/contrast.js', 'tools/contrast.js', pwEnv)) bail();          // V1：界面文字对比度 >= 4.5:1（light/dark 两种主题，playwright 实测）
   if (fs.existsSync(path.join(root, 'tests', 'ui-probes.js'))) {

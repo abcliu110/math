@@ -309,12 +309,13 @@
     arSave(id, e.props, U.ArithBench.undo(U.ArithBench.currentOf(S.scene, id, e.props), k));
     refresh();
   }
-  // 点的是哪个按钮：选中要拆的数（再点取消）、拆、凑十、算这一列、撤销
+  // 点的是哪个按钮：选中要拆、凑整的数（再点取消）、拆、凑十、凑整、算这一列、算一个部分积、相加、撤销
   function arClick(id, el) {
     const dr = UI.Panels.wbDraft(id);
     if (el.dataset.arTerm !== undefined) { const k = +el.dataset.arTerm; dr.arTerm = dr.arTerm === k ? null : k; dr.msg = ''; refresh(); return; }
     if (el.dataset.arTool !== undefined) return arDo(id, el.dataset.arTool, { term: dr.arTerm === undefined ? null : dr.arTerm });
     if (el.dataset.arCol !== undefined) return arDo(id, 'col', { col: +el.dataset.arCol });
+    if (el.dataset.arPart !== undefined) return arDo(id, 'part', { digit: +el.dataset.arPart });
     arUndo(id, +el.dataset.arUndo);
   }
   function wbFactor(id) {
@@ -496,7 +497,7 @@
         const eq = wbEqn(id); if (eq) UI.StepGraph.openExpr(wbNow(id, eq), (k) => wbUndo(id, k));
         return;
       }
-      const ar = t.closest && t.closest('[data-ar-term],[data-ar-tool],[data-ar-col],[data-ar-undo]');
+      const ar = t.closest && t.closest('[data-ar-term],[data-ar-tool],[data-ar-col],[data-ar-part],[data-ar-undo]');
       if (ar) { arClick(id, ar); return; }
       const wb = t.closest && t.closest('[data-wb-tool],[data-wb-rule],[data-wb-undo]');
       if (wb) {
