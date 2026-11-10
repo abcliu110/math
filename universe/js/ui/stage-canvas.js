@@ -100,7 +100,8 @@
       // 块（§10.5.10）：用块自己的颜色；可以拖（data-drag，松手时一次 piece 移动）
       const ent = ents[v.id], isPc = !!ent && SG.roleOf(ent) === 'piece' && v.port === 'f';
       const c = isPc ? (ent.props.color || SG.WS_COL[0]) : SG.WS_COL[i % SG.WS_COL.length], on = sel.has(SG.pickOf(v)), sw = on ? 4 : 2;
-      const pk = " data-pick=\"" + SG.escA(SG.pickOf(v)) + "\" role=\"img\" aria-label=\"" + SG.escA(ariaOf(v, f)) + "\"";   // 屏幕阅读器读出的名字（V8，2.8）
+      // 屏幕阅读器读出的名字（V8，2.8）；data-pri 是点选的优先级（V3，1.5 第 1 条）：点 0 > 线段、边 1 > 填充区域 2，同一位置多个时选优先级高的
+      const pk = (pri) => " data-pick=\"" + SG.escA(SG.pickOf(v)) + "\" data-pri=\"" + pri + "\" role=\"img\" aria-label=\"" + SG.escA(ariaOf(v, f)) + "\"";
       const dg = isPc && !ent.props.locked ? ' data-drag="' + ent.id + '" data-s="' + s.toFixed(4) + '"' : '';
       const sty = isPc ? ' style="cursor:' + (ent.props.locked ? 'pointer' : 'grab') + '"' : " style=\"cursor:pointer\"";
       // 线和多边形的边：细线很难点中，所以（除了已经有把手的、块）再加一层加宽的透明线，点边就选中它
@@ -110,19 +111,19 @@
         const sp = SG.shownPts(f, ent);   // 块有近似角度时画转过去的样子（V9，2.10）；其余就是精确坐标
         const d = sp.map((p, k) => (k ? 'L' : 'M') + X(p.x).toFixed(1) + ' ' + Y(p.y).toFixed(1)).join(' ') + ' Z';
         const fit = isPc && !!fitOn && fitOn.ids.includes(ent.id);
-        g += '<path d="' + d + '" fill="' + c + '22" stroke="' + (fit ? '#16a34a' : c) + '" stroke-width="' + sw + '"' + (fit && fitOn.flash ? ' class="wsflash"' : '') + pk + dg + sty + '/>';
-        if (wantHit) hit += '<path d="' + d + '" fill="none" stroke="transparent" stroke-width="12"' + pk + ' style="cursor:pointer"/>';
+        g += '<path d="' + d + '" fill="' + c + '22" stroke="' + (fit ? '#16a34a' : c) + '" stroke-width="' + sw + '"' + (fit && fitOn.flash ? ' class="wsflash"' : '') + pk(2) + dg + sty + '/>';
+        if (wantHit) hit += '<path d="' + d + '" fill="none" stroke="transparent" stroke-width="12"' + pk(1) + ' style="cursor:pointer"/>';
         lx = sp.reduce((a, p) => a + X(p.x), 0) / sp.length; ly = sp.reduce((a, p) => a + Y(p.y), 0) / sp.length;
         const tw = SG.TXT_W(v.label); cands = [[lx - tw / 2, ly + 4], [lx - tw / 2, ly + 18], [lx - tw / 2, ly - 10], [lx - tw / 2, ly + 32]]; prio = 2;
       } else if (f.type === 'segment') {
         const a = f.pts[0], b = f.pts[1];
-        g += '<line x1="' + X(Q.num(a.x)) + '" y1="' + Y(Q.num(a.y)) + '" x2="' + X(Q.num(b.x)) + '" y2="' + Y(Q.num(b.y)) + '" stroke="' + c + '" stroke-width="' + (on ? 5 : 2.5) + '"' + (f.dash ? ' stroke-dasharray="6 4"' : '') + ' stroke-linecap="round"' + pk + sty + '/>';
-        if (wantHit) hit += '<line x1="' + X(Q.num(a.x)) + '" y1="' + Y(Q.num(a.y)) + '" x2="' + X(Q.num(b.x)) + '" y2="' + Y(Q.num(b.y)) + '" stroke="transparent" stroke-width="14"' + pk + ' style="cursor:pointer"/>';
+        g += '<line x1="' + X(Q.num(a.x)) + '" y1="' + Y(Q.num(a.y)) + '" x2="' + X(Q.num(b.x)) + '" y2="' + Y(Q.num(b.y)) + '" stroke="' + c + '" stroke-width="' + (on ? 5 : 2.5) + '"' + (f.dash ? ' stroke-dasharray="6 4"' : '') + ' stroke-linecap="round"' + pk(1) + sty + '/>';
+        if (wantHit) hit += '<line x1="' + X(Q.num(a.x)) + '" y1="' + Y(Q.num(a.y)) + '" x2="' + X(Q.num(b.x)) + '" y2="' + Y(Q.num(b.y)) + '" stroke="transparent" stroke-width="14"' + pk(1) + ' style="cursor:pointer"/>';
         lx = (X(Q.num(a.x)) + X(Q.num(b.x))) / 2; ly = (Y(Q.num(a.y)) + Y(Q.num(b.y))) / 2;
         const tw = SG.TXT_W(v.label); cands = [[lx + 6, ly - 6], [lx + 6, ly + 14], [lx - tw - 6, ly - 6], [lx - tw - 6, ly + 14]];
       } else if (f.type === 'circle') {
         const cx = X(Q.num(f.pts[0].x)), cy = Y(Q.num(f.pts[0].y));
-        g += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (Math.sqrt(Q.num(f.r2)) * s) + '" fill="none" stroke="' + c + '" stroke-width="' + sw + '"' + pk + sty + '/>';
+        g += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (Math.sqrt(Q.num(f.r2)) * s) + '" fill="none" stroke="' + c + '" stroke-width="' + sw + '"' + pk(2) + sty + '/>';
         lx = cx; ly = cy;
         const rr = Math.sqrt(Q.num(f.r2)) * s, tw = SG.TXT_W(v.label), k = 0.71;
         cands = [[cx - tw / 2, cy + 4], [cx + rr * k + 3, cy - rr * k], [cx - rr * k - tw - 3, cy - rr * k], [cx - tw / 2, cy - rr - 6], [cx - tw / 2, cy + rr + 14]]; prio = 3;
@@ -130,15 +131,43 @@
         const px = X(Q.num(f.pts[0].x)), py = Y(Q.num(f.pts[0].y)), src = f.tag && SG.roleOf(ents[f.tag]) === 'point' ? f.tag : null;
         if (src) {
           // 自由点的把手：拖动改它的 x、y（沿用 onDown 的 data-drag 机制）
-          top += '<circle data-drag="' + src + '" data-kx="x" data-ky="y" data-s="' + s.toFixed(4) + '" cx="' + px + '" cy="' + py + '" r="7" fill="#fff" stroke="' + c + '" stroke-width="' + (on ? 4 : 2.5) + '" style="cursor:grab"' + pk + '/>';
-        } else g += '<circle cx="' + px + '" cy="' + py + '" r="' + (on ? 6 : 4) + '" fill="' + c + '"' + pk + sty + '/>';
+          top += '<circle data-drag="' + src + '" data-kx="x" data-ky="y" data-s="' + s.toFixed(4) + '" cx="' + px + '" cy="' + py + '" r="7" fill="#fff" stroke="' + c + '" stroke-width="' + (on ? 4 : 2.5) + '" style="cursor:grab"' + pk(0) + '/>';
+        } else g += '<circle cx="' + px + '" cy="' + py + '" r="' + (on ? 6 : 4) + '" fill="' + c + '"' + pk(0) + sty + '/>';
         lx = px + 9; ly = py - 9;
         const tw = SG.TXT_W(v.label); cands = [[px + 9, py - 9], [px + 9, py + 15], [px - 9 - tw, py - 9], [px - 9 - tw, py + 15]]; prio = 0;
       }
       if (lx !== undefined) labs.push({ text: v.label, c, cands, prio, ren: f.type === 'point' && ents[v.id] && SG.roleOf(ents[v.id]) === 'point' ? v.id : null });   // 点的标签可以双击改名（2.6）
       if (selName && SG.pickOf(v) === selName) SG.readoutsFor(ent, f, X, Y, labs);   // 选中的图形：读数（2.9）
     });
-    return wsEdges(fr) + g + hit + top + wsHandles(fr) + gsvg + drawPreview(ws, fr) + offArrows(fr, ws) + placeLabels(labs, w, h, obs) + boardMsg(w, h);
+    return wsEdges(fr) + g + hit + top + wsHandles(fr) + gsvg + drawPreview(ws, fr) + dragSnapSvg(ws, fr) + offArrows(fr, ws) + placeLabels(labs, w, h, obs) + selHint(ws, fr) + boardMsg(w, h);
+  }
+  // 选中提示（V3，1.5 第 3 条）：选中图形时，画布左下角写一行：选中的是什么，怎么切换和取消。画线、剪的时候不显示（那时有自己的工具状态）
+  function selHint(ws, fr) {
+    const S = UI.S, sel = S.wsSel || [];
+    if (!sel.length || S.wsDraw || !fr.vals) return '';
+    const txt = sel.length > 1 ? '已选中 ' + sel.length + ' 个图形' : '已选中：' + figName(fr, sel[0]);
+    const full = txt + '，按 Tab 切换，Esc 取消', y = fr.h - L.SEL_HINT_Y, w = SG.TXT_W(full) + L.SEL_HINT_PAD;
+    return '<rect x="6" y="' + y + '" width="' + w + '" height="22" rx="5" style="fill:var(--card);stroke:var(--ink);stroke-width:1" pointer-events="none"/>' +
+      '<text x="13" y="' + (y + 15) + '" font-size="13" font-weight="700" font-family="var(--font)" style="fill:var(--ink)" pointer-events="none">' + K.esc(full) + '</text>';
+  }
+  // 学生看到的图形名字：点是“点A”，线段是“线段AB”（两端点的名字），其余用标签
+  function figName(fr, name) {
+    const v = fr.vals.find((x) => SG.pickOf(x) === name); if (!v) return name;
+    const fi = SG.figInfo(v);
+    // 点的标签：自由点在画布上的标签（A、B……）
+    const labOf = (id) => { const pv = fr.vals.find((x) => x.fig && x.fig.type === 'point' && SG.figInfo(x) && SG.figInfo(x).verts[0] === id); return pv ? pv.label : null; };
+    if (fi && fi.kind === 'pts' && v.fig.type === 'point') return '点' + (labOf(fi.verts[0]) || v.label);
+    if (fi && fi.kind === 'pts' && v.fig.type === 'segment' && fi.verts.length === 2 && labOf(fi.verts[0]) && labOf(fi.verts[1])) return '线段' + labOf(fi.verts[0]) + labOf(fi.verts[1]);
+    return v.label;
+  }
+  // 拖动自由点时靠近构造点：画出它的标记，旁边写出是哪一种（松手才建器材，见 stage-shape 的 shapeUp）
+  function dragSnapSvg(ws, fr) {
+    const d = SG.drag; if (!d || d.kind !== 'shape' || d.wsId !== ws.id || !d.snap) return '';
+    return conMark(fr.X(d.snap.x), fr.Y(d.snap.y), d.snap.label);
+  }
+  function conMark(x, y, label) {
+    return '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="9" fill="none" stroke="#fff" stroke-width="2" pointer-events="none"/>' +
+      '<text x="' + (x + 12).toFixed(1) + '" y="' + (y - 12).toFixed(1) + '" font-size="13" font-weight="700" fill="#fff" stroke="#0b1020" stroke-width="3" paint-order="stroke" pointer-events="none">' + K.esc(label) + '</text>';
   }
   // 画布顶部的一条消息（只占上面两行，不接收鼠标：底下的点和图形照常能点）
   function boardMsg(w, h) {
@@ -235,7 +264,7 @@
       const pts = fi.f.pts;
       fi.edges.forEach(([a, b]) => {
         const ga = fi.verts[a], gb = fi.verts[b]; if (ga === gb) return;
-        g += '<line x1="' + X(Q.num(pts[a].x)).toFixed(1) + '" y1="' + Y(Q.num(pts[a].y)).toFixed(1) + '" x2="' + X(Q.num(pts[b].x)).toFixed(1) + '" y2="' + Y(Q.num(pts[b].y)).toFixed(1) + '" stroke="transparent" stroke-width="12" data-hdl="edge" data-gids="' + ga + ',' + gb + '" data-pick="' + SG.escA(SG.pickOf(v)) + '" style="cursor:move"/>';
+        g += '<line x1="' + X(Q.num(pts[a].x)).toFixed(1) + '" y1="' + Y(Q.num(pts[a].y)).toFixed(1) + '" x2="' + X(Q.num(pts[b].x)).toFixed(1) + '" y2="' + Y(Q.num(pts[b].y)).toFixed(1) + '" stroke="transparent" stroke-width="12" data-hdl="edge" data-gids="' + ga + ',' + gb + '" data-pick="' + SG.escA(SG.pickOf(v)) + '" data-pri="1" style="cursor:move"/>';
       });
     }
     return g;

@@ -20,16 +20,24 @@
   // 工作区双击循环选中（V3，§1.5）。pointer 事件拿不到点击次数，所以自己配对：同一位置（4 像素内）500 毫秒内的两下点击是一次双击。
   // 双击的第一下照常选最上面的；第二下（wsCyc 记着上一次循环到哪里了）依次换到鼠标下面的下一个图形，栈顶在前，2 秒内连续双击有效。
   const WS_DBL_PX = 4;   // 两下点击离得不超过这么多像素才算同一位置
-  function wsCycPick(ev, wb) {
+  // 同一位置的图形（V3，1.5 第 4 条）：从页面的命中结果读出（只看这个工作区），按优先级稳定排序：
+  // 点（把手）0 > 线段、边 1 > 填充区域 2；同一优先级按栈的顺序（上面的在前）。第一个就是单击选中的。
+  function pickStack(wb, x, y) {
+    const seen = [], out = [];
+    for (const el of document.elementsFromPoint(x, y)) {
+      const pk = el.closest ? el.closest('[data-pick]') : null;
+      if (!pk || pk.closest('.wsbody') !== wb || seen.includes(pk.dataset.pick)) continue;
+      seen.push(pk.dataset.pick);
+      out.push({ name: pk.dataset.pick, el: pk, pri: +(pk.dataset.pri || 2), i: out.length });
+    }
+    return out.sort((a, b) => a.pri - b.pri || a.i - b.i);
+  }
+  function wsCycPick(ev, wb, stack) {
     const now = Date.now(), last = SG.wsPress, same = (a) => Math.abs(a.x - ev.clientX) <= WS_DBL_PX && Math.abs(a.y - ev.clientY) <= WS_DBL_PX;
     SG.wsPress = { x: ev.clientX, y: ev.clientY, t: now, second: false };
     if (!last || last.second || !same(last) || now - last.t >= 500) return null;   // 第一下（或者已经配对过的）：照常选最上面的
     SG.wsPress.second = true;
-    const names = [];
-    for (const el of document.elementsFromPoint(ev.clientX, ev.clientY)) {
-      const pk = el.closest ? el.closest('[data-pick]') : null;
-      if (pk && pk.closest('.wsbody') === wb && !names.includes(pk.dataset.pick)) names.push(pk.dataset.pick);
-    }
+    const names = stack.map((s) => s.name);
     if (!names.length) return null;
     const c = SG.wsCyc, near = !!c && c.wsid === wb.dataset.wsid && same(c) && now - c.t < 2000;
     const idx = near ? (c.idx + 1) % names.length : 0;
@@ -87,17 +95,27 @@
       if (pk && pk.closest('.wsbody') === wbd) { ev.preventDefault(); ev.stopPropagation(); SG.wsAct(a.ws, a.act, pk.dataset.pick); return; }
       SG.setMsg('', true);
     }
-    const cyc = pk && wbd && !ev.shiftKey ? wsCycPick(ev, wbd) : null;   // 双击的第二下：选下一个图形（V3）
-    if (cyc) pk = [...wbd.querySelectorAll('[data-pick]')].find((el) => el.dataset.pick === cyc) || pk;
-    if (pk) SG.wsPick(pk.dataset.pick, ev.shiftKey);
-    // 自由点（工作区里的点、多边形的顶点）：直接拖动，改的是那个自由点的 x、y（格点吸附，范围内）；块走块的拖动
+    // 同一位置的图形：单击选栈顶（优先级最高的）；双击的第二下换到下一个（V3，原有）；Alt 点击选第二个（V3，1.5 第 2 条）
+    const stack = pk && wbd ? pickStack(wbd, ev.clientX, ev.clientY) : [];
+    const cyc = pk && wbd && !ev.shiftKey && !ev.altKey ? wsCycPick(ev, wbd, stack) : null;
+    // 自由点（工作区里的点、多边形的顶点）：直接拖动（把手优先，Alt 也一样：按住 Alt 拖动是“拖动时暂时不吸附”）
     const gh = cyc ? null : t.closest('[data-drag]');
+    // Alt 按下时：点在自由点的把手上照常拖（按住 Alt 拖动 = 暂时不吸附）；点在别的图形（包括块）上就是 Alt 点击，选第二个
+    const ghEnt = gh ? S.scene.entities[gh.dataset.drag] : null, ghPoint = !!ghEnt && SG.roleOf(ghEnt) === 'point';
+    const altPick = !!pk && !!wbd && ev.altKey && !ev.shiftKey && !ghPoint && stack.length > 1;
+    let pick = stack.length ? stack[0].name : (pk ? pk.dataset.pick : null);
+    if (cyc) pick = cyc;
+    if (altPick) pick = stack[1].name;
+    if (pick && pk) pk = (stack.find((s) => s.name === pick) || { el: pk }).el;
+    if (altPick) { SG.wsPick(pick, false); SG.render(); return; }
+    if (pick) SG.wsPick(pick, ev.shiftKey);
     if (gh) {
       const pe = S.scene.entities[gh.dataset.drag]; if (!pe) return;
       if (SG.roleOf(pe) === 'piece') { SG.pieceDown(pe, gh, pk, ev); return; }
       const gwb = gh.closest('.wsbody'); if (!gwb) return;
       ev.preventDefault(); ev.stopPropagation();
-      SG.startShape(ev, gwb, gwb.dataset.wsid, 'tr', [SG.tgt(pe.id, gh.dataset.kx || 'x', gh.dataset.ky || 'y')], { align: SG.buildAlign(UI.S.scene.entities[gwb.dataset.wsid], [SG.gptPt(pe.id)], [], [pe.id], null) });
+      // 拖动的是自由点（pt）：松手时可以吸附到构造点（V4，1.3 第 5、6 条）
+      SG.startShape(ev, gwb, gwb.dataset.wsid, 'tr', [SG.tgt(pe.id, gh.dataset.kx || 'x', gh.dataset.ky || 'y')], { align: SG.buildAlign(UI.S.scene.entities[gwb.dataset.wsid], [SG.gptPt(pe.id)], [], [pe.id], null), pt: SG.roleOf(pe) === 'point' ? pe.id : null });
       if (pk) SG.render();   // 选中状态变了，重画（拖动数据已经记下来了）
       return;
     }

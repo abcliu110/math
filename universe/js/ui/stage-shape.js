@@ -82,6 +82,28 @@
       if (polyLike) return startShape(ev, wb, wsId, 'rot', uniq(fi.verts).map((g) => tgt(g, 'x', 'y')), { c, qb });
     }
   }
+  // 拖动自由点时的构造点候选（V4，§1.3 第 2、6 条）：别的图形的中点、交点（器材声明的 snap：of 为 edge、cross），
+  // 以及别的自由点 R 到边所在直线的垂足（foot 声明，起点是 R）。拖动开始时算一次（拖动时别的图形不变）；不要用这个点自己的线。
+  function dragCons(d) {
+    if (d.cons) return d.cons;
+    const ws = UI.S.scene.entities[d.wsId], vals = SG.wsVisible(ws), names = SG.wsNames(), P = d.pt, out = [];
+    const usesP = (c) => c.con.ids.includes(P) || (c.con.extra || []).some((e) => e.id === P);
+    for (const c of SG.constructsOf(vals, names, null)) if (!usesP(c)) out.push(c);
+    for (const v of vals) {
+      const fi = SG.figInfo(v); if (!fi || fi.kind !== 'pts' || v.fig.type !== 'point') continue;
+      const R = fi.verts[0]; if (!R || R === P) continue;
+      const rp = v.fig.pts[0];
+      for (const c of SG.constructsOf(vals, names, { ref: R, x: Q.num(rp.x), y: Q.num(rp.y), exact: rp })) if (c.con.extra && c.con.extra.length && !usesP(c)) out.push(c);
+    }
+    d.cons = out; return out;
+  }
+  // 拖动中的点落在构造点的吸附半径（SNAP_PX 屏幕像素）里：返回最近的那个候选，否则 null
+  function snapDragCon(d, mx, my) {
+    const t = d.targets[0], px = t.x0 + UI.Space.pxToUnits(mx, d.unit), py = t.y0 - UI.Space.pxToUnits(my, d.unit);
+    let best = null, bd = Infinity;
+    for (const c of dragCons(d)) { const dd = UI.Space.unitsToPx(Math.hypot(c.x - px, c.y - py), d.unit); if (dd <= SG.SNAP_PX && dd < bd) { bd = dd; best = c; } }
+    return best;
+  }
   // 拖动中：只改预览（实体属性），重算一次，只重画工作区
   function shapeMove(ev) {
     const S = UI.S, d = SG.drag, E = S.scene.entities;
@@ -93,11 +115,21 @@
     let tip = '';
     if (d.mode === 'tr') {
       let dX = Math.round(UI.Space.pxToUnits(mx, d.unit)), dY = -Math.round(UI.Space.pxToUnits(my, d.unit)), lx = -Infinity, hx = Infinity, ly = -Infinity, hy = Infinity;
-      if (d.align) { d.align.alt = !!ev.altKey; const s = SG.alignSolve(d.align, { x: UI.Space.pxToUnits(mx, d.unit), y: -UI.Space.pxToUnits(my, d.unit) }, d.unit); dX = s.dx; dY = s.dy; d.guides = s.guides; }
+      // 吸附开关关了、或者按住 Alt：不吸附（对齐线和构造点都不要）
+      const free = SG.snapFree(ev);
+      if (d.align) { d.align.alt = free; const s = SG.alignSolve(d.align, { x: UI.Space.pxToUnits(mx, d.unit), y: -UI.Space.pxToUnits(my, d.unit) }, d.unit); dX = s.dx; dY = s.dy; d.guides = s.guides; }
       for (const t of d.targets) { lx = Math.max(lx, t.lo[0] - t.x0); hx = Math.min(hx, t.hi[0] - t.x0); ly = Math.max(ly, t.lo[1] - t.y0); hy = Math.min(hy, t.hi[1] - t.y0); }
       dX = Math.max(lx, Math.min(hx, dX)); dY = Math.max(ly, Math.min(hy, dY));
-      for (const t of d.targets) { put(t.id, t.kx, t.x0 + dX); put(t.id, t.ky, t.y0 + dY); }
-      tip = dX || dY ? '向右 ' + dX + ' 格，向上 ' + dY + ' 格' : '';
+      // 拖动自由点靠近构造点：吸附。点先留在原来的地方，松手时变成构造点（shapeUp 提交）
+      d.snap = d.pt && !free ? snapDragCon(d, mx, my) : null;
+      if (d.snap) {
+        d.guides = [];
+        for (const t of d.targets) { put(t.id, t.kx, t.x0); put(t.id, t.ky, t.y0); }
+        tip = '松手变成「' + d.snap.label + '」';
+      } else {
+        for (const t of d.targets) { put(t.id, t.kx, t.x0 + dX); put(t.id, t.ky, t.y0 + dY); }
+        tip = dX || dY ? '向右 ' + dX + ' 格，向上 ' + dY + ' 格' : '';
+      }
     } else if (d.mode === 'sc' || d.mode === 'pscale') {
       // 放缩：以对角为中心（按住 Alt 以中心为准）；比例吸附到 1/2、2/3、1、3/2、2、3，并且结果要是整数坐标
       const qb = d.qb, cs = [[qb.x0, qb.y0], [qb.x1, qb.y0], [qb.x1, qb.y1], [qb.x0, qb.y1]];
@@ -157,6 +189,8 @@
     if (d.id && E[d.id]) { if (d.s0 !== undefined) E[d.id].props.scale = d.s0; if (d.t0 !== undefined) E[d.id].props.turn = d.t0; }
     if (d.mode === 'prot' && E[d.id]) { if (d.a0) E[d.id][SG.APPROX] = d.a0; else delete E[d.id][SG.APPROX]; }
     if (!d.moved) return SG.render();
+    // 拖动自由点吸附到构造点（V4）：一步（建构造器材、改接线、删掉这个点）
+    if (d.snap && d.pt) return UI.Intent.run('snapdrag', { ws: d.wsId, id: d.pt, con: d.snap.con });
     // 块的旋转（V9，2.10）：松手时一次提交（转过 90° 的部分是块的转动动作，余下的是 approxDeg），撤销一次回去
     if (d.mode === 'prot') {
       if (d.A === d.A0) return SG.render();

@@ -158,6 +158,18 @@
         }
       },
     },
+    // 拖动自由点吸附到构造点（V4，§1.3）：自由点不能存分数坐标，所以它变成构造点：建构造器材（接它的两个点、或三个点），
+    // 原来从这个点出去的线改接到构造器材的输出（relink，线的位置不变，多边形顶点顺序不变），再删掉这个点。整串是一步
+    snapdrag: {
+      label: 'snap',
+      fn(A, p) {
+        const S = UI.S, ws = S.scene.entities[p.ws], P = p.id;
+        if (!ws || !S.scene.entities[P]) throw { why: '这个点已经不在了' };
+        const c = buildConstruct(A, ws, p.con);
+        for (const l of S.scene.links.filter((x) => x.from === P)) A({ t: 'relink', id: l.id, from: c.id, fromPort: c.port });
+        A({ t: 'del', id: P });
+      },
+    },
     // 复制一个自由点围成的图形：新建同样的点（偏移 dx、dy）和多边形，放进工作区。一步
     copyfig: {
       label: 'copyfig',

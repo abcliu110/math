@@ -66,6 +66,8 @@ async function checkDist() {
   if (!runScript('tests/ui-workbench.js', 'tests/ui-workbench.js', pwEnv)) bail();   // D2：题目声明工作台（几何题只列几何工作台的器材；旧题器材架不变；workbench 的 lint）
   if (!runScript('tests/ui-select.js', 'tests/ui-select.js', pwEnv)) bail();         // V3：工作区选择（同一位置双击依次选中重叠的图形，单击选最上面的）
   if (!runScript('tests/ui-snap.js', 'tests/ui-snap.js', pwEnv)) bail();             // V4：吸附到构造点（画线吸附到中点，背后建 gmid；拖动端点后跟着动）
+  if (!runScript('tests/ui-select2.js', 'tests/ui-select2.js', pwEnv)) bail();       // V3 剩余：选中提示、Alt 点击选第二个、Tab 切换、优先级（线段 > 填充），真实鼠标和键盘
+  if (!runScript('tests/ui-snap2.js', 'tests/ui-snap2.js', pwEnv)) bail();           // V4 剩余：拖动吸附到中点、交点、垂足（建构造器材、改接、一步撤销）、吸附开关、Alt 不吸附，真实鼠标
   if (!runScript('tests/ui-shapes.js', 'tests/ui-shapes.js', pwEnv)) bail();         // 常见图形、顶点编辑、直接拖出辅助线（真实鼠标和键盘）；含画布横纵比例回归
   if (!runScript('tests/ui-export.js', 'tests/ui-export.js', pwEnv)) bail();         // 2.12/V10：导出图片（真实鼠标点菜单，台面和专注工作区各一次下载，.png、大小 > 0）
   if (!runScript('tests/ui-labels.js', 'tests/ui-labels.js', pwEnv)) bail();         // V6：标签避让（2.3）、图层分组（2.4）、点的命名与双击改名（2.6），真实鼠标

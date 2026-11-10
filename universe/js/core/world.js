@@ -420,6 +420,26 @@
         return ok();
       }
       case 'link': return link(scene, a);
+      // 改一根线的来源（V4，吸附到构造点时：原来接在自由点上的线改接到构造器材的输出）。线在连线列表里的位置不变，
+      // 所以多边形的顶点顺序（按连线先后）不变；口和类型仍然要对，成环或者算出 reject 就不改
+      case 'relink': {
+        const l = scene.links.find((x) => x.id === a.id); if (!l) return fail('找不到这根线');
+        const F = E[a.from], T = E[l.to];
+        if (!F || !T) return fail('找不到器材');
+        if (isProp(l.toPort)) return fail('这根线是属性驱动的，不能改接');
+        const fo = defOf(F).outputs[a.fromPort], ti = defOf(T).inputs[l.toPort];
+        if (!fo) return fail(F.name + ' 没有这个输出口');
+        if (!ti) return fail(T.name + ' 没有「' + l.toPort + '」这个口');
+        if (!U.kindOK(fo.kind, ti.kind)) return fail(F.name + ' 输出的类型对不上');
+        if (scene.links.some((x) => x !== l && x.from === F.id && x.fromPort === a.fromPort && x.to === T.id && x.toPort === l.toPort)) return fail('这根线已经有了');
+        if (createsUnsafeCycle(scene, F.id, T.id)) return fail(LOOP_WHY);
+        const prev = { from: l.from, fromPort: l.fromPort };
+        l.from = F.id; l.fromPort = a.fromPort;
+        let bad = null;
+        try { const D = evaluate(scene); const rj = D[T.id].sig.find((s) => s.lv === 'reject'); if (rj) bad = rj.tx; } catch (err) { bad = '这里连不上'; }
+        if (bad) { l.from = prev.from; l.fromPort = prev.fromPort; return fail(bad); }
+        return ok({ id: l.id });
+      }
       case 'unlink': {
         const n = scene.links.length;
         scene.links = scene.links.filter((l) => l.id !== a.id);

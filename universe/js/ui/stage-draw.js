@@ -24,7 +24,10 @@
   }
   // 吸附：算法在 UI.Space.snap（顶点、构造点、边上的格点、格点）；这里告诉它每个顶点属于哪个自由点，以及有哪些构造点。
   // start：已经按下的起点（第二个点时才有）：垂足要从它算
-  function snapTo(fr, wp, sc, start) {
+  // 吸附开关（工具条的“吸附”）关了，或者按住 Alt：不吸附，点落在整数格点上（自由点只存整数）
+  function snapFree(ev) { return UI.S.snapOn === false || !!(ev && ev.altKey); }
+  function snapTo(fr, wp, sc, start, free) {
+    if (free) return { x: Math.round(wp.x), y: Math.round(wp.y), ref: null };
     const E = UI.S.scene.entities;
     return UI.Space.snap(fr.vals, wp, sc.unit, {
       px: SG.SNAP_PX,
@@ -50,7 +53,10 @@
       const fi = SG.figInfo(v); if (!fi || fi.kind !== 'pts' || fi.f.type === 'point') continue;
       for (const [i, j] of fi.edges) if (fi.verts[i] !== fi.verts[j]) edges.push({ a: v.fig.pts[i], b: v.fig.pts[j], ids: [fi.verts[i], fi.verts[j]] });
     }
-    const nm = (ids) => ids.map((g) => names[g + '.p'] || null);
+    // 点的名字：画布上写的标签（A、B……，见 wsValues）；没有标签的用稳定名字
+    const lab = new Map();
+    for (const v of vals) { const fi = SG.figInfo(v); if (fi && fi.kind === 'pts' && v.fig.type === 'point' && fi.verts[0]) lab.set(fi.verts[0], v.label); }
+    const nm = (ids) => ids.map((g) => lab.get(g) || names[g + '.p'] || null);
     const add = (type, sn, at, ids, extra, label) => {
       const key = type + ':' + ids.slice().sort().join(',') + ':' + extra.map((e) => e.id).join(',');
       if (seen.has(key)) return; seen.add(key);
@@ -88,7 +94,7 @@
     const fr = SG.wsFrame(ws, +wb.getAttribute('width'), +wb.getAttribute('height'));
     if (!UI.State.viewOf(ws)) UI.State.setUi(ws, 'view', fr.vw);
     const sc = UI.Space.canvasOf(wb.getBoundingClientRect(), fr.vw.span);
-    return snapTo(fr, UI.Space.screenToWorkspace(ev, fr.vw, sc), sc, start !== undefined ? start : (S.wsDraw && S.wsDraw.pend));
+    return snapTo(fr, UI.Space.screenToWorkspace(ev, fr.vw, sc), sc, start !== undefined ? start : (S.wsDraw && S.wsDraw.pend), snapFree(ev));
   }
   function drawClick(wb, ev) {
     const S = UI.S, D = S.wsDraw, ws = S.scene.entities[D.ws];
@@ -125,7 +131,7 @@
     const wb = [...document.querySelectorAll('svg.wsbody[data-wsid="' + D.ws + '"]')].find((el) => { const r = el.getBoundingClientRect(); return ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom; });
     if (!ws || !wb) return;
     const fr = SG.wsFrame(ws, +wb.getAttribute('width'), +wb.getAttribute('height')), sc = UI.Space.canvasOf(wb.getBoundingClientRect(), fr.vw.span);
-    D.cur = snapTo(fr, UI.Space.screenToWorkspace(ev, fr.vw, sc), sc, D.pend); SG.wsRedraw(D.ws);
+    D.cur = snapTo(fr, UI.Space.screenToWorkspace(ev, fr.vw, sc), sc, D.pend, snapFree(ev)); SG.wsRedraw(D.ws);
   }
   // 两个点都定了：建点（不是顶点的才建）、建线段；剪的模式再建剪刀、剪开。整串是一步
   function finishLine(D, a, b) {
@@ -149,5 +155,5 @@
     if (r.ok) { S.wsSel = []; S.wsMsg = ''; } else SG.setMsg(r.why, false);
     SG.render();
   }
-  Object.assign(SG, { endDraw, activeWs, drawMode, snapTo, snapAt, constructsOf, drawClick, drawHover, finishLine, lineDragStart, lineDragEnd, DRAG_LINE_PX });
+  Object.assign(SG, { endDraw, activeWs, drawMode, snapFree, snapTo, snapAt, constructsOf, drawClick, drawHover, finishLine, lineDragStart, lineDragEnd, DRAG_LINE_PX });
 })(window);

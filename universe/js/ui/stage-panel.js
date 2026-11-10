@@ -167,7 +167,13 @@
     const acBtn = (id, label, tip) => '<button data-fbar="' + id + '" data-ws="' + ws.id + '"' + (A === id ? ' class="on" aria-pressed="true"' : '') + ' title="' + SG.escA(tip) + '">' + label + '</button>';
     return '<span class="fbar-tools">' + btn('seg', '连线', '连线（L）：拖出一条线，会自动吸到顶点、中点、垂足、交点；也可以点两下') + btn('cut', '剪', '剪（C）：先选一个图形，再拖出一条剪切线') +
       '<span class="wsmini-sep"></span>' + shapesHtml(ws) + acBtn('copy', '复制', '复制选中的图形（Ctrl+D）') + acBtn('rot', '旋转', '把选中的图形转 90°（R）') + acBtn('flip', '翻转', '把选中的图形左右翻转（F）') +
-      btn('del', '删除', '删除选中的图形或步骤（Delete）') + btn('undo', '撤销', '撤销上一步') + '</span>';
+      btn('del', '删除', '删除选中的图形或步骤（Delete）') + btn('undo', '撤销', '撤销上一步') +
+      '<span class="wsmini-sep"></span>' + snapBtn(ws) + '</span>';
+  }
+  // 吸附开关（V4，§1.3 第 4 条）：关了，拖动和画线都不吸附到中点、交点、垂足；按住 Alt 暂时不吸附（和开关无关）
+  function snapBtn(ws) {
+    const on = UI.S.snapOn !== false;
+    return '<button data-fbar="snap" data-ws="' + ws.id + '"' + (on ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"') + ' title="' + SG.escA(on ? '吸附：拖动和画线靠近中点、交点、垂足时吸附（关掉以后不吸附；按住 Alt 也暂时不吸附）' : '吸附已关：拖动和画线不吸附（再点一下打开）') + '">吸附</button>';
   }
   // 浮动条的整块：收起时只剩一个“工具”按钮（偏好记在 UI.Chrome 里）
   // pos：浮动条在台面局部像素里的位置（画布上方）；专注标题栏里没有位置
@@ -197,6 +203,7 @@
     if (a === 'del') return barDelete(wsId);
     if (a === 'copy' || a === 'rot' || a === 'flip') return SG.wsAct(wsId, a);
     if (a === 'undo') { const u = document.getElementById('undo'); if (u) u.click(); }
+    if (a === 'snap') { UI.S.snapOn = UI.S.snapOn === false; return SG.render(); }
   }
   Object.assign(SG, { wsPanelHtml, wsPick, delWs, wsRun, wsAddShape, barTools, barHtml, barDelete, barAction });
 })(window);

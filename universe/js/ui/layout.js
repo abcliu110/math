@@ -18,7 +18,7 @@
     PORT_LABEL_X: 12,             // 端口旁边的文字离卡片边的距离
     SIG_GAP: 8,                   // 信号条离卡片底边的距离
     TIP_OFFSET: 14,               // 提示框离鼠标的距离
-    TOOL_STATUS_X: 10, TOOL_STATUS_Y: 12,   // 画线时台面上的当前工具状态：离工作区画布左边、下边的距离（2.5）
+    TOOL_STATUS_X: 10, TOOL_STATUS_Y: 12, SEL_HINT_Y: 30, SEL_HINT_PAD: 14,   // 画线时台面上的当前工具状态：离工作区画布左边、下边的距离（2.5）
     LINK_CURVE_MIN: 40,           // 连线曲线控制点的最小伸出长度
     MIN_W: 120, MIN_H: 90,        // 卡片最小尺寸
     DEFAULT_CARD: [150, 90],      // 没有 size() 的器材用的卡片尺寸
