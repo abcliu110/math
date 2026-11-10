@@ -101,22 +101,39 @@
     if (UI.Guide) UI.Guide.check(Object.values(E).some((x) => SG.isWsDef(x.type)));   // 2.13：第一次看到几何工作区，弹一次引导
     SG.worldEl.style.transform = 'translate(' + S.view.x + 'px,' + S.view.y + 'px) scale(' + S.view.z + ')';
     UI.Layout.placePanels(SG.worldEl, SG.stageEl, S.view, (id) => { const e = S.scene.entities[id]; return e ? SG.geom(e) : null; });
+    renderBars();
     const z = $('#zv'); if (z) z.textContent = Math.round(S.view.z * 100) + '%';
     if (SG.focusEl) { SG.focusEl.innerHTML = focusHtml(); SG.focusEl.style.display = UI.State.focusedId() ? '' : 'none'; }
     if (UI.App && UI.App.persistView) UI.App.persistView();   // 视图改过就存档（不进撤销）
   }
 
-  // ---- 专注模式（§10.5.8 A4）：工作区放大成覆盖台面的浮层，双击标题或按 Esc 还原 ----
+  // 浮动工具条（V2）：每个工作区一条，贴在画布上方（屏幕像素，不随台面缩放）；专注时不画，标题栏里有同样的按钮
+  function renderBars() {
+    if (!SG.barsEl) return;
+    const S = UI.S, Sp = UI.Space;
+    let h = '';
+    if (!UI.State.focusedId()) for (const id of Object.keys(S.scene.entities)) {
+      const e = S.scene.entities[id];
+      if (!SG.isWsDef(e.type) || SG.inWs(e)) continue;
+      const g = SG.geom(e), at = Sp.stageToLocal(S.view, { x: g.x, y: g.y });
+      h += SG.barHtml(e, { x: at.x, y: at.y - L.BAR.h - L.BAR.gap });
+    }
+    SG.barsEl.innerHTML = h;
+  }
+  // ---- 专注模式（§10.5.8 A4，V2）：工作区放大成覆盖台面的浮层，双击标题、按 Esc 或再点“全屏”还原 ----
+  // 画布占满台面（抽屉展开时让出右边一栏）；标题栏里有工具，抽屉（图层、步骤、范围）可以收起
   function setFocus(id) { UI.State.setFocusId(id || null); render(); }
   function focusHtml() {
     const S = UI.S, id = UI.State.focusedId(), e = id && S.scene.entities[id];
     if (!e || !SG.isWsDef(e.type)) { if (id) UI.State.setFocusId(null); return ''; }
-    const r = SG.stageEl.getBoundingClientRect();
-    const F = L.FOCUS, W = Math.max(F.minW, Math.round(r.width - F.side - F.padX)), H = Math.max(F.minH, Math.round(r.height - F.hdH - F.padY));
-    let h = '<div class="wsf-hd" title="双击标题，或按 Esc，还原"><b>' + K.esc(e.name) + '</b><span>双击标题或按 Esc 还原</span><button data-ws-unfocus>还原</button></div>';
+    const r = SG.stageEl.getBoundingClientRect(), F = L.FOCUS, open = UI.Chrome.focusSideOpen();
+    const W = Math.max(F.minW, Math.round(r.width - F.padX - (open ? F.side : 0))), H = Math.max(F.minH, Math.round(r.height - F.hdH - F.padY));
+    let h = '<div class="wsf-hd" title="双击标题，或按 Esc，还原"><b>' + K.esc(e.name) + '</b><span>双击标题或按 Esc 还原</span>' + SG.barTools(e) +
+      '<button data-fbar="side" data-ws="' + e.id + '" title="展开或收起右边的抽屉（图层、步骤、范围）">' + (open ? '收起抽屉' : '展开抽屉') + '</button>' +
+      '<button data-fbar="focus" data-ws="' + e.id + '" title="还原到台面">还原</button></div>';
     h += '<div class="wsf-main"><svg class="bdy wsbody" data-wsid="' + e.id + '" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '">' + SG.wsBody(e, W, H) + '</svg>';
-    h += '<div class="wsf-side">' + SG.wsPanelHtml(e, SG.wsNames(), { w: W, h: H }, true) + '</div></div>';
-    return h;
+    if (open) h += '<div class="wsf-side">' + SG.wsPanelHtml(e, SG.wsNames(), { w: W, h: H }, true) + '</div>';
+    return h + '</div>';
   }
   Object.assign(SG, { pillsOf, portPos, bez, cardHtml, ICO, ico, linksHtml, render, setFocus, focusHtml });
 })(window);

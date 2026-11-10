@@ -285,6 +285,9 @@
     $('#tidy').onclick = () => UI.Intent.run('tidy'); $('#clear').onclick = () => { if (Object.keys(S.scene.entities).length) UI.Intent.run('clear'); };
     $('#burger').onclick = () => $('#left').classList.toggle('open');
     $('#shelfbtn').onclick = () => $('#right').classList.toggle('open');
+    // 左右栏收成窄条（V2）：收起或展开会改变台面宽度，所以重新适应
+    $('#lrail').onclick = () => { UI.Chrome.toggleRail('left'); UI.Stage.fit(); UI.Stage.render(); };
+    $('#rrail').onclick = () => { UI.Chrome.toggleRail('right'); UI.Stage.fit(); UI.Stage.render(); };
     $('#menubtn').onclick = (e) => { e.stopPropagation(); $('#menu').classList.toggle('open'); };
     document.addEventListener('click', () => $('#menu').classList.remove('open'));
     $('#menu').addEventListener('click', (e) => {
@@ -480,7 +483,7 @@
       else if (e.key === 'Escape' && UI.State.focusedId()) UI.Stage.setFocus(null);
       else if (e.key === 'Escape') { S.sel = null; S.selLink = null; UI.Panels.renderInsp(); UI.Stage.render(); }
     });
-    G.addEventListener('resize', () => { const nar = G.innerWidth <= L.NARROW_BP; $('#shelfbtn').style.display = nar ? '' : 'none'; UI.Stage.render(); });   // 窗口变了：面板重新摆（实测尺寸，不溢出）
+    G.addEventListener('resize', () => { const nar = G.innerWidth <= L.NARROW_BP; $('#shelfbtn').style.display = nar ? '' : 'none'; if (UI.Chrome.apply()) UI.Stage.fit(); UI.Stage.render(); });   // 窗口变了：栏收不收、面板重新摆（实测尺寸，不溢出）
     $('#shelfbtn').style.display = G.innerWidth <= L.NARROW_BP ? '' : 'none';
   }
 

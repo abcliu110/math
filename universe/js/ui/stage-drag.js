@@ -38,7 +38,7 @@
   }
   function onDown(ev) {
     const S = UI.S, t = ev.target;
-    if (t.closest('.tool') || t.closest('.wsx') || t.closest('.wsx-float')) return;   // 工作区底下的面板：让浏览器照常处理按钮和输入框
+    if (t.closest('.tool') || t.closest('.wsx') || t.closest('.wsx-float') || t.closest('.fbar')) return;   // 工作区底下的面板：让浏览器照常处理按钮和输入框
     // 超出范围的图形的箭头：点一下，范围调到它
     const arr = t.closest('[data-fit-key]');
     if (arr) { ev.preventDefault(); ev.stopPropagation(); SG.wsFit(arr.dataset.fitWs, arr.dataset.fitKey); return; }

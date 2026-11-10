@@ -219,7 +219,8 @@ async function assertInvariants(page, label, opts) {
         const port = Object.keys(node.out).find((p) => node.out[p] && node.out[p].kind === 'fig');
         if (!port || !node.out[port].data || !node.out[port].data.pts || !node.out[port].data.pts.length) continue;
         const pts = node.out[port].data.pts, xs = pts.map((q) => U.Q.num(q.x)), ys = pts.map((q) => U.Q.num(q.y));
-        items.push({ id: k.id, name: (k.props && k.props.name) || '', cx: (Math.min(...xs) + Math.max(...xs)) / 2, cy: (Math.min(...ys) + Math.max(...ys)) / 2 });
+        // 点的标签是 mark（2.6：点的名字），图形的标签是 name；点没有 name 时就看 mark
+        items.push({ id: k.id, name: (k.props && (k.props.name || k.props.mark)) || '', cx: (Math.min(...xs) + Math.max(...xs)) / 2, cy: (Math.min(...ys) + Math.max(...ys)) / 2 });
       }
       out.ws.push({ id: e.id, w, h, view, text: sv.textContent, items });
     }

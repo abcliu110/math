@@ -9,6 +9,8 @@
     SG.stageEl = $('#stage'); SG.worldEl = $('#world');
     // 专注浮层：放在台面外面（不跟着台面缩放平移），盖住整个台面
     SG.focusEl = document.createElement('div'); SG.focusEl.id = 'wsfocus'; SG.focusEl.style.display = 'none'; SG.stageEl.appendChild(SG.focusEl);
+    // 工作区的浮动工具条（V2）：放在台面上，画布上方；不随台面缩放，点它不会拖动台面（见 stage-drag 的 onDown）
+    SG.barsEl = document.createElement('div'); SG.barsEl.id = 'wsbars'; SG.stageEl.appendChild(SG.barsEl);
     SG.stageEl.addEventListener('pointerdown', SG.onDown);
     // 拖卡片时不让浏览器接管成“原生拖放”（否则之后的 pointermove 全被吞掉）
     SG.stageEl.addEventListener('dragstart', (ev) => ev.preventDefault());
@@ -39,17 +41,19 @@
     SG.stageEl.addEventListener('click', (ev) => {
       const why = ev.target.closest('[data-why]');
       if (why) { const [wid, wport] = why.dataset.why.split('|'); UI.Panels.whyDialog(wid, wport); return; }
+      // 浮动工具条、专注标题栏的按钮（V2）
+      const fb = ev.target.closest('[data-fbar]');
+      if (fb) { SG.barAction(fb); return; }
       // 工作区面板：工具、步骤（点开看参数）、删除一步
       const ff = ev.target.closest('[data-fig-flip]');
       if (ff) { SG.figFlip(ff.dataset.ws, ff.dataset.name, +ff.dataset.figFlip); return; }
+      // 抽屉收起、展开：展开时要给它让出画布右边的位置，所以重新适应（V2，1.2 第 2 条）
       const wfo = ev.target.closest('[data-ws-fold]');
-      if (wfo) { UI.Layout.toggleFold(wfo.dataset.wsFold); SG.render(); return; }
+      if (wfo) { UI.Layout.toggleFold(wfo.dataset.wsFold); SG.fit(); SG.render(); return; }
       const wt = ev.target.closest('[data-ws-tool]');
       if (wt) { SG.wsRun(wt.dataset.ws, wt.dataset.wsTool); return; }
       const wf = ev.target.closest('[data-ws-fit]');
       if (wf) { SG.wsFit(wf.dataset.wsFit); return; }
-      const wu = ev.target.closest('[data-ws-unfocus]');
-      if (wu) { SG.setFocus(null); return; }
       // 图层分组（2.4）：点标题展开或收起；全部显示、全部隐藏（隐藏的是这个工作区的所有图形，不只是现在看得见的）
       const lg = ev.target.closest('[data-ws-lgroup]');
       if (lg) { const S = UI.S, o = Object.assign({}, S.wsLayerOpen || {}), k = lg.dataset.wsLgroup; if (o[k]) delete o[k]; else o[k] = true; S.wsLayerOpen = o; SG.render(); return; }

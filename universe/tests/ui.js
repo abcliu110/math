@@ -562,7 +562,7 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   const pickNm = async (name, shift) => {
     const pt = await p.evaluate((nm) => {
       for (const el of [...document.querySelectorAll('[data-pick]')].filter((e) => e.dataset.pick === nm)) {
-        const r = el.getBoundingClientRect(), cands = [];
+        const r = el.getBoundingClientRect(), cands = [[r.left + r.width / 2, r.top + r.height / 2]];   // 先试中心（小点的中心一定在它自己上面），和 pickAt 一样
         for (let i = 1; i < 10; i++) for (let j = 1; j < 10; j++) cands.push([r.left + r.width * i / 10, r.top + r.height * j / 10]);
         for (const [x, y] of cands) { const hit = document.elementFromPoint(x, y); if (hit && hit.closest('[data-pick]') === el) return { x, y }; }
       }

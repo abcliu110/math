@@ -13,8 +13,8 @@
     const vals = SG.wsValues(ws, names), steps = SG.wsSteps(ws), picks = S.wsSel || [];
     const pos = inFocus ? '' : ' style="width:' + g.w + 'px"';   // 位置由 UI.Layout.placePanels 在渲染后摆好（实测尺寸）
     let h = '<div class="wsx" data-ws="' + ws.id + '"' + pos + '>';
-    // 收起/展开按钮：只在放不下、会压住卡片时显示（见 UI.Layout.placePanels）
-    h += '<button class="wsx-fold" data-ws-fold="' + ws.id + '"><span class="wsx-fold-open">工作区 ▸</span><span class="wsx-fold-shut">收起 ▾</span></button>';
+    // 收起/展开按钮（V2）：展开时是「收起」，收起时是右下角的「工作区」；专注模式里的抽屉用标题栏的“收起抽屉”按钮
+    if (!inFocus) h += '<button class="wsx-fold" data-ws-fold="' + ws.id + '"><span class="wsx-fold-open">工作区 ▸</span><span class="wsx-fold-shut">收起 ▾</span></button>';
     const D = S.wsDraw && S.wsDraw.ws === ws.id ? S.wsDraw : null;
     // 工具说明从 UI.ToolHelp 读（悬停或聚焦时由 CSS 显示 data-tip）；没有说明的工具不带 data-tip
     h += '<div class="wsx-tools">' + wd.tools.map((t) => { const hp = UI.ToolHelp.of(t.id); return '<button data-ws-tool="' + t.id + '" data-ws="' + ws.id + '"' + (hp ? ' data-tip="' + SG.escA(hp.tip) + '"' : '') + (D && D.tool === t.id ? ' class="on" aria-pressed="true"' : '') + '>' + K.esc(t.label) + '</button>'; }).join('') +
@@ -122,5 +122,39 @@
     } else SG.setMsg((r && r.why) || '这一步做不了', false);
     SG.render();
   }
-  Object.assign(SG, { wsPanelHtml, wsPick, delWs, wsRun });
+  // ---- 浮动工具条（V2，1.2 第 2 条）：贴在画布上方，放连线、剪、删除、撤销和全屏；全部工具仍在抽屉里（移动、旋转……） ----
+  // 专注模式的标题栏里也用这一组按钮（同一份标记）
+  function barTools(ws) {
+    const D = UI.S.wsDraw && UI.S.wsDraw.ws === ws.id ? UI.S.wsDraw : null;
+    const btn = (id, label, tip) => '<button data-fbar="' + id + '" data-ws="' + ws.id + '"' + (D && D.tool === id ? ' class="on" aria-pressed="true"' : '') + ' title="' + SG.escA(tip) + '">' + label + '</button>';
+    return '<span class="fbar-tools">' + btn('seg', '连线', '连线：点两下画一条线（Esc 退出）') + btn('cut', '剪', '剪：先选一个图形，再点两下画剪切线（Esc 退出）') +
+      btn('del', '删除', '删除选中的图形或步骤') + btn('undo', '撤销', '撤销上一步') + '</span>';
+  }
+  // 浮动条的整块：收起时只剩一个“工具”按钮（偏好记在 UI.Chrome 里）
+  // pos：浮动条在台面局部像素里的位置（画布上方）；专注标题栏里没有位置
+  function barHtml(ws, pos) {
+    const shut = UI.Chrome.barShut();
+    return '<div class="fbar' + (shut ? ' shut' : '') + '" data-wsbar="' + ws.id + '"' + (pos ? ' style="left:' + pos.x + 'px;top:' + pos.y + 'px"' : '') + '>' +
+      '<button class="fbar-fold" data-fbar="fold" data-ws="' + ws.id + '" title="' + (shut ? '展开工具条' : '收起工具条') + '">' + (shut ? '工具 ▸' : '▾') + '</button>' +
+      barTools(ws) +
+      '<button data-fbar="focus" data-ws="' + ws.id + '" title="放大到台面的全部，再点一次或按 Esc 还原">全屏</button></div>';
+  }
+  // 删除：删的是选中的步骤（连同它的结果，见 delWs）或选中的图形；没有选中就说明一下
+  function barDelete(wsId) {
+    const S = UI.S, id = S.sel, e = id && S.scene.entities[id];
+    if (!e || e.parent !== wsId) { SG.setMsg('先点选要删除的图形或步骤，再点删除', false); return SG.render(); }
+    if (SG.roleOf(e) === 'step') return delWs(id);
+    S.sel = null; UI.Intent.run('delete', { id }); SG.render();
+  }
+  // 浮动条和专注标题栏的按钮：走的还是原来的入口（连线、剪走工具，撤销走撤销按钮，删除走步骤清单的删除）
+  function barAction(el) {
+    const a = el.dataset.fbar, wsId = el.dataset.ws || UI.State.focusedId();
+    if (a === 'fold') { UI.Chrome.toggleBar(); return SG.render(); }
+    if (a === 'side') { UI.Chrome.toggleFocusSide(); return SG.render(); }
+    if (a === 'focus') return SG.setFocus(UI.State.focusedId() ? null : wsId);
+    if (a === 'seg' || a === 'cut') return SG.wsRun(wsId, a);
+    if (a === 'del') return barDelete(wsId);
+    if (a === 'undo') { const u = document.getElementById('undo'); if (u) u.click(); }
+  }
+  Object.assign(SG, { wsPanelHtml, wsPick, delWs, wsRun, barTools, barHtml, barDelete, barAction });
 })(window);
