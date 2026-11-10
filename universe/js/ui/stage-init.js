@@ -21,7 +21,7 @@
       const vx = ev.target.getAttribute && ev.target.getAttribute('data-ws-vx');
       if (vx) {
         let n = parseInt(ev.target.value, 10); if (!Number.isFinite(n)) return SG.render();
-        n = Math.max(-10, Math.min(10, n));
+        n = Math.max(-L.COORD_MAX, Math.min(L.COORD_MAX, n));
         UI.Intent.run('params', { ops: [{ id: vx, k: ev.target.getAttribute('data-ws-vk'), v: n }] }); SG.render(); return;
       }
       const l = ev.target.getAttribute && ev.target.getAttribute('data-ws-layer');

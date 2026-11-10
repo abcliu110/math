@@ -81,6 +81,12 @@
     if (rn && wbd && SG.dbl('ren:' + rn.dataset.ren)) { ev.preventDefault(); ev.stopPropagation(); SG.startRename(rn.dataset.ren); return; }
     // 工作区里选中对象（点、线、图形）：Shift 点是加选
     let pk = t.closest('[data-pick]');
+    // 复制、旋转、翻转、删除在等「点一下要操作的图形」：点到图形就做；点到别处取消
+    if (S.wsArm && wbd && wbd.dataset.wsid === S.wsArm.ws) {
+      const a = S.wsArm; S.wsArm = null;
+      if (pk && pk.closest('.wsbody') === wbd) { ev.preventDefault(); ev.stopPropagation(); SG.wsAct(a.ws, a.act, pk.dataset.pick); return; }
+      SG.setMsg('', true);
+    }
     const cyc = pk && wbd && !ev.shiftKey ? wsCycPick(ev, wbd) : null;   // 双击的第二下：选下一个图形（V3）
     if (cyc) pk = [...wbd.querySelectorAll('[data-pick]')].find((el) => el.dataset.pick === cyc) || pk;
     if (pk) SG.wsPick(pk.dataset.pick, ev.shiftKey);

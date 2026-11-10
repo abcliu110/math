@@ -79,9 +79,11 @@
     for (const v of vals) {
       const f = v.fig; if (!f || !f.pts) continue;
       f.pts.forEach((p, i) => {
-        if (!Q.isInt(p.x) || !Q.isInt(p.y)) return;
+        // 整数坐标的点都可以吸；分数坐标的点（中点、垂足、交点）只有它本身是一个器材（ref）时才吸，吸到的是这个器材，精确坐标跟着带上
+        const intp = Q.isInt(p.x) && Q.isInt(p.y), r0 = opts.ref ? opts.ref(v, i) : null;
+        if (!intp && !r0) return;
         const x = Q.num(p.x), y = Q.num(p.y), d = Math.hypot(x - wp.x, y - wp.y);
-        if (d <= R && d < bd) { bd = d; best = { x, y, ref: opts.ref ? opts.ref(v, i) : null }; }
+        if (d <= R && d < bd) { bd = d; best = { x, y, ref: r0 }; if (!intp) best.exact = { x: p.x, y: p.y }; }
       });
     }
     if (best) return best;

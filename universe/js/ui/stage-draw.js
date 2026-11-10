@@ -22,44 +22,73 @@
     if (tool === 'seg') S.wsSel = [];
     SG.render();
   }
-  // 吸附：算法在 UI.Space.snap（顶点、构造点、边上的格点、格点）；这里告诉它每个顶点属于哪个自由点，以及有哪些构造点
-  function snapTo(fr, wp, sc) {
+  // 吸附：算法在 UI.Space.snap（顶点、构造点、边上的格点、格点）；这里告诉它每个顶点属于哪个自由点，以及有哪些构造点。
+  // start：已经按下的起点（第二个点时才有）：垂足要从它算
+  function snapTo(fr, wp, sc, start) {
+    const E = UI.S.scene.entities;
     return UI.Space.snap(fr.vals, wp, sc.unit, {
       px: SG.SNAP_PX,
-      ref: (v, i) => { const fi = SG.figInfo(v); return fi && fi.kind === 'pts' && fi.verts[i] ? fi.verts[i] : null; },
-      cons: constructsOf(fr.vals, SG.wsNames()),
+      // 顶点属于哪个器材：自由点围成的图形，顶点是那个自由点；单独画出来的构造点（中点、垂足、交点）就是它自己的 p 口
+      ref: (v, i) => {
+        const fi = SG.figInfo(v); if (fi && fi.kind === 'pts' && fi.verts[i]) return fi.verts[i];
+        const ent = E[v.id];
+        return v.fig.type === 'point' && v.port === 'p' && ent && SG.roleOf(ent) === 'step' ? v.id : null;
+      },
+      cons: constructsOf(fr.vals, SG.wsNames(), start),
     });
   }
-  // 构造点候选（V4）：器材声明里有 snap 的（geo 包里的中点），对每条边算一个候选点。
-  // 候选的种类从声明读出来，不认具体器材名；边的两个端点必须是自由点（figInfo 的 verts），才能建构造器材接上去。
-  // con 记下要建的器材（type）、接哪两个点（ids，按 wire 的顺序）、从哪个口取结果（out）。
-  function constructsOf(vals, names) {
+  // 构造点候选：器材声明里有 snap 的（geo 包里的中点、垂足、交点）。候选的种类从声明读出来，不认具体器材名；
+  // 边的端点必须是自由点（figInfo 的 verts），才能建构造器材接上去。三种取法（snap.of）：
+  //   edge  每条边一个（中点）；  foot  起点到每条边所在直线的垂足（要先有起点）；  cross  每两条边在里面相交的交点（比如两条对角线）
+  // con 记下要建的器材（type）、接哪几个点（ids，按 wire 的顺序；extra 是另外要接的口）、从哪个口取结果（out）。
+  function constructsOf(vals, names, start) {
     const decl = Object.keys(U.types).filter((k) => U.types[k].snap);
     const out = [], seen = new Set();
     if (!decl.length) return out;
+    const edges = [];   // { a, b: 端点坐标；ids: 端点的自由点 }
     for (const v of vals) {
-      const fi = SG.figInfo(v); if (!fi || fi.kind !== 'pts') continue;
-      for (const [i, j] of fi.edges) for (const type of decl) {
-        const sn = U.types[type].snap, ids = [fi.verts[i], fi.verts[j]];
-        if (sn.of !== 'edge') continue;
-        const key = type + ':' + ids.slice().sort().join(',');
-        if (seen.has(key)) continue;
-        seen.add(key);
-        const at = sn.at(v.fig.pts[i], v.fig.pts[j]), nm = ids.map((g) => names[g + '.p'] || null);
-        const label = nm[0] && nm[1] ? nm[0] + nm[1] + ' 的' + sn.label : sn.label;
-        out.push({ x: Q.num(at.x), y: Q.num(at.y), exact: at, label, con: { type, wire: sn.wire, out: sn.out, ids, label, mark: sn.mark } });
+      const fi = SG.figInfo(v); if (!fi || fi.kind !== 'pts' || fi.f.type === 'point') continue;
+      for (const [i, j] of fi.edges) if (fi.verts[i] !== fi.verts[j]) edges.push({ a: v.fig.pts[i], b: v.fig.pts[j], ids: [fi.verts[i], fi.verts[j]] });
+    }
+    const nm = (ids) => ids.map((g) => names[g + '.p'] || null);
+    const add = (type, sn, at, ids, extra, label) => {
+      const key = type + ':' + ids.slice().sort().join(',') + ':' + extra.map((e) => e.id).join(',');
+      if (seen.has(key)) return; seen.add(key);
+      out.push({ x: Q.num(at.x), y: Q.num(at.y), exact: at, label, con: { type, wire: sn.wire, out: sn.out, ids, extra, label, mark: sn.mark } });
+    };
+    const sgn = (a, b, p) => U.Geo.side(a, b, p);
+    for (const type of decl) {
+      const sn = U.types[type].snap;
+      if (sn.of === 'edge') {
+        for (const e of edges) { const n = nm(e.ids); add(type, sn, sn.at(e.a, e.b), e.ids, [], n[0] && n[1] ? n[0] + n[1] + ' 的' + sn.label : sn.label); }
+      } else if (sn.of === 'foot' && start && start.ref) {
+        const sp = start.exact || { x: Q(start.x), y: Q(start.y) };
+        for (const e of edges) {
+          if (e.ids.includes(start.ref)) continue;
+          const at = sn.at(e.a, e.b, sp); if (Q.eq(at.x, sp.x) && Q.eq(at.y, sp.y)) continue;
+          const n = nm(e.ids);
+          add(type, sn, at, e.ids, [{ port: 'p', id: start.ref }], n[0] && n[1] ? '到 ' + n[0] + n[1] + ' 的垂足（画出垂线）' : sn.label);
+        }
+      } else if (sn.of === 'cross') {
+        for (let i = 0; i < edges.length; i++) for (let j = i + 1; j < edges.length; j++) {
+          const e = edges[i], f = edges[j];
+          if (e.ids.some((g) => f.ids.includes(g))) continue;
+          if (sgn(e.a, e.b, f.a) * sgn(e.a, e.b, f.b) >= 0 || sgn(f.a, f.b, e.a) * sgn(f.a, f.b, e.b) >= 0) continue;   // 要在两条线段的里面真正相交
+          const at = sn.at(e.a, e.b, f.a, f.b); if (!at) continue;
+          add(type, sn, at, e.ids.concat(f.ids), [], sn.label);
+        }
       }
     }
     return out;
   }
   // 鼠标位置 → 吸附后的点（画线时坐标范围冻结，免得画到一半图跳走）
-  function snapAt(wb, ev) {
+  function snapAt(wb, ev, start) {
     const S = UI.S, ws = S.scene.entities[wb.dataset.wsid];
     if (!ws) return null;
     const fr = SG.wsFrame(ws, +wb.getAttribute('width'), +wb.getAttribute('height'));
     if (!UI.State.viewOf(ws)) UI.State.setUi(ws, 'view', fr.vw);
     const sc = UI.Space.canvasOf(wb.getBoundingClientRect(), fr.vw.span);
-    return snapTo(fr, UI.Space.screenToWorkspace(ev, fr.vw, sc), sc);
+    return snapTo(fr, UI.Space.screenToWorkspace(ev, fr.vw, sc), sc, start !== undefined ? start : (S.wsDraw && S.wsDraw.pend));
   }
   function drawClick(wb, ev) {
     const S = UI.S, D = S.wsDraw, ws = S.scene.entities[D.ws];
@@ -86,7 +115,7 @@
     const a = D.pend, temp = D.temp;
     D.pend = null; D.cur = null; D.downAt = null;
     if (!wb) { if (temp) endDraw(); else SG.wsRedraw(D.ws); return true; }
-    const b = snapAt(wb, ev);
+    const b = snapAt(wb, ev, a);
     if (temp) S.wsDraw = null;
     finishLine(temp ? Object.assign({}, D, { pend: null }) : D, a, b);
     return true;
@@ -96,7 +125,7 @@
     const wb = [...document.querySelectorAll('svg.wsbody[data-wsid="' + D.ws + '"]')].find((el) => { const r = el.getBoundingClientRect(); return ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom; });
     if (!ws || !wb) return;
     const fr = SG.wsFrame(ws, +wb.getAttribute('width'), +wb.getAttribute('height')), sc = UI.Space.canvasOf(wb.getBoundingClientRect(), fr.vw.span);
-    D.cur = snapTo(fr, UI.Space.screenToWorkspace(ev, fr.vw, sc), sc); SG.wsRedraw(D.ws);
+    D.cur = snapTo(fr, UI.Space.screenToWorkspace(ev, fr.vw, sc), sc, D.pend); SG.wsRedraw(D.ws);
   }
   // 两个点都定了：建点（不是顶点的才建）、建线段；剪的模式再建剪刀、剪开。整串是一步
   function finishLine(D, a, b) {

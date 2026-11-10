@@ -400,4 +400,10 @@ svg.wsbody text:not([data-ren]) { pointer-events: none; }
 .ctxmenu { position: absolute; z-index: 40; display: flex; flex-direction: column; gap: 4px; min-width: 128px; padding: 6px; transform: translate(-50%, 8px); background: var(--card); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 6px 16px #0006; }
 .ctxmenu button { font: inherit; font-size: 14px; min-height: 36px; padding: 0 12px; border-radius: 8px; text-align: left; background: var(--card); color: var(--ink); cursor: pointer; }
 .ctxmenu button:hover, .ctxmenu button:focus-visible { background: var(--line); }
->
+>/* 工具条上的「图形 ▾」菜单：点开是一个小面板，点一个图形就放进工作区 */
+.shape-menu { position: relative; display: inline-block; }
+.shape-menu > summary { list-style: none; cursor: pointer; font-size: 12px; height: 24px; line-height: 22px; padding: 0 8px; border-radius: 8px; border: 1px solid #aab4c8; background: #fff; color: var(--ink); box-sizing: border-box; }
+.shape-menu > summary::-webkit-details-marker { display: none; }
+.shape-menu[open] > summary { border-color: var(--blue); }
+.shape-pop { position: absolute; left: 0; top: 28px; z-index: 40; background: var(--card); color: var(--ink); border-radius: 10px; padding: 8px; box-shadow: 0 6px 18px #0007; width: max-content; max-width: 320px; display: flex; flex-direction: column; gap: 6px; }
+.shape-pop button { margin: 2px 4px 2px 0; }

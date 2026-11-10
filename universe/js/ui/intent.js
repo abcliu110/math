@@ -20,10 +20,12 @@
   // 已经有同样接法的器材（同一工作区）就直接用它，不重复建。整串在调用它的那一个手势里，是一个撤销项。
   function buildConstruct(A, ws, con) {
     const E = UI.S.scene.entities, L = UI.S.scene.links;
-    const same = Object.values(E).find((e) => e.type === con.type && e.parent === ws.id && con.wire.every((port, i) => L.some((l) => l.to === e.id && l.toPort === port && l.from === con.ids[i])));
+    // 要接的口：wire 按顺序接 ids，extra 是另外指定的（垂足的起点）。接线的来源口都是 p（点的输出口）
+    const ports = con.wire.map((port, i) => ({ port, id: con.ids[i] })).concat(con.extra || []);
+    const same = Object.values(E).find((e) => e.type === con.type && e.parent === ws.id && ports.every((q) => L.some((l) => l.to === e.id && l.toPort === q.port && l.from === q.id)));
     const d = same ? same.id : A({ t: 'add', type: con.type, x: 0, y: 0 }).id;
     if (!same) {
-      con.wire.forEach((port, i) => A({ t: 'link', from: con.ids[i], fromPort: 'p', to: d, toPort: port }));
+      ports.forEach((q) => A({ t: 'link', from: q.id, fromPort: 'p', to: d, toPort: q.port }));
       A({ t: 'put', id: d, parent: ws.id, slot: 'items' });
     }
     return { id: d, port: con.out };
@@ -101,6 +103,8 @@
         // V5：用户已确认“删除并同时删除依赖”：先删依赖它的器材（直接和间接），再删它自己；整串是一个撤销项
         if (p.confirmed) for (const d of W.dependentsOf(UI.S.scene, p.id)) A({ t: 'del', id: d });
         A({ t: 'del', id: p.id, keep: p.keep });
+        // 删图形时顺带删它的顶点：别处（线、中点……）还连着的顶点留下
+        for (const v of p.alsoVerts || []) if (UI.S.scene.entities[v] && !UI.S.scene.links.some((l) => l.from === v)) A({ t: 'del', id: v });
       },
       after(r, p, ctx) { if (ctx.id && UI.S.sel === ctx.id) UI.S.sel = null; },
     },
@@ -134,6 +138,23 @@
           const pc = U.Piece.cutInto(S.scene, { id: gc, ws, wires: [{ r: { id: cut.id } }] });
           if (!pc.ok) throw { why: pc.why };
         }
+      },
+    },
+    // 复制一个自由点围成的图形：新建同样的点（偏移 dx、dy）和多边形，放进工作区。一步
+    copyfig: {
+      label: 'copyfig',
+      fn(A, p, ctx) {
+        const S = UI.S, E = S.scene.entities, ws = E[p.ws];
+        const map = {};
+        for (const id of p.verts) {
+          if (map[id]) continue;
+          const o = E[id].props, n = A({ t: 'add', type: E[id].type, x: 0, y: 0, props: { x: o.x + p.dx, y: o.y + p.dy, mark: nextPointName(S.scene) } });
+          A({ t: 'put', id: n.id, parent: ws.id, slot: 'items' }); map[id] = n.id;
+        }
+        const poly = A({ t: 'add', type: E[p.poly].type, x: 0, y: 0 }).id;
+        for (const id of p.verts) A({ t: 'link', from: map[id], fromPort: 'p', to: poly, toPort: 'pts' });
+        A({ t: 'put', id: poly, parent: ws.id, slot: 'items' });
+        ctx.id = poly;
       },
     },
     // 工作区里放一个常见图形（梯形、菱形……）：建器材，再放进工作区变成自由点和多边形。一步
