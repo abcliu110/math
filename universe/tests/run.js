@@ -936,6 +936,22 @@ t('覆盖统计：有题的知识点、按年级、按本质都能算出来', ()
   const S = U.Coverage.summarize(U.problems);
   eq(S.points.length, 142); truthy(S.points.some((r) => r.problems.length > 0)); eq(S.grades.length, 9); eq(S.essences.length, 12);
 });
+// 遗留状态（next-steps.md §8）：孤立题（没有知识点的题）和没有题的知识点，只允许下面列出的例外。
+// 新增孤立题、或例外被接上了却没从这里删掉，都会失败。例外的理由写在 docs/next-steps.md §8。
+const ORPHAN_OK = { 'seq-arith-20': '等差数列求和是高中内容，义务教育课标（2022）没有要求，知识点表里没有对应的点' };
+const NO_PROBLEM_OK = {
+  '2.14b': '推理（排除法、谁是谁）：现有器材没有可以逐格排除的表格，需要新器材，见 next-steps.md §8',
+  '6.14': '综合与实践 / 整理和复习：不是单一知识点，留到综合题批次',
+};
+t('遗留：孤立题（points 为空，不在任何知识点下）只剩允许的例外', () => {
+  const S = U.Coverage.summarize(U.problems);
+  eq(S.noPoint.slice().sort(), Object.keys(ORPHAN_OK).sort(), '孤立题');
+  for (const id of Object.keys(ORPHAN_OK)) truthy(U.problems.some((p) => p.id === id), '例外里的题不存在：' + id);
+});
+t('遗留：没有题的知识点只剩允许的例外（2.14b 推理、6.14 综合）', () => {
+  const S = U.Coverage.summarize(U.problems);
+  eq(S.noProblemPoints.slice().sort(), Object.keys(NO_PROBLEM_OK).sort(), '没有题的知识点');
+});
 console.log('证明类器材（2.7）');
 const pr = (type, props, feed) => { const sc = W.blank(); const e = W.add(sc, type, 0, 0, props || {}); (feed || []).forEach(([t, p2, port, fport]) => { const f = W.add(sc, t, 0, 0, p2); W.act(sc, { t: 'link', from: f, fromPort: fport || 'v', to: e, toPort: port }); }); return W.evaluate(sc)[e].out; };
 const lvOf = (o) => (o.lv ? Q.num(o.lv.data) : null);
