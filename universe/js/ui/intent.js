@@ -342,6 +342,15 @@
     tidy: { label: 'tidy', fn(A) { return A({ t: 'tidy' }); } },
     // 工作台的步骤写进台面（D8：竖式、数据图表台；式子工作台的 I 也是这一条）。内核先判断能不能做，这里只写回。
     wbsteps: { label: 'wb', fn(A, p) { return A({ t: 'wb', host: p.host, key: p.key, steps: p.steps }); } },
+    // 定型（§10.5.6 第 5 步）：内核判断能不能做（没有新步骤就拒绝，说明原因）；写回台面是一个动作
+    wbbake: {
+      label: 'bake',
+      fn(A, p) {
+        const st = U.Workbench.bake(p.st);
+        if (st.lastError) throw { why: st.lastError };
+        return A(U.ExprBench.saveAction(p.id, p.eq, st));
+      },
+    },
     // 清空台面：先问（会删几个器材），确认后才清；撤销一次找回
     clear: {
       label: 'clear',

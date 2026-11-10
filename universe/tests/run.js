@@ -2712,6 +2712,75 @@ t('整体移动：约束的点都在移动的那组里才算刚体；只动一�
   eq(U.Geo.locks.rigid(sc, ids), true);
   eq(U.Geo.locks.rigid(sc, [ids[0]]), false);
 });
+console.log('分步定型（bake，§10.5.6 第 5 步）：前面的步骤折成一步，撤销回到定型前，判题仍能读到定型前的步骤');
+{
+  const N = (n) => ({ op: 'num', n: BigInt(n) }), X = { op: 'var', name: 'x' };
+  const add = (...args) => ({ op: 'add', args }), mul = (...args) => ({ op: 'mul', args });
+  const WB = U.Workbench, EV = (d) => U.val('eqn', d), cn = (s) => /[一-鿿]/.test(s || '');
+  const lin = () => ({ lhs: add(mul(N(3), X), N(5)), rhs: N(20), rel: '=' });
+  // 3x + 5 = 20：移项、两边同除以 3，两步，解为 x = 5
+  const two = () => { const s = WB.create(EV(lin())); const m = WB.step(s, 'move-term', [1], {}); return WB.step(m, 'divide', null, { by: 3 }); };
+  // 方程台送来的方程：两边是多项式（ExprBench 用它记台面上的 key）
+  const polyEqn = () => { const d = lin(); return EV({ lhs: U.Form.value(d.lhs), rhs: U.Poly.norm([{ c: U.Q(20), m: {} }]), rel: '=' }); };
+
+  t('定型：没有新步骤时说明原因，步骤不变；定型后马上再定型也被拒绝', () => {
+    const b = WB.bake(WB.create(EV(lin())));
+    truthy(cn(b.lastError), b.lastError); eq(b.steps.length, 0);
+    const done = WB.bake(two()); eq(done.steps.length, 3);
+    const again = WB.bake(done); truthy(cn(again.lastError), again.lastError); eq(again.steps.length, 3, '没有新步骤，步骤不变');
+  });
+  t('定型：两步折成一步（bake），当前值不变，解还在，说明里有「定型」', () => {
+    const s = two(), b = WB.bake(s);
+    eq(b.lastError, null); eq(b.steps.length, 3); eq(b.steps[2].tool, 'bake'); eq(b.steps[2].rule, 'bake');
+    eq(bigStr(b.current), bigStr(s.current), '定型不改值');
+    eq(WB.solution(b).solved, true); eq(WB.solution(b).x, U.Q(5));
+    truthy(WB.stepLog(b)[2].indexOf('定型') >= 0, WB.stepLog(b)[2]);
+  });
+  t('定型的折叠信息：一次定型是一个折叠（前 2 步）；定型后没有待定型的步骤，定型前有 2 步待定', () => {
+    const b = WB.bake(two());
+    eq(WB.folds(b), [{ from: 0, bake: 2 }]); eq(WB.pending(b), 0); eq(WB.pending(two()), 2);
+  });
+  t('定型后撤销到定型前：撤销到定型那一步之前，回到两步，解回来了；撤销到定型之后不影响', () => {
+    const b = WB.bake(two());
+    const back = WB.undo(b, 2);
+    eq(back.lastError, null); eq(back.steps.length, 2); eq(WB.solution(back).solved, true);
+    eq(WB.undo(b, 3).steps.length, 3);
+  });
+  t('定型的折叠不能拆开：撤销到折叠中间被拒绝，说明原因，步骤不变；撤到折叠的起点是整组一起撤', () => {
+    const b = WB.bake(two());
+    const bad = WB.undo(b, 1);
+    truthy(cn(bad.lastError), bad.lastError); eq(bad.steps.length, 3, '步骤不变');
+    eq(WB.undo(b, 0).steps.length, 0, '整组一起撤');
+  });
+  t('定型可以接着做：第二次定型只折叠它之后的步骤，撤销按折叠分段', () => {
+    let s = WB.create(EV(lin()));
+    s = WB.bake(WB.step(s, 'move-term', [1], {}));
+    s = WB.bake(WB.step(s, 'divide', null, { by: 3 }));
+    eq(s.lastError, null); eq(s.steps.map((x) => x.tool), ['move-term', 'bake', 'divide', 'bake']);
+    eq(WB.solution(s).solved, true);
+    eq(WB.folds(s), [{ from: 0, bake: 1 }, { from: 2, bake: 3 }]);
+    eq(WB.undo(s, 3).steps.length, 3, '撤销到第二次定型之前：只去掉第二次定型');
+    eq(WB.undo(s, 2).steps.length, 2, '撤销到第一次定型之后');
+    eq(WB.undo(s, 2).steps.map((x) => x.tool), ['move-term', 'bake']);
+    eq(bigStr(WB.replay(s.start, s.steps).current), bigStr(s.current), '重放结果一致');
+  });
+  t('定型的结果进台面：存进 scene.workbench 后重算的状态一样，步骤里有定型那一步', () => {
+    const e0 = polyEqn(), b = WB.bake(two());   // 台面上的方程两边是多项式（和方程台送来的一样）
+    const act = U.ExprBench.saveAction('w1', e0, b);
+    eq(act.steps.map((x) => x.tool), ['move-term', 'divide', 'bake']);
+    const sc = { entities: {}, links: [], clock: { t: 0, n: 0 }, workbench: { host: 'w1', key: U.ExprBench.keyOf(e0), steps: act.steps } };
+    const st = U.ExprBench.stateOf(sc, 'w1', e0);
+    truthy(st, '台面上的步骤应能重算');
+    eq(U.ExprBench.showState(st), U.ExprBench.showState(b)); eq(st.steps.length, 3); eq(st.steps[2].tool, 'bake');
+  });
+  t('判题的步骤查询：定型后仍能读到定型前用过的规则，每一步保持不变量', () => {
+    const sc = W.blank(), D = W.evaluate(sc), cond = (c) => U.Judge.compile(c);
+    sc.workbench = { host: 'w1', steps: U.ExprBench.saveAction('w1', polyEqn(), WB.bake(two())).steps };
+    eq(cond({ steps: { used: 'alg.move-term', allKept: true } })(U.Judge.makeW(sc, D, {})), true, '定型前用过移项');
+    eq(cond({ steps: { used: 'alg.divide', allKept: true } })(U.Judge.makeW(sc, D, {})), true, '定型前用过两边同除');
+    eq(cond({ steps: { used: 'alg.collect' } })(U.Judge.makeW(sc, D, {})), false, '没用过的规则仍然是假');
+  });
+}
 
 console.log('\n' + pass + ' 通过，' + fail + ' 失败');
 process.exit(fail ? 1 : 0);
