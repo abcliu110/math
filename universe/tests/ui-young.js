@@ -109,6 +109,8 @@ async function clickMenuYoung(p) {
     await p.evaluate(() => UI.Stage.render()); await p.waitForTimeout(150);
     const ids = await toolIds(p);
     ok(JSON.stringify(ids) === JSON.stringify(YOUNG_TOOLS), '(C) 工具行只剩声明的工具（按 id）：' + JSON.stringify(ids));
+    const measureOn = await p.locator('.wsx-measure').count();
+    ok(measureOn === 0, '(C) 低年级模式下尺子、量角器按钮不显示（个数 ' + measureOn + '）');
     const toolFontOn = await fontOf(p, '.wsx-tools button[data-ws-tool]');
     ok(toolFontOn >= 16 && toolFontOn >= toolFontOff + 2, '(C) 工作区工具按钮字号变大：' + toolFontOff + 'px → ' + toolFontOn + 'px（至少 16px）');
     // 真实鼠标点保留的“合并”工具（没选中图形时也要能点、不报错）
@@ -121,6 +123,7 @@ async function clickMenuYoung(p) {
     await clickMenuYoung(p);
     await p.evaluate(() => UI.Stage.render()); await p.waitForTimeout(150);
     ok((await toolIds(p)).length === allBefore.length, '(C) 关掉后工具行回到全部工具');
+    ok((await p.locator('.wsx-measure').count()) > 0, '(C) 关掉后尺子、量角器按钮回来');
     ok(errs.length === 0, '(C) 工具行的操作期间没有页面错误' + (errs.length ? '（' + errs[0] + '）' : ''));
     await ctx.close();
   }
