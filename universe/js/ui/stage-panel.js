@@ -178,7 +178,7 @@
     const acBtn = (id, label, tip) => '<button data-fbar="' + id + '" data-ws="' + ws.id + '"' + (A === id ? ' class="on" aria-pressed="true"' : '') + ' title="' + SG.escA(tip) + '">' + label + '</button>';
     return '<span class="fbar-tools">' + btn('seg', '连线', '连线（L）：拖出一条线，会自动吸到顶点、中点、垂足、交点；也可以点两下') + btn('cut', '剪', '剪（C）：先选一个图形，再拖出一条剪切线') +
       '<span class="wsmini-sep"></span>' + shapesHtml(ws) + acBtn('copy', '复制', '复制选中的图形（Ctrl+D；Ctrl+C 后 Ctrl+V 粘贴）') + acBtn('mirror', '镜像', '镜像复制选中的图形（M）：副本贴着它的右边，左右对称') + btn('group', '编组', '把选中的图形编成一组（Ctrl+G）：点一个，两个一起选中、一起拖动；Ctrl+Shift+G 取消编组') + acBtn('rot', '旋转', '把选中的图形转 90°（R）') + acBtn('flip', '翻转', '把选中的图形左右翻转（F）') +
-      btn('del', '删除', '删除选中的图形或步骤（Delete）') + btn('undo', '撤销', '撤销上一步') +
+      lockHtml(ws) + btn('del', '删除', '删除选中的图形或步骤（Delete）') + btn('undo', '撤销', '撤销上一步') +
       '<span class="wsmini-sep"></span>' + snapBtn(ws) + '</span>';
   }
   // 多选对齐与等距分布（§10.5.9 第 3 条）：这个工作区里选中两个以上的图形时，在主工具条上方再出一条对齐工具条（主工具条已经放满，不能挤进去）；
@@ -193,6 +193,11 @@
       b('dv', '垂直等距', '垂直等距：两端不动，中间的纵向间距相等（至少三个，间距要是整数格）');
     const top = pos.y - (UI.LAYOUT.BAR.h + UI.LAYOUT.BAR.gap);
     return '<div class="fbar wsalign" role="toolbar" aria-label="对齐与分布" data-wsalign="' + ws.id + '" style="left:' + pos.x + 'px;top:' + top + 'px">' + html + '</div>';
+  }
+  // 锁长 / 锁直角（§10.5.9 第 1 条）：选中一条线段或一个多边形时才有；按钮的字就是它现在能做的事
+  function lockHtml(ws) {
+    const T = SG.lockTarget(ws.id); if (!T) return '';
+    return '<button data-fbar="lock" data-ws="' + ws.id + '" title="' + SG.escA(T.tip) + '">' + T.label + '</button>';
   }
   // 吸附开关（V4，§1.3 第 4 条）：关了，拖动和画线都不吸附到中点、交点、垂足；按住 Alt 暂时不吸附（和开关无关）
   function snapBtn(ws) {
@@ -229,6 +234,7 @@
     if (a === 'group') return SG.wsGroup(wsId, true);
     if (a.indexOf('al-') === 0) return SG.alignWs(wsId, a.slice(3));
     if (a === 'undo') { const u = document.getElementById('undo'); if (u) u.click(); }
+    if (a === 'lock') return SG.wsLock(wsId);
     if (a === 'snap') { UI.S.snapOn = UI.S.snapOn === false; return SG.render(); }
   }
   // 看背后的连线（D6）：步骤图只读；点一步，撤销到那一步为止（之后的步骤撤掉）。撤销用的是台面的撤销按钮，历史照常记录

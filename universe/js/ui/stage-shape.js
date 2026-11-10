@@ -104,6 +104,62 @@
     for (const c of dragCons(d)) { const dd = UI.Space.unitsToPx(Math.hypot(c.x - px, c.y - py), d.unit); if (dd <= SG.SNAP_PX && dd < bd) { bd = dd; best = c; } }
     return best;
   }
+  // ---- 约束锁定（§10.5.9 第 1 条）：界面只问内核（U.Geo.locks），不认器材名 ----
+  const touchesLock = (scene, ids) => U.Geo.locks.of(scene).some((c) => [c.a, c.b, c.c].some((k) => ids.includes(k)));
+  // 拖动的门：一个点只能落在约束允许的位置（离鼠标最近的）；一组图形整体动，约束要都在组里（刚体）
+  function lockGate(scene, d, dX, dY) {
+    if (!d.pt) {
+      const ids = d.targets.map((t) => t.id);
+      return U.Geo.locks.rigid(scene, ids) ? { dX, dY, locked: false, tip: '' } : { dX: 0, dY: 0, locked: true, tip: '这块图形有约束连着外面的点，先解锁' };
+    }
+    const t = d.targets[0], r = U.Geo.locks.fit(scene, d.pt, { x: t.x0 + dX, y: t.y0 + dY });
+    if (!r.ok) return { dX: 0, dY: 0, locked: true, tip: r.why };
+    if (!r.locked) return { dX, dY, locked: false, tip: '' };
+    const same = r.x === t.x0 + dX && r.y === t.y0 + dY;
+    return { dX: r.x - t.x0, dY: r.y - t.y0, locked: true, tip: same ? '' : '约束：只能落在允许的位置' };
+  }
+  // 线段的定长约束（没有锁就是 null），画标签和读数用
+  const segLenLock = (segId) => { const ends = U.Geo.locks.segEnds(UI.S.scene, segId); return ends ? U.Geo.locks.lenOf(UI.S.scene, ends) : null; };
+  // 工具条的「锁长 / 锁直角」：选中一条线段或一个多边形时，说明它现在能做什么；没有可锁的就没有按钮
+  function lockTarget(wsId) {
+    const S = UI.S, sel = S.wsSel || [];
+    if (sel.length !== 1) return null;
+    const fi = figByName(wsId, sel[0]); if (!fi || fi.kind !== 'pts') return null;
+    const LK = U.Geo.locks;
+    if (fi.f.type === 'segment') {
+      const ends = LK.segEnds(S.scene, fi.ent.id); if (!ends) return null;
+      const on = !!LK.lenOf(S.scene, ends);
+      return { seg: fi.ent.id, ws: wsId, label: on ? '解锁长' : '锁长', tip: on ? '解开这条线段的长度（拖动以后可以自由改变）' : '锁住这条线段的长度：拖动端点时长不变；双击长度的数字可以直接改' };
+    }
+    if (fi.f.type === 'polygon') {
+      const tris = LK.rightAt(S.scene, fi.verts);
+      if (!tris.length) return null;
+      const on = tris.every((t) => LK.rightOf(S.scene, t));
+      return { poly: fi.ent.id, verts: fi.verts, ws: wsId, label: on ? '解锁直角' : '锁直角', tip: on ? '解开这个图形所有直角的锁' : '锁住这个图形的直角：拖动顶点时直角保持（只能沿垂线走）' };
+    }
+    return null;
+  }
+  function wsLock(wsId) {
+    const T = lockTarget(wsId); if (!T) return SG.render();
+    const r = UI.Intent.run('lock', T);
+    SG.setMsg(r && r.ok === false ? r.why : '', !(r && r.ok === false));
+    SG.render();
+  }
+  // 直角锁的标记：锁住的直角顶点上画一个小方框（沿两条边），data-rmark 标出是哪个顶点
+  function rightMarks(v, X, Y, sp) {
+    const fi = figInfo(v); if (!fi || fi.kind !== 'pts' || fi.f.type !== 'polygon') return '';
+    const LK = U.Geo.locks, n = fi.verts.length, unit = (x, y) => { const d = Math.hypot(x, y) || 1; return { x: x / d, y: y / d }; };
+    let out = '';
+    fi.verts.forEach((id, i) => {
+      const tri = [fi.verts[(i + n - 1) % n], id, fi.verts[(i + 1) % n]];
+      if (!LK.rightOf(UI.S.scene, tri)) return;
+      const vx = X(sp[i].x), vy = Y(sp[i].y), u1 = unit(X(sp[(i + n - 1) % n].x) - vx, Y(sp[(i + n - 1) % n].y) - vy), u2 = unit(X(sp[(i + 1) % n].x) - vx, Y(sp[(i + 1) % n].y) - vy), s = L.RIGHT_MARK;
+      const p1 = [vx + u1.x * s, vy + u1.y * s], p2 = [p1[0] + u2.x * s, p1[1] + u2.y * s], p3 = [vx + u2.x * s, vy + u2.y * s];
+      out += '<path data-rmark="' + id + '" d="M' + p1.map((q) => q.toFixed(1)).join(' ') + ' L' + p2.map((q) => q.toFixed(1)).join(' ') + ' L' + p3.map((q) => q.toFixed(1)).join(' ') + '" fill="none" stroke="' + RIGHT_COL + '" stroke-width="1.5"/>';
+    });
+    return out;
+  }
+  const RIGHT_COL = '#7c3aed';
   // 拖动中：只改预览（实体属性），重算一次，只重画工作区
   function shapeMove(ev) {
     const S = UI.S, d = SG.drag, E = S.scene.entities;
@@ -113,6 +169,11 @@
     const wp = UI.Space.screenToWorkspace(ev, d.v, d.sc), out = [];
     const put = (id, k, v) => { E[id].props[k] = v; out.push({ id, k, v }); };
     let tip = '';
+    // 约束（§10.5.9 第 1 条）：放缩会改长，锁着的图形不能放缩；旋转要是约束连着外面的点，也不能转
+    if (d.mode === 'sc' || d.mode === 'rot') {
+      const ids = d.targets.map((t) => t.id), bad = d.mode === 'sc' ? touchesLock(S.scene, ids) : !U.Geo.locks.rigid(S.scene, ids);
+      if (bad) { SG.showTip(ev.clientX, ev.clientY, d.mode === 'sc' ? '有约束锁着，先解锁再放缩' : '有约束连着外面的点，先解锁再转', false); return; }
+    }
     if (d.mode === 'tr') {
       let dX = Math.round(UI.Space.pxToUnits(mx, d.unit)), dY = -Math.round(UI.Space.pxToUnits(my, d.unit)), lx = -Infinity, hx = Infinity, ly = -Infinity, hy = Infinity;
       // 吸附开关关了、或者按住 Alt：不吸附（对齐线和构造点都不要）
@@ -120,15 +181,18 @@
       if (d.align) { d.align.alt = free; const s = SG.alignSolve(d.align, { x: UI.Space.pxToUnits(mx, d.unit), y: -UI.Space.pxToUnits(my, d.unit) }, d.unit); dX = s.dx; dY = s.dy; d.guides = s.guides; }
       for (const t of d.targets) { lx = Math.max(lx, t.lo[0] - t.x0); hx = Math.min(hx, t.hi[0] - t.x0); ly = Math.max(ly, t.lo[1] - t.y0); hy = Math.min(hy, t.hi[1] - t.y0); }
       dX = Math.max(lx, Math.min(hx, dX)); dY = Math.max(ly, Math.min(hy, dY));
-      // 拖动自由点靠近构造点：吸附。点先留在原来的地方，松手时变成构造点（shapeUp 提交）
-      d.snap = d.pt && !free ? snapDragCon(d, mx, my) : null;
+      // 约束（§10.5.9 第 1 条）：拖一个点时，只能落在约束允许的位置（取离鼠标最近的）；拖一组时，约束要都在这组里
+      const lk = lockGate(S.scene, d, dX, dY);
+      dX = lk.dX; dY = lk.dY;
+      // 拖动自由点靠近构造点：吸附。点先留在原来的地方，松手时变成构造点（shapeUp 提交）。锁住的点不吸附
+      d.snap = d.pt && !free && !lk.locked ? snapDragCon(d, mx, my) : null;
       if (d.snap) {
         d.guides = [];
         for (const t of d.targets) { put(t.id, t.kx, t.x0); put(t.id, t.ky, t.y0); }
         tip = '松手变成「' + d.snap.label + '」';
       } else {
         for (const t of d.targets) { put(t.id, t.kx, t.x0 + dX); put(t.id, t.ky, t.y0 + dY); }
-        tip = dX || dY ? '向右 ' + dX + ' 格，向上 ' + dY + ' 格' : '';
+        tip = lk.tip || (dX || dY ? '向右 ' + dX + ' 格，向上 ' + dY + ' 格' : '');
       }
     } else if (d.mode === 'sc' || d.mode === 'pscale') {
       // 放缩：以对角为中心（按住 Alt 以中心为准）；比例吸附到 1/2、2/3、1、3/2、2、3，并且结果要是整数坐标
@@ -344,5 +408,5 @@
     SG.setMsg(bad || '', !bad);
     SG.render();
   }
-  Object.assign(SG, { wsAct, ACT_LABEL, uniq, SCALES, SNAP_PX, minQ, maxQ, modT, tgt, figInfo, figByName, moveTargets, startShape, startHandle, shapeMove, shapeUp, figFlip, pieceVerts, clipCopy, clipPaste, wsGroup, groupMembers, groupDrag });
+  Object.assign(SG, { wsAct, ACT_LABEL, uniq, SCALES, SNAP_PX, minQ, maxQ, modT, tgt, figInfo, figByName, moveTargets, startShape, startHandle, shapeMove, shapeUp, figFlip, pieceVerts, clipCopy, clipPaste, wsGroup, groupMembers, groupDrag, touchesLock, segLenLock, lockTarget, wsLock, rightMarks });
 })(window);

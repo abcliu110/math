@@ -2634,6 +2634,84 @@ t('J4 生成是幂等的：对生成结果再生成，内容不变', () => {
   eq(again ? again.loader : 'x', r ? r.loader : 'y');
 });
 
+// ---- 约束锁定与尺寸驱动（§10.5.9 第 1、2 条）----
+console.log('约束锁定与尺寸驱动（§10.5.9 第 1、2 条）');
+// 场景：定长约束接着两个点（kind 0），或直角约束接着三个点（kind 1，b 为顶点）。约束器材 gcon 的输入口是 a、b、c
+const lockScene = (kind, len, pts) => {
+  const sc = W.blank(), ids = pts.map(([x, y]) => W.add(sc, 'gpt', 0, 0, { x, y }));
+  const con = W.add(sc, 'gcon', 0, 0, { kind, len });
+  const ports = kind === 0 ? ['a', 'b'] : ['a', 'b', 'c'];
+  ports.forEach((p, i) => sc.links.push({ id: 'k' + i, from: ids[i], fromPort: 'p', to: con, toPort: p }));
+  return { sc, ids, con };
+};
+t('约束器材 gcon 在包里声明 constraint，lint 通过', () => {
+  truthy(U.types.gcon && U.types.gcon.constraint === true, 'gcon 应声明 constraint: true');
+  eq(U.lintType(U.types.gcon).errors, []);
+});
+t('定长约束的输出是锁住的长度（求值结果是 5）', () => {
+  const { sc, con } = lockScene(0, 5, [[0, 0], [3, 4]]);
+  eq(U.Q.show(W.evaluate(sc)[con].out.n.data), '5');
+});
+t('Geo.locks.of 读出约束的端点；少接一个点就不起作用', () => {
+  const { sc, ids, con } = lockScene(0, 5, [[0, 0], [3, 4]]);
+  const L = U.Geo.locks.of(sc);
+  eq(L.length, 1); eq(L[0].kind, 'len'); eq(L[0].a, ids[0]); eq(L[0].b, ids[1]); eq(L[0].id, con);
+  sc.links = sc.links.filter((l) => l.toPort !== 'b');
+  eq(U.Geo.locks.of(sc).length, 0);
+});
+t('拖动锁长的端点：B 拖到 (6,0)，只能落在长 5 的圆上，取最近的 (5,0)', () => {
+  const { sc, ids } = lockScene(0, 5, [[0, 0], [3, 4]]);
+  eq(U.Geo.locks.fit(sc, ids[1], { x: 6, y: 0 }), { ok: true, x: 5, y: 0, locked: true });
+});
+t('拖动没有约束的点，原样返回', () => {
+  const sc = W.blank(), p = W.add(sc, 'gpt', 0, 0, { x: 1, y: 1 });
+  eq(U.Geo.locks.fit(sc, p, { x: 7, y: -3 }), { ok: true, x: 7, y: -3, locked: false });
+});
+t('拖动锁长的端点 A：落点仍在离 B 长 5 的圆上', () => {
+  const { sc, ids } = lockScene(0, 5, [[0, 0], [3, 4]]);
+  const r = U.Geo.locks.fit(sc, ids[0], { x: 1, y: -6 });
+  truthy(r.ok, '应能落在圆上');
+  eq((r.x - 3) * (r.x - 3) + (r.y - 4) * (r.y - 4), 25);
+});
+t('尺寸驱动：把长改成 4，B 从 (5,0) 落到长 4 的圆上最近的 (4,0)', () => {
+  const { sc, ids, con } = lockScene(0, 5, [[0, 0], [5, 0]]);
+  const r = U.Geo.locks.dim(sc, con, 4);
+  eq(r.ok, true); eq(r.id, ids[1]); eq([r.x, r.y], [4, 0]);
+});
+t('尺寸驱动：b 动不了就动 a：长改成 11，B(3,4) 不动，A 落到离原来最近的 (3,-7)', () => {
+  const { sc, ids, con } = lockScene(0, 5, [[0, 0], [3, 4]]);
+  const r = U.Geo.locks.dim(sc, con, 11);
+  eq(r.ok, true); eq(r.id, ids[0]); eq([r.x, r.y], [3, -7]);
+});
+t('尺寸驱动：两端都画不出来的长（20：工作区里没有整数点到 A、B 的距离是 20）说明原因，不动', () => {
+  const { sc, con } = lockScene(0, 5, [[0, 0], [3, 4]]);
+  const r = U.Geo.locks.dim(sc, con, 20);
+  eq(r.ok, false); truthy(/画不出来/.test(r.why || ''), '应说明画不出来');
+});
+t('尺寸驱动：长度只能是 1 到 20 的整数', () => {
+  const { sc, con } = lockScene(0, 5, [[0, 0], [3, 4]]);
+  eq(U.Geo.locks.dim(sc, con, 2.5).ok, false); eq(U.Geo.locks.dim(sc, con, 0).ok, false);
+});
+t('锁长：只有长是整数的线段能锁（3、4、5 能，√2 不能）', () => {
+  const { sc, ids } = lockScene(0, 5, [[0, 0], [3, 4]]);
+  eq(U.Geo.locks.canLen(sc, ids[0], ids[1]).len, 5);
+  const s2 = W.blank(), p = W.add(s2, 'gpt', 0, 0, { x: 0, y: 0 }), q = W.add(s2, 'gpt', 0, 0, { x: 1, y: 1 });
+  eq(U.Geo.locks.canLen(s2, p, q).ok, false);
+});
+t('直角：多边形里的直角顶点；A(0,0)、B(4,0)、C(0,3) 只有 A 是直角', () => {
+  const sc = W.blank(), ids = [[0, 0], [4, 0], [0, 3]].map(([x, y]) => W.add(sc, 'gpt', 0, 0, { x, y }));
+  const r = U.Geo.locks.rightAt(sc, ids);
+  eq(r.length, 1); eq(r[0][1], ids[0]);
+});
+t('直角约束：拖 P(4,0) 到 (3,5)，只能沿与 BC 垂直的线走，落到 (3,0)', () => {
+  const { sc, ids } = lockScene(1, 0, [[4, 0], [0, 0], [0, 3]]);
+  eq(U.Geo.locks.fit(sc, ids[0], { x: 3, y: 5 }), { ok: true, x: 3, y: 0, locked: true });
+});
+t('整体移动：约束的点都在移动的那组里才算刚体；只动一端不是', () => {
+  const { sc, ids } = lockScene(0, 5, [[0, 0], [3, 4]]);
+  eq(U.Geo.locks.rigid(sc, ids), true);
+  eq(U.Geo.locks.rigid(sc, [ids[0]]), false);
+});
 console.log('分步定型（bake，§10.5.6 第 5 步）：前面的步骤折成一步，撤销回到定型前，判题仍能读到定型前的步骤');
 {
   const N = (n) => ({ op: 'num', n: BigInt(n) }), X = { op: 'var', name: 'x' };
