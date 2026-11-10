@@ -186,5 +186,59 @@
       return UI.Intent.run('params', { ops: list });
     }
   }
-  Object.assign(SG, { uniq, SCALES, SNAP_PX, minQ, maxQ, modT, tgt, figInfo, figByName, moveTargets, startShape, startHandle, shapeMove, shapeUp, figFlip });
+  // ---- 工具条上的图形操作：复制、旋转、翻转、删除（不用先选图形）----
+  // 对谁做：选中的图形；没有选中，工作区里只有一个图形就是它；有好几个就等着：点一下要操作的图形（S.wsArm），点到就做
+  const ACT_LABEL = { copy: '复制', rot: '旋转', flip: '翻转', del: '删除' };
+  const isFig = (fi) => !!fi && !!fi.f && (fi.f.type === 'polygon' || fi.f.type === 'circle');
+  function wsFigures(wsId) {
+    const ws = UI.S.scene.entities[wsId]; if (!ws) return [];
+    return SG.wsVisible(ws).map((v) => ({ v, fi: figInfo(v) })).filter((x) => isFig(x.fi) || (x.v.fig && x.v.fig.type === 'polygon' && x.fi));
+  }
+  // 旋转：自由点围成的图形，每个顶点绕外框中心（取整数）逆时针转 90°，坐标仍是整数；转出 ±10 的范围就不转，说明原因
+  function figRotate(fi) {
+    const E = UI.S.scene.entities, ids = uniq(fi.verts), pts = fi.f.pts;
+    const bx = pts.map((p) => Q.num(p.x)), by = pts.map((p) => Q.num(p.y));
+    const c = { x: Math.round((Math.min(...bx) + Math.max(...bx)) / 2), y: Math.round((Math.min(...by) + Math.max(...by)) / 2) };
+    const ops = ids.map((id) => { const x = E[id].props.x, y = E[id].props.y; return { id, nx: c.x - (y - c.y), ny: c.y + (x - c.x) }; });
+    if (ops.some((o) => Math.abs(o.nx) > L.COORD_MAX || Math.abs(o.ny) > L.COORD_MAX)) return { ok: false, why: '转过去会超出工作区的坐标范围（±' + L.COORD_MAX + '），先把图形挪近中间再转' };
+    const list = []; for (const o of ops) { list.push({ id: o.id, k: 'x', v: o.nx }); list.push({ id: o.id, k: 'y', v: o.ny }); }
+    return UI.Intent.run('params', { ops: list });
+  }
+  function figCopy(wsId, fi) {
+    const E = UI.S.scene.entities, ids = uniq(fi.verts), cand = [[2, -2], [-2, -2], [2, 2], [-2, 2], [4, 0], [-4, 0], [0, 4], [0, -4]];
+    const fits = ([dx, dy]) => ids.every((id) => Math.abs(E[id].props.x + dx) <= L.COORD_MAX && Math.abs(E[id].props.y + dy) <= L.COORD_MAX);
+    const off = cand.find(fits); if (!off) return { ok: false, why: '工作区里放不下一份副本（坐标范围 ±10）' };
+    return UI.Intent.run('copyfig', { ws: wsId, poly: fi.ent.id, verts: fi.verts, dx: off[0], dy: off[1] });
+  }
+  function figApply(wsId, act, name) {
+    const fi = figByName(wsId, name); if (!fi) return { ok: false, why: '找不到这个图形' };
+    if (act === 'flip') { figFlip(wsId, name, 1); return { ok: true }; }
+    if (act === 'del') {
+      if (fi.kind === 'pts') return UI.Intent.run('delete', { id: fi.ent.id, alsoVerts: uniq(fi.verts) });
+      return UI.Intent.run('delete', { id: fi.ent.id });
+    }
+    if (act === 'copy') return fi.kind === 'pts' ? figCopy(wsId, fi) : UI.Intent.run('copy', { id: fi.ent.id });
+    if (act === 'rot') {
+      if (fi.kind === 'pts') return figRotate(fi);
+      if (fi.kind === 'piece') return UI.Intent.run('piece', { ids: [fi.ent.id], what: 'turn', value: 1 });
+      return UI.Intent.run('params', { ops: [{ id: fi.ent.id, k: 'turn', v: modT(fi.ent.props.turn + 1) }] });
+    }
+    return { ok: false, why: '不认识的操作' };
+  }
+  function wsAct(wsId, act, name) {
+    const S = UI.S; S.wsArm = null;
+    let names = name ? [name] : (S.wsSel || []).filter((n) => isFig(figByName(wsId, n)) || (figByName(wsId, n) && figByName(wsId, n).f.type === 'polygon'));
+    if (!names.length) {
+      const all = wsFigures(wsId).map((x) => SG.pickOf(x.v));
+      if (!all.length) { SG.setMsg('工作区里还没有图形：点「图形」放一个', false); return SG.render(); }
+      if (all.length === 1) names = all;
+      else { S.wsArm = { ws: wsId, act }; SG.setMsg('点一下要' + ACT_LABEL[act] + '的图形（Esc 取消）', true); return SG.render(); }
+    }
+    let bad = null;
+    for (const n of names) { const r = figApply(wsId, act, n); if (r && r.ok === false) { bad = r.why; break; } }
+    if (act !== 'flip' && act !== 'rot') S.wsSel = [];
+    SG.setMsg(bad || '', !bad);
+    SG.render();
+  }
+  Object.assign(SG, { wsAct, ACT_LABEL, uniq, SCALES, SNAP_PX, minQ, maxQ, modT, tgt, figInfo, figByName, moveTargets, startShape, startHandle, shapeMove, shapeUp, figFlip });
 })(window);

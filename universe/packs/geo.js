@@ -120,6 +120,57 @@
         draw: (c) => (c.out.p ? K.text(c.w / 2, c.h / 2 + 4, U.Fig.show(c.out.p.data).replace('点 ', ''), { size: 13 }) : ''),
       },
 
+      // ---------------- 垂足（三个点）：画线时自动找垂足用。点 p 到直线 ab 的垂足 ----------------
+      gperp: {
+        workspaceRole: 'step',
+        workbenches: ['geometry'],
+        handles: true,
+        stepLabel: '垂足',
+        hidden: true,
+        essence: ['E1', 'E3'],
+        label: '垂足（点到线）', prefix: '垂足', group: '图形', grades: [7, 9], lint: ex('只由一个点和线上的两个点决定'),
+        // 吸附声明：已经按下了起点 p（start），指针靠近「p 到某条边所在直线的垂足」就吸附；结果是建这个器材，起点接 p，边的两端接 a、b
+        snap: { kind: 'foot', label: '垂足（画出垂线）', mark: '⊥', of: 'foot', wire: ['a', 'b'], extra: ['p'], out: 'p', at: (a, b, start) => Geo.foot(start, a, b) },
+        props: {},
+        inputs: { p: pointIn, a: pointIn, b: pointIn },
+        outputs: { p: { dim: null, kind: 'fig', label: '垂足' } },
+        icon: () => K.line(8, 36, 56, 36, { w: 2 }) + K.line(32, 8, 32, 36, { w: 2, dash: '4 3' }),
+        size: () => [110, 60],
+        compute: (c) => {
+          const p = figIn(c, 'p', 'point'), a = figIn(c, 'a', 'point'), b = figIn(c, 'b', 'point');
+          if (!p || !a || !b) { c.say('info', '接三个点进来：要作垂线的点，和直线上的两个点'); return {}; }
+          if (Q.num(F.d2(a.pts[0], b.pts[0])) === 0) { c.say('warn', '直线上的两个点重合了'); return {}; }
+          return { p: fig(ptFig(Geo.foot(p.pts[0], a.pts[0], b.pts[0]))) };
+        },
+        draw: (c) => (c.out.p ? K.text(c.w / 2, c.h / 2 + 4, U.Fig.show(c.out.p.data).replace('点 ', ''), { size: 13 }) : ''),
+      },
+
+      // ---------------- 交点（四个点）：画线时自动找两条线的交点用 ----------------
+      gcross: {
+        workspaceRole: 'step',
+        workbenches: ['geometry'],
+        handles: true,
+        stepLabel: '交点',
+        hidden: true,
+        essence: ['E1'],
+        label: '交点（两条线）', prefix: '交点', group: '图形', grades: [7, 9], lint: ex('只由两条线（四个点）决定'),
+        // 吸附声明：两条线段（边、对角线）在里面相交，指针靠近交点就吸附；线 ab、线 cd
+        snap: { kind: 'cross', label: '交点', mark: '×', of: 'cross', wire: ['a', 'b', 'c', 'd'], out: 'p', at: (a, b, c2, d) => Geo.lineIntersect(a, b, c2, d) },
+        props: {},
+        inputs: { a: pointIn, b: pointIn, c: pointIn, d: pointIn },
+        outputs: { p: { dim: null, kind: 'fig', label: '交点' } },
+        icon: () => K.line(10, 10, 54, 36, { w: 2 }) + K.line(10, 36, 54, 10, { w: 2 }),
+        size: () => [110, 60],
+        compute: (c) => {
+          const [a, b, c2, d] = ['a', 'b', 'c', 'd'].map((k) => figIn(c, k, 'point'));
+          if (!a || !b || !c2 || !d) { c.say('info', '接四个点进来：第一条线的两端和第二条线的两端'); return {}; }
+          const p = Geo.lineIntersect(a.pts[0], b.pts[0], c2.pts[0], d.pts[0]);
+          if (!p) { c.say('warn', '两条线平行，没有交点'); return {}; }
+          return { p: fig(ptFig(p)) };
+        },
+        draw: (c) => (c.out.p ? K.text(c.w / 2, c.h / 2 + 4, U.Fig.show(c.out.p.data).replace('点 ', ''), { size: 13 }) : ''),
+      },
+
       // ---------------- 围成多边形：按连线顺序把点围起来 ----------------
       gpoly: {
         workspaceRole: 'none',

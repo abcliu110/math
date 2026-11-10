@@ -19,7 +19,6 @@
     // 工具说明从 UI.ToolHelp 读（悬停或聚焦时由 CSS 显示 data-tip）；没有说明的工具不带 data-tip
     h += '<div class="wsx-tools">' + wd.tools.map((t) => { const hp = UI.ToolHelp.of(t.id); return '<button data-ws-tool="' + t.id + '" data-ws="' + ws.id + '"' + (hp ? ' data-tip="' + SG.escA(hp.tip) + '"' : '') + (D && D.tool === t.id ? ' class="on" aria-pressed="true"' : '') + '>' + K.esc(t.label) + '</button>'; }).join('') +
       '<button data-ws-fit="' + ws.id + '" title="按内容选坐标范围，让图正好装下">适应</button></div>';
-    h += shapesHtml(ws);
     h += '<div class="wsx-range">' + SG.rangeText(ws, pw, ph) + '</div>';
     h += '<div class="wsx-args">移动时：向右 <input type="number" data-ws-arg="dx" value="' + SG.escA(S.wsArgs.dx) + '"> 向上 <input type="number" data-ws-arg="dy" value="' + SG.escA(S.wsArgs.dy) + '"></div>';
     h += '<div class="wsx-sel">' + (D ? (D.tool === 'cut' ? '剪：选中要剪的图形，点两下画剪切线（Esc 退出）' : '连线：点两下画一条线（Esc 退出）') : picks.length ? '选中：' + picks.map((x) => K.esc(SG.pickLabel(x, vals))).join('、') : '点图形或点来选中（Shift 点可以多选）') + '</div>';
@@ -45,7 +44,7 @@
   function shapesHtml(ws) {
     const list = U.Shapes ? U.Shapes.LIST : []; if (!list.length) return '';
     const grp = (n) => list.filter((t) => t.pts.length === n).map((t) => '<button data-ws-shape="' + t.id + '" data-ws="' + ws.id + '" title="放一个' + SG.escA(plain(t)) + '：顶点可以拖，里面可以画辅助线">' + K.esc(plain(t)) + '</button>').join('');
-    return '<details class="wsx-shapes"><summary>放一个图形 ▾</summary><div><span class="wsx-lbl">三角形</span>' + grp(3) + '</div><div><span class="wsx-lbl">四边形</span>' + grp(4) + '</div></details>';
+    return '<details class="shape-menu"><summary title="放一个图形：三角形、长方形、梯形、菱形……">图形 ▾</summary><div class="shape-pop"><div><span class="wsx-lbl">三角形</span>' + grp(3) + '</div><div><span class="wsx-lbl">四边形</span>' + grp(4) + '</div></div></details>';
   }
   function wsAddShape(wsId, type) {
     const S = UI.S, ws = S.scene.entities[wsId]; if (!ws || !U.types[type]) return;
@@ -163,18 +162,20 @@
   function barTools(ws) {
     const D = UI.S.wsDraw && UI.S.wsDraw.ws === ws.id ? UI.S.wsDraw : null;
     const btn = (id, label, tip) => '<button data-fbar="' + id + '" data-ws="' + ws.id + '"' + (D && D.tool === id ? ' class="on" aria-pressed="true"' : '') + ' title="' + SG.escA(tip) + '">' + label + '</button>';
-    return '<span class="fbar-tools">' + btn('seg', '连线', '连线：点两下画一条线（Esc 退出）') + btn('cut', '剪', '剪：先选一个图形，再点两下画剪切线（Esc 退出）') +
-      btn('del', '删除', '删除选中的图形或步骤') + btn('undo', '撤销', '撤销上一步') + '</span>';
+    // 连线会自己找顶点、中点、垂足、交点；复制、旋转、翻转、删除作用在选中的图形上，没选就点一下要操作的图形（或只有一个图形时就是它）
+    const A = UI.S.wsArm && UI.S.wsArm.ws === ws.id ? UI.S.wsArm.act : null;
+    const acBtn = (id, label, tip) => '<button data-fbar="' + id + '" data-ws="' + ws.id + '"' + (A === id ? ' class="on" aria-pressed="true"' : '') + ' title="' + SG.escA(tip) + '">' + label + '</button>';
+    return '<span class="fbar-tools">' + btn('seg', '连线', '连线（L）：拖出一条线，会自动吸到顶点、中点、垂足、交点；也可以点两下') + btn('cut', '剪', '剪（C）：先选一个图形，再拖出一条剪切线') +
+      '<span class="wsmini-sep"></span>' + shapesHtml(ws) + acBtn('copy', '复制', '复制选中的图形（Ctrl+D）') + acBtn('rot', '旋转', '把选中的图形转 90°（R）') + acBtn('flip', '翻转', '把选中的图形左右翻转（F）') +
+      btn('del', '删除', '删除选中的图形或步骤（Delete）') + btn('undo', '撤销', '撤销上一步') + '</span>';
   }
   // 浮动条的整块：收起时只剩一个“工具”按钮（偏好记在 UI.Chrome 里）
   // pos：浮动条在台面局部像素里的位置（画布上方）；专注标题栏里没有位置
   // 快捷图形（原来的画布迷你工具条里的四个，和抽屉里的“放一个图形”是同一批）
-  const QUICK_SHAPES = ['fscalene', 'frect', 'ftrap', 'fpgram'];
   // 选择（V）、快捷图形、连线、剪、删除、撤销、全屏：只有这一条工具条（原来的迷你工具条和它重复，已并进来）
   function barHtml(ws, pos) {
     const shut = UI.Chrome.barShut(), D = UI.S.wsDraw && UI.S.wsDraw.ws === ws.id ? UI.S.wsDraw : null;
-    const shapes = U.Shapes ? QUICK_SHAPES.filter((id) => U.types[id]).map((id) => '<button data-ws-shape="' + id + '" data-ws="' + ws.id + '" title="放一个' + SG.escA(plain(U.Shapes.BY[id])) + '：顶点可以拖，里面可以画辅助线">' + K.esc(plain(U.Shapes.BY[id])) + '</button>').join('') : '';
-    const quick = '<span class="fbar-quick"><button data-ws-mode="select" data-ws="' + ws.id + '"' + (!D ? ' class="on" aria-pressed="true"' : '') + ' title="选择、拖动点和图形（V）">选择 <kbd>V</kbd></button>' + shapes + '<span class="wsmini-sep"></span></span>';
+    const quick = '<span class="fbar-quick"><button data-ws-mode="select" data-ws="' + ws.id + '"' + (!D ? ' class="on" aria-pressed="true"' : '') + ' title="选择、拖动点和图形（V）">选择 <kbd>V</kbd></button><span class="wsmini-sep"></span></span>';
     return '<div class="fbar wsmini' + (shut ? ' shut' : '') + '" data-wsbar="' + ws.id + '"' + (pos ? ' style="left:' + pos.x + 'px;top:' + pos.y + 'px"' : '') + '>' +
       '<button class="fbar-fold" data-fbar="fold" data-ws="' + ws.id + '" title="' + (shut ? '展开工具条' : '收起工具条') + '">' + (shut ? '工具 ▸' : '▾') + '</button>' +
       quick + barTools(ws) +
@@ -183,9 +184,8 @@
   // 删除：删的是选中的步骤（连同它的结果，见 delWs）或选中的图形；没有选中就说明一下
   function barDelete(wsId) {
     const S = UI.S, id = S.sel, e = id && S.scene.entities[id];
-    if (!e || e.parent !== wsId) { SG.setMsg('先点选要删除的图形或步骤，再点删除', false); return SG.render(); }
-    if (SG.roleOf(e) === 'step') return delWs(id);
-    S.sel = null; UI.Intent.run('delete', { id }); SG.render();
+    if (e && e.parent === wsId && SG.roleOf(e) === 'step') return delWs(id);   // 选中的步骤：连同它的结果一起删
+    return SG.wsAct(wsId, 'del');   // 图形：选中的，或点一下要删的
   }
   // 浮动条和专注标题栏的按钮：走的还是原来的入口（连线、剪走工具，撤销走撤销按钮，删除走步骤清单的删除）
   function barAction(el) {
@@ -195,6 +195,7 @@
     if (a === 'focus') return SG.setFocus(UI.State.focusedId() ? null : wsId);
     if (a === 'seg' || a === 'cut') return SG.wsRun(wsId, a);
     if (a === 'del') return barDelete(wsId);
+    if (a === 'copy' || a === 'rot' || a === 'flip') return SG.wsAct(wsId, a);
     if (a === 'undo') { const u = document.getElementById('undo'); if (u) u.click(); }
   }
   Object.assign(SG, { wsPanelHtml, wsPick, delWs, wsRun, wsAddShape, barTools, barHtml, barDelete, barAction });

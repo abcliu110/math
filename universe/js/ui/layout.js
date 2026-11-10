@@ -22,6 +22,7 @@
     LINK_CURVE_MIN: 40,           // 连线曲线控制点的最小伸出长度
     MIN_W: 120, MIN_H: 90,        // 卡片最小尺寸
     DEFAULT_CARD: [150, 90],      // 没有 size() 的器材用的卡片尺寸
+    COORD_MAX: 10,                // 自由点坐标的范围 ±这么多（gpt 的 min、max）
     TOOL_GAP: 14,                 // 选中卡片时，工具条离卡片右边的距离
     CARD_PAD: 12,                 // 找空位时，已有卡片四周留的空隙
     SPOT_STEP: 40, SPOT_RINGS: 30, // 找空位：每一圈的步长、最多几圈

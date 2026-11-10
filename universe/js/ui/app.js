@@ -468,6 +468,10 @@
     // 键盘
     document.addEventListener('keydown', (e) => {
       if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+      if (e.key === 'Escape' && S.wsArm) { S.wsArm = null; UI.Stage.render(); return; }   // 取消「点一下要操作的图形」
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'd' || e.key === 'D')) {   // Ctrl+D：复制选中的图形
+        const ws = UI.Stage.activeWs(); if (ws && (S.wsSel || []).length) { e.preventDefault(); UI.Stage.wsAct(ws, 'copy'); return; }
+      }
       if (UI.Stage.keyNav(e)) return;   // 工作区的键盘操作：Tab、Enter、方向键、Delete、Esc（V8，2.8），和鼠标共用意图层
       if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); }
       else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'Z'))) { e.preventDefault(); redo(); }
@@ -475,7 +479,12 @@
       else if (e.key === ' ') { e.preventDefault(); UI.Intent.clock({ running: !S.scene.clock.running }); }
       else if ((e.key === 'r' || e.key === 'R' || e.key === 'f' || e.key === 'F') && !e.ctrlKey && !e.metaKey && !e.altKey) {
         // 块（§10.5.10）：R 转 90°，F 左右翻，作用在选中的块上；没有选中块就什么也不做
-        const ids = UI.Stage.selPieceIds(); if (!ids.length) return;
+        const ids = UI.Stage.selPieceIds();
+        if (!ids.length) {   // 不是块：自由点围成的图形，R 转 90°、F 左右翻
+          const ws = UI.Stage.activeWs();
+          if (ws && (S.wsSel || []).length) { e.preventDefault(); UI.Stage.wsAct(ws, e.key === 'r' || e.key === 'R' ? 'rot' : 'flip'); }
+          return;
+        }
         e.preventDefault();
         const what = e.key === 'r' || e.key === 'R' ? 'turn' : 'flip';
         UI.Intent.run('piece', { ids, what, value: 1 });
