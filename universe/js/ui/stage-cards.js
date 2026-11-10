@@ -50,10 +50,10 @@
     // 选中工具条
     if (S.sel === e.id) {
       h += '<div class="tool" style="left:' + (g.x + g.w + L.TOOL_GAP) + 'px;top:' + g.y + 'px">' +
-        '<button data-act="insp" title="属性">' + ico('gear') + '</button><button data-act="copy" title="复制">' + ico('copy') + '</button>' +
-        (SG.def(e).stateful ? '<button data-act="resetstate" title="记忆归零">' + ico('undo') + '</button>' : '') +
-        (SG.roleOf(e) === 'piece' ? '<button data-act="turn" title="转 90°（R）">' + ico('turn') + '</button><button data-act="flip" title="左右翻（F）">' + ico('flip') + '</button>' : '') +
-        '<button data-act="del" title="删除">' + ico('trash') + '</button></div>';
+        '<button data-act="insp" title="属性" aria-label="属性">' + ico('gear') + '</button><button data-act="copy" title="复制" aria-label="复制">' + ico('copy') + '</button>' +
+        (SG.def(e).stateful ? '<button data-act="resetstate" title="记忆归零" aria-label="记忆归零">' + ico('undo') + '</button>' : '') +
+        (SG.roleOf(e) === 'piece' ? '<button data-act="turn" title="转 90°（R）" aria-label="转 90 度">' + ico('turn') + '</button><button data-act="flip" title="左右翻（F）" aria-label="左右翻">' + ico('flip') + '</button>' : '') +
+        '<button data-act="del" title="删除" aria-label="删除">' + ico('trash') + '</button></div>';
     }
     if (SG.isWsDef(e.type)) { const ff = SG.figFloat(e, g.w, cH); if (ff) h += SG.floatHtml(e.id, ff, g.x, g.y + HD); }
     return h;
@@ -79,7 +79,7 @@
       const sel = S.selLink === l.id, pd = bez(a, b);
       paths += '<path class="hit" data-link="' + l.id + '" d="' + pd + '"/><path class="ln' + (sel ? ' sel' : '') + '" stroke="' + col + '" d="' + pd + '"/>';
       if (S.scene.clock.running) paths += '<path class="flow" d="' + pd + '"/>';
-      lbl += '<div class="lb' + (sel ? ' sel' : '') + '" data-link="' + l.id + '" style="left:' + ((a.x + b.x) / 2) + 'px;top:' + ((a.y + b.y) / 2) + 'px">' + K.esc(v ? U.briefVal(v) : '—') + (sel ? ' <button class="lbwhy" data-why="' + l.from + '|' + l.fromPort + '" title="这个数是怎么来的">？</button><button class="lbdel" data-unlink="' + l.id + '" title="删除这根线">✕</button>' : '') + '</div>';
+      lbl += '<div class="lb' + (sel ? ' sel' : '') + '" data-link="' + l.id + '" style="left:' + ((a.x + b.x) / 2) + 'px;top:' + ((a.y + b.y) / 2) + 'px">' + K.esc(v ? U.briefVal(v) : '—') + (sel ? ' <button class="lbwhy" data-why="' + l.from + '|' + l.fromPort + '" title="这个数是怎么来的" aria-label="这个数是怎么来的">？</button><button class="lbdel" data-unlink="' + l.id + '" title="删除这根线" aria-label="删除这根线">✕</button>' : '') + '</div>';
     }
     if (SG.linking && SG.linking.cur) { const F = E[SG.linking.from]; paths += '<path class="ln" stroke="#fff" stroke-dasharray="6 6" d="' + bez(portPos(F, SG.linking.fromPort, D, true), SG.linking.cur) + '" fill="none"/>'; }
     return { paths, lbl };

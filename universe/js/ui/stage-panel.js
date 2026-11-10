@@ -35,7 +35,7 @@
     steps.forEach((st, i) => {
       const srcs = S.scene.links.filter((l) => l.to === st.id).map((l) => SG.pretty(names[l.from + '.' + l.fromPort]) || '?');
       h += '<div class="wsx-step" data-ws-step="' + st.id + '"><span>第 ' + (i + 1) + ' 步：' + K.esc(SG.stepLabel(st)) + '（' + K.esc(srcs.join('、')) + '）</span>' +
-        '<button data-ws-del="' + st.id + '" title="删除这一步">✕</button></div>';
+        '<button data-ws-del="' + st.id + '" title="删除这一步" aria-label="删除这一步">✕</button></div>';
     });
     h += '<div class="wsx-h">图层</div>' + layersHtml(ws, vals, hidden);
     return h + '</div>';

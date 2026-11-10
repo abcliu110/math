@@ -60,6 +60,11 @@
     BAR: { top: 4, h: 28, gap: 6, fabGap: 4 },   // fabGap：适应台面时，底部浮动条和画布之间的间距（比摆抽屉时小，画布能多占一点）
     // 左右栏收成窄条的宽度（屏幕像素）；只在桌面宽度（超过 overlayBP，窄屏的栏是盖在上面的）生效；几何工作区打开、窗口窄于 autoBP 时自动收起（V2）
     RAIL: { w: 30, overlayBP: 960, autoBP: 1100 },
+    // 触屏（V8，2.7）：把手和点击区至少 min 像素（CSS 像素，只在触屏的按下时放大点击范围，画面不变）；
+    // 长按 longMs 毫秒弹出菜单，移动超过 slop 像素就不算长按；双指按下后 recentMs 毫秒内的右键菜单（系统长按）不弹
+    TOUCH: { min: 24, longMs: 500, slop: 10, recentMs: 1000 },
+    // 键盘（V8，2.8）：方向键移动选中图形的步长（格）；按住 Shift 的大步
+    KEY: { step: 1, big: 5 },
   });
   UI.LAYOUT = LAYOUT;
 

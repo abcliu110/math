@@ -1,5 +1,5 @@
 /* node tools/verify.js —— 一条命令跑完全部检查，任一步失败就退出非零（不再往下跑）。
- * 顺序：tests/run.js → tools/check-types.js → tests/ui.js → tests/ui-probes.js（如果存在）→ tests/ui-layout.js → tests/ui-space.js → tests/ui-roles.js → tests/ui-deps.js → tests/ui-workbench.js → tests/ui-select.js → tests/ui-snap.js → tests/ui-shapes.js → tests/ui-export.js → tests/ui-labels.js → tests/ui-space-focus.js → tests/ui-feedback.js → tests/ui-readout.js → tests/ui-robust.js → tests/ui-random.js → tools/lint-ui.js → tools/contrast.js → tools/build-standalone.js → dist 文件加载检查。
+ * 顺序：tests/run.js → tools/check-types.js → tests/ui.js → tests/ui-probes.js（如果存在）→ tests/ui-layout.js → tests/ui-space.js → tests/ui-roles.js → tests/ui-deps.js → tests/ui-workbench.js → tests/ui-select.js → tests/ui-snap.js → tests/ui-shapes.js → tests/ui-export.js → tests/ui-labels.js → tests/ui-space-focus.js → tests/ui-touch-keys.js → tests/ui-feedback.js → tests/ui-readout.js → tests/ui-robust.js → tests/ui-random.js → tools/lint-ui.js → tools/contrast.js → tools/build-standalone.js → dist 文件加载检查。
  * 界面测试和 dist 检查需要环境变量 PW_NODE_PATH：playwright 所在的 node_modules 目录。
  * 用法：PW_NODE_PATH=<.../node_modules> node tools/verify.js */
 'use strict';
@@ -70,6 +70,7 @@ async function checkDist() {
   if (!runScript('tests/ui-export.js', 'tests/ui-export.js', pwEnv)) bail();         // 2.12/V10：导出图片（真实鼠标点菜单，台面和专注工作区各一次下载，.png、大小 > 0）
   if (!runScript('tests/ui-labels.js', 'tests/ui-labels.js', pwEnv)) bail();         // V6：标签避让（2.3）、图层分组（2.4）、点的命名与双击改名（2.6），真实鼠标
   if (!runScript('tests/ui-space-focus.js', 'tests/ui-space-focus.js', pwEnv)) bail();   // V2：空间（1024×768 画布 ≥ 60%、抽屉不压画布、浮动条收起展开、专注进入退出、左右栏窄条）
+  if (!runScript('tests/ui-touch-keys.js', 'tests/ui-touch-keys.js', pwEnv)) bail();   // V8：触屏（24 像素点击区、双指缩放、长按菜单，CDP 真实触摸）与键盘（Tab、方向键、Delete、Ctrl+Z、Esc）、aria-label
   if (!runScript('tests/ui-feedback.js', 'tests/ui-feedback.js', pwEnv)) bail();     // 2.5/2.13/V7：工具说明与当前工具状态、新手引导（弹一次、关闭后刷新不再弹、菜单可再开）
   if (!runScript('tests/ui-readout.js', 'tests/ui-readout.js', pwEnv)) bail();       // 2.9/2.10/V9：读数（线段长、三角形面积与各边各角）、块的任意整数角度旋转（近似，1° / Shift 15° 吸附）、撤销
   if (!runScript('tests/ui-robust.js', 'tests/ui-robust.js', pwEnv)) bail();        // U8/P6–P8/P11：端口不挡标题栏、十格阵只放筹码、删除工作区不留残留、题目里的重放、复制留在容器里（真实鼠标）

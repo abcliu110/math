@@ -12,6 +12,7 @@
     // 工作区的浮动工具条（V2）：放在台面上，画布上方；不随台面缩放，点它不会拖动台面（见 stage-drag 的 onDown）
     SG.barsEl = document.createElement('div'); SG.barsEl.id = 'wsbars'; SG.stageEl.appendChild(SG.barsEl);
     SG.stageEl.addEventListener('pointerdown', SG.onDown);
+    SG.touchBind();   // 触屏（V8）：系统取消触摸、长按后的右键菜单
     // 拖卡片时不让浏览器接管成“原生拖放”（否则之后的 pointermove 全被吞掉）
     SG.stageEl.addEventListener('dragstart', (ev) => ev.preventDefault());
     // 工作区面板：图层开关、移动工具的 dx、dy（只记下来，不重画，免得输入框失去焦点）

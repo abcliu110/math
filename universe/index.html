@@ -8,7 +8,7 @@
 </head>
 <body>
 <div id="top">
-  <button class="menu-btn" id="burger" title="实验库 / 步骤">≡</button>
+  <button class="menu-btn" id="burger" title="实验库 / 步骤" aria-label="实验库和步骤">≡</button>
   <span class="brand">数学小宇宙</span>
   <span class="ptitle" id="ptitle"></span>
   <div class="seg" id="modes"><button data-mode="free">自由探究</button><button data-mode="practice">练习</button><button data-mode="exam">考试</button></div>
@@ -22,7 +22,7 @@
 </div>
 <div id="main">
   <div id="left">
-    <button class="railbtn" id="lrail" title="收起实验库">‹</button>
+    <button class="railbtn" id="lrail" title="收起实验库" aria-label="收起实验库">‹</button>
     <div class="tabs" id="ltabs"><button data-tab="lab">实验库</button><button data-tab="steps">步骤</button></div>
     <div class="scroll" id="leftbody"></div>
   </div>
@@ -31,16 +31,16 @@
     <div id="banner" style="display:none"></div>
     <div id="guide" class="guide" style="display:none"></div>
     <div id="insp"></div>
-    <div class="fab" id="zoom"><button id="zout">−</button><span class="zv" id="zv">100%</span><button id="zin">+</button><button id="zfit">适应</button></div>
+    <div class="fab" id="zoom"><button id="zout" aria-label="缩小台面">−</button><span class="zv" id="zv">100%</span><button id="zin" aria-label="放大台面">+</button><button id="zfit">适应</button></div>
     <div class="fab" id="clockbar">
-      <button id="rew" title="回到第 0 拍">⏮</button><button id="go" class="go" title="开始 / 暂停（空格）">▶</button><button id="step1" title="走一拍">⏭</button>
+      <button id="rew" title="回到第 0 拍" aria-label="回到第 0 拍">⏮</button><button id="go" class="go" title="开始 / 暂停（空格）" aria-label="开始或暂停">▶</button><button id="step1" title="走一拍" aria-label="走一拍">⏭</button>
       <span class="tk" id="tk"></span>
       <span class="rate"><button data-rate="0.5">0.5×</button><button data-rate="1">1×</button><button data-rate="4">4×</button><button data-rate="20">20×</button></span>
     </div>
     <div class="fab" id="fabr"><button id="why">💡 为什么</button><button id="found">📝 我的发现</button></div>
   </div>
   <div id="right">
-    <button class="railbtn" id="rrail" title="收起器材架">›</button>
+    <button class="railbtn" id="rrail" title="收起器材架" aria-label="收起器材架">›</button>
     <div class="sh" style="padding:12px;border-bottom:1px solid var(--line)"><input class="search" id="q2" placeholder="搜索器材"></div>
     <div class="scroll" id="shelfbody"></div>
   </div>
@@ -177,6 +177,8 @@
 <script src="js/ui/stage-draw.js"></script>
 <script src="js/ui/stage-drag.js"></script>
 <script src="js/ui/stage-drop.js"></script>
+<script src="js/ui/stage-touch.js"></script>
+<script src="js/ui/stage-keys.js"></script>
 <script src="js/ui/stage-init.js"></script>
 <script src="js/ui/stage.js"></script>
 <script src="js/ui/export.js"></script>

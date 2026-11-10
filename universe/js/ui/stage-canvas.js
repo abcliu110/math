@@ -79,6 +79,11 @@
     });
     return out.join('');
   }
+  // 图形的读法（V8，2.8）：点写成“点 A，坐标 x, y”，其余写它的名字（长方形 1 之类）
+  function ariaOf(v, f) {
+    if (f.type === 'point' && f.pts && f.pts[0]) return '点 ' + v.label + '，坐标 ' + Q.show(f.pts[0].x) + ', ' + Q.show(f.pts[0].y);
+    return v.label;
+  }
   function wsBody(ws, w, h) {
     const S = UI.S, sel = new Set(S.wsSel || []), ents = S.scene.entities;
     const fr = SG.wsFrame(ws, w, h), vals = fr.vals;
@@ -95,7 +100,7 @@
       // 块（§10.5.10）：用块自己的颜色；可以拖（data-drag，松手时一次 piece 移动）
       const ent = ents[v.id], isPc = !!ent && SG.roleOf(ent) === 'piece' && v.port === 'f';
       const c = isPc ? (ent.props.color || SG.WS_COL[0]) : SG.WS_COL[i % SG.WS_COL.length], on = sel.has(SG.pickOf(v)), sw = on ? 4 : 2;
-      const pk = " data-pick=\"" + SG.escA(SG.pickOf(v)) + "\"";
+      const pk = " data-pick=\"" + SG.escA(SG.pickOf(v)) + "\" role=\"img\" aria-label=\"" + SG.escA(ariaOf(v, f)) + "\"";   // 屏幕阅读器读出的名字（V8，2.8）
       const dg = isPc && !ent.props.locked ? ' data-drag="' + ent.id + '" data-s="' + s.toFixed(4) + '"' : '';
       const sty = isPc ? ' style="cursor:' + (ent.props.locked ? 'pointer' : 'grab') + '"' : " style=\"cursor:pointer\"";
       // 线和多边形的边：细线很难点中，所以（除了已经有把手的、块）再加一层加宽的透明线，点边就选中它
