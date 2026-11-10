@@ -289,6 +289,17 @@
         for (const it of p.items) { if (it.kind === 'piece') pasteOnePiece(A, it); else pasteOneFig(A, it, p.ws); }
       },
     },
+    // 尺子、量角器（§10.5.9 第 6 条）：放（add）、拖把手（move）、删（del）。它们是台面上的标记，不改图形
+    mark: {
+      label: 'mark',
+      fn(A, p, ctx) { const r = A({ t: 'mark', op: p.op, id: p.id, ws: p.ws, kind: p.kind, pts: p.pts, i: p.i, x: p.x, y: p.y, dx: p.dx, dy: p.dy }); ctx.id = r.id || p.id; return r; },
+      after(r, p, ctx) { if (p.op === 'add' && ctx.id) { UI.S.wsSel = ['mk:' + ctx.id]; } },
+    },
+    // 标注（§10.5.9 第 6 条）：给线段或量角器的角写一句话（add），删掉一条（del）
+    note: {
+      label: 'note',
+      fn(A, p, ctx) { const r = A({ t: 'note', op: p.op, id: p.id, ws: p.ws, ref: p.ref, text: p.text }); ctx.id = r.id || p.id; return r; },
+    },
     // 锁长 / 锁直角（§10.5.9 第 1 条）：约束器材接着它锁住的点，放进工作区。已经锁着就解锁（删掉约束）。
     // seg：线段（锁长，当前长度必须是整数）；poly + verts：多边形（锁住它所有的直角顶点，整批是一步）
     lock: {

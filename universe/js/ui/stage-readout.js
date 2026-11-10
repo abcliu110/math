@@ -102,5 +102,5 @@
     }
   }
 
-  Object.assign(SG, { APPROX, approxOf, totalDeg, pivotOf, shownPts, readoutsFor });
+  Object.assign(SG, { APPROX, approxOf, totalDeg, pivotOf, shownPts, readoutsFor, lenText, angText });   // lenText、angText 也给尺子和量角器用（stage-measure.js）
 })(window);

@@ -405,6 +405,8 @@
     const E = scene.entities;
     switch (a.t) {
       case 'tool': return tool(scene, a);
+      // 尺子、量角器和标注（§10.5.9 第 6 条）：台面的顶层字段，不是器材（js/core/measure.js）
+      case 'mark': case 'note': return U.Measure.act(scene, a);
       // 块（§10.5.10）：改块自己的属性，一条动作记一步（撤销由界面的快照栈负责）
       case 'piece': return U.Piece.act(scene, a);
       case 'wsdrop': return U.Piece.dropInto(scene, a);
@@ -553,7 +555,7 @@
         const e = E[a.id]; if (!e) return fail('找不到器材'); const def = defOf(e);
         if (!def.stateful) return fail('这个器材没有记忆'); e.state = def.init(e.props); return ok();
       }
-      case 'clear': scene.entities = {}; scene.links = []; scene.nid = 1; scene.seq = {}; delete scene.workbench; rewind(scene); return ok();
+      case 'clear': scene.entities = {}; scene.links = []; scene.nid = 1; scene.seq = {}; delete scene.workbench; delete scene.marks; delete scene.notes; rewind(scene); return ok();
       case 'tidy': tidy(scene); return ok();
       case 'clock': {
         const ck = scene.clock;

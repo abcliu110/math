@@ -403,6 +403,15 @@ button.gdel { border: 0; background: none; color: var(--dim); cursor: pointer; }
 .wsx-float { pointer-events: none; }
 .wsx-float button { pointer-events: auto; }
 .wsx-float button:hover { border-color: var(--blue); }
+/* 尺子、量角器的标注（§10.5.9 第 6 条）：浮动条里的第二行（输入框、加标注、已有的标注） */
+.wsx-float { flex-wrap: wrap; }
+.wsx-note { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; pointer-events: auto; }
+.wsx-note input { font: inherit; font-size: 12px; width: 150px; padding: 3px 6px; border-radius: 8px; border: 1px solid #aab4c8; background: #fff; color: var(--ink); }
+.wsx-note-one { font-size: 12px; color: var(--ink); }
+.wsx-measure { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.wsx-measure button { font: inherit; font-size: 12px; padding: 3px 8px; border-radius: 8px; border: 1px solid #aab4c8; background: #fff; color: var(--ink); cursor: pointer; }
+.wsx-measure button:hover { border-color: var(--blue); }
+.wsx-note-one button { font: inherit; font-size: 12px; padding: 0 5px; border-radius: 8px; border: 1px solid #aab4c8; background: #fff; color: var(--ink); cursor: pointer; }
 .wsx-tools button.on { background: var(--blue); color: #fff; border-color: var(--blue); }
 
 /* 几何工作区（界面修正）：浮动翻转条的按钮不换行；工作区里的按钮文字不折行 */
