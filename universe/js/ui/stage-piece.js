@@ -30,7 +30,7 @@
     // 对齐准备：块的形状（拖动开始时的）和其余的顶点、边（目标图形也在里面），块自己的不算
     const pv = S.D[pe.id] && S.D[pe.id].out.f ? S.D[pe.id].out.f.data : null;
     const align = pv && ws ? SG.buildAlign(ws, pv.pts, SG.edgesOf(pv), [], (v) => v.id === pe.id) : null;
-    SG.drag = { kind: 'piece', id: pe.id, wsId: pe.parent, v0, unit: v0 ? UI.Space.canvasOf(r, v0.span).unit : UI.Space.figUnit(r, cw, +gh.dataset.s), dx0: pe.props.dx, dy0: pe.props.dy, sx: ev.clientX, sy: ev.clientY, dxn: 0, dyn: 0, out: false, moved: false, align, guides: [] };
+    SG.drag = { kind: 'piece', id: pe.id, wsId: pe.parent, v0, unit: v0 ? UI.Space.canvasOf(r, v0.span).unit : UI.Space.figUnit(r, cw, +gh.dataset.s), dx0: pe.props.dx, dy0: pe.props.dy, sx: ev.clientX, sy: ev.clientY, dxn: 0, dyn: 0, out: false, moved: false, align, guides: [], ghost: pv ? [pv.pts.map((q) => ({ x: Q.num(q.x), y: Q.num(q.y) }))] : [] };
     // 量完大小再重画：重画会换掉这个图形的 DOM，之后再量会得到 0
     if (pk) SG.render();
   }

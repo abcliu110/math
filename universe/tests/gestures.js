@@ -227,10 +227,12 @@ async function assertInvariants(page, label, opts) {
         if (!port || !node.out[port].data || !node.out[port].data.pts || !node.out[port].data.pts.length) continue;
         const pts = node.out[port].data.pts, xs = pts.map((q) => U.Q.num(q.x)), ys = pts.map((q) => U.Q.num(q.y));
         // 点的标签是 mark（2.6：点的名字），图形的标签是 name；点没有 name 时就看 mark
-        items.push({ id: k.id, name: (k.props && (k.props.name || k.props.mark)) || '', cx: (Math.min(...xs) + Math.max(...xs)) / 2, cy: (Math.min(...ys) + Math.max(...ys)) / 2 });
+        items.push({ id: k.id, name: (k.props && (k.props.name || k.props.mark)) || '', cx: (Math.min(...xs) + Math.max(...xs)) / 2, cy: (Math.min(...ys) + Math.max(...ys)) / 2, x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) });
       }
+      // 边缘箭头（整个图形在可见范围外面时画，见 stage-canvas.js 的 offArrows）：data-offscreen 标记，记下它的文字（图形的名字）
+      const arrows = [...sv.querySelectorAll('[data-offscreen]')].map((g) => g.textContent.trim());
       // 没有名字的图形（例如“四边形 ABCD”这种由器材自己起标签的）：标签由界面算出（UI.Stage.labelsOf），用它核对画布文字
-      out.ws.push({ id: e.id, w, h, view, text: sv.textContent, items, figs: UI.Stage.labelsOf(e.id) });
+      out.ws.push({ id: e.id, w, h, view, text: sv.textContent, items, arrows, figs: UI.Stage.labelsOf(e.id) });
     }
     return out;
   });
@@ -268,7 +270,15 @@ async function assertInvariants(page, label, opts) {
       if (!shown) fail('工作区里的图形 ' + it.id + ' 没有标签显示');
       if (ws.view) {
         const hw = ws.view.span / 2, hh = ws.view.span * ws.h / (2 * ws.w);
-        if (Math.abs(it.cx - ws.view.cx) > hw || Math.abs(it.cy - ws.view.cy) > hh) fail('工作区里的图形 ' + (it.name || it.id) + ' 的中心在可见范围之外');
+        // 中心在可见范围之外是允许的（手动缩放会把图形推出去；界面设计对此画边缘箭头，见 stage-canvas.js 的 offArrows）。
+        // 所以这里的要求是：整个图形都在可见范围外面时，界面必须画出它的边缘箭头（data-offscreen）；
+        // 图形还有一部分在范围里，它是看得见的，不需要箭头。原来的断言（中心必须在范围里）和设计不一致，已改成这一条。
+        const cOut = Math.abs(it.cx - ws.view.cx) > hw || Math.abs(it.cy - ws.view.cy) > hh;
+        const whollyOut = it.x1 < ws.view.cx - hw || it.x0 > ws.view.cx + hw || it.y1 < ws.view.cy - hh || it.y0 > ws.view.cy + hh;
+        if (cOut && whollyOut) {
+          const hasArrow = it.name ? ws.arrows.some((t) => t.indexOf(it.name) >= 0) : ws.arrows.length > 0;
+          if (!hasArrow) fail('工作区里的图形 ' + (it.name || it.id) + ' 整个在可见范围之外，但界面没有画出它的边缘箭头');
+        }
       }
     }
   }

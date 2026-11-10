@@ -38,6 +38,9 @@ const TOTAL = KINDS.reduce((s, k) => s + k[1], 0);
   // 起始：空台面，放一个工作区（设置，不是手势）
   await p.evaluate(() => { UI.App.openFree(); UI.App.act({ t: 'clear' }); UI.App.act({ t: 'add', type: 'gworkspace', x: 120, y: 60 }); });
   await p.waitForTimeout(300);
+  // 新手引导气泡（每次新开页面都会弹，直到点“知道了”）：它的按钮压在台面右上角，随机手势会点到卡片的地方。
+  // 这是环境设置（和上面放工作区一样），不是手势；引导本身的行为由 tests/ui-feedback.js 检查
+  if (await p.locator('#guide-close').count()) await p.click('#guide-close');
 
   // 读出当前界面状态：器材架上的器材、屏幕上的卡片和工作区、撤销按钮是否可用、是否在专注模式
   const snapState = () => p.evaluate(() => {
@@ -165,11 +168,18 @@ const TOTAL = KINDS.reduce((s, k) => s + k[1], 0);
     async '切换视图'(st) {
       if (st.focused) {
         if (rnd() < 0.5) return { name: 'Esc 还原专注模式', r: await G.press(p, 'Escape') };
-        return { name: '点“还原”，退出专注模式', r: await G.clickSel(p, '[data-ws-unfocus]') };
+        return { name: '点“还原”，退出专注模式', r: await G.clickSel(p, '[data-fbar="focus"][data-ws="' + st.focused + '"]') };
       }
       if (st.wss.length) {
         const id = pick(st.wss);
         if (rnd() < 0.5) return { name: '双击工作区 ' + id + ' 的标题，进入专注模式', r: await G.dblClickHd(p, id) };
+        // 「适应」按钮只在工作区的面板展开时可见（收起的工作区没有）：看不见的就不点，改平移（前置条件，和上面挑卡片一样）
+        const fitShown = await p.evaluate((i) => {
+          const el = document.querySelector('[data-ws-fit="' + i + '"]');
+          if (!el || el.closest('.wsx-folded')) return false;
+          const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0;
+        }, id);
+        if (!fitShown) return acts['平移'](st);
         return { name: '点工作区 ' + id + ' 的“适应”', r: await G.clickSel(p, '[data-ws-fit="' + id + '"]') };
       }
       return acts['平移'](st);

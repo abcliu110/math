@@ -75,7 +75,7 @@
       const t = Math.min(dx ? (w / 2 - M - 14) / Math.abs(dx) : Infinity, dy ? (h / 2 - M - 14) / Math.abs(dy) : Infinity);
       const ax = w / 2 + dx * t, ay = h / 2 + dy * t, ang = Math.atan2(dy, dx) * 180 / Math.PI, c = SG.WS_COL[i % SG.WS_COL.length];
       const tw = SG.TXT_W(v.label), tx = Math.max(M, Math.min(w - M - tw, ax - tw / 2)), ty = ay < h / 2 ? Math.min(h - M, ay + 26) : Math.max(M + 11, ay - 18);
-      out.push('<g data-fit-ws="' + ws.id + '" data-fit-key="' + SG.escA(v.key) + '" style="cursor:pointer">' +
+      out.push('<g data-offscreen="1" data-fit-ws="' + ws.id + '" data-fit-key="' + SG.escA(v.key) + '" style="cursor:pointer">' +
         '<circle cx="' + ax.toFixed(1) + '" cy="' + ay.toFixed(1) + '" r="12" style="fill:var(--card)" stroke="' + c + '" stroke-width="2"/>' +
         '<path d="M-5 -4 L5 0 L-5 4 Z" fill="' + c + '" transform="translate(' + ax.toFixed(1) + ' ' + ay.toFixed(1) + ') rotate(' + ang.toFixed(1) + ')"/>' +
         '<text x="' + tx.toFixed(1) + '" y="' + ty.toFixed(1) + '" font-size="12" font-weight="700" fill="' + c + '" style="stroke:var(--halo)" stroke-width="3" paint-order="stroke" stroke-linejoin="round" font-family="var(--font)">' + K.esc(v.label) + '</text></g>');
@@ -86,6 +86,13 @@
   function ariaOf(v, f) {
     if (f.type === 'point' && f.pts && f.pts[0]) return '点 ' + v.label + '，坐标 ' + Q.show(f.pts[0].x) + ', ' + Q.show(f.pts[0].y);
     return v.label;
+  }
+  // 幽灵对照（§10.5.9 第 8 条）：拖动块或组里的图形时，原来的位置留一个虚线、半透明的轮廓；松手就没有了（SG.drag 的 ghost 只在拖动中有）
+  function ghostSvg(ws, fr) {
+    const d = SG.drag;
+    if (!d || d.wsId !== ws.id || !d.moved || !d.ghost || !d.ghost.length) return '';
+    const { X, Y } = fr;
+    return d.ghost.map((poly) => '<path data-ghost="1" d="' + poly.map((p, k) => (k ? 'L' : 'M') + X(p.x).toFixed(1) + ' ' + Y(p.y).toFixed(1)).join(' ') + ' Z" fill="none" stroke="var(--dim)" stroke-width="1.5" stroke-dasharray="5 4" opacity=".6" style="pointer-events:none"/>').join('');
   }
   function wsBody(ws, w, h) {
     const S = UI.S, sel = new Set(S.wsSel || []), ents = S.scene.entities;
@@ -142,7 +149,7 @@
       if (lx !== undefined) labs.push({ text: v.label, c, cands, prio, ren: f.type === 'point' && ents[v.id] && SG.roleOf(ents[v.id]) === 'point' ? v.id : null });   // 点的标签可以双击改名（2.6）
       if (selName && SG.pickOf(v) === selName) SG.readoutsFor(ent, f, X, Y, labs);   // 选中的图形：读数（2.9）
     });
-    return wsEdges(fr) + g + hit + top + wsHandles(fr) + gsvg + drawPreview(ws, fr) + dragSnapSvg(ws, fr) + offArrows(fr, ws) + placeLabels(labs, w, h, obs) + selHint(ws, fr) + boardMsg(w, h);
+    return wsEdges(fr) + g + hit + top + wsHandles(fr) + ghostSvg(ws, fr) + gsvg + drawPreview(ws, fr) + dragSnapSvg(ws, fr) + offArrows(fr, ws) + placeLabels(labs, w, h, obs) + selHint(ws, fr) + boardMsg(w, h);
   }
   // 选中提示（V3，1.5 第 3 条）：选中图形时，画布左下角写一行：选中的是什么，怎么切换和取消。画线、剪的时候不显示（那时有自己的工具状态）
   function selHint(ws, fr) {

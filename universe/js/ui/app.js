@@ -27,7 +27,8 @@
 
   // ---------- 刷新 ----------
   function refresh(full) {
-    S.D = W.evaluate(S.scene);
+    // 增量求值（任务 J）：只重算改过的器材和它们的下游，其余沿用上次的结果
+    S.D = W.evaluateCached(S.scene, S.evalCache || (S.evalCache = {}));
     judgeNow();
     UI.Stage.render(); UI.Panels.renderClock();
     if (full !== false) { UI.Panels.renderTop(); UI.Panels.renderLeft(); UI.Panels.renderInsp(); }
@@ -237,9 +238,9 @@
     openProblem(S.problem.id, m);
   }
 
-  // ---------- 式子工作台（任务 H 第 3b 步；任务 I：每一步记在台面上）----------
+  // ---------- 式子工作台（任务 H 第 3b 步；任务 I：每一步记在台面上；D7：几何来的 S）----------
   // 工作台的步骤写在台面上（scene.workbench，U.ExprBench）：状态从它重算；每次变动是一个动作，撤销一次就回到上一步。
-  function wbEqn(id) { const dd = S.D && S.D[id]; return dd ? U.ExprBench.eqnIn(dd.inp) : null; }
+  function wbEqn(id) { const dd = S.D && S.D[id]; return dd ? U.ExprBench.workEqnIn(dd.inp) : null; }
   function wbNow(id, eq) { return U.ExprBench.currentOf(S.scene, id, eq); }
   // 选中项：dr.sel 里是 'lhs:0' 这样的键；按边取下标
   function wbSelOf(id, side) {
@@ -259,7 +260,7 @@
     const st = wbNow(id, eq);
     const ns = U.Workbench.step(st, tool, ref, args);
     if (ns.lastError) dr.msg = ns.lastError;
-    else { wbSave(id, eq, ns); dr.msg = ''; dr.ref = ''; dr.sel = []; }
+    else { wbSave(id, eq, ns); dr.msg = ''; dr.ref = ''; dr.sub = ''; dr.sel = []; }
     refresh();
   }
   function wbStep(id, tool) {
@@ -274,6 +275,11 @@
       ref = L.length === 1 ? L[0] : (/^\d+$/.test(raw) ? +raw - 1 : (raw || null));
     } else if (tool === 'divide' || tool === 'multiply') {
       args = { by: dr.by };
+    } else if (tool === 'substitute') {
+      // 代入：输入框写「字母 = 数」，例如 a=6；字母和数交给内核判断
+      const m = /^\s*([a-zA-Z])\s*=\s*(\S+)\s*$/.exec(dr.sub || '');
+      if (!m) return wbMsg(id, '请在「代入」框里写成「字母 = 数」，例如 a=6');
+      args = { var: m[1], val: m[2] };
     } else if (tool === 'collect' && (L.length || R.length)) {
       // 合并：选中的几项必须在同一边，至少两项；合并的结果留在原来的位置
       if (L.length && R.length) return wbMsg(id, '合并只能选同一边的项');

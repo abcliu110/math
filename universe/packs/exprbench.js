@@ -1,13 +1,28 @@
-/* 器材包 exprbench（任务 H 第 3b 步，见 next-steps.md §10.5.3–10.5.6；任务 I：步骤写进台面）：式子工作台。
+/* 器材包 exprbench（任务 H 第 3b 步，见 next-steps.md §10.5.3–10.5.6；任务 I：步骤写进台面；D7：几何来的 S）：式子工作台。
  * 工作台的步骤历史写在台面（scene）上：scene.workbench = { host: 工作台器材 id, key: 步骤开始时方程的记号, steps: [{ tool, rule, ref, args, kept }] }。
  * 它不是器材：不改台面的器材和连线（所以「步骤不改台面」仍然成立），判题的 steps 查询读 scene.workbench.steps（judge.js）。
- * 工作台的状态从步骤重算（U.Workbench.replay）；撤销 = 把步骤截短后整体写回（一条撤销记录）。方程换了，旧步骤不再用。 */
+ * 工作台的状态从步骤重算（U.Workbench.replay）；撤销 = 把步骤截短后整体写回（一条撤销记录）。方程换了，旧步骤不再用。
+ * D7：接了「几何的面积」（g）和「公式的右边」（f，如 a×h）时，方程是 S = f（S 从几何来，eq.geo 标记）；
+ * 只接了 g 时没有方程，界面写着「S = ?」。e（方程台来的方程）优先。 */
 (function (G) {
   'use strict';
   const U = G.U, K = U.kit;
 
   const eqnIn = (inp) => { const v = K.first(inp && inp.e); return v && v.kind === 'eqn' ? v : null; };
   const eqText = (v) => U.KINDS.eqn.show(v.data);   // 方程的记号：步骤跟着它走
+
+  // D7：从几何来的 S。
+  const areaIn = (inp) => { const v = K.first(inp && inp.g); return v && v.kind === 'num' ? v : null; };
+  const formulaIn = (inp) => { const v = K.first(inp && inp.f); return v && v.kind === 'poly' ? v : null; };
+  // 工作台用的方程：e 优先；否则 g 和 f 都接上时是 S = f。两边用多项式（和方程台一样；工作台的 norm 会换成形式）。
+  // geo：标记这个方程是从几何来的（工作台据此多出「代入」「算出数」）
+  const workEqnIn = (inp) => {
+    const e = eqnIn(inp);
+    if (e) return e;
+    const f = formulaIn(inp);
+    if (!areaIn(inp) || !f) return null;
+    return Object.assign(U.val('eqn', { lhs: U.Poly.variable('S'), rhs: f.data, rel: '=' }), { geo: true });
+  };
 
   // 这个工作台记下的步骤（台面上的 scene.workbench 指向它时才算）
   const stepsOf = (scene, id) => {
@@ -18,10 +33,11 @@
   const stateOf = (scene, id, eq) => {
     const wb = scene && scene.workbench;
     if (!eq || !wb || wb.host !== id || !stepsOf(scene, id).length || wb.key !== eqText(eq)) return null;
-    try { return U.Workbench.replay(U.Workbench.create(eq).start, wb.steps); } catch (err) { return null; }
+    const start = U.Workbench.create(eq, { formula: !!eq.geo });
+    try { return U.Workbench.replay(start.start, wb.steps, !!eq.geo); } catch (err) { return null; }
   };
   // 当前的工作台（没有记下的历史时，从方程本身开始）
-  const currentOf = (scene, id, eq) => stateOf(scene, id, eq) || U.Workbench.create(eq);
+  const currentOf = (scene, id, eq) => stateOf(scene, id, eq) || U.Workbench.create(eq, { formula: !!eq.geo });
   const showState = (st) => {
     const v = st.current;
     if (v.kind !== 'eqn') return U.Form.show(v.data);
@@ -34,7 +50,7 @@
   });
 
   U.ExprBench = {
-    stepsOf, stateOf, currentOf, saveAction, showState, eqnIn, keyOf: eqText,
+    stepsOf, stateOf, currentOf, saveAction, showState, eqnIn, workEqnIn, areaIn, formulaIn, keyOf: eqText,
   };
 
   U.registerPack({
@@ -42,6 +58,7 @@
     types: {
       exprbench: {
         workspaceRole: 'none',
+        readsScene: true, // 读台面上的工作台步骤（scene.workbench），不全在连线上：增量求值时每次都算（任务 J）
         handles: true,
         inspector: 'workbench',
         essence: ['E4', 'E8'],
@@ -50,20 +67,28 @@
           label: { type: 'text', label: '标签', default: '' },
         },
         lint: { minProps: 1, why: '式子工作台只有一个标签；方程从输入口来，步骤在检查器里做' },
-        inputs: { e: { kind: 'eqn', label: '方程' } },
+        inputs: {
+          e: { kind: 'eqn', label: '方程' },
+          g: { kind: 'num', label: '几何来的面积（S）' },
+          f: { kind: 'poly', label: '公式的右边（如 a×h）' },
+        },
         outputs: { solved: { dim: null, kind: 'bool', label: '解出来了（x = 数）' } },
         icon: () => K.text(32, 24, 'x=?', { size: 15, weight: 700 }) + K.text(32, 40, '移项 · 除', { size: 12 }),
         size: () => [210, 110],
         compute: (c) => {
-          const eq = eqnIn(c.inp);
-          if (!eq) { c.say('info', '接一个方程'); return { solved: U.val('bool', false) }; }
+          const eq = workEqnIn(c.inp);
+          if (!eq) {
+            c.say('info', areaIn(c.inp) ? '再接一个公式（如 a×h）' : '接一个方程');
+            return { solved: U.val('bool', false) };
+          }
           const solved = U.Workbench.solution(currentOf(c.scene, c.ent.id, eq)).solved;
           return { solved: U.val('bool', solved) };
         },
         badge: (c) => (c.out && c.out.solved && c.out.solved.data ? '解出来了' : ''),
         draw: (c) => {
-          const eq = eqnIn(c.d && c.d.inp);
-          const txt = eq ? showState(currentOf(c.scene, c.ent.id, eq)) : '接一个方程';
+          const inp = c.d && c.d.inp;
+          const eq = workEqnIn(inp);
+          const txt = eq ? showState(currentOf(c.scene, c.ent.id, eq)) : areaIn(inp) ? 'S = ?' : '接一个方程';
           return K.text(c.w / 2, c.h / 2 - 6, c.props.label || '式子工作台', { size: 12, weight: 700, fill: 'var(--dim)' }) +
             K.text(c.w / 2, c.h / 2 + 16, txt, { size: 15, weight: 700 });
         },
