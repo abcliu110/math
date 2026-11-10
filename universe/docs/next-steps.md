@@ -802,6 +802,9 @@ workspace: {
   - 改成只重算受影响的下游器材，只重画变化的卡片或工作区；
   - 验收：工作区里 300 个对象，拖动一个点能保持流畅（每帧 16 毫秒以内），可以在测试里计时。
 - **文件清单自动生成**：新增文件时现在要手动改 `index.html`、`tests/run.js`、`tools/check-types.js`、`loader.js` 四处。改成一份清单（例如 `manifest.js`），四处都从它读，或者用脚本生成。
+  - 状态（遗留项完成）：`tools/gen-manifest.js` 从 `packs/` 生成 `index.html` 的 packs 脚本块和 `loader.js` 的 `PACK_FILES`（标记之间），加载顺序按包的依赖排；`tests/run.js` 检查生成结果和文件一致。`tests/run.js` 和 `tools/check-types.js` 仍各自列文件，未改。
+  - 状态（符号点，遗留项完成）：符号点（`spoint`）可以接进几何画板的“符号点”口，画在坐标系上，文字保留精确写法（`tests/ui-render.js`）。
+  - 状态（局部渲染，遗留项完成）：台面按段（连线、每台器材、标签、工作区面板）缓存 HTML 和 DOM，只换掉变了的段；`UI.Stage.redrawCount()` 计数，改一台器材重画 1 段。
 - **一次只让一个会话改这个文件夹**：两个会话同时在 `main` 上改同一批文件，已经出现过改动互相带走、提交了未完成的改动、测试跑不起来的情况。并行工作请用独立的 git worktree，做完再合并。
 
 ### 10.8 顺序
