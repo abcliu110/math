@@ -82,7 +82,7 @@
   function wsBody(ws, w, h) {
     const S = UI.S, sel = new Set(S.wsSel || []), ents = S.scene.entities;
     const fr = SG.wsFrame(ws, w, h), vals = fr.vals;
-    if (!fr.b) return K.text(w / 2, h / 2 - 6, '把图形拖到这里', { size: 15, weight: 700, fill: 'var(--dim)' }) + K.text(w / 2, h / 2 + 16, '从右边器材架拖，或拖台面上的图形卡片', { size: 12, fill: 'var(--dim)' });
+    if (!fr.b) return K.text(w / 2, h / 2 - 6, '把图形拖到这里', { size: 15, weight: 700, fill: 'var(--dim)' }) + K.text(w / 2, h / 2 + 16, '从右边器材架拖，或拖台面上的图形卡片', { size: 12, fill: 'var(--dim)' }) + statusFor(ws, fr);   // 空的工作区也要显示当前工具状态（2.5）
     const { vw, s, X, Y } = fr;
     const labs = [], obs = [];   // 标签先收集，最后统一摆放（不叠、不压住线和圆、不出画布）；obs 是图形的障碍（2.3）
     const gsvg = guidesSvg(SG.drag && SG.drag.wsId === ws.id ? SG.drag.guides || [] : [], fr, labs);   // 拖动时的对齐参考线（C12–C14）
@@ -148,10 +148,19 @@
     const S = UI.S; S.wsMsg = text || ''; S.wsMsgKind = good ? 'good' : 'bad'; S.wsBoardUntil = Date.now() + 6000;
     clearTimeout(SG.msgTimer); SG.msgTimer = setTimeout(() => { if (!SG.drag && UI.S.wsBoardUntil <= Date.now() && UI.S.wsMsg) SG.render(); }, 6100);
   }
+  // 当前工具状态（2.5）：正在“点两下画线”等模式时，画布左下角写一行：当前是什么工具、怎么操作（文字从 UI.ToolHelp 读）。
+  // 文字的描边当作身后的底色（颜色用令牌）
+  function toolStatus(D, fr) {
+    const t = UI.ToolHelp.status(D.tool); if (!t) return '';
+    const L = UI.LAYOUT;
+    return '<text x="' + L.TOOL_STATUS_X + '" y="' + (fr.h - L.TOOL_STATUS_Y).toFixed(1) + '" font-size="13" font-weight="700" font-family="var(--font)" style="fill:var(--ink);stroke:var(--card);stroke-width:4px;paint-order:stroke" pointer-events="none">' + K.esc(t) + '</text>';
+  }
+  // 这个工作区正在画线时的当前工具状态，否则空串
+  function statusFor(ws, fr) { const D = UI.S.wsDraw; return D && D.ws === ws.id ? toolStatus(D, fr) : ''; }
   // 画线时的预览：第一点（空心圈）、到光标吸附位置的虚线、光标处的吸附点
   function drawPreview(ws, fr) {
     const D = UI.S.wsDraw; if (!D || D.ws !== ws.id) return '';
-    let g = '';
+    let g = toolStatus(D, fr);
     if (D.pend) g += '<circle cx="' + fr.X(D.pend.x).toFixed(1) + '" cy="' + fr.Y(D.pend.y).toFixed(1) + '" r="6" fill="none" stroke="#fff" stroke-width="2"/>';
     if (D.pend && D.cur) g += '<line x1="' + fr.X(D.pend.x).toFixed(1) + '" y1="' + fr.Y(D.pend.y).toFixed(1) + '" x2="' + fr.X(D.cur.x).toFixed(1) + '" y2="' + fr.Y(D.cur.y).toFixed(1) + '" stroke="#fff" stroke-width="2" stroke-dasharray="6 4"/>';
     if (D.cur) g += '<circle cx="' + fr.X(D.cur.x).toFixed(1) + '" cy="' + fr.Y(D.cur.y).toFixed(1) + '" r="5" fill="#fff" fill-opacity=".35" stroke="#fff" stroke-width="2"/>';

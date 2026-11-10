@@ -27,7 +27,8 @@
     try { badge = SG.isWsDef(e.type) ? (SG.wsSteps(e).length ? SG.wsSteps(e).length + ' 步' : '') : d.badge ? d.badge(c) : ''; } catch (x) { badge = ''; }
     let h = '<div class="card' + (S.sel === e.id ? ' sel' : '') + '" data-id="' + e.id + '" style="left:' + g.x + 'px;top:' + g.y + 'px;width:' + g.w + 'px;height:' + g.h + 'px">';
     h += '<div class="hd" data-id="' + e.id + '"><span class="nm">' + K.esc(e.name) + '</span><span class="bd">' + K.esc(badge || '') + '</span></div>';
-    h += '<svg class="bdy' + (SG.isWsDef(e.type) ? ' wsbody" data-wsid="' + e.id : '') + '" width="' + g.w + '" height="' + cH + '" viewBox="0 0 ' + g.w + ' ' + cH + '">' + body + '</svg>';
+    const drawing = S.wsDraw && S.wsDraw.ws === e.id;   // 正在画线：指针变成十字（2.5）
+    h += '<svg class="bdy' + (SG.isWsDef(e.type) ? ' wsbody' + (drawing ? ' drawing' : '') + '" data-wsid="' + e.id : '') + '" width="' + g.w + '" height="' + cH + '" viewBox="0 0 ' + g.w + ' ' + cH + '">' + body + '</svg>';
     Object.keys(d.inputs).forEach((k, i) => {
       h += '<i class="port in" data-id="' + e.id + '" data-port="' + k + '" style="left:0;top:' + (PORT_Y0 + i * PORT_DY) + 'px"></i>';
       h += '<span class="pl" style="left:' + L.PORT_LABEL_X + 'px;top:' + (PORT_Y0 + i * PORT_DY) + 'px">' + K.esc(d.inputs[k].label) + '</span>';
@@ -97,6 +98,7 @@
     h += lk.lbl;
     for (const id of Object.keys(E)) if (SG.isWsDef(E[id].type)) h += SG.wsPanelHtml(E[id], names);
     SG.worldEl.innerHTML = h;
+    if (UI.Guide) UI.Guide.check(Object.values(E).some((x) => SG.isWsDef(x.type)));   // 2.13：第一次看到几何工作区，弹一次引导
     SG.worldEl.style.transform = 'translate(' + S.view.x + 'px,' + S.view.y + 'px) scale(' + S.view.z + ')';
     UI.Layout.placePanels(SG.worldEl, SG.stageEl, S.view, (id) => { const e = S.scene.entities[id]; return e ? SG.geom(e) : null; });
     const z = $('#zv'); if (z) z.textContent = Math.round(S.view.z * 100) + '%';

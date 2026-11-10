@@ -302,6 +302,7 @@
       if (m.dataset.m === 'parent') UI.Panels.parentDialog();
       if (m.dataset.m === 'improve') UI.Panels.improveDialog();
       if (m.dataset.m === 'health') UI.Panels.healthDialog();
+      if (m.dataset.m === 'guide') UI.Guide.open();
       if (m.dataset.m === 'export') download('学习记录.json', JSON.stringify(Ev.log, null, 1));
       if (m.dataset.m === 'clearlog') { Ev.clear(); UI.Panels.renderLeft(); say('学习记录已清除', '', 2000); }
     });
