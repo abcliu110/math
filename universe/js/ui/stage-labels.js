@@ -34,7 +34,7 @@
     return pretty(nm) || it.name || FIG_NAME[fig && fig.type] || SG.defOf(it).label;
   }
   // 选中的对象显示成学生的名字（找到了用图形的标签，找不到就按名字换算）
-  const pickLabel = (x, vals) => { const v = vals.find((y) => SG.pickOf(y) === x); return v ? v.label : pretty(x) || x; };
+  const pickLabel = (x, vals) => { const v = vals.find((y) => SG.pickOf(y) === x); return v ? v.label : String(x).indexOf('mk:') === 0 ? SG.markName(x) : pretty(x) || x; };
   // 拼合器材有两种：「合并」（没有目标口）和「对齐到目标」（目标口接着目标图形）；步骤清单要分得开
   // 步骤清单里的名字：器材声明的 stepLabel（字符串，或 (ent, scene) => 字符串），没有就用器材名
   const stepLabel = (st) => { const s = SG.defOf(st).stepLabel; return typeof s === 'function' ? s(st, UI.S.scene) : s || SG.defOf(st).label || st.type; };

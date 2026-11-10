@@ -46,12 +46,22 @@
       if (wb) SG.wsZoomAt(wb, f, ev.clientX, ev.clientY);
       else if (!(ev.target.closest && ev.target.closest('#wsfocus'))) SG.zoomAt(f, ev.clientX, ev.clientY);
     }, { passive: false });
+    // 标注的输入框里按回车就是“加标注”（和按按钮一样）
+    SG.stageEl.addEventListener('keydown', (ev) => {
+      if (ev.key !== 'Enter' || !ev.target.matches || !ev.target.matches('[data-note-in]')) return;
+      const btn = ev.target.closest('.wsx-note') && ev.target.closest('.wsx-note').querySelector('[data-note-add]');
+      if (btn) { ev.preventDefault(); SG.noteAdd(btn); }
+    });
     SG.stageEl.addEventListener('click', (ev) => {
       const why = ev.target.closest('[data-why]');
       if (why) { const [wid, wport] = why.dataset.why.split('|'); UI.Panels.whyDialog(wid, wport); return; }
       // 浮动工具条、专注标题栏的按钮（V2）
       const fb = ev.target.closest('[data-fbar]');
       if (fb) { SG.barAction(fb); return; }
+      // 尺子、量角器和标注（§10.5.9 第 6 条）：加标注、删标注、删量角器或尺子
+      const na = ev.target.closest('[data-note-add]'); if (na) { SG.noteAdd(na); return; }
+      const nd = ev.target.closest('[data-note-del]'); if (nd) { SG.noteDel(nd.dataset.noteDel); return; }
+      const md = ev.target.closest('[data-mark-del]'); if (md) { SG.markDel(md.dataset.markDel); return; }
       // 工作区面板：工具、步骤（点开看参数）、删除一步
       const ff = ev.target.closest('[data-fig-flip]');
       if (ff) { SG.figFlip(ff.dataset.ws, ff.dataset.name, +ff.dataset.figFlip); return; }

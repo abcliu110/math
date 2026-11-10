@@ -151,7 +151,7 @@
       if (lx !== undefined) labs.push({ text: v.label, c, cands, prio, ren: f.type === 'point' && ents[v.id] && SG.roleOf(ents[v.id]) === 'point' ? v.id : null });   // 点的标签可以双击改名（2.6）
       if (selName && SG.pickOf(v) === selName) SG.readoutsFor(ent, f, X, Y, labs);   // 选中的图形：读数（2.9）
     });
-    return wsEdges(fr) + g + hit + top + wsHandles(fr) + ghostSvg(ws, fr) + gsvg + drawPreview(ws, fr) + dragSnapSvg(ws, fr) + offArrows(fr, ws) + placeLabels(labs, w, h, obs) + selHint(ws, fr) + boardMsg(w, h);
+    return wsEdges(fr) + g + hit + top + wsHandles(fr) + SG.marksSvg(ws, fr, labs) + ghostSvg(ws, fr) + gsvg + drawPreview(ws, fr) + dragSnapSvg(ws, fr) + offArrows(fr, ws) + placeLabels(labs, w, h, obs) + selHint(ws, fr) + boardMsg(w, h);
   }
   // 选中提示（V3，1.5 第 3 条）：选中图形时，画布左下角写一行：选中的是什么，怎么切换和取消。画线、剪的时候不显示（那时有自己的工具状态）
   function selHint(ws, fr) {
@@ -164,6 +164,7 @@
   }
   // 学生看到的图形名字：点是“点A”，线段是“线段AB”（两端点的名字），其余用标签
   function figName(fr, name) {
+    if (String(name).indexOf('mk:') === 0) return SG.markName(name);   // 尺子、量角器（stage-measure.js）
     const v = fr.vals.find((x) => SG.pickOf(x) === name); if (!v) return name;
     const fi = SG.figInfo(v);
     // 点的标签：自由点在画布上的标签（A、B……）
@@ -255,16 +256,20 @@
   // 选中一个图形时，它旁边的浮动工具条的位置（卡片里的坐标）
   function figFloat(ws, w, h) {
     const S = UI.S; if ((S.wsSel || []).length !== 1) return null;
-    const name = S.wsSel[0], fr = SG.wsFrame(ws, w, h), v = fr.vals.find((x) => SG.pickOf(x) === name), fi = v && SG.figInfo(v);
+    const name = S.wsSel[0], fr = SG.wsFrame(ws, w, h);
+    const mk = SG.markFloat(ws, name, fr, h); if (mk) return mk;   // 尺子、量角器：在标记的下面（stage-measure.js）
+    const v = fr.vals.find((x) => SG.pickOf(x) === name), fi = v && SG.figInfo(v);
     if (!fi || !fi.f.pts || (fi.kind === 'pts' && fi.f.type === 'point')) return null;
     const xs = fi.f.pts.map((p) => Q.num(p.x)), ys = fi.f.pts.map((p) => Q.num(p.y));
-    return { name, left: fr.X((Math.min(...xs) + Math.max(...xs)) / 2), top: Math.min(fr.Y(Math.min(...ys)) + L.FLOAT.dy, h - L.FLOAT.h) };   // 浮动工具条放在图形的下面（画布里面），不盖住标题和步数
+    // 线段可以写标注（引用它的器材 id）；其余图形只有翻转
+    const ref = fi.kind === 'pts' && fi.f.type === 'segment' ? fi.ent.id : null, hh = ref ? L.MARK.NOTE_H : L.FLOAT.h;
+    return { name, left: fr.X((Math.min(...xs) + Math.max(...xs)) / 2), top: Math.min(fr.Y(Math.min(...ys)) + L.FLOAT.dy, h - hh), ref };   // 浮动工具条放在图形的下面（画布里面），不盖住标题和步数
   }
   function floatHtml(wsId, f, ox, oy) {
     const left = Math.max(L.FLOAT.edge, ox + f.left - L.FLOAT.halfW), top = Math.max(oy + L.FLOAT.top, oy + f.top), nm = SG.escA(f.name);
-    return '<div class="wsx-float" style="left:' + left + 'px;top:' + top + 'px">' +
-      '<button data-fig-flip="1" data-ws="' + wsId + '" data-name="' + nm + '">左右翻</button>' +
-      '<button data-fig-flip="2" data-ws="' + wsId + '" data-name="' + nm + '">上下翻</button></div>';
+    const flips = f.mark ? '' : '<button data-fig-flip="1" data-ws="' + wsId + '" data-name="' + nm + '">左右翻</button>' +
+      '<button data-fig-flip="2" data-ws="' + wsId + '" data-name="' + nm + '">上下翻</button>';
+    return '<div class="wsx-float" style="left:' + left + 'px;top:' + top + 'px">' + flips + SG.floatExtra(wsId, f) + '</div>';
   }
   // 画布上的把手：边（拖边平移）、角（放缩）、旋转把手；顶点是自由点的把手（和原来的 data-drag 一样）
   // 边的命中线：画在图形的下面（点和图形本身在上面，点不会被边盖住）；拖边 = 整条边平移

@@ -251,6 +251,17 @@
         for (const it of p.items) { if (it.kind === 'piece') pasteOnePiece(A, it); else pasteOneFig(A, it, p.ws); }
       },
     },
+    // 尺子、量角器（§10.5.9 第 6 条）：放（add）、拖把手（move）、删（del）。它们是台面上的标记，不改图形
+    mark: {
+      label: 'mark',
+      fn(A, p, ctx) { const r = A({ t: 'mark', op: p.op, id: p.id, ws: p.ws, kind: p.kind, pts: p.pts, i: p.i, x: p.x, y: p.y, dx: p.dx, dy: p.dy }); ctx.id = r.id || p.id; return r; },
+      after(r, p, ctx) { if (p.op === 'add' && ctx.id) { UI.S.wsSel = ['mk:' + ctx.id]; } },
+    },
+    // 标注（§10.5.9 第 6 条）：给线段或量角器的角写一句话（add），删掉一条（del）
+    note: {
+      label: 'note',
+      fn(A, p, ctx) { const r = A({ t: 'note', op: p.op, id: p.id, ws: p.ws, ref: p.ref, text: p.text }); ctx.id = r.id || p.id; return r; },
+    },
     // 编组（§10.5.9 第 3 条）：ids 记同一个组号 gid；gid 为空就取消编组
     group: { label: 'group', fn(A, p) { return A({ t: 'group', ids: p.ids, gid: p.gid || null }); } },
     // 连线：从一个输出口拉到一个输入口
