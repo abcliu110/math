@@ -64,5 +64,25 @@
       goal: ['height', 'cut', 'fit'],
       why: '剪下来的三角形只是换了位置，面积没变，所以平行四边形的面积 = 长方形的面积 = 底 × 高。形状变了，周长也变了，但面积是不变量。',
     },
+    {
+      // §10.5.9 第 10 条的示例（出题人控制）：器材架只列 shelf，工作区工具只留连线和剪，图形是题目给的（不许改名、不许删）
+      id: 'geo-teacher-median', essence: ['E2', 'E5'], title: '出题人控制：沿中线剪开（图形是题目给的）', grade: 5, domain: '图形与几何',
+      points: ['5.6'], level: 'core', rung: 3, alias: ['中线', '出题人', '锁定', '题目给的'],
+      hook: '三角形 ABC 已经画好，名字和图形都是题目给的，不能改、不能删。工具只留了「连线」「中点」「剪」：作出 BC 的中点，从 A 连到它，沿这条线剪开。',
+      shelf: ['gworkspace', 'gpt', 'figmeasure'], shelfOnly: true,
+      tools: ['seg', 'mid', 'cut'], rename: false, deleteGiven: false,
+      build: () => board([['A', 0, 0], ['B', 6, 0], ['C', 2, 4]]),
+      milestones: [
+        { id: 'mid', say: '作出 BC 的中点', score: 3, glow: ['gmid'],
+          when: { built: { rule: 'geo.midpoint', of: ['B', 'C'] } },
+          hints: ['先找 BC 的正中间。', '用「中点」器材，把 B、C 两个点接进去。', '中点的两个输入口分别接 B 和 C。'] },
+        { id: 'cut', say: '沿中线剪开，两块面积相等', score: 4, glow: ['gseg', 'gcut'], why_code: '要比较剪刀两个输出块的面积',
+          test: (w) => w.ofType('gcut').some((e) => { const a = areaOf(w, e, 'a'), b = areaOf(w, e, 'b'); return a && b && U.KINDS.real.eq(a, b); }),
+          hints: ['从 A 连到中点，就是一条中线。', '「连线」接 A 和中点，再把线接进「剪刀」的“沿这条线剪”。', '剪刀的图形口接三角形，切线口接中线。'] },
+      ],
+      traps: [],
+      goal: ['mid', 'cut'],
+      why: '两块三角形的底都是 BC 的一半，高都是 A 到 BC 的距离，所以面积相等。这道题的图形和名字都锁住了，学生只能在它上面作图。',
+    },
   );
 })(typeof globalThis !== 'undefined' ? globalThis : window);

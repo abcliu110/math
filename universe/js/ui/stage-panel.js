@@ -17,7 +17,8 @@
     if (!inFocus) h += '<button class="wsx-fold" data-ws-fold="' + ws.id + '"><span class="wsx-fold-open">工作区 ▸</span><span class="wsx-fold-shut">收起 ▾</span></button>';
     const D = S.wsDraw && S.wsDraw.ws === ws.id ? S.wsDraw : null;
     // 工具说明从 UI.ToolHelp 读（悬停或聚焦时由 CSS 显示 data-tip）；没有说明的工具不带 data-tip
-    h += '<div class="wsx-tools">' + wd.tools.map((t) => { const hp = UI.ToolHelp.of(t.id); return '<button data-ws-tool="' + t.id + '" data-ws="' + ws.id + '"' + (hp ? ' data-tip="' + SG.escA(hp.tip) + '"' : '') + (D && D.tool === t.id ? ' class="on" aria-pressed="true"' : '') + '>' + K.esc(t.label) + '</button>'; }).join('') +
+    // 出题人控制（§10.5.9 第 10 条）：题目 tools 白名单之外的工具不显示
+    h += '<div class="wsx-tools">' + wd.tools.filter((t) => U.problemToolAllowed(S.problem, t.id)).map((t) => { const hp = UI.ToolHelp.of(t.id); return '<button data-ws-tool="' + t.id + '" data-ws="' + ws.id + '"' + (hp ? ' data-tip="' + SG.escA(hp.tip) + '"' : '') + (D && D.tool === t.id ? ' class="on" aria-pressed="true"' : '') + '>' + K.esc(t.label) + '</button>'; }).join('') +
       '<button data-ws-fit="' + ws.id + '" title="按内容选坐标范围，让图正好装下">适应</button></div>';
     h += '<div class="wsx-range">' + SG.rangeText(ws, pw, ph) + '</div>';
     h += '<div class="wsx-args">移动时：向右 <input type="number" data-ws-arg="dx" value="' + SG.escA(S.wsArgs.dx) + '"> 向上 <input type="number" data-ws-arg="dy" value="' + SG.escA(S.wsArgs.dy) + '"></div>';

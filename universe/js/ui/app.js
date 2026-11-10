@@ -225,6 +225,14 @@
     refresh(); UI.Panels.renderShelf();
     say(S.mode === 'exam' ? '考试：没有提示，搭好后点「交卷」' : '练习：跟着左边的步骤做，下一步要的器材会发光', '', 4200);
   }
+  // 题目给的图形的 id（§10.5.9 第 10 条）：题目 build 出来的器材，按题目缓存；自由探究里没有
+  let givenCache = { pid: null, ids: new Set() };
+  function givenIds() {
+    const p = S.problem;
+    if (!p) return new Set();
+    if (givenCache.pid !== p.id) givenCache = { pid: p.id, ids: U.problemGivenIds(p) };
+    return givenCache.ids;
+  }
   function openFree() {
     S.mode = 'free'; S.problem = null; S.run = null; S.session = null; Ev.ctx = {};
     let sc = null; try { sc = S.freeScene ? U.JSON.parse(S.freeScene) : U.JSON.parse(lsGet(FREE_KEY)); } catch (e) { sc = null; }
@@ -640,6 +648,6 @@
     setInterval(saveSession, 2000); G.addEventListener('pagehide', saveSession);
     offerResume();
   }
-  UI.App = { tx, act, actMany, build, preview, snapshot, afterMove, removeEntity, askDelete, askDeps, askClear, clockAct, openProblem, openFree, setMode, say, undo, redo, stepOnce, refresh, persistView };
+  UI.App = { tx, act, actMany, build, preview, snapshot, afterMove, removeEntity, askDelete, askDeps, askClear, clockAct, openProblem, openFree, setMode, say, undo, redo, stepOnce, refresh, persistView, givenIds };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })(window);
