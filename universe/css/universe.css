@@ -499,10 +499,17 @@ svg.wsbody text:not([data-ren]) { pointer-events: none; }
 .dg-r-res .dg-cell.off { opacity: 0.35; }
 .dg-r-res .dg-cell.dg-over { outline: 2px dashed var(--blue-ink); }
 .dg-acts { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0; }
-.dg-pal { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 4px; }
+/* 竖式的每一列有自己的数字池（js/ui/wb-kit.js 的 digitHtml）：池子在这一列的正下方，5 × 2 排 0–9 */
+#insp:has(.dg-tab) { width: 360px; }
+.dg-r-pool td { padding: 4px 0 0; vertical-align: top; }
+.dg-pool { display: grid; grid-template-columns: repeat(5, 19px); gap: 2px; justify-content: center; padding: 2px; border-radius: 6px; }
+.dg-pool.cur { outline: 2px solid var(--blue-ink); }
+.dg-pool.off { opacity: 0.4; }
+.dg-pool .dg-tile { min-width: 0; width: 19px; height: 24px; line-height: 22px; font-size: 13px; border-radius: 5px; }
 .dg-tile { min-width: 34px; height: 34px; line-height: 34px; text-align: center; border-radius: 8px; border: 1px solid var(--txt3); background: var(--panel2); color: var(--txt); font-weight: 700; cursor: grab; touch-action: none; user-select: none; }
 .dg-tile.pick { border: 2px solid var(--blue-ink); }
 .dg-tile.dg-drag { opacity: 0.5; }
+.dg .dg-btn[data-dg-carry], .dg .dg-btn[data-dg-borrow] { cursor: grab; touch-action: none; user-select: none; }
 .dg-now, .db-now { font-size: 13px; font-weight: 700; margin: 4px 0; color: var(--txt); }
 .dg-msg, .db-msg { min-height: 16px; font-size: 12px; margin: 4px 0; color: var(--bad-ink); }
 .dg .dg-btn, .db .dg-btn { font: inherit; font-size: 12px; padding: 3px 8px; border-radius: 8px; border: 1px solid var(--txt3); background: var(--panel2); color: var(--txt); cursor: pointer; }
@@ -510,6 +517,11 @@ svg.wsbody text:not([data-ren]) { pointer-events: none; }
 .db-in { width: 0; flex: 1 1 0; min-width: 0; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel2); color: var(--txt); font: inherit; }
 .db-plot { display: block; width: 100%; height: auto; border-radius: 8px; background: var(--panel2); margin: 6px 0; }
 .db-eq { font-weight: 700; color: var(--good); margin: 4px 0; }
+/* 数据格的数字盘（js/ui/wb-kit.js 的 dataHtml）：0–9、小数点、负号、⌫、清空，3 列 */
+.db-pad { margin: 6px 0; padding: 6px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel2); }
+.db-pad-to { font-size: 12px; color: var(--txt2); margin-bottom: 4px; }
+.db-pad-keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.db-pad-keys .dg-btn { font-size: 15px; font-weight: 700; padding: 6px 0; min-width: 0; }
 /* 2.14b 排除表（js/ui/wb-kit.js 的 deduceHtml）：未定 / 不是（灰）/ 是（绿）/ 已排除（灰）。选择器带 .dd 前缀，压过 .wb button */
 .dd { font-size: 13px; }
 .dd-now, .dd-hint { font-size: 12px; margin: 4px 0; color: var(--txt2); }
