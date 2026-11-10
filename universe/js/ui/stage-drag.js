@@ -76,6 +76,9 @@
       if (S.wsDraw.tool === 'cut' && !S.wsDraw.pend && /^(path|line)$/i.test(t.tagName) && t.closest('[data-pick]')) { SG.wsPick(t.closest('[data-pick]').dataset.pick, ev.shiftKey); return SG.render(); }
       ev.preventDefault(); ev.stopPropagation(); SG.drawClick(wbd, ev); return;
     }
+    // 尺子、量角器的把手（§10.5.9 第 6 条）：拖动挪它的一个点，松手提交一步
+    const mh = t.closest('[data-mhdl]');
+    if (mh && wbd) { ev.preventDefault(); ev.stopPropagation(); SG.markDown(mh, ev); return; }
     const hd = t.closest('[data-hdl]');
     if (hd && wbd) { ev.preventDefault(); ev.stopPropagation(); SG.startHandle(hd, ev); return; }
     // 卡片右下角的拖柄：拖动改大小；双击恢复默认大小（一次 act，可以撤销）
@@ -111,6 +114,9 @@
     if (altPick) pick = stack[1].name;
     if (pick && pk) pk = (stack.find((s) => s.name === pick) || { el: pk }).el;
     if (altPick) { SG.wsPick(pick, false); SG.render(); return; }
+    // 尺子、量角器本身（直接按在它上面）：整把挪动。优先于压在它下面的点（点的优先级比线高，但这里要的是尺子）
+    const mkT = t.closest('[data-pick]');
+    if (mkT && wbd && !ev.shiftKey && String(mkT.dataset.pick).indexOf('mk:') === 0 && SG.markBody(mkT, ev)) { ev.preventDefault(); ev.stopPropagation(); SG.render(); return; }
     if (pick) SG.wsPick(pick, ev.shiftKey);
     if (gh) {
       const pe = S.scene.entities[gh.dataset.drag]; if (!pe) return;
@@ -204,6 +210,7 @@
     }
     if (S.wsDraw && S.wsDraw.pend) SG.drawHover(ev);
     if (!SG.drag) return;
+    if (SG.drag.kind === 'mark' || SG.drag.kind === 'markbody') { SG.markMove(ev); return; }
     if (SG.drag.kind === 'piece') { SG.pieceMove(ev); return; }
     if (SG.drag.kind === 'shape') { SG.shapeMove(ev); return; }
     if (SG.drag.kind === 'rz') {
@@ -258,6 +265,7 @@
       const d = SG.drag; SG.drag = null; SG.stageEl.classList.remove('panning');
       if (d.moved) SG.dblKey = null;   // 拖动过的不算点击：下一次按不能被当成双击
       document.querySelectorAll('.card.droptarget').forEach((c) => c.classList.remove('droptarget'));
+      if (d.kind === 'mark' || d.kind === 'markbody') { SG.markUp(d); SG.render(); return; }
       if (d.kind === 'piece') { SG.pieceUp(d, ev); return; }
       if (d.kind === 'shape') { SG.shapeUp(d, ev); return; }
       if (d.kind === 'rz') {
