@@ -34,6 +34,11 @@ const PAGES = [
   { name: '中线面积', setup: () => UI.App.openProblem('geo-median-area', 'practice') },
   { name: '分数加法', setup: () => UI.App.openProblem('frac-add-unlike', 'practice') },
   { name: '两个骰子', setup: () => UI.App.openProblem('two-dice', 'practice') },
+  { name: '工作区工具行', setup: () => {
+    UI.App.openFree(); UI.App.act({ t: 'clear' });
+    UI.App.act({ t: 'add', type: 'gworkspace', x: 120, y: 60 });
+    UI.Stage.render();
+  } },
   { name: '属性面板', setup: () => {
     UI.App.openFree(); UI.App.act({ t: 'clear' });
     const id = UI.App.act({ t: 'add', type: 'num', x: 200, y: 200, props: { n: 3 } }).id;
@@ -44,7 +49,8 @@ const PAGES = [
   } },
 ];
 const SCHEMES = ['light', 'dark'];
-const CONTRAST_MODES = ['normal', 'high'];   // 高对比度（css/universe.css 的 data-contrast="high" 令牌）也要两套主题都过
+const CONTRAST_MODES = ['normal', 'high', 'young'];   // 高对比度（css/universe.css 的 data-contrast="high" 令牌）和低年级模式（§11，字体和按钮变大）也要两套主题都过
+const MODE_LABEL = { normal: '', high: '·高对比度', young: '·低年级' };
 
 // ---------- 对比度公式（WCAG 2，sRGB 相对亮度） ----------
 function lum(rgb) {
@@ -200,10 +206,11 @@ async function run() {
     // 每种主题（light / dark）× 普通 / 高对比度（V10，2.6b：菜单里的开关，用 localStorage 打开）各跑一遍
     for (const scheme of SCHEMES) for (const mode of CONTRAST_MODES) {
       const ctx = await b.newContext({ colorScheme: scheme, viewport: { width: 1440, height: 900 } });
-      const label = scheme + (mode === 'high' ? '·高对比度' : '');
+      const label = scheme + MODE_LABEL[mode];
       for (const pg of PAGES) {
         const p = await ctx.newPage();
         if (mode === 'high') await p.addInitScript(() => { try { localStorage.setItem('universe.contrast', 'high'); } catch (e) { /* 存储不可用 */ } });
+        if (mode === 'young') await p.addInitScript(() => { try { localStorage.setItem('universe.young', 'on'); } catch (e) { /* 存储不可用 */ } });
         p.on('pageerror', (e) => errors.push(pg.name + '（' + label + '）页面报错：' + e.message));
         try {
           await p.goto(url); await p.waitForTimeout(300);

@@ -206,18 +206,23 @@
       if (!den) return;
       const tp = ((wp.x - ax) * v0x + (wp.y - ay) * v0y) / den;
       const order = SCALES.slice().sort((a, b) => Math.abs(Q.num(a) - tp) - Math.abs(Q.num(b) - tp));
-      let pick = null;
-      for (const f of order) {
+      // 取离鼠标最近的、结果能写进去的比例：整数坐标，并且在坐标范围（t.lo、t.hi）里。最近的那个不行时，说明原因，停在能用的比例上
+      let pick = null, miss = '';
+      for (const [i, f] of order.entries()) {
         if (d.mode === 'pscale') { pick = { f, nv: [] }; break; }
         const nv = d.targets.map((t) => ({ t, x: Q.add(A.x, Q.mul(f, Q.sub(Q(t.x0), A.x))), y: Q.add(A.y, Q.mul(f, Q.sub(Q(t.y0), A.y))) }));
-        if (nv.every((v) => Q.isInt(v.x) && Q.isInt(v.y))) { pick = { f, nv }; break; }
+        const inRange = (v) => { const x = Q.num(v.x), y = Q.num(v.y); return x >= v.t.lo[0] && x <= v.t.hi[0] && y >= v.t.lo[1] && y <= v.t.hi[1]; };
+        const why = !nv.every((v) => Q.isInt(v.x) && Q.isInt(v.y)) ? '会得到分数坐标（自由点只存整数）' : !nv.every(inRange) ? '会超出坐标范围（±' + L.COORD_MAX + '）' : '';
+        if (!why) { pick = { f, nv }; break; }
+        if (i === 0) miss = why;
       }
       if (pick) {
         d.f = pick.f;
         if (d.mode === 'sc') for (const v of pick.nv) { put(v.t.id, v.t.kx, Q.num(v.x)); put(v.t.id, v.t.ky, Q.num(v.y)); }
         else E[d.id].props.scale = Q.show(Q.mul(Q.parse(d.s0), pick.f));
         tip = '放缩 ' + Q.show(pick.f) + ' 倍';
-      } else tip = '这个比例会得到分数坐标（自由点只存整数），先不动';
+        if (miss) tip = Q.show(order[0]) + ' 倍' + miss + '，停在 ' + Q.show(pick.f) + ' 倍';
+      } else tip = '这个比例没有能用的结果，先不动';
     } else if (d.mode === 'prot') {
       // 块的旋转（V9，2.10）：总角度从按下时的角度开始，跟着鼠标走，按 1° 吸附（按住 Shift 按 15°）。
       // 90° 的倍数记在内核的 turn（精确），余下的 0–89 记在块的 approxDeg（界面层近似）。逆时针为正。
