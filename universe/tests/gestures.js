@@ -160,6 +160,20 @@ async function clickSel(page, sel) {
 const undo = (page) => clickSel(page, '#undo');
 const redo = (page) => clickSel(page, '#redo');
 
+// 工作区里的真实鼠标点：单击（一下），或双击（两下，第二下的 clickCount 为 2，和真人双击一样）
+async function clickAt(page, x, y, label) {
+  await begin(page, 'clickAt(' + (label || '') + ')');
+  await page.mouse.click(x, y);
+  await pause(page, 200);
+  return { visible: true, text: '', added: [], label: label || '' };
+}
+async function dblClickAt(page, x, y, label) {
+  await begin(page, 'dblClickAt(' + (label || '') + ')');
+  await page.mouse.dblclick(x, y);
+  await pause(page, 200);
+  return { visible: true, text: '', added: [], label: label || '' };
+}
+
 // 按键（如 'Delete'、'Control+z'）
 async function press(page, key) {
   await begin(page, 'press(' + key + ')');
@@ -250,6 +264,6 @@ async function assertInvariants(page, label, opts) {
 
 module.exports = {
   attachErrorCollector, assertInvariants,
-  dragTileTo, dragCardTo, clickTile, clickCard, clickSel, undo, redo, press,
+  dragTileTo, dragCardTo, clickTile, clickCard, clickSel, clickAt, dblClickAt, undo, redo, press,
   cardIds, bannerText,
 };

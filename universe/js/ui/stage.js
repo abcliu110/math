@@ -1022,6 +1022,26 @@
     render();
   }
 
+  // 工作区双击循环选中（V3，§1.5）。pointer 事件拿不到点击次数，所以自己配对：同一位置（4 像素内）500 毫秒内的两下点击是一次双击。
+  // 双击的第一下照常选最上面的；第二下（wsCyc 记着上一次循环到哪里了）依次换到鼠标下面的下一个图形，栈顶在前，2 秒内连续双击有效。
+  const WS_DBL_PX = 4;   // 两下点击离得不超过这么多像素才算同一位置
+  let wsPress = null, wsCyc = null;
+  function wsCycPick(ev, wb) {
+    const now = Date.now(), last = wsPress, same = (a) => Math.abs(a.x - ev.clientX) <= WS_DBL_PX && Math.abs(a.y - ev.clientY) <= WS_DBL_PX;
+    wsPress = { x: ev.clientX, y: ev.clientY, t: now, second: false };
+    if (!last || last.second || !same(last) || now - last.t >= 500) return null;   // 第一下（或者已经配对过的）：照常选最上面的
+    wsPress.second = true;
+    const names = [];
+    for (const el of document.elementsFromPoint(ev.clientX, ev.clientY)) {
+      const pk = el.closest ? el.closest('[data-pick]') : null;
+      if (pk && pk.closest('.wsbody') === wb && !names.includes(pk.dataset.pick)) names.push(pk.dataset.pick);
+    }
+    if (!names.length) return null;
+    const c = wsCyc, near = !!c && c.wsid === wb.dataset.wsid && same(c) && now - c.t < 2000;
+    const idx = near ? (c.idx + 1) % names.length : 0;
+    wsCyc = { wsid: wb.dataset.wsid, x: ev.clientX, y: ev.clientY, t: now, idx };
+    return names[idx];
+  }
   function onDown(ev) {
     const S = UI.S, t = ev.target;
     if (t.closest('.tool') || t.closest('.wsx') || t.closest('.wsx-float')) return;   // 工作区底下的面板：让浏览器照常处理按钮和输入框
@@ -1047,10 +1067,12 @@
       startResize(rz.dataset.rz, ev); return;
     }
     // 工作区里选中对象（点、线、图形）：Shift 点是加选
-    const pk = t.closest('[data-pick]');
+    let pk = t.closest('[data-pick]');
+    const cyc = pk && wbd && !ev.shiftKey ? wsCycPick(ev, wbd) : null;   // 双击的第二下：选下一个图形（V3）
+    if (cyc) pk = [...wbd.querySelectorAll('[data-pick]')].find((el) => el.dataset.pick === cyc) || pk;
     if (pk) wsPick(pk.dataset.pick, ev.shiftKey);
     // 自由点（工作区里的点、多边形的顶点）：直接拖动，改的是那个自由点的 x、y（格点吸附，范围内）；块走块的拖动
-    const gh = t.closest('[data-drag]');
+    const gh = cyc ? null : t.closest('[data-drag]');
     if (gh) {
       const pe = S.scene.entities[gh.dataset.drag]; if (!pe) return;
       if (roleOf(pe) === 'piece') { pieceDown(pe, gh, pk, ev); return; }
