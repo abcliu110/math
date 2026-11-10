@@ -253,6 +253,8 @@
     },
     // 编组（§10.5.9 第 3 条）：ids 记同一个组号 gid；gid 为空就取消编组
     group: { label: 'group', fn(A, p) { return A({ t: 'group', ids: p.ids, gid: p.gid || null }); } },
+    // 多选对齐、等距分布（§10.5.9 第 3 条）：ops 是 { id, k, v } 的列表（块的 dx/dy，自由点的 x/y），整批是一步
+    align: { label: 'align', fn(A, p) { for (const op of p.ops) A({ t: 'set', id: op.id, k: op.k, v: op.v }); } },
     // 连线：从一个输出口拉到一个输入口
     link: {
       label: 'link',

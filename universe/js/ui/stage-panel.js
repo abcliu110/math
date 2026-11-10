@@ -181,6 +181,19 @@
       btn('del', '删除', '删除选中的图形或步骤（Delete）') + btn('undo', '撤销', '撤销上一步') +
       '<span class="wsmini-sep"></span>' + snapBtn(ws) + '</span>';
   }
+  // 多选对齐与等距分布（§10.5.9 第 3 条）：这个工作区里选中两个以上的图形时，在主工具条上方再出一条对齐工具条（主工具条已经放满，不能挤进去）；
+  // 每个按钮是一步撤销。收起工具条时不出现。
+  function alignBar(ws, pos) {
+    if (UI.Chrome.barShut() || !pos || (UI.S.wsSel || []).filter((n) => SG.figByName(ws.id, n)).length < 2) return '';
+    const b = (op, label, tip) => '<button data-fbar="al-' + op + '" data-ws="' + ws.id + '" title="' + SG.escA(tip) + '">' + label + '</button>';
+    const html = b('l', '左齐', '左对齐：所有选中的图形左边缘对齐到最左的那个') + b('r', '右齐', '右对齐：右边缘对齐到最右的那个') +
+      b('t', '顶齐', '顶对齐：上边缘对齐到最高的那个') + b('b', '底齐', '底对齐：下边缘对齐到最低的那个') +
+      b('hc', '水平居中', '水平居中：中心的横坐标对齐') + b('vc', '垂直居中', '垂直居中：中心的纵坐标对齐') +
+      b('dh', '水平等距', '水平等距：两端不动，中间的横向间距相等（至少三个，间距要是整数格）') +
+      b('dv', '垂直等距', '垂直等距：两端不动，中间的纵向间距相等（至少三个，间距要是整数格）');
+    const top = pos.y - (UI.LAYOUT.BAR.h + UI.LAYOUT.BAR.gap);
+    return '<div class="fbar wsalign" role="toolbar" aria-label="对齐与分布" data-wsalign="' + ws.id + '" style="left:' + pos.x + 'px;top:' + top + 'px">' + html + '</div>';
+  }
   // 吸附开关（V4，§1.3 第 4 条）：关了，拖动和画线都不吸附到中点、交点、垂足；按住 Alt 暂时不吸附（和开关无关）
   function snapBtn(ws) {
     const on = UI.S.snapOn !== false;
@@ -193,7 +206,7 @@
   function barHtml(ws, pos) {
     const shut = UI.Chrome.barShut(), D = UI.S.wsDraw && UI.S.wsDraw.ws === ws.id ? UI.S.wsDraw : null;
     const quick = '<span class="fbar-quick"><button data-ws-mode="select" data-ws="' + ws.id + '"' + (!D ? ' class="on" aria-pressed="true"' : '') + ' title="选择、拖动点和图形（V）">选择 <kbd>V</kbd></button><span class="wsmini-sep"></span></span>';
-    return '<div class="fbar wsmini' + (shut ? ' shut' : '') + '" data-wsbar="' + ws.id + '"' + (pos ? ' style="left:' + pos.x + 'px;top:' + pos.y + 'px"' : '') + '>' +
+    return alignBar(ws, pos) + '<div class="fbar wsmini' + (shut ? ' shut' : '') + '" data-wsbar="' + ws.id + '"' + (pos ? ' style="left:' + pos.x + 'px;top:' + pos.y + 'px"' : '') + '>' +
       '<button class="fbar-fold" data-fbar="fold" data-ws="' + ws.id + '" title="' + (shut ? '展开工具条' : '收起工具条') + '">' + (shut ? '工具 ▸' : '▾') + '</button>' +
       quick + barTools(ws) +
       '<button data-fbar="focus" data-ws="' + ws.id + '" title="放大到台面的全部，再点一次或按 Esc 还原">全屏</button></div>';
@@ -214,6 +227,7 @@
     if (a === 'del') return barDelete(wsId);
     if (a === 'copy' || a === 'mirror' || a === 'rot' || a === 'flip') return SG.wsAct(wsId, a);
     if (a === 'group') return SG.wsGroup(wsId, true);
+    if (a.indexOf('al-') === 0) return SG.alignWs(wsId, a.slice(3));
     if (a === 'undo') { const u = document.getElementById('undo'); if (u) u.click(); }
     if (a === 'snap') { UI.S.snapOn = UI.S.snapOn === false; return SG.render(); }
   }
