@@ -189,7 +189,8 @@
       arithbench: {
         workspaceRole: 'none',
         handles: true,
-        inspector: 'arithbench',
+        inspector: 'workbench',
+        wbUI: 'arith',   // 界面按这个名字找画法（js/ui/panels.js 的 arHtml），见 registry 的 WB_UIS
         essence: ['E2'],
         label: '竖式工作台', prefix: '竖式', group: '数与运算', grades: [1, 4], alias: ['竖式', '进位', '退位', '凑十', '拆数', '加法', '减法', '乘法'],
         workbenches: ['arith'],

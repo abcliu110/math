@@ -83,6 +83,8 @@
       built: { fields: ['rule', 'of'] },
       form: { fields: ['role', 'is'] },
       steps: { fields: ['used', 'allKept'] },
+      digits: { fields: ['solved'] },                       // 数位竖式写完了（D8）
+      data: { fields: ['minRows', 'plotted', 'fitted'] },   // 数据图表台：录了几组、画了图、拟合了（D8）
     };
     const lintNew = (c, where) => {
       const pre = where + ' ' + (c.id || '') + ' ';

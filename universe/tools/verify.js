@@ -1,5 +1,5 @@
 /* node tools/verify.js —— 一条命令跑完全部检查，任一步失败就退出非零（不再往下跑）。
- * 顺序：tests/run.js → tools/check-types.js → tests/ui.js → tests/ui-probes.js（如果存在）→ tests/ui-layout.js → tests/ui-space.js → tests/ui-roles.js → tests/ui-deps.js → tests/ui-workbench.js → tests/ui-expr.js → tests/ui-stepgraph.js → tests/ui-steps.js → tests/ui-arith.js → tests/ui-select.js → tests/ui-snap.js → tests/ui-shapes.js → tests/ui-export.js → tests/ui-labels.js → tests/ui-space-focus.js → tests/ui-touch-keys.js → tests/ui-feedback.js → tests/ui-readout.js → tests/ui-robust.js → tests/ui-random.js → tests/ui-theme.js → tests/ui-perf.js → tools/lint-ui.js → tools/contrast.js → tools/build-standalone.js → dist 文件加载检查。
+ * 顺序：tests/run.js → tools/check-types.js → tests/ui.js → tests/ui-probes.js（如果存在）→ tests/ui-layout.js → tests/ui-space.js → tests/ui-roles.js → tests/ui-deps.js → tests/ui-workbench.js → tests/ui-expr.js → tests/ui-stepgraph.js → tests/ui-steps.js → tests/ui-arith.js → tests/ui-digit.js → tests/ui-data.js → tests/ui-cross.js → tests/ui-extend.js → tests/ui-select.js → tests/ui-snap.js → tests/ui-shapes.js → tests/ui-export.js → tests/ui-labels.js → tests/ui-space-focus.js → tests/ui-touch-keys.js → tests/ui-feedback.js → tests/ui-readout.js → tests/ui-robust.js → tests/ui-random.js → tests/ui-theme.js → tests/ui-perf.js → tests/ui-s105.js → tools/lint-ui.js → tools/contrast.js → tools/build-standalone.js → dist 文件加载检查。
  * 界面测试和 dist 检查需要环境变量 PW_NODE_PATH：playwright 所在的 node_modules 目录。
  * 用法：PW_NODE_PATH=<.../node_modules> node tools/verify.js */
 'use strict';
@@ -68,6 +68,10 @@ async function checkDist() {
   if (!runScript('tests/ui-stepgraph.js', 'tests/ui-stepgraph.js', pwEnv)) bail();   // D6：看背后的连线（式子 3 步的依赖图、几何剪的依赖图；点节点回到那一步，真实鼠标和键盘）
   if (!runScript('tests/ui-steps.js', 'tests/ui-steps.js', pwEnv)) bail();           // I：工作台的步骤写进台面（真实鼠标：移项、合并、两边同除、因式分解；steps 查询；撤销）
   if (!runScript('tests/ui-arith.js', 'tests/ui-arith.js', pwEnv)) bail();   // H4：算术工作台（竖式，真实鼠标）：加减乘竖式、进位退位、凑十、拆数、撤销；题目 workbench 为 arith
+  if (!runScript('tests/ui-digit.js', 'tests/ui-digit.js', pwEnv)) bail();           // D8：数位竖式（真实鼠标：拖数字进列、退位、进位、点选；撤销；判题 digits 查询）
+  if (!runScript('tests/ui-data.js', 'tests/ui-data.js', pwEnv)) bail();             // D8：数据图表台（真实鼠标和键盘：录数据、画散点图、拟合直线；删行作废；撤销）
+  if (!runScript('tests/ui-cross.js', 'tests/ui-cross.js', pwEnv)) bail();      // D7：跨工作台（几何台面的面积读数接进式子工作台，S = a×h，真实鼠标代入、算出数，得到 S = 24）
+  if (!runScript('tests/ui-extend.js', 'tests/ui-extend.js', pwEnv)) bail();   // J：二次扩域坐标（抛物线的顶点、交点在台面上精确显示）、增量求值（改无关器材求值 0 次；300 个对象增量中位数 < 16 毫秒）、文件清单一致
   if (!runScript('tests/ui-select.js', 'tests/ui-select.js', pwEnv)) bail();         // V3：工作区选择（同一位置双击依次选中重叠的图形，单击选最上面的）
   if (!runScript('tests/ui-snap.js', 'tests/ui-snap.js', pwEnv)) bail();             // V4：吸附到构造点（画线吸附到中点，背后建 gmid；拖动端点后跟着动）
   if (!runScript('tests/ui-select2.js', 'tests/ui-select2.js', pwEnv)) bail();       // V3 剩余：选中提示、Alt 点击选第二个、Tab 切换、优先级（线段 > 填充），真实鼠标和键盘
@@ -83,6 +87,7 @@ async function checkDist() {
   if (!runScript('tests/ui-random.js', 'tests/ui-random.js', pwEnv)) bail();        // U8：随机手势 200 步（固定种子 20260509），每步不变量成立
   if (!runScript('tests/ui-theme.js', 'tests/ui-theme.js', pwEnv)) bail();          // V10/2.11/2.6b：深浅色令牌（两套对比度）、跟随系统、菜单切换并记住、存储不可用、线型（颜色不同线型不同）
   if (!runScript('tests/ui-perf.js', 'tests/ui-perf.js', pwEnv)) bail();            // V10/2.15：性能（50 个图形，真实鼠标拖动一次，单次处理和到下一帧 < 200 毫秒；实测数字在输出里）
+  if (!runScript('tests/ui-s105.js', 'tests/ui-s105.js', pwEnv)) bail();            // §10.5.9 剩余项：复制粘贴（Ctrl+C/V）、镜像复制（M）、多选编组（Ctrl+G）、拖动幽灵对照（真实鼠标和键盘）
   if (!runScript('tools/lint-ui.js', 'tools/lint-ui.js')) bail();              // 界面代码的意图层、状态分层、布局数字、坐标换算、器材判断（U3–U7）
   if (!runScript('tools/contrast.js', 'tools/contrast.js', pwEnv)) bail();          // V1：界面文字对比度 >= 4.5:1（light/dark 两种主题，playwright 实测）
   if (fs.existsSync(path.join(root, 'tests', 'ui-probes.js'))) {

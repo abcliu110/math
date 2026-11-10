@@ -78,14 +78,28 @@
   }
 
   // 键盘事件入口（app.js 的 keydown 先调用它）。返回 true：已经处理，调用方不要再处理。
+  // 复制、粘贴、编组（§10.5.9 第 3、4 条）：Ctrl+C 复制选中的图形，Ctrl+V 粘贴，Ctrl+G 编组，Ctrl+Shift+G 取消编组。
+  // 没有选中图形、或没有可以粘贴的：返回 false，让浏览器照常处理（比如复制选中的文字）
+  function clipKeys(e, wsId) {
+    const S = UI.S, k = e.key.toLowerCase(), sel = (S.wsSel || []).length > 0;
+    if (!wsId) return false;
+    if (k === 'c') { if (!sel) return false; e.preventDefault(); SG.clipCopy(wsId); return true; }
+    if (k === 'v') { if (!(S.wsClip || []).length) return false; e.preventDefault(); SG.clipPaste(wsId); return true; }
+    if (k === 'g') { if (!sel) return false; e.preventDefault(); SG.wsGroup(wsId, !e.shiftKey); return true; }
+    return false;
+  }
+
   function keyNav(e) {
     const S = UI.S;
+    if (S && (e.ctrlKey || e.metaKey) && !e.altKey && /^[cvg]$/i.test(e.key)) return clipKeys(e, SG.activeWs());
     if (!S || e.ctrlKey || e.metaKey || e.altKey) return false;
     if (SG.ctxId) { if (e.key === 'Escape') { SG.closeCtx(); return true; } return false; }
     if (e.target && e.target.tagName === 'BUTTON') return false;   // 焦点在按钮上：Enter、空格照常是按按钮
     const wsId = SG.activeWs();
     // 每个分支：先做，做成了再 preventDefault（做不成的按键照常交给浏览器和 app.js）
     let done = false;
+    // M：镜像复制选中的图形（§10.5.9 第 4 条）
+    if ((e.key === 'm' || e.key === 'M') && wsId && !S.wsDraw && (S.wsSel || []).length) { e.preventDefault(); SG.wsAct(wsId, 'mirror'); return true; }
     // Tab 只在用户刚在工作区里操作过（鼠标停过或按过）时才归工作区；否则照常在按钮之间移动焦点
     const hot = SG.hotWs && S.scene.entities[SG.hotWs] && SG.isWsDef(S.scene.entities[SG.hotWs].type) ? SG.hotWs : null;
     if (e.key === 'Tab') done = !!hot && !S.wsDraw && tabMove(hot, e.shiftKey);

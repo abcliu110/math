@@ -274,6 +274,27 @@
         draw: (c) => K.text(c.w / 2, c.h / 2 + 4, c.out.ok ? (c.out.ok.data ? '正好拼成 ✓' : '还没拼对') : c.out.merged ? '粘成' + F.name(c.out.merged.data) : '—', { size: 14, weight: 700 }),
       },
 
+      // ---------------- 面积读数（D7）：多边形的面积作为数据源输出，可以接进式子工作台（S = a × h）----------------
+      garea: {
+        workspaceRole: 'none',
+        workbenches: ['geometry'],
+        handles: true,
+        essence: ['E5', 'E2'],
+        label: '面积读数', prefix: '面积', group: '图形', grades: [5, 9], lint: ex('只读连进来的图形的面积，没有可调的属性'),
+        props: {},
+        inputs: { f: { kind: 'fig', label: '图形' } },
+        outputs: { s: { dim: 'area', kind: 'num', label: '面积' } },
+        icon: () => K.text(32, 26, 'S', { size: 18, weight: 700 }),
+        size: () => [120, 60],
+        compute: (c) => {
+          const f = figIn(c, 'f', 'polygon'); if (!f) { c.say('info', '接一个多边形进来'); return {}; }
+          const a = Q.div(Q.abs(F.area2(f)), Q(2));
+          c.say('info', '面积 ' + Q.show(a));
+          return { s: U.val('num', a, { dim: 'area' }) };
+        },
+        draw: (c) => K.text(c.w / 2, c.h / 2 + 4, c.out.s ? '面积 ' + Q.show(c.out.s.data) : '面积 ?', { size: 14, weight: 700 }),
+      },
+
       // ---------------- 几何画板：把连进来的图形画在同一个坐标系里，自由点可以拖 ----------------
       gboard: {
         workspaceRole: 'none',

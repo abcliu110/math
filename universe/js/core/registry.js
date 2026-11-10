@@ -121,7 +121,11 @@
 
   // 工作台（D2，docs/direction.md 5.2）：题目的 workbench 决定打开时进入哪个工作台；器材用 workbenches 声明自己属于哪些工作台。
   //   'graph' 是关系画布（默认）：器材架列出全部器材，和以前一样。其他工作台的器材架只列出 workbenches 里写了它的器材。
-  U.WORKBENCHES = ['graph', 'geometry', 'arith'];
+  // 'place-value'：数位竖式（D8，器材 colbench）；'data'：数据图表台（D8，器材 databench）
+  U.WORKBENCHES = ['graph', 'geometry', 'arith', 'place-value', 'data'];
+  // 器材自己的工作台界面（inspector 为 'workbench' 时的 wbUI）：界面按这个名字找画法，不按器材名字（js/ui/wb-kit.js）
+  // 'arith' 是竖式工作台（H4，js/ui/panels.js 的 arHtml）
+  U.WB_UIS = ['digits', 'data', 'arith'];
   U.onWorkbenchShelf = (def, wb) => wb === 'graph' || !!(def && Array.isArray(def.workbenches) && def.workbenches.includes(wb));
 
   U.lintType = function (def) {
@@ -138,7 +142,8 @@
     if (def.stepLabel !== undefined && (def.workspaceRole !== 'step' || !(typeof def.stepLabel === 'string' || typeof def.stepLabel === 'function'))) err('stepLabel 只给步骤（workspaceRole: step），且要是字符串或函数');
     if (def.splitsPieces !== undefined && (def.workspaceRole !== 'step' || typeof def.splitsPieces !== 'boolean')) err('splitsPieces 只给步骤，且要是 true / false');
     if (def.figEdit !== undefined && def.figEdit !== 'place') err('figEdit 目前只认 place');
-    if (def.inspector !== undefined && def.inspector !== 'workbench' && def.inspector !== 'arithbench') err('inspector 目前只认 workbench（式子工作台）和 arithbench（竖式工作台）');
+    if (def.inspector !== undefined && def.inspector !== 'workbench') err('inspector 目前只认 workbench');
+    if (def.wbUI !== undefined && !(def.inspector === 'workbench' && U.WB_UIS.includes(def.wbUI))) err('wbUI 要和 inspector: workbench 一起写，且只认 ' + U.WB_UIS.join(' / '));
     if (def.numberSource !== undefined && typeof def.numberSource !== 'boolean') err('numberSource 要是 true / false');
     if (def.hidden !== undefined && typeof def.hidden !== 'boolean') err('hidden 要是 true / false（不列在器材架上）');    if (typeof def.icon !== 'function') err('缺 icon()，器材架每个器材都要有缩略图');
     if (typeof def.size !== 'function') err('缺 size(ent)');

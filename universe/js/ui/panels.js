@@ -156,8 +156,8 @@
       }
       h += '</div></div>';
     }
-    if (d.inspector === 'workbench') h += wbHtml(e, dd);
-    else if (d.inspector === 'arithbench') h += arHtml(e, dd);
+    // 器材自己声明了工作台界面（wbUI）就用它的画法：竖式（arith）用本文件的 arHtml；数位竖式和数据图表台用 UI.WBKit；否则是式子工作台（I）
+    if (d.inspector === 'workbench') h += d.wbUI === 'arith' ? arHtml(e, dd) : d.wbUI ? UI.WBKit.html(e, d) : wbHtml(e, dd);
     h += '<div class="note">想让别的器材来决定「' + (Object.keys(d.props)[0] ? esc(d.props[Object.keys(d.props)[0]].label) : '') + '」？从别的器材的输出口拖一根线，放到这台器材左边出现的药丸上。</div>';
     const sg = (dd && dd.sig) || []; if (sg.length) h += '<div class="sigs">' + sg.map((s) => '<div>· ' + esc(s.tx) + '</div>').join('') + '</div>';
     h += '<div class="btnrow"><button class="btn" data-reset="1">恢复默认</button></div>';
@@ -168,7 +168,7 @@
   // 步骤历史写在台面上（scene.workbench，U.ExprBench），这里只画。输入框的草稿放在 S.wbDraft[器材 id]。
   function wbDraft(id) {
     const S = UI.S; S.wbDraft = S.wbDraft || {};
-    return S.wbDraft[id] || (S.wbDraft[id] = { ref: '', side: 'lhs', by: '', msg: '', sel: [] });
+    return S.wbDraft[id] || (S.wbDraft[id] = { ref: '', side: 'lhs', by: '', sub: '', msg: '', sel: [] });
   }
   // 一边的有符号项：加法的每一项是加；减法（移项后的 20 − 5）的第二项是减
   function wbTerms(node) {
@@ -186,8 +186,14 @@
     }).join('') + '</div>';
   }
   function wbHtml(e, dd) {
-    const eq = U.ExprBench.eqnIn(dd && dd.inp);
-    if (!eq) return '<div class="wb"><h5>式子工作台</h5><div class="wb-none">接一个方程</div><div class="note">从方程台的「方程」口拖一根线到这台器材的「方程」口。</div></div>';
+    const inp = dd && dd.inp, eq = U.ExprBench.workEqnIn(inp), area = U.ExprBench.areaIn(inp);
+    // 几何来的面积（D7）：接上了就写出它的数；它是 S，式子里的 S 就是它
+    const fromGeo = area ? '<div class="wb-note">几何台面的面积是 ' + esc(U.Q.show(area.data)) + '（式子里的 S 从几何来）</div>' : '';
+    if (!eq) {
+      if (area) return '<div class="wb"><h5>式子工作台</h5><div class="wb-now">现在：<b>S = ?</b></div>' + fromGeo +
+        '<div class="note">再从代数式卡的输出口拖一根线到这台器材的「公式的右边」口，例如 a×h。</div></div>';
+      return '<div class="wb"><h5>式子工作台</h5><div class="wb-none">接一个方程</div><div class="note">从方程台的「方程」口拖一根线到这台器材的「方程」口。</div></div>';
+    }
     const st = U.ExprBench.currentOf(UI.S.scene, e.id, eq), dr = wbDraft(e.id), cur = st.current;
     // 选中项只认现在还存在的项（前面的步骤改了式子，旧的选择就作废）
     const sides = cur.kind === 'eqn' ? { lhs: cur.data.lhs, rhs: cur.data.rhs } : {};
@@ -195,7 +201,7 @@
       const m = /^(lhs|rhs):(\d+)$/.exec(k);
       return !!m && +m[2] < wbTerms(sides[m[1]]).length;
     });
-    let h = '<div class="wb"><h5>式子工作台</h5><div class="wb-now">现在：<b>' + esc(U.ExprBench.showState(st)) + '</b></div>';
+    let h = '<div class="wb"><h5>式子工作台</h5><div class="wb-now">现在：<b>' + esc(U.ExprBench.showState(st)) + '</b></div>' + fromGeo;
     if (cur.kind === 'eqn') {
       h += '<div class="wb-eq">' + wbSide('lhs', sides.lhs, dr) + '<span class="wb-rel">' + esc(cur.data.rel) + '</span>' + wbSide('rhs', sides.rhs, dr) + '</div>';
       h += '<div class="wb-note">点项就选中（可以多选）。把左边的项拖过等号，松手就是移项；选两个同类项再点「合并同类项」。</div>';
@@ -205,8 +211,9 @@
       '<label>要动的项（序号，或标签）<input data-wb-field="ref" value="' + esc(dr.ref) + '" placeholder="例如 2"></label>' +
       '<label>哪一边<select data-wb-field="side">' + [['lhs', '左边'], ['rhs', '右边']].map(([v, t]) => '<option value="' + v + '"' + (v === dr.side ? ' selected' : '') + '>' + t + '</option>').join('') + '</select></label>' +
       '<label>两边同除 / 同乘几<input data-wb-field="by" value="' + esc(dr.by) + '" placeholder="例如 3" class="in-by"></label>' +
+      '<label>代入（字母 = 数）<input data-wb-field="sub" value="' + esc(dr.sub) + '" placeholder="例如 a=6" class="in-by"></label>' +
       '<label>因式分解的两个根<input data-wb-field="r1" value="' + esc(dr.r1 || '') + '" placeholder="例如 2" class="in-by"><input data-wb-field="r2" value="' + esc(dr.r2 || '') + '" placeholder="例如 3" class="in-by"></label></div>';
-    h += '<div class="wb-tools">' + U.Workbench.tools(cur).map((t) => '<button data-wb-tool="' + t.id + '">' + esc(t.label) + '</button>').join('');
+    h += '<div class="wb-tools">' + U.Workbench.tools(cur, !!st.formula).map((t) => '<button data-wb-tool="' + t.id + '">' + esc(t.label) + '</button>').join('');
     // 因式分解（任务 I）：作用在选的那一边上，两个根填在上面的输入框里
     if (cur.kind === 'eqn') h += '<button data-wb-rule="factor" title="两个根填在上面的输入框里（首项系数是 1）">因式分解</button>';
     const k = U.Workbench.coef(st);
@@ -217,7 +224,7 @@
     const log = U.Workbench.stepLog(st);
     h += log.length ? st.steps.map((s, i) => '<div class="wb-step"><span>' + esc(log[i]) + '<small>' + esc(s.why) + '</small></span><button data-wb-undo="' + (i + 1) + '">撤销到这一步</button></div>').join('') : '<div class="wb-none">还没有步骤</div>';
     const sol = U.Workbench.solution(st);
-    if (sol.solved) h += '<div class="wb-sol">解：x = ' + esc(U.Q.show(sol.x)) + '</div>';
+    if (sol.solved) h += '<div class="wb-sol">解：' + esc(U.Form.show(cur.data.lhs)) + ' = ' + esc(U.Q.show(sol.x)) + '</div>';
     return h + '</div>';
   }
 

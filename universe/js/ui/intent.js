@@ -44,6 +44,64 @@
     for (let n = 0; ; n++) for (const ch of letters) { const nm = n ? ch + n : ch; if (!used.has(nm)) return nm; }
   }
 
+  // ---- 复制、镜像复制（§10.5.9 第 4 条）----
+  // 镜像的朝向：块的摆放是“翻转 → 转 → 平移”。镜像等于再沿竖直线翻一次：左右翻（1）和不翻（0）互换，转的角度取负；上下翻（2）等于左右翻再转 180°，所以转的角度是 2 − 转。
+  function mirrorState(flip, turn) {
+    const f = +flip || 0, t = +turn || 0;
+    if (f === 0) return { flip: 1, turn: ((-t % 4) + 4) % 4 };
+    if (f === 1) return { flip: 0, turn: ((-t % 4) + 4) % 4 };
+    return { flip: 0, turn: ((2 - t) % 4 + 4) % 4 };
+  }
+  // 块的副本接着同一个剪切来源（同一条输入线）：形状、放缩一样；名字是新的，颜色按顺序换一个。
+  // 普通复制：位置偏移 (2, −2)。镜像：副本是原图沿它右边界的镜像（左边贴着原图的右边，底边对齐）。
+  function pasteOnePiece(A, it) {
+    const S = UI.S, src = S.scene.entities[it.id];
+    if (!src) throw { why: '找不到要复制的块' };
+    const feed = S.scene.links.find((l) => l.to === it.id && l.toPort === 'f');
+    const id = A({ t: 'copy', id: it.id }).id;
+    if (feed) A({ t: 'link', from: feed.from, fromPort: feed.fromPort, to: id, toPort: 'f' });
+    const k = S.scene.seq.gpiece, name = '块 ' + k;
+    A({ t: 'rename', id, name });
+    A({ t: 'set', id, k: 'name', v: name });
+    A({ t: 'set', id, k: 'color', v: U.Piece.COLORS[(k - 1) % U.Piece.COLORS.length] });
+    let dx = src.props.dx + (it.mirror ? 0 : 2), dy = src.props.dy + (it.mirror ? 0 : -2);
+    if (it.mirror) { const m = mirrorState(src.props.flip, src.props.turn); A({ t: 'set', id, k: 'flip', v: m.flip }); A({ t: 'set', id, k: 'turn', v: m.turn }); }
+    A({ t: 'set', id, k: 'dx', v: dx }); A({ t: 'set', id, k: 'dy', v: dy });
+    if (it.mirror) {
+      let pts = null;
+      try { const D = U.World.evaluate(S.scene); pts = D[id] && D[id].out.f && D[id].out.f.data ? D[id].out.f.data.pts : null; } catch (err) { pts = null; }
+      if (!pts) throw { why: '这一块现在算不出形状，镜像不了' };
+      const minX = Math.min(...pts.map((q) => U.Q.num(q.x))), minY = Math.min(...pts.map((q) => U.Q.num(q.y)));
+      A({ t: 'set', id, k: 'dx', v: dx + Math.round(it.edgeX - minX) }); A({ t: 'set', id, k: 'dy', v: dy + Math.round(it.bottomY - minY) });
+    }
+  }
+  // 自由点围成的图形：新建同样的点和多边形，放进工作区。普通复制找一个放得下的偏移；镜像 x → 2×右边界 − x，贴着原图的右边
+  function pasteOneFig(A, it, wsId) {
+    const S = UI.S, E = S.scene.entities, ws = E[wsId], poly = E[it.poly], LIM = UI.LAYOUT.COORD_MAX;
+    if (!poly || !ws) throw { why: '找不到要复制的图形' };
+    const lim = (v) => Math.abs(v) <= LIM, V = it.verts.filter((g, i, a) => a.indexOf(g) === i);
+    let off = [0, 0], edge = 0;
+    if (it.mirror) {
+      edge = Math.max(...V.map((g) => E[g].props.x));
+      if (!V.every((g) => lim(2 * edge - E[g].props.x) && lim(E[g].props.y))) throw { why: '镜像会超出工作区的坐标范围（±' + LIM + '），先把图形挪近中间再镜像' };
+    } else {
+      const cand = [[2, -2], [-2, -2], [2, 2], [-2, 2], [4, 0], [-4, 0], [0, 4], [0, -4]];
+      const found = cand.find(([dx, dy]) => V.every((g) => lim(E[g].props.x + dx) && lim(E[g].props.y + dy)));
+      if (!found) throw { why: '工作区里放不下一份副本（坐标范围 ±' + LIM + '）' };
+      off = found;
+    }
+    const map = {};
+    for (const id of V) {
+      const o = E[id].props;
+      const x = it.mirror ? 2 * edge - o.x : o.x + off[0], y = it.mirror ? o.y : o.y + off[1];
+      const n = A({ t: 'add', type: E[id].type, x: 0, y: 0, props: { x, y, mark: nextPointName(S.scene) } });
+      A({ t: 'put', id: n.id, parent: ws.id, slot: 'items' }); map[id] = n.id;
+    }
+    const pid = A({ t: 'add', type: poly.type, x: 0, y: 0 }).id;
+    for (const id of V) A({ t: 'link', from: map[id], fromPort: 'p', to: pid, toPort: 'pts' });
+    A({ t: 'put', id: pid, parent: ws.id, slot: 'items' });
+  }
+
   const KINDS = {
     // 点击器材架瓦片，或从器材架拖出来：新建一个器材；拖到容器上就直接放进去（一步完成）。新点自动命名（2.6）
     add: {
@@ -120,7 +178,15 @@
         ctx.id = p.id;
         // V5：用户已确认“删除并同时删除依赖”：先删依赖它的器材（直接和间接），再删它自己；整串是一个撤销项
         if (p.confirmed) for (const d of W.dependentsOf(UI.S.scene, p.id)) A({ t: 'del', id: d });
+        // 只删容器（keep: 'out'）：里面的东西倒到台面上。它们原来的位置可能压在别的工作区上，
+        // 所以和取出来一样，每一个都挪到不重叠的空位（同一个事务，一个撤销项）
+        const outKids = p.keep === 'all' ? [] : W.childrenOf(UI.S.scene, p.id);
         A({ t: 'del', id: p.id, keep: p.keep });
+        for (const k of outKids) {
+          if (!UI.S.scene.entities[k.id]) continue;
+          const sp = UI.Stage.freeSpot(k.x, k.y, k.type, k.id);
+          if (sp.x !== k.x || sp.y !== k.y) A({ t: 'move', id: k.id, x: sp.x, y: sp.y });
+        }
         // 删图形时顺带删它的顶点：别处（线、中点……）还连着的顶点留下
         for (const v of p.alsoVerts || []) if (UI.S.scene.entities[v] && !UI.S.scene.links.some((l) => l.from === v)) A({ t: 'del', id: v });
       },
@@ -170,23 +236,6 @@
         A({ t: 'del', id: P });
       },
     },
-    // 复制一个自由点围成的图形：新建同样的点（偏移 dx、dy）和多边形，放进工作区。一步
-    copyfig: {
-      label: 'copyfig',
-      fn(A, p, ctx) {
-        const S = UI.S, E = S.scene.entities, ws = E[p.ws];
-        const map = {};
-        for (const id of p.verts) {
-          if (map[id]) continue;
-          const o = E[id].props, n = A({ t: 'add', type: E[id].type, x: 0, y: 0, props: { x: o.x + p.dx, y: o.y + p.dy, mark: nextPointName(S.scene) } });
-          A({ t: 'put', id: n.id, parent: ws.id, slot: 'items' }); map[id] = n.id;
-        }
-        const poly = A({ t: 'add', type: E[p.poly].type, x: 0, y: 0 }).id;
-        for (const id of p.verts) A({ t: 'link', from: map[id], fromPort: 'p', to: poly, toPort: 'pts' });
-        A({ t: 'put', id: poly, parent: ws.id, slot: 'items' });
-        ctx.id = poly;
-      },
-    },
     // 工作区里放一个常见图形（梯形、菱形……）：建器材，再放进工作区变成自由点和多边形。一步
     shape: {
       label: 'shape',
@@ -195,6 +244,15 @@
         A({ t: 'wsdrop', id: r.id, ws: p.ws, x: p.x, y: p.y });
       },
     },
+    // 复制、镜像复制（§10.5.9 第 4 条）：items 是要复制的图形（块或自由点图形），整批是一步（一次撤销）；ws 是放自由点图形的工作区
+    paste: {
+      label: 'paste',
+      fn(A, p) {
+        for (const it of p.items) { if (it.kind === 'piece') pasteOnePiece(A, it); else pasteOneFig(A, it, p.ws); }
+      },
+    },
+    // 编组（§10.5.9 第 3 条）：ids 记同一个组号 gid；gid 为空就取消编组
+    group: { label: 'group', fn(A, p) { return A({ t: 'group', ids: p.ids, gid: p.gid || null }); } },
     // 连线：从一个输出口拉到一个输入口
     link: {
       label: 'link',
@@ -237,6 +295,8 @@
     reset: { label: 'reset', fn(A, p) { return A({ t: 'reset', id: p.id }); } },
     resetstate: { label: 'resetstate', fn(A, p) { return A({ t: 'resetstate', id: p.id }); } },
     tidy: { label: 'tidy', fn(A) { return A({ t: 'tidy' }); } },
+    // 工作台的步骤写进台面（D8：竖式、数据图表台；式子工作台的 I 也是这一条）。内核先判断能不能做，这里只写回。
+    wbsteps: { label: 'wb', fn(A, p) { return A({ t: 'wb', host: p.host, key: p.key, steps: p.steps }); } },
     // 清空台面：先问（会删几个器材），确认后才清；撤销一次找回
     clear: {
       label: 'clear',

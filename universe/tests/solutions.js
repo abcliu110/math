@@ -25,7 +25,7 @@ module.exports = {
   'ratio-share-50'(h) { const r = h.add('ratio', { total: 50 }); h.link(h.role('a'), r, 'a'); h.link(h.role('b'), r, 'b'); },
   'chicken-rabbit'(h) { const a = h.role('l1'), b = h.role('l2'), c = h.add('cross'); h.set(a, 'k', -1); h.set(a, 'b', 35); h.set(b, 'k', -0.5); h.set(b, 'b', 23.5); h.link(a, c, 'f'); h.link(b, c, 'g'); },
   'bag-red-ratio'(h) { const g = h.add('hist'), s = h.add('stats'); h.link(h.role('b'), g, 'v'); h.set(g, 'lo', 0); h.set(g, 'hi', 1); h.link(g, s, 'd', 'dist'); h.run(450); },
-  'arith-carry-47-38'(h) { const b = h.role('bench'); h.wb(b, [{ tool: 'col', rule: 'arith.column', ref: null, args: { col: 0 }, kept: true }, { tool: 'col', rule: 'arith.column', ref: null, args: { col: 1 }, kept: true }]); },
+  'arith-carry-47-38'(h) { const b = h.role('bench'); h.wbRaw(b, [{ tool: 'col', rule: 'arith.column', ref: null, args: { col: 0 }, kept: true }, { tool: 'col', rule: 'arith.column', ref: null, args: { col: 1 }, kept: true }]); },
   'gcd-12-18'(h) { const t = h.add('numtheory'); h.link(h.role('a'), t, 'a'); h.link(h.role('b'), t, 'b'); },
   'prime-91'(h) { const t = h.add('numtheory'), d = h.add('divmod'), sev = h.add('num', { n: 7 }); h.link(h.role('n'), t, 'a'); h.link(h.role('n'), d, 'a'); h.link(sev, d, 'b'); },
   'sqrt-2'(h) { const r = h.add('sqrt'), p = h.add('power', { e: 2 }); h.link(h.role('a'), r, 'v'); h.link(r, p, 'a'); },

@@ -27,7 +27,8 @@
 
   // ---------- 刷新 ----------
   function refresh(full) {
-    S.D = W.evaluate(S.scene);
+    // 增量求值（任务 J）：只重算改过的器材和它们的下游，其余沿用上次的结果
+    S.D = W.evaluateCached(S.scene, S.evalCache || (S.evalCache = {}));
     judgeNow();
     UI.Stage.render(); UI.Panels.renderClock();
     if (full !== false) { UI.Panels.renderTop(); UI.Panels.renderLeft(); UI.Panels.renderInsp(); }
@@ -94,7 +95,9 @@
   function finish() {
     const rep = J.report(S.problem, S.run, S.scene, S.D);
     Ev.push('finish', rep); S.scene.clock.running = false; clearSession();
-    setTimeout(() => { UI.Panels.dialog(UI.Panels.reportHtml(rep, S.problem, 'practice')); UI.Panels.renderLeft(); }, 700);
+    // 题目在 700 毫秒后才弹报告：先把题目记下来，免得这段时间里换了题（S.problem 变成 null）就读空
+    const done = S.problem;
+    setTimeout(() => { UI.Panels.dialog(UI.Panels.reportHtml(rep, done, 'practice')); UI.Panels.renderLeft(); }, 700);
   }
 
   // ---------- 改动入口 ----------
@@ -213,6 +216,9 @@
     S.session = U.Session.start(p, S.mode, S.scene);
     S.undo = []; S.redo = []; S.sel = null; S.selLink = null; S.inspOpen = false; S.tab = 'steps'; S.glow = [];
     S.wsSel = []; S.wsMsg = ''; S.wsDraw = null;
+    // 工作台题（D8）：台面上有竖式或数据图表台，打开题目就进入它（属性面板自动打开）
+    const bench = Object.values(S.scene.entities).find((x) => U.types[x.type] && U.types[x.type].wbUI);
+    if (bench) { S.sel = bench.id; S.inspOpen = true; }
     if (!p.predict) S.run.pred_done = true;
     Ev.ctx = { pid: p.id, mode: S.mode }; Ev.push('start', {});
     S.D = W.evaluate(S.scene); UI.Stage.fit(); S.glow = glowOf();
@@ -234,9 +240,9 @@
     openProblem(S.problem.id, m);
   }
 
-  // ---------- 式子工作台（任务 H 第 3b 步；任务 I：每一步记在台面上）----------
+  // ---------- 式子工作台（任务 H 第 3b 步；任务 I：每一步记在台面上；D7：几何来的 S）----------
   // 工作台的步骤写在台面上（scene.workbench，U.ExprBench）：状态从它重算；每次变动是一个动作，撤销一次就回到上一步。
-  function wbEqn(id) { const dd = S.D && S.D[id]; return dd ? U.ExprBench.eqnIn(dd.inp) : null; }
+  function wbEqn(id) { const dd = S.D && S.D[id]; return dd ? U.ExprBench.workEqnIn(dd.inp) : null; }
   function wbNow(id, eq) { return U.ExprBench.currentOf(S.scene, id, eq); }
   // 选中项：dr.sel 里是 'lhs:0' 这样的键；按边取下标
   function wbSelOf(id, side) {
@@ -256,7 +262,7 @@
     const st = wbNow(id, eq);
     const ns = U.Workbench.step(st, tool, ref, args);
     if (ns.lastError) dr.msg = ns.lastError;
-    else { wbSave(id, eq, ns); dr.msg = ''; dr.ref = ''; dr.sel = []; }
+    else { wbSave(id, eq, ns); dr.msg = ''; dr.ref = ''; dr.sub = ''; dr.sel = []; }
     refresh();
   }
   function wbStep(id, tool) {
@@ -271,6 +277,11 @@
       ref = L.length === 1 ? L[0] : (/^\d+$/.test(raw) ? +raw - 1 : (raw || null));
     } else if (tool === 'divide' || tool === 'multiply') {
       args = { by: dr.by };
+    } else if (tool === 'substitute') {
+      // 代入：输入框写「字母 = 数」，例如 a=6；字母和数交给内核判断
+      const m = /^\s*([a-zA-Z])\s*=\s*(\S+)\s*$/.exec(dr.sub || '');
+      if (!m) return wbMsg(id, '请在「代入」框里写成「字母 = 数」，例如 a=6');
+      args = { var: m[1], val: m[2] };
     } else if (tool === 'collect' && (L.length || R.length)) {
       // 合并：选中的几项必须在同一边，至少两项；合并的结果留在原来的位置
       if (L.length && R.length) return wbMsg(id, '合并只能选同一边的项');
@@ -449,6 +460,7 @@
     $('#q2').addEventListener('input', () => UI.Panels.renderShelf());
     // 属性面板
     const insp = $('#insp');
+    UI.WBKit.bind(insp);   // 竖式、数据图表台（D8）的鼠标和键盘
     // 式子工作台的输入框：只记草稿，不重画（免得输入框失去焦点）
     insp.addEventListener('input', (e) => { if (e.target.dataset.wbField && S.sel) UI.Panels.wbDraft(S.sel)[e.target.dataset.wbField] = e.target.value; });
     insp.addEventListener('change', (e) => {

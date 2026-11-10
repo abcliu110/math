@@ -106,11 +106,16 @@
   }
 
   // ---------- 求值 ----------
+  // 增量（任务 J）：opts.only 是要重算的器材集合（没有 = 全部）；其余器材沿用 opts.prevD 里的结果，不调用它们的 read/compute。
+  // opts.count（对象）记下每台器材实际求值的次数，测试用它证明“无关器材求值次数为 0”。
   function evaluate(scene, opts) {
     const TRACE = !(opts && opts.trace === false);
     const E = scene.entities, ck = scene.clock, D = {};
     const ids = Object.keys(E);
-    for (const id of ids) D[id] = { out: {}, sig: [], inp: {}, props: null, driven: {}, trace: null };
+    const only = opts && opts.only, prevD = opts && opts.prevD, count = opts && opts.count;
+    const live = (id) => !only || only.has(id) || !prevD || !prevD[id];
+    const bump = (id) => { if (count) count[id] = (count[id] || 0) + 1; };
+    for (const id of ids) D[id] = live(id) ? { out: {}, sig: [], inp: {}, props: null, driven: {}, trace: null } : prevD[id];
     const into = {};
     for (const l of scene.links) if (E[l.from] && E[l.to]) (into[l.to] = into[l.to] || []).push(l);
     const sayFor = (id) => (lv, tx) => D[id].sig.push({ lv, tx });
@@ -124,7 +129,8 @@
     // A. 有状态器材读出输出
     for (const id of ids) {
       const e = E[id], def = defOf(e);
-      if (!def.stateful) continue;
+      if (!def.stateful || !live(id)) continue;
+      bump(id);
       try { D[id].out = def.read({ ent: e, props: e.props, state: e.state, t: ck.t, n: ck.n, say: sayFor(id), kids: (slot) => childrenOf(scene, id, slot) }) || {}; if (def.exact === false) approx(D[id].out); }
       catch (err) { D[id].out = {}; D[id].sig.push({ lv: 'err', tx: errText(err) }); }
     }
@@ -174,7 +180,7 @@
     const queue = stateless.filter((id) => indeg[id] === 0), order = [];
     while (queue.length) { const c = queue.shift(); order.push(c); for (const t of adj[c]) if (--indeg[t] === 0) queue.push(t); }
     const done = {}; order.forEach((id) => (done[id] = 1));
-    stateless.filter((id) => !done[id]).forEach((id) => D[id].sig.push({ lv: 'err', tx: '连成了没有记忆的环' }));
+    stateless.filter((id) => !done[id] && live(id)).forEach((id) => D[id].sig.push({ lv: 'err', tx: '连成了没有记忆的环' }));
 
     // 事实：台面上已经算出的结论，证明器材可以引用（key = 器材id.输出口）。真：布尔输出为真，或证据等级 ≥ ②。
     const factTrue = (key) => {
@@ -189,6 +195,7 @@
     const lateIds = [];
     const runOne = (id) => {
       const e = E[id], def = defOf(e), d = D[id];
+      bump(id);
       gather(id);
       const ctx = { ent: e, props: d.props, inp: d.inp, t: ck.t, n: ck.n, seed: ck.seed, say: sayFor(id), kids: (slot) => childrenOf(scene, id, slot), fact: factTrue, scene,
         step: (say, value, rule) => { if (rule && !U.RULES[rule]) U.ruleErrors.push(e.type + ' 用了没登记的规则 ' + rule); if (d.trace) d.trace.steps.push({ say, value: value === undefined ? null : value, rule: rule || null }); },
@@ -196,13 +203,13 @@
       try { d.out = def.compute(ctx) || {}; if (!(def.exact !== false && !d.inexact)) approx(d.out); } catch (err) { d.out = {}; d.sig.push({ lv: 'err', tx: errText(err) }); }
       if (def.sig) { try { def.sig(Object.assign({}, ctx, { out: d.out }), sayFor(id)); } catch (err) { /* 信号条出错不影响计算 */ } }
     };
-    for (const id of order) { if (defOf(E[id]).late) lateIds.push(id); else runOne(id); }
+    for (const id of order) { if (!live(id)) continue; if (defOf(E[id]).late) lateIds.push(id); else runOne(id); }
     for (const id of lateIds) runOne(id);
 
     // 有状态器材：此时才有输入可读
     for (const id of ids) {
       const e = E[id], def = defOf(e);
-      if (!def.stateful) continue;
+      if (!def.stateful || !live(id)) continue;
       gather(id);
       if (def.sig) { try { def.sig({ ent: e, props: D[id].props, inp: D[id].inp, state: e.state, out: D[id].out, t: ck.t, n: ck.n, seed: ck.seed }, sayFor(id)); } catch (err) { /* ignore */ } }
     }
@@ -227,6 +234,49 @@
     for (const id in next) E[id].state = next[id];
     ck.n += 1; ck.t = Math.round((ck.t + dt) * 1e6) / 1e6;
     return evaluate(scene);
+  }
+
+  // 影响范围（任务 J）：改了 ids 以后要重算的器材 = 它们自己 + 沿连线往下游的所有器材 + 父器材（容器可能读子器材）。
+  // 另外：证明脚手架（late）和读台面其他部分的器材（readsScene）每次都算，它们的输入不全在连线上。
+  function affected(scene, ids) {
+    const E = scene.entities, out = new Set(), queue = [];
+    const add = (id) => { if (E[id] && !out.has(id)) { out.add(id); queue.push(id); } };
+    const outs = {};
+    for (const l of scene.links) (outs[l.from] = outs[l.from] || []).push(l.to);
+    ids.forEach(add);
+    for (const id of Object.keys(E)) { const d = defOf(E[id]); if (d.late || d.readsScene) add(id); }
+    while (queue.length) {
+      const c = queue.shift();
+      for (const t of outs[c] || []) add(t);
+      if (E[c] && E[c].parent) add(E[c].parent);
+    }
+    return out;
+  }
+
+  // 增量求值（任务 J）：cache = {D, fp, clock}，第一次调用全量；之后只比较每台器材的指纹（类型、名字、属性、父子、状态、输入连线）
+  // 和时钟，找出改过的器材，只重算它们的影响范围。时钟走过的（t、n 等变了）一律全量。结果和 evaluate 一样。
+  function evaluateCached(scene, cache, opts) {
+    const c = cache || {}, E = scene.entities;
+    const inbound = {};
+    for (const l of scene.links) (inbound[l.to] = inbound[l.to] || []).push(l.id + ':' + l.from + '.' + l.fromPort + '>' + l.toPort);
+    const fp = {};
+    // 工作台的步骤写在台面的 scene.workbench 上（不是器材）：它是工作台器材（host）的输入，步骤变了，host 要重算
+    const wb = scene.workbench, wbHost = wb && wb.host;
+    for (const id of Object.keys(E)) {
+      const e = E[id], wbIn = id === wbHost ? [wb.key, wb.steps] : null;
+      fp[id] = U.JSON.stringify([e.type, e.name, e.x, e.y, e.props, e.parent, e.slot, e.state, e.k, inbound[id] || [], wbIn]);
+    }
+    const clock = U.JSON.stringify(scene.clock);
+    const full = !c.D || c.clock !== clock;
+    // 被删掉的器材：它原来的父器材（容器）少了一个子器材，要重算
+    const gone = full ? [] : Object.keys(c.fp).filter((id) => !E[id]).map((id) => c.par[id]).filter((p) => p && E[p]);
+    const changed = full ? Object.keys(E) : Object.keys(E).filter((id) => c.fp[id] !== fp[id]).concat(gone);
+    const only = full ? null : affected(scene, changed);
+    const D = evaluate(scene, { only, prevD: c.D, count: opts && opts.count });
+    const par = {};
+    for (const id of Object.keys(E)) if (E[id].parent) par[id] = E[id].parent;
+    c.D = D; c.fp = fp; c.clock = clock; c.par = par;
+    return D;
   }
 
   function rewind(scene) {
@@ -485,6 +535,13 @@
         }
         return ok({ id });
       }
+      // 编组（§10.5.9 第 3 条）：一组器材记同一个组号（顶层字段 group，和 approxDeg 一样随快照撤销、随存档保存）；gid 为空就取消编组
+      case 'group': {
+        const ids = a.ids || [];
+        for (const id of ids) if (!E[id]) return fail('找不到器材');
+        for (const id of ids) { if (a.gid) E[id].group = a.gid; else delete E[id].group; }
+        return ok();
+      }
       case 'reset': {
         const e = E[a.id]; if (!e) return fail('找不到器材');
         const def = defOf(e);
@@ -599,5 +656,5 @@
     return s;
   }
 
-  U.World = { blank, clone, add, act, evaluate, explain, explainText, tick, rewind, dryLink, hasLoop, isStateful, save, load, migrate, CURRENT_V, createsUnsafeCycle, LOOP_WHY, PROP, isProp, childrenOf: (scene, id, slot) => childrenOf(scene, id, slot), dependentsOf: (scene, id) => dependentsOf(scene, id), isInside: (scene, c, anc) => isInside(scene, c, anc) };
+  U.World = { blank, clone, add, act, evaluate, evaluateCached, affected, explain, explainText, tick, rewind, dryLink, hasLoop, isStateful, save, load, migrate, CURRENT_V, createsUnsafeCycle, LOOP_WHY, PROP, isProp, childrenOf: (scene, id, slot) => childrenOf(scene, id, slot), dependentsOf: (scene, id) => dependentsOf(scene, id), isInside: (scene, c, anc) => isInside(scene, c, anc) };
 })(typeof globalThis !== 'undefined' ? globalThis : window);

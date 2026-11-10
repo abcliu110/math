@@ -117,6 +117,37 @@
   });
   // 有理数可以无损进入符号数（num → real）
   U.KINDS.num.to = Object.assign({}, U.KINDS.num.to || {}, { real: (q) => R.from(q) });
+  R.eq = (a, b) => Q.eq(a.a, b.a) && Q.eq(a.b, b.b) && a.c === b.c && Q.eq(a.p, b.p);
+
+  // 符号点（任务 J，§10.7）：{x, y} 两个坐标都是符号数。每个坐标各自最多一个根式（如 2 + √3），
+  // 所以抛物线的顶点、与坐标轴的交点都能精确写出。混用两个不同根式（如 √2 + √3）时，单个坐标精确表示不了：
+  // 退回近似值（四位小数的有理数），标 exact:false，显示带 ≈。
+  const toReal = (v) => (v && typeof v === 'object' && 'c' in v ? v : v && typeof v === 'object' && 'n' in v ? R.from(v) : R.from(Q.fromNumber(v)));
+  const approxReal = (x) => R.from(Q.fromNumber(Math.round(x * 1e6) / 1e6));
+  U.SPoint = {
+    // 精确的符号点（x、y 可以是符号数、有理数或整数）
+    of(x, y) { return U.val('spoint', { x: toReal(x), y: toReal(y) }); },
+    // 从近似的浮点数得到近似点（标 ≈）
+    approx(x, y) { return U.val('spoint', { x: approxReal(x), y: approxReal(y) }, { exact: false }); },
+    // 两点相加（坐标逐个加）。某个坐标两个根式混用：该坐标退回近似，整个点标 ≈
+    add(p, q) {
+      let exact = p.exact !== false && q.exact !== false;
+      const one = (a, b) => {
+        const s = R.add(a, b);
+        if (s) return s;
+        exact = false;
+        return approxReal(R.approx(a) + R.approx(b));
+      };
+      const x = one(p.data.x, q.data.x), y = one(p.data.y, q.data.y);
+      return U.val('spoint', { x, y }, { exact });
+    },
+  };
+  U.defineKind('spoint', {
+    label: '符号点', color: '#fb7185', exact: true,
+    eq: (a, b) => R.eq(a.x, b.x) && R.eq(a.y, b.y),
+    show: (p) => '(' + R.show(p.x) + ', ' + R.show(p.y) + ')',
+    showApprox: (p) => '(' + (Math.round(R.approx(p.x) * 1e4) / 1e4) + ', ' + (Math.round(R.approx(p.y) * 1e4) / 1e4) + ')',
+  });
 
   // 连线气泡用的短文字：kind 可以提供 brief（例如图形只写“三角形”），否则同 showVal
   U.briefVal = (v) => { const K = v && U.KINDS[v.kind]; return K && K.brief ? (v.exact === false ? '≈' : '') + K.brief(v.data) : U.showVal(v); };

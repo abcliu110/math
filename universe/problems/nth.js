@@ -3,7 +3,7 @@
   'use strict';
   const U = G.U, mk = U.mkScene, P = [];
   P.push({
-    id: 'nth-tenth', title: '第 10 拍，取到的数是 21？', grade: 6, domain: '时间与变化', essence: ['E6', 'E8'], points: [], topics: ['数列', '通项'],
+    id: 'nth-tenth', title: '第 10 拍，取到的数是 21？', grade: 6, domain: '时间与变化', essence: ['E6', 'E8'], points: ['6.7b'], topics: ['数列', '通项'],
     alias: ['数列', '规律'], hook: '这个器材每一拍都看“现在是第几拍”，再按规则算出一个数。把规则设成 2×n + 1，让时钟走到第 10 拍，看它取到多少。',
     shelf: ['nth', 'meter', 'compare'],
     build: mk({ ents: [{ type: 'nth', x: 140, y: 100, role: 'g', props: { a: 1, b: 0, mode: 0 } }] }),
