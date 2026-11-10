@@ -29,7 +29,7 @@
       '<span class="wsx-hint">拖动块可以移动；拖出工作区，松手就变成台面上的器材</span></div>';
     h += propsHtml(ws, vals, picks);
     h += '<div class="wsx-foot' + (S.wsMsg ? ' bad' : '') + '">' + K.esc(S.wsMsg || '') + '</div>';
-    h += '<div class="wsx-h">步骤</div>';
+    h += '<div class="wsx-h">步骤 <button data-ws-graph="' + ws.id + '" title="看每一步的连线：剪、移、拼各用了哪一步的结果（只看，点一步回到那一步）">看背后的连线</button></div>';
     if (!steps.length) h += '<div class="wsx-none">还没有步骤</div>';
     steps.forEach((st, i) => {
       const srcs = S.scene.links.filter((l) => l.to === st.id).map((l) => SG.pretty(names[l.from + '.' + l.fromPort]) || '?');
@@ -205,5 +205,25 @@
     if (a === 'undo') { const u = document.getElementById('undo'); if (u) u.click(); }
     if (a === 'snap') { UI.S.snapOn = UI.S.snapOn === false; return SG.render(); }
   }
-  Object.assign(SG, { wsPanelHtml, wsPick, delWs, wsRun, wsAddShape, barTools, barHtml, barDelete, barAction });
+  // 看背后的连线（D6）：步骤图只读；点一步，撤销到那一步为止（之后的步骤撤掉）。撤销用的是台面的撤销按钮，历史照常记录
+  function openGraph(wsId) {
+    const S = UI.S, ws = S.scene.entities[wsId]; if (!ws) return;
+    const names = SG.wsNames();
+    const model = U.StepGraph.ofScene(S.scene, SG.wsSteps(ws), {
+      label: (st) => SG.stepLabel(st),
+      srcName: (l) => SG.pretty(names[l.from + '.' + l.fromPort]) || '',
+    });
+    UI.StepGraph.openScene(model, '几何工作区：背后的连线', (k) => wsGoto(wsId, k));
+  }
+  // 撤销到第 k 步为止：一直撤销，直到这个工作区的步骤只剩 k 步（或没有可撤的了）
+  function wsGoto(wsId, k) {
+    const btn = document.getElementById('undo');
+    for (let guard = 0; guard < 1000 && btn && !btn.disabled; guard++) {
+      const ws = UI.S.scene.entities[wsId];
+      if (!ws || SG.wsSteps(ws).length <= k) break;
+      btn.click();
+    }
+    SG.render();
+  }
+  Object.assign(SG, { wsPanelHtml, wsPick, delWs, wsRun, wsAddShape, barTools, barHtml, barDelete, barAction, openGraph, wsGoto });
 })(window);

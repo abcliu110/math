@@ -442,6 +442,11 @@
       if (chip) { if (!afterDrag) wbToggle(id, chip.dataset.wbTerm); return; }
       const wbAct = t.closest && t.closest('[data-wb-act]');
       if (wbAct) { wbDivideCoef(id); return; }
+      // 看背后的连线（D6）：只读；点哪一步，历史就回到哪一步
+      if (t.closest && t.closest('[data-wb-graph]')) {
+        const eq = wbEqn(id); if (eq) UI.StepGraph.openExpr(U.ExprBench.currentOf(id, eq), (k) => wbUndo(id, k));
+        return;
+      }
       const wb = t.closest && t.closest('[data-wb-tool],[data-wb-undo]');
       if (wb) { if (wb.dataset.wbTool !== undefined) wbStep(id, wb.dataset.wbTool); else wbUndo(id, +wb.dataset.wbUndo); return; }
       if (t.dataset.gridDel !== undefined) {

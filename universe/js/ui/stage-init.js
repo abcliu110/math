@@ -79,6 +79,8 @@
       }
       const wd = ev.target.closest('[data-ws-del]');
       if (wd) { SG.delWs(wd.dataset.wsDel); return; }
+      const wg = ev.target.closest('[data-ws-graph]');
+      if (wg) { SG.openGraph(wg.dataset.wsGraph); return; }
       const wst = ev.target.closest('[data-ws-step]');
       if (wst) { const S = UI.S; S.sel = wst.dataset.wsStep; S.selLink = null; S.inspOpen = true; UI.Panels.renderInsp(); SG.render(); return; }
       // 块的把手（工作区面板里）：转 90°、左右翻、属性
