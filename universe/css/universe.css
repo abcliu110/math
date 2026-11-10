@@ -537,3 +537,18 @@ svg.wsbody text:not([data-ren]) { pointer-events: none; }
 .dd .dd-cell.dd-only { outline: 2px dashed var(--blue-ink); outline-offset: 1px; }
 .dd-msg { min-height: 16px; font-size: 12px; margin: 4px 0; color: var(--txt2); }
 .dd-concl { font-weight: 700; color: var(--good); margin: 4px 0; }
+
+/* 低年级模式（§11，js/ui/young.js 写 data-young="on"）：字体、按钮、把手变大；颜色不变，两套主题的对比度不受影响。 */
+html[data-young="on"], html[data-young="on"] body { font-size: 17px; }
+html[data-young="on"] .tbtn { font-size: 18px; padding: 8px 12px; min-height: 38px; }
+html[data-young="on"] .seg button { font-size: 17px; padding: 8px 16px; }
+html[data-young="on"] .btn { font-size: 17px; padding: 10px 16px; }
+html[data-young="on"] .ddm button { font-size: 17px; padding: 10px 12px; }
+html[data-young="on"] .tile { padding: 10px 8px; }
+html[data-young="on"] .tile svg { width: 80px; height: 56px; }
+html[data-young="on"] .tile .nm { font-size: 15px; }
+html[data-young="on"] .wsx { font-size: 15px; }
+html[data-young="on"] .wsx button { font-size: 16px; padding: 6px 12px; min-height: 36px; }
+html[data-young="on"] .wsx-tools button { font-size: 16px; padding: 6px 12px; min-height: 36px; }
+html[data-young="on"] .wsx-step button, html[data-young="on"] .wsx-foot, html[data-young="on"] .wsx-sel { font-size: 15px; }
+html[data-young="on"] .fab button { font-size: 17px; min-height: 36px; }
