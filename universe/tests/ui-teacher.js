@@ -28,7 +28,8 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   const EX = 'geo-teacher-median', OLD = 'geo-median-area';
   const open = async (pid) => { await p.evaluate((pid) => UI.App.openProblem(pid, 'practice'), pid); await p.waitForTimeout(300); };
   const tileTypes = () => p.evaluate(() => [...document.querySelectorAll('#shelfbody .tile')].map((t) => t.dataset.type));
-  const wsToolLabels = () => p.evaluate(() => [...document.querySelectorAll('[data-ws-tool]')].map((b) => b.textContent.trim()));
+  // 只数工作区工具行（.wsx-tools）里的器材工具；尺子、量角器在它们自己的一行，不算
+  const wsToolLabels = () => p.evaluate(() => [...document.querySelectorAll('.wsx-tools [data-ws-tool]')].map((b) => b.textContent.trim()));
   const wsId = () => p.evaluate(() => { const e = Object.values(UI.S.scene.entities).find((x) => x.type === 'gworkspace'); return e ? e.id : null; });
   const nameOf = (id) => p.evaluate((id) => UI.S.scene.entities[id] ? UI.S.scene.entities[id].name : null, id);
   const exists = (id) => p.evaluate((id) => !!UI.S.scene.entities[id], id);
