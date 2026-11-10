@@ -20,7 +20,7 @@
 
   function cardHtml(e, D, S) {
     const d = SG.def(e), g = SG.geom(e), dd = D[e.id], cH = g.h - HD;
-    const c = { ent: e, props: dd.props || e.props, d: dd, out: dd.out, state: e.state, w: g.w, h: cH, t: S.scene.clock.t, n: S.scene.clock.n };
+    const c = { ent: e, props: dd.props || e.props, d: dd, out: dd.out, state: e.state, w: g.w, h: cH, t: S.scene.clock.t, n: S.scene.clock.n, scene: S.scene };
     let body = '', badge = '';
     try { body = SG.isWsDef(e.type) ? SG.wsBody(e, g.w, cH) : d.draw(c); } catch (x) { body = K.text(g.w / 2, cH / 2, '画不出来', { fill: 'var(--bad)' }); }
     // 工作区的标题步数只数学生做的步骤（和下面的步骤清单是同一批）

@@ -66,6 +66,7 @@ async function checkDist() {
   if (!runScript('tests/ui-workbench.js', 'tests/ui-workbench.js', pwEnv)) bail();   // D2：题目声明工作台（几何题只列几何工作台的器材；旧题器材架不变；workbench 的 lint）
   if (!runScript('tests/ui-expr.js', 'tests/ui-expr.js', pwEnv)) bail();             // D5：式子工作台（真实鼠标：点选、拖过等号移项、点两项合并、两边同除；历史和撤销）
   if (!runScript('tests/ui-stepgraph.js', 'tests/ui-stepgraph.js', pwEnv)) bail();   // D6：看背后的连线（式子 3 步的依赖图、几何剪的依赖图；点节点回到那一步，真实鼠标和键盘）
+  if (!runScript('tests/ui-steps.js', 'tests/ui-steps.js', pwEnv)) bail();           // I：工作台的步骤写进台面（真实鼠标：移项、合并、两边同除、因式分解；steps 查询；撤销）
   if (!runScript('tests/ui-select.js', 'tests/ui-select.js', pwEnv)) bail();         // V3：工作区选择（同一位置双击依次选中重叠的图形，单击选最上面的）
   if (!runScript('tests/ui-snap.js', 'tests/ui-snap.js', pwEnv)) bail();             // V4：吸附到构造点（画线吸附到中点，背后建 gmid；拖动端点后跟着动）
   if (!runScript('tests/ui-select2.js', 'tests/ui-select2.js', pwEnv)) bail();       // V3 剩余：选中提示、Alt 点击选第二个、Tab 切换、优先级（线段 > 填充），真实鼠标和键盘

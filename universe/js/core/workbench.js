@@ -29,8 +29,9 @@
     { id: 'multiply', label: '两边同乘', rule: 'alg.multiply' },
     { id: 'collect', label: '合并同类项', rule: 'alg.collect' },
   ];
+  // 因式分解（任务 I）不在方程的工具表里（工具表是既有的界面约定）：界面按规则 id 直接执行，见 stepRule
   // 在方程的某一边上作用的形式规则（引用的第一个元素是 lhs 或 rhs）
-  const SIDE_RULES = ['alg.collect', 'alg.expand', 'arith.reduce-fraction'];
+  const SIDE_RULES = ['alg.collect', 'alg.expand', 'arith.reduce-fraction', 'alg.factor'];
   // 不需要引用位置的规则
   const NO_REF_RULES = ['alg.divide', 'alg.multiply'];
 

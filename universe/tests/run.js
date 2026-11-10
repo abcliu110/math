@@ -2060,5 +2060,114 @@ t('常见图形：放在台面上是普通图形器材，放大 2 倍面积是 4
   eq(U.Q.mul(D[b].out.area.data, U.Q(4)), D[a].out.area.data);
 });
 
+// ---- 任务 I（next-steps.md §10.6）：判分看路径和形式 ----
+const FXI = U.Form, PXI = U.Poly;
+const formI = (s) => FXI.fromPoly(PXI.parse(s));
+const eqnI = (l, r) => U.val('eqn', { lhs: PXI.parse(l), rhs: PXI.parse(r), rel: '=' });   // 方程台输出的两边是多项式（和 eqdesk 一样）
+const falsy = (x, m) => { if (x) throw new Error(m || '应为假'); };
+t('I: alg.factor 把 x²−5x+6 分解成 (x−2)(x−3)，值不变，结果是因式分解形式', () => {
+  const r = U.applyRule('alg.factor', U.val('form', formI('x^2 - 5x + 6')), [], { r1: 2, r2: 3 });
+  truthy(r.ok, r.why); truthy(r.kept, r.why);
+  eq(FXI.show(r.value.data), '(x − 2)(x − 3)');
+  truthy(FXI.isNormal(r.value.data, 'factored'), '结果应是因式分解形式');
+});
+t('I: alg.factor 负根：x²+x−6 = (x+3)(x−2)', () => {
+  const r = U.applyRule('alg.factor', U.val('form', formI('x^2 + x - 6')), [], { r1: -3, r2: 2 });
+  truthy(r.ok && r.kept, r.why); eq(FXI.show(r.value.data), '(x + 3)(x − 2)');
+});
+t('I: alg.factor 拒绝：根不对、缺根、首项系数不是 1、已经是乘积', () => {
+  const v = U.val('form', formI('x^2 - 5x + 6'));
+  const a = U.applyRule('alg.factor', v, [], { r1: 1, r2: 3 });
+  truthy(!a.ok && /不等于/.test(a.why), '根不对要说明相乘不等于原式：' + a.why);
+  truthy(!U.applyRule('alg.factor', v, [], { r1: 2 }).ok, '缺一个根');
+  truthy(!U.applyRule('alg.factor', U.val('form', formI('2x^2 - 10x + 12')), [], { r1: 2, r2: 3 }).ok, '首项系数不是 1');
+  const prodI = { op: 'mul', args: [{ op: 'group', args: [{ op: 'sub', args: [{ op: 'var', name: 'x' }, { op: 'num', n: 2n }] }] }, { op: 'group', args: [{ op: 'sub', args: [{ op: 'var', name: 'x' }, { op: 'num', n: 3n }] }] }] };
+  truthy(!U.applyRule('alg.factor', U.val('form', prodI), [], { r1: 2, r2: 3 }).ok, '已经是乘积');
+});
+t('I: 工作台按规则 id 执行因式分解（stepRule）：一步记进历史、写进步骤说明；根不对时说明原因、步骤不变', () => {
+  const st0 = U.Workbench.create(eqnI('x^2 - 5x + 6', '0'));
+  const bad = U.Workbench.stepRule(st0, 'alg.factor', ['lhs'], { r1: 1, r2: 3 });
+  truthy(/不等于/.test(bad.lastError || ''), '根不对要说明');
+  eq(bad.steps.length, 0, '步骤不变');
+  const st = U.Workbench.stepRule(st0, 'alg.factor', ['lhs'], { r1: 2, r2: 3 });
+  eq(st.lastError, null); eq(st.steps.length, 1); eq(st.steps[0].rule, 'alg.factor');
+  truthy(/因式分解/.test(U.Workbench.stepLog(st)[0]), U.Workbench.stepLog(st)[0]);
+  truthy(U.Workbench.stepLog(st)[0].indexOf('(x − 2)(x − 3)') >= 0, '结果写进了说明');
+  eq(U.Workbench.replay(st0.start, st.steps).current.kind, 'eqn', '重放得到同样的方程');
+});
+
+// 工作台的步骤写在台面（scene.workbench），判题的 steps 查询读它（judge.js 原有的读法，不改）
+const JI = U.Judge;
+const stepsQ = (sc, c) => JI.compile(c)(JI.makeW(sc, W.evaluate(sc), {}));
+const saveWB = (sc, host, eqv, st) => { const r = W.act(sc, U.ExprBench.saveAction(host, eqv, st)); truthy(r.ok, r.why || '写台面失败'); };
+// 方程台接工作台（和界面上一样：代数式卡 → 方程台 → 工作台）
+const wireEq = (sc, host, l, r) => {
+  const a = W.add(sc, 'algebra', 0, 0, { text: l }), b = W.add(sc, 'algebra', 0, 0, { text: r }), q = W.add(sc, 'eqdesk', 0, 0, { by: 0 });
+  link(sc, a, 'p', q, 'L'); link(sc, b, 'p', q, 'R'); link(sc, q, 'eq', host, 'e');
+};
+const moveThenCollectDivide = () => {
+  const eqv = eqnI('3x+5', '20');
+  let st = U.Workbench.step(U.Workbench.create(eqv), 'move-term', 1, {});
+  st = U.Workbench.step(st, 'collect', ['rhs'], {}); eq(st.lastError, null, '合并：' + st.lastError);
+  st = U.Workbench.step(st, 'divide', null, { by: '3' }); eq(st.lastError, null, '除：' + st.lastError);
+  return { eqv, st };
+};
+t('I: 工作台的步骤写在台面（scene.workbench），不是器材，不改器材和连线', () => {
+  const sc = W.blank(), host = W.add(sc, 'exprbench', 0, 0, {}), n0 = Object.keys(sc.entities).length;
+  const { eqv, st } = moveThenCollectDivide();
+  saveWB(sc, host, eqv, st);
+  eq(Object.keys(sc.entities).length, n0, '器材数不变'); eq(sc.links.length, 0, '连线数不变');
+  eq(sc.workbench.host, host, '记在这台工作台上'); eq(sc.workbench.steps.map((s) => s.rule), ['alg.move-term', 'alg.collect', 'alg.divide'], '三步，按顺序');
+});
+t('I: 没有步骤时，steps 查询为假，并说明没有记录', () => {
+  const sc = W.blank(); W.add(sc, 'exprbench', 0, 0, {});
+  falsy(stepsQ(sc, { steps: { used: 'alg.move-term' } }));
+  truthy(/没有式子工作台的步骤记录/.test(JI.unmetWhy({ steps: { used: 'alg.move-term' } }, sc, W.evaluate(sc))));
+});
+t('I: 一道代数题做完工作台步骤后，judge 的 steps 查询为真（移项、合并、两边同除）', () => {
+  const sc = W.blank(), host = W.add(sc, 'exprbench', 0, 0, {});
+  wireEq(sc, host, '3x+5', '20');
+  const { eqv, st } = moveThenCollectDivide();
+  eq(U.Workbench.solution(st).solved, true, '解出 x = 5');
+  saveWB(sc, host, eqv, st);
+  truthy(stepsQ(sc, { steps: { used: 'alg.move-term', allKept: true } }), '用过移项，且每步都保持了不变量');
+  truthy(stepsQ(sc, { steps: { used: 'alg.divide' } }), '用过两边同除');
+  falsy(stepsQ(sc, { steps: { used: 'alg.factor' } }), '没有用因式分解');
+  eq(W.evaluate(sc)[host].out.solved.data, true, '工作台的「解出来了」输出为真（从台面上的步骤算出来）');
+});
+t('I: 撤销到第 1 步：台面上只剩移项；换一个方程：旧步骤不再用', () => {
+  const sc = W.blank(), host = W.add(sc, 'exprbench', 0, 0, {});
+  const { eqv, st } = moveThenCollectDivide();
+  saveWB(sc, host, eqv, st);
+  saveWB(sc, host, eqv, U.Workbench.undo(st, 1));
+  eq(sc.workbench.steps.length, 1, '剩 1 步');
+  truthy(stepsQ(sc, { steps: { used: 'alg.move-term' } }) && !stepsQ(sc, { steps: { used: 'alg.divide' } }), '只剩移项');
+  const eq2 = eqnI('2x', '4');
+  truthy(U.ExprBench.currentOf(sc, host, eq2).steps.length === 0, '方程换了：旧步骤不用，从新方程开始');
+  eq(U.Workbench.stepLog(U.ExprBench.currentOf(sc, host, eq2)).length, 0, '没有历史');
+  saveWB(sc, host, eq2, U.Workbench.create(eq2));
+  eq(sc.workbench, undefined, '清掉了旧步骤');
+});
+t('I: 工作台状态从台面重算，和内存里的历史一致；删掉工作台，步骤也没了', () => {
+  const sc = W.blank(), host = W.add(sc, 'exprbench', 0, 0, {});
+  const { eqv, st } = moveThenCollectDivide();
+  saveWB(sc, host, eqv, st);
+  eq(U.Workbench.stepLog(U.ExprBench.currentOf(sc, host, eqv)), U.Workbench.stepLog(st), '日志一致');
+  W.act(sc, { t: 'del', id: host });
+  eq(sc.workbench, undefined, '工作台删了，步骤也删了');
+});
+t('I: 因式分解进工作台：alg.factor 步骤记在台面上，steps 查询（用过且保持）为真', () => {
+  const sc = W.blank(), host = W.add(sc, 'exprbench', 0, 0, {}), eqv = eqnI('x^2 - 5x + 6', '0');
+  const st = U.Workbench.stepRule(U.Workbench.create(eqv), 'alg.factor', ['lhs'], { r1: 2, r2: 3 });
+  saveWB(sc, host, eqv, st);
+  truthy(stepsQ(sc, { steps: { used: 'alg.factor', allKept: true } }), '用过因式分解，且保持了不变量');
+  eq(U.ExprBench.currentOf(sc, host, eqv).current.kind, 'eqn', '重算得到分解后的方程');
+});
+t('I: 工作台器材的「有没有步骤」在台面上：没有台面步骤时，它的状态是方程本身', () => {
+  const sc = W.blank(), host = W.add(sc, 'exprbench', 0, 0, {}), eqv = eqnI('3x+5', '20');
+  eq(U.ExprBench.currentOf(sc, host, eqv).steps.length, 0);
+  eq(U.ExprBench.stepsOf(sc, host).length, 0);
+});
+
 console.log('\n' + pass + ' 通过，' + fail + ' 失败');
 process.exit(fail ? 1 : 0);

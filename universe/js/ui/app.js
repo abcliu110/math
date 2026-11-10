@@ -140,6 +140,8 @@
     saveFree(); refresh();
     return last;
   }
+  // 式子工作台的步骤写在台面上（一个动作，撤销一次回到上一步；U.ExprBench.saveAction）
+  function wbSave(id, eq, st) { act(U.ExprBench.saveAction(id, eq, st)); }
   // 单个动作：老接口，失败时返回 { ok:false, why }（调用方照旧看 r.ok）
   function act(a, o) {
     o = o || {};
@@ -230,8 +232,10 @@
     openProblem(S.problem.id, m);
   }
 
-  // ---------- 式子工作台（任务 H 第 3b 步）：步骤只改工作台的状态（U.ExprBench.states），不改台面 ----------
+  // ---------- 式子工作台（任务 H 第 3b 步；任务 I：每一步记在台面上）----------
+  // 工作台的步骤写在台面上（scene.workbench，U.ExprBench）：状态从它重算；每次变动是一个动作，撤销一次就回到上一步。
   function wbEqn(id) { const dd = S.D && S.D[id]; return dd ? U.ExprBench.eqnIn(dd.inp) : null; }
+  function wbNow(id, eq) { return U.ExprBench.currentOf(S.scene, id, eq); }
   // 选中项：dr.sel 里是 'lhs:0' 这样的键；按边取下标
   function wbSelOf(id, side) {
     return (UI.Panels.wbDraft(id).sel || []).filter((k) => k.indexOf(side + ':') === 0).map((k) => +k.slice(side.length + 1));
@@ -247,10 +251,10 @@
   function wbDo(id, tool, ref, args) {
     const eq = wbEqn(id), dr = UI.Panels.wbDraft(id);
     if (!eq) return;
-    const st = U.ExprBench.currentOf(id, eq);
+    const st = wbNow(id, eq);
     const ns = U.Workbench.step(st, tool, ref, args);
     if (ns.lastError) dr.msg = ns.lastError;
-    else { U.ExprBench.states[id] = { key: U.ExprBench.keyOf(eq), state: ns }; dr.msg = ''; dr.ref = ''; dr.sel = []; }
+    else { wbSave(id, eq, ns); dr.msg = ''; dr.ref = ''; dr.sel = []; }
     refresh();
   }
   function wbStep(id, tool) {
@@ -276,10 +280,19 @@
     }
     wbDo(id, tool, ref, args);
   }
+  // 因式分解（任务 I）：作用在选的那一边上；两个根由输入框给（r1、r2）。内核按规则 id 执行，检查相乘是不是原式。
+  function wbFactor(id) {
+    const eq = wbEqn(id), dr = UI.Panels.wbDraft(id);
+    if (!eq) return;
+    const ns = U.Workbench.stepRule(wbNow(id, eq), 'alg.factor', [dr.side], { r1: (dr.r1 || '').trim(), r2: (dr.r2 || '').trim() });
+    if (ns.lastError) dr.msg = ns.lastError;
+    else { wbSave(id, eq, ns); dr.msg = ''; dr.ref = ''; dr.sel = []; }
+    refresh();
+  }
   // 「两边同除以 k」：k 是左边 kx 的系数，界面直接给出，不用打字
   function wbDivideCoef(id) {
     const eq = wbEqn(id); if (!eq) return;
-    const k = U.Workbench.coef(U.ExprBench.currentOf(id, eq));
+    const k = U.Workbench.coef(wbNow(id, eq));
     if (k) wbDo(id, 'divide', null, { by: U.Q.show(k) });
   }
   // 拖过等号移项（D5）：在左边的项上按下，拖到右边那一块上松手，就是一步「移项」；没有拖到右边什么都不做。
@@ -312,8 +325,7 @@
   });
   function wbUndo(id, k) {
     const eq = wbEqn(id); if (!eq) return;
-    const st = U.ExprBench.currentOf(id, eq);
-    U.ExprBench.states[id] = { key: U.ExprBench.keyOf(eq), state: U.Workbench.undo(st, k) };
+    wbSave(id, eq, U.Workbench.undo(wbNow(id, eq), k));
     UI.Panels.wbDraft(id).msg = '';
     refresh();
   }
@@ -444,11 +456,16 @@
       if (wbAct) { wbDivideCoef(id); return; }
       // 看背后的连线（D6）：只读；点哪一步，历史就回到哪一步
       if (t.closest && t.closest('[data-wb-graph]')) {
-        const eq = wbEqn(id); if (eq) UI.StepGraph.openExpr(U.ExprBench.currentOf(id, eq), (k) => wbUndo(id, k));
+        const eq = wbEqn(id); if (eq) UI.StepGraph.openExpr(wbNow(id, eq), (k) => wbUndo(id, k));
         return;
       }
-      const wb = t.closest && t.closest('[data-wb-tool],[data-wb-undo]');
-      if (wb) { if (wb.dataset.wbTool !== undefined) wbStep(id, wb.dataset.wbTool); else wbUndo(id, +wb.dataset.wbUndo); return; }
+      const wb = t.closest && t.closest('[data-wb-tool],[data-wb-rule],[data-wb-undo]');
+      if (wb) {
+        if (wb.dataset.wbTool !== undefined) wbStep(id, wb.dataset.wbTool);
+        else if (wb.dataset.wbRule !== undefined) wbFactor(id);
+        else wbUndo(id, +wb.dataset.wbUndo);
+        return;
+      }
       if (t.dataset.gridDel !== undefined) {
         // 删除表格的一行（行号就是显示的行号，空行不在文字里）
         const cur = U.Table.gridRows(S.scene.entities[id].props[t.dataset.target]);

@@ -164,7 +164,7 @@
   }
 
   // ---------- 式子工作台的检查器（任务 H 第 3b 步，§10.5.3）----------
-  // 步骤历史在 U.ExprBench.states 里，不在台面上；这里只画。输入框的草稿放在 S.wbDraft[器材 id]。
+  // 步骤历史写在台面上（scene.workbench，U.ExprBench），这里只画。输入框的草稿放在 S.wbDraft[器材 id]。
   function wbDraft(id) {
     const S = UI.S; S.wbDraft = S.wbDraft || {};
     return S.wbDraft[id] || (S.wbDraft[id] = { ref: '', side: 'lhs', by: '', msg: '', sel: [] });
@@ -187,7 +187,7 @@
   function wbHtml(e, dd) {
     const eq = U.ExprBench.eqnIn(dd && dd.inp);
     if (!eq) return '<div class="wb"><h5>式子工作台</h5><div class="wb-none">接一个方程</div><div class="note">从方程台的「方程」口拖一根线到这台器材的「方程」口。</div></div>';
-    const st = U.ExprBench.currentOf(e.id, eq), dr = wbDraft(e.id), cur = st.current;
+    const st = U.ExprBench.currentOf(UI.S.scene, e.id, eq), dr = wbDraft(e.id), cur = st.current;
     // 选中项只认现在还存在的项（前面的步骤改了式子，旧的选择就作废）
     const sides = cur.kind === 'eqn' ? { lhs: cur.data.lhs, rhs: cur.data.rhs } : {};
     dr.sel = (dr.sel || []).filter((k) => {
@@ -203,8 +203,11 @@
     h += '<div class="wb-apply">' +
       '<label>要动的项（序号，或标签）<input data-wb-field="ref" value="' + esc(dr.ref) + '" placeholder="例如 2"></label>' +
       '<label>哪一边<select data-wb-field="side">' + [['lhs', '左边'], ['rhs', '右边']].map(([v, t]) => '<option value="' + v + '"' + (v === dr.side ? ' selected' : '') + '>' + t + '</option>').join('') + '</select></label>' +
-      '<label>两边同除 / 同乘几<input data-wb-field="by" value="' + esc(dr.by) + '" placeholder="例如 3" class="in-by"></label></div>';
+      '<label>两边同除 / 同乘几<input data-wb-field="by" value="' + esc(dr.by) + '" placeholder="例如 3" class="in-by"></label>' +
+      '<label>因式分解的两个根<input data-wb-field="r1" value="' + esc(dr.r1 || '') + '" placeholder="例如 2" class="in-by"><input data-wb-field="r2" value="' + esc(dr.r2 || '') + '" placeholder="例如 3" class="in-by"></label></div>';
     h += '<div class="wb-tools">' + U.Workbench.tools(cur).map((t) => '<button data-wb-tool="' + t.id + '">' + esc(t.label) + '</button>').join('');
+    // 因式分解（任务 I）：作用在选的那一边上，两个根填在上面的输入框里
+    if (cur.kind === 'eqn') h += '<button data-wb-rule="factor" title="两个根填在上面的输入框里（首项系数是 1）">因式分解</button>';
     const k = U.Workbench.coef(st);
     if (k) h += '<button data-wb-act="divide-coef">两边同除以 ' + esc(U.Q.show(k)) + '</button>';
     h += '</div>';
