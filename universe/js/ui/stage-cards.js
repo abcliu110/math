@@ -81,7 +81,7 @@
       if (S.scene.clock.running) paths += '<path class="flow" d="' + pd + '"/>';
       lbl += '<div class="lb' + (sel ? ' sel' : '') + '" data-link="' + l.id + '" style="left:' + ((a.x + b.x) / 2) + 'px;top:' + ((a.y + b.y) / 2) + 'px">' + K.esc(v ? U.briefVal(v) : '—') + (sel ? ' <button class="lbwhy" data-why="' + l.from + '|' + l.fromPort + '" title="这个数是怎么来的" aria-label="这个数是怎么来的">？</button><button class="lbdel" data-unlink="' + l.id + '" title="删除这根线" aria-label="删除这根线">✕</button>' : '') + '</div>';
     }
-    if (SG.linking && SG.linking.cur) { const F = E[SG.linking.from]; paths += '<path class="ln" stroke="#fff" stroke-dasharray="6 6" d="' + bez(portPos(F, SG.linking.fromPort, D, true), SG.linking.cur) + '" fill="none"/>'; }
+    if (SG.linking && SG.linking.cur) { const F = E[SG.linking.from]; paths += '<path class="ln" style="stroke:var(--flow)" stroke-dasharray="6 6" d="' + bez(portPos(F, SG.linking.fromPort, D, true), SG.linking.cur) + '" fill="none"/>'; }
     return { paths, lbl };
   }
 

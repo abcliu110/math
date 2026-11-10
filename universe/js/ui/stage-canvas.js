@@ -5,6 +5,9 @@
   const $ = (s) => document.querySelector(s);
   const L = UI.LAYOUT, HD = L.HD, PORT_Y0 = L.PORT_Y0, PORT_DY = L.PORT_DY, PILL_DY = L.PILL_DY, PILL_W = L.PILL_W, MIN_W = L.MIN_W, MIN_H = L.MIN_H;
   const SG = UI.StageCtx;
+  // 线型（V10，2.6b）：线段和多边形的边按图形的序号换线型，颜色相同也分得开；辅助线固定虚线
+  const da = (d) => (d ? ' stroke-dasharray="' + d + '"' : '');
+  const dashOf = (f, i) => SG.LINE_DASH[f.dash ? 'aux' : 'line'][i % SG.WS_COL.length];   // 和颜色同一个序号，颜色不同线型就不同
   // 工作区的画布：把所有显示的值画在一起，按工作区的坐标范围画（范围定下来以后，卡片变大图也跟着变大）
   // 标签（V6，2.3）：标签的矩形不能和别的标签叠，也不能压住障碍（线、顶点圆圈、点、圆的线，见 figObs）。
   // 先按候选位置挑第一个“在画布里、不叠、不压住障碍”的；候选都不行，就在画布里按格子找；实在没有，夹到画布里（这时才可能叠，但不会比候选更差）。
@@ -28,7 +31,7 @@
     let svg = '';
     for (const T of labs.slice().sort((a, b) => a.prio - b.prio)) {
       const [x, y, b] = pick(T); placed.push(b);
-      svg += '<text' + (T.ren ? ' data-ren="' + T.ren + '" style="cursor:text"' : '') + (T.ro ? ' data-ro="' + T.ro + '" pointer-events="none"' : '') + ' x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" font-size="12" font-weight="700" fill="' + T.c + '" stroke="#f4f6fb" stroke-width="3" paint-order="stroke" stroke-linejoin="round" font-family="var(--font)">' + K.esc(T.text) + '</text>';
+      svg += '<text' + (T.ren ? ' data-ren="' + T.ren + '"' : '') + (T.ro ? ' data-ro="' + T.ro + '" pointer-events="none"' : '') + ' x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" font-size="12" font-weight="700" fill="' + T.c + '" style="' + (T.ren ? 'cursor:text;' : '') + 'stroke:var(--halo)" stroke-width="3" paint-order="stroke" stroke-linejoin="round" font-family="var(--font)">' + K.esc(T.text) + '</text>';
     }
     return svg;
   }
@@ -73,9 +76,9 @@
       const ax = w / 2 + dx * t, ay = h / 2 + dy * t, ang = Math.atan2(dy, dx) * 180 / Math.PI, c = SG.WS_COL[i % SG.WS_COL.length];
       const tw = SG.TXT_W(v.label), tx = Math.max(M, Math.min(w - M - tw, ax - tw / 2)), ty = ay < h / 2 ? Math.min(h - M, ay + 26) : Math.max(M + 11, ay - 18);
       out.push('<g data-fit-ws="' + ws.id + '" data-fit-key="' + SG.escA(v.key) + '" style="cursor:pointer">' +
-        '<circle cx="' + ax.toFixed(1) + '" cy="' + ay.toFixed(1) + '" r="12" fill="#fff" stroke="' + c + '" stroke-width="2"/>' +
+        '<circle cx="' + ax.toFixed(1) + '" cy="' + ay.toFixed(1) + '" r="12" style="fill:var(--card)" stroke="' + c + '" stroke-width="2"/>' +
         '<path d="M-5 -4 L5 0 L-5 4 Z" fill="' + c + '" transform="translate(' + ax.toFixed(1) + ' ' + ay.toFixed(1) + ') rotate(' + ang.toFixed(1) + ')"/>' +
-        '<text x="' + tx.toFixed(1) + '" y="' + ty.toFixed(1) + '" font-size="12" font-weight="700" fill="' + c + '" stroke="#f4f6fb" stroke-width="3" paint-order="stroke" stroke-linejoin="round" font-family="var(--font)">' + K.esc(v.label) + '</text></g>');
+        '<text x="' + tx.toFixed(1) + '" y="' + ty.toFixed(1) + '" font-size="12" font-weight="700" fill="' + c + '" style="stroke:var(--halo)" stroke-width="3" paint-order="stroke" stroke-linejoin="round" font-family="var(--font)">' + K.esc(v.label) + '</text></g>');
     });
     return out.join('');
   }
@@ -111,13 +114,13 @@
         const sp = SG.shownPts(f, ent);   // 块有近似角度时画转过去的样子（V9，2.10）；其余就是精确坐标
         const d = sp.map((p, k) => (k ? 'L' : 'M') + X(p.x).toFixed(1) + ' ' + Y(p.y).toFixed(1)).join(' ') + ' Z';
         const fit = isPc && !!fitOn && fitOn.ids.includes(ent.id);
-        g += '<path d="' + d + '" fill="' + c + '22" stroke="' + (fit ? '#16a34a' : c) + '" stroke-width="' + sw + '"' + (fit && fitOn.flash ? ' class="wsflash"' : '') + pk(2) + dg + sty + '/>';
+        g += '<path d="' + d + '" fill="' + c + '22" stroke="' + (fit ? '#16a34a' : c) + '" stroke-width="' + sw + '"' + da(dashOf(f, i)) + (fit && fitOn.flash ? ' class="wsflash"' : '') + pk(2) + dg + sty + '/>';
         if (wantHit) hit += '<path d="' + d + '" fill="none" stroke="transparent" stroke-width="12"' + pk(1) + ' style="cursor:pointer"/>';
         lx = sp.reduce((a, p) => a + X(p.x), 0) / sp.length; ly = sp.reduce((a, p) => a + Y(p.y), 0) / sp.length;
         const tw = SG.TXT_W(v.label); cands = [[lx - tw / 2, ly + 4], [lx - tw / 2, ly + 18], [lx - tw / 2, ly - 10], [lx - tw / 2, ly + 32]]; prio = 2;
       } else if (f.type === 'segment') {
         const a = f.pts[0], b = f.pts[1];
-        g += '<line x1="' + X(Q.num(a.x)) + '" y1="' + Y(Q.num(a.y)) + '" x2="' + X(Q.num(b.x)) + '" y2="' + Y(Q.num(b.y)) + '" stroke="' + c + '" stroke-width="' + (on ? 5 : 2.5) + '"' + (f.dash ? ' stroke-dasharray="6 4"' : '') + ' stroke-linecap="round"' + pk(1) + sty + '/>';
+        g += '<line x1="' + X(Q.num(a.x)) + '" y1="' + Y(Q.num(a.y)) + '" x2="' + X(Q.num(b.x)) + '" y2="' + Y(Q.num(b.y)) + '" stroke="' + c + '" stroke-width="' + (on ? 5 : 2.5) + '"' + da(dashOf(f, i)) + ' stroke-linecap="round"' + pk(1) + sty + '/>';
         if (wantHit) hit += '<line x1="' + X(Q.num(a.x)) + '" y1="' + Y(Q.num(a.y)) + '" x2="' + X(Q.num(b.x)) + '" y2="' + Y(Q.num(b.y)) + '" stroke="transparent" stroke-width="14"' + pk(1) + ' style="cursor:pointer"/>';
         lx = (X(Q.num(a.x)) + X(Q.num(b.x))) / 2; ly = (Y(Q.num(a.y)) + Y(Q.num(b.y))) / 2;
         const tw = SG.TXT_W(v.label); cands = [[lx + 6, ly - 6], [lx + 6, ly + 14], [lx - tw - 6, ly - 6], [lx - tw - 6, ly + 14]];
@@ -166,17 +169,17 @@
     return conMark(fr.X(d.snap.x), fr.Y(d.snap.y), d.snap.label);
   }
   function conMark(x, y, label) {
-    return '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="9" fill="none" stroke="#fff" stroke-width="2" pointer-events="none"/>' +
-      '<text x="' + (x + 12).toFixed(1) + '" y="' + (y - 12).toFixed(1) + '" font-size="13" font-weight="700" fill="#fff" stroke="#0b1020" stroke-width="3" paint-order="stroke" pointer-events="none">' + K.esc(label) + '</text>';
+    return '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="9" fill="none" style="stroke:var(--flow)" stroke-width="2" pointer-events="none"/>' +
+      '<text x="' + (x + 12).toFixed(1) + '" y="' + (y - 12).toFixed(1) + '" font-size="13" font-weight="700" style="fill:var(--flow);stroke:var(--mark-halo)" stroke-width="3" paint-order="stroke" pointer-events="none">' + K.esc(label) + '</text>';
   }
   // 画布顶部的一条消息（只占上面两行，不接收鼠标：底下的点和图形照常能点）
   function boardMsg(w, h) {
     const S = UI.S, t = S.wsMsg; if (!t || !(S.wsBoardUntil > Date.now())) return '';
     const good = S.wsMsgKind === 'good', per = Math.max(8, Math.floor((w - 16) / 11)), lines = [];
     for (let i = 0; i < t.length; i += per) lines.push(t.slice(i, i + per));
-    const L = lines.slice(0, 2), bh = L.length * 14 + 6, col = good ? '#15803d' : '#b91c1c';
-    let s = '<rect x="3" y="3" width="' + (w - 6) + '" height="' + bh + '" rx="5" fill="' + (good ? '#f0fdf4' : '#fef2f2') + '" stroke="' + col + '" stroke-width="1" pointer-events="none"/>';
-    L.forEach((ln, i) => { s += '<text x="9" y="' + (3 + 14 + i * 14) + '" font-size="12" font-weight="700" fill="' + col + '" font-family="var(--font)" pointer-events="none">' + K.esc(ln) + '</text>'; });
+    const L = lines.slice(0, 2), bh = L.length * 14 + 6, col = good ? 'var(--msg-good-ink)' : 'var(--msg-bad-ink)', bgc = good ? 'var(--msg-good-bg)' : 'var(--msg-bad-bg)';
+    let s = '<rect x="3" y="3" width="' + (w - 6) + '" height="' + bh + '" rx="5" style="fill:' + bgc + ';stroke:' + col + '" stroke-width="1" pointer-events="none"/>';
+    L.forEach((ln, i) => { s += '<text x="9" y="' + (3 + 14 + i * 14) + '" font-size="12" font-weight="700" style="fill:' + col + '" font-family="var(--font)" pointer-events="none">' + K.esc(ln) + '</text>'; });
     return s;
   }
   // 工作区的消息：文字和颜色一起设（好 / 坏）
@@ -198,14 +201,14 @@
   function drawPreview(ws, fr) {
     const D = UI.S.wsDraw; if (!D || D.ws !== ws.id) return '';
     let g = toolStatus(D, fr);
-    if (D.pend) g += '<circle cx="' + fr.X(D.pend.x).toFixed(1) + '" cy="' + fr.Y(D.pend.y).toFixed(1) + '" r="6" fill="none" stroke="#fff" stroke-width="2"/>';
-    if (D.pend && D.cur) g += '<line x1="' + fr.X(D.pend.x).toFixed(1) + '" y1="' + fr.Y(D.pend.y).toFixed(1) + '" x2="' + fr.X(D.cur.x).toFixed(1) + '" y2="' + fr.Y(D.cur.y).toFixed(1) + '" stroke="#fff" stroke-width="2" stroke-dasharray="6 4"/>';
-    if (D.cur) g += '<circle cx="' + fr.X(D.cur.x).toFixed(1) + '" cy="' + fr.Y(D.cur.y).toFixed(1) + '" r="5" fill="#fff" fill-opacity=".35" stroke="#fff" stroke-width="2"/>';
+    if (D.pend) g += '<circle cx="' + fr.X(D.pend.x).toFixed(1) + '" cy="' + fr.Y(D.pend.y).toFixed(1) + '" r="6" fill="none" style="stroke:var(--flow)" stroke-width="2"/>';
+    if (D.pend && D.cur) g += '<line x1="' + fr.X(D.pend.x).toFixed(1) + '" y1="' + fr.Y(D.pend.y).toFixed(1) + '" x2="' + fr.X(D.cur.x).toFixed(1) + '" y2="' + fr.Y(D.cur.y).toFixed(1) + '" style="stroke:var(--flow)" stroke-width="2" stroke-dasharray="6 4"/>';
+    if (D.cur) g += '<circle cx="' + fr.X(D.cur.x).toFixed(1) + '" cy="' + fr.Y(D.cur.y).toFixed(1) + '" r="5" style="fill:var(--flow)" fill-opacity=".35" stroke="none"/>';
     // 吸附到构造点（中点等）：外圈加一个标记，旁边写出是哪一种、哪两个点的
     if (D.cur && D.cur.con) {
       const x = fr.X(D.cur.x), y = fr.Y(D.cur.y);
-      g += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="9" fill="none" stroke="#fff" stroke-width="2"/>';
-      g += '<text x="' + (x + 12).toFixed(1) + '" y="' + (y - 12).toFixed(1) + '" font-size="13" font-weight="700" fill="#fff" stroke="#0b1020" stroke-width="3" paint-order="stroke">' + K.esc(D.cur.con.label) + '</text>';
+      g += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="9" fill="none" style="stroke:var(--flow)" stroke-width="2"/>';
+      g += '<text x="' + (x + 12).toFixed(1) + '" y="' + (y - 12).toFixed(1) + '" font-size="13" font-weight="700" style="fill:var(--flow);stroke:var(--mark-halo)" stroke-width="3" paint-order="stroke">' + K.esc(D.cur.con.label) + '</text>';
     }
     return g;
   }

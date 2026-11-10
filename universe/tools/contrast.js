@@ -10,9 +10,9 @@
  *   - 颜色：getComputedStyle 已经把 var(--x) 解析成实际色值。本文件还读取 css/universe.css 的 :root 令牌，
  *     失败时在报告里写出颜色对应的令牌名；
  *   - 透明度：元素及其祖先的 opacity 连乘后作用在它的颜色和背景上（例如 .off 被压暗的器材架）。
- * 主题：universe.css 目前只有一套 :root 令牌（深色台面 + 浅色卡片），代码里没有 prefers-color-scheme 或 data-theme。
- *   检查仍按 light 和 dark 两种 colorScheme 各跑一遍；结果相同的同一处文字会在两种主题下各计一次，
- *   汇总的“去重后”数字把它们合并为一处。
+ * 主题（V10，2.11）：universe.css 有两套令牌：:root 是深色，:root[data-theme="light"] 是浅色。js/ui/theme.js 按系统偏好
+ *   （prefers-color-scheme）决定 data-theme，所以 light / dark 两种 colorScheme 各跑一遍，分别检查两套主题。
+ *   结果相同的同一处文字会在两种主题下各计一次，汇总的“去重后”数字把它们合并为一处。
  * 另外报告 12px 以下的文字数（只作提示，不计入失败）。
  * 需要 playwright：NODE_PATH 指向它的 node_modules（和 tests/ 一样）。
  * 用法：NODE_PATH=<.../node_modules> node tools/contrast.js */
@@ -63,18 +63,23 @@ function hexToRgb(h) {
 }
 
 // ---------- 读取 :root 令牌（把 var(--x) 链解析成色值，用来给颜色起名字） ----------
+// 深色（:root）和浅色（:root[data-theme="light"]）两套令牌分开读，按每次检查的主题取名字
 function readTokens() {
   const css = fs.readFileSync(path.join(root, 'css', 'universe.css'), 'utf8');
-  const block = /:root\s*\{([^}]*)\}/.exec(css);
-  const raw = {};
-  if (block) for (const m of block[1].matchAll(/--([\w-]+)\s*:\s*([^;]+);/g)) raw[m[1]] = m[2].trim();
-  const resolve = (v, depth) => {
-    const r = /^var\(--([\w-]+)\)$/.exec(v);
-    return r && raw[r[1]] && depth < 10 ? resolve(raw[r[1]], depth + 1) : v;
+  const parse = (sel) => {
+    const re = new RegExp('(^|\\s)' + sel.replace(/[\[\]()"=]/g, (c) => '\\' + c) + '\\s*\\{([^}]*)\\}', 'm');
+    const block = re.exec(css);
+    const raw = {};
+    if (block) for (const m of block[2].matchAll(/--([\w-]+)\s*:\s*([^;]+);/g)) raw[m[1]] = m[2].trim();
+    const resolve = (v, depth) => {
+      const r = /^var\(--([\w-]+)\)$/.exec(v);
+      return r && raw[r[1]] && depth < 10 ? resolve(raw[r[1]], depth + 1) : v;
+    };
+    const rgb = {};
+    for (const k of Object.keys(raw)) { const c = hexToRgb(resolve(raw[k], 0)); if (c) rgb['--' + k] = c; }
+    return rgb;
   };
-  const rgb = {};
-  for (const k of Object.keys(raw)) { const c = hexToRgb(resolve(raw[k], 0)); if (c) rgb['--' + k] = c; }
-  return rgb;
+  return { dark: parse(':root'), light: parse(':root[data-theme="light"]') };
 }
 function tokenName(tokens, rgb) {
   const hits = Object.keys(tokens).filter((k) => tokens[k].every((v, i) => Math.round(v) === rgb[i]));
@@ -225,7 +230,7 @@ async function run() {
 
   for (const g of bad) {
     const r = g.r;
-    const fgTok = tokenName(tokens, r.fg), bgTok = tokenName(tokens, r.bg);
+    const fgTok = tokenName(tokens[r.scheme], r.fg), bgTok = tokenName(tokens[r.scheme], r.bg);
     console.log('  FAIL ' + r.page + ' | ' + g.schemes.join('/') + ' | ' + r.desc + ' | "' + r.text + '" @' + r.pos.join(',') +
       ' | ' + r.size + 'px | 文字 ' + hex(r.fg) + (fgTok ? '（' + fgTok + '）' : '') + ' 背景 ' + hex(r.bg) + (bgTok ? '（' + bgTok + '）' : '') +
       ' | 对比度 ' + g.ratio.toFixed(2) + ':1' + (r.bgImg ? ' [背景含图片或渐变，按纯色估算]' : ''));

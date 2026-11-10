@@ -181,7 +181,7 @@
       // 只重画拖线那一条，避免整块重绘打断悬停状态
       const lp = SG.worldEl.querySelector('#links path[stroke-dasharray]');
       const F = S.scene.entities[SG.linking.from], a = SG.portPos(F, SG.linking.fromPort, S.D, true);
-      if (lp) lp.setAttribute('d', SG.bez(a, SG.linking.cur)); else { const sv = SG.worldEl.querySelector('#links'); sv.insertAdjacentHTML('beforeend', '<path class="ln" stroke="#fff" stroke-dasharray="6 6" fill="none" d="' + SG.bez(a, SG.linking.cur) + '"/>'); }
+      if (lp) lp.setAttribute('d', SG.bez(a, SG.linking.cur)); else { const sv = SG.worldEl.querySelector('#links'); sv.insertAdjacentHTML('beforeend', '<path class="ln" style="stroke:var(--flow)" stroke-dasharray="6 6" fill="none" d="' + SG.bez(a, SG.linking.cur) + '"/>'); }
       return;
     }
     const hw = ev.target.closest && ev.target.closest('.wsbody'); if (hw) SG.hotWs = hw.dataset.wsid;   // 快捷键作用在鼠标最后停过的工作区
