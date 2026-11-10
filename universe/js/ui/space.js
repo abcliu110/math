@@ -55,9 +55,9 @@
   function perUnit(w, vw) { return w / vw.span; }
   // 几何坐标 → 画布像素（w、h 是画布的宽高）；反过来
   function canvasX(x, w, vw) { return w / 2 + (x - vw.cx) * perUnit(w, vw); }
-  function canvasY(y, h, vw) { return h / 2 - (y - vw.cy) * perUnit(h, vw); }
+  function canvasY(y, h, vw, w) { return h / 2 - (y - vw.cy) * (w / vw.span); }
   function canvasToWorkspace(p, w, h, vw) { const s = perUnit(w, vw); return { x: vw.cx + (p.x - w / 2) / s, y: vw.cy - (p.y - h / 2) / s }; }
-  function workspaceToCanvas(p, w, h, vw) { return { x: canvasX(p.x, w, vw), y: canvasY(p.y, h, vw) }; }
+  function workspaceToCanvas(p, w, h, vw) { return { x: canvasX(p.x, w, vw), y: canvasY(p.y, h, vw, w) }; }
   // 工作区的横向半宽、纵向半高（几何单位）；横纵都按同一个每单位像素数算
   function halfRange(w, h, vw) { return { hw: vw.span / 2, hh: vw.span * h / w / 2 }; }
   // 没有工作区范围时：图形数据里的单位长度 s（data-s，图形坐标系）在 cw 像素宽的画布上占的屏幕像素

@@ -39,6 +39,7 @@
     });
     if (d.handles) h += '<i class="rz" data-rz="' + e.id + '" title="拖动改大小；双击恢复默认"></i>';   // 把手由器材声明（handles）
     h += '</div>';
+    if (SG.isWsDef(e.type)) h += SG.miniHtml(e, g);   // 迷你工具条：卡片上沿的外面，不盖住画布
     // 属性药丸（在卡片左边外侧）
     pillsOf(e, D).forEach((k, i) => {
       const drv = dd.driven[k];

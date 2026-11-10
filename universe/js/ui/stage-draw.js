@@ -7,6 +7,14 @@
   const SG = UI.StageCtx;
   // ---- 工作区里两下画线（§10.5.8 B11）----
   function endDraw() { const S = UI.S; if (S.wsDraw) { S.wsDraw = null; S.wsMsg = ''; SG.render(); } }
+  // 快捷键作用在哪个工作区：正在画线的；鼠标最后停过的；台面上只有一个的
+  function activeWs() {
+    const S = UI.S, E = S.scene.entities;
+    if (S.wsDraw && E[S.wsDraw.ws]) return S.wsDraw.ws;
+    if (SG.hotWs && E[SG.hotWs] && SG.isWsDef(E[SG.hotWs].type)) return SG.hotWs;
+    const all = Object.values(E).filter((e) => SG.isWsDef(e.type));
+    return all.length === 1 ? all[0].id : null;
+  }
   function drawMode(wsId, tool) {
     const S = UI.S, D = S.wsDraw;
     if (D && D.ws === wsId && D.tool === tool) return endDraw();
@@ -44,15 +52,44 @@
     }
     return out;
   }
+  // 鼠标位置 → 吸附后的点（画线时坐标范围冻结，免得画到一半图跳走）
+  function snapAt(wb, ev) {
+    const S = UI.S, ws = S.scene.entities[wb.dataset.wsid];
+    if (!ws) return null;
+    const fr = SG.wsFrame(ws, +wb.getAttribute('width'), +wb.getAttribute('height'));
+    if (!UI.State.viewOf(ws)) UI.State.setUi(ws, 'view', fr.vw);
+    const sc = UI.Space.canvasOf(wb.getBoundingClientRect(), fr.vw.span);
+    return snapTo(fr, UI.Space.screenToWorkspace(ev, fr.vw, sc), sc);
+  }
   function drawClick(wb, ev) {
     const S = UI.S, D = S.wsDraw, ws = S.scene.entities[D.ws];
     if (!ws) return endDraw();
-    const fr = SG.wsFrame(ws, +wb.getAttribute('width'), +wb.getAttribute('height'));
-    if (!UI.State.viewOf(ws)) UI.State.setUi(ws, 'view', fr.vw);   // 画线时坐标范围冻结
-    const sc = UI.Space.canvasOf(wb.getBoundingClientRect(), fr.vw.span), sp = snapTo(fr, UI.Space.screenToWorkspace(ev, fr.vw, sc), sc);
-    if (!D.pend) { D.pend = sp; D.cur = sp; S.wsMsg = ''; return SG.wsRedraw(D.ws); }
-    const a = D.pend; D.pend = null; D.cur = null;
+    const sp = snapAt(wb, ev);
+    if (!D.pend) { D.pend = sp; D.cur = sp; D.downAt = { x: ev.clientX, y: ev.clientY }; S.wsMsg = ''; return SG.wsRedraw(D.ws); }
+    const a = D.pend; D.pend = null; D.cur = null; D.downAt = null;
     finishLine(D, a, sp);
+  }
+  // 直接拖出一条线（不用先点「连线」）：在画线模式里按下起点、拖到终点松手；或者不在任何模式里按住 Shift 拖。
+  // 拖出来的线用的是同一套吸附（顶点、中点、交点、格点）和同一个建线动作，一条线就是一步。
+  const DRAG_LINE_PX = 6;
+  function lineDragStart(wb, ev, tool) {
+    const S = UI.S, sp = snapAt(wb, ev); if (!sp) return false;
+    S.wsDraw = { ws: wb.dataset.wsid, tool: tool || 'seg', pend: sp, cur: sp, temp: true, downAt: { x: ev.clientX, y: ev.clientY } };
+    S.wsMsg = ''; SG.wsRedraw(S.wsDraw.ws); return true;
+  }
+  // 松手时：画线模式里按下—拖—松，或者 Shift 拖，都用这里收尾；返回 true 表示这次松手已经处理
+  function lineDragEnd(ev) {
+    const S = UI.S, D = S.wsDraw; if (!D || !D.pend || !D.downAt) return false;
+    const moved = Math.hypot(ev.clientX - D.downAt.x, ev.clientY - D.downAt.y) >= DRAG_LINE_PX;
+    if (!moved) { if (D.temp) endDraw(); return false; }   // 没拖：画线模式里照旧「点两下」，临时模式（Shift）取消
+    const wb = [...document.querySelectorAll('svg.wsbody[data-wsid="' + D.ws + '"]')].find((el) => { const r = el.getBoundingClientRect(); return ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom; });
+    const a = D.pend, temp = D.temp;
+    D.pend = null; D.cur = null; D.downAt = null;
+    if (!wb) { if (temp) endDraw(); else SG.wsRedraw(D.ws); return true; }
+    const b = snapAt(wb, ev);
+    if (temp) S.wsDraw = null;
+    finishLine(temp ? Object.assign({}, D, { pend: null }) : D, a, b);
+    return true;
   }
   function drawHover(ev) {
     const S = UI.S, D = S.wsDraw, ws = S.scene.entities[D.ws];
@@ -83,5 +120,5 @@
     if (r.ok) { S.wsSel = []; S.wsMsg = ''; } else SG.setMsg(r.why, false);
     SG.render();
   }
-  Object.assign(SG, { endDraw, drawMode, snapTo, constructsOf, drawClick, drawHover, finishLine });
+  Object.assign(SG, { endDraw, activeWs, drawMode, snapTo, snapAt, constructsOf, drawClick, drawHover, finishLine, lineDragStart, lineDragEnd, DRAG_LINE_PX });
 })(window);

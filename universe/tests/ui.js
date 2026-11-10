@@ -647,7 +647,7 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   const wsid2 = await wsIdOf(), segN = () => p.evaluate(() => Object.values(UI.S.scene.entities).filter((e) => e.type === 'gseg').length);
   const n0 = await segN();
   await wsBtn('seg');
-  ok(await p.locator('[data-ws-tool="seg"].on').count() === 1, '(d) 选「连线」：工具按钮亮起，进入画线');
+  ok(await p.locator('.wsx [data-ws-tool="seg"].on').count() === 1, '(d) 选「连线」：工具按钮亮起，进入画线');
   const wb2 = await p.locator('.card[data-id="' + wsid2 + '"] svg.wsbody').boundingBox();
   await p.mouse.click(wb2.x + wb2.width * 0.12, wb2.y + wb2.height * 0.9); await p.waitForTimeout(40);
   await p.mouse.click(wb2.x + wb2.width * 0.42, wb2.y + wb2.height * 0.9); await p.waitForTimeout(120);

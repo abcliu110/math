@@ -1,5 +1,5 @@
 /* node tools/verify.js —— 一条命令跑完全部检查，任一步失败就退出非零（不再往下跑）。
- * 顺序：tests/run.js → tools/check-types.js → tests/ui.js → tests/ui-probes.js（如果存在）→ tests/ui-layout.js → tests/ui-space.js → tests/ui-roles.js → tests/ui-deps.js → tests/ui-workbench.js → tests/ui-select.js → tests/ui-snap.js → tests/ui-export.js → tests/ui-labels.js → tests/ui-feedback.js → tests/ui-readout.js → tools/lint-ui.js → tools/contrast.js → tools/build-standalone.js → dist 文件加载检查。
+ * 顺序：tests/run.js → tools/check-types.js → tests/ui.js → tests/ui-probes.js（如果存在）→ tests/ui-layout.js → tests/ui-space.js → tests/ui-roles.js → tests/ui-deps.js → tests/ui-workbench.js → tests/ui-select.js → tests/ui-snap.js → tests/ui-shapes.js → tests/ui-export.js → tests/ui-labels.js → tests/ui-feedback.js → tests/ui-readout.js → tools/lint-ui.js → tools/contrast.js → tools/build-standalone.js → dist 文件加载检查。
  * 界面测试和 dist 检查需要环境变量 PW_NODE_PATH：playwright 所在的 node_modules 目录。
  * 用法：PW_NODE_PATH=<.../node_modules> node tools/verify.js */
 'use strict';
@@ -66,6 +66,7 @@ async function checkDist() {
   if (!runScript('tests/ui-workbench.js', 'tests/ui-workbench.js', pwEnv)) bail();   // D2：题目声明工作台（几何题只列几何工作台的器材；旧题器材架不变；workbench 的 lint）
   if (!runScript('tests/ui-select.js', 'tests/ui-select.js', pwEnv)) bail();         // V3：工作区选择（同一位置双击依次选中重叠的图形，单击选最上面的）
   if (!runScript('tests/ui-snap.js', 'tests/ui-snap.js', pwEnv)) bail();             // V4：吸附到构造点（画线吸附到中点，背后建 gmid；拖动端点后跟着动）
+  if (!runScript('tests/ui-shapes.js', 'tests/ui-shapes.js', pwEnv)) bail();         // 常见图形、顶点编辑、直接拖出辅助线（真实鼠标和键盘）；含画布横纵比例回归
   if (!runScript('tests/ui-export.js', 'tests/ui-export.js', pwEnv)) bail();         // 2.12/V10：导出图片（真实鼠标点菜单，台面和专注工作区各一次下载，.png、大小 > 0）
   if (!runScript('tests/ui-labels.js', 'tests/ui-labels.js', pwEnv)) bail();         // V6：标签避让（2.3）、图层分组（2.4）、点的命名与双击改名（2.6），真实鼠标
   if (!runScript('tests/ui-feedback.js', 'tests/ui-feedback.js', pwEnv)) bail();     // 2.5/2.13/V7：工具说明与当前工具状态、新手引导（弹一次、关闭后刷新不再弹、菜单可再开）
