@@ -936,6 +936,22 @@ t('覆盖统计：有题的知识点、按年级、按本质都能算出来', ()
   const S = U.Coverage.summarize(U.problems);
   eq(S.points.length, 142); truthy(S.points.some((r) => r.problems.length > 0)); eq(S.grades.length, 9); eq(S.essences.length, 12);
 });
+// 遗留状态（next-steps.md §8）：孤立题（没有知识点的题）和没有题的知识点，只允许下面列出的例外。
+// 新增孤立题、或例外被接上了却没从这里删掉，都会失败。例外的理由写在 docs/next-steps.md §8。
+const ORPHAN_OK = { 'seq-arith-20': '等差数列求和是高中内容，义务教育课标（2022）没有要求，知识点表里没有对应的点' };
+const NO_PROBLEM_OK = {
+  '2.14b': '推理（排除法、谁是谁）：现有器材没有可以逐格排除的表格，需要新器材，见 next-steps.md §8',
+  '6.14': '综合与实践 / 整理和复习：不是单一知识点，留到综合题批次',
+};
+t('遗留：孤立题（points 为空，不在任何知识点下）只剩允许的例外', () => {
+  const S = U.Coverage.summarize(U.problems);
+  eq(S.noPoint.slice().sort(), Object.keys(ORPHAN_OK).sort(), '孤立题');
+  for (const id of Object.keys(ORPHAN_OK)) truthy(U.problems.some((p) => p.id === id), '例外里的题不存在：' + id);
+});
+t('遗留：没有题的知识点只剩允许的例外（2.14b 推理、6.14 综合）', () => {
+  const S = U.Coverage.summarize(U.problems);
+  eq(S.noProblemPoints.slice().sort(), Object.keys(NO_PROBLEM_OK).sort(), '没有题的知识点');
+});
 console.log('证明类器材（2.7）');
 const pr = (type, props, feed) => { const sc = W.blank(); const e = W.add(sc, type, 0, 0, props || {}); (feed || []).forEach(([t, p2, port, fport]) => { const f = W.add(sc, t, 0, 0, p2); W.act(sc, { t: 'link', from: f, fromPort: fport || 'v', to: e, toPort: port }); }); return W.evaluate(sc)[e].out; };
 const lvOf = (o) => (o.lv ? Q.num(o.lv.data) : null);
@@ -2167,6 +2183,177 @@ t('I: 工作台器材的「有没有步骤」在台面上：没有台面步骤�
   const sc = W.blank(), host = W.add(sc, 'exprbench', 0, 0, {}), eqv = eqnI('3x+5', '20');
   eq(U.ExprBench.currentOf(sc, host, eqv).steps.length, 0);
   eq(U.ExprBench.stepsOf(sc, host).length, 0);
+});
+
+// ---- 任务 J（next-steps.md §10.7）：二次扩域坐标、增量求值、文件清单 ----
+console.log('任务 J：二次扩域坐标');
+t('J1 顶点：y = 2x² − 8x + 5 的顶点精确为 (2, −3)', () => {
+  const sc = W.blank(), id = W.add(sc, 'quad-vertex', 0, 0, { a: 2, b: -8, c: 5 });
+  const v = W.evaluate(sc)[id].out.v;
+  truthy(v && v.kind === 'spoint', '应输出符号点');
+  eq(U.KINDS.spoint.show(v.data), '(2, −3)'); eq(v.exact, true);
+});
+t('J1 交点：y = x² − 2 与 x 轴交于 √2 和 −√2（精确，不是近似）', () => {
+  const sc = W.blank(), id = W.add(sc, 'quad-xint', 0, 0, { a: 1, b: 0, c: -2 });
+  const o = W.evaluate(sc)[id].out;
+  eq(U.Real.show(o.p1.data.x), '√2'); eq(U.Real.show(o.p2.data.x), '−√2');
+  eq(U.Real.show(o.p1.data.y), '0'); eq(o.p1.exact, true);
+});
+t('J1 交点：x² − 4x + 1 = 0 的根是 2 ± √3（只用一个根式 √3）', () => {
+  const sc = W.blank(), id = W.add(sc, 'quad-xint', 0, 0, { a: 1, b: -4, c: 1 });
+  const o = W.evaluate(sc)[id].out;
+  eq(U.Real.show(o.p1.data.x), '2 + √3'); eq(U.Real.show(o.p2.data.x), '2 − √3');
+});
+t('J1 判别式为负：没有 x 轴交点（没有输出）', () => {
+  const sc = W.blank(), id = W.add(sc, 'quad-xint', 0, 0, { a: 1, b: 0, c: 1 });
+  const o = W.evaluate(sc)[id].out;
+  eq(o.p1, undefined); eq(o.p2, undefined);
+});
+t('J1 y 轴交点是 (0, c)', () => {
+  const sc = W.blank(), id = W.add(sc, 'quad-yint', 0, 0, { a: 2, b: 3, c: -5 });
+  eq(U.KINDS.spoint.show(W.evaluate(sc)[id].out.p.data), '(0, −5)');
+});
+t('J1 a = 0 不是抛物线：拒绝并说明', () => {
+  const sc = W.blank(), id = W.add(sc, 'quad-vertex', 0, 0, { a: 0, b: 1, c: 1 });
+  const D = W.evaluate(sc);
+  eq(D[id].out.v, undefined); truthy(D[id].sig.some((s) => s.lv === 'reject'), '应有拒绝说明');
+});
+t('J1 混用两个根式（√2 + √3）：退回近似值，标 ≈', () => {
+  const r2 = U.Real.sqrt(U.Q(2)), r3 = U.Real.sqrt(U.Q(3));
+  const p = U.SPoint.add(U.SPoint.of(r2, U.Real.from(U.Q(0))), U.SPoint.of(r3, U.Real.from(U.Q(0))));
+  eq(p.exact, false); truthy(U.showVal(p).startsWith('≈'), '应显示 ≈');
+  truthy(Math.abs(U.Real.approx(p.data.x) - (Math.SQRT2 + Math.sqrt(3))) < 1e-3, '近似值接近 √2 + √3');
+});
+t('J1 同一个根式内相加：精确（1 + √2 与 1 − √2 相加得 2）', () => {
+  const r2 = U.Real.sqrt(U.Q(2));
+  const a = U.SPoint.of(U.Real.add(U.Real.from(U.Q(1)), r2), U.Real.from(U.Q(0)));
+  const b = U.SPoint.of(U.Real.add(U.Real.from(U.Q(1)), U.Real.mul(r2, U.Real.from(U.Q(-1)))), U.Real.from(U.Q(0)));
+  const s = U.SPoint.add(a, b);
+  eq(s.exact, true); eq(U.Real.show(s.data.x), '2');
+});
+t('J1 符号点存档往返后相等', () => {
+  const v = U.SPoint.of(U.Real.sqrt(U.Q(3)), U.Real.from(U.Q(-1)));
+  const back = U.KINDS.spoint.parse(U.KINDS.spoint.serialize(v.data));
+  truthy(U.KINDS.spoint.eq(back, v.data), '往返相等');
+});
+
+console.log('任务 J：增量求值与局部渲染');
+// 一条链（3 台器材）：num → op1（甲乙两口都接它）→ op2（甲接 op1，乙接 num）；返回 [num, op1, op2]
+const jChain = (sc, x, y, n) => {
+  const a = W.add(sc, 'num', x, y, { n }), b = W.add(sc, 'op', x, y, { op: 0 }), c = W.add(sc, 'op', x, y, { op: 0 });
+  const ln = (from, fromPort, to, toPort) => sc.links.push({ id: 'l' + sc.nid++, from, fromPort, to, toPort });
+  ln(a, 'v', b, 'a'); ln(a, 'v', b, 'b'); ln(b, 'r', c, 'a'); ln(a, 'v', c, 'b');
+  return [a, b, c];
+};
+const jCount = (fn) => { const count = {}; fn(count); return count; };
+const jSum = (count, ids) => ids.reduce((s, id) => s + (count[id] || 0), 0);
+t('J2 改一个无关器材：其他器材的求值次数为 0（计数）', () => {
+  const sc = W.blank(), A = jChain(sc, 0, 0, 1), B = jChain(sc, 100, 0, 2), C = W.add(sc, 'num', 200, 0, { n: 3 });
+  const cache = {};
+  W.evaluateCached(sc, cache);
+  sc.entities[C].props.n = 7;
+  const count = jCount((k) => W.evaluateCached(sc, cache, { count: k }));
+  eq(jSum(count, A.concat(B)), 0, '链 A、链 B 的求值次数');
+  eq(count[C], 1, '被改的器材算了一次');
+});
+t('J2 改上游：下游器材重算，别的链为 0', () => {
+  const sc = W.blank(), A = jChain(sc, 0, 0, 1), B = jChain(sc, 100, 0, 2);
+  const cache = {};
+  W.evaluateCached(sc, cache);
+  const before = bigStr(cache.D[A[2]].out);
+  sc.entities[A[0]].props.n = 5;
+  const count = jCount((k) => W.evaluateCached(sc, cache, { count: k }));
+  truthy(count[A[0]] === 1 && count[A[1]] === 1 && count[A[2]] === 1, '链 A 的三台都重算');
+  eq(jSum(count, B), 0, '链 B 为 0');
+  truthy(bigStr(cache.D[A[2]].out) !== before, '下游的结果已更新');
+});
+t('J2 增量结果与全量求值完全一致', () => {
+  const sc = W.blank(), A = jChain(sc, 0, 0, 1), B = jChain(sc, 100, 0, 2), C = W.add(sc, 'num', 200, 0, { n: 3 });
+  const cache = {};
+  W.evaluateCached(sc, cache);
+  sc.entities[A[0]].props.n = 9; sc.entities[C].props.n = 4;
+  const inc = W.evaluateCached(sc, cache), full = W.evaluate(sc);
+  for (const id of Object.keys(full)) eq(bigStr(inc[id].out), bigStr(full[id].out), id + ' 的输出');
+});
+t('J2 子器材改动：父器材（容器）也重算', () => {
+  const sc = W.blank(), P = W.add(sc, 'num', 0, 0, { n: 1 }), K = W.add(sc, 'num', 0, 0, { n: 2 });
+  sc.entities[K].parent = P; sc.entities[K].slot = 'k';
+  const cache = {};
+  W.evaluateCached(sc, cache);
+  sc.entities[K].props.n = 8;
+  const count = jCount((k) => W.evaluateCached(sc, cache, { count: k }));
+  eq(count[K], 1); eq(count[P], 1, '父器材重算');
+});
+t('J2 删掉子器材：原来的父器材重算（不会用旧结果）', () => {
+  const sc = W.blank(), P = W.add(sc, 'num', 0, 0, { n: 1 }), K = W.add(sc, 'num', 0, 0, { n: 2 });
+  sc.entities[K].parent = P; sc.entities[K].slot = 'k';
+  const cache = {};
+  W.evaluateCached(sc, cache);
+  delete sc.entities[K];
+  const count = jCount((k) => W.evaluateCached(sc, cache, { count: k }));
+  eq(count[P], 1, '父器材重算');
+  eq(bigStr(cache.D), bigStr(W.evaluate(sc)), '结果与全量一致');
+});
+t('J2 时钟走一拍：全部器材重算（时钟不能增量）', () => {
+  const sc = W.blank(), A = jChain(sc, 0, 0, 1), B = jChain(sc, 100, 0, 2);
+  const cache = {};
+  W.evaluateCached(sc, cache);
+  sc.clock.n += 1;
+  const count = jCount((k) => W.evaluateCached(sc, cache, { count: k }));
+  eq(jSum(count, A.concat(B)), 6, '六台都算了一次');
+});
+t('J2 没有改动：一台都不重算', () => {
+  const sc = W.blank(); jChain(sc, 0, 0, 1);
+  const cache = {};
+  W.evaluateCached(sc, cache);
+  const count = jCount((k) => W.evaluateCached(sc, cache, { count: k }));
+  eq(Object.keys(count).length, 0);
+});
+t('J2 影响范围：affected 包括下游，不包括无关的器材', () => {
+  const sc = W.blank(), A = jChain(sc, 0, 0, 1), B = jChain(sc, 100, 0, 2);
+  const s = W.affected(sc, [A[0]]);
+  eq([...s].sort(), A.slice().sort());
+});
+t('J2 工作区里 300 个对象，改一个点，增量求值中位数 < 16 毫秒', () => {
+  const sc = W.blank();
+  const heads = [];
+  for (let i = 0; i < 100; i++) heads.push(jChain(sc, i * 10, 0, i)[0]);
+  const cache = {};
+  const tFull0 = Date.now(); W.evaluateCached(sc, cache); const fullMs = Date.now() - tFull0;
+  const times = [];
+  for (let i = 0; i < 9; i++) {
+    sc.entities[heads[i]].props.n = i + 50;
+    const t0 = process.hrtime.bigint();
+    W.evaluateCached(sc, cache);
+    times.push(Number(process.hrtime.bigint() - t0) / 1e6);
+  }
+  times.sort((x, y) => x - y);
+  const med = times[4];
+  console.log('       300 个对象：全量 ' + fullMs + ' 毫秒，增量中位数 ' + med.toFixed(3) + ' 毫秒');
+  truthy(med < 16, '增量中位数 ' + med + ' 毫秒，应 < 16');
+});
+
+console.log('任务 J：文件清单');
+// 解析 index.html 里 packs/ 下的脚本
+const htmlSrcs = [...fs.readFileSync(path.join(root, 'index.html'), 'utf8').matchAll(/<script src="(packs\/[^"]+)"><\/script>/g)].map((m) => m[1]);
+const dirPacks = fs.readdirSync(path.join(root, 'packs')).filter((f) => f.endsWith('.js')).sort().map((f) => 'packs/' + f);
+t('J3 清单和 index.html 一致（仓库里的真实文件）', () => {
+  eq(U.checkPackManifest(U.PACK_FILES, htmlSrcs, dirPacks), []);
+});
+t('J3 清单检查：一致时没有错误', () => {
+  eq(U.checkPackManifest({ core: 'packs/core.js' }, ['packs/core.js'], ['packs/core.js']), []);
+});
+t('J3 清单检查：index.html 漏了一个包，检查失败并指出是哪个', () => {
+  const errs = U.checkPackManifest({ core: 'packs/core.js', time: 'packs/time.js' }, ['packs/core.js'], ['packs/core.js', 'packs/time.js']);
+  truthy(errs.length > 0, '应报错'); truthy(errs.some((m) => m.includes('packs/time.js')), '应指出 time');
+});
+t('J3 清单检查：清单里有一个包的文件不存在，检查失败', () => {
+  const errs = U.checkPackManifest({ core: 'packs/core.js', ghost: 'packs/ghost.js' }, ['packs/core.js', 'packs/ghost.js'], ['packs/core.js']);
+  truthy(errs.some((m) => m.includes('ghost')), '应指出 ghost');
+});
+t('J3 清单检查：packs 里有文件没登记，检查失败', () => {
+  const errs = U.checkPackManifest({ core: 'packs/core.js' }, ['packs/core.js'], ['packs/core.js', 'packs/new.js']);
+  truthy(errs.some((m) => m.includes('new.js')), '应指出 new.js');
 });
 
 console.log('\n' + pass + ' 通过，' + fail + ' 失败');

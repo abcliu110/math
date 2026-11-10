@@ -5,7 +5,7 @@
   const pour = (props) => mk({ ents: [{ type: 'pour', x: 120, y: 80, role: 'p', props }] });
 
   P.push({
-    id: 'pour-conserve', essence: ['E5', 'E3'], title: '甲杯的水倒进乙杯，水变少了吗？', grade: 4, domain: '数与运算', points: [], topics: ['守恒', '总量不变', '搬家'],
+    id: 'pour-conserve', essence: ['E5', 'E3'], title: '甲杯的水倒进乙杯，水变少了吗？', grade: 4, domain: '数与运算', points: ['5.9'], topics: ['守恒', '总量不变', '搬家'],
     alias: ['守恒', '倒水', '总量'], hook: '甲杯装满 10，乙杯空着，乙杯最多装 6。把“倒水”选成“甲倒进乙”，再读“总量”和两杯各剩多少。',
     shelf: ['pour', 'num', 'compare'],
     build: pour({ A: 10, B: 6, a: 10, b: 0, pour: 0 }),

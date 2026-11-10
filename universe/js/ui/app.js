@@ -27,7 +27,8 @@
 
   // ---------- 刷新 ----------
   function refresh(full) {
-    S.D = W.evaluate(S.scene);
+    // 增量求值（任务 J）：只重算改过的器材和它们的下游，其余沿用上次的结果
+    S.D = W.evaluateCached(S.scene, S.evalCache || (S.evalCache = {}));
     judgeNow();
     UI.Stage.render(); UI.Panels.renderClock();
     if (full !== false) { UI.Panels.renderTop(); UI.Panels.renderLeft(); UI.Panels.renderInsp(); }
