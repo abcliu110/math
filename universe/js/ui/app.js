@@ -232,21 +232,84 @@
 
   // ---------- 式子工作台（任务 H 第 3b 步）：步骤只改工作台的状态（U.ExprBench.states），不改台面 ----------
   function wbEqn(id) { const dd = S.D && S.D[id]; return dd ? U.ExprBench.eqnIn(dd.inp) : null; }
+  // 选中项：dr.sel 里是 'lhs:0' 这样的键；按边取下标
+  function wbSelOf(id, side) {
+    return (UI.Panels.wbDraft(id).sel || []).filter((k) => k.indexOf(side + ':') === 0).map((k) => +k.slice(side.length + 1));
+  }
+  function wbMsg(id, text) { UI.Panels.wbDraft(id).msg = text; refresh(); }
+  function wbToggle(id, key) {
+    const dr = UI.Panels.wbDraft(id), sel = dr.sel || [];
+    dr.sel = sel.indexOf(key) >= 0 ? sel.filter((k) => k !== key) : sel.concat([key]);
+    dr.msg = '';
+    refresh();
+  }
+  // 按一个工具（或拖过等号的移项）执行一步：内核判断能不能做，不能做就说明原因、步骤不变
+  function wbDo(id, tool, ref, args) {
+    const eq = wbEqn(id), dr = UI.Panels.wbDraft(id);
+    if (!eq) return;
+    const st = U.ExprBench.currentOf(id, eq);
+    const ns = U.Workbench.step(st, tool, ref, args);
+    if (ns.lastError) dr.msg = ns.lastError;
+    else { U.ExprBench.states[id] = { key: U.ExprBench.keyOf(eq), state: ns }; dr.msg = ''; dr.ref = ''; dr.sel = []; }
+    refresh();
+  }
   function wbStep(id, tool) {
     const eq = wbEqn(id), dr = UI.Panels.wbDraft(id);
     if (!eq) return;
     const raw = (dr.ref || '').trim();
-    // 移项：序号从 1 数（左边的第几项）；标签照原样交给内核。两边同除/同乘不需要位置，只要数
+    const L = wbSelOf(id, 'lhs'), R = wbSelOf(id, 'rhs');
+    // 移项：选中了左边的一项就移它；否则序号从 1 数（左边的第几项）；标签照原样交给内核
     let ref = null, args = {};
-    if (tool === 'move-term') ref = /^\d+$/.test(raw) ? +raw - 1 : (raw || null);
-    else if (tool === 'divide' || tool === 'multiply') args = { by: dr.by };
-    else ref = raw || [dr.side];   // 合并、去括号、约分：没写标签就作用在选的那一边上
-    const st = U.ExprBench.currentOf(id, eq);
-    const ns = U.Workbench.step(st, tool, ref, args);
-    if (ns.lastError) dr.msg = ns.lastError;
-    else { U.ExprBench.states[id] = { key: U.ExprBench.keyOf(eq), state: ns }; dr.msg = ''; dr.ref = ''; }
-    refresh();
+    if (tool === 'move-term') {
+      if (R.length) return wbMsg(id, '移项只能移左边的项');
+      ref = L.length === 1 ? L[0] : (/^\d+$/.test(raw) ? +raw - 1 : (raw || null));
+    } else if (tool === 'divide' || tool === 'multiply') {
+      args = { by: dr.by };
+    } else if (tool === 'collect' && (L.length || R.length)) {
+      // 合并：选中的几项必须在同一边，至少两项；合并的结果留在原来的位置
+      if (L.length && R.length) return wbMsg(id, '合并只能选同一边的项');
+      if (L.length + R.length < 2) return wbMsg(id, '再选一项才能合并');
+      ref = [L.length ? 'lhs' : 'rhs'];
+      args = { pick: L.length ? L : R };
+    } else {
+      ref = raw || [dr.side];   // 合并、去括号、约分：没写标签就作用在选的那一边上
+    }
+    wbDo(id, tool, ref, args);
   }
+  // 「两边同除以 k」：k 是左边 kx 的系数，界面直接给出，不用打字
+  function wbDivideCoef(id) {
+    const eq = wbEqn(id); if (!eq) return;
+    const k = U.Workbench.coef(U.ExprBench.currentOf(id, eq));
+    if (k) wbDo(id, 'divide', null, { by: U.Q.show(k) });
+  }
+  // 拖过等号移项（D5）：在左边的项上按下，拖到右边那一块上松手，就是一步「移项」；没有拖到右边什么都不做。
+  // 按下后移动超过 WB_DRAG_PX 才算拖；拖过之后的那次点击不算选中。
+  let wbDrag = null, wbJust = false;
+  const WB_DRAG_PX = 6;
+  const wbZoneAt = (e) => { const hit = document.elementFromPoint(e.clientX, e.clientY); return hit && hit.closest ? hit.closest('[data-wb-side="rhs"]') : null; };
+  document.addEventListener('pointerdown', (e) => {
+    wbJust = false;
+    const c = e.target.closest && e.target.closest('#insp [data-wb-term]');
+    if (!c || c.dataset.wbSide !== 'lhs' || e.button !== 0) return;
+    wbDrag = { id: S.sel, i: +c.dataset.wbI, el: c, x0: e.clientX, y0: e.clientY, on: false };
+  });
+  window.addEventListener('pointermove', (e) => {
+    const d = wbDrag;
+    if (!d) return;
+    const dx = e.clientX - d.x0, dy = e.clientY - d.y0;
+    if (!d.on) { if (Math.hypot(dx, dy) <= WB_DRAG_PX) return; d.on = true; d.el.classList.add('wb-drag'); }
+    const z = wbZoneAt(e);
+    document.querySelectorAll('[data-wb-side="rhs"]').forEach((el) => el.classList.toggle('wb-over', el === z));
+  });
+  window.addEventListener('pointerup', (e) => {
+    const d = wbDrag;
+    wbDrag = null;
+    if (!d || !d.on) return;
+    wbJust = true;
+    const z = wbZoneAt(e);
+    if (z && d.id === S.sel) wbDo(d.id, 'move-term', d.i, {});
+    else wbMsg(d.id, '把左边的项拖到等号右边松手，就是移项');
+  });
   function wbUndo(id, k) {
     const eq = wbEqn(id); if (!eq) return;
     const st = U.ExprBench.currentOf(id, eq);
@@ -374,6 +437,11 @@
     });
     insp.addEventListener('click', (e) => {
       const t = e.target, id = S.sel;
+      const afterDrag = wbJust; wbJust = false;   // 拖过之后浏览器可能补一次点击：不算选中
+      const chip = t.closest && t.closest('[data-wb-term]');
+      if (chip) { if (!afterDrag) wbToggle(id, chip.dataset.wbTerm); return; }
+      const wbAct = t.closest && t.closest('[data-wb-act]');
+      if (wbAct) { wbDivideCoef(id); return; }
       const wb = t.closest && t.closest('[data-wb-tool],[data-wb-undo]');
       if (wb) { if (wb.dataset.wbTool !== undefined) wbStep(id, wb.dataset.wbTool); else wbUndo(id, +wb.dataset.wbUndo); return; }
       if (t.dataset.gridDel !== undefined) {
