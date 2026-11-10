@@ -26,12 +26,13 @@
   const isContainer = (e) => !!(U.types[e.type] && U.types[e.type].slots);
   // 1.10：松手时，如果落在能装它的容器上就放进去；落在别处且原来在容器里，就取出来
   // 新加一张卡片放哪里：从想放的位置开始，往外一圈一圈找，找到和已有卡片（包括工作区底下的工具面板）都不重叠的空位
-  function freeSpot(x, y, type) {
+  // skipId：已经建好、正要挪开的那一张（从器材架拖到台面时用，它自己不占地）
+  function freeSpot(x, y, type, skipId) {
     const E = UI.S.scene.entities, d = U.types[type], sz = d && d.size ? d.size({ props: {} }) : L.DEFAULT_CARD, w = sz[0], h = sz[1];
     // 占地：卡片本身，加上工作区的面板（实测的尺寸和位置，见 UI.Layout.panelRect）
     const rects = [];
     for (const e of Object.values(E)) {
-      if (e.parent) continue;
+      if (e.parent || e.id === skipId) continue;
       const g = SG.geom(e), P = L.CARD_PAD;
       rects.push({ x0: g.x - P, y0: g.y - P, x1: g.x + g.w + P, y1: g.y + g.h + P });
       if (SG.isWsDef(e.type)) { const p = UI.Layout.panelRect(e.id, g); rects.push({ x0: p.x - P, y0: p.y - P, x1: p.x + p.w + P, y1: p.y + p.h + P }); }

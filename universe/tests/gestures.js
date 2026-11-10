@@ -141,8 +141,15 @@ async function clickCard(page, id) {
   const cardSel = '.card[data-id="' + id + '"]';
   const hd = page.locator(cardSel + ' .hd').first();
   const grip = (await hd.count()) ? hd : page.locator(cardSel).first();
-  await grip.scrollIntoViewIfNeeded();
-  await grip.click();
+  // 先等标题栏可见，并且位置连续两次一致（没有在动），再点；不用 scrollIntoViewIfNeeded 的超时方式
+  await grip.waitFor({ state: 'visible', timeout: 5000 });
+  let a = null;
+  for (let i = 0; i < 20; i++) {
+    const b1 = await grip.boundingBox(); await pause(page, 30); const b2 = await grip.boundingBox();
+    if (b1 && b2 && b1.x === b2.x && b1.y === b2.y && b1.width === b2.width && b1.height === b2.height) { a = b2; break; }
+  }
+  if (!a) throw new Error('标题栏的位置一直在变，没法点：' + id);
+  await grip.click({ timeout: 5000 });
   await pause(page, 200);
   return { visible: await inViewport(page, cardSel), text: (await textOf(page, id)).trim(), added: [], label: '' };
 }
@@ -222,7 +229,8 @@ async function assertInvariants(page, label, opts) {
         // 点的标签是 mark（2.6：点的名字），图形的标签是 name；点没有 name 时就看 mark
         items.push({ id: k.id, name: (k.props && (k.props.name || k.props.mark)) || '', cx: (Math.min(...xs) + Math.max(...xs)) / 2, cy: (Math.min(...ys) + Math.max(...ys)) / 2 });
       }
-      out.ws.push({ id: e.id, w, h, view, text: sv.textContent, items });
+      // 没有名字的图形（例如“四边形 ABCD”这种由器材自己起标签的）：标签由界面算出（UI.Stage.labelsOf），用它核对画布文字
+      out.ws.push({ id: e.id, w, h, view, text: sv.textContent, items, figs: UI.Stage.labelsOf(e.id) });
     }
     return out;
   });
@@ -251,7 +259,13 @@ async function assertInvariants(page, label, opts) {
   // (c)
   for (const ws of snap.ws) {
     for (const it of ws.items) {
-      if (!it.name || ws.text.indexOf(it.name) < 0) fail('工作区里的图形 ' + it.id + ' 没有标签显示');
+      let shown;
+      if (it.name) shown = ws.text.indexOf(it.name) >= 0;
+      else {
+        const ls = ws.figs.filter((f) => f.id === it.id);   // 没有名字：看界面给它算出的标签是不是都画在了画布上
+        shown = ls.length > 0 && ls.every((f) => f.label && ws.text.indexOf(f.label) >= 0);
+      }
+      if (!shown) fail('工作区里的图形 ' + it.id + ' 没有标签显示');
       if (ws.view) {
         const hw = ws.view.span / 2, hh = ws.view.span * ws.h / (2 * ws.w);
         if (Math.abs(it.cx - ws.view.cx) > hw || Math.abs(it.cy - ws.view.cy) > hh) fail('工作区里的图形 ' + (it.name || it.id) + ' 的中心在可见范围之外');
@@ -263,8 +277,40 @@ async function assertInvariants(page, label, opts) {
   if (s.errs.length) fail('控制台报错：' + s.errs[0] + (s.errs.length > 1 ? '（另有 ' + (s.errs.length - 1) + ' 条）' : ''));
 }
 
+// 滚轮（指在 x、y 上滚一次）：dy<0 放大。指在工作区上只缩放这个工作区，指在别处缩放台面
+async function wheelAt(page, x, y, dy) {
+  await begin(page, 'wheel(' + dy + ')');
+  await page.mouse.move(x, y);
+  await page.mouse.wheel(0, dy);
+  await pause(page, 200);
+  return { visible: true, text: await bannerText(page), added: [], label: '' };
+}
+
+// 台面空白处拖动：平移台面
+async function panStage(page, from, to) {
+  await begin(page, 'panStage');
+  await dragPath(page, from, to);
+  return { visible: true, text: await bannerText(page), added: [], label: '' };
+}
+
+// 双击卡片标题（工作区：进入专注模式）
+async function dblClickHd(page, id) {
+  await begin(page, 'dblClickHd(' + id + ')');
+  const hd = page.locator('.card[data-id="' + id + '"] .hd').first();
+  await hd.scrollIntoViewIfNeeded();
+  const b = await hd.boundingBox();
+  if (!b) throw new Error('标题栏不在屏幕上：' + id);
+  await page.mouse.dblclick(b.x + b.width / 2, b.y + b.height / 2);
+  await pause(page, 250);
+  return { visible: true, text: await bannerText(page), added: [], label: '' };
+}
+
+// 点对话框里的按钮（删除容器时的“连里面一起删”“只删容器”“算了”）
+const clickDialog = (page, sel) => clickSel(page, sel);
+
 module.exports = {
   attachErrorCollector, assertInvariants,
   dragTileTo, dragCardTo, clickTile, clickCard, clickSel, clickAt, dblClickAt, undo, redo, press,
+  wheelAt, panStage, dblClickHd, clickDialog, dragPath,
   cardIds, bannerText,
 };

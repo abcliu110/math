@@ -50,7 +50,12 @@
         const r = A({ t: 'add', type: p.type, x: p.x, y: p.y });
         ctx.id = r.id;
         if (isPointType(p.type)) A({ t: 'set', id: r.id, k: 'mark', v: nextPointName(UI.S.scene) });
-        if (p.ev) putTarget(A, r.id, UI.Stage.dropTarget(p.ev, r.id));
+        if (!p.ev) return;
+        const tgt = UI.Stage.dropTarget(p.ev, r.id);
+        if (tgt) return putTarget(A, r.id, tgt);
+        // 落在台面上：不能盖住容器（工作区、十格阵）。和点击添加一样，找一个不重叠的空位（同一个事务，一个撤销项）
+        const sp = UI.Stage.freeSpot(p.x, p.y, p.type, r.id);
+        if (sp.x !== p.x || sp.y !== p.y) A({ t: 'move', id: r.id, x: sp.x, y: sp.y });
       },
       after(r, p, ctx) { if ((p.select || p.ev) && ctx.id) { UI.S.sel = ctx.id; UI.S.selLink = null; } },
     },
