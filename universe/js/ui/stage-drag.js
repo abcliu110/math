@@ -87,6 +87,9 @@
       if (SG.dbl('rz:' + rz.dataset.rz)) { S.sel = rz.dataset.rz; UI.Intent.run('resize', { id: rz.dataset.rz, w: null, h: null }); return; }
       startResize(rz.dataset.rz, ev); return;
     }
+    // 双击线段的长度（§10.5.9 第 2 条）：标签不是图形，点它不改选中；第二下开输入框，直接输入长度
+    const dm = t.closest('[data-dim]');
+    if (dm && wbd) { ev.preventDefault(); ev.stopPropagation(); if (SG.dbl('dim:' + dm.dataset.dim)) SG.startDim(dm.dataset.dim); return; }
     // 双击点的标签：改名（2.6）。第一下照常（标签不是选中的对象），第二下开输入框
     const rn = t.closest('[data-ren]');
     if (rn && wbd && SG.dbl('ren:' + rn.dataset.ren)) { ev.preventDefault(); ev.stopPropagation(); SG.startRename(rn.dataset.ren); return; }

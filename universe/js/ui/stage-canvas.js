@@ -33,7 +33,7 @@
     let svg = '';
     for (const T of labs.slice().sort((a, b) => a.prio - b.prio)) {
       const [x, y, b] = pick(T); placed.push(b);
-      svg += '<text' + (T.ren ? ' data-ren="' + T.ren + '"' : '') + (T.ro ? ' data-ro="' + T.ro + '" pointer-events="none"' : '') + ' x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" font-size="12" font-weight="700" fill="' + T.c + '" style="' + (T.ren ? 'cursor:text;' : '') + 'stroke:var(--halo)" stroke-width="3" paint-order="stroke" stroke-linejoin="round" font-family="var(--font)">' + K.esc(T.text) + '</text>';
+      svg += '<text' + (T.ren ? ' data-ren="' + T.ren + '"' : '') + (T.dim ? ' data-dim="' + T.dim + '"' : '') + (T.ro ? ' data-ro="' + T.ro + '"' + (T.dim ? '' : ' pointer-events="none"') : '') + ' x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" font-size="12" font-weight="700" fill="' + T.c + '" style="' + (T.ren || T.dim ? 'cursor:text;' : '') + 'stroke:var(--halo)" stroke-width="3" paint-order="stroke" stroke-linejoin="round" font-family="var(--font)">' + K.esc(T.text) + '</text>';
     }
     return svg;
   }
@@ -125,6 +125,7 @@
         const fit = isPc && !!fitOn && fitOn.ids.includes(ent.id);
         g += '<path d="' + d + '" fill="' + K.texFill(f, c) + '" stroke="' + (fit ? '#16a34a' : c) + '" stroke-width="' + sw + '"' + da(dashOf(f, i)) + (fit && fitOn.flash ? ' class="wsflash"' : '') + pk(2) + dg + sty + '/>';
         if (wantHit) hit += '<path d="' + d + '" fill="none" stroke="transparent" stroke-width="12"' + pk(1) + ' style="cursor:pointer"/>';
+        g += SG.rightMarks(v, X, Y, sp);   // 锁住的直角（§10.5.9 第 1 条）
         lx = sp.reduce((a, p) => a + X(p.x), 0) / sp.length; ly = sp.reduce((a, p) => a + Y(p.y), 0) / sp.length;
         const tw = SG.TXT_W(v.label); cands = [[lx - tw / 2, ly + 4], [lx - tw / 2, ly + 18], [lx - tw / 2, ly - 10], [lx - tw / 2, ly + 32]]; prio = 2;
       } else if (f.type === 'segment') {
@@ -133,6 +134,8 @@
         if (wantHit) hit += '<line x1="' + X(Q.num(a.x)) + '" y1="' + Y(Q.num(a.y)) + '" x2="' + X(Q.num(b.x)) + '" y2="' + Y(Q.num(b.y)) + '" stroke="transparent" stroke-width="14"' + pk(1) + ' style="cursor:pointer"/>';
         lx = (X(Q.num(a.x)) + X(Q.num(b.x))) / 2; ly = (Y(Q.num(a.y)) + Y(Q.num(b.y))) / 2;
         const tw = SG.TXT_W(v.label); cands = [[lx + 6, ly - 6], [lx + 6, ly + 14], [lx - tw - 6, ly - 6], [lx - tw - 6, ly + 14]];
+        const lk = ent ? SG.segLenLock(ent.id) : null;
+        if (lk && !on) { const lt = '锁 长 ' + lk.len, lw = SG.TXT_W(lt); labs.push({ text: lt, c, cands: [[lx - lw / 2, ly + 30], [lx - lw / 2, ly - 22], [lx + 8, ly + 30]], prio: 3, dim: ent.id }); }   // 锁住的长：写着锁和长度，可以双击改数（§10.5.9 第 1、2 条）
       } else if (f.type === 'circle') {
         const cx = X(Q.num(f.pts[0].x)), cy = Y(Q.num(f.pts[0].y));
         g += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (Math.sqrt(Q.num(f.r2)) * s) + '" fill="none" stroke="' + c + '" stroke-width="' + sw + '"' + pk(2) + sty + '/>';

@@ -6,6 +6,8 @@
  *  - U.Workbench.step(state, toolId, ref, args) → 新 state；不能用或破坏不变量时 lastError 说明原因，steps 不变。
  *  - U.Workbench.undo(state, k)：保留前 k 步，从 start 重放得到 current。
  *  - U.Workbench.replay(start, steps)：重放一串步骤（undo 用它；测试用它检查结果一致）。
+ *  - U.Workbench.bake(state)：定型（§10.5.6 第 5 步）：上次定型后的步骤折成一步（tool/rule 为 'bake'，值不变）。
+ *    折叠（folds）内部不能拆开撤销：undo 撤到折叠中间会被拒绝；撤到定型那一步之前就是撤销定型。pending 是还没定型的步数。
  *  - U.Workbench.stepLog(state) → ['第 1 步：移项：… → …', …]
  *  - U.Workbench.solution(state) → { solved: true, x } 当 current 是 x = 数；否则 { solved: false }
  *  - 引用 ref：形式用路径（下标数组）或标签（字符串，见 U.Form.find）；方程上的形式规则用 ['lhs'|'rhs', …路径]
@@ -39,6 +41,21 @@
   const SIDE_RULES = ['alg.collect', 'alg.expand', 'arith.reduce-fraction', 'alg.factor'];
   // 不需要引用位置的规则（代入的字母和数放在 args 里；算出数两边都看）
   const NO_REF_RULES = ['alg.divide', 'alg.multiply', 'alg.substitute', 'alg.compute'];
+
+  // 定型（§10.5.6 第 5 步）：一步，值不变，把它之前（上次定型之后）的步骤折成一步、不能再拆开改。
+  // 步骤里它记作 tool/rule 为 'bake'、args.n 为折叠的步数；它不是规则，重放时原样通过。
+  const BAKE = 'bake';
+  const isBake = (s) => !!s && s.tool === BAKE;
+  // 每次定型给一个折叠：{ from, bake }，折叠的是下标 [from, bake) 的步骤，bake 是定型那一步的下标
+  function foldsOf(steps) {
+    const out = []; let a = 0;
+    steps.forEach((s, i) => { if (isBake(s)) { out.push({ from: a, bake: i }); a = i + 1; } });
+    return out;
+  }
+  // 撤销到前 k 步：k 落在某个折叠的中间（from < k < bake）时拆开了它，不行
+  const splitsFold = (steps, k) => foldsOf(steps).some((f) => f.from < k && k < f.bake);
+  // 上次定型之后还没有折叠的步数
+  const pendingOf = (steps) => { let a = 0; steps.forEach((s, i) => { if (isBake(s)) a = i + 1; }); return steps.length - a; };
 
   const isEqnData = (d) => !!d && !d.op && 'lhs' in d && 'rhs' in d;
   // 多项式两边换成形式（规则只认形式）
@@ -99,6 +116,11 @@
     let cur = start;
     const out = [];
     for (const s of steps) {
+      if (isBake(s)) {
+        const n = (s.args && s.args.n) || 0;
+        out.push({ tool: BAKE, rule: BAKE, ref: null, args: { n }, before: cur, after: cur, why: '前 ' + n + ' 步固定成一步，不能再改' });
+        continue;
+      }
       const r = applyStep(cur, s.rule, s.ref, s.args);
       if (!r.ok || !r.kept) throw new Error('重放第 ' + (out.length + 1) + ' 步失败：' + (r.why || BROKEN));
       out.push({ tool: s.tool, rule: s.rule, ref: s.ref, args: s.args, before: cur, after: r.value, why: r.why });
@@ -144,13 +166,27 @@
 
     undo(state, k) {
       const n = Math.max(0, Math.min(k, state.steps.length));
+      if (splitsFold(state.steps, n)) return fail(state, '定型过的步骤不能拆开撤销：要撤销请撤销到定型那一步（撤销定型）之前');
       return replay(state.start, state.steps.slice(0, n), state.formula);
     },
+
+    // 定型：把上次定型之后的步骤折成一步（值不变）。没有新步骤时说明原因，步骤不变。
+    bake(state) {
+      const n = pendingOf(state.steps);
+      if (n <= 0) return fail(state, '没有可以定型的步骤：上次定型后还没有新的步骤');
+      const step = { tool: BAKE, rule: BAKE, ref: null, args: { n }, before: state.current, after: state.current, why: '前 ' + n + ' 步固定成一步，不能再改', kept: true };
+      return flagged({ start: state.start, steps: state.steps.concat([step]), current: state.current, lastError: null }, state.formula);
+    },
+
+    // 折叠（每次定型一个）和还没定型的步数：界面据此折叠步骤列表、决定要不要显示「定型」
+    folds: (state) => foldsOf(state.steps),
+    pending: (state) => pendingOf(state.steps),
 
     replay,
 
     stepLog(state) {
       return state.steps.map((s, i) => {
+        if (isBake(s)) return '第 ' + (i + 1) + ' 步：定型：' + showVal(s.before) + '（前 ' + ((s.args && s.args.n) || 0) + ' 步固定成一步）';
         const t = tableOf(s.before, true).find((x) => x.id === s.tool);
         const label = t ? t.label : ((U.RULES[s.rule] || {}).label || s.tool);
         return '第 ' + (i + 1) + ' 步：' + label + '：' + showVal(s.before) + ' → ' + showVal(s.after);

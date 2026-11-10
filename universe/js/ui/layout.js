@@ -57,6 +57,7 @@
     MARK: { HDL: 7, RULER_W: 4, RULER_W_ON: 6, TICK_LEN: 6, TICK_PX: 6, TICK_MAX: 60, SNAP_PX: 10, ARC_R: 40, DEF_FRAC: 0.2, NOTE_H: 70 },
     // 块的旋转（V9，2.10）：拖动时总角度吸附的步长（度）；按住 Shift 时的粗步长
     ROT: { step: 1, coarse: 15 },
+    RIGHT_MARK: 9,                 // 直角锁的小方框边长（像素，§10.5.9 第 1 条）
     LAYER_FLAT: 6,                 // 工作区的图层不超过这么多个，就平铺；超过就按类别分组、默认收起（2.4）
     // 工作区的抽屉（图层、步骤、范围）：展开时是画布右边的一栏（宽 px 屏幕像素，离画布 gap）；窗口宽到 wideBP 才默认展开，窄窗口默认收起，让画布占满（V2）
     DRAWER: { px: 240, gap: 12, wideBP: 1200 },

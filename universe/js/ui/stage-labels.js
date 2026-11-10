@@ -64,5 +64,32 @@
     inp.addEventListener('blur', () => end(true));
     document.body.appendChild(inp); inp.focus(); inp.select();
   }
-  Object.assign(SG, { TXT_W, vName, joinV, pretty, isTarget, FIG_NAME, figLabel, pickLabel, stepLabel, startRename });
+  // 尺寸驱动（§10.5.9 第 2 条）：双击线段的长度，弹出输入框；输入整数回车，线段的端点挪到那个长度（按锁住的约束，离原来最近的）。
+  // 没有锁的线段，改长度会先锁住它（一步，撤销一次回去）。输入不是整数就说明原因，不改。
+  function startDim(segId) {
+    const S = UI.S;
+    if (!S.scene.entities[segId] || document.querySelector('input.wsx-dim')) return;
+    const lab = [...document.querySelectorAll('svg.wsbody text[data-dim]')].find((t) => t.dataset.dim === segId);
+    if (!lab) return;
+    const r = lab.getBoundingClientRect();
+    const inp = document.createElement('input');
+    inp.className = 'wsx-dim'; inp.inputMode = 'numeric'; inp.maxLength = 2; inp.placeholder = '长度'; inp.setAttribute('aria-label', '线段的长度（整数）');
+    inp.style.left = r.left + 'px'; inp.style.top = r.top + 'px';
+    let done = false;
+    const end = (commit) => {
+      if (done) return; done = true;
+      const v = inp.value.trim();
+      inp.remove();
+      if (commit && v) {
+        const n = Number(v);
+        const res = Number.isInteger(n) ? UI.Intent.run('dim', { seg: segId, len: n }) : { ok: false, why: '长度要填整数（比如 3、4、5）' };
+        if (res && res.ok === false) SG.setMsg(res.why, false);
+      }
+      SG.render();
+    };
+    inp.addEventListener('keydown', (ev) => { ev.stopPropagation(); if (ev.key === 'Enter') end(true); else if (ev.key === 'Escape') end(false); });
+    inp.addEventListener('blur', () => end(true));
+    document.body.appendChild(inp); inp.focus();
+  }
+  Object.assign(SG, { TXT_W, vName, joinV, pretty, isTarget, FIG_NAME, figLabel, pickLabel, stepLabel, startRename, startDim });
 })(window);
