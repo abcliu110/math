@@ -65,6 +65,8 @@
         hidden: true,
         essence: ['E2', 'E5'],
         label: '中点', prefix: '中点', group: '图形', grades: [5, 9], lint: ex('只由两个点决定，没有可调的属性'),
+        // 吸附声明（V4）：画线、放点时，靠近一条边的中点就吸附到它；吸附的结果是建这个器材（接 wire 里的两个点），用它的 out 口
+        snap: { kind: 'mid', label: '中点', mark: '△', of: 'edge', wire: ['a', 'b'], out: 'p', at: (p, q) => Geo.midpoint(p, q) },
         props: {},
         inputs: { a: pointIn, b: pointIn },
         outputs: { p: { dim: null, kind: 'fig', label: '中点' } },

@@ -69,8 +69,10 @@
   // ---- 吸附 ----
   // 把世界点 wp（几何坐标）吸到附近的目标上：先吸整数顶点（vals 里图形的点），再吸边上的格点，最后吸整数格点。
   // vals：工作区里可见的值，每个有 fig = { type, pts: [{x, y}] }（点是有理数）；unit：每单位屏幕像素；
-  // opts.px：吸附半径（屏幕像素）；opts.ref(v, i)：顶点 i 属于哪个自由点（没有就返回 null）。
-  // 返回 { x, y, ref }：x、y 是精确有理数（整数或有理数的 num 值），ref 是被吸到的自由点 id 或 null。
+  // opts.px：吸附半径（屏幕像素）；opts.ref(v, i)：顶点 i 属于哪个自由点（没有就返回 null）；
+  // opts.cons：构造点候选（中点等），每个 { x, y（数）, exact（精确有理数点）, label, con }；比顶点后、比边上的格点先。
+  // 返回 { x, y, ref }：x、y 是精确有理数（整数或有理数的 num 值），ref 是被吸到的自由点 id 或 null；
+  // 吸到构造点时还有 con（建哪个器材、接哪两个点）和 exact（精确坐标）。
   function snap(vals, wp, unit, opts) {
     const Q = G.U.Q, R = opts.px / unit, near = (x, y) => Math.hypot(x - wp.x, y - wp.y) <= R;
     let best = null, bd = Infinity;
@@ -83,6 +85,9 @@
       });
     }
     if (best) return best;
+    let cb = null, cd = Infinity;
+    for (const c of opts.cons || []) { const d = Math.hypot(c.x - wp.x, c.y - wp.y); if (d <= R && d < cd) { cd = d; cb = c; } }
+    if (cb) return { x: cb.x, y: cb.y, ref: null, con: cb.con, exact: cb.exact };
     for (const v of vals) {
       const f = v.fig; if (!f || !f.pts || (f.type !== 'polygon' && f.type !== 'segment')) continue;
       const n = f.pts.length, m = f.type === 'polygon' ? n : 1;

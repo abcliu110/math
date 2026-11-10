@@ -65,6 +65,7 @@ async function checkDist() {
   if (!runScript('tests/ui-deps.js', 'tests/ui-deps.js', pwEnv)) bail();       // V5：删除与依赖（删除被依赖的点要确认、取消不变、一起删除、撤销一次恢复；清空台面先确认）
   if (!runScript('tests/ui-workbench.js', 'tests/ui-workbench.js', pwEnv)) bail();   // D2：题目声明工作台（几何题只列几何工作台的器材；旧题器材架不变；workbench 的 lint）
   if (!runScript('tests/ui-select.js', 'tests/ui-select.js', pwEnv)) bail();         // V3：工作区选择（同一位置双击依次选中重叠的图形，单击选最上面的）
+  if (!runScript('tests/ui-snap.js', 'tests/ui-snap.js', pwEnv)) bail();             // V4：吸附到构造点（画线吸附到中点，背后建 gmid；拖动端点后跟着动）
   if (!runScript('tools/lint-ui.js', 'tools/lint-ui.js')) bail();              // 界面代码的意图层、状态分层、布局数字、坐标换算、器材判断（U3–U7）
   if (!runScript('tools/contrast.js', 'tools/contrast.js', pwEnv)) bail();          // V1：界面文字对比度 >= 4.5:1（light/dark 两种主题，playwright 实测）
   if (fs.existsSync(path.join(root, 'tests', 'ui-probes.js'))) {

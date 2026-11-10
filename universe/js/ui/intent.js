@@ -16,6 +16,19 @@
     if (e && e.parent) return A({ t: 'take', id });
   }
 
+  // 吸附到构造点（V4）：在工作区里建它的构造器材（con.type），两个输入口（con.wire）接上 con.ids 的自由点，放进工作区。
+  // 已经有同样接法的器材（同一工作区）就直接用它，不重复建。整串在调用它的那一个手势里，是一个撤销项。
+  function buildConstruct(A, ws, con) {
+    const E = UI.S.scene.entities, L = UI.S.scene.links;
+    const same = Object.values(E).find((e) => e.type === con.type && e.parent === ws.id && con.wire.every((port, i) => L.some((l) => l.to === e.id && l.toPort === port && l.from === con.ids[i])));
+    const d = same ? same.id : A({ t: 'add', type: con.type, x: 0, y: 0 }).id;
+    if (!same) {
+      con.wire.forEach((port, i) => A({ t: 'link', from: con.ids[i], fromPort: 'p', to: d, toPort: port }));
+      A({ t: 'put', id: d, parent: ws.id, slot: 'items' });
+    }
+    return { id: d, port: con.out };
+  }
+
   const KINDS = {
     // 点击器材架瓦片，或从器材架拖出来：新建一个器材；拖到容器上就直接放进去（一步完成）
     add: {
@@ -87,15 +100,17 @@
       label: 'draw',
       fn(A, p) {
         const S = UI.S, ws = S.scene.entities[p.ws];
-        const ids = [p.a, p.b].map((q) => {
-          if (q.ref) return q.ref;
+        // 端点：自由点（顶点）直接用；构造点（吸附到的中点等）建它的器材，用它的输出；都不是就新建一个自由点
+        const ends = [p.a, p.b].map((q) => {
+          if (q.ref) return { id: q.ref, port: 'p' };
+          if (q.con) return buildConstruct(A, ws, q.con);
           const n = A({ t: 'add', type: 'gpt', x: 0, y: 0, props: { x: q.x, y: q.y } });
           A({ t: 'put', id: n.id, parent: ws.id, slot: 'items' });
-          return n.id;
+          return { id: n.id, port: 'p' };
         });
         const sg = A({ t: 'add', type: 'gseg', x: 0, y: 0 }).id;
-        A({ t: 'link', from: ids[0], fromPort: 'p', to: sg, toPort: 'a' });
-        A({ t: 'link', from: ids[1], fromPort: 'p', to: sg, toPort: 'b' });
+        A({ t: 'link', from: ends[0].id, fromPort: ends[0].port, to: sg, toPort: 'a' });
+        A({ t: 'link', from: ends[1].id, fromPort: ends[1].port, to: sg, toPort: 'b' });
         A({ t: 'put', id: sg, parent: ws.id, slot: 'items' });
         if (p.cut) {
           const cut = p.cut, gc = A({ t: 'add', type: 'gcut', x: 0, y: 0 }).id;

@@ -261,6 +261,12 @@
     if (D.pend) g += '<circle cx="' + fr.X(D.pend.x).toFixed(1) + '" cy="' + fr.Y(D.pend.y).toFixed(1) + '" r="6" fill="none" stroke="#fff" stroke-width="2"/>';
     if (D.pend && D.cur) g += '<line x1="' + fr.X(D.pend.x).toFixed(1) + '" y1="' + fr.Y(D.pend.y).toFixed(1) + '" x2="' + fr.X(D.cur.x).toFixed(1) + '" y2="' + fr.Y(D.cur.y).toFixed(1) + '" stroke="#fff" stroke-width="2" stroke-dasharray="6 4"/>';
     if (D.cur) g += '<circle cx="' + fr.X(D.cur.x).toFixed(1) + '" cy="' + fr.Y(D.cur.y).toFixed(1) + '" r="5" fill="#fff" fill-opacity=".35" stroke="#fff" stroke-width="2"/>';
+    // 吸附到构造点（中点等）：外圈加一个标记，旁边写出是哪一种、哪两个点的
+    if (D.cur && D.cur.con) {
+      const x = fr.X(D.cur.x), y = fr.Y(D.cur.y);
+      g += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="9" fill="none" stroke="#fff" stroke-width="2"/>';
+      g += '<text x="' + (x + 12).toFixed(1) + '" y="' + (y - 12).toFixed(1) + '" font-size="13" font-weight="700" fill="#fff" stroke="#0b1020" stroke-width="3" paint-order="stroke">' + K.esc(D.cur.con.label) + '</text>';
+    }
     return g;
   }
   // 工作区底下的面板：工具行、选中的对象、消息、步骤历史、图层
@@ -981,9 +987,35 @@
     if (tool === 'seg') S.wsSel = [];
     render();
   }
-  // 吸附：算法在 UI.Space.snap（顶点、边上的格点、格点）；这里只告诉它每个顶点属于哪个自由点
+  // 吸附：算法在 UI.Space.snap（顶点、构造点、边上的格点、格点）；这里告诉它每个顶点属于哪个自由点，以及有哪些构造点
   function snapTo(fr, wp, sc) {
-    return UI.Space.snap(fr.vals, wp, sc.unit, { px: SNAP_PX, ref: (v, i) => { const fi = figInfo(v); return fi && fi.kind === 'pts' && fi.verts[i] ? fi.verts[i] : null; } });
+    return UI.Space.snap(fr.vals, wp, sc.unit, {
+      px: SNAP_PX,
+      ref: (v, i) => { const fi = figInfo(v); return fi && fi.kind === 'pts' && fi.verts[i] ? fi.verts[i] : null; },
+      cons: constructsOf(fr.vals, wsNames()),
+    });
+  }
+  // 构造点候选（V4）：器材声明里有 snap 的（geo 包里的中点），对每条边算一个候选点。
+  // 候选的种类从声明读出来，不认具体器材名；边的两个端点必须是自由点（figInfo 的 verts），才能建构造器材接上去。
+  // con 记下要建的器材（type）、接哪两个点（ids，按 wire 的顺序）、从哪个口取结果（out）。
+  function constructsOf(vals, names) {
+    const decl = Object.keys(U.types).filter((k) => U.types[k].snap);
+    const out = [], seen = new Set();
+    if (!decl.length) return out;
+    for (const v of vals) {
+      const fi = figInfo(v); if (!fi || fi.kind !== 'pts') continue;
+      for (const [i, j] of fi.edges) for (const type of decl) {
+        const sn = U.types[type].snap, ids = [fi.verts[i], fi.verts[j]];
+        if (sn.of !== 'edge') continue;
+        const key = type + ':' + ids.slice().sort().join(',');
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const at = sn.at(v.fig.pts[i], v.fig.pts[j]), nm = ids.map((g) => names[g + '.p'] || null);
+        const label = nm[0] && nm[1] ? nm[0] + nm[1] + ' 的' + sn.label : sn.label;
+        out.push({ x: Q.num(at.x), y: Q.num(at.y), exact: at, label, con: { type, wire: sn.wire, out: sn.out, ids, label, mark: sn.mark } });
+      }
+    }
+    return out;
   }
   function drawClick(wb, ev) {
     const S = UI.S, D = S.wsDraw, ws = S.scene.entities[D.ws];
@@ -1006,9 +1038,12 @@
   function finishLine(D, a, b) {
     const S = UI.S, ws = S.scene.entities[D.ws];
     if (!ws) return endDraw();
-    if (a.x === b.x && a.y === b.y) { setMsg('两个点不能重合', false); return render(); }
+    // 精确坐标：吸附到构造点时用它的有理数值（中点可能是分数），否则是整数格点
+    const ex = (s) => s.exact || { x: Q(s.x), y: Q(s.y) };
+    const ea = ex(a), eb = ex(b);
+    if (Q.eq(ea.x, eb.x) && Q.eq(ea.y, eb.y)) { setMsg('两个点不能重合', false); return render(); }
     let cut = null;
-    const seg = { type: 'segment', pts: [{ x: Q(a.x), y: Q(a.y) }, { x: Q(b.x), y: Q(b.y) }] };
+    const seg = { type: 'segment', pts: [ea, eb] };
     if (D.tool === 'cut') {
       const sel = S.wsSel || [], pr = sel.length === 1 ? resolvePick(sel[0]) : null;
       if (!pr || typeof pr === 'string' || !pr.value || pr.value.data.type !== 'polygon') { setMsg('剪需要先选一个多边形，再画一条线', false); return render(); }
