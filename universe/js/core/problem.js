@@ -85,6 +85,7 @@
       steps: { fields: ['used', 'allKept'] },
       digits: { fields: ['solved'] },                       // 数位竖式写完了（D8）
       data: { fields: ['minRows', 'plotted', 'fitted'] },   // 数据图表台：录了几组、画了图、拟合了（D8）
+      deduce: { fields: ['yes', 'no', 'solved'] },           // 排除表（2.14b）：写出结论、排除了一格、排完了
     };
     const lintNew = (c, where) => {
       const pre = where + ' ' + (c.id || '') + ' ';
@@ -102,6 +103,13 @@
           const kinds = ['reduced-fraction', 'collected', 'factored', 'place-value'];
           if (typeof body.role !== 'string' || !body.role.trim()) err(pre + 'form.role 要是角色名（非空文字）');
           if (!kinds.includes(body.is)) err(pre + 'form.is 只能是 ' + kinds.join(' / '));
+        }
+        if (key === 'deduce') {
+          for (const k of ['yes', 'no']) {
+            const x = body[k];
+            if (x !== undefined && !(x && typeof x.person === 'string' && typeof x.value === 'string' && x.person.trim() && x.value.trim())) err(pre + 'deduce.' + k + ' 要写 { person, value }（人名和值，都是非空文字）');
+          }
+          if (body.solved !== undefined && body.solved !== true) err(pre + 'deduce.solved 只能是 true');
         }
         if (key === 'steps') {
           if (typeof body.used !== 'string' || !body.used.trim()) err(pre + 'steps.used 要是规则编号（非空文字）');

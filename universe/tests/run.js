@@ -3,7 +3,7 @@
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const root = path.join(__dirname, '..');
 const fsx = require('fs'), pk = (d) => fsx.readdirSync(path.join(root, d)).filter((f) => f.endsWith('.js')).sort().map((f) => d + '/' + f);
-const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/ratio.js', 'js/core/form.js', 'js/core/predict.js', 'js/core/eqn.js', 'js/core/seq.js', 'js/core/table.js', 'js/core/figure.js', 'js/core/geo.js', 'js/core/convert.js', 'js/core/registry.js', 'js/core/rules.js', 'js/core/rules-exec.js', 'js/core/workbench.js', 'js/core/digits.js', 'js/core/databench.js', 'js/core/geo-rules.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/curriculum.js', 'js/core/coverage.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
+const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/ratio.js', 'js/core/form.js', 'js/core/predict.js', 'js/core/eqn.js', 'js/core/seq.js', 'js/core/table.js', 'js/core/figure.js', 'js/core/geo.js', 'js/core/convert.js', 'js/core/registry.js', 'js/core/rules.js', 'js/core/rules-exec.js', 'js/core/workbench.js', 'js/core/digits.js', 'js/core/databench.js', 'js/core/deduce.js', 'js/core/geo-rules.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/curriculum.js', 'js/core/coverage.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
 const ctx = vm.createContext({ console, TextEncoder, TextDecoder, btoa, atob });
 ctx.globalThis = ctx;
 for (const f of files) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f });
@@ -936,11 +936,77 @@ t('覆盖统计：有题的知识点、按年级、按本质都能算出来', ()
   const S = U.Coverage.summarize(U.problems);
   eq(S.points.length, 142); truthy(S.points.some((r) => r.problems.length > 0)); eq(S.grades.length, 9); eq(S.essences.length, 12);
 });
+console.log('排除表（2.14b 推理，next-steps.md §8.1）');
+const DP = { people: '小明,小红,小刚', groups: '颜色：红,蓝,绿；宠物：猫,狗,兔' };
+const DSOL = [[2, 1], [1, 1], [1, 2], [1, 0], [2, 2], [0, 1], [1, 3], [2, 3], [0, 3], [1, 4], [1, 5], [2, 4]];   // 参考解每一步 [人, 格]
+const dRun = (list) => { let st = U.Deduce.start(DP); const steps = []; for (const [i, j] of list) { const r = U.Deduce.apply(st, 'mark', { i, j }); if (!r.ok) throw new Error('第 ' + (steps.length + 1) + ' 步不对：' + r.why); st = r.state; steps.push(r.step); } return { st, steps }; };
+t('排除表：解析人、分组和值（中英文逗号、分号都认）', () => {
+  const M = U.Deduce.parse(DP);
+  eq(M.people, ['小明', '小红', '小刚']); eq(M.groups.map((g) => g.name), ['颜色', '宠物']); eq(M.cols.map((c) => c.name), ['红', '蓝', '绿', '猫', '狗', '兔']);
+  eq(U.Deduce.parse({ people: '甲，乙', groups: '红、蓝' }).cols.length, 2);
+});
+t('排除表：值的个数和人数对不上、人名重复、值重名，都报错', () => {
+  truthy(U.Deduce.parse({ people: '甲,乙,丙', groups: '红,蓝' }).error, '值的个数要和人数一样');
+  truthy(U.Deduce.parse({ people: '甲,甲', groups: '红,蓝' }).error, '人名不能重复');
+  truthy(U.Deduce.parse({ people: '甲,乙', groups: '红,蓝；颜色：红,绿' }).error, '值不能重名（判题按值的名字找）');
+});
+t('排除表：点一下标“不是”，再点（不能推出时）回到未定', () => {
+  const st = U.Deduce.start(DP); let r = U.Deduce.apply(st, 'mark', { i: 2, j: 1 }); truthy(r.ok, '第一次点应当成功');
+  eq(r.state.cells[2][1], 'n'); eq(r.step.args.to, 'n');
+  r = U.Deduce.apply(r.state, 'mark', { i: 2, j: 1 }); truthy(r.ok); eq(r.state.cells[2][1], 'u', '再点回到未定');
+});
+t('排除表：同一行只剩一格时，点它直接标“是”，同列的别的格子变灰', () => {
+  const { st } = dRun([[2, 1], [1, 1], [1, 2]]);   // 小刚不是蓝；小红不是蓝、不是绿
+  truthy(U.Deduce.view(st).rows[1].cells[0].only, '小红的红是唯一剩下的');
+  const r = U.Deduce.apply(st, 'mark', { i: 1, j: 0 }); truthy(r.ok, '唯一剩下的可以标是'); eq(r.state.cells[1][0], 'y');
+  const v2 = U.Deduce.view(r.state);
+  eq(v2.rows[0].cells[0].st, 'x', '同一列（红）的小明被排除（灰）'); eq(v2.rows[2].cells[0].st, 'x', '同一列（红）的小刚被排除（灰）');
+  eq(v2.conclusions, ['小红 是 红']);
+});
+t('排除表：被排除的格子不能点，给出原因；没有唯一剩下时点一下只是排除', () => {
+  const { st } = dRun([[2, 1], [1, 1], [1, 2], [1, 0]]);
+  const r = U.Deduce.apply(st, 'mark', { i: 2, j: 0 }); truthy(!r.ok && /已经被排除/.test(r.why), '被排除的格子不能点');
+  const r2 = U.Deduce.apply(U.Deduce.start(DP), 'mark', { i: 0, j: 0 }); eq(r2.state.cells[0][0], 'n', '开始时没有唯一剩下的格子，点一下只是排除');
+});
+t('排除表：参考解 12 步全部合法，排完后每人每组都是一个“是”（solved）', () => {
+  const { st, steps } = dRun(DSOL);
+  eq(steps.length, 12); truthy(U.Deduce.solved(st), '应当排完');
+  eq(U.Deduce.view(st).now, '每人每一组都已经排定', '界面的进度');
+});
+t('排除表：步骤重放和逐步走的结果一致；撤销就是截短步骤后重放', () => {
+  const { st, steps } = dRun(DSOL);
+  eq(U.Deduce.replay(U.Deduce.start(DP), steps).cells, st.cells);
+  eq(U.Deduce.replay(U.Deduce.start(DP), steps.slice(0, 4)).cells[1][0], 'y', '撤销到第 4 步，小红的红还是是');
+});
+t('排除表：判题（yes / no / solved）看台面上记的步骤；表换了，旧步骤不算', () => {
+  const { steps } = dRun(DSOL);
+  const scene = { entities: { h: { type: 'deduce', props: DP } }, links: [], clock: { t: 0, n: 0 }, workbench: { host: 'h', key: U.Deduce.keyOf(DP), steps } };
+  const J = (c, sc) => U.Judge.compile(c)(U.Judge.makeW(sc || scene, {}, {}));
+  truthy(J({ deduce: { yes: { person: '小红', value: '红' } } }), '小红 是 红');
+  truthy(!J({ deduce: { yes: { person: '小明', value: '红' } } }), '小明 不是 红');
+  truthy(J({ deduce: { no: { person: '小刚', value: '蓝' } } }), '小刚 不是 蓝（已排除）');
+  truthy(J({ deduce: { solved: true } }), '排完了');
+  const scene2 = Object.assign({}, scene, { workbench: Object.assign({}, scene.workbench, { key: 'deduce|别的表' }) });
+  truthy(!J({ deduce: { solved: true } }, scene2), '表换了，旧步骤不算');
+  truthy(!J({ deduce: { solved: true } }, { entities: {}, links: [], clock: { t: 0, n: 0 } }), '没有排除表，不算');
+});
+t('排除表：步骤的文字写着人、值和做法', () => {
+  const { steps } = dRun([[2, 1], [2, 1]]);
+  eq(U.Deduce.stepText(U.Deduce.parse(DP), steps[0]), '小刚 蓝：不是');
+  eq(U.Deduce.stepText(U.Deduce.parse(DP), steps[1]), '小刚 蓝：取消排除');
+});
+t('排除表：是一种工作台（deduce），器材在排除表里，题目 deduce-who 有知识点 2.14b 且 lint 通过', () => {
+  truthy(U.WORKBENCHES.includes('deduce'), 'WORKBENCHES 里要有 deduce');
+  eq(U.types.deduce.wbUI, 'deduce'); truthy(U.WB_UIS.includes('deduce'));
+  eq(U.types.deduce.workbenches, ['deduce']);
+  const p = U.problems.find((x) => x.id === 'deduce-who');
+  truthy(p, '有题 deduce-who'); eq(p.workbench, 'deduce'); truthy(p.points.includes('2.14b'));
+  eq(U.problemLint(p).errors, [], '题目 lint 没有错误');
+});
 // 遗留状态（next-steps.md §8）：孤立题（没有知识点的题）和没有题的知识点，只允许下面列出的例外。
 // 新增孤立题、或例外被接上了却没从这里删掉，都会失败。例外的理由写在 docs/next-steps.md §8。
 const ORPHAN_OK = { 'seq-arith-20': '等差数列求和是高中内容，义务教育课标（2022）没有要求，知识点表里没有对应的点' };
 const NO_PROBLEM_OK = {
-  '2.14b': '推理（排除法、谁是谁）：现有器材没有可以逐格排除的表格，需要新器材，见 next-steps.md §8',
   '6.14': '综合与实践 / 整理和复习：不是单一知识点，留到综合题批次',
 };
 t('遗留：孤立题（points 为空，不在任何知识点下）只剩允许的例外', () => {
@@ -948,7 +1014,7 @@ t('遗留：孤立题（points 为空，不在任何知识点下）只剩允许�
   eq(S.noPoint.slice().sort(), Object.keys(ORPHAN_OK).sort(), '孤立题');
   for (const id of Object.keys(ORPHAN_OK)) truthy(U.problems.some((p) => p.id === id), '例外里的题不存在：' + id);
 });
-t('遗留：没有题的知识点只剩允许的例外（2.14b 推理、6.14 综合）', () => {
+t('遗留：没有题的知识点只剩允许的例外（6.14 综合）', () => {
   const S = U.Coverage.summarize(U.problems);
   eq(S.noProblemPoints.slice().sort(), Object.keys(NO_PROBLEM_OK).sort(), '没有题的知识点');
 });
@@ -1302,6 +1368,12 @@ for (const p of U.problems) {
         const r = W.act(s, { t: 'wb', host, key, steps }); if (!r.ok) throw new Error(r.why); chk();
       },
       wbRaw(host, steps) { const r = W.act(s, { t: 'wb', host, key: U.ArithBench.keyOf(s.entities[host].props), steps }); if (!r.ok) throw new Error(r.why); chk(); },
+      // 排除表（2.14b）：list 是 [[人, 格]…]，每一步用内核检查（不对就报错），全部通过后写进台面
+      deduce(host, list) {
+        const props = s.entities[host].props; let st = U.Deduce.start(props); const steps = [];
+        for (const [i, j] of list) { const r = U.Deduce.apply(st, 'mark', { i, j }); if (!r.ok) throw new Error('参考解第 ' + (steps.length + 1) + ' 步不对：' + r.why); st = r.state; steps.push(r.step); }
+        const r = W.act(s, { t: 'wb', host, key: U.Deduce.keyOf(props), steps }); if (!r.ok) throw new Error(r.why); chk();
+      },
       run(n) { for (let i = 0; i < n; i++) { J2.check(p, run, s, W.tick(s)); } },
     };
     fn(h); chk();

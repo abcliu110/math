@@ -493,3 +493,18 @@ svg.wsbody text:not([data-ren]) { pointer-events: none; }
 .db-in { width: 0; flex: 1 1 0; min-width: 0; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel2); color: var(--txt); font: inherit; }
 .db-plot { display: block; width: 100%; height: auto; border-radius: 8px; background: var(--panel2); margin: 6px 0; }
 .db-eq { font-weight: 700; color: var(--good); margin: 4px 0; }
+/* 2.14b 排除表（js/ui/wb-kit.js 的 deduceHtml）：未定 / 不是（灰）/ 是（绿）/ 已排除（灰）。选择器带 .dd 前缀，压过 .wb button */
+.dd { font-size: 13px; }
+.dd-now, .dd-hint { font-size: 12px; margin: 4px 0; color: var(--txt2); }
+.dd-now { font-size: 13px; font-weight: 700; color: var(--txt); }
+.dd-tab { border-collapse: separate; border-spacing: 3px; margin: 4px 0; }
+.dd-tab th { font-size: 12px; font-weight: 700; color: var(--txt2); padding: 2px 3px; }
+.dd-tab .dd-r-group th { font-size: 11px; font-weight: 400; color: var(--txt3); }
+.dd-tab .dd-person { text-align: right; color: var(--txt); white-space: nowrap; }
+.dd .dd-cell { font: inherit; font-size: 12px; font-weight: 700; min-width: 40px; height: 32px; padding: 0 3px; border-radius: 6px; border: 1px solid var(--txt3); background: var(--panel2); color: var(--txt); cursor: pointer; }
+.dd .dd-cell.dd-y { background: var(--ok-bg); color: var(--ok-ink); border-color: var(--good); }
+.dd .dd-cell.dd-n, .dd .dd-cell.dd-x { background: var(--off-bg); color: var(--off-ink); border-color: var(--off-line); }
+.dd .dd-cell.dd-x { color: var(--off-ink2); }
+.dd .dd-cell.dd-only { outline: 2px dashed var(--blue-ink); outline-offset: 1px; }
+.dd-msg { min-height: 16px; font-size: 12px; margin: 4px 0; color: var(--txt2); }
+.dd-concl { font-weight: 700; color: var(--good); margin: 4px 0; }

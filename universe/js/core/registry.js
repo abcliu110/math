@@ -122,10 +122,11 @@
   // 工作台（D2，docs/direction.md 5.2）：题目的 workbench 决定打开时进入哪个工作台；器材用 workbenches 声明自己属于哪些工作台。
   //   'graph' 是关系画布（默认）：器材架列出全部器材，和以前一样。其他工作台的器材架只列出 workbenches 里写了它的器材。
   // 'place-value'：数位竖式（D8，器材 colbench）；'data'：数据图表台（D8，器材 databench）
-  U.WORKBENCHES = ['graph', 'geometry', 'arith', 'place-value', 'data'];
+  // 'deduce'：排除表（2.14b 推理，器材 deduce，js/ui/wb-kit.js 的 deduceHtml）
+  U.WORKBENCHES = ['graph', 'geometry', 'arith', 'place-value', 'data', 'deduce'];
   // 器材自己的工作台界面（inspector 为 'workbench' 时的 wbUI）：界面按这个名字找画法，不按器材名字（js/ui/wb-kit.js）
   // 'arith' 是竖式工作台（H4，js/ui/panels.js 的 arHtml）
-  U.WB_UIS = ['digits', 'data', 'arith'];
+  U.WB_UIS = ['digits', 'data', 'arith', 'deduce'];
   U.onWorkbenchShelf = (def, wb) => wb === 'graph' || !!(def && Array.isArray(def.workbenches) && def.workbenches.includes(wb));
 
   U.lintType = function (def) {
