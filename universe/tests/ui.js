@@ -55,6 +55,7 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
 
   console.log('时钟与记忆器');
   await p.click('#clear'); await p.waitForTimeout(50);
+  await p.click('#dlg-confirm'); await p.waitForTimeout(50);   // V5：清空台面要先确认（这里是准备场景，确认清空）
   const ids = await p.evaluate(() => { const A = UI.App, S = UI.S; const m = A.act({ t: 'add', type: 'memory', x: 300, y: 200 }).id, o = A.act({ t: 'add', type: 'op', x: 620, y: 200 }).id, n = A.act({ t: 'add', type: 'num', x: 300, y: 380 }).id; A.act({ t: 'link', from: m, to: o, toPort: 'a' }); A.act({ t: 'link', from: n, to: o, toPort: 'b' }); A.act({ t: 'link', from: o, to: m, toPort: 'in' }); return { m, o, n }; });
   await p.click('#rew'); await p.click('[data-rate="20"]'); await p.click('#go'); await p.waitForTimeout(1500); await p.click('#go');
   const mv = await p.evaluate((id) => U.Q.num(UI.S.D[id].out.v.data), ids.m);

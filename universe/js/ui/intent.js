@@ -47,7 +47,16 @@
       label: 'del',
       pre(p) {
         if (p.link) { UI.S.selLink = null; return null; }
-        if (p.step || p.keep !== undefined) return null;
+        if (p.step) return null;
+        // V5：别的器材依赖它（连线从它出发）→ 先列出受影响的器材，用户确认后才删（删除与依赖一起删）
+        if (!p.confirmed) {
+          const deps = W.dependentsOf(UI.S.scene, p.id);
+          if (deps.length) {
+            UI.App.askDeps(p.id, deps, () => run('delete', Object.assign({}, p, { confirmed: true })));
+            return { ok: true, pending: true };
+          }
+        }
+        if (p.keep !== undefined) return null;
         const kids = W.childrenOf(UI.S.scene, p.id);
         if (!kids.length) return null;
         UI.App.askDelete(p.id, kids.length);   // 1.10：里面有东西，先问连里面一起删还是倒到台面上
@@ -62,6 +71,8 @@
           ctx.id = p.step; return;
         }
         ctx.id = p.id;
+        // V5：用户已确认“删除并同时删除依赖”：先删依赖它的器材（直接和间接），再删它自己；整串是一个撤销项
+        if (p.confirmed) for (const d of W.dependentsOf(UI.S.scene, p.id)) A({ t: 'del', id: d });
         A({ t: 'del', id: p.id, keep: p.keep });
       },
       after(r, p, ctx) { if (ctx.id && UI.S.sel === ctx.id) UI.S.sel = null; },
@@ -128,7 +139,17 @@
     reset: { label: 'reset', fn(A, p) { return A({ t: 'reset', id: p.id }); } },
     resetstate: { label: 'resetstate', fn(A, p) { return A({ t: 'resetstate', id: p.id }); } },
     tidy: { label: 'tidy', fn(A) { return A({ t: 'tidy' }); } },
-    clear: { label: 'clear', fn(A) { return A({ t: 'clear' }); } },
+    // 清空台面：先问（会删几个器材），确认后才清；撤销一次找回
+    clear: {
+      label: 'clear',
+      pre(p) {
+        if (p.confirmed) return null;
+        UI.App.askClear(Object.keys(UI.S.scene.entities).length, () => run('clear', { confirmed: true }));
+        return { ok: true, pending: true };
+      },
+      fn(A) { return A({ t: 'clear' }); },
+      after() { UI.S.sel = null; UI.S.selLink = null; },
+    },
   };
 
   // 执行一个手势：只调用一次 UI.App.tx。p.before 是拖动开始前的台面（拖动预览不进撤销），p.label 可改事件名

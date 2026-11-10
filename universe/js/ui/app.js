@@ -168,6 +168,28 @@
     UI.Panels.dialog('<h3>删除「' + U.kit.esc(S.scene.entities[id].name) + '」</h3><p>里面有 ' + n + ' 个东西。</p>' +
       '<div class="btnrow"><button class="btn" id="dlg-delout">只删容器，东西倒到台面上</button><button class="btn pri" id="dlg-delall">连里面的一起删</button><button class="btn" id="dlg-close">算了</button></div>');
   }
+  // V5：确认框（删除有依赖的器材、清空台面）。confirm 是确认后要做的事（一个函数，里面调用 UI.Intent.run）；取消或关闭就丢掉
+  let pendingConfirm = null;
+  function askConfirm(html, label, confirm) {
+    pendingConfirm = confirm;
+    UI.Panels.dialog(html + '<div class="btnrow"><button class="btn pri" id="dlg-confirm">' + U.kit.esc(label) + '</button><button class="btn" id="dlg-close">取消</button></div>');
+  }
+  // 台面上一个器材的名字（和卡片标题一致：器材的名字；没有就用稳定名字或种类名）
+  function nameOf(id) {
+    const e = S.scene.entities[id]; if (!e) return id;
+    const n = U.Names.list(S.scene).find((x) => x.id === id);
+    return e.name || (n && n.name) || (U.types[e.type] && U.types[e.type].label) || id;
+  }
+  // 删除一个被依赖的器材：列出受影响的器材（deps 是 id 的列表），确认后执行 confirm（删除依赖一起删）
+  function askDeps(id, deps, confirm) {
+    const who = deps.map((d) => '<li>' + U.kit.esc(nameOf(d)) + '</li>').join('');
+    askConfirm('<h3>删除「' + U.kit.esc(nameOf(id)) + '」？</h3><p>有 ' + deps.length + ' 个器材用到它，删除后它们会一起被删除：</p><ul>' + who + '</ul>' +
+      '<p class="note-hint">撤销可以找回。</p>', '删除并同时删除依赖', confirm);
+  }
+  // 清空台面：说明会删几个器材，确认后清空（撤销可以找回）
+  function askClear(n, confirm) {
+    askConfirm('<h3>清空台面？</h3><p>会删除 ' + n + ' 个器材，以及它们之间的线。</p><p class="note-hint">撤销可以找回。</p>', '清空台面', confirm);
+  }
   // 删除的所有入口都走这里（UI.Intent.run('delete')）；保留这个名字是给旧调用方用的
   function removeEntity(id) { return UI.Intent.run('delete', { id }); }
   function afterMove() { saveFree(); UI.Panels.renderTop(); }
@@ -432,7 +454,8 @@
         if (id && S.scene.entities[id]) { S.sel = null; UI.Intent.run('delete', { id, keep: t.id === 'dlg-delall' ? 'all' : 'out' }); }
         return;
       }
-      if (t.id === 'dlg' || t.id === 'dlg-close') { pendingDel = null; UI.Panels.closeDialog(); }
+      if (t.id === 'dlg-confirm') { const go = pendingConfirm; pendingConfirm = null; UI.Panels.closeDialog(); if (go) go(); return; }
+      if (t.id === 'dlg' || t.id === 'dlg-close') { pendingDel = null; pendingConfirm = null; UI.Panels.closeDialog(); }
       else if (t.id === 'dlg-back') { const miss = (S.run && S.problem) ? S.problem.milestones.find((m) => S.run.ms[m.id] && !S.run.ms[m.id].done) : null; UI.Panels.closeDialog(); if (miss) say('回到这一步：' + miss.say, 'info', 5000); }
       else if (t.id === 'dlg-again') { UI.Panels.closeDialog(); openProblem(S.problem.id, S.mode); }
       else if (t.id === 'dlg-next') { UI.Panels.closeDialog(); const i = U.problems.findIndex((p) => p.id === S.problem.id); openProblem(U.problems[(i + 1) % U.problems.length].id, 'practice'); }
@@ -466,6 +489,6 @@
     setInterval(saveSession, 2000); G.addEventListener('pagehide', saveSession);
     offerResume();
   }
-  UI.App = { tx, act, actMany, build, preview, snapshot, afterMove, removeEntity, askDelete, clockAct, openProblem, openFree, setMode, say, undo, redo, stepOnce, refresh, persistView };
+  UI.App = { tx, act, actMany, build, preview, snapshot, afterMove, removeEntity, askDelete, askDeps, askClear, clockAct, openProblem, openFree, setMode, say, undo, redo, stepOnce, refresh, persistView };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })(window);

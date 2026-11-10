@@ -31,6 +31,16 @@
   function childrenOf(scene, id, slot) {
     return Object.values(scene.entities).filter((e) => e.parent === id && (slot === undefined || e.slot === slot));
   }
+  // 谁依赖 id（V5）：沿连线（from → to）往下游找，直接和间接依赖它的器材（不含 id 自己），按找到的先后排列。
+  // 删除前用它列出会受影响的器材：连线少了，依赖它的器材（如多边形的顶点）就会变
+  function dependentsOf(scene, id) {
+    const out = [], seen = { [id]: 1 }, queue = [id];
+    while (queue.length) {
+      const c = queue.shift();
+      for (const l of scene.links) if (l.from === c && !seen[l.to] && scene.entities[l.to]) { seen[l.to] = 1; out.push(l.to); queue.push(l.to); }
+    }
+    return out;
+  }
   // cand 是否在 anc 里面（含 cand === anc）；沿 parent 链往上走，防止成环
   function isInside(scene, cand, anc) {
     const seen = {}; let c = cand;
@@ -556,5 +566,5 @@
     return s;
   }
 
-  U.World = { blank, clone, add, act, evaluate, explain, explainText, tick, rewind, dryLink, hasLoop, isStateful, save, load, migrate, CURRENT_V, createsUnsafeCycle, LOOP_WHY, PROP, isProp, childrenOf: (scene, id, slot) => childrenOf(scene, id, slot), isInside: (scene, c, anc) => isInside(scene, c, anc) };
+  U.World = { blank, clone, add, act, evaluate, explain, explainText, tick, rewind, dryLink, hasLoop, isStateful, save, load, migrate, CURRENT_V, createsUnsafeCycle, LOOP_WHY, PROP, isProp, childrenOf: (scene, id, slot) => childrenOf(scene, id, slot), dependentsOf: (scene, id) => dependentsOf(scene, id), isInside: (scene, c, anc) => isInside(scene, c, anc) };
 })(typeof globalThis !== 'undefined' ? globalThis : window);
