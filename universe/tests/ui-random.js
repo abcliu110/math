@@ -173,6 +173,13 @@ const TOTAL = KINDS.reduce((s, k) => s + k[1], 0);
       if (st.wss.length) {
         const id = pick(st.wss);
         if (rnd() < 0.5) return { name: '双击工作区 ' + id + ' 的标题，进入专注模式', r: await G.dblClickHd(p, id) };
+        // 「适应」按钮只在工作区的面板展开时可见（收起的工作区没有）：看不见的就不点，改平移（前置条件，和上面挑卡片一样）
+        const fitShown = await p.evaluate((i) => {
+          const el = document.querySelector('[data-ws-fit="' + i + '"]');
+          if (!el || el.closest('.wsx-folded')) return false;
+          const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0;
+        }, id);
+        if (!fitShown) return acts['平移'](st);
         return { name: '点工作区 ' + id + ' 的“适应”', r: await G.clickSel(p, '[data-ws-fit="' + id + '"]') };
       }
       return acts['平移'](st);

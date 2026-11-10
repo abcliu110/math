@@ -140,8 +140,7 @@
     if (def.figEdit !== undefined && def.figEdit !== 'place') err('figEdit 目前只认 place');
     if (def.inspector !== undefined && def.inspector !== 'workbench') err('inspector 目前只认 workbench');
     if (def.numberSource !== undefined && typeof def.numberSource !== 'boolean') err('numberSource 要是 true / false');
-    if (def.hidden !== undefined && typeof def.hidden !== 'boolean') err('hidden 要是 true / false（不列在器材架上）');
-    if (typeof def.icon !== 'function') err('缺 icon()，器材架每个器材都要有缩略图');
+    if (def.hidden !== undefined && typeof def.hidden !== 'boolean') err('hidden 要是 true / false（不列在器材架上）');    if (typeof def.icon !== 'function') err('缺 icon()，器材架每个器材都要有缩略图');
     if (typeof def.size !== 'function') err('缺 size(ent)');
     if (typeof def.draw !== 'function') err('缺 draw(c)');
     if (def.late) {

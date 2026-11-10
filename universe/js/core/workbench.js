@@ -34,8 +34,9 @@
     { id: 'substitute', label: '代入', rule: 'alg.substitute' },
     { id: 'compute', label: '算出数', rule: 'alg.compute' },
   ];
+  // 因式分解（任务 I）不在方程的工具表里（工具表是既有的界面约定）：界面按规则 id 直接执行，见 stepRule
   // 在方程的某一边上作用的形式规则（引用的第一个元素是 lhs 或 rhs）
-  const SIDE_RULES = ['alg.collect', 'alg.expand', 'arith.reduce-fraction'];
+  const SIDE_RULES = ['alg.collect', 'alg.expand', 'arith.reduce-fraction', 'alg.factor'];
   // 不需要引用位置的规则（代入的字母和数放在 args 里；算出数两边都看）
   const NO_REF_RULES = ['alg.divide', 'alg.multiply', 'alg.substitute', 'alg.compute'];
 

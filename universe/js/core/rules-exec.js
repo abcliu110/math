@@ -237,6 +237,36 @@
     },
   });
 
+  // 因式分解（任务 I）：首项系数是 1 的二次式 x² + bx + c 写成 (x − r1)(x − r2)。args.r1、args.r2 是两个有理数根。
+  // 规则不替学生找根：根不对（相乘不等于原式）、缺根、已经是乘积，都说明原因；值是否保持由 keeps:'value' 再检查。
+  const linFactor = (r) => {
+    const neg = r.n < 0n, m = neg ? -r.n : r.n;
+    const c = r.d === 1n ? { op: 'num', n: m } : { op: 'frac', n: m, d: r.d };
+    return { op: 'group', args: [{ op: neg ? 'add' : 'sub', args: [{ op: 'var', name: 'x' }, c] }] };
+  };
+  R('alg.factor', {
+    label: '因式分解：把二次式写成两个一次式相乘（首项系数是 1）', essence: ['E2'], grade: [8, 9], keeps: 'value',
+    match(f, at, args) {
+      const n = nodeAt(f, at);
+      if (!n) return '这里没有式子';
+      let g = n;
+      while (g.op === 'group') g = g.args[0];
+      if (g.op === 'mul') return '已经是乘积的形式，不用再分解';
+      let p;
+      try { p = polyOf(F.value(n)); } catch (e) { return '这一项算不出来：' + e.message; }
+      const vs = P.vars(p);
+      if (vs.length !== 1 || vs[0] !== 'x') return '因式分解要作用在只含 x 的式子上';
+      const r1 = qArg(args && args.r1), r2 = qArg(args && args.r2);
+      if (!r1 || !r2) return '请写出两个根 r1、r2（都要是数）';
+      const X = P.variable('x');
+      if (!P.eq(P.mul(P.sub(X, P.const(r1)), P.sub(X, P.const(r2))), p)) return '这两个根相乘得到的式子不等于原来的式子（只能分解首项系数是 1 的二次式）';
+    },
+    apply(f, at, args) {
+      const r1 = qArg(args.r1), r2 = qArg(args.r2);
+      return setAt(f, at, { op: 'mul', args: [linFactor(r1), linFactor(r2)] });
+    },
+  });
+
   // 两边同除以 / 同乘以一个不为 0 的数：两边的解不变。不等式乘除负数时不等号反向。
   const scaleRule = (op) => ({
     on: 'eqn', label: op === 'divide' ? '两边同除以一个不为 0 的数，解不变' : '两边同乘以一个不为 0 的数，解不变',

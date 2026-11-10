@@ -190,7 +190,7 @@
     const runOne = (id) => {
       const e = E[id], def = defOf(e), d = D[id];
       gather(id);
-      const ctx = { ent: e, props: d.props, inp: d.inp, t: ck.t, n: ck.n, seed: ck.seed, say: sayFor(id), kids: (slot) => childrenOf(scene, id, slot), fact: factTrue,
+      const ctx = { ent: e, props: d.props, inp: d.inp, t: ck.t, n: ck.n, seed: ck.seed, say: sayFor(id), kids: (slot) => childrenOf(scene, id, slot), fact: factTrue, scene,
         step: (say, value, rule) => { if (rule && !U.RULES[rule]) U.ruleErrors.push(e.type + ' 用了没登记的规则 ' + rule); if (d.trace) d.trace.steps.push({ say, value: value === undefined ? null : value, rule: rule || null }); },
         because: (port, say, rule) => { if (rule && !U.RULES[rule]) U.ruleErrors.push(e.type + ' 用了没登记的规则 ' + rule); if (d.trace) d.trace.outputs[port] = { say, rule: rule || null }; } };
       try { d.out = def.compute(ctx) || {}; if (!(def.exact !== false && !d.inexact)) approx(d.out); } catch (err) { d.out = {}; d.sig.push({ lv: 'err', tx: errText(err) }); }
@@ -363,6 +363,12 @@
         const id = add(scene, a.type, a.x || 0, a.y || 0, a.props);
         return ok({ id });
       }
+      // 式子工作台的步骤（任务 I）：写在台面的 scene.workbench 上（不是器材，不改器材和连线）。a.steps 为空时清掉。
+      case 'wb': {
+        if (!a.steps || !a.steps.length) { delete scene.workbench; return ok(); }
+        scene.workbench = { host: a.host, key: a.key, steps: a.steps };
+        return ok();
+      }
       case 'move': {
         const e = E[a.id]; if (!e) return fail('找不到器材');
         // 台面卡片的位置保留到千分之一：整数取整在台面放大时会偏出 1 像素以上（缩放 250% 时 0.5 个单位 = 1.25 像素）
@@ -453,6 +459,7 @@
           const drop = (id) => { for (const k of childrenOf(scene, id)) drop(k.id); delete E[id]; };
           const oldP = E[a.id].parent;
           drop(a.id);
+          if (scene.workbench && scene.workbench.host === a.id) delete scene.workbench;
           scene.links = scene.links.filter((l) => E[l.from] && E[l.to]);
           if (oldP) relayout(scene, oldP);
         } else {
@@ -461,6 +468,7 @@
           delete E[a.id];
           scene.links = scene.links.filter((l) => l.from !== a.id && l.to !== a.id);
           if (old) relayout(scene, old);
+          if (scene.workbench && scene.workbench.host === a.id) delete scene.workbench;   // 工作台删了，它的步骤也没了
           return ok({ moved: kids.length });
         }
         return ok();
@@ -488,7 +496,7 @@
         const e = E[a.id]; if (!e) return fail('找不到器材'); const def = defOf(e);
         if (!def.stateful) return fail('这个器材没有记忆'); e.state = def.init(e.props); return ok();
       }
-      case 'clear': scene.entities = {}; scene.links = []; scene.nid = 1; scene.seq = {}; rewind(scene); return ok();
+      case 'clear': scene.entities = {}; scene.links = []; scene.nid = 1; scene.seq = {}; delete scene.workbench; rewind(scene); return ok();
       case 'tidy': tidy(scene); return ok();
       case 'clock': {
         const ck = scene.clock;
