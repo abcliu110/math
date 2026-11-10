@@ -328,6 +328,15 @@ button.gdel { border: 0; background: none; color: var(--dim); cursor: pointer; }
 .wb-step small { display: block; color: var(--dim); font-size: 11px; margin-top: 2px; }
 .wb-sol { margin-top: 8px; font-size: 15px; font-weight: 700; color: var(--good); }
 
+/* 竖式工作台（任务 H 第 4 步，panels.js 的 arHtml）：列对齐，进位和退位写在上一列的上方，结果在最下面一行 */
+.ar-grid { border-collapse: collapse; margin: 8px 0 6px; font-variant-numeric: tabular-nums; }
+.ar-grid td { min-width: 34px; height: 26px; text-align: center; font-size: 18px; font-weight: 700; padding: 0 4px; }
+.ar-grid .ar-head td { font-size: 11px; font-weight: 400; color: var(--txt2); height: 16px; }
+.ar-grid .ar-carry td { font-size: 12px; color: var(--txt2); height: 16px; }
+.ar-grid .ar-op { text-align: right; padding-right: 2px; }
+.ar-grid .ar-ans td { border-top: 2px solid var(--ink); }
+.ar-part { display: inline-block; padding: 4px 6px; font-size: 14px; font-weight: 700; }
+
 /* ---- 步骤图（D6，js/ui/stepgraph.js）：只读的依赖图，方框是一步，箭头是「用了那一步的结果」 ---- */
 #dlg .box.sg-wide { width: min(860px, 94vw); }
 .sg-hint { color: var(--txt2); font-size: 13px; margin: 2px 0 10px; line-height: 1.5; }

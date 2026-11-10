@@ -1278,6 +1278,7 @@ for (const p of U.problems) {
       link(from, to, toPort, fromPort) { const r = W.act(s, { t: 'link', from, to, toPort, fromPort }); if (!r.ok) throw new Error('连线失败：' + r.why); chk(); },
       set(id, k, v) { const r = W.act(s, { t: 'set', id, k, v }); if (!r.ok) throw new Error(r.why); chk(); },
       role(r) { const e = Object.values(s.entities).find((x) => x.role === r); if (!e) throw new Error('没有角色 ' + r); return e.id; },
+      wb(host, steps) { const r = W.act(s, { t: 'wb', host, key: U.ArithBench.keyOf(s.entities[host].props), steps }); if (!r.ok) throw new Error(r.why); chk(); },
       run(n) { for (let i = 0; i < n; i++) { J2.check(p, run, s, W.tick(s)); } },
     };
     fn(h); chk();
@@ -1463,6 +1464,46 @@ console.log('可执行规则（G）');
     const r = ap('arith.reduce-fraction', FV({ op: 'frac', n: 2, d: 4 }), [], {});
     eq(r.ok, true); eq(r.kept, true); eq(F.show(r.value.data), '1/2'); truthy(F.isNormal(r.value.data, 'reduced-fraction'));
     const q = ap('arith.reduce-fraction', FV({ op: 'frac', n: 1, d: 2 }), [], {}); eq(q.ok, false); truthy(cn(q.why), q.why);
+  });
+  // 竖式工作台（任务 H 第 4 步）的内核：逐列计算、拆数和凑十走规则、撤销从头重放
+  t('竖式内核：47 + 38 从个位算起，个位 5 进 1，结果 85；跳过个位被拒绝', () => {
+    const A = U.ArithBench, st0 = A.currentOf({}, 'x', { a: 47, b: 38, op: 0 });
+    const bad = A.step(st0, 'col', { col: 1 }); truthy(bad.lastError, '跳过个位应被拒绝'); eq(bad.steps.length, 0, '步骤不变');
+    const s2 = A.step(A.step(st0, 'col', { col: 0 }), 'col', { col: 1 });
+    eq(s2.cols[0].digit, 5); eq(s2.cols[0].carry, 1); eq(s2.result, 85); eq(s2.steps.length, 2);
+    eq(A.undo(s2, 1).result, null, '撤销到第 1 步，结果消失');
+  });
+  t('竖式内核：减法 52 − 27 借位得 25；a 小于 b 与乘数超过一位被拒绝并说明', () => {
+    const A = U.ArithBench;
+    const d = A.step(A.step(A.currentOf({}, 'x', { a: 52, b: 27, op: 1 }), 'col', { col: 0 }), 'col', { col: 1 });
+    eq(d.result, 25); eq(d.cols[0].carry, 1);
+    truthy(A.currentOf({}, 'x', { a: 27, b: 52, op: 1 }).start.error, '负数结果不做');
+    truthy(A.currentOf({}, 'x', { a: 23, b: 12, op: 2 }).start.error, '乘数超过一位不做');
+  });
+  t('竖式内核：23 × 4 = 92，个位 12 写 2 进 1，十位 2 × 4 + 1 = 9', () => {
+    const A = U.ArithBench;
+    const m = A.step(A.step(A.currentOf({}, 'x', { a: 23, b: 4, op: 2 }), 'col', { col: 0 }), 'col', { col: 1 });
+    eq(m.cols[0].digit, 2); eq(m.cols[0].carry, 1); eq(m.result, 92);
+  });
+  t('竖式内核：拆数只能在竖式开始前做；整十数、一位数不拆；凑十要两个一位数', () => {
+    const A = U.ArithBench, st0 = A.currentOf({}, 'x', { a: 47, b: 38, op: 0 });
+    const sp = A.step(st0, 'split', { term: 1 });
+    eq(sp.lastError, null); eq(A.showState(sp), '47 + 30 + 8'); eq(sp.steps[0].rule, 'arith.split');
+    truthy(A.step(A.currentOf({}, 'x', { a: 30, b: 5, op: 0 }), 'split', { term: 0 }).lastError, '整十数不拆');
+    truthy(A.step(A.currentOf({}, 'x', { a: 8, b: 5, op: 0 }), 'split', { term: 0 }).lastError, '一位数不拆');
+    truthy(A.step(st0, 'make-ten', {}).lastError, '47 + 38 不能凑十');
+    const started = A.step(sp, 'col', { col: 0 });
+    truthy(A.step(started, 'split', { term: 2 }).lastError, '竖式开始后不能再拆');
+    const ten = A.step(A.currentOf({}, 'x', { a: 8, b: 5, op: 0 }), 'make-ten', {});
+    eq(A.showState(ten), '8 + 2 + 3'); eq(ten.steps[0].rule, 'arith.make-ten');
+  });
+  t('竖式内核：步骤记在台面上；算式变了，旧步骤不用', () => {
+    const A = U.ArithBench, props = { a: 47, b: 38, op: 0 };
+    const st = A.step(A.step(A.currentOf({}, 'x', props), 'col', { col: 0 }), 'col', { col: 1 });
+    const scene = { workbench: A.saveAction('x', props, st) };
+    eq(scene.workbench.key, '47|0|38'); eq(A.stateOf(scene, 'x', props).result, 85, '按同一算式重放');
+    eq(A.stateOf(scene, 'x', { a: 47, b: 39, op: 0 }), null, '换了数，旧历史不用');
+    eq(A.stateOf(scene, 'other', props), null, '不是这台器材的历史不用');
   });
   t('移项：2x + 3 = 7，3 移到右边变号成 7 − 3，解仍是 x = 2', () => {
     const r = ap('alg.move-term', EV(lin), [1], {});

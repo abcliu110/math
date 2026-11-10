@@ -149,6 +149,17 @@ async function clickCard(page, id) {
     if (b1 && b2 && b1.x === b2.x && b1.y === b2.y && b1.width === b2.width && b1.height === b2.height) { a = b2; break; }
   }
   if (!a) throw new Error('标题栏的位置一直在变，没法点：' + id);
+  // 标题栏被顶部的条（模式切换等）盖住时（卡片被平移到条的下面），真人点不到标题栏，就点卡片中间；
+  // 中间也必须是这张卡在最上面，否则和原来一样报错（不吞掉被别的卡盖住的情况）
+  const hitAt = (x, y) => page.evaluate(([sel, x, y]) => { const t = document.elementFromPoint(x, y); return !!(t && t.closest(sel)); }, [cardSel, x, y]);
+  if (!(await hitAt(a.x + a.width / 2, a.y + a.height / 2))) {
+    const box = await page.locator(cardSel).first().boundingBox();
+    const cx = box.x + box.width / 2, cy = box.y + box.height / 2;
+    if (!(await hitAt(cx, cy))) throw new Error('卡片被别的东西盖住，点不到：' + id);
+    await page.mouse.click(cx, cy);
+    await pause(page, 200);
+    return { visible: await inViewport(page, cardSel), text: (await textOf(page, id)).trim(), added: [], label: '' };
+  }
   await grip.click({ timeout: 5000 });
   await pause(page, 200);
   return { visible: await inViewport(page, cardSel), text: (await textOf(page, id)).trim(), added: [], label: '' };

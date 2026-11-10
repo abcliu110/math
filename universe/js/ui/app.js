@@ -142,6 +142,8 @@
   }
   // 式子工作台的步骤写在台面上（一个动作，撤销一次回到上一步；U.ExprBench.saveAction）
   function wbSave(id, eq, st) { act(U.ExprBench.saveAction(id, eq, st)); }
+  // 竖式工作台（任务 H 第 4 步）的步骤也写在台面上（scene.workbench）：一次点击一个动作
+  function arSave(id, props, st) { act(U.ArithBench.saveAction(id, props, st)); }
   // 单个动作：老接口，失败时返回 { ok:false, why }（调用方照旧看 r.ok）
   function act(a, o) {
     o = o || {};
@@ -281,6 +283,29 @@
     wbDo(id, tool, ref, args);
   }
   // 因式分解（任务 I）：作用在选的那一边上；两个根由输入框给（r1、r2）。内核按规则 id 执行，检查相乘是不是原式。
+  // ---------- 竖式工作台（任务 H 第 4 步，§10.5.6）----------
+  // 状态从台面上的步骤重算（U.ArithBench）；每次点击是一个动作，撤销一次就回到上一步。
+  function arDo(id, tool, args) {
+    const e = S.scene.entities[id]; if (!e) return;
+    const dr = UI.Panels.wbDraft(id);
+    const ns = U.ArithBench.step(U.ArithBench.currentOf(S.scene, id, e.props), tool, args);
+    if (ns.lastError) dr.msg = ns.lastError;
+    else { arSave(id, e.props, ns); dr.msg = ''; dr.arTerm = null; }
+    refresh();
+  }
+  function arUndo(id, k) {
+    const e = S.scene.entities[id]; if (!e) return;
+    arSave(id, e.props, U.ArithBench.undo(U.ArithBench.currentOf(S.scene, id, e.props), k));
+    refresh();
+  }
+  // 点的是哪个按钮：选中要拆的数（再点取消）、拆、凑十、算这一列、撤销
+  function arClick(id, el) {
+    const dr = UI.Panels.wbDraft(id);
+    if (el.dataset.arTerm !== undefined) { const k = +el.dataset.arTerm; dr.arTerm = dr.arTerm === k ? null : k; dr.msg = ''; refresh(); return; }
+    if (el.dataset.arTool !== undefined) return arDo(id, el.dataset.arTool, { term: dr.arTerm === undefined ? null : dr.arTerm });
+    if (el.dataset.arCol !== undefined) return arDo(id, 'col', { col: +el.dataset.arCol });
+    arUndo(id, +el.dataset.arUndo);
+  }
   function wbFactor(id) {
     const eq = wbEqn(id), dr = UI.Panels.wbDraft(id);
     if (!eq) return;
@@ -459,6 +484,8 @@
         const eq = wbEqn(id); if (eq) UI.StepGraph.openExpr(wbNow(id, eq), (k) => wbUndo(id, k));
         return;
       }
+      const ar = t.closest && t.closest('[data-ar-term],[data-ar-tool],[data-ar-col],[data-ar-undo]');
+      if (ar) { arClick(id, ar); return; }
       const wb = t.closest && t.closest('[data-wb-tool],[data-wb-rule],[data-wb-undo]');
       if (wb) {
         if (wb.dataset.wbTool !== undefined) wbStep(id, wb.dataset.wbTool);

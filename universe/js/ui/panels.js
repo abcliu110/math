@@ -157,6 +157,7 @@
       h += '</div></div>';
     }
     if (d.inspector === 'workbench') h += wbHtml(e, dd);
+    else if (d.inspector === 'arithbench') h += arHtml(e, dd);
     h += '<div class="note">想让别的器材来决定「' + (Object.keys(d.props)[0] ? esc(d.props[Object.keys(d.props)[0]].label) : '') + '」？从别的器材的输出口拖一根线，放到这台器材左边出现的药丸上。</div>';
     const sg = (dd && dd.sig) || []; if (sg.length) h += '<div class="sigs">' + sg.map((s) => '<div>· ' + esc(s.tx) + '</div>').join('') + '</div>';
     h += '<div class="btnrow"><button class="btn" data-reset="1">恢复默认</button></div>';
@@ -217,6 +218,43 @@
     h += log.length ? st.steps.map((s, i) => '<div class="wb-step"><span>' + esc(log[i]) + '<small>' + esc(s.why) + '</small></span><button data-wb-undo="' + (i + 1) + '">撤销到这一步</button></div>').join('') : '<div class="wb-none">还没有步骤</div>';
     const sol = U.Workbench.solution(st);
     if (sol.solved) h += '<div class="wb-sol">解：x = ' + esc(U.Q.show(sol.x)) + '</div>';
+    return h + '</div>';
+  }
+
+  // ---------- 竖式工作台（任务 H 第 4 步，§10.5.6）----------
+  // 步骤写在台面上（scene.workbench，U.ArithBench），这里只画：算式（点选要拆的数）、竖式（一列一列算，下一列的按钮才出现）、步骤（可撤销）。
+  function arHtml(e, dd) {
+    const st = U.ArithBench.currentOf(UI.S.scene, e.id, e.props), dr = wbDraft(e.id);
+    let h = '<div class="wb ar"><h5>竖式工作台</h5>';
+    if (st.start.error) return h + '<div class="wb-msg">' + esc(st.start.error) + '</div></div>';
+    h += '<div class="wb-now">现在：<b>' + esc(U.ArithBench.showState(st)) + '</b></div>';
+    // 算式：每个还没拆的数是一个按钮；竖式开始算以后就不能再拆或凑十
+    const parts = U.ArithBench.exprParts(st), free = !st.cols.length;
+    if (parts.length) {
+      h += '<div class="wb-eq">' + parts.map((x, j) => (j ? '<span class="wb-rel">+</span>' : '') +
+        (x.plain && free ? '<button class="wb-chip' + (dr.arTerm === x.k ? ' sel' : '') + '" data-ar-term="' + x.k + '" aria-pressed="' + (dr.arTerm === x.k) + '">' + esc(x.text) + '</button>' : '<span class="ar-part">' + esc(x.text) + '</span>')).join('') + '</div>';
+    }
+    // 竖式：列对齐（个位对个位）；进位、退位写在上一列的上方；结果写在最下面一行
+    const rows = st.rows, base = st.base, N = Math.max(base, st.cols.length + (st.cols.length && st.cols[st.cols.length - 1].carry > 0 ? 1 : 0));
+    const cols = []; for (let i = N - 1; i >= 0; i--) cols.push(i);
+    const opSym = ['+', '−', '×'][st.start.op];
+    let t = '<table class="ar-grid"><tr class="ar-head"><td></td>' + cols.map((i) => '<td>' + esc(U.ArithBench.place(i)) + '</td>').join('') + '</tr>';
+    t += '<tr class="ar-carry"><td></td>' + cols.map((i) => '<td data-ar-cell="carry-' + i + '">' + (i > 0 && st.cols[i - 1] && st.cols[i - 1].carry ? st.cols[i - 1].carry : '') + '</td>').join('') + '</tr>';
+    rows.forEach((r, k) => {
+      t += '<tr><td class="ar-op">' + (k === rows.length - 1 ? opSym : '') + '</td>' + cols.map((i) => '<td data-ar-cell="row-' + k + '-' + i + '">' + (i < U.ArithBench.lenOf(r) ? U.ArithBench.digitAt(r, i) : '') + '</td>').join('') + '</tr>';
+    });
+    t += '<tr class="ar-ans"><td></td>' + cols.map((i) => '<td data-ar-cell="ans-' + i + '">' + (st.cols[i] ? st.cols[i].digit : '') + '</td>').join('') + '</tr></table>';
+    h += t;
+    // 下一列（只有一个按钮：列要从个位算起）
+    const next = st.cols.length;
+    if (U.ArithBench.needNext(st.cols, base)) h += '<div class="wb-tools"><button data-ar-col="' + next + '">算' + esc(U.ArithBench.place(next)) + '</button></div>';
+    const tools = U.ArithBench.tools(st);
+    if (tools.length && free) h += '<div class="wb-note">先在算式里点选一个数，再拆；也可以对两个一位数用凑十。</div><div class="wb-tools">' + tools.map((x) => '<button data-ar-tool="' + x.id + '">' + esc(x.label) + '</button>').join('') + '</div>';
+    if (dr.msg) h += '<div class="wb-msg">' + esc(dr.msg) + '</div>';
+    if (st.result !== null) h += '<div class="wb-sol">结果：' + esc(String(st.result)) + '</div>';
+    h += '<div class="wb-h">步骤</div>';
+    const log = U.ArithBench.stepLog(st);
+    h += log.length ? st.steps.map((s, i) => '<div class="wb-step"><span>' + esc(log[i]) + '</span><button data-ar-undo="' + (i + 1) + '">撤销到这一步</button></div>').join('') : '<div class="wb-none">还没有步骤</div>';
     return h + '</div>';
   }
 

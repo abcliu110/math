@@ -5,6 +5,22 @@
   const P = [];
 
   P.push({
+    id: 'arith-carry-47-38', essence: ['E2'], title: '用竖式算 47 + 38', grade: 2, domain: '数与运算', points: ['2.3'], topics: ['两位数加法', '进位'],
+    alias: ['竖式', '进位', '两位数加法'], workbench: 'arith', rung: 2, level: 'core',
+    hook: '把 47 和 38 竖着写，个位对个位。从个位算起：个位满十要进到十位。',
+    shelf: ['arithbench'],
+    build: mk({ ents: [{ type: 'arithbench', x: 300, y: 200, role: 'bench', props: { a: 47, op: 0, b: 38 } }] }),
+    milestones: [
+      { id: 'col1', say: '竖式里算出个位', score: 2, when: { steps: { used: 'arith.column', allKept: true } },
+        hints: ['从个位算起：7 + 8 等于多少？', '点竖式下面的「算个位」。', '15 写 5，向十位进 1。'] },
+      { id: 'result', say: '竖式算出 47 + 38 = 85', score: 4, when: { type: 'arithbench', port: 'result', op: '=', value: '85' },
+        hints: ['十位上还要加上进位的 1。', '点「算十位」：4 + 3 + 1 = 8。', '十位写 8，结果是 85。'] },
+    ],
+    traps: [], goal: ['col1', 'result'],
+    why: '个位 7 + 8 = 15，写 5，进 1；十位 4 + 3 + 1 = 8，写 8。结果 85。竖式的要点：相同数位对齐，从个位算起，满十就进位。',
+  });
+
+  P.push({
     id: 'gcd-12-18', essence: ['E2'], title: '12 和 18 的最大公因数、最小公倍数', grade: 5, domain: '数与运算', points: ['5.8'], topics: ['最大公因数', '最小公倍数'],
     alias: ['公因数', '公倍数'], hook: '把 12 和 18 接进「数的性质」，读出两个结果，想想它们是怎么来的。',
     shelf: ['num', 'numtheory', 'meter', 'op'],
