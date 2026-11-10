@@ -98,6 +98,7 @@ async function checkDist() {
   if (!runScript('tests/ui-arith2.js', 'tests/ui-arith2.js', pwEnv)) bail();   // H4 遗留（真实鼠标）：凑整（点选、拒绝说明）、两位数乘两位数（部分积、相加、撤销）、减法负数结果（−24）
   if (!runScript('tests/ui-constraint.js', 'tests/ui-constraint.js', pwEnv)) bail();   // §10.5.9 第 1、2 条：约束锁定（真实鼠标锁长、拖动被锁的端点、锁直角、拖动直角顶点）、尺寸驱动（双击长度输入数字，撤销）
   if (!runScript('tests/ui-bake.js', 'tests/ui-bake.js', pwEnv)) bail();       // §10.5.6 第 5 步 定型（真实鼠标）：两步折成一个折叠、折叠里没有撤销、台面和判题仍读得到定型前的步骤、撤销定型回到两步
+  if (!runScript('tests/ui-scale.js', 'tests/ui-scale.js', pwEnv)) bail();     // 几何图形缩放把手（真实鼠标）：三角形放大 2 倍、矩形缩到 1/2、奇数边和超范围时的提示、撤销一步
   if (!runScript('tools/lint-ui.js', 'tools/lint-ui.js')) bail();              // 界面代码的意图层、状态分层、布局数字、坐标换算、器材判断（U3–U7）
   if (!runScript('tools/contrast.js', 'tools/contrast.js', pwEnv)) bail();          // V1：界面文字对比度 >= 4.5:1（light/dark 两种主题，playwright 实测）
   if (fs.existsSync(path.join(root, 'tests', 'ui-probes.js'))) {
