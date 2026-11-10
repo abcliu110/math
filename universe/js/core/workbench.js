@@ -109,6 +109,9 @@
   }
 
   const Workbench = {
+    // 一个值的文字（方程是「左 = 右」，形式是它的写法）；步骤图的起点用它
+    show: showVal,
+
     create(value) {
       const v = norm(value);
       return { start: v, steps: [], current: v, lastError: null };

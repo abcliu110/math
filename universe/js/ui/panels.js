@@ -209,7 +209,7 @@
     if (k) h += '<button data-wb-act="divide-coef">两边同除以 ' + esc(U.Q.show(k)) + '</button>';
     h += '</div>';
     if (dr.msg) h += '<div class="wb-msg">' + esc(dr.msg) + '</div>';
-    h += '<div class="wb-h">步骤</div>';
+    h += '<div class="wb-h">步骤 <button data-wb-graph="1" title="看每一步用了哪一步的结果（只看，不改历史）">看背后的连线</button></div>';
     const log = U.Workbench.stepLog(st);
     h += log.length ? st.steps.map((s, i) => '<div class="wb-step"><span>' + esc(log[i]) + '<small>' + esc(s.why) + '</small></span><button data-wb-undo="' + (i + 1) + '">撤销到这一步</button></div>').join('') : '<div class="wb-none">还没有步骤</div>';
     const sol = U.Workbench.solution(st);
@@ -227,7 +227,7 @@
 
   // ---------- 对话框 ----------
   function dialog(html) { const d = $('#dlg'); d.querySelector('.box').innerHTML = html; d.classList.add('open'); }
-  function closeDialog() { $('#dlg').classList.remove('open'); }
+  function closeDialog() { $('#dlg').classList.remove('open'); const box = document.querySelector('#dlg .box'); if (box) box.classList.remove('sg-wide'); }
 
   // 来历面板（任务 A）：这个数是怎么来的，一层一层展开到源头
   function whyNode(t, open) {

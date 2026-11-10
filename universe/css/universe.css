@@ -328,6 +328,22 @@ button.gdel { border: 0; background: none; color: var(--dim); cursor: pointer; }
 .wb-step small { display: block; color: var(--dim); font-size: 11px; margin-top: 2px; }
 .wb-sol { margin-top: 8px; font-size: 15px; font-weight: 700; color: var(--good); }
 
+/* ---- 步骤图（D6，js/ui/stepgraph.js）：只读的依赖图，方框是一步，箭头是「用了那一步的结果」 ---- */
+#dlg .box.sg-wide { width: min(860px, 94vw); }
+.sg-hint { color: var(--txt2); font-size: 13px; margin: 2px 0 10px; line-height: 1.5; }
+.sg-none { color: var(--txt2); padding: 12px 0; }
+.sg-svg { display: block; width: 100%; height: auto; max-height: 60vh; }
+.sg-node { cursor: pointer; }
+.sg-node rect { fill: var(--panel2); stroke: var(--line); stroke-width: 1.5; }
+.sg-node:hover rect, .sg-node:focus rect { stroke: var(--orange); stroke-width: 2.5; }
+.sg-node:focus { outline: none; }
+.sg-t { fill: var(--txt); font-size: 13px; font-weight: 700; }
+.sg-l { fill: var(--txt); font-size: 13px; }
+.sg-n { fill: var(--txt2); font-size: 11px; }
+.sg-edge { fill: none; stroke: var(--txt2); stroke-width: 1.6; }
+.sg-arrow { fill: var(--txt2); }
+.wb-h button, .wsx-h button { font-size: 12px; margin-left: 6px; }
+
 /* ---- 改大小（§10.5.8 A1）：卡片右下角的拖柄，命中区 24 像素（手指也好按） ---- */
 .card .rz { position: absolute; right: 0; bottom: 0; width: 24px; height: 24px; cursor: nwse-resize; z-index: 3; touch-action: none; }
 .card .rz::after { content: ""; position: absolute; right: 5px; bottom: 5px; width: 10px; height: 10px; border-right: 3px solid var(--txt3, #8a97ad); border-bottom: 3px solid var(--txt3, #8a97ad); border-radius: 0 0 3px 0; }
