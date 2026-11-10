@@ -12,7 +12,7 @@
   // 可执行规则（任务 G，见 next-steps.md §10.4）：有 on / match / apply / keeps 之一的，要求四项齐全且合法。
   // 没有这些字段的登记项照旧，不做检查。
   U.RULE_ON = ['form', 'eqn', 'fig', 'figs'];
-  U.KEEPS = ['value', 'equation', 'area', 'congruence'];
+  U.KEEPS = ['value', 'equation', 'area', 'congruence', 'subst'];   // subst：代入（D7），由规则自己的 check 核对
   U.defineRule = (id, def) => {
     U.RULES[id] = Object.assign({ essence: [], grade: [1, 9] }, def);
     if (def.on || def.match || def.apply || def.keeps) {

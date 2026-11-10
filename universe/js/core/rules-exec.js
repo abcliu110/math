@@ -81,9 +81,14 @@
     return { same: true, why: '解集相同' };
   }
 
-  function keptBy(rule, old, out, eqnMode) {
+  function keptBy(rule, old, out, eqnMode, a) {
     const k = rule.keeps;
     if (eqnMode) {
+      if (k === 'subst') {
+        if (typeof rule.check !== 'function') return { kept: false, why: '没有 check 函数，无法确认代入是否正确' };
+        const same = !!rule.check(old, out, a || {});
+        return { kept: same, why: same ? '代入是正确的：两边都换成了同样的数' : '代入的结果和原来对不上' };
+      }
       if (k !== 'equation') return { kept: false, why: '方程上的规则只能保持解集（equation）' };
       const r = sameSolutions(old, out);
       return { kept: r.same, why: r.why };
@@ -133,7 +138,7 @@
       : U.val('form', out, { dim: value && value.dim, exact: !(value && value.exact === false) });
 
     let kept = false, detail = '';
-    try { ({ kept, why: detail } = keptBy(rule, old, out, eqnMode)); } catch (e) { kept = false; detail = e.message; }
+    try { ({ kept, why: detail } = keptBy(rule, old, out, eqnMode, a)); } catch (e) { kept = false; detail = e.message; }
     return {
       ok: true,
       value: newValue,
@@ -333,6 +338,45 @@
       const n = nodeAt(f, at);
       const prod = n.args.reduce((acc, x) => P.mul(acc, polyOf(F.value(x))), P.const(Q(1)));
       return setAt(f, at, F.fromPoly(prod));
+    },
+  });
+
+  // 代入（D7）：把方程两边的字母 v 都换成同一个数。args：{ var: 'a', val: '6' }（val 是整数、小数或 3/4）。
+  // 代入以后，式子里不再有 v；两边的值按 v = val 算，和原来的式子一致（check 逐边核对）。
+  const SUB_VAR = /^[a-zA-Z]$/;
+  const subSide = (x, name, val) => F.fromPoly(P.subst(polyOf(F.value(x)), name, P.const(val)));
+  const hasLetter = (x) => { try { return isPoly(F.value(x)) && P.vars(F.value(x)).length > 0; } catch (e) { return false; } };
+  R('alg.substitute', {
+    on: 'eqn', label: '代入：把字母换成数，两边同时换', essence: ['E4'], grade: [6, 9], keeps: 'subst',
+    match(eq, at, args) {
+      const name = args && args.var, val = qArg(args && args.val);
+      if (typeof name !== 'string' || !SUB_VAR.test(name)) return '请写成「字母 = 数」，例如 a=6';
+      if (!val) return '代入的数不对：请写整数、小数或 3/4 这样的分数';
+      if (!hasLetter(eq.lhs) && !hasLetter(eq.rhs)) return '两边都没有字母，用不着代入';
+      const has = (x) => { try { return isPoly(F.value(x)) && P.vars(F.value(x)).includes(name); } catch (e) { return false; } };
+      if (!has(eq.lhs) && !has(eq.rhs)) return '式子里没有字母 ' + name;
+    },
+    apply(eq, at, args) {
+      const name = args.var, val = qArg(args.val);
+      return { lhs: subSide(eq.lhs, name, val), rhs: subSide(eq.rhs, name, val), rel: eq.rel };
+    },
+    check(old, out, args) {
+      const name = args.var, val = qArg(args.val);
+      return F.equivalent(subSide(old.lhs, name, val), out.lhs) && F.equivalent(subSide(old.rhs, name, val), out.rhs);
+    },
+  });
+
+  // 算出数（D7）：两边里不含字母、还不是一个数的部分，算成一个数（6 × 4 变成 24）。值不变。
+  const numNode = (q) => (q.d === 1n ? { op: 'num', n: q.n } : { op: 'frac', n: q.n, d: q.d });
+  const closedSide = (x) => { try { const v = F.value(x); return !isPoly(v) && x.op !== 'num'; } catch (e) { return false; } };
+  R('alg.compute', {
+    on: 'eqn', label: '算出数：不含字母的部分算成一个数', essence: ['E2'], grade: [3, 9], keeps: 'equation',
+    match(eq) {
+      if (!closedSide(eq.lhs) && !closedSide(eq.rhs)) return '没有可以算出数的部分';
+    },
+    apply(eq) {
+      const comp = (x) => (closedSide(x) ? numNode(F.value(x)) : x);
+      return { lhs: comp(eq.lhs), rhs: comp(eq.rhs), rel: eq.rel };
     },
   });
 

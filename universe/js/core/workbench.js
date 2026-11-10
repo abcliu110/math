@@ -29,10 +29,15 @@
     { id: 'multiply', label: '两边同乘', rule: 'alg.multiply' },
     { id: 'collect', label: '合并同类项', rule: 'alg.collect' },
   ];
+  // 只在「从几何来」的式子（state.formula）上出现的工具（D7）：代入字母、算出数
+  const FORMULA_TOOLS = [
+    { id: 'substitute', label: '代入', rule: 'alg.substitute' },
+    { id: 'compute', label: '算出数', rule: 'alg.compute' },
+  ];
   // 在方程的某一边上作用的形式规则（引用的第一个元素是 lhs 或 rhs）
   const SIDE_RULES = ['alg.collect', 'alg.expand', 'arith.reduce-fraction'];
-  // 不需要引用位置的规则
-  const NO_REF_RULES = ['alg.divide', 'alg.multiply'];
+  // 不需要引用位置的规则（代入的字母和数放在 args 里；算出数两边都看）
+  const NO_REF_RULES = ['alg.divide', 'alg.multiply', 'alg.substitute', 'alg.compute'];
 
   const isEqnData = (d) => !!d && !d.op && 'lhs' in d && 'rhs' in d;
   // 多项式两边换成形式（规则只认形式）
@@ -46,7 +51,10 @@
     if (isEqnData(v)) return U.val('eqn', { lhs: sideOf(v.lhs), rhs: sideOf(v.rhs), rel: v.rel || '=' });
     return U.val('form', v);
   }
-  const tableOf = (v) => (norm(v).kind === 'eqn' ? EQN_TOOLS : FORM_TOOLS);
+  // formula：这个式子是从几何来的（S = 公式），多出 FORMULA_TOOLS 里的工具
+  const tableOf = (v, formula) => (norm(v).kind === 'eqn' ? EQN_TOOLS.concat(formula ? FORMULA_TOOLS : []) : FORM_TOOLS);
+  // 状态里带 formula 标记时才写进去（没有就不写，已有的状态形状不变）
+  const flagged = (out, formula) => (formula ? Object.assign(out, { formula: true }) : out);
   const showVal = (v) => (v.kind === 'eqn' ? F.show(v.data.lhs) + ' ' + v.data.rel + ' ' + F.show(v.data.rhs) : F.show(v.data));
   const fail = (state, why) => Object.assign({}, state, { lastError: why });
 
@@ -86,7 +94,7 @@
   }
 
   // 从 start 重放一串步骤。步骤里的 ref 和 args 是原样保存的，重放结果必须相同。
-  function replay(start, steps) {
+  function replay(start, steps, formula) {
     let cur = start;
     const out = [];
     for (const s of steps) {
@@ -95,7 +103,7 @@
       out.push({ tool: s.tool, rule: s.rule, ref: s.ref, args: s.args, before: cur, after: r.value, why: r.why });
       cur = r.value;
     }
-    return { start, steps: out, current: cur, lastError: null };
+    return flagged({ start, steps: out, current: cur, lastError: null }, formula);
   }
 
   // 按规则 id 执行一步（step 用它；测试也可以用它执行没有列在工具表里的规则）
@@ -105,24 +113,25 @@
     if (!r.ok) return fail(state, r.why);
     if (!r.kept) return fail(state, BROKEN);
     const step = { tool, rule, ref, args: a, before: state.current, after: r.value, why: r.why };
-    return { start: state.start, steps: state.steps.concat([step]), current: r.value, lastError: null };
+    return flagged({ start: state.start, steps: state.steps.concat([step]), current: r.value, lastError: null }, state.formula);
   }
 
   const Workbench = {
     // 一个值的文字（方程是「左 = 右」，形式是它的写法）；步骤图的起点用它
     show: showVal,
 
-    create(value) {
+    // opts.formula：式子是从几何来的（S = 公式），工具表里多出「代入」「算出数」
+    create(value, opts) {
       const v = norm(value);
-      return { start: v, steps: [], current: v, lastError: null };
+      return flagged({ start: v, steps: [], current: v, lastError: null }, !!(opts && opts.formula));
     },
 
-    tools(value) {
-      return tableOf(value).map((t) => ({ id: t.id, label: t.label }));
+    tools(value, formula) {
+      return tableOf(value, !!formula).map((t) => ({ id: t.id, label: t.label }));
     },
 
     step(state, toolId, ref, args) {
-      const t = tableOf(state.current).find((x) => x.id === toolId);
+      const t = tableOf(state.current, !!state.formula).find((x) => x.id === toolId);
       if (!t) return fail(state, '这个工具用在这里不合适：' + toolId);
       return record(state, t.id, t.rule, ref, args);
     },
@@ -134,14 +143,14 @@
 
     undo(state, k) {
       const n = Math.max(0, Math.min(k, state.steps.length));
-      return replay(state.start, state.steps.slice(0, n));
+      return replay(state.start, state.steps.slice(0, n), state.formula);
     },
 
     replay,
 
     stepLog(state) {
       return state.steps.map((s, i) => {
-        const t = tableOf(s.before).find((x) => x.id === s.tool);
+        const t = tableOf(s.before, true).find((x) => x.id === s.tool);
         const label = t ? t.label : ((U.RULES[s.rule] || {}).label || s.tool);
         return '第 ' + (i + 1) + ' 步：' + label + '：' + showVal(s.before) + ' → ' + showVal(s.after);
       });
@@ -169,9 +178,10 @@
       // 左边是多项式且只含 x；右边是有理数（没有字母）
       const isPoly = (p) => !!p && Array.isArray(p.terms);
       if (!isPoly(L) || isPoly(R)) return { solved: false };
+      // 左边只是一个字母（x，或 D7 里的 S），右边是数
       const vars = P.vars(L);
-      if (vars.length !== 1 || vars[0] !== 'x') return { solved: false };
-      if (!P.eq(L, P.variable('x'))) return { solved: false };
+      if (vars.length !== 1) return { solved: false };
+      if (!P.eq(L, P.variable(vars[0]))) return { solved: false };
       return { solved: true, x: R };
     },
   };

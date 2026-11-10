@@ -120,7 +120,15 @@
         ctx.id = p.id;
         // V5：用户已确认“删除并同时删除依赖”：先删依赖它的器材（直接和间接），再删它自己；整串是一个撤销项
         if (p.confirmed) for (const d of W.dependentsOf(UI.S.scene, p.id)) A({ t: 'del', id: d });
+        // 只删容器（keep: 'out'）：里面的东西倒到台面上。它们原来的位置可能压在别的工作区上，
+        // 所以和取出来一样，每一个都挪到不重叠的空位（同一个事务，一个撤销项）
+        const outKids = p.keep === 'all' ? [] : W.childrenOf(UI.S.scene, p.id);
         A({ t: 'del', id: p.id, keep: p.keep });
+        for (const k of outKids) {
+          if (!UI.S.scene.entities[k.id]) continue;
+          const sp = UI.Stage.freeSpot(k.x, k.y, k.type, k.id);
+          if (sp.x !== k.x || sp.y !== k.y) A({ t: 'move', id: k.id, x: sp.x, y: sp.y });
+        }
         // 删图形时顺带删它的顶点：别处（线、中点……）还连着的顶点留下
         for (const v of p.alsoVerts || []) if (UI.S.scene.entities[v] && !UI.S.scene.links.some((l) => l.from === v)) A({ t: 'del', id: v });
       },

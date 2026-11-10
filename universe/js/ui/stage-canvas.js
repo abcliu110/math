@@ -75,7 +75,7 @@
       const t = Math.min(dx ? (w / 2 - M - 14) / Math.abs(dx) : Infinity, dy ? (h / 2 - M - 14) / Math.abs(dy) : Infinity);
       const ax = w / 2 + dx * t, ay = h / 2 + dy * t, ang = Math.atan2(dy, dx) * 180 / Math.PI, c = SG.WS_COL[i % SG.WS_COL.length];
       const tw = SG.TXT_W(v.label), tx = Math.max(M, Math.min(w - M - tw, ax - tw / 2)), ty = ay < h / 2 ? Math.min(h - M, ay + 26) : Math.max(M + 11, ay - 18);
-      out.push('<g data-fit-ws="' + ws.id + '" data-fit-key="' + SG.escA(v.key) + '" style="cursor:pointer">' +
+      out.push('<g data-offscreen="1" data-fit-ws="' + ws.id + '" data-fit-key="' + SG.escA(v.key) + '" style="cursor:pointer">' +
         '<circle cx="' + ax.toFixed(1) + '" cy="' + ay.toFixed(1) + '" r="12" style="fill:var(--card)" stroke="' + c + '" stroke-width="2"/>' +
         '<path d="M-5 -4 L5 0 L-5 4 Z" fill="' + c + '" transform="translate(' + ax.toFixed(1) + ' ' + ay.toFixed(1) + ') rotate(' + ang.toFixed(1) + ')"/>' +
         '<text x="' + tx.toFixed(1) + '" y="' + ty.toFixed(1) + '" font-size="12" font-weight="700" fill="' + c + '" style="stroke:var(--halo)" stroke-width="3" paint-order="stroke" stroke-linejoin="round" font-family="var(--font)">' + K.esc(v.label) + '</text></g>');

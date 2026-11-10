@@ -262,7 +262,8 @@ button.gdel { border: 0; background: none; color: var(--dim); cursor: pointer; }
 
 /* 几何工作区（§10.5，任务 H1）：画布在卡片里；面板在卡片底下 */
 .wsbody { cursor: default; }
-.wsx { position: absolute; box-sizing: border-box; background: var(--card); color: var(--ink); border-radius: 12px; padding: 8px 10px; font-size: 12px; box-shadow: 0 2px 0 #0003, 0 10px 26px #0006; border: 2px solid transparent; user-select: none; }
+/* 工作区的面板压在选中卡片的工具条（.tool，z 5）上面：不然卡片的工具条会挡住「适应」等按钮（随机测试第 80 步） */
+.wsx { position: absolute; z-index: 6; box-sizing: border-box; background: var(--card); color: var(--ink); border-radius: 12px; padding: 8px 10px; font-size: 12px; box-shadow: 0 2px 0 #0003, 0 10px 26px #0006; border: 2px solid transparent; user-select: none; }
 .wsx button { font: inherit; font-size: 12px; padding: 3px 8px; margin: 2px 2px 2px 0; border-radius: 8px; border: 1px solid #aab4c8; background: #fff; color: var(--ink); cursor: pointer; }
 .wsx button:hover { border-color: var(--blue); }
 .wsx input[type=number] { width: 48px; font: inherit; font-size: 12px; }

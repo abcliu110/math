@@ -231,7 +231,7 @@
   }
 
   // ---------- 式子工作台（任务 H 第 3b 步）：步骤只改工作台的状态（U.ExprBench.states），不改台面 ----------
-  function wbEqn(id) { const dd = S.D && S.D[id]; return dd ? U.ExprBench.eqnIn(dd.inp) : null; }
+  function wbEqn(id) { const dd = S.D && S.D[id]; return dd ? U.ExprBench.workEqnIn(dd.inp) : null; }
   // 选中项：dr.sel 里是 'lhs:0' 这样的键；按边取下标
   function wbSelOf(id, side) {
     return (UI.Panels.wbDraft(id).sel || []).filter((k) => k.indexOf(side + ':') === 0).map((k) => +k.slice(side.length + 1));
@@ -250,7 +250,7 @@
     const st = U.ExprBench.currentOf(id, eq);
     const ns = U.Workbench.step(st, tool, ref, args);
     if (ns.lastError) dr.msg = ns.lastError;
-    else { U.ExprBench.states[id] = { key: U.ExprBench.keyOf(eq), state: ns }; dr.msg = ''; dr.ref = ''; dr.sel = []; }
+    else { U.ExprBench.states[id] = { key: U.ExprBench.keyOf(eq), state: ns }; dr.msg = ''; dr.ref = ''; dr.sub = ''; dr.sel = []; }
     refresh();
   }
   function wbStep(id, tool) {
@@ -265,6 +265,11 @@
       ref = L.length === 1 ? L[0] : (/^\d+$/.test(raw) ? +raw - 1 : (raw || null));
     } else if (tool === 'divide' || tool === 'multiply') {
       args = { by: dr.by };
+    } else if (tool === 'substitute') {
+      // 代入：输入框写「字母 = 数」，例如 a=6；字母和数交给内核判断
+      const m = /^\s*([a-zA-Z])\s*=\s*(\S+)\s*$/.exec(dr.sub || '');
+      if (!m) return wbMsg(id, '请在「代入」框里写成「字母 = 数」，例如 a=6');
+      args = { var: m[1], val: m[2] };
     } else if (tool === 'collect' && (L.length || R.length)) {
       // 合并：选中的几项必须在同一边，至少两项；合并的结果留在原来的位置
       if (L.length && R.length) return wbMsg(id, '合并只能选同一边的项');
