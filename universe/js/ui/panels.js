@@ -238,6 +238,17 @@
     let h = '<div class="wb ar"><h5>竖式工作台</h5>';
     if (st.start.error) return h + '<div class="wb-msg">' + esc(st.start.error) + '</div></div>';
     h += '<div class="wb-now">现在：<b>' + esc(U.ArithBench.showState(st)) + '</b></div>';
+    h += U.ArithBench.isMul2(st.start) ? arMul2Body(st) : arColBody(st, dr);
+    if (dr.msg) h += '<div class="wb-msg">' + esc(dr.msg) + '</div>';
+    if (st.result !== null) h += '<div class="wb-sol">结果：' + esc(U.ArithBench.resultText(st)) + '</div>';
+    h += '<div class="wb-h">步骤</div>';
+    const log = U.ArithBench.stepLog(st);
+    h += log.length ? st.steps.map((s, i) => '<div class="wb-step"><span>' + esc(log[i]) + '</span><button data-ar-undo="' + (i + 1) + '">撤销到这一步</button></div>').join('') : '<div class="wb-none">还没有步骤</div>';
+    return h + '</div>';
+  }
+  // 竖式（加、减、一位数的乘法）：算式（点选要拆、凑整的数）、竖式（一列一列算）、拆数凑十凑整
+  function arColBody(st, dr) {
+    let h = '';
     // 算式：每个还没拆的数是一个按钮；竖式开始算以后就不能再拆或凑十
     const parts = U.ArithBench.exprParts(st), free = !st.cols.length;
     if (parts.length) {
@@ -259,13 +270,25 @@
     const next = st.cols.length;
     if (U.ArithBench.needNext(st.cols, base)) h += '<div class="wb-tools"><button data-ar-col="' + next + '">算' + esc(U.ArithBench.place(next)) + '</button></div>';
     const tools = U.ArithBench.tools(st);
-    if (tools.length && free) h += '<div class="wb-note">先在算式里点选一个数，再拆；也可以对两个一位数用凑十。</div><div class="wb-tools">' + tools.map((x) => '<button data-ar-tool="' + x.id + '">' + esc(x.label) + '</button>').join('') + '</div>';
-    if (dr.msg) h += '<div class="wb-msg">' + esc(dr.msg) + '</div>';
-    if (st.result !== null) h += '<div class="wb-sol">结果：' + esc(String(st.result)) + '</div>';
-    h += '<div class="wb-h">步骤</div>';
-    const log = U.ArithBench.stepLog(st);
-    h += log.length ? st.steps.map((s, i) => '<div class="wb-step"><span>' + esc(log[i]) + '</span><button data-ar-undo="' + (i + 1) + '">撤销到这一步</button></div>').join('') : '<div class="wb-none">还没有步骤</div>';
-    return h + '</div>';
+    if (tools.length && free) h += '<div class="wb-note">先在算式里点选一个数，再拆或凑整；也可以对两个一位数用凑十。</div><div class="wb-tools">' + tools.map((x) => '<button data-ar-tool="' + x.id + '">' + esc(x.label) + '</button>').join('') + '</div>';
+    if (U.ArithBench.isNeg(st.start)) h += '<div class="wb-note">被减数比减数小：大数写在上面减，结果是负数，最后写负号。</div>';
+    return h;
+  }
+  // 两位数乘两位数：竖式里一行一个部分积（十位的那一行向左移一位，末尾补 0），最后一行是相加的结果；下一步的按钮只出现一个
+  function arMul2Body(st) {
+    let h = '<div class="wb-note">两位数乘两位数：每个数位乘一次得到一个部分积，部分积相加就是结果。</div>';
+    const N = U.ArithBench.lenOf(st.start.a * st.start.b), cols = [];
+    for (let i = N - 1; i >= 0; i--) cols.push(i);
+    const row = (sym, v, name) => '<tr><td class="ar-op">' + sym + '</td>' + cols.map((i) => '<td data-ar-cell="' + name + '-' + i + '">' + (i < U.ArithBench.lenOf(v) ? U.ArithBench.digitAt(v, i) : '') + '</td>').join('') + '</tr>';
+    let t = '<table class="ar-grid"><tr class="ar-head"><td></td>' + cols.map((i) => '<td>' + esc(U.ArithBench.place(i)) + '</td>').join('') + '</tr>';
+    t += row('', st.start.a, 'row-0') + row('×', st.start.b, 'row-1');
+    st.parts.forEach((p, k) => { t += row('', p.value, 'pp-' + k); });
+    if (st.total !== null) t += '<tr class="ar-ans"><td></td>' + cols.map((i) => '<td data-ar-cell="ans-' + i + '">' + (i < U.ArithBench.lenOf(st.total) ? U.ArithBench.digitAt(st.total, i) : '') + '</td>').join('') + '</tr>';
+    h += t + '</table>';
+    const k = st.parts.length;
+    if (st.total === null && k < U.ArithBench.lenOf(st.start.b)) h += '<div class="wb-tools"><button data-ar-part="' + k + '">算' + esc(U.ArithBench.place(k)) + '的部分积</button></div>';
+    else if (st.total === null) h += '<div class="wb-tools"><button data-ar-tool="sum">相加（部分积）</button></div>';
+    return h;
   }
 
   // ---------- 时钟条 ----------

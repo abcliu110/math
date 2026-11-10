@@ -5,8 +5,13 @@
  *   - tool 'split'（拆数，规则 arith.split）：加法里点选一个数，拆成十位和个位（47 + 38 → 47 + 30 + 8）；
  *   - tool 'make-ten'（凑十，规则 arith.make-ten）：两个一位数相加、和超过 10 时凑十（8 + 5 → 8 + 2 + 3）；
  *   - tool 'col'（竖式算一列，规则 arith.column）：从个位起一列一列算，进位（加）或退位（减）写在下一列上。
- *   拆数、凑十只能在竖式还没开始算之前做，之后要先撤销。
- * 内核：U.ArithBench.replay(start, steps) 从头重放；撤销和重算都靠它。竖式只支持两个数的加减，乘法只支持一位数乘多位数（限制见 docs）。 */
+ *   - tool 'round'（凑整，规则 arith.round）：两个数的加法，点选一个数，把它凑到下一个整十（需要的数从另一个数里拿出来：47 + 38 → 47 + 3 + 35）；
+ *   - tool 'part'（两位数乘两位数的部分积，规则 arith.partial）：先算个位的部分积，再算十位的部分积（向左移一位）；
+ *   - tool 'sum'（相加部分积，规则 arith.sum-partial）：部分积都算完以后相加，得到结果。
+ *   拆数、凑十、凑整只能在竖式还没开始算之前做，之后要先撤销。
+ * 减法允许负数结果：被减数小于减数时，竖式把大数写在上面，结果是负数（精确的有理数，界面显示负号）。
+ * 乘法：乘数是一位数时用竖式列（任意多位的被乘数）；乘数是两位数（10 到 99）时用部分积，被乘数最多两位。
+ * 内核：U.ArithBench.replay(start, steps) 从头重放；撤销和重算都靠它。竖式只支持两个数的加减乘（限制见 docs）。 */
 (function (G) {
   'use strict';
   const U = G.U, K = U.kit;
@@ -27,13 +32,18 @@
   function create(props) {
     const a = Math.max(0, Math.floor(Number(props.a) || 0)), b = Math.max(0, Math.floor(Number(props.b) || 0)), op = props.op | 0;
     const start = { a, b, op, form: formOf(a, b, op), error: null };
-    if (op === 1 && a < b) start.error = '被减数小于减数，结果是负数，这里先不做';
-    if (op === 2 && b > 9) start.error = '竖式这里只做一位数的乘法（第二个数要在 0 到 9 之间）';
+    if (op === 2 && b > 9 && (a > 99 || b > 99)) start.error = '竖式这里只做一位数的乘法，或者两位数乘两位数（两个数都在 99 以内）';
     return start;
   }
   const keyOf = (props) => [props.a, props.op, props.b].join('|');
   // 竖式的各行：加法是算式里的所有数（拆开以后也一样），减法和乘法就是两个数
-  const rowsOf = (st) => (st.op === 0 ? flatOf(st.form) : [st.a, st.b]);
+  // 减法结果为负（被减数小于减数）：竖式把大数写在上面，结果前面加负号
+  const isNeg = (st) => st.op === 1 && st.a < st.b;
+  // 两位数乘两位数（乘数在 10 到 99）：用部分积，不用一列一列算
+  const isMul2 = (st) => st.op === 2 && st.b > 9;
+  const rowsOf = (st) => (st.op === 0 ? flatOf(st.form) : isNeg(st) ? [st.b, st.a] : [st.a, st.b]);
+  // 结果的写法：负数用 −（全角减号）
+  const signed = (n) => (n < 0 ? '−' + String(-n) : String(n));
   const baseOf = (rows) => Math.max(...rows.map(lenOf));
 
   // 第 i 列：cin 是从右边进来的进位（加）或退位（减）；返回这一列的全部数字
@@ -61,6 +71,36 @@
     return place(i) + '：' + c.parts[0] + ' × ' + c.parts[1] + (c.cin ? ' + ' + c.cin + '（进位）' : '') + ' = ' + c.total + '，写 ' + c.digit + (c.carry ? '，进 ' + c.carry : '');
   };
 
+  // 两位数乘两位数的一个部分积的说明：个位直接乘；十位乘完向左移一位
+  const partText = (a, i, d, value) => (i === 0
+    ? '个位：' + a + ' × ' + d + ' = ' + value
+    : '十位：' + a + ' × ' + d + ' = ' + a * d + '，向左移一位，得 ' + value);
+
+  // 两位数乘两位数的重放：部分积按数位从个位起算，都算完以后才能相加；相加的结果必须等于 a × b
+  function replayMul2(start, steps) {
+    const a = start.a, b = start.b, N = lenOf(b), parts = [], out = [];
+    let total = null;
+    for (const s of steps) {
+      if (s.tool === 'part') {
+        const i = s.args && s.args.digit;
+        if (total !== null) throw new Error('部分积已经加完了，不能再算');
+        if (i !== parts.length) throw new Error(parts.length < N ? (parts.length ? '先算' + place(parts.length) + '的部分积' : '要先算个位的部分积') : '部分积已经算完了');
+        const d = digitAt(b, i), value = a * d * 10 ** i;
+        parts.push({ place: i, digit: d, value });
+        out.push({ tool: 'part', rule: 'arith.partial', ref: null, args: { digit: i }, kept: true, why: partText(a, i, d, value) });
+      } else if (s.tool === 'sum') {
+        if (total !== null) throw new Error('已经相加过了');
+        if (parts.length < N) throw new Error('部分积还没算完，先算' + place(parts.length) + '的部分积');
+        total = parts.reduce((x, p) => x + p.value, 0);
+        if (total !== a * b) throw new Error('部分积相加的结果和算式不一样');
+        out.push({ tool: 'sum', rule: 'arith.sum-partial', ref: null, args: {}, kept: true, why: '相加：' + parts.map((p) => p.value).join(' + ') + ' = ' + total });
+      } else {
+        throw new Error('两位数乘两位数只用「算部分积」和「相加」，没有这个工具：' + s.tool);
+      }
+    }
+    return { start, form: start.form, steps: out, cols: [], parts, total, rows: [a, b], base: baseOf([a, b]), result: total, error: null, lastError: null };
+  }
+
   // 从头重放一串步骤。拆数、凑十走形式规则（U.applyRule）；竖式的一列按顺序算，错了就抛出原因。
   function replay(start, steps) {
     let form = start.form;
@@ -68,6 +108,7 @@
       if (steps.length) throw new Error(start.error);
       return { start, form, steps: [], cols: [], rows: rowsOf({ op: start.op, a: start.a, b: start.b, form }), base: 0, result: null, error: start.error, lastError: null };
     }
+    if (isMul2(start)) return replayMul2(start, steps);
     const cols = [], out = [];
     for (const s of steps) {
       const rows = rowsOf({ op: start.op, a: start.a, b: start.b, form });
@@ -80,16 +121,18 @@
         const beyond = i >= base;
         cols.push(c);
         out.push({ tool: 'col', rule: 'arith.column', ref: null, args: { col: i }, kept: true, why: colText(i, start.op, c, beyond) });
-      } else if (s.tool === 'split' || s.tool === 'make-ten') {
-        if (cols.length) throw new Error('竖式已经开始算了，要拆数或凑十，先撤销到竖式之前');
-        if (start.op !== 0) throw new Error('拆数和凑十只用在加法上');
+      } else if (s.tool === 'split' || s.tool === 'make-ten' || s.tool === 'round') {
+        if (cols.length) throw new Error('竖式已经开始算了，要拆数、凑十或凑整，先撤销到竖式之前');
+        if (start.op !== 0) throw new Error('拆数、凑十和凑整只用在加法上');
         const before = flatOf(form), r = U.applyRule(s.rule, U.val('form', form), s.ref, s.args);
         if (!r.ok) throw new Error(r.why);
         if (!r.kept) throw new Error('这一步破坏了不变量，已拒绝');
         form = r.value.data;
         const why = s.tool === 'split'
           ? '拆数：' + s.args.whole + ' = ' + s.args.parts.join(' + ')
-          : '凑十：' + before.join(' + ') + ' = ' + flatOf(form).join(' + ');
+          : s.tool === 'round'
+            ? '凑整：' + before.join(' + ') + ' = ' + flatOf(form).join(' + ')
+            : '凑十：' + before.join(' + ') + ' = ' + flatOf(form).join(' + ');
         out.push({ tool: s.tool, rule: s.rule, ref: s.ref, args: s.args, kept: true, why });
       } else {
         throw new Error('没有这个工具：' + s.tool);
@@ -100,7 +143,8 @@
     const done = cols.length > 0 && !needNext(cols, base);
     let result = null;
     if (done) {
-      result = cols.reduce((s, c, i) => s + c.digit * 10 ** i, 0);
+      const mag = cols.reduce((s, c, i) => s + c.digit * 10 ** i, 0);
+      result = isNeg(start) ? -mag : mag;
       const want = start.op === 0 ? rows.reduce((s, x) => s + x, 0) : start.op === 1 ? start.a - start.b : start.a * start.b;
       if (result !== want) throw new Error('竖式算出的数和算式不一样');
     }
@@ -127,12 +171,23 @@
     args = args || {};
     if (st.start.error) return fail(st, st.start.error);
     let s = null;
-    if (tool === 'col') s = { tool, rule: 'arith.column', ref: null, args: { col: args.col } };
+    if (isMul2(st.start)) {
+      if (tool === 'part') s = { tool, rule: 'arith.partial', ref: null, args: { digit: args.digit } };
+      else if (tool === 'sum') s = { tool, rule: 'arith.sum-partial', ref: null, args: {} };
+      else return fail(st, '两位数乘两位数只用「算部分积」和「相加」');
+    } else if (tool === 'col') s = { tool, rule: 'arith.column', ref: null, args: { col: args.col } };
     else if (tool === 'make-ten') {
       if (st.start.op !== 0) return fail(st, '凑十只用在加法上');
       const f = st.form;
       if (f.op !== 'add' || f.args.length !== 2 || f.args.some((x) => x.op !== 'num')) return fail(st, '凑十要在两个数的加法上做，而且两个数都没拆过');
       s = { tool, rule: 'arith.make-ten', ref: [], args: {} };
+    } else if (tool === 'round') {
+      if (st.start.op !== 0) return fail(st, '凑整只用在加法上');
+      const k = args.term;
+      if (k !== 0 && k !== 1) return fail(st, '先在算式里点选要凑整的数');
+      const f = st.form;
+      if (f.op !== 'add' || f.args.length !== 2 || f.args.some((x) => x.op !== 'num')) return fail(st, '凑整要在两个数的加法上做，而且两个数都没拆过');
+      s = { tool, rule: 'arith.round', ref: [], args: { near: k } };
     } else if (tool === 'split') {
       if (st.start.op !== 0) return fail(st, '拆数只用在加法上');
       const k = args.term;
@@ -162,18 +217,21 @@
   // 界面和判题要的文字
   const showState = (st) => {
     if (st.start.error) return st.start.error;
-    const op = OPS[st.start.op], rows = st.rows;
-    if (st.start.op === 0) return rows.join(' + ');
-    return rows.join(' ' + op + ' ');
+    if (st.start.op === 0) return st.rows.join(' + ');
+    // 减法和乘法按原来的顺序写（减法的竖式可能把大数写在上面，这里仍是 23 − 47）
+    return st.start.a + ' ' + OPS[st.start.op] + ' ' + st.start.b;
   };
+  // 结果的写法（负数带负号）；还没有结果是 null
+  const resultText = (st) => (st.result === null ? null : signed(st.result));
   // 算式行的按钮：加法里每个还没拆的数是一个按钮（点选后拆）
   const exprParts = (st) => (st.form.op === 'add' ? st.form.args.map((x, k) => ({ k, text: x.op === 'num' ? String(x.n) : '(' + flatOf(x).join(' + ') + ')', plain: x.op === 'num' })) : []);
 
   U.ArithBench = {
     create, keyOf, rowsOf, baseOf, digitAt, lenOf, replay, stateOf, currentOf, step, undo, saveAction, showState, exprParts, needNext, place,
+    isMul2, isNeg, resultText,
     tools(st) {
       if (st.start.op !== 0 || st.start.error) return [];
-      return [{ id: 'split', label: '拆（选中的数）' }, { id: 'make-ten', label: '凑十' }];
+      return [{ id: 'split', label: '拆（选中的数）' }, { id: 'make-ten', label: '凑十' }, { id: 'round', label: '凑整（选中的数）' }];
     },
     // 步骤记录的文字（历史列表）
     stepLog(st) {
@@ -207,8 +265,8 @@
         compute: (c) => {
           const st = currentOf(c.scene, c.ent.id, c.props);
           if (st.start.error) { c.say('reject', st.start.error); return {}; }
-          if (st.result === null) { c.say('info', '用竖式算：从个位算起'); return {}; }
-          c.say('ok', showState(st) + ' = ' + st.result);
+          if (st.result === null) { c.say('info', isMul2(st.start) ? '用部分积算：先算个位的部分积' : '用竖式算：从个位算起'); return {}; }
+          c.say('ok', showState(st) + ' = ' + resultText(st));
           return { result: U.val('num', U.Q(st.result), { dim: null }) };
         },
         badge: (c) => (c.out && c.out.result ? '= ' + c.out.result.data.n : ''),
@@ -217,7 +275,7 @@
           const txt = st.start.error ? '不能算' : showState(st);
           return K.text(c.w / 2, c.h / 2 - 6, c.props.label || '竖式工作台', { size: 12, weight: 700, fill: 'var(--dim)' }) +
             K.text(c.w / 2, c.h / 2 + 16, txt, { size: 15, weight: 700 }) +
-            (st.result !== null ? K.text(c.w / 2, c.h - 8, '= ' + st.result, { size: 13, weight: 700, fill: 'var(--good)' }) : '');
+            (st.result !== null ? K.text(c.w / 2, c.h - 8, '= ' + resultText(st), { size: 13, weight: 700, fill: 'var(--good)' }) : '');
         },
       },
     },

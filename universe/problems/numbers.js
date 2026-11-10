@@ -80,5 +80,54 @@
     ref: ['compare,num,num,power|3'],
   });
 
+  // H4 遗留（§10.5.6）：凑整、两位数乘两位数、减法的负数结果，都在竖式工作台上做
+  P.push({
+    id: 'arith-round-47-38', essence: ['E2'], title: '用凑整算 47 + 38', grade: 2, domain: '数与运算', points: ['2.2'], topics: ['凑整', '两位数加法'],
+    alias: ['凑整', '凑整算', '整十'], workbench: 'arith', rung: 2, level: 'core',
+    hook: '47 离 50 只差 3。先从 38 里拿出 3，把 47 凑成 50，再用竖式算。',
+    shelf: ['arithbench'],
+    build: mk({ ents: [{ type: 'arithbench', x: 300, y: 200, role: 'bench', props: { a: 47, op: 0, b: 38 } }] }),
+    milestones: [
+      { id: 'round', say: '用凑整把 47 凑成 50', score: 3, when: { steps: { used: 'arith.round', allKept: true } },
+        hints: ['47 离下一个整十还差几？', '点选 47，再点「凑整」。', '47 + 3 + 35：47 + 3 = 50。'] },
+      { id: 'result', say: '竖式算出 47 + 38 = 85', score: 4, when: { type: 'arithbench', port: 'result', op: '=', value: '85' },
+        hints: ['现在算 50 + 35。', '点「算个位」，再点「算十位」。', '结果是 85。'] },
+    ],
+    traps: [], goal: ['round', 'result'],
+    why: '47 + 38 = 47 + 3 + 35 = 50 + 35 = 85。凑整是先把一个数凑到整十，再把剩下的加上去；差的部分要从另一个数里拿出来。',
+  });
+
+  P.push({
+    id: 'arith-mul-23-14', essence: ['E2'], title: '用竖式算 23 × 14', grade: 3, domain: '数与运算', points: ['3.11'], topics: ['两位数乘两位数', '部分积'],
+    alias: ['两位数乘两位数', '部分积', '乘法竖式'], workbench: 'arith', rung: 3, level: 'core',
+    hook: '把 14 拆成 4 和 10，分别乘 23，再把两个部分积加起来。',
+    shelf: ['arithbench'],
+    build: mk({ ents: [{ type: 'arithbench', x: 300, y: 200, role: 'bench', props: { a: 23, op: 2, b: 14 } }] }),
+    milestones: [
+      { id: 'p0', say: '算出个位的部分积：23 × 4 = 92', score: 3, when: { steps: { used: 'arith.partial', allKept: true } },
+        hints: ['先用 14 的个位 4 去乘 23。', '点「算个位的部分积」。', '23 × 4 = 92。'] },
+      { id: 'result', say: '竖式算出 23 × 14 = 322', score: 4, when: { type: 'arithbench', port: 'result', op: '=', value: '322' },
+        hints: ['十位的部分积要向左移一位：23 × 10 = 230。', '点「算十位的部分积」，再点「相加（部分积）」。', '92 + 230 = 322。'] },
+    ],
+    traps: [], goal: ['p0', 'result'],
+    why: '23 × 14 = 23 × 4 + 23 × 10 = 92 + 230 = 322。两位数乘两位数：每个数位乘一次，十位的部分积末尾补 0，再相加。',
+  });
+
+  P.push({
+    id: 'arith-sub-negative', essence: ['E2'], title: '23 − 47 是多少？', grade: 7, domain: '数与运算', points: ['7.2'], topics: ['有理数的减法', '负数'],
+    alias: ['负数', '减法负数', '小减大'], workbench: 'arith', rung: 3, level: 'core',
+    hook: '23 比 47 小，减不了。竖式把大数写在上面，算出差，再决定结果的正负。',
+    shelf: ['arithbench'],
+    build: mk({ ents: [{ type: 'arithbench', x: 300, y: 200, role: 'bench', props: { a: 23, op: 1, b: 47 } }] }),
+    milestones: [
+      { id: 'cols', say: '竖式算出个位和十位', score: 2, when: { steps: { used: 'arith.column', allKept: true } },
+        hints: ['大数 47 写在上面，小数 23 在下面。', '点「算个位」：7 − 3 = 4。', '再点「算十位」：4 − 2 = 2。'] },
+      { id: 'result', say: '结果是 −24', score: 4, when: { type: 'arithbench', port: 'result', op: '=', value: '-24' },
+        hints: ['47 − 23 = 24，比 0 大；原题是 23 − 47。', '差的前面要加负号。', '−24。'] },
+    ],
+    traps: [], goal: ['cols', 'result'],
+    why: '23 − 47 = −(47 − 23) = −24。减数比被减数大时，结果是负数：先算大数减小数的差，再在前面加负号。',
+  });
+
   U.problems.push(...P);
 })(typeof globalThis !== 'undefined' ? globalThis : window);

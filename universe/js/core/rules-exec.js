@@ -187,6 +187,30 @@
     },
   });
 
+  // 凑整（H4 遗留）：两个数相加，点选的那个数（args.near，0 或 1）凑到下一个整十，差的部分从另一个数里拿出来。
+  // 例：47 + 38，点选 47：差 3，从 38 拿出 3 → 47 + 3 + 35。差要在 1 到 9 之间（接近整十），另一个数要比差大，才拿得出。
+  R('arith.round', {
+    label: '凑整：把一个数凑到下一个整十，另一个数里拿出差的部分', essence: ['E2'], grade: [2, 3], keeps: 'value',
+    match(f, at, args) {
+      const n = nodeAt(f, at);
+      if (!n || n.op !== 'add' || n.args.length !== 2) return '凑整要在两个数的加法上做';
+      const [x, y] = n.args;
+      if (x.op !== 'num' || y.op !== 'num') return '凑整的两个加数都要是整数';
+      const k = args && args.near;
+      if (k !== 0 && k !== 1) return '请点选要凑整的那个数';
+      const near = Number(n.args[k].n), other = Number(n.args[1 - k].n);
+      if (near % 10 === 0) return near + ' 已经是整十数，不用凑整';
+      const gap = 10 - (near % 10);   // 1 到 9：凑到的整十最近
+      if (other <= gap) return '另一个数 ' + other + ' 不够凑，要比差 ' + gap + ' 大';
+    },
+    apply(f, at, args) {
+      const n = nodeAt(f, at), k = args.near;
+      const near = n.args[k], other = Number(n.args[1 - k].n);
+      const gap = 10 - (Number(near.n) % 10);
+      return setAt(f, at, { op: 'add', args: [near, num(gap), num(other - gap)] });
+    },
+  });
+
   R('arith.commute', {
     label: '交换律：两个数交换位置，和（积）不变', essence: ['E2'], grade: [1, 2], keeps: 'value',
     match(f, at) {
