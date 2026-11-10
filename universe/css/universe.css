@@ -370,5 +370,24 @@ body.rail-l #left > :not(.railbtn), body.rail-r #right > :not(.railbtn) { displa
 .fbar button.fbar-fold { border-color: transparent; background: transparent; font-weight: 700; }
 .fbar-tools { display: flex; align-items: center; gap: 4px; }
 .fbar-tools button.on { background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 700; }
-.fbar.shut .fbar-tools, .fbar.shut [data-fbar="focus"] { display: none; }
+.fbar.shut .fbar-tools, .fbar.shut .fbar-quick, .fbar.shut [data-fbar="focus"] { display: none; }
+.fbar-quick { display: flex; align-items: center; gap: 4px; }
 #wsfocus .wsf-hd .fbar-tools button { font-size: 12px; padding: 3px 10px; }
+/* 工作区面板：放常见图形、选中图形的属性 */
+.wsx-shapes { margin: 4px 0; }
+.wsx-shapes > summary { cursor: pointer; color: var(--blue); font-weight: 700; padding: 2px 0; }
+.wsx-lbl { color: var(--dim); margin-right: 4px; }
+.wsx-props { margin: 6px 0; padding: 6px 8px; border-radius: 8px; background: #eef3fb; color: var(--ink); line-height: 1.6; }
+.wsx-facts { margin-left: 8px; color: var(--dim); }
+.wsx-vxs { margin-top: 4px; }
+.wsx-vx { display: inline-block; margin-right: 8px; white-space: nowrap; }
+.wsx-vx input[type=number] { width: 42px; }
+/* 画布里的迷你工具条：卡片左下角 */
+.wsmini button { font: inherit; font-size: 12px; padding: 2px 7px; border-radius: 6px; border: 1px solid #aab4c8; background: #fff; color: var(--ink); cursor: pointer; }
+.wsmini button:hover { border-color: var(--blue); }
+.wsmini button.on { background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 700; }
+.wsmini kbd { font: inherit; font-size: 11px; font-weight: 700; }
+.wsmini-sep { width: 1px; height: 16px; background: #aab4c8; margin: 0 2px; }
+/* 画布里图形的名字标签不拦鼠标：点图形中间（标签压在上面）也要能选中图形。能双击改名的点标签（data-ren）照旧响应 */
+svg.wsbody text:not([data-ren]) { pointer-events: none; }
+>

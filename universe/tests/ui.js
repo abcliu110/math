@@ -616,8 +616,13 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   const turnOf = () => p.evaluate((pid) => UI.S.scene.entities[pid].props.turn, pieceId);
   const t0 = await turnOf();
   const rot = await p.locator('.card svg.wsbody [data-hdl="rot"]').first().boundingBox();
-  const pc = await p.locator('.card svg.wsbody [data-pick="' + pieceName + '"]').first().boundingBox();
-  const cxp = pc.x + pc.width / 2, cyp = pc.y + pc.height / 2;
+  // 转动中心是块的外框中心（把手的圆心也在这里）。拖到“正左边”要以它为准：屏幕上的外框盒子不一定就是它（V9 把手按 1° 吸附，目标要真的在 90° 上）
+  const cen = await p.evaluate(([pid, ws]) => {
+    const pts = UI.S.D[pid].out.f.data.pts, xs = pts.map((q) => U.Q.num(q.x)), ys = pts.map((q) => U.Q.num(q.y));
+    const wb = document.querySelector('.card[data-id="' + ws + '"] svg.wsbody'), r = wb.getBoundingClientRect(), vw = UI.Stage.rangeOf(ws), sc = UI.Space.canvasOf(r, vw.span);
+    return UI.Space.workspaceToScreen({ x: (Math.min(...xs) + Math.max(...xs)) / 2, y: (Math.min(...ys) + Math.max(...ys)) / 2 }, vw, sc);
+  }, [pieceId, tri.ws]);
+  const cxp = cen.x, cyp = cen.y;
   await p.mouse.move(rot.x + rot.width / 2, rot.y + rot.height / 2); await p.mouse.down();
   await p.mouse.move(cxp - 90, cyp, { steps: 8 }); await p.mouse.up(); await p.waitForTimeout(80);
   const t1 = await turnOf();
@@ -642,7 +647,7 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   const wsid2 = await wsIdOf(), segN = () => p.evaluate(() => Object.values(UI.S.scene.entities).filter((e) => e.type === 'gseg').length);
   const n0 = await segN();
   await wsBtn('seg');
-  ok(await p.locator('[data-ws-tool="seg"].on').count() === 1, '(d) 选「连线」：工具按钮亮起，进入画线');
+  ok(await p.locator('.wsx [data-ws-tool="seg"].on').count() === 1, '(d) 选「连线」：工具按钮亮起，进入画线');
   const wb2 = await p.locator('.card[data-id="' + wsid2 + '"] svg.wsbody').boundingBox();
   await p.mouse.click(wb2.x + wb2.width * 0.12, wb2.y + wb2.height * 0.9); await p.waitForTimeout(40);
   await p.mouse.click(wb2.x + wb2.width * 0.42, wb2.y + wb2.height * 0.9); await p.waitForTimeout(120);

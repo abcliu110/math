@@ -66,13 +66,13 @@ const addWs = (p) => p.evaluate(() => { UI.App.openFree(); UI.App.act({ t: 'clea
   const toolIds = await p.evaluate(() => U.types.gworkspace.workspace.tools.map((t) => t.id));
   const missing = await p.evaluate((ids) => ids.filter((id) => { const h = UI.ToolHelp.of(id); return !h || !h.tip; }), toolIds);
   ok(toolIds.length > 0 && missing.length === 0, '说明表覆盖全部 ' + toolIds.length + ' 个工具' + (missing.length ? '，缺：' + missing.join('、') : ''));
-  const btnTips = await p.evaluate(() => [...document.querySelectorAll('[data-ws-tool]')].map((x) => x.getAttribute('data-tip') || ''));
+  const btnTips = await p.evaluate(() => [...document.querySelectorAll('.wsx-tools [data-ws-tool]')].map((x) => x.getAttribute('data-tip') || ''));
   ok(btnTips.length === toolIds.length && btnTips.every((t) => t.length > 0), '每个工具按钮都带 data-tip（' + btnTips.filter(Boolean).length + '/' + btnTips.length + '）');
 
   console.log('(e) 悬停工具按钮，说明出现');
-  await p.hover('[data-ws-tool="seg"]');
+  await p.hover('.wsx-tools [data-ws-tool="seg"]');
   await p.waitForTimeout(120);
-  const shownTip = await p.evaluate(() => getComputedStyle(document.querySelector('[data-ws-tool="seg"]'), '::after').content);
+  const shownTip = await p.evaluate(() => getComputedStyle(document.querySelector('.wsx-tools [data-ws-tool="seg"]'), '::after').content);
   ok(shownTip.includes('点两下画一条线'), '悬停“连线”，说明显示：' + shownTip.slice(0, 40));
   await p.mouse.move(2, 2);
 

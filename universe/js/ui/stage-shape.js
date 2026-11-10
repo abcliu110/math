@@ -77,7 +77,7 @@
     if (kind === 'rot') {
       const cf = { x: (Q.num(qb.x0) + Q.num(qb.x1)) / 2, y: (Q.num(qb.y0) + Q.num(qb.y1)) / 2 };
       const c = polyLike ? { x: Math.round(cf.x), y: Math.round(cf.y) } : cf;   // 图形的旋转中心取整数，旋转后仍然是整数坐标
-      if (fi.kind === 'piece') return startShape(ev, wb, wsId, 'prot', [], { id: fi.ent.id, t0: fi.ent.props.turn, c, qb });
+      if (fi.kind === 'piece') return startShape(ev, wb, wsId, 'prot', [], { id: fi.ent.id, t0: fi.ent.props.turn, a0: SG.approxOf(fi.ent), A0: SG.totalDeg(fi.ent), c, qb });
       if (fi.kind === 'place') return startShape(ev, wb, wsId, 'lrot', [], { id: fi.ent.id, t0: fi.ent.props.turn, c, qb });
       if (polyLike) return startShape(ev, wb, wsId, 'rot', uniq(fi.verts).map((g) => tgt(g, 'x', 'y')), { c, qb });
     }
@@ -118,7 +118,18 @@
         else E[d.id].props.scale = Q.show(Q.mul(Q.parse(d.s0), pick.f));
         tip = '放缩 ' + Q.show(pick.f) + ' 倍';
       } else tip = '这个比例会得到分数坐标（自由点只存整数），先不动';
-    } else if (d.mode === 'rot' || d.mode === 'prot' || d.mode === 'lrot') {
+    } else if (d.mode === 'prot') {
+      // 块的旋转（V9，2.10）：总角度从按下时的角度开始，跟着鼠标走，按 1° 吸附（按住 Shift 按 15°）。
+      // 90° 的倍数记在内核的 turn（精确），余下的 0–89 记在块的 approxDeg（界面层近似）。逆时针为正。
+      const c = d.c, th0 = Math.atan2(d.start.y - c.y, d.start.x - c.x), th = Math.atan2(wp.y - c.y, wp.x - c.x);
+      const step = ev.shiftKey ? L.ROT.coarse : L.ROT.step;
+      let A = Math.round((d.A0 + (th - th0) * 180 / Math.PI) / step) * step;
+      A = ((A % 360) + 360) % 360;
+      d.A = A;
+      E[d.id].props.turn = Math.floor(A / 90) % 4;
+      if (A % 90) E[d.id][SG.APPROX] = A % 90; else delete E[d.id][SG.APPROX];
+      tip = '转到 ' + (A % 90 ? '≈' : '') + A + '°';
+    } else if (d.mode === 'rot' || d.mode === 'lrot') {
       // 旋转：角度吸附到 90°，逆时针为正（和摆放器材的 turn 一致）
       const c = d.c, th0 = Math.atan2(d.start.y - c.y, d.start.x - c.x), th = Math.atan2(wp.y - c.y, wp.x - c.x);
       const k = Math.round((th - th0) / (Math.PI / 2));
@@ -144,12 +155,17 @@
     const orig = {};
     for (const t of d.targets) { orig[t.id + '|' + t.kx] = t.x0; orig[t.id + '|' + t.ky] = t.y0; E[t.id].props[t.kx] = t.x0; E[t.id].props[t.ky] = t.y0; }
     if (d.id && E[d.id]) { if (d.s0 !== undefined) E[d.id].props.scale = d.s0; if (d.t0 !== undefined) E[d.id].props.turn = d.t0; }
+    if (d.mode === 'prot' && E[d.id]) { if (d.a0) E[d.id][SG.APPROX] = d.a0; else delete E[d.id][SG.APPROX]; }
     if (!d.moved) return SG.render();
+    // 块的旋转（V9，2.10）：松手时一次提交（转过 90° 的部分是块的转动动作，余下的是 approxDeg），撤销一次回去
+    if (d.mode === 'prot') {
+      if (d.A === d.A0) return SG.render();
+      return UI.Intent.run('spin', { id: d.id, turn: modT(Math.floor(d.A / 90) - d.t0), approx: d.A % 90 });
+    }
     const last = {};
     for (const o of d.out) last[o.id + '|' + o.k] = o;
     const list = Object.values(last).filter((o) => o.v !== orig[o.id + '|' + o.k]).map((o) => ({ id: o.id, k: o.k, v: o.v }));
     if (d.mode === 'pscale' && d.f && !Q.eq(d.f, Q(1))) list.push({ id: d.id, what: 'scale', value: Q.show(d.f) });
-    if (d.mode === 'prot' && d.k % 4) list.push({ id: d.id, what: 'turn', value: d.k });
     if (d.mode === 'lrot' && modT(d.t0 + d.k) !== d.t0) list.push({ id: d.id, k: 'turn', v: modT(d.t0 + d.k) });
     if (list.length) UI.Intent.run('params', { ops: list }); else SG.render();
   }

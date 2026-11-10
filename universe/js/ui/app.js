@@ -479,6 +479,13 @@
         const what = e.key === 'r' || e.key === 'R' ? 'turn' : 'flip';
         UI.Intent.run('piece', { ids, what, value: 1 });
       }
+      else if (/^[lcvLCV]$/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        // 几何工作区的快捷键：L 连线、C 剪、V 回到选择；作用在鼠标最后停过的工作区（台面上只有一个就是它）
+        const ws = UI.Stage.activeWs(); if (!ws) return;
+        e.preventDefault();
+        const k = e.key.toLowerCase();
+        if (k === 'v') UI.Stage.endDraw(); else UI.Stage.drawMode(ws, k === 'l' ? 'seg' : 'cut');
+      }
       else if (e.key === 'Escape' && S.wsDraw) UI.Stage.endDraw();
       else if (e.key === 'Escape' && UI.State.focusedId()) UI.Stage.setFocus(null);
       else if (e.key === 'Escape') { S.sel = null; S.selLink = null; UI.Panels.renderInsp(); UI.Stage.render(); }

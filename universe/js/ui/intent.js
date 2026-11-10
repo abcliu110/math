@@ -136,6 +136,14 @@
         }
       },
     },
+    // 工作区里放一个常见图形（梯形、菱形……）：建器材，再放进工作区变成自由点和多边形。一步
+    shape: {
+      label: 'shape',
+      fn(A, p) {
+        const r = A({ t: 'add', type: p.type, x: 0, y: 0 });
+        A({ t: 'wsdrop', id: r.id, ws: p.ws, x: p.x, y: p.y });
+      },
+    },
     // 连线：从一个输出口拉到一个输入口
     link: {
       label: 'link',
@@ -154,6 +162,16 @@
     piece: {
       label: 'piece',
       fn(A, p) { for (const id of p.ids) A({ t: 'piece', id, what: p.what, value: p.value }); },
+    },
+    // 块的旋转（V9，2.10）：转过 90° 的部分是块的转动（内核的 turn，一个动作，值为 0 也记一步），余下的 0–89 写在块的 approxDeg 上
+    // （界面层的近似，不是属性，内核的数值语义不变）。撤销快照带着 approxDeg，所以撤销一次就回去。整串是一步。
+    spin: {
+      label: 'spin',
+      fn(A, p) {
+        A({ t: 'piece', id: p.id, what: 'turn', value: p.turn });
+        const e = UI.S.scene.entities[p.id];
+        if (p.approx) e.approxDeg = p.approx; else delete e.approxDeg;
+      },
     },
     rename: {
       label: 'rename',

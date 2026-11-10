@@ -28,7 +28,7 @@
     let svg = '';
     for (const T of labs.slice().sort((a, b) => a.prio - b.prio)) {
       const [x, y, b] = pick(T); placed.push(b);
-      svg += '<text' + (T.ren ? ' data-ren="' + T.ren + '" style="cursor:text"' : '') + ' x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" font-size="12" font-weight="700" fill="' + T.c + '" stroke="#f4f6fb" stroke-width="3" paint-order="stroke" stroke-linejoin="round" font-family="var(--font)">' + K.esc(T.text) + '</text>';
+      svg += '<text' + (T.ren ? ' data-ren="' + T.ren + '" style="cursor:text"' : '') + (T.ro ? ' data-ro="' + T.ro + '" pointer-events="none"' : '') + ' x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" font-size="12" font-weight="700" fill="' + T.c + '" stroke="#f4f6fb" stroke-width="3" paint-order="stroke" stroke-linejoin="round" font-family="var(--font)">' + K.esc(T.text) + '</text>';
     }
     return svg;
   }
@@ -65,7 +65,7 @@
   function offArrows(fr, ws) {
     const { vw, w, h, X, Y, vals } = fr, { hw, hh } = UI.Space.halfRange(w, h, vw), M = 6, out = [];
     vals.forEach((v, i) => {
-      const bx = SG.figBox(v.fig); if (!bx) return;
+      const bx = SG.figBox(v.fig, UI.S.scene.entities[v.id]); if (!bx) return;
       if (bx.x1 >= vw.cx - hw && bx.x0 <= vw.cx + hw && bx.y1 >= vw.cy - hh && bx.y0 <= vw.cy + hh) return;
       const dx = X((bx.x0 + bx.x1) / 2) - w / 2, dy = Y((bx.y0 + bx.y1) / 2) - h / 2;
       if (!dx && !dy) return;
@@ -88,6 +88,7 @@
     const gsvg = guidesSvg(SG.drag && SG.drag.wsId === ws.id ? SG.drag.guides || [] : [], fr, labs);   // 拖动时的对齐参考线（C12–C14）
     const fitOn = fitState(ws);   // 拼合正确的块变绿（C16）
     let g = '', top = '', hit = '';   // top：自由点的把手，画在所有图形的上面（图形的填充不能盖住点）；hit：没有别的把手的线和多边形的边，加宽的透明命中线
+    const selName = (S.wsSel || []).length === 1 ? S.wsSel[0] : null;   // 选中一个图形时，它的读数（V9，2.9）
     vals.forEach((v, i) => {
       const f = v.fig; if (!f) return;
       figObs(f, X, Y, s, obs);
@@ -101,11 +102,12 @@
       const fi0 = SG.figInfo(v), wantHit = (f.type === 'polygon' || f.type === 'segment') && !(fi0 && (fi0.kind === 'pts' || fi0.kind === 'piece'));
       let lx, ly, cands = [], prio = 1;
       if (f.type === 'polygon') {
-        const d = f.pts.map((p, k) => (k ? 'L' : 'M') + X(Q.num(p.x)).toFixed(1) + ' ' + Y(Q.num(p.y)).toFixed(1)).join(' ') + ' Z';
+        const sp = SG.shownPts(f, ent);   // 块有近似角度时画转过去的样子（V9，2.10）；其余就是精确坐标
+        const d = sp.map((p, k) => (k ? 'L' : 'M') + X(p.x).toFixed(1) + ' ' + Y(p.y).toFixed(1)).join(' ') + ' Z';
         const fit = isPc && !!fitOn && fitOn.ids.includes(ent.id);
         g += '<path d="' + d + '" fill="' + c + '22" stroke="' + (fit ? '#16a34a' : c) + '" stroke-width="' + sw + '"' + (fit && fitOn.flash ? ' class="wsflash"' : '') + pk + dg + sty + '/>';
         if (wantHit) hit += '<path d="' + d + '" fill="none" stroke="transparent" stroke-width="12"' + pk + ' style="cursor:pointer"/>';
-        lx = f.pts.reduce((a, p) => a + X(Q.num(p.x)), 0) / f.pts.length; ly = f.pts.reduce((a, p) => a + Y(Q.num(p.y)), 0) / f.pts.length;
+        lx = sp.reduce((a, p) => a + X(p.x), 0) / sp.length; ly = sp.reduce((a, p) => a + Y(p.y), 0) / sp.length;
         const tw = SG.TXT_W(v.label); cands = [[lx - tw / 2, ly + 4], [lx - tw / 2, ly + 18], [lx - tw / 2, ly - 10], [lx - tw / 2, ly + 32]]; prio = 2;
       } else if (f.type === 'segment') {
         const a = f.pts[0], b = f.pts[1];
@@ -129,6 +131,7 @@
         const tw = SG.TXT_W(v.label); cands = [[px + 9, py - 9], [px + 9, py + 15], [px - 9 - tw, py - 9], [px - 9 - tw, py + 15]]; prio = 0;
       }
       if (lx !== undefined) labs.push({ text: v.label, c, cands, prio, ren: f.type === 'point' && ents[v.id] && SG.roleOf(ents[v.id]) === 'point' ? v.id : null });   // 点的标签可以双击改名（2.6）
+      if (selName && SG.pickOf(v) === selName) SG.readoutsFor(ent, f, X, Y, labs);   // 选中的图形：读数（2.9）
     });
     return wsEdges(fr) + g + hit + top + wsHandles(fr) + gsvg + drawPreview(ws, fr) + offArrows(fr, ws) + placeLabels(labs, w, h, obs) + boardMsg(w, h);
   }
@@ -193,6 +196,7 @@
     const S = UI.S, tg = SG.wsValues(ws, SG.wsNames()).find((v) => SG.isTarget(S.scene.entities[v.id]));
     const pcs = SG.wsKids(ws).filter((k) => SG.roleOf(k) === 'piece');
     if (!tg || !tg.fig || !pcs.length) return null;
+    if (pcs.some((k) => SG.approxOf(k))) return null;   // 近似旋转的块只在界面上转过去，不参与拼合判定（V9，2.10）
     const figs = pcs.map((k) => S.D[k.id] && S.D[k.id].out.f && S.D[k.id].out.f.data);
     if (figs.some((f) => !f) || !U.Geo.assemble(figs, tg.fig).ok) return null;
     return { ids: pcs.map((k) => k.id), flash: !!(S.wsFit && S.wsFit.ws === ws.id && Date.now() < S.wsFit.until) };
@@ -241,11 +245,13 @@
       // 顶点：是自由点、又没有单独画出来的，画一个把手（拖动改它的 x、y）；已经画出来的点自己就是把手
       if (fi.kind === 'pts' && !isPt) pts.forEach((p, k) => { if (shown.has(fi.verts[k])) return; g += '<circle data-drag="' + fi.verts[k] + '" data-kx="x" data-ky="y" cx="' + X(Q.num(p.x)) + '" cy="' + Y(Q.num(p.y)) + '" r="4.5" fill="#fff" stroke="' + col + '" stroke-width="2" style="cursor:grab"/>'; });
       if (!on || isPt) return;
-      const xs = pts.map((p) => Q.num(p.x)), ys = pts.map((p) => Q.num(p.y));
+      const sp = SG.shownPts(fi.f, fi.ent), xs = sp.map((p) => p.x), ys = sp.map((p) => p.y);   // 把手跟着画出来的图形走（近似旋转的块）
       const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
       if (fi.kind === 'piece' || fi.kind === 'pts') {
+        // 放缩把手画在外框的角外面一点：长方形、梯形的顶点正好在外框的角上，把手不能盖住顶点（否则选中后就拖不到顶点了）
+        const CO = [[-9, 9], [9, 9], [9, -9], [-9, -9]];
         [[x0, y0], [x1, y0], [x1, y1], [x0, y1]].forEach(([x, y], k) => {
-          g += '<rect data-hdl="corner" data-corner="' + k + '" x="' + (X(x) - 5).toFixed(1) + '" y="' + (Y(y) - 5).toFixed(1) + '" width="10" height="10" fill="#fff" stroke="' + col + '" stroke-width="2" style="cursor:nwse-resize"/>';
+          g += '<rect data-hdl="corner" data-corner="' + k + '" x="' + (X(x) - 5 + CO[k][0]).toFixed(1) + '" y="' + (Y(y) - 5 + CO[k][1]).toFixed(1) + '" width="10" height="10" fill="#fff" stroke="' + col + '" stroke-width="2" style="cursor:nwse-resize"/>';
         });
       }
       const cx = X((x0 + x1) / 2), ty = Math.max(12, Y(y1) - 28);   // 把手留在画布里面（画布外面会被卡片的标题盖住）
