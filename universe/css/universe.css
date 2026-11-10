@@ -138,6 +138,7 @@ input, select, textarea { font: inherit; color: inherit; }
   background-size: 28px 28px; }
 #stage.panning { cursor: grabbing; }
 #world { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+#world > .sec { display: contents; }   /* 局部渲染的段（任务 J）：只是分组，不影响布局 */
 #links { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
 #links path.hit { stroke: transparent; stroke-width: 14; fill: none; pointer-events: stroke; cursor: pointer; }
 #links path.ln { fill: none; stroke-width: 3; stroke-linecap: round; pointer-events: none; }

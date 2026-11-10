@@ -402,7 +402,7 @@
         essence: ['E1', 'E5'],
         label: '几何画板', prefix: '画板', group: '图形', grades: [4, 9],
         props: { range: { type: 'int', label: '坐标范围（±）', default: 8, min: 4, max: 10 }, grid: { type: 'bool', label: '画格点', default: true }, title: { type: 'text', label: '标题', default: '' } },
-        inputs: { figs: { kind: 'fig', label: '图形', many: true } },
+        inputs: { figs: { kind: 'fig', label: '图形', many: true }, pts: { kind: 'spoint', label: '符号点', many: true } },
         outputs: { n: { dim: null, kind: 'num', label: '图形个数' } },
         icon: () => K.rect(8, 6, 48, 32, { stroke: 'var(--ink)', r: 3 }) + '<path d="M16 32 L46 32 L22 12 Z" fill="none" stroke="var(--ink)"/>',
         size: () => [300, 300],
@@ -430,6 +430,15 @@
               if (f.tag) handles += '<circle class="gpt" data-drag="' + f.tag + '" data-kx="x" data-ky="y" data-s="' + s.toFixed(4) + '" cx="' + X(f.pts[0].x) + '" cy="' + Y(f.pts[0].y) + '" r="7" fill="#fff" stroke="' + col + '" stroke-width="2.5" style="cursor:grab"/>';
               else shapes += K.mark(X(f.pts[0].x), Y(f.pts[0].y), 'circle', 4, { fill: col });
             }
+          });
+          // 符号点（任务 J，§10.7）：抛物线的交点、顶点等精确坐标，画在坐标系上。位置用近似值（只定像素），
+          // 旁边的文字是精确的（2 + √3）。data-sp 是精确文字，界面和测试都从这里读。
+          const sps = ((c.d && c.d.inp && c.d.inp.pts) || []).filter((x) => x && x.kind === 'spoint');
+          sps.forEach((v) => {
+            const px = ox + (U.Real.approx(v.data.x) + R) * s, py = oy + (R - U.Real.approx(v.data.y)) * s;
+            const txt = (v.exact === false ? '≈' : '') + U.Real.show(v.data.x);   // 点在 x 轴上时写 x 坐标（2 + √3）；一般的点写整个符号点
+            shapes += '<circle data-sp="' + K.esc(txt) + '" cx="' + px.toFixed(1) + '" cy="' + py.toFixed(1) + '" r="4" fill="var(--ink)" stroke="var(--card)" stroke-width="1.5"/>';
+            shapes += K.text(px, py - 9, txt, { size: 12, weight: 700 });
           });
           return g + shapes + handles;
         },
