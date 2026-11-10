@@ -28,6 +28,21 @@
     return out;
   };
 
+  // 文件清单检查（任务 J）：PACK_FILES、index.html 里 packs/ 下的脚本、packs/ 目录里的文件，三者必须一致。
+  // 返回错误文字的数组，空数组 = 一致。tests/run.js 用真实文件检查（不一致则 verify 失败）。
+  U.checkPackManifest = function (packFiles, htmlSrcs, dirFiles) {
+    const errs = [], files = packFiles || {}, html = htmlSrcs || [], dir = dirFiles || [];
+    const listed = new Set(Object.keys(files).map((id) => files[id]));
+    const inHtml = new Set(html), inDir = new Set(dir);
+    for (const id of Object.keys(files)) {
+      if (!inHtml.has(files[id])) errs.push('清单里的包 ' + id + '（' + files[id] + '）没有在 index.html 里加载');
+      if (!inDir.has(files[id])) errs.push('清单里的包 ' + id + ' 的文件 ' + files[id] + ' 不存在');
+    }
+    for (const f of html) if (!listed.has(f)) errs.push('index.html 加载了 ' + f + '，但清单 PACK_FILES 里没有这个包');
+    for (const f of dir) if (!listed.has(f)) errs.push('packs 里的 ' + f + ' 没有登记在清单 PACK_FILES 里');
+    return errs;
+  };
+
   // 打开问题或分享链接时，算出要加载哪些包：题目 shelf 里的器材类型 + 台面里的器材类型
   U.packsNeeded = function (problem, scene) {
     const types = new Set([...(problem && problem.shelf || []), ...Object.values((scene && scene.entities) || {}).map((e) => e.type)]);

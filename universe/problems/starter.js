@@ -94,7 +94,7 @@
   });
 
   P.push({
-    id: 'counter-loop', essence: ['E6'], title: '让它自己数数：1、2、3……', grade: 4, domain: '时间与变化', points: [], topics: ['递推', '反馈', '数列'],
+    id: 'counter-loop', essence: ['E6'], title: '让它自己数数：1、2、3……', grade: 4, domain: '时间与变化', points: ['1.16'], topics: ['递推', '反馈', '数列'],
     alias: ['计数', '迭代', '循环'], hook: '你要做一台会自己加 1 的机器。提示：它要“记住”上一次的数，再加 1，再记住……',
     shelf: ['num', 'op', 'memory', 'meter', 'clock'],
     build: mk({ ents: [

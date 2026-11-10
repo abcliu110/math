@@ -58,6 +58,7 @@
     types: {
       exprbench: {
         workspaceRole: 'none',
+        readsScene: true, // 读台面上的工作台步骤（scene.workbench），不全在连线上：增量求值时每次都算（任务 J）
         handles: true,
         inspector: 'workbench',
         essence: ['E4', 'E8'],
