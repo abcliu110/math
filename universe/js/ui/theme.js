@@ -21,12 +21,25 @@
     apply();
   }
   const cycle = () => set(MODES[(MODES.indexOf(mode) + 1) % MODES.length]);
+  // 高对比度（V10，2.6b）：菜单里的开关，开了写 data-contrast="high"（css/universe.css 里两套高对比度令牌）；记在 localStorage，同样 try/catch
+  const CKEY = 'universe.contrast';
+  let high = false;
+  try { high = G.localStorage.getItem(CKEY) === 'high'; } catch (e) { /* 存储不可用：只在内存里生效 */ }
+  function paintContrast() { const b = G.document.getElementById('contrastbtn'); if (b) { b.textContent = '高对比度：' + (high ? '开' : '关'); b.setAttribute('aria-pressed', high ? 'true' : 'false'); } }
+  function applyContrast() { G.document.documentElement.setAttribute('data-contrast', high ? 'high' : 'normal'); paintContrast(); }
+  function toggleContrast() {
+    high = !high;
+    try { if (high) G.localStorage.setItem(CKEY, 'high'); else G.localStorage.removeItem(CKEY); } catch (e) { /* 存储不可用：只在内存里生效 */ }
+    applyContrast();
+  }
+  applyContrast();
+  G.document.addEventListener('click', (e) => { const t = e.target; if (t && t.closest && t.closest('#contrastbtn')) toggleContrast(); });
   if (mq) {
     const onChange = () => { if (mode === 'auto') apply(); };
     if (mq.addEventListener) mq.addEventListener('change', onChange); else if (mq.addListener) mq.addListener(onChange);
   }
   apply();
-  G.document.addEventListener('DOMContentLoaded', paintButton);
+  G.document.addEventListener('DOMContentLoaded', () => { paintButton(); paintContrast(); });
   G.document.addEventListener('click', (e) => { const t = e.target; if (t && t.closest && t.closest('#themebtn')) cycle(); });
-  UI.Theme = { get: () => mode, resolved, set, cycle, LABEL };
+  UI.Theme = { get: () => mode, resolved, set, cycle, LABEL, isHigh: () => high, toggleContrast };
 })(window);

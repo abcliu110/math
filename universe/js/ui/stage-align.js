@@ -19,9 +19,17 @@
   const gapSeg = (a, b, c, d) => Math.min(pdist(a, c, d), pdist(b, c, d), pdist(c, a, b), pdist(d, a, b));
   const edgesOf = (f) => (f.type === 'polygon' ? f.pts.map((_, k) => [k, (k + 1) % f.pts.length]) : f.type === 'segment' ? [[0, 1]] : []);
   const gptPt = (id) => { const e = UI.S.scene.entities[id]; return { x: Q(e.props.x), y: Q(e.props.y) }; };
+  // 工作区里点的名字（学生看到的 A、B……）：按 id 取，从画布上的点图形（标签）来；和 stage-draw 的 constructsOf 用同一个办法
+  function pointNames(ws) {
+    const m = {};
+    for (const v of SG.wsVisible(ws)) { const fi = SG.figInfo(v); if (fi && fi.kind === 'pts' && v.fig.type === 'point' && fi.verts[0]) m[fi.verts[0] + '.p'] = v.label; }
+    const wn = SG.wsNames();
+    for (const k of Object.keys(wn)) if (!m[k]) m[k] = wn[k];
+    return m;
+  }
   // 拖动前准备：动点（拖动开始时的精确坐标）、动点之间的边（下标对），其余的顶点和边（动点本身和 exclude 指的图形不算）。名字用学生看到的
   function buildAlign(ws, base, edges, ids, exclude) {
-    const names = SG.wsNames(), O = [], OE = [];
+    const names = pointNames(ws), O = [], OE = [];
     for (const v of SG.wsVisible(ws)) {
       if (exclude && exclude(v)) continue;
       const fi = SG.figInfo(v), pts = v.fig.pts || [], vid = fi && fi.kind === 'pts' ? fi.verts : null;
@@ -32,6 +40,8 @@
       for (const [a, b] of es) {
         if (mv(a) || mv(b)) continue;
         OE.push({ a: pts[a], b: pts[b], name: nm(a) && nm(b) ? nm(a) + nm(b) : v.label + '的边' });
+        // 边的中点（V4 剩余，1.3）：块的顶点可以对齐到别的图形边的中点（整数坐标的中点才能落在整数平移上）；等距判断不用它
+        O.push({ p: { x: Q.div(Q.add(pts[a].x, pts[b].x), Q(2)), y: Q.div(Q.add(pts[a].y, pts[b].y), Q(2)) }, name: nm(a) && nm(b) ? nm(a) + nm(b) + ' 的中点' : v.label + ' 的边的中点', mid: true });
       }
     }
     return { base, edges, ids, others: O, oedges: OE, alt: false };
@@ -93,7 +103,7 @@
         const at = numP(p);
         for (const v of O) {
           const sx = Q.eq(p.x, v.p.x), sy = Q.eq(p.y, v.p.y);
-          if (sx && sy) add('pt' + at.x + ',' + at.y, { k: 'pt', x: at.x, y: at.y, at, text: '顶点重合' });
+          if (sx && sy) add('pt' + at.x + ',' + at.y, { k: 'pt', x: at.x, y: at.y, at, text: v.mid ? '落在 ' + v.name + ' 上' : '顶点重合' });
           else if (sx) add('vx' + at.x, { k: 'vl', x: at.x, at, text: '和 ' + v.name + ' 同一竖线' });
           else if (sy) add('hy' + at.y, { k: 'hl', y: at.y, at, text: '和 ' + v.name + ' 同一横线' });
         }
@@ -121,7 +131,7 @@
       for (const p of P) {
         let n = 0;
         for (let a = 0; a < O.length && n < 1; a++) for (let b = a + 1; b < O.length && n < 1; b++) {
-          if (O[a].name === O[b].name) continue;
+          if (O[a].name === O[b].name || O[a].mid || O[b].mid) continue;
           const d1 = d2(p, O[a].p), e2 = d2(p, O[b].p);
           if (Q.eq(d1, Q(0)) || !Q.eq(d1, e2)) continue;
           add('eq' + numP(p).x + ',' + numP(p).y + O[a].name + O[b].name, { k: 'seg2', a: numP(O[a].p), b: numP(O[b].p), at: numP(p), text: '与 ' + O[a].name + '、' + O[b].name + ' 等距' });
@@ -131,5 +141,38 @@
     }
     return { dx: Q.num(T.x), dy: Q.num(T.y), guides };
   }
-  Object.assign(SG, { ALIGN_PX, GUIDE_COL, cr2, dt2, vsb, numP, rnd, pdist, gapSeg, edgesOf, gptPt, buildAlign, alignOfFig, alignSolve });
+  // 卡片拖动吸附（V4 剩余，1.3）：卡片不是几何对象，所以在屏幕上吸：卡片中心离可见工作区里某个顶点或线段（多边形边）的中点在 SNAP_PX 像素内，
+  // 就吸过去，返回新的卡片位置和写给学生看的名字（“AB 的中点”）；Alt 按住或吸附开关关了就不吸。被拖的卡片本身的工作区不参与。
+  function cardSnap(ev, id, x, y) {
+    const S = UI.S, e = S.scene.entities[id];
+    if (!e || SG.snapFree(ev)) return null;
+    const g = SG.geom(e), cen = UI.Space.stageToScreen({ x: x + g.w / 2, y: y + g.h / 2 }, S.view);
+    let best = null;
+    for (const wb of document.querySelectorAll('svg.wsbody')) {
+      const wid = wb.dataset.wsid, ws = S.scene.entities[wid];
+      if (!ws || wid === id) continue;
+      const fr = SG.wsFrame(ws, +wb.getAttribute('width'), +wb.getAttribute('height')), sc = UI.Space.canvasOf(wb.getBoundingClientRect(), fr.vw.span);
+      const names = pointNames(ws);
+      const consider = (p, label) => {
+        const q = UI.Space.workspaceToScreen(p, fr.vw, sc), d = Math.hypot(q.x - cen.x, q.y - cen.y);
+        if (d <= SG.SNAP_PX && (!best || d < best.d)) best = { d, q, label };
+      };
+      for (const v of fr.vals) {
+        const f = v.fig; if (!f || !f.pts || f.type === 'circle') continue;
+        const P = f.pts.map((p) => ({ x: Q.num(p.x), y: Q.num(p.y) }));
+        // 名字用学生看到的点名（A、B……）：有就写“AB 的中点”，没有就用图形的名字
+        const fi = SG.figInfo(v), nmk = (k) => (fi && fi.kind === 'pts' && names[fi.verts[k] + '.p']) || null;
+        if (f.type === 'point') consider(P[0], nmk(0) || v.label);
+        else {
+          P.forEach((p, k) => consider(p, nmk(k) || v.label + '的顶点'));
+          const n = P.length, es = f.type === 'polygon' ? P.map((_, k) => [k, (k + 1) % n]) : f.type === 'segment' ? [[0, 1]] : [];
+          for (const [a, b] of es) consider({ x: (P[a].x + P[b].x) / 2, y: (P[a].y + P[b].y) / 2 }, nmk(a) && nmk(b) ? nmk(a) + nmk(b) + ' 的中点' : v.label + ' 的边的中点');
+        }
+      }
+    }
+    if (!best) return null;
+    const w = UI.Space.screenToStage({ clientX: best.q.x, clientY: best.q.y }, S.view);
+    return { x: w.x - g.w / 2, y: w.y - g.h / 2, label: best.label };
+  }
+  Object.assign(SG, { ALIGN_PX, GUIDE_COL, cr2, dt2, vsb, numP, rnd, pdist, gapSeg, edgesOf, gptPt, buildAlign, alignOfFig, alignSolve, cardSnap });
 })(window);

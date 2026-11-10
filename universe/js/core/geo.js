@@ -34,6 +34,19 @@
     },
     // 点 p 在直线 ab 的哪一侧：1 左、−1 右、0 在线上
     side: (a, b, p) => sgn(cross(sub(b, a), sub(p, a))),
+    // 三角形 abc 的重心（三个顶点的平均，有理数）
+    centroid: (a, b, c) => ({ x: Q.div(Q.add(Q.add(a.x, b.x), c.x), Q(3)), y: Q.div(Q.add(Q.add(a.y, b.y), c.y), Q(3)) }),
+    // 三角形 abc 的外心（三边中垂线的交点，有理数）；三点共线时没有，返回 null
+    circumcenter(a, b, c) {
+      const d = Q.mul(Q(2), Q.add(Q.add(Q.mul(a.x, Q.sub(b.y, c.y)), Q.mul(b.x, Q.sub(c.y, a.y))), Q.mul(c.x, Q.sub(a.y, b.y))));
+      if (d.n === 0n) return null;
+      const sa = Q.add(Q.mul(a.x, a.x), Q.mul(a.y, a.y)), sb = Q.add(Q.mul(b.x, b.x), Q.mul(b.y, b.y)), sc = Q.add(Q.mul(c.x, c.x), Q.mul(c.y, c.y));
+      const ux = Q.add(Q.add(Q.mul(sa, Q.sub(b.y, c.y)), Q.mul(sb, Q.sub(c.y, a.y))), Q.mul(sc, Q.sub(a.y, b.y)));
+      const uy = Q.add(Q.add(Q.mul(sa, Q.sub(c.x, b.x)), Q.mul(sb, Q.sub(a.x, c.x))), Q.mul(sc, Q.sub(b.x, a.x)));
+      return { x: Q.div(ux, d), y: Q.div(uy, d) };
+    },
+    // 线段 ab 上靠近 a 的 k/3 点（k = 1 或 2）：三等分点
+    trisect: (a, b, k) => ({ x: Q.add(a.x, Q.div(Q.mul(Q(k), Q.sub(b.x, a.x)), Q(3))), y: Q.add(a.y, Q.div(Q.mul(Q(k), Q.sub(b.y, a.y)), Q(3))) }),
 
     // ---------- 剪切 ----------
     // 用直线 ab 把多边形切成两块。返回 { pieces: [poly1, poly2] } 或 { pieces: null, why }

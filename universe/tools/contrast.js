@@ -44,6 +44,7 @@ const PAGES = [
   } },
 ];
 const SCHEMES = ['light', 'dark'];
+const CONTRAST_MODES = ['normal', 'high'];   // 高对比度（css/universe.css 的 data-contrast="high" 令牌）也要两套主题都过
 
 // ---------- 对比度公式（WCAG 2，sRGB 相对亮度） ----------
 function lum(rgb) {
@@ -119,6 +120,7 @@ function collectInPage() {
       if (!(s.compareDocumentPosition(t) & Node.DOCUMENT_POSITION_FOLLOWING)) return;   // s 必须排在文字前面
       const s2 = css(s);
       if (s2.fill === 'none' || !shown(s) || typeof s.isPointInFill !== 'function') return;
+      if (s2.fill.indexOf('url(') === 0) return;   // 纹理填充（斜线、点阵）：图案是稀疏的线或点，文字自己有描边，不当作纯色底色
       const c = rgba(s2.fill); c[3] *= parseFloat(s2.fillOpacity);
       if (c[3] <= 0) return;
       const m = s.getScreenCTM(); if (!m) return;
@@ -195,19 +197,22 @@ async function run() {
   const errors = [];      // 页面报错、打开失败
   let checked = 0;
   try {
-    for (const scheme of SCHEMES) {
+    // 每种主题（light / dark）× 普通 / 高对比度（V10，2.6b：菜单里的开关，用 localStorage 打开）各跑一遍
+    for (const scheme of SCHEMES) for (const mode of CONTRAST_MODES) {
       const ctx = await b.newContext({ colorScheme: scheme, viewport: { width: 1440, height: 900 } });
+      const label = scheme + (mode === 'high' ? '·高对比度' : '');
       for (const pg of PAGES) {
         const p = await ctx.newPage();
-        p.on('pageerror', (e) => errors.push(pg.name + '（' + scheme + '）页面报错：' + e.message));
+        if (mode === 'high') await p.addInitScript(() => { try { localStorage.setItem('universe.contrast', 'high'); } catch (e) { /* 存储不可用 */ } });
+        p.on('pageerror', (e) => errors.push(pg.name + '（' + label + '）页面报错：' + e.message));
         try {
           await p.goto(url); await p.waitForTimeout(300);
           await p.evaluate(pg.setup); await p.waitForTimeout(250);
           const items = await p.evaluate(collectInPage);
           checked += items.length;
-          for (const it of items) rows.push(Object.assign({ page: pg.name, scheme }, it));
+          for (const it of items) rows.push(Object.assign({ page: pg.name, scheme: label, theme: scheme }, it));
         } catch (e) {
-          errors.push(pg.name + '（' + scheme + '）打开失败：' + e.message.split('\n')[0]);
+          errors.push(pg.name + '（' + label + '）打开失败：' + e.message.split('\n')[0]);
         }
         await p.close();
       }
@@ -226,11 +231,11 @@ async function run() {
   }
   const bad = [...groups.values()].filter((g) => g.ratio < MIN).sort((a, b) => a.ratio - b.ratio);
   const small = [...groups.values()].filter((g) => g.r.size < SMALL);
-  const pagesN = PAGES.length, schemesN = SCHEMES.length;
+  const pagesN = PAGES.length, schemesN = SCHEMES.length * CONTRAST_MODES.length;
 
   for (const g of bad) {
     const r = g.r;
-    const fgTok = tokenName(tokens[r.scheme], r.fg), bgTok = tokenName(tokens[r.scheme], r.bg);
+    const fgTok = tokenName(tokens[r.theme], r.fg), bgTok = tokenName(tokens[r.theme], r.bg);
     console.log('  FAIL ' + r.page + ' | ' + g.schemes.join('/') + ' | ' + r.desc + ' | "' + r.text + '" @' + r.pos.join(',') +
       ' | ' + r.size + 'px | 文字 ' + hex(r.fg) + (fgTok ? '（' + fgTok + '）' : '') + ' 背景 ' + hex(r.bg) + (bgTok ? '（' + bgTok + '）' : '') +
       ' | 对比度 ' + g.ratio.toFixed(2) + ':1' + (r.bgImg ? ' [背景含图片或渐变，按纯色估算]' : ''));

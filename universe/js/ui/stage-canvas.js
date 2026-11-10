@@ -8,6 +8,8 @@
   // 线型（V10，2.6b）：线段和多边形的边按图形的序号换线型，颜色相同也分得开；辅助线固定虚线
   const da = (d) => (d ? ' stroke-dasharray="' + d + '"' : '');
   const dashOf = (f, i) => SG.LINE_DASH[f.dash ? 'aux' : 'line'][i % SG.WS_COL.length];   // 和颜色同一个序号，颜色不同线型就不同
+  // 点的形状（V10，2.6b）：由产生这个点的器材声明（pointShape，见 packs/geo.js）；没有声明的是圆
+  const shapeOf = (v) => { const e = UI.S.scene.entities[v.id], d = e && U.types[e.type]; return (d && d.pointShape) || 'circle'; };
   // 工作区的画布：把所有显示的值画在一起，按工作区的坐标范围画（范围定下来以后，卡片变大图也跟着变大）
   // 标签（V6，2.3）：标签的矩形不能和别的标签叠，也不能压住障碍（线、顶点圆圈、点、圆的线，见 figObs）。
   // 先按候选位置挑第一个“在画布里、不叠、不压住障碍”的；候选都不行，就在画布里按格子找；实在没有，夹到画布里（这时才可能叠，但不会比候选更差）。
@@ -102,7 +104,7 @@
     const labs = [], obs = [];   // 标签先收集，最后统一摆放（不叠、不压住线和圆、不出画布）；obs 是图形的障碍（2.3）
     const gsvg = guidesSvg(SG.drag && SG.drag.wsId === ws.id ? SG.drag.guides || [] : [], fr, labs);   // 拖动时的对齐参考线（C12–C14）
     const fitOn = fitState(ws);   // 拼合正确的块变绿（C16）
-    let g = '', top = '', hit = '';   // top：自由点的把手，画在所有图形的上面（图形的填充不能盖住点）；hit：没有别的把手的线和多边形的边，加宽的透明命中线
+    let g = K.texDefs(SG.WS_COL), top = '', hit = '';   // g 先放纹理图案的定义（V10，2.6b）；top：自由点的把手，画在所有图形的上面（图形的填充不能盖住点）；hit：没有别的把手的线和多边形的边，加宽的透明命中线
     const selName = (S.wsSel || []).length === 1 ? S.wsSel[0] : null;   // 选中一个图形时，它的读数（V9，2.9）
     vals.forEach((v, i) => {
       const f = v.fig; if (!f) return;
@@ -121,7 +123,7 @@
         const sp = SG.shownPts(f, ent);   // 块有近似角度时画转过去的样子（V9，2.10）；其余就是精确坐标
         const d = sp.map((p, k) => (k ? 'L' : 'M') + X(p.x).toFixed(1) + ' ' + Y(p.y).toFixed(1)).join(' ') + ' Z';
         const fit = isPc && !!fitOn && fitOn.ids.includes(ent.id);
-        g += '<path d="' + d + '" fill="' + c + '22" stroke="' + (fit ? '#16a34a' : c) + '" stroke-width="' + sw + '"' + da(dashOf(f, i)) + (fit && fitOn.flash ? ' class="wsflash"' : '') + pk(2) + dg + sty + '/>';
+        g += '<path d="' + d + '" fill="' + K.texFill(f, c) + '" stroke="' + (fit ? '#16a34a' : c) + '" stroke-width="' + sw + '"' + da(dashOf(f, i)) + (fit && fitOn.flash ? ' class="wsflash"' : '') + pk(2) + dg + sty + '/>';
         if (wantHit) hit += '<path d="' + d + '" fill="none" stroke="transparent" stroke-width="12"' + pk(1) + ' style="cursor:pointer"/>';
         lx = sp.reduce((a, p) => a + X(p.x), 0) / sp.length; ly = sp.reduce((a, p) => a + Y(p.y), 0) / sp.length;
         const tw = SG.TXT_W(v.label); cands = [[lx - tw / 2, ly + 4], [lx - tw / 2, ly + 18], [lx - tw / 2, ly - 10], [lx - tw / 2, ly + 32]]; prio = 2;
@@ -142,7 +144,7 @@
         if (src) {
           // 自由点的把手：拖动改它的 x、y（沿用 onDown 的 data-drag 机制）
           top += '<circle data-drag="' + src + '" data-kx="x" data-ky="y" data-s="' + s.toFixed(4) + '" cx="' + px + '" cy="' + py + '" r="7" fill="#fff" stroke="' + c + '" stroke-width="' + (on ? 4 : 2.5) + '" style="cursor:grab"' + pk(0) + '/>';
-        } else g += '<circle cx="' + px + '" cy="' + py + '" r="' + (on ? 6 : 4) + '" fill="' + c + '"' + pk(0) + sty + '/>';
+        } else g += K.mark(px, py, shapeOf(v), on ? 6 : 4, { fill: c, extra: pk(0) + sty });
         lx = px + 9; ly = py - 9;
         const tw = SG.TXT_W(v.label); cands = [[px + 9, py - 9], [px + 9, py + 15], [px - 9 - tw, py - 9], [px - 9 - tw, py + 15]]; prio = 0;
       }

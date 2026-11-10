@@ -22,6 +22,7 @@
         workspaceRole: 'point',
         workbenches: ['geometry'],
         handles: true,
+        pointShape: 'circle',
         essence: ['E1', 'E3'],
         label: '自由点', prefix: '点', group: '图形', grades: [4, 9],
         props: { x: { type: 'int', label: 'x', default: 0, min: -10, max: 10 }, y: { type: 'int', label: 'y', default: 0, min: -10, max: 10 }, mark: { type: 'text', label: '名字', default: '' } },
@@ -63,6 +64,7 @@
         handles: true,
         stepLabel: '中点',
         hidden: true,
+        pointShape: 'square',
         essence: ['E2', 'E5'],
         label: '中点', prefix: '中点', group: '图形', grades: [5, 9], lint: ex('只由两个点决定，没有可调的属性'),
         // 吸附声明（V4）：画线、放点时，靠近一条边的中点就吸附到它；吸附的结果是建这个器材（接 wire 里的两个点），用它的 out 口
@@ -84,6 +86,7 @@
         hidden: true,
         essence: ['E1'],
         label: '交点', prefix: '交点', group: '图形', grades: [7, 9], lint: ex('只由两条线决定，没有可调的属性'),
+        pointShape: 'triangle',
         props: {},
         inputs: { s: segIn, t: segIn },
         outputs: { p: { dim: null, kind: 'fig', label: '交点' } },
@@ -105,6 +108,7 @@
         handles: true,
         stepLabel: '垂线',
         hidden: true,
+        pointShape: 'diamond',
         essence: ['E1', 'E3'],
         label: '垂足', prefix: '垂足', group: '图形', grades: [7, 9], lint: ex('只由一个点和一条线决定'),
         props: {},
@@ -127,6 +131,7 @@
         handles: true,
         stepLabel: '垂足',
         hidden: true,
+        pointShape: 'diamond',
         essence: ['E1', 'E3'],
         label: '垂足（点到线）', prefix: '垂足', group: '图形', grades: [7, 9], lint: ex('只由一个点和线上的两个点决定'),
         // 吸附声明：已经按下了起点 p（start），指针靠近「p 到某条边所在直线的垂足」就吸附；结果是建这个器材，起点接 p，边的两端接 a、b
@@ -152,6 +157,7 @@
         handles: true,
         stepLabel: '交点',
         hidden: true,
+        pointShape: 'triangle',
         essence: ['E1'],
         label: '交点（两条线）', prefix: '交点', group: '图形', grades: [7, 9], lint: ex('只由两条线（四个点）决定'),
         // 吸附声明：两条线段（边、对角线）在里面相交，指针靠近交点就吸附；线 ab、线 cd
@@ -171,6 +177,96 @@
         draw: (c) => (c.out.p ? K.text(c.w / 2, c.h / 2 + 4, U.Fig.show(c.out.p.data).replace('点 ', ''), { size: 13 }) : ''),
       },
 
+      // ---------------- 三角形的重心：三个顶点的平均（V4 构造点；画线、拖点时靠近就吸附）----------------
+      gcentroid: {
+        workspaceRole: 'step',
+        workbenches: ['geometry'],
+        handles: true,
+        stepLabel: '重心',
+        hidden: true,
+        pointShape: 'tdown',
+        essence: ['E1', 'E5'],
+        label: '重心', prefix: '重心', group: '图形', grades: [7, 9], lint: ex('只由三个顶点决定，没有可调的属性'),
+        // 吸附声明：三角形的三个顶点（工作区里的多边形恰好三个顶点，且都是自由点）；结果建这个器材，接 a、b、c
+        snap: { kind: 'centroid', label: '重心', mark: '▽', of: 'tri', wire: ['a', 'b', 'c'], out: 'p', at: (a, b, c2) => Geo.centroid(a, b, c2) },
+        props: {},
+        inputs: { a: pointIn, b: pointIn, c: pointIn },
+        outputs: { p: { dim: null, kind: 'fig', label: '重心' } },
+        icon: () => K.circle(32, 26, 3, { fill: 'var(--ink)' }) + K.line(12, 40, 52, 40, { w: 1.5 }),
+        size: () => [120, 60],
+        compute: (c) => {
+          const [a, b, c2] = ['a', 'b', 'c'].map((k) => figIn(c, k, 'point'));
+          if (!a || !b || !c2) { c.say('info', '接三个点进来：三角形的三个顶点'); return {}; }
+          return { p: fig(ptFig(Geo.centroid(a.pts[0], b.pts[0], c2.pts[0]))) };
+        },
+        draw: (c) => (c.out.p ? K.text(c.w / 2, c.h / 2 + 4, U.Fig.show(c.out.p.data).replace('点 ', ''), { size: 13 }) : ''),
+      },
+
+      // ---------------- 三角形的圆心（外心，外接圆的圆心）：三边中垂线的交点（V4 构造点）----------------
+      gcircum: {
+        workspaceRole: 'step',
+        workbenches: ['geometry'],
+        handles: true,
+        stepLabel: '圆心',
+        hidden: true,
+        pointShape: 'cross',
+        essence: ['E1', 'E5'],
+        label: '圆心（外接圆）', prefix: '圆心', group: '图形', grades: [7, 9], lint: ex('只由三个顶点决定，没有可调的属性'),
+        // 吸附声明：三角形的三个顶点；三点共线时没有外接圆，不吸附
+        snap: { kind: 'circum', label: '圆心（外接圆）', mark: '◎', of: 'tri', wire: ['a', 'b', 'c'], out: 'p', at: (a, b, c2) => Geo.circumcenter(a, b, c2) },
+        props: {},
+        inputs: { a: pointIn, b: pointIn, c: pointIn },
+        outputs: { p: { dim: null, kind: 'fig', label: '圆心' } },
+        icon: () => K.circle(32, 28, 12, { stroke: 'var(--ink)' }) + K.line(26, 28, 38, 28, { w: 1.5 }),
+        size: () => [120, 60],
+        compute: (c) => {
+          const [a, b, c2] = ['a', 'b', 'c'].map((k) => figIn(c, k, 'point'));
+          if (!a || !b || !c2) { c.say('info', '接三个点进来：三角形的三个顶点'); return {}; }
+          const p = Geo.circumcenter(a.pts[0], b.pts[0], c2.pts[0]);
+          if (!p) { c.say('warn', '三个点在一条直线上，没有外接圆'); return {}; }
+          return { p: fig(ptFig(p)) };
+        },
+        draw: (c) => (c.out.p ? K.text(c.w / 2, c.h / 2 + 4, U.Fig.show(c.out.p.data).replace('点 ', ''), { size: 13 }) : ''),
+      },
+
+      // ---------------- 线段的三等分点（靠近第一个端点、靠近第二个端点各一个）（V4 构造点）----------------
+      gtri1: {
+        workspaceRole: 'step',
+        workbenches: ['geometry'],
+        handles: true,
+        stepLabel: '三分之一点',
+        hidden: true,
+        pointShape: 'star',
+        essence: ['E1', 'E2'],
+        label: '三分之一点', prefix: '三分点', group: '图形', grades: [5, 9], lint: ex('只由线段的两个端点决定，没有可调的属性'),
+        snap: { kind: 'trisect', label: '三分之一点', mark: '⅓', of: 'edge', wire: ['a', 'b'], out: 'p', at: (p, q) => Geo.trisect(p, q, 1) },
+        props: {},
+        inputs: { a: pointIn, b: pointIn },
+        outputs: { p: { dim: null, kind: 'fig', label: '三分之一点' } },
+        icon: () => K.line(8, 30, 56, 30, { w: 2 }) + K.circle(22, 30, 3.5, { fill: 'var(--ink)' }),
+        size: () => [120, 60],
+        compute: (c) => { const [a, b] = two(c, 'a', 'b', 'point'); if (!a || !b) { c.say('info', '接两个点进来'); return {}; } return { p: fig(ptFig(Geo.trisect(a.pts[0], b.pts[0], 1))) }; },
+        draw: (c) => (c.out.p ? K.text(c.w / 2, c.h / 2 + 4, U.Fig.show(c.out.p.data).replace('点 ', ''), { size: 13 }) : ''),
+      },
+      gtri2: {
+        workspaceRole: 'step',
+        workbenches: ['geometry'],
+        handles: true,
+        stepLabel: '三分之二点',
+        hidden: true,
+        pointShape: 'star',
+        essence: ['E1', 'E2'],
+        label: '三分之二点', prefix: '三分点', group: '图形', grades: [5, 9], lint: ex('只由线段的两个端点决定，没有可调的属性'),
+        snap: { kind: 'trisect', label: '三分之二点', mark: '⅔', of: 'edge', wire: ['a', 'b'], out: 'p', at: (p, q) => Geo.trisect(p, q, 2) },
+        props: {},
+        inputs: { a: pointIn, b: pointIn },
+        outputs: { p: { dim: null, kind: 'fig', label: '三分之二点' } },
+        icon: () => K.line(8, 30, 56, 30, { w: 2 }) + K.circle(42, 30, 3.5, { fill: 'var(--ink)' }),
+        size: () => [120, 60],
+        compute: (c) => { const [a, b] = two(c, 'a', 'b', 'point'); if (!a || !b) { c.say('info', '接两个点进来'); return {}; } return { p: fig(ptFig(Geo.trisect(a.pts[0], b.pts[0], 2))) }; },
+        draw: (c) => (c.out.p ? K.text(c.w / 2, c.h / 2 + 4, U.Fig.show(c.out.p.data).replace('点 ', ''), { size: 13 }) : ''),
+      },
+
       // ---------------- 围成多边形：按连线顺序把点围起来 ----------------
       gpoly: {
         workspaceRole: 'none',
@@ -178,7 +274,8 @@
         handles: true,
         essence: ['E2'],
         label: '围成多边形', prefix: '多边形', group: '图形', grades: [4, 9], lint: ex('顶点由连进来的点决定'),
-        props: {},
+        // 填充（V10，2.6b）：纯色之外可以选斜线或点阵，和颜色一起区分（三角形也是多边形）
+        props: { tex: { type: 'choice', label: '填充', default: 0, choices: ['纯色', '斜线', '点阵'] } },
         inputs: { pts: { kind: 'fig', label: '顶点', many: true } },
         outputs: { f: { dim: null, kind: 'fig', label: '多边形' } },
         icon: () => '<path d="M10 36 L54 36 L40 8 Z" fill="none" stroke="var(--ink)" stroke-width="1.5"/>',
@@ -187,6 +284,7 @@
           const ps = (c.inp.pts || []).filter((x) => x && x.kind === 'fig' && x.data.type === 'point').map((x) => x.data.pts[0]);
           if (ps.length < 3) { c.say('info', '至少接 3 个点（按连线的先后围起来）'); return {}; }
           const f = { type: 'polygon', pts: ps };
+          if (c.props.tex) f.tex = ['', 'hatch', 'dots'][c.props.tex];
           if (F.area2(f).n === 0n) { c.say('warn', '这些点在一条直线上，围不成图形'); return {}; }
           return { f: fig(f) };
         },
@@ -312,25 +410,25 @@
         draw: (c) => {
           const R = c.props.range, w = c.w - 8, h = c.h - 8, s = Math.min(w, h) / (2 * R), ox = 4 + (w - 2 * R * s) / 2, oy = 4 + (h - 2 * R * s) / 2;
           const X = (q) => ox + (Q.num(q) + R) * s, Y = (q) => oy + (R - Q.num(q)) * s;
-          let g = '';
+          const colors = ['#1d4ed8', '#c2410c', '#047857', '#7e22ce', '#b91c1c'];   // 与 js/ui/stage.js 的 WS_COL 同一组（对比度合格）
+          let g = K.texDefs(colors);   // 纹理图案的定义（V10，2.6b）
           if (c.props.grid) for (let i = -R; i <= R; i++) for (let j = -R; j <= R; j++) g += '<circle cx="' + X(Q(i)).toFixed(1) + '" cy="' + Y(Q(j)).toFixed(1) + '" r="0.9" fill="var(--line, #bbb)"/>';
           g += '<line x1="' + X(Q(-R)) + '" y1="' + Y(Q(0)) + '" x2="' + X(Q(R)) + '" y2="' + Y(Q(0)) + '" stroke="var(--line, #bbb)"/><line x1="' + X(Q(0)) + '" y1="' + Y(Q(-R)) + '" x2="' + X(Q(0)) + '" y2="' + Y(Q(R)) + '" stroke="var(--line, #bbb)"/>';
           const fs = ((c.d && c.d.inp && c.d.inp.figs) || []).filter((x) => x && x.kind === 'fig').map((x) => x.data);
-          const colors = ['#1d4ed8', '#c2410c', '#047857', '#7e22ce', '#b91c1c'];   // 与 js/ui/stage.js 的 WS_COL 同一组（对比度合格）
           let shapes = '', handles = '';
           fs.forEach((f, i) => {
             const col = colors[i % colors.length];
             if (f.type === 'polygon') {
               const d = f.pts.map((p, k) => (k ? 'L' : 'M') + X(p.x).toFixed(1) + ' ' + Y(p.y).toFixed(1)).join(' ') + ' Z';
               // 摆放器材输出的块带 tag：整块可以拖（改的是摆放器材的 dx、dy）
-              shapes += '<path d="' + d + '" fill="' + col + (f.tag ? '44' : '22') + '" stroke="' + col + '" stroke-width="2"' + (f.tag ? ' data-drag="' + f.tag + '" data-kx="dx" data-ky="dy" data-s="' + s.toFixed(4) + '" style="cursor:grab"' : '') + '/>';
+              shapes += '<path d="' + d + '" fill="' + (f.tex ? K.texFill(f, col) : col + (f.tag ? '44' : '22')) + '" stroke="' + col + '" stroke-width="2"' + (f.tag ? ' data-drag="' + f.tag + '" data-kx="dx" data-ky="dy" data-s="' + s.toFixed(4) + '" style="cursor:grab"' : '') + '/>';
             }
             else if (f.type === 'segment') shapes += '<line x1="' + X(f.pts[0].x) + '" y1="' + Y(f.pts[0].y) + '" x2="' + X(f.pts[1].x) + '" y2="' + Y(f.pts[1].y) + '" stroke="' + col + '" stroke-width="2"' + (f.dash ? ' stroke-dasharray="6 4"' : '') + '/>';
             else if (f.type === 'circle') shapes += '<circle cx="' + X(f.pts[0].x) + '" cy="' + Y(f.pts[0].y) + '" r="' + Math.sqrt(Q.num(f.r2)) * s + '" fill="none" stroke="' + col + '" stroke-width="2"/>';
             else if (f.type === 'point') {
               // 自由点（带 tag）画成可拖的把手；构造出来的点画成实心小点
               if (f.tag) handles += '<circle class="gpt" data-drag="' + f.tag + '" data-kx="x" data-ky="y" data-s="' + s.toFixed(4) + '" cx="' + X(f.pts[0].x) + '" cy="' + Y(f.pts[0].y) + '" r="7" fill="#fff" stroke="' + col + '" stroke-width="2.5" style="cursor:grab"/>';
-              else shapes += '<circle cx="' + X(f.pts[0].x) + '" cy="' + Y(f.pts[0].y) + '" r="4" fill="' + col + '"/>';
+              else shapes += K.mark(X(f.pts[0].x), Y(f.pts[0].y), 'circle', 4, { fill: col });
             }
           });
           return g + shapes + handles;

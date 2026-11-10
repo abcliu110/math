@@ -226,6 +226,9 @@
       const w = UI.Space.screenToStage(ev);
       if (!SG.drag.moved) { SG.drag.moved = true; SG.drag.before = UI.App.snapshot(); }
       SG.drag.x1 = w.x - SG.drag.dx; SG.drag.y1 = w.y - SG.drag.dy;
+      // 卡片靠近工作区里的顶点、线段中点时吸过去（V4 剩余，1.3），松手按吸到的位置放
+      const sn = SG.cardSnap(ev, SG.drag.id, SG.drag.x1, SG.drag.y1);
+      if (sn) { SG.drag.x1 = sn.x; SG.drag.y1 = sn.y; showTip(ev.clientX, ev.clientY, '吸附到 ' + sn.label, true); } else showTip(0, 0, '');
       UI.Intent.preview('move', { id: SG.drag.id, x: SG.drag.x1, y: SG.drag.y1 }); SG.render();
       // 拖到容器上时，给容器加虚线框提示“松手放进去”
       const hov = SG.cardUnder(ev, SG.drag.id, SG.isContainer);

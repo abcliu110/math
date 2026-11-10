@@ -83,6 +83,15 @@
           const at = sn.at(e.a, e.b, f.a, f.b); if (!at) continue;
           add(type, sn, at, e.ids.concat(f.ids), [], sn.label);
         }
+      } else if (sn.of === 'tri') {
+        // 三角形（V4 剩余）：工作区里三个顶点都是自由点的三角形；重心、外心都从三个顶点算。算不出（三点共线）就不给
+        for (const v of vals) {
+          const fi = SG.figInfo(v);
+          if (!fi || fi.kind !== 'pts' || fi.f.type !== 'polygon' || fi.f.pts.length !== 3 || new Set(fi.verts).size !== 3) continue;
+          const at = sn.at(fi.f.pts[0], fi.f.pts[1], fi.f.pts[2]); if (!at) continue;
+          const n = nm(fi.verts);
+          add(type, sn, at, fi.verts, [], n.every(Boolean) ? n.join('') + ' 的' + sn.label : sn.label);
+        }
       }
     }
     return out;

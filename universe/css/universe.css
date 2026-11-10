@@ -25,6 +25,22 @@
   --msg-good-bg: #f0fdf4; --msg-good-ink: #15803d; --msg-bad-bg: #fef2f2; --msg-bad-ink: #b91c1c;
   --halo: #ffffff; --mark-halo: #ffffff;
 }
+/* 高对比度（V10，2.6b / 2.11）：菜单里的“高对比度”开关（js/ui/theme.js 写 data-contrast="high"）。
+ * 在两套主题上各定义一组更亮、更深的令牌，文字和背景的对比度都 >= 4.5:1（tests/ui-visual.js 检查）。
+ * 深色的规则写成 :not([data-theme="light"])，免得和浅色的规则同时命中。 */
+:root[data-contrast="high"]:not([data-theme="light"]) {
+  --bg: #000000; --panel: #05080f; --panel2: #0f1624; --line: #3a4760; --txt: #ffffff; --txt2: #e6ecf7; --txt3: #d3dbea;
+  --blue-ink: #a9d2ff; --orange: #ffc266; --sel-bg: #0b2a55; --dim: #1f2a3d; --ink: #0b1220;
+  --ok-ink: #7dffc4; --bad-ink: #ff9aa0; --off-bg: #1f2a3d; --off-ink: #ffffff; --off-ink2: #ececf5; --warnbox-ink: #ffe2a8; --new-ink: #efe9ff;
+  --sig-bg: #1f2a3d; --lb-bg: #000000f2; --hover: #3d4f72;
+}
+:root[data-theme="light"][data-contrast="high"] {
+  --bg: #ffffff; --panel: #ffffff; --panel2: #eef3fb; --line: #b4bfd2; --txt: #000000; --txt2: #101828; --txt3: #1f2937;
+  --blue: #1e40af; --blue-ink: #0b3fa8; --orange: #7c2d04; --good: #03563d; --bad: #991b1b; --warn: #78350f;
+  --card: #ffffff; --ink: #000000; --dim: #1f2937; --accent: #9a2e00; --bad-ink: #991b1b; --sel-bg: #cfe0ff; --hover: #b4c6e6;
+  --ok-ink: #03563d; --off-bg: #dde3ec; --off-ink: #0f172a; --off-ink2: #1e293b; --warnbox-ink: #5c2a0a; --new-ink: #3b0f80;
+  --msg-good-ink: #0b5c2e; --msg-bad-ink: #8b1111; --sig-bg: #dde3ec; --lb-bg: #ffffffff;
+}
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; background: var(--bg); color: var(--txt); font-family: var(--font); font-size: 14px; overflow: hidden; -webkit-font-smoothing: antialiased; }
 button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
