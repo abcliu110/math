@@ -37,7 +37,15 @@
     return names[idx];
   }
   function onDown(ev) {
-    const S = UI.S, t = ev.target;
+    const S = UI.S;
+    if (ev.target.closest('.ctxmenu')) return;   // 长按菜单自己处理（V8）
+    if (SG.ctxId) SG.closeCtx();
+    let t = ev.target;
+    if (ev.pointerType === 'touch') {   // 触屏（V8，2.7）：第二个触点是双指缩放；第一个触点的点击范围放大到 24 像素，并开始计长按
+      if (SG.touchDown(ev)) return;
+      t = SG.touchPick(ev) || t;
+      SG.lpStart(ev, t);
+    }
     if (t.closest('.tool') || t.closest('.wsx') || t.closest('.wsx-float') || t.closest('.fbar') || t.closest('.wsmini')) return;   // 工作区底下的面板和浮动工具条（.fbar，也带 .wsmini）：让浏览器照常处理按钮和输入框
     // 超出范围的图形的箭头：点一下，范围调到它
     const arr = t.closest('[data-fit-key]');
@@ -136,6 +144,7 @@
   }
   function onMove(ev) {
     const S = UI.S;
+    if (ev.pointerType === 'touch' && SG.touchMove(ev)) return;   // 双指缩放中（V8）
     if (SG.linking) {
       SG.linking.cur = UI.Space.screenToStage(ev);
       document.querySelectorAll('.port.ok,.port.no,.pill.ok,.pill.no').forEach((n) => n.classList.remove('ok', 'no'));
@@ -198,6 +207,7 @@
 
   function onUp(ev) {
     const S = UI.S;
+    if (ev.pointerType === 'touch' && SG.touchEnd(ev)) return;   // 双指缩放中抬起的手指（V8）
     if (SG.shiftLine) {   // Shift 按下后没拖：就是 Shift 点选（加选 / 去掉）
       const sl = SG.shiftLine; SG.shiftLine = null;
       if (sl.pick) SG.wsPick(sl.pick, true);

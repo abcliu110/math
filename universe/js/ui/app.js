@@ -468,6 +468,7 @@
     // 键盘
     document.addEventListener('keydown', (e) => {
       if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+      if (UI.Stage.keyNav(e)) return;   // 工作区的键盘操作：Tab、Enter、方向键、Delete、Esc（V8，2.8），和鼠标共用意图层
       if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); }
       else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'Z'))) { e.preventDefault(); redo(); }
       else if (e.key === 'Delete' || e.key === 'Backspace') { if (S.selLink) { const id = S.selLink; S.selLink = null; UI.Intent.run('delete', { link: id }); } else if (S.sel) UI.Intent.run('delete', { id: S.sel }); }
