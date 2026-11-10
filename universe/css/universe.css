@@ -332,6 +332,15 @@ button.gdel { border: 0; background: none; color: var(--dim); cursor: pointer; }
 .wb button { font: inherit; font-size: 12px; padding: 3px 8px; margin: 2px 4px 2px 0; border-radius: 8px; border: 1px solid #aab4c8; background: #fff; color: var(--ink); cursor: pointer; }
 .wb-step { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin: 3px 0; font-size: 12px; }
 .wb-step button { margin: 0; white-space: nowrap; }
+/* 时间条（§10.5.9 第 7 条）：只读预览；步骤之间的过渡不超过 200 毫秒；菜单关掉动画（data-anim="off"）时全部不播 */
+.wb-tl { margin: 6px 0; font-size: 12px; }
+.wb-tl input[type="range"] { width: 100%; margin: 4px 0 0; }
+.wb-tl-pick { margin-top: 4px; }
+.wb-after { text-decoration: line-through; }
+.wb-step.wb-at { font-weight: 700; }
+[data-wb-now], .wb-step, .wb-eq { transition: opacity 200ms ease-out, transform 200ms ease-out; }
+.wb-enter { opacity: 0.2; transform: translateY(4px); }
+:root[data-anim="off"] *, :root[data-anim="off"] *::before, :root[data-anim="off"] *::after { transition: none !important; animation: none !important; }
 .wb-msg { color: var(--bad); margin: 6px 0; font-size: 12px; }
 /* 式子工作台（D5）：等号两边的项是按钮；选中的项用粗边和黄底标出，拖动时变淡，拖到右边时右边变蓝 */
 .wb-eq { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; margin: 8px 0 4px; }

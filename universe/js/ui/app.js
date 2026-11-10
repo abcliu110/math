@@ -262,7 +262,7 @@
     const st = wbNow(id, eq);
     const ns = U.Workbench.step(st, tool, ref, args);
     if (ns.lastError) dr.msg = ns.lastError;
-    else { wbSave(id, eq, ns); dr.msg = ''; dr.ref = ''; dr.sub = ''; dr.sel = []; }
+    else { wbSave(id, eq, ns); dr.msg = ''; dr.ref = ''; dr.sub = ''; dr.sel = []; dr.tl = undefined; dr.tlSet = false; }
     refresh();
   }
   function wbStep(id, tool) {
@@ -323,7 +323,7 @@
     if (!eq) return;
     const ns = U.Workbench.stepRule(wbNow(id, eq), 'alg.factor', [dr.side], { r1: (dr.r1 || '').trim(), r2: (dr.r2 || '').trim() });
     if (ns.lastError) dr.msg = ns.lastError;
-    else { wbSave(id, eq, ns); dr.msg = ''; dr.ref = ''; dr.sel = []; }
+    else { wbSave(id, eq, ns); dr.msg = ''; dr.ref = ''; dr.sel = []; dr.tl = undefined; dr.tlSet = false; }
     refresh();
   }
   // 「两边同除以 k」：k 是左边 kx 的系数，界面直接给出，不用打字
@@ -463,9 +463,14 @@
     const insp = $('#insp');
     UI.WBKit.bind(insp);   // 竖式、数据图表台（D8）的鼠标和键盘
     // 式子工作台的输入框：只记草稿，不重画（免得输入框失去焦点）
-    insp.addEventListener('input', (e) => { if (e.target.dataset.wbField && S.sel) UI.Panels.wbDraft(S.sel)[e.target.dataset.wbField] = e.target.value; });
+    insp.addEventListener('input', (e) => {
+      if (e.target.dataset.wbField && S.sel) UI.Panels.wbDraft(S.sel)[e.target.dataset.wbField] = e.target.value;
+      // 拖动时间条：只读预览（不改历史），松手前不出现选择
+      if (e.target.dataset.wbTl !== undefined && S.sel) UI.Panels.wbTl(S.sel, +e.target.value, false);
+    });
     insp.addEventListener('change', (e) => {
       const t = e.target, id = S.sel; if (!id) return;
+      if (t.dataset.wbTl !== undefined) { UI.Panels.wbTl(id, +t.value, true); return; }
       if (t.dataset.wbField) { UI.Panels.wbDraft(id)[t.dataset.wbField] = t.value; return; }
       if (t.id === 'nm') {
         // 块：名字同时写到器材名和「名字」属性上（台面卡片的标题和工作区的标签各用一个），一步改完
@@ -488,6 +493,10 @@
     insp.addEventListener('click', (e) => {
       const t = e.target, id = S.sel;
       const afterDrag = wbJust; wbJust = false;   // 拖过之后浏览器可能补一次点击：不算选中
+      // 时间条（§10.5.9 第 7 条）：回到当前步只改草稿；停在第 k 步就是撤销到第 k 步（和「撤销到这一步」一样，进历史）
+      if (t.closest && t.closest('[data-wb-tl-back]')) { UI.Panels.wbTl(id, undefined, false); return; }
+      const tlStop = t.closest && t.closest('[data-wb-tl-stop]');
+      if (tlStop) { UI.Panels.wbDraft(id).tl = undefined; wbUndo(id, +tlStop.dataset.wbTlStop); return; }
       const chip = t.closest && t.closest('[data-wb-term]');
       if (chip) { if (!afterDrag) wbToggle(id, chip.dataset.wbTerm); return; }
       const wbAct = t.closest && t.closest('[data-wb-act]');
