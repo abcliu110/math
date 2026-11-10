@@ -1,5 +1,5 @@
 /* node tools/verify.js —— 一条命令跑完全部检查，任一步失败就退出非零（不再往下跑）。
- * 顺序：tests/run.js → tools/check-types.js → tests/ui.js → tests/ui-probes.js（如果存在）→ tests/ui-layout.js → tests/ui-space.js → tests/ui-roles.js → tests/ui-deps.js → tests/ui-workbench.js → tests/ui-expr.js → tests/ui-select.js → tests/ui-snap.js → tests/ui-shapes.js → tests/ui-export.js → tests/ui-labels.js → tests/ui-space-focus.js → tests/ui-touch-keys.js → tests/ui-feedback.js → tests/ui-readout.js → tests/ui-robust.js → tests/ui-random.js → tools/lint-ui.js → tools/contrast.js → tools/build-standalone.js → dist 文件加载检查。
+ * 顺序：tests/run.js → tools/check-types.js → tests/ui.js → tests/ui-probes.js（如果存在）→ tests/ui-layout.js → tests/ui-space.js → tests/ui-roles.js → tests/ui-deps.js → tests/ui-workbench.js → tests/ui-expr.js → tests/ui-select.js → tests/ui-snap.js → tests/ui-shapes.js → tests/ui-export.js → tests/ui-labels.js → tests/ui-space-focus.js → tests/ui-touch-keys.js → tests/ui-feedback.js → tests/ui-readout.js → tests/ui-robust.js → tests/ui-random.js → tests/ui-theme.js → tests/ui-perf.js → tools/lint-ui.js → tools/contrast.js → tools/build-standalone.js → dist 文件加载检查。
  * 界面测试和 dist 检查需要环境变量 PW_NODE_PATH：playwright 所在的 node_modules 目录。
  * 用法：PW_NODE_PATH=<.../node_modules> node tools/verify.js */
 'use strict';
@@ -78,6 +78,8 @@ async function checkDist() {
   if (!runScript('tests/ui-readout.js', 'tests/ui-readout.js', pwEnv)) bail();       // 2.9/2.10/V9：读数（线段长、三角形面积与各边各角）、块的任意整数角度旋转（近似，1° / Shift 15° 吸附）、撤销
   if (!runScript('tests/ui-robust.js', 'tests/ui-robust.js', pwEnv)) bail();        // U8/P6–P8/P11：端口不挡标题栏、十格阵只放筹码、删除工作区不留残留、题目里的重放、复制留在容器里（真实鼠标）
   if (!runScript('tests/ui-random.js', 'tests/ui-random.js', pwEnv)) bail();        // U8：随机手势 200 步（固定种子 20260509），每步不变量成立
+  if (!runScript('tests/ui-theme.js', 'tests/ui-theme.js', pwEnv)) bail();          // V10/2.11/2.6b：深浅色令牌（两套对比度）、跟随系统、菜单切换并记住、存储不可用、线型（颜色不同线型不同）
+  if (!runScript('tests/ui-perf.js', 'tests/ui-perf.js', pwEnv)) bail();            // V10/2.15：性能（50 个图形，真实鼠标拖动一次，单次处理和到下一帧 < 200 毫秒；实测数字在输出里）
   if (!runScript('tools/lint-ui.js', 'tools/lint-ui.js')) bail();              // 界面代码的意图层、状态分层、布局数字、坐标换算、器材判断（U3–U7）
   if (!runScript('tools/contrast.js', 'tools/contrast.js', pwEnv)) bail();          // V1：界面文字对比度 >= 4.5:1（light/dark 两种主题，playwright 实测）
   if (fs.existsSync(path.join(root, 'tests', 'ui-probes.js'))) {
