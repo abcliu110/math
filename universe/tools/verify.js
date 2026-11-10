@@ -102,6 +102,7 @@ async function checkDist() {
   if (!runScript('tests/ui-scale.js', 'tests/ui-scale.js', pwEnv)) bail();     // 几何图形缩放把手（真实鼠标）：三角形放大 2 倍、矩形缩到 1/2、奇数边和超范围时的提示、撤销一步
   if (!runScript('tools/lint-ui.js', 'tools/lint-ui.js')) bail();              // 界面代码的意图层、状态分层、布局数字、坐标换算、器材判断（U3–U7）
   if (!runScript('tools/contrast.js', 'tools/contrast.js', pwEnv)) bail();          // V1：界面文字对比度 >= 4.5:1（light/dark 两种主题，playwright 实测）
+  if (!runScript('tests/ui-young.js', 'tests/ui-young.js', pwEnv)) bail();   // §11 低年级模式（真实鼠标）：菜单开关、字号和按钮变大、记住、工作区工具行只留声明的几个、存储不可用
   if (fs.existsSync(path.join(root, 'tests', 'ui-probes.js'))) {
     if (!runScript('tests/ui-probes.js', 'tests/ui-probes.js', pwEnv)) bail();
   }
