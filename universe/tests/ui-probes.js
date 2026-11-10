@@ -140,7 +140,7 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   await p.evaluate((s) => localStorage.setItem('universe-free-v1', s), oldSave);
   await p.reload(); await p.waitForTimeout(500);
   const oldLoaded = await p.evaluate(() => ({ n: Object.keys(UI.S.scene.entities).length, v: UI.S.scene.v }));
-  ok(oldLoaded.n === nOld && oldLoaded.v === 5, '旧存档（v4）打开后实体数 ' + oldLoaded.n + '，版本 ' + oldLoaded.v + '（期望 ' + nOld + '、5）');
+  ok(oldLoaded.n === nOld && oldLoaded.v === 6, '旧存档（v4）打开后实体数 ' + oldLoaded.n + '，版本 ' + oldLoaded.v + '（期望 ' + nOld + '、6）');
   await G.assertInvariants(p, '打开旧存档');
 
   await G.assertInvariants(p, '结束检查', { skip: ['undo'] });

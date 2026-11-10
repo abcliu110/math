@@ -605,7 +605,9 @@
   //   v2 → v3：器材补 parent / slot（容器与层级，1.10），没有容器的旧台面全部为 null
   //   v3 → v4：有理数的分子分母改成 BigInt
   //   v4 → v5：器材补 ui（界面的视图状态：工作区的坐标范围、图层开关、专注，U4）；旧台面没有视图，补成空对象，即按内容自动适应
-  const CURRENT_V = 5;
+  //   v5 → v6：块（gpiece）的平移 dx、dy 允许有理数（分数吸附）。旧台面的整数平移不变（整数存普通数字）；
+  //            其余写法（{n, d} 对象、字符串、非整数的数）统一成规范形式：整数是普通数字，分数是 "n/d"（U.Q.store）
+  const CURRENT_V = 6;
   const MIGRATIONS = {
     1: (s) => {
       const c = blank().clock; s.clock = Object.assign(c, s.clock || {});
@@ -637,6 +639,20 @@
     },
     5: (s) => {
       for (const e of Object.values(s.entities)) if (e.ui === undefined) e.ui = {};
+      return s;
+    },
+    // v5 → v6：块的平移量规范化（见上面的注释）。取不出有理数的值原样保留（界面和求值会报出来，不悄悄改成 0）
+    6: (s) => {
+      const Q = U.Q;
+      const norm = (x) => {
+        if (typeof x === 'number' && Number.isInteger(x)) return x;
+        try { return Q.store(typeof x === 'number' ? Q.fromNumber(x) : Q.parse(x)); } catch (err) { return x; }
+      };
+      for (const e of Object.values(s.entities)) {
+        if (e.type !== 'gpiece' || !e.props) continue;
+        if (e.props.dx !== undefined) e.props.dx = norm(e.props.dx);
+        if (e.props.dy !== undefined) e.props.dy = norm(e.props.dy);
+      }
       return s;
     },
   };

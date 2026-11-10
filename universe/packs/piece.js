@@ -46,9 +46,11 @@
     const next = {};
     switch (a.what) {
       case 'move': {
+        // 平移量是有理数（精确）：整数、"1/2" 这样的字符串，或 U.Q 数；原来的平移加上它，存规范形式
         const v = a.value || {};
-        const dx = Math.round(Number(v.dx) || 0), dy = Math.round(Number(v.dy) || 0);
-        next.dx = p.dx + dx; next.dy = p.dy + dy; break;
+        let ddx, ddy;
+        try { ddx = Q.parse(v.dx === undefined ? 0 : v.dx); ddy = Q.parse(v.dy === undefined ? 0 : v.dy); } catch (err) { return fail('平移量要填有理数，例如 2 或 1/2'); }
+        next.dx = Q.store(Q.add(Q.parse(p.dx), ddx)); next.dy = Q.store(Q.add(Q.parse(p.dy), ddy)); break;
       }
       case 'turn': {
         const k = a.value === undefined ? 1 : Math.round(Number(a.value));
@@ -134,8 +136,8 @@
         essence: ['E2', 'E5'],
         label: '块', prefix: '块', group: '图形', grades: [5, 9],
         props: {
-          dx: { type: 'int', label: '向右移', default: 0, min: -200, max: 200 },
-          dy: { type: 'int', label: '向上移', default: 0, min: -200, max: 200 },
+          dx: { type: 'rat', label: '向右移', default: 0, min: -200, max: 200 },
+          dy: { type: 'rat', label: '向上移', default: 0, min: -200, max: 200 },
           turn: { type: 'choice', label: '旋转', default: 0, choices: ['不转', '转 90°', '转 180°', '转 270°'] },
           flip: { type: 'choice', label: '翻转', default: 0, choices: ['不翻', '左右翻', '上下翻'] },
           scale: { type: 'text', label: '放缩（倍数）', default: '1' },

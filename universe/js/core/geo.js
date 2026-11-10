@@ -133,7 +133,8 @@
       if (o.flip === 1) g = F.map(g, (p) => ({ x: Q.sub(Q.add(x0, x1), p.x), y: p.y }));        // 左右翻
       if (o.flip === 2) g = F.map(g, (p) => ({ x: p.x, y: Q.sub(Q.add(y0, y1), p.y) }));        // 上下翻
       if (o.turn) g = F.rotate90(g, { x: x0, y: y0 }, o.turn);
-      if (o.dx || o.dy) g = F.translate(g, Q(o.dx || 0), Q(o.dy || 0));
+      const tx = Q.parse(o.dx || 0), ty = Q.parse(o.dy || 0);   // 平移量可以是有理数（块的分数平移），精确
+      if (tx.n || ty.n) g = F.translate(g, tx, ty);
       return g;
     },
 

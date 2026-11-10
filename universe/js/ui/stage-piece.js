@@ -30,7 +30,8 @@
     // 对齐准备：块的形状（拖动开始时的）和其余的顶点、边（目标图形也在里面），块自己的不算
     const pv = S.D[pe.id] && S.D[pe.id].out.f ? S.D[pe.id].out.f.data : null;
     const align = pv && ws ? SG.buildAlign(ws, pv.pts, SG.edgesOf(pv), [], (v) => v.id === pe.id) : null;
-    SG.drag = { kind: 'piece', id: pe.id, wsId: pe.parent, v0, unit: v0 ? UI.Space.canvasOf(r, v0.span).unit : UI.Space.figUnit(r, cw, +gh.dataset.s), dx0: pe.props.dx, dy0: pe.props.dy, sx: ev.clientX, sy: ev.clientY, dxn: 0, dyn: 0, out: false, moved: false, align, guides: [], ghost: pv ? [pv.pts.map((q) => ({ x: Q.num(q.x), y: Q.num(q.y) }))] : [] };
+    if (align) align.frac = true;   // 块的平移是有理数：目标是分数中点（边的中点）也能吸附
+    SG.drag = { kind: 'piece', id: pe.id, wsId: pe.parent, v0, unit: v0 ? UI.Space.canvasOf(r, v0.span).unit : UI.Space.figUnit(r, cw, +gh.dataset.s), dx0: pe.props.dx, dy0: pe.props.dy, q0x: Q.parse(pe.props.dx), q0y: Q.parse(pe.props.dy), sx: ev.clientX, sy: ev.clientY, dxq: Q(0), dyq: Q(0), out: false, moved: false, align, guides: [], ghost: pv ? [pv.pts.map((q) => ({ x: Q.num(q.x), y: Q.num(q.y) }))] : [] };
     // 量完大小再重画：重画会换掉这个图形的 DOM，之后再量会得到 0
     if (pk) SG.render();
   }
@@ -42,19 +43,21 @@
     if (!d.moved && d.v0) UI.State.setUi(S.scene.entities[d.wsId], 'view', d.v0);   // 拖动开始：把冻结的坐标范围存下来
     d.moved = true;
     d.out = !overWs(ev, d.wsId);
-    const cl = (v) => Math.max(-200, Math.min(200, v));
-    let nx = d.dx0, ny = d.dy0; d.guides = [];
+    // 平移量精确（有理数）：不吸附时按整格走（取整），吸附时用对齐求出的精确平移（可以是分数中点）
+    const cl = (q) => (Q.cmp(q, Q(-200)) < 0 ? Q(-200) : Q.cmp(q, Q(200)) > 0 ? Q(200) : q);
+    let nx = d.q0x, ny = d.q0y; d.guides = [];
     if (!d.out) {
-      if (d.align) { d.align.alt = !!ev.altKey; const s = SG.alignSolve(d.align, { x: UI.Space.pxToUnits(mx, d.unit), y: -UI.Space.pxToUnits(my, d.unit) }, d.unit); nx = cl(d.dx0 + s.dx); ny = cl(d.dy0 + s.dy); d.guides = s.guides; }
-      else { nx = cl(d.dx0 + Math.round(UI.Space.pxToUnits(mx, d.unit))); ny = cl(d.dy0 - Math.round(UI.Space.pxToUnits(my, d.unit))); }
+      if (d.align) { d.align.alt = !!ev.altKey; const s = SG.alignSolve(d.align, { x: UI.Space.pxToUnits(mx, d.unit), y: -UI.Space.pxToUnits(my, d.unit) }, d.unit); nx = cl(Q.add(d.q0x, s.dxq)); ny = cl(Q.add(d.q0y, s.dyq)); d.guides = s.guides; }
+      else { nx = cl(Q.add(d.q0x, Q(Math.round(UI.Space.pxToUnits(mx, d.unit))))); ny = cl(Q.sub(d.q0y, Q(Math.round(UI.Space.pxToUnits(my, d.unit))))); }
     }
-    d.dxn = nx - d.dx0; d.dyn = ny - d.dy0;
-    if (e.props.dx !== nx || e.props.dy !== ny) {
-      e.props.dx = nx; e.props.dy = ny;
+    d.dxq = Q.sub(nx, d.q0x); d.dyq = Q.sub(ny, d.q0y);
+    const sx = Q.store(nx), sy = Q.store(ny);
+    if (e.props.dx !== sx || e.props.dy !== sy) {
+      e.props.dx = sx; e.props.dy = sy;
       // 还在工作区里：只重画工作区；拖出去了要变成台面上的卡片，整张台面重画
       if (d.out) UI.App.refresh(false); else { S.D = W.evaluate(S.scene); SG.wsRedraw(d.wsId); }
     }
-    SG.showTip(ev.clientX, ev.clientY, d.out ? '松手放到台面上，就变成一张器材卡片' : '向右 ' + d.dxn + ' 格，向上 ' + d.dyn + ' 格', !d.out);
+    SG.showTip(ev.clientX, ev.clientY, d.out ? '松手放到台面上，就变成一张器材卡片' : '向右 ' + Q.show(d.dxq) + ' 格，向上 ' + Q.show(d.dyq) + ' 格', !d.out);
   }
   // 松手：还在工作区里，就是一步移动；拖出了工作区，就取出来放到台面上（落在别的容器上就放进那个容器）
   function pieceUp(d, ev) {
@@ -66,7 +69,7 @@
     if (d.out) {
       const w = UI.Space.screenToStage(ev);
       UI.Intent.run('drop', { id: d.id, ev, piece: true, out: { x: w.x - L.PIECE_DROP.x, y: w.y - L.PIECE_DROP.y } });
-    } else if (d.dxn || d.dyn) UI.Intent.run('piece', { ids: [d.id], what: 'move', value: { dx: d.dxn, dy: d.dyn } });
+    } else if (!Q.eq(d.dxq, Q(0)) || !Q.eq(d.dyq, Q(0))) UI.Intent.run('piece', { ids: [d.id], what: 'move', value: { dx: Q.show(d.dxq), dy: Q.show(d.dyq) } });
     else UI.App.refresh(false);
     // 松手后：拼对了就闪一下（判定在 wsBody 里每次重画时算，和「对齐到目标」一样用 U.Geo.assemble）
     if (!d.out) S.wsFit = { ws: d.wsId, until: Date.now() + 900 };

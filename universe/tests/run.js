@@ -65,7 +65,7 @@ t('v2 台面没有容器字段：升到 v3 后 parent/slot 为 null', () => {
   const s = W.load(JSON.stringify({ v: 2, nid: 2, seq: {}, entities: { e1: { id: 'e1', type: 'num', name: 'x', x: 0, y: 0, props: { n: 1 } } }, links: [], clock: { t: 0, n: 0, running: false, hz: 4, rate: 1, seed: 1 } }));
   eq(s.v, W.CURRENT_V); eq(s.entities.e1.parent, null); eq(s.entities.e1.slot, null);
 });
-t('旧存档 v1–v4 都能读，升到 v5，实体补空的 ui（视图按自动适应），求值不报错', () => {
+t('旧存档 v1–v4 都能读，升到 v6，实体补空的 ui（视图按自动适应），求值不报错', () => {
   const clock = { t: 0, n: 0, running: false, hz: 4, rate: 1, seed: 1 };
   const olds = [
     { entities: { e1: { id: 'e1', type: 'num', name: 'x', x: 0, y: 0, props: { n: 1 } } }, links: [] },
@@ -75,7 +75,7 @@ t('旧存档 v1–v4 都能读，升到 v5，实体补空的 ui（视图按自�
   ];
   for (const o of olds) {
     const s = W.load(JSON.stringify(o));
-    eq(s.v, 5, '升到 v5'); eq(s.entities.e1.ui, {}, '实体补空的 ui');
+    eq(s.v, 6, '升到 v6（v6 起块的平移可以是分数）'); eq(s.entities.e1.ui, {}, '实体补空的 ui');
     W.evaluate(s);
   }
 });
@@ -1950,6 +1950,63 @@ t('块的移动：移动块 2 三次，仍只有这一个块器材，每次一�
   eq(sc.entities[b2].props.dx, 15);
   const back = W.load(snaps.pop());
   eq(back.entities[b2].props.dx, 10, '撤销最后一步，回到前一个 dx');
+});
+console.log('块的分数平移（分数吸附，存档 v6）');
+t('有理数属性：整数存普通数字，分数存 "n/d" 字符串；范围和非法写法照常检查；控件是文本框', () => {
+  const P = { type: 'rat', label: '向右移', default: 0, min: -200, max: 200 };
+  eq(U.coerceProp(P, 3), { ok: true, v: 3 });
+  eq(U.coerceProp(P, '1/2'), { ok: true, v: '1/2' });
+  eq(U.coerceProp(P, '4/2'), { ok: true, v: 2 }, '约分后是整数，存普通数字');
+  eq(U.coerceProp(P, '-3/4'), { ok: true, v: '-3/4' });
+  eq(U.coerceProp(P, Q(3, 2)), { ok: true, v: '3/2' }, 'U.Q 数也接受');
+  eq(U.coerceProp(P, 0.25), { ok: true, v: '1/4' }, '小数 0.25 精确成 1/4');
+  truthy(!U.coerceProp(P, 'abc').ok, '不是有理数要拒绝');
+  truthy(!U.coerceProp(P, 201).ok && !U.coerceProp(P, '-201/1').ok, '范围外拒绝');
+  eq(Q.store(Q(4, 2)), 2); eq(Q.store(Q(-1, 2)), '-1/2'); eq(Q.store(Q(0)), 0);
+  eq(U.controlFor(P), 'text', '有理数属性用文本框（精确写法）');
+  eq(U.types.gpiece.props.dx.type, 'rat', '块的 dx、dy 是有理数属性');
+});
+t('块的分数平移：移 1/2 再移 1/2 得整数 1；再移 −3/2、上移 1/4，顶点精确平移', () => {
+  const { sc, pieces } = pc.cut();
+  const b = pieces[0], base = W.evaluate(sc)[b].out.f.data.pts;
+  const mv = (v) => { const r = W.act(sc, { t: 'piece', id: b, what: 'move', value: v }); truthy(r.ok, r.why); return r; };
+  mv({ dx: '1/2', dy: 0 });
+  eq(sc.entities[b].props.dx, '1/2', '第一次移 1/2，存成分数');
+  mv({ dx: '1/2', dy: 0 });
+  eq(sc.entities[b].props.dx, 1, '两个 1/2 加起来是整数 1，存成数字');
+  mv({ dx: '-3/2', dy: '1/4' });
+  eq(sc.entities[b].props.dx, '-1/2', '加上 −3/2 得 −1/2');
+  eq(sc.entities[b].props.dy, '1/4', '向上移 1/4');
+  const got = W.evaluate(sc)[b].out.f.data.pts.map((p) => Q.show(p.x) + ',' + Q.show(p.y)).sort();
+  const want = base.map((p) => Q.show(Q.add(p.x, Q(-1, 2))) + ',' + Q.show(Q.add(p.y, Q(1, 4)))).sort();
+  eq(got, want, '每个顶点精确地平移 (−1/2, 1/4)');
+  truthy(!W.act(sc, { t: 'piece', id: b, what: 'move', value: { dx: 'x' } }).ok, '平移量不是有理数，拒绝');
+  sc.entities[b].props.locked = true;
+  truthy(!W.act(sc, { t: 'piece', id: b, what: 'move', value: { dx: 1 } }).ok, '锁住的块不能动');
+});
+t('摆放：平移量可以是分数（精确）；整数平移的结果不变', () => {
+  const tr = U.Fig.polygon([[0, 0], [2, 0], [0, 2]]);
+  const pts = (f) => f.pts.map((p) => Q.show(p.x) + ',' + Q.show(p.y));
+  eq(pts(Gx.place(tr, { dx: '1/2', dy: '-1/4' })), ['1/2,-1/4', '5/2,-1/4', '1/2,7/4']);
+  eq(pts(Gx.place(tr, { dx: 3 })), ['3,0', '5,0', '3,2']);
+});
+t('v6 迁移：v5 台面的块平移，整数保持数字，其余写法统一成规范形式；v6 再读回来不变', () => {
+  const clock = { t: 0, n: 0, running: false, hz: 4, rate: 1, seed: 1 };
+  const blk = (id, dx, dy) => ({ id, type: 'gpiece', name: id, x: 0, y: 0, parent: null, slot: null, props: { dx, dy, turn: 0, flip: 0, scale: '1', name: id, color: '#f6c177', locked: false } });
+  const old = { v: 5, nid: 4, seq: {}, clock, links: [], entities: {
+    b1: blk('b1', 3, 0),
+    b2: blk('b2', { n: '1', d: '2' }, 0),
+    b3: blk('b3', 0.75, '3/4'),
+  } };
+  const s = W.load(JSON.stringify(old));
+  eq(s.v, 6, '升到 v6');
+  eq([s.entities.b1.props.dx, s.entities.b1.props.dy], [3, 0], '整数平移不变（仍是普通数字）');
+  eq([s.entities.b2.props.dx, s.entities.b2.props.dy], ['1/2', 0], '{n, d} 写法统一成 "1/2"');
+  eq([s.entities.b3.props.dx, s.entities.b3.props.dy], ['3/4', '3/4'], '非整数的数精确成 3/4，字符串不变');
+  const again = W.load(W.save(s));
+  eq(again.entities.b3.props.dx, '3/4', '存了再读，分数还在');
+  eq(W.save(again), W.save(s), 'v6 台面再迁移不变（幂等）');
+  W.evaluate(s);
 });
 t('块的旋转：块 1 转 90°，输出顶点等于原顶点绕左下角逆时针转 90° 的结果', () => {
   const { sc, pieces } = pc.cut();

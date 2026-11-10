@@ -50,7 +50,7 @@
       }
     } else if (fi.kind === 'place' || fi.kind === 'piece') {
       const p = fi.ent.props, id = fi.ent.id;
-      ops.push({ id, k: 'dx', v: (Number(p.dx) || 0) + dx }, { id, k: 'dy', v: (Number(p.dy) || 0) + dy });
+      ops.push({ id, k: 'dx', v: Q.store(Q.add(Q.parse(p.dx), Q(dx))) }, { id, k: 'dy', v: Q.store(Q.add(Q.parse(p.dy), Q(dy))) });   // 平移是有理数，精确相加
     } else return false;
     UI.Intent.run('params', { ops });
     return true;

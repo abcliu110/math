@@ -64,7 +64,8 @@
     A({ t: 'rename', id, name });
     A({ t: 'set', id, k: 'name', v: name });
     A({ t: 'set', id, k: 'color', v: U.Piece.COLORS[(k - 1) % U.Piece.COLORS.length] });
-    let dx = src.props.dx + (it.mirror ? 0 : 2), dy = src.props.dy + (it.mirror ? 0 : -2);
+    const shift = (v, k) => U.Q.store(U.Q.add(U.Q.parse(v), U.Q(k)));   // 平移是有理数，精确相加
+    let dx = shift(src.props.dx, it.mirror ? 0 : 2), dy = shift(src.props.dy, it.mirror ? 0 : -2);
     if (it.mirror) { const m = mirrorState(src.props.flip, src.props.turn); A({ t: 'set', id, k: 'flip', v: m.flip }); A({ t: 'set', id, k: 'turn', v: m.turn }); }
     A({ t: 'set', id, k: 'dx', v: dx }); A({ t: 'set', id, k: 'dy', v: dy });
     if (it.mirror) {
@@ -72,7 +73,7 @@
       try { const D = U.World.evaluate(S.scene); pts = D[id] && D[id].out.f && D[id].out.f.data ? D[id].out.f.data.pts : null; } catch (err) { pts = null; }
       if (!pts) throw { why: '这一块现在算不出形状，镜像不了' };
       const minX = Math.min(...pts.map((q) => U.Q.num(q.x))), minY = Math.min(...pts.map((q) => U.Q.num(q.y)));
-      A({ t: 'set', id, k: 'dx', v: dx + Math.round(it.edgeX - minX) }); A({ t: 'set', id, k: 'dy', v: dy + Math.round(it.bottomY - minY) });
+      A({ t: 'set', id, k: 'dx', v: shift(dx, Math.round(it.edgeX - minX)) }); A({ t: 'set', id, k: 'dy', v: shift(dy, Math.round(it.bottomY - minY)) });
     }
   }
   // 自由点围成的图形：新建同样的点和多边形，放进工作区。普通复制找一个放得下的偏移；镜像 x → 2×右边界 − x，贴着原图的右边

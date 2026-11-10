@@ -44,6 +44,8 @@
   };
   Q.isInt = (a) => a.d === 1n;
   Q.show = (a) => (a.d === 1n ? String(a.n) : a.n + '/' + a.d);
+  // 存进属性（props）的规范形式：整数存普通数字（老存档和老测试的 props 不变），分数存 "n/d" 字符串（精确，不近似）
+  Q.store = (a) => (a.d === 1n && a.n >= -9007199254740991n && a.n <= 9007199254740991n ? Number(a.n) : Q.show(a));
   Q.showDec = (a, k) => { const x = Q.num(a); return Number.isInteger(x) ? String(x) : String(+x.toFixed(k === undefined ? 2 : k)); };
   Q.showMixed = (a) => {
     if (a.d === 1n || babs(a.n) < a.d) return Q.show(a);

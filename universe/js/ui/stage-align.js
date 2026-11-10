@@ -64,7 +64,7 @@
       let bc = null;
       for (const b of B) for (const v of O) {
         const tx = Q.sub(v.p.x, b.x), ty = Q.sub(v.p.y, b.y);
-        if (!Q.isInt(tx) || !Q.isInt(ty)) continue;
+        if (!al.frac && (!Q.isInt(tx) || !Q.isInt(ty))) continue;   // 块（frac）的平移是有理数，分数中点也能吸；其余只吸整数平移
         const d = pxd(Q.num(tx) - Tc.x, Q.num(ty) - Tc.y);
         if (d <= ALIGN_PX && (!bc || d < bc.d)) bc = { d, x: tx, y: ty };
       }
@@ -72,7 +72,7 @@
       else {
         // 2. 单方向：顶点同一竖线 / 横线、坐标轴、竖直（水平）的边共线；每个方向取最近的
         const cx = [], cy = [];
-        const add = (L, val, d) => { if (Q.isInt(val) && d <= ALIGN_PX) L.push({ val, d }); };
+        const add = (L, val, d) => { if ((al.frac || Q.isInt(val)) && d <= ALIGN_PX) L.push({ val, d }); };
         for (const b of B) {
           for (const v of O) {
             const vx = Q.sub(v.p.x, b.x), vy = Q.sub(v.p.y, b.y);
@@ -139,7 +139,7 @@
         }
       }
     }
-    return { dx: Q.num(T.x), dy: Q.num(T.y), guides };
+    return { dx: Q.num(T.x), dy: Q.num(T.y), dxq: T.x, dyq: T.y, guides };   // dxq、dyq 是精确的有理数平移（块拖动用）
   }
   // 卡片拖动吸附（V4 剩余，1.3）：卡片不是几何对象，所以在屏幕上吸：卡片中心离可见工作区里某个顶点或线段（多边形边）的中点在 SNAP_PX 像素内，
   // 就吸过去，返回新的卡片位置和写给学生看的名字（“AB 的中点”）；Alt 按住或吸附开关关了就不吸。被拖的卡片本身的工作区不参与。

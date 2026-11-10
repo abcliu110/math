@@ -21,7 +21,8 @@
     const e = UI.S.scene.entities[id], P = U.types[e.type].props;
     const rg = (k) => [P[k] && P[k].min !== undefined ? P[k].min : -1e9, P[k] && P[k].max !== undefined ? P[k].max : 1e9];
     const a = rg(kx), b = rg(ky);
-    return { id, kx, ky, x0: e.props[kx], y0: e.props[ky], lo: [a[0], b[0]], hi: [a[1], b[1]] };
+    // x0、y0 是属性里存的原样（整数是普通数字，分数是 "n/d"）；qx、qy 是精确的有理数，平移算的是它们
+    return { id, kx, ky, x0: e.props[kx], y0: e.props[ky], qx: Q.parse(e.props[kx]), qy: Q.parse(e.props[ky]), lo: [a[0], b[0]], hi: [a[1], b[1]] };
   }
   // 一个图形的编辑信息：kind、实体、顶点（自由点的 id）、边（顶点下标对）。不能直接改的返回 null
   function figInfo(v) {
@@ -118,16 +119,16 @@
       // 吸附开关关了、或者按住 Alt：不吸附（对齐线和构造点都不要）
       const free = SG.snapFree(ev);
       if (d.align) { d.align.alt = free; const s = SG.alignSolve(d.align, { x: UI.Space.pxToUnits(mx, d.unit), y: -UI.Space.pxToUnits(my, d.unit) }, d.unit); dX = s.dx; dY = s.dy; d.guides = s.guides; }
-      for (const t of d.targets) { lx = Math.max(lx, t.lo[0] - t.x0); hx = Math.min(hx, t.hi[0] - t.x0); ly = Math.max(ly, t.lo[1] - t.y0); hy = Math.min(hy, t.hi[1] - t.y0); }
+      for (const t of d.targets) { lx = Math.max(lx, t.lo[0] - Q.num(t.qx)); hx = Math.min(hx, t.hi[0] - Q.num(t.qx)); ly = Math.max(ly, t.lo[1] - Q.num(t.qy)); hy = Math.min(hy, t.hi[1] - Q.num(t.qy)); }
       dX = Math.max(lx, Math.min(hx, dX)); dY = Math.max(ly, Math.min(hy, dY));
       // 拖动自由点靠近构造点：吸附。点先留在原来的地方，松手时变成构造点（shapeUp 提交）
       d.snap = d.pt && !free ? snapDragCon(d, mx, my) : null;
       if (d.snap) {
         d.guides = [];
-        for (const t of d.targets) { put(t.id, t.kx, t.x0); put(t.id, t.ky, t.y0); }
+        for (const t of d.targets) { put(t.id, t.kx, Q.store(t.qx)); put(t.id, t.ky, Q.store(t.qy)); }
         tip = '松手变成「' + d.snap.label + '」';
       } else {
-        for (const t of d.targets) { put(t.id, t.kx, t.x0 + dX); put(t.id, t.ky, t.y0 + dY); }
+        for (const t of d.targets) { put(t.id, t.kx, Q.store(Q.add(t.qx, Q(dX)))); put(t.id, t.ky, Q.store(Q.add(t.qy, Q(dY)))); }
         tip = dX || dY ? '向右 ' + dX + ' 格，向上 ' + dY + ' 格' : '';
       }
     } else if (d.mode === 'sc' || d.mode === 'pscale') {

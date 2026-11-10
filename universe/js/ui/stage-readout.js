@@ -24,7 +24,7 @@
     const f = v && v.data;
     if (!f || !f.pts || !f.pts.length) return null;
     const xs = f.pts.map((p) => Q.num(p.x)), ys = f.pts.map((p) => Q.num(p.y));
-    return { x: Math.min(...xs) + ent.props.dx, y: Math.min(...ys) + ent.props.dy };
+    return { x: Math.min(...xs) + Q.num(Q.parse(ent.props.dx)), y: Math.min(...ys) + Q.num(Q.parse(ent.props.dy)) };
   }
   // 图形显示用的顶点（工作区坐标，浮点）：块有近似角度时绕转动中心转过去，其余就是内核的精确坐标
   function shownPts(f, ent) {
