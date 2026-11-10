@@ -6,25 +6,60 @@
   const L = UI.LAYOUT, HD = L.HD, PORT_Y0 = L.PORT_Y0, PORT_DY = L.PORT_DY, PILL_DY = L.PILL_DY, PILL_W = L.PILL_W, MIN_W = L.MIN_W, MIN_H = L.MIN_H;
   const SG = UI.StageCtx;
   // 工作区的画布：把所有显示的值画在一起，按工作区的坐标范围画（范围定下来以后，卡片变大图也跟着变大）
-  // 标签：先按候选位置挑第一个“在画布里、不和已放的标签叠”的；候选都不行，就找画布里一个空的格子；实在没有，夹到画布里
-  function placeLabels(labs, w, h) {
-    const M = 3, placed = [];
-    const box = (x, y, t) => ({ x0: x, x1: x + SG.TXT_W(t), y0: y - 11, y1: y + 3 });
+  // 标签（V6，2.3）：标签的矩形不能和别的标签叠，也不能压住障碍（线、顶点圆圈、点、圆的线，见 figObs）。
+  // 先按候选位置挑第一个“在画布里、不叠、不压住障碍”的；候选都不行，就在画布里按格子找；实在没有，夹到画布里（这时才可能叠，但不会比候选更差）。
+  function placeLabels(labs, w, h, obs) {
+    const M = 3, LB = L.LABEL, placed = [], blockers = obs || [];
+    const box = (x, y, t) => ({ x0: x, x1: x + SG.TXT_W(t), y0: y - LB.up, y1: y + LB.down });
     const inside = (b) => b.x0 >= M && b.x1 <= w - M && b.y0 >= M && b.y1 <= h - M;
     const hit = (b) => placed.some((p) => b.x0 < p.x1 && b.x1 > p.x0 && b.y0 < p.y1 && b.y1 > p.y0);
-    const pick = (L) => {
-      for (const [x, y] of L.cands) { const b = box(x, y, L.text); if (inside(b) && !hit(b)) return [x, y, b]; }
-      for (let y = 14; y <= h - 4; y += 14) for (let x = M; x <= w - SG.TXT_W(L.text) - M; x += 18) { const b = box(x, y, L.text); if (inside(b) && !hit(b)) return [x, y, b]; }
-      const [x0, y0] = L.cands[0], b0 = box(x0, y0, L.text);
+    const blocked = (b) => blockers.some((o) => boxHits(o, b, LB.pad));
+    const free = (b) => inside(b) && !hit(b) && !blocked(b);
+    const pick = (T) => {
+      for (const [x, y] of T.cands) { const b = box(x, y, T.text); if (free(b)) return [x, y, b]; }
+      // 找不到候选：在画布里按格子找，离第一个候选近的先试（标签留在它的图形旁边）
+      const [x0, y0] = T.cands[0], b0 = box(x0, y0, T.text), grid = [];
+      for (let y = LB.up + M; y <= h - LB.down - M; y += LB.grid) for (let x = M; x <= w - SG.TXT_W(T.text) - M; x += LB.grid) grid.push([x, y]);
+      grid.sort((a, c) => Math.hypot(a[0] - x0, a[1] - y0) - Math.hypot(c[0] - x0, c[1] - y0));
+      for (const [x, y] of grid) { const b = box(x, y, T.text); if (free(b)) return [x, y, b]; }
       const dx = Math.max(M - b0.x0, Math.min(0, w - M - b0.x1)), dy = Math.max(M - b0.y0, Math.min(0, h - M - b0.y1));
-      return [x0 + dx, y0 + dy, box(x0 + dx, y0 + dy, L.text)];
+      return [x0 + dx, y0 + dy, box(x0 + dx, y0 + dy, T.text)];
     };
     let svg = '';
-    for (const L of labs.slice().sort((a, b) => a.prio - b.prio)) {
-      const [x, y, b] = pick(L); placed.push(b);
-      svg += '<text x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" font-size="12" font-weight="700" fill="' + L.c + '" stroke="#f4f6fb" stroke-width="3" paint-order="stroke" stroke-linejoin="round" font-family="var(--font)">' + K.esc(L.text) + '</text>';
+    for (const T of labs.slice().sort((a, b) => a.prio - b.prio)) {
+      const [x, y, b] = pick(T); placed.push(b);
+      svg += '<text' + (T.ren ? ' data-ren="' + T.ren + '" style="cursor:text"' : '') + ' x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" font-size="12" font-weight="700" fill="' + T.c + '" stroke="#f4f6fb" stroke-width="3" paint-order="stroke" stroke-linejoin="round" font-family="var(--font)">' + K.esc(T.text) + '</text>';
     }
     return svg;
+  }
+  // 标签的障碍（2.3）：图形的线、多边形的边、顶点圆圈、点、圆的线。画布坐标（像素）。
+  //   seg：线段；disc：实心的圆（点、顶点）；ring：只有圆周（圆）
+  function figObs(f, X, Y, s, obs) {
+    if (!f.pts || !f.pts.length) return;
+    const P = (q) => [X(Q.num(q.x)), Y(Q.num(q.y))];
+    if (f.type === 'circle') { const c = P(f.pts[0]); obs.push({ k: 'ring', x: c[0], y: c[1], r: Math.sqrt(Q.num(f.r2)) * s }); return; }
+    if (f.type === 'point') { const c = P(f.pts[0]); obs.push({ k: 'disc', x: c[0], y: c[1], r: L.LABEL.dot }); return; }
+    const n = f.pts.length;
+    f.pts.forEach((q) => { const c = P(q); obs.push({ k: 'disc', x: c[0], y: c[1], r: L.LABEL.vertex }); });
+    for (let k = 0; k < (f.type === 'polygon' ? n : n - 1); k++) { const a = P(f.pts[k]), c = P(f.pts[(k + 1) % n]); obs.push({ k: 'seg', x1: a[0], y1: a[1], x2: c[0], y2: c[1] }); }
+  }
+  // 标签的矩形 b 和障碍 o 是否相交（m 是留的空隙）：线段用 Liang–Barsky 裁剪，圆用最近点、最远角的距离
+  function boxHits(o, b, m) {
+    if (o.k === 'seg') {
+      let t0 = 0, t1 = 1; const dx = o.x2 - o.x1, dy = o.y2 - o.y1, bx0 = b.x0 - m, bx1 = b.x1 + m, by0 = b.y0 - m, by1 = b.y1 + m;
+      const pp = [-dx, dx, -dy, dy], qq = [o.x1 - bx0, bx1 - o.x1, o.y1 - by0, by1 - o.y1];
+      for (let i = 0; i < 4; i++) {
+        if (pp[i] === 0) { if (qq[i] < 0) return false; continue; }
+        const r = qq[i] / pp[i];
+        if (pp[i] < 0) { if (r > t1) return false; if (r > t0) t0 = r; } else { if (r < t0) return false; if (r < t1) t1 = r; }
+      }
+      return true;
+    }
+    const nx = Math.max(b.x0, Math.min(o.x, b.x1)), ny = Math.max(b.y0, Math.min(o.y, b.y1));   // 矩形上离圆心最近的点
+    const near = Math.hypot(nx - o.x, ny - o.y);
+    if (o.k === 'disc') return near <= o.r + m;
+    const far = Math.hypot(Math.max(Math.abs(o.x - b.x0), Math.abs(o.x - b.x1)), Math.max(Math.abs(o.y - b.y0), Math.abs(o.y - b.y1)));   // 离圆心最远的角
+    return near <= o.r + m && far >= o.r - m;
   }
   // 整个在坐标范围外面的图形：在画布边缘画一个箭头和名字，点一下就把范围调到它（wsFit）
   function offArrows(fr, ws) {
@@ -49,12 +84,13 @@
     const fr = SG.wsFrame(ws, w, h), vals = fr.vals;
     if (!fr.b) return K.text(w / 2, h / 2 - 6, '把图形拖到这里', { size: 15, weight: 700, fill: 'var(--dim)' }) + K.text(w / 2, h / 2 + 16, '从右边器材架拖，或拖台面上的图形卡片', { size: 12, fill: 'var(--dim)' });
     const { vw, s, X, Y } = fr;
-    const labs = [];   // 标签先收集，最后统一摆放（不叠、不出画布）
+    const labs = [], obs = [];   // 标签先收集，最后统一摆放（不叠、不压住线和圆、不出画布）；obs 是图形的障碍（2.3）
     const gsvg = guidesSvg(SG.drag && SG.drag.wsId === ws.id ? SG.drag.guides || [] : [], fr, labs);   // 拖动时的对齐参考线（C12–C14）
     const fitOn = fitState(ws);   // 拼合正确的块变绿（C16）
     let g = '', top = '', hit = '';   // top：自由点的把手，画在所有图形的上面（图形的填充不能盖住点）；hit：没有别的把手的线和多边形的边，加宽的透明命中线
     vals.forEach((v, i) => {
       const f = v.fig; if (!f) return;
+      figObs(f, X, Y, s, obs);
       // 块（§10.5.10）：用块自己的颜色；可以拖（data-drag，松手时一次 piece 移动）
       const ent = ents[v.id], isPc = !!ent && SG.roleOf(ent) === 'piece' && v.port === 'f';
       const c = isPc ? (ent.props.color || SG.WS_COL[0]) : SG.WS_COL[i % SG.WS_COL.length], on = sel.has(SG.pickOf(v)), sw = on ? 4 : 2;
@@ -92,9 +128,9 @@
         lx = px + 9; ly = py - 9;
         const tw = SG.TXT_W(v.label); cands = [[px + 9, py - 9], [px + 9, py + 15], [px - 9 - tw, py - 9], [px - 9 - tw, py + 15]]; prio = 0;
       }
-      if (lx !== undefined) labs.push({ text: v.label, c, cands, prio });
+      if (lx !== undefined) labs.push({ text: v.label, c, cands, prio, ren: f.type === 'point' && ents[v.id] && SG.roleOf(ents[v.id]) === 'point' ? v.id : null });   // 点的标签可以双击改名（2.6）
     });
-    return wsEdges(fr) + g + hit + top + wsHandles(fr) + gsvg + drawPreview(ws, fr) + offArrows(fr, ws) + placeLabels(labs, w, h) + boardMsg(w, h);
+    return wsEdges(fr) + g + hit + top + wsHandles(fr) + gsvg + drawPreview(ws, fr) + offArrows(fr, ws) + placeLabels(labs, w, h, obs) + boardMsg(w, h);
   }
   // 画布顶部的一条消息（只占上面两行，不接收鼠标：底下的点和图形照常能点）
   function boardMsg(w, h) {

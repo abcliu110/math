@@ -34,7 +34,31 @@
       h += '<div class="wsx-step" data-ws-step="' + st.id + '"><span>第 ' + (i + 1) + ' 步：' + K.esc(SG.stepLabel(st)) + '（' + K.esc(srcs.join('、')) + '）</span>' +
         '<button data-ws-del="' + st.id + '" title="删除这一步">✕</button></div>';
     });
-    h += '<div class="wsx-h">图层</div><div class="wsx-layers">' + (vals.length ? vals.map((v) => '<label><input type="checkbox" data-ws-layer="' + SG.escA(v.key) + '" data-ws-of="' + ws.id + '"' + (hidden[v.key] ? '' : ' checked') + '> ' + K.esc(v.label) + '</label>').join('') : '<span class="wsx-none">没有图形</span>') + '</div>';
+    h += '<div class="wsx-h">图层</div>' + layersHtml(ws, vals, hidden);
+    return h + '</div>';
+  }
+  // 图层列表（2.4）：图形不多（不超过 L.LAYER_FLAT）时平铺；多了就按类别分组（点、线、图形、块、辅助线），每组可以展开或收起，
+  // 默认收起，列表不会随图形数量无限变长。组里的展开状态记在台面的会话状态 S.wsLayerOpen 里。类别按图形的种类和块的角色分，不按器材名。
+  const LAYER_GROUPS = ['点', '线', '图形', '块', '辅助线'];
+  function layerGroup(v) {
+    const ent = UI.S.scene.entities[v.id];
+    if (ent && SG.roleOf(ent) === 'piece') return '块';
+    if (v.fig.type === 'point') return '点';
+    if (v.fig.type === 'segment') return v.fig.dash ? '辅助线' : '线';
+    return '图形';
+  }
+  function layersHtml(ws, vals, hidden) {
+    if (!vals.length) return '<div class="wsx-layers"><span class="wsx-none">没有图形</span></div>';
+    const box = (v) => '<label><input type="checkbox" data-ws-layer="' + SG.escA(v.key) + '" data-ws-of="' + ws.id + '"' + (hidden[v.key] ? '' : ' checked') + '> ' + K.esc(v.label) + '</label>';
+    if (vals.length <= L.LAYER_FLAT) return '<div class="wsx-layers">' + vals.map(box).join('') + '</div>';
+    const open = UI.S.wsLayerOpen || {};
+    let h = '<div class="wsx-layers"><div class="wsx-layers-all"><button data-ws-layers="show" data-ws-of="' + ws.id + '">全部显示</button><button data-ws-layers="hide" data-ws-of="' + ws.id + '">全部隐藏</button></div>';
+    for (const g of LAYER_GROUPS) {
+      const items = vals.filter((v) => layerGroup(v) === g); if (!items.length) continue;
+      const key = ws.id + '|' + g, on = !!open[key];
+      h += '<button class="wsx-lgrp" data-ws-lgroup="' + SG.escA(key) + '" aria-expanded="' + (on ? 'true' : 'false') + '">' + (on ? '▾ ' : '▸ ') + g + '（' + items.length + '）</button>';
+      if (on) h += '<div class="wsx-layers-grp">' + items.map(box).join('') + '</div>';
+    }
     return h + '</div>';
   }
   // 点选：没有 Shift 就只选这一个，有 Shift 就加上 / 去掉

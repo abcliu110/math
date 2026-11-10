@@ -29,13 +29,27 @@
     return { id: d, port: con.out };
   }
 
+  // 点的名字（2.6）：新点自动叫下一个没用过的字母（A、B、C…，用完再用 A1、B1…）。用过的 = 所有点的名字属性、角色和名字。
+  // 角色是点的器材声明（workspaceRole 为 point），不按器材名判断。
+  const isPointType = (type) => !!(U.types[type] && U.types[type].workspaceRole === 'point');
+  function nextPointName(scene) {
+    const used = new Set();
+    for (const e of Object.values(scene.entities)) {
+      if (!isPointType(e.type)) continue;
+      for (const v of [e.props && e.props.mark, e.role, e.name]) if (v) used.add(String(v));
+    }
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    for (let n = 0; ; n++) for (const ch of letters) { const nm = n ? ch + n : ch; if (!used.has(nm)) return nm; }
+  }
+
   const KINDS = {
-    // 点击器材架瓦片，或从器材架拖出来：新建一个器材；拖到容器上就直接放进去（一步完成）
+    // 点击器材架瓦片，或从器材架拖出来：新建一个器材；拖到容器上就直接放进去（一步完成）。新点自动命名（2.6）
     add: {
       label: 'add',
       fn(A, p, ctx) {
         const r = A({ t: 'add', type: p.type, x: p.x, y: p.y });
         ctx.id = r.id;
+        if (isPointType(p.type)) A({ t: 'set', id: r.id, k: 'mark', v: nextPointName(UI.S.scene) });
         if (p.ev) putTarget(A, r.id, UI.Stage.dropTarget(p.ev, r.id));
       },
       after(r, p, ctx) { if ((p.select || p.ev) && ctx.id) { UI.S.sel = ctx.id; UI.S.selLink = null; } },
@@ -104,7 +118,7 @@
         const ends = [p.a, p.b].map((q) => {
           if (q.ref) return { id: q.ref, port: 'p' };
           if (q.con) return buildConstruct(A, ws, q.con);
-          const n = A({ t: 'add', type: 'gpt', x: 0, y: 0, props: { x: q.x, y: q.y } });
+          const n = A({ t: 'add', type: 'gpt', x: 0, y: 0, props: { x: q.x, y: q.y, mark: nextPointName(S.scene) } });
           A({ t: 'put', id: n.id, parent: ws.id, slot: 'items' });
           return { id: n.id, port: 'p' };
         });

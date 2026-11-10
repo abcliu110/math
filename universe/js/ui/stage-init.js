@@ -50,6 +50,17 @@
       if (wf) { SG.wsFit(wf.dataset.wsFit); return; }
       const wu = ev.target.closest('[data-ws-unfocus]');
       if (wu) { SG.setFocus(null); return; }
+      // 图层分组（2.4）：点标题展开或收起；全部显示、全部隐藏（隐藏的是这个工作区的所有图形，不只是现在看得见的）
+      const lg = ev.target.closest('[data-ws-lgroup]');
+      if (lg) { const S = UI.S, o = Object.assign({}, S.wsLayerOpen || {}), k = lg.dataset.wsLgroup; if (o[k]) delete o[k]; else o[k] = true; S.wsLayerOpen = o; SG.render(); return; }
+      const la = ev.target.closest('[data-ws-layers]');
+      if (la) {
+        const ws = UI.S.scene.entities[la.dataset.wsOf]; if (!ws) return;
+        const h = {};
+        if (la.dataset.wsLayers === 'hide') for (const v of SG.wsValues(ws, SG.wsNames())) h[v.key] = true;
+        UI.State.setUi(ws, 'hiddenLayers', Object.keys(h).length ? h : null);
+        SG.render(); return;
+      }
       const wd = ev.target.closest('[data-ws-del]');
       if (wd) { SG.delWs(wd.dataset.wsDel); return; }
       const wst = ev.target.closest('[data-ws-step]');

@@ -60,6 +60,9 @@
       if (SG.dbl('rz:' + rz.dataset.rz)) { S.sel = rz.dataset.rz; UI.Intent.run('resize', { id: rz.dataset.rz, w: null, h: null }); return; }
       startResize(rz.dataset.rz, ev); return;
     }
+    // 双击点的标签：改名（2.6）。第一下照常（标签不是选中的对象），第二下开输入框
+    const rn = t.closest('[data-ren]');
+    if (rn && wbd && SG.dbl('ren:' + rn.dataset.ren)) { ev.preventDefault(); ev.stopPropagation(); SG.startRename(rn.dataset.ren); return; }
     // 工作区里选中对象（点、线、图形）：Shift 点是加选
     let pk = t.closest('[data-pick]');
     const cyc = pk && wbd && !ev.shiftKey ? wsCycPick(ev, wbd) : null;   // 双击的第二下：选下一个图形（V3）

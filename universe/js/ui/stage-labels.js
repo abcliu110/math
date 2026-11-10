@@ -30,6 +30,7 @@
   function figLabel(it, nm, fig) {
     if (SG.roleOf(it) === 'piece') return it.props.name || it.name;
     if (isTarget(it)) return '目标图形';
+    if (SG.roleOf(it) === 'point' && it.props && it.props.mark) return it.props.mark;   // 点的名字（2.6）：学生能改，标签显示名字属性；稳定的引用仍是 id 和角色
     return pretty(nm) || it.name || FIG_NAME[fig && fig.type] || SG.defOf(it).label;
   }
   // 选中的对象显示成学生的名字（找到了用图形的标签，找不到就按名字换算）
@@ -37,5 +38,31 @@
   // 拼合器材有两种：「合并」（没有目标口）和「对齐到目标」（目标口接着目标图形）；步骤清单要分得开
   // 步骤清单里的名字：器材声明的 stepLabel（字符串，或 (ent, scene) => 字符串），没有就用器材名
   const stepLabel = (st) => { const s = SG.defOf(st).stepLabel; return typeof s === 'function' ? s(st, UI.S.scene) : s || SG.defOf(st).label || st.type; };
-  Object.assign(SG, { TXT_W, vName, joinV, pretty, isTarget, FIG_NAME, figLabel, pickLabel, stepLabel });
+  // 改名（2.6）：双击点的标签，在标签上弹出一个输入框。回车或离开输入框就改名（一步，撤销一次恢复），Esc 放弃。
+  // 只改显示的名字（属性 mark，名字 name），id 和引用不变。
+  function startRename(id) {
+    const S = UI.S, e = S.scene.entities[id];
+    if (!e || document.querySelector('input.wsx-ren')) return;
+    const lab = [...document.querySelectorAll('svg.wsbody text[data-ren]')].find((t) => t.dataset.ren === id);
+    if (!lab) return;
+    const r = lab.getBoundingClientRect(), cur = e.props.mark || '';
+    const inp = document.createElement('input');
+    inp.className = 'wsx-ren'; inp.value = cur; inp.maxLength = 12; inp.setAttribute('aria-label', '点的名字');
+    inp.style.left = r.left + 'px'; inp.style.top = r.top + 'px';
+    let done = false;
+    const end = (commit) => {
+      if (done) return; done = true;
+      const v = inp.value.trim();
+      inp.remove();
+      if (commit && v && v !== cur) {
+        const res = UI.Intent.run('rename', { id, name: v, alsoProp: 'mark' });
+        if (!res.ok) SG.setMsg(res.why, false);
+      }
+      SG.render();
+    };
+    inp.addEventListener('keydown', (ev) => { ev.stopPropagation(); if (ev.key === 'Enter') end(true); else if (ev.key === 'Escape') end(false); });
+    inp.addEventListener('blur', () => end(true));
+    document.body.appendChild(inp); inp.focus(); inp.select();
+  }
+  Object.assign(SG, { TXT_W, vName, joinV, pretty, isTarget, FIG_NAME, figLabel, pickLabel, stepLabel, startRename });
 })(window);

@@ -262,6 +262,10 @@ button.gdel { border: 0; background: none; color: var(--dim); cursor: pointer; }
 .wsx-step:hover { background: #3b9bff22; }
 .wsx-step button { margin: 0; padding: 0 6px; }
 .wsx-layers label { display: inline-block; margin: 2px 8px 2px 0; }
+/* 图层分组（2.4）：标题按钮占一行，展开的组里面可以滚动，列表不会无限变长 */
+.wsx-layers-all { margin-bottom: 2px; }
+.wsx-lgrp { display: block; width: 100%; text-align: left; margin: 2px 0; }
+.wsx-layers-grp { max-height: 120px; overflow-y: auto; padding-left: 6px; }
 
 /* 式子工作台的检查器（§10.5.3）：步骤、应用到选中项、解 */
 .wb { margin-top: 12px; border-top: 1px dashed #aab4c8; padding-top: 8px; font-size: 13px; }
