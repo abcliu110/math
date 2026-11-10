@@ -22,6 +22,7 @@
     'curved': 'packs/curved.js',
     'cutpaste': 'packs/cutpaste.js',
     'databench': 'packs/databench.js',
+    'deduce': 'packs/deduce.js',
     'digitbench': 'packs/digitbench.js',
     'eqscale': 'packs/eqscale.js',
     'exprbench': 'packs/exprbench.js',

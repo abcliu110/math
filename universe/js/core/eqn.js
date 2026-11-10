@@ -163,15 +163,18 @@
   });
 })(typeof globalThis !== 'undefined' ? globalThis : window);
 
-/* 代数式解析（B.4 的“代数式卡”）：只支持整式。数字、字母、+ − × * 空格相乘、括号、乘方 ^n（或 ²³）。
+/* 代数式解析（B.4 的“代数式卡”）：整式，加上「除以一个非零的数」。数字、字母、+ − × * · 空格相乘、括号、乘方 ^n（或 ²³）。
+ * 除法（D7）：「/」或「÷」后面必须是一个非零的数，如 a/2、3/4 a、a·h/2；½ ⅓ ¼ ⅔ ¾ 是分数的数，如 ½ × a × h。
+ * 除以字母、除以 0 都抛出带原因的错误。系数是精确的有理数。
  * U.Poly.parse('2(x+y)') → poly。遇到不认识的字符抛出带原因的错误。 */
 (function (G) {
   'use strict';
   const U = G.U, Q = U.Q, P = U.Poly;
+  const UFRAC = { '½': [1, 2], '⅓': [1, 3], '⅔': [2, 3], '¼': [1, 4], '¾': [3, 4] };
   const SUPN = { '⁰': 0, '¹': 1, '²': 2, '³': 3, '⁴': 4, '⁵': 5, '⁶': 6, '⁷': 7, '⁸': 8, '⁹': 9 };
 
   P.parse = function (text) {
-    const s = String(text).replace(/\s+/g, '').replace(/×/g, '*');
+    const s = String(text).replace(/\s+/g, '').replace(/×/g, '*').replace(/·/g, '*').replace(/÷/g, '/');
     let i = 0;
     const peek = () => s[i];
     const fail = (why) => { throw new Error(why + '（位置 ' + (i + 1) + '）'); };
@@ -180,11 +183,21 @@
       while (peek() === '+' || peek() === '-') { const op = s[i++]; const r = term(); v = op === '+' ? P.add(v, r) : P.sub(v, r); }
       return v;
     };
-    const startsFactor = () => /[0-9a-zA-Z(]/.test(peek() || '');
+    const startsFactor = () => /[0-9a-zA-Z(]/.test(peek() || '') || UFRAC[peek()] !== undefined;
+    // 除以一个非零的数：除数必须是常数（a/b 不是整式，不认）
+    const divide = (v, d) => {
+      if (!d.terms.length) fail('不能除以 0');
+      if (d.terms.length !== 1 || Object.keys(d.terms[0].m).length) fail('只能除以一个数，例如 /2');
+      return P.mul(v, P.const(Q.div(Q(1), d.terms[0].c)));
+    };
     const term = () => {
       let v = factor();
-      while (peek() === '*' || startsFactor()) { if (peek() === '*') i++; v = P.mul(v, factor()); }
-      return v;
+      for (;;) {
+        if (peek() === '/') { i++; v = divide(v, factor()); continue; }
+        if (peek() === '*') { i++; v = P.mul(v, factor()); continue; }
+        if (startsFactor()) { v = P.mul(v, factor()); continue; }
+        return v;
+      }
     };
     const factor = () => {
       let v = unary();
@@ -203,6 +216,7 @@
       const c = peek();
       if (c === undefined) fail('式子没写完');
       if (/[0-9]/.test(c)) { const n = num(); let v = P.const(Q(n)); return v; }
+      if (UFRAC[c]) { i++; return P.const(Q(UFRAC[c][0], UFRAC[c][1])); }
       if (/[a-zA-Z]/.test(c)) { i++; return P.variable(c); }
       if (c === '(') { i++; const v = expr(); if (peek() !== ')') fail('括号没有配对'); i++; return v; }
       fail('看不懂这个字符：“' + c + '”');

@@ -1,4 +1,5 @@
-/* 工作台的界面（D8，docs/direction.md 第 7 节 D8）：数位竖式（器材的 wbUI: 'digits'）和数据图表台（wbUI: 'data'）。
+/* 工作台的界面（D8，docs/direction.md 第 7 节 D8）：数位竖式（器材的 wbUI: 'digits'）和数据图表台（wbUI: 'data'）；
+ * 排除表（2.14b，wbUI: 'deduce'）。
  * 只画和接鼠标、键盘；每一步都走 UI.Intent.run('wbsteps', …) 写进台面的 scene.workbench，
  * 能不能做由内核（U.Digits、U.DataBench）判断，不能做就说明原因、步骤不变。
  * 草稿（输入框的字、点选的数字、提示）放在 UI.Panels.wbDraft(器材 id) 上（会话状态，不存）。
@@ -135,6 +136,41 @@
     commit(id, DATA_KEY(), base.concat([r.step]));
   }
 
+  // ---------- 排除表（2.14b，器材 deduce，wbUI: 'deduce'）：点格子 = 一步，规则在 U.Deduce ----------
+  function deduceStep(id, i, j) {
+    const e = ent(id), key = U.Deduce.keyOf(e.props), st = U.Deduce.current(UI.S.scene, id);
+    const r = U.Deduce.apply(st, 'mark', { i, j });
+    if (!r.ok) return note(id, r.why);
+    const base = U.Deduce.stateOf(UI.S.scene, id) ? stepsOf(id, key) : [];
+    draft(id).msg = r.msg;
+    commit(id, key, base.concat([r.step]));
+  }
+  function deduceHtml(e) {
+    const st = U.Deduce.current(UI.S.scene, e.id), dr = draft(e.id), key = U.Deduce.keyOf(e.props);
+    if (!st) return '<div class="wb dd"><h5>排除表</h5><div class="dd-msg">人或属性的数目对不上，题目的表要检查</div></div>';
+    const v = U.Deduce.view(st), M = U.Deduce.parse(e.props);
+    let h = '<div class="wb dd"><h5>排除表</h5><div class="dd-now">' + esc(v.now) + '</div>';
+    h += '<table class="dd-tab"><tr class="dd-r-group"><td></td>' + v.groups.map((g) => '<th colspan="' + g.n + '">' + esc(g.name) + '</th>').join('') + '</tr>';
+    h += '<tr class="dd-r-head"><td></td>' + v.cols.map((c) => '<th>' + esc(c.name) + '</th>').join('') + '</tr>';
+    v.rows.forEach((row) => {
+      h += '<tr><th class="dd-person">' + esc(row.name) + '</th>' + row.cells.map((c) =>
+        '<td><button class="dd-cell dd-' + c.st + (c.only ? ' dd-only' : '') + '" data-dd-cell="' + c.i + ',' + c.j + '" data-dd-st="' + c.st + '" data-dd-only="' + (c.only ? 1 : 0) + '" aria-label="' + esc(row.name + ' ' + c.value + '：' + c.label) + '">' + esc(c.text) + '</button></td>'
+      ).join('') + '</tr>';
+    });
+    h += '</table>';
+    if (v.hint) h += '<div class="dd-hint">' + esc(v.hint) + '</div>';
+    h += '<div class="dd-msg">' + esc(dr.msg || '') + '</div>';
+    if (v.conclusions.length) h += '<div class="wb-h">结论</div><div class="dd-concl">' + v.conclusions.map(esc).join('；') + '</div>';
+    const hist = stepsOf(e.id, key);
+    if (hist.length) h += '<div class="wb-h">步骤</div>' + hist.map((s, i) => '<div class="wb-step"><span>第 ' + (i + 1) + ' 步：' + esc(U.Deduce.stepText(M, s)) + '</span><button class="dg-btn" data-dd-undo="' + (i + 1) + '">回到这一步</button></div>').join('');
+    return h + '</div>';
+  }
+  function deduceClick(id, t) {
+    const cell = t.closest('[data-dd-cell]');
+    if (cell) { const ij = cell.dataset.ddCell.split(','); return deduceStep(id, +ij[0], +ij[1]); }
+    const und = t.closest('[data-dd-undo]'); if (und) return undoTo(id, +und.dataset.ddUndo, U.Deduce.keyOf(ent(id).props));
+  }
+
   // ---------- 点击（按钮、点一列、点一个数字） ----------
   function digitClick(id, t) {
     const cell = t.closest('[data-dg-cell]');
@@ -195,6 +231,7 @@
       const id = UI.S.sel, kind = benchKind(id);
       if (kind === 'digits') digitClick(id, ev.target);
       else if (kind === 'data') dataClick(id, ev.target);
+      else if (kind === 'deduce') deduceClick(id, ev.target);
     });
     insp.addEventListener('input', (ev) => {
       const id = UI.S.sel, t = ev.target;
@@ -210,7 +247,7 @@
 
   UI.WBKit = {
     // 属性面板里的工作台：d 是器材的定义（声明了 wbUI）
-    html(e, d) { return d.wbUI === 'digits' ? digitHtml(e) : dataHtml(e); },
+    html(e, d) { return d.wbUI === 'digits' ? digitHtml(e) : d.wbUI === 'deduce' ? deduceHtml(e) : dataHtml(e); },
     bind,
   };
 })(window);

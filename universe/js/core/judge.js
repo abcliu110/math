@@ -125,6 +125,8 @@
     if (c.digits) return U.Digits.judge(scene, c.digits);
     // 数据图表台（D8）：录了几组、画了没有、拟合了没有（data: { minRows, plotted, fitted }）
     if (c.data) return U.DataBench.judge(scene, c.data);
+    // 排除表（2.14b）：写出了哪个结论（deduce: { yes: { person, value } }）、排除了哪一格（no）、全部排完了（solved）
+    if (c.deduce) return U.Deduce.judge(scene, c.deduce);
     if (c.steps) {
       const s = c.steps, st = scene.workbench;
       if (!st || !Array.isArray(st.steps)) return { ok: false, why: '没有式子工作台的步骤记录，无法判断有没有用“' + s.used + '”' };
@@ -134,7 +136,7 @@
     }
     return { ok: true };
   }
-  const isNewShape = (c) => !!c && typeof c === 'object' && (c.built !== undefined || c.form !== undefined || c.steps !== undefined || c.digits !== undefined || c.data !== undefined);
+  const isNewShape = (c) => !!c && typeof c === 'object' && (c.built !== undefined || c.form !== undefined || c.steps !== undefined || c.digits !== undefined || c.data !== undefined || c.deduce !== undefined);
 
   const OPS = { '=': (c) => c === 0, '>': (c) => c > 0, '<': (c) => c < 0, '>=': (c) => c >= 0, '<=': (c) => c <= 0, '!=': (c) => c !== 0 };
   function cmpVal(v, op, want) {

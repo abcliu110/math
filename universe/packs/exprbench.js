@@ -24,6 +24,16 @@
     return Object.assign(U.val('eqn', { lhs: U.Poly.variable('S'), rhs: f.data, rel: '=' }), { geo: true });
   };
 
+  // D7：几何台面的面积（现在的读数）和式子算出的 S 对照。读数变了，这里跟着变（每次求值都重算）。
+  // 没有面积返回 null；式子还没解出来时 same 为 null；解出来了就比较：same 为真或假，text 写出两个数。
+  const areaNote = (st, area) => {
+    if (!area) return null;
+    const sol = U.Workbench.solution(st), now = U.Q.show(area.data);
+    if (!sol.solved) return { same: null, text: '几何台面的面积是 ' + now + '（式子还没有解）' };
+    if (U.Q.eq(sol.x, area.data)) return { same: true, text: '几何台面的面积是 ' + now + '，和式子算出的 S 一致' };
+    return { same: false, text: '几何台面现在的面积是 ' + now + '，式子算出的 S 是 ' + U.Q.show(sol.x) + '，对不上：几何变了，请重新代入' };
+  };
+
   // 这个工作台记下的步骤（台面上的 scene.workbench 指向它时才算）
   const stepsOf = (scene, id) => {
     const wb = scene && scene.workbench;
@@ -50,7 +60,7 @@
   });
 
   U.ExprBench = {
-    stepsOf, stateOf, currentOf, saveAction, showState, eqnIn, workEqnIn, areaIn, formulaIn, keyOf: eqText,
+    stepsOf, stateOf, currentOf, saveAction, showState, eqnIn, workEqnIn, areaIn, formulaIn, areaNote, keyOf: eqText,
   };
 
   U.registerPack({
@@ -81,7 +91,10 @@
             c.say('info', areaIn(c.inp) ? '再接一个公式（如 a×h）' : '接一个方程');
             return { solved: U.val('bool', false) };
           }
-          const solved = U.Workbench.solution(currentOf(c.scene, c.ent.id, eq)).solved;
+          // 几何来的式子：解出来还要和几何台面的面积一致（读数变了，就不算解出来了）
+          const st = currentOf(c.scene, c.ent.id, eq), area = eq.geo ? areaIn(c.inp) : null;
+          const note = areaNote(st, area);
+          const solved = U.Workbench.solution(st).solved && (!note || note.same === true);
           return { solved: U.val('bool', solved) };
         },
         badge: (c) => (c.out && c.out.solved && c.out.solved.data ? '解出来了' : ''),
