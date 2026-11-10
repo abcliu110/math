@@ -222,7 +222,7 @@
   }
   // ---- 工具条上的图形操作：复制、旋转、翻转、删除（不用先选图形）----
   // 对谁做：选中的图形；没有选中，工作区里只有一个图形就是它；有好几个就等着：点一下要操作的图形（S.wsArm），点到就做
-  const ACT_LABEL = { copy: '复制', rot: '旋转', flip: '翻转', del: '删除' };
+  const ACT_LABEL = { copy: '复制', mirror: '镜像复制', rot: '旋转', flip: '翻转', del: '删除' };
   const isFig = (fi) => !!fi && !!fi.f && (fi.f.type === 'polygon' || fi.f.type === 'circle');
   function wsFigures(wsId) {
     const ws = UI.S.scene.entities[wsId]; if (!ws) return [];
@@ -238,11 +238,81 @@
     const list = []; for (const o of ops) { list.push({ id: o.id, k: 'x', v: o.nx }); list.push({ id: o.id, k: 'y', v: o.ny }); }
     return UI.Intent.run('params', { ops: list });
   }
-  function figCopy(wsId, fi) {
-    const E = UI.S.scene.entities, ids = uniq(fi.verts), cand = [[2, -2], [-2, -2], [2, 2], [-2, 2], [4, 0], [-4, 0], [0, 4], [0, -4]];
-    const fits = ([dx, dy]) => ids.every((id) => Math.abs(E[id].props.x + dx) <= L.COORD_MAX && Math.abs(E[id].props.y + dy) <= L.COORD_MAX);
-    const off = cand.find(fits); if (!off) return { ok: false, why: '工作区里放不下一份副本（坐标范围 ±10）' };
-    return UI.Intent.run('copyfig', { ws: wsId, poly: fi.ent.id, verts: fi.verts, dx: off[0], dy: off[1] });
+  // 块和自由点图形的坐标（求值结果，Q 转成数），块没算出来就是 null
+  function pieceVerts(id) {
+    const d = UI.S.D[id], pts = d && d.out && d.out.f && d.out.f.data ? d.out.f.data.pts : null;
+    return pts ? pts.map((q) => [Q.num(q.x), Q.num(q.y)]) : null;
+  }
+  // 复制、镜像复制（§10.5.9 第 4 条）：names 里的图形（块或自由点围成的图形）整批做成一步。点（单个自由点）不复制
+  function pasteNames(wsId, names, mirror) {
+    const items = [];
+    for (const n of names) {
+      const fi = figByName(wsId, n); if (!fi) continue;
+      if (fi.kind === 'piece') {
+        const pv = pieceVerts(fi.ent.id);
+        if (mirror && !pv) return { ok: false, why: '这一块现在算不出形状，镜像不了' };
+        items.push({ kind: 'piece', id: fi.ent.id, mirror: !!mirror, edgeX: pv ? Math.max(...pv.map((q) => q[0])) : 0, bottomY: pv ? Math.min(...pv.map((q) => q[1])) : 0 });
+      } else if (fi.kind === 'pts' && fi.f.type !== 'point') items.push({ kind: 'pts', poly: fi.ent.id, verts: uniq(fi.verts), mirror: !!mirror });
+    }
+    if (!items.length) return { ok: false, why: '这个图形没法' + (mirror ? '镜像复制' : '复制') };
+    return UI.Intent.run('paste', { ws: wsId, items });
+  }
+  // 复制（Ctrl+C）：记住选中的图形；粘贴（Ctrl+V）：放进当前的工作区（块只能回到它原来的工作区）
+  function clipCopy(wsId) {
+    const S = UI.S, items = [];
+    for (const n of S.wsSel || []) {
+      const fi = figByName(wsId, n); if (!fi) continue;
+      if (fi.kind === 'piece') items.push({ kind: 'piece', id: fi.ent.id });
+      else if (fi.kind === 'pts' && fi.f.type !== 'point') items.push({ kind: 'pts', poly: fi.ent.id, verts: uniq(fi.verts) });
+    }
+    S.wsClip = items;
+    SG.setMsg(items.length ? '已复制 ' + items.length + ' 个图形，按 Ctrl+V 粘贴到工作区' : '选中的图形没法复制', items.length > 0);
+    SG.render();
+    return items.length > 0;
+  }
+  function clipPaste(wsId) {
+    const S = UI.S, E = S.scene.entities, clip = S.wsClip || [], items = [];
+    for (const c of clip) {
+      if (c.kind === 'piece') { if (E[c.id] && E[c.id].parent === wsId) items.push({ kind: 'piece', id: c.id, mirror: false, edgeX: 0, bottomY: 0 }); }
+      else if (E[c.poly] && c.verts.every((v) => E[v])) items.push({ kind: 'pts', poly: c.poly, verts: c.verts, mirror: false });
+    }
+    if (!items.length) { SG.setMsg(clip.length ? '复制的图形在这个工作区里找不到了' : '先选中图形，按 Ctrl+C 复制', false); SG.render(); return false; }
+    const r = UI.Intent.run('paste', { ws: wsId, items });
+    if (r && r.ok === false) SG.setMsg(r.why, false); else { S.wsSel = []; SG.setMsg('', true); }
+    SG.render();
+    return !(r && r.ok === false);
+  }
+  // 编组（§10.5.9 第 3 条）：选中两个以上的图形记成一组（同一个组号）。组里的图形点一个就一起选中，拖动一起动。
+  // on 为假：取消选中图形所在的组（整组都取消）
+  function groupMembers(wsId, gid) {
+    const ws = UI.S.scene.entities[wsId]; if (!ws || !gid) return [];
+    return SG.wsVisible(ws).map((v) => SG.figInfo(v)).filter((fi) => fi && fi.ent.group === gid);
+  }
+  function wsGroup(wsId, on) {
+    const S = UI.S, fis = (S.wsSel || []).map((n) => figByName(wsId, n)).filter(Boolean);
+    let ids = [], gid = null;
+    if (on) {
+      if (fis.length < 2) { SG.setMsg('编组要先选两个以上的图形（按住 Shift 点）', false); return SG.render(); }
+      gid = 'grp' + Date.now().toString(36); ids = fis.map((fi) => fi.ent.id);
+    } else {
+      const gids = [...new Set(fis.map((fi) => fi.ent.group).filter(Boolean))];
+      if (!gids.length) { SG.setMsg('选中的图形没有编组', false); return SG.render(); }
+      ids = [].concat(...gids.map((g) => groupMembers(wsId, g).map((fi) => fi.ent.id)));
+    }
+    const r = UI.Intent.run('group', { ids, gid });
+    if (r && r.ok === false) SG.setMsg(r.why, false); else SG.setMsg(on ? '已编成一组：点一个，两个一起选中；拖动一起动' : '已取消编组', true);
+    SG.render();
+  }
+  // 组里的图形一起拖：每个图形的可动目标合在一起，松手是一步（和单个图形一样）；幽灵画出每个图形原来的位置
+  function memberTargets(fi) { return fi.kind === 'piece' ? [tgt(fi.ent.id, 'dx', 'dy')] : moveTargets(fi); }
+  function groupDrag(ev, wb, wsId, fi) {
+    const gid = fi.ent.group; if (!gid) return false;
+    const mem = groupMembers(wsId, gid).filter((m) => !m.ent.props.locked);
+    if (mem.length < 2) return false;
+    const targets = [].concat(...mem.map(memberTargets));
+    const ghost = mem.filter((m) => m.f.type === 'polygon').map((m) => m.f.pts.map((q) => ({ x: Q.num(q.x), y: Q.num(q.y) })));
+    startShape(ev, wb, wsId, 'tr', targets, { align: null, ghost });
+    return true;
   }
   function figApply(wsId, act, name) {
     const fi = figByName(wsId, name); if (!fi) return { ok: false, why: '找不到这个图形' };
@@ -251,7 +321,6 @@
       if (fi.kind === 'pts') return UI.Intent.run('delete', { id: fi.ent.id, alsoVerts: uniq(fi.verts) });
       return UI.Intent.run('delete', { id: fi.ent.id });
     }
-    if (act === 'copy') return fi.kind === 'pts' ? figCopy(wsId, fi) : UI.Intent.run('copy', { id: fi.ent.id });
     if (act === 'rot') {
       if (fi.kind === 'pts') return figRotate(fi);
       if (fi.kind === 'piece') return UI.Intent.run('piece', { ids: [fi.ent.id], what: 'turn', value: 1 });
@@ -269,10 +338,11 @@
       else { S.wsArm = { ws: wsId, act }; SG.setMsg('点一下要' + ACT_LABEL[act] + '的图形（Esc 取消）', true); return SG.render(); }
     }
     let bad = null;
-    for (const n of names) { const r = figApply(wsId, act, n); if (r && r.ok === false) { bad = r.why; break; } }
+    if (act === 'copy' || act === 'mirror') { const r = pasteNames(wsId, names, act === 'mirror'); if (r && r.ok === false) bad = r.why; }
+    else for (const n of names) { const r = figApply(wsId, act, n); if (r && r.ok === false) { bad = r.why; break; } }
     if (act !== 'flip' && act !== 'rot') S.wsSel = [];
     SG.setMsg(bad || '', !bad);
     SG.render();
   }
-  Object.assign(SG, { wsAct, ACT_LABEL, uniq, SCALES, SNAP_PX, minQ, maxQ, modT, tgt, figInfo, figByName, moveTargets, startShape, startHandle, shapeMove, shapeUp, figFlip });
+  Object.assign(SG, { wsAct, ACT_LABEL, uniq, SCALES, SNAP_PX, minQ, maxQ, modT, tgt, figInfo, figByName, moveTargets, startShape, startHandle, shapeMove, shapeUp, figFlip, pieceVerts, clipCopy, clipPaste, wsGroup, groupMembers, groupDrag });
 })(window);

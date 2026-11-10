@@ -100,8 +100,19 @@
   // 点选：没有 Shift 就只选这一个，有 Shift 就加上 / 去掉
   function wsPick(name, shift) {
     const S = UI.S, cur = S.wsSel || [];
-    S.wsSel = shift ? (cur.includes(name) ? cur.filter((x) => x !== name) : cur.concat([name])) : [name];
+    // 组里的图形：点一个，整组一起选中（按住 Shift 点只加上或去掉这一个，§10.5.9 第 3 条）
+    S.wsSel = shift ? (cur.includes(name) ? cur.filter((x) => x !== name) : cur.concat([name])) : groupNamesOf(name);
     S.wsMsg = '';   // 换了选择，上一条消息就不再适用
+  }
+  // 这个图形所在组的全部图形的名字（没有编组就只有它自己）
+  function groupNamesOf(name) {
+    for (const ws of Object.values(UI.S.scene.entities)) {
+      if (!SG.isWsDef(ws.type)) continue;
+      const fi = SG.figByName(ws.id, name); if (!fi || !fi.ent.group) continue;
+      const gid = fi.ent.group;
+      return SG.wsVisible(ws).filter((v) => { const x = SG.figInfo(v); return !!x && x.ent.group === gid; }).map((v) => SG.pickOf(v));
+    }
+    return [name];
   }
   // 删除工作区里的一步（步骤清单的 ✕）：后面的步骤还用着它的结果，就不删，并在画布上说明是哪几步；
   // 剪开的那一步连它剪出来的块一起删，被剪的图形恢复显示
@@ -166,7 +177,7 @@
     const A = UI.S.wsArm && UI.S.wsArm.ws === ws.id ? UI.S.wsArm.act : null;
     const acBtn = (id, label, tip) => '<button data-fbar="' + id + '" data-ws="' + ws.id + '"' + (A === id ? ' class="on" aria-pressed="true"' : '') + ' title="' + SG.escA(tip) + '">' + label + '</button>';
     return '<span class="fbar-tools">' + btn('seg', '连线', '连线（L）：拖出一条线，会自动吸到顶点、中点、垂足、交点；也可以点两下') + btn('cut', '剪', '剪（C）：先选一个图形，再拖出一条剪切线') +
-      '<span class="wsmini-sep"></span>' + shapesHtml(ws) + acBtn('copy', '复制', '复制选中的图形（Ctrl+D）') + acBtn('rot', '旋转', '把选中的图形转 90°（R）') + acBtn('flip', '翻转', '把选中的图形左右翻转（F）') +
+      '<span class="wsmini-sep"></span>' + shapesHtml(ws) + acBtn('copy', '复制', '复制选中的图形（Ctrl+D；Ctrl+C 后 Ctrl+V 粘贴）') + acBtn('mirror', '镜像', '镜像复制选中的图形（M）：副本贴着它的右边，左右对称') + btn('group', '编组', '把选中的图形编成一组（Ctrl+G）：点一个，两个一起选中、一起拖动；Ctrl+Shift+G 取消编组') + acBtn('rot', '旋转', '把选中的图形转 90°（R）') + acBtn('flip', '翻转', '把选中的图形左右翻转（F）') +
       btn('del', '删除', '删除选中的图形或步骤（Delete）') + btn('undo', '撤销', '撤销上一步') +
       '<span class="wsmini-sep"></span>' + snapBtn(ws) + '</span>';
   }
@@ -201,7 +212,8 @@
     if (a === 'focus') return SG.setFocus(UI.State.focusedId() ? null : wsId);
     if (a === 'seg' || a === 'cut') return SG.wsRun(wsId, a);
     if (a === 'del') return barDelete(wsId);
-    if (a === 'copy' || a === 'rot' || a === 'flip') return SG.wsAct(wsId, a);
+    if (a === 'copy' || a === 'mirror' || a === 'rot' || a === 'flip') return SG.wsAct(wsId, a);
+    if (a === 'group') return SG.wsGroup(wsId, true);
     if (a === 'undo') { const u = document.getElementById('undo'); if (u) u.click(); }
     if (a === 'snap') { UI.S.snapOn = UI.S.snapOn === false; return SG.render(); }
   }

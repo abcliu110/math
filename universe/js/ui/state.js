@@ -23,7 +23,7 @@
     view: 'session', mode: 'session', problem: 'session', run: 'session', session: 'session', freeScene: 'session',
     tab: 'session', inspOpen: 'session', glow: 'session', showSig: 'session', q1: 'session', wbDraft: 'session',
     sel: 'session', selLink: 'session', undo: 'session', redo: 'session',
-    wsSel: 'session', wsArgs: 'session', wsMsg: 'session', wsMsgKind: 'session', wsBoardUntil: 'session', wsDraw: 'session', wsArm: 'session', wsFit: 'session', wsLayerOpen: 'session', snapOn: 'session',
+    wsSel: 'session', wsArgs: 'session', wsMsg: 'session', wsMsgKind: 'session', wsBoardUntil: 'session', wsDraw: 'session', wsArm: 'session', wsClip: 'session', wsFit: 'session', wsLayerOpen: 'session', snapOn: 'session',
     D: 'derived', wsSig: 'derived',
   };
   const ENTITY_UI = {

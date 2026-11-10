@@ -485,6 +485,13 @@
         }
         return ok({ id });
       }
+      // 编组（§10.5.9 第 3 条）：一组器材记同一个组号（顶层字段 group，和 approxDeg 一样随快照撤销、随存档保存）；gid 为空就取消编组
+      case 'group': {
+        const ids = a.ids || [];
+        for (const id of ids) if (!E[id]) return fail('找不到器材');
+        for (const id of ids) { if (a.gid) E[id].group = a.gid; else delete E[id].group; }
+        return ok();
+      }
       case 'reset': {
         const e = E[a.id]; if (!e) return fail('找不到器材');
         const def = defOf(e);

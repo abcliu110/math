@@ -111,7 +111,12 @@
     if (pick) SG.wsPick(pick, ev.shiftKey);
     if (gh) {
       const pe = S.scene.entities[gh.dataset.drag]; if (!pe) return;
-      if (SG.roleOf(pe) === 'piece') { SG.pieceDown(pe, gh, pk, ev); return; }
+      if (SG.roleOf(pe) === 'piece') {
+        // 编了组的块：拖动一起动（§10.5.9 第 3 条）；没编组就是原来的块拖动
+        const gw = gh.closest('.wsbody'), pfi = gw && pk ? SG.figByName(gw.dataset.wsid, pk.dataset.pick) : null;
+        if (pfi && pfi.ent.group && SG.groupDrag(ev, gw, gw.dataset.wsid, pfi)) { ev.preventDefault(); ev.stopPropagation(); SG.render(); return; }
+        SG.pieceDown(pe, gh, pk, ev); return;
+      }
       const gwb = gh.closest('.wsbody'); if (!gwb) return;
       ev.preventDefault(); ev.stopPropagation();
       // 拖动的是自由点（pt）：松手时可以吸附到构造点（V4，1.3 第 5、6 条）
@@ -122,7 +127,7 @@
     if (pk) {
       // 整个图形可以直接拖：自由点围成的图形整体平移（每个顶点各改一次 x、y，记成一步）；摆放出来的图形改 dx、dy
       const pwb = pk.closest('.wsbody'), fi = pwb && !ev.shiftKey ? SG.figByName(pwb.dataset.wsid, pk.dataset.pick) : null;
-      if (fi && (fi.kind === 'pts' || fi.kind === 'place')) { ev.preventDefault(); ev.stopPropagation(); SG.startShape(ev, pwb, pwb.dataset.wsid, 'tr', SG.moveTargets(fi), { align: SG.alignOfFig(pwb.dataset.wsid, fi) }); }
+      if (fi && (fi.kind === 'pts' || fi.kind === 'place')) { ev.preventDefault(); ev.stopPropagation(); if (!SG.groupDrag(ev, pwb, pwb.dataset.wsid, fi)) SG.startShape(ev, pwb, pwb.dataset.wsid, 'tr', SG.moveTargets(fi), { align: SG.alignOfFig(pwb.dataset.wsid, fi) }); }
       SG.render(); return;
     }
     // 工作区的画布：点空白处取消选中，不移动工作区，也不平移台面
