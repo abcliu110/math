@@ -30,10 +30,10 @@
   // 没存过的，按内容自动选（横纵都装得下）。一旦拖过、滚过、改过大小、点过“适应”，就存下来：
   // 之后拉大卡片只是把图画大，坐标范围不变。
   function wsVisible(ws) { const hidden = UI.State.hiddenOf(ws); return wsValues(ws, SG.wsNames()).filter((v) => !hidden[v.key] && v.fig); }
-  // 一个图形在坐标里的外框（圆按半径算）；没有点就是 null
-  function figBox(f) {
+  // 一个图形在坐标里的外框（圆按半径算）；没有点就是 null。按画出来的样子算（近似旋转的块转过去以后的外框，V9）
+  function figBox(f, ent) {
     if (!f || !f.pts || !f.pts.length) return null;
-    const r = f.type === 'circle' ? Math.sqrt(Q.num(f.r2)) : 0, xs = f.pts.map((p) => Q.num(p.x)), ys = f.pts.map((p) => Q.num(p.y));
+    const r = f.type === 'circle' ? Math.sqrt(Q.num(f.r2)) : 0, pts = SG.shownPts(f, ent), xs = pts.map((p) => p.x), ys = pts.map((p) => p.y);
     return { x0: Math.min(...xs) - r, x1: Math.max(...xs) + r, y0: Math.min(...ys) - r, y1: Math.max(...ys) + r };
   }
   function wsBounds(vals) {
@@ -41,7 +41,7 @@
     for (const v of vals) {
       const f = v.fig;
       const r = f.type === 'circle' ? Math.sqrt(Q.num(f.r2)) : 0;
-      for (const p of f.pts || []) { xs.push(Q.num(p.x) - r, Q.num(p.x) + r); ys.push(Q.num(p.y) - r, Q.num(p.y) + r); }
+      for (const p of f.pts ? SG.shownPts(f, UI.S.scene.entities[v.id]) : []) { xs.push(p.x - r, p.x + r); ys.push(p.y - r, p.y + r); }
     }
     if (!xs.length) return null;
     let x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
@@ -81,7 +81,7 @@
       S.wsSig[ws.id] = sig;
       if (!changed.length || first) continue;
       const g = SG.geom(ws), w = g.w, h = g.h - HD, vw = wsView(ws, w, h), { hw, hh } = UI.Space.halfRange(w, h, vw);
-      const out = changed.some((v) => { const bx = figBox(v.fig); return bx && (bx.x0 < vw.cx - hw || bx.x1 > vw.cx + hw || bx.y0 < vw.cy - hh || bx.y1 > vw.cy + hh); });
+      const out = changed.some((v) => { const bx = figBox(v.fig, UI.S.scene.entities[v.id]); return bx && (bx.x0 < vw.cx - hw || bx.x1 > vw.cx + hw || bx.y0 < vw.cy - hh || bx.y1 > vw.cy + hh); });
       if (out) UI.State.setUi(ws, 'view', autoView(wsBounds(vals), w, h));
     }
   }

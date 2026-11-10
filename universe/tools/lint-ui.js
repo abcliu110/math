@@ -22,7 +22,7 @@
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const root = path.join(__dirname, '..');
 // 台面按职责拆成了 stage-*.js（D4），stage.js 只是对外入口；拆出来的每个文件都要查
-const STAGE_FILES = ['js/ui/stage.js', 'js/ui/stage-core.js', 'js/ui/stage-labels.js', 'js/ui/stage-workspace.js', 'js/ui/stage-canvas.js', 'js/ui/stage-panel.js', 'js/ui/stage-cards.js', 'js/ui/stage-view.js', 'js/ui/stage-piece.js', 'js/ui/stage-shape.js', 'js/ui/stage-align.js', 'js/ui/stage-draw.js', 'js/ui/stage-drag.js', 'js/ui/stage-drop.js', 'js/ui/stage-init.js'];
+const STAGE_FILES = ['js/ui/stage.js', 'js/ui/stage-core.js', 'js/ui/stage-labels.js', 'js/ui/stage-workspace.js', 'js/ui/stage-canvas.js', 'js/ui/stage-readout.js', 'js/ui/stage-panel.js', 'js/ui/stage-cards.js', 'js/ui/stage-view.js', 'js/ui/stage-piece.js', 'js/ui/stage-shape.js', 'js/ui/stage-align.js', 'js/ui/stage-draw.js', 'js/ui/stage-drag.js', 'js/ui/stage-drop.js', 'js/ui/stage-init.js'];
 const FILES = [...STAGE_FILES, 'js/ui/panels.js', 'js/ui/app.js'];   // intent.js 本身不在检查范围内
 // 修改类动作：和 js/core/world.js 的 act 分支一致
 const MUTATING = ['add', 'clear', 'clock', 'copy', 'del', 'link', 'move', 'piece', 'put', 'rename', 'reset', 'resetstate', 'resize', 'set', 'take', 'tidy', 'tool', 'unlink', 'wsdrop'];
