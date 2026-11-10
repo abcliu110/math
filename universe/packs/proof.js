@@ -215,7 +215,7 @@
           lv: { dim: null, kind: 'num', label: '证据等级' }, refuted: { dim: null, kind: 'bool', label: '被推翻' },
           kept: { dim: null, kind: 'bool', label: '每次都不变吗' }, end: { dim: null, kind: 'num', label: '最后的值' },
         },
-        icon: () => K.line(10, 30, 54, 30, { w: 2 }) + K.line(44, 24, 54, 30, { w: 2 }) + K.text(32, 20, '不变', { size: 11 }),
+        icon: () => K.line(10, 30, 54, 30, { w: 2 }) + K.line(44, 24, 54, 30, { w: 2 }) + K.text(32, 20, '不变', { size: 12 }),
         size: () => [200, 110],
         compute: (c) => {
           let v = Q.fromNumber(c.props.start);

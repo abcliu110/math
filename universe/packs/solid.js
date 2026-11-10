@@ -73,7 +73,7 @@
           hi: { type: 'int', label: '统计到', default: 20, min: -49, max: 100 },
         },
         outputs: { dist: { dim: null, kind: 'dist', label: '分布' }, n: { dim: null, kind: 'num', label: '个数' }, mean: { dim: null, kind: 'num', label: '平均数' }, median: { dim: null, kind: 'num', label: '中位数' } },
-        icon: () => [0, 1, 2].map((i) => K.line(10, 12 + i * 10, 54, 12 + i * 10, { w: 1.5, stroke: 'var(--dim)' })).join('') + K.text(32, 18, '3 5 9', { size: 11, weight: 700 }),
+        icon: () => [0, 1, 2].map((i) => K.line(10, 12 + i * 10, 54, 12 + i * 10, { w: 1.5, stroke: 'var(--dim)' })).join('') + K.text(32, 18, '3 5 9', { size: 12, weight: 700 }),
         size: () => [250, 130],
         compute: (c) => {
           const xs = String(c.props.list).split(/[,，\s]+/).filter(Boolean).map(Number);

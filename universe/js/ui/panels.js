@@ -101,7 +101,7 @@
       h += '<div class="grp">' + esc(g) + '</div><div class="tiles">';
       ts.forEach((t) => {
         const off = allow && !allow.includes(t.id), glow = S.glow && S.glow.includes(t.id);
-        h += '<div class="tile' + (off ? ' off' : '') + (glow ? ' glow' : '') + '" data-type="' + t.id + '"><svg viewBox="0 0 64 44">' + t.icon() + '</svg><div class="nm">' + esc(t.label) + '</div></div>';
+        h += '<div class="tile' + (off ? ' off' : '') + (glow ? ' glow' : '') + '"' + (off ? ' title="本题不用这个器材，不能拖到台面上"' : '') + ' data-type="' + t.id + '"><svg viewBox="0 0 64 44">' + t.icon() + '</svg><div class="nm">' + esc(t.label) + '</div></div>';
       });
       h += '</div>';
     }

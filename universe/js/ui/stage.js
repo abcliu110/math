@@ -19,7 +19,8 @@
   // 界面不认具体器材名：加一种新器材，只写它自己的声明。
   const defOf = (e) => (e && U.types[e.type]) || {};
   const roleOf = (e) => U.roleOf(e);
-  const WS_COL = ['#3b82f6', '#f97316', '#10b981', '#a855f7', '#ef4444'];
+  // 点名与图形配色：深色一组，白底（卡片）上文字对比度都 >= 4.5:1（V1，tools/contrast.js）
+  const WS_COL = ['#1d4ed8', '#c2410c', '#047857', '#7e22ce', '#b91c1c'];
   const escA = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   const numOf = (id) => +String(id).slice(1);
   // 容器：workspaceRole 为 container 的器材。它的显示和工具写在 workspace 配置里，没写的按默认（显示图形、没有工具）
@@ -142,7 +143,7 @@
     let svg = '';
     for (const L of labs.slice().sort((a, b) => a.prio - b.prio)) {
       const [x, y, b] = pick(L); placed.push(b);
-      svg += '<text x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" font-size="11" font-weight="700" fill="' + L.c + '" font-family="var(--font)">' + K.esc(L.text) + '</text>';
+      svg += '<text x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" font-size="12" font-weight="700" fill="' + L.c + '" stroke="#f4f6fb" stroke-width="3" paint-order="stroke" stroke-linejoin="round" font-family="var(--font)">' + K.esc(L.text) + '</text>';
     }
     return svg;
   }
@@ -160,7 +161,7 @@
       out.push('<g data-fit-ws="' + ws.id + '" data-fit-key="' + escA(v.key) + '" style="cursor:pointer">' +
         '<circle cx="' + ax.toFixed(1) + '" cy="' + ay.toFixed(1) + '" r="12" fill="#fff" stroke="' + c + '" stroke-width="2"/>' +
         '<path d="M-5 -4 L5 0 L-5 4 Z" fill="' + c + '" transform="translate(' + ax.toFixed(1) + ' ' + ay.toFixed(1) + ') rotate(' + ang.toFixed(1) + ')"/>' +
-        '<text x="' + tx.toFixed(1) + '" y="' + ty.toFixed(1) + '" font-size="11" font-weight="700" fill="' + c + '" font-family="var(--font)">' + K.esc(v.label) + '</text></g>');
+        '<text x="' + tx.toFixed(1) + '" y="' + ty.toFixed(1) + '" font-size="12" font-weight="700" fill="' + c + '" stroke="#f4f6fb" stroke-width="3" paint-order="stroke" stroke-linejoin="round" font-family="var(--font)">' + K.esc(v.label) + '</text></g>');
     });
     return out.join('');
   }
@@ -187,7 +188,7 @@
   function wsBody(ws, w, h) {
     const S = UI.S, sel = new Set(S.wsSel || []), ents = S.scene.entities;
     const fr = wsFrame(ws, w, h), vals = fr.vals;
-    if (!fr.b) return K.text(w / 2, h / 2 - 6, '把图形拖到这里', { size: 15, weight: 700, fill: 'var(--dim)' }) + K.text(w / 2, h / 2 + 16, '从右边器材架拖，或拖台面上的图形卡片', { size: 11, fill: 'var(--dim)' });
+    if (!fr.b) return K.text(w / 2, h / 2 - 6, '把图形拖到这里', { size: 15, weight: 700, fill: 'var(--dim)' }) + K.text(w / 2, h / 2 + 16, '从右边器材架拖，或拖台面上的图形卡片', { size: 12, fill: 'var(--dim)' });
     const { vw, s, X, Y } = fr;
     const labs = [];   // 标签先收集，最后统一摆放（不叠、不出画布）
     const gsvg = guidesSvg(drag && drag.wsId === ws.id ? drag.guides || [] : [], fr, labs);   // 拖动时的对齐参考线（C12–C14）
@@ -243,7 +244,7 @@
     for (let i = 0; i < t.length; i += per) lines.push(t.slice(i, i + per));
     const L = lines.slice(0, 2), bh = L.length * 14 + 6, col = good ? '#15803d' : '#b91c1c';
     let s = '<rect x="3" y="3" width="' + (w - 6) + '" height="' + bh + '" rx="5" fill="' + (good ? '#f0fdf4' : '#fef2f2') + '" stroke="' + col + '" stroke-width="1" pointer-events="none"/>';
-    L.forEach((ln, i) => { s += '<text x="9" y="' + (3 + 14 + i * 14) + '" font-size="11" font-weight="700" fill="' + col + '" font-family="var(--font)" pointer-events="none">' + K.esc(ln) + '</text>'; });
+    L.forEach((ln, i) => { s += '<text x="9" y="' + (3 + 14 + i * 14) + '" font-size="12" font-weight="700" fill="' + col + '" font-family="var(--font)" pointer-events="none">' + K.esc(ln) + '</text>'; });
     return s;
   }
   // 工作区的消息：文字和颜色一起设（好 / 坏）

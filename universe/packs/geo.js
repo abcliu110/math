@@ -232,7 +232,7 @@
           if (c.props.grid) for (let i = -R; i <= R; i++) for (let j = -R; j <= R; j++) g += '<circle cx="' + X(Q(i)).toFixed(1) + '" cy="' + Y(Q(j)).toFixed(1) + '" r="0.9" fill="var(--line, #bbb)"/>';
           g += '<line x1="' + X(Q(-R)) + '" y1="' + Y(Q(0)) + '" x2="' + X(Q(R)) + '" y2="' + Y(Q(0)) + '" stroke="var(--line, #bbb)"/><line x1="' + X(Q(0)) + '" y1="' + Y(Q(-R)) + '" x2="' + X(Q(0)) + '" y2="' + Y(Q(R)) + '" stroke="var(--line, #bbb)"/>';
           const fs = ((c.d && c.d.inp && c.d.inp.figs) || []).filter((x) => x && x.kind === 'fig').map((x) => x.data);
-          const colors = ['#3b82f6', '#f97316', '#10b981', '#a855f7', '#ef4444'];
+          const colors = ['#1d4ed8', '#c2410c', '#047857', '#7e22ce', '#b91c1c'];   // 与 js/ui/stage.js 的 WS_COL 同一组（对比度合格）
           let shapes = '', handles = '';
           fs.forEach((f, i) => {
             const col = colors[i % colors.length];

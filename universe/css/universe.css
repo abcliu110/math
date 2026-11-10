@@ -1,8 +1,8 @@
 :root {
   --font: -apple-system, "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", system-ui, sans-serif;
-  --bg: #0e1420; --panel: #141b29; --panel2: #1a2334; --line: #263149; --txt: #e6ebf5; --txt2: #9aa7bf; --txt3: #6b778c;
-  --blue: #3b9bff; --orange: #ff9a2e; --good: #12a36b; --bad: #e5484d; --warn: #f5a524;
-  --card: #f4f6fb; --card2: #e4eaf6; --ink: #1b2433; --dim: #6b778c; --accent: #f08a1c;
+  --bg: #0e1420; --panel: #141b29; --panel2: #1a2334; --line: #263149; --txt: #e6ebf5; --txt2: #9aa7bf; --txt3: #94a0b6;
+  --blue: #2563eb; --blue-ink: #7cb3ff; --orange: #ff9a2e; --good: #12a36b; --bad: #e5484d; --warn: #f5a524;
+  --card: #f4f6fb; --card2: #e4eaf6; --ink: #1b2433; --dim: #52607a; --accent: #c2410c; --bad: #c62828; --bad-ink: #ff7b7e;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; background: var(--bg); color: var(--txt); font-family: var(--font); font-size: 14px; overflow: hidden; -webkit-font-smoothing: antialiased; }
@@ -37,7 +37,7 @@ input, select, textarea { font: inherit; color: inherit; }
 #stagewrap { flex: 1; position: relative; overflow: hidden; background: var(--bg); }
 .tabs { display: flex; border-bottom: 1px solid var(--line); }
 .tabs button { flex: 1; padding: 14px 0; color: var(--txt2); border-bottom: 2px solid transparent; }
-.tabs button.on { color: var(--blue); border-bottom-color: var(--blue); }
+.tabs button.on { color: var(--blue-ink); border-bottom-color: var(--blue); }
 .scroll { overflow-y: auto; flex: 1; padding: 12px; }
 .scroll::-webkit-scrollbar { width: 8px; } .scroll::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
 
@@ -49,7 +49,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .plist .it:hover { border-color: var(--blue); }
 .plist .it.cur { border-color: var(--blue); background: #1b2a42; }
 .plist .it .tt { flex: 1; line-height: 1.4; }
-.chip { font-size: 11px; padding: 2px 7px; border-radius: 10px; background: var(--line); color: var(--txt2); white-space: nowrap; }
+.chip { font-size: 12px; padding: 2px 7px; border-radius: 10px; background: var(--line); color: var(--txt2); white-space: nowrap; }
 .chip.ok { background: #0e3b2c; color: #5be3b0; }
 .pcard { background: #1b2a42; border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; line-height: 1.6; }
 .pcard b { display: block; margin-bottom: 4px; font-size: 15px; }
@@ -82,10 +82,15 @@ input, select, textarea { font: inherit; color: inherit; }
 .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .tile { background: var(--panel2); border-radius: 10px; padding: 8px 6px 7px; text-align: center; cursor: grab; border: 1px solid transparent; user-select: none; touch-action: none; }
 .tile:hover { border-color: var(--blue); background: #1d2940; }
-.tile svg { width: 64px; height: 44px; display: block; margin: 0 auto 4px; background: var(--card); border-radius: 6px; --ink: #1b2433; --dim: #6b778c; --accent: #f08a1c; --good: #12a36b; --bad: #e5484d; --card2: #e4eaf6; }
+.tile svg { width: 64px; height: 44px; display: block; margin: 0 auto 4px; background: var(--card); border-radius: 6px; --ink: #1b2433; --dim: #52607a; --accent: #c2410c; --good: #12a36b; --bad: #c62828; --card2: #e4eaf6; }
 .tile .nm { font-size: 12px; color: var(--txt2); line-height: 1.3; }
 .tile.glow { border-color: var(--orange); box-shadow: 0 0 0 2px #ff9a2e55, 0 0 14px #ff9a2e66; animation: glow 1.4s ease-in-out infinite alternate; }
-.tile.off { opacity: .35; pointer-events: none; }
+/* 本题不用的器材：不再整块半透明（那样文字和图都看不清），改成深灰底 + 清楚的文字 + 一行说明；悬停时说明原因（title） */
+.tile.off { background: #2b3446; border-color: #4b5670; border-style: dashed; cursor: not-allowed; }
+.tile.off:hover { background: #2b3446; border-color: #4b5670; }
+.tile.off svg { filter: grayscale(1); }
+.tile.off .nm { color: #d5dbe6; }
+.tile.off .nm::after { content: "本题不用"; display: block; margin-top: 2px; color: #c3cbda; font-size: 12px; }
 @keyframes glow { from { box-shadow: 0 0 0 1px #ff9a2e44; } to { box-shadow: 0 0 0 3px #ff9a2e88, 0 0 18px #ff9a2e88; } }
 #ghost { position: fixed; z-index: 90; pointer-events: none; opacity: .85; }
 
@@ -102,7 +107,7 @@ input, select, textarea { font: inherit; color: inherit; }
 #links path.ln.sel { stroke-width: 5; filter: drop-shadow(0 0 4px #fff8); }
 #links path.flow { fill: none; stroke: #fff; stroke-width: 2; stroke-dasharray: 2 14; stroke-linecap: round; opacity: .75; pointer-events: none; animation: flow .8s linear infinite; }
 @keyframes flow { to { stroke-dashoffset: -16; } }
-.lb { position: absolute; transform: translate(-50%, -50%); background: #0b1220e8; border: 1px solid var(--line); color: var(--txt); font-size: 11px; padding: 1px 7px; border-radius: 9px; white-space: nowrap; pointer-events: auto; cursor: pointer; }
+.lb { position: absolute; transform: translate(-50%, -50%); background: #0b1220e8; border: 1px solid var(--line); color: var(--txt); font-size: 12px; padding: 1px 7px; border-radius: 9px; white-space: nowrap; pointer-events: auto; cursor: pointer; }
 .lb.sel { border-color: #fff; }
 .card { position: absolute; background: var(--card); color: var(--ink); border-radius: 12px; box-shadow: 0 2px 0 #0003, 0 10px 26px #0006; border: 2px solid transparent; user-select: none; }
 .card.sel { border-color: var(--blue); box-shadow: 0 0 0 3px #3b9bff44, 0 10px 26px #0006; }
@@ -116,8 +121,8 @@ input, select, textarea { font: inherit; color: inherit; }
 .port.ok { box-shadow: 0 0 0 5px #12a36b88; }
 .port.no { box-shadow: 0 0 0 5px #e5484d88; }
 .port:hover { transform: translate(-50%, -50%) scale(1.25); }
-.pl { opacity: .4; transition: opacity .15s; position: absolute; font-size: 10px; color: #7a869c; transform: translateY(-50%); pointer-events: none; white-space: nowrap; }
-.pill { position: absolute; width: 92px; height: 22px; line-height: 20px; border-radius: 11px; background: #fff; color: var(--ink); border: 2px solid #aab4c8; font-size: 11px; text-align: center; transform: translateY(-50%); cursor: crosshair; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px; }
+.pl { position: absolute; font-size: 12px; color: var(--dim); transform: translateY(-50%); pointer-events: none; white-space: nowrap; }
+.pill { position: absolute; width: 92px; height: 22px; line-height: 20px; border-radius: 11px; background: #fff; color: var(--ink); border: 2px solid #aab4c8; font-size: 12px; text-align: center; transform: translateY(-50%); cursor: crosshair; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px; }
 .pill.driven { background: #dff3ea; border-color: var(--good); }
 .pill.ok { border-color: var(--good); box-shadow: 0 0 0 4px #12a36b66; }
 .pill.no { border-color: var(--bad); box-shadow: 0 0 0 4px #e5484d66; }
@@ -225,7 +230,7 @@ input, select, textarea { font: inherit; color: inherit; }
 #insp .rsyms .ins { padding: 2px 6px; border-radius: 6px; background: var(--panel2); border: 1px solid var(--line); cursor: pointer; font-size: 12px; }
 #insp .rhint { font-size: 12px; margin-top: 4px; }
 #insp .rok { color: var(--good); }
-#insp .rerr { color: var(--bad); }
+#insp .rerr { color: var(--bad-ink); }
 
 /* 表格式编辑（数据表的数据属性） */
 table.grid { border-collapse: collapse; margin: 4px 0; }
@@ -274,7 +279,7 @@ button.gdel { border: 0; background: none; color: var(--dim); cursor: pointer; }
 .card .rz:hover::after { border-color: #fff; }
 
 /* ---- 工作区：坐标范围的说明与适应按钮（§10.5.8 A2） ---- */
-.wsx-range { color: var(--dim); font-size: 11px; margin: 2px 0 4px; }
+.wsx-range { color: var(--dim); font-size: 12px; margin: 2px 0 4px; }
 
 /* ---- 专注模式（§10.5.8 A4）：工作区放大成覆盖台面的浮层 ---- */
 #wsfocus { position: absolute; inset: 0; z-index: 20; background: var(--bg); display: flex; flex-direction: column; padding: 12px 24px; box-sizing: border-box; cursor: default; user-select: none; }

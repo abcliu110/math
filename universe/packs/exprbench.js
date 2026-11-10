@@ -41,7 +41,7 @@
         lint: { minProps: 1, why: '式子工作台只有一个标签；方程从输入口来，步骤在检查器里做' },
         inputs: { e: { kind: 'eqn', label: '方程' } },
         outputs: { solved: { dim: null, kind: 'bool', label: '解出来了（x = 数）' } },
-        icon: () => K.text(32, 24, 'x=?', { size: 15, weight: 700 }) + K.text(32, 40, '移项 · 除', { size: 9 }),
+        icon: () => K.text(32, 24, 'x=?', { size: 15, weight: 700 }) + K.text(32, 40, '移项 · 除', { size: 12 }),
         size: () => [210, 110],
         compute: (c) => {
           const eq = eqnIn(c.inp);

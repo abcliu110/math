@@ -22,7 +22,7 @@
           label: { type: 'text', label: '标签', default: '' },
         },
         outputs: { p: { dim: null, kind: 'point', label: '点' } },
-        icon: () => K.line(8, 36, 56, 36, { w: 1.5 }) + K.line(12, 8, 12, 36, { w: 1.5 }) + K.circle(40, 20, 3.5, { fill: 'var(--accent)' }) + K.text(40, 14, '(4,3)', { size: 9 }),
+        icon: () => K.line(8, 36, 56, 36, { w: 1.5 }) + K.line(12, 8, 12, 36, { w: 1.5 }) + K.circle(40, 20, 3.5, { fill: 'var(--accent)' }) + K.text(40, 14, '(4,3)', { size: 12 }),
         size: () => [170, 100],
         compute: (c) => {
           const col = c.props.col, row = c.props.row;
