@@ -1719,6 +1719,25 @@ console.log('式子工作台内核（任务 H 第 3a 步）：两边同除同乘
     eq(F.show(f.current.data), '5x'); eq(WB.solution(f), { solved: false });
     eq(WB.solution(WB.create(EV(linEqn()))), { solved: false });
   });
+  t('D5 合并同类项：减法 20 − 5 合并成 15（移项后的右边）；pick 只合并选中的几项，其余原样留下', () => {
+    const sub20 = { op: 'sub', args: [N(20), N(5)] };
+    const s = ap('alg.collect', FV(sub20), [], {});
+    eq(s.ok, true); eq(s.kept, true); eq(F.show(s.value.data), '15');
+    const f = add(mul(N(3), X), N(5), mul(N(2), X));
+    const p = ap('alg.collect', FV(f), [], { pick: [0, 2] });
+    eq(p.ok, true); eq(p.kept, true); eq(F.show(p.value.data), '5x + 5');
+    const q = ap('alg.collect', FV(f), [], { pick: [0, 1] });
+    eq(q.ok, false); eq(q.kept, false); truthy(cn(q.why), q.why);
+    const bad = ap('alg.collect', FV(f), [], { pick: [0] });
+    eq(bad.ok, false); truthy(cn(bad.why), bad.why);
+    const neg = ap('alg.collect', FV({ op: 'sub', args: [mul(N(2), X), mul(N(5), X)] }), [], {});
+    eq(neg.kept, true); eq(F.show(neg.value.data), '−3x');
+    const st = WB.step(WB.step(WB.create(EV(linEqn())), 'move-term', [1], {}), 'collect', ['rhs'], { pick: [0, 1] });
+    eq(st.steps.length, 2); eq(F.show(st.current.data.rhs), '15');
+    eq(WB.coef(WB.create(EV({ lhs: mul(N(3), X), rhs: N(20), rel: '=' }))).n, 3n);
+    eq(WB.coef(WB.create(EV(linEqn()))), null);
+    eq(WB.coef(WB.create(EV({ lhs: X, rhs: N(5), rel: '=' }))), null);
+  });
 }
 
 console.log('改大小（resize，§10.5.8 A1）');

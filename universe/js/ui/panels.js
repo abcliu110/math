@@ -167,26 +167,51 @@
   // 步骤历史在 U.ExprBench.states 里，不在台面上；这里只画。输入框的草稿放在 S.wbDraft[器材 id]。
   function wbDraft(id) {
     const S = UI.S; S.wbDraft = S.wbDraft || {};
-    return S.wbDraft[id] || (S.wbDraft[id] = { ref: '', side: 'lhs', by: '', msg: '' });
+    return S.wbDraft[id] || (S.wbDraft[id] = { ref: '', side: 'lhs', by: '', msg: '', sel: [] });
+  }
+  // 一边的有符号项：加法的每一项是加；减法（移项后的 20 − 5）的第二项是减
+  function wbTerms(node) {
+    if (!node) return [];
+    if (node.op === 'add') return node.args.map((f) => ({ f, sign: 1 }));
+    if (node.op === 'sub' && node.args.length === 2) return [{ f: node.args[0], sign: 1 }, { f: node.args[1], sign: -1 }];
+    return [{ f: node, sign: 1 }];
+  }
+  // 等号一边的项：每一项是一个按钮，选中的项带 sel 类和 aria-pressed
+  function wbSide(side, node, dr) {
+    return '<div class="wb-side" data-wb-side="' + side + '">' + wbTerms(node).map((t, i) => {
+      const on = dr.sel.indexOf(side + ':' + i) >= 0;
+      const txt = (t.sign < 0 ? '− ' : (i > 0 ? '+ ' : '')) + U.Form.show(t.f);
+      return '<button class="wb-chip' + (on ? ' sel' : '') + '" data-wb-term="' + side + ':' + i + '" data-wb-side="' + side + '" data-wb-i="' + i + '" aria-pressed="' + on + '">' + esc(txt) + '</button>';
+    }).join('') + '</div>';
   }
   function wbHtml(e, dd) {
     const eq = U.ExprBench.eqnIn(dd && dd.inp);
     if (!eq) return '<div class="wb"><h5>式子工作台</h5><div class="wb-none">接一个方程</div><div class="note">从方程台的「方程」口拖一根线到这台器材的「方程」口。</div></div>';
     const st = U.ExprBench.currentOf(e.id, eq), dr = wbDraft(e.id), cur = st.current;
-    const L = cur.kind === 'eqn' ? cur.data.lhs : null;
-    const terms = L ? (L.op === 'add' ? L.args : [L]) : [];
+    // 选中项只认现在还存在的项（前面的步骤改了式子，旧的选择就作废）
+    const sides = cur.kind === 'eqn' ? { lhs: cur.data.lhs, rhs: cur.data.rhs } : {};
+    dr.sel = (dr.sel || []).filter((k) => {
+      const m = /^(lhs|rhs):(\d+)$/.exec(k);
+      return !!m && +m[2] < wbTerms(sides[m[1]]).length;
+    });
     let h = '<div class="wb"><h5>式子工作台</h5><div class="wb-now">现在：<b>' + esc(U.ExprBench.showState(st)) + '</b></div>';
+    if (cur.kind === 'eqn') {
+      h += '<div class="wb-eq">' + wbSide('lhs', sides.lhs, dr) + '<span class="wb-rel">' + esc(cur.data.rel) + '</span>' + wbSide('rhs', sides.rhs, dr) + '</div>';
+      h += '<div class="wb-note">点项就选中（可以多选）。把左边的项拖过等号，松手就是移项；选两个同类项再点「合并同类项」。</div>';
+    }
     h += '<div class="wb-h">应用到选中项</div>';
-    h += '<div class="wb-terms">左边的项：' + terms.map((t, i) => '<span class="wb-term">' + (i + 1) + ' → ' + esc(U.Form.show(t)) + '</span>').join('') + '</div>';
     h += '<div class="wb-apply">' +
       '<label>要动的项（序号，或标签）<input data-wb-field="ref" value="' + esc(dr.ref) + '" placeholder="例如 2"></label>' +
       '<label>哪一边<select data-wb-field="side">' + [['lhs', '左边'], ['rhs', '右边']].map(([v, t]) => '<option value="' + v + '"' + (v === dr.side ? ' selected' : '') + '>' + t + '</option>').join('') + '</select></label>' +
       '<label>两边同除 / 同乘几<input data-wb-field="by" value="' + esc(dr.by) + '" placeholder="例如 3" class="in-by"></label></div>';
-    h += '<div class="wb-tools">' + U.Workbench.tools(cur).map((t) => '<button data-wb-tool="' + t.id + '">' + esc(t.label) + '</button>').join('') + '</div>';
+    h += '<div class="wb-tools">' + U.Workbench.tools(cur).map((t) => '<button data-wb-tool="' + t.id + '">' + esc(t.label) + '</button>').join('');
+    const k = U.Workbench.coef(st);
+    if (k) h += '<button data-wb-act="divide-coef">两边同除以 ' + esc(U.Q.show(k)) + '</button>';
+    h += '</div>';
     if (dr.msg) h += '<div class="wb-msg">' + esc(dr.msg) + '</div>';
     h += '<div class="wb-h">步骤</div>';
     const log = U.Workbench.stepLog(st);
-    h += log.length ? log.map((s, i) => '<div class="wb-step"><span>' + esc(s) + '</span><button data-wb-undo="' + (i + 1) + '">撤销到这一步</button></div>').join('') : '<div class="wb-none">还没有步骤</div>';
+    h += log.length ? st.steps.map((s, i) => '<div class="wb-step"><span>' + esc(log[i]) + '<small>' + esc(s.why) + '</small></span><button data-wb-undo="' + (i + 1) + '">撤销到这一步</button></div>').join('') : '<div class="wb-none">还没有步骤</div>';
     const sol = U.Workbench.solution(st);
     if (sol.solved) h += '<div class="wb-sol">解：x = ' + esc(U.Q.show(sol.x)) + '</div>';
     return h + '</div>';

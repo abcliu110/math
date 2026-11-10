@@ -294,6 +294,17 @@ button.gdel { border: 0; background: none; color: var(--dim); cursor: pointer; }
 .wb-step { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin: 3px 0; font-size: 12px; }
 .wb-step button { margin: 0; white-space: nowrap; }
 .wb-msg { color: var(--bad); margin: 6px 0; font-size: 12px; }
+/* 式子工作台（D5）：等号两边的项是按钮；选中的项用粗边和黄底标出，拖动时变淡，拖到右边时右边变蓝 */
+.wb-eq { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; margin: 8px 0 4px; }
+.wb-side { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; min-height: 30px; flex: 1 1 auto; padding: 4px; border-radius: 10px; }
+.wb .wb-side[data-wb-side="rhs"].wb-over { background: #bfe3ff; outline: 2px dashed #1b2433; }
+.wb-rel { font-size: 16px; font-weight: 700; padding: 0 2px; }
+.wb .wb-chip { font: inherit; font-size: 14px; font-weight: 700; padding: 4px 10px; border-radius: 8px; border: 1px solid #8a96ad; background: #ffffff; color: #1b2433; cursor: pointer; touch-action: none; }
+.wb .wb-chip.sel { background: #ffe08a; border: 2px solid #c2410c; padding: 3px 9px; }
+.wb .wb-chip.wb-drag { opacity: 0.55; }
+.wb-note { font-size: 12px; color: var(--dim); margin: 2px 0 6px; }
+.wb-tools button[data-wb-act] { font-weight: 700; }
+.wb-step small { display: block; color: var(--dim); font-size: 11px; margin-top: 2px; }
 .wb-sol { margin-top: 8px; font-size: 15px; font-weight: 700; color: var(--good); }
 
 /* ---- 改大小（§10.5.8 A1）：卡片右下角的拖柄，命中区 24 像素（手指也好按） ---- */

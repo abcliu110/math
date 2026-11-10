@@ -144,6 +144,19 @@
       });
     },
 
+    // 方程的左边只有一项 kx（k 不是 0 也不是 1）时返回 k（一个有理数），界面用它做「两边同除以 k」的按钮
+    coef(state) {
+      const v = state.current;
+      if (v.kind !== 'eqn' || v.data.rel !== '=') return null;
+      let L;
+      try { L = F.value(v.data.lhs); } catch (e) { return null; }
+      if (!L || !Array.isArray(L.terms) || L.terms.length !== 1) return null;
+      const t = L.terms[0];
+      if (Object.keys(t.m).length !== 1 || String(t.m.x) !== '1') return null;
+      if (t.c.n === 0n || (t.c.n === 1n && t.c.d === 1n)) return null;
+      return t.c;
+    },
+
     // current 是 x = 数（一个未知数 x，右边没有字母）时给出解
     solution(state) {
       const v = state.current;

@@ -253,16 +253,43 @@
   R('alg.divide', scaleRule('divide'));
   R('alg.multiply', scaleRule('multiply'));
 
-  // 合并同类项：add 里的几项必须是同类项，合成一项。
+  // 合并同类项：加法（或减法，两项）里的几项必须是同类项，合成一项。
+  // 减法的第二项带负号（移项后的 20 − 5 合并成 15）。args.pick 可以指定要合并的几项（下标从 0 数，
+  // 按有符号的项数）；不写就合并这一个节点的全部项。没选的项原样留下，顺序不变。
+  const signedTerms = (n) => {
+    if (n.op === 'add') return n.args.map((node) => ({ node, sign: 1 }));
+    if (n.op === 'sub' && n.args.length === 2) return [{ node: n.args[0], sign: 1 }, { node: n.args[1], sign: -1 }];
+    return null;
+  };
+  // 要合并的下标（升序）；不对时返回说明
+  const pickOf = (args, count) => {
+    const p = args && args.pick;
+    if (p === undefined) return Array.from({ length: count }, (_, i) => i);
+    if (!Array.isArray(p) || p.length < 2) return '请选两项以上再合并';
+    if (p.some((i) => !Number.isInteger(i) || i < 0 || i >= count) || new Set(p).size !== p.length) return '选中的项不对，请重选';
+    return p.slice().sort((a, b) => a - b);
+  };
+  // 有符号项组成一个式子：第一项是负的，前面加负号；之后用 + 或 −
+  const buildSigned = (list) => {
+    let acc = null;
+    for (const it of list) {
+      if (!acc) acc = it.sign < 0 ? { op: 'neg', args: [it.node] } : it.node;
+      else acc = { op: it.sign < 0 ? 'sub' : 'add', args: [acc, it.node] };
+    }
+    return acc;
+  };
   R('alg.collect', {
     label: '合并同类项：同类的项相加，字母部分不变', essence: ['E2'], grade: [5, 7], keeps: 'value',
-    match(f, at) {
+    match(f, at, args) {
       const n = nodeAt(f, at);
-      if (!n || n.op !== 'add' || n.args.length < 2) return '只有加法里的同类项才能合并';
+      const items = n && signedTerms(n);
+      if (!items || items.length < 2) return '只有加法或减法里的同类项才能合并';
+      const pick = pickOf(args, items.length);
+      if (typeof pick === 'string') return pick;
       let key = null;
-      for (const t of n.args) {
+      for (const i of pick) {
         let p;
-        try { p = polyOf(F.value(t)); } catch (e) { return '这一项算不出来：' + e.message; }
+        try { p = polyOf(F.value(items[i].node)); } catch (e) { return '这一项算不出来：' + e.message; }
         if (p.terms.length !== 1) return '这一项不是单独的一项，不能合并';
         const k = monoKey(p.terms[0].m);
         if (key === null) key = k; else if (k !== key) return '这几项不是同类项，不能合并';
@@ -270,8 +297,26 @@
     },
     apply(f, at, args) {
       const n = nodeAt(f, at);
-      const sum = n.args.reduce((acc, t) => P.add(acc, polyOf(F.value(t))), P.const(Q(0)));
-      return setAt(f, at, tagNode(F.fromPoly(sum), 'collected', args));
+      const items = signedTerms(n);
+      const pick = pickOf(args, items.length);
+      const chosen = new Set(pick);
+      const sum = pick.reduce((acc, i) => {
+        const p = polyOf(F.value(items[i].node));
+        return P.add(acc, items[i].sign < 0 ? P.neg(p) : p);
+      }, P.const(Q(0)));
+      // 合并的结果是一项：系数为负时记成「减去一个正的项」（sign -1）
+      const neg = sum.terms.length === 1 && sum.terms[0].c.n < 0n;
+      const absNode = F.fromPoly(neg ? P.neg(sum) : sum);
+      const out = [];
+      let placed = false;
+      items.forEach((it, i) => {
+        if (!chosen.has(i)) { out.push(it); return; }
+        if (!placed) { out.push({ node: absNode, sign: neg ? -1 : 1 }); placed = true; }
+      });
+      // 只剩一项：整个节点换成这一项（标签打在最外面）；否则只换掉被合并的那一块
+      if (out.length === 1) return setAt(f, at, tagNode(buildSigned(out), 'collected', args));
+      out[out.findIndex((it) => it.node === absNode)] = { node: tagNode(absNode, 'collected', args), sign: neg ? -1 : 1 };
+      return setAt(f, at, buildSigned(out));
     },
   });
 
