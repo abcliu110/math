@@ -245,6 +245,14 @@ button.gdel { border: 0; background: none; color: var(--dim); cursor: pointer; }
 .wsx button:hover { border-color: var(--blue); }
 .wsx input[type=number] { width: 48px; font: inherit; font-size: 12px; }
 .wsx-args { margin: 4px 0; color: var(--dim); }
+/* 放不下、会压住卡片时：面板收成右下角的一个按钮（wsx-folded），或展开后带一个「收起」按钮（wsx-tight） */
+.wsx .wsx-fold { display: none; margin: 0 0 4px; }
+.wsx.wsx-tight .wsx-fold, .wsx.wsx-folded .wsx-fold { display: inline-block; }
+.wsx .wsx-fold-shut, .wsx.wsx-folded .wsx-fold-shut, .wsx.wsx-tight .wsx-fold-open { display: none; }
+.wsx.wsx-tight .wsx-fold-shut { display: inline; }
+.wsx.wsx-folded > :not(.wsx-fold) { display: none; }
+.wsx.wsx-folded { padding: 4px; }
+.wsx.wsx-folded .wsx-fold { margin: 0; }
 .wsx-sel { margin: 6px 0 2px; color: var(--dim); }
 .wsx-foot { min-height: 16px; margin-bottom: 4px; color: var(--dim); }
 .wsx-foot.bad { color: var(--bad); font-weight: 700; }

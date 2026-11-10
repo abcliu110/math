@@ -92,6 +92,30 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   ok(an.right.side === 'right' && an.right.fits && an.right.x === 136, 'anchor：下方放不下就放右边');
   ok(!an.none.fits && an.none.x >= 0 && an.none.y >= 0 && an.none.x + 100 <= 150 && an.none.y + 50 <= 120, 'anchor：都放不下就夹进可视区');
 
+  console.log('200% 缩放：工作区画布中心用真实鼠标点，命中的是画布，不是面板');
+  await p.evaluate(() => {
+    const S = UI.S, e = Object.values(S.scene.entities).find((x) => U.types[x.type].workspace);
+    const g = UI.Stage.geom(e), st = document.querySelector('#stage').getBoundingClientRect();
+    S.view = { z: 2, x: st.width / 2 - (g.x + g.w / 2) * 2, y: st.height / 2 - (g.y + g.h / 2) * 2 };
+    UI.Stage.render();
+  });
+  const click200 = await p.evaluate(() => {
+    const ws = Object.values(UI.S.scene.entities).find((x) => U.types[x.type].workspace);
+    const wb = document.querySelector('svg.wsbody[data-wsid="' + ws.id + '"]'), r = wb.getBoundingClientRect();
+    const st = document.querySelector('#stage').getBoundingClientRect();
+    const x = (r.left + r.right) / 2, y = (r.top + r.bottom) / 2;
+    window.__hitLog = [];
+    document.addEventListener('pointerdown', (e) => {
+      const t = e.target;
+      window.__hitLog.push(t.closest && t.closest('.wsx') ? 'panel' : t.closest && t.closest('svg.wsbody[data-wsid="' + ws.id + '"]') ? 'canvas' : 'other');
+    }, true);
+    return { x, y, inStage: x > st.left && x < st.right && y > st.top && y < st.bottom };
+  });
+  ok(click200.inStage, '200%：画布中心在台面里（看得见）');
+  await p.mouse.click(click200.x, click200.y); await p.waitForTimeout(100);
+  const hit200 = await p.evaluate(() => window.__hitLog[0] || 'none');
+  ok(hit200 === 'canvas', '200%：真实鼠标点画布中心，命中画布（实际命中：' + hit200 + '）');
+
   ok(errs.length === 0, '控制台 0 报错' + (errs.length ? '：' + errs[0] : ''));
   p.setViewportSize({ width: 1440, height: 860 }).catch(() => {});
   console.log('\n' + pass + ' 通过，' + fail + ' 失败');

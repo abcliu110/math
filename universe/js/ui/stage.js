@@ -271,6 +271,8 @@
     const vals = wsValues(ws, names), steps = wsSteps(ws), picks = S.wsSel || [];
     const pos = inFocus ? '' : ' style="width:' + g.w + 'px"';   // 位置由 UI.Layout.placePanels 在渲染后摆好（实测尺寸）
     let h = '<div class="wsx" data-ws="' + ws.id + '"' + pos + '>';
+    // 收起/展开按钮：只在放不下、会压住卡片时显示（见 UI.Layout.placePanels）
+    h += '<button class="wsx-fold" data-ws-fold="' + ws.id + '"><span class="wsx-fold-open">工作区 ▸</span><span class="wsx-fold-shut">收起 ▾</span></button>';
     const D = S.wsDraw && S.wsDraw.ws === ws.id ? S.wsDraw : null;
     h += '<div class="wsx-tools">' + wd.tools.map((t) => '<button data-ws-tool="' + t.id + '" data-ws="' + ws.id + '"' + (D && D.tool === t.id ? ' class="on"' : '') + '>' + K.esc(t.label) + '</button>').join('') +
       '<button data-ws-fit="' + ws.id + '" title="按内容选坐标范围，让图正好装下">适应</button></div>';
@@ -1280,6 +1282,8 @@
       // 工作区面板：工具、步骤（点开看参数）、删除一步
       const ff = ev.target.closest('[data-fig-flip]');
       if (ff) { figFlip(ff.dataset.ws, ff.dataset.name, +ff.dataset.figFlip); return; }
+      const wfo = ev.target.closest('[data-ws-fold]');
+      if (wfo) { UI.Layout.toggleFold(wfo.dataset.wsFold); render(); return; }
       const wt = ev.target.closest('[data-ws-tool]');
       if (wt) { wsRun(wt.dataset.ws, wt.dataset.wsTool); return; }
       const wf = ev.target.closest('[data-ws-fit]');

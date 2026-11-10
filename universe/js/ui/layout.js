@@ -85,6 +85,10 @@
 
   // 面板相对卡片左上角的位置和实测尺寸（最近一次渲染）。键是工作区 id。
   const placed = {};
+  // 用户手动展开过的面板（放不下时默认收起；展开后照常摆，会压住卡片，由用户自己选）。键是工作区 id。
+  const expanded = {};
+  // 面板的收起/展开按钮：放不下时收起的面板只剩这个按钮；展开的面板里也有它，用来收起
+  function toggleFold(id) { expanded[id] = !expanded[id]; }
   // 渲染后调用：worldEl 里每个工作区面板，用 DOM 实测尺寸，按 anchor 摆好
   function placePanels(worldEl, stageEl, view, geomOf) {
     const B = visibleBounds(stageEl, view), availW = B.x1 - B.x0, availH = B.y1 - B.y0;
@@ -104,8 +108,18 @@
         size = { w: el.offsetWidth, h: el.offsetHeight };
         p = anchor(card, size, B);
       }
+      // 面板会压住卡片（图形点不到）时：默认收起成可视区右下角的一个小按钮，用户点了才展开。只留在间距里不算压住
+      const tight = p.x < card.x + card.w && p.x + size.w > card.x && p.y < card.y + card.h && p.y + size.h > card.y;
+      const folded = tight && !expanded[id];
+      el.classList.toggle('wsx-tight', tight);
+      el.classList.toggle('wsx-folded', folded);
+      if (folded) {
+        el.style.width = ''; el.style.maxHeight = '';
+        size = { w: el.offsetWidth, h: el.offsetHeight };
+        p = { x: B.x1 - size.w, y: B.y1 - size.h, side: 'corner', fits: false };
+      }
       el.style.left = p.x + 'px'; el.style.top = p.y + 'px';
-      placed[id] = { dx: p.x - card.x, dy: p.y - card.y, w: size.w, h: size.h, side: p.side, fits: p.fits };
+      placed[id] = { dx: p.x - card.x, dy: p.y - card.y, w: size.w, h: size.h, side: p.side, fits: p.fits, folded };
     });
   }
   // 面板在世界坐标里的矩形。card：卡片的世界矩形 {x, y, w, h}
@@ -115,5 +129,5 @@
     return { x: card.x, y: card.y + card.h + LAYOUT.WS_PANEL_GAP, w: card.w, h: LAYOUT.WS_PANEL_H };
   }
 
-  UI.Layout = { anchor, visibleBounds, placePanels, panelRect, clamp };
+  UI.Layout = { anchor, visibleBounds, placePanels, panelRect, toggleFold, clamp };
 })(typeof globalThis !== 'undefined' ? globalThis : window);
