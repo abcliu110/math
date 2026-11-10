@@ -1,8 +1,9 @@
 /* 问题结构（设计 v2 §2.1）：问题是一份数据，lint 在它进题库之前检查结构。
  * 不检查内容好不好，只检查结构对不对、哪些写法需要解释。
  *
- * 字段：id、title（必须）；points、alias、level、rung、shelf、hook、scene、predict、
+ * 字段：id、title（必须）；points、alias、level、rung、shelf、workbench、hook、scene、predict、
  *       milestones（必须）、traps、goal、explain、variant、params、exam、why、claim、evidence
+ * workbench：打开题目时进入的工作台（见 U.WORKBENCHES）。默认 'graph'（关系画布）；'geometry' 的器材架只列几何工作台的器材
  * 里程碑 / 陷阱的条件：when（数据形式，首选）或 test（函数，兜底；必须写 why_code 说明原因）
  * level：core 核心 / trap 陷阱 / stretch 延伸（深到奥数，结论必须走到证明）
  * rung：台阶 1–6（见 §2.2）
@@ -35,6 +36,11 @@
     else if (!Array.isArray(p.points) || !p.points.every((x) => typeof x === 'string')) err('points 要是知识点编号的数组');
     if (p.alias !== undefined && !Array.isArray(p.alias)) err('alias 要是数组');
     if (p.shelf !== undefined && !Array.isArray(p.shelf)) err('shelf 要是器材类型的数组');
+    if (p.workbench !== undefined && !U.WORKBENCHES.includes(p.workbench)) err('workbench 只能是 ' + U.WORKBENCHES.join(' / ') + '（默认 graph，即关系画布）');
+    else if (p.workbench !== undefined && p.workbench !== 'graph' && Array.isArray(p.shelf)) {
+      // 器材架上的器材如果不在这个工作台的声明里，学生在这个工作台里看不到它（只提醒，不挡）
+      p.shelf.forEach((t) => { if (U.types[t] && !U.onWorkbenchShelf(U.types[t], p.workbench)) warn('器材架上的 ' + t + ' 不在「' + p.workbench + '」工作台的器材里，这个工作台的器材架不会列出它'); });
+    }
     if (p.level !== undefined && !P.LEVELS.includes(p.level)) err('level 只能是 ' + P.LEVELS.join(' / '));
     if (p.rung === undefined) warn('没写 rung（台阶 1–6）');
     else if (!Number.isInteger(p.rung) || p.rung < 1 || p.rung > P.RUNG_MAX) err('rung 只能是 1–' + P.RUNG_MAX + ' 的整数');

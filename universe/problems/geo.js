@@ -21,7 +21,7 @@
 
   U.problems.push(
     {
-      id: 'geo-median-area', essence: ['E2', 'E5'], title: '三角形的中线把面积分成两半吗？', grade: 5, domain: '图形与几何',
+      id: 'geo-median-area', workbench: 'geometry', essence: ['E2', 'E5'], title: '三角形的中线把面积分成两半吗？', grade: 5, domain: '图形与几何',
       points: ['5.6'], level: 'core', rung: 3, alias: ['中线', '辅助线', '剪开', '面积'],
       hook: '从顶点 A 连到对边 BC 上的一点，把三角形剪成两块。连到哪里，两块面积才正好相等？',
       shelf: ['gmid', 'gseg', 'gcut', 'gfoot', 'gint', 'gboard', 'figmeasure'],
@@ -41,7 +41,7 @@
       why: '两块三角形的底都是 BC 的一半，高都是 A 到 BC 的距离，所以面积相等。拖动 A、B、C 试试：只要是中线，两块永远一样大。',
     },
     {
-      id: 'geo-pgram-cut', essence: ['E5', 'E2'], title: '平行四边形剪一刀，拼成长方形', grade: 5, domain: '图形与几何',
+      id: 'geo-pgram-cut', workbench: 'geometry', essence: ['E5', 'E2'], title: '平行四边形剪一刀，拼成长方形', grade: 5, domain: '图形与几何',
       points: ['5.6'], level: 'core', rung: 3, alias: ['平行四边形', '剪拼', '高', '移动', '粘贴'],
       hook: '沿着一条高把平行四边形剪开，把剪下的那块移过去，能不能正好拼成右边的长方形？',
       shelf: ['gseg', 'gfoot', 'gcut', 'gplace', 'gasm', 'gboard', 'figmeasure'],

@@ -20,6 +20,7 @@
       // ---------------- 自由点：坐标是属性，可以在画板上拖 ----------------
       gpt: {
         workspaceRole: 'point',
+        workbenches: ['geometry'],
         handles: true,
         essence: ['E1', 'E3'],
         label: '自由点', prefix: '点', group: '图形', grades: [4, 9],
@@ -35,6 +36,7 @@
       // ---------------- 连线：两点连成线段 ----------------
       gseg: {
         workspaceRole: 'step',
+        workbenches: ['geometry'],
         handles: true,
         stepLabel: '连线',
         hidden: true,
@@ -57,6 +59,7 @@
       // ---------------- 中点 ----------------
       gmid: {
         workspaceRole: 'step',
+        workbenches: ['geometry'],
         handles: true,
         stepLabel: '中点',
         hidden: true,
@@ -74,6 +77,7 @@
       // ---------------- 交点：两条线（看成直线）的交点 ----------------
       gint: {
         workspaceRole: 'none',
+        workbenches: ['geometry'],
         handles: true,
         hidden: true,
         essence: ['E1'],
@@ -95,6 +99,7 @@
       // ---------------- 垂足：过点作直线的垂线 ----------------
       gfoot: {
         workspaceRole: 'step',
+        workbenches: ['geometry'],
         handles: true,
         stepLabel: '垂线',
         hidden: true,
@@ -116,6 +121,7 @@
       // ---------------- 围成多边形：按连线顺序把点围起来 ----------------
       gpoly: {
         workspaceRole: 'none',
+        workbenches: ['geometry'],
         handles: true,
         essence: ['E2'],
         label: '围成多边形', prefix: '多边形', group: '图形', grades: [4, 9], lint: ex('顶点由连进来的点决定'),
@@ -137,6 +143,7 @@
       // ---------------- 剪刀：沿一条线把多边形剪成两块 ----------------
       gcut: {
         workspaceRole: 'step',
+        workbenches: ['geometry'],
         handles: true,
         stepLabel: '剪',
         splitsPieces: true,
@@ -162,6 +169,7 @@
       // ---------------- 摆放：翻转、旋转、移动一块 ----------------
       gplace: {
         workspaceRole: 'step',
+        workbenches: ['geometry'],
         handles: true,
         stepLabel: (e) => (e.props.flip ? '翻转' : e.props.turn ? '旋转' : '移动'),
         figEdit: 'place',
@@ -190,6 +198,7 @@
       // ---------------- 拼合：这些块能不能正好拼成目标 ----------------
       gasm: {
         workspaceRole: 'step',
+        workbenches: ['geometry'],
         handles: true,
         stepLabel: (e, scene) => (scene.links.some((l) => l.to === e.id && l.toPort === 'target') ? '对齐到目标' : '合并'),
         hidden: true,
@@ -215,6 +224,7 @@
       // ---------------- 几何画板：把连进来的图形画在同一个坐标系里，自由点可以拖 ----------------
       gboard: {
         workspaceRole: 'none',
+        workbenches: ['geometry'],
         handles: true,
         hidden: true,
         essence: ['E1', 'E5'],

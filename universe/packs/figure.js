@@ -117,6 +117,7 @@
       // ---------------- 量一量 ----------------
       figmeasure: {
         workspaceRole: 'none',
+        workbenches: ['geometry'],
         handles: true,
         essence: ['E3'],
         label: '量图形', prefix: '量', group: '图形', grades: [3, 9],

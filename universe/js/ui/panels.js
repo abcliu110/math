@@ -91,12 +91,14 @@
   // ---------- 右栏：器材架 ----------
   // 器材架不列出 hidden 的器材（器材定义里声明）：工作区的工具会自己造出来的步骤（连线、中点、剪刀……），学生不用从架上拿。
   // 器材类型还在，存档和旧题里用到它们照样能用；搜索结果里也不列。
+  // 工作台（D2）：题目的 workbench 决定列哪些器材。关系画布（graph，默认）列全部器材；其他工作台只列它声明过的器材。
   function renderShelf() {
     const S = UI.S, q = ($('#q2') && $('#q2').value || '').trim();
     const allow = S.problem ? S.problem.shelf : null;
+    const wb = S.problem && S.problem.workbench || 'graph';
     let h = '';
     for (const g of U.GROUPS) {
-      const ts = Object.values(U.types).filter((t) => !t.hidden && t.group === g && (!q || (t.label + t.alias.join('') + g).includes(q)));
+      const ts = Object.values(U.types).filter((t) => !t.hidden && U.onWorkbenchShelf(t, wb) && t.group === g && (!q || (t.label + t.alias.join('') + g).includes(q)));
       if (!ts.length) continue;
       h += '<div class="grp">' + esc(g) + '</div><div class="tiles">';
       ts.forEach((t) => {

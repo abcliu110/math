@@ -127,6 +127,7 @@
     types: {
       gpiece: {
         workspaceRole: 'piece',
+        workbenches: ['geometry'],
         handles: true,
         essence: ['E2', 'E5'],
         label: '块', prefix: '块', group: '图形', grades: [5, 9],
