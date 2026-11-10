@@ -94,7 +94,9 @@
   function finish() {
     const rep = J.report(S.problem, S.run, S.scene, S.D);
     Ev.push('finish', rep); S.scene.clock.running = false; clearSession();
-    setTimeout(() => { UI.Panels.dialog(UI.Panels.reportHtml(rep, S.problem, 'practice')); UI.Panels.renderLeft(); }, 700);
+    // 题目在 700 毫秒后才弹报告：先把题目记下来，免得这段时间里换了题（S.problem 变成 null）就读空
+    const done = S.problem;
+    setTimeout(() => { UI.Panels.dialog(UI.Panels.reportHtml(rep, done, 'practice')); UI.Panels.renderLeft(); }, 700);
   }
 
   // ---------- 改动入口 ----------
@@ -211,6 +213,9 @@
     S.session = U.Session.start(p, S.mode, S.scene);
     S.undo = []; S.redo = []; S.sel = null; S.selLink = null; S.inspOpen = false; S.tab = 'steps'; S.glow = [];
     S.wsSel = []; S.wsMsg = ''; S.wsDraw = null;
+    // 工作台题（D8）：台面上有竖式或数据图表台，打开题目就进入它（属性面板自动打开）
+    const bench = Object.values(S.scene.entities).find((x) => U.types[x.type] && U.types[x.type].wbUI);
+    if (bench) { S.sel = bench.id; S.inspOpen = true; }
     if (!p.predict) S.run.pred_done = true;
     Ev.ctx = { pid: p.id, mode: S.mode }; Ev.push('start', {});
     S.D = W.evaluate(S.scene); UI.Stage.fit(); S.glow = glowOf();
@@ -424,6 +429,7 @@
     $('#q2').addEventListener('input', () => UI.Panels.renderShelf());
     // 属性面板
     const insp = $('#insp');
+    UI.WBKit.bind(insp);   // 竖式、数据图表台（D8）的鼠标和键盘
     // 式子工作台的输入框：只记草稿，不重画（免得输入框失去焦点）
     insp.addEventListener('input', (e) => { if (e.target.dataset.wbField && S.sel) UI.Panels.wbDraft(S.sel)[e.target.dataset.wbField] = e.target.value; });
     insp.addEventListener('change', (e) => {

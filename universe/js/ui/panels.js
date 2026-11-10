@@ -156,7 +156,8 @@
       }
       h += '</div></div>';
     }
-    if (d.inspector === 'workbench') h += wbHtml(e, dd);
+    // 器材自己声明了工作台界面（wbUI：竖式、数据图表台，D8）就用它的画法；否则是式子工作台（I）
+    if (d.inspector === 'workbench') h += d.wbUI ? UI.WBKit.html(e, d) : wbHtml(e, dd);
     h += '<div class="note">想让别的器材来决定「' + (Object.keys(d.props)[0] ? esc(d.props[Object.keys(d.props)[0]].label) : '') + '」？从别的器材的输出口拖一根线，放到这台器材左边出现的药丸上。</div>';
     const sg = (dd && dd.sig) || []; if (sg.length) h += '<div class="sigs">' + sg.map((s) => '<div>· ' + esc(s.tx) + '</div>').join('') + '</div>';
     h += '<div class="btnrow"><button class="btn" data-reset="1">恢复默认</button></div>';

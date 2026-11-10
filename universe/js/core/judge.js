@@ -121,6 +121,10 @@
       let ok = false; try { ok = !!U.Form.isNormal(v.data, f.is); } catch (err) { ok = false; }
       return ok ? { ok: true } : { ok: false, why: '“' + f.role + '”还不是“' + (FORM_LABEL[f.is] || f.is) + '”形式' };
     }
+    // 数位竖式（D8）：写完了没有（digits: { solved: true }）
+    if (c.digits) return U.Digits.judge(scene, c.digits);
+    // 数据图表台（D8）：录了几组、画了没有、拟合了没有（data: { minRows, plotted, fitted }）
+    if (c.data) return U.DataBench.judge(scene, c.data);
     if (c.steps) {
       const s = c.steps, st = scene.workbench;
       if (!st || !Array.isArray(st.steps)) return { ok: false, why: '没有式子工作台的步骤记录，无法判断有没有用“' + s.used + '”' };
@@ -130,7 +134,7 @@
     }
     return { ok: true };
   }
-  const isNewShape = (c) => !!c && typeof c === 'object' && (c.built !== undefined || c.form !== undefined || c.steps !== undefined);
+  const isNewShape = (c) => !!c && typeof c === 'object' && (c.built !== undefined || c.form !== undefined || c.steps !== undefined || c.digits !== undefined || c.data !== undefined);
 
   const OPS = { '=': (c) => c === 0, '>': (c) => c > 0, '<': (c) => c < 0, '>=': (c) => c >= 0, '<=': (c) => c <= 0, '!=': (c) => c !== 0 };
   function cmpVal(v, op, want) {
