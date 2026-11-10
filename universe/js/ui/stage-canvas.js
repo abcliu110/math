@@ -244,8 +244,10 @@
       const xs = pts.map((p) => Q.num(p.x)), ys = pts.map((p) => Q.num(p.y));
       const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
       if (fi.kind === 'piece' || fi.kind === 'pts') {
+        // 放缩把手画在外框的角外面一点：长方形、梯形的顶点正好在外框的角上，把手不能盖住顶点（否则选中后就拖不到顶点了）
+        const CO = [[-9, 9], [9, 9], [9, -9], [-9, -9]];
         [[x0, y0], [x1, y0], [x1, y1], [x0, y1]].forEach(([x, y], k) => {
-          g += '<rect data-hdl="corner" data-corner="' + k + '" x="' + (X(x) - 5).toFixed(1) + '" y="' + (Y(y) - 5).toFixed(1) + '" width="10" height="10" fill="#fff" stroke="' + col + '" stroke-width="2" style="cursor:nwse-resize"/>';
+          g += '<rect data-hdl="corner" data-corner="' + k + '" x="' + (X(x) - 5 + CO[k][0]).toFixed(1) + '" y="' + (Y(y) - 5 + CO[k][1]).toFixed(1) + '" width="10" height="10" fill="#fff" stroke="' + col + '" stroke-width="2" style="cursor:nwse-resize"/>';
         });
       }
       const cx = X((x0 + x1) / 2), ty = Math.max(12, Y(y1) - 28);   // 把手留在画布里面（画布外面会被卡片的标题盖住）

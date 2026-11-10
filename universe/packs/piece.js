@@ -93,6 +93,8 @@
     if (!e) return fail('找不到要放的器材');
     if (!ws || U.roleOf(ws) !== 'container') return fail('这里不是工作区');
     if (e.parent === ws.id) return ok({ already: true });
+    // 常见图形（梯形、菱形……）：变成自由点和围成多边形，顶点可以拖、辅助线可以画在里面（见 packs/shapes.js）
+    if (U.types[e.type] && U.types[e.type].freeShape && U.Shapes) { const r = U.Shapes.dropFree(scene, e, ws, a); return r.ok ? ok({ placed: r.placed }) : fail(r.why); }
     const p = W.act(scene, { t: 'put', id: e.id, parent: ws.id, slot: 'items' });
     if (!p.ok) return p;
     const def = U.types[e.type], port = Object.keys(def.outputs).find((k) => def.outputs[k].kind === 'fig');

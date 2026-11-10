@@ -88,7 +88,7 @@
   // 工作区的画布框架：可见的值、范围、像素换算。w、h 是画布的宽高（属性）
   function wsFrame(ws, w, h) {
     const vals = wsVisible(ws), b = wsBounds(vals), vw = wsView(ws, w, h, b), s = UI.Space.perUnit(w, vw);
-    return { vals, b, vw, s, w, h, X: (x) => UI.Space.canvasX(x, w, vw), Y: (y) => UI.Space.canvasY(y, h, vw) };
+    return { vals, b, vw, s, w, h, X: (x) => UI.Space.canvasX(x, w, vw), Y: (y) => UI.Space.canvasY(y, h, vw, w) };
   }
   Object.assign(SG, { wsValues, wsSteps, wsVisible, figBox, wsBounds, autoView, wsView, fmtHalf, rangeText, checkViews, wsFrame });
 })(window);

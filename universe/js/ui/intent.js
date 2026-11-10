@@ -136,6 +136,14 @@
         }
       },
     },
+    // 工作区里放一个常见图形（梯形、菱形……）：建器材，再放进工作区变成自由点和多边形。一步
+    shape: {
+      label: 'shape',
+      fn(A, p) {
+        const r = A({ t: 'add', type: p.type, x: 0, y: 0 });
+        A({ t: 'wsdrop', id: r.id, ws: p.ws, x: p.x, y: p.y });
+      },
+    },
     // 连线：从一个输出口拉到一个输入口
     link: {
       label: 'link',

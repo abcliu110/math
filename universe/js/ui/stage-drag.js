@@ -38,7 +38,7 @@
   }
   function onDown(ev) {
     const S = UI.S, t = ev.target;
-    if (t.closest('.tool') || t.closest('.wsx') || t.closest('.wsx-float')) return;   // 工作区底下的面板：让浏览器照常处理按钮和输入框
+    if (t.closest('.tool') || t.closest('.wsx') || t.closest('.wsx-float') || t.closest('.wsmini')) return;   // 工作区底下的面板：让浏览器照常处理按钮和输入框
     // 超出范围的图形的箭头：点一下，范围调到它
     const arr = t.closest('[data-fit-key]');
     if (arr) { ev.preventDefault(); ev.stopPropagation(); SG.wsFit(arr.dataset.fitWs, arr.dataset.fitKey); return; }
@@ -47,6 +47,14 @@
     if (fo && !t.closest('.wsbody')) { if (t.closest('.wsf-hd') && !t.closest('button') && SG.dbl('focus-hd')) SG.setFocus(null); return; }
     // 工作区里画线（点两下）；把手：边、角、旋转
     const wbd = t.closest('.wsbody');
+    if (wbd) SG.hotWs = wbd.dataset.wsid;
+    // Shift + 拖：不用点「连线」，直接拖出一条线（起点、终点都吸附）。按下后先不动手：不拖就还是原来的 Shift 点选（松手时处理）
+    if (ev.shiftKey && wbd && !S.wsDraw && !t.closest('[data-hdl]') && !t.closest('.rz') && !t.closest('[data-fit-key]')) {
+      const pk0 = t.closest('[data-pick]');
+      ev.preventDefault(); ev.stopPropagation();
+      SG.shiftLine = { wb: wbd, x: ev.clientX, y: ev.clientY, pick: pk0 ? pk0.dataset.pick : null };
+      return;
+    }
     if (S.wsDraw && wbd && wbd.dataset.wsid === S.wsDraw.ws) {
       // 剪的模式：没有在画线的时候，点图形的线是选图形（方便先选好要剪的那一块）
       if (S.wsDraw.tool === 'cut' && !S.wsDraw.pend && /^(path|line)$/i.test(t.tagName) && t.closest('[data-pick]')) { SG.wsPick(t.closest('[data-pick]').dataset.pick, ev.shiftKey); return SG.render(); }
@@ -143,6 +151,16 @@
       if (lp) lp.setAttribute('d', SG.bez(a, SG.linking.cur)); else { const sv = SG.worldEl.querySelector('#links'); sv.insertAdjacentHTML('beforeend', '<path class="ln" stroke="#fff" stroke-dasharray="6 6" fill="none" d="' + SG.bez(a, SG.linking.cur) + '"/>'); }
       return;
     }
+    const hw = ev.target.closest && ev.target.closest('.wsbody'); if (hw) SG.hotWs = hw.dataset.wsid;   // 快捷键作用在鼠标最后停过的工作区
+    // Shift 按下后拖过一小段：变成画线（起点是按下的位置）
+    if (SG.shiftLine) {
+      const sl = SG.shiftLine;
+      if (Math.hypot(ev.clientX - sl.x, ev.clientY - sl.y) >= SG.DRAG_LINE_PX) {
+        SG.shiftLine = null;
+        if (SG.lineDragStart(sl.wb, { clientX: sl.x, clientY: sl.y }, 'seg')) SG.drawHover(ev);
+      }
+      return;
+    }
     if (S.wsDraw && S.wsDraw.pend) SG.drawHover(ev);
     if (!SG.drag) return;
     if (SG.drag.kind === 'piece') { SG.pieceMove(ev); return; }
@@ -180,6 +198,12 @@
 
   function onUp(ev) {
     const S = UI.S;
+    if (SG.shiftLine) {   // Shift 按下后没拖：就是 Shift 点选（加选 / 去掉）
+      const sl = SG.shiftLine; SG.shiftLine = null;
+      if (sl.pick) SG.wsPick(sl.pick, true);
+      SG.render(); return;
+    }
+    if (S.wsDraw && S.wsDraw.pend && SG.lineDragEnd(ev)) return;
     if (SG.linking) {
       const h = SG.hoverTarget(ev), L = SG.linking; SG.linking = null; showTip(0, 0, '');
       if (h && (h.id !== L.from || h.port)) UI.Intent.run('link', { from: L.from, fromPort: L.fromPort, to: h.id, toPort: h.port || undefined }); else SG.render();

@@ -14,6 +14,13 @@
     SG.stageEl.addEventListener('dragstart', (ev) => ev.preventDefault());
     // 工作区面板：图层开关、移动工具的 dx、dy（只记下来，不重画，免得输入框失去焦点）
     SG.stageEl.addEventListener('change', (ev) => {
+      // 选中图形的顶点坐标：改一个数，就是改那个自由点的 x 或 y（一步，可撤销；超出范围就夹回 ±10）
+      const vx = ev.target.getAttribute && ev.target.getAttribute('data-ws-vx');
+      if (vx) {
+        let n = parseInt(ev.target.value, 10); if (!Number.isFinite(n)) return SG.render();
+        n = Math.max(-10, Math.min(10, n));
+        UI.Intent.run('params', { ops: [{ id: vx, k: ev.target.getAttribute('data-ws-vk'), v: n }] }); SG.render(); return;
+      }
       const l = ev.target.getAttribute && ev.target.getAttribute('data-ws-layer');
       if (l === null || l === undefined) return;
       const ws = UI.S.scene.entities[ev.target.getAttribute('data-ws-of')];
@@ -44,6 +51,10 @@
       if (ff) { SG.figFlip(ff.dataset.ws, ff.dataset.name, +ff.dataset.figFlip); return; }
       const wfo = ev.target.closest('[data-ws-fold]');
       if (wfo) { UI.Layout.toggleFold(wfo.dataset.wsFold); SG.render(); return; }
+      const wmd = ev.target.closest('[data-ws-mode]');
+      if (wmd) { SG.endDraw(); UI.S.wsSel = []; SG.render(); return; }
+      const wsh = ev.target.closest('[data-ws-shape]');
+      if (wsh) { SG.wsAddShape(wsh.dataset.ws, wsh.dataset.wsShape); return; }
       const wt = ev.target.closest('[data-ws-tool]');
       if (wt) { SG.wsRun(wt.dataset.ws, wt.dataset.wsTool); return; }
       const wf = ev.target.closest('[data-ws-fit]');

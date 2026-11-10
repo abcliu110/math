@@ -2001,5 +2001,45 @@ t('lint：认数据形式的新条件；拒绝未知字段、不认识的构造�
   eq(U.problemLint(one({ type: 'num', port: 'v', value: '1' }, [{ id: 't2', wrong: '错', when: { form: { role: '结果', is: 'factored' } } }])).errors, [], '陷阱里可以用形式查询');
 });
 
+console.log('常见图形');
+t('常见图形：每个模板被识别成自己的名字（精确判断）', () => {
+  const want = { fscalene: '锐角三角形', fquad4: '一般四边形', frtri: '直角三角形', fisotri: '等腰三角形', frect: '长方形', fsquare: '正方形', fpgram: '平行四边形', frhomb: '菱形', ftrap: '梯形', fisotrap: '等腰梯形', frtrap: '直角梯形', fkite: '筝形' };
+  for (const sh of U.Shapes.LIST) eq(U.Shapes.classify(U.Fig.polygon(sh.pts)).name, want[sh.id], sh.id);
+  eq(U.Shapes.LIST.length, 12, '共 12 种');
+});
+t('常见图形：识别边界——拉歪一个顶点就不再是原来的图形', () => {
+  const F = U.Fig, c = (pts) => U.Shapes.classify(F.polygon(pts)).name;
+  eq(c([[0, 0], [6, 0], [5, 3], [3, 3]]), '梯形', '上底变短仍是梯形');
+  eq(c([[0, 0], [6, 0], [5, 3], [2, 4]]), '一般四边形', '没有平行边');
+  eq(c([[0, 0], [4, 0], [1, 1], [0, 4]]), '四边形（凹的或扭的）', '凹四边形');
+  eq(c([[0, 0], [3, 0], [1, 2]]), '锐角三角形'); eq(c([[0, 0], [4, 0], [5, 1]]), '钝角三角形'); eq(c([[0, 0], [4, 0], [2, 2]]), '等腰直角三角形');
+});
+t('常见图形：描述给出精确的边长、面积、周长', () => {
+  const d = U.Shapes.describe(U.Fig.polygon([[0, 0], [4, 0], [0, 3]]));
+  eq(d.area, '6'); eq(d.sides, ['4', '5', '3'], '边长 4、5、3'); eq(d.perim, '12', '3-4-5 三角形周长 12');
+  const t2 = U.Shapes.describe(U.Fig.polygon([[0, 0], [6, 0], [5, 3], [2, 3]]));
+  eq(t2.area, '27/2', '梯形面积 (3+6)×3÷2 = 27/2');
+});
+t('常见图形：器材放进工作区变成自由点和多边形，顶点可改，识别跟着变', () => {
+  const sc = W.blank(), ws = W.add(sc, 'gworkspace', 0, 0, {}), sh = W.add(sc, 'ftrap', 0, 0, {});
+  const r = W.act(sc, { t: 'wsdrop', id: sh, ws, x: 0, y: 0 }); truthy(r.ok, r.why);
+  eq(sc.entities[sh], undefined, '器材本身删掉了');
+  const pts = Object.values(sc.entities).filter((e) => e.type === 'gpt'), poly = Object.values(sc.entities).find((e) => e.type === 'gpoly');
+  eq(pts.length, 4, '四个自由点'); truthy(pts.every((p) => p.parent === ws) && poly.parent === ws, '都在工作区里');
+  eq(pts.map((p) => p.props.mark), ['A', 'B', 'C', 'D'], '顶点按字母命名');
+  let D = W.evaluate(sc); eq(U.Shapes.classify(D[poly.id].out.f.data).name, '梯形');
+  W.act(sc, { t: 'set', id: pts[2].id, k: 'y', v: pts[2].props.y + 1 }); W.act(sc, { t: 'set', id: pts[3].id, k: 'y', v: pts[3].props.y - 1 });
+  D = W.evaluate(sc); eq(U.Shapes.classify(D[poly.id].out.f.data).name, '一般四边形', '拖歪两个顶点，不再有平行边');
+});
+t('常见图形：落点在边缘时整体挪回 ±10 里，坐标仍是整数', () => {
+  const sc = W.blank(), ws = W.add(sc, 'gworkspace', 0, 0, {}), sh = W.add(sc, 'frhomb', 0, 0, {});
+  truthy(W.act(sc, { t: 'wsdrop', id: sh, ws, x: 40, y: -40 }).ok);
+  for (const p of Object.values(sc.entities).filter((e) => e.type === 'gpt')) truthy(Math.abs(p.props.x) <= 10 && Math.abs(p.props.y) <= 10, '在范围内');
+});
+t('常见图形：放在台面上是普通图形器材，放大 2 倍面积是 4 倍', () => {
+  const sc = W.blank(), a = W.add(sc, 'ftrap', 0, 0, { s: 2 }), b = W.add(sc, 'ftrap', 0, 0, {}), D = W.evaluate(sc);
+  eq(U.Q.mul(D[b].out.area.data, U.Q(4)), D[a].out.area.data);
+});
+
 console.log('\n' + pass + ' 通过，' + fail + ' 失败');
 process.exit(fail ? 1 : 0);

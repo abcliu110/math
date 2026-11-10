@@ -19,6 +19,7 @@
     // 工具说明从 UI.ToolHelp 读（悬停或聚焦时由 CSS 显示 data-tip）；没有说明的工具不带 data-tip
     h += '<div class="wsx-tools">' + wd.tools.map((t) => { const hp = UI.ToolHelp.of(t.id); return '<button data-ws-tool="' + t.id + '" data-ws="' + ws.id + '"' + (hp ? ' data-tip="' + SG.escA(hp.tip) + '"' : '') + (D && D.tool === t.id ? ' class="on" aria-pressed="true"' : '') + '>' + K.esc(t.label) + '</button>'; }).join('') +
       '<button data-ws-fit="' + ws.id + '" title="按内容选坐标范围，让图正好装下">适应</button></div>';
+    h += shapesHtml(ws);
     h += '<div class="wsx-range">' + SG.rangeText(ws, pw, ph) + '</div>';
     h += '<div class="wsx-args">移动时：向右 <input type="number" data-ws-arg="dx" value="' + SG.escA(S.wsArgs.dx) + '"> 向上 <input type="number" data-ws-arg="dy" value="' + SG.escA(S.wsArgs.dy) + '"></div>';
     h += '<div class="wsx-sel">' + (D ? (D.tool === 'cut' ? '剪：选中要剪的图形，点两下画剪切线（Esc 退出）' : '连线：点两下画一条线（Esc 退出）') : picks.length ? '选中：' + picks.map((x) => K.esc(SG.pickLabel(x, vals))).join('、') : '点图形或点来选中（Shift 点可以多选）') + '</div>';
@@ -27,6 +28,7 @@
     if (pcs.length) h += '<div class="wsx-piece"><b>' + K.esc(pcs.length === 1 ? S.scene.entities[pcs[0]].props.name : pcs.length + ' 块') + '</b>' +
       '<button data-piece-act="turn" title="也可以按 R">转 90°</button><button data-piece-act="flip" title="也可以按 F">左右翻</button><button data-piece-act="insp">属性</button>' +
       '<span class="wsx-hint">拖动块可以移动；拖出工作区，松手就变成台面上的器材</span></div>';
+    h += propsHtml(ws, vals, picks);
     h += '<div class="wsx-foot' + (S.wsMsg ? ' bad' : '') + '">' + K.esc(S.wsMsg || '') + '</div>';
     h += '<div class="wsx-h">步骤</div>';
     if (!steps.length) h += '<div class="wsx-none">还没有步骤</div>';
@@ -36,6 +38,48 @@
         '<button data-ws-del="' + st.id + '" title="删除这一步">✕</button></div>';
     });
     h += '<div class="wsx-h">图层</div>' + layersHtml(ws, vals, hidden);
+    return h + '</div>';
+  }
+  // 放常见图形：一排按钮，点一下在当前视野的中央放一个（已经有图形就错开一点）。放进来的是自由点和多边形：顶点可拖，里面能画辅助线
+  const plain = (t) => t.label.replace('（可编辑）', '');
+  function shapesHtml(ws) {
+    const list = U.Shapes ? U.Shapes.LIST : []; if (!list.length) return '';
+    const grp = (n) => list.filter((t) => t.pts.length === n).map((t) => '<button data-ws-shape="' + t.id + '" data-ws="' + ws.id + '" title="放一个' + SG.escA(plain(t)) + '：顶点可以拖，里面可以画辅助线">' + K.esc(plain(t)) + '</button>').join('');
+    return '<details class="wsx-shapes"><summary>放一个图形 ▾</summary><div><span class="wsx-lbl">三角形</span>' + grp(3) + '</div><div><span class="wsx-lbl">四边形</span>' + grp(4) + '</div></details>';
+  }
+  // 画布里的迷你工具条（卡片左下角）：选择 / 连线 / 剪，和最常用的四个图形。不用再到卡片底下的面板里去找按钮
+  const MINI_SHAPES = ['fscalene', 'frect', 'ftrap', 'fpgram'];
+  function miniHtml(ws, g) {
+    const D = UI.S.wsDraw && UI.S.wsDraw.ws === ws.id ? UI.S.wsDraw : null, tools = SG.wsCfg(ws.type).tools;
+    const tb = (id, label, key) => tools.some((t) => t.id === id) ? '<button data-ws-tool="' + id + '" data-ws="' + ws.id + '" title="' + SG.escA((UI.ToolHelp.of(id) || {}).tip || label) + '"' + (D && D.tool === id ? ' class="on" aria-pressed="true"' : '') + '>' + label + ' <kbd>' + key + '</kbd></button>' : '';
+    const shapes = U.Shapes ? MINI_SHAPES.filter((id) => U.types[id]).map((id) => '<button data-ws-shape="' + id + '" data-ws="' + ws.id + '" title="放一个' + SG.escA(plain(U.Shapes.BY[id])) + '：顶点可以拖，里面可以画辅助线">' + K.esc(plain(U.Shapes.BY[id])) + '</button>').join('') : '';
+    return '<div class="wsmini" style="left:' + g.x + 'px;top:' + (g.y - L.MINI_H) + 'px"><button data-ws-mode="select" data-ws="' + ws.id + '"' + (!D ? ' class="on" aria-pressed="true"' : '') + ' title="选择、拖动点和图形（V）">选择 <kbd>V</kbd></button>' + tb('seg', '连线', 'L') + tb('cut', '剪', 'C') + '<span class="wsmini-sep"></span>' + shapes + '</div>';
+  }
+  function wsAddShape(wsId, type) {
+    const S = UI.S, ws = S.scene.entities[wsId]; if (!ws || !U.types[type]) return;
+    const g = SG.geom(ws), fr = SG.wsFrame(ws, g.w, g.h - HD);
+    const n = SG.wsVisible(ws).filter((v) => v.fig.type === 'polygon').length, off = [[0, 0], [-3, 2], [3, -2], [-2, -3], [3, 3]][n % 5];
+    const r = UI.Intent.run('shape', { ws: wsId, type, x: Math.round(fr.vw.cx) + off[0], y: Math.round(fr.vw.cy) + off[1] });
+    if (r && r.ok === false) SG.setMsg(r.why || '放不进去', false); else SG.setMsg('', true);
+    SG.render();
+  }
+  // 选中一个图形：它是什么图形（精确判断，改了顶点会跟着变）、边长、面积、周长；自由点围成的，还能直接改顶点坐标
+  function propsHtml(ws, vals, picks) {
+    if (picks.length !== 1 || !U.Shapes) return '';
+    const v = vals.find((x) => SG.pickOf(x) === picks[0]);
+    if (!v || !v.fig || v.fig.type !== 'polygon') return '';
+    const d = U.Shapes.describe(v.fig); if (!d) return '';
+    const fi = SG.figInfo(v);
+    let h = '<div class="wsx-props"><b>' + K.esc(d.name) + '</b>' + (d.facts.length ? '<span class="wsx-facts">' + K.esc(d.facts.join('；')) + '</span>' : '');
+    h += '<div>面积 ' + K.esc(d.area) + '　周长 ' + K.esc(d.perim) + '</div><div>边长 ' + K.esc(d.sides.join('、')) + '</div>';
+    if (fi && fi.kind === 'pts') {
+      const E = UI.S.scene.entities, rows = SG.uniq(fi.verts).map((id) => {
+        const p = E[id]; if (!p) return '';
+        const inp = (k) => '<input type="number" min="-10" max="10" step="1" data-ws-vx="' + id + '" data-ws-vk="' + k + '" value="' + SG.escA(p.props[k]) + '" aria-label="' + SG.escA((p.props.mark || '点') + ' 的 ' + k) + '">';
+        return '<label class="wsx-vx">' + K.esc(p.props.mark || '点') + '（' + inp('x') + '，' + inp('y') + '）</label>';
+      });
+      h += '<div class="wsx-vxs">顶点：' + rows.join('') + '</div>';
+    }
     return h + '</div>';
   }
   // 图层列表（2.4）：图形不多（不超过 L.LAYER_FLAT）时平铺；多了就按类别分组（点、线、图形、块、辅助线），每组可以展开或收起，
@@ -122,5 +166,5 @@
     } else SG.setMsg((r && r.why) || '这一步做不了', false);
     SG.render();
   }
-  Object.assign(SG, { wsPanelHtml, wsPick, delWs, wsRun });
+  Object.assign(SG, { wsPanelHtml, wsPick, delWs, wsRun, wsAddShape, miniHtml });
 })(window);
