@@ -24,7 +24,7 @@
     tab: 'session', inspOpen: 'session', glow: 'session', showSig: 'session', q1: 'session', wbDraft: 'session',
     sel: 'session', selLink: 'session', undo: 'session', redo: 'session',
     wsSel: 'session', wsArgs: 'session', wsMsg: 'session', wsMsgKind: 'session', wsBoardUntil: 'session', wsDraw: 'session', wsArm: 'session', wsFit: 'session', wsLayerOpen: 'session', snapOn: 'session',
-    D: 'derived', wsSig: 'derived',
+    D: 'derived', wsSig: 'derived', evalCache: 'derived',
   };
   const ENTITY_UI = {
     view: '工作区的坐标范围 {cx, cy, span}；没有就按内容自动适应',

@@ -7,6 +7,19 @@
   // 角度选择：选项的下标 0/1/2 对应 90/180/270 度（逆时针）
   const TURN = [90, 180, 270];
 
+  // 抛物线 y = ax² + bx + c 的系数（任务 J）。a = 0 时不是抛物线：quadOf 返回 null 并说明
+  const QUAD_PROPS = {
+    a: { type: 'int', label: 'a（x² 前）', default: 1, min: -10, max: 10 },
+    b: { type: 'int', label: 'b（x 前）', default: 0, min: -20, max: 20 },
+    c: { type: 'int', label: 'c（常数）', default: 0, min: -20, max: 20 },
+    label: { type: 'text', label: '标签', default: '' },
+  };
+  const quadOf = (c) => {
+    const a = Q(Number(c.props.a)), b = Q(Number(c.props.b)), cc = Q(Number(c.props.c));
+    if (a.n === 0n) { c.say('reject', 'a 不能是 0：那样就不是抛物线，是直线了'); return null; }
+    return { a, b, c: cc };
+  };
+
   U.registerPack({
     id: 'coordsx', version: 1,
     types: {
@@ -116,6 +129,81 @@
         },
         badge: (c) => (c.out.rel ? ['相离', '相切', '相交'][c.out.rel.data.n] : ''),
         draw: (c) => K.text(c.w / 2, c.h / 2 + 6, c.out.rel ? ['相离', '相切', '相交'][c.out.rel.data.n] : '… ', { size: 16, weight: 700 }),
+      },
+
+      // ---------------- 抛物线的精确坐标（任务 J，§10.7）：y = ax² + bx + c 的顶点、与 x 轴交点、与 y 轴交点 ----------------
+      // 输出是符号点（kind spoint），坐标可以是 有理数 + 有理数 × √d。a = 0 不是抛物线。
+      'quad-vertex': {
+        workspaceRole: 'none',
+        handles: true,
+        essence: ['E10', 'E8'],
+        label: '抛物线顶点（精确）', prefix: '顶', group: '函数', grades: [9, 9], alias: ['顶点', '二次函数', '精确坐标', '抛物线'],
+        props: QUAD_PROPS,
+        outputs: { v: { dim: null, kind: 'spoint', label: '顶点（精确坐标）' } },
+        icon: () => '<path d="M10 12 Q32 56 54 12" fill="none" stroke="var(--good)" stroke-width="3"/>' + K.circle(32, 34, 3.5, { fill: 'var(--accent)' }),
+        size: () => [200, 110],
+        compute: (c) => {
+          const q = quadOf(c); if (!q) return {};
+          const vx = Q.neg(Q.div(q.b, Q.mul(Q(2), q.a)));
+          const vy = Q.add(Q.mul(q.a, Q.mul(vx, vx)), Q.add(Q.mul(q.b, vx), q.c));
+          const v = U.SPoint.of(U.Real.from(vx), U.Real.from(vy));
+          c.say('ok', '顶点 ' + U.KINDS.spoint.show(v.data));
+          return { v };
+        },
+        badge: (c) => (c.out.v ? U.showVal(c.out.v) : ''),
+        draw: (c) => K.text(c.w / 2, c.h / 2 + 6, c.out.v ? '顶点 ' + U.showVal(c.out.v) : '顶点', { size: 14, weight: 700 }),
+      },
+
+      'quad-xint': {
+        workspaceRole: 'none',
+        handles: true,
+        essence: ['E10', 'E8'],
+        label: '抛物线与 x 轴交点（精确）', prefix: '交', group: '函数', grades: [9, 9], alias: ['与 x 轴', '根', '判别式', '二次函数'],
+        props: QUAD_PROPS,
+        outputs: {
+          p1: { dim: null, kind: 'spoint', label: '交点 1（x 较小的那个，或 + 的那个）' },
+          p2: { dim: null, kind: 'spoint', label: '交点 2' },
+        },
+        icon: () => '<path d="M8 40 Q32 -8 56 40" fill="none" stroke="var(--good)" stroke-width="3"/>' + K.line(6, 40, 58, 40, { w: 1.5, stroke: 'var(--dim)' }),
+        size: () => [200, 110],
+        compute: (c) => {
+          const q = quadOf(c); if (!q) return {};
+          const disc = Q.sub(Q.mul(q.b, q.b), Q.mul(Q(4), Q.mul(q.a, q.c)));
+          if (disc.n < 0) { c.say('info', '判别式 < 0，与 x 轴没有交点'); return {}; }
+          // 求根公式：精确根（一个根式）。根号太大时退回近似值（标 ≈）
+          let roots = null;
+          try { roots = U.Eqn.quadratic(q.a, q.b, q.c).roots; } catch (e) { roots = null; }
+          let out;
+          if (roots && roots.length === 2) {
+            out = { p1: U.SPoint.of(roots[0], U.Real.from(Q(0))), p2: U.SPoint.of(roots[1], U.Real.from(Q(0))) };
+          } else {
+            const a = Q.num(q.a), b = Q.num(q.b), s = Math.sqrt(Q.num(disc));
+            out = { p1: U.SPoint.approx((-b + s) / (2 * a), 0), p2: U.SPoint.approx((-b - s) / (2 * a), 0) };
+          }
+          c.say('ok', '与 x 轴交点 ' + U.showVal(out.p1) + (disc.n === 0n ? '（只有一个）' : '、' + U.showVal(out.p2)));
+          return out;
+        },
+        badge: (c) => (c.out.p1 ? U.showVal(c.out.p1) + (c.out.p2 ? '、' + U.showVal(c.out.p2) : '') : '无交点'),
+        draw: (c) => K.text(c.w / 2, c.h / 2 + 6, c.out.p1 ? '与 x 轴：' + U.showVal(c.out.p1) + (c.out.p2 ? '、' + U.showVal(c.out.p2) : '') : '与 x 轴没有交点', { size: 13, weight: 700 }),
+      },
+
+      'quad-yint': {
+        workspaceRole: 'none',
+        handles: true,
+        essence: ['E10', 'E8'],
+        label: '抛物线与 y 轴交点（精确）', prefix: '纵', group: '函数', grades: [9, 9], alias: ['与 y 轴', '常数项', '二次函数'],
+        props: QUAD_PROPS,
+        outputs: { p: { dim: null, kind: 'spoint', label: '与 y 轴的交点 (0, c)' } },
+        icon: () => K.line(32, 6, 32, 58, { w: 1.5, stroke: 'var(--dim)' }) + K.circle(32, 40, 3.5, { fill: 'var(--accent)' }),
+        size: () => [200, 110],
+        compute: (c) => {
+          const q = quadOf(c); if (!q) return {};
+          const p = U.SPoint.of(U.Real.from(Q(0)), U.Real.from(q.c));
+          c.say('ok', '与 y 轴交于 ' + U.KINDS.spoint.show(p.data));
+          return { p };
+        },
+        badge: (c) => (c.out.p ? U.showVal(c.out.p) : ''),
+        draw: (c) => K.text(c.w / 2, c.h / 2 + 6, c.out.p ? '与 y 轴：' + U.showVal(c.out.p) : '与 y 轴', { size: 14, weight: 700 }),
       },
     },
   });
