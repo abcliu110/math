@@ -189,6 +189,30 @@
       return '<button class="wb-chip' + (on ? ' sel' : '') + '" data-wb-term="' + side + ':' + i + '" data-wb-side="' + side + '" data-wb-i="' + i + '" aria-pressed="' + on + '">' + esc(txt) + '</button>';
     }).join('') + '</div>';
   }
+  // 步骤列表（§10.5.6 第 5 步）：每次定型的那几步收在一个折叠里（只能展开看，没有撤销按钮），外面是定型那一行（撤销定型）。
+  // 定型那一行的撤销 k = 定型的下标：保留定型前的步骤。
+  function wbStepRows(st) {
+    const steps = st.steps;
+    if (!steps.length) return '<div class="wb-none">还没有步骤</div>';
+    const log = U.Workbench.stepLog(st), folds = U.Workbench.folds(st);
+    const row = (i, cls, undo, label) => '<div class="wb-step' + cls + '"><span>' + esc(log[i]) + '<small>' + esc(steps[i].why) + '</small></span>' +
+      (undo ? '<button data-wb-undo="' + (undo) + '">' + label + '</button>' : '') + '</div>';
+    let h = '';
+    for (let i = 0; i < steps.length;) {
+      const f = folds.find((x) => x.from === i);
+      if (f) {
+        let inner = '';
+        for (let j = f.from; j < f.bake; j++) inner += row(j, ' wb-folded', 0, '');
+        h += '<details class="wb-fold"><summary>定型：前 ' + (f.bake - f.from) + ' 步（已固定，不能再改）</summary>' + inner + '</details>';
+        h += row(f.bake, ' wb-bake', f.bake, '撤销定型');
+        i = f.bake + 1;
+      } else {
+        h += row(i, '', i + 1, '撤销到这一步');
+        i++;
+      }
+    }
+    return h;
+  }
   function wbHtml(e, dd) {
     const inp = dd && dd.inp, eq = U.ExprBench.workEqnIn(inp), area = U.ExprBench.areaIn(inp);
     // 几何来的面积（D7）：接上了就写出它的数；它是 S，式子里的 S 就是它
@@ -224,9 +248,9 @@
     if (k) h += '<button data-wb-act="divide-coef">两边同除以 ' + esc(U.Q.show(k)) + '</button>';
     h += '</div>';
     if (dr.msg) h += '<div class="wb-msg">' + esc(dr.msg) + '</div>';
-    h += '<div class="wb-h">步骤 <button data-wb-graph="1" title="看每一步用了哪一步的结果（只看，不改历史）">看背后的连线</button></div>';
-    const log = U.Workbench.stepLog(st);
-    h += log.length ? st.steps.map((s, i) => '<div class="wb-step"><span>' + esc(log[i]) + '<small>' + esc(s.why) + '</small></span><button data-wb-undo="' + (i + 1) + '">撤销到这一步</button></div>').join('') : '<div class="wb-none">还没有步骤</div>';
+    const pending = U.Workbench.pending(st);
+    h += '<div class="wb-h">步骤 ' + (pending ? '<button data-wb-bake="1" title="把上次定型之后的步骤折成一步，不能再改；撤销定型可以回到定型前">定型</button> ' : '') + '<button data-wb-graph="1" title="看每一步用了哪一步的结果（只看，不改历史）">看背后的连线</button></div>';
+    h += wbStepRows(st);
     const sol = U.Workbench.solution(st);
     // 几何来的式子：和几何台面的面积对照（读数变了，这里跟着变）
     const note = eq.geo ? U.ExprBench.areaNote(st, area) : null;
