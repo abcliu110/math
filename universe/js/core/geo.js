@@ -158,6 +158,100 @@
       return { ok: true, why: '正好拼成：内部的边都两两对上，外边界就是目标', areaSum, areaT };
     },
   };
+  // ---- 约束锁定（§10.5.9 第 1 条）----
+  // 约束器材（声明 constraint: true，见 packs/geo.js 的 gcon）：kind 0 定长（a、b 的距离的平方 = len²），kind 1 直角（b 处 BA ⊥ BC）。
+  // 自由点只存整数坐标，所以只在整数格点上找满足约束的位置：拖动时取离鼠标最近的那个，改长度时取离原来最近的那个。
+  // 找不到就不动（说明原因）。界面只调用这里的函数，不按器材名判断。
+  const pos = (scene, id) => ({ x: scene.entities[id].props.x, y: scene.entities[id].props.y });
+  function locksOf(scene) {
+    const E = scene.entities, out = [];
+    for (const e of Object.values(E)) {
+      const d = U.types[e.type]; if (!d || !d.constraint) continue;
+      const from = (port) => { const l = scene.links.find((x) => x.to === e.id && x.toPort === port); return l && E[l.from] ? l.from : null; };
+      const kind = e.props.kind === 1 ? 'right' : 'len';
+      const c = { id: e.id, kind, len: +e.props.len || 0, a: from('a'), b: from('b'), c: from('c') };
+      if (!c.a || !c.b || (kind === 'right' && !c.c)) continue;   // 接不全的约束不起作用（比如它的点被删了）
+      out.push(c);
+    }
+    return out;
+  }
+  // 约束在某组点的位置（P(id) 给坐标）下是否成立；len 可以覆盖定长的长度（改长度时用）
+  function holds(c, P, len) {
+    if (c.kind === 'len') {
+      const A = P(c.a), B = P(c.b), L = len === undefined ? c.len : len, dx = A.x - B.x, dy = A.y - B.y;
+      return dx * dx + dy * dy === L * L;
+    }
+    const A = P(c.a), B = P(c.b), C = P(c.c);
+    const u = [A.x - B.x, A.y - B.y], v = [C.x - B.x, C.y - B.y];
+    if (!(u[0] || u[1]) || !(v[0] || v[1])) return false;   // 两条边退化成一个点，不算直角
+    return u[0] * v[0] + u[1] * v[1] === 0;
+  }
+  // 把点 id 移到 want 附近：满足它的所有约束（别的点不动）的整数格点里，离 want 最近的一个（平手取 x 小的，再取 y 小的）
+  function fitPoint(scene, id, want, over) {
+    const cons = locksOf(scene).filter((c) => c.a === id || c.b === id || c.c === id);
+    if (!cons.length) return { ok: true, x: want.x, y: want.y, locked: false };
+    const d = U.types.gpt.props, x0 = d.x.min, x1 = d.x.max, y0 = d.y.min, y1 = d.y.max;
+    let best = null, bd = Infinity;
+    for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) {
+      const P = (k) => (k === id ? { x, y } : pos(scene, k));
+      if (!cons.every((c) => holds(c, P, over ? over[c.id] : undefined))) continue;
+      const dd = (x - want.x) * (x - want.x) + (y - want.y) * (y - want.y);
+      if (dd < bd) { bd = dd; best = { x, y }; }
+    }
+    if (!best) return { ok: false, why: '这个点被约束锁着，附近没有它能放的位置', locked: true };
+    return { ok: true, x: best.x, y: best.y, locked: true };
+  }
+  const isInt = (v) => Number.isInteger(v) && v >= 1 && v <= 20;
+  Geo.locks = {
+    // 所有约束（只列接全了的）
+    of: locksOf,
+    // 拖动一个点到 want：返回允许的位置（ok 为假时说明原因）
+    fit: (scene, id, want) => fitPoint(scene, id, want, null),
+    // 把定长约束 conId 的长度改成 L：先动 b，动不了再动 a（离原来的位置最近的）。返回要移动的点 id 和新坐标
+    dim(scene, conId, L) {
+      const c = locksOf(scene).find((x) => x.id === conId && x.kind === 'len');
+      if (!c) return { ok: false, why: '这条线没有锁长' };
+      if (!isInt(L)) return { ok: false, why: '长度要填 1 到 20 之间的整数' };
+      for (const id of [c.b, c.a]) {
+        const r = fitPoint(scene, id, pos(scene, id), { [conId]: L });
+        if (r.ok) return Object.assign({ id }, r);
+      }
+      return { ok: false, why: '长 ' + L + ' 画不出来：没有整数格点能满足这条线的约束（长的平方要能写成两个整数的平方和，而且别的约束也要成立）' };
+    },
+    // 当前这条线能不能锁长：两端都是整数格点，长的平方是整数的平方（3、4、5 这样的长）
+    canLen(scene, a, b) {
+      const A = pos(scene, a), B = pos(scene, b), d2 = (A.x - B.x) ** 2 + (A.y - B.y) ** 2, r = Math.round(Math.sqrt(d2));
+      if (!d2 || r * r !== d2 || r > 20) return { ok: false, why: '这条线的长不是整数（平方是 ' + d2 + '），锁不住：先把它拖到 3、4、5 这样的整数长' };
+      return { ok: true, len: r };
+    },
+    // 多边形（按顶点顺序的 id 数组）上哪些顶点是直角：返回 [前一点, 顶点, 后一点] 的三元组
+    rightAt(scene, ids) {
+      const n = ids.length, out = [];
+      for (let i = 0; i < n; i++) {
+        const tri = [ids[(i + n - 1) % n], ids[i], ids[(i + 1) % n]];
+        if (holds({ kind: 'right', a: tri[0], b: tri[1], c: tri[2] }, (k) => pos(scene, k))) out.push(tri);
+      }
+      return out;
+    },
+    // 线段器材 seg 的两端点 id（按 a、b 口）；接不全返回 null
+    segEnds(scene, seg) {
+      const a = scene.links.find((l) => l.to === seg && l.toPort === 'a'), b = scene.links.find((l) => l.to === seg && l.toPort === 'b');
+      return a && b ? [a.from, b.from] : null;
+    },
+    // 这两个点之间的定长约束（不论顺序），没有返回 null
+    lenOf(scene, ids) {
+      return locksOf(scene).find((c) => c.kind === 'len' && ((c.a === ids[0] && c.b === ids[1]) || (c.a === ids[1] && c.b === ids[0]))) || null;
+    },
+    // 顶点 tri[1] 上、两条边是 tri[0] 和 tri[2] 的直角约束，没有返回 null
+    rightOf(scene, tri) {
+      return locksOf(scene).find((c) => c.kind === 'right' && c.b === tri[1] && ((c.a === tri[0] && c.c === tri[2]) || (c.a === tri[2] && c.c === tri[0]))) || null;
+    },
+    // 一组点整体移动（平移、旋转）时，约束要是都在这组点里，移动后仍然成立（长和直角不变）
+    rigid(scene, ids) {
+      const set = new Set(ids);
+      return locksOf(scene).every((c) => !([c.a, c.b, c.c].some((k) => set.has(k))) || [c.a, c.b, c.c].every((k) => !k || set.has(k)));
+    },
+  };
   U.Geo = Geo;
 
   // 图形组（剪切的结果）：一组图形
