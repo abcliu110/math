@@ -71,11 +71,12 @@
     if (!f || !f.pts || !f.pts.length || f.type === 'point' || f.type === 'circle') return;
     const kp = f.pts.map((p) => ({ x: Q.num(p.x), y: Q.num(p.y) }));          // 精确值的浮点（角度用）
     const sp = shownPts(f, ent).map((p) => ({ x: X(p.x), y: Y(p.y) }));       // 画布上的位置
-    const add = (text, cands, ro) => labs.push({ text, c: RO_COL, cands, prio: 5, ro });
+    const add = (text, cands, ro, dim) => labs.push({ text, c: RO_COL, cands, prio: 5, ro, dim: dim || null });
     const cen = { x: avg(sp.map((p) => p.x)), y: avg(sp.map((p) => p.y)) };
     if (f.type === 'segment') {
-      const a = sp[0], b = sp[1], u = unit(-(b.y - a.y), b.x - a.x), text = '长 ' + lenText(f.pts[0], f.pts[1]);
-      add(text, around((a.x + b.x) / 2, (a.y + b.y) / 2, u, text, [RO.near, RO.far, -RO.near]), 'len');
+      // 选中的线段：读数可以双击改长度（§10.5.9 第 2 条，dim）；锁着的写「锁」
+      const a = sp[0], b = sp[1], u = unit(-(b.y - a.y), b.x - a.x), lk = ent ? SG.segLenLock(ent.id) : null, text = (lk ? '锁 ' : '') + '长 ' + lenText(f.pts[0], f.pts[1]);
+      add(text, around((a.x + b.x) / 2, (a.y + b.y) / 2, u, text, [RO.near, RO.far, -RO.near]), 'len', ent ? ent.id : null);
       return;
     }
     if (f.type !== 'polygon') return;

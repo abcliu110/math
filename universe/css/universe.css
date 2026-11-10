@@ -465,7 +465,8 @@ body.rail-l #left > :not(.railbtn), body.rail-r #right > :not(.railbtn) { displa
 .wsmini kbd { font: inherit; font-size: 11px; font-weight: 700; }
 .wsmini-sep { width: 1px; height: 16px; background: #aab4c8; margin: 0 2px; }
 /* 画布里图形的名字标签不拦鼠标：点图形中间（标签压在上面）也要能选中图形。能双击改名的点标签（data-ren）照旧响应 */
-svg.wsbody text:not([data-ren]) { pointer-events: none; }
+svg.wsbody text:not([data-ren]):not([data-dim]) { pointer-events: none; }
+input.wsx-dim { position: fixed; z-index: 50; width: 64px; font: 700 13px var(--font); }   /* 尺寸驱动的长度输入框（§10.5.9 第 2 条） */
 /* 触屏（V8，2.7）：工具按钮至少 36 像素；只在触屏（粗指针）上生效，鼠标的大小不变 */
 @media (pointer: coarse) {
   .tool button, .wsx-tools button, .fbar button, .wsmini button, .fab button { min-width: 36px; min-height: 36px; }

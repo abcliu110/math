@@ -57,6 +57,34 @@
         draw: (c) => K.line(14, c.h / 2, c.w - 14, c.h / 2 - 10, { w: 2, dash: c.props.dash ? '5 4' : '' }),
       },
 
+      // ---------------- 约束（§10.5.9 第 1 条）：锁住一条线段的长度（定长），或一个直角（直角）----------------
+      // 约束是世界里的器材：输入口接着被约束的点（定长接 a、b；直角接 a、b（顶点）、c）。它不画图形，只在步骤里出现，
+      // 输出一个数（锁住的长度），界面和内核据此只允许满足约束的拖动（U.Geo.fit）。constraint: true 是声明，界面不按器材名判断。
+      gcon: {
+        workspaceRole: 'step',
+        workbenches: ['geometry'],
+        handles: false,
+        stepLabel: (e) => (e.props.kind === 1 ? '锁直角' : '锁长 ' + e.props.len),
+        constraint: true,
+        hidden: true,
+        essence: ['E1'],
+        label: '约束（锁长、锁直角）', prefix: '约束', group: '图形', grades: [4, 9], lint: ex('约束由界面的「锁长」「锁直角」按钮创建，参数由它自己决定'),
+        props: {
+          kind: { type: 'choice', label: '约束', default: 0, choices: ['定长', '直角'], write: false },
+          len: { type: 'int', label: '长度（整数）', default: 1, min: 1, max: 20 },
+        },
+        inputs: { a: pointIn, b: pointIn, c: pointIn },
+        outputs: { n: { dim: null, kind: 'num', label: '锁住的长度' } },
+        icon: () => K.text(32, 26, '锁', { size: 18, weight: 700 }),
+        size: () => [120, 50],
+        compute: (c) => {
+          const n = c.props.kind === 1 ? 0 : c.props.len;
+          if (!(c.inp.a || []).length || !(c.inp.b || []).length) c.say('info', '接两个点进来（直角再接第三个点）');
+          return { n: U.val('num', Q(n), { dim: null }) };
+        },
+        draw: (c) => K.text(c.w / 2, c.h / 2 + 4, c.props.kind === 1 ? '锁直角' : '锁长 ' + c.props.len, { size: 13, weight: 700 }),
+      },
+
       // ---------------- 中点 ----------------
       gmid: {
         workspaceRole: 'step',
