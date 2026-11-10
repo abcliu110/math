@@ -17,7 +17,7 @@
     if (!inFocus) h += '<button class="wsx-fold" data-ws-fold="' + ws.id + '"><span class="wsx-fold-open">工作区 ▸</span><span class="wsx-fold-shut">收起 ▾</span></button>';
     const D = S.wsDraw && S.wsDraw.ws === ws.id ? S.wsDraw : null;
     // 工具说明从 UI.ToolHelp 读（悬停或聚焦时由 CSS 显示 data-tip）；没有说明的工具不带 data-tip
-    h += '<div class="wsx-tools">' + wd.tools.map((t) => { const hp = UI.ToolHelp.of(t.id); return '<button data-ws-tool="' + t.id + '" data-ws="' + ws.id + '"' + (hp ? ' data-tip="' + SG.escA(hp.tip) + '"' : '') + (D && D.tool === t.id ? ' class="on" aria-pressed="true"' : '') + '>' + K.esc(t.label) + '</button>'; }).join('') +
+    h += '<div class="wsx-tools">' + wd.tools.filter((t) => UI.Young.showTool(t.id)).map((t) => { const hp = UI.ToolHelp.of(t.id); return '<button data-ws-tool="' + t.id + '" data-ws="' + ws.id + '"' + (hp ? ' data-tip="' + SG.escA(hp.tip) + '"' : '') + (D && D.tool === t.id ? ' class="on" aria-pressed="true"' : '') + '>' + K.esc(t.label) + '</button>'; }).join('') +
       '<button data-ws-fit="' + ws.id + '" title="按内容选坐标范围，让图正好装下">适应</button></div>';
     h += '<div class="wsx-range">' + SG.rangeText(ws, pw, ph) + '</div>';
     h += '<div class="wsx-args">移动时：向右 <input type="number" data-ws-arg="dx" value="' + SG.escA(S.wsArgs.dx) + '"> 向上 <input type="number" data-ws-arg="dy" value="' + SG.escA(S.wsArgs.dy) + '"></div>';
@@ -178,8 +178,26 @@
     const acBtn = (id, label, tip) => '<button data-fbar="' + id + '" data-ws="' + ws.id + '"' + (A === id ? ' class="on" aria-pressed="true"' : '') + ' title="' + SG.escA(tip) + '">' + label + '</button>';
     return '<span class="fbar-tools">' + btn('seg', '连线', '连线（L）：拖出一条线，会自动吸到顶点、中点、垂足、交点；也可以点两下') + btn('cut', '剪', '剪（C）：先选一个图形，再拖出一条剪切线') +
       '<span class="wsmini-sep"></span>' + shapesHtml(ws) + acBtn('copy', '复制', '复制选中的图形（Ctrl+D；Ctrl+C 后 Ctrl+V 粘贴）') + acBtn('mirror', '镜像', '镜像复制选中的图形（M）：副本贴着它的右边，左右对称') + btn('group', '编组', '把选中的图形编成一组（Ctrl+G）：点一个，两个一起选中、一起拖动；Ctrl+Shift+G 取消编组') + acBtn('rot', '旋转', '把选中的图形转 90°（R）') + acBtn('flip', '翻转', '把选中的图形左右翻转（F）') +
-      btn('del', '删除', '删除选中的图形或步骤（Delete）') + btn('undo', '撤销', '撤销上一步') +
+      lockHtml(ws) + btn('del', '删除', '删除选中的图形或步骤（Delete）') + btn('undo', '撤销', '撤销上一步') +
       '<span class="wsmini-sep"></span>' + snapBtn(ws) + '</span>';
+  }
+  // 多选对齐与等距分布（§10.5.9 第 3 条）：这个工作区里选中两个以上的图形时，在主工具条上方再出一条对齐工具条（主工具条已经放满，不能挤进去）；
+  // 每个按钮是一步撤销。收起工具条时不出现。
+  function alignBar(ws, pos) {
+    if (UI.Chrome.barShut() || !pos || (UI.S.wsSel || []).filter((n) => SG.figByName(ws.id, n)).length < 2) return '';
+    const b = (op, label, tip) => '<button data-fbar="al-' + op + '" data-ws="' + ws.id + '" title="' + SG.escA(tip) + '">' + label + '</button>';
+    const html = b('l', '左齐', '左对齐：所有选中的图形左边缘对齐到最左的那个') + b('r', '右齐', '右对齐：右边缘对齐到最右的那个') +
+      b('t', '顶齐', '顶对齐：上边缘对齐到最高的那个') + b('b', '底齐', '底对齐：下边缘对齐到最低的那个') +
+      b('hc', '水平居中', '水平居中：中心的横坐标对齐') + b('vc', '垂直居中', '垂直居中：中心的纵坐标对齐') +
+      b('dh', '水平等距', '水平等距：两端不动，中间的横向间距相等（至少三个，间距要是整数格）') +
+      b('dv', '垂直等距', '垂直等距：两端不动，中间的纵向间距相等（至少三个，间距要是整数格）');
+    const top = pos.y - (UI.LAYOUT.BAR.h + UI.LAYOUT.BAR.gap);
+    return '<div class="fbar wsalign" role="toolbar" aria-label="对齐与分布" data-wsalign="' + ws.id + '" style="left:' + pos.x + 'px;top:' + top + 'px">' + html + '</div>';
+  }
+  // 锁长 / 锁直角（§10.5.9 第 1 条）：选中一条线段或一个多边形时才有；按钮的字就是它现在能做的事
+  function lockHtml(ws) {
+    const T = SG.lockTarget(ws.id); if (!T) return '';
+    return '<button data-fbar="lock" data-ws="' + ws.id + '" title="' + SG.escA(T.tip) + '">' + T.label + '</button>';
   }
   // 吸附开关（V4，§1.3 第 4 条）：关了，拖动和画线都不吸附到中点、交点、垂足；按住 Alt 暂时不吸附（和开关无关）
   function snapBtn(ws) {
@@ -193,7 +211,7 @@
   function barHtml(ws, pos) {
     const shut = UI.Chrome.barShut(), D = UI.S.wsDraw && UI.S.wsDraw.ws === ws.id ? UI.S.wsDraw : null;
     const quick = '<span class="fbar-quick"><button data-ws-mode="select" data-ws="' + ws.id + '"' + (!D ? ' class="on" aria-pressed="true"' : '') + ' title="选择、拖动点和图形（V）">选择 <kbd>V</kbd></button><span class="wsmini-sep"></span></span>';
-    return '<div class="fbar wsmini' + (shut ? ' shut' : '') + '" data-wsbar="' + ws.id + '"' + (pos ? ' style="left:' + pos.x + 'px;top:' + pos.y + 'px"' : '') + '>' +
+    return alignBar(ws, pos) + '<div class="fbar wsmini' + (shut ? ' shut' : '') + '" data-wsbar="' + ws.id + '"' + (pos ? ' style="left:' + pos.x + 'px;top:' + pos.y + 'px"' : '') + '>' +
       '<button class="fbar-fold" data-fbar="fold" data-ws="' + ws.id + '" title="' + (shut ? '展开工具条' : '收起工具条') + '">' + (shut ? '工具 ▸' : '▾') + '</button>' +
       quick + barTools(ws) +
       '<button data-fbar="focus" data-ws="' + ws.id + '" title="放大到台面的全部，再点一次或按 Esc 还原">全屏</button></div>';
@@ -214,7 +232,9 @@
     if (a === 'del') return barDelete(wsId);
     if (a === 'copy' || a === 'mirror' || a === 'rot' || a === 'flip') return SG.wsAct(wsId, a);
     if (a === 'group') return SG.wsGroup(wsId, true);
+    if (a.indexOf('al-') === 0) return SG.alignWs(wsId, a.slice(3));
     if (a === 'undo') { const u = document.getElementById('undo'); if (u) u.click(); }
+    if (a === 'lock') return SG.wsLock(wsId);
     if (a === 'snap') { UI.S.snapOn = UI.S.snapOn === false; return SG.render(); }
   }
   // 看背后的连线（D6）：步骤图只读；点一步，撤销到那一步为止（之后的步骤撤掉）。撤销用的是台面的撤销按钮，历史照常记录

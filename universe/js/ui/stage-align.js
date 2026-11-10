@@ -174,5 +174,84 @@
     const w = UI.Space.screenToStage({ clientX: best.q.x, clientY: best.q.y }, S.view);
     return { x: w.x - g.w / 2, y: w.y - g.h / 2, label: best.label };
   }
-  Object.assign(SG, { ALIGN_PX, GUIDE_COL, cr2, dt2, vsb, numP, rnd, pdist, gapSeg, edgesOf, gptPt, buildAlign, alignOfFig, alignSolve, cardSnap });
+  // ---- 多选对齐与等距分布（§10.5.9 第 3 条）：选中两个以上的图形，工具条上的八个按钮 ----
+  // 每个按钮是一个手势（UI.Intent 的 align），整批 set 是一步撤销。算法全部用精确的有理数（Q）：
+  // 目标位置和每个图形的平移量都必须是整数（自由点只存整数），做不到就说明原因、不动图形。
+  const ALIGN_LABEL = { l: '左对齐', r: '右对齐', t: '顶对齐', b: '底对齐', hc: '水平居中', vc: '垂直居中', dh: '水平等距', dv: '垂直等距' };
+  // 图形的外框（工作区坐标，Q 值）：边缘是哪一个顶点，就用哪一个的 Q 值（不转成数字，免得丢精度）
+  function alignBoxOf(fi) {
+    const P = fi.f.pts || [];
+    const pick = (cmp, key) => P.reduce((m, q) => (!m || cmp(Q.num(q[key]), Q.num(m[key])) ? q : m), null);
+    const lo = (k) => pick((a, b) => a < b, k)[k], hi = (k) => pick((a, b) => a > b, k)[k];
+    return { x0: lo('x'), x1: hi('x'), y0: lo('y'), y1: hi('y') };
+  }
+  // 平移一个图形：块和摆放改 dx、dy；自由点围成的图形（或单个点）改每个顶点的 x、y（共用的顶点只挪一次）
+  function alignMoveOps(fi, dx, dy, into) {
+    if (fi.kind === 'pts') {
+      for (const g of SG.uniq(fi.verts)) {
+        const old = into.get(g);
+        if (old) { if (!Q.eq(old.x, dx) || !Q.eq(old.y, dy)) return false; continue; }   // 同一个顶点被要求了不同的平移
+        into.set(g, { x: dx, y: dy });
+      }
+      return true;
+    }
+    into.set(fi.ent.id, { piece: true, x: dx, y: dy });
+    return true;
+  }
+  function alignWs(wsId, op) {
+    const S = UI.S, E = S.scene.entities, items = [];
+    for (const n of S.wsSel || []) {
+      const fi = SG.figByName(wsId, n);
+      if (!fi || items.some((it) => it.fi.ent.id === fi.ent.id)) continue;
+      items.push({ fi, box: alignBoxOf(fi) });
+    }
+    const say = (why) => { SG.setMsg(why, false); return SG.render(); };
+    if (items.length < 2) return say('对齐要先选两个以上的图形（按住 Shift 点）');
+    if ((op === 'dh' || op === 'dv') && items.length < 3) return say('等距分布要至少三个图形（两个图形只有一个间距，没什么可分）');
+    const ax = op === 'l' || op === 'r' || op === 'hc' || op === 'dh' ? 'x' : 'y';
+    const lo = (it) => it.box[ax + '0'], hi = (it) => it.box[ax + '1'], mid = (it) => Q.div(Q.add(lo(it), hi(it)), Q(2));
+    const minQ = (xs) => xs.reduce((m, v) => (!m || Q.num(v) < Q.num(m) ? v : m), null);
+    const maxQ = (xs) => xs.reduce((m, v) => (!m || Q.num(v) > Q.num(m) ? v : m), null);
+    // 每个图形要平移多少（Q 值）：这一步的目标位置
+    let shift;
+    if (op === 'l' || op === 'b') { const T = minQ(items.map((it) => (op === 'l' ? lo(it) : it.box.y0))); shift = (it) => Q.sub(T, op === 'l' ? lo(it) : it.box.y0); }
+    else if (op === 'r' || op === 't') { const T = maxQ(items.map((it) => (op === 'r' ? hi(it) : it.box.y1))); shift = (it) => Q.sub(T, op === 'r' ? hi(it) : it.box.y1); }
+    else if (op === 'hc' || op === 'vc') {
+      const T = Q.div(Q.add(minQ(items.map(lo)), maxQ(items.map(hi))), Q(2));
+      shift = (it) => Q.sub(T, mid(it));
+    } else {
+      // 等距：按起点排（从左到右，或从下到上），两端不动，中间的间距都是 gap（必须是整数）
+      const sorted = items.slice().sort((a, b) => (Q.num(lo(a)) - Q.num(lo(b))));
+      const F = sorted[0], L = sorted[sorted.length - 1];
+      const W = sorted.reduce((s, it) => Q.add(s, Q.sub(hi(it), lo(it))), Q(0));
+      const gap = Q.div(Q.sub(Q.sub(hi(L), lo(F)), W), Q(sorted.length - 1));
+      if (!Q.isInt(gap)) return say('间距不是整数（' + Q.show(gap) + '），自由点只存整数格：先把图形挪到间距能整除的位置');
+      const at = new Map();
+      let cur = lo(F);
+      for (const it of sorted) { at.set(it, cur); cur = Q.add(cur, Q.add(Q.sub(hi(it), lo(it)), gap)); }
+      shift = (it) => Q.sub(at.get(it), lo(it));
+    }
+    // 生成每个图形的平移；锁定的图形不能动；所有平移量必须是整数
+    const into = new Map();
+    for (const it of items) {
+      const d = shift(it), dx = ax === 'x' ? d : Q(0), dy = ax === 'y' ? d : Q(0);
+      if (!Q.isInt(d)) return say('这样对齐会落在非整数的位置（自由点只存整数格），先把图形挪到格点上');
+      if (Q.eq(d, Q(0))) continue;
+      if (it.fi.ent.props.locked) return say('「' + (it.fi.ent.name || '这个图形') + '」锁定了，不能移动');
+      if (!alignMoveOps(it.fi, dx, dy, into)) return say('有顶点同时属于几个图形，它们要的位置不同，没法一起对齐');
+    }
+    if (!into.size) return say('已经是这样对齐的了');
+    // 转成动作：块改 dx/dy（加上原值），顶点改 x/y（加上原值）
+    const ops = [];
+    for (const [id, m] of into) {
+      const e = E[id], px = m.piece ? 'dx' : 'x', py = m.piece ? 'dy' : 'y';
+      if (!Q.eq(m.x, Q(0))) ops.push({ id, k: px, v: Q.num(Q.add(Q(e.props[px]), m.x)) });
+      if (!Q.eq(m.y, Q(0))) ops.push({ id, k: py, v: Q.num(Q.add(Q(e.props[py]), m.y)) });
+    }
+    const r = UI.Intent.run('align', { ws: wsId, ops, label: ALIGN_LABEL[op] });
+    if (r && r.ok === false) return say(r.why || '这一步做不了');
+    SG.setMsg(ALIGN_LABEL[op] + '：' + items.length + ' 个图形已对齐（撤销一步回去）', true);
+    return SG.render();
+  }
+  Object.assign(SG, { ALIGN_PX, GUIDE_COL, cr2, dt2, vsb, numP, rnd, pdist, gapSeg, edgesOf, gptPt, buildAlign, alignOfFig, alignSolve, cardSnap, alignWs, ALIGN_LABEL });
 })(window);

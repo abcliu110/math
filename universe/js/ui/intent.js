@@ -31,6 +31,14 @@
     return { id: d, port: con.out };
   }
 
+  // 约束器材（§10.5.9 第 1 条）：kind 0 定长（接 a、b），1 直角（接 a、b 顶点、c）；放进工作区，返回它的 id
+  function addCon(A, ws, kind, len, ids) {
+    const c = A({ t: 'add', type: 'gcon', x: 0, y: 0, props: { kind, len } }).id;
+    ids.forEach((id, i) => A({ t: 'link', from: id, fromPort: 'p', to: c, toPort: ['a', 'b', 'c'][i] }));
+    A({ t: 'put', id: c, parent: ws, slot: 'items' });
+    return c;
+  }
+
   // 点的名字（2.6）：新点自动叫下一个没用过的字母（A、B、C…，用完再用 A1、B1…）。用过的 = 所有点的名字属性、角色和名字。
   // 角色是点的器材声明（workspaceRole 为 point），不按器材名判断。
   const isPointType = (type) => !!(U.types[type] && U.types[type].workspaceRole === 'point');
@@ -251,8 +259,47 @@
         for (const it of p.items) { if (it.kind === 'piece') pasteOnePiece(A, it); else pasteOneFig(A, it, p.ws); }
       },
     },
+    // 锁长 / 锁直角（§10.5.9 第 1 条）：约束器材接着它锁住的点，放进工作区。已经锁着就解锁（删掉约束）。
+    // seg：线段（锁长，当前长度必须是整数）；poly + verts：多边形（锁住它所有的直角顶点，整批是一步）
+    lock: {
+      label: 'lock',
+      fn(A, p) {
+        const S = UI.S, LK = U.Geo.locks;
+        if (p.seg) {
+          const ends = LK.segEnds(S.scene, p.seg); if (!ends) throw { why: '线段的两端没接好，锁不了' };
+          const old = LK.lenOf(S.scene, ends);
+          if (old) return A({ t: 'del', id: old.id });
+          const r = LK.canLen(S.scene, ends[0], ends[1]); if (!r.ok) throw { why: r.why };
+          return addCon(A, S.scene.entities[p.seg].parent, 0, r.len, ends);
+        }
+        const tris = LK.rightAt(S.scene, p.verts || []);
+        if (!tris.length) throw { why: '这个多边形没有直角可以锁' };
+        const have = tris.map((t) => LK.rightOf(S.scene, t));
+        if (have.every((c) => c)) return have.forEach((c) => A({ t: 'del', id: c.id }));
+        for (const t of tris) if (!LK.rightOf(S.scene, t)) addCon(A, p.ws, 1, 1, t);
+      },
+    },
+    // 尺寸驱动（§10.5.9 第 2 条）：直接输入线段的长度。没有锁就先锁住（一步），再把端点挪到长 len 的位置上（离原来最近的）。
+    // 整串是一步：撤销一次回到原来的长。
+    dim: {
+      label: 'dim',
+      fn(A, p) {
+        const S = UI.S, LK = U.Geo.locks, ends = LK.segEnds(S.scene, p.seg);
+        if (!ends) throw { why: '线段的两端没接好，改不了长' };
+        let con = LK.lenOf(S.scene, ends);
+        if (!con) con = { id: addCon(A, S.scene.entities[p.seg].parent, 0, p.len, ends) };
+        else if (con.len === p.len) return;
+        else A({ t: 'set', id: con.id, k: 'len', v: p.len });
+        const r = LK.dim(S.scene, con.id, p.len);
+        if (!r.ok) throw { why: r.why };
+        A({ t: 'set', id: r.id, k: 'x', v: r.x });
+        A({ t: 'set', id: r.id, k: 'y', v: r.y });
+      },
+    },
     // 编组（§10.5.9 第 3 条）：ids 记同一个组号 gid；gid 为空就取消编组
     group: { label: 'group', fn(A, p) { return A({ t: 'group', ids: p.ids, gid: p.gid || null }); } },
+    // 多选对齐、等距分布（§10.5.9 第 3 条）：ops 是 { id, k, v } 的列表（块的 dx/dy，自由点的 x/y），整批是一步
+    align: { label: 'align', fn(A, p) { for (const op of p.ops) A({ t: 'set', id: op.id, k: op.k, v: op.v }); } },
     // 连线：从一个输出口拉到一个输入口
     link: {
       label: 'link',
@@ -297,6 +344,15 @@
     tidy: { label: 'tidy', fn(A) { return A({ t: 'tidy' }); } },
     // 工作台的步骤写进台面（D8：竖式、数据图表台；式子工作台的 I 也是这一条）。内核先判断能不能做，这里只写回。
     wbsteps: { label: 'wb', fn(A, p) { return A({ t: 'wb', host: p.host, key: p.key, steps: p.steps }); } },
+    // 定型（§10.5.6 第 5 步）：内核判断能不能做（没有新步骤就拒绝，说明原因）；写回台面是一个动作
+    wbbake: {
+      label: 'bake',
+      fn(A, p) {
+        const st = U.Workbench.bake(p.st);
+        if (st.lastError) throw { why: st.lastError };
+        return A(U.ExprBench.saveAction(p.id, p.eq, st));
+      },
+    },
     // 清空台面：先问（会删几个器材），确认后才清；撤销一次找回
     clear: {
       label: 'clear',

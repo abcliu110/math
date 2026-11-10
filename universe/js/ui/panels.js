@@ -210,11 +210,6 @@
     if (sol.solved) h += '<div class="wb-sol">解：' + esc(U.Form.show(cur.data.lhs)) + ' = ' + esc(U.Q.show(sol.x)) + '</div>';
     return h;
   }
-  function wbStepsHtml(st, pv) {
-    const log = U.Workbench.stepLog(st);
-    if (!log.length) return '<div class="wb-none">还没有步骤</div>';
-    return st.steps.map((s, i) => '<div class="wb-step' + (pv !== undefined && i >= pv ? ' wb-after' : '') + (pv === i + 1 ? ' wb-at' : '') + '"><span>' + esc(log[i]) + '<small>' + esc(s.why) + '</small></span><button data-wb-undo="' + (i + 1) + '">撤销到这一步</button></div>').join('');
-  }
   function wbTlHtml(n, pv, dr) {
     if (!n) return '';
     const at = pv === undefined ? n : pv;
@@ -232,7 +227,7 @@
     const put = (sel, html) => { const x = box.querySelector(sel); if (x) x.innerHTML = html; };
     put('[data-wb-now]', wbNowHtml(view));
     put('[data-wb-view]', wbViewHtml(view.current, dr, pv));
-    put('[data-wb-steps]', wbStepsHtml(st, pv));
+    put('[data-wb-steps]', wbStepRows(st, pv));
     const sl = box.querySelector('[data-wb-tl]'); if (sl) sl.value = pv === undefined ? n : pv;
     const tn = box.querySelector('[data-wb-tl-now]');
     if (tn) tn.textContent = pv === undefined ? '当前：第 ' + n + ' 步' : '预览：第 ' + pv + ' 步（只读）';
@@ -260,6 +255,32 @@
       if (!el) return;
       el.classList.add('wb-enter'); void el.offsetWidth; el.classList.remove('wb-enter');   // 先让浏览器算出起点样式，再去掉，过渡才会发生
     });
+  }
+  // 步骤列表（§10.5.6 第 5 步）：每次定型的那几步收在一个折叠里（只能展开看，没有撤销按钮），外面是定型那一行（撤销定型）。
+  // 定型那一行的撤销 k = 定型的下标：保留定型前的步骤。
+  function wbStepRows(st, pv) {
+    const steps = st.steps;
+    if (!steps.length) return '<div class="wb-none">还没有步骤</div>';
+    const log = U.Workbench.stepLog(st), folds = U.Workbench.folds(st);
+    // 预览（时间条）：预览的第 pv 步之后的步骤划掉，第 pv 步标粗；不预览时没有这两个类
+    const pc = (i) => (pv === undefined ? '' : (i >= pv ? ' wb-after' : '') + (i === pv - 1 ? ' wb-at' : ''));
+    const row = (i, cls, undo, label) => '<div class="wb-step' + cls + pc(i) + '"><span>' + esc(log[i]) + '<small>' + esc(steps[i].why) + '</small></span>' +
+      (undo ? '<button data-wb-undo="' + (undo) + '">' + label + '</button>' : '') + '</div>';
+    let h = '';
+    for (let i = 0; i < steps.length;) {
+      const f = folds.find((x) => x.from === i);
+      if (f) {
+        let inner = '';
+        for (let j = f.from; j < f.bake; j++) inner += row(j, ' wb-folded', 0, '');
+        h += '<details class="wb-fold"><summary>定型：前 ' + (f.bake - f.from) + ' 步（已固定，不能再改）</summary>' + inner + '</details>';
+        h += row(f.bake, ' wb-bake', f.bake, '撤销定型');
+        i = f.bake + 1;
+      } else {
+        h += row(i, '', i + 1, '撤销到这一步');
+        i++;
+      }
+    }
+    return h;
   }
   function wbHtml(e, dd) {
     const inp = dd && dd.inp, eq = U.ExprBench.workEqnIn(inp), area = U.ExprBench.areaIn(inp);
@@ -299,8 +320,9 @@
     if (coef) h += '<button data-wb-act="divide-coef">两边同除以 ' + esc(U.Q.show(coef)) + '</button>';
     h += '</div></div>';
     if (dr.msg) h += '<div class="wb-msg">' + esc(dr.msg) + '</div>';
-    h += '<div class="wb-h">步骤 <button data-wb-graph="1" title="看每一步用了哪一步的结果（只看，不改历史）">看背后的连线</button></div>';
-    h += '<div data-wb-steps="1">' + wbStepsHtml(st, pv) + '</div>';
+    const pending = U.Workbench.pending(st);
+    h += '<div class="wb-h">步骤 ' + (pending && pv === undefined ? '<button data-wb-bake="1" title="把上次定型之后的步骤折成一步，不能再改；撤销定型可以回到定型前">定型</button> ' : '') + '<button data-wb-graph="1" title="看每一步用了哪一步的结果（只看，不改历史）">看背后的连线</button></div>';
+    h += '<div data-wb-steps="1">' + wbStepRows(st, pv) + '</div>';
     // 几何来的式子：和几何台面的面积对照（读数变了，这里跟着变）
     const note = eq.geo ? U.ExprBench.areaNote(st, area) : null;
     if (note) h += '<div class="' + (note.same === false ? 'wb-msg' : 'wb-note') + '" data-wb-area="' + (note.same === null ? 'open' : note.same ? 'same' : 'off') + '">' + esc(note.text) + '</div>';

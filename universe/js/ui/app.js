@@ -362,7 +362,16 @@
   });
   function wbUndo(id, k) {
     const eq = wbEqn(id); if (!eq) return;
-    wbSave(id, eq, U.Workbench.undo(wbNow(id, eq), k));
+    const ns = U.Workbench.undo(wbNow(id, eq), k);
+    if (ns.lastError) { UI.Panels.wbDraft(id).msg = ns.lastError; refresh(); return; }   // 拆开了定型过的步骤：不动，说明原因
+    wbSave(id, eq, ns);
+    UI.Panels.wbDraft(id).msg = '';
+    refresh();
+  }
+  // 定型（§10.5.6 第 5 步）：经 UI.Intent；没有新步骤时内核拒绝，原因由事务提示
+  function wbBake(id) {
+    const eq = wbEqn(id); if (!eq) return;
+    UI.Intent.run('wbbake', { id, eq, st: wbNow(id, eq) });
     UI.Panels.wbDraft(id).msg = '';
     refresh();
   }
@@ -501,6 +510,7 @@
       if (chip) { if (!afterDrag) wbToggle(id, chip.dataset.wbTerm); return; }
       const wbAct = t.closest && t.closest('[data-wb-act]');
       if (wbAct) { wbDivideCoef(id); return; }
+      if (t.closest && t.closest('[data-wb-bake]')) { wbBake(id); return; }
       // 看背后的连线（D6）：只读；点哪一步，历史就回到哪一步
       if (t.closest && t.closest('[data-wb-graph]')) {
         const eq = wbEqn(id); if (eq) UI.StepGraph.openExpr(wbNow(id, eq), (k) => wbUndo(id, k));
