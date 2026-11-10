@@ -369,5 +369,15 @@
     $('#cb-out').innerHTML = h;
   }
 
+  // 菜单里“保存台面到文件”后面加一个“导出图片”（PNG，见 js/ui/export.js）
+  (function addExportButton() {
+    const menu = $('#menu'), save = menu && menu.querySelector('[data-m="save"]');
+    if (!save) return;
+    const b = document.createElement('button');
+    b.dataset.png = '1'; b.textContent = '导出图片（PNG）';
+    b.onclick = () => UI.Export.run();
+    save.after(b);
+  })();
+
   UI.Panels = { wbDraft, renderTop, renderLeft, renderShelf, renderInsp, renderClock, shareDialog, studentDialog, boardDialog, boardOut, dialog, closeDialog, reportHtml, inquiryHtml, wrongDialog, whyDialog, parentDialog, improveDialog, healthDialog, healthOut, reportDialog, authorDialog, initShelfDrag, renderAll() { renderTop(); renderLeft(); renderShelf(); renderInsp(); renderClock(); } };
 })(window);
