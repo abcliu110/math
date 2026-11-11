@@ -34,12 +34,29 @@
   }
   applyContrast();
   G.document.addEventListener('click', (e) => { const t = e.target; if (t && t.closest && t.closest('#contrastbtn')) toggleContrast(); });
+  // 动画（§10.5.9 第 7 条）：步骤之间的过渡（≤ 300 毫秒）。菜单里的开关；记在 localStorage（'on' / 'off'）。
+  // 没有记录时，系统要求减少动态效果（prefers-reduced-motion）就默认关。关了写 data-anim="off"，css 里所有过渡都不播。
+  const AKEY = 'universe.anim';
+  let anim = true;
+  try {
+    const v = G.localStorage.getItem(AKEY);
+    anim = v === 'on' ? true : v === 'off' ? false : !(G.matchMedia && G.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  } catch (e) { /* 存储不可用：按系统设置 */ }
+  function paintAnim() { const b = G.document.getElementById('animbtn'); if (b) { b.textContent = '动画：' + (anim ? '开' : '关'); b.setAttribute('aria-pressed', anim ? 'true' : 'false'); } }
+  function applyAnim() { G.document.documentElement.setAttribute('data-anim', anim ? 'on' : 'off'); paintAnim(); }
+  function toggleAnim() {
+    anim = !anim;
+    try { G.localStorage.setItem(AKEY, anim ? 'on' : 'off'); } catch (e) { /* 存储不可用：只在内存里生效 */ }
+    applyAnim();
+  }
+  applyAnim();
+  G.document.addEventListener('click', (e) => { const t = e.target; if (t && t.closest && t.closest('#animbtn')) toggleAnim(); });
   if (mq) {
     const onChange = () => { if (mode === 'auto') apply(); };
     if (mq.addEventListener) mq.addEventListener('change', onChange); else if (mq.addListener) mq.addListener(onChange);
   }
   apply();
-  G.document.addEventListener('DOMContentLoaded', () => { paintButton(); paintContrast(); });
+  G.document.addEventListener('DOMContentLoaded', () => { paintButton(); paintContrast(); paintAnim(); });
   G.document.addEventListener('click', (e) => { const t = e.target; if (t && t.closest && t.closest('#themebtn')) cycle(); });
-  UI.Theme = { get: () => mode, resolved, set, cycle, LABEL, isHigh: () => high, toggleContrast };
+  UI.Theme = { get: () => mode, resolved, set, cycle, LABEL, isHigh: () => high, toggleContrast, anim: () => anim, toggleAnim };
 })(window);

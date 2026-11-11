@@ -167,6 +167,7 @@
     const sg = (dd && dd.sig) || []; if (sg.length) h += '<div class="sigs">' + sg.map((s) => '<div>· ' + esc(s.tx) + '</div>').join('') + '</div>';
     h += '<div class="btnrow"><button class="btn" data-reset="1">恢复默认</button></div>';
     box.innerHTML = h; box.classList.add('open');
+    if (d.inspector === 'workbench' && !d.wbUI) wbEnter(e.id);
   }
 
   // ---------- 式子工作台的检查器（任务 H 第 3b 步，§10.5.3）----------
@@ -190,13 +191,85 @@
       return '<button class="wb-chip' + (on ? ' sel' : '') + '" data-wb-term="' + side + ':' + i + '" data-wb-side="' + side + '" data-wb-i="' + i + '" aria-pressed="' + on + '">' + esc(txt) + '</button>';
     }).join('') + '</div>';
   }
+  // ---------- 式子工作台的时间条（§10.5.9 第 7 条）----------
+  // 时间条只读预览任一步：草稿 dr.tl 是预览的步数（undefined = 当前步），不改台面，也不改历史。
+  // 拖动时只重画时间条会影响的部分（wbPaint），不重画整个面板：重画会把正在拖的滑块换掉。
+  // 松手后 dr.tlSet 为真，出现两个选择：「回到当前步」或「停在这一步」（停下就是撤销之后的步骤，走原来的撤销）。
+  const wbSeen = {};   // 器材 id → 上一次画出的步数，只用来判断是不是新增了一步（要播放过渡）
+  function wbView(st, pv) {
+    if (pv === undefined) return st;
+    try { return U.Workbench.replay(st.start, st.steps.slice(0, pv), st.formula); } catch (err) { return st; }
+  }
+  function wbNowHtml(view) { return '现在：<b>' + esc(U.ExprBench.showState(view)) + '</b>'; }
+  function wbViewHtml(cur, dr, pv) {
+    const ro = pv !== undefined;
+    let h = '';
+    if (cur.kind === 'eqn') {
+      const sides = { lhs: cur.data.lhs, rhs: cur.data.rhs };
+      h += '<div class="wb-eq' + (ro ? ' wb-ro' : '') + '">' +
+        (ro ? esc(U.Form.show(sides.lhs)) : wbSide('lhs', sides.lhs, dr)) + '<span class="wb-rel">' + esc(cur.data.rel) + '</span>' +
+        (ro ? esc(U.Form.show(sides.rhs)) : wbSide('rhs', sides.rhs, dr)) + '</div>';
+      h += '<div class="wb-note">' + (ro ? '只读预览：历史没有改变。松手后选「回到当前步」，或「停在这一步」。' : '点项就选中（可以多选）。把左边的项拖过等号，松手就是移项；选两个同类项再点「合并同类项」。') + '</div>';
+    }
+    const sol = U.Workbench.solution({ current: cur });
+    if (sol.solved) h += '<div class="wb-sol">解：' + esc(U.Form.show(cur.data.lhs)) + ' = ' + esc(U.Q.show(sol.x)) + '</div>';
+    return h;
+  }
+  function wbTlHtml(n, pv, dr) {
+    if (!n) return '';
+    const at = pv === undefined ? n : pv;
+    return '<div class="wb-tl"><label>时间条（拖动或点击，只读预览任一步） <input type="range" data-wb-tl="1" min="0" max="' + n + '" step="1" value="' + at + '"></label> ' +
+      '<span class="wb-tl-now" data-wb-tl-now="1">' + esc(pv === undefined ? '当前：第 ' + n + ' 步' : '预览：第 ' + pv + ' 步（只读）') + '</span>' +
+      '<div class="wb-tl-pick" data-wb-tl-pick="1"' + (dr.tlSet && pv !== undefined ? '' : ' hidden') + '>' +
+      '<button data-wb-tl-back="1">回到当前步</button><button data-wb-tl-stop="' + at + '">停在第 ' + at + ' 步（之后的步骤撤销）</button></div></div>';
+  }
+  // 只更新会随时间条变化的部分（拖动时用）：现在、式子、步骤、编辑区、两个选择
+  function wbPaint(id) {
+    const box = document.querySelector('#insp .wb'), e = UI.S.scene.entities[id], dd = UI.S.D && UI.S.D[id];
+    const eq = dd && U.ExprBench.workEqnIn(dd.inp);
+    if (!box || !e || !eq) return;
+    const st = U.ExprBench.currentOf(UI.S.scene, id, eq), dr = wbDraft(id), pv = dr.tl, view = wbView(st, pv), n = st.steps.length;
+    const put = (sel, html) => { const x = box.querySelector(sel); if (x) x.innerHTML = html; };
+    put('[data-wb-now]', wbNowHtml(view));
+    put('[data-wb-view]', wbViewHtml(view.current, dr, pv));
+    put('[data-wb-steps]', wbStepRows(st, pv));
+    const sl = box.querySelector('[data-wb-tl]'); if (sl) sl.value = pv === undefined ? n : pv;
+    const tn = box.querySelector('[data-wb-tl-now]');
+    if (tn) tn.textContent = pv === undefined ? '当前：第 ' + n + ' 步' : '预览：第 ' + pv + ' 步（只读）';
+    const live = box.querySelector('[data-wb-live]'); if (live) live.hidden = pv !== undefined;
+    const stop = box.querySelector('[data-wb-tl-stop]');
+    if (stop && pv !== undefined) { stop.dataset.wbTlStop = pv; stop.textContent = '停在第 ' + pv + ' 步（之后的步骤撤销）'; }
+    const pick = box.querySelector('[data-wb-tl-pick]'); if (pick) pick.hidden = !(dr.tlSet && pv !== undefined);
+  }
+  // 时间条的动作（拖动 released=false、松手 released=true、回到当前步 v=undefined）：只改草稿，再局部重画
+  function wbTl(id, v, released) {
+    const dd = UI.S.D && UI.S.D[id], eq = dd && U.ExprBench.workEqnIn(dd.inp);
+    if (!eq) return;
+    const n = U.ExprBench.currentOf(UI.S.scene, id, eq).steps.length, dr = wbDraft(id);
+    dr.tl = (typeof v !== 'number' || v >= n || v < 0) ? undefined : v;   // 拖到最右就是当前步，不是预览
+    dr.tlSet = !!released && dr.tl !== undefined;
+    wbPaint(id);
+  }
+  // 步骤之间的过渡（CSS transition，见 css 里的 wb-enter，时长 200 毫秒）：新增了一步，「现在」和新的那一步从淡入的状态过渡到正常。
+  // 动画关掉（菜单）时不播。新画出来的面板里 wbSeen 记的是上一次的步数。
+  function wbEnter(id) {
+    const n = document.querySelectorAll('#insp [data-wb-steps] .wb-step').length, prev = wbSeen[id];
+    wbSeen[id] = n;
+    if (prev === undefined || n <= prev || !(UI.Theme && UI.Theme.anim && UI.Theme.anim())) return;
+    [document.querySelector('#insp [data-wb-now]'), document.querySelector('#insp [data-wb-steps] .wb-step:last-child')].forEach((el) => {
+      if (!el) return;
+      el.classList.add('wb-enter'); void el.offsetWidth; el.classList.remove('wb-enter');   // 先让浏览器算出起点样式，再去掉，过渡才会发生
+    });
+  }
   // 步骤列表（§10.5.6 第 5 步）：每次定型的那几步收在一个折叠里（只能展开看，没有撤销按钮），外面是定型那一行（撤销定型）。
   // 定型那一行的撤销 k = 定型的下标：保留定型前的步骤。
-  function wbStepRows(st) {
+  function wbStepRows(st, pv) {
     const steps = st.steps;
     if (!steps.length) return '<div class="wb-none">还没有步骤</div>';
     const log = U.Workbench.stepLog(st), folds = U.Workbench.folds(st);
-    const row = (i, cls, undo, label) => '<div class="wb-step' + cls + '"><span>' + esc(log[i]) + '<small>' + esc(steps[i].why) + '</small></span>' +
+    // 预览（时间条）：预览的第 pv 步之后的步骤划掉，第 pv 步标粗；不预览时没有这两个类
+    const pc = (i) => (pv === undefined ? '' : (i >= pv ? ' wb-after' : '') + (i === pv - 1 ? ' wb-at' : ''));
+    const row = (i, cls, undo, label) => '<div class="wb-step' + cls + pc(i) + '"><span>' + esc(log[i]) + '<small>' + esc(steps[i].why) + '</small></span>' +
       (undo ? '<button data-wb-undo="' + (undo) + '">' + label + '</button>' : '') + '</div>';
     let h = '';
     for (let i = 0; i < steps.length;) {
@@ -223,18 +296,21 @@
         '<div class="note">再从代数式卡的输出口拖一根线到这台器材的「公式的右边」口，例如 a×h。</div></div>';
       return '<div class="wb"><h5>式子工作台</h5><div class="wb-none">接一个方程</div><div class="note">从方程台的「方程」口拖一根线到这台器材的「方程」口。</div></div>';
     }
-    const st = U.ExprBench.currentOf(UI.S.scene, e.id, eq), dr = wbDraft(e.id), cur = st.current;
-    // 选中项只认现在还存在的项（前面的步骤改了式子，旧的选择就作废）
-    const sides = cur.kind === 'eqn' ? { lhs: cur.data.lhs, rhs: cur.data.rhs } : {};
-    dr.sel = (dr.sel || []).filter((k) => {
-      const m = /^(lhs|rhs):(\d+)$/.exec(k);
-      return !!m && +m[2] < wbTerms(sides[m[1]]).length;
-    });
-    let h = '<div class="wb"><h5>式子工作台</h5><div class="wb-now">现在：<b>' + esc(U.ExprBench.showState(st)) + '</b></div>' + fromGeo;
-    if (cur.kind === 'eqn') {
-      h += '<div class="wb-eq">' + wbSide('lhs', sides.lhs, dr) + '<span class="wb-rel">' + esc(cur.data.rel) + '</span>' + wbSide('rhs', sides.rhs, dr) + '</div>';
-      h += '<div class="wb-note">点项就选中（可以多选）。把左边的项拖过等号，松手就是移项；选两个同类项再点「合并同类项」。</div>';
+    const st = U.ExprBench.currentOf(UI.S.scene, e.id, eq), dr = wbDraft(e.id), n = st.steps.length;
+    if (dr.tl !== undefined && (dr.tl < 0 || dr.tl >= n)) { dr.tl = undefined; dr.tlSet = false; }
+    const pv = dr.tl, view = wbView(st, pv), cur = view.current;
+    // 选中项只认现在还存在的项（前面的步骤改了式子，旧的选择就作废）；预览时不改选择
+    if (pv === undefined && cur.kind === 'eqn') {
+      const sides = { lhs: cur.data.lhs, rhs: cur.data.rhs };
+      dr.sel = (dr.sel || []).filter((k) => {
+        const m = /^(lhs|rhs):(\d+)$/.exec(k);
+        return !!m && +m[2] < wbTerms(sides[m[1]]).length;
+      });
     }
+    let h = '<div class="wb"><h5>式子工作台</h5><div class="wb-now" data-wb-now="1">' + wbNowHtml(view) + '</div>' + fromGeo + wbTlHtml(n, pv, dr);
+    h += '<div data-wb-view="1">' + wbViewHtml(cur, dr, pv) + '</div>';
+    // 编辑区（预览时隐藏：只读）
+    h += '<div data-wb-live="1"' + (pv !== undefined ? ' hidden' : '') + '>';
     h += '<div class="wb-h">应用到选中项</div>';
     h += '<div class="wb-apply">' +
       '<label>要动的项（序号，或标签）<input data-wb-field="ref" value="' + esc(dr.ref) + '" placeholder="例如 2"></label>' +
@@ -245,18 +321,16 @@
     h += '<div class="wb-tools">' + U.Workbench.tools(cur, !!st.formula).map((t) => '<button data-wb-tool="' + t.id + '">' + esc(t.label) + '</button>').join('');
     // 因式分解（任务 I）：作用在选的那一边上，两个根填在上面的输入框里
     if (cur.kind === 'eqn') h += '<button data-wb-rule="factor" title="两个根填在上面的输入框里（首项系数是 1）">因式分解</button>';
-    const k = U.Workbench.coef(st);
-    if (k) h += '<button data-wb-act="divide-coef">两边同除以 ' + esc(U.Q.show(k)) + '</button>';
-    h += '</div>';
+    const coef = U.Workbench.coef(view);
+    if (coef) h += '<button data-wb-act="divide-coef">两边同除以 ' + esc(U.Q.show(coef)) + '</button>';
+    h += '</div></div>';
     if (dr.msg) h += '<div class="wb-msg">' + esc(dr.msg) + '</div>';
     const pending = U.Workbench.pending(st);
-    h += '<div class="wb-h">步骤 ' + (pending ? '<button data-wb-bake="1" title="把上次定型之后的步骤折成一步，不能再改；撤销定型可以回到定型前">定型</button> ' : '') + '<button data-wb-graph="1" title="看每一步用了哪一步的结果（只看，不改历史）">看背后的连线</button></div>';
-    h += wbStepRows(st);
-    const sol = U.Workbench.solution(st);
+    h += '<div class="wb-h">步骤 ' + (pending && pv === undefined ? '<button data-wb-bake="1" title="把上次定型之后的步骤折成一步，不能再改；撤销定型可以回到定型前">定型</button> ' : '') + '<button data-wb-graph="1" title="看每一步用了哪一步的结果（只看，不改历史）">看背后的连线</button></div>';
+    h += '<div data-wb-steps="1">' + wbStepRows(st, pv) + '</div>';
     // 几何来的式子：和几何台面的面积对照（读数变了，这里跟着变）
     const note = eq.geo ? U.ExprBench.areaNote(st, area) : null;
     if (note) h += '<div class="' + (note.same === false ? 'wb-msg' : 'wb-note') + '" data-wb-area="' + (note.same === null ? 'open' : note.same ? 'same' : 'off') + '">' + esc(note.text) + '</div>';
-    if (sol.solved) h += '<div class="wb-sol">解：' + esc(U.Form.show(cur.data.lhs)) + ' = ' + esc(U.Q.show(sol.x)) + '</div>';
     return h + '</div>';
   }
 
@@ -507,5 +581,5 @@
     save.after(b);
   })();
 
-  UI.Panels = { wbDraft, renderTop, renderLeft, renderShelf, renderInsp, renderClock, shareDialog, studentDialog, boardDialog, boardOut, dialog, closeDialog, reportHtml, inquiryHtml, wrongDialog, whyDialog, parentDialog, improveDialog, healthDialog, healthOut, reportDialog, authorDialog, initShelfDrag, renderAll() { renderTop(); renderLeft(); renderShelf(); renderInsp(); renderClock(); } };
+  UI.Panels = { wbDraft, wbTl, wbPaint, renderTop, renderLeft, renderShelf, renderInsp, renderClock, shareDialog, studentDialog, boardDialog, boardOut, dialog, closeDialog, reportHtml, inquiryHtml, wrongDialog, whyDialog, parentDialog, improveDialog, healthDialog, healthOut, reportDialog, authorDialog, initShelfDrag, renderAll() { renderTop(); renderLeft(); renderShelf(); renderInsp(); renderClock(); } };
 })(window);
