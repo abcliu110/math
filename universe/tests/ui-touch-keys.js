@@ -119,14 +119,12 @@ async function buildScene(p) {
   await wait(tp, 750);
   const menu = await tp.evaluate(() => { const m = document.querySelector('.ctxmenu'); return m && m.style.display !== 'none' ? [...m.querySelectorAll('[data-ctx]')].map((x) => x.dataset.ctx) : null; });
   T.end(); await wait(tp, 600);
-  ok(!!menu && menu.includes('copy') && menu.includes('del') && menu.includes('insp'), '长按 500 毫秒（手指不动）弹出菜单：' + (menu ? menu.join('、') : '没有菜单'));
+  ok(!!menu && menu.includes('del') && menu.includes('insp'), '长按 500 毫秒（手指不动）弹出菜单：' + (menu ? menu.join('、') : '没有菜单'));
   ok(!!menu && !menu.includes('turn'), '普通卡片的菜单没有“转 90°”（只有块有）');
-  const copyAt = await tp.evaluate(() => { const b2 = document.querySelector('.ctxmenu [data-ctx="copy"]'); if (!b2) return null; const r = b2.getBoundingClientRect(); return { x: (r.left + r.right) / 2, y: (r.top + r.bottom) / 2 }; });
-  if (copyAt) { T.start([{ x: copyAt.x, y: copyAt.y, id: 4 }]); T.end(); await wait(tp, 300); }
-  const cardsAfter = await tp.evaluate(() => Object.keys(UI.S.scene.entities).length);
-  ok(cardsAfter === cardsBefore + 1, '点菜单里的“复制”：器材多了一个（' + cardsBefore + ' → ' + cardsAfter + '）');
-  ok((await tp.evaluate(() => !document.querySelector('.ctxmenu') || document.querySelector('.ctxmenu').style.display === 'none')), '复制以后菜单收起');
-  await G.assertInvariants(tp, '长按菜单：复制之后');
+  ok(!!menu && !menu.includes('copy'), '长按菜单里没有“复制”（避免点错）：' + (menu ? menu.join('、') : ''));
+  await tp.keyboard.press('Escape').catch(() => {}); await wait(tp, 200);
+  ok((await tp.evaluate((n) => Object.keys(UI.S.scene.entities).length === n, cardsBefore)), '器材数量没变（' + cardsBefore + '）');
+  await G.assertInvariants(tp, '长按菜单之后');
 
   // (d) 长按时手指移动了：不弹菜单，按拖动处理（卡片跟着走）
   await tp.evaluate(() => UI.Stage.fit());
