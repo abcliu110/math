@@ -113,18 +113,19 @@
     const lim = (v) => Math.abs(v) <= LIM, V = it.verts.filter((g, i, a) => a.indexOf(g) === i);
     let off = [0, 0], edge = 0;
     if (it.mirror) {
-      edge = Math.max(...V.map((g) => E[g].props.x));
-      if (!V.every((g) => lim(2 * edge - E[g].props.x) && lim(E[g].props.y))) throw { why: '镜像会超出工作区的坐标范围（±' + LIM + '），先把图形挪近中间再镜像' };
+      const xs = V.map((g) => U.Q.parse(E[g].props.x)); edge = xs.reduce((a, b) => (U.Q.cmp(a, b) >= 0 ? a : b));
+      if (!V.every((g) => lim(U.Q.num(U.Q.sub(U.Q.mul(U.Q(2), edge), U.Q.parse(E[g].props.x)))) && lim(U.Q.num(U.Q.parse(E[g].props.y))))) throw { why: '镜像会超出工作区的坐标范围（±' + LIM + '），先把图形挪近中间再镜像' };
     } else {
       const cand = [[2, -2], [-2, -2], [2, 2], [-2, 2], [4, 0], [-4, 0], [0, 4], [0, -4]];
-      const found = cand.find(([dx, dy]) => V.every((g) => lim(E[g].props.x + dx) && lim(E[g].props.y + dy)));
+      const found = cand.find(([dx, dy]) => V.every((g) => lim(U.Q.num(U.Q.parse(E[g].props.x)) + dx) && lim(U.Q.num(U.Q.parse(E[g].props.y)) + dy)));
       if (!found) throw { why: '工作区里放不下一份副本（坐标范围 ±' + LIM + '）' };
       off = found;
     }
     const map = {};
     for (const id of V) {
       const o = E[id].props;
-      const x = it.mirror ? 2 * edge - o.x : o.x + off[0], y = it.mirror ? o.y : o.y + off[1];
+      const px = U.Q.parse(o.x), py = U.Q.parse(o.y);
+      const x = U.Q.store(it.mirror ? U.Q.sub(U.Q.mul(U.Q(2), edge), px) : U.Q.add(px, U.Q(off[0]))), y = U.Q.store(it.mirror ? py : U.Q.add(py, U.Q(off[1])));
       const n = A({ t: 'add', type: E[id].type, x: 0, y: 0, props: { x, y, mark: nextPointName(S.scene) } });
       A({ t: 'put', id: n.id, parent: ws.id, slot: 'items' }); map[id] = n.id;
     }

@@ -25,13 +25,13 @@
         pointShape: 'circle',
         essence: ['E1', 'E3'],
         label: '自由点', prefix: '点', group: '图形', grades: [4, 9],
-        props: { x: { type: 'int', label: 'x', default: 0, min: -10, max: 10 }, y: { type: 'int', label: 'y', default: 0, min: -10, max: 10 }, mark: { type: 'text', label: '名字', default: '' } },
+        props: { x: { type: 'rat', label: 'x', default: 0, min: -10, max: 10 }, y: { type: 'rat', label: 'y', default: 0, min: -10, max: 10 }, mark: { type: 'text', label: '名字', default: '' } },
         outputs: { p: { dim: null, kind: 'fig', label: '点' } },
         icon: () => K.circle(32, 22, 5, { fill: 'var(--ink)' }),
         size: () => [120, 70],
-        compute: (c) => ({ p: fig(ptFig({ x: Q(c.props.x), y: Q(c.props.y) }, c.ent.id)) }),
-        badge: (c) => (c.props.mark || '') + '(' + c.props.x + ', ' + c.props.y + ')',
-        draw: (c) => K.text(c.w / 2, c.h / 2 + 4, (c.props.mark ? c.props.mark + ' ' : '') + '(' + c.props.x + ', ' + c.props.y + ')', { size: 14, weight: 700 }),
+        compute: (c) => ({ p: fig(ptFig({ x: Q.parse(c.props.x), y: Q.parse(c.props.y) }, c.ent.id)) }),
+        badge: (c) => (c.props.mark || '') + '(' + Q.show(Q.parse(c.props.x)) + ', ' + Q.show(Q.parse(c.props.y)) + ')',
+        draw: (c) => K.text(c.w / 2, c.h / 2 + 4, (c.props.mark ? c.props.mark + ' ' : '') + '(' + Q.show(Q.parse(c.props.x)) + ', ' + Q.show(Q.parse(c.props.y)) + ')', { size: 14, weight: 700 }),
       },
 
       // ---------------- 连线：两点连成线段 ----------------

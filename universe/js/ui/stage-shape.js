@@ -35,7 +35,7 @@
     const srcs = uniq(UI.S.scene.links.filter((l) => l.to === ent.id && E[l.from] && SG.roleOf(E[l.from]) === 'point').map((l) => l.from));
     const verts = [];
     for (const p of f.pts) {
-      const g = srcs.find((id) => Q.eq(Q(E[id].props.x), p.x) && Q.eq(Q(E[id].props.y), p.y));
+      const g = srcs.find((id) => Q.eq(Q.parse(E[id].props.x), p.x) && Q.eq(Q.parse(E[id].props.y), p.y));
       if (!g) return null;
       verts.push(g);
     }
@@ -212,13 +212,13 @@
         if (d.mode === 'pscale') { pick = { f, nv: [] }; break; }
         const nv = d.targets.map((t) => ({ t, x: Q.add(A.x, Q.mul(f, Q.sub(Q(t.x0), A.x))), y: Q.add(A.y, Q.mul(f, Q.sub(Q(t.y0), A.y))) }));
         const inRange = (v) => { const x = Q.num(v.x), y = Q.num(v.y); return x >= v.t.lo[0] && x <= v.t.hi[0] && y >= v.t.lo[1] && y <= v.t.hi[1]; };
-        const why = !nv.every((v) => Q.isInt(v.x) && Q.isInt(v.y)) ? '会得到分数坐标（自由点只存整数）' : !nv.every(inRange) ? '会超出坐标范围（±' + L.COORD_MAX + '）' : '';
+        const why = !nv.every(inRange) ? '会超出坐标范围（±' + L.COORD_MAX + '）' : '';
         if (!why) { pick = { f, nv }; break; }
         if (i === 0) miss = why;
       }
       if (pick) {
         d.f = pick.f;
-        if (d.mode === 'sc') for (const v of pick.nv) { put(v.t.id, v.t.kx, Q.num(v.x)); put(v.t.id, v.t.ky, Q.num(v.y)); }
+        if (d.mode === 'sc') for (const v of pick.nv) { put(v.t.id, v.t.kx, Q.store(v.x)); put(v.t.id, v.t.ky, Q.store(v.y)); }
         else E[d.id].props.scale = Q.show(Q.mul(Q.parse(d.s0), pick.f));
         tip = '放缩 ' + Q.show(pick.f) + ' 倍';
         if (miss) tip = Q.show(order[0]) + ' 倍' + miss + '，停在 ' + Q.show(pick.f) + ' 倍';
@@ -308,7 +308,7 @@
     const c = { x: Math.round((Math.min(...bx) + Math.max(...bx)) / 2), y: Math.round((Math.min(...by) + Math.max(...by)) / 2) };
     const ops = ids.map((id) => { const x = E[id].props.x, y = E[id].props.y; return { id, nx: c.x - (y - c.y), ny: c.y + (x - c.x) }; });
     if (ops.some((o) => Math.abs(o.nx) > L.COORD_MAX || Math.abs(o.ny) > L.COORD_MAX)) return { ok: false, why: '转过去会超出工作区的坐标范围（±' + L.COORD_MAX + '），先把图形挪近中间再转' };
-    const list = []; for (const o of ops) { list.push({ id: o.id, k: 'x', v: o.nx }); list.push({ id: o.id, k: 'y', v: o.ny }); }
+    const list = []; for (const o of ops) { list.push({ id: o.id, k: 'x', v: Q.store(o.nx) }); list.push({ id: o.id, k: 'y', v: Q.store(o.ny) }); }
     return UI.Intent.run('params', { ops: list });
   }
   // 块和自由点图形的坐标（求值结果，Q 转成数），块没算出来就是 null

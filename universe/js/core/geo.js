@@ -163,7 +163,8 @@
   // 约束器材（声明 constraint: true，见 packs/geo.js 的 gcon）：kind 0 定长（a、b 的距离的平方 = len²），kind 1 直角（b 处 BA ⊥ BC）。
   // 自由点只存整数坐标，所以只在整数格点上找满足约束的位置：拖动时取离鼠标最近的那个，改长度时取离原来最近的那个。
   // 找不到就不动（说明原因）。界面只调用这里的函数，不按器材名判断。
-  const pos = (scene, id) => ({ x: scene.entities[id].props.x, y: scene.entities[id].props.y });
+  // 近似坐标（数字）：给只要大概位置的计算用；精确的计算用 U.Q.parse(props.x)。分数坐标存成 "n/d" 字符串，这里转成数字
+  const pos = (scene, id) => ({ x: U.Q.num(U.Q.parse(scene.entities[id].props.x)), y: U.Q.num(U.Q.parse(scene.entities[id].props.y)) });
   function locksOf(scene) {
     const E = scene.entities, out = [];
     for (const e of Object.values(E)) {

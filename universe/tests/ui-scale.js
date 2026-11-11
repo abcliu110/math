@@ -1,7 +1,7 @@
 /* node tests/ui-scale.js —— 几何工作区：选中图形后拖四角的缩放把手（真实鼠标和键盘）。
  *  1. 选中多边形（三角形、矩形）后，四角都有把手，拖一个角：图形按比例变大（2 倍）；
  *  2. 偶数边的矩形拖到 1/2：图形变小，坐标仍是整数；撤销一次回到原样；
- *  3. 奇数边的矩形拖到 1/2：结果会是分数坐标，图形不动，提示说明原因（不假装变了）；
+ *  3. 奇数边的矩形拖到 1/2：结果是分数坐标（有理数），图形真的缩小了，提示说明是 1/2 倍；
  *  4. 拖到 2 倍，但超出坐标范围（±10）：提示说超出范围，图形不会变成越界的坐标；
  *  5. 控制台 0 报错。
  * 需要 playwright（NODE_PATH 指向它的 node_modules）。 */
@@ -88,7 +88,7 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   await p.keyboard.press('Control+z'); await p.waitForTimeout(250);
   ok(sameAs(await coords(), rBefore), '撤销一次，矩形回到原来的大小');
 
-  console.log('3. 奇数边矩形：拖到 1/2 会得到分数坐标，图形不动，提示说明');
+  console.log('3. 奇数边矩形：拖到 1/2 得到分数坐标（有理数），图形真的缩小，提示说明');
   await p.evaluate(() => { UI.S.wsDraw = null; UI.S.wsSel = []; UI.App.act({ t: 'clear' }); UI.App.act({ t: 'add', type: 'gworkspace', x: 0, y: 0 }); });
   await p.waitForTimeout(150);
   await addShape('frect');
@@ -96,8 +96,8 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   ok(await selectShape(), '选中奇数边的矩形');
   const oBefore = await coords();
   const r3 = await dragCorner(0.5);
-  ok(sameAs(await coords(), oBefore), '拖到 1/2：图形没有变成分数坐标，也没有乱动');
-  ok(r3.tip.includes('分数'), '提示说明这个比例会得到分数坐标：' + JSON.stringify(r3.tip));
+  ok(!sameAs(await coords(), oBefore), '拖到 1/2：图形真的缩小了（分数坐标）');
+  ok(r3.tip.includes('1/2'), '提示说明是 1/2 倍：' + JSON.stringify(r3.tip));
 
   console.log('4. 拖到 2 倍但超出坐标范围（±10）：提示超出，不写入越界的坐标');
   await p.evaluate(() => { UI.S.wsDraw = null; UI.S.wsSel = []; UI.App.act({ t: 'clear' }); UI.App.act({ t: 'add', type: 'gworkspace', x: 0, y: 0 }); });

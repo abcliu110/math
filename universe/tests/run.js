@@ -75,7 +75,7 @@ t('旧存档 v1–v4 都能读，升到 v6，实体补空的 ui（视图按自�
   ];
   for (const o of olds) {
     const s = W.load(JSON.stringify(o));
-    eq(s.v, 6, '升到 v6（v6 起块的平移可以是分数）'); eq(s.entities.e1.ui, {}, '实体补空的 ui');
+    eq(s.v, W.CURRENT_V, '升到当前版本（v6 起块的平移可以是分数，v7 起自由点坐标可以是分数）'); eq(s.entities.e1.ui, {}, '实体补空的 ui');
     W.evaluate(s);
   }
 });
@@ -1999,7 +1999,7 @@ t('v6 迁移：v5 台面的块平移，整数保持数字，其余写法统一�
     b3: blk('b3', 0.75, '3/4'),
   } };
   const s = W.load(JSON.stringify(old));
-  eq(s.v, 6, '升到 v6');
+  eq(s.v, W.CURRENT_V, '升到当前版本');
   eq([s.entities.b1.props.dx, s.entities.b1.props.dy], [3, 0], '整数平移不变（仍是普通数字）');
   eq([s.entities.b2.props.dx, s.entities.b2.props.dy], ['1/2', 0], '{n, d} 写法统一成 "1/2"');
   eq([s.entities.b3.props.dx, s.entities.b3.props.dy], ['3/4', '3/4'], '非整数的数精确成 3/4，字符串不变');

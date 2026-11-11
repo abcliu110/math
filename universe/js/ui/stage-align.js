@@ -18,7 +18,7 @@
   const pdist = (p, a, b) => { const dx = b.x - a.x, dy = b.y - a.y, L = dx * dx + dy * dy, t = L ? Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / L)) : 0; return Math.hypot(p.x - a.x - t * dx, p.y - a.y - t * dy); };
   const gapSeg = (a, b, c, d) => Math.min(pdist(a, c, d), pdist(b, c, d), pdist(c, a, b), pdist(d, a, b));
   const edgesOf = (f) => (f.type === 'polygon' ? f.pts.map((_, k) => [k, (k + 1) % f.pts.length]) : f.type === 'segment' ? [[0, 1]] : []);
-  const gptPt = (id) => { const e = UI.S.scene.entities[id]; return { x: Q(e.props.x), y: Q(e.props.y) }; };
+  const gptPt = (id) => { const e = UI.S.scene.entities[id]; return { x: Q.parse(e.props.x), y: Q.parse(e.props.y) }; };
   // 工作区里点的名字（学生看到的 A、B……）：按 id 取，从画布上的点图形（标签）来；和 stage-draw 的 constructsOf 用同一个办法
   function pointNames(ws) {
     const m = {};
