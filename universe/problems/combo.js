@@ -8,7 +8,7 @@
   // 1. 分式加法：两张分数卡 → 分式运算 → 分式读数 → 读数器
   P.push({
     id: 'combo-fraction-sum', essence: ['E3', 'E2'], title: '1/2 + 1/3 等于多少？用两张分数卡和一台读数器接起来看', grade: 6, domain: '数与运算', points: ['6.12'],
-    topics: ['分数加法', '异分母分数'], alias: ['分数'], hook: '两张分数卡分别是 1/2 和 1/3。把它们接进分式运算，再用读数器看结果。接对了，读数器上会出现一个数。',
+    topics: ['分数加法', '异分母分数'], alias: ['综合', '分数'], hook: '两张分数卡分别是 1/2 和 1/3。把它们接进分式运算，再用读数器看结果。接对了，读数器上会出现一个数。',
     shelf: ['fracnum', 'ratop', 'ratread', 'meter'],
     build: mk({ ents: [
       E('fracnum', 60, 80, 'f1', { num: 1, den: 2 }),
@@ -26,7 +26,7 @@
   // 2. 代入：代数式 → 代入器 → 读数器
   P.push({
     id: 'combo-substitute', essence: ['E8', 'E3'], title: '把 x = 3 代入 x²+1，结果是几？', grade: 7, domain: '关系', points: ['7.2'],
-    topics: ['代入求值'], alias: ['代数式'], hook: '代数式卡上写着 x^2+1。代入器把 x 换成 3，读数器显示结果。',
+    topics: ['代入求值'], alias: ['综合', '代数式'], hook: '代数式卡上写着 x^2+1。代入器把 x 换成 3，读数器显示结果。',
     shelf: ['algebra', 'subst', 'meter'],
     build: mk({ ents: [
       E('algebra', 60, 120, 'p', { text: 'x^2+1' }),
@@ -42,7 +42,7 @@
   // 3. 方程组：两个方程 → 方程台 → 方程组台 → 读数器
   P.push({
     id: 'combo-system-interval', essence: ['E5', 'E8'], title: '2x+y=7 和 x−y=2 一起解：x 是几？', grade: 8, domain: '关系', points: ['8.11'],
-    topics: ['二元一次方程组'], alias: ['方程组'], hook: '把两个方程分别用方程台接好，再交给方程组台。方程组台给出 x、y，读数器显示 x。',
+    topics: ['二元一次方程组'], alias: ['综合', '方程组'], hook: '把两个方程分别用方程台接好，再交给方程组台。方程组台给出 x、y，读数器显示 x。',
     shelf: ['algebra', 'eqdesk', 'system2', 'numline_iv', 'meter'],
     build: mk({ ents: [
       E('algebra', 40, 60, 'a1', { text: '2*x+y' }),
@@ -64,7 +64,7 @@
   // 4. 平移不改变面积：正方形 → 块（平移）→ 面积读数 → 读数器；圆的面积单独读
   P.push({
     id: 'combo-move-area', essence: ['E9', 'E3'], title: '一个正方形平移以后，面积还一样吗？', grade: 7, domain: '图形', points: ['5.8'],
-    topics: ['平移不改变面积', '圆的面积'], alias: ['图形变换'], hook: '正方形 s=2 接进块，块向右平移 3。面积读数接在块后面，看平移后的面积。圆的面积也读出来。',
+    topics: ['平移不改变面积', '圆的面积'], alias: ['综合', '图形变换'], hook: '正方形 s=2 接进块，块向右平移 3。面积读数接在块后面，看平移后的面积。圆的面积也读出来。',
     shelf: ['frect', 'gpiece', 'garea', 'fcirc', 'meter'],
     build: mk({ ents: [
       E('frect', 60, 80, 'sq', { s: 2, ox: 0, oy: 0 }),
@@ -83,7 +83,7 @@
   // 5. 不变量与证据检查：不变量追踪器 → 证据检查器
   P.push({
     id: 'combo-invariant-check', essence: ['E4', 'E9'], title: '每次加 0，这个数是不变量吗？不变量追踪器能下结论吗？用证据检查器看', grade: 9, domain: '关系', points: ['9.12'],
-    topics: ['不变量', '证明'], alias: ['证明'], hook: '不变量追踪器记录每一步的变化，但它只看不证：证据等级是 0。证据检查器接上它，判断证据够不够。',
+    topics: ['不变量', '证明'], alias: ['综合', '证明'], hook: '不变量追踪器记录每一步的变化，但它只看不证：证据等级是 0。证据检查器接上它，判断证据够不够。',
     shelf: ['invariant', 'proofcheck'],
     build: mk({ ents: [
       E('invariant', 60, 120, 'inv', { change: 0, times: 4, start: 5 }),
@@ -99,7 +99,7 @@
   // 6. 二次函数：一个函数 → 顶点的 x、y 读出来；与坐标轴的交点是符号点，摆在台面上一起看
   P.push({
     id: 'combo-parabola-vertex', essence: ['E2', 'E5'], title: 'y = x²−2x−3：顶点的横坐标是几？', grade: 9, domain: '函数', points: ['9.12'],
-    topics: ['二次函数的顶点', '与坐标轴的交点'], alias: ['抛物线'], hook: '抛物线 y=x²−2x−3。函数器读出顶点的 x、y；精确的顶点、与 x 轴的交点、与 y 轴的交点摆在旁边对照。',
+    topics: ['二次函数的顶点', '与坐标轴的交点'], alias: ['综合', '抛物线'], hook: '抛物线 y=x²−2x−3。函数器读出顶点的 x、y；精确的顶点、与 x 轴的交点、与 y 轴的交点摆在旁边对照。',
     shelf: ['quad', 'quad-vertex', 'quad-xint', 'quad-yint', 'meter'],
     build: mk({ ents: [
       E('quad', 60, 120, 'q', { a: 1, b: -2, c: -3 }),
@@ -119,7 +119,7 @@
   // 7. 三角形与四边形的面积比较：图形 → 面积 → 比较器 / 比例器；两个三角形是否全等
   P.push({
     id: 'combo-shapes-compare', essence: ['E9', 'E3'], title: '哪一个三角形的面积大？它们全等吗？', grade: 7, domain: '图形', points: ['5.8'],
-    topics: ['三角形面积', '全等'], alias: ['面积'], hook: '直角三角形和等腰三角形各自的面积读出来，比较器判断谁大；图形关系器判断两个三角形是不是全等。',
+    topics: ['三角形面积', '全等'], alias: ['综合', '面积'], hook: '直角三角形和等腰三角形各自的面积读出来，比较器判断谁大；图形关系器判断两个三角形是不是全等。',
     shelf: ['frtri', 'fisotri', 'fscalene', 'compare', 'figrel', 'ratio', 'meter'],
     build: mk({ ents: [
       E('frtri', 60, 60, 'rt', { s: 2, ox: 0, oy: 0 }),
@@ -141,7 +141,7 @@
   // 8. 八种四边形：面积并排比较，比例器看它们的比
   P.push({
     id: 'combo-quad-family', essence: ['E9', 'E2'], title: '八种四边形：谁的面积是正方形的两倍？', grade: 8, domain: '图形', points: ['5.8'],
-    topics: ['四边形面积', '图形分类'], alias: ['四边形'], hook: '正方形、平行四边形、菱形、梯形、等腰梯形、直角梯形、筝形……每一种都可以拖动。它们的面积读出来，比例器看它们的比。',
+    topics: ['四边形面积', '图形分类'], alias: ['综合', '四边形'], hook: '正方形、平行四边形、菱形、梯形、等腰梯形、直角梯形、筝形……每一种都可以拖动。它们的面积读出来，比例器看它们的比。',
     shelf: ['fsquare', 'fpgram', 'frhomb', 'ftrap', 'fisotrap', 'frtrap', 'fkite', 'fquad4', 'ratio', 'meter'],
     build: mk({ ents: [
       E('fsquare', 40, 60, 'sq', { s: 2, ox: 0, oy: 0 }),
@@ -166,7 +166,7 @@
   // 9. 分数与图形面积的凑数：tenframe 的数 → 读数器
   P.push({
     id: 'combo-tenframe-count', essence: ['E3', 'E1'], title: '十格阵里放了 3 个筹码，读数器上是几？', grade: 1, domain: '数与运算', points: ['4.9'],
-    topics: ['凑十', '数的组成'], alias: ['数数'], hook: '十格阵已经放了 3 个筹码。把十格阵接到读数器上，读出里面有几个。',
+    topics: ['凑十', '数的组成'], alias: ['综合', '数数'], hook: '十格阵已经放了 3 个筹码。把十格阵接到读数器上，读出里面有几个。',
     shelf: ['tenframe', 'counter', 'meter'],
     build: () => {
       const W = U.World, s = W.blank();
@@ -185,7 +185,7 @@
   // 10. 运算器与代数式：代数式 → 代入器 → 代数读数器；表达式读数
   P.push({
     id: 'combo-expr-read', essence: ['E8', 'E4'], title: '一个式子和一个方程：式子读数是几？方程有没有解？', grade: 8, domain: '关系', points: ['8.11'],
-    topics: ['代数式读数', '方程的解'], alias: ['式子'], hook: '式子工作台处理式子；代数式读数器读出一个代数式在某个 x 下的值。两个方程用方程台接好后，式子工作台判断它们是否同解。',
+    topics: ['代数式读数', '方程的解'], alias: ['综合', '式子'], hook: '式子工作台处理式子；代数式读数器读出一个代数式在某个 x 下的值。两个方程用方程台接好后，式子工作台判断它们是否同解。',
     shelf: ['exprbench', 'exprread', 'eqdesk', 'algebra', 'meter'],
     build: mk({ ents: [
       E('algebra', 40, 80, 'p', { text: 'x+1' }),
@@ -203,7 +203,7 @@
   // 11. 整数运算：除法、位数、最大公约数与幂
   P.push({
     id: 'combo-number-chain', essence: ['E3', 'E2'], title: '17 ÷ 5 的商和余数；2024 的数字和；12 和 18 的最大公约数；2 的 3 次方', grade: 5, domain: '数与运算', points: ['5.4'],
-    topics: ['带余除法', '数位', '最大公约数', '乘方'], alias: ['整数'], hook: '四条小路各接一台器材：带余除法给商和余数，数位板数数字，数的性质找最大公约数，乘方算幂。读数器把结果显示出来。',
+    topics: ['带余除法', '数位', '最大公约数', '乘方'], alias: ['综合', '整数'], hook: '四条小路各接一台器材：带余除法给商和余数，数位板数数字，数的性质找最大公约数，乘方算幂。读数器把结果显示出来。',
     shelf: ['divmod', 'digits', 'numtheory', 'power', 'num', 'meter'],
     build: mk({ ents: [
       E('num', 40, 60, 'n17', { n: 17 }), E('num', 40, 130, 'n5', { n: 5 }),
@@ -230,7 +230,7 @@
   // 12. 百分数与分数条：比、百分数、分数条、估算
   P.push({
     id: 'combo-percent-bar', essence: ['E3', 'E9'], title: '3 是 4 的百分之几？用分数条画出来，再估一估', grade: 6, domain: '数与运算', points: ['6.12'],
-    topics: ['百分数', '分数的意义'], alias: ['百分数'], hook: '百分数器算出 3 是 4 的百分之几；分数条把这个比例画成格子；估算器检查你猜的答案离多远。',
+    topics: ['百分数', '分数的意义'], alias: ['综合', '百分数'], hook: '百分数器算出 3 是 4 的百分之几；分数条把这个比例画成格子；估算器检查你猜的答案离多远。',
     shelf: ['num', 'percent', 'fracbar', 'estimate', 'meter'],
     build: mk({ ents: [
       E('num', 40, 60, 'a', { n: 3 }), E('num', 40, 140, 'b', { n: 4 }),
@@ -252,7 +252,7 @@
   // 13. 直线、反比例、圆与符号点：直线 → 代入器 → 读数；反比例 → 读数；圆与直线；点的旋转
   P.push({
     id: 'combo-line-inverse-rotate', essence: ['E2', 'E5'], title: 'y = 2x + 1 在 x = 3 时是几？反比例 6/x 在 x = 2 时是几？点 (3,2) 绕原点转 90° 去哪里？', grade: 7, domain: '函数', points: ['7.6'],
-    topics: ['一次函数', '反比例', '旋转'], alias: ['函数'], hook: '直线器画 y=2x+1，代入器取 x=3 的值；反比例器算 6/x；直线与圆判断关系；点的旋转器把点绕原点转 90°。',
+    topics: ['一次函数', '反比例', '旋转'], alias: ['综合', '函数'], hook: '直线器画 y=2x+1，代入器取 x=3 的值；反比例器算 6/x；直线与圆判断关系；点的旋转器把点绕原点转 90°。',
     shelf: ['line', 'at', 'inverse-prop', 'circle-line', 'pair-pos', 'rotate-about', 'meter'],
     build: mk({ ents: [
       E('line', 40, 60, 'ln', { k: 2, b: 1, range: 5 }),
@@ -277,7 +277,7 @@
   // 14. 图形测量：长方形 → 变换 → 测量；面积不变
   P.push({
     id: 'combo-measure-transform', essence: ['E9', 'E3'], title: '一个长方形旋转 90° 之后，面积和周长变了吗？', grade: 6, domain: '图形', points: ['5.8'],
-    topics: ['图形变换', '面积与周长'], alias: ['图形测量'], hook: '长方形经过变换器旋转 90°，再接进测量器。读出面积和周长，和原来比一比。',
+    topics: ['图形变换', '面积与周长'], alias: ['综合', '图形测量'], hook: '长方形经过变换器旋转 90°，再接进测量器。读出面积和周长，和原来比一比。',
     shelf: ['frect', 'xform', 'figmeasure', 'meter'],
     build: mk({ ents: [
       E('frect', 40, 80, 'fr', { s: 2, ox: 0, oy: 0 }),
@@ -297,7 +297,7 @@
   // 15. 数据分析：数据表 → 拟合 → 预测；统计量与两路表
   P.push({
     id: 'combo-data-fit', essence: ['E5', 'E9'], title: '每分钟跑 60 米：拟合出直线，预测 5 分钟跑多远？', grade: 9, domain: '统计与概率', points: ['9.12'],
-    topics: ['拟合', '预测', '统计量'], alias: ['数据'], hook: '数据表记录时间和路程；拟合器找出一条直线，预测器用它推 5 分钟的路程；统计器算平均数，两路表算总数。',
+    topics: ['拟合', '预测', '统计量'], alias: ['综合', '数据'], hook: '数据表记录时间和路程；拟合器找出一条直线，预测器用它推 5 分钟的路程；统计器算平均数，两路表算总数。',
     shelf: ['datatable', 'column', 'scatter', 'fit', 'predict', 'data', 'stats', 'twoway', 'line', 'meter'],
     build: mk({ ents: [
       E('datatable', 40, 60, 'dt', { data: '1,60;2,120;3,180', xname: '时间', yname: '路程' }),
@@ -326,7 +326,7 @@
   // 16. 循环与掷骰：记忆器加 1 循环，骰子的结果直方图
   P.push({
     id: 'combo-loop-dice', essence: ['E1', 'E4'], title: '记忆器每拍加 1，走 5 拍后是几？骰子掷 5 次，直方图怎样？', grade: 4, domain: '时间与变化', points: ['4.9'],
-    topics: ['递推', '随机'], alias: ['循环'], hook: '记忆器的输出 +1 再送回记忆器，每走一拍数就涨 1。骰子的结果送进直方图，掷得越多，图越能说明问题。',
+    topics: ['递推', '随机'], alias: ['综合', '循环'], hook: '记忆器的输出 +1 再送回记忆器，每走一拍数就涨 1。骰子的结果送进直方图，掷得越多，图越能说明问题。',
     shelf: ['memory', 'op', 'num', 'dice', 'hist', 'meter'],
     build: mk({ ents: [
       E('memory', 40, 60, 'mem', { init: 0, hold: 1, wrap: 0 }),
