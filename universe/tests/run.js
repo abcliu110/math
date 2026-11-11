@@ -3137,5 +3137,39 @@ console.log('分步定型（bake，§10.5.6 第 5 步）：前面的步骤折成
   });
 }
 
+console.log('示例菜单（problems/examples-data.js，由 tools/gen-examples.js 生成）');
+{
+  const EX = U.EXAMPLES || [];
+  t('示例数据是最新的（node tools/gen-examples.js --check）', () => {
+    const r = require('child_process').spawnSync(process.execPath, [path.join(root, 'tools', 'gen-examples.js'), '--check'], { encoding: 'utf8' });
+    eq(r.status, 0, r.stdout + r.stderr);
+  });
+  t('示例：每个都能读回来、能求值；综合示例器材多、线多', () => {
+    truthy(EX.length >= 21, '示例太少：' + EX.length);
+    for (const ex of EX) {
+      const s = W.load(U.JSON.parse(ex.scene)); W.evaluate(s);
+      truthy(Object.keys(s.entities).length >= 1, ex.id + ' 是空的');
+      if (ex.kind === '综合') { truthy(Object.keys(s.entities).length >= 12, ex.id + ' 器材少于 12 个'); truthy(s.links.length >= 12, ex.id + ' 连线少于 12 条'); }
+    }
+  });
+  t('示例：卡片互相不重叠（布局整齐）', () => {
+    for (const ex of EX) {
+      const s = W.load(U.JSON.parse(ex.scene));
+      const R = Object.values(s.entities).map((e) => { const z = U.types[e.type].size(e); return { id: e.id, x: e.x, y: e.y, w: e.w > 0 ? e.w : z[0], h: e.h > 0 ? e.h : z[1] }; });
+      for (let i = 0; i < R.length; i++) for (let j = i + 1; j < R.length; j++) {
+        const a = R[i], b = R[j];
+        if (a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h) throw new Error(ex.id + '：' + a.id + ' 和 ' + b.id + ' 重叠');
+      }
+    }
+  });
+  t('示例：每个可见器材都至少在一个示例里用到', () => {
+    const used = new Set();
+    for (const ex of EX) for (const e of Object.values(U.JSON.parse(ex.scene).entities)) used.add(e.type);
+    const packTypes = new Set(Object.values(U.packs).flatMap((p) => p.types));   // 只算器材包里的器材（测试里临时定义的宏不算）
+    const missing = Object.keys(U.types).filter((id) => packTypes.has(id) && !U.types[id].hidden && !used.has(id));
+    eq(missing, [], '这些器材没有出现在任何示例里：' + missing.join('、'));
+  });
+}
+
 console.log('\n' + pass + ' 通过，' + fail + ' 失败');
 process.exit(fail ? 1 : 0);

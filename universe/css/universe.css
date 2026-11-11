@@ -628,3 +628,8 @@ body.rail-l #lrail:hover, body.rail-r #rrail:hover { background: #dbeafe; color:
 #wsfocus .wsf-hd b { white-space: nowrap; flex: none; }
 #wsfocus .wsf-hd .fbar-tools { flex-wrap: wrap; row-gap: 4px; }
 @media (max-width: 1500px) { #wsfocus .wsf-hd .wsf-tip { display: none; } }
+/* 示例菜单（菜单 → 示例）的列表 */
+.ex-list { max-height: 62vh; overflow: auto; }
+.it.ex { display: block; }
+.it.ex .chip { margin-left: 8px; }
+.ex-sub { color: var(--txt3); font-size: 12px; margin-top: 4px; font-weight: 400; }

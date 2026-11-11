@@ -581,6 +581,21 @@
   }
 
   // 班级看板（老师）：粘贴学生的结果码，一行一个，按题汇总达成率和常踩的坑
+  // 示例菜单：列出做好的综合示例，点一个就打开它的结果
+  function examplesDialog() {
+    const list = U.EXAMPLES || [];
+    let h = '<h3>示例</h3><p style="color:var(--txt3);margin-top:0">每个示例是做好的结果：打开就能看到接好的线和读数，也可以动手改。</p><div class="plist ex-list">';
+    for (const kind of ['综合', '小示例']) {
+      const items = list.filter((e) => (e.kind || '小示例') === kind);
+      if (!items.length) continue;
+      h += '<div class="grp">' + (kind === '综合' ? '综合示例（很多器材一起用）' : '小示例（几台器材配合）') + '</div>';
+      items.forEach((e) => {
+        h += '<div class="it ex" data-ex="' + esc(e.id) + '"><span class="tt">' + esc(e.title) + '</span>' + (e.grade ? '<span class="chip">' + e.grade + ' 年级</span>' : '') +
+          (e.hook ? '<div class="ex-sub">' + esc(e.hook) + '</div>' : '') + '</div>';
+      });
+    }
+    dialog(h + '</div><div class="btnrow"><button class="btn" id="dlg-close">关闭</button></div>');
+  }
   function boardDialog() {
     dialog('<h3>班级看板</h3><p style="color:var(--txt3);margin-top:0">把学生交回的结果码粘贴进来，一行一个。</p>' +
       '<textarea id="cb-codes" placeholder="每行一个结果码" class="ta-codes"></textarea>' +
@@ -613,5 +628,5 @@
     save.after(b);
   })();
 
-  UI.Panels = { wbDraft, wbTl, wbPaint, renderTop, renderLeft, renderShelf, shelfMaybe, renderInsp, renderClock, shareDialog, studentDialog, boardDialog, boardOut, dialog, closeDialog, reportHtml, inquiryHtml, wrongDialog, whyDialog, parentDialog, improveDialog, healthDialog, healthOut, reportDialog, authorDialog, initShelfDrag, renderAll() { renderTop(); renderLeft(); renderShelf(); renderInsp(); renderClock(); } };
+  UI.Panels = { wbDraft, wbTl, wbPaint, renderTop, renderLeft, renderShelf, shelfMaybe, renderInsp, renderClock, shareDialog, studentDialog, boardDialog, boardOut, dialog, closeDialog, examplesDialog, reportHtml, inquiryHtml, wrongDialog, whyDialog, parentDialog, improveDialog, healthDialog, healthOut, reportDialog, authorDialog, initShelfDrag, renderAll() { renderTop(); renderLeft(); renderShelf(); renderInsp(); renderClock(); } };
 })(window);

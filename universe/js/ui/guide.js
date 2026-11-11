@@ -32,5 +32,7 @@
   }
   // 台面每次渲染后调用：有几何工作区、没看过、本页也还没弹过，就弹出
   function check(hasWs) { if (hasWs && !shownNow && !seen()) open(); }
-  UI.Guide = { open, close, check, STEPS, KEY, seen };
+  // 打开示例这类“别人已经摆好的台面”时用：这一页里不自动弹引导（不写本地存储，以后自己新建工作区时照常弹）
+  function suppress() { shownNow = true; }
+  UI.Guide = { open, close, check, suppress, STEPS, KEY, seen };
 })(window);

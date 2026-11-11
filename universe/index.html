@@ -15,7 +15,7 @@
   <span class="ptitle" id="ptitle"></span>
   <div class="seg" id="modes"><button data-mode="free">自由探究</button><button data-mode="practice">练习</button><button data-mode="exam">考试</button></div>
   <div class="dd"><button class="tbtn" id="menubtn">菜单</button>
-    <div class="ddm" id="menu"><button id="themebtn" title="深色 / 浅色；默认跟随系统">外观：跟随系统</button><button id="contrastbtn" aria-pressed="false" title="颜色对比度更高（两套主题的文字都 ≥ 4.5:1）">高对比度：关</button><button id="animbtn" aria-pressed="true" title="步骤之间的过渡动画（约 0.2 秒）；关掉后步骤立刻换">动画：开</button><button id="youngbtn" aria-pressed="false" title="字体和按钮更大，工作区只留最常用的工具">低年级模式：关</button><button data-m="save">保存台面到文件</button><button data-m="load">从文件载入台面</button><button data-m="share">分享台面…</button><button data-m="author">出一道凑数题…</button><button data-m="student">我来出题…</button><button data-m="board">班级看板…</button><button data-m="myexport">导出我的题</button><button data-m="myimport">导入题目</button><button data-m="wrong">错题本</button><button data-m="report">学习报告</button><button data-m="parent">家长周报</button><button data-m="improve">改进清单</button><button data-m="health">知识点体检表</button><button data-m="guide">几何工作区引导</button><button data-m="export">导出学习记录</button><button data-m="clearlog">清除学习记录</button></div></div>
+    <div class="ddm" id="menu"><button data-m="examples" title="几台器材配合着用的完整结果：打开就能看到接好的线和读数">示例</button><button id="themebtn" title="深色 / 浅色；默认跟随系统">外观：跟随系统</button><button id="contrastbtn" aria-pressed="false" title="颜色对比度更高（两套主题的文字都 ≥ 4.5:1）">高对比度：关</button><button id="animbtn" aria-pressed="true" title="步骤之间的过渡动画（约 0.2 秒）；关掉后步骤立刻换">动画：开</button><button id="youngbtn" aria-pressed="false" title="字体和按钮更大，工作区只留最常用的工具">低年级模式：关</button><button data-m="save">保存台面到文件</button><button data-m="load">从文件载入台面</button><button data-m="share">分享台面…</button><button data-m="author">出一道凑数题…</button><button data-m="student">我来出题…</button><button data-m="board">班级看板…</button><button data-m="myexport">导出我的题</button><button data-m="myimport">导入题目</button><button data-m="wrong">错题本</button><button data-m="report">学习报告</button><button data-m="parent">家长周报</button><button data-m="improve">改进清单</button><button data-m="health">知识点体检表</button><button data-m="guide">几何工作区引导</button><button data-m="export">导出学习记录</button><button data-m="clearlog">清除学习记录</button></div></div>
   <span class="sp"></span>
   <button class="tbtn pri" id="submit" style="display:none">交卷</button>
   <button class="tbtn" id="undo">撤销</button><button class="tbtn" id="redo">重做</button>
@@ -222,6 +222,7 @@
 <script src="problems/whatif.js"></script>
 <script src="problems/guessrule.js"></script>
 <script src="problems/combo.js"></script>
+<script src="problems/examples-data.js"></script>
 <script src="js/ui/howto.js"></script>
 <script src="js/ui/demos.js"></script>
 <script src="js/ui/state.js"></script>

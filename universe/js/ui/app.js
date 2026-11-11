@@ -9,7 +9,7 @@
 
   const S = (UI.S = {
     scene: W.blank(), D: null, sel: null, selLink: null, view: { x: 0, y: 0, z: 1 }, mode: 'free', problem: null, run: null,
-    undo: [], redo: [], tab: 'lab', inspOpen: false, help: {}, demo: {}, helpSeen: {}, helpAuto: true, glow: [], showSig: true, q1: '', freeScene: null,
+    undo: [], redo: [], tab: 'lab', inspOpen: false, help: {}, demo: {}, helpSeen: {}, helpAuto: true, glow: [], showSig: true, q1: '', freeScene: null, example: null,
     // 几何工作区（§10.5）：选中的对象（稳定名字）、移动工具的参数、面板消息
     // 工作区的坐标范围、图层开关、专注都是视图状态，放在工作区实体的 ui 字段里（见 js/ui/state.js）
     wsSel: [], wsArgs: { dx: '0', dy: '0' }, wsMsg: '',
@@ -205,13 +205,14 @@
   function undo() { if (!S.undo.length) return; S.redo.push(snap()); restore(S.undo.pop()); saveFree(); }
   function redo() { if (!S.redo.length) return; S.undo.push(snap()); restore(S.redo.pop()); saveFree(); }
 
-  function saveFree() { if (S.mode === 'free') lsSet(FREE_KEY, W.save(S.scene)); }
+  function saveFree() { if (S.mode === 'free' && !S.example) lsSet(FREE_KEY, W.save(S.scene)); }   // 打开示例时不覆盖学生自己的自由台面
 
   // ---------- 开题 / 切模式 ----------
   function openProblem(id, mode) {
     const p = U.problemById(id); if (!p) return;
     UI.Panels.closeDialog();
-    if (S.mode === 'free') S.freeScene = full();
+    if (S.mode === 'free' && !S.example) S.freeScene = full();
+    S.example = null;
     S.problem = p; S.mode = mode || 'practice'; S.scene = p.build(); S.run = J.start(p, S.mode);
     S.session = U.Session.start(p, S.mode, S.scene);
     S.undo = []; S.redo = []; S.sel = null; S.selLink = null; S.inspOpen = false; S.tab = 'steps'; S.glow = [];
@@ -234,12 +235,27 @@
     return givenCache.ids;
   }
   function openFree() {
+    S.example = null;
     S.mode = 'free'; S.problem = null; S.run = null; S.session = null; Ev.ctx = {};
     let sc = null; try { sc = S.freeScene ? U.JSON.parse(S.freeScene) : U.JSON.parse(lsGet(FREE_KEY)); } catch (e) { sc = null; }
     try { S.scene = sc ? W.load(sc) : W.blank(); } catch (e) { S.scene = W.blank(); }
     S.undo = []; S.redo = []; S.sel = null; S.selLink = null; S.glow = []; S.tab = 'lab'; S.wsDraw = null;
     S.D = W.evaluate(S.scene); UI.Stage.fit(); refresh(); UI.Panels.renderShelf();
     say('自由探究：从右边拖器材到台面，拖蓝点连线，点 ▶ 让世界动起来', '', 4200);
+  }
+  // 示例菜单：打开一个做好的综合示例（接好线、读数已经出来）。场景来自 problems/examples-data.js（tools/gen-examples.js 生成）。
+  // 示例按自由模式显示（可以直接改），但不存进学生的自由台面：打开前先把学生自己的自由台面留好。
+  function openExample(id) {
+    const ex = (U.EXAMPLES || []).find((e) => e.id === id); if (!ex) return;
+    UI.Panels.closeDialog();
+    if (S.mode === 'free' && !S.example) S.freeScene = full();
+    S.example = ex.id; S.mode = 'free'; S.problem = null; S.run = null; S.session = null; Ev.ctx = {};
+    try { S.scene = W.load(U.JSON.parse(ex.scene)); } catch (e) { S.scene = W.blank(); }
+    S.undo = []; S.redo = []; S.sel = null; S.selLink = null; S.glow = []; S.tab = 'lab'; S.wsDraw = null; S.wsSel = [];
+    Object.keys(S.scene.entities).forEach((eid) => { S.help[eid] = false; });   // 示例里不弹“怎么玩”的说明卡，免得盖住布局
+    if (UI.Guide && UI.Guide.suppress) UI.Guide.suppress();   // 也不弹几何工作区的新手引导
+    S.D = W.evaluate(S.scene); UI.Stage.fit(); refresh(); UI.Panels.renderShelf();
+    say('示例：' + ex.title + '（做好的结果，可以直接看，也可以动手改；“自由探究”回到你自己的台面）', '', 7000);
   }
   function setMode(m) {
     if (m === 'free') return openFree();
@@ -426,6 +442,7 @@
       if (m.dataset.m === 'share') UI.Panels.shareDialog();
       if (m.dataset.m === 'student') UI.Panels.studentDialog();
       if (m.dataset.m === 'board') UI.Panels.boardDialog();
+      if (m.dataset.m === 'examples') UI.Panels.examplesDialog();
       if (m.dataset.m === 'author') UI.Panels.authorDialog();
       if (m.dataset.m === 'myexport') download('我的题.json', U.Author.exportJson());
       if (m.dataset.m === 'myimport') { const i = document.createElement('input'); i.type = 'file'; i.accept = '.json'; i.onchange = () => { const r = new FileReader(); r.onload = () => { try { const n = U.Author.importJson(r.result); UI.Panels.renderLeft(); say('导入了 ' + n + ' 道题，在「实验库 → 我的题」里', 'good'); } catch (e) { say('导入失败：' + e.message, 'bad', 4000); } }; r.readAsText(i.files[0]); }; i.click(); }
@@ -573,6 +590,7 @@
     $('#dlg').addEventListener('change', (e) => { const t = e.target; if (t.dataset && t.dataset.reason && t.value) Ev.push('reason', { id: t.dataset.reason, label: t.value }); });
     $('#dlg').addEventListener('click', (e) => {
       const t = e.target;
+      const exb = t.closest && t.closest('[data-ex]'); if (exb) { openExample(exb.dataset.ex); return; }
       if (t.id === 'au-ok') {
         const givens = $('#au-givens').value.split(/[,，\s]+/).filter(Boolean).map((x) => { try { const q = U.Q.parse(x); return { n: Number(q.n), d: Number(q.d) }; } catch (e) { return null; } });
         const msg = $('#au-msg'); const show = (w) => { msg.textContent = w; msg.style.display = 'block'; };
@@ -667,6 +685,6 @@
     setInterval(saveSession, 2000); G.addEventListener('pagehide', saveSession);
     offerResume();
   }
-  UI.App = { tx, act, actMany, build, preview, snapshot, afterMove, removeEntity, askDelete, askDeps, askClear, clockAct, openProblem, openFree, setMode, say, undo, redo, stepOnce, refresh, persistView, givenIds };
+  UI.App = { tx, act, actMany, build, preview, snapshot, afterMove, removeEntity, askDelete, askDeps, askClear, clockAct, openProblem, openFree, openExample, setMode, say, undo, redo, stepOnce, refresh, persistView, givenIds };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })(window);
