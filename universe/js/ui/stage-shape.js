@@ -242,8 +242,9 @@
       if (d.mode === 'rot') {
         const a = th - th0, cs = Math.cos(a), sn = Math.sin(a), r100 = (v) => Math.round(v * 100) / 100;
         const nv = d.targets.map((t) => { const dx = t.x0 - c.x, dy = t.y0 - c.y; return { t, x: r100(c.x + dx * cs - dy * sn), y: r100(c.y + dx * sn + dy * cs) }; });
+        const deg = Math.round(a * 180 / Math.PI);
         if (nv.some((v) => Math.abs(v.x) > L.COORD_MAX || Math.abs(v.y) > L.COORD_MAX)) tip = '转到这个角度会超出坐标范围（±' + L.COORD_MAX + '），先不动';
-        else { for (const v of nv) { put(v.t.id, v.t.kx, v.x); put(v.t.id, v.t.ky, v.y); } tip = '转 ' + Math.round(a * 180 / Math.PI) + '°'; }
+        else { for (const v of nv) { put(v.t.id, v.t.kx, v.x); put(v.t.id, v.t.ky, v.y); } tip = '转 ' + deg + '°'; }
       } else {
         const k = Math.round((th - th0) / (Math.PI / 2));
         d.k = k;
