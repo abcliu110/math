@@ -80,14 +80,6 @@
       if (P.max !== undefined && r > P.max) return { ok: false, why: '「' + P.label + '」最大是 ' + P.max };
       return { ok: true, v: U.Q.store(q) };
     }
-    // 有理数（分数坐标等）：整数、"n/d" 或小数都行；存规范形式（整数是普通数字，分数是 "n/d"，见 U.Q.store）
-    if (P.type === 'rat') {
-      let q;
-      try { q = U.Q.parse(x); } catch (err) { return { ok: false, why: '要填整数或分数，比如 2/3' }; }
-      if (P.min !== undefined && U.Q.cmp(q, U.Q.parse(P.min)) < 0) return { ok: false, why: '「' + P.label + '」最小是 ' + P.min };
-      if (P.max !== undefined && U.Q.cmp(q, U.Q.parse(P.max)) > 0) return { ok: false, why: '「' + P.label + '」最大是 ' + P.max };
-      return { ok: true, v: U.Q.store(q) };
-    }
     let v;
     if (x && typeof x === 'object' && 'n' in x) v = U.Q.num(x); else v = Number(x);
     if (!Number.isFinite(v)) return { ok: false, why: '要填一个数' };

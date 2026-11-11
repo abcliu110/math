@@ -81,7 +81,7 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
 
   console.log('7. 工具条：复制、旋转、翻转、删除不用先选图形');
   const fresh = async () => { await p.evaluate(() => { UI.S.wsDraw = null; UI.S.wsSel = []; UI.App.act({ t: 'clear' }); UI.App.act({ t: 'add', type: 'gworkspace', x: 0, y: 0 }); }); await p.waitForTimeout(200); };
-  const bbox = () => p.evaluate(() => { const E = UI.S.scene.entities, g = Object.values(E).filter((e) => e.type === 'gpt'); const xs = g.map((e) => e.props.x), ys = g.map((e) => e.props.y); return { w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys), n: g.length }; });
+  const bbox = () => p.evaluate(() => { const E = UI.S.scene.entities, g = Object.values(E).filter((e) => e.type === 'gpt'); const xs = g.map((e) => U.Q.num(U.Q.parse(e.props.x))), ys = g.map((e) => U.Q.num(U.Q.parse(e.props.y))); return { w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys), n: g.length }; });
   const bar = (a) => p.locator('.wsmini [data-fbar="' + a + '"]').first().click();
   const polyPt = (i) => p.evaluate((i) => { const el = [...document.querySelectorAll('svg.wsbody path[data-pick]')][i]; const r = el.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; }, i);
   await fresh(); await addShape('frtri');

@@ -289,7 +289,7 @@
     }
     if (fi.kind === 'pts' && fi.f.type !== 'point') {
       const q = v === 1 ? 'x' : 'y', pts = fi.f.pts, mn = minQ(pts.map((p) => p[q])), mx = maxQ(pts.map((p) => p[q]));
-      const list = uniq(fi.verts).map((g) => ({ id: g, k: q, v: Q.num(Q.sub(Q.add(mn, mx), Q(UI.S.scene.entities[g].props[q]))) }));
+      const list = uniq(fi.verts).map((g) => ({ id: g, k: q, v: Q.store(Q.sub(Q.add(mn, mx), Q.parse(UI.S.scene.entities[g].props[q]))) }));
       return UI.Intent.run('params', { ops: list });
     }
   }
@@ -304,10 +304,10 @@
   // 旋转：自由点围成的图形，每个顶点绕外框中心（取整数）逆时针转 90°，坐标仍是整数；转出 ±10 的范围就不转，说明原因
   function figRotate(fi) {
     const E = UI.S.scene.entities, ids = uniq(fi.verts), pts = fi.f.pts;
-    const bx = pts.map((p) => Q.num(p.x)), by = pts.map((p) => Q.num(p.y));
-    const c = { x: Math.round((Math.min(...bx) + Math.max(...bx)) / 2), y: Math.round((Math.min(...by) + Math.max(...by)) / 2) };
-    const ops = ids.map((id) => { const x = E[id].props.x, y = E[id].props.y; return { id, nx: c.x - (y - c.y), ny: c.y + (x - c.x) }; });
-    if (ops.some((o) => Math.abs(o.nx) > L.COORD_MAX || Math.abs(o.ny) > L.COORD_MAX)) return { ok: false, why: '转过去会超出工作区的坐标范围（±' + L.COORD_MAX + '），先把图形挪近中间再转' };
+    // 外框中心用精确的有理数（不取整），转过去的坐标也是精确的
+    const c = { x: Q.div(Q.add(minQ(pts.map((p) => p.x)), maxQ(pts.map((p) => p.x))), Q(2)), y: Q.div(Q.add(minQ(pts.map((p) => p.y)), maxQ(pts.map((p) => p.y))), Q(2)) };
+    const ops = ids.map((id) => { const x = Q.parse(E[id].props.x), y = Q.parse(E[id].props.y); return { id, nx: Q.add(c.x, Q.sub(c.y, y)), ny: Q.add(c.y, Q.sub(x, c.x)) }; });
+    if (ops.some((o) => Math.abs(Q.num(o.nx)) > L.COORD_MAX || Math.abs(Q.num(o.ny)) > L.COORD_MAX)) return { ok: false, why: '转过去会超出工作区的坐标范围（±' + L.COORD_MAX + '），先把图形挪近中间再转' };
     const list = []; for (const o of ops) { list.push({ id: o.id, k: 'x', v: Q.store(o.nx) }); list.push({ id: o.id, k: 'y', v: Q.store(o.ny) }); }
     return UI.Intent.run('params', { ops: list });
   }
