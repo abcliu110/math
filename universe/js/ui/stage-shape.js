@@ -76,7 +76,7 @@
     }
     if (kind === 'rot') {
       const cf = { x: (Q.num(qb.x0) + Q.num(qb.x1)) / 2, y: (Q.num(qb.y0) + Q.num(qb.y1)) / 2 };
-      const c = polyLike ? { x: Math.round(cf.x), y: Math.round(cf.y) } : cf;   // 图形的旋转中心取整数，旋转后仍然是整数坐标
+      const c = cf;   // 旋转中心是精确的中心；任意角度时坐标取到 1/100
       if (fi.kind === 'piece') return startShape(ev, wb, wsId, 'prot', [], { id: fi.ent.id, t0: fi.ent.props.turn, a0: SG.approxOf(fi.ent), A0: SG.totalDeg(fi.ent), c, qb });
       if (fi.kind === 'place') return startShape(ev, wb, wsId, 'lrot', [], { id: fi.ent.id, t0: fi.ent.props.turn, c, qb });
       if (polyLike) return startShape(ev, wb, wsId, 'rot', uniq(fi.verts).map((g) => tgt(g, 'x', 'y')), { c, qb });
@@ -236,18 +236,20 @@
       if (A % 90) E[d.id][SG.APPROX] = A % 90; else delete E[d.id][SG.APPROX];
       tip = '转到 ' + (A % 90 ? '≈' : '') + A + '°';
     } else if (d.mode === 'rot' || d.mode === 'lrot') {
-      // 旋转：角度吸附到 90°，逆时针为正（和摆放器材的 turn 一致）
+      // 自由点图形：任意角度（逆时针为正），每个顶点的坐标取到 1/100；转出 ±COORD_MAX 的范围就不动
+      // 块（lrot）：角度吸附到 90°，和摆放器材的 turn 一致
       const c = d.c, th0 = Math.atan2(d.start.y - c.y, d.start.x - c.x), th = Math.atan2(wp.y - c.y, wp.x - c.x);
-      const k = Math.round((th - th0) / (Math.PI / 2));
-      d.k = k;
       if (d.mode === 'rot') {
-        for (const t of d.targets) {
-          let x = t.x0, y = t.y0;
-          for (let i = 0; i < modT(k); i++) { const dx = x - c.x, dy = y - c.y; x = c.x - dy; y = c.y + dx; }
-          put(t.id, t.kx, x); put(t.id, t.ky, y);
-        }
-      } else E[d.id].props.turn = modT(d.t0 + k);
-      tip = '转 ' + k * 90 + '°';
+        const a = th - th0, cs = Math.cos(a), sn = Math.sin(a), r100 = (v) => Math.round(v * 100) / 100;
+        const nv = d.targets.map((t) => { const dx = t.x0 - c.x, dy = t.y0 - c.y; return { t, x: r100(c.x + dx * cs - dy * sn), y: r100(c.y + dx * sn + dy * cs) }; });
+        if (nv.some((v) => Math.abs(v.x) > L.COORD_MAX || Math.abs(v.y) > L.COORD_MAX)) tip = '转到这个角度会超出坐标范围（±' + L.COORD_MAX + '），先不动';
+        else { for (const v of nv) { put(v.t.id, v.t.kx, v.x); put(v.t.id, v.t.ky, v.y); } tip = '转 ' + Math.round(a * 180 / Math.PI) + '°'; }
+      } else {
+        const k = Math.round((th - th0) / (Math.PI / 2));
+        d.k = k;
+        E[d.id].props.turn = modT(d.t0 + k);
+        tip = '转 ' + k * 90 + '°';
+      }
     }
     d.out = out;
     S.D = W.evaluate(S.scene);
