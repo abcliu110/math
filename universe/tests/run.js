@@ -2691,6 +2691,53 @@ t('J4 生成是幂等的：对生成结果再生成，内容不变', () => {
   eq(again ? again.loader : 'x', r ? r.loader : 'y');
 });
 
+// §10.5.9 第 10 条：出题人控制。题目用字段声明器材、工具、能不能改名、能不能删题目给的图形；界面不按器材名硬编码。
+t('出题人控制：没写新字段时的默认值（工具不设白名单，题目给的图形可改名、可删）', () => {
+  const r = U.problemRules({ id: 'x', title: 'x', milestones: [] });
+  eq(r.rename, true); eq(r.deleteGiven, true); eq(r.shelfOnly, false); eq(r.tools, null);
+});
+t('出题人控制：tools 只能写工作区工具的 id，写错了 lint 报错并指出是哪一个', () => {
+  const base = U.problems.find((p) => p.id === 'geo-median-area');
+  const bad = U.problemLint(Object.assign({}, base, { tools: ['seg', 'nope'] })).errors;
+  truthy(bad.some((m) => m.includes('nope')), '应报错并指出 nope，实际：' + JSON.stringify(bad));
+  eq(U.problemLint(Object.assign({}, base, { tools: ['seg', 'cut'] })).errors.length, 0, 'seg、cut 是工作区工具，lint 应通过');
+  truthy(U.problemLint(Object.assign({}, base, { tools: 'seg' })).errors.length > 0, 'tools 要是数组');
+});
+t('出题人控制：shelfOnly 要是布尔值，并且要和 shelf 一起写', () => {
+  const base = U.problems.find((p) => p.id === 'geo-median-area');
+  truthy(U.problemLint(Object.assign({}, base, { shelfOnly: 'yes' })).errors.some((m) => m.includes('shelfOnly')), 'shelfOnly 不是布尔值应报错');
+  truthy(U.problemLint(Object.assign({}, base, { shelfOnly: true, shelf: undefined })).errors.some((m) => m.includes('shelfOnly')), '没有 shelf 却写 shelfOnly 应报错');
+  eq(U.problemLint(Object.assign({}, base, { shelfOnly: true })).errors.length, 0, 'shelfOnly: true 配 shelf 应通过');
+});
+t('出题人控制：rename、deleteGiven 要是布尔值', () => {
+  const base = U.problems.find((p) => p.id === 'geo-median-area');
+  truthy(U.problemLint(Object.assign({}, base, { rename: 0 })).errors.some((m) => m.includes('rename')), 'rename 不是布尔值应报错');
+  truthy(U.problemLint(Object.assign({}, base, { deleteGiven: 'no' })).errors.some((m) => m.includes('deleteGiven')), 'deleteGiven 不是布尔值应报错');
+});
+t('出题人控制：problemToolAllowed 只看 tools 白名单，没有白名单就都允许', () => {
+  eq(U.problemToolAllowed({}, 'cut'), true);
+  eq(U.problemToolAllowed({ tools: ['seg'] }, 'cut'), false);
+  eq(U.problemToolAllowed({ tools: ['seg'] }, 'seg'), true);
+});
+t('出题人控制：problemGivenIds 就是题目 build 出来的器材 id（学生加的不算）', () => {
+  const p = U.problemById('geo-teacher-median');
+  const ids = U.problemGivenIds(p);
+  eq([...ids].sort().join(','), Object.keys(p.build().entities).sort().join(','), '题目给的器材 id');
+  eq(U.problemGivenIds(null).size, 0, '没有题目时没有题目给的图形');
+});
+t('出题人控制：示例题 geo-teacher-median 声明了器材架、工具白名单、不许改名、不许删题目给的图形', () => {
+  const p = U.problemById('geo-teacher-median');
+  truthy(p, '示例题要存在');
+  eq(p.shelfOnly, true); eq(p.rename, false); eq(p.deleteGiven, false);
+  eq(p.tools.slice().sort().join(','), 'cut,mid,seg', '工具只留连线、中点和剪');
+  const r = U.problemRules(p);
+  eq(r.rename, false); eq(r.deleteGiven, false); eq(r.shelfOnly, true);
+  eq(U.problemLint(p).errors.length, 0, '示例题 lint 通过');
+});
+t('出题人控制：题库里所有题目的 lint 没有错误（含新字段）', () => {
+  const r = U.problemLintAll(U.problems);
+  eq(Object.keys(r.errors).length, 0, '有错误的题：' + Object.keys(r.errors).join('、'));
+});
 // ---- 约束锁定与尺寸驱动（§10.5.9 第 1、2 条）----
 console.log('约束锁定与尺寸驱动（§10.5.9 第 1、2 条）');
 // 场景：定长约束接着两个点（kind 0），或直角约束接着三个点（kind 1，b 为顶点）。约束器材 gcon 的输入口是 a、b、c

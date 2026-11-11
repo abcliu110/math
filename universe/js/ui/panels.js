@@ -96,6 +96,7 @@
     const S = UI.S, q = ($('#q2') && $('#q2').value || '').trim();
     const allow = S.problem ? S.problem.shelf : null;
     const wb = S.problem && S.problem.workbench || 'graph';
+    const R = U.problemRules(S.problem);
     let h = '';
     for (const g of U.GROUPS) {
       const ts = Object.values(U.types).filter((t) => !t.hidden && U.onWorkbenchShelf(t, wb) && t.group === g && (!q || (t.label + t.alias.join('') + g).includes(q)));
@@ -103,6 +104,7 @@
       h += '<div class="grp">' + esc(g) + '</div><div class="tiles">';
       ts.forEach((t) => {
         const off = allow && !allow.includes(t.id), glow = S.glow && S.glow.includes(t.id);
+        if (off && R.shelfOnly) return;   // 出题人控制（§10.5.9 第 10 条）：shelfOnly 时题目 shelf 之外的器材直接不列
         h += '<div class="tile' + (off ? ' off' : '') + (glow ? ' glow' : '') + '"' + (off ? ' title="本题不用这个器材，不能拖到台面上"' : '') + ' data-type="' + t.id + '"><svg viewBox="0 0 64 44">' + t.icon() + '</svg><div class="nm">' + esc(t.label) + '</div></div>';
       });
       h += '</div>';
@@ -115,7 +117,9 @@
     const S = UI.S, box = $('#insp'), e = S.sel && S.scene.entities[S.sel];
     if (!e || !S.inspOpen) { box.classList.remove('open'); return; }
     const d = U.types[e.type], dd = S.D[e.id];
-    let h = '<h4><input id="nm" value="' + esc(e.name) + '" maxlength="12"><button class="tbtn" data-close="1">✕</button></h4>';
+    // 题目给的图形不许改名时（§10.5.9 第 10 条），名字输入框禁用，说明写在提示里
+    const lockName = !U.problemRules(S.problem).rename && UI.App.givenIds().has(String(e.id));
+    let h = '<h4><input id="nm" value="' + esc(e.name) + '" maxlength="12"' + (lockName ? ' disabled title="题目给的，不许改名"' : '') + '><button class="tbtn" data-close="1">✕</button></h4>';
     for (const k of Object.keys(d.props)) {
       if (d.props[k].hidden) continue;
       if (U.roleOf(e) === 'piece' && k === 'name') continue;   // 块的名字就是上面的名字框（§10.5.10）

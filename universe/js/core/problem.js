@@ -2,7 +2,9 @@
  * 不检查内容好不好，只检查结构对不对、哪些写法需要解释。
  *
  * 字段：id、title（必须）；points、alias、level、rung、shelf、workbench、hook、scene、predict、
- *       milestones（必须）、traps、goal、explain、variant、params、exam、why、claim、evidence
+ *       milestones（必须）、traps、goal、explain、variant、params、exam、why、claim、evidence；
+ *       出题人控制（§10.5.9 第 10 条）：shelfOnly（器材架只列 shelf，其它隐藏）、tools（工作区工具白名单）、
+ *       rename、deleteGiven（能不能改名、删题目给的图形，默认都能）
  * workbench：打开题目时进入的工作台（见 U.WORKBENCHES）。默认 'graph'（关系画布）；'geometry' 的器材架只列几何工作台的器材
  * 里程碑 / 陷阱的条件：when（数据形式，首选）或 test（函数，兜底；必须写 why_code 说明原因）
  * level：core 核心 / trap 陷阱 / stretch 延伸（深到奥数，结论必须走到证明）
@@ -78,6 +80,21 @@
       }
     }
 
+    // 出题人控制（§10.5.9 第 10 条）：器材架只列 shelf（shelfOnly 时其它隐藏，否则变灰）；工具白名单；能不能改名、删题目给的图形
+    if (p.shelfOnly !== undefined) {
+      if (typeof p.shelfOnly !== 'boolean') err('shelfOnly 要是 true 或 false');
+      else if (p.shelfOnly && !Array.isArray(p.shelf)) err('shelfOnly: true 要和 shelf（器材列表）一起写');
+    }
+    if (p.tools !== undefined) {
+      if (!Array.isArray(p.tools) || !p.tools.every((x) => typeof x === 'string')) err('tools 要是工作区工具 id 的数组');
+      else {
+        const known = U.workspaceToolIds();
+        p.tools.forEach((t) => { if (!known.includes(t)) err('tools 里的 ' + t + ' 不是工作区工具（只认 ' + known.join('、') + '）'); });
+      }
+    }
+    if (p.rename !== undefined && typeof p.rename !== 'boolean') err('rename 要是 true 或 false（能不能改名）');
+    if (p.deleteGiven !== undefined && typeof p.deleteGiven !== 'boolean') err('deleteGiven 要是 true 或 false（能不能删题目给的图形）');
+
     // 数据形式的新条件（任务 I）：built / form / steps，只认下面列出的字段
     const NEW = {
       built: { fields: ['rule', 'of'] },
@@ -144,6 +161,29 @@
       checkCond(t, '陷阱');
     });
     return { errors, warnings, fnCount, condCount };
+  };
+
+  // 出题人控制的读法（§10.5.9 第 10 条）：没写字段就是默认值，老题的行为不变
+  U.problemRules = (p) => ({
+    rename: !p || p.rename !== false,
+    deleteGiven: !p || p.deleteGiven !== false,
+    shelfOnly: !!(p && p.shelfOnly),
+    tools: p && Array.isArray(p.tools) ? p.tools.slice() : null,
+  });
+  // 这个工作区工具对学生可用吗（没有 tools 白名单就都可用）
+  U.problemToolAllowed = (p, id) => !p || !Array.isArray(p.tools) || p.tools.includes(id);
+  // 所有工作区工具的 id（器材声明的 workspace.tools）
+  U.workspaceToolIds = () => {
+    const ids = [];
+    for (const d of Object.values(U.types)) for (const t of (d.workspace && d.workspace.tools) || []) if (!ids.includes(t.id)) ids.push(t.id);
+    return ids;
+  };
+  // 题目给的图形：题目 build 出来的器材 id（学生之后加的器材编号都更大，不会混进来）
+  U.problemGivenIds = (p) => {
+    const out = new Set();
+    if (!p || typeof p.build !== 'function') return out;
+    try { Object.keys(p.build().entities).forEach((id) => out.add(id)); } catch (e) { /* 建不出来就当没有题目给的图形 */ }
+    return out;
   };
 
   // 对整个题库检查：错误按题列出；函数形式占比超过上限时给出警告

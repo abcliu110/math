@@ -96,6 +96,7 @@ async function checkDist() {
   if (!runScript('tests/ui-digit2.js', 'tests/ui-digit2.js', pwEnv)) bail();     // D8 遗留：竖式每一列的数字池（0–9，在列的正下方）、真实鼠标拖数字、拖退位和进位到格子上、拖错有提示不写入
   if (!runScript('tests/ui-data2.js', 'tests/ui-data2.js', pwEnv)) bail();       // D8 遗留：数据图表台每个数据格的数字盘（0–9、小数点、负号、⌫、清空），只点不打字，录入、画图、拟合
   if (!runScript('tests/ui-arith2.js', 'tests/ui-arith2.js', pwEnv)) bail();   // H4 遗留（真实鼠标）：凑整（点选、拒绝说明）、两位数乘两位数（部分积、相加、撤销）、减法负数结果（−24）
+  if (!runScript('tests/ui-teacher.js', 'tests/ui-teacher.js', pwEnv)) bail(); // §10.5.9 第 10 条：出题人控制（题目声明器材架和工具白名单；不许改名、不许删题目给的图形；真实鼠标和键盘）
   if (!runScript('tests/ui-measure.js', 'tests/ui-measure.js', pwEnv)) bail();   // §10.5.9 第 6 条：尺子、量角器（真实鼠标拖把手、吸附、精确读数）、标注（加、撤销、存档读回、删除）、不改图形
   if (!runScript('tests/ui-align10.js', 'tests/ui-align10.js', pwEnv)) bail();  // §10.5.9 第 3 条：多选对齐与等距分布工具条（真实鼠标）：八个按钮、每个一步撤销、精确的边缘与中心、等距的整数间距与说明
   if (!runScript('tests/ui-constraint.js', 'tests/ui-constraint.js', pwEnv)) bail();   // §10.5.9 第 1、2 条：约束锁定（真实鼠标锁长、拖动被锁的端点、锁直角、拖动直角顶点）、尺寸驱动（双击长度输入数字，撤销）

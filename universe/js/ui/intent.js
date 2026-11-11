@@ -16,6 +16,28 @@
     if (e && e.parent) return A({ t: 'take', id });
   }
 
+  // 出题人控制（§10.5.9 第 10 条）：题目不许改名 / 不许删题目给的图形，由题目的字段声明（rename、deleteGiven）。
+  // 返回原因（字符串）表示不行；没有原因就是可以。界面不按器材名判断，只看题目给的图形的 id。
+  const givenHit = (ids) => { const g = UI.App.givenIds(); return ids.filter((id) => g.has(String(id)) && UI.S.scene.entities[id]); };
+  function renameBlock(id) {
+    if (U.problemRules(UI.S.problem).rename || !givenHit([id]).length) return null;
+    return '「' + UI.S.scene.entities[id].name + '」是题目给的，题目不许改名';
+  }
+  // 删除：题目给的图形（或删了会一起删掉的依赖、里面的东西）不许删。keep 为 all 时里面的东西也会一起删
+  function deleteBlock(id, keep) {
+    if (U.problemRules(UI.S.problem).deleteGiven) return null;
+    const kids = keep === 'all' ? W.childrenOf(UI.S.scene, id).map((k) => k.id) : [];
+    const hit = givenHit([id].concat(W.dependentsOf(UI.S.scene, id), kids));
+    return hit.length ? '「' + UI.S.scene.entities[hit[0]].name + '」是题目给的图形，题目不许删除' : null;
+  }
+  // 清空台面：台面上有题目给的图形、又不许删时，整个清空不行
+  function clearBlock() {
+    if (U.problemRules(UI.S.problem).deleteGiven) return null;
+    return givenHit(Object.keys(UI.S.scene.entities)).length ? '台面上有题目给的图形，题目不许删除，所以不能清空' : null;
+  }
+  // 工作区工具：题目 tools 白名单之外的工具不许用（界面上也不显示）
+  const toolBlock = (tool) => (U.problemToolAllowed(UI.S.problem, tool) ? null : '本题不用这个工具');
+
   // 吸附到构造点（V4）：在工作区里建它的构造器材（con.type），两个输入口（con.wire）接上 con.ids 的自由点，放进工作区。
   // 已经有同样接法的器材（同一工作区）就直接用它，不重复建。整串在调用它的那一个手势里，是一个撤销项。
   function buildConstruct(A, ws, con) {
@@ -162,6 +184,8 @@
       pre(p) {
         if (p.link) { UI.S.selLink = null; return null; }
         if (p.step) return null;
+        const blocked = deleteBlock(p.id, p.keep);
+        if (blocked) { UI.App.say(blocked, 'bad', 3800); return { ok: false, why: blocked }; }
         // V5：别的器材依赖它（连线从它出发）→ 先列出受影响的器材，用户确认后才删（删除与依赖一起删）
         if (!p.confirmed) {
           const deps = W.dependentsOf(UI.S.scene, p.id);
@@ -204,12 +228,18 @@
     // 工作区的工具（连线、剪、对齐、移动……）：选中的对象交给世界的 tool 动作
     tool: {
       label: 'tool',
-      fn(A, p) { return A({ t: 'tool', ws: p.ws, tool: p.tool, picks: p.picks, args: p.args }); },
+      fn(A, p) {
+        const blocked = toolBlock(p.tool);
+        if (blocked) throw { why: blocked };
+        return A({ t: 'tool', ws: p.ws, tool: p.tool, picks: p.picks, args: p.args });
+      },
     },
     // 点两下画线（连线、剪）：建点（不是顶点的才建）、建线段；剪的模式再建剪刀、剪开。整串是一步
     draw: {
       label: 'draw',
       fn(A, p) {
+        const blocked = toolBlock(p.cut ? 'cut' : 'seg');
+        if (blocked) throw { why: blocked };
         const S = UI.S, ws = S.scene.entities[p.ws];
         // 端点：自由点（顶点）直接用；构造点（吸附到的中点等）建它的器材，用它的输出；都不是就新建一个自由点
         const ends = [p.a, p.b].map((q) => {
@@ -344,6 +374,8 @@
     rename: {
       label: 'rename',
       fn(A, p) {
+        const blocked = renameBlock(p.id);
+        if (blocked) throw { why: blocked };
         const r = A({ t: 'rename', id: p.id, name: p.name });
         if (p.alsoProp) A({ t: 'set', id: p.id, k: p.alsoProp, v: p.name });   // 块：名字同时写到器材名和「名字」属性
         return r;
@@ -370,6 +402,8 @@
       label: 'clear',
       pre(p) {
         if (p.confirmed) return null;
+        const blocked = clearBlock();
+        if (blocked) { UI.App.say(blocked, 'bad', 3800); return { ok: false, why: blocked }; }
         UI.App.askClear(Object.keys(UI.S.scene.entities).length, () => run('clear', { confirmed: true }));
         return { ok: true, pending: true };
       },
