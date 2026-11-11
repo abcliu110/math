@@ -49,6 +49,8 @@ async function dragPath(page, from, to) {
 
 // 器材架瓦片：滚到可见后取它的位置
 async function tileBox(page, type) {
+  // 器材架收成了窄条（专注模式默认收起，2026-11）：像用户一样先点窄条展开
+  if (await page.evaluate(() => document.body.classList.contains('rail-r'))) { await page.click('#rrail'); await page.waitForTimeout(150); }
   const tile = page.locator('.tile[data-type="' + type + '"]').first();
   await tile.scrollIntoViewIfNeeded();
   const box = await tile.boundingBox();

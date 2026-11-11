@@ -3,7 +3,7 @@
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const root = path.join(__dirname, '..');
 const fsx = require('fs'), pk = (d) => fsx.readdirSync(path.join(root, d)).filter((f) => f.endsWith('.js')).sort().map((f) => d + '/' + f);
-const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/ratio.js', 'js/core/form.js', 'js/core/predict.js', 'js/core/eqn.js', 'js/core/seq.js', 'js/core/table.js', 'js/core/figure.js', 'js/core/geo.js', 'js/core/convert.js', 'js/core/registry.js', 'js/core/rules.js', 'js/core/rules-exec.js', 'js/core/workbench.js', 'js/core/digits.js', 'js/core/databench.js', 'js/core/deduce.js', 'js/core/geo-rules.js', 'js/core/world.js', 'js/core/measure.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/curriculum.js', 'js/core/coverage.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
+const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/ratio.js', 'js/core/form.js', 'js/core/predict.js', 'js/core/eqn.js', 'js/core/seq.js', 'js/core/rulelib.js', 'js/core/game.js', 'js/core/prooflib.js', 'js/core/table.js', 'js/core/figure.js', 'js/core/geo.js', 'js/core/convert.js', 'js/core/registry.js', 'js/core/rules.js', 'js/core/rules-exec.js', 'js/core/workbench.js', 'js/core/digits.js', 'js/core/databench.js', 'js/core/deduce.js', 'js/core/geo-rules.js', 'js/core/world.js', 'js/core/measure.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/curriculum.js', 'js/core/coverage.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
 const ctx = vm.createContext({ console, TextEncoder, TextDecoder, btoa, atob });
 ctx.globalThis = ctx;
 for (const f of files) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f });
@@ -1344,6 +1344,96 @@ t('W.near 带容差判断近似值：不记录', () => {
   const near = (x, tol) => Math.abs(U.Q.num(D[c].out.t.data) - x) <= tol;
   truthy(near(195.5, 0.01)); truthy(!near(100, 0.01)); eq(U.inexactReads.length, 0);
 });
+console.log('先猜后看与估算器');
+t('估算器：没填估计不给输出；填了一个数，差多少、差百分之几、20% 以内算估准', () => {
+  const sc = W.blank(), a = W.add(sc, 'num', 0, 0, { n: 899 }), e = W.add(sc, 'estimate', 0, 0, {}); W.act(sc, { t: 'link', from: a, to: e, toPort: 'actual' });
+  eq(Object.keys(W.evaluate(sc)[e].out), [], '没填估计时没有输出');
+  W.act(sc, { t: 'set', id: e, k: 'guess', v: '900' }); let o = W.evaluate(sc)[e].out;
+  eq(Q.num(o.gap.data), 1); truthy(Q.num(o.pct.data) < 0.2); eq(o.inRange.data, true);
+  W.act(sc, { t: 'set', id: e, k: 'guess', v: '500' }); o = W.evaluate(sc)[e].out; eq(o.inRange.data, false);
+});
+t('估算器：范围估计要最少、最多都填且最少不大于最多；实际值在范围里才算估中', () => {
+  const sc = W.blank(), a = W.add(sc, 'num', 0, 0, { n: 899 }), e = W.add(sc, 'estimate', 0, 0, { mode: 1, lo: '800' }); W.act(sc, { t: 'link', from: a, to: e, toPort: 'actual' });
+  eq(Object.keys(W.evaluate(sc)[e].out), []);
+  W.act(sc, { t: 'set', id: e, k: 'hi', v: '700' }); eq(Object.keys(W.evaluate(sc)[e].out), [], '最少大于最多：不算填好');
+  W.act(sc, { t: 'set', id: e, k: 'hi', v: '1000' }); eq(W.evaluate(sc)[e].out.inRange.data, true);
+  W.act(sc, { t: 'set', id: e, k: 'hi', v: '850' }); eq(W.evaluate(sc)[e].out.inRange.data, false);
+});
+t('先猜后看：填猜测记一条 guess 事件（只记差多少，不扣分）；没填完整不记', () => {
+  U.Events.clear();
+  const sc = W.blank(), a = W.add(sc, 'num', 0, 0, { n: 899 }), e = W.add(sc, 'estimate', 0, 0, {}); W.act(sc, { t: 'link', from: a, to: e, toPort: 'actual' });
+  W.act(sc, { t: 'set', id: e, k: 'guess', v: '50' });
+  const g = U.Events.log.filter((x) => x.type === 'guess'); eq(g.length, 1); eq(g[0].data.right, false); eq(g[0].data.gap, 849);
+  W.act(sc, { t: 'set', id: e, k: 'mode', v: 1 }); eq(U.Events.log.filter((x) => x.type === 'guess').length, 1, '范围还没填，不记');
+});
+t('先猜后看：guess 声明不合法（口或属性不存在）进不了注册表', () => {
+  const bad = Object.assign({}, U.types.estimate, { guess: { props: ['nope'], ports: ['gap'], answered: () => true } });
+  truthy(U.lintType(bad).errors.some((m) => /guess\.props/.test(m)));
+  const bad2 = Object.assign({}, U.types.estimate, { guess: { props: ['guess'], ports: ['nope'], answered: () => true } });
+  truthy(U.lintType(bad2).errors.some((m) => /guess\.ports/.test(m)));
+});
+t('质因数积木：2–1000 的 gcd、lcm、因数个数、积木块数和直接计算一致', () => {
+  const gcd = (a, b) => (b ? gcd(b, a % b) : a), divs = (n) => { let c = 0; for (let i = 1; i <= n; i++) if (n % i === 0) c++; return c; };
+  const bl = (n) => { let c = 0; for (let p = 2; n > 1; p++) while (n % p === 0) { n /= p; c++; } return c; };
+  for (let a = 2; a <= 1000; a += 7) {
+    const sc = W.blank(), e = W.add(sc, 'primeblocks', 0, 0, { a, b: 0, mode: 0 }); let o = W.evaluate(sc)[e].out;
+    eq(Q.num(o.count.data), divs(a), 'count ' + a); eq(Q.num(o.blocks.data), bl(a), 'blocks ' + a);
+    for (const b of [2, 12, 36, 97, 360]) {
+      W.act(sc, { t: 'set', id: e, k: 'b', v: b }); o = W.evaluate(sc)[e].out; const g = gcd(a, b);
+      eq(Q.num(o.gcd.data), g, 'gcd ' + a + ',' + b); eq(Q.num(o.lcm.data), a / g * b, 'lcm ' + a + ',' + b); eq(Q.num(o.rn.data) * b, a * Q.num(o.rd.data), '约分 ' + a + '/' + b);
+    }
+  }
+});
+t('质因数积木：1 没有积木（拒绝）；质数是一块；搭因数先猜才有“差几”，猜对差 0，记 guess 事件', () => {
+  const sc = W.blank(), e = W.add(sc, 'primeblocks', 0, 0, { a: 36, mode: 2 });
+  eq(U.lintType(U.types.primeblocks).errors, []);
+  truthy(!W.act(sc, { t: 'set', id: e, k: 'a', v: 1 }).ok || W.evaluate(sc)[e].sig.some((x) => x.lv === 'reject'));
+  W.act(sc, { t: 'set', id: e, k: 'a', v: 13 }); eq(W.evaluate(sc)[e].out.blocks.data.n, 1);
+  W.act(sc, { t: 'set', id: e, k: 'a', v: 36 }); eq(W.evaluate(sc)[e].out.gap, undefined, '没猜没有 gap');
+  U.Events.clear(); W.act(sc, { t: 'set', id: e, k: 'guess', v: '4' });
+  eq(Q.num(W.evaluate(sc)[e].out.gap.data), 5); const g = U.Events.log.filter((x) => x.type === 'guess'); eq(g.length, 1); eq(g[0].data.right, false); eq(g[0].data.gap, 5);
+  W.act(sc, { t: 'set', id: e, k: 'guess', v: '9' }); eq(Q.num(W.evaluate(sc)[e].out.gap.data), 0);
+});
+console.log('找错台');
+t('错例库自检：每条的错步确实不成立，其余步骤确实成立；整份都对的确实都成立', () => {
+  const errs = []; for (const C of U.BugLib.CASES) errs.push(...U.BugLib.lintCase(C)); eq(errs, []);
+  truthy(U.BugLib.CASES.some((C) => C.bugAt === 0), '要有整份都对的'); truthy(U.BugLib.CASES.length >= 8);
+  eq(U.lintType(U.types.findbug).errors, []);
+});
+t('找错台：先判断，点错行不扣分（说明为什么这行对），点对行，选理由，改对；改错再说明', () => {
+  const sc = W.blank(), e = W.add(sc, 'findbug', 0, 0, { caseId: 3 });   // 解方程 3x+5=20 → 3x=25（第 2 行错）
+  const out = () => W.evaluate(sc)[e], set = (k, v) => W.act(sc, { t: 'set', id: e, k, v });
+  U.Events.clear(); set('claim', 2); eq(U.Events.log.filter((x) => x.type === 'guess').pop().data.right, true, '判断“有错”对');
+  set('pick', 3); eq(Q.num(out().out.found.data), 0); truthy(/没有错/.test(out().sig.map((x) => x.tx).join('|')), '点错行：说明这行没有错');
+  set('pick', 2); eq(Q.num(out().out.found.data), 1);
+  set('reason', 2); eq(Q.num(out().out.reasonOk.data), 0); truthy(/不相等|解/.test(out().sig.map((x) => x.tx).join('|')), '理由选错：代进去给你看');
+  set('reason', 1); eq(Q.num(out().out.reasonOk.data), 1);
+  set('fix', '3x=24'); eq(Q.num(out().out.fixed.data), 0);
+  set('fix', '3x=15'); eq(Q.num(out().out.fixed.data), 1);
+  set('fix', '3x=25'); eq(Q.num(out().out.fixed.data), 0, '改回原来的错行不算');
+});
+t('找错台：整份都对的那份，判断“整份都对”才算；判断“有错”不算，点任何行都是“没有错”', () => {
+  const sc = W.blank(), e = W.add(sc, 'findbug', 0, 0, { caseId: 6 }), set = (k, v) => W.act(sc, { t: 'set', id: e, k, v });
+  set('claim', 2); eq(Q.num(W.evaluate(sc)[e].out.found.data), 0); eq(Q.num(W.evaluate(sc)[e].out.claimOk.data), 0);
+  set('claim', 1); eq(Q.num(W.evaluate(sc)[e].out.found.data), 1); eq(Q.num(W.evaluate(sc)[e].out.claimOk.data), 1);
+});
+console.log('规则库');
+t('规则库：每条规则在例子空间里既有“算”也有“不算”；三角形池 24 个且互不相同、都不退化', () => {
+  const RL = U.RuleLib; truthy(RL.rules('num').length >= 15 && RL.rules('tri').length >= 6);
+  for (const r of RL.rules()) { const sp = RL.space(r); truthy(sp.some((x) => r.test(x)) && sp.some((x) => !r.test(x)), r.id + ' 要两边都有'); }
+  eq(RL.triPool.length, 24); eq(new Set(RL.triPool.map((x) => RL.show('tri', x))).size, 24);
+});
+t('规则库：说法的标准答案（总是 / 有时 / 从不）和穷举一致，三种答案都有，共 20 条以上', () => {
+  const RL = U.RuleLib, cs = RL.claims(), ans = {};
+  truthy(cs.length >= 20); for (const c of cs) { const T = RL.truth(c); ans[T.answer] = (ans[T.answer] || 0) + 1; eq(T.yes.length + T.no.length, c.space.items.length); }
+  truthy(ans['总是'] >= 5 && ans['有时'] >= 5 && ans['从不'] >= 2, JSON.stringify(ans));
+  eq(RL.truth(RL.get('c.sq-ge')).answer, '总是'); eq(RL.truth(RL.get('c.sq-ge-rat')).answer, '有时'); eq(RL.truth(RL.get('c.mod3-both')).answer, '从不');
+  eq(RL.truth(RL.get('c.n2n41')).answer, '有时'); eq(RL.truth(RL.get('c.prime-odd')).answer, '有时'); eq(RL.truth(RL.get('c.sum3-mul3')).answer, '总是');
+});
+t('规则库：例子的读法（整数、一对数、分数、三角形）读不出来返回 null', () => {
+  const RL = U.RuleLib; eq(RL.parse('int', '7'), 7); eq(RL.parse('int', '7.5'), null); eq(RL.parse('tuple', '3, 5'), [3, 5]); eq(RL.parse('tuple', '3'), null);
+  eq(Q.show(RL.parse('rat', '1/2')), '1/2'); eq(RL.parse('tri', '0,0 4,0 0,3'), [[0, 0], [4, 0], [0, 3]]); eq(RL.parse('tri', '0,0 4,0'), null);
+});
 console.log('参考解回归（每道题都必须能通关）');
 // 参考解：tests/solutions.js 加上每个年级的 tests/solutions-gN.js（内容代理分年级写，避免互相覆盖）
 const SOL = Object.assign({}, require('./solutions.js'),
@@ -1359,6 +1449,7 @@ for (const p of U.problems) {
       add(type, props) { const r = W.act(s, { t: 'add', type, x: 0, y: 0, props }); if (!r.ok) throw new Error(r.why); chk(); return r.id; },
       link(from, to, toPort, fromPort) { const r = W.act(s, { t: 'link', from, to, toPort, fromPort }); if (!r.ok) throw new Error('连线失败：' + r.why); chk(); },
       set(id, k, v) { const r = W.act(s, { t: 'set', id, k, v }); if (!r.ok) throw new Error(r.why); chk(); },
+      U, props(id) { return s.entities[id].props; },
       role(r) { const e = Object.values(s.entities).find((x) => x.role === r); if (!e) throw new Error('没有角色 ' + r); return e.id; },
       // 工作台的步骤（D8）：list 是 [[工具, 参数]…]，每一步用内核检查，全部保持不变量后整体写进台面（scene.workbench）
       wb(host, key, list) {
@@ -2816,6 +2907,152 @@ t('整体移动：约束的点都在移动的那组里才算刚体；只动一�
   eq(U.Geo.locks.rigid(sc, ids), true);
   eq(U.Geo.locks.rigid(sc, [ids[0]]), false);
 });
+console.log('猜规则台');
+t('猜规则台：先猜后记，猜错也记；猜想被反例推翻，摆出反例；对了才算猜对', () => {
+  eq(U.lintType(U.types.guessrule).errors, []);
+  const sc = W.blank(), e = W.add(sc, 'guessrule', 0, 0, { secret: 5 }), set = (k, v) => W.act(sc, { t: 'set', id: e, k, v }), out = (k) => Q.num(W.evaluate(sc)[e].out[k].data);
+  truthy(set('ex', 4).ok && set('gs', 2).ok, '点例子再猜');   // 4 除以 3 余 1，算；我猜了不算
+  eq(out('tried'), 1); eq(W.evaluate(sc)[e].props.ex, 0, '提交后选中清空');
+  truthy(!set('ex', 4).ok || (set('gs', 1), out('tried') === 1), '同一个例子不重复记');
+  set('hyp', 2); eq(out('solved'), 0); truthy(out('counter') > 0, '单数被推翻');
+  set('hyp', 6); eq(out('solved'), 1); eq(out('lv'), 3);
+});
+t('猜规则台：互换，系统每次问能把候选分成两半的例子，答错被指出，最终猜出', () => {
+  const sc = W.blank(), e = W.add(sc, 'guessrule', 0, 0, { secret: 0, mode: 1 }), set = (k, v) => W.act(sc, { t: 'set', id: e, k, v }), pr = () => sc.entities[e].props;
+  set('mine', 9); let n = 0;   // 质数
+  for (; n < 40; n++) { const q = U.GuessRule.pending(pr()); if (!q) break; const bad = set('ans', q.truth ? 2 : 1); eq(W.evaluate(sc)[e].props.msg.length > 0, true, '答错要有说明'); set('ans', q.truth ? 1 : 2); }
+  eq(Q.num(W.evaluate(sc)[e].out.sysSolved.data), 1); truthy(n <= 12, '半分法用不了几个例子：' + n);
+});
+
+console.log('对手与游戏');
+t('取石子：穷举的必胜判断和 n mod (k+1) 一致；最好的走法留下 (k+1) 的倍数；“取到最后的输”的表也对', () => {
+  for (let k = 2; k <= 5; k++) { const tr = U.Games.nimTruth(30, k, false); for (let n = 0; n <= 30; n++) eq(tr[n], n % (k + 1) === 0 ? 'L' : 'W', 'k=' + k + ' n=' + n); }
+  const g = U.Games.nimGame(3, false); for (let n = 1; n <= 20; n++) { const b = U.Game.best(g, { pile: n, turn: 0, by: 1 }); if (b.win) eq((n - b.move) % 4, 0, 'n=' + n); }
+  const tm = U.Games.nimTruth(12, 3, true); eq(tm[1], 'L'); eq(tm[2], 'W'); eq(tm[5], 'L');   // 取最后一颗的输：剩 1 颗必败，剩 4k+1 必败
+});
+t('对手：难度 2 总走最好的；难度 0 / 1 同一个局面同一个 seed 走法不变；难度 1 有时走错', () => {
+  const g = U.Games.nimGame(3, false), st = { pile: 10, turn: 0, by: 1 };
+  for (let sd = 0; sd < 20; sd++) eq(U.Game.opponent(g, st, 2, sd), 2);
+  eq(U.Game.opponent(g, st, 1, 5), U.Game.opponent(g, st, 1, 5));
+  let bad = 0; for (let sd = 0; sd < 200; sd++) if (U.Game.opponent(g, st, 1, sd) !== 2) bad++;
+  truthy(bad > 20 && bad < 120, '难度 1 大约三成走错：' + bad);
+});
+t('汉诺塔：最少步数是 2ⁿ − 1；按递归搬法搬完正好是最少，多走一步就不是最少', () => {
+  const hanoi = (n, a, b, c, out) => { if (!n) return; hanoi(n - 1, a, c, b, out); out.push([a, c]); hanoi(n - 1, b, a, c, out); };
+  for (let n = 1; n <= 7; n++) {
+    const sc = W.blank(), e = W.add(sc, 'hanoi', 0, 0, { n }), set = (k, v) => W.act(sc, { t: 'set', id: e, k, v }), mv = []; hanoi(n, 1, 2, 3, mv);
+    for (const [a, b] of mv) { truthy(set('mv', a).ok); truthy(set('mv', b).ok); }
+    const o = W.evaluate(sc)[e].out; eq(Q.num(o.min.data), 2 ** n - 1); eq(Q.num(o.moves.data), 2 ** n - 1); eq(Q.num(o.optimal.data), 1);
+  }
+  const sc = W.blank(), e = W.add(sc, 'hanoi', 0, 0, { n: 2 }), set = (k, v) => W.act(sc, { t: 'set', id: e, k, v });
+  set('mv', 1); set('mv', 2); set('mv', 1); set('mv', 2); eq(sc.entities[e].props.msg, '大盘不能压在小盘上'); eq(sc.entities[e].props.moves, 1);
+});
+t('一笔画：possible 和“奇点 0 或 2 个且连通”一致，并且和穷举走法一致（图库 5 张图）', () => {
+  const GL = U.Games.GRAPHS; eq(GL.map((g, i) => { const sc = W.blank(), e = W.add(sc, 'euler', 0, 0, { graph: i }), E = U.Games.edgesOf(sc.entities[e].props), st = U.Games.eulerStats(g.v.length, E); return [st.possible, U.Games.findPath(g.v.length, E) ? 1 : 0, st.odd]; }), [[1, 1, 2], [0, 0, 4], [0, 0, 4], [1, 1, 0], [1, 1, 2]]);
+  const sc = W.blank(), e = W.add(sc, 'euler', 0, 0, { graph: 2, mode: 1 }), set = (k, v) => W.act(sc, { t: 'set', id: e, k, v });
+  set('go', 2); set('go', 3); eq(Q.num(W.evaluate(sc)[e].out.possible.data), 1); eq(Q.num(W.evaluate(sc)[e].out.odd.data), 2);
+});
+
+console.log('证明排序');
+t('证明库：每条证明合格（需要的步骤都存在、没有环、每步都被用到、依据在选项里、有干扰卡）', () => { const errs = []; for (const p of U.ProofLib.all()) errs.push(...U.ProofLib.lint(p)); eq(errs, []); truthy(U.ProofLib.all().length >= 4); });
+t('证明排序：顺序颠倒会指出“用到的还没出现”；放干扰卡被指出；排对且依据对才 ok', () => {
+  const sc = W.blank(), e = W.add(sc, 'proofsort', 0, 0, { pid: 0 }), set = (k, v) => W.act(sc, { t: 'set', id: e, k, v }), P = U.ProofLib.get('odd-odd-even'), C = U.Proofsort.cardsOf(P), idx = (id) => C.findIndex((c) => c.id === id) + 1;
+  set('add', idx('s3')); let J = U.Proofsort.judge(sc.entities[e].props); eq(J.orderOk, false); truthy(J.notes[0].includes('还没有出现'));
+  set('del', 1); set('add', idx('d2')); J = U.Proofsort.judge(sc.entities[e].props); eq(J.dist, 1); truthy(J.notes[0].includes('循环论证'));
+  set('del', 1); P.steps.forEach((st, i) => { set('add', idx(st.id)); set('rr', i * 10 + P.rules.indexOf(st.rule) + 1); });
+  eq(Q.num(W.evaluate(sc)[e].out.ok.data), 1); eq(Q.num(W.evaluate(sc)[e].out.lv.data), 4);
+  set('rr', 0 * 10 + 1 + 1); eq(Q.num(W.evaluate(sc)[e].out.ok.data), 0);   // 第一步的依据改错
+});
+
+console.log('逼近器');
+t('逼近器：取一半第 n 步的差精确等于 1/2ⁿ；0.999… 的差是 1/10ⁿ；割圆的上下界夹住 π、每次翻倍区间缩小；√2 的区间端点是精确分数且夹住 √2', () => {
+  const A = U.Approach; for (let n = 0; n <= 12; n++) { eq(Q.show(A.at(0, n).gap), Q.show(Q(1, 2 ** n))); eq(Q.show(A.at(2, n).gap), Q.show(Q(1, 10 ** n))); }
+  let prev = 9; for (let n = 0; n <= 8; n++) { const a = A.at(1, n), lo = Q.num(a.lo), hi = Q.num(a.hi); truthy(lo < Math.PI && Math.PI < hi, '割圆 n=' + n); truthy(hi - lo < prev); prev = hi - lo; }
+  for (let n = 0; n <= 15; n++) { const a = A.at(3, n); truthy(Q.num(a.lo) <= Math.SQRT2 && Math.SQRT2 <= Q.num(a.hi)); eq(Q.show(a.gap), Q.show(Q(1, 2 ** n))); truthy(Q.cmp(Q.mul(a.lo, a.lo), Q(2)) < 0 && Q.cmp(Q.mul(a.hi, a.hi), Q(2)) > 0); }
+  eq(A.stepsFor(2, Q(1, 1000000)), 7); eq(A.stepsFor(0, Q(1, 1000)), 10);
+});
+
+console.log('钉板');
+t('钉板：随机 200 个格点多边形，独立数出的 B、I 和鞋带公式的面积满足皮克公式；内置 60 个多边形都简单', () => {
+  const GB = U.Geoboard; let seed = 12345, n = 0; const rnd = (m) => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed % m; };
+  while (n < 200) { const k = 3 + rnd(3), P = []; for (let i = 0; i < k; i++) P.push([rnd(7), rnd(7)]); if (!GB.simple(P)) continue; const c = GB.count(P); eq(c.A2, 2 * c.I + c.B - 2, JSON.stringify(P)); n++; }
+  truthy(GB.TEST.length >= 50 && GB.TEST.every((P) => GB.simple(P)));
+  eq(GB.simple([[0, 0], [2, 2], [2, 0], [0, 2]]), false);   // 蝴蝶结，边交叉
+});
+
+console.log('改规则的世界');
+t('出租车圆：r=1..5 都是 4r 个路口；A(0,0)B(2,2) 的等距集合是一片区域（>11 个）', () => {
+  const WI = U.WhatIf; for (let r = 1; r <= 5; r++) eq(WI.tTruth({ mode: 0, r, pair: 0 }).length, 4 * r);
+  truthy(WI.tTruth({ mode: 1, r: 1, pair: 1 }).length > 11); eq(WI.tTruth({ mode: 1, r: 1, pair: 0 }).length, 11);
+});
+t('球面三角形：北极+赤道 0°/90° 三个直角、内角和 270；三点共大圆无三角形', () => {
+  const WI = U.WhatIf, J = WI.sJudge({ pts: '0,1,2' }); eq(J.sum, 270); eq(J.exact, true); eq(J.angles.join(), '90,90,90');
+  eq(WI.sJudge({ pts: '1,2,3' }).degenerate, true);
+  for (const p of ['0,5,6', '5,6,7', '8,9,0', '1,6,9']) { const j = WI.sJudge({ pts: p }); if (j.ok) truthy(j.sum > 180 && j.sum < 540); }
+});
+t('换一种运算：5 张表的交换律/结合律/单位元/逆元与已知结论一致', () => {
+  const WI = U.WhatIf, T = WI.OPS.map((o) => WI.nTruth(o));
+  eq(T[0].comm && T[0].assoc && T[0].hasId && T[0].inv, true);     // 模 5 加法是群
+  eq(T[1].comm && T[1].assoc && T[1].hasId, true); eq(T[1].inv, false);   // 模 6 乘法没有逆元
+  eq(T[2].comm && T[2].assoc && T[2].hasId && !T[2].inv, true);
+  eq(T[3].comm, true); eq(T[3].assoc, false);                     // |a−b| 不满足结合律
+  eq(T[4].comm, false); eq(T[4].assoc, false); eq(T[4].hasId, false);
+});
+
+console.log('海龟作图');
+t('海龟：正方形、三角形（转 120°）闭合且共转 360°；转 60° 不闭合；五角星共转 720° 且画对；左右镜像也算对', () => {
+  const T = U.Turtle, sq = T.run('T4;F100;R90;E'); eq(sq.closed, true); eq(sq.turned, 360);
+  eq(T.run('T3;F100;L120;E').closed, true); eq(T.run('T3;F100;L60;E').closed, false);
+  const st = T.run('T5;F100;L144;E'); eq(st.closed, true); eq(st.turned, 720);
+  eq(T.same(T.sig(T.run('T5;F100;L144;E').pts), T.sig(T.run('T5;F100;R144;E').pts)), true);
+  eq(T.same(T.sig(sq.pts), T.sig(T.run('T6;F100;L60;E').pts)), false);
+  for (let n = 3; n <= 12; n++) { if (360 % n === 0) { const r = T.run('T' + n + ';F50;L' + (360 / n) + ';E'); eq(r.closed, true); eq(r.turned, 360); } }
+  eq(T.parse([{ c: 'T', v: 2 }]).err !== '', true);
+});
+
+console.log('展开图和小方块');
+t('展开图：六连方共 35 种，恰好 11 种能折成正方体；田字加两格不能折；每个能折的展开图 6 个面各出现一次', () => {
+  const SN = U.SolidNet; eq(SN.HEX.length, 35); const ok = SN.HEX.filter((c) => SN.fold(c).foldable); eq(ok.length, 11);
+  SN.HEX.forEach((c) => eq(SN.connected(c), true));
+  ok.forEach((c) => eq(SN.fold(c).face.slice().sort().join(), '0,1,2,3,4,5'));
+  eq(SN.fold([[0, 0], [1, 0], [0, 1], [1, 1], [2, 0], [3, 0]]).foldable, false);
+  eq(SN.fold([[0, 0], [1, 0], [2, 0], [3, 0], [1, 1], [1, -1]].map(([x, y]) => [x, y + 1])).foldable, true);   // 1-4-1 型
+});
+t('小方块：单块表面积 6；拿掉角上的方块表面积不变；三个目标有解且最少 ≤ 最多', () => {
+  const SN = U.SolidNet, h = '1000000000000000'.split('').map(Number); eq(SN.surface(h), 6);
+  const a = '1100000000000000'.split('').map(Number), b = '2100000000000000'.split('').map(Number); eq(SN.surface(a), 10); eq(SN.surface(b), 14);
+  SN.TGT.forEach((t, i) => { const r = SN.range(i); truthy(r[0] <= r[1]); const V = SN.views(t.split('').map(Number)); truthy(r[0] <= t.split('').map(Number).reduce((x, y) => x + y, 0) && r[1] >= t.split('').map(Number).reduce((x, y) => x + y, 0)); });
+});
+
+console.log('尺规作图');
+t('尺规：标准作法 4 个位置都成立；凭眼睛放的点只在原位置成立；半径不相等的作法不成立', () => {
+  const C = U.Compass, J = (task, st) => C.judge({ task, steps: st });
+  eq(J(0, 'c:0,1;c:1,0;m:0,1,0;m:0,1,1;l:2,3').ok, 1); eq(J(1, 'c:0,1;c:1,0;m:0,1,0').ok, 1);
+  const e = J(0, 'f:0,3;f:0,-3;l:2,3'); eq(e.first, 1); eq(e.ok, 0); truthy(e.passed < 4);
+  eq(J(0, 'c:0,1;c:1,1;m:0,1,0;m:0,1,1;l:2,3').ok, 0);      // 第二个圆的半径是 0（圆心和圆上点同一个）
+  eq(J(0, 'c:0,1;c:1,0;m:0,1,0;l:0,2').ok, 0);
+  for (const m of C.MAPS) eq(C.passTask(0, ['c:0,1', 'c:1,0', 'm:0,1,0', 'm:0,1,1', 'l:2,3'], m), true);
+});
+
+console.log('两种解法对照');
+t('两种解法：每道题左右各 4 项，值随 n 一一对应且互不重复；连对判对错与是否为对应项一致', () => {
+  const T = U.TwoWays; T.SCN.forEach((sc, k) => { for (let l = 0; l < 4; l++) { const m = [0, 1, 2, 3].filter((r) => T.NS.every((n) => sc.lv[l](n) === sc.rv[r](n))); eq(m, [l]); }
+    eq(sc.perm.slice().sort().join(), '0,1,2,3');
+    eq(T.judge({ sc: k, pairs: '0-0;1-1;2-2;3-3', disc: 1 }).all, 1); eq(T.judge({ sc: k, pairs: '0-1;1-0', disc: 0 }).wrong, 2); });
+});
+
+console.log('最优化、缩放、概率树');
+t('最优化：围篱笆最大在 5（25）、靠墙最大在 5（50）、将军饮马最短在 3（6√2）', () => {
+  const O = U.Optimize; eq(O.bestX(0), 5); eq(O.val(0, 5), 25); eq(O.bestX(1), 5); eq(O.val(1, 5), 50);
+  eq(O.bestX(2), 3); truthy(Math.abs(O.val(2, 3) - 6 * Math.SQRT2) < 1e-9);
+});
+t('缩放：边长放大 k 倍，周长 k 倍、面积 k² 倍、体积 k³ 倍', () => {
+  const S = U.ScaleLab; for (const k of ['2', '3', '1/2', '5/2']) { const J = S.sJudge({ k, shape: 0, gans: '' }), q = Q.parse(k); eq(Q.cmp(J.perim, q), 0); eq(Q.cmp(J.area, Q.mul(q, q)), 0); }
+});
+t('概率树：每个实验所有路径的概率之和是 1', () => {
+  const PT = U.PTree; PT.EXPS.forEach((E) => { let tot = Q(0); PT.pathsOf(E).forEach((x) => { tot = Q.add(tot, x.p); }); eq(Q.cmp(tot, Q(1)), 0, E.name); });
+});
+
 console.log('分步定型（bake，§10.5.6 第 5 步）：前面的步骤折成一步，撤销回到定型前，判题仍能读到定型前的步骤');
 {
   const N = (n) => ({ op: 'num', n: BigInt(n) }), X = { op: 'var', name: 'x' };

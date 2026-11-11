@@ -155,11 +155,11 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
     ok(rc === 1, '(5) 锁直角后有一个直角约束（三角形只有 A 是直角）');
     ok((await rightMarks()) === 1, '(5) A 处画出直角标记');
     const hC = await handleOf(t2.c);
-    const [t25] = await scr([{ x: 2, y: 5 }]);
+    const [t25] = await scr([{ x: 2, y: 4 }]);   // 2026-11：拖动不能出画布看得到的范围（上边约 4.4），目标点放在画布里
     await dragTo(hC, t25);
     await inv('拖动直角的顶点 C');
     const C1 = await ent(t2.c);
-    ok(C1 && C1.x === 0 && C1.y === 5, '(5) C 拖到 (2,5)，只能沿与 AB 垂直的线走，落到 (0, 5)：实际 (' + (C1 && C1.x) + ', ' + (C1 && C1.y) + ')');
+    ok(C1 && C1.x === 0 && C1.y === 4, '(5) C 拖到 (2,4)，只能沿与 AB 垂直的线走，落到 (0, 4)：实际 (' + (C1 && C1.x) + ', ' + (C1 && C1.y) + ')');
 
     // (6) 撤销
     await G.undo(p); await p.waitForTimeout(250);

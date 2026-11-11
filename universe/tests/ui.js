@@ -21,7 +21,7 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
 
   console.log('自由探究');
   // 拖「数字」「数字」「运算器」到台面
-  const drag = async (type, x, y) => { const t = p.locator('.tile[data-type="' + type + '"]'); await t.scrollIntoViewIfNeeded(); const bb = await t.boundingBox(); await p.mouse.move(bb.x + 30, bb.y + 20); await p.mouse.down(); await p.mouse.move(x, y, { steps: 8 }); await p.mouse.up(); };
+  const drag = async (type, x, y) => { const t = p.locator('.tile[data-type="' + type + '"]').first(); await t.scrollIntoViewIfNeeded(); const bb = await t.boundingBox(); await p.mouse.move(bb.x + 30, bb.y + 20); await p.mouse.down(); await p.mouse.move(x, y, { steps: 8 }); await p.mouse.up(); };
   await drag('num', 450, 200); await drag('num', 450, 420); await drag('op', 800, 300);
   ok((await ents()) === 3, '拖 3 个器材上台面');
   await p.evaluate(() => { const S = UI.S, ids = Object.keys(S.scene.entities); UI.App.act({ t: 'set', id: ids[0], k: 'n', v: 2 }); UI.App.act({ t: 'set', id: ids[0], k: 'd', v: 5 }); UI.App.act({ t: 'set', id: ids[1], k: 'd', v: 3 }); });

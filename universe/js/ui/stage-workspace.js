@@ -51,7 +51,8 @@
   // 按内容自动选范围：内容的中心在中间，横纵两个方向都装得下，四周留一点边
   function autoView(b, w, h) {
     if (!b) return { cx: 0, cy: 0, span: 10 };
-    const span = Math.max(b.x1 - b.x0, (b.y1 - b.y0) * w / Math.max(h, 1)) * L.AUTO_MARGIN;
+    const bw = b.x1 - b.x0, bh = b.y1 - b.y0, r = w / Math.max(h, 1);
+    const span = Math.max(L.AUTO_MIN_SPAN, bw * L.AUTO_MARGIN, bh * r * L.AUTO_MARGIN, bw + 2 * L.AUTO_PAD, (bh + 2 * L.AUTO_PAD) * r);
     return { cx: (b.x0 + b.x1) / 2, cy: (b.y0 + b.y1) / 2, span };
   }
   function wsView(ws, w, h, b) {

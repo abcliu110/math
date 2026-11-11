@@ -151,7 +151,9 @@
     const fr = SG.wsFrame(ws, +wb.getAttribute('width'), +wb.getAttribute('height'));
     UI.State.setUi(ws, 'view', fr.vw);
     const sc = UI.Space.canvasOf(wb.getBoundingClientRect(), fr.vw.span);
-    SG.drag = Object.assign({ kind: 'shape', mode, wsId, v: fr.vw, sc, unit: sc.unit, sx: ev.clientX, sy: ev.clientY, start: UI.Space.screenToWorkspace(ev, fr.vw, sc), targets, moved: false, out: [], f: Q(1), k: 0, guides: [] }, extra || {});
+    // 2026-11：画布能看到的范围（坐标）。平移时图形不能拖出这个范围（以前只限在 ±10，看得到的范围小得多，一拖就拖出窗口看不见了）
+    const { hw, hh } = UI.Space.halfRange(fr.w, fr.h, fr.vw), vis = { x0: fr.vw.cx - hw, x1: fr.vw.cx + hw, y0: fr.vw.cy - hh, y1: fr.vw.cy + hh };
+    SG.drag = Object.assign({ kind: 'shape', mode, wsId, v: fr.vw, vis, sc, unit: sc.unit, sx: ev.clientX, sy: ev.clientY, start: UI.Space.screenToWorkspace(ev, fr.vw, sc), targets, moved: false, out: [], f: Q(1), k: 0, guides: [] }, extra || {});
   }
   // 按下一个把手：边（整条边平移）、角（放缩）、旋转把手
   function startHandle(hd, ev) {
@@ -290,6 +292,19 @@
       const free = SG.snapFree(ev);
       if (d.align) { d.align.alt = free; const s = SG.alignSolve(d.align, { x: UI.Space.pxToUnits(mx, d.unit), y: -UI.Space.pxToUnits(my, d.unit) }, d.unit); dX = s.dx; dY = s.dy; d.guides = s.guides; }
       for (const t of d.targets) { lx = Math.max(lx, t.lo[0] - Q.num(t.qx)); hx = Math.min(hx, t.hi[0] - Q.num(t.qx)); ly = Math.max(ly, t.lo[1] - Q.num(t.qy)); hy = Math.min(hy, t.hi[1] - Q.num(t.qy)); }
+      // 留在画布里：整个图形（所有拖动的点）都不出看得到的范围（边上留 VIS_PAD 格）。图形本来就比画布大的方向不限
+      if (d.vis && d.mode === 'tr') {
+        const v = d.vis, m = L.VIS_PAD, xs = d.targets.map((t) => Q.num(t.qx)), ys = d.targets.map((t) => Q.num(t.qy));
+        const bx0 = Math.min(...xs), bx1 = Math.max(...xs), by0 = Math.min(...ys), by1 = Math.max(...ys);
+        // 正好在画布边上的格点也算在里面（边上留 VIS_TOL 格的余量，点画在边上还看得见、点得到）
+        const tl = L.VIS_TOL;
+        if (bx1 - bx0 <= v.x1 - v.x0 - 2 * m) { lx = Math.max(lx, Math.ceil(v.x0 + m - bx0 - tl)); hx = Math.min(hx, Math.floor(v.x1 - m - bx1 + tl)); }
+        if (by1 - by0 <= v.y1 - v.y0 - 2 * m) { ly = Math.max(ly, Math.ceil(v.y0 + m - by0 - tl)); hy = Math.min(hy, Math.floor(v.y1 - m - by1 + tl)); }
+        if (lx > hx) { const c = (lx + hx) / 2; lx = hx = Math.round(c); } if (ly > hy) { const c = (ly + hy) / 2; ly = hy = Math.round(c); }
+        if (lx > 0 || hx < 0) { lx = Math.min(lx, 0); hx = Math.max(hx, 0); }   // 本来就在外面的：至少能不动
+        if (ly > 0 || hy < 0) { ly = Math.min(ly, 0); hy = Math.max(hy, 0); }
+      }
+      const clipped = (dX < lx || dX > hx || dY < ly || dY > hy);
       dX = Math.max(lx, Math.min(hx, dX)); dY = Math.max(ly, Math.min(hy, dY));
       // 约束（§10.5.9 第 1 条）：拖一个点时，只能落在约束允许的位置（取离鼠标最近的）；拖一组时，约束要都在这组里
       const lk = lockGate(S.scene, d, dX, dY);
@@ -303,7 +318,7 @@
       } else {
         // 平移是精确的有理数（块的分数平移）：从 qx、qy 精确相加；约束的门（lk）已经把 dX、dY 限在允许的位置
         for (const t of d.targets) { put(t.id, t.kx, Q.store(Q.add(t.qx, Q(dX)))); put(t.id, t.ky, Q.store(Q.add(t.qy, Q(dY)))); }
-        tip = lk.tip || (dX || dY ? '向右 ' + dX + ' 格，向上 ' + dY + ' 格' : '');
+        tip = lk.tip || ((dX || dY ? '向右 ' + dX + ' 格，向上 ' + dY + ' 格' : '') + (clipped ? (dX || dY ? '，' : '') + '到画布边了（放大画布或缩小视图，图形就能放远一些）' : ''));
       }
     } else if (d.mode === 'sc' || d.mode === 'pscale') {
       // 放缩：以对角为中心（按住 Alt 以中心为准）；比例任意（精确到 1/100）
@@ -315,12 +330,14 @@
       // 比例任意：取鼠标处的比例，精确到 1/100（有理数）；结果超出坐标范围时，往 1 那边让一点，停在能用的比例上
       // 比例吸附到好记的数：十分之几、几分之一（1/2、1/3、1/4……）和它们的倍数；按住 Shift 精确到 1/100
       const niceF = (x) => { let best = null; for (const dd of [10, 4, 3]) { const n = Math.max(1, Math.round(x * dd)), e = Math.abs(n / dd - x); if (!best || e < best.e - 1e-9) best = { n, dd, e }; } return Q(best.n, best.dd); };
-      let fNear = ev.shiftKey ? Q.fromNumber(Math.max(0.01, Math.round(tp * 100) / 100)) : niceF(Math.max(0.1, tp)), sn = null;
+      // 比例跟着鼠标连续变（精确到 1/100）；离好记的比例（十分之几、1/2、1/3、3/4……）很近（NICE_PX 像素内）才吸过去。按住 Shift 不吸
+      const f100 = Q.fromNumber(Math.max(0.01, Math.round(tp * 100) / 100)), nf = niceF(Math.max(0.1, tp));
+      let fNear = !ev.shiftKey && UI.Space.unitsToPx(Math.abs(Q.num(nf) - tp) * Math.sqrt(den), d.unit) <= L.SCALE_NICE_PX ? nf : f100, sn = null;
       // 吸附（2026-11）：顶点对齐别的图形、某条边和别的边等长，优先于好记的比例；吸附开关关了或按住 Alt 不吸
       if (d.mode === 'sc' && d.al && !SG.snapFree(ev)) {
         sn = scaleSnap(d, A, tp, Math.sqrt(den), d.unit);
         // 鼠标就在好记的比例上（3 像素内），而吸附要的比例是很长的分数（转过的图形对齐时常这样）：用好记的
-        if (sn && sn.f.d > 100n && UI.Space.unitsToPx(Math.abs(Q.num(fNear) - tp) * Math.sqrt(den), d.unit) <= 3) sn = null;
+        if (sn && sn.f.d > 100n && fNear === nf) sn = null;
         if (sn) fNear = sn.f;
       }
       const hundredth = Q(1, 100);

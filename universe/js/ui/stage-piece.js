@@ -18,6 +18,12 @@
   function overWs(ev, wsId) {
     return document.elementsFromPoint(ev.clientX, ev.clientY).some((n) => n.closest && (n.closest('[data-wsid="' + wsId + '"]') || n.closest('.card[data-id="' + wsId + '"]')));
   }
+  function farFromWs(ev, wsId) {
+    const el = document.querySelector('#wsfocus [data-wsid="' + wsId + '"]') || document.querySelector('.card[data-id="' + wsId + '"]');
+    if (!el) return true;
+    const r = el.getBoundingClientRect(), m = L.PIECE_OUT_PX;
+    return ev.clientX < r.left - m || ev.clientX > r.right + m || ev.clientY < r.top - m || ev.clientY > r.bottom + m;
+  }
   // 按下块：拖动中只改块的 dx、dy 作预览；松手时再一次 piece 移动动作，撤销就回到原来的位置
   function pieceDown(pe, gh, pk, ev) {
     const S = UI.S;
@@ -42,7 +48,8 @@
     if (!d.moved && Math.hypot(mx, my) < L.DRAG_SLOP) return;
     if (!d.moved && d.v0) UI.State.setUi(S.scene.entities[d.wsId], 'view', d.v0);   // 拖动开始：把冻结的坐标范围存下来
     d.moved = true;
-    d.out = !overWs(ev, d.wsId);
+    // 2026-11：鼠标要离开工作区明显一段（PIECE_OUT_PX 像素）才算拖出去，免得移动时擦边就把块拖出了工作区
+    d.out = !overWs(ev, d.wsId) && farFromWs(ev, d.wsId);
     // 平移量精确（有理数）：不吸附时按整格走（取整），吸附时用对齐求出的精确平移（可以是分数中点）
     const cl = (q) => (Q.cmp(q, Q(-200)) < 0 ? Q(-200) : Q.cmp(q, Q(200)) > 0 ? Q(200) : q);
     let nx = d.q0x, ny = d.q0y; d.guides = [];

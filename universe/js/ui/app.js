@@ -9,7 +9,7 @@
 
   const S = (UI.S = {
     scene: W.blank(), D: null, sel: null, selLink: null, view: { x: 0, y: 0, z: 1 }, mode: 'free', problem: null, run: null,
-    undo: [], redo: [], tab: 'lab', inspOpen: false, glow: [], showSig: true, q1: '', freeScene: null,
+    undo: [], redo: [], tab: 'lab', inspOpen: false, help: {}, helpSeen: {}, helpAuto: true, glow: [], showSig: true, q1: '', freeScene: null,
     // 几何工作区（§10.5）：选中的对象（稳定名字）、移动工具的参数、面板消息
     // 工作区的坐标范围、图层开关、专注都是视图状态，放在工作区实体的 ui 字段里（见 js/ui/state.js）
     wsSel: [], wsArgs: { dx: '0', dy: '0' }, wsMsg: '',
@@ -31,7 +31,7 @@
     S.D = W.evaluateCached(S.scene, S.evalCache || (S.evalCache = {}));
     judgeNow();
     UI.Stage.render(); UI.Panels.renderClock();
-    if (full !== false) { UI.Panels.renderTop(); UI.Panels.renderLeft(); UI.Panels.renderInsp(); }
+    if (full !== false) { UI.Panels.renderTop(); UI.Panels.renderLeft(); UI.Panels.renderInsp(); UI.Panels.shelfMaybe(); }
   }
 
   function glowOf() {

@@ -24,11 +24,16 @@
     const free = (b) => inside(b) && !hit(b) && !blocked(b);
     const pick = (T) => {
       for (const [x, y] of T.cands) { const b = box(x, y, T.text); if (free(b)) return [x, y, b]; }
-      // 找不到候选：在画布里按格子找，离第一个候选近的先试（标签留在它的图形旁边）
-      const [x0, y0] = T.cands[0], b0 = box(x0, y0, T.text), grid = [];
-      for (let y = LB.up + M; y <= h - LB.down - M; y += LB.grid) for (let x = M; x <= w - SG.TXT_W(T.text) - M; x += LB.grid) grid.push([x, y]);
-      grid.sort((a, c) => Math.hypot(a[0] - x0, a[1] - y0) - Math.hypot(c[0] - x0, c[1] - y0));
-      for (const [x, y] of grid) { const b = box(x, y, T.text); if (free(b)) return [x, y, b]; }
+      // 找不到候选：从第一个候选往外一圈一圈找（离它近的先试，标签留在它的图形旁边），最远 LB.reach 像素。
+      // 2026-11：以前把整张画布的格子都列出来排序再试，画布大（专注模式）时每画一次要几十毫秒，拖动旋转、放缩就跟不上鼠标
+      const [x0, y0] = T.cands[0], b0 = box(x0, y0, T.text), g = LB.grid;
+      for (let r = g; r <= LB.reach; r += g) {
+        const ring = [];
+        for (let k = -r; k <= r; k += g) ring.push([x0 + k, y0 - r], [x0 + k, y0 + r]);
+        for (let k = -r + g; k <= r - g; k += g) ring.push([x0 - r, y0 + k], [x0 + r, y0 + k]);
+        ring.sort((a, c) => Math.hypot(a[0] - x0, a[1] - y0) - Math.hypot(c[0] - x0, c[1] - y0));
+        for (const [x, y] of ring) { const b = box(x, y, T.text); if (free(b)) return [x, y, b]; }
+      }
       const dx = Math.max(M - b0.x0, Math.min(0, w - M - b0.x1)), dy = Math.max(M - b0.y0, Math.min(0, h - M - b0.y1));
       return [x0 + dx, y0 + dy, box(x0 + dx, y0 + dy, T.text)];
     };
@@ -270,7 +275,9 @@
   // 画布（工作区的 svg）重画：拖动和画线时只动这一块，不重画台面
   function wsRedraw(id) {
     const ws = UI.S.scene.entities[id]; if (!ws) return;
-    document.querySelectorAll('svg.wsbody[data-wsid="' + id + '"]').forEach((sv) => { sv.innerHTML = wsBody(ws, +sv.getAttribute('width'), +sv.getAttribute('height')); });
+    // 专注模式时只重画专注的画布（台面上的卡片被盖着，松手时整体重画会更新它），拖动时少画一半
+    const focused = UI.State.focusedId() === id && SG.focusEl && SG.focusEl.querySelector('svg.wsbody[data-wsid="' + id + '"]');
+    (focused ? [focused] : document.querySelectorAll('svg.wsbody[data-wsid="' + id + '"]')).forEach((sv) => { sv.innerHTML = wsBody(ws, +sv.getAttribute('width'), +sv.getAttribute('height')); });
   }
   // 选中一个图形时，它旁边的浮动工具条的位置（卡片里的坐标）
   function figFloat(ws, w, h) {

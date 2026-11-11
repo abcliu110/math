@@ -92,22 +92,46 @@
   // 器材架不列出 hidden 的器材（器材定义里声明）：工作区的工具会自己造出来的步骤（连线、中点、剪刀……），学生不用从架上拿。
   // 器材类型还在，存档和旧题里用到它们照样能用；搜索结果里也不列。
   // 工作台（D2）：题目的 workbench 决定列哪些器材。关系画布（graph，默认）列全部器材；其他工作台只列它声明过的器材。
+  // 分组的顺序：本题用到的、台面上已有的（几何工作区算很多）在前（2026-11）
+  let lastGroups = '';
+  function shelfGroups() {
+    const S = UI.S, allow = S.problem ? S.problem.shelf : null, used = {};
+    for (const e of Object.values(S.scene.entities)) { const d = U.types[e.type]; if (d) used[d.group] = (used[d.group] || 0) + (d.workspaceRole === 'container' ? 50 : 1); }
+    if (allow) for (const id of allow) { const d = U.types[id]; if (d) used[d.group] = (used[d.group] || 0) + 100; }
+    return U.GROUPS.map((g, i) => ({ g, i, w: used[g] || 0 })).sort((a, b) => b.w - a.w || a.i - b.i).map((x) => x.g);
+  }
+  // 台面变了：分组的顺序变了才重画器材架（不每次都画）
+  function shelfMaybe() { if (shelfGroups().join() !== lastGroups) renderShelf(); }
   function renderShelf() {
     const S = UI.S, q = ($('#q2') && $('#q2').value || '').trim();
     const allow = S.problem ? S.problem.shelf : null;
     const wb = S.problem && S.problem.workbench || 'graph';
     const R = U.problemRules(S.problem);
+    // 器材的排序（2026-11）：
+    //   1. 最上面一组「最近用过」（最多 RECENT_N 个，不搜索时才有）；
+    //   2. 分组按“和台面上正在做的事有多相关”排：本题用到的器材所在的组、台面上已有器材的组在前（有几何工作区时「图形」在最前），其余按原来的顺序；
+    //   3. 组里：本题能用的在前，再按适用年级从低到高（简单的在前），同年级保持原来的顺序。
+    const groups = shelfGroups();
+    lastGroups = groups.join();
+    const order = Object.keys(U.types);
+    const rank = (t) => [allow && !allow.includes(t.id) ? 1 : 0, (t.grades || [1])[0], order.indexOf(t.id)];
+    const cmp = (a, b) => { const x = rank(a), y = rank(b); for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return x[i] - y[i]; return 0; };
+    const listed = (t) => !t.hidden && U.onWorkbenchShelf(t, wb);
+    const tile = (t) => {
+      const off = allow && !allow.includes(t.id), glow = S.glow && S.glow.includes(t.id);
+      if (off && R.shelfOnly) return '';   // 出题人控制（§10.5.9 第 10 条）：shelfOnly 时题目 shelf 之外的器材直接不列
+      return '<div class="tile' + (off ? ' off' : '') + (glow ? ' glow' : '') + '"' + (off ? ' title="本题不用这个器材，不能拖到台面上"' : '') + ' data-type="' + t.id + '"><svg viewBox="0 0 64 44">' + t.icon() + '</svg><div class="nm">' + esc(t.label) + '</div></div>';
+    };
     let h = '';
-    for (const g of U.GROUPS) {
-      const ts = Object.values(U.types).filter((t) => !t.hidden && U.onWorkbenchShelf(t, wb) && t.group === g && (!q || (t.label + t.alias.join('') + g).includes(q)));
-      if (!ts.length) continue;
-      h += '<div class="grp">' + esc(g) + '</div><div class="tiles">';
-      ts.forEach((t) => {
-        const off = allow && !allow.includes(t.id), glow = S.glow && S.glow.includes(t.id);
-        if (off && R.shelfOnly) return;   // 出题人控制（§10.5.9 第 10 条）：shelfOnly 时题目 shelf 之外的器材直接不列
-        h += '<div class="tile' + (off ? ' off' : '') + (glow ? ' glow' : '') + '"' + (off ? ' title="本题不用这个器材，不能拖到台面上"' : '') + ' data-type="' + t.id + '"><svg viewBox="0 0 64 44">' + t.icon() + '</svg><div class="nm">' + esc(t.label) + '</div></div>';
-      });
-      h += '</div>';
+    if (!q) {
+      const rec = recentTypes().map((id) => U.types[id]).filter((t) => t && listed(t) && !(allow && !allow.includes(t.id) && R.shelfOnly));
+      if (rec.length) h += '<div class="grp">最近用过</div><div class="tiles">' + rec.map(tile).join('') + '</div>';
+    }
+    for (const g of groups) {
+      const ts = Object.values(U.types).filter((t) => listed(t) && t.group === g && (!q || (t.label + t.alias.join('') + g).includes(q))).sort(cmp);
+      const body = ts.map(tile).join('');
+      if (!body) continue;
+      h += '<div class="grp">' + esc(g) + '</div><div class="tiles">' + body + '</div>';
     }
     $('#shelfbody').innerHTML = h || '<div class="empty">没有找到这个器材</div>';
   }
@@ -163,7 +187,7 @@
     }
     // 器材自己声明了工作台界面（wbUI）就用它的画法：竖式（arith）用本文件的 arHtml；数位竖式和数据图表台用 UI.WBKit；否则是式子工作台（I）
     if (d.inspector === 'workbench') h += d.wbUI === 'arith' ? arHtml(e, dd) : d.wbUI ? UI.WBKit.html(e, d) : wbHtml(e, dd);
-    h += '<div class="note">想让别的器材来决定「' + (Object.keys(d.props)[0] ? esc(d.props[Object.keys(d.props)[0]].label) : '') + '」？从别的器材的输出口拖一根线，放到这台器材左边出现的药丸上。</div>';
+    h += '<div class="note">想让别的器材来决定「' + (Object.keys(d.props).find((k) => !d.props[k].hidden) ? esc(d.props[Object.keys(d.props).find((k) => !d.props[k].hidden)].label) : '') + '」？从别的器材的输出口拖一根线，放到这台器材左边出现的药丸上。</div>';
     const sg = (dd && dd.sig) || []; if (sg.length) h += '<div class="sigs">' + sg.map((s) => '<div>· ' + esc(s.tx) + '</div>').join('') + '</div>';
     h += '<div class="btnrow"><button class="btn" data-reset="1">恢复默认</button></div>';
     box.innerHTML = h; box.classList.add('open');
@@ -508,6 +532,14 @@
     dialog(h);
   }
 
+  // 最近用过的器材（存在本机，最新的在前）
+  const RECENT_KEY = 'universe.recent';
+  function recentTypes() { try { const a = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]'); return Array.isArray(a) ? a.slice(0, L.RECENT_N) : []; } catch (e) { return []; } }
+  function noteRecent(type) {
+    const a = [type].concat(recentTypes().filter((x) => x !== type)).slice(0, L.RECENT_N);
+    try { localStorage.setItem(RECENT_KEY, JSON.stringify(a)); } catch (e) { /* 存不了就算了 */ }
+    setTimeout(renderShelf, 0);   // 松手以后再重画器材架（「最近用过」一组跟着变）
+  }
   // ---------- 器材架拖放 ----------
   function initShelfDrag() {
     $('#shelfbody').addEventListener('pointerdown', (ev) => {
@@ -522,8 +554,8 @@
         if (ghost) { ghost.remove(); ghost = null; }
         const over = document.elementFromPoint(e.clientX, e.clientY);
         // 从器材架拖进台面：添加和放进容器是一个事务（P1：一次撤销回到拖动之前）
-        if (moved && over && over.closest('#stagewrap')) { const w = UI.Space.screenToStage(e); UI.Intent.run('add', { type, x: w.x - L.ADD_CENTER.x, y: w.y - L.ADD_CENTER.y, ev: e }); }
-        else if (!moved) { const w = UI.Space.stageCenter(); const sp = UI.Stage.freeSpot(w.x - L.ADD_CLICK.x, w.y - L.ADD_CLICK.y, type); UI.Intent.run('add', { type, x: sp.x, y: sp.y, select: true }); }
+        if (moved && over && over.closest('#stagewrap')) { const w = UI.Space.screenToStage(e); noteRecent(type); UI.Intent.run('add', { type, x: w.x - L.ADD_CENTER.x, y: w.y - L.ADD_CENTER.y, ev: e }); }
+        else if (!moved) { const w = UI.Space.stageCenter(); const sp = UI.Stage.freeSpot(w.x - L.ADD_CLICK.x, w.y - L.ADD_CLICK.y, type); noteRecent(type); UI.Intent.run('add', { type, x: sp.x, y: sp.y, select: true }); }
       };
       window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up);
     });
@@ -581,5 +613,5 @@
     save.after(b);
   })();
 
-  UI.Panels = { wbDraft, wbTl, wbPaint, renderTop, renderLeft, renderShelf, renderInsp, renderClock, shareDialog, studentDialog, boardDialog, boardOut, dialog, closeDialog, reportHtml, inquiryHtml, wrongDialog, whyDialog, parentDialog, improveDialog, healthDialog, healthOut, reportDialog, authorDialog, initShelfDrag, renderAll() { renderTop(); renderLeft(); renderShelf(); renderInsp(); renderClock(); } };
+  UI.Panels = { wbDraft, wbTl, wbPaint, renderTop, renderLeft, renderShelf, shelfMaybe, renderInsp, renderClock, shareDialog, studentDialog, boardDialog, boardOut, dialog, closeDialog, reportHtml, inquiryHtml, wrongDialog, whyDialog, parentDialog, improveDialog, healthDialog, healthOut, reportDialog, authorDialog, initShelfDrag, renderAll() { renderTop(); renderLeft(); renderShelf(); renderInsp(); renderClock(); } };
 })(window);

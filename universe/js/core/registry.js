@@ -155,7 +155,19 @@
     if (def.inspector !== undefined && def.inspector !== 'workbench') err('inspector 目前只认 workbench');
     if (def.wbUI !== undefined && !(def.inspector === 'workbench' && U.WB_UIS.includes(def.wbUI))) err('wbUI 要和 inspector: workbench 一起写，且只认 ' + U.WB_UIS.join(' / '));
     if (def.numberSource !== undefined && typeof def.numberSource !== 'boolean') err('numberSource 要是 true / false');
-    if (def.hidden !== undefined && typeof def.hidden !== 'boolean') err('hidden 要是 true / false（不列在器材架上）');    if (typeof def.icon !== 'function') err('缺 icon()，器材架每个器材都要有缩略图');
+    if (def.hidden !== undefined && typeof def.hidden !== 'boolean') err('hidden 要是 true / false（不列在器材架上）');
+    // 先猜后看（docs/new-instruments.md 3.2）：guess = { props:[填猜测的属性], ports:[揭开前遮住的输出口], answered(props) → 填了没有 }。只遮界面，内核照常算
+    if (def.onSet !== undefined && typeof def.onSet !== 'function') err('onSet 要是函数 (属性, 改的属性名, 新值) → 要一起改的别的属性');
+    if (def.guess !== undefined) {
+      const g = def.guess;
+      if (!g || typeof g !== 'object' || typeof g.answered !== 'function') err('guess 要写 { props, ports, answered(props) }');
+      else {
+        if (!Array.isArray(g.props) || !g.props.length || !g.props.every((k) => def.props[k])) err('guess.props 要是本器材属性名的数组');
+        if (g.score !== undefined && typeof g.score !== 'function') err('guess.score 要是函数 (输出, 属性) → { right, gap }');
+        if (!Array.isArray(g.ports) || !g.ports.length || !g.ports.every((k) => def.outputs[k])) err('guess.ports 要是本器材输出口名的数组');
+      }
+    }
+    if (typeof def.icon !== 'function') err('缺 icon()，器材架每个器材都要有缩略图');
     if (typeof def.size !== 'function') err('缺 size(ent)');
     if (typeof def.draw !== 'function') err('缺 draw(c)');
     if (def.late) {

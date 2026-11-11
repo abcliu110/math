@@ -21,21 +21,30 @@
   function cardHtml(e, D, S) {
     const d = SG.def(e), g = SG.geom(e), dd = D[e.id], cH = g.h - HD;
     const c = { ent: e, props: dd.props || e.props, d: dd, out: dd.out, state: e.state, w: g.w, h: cH, t: S.scene.clock.t, n: S.scene.clock.n, scene: S.scene };
+    c.masked = !!(d.guess && !d.guess.answered(c.props));   // 先猜后看：还没填猜测，被 guess.ports 遮住的读数在界面上不显示（内核里值照常流动）
     let body = '', badge = '';
     try { body = SG.isWsDef(e.type) ? SG.wsBody(e, g.w, cH) : d.draw(c); } catch (x) { body = K.text(g.w / 2, cH / 2, '画不出来', { fill: 'var(--bad)' }); }
     // 工作区的标题步数只数学生做的步骤（和下面的步骤清单是同一批）
     try { badge = SG.isWsDef(e.type) ? (SG.wsSteps(e).length ? SG.wsSteps(e).length + ' 步' : '') : d.badge ? d.badge(c) : ''; } catch (x) { badge = ''; }
     let h = '<div class="card' + (S.sel === e.id ? ' sel' : '') + '" data-id="' + e.id + '" style="left:' + g.x + 'px;top:' + g.y + 'px;width:' + g.w + 'px;height:' + g.h + 'px">';
-    h += '<div class="hd" data-id="' + e.id + '"><span class="nm">' + K.esc(e.name) + '</span><span class="bd">' + K.esc(badge || '') + '</span></div>';
+    // 器材自己画交互、又有要填的属性（先猜、写例子）时，标题栏放一个入口，点一下打开属性面板（不用靠双击发现）
+    const fillable = d.compactPorts && Object.keys(d.props).some((k) => d.props[k].write && !d.props[k].hidden && !(D[e.id] && D[e.id].driven[k]));
+    const chip = fillable ? '<span class="gchip' + (c.masked ? ' ask' : '') + '" data-card-insp="' + e.id + '">' + (c.masked ? '✎ 先猜' : '✎ 填写') + '</span>' : '';
+    // “怎么玩”：第一次出现时自动盖在器材上（3 步），点“知道了”收起；标题栏的“? 怎么玩”随时再开
+    const HT = UI.Howto && UI.Howto[e.type];
+    if (HT && S.help[e.id] === undefined) { S.help[e.id] = !!S.helpAuto && !S.helpSeen[e.type]; S.helpSeen[e.type] = true; }
+    const hchip = HT ? '<span class="gchip hq" data-help="' + e.id + '">? 怎么玩</span>' : '';
+    h += '<div class="hd" data-id="' + e.id + '"><span class="nm">' + K.esc(e.name) + '</span>' + hchip + chip + '<span class="bd">' + K.esc(badge || '') + '</span></div>';
     const drawing = S.wsDraw && S.wsDraw.ws === e.id;   // 正在画线：指针变成十字（2.5）
     h += '<svg class="bdy' + (SG.isWsDef(e.type) ? ' wsbody' + (drawing ? ' drawing' : '') + '" data-wsid="' + e.id : '') + '" width="' + g.w + '" height="' + cH + '" viewBox="0 0 ' + g.w + ' ' + cH + '">' + body + '</svg>';
+    if (HT && S.help[e.id]) h += '<div class="howto"><b>怎么玩</b><ol>' + HT.map((x) => '<li>' + K.esc(x) + '</li>').join('') + '</ol><span class="hbtn" data-help="' + e.id + '">知道了，开始</span></div>';
     Object.keys(d.inputs).forEach((k, i) => {
       h += '<i class="port in" data-id="' + e.id + '" data-port="' + k + '" style="left:0;top:' + (PORT_Y0 + i * PORT_DY) + 'px"></i>';
       h += '<span class="pl" style="left:' + L.PORT_LABEL_X + 'px;top:' + (PORT_Y0 + i * PORT_DY) + 'px">' + K.esc(d.inputs[k].label) + '</span>';
     });
     Object.keys(d.outputs).forEach((k, i) => {
-      h += '<i class="port out" data-id="' + e.id + '" data-port="' + k + '" style="left:' + g.w + 'px;top:' + (PORT_Y0 + i * PORT_DY) + 'px;background:' + U.kindColor(d.outputs[k].kind) + '"></i>';
-      if (!SG.isWsDef(e.type)) h += '<span class="pl" style="right:' + L.PORT_LABEL_X + 'px;top:' + (PORT_Y0 + i * PORT_DY) + 'px">' + K.esc(d.outputs[k].label) + '</span>';   // 工作区的步数标在标题栏里，这里不再写（会和画布里的把手叠在一起）
+      h += '<i class="port out" data-id="' + e.id + '" data-port="' + k + '"' + (d.compactPorts ? ' title="' + K.esc(d.outputs[k].label) + '"' : '') + ' style="left:' + g.w + 'px;top:' + (PORT_Y0 + i * PORT_DY) + 'px;background:' + U.kindColor(d.outputs[k].kind) + '"></i>';
+      if (!SG.isWsDef(e.type) && !d.compactPorts) h += '<span class="pl" style="right:' + L.PORT_LABEL_X + 'px;top:' + (PORT_Y0 + i * PORT_DY) + 'px">' + K.esc(d.outputs[k].label) + '</span>';   // 工作区的步数标在标题栏里，这里不再写（会和画布里的把手叠在一起）
     });
     if (d.handles) h += '<i class="rz" data-rz="' + e.id + '" title="拖动改大小；双击恢复默认"></i>';   // 把手由器材声明（handles）
     h += '</div>';
@@ -116,6 +125,8 @@
 
   function render() {
     const S = UI.S; if (!S) return;
+    // 两侧栏跟着台面走（2026-11）：放上几何工作区、窗口不够宽时自动收起；收起或展开改变了台面宽度就重新适应
+    if (UI.Chrome.apply() && SG.fit && !UI.State.focusedId()) SG.fit();
     SG.checkViews();
     const D = S.D, E = S.scene.entities;
     const lk = linksHtml(S);
@@ -136,7 +147,12 @@
     UI.Layout.placePanels(SG.worldEl, SG.stageEl, S.view, (id) => { const e = S.scene.entities[id]; return e ? SG.geom(e) : null; });
     renderBars();
     const z = $('#zv'); if (z) z.textContent = Math.round(S.view.z * 100) + '%';
-    if (SG.focusEl) { SG.focusEl.innerHTML = focusHtml(); SG.focusEl.style.display = UI.State.focusedId() ? '' : 'none'; }
+    if (SG.focusEl) {
+      SG.focusEl.innerHTML = focusHtml(); SG.focusEl.style.display = UI.State.focusedId() ? '' : 'none';
+      // 标题栏放不下换了行（2026-11）：量一下实际的高度，和上次算画布用的不一样就再画一次（画布高度让出标题栏）
+      const hd = UI.State.focusedId() && SG.focusEl.querySelector('.wsf-hd');
+      if (hd && Math.abs(hd.offsetHeight - (SG.focusHdH || L.FOCUS.hdH)) > 2) { SG.focusHdH = hd.offsetHeight; SG.focusEl.innerHTML = focusHtml(); }
+    }
     if (UI.App && UI.App.persistView) UI.App.persistView();   // 视图改过就存档（不进撤销）
   }
 
@@ -155,13 +171,15 @@
   }
   // ---- 专注模式（§10.5.8 A4，V2）：工作区放大成覆盖台面的浮层，双击标题、按 Esc 或再点“全屏”还原 ----
   // 画布占满台面（抽屉展开时让出右边一栏）；标题栏里有工具，抽屉（图层、步骤、范围）可以收起
-  function setFocus(id) { UI.State.setFocusId(id || null); render(); }
+  // 进出专注模式：两侧栏跟着收起或还原（专注时默认收起，台面宽了要重新适应）
+  //   台面的缩放和平移不变（只是台面变宽或变窄），回到台面时还是原来的样子
+  function setFocus(id) { UI.State.setFocusId(id || null); UI.Chrome.apply(); render(); }
   function focusHtml() {
     const S = UI.S, id = UI.State.focusedId(), e = id && S.scene.entities[id];
     if (!e || !SG.isWsDef(e.type)) { if (id) UI.State.setFocusId(null); return ''; }
     const r = SG.stageEl.getBoundingClientRect(), F = L.FOCUS, open = UI.Chrome.focusSideOpen();
-    const W = Math.max(F.minW, Math.round(r.width - F.padX - (open ? F.side : 0))), H = Math.max(F.minH, Math.round(r.height - F.hdH - F.padY));
-    let h = '<div class="wsf-hd" title="双击标题，或按 Esc，还原"><b>' + K.esc(e.name) + '</b><span>双击标题或按 Esc 还原</span>' + SG.barTools(e) +
+    const W = Math.max(F.minW, Math.round(r.width - F.padX - (open ? F.side : 0))), H = Math.max(F.minH, Math.round(r.height - (SG.focusHdH || F.hdH) - F.padY));
+    let h = '<div class="wsf-hd" title="双击标题，或按 Esc，还原"><b>' + K.esc(e.name) + '</b><span class="wsf-tip">双击标题或按 Esc 还原</span>' + SG.barTools(e) +
       '<button data-fbar="side" data-ws="' + e.id + '" title="展开或收起右边的抽屉（图层、步骤、范围）">' + (open ? '收起抽屉' : '展开抽屉') + '</button>' +
       '<button data-fbar="focus" data-ws="' + e.id + '" title="还原到台面">还原</button></div>';
     h += '<div class="wsf-main"><svg class="bdy wsbody" data-wsid="' + e.id + '" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '">' + SG.wsBody(e, W, H) + '</svg>';

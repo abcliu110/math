@@ -469,12 +469,27 @@
         if (scene.links.some((l) => l.to === a.id && l.toPort === PROP + a.k)) return fail('「' + P.label + '」正由连线驱动，先断开连线再手动改');
         const r = U.coerceProp(P, a.v);
         if (!r.ok) return fail(r.why);
-        const prev = e.props[a.k], prevState = e.state ? clone(e.state) : undefined;
+        const prev = e.props[a.k], prevState = e.state ? clone(e.state) : undefined, prevProps = Object.assign({}, e.props);
         e.props[a.k] = r.v;
+        // onSet(props, k, v) → 要一起改的别的属性（比如“提交例子”把一条记录追加进日志、清空待提交的例子）。纯函数；$guess = { right, gap } 记一条 guess 事件
+        let guessEv = null;
+        if (def.onSet) {
+          const patch = def.onSet(e.props, a.k, r.v);
+          if (patch) { for (const pk of Object.keys(patch)) { if (pk === '$guess') guessEv = patch[pk]; else if (def.props[pk]) e.props[pk] = patch[pk]; } }
+        }
         if (def.reinit && def.reinit.includes(a.k)) e.state = def.init(e.props);
         let bad = null;
         try { const D = evaluate(scene); const rj = D[e.id].sig.find((s) => s.lv === 'reject'); if (rj) bad = rj.tx; for (const l of scene.links) if (l.from === e.id) { const x = D[l.to] && D[l.to].sig.find((s) => s.lv === 'reject'); if (x) bad = x.tx; } } catch (err) { bad = '这样改算不出来'; }
-        if (bad) { e.props[a.k] = prev; if (prevState) e.state = prevState; return fail(bad); }
+        if (bad) { for (const pk of Object.keys(prevProps)) e.props[pk] = prevProps[pk]; if (prevState) e.state = prevState; return fail(bad); }
+        if (guessEv && U.Events) U.Events.push('guess', { ent: def.id, right: guessEv.right, gap: guessEv.gap === undefined ? null : guessEv.gap });
+        // 先猜后看：填（或改）了猜测，记一条 guess 事件。猜错不扣分，只记差多少；事件只是记录，不影响判分
+        if (def.guess && def.guess.props.includes(a.k) && def.guess.answered(e.props) && U.Events) {
+          try {
+            const o = evaluate(scene)[e.id].out;
+            const r = def.guess.score ? def.guess.score(o, e.props) : { right: o.inRange ? o.inRange.data === true : null, gap: o.gap ? Q.num(o.gap.data) : null };
+            if (r) U.Events.push('guess', { ent: def.id, right: r.right, gap: r.gap });
+          } catch (err) { /* 算不出来就不记 */ }
+        }
         return ok();
       }
       case 'link': return link(scene, a);

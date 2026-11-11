@@ -163,6 +163,11 @@
     if (card) {
       const id = card.dataset.id; if (t.closest('.port')) return;
       const e = S.scene.entities[id];
+      // 器材自己画的可点区域（先猜后看、找错台等）：svg 元素带 data-pick-k（属性名）和 data-pick-v（点一下设成这个整数），点一下就是一次“设属性”的意图
+      const hp = t.closest('[data-help]'); if (hp) { S.help[hp.dataset.help] = !S.help[hp.dataset.help]; SG.render(); return; }   // “怎么玩”：开 / 关
+      if (t.closest('[data-card-insp]')) { S.sel = id; S.selLink = null; S.inspOpen = true; UI.Panels.renderInsp(); SG.render(); return; }   // 标题栏的“先猜 / 填写”：直接打开属性面板
+      const pk = t.closest('[data-pick-k]');
+      if (pk && card.contains(pk)) { S.sel = id; S.selLink = null; UI.Intent.run('set', { id, k: pk.dataset.pickK, v: Number(pk.dataset.pickV) }); UI.Panels.renderInsp(); return; }
       if (SG.isWsDef(e.type)) {
         // 工作区：双击标题是专注模式（不开属性面板）
         if (t.closest('.hd') && SG.dbl('hd:' + id)) { SG.setFocus(id); return; }
