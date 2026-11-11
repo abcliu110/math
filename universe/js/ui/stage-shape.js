@@ -10,7 +10,6 @@
   // 块（'piece'，用块的动作：移、转、翻、放缩）；摆放出来的（'place'，改 dx、dy、turn、flip）。
   // 顶点是不是自由点，靠连线查：多边形或线段的输入口接着的 gpt 器材，坐标对得上的就是它的顶点。
   const uniq = (xs) => xs.filter((x, i) => xs.indexOf(x) === i);
-  const SCALES = ['1/2', '2/3', '1', '3/2', '2', '3'].map((s) => Q.parse(s));
   const SNAP_PX = 9;
   const minQ = (a) => a.reduce((m, q) => (Q.cmp(q, m) < 0 ? q : m));
   const maxQ = (a) => a.reduce((m, q) => (Q.cmp(q, m) > 0 ? q : m));
@@ -199,29 +198,31 @@
         tip = lk.tip || (dX || dY ? '向右 ' + dX + ' 格，向上 ' + dY + ' 格' : '');
       }
     } else if (d.mode === 'sc' || d.mode === 'pscale') {
-      // 放缩：以对角为中心（按住 Alt 以中心为准）；比例吸附到 1/2、2/3、1、3/2、2、3，并且结果要是整数坐标
+      // 放缩：以对角为中心（按住 Alt 以中心为准）；比例任意（精确到 1/100）
       const qb = d.qb, cs = [[qb.x0, qb.y0], [qb.x1, qb.y0], [qb.x1, qb.y1], [qb.x0, qb.y1]];
       const A = ev.altKey ? { x: Q.div(Q.add(qb.x0, qb.x1), Q(2)), y: Q.div(Q.add(qb.y0, qb.y1), Q(2)) } : { x: cs[(d.corner + 2) % 4][0], y: cs[(d.corner + 2) % 4][1] };
       const ax = Q.num(A.x), ay = Q.num(A.y), v0x = Q.num(cs[d.corner][0]) - ax, v0y = Q.num(cs[d.corner][1]) - ay, den = v0x * v0x + v0y * v0y;
       if (!den) return;
       const tp = ((wp.x - ax) * v0x + (wp.y - ay) * v0y) / den;
-      const order = SCALES.slice().sort((a, b) => Math.abs(Q.num(a) - tp) - Math.abs(Q.num(b) - tp));
-      // 取离鼠标最近的、结果能写进去的比例：整数坐标，并且在坐标范围（t.lo、t.hi）里。最近的那个不行时，说明原因，停在能用的比例上
-      let pick = null, miss = '';
-      for (const [i, f] of order.entries()) {
+      // 比例任意：取鼠标处的比例，精确到 1/100（有理数）；结果超出坐标范围时，往 1 那边让一点，停在能用的比例上
+      const fNear = Q.fromNumber(Math.max(0.01, Math.round(tp * 100) / 100));
+      const hundredth = Q(1, 100);
+      let f = fNear, pick = null, miss = '';
+      for (let k = 0; k < 400 && !pick; k++) {
         if (d.mode === 'pscale') { pick = { f, nv: [] }; break; }
         const nv = d.targets.map((t) => ({ t, x: Q.add(A.x, Q.mul(f, Q.sub(Q(t.x0), A.x))), y: Q.add(A.y, Q.mul(f, Q.sub(Q(t.y0), A.y))) }));
         const inRange = (v) => { const x = Q.num(v.x), y = Q.num(v.y); return x >= v.t.lo[0] && x <= v.t.hi[0] && y >= v.t.lo[1] && y <= v.t.hi[1]; };
-        const why = !nv.every(inRange) ? '会超出坐标范围（±' + L.COORD_MAX + '）' : '';
-        if (!why) { pick = { f, nv }; break; }
-        if (i === 0) miss = why;
+        if (nv.every(inRange)) { pick = { f, nv }; break; }
+        if (k === 0) miss = '会超出坐标范围（±' + L.COORD_MAX + '）';
+        if (Q.cmp(f, Q(1)) === 0) break;
+        f = Q.cmp(f, Q(1)) > 0 ? Q.sub(f, hundredth) : Q.add(f, hundredth);
       }
       if (pick) {
         d.f = pick.f;
         if (d.mode === 'sc') for (const v of pick.nv) { put(v.t.id, v.t.kx, Q.store(v.x)); put(v.t.id, v.t.ky, Q.store(v.y)); }
         else E[d.id].props.scale = Q.show(Q.mul(Q.parse(d.s0), pick.f));
         tip = '放缩 ' + Q.show(pick.f) + ' 倍';
-        if (miss) tip = Q.show(order[0]) + ' 倍' + miss + '，停在 ' + Q.show(pick.f) + ' 倍';
+        if (miss) tip = Q.show(fNear) + ' 倍' + miss + '，停在 ' + Q.show(pick.f) + ' 倍';
       } else tip = '这个比例没有能用的结果，先不动';
     } else if (d.mode === 'prot') {
       // 块的旋转（V9，2.10）：总角度从按下时的角度开始，跟着鼠标走，按 1° 吸附（按住 Shift 按 15°）。
@@ -417,5 +418,5 @@
     SG.setMsg(bad || '', !bad);
     SG.render();
   }
-  Object.assign(SG, { wsAct, ACT_LABEL, uniq, SCALES, SNAP_PX, minQ, maxQ, modT, tgt, figInfo, figByName, moveTargets, startShape, startHandle, shapeMove, shapeUp, figFlip, pieceVerts, clipCopy, clipPaste, wsGroup, groupMembers, groupDrag, touchesLock, segLenLock, lockTarget, wsLock, rightMarks });
+  Object.assign(SG, { wsAct, ACT_LABEL, uniq, SNAP_PX, minQ, maxQ, modT, tgt, figInfo, figByName, moveTargets, startShape, startHandle, shapeMove, shapeUp, figFlip, pieceVerts, clipCopy, clipPaste, wsGroup, groupMembers, groupDrag, touchesLock, segLenLock, lockTarget, wsLock, rightMarks });
 })(window);

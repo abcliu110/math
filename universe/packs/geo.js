@@ -5,7 +5,8 @@
   'use strict';
   const U = G.U, Q = U.Q, K = U.kit, F = U.Fig, Geo = U.Geo;
   const fig = (f) => U.val('fig', f, { dim: null });
-  const ptFig = (p, tag) => Object.assign({ type: 'point', pts: [p] }, tag ? { tag } : {});
+  // 点的形状：由产生这个点的器材声明（pointShape）；c 是器材的计算上下文（c.ent.type 是器材名）
+  const ptFig = (p, tag, c) => { const d = c && c.ent && U.types[c.ent.type]; return Object.assign({ type: 'point', pts: [p] }, tag ? { tag } : {}, d && d.pointShape ? { shape: d.pointShape } : {}); };
   const figIn = (c, port, type) => { const v = (c.inp[port] || []).find((x) => x && x.kind === 'fig' && (!type || x.data.type === type)); return v ? v.data : null; };
   const figsIn = (c, port) => (c.inp[port] || []).filter((x) => x && (x.kind === 'fig' || x.kind === 'figs')).flatMap((x) => (x.kind === 'figs' ? x.data : [x.data]));
   const two = (c, a, b, type) => [figIn(c, a, type), figIn(c, b, type)];
@@ -29,7 +30,7 @@
         outputs: { p: { dim: null, kind: 'fig', label: '点' } },
         icon: () => K.circle(32, 22, 5, { fill: 'var(--ink)' }),
         size: () => [120, 70],
-        compute: (c) => ({ p: fig(ptFig({ x: Q.parse(c.props.x), y: Q.parse(c.props.y) }, c.ent.id)) }),
+        compute: (c) => ({ p: fig(ptFig({ x: Q.parse(c.props.x), y: Q.parse(c.props.y) }, c.ent.id, c)) }),
         badge: (c) => (c.props.mark || '') + '(' + Q.show(Q.parse(c.props.x)) + ', ' + Q.show(Q.parse(c.props.y)) + ')',
         draw: (c) => K.text(c.w / 2, c.h / 2 + 4, (c.props.mark ? c.props.mark + ' ' : '') + '(' + Q.show(Q.parse(c.props.x)) + ', ' + Q.show(Q.parse(c.props.y)) + ')', { size: 14, weight: 700 }),
       },
@@ -102,7 +103,7 @@
         outputs: { p: { dim: null, kind: 'fig', label: '中点' } },
         icon: () => K.line(8, 30, 56, 30, { w: 2 }) + K.circle(32, 30, 4, { fill: 'var(--ink)' }),
         size: () => [110, 60],
-        compute: (c) => { const [a, b] = two(c, 'a', 'b', 'point'); if (!a || !b) { c.say('info', '接两个点进来'); return {}; } return { p: fig(ptFig(Geo.midpoint(a.pts[0], b.pts[0]))) }; },
+        compute: (c) => { const [a, b] = two(c, 'a', 'b', 'point'); if (!a || !b) { c.say('info', '接两个点进来'); return {}; } return { p: fig(ptFig(Geo.midpoint(a.pts[0], b.pts[0]), undefined, c)) }; },
         draw: (c) => (c.out.p ? K.text(c.w / 2, c.h / 2 + 4, U.Fig.show(c.out.p.data).replace('点 ', ''), { size: 13 }) : ''),
       },
 
@@ -124,7 +125,7 @@
           const [s, t] = two(c, 's', 't', 'segment'); if (!s || !t) { c.say('info', '接两条线进来'); return {}; }
           const p = Geo.lineIntersect(s.pts[0], s.pts[1], t.pts[0], t.pts[1]);
           if (!p) { c.say('warn', '两条线平行，没有交点'); return {}; }
-          return { p: fig(ptFig(p)) };
+          return { p: fig(ptFig(p, undefined, c)) };
         },
         draw: (c) => (c.out.p ? K.text(c.w / 2, c.h / 2 + 4, U.Fig.show(c.out.p.data).replace('点 ', ''), { size: 13 }) : ''),
       },
@@ -147,7 +148,7 @@
         compute: (c) => {
           const p = figIn(c, 'p', 'point'), s = figIn(c, 's', 'segment'); if (!p || !s) { c.say('info', '接一个点和一条线进来'); return {}; }
           const f = Geo.foot(p.pts[0], s.pts[0], s.pts[1]);
-          return { p: fig(ptFig(f)), h: fig({ type: 'segment', pts: [p.pts[0], f], dash: true }) };
+          return { p: fig(ptFig(f, undefined, c)), h: fig({ type: 'segment', pts: [p.pts[0], f], dash: true }) };
         },
         draw: (c) => (c.out.p ? K.text(c.w / 2, c.h / 2 + 4, U.Fig.show(c.out.p.data).replace('点 ', ''), { size: 13 }) : ''),
       },
@@ -173,7 +174,7 @@
           const p = figIn(c, 'p', 'point'), a = figIn(c, 'a', 'point'), b = figIn(c, 'b', 'point');
           if (!p || !a || !b) { c.say('info', '接三个点进来：要作垂线的点，和直线上的两个点'); return {}; }
           if (Q.num(F.d2(a.pts[0], b.pts[0])) === 0) { c.say('warn', '直线上的两个点重合了'); return {}; }
-          return { p: fig(ptFig(Geo.foot(p.pts[0], a.pts[0], b.pts[0]))) };
+          return { p: fig(ptFig(Geo.foot(p.pts[0], a.pts[0], b.pts[0]), undefined, c)) };
         },
         draw: (c) => (c.out.p ? K.text(c.w / 2, c.h / 2 + 4, U.Fig.show(c.out.p.data).replace('点 ', ''), { size: 13 }) : ''),
       },
@@ -200,7 +201,7 @@
           if (!a || !b || !c2 || !d) { c.say('info', '接四个点进来：第一条线的两端和第二条线的两端'); return {}; }
           const p = Geo.lineIntersect(a.pts[0], b.pts[0], c2.pts[0], d.pts[0]);
           if (!p) { c.say('warn', '两条线平行，没有交点'); return {}; }
-          return { p: fig(ptFig(p)) };
+          return { p: fig(ptFig(p, undefined, c)) };
         },
         draw: (c) => (c.out.p ? K.text(c.w / 2, c.h / 2 + 4, U.Fig.show(c.out.p.data).replace('点 ', ''), { size: 13 }) : ''),
       },
@@ -225,7 +226,7 @@
         compute: (c) => {
           const [a, b, c2] = ['a', 'b', 'c'].map((k) => figIn(c, k, 'point'));
           if (!a || !b || !c2) { c.say('info', '接三个点进来：三角形的三个顶点'); return {}; }
-          return { p: fig(ptFig(Geo.centroid(a.pts[0], b.pts[0], c2.pts[0]))) };
+          return { p: fig(ptFig(Geo.centroid(a.pts[0], b.pts[0], c2.pts[0]), undefined, c)) };
         },
         draw: (c) => (c.out.p ? K.text(c.w / 2, c.h / 2 + 4, U.Fig.show(c.out.p.data).replace('点 ', ''), { size: 13 }) : ''),
       },
@@ -252,7 +253,7 @@
           if (!a || !b || !c2) { c.say('info', '接三个点进来：三角形的三个顶点'); return {}; }
           const p = Geo.circumcenter(a.pts[0], b.pts[0], c2.pts[0]);
           if (!p) { c.say('warn', '三个点在一条直线上，没有外接圆'); return {}; }
-          return { p: fig(ptFig(p)) };
+          return { p: fig(ptFig(p, undefined, c)) };
         },
         draw: (c) => (c.out.p ? K.text(c.w / 2, c.h / 2 + 4, U.Fig.show(c.out.p.data).replace('点 ', ''), { size: 13 }) : ''),
       },
@@ -273,7 +274,7 @@
         outputs: { p: { dim: null, kind: 'fig', label: '三分之一点' } },
         icon: () => K.line(8, 30, 56, 30, { w: 2 }) + K.circle(22, 30, 3.5, { fill: 'var(--ink)' }),
         size: () => [120, 60],
-        compute: (c) => { const [a, b] = two(c, 'a', 'b', 'point'); if (!a || !b) { c.say('info', '接两个点进来'); return {}; } return { p: fig(ptFig(Geo.trisect(a.pts[0], b.pts[0], 1))) }; },
+        compute: (c) => { const [a, b] = two(c, 'a', 'b', 'point'); if (!a || !b) { c.say('info', '接两个点进来'); return {}; } return { p: fig(ptFig(Geo.trisect(a.pts[0], b.pts[0], 1), undefined, c)) }; },
         draw: (c) => (c.out.p ? K.text(c.w / 2, c.h / 2 + 4, U.Fig.show(c.out.p.data).replace('点 ', ''), { size: 13 }) : ''),
       },
       gtri2: {
@@ -291,7 +292,7 @@
         outputs: { p: { dim: null, kind: 'fig', label: '三分之二点' } },
         icon: () => K.line(8, 30, 56, 30, { w: 2 }) + K.circle(42, 30, 3.5, { fill: 'var(--ink)' }),
         size: () => [120, 60],
-        compute: (c) => { const [a, b] = two(c, 'a', 'b', 'point'); if (!a || !b) { c.say('info', '接两个点进来'); return {}; } return { p: fig(ptFig(Geo.trisect(a.pts[0], b.pts[0], 2))) }; },
+        compute: (c) => { const [a, b] = two(c, 'a', 'b', 'point'); if (!a || !b) { c.say('info', '接两个点进来'); return {}; } return { p: fig(ptFig(Geo.trisect(a.pts[0], b.pts[0], 2), undefined, c)) }; },
         draw: (c) => (c.out.p ? K.text(c.w / 2, c.h / 2 + 4, U.Fig.show(c.out.p.data).replace('点 ', ''), { size: 13 }) : ''),
       },
 
@@ -456,7 +457,7 @@
             else if (f.type === 'point') {
               // 自由点（带 tag）画成可拖的把手；构造出来的点画成实心小点
               if (f.tag) handles += '<circle class="gpt" data-drag="' + f.tag + '" data-kx="x" data-ky="y" data-s="' + s.toFixed(4) + '" cx="' + X(f.pts[0].x) + '" cy="' + Y(f.pts[0].y) + '" r="7" fill="#fff" stroke="' + col + '" stroke-width="2.5" style="cursor:grab"/>';
-              else shapes += K.mark(X(f.pts[0].x), Y(f.pts[0].y), 'circle', 4, { fill: col });
+              else shapes += K.mark(X(f.pts[0].x), Y(f.pts[0].y), f.shape || 'circle', 4, { fill: col });
             }
           });
           // 符号点（任务 J，§10.7）：抛物线的交点、顶点等精确坐标，画在坐标系上。位置用近似值（只定像素），

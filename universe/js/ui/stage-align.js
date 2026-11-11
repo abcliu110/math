@@ -169,6 +169,24 @@
           for (const [a, b] of es) consider({ x: (P[a].x + P[b].x) / 2, y: (P[a].y + P[b].y) / 2 }, nmk(a) && nmk(b) ? nmk(a) + nmk(b) + ' 的中点' : v.label + ' 的边的中点');
         }
       }
+      // 几何交点：工作区里两条边（多边形的边、线段）在它们内部相交的点（端点已经是顶点，不重复算）
+      const edges = [];
+      for (const v of fr.vals) {
+        const f = v.fig; if (!f || !f.pts || f.type === 'circle' || f.type === 'point') continue;
+        const P = f.pts.map((p) => ({ x: Q.num(p.x), y: Q.num(p.y) })), fi = SG.figInfo(v), n = P.length;
+        const nm = (k) => (fi && fi.kind === 'pts' && names[fi.verts[k] + '.p']) || null;
+        const es = f.type === 'polygon' ? P.map((_, k) => [k, (k + 1) % n]) : [[0, 1]];
+        for (const [a, b] of es) edges.push({ A: P[a], B: P[b], label: nm(a) && nm(b) ? nm(a) + nm(b) : v.label });
+      }
+      for (let i = 0; i < edges.length; i++) for (let j = i + 1; j < edges.length; j++) {
+        const e1 = edges[i], e2 = edges[j];
+        const r = { x: e1.B.x - e1.A.x, y: e1.B.y - e1.A.y }, t2 = { x: e2.B.x - e2.A.x, y: e2.B.y - e2.A.y };
+        const den = r.x * t2.y - r.y * t2.x; if (Math.abs(den) < 1e-12) continue;
+        const qx = e2.A.x - e1.A.x, qy = e2.A.y - e1.A.y;
+        const t = (qx * t2.y - qy * t2.x) / den, u = (qx * r.y - qy * r.x) / den;
+        if (t <= 1e-9 || t >= 1 - 1e-9 || u <= 1e-9 || u >= 1 - 1e-9) continue;
+        consider({ x: e1.A.x + t * r.x, y: e1.A.y + t * r.y }, e1.label + ' 与 ' + e2.label + ' 的交点');
+      }
     }
     if (!best) return null;
     const w = UI.Space.screenToStage({ clientX: best.q.x, clientY: best.q.y }, S.view);

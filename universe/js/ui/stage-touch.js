@@ -74,7 +74,7 @@
     if (!a || !b) return;
     const d = spread(a, b), mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2, S = UI.S;
     SG.zoomAt(d / P.lastD, mx, my);   // 以中点为中心缩放（台面）
-    S.view.x += mx - P.lastX; S.view.y += my - P.lastY;   // 中点移动就是平移
+    S.view = SG.clampPan(Object.assign({}, S.view, { x: S.view.x + mx - P.lastX, y: S.view.y + my - P.lastY }));   // 中点移动就是平移（夹紧，不把卡片推到标题栏下面）
     P.lastD = d; P.lastX = mx; P.lastY = my;
     SG.render();
   }

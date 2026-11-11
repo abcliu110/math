@@ -65,5 +65,17 @@
     const local = cx === undefined ? { x: r.width / 2, y: r.height / 2 } : UI.Space.stageLocal({ clientX: cx, clientY: cy });
     S.view = UI.Space.zoomView(S.view, f, local, L.ZOOM); SG.render();
   }
-  Object.assign(SG, { wsZoomAt, wsFit, fit, zoomAt });
+  // 平移夹紧：台面内容不能被推到顶部的标题栏（模式栏）下面。最高的顶层卡片的顶边不能比保留的顶部距离更靠上
+  function clampPan(v) {
+    const S = UI.S, BAR = L.BAR, T = BAR.top + BAR.h + BAR.gap;
+    let minTop = null;
+    for (const e of Object.values(S.scene.entities)) {
+      if (e.parent) continue;
+      const g = SG.geom(e); if (!g || !Number.isFinite(g.y)) continue;
+      minTop = minTop === null ? g.y : Math.min(minTop, g.y);
+    }
+    if (minTop === null) return v;
+    return Object.assign({}, v, { y: Math.max(v.y, T - minTop * v.z) });
+  }
+  Object.assign(SG, { wsZoomAt, wsFit, fit, zoomAt, clampPan });
 })(window);
