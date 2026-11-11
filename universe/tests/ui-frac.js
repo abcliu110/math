@@ -139,7 +139,7 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
     await p.evaluate((s) => localStorage.setItem('universe-free-v1', s), oldSave);
     await p.reload(); await p.waitForTimeout(500);
     const mig = await p.evaluate((id) => ({ v: UI.S.scene.v, dx: UI.S.scene.entities[id] && UI.S.scene.entities[id].props.dx, dy: UI.S.scene.entities[id] && UI.S.scene.entities[id].props.dy }), pieceId);
-    ok(mig.v === 6 && mig.dx === '1/2' && mig.dy === 2, '(F4) v5 旧存档打开后版本 ' + mig.v + '，平移 dx ' + JSON.stringify(mig.dx) + '、dy ' + JSON.stringify(mig.dy) + '（期望 6、"1/2"、2）');
+    ok(mig.v === 7 && mig.dx === '1/2' && mig.dy === 2, '(F4) v5 旧存档打开后版本 ' + mig.v + '（当前版本 ' + 7 + '），平移 dx ' + JSON.stringify(mig.dx) + '、dy ' + JSON.stringify(mig.dy) + '（期望 "1/2"、2）');
     await inv('打开 v5 旧存档');
   } catch (e) {
     fail++; console.log('  FAIL 测试中断：' + e.message);
