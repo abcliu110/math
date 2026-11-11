@@ -181,7 +181,7 @@
       for (let i = 0; i < edges.length; i++) for (let j = i + 1; j < edges.length; j++) {
         const e1 = edges[i], e2 = edges[j];
         const r = { x: e1.B.x - e1.A.x, y: e1.B.y - e1.A.y }, t2 = { x: e2.B.x - e2.A.x, y: e2.B.y - e2.A.y };
-        const den = r.x * t2.y - r.y * t2.x; if (Math.abs(den) < 1e-12) continue;
+        const den = r.x * t2.y - r.y * t2.x; if (Math.abs(den) < Number.EPSILON) continue;
         const qx = e2.A.x - e1.A.x, qy = e2.A.y - e1.A.y;
         const t = (qx * t2.y - qy * t2.x) / den, u = (qx * r.y - qy * r.x) / den;
         if (t <= 1e-9 || t >= 1 - 1e-9 || u <= 1e-9 || u >= 1 - 1e-9) continue;

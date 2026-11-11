@@ -75,7 +75,7 @@
       minTop = minTop === null ? g.y : Math.min(minTop, g.y);
     }
     if (minTop === null) return v;
-    return Object.assign({}, v, { y: Math.max(v.y, T - minTop * v.z) });
+    return Object.assign({}, v, { y: Math.max(v.y, T - UI.Space.scaleLen(minTop, v.z)) });
   }
   Object.assign(SG, { wsZoomAt, wsFit, fit, zoomAt, clampPan });
 })(window);
