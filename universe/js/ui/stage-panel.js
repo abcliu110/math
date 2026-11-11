@@ -17,8 +17,9 @@
     if (!inFocus) h += '<button class="wsx-fold" data-ws-fold="' + ws.id + '"><span class="wsx-fold-open">工作区 ▸</span><span class="wsx-fold-shut">收起 ▾</span></button>';
     const D = S.wsDraw && S.wsDraw.ws === ws.id ? S.wsDraw : null;
     // 工具说明从 UI.ToolHelp 读（悬停或聚焦时由 CSS 显示 data-tip）；没有说明的工具不带 data-tip
-    h += '<div class="wsx-tools">' + wd.tools.filter((t) => UI.Young.showTool(t.id)).map((t) => { const hp = UI.ToolHelp.of(t.id); return '<button data-ws-tool="' + t.id + '" data-ws="' + ws.id + '"' + (hp ? ' data-tip="' + SG.escA(hp.tip) + '"' : '') + (D && D.tool === t.id ? ' class="on" aria-pressed="true"' : '') + '>' + K.esc(t.label) + '</button>'; }).join('') +
-      '<button data-ws-fit="' + ws.id + '" title="按内容选坐标范围，让图正好装下">适应</button></div>';
+    // 出题人控制（§10.5.9 第 10 条）：题目 tools 白名单之外的工具不显示；低年级模式另外过滤（UI.Young.showTool）
+    h += '<div class="wsx-tools">' + wd.tools.filter((t) => U.problemToolAllowed(S.problem, t.id) && UI.Young.showTool(t.id)).map((t) => { const hp = UI.ToolHelp.of(t.id); return '<button data-ws-tool="' + t.id + '" data-ws="' + ws.id + '"' + (hp ? ' data-tip="' + SG.escA(hp.tip) + '"' : '') + (D && D.tool === t.id ? ' class="on" aria-pressed="true"' : '') + '>' + K.esc(t.label) + '</button>'; }).join('') +
+      '<button data-ws-fit="' + ws.id + '" title="按内容选坐标范围，让图正好装下">适应</button></div>' + (wd.tools.length && !UI.Young.get() ? '<div class="wsx-measure">' + SG.measureBtns(ws.id) + '</div>' : '');   // 尺子、量角器单独一行（不是器材声明的工具）；低年级模式不显示
     h += '<div class="wsx-range">' + SG.rangeText(ws, pw, ph) + '</div>';
     h += '<div class="wsx-args">移动时：向右 <input type="number" data-ws-arg="dx" value="' + SG.escA(S.wsArgs.dx) + '"> 向上 <input type="number" data-ws-arg="dy" value="' + SG.escA(S.wsArgs.dy) + '"></div>';
     h += '<div class="wsx-sel">' + (D ? (D.tool === 'cut' ? '剪：选中要剪的图形，点两下画剪切线（Esc 退出）' : '连线：点两下画一条线（Esc 退出）') : picks.length ? '选中：' + picks.map((x) => K.esc(SG.pickLabel(x, vals))).join('、') : '点图形或点来选中（Shift 点可以多选）') + '</div>';
@@ -138,6 +139,8 @@
   }
   // 点工具：把选中的对象交给世界的 t:'tool' 动作（走 act，可以撤销）；失败就把原因放在画布上（和面板里）
   function wsRun(wsId, tool) {
+    // 尺子、量角器：不是工具（不建步骤、不改图形），直接放一个标记（stage-measure.js）
+    if (tool === 'ruler' || tool === 'protractor') return SG.addMark(wsId, tool);
     const S = UI.S, args = {}, picks = (S.wsSel || []).slice();
     const ws = S.scene.entities[wsId], T = ws && SG.wsCfg(ws.type).tools.find((x) => x.id === tool), rule = T && U.RULES[T.rule];
     // 连线、剪：没有选够两个对象，就进入「点两下画线」的模式（§10.5.8 B11）
