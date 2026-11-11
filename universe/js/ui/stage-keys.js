@@ -44,9 +44,10 @@
     const ops = [];
     if (fi.kind === 'pts') {
       for (const g of SG.uniq(fi.verts)) {
-        const tx = SG.tgt(g, 'x', 'y'), nx = Q.num(Q(tx.x0)) + dx, ny = Q.num(Q(tx.y0)) + dy;   // 属性里存的是整数，先包成有理数再读
+        // 坐标可能是分数（转过、缩过的图形，存成 "n/d"）：用精确的 qx、qy 相加，存回精确的值
+        const tx = SG.tgt(g, 'x', 'y'), qx = Q.add(tx.qx, Q(dx)), qy = Q.add(tx.qy, Q(dy)), nx = Q.num(qx), ny = Q.num(qy);
         if (nx < tx.lo[0] || nx > tx.hi[0] || ny < tx.lo[1] || ny > tx.hi[1]) { SG.setMsg('再走就出坐标范围了', false); SG.render(); return true; }
-        ops.push({ id: g, k: 'x', v: nx }, { id: g, k: 'y', v: ny });
+        ops.push({ id: g, k: 'x', v: Q.store(qx) }, { id: g, k: 'y', v: Q.store(qy) });
       }
     } else if (fi.kind === 'place' || fi.kind === 'piece') {
       const p = fi.ent.props, id = fi.ent.id;
@@ -98,6 +99,14 @@
     const wsId = SG.activeWs();
     // 每个分支：先做，做成了再 preventDefault（做不成的按键照常交给浏览器和 app.js）
     let done = false;
+    // [ ]：转（逆时针 / 顺时针 15°，按住 Shift 1°）；+ −：放大 2 倍、缩小一半（2026-11，形状不变）
+    const one = oneSel();
+    if (wsId && !S.wsDraw && one && !cardSel()) {
+      const st = L.FIG_STEP;
+      if (e.code === 'BracketLeft' || e.code === 'BracketRight') { e.preventDefault(); SG.figRotateBy(wsId, one, (e.code === 'BracketLeft' ? 1 : -1) * (e.shiftKey ? st.rotFine : st.rot)); return true; }
+      if (e.key === '+' || e.key === '=') { e.preventDefault(); SG.figScaleBy(wsId, one, Q(st.grow[0], st.grow[1])); return true; }
+      if (e.key === '-' || e.key === '_') { e.preventDefault(); SG.figScaleBy(wsId, one, Q(st.shrink[0], st.shrink[1])); return true; }
+    }
     // M：镜像复制选中的图形（§10.5.9 第 4 条）
     if ((e.key === 'm' || e.key === 'M') && wsId && !S.wsDraw && (S.wsSel || []).length) { e.preventDefault(); SG.wsAct(wsId, 'mirror'); return true; }
     // Tab 只在用户刚在工作区里操作过（鼠标停过或按过）时才归工作区；否则照常在按钮之间移动焦点

@@ -67,7 +67,9 @@
     if (fi && fi.kind === 'pts') {
       const E = UI.S.scene.entities, rows = SG.uniq(fi.verts).map((id) => {
         const p = E[id]; if (!p) return '';
-        const inp = (k) => '<input type="number" min="-10" max="10" step="1" data-ws-vx="' + id + '" data-ws-vk="' + k + '" value="' + SG.escA(p.props[k]) + '" aria-label="' + SG.escA((p.props.mark || '点') + ' 的 ' + k) + '">';
+        // 2026-11：坐标可能是分数（转过、缩过的图形）：分母不大的写成 n/d，分母很大的写近似小数（≈），鼠标停上去看精确值；可以填整数、分数、小数
+        const show = (v) => { const q = U.Q.parse(v); return q.d <= 100n ? U.Q.show(q) : '≈' + U.Q.showDec(q, 2); };
+        const inp = (k) => '<input type="text" inputmode="decimal" data-ws-vx="' + id + '" data-ws-vk="' + k + '" value="' + SG.escA(show(p.props[k])) + '" title="' + SG.escA(U.Q.show(U.Q.parse(p.props[k]))) + '" aria-label="' + SG.escA((p.props.mark || '点') + ' 的 ' + k) + '">';
         return '<label class="wsx-vx">' + K.esc(p.props.mark || '点') + '（' + inp('x') + '，' + inp('y') + '）</label>';
       });
       h += '<div class="wsx-vxs">顶点：' + rows.join('') + '</div>';

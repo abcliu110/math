@@ -5,7 +5,7 @@
  *       (1) 系统是浅色 / 深色时，<html data-theme> 和台面背景跟着变（跟随系统）；
  *       (2) 菜单里的“外观”按钮：跟随系统 → 浅色 → 深色 循环，选择记在 localStorage，刷新后还在；选回“跟随系统”就清掉记录；
  *       (3) localStorage 读写抛异常（隐私模式）时页面照常打开、没有报错，按钮照常能用；
- *   (C) 色觉障碍（2.6b）：工作区里不同颜色的线段和多边形的边，线型（stroke-dasharray）也不同；
+ *   (C) 色觉障碍（2.6b）：打开高对比度时，工作区里不同颜色的线段和多边形的边，线型（stroke-dasharray）也不同（平时都是实线，2026-11）；
  *       同一个工作区里，任意两个颜色不同的线或边，线型都不同（只靠颜色区分的情况不允许）。
  * 需要 playwright（NODE_PATH 指向它的 node_modules）。 */
 'use strict';
@@ -157,6 +157,11 @@ function resolveColor(raw, v) {
       UI.Stage.fit(); UI.Stage.render();
     });
     await p.waitForTimeout(300);
+    // 2026-11：平时线都是实线（好看）；打开高对比度时才按颜色换线型。先看平时，再打开高对比度检查线型
+    const plain = await p.evaluate(() => [...document.querySelector('svg.wsbody').querySelectorAll('line[data-pick], path[data-pick]')].filter((el) => el.getAttribute('stroke') && el.getAttribute('stroke') !== 'transparent').map((el) => el.getAttribute('stroke-dasharray') || ''));
+    ok(plain.length >= 6 && plain.every((d) => d === '' || d === '5 5'), '平时（高对比度关）：线和边都是实线（辅助线是虚线）');
+    await p.evaluate(() => { document.documentElement.setAttribute('data-contrast', 'high'); UI.Stage.render(); });
+    await p.waitForTimeout(200);
     // 每个线段 / 多边形边的（颜色，线型）：取可见的线和路径（透明的命中线不算）
     const strokes = await p.evaluate(() => {
       const wb = document.querySelector('svg.wsbody');

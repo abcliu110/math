@@ -14,6 +14,103 @@
   const minQ = (a) => a.reduce((m, q) => (Q.cmp(q, m) < 0 ? q : m));
   const maxQ = (a) => a.reduce((m, q) => (Q.cmp(q, m) > 0 ? q : m));
   const modT = (x) => ((x % 4) + 4) % 4;
+  // 精确的旋转（2026-11）：转 A 度（整数度），cos、sin 取一对有理数，满足 cos² + sin² = 1（勾股数：
+  //   t ≈ tan(r/2) 取分母不大的分数 p/q，cos = (q²−p²)/(q²+p²)，sin = 2pq/(q²+p²)）。这样转过去的图形和原来全等：
+  //   边长、角、面积一点不变（长方形转完还是长方形，面积还是原来的数），不再把每个顶点四舍五入到 1/100 而把形状转歪。
+  //   90° 的倍数是精确的；余下的 r（−45° 到 45°）误差不到 0.05°。
+  function rotCS(A, tolDeg) {
+    let k = Math.round(A / 90), r = A - 90 * k;
+    let c = Q(1), sn = Q(0);
+    if (Math.abs(r) > 1e-9) {
+      const x = Math.tan(r * Math.PI / 360), tol = (tolDeg || 0.05) * Math.PI / 180, qmax = tolDeg && tolDeg < 0.05 ? 4000 : 400;
+      let best = null;
+      for (let q = 1; q <= qmax; q++) {
+        const pp = Math.round(x * q); if (!pp) continue;
+        const err = Math.abs(2 * Math.atan(pp / q) - r * Math.PI / 180);
+        if (!best || err < best.err) best = { p: pp, q, err };
+        if (err < tol) break;
+      }
+      if (best) {   // 角度小到分母 qmax 以内的分数都表示不了（比 0.01° 还小）：就当没转
+        const P = BigInt(best.p), QQ = BigInt(best.q), den = QQ * QQ + P * P;
+        c = Q(QQ * QQ - P * P, den); sn = Q(2n * P * QQ, den);
+      }
+    }
+    k = modT(k);
+    for (let j = 0; j < k; j++) { const t = c; c = Q.neg(sn); sn = t; }   // 再转 90°：(c, s) → (−s, c)
+    return { c, s: sn };
+  }
+  // 有理数的平方根（是完全平方才有，否则 null）：判断“转到和某条边平行”“放缩到和某条边等长”能不能精确做到
+  const isqrtB = (n) => { if (n < 2n) return n; let x = BigInt(Math.floor(Math.sqrt(Number(n)))); while (x * x > n) x--; while ((x + 1n) * (x + 1n) <= n) x++; return x; };
+  const sqrtQ = (q) => { if (q.n < 0n) return null; const a = isqrtB(q.n), b = isqrtB(q.d); return a * a === q.n && b * b === q.d ? Q(a, b) : null; };
+  const dotQ = (u, w) => Q.add(Q.mul(u.x, w.x), Q.mul(u.y, w.y)), crsQ = (u, w) => Q.sub(Q.mul(u.x, w.y), Q.mul(u.y, w.x));
+  const angOf = (u) => Math.atan2(Q.num(u.y), Q.num(u.x)) * 180 / Math.PI;
+  // 转 deg 度（deg 是要转到的角度，和 u→w 的方向差差 180° 的整数倍）：u 转过去和 w 平行。
+  // |u|·|w| 是有理数时精确（cos = u·w / |u||w|，sin = u×w / |u||w|）；否则用勾股数近似，误差不到 0.005°
+  function rotToward(u, w, deg) {
+    const L = sqrtQ(Q.mul(dotQ(u, u), dotQ(w, w)));
+    if (!L || L.n === 0n) return Object.assign(rotCS(deg, 0.005), { exact: false });
+    let c = Q.div(dotQ(u, w), L), sn = Q.div(crsQ(u, w), L);
+    const base = Math.atan2(Q.num(sn), Q.num(c)) * 180 / Math.PI;
+    if (Math.round((deg - base) / 180) % 2) { c = Q.neg(c); sn = Q.neg(sn); }   // 差 180°：反过来
+    return { c, s: sn, exact: true };
+  }
+  const rotPts = (B, cq, R) => B.map((b) => { const dx = Q.sub(b.x, cq.x), dy = Q.sub(b.y, cq.y); return { x: Q.add(cq.x, Q.sub(Q.mul(dx, R.c), Q.mul(dy, R.s))), y: Q.add(cq.y, Q.add(Q.mul(dx, R.s), Q.mul(dy, R.c))) }; });
+  const normDeg = (a) => ((a + 180) % 360 + 360) % 360 - 180;
+  // 自己的边的名字（AB），没有名字的用“边”
+  function ownEdgeNames(wsId, ids, edges) {
+    const nm = SG.pointNames(UI.S.scene.entities[wsId]);
+    return edges.map(([i, j]) => (nm[ids[i] + '.p'] && nm[ids[j] + '.p'] ? '边 ' + nm[ids[i] + '.p'] + nm[ids[j] + '.p'] : '这条边'));
+  }
+  // 旋转的吸附（2026-11）：转到某条边水平、竖直，或者和别的图形的边平行、垂直；离鼠标的角度在阈值里就吸过去。
+  // 返回 { deg, R, guides }。没有吸附：按 step 取整（1°，Shift 15°）
+  function rotSnap(d, raw, step, free) {
+    const B = d.base, al = d.al, cands = [];
+    if (!free) {
+      const thr = Math.max(1.5, Math.min(4, (L.ROT_SNAP_PX / Math.max(20, d.rpx)) * 180 / Math.PI));
+      const near = (target) => { const t = target + 360 * Math.round((raw - target) / 360); return { t, e: Math.abs(t - raw) }; };
+      const dirs = [{ w: { x: Q(1), y: Q(0) }, kind: 'h' }, { w: { x: Q(0), y: Q(1) }, kind: 'v' }];
+      for (const o of al.oedges) { const w = { x: Q.sub(o.b.x, o.a.x), y: Q.sub(o.b.y, o.a.y) }; if (Q.eq(w.x, Q(0)) && Q.eq(w.y, Q(0))) continue; dirs.push({ w, kind: 'par', o }, { w: { x: Q.neg(w.y), y: w.x }, kind: 'perp', o }); }
+      al.edges.forEach(([i, j], ei) => {
+        const u = { x: Q.sub(B[j].x, B[i].x), y: Q.sub(B[j].y, B[i].y) }; if (Q.eq(u.x, Q(0)) && Q.eq(u.y, Q(0))) return;
+        const au = angOf(u);
+        for (const dd of dirs) {
+          const need = angOf(dd.w) - au;
+          for (const t0 of [need, need + 180]) { const n = near(t0); if (n.e <= thr) cands.push(Object.assign({ deg: n.t, e: n.e, u, ei }, dd)); }
+        }
+      });
+      const z = near(0); if (z.e <= thr) cands.push({ deg: z.t, e: z.e, kind: 'zero' });
+    }
+    // 优先级：误差小的先；同样近时，水平竖直 > 平行垂直
+    cands.sort((a, b) => a.e - b.e || (a.kind === 'h' || a.kind === 'v' ? -1 : 0) - (b.kind === 'h' || b.kind === 'v' ? -1 : 0));
+    const c = cands[0];
+    if (!c) { const deg = normDeg(Math.round(raw / step) * step); return { deg, R: rotCS(deg), guides: [], snapped: false }; }
+    const deg = normDeg(c.deg);
+    if (c.kind === 'zero') return { deg: 0, R: { c: Q(1), s: Q(0) }, guides: [], snapped: true, text: '回到原来的方向' };
+    const R = rotToward(c.u, c.w, c.deg), P = rotPts(B, d.cq, R), [i, j] = al.edges[c.ei], a = SG.numP(P[i]), b = SG.numP(P[j]), mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    const en = d.enames[c.ei], ap = R.exact ? '' : '（近似）';   // 边长是无理数时转不到精确的平行，写明是近似
+    const g = [{ k: 'seg', a, b, at: mid }];
+    if (c.kind === 'h') g.push({ k: 'hl', y: mid.y, at: mid, text: en + ' 水平' + ap });
+    else if (c.kind === 'v') g.push({ k: 'vl', x: mid.x, at: mid, text: en + ' 竖直' + ap });
+    else g.push({ k: 'ln', a: SG.numP(c.o.a), b: SG.numP(c.o.b), at: mid, text: en + (c.kind === 'par' ? ' ∥ ' : ' ⊥ ') + c.o.name + ap });
+    return { deg, R, guides: g, snapped: true };
+  }
+  // 放缩的吸附（2026-11）：放缩以后某个顶点和别的图形的顶点同一竖线 / 横线、落在坐标轴上，或者某条边和别的图形的边等长。
+  // A 是放缩中心（不动的点），tp 是鼠标处的比例，v0len 是拖的角到 A 的距离（坐标单位），用来把比例的差换成屏幕像素
+  function scaleSnap(d, A, tp, v0len, unit) {
+    const B = d.base, al = d.al, cands = [], thr = L.SCALE_SNAP_PX;
+    const tryF = (f, e) => { if (Q.cmp(f, Q(0)) <= 0) return; const px = UI.Space.unitsToPx(Math.abs(Q.num(f) - tp) * v0len, unit); if (px <= thr) cands.push(Object.assign({ f, px }, e)); };
+    for (const b of B) {
+      const bx = Q.sub(b.x, A.x), by = Q.sub(b.y, A.y);
+      if (!Q.eq(bx, Q(0))) { for (const o of al.others) if (!o.mid) tryF(Q.div(Q.sub(o.p.x, A.x), bx), { kind: 'x' }); tryF(Q.div(Q.neg(A.x), bx), { kind: 'x' }); }
+      if (!Q.eq(by, Q(0))) { for (const o of al.others) if (!o.mid) tryF(Q.div(Q.sub(o.p.y, A.y), by), { kind: 'y' }); tryF(Q.div(Q.neg(A.y), by), { kind: 'y' }); }
+    }
+    al.edges.forEach(([i, j], ei) => {
+      const u = { x: Q.sub(B[j].x, B[i].x), y: Q.sub(B[j].y, B[i].y) }, l2 = dotQ(u, u); if (l2.n === 0n) return;
+      for (const o of al.oedges) { const w = { x: Q.sub(o.b.x, o.a.x), y: Q.sub(o.b.y, o.a.y) }, f = sqrtQ(Q.div(dotQ(w, w), l2)); if (f) tryF(f, { kind: 'len', ei, o }); }
+    });
+    cands.sort((a, b) => a.px - b.px || (a.kind === 'len' ? -1 : 1));
+    return cands[0] || null;
+  }
   // 屏幕像素 → 工作区坐标：sc.unit 是一个坐标单位占的屏幕像素（已经算进台面的缩放）
   // 一个可以改的目标：实体 id、两个属性名（kx、ky）、原来的值、允许的范围
   function tgt(id, kx, ky) {
@@ -71,16 +168,26 @@
     if (kind === 'corner') {
       const corner = +hd.dataset.corner;
       if (fi.kind === 'piece') return startShape(ev, wb, wsId, 'pscale', [], { id: fi.ent.id, s0: fi.ent.props.scale, qb, corner });
-      if (polyLike) return startShape(ev, wb, wsId, 'sc', uniq(fi.verts).map((g) => tgt(g, 'x', 'y')), { qb, corner });
+      if (polyLike) return startShape(ev, wb, wsId, 'sc', uniq(fi.verts).map((g) => tgt(g, 'x', 'y')), Object.assign({ qb, corner }, snapPrep(wsId, fi)));
       return;
     }
     if (kind === 'rot') {
       const cf = { x: (Q.num(qb.x0) + Q.num(qb.x1)) / 2, y: (Q.num(qb.y0) + Q.num(qb.y1)) / 2 };
-      const c = cf;   // 旋转中心是精确的中心；任意角度时坐标取到 1/100
+      const c = cf;   // 旋转中心：外框的中心（cq 是精确的有理数，自由点图形按它精确地转）
+      const cq = { x: Q.div(Q.add(qb.x0, qb.x1), Q(2)), y: Q.div(Q.add(qb.y0, qb.y1), Q(2)) };
       if (fi.kind === 'piece') return startShape(ev, wb, wsId, 'prot', [], { id: fi.ent.id, t0: fi.ent.props.turn, a0: SG.approxOf(fi.ent), A0: SG.totalDeg(fi.ent), c, qb });
       if (fi.kind === 'place') return startShape(ev, wb, wsId, 'lrot', [], { id: fi.ent.id, t0: fi.ent.props.turn, c, qb });
-      if (polyLike) return startShape(ev, wb, wsId, 'rot', uniq(fi.verts).map((g) => tgt(g, 'x', 'y')), { c, qb });
+      if (polyLike) {
+        startShape(ev, wb, wsId, 'rot', uniq(fi.verts).map((g) => tgt(g, 'x', 'y')), Object.assign({ c, cq, qb }, snapPrep(wsId, fi)));
+        const dd = SG.drag; dd.rpx = UI.Space.unitsToPx(Math.hypot(dd.start.x - c.x, dd.start.y - c.y), dd.unit);   // 旋转把手到中心的屏幕距离（定吸附的角度阈值）
+        return;
+      }
     }
+  }
+  // 旋转、放缩的吸附准备：自己的顶点（精确坐标）、边、边的名字，别的图形的顶点和边（不含自己）
+  function snapPrep(wsId, fi) {
+    const al = SG.alignOfFig(wsId, fi);
+    return { al, base: al.base, enames: ownEdgeNames(wsId, al.ids, al.edges) };
   }
   // 拖动自由点时的构造点候选（V4，§1.3 第 2、6 条）：别的图形的中点、交点（器材声明的 snap：of 为 edge、cross），
   // 以及别的自由点 R 到边所在直线的垂足（foot 声明，起点是 R）。拖动开始时算一次（拖动时别的图形不变）；不要用这个点自己的线。
@@ -99,7 +206,7 @@
   }
   // 拖动中的点落在构造点的吸附半径（SNAP_PX 屏幕像素）里：返回最近的那个候选，否则 null
   function snapDragCon(d, mx, my) {
-    const t = d.targets[0], px = t.x0 + UI.Space.pxToUnits(mx, d.unit), py = t.y0 - UI.Space.pxToUnits(my, d.unit);
+    const t = d.targets[0], px = Q.num(t.qx) + UI.Space.pxToUnits(mx, d.unit), py = Q.num(t.qy) - UI.Space.pxToUnits(my, d.unit);   // 坐标可能是分数，用 qx、qy
     let best = null, bd = Infinity;
     for (const c of dragCons(d)) { const dd = UI.Space.unitsToPx(Math.hypot(c.x - px, c.y - py), d.unit); if (dd <= SG.SNAP_PX && dd < bd) { bd = dd; best = c; } }
     return best;
@@ -205,12 +312,22 @@
       if (!den) return;
       const tp = ((wp.x - ax) * v0x + (wp.y - ay) * v0y) / den;
       // 比例任意：取鼠标处的比例，精确到 1/100（有理数）；结果超出坐标范围时，往 1 那边让一点，停在能用的比例上
-      const fNear = Q.fromNumber(Math.max(0.01, Math.round(tp * 100) / 100));
+      // 比例吸附到好记的数：十分之几、几分之一（1/2、1/3、1/4……）和它们的倍数；按住 Shift 精确到 1/100
+      const niceF = (x) => { let best = null; for (const dd of [10, 4, 3]) { const n = Math.max(1, Math.round(x * dd)), e = Math.abs(n / dd - x); if (!best || e < best.e - 1e-9) best = { n, dd, e }; } return Q(best.n, best.dd); };
+      let fNear = ev.shiftKey ? Q.fromNumber(Math.max(0.01, Math.round(tp * 100) / 100)) : niceF(Math.max(0.1, tp)), sn = null;
+      // 吸附（2026-11）：顶点对齐别的图形、某条边和别的边等长，优先于好记的比例；吸附开关关了或按住 Alt 不吸
+      if (d.mode === 'sc' && d.al && !SG.snapFree(ev)) {
+        sn = scaleSnap(d, A, tp, Math.sqrt(den), d.unit);
+        // 鼠标就在好记的比例上（3 像素内），而吸附要的比例是很长的分数（转过的图形对齐时常这样）：用好记的
+        if (sn && sn.f.d > 100n && UI.Space.unitsToPx(Math.abs(Q.num(fNear) - tp) * Math.sqrt(den), d.unit) <= 3) sn = null;
+        if (sn) fNear = sn.f;
+      }
       const hundredth = Q(1, 100);
       let f = fNear, pick = null, miss = '';
       for (let k = 0; k < 400 && !pick; k++) {
         if (d.mode === 'pscale') { pick = { f, nv: [] }; break; }
-        const nv = d.targets.map((t) => ({ t, x: Q.add(A.x, Q.mul(f, Q.sub(Q(t.x0), A.x))), y: Q.add(A.y, Q.mul(f, Q.sub(Q(t.y0), A.y))) }));
+        // 用精确的 qx、qy（原来写 Q(t.x0)：顶点是分数（"3/2"）时 Q 不认字符串，抛 bad-number，转过或缩过的图形就再也缩放不了）
+        const nv = d.targets.map((t) => ({ t, x: Q.add(A.x, Q.mul(f, Q.sub(t.qx, A.x))), y: Q.add(A.y, Q.mul(f, Q.sub(t.qy, A.y))) }));
         const inRange = (v) => { const x = Q.num(v.x), y = Q.num(v.y); return x >= v.t.lo[0] && x <= v.t.hi[0] && y >= v.t.lo[1] && y <= v.t.hi[1]; };
         if (nv.every(inRange)) { pick = { f, nv }; break; }
         if (k === 0) miss = '会超出坐标范围（±' + L.COORD_MAX + '）';
@@ -220,6 +337,13 @@
       if (pick) {
         d.f = pick.f;
         if (d.mode === 'sc') for (const v of pick.nv) { put(v.t.id, v.t.kx, Q.store(v.x)); put(v.t.id, v.t.ky, Q.store(v.y)); }
+        // 参考线：放缩以后精确成立的关系（同一竖线、横线、共线……），加上吸附到的“等长”
+        if (d.mode === 'sc' && d.al) {
+          const P = pick.nv.map((v) => ({ x: v.x, y: v.y })), gs = SG.relGuides(d.al, P, null, d.unit);
+          if (sn && sn.kind === 'len' && Q.eq(sn.f, pick.f)) { const [i, j] = d.al.edges[sn.ei], a = SG.numP(P[i]), b = SG.numP(P[j]); gs.unshift({ k: 'seg', a, b, at: a }, { k: 'seg', a: SG.numP(sn.o.a), b: SG.numP(sn.o.b), at: a }, { k: 'pt', x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, at: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, text: d.enames[sn.ei] + ' 和 ' + sn.o.name + ' 等长', noDot: true }); }
+          gs.push({ k: 'pt', x: Q.num(A.x), y: Q.num(A.y), at: { x: Q.num(A.x), y: Q.num(A.y) }, text: '' });   // 放缩中心
+          d.guides = gs;
+        }
         else E[d.id].props.scale = Q.show(Q.mul(Q.parse(d.s0), pick.f));
         tip = '放缩 ' + Q.show(pick.f) + ' 倍';
         if (miss) tip = Q.show(fNear) + ' 倍' + miss + '，停在 ' + Q.show(pick.f) + ' 倍';
@@ -240,11 +364,21 @@
       // 块（lrot）：角度吸附到 90°，和摆放器材的 turn 一致
       const c = d.c, th0 = Math.atan2(d.start.y - c.y, d.start.x - c.x), th = Math.atan2(wp.y - c.y, wp.x - c.x);
       if (d.mode === 'rot') {
-        const a = th - th0, cs = Math.cos(a), sn = Math.sin(a), r100 = (v) => Math.round(v * 100) / 100;
-        const nv = d.targets.map((t) => { const dx = t.x0 - c.x, dy = t.y0 - c.y; return { t, x: r100(c.x + dx * cs - dy * sn), y: r100(c.y + dx * sn + dy * cs) }; });
-        const deg = Math.round(a * 180 / Math.PI);
-        if (nv.some((v) => Math.abs(v.x) > L.COORD_MAX || Math.abs(v.y) > L.COORD_MAX)) tip = '转到这个角度会超出坐标范围（±' + L.COORD_MAX + '），先不动';
-        else { for (const v of nv) { put(v.t.id, v.t.kx, v.x); put(v.t.id, v.t.ky, v.y); } tip = '转 ' + deg + '°'; }
+        // 任意角度：按 1° 吸附（按住 Shift 按 15°），逆时针为正；坐标精确（rotCS），图形和原来全等。
+        // 原来用 t.x0 − c.x：顶点是分数（字符串 "n/d"）时得到 NaN，转过一次的图形就转不动了；现在一律用精确的 qx、qy
+        // 吸附（2026-11）：某条边转到水平、竖直，或者和别的图形的边平行、垂直时吸过去，画参考线（Alt 或吸附开关关了不吸）
+        const step = ev.shiftKey ? L.ROT.coarse : L.ROT.step, raw = normDeg((th - th0) * 180 / Math.PI);
+        const rs = rotSnap(d, raw, step, SG.snapFree(ev)), deg = rs.deg, R = rs.R;
+        const P = rotPts(d.base, d.cq, R), nv = d.targets.map((t, k) => ({ t, x: P[k].x, y: P[k].y }));
+        const inRange = (v) => { const x = Q.num(v.x), y = Q.num(v.y); return x >= v.t.lo[0] && x <= v.t.hi[0] && y >= v.t.lo[1] && y <= v.t.hi[1]; };
+        if (!nv.every(inRange)) tip = '转到这个角度会超出坐标范围（±' + L.COORD_MAX + '），先不动';
+        else {
+          for (const v of nv) { put(v.t.id, v.t.kx, Q.store(v.x)); put(v.t.id, v.t.ky, Q.store(v.y)); }
+          const shown = Math.round(deg * 10) / 10;
+          tip = '转 ' + (Number.isInteger(deg) ? deg : '≈' + shown) + '°' + (rs.text ? '：' + rs.text : rs.snapped ? '' : '（Shift：每次 ' + L.ROT.coarse + '°，Alt：不吸附）');
+          const a0 = Math.atan2(d.start.y - c.y, d.start.x - c.x);
+          d.guides = [{ k: 'arc', at: { x: c.x, y: c.y }, rpx: Math.min(40, Math.max(22, d.rpx * 0.35)), a0, a1: a0 + deg * Math.PI / 180, text: (Number.isInteger(deg) ? deg : '≈' + shown) + '°' }].concat(rs.guides, SG.relGuides(d.al, P, null, d.unit).filter((g) => g.k !== 'ln'));
+        }
       } else {
         const k = Math.round((th - th0) / (Math.PI / 2));
         d.k = k;
@@ -296,6 +430,65 @@
       const list = uniq(fi.verts).map((g) => ({ id: g, k: q, v: Q.store(Q.sub(Q.add(mn, mx), Q.parse(UI.S.scene.entities[g].props[q]))) }));
       return UI.Intent.run('params', { ops: list });
     }
+  }
+  // ---- 浮动条和键盘（2026-11）：转一个角度、放缩一个倍数、摆正。都是一步（撤销一次回去），坐标精确 ----
+  const say = (m, good) => { SG.setMsg(m, !!good); SG.render(); return { ok: !!good, why: good ? '' : m }; };
+  // 自由点图形的顶点（精确）和外框中心
+  function ptsOf(fi) {
+    const ids = uniq(fi.verts), B = ids.map((g) => SG.gptPt(g)), xs = B.map((p) => p.x), ys = B.map((p) => p.y);
+    return { ids, B, cq: { x: Q.div(Q.add(minQ(xs), maxQ(xs)), Q(2)), y: Q.div(Q.add(minQ(ys), maxQ(ys)), Q(2)) } };
+  }
+  // 把新坐标写回去（一步）；超出坐标范围就不动，说明原因
+  function putPts(ids, P, what) {
+    if (P.some((p) => Math.abs(Q.num(p.x)) > L.COORD_MAX || Math.abs(Q.num(p.y)) > L.COORD_MAX)) return say(what + '会超出坐标范围（±' + L.COORD_MAX + '），先把图形挪近中间');
+    if (ids.some((g) => U.Geo.locks.of(UI.S.scene).some((c) => [c.a, c.b, c.c].includes(g))) && what.indexOf('放缩') === 0) return say('有约束锁着，先解锁再放缩');
+    const ops = []; ids.forEach((g, k) => { ops.push({ id: g, k: 'x', v: Q.store(P[k].x) }, { id: g, k: 'y', v: Q.store(P[k].y) }); });
+    UI.Intent.run('params', { ops }); SG.setMsg(what, true); SG.render(); return { ok: true };
+  }
+  const canEdit = (fi) => fi && fi.kind === 'pts' && fi.f.type !== 'point';
+  // 转 deg 度（逆时针为正），绕外框中心
+  function figRotateBy(wsId, name, deg) {
+    const fi = figByName(wsId, name); if (!fi) return say('先选中一个图形');
+    if (!canEdit(fi)) {
+      if (deg % 90) return say('这个图形只能转 90° 的倍数（点「旋转」或按 R）');
+      const k = modT(Math.round(deg / 90)); if (!k) return { ok: true };
+      if (fi.kind === 'piece') return UI.Intent.run('piece', { ids: [fi.ent.id], what: 'turn', value: k });
+      if (fi.kind === 'place') return UI.Intent.run('params', { ops: [{ id: fi.ent.id, k: 'turn', v: modT(fi.ent.props.turn + k) }] });
+      return say('这个图形不能转');
+    }
+    if (!U.Geo.locks.rigid(UI.S.scene, uniq(fi.verts))) return say('有约束连着外面的点，先解锁再转');
+    const o = ptsOf(fi), sh = Math.round(deg * 10) / 10;
+    return putPts(o.ids, rotPts(o.B, o.cq, rotCS(deg)), '转了 ' + (Number.isInteger(deg) ? deg : '≈' + sh) + '°');
+  }
+  // 放缩 f 倍（有理数），绕外框中心
+  function figScaleBy(wsId, name, f) {
+    const fi = figByName(wsId, name); if (!fi) return say('先选中一个图形');
+    if (Q.cmp(f, Q(0)) <= 0) return say('倍数要大于 0');
+    if (fi.kind === 'piece') return UI.Intent.run('params', { ops: [{ id: fi.ent.id, what: 'scale', value: Q.show(f) }] });
+    if (!canEdit(fi)) return say('这个图形不能放缩');
+    const o = ptsOf(fi), P = o.B.map((b) => ({ x: Q.add(o.cq.x, Q.mul(f, Q.sub(b.x, o.cq.x))), y: Q.add(o.cq.y, Q.mul(f, Q.sub(b.y, o.cq.y))) }));
+    return putPts(o.ids, P, '放缩 ' + Q.show(f) + ' 倍（形状不变）');
+  }
+  // 摆正：转最小的角度，让某一条边水平或竖直（|边长| 是有理数时精确，比如转过的长方形转回来）
+  function figStraighten(wsId, name) {
+    const fi = figByName(wsId, name); if (!fi) return say('先选中一个图形');
+    if (!canEdit(fi)) return say('这个图形本来就是正的（只能转 90° 的倍数）');
+    const o = ptsOf(fi), ids = o.ids, B = o.B;
+    let best = null;
+    for (const [a, b] of fi.edges) {
+      const i = ids.indexOf(fi.verts[a]), j = ids.indexOf(fi.verts[b]), u = { x: Q.sub(B[j].x, B[i].x), y: Q.sub(B[j].y, B[i].y) };
+      if (Q.eq(u.x, Q(0)) && Q.eq(u.y, Q(0))) continue;
+      const au = angOf(u);
+      for (const [w, t] of [[{ x: Q(1), y: Q(0) }, 0], [{ x: Q(0), y: Q(1) }, 90]]) {
+        const need = t - au, deg = need - 180 * Math.round(need / 180);
+        if (!best || Math.abs(deg) < Math.abs(best.deg) - 1e-9) best = { deg, u, w };
+      }
+    }
+    if (!best) return say('这个图形没有边可以摆正');
+    if (Math.abs(best.deg) < 1e-9) return say('已经是正的了（有边是水平或竖直的）', true);
+    if (!U.Geo.locks.rigid(UI.S.scene, ids)) return say('有约束连着外面的点，先解锁再转');
+    const R = rotToward(best.u, best.w, best.deg), sh = Math.round(best.deg * 10) / 10;
+    return putPts(ids, rotPts(B, o.cq, R), '摆正：转了 ' + (R.exact ? '' : '≈') + sh + '°' + (R.exact ? '' : '（这条边的长不是整数，只能近似摆正）'));
   }
   // ---- 工具条上的图形操作：复制、旋转、翻转、删除（不用先选图形）----
   // 对谁做：选中的图形；没有选中，工作区里只有一个图形就是它；有好几个就等着：点一下要操作的图形（S.wsArm），点到就做
@@ -421,5 +614,5 @@
     SG.setMsg(bad || '', !bad);
     SG.render();
   }
-  Object.assign(SG, { wsAct, ACT_LABEL, uniq, SNAP_PX, minQ, maxQ, modT, tgt, figInfo, figByName, moveTargets, startShape, startHandle, shapeMove, shapeUp, figFlip, pieceVerts, clipCopy, clipPaste, wsGroup, groupMembers, groupDrag, touchesLock, segLenLock, lockTarget, wsLock, rightMarks });
+  Object.assign(SG, { figRotateBy, figScaleBy, figStraighten, rotCS, wsAct, ACT_LABEL, uniq, SNAP_PX, minQ, maxQ, modT, tgt, figInfo, figByName, moveTargets, startShape, startHandle, shapeMove, shapeUp, figFlip, pieceVerts, clipCopy, clipPaste, wsGroup, groupMembers, groupDrag, touchesLock, segLenLock, lockTarget, wsLock, rightMarks });
 })(window);

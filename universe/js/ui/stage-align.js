@@ -95,51 +95,55 @@
       }
     }
     if (!T) T = { x: rnd(Tc.x), y: rnd(Tc.y) };   // Alt 或者没有吸附：和原来一样取整
-    if (!al.alt) {
-      // 3. 参考线：只画精确成立的关系（不管是不是吸附来的）；同一条线只画一次，最多 8 条
-      const P = al.base.map((b) => ({ x: Q.add(b.x, T.x), y: Q.add(b.y, T.y) }));
-      const seen = new Set(), add = (k, g) => { if (!seen.has(k) && guides.length < 8) { seen.add(k); guides.push(g); } };
-      P.forEach((p, i) => {
-        const at = numP(p);
-        for (const v of O) {
-          const sx = Q.eq(p.x, v.p.x), sy = Q.eq(p.y, v.p.y);
-          if (sx && sy) add('pt' + at.x + ',' + at.y, { k: 'pt', x: at.x, y: at.y, at, text: v.mid ? '落在 ' + v.name + ' 上' : '顶点重合' });
-          else if (sx) add('vx' + at.x, { k: 'vl', x: at.x, at, text: '和 ' + v.name + ' 同一竖线' });
-          else if (sy) add('hy' + at.y, { k: 'hl', y: at.y, at, text: '和 ' + v.name + ' 同一横线' });
-        }
-        if (Q.eq(p.x, Q(0))) add('ax' + at.x, { k: 'vl', x: 0, at, text: '在纵轴上' });
-        if (Q.eq(p.y, Q(0))) add('ay' + at.y, { k: 'hl', y: 0, at, text: '在横轴上' });
-        // 格点：整数位置，而且拖动的鼠标本来就离这个格点很近
-        const bn = al.base[i], cx0 = Q.num(bn.x) + Tc.x, cy0 = Q.num(bn.y) + Tc.y;
-        if (Q.isInt(p.x) && Q.isInt(p.y) && pxd(cx0 - at.x, cy0 - at.y) <= ALIGN_PX) add('gp' + at.x + ',' + at.y, { k: 'pt', x: at.x, y: at.y, at, text: '格点' });
-      });
-      for (const [i, j] of al.edges) {
-        const ea = P[i], eb = P[j], u = vsb(eb, ea), A = numP(ea), Bp = numP(eb), mid = { x: (A.x + Bp.x) / 2, y: (A.y + Bp.y) / 2 };
-        if (Q.eq(u.x, Q(0)) && Q.eq(u.y, Q(0))) continue;
-        for (const o of OE) {
-          const w = vsb(o.b, o.a), oa = numP(o.a), ob = numP(o.b), key = oa.x + ',' + oa.y + ',' + ob.x + ',' + ob.y;
-          if (Q.eq(w.x, Q(0)) && Q.eq(w.y, Q(0))) continue;
-          const c = cr2(u, w), near = UI.Space.unitsToPx(gapSeg(A, Bp, oa, ob), unit) <= ALIGN_PX;
-          if (Q.eq(c, Q(0))) {
-            if (Q.eq(cr2(u, vsb(o.a, ea)), Q(0))) add('ln' + key, { k: 'ln', a: oa, b: ob, at: mid, text: '和 ' + o.name + ' 共线' });
-            else if (near) add('ln' + key, { k: 'ln', a: oa, b: ob, at: mid, text: '和 ' + o.name + ' 平行' });
-          } else if (near && Q.eq(dt2(u, w), Q(0))) add('ln' + key, { k: 'ln', a: oa, b: ob, at: mid, text: '和 ' + o.name + ' 垂直' });
-        }
+    if (!al.alt) for (const g of relGuides(al, al.base.map((b) => ({ x: Q.add(b.x, T.x), y: Q.add(b.y, T.y) })), Tc, unit)) guides.push(g);
+    return { dx: Q.num(T.x), dy: Q.num(T.y), dxq: T.x, dyq: T.y, guides };   // dxq、dyq 是精确的有理数平移（块拖动用）
+  }
+  // 精确成立的关系画成参考线（移动、旋转、放缩共用）：P 是动点的新位置（和 al.base 一一对应），al.edges 是动点之间的边。
+  // Tc 是拖动量（只有平移时有，用来判断“格点”），旋转、放缩传 null
+  function relGuides(al, P, Tc, unit) {
+    // 3. 参考线：只画精确成立的关系（不管是不是吸附来的）；同一条线只画一次，最多 8 条
+    const guides = [], pxd = (a, b) => UI.Space.unitsToPx(Math.hypot(a, b), unit), O = al.others, OE = al.oedges;
+    const seen = new Set(), add = (k, g) => { if (!seen.has(k) && guides.length < 8) { seen.add(k); guides.push(g); } };
+    P.forEach((p, i) => {
+      const at = numP(p);
+      for (const v of O) {
+        const sx = Q.eq(p.x, v.p.x), sy = Q.eq(p.y, v.p.y);
+        if (sx && sy) add('pt' + at.x + ',' + at.y, { k: 'pt', x: at.x, y: at.y, at, text: v.mid ? '落在 ' + v.name + ' 上' : '顶点重合' });
+        else if (sx) add('vx' + at.x, { k: 'vl', x: at.x, at, text: '和 ' + v.name + ' 同一竖线' });
+        else if (sy) add('hy' + at.y, { k: 'hl', y: at.y, at, text: '和 ' + v.name + ' 同一横线' });
       }
-      // 等距：一个动点到另外两个不同的顶点距离相等（精确相等才算）
-      const d2 = (p, q) => { const dx = Q.sub(p.x, q.x), dy = Q.sub(p.y, q.y); return Q.add(Q.mul(dx, dx), Q.mul(dy, dy)); };
-      for (const p of P) {
-        let n = 0;
-        for (let a = 0; a < O.length && n < 1; a++) for (let b = a + 1; b < O.length && n < 1; b++) {
-          if (O[a].name === O[b].name || O[a].mid || O[b].mid) continue;
-          const d1 = d2(p, O[a].p), e2 = d2(p, O[b].p);
-          if (Q.eq(d1, Q(0)) || !Q.eq(d1, e2)) continue;
-          add('eq' + numP(p).x + ',' + numP(p).y + O[a].name + O[b].name, { k: 'seg2', a: numP(O[a].p), b: numP(O[b].p), at: numP(p), text: '与 ' + O[a].name + '、' + O[b].name + ' 等距' });
-          n++;
-        }
+      if (Q.eq(p.x, Q(0))) add('ax' + at.x, { k: 'vl', x: 0, at, text: '在纵轴上' });
+      if (Q.eq(p.y, Q(0))) add('ay' + at.y, { k: 'hl', y: 0, at, text: '在横轴上' });
+      // 格点：整数位置，而且拖动的鼠标本来就离这个格点很近
+      const bn = al.base[i], cx0 = Tc ? Q.num(bn.x) + Tc.x : 0, cy0 = Tc ? Q.num(bn.y) + Tc.y : 0;
+      if (Tc && Q.isInt(p.x) && Q.isInt(p.y) && pxd(cx0 - at.x, cy0 - at.y) <= ALIGN_PX) add('gp' + at.x + ',' + at.y, { k: 'pt', x: at.x, y: at.y, at, text: '格点' });
+    });
+    for (const [i, j] of al.edges) {
+      const ea = P[i], eb = P[j], u = vsb(eb, ea), A = numP(ea), Bp = numP(eb), mid = { x: (A.x + Bp.x) / 2, y: (A.y + Bp.y) / 2 };
+      if (Q.eq(u.x, Q(0)) && Q.eq(u.y, Q(0))) continue;
+      for (const o of OE) {
+        const w = vsb(o.b, o.a), oa = numP(o.a), ob = numP(o.b), key = oa.x + ',' + oa.y + ',' + ob.x + ',' + ob.y;
+        if (Q.eq(w.x, Q(0)) && Q.eq(w.y, Q(0))) continue;
+        const c = cr2(u, w), near = UI.Space.unitsToPx(gapSeg(A, Bp, oa, ob), unit) <= ALIGN_PX;
+        if (Q.eq(c, Q(0))) {
+          if (Q.eq(cr2(u, vsb(o.a, ea)), Q(0))) add('ln' + key, { k: 'ln', a: oa, b: ob, at: mid, text: '和 ' + o.name + ' 共线' });
+          else if (near) add('ln' + key, { k: 'ln', a: oa, b: ob, at: mid, text: '和 ' + o.name + ' 平行' });
+        } else if (near && Q.eq(dt2(u, w), Q(0))) add('ln' + key, { k: 'ln', a: oa, b: ob, at: mid, text: '和 ' + o.name + ' 垂直' });
       }
     }
-    return { dx: Q.num(T.x), dy: Q.num(T.y), dxq: T.x, dyq: T.y, guides };   // dxq、dyq 是精确的有理数平移（块拖动用）
+    // 等距：一个动点到另外两个不同的顶点距离相等（精确相等才算）
+    const d2 = (p, q) => { const dx = Q.sub(p.x, q.x), dy = Q.sub(p.y, q.y); return Q.add(Q.mul(dx, dx), Q.mul(dy, dy)); };
+    for (const p of P) {
+      let n = 0;
+      for (let a = 0; a < O.length && n < 1; a++) for (let b = a + 1; b < O.length && n < 1; b++) {
+        if (O[a].name === O[b].name || O[a].mid || O[b].mid) continue;
+        const d1 = d2(p, O[a].p), e2 = d2(p, O[b].p);
+        if (Q.eq(d1, Q(0)) || !Q.eq(d1, e2)) continue;
+        add('eq' + numP(p).x + ',' + numP(p).y + O[a].name + O[b].name, { k: 'seg2', a: numP(O[a].p), b: numP(O[b].p), at: numP(p), text: '与 ' + O[a].name + '、' + O[b].name + ' 等距' });
+        n++;
+      }
+    }
+    return guides;
   }
   // 卡片拖动吸附（V4 剩余，1.3）：卡片不是几何对象，所以在屏幕上吸：卡片中心离可见工作区里某个顶点或线段（多边形边）的中点在 SNAP_PX 像素内，
   // 就吸过去，返回新的卡片位置和写给学生看的名字（“AB 的中点”）；Alt 按住或吸附开关关了就不吸。被拖的卡片本身的工作区不参与。
@@ -263,13 +267,13 @@
     const ops = [];
     for (const [id, m] of into) {
       const e = E[id], px = m.piece ? 'dx' : 'x', py = m.piece ? 'dy' : 'y';
-      if (!Q.eq(m.x, Q(0))) ops.push({ id, k: px, v: Q.num(Q.add(Q(e.props[px]), m.x)) });
-      if (!Q.eq(m.y, Q(0))) ops.push({ id, k: py, v: Q.num(Q.add(Q(e.props[py]), m.y)) });
+      if (!Q.eq(m.x, Q(0))) ops.push({ id, k: px, v: Q.store(Q.add(Q.parse(e.props[px]), m.x)) });   // 原值可能是分数（"n/d"），用 Q.parse 读、精确存
+      if (!Q.eq(m.y, Q(0))) ops.push({ id, k: py, v: Q.store(Q.add(Q.parse(e.props[py]), m.y)) });
     }
     const r = UI.Intent.run('align', { ws: wsId, ops, label: ALIGN_LABEL[op] });
     if (r && r.ok === false) return say(r.why || '这一步做不了');
     SG.setMsg(ALIGN_LABEL[op] + '：' + items.length + ' 个图形已对齐（撤销一步回去）', true);
     return SG.render();
   }
-  Object.assign(SG, { ALIGN_PX, GUIDE_COL, cr2, dt2, vsb, numP, rnd, pdist, gapSeg, edgesOf, gptPt, buildAlign, alignOfFig, alignSolve, cardSnap, alignWs, ALIGN_LABEL });
+  Object.assign(SG, { ALIGN_PX, GUIDE_COL, cr2, dt2, vsb, numP, rnd, pdist, gapSeg, edgesOf, gptPt, buildAlign, alignOfFig, alignSolve, relGuides, pointNames, cardSnap, alignWs, ALIGN_LABEL });
 })(window);

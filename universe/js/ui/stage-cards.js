@@ -165,6 +165,7 @@
       '<button data-fbar="side" data-ws="' + e.id + '" title="展开或收起右边的抽屉（图层、步骤、范围）">' + (open ? '收起抽屉' : '展开抽屉') + '</button>' +
       '<button data-fbar="focus" data-ws="' + e.id + '" title="还原到台面">还原</button></div>';
     h += '<div class="wsf-main"><svg class="bdy wsbody" data-wsid="' + e.id + '" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '">' + SG.wsBody(e, W, H) + '</svg>';
+    { const ff = SG.figFloat(e, W, H); if (ff) h += SG.floatHtml(e.id, ff, 0, 0); }   // 专注模式也有选中图形的浮动条（2026-11）
     if (open) h += '<div class="wsf-side">' + SG.wsPanelHtml(e, SG.wsNames(), { w: W, h: H }, true) + '</div>';
     return h + '</div>';
   }

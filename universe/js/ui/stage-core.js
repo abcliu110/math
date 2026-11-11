@@ -23,10 +23,14 @@
   const WS_COL = ['#1d4ed8', '#c2410c', '#047857', '#7e22ce', '#b91c1c'];
   // 线型（V10，2.6b）：颜色之外的第二种区分手段。颜色按序号 i % 5 轮换，线型也按 i % 5 轮换，所以颜色不同的线线型一定不同。
   //   “线”（实线家族）和“辅助线”（虚线家族，f.dash）两组的线型互不相同，两种线也分得开。
+  //   线条好看一些（2026-11）：第一个图形一定是实线；其余的线型拉长、配圆头（stroke-linecap round），点线画成圆点而不是碎线；
+  //   颜色和线型的序号只在“线和多边形”里数（点不占序号），所以工作区里只有一个图形时它就是实线。
   const LINE_DASH = {
-    line: ['', '2 3', '10 3 2 3', '16 5 2 5', '1 4'],    // 实线、点线、点划线、长划点线、稀点线
-    aux: ['6 4', '9 4', '4 2 1 2', '12 3 3 3', '3 6'],    // 虚线家族（辅助线）
+    line: ['', '10 6', '0.1 6', '14 5 0.1 5', '6 4 6 10'],    // 实线、长虚线、圆点线、点划线、双划线
+    aux: ['5 5', '8 6', '0.1 4', '12 4 0.1 4', '3 7'],         // 虚线家族（辅助线）
   };
+  // 颜色序号：点在点里数，线和多边形在线和多边形里数（不让 4 个顶点把多边形挤到第 5 种颜色、稀点线上去）
+  const colIdx = (vals, i) => { const isPt = (v) => !!(v && v.fig && v.fig.type === 'point'), me = isPt(vals[i]); let k = 0; for (let j = 0; j < i; j++) if (vals[j] && vals[j].fig && isPt(vals[j]) === me) k++; return k; };
   const escA = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   const numOf = (id) => +String(id).slice(1);
   // 容器：workspaceRole 为 container 的器材。它的显示和工具写在 workspace 配置里，没写的按默认（显示图形、没有工具）
@@ -40,5 +44,5 @@
   const pickOf = (v) => v.name || '#' + v.key;
   // 找回选中的对象：'#' 开头的按键找（实体 id 和口），其余按稳定名字找。返回和 U.Names.resolve 一样的形状
   const resolvePick = (name) => { if (name[0] !== '#') return U.Names.resolve(UI.S.scene, name); const [id, port] = name.slice(1).split('.'); const e = UI.S.scene.entities[id]; if (!e) return 'missing: ' + name; const node = (UI.S.D || {})[id]; return { name, id, port, ent: e, value: (node && node.out[port]) || null }; };
-  Object.assign(SG, { def, geom, dbl, SIGLV, defOf, roleOf, WS_COL, LINE_DASH, escA, numOf, isWsDef, wsCfg, inWs, wsKids, wsNames, pickOf, resolvePick });
+  Object.assign(SG, { def, geom, dbl, SIGLV, defOf, roleOf, WS_COL, LINE_DASH, colIdx, escA, numOf, isWsDef, wsCfg, inWs, wsKids, wsNames, pickOf, resolvePick });
 })(window);

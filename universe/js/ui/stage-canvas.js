@@ -7,7 +7,9 @@
   const SG = UI.StageCtx;
   // 线型（V10，2.6b）：线段和多边形的边按图形的序号换线型，颜色相同也分得开；辅助线固定虚线
   const da = (d) => (d ? ' stroke-dasharray="' + d + '"' : '');
-  const dashOf = (f, i) => SG.LINE_DASH[f.dash ? 'aux' : 'line'][i % SG.WS_COL.length];   // 和颜色同一个序号，颜色不同线型就不同
+  // 2026-11：平时线都是实线（辅助线是一种虚线），好看；打开「高对比度」时才按序号换线型（色觉障碍时颜色不同、线型也不同）
+  const highContrast = () => document.documentElement.getAttribute('data-contrast') === 'high';
+  const dashOf = (f, i) => (highContrast() ? SG.LINE_DASH[f.dash ? 'aux' : 'line'][i % SG.WS_COL.length] : f.dash ? SG.LINE_DASH.aux[0] : '');   // 和颜色同一个序号（SG.colIdx）
   // 点的形状（V10，2.6b）：由产生这个点的器材声明（pointShape，见 packs/geo.js）；没有声明的是圆
   const shapeOf = (v) => { const e = UI.S.scene.entities[v.id], d = e && U.types[e.type]; return (d && d.pointShape) || 'circle'; };
   // 工作区的画布：把所有显示的值画在一起，按工作区的坐标范围画（范围定下来以后，卡片变大图也跟着变大）
@@ -75,7 +77,7 @@
       const dx = X((bx.x0 + bx.x1) / 2) - w / 2, dy = Y((bx.y0 + bx.y1) / 2) - h / 2;
       if (!dx && !dy) return;
       const t = Math.min(dx ? (w / 2 - M - 14) / Math.abs(dx) : Infinity, dy ? (h / 2 - M - 14) / Math.abs(dy) : Infinity);
-      const ax = w / 2 + dx * t, ay = h / 2 + dy * t, ang = Math.atan2(dy, dx) * 180 / Math.PI, c = SG.WS_COL[i % SG.WS_COL.length];
+      const ax = w / 2 + dx * t, ay = h / 2 + dy * t, ang = Math.atan2(dy, dx) * 180 / Math.PI, c = SG.WS_COL[SG.colIdx(vals, i) % SG.WS_COL.length];
       const tw = SG.TXT_W(v.label), tx = Math.max(M, Math.min(w - M - tw, ax - tw / 2)), ty = ay < h / 2 ? Math.min(h - M, ay + 26) : Math.max(M + 11, ay - 18);
       out.push('<g data-offscreen="1" data-fit-ws="' + ws.id + '" data-fit-key="' + SG.escA(v.key) + '" style="cursor:pointer">' +
         '<circle cx="' + ax.toFixed(1) + '" cy="' + ay.toFixed(1) + '" r="12" style="fill:var(--card)" stroke="' + c + '" stroke-width="2"/>' +
@@ -106,12 +108,13 @@
     const fitOn = fitState(ws);   // 拼合正确的块变绿（C16）
     let g = K.texDefs(SG.WS_COL), top = '', hit = '';   // g 先放纹理图案的定义（V10，2.6b）；top：自由点的把手，画在所有图形的上面（图形的填充不能盖住点）；hit：没有别的把手的线和多边形的边，加宽的透明命中线
     const selName = (S.wsSel || []).length === 1 ? S.wsSel[0] : null;   // 选中一个图形时，它的读数（V9，2.9）
-    vals.forEach((v, i) => {
+    vals.forEach((v, i0) => {
       const f = v.fig; if (!f) return;
+      const i = SG.colIdx(vals, i0);   // 颜色和线型的序号（点和线分开数）
       figObs(f, X, Y, s, obs);
       // 块（§10.5.10）：用块自己的颜色；可以拖（data-drag，松手时一次 piece 移动）
       const ent = ents[v.id], isPc = !!ent && SG.roleOf(ent) === 'piece' && v.port === 'f';
-      const c = isPc ? (ent.props.color || SG.WS_COL[0]) : SG.WS_COL[i % SG.WS_COL.length], on = sel.has(SG.pickOf(v)), sw = on ? 4 : 2;
+      const c = isPc ? (ent.props.color || SG.WS_COL[0]) : SG.WS_COL[i % SG.WS_COL.length], on = sel.has(SG.pickOf(v)), sw = on ? 3.5 : 2.5;
       // 屏幕阅读器读出的名字（V8，2.8）；data-pri 是点选的优先级（V3，1.5 第 1 条）：点 0 > 线段、边 1 > 填充区域 2，同一位置多个时选优先级高的
       const pk = (pri) => " data-pick=\"" + SG.escA(SG.pickOf(v)) + "\" data-pri=\"" + pri + "\" role=\"img\" aria-label=\"" + SG.escA(ariaOf(v, f)) + "\"";
       const dg = isPc && !ent.props.locked ? ' data-drag="' + ent.id + '" data-s="' + s.toFixed(4) + '"' : '';
@@ -123,14 +126,14 @@
         const sp = SG.shownPts(f, ent);   // 块有近似角度时画转过去的样子（V9，2.10）；其余就是精确坐标
         const d = sp.map((p, k) => (k ? 'L' : 'M') + X(p.x).toFixed(1) + ' ' + Y(p.y).toFixed(1)).join(' ') + ' Z';
         const fit = isPc && !!fitOn && fitOn.ids.includes(ent.id);
-        g += '<path d="' + d + '" fill="' + K.texFill(f, c) + '" stroke="' + (fit ? '#16a34a' : c) + '" stroke-width="' + sw + '"' + da(dashOf(f, i)) + (fit && fitOn.flash ? ' class="wsflash"' : '') + pk(2) + dg + sty + '/>';
+        g += '<path d="' + d + '" fill="' + K.texFill(f, c) + '" stroke="' + (fit ? '#16a34a' : c) + '" stroke-width="' + sw + '"' + da(dashOf(f, i)) + ' stroke-linejoin="round" stroke-linecap="round"' + (fit && fitOn.flash ? ' class="wsflash"' : '') + pk(2) + dg + sty + '/>';
         if (wantHit) hit += '<path d="' + d + '" fill="none" stroke="transparent" stroke-width="12"' + pk(1) + ' style="cursor:pointer"/>';
         g += SG.rightMarks(v, X, Y, sp);   // 锁住的直角（§10.5.9 第 1 条）
         lx = sp.reduce((a, p) => a + X(p.x), 0) / sp.length; ly = sp.reduce((a, p) => a + Y(p.y), 0) / sp.length;
         const tw = SG.TXT_W(v.label); cands = [[lx - tw / 2, ly + 4], [lx - tw / 2, ly + 18], [lx - tw / 2, ly - 10], [lx - tw / 2, ly + 32]]; prio = 2;
       } else if (f.type === 'segment') {
         const a = f.pts[0], b = f.pts[1];
-        g += '<line x1="' + X(Q.num(a.x)) + '" y1="' + Y(Q.num(a.y)) + '" x2="' + X(Q.num(b.x)) + '" y2="' + Y(Q.num(b.y)) + '" stroke="' + c + '" stroke-width="' + (on ? 5 : 2.5) + '"' + da(dashOf(f, i)) + ' stroke-linecap="round"' + pk(1) + sty + '/>';
+        g += '<line x1="' + X(Q.num(a.x)) + '" y1="' + Y(Q.num(a.y)) + '" x2="' + X(Q.num(b.x)) + '" y2="' + Y(Q.num(b.y)) + '" stroke="' + c + '" stroke-width="' + (on ? 4 : 2.5) + '"' + da(dashOf(f, i)) + ' stroke-linecap="round"' + pk(1) + sty + '/>';
         if (wantHit) hit += '<line x1="' + X(Q.num(a.x)) + '" y1="' + Y(Q.num(a.y)) + '" x2="' + X(Q.num(b.x)) + '" y2="' + Y(Q.num(b.y)) + '" stroke="transparent" stroke-width="14"' + pk(1) + ' style="cursor:pointer"/>';
         lx = (X(Q.num(a.x)) + X(Q.num(b.x))) / 2; ly = (Y(Q.num(a.y)) + Y(Q.num(b.y))) / 2;
         const tw = SG.TXT_W(v.label); cands = [[lx + 6, ly - 6], [lx + 6, ly + 14], [lx - tw - 6, ly - 6], [lx - tw - 6, ly + 14]];
@@ -146,7 +149,7 @@
         const px = X(Q.num(f.pts[0].x)), py = Y(Q.num(f.pts[0].y)), src = f.tag && SG.roleOf(ents[f.tag]) === 'point' ? f.tag : null;
         if (src) {
           // 自由点的把手：拖动改它的 x、y（沿用 onDown 的 data-drag 机制）
-          top += '<circle data-drag="' + src + '" data-kx="x" data-ky="y" data-s="' + s.toFixed(4) + '" cx="' + px + '" cy="' + py + '" r="7" fill="#fff" stroke="' + c + '" stroke-width="' + (on ? 4 : 2.5) + '" style="cursor:grab"' + pk(0) + '/>';
+          top += '<circle data-drag="' + src + '" data-kx="x" data-ky="y" data-s="' + s.toFixed(4) + '" cx="' + px + '" cy="' + py + '" r="6" fill="#fff" stroke="' + c + '" stroke-width="' + (on ? 3.5 : 2.5) + '" style="cursor:grab"' + pk(0) + '/>';
         } else g += K.mark(px, py, shapeOf(v), on ? 6 : 4, { fill: c, extra: pk(0) + sty });
         lx = px + 9; ly = py - 9;
         const tw = SG.TXT_W(v.label); cands = [[px + 9, py - 9], [px + 9, py + 15], [px - 9 - tw, py - 9], [px - 9 - tw, py + 15]]; prio = 0;
@@ -154,14 +157,18 @@
       if (lx !== undefined) labs.push({ text: v.label, c, cands, prio, ren: f.type === 'point' && ents[v.id] && SG.roleOf(ents[v.id]) === 'point' ? v.id : null });   // 点的标签可以双击改名（2.6）
       if (selName && SG.pickOf(v) === selName) SG.readoutsFor(ent, f, X, Y, labs);   // 选中的图形：读数（2.9）
     });
-    return wsEdges(fr) + g + hit + top + wsHandles(fr) + SG.marksSvg(ws, fr, labs) + ghostSvg(ws, fr) + gsvg + drawPreview(ws, fr) + dragSnapSvg(ws, fr) + offArrows(fr, ws) + placeLabels(labs, w, h, obs) + selHint(ws, fr) + boardMsg(w, h);
+    // 2026-11：选中图形的把手（放缩、旋转）画在标签上面，标签也躲开把手（以前点名标签会盖住角上的把手，拖不到）
+    const hdl = wsHandles(fr, obs);
+    return wsEdges(fr) + g + hit + top + SG.marksSvg(ws, fr, labs) + ghostSvg(ws, fr) + gsvg + drawPreview(ws, fr) + dragSnapSvg(ws, fr) + offArrows(fr, ws) + placeLabels(labs, w, h, obs) + hdl + selHint(ws, fr) + boardMsg(w, h);
   }
   // 选中提示（V3，1.5 第 3 条）：选中图形时，画布左下角写一行：选中的是什么，怎么切换和取消。画线、剪的时候不显示（那时有自己的工具状态）
   function selHint(ws, fr) {
     const S = UI.S, sel = S.wsSel || [];
     if (!sel.length || S.wsDraw || !fr.vals) return '';
     const txt = sel.length > 1 ? '已选中 ' + sel.length + ' 个图形' : '已选中：' + figName(fr, sel[0]);
-    const full = txt + '，按 Tab 切换，Esc 取消', y = fr.h - L.SEL_HINT_Y, w = SG.TXT_W(full) + L.SEL_HINT_PAD;
+    // 2026-11：选中能转、能放缩的图形时提示快捷键
+    const one = sel.length === 1 && SG.figByName(ws.id, sel[0]), canTurn = one && one.f.type !== 'point' && one.kind !== 'place';
+    const full = txt + '，按 Tab 切换，' + (canTurn ? '[ ] 转，+ − 放缩，' : '') + 'Esc 取消', y = fr.h - L.SEL_HINT_Y, w = SG.TXT_W(full) + L.SEL_HINT_PAD;
     return '<rect x="6" y="' + y + '" width="' + w + '" height="22" rx="5" style="fill:var(--card);stroke:var(--ink);stroke-width:1" pointer-events="none"/>' +
       '<text x="13" y="' + (y + 15) + '" font-size="13" font-weight="700" font-family="var(--font)" style="fill:var(--ink)" pointer-events="none">' + K.esc(full) + '</text>';
   }
@@ -235,7 +242,16 @@
       else if (g.k === 'hl') s += gline(0, Y(g.y), w, Y(g.y));
       else if (g.k === 'ln') { const x0 = X(g.a.x), y0 = Y(g.a.y), x1 = X(g.b.x), y1 = Y(g.b.y), dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy) || 1, K = (w + h) / L; s += gline(x0 - dx * K, y0 - dy * K, x1 + dx * K, y1 + dy * K); }
       else if (g.k === 'seg2') s += gline(X(g.a.x), Y(g.a.y), X(g.b.x), Y(g.b.y)) + gline(ax, ay, X(g.a.x), Y(g.a.y)) + gline(ax, ay, X(g.b.x), Y(g.b.y));
-      s += '<circle class="wsguide" cx="' + ax.toFixed(1) + '" cy="' + ay.toFixed(1) + '" r="' + (g.k === 'pt' ? 6 : 3) + '" fill="' + (g.k === 'pt' ? 'none' : SG.GUIDE_COL) + '" stroke="' + SG.GUIDE_COL + '" stroke-width="2" pointer-events="none"/>';
+      else if (g.k === 'seg') s += '<line class="wsguide" x1="' + X(g.a.x).toFixed(1) + '" y1="' + Y(g.a.y).toFixed(1) + '" x2="' + X(g.b.x).toFixed(1) + '" y2="' + Y(g.b.y).toFixed(1) + '" stroke="' + SG.GUIDE_COL + '" stroke-width="5" stroke-opacity=".35" stroke-linecap="round" pointer-events="none"/>';   // 被对齐的那条边：加一道浅色的粗线
+      else if (g.k === 'arc') {
+        // 旋转：中心一个十字，从开始的方向到现在的方向画一段弧（屏幕上 y 向下，所以角度取反）
+        const r = g.rpx, a0 = g.a0, a1 = g.a1, P = (a) => [ax + r * Math.cos(a), ay - r * Math.sin(a)], p0 = P(a0), p1 = P(a1), big = Math.abs(a1 - a0) > Math.PI ? 1 : 0, sw = a1 > a0 ? 0 : 1;
+        s += '<path class="wsguide" d="M' + (ax - 6) + ' ' + ay + ' H' + (ax + 6) + ' M' + ax + ' ' + (ay - 6) + ' V' + (ay + 6) + '" stroke="' + SG.GUIDE_COL + '" stroke-width="1.5" pointer-events="none"/>';
+        s += gline(ax, ay, p0[0], p0[1]) + gline(ax, ay, p1[0], p1[1]);
+        if (Math.abs(a1 - a0) > 1e-6) s += '<path class="wsguide" d="M' + p0[0].toFixed(1) + ' ' + p0[1].toFixed(1) + ' A' + r + ' ' + r + ' 0 ' + big + ' ' + sw + ' ' + p1[0].toFixed(1) + ' ' + p1[1].toFixed(1) + '" fill="' + SG.GUIDE_COL + '" fill-opacity=".08" stroke="' + SG.GUIDE_COL + '" stroke-width="2" pointer-events="none"/>';
+      }
+      if (g.k !== 'arc' && g.k !== 'seg' && !g.noDot) s += '<circle class="wsguide" cx="' + ax.toFixed(1) + '" cy="' + ay.toFixed(1) + '" r="' + (g.k === 'pt' ? 6 : 3) + '" fill="' + (g.k === 'pt' ? 'none' : SG.GUIDE_COL) + '" stroke="' + SG.GUIDE_COL + '" stroke-width="2" pointer-events="none"/>';
+      if (!g.text) continue;
       const tw = SG.TXT_W(g.text);
       labs.push({ text: g.text, c: SG.GUIDE_COL, cands: [[ax + 8, ay - 8], [ax + 8, ay + 16], [ax - tw - 8, ay - 8], [ax - tw - 8, ay + 16]], prio: -1 });
     }
@@ -266,13 +282,31 @@
     const xs = fi.f.pts.map((p) => Q.num(p.x)), ys = fi.f.pts.map((p) => Q.num(p.y));
     // 线段可以写标注（引用它的器材 id）；其余图形只有翻转
     const ref = fi.kind === 'pts' && fi.f.type === 'segment' ? fi.ent.id : null, hh = ref ? L.MARK.NOTE_H : L.FLOAT.h;
-    return { name, left: fr.X((Math.min(...xs) + Math.max(...xs)) / 2), top: Math.min(fr.Y(Math.min(...ys)) + L.FLOAT.dy, h - hh), ref };   // 浮动工具条放在图形的下面（画布里面），不盖住标题和步数
+    // 2026-11：浮动条不能盖住角上的放缩把手：图形下面放得下就放下面；放不下放上面（旋转把手的上面）；都放不下就放到画布外面的下方
+    const below = fr.Y(Math.min(...ys)) + L.FLOAT.dy, above = fr.Y(Math.max(...ys)) - L.FLOAT.above - hh;
+    const top = below + hh <= h ? below : above >= L.FLOAT.top ? above : h + L.FLOAT.top;
+    return { name, cw: w, left: fr.X((Math.min(...xs) + Math.max(...xs)) / 2), top, ref };   // 浮动工具条放在图形的下面（画布里面），不盖住标题和步数
   }
   function floatHtml(wsId, f, ox, oy) {
-    const left = Math.max(L.FLOAT.edge, ox + f.left - L.FLOAT.halfW), top = Math.max(oy + L.FLOAT.top, oy + f.top), nm = SG.escA(f.name);
+    // 浮动条的宽度（估计）：有转、放缩工具的长一些；不超出画布的右边（2026-11）
+    const fi = !f.mark && SG.figByName(wsId, f.name), est = !fi ? 2 * L.FLOAT.halfW : fi.kind === 'pts' ? (fi.f.type === 'polygon' ? 470 : 340) : fi.kind === 'piece' ? 300 : 2 * L.FLOAT.halfW;
+    const lo = ox + L.FLOAT.edge, hi = f.cw ? Math.max(lo, ox + f.cw - est - L.FLOAT.edge) : Infinity;   // 比画布还宽时贴着画布的左边
+    const left = Math.max(L.FLOAT.edge, lo, Math.min(hi, ox + f.left - est / 2)), top = Math.max(oy + L.FLOAT.top, oy + f.top), nm = SG.escA(f.name);
     const flips = f.mark ? '' : '<button data-fig-flip="1" data-ws="' + wsId + '" data-name="' + nm + '">左右翻</button>' +
-      '<button data-fig-flip="2" data-ws="' + wsId + '" data-name="' + nm + '">上下翻</button>';
+      '<button data-fig-flip="2" data-ws="' + wsId + '" data-name="' + nm + '">上下翻</button>' + figTools(wsId, f.name, nm);
     return '<div class="wsx-float" style="left:' + left + 'px;top:' + top + 'px">' + flips + SG.floatExtra(wsId, f) + '</div>';
+  }
+  // 浮动条的第二组（2026-11）：转 15°、摆正、放大缩小，以及直接输入角度、倍数（回车就做）。块只能转 90° 的倍数，没有角度框
+  function figTools(wsId, name, nm) {
+    const fi = SG.figByName(wsId, name); if (!fi || fi.f.type === 'point' || fi.kind === 'place') return '';
+    const b = (attr, txt, tip) => '<button ' + attr + ' data-ws="' + wsId + '" data-name="' + nm + '" title="' + tip + '">' + txt + '</button>';
+    const st = L.FIG_STEP, free = fi.kind === 'pts', poly = free && fi.f.type === 'polygon';   // 线段只有转和放缩按钮（浮动条下面还有标注那一行）
+    let h = '<span class="wsx-sep"></span>' + b('data-fig-rot="' + (free ? st.rot : 90) + '"', '↺', '逆时针转 ' + (free ? st.rot : 90) + '°（键盘 [ ）') + b('data-fig-rot="-' + (free ? st.rot : 90) + '"', '↻', '顺时针转 ' + (free ? st.rot : 90) + '°（键盘 ] ）');
+    if (poly) h += b('data-fig-straight="1"', '摆正', '转最小的角度，让一条边水平或竖直');
+    h += '<span class="wsx-sep"></span>' + b('data-fig-scale="2"', '放大', '放大到 2 倍，形状不变（键盘 + ）') + b('data-fig-scale="1/2"', '缩小', '缩小一半，形状不变（键盘 − ）');
+    if (poly) h += '<span class="wsx-in"><input data-fig-ang="1" data-ws="' + wsId + '" data-name="' + nm + '" inputmode="decimal" placeholder="角度" aria-label="转多少度（逆时针为正），回车" title="输入角度，回车就转（逆时针为正，负数顺时针）">°</span>' +
+      '<span class="wsx-in">×<input data-fig-k="1" data-ws="' + wsId + '" data-name="' + nm + '" inputmode="decimal" placeholder="倍数" aria-label="放缩多少倍，回车" title="输入倍数（比如 3/2、0.5），回车就放缩"></span>';
+    return h;
   }
   // 画布上的把手：边（拖边平移）、角（放缩）、旋转把手；顶点是自由点的把手（和原来的 data-drag 一样）
   // 边的命中线：画在图形的下面（点和图形本身在上面，点不会被边盖住）；拖边 = 整条边平移
@@ -289,13 +323,14 @@
     }
     return g;
   }
-  function wsHandles(fr) {
+  function wsHandles(fr, obs) {
+    const ob = (x, y, r) => { if (obs) obs.push({ k: 'disc', x, y, r }); };
     const S = UI.S, sel = (S.wsSel || []).length === 1 ? S.wsSel[0] : null, X = fr.X, Y = fr.Y;
     const shown = new Set(fr.vals.filter((v) => v.fig && v.fig.type === 'point').map((v) => v.id));
     let g = '';
     fr.vals.forEach((v, i) => {
       const fi = SG.figInfo(v); if (!fi || !fi.f.pts) return;
-      const col = SG.WS_COL[i % SG.WS_COL.length], on = !!sel && SG.pickOf(v) === sel, pts = fi.f.pts, isPt = fi.kind === 'pts' && fi.f.type === 'point';
+      const col = SG.WS_COL[SG.colIdx(fr.vals, i) % SG.WS_COL.length], on = !!sel && SG.pickOf(v) === sel, pts = fi.f.pts, isPt = fi.kind === 'pts' && fi.f.type === 'point';
       // 顶点：是自由点、又没有单独画出来的，画一个把手（拖动改它的 x、y）；已经画出来的点自己就是把手
       if (fi.kind === 'pts' && !isPt) pts.forEach((p, k) => { if (shown.has(fi.verts[k])) return; g += '<circle data-drag="' + fi.verts[k] + '" data-kx="x" data-ky="y" cx="' + X(Q.num(p.x)) + '" cy="' + Y(Q.num(p.y)) + '" r="4.5" fill="#fff" stroke="' + col + '" stroke-width="2" style="cursor:grab"/>'; });
       if (!on || isPt) return;
@@ -304,12 +339,18 @@
       if (fi.kind === 'piece' || fi.kind === 'pts') {
         // 放缩把手画在外框的角外面一点：长方形、梯形的顶点正好在外框的角上，把手不能盖住顶点（否则选中后就拖不到顶点了）
         const CO = [[-9, 9], [9, 9], [9, -9], [-9, -9]];
+        // 把手留在画布里面：图形大到贴着画布边时，把手不能跑到画布外面（被裁掉），右下角也不能落在卡片的改大小把手（.rz，24×24）底下
+        const RZ = 30, HS = 12;
         [[x0, y0], [x1, y0], [x1, y1], [x0, y1]].forEach(([x, y], k) => {
-          g += '<rect data-hdl="corner" data-corner="' + k + '" x="' + (X(x) - 5 + CO[k][0]).toFixed(1) + '" y="' + (Y(y) - 5 + CO[k][1]).toFixed(1) + '" width="10" height="10" fill="#fff" stroke="' + col + '" stroke-width="2" style="cursor:nwse-resize"/>';
+          let hx = Math.max(2, Math.min(fr.w - HS - 2, X(x) - HS / 2 + CO[k][0])), hy = Math.max(2, Math.min(fr.h - HS - 2, Y(y) - HS / 2 + CO[k][1]));
+          if (hx + HS > fr.w - RZ && hy + HS > fr.h - RZ) hy = fr.h - RZ - HS;
+          ob(hx + HS / 2, hy + HS / 2, HS);
+          g += '<rect data-hdl="corner" data-corner="' + k + '" x="' + hx.toFixed(1) + '" y="' + hy.toFixed(1) + '" width="' + HS + '" height="' + HS + '" rx="2" fill="#fff" stroke="' + col + '" stroke-width="2" style="cursor:' + (k % 2 ? 'nesw' : 'nwse') + '-resize"/>';
         });
       }
       const cx = X((x0 + x1) / 2), ty = Math.max(12, Y(y1) - 28);   // 把手留在画布里面（画布外面会被卡片的标题盖住）
       g += '<line x1="' + cx.toFixed(1) + '" y1="' + Y(y1).toFixed(1) + '" x2="' + cx.toFixed(1) + '" y2="' + ty.toFixed(1) + '" stroke="' + col + '" stroke-dasharray="3 3"/>';
+      ob(cx, ty, 12);
       g += '<circle data-hdl="rot" cx="' + cx.toFixed(1) + '" cy="' + ty.toFixed(1) + '" r="7" fill="#fff" stroke="' + col + '" stroke-width="2.5" style="cursor:grab"/>';
     });
     return g;

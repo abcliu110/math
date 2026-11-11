@@ -20,9 +20,11 @@
       // 选中图形的顶点坐标：改一个数，就是改那个自由点的 x 或 y（一步，可撤销；超出范围就夹回 ±10）
       const vx = ev.target.getAttribute && ev.target.getAttribute('data-ws-vx');
       if (vx) {
-        let n = parseInt(ev.target.value, 10); if (!Number.isFinite(n)) return SG.render();
-        n = Math.max(-L.COORD_MAX, Math.min(L.COORD_MAX, n));
-        UI.Intent.run('params', { ops: [{ id: vx, k: ev.target.getAttribute('data-ws-vk'), v: n }] }); SG.render(); return;
+        // 整数、分数（3/2）、小数都可以；超出范围就夹回 ±10
+        let q = null; try { q = U.Q.parse(ev.target.value.replace(/[≈\s]/g, '')); } catch (e) { q = null; }
+        if (!q) return SG.render();
+        if (U.Q.num(q) > L.COORD_MAX) q = U.Q(L.COORD_MAX); if (U.Q.num(q) < -L.COORD_MAX) q = U.Q(-L.COORD_MAX);
+        UI.Intent.run('params', { ops: [{ id: vx, k: ev.target.getAttribute('data-ws-vk'), v: U.Q.store(q) }] }); SG.render(); return;
       }
       const l = ev.target.getAttribute && ev.target.getAttribute('data-ws-layer');
       if (l === null || l === undefined) return;
@@ -52,6 +54,14 @@
       const btn = ev.target.closest('.wsx-note') && ev.target.closest('.wsx-note').querySelector('[data-note-add]');
       if (btn) { ev.preventDefault(); SG.noteAdd(btn); }
     });
+    // 浮动条的角度框、倍数框：回车就转、就放缩（2026-11）
+    SG.stageEl.addEventListener('keydown', (ev) => {
+      const t = ev.target; if (ev.key !== 'Enter' || !t.matches || !t.matches('[data-fig-ang],[data-fig-k]')) return;
+      ev.preventDefault();
+      const v = t.value.trim().replace(/[°度×倍\s]/g, ''); if (!v) return;
+      if (t.matches('[data-fig-ang]')) { const a = +v; if (!Number.isFinite(a)) { SG.setMsg('角度要写一个数，比如 30 或 -45', false); return SG.render(); } SG.figRotateBy(t.dataset.ws, t.dataset.name, a); }
+      else { let f = null; try { f = U.Q.parse(v); } catch (e) { f = null; } if (!f) { SG.setMsg('倍数要写一个数，比如 2、3/2、0.5', false); return SG.render(); } SG.figScaleBy(t.dataset.ws, t.dataset.name, f); }
+    });
     SG.stageEl.addEventListener('click', (ev) => {
       const why = ev.target.closest('[data-why]');
       if (why) { const [wid, wport] = why.dataset.why.split('|'); UI.Panels.whyDialog(wid, wport); return; }
@@ -65,6 +75,9 @@
       // 工作区面板：工具、步骤（点开看参数）、删除一步
       const ff = ev.target.closest('[data-fig-flip]');
       if (ff) { SG.figFlip(ff.dataset.ws, ff.dataset.name, +ff.dataset.figFlip); return; }
+      const fro = ev.target.closest('[data-fig-rot]'); if (fro) { SG.figRotateBy(fro.dataset.ws, fro.dataset.name, +fro.dataset.figRot); return; }
+      const fsc = ev.target.closest('[data-fig-scale]'); if (fsc) { SG.figScaleBy(fsc.dataset.ws, fsc.dataset.name, U.Q.parse(fsc.dataset.figScale)); return; }
+      const fst = ev.target.closest('[data-fig-straight]'); if (fst) { SG.figStraighten(fst.dataset.ws, fst.dataset.name); return; }
       // 抽屉收起、展开：展开时要给它让出画布右边的位置，所以重新适应（V2，1.2 第 2 条）
       const wfo = ev.target.closest('[data-ws-fold]');
       if (wfo) { UI.Layout.toggleFold(wfo.dataset.wsFold); SG.fit(); SG.render(); return; }

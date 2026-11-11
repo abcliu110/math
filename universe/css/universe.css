@@ -475,7 +475,7 @@ body.rail-l #left > :not(.railbtn), body.rail-r #right > :not(.railbtn) { displa
 .wsx-facts { margin-left: 8px; color: var(--dim); }
 .wsx-vxs { margin-top: 4px; }
 .wsx-vx { display: inline-block; margin-right: 8px; white-space: nowrap; }
-.wsx-vx input[type=number] { width: 42px; }
+.wsx-vx input[type=number], .wsx-vx input[type=text] { width: 46px; }
 /* 画布里的迷你工具条：卡片左下角 */
 .wsmini button { font: inherit; font-size: 12px; padding: 2px 7px; border-radius: 6px; border: 1px solid #aab4c8; background: #fff; color: var(--ink); cursor: pointer; }
 .wsmini button:hover { border-color: var(--blue); }
@@ -571,3 +571,21 @@ html[data-young="on"] .wsx button { font-size: 16px; padding: 6px 12px; min-heig
 html[data-young="on"] .wsx-tools button { font-size: 16px; padding: 6px 12px; min-height: 36px; }
 html[data-young="on"] .wsx-step button, html[data-young="on"] .wsx-foot, html[data-young="on"] .wsx-sel { font-size: 15px; }
 html[data-young="on"] .fab button { font-size: 17px; min-height: 36px; }
+
+/* 几何工作区（2026-11）：浮动条的第二组（转、摆正、放缩、角度和倍数输入框），把手的悬停反馈 */
+.wsx-sep { width: 1px; align-self: stretch; background: var(--line); margin: 2px 2px; }
+.wsx-in { display: inline-flex; align-items: center; gap: 2px; font-size: 12px; color: var(--ink); pointer-events: auto; }
+.wsx-in input { font: inherit; font-size: 12px; width: 44px; padding: 3px 5px; border-radius: 8px; border: 1px solid #aab4c8; background: #fff; color: var(--ink); text-align: center; }
+.wsx-in input:focus { outline: 2px solid var(--blue); outline-offset: 0; border-color: var(--blue); }
+svg.wsbody [data-hdl="corner"], svg.wsbody [data-hdl="rot"] { transition: fill .12s, r .12s; }
+svg.wsbody [data-hdl="corner"]:hover, svg.wsbody [data-hdl="rot"]:hover { fill: #dbeafe; }
+svg.wsbody [data-hdl="rot"]:hover { r: 9; }
+svg.wsbody circle[data-drag]:hover { r: 8; }
+svg.wsbody [data-hdl="edge"]:hover { stroke: #0891b233; }
+/* 专注模式（2026-11）：标题栏的按钮不换行（窄窗口时说明文字先省略），画布上也有选中图形的浮动条 */
+#wsfocus .wsf-hd button { white-space: nowrap; flex: none; }
+#wsfocus .wsf-hd span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#wsfocus .wsf-hd .fbar-tools { flex: none; }
+#wsfocus .wsf-hd .fbar-tools button { padding: 3px 7px; }
+#wsfocus .wsf-main { position: relative; }
+.wsx-float { width: max-content; max-width: 560px; }   /* 靠近台面右边时也不要挤成好几行（2026-11） */

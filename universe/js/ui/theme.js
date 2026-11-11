@@ -31,6 +31,7 @@
     high = !high;
     try { if (high) G.localStorage.setItem(CKEY, 'high'); else G.localStorage.removeItem(CKEY); } catch (e) { /* 存储不可用：只在内存里生效 */ }
     applyContrast();
+    if (G.UI && G.UI.Stage && G.UI.Stage.render) G.UI.Stage.render();   // 线型跟着高对比度换（工作区的线，2026-11）
   }
   applyContrast();
   G.document.addEventListener('click', (e) => { const t = e.target; if (t && t.closest && t.closest('#contrastbtn')) toggleContrast(); });
