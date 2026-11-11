@@ -54,7 +54,7 @@
     READOUT: { near: 14, far: 28, corner: 16, line: 18, base: 4, rot: [36, 54] },
     // 尺子、量角器、标注（§10.5.9 第 6 条）：把手半径、线宽、刻度（长、粗细）、吸附的半径（屏幕像素）、量角器弧的最大半径、
     // 尺子和量角器放上去时离工作区中心的比例（占可见范围），以及有标注时浮动条的高度
-    MARK: { HDL: 7, RULER_W: 4, RULER_W_ON: 6, TICK_LEN: 6, TICK_PX: 6, TICK_MAX: 60, SNAP_PX: 10, ARC_R: 40, DEF_FRAC: 0.2, NOTE_H: 70 },
+    MARK: { HDL: 7, RULER_W: 4, RULER_W_ON: 6, TICK_LEN: 6, TICK_PX: 6, TICK_MAX: 60, SNAP_PX: 10, ARC_R: 40, ARC_MIN: 22, DEF_FRAC: 0.2, NOTE_H: 70 },
     // 块的旋转（V9，2.10）：拖动时总角度吸附的步长（度）；按住 Shift 时的粗步长
     ROT: { step: 1, coarse: 15 },
     ROT_SNAP_PX: 10,               // 旋转吸附（2026-11）：把手沿圆弧离“边水平 / 竖直 / 平行 / 垂直”的位置这么多屏幕像素以内就吸过去（换成角度，夹在 1.5°–4°）

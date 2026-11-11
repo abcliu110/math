@@ -43,7 +43,8 @@
   const isqrtB = (n) => { if (n < 2n) return n; let x = BigInt(Math.floor(Math.sqrt(Number(n)))); while (x * x > n) x--; while ((x + 1n) * (x + 1n) <= n) x++; return x; };
   const sqrtQ = (q) => { if (q.n < 0n) return null; const a = isqrtB(q.n), b = isqrtB(q.d); return a * a === q.n && b * b === q.d ? Q(a, b) : null; };
   const dotQ = (u, w) => Q.add(Q.mul(u.x, w.x), Q.mul(u.y, w.y)), crsQ = (u, w) => Q.sub(Q.mul(u.x, w.y), Q.mul(u.y, w.x));
-  const angOf = (u) => Math.atan2(Q.num(u.y), Q.num(u.x)) * 180 / Math.PI;
+  const DEG_PER_RAD = 180 / Math.PI;
+  const angOf = (u) => Math.atan2(Q.num(u.y), Q.num(u.x)) * DEG_PER_RAD;
   // 转 deg 度（deg 是要转到的角度，和 u→w 的方向差差 180° 的整数倍）：u 转过去和 w 平行。
   // |u|·|w| 是有理数时精确（cos = u·w / |u||w|，sin = u×w / |u||w|）；否则用勾股数近似，误差不到 0.005°
   function rotToward(u, w, deg) {
@@ -377,7 +378,7 @@
           const shown = Math.round(deg * 10) / 10;
           tip = '转 ' + (Number.isInteger(deg) ? deg : '≈' + shown) + '°' + (rs.text ? '：' + rs.text : rs.snapped ? '' : '（Shift：每次 ' + L.ROT.coarse + '°，Alt：不吸附）');
           const a0 = Math.atan2(d.start.y - c.y, d.start.x - c.x);
-          d.guides = [{ k: 'arc', at: { x: c.x, y: c.y }, rpx: Math.min(40, Math.max(22, d.rpx * 0.35)), a0, a1: a0 + deg * Math.PI / 180, text: (Number.isInteger(deg) ? deg : '≈' + shown) + '°' }].concat(rs.guides, SG.relGuides(d.al, P, null, d.unit).filter((g) => g.k !== 'ln'));
+          d.guides = [{ k: 'arc', at: { x: c.x, y: c.y }, rpx: Math.min(L.MARK.ARC_R, Math.max(L.MARK.ARC_MIN, d.rpx * 0.35)), a0, a1: a0 + deg / DEG_PER_RAD, text: (Number.isInteger(deg) ? deg : '≈' + shown) + '°' }].concat(rs.guides, SG.relGuides(d.al, P, null, d.unit).filter((g) => g.k !== 'ln'));
         }
       } else {
         const k = Math.round((th - th0) / (Math.PI / 2));
@@ -487,7 +488,7 @@
     if (!best) return say('这个图形没有边可以摆正');
     if (Math.abs(best.deg) < 1e-9) return say('已经是正的了（有边是水平或竖直的）', true);
     if (!U.Geo.locks.rigid(UI.S.scene, ids)) return say('有约束连着外面的点，先解锁再转');
-    const R = rotToward(best.u, best.w, best.deg), sh = Math.round(best.deg * 10) / 10;
+    const R = rotToward(best.u, best.w, best.deg), sh = Number(best.deg.toFixed(1));
     return putPts(ids, rotPts(B, o.cq, R), '摆正：转了 ' + (R.exact ? '' : '≈') + sh + '°' + (R.exact ? '' : '（这条边的长不是整数，只能近似摆正）'));
   }
   // ---- 工具条上的图形操作：复制、旋转、翻转、删除（不用先选图形）----
