@@ -40,8 +40,8 @@
         essence: ['E3', 'E1'],
         label: '数字', prefix: '数', group: '分数', grades: [1, 9],
         props: {
-          n: { type: 'int', label: '分子', default: 1, min: -999, max: 999 },
-          d: { type: 'int', label: '分母', default: 1, min: 1, max: 999 },
+          n: { type: 'int', label: '分子', default: 1, min: -999999999, max: 999999999 },
+          d: { type: 'int', label: '分母', default: 1, min: 1, max: 999999 },
           unit: { type: 'choice', label: '单位', default: 0, choices: D.names },
         },
         outputs: { v: { dim: null, kind: 'num', label: '值' } },

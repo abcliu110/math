@@ -69,7 +69,8 @@
   };
   U.coerceProp = (P, x) => {
     if (!P) return { ok: false, why: '没有这个属性' };
-    if (P.type === 'text') return { ok: true, v: String(x === undefined || x === null ? '' : x) };
+    // 数字卡连到文字属性时，值是有理数对象：要写成“1/3”这样的文字，不能 String() 成乱码
+    if (P.type === 'text') return { ok: true, v: x && typeof x === 'object' && 'n' in x && 'd' in x ? U.Q.show(U.Q(x.n, x.d)) : String(x === undefined || x === null ? '' : x) };
     if (P.type === 'bool') return { ok: true, v: !!x };
     // 有理数（精确）：整数或 "n/d"，存规范形式（U.Q.store）；范围按近似值比较
     if (P.type === 'rat') {

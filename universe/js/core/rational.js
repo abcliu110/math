@@ -63,8 +63,9 @@
     const t = String(s).trim();
     let m = /^(-?\d+)\s*\/\s*(\d+)$/.exec(t);
     if (m) return Q(BigInt(m[1]), BigInt(m[2]));
-    m = /^-?\d+(\.\d+)?$/.exec(t);
-    if (m) return Q.fromNumber(parseFloat(t));
+    // 小数和很大的整数按原样精确读（不经过浮点数）：12345678901234567890、0.123456789 都不丢位
+    m = /^(-?)(\d+)(?:\.(\d+))?$/.exec(t);
+    if (m) { const fr = m[3] || '', num = BigInt(m[2] + fr) * (m[1] ? -1n : 1n); return Q(num, 10n ** BigInt(fr.length)); }
     throw new Error('bad-number');
   };
   // 存档用的 JSON：BigInt 写成 {"$big":"数字串"}，读回时还原成 BigInt

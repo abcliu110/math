@@ -21,8 +21,8 @@
         essence: ['E1', 'E2'],
         label: '竖式工作台', prefix: '竖式', group: '数与运算', grades: [2, 3], alias: ['竖式', '数位', '进位', '退位', '个十百'],
         props: {
-          a: { type: 'int', label: '第一个数', default: 47, min: 0, max: 999, hidden: true },
-          b: { type: 'int', label: '第二个数', default: 38, min: 0, max: 999, hidden: true },
+          a: { type: 'int', label: '第一个数', default: 47, min: 0, max: 99999999, hidden: true },
+          b: { type: 'int', label: '第二个数', default: 38, min: 0, max: 99999999, hidden: true },
           op: { type: 'choice', label: '算法', default: 0, choices: ['加法', '减法'], hidden: true },
         },
         lint: { minProps: 1, why: '竖式的两个数和算法由题目给定，学生在竖式里写，不在属性面板里改' },

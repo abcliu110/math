@@ -41,7 +41,7 @@
         essence: ['E3', 'E12'],
         label: '比', prefix: '比', group: '数与运算', grades: [5, 6], alias: ['按比分配', '比例', '化简比'],
         props: {
-          total: { type: 'num', label: '一共要分（0=不分）', default: 0, min: 0, max: 9999, step: 1 },
+          total: { type: 'num', label: '一共要分（0=不分）', default: 0, min: 0, max: 9999999, step: 1 },
           simplify: { type: 'bool', label: '化成最简整数比', default: true },
           label: { type: 'text', label: '标签', default: '' },
         },

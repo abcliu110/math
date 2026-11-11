@@ -158,9 +158,26 @@ input, select, textarea { font: inherit; color: inherit; }
 .card .hd .gchip.ask { background: var(--accent); color: #fff; }
 .card .hd .gchip.hq { margin-left: auto; margin-right: 6px; background: #e8f0ff; color: #2255cc; }
 .card .hd .hq + .gchip { margin-left: 0; }
-.card .howto { position: absolute; left: 0; right: 0; top: 28px; bottom: 0; z-index: 4; background: rgba(255,255,255,.97); padding: 12px 18px; border-radius: 0 0 12px 12px; overflow: auto; font-size: 14px; line-height: 1.5; color: var(--ink); }
+.card .hd .gchip.sw { margin-left: auto; margin-right: 6px; background: #e9f7ee; color: #1f7a45; }
+.card .hd .gchip.sw + .hq { margin-left: 0; }
+.card .howto { position: absolute; left: 0; top: calc(100% + 40px); width: 100%; min-width: 340px; box-sizing: border-box; z-index: 6; background: #fff; padding: 12px 18px; border-radius: 12px; border: 1px solid #c9d1e3; box-shadow: 0 8px 22px rgba(0,0,0,.22); font-size: 14px; line-height: 1.5; color: var(--ink); }
 .card .howto b { font-size: 15px; }
 .card .howto ol { margin: 6px 0 10px 18px; padding: 0; }
+.card .howto .htabs { display: flex; gap: 8px; margin-bottom: 8px; }
+.card .howto .htab { padding: 3px 12px; border-radius: 12px; background: #eef1f7; color: var(--ink); font-weight: 700; font-size: 13px; cursor: pointer; }
+.card .howto .htab.on { background: var(--accent); color: #fff; }
+.card .howto.demo { height: 300px; display: flex; flex-direction: column; padding: 6px 12px 8px; }
+.card .howto.demo svg { flex: 1 1 0; min-height: 0; width: 100%; }
+.card .howto .dcap { font-weight: 700; font-size: 14px; text-align: center; padding: 2px 0 4px; color: var(--ink); }
+.card .howto .dnav { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.card .howto .hbtn, .card .howto .dbtn { white-space: nowrap; }
+.card .hd .gchip { white-space: nowrap; }
+.card .howto .dbtn { padding: 3px 16px; border-radius: 14px; background: var(--accent); color: #fff; font-weight: 700; cursor: pointer; }
+.card .howto .dbtn.off { background: #e6e9f0; color: #aab; cursor: default; }
+.card .howto .dots { display: flex; gap: 5px; }
+.card .howto .dots i { width: 8px; height: 8px; border-radius: 50%; border: 1px solid var(--dim); }
+.card .howto .dots i.on { background: var(--accent); border-color: var(--accent); }
+.card .howto p { margin: 0 0 8px; }
 .card .howto li { margin-bottom: 6px; }
 .card .howto .hbtn { display: inline-block; padding: 5px 16px; border-radius: 14px; background: var(--accent); color: #fff; font-weight: 700; cursor: pointer; }
 .card .bdy { display: block; cursor: move; }

@@ -8,41 +8,71 @@
   // 哪些属性口要画成药丸：被连线驱动的；正在拖线时再加上所有可写、没被驱动的
   function pillsOf(e, D) {
     const d = SG.def(e), driven = (D[e.id] && D[e.id].driven) || {};
-    return Object.keys(d.props).filter((k) => d.props[k].write && (driven[k] || SG.linking));
+    return UI.pillOrder(d, Object.keys(d.props).filter((k) => d.props[k].write && (driven[k] || SG.linking)));
   }
   function portPos(e, port, D, out) {
     const g = SG.geom(e), d = SG.def(e);
-    if (out) { const i = Math.max(0, Object.keys(d.outputs).indexOf(port)); return { x: g.x + g.w, y: g.y + PORT_Y0 + i * PORT_DY }; }
+    if (out) { const i = Math.max(0, UI.outOrder(e.type, d).indexOf(port)); return { x: g.x + g.w, y: g.y + PORT_Y0 + i * PORT_DY }; }
     if (W.isProp(port)) { const k = port.slice(2), ps = pillsOf(e, D), i = Math.max(0, ps.indexOf(k)); return { x: g.x - L.PILL_GAP, y: g.y + PORT_Y0 + i * PILL_DY }; }
     const i = Math.max(0, Object.keys(d.inputs).indexOf(port)); return { x: g.x, y: g.y + PORT_Y0 + i * PORT_DY };
   }
   const bez = (a, b) => { const dx = Math.max(L.LINK_CURVE_MIN, Math.abs(b.x - a.x) / 2); return 'M' + a.x + ',' + a.y + ' C' + (a.x + dx) + ',' + a.y + ' ' + (b.x - dx) + ',' + b.y + ' ' + b.x + ',' + b.y; };
 
+  // 数很大时文字会超出卡片：估一下每段文字的宽度，放不下就压窄到放得下（textLength），不改字号也不丢位
+  function fitBody(body, w) {
+    return body.replace(/<text ([^>]*)>([^<]*)<\/text>/g, (m, attrs, txt) => {
+      if (/textLength|transform/.test(attrs)) return m;
+      const x = Number((/ x="(-?[\d.]+)"/.exec(' ' + attrs) || [])[1]), fs = Number((/font-size="([\d.]+)"/.exec(attrs) || [])[1]) || 12, an = (/text-anchor="(\w+)"/.exec(attrs) || [])[1] || 'start';
+      if (!Number.isFinite(x) || txt.length < 8) return m;
+      let est = 0; for (const ch of txt.replace(/&amp;|&lt;|&gt;/g, '_')) est += (ch.charCodeAt(0) > 255 ? 1 : 0.58) * fs;
+      const room = an === 'middle' ? 2 * Math.min(x, w - x) - 8 : an === 'end' ? x - 4 : w - x - 4;
+      if (est <= room || room < 40) return m;
+      return '<text ' + attrs + ' textLength="' + Math.floor(room) + '" lengthAdjust="spacingAndGlyphs">' + txt + '</text>';
+    });
+  }
   function cardHtml(e, D, S) {
     const d = SG.def(e), g = SG.geom(e), dd = D[e.id], cH = g.h - HD;
     const c = { ent: e, props: dd.props || e.props, d: dd, out: dd.out, state: e.state, w: g.w, h: cH, t: S.scene.clock.t, n: S.scene.clock.n, scene: S.scene };
     c.masked = !!(d.guess && !d.guess.answered(c.props));   // 先猜后看：还没填猜测，被 guess.ports 遮住的读数在界面上不显示（内核里值照常流动）
     let body = '', badge = '';
-    try { body = SG.isWsDef(e.type) ? SG.wsBody(e, g.w, cH) : d.draw(c); } catch (x) { body = K.text(g.w / 2, cH / 2, '画不出来', { fill: 'var(--bad)' }); }
+    try { body = SG.isWsDef(e.type) ? SG.wsBody(e, g.w, cH) : fitBody(d.draw(c), g.w); } catch (x) { body = K.text(g.w / 2, cH / 2, '画不出来', { fill: 'var(--bad)' }); }
     // 工作区的标题步数只数学生做的步骤（和下面的步骤清单是同一批）
     try { badge = SG.isWsDef(e.type) ? (SG.wsSteps(e).length ? SG.wsSteps(e).length + ' 步' : '') : d.badge ? d.badge(c) : ''; } catch (x) { badge = ''; }
     let h = '<div class="card' + (S.sel === e.id ? ' sel' : '') + '" data-id="' + e.id + '" style="left:' + g.x + 'px;top:' + g.y + 'px;width:' + g.w + 'px;height:' + g.h + 'px">';
     // 器材自己画交互、又有要填的属性（先猜、写例子）时，标题栏放一个入口，点一下打开属性面板（不用靠双击发现）
     const fillable = d.compactPorts && Object.keys(d.props).some((k) => d.props[k].write && !d.props[k].hidden && !(D[e.id] && D[e.id].driven[k]));
     const chip = fillable ? '<span class="gchip' + (c.masked ? ' ask' : '') + '" data-card-insp="' + e.id + '">' + (c.masked ? '✎ 先猜' : '✎ 填写') + '</span>' : '';
-    // “怎么玩”：第一次出现时自动盖在器材上（3 步），点“知道了”收起；标题栏的“? 怎么玩”随时再开
+    // “怎么玩”：第一次出现时自动在卡片下方展开（3 步，不盖住器材），点“收起”；标题栏的“? 怎么玩”随时再开
     const HT = UI.Howto && UI.Howto[e.type];
     if (HT && S.help[e.id] === undefined) { S.help[e.id] = !!S.helpAuto && !S.helpSeen[e.type]; S.helpSeen[e.type] = true; }
-    const hchip = HT ? '<span class="gchip hq" data-help="' + e.id + '">? 怎么玩</span>' : '';
-    h += '<div class="hd" data-id="' + e.id + '"><span class="nm">' + K.esc(e.name) + '</span>' + hchip + chip + '<span class="bd">' + K.esc(badge || '') + '</span></div>';
+    const hchip = HT ? '<span class="gchip hq" data-help="' + e.id + '">? 怎么玩 / 原理</span>' : '';
+    // “换一种”：点一下切到下一种场景 / 模式（值在渲染时算好：当前 +1，到头回到第一个）
+    const swK = UI.Switch && UI.Switch[e.type], swD = swK && d.props[swK];
+    const swCur = swD && swD.choices ? Math.max(0, Number((e.props || {})[swK]) || 0) : 0;
+    const sw = swD && swD.choices && swD.choices.length > 1 ? '<span class="gchip sw" data-pick-k="' + swK + '" data-pick-v="' + ((swCur + 1) % swD.choices.length) + '" title="点一下换成下一种：' + K.esc(swD.label || '') + '">' + K.esc(String(swD.choices[Math.min(swCur, swD.choices.length - 1)]).slice(0, 8)) + ' ▸</span>' : '';
+    h += '<div class="hd" data-id="' + e.id + '"><span class="nm">' + K.esc(e.name) + '</span>' + sw + hchip + chip + '<span class="bd">' + K.esc(badge || '') + '</span></div>';
     const drawing = S.wsDraw && S.wsDraw.ws === e.id;   // 正在画线：指针变成十字（2.5）
     h += '<svg class="bdy' + (SG.isWsDef(e.type) ? ' wsbody' + (drawing ? ' drawing' : '') + '" data-wsid="' + e.id : '') + '" width="' + g.w + '" height="' + cH + '" viewBox="0 0 ' + g.w + ' ' + cH + '">' + body + '</svg>';
-    if (HT && S.help[e.id]) h += '<div class="howto"><b>怎么玩</b><ol>' + HT.map((x) => '<li>' + K.esc(x) + '</li>').join('') + '</ol><span class="hbtn" data-help="' + e.id + '">知道了，开始</span></div>';
+    if (HT && S.help[e.id]) {
+      // 两页：怎么玩（3 步）、原理（为什么这样做，数学上讲清楚）；原理可以随当前属性变（器材在 UI.Why 里给函数）
+      const mode = S.help[e.id] === 'why' ? 'why' : 'how', DM = UI.Demo && UI.Demo[e.type], WY = UI.Why && UI.Why[e.type], wl = typeof WY === 'function' ? WY(e.props || {}) : WY;
+      const has = !!(DM || wl);
+      const tabs = '<span class="htab' + (mode === 'how' ? ' on' : '') + '" data-help-mode="how:' + e.id + '">怎么玩</span>' + (has ? '<span class="htab' + (mode === 'why' ? ' on' : '') + '" data-help-mode="why:' + e.id + '">' + (DM ? '看图：为什么这样' : '原理：为什么这样') + '</span>' : '');
+      if (mode === 'why' && DM) {
+        // 看图演示：几个画面，◀ ▶ 一步一步看；图上只有短句
+        const n = DM.caps.length, st = Math.max(0, Math.min(S.demo[e.id] || 0, n - 1));
+        const dots = DM.caps.map((_, i) => '<i class="' + (i === st ? 'on' : '') + '"></i>').join('');
+        h += '<div class="howto demo"><div class="htabs">' + tabs + '</div><svg viewBox="0 0 360 180" preserveAspectRatio="xMidYMid meet">' + DM.draw(st) + '</svg><div class="dcap">' + K.esc(DM.caps[st]) + '</div><div class="dnav"><span class="dbtn' + (st > 0 ? '' : ' off') + '" data-demo="' + e.id + ':' + (st - 1) + ':' + n + '">◀</span><span class="dots">' + dots + '</span><span class="dbtn' + (st < n - 1 ? '' : ' off') + '" data-demo="' + e.id + ':' + (st + 1) + ':' + n + '">▶</span><span class="hbtn" data-help="' + e.id + '">看懂了</span></div></div>';
+      } else {
+        const body2 = mode === 'why' && wl ? wl.map((x) => '<p>' + K.esc(x) + '</p>').join('') : '<ol>' + HT.map((x) => '<li>' + K.esc(x) + '</li>').join('') + '</ol>';
+        h += '<div class="howto"><div class="htabs">' + tabs + '</div>' + body2 + '<span class="hbtn" data-help="' + e.id + '">' + (mode === 'how' ? '知道了，收起' : '收起') + '</span></div>';
+      }
+    }
     Object.keys(d.inputs).forEach((k, i) => {
       h += '<i class="port in" data-id="' + e.id + '" data-port="' + k + '" style="left:0;top:' + (PORT_Y0 + i * PORT_DY) + 'px"></i>';
       h += '<span class="pl" style="left:' + L.PORT_LABEL_X + 'px;top:' + (PORT_Y0 + i * PORT_DY) + 'px">' + K.esc(d.inputs[k].label) + '</span>';
     });
-    Object.keys(d.outputs).forEach((k, i) => {
+    UI.outOrder(e.type, d).forEach((k, i) => {
       h += '<i class="port out" data-id="' + e.id + '" data-port="' + k + '"' + (d.compactPorts ? ' title="' + K.esc(d.outputs[k].label) + '"' : '') + ' style="left:' + g.w + 'px;top:' + (PORT_Y0 + i * PORT_DY) + 'px;background:' + U.kindColor(d.outputs[k].kind) + '"></i>';
       if (!SG.isWsDef(e.type) && !d.compactPorts) h += '<span class="pl" style="right:' + L.PORT_LABEL_X + 'px;top:' + (PORT_Y0 + i * PORT_DY) + 'px">' + K.esc(d.outputs[k].label) + '</span>';   // 工作区的步数标在标题栏里，这里不再写（会和画布里的把手叠在一起）
     });
@@ -59,7 +89,7 @@
     // 选中工具条
     if (S.sel === e.id) {
       h += '<div class="tool" style="left:' + (g.x + g.w + L.TOOL_GAP) + 'px;top:' + g.y + 'px">' +
-        '<button data-act="insp" title="属性" aria-label="属性">' + ico('gear') + '</button><button data-act="copy" title="复制" aria-label="复制">' + ico('copy') + '</button>' +
+        '<button data-act="insp" title="属性" aria-label="属性">' + ico('gear') + '</button>' +
         (SG.def(e).stateful ? '<button data-act="resetstate" title="记忆归零" aria-label="记忆归零">' + ico('undo') + '</button>' : '') +
         (SG.roleOf(e) === 'piece' ? '<button data-act="turn" title="转 90°（R）" aria-label="转 90 度">' + ico('turn') + '</button><button data-act="flip" title="左右翻（F）" aria-label="左右翻">' + ico('flip') + '</button>' : '') +
         '<button data-act="del" title="删除" aria-label="删除">' + ico('trash') + '</button></div>';

@@ -3121,6 +3121,20 @@ console.log('分步定型（bake，§10.5.6 第 5 步）：前面的步骤折成
     eq(cond({ steps: { used: 'alg.divide', allKept: true } })(U.Judge.makeW(sc, D, {})), true, '定型前用过两边同除');
     eq(cond({ steps: { used: 'alg.collect' } })(U.Judge.makeW(sc, D, {})), false, '没用过的规则仍然是假');
   });
+  t('数字卡连到文字属性：分数写成 1/3，不是乱码（分数面积的两个分数口）', () => {
+    const s = W.blank(), n1 = W.act(s, { t: 'add', type: 'num', x: 0, y: 0, props: { n: 1, d: 3 } }).id, n2 = W.act(s, { t: 'add', type: 'num', x: 0, y: 0, props: { n: 3, d: 4 } }).id;
+    const f = W.act(s, { t: 'add', type: 'fracarea', x: 0, y: 0, props: { op: 1 } }).id;
+    truthy(W.act(s, { t: 'link', from: n1, fromPort: 'v', to: f, toPort: 'p.a' }).ok, '第一个分数口能连');
+    truthy(W.act(s, { t: 'link', from: n2, fromPort: 'v', to: f, toPort: 'p.b' }).ok, '第二个分数口能连');
+    const D = W.evaluate(s); eq(D[f].props.a, '1/3', '第一个分数收到 1/3'); eq(D[f].props.b, '3/4', '第二个分数收到 3/4'); eq(U.Q.show(D[f].out.result.data), '1/4', '1/3 × 3/4 = 1/4');
+  });
+  t('大一点的数：十进制和很大的整数精确读入，数字卡分子分母放宽', () => {
+    eq(U.Q.show(U.Q.parse('12345678901234567890')), '12345678901234567890', '20 位整数不丢位');
+    eq(U.Q.show(U.Q.parse('0.123456789')), '123456789/1000000000', '9 位小数不被舍入');
+    eq(U.Q.show(U.Q.parse('-2.5')), '-5/2', '负小数');
+    const s = W.blank(), n = W.act(s, { t: 'add', type: 'num', x: 0, y: 0, props: { n: 999999999, d: 999999 } });
+    truthy(n.ok, '分子 999999999、分母 999999 的数字卡能放'); eq(U.Q.show(W.evaluate(s)[n.id].out.v.data), '1001001/1001', '约分以后的值（公因数 999）');
+  });
 }
 
 console.log('\n' + pass + ' 通过，' + fail + ' 失败');

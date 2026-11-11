@@ -79,8 +79,8 @@
         essence: ['E8'],
         label: '分式读数', prefix: '读', group: '数与运算', grades: [8, 9], alias: ['分式求值', '代入'],
         props: {
-          x: { type: 'num', label: 'x 等于', default: 1, min: -99, max: 99, step: 1 },
-          y: { type: 'num', label: 'y 等于', default: 0, min: -99, max: 99, step: 1 },
+          x: { type: 'num', label: 'x 等于', default: 1, min: -99999, max: 99999, step: 1 },
+          y: { type: 'num', label: 'y 等于', default: 0, min: -99999, max: 99999, step: 1 },
           label: { type: 'text', label: '标签', default: '' },
         },
         lint: { minProps: 2, why: '分式读数只需要 x、y 两个代入值和标签' },

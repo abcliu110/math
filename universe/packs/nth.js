@@ -11,8 +11,8 @@
         essence: ['E6', 'E8'],
         label: '取第n项', prefix: '项', group: '时间与变化', grades: [4, 9], alias: ['通项', '第n项', '数列', '规律'],
         props: {
-          a: { type: 'num', label: '系数 a', default: 1, min: -99, max: 99, step: 1 },
-          b: { type: 'num', label: '常数 b', default: 0, min: -99, max: 99, step: 1 },
+          a: { type: 'num', label: '系数 a', default: 1, min: -99999, max: 99999, step: 1 },
+          b: { type: 'num', label: '常数 b', default: 0, min: -99999, max: 99999, step: 1 },
           mode: { type: 'choice', label: '规则', default: 0, choices: ['a×n + b', 'a×n² + b'] },
         },
         outputs: { v: { dim: null, kind: 'num', label: '第 n 项' } },

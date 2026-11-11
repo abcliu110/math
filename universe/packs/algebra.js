@@ -106,8 +106,8 @@
         essence: ['E8'],
         label: '代数式读数', prefix: '读', group: '数与运算', grades: [7, 9], alias: ['代数式', '多个字母', '求值'],
         props: {
-          x: { type: 'num', label: 'x 等于', default: 0, min: -99, max: 99, step: 1 },
-          y: { type: 'num', label: 'y 等于', default: 0, min: -99, max: 99, step: 1 },
+          x: { type: 'num', label: 'x 等于', default: 0, min: -99999, max: 99999, step: 1 },
+          y: { type: 'num', label: 'y 等于', default: 0, min: -99999, max: 99999, step: 1 },
           label: { type: 'text', label: '标签', default: '' },
         },
         lint: { minProps: 2, why: '代数式读数只需要 x、y 两个代入值和标签' },
@@ -137,7 +137,7 @@
         label: '代入器', prefix: '代', group: '数与运算', grades: [6, 9], alias: ['代入', '求值'],
         props: {
           var: { type: 'text', label: '字母', default: 'x' },
-          value: { type: 'num', label: '代入的数', default: 0, min: -99, max: 99, step: 1 },
+          value: { type: 'num', label: '代入的数', default: 0, min: -99999, max: 99999, step: 1 },
           check: { type: 'bool', label: '判断是否为 0', default: false },
         },
         inputs: { p: { kind: 'poly', label: '式子' } },

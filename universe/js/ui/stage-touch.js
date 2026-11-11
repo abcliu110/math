@@ -13,7 +13,7 @@
   const SNAP_SEL = '[data-hdl],[data-drag],.rz,.port.out';
   // 按下时不开长按菜单的控件（它们有自己的按下动作）
   const CONTROL = 'button,input,select,textarea,.tool,.wsx,.wsx-float,.fbar,.wsmini,.fab,.pill,.ctxmenu,[data-why],[data-unlink],[data-link]';
-  const MENU_ITEMS = { copy: '复制', del: '删除', turn: '转 90°', insp: '属性' };
+  const MENU_ITEMS = { del: '删除', turn: '转 90°', insp: '属性' };
 
   SG.touches = new Map();   // 正在按着的触点：pointerId → { x, y }（只记触屏）
   SG.pinch = null;          // 双指缩放中：{ ids, lastD, lastX, lastY }
@@ -134,7 +134,7 @@
   }
   function openCtx(id, x, y) {
     const S = UI.S, e = S.scene.entities[id], el = ensureMenu();
-    const keys = ['copy', 'del'].concat(SG.roleOf(e) === 'piece' ? ['turn'] : [], ['insp']);
+    const keys = ['del'].concat(SG.roleOf(e) === 'piece' ? ['turn'] : [], ['insp']);
     el.innerHTML = keys.map((k) => '<button type="button" role="menuitem" aria-label="' + MENU_ITEMS[k] + '" data-ctx="' + k + '">' + MENU_ITEMS[k] + '</button>').join('');
     const p = UI.Space.stageLocal({ clientX: x, clientY: y });
     el.style.left = p.x + 'px'; el.style.top = p.y + 'px';
@@ -149,7 +149,6 @@
     const S = UI.S, id = SG.ctxId;
     closeCtx();
     if (!id || !S.scene.entities[id]) return;
-    if (k === 'copy') return UI.Intent.run('copy', { id });
     if (k === 'del') { S.sel = null; return UI.Intent.run('delete', { id }); }
     if (k === 'turn') return UI.Intent.run('piece', { ids: [id], what: 'turn', value: 1 });
     if (k === 'insp') { S.sel = id; S.selLink = null; S.inspOpen = true; UI.Panels.renderInsp(); SG.render(); }

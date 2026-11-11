@@ -13,11 +13,11 @@
         essence: ['E12', 'E8'],
         label: '套餐对比', prefix: '套', group: '关系', grades: [6, 9], alias: ['套餐', '一次函数', '交点', '建模', '月租', '电话费', '两种方案'],
         props: {
-          base1: { type: 'num', label: '甲 月租（元）', default: 20, min: 0, max: 1000, step: 1 },
-          rate1: { type: 'num', label: '甲 每分钟（元）', default: 0.1, min: 0, max: 10, step: 0.01 },
-          base2: { type: 'num', label: '乙 月租（元）', default: 0, min: 0, max: 1000, step: 1 },
-          rate2: { type: 'num', label: '乙 每分钟（元）', default: 0.15, min: 0, max: 10, step: 0.01 },
-          x: { type: 'num', label: '通话（分钟）', default: 0, min: 0, max: 10000, step: 1 },
+          base1: { type: 'num', label: '甲 月租（元）', default: 20, min: 0, max: 1000000, step: 1 },
+          rate1: { type: 'num', label: '甲 每分钟（元）', default: 0.1, min: 0, max: 1000, step: 0.01 },
+          base2: { type: 'num', label: '乙 月租（元）', default: 0, min: 0, max: 1000000, step: 1 },
+          rate2: { type: 'num', label: '乙 每分钟（元）', default: 0.15, min: 0, max: 1000, step: 0.01 },
+          x: { type: 'num', label: '通话（分钟）', default: 0, min: 0, max: 1000000, step: 1 },
         },
         outputs: {
           ca: { dim: null, kind: 'num', label: '甲要花' },

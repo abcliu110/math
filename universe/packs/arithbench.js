@@ -253,9 +253,9 @@
         label: '竖式工作台', prefix: '竖式', group: '数与运算', grades: [1, 4], alias: ['竖式', '进位', '退位', '凑十', '拆数', '加法', '减法', '乘法'],
         workbenches: ['arith'],
         props: {
-          a: { type: 'int', label: '第一个数', default: 47, min: 0, max: 999 },
+          a: { type: 'int', label: '第一个数', default: 47, min: 0, max: 99999999 },
           op: { type: 'choice', label: '运算', default: 0, choices: ['加', '减', '乘'] },
-          b: { type: 'int', label: '第二个数', default: 38, min: 0, max: 999 },
+          b: { type: 'int', label: '第二个数', default: 38, min: 0, max: 99999999 },
           label: { type: 'text', label: '标签', default: '' },
         },
         lint: { minProps: 1, why: '竖式工作台的数和运算写在它的属性里；步骤在检查器里做' },

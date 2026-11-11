@@ -39,9 +39,9 @@
         essence: ['E6'],
         label: '记忆器', prefix: '记', group: '时间与变化', grades: [3, 9], alias: ['寄存器', '递推', '迭代'],
         props: {
-          init: { type: 'num', label: '起始值', default: 0, min: -9999, max: 9999, step: 1 },
+          init: { type: 'num', label: '起始值', default: 0, min: -9999999, max: 9999999, step: 1 },
           hold: { type: 'int', label: '几拍记一次', default: 1, min: 1, max: 50 },
-          wrap: { type: 'num', label: '超过就回起点', default: 0, min: 0, max: 99999, step: 1 },
+          wrap: { type: 'num', label: '超过就回起点', default: 0, min: 0, max: 999999999, step: 1 },
         },
         reinit: ['init'],
         inputs: { in: { kind: 'num', label: '新值' } },

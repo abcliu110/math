@@ -15,9 +15,9 @@
         essence: ['E4', 'E8'],
         label: '解方程', prefix: '解', group: '关系', grades: [6, 8], alias: ['一元一次方程', 'ax+b=c', '移项'],
         props: {
-          a: { type: 'num', label: 'x 前面的数 a', default: 1, min: -99, max: 99, step: 1 },
-          b: { type: 'num', label: '加上 b', default: 0, min: -99, max: 99, step: 1 },
-          c: { type: 'num', label: '等于 c', default: 0, min: -999, max: 999, step: 1 },
+          a: { type: 'num', label: 'x 前面的数 a', default: 1, min: -99999, max: 99999, step: 1 },
+          b: { type: 'num', label: '加上 b', default: 0, min: -99999, max: 99999, step: 1 },
+          c: { type: 'num', label: '等于 c', default: 0, min: -9999999, max: 9999999, step: 1 },
         },
         outputs: { x: { dim: null, kind: 'num', label: 'x' }, ok: { dim: null, kind: 'bool', label: '有唯一解' } },
         icon: () => K.text(32, 29, 'ax+b=c', { size: 14, weight: 700 }),
@@ -169,8 +169,8 @@
         essence: ['E6'],
         label: '数列', prefix: '列', group: '时间与变化', grades: [4, 9], alias: ['等差数列', '等比数列', '求和', '规律'],
         props: {
-          first: { type: 'num', label: '第一项', default: 1, min: -999, max: 999, step: 1 },
-          diff: { type: 'num', label: '公差 / 公比', default: 1, min: -99, max: 99, step: 1 },
+          first: { type: 'num', label: '第一项', default: 1, min: -9999999, max: 9999999, step: 1 },
+          diff: { type: 'num', label: '公差 / 公比', default: 1, min: -99999, max: 99999, step: 1 },
           mode: { type: 'choice', label: '类型', default: 0, choices: ['等差', '等比'] },
         },
         reinit: ['first', 'diff', 'mode'],

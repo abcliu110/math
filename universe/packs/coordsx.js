@@ -89,7 +89,7 @@
         label: '反比例', prefix: '反', group: '函数', grades: [9, 9], alias: ['反比例', 'y=k/x', '乘积', '积不变'],
         props: {
           k: { type: 'int', label: 'k（x 与 y 的乘积）', default: 6 },
-          x: { type: 'num', label: 'x 等于', default: 2, min: -99, max: 99, step: 1 },
+          x: { type: 'num', label: 'x 等于', default: 2, min: -99999, max: 99999, step: 1 },
           label: { type: 'text', label: '标签', default: '' },
         },
         outputs: { y: { dim: null, kind: 'num', label: 'y' } },

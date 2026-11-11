@@ -119,7 +119,6 @@
       const a = b.dataset.act;
       if (a === 'turn' || a === 'flip') UI.Intent.run('piece', { ids: [id], what: a, value: 1 });
       else if (a === 'insp') { S.inspOpen = !S.inspOpen; UI.Panels.renderInsp(); }
-      else if (a === 'copy') UI.Intent.run('copy', { id });
       else if (a === 'del') { S.sel = null; UI.Intent.run('delete', { id }); }
       else if (a === 'resetstate') UI.Intent.run('resetstate', { id });
     });
