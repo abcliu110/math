@@ -3524,6 +3524,47 @@ console.log('解集的并交补与高次不等式（js/core/eqn.js、packs/equat
   });
 }
 
+console.log('递推与迭代（packs/iterate.js）：一项一项往下算，整串交出来');
+{
+  const mk = () => {
+    const s = W.blank(), add = (type, props) => { const r = W.act(s, { t: 'add', type, x: 0, y: 0, props }); if (!r.ok) throw new Error(r.why); return r.id; };
+    const link = (a, b, tp, fp) => W.act(s, { t: 'link', from: a, to: b, toPort: tp, fromPort: fp });
+    return { s, add, link };
+  };
+  const show = (v) => U.showVal(v);
+  const out = (m, id) => W.evaluate(m.s)[id].out;
+  const seqs = (v) => v.data.map((q) => Q.show(q));
+  t('迭代器：x → x/2 + 1 从 1 开始，精确的分数一项项逼近 2', () => {
+    const m = mk(), it = m.add('iterate', { start: 1, f: 'x/2 + 1', n: 6 }), o = out(m, it);
+    eq(seqs(o.s), ['1', '3/2', '7/4', '15/8', '31/16', '63/32']); eq(show(o.last), '63/32'); eq(show(o.diff), '1/32');
+    truthy(o.s.exact !== false);
+  });
+  t('迭代器：数太长就改用近似（整串标 ≈）；越算越大会停下；两个字母被拒绝', () => {
+    const m = mk(), it = m.add('iterate', { start: '1/3', f: 'x^2 - 1/5', n: 60 }), o = out(m, it);
+    truthy(o.s.exact === false && o.s.data.length === 60, '近似、项数不变'); truthy(/^≈/.test(show(o.last)), show(o.last));
+    const m2 = mk(), b = m2.add('iterate', { start: 10, f: 'x^2', n: 50 }); truthy(out(m2, b).s.data.length < 50, '平方一直变大，超过 10^100 后停下');
+    const m3 = mk(), c = m3.add('iterate', { f: 'x + y' }); eq(out(m3, c).s, undefined);
+  });
+  t('二阶递推：默认是斐波那契；最后两项的比逼近黄金分割', () => {
+    const m = mk(), r = m.add('recur2', {}), o = out(m, r);
+    eq(seqs(o.s), ['0', '1', '1', '2', '3', '5', '8', '13', '21', '34', '55', '89']); eq(show(o.last), '89'); eq(show(o.ratio), '89/55');
+    W.act(m.s, { t: 'set', id: r, k: 'a', v: 2 }); W.act(m.s, { t: 'set', id: r, k: 'b', v: 0 }); W.act(m.s, { t: 'set', id: r, k: 'x0', v: 1 }); W.act(m.s, { t: 'set', id: r, k: 'n', v: 5 });
+    eq(seqs(out(m, r).s), ['1', '1', '2', '4', '8'], 'a=2、b=0：翻倍');
+  });
+  t('通项：2n − 1 是奇数，前 10 个的和是 100；n² 是平方数', () => {
+    const m = mk(), q = m.add('seqform', {}), o = out(m, q);
+    eq(seqs(o.s), ['1', '3', '5', '7', '9', '11', '13', '15', '17', '19']); eq(show(o.sum), '100');
+    W.act(m.s, { t: 'set', id: q, k: 'f', v: 'n^2' }); eq(show(out(m, q).sum), '385');
+    eq(W.act(m.s, { t: 'set', id: q, k: 'to', v: -5 }).ok, false, '“n 到”小于“n 从”被拒绝');
+  });
+  t('递推的数列能接数列统计、数列变换、取值表和拟合', () => {
+    const m = mk(), r = m.add('recur2', {}), st = m.add('seqstat', { want: 1 }), mp = m.add('seqmap', { f: 'x*x' }), tb = m.add('column', { col: 1 });
+    truthy(m.link(r, st, 's', 's').ok); eq(show(out(m, st).v), '232');   // 0+1+1+2+3+5+8+13+21+34+55+89
+    truthy(m.link(r, mp, 's', 's').ok); eq(seqs(out(m, mp).s).slice(0, 5), ['0', '1', '1', '4', '9']);
+    truthy(m.link(r, tb, 't', 's').ok); eq(out(m, tb).s.data.length, 12);
+  });
+}
+
 console.log('示例菜单（problems/examples-data.js，由 tools/gen-examples.js 生成）');
 {
   const EX = U.EXAMPLES || [];

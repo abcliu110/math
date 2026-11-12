@@ -43,6 +43,7 @@
     'geoboard': 'packs/geoboard.js',
     'geometry': 'packs/geometry.js',
     'guessrule': 'packs/guessrule.js',
+    'iterate': 'packs/iterate.js',
     'logic': 'packs/logic.js',
     'middle': 'packs/middle.js',
     'time': 'packs/time.js',

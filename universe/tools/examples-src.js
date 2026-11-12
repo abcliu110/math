@@ -253,4 +253,22 @@ module.exports = [
       ['e5', 's5', 'eq', 'eq'], ['s5', 'nl5', 'iv', 'set'],
     ],
   },
+  {
+    id: 'ex-recursion-lab', grade: 7, domain: '时间与变化', title: '综合 · 递推实验室：迭代、斐波那契、通项',
+    hook: '一项一项往下算：迭代器让 x → x/2 + 1 从 1 开始，精确的分数一步步逼近 2；二阶递推默认是斐波那契数列，最后两项的比逼近黄金分割 1.618…；通项 2n − 1 列出奇数，前 10 个的和是 100（正好是 10²）。数列都能继续接统计量和变换。',
+    ents: [
+      ['it', 'iterate', { start: 1, f: 'x/2 + 1', n: 8 }], ['mlast', 'meter', { digits: 4, label: '第 8 项' }], ['mdiff', 'meter', { digits: 4, label: '最后一步变化' }],
+      ['fib', 'recur2', { n: 14 }], ['mratio', 'meter', { digits: 4, label: '最后两项的比' }], ['fsum', 'seqstat', { want: 1 }], ['mfsum', 'meter', { digits: 0, label: '前 14 项的和' }],
+      ['odd', 'seqform', { f: '2n - 1', from: 1, to: 10 }], ['msum', 'meter', { digits: 0, label: '前 10 个奇数的和' }],
+      ['sq', 'seqmap', { f: 'x*x' }], ['avg', 'seqstat', { want: 2 }], ['mavg', 'meter', { digits: 1, label: '奇数平方的平均数' }],
+      ['iavg', 'seqstat', { want: 2 }], ['miavg', 'meter', { digits: 4, label: '迭代 8 项的平均' }],
+      ['fmax', 'seqstat', { want: 5 }], ['mfmax', 'meter', { digits: 0, label: '斐波那契最大项' }],
+    ],
+    links: [
+      ['it', 'mlast', 'v', 'last'], ['it', 'mdiff', 'v', 'diff'],
+      ['fib', 'mratio', 'v', 'ratio'], ['fib', 'fsum', 's', 's'], ['fsum', 'mfsum', 'v', 'v'],
+      ['odd', 'msum', 'v', 'sum'], ['odd', 'sq', 's', 's'], ['sq', 'avg', 's', 's'], ['avg', 'mavg', 'v', 'v'],
+      ['it', 'iavg', 's', 's'], ['iavg', 'miavg', 'v', 'v'], ['fib', 'fmax', 's', 's'], ['fmax', 'mfmax', 'v', 'v'],
+    ],
+  },
 ];
