@@ -28,7 +28,7 @@
   // 新加一张卡片放哪里：从想放的位置开始，往外一圈一圈找，找到和已有卡片（包括工作区底下的工具面板）都不重叠的空位
   // skipId：已经建好、正要挪开的那一张（从器材架拖到台面时用，它自己不占地）
   function freeSpot(x, y, type, skipId) {
-    const E = UI.S.scene.entities, d = U.types[type], sz = d && d.size ? d.size({ props: {} }) : L.DEFAULT_CARD, w = sz[0], h = sz[1];
+    const E = UI.S.scene.entities, d = U.types[type], sz = d && d.size ? d.size({ props: U.defaultProps(d) }) : L.DEFAULT_CARD, w = sz[0], h = sz[1];
     // 占地：卡片本身，加上工作区的面板（实测的尺寸和位置，见 UI.Layout.panelRect）
     const rects = [];
     for (const e of Object.values(E)) {
@@ -66,7 +66,7 @@
   }
   // 矩形 (x,y,type) 是否压在某个能装东西的容器上（不含 skipId 自己、不含已经在容器里的卡片）
   function overContainer(x, y, type, skipId) {
-    const E = UI.S.scene.entities, d = U.types[type], sz = d && d.size ? d.size({ props: {} }) : L.DEFAULT_CARD, w = sz[0], h = sz[1];
+    const E = UI.S.scene.entities, d = U.types[type], sz = d && d.size ? d.size({ props: U.defaultProps(d) }) : L.DEFAULT_CARD, w = sz[0], h = sz[1];
     for (const e of Object.values(E)) {
       if (e.parent || e.id === skipId || !isContainer(e)) continue;
       const g = SG.geom(e);

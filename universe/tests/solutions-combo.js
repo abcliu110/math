@@ -87,4 +87,11 @@ module.exports = {
     h.link(h.role('dc'), hs, 'v', 'v'); h.link(hs, h.role('mh'), 'v', 'n');
     h.run(5);
   },
+  'combo-sweep-fence'(h) {
+    const x = h.role('x'), sub = h.role('sub'), area = h.role('area'), tab = h.role('tab');
+    h.link(h.role('ten'), sub, 'a'); h.link(x, sub, 'b', 'x');
+    h.link(x, area, 'a', 'x'); h.link(sub, area, 'b', 'r');
+    h.link(x, tab, 'x', 'x'); h.link(area, tab, 'y', 'r');
+    h.link(tab, h.role('mbest'), 'v', 'best'); h.link(tab, h.role('mat'), 'v', 'at');
+  },
 };

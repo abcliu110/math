@@ -3137,6 +3137,117 @@ console.log('分步定型（bake，§10.5.6 第 5 步）：前面的步骤折成
   });
 }
 
+console.log('扫描（packs/sweep.js）：让一个量变化，把每一步的结果收成表');
+{
+  const mk = () => {
+    const s = W.blank(), add = (type, props) => { const r = W.act(s, { t: 'add', type, x: 0, y: 0, props }); if (!r.ok) throw new Error(r.why); return r.id; };
+    const link = (a, b, tp, fp) => { const r = W.act(s, { t: 'link', from: a, to: b, toPort: tp, fromPort: fp }); if (!r.ok) throw new Error(r.why); };
+    return { s, add, link };
+  };
+  // y = x² − 4x：x 从 −2 到 6，每次 1/2（17 个点）
+  const parabola = (sweepProps, tabProps) => {
+    const m = mk(), x = m.add('sweepx', sweepProps), mul = m.add('op', { op: 2 }), sub = m.add('op', { op: 1 }), four = m.add('num', { n: 4 }), m4 = m.add('op', { op: 2 }), tab = m.add('sweeptab', tabProps || {});
+    m.link(x, mul, 'a', 'x'); m.link(x, mul, 'b', 'x'); m.link(x, m4, 'a', 'x'); m.link(four, m4, 'b', 'v'); m.link(mul, sub, 'a', 'r'); m.link(m4, sub, 'b', 'r');
+    m.link(x, tab, 'x', 'x'); m.link(sub, tab, 'y', 'r');
+    return Object.assign(m, { x, tab });
+  };
+  const show = (v) => U.showVal(v);
+  t('取值表：x² − 4x 在 −2 到 6 扫 17 个点，最小值 −4 在 x = 2（精确）', () => {
+    const m = parabola({ from: -2, to: 6, step: '1/2' }, { goal: 1 }), o = W.evaluate(m.s)[m.tab].out;
+    eq(show(o.best), '-4'); eq(show(o.at), '2'); eq(show(o.count), '17');
+    eq(o.t.data.rows.length, 17); truthy(o.t.exact !== false, '精确输入不该标近似');
+  });
+  t('取值表：goal 选最大值，在端点 x = −2 取到 12', () => {
+    const m = parabola({ from: -2, to: 6, step: '1/2' }, { goal: 0 }), o = W.evaluate(m.s)[m.tab].out;
+    eq(show(o.best), '12'); eq(show(o.at), '-2');
+  });
+  t('取值表：不改扫描变量的“当前值”，下游照常读当前值；扫描副本不留痕', () => {
+    const m = parabola({ cur: 3, from: 1, to: 9, step: 1 });
+    const before = U.JSON.stringify(m.s); const D = W.evaluate(m.s);
+    eq(U.JSON.stringify(m.s), before); eq(show(D[m.x].out.x), '3');
+  });
+  t('取值表：存盘、读回、再求值，结果一样', () => {
+    const m = parabola({ from: 0, to: 4, step: 1 }, { goal: 1 });
+    const s2 = W.load(U.JSON.parse(W.save(m.s))); eq(show(W.evaluate(s2)[m.tab].out.best), '-4');
+  });
+  t('取值表：两张取值表共用一个扫描变量，互不干扰（副本里不套娃）', () => {
+    const m = parabola({ from: 0, to: 4, step: 1 }, { goal: 1 }), t2 = m.add('sweeptab', { goal: 0 });
+    const y = Object.values(m.s.links).find((l) => l.to === m.tab && l.toPort === 'y');
+    m.link(m.x, t2, 'x', 'x'); m.link(y.from, t2, 'y', y.fromPort);
+    const D = W.evaluate(m.s); eq(show(D[m.tab].out.best), '-4'); eq(show(D[t2].out.best), '0');
+  });
+  t('取值表：没接线时只提示不报错；步长 0、点太多、到小于从，改的时候被拒绝并说清原因，原值不变', () => {
+    const m = mk(), tab = m.add('sweeptab', {}), D0 = W.evaluate(m.s)[tab]; eq(Object.keys(D0.out).length, 0); truthy(D0.sig.length >= 1, '没接线要有提示');
+    const bad = (k, v, why) => {
+      const p = parabola({ from: 1, to: 9, step: 1 }), before = p.s.entities[p.x].props[k], r = W.act(p.s, { t: 'set', id: p.x, k, v });
+      truthy(!r.ok, why + ' 应该被拒绝'); truthy(r.why && r.why.length > 2, why + ' 要说明原因'); eq(p.s.entities[p.x].props[k], before, why + ' 被拒后值要还原');
+    };
+    bad('step', 0, '步长 0'); bad('step', '1/1000', '点太多'); bad('to', 0, '到小于从');
+  });
+  t('取值表 → 拟合器：扫 y = 3x + 2，拟合还原斜率 3、截距 2', () => {
+    const m = mk(), x = m.add('sweepx', { from: 0, to: 5, step: 1 }), three = m.add('num', { n: 3 }), two = m.add('num', { n: 2 }), a = m.add('op', { op: 2 }), b = m.add('op', { op: 0 }), tab = m.add('sweeptab', {}), ft = m.add('fit', { model: 1, xcol: 0, ycol: 1 });
+    m.link(x, a, 'a', 'x'); m.link(three, a, 'b', 'v'); m.link(a, b, 'a', 'r'); m.link(two, b, 'b', 'v'); m.link(x, tab, 'x', 'x'); m.link(b, tab, 'y', 'r'); m.link(tab, ft, 't', 't');
+    const o = W.evaluate(m.s)[ft].out; eq(show(o.k), '3'); eq(show(o.b), '2');
+  });
+  t('数值参数可以被连线驱动：扫描变量 → 抛物线顶点的 a', () => {
+    const m = mk(), n = m.add('num', { n: 3 }), qv = m.add('quad-vertex', { a: 1, b: -2, c: 5 });
+    m.link(n, qv, 'p.a', 'v'); const D = W.evaluate(m.s);
+    eq(D[qv].props.a, 3); truthy(D[qv].driven.a, '参数 a 应标为被驱动');
+  });
+}
+
+console.log('选择与真假运算（packs/logic.js）：“成立 / 不成立”能接进别的器材，用来分情况');
+{
+  const mk = () => {
+    const s = W.blank(), add = (type, props) => { const r = W.act(s, { t: 'add', type, x: 0, y: 0, props }); if (!r.ok) throw new Error(r.why); return r.id; };
+    const link = (a, b, tp, fp) => { const r = W.act(s, { t: 'link', from: a, to: b, toPort: tp, fromPort: fp }); if (!r.ok) throw new Error(r.why); };
+    return { s, add, link };
+  };
+  const show = (v) => U.showVal(v);
+  // 绝对值：x ≥ 0 用 x，否则用 0 − x
+  const absOf = (xv) => {
+    const m = mk(), x = m.add('num', { n: xv }), zero = m.add('num', { n: 0 }), ge = m.add('compare', { op: 4 }), neg = m.add('op', { op: 1 }), pk = m.add('pick', {});
+    m.link(x, ge, 'a', 'v'); m.link(zero, ge, 'b', 'v'); m.link(zero, neg, 'a', 'v'); m.link(x, neg, 'b', 'v');
+    m.link(ge, pk, 'c', 'ok'); m.link(x, pk, 'a', 'v'); m.link(neg, pk, 'b', 'r');
+    return Object.assign(m, { pk });
+  };
+  t('选择：比较器的“成立”接进选择，做出绝对值（−3 → 3，4 → 4，0 → 0）', () => {
+    for (const [xv, want] of [[-3, '3'], [4, '4'], [0, '0']]) { const m = absOf(xv); eq(show(W.evaluate(m.s)[m.pk].out.r), want, '|' + xv + '|'); }
+  });
+  t('选择：条件成立只需要甲，不成立只需要乙；没用到的一边可以不接', () => {
+    const m = mk(), a = m.add('num', { n: 7 }), cmp = m.add('compare', { op: 0 }), one = m.add('num', { n: 1 }), pk = m.add('pick', {});
+    m.link(one, cmp, 'a', 'v'); m.link(one, cmp, 'b', 'v'); m.link(cmp, pk, 'c', 'ok'); m.link(a, pk, 'a', 'v');
+    eq(show(W.evaluate(m.s)[pk].out.r), '7');   // 1 = 1 成立，只用甲，乙没接
+    const m2 = mk(), c2 = m2.add('compare', { op: 1 }), n2 = m2.add('num', { n: 5 }), p2 = m2.add('pick', {});
+    m2.link(n2, c2, 'a', 'v'); m2.link(n2, c2, 'b', 'v'); m2.link(c2, p2, 'c', 'ok'); m2.link(n2, p2, 'a', 'v');   // 5 < 5 不成立，要乙，乙没接
+    const D = W.evaluate(m2.s)[p2]; eq(Object.keys(D.out).includes('r'), false); truthy(D.sig.some((g) => g.tx.includes('乙')), '要提示接乙');
+  });
+  t('选择：“条件反过来”对调甲乙；没接条件只提示不报错', () => {
+    const m = absOf(4); m.s.entities[m.pk].props.flip = true; eq(show(W.evaluate(m.s)[m.pk].out.r), '-4');
+    const m2 = mk(), p = m2.add('pick', {}); eq(Object.keys(W.evaluate(m2.s)[p].out).length, 0);
+  });
+  t('真假运算：且、或、异或、非甲、结果取反的真值表', () => {
+    const want = { 0: [[1, 1, true], [1, 0, false], [0, 1, false], [0, 0, false]], 1: [[1, 1, true], [1, 0, true], [0, 1, true], [0, 0, false]], 2: [[1, 1, false], [1, 0, true], [0, 1, true], [0, 0, false]] };
+    for (const op of [0, 1, 2]) for (const [av, bv, r] of want[op]) {
+      const m = mk(), one = m.add('num', { n: 1 }), cA = m.add('compare', { op: 0 }), cB = m.add('compare', { op: 0 }), lg = m.add('logic', { op }), two = m.add('num', { n: 2 });
+      m.link(one, cA, 'a', 'v'); m.link(av ? one : two, cA, 'b', 'v'); m.link(one, cB, 'a', 'v'); m.link(bv ? one : two, cB, 'b', 'v'); m.link(cA, lg, 'a', 'ok'); m.link(cB, lg, 'b', 'ok');
+      eq(W.evaluate(m.s)[lg].out.r.data, r, '运算 ' + op + ' 甲=' + av + ' 乙=' + bv);
+    }
+    const m = mk(), one = m.add('num', { n: 1 }), c = m.add('compare', { op: 0 }), lg = m.add('logic', { op: 3 });
+    m.link(one, c, 'a', 'v'); m.link(one, c, 'b', 'v'); m.link(c, lg, 'a', 'ok'); eq(W.evaluate(m.s)[lg].out.r.data, false, '非甲只需要甲');
+    m.s.entities[lg].props.not = true; eq(W.evaluate(m.s)[lg].out.r.data, true, '结果取反');
+  });
+  t('选择 + 扫描：把 |x| 在 −3 到 3 扫出来，最大值 3，7 个点', () => {
+    const m = mk(), x = m.add('sweepx', { from: -3, to: 3, step: 1 }), zero = m.add('num', { n: 0 }), ge = m.add('compare', { op: 4 }), neg = m.add('op', { op: 1 }), pk = m.add('pick', {}), tab = m.add('sweeptab', {});
+    m.link(x, ge, 'a', 'x'); m.link(zero, ge, 'b', 'v'); m.link(zero, neg, 'a', 'v'); m.link(x, neg, 'b', 'x'); m.link(ge, pk, 'c', 'ok'); m.link(x, pk, 'a', 'x'); m.link(neg, pk, 'b', 'r'); m.link(x, tab, 'x', 'x'); m.link(pk, tab, 'y', 'r');
+    const o = W.evaluate(m.s)[tab].out; eq(show(o.best), '3'); eq(show(o.count), '7');
+  });
+  t('真假口不再是死胡同：至少有两种器材接收“真假”', () => {
+    const takers = Object.keys(U.types).filter((n) => Object.values(U.types[n].inputs || {}).some((p) => p.kind === 'bool'));
+    truthy(takers.length >= 2, '接收真假的器材：' + takers.join(','));
+  });
+}
+
 console.log('示例菜单（problems/examples-data.js，由 tools/gen-examples.js 生成）');
 {
   const EX = U.EXAMPLES || [];

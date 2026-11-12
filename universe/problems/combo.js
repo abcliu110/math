@@ -345,5 +345,28 @@
     ref: ['memory|0'],
   });
 
+  // 17. 扫描：围篱笆，面积随宽怎么变？最大是多少？
+  P.push({
+    id: 'combo-sweep-fence', essence: ['E4', 'E8'], title: '周长 20 的长方形，宽取 1 到 9：面积最大是多少？在宽是几的时候？', grade: 9, domain: '函数', points: ['9.4'],
+    topics: ['最值问题', '二次函数'], alias: ['综合', '扫描', '围篱笆'], hook: '长方形周长 20，宽是 x，长就是 10−x，面积是 x×(10−x)。把扫描变量接进算式，让取值表把 x 从 1 扫到 9：每个 x 的面积都列出来，最大的一个自己跳出来。',
+    shelf: ['sweepx', 'sweeptab', 'num', 'op', 'meter'],
+    build: mk({ ents: [
+      E('sweepx', 40, 120, 'x', { cur: 3, from: 1, to: 9, step: 1 }),
+      E('num', 40, 260, 'ten', { n: 10 }),
+      E('op', 240, 200, 'sub', { op: 1 }),
+      E('op', 420, 120, 'area', { op: 2 }),
+      E('sweeptab', 600, 120, 'tab', { goal: 0, digits: 0 }),
+      E('meter', 880, 60, 'mbest', { digits: 0, label: '最大面积' }),
+      E('meter', 880, 200, 'mat', { digits: 0, label: '在 x =' }),
+    ] }),
+    milestones: [
+      { id: 'table', say: '取值表扫了 9 个点（x = 1 … 9）', score: 6, when: (w) => w.some('sweeptab', (e) => w.num(e, 'count') === 9), hints: ['x 要接取值表的 x 口；面积接它的 y 口。', '面积 = x × (10 − x)：先用“减”算出 10 − x，再和 x 相乘。'] },
+      { id: 'best', say: '最大面积是 25', score: 8, when: (w) => w.some('meter', (e) => w.num(e, 'v') === 25), hints: ['取值表的“最大（小）的 y”接读数器。'] },
+      { id: 'at', say: '最大面积出现在 x = 5：长宽相等，是正方形', score: 8, when: (w) => w.some('sweeptab', (e) => w.num(e, 'at') === 5), hints: ['看取值表的“在哪个 x”。', '为什么刚好是 5？想想长和宽的关系。'] },
+    ],
+    traps: [], why: '面积 x(10−x) 在 x = 5 时最大，是 25：周长一定时，长方形越接近正方形面积越大。取值表是“试很多个”的整齐写法：每个 x 都算一遍，最大的一眼就能看出来；要说明“一定是最大”，还得用二次函数的顶点或配方来证明（表只是举例，证据到 ①）。',
+    ref: ['optimize|0'],
+  });
+
   U.problemsCombo = P.filter((p) => /^combo-/.test(p.id));
 })(typeof globalThis !== 'undefined' ? globalThis : window);

@@ -1,12 +1,12 @@
 # 知识点覆盖报告
 
-> 由 `node tools/coverage.js` 生成，日期 2026-11-11。数据来自 `js/core/curriculum.js` 与 `problems/*.js`。
+> 由 `node tools/coverage.js` 生成，日期 2026-11-12。数据来自 `js/core/curriculum.js` 与 `problems/*.js`。
 
 ## 总览
 
 - 知识点：142 个（设计目标 142）
 - 有题的知识点：141 个（99%）
-- 题目：415 道；没有对应知识点的题：1 道
+- 题目：431 道；没有对应知识点的题：1 道
 - 没有器材的本质：无
 - 没有题的本质：无
 
@@ -17,12 +17,12 @@
 | 1 | 16 | 16（100%） | 35 |
 | 2 | 16 | 16（100%） | 39 |
 | 3 | 16 | 16（100%） | 49 |
-| 4 | 17 | 17（100%） | 50 |
-| 5 | 14 | 14（100%） | 73 |
-| 6 | 15 | 14（93%） | 45 |
-| 7 | 16 | 16（100%） | 55 |
-| 8 | 16 | 16（100%） | 57 |
-| 9 | 16 | 16（100%） | 37 |
+| 4 | 17 | 17（100%） | 52 |
+| 5 | 14 | 14（100%） | 78 |
+| 6 | 15 | 14（93%） | 47 |
+| 7 | 16 | 16（100%） | 57 |
+| 8 | 16 | 16（100%） | 59 |
+| 9 | 16 | 16（100%） | 40 |
 
 ## 按知识点
 
@@ -84,7 +84,7 @@
 | 4.6 | 4 | 除数是两位数的除法 | 1 | 1 | 0 | 1 | num |
 | 4.7 | 4 | 条形统计图 | 1 | 1 | 0 | 1 | data、num |
 | 4.8 | 4 | 优化 | 1 | 1 | 0 | 1 | num |
-| 4.9 | 4 | 四则运算 | 8 | 1 | 0 | 1 | asn、num、findbug、road、turtle |
+| 4.9 | 4 | 四则运算 | 10 | 1 | 0 | 1 | asn、tenframe、counter、meter、memory、num、op、dice、hist、findbug、road、turtle |
 | 4.17 | 4 | 观察物体（二） | 1 | 1 | 0 | 1 | views |
 | 4.10 | 4 | 运算定律 | 1 | 1 | 0 | 1 | num |
 | 4.11 | 4 | 小数的意义和性质 | 1 | 1 | 0 | 1 | num |
@@ -96,12 +96,12 @@
 | 5.1 | 5 | 小数乘法 | 2 | 1 | 0 | 1 | num |
 | 5.2 | 5 | 位置 | 1 | 1 | 0 | 1 | — |
 | 5.3 | 5 | 小数除法 | 1 | 1 | 0 | 1 | num |
-| 5.4 | 5 | 可能性 | 6 | 1 | 0 | 3 | dice、enumerator、num、meter、array、ptree |
+| 5.4 | 5 | 可能性 | 7 | 1 | 0 | 3 | dice、num、divmod、meter、digits、numtheory、power、enumerator、array、ptree |
 | 5.5 | 5 | 简易方程 | 10 | 0 | 0 | 1 | variable、barmodel、eqscale、nim、linsolve、costplan、road |
 | 5.6 | 5 | 多边形的面积 | 5 | 1 | 0 | 1 | num、parallelogram、gworkspace、gpt、gpoly、fquad |
 | 5.7 | 5 | 植树问题 | 1 | 1 | 0 | 1 | num |
 | 5.14 | 5 | 观察物体（三） | 2 | 1 | 0 | 1 | views、twoways |
-| 5.8 | 5 | 因数与倍数 | 21 | 0 | 0 | 2 | asn、conjecture、hanoi、guessrule、modclock、num、primeblocks、counterex、scanner、proofsort、net |
+| 5.8 | 5 | 因数与倍数 | 25 | 0 | 0 | 2 | asn、frect、gpiece、garea、meter、fcirc、frtri、fisotri、fscalene、compare、figrel、ratio、fsquare、fpgram、frhomb、ftrap、fisotrap、frtrap、fkite、fquad4、xform、figmeasure、conjecture、hanoi、guessrule、modclock、num、primeblocks、counterex、scanner、proofsort、net |
 | 5.9 | 5 | 长方体和正方体 | 3 | 1 | 0 | 1 | pour、cuboid |
 | 5.10 | 5 | 分数的意义和性质 | 2 | 0 | 0 | 1 | num、primeblocks |
 | 5.11 | 5 | 分数的加法和减法 | 7 | 1 | 0 | 1 | num、approach、findbug、fracarea |
@@ -119,15 +119,15 @@
 | 6.9 | 6 | 负数运算——为什么负负得正 | 1 | 1 | 0 | 1 | num |
 | 6.10 | 6 | 百分数（二） | 1 | 1 | 0 | 1 | num |
 | 6.11 | 6 | 圆柱与圆锥 | 1 | 1 | 0 | 1 | circle、num |
-| 6.12 | 6 | 比例 | 7 | 1 | 0 | 1 | num、datatable、fmachine、euler、scale、shadow、taxi |
+| 6.12 | 6 | 比例 | 9 | 1 | 0 | 1 | fracnum、ratop、ratread、meter、num、percent、fracbar、estimate、datatable、fmachine、euler、scale、shadow、taxi |
 | 6.13 | 6 | 鸽巢问题 | 1 | 1 | 0 | 1 | num |
 | 6.14 | 6 | 综合与实践 / 整理和复习 | 0 | 0 | 0 | — | — |
 | 7.1 | 7 | 正数和负数、有理数与数轴 | 4 | 1 | 0 | 1 | approach、asn、num、proofsort |
-| 7.2 | 7 | 有理数的加减法 | 5 | 1 | 0 | 1 | num、findbug、arithbench、newop |
+| 7.2 | 7 | 有理数的加减法 | 6 | 1 | 0 | 1 | algebra、subst、meter、num、findbug、arithbench、newop |
 | 7.3 | 7 | 有理数的乘除法、乘方与科学记数法 | 3 | 1 | 0 | 1 | num、hanoi |
 | 7.4 | 7 | 整式 | 1 | 1 | 2 | 4 | algebra、induction |
 | 7.5 | 7 | 整式的加减 | 1 | 1 | 0 | 1 | algebra |
-| 7.6 | 7 | 解一元一次方程 | 9 | 0 | 0 | 1 | eqscale、findbug、linsolve |
+| 7.6 | 7 | 解一元一次方程 | 10 | 0 | 0 | 1 | line、at、meter、inverse-prop、circle-line、pair-pos、rotate-about、eqscale、findbug、linsolve |
 | 7.7 | 7 | 实际问题与一元一次方程 | 1 | 1 | 0 | 1 | algebra |
 | 7.8 | 7 | 几何图形与直线、射线、线段 | 1 | 1 | 0 | 1 | num |
 | 7.9 | 7 | 角 | 4 | 0 | 0 | 1 | curved、conjecture、polygon、fold |
@@ -148,7 +148,7 @@
 | 8.8 | 8 | 分式及其运算 | 1 | 1 | 0 | 1 | — |
 | 8.9 | 8 | 分式方程 | 2 | 0 | 0 | 1 | approach |
 | 8.10 | 8 | 二次根式 | 1 | 1 | 0 | 1 | num |
-| 8.11 | 8 | 勾股定理与逆定理 | 6 | 1 | 0 | 1 | dissect、geoboard、tri、proofsort |
+| 8.11 | 8 | 勾股定理与逆定理 | 8 | 1 | 0 | 1 | algebra、eqdesk、system2、numline_iv、meter、exprbench、exprread、dissect、geoboard、tri、proofsort |
 | 8.12 | 8 | 平行四边形 | 7 | 0 | 0 | 1 | compass、parallelogram、optimize、taxi |
 | 8.13 | 8 | 特殊的平行四边形 | 1 | 1 | 0 | 1 | — |
 | 8.14 | 8 | 函数与正比例函数 | 1 | 1 | 0 | 1 | — |
@@ -165,7 +165,7 @@
 | 9.9 | 9 | 随机事件与概率 | 3 | 0 | 0 | 1 | bag、coin、ptree |
 | 9.10 | 9 | 列举法求概率与频率估计 | 1 | 1 | 0 | 1 | enumerator |
 | 9.11 | 9 | 反比例函数 | 1 | 1 | 0 | 1 | — |
-| 9.12 | 9 | 图形的相似与位似 | 4 | 1 | 0 | 1 | ftri、scale、spheretri |
+| 9.12 | 9 | 图形的相似与位似 | 7 | 1 | 0 | 1 | invariant、proofcheck、quad、quad-vertex、quad-xint、quad-yint、meter、datatable、column、fit、predict、line、scatter、data、stats、twoway、ftri、scale、spheretri |
 | 9.13 | 9 | 相似三角形 | 1 | 0 | 0 | 1 | ftri |
 | 9.14 | 9 | 锐角三角函数 | 1 | 1 | 0 | 1 | trig-table |
 | 9.15 | 9 | 解直角三角形及其应用 | 1 | 0 | 0 | 1 | angles |
@@ -175,15 +175,15 @@
 
 | 本质 | 题目数 | 器材数 |
 |---|---|---|
-| E1 | 42 | 26 |
-| E2 | 134 | 34 |
-| E3 | 124 | 48 |
-| E4 | 41 | 16 |
-| E5 | 110 | 52 |
-| E6 | 25 | 17 |
+| E1 | 44 | 26 |
+| E2 | 139 | 34 |
+| E3 | 132 | 48 |
+| E4 | 44 | 16 |
+| E5 | 114 | 52 |
+| E6 | 25 | 19 |
 | E7 | 30 | 12 |
-| E8 | 61 | 32 |
-| E9 | 68 | 14 |
+| E8 | 64 | 34 |
+| E9 | 75 | 14 |
 | E10 | 10 | 7 |
 | E11 | 11 | 7 |
 | E12 | 22 | 11 |
