@@ -119,11 +119,12 @@
           const r = E.solve(e, v);
           if (r.kind === 'error') { c.say('info', r.why); return {}; }
           if (c.step) r.steps.forEach((s) => c.step(s.say, null, s.rule));
-          const out = { set: U.val('solset', r.set) };
+          const ap = S.approx(r.set), ex = ap ? { exact: false } : {};   // 数值求出的近似根：结果标近似
+          const out = { set: U.val('solset', r.set) };   // 解集里近似根自己带 ≈，不用再整体标近似
           const q = S.single(r.set);
           if (q) {
-            out.x = U.val('num', q);
-            if (c.props.check && e.rel === '=') {
+            out.x = U.val('num', q, ex);
+            if (c.props.check && e.rel === '=' && !ap) {
               const env = {}; env[v] = q;
               const l = P.evalQ(e.lhs, env), rr = P.evalQ(e.rhs, env);
               if (c.step) c.step('代回去检验：左边 = ' + Q.show(l) + '，右边 = ' + Q.show(rr) + (Q.eq(l, rr) ? '，相等' : '，不相等！'), null, 'eq.both-sides');
@@ -178,19 +179,32 @@
         props: {
           x: { type: 'text', label: '第一个未知数', default: 'x' },
           y: { type: 'text', label: '第二个未知数', default: 'y' },
+          z: { type: 'text', label: '第三个未知数（三个方程时用）', default: 'z' },
           name: { type: 'text', label: '名字', default: '' },
         },
-        inputs: { eqs: { kind: 'eqn', many: true, label: '方程（两个）' } },
+        inputs: { eqs: { kind: 'eqn', many: true, label: '方程' } },
         outputs: {
           x: { dim: null, kind: 'num', label: '第一个解' },
           y: { dim: null, kind: 'num', label: '第二个解' },
+          z: { dim: null, kind: 'num', label: '第三个解' },
         },
         icon: () => K.text(32, 24, '{', { size: 28 }) + K.text(42, 32, 'x,y', { size: 12, weight: 700 }),
         size: () => [230, 110],
         compute: (c) => {
           const es = (c.inp.eqs || []).filter((v) => v && v.kind === 'eqn').map((v) => v.data);
-          if (es.length < 2) { c.say('info', '接两个方程'); return {}; }
-          if (es.length > 2) c.say('info', '这台只解两个方程的方程组，先用前两个');
+          if (es.length < 2) { c.say('info', '接两个方程（三个未知数就接三个）'); return {}; }
+          if (es.length >= 3) {   // 三元一次方程组：高斯消元
+            const three = es.slice(0, 3), names = [].concat(...three.map((e) => P.vars(e.lhs).concat(P.vars(e.rhs)))).filter((k, i, a) => a.indexOf(k) === i).sort();
+            if (names.length !== 3) { c.say('info', '三个方程要正好三个未知数，现在是 ' + names.length + ' 个：' + names.join('、')); return {}; }
+            let vs = [String(c.props.x).trim() || 'x', String(c.props.y).trim() || 'y', String(c.props.z).trim() || 'z'];
+            if (!vs.every((v) => names.includes(v)) || new Set(vs).size !== 3) vs = names;   // 字母名对不上，就用方程里实际的三个字母
+            const r3 = E.solveLinearSystem(three, vs);
+            if (r3.kind === 'error') { c.say('info', r3.why); return {}; }
+            if (c.step) r3.steps.forEach((s) => c.step(s.say, null, s.rule));
+            if (r3.kind !== 'solution') { c.say('info', '没有唯一的解（有的方程是别的方程的组合，或者互相矛盾）'); return {}; }
+            c.say('ok', vs.map((v, i) => v + ' = ' + Q.show(r3.values[i])).join('，'));
+            return { x: U.val('num', r3.values[0]), y: U.val('num', r3.values[1]), z: U.val('num', r3.values[2]) };
+          }
           const all = [].concat(...es.slice(0, 2).map((e) => P.vars(e.lhs).concat(P.vars(e.rhs)))).filter((k, i, a) => a.indexOf(k) === i).sort();
           let x = String(c.props.x).trim() || 'x', y = String(c.props.y).trim() || 'y';
           if (all.length === 2 && !(all.includes(x) && all.includes(y))) { x = all[0]; y = all[1]; }   // 字母名对不上，就用方程里实际的两个字母
@@ -201,8 +215,8 @@
           c.say('ok', x + ' = ' + Q.show(r.x) + '，' + y + ' = ' + Q.show(r.y));
           return { x: U.val('num', r.x), y: U.val('num', r.y) };
         },
-        badge: (c) => (c.out.x && c.out.y ? Q.show(c.out.x.data) + '，' + Q.show(c.out.y.data) : ''),
-        draw: (c) => K.text(c.w / 2, c.h / 2 + 10, c.out.x && c.out.y ? 'x=' + Q.show(c.out.x.data) + '  y=' + Q.show(c.out.y.data) : '…', { size: 20, weight: 700 }),
+        badge: (c) => (c.out.x && c.out.y ? Q.show(c.out.x.data) + '，' + Q.show(c.out.y.data) + (c.out.z ? '，' + Q.show(c.out.z.data) : '') : ''),
+        draw: (c) => K.text(c.w / 2, c.h / 2 + 10, c.out.x && c.out.y ? 'x=' + Q.show(c.out.x.data) + '  y=' + Q.show(c.out.y.data) + (c.out.z ? '  z=' + Q.show(c.out.z.data) : '') : '…', { size: 20, weight: 700 }),
       },
 
       // ---------------- 解集运算：交（不等式组）、并、补、甲减乙 ----------------

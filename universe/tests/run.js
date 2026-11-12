@@ -3155,7 +3155,7 @@ console.log('方程与不等式（packs/equation.js）：一种“方程”、�
     eq(solved('x + 1 = x + 1').set, 'x 取任何数都行'); eq(solved('x + 1 = x + 2').set, '无解');
   });
   t('解：不会解的只提示、不报错、没有输出；字母名对不上时自动用方程里唯一的字母', () => {
-    const a = solved('x^3 = 2'); truthy(!a.set && a.sig.includes('三次'), a.sig);   // ∛2 不是有理数，暂时解不了
+    const a = solved('x^3 = 2'); eq(a.set, 'x ≈ 1.259921', '∛2 没法精确写，用数值求近似根');
     const b = solved('x + y = 3'); truthy(!b.set && b.sig.includes('y'), b.sig);
     eq(solved('2t + 1 = 7').x, '3', '只有一个字母 t，自动用 t');
   });
@@ -3464,6 +3464,9 @@ console.log('整式（packs/polytools.js）：因式分解、整式运算、造�
     const m = r.m, a2 = m.add('algebra', { text: 'x^4-1' }), cmp = m.add('compare', {}); void a2; void cmp;
     eq(U.convertVal(r.o.f, 'poly').data.terms.length, 2, '展开回 x⁴ − 1');
     eq(show(fac('x^2+1').o.f), '(x² + 1)', '没有有理根的二次式留着');
+    eq(show(fac('x^4+x^2+1').o.f), '(x² − x + 1)(x² + x + 1)', '没有有理根的四次式：分成两个整系数二次因式');
+    eq(show(fac('x^4+4').o.f), '(x² − 2x + 2)(x² + 2x + 2)');
+    eq(show(fac('x^4-5x^2+6').o.f), '(x² − 3)(x² − 2)'.replace('(x² − 3)(x² − 2)', '(x² − 2)(x² − 3)'));
     eq(show(fac('x^2-2').o.f), '(x² − 2)', '√2 不是有理数，在有理数范围内分不下去');
   });
   t('整式运算：加减乘、带余除法（商和余式）、最大公因式', () => {
@@ -3496,7 +3499,11 @@ console.log('解集的并交补与高次不等式（js/core/eqn.js、packs/equat
     eq(sol('x^3-6x^2+11x-6=0'), 'x = 1 或 x = 2 或 x = 3'); eq(sol('x^3=1'), 'x = 1');
     eq(sol('x^3-x>=0'), '−1 ≤ x ≤ 0 或 x ≥ 1'); eq(sol('x^3-6x^2+11x-6<0'), 'x < 1 或 2 < x < 3');
     eq(sol('(x-1)^2*(x+2)>0'.replace('*', '')), '-2 < x < 1 或 x > 1'.replace('-2', '−2'));
-    truthy(sol('x^3=2').startsWith('ERR'), '∛2 暂时不行');
+    eq(sol('x^3=2'), 'x ≈ 1.259921', '没有有理根的三次：数值求近似根（标 ≈）');
+    eq(sol('x^3-3x+1>0'), '≈−1.879385 < x < ≈0.347296 或 x > ≈1.532089', '三次不等式的端点也是近似根');
+    eq(sol('x^4+x^2+1=0'), '无解', 'x⁴ + x² + 1 没有实根');
+    eq(sol('x^4-5x^2+6=0'), 'x = −√3 或 x = −√2 或 x = √2 或 x = √3', '分成两个二次因式，根是精确的根号');
+    eq(sol('x^4+4x^2-5=0'), 'x = −1 或 x = 1');
     eq(sol('x^4-5x^2+4=0'), 'x = −2 或 x = −1 或 x = 1 或 x = 2');
   });
   t('解集的交、并、补：不等式组、至少一个成立、之外', () => {
@@ -3562,6 +3569,34 @@ console.log('递推与迭代（packs/iterate.js）：一项一项往下算，整
     truthy(m.link(r, st, 's', 's').ok); eq(show(out(m, st).v), '232');   // 0+1+1+2+3+5+8+13+21+34+55+89
     truthy(m.link(r, mp, 's', 's').ok); eq(seqs(out(m, mp).s).slice(0, 5), ['0', '1', '1', '4', '9']);
     truthy(m.link(r, tb, 't', 's').ok); eq(out(m, tb).s.data.length, 12);
+  });
+}
+
+console.log('三元一次方程组（packs/equation.js 的方程组）');
+{
+  const mk = () => {
+    const s = W.blank(), add = (type, props) => { const r = W.act(s, { t: 'add', type, x: 0, y: 0, props }); if (!r.ok) throw new Error(r.why); return r.id; };
+    const link = (a, b, tp, fp) => W.act(s, { t: 'link', from: a, to: b, toPort: tp, fromPort: fp });
+    return { s, add, link };
+  };
+  const sys3 = (texts, props) => {
+    const m = mk(), g = m.add('eqsys', props || {});
+    for (const text of texts) { const e = m.add('eqcard', { text }); m.link(e, g, 'eqs', 'eq'); }
+    return W.evaluate(m.s)[g].out;
+  };
+  t('方程组：三个方程三个未知数，高斯消元，精确的分数', () => {
+    const o = sys3(['x + y + z = 6', '2x - y + z = 3', 'x + 2y - z = 2']);
+    eq([o.x, o.y, o.z].map((v) => U.showVal(v)), ['1', '2', '3']);
+    const o2 = sys3(['2x + 3y + z = 1', 'x - y + 2z = 0', '3x + y - z = 2']); truthy(o2.x && o2.y && o2.z);
+    const lhs = (a, b, c) => Q.add(Q.add(Q.mul(Q(a), o2.x.data), Q.mul(Q(b), o2.y.data)), Q.mul(Q(c), o2.z.data));
+    eq(U.showVal(U.val('num', lhs(2, 3, 1))), '1', '解代回去，三个方程都成立'); eq(U.showVal(U.val('num', lhs(1, -1, 2))), '0'); eq(U.showVal(U.val('num', lhs(3, 1, -1))), '2');
+  });
+  t('方程组：字母名对不上时用方程里的字母；方程重合、未知数个数不对都只提示不崩', () => {
+    const o = sys3(['a + b + c = 6', '2a - b + c = 3', 'a + 2b - c = 2']); eq(U.showVal(o.z), '3');
+    eq(sys3(['x + y + z = 6', '2x + 2y + 2z = 12', 'x - y = 0']).x, undefined, '前两个方程重合：没有唯一解');
+    eq(sys3(['x + y = 6', 'x - y = 0', 'x + 2y = 9']).x, undefined, '三个方程只有两个字母：只提示');
+    eq(U.showVal(sys3(['x + y = 6', 'x - y = 0', 'x + y + z = 1']).z), '-5', '三个字母三个方程，哪怕前两个只含两个字母');
+    eq(sys3(['x*y = 6', 'x - y = 0', 'x + z = 1']).x, undefined, '有乘积项：不是一次方程组');
   });
 }
 

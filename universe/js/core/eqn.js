@@ -61,6 +61,42 @@
       return { kind: 'solution', value: x, rel, steps };
     },
 
+    // n 元一次方程组（n 个方程）：高斯消元，每一步都记下来。vars 是未知数的名字数组。
+    // 返回 { kind: 'solution', values: [有理数…], steps } | { kind: 'degenerate', steps } | { kind: 'error', why }
+    solveLinearSystem(es, vars) {
+      const n = vars.length, steps = [];
+      if (es.length !== n) return { kind: 'error', why: '未知数有 ' + n + ' 个，方程要正好 ' + n + ' 个（现在 ' + es.length + ' 个）' };
+      const rows = [];
+      for (const e of es) {
+        if (e.rel !== '=') return { kind: 'error', why: '方程组里只能是等式（不能是不等式）' };
+        const d = Eqn.diff(e), row = new Array(n + 1).fill(null).map(() => Q(0));
+        for (const t of d.terms) {
+          const keys = Object.keys(t.m);
+          if (!keys.length) { row[n] = Q.sub(row[n], t.c); continue; }
+          if (keys.length === 1 && t.m[keys[0]] === 1 && vars.includes(keys[0])) { const j = vars.indexOf(keys[0]); row[j] = Q.add(row[j], t.c); continue; }
+          return { kind: 'error', why: '只能解一次方程组（每一项只能是数，或者数乘一个未知数）' };
+        }
+        rows.push(row);
+      }
+      const showRow = (r) => r.slice(0, n).map((c, j) => (c.n === 0n ? '' : Q.show(c) + vars[j])).filter(Boolean).join(' + ').split('+ -').join('− ') + ' = ' + Q.show(r[n]);
+      steps.push({ say: '写成：' + rows.map(showRow).join('；'), rule: 'eq.both-sides' });
+      for (let k = 0; k < n; k++) {
+        let p = k; while (p < n && rows[p][k].n === 0n) p++;
+        if (p === n) { steps.push({ say: '消到第 ' + (k + 1) + ' 个未知数 ' + vars[k] + ' 时，剩下的方程里它的系数全是 0：方程组没有唯一的解', rule: 'eq.both-sides' }); return { kind: 'degenerate', steps }; }
+        if (p !== k) { const t = rows[p]; rows[p] = rows[k]; rows[k] = t; }
+        const pv = rows[k][k];
+        for (let i = 0; i < n; i++) {
+          if (i === k || rows[i][k].n === 0n) continue;
+          const f = Q.div(rows[i][k], pv);
+          rows[i] = rows[i].map((c, j) => Q.sub(c, Q.mul(f, rows[k][j])));
+        }
+        steps.push({ say: '用第 ' + (k + 1) + ' 个方程消去其余方程里的 ' + vars[k], rule: 'eq.both-sides' });
+      }
+      const values = rows.map((r, i) => Q.div(r[n], r[i]));
+      steps.push({ say: values.map((v, i) => vars[i] + ' = ' + Q.show(v)).join('，'), rule: 'eq.both-sides' });
+      return { kind: 'solution', values, steps };
+    },
+
     // 恒等式：移项后规范化为 0（对所有取值都成立）
     isIdentity(e) { return e.rel === '=' && Eqn.diff(e).terms.length === 0; },
 
@@ -204,10 +240,11 @@
     return Solset.of(v, { segs: xs });
   };
   const showSeg = (s, v) => {
-    if (s.lo && s.hi && cmpR(s.lo, s.hi) === 0) return v + ' = ' + R.show(s.lo);
-    if (s.lo && s.hi) return R.show(s.lo) + (s.loOpen ? ' < ' : ' ≤ ') + v + (s.hiOpen ? ' < ' : ' ≤ ') + R.show(s.hi);
-    if (s.lo) return v + (s.loOpen ? ' > ' : ' ≥ ') + R.show(s.lo);
-    return v + (s.hiOpen ? ' < ' : ' ≤ ') + R.show(s.hi);
+    if (s.lo && s.hi && cmpR(s.lo, s.hi) === 0) return (s.lo.ap ? v + ' ≈ ' : v + ' = ') + R.show(s.lo);
+    const rs = (r) => (r.ap ? '≈' : '') + R.show(r);   // 近似根前面标 ≈
+    if (s.lo && s.hi) return rs(s.lo) + (s.loOpen ? ' < ' : ' ≤ ') + v + (s.hiOpen ? ' < ' : ' ≤ ') + rs(s.hi);
+    if (s.lo) return v + (s.loOpen ? ' > ' : ' ≥ ') + rs(s.lo);
+    return v + (s.hiOpen ? ' < ' : ' ≤ ') + rs(s.hi);
   };
   const Solset = {
     of(v, o) { return Object.assign({ v: v || 'x' }, o); },
@@ -217,11 +254,13 @@
       return Solset.of(v, { items: out });
     },
     seg, segsOf, fromSegs, cmpR,
+    // 解里有没有数值求出来的近似根（有的话，结果要标近似）
+    approx(S) { return segsOf(S).some((g) => (g.lo && g.lo.ap) || (g.hi && g.hi.ap)); },
     show(S) {
       const v = S.v || 'x';
       if (S.all) return v + ' 取任何数都行';
       if (S.none) return '无解';
-      if (S.items) return S.items.map((r) => v + ' = ' + R.show(r)).join(' 或 ');
+      if (S.items) return S.items.map((r) => (r.ap ? v + ' ≈ ' : v + ' = ') + R.show(r)).join(' 或 ');
       if (S.segs) return S.segs.map((s) => showSeg(s, v)).join(' 或 ');
       const I = S.iv, q = (x) => Q.show(x).replace('-', '−');   // 负号用真正的减号，和根号写法（−√2）一致
       if (I.lo && I.hi && Q.eq(I.lo, I.hi)) return v + ' = ' + q(I.lo);
@@ -292,6 +331,63 @@
     return out;
   };
   const gcdBig = (a, b) => { a = a < 0n ? -a : a; b = b < 0n ? -b : b; while (b) { [a, b] = [b, a % b]; } return a; };
+  // 没有有理根的整系数多项式（系数数组，下标是次数，次数 ≥ 4）：试着分出整系数的二次因式（Kronecker 法：在 0、1、−1 三点上，
+  // 二次因式的值必须整除多项式的值，枚举这些值，插值出二次式，再验证能不能整除）。返回 { quads: [系数数组…], rest: 系数数组 }
+  const polyDivide = (a, b) => {   // a ÷ b：返回 { q, r }（系数数组）
+    const nb = b.length - 1; let r = a.slice();
+    const q = new Array(Math.max(a.length - nb, 1)).fill(Q(0));
+    for (let i = a.length - 1; i >= nb; i--) {
+      const f = Q.div(r[i], b[nb]); q[i - nb] = f;
+      for (let j = 0; j <= nb; j++) r[i - nb + j] = Q.sub(r[i - nb + j], Q.mul(f, b[j]));
+    }
+    return { q, r: r.slice(0, Math.max(nb, 1)) };
+  };
+  const evalCoef = (a, x) => a.reduceRight((s, c) => Q.add(Q.mul(s, x), c), Q(0));
+  const splitQuadratics = (a0) => {
+    let a = a0.slice();
+    const quads = [];
+    for (let guard = 0; guard < 10 && a.length - 1 >= 4; guard++) {
+      const ks = [0, 1, -1], vals = ks.map((k) => evalCoef(a, Q(k)));
+      if (vals.some((x) => x.d !== 1n || x.n === 0n)) break;
+      const dv = vals.map((x) => ratDivisors(x.n));
+      if (dv.some((x) => !x) || dv.reduce((s, x) => s * 2 * x.length, 1) > 200000) break;
+      let found = null;
+      outer: for (const d0 of dv[0]) for (const s0 of [1, -1]) for (const d1 of dv[1]) for (const s1 of [1, -1]) for (const d2 of dv[2]) for (const s2 of [1, -1]) {
+        const y0 = s0 * d0, y1 = s1 * d1, y2 = s2 * d2;
+        // 过 (0,y0)、(1,y1)、(−1,y2) 的二次式 c + b x + a x²
+        const c = y0, b2 = y1 - y2, a2 = y1 + y2 - 2 * y0;
+        if (b2 % 2 !== 0 || a2 % 2 !== 0 || a2 === 0) continue;
+        const cand = [Q(c), Q(b2 / 2), Q(a2 / 2)];
+        const dm = polyDivide(a, cand);
+        if (dm.r.every((x) => x.n === 0n)) { found = { cand, q: dm.q }; break outer; }
+      }
+      if (!found) break;
+      quads.push(found.cand); a = found.q;
+    }
+    return { quads, rest: a };
+  };
+  Eqn.splitQuadratics = splitQuadratics;
+  // 实根的数值解（只在没有别的办法时用）：先求导数的根把数轴分段，每段至多一个根，用二分法。返回从小到大的实根。
+  const numRoots = (coef) => {
+    const n = coef.length - 1;
+    if (n < 1) return [];
+    if (n === 1) return [-coef[0] / coef[1]];
+    const ev = (x) => coef.reduceRight((s, c) => s * x + c, 0);
+    const crit = numRoots(coef.slice(1).map((c, i) => c * (i + 1)));
+    const B = 1 + Math.max.apply(null, coef.slice(0, n).map((c) => Math.abs(c / coef[n])));
+    const pts = [-B].concat(crit.filter((c) => c > -B && c < B), [B]), out = [];
+    for (let i = 0; i + 1 < pts.length; i++) {
+      let lo = pts[i], hi = pts[i + 1], flo = ev(lo), fhi = ev(hi);
+      if (flo === 0) { out.push(lo); continue; }
+      if (flo * fhi < 0) {
+        for (let it = 0; it < 200; it++) { const mid = (lo + hi) / 2, fm = ev(mid); if (fm === 0) { lo = hi = mid; break; } if (flo * fm < 0) { hi = mid; fhi = fm; } else { lo = mid; flo = fm; } }
+        out.push((lo + hi) / 2);
+      }
+    }
+    if (ev(B) === 0) out.push(B);
+    return out.filter((x, i) => !i || Math.abs(x - out[i - 1]) > 1e-9);
+  };
+  const approxReal = (x) => { const r = R.from(Q.fromNumber(Math.round(x * 1e9) / 1e9)); r.ap = true; return r; };   // 近似根：带 ap 标记，显示成 ≈1.259921
   Eqn.realRoots = (d, v) => {
     let a = [];   // 系数，下标是次数
     for (const t of d.terms) { const k = t.m[v] || 0; a[k] = Q.add(a[k] || Q(0), t.c); }
@@ -302,38 +398,49 @@
     // 化成整数系数
     let den = 1n; for (const c of a) den = (den / gcdBig(den, c.d)) * c.d;
     a = a.map((c) => Q.mul(c, { n: den, d: 1n }));
-    const evalAt = (r) => a.reduceRight((s, c) => Q.add(Q.mul(s, r), c), Q(0));
+    const evalAt = (r) => evalCoef(a, r);
+    let approx = false;
     for (let guard = 0; guard < 80 && a.length > 3; guard++) {
       const ds0 = ratDivisors(a[0].n), dsn = ratDivisors(a[a.length - 1].n);
       if (!ds0 || !dsn) return { why: '系数太大，暂时解不了' };
       let found = null;
       outer: for (const p of ds0) for (const q of dsn) for (const s of [1, -1]) { const r = Q.div(Q(s * p), Q(q)); if (evalAt(r).n === 0n) { found = r; break outer; } }
-      if (!found) return { why: '没有有理根的三次以上方程暂时解不了（只能解能分解出一次、二次式的）' };
+      if (!found) break;
       const n = a.length - 1, qd = new Array(n); let carry = Q(0);
       for (let i = n; i >= 1; i--) { carry = Q.add(a[i], Q.mul(carry, found)); qd[i - 1] = carry; }
       a = qd; addRoot(R.from(found), 1);
     }
-    if (a.length === 3) {
-      const r = Eqn.quadratic(a[2], a[1], a[0]);
-      if (r.kind === 'roots') { for (const x of r.roots) addRoot(x, 1); }
-    } else if (a.length === 2) addRoot(R.from(Q.neg(Q.div(a[0], a[1]))), 1);
+    const quadRoots = (c) => { const r = Eqn.quadratic(c[2], c[1], c[0]); if (r.kind === 'roots') for (const x of r.roots) addRoot(x, 1); };
+    if (a.length > 3) {
+      // 没有有理根了：先拆出二次因式，每个二次式精确求根
+      const sp = splitQuadratics(a);
+      for (const qd of sp.quads) quadRoots(qd);
+      a = sp.rest;
+      if (a.length > 3) {   // 剩下三次或更高又分不开：数值求根（精确到 9 位小数），结果标近似
+        approx = true;
+        for (const x of numRoots(a.map((c) => Q.num(c)))) addRoot(approxReal(x), 1);
+        a = [];
+      }
+    }
+    if (a.length === 3) quadRoots(a);
+    else if (a.length === 2) addRoot(R.from(Q.neg(Q.div(a[0], a[1]))), 1);
     // 二次式重根（判别式 0）会被当成同一个根加两次：重数自然是 2，不用再处理
     roots.sort((x, y) => R.approx(x.r) - R.approx(y.r));
-    return { roots, lead: d.terms.reduce((best, t) => ((t.m[v] || 0) >= (best.m[v] || 0) ? t : best), d.terms[0]).c };
+    return { approx, roots, lead: d.terms.reduce((best, t) => ((t.m[v] || 0) >= (best.m[v] || 0) ? t : best), d.terms[0]).c };
   };
   // 符号表：根把数轴分成几段，最右边的符号和首项系数相同，每过一个奇数重数的根符号变一次
   Eqn.solveByRoots = (e, v) => {
     const d = Eqn.diff(e), rr = Eqn.realRoots(d, v);
     if (rr.why) return { kind: 'error', why: rr.why };
-    const roots = rr.roots, rel = e.rel;
-    if (rel === '=') return { kind: 'ok', set: roots.length ? Solset.items(v, roots.map((x) => x.r)) : Solset.of(v, { none: true }), steps: [roots.length ? '求出所有根：' + roots.map((x) => R.show(x.r) + (x.m > 1 ? '（重根）' : '')).join('、') : '没有实数根'] };
+    const roots = rr.roots, rel = e.rel, note = rr.approx ? ['剩下的三次或更高的部分分不开：用数值方法求近似根（精确到 9 位小数，结果标 ≈）'] : [];
+    if (rel === '=') return { kind: 'ok', approx: rr.approx, set: roots.length ? Solset.items(v, roots.map((x) => x.r)) : Solset.of(v, { none: true }), steps: note.concat([roots.length ? '求出所有根：' + roots.map((x) => R.show(x.r) + (x.m > 1 ? '（重根）' : '')).join('、') : '没有实数根']) };
     const want = rel === '>' || rel === '≥' ? 1 : -1, closed = rel === '≥' || rel === '≤';
     const out = [];
     let sign = rr.lead.n > 0n ? 1 : -1;   // 最右边一段的符号
     // 从右往左：右边的段先处理
     const bounds = roots.slice().reverse();
     let hi = null, hiOpen = true;
-    const steps = ['先求根：' + (roots.length ? roots.map((x) => R.show(x.r)).join('、') : '没有实数根'), '最右边那一段的符号和首项系数一样：' + (sign > 0 ? '正' : '负')];
+    const steps = note.concat(['先求根：' + (roots.length ? roots.map((x) => R.show(x.r)).join('、') : '没有实数根'), '最右边那一段的符号和首项系数一样：' + (sign > 0 ? '正' : '负')]);
     for (const b of bounds) {
       if (sign === want) out.push(seg(b.r, hi, !closed, hiOpen));
       if (closed) out.push(seg(b.r, b.r, false, false));
@@ -341,7 +448,7 @@
     }
     if (sign === want) out.push(seg(null, hi, true, hiOpen));
     steps.push('每过一个奇数重数的根，符号变一次；挑出符合“' + rel + ' 0”的段');
-    return { kind: 'ok', set: fromSegs(v, out), steps };
+    return { kind: 'ok', set: fromSegs(v, out), steps, approx: rr.approx };
   };
 
   // 解方程 / 解不等式：一元一次（含不等式）、一元二次方程。返回 { kind:'ok', set, steps } | { kind:'error', why }
@@ -365,7 +472,7 @@
     // 二次不等式、三次以上：求出所有实根，再用符号表（只要根都能精确写出来）
     const g = Eqn.solveByRoots(e, v);
     if (g.kind !== 'ok') return g;
-    return { kind: 'ok', set: g.set, steps: g.steps.map((x) => ({ say: x, rule: 'eq.both-sides' })) };
+    return { kind: 'ok', set: g.set, approx: g.approx, steps: g.steps.map((x) => ({ say: x, rule: 'eq.both-sides' })) };
   };
 
   // ---- 函数 curve：y = f(x)，f 是 x 的多项式。直线、抛物线、一般多项式函数都是它。 ----

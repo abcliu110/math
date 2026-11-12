@@ -79,7 +79,7 @@
   // ---- 画 ----
   const hitRect = (H, x, y, w, h, k, v) => H.push('<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="4" fill="transparent" data-pick-k="' + k + '" data-pick-v="' + v + '" style="cursor:pointer"/>');
   function triSvg(t, x, y, w, h, fill, stroke) {
-    const sx = (w - 8) / 4, sy = (h - 8) / 4, P = t.map((q) => [x + 4 + q[0] * sx, y + h - 4 - q[1] * sy]);
+    const sx = Math.min((w - 8) / 4, (h - 8) / 4), sy = sx, P = t.map((q) => [x + 4 + q[0] * sx, y + h - 4 - q[1] * sy]);   // 横竖一个单位一样长
     return '<polygon points="' + P.map((q) => q[0].toFixed(1) + ',' + q[1].toFixed(1)).join(' ') + '" fill="' + (fill || 'none') + '" stroke="' + (stroke || 'var(--ink)') + '" stroke-width="1.5"/>';
   }
   function draw(c) {

@@ -255,7 +255,7 @@
     Object.keys(S.scene.entities).forEach((eid) => { S.help[eid] = false; });   // 示例里不弹“怎么玩”的说明卡，免得盖住布局
     if (UI.Guide && UI.Guide.suppress) UI.Guide.suppress();   // 也不弹几何工作区的新手引导
     S.D = W.evaluate(S.scene); UI.Stage.fit(); refresh(); UI.Panels.renderShelf();
-    say('示例：' + ex.title + '（做好的结果，可以直接看，也可以动手改；“自由探究”回到你自己的台面）', '', 7000);
+    say('示例：' + ex.title, '', 4000);   // 一行就够：台面适应时上面留了位置，提示条不盖卡片（做好的结果可以直接看、动手改；“自由探究”回到自己的台面）
   }
   function setMode(m) {
     if (m === 'free') return openFree();

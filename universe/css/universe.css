@@ -201,7 +201,7 @@ input, select, textarea { font: inherit; color: inherit; }
 #tip.good { background: var(--sig-ok); }
 
 /* 台面悬浮件 */
-#banner { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); background: var(--lb-bg); border: 1px solid var(--line); padding: 10px 18px; border-radius: 10px; z-index: 20; max-width: 70%; text-align: center; line-height: 1.5; transition: opacity .3s; }
+#banner { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); background: var(--lb-bg); border: 1px solid var(--line); padding: 10px 18px; border-radius: 10px; z-index: 20; max-width: 70%; text-align: center; line-height: 1.5; transition: opacity .3s; pointer-events: none; }   /* 提示条只是看的：不挡下面卡片的点击 */
 #banner.good { border-color: var(--good); } #banner.bad { border-color: var(--bad); } #banner.warn { border-color: var(--orange); }
 .fab { position: absolute; z-index: 20; display: flex; gap: 2px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 4px; }
 .fab button { padding: 8px 12px; border-radius: 8px; white-space: nowrap; }

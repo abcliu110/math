@@ -145,32 +145,41 @@
           return out;
         },
         badge: (c) => (c.out.n ? c.out.n.data.n + ' 个交点' : ''),
+        // 画法：x、y 两个方向用同一个长度单位（1 个单位在横、竖方向一样长），所以抛物线不会被拉扁，斜率 1 的直线正好 45°。
+        // “x 从 / 到”是至少要看到的范围；卡片比这个范围宽或高时，两边对称地多画一些。
         draw: (c) => {
           const fs = (((c.d && c.d.inp) || {}).f || []).filter((v) => v && v.kind === 'curve').map((v) => v.data);
-          const x0 = Q.num(Q.parse(c.props.xlo)), x1 = Q.num(Q.parse(c.props.xhi)), px = Q.num(Q.parse(c.props.probe));
-          const L = 34, R = c.w - 14, T = 16, B = c.h - 26, N = 120;
+          const ux0 = Q.num(Q.parse(c.props.xlo)), ux1 = Q.num(Q.parse(c.props.xhi)), px = Q.num(Q.parse(c.props.probe));
+          const L = 34, R = c.w - 14, T = 16, B = c.h - 26, N = 160, W = R - L, H = B - T;
           if (!fs.length) return K.text(c.w / 2, c.h / 2, '接函数', { fill: 'var(--dim)' });
           const fns = fs.slice(0, 4).map(fnOf);
-          const samples = fns.map((f) => { const a = []; for (let i = 0; i <= N; i++) { const x = x0 + (x1 - x0) * i / N; a.push([x, f(x)]); } return a; });
-          const clip = 100;
-          let y0 = Infinity, y1 = -Infinity;
-          for (const a of samples) for (const [, y] of a) if (Math.abs(y) <= clip) { y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
-          if (!isFinite(y0)) { y0 = -1; y1 = 1; }
-          y0 = Math.min(y0, 0); y1 = Math.max(y1, 0);
-          const padY = (y1 - y0) * 0.08 || 1; y0 -= padY; y1 += padY;
-          const sx = (x) => L + (x - x0) / (x1 - x0) * (R - L), sy = (y) => B - (y - y0) / (y1 - y0) * (B - T);
-          const num = (v) => (Math.round(v * 100) / 100).toString();
+          // 1. 先在用户给的 x 范围里看 y 的范围，取能同时放下 x 范围和 y 范围的最大单位长度
+          let ya = Infinity, yb = -Infinity;
+          for (const f of fns) for (let i = 0; i <= N; i++) { const y = f(ux0 + (ux1 - ux0) * i / N); if (Math.abs(y) <= 100) { ya = Math.min(ya, y); yb = Math.max(yb, y); } }
+          if (!isFinite(ya)) { ya = -1; yb = 1; }
+          ya = Math.min(ya, 0); yb = Math.max(yb, 0);
+          const yr = (yb - ya) * 1.1 || 2, scale = Math.min(W / (ux1 - ux0), H / yr);   // 每个单位多少像素
+          // 2. 按这个单位，把 x、y 的可见范围各自对称地补满卡片
+          const xc = (ux0 + ux1) / 2, yc = (ya + yb) / 2;
+          const x0 = xc - W / scale / 2, x1 = xc + W / scale / 2, y0 = yc - H / scale / 2, y1 = yc + H / scale / 2;
+          const sx = (x) => L + (x - x0) * scale, sy = (y) => B - (y - y0) * scale;
+          const fmt = (v) => (Math.round(v * 100) / 100).toString().replace('-', '−');
+          // 刻度间隔：1、2、5 × 10 的几次方，让相邻刻度至少隔 30 像素
+          let step = 1; const mag = Math.pow(10, Math.floor(Math.log10(30 / scale)));
+          for (const m of [1, 2, 5, 10]) { step = m * mag; if (step * scale >= 30) break; }
           let s = '';
-          // 坐标轴（0 在范围里才画）、范围两端的刻度
-          if (y0 <= 0 && y1 >= 0) s += K.line(L, sy(0), R, sy(0), { w: 1.5 });
-          if (x0 <= 0 && x1 >= 0) s += K.line(sx(0), T, sx(0), B, { w: 1.5 });
-          s += K.line(L, B, R, B, { w: 1, stroke: 'var(--dim)' }) + K.line(L, T, L, B, { w: 1, stroke: 'var(--dim)' });
-          s += K.text(L, B + 14, num(x0), { size: 10, fill: 'var(--dim)' }) + K.text(R, B + 14, num(x1), { size: 10, fill: 'var(--dim)' });
-          s += K.text(L - 4, sy(y1) + 4, num(y1), { size: 10, fill: 'var(--dim)', anchor: 'end' }) + K.text(L - 4, sy(y0), num(y0), { size: 10, fill: 'var(--dim)', anchor: 'end' });
-          // 曲线：超出范围的点断开
-          samples.forEach((a, i) => {
+          for (let gx = Math.ceil(x0 / step) * step; gx <= x1 + 1e-9; gx += step) s += K.line(sx(gx), T, sx(gx), B, { w: 1, stroke: 'var(--sel-bg)' });
+          for (let gy = Math.ceil(y0 / step) * step; gy <= y1 + 1e-9; gy += step) s += K.line(L, sy(gy), R, sy(gy), { w: 1, stroke: 'var(--sel-bg)' });
+          const ax = Math.max(L, Math.min(R, sx(0))), ay = Math.max(T, Math.min(B, sy(0)));   // 坐标轴：0 不在范围里就贴边
+          s += K.line(L, ay, R, ay, { w: 1.5 }) + K.line(ax, T, ax, B, { w: 1.5 });
+          for (let gx = Math.ceil(x0 / step) * step; gx <= x1 + 1e-9; gx += step) if (Math.abs(gx) > 1e-9) s += K.text(sx(gx), Math.min(B + 12, ay + 12), fmt(gx), { size: 10, fill: 'var(--dim)' });
+          for (let gy = Math.ceil(y0 / step) * step; gy <= y1 + 1e-9; gy += step) if (Math.abs(gy) > 1e-9) s += K.text(ax - 4, sy(gy) + 3, fmt(gy), { size: 10, fill: 'var(--dim)', anchor: 'end' });
+          s += K.text(R - 2, ay - 4, 'x', { size: 11, anchor: 'end' }) + K.text(ax + 6, T + 9, 'y', { size: 11, anchor: 'start' });
+          // 曲线：超出画面的点断开
+          fns.forEach((f, i) => {
             let d = '', pen = false;
-            for (const [x, y] of a) {
+            for (let k = 0; k <= N * 2; k++) {
+              const x = x0 + (x1 - x0) * k / (N * 2), y = f(x);
               if (y < y0 - 1 || y > y1 + 1) { pen = false; continue; }
               d += (pen ? 'L' : 'M') + sx(x).toFixed(1) + ' ' + sy(y).toFixed(1); pen = true;
             }
@@ -188,10 +197,11 @@
           if (px >= x0 && px <= x1) {
             const y = fns[0](px);
             s += K.line(sx(px), T, sx(px), B, { w: 1, stroke: 'var(--dim)' });
-            if (y >= y0 && y <= y1) s += K.circle(sx(px), sy(y), 4, { fill: COLORS[0] }) + K.text(sx(px) + 6, sy(y) - 6, '(' + num(px) + ', ' + num(y) + ')', { size: 11, anchor: 'start' });
+            if (y >= y0 && y <= y1) s += K.circle(sx(px), sy(y), 4, { fill: COLORS[0] }) + K.text(sx(px) + 6, sy(y) - 6, '(' + fmt(px) + ', ' + fmt(y) + ')', { size: 11, anchor: 'start' });
           }
           // 图例
           fs.slice(0, 4).forEach((f, i) => { s += K.text(L + 50, T + 12 + i * 14, show(f), { size: 11, anchor: 'start', fill: COLORS[i] }); });
+          s += K.text(c.w - 14, c.h - 6, '1 格 = ' + fmt(step) + '（横竖一样长）', { size: 10, anchor: 'end', fill: 'var(--dim)' });
           return s;
         },
       },

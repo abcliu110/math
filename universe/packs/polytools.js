@@ -89,11 +89,16 @@
         add(lin.p, 1); c = Q.mul(c, lin.c); a = quot;
       }
       let rest = fromCoeffs(a, v);
-      const prr = primitive(rest, v); c = Q.mul(c, prr.c); rest = prr.p;
+      let prr = primitive(rest, v); c = Q.mul(c, prr.c); rest = prr.p;
+      if (P.degree(rest) >= 4) {   // 没有有理根的四次及以上：试着分出整系数的二次因式
+        const sp = E.splitQuadratics(coeffsOf(rest, v));
+        for (const qd of sp.quads) { const pq = primitive(fromCoeffs(qd, v), v); add(pq.p, 1); c = Q.mul(c, pq.c); }
+        if (sp.quads.length) { rest = fromCoeffs(sp.rest, v); prr = primitive(rest, v); c = Q.mul(c, prr.c); rest = prr.p; }
+      }
       if (P.degree(rest) >= 1) {
         add(rest, 1);
         const d = P.degree(rest);
-        if (d >= 4) notes.push('剩下的 ' + P.show(rest) + ' 没有有理根，可能还能分成两个二次式，这台器材只找一次因式');
+        if (d >= 4) notes.push('剩下的 ' + P.show(rest) + ' 没有有理根，也没找到整系数的二次因式，在有理数范围内分不下去了');
         else if (d >= 2) notes.push(P.show(rest) + ' 在有理数范围内分不下去了');
       } else c = Q.mul(c, rest.terms.length ? rest.terms[0].c : Q(1));
     } else {
@@ -113,9 +118,10 @@
     }
     // 因式的内部排序：按次数、再按文字
     // 排序：单项式（x、y）在前，其余按次数、常数项的绝对值、负的在前，最后按文字
+    const lin = (x) => { const t = x.p.terms.find((u) => Object.keys(u.m).length === 1 && Object.values(u.m)[0] === 1); return t ? t.c : Q(0); };
     const cst = (x) => { const t = x.p.terms.find((u) => !Object.keys(u.m).length); return t ? t.c : Q(0); };
     fs.sort((x, y) => (y.p.terms.length === 1) - (x.p.terms.length === 1) || P.degree(x.p) - P.degree(y.p) ||
-      Q.cmp(Q.abs(cst(x)), Q.abs(cst(y))) || Q.cmp(cst(x), cst(y)) || P.show(x.p).localeCompare(P.show(y.p)));
+      Q.cmp(Q.abs(cst(x)), Q.abs(cst(y))) || Q.cmp(cst(x), cst(y)) || Q.cmp(lin(x), lin(y)) || P.show(x.p).localeCompare(P.show(y.p)));
     return { c, fs, note: notes.join('；') };
   };
 

@@ -53,6 +53,13 @@
   };
 
   // 卡片尺寸规则（界面的 UI.LAYOUT 引用这里的数）：口的位置 = PORT_Y0 + 序号 × PORT_DY；口旁边的文字最多留 LABEL_MAXCH 个字的位置，其余用省略号
+  // 口旁边写的短名：超过 LABEL_MAXCH 个字时去掉括号里的补充说明（“种类（0 锐角 …）”→“种类”），再不行就截断；完整名字放在口的悬停提示里
+  U.shortLabel = (label) => {
+    const s = String(label), max = 8, chars = [...s];
+    if (chars.length <= max) return s;
+    const head = s.split(/[（(]/)[0].trim();
+    return [...head].length >= 1 && [...head].length <= max ? head : chars.slice(0, max).join('');
+  };
   U.CARD = Object.freeze({ PORT_Y0: 40, PORT_DY: 22, PAD_BOTTOM: 16, LABEL_X: 12, LABEL_CHAR: 12, LABEL_MAXCH: 8, BODY_MIN_W: 64 });
   U.fitCard = (def, sz) => {
     const C = U.CARD, ins = Object.keys(def.inputs || {}), outs = Object.keys(def.outputs || {});

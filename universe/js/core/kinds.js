@@ -94,6 +94,7 @@
     },
     approx: (v) => U.Q.num(v.a) + U.Q.num(v.b) * Math.sqrt(v.c) + U.Q.num(v.p) * Math.PI,
     show(v) {
+      if (v.ap) return (Q.showDec(v.a, 6) + '').replace('-', '−');   // 数值求出的近似根：直接写小数（外面再标 ≈）
       // 每一项写成 [符号, 文字]，第一项不带前导加号，之后用 " + " 或 " − " 连接
       const terms = [];
       const term = (x, body) => {

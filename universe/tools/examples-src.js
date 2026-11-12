@@ -88,6 +88,8 @@ module.exports = [
       ['three', 'num', { n: 3 }], ['ck', 'eqcheck', {}], ['one', 'num', { n: 1 }], ['zero', 'num', { n: 0 }], ['pk', 'pick', { digits: 0, label: '3 是解吗（1 是 / 0 不是）' }], ['mpk', 'meter', { digits: 0, label: '3 是解吗' }],
       ['a5', 'algebra', { text: '3*x+1' }], ['sb', 'subst', { var: 'x', value: 3, check: false }], ['msb', 'meter', { digits: 0, label: '3x+1（x=3）' }],
       ['wb', 'exprbench', { label: '同解吗' }],
+      ['t1', 'eqcard', { text: 'x + y + z = 6' }], ['t2', 'eqcard', { text: '2x - y + z = 3' }], ['t3', 'eqcard', { text: 'x + 2y - z = 2' }],
+      ['sys3', 'eqsys', {}], ['m3x', 'meter', { digits: 0, label: '三元：x' }], ['m3y', 'meter', { digits: 0, label: '三元：y' }], ['m3z', 'meter', { digits: 0, label: '三元：z' }],
     ],
     links: [
       ['q1', 'sys', 'eqs', 'eq'], ['q2', 'sys', 'eqs', 'eq'], ['sys', 'mx', 'v', 'x'], ['sys', 'my', 'v', 'y'],
@@ -98,6 +100,7 @@ module.exports = [
       ['q6', 'ck', 'eq', 'eq'], ['three', 'ck', 'x', 'v'], ['ck', 'pk', 'c', 'ok'], ['one', 'pk', 'a'], ['zero', 'pk', 'b'], ['pk', 'mpk', 'v', 'r'],
       ['a5', 'sb', 'p'], ['sb', 'msb', 'v', 'v'],
       ['q1', 'wb', 'e', 'eq'], ['a5', 'wb', 'f', 'p'], ['mx', 'wb', 'g', 'v'],
+      ['t1', 'sys3', 'eqs', 'eq'], ['t2', 'sys3', 'eqs', 'eq'], ['t3', 'sys3', 'eqs', 'eq'], ['sys3', 'm3x', 'v', 'x'], ['sys3', 'm3y', 'v', 'y'], ['sys3', 'm3z', 'v', 'z'],
     ],
   },
   {
@@ -225,6 +228,7 @@ module.exports = [
       ['g1', 'algebra', { text: 'x^2-1' }], ['g2', 'algebra', { text: 'x^2+2x+1' }], ['gd', 'polyop', { op: 4 }],
       ['a', 'algebra', { text: 'x^3-2x+3' }], ['b', 'algebra', { text: 'x-1' }], ['dv2', 'polyop', { op: 3 }],
       ['fx', 'factor', {}], ['x3', 'algebra', { text: 'x^3-x' }],
+      ['fq', 'factor', {}], ['x4', 'algebra', { text: 'x^4+x^2+1' }],
     ],
     links: [
       ['p1', 'f1', 'p', 'p'], ['f1', 'mn', 'v', 'n'],
@@ -232,12 +236,12 @@ module.exports = [
       ['p1', 'em', 'l', 'p'], ['zero', 'em', 'r'], ['em', 'sv', 'eq', 'eq'], ['sv', 'nl', 'iv', 'set'],
       ['g1', 'gd', 'a', 'p'], ['g2', 'gd', 'b', 'p'],
       ['a', 'dv2', 'a', 'p'], ['b', 'dv2', 'b', 'p'],
-      ['x3', 'fx', 'p', 'p'],
+      ['x3', 'fx', 'p', 'p'], ['x4', 'fq', 'p', 'p'],
     ],
   },
   {
     id: 'ex-ineq-lab', grade: 9, domain: '关系', title: '综合 · 不等式实验室：不等式组、二次不等式、三次方程、解集的并交补',
-    hook: '解集现在可以是几段：不等式组 2x − 1 > 0 且 x − 4 < 0 用“解集运算”取交集，得到 1/2 < x < 4；二次不等式 x² − x − 6 > 0 解出两段 x < −2 或 x > 3，再取“甲之外”得到 −2 ≤ x ≤ 3；x² − 2 < 0 的端点是根号 ±√2；三次方程 x³ − 6x² + 11x − 6 = 0 找到三个根。全都画在解集数轴上。',
+    hook: '解集现在可以是几段：不等式组 2x − 1 > 0 且 x − 4 < 0 用“解集运算”取交集，得到 1/2 < x < 4；二次不等式 x² − x − 6 > 0 解出两段 x < −2 或 x > 3，再取“甲之外”得到 −2 ≤ x ≤ 3；x² − 2 < 0 的端点是根号 ±√2；三次方程 x³ − 6x² + 11x − 6 = 0 找到三个根；x³ = 2 没有精确写法，用数值方法求出近似根 ≈1.259921（标 ≈）。全都画在解集数轴上。',
     ents: [
       ['e1', 'eqcard', { text: '2x - 1 > 0' }], ['s1', 'solve', {}], ['e2', 'eqcard', { text: 'x - 4 < 0' }], ['s2', 'solve', {}],
       ['and', 'setop', { op: 0 }], ['nl1', 'numline_iv', { lo: -3, hi: 6, probe: 2 }],
@@ -245,12 +249,14 @@ module.exports = [
       ['out', 'setop', { op: 2 }], ['nl3', 'numline_iv', { lo: -4, hi: 5, probe: 0 }],
       ['e4', 'eqcard', { text: 'x^2 - 2 < 0' }], ['s4', 'solve', {}], ['nl4', 'numline_iv', { lo: -3, hi: 3, probe: 1 }],
       ['e5', 'eqcard', { text: 'x^3 - 6x^2 + 11x - 6 = 0' }], ['s5', 'solve', {}], ['nl5', 'numline_iv', { lo: -1, hi: 4, probe: 2 }],
+      ['e6', 'eqcard', { text: 'x^3 = 2' }], ['s6', 'solve', {}], ['nl6', 'numline_iv', { lo: -1, hi: 3, probe: 1 }],
     ],
     links: [
       ['e1', 's1', 'eq', 'eq'], ['e2', 's2', 'eq', 'eq'], ['s1', 'and', 'a', 'set'], ['s2', 'and', 'b', 'set'], ['and', 'nl1', 'iv', 'set'],
       ['e3', 's3', 'eq', 'eq'], ['s3', 'nl2', 'iv', 'set'], ['s3', 'out', 'a', 'set'], ['out', 'nl3', 'iv', 'set'],
       ['e4', 's4', 'eq', 'eq'], ['s4', 'nl4', 'iv', 'set'],
       ['e5', 's5', 'eq', 'eq'], ['s5', 'nl5', 'iv', 'set'],
+      ['e6', 's6', 'eq', 'eq'], ['s6', 'nl6', 'iv', 'set'],
     ],
   },
   {
