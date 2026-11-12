@@ -3390,6 +3390,60 @@ console.log('数据管道（packs/seqtools.js）：数列、符号数、符号�
   });
 }
 
+console.log('函数（packs/curves.js）：函数是一种值，能和方程、代数式、直线互相转换');
+{
+  const mk = () => {
+    const s = W.blank(), add = (type, props) => { const r = W.act(s, { t: 'add', type, x: 0, y: 0, props }); if (!r.ok) throw new Error(r.why); return r.id; };
+    const link = (a, b, tp, fp) => W.act(s, { t: 'link', from: a, to: b, toPort: tp, fromPort: fp });
+    return { s, add, link };
+  };
+  const show = (v) => U.showVal(v);
+  const out = (m, id) => W.evaluate(m.s)[id].out;
+  t('函数卡：写 y = x² − 4x + 3；y= 或 f(x)= 开头都行；两个字母被拒绝', () => {
+    const m = mk(), a = m.add('fncard', { f: 'x^2 - 4x + 3' }); eq(show(out(m, a).f), 'y = x² − 4x + 3');
+    W.act(m.s, { t: 'set', id: a, k: 'f', v: 'y = 2x + 1' }); eq(show(out(m, a).f), 'y = 2x + 1');
+    W.act(m.s, { t: 'set', id: a, k: 'f', v: 'f(x) = x + 1' }); eq(show(out(m, a).f), 'y = x + 1');
+    W.act(m.s, { t: 'set', id: a, k: 'f', v: 'x + y' }); eq(out(m, a).f, undefined);
+  });
+  t('二次函数：y = x² − 4x + 3 的顶点是 (2, −1)；a = 0 时没有顶点；a、b、c 能被扫描变量驱动', () => {
+    const m = mk(), q = m.add('fnquad', {}), o = out(m, q);
+    eq(show(o.f), 'y = x² − 4x + 3'); eq(show(o.vx), '2'); eq(show(o.vy), '-1');
+    W.act(m.s, { t: 'set', id: q, k: 'a', v: 0 }); eq(out(m, q).vx, undefined);
+    const m2 = mk(), sw = m2.add('sweepx', { cur: 2 }), q2 = m2.add('fnquad', {});
+    truthy(m2.link(sw, q2, 'p.a', 'x').ok); eq(show(out(m2, q2).f), 'y = 2x² − 4x + 3');
+  });
+  t('函数求值：f(5) = 8（精确）；分数也精确', () => {
+    const m = mk(), q = m.add('fnquad', {}), n = m.add('num', { n: 5 }), at = m.add('fnat', {});
+    m.link(q, at, 'f', 'f'); m.link(n, at, 'x', 'v'); eq(show(out(m, at).y), '8');
+    W.act(m.s, { t: 'set', id: n, k: 'n', v: 1 }); W.act(m.s, { t: 'set', id: n, k: 'd', v: 2 }); eq(show(out(m, at).y), '5/4');
+  });
+  t('函数解：零点、f = g、不等式；结果是“解集”，能接解集数轴', () => {
+    const m = mk(), q = m.add('fncard', { f: 'x^2 - 4x + 3' }), z = m.add('fnsolve', {});
+    m.link(q, z, 'f', 'f'); eq(show(out(m, z).set), 'x = 1 或 x = 3'); eq(show(out(m, z).n), '2');
+    const g = m.add('fncard', { f: 'x - 1' }); m.link(g, z, 'g', 'f');
+    eq(show(out(m, z).set), 'x = 1 或 x = 4', 'x² − 4x + 3 = x − 1');
+    const nl = m.add('numline_iv', {}); truthy(m.link(z, nl, 'iv', 'set').ok);
+    const m2 = mk(), a = m2.add('fncard', { f: '2x + 1' }), z2 = m2.add('fnsolve', { rel: 2 }); m2.link(a, z2, 'f', 'f'); eq(show(out(m2, z2).set), 'x > -1/2');
+  });
+  t('函数图像：前两条的交点个数；试的 x 处的 y；没接东西不崩', () => {
+    const m = mk(), a = m.add('fncard', { f: 'x^2 - 4x + 3' }), b = m.add('fncard', { f: 'x - 1' }), g = m.add('fngraph', { probe: 2 });
+    m.link(a, g, 'f', 'f'); m.link(b, g, 'f', 'f');
+    const o = out(m, g); eq(show(o.n), '2'); eq(show(o.y), '-1');
+    const m2 = mk(), g2 = m2.add('fngraph', {}); eq(out(m2, g2).y, undefined);
+    eq(W.act(m.s, { t: 'set', id: g, k: 'xlo', v: 9 }).ok, false, 'x 从 ≥ x 到：被拒绝');
+  });
+  t('转换：直线变函数、函数变直线（一次时）；代数式、方程变函数；二次函数不能当直线', () => {
+    const m = mk(), a = m.add('fncard', { f: '2x + 1' }), at = m.add('at', {});
+    const r = m.link(a, at, 'f', 'f'); truthy(r.ok, r.why);
+    const q = m.add('fnquad', {}), cr = m.add('cross', {}); m.link(q, cr, 'f', 'f'); eq(out(m, cr).x, undefined, '二次函数不能当直线');
+    const al = m.add('algebra', { text: 'a^2 - 1' }), fg = m.add('fngraph', {}); truthy(m.link(al, fg, 'f', 'p').ok, '代数式能画图');
+    eq(show(out(m, fg).y), '0', 'a² − 1 在 x = 1 处为 0（单个字母换成 x）');
+    const ec = m.add('eqcard', { e: '2x + 1 = 7' }), fg2 = m.add('fngraph', { probe: 3 }); truthy(m.link(ec, fg2, 'f', 'eq').ok, '方程能画图');
+    eq(show(out(m, fg2).y), '0', '2x + 1 − 7 在 x = 3 处为 0：方程的解就是图像和 x 轴的交点');
+    const ln = m.add('line', {}); const fg3 = m.add('fngraph', {}); truthy(m.link(ln, fg3, 'f', Object.keys(U.types.line.outputs)[0]).ok, '直线能画图');
+  });
+}
+
 console.log('示例菜单（problems/examples-data.js，由 tools/gen-examples.js 生成）');
 {
   const EX = U.EXAMPLES || [];

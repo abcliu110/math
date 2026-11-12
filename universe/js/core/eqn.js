@@ -233,6 +233,43 @@
     }
     return { kind: 'error', why: '三次以上的方程暂时解不了' };
   };
+
+  // ---- 函数 curve：y = f(x)，f 是 x 的多项式。直线、抛物线、一般多项式函数都是它。 ----
+  // 一次及以下的 curve 能自动变回“直线”（fn），所以交点、代入、预测这些认直线的器材照样能接。
+  // 数、代数式、方程也能直接当函数：数是水平线；代数式（只有一个字母）是 y = 这个式子；方程是 y = 左边 − 右边（它和 x 轴的交点就是解）。
+  const toX = (p) => {
+    const vs = P.vars(p);
+    if (vs.length === 0) return p;
+    if (vs.length > 1) return null;
+    return vs[0] === 'x' ? p : P.subst(p, vs[0], P.variable('x'));
+  };
+  const linearOf = (p) => {
+    if (P.degree(p) > 1) return null;
+    let k = Q(0), b = Q(0);
+    for (const t of p.terms) { if (t.m.x) k = Q.add(k, t.c); else b = Q.add(b, t.c); }
+    return { k, b };
+  };
+  const Curve = { toX, linearOf, of: (p) => ({ p }) };
+  U.Curve = Curve;
+  U.defineKind('curve', {
+    label: '函数', color: '#10b981',
+    eq: (a, b) => P.eq(a.p, b.p),
+    show: (c) => 'y = ' + P.show(c.p),
+    brief: (c) => P.show(c.p),
+    to: {
+      poly: (c) => c.p,
+      expr: (c) => c.p,
+      eqn: (c) => Eqn.make(c.p, P.const(Q(0)), '='),
+      fn: (c) => linearOf(c.p),
+    },
+  });
+  const addTo = (kind, key, f) => { U.KINDS[kind].to = Object.assign({}, U.KINDS[kind].to || {}, { [key]: f }); };
+  addTo('num', 'curve', (q) => ({ p: P.const(q) }));
+  addTo('fn', 'curve', (f) => ({ p: P.norm([{ c: f.k, m: { x: 1 } }, { c: f.b, m: {} }]) }));
+  const polyToCurve = (p) => { const x = toX(p); return x ? { p: x } : null; };
+  addTo('poly', 'curve', polyToCurve);
+  addTo('expr', 'curve', polyToCurve);
+  addTo('eqn', 'curve', (e) => polyToCurve(Eqn.diff(e)));
 })(typeof globalThis !== 'undefined' ? globalThis : window);
 
 /* 代数式解析（B.4 的“代数式卡”）：整式，加上「除以一个非零的数」。数字、字母、+ − × * · 空格相乘、括号、乘方 ^n（或 ²³）。

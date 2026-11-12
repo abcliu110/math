@@ -194,4 +194,25 @@ module.exports = [
       ['qv', 'sp', 'p', 'v'], ['sp', 'rx', 'r', 'x'], ['rx', 'mx', 'v', 'v'],
     ],
   },
+  {
+    id: 'ex-function-lab', grade: 9, domain: '函数', title: '综合 · 函数实验室：画图、求值、零点、交点、不等式',
+    hook: '函数现在是一种能接线的值。二次函数 x² − 4x + 3 和直线 y = x − 1 画在同一个坐标系里，交点个数、交点的 x（解集）、顶点、f(5) 都从同一个函数读出来；下面一行是方程 2x + 1 = 7 直接变成函数，图像穿过 x 轴的地方就是解；再用一次函数解不等式 2x + 1 > 0，结果接解集数轴。',
+    ents: [
+      ['fq', 'fnquad', { a: 1, b: -4, c: 3 }], ['fc', 'fncard', { f: 'x - 1' }],
+      ['g1', 'fngraph', { xlo: -1, xhi: 5, probe: 2 }],
+      ['sol', 'fnsolve', { rel: 0 }], ['nl', 'numline_iv', { lo: -1, hi: 5, probe: 2 }], ['mn', 'meter', { digits: 0, label: '交点个数' }],
+      ['mvx', 'meter', { digits: 0, label: '顶点 x' }], ['mvy', 'meter', { digits: 0, label: '顶点 y' }],
+      ['n5', 'num', { n: 5 }], ['at', 'fnat', {}], ['mat', 'meter', { digits: 0, label: 'f(5)' }],
+      ['ec', 'eqcard', { e: '2x + 1 = 7' }], ['g2', 'fngraph', { xlo: -1, xhi: 6, probe: 3 }], ['my', 'meter', { digits: 0, label: '图像在 x = 3 的高度' }],
+      ['lin', 'fncard', { f: '2x + 1' }], ['ineq', 'fnsolve', { rel: 2 }], ['nl2', 'numline_iv', { lo: -3, hi: 3, probe: 0 }],
+    ],
+    links: [
+      ['fq', 'g1', 'f', 'f'], ['fc', 'g1', 'f', 'f'],
+      ['fq', 'sol', 'f', 'f'], ['fc', 'sol', 'g', 'f'], ['sol', 'nl', 'iv', 'set'], ['sol', 'mn', 'v', 'n'],
+      ['fq', 'mvx', 'v', 'vx'], ['fq', 'mvy', 'v', 'vy'],
+      ['fq', 'at', 'f', 'f'], ['n5', 'at', 'x', 'v'], ['at', 'mat', 'v', 'y'],
+      ['ec', 'g2', 'f', 'eq'], ['g2', 'my', 'v', 'y'],
+      ['lin', 'ineq', 'f', 'f'], ['ineq', 'nl2', 'iv', 'set'],
+    ],
+  },
 ];
