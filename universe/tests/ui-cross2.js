@@ -123,6 +123,7 @@ const norm = (s) => String(s || '').replace(/\s+/g, ' ').trim();
   ok(await p.evaluate((id) => UI.S.D[id].out.solved.data === true, x), '「解出来了」输出为真');
 
   console.log('(d) 真实鼠标拖动顶点 C：(0, 4) → (0, 5)，读数和式子同步变化');
+  await p.evaluate(() => { UI.Stage.fit(); UI.Stage.render(); }); await p.waitForTimeout(200);   // 卡片大小变过以后，适应一次，保证要拖的顶点在台面里（不在侧栏下面）
   const unit = await p.evaluate((ws) => document.querySelector('svg.wsbody[data-wsid="' + ws + '"]').getBoundingClientRect().width / UI.Stage.rangeOf(ws).span, ids.ws);
   const bx = await p.locator('circle[data-drag="' + ids.c + '"]').first().boundingBox();
   const cx = bx.x + bx.width / 2, cy = bx.y + bx.height / 2;

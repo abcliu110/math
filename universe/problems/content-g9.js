@@ -4,28 +4,23 @@
   const U = G.U, W = U.World;
   const R = (s, id, role) => { s.entities[id].role = role; return id; };
 
-  // 9.1 解一元二次方程（核心）：方程台读出两个精确根
+  // 9.1 解一元二次方程（核心）：解读出两个精确根
   U.problems.push({
     id: 'g9-quad-solve-core', title: '解 x² − 5x + 6 = 0，两个根各是几？', grade: 9, domain: '关系', essence: ['E4', 'E8'], points: ['9.1'], level: 'core', rung: 3,
-    alias: ['一元二次方程', '解方程', '因式分解', '两个根'], hook: '左边放 x² − 5x + 6，右边放 0。方程台能把两个根都算出来吗？',
-    shelf: ['algebra', 'eqdesk'],
-    build() {
-      const s = W.blank();
-      R(s, W.add(s, 'algebra', 60, 60, { text: 'x^2-5x+6' }), 'l');
-      R(s, W.add(s, 'algebra', 60, 200, { text: '0' }), 'r');
-      return s;
-    },
+    alias: ['一元二次方程', '解方程', '因式分解', '两个根'], hook: '写出方程 x² − 5x + 6 = 0（方程卡里写 x^2 - 5x + 6 = 0），再接一台解。解集里有两个根吗？',
+    shelf: ['eqcard', 'solve'],
+    build() { return W.blank(); },
     predict: null,
     milestones: [
-      { id: 'put', say: '放一台方程台，左边接式子，右边接 0', score: 2, when: { count: { type: 'eqdesk', ge: 1 } },
-        hints: ['解方程要用「方程台」。', '左边接 x² − 5x + 6，右边接 0。', '放一台方程台，两边分别接两张式子卡。'] },
-      { id: 'roots', say: '方程台读出两个根：2 和 3', score: 4,
-        when: (w) => w.some('eqdesk', (e, d) => { const a = d.out.r1, b = d.out.r2; return !!(a && b) && [U.KINDS.real.show(a.data), U.KINDS.real.show(b.data)].sort().join(',') === '2,3'; }),
-        why_code: '两个根是符号精确数，数据形式的 when 只能比较数，不能直接读出“两个根是 2 和 3”',
-        hints: ['二次方程可以试着分解成两个一次式的积。', '看“二次方程的第一个根 / 第二个根”两个输出。', '把两边同时加 0 就不改变方程：“做多少”设成 0 即可读出两个根。'] },
+      { id: 'put', say: '放一张方程卡写出方程，再接一台解', score: 2, when: { count: { type: 'solve', ge: 1 } },
+        hints: ['解方程要用「解」，方程要先用「方程卡」写下来。', '方程卡里写 x^2 - 5x + 6 = 0。', '把方程卡的输出接到解上。'] },
+      { id: 'roots', say: '解集是两个根：2 和 3', score: 4,
+        when: (w) => w.some('solve', (e, d) => !!(d.out.set && U.Solset.show(d.out.set.data) === 'x = 2 或 x = 3')),
+        why_code: '解集里有两个根，数据形式的 when 只能比较一个数，不能直接读出“两个根是 2 和 3”',
+        hints: ['二次方程可以试着分解成两个一次式的积。', '看解的“解集”：x = 几 或 x = 几。', '方程卡里写成 x^2 - 5x + 6 = 0。'] },
     ],
     traps: [], goal: ['roots'],
-    why: 'x² − 5x + 6 = (x − 2)(x − 3)，所以两个根是 2 和 3。方程台在不是一次式时会给出两个精确根。',
+    why: 'x² − 5x + 6 = (x − 2)(x − 3)，所以两个根是 2 和 3。解在不是一次式时会给出两个精确根。',
   });
 
   // 9.2 一元二次方程的应用与根的判别式（核心）：判别式为 0 时只有一个根

@@ -3137,6 +3137,83 @@ console.log('分步定型（bake，§10.5.6 第 5 步）：前面的步骤折成
   });
 }
 
+console.log('方程与不等式（packs/equation.js）：一种“方程”、一种“解集”，每台器材只做一件事');
+{
+  const mk = () => {
+    const s = W.blank(), add = (type, props) => { const r = W.act(s, { t: 'add', type, x: 0, y: 0, props }); if (!r.ok) throw new Error(type + '：' + r.why); return r.id; };
+    const link = (a, b, tp, fp) => { const r = W.act(s, { t: 'link', from: a, to: b, toPort: tp, fromPort: fp }); if (!r.ok) throw new Error('连线 ' + tp + '：' + r.why); };
+    return { s, add, link };
+  };
+  const show = (v) => U.showVal(v);
+  const solved = (text, props) => { const m = mk(), e = m.add('eqcard', { text }), so = m.add('solve', props || {}); m.link(e, so, 'eq', 'eq'); const D = W.evaluate(m.s)[so]; return { set: D.out.set && show(D.out.set), x: D.out.x && show(D.out.x), sig: D.sig.map((g) => g.tx).join('|') }; };
+  t('解：一次方程、不等式、二次方程（精确根）、恒等式、无解', () => {
+    eq(solved('2x + 1 = 7').set, 'x = 3'); eq(solved('2x + 1 = 7').x, '3');
+    eq(solved('3x - 5 >= x + 1').set, 'x ≥ 3'); eq(solved('2x + 1 > 7').set, 'x > 3');
+    eq(solved('-2x < 6').set, 'x > -3', '两边除以负数，不等号反向');
+    eq(solved('x^2 - 5x + 6 = 0').set, 'x = 2 或 x = 3'); eq(solved('x^2 - 2 = 0').set, 'x = −√2 或 x = √2');
+    eq(solved('x^2 - 2x + 1 = 0').set, 'x = 1', '两个根相同只留一个'); eq(solved('x^2 = -1').set, '无解');
+    eq(solved('x + 1 = x + 1').set, 'x 取任何数都行'); eq(solved('x + 1 = x + 2').set, '无解');
+  });
+  t('解：不会解的只提示、不报错、没有输出；字母名对不上时自动用方程里唯一的字母', () => {
+    const a = solved('x^3 = 1'); truthy(!a.set && a.sig.includes('三次'), a.sig);
+    const b = solved('x + y = 3'); truthy(!b.set && b.sig.includes('y'), b.sig);
+    eq(solved('2t + 1 = 7').x, '3', '只有一个字母 t，自动用 t');
+  });
+  t('方程卡：整行写方程；没有等号、两个等号、写不出的式子都被拒绝并说明原因', () => {
+    for (const [txt, why] of [['2x + 1', '等号'], ['1 < x < 3', '只能有一个'], ['2x + = 7', '']]) {
+      const m = mk(), e = m.add('eqcard', {}), r = W.act(m.s, { t: 'set', id: e, k: 'text', v: txt }); truthy(!r.ok, txt + ' 应该被拒绝'); truthy(r.why.includes(why), r.why);
+    }
+    const m = mk(), e = m.add('eqcard', { text: '3x−5≥x+1' }); eq(show(W.evaluate(m.s)[e].out.eq), '3x − 5 ≥ x + 1', '全角符号也认');
+  });
+  t('变形：两边同时做一件事，乘除负数不等号反向，乘 0 被拒绝', () => {
+    const m = mk(), e = m.add('eqcard', { text: '2x + 1 = 7' }), a = m.add('eqstep', { op: 1, by: '1' }), b = m.add('eqstep', { op: 3, by: '2' }), so = m.add('solve', {});
+    m.link(e, a, 'eq', 'eq'); m.link(a, b, 'eq', 'eq'); m.link(b, so, 'eq', 'eq');
+    const D = W.evaluate(m.s); eq(show(D[a].out.eq), '2x = 6'); eq(show(D[b].out.eq), 'x = 3'); eq(show(D[so].out.x), '3');
+    const n = mk(), e2 = n.add('eqcard', { text: 'x < 4' }), s2 = n.add('eqstep', { op: 2, by: '-1' }); n.link(e2, s2, 'eq', 'eq');
+    eq(show(W.evaluate(n.s)[s2].out.eq), '−x > −4', '乘 −1 不等号反向'); truthy(!W.act(n.s, { t: 'set', id: s2, k: 'by', v: '0' }).ok, '乘 0 要被拒绝');
+    const z = mk(), e3 = z.add('eqcard', { text: 'x + 1 = 3' }), s3 = z.add('eqstep', { op: 1, by: 'x' }); z.link(e3, s3, 'eq', 'eq');
+    eq(show(W.evaluate(z.s)[s3].out.eq), '1 = −x + 3', '两边同时减一个含 x 的式子');
+  });
+  t('验根：代进去看成不成立（等式和不等式），给出左 − 右', () => {
+    const chk = (text, n) => { const m = mk(), e = m.add('eqcard', { text }), k = m.add('num', { n }), c = m.add('eqcheck', {}); m.link(e, c, 'eq', 'eq'); m.link(k, c, 'x', 'v'); const o = W.evaluate(m.s)[c].out; return [o.ok.data, show(o.gap)]; };
+    eq(chk('2x + 1 = 7', 3).join(), 'true,0'); eq(chk('2x + 1 = 7', 4).join(), 'false,2');
+    eq(chk('2x + 1 > 7', 3).join(), 'false,0', '3 取不到'); eq(chk('2x + 1 > 7', 4).join(), 'true,2'); eq(chk('2x + 1 >= 7', 3).join(), 'true,0');
+  });
+  t('方程组：接两个方程解出 x、y；字母名对不上时用方程里的字母；两个方程重合没有唯一解', () => {
+    const sys = (a, b, props) => { const m = mk(), p = m.add('eqcard', { text: a }), q = m.add('eqcard', { text: b }), sy = m.add('eqsys', props || {}); m.link(p, sy, 'eqs', 'eq'); m.link(q, sy, 'eqs', 'eq'); const D = W.evaluate(m.s)[sy]; return [D.out.x && show(D.out.x), D.out.y && show(D.out.y), D.sig.map((g) => g.tx).join('|')]; };
+    eq(sys('2x + y = 7', 'x - y = 2').slice(0, 2).join(), '3,1'); eq(sys('2a + b = 7', 'a - b = 2').slice(0, 2).join(), '3,1');
+    const r = sys('x + y = 2', '2x + 2y = 4'); truthy(!r[0] && r[2].includes('没有唯一'), r[2]);
+  });
+  t('解集能自动变成数、区间：接读数器、解集数轴；旧的“解集（区间）”口也能接新数轴', () => {
+    const m = mk(), e = m.add('eqcard', { text: '3x - 5 >= x + 1' }), so = m.add('solve', {}), ax = m.add('numline_iv', { probe: 4 }), me = m.add('meter', {});
+    m.link(e, so, 'eq', 'eq'); m.link(so, ax, 'iv', 'set'); m.link(so, me, 'v', 'set');
+    const D = W.evaluate(m.s); eq(D[ax].out.inside.data, true); truthy(!D[me].out.v, '区间不能变成一个数，读数器不该有值');
+    const m2 = mk(), e2 = m2.add('eqcard', { text: 'x^2 - 5x + 6 = 0' }), s2 = m2.add('solve', {}), a2 = m2.add('numline_iv', { probe: 2 }), a3 = m2.add('numline_iv', { probe: 4 });
+    m2.link(e2, s2, 'eq', 'eq'); m2.link(s2, a2, 'iv', 'set'); const o = W.evaluate(m2.s)[a2].out; eq(o.inside.data, true, '2 是根'); a3 && m2.link(s2, a3, 'iv', 'set'); eq(W.evaluate(m2.s)[a3].out.inside.data, false, '4 不是根');
+    const m3 = mk(), l = m3.add('algebra', { text: '2x+1' }), r = m3.add('algebra', { text: '7' }), ed = m3.add('eqdesk', { rel: 2 }), a4 = m3.add('numline_iv', { probe: 4 });
+    m3.link(l, ed, 'L', 'p'); m3.link(r, ed, 'R', 'p'); m3.link(ed, a4, 'iv', 'iv'); eq(W.evaluate(m3.s)[a4].out.inside.data, true, '旧方程台的区间口接新数轴');
+  });
+  t('旧的方程台、方程组台、解方程、不等式不再放在器材架上，但旧存档里的它们照样能算', () => {
+    for (const n of ['eqdesk', 'system2', 'linsolve', 'ineq']) { truthy(U.types[n].hidden === true, n + ' 应该隐藏'); }
+    const m = mk(), l = m.add('algebra', { text: 'x+1' }), r = m.add('algebra', { text: '3' }), ed = m.add('eqdesk', {}); m.link(l, ed, 'L', 'p'); m.link(r, ed, 'R', 'p'); eq(show(W.evaluate(m.s)[ed].out.x), '2');
+  });
+  t('每道题的器材架里不能有被隐藏的器材（学生拖不出来就做不了题）', () => {
+    const OLD = ['eqdesk', 'system2', 'linsolve', 'ineq'];   // 被新方程器材取代的旧器材
+    for (const p of U.problems) for (const ty of p.shelf || []) { truthy(U.types[ty], p.id + ' 的器材架里有不存在的器材 ' + ty); truthy(!OLD.includes(ty), p.id + ' 的器材架里还有被取代的旧器材 ' + ty); }
+  });
+  t('卡片尺寸：每台器材的卡片都容得下所有的口（高）和口旁边的文字（宽）', () => {
+    const C = U.CARD;
+    for (const [n, d] of Object.entries(U.types)) {
+      if (d.workspaceRole !== 'none' || d.sizeFixed) continue;
+      const sz = d.size({ props: U.defaultProps(d) }), np = Math.max(Object.keys(d.inputs).length, Object.keys(d.outputs).length);
+      if (np) truthy(sz[1] >= C.PORT_Y0 + (np - 1) * C.PORT_DY + C.PAD_BOTTOM, n + ' 卡片太矮：' + sz[1] + '，有 ' + np + ' 个口');
+      const lab = (o) => Math.min(C.LABEL_MAXCH, Math.max(0, ...Object.values(o).map((p) => String(p.label).length)));
+      const side = (o) => (Object.keys(o).length ? C.LABEL_X + lab(o) * C.LABEL_CHAR : 0);
+      if (np) truthy(sz[0] >= side(d.inputs) + (d.compactPorts ? 0 : side(d.outputs)) + C.BODY_MIN_W, n + ' 卡片太窄：' + sz[0]);
+    }
+  });
+}
+
 console.log('扫描（packs/sweep.js）：让一个量变化，把每一步的结果收成表');
 {
   const mk = () => {

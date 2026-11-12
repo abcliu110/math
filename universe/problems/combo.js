@@ -39,26 +39,21 @@
     traps: [], why: '代入就是把字母换成数再算。x²+1 的 x 换成 3，得到 9+1 = 10。', ref: ['variable|0'],
   });
 
-  // 3. 方程组：两个方程 → 方程台 → 方程组台 → 读数器
+  // 3. 方程组：两张方程卡 → 方程组 → 读数器
   P.push({
     id: 'combo-system-interval', essence: ['E5', 'E8'], title: '2x+y=7 和 x−y=2 一起解：x 是几？', grade: 8, domain: '关系', points: ['8.11'],
-    topics: ['二元一次方程组'], alias: ['综合', '方程组'], hook: '把两个方程分别用方程台接好，再交给方程组台。方程组台给出 x、y，读数器显示 x。',
-    shelf: ['algebra', 'eqdesk', 'system2', 'numline_iv', 'meter'],
+    topics: ['二元一次方程组'], alias: ['综合', '方程组'], hook: '两张方程卡分别写着 2x + y = 7 和 x − y = 2。把它们都接进方程组，方程组给出 x、y，读数器显示 x。',
+    shelf: ['eqcard', 'eqsys', 'solve', 'numline_iv', 'meter'],
     build: mk({ ents: [
-      E('algebra', 40, 60, 'a1', { text: '2*x+y' }),
-      E('algebra', 40, 130, 'a2', { text: '7' }),
-      E('eqdesk', 230, 95, 'e1', {}),
-      E('algebra', 40, 260, 'a3', { text: 'x-y' }),
-      E('algebra', 40, 330, 'a4', { text: '2' }),
-      E('eqdesk', 230, 295, 'e2', {}),
-      E('system2', 430, 190, 'sys', {}),
-      E('numline_iv', 430, 340, 'nl', { probe: 1, lo: -5, hi: 5 }),
-      E('meter', 640, 190, 'show', { digits: 0 }),
+      E('eqcard', 40, 60, 'e1', { text: '2x + y = 7' }),
+      E('eqcard', 40, 220, 'e2', { text: 'x - y = 2' }),
+      E('eqsys', 330, 130, 'sys', {}),
+      E('meter', 620, 130, 'show', { digits: 0 }),
     ] }),
     milestones: [
-      { id: 'sol', say: '读数器上是方程组的解 x = 3', score: 10, when: (w) => w.some('meter', (e) => w.num(e, 'v') === 3), hints: ['方程组台需要两个方程都接进来。', '两个方程台的 eq 输出，接到 A 和 B。', '解 x 从方程组台的 x 输出读出。'] },
+      { id: 'sol', say: '读数器上是方程组的解 x = 3', score: 10, when: (w) => w.some('meter', (e) => w.num(e, 'v') === 3), hints: ['方程组需要两个方程都接进来。', '两张方程卡的输出，都接到方程组的“方程”口（可以接两根线）。', '解 x 从方程组的第一个解读出。'] },
     ],
-    traps: [], why: '2x+y=7 和 x−y=2 相加得 3x=9，x=3，y=1。方程组台把两个方程合起来解。', ref: ['linsolve|0'],
+    traps: [], why: '2x+y=7 和 x−y=2 相加得 3x=9，x=3，y=1。方程组把两个方程合起来解。', ref: ['eqsys|0'],
   });
 
   // 4. 平移不改变面积：正方形 → 块（平移）→ 面积读数 → 读数器；圆的面积单独读
@@ -185,11 +180,11 @@
   // 10. 运算器与代数式：代数式 → 代入器 → 代数读数器；表达式读数
   P.push({
     id: 'combo-expr-read', essence: ['E8', 'E4'], title: '一个式子和一个方程：式子读数是几？方程有没有解？', grade: 8, domain: '关系', points: ['8.11'],
-    topics: ['代数式读数', '方程的解'], alias: ['综合', '式子'], hook: '式子工作台处理式子；代数式读数器读出一个代数式在某个 x 下的值。两个方程用方程台接好后，式子工作台判断它们是否同解。',
-    shelf: ['exprbench', 'exprread', 'eqdesk', 'algebra', 'meter'],
+    topics: ['代数式读数', '方程的解'], alias: ['综合', '式子'], hook: '式子工作台处理式子；代数式读数器读出一个代数式在某个 x 下的值。方程卡写出方程后，式子工作台判断它们是否同解。',
+    shelf: ['exprbench', 'exprread', 'eqcard', 'algebra', 'meter'],
     build: mk({ ents: [
       E('algebra', 40, 80, 'p', { text: 'x+1' }),
-      E('eqdesk', 240, 80, 'e', {}),
+      E('eqcard', 240, 80, 'e', { text: 'x + 1 = 3' }),
       E('exprbench', 440, 80, 'wb', { label: '同解吗' }),
       E('exprread', 240, 260, 'er', { x: 2, y: 0, label: '读数' }),
     ] }),

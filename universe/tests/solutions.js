@@ -15,7 +15,7 @@ module.exports = {
   'round-347'(h) { const r = h.add('round'); h.link(h.role('x'), r, 'v'); h.set(r, 'place', -1); },
   'binary-13'(h) { const d = h.add('digits'); h.link(h.role('x'), d, 'v'); h.set(d, 'base', 2); },
   'decimal-add'(h) { const o = h.add('op'), c = h.add('compare'); h.link(h.role('a'), o, 'a'); h.link(h.role('b'), o, 'b'); h.link(o, c, 'a'); h.link(h.role('c'), c, 'b'); },
-  'linear-3x5'(h) { const s = h.role('s'); h.set(s, 'a', 3); h.set(s, 'b', 5); h.set(s, 'c', 20); },
+  'linear-3x5'(h) { const e = h.role('s'), a = h.add('eqstep', { op: 1, by: '5' }), b = h.add('eqstep', { op: 3, by: '3' }), so = h.add('solve', {}); h.link(e, a, 'eq', 'eq'); h.link(a, b, 'eq', 'eq'); h.link(b, so, 'eq', 'eq'); },
   'triangle-348'(h) { const t = h.role('t'); h.set(t, 'c', 6); h.set(t, 'c', 5); },
   'circle-r5'(h) { const c = h.role('c'); h.set(c, 'r', 5); },
   'quad-vertex'(h) { const q = h.role('q'); h.set(q, 'b', -4); h.set(q, 'c', 3); },
@@ -37,7 +37,10 @@ module.exports = {
   'cuboid-vol'(h) { const c = h.role('c'); h.set(c, 'l', 6); h.set(c, 'w', 4); h.set(c, 'h', 3); },
   'mean-vs-median'(h) { h.set(h.role('d'), 'list', '3, 4, 4, 5, 40'); h.set(h.role('d'), 'list', '3, 4, 4, 5, 4'); },
   'triangle-right'(h) { h.set(h.role('t'), 'B', 55); },
-  'ineq-min-int'(h) { const q = h.role('q'); h.set(q, 'a', 2); h.set(q, 'b', 1); h.set(q, 'c', 7); h.set(q, 'x', 3); h.set(q, 'x', 4); },
+  'ineq-min-int'(h) {
+    const e = h.role('q'), so = h.add('solve', {}); h.link(e, so, 'eq', 'eq');
+    for (const n of [3, 4]) { const c = h.add('eqcheck', {}), k = h.add('num', { n }); h.link(e, c, 'eq', 'eq'); h.link(k, c, 'x', 'v'); }
+  },
   'meet-100'(h) { const r = h.role('r'); h.set(r, 'v1', 6); h.set(r, 'v2', -4); h.run(12); },
   'chase-30'(h) { const r = h.role('r'); h.set(r, 'v1', 7); h.set(r, 'v2', 4); h.run(12); },
   'loop-400'(h) { const r = h.role('r'); h.set(r, 'v1', 8); h.set(r, 'v2', 6); h.run(205); },

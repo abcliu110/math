@@ -11,7 +11,7 @@
   for (const kind of Object.keys(U.KINDS)) {
     U.define('pin_' + kind, {
       essence: ['E12'], label: '引脚（' + kind + '）', prefix: '脚', group: '关系', grades: [1, 1], hidden: true,
-      workspaceRole: 'none', handles: true,
+      workspaceRole: 'none', handles: true, sizeFixed: true,   // 内部引脚不画出来，不需要容得下口的卡片尺寸
       props: { key: { type: 'text', label: '名', default: '', hidden: true } },
       inputs: {}, outputs: { v: { dim: null, kind, label: '值' } },
       lint: { minProps: 0, why: '内部引脚，只在打包器材里出现' },

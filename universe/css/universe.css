@@ -186,7 +186,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .port.ok { box-shadow: 0 0 0 5px #12a36b88; }
 .port.no { box-shadow: 0 0 0 5px #e5484d88; }
 .port:hover { transform: translate(-50%, -50%) scale(1.25); }
-.pl { position: absolute; font-size: 12px; color: var(--dim); transform: translateY(-50%); pointer-events: none; white-space: nowrap; }
+.pl { position: absolute; font-size: 12px; color: var(--dim); transform: translateY(-50%); pointer-events: none; white-space: nowrap; max-width: 96px; overflow: hidden; text-overflow: ellipsis; }   /* 96 = 内核 U.CARD.LABEL_MAXCH × LABEL_CHAR：口的文字最多占 8 个字的位置，再长用省略号 */
 .pill { position: absolute; width: 92px; height: 22px; line-height: 20px; border-radius: 11px; background: #fff; color: var(--ink); border: 2px solid #aab4c8; font-size: 12px; text-align: center; transform: translateY(-50%); cursor: crosshair; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px; }
 .pill.driven { background: #dff3ea; border-color: var(--good); }
 .pill.ok { border-color: var(--good); box-shadow: 0 0 0 4px #12a36b66; }

@@ -17,16 +17,16 @@
   });
   P.push({
     id: 'ineq-min-int', essence: ['E4', 'E8'], title: '2x + 1 > 7，最小的整数 x 是几？', grade: 8, domain: '代数', points: ['7.15'], topics: ['一元一次不等式', '解集'],
-    alias: ['不等式'], hook: '先把不等式器材调成 2x + 1 > 7。它能试任何 x。找出分界点，再找最小的整数解——注意“>”不包括分界点本身。',
-    shelf: ['ineq', 'meter', 'compare'],
-    build: mk({ ents: [{ type: 'ineq', x: 120, y: 80, role: 'q', props: { a: 1, b: 0, dir: 0, c: 0, x: 0 } }] }),
+    alias: ['不等式'], hook: '台面上的方程卡写着不等式 2x + 1 > 7。接一台解看解集，再用「验根」试几个整数：找出最小的整数 x——注意“>”不包括分界点本身。',
+    shelf: ['eqcard', 'solve', 'eqcheck', 'num', 'numline_iv', 'meter'],
+    build: mk({ ents: [{ type: 'eqcard', x: 100, y: 100, role: 'q', props: { text: '2x + 1 > 7' } }] }),
     predict: { q: '先猜：最小整数解——', options: [{ v: 3, label: '3' }, { v: 4, label: '4' }, { v: 6, label: '6' }], reveal: () => ({ v: 4, label: '4（x = 3 刚好不成立）' }) },
     milestones: [
-      { id: 'bound', say: '调成 2x+1>7，分界点是 3', score: 3, when: { role: 'q', port: 'bound', op: '=', value: '3' }, hints: ['2x + 1 = 7 的解。', '(7 − 1) ÷ 2。', '3。'] },
-      { id: 'no3', say: '试 x = 3：不成立', score: 3, when: (w) => w.some('ineq', (e) => e.props.x === 3 && w.num(e, 'ok') === 0), hints: ['把“试一试 x”改成 3。', '看右上的 ✓/✗。', '3 取不到，因为是“>”。'] },
-      { id: 'yes4', say: '试 x = 4：成立', score: 4, when: (w) => w.some('ineq', (e) => e.props.x === 4 && w.num(e, 'ok') === 1), hints: ['再试一个更大的整数。', '3 后面的整数。', '4。'] },
+      { id: 'bound', say: '解集是 x > 3，分界点是 3（3 本身不算）', score: 3, when: (w) => w.some('solve', (e, d) => { const S = d.out.set && d.out.set.data; return !!(S && S.iv && S.iv.lo && S.iv.loOpen && U.Q.eq(S.iv.lo, U.Q(3))); }), hints: ['接一台「解」。', '2x + 1 = 7 的解是分界点。', '(7 − 1) ÷ 2 = 3，而且是“>”，3 取不到。'] },
+      { id: 'no3', say: '试 x = 3：不成立', score: 3, when: (w) => w.some('eqcheck', (e, d) => !!(d.out.ok && d.out.ok.data === false && d.out.gap && U.Q.eq(d.out.gap.data, U.Q(0)))), hints: ['接一台「验根」，再放一张数字卡写 3。', '看验根上的 ✓ / ✗。', '3 取不到，因为是“>”。'] },
+      { id: 'yes4', say: '试 x = 4：成立', score: 4, when: (w) => w.some('eqcheck', (e, d) => !!(d.out.ok && d.out.ok.data === true && d.out.gap && U.Q.eq(d.out.gap.data, U.Q(2)))), hints: ['再试一个更大的整数。', '3 后面的整数。', '4。'] },
     ],
-    traps: [], why: '2x+1>7 ⇒ x>3，空心圆表示 3 本身不算。大于 3 的最小整数是 4。', ref: ['ineq|0'],
+    traps: [], why: '2x+1>7 ⇒ x>3，空心圆表示 3 本身不算。大于 3 的最小整数是 4。', ref: ['solve|0'],
   });
   U.problems.push(...P);
 })(typeof globalThis !== 'undefined' ? globalThis : window);

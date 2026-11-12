@@ -11,11 +11,8 @@ module.exports = {
   },
   'combo-system-interval'(h) {
     const e1 = h.role('e1'), e2 = h.role('e2'), sys = h.role('sys');
-    h.link(h.role('a1'), e1, 'L'); h.link(h.role('a2'), e1, 'R');
-    h.link(h.role('a3'), e2, 'L'); h.link(h.role('a4'), e2, 'R');
-    h.link(e1, sys, 'A', 'eq'); h.link(e2, sys, 'B', 'eq');
+    h.link(e1, sys, 'eqs', 'eq'); h.link(e2, sys, 'eqs', 'eq');
     h.link(sys, h.role('show'), 'v', 'x');
-    h.link(e1, h.role('nl'), 'iv', 'iv');
   },
   'combo-move-area'(h) {
     const blk = h.role('blk'), ga = h.role('ga');

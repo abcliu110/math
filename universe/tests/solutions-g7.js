@@ -13,10 +13,10 @@ module.exports = {
   'g7-like-terms-core'(h) { h.set(h.role('card'), 'text', '2x + 3x - x'); },
   'g7-like-terms-trap'(h) { h.set(h.role('card'), 'text', '3x - (x - 2)'); },
   'g7-equation-word-core'(h) {
-    const q = h.add('eqdesk', { rel: 0 }); h.link(h.role('lhs'), q, 'L', 'p'); h.link(h.role('rhs'), q, 'R', 'p');
+    const e = h.add('eqcard', { text: '3x = 27' }), q = h.add('solve', {}); h.link(e, q, 'eq', 'eq');
   },
   'g7-equation-sign-trap'(h) {
-    const q = h.add('eqdesk', { rel: 0 }); h.link(h.role('lhs'), q, 'L', 'p'); h.link(h.role('rhs'), q, 'R', 'p');
+    const e = h.add('eqcard', { text: '2x + 5 = 17' }), q = h.add('solve', {}); h.link(e, q, 'eq', 'eq');
   },
   'g7-segment-length-core'(h) { const o = h.add('op', { op: 1 }); h.link(h.role('B'), o, 'a'); h.link(h.role('A'), o, 'b'); },
   'g7-segment-sum-trap'(h) { const o = h.add('op', { op: 0 }); h.link(h.role('AC'), o, 'a'); h.link(h.role('CB'), o, 'b'); },

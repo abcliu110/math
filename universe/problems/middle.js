@@ -6,18 +6,18 @@
 
   P.push({
     id: 'linear-3x5', essence: ['E4'], title: '3x + 5 = 20，x 是多少？', grade: 7, domain: '关系', points: ['7.6', '5.5'], topics: ['一元一次方程', '移项', '等式性质'],
-    alias: ['方程'], hook: '台面上有一台解方程器。把它调成 3x + 5 = 20，看 x 是多少，再想想它是怎么算出来的。',
-    shelf: ['linsolve', 'num', 'op', 'balance', 'meter'],
-    build: mk({ ents: [{ type: 'linsolve', x: 120, y: 120, role: 's' }] }),
+    alias: ['方程'], hook: '台面上有一张方程卡，写着 3x + 5 = 20。用「变形」一步一步做：两边同时减 5，再同时除以 3；最后接一台解，看 x 是多少。',
+    shelf: ['eqcard', 'eqstep', 'solve', 'eqcheck', 'num', 'meter'],
+    build: mk({ ents: [{ type: 'eqcard', x: 100, y: 120, role: 's', props: { text: '3x + 5 = 20' } }] }),
     predict: { q: '先猜：x 等于——', options: [{ v: 5, label: '5' }, { v: 25, label: '25' }, { v: '25/3', label: '25/3' }], reveal: () => ({ v: 5, label: '5' }) },
     milestones: [
-      { id: 'a3', say: '把 a 调成 3', score: 2, when: (w) => w.some('linsolve', (e) => e.props.a === 3), hints: ['x 前面的数是 3。', '属性「x 前面的数 a」。', 'a = 3。'] },
-      { id: 'bc', say: '把 b 调成 5、c 调成 20', score: 3, when: (w) => w.some('linsolve', (e) => e.props.b === 5 && e.props.c === 20), hints: ['+5，等于 20。', 'b = 5，c = 20。', '两个属性都要改。'] },
-      { id: 'x5', say: 'x = 5', score: 5, when: { type: 'linsolve', port: 'x', op: '=', value: '5' }, hints: ['看读数。', '(20 − 5) ÷ 3。', 'x = 5。'] },
+      { id: 'sub5', say: '两边同时减 5：3x = 15', score: 2, when: (w) => w.some('eqstep', (e) => e.props.op === 1 && String(e.props.by).trim() === '5'), hints: ['先去掉 +5。', '接一台「变形」，选“两边同时减”，做多少填 5。', '3x + 5 − 5 = 20 − 5。'] },
+      { id: 'div3', say: '两边同时除以 3', score: 3, when: (w) => w.some('eqstep', (e) => e.props.op === 3 && String(e.props.by).trim() === '3'), hints: ['现在是 3x = 15。', '再接一台「变形」，选“两边同时除以”，做多少填 3。', '3x ÷ 3 = 15 ÷ 3。'] },
+      { id: 'x5', say: 'x = 5', score: 5, when: { type: 'solve', port: 'x', op: '=', value: '5' }, hints: ['把最后一个方程接到「解」上。', '(20 − 5) ÷ 3。', 'x = 5。'] },
     ],
-    traps: [{ id: 'x25', when: { type: 'linsolve', port: 'x', op: '=', value: '25/3' }, wrong: '25/3 是把 5 加到右边了。移项要变号：3x = 20 − 5 = 15。' }],
+    traps: [],
     why: '等式两边同时减 5：3x = 15；两边同时除以 3：x = 5。移项就是“两边同时做同一件事”的省略写法。',
-    ref: ['linsolve|0'],
+    ref: ['solve|0'],
   });
 
   P.push({

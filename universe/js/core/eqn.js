@@ -161,6 +161,78 @@
     eq: (a, b) => (a.lo === null ? b.lo === null : b.lo !== null && Q.eq(a.lo, b.lo)) && (a.hi === null ? b.hi === null : b.hi !== null && Q.eq(a.hi, b.hi)) && a.loOpen === b.loOpen && a.hiOpen === b.hiOpen,
     show: (I) => Interval.show(I),
   });
+
+  // ---- 解集：解方程、解不等式的结果，统一成一种值 ----
+  //  { v: 未知数的名字, items: [符号数…]（几个孤立的解） | iv: 区间 | all: true（所有数都是解） | none: true（无解） }
+  //  能自动变成：num（只有一个有理数解时）、interval（区间、单个解、所有数）；区间也能变成解集，所以旧的“解集（区间）”口还能接进新器材。
+  const isRat = (r) => r.b.n === 0n && r.p.n === 0n;
+  const Solset = {
+    of(v, o) { return Object.assign({ v: v || 'x' }, o); },
+    items(v, list) {   // 孤立解：按大小排好、去重
+      const out = [];
+      for (const r of list.slice().sort((a, b) => R.approx(a) - R.approx(b))) if (!out.some((x) => R.eq(x, r))) out.push(r);
+      return Solset.of(v, { items: out });
+    },
+    show(S) {
+      const v = S.v || 'x';
+      if (S.all) return v + ' 取任何数都行';
+      if (S.none) return '无解';
+      if (S.items) return S.items.map((r) => v + ' = ' + R.show(r)).join(' 或 ');
+      const I = S.iv;
+      if (I.lo && I.hi && Q.eq(I.lo, I.hi)) return v + ' = ' + Q.show(I.lo);
+      if (I.lo && I.hi) return Q.show(I.lo) + (I.loOpen ? ' < ' : ' ≤ ') + v + (I.hiOpen ? ' < ' : ' ≤ ') + Q.show(I.hi);
+      if (I.lo) return v + (I.loOpen ? ' > ' : ' ≥ ') + Q.show(I.lo);
+      if (I.hi) return v + (I.hiOpen ? ' < ' : ' ≤ ') + Q.show(I.hi);
+      return v + ' 取任何数都行';
+    },
+    // 一个有理数在不在解集里（符号数的解只在它恰好是有理数时才比得出来）
+    contains(S, q) {
+      if (S.all) return true;
+      if (S.none) return false;
+      if (S.iv) return Interval.contains(S.iv, q);
+      return S.items.some((r) => isRat(r) && Q.eq(r.a, q));
+    },
+    // 只有一个有理数解时的那个数
+    single(S) {
+      if (S.items && S.items.length === 1 && isRat(S.items[0])) return S.items[0].a;
+      if (S.iv && S.iv.lo && S.iv.hi && Q.eq(S.iv.lo, S.iv.hi)) return S.iv.lo;
+      return null;
+    },
+    toInterval(S) {
+      if (S.iv) return S.iv;
+      if (S.all) return Interval.make(null, null, true, true);
+      const q = Solset.single(S); return q ? Interval.make(q, q, false, false) : null;
+    },
+  };
+  U.Solset = Solset;
+  U.defineKind('solset', {
+    label: '解集', color: '#84cc16',
+    eq: (a, b) => Solset.show(a) === Solset.show(b),
+    show: (S) => Solset.show(S),
+    to: { num: (S) => Solset.single(S), interval: (S) => Solset.toInterval(S) },
+  });
+  U.KINDS.interval.to = Object.assign({}, U.KINDS.interval.to || {}, { solset: (I) => Solset.of('x', { iv: I }) });
+
+  // 解方程 / 解不等式：一元一次（含不等式）、一元二次方程。返回 { kind:'ok', set, steps } | { kind:'error', why }
+  Eqn.solve = (e, v) => {
+    const d = Eqn.diff(e), others = P.vars(d).filter((x) => x !== v);
+    if (others.length) return { kind: 'error', why: '式子里除了 ' + v + ' 还有 ' + others.join('、') + '：先把它们换成数（比如接代入器），或者换一个未知数' };
+    const deg = P.degree(d);
+    if (deg <= 1) {
+      const s = Eqn.solveLinear(e, v);
+      if (s.kind === 'solution') return { kind: 'ok', steps: s.steps, set: s.rel === '=' ? Solset.of(v, { items: [R.from(s.value)] }) : Solset.of(v, { iv: Interval.fromLinear(s) }) };
+      if (s.kind === 'all') return { kind: 'ok', steps: s.steps, set: Solset.of(v, { all: true }) };
+      if (s.kind === 'none') return { kind: 'ok', steps: s.steps, set: Solset.of(v, { none: true }) };
+      return { kind: 'error', why: s.why };
+    }
+    if (deg === 2) {
+      const q = Eqn.solveQuadratic(e, v);
+      if (q.kind === 'roots') return { kind: 'ok', steps: q.steps, set: Solset.items(v, q.roots) };
+      if (q.kind === 'none') return { kind: 'ok', steps: q.steps, set: Solset.of(v, { none: true }) };
+      return { kind: 'error', why: q.why };
+    }
+    return { kind: 'error', why: '三次以上的方程暂时解不了' };
+  };
 })(typeof globalThis !== 'undefined' ? globalThis : window);
 
 /* 代数式解析（B.4 的“代数式卡”）：整式，加上「除以一个非零的数」。数字、字母、+ − × * · 空格相乘、括号、乘方 ^n（或 ²³）。

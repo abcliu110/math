@@ -39,6 +39,7 @@
       ineq: {
         workspaceRole: 'none',
         handles: true,
+        hidden: true,   // 旧器材：被 packs/equation.js 的新一套取代，不再放在器材架上（旧存档和旧题照样能用）
         essence: ['E4', 'E8'],
         label: '不等式', prefix: '式', group: '关系', grades: [7, 9], alias: ['不等式', '解集', '最小整数解'],
         props: {

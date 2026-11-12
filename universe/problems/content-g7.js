@@ -176,15 +176,15 @@
   // 7.7 实际问题与一元一次方程（核心）：设未知数，列方程
   U.problems.push({
     id: 'g7-equation-word-core', title: '买 3 支笔共 27 元，每支多少钱？', grade: 7, domain: '代数', essence: ['E4', 'E8'], points: ['7.7'], level: 'core', rung: 2,
-    alias: ['方程', '应用题', '设未知数'], hook: '设每支笔 x 元，3 支共 27 元。列出方程，用方程台求出 x。',
-    shelf: ['algebra', 'eqdesk'],
-    build() { const s = W.blank(); R(s, W.add(s, 'algebra', 60, 60, { text: '3x', name: '3 支笔的钱' }), 'lhs'); R(s, W.add(s, 'algebra', 60, 200, { text: '27', name: '总价' }), 'rhs'); return s; },
+    alias: ['方程', '应用题', '设未知数'], hook: '设每支笔 x 元，3 支共 27 元。用方程卡写出方程，再接一台解，求出 x。',
+    shelf: ['eqcard', 'solve'],
+    build() { return W.blank(); },
     predict: null,
     milestones: [
-      { id: 'equation', say: '放一台方程台', score: 2, when: { count: { type: 'eqdesk', ge: 1 } },
-        hints: ['要解方程，先要一台方程台。', '「方程台」把左右两个式子变成方程。', '放一台方程台。'] },
-      { id: 'solve', say: '解得 x = 9，每支 9 元', score: 4, when: { type: 'eqdesk', port: 'x', op: '=', value: '9' },
-        hints: ['左边是 3 支笔的钱，右边是总价，两边相等。', '3x = 27，两边同除以 3。', '把左边 3x 接方程台的左边，右边 27 接右边。'] },
+      { id: 'equation', say: '放一张方程卡，把方程写下来', score: 2, when: { count: { type: 'eqcard', ge: 1 } },
+        hints: ['要解方程，先要把方程写下来。', '「方程卡」整行写方程，例如 2x + 1 = 7。', '放一张方程卡，写出 3x = 27。'] },
+      { id: 'solve', say: '解得 x = 9，每支 9 元', score: 4, when: { type: 'solve', port: 'x', op: '=', value: '9' },
+        hints: ['3 支笔的钱是 3x，等于总价 27。', '方程卡里写 3x = 27，再把它接到「解」上。', '3x = 27，两边同除以 3。'] },
     ],
     traps: [], goal: ['solve'],
     why: '设每支笔 x 元，3x = 27，x = 9。列方程的关键是找出等量关系：3 支笔的钱等于总价。',
@@ -193,17 +193,17 @@
   // 7.7 实际问题与一元一次方程（陷阱）：移项要变号
   U.problems.push({
     id: 'g7-equation-sign-trap', title: '2x + 5 = 17：移项时 +5 要变号', grade: 7, domain: '代数', essence: ['E4', 'E8'], points: ['7.7'], level: 'trap', rung: 3,
-    alias: ['方程', '移项', '变号'], hook: '把 +5 移到右边，它要变成几？算出 x，再检查一遍。',
-    shelf: ['algebra', 'eqdesk'],
-    build() { const s = W.blank(); R(s, W.add(s, 'algebra', 60, 60, { text: '2x + 5', name: '左边' }), 'lhs'); R(s, W.add(s, 'algebra', 60, 200, { text: '17', name: '右边' }), 'rhs'); return s; },
+    alias: ['方程', '移项', '变号'], hook: '把 +5 移到右边，它要变成几？算出 x，再用「验根」检查一遍。',
+    shelf: ['eqcard', 'eqstep', 'solve', 'eqcheck', 'num'],
+    build() { return W.blank(); },
     predict: null,
     milestones: [
-      { id: 'equation', say: '放一台方程台', score: 2, when: { count: { type: 'eqdesk', ge: 1 } },
-        hints: ['要解方程，先要一台方程台。', '「方程台」把左右两个式子变成方程。', '放一台方程台。'] },
-      { id: 'solve', say: '解得 x = 6', score: 4, when: { type: 'eqdesk', port: 'x', op: '=', value: '6' },
-        hints: ['移项：+5 移到右边要变成 −5。', '2x = 17 − 5 = 12，所以 x = 6。', '左边写 2x + 5，右边写 17。'] },
+      { id: 'equation', say: '放一张方程卡，写出 2x + 5 = 17', score: 2, when: { count: { type: 'eqcard', ge: 1 } },
+        hints: ['要解方程，先要把方程写下来。', '「方程卡」整行写方程。', '放一张方程卡，写出 2x + 5 = 17。'] },
+      { id: 'solve', say: '解得 x = 6', score: 4, when: { type: 'solve', port: 'x', op: '=', value: '6' },
+        hints: ['移项：+5 移到右边要变成 −5。', '2x = 17 − 5 = 12，所以 x = 6。', '把方程卡接到「解」上；也可以先接「变形」：两边同时减 5。'] },
     ],
-    traps: [{ id: 'nosign', wrong: '移项时 +5 没有变号，写成了 2x = 17 + 5，解得 x = 11。', when: { type: 'eqdesk', port: 'x', op: '=', value: '11' } }],
+    traps: [{ id: 'nosign', wrong: '移项时 +5 没有变号，写成了 2x = 17 + 5，解得 x = 11。', when: { type: 'solve', port: 'x', op: '=', value: '11' } }],
     goal: ['solve'],
     why: '2x + 5 = 17，移项得 2x = 17 − 5 = 12，x = 6。移项要变号：+5 移到另一边变成 −5。',
   });

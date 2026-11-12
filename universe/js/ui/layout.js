@@ -12,7 +12,7 @@
 
   const LAYOUT = Object.freeze({
     HD: 28,                       // 卡片标题栏高度
-    PORT_Y0: 40, PORT_DY: 22,     // 端口：第一个口离卡片顶边的距离；口与口之间的间距
+    PORT_Y0: G.U.CARD.PORT_Y0, PORT_DY: G.U.CARD.PORT_DY,   // 端口：第一个口离卡片顶边的距离；口与口之间的间距（和内核算卡片最小尺寸用的是同一组数）
     PILL_DY: 26, PILL_W: 92,      // 属性药丸：间距、宽度
     PILL_GAP: 8,                  // 属性药丸离卡片左边的距离
     PORT_LABEL_X: 12,             // 端口旁边的文字离卡片边的距离

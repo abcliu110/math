@@ -43,8 +43,25 @@
     for (const k in def.outputs) { def.outputs[k].label = def.outputs[k].label || k; }
     def.stateful = typeof def.step === 'function';
     if (def.stateful && !def.init) def.init = () => ({});
+    // 卡片至少要容得下所有的口和口旁边的文字（只增不减）：以前只看 size()，口多的器材（比如 6 个输出的方程台）口会掉到卡片外面，标签压住正文
+    if (typeof def.size === 'function' && def.workspaceRole === 'none' && !def.sizeFixed) {
+      const base = def.size;
+      def.size = function () { return U.fitCard(def, base.apply(this, arguments)); };
+    }
     U.types[id] = def;
     return def;
+  };
+
+  // 卡片尺寸规则（界面的 UI.LAYOUT 引用这里的数）：口的位置 = PORT_Y0 + 序号 × PORT_DY；口旁边的文字最多留 LABEL_MAXCH 个字的位置，其余用省略号
+  U.CARD = Object.freeze({ PORT_Y0: 40, PORT_DY: 22, PAD_BOTTOM: 16, LABEL_X: 12, LABEL_CHAR: 12, LABEL_MAXCH: 8, BODY_MIN_W: 64 });
+  U.fitCard = (def, sz) => {
+    const C = U.CARD, ins = Object.keys(def.inputs || {}), outs = Object.keys(def.outputs || {});
+    const chars = (o, ks) => Math.min(C.LABEL_MAXCH, Math.max(0, ...ks.map((k) => String(o[k].label || k).length)));
+    const side = (o, ks) => (ks.length ? C.LABEL_X + chars(o, ks) * C.LABEL_CHAR : 0);
+    const n = Math.max(ins.length, outs.length);
+    const minH = n ? C.PORT_Y0 + (n - 1) * C.PORT_DY + C.PAD_BOTTOM : 0;
+    const minW = side(def.inputs, ins) + (def.compactPorts ? 0 : side(def.outputs, outs)) + C.BODY_MIN_W;
+    return [Math.max(sz[0], minW), Math.max(sz[1], minH)];
   };
 
   U.defaultProps = (def, given) => {

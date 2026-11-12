@@ -12,6 +12,7 @@
       linsolve: {
         workspaceRole: 'none',
         handles: true,
+        hidden: true,   // 旧器材：被 packs/equation.js 的新一套取代，不再放在器材架上（旧存档和旧题照样能用）
         essence: ['E4', 'E8'],
         label: '解方程', prefix: '解', group: '关系', grades: [6, 8], alias: ['一元一次方程', 'ax+b=c', '移项'],
         props: {

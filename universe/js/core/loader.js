@@ -30,6 +30,7 @@
     'digitbench': 'packs/digitbench.js',
     'dissect': 'packs/dissect.js',
     'eqscale': 'packs/eqscale.js',
+    'equation': 'packs/equation.js',
     'estimate': 'packs/estimate.js',
     'exprbench': 'packs/exprbench.js',
     'figure': 'packs/figure.js',

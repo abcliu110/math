@@ -3,8 +3,8 @@
 'use strict';
 module.exports = {
   'g9-quad-solve-core'(h) {
-    const e = h.add('eqdesk', { by: 0 });
-    h.link(h.role('l'), e, 'L', 'p'); h.link(h.role('r'), e, 'R', 'p');
+    const e = h.add('eqcard', { text: 'x^2 - 5x + 6 = 0' }), q = h.add('solve', {});
+    h.link(e, q, 'eq', 'eq');
   },
   'g9-discriminant-core'(h) { h.set(h.role('q'), 'c', 4); },
   'g9-discriminant-trap'(h) { h.set(h.role('q'), 'c', -4); h.set(h.role('q'), 'c', 4); },

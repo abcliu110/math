@@ -44,6 +44,7 @@
       eqdesk: {
         workspaceRole: 'none',
         handles: true,
+        hidden: true,   // 旧器材：被 packs/equation.js 的新一套取代，不再放在器材架上（旧存档和旧题照样能用）
         essence: ['E4', 'E8'],
         label: '方程台', prefix: '程', group: '关系', grades: [6, 9], alias: ['解方程', '等式变形'],
         props: {
@@ -161,6 +162,7 @@
       system2: {
         workspaceRole: 'none',
         handles: true,
+        hidden: true,   // 旧器材：被 packs/equation.js 的新一套取代，不再放在器材架上（旧存档和旧题照样能用）
         essence: ['E4', 'E8'],
         label: '方程组台', prefix: '组', group: '关系', grades: [7, 9], alias: ['二元一次', '消元'],
         props: {
@@ -197,24 +199,34 @@
           lo: { type: 'num', label: '画出的最小值', default: -5, min: -20, max: 20, step: 1 },
           hi: { type: 'num', label: '画出的最大值', default: 5, min: -20, max: 20, step: 1 },
         },
-        inputs: { iv: { kind: 'interval', label: '解集' } },
+        inputs: { iv: { kind: 'solset', label: '解集' } },
         outputs: { inside: { dim: null, kind: 'bool', label: '试的数在解集里吗' } },
         icon: () => K.line(6, 26, 58, 26, { w: 2 }) + K.line(34, 20, 34, 32, { w: 2 }),
-        size: () => [220, 100],
+        size: () => [260, 110],
         compute: (c) => {
-          const iv = ivOf(c, 'iv'); if (!iv) { c.say('info', '接一个解集（区间）'); return {}; }
-          const inside = I.contains(iv, Q.fromNumber(c.props.probe));
-          c.say(inside ? 'ok' : 'info', I.show(iv) + '；' + c.props.probe + (inside ? ' 在里面' : ' 不在里面'));
+          const v = K.first(c.inp.iv); if (!v || v.kind !== 'solset') { c.say('info', '接一个解集'); return {}; }
+          const probe = Q.fromNumber(c.props.probe), inside = U.Solset.contains(v.data, probe);
+          c.say(inside ? 'ok' : 'info', U.Solset.show(v.data) + '；' + c.props.probe + (inside ? ' 在里面' : ' 不在里面'));
           return { inside: U.val('bool', inside) };
         },
         badge: (c) => (c.out.inside ? (c.out.inside.data ? '在里面' : '不在里面') : ''),
+        // 画法：区间画成一段粗线（闭端实心点、开端空心点，无穷端画到头）；几个孤立的解各画一个点；所有数画满；无解什么也不画
         draw: (c) => {
-          const iv = ivOf({ inp: (c.d && c.d.inp) || {} }, 'iv'), x0 = 14, x1 = c.w - 14, y = c.h / 2 + 4, sc = (v) => x0 + (v - c.props.lo) / (c.props.hi - c.props.lo) * (x1 - x0);
+          const sv = K.first(((c.d && c.d.inp) || {}).iv), S = sv && sv.kind === 'solset' ? sv.data : null;
+          const x0 = 14, x1 = c.w - 14, y = c.h / 2 + 6, sc = (v) => Math.max(x0, Math.min(x1, x0 + (v - c.props.lo) / (c.props.hi - c.props.lo) * (x1 - x0)));
+          const dot = (v, open) => K.circle(sc(v), y, 5, { fill: open ? 'var(--card)' : 'var(--accent)', stroke: 'var(--accent)', w: 2 });
           let s = K.line(x0, y, x1, y, { w: 2 });
-          if (iv) {
-            const a = iv.lo ? sc(Q.num(iv.lo)) : x0, b = iv.hi ? sc(Q.num(iv.hi)) : x1;
-            s += K.line(a, y, b, y, { w: 6, stroke: 'var(--accent)' });
-          }
+          for (let t = Math.ceil(c.props.lo); t <= c.props.hi; t++) s += K.line(sc(t), y - 4, sc(t), y + 4, { w: 1 });
+          s += K.text(sc(c.props.lo), y + 22, String(c.props.lo), { size: 10, fill: 'var(--dim)' }) + K.text(sc(c.props.hi), y + 22, String(c.props.hi), { size: 10, fill: 'var(--dim)' });
+          s += K.line(sc(c.props.probe), y - 12, sc(c.props.probe), y - 4, { w: 2, stroke: 'var(--ink)' });   // 试的那个数
+          if (!S) return s;
+          if (S.none) return s + K.text(c.w / 2, y - 18, '无解', { size: 14, weight: 700, fill: 'var(--dim)' });
+          if (S.items) return s + S.items.map((r) => dot(U.Real.approx(r), false)).join('');
+          const iv = S.all ? I.make(null, null, true, true) : S.iv;
+          const a = iv.lo ? sc(Q.num(iv.lo)) : x0, b = iv.hi ? sc(Q.num(iv.hi)) : x1;
+          s += K.line(a, y, b, y, { w: 6, stroke: 'var(--accent)' });
+          if (iv.lo) s += dot(Q.num(iv.lo), iv.loOpen);
+          if (iv.hi) s += dot(Q.num(iv.hi), iv.hiOpen);
           return s;
         },
       },
