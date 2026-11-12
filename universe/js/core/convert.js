@@ -20,6 +20,27 @@
     set: (arr) => U.SetV.of(arr.map(toQ)),           // 数列变成集合（去重、排序）
   });
 
+  // 数列、符号数、符号点接进管道：精确值不丢；做不到的返回 null（连线时提示“不能转换”）
+  U.KINDS.seq.to = Object.assign({}, U.KINDS.seq.to || {}, {
+    table: (arr) => U.Table.make([{ name: '序号' }, { name: '值' }], arr.map((x, i) => [Q(i + 1), toQ(x)])),   // 数列变成两列的表：序号、值
+    dist: (arr) => {                                    // 全是不太大的整数时，数列变成分布（统计量、直方图能接）
+      const xs = arr.map(toQ); if (!xs.length || !xs.every((x) => x.d === 1n)) return null;
+      const ns = xs.map((x) => Number(x.n)), lo = Math.min.apply(null, ns), hi = Math.max.apply(null, ns);
+      if (hi - lo > 200) return null;
+      const counts = new Array(hi - lo + 1).fill(0); ns.forEach((n) => { counts[n - lo]++; });
+      return { lo, counts };
+    },
+  });
+  U.KINDS.real.to = Object.assign({}, U.KINDS.real.to || {}, {
+    num: (r) => (r.b.n === 0n && r.p.n === 0n ? r.a : null),   // 只有“其实是有理数”的符号数才能直接当数
+  });
+  U.KINDS.spoint.to = Object.assign({}, U.KINDS.spoint.to || {}, {
+    point: (p) => (p.x.b.n === 0n && p.x.p.n === 0n && p.y.b.n === 0n && p.y.p.n === 0n ? { x: p.x.a, y: p.y.a } : null),
+  });
+  U.KINDS.point.to = Object.assign({}, U.KINDS.point.to || {}, {
+    spoint: (p) => ({ x: U.Real.from(p.x), y: U.Real.from(p.y) }),
+  });
+
   // 执行一次转换：返回新值；不能转换时返回 null
   U.convertVal = function (v, dst) {
     if (!v || v.kind === dst || dst === 'any') return v;

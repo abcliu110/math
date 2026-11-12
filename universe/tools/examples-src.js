@@ -173,4 +173,25 @@ module.exports = [
       ['x2', 'tab2', 'x', 'x'], ['pf', 'tab2', 'y', 'r'], ['tab2', 'mf', 'v', 'best'], ['tab2', 'mfx', 'v', 'at'], ['tab2', 'sc2', 't', 't'],
     ],
   },
+  {
+    id: 'ex-pipeline-lab', grade: 8, domain: '统计与概率', title: '综合 · 数据管道：数列、统计量、变换、拟合、根号和顶点',
+    hook: '一张复式统计表出来的数列，现在能一路接下去：求平均数、中位数、标准差；套式子 2x+1 变成新数列再求和；直接交给拟合器看趋势。下面两行是精确数：sin 45° 读成近似小数，抛物线顶点拆成 x、y 两个符号数。',
+    ents: [
+      ['tw', 'twoway', { data: '3,2,5;4,4,3;6,3,6' }],
+      ['avg', 'seqstat', { want: 2 }], ['med', 'seqstat', { want: 3 }], ['sd', 'seqstat', { want: 9 }],
+      ['mavg', 'meter', { digits: 2, label: '行合计的平均数' }], ['mmed', 'meter', { digits: 2, label: '中位数' }], ['msd', 'meter', { digits: 3, label: '标准差' }],
+      ['mp', 'seqmap', { f: '2x + 1' }], ['tot', 'seqstat', { want: 1 }], ['mtot', 'meter', { digits: 0, label: '2x+1 以后的和' }],
+      ['ft', 'fit', { model: 1, xcol: 0, ycol: 1 }], ['mk', 'meter', { digits: 2, label: '每多一行，合计变化' }],
+      ['tr', 'trig-table', { angle: 1 }], ['rr', 'realread', { digits: 4 }], ['mrr', 'meter', { digits: 4, label: 'sin 45° ≈' }],
+      ['qv', 'quad-vertex', { a: 1, b: -4, c: 5 }], ['sp', 'spread', {}], ['rx', 'realread', { digits: 2 }], ['mx', 'meter', { digits: 2, label: '顶点的 x' }],
+    ],
+    links: [
+      ['tw', 'avg', 's', 'rowsum'], ['tw', 'med', 's', 'rowsum'], ['tw', 'sd', 's', 'rowsum'],
+      ['avg', 'mavg', 'v', 'v'], ['med', 'mmed', 'v', 'v'], ['sd', 'msd', 'v', 'v'],
+      ['tw', 'mp', 's', 'rowsum'], ['mp', 'tot', 's', 's'], ['tot', 'mtot', 'v', 'v'],
+      ['tw', 'ft', 't', 'rowsum'], ['ft', 'mk', 'v', 'k'],
+      ['tr', 'rr', 'r', 'sin'], ['rr', 'mrr', 'v', 'v'],
+      ['qv', 'sp', 'p', 'v'], ['sp', 'rx', 'r', 'x'], ['rx', 'mx', 'v', 'v'],
+    ],
+  },
 ];

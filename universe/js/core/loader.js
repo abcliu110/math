@@ -59,6 +59,7 @@
     'ratio': 'packs/ratio.js',
     'road': 'packs/road.js',
     'scale': 'packs/scale.js',
+    'seqtools': 'packs/seqtools.js',
     'workspace': 'packs/workspace.js',
     'shapes': 'packs/shapes.js',
     'solid': 'packs/solid.js',

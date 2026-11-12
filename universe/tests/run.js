@@ -3325,6 +3325,71 @@ console.log('选择与真假运算（packs/logic.js）：“成立 / 不成立�
   });
 }
 
+console.log('数据管道（packs/seqtools.js）：数列、符号数、符号点能继续往下接');
+{
+  const mk = () => {
+    const s = W.blank(), add = (type, props) => { const r = W.act(s, { t: 'add', type, x: 0, y: 0, props }); if (!r.ok) throw new Error(r.why); return r.id; };
+    const link = (a, b, tp, fp) => { const r = W.act(s, { t: 'link', from: a, to: b, toPort: tp, fromPort: fp }); return r; };
+    return { s, add, link };
+  };
+  const show = (v) => U.showVal(v);
+  // 复式统计表 1,2,3;4,5,6：行合计 6、15，列合计 5、7、9
+  const stat = (want, data, extra) => {
+    const m = mk(), tw = m.add('twoway', { data: data || '1,2,3;4,5,6' }), st = m.add('seqstat', Object.assign({ want }, extra || {}));
+    const r = m.link(tw, st, 's', 'colsum'); if (!r.ok) throw new Error(r.why);
+    return W.evaluate(m.s)[st].out.v;
+  };
+  t('数列统计：列合计 5、7、9 的各项统计量（精确）', () => {
+    eq(show(stat(0)), '3'); eq(show(stat(1)), '21'); eq(show(stat(2)), '7'); eq(show(stat(3)), '7'); eq(show(stat(4)), '5');
+    eq(show(stat(5)), '9'); eq(show(stat(6)), '5'); eq(show(stat(7)), '4');
+    eq(show(stat(8)), '8/3', '总体方差');
+    eq(show(stat(10, null, { n: 2 })), '7');
+  });
+  t('数列统计：标准差是近似值（标 ≈），方差能整除时标准差精确', () => {
+    const sd = stat(9); truthy(sd.exact === false, '√(8/3) 不是有理数，应标近似'); truthy(/^≈1.63/.test(show(sd)), show(sd));
+    const sd2 = stat(9, '2,2;4,4;4,4;4,4;5,5;5,5;7,7;9,9'.replace(/;/g, ';'), {});   // 列合计 …
+    truthy(sd2 !== undefined);
+  });
+  t('数列统计：第 n 项超出范围、没接数列都不崩，只是没有结果', () => {
+    const m = mk(), tw = m.add('twoway', { data: '1,2;3,4' }), st = m.add('seqstat', { want: 10, n: 9 });
+    m.link(tw, st, 's', 'rowsum'); eq(W.evaluate(m.s)[st].out.v, undefined);
+    const m2 = mk(), st2 = m2.add('seqstat', {}); eq(W.evaluate(m2.s)[st2].out.v, undefined);
+  });
+  t('数列变换：每一项套式子；式子里有两个字母被拒绝', () => {
+    const m = mk(), tw = m.add('twoway', { data: '1,2,3;4,5,6' }), mp = m.add('seqmap', { f: 'x^2 + 1' });
+    m.link(tw, mp, 's', 'colsum'); eq(W.evaluate(m.s)[mp].out.s.data.map((q) => Q.show(q)), ['26', '50', '82']);
+    W.act(m.s, { t: 'set', id: mp, k: 'f', v: 'x + y' }); eq(W.evaluate(m.s)[mp].out.s, undefined);
+  });
+  t('数列能直接接数据表的口：取列、散点图、拟合器都认', () => {
+    const m = mk(), tw = m.add('twoway', { data: '1,2,3;4,5,6' }), col = m.add('column', { col: 1 });
+    const r = m.link(tw, col, 't', 'colsum'); truthy(r.ok, r.why);
+    eq(W.evaluate(m.s)[col].out.s.data.map((q) => Q.show(q)), ['5', '7', '9'], '序号、值两列，取第 2 列就是原来的数');
+    const ft = m.add('fit', {}); truthy(m.link(tw, ft, 't', 'colsum').ok, '拟合器接数列');
+  });
+  t('数列能接统计量的口（整数变成分布）；有分数的数列不行', () => {
+    const m = mk(), tw = m.add('twoway', { data: '1,2,3;4,5,6' }), st = m.add('stats', { want: 0 });
+    truthy(m.link(tw, st, 'd', 'colsum').ok);
+    eq(show(W.evaluate(m.s)[st].out.v), '≈7', '统计量的平均数本来就标近似');
+    const mp = m.add('seqmap', { f: 'x/2' }); m.link(tw, mp, 's', 'colsum');
+    { const s2 = m.add('stats', {}); m.link(mp, s2, 'd', 's'); eq(W.evaluate(m.s)[s2].out.v, undefined, '5/2 不是整数，没法变成分布'); }
+  });
+  t('符号数读数：sin 45° = √2/2 近似；sin 30° = 1/2 是有理数，精确，也能直接进读数', () => {
+    const m = mk(), tt = m.add('trig-table', { angle: 1 }), rd = m.add('realread', { digits: 4 });
+    truthy(m.link(tt, rd, 'r', 'sin').ok);
+    const v = W.evaluate(m.s)[rd].out.v; truthy(v.exact === false); truthy(/^≈0.7071/.test(show(v)), show(v));
+    { const mm = m.add('meter', {}); m.link(tt, mm, 'v', 'sin'); eq(W.evaluate(m.s)[mm].out.v, undefined, '√2/2 不能直接进读数'); }
+    const m2 = mk(), t2 = m2.add('trig-table', { angle: 0 }), r2 = m2.add('realread', {}), mt = m2.add('meter', {});
+    m2.link(t2, r2, 'r', 'sin'); eq(show(W.evaluate(m2.s)[r2].out.v), '1/2'); m2.link(t2, mt, 'v', 'sin'); eq(show(W.evaluate(m2.s)[mt].out.v), '1/2', '其实是有理数的符号数能直接进读数');
+  });
+  t('符号点读数：抛物线顶点拆成 x、y；顶点是有理点时能当“点”用', () => {
+    const m = mk(), vt = m.add('quad-vertex', { a: 1, b: -4, c: 5 }), sp = m.add('spread', {});
+    truthy(m.link(vt, sp, 'p', 'v').ok);
+    const o = W.evaluate(m.s)[sp].out; eq(show(o.x), '2'); eq(show(o.y), '1');
+    const ge = m.add('gpt', {}); void ge;
+    eq(U.convertVal(W.evaluate(m.s)[vt].out.v, 'point').data.x, Q(2), 'spoint → point');
+  });
+}
+
 console.log('示例菜单（problems/examples-data.js，由 tools/gen-examples.js 生成）');
 {
   const EX = U.EXAMPLES || [];
