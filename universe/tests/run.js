@@ -3444,6 +3444,43 @@ console.log('函数（packs/curves.js）：函数是一种值，能和方程、�
   });
 }
 
+console.log('整式（packs/polytools.js）：因式分解、整式运算、造方程');
+{
+  const mk = () => {
+    const s = W.blank(), add = (type, props) => { const r = W.act(s, { t: 'add', type, x: 0, y: 0, props }); if (!r.ok) throw new Error(r.why); return r.id; };
+    const link = (a, b, tp, fp) => W.act(s, { t: 'link', from: a, to: b, toPort: tp, fromPort: fp });
+    return { s, add, link };
+  };
+  const show = (v) => U.showVal(v);
+  const out = (m, id) => W.evaluate(m.s)[id].out;
+  const fac = (text) => { const m = mk(), a = m.add('algebra', { text }), f = m.add('factor', {}); const r = m.link(a, f, 'p', 'p'); if (!r.ok) throw new Error(r.why); return { m, f, o: out(m, f) }; };
+  t('因式分解：二次、三次、提公因式、平方差、完全平方', () => {
+    const cases = [['x^2-5x+6', '(x − 2)(x − 3)'], ['2x^2-8', '2(x − 2)(x + 2)'], ['x^3-x', 'x(x − 1)(x + 1)'], ['x^2+2x+1', '(x + 1)²'],
+      ['6x^2+5x+1', '(2x + 1)(3x + 1)'], ['x^3-6x^2+11x-6', '(x − 1)(x − 2)(x − 3)'], ['4x^2-9y^2', '(2x + 3y)(2x − 3y)'], ['2x+4', '2(x + 2)'], ['-x^2+1', '−(x − 1)(x + 1)']];
+    for (const [src, want] of cases) eq(show(fac(src).o.f), want, src);
+  });
+  t('因式分解：展开回去等于原式（自动当式子用）；分不动的部分原样留着', () => {
+    const r = fac('x^4-1'); eq(show(r.o.f), '(x − 1)(x + 1)(x² + 1)');
+    const m = r.m, a2 = m.add('algebra', { text: 'x^4-1' }), cmp = m.add('compare', {}); void a2; void cmp;
+    eq(U.convertVal(r.o.f, 'poly').data.terms.length, 2, '展开回 x⁴ − 1');
+    eq(show(fac('x^2+1').o.f), '(x² + 1)', '没有有理根的二次式留着');
+    eq(show(fac('x^2-2').o.f), '(x² − 2)', '√2 不是有理数，在有理数范围内分不下去');
+  });
+  t('整式运算：加减乘、带余除法（商和余式）、最大公因式', () => {
+    const mkop = (op, A, B) => { const m = mk(), a = m.add('algebra', { text: A }), b = m.add('algebra', { text: B }), p = m.add('polyop', { op }); m.link(a, p, 'a', 'p'); m.link(b, p, 'b', 'p'); return out(m, p); };
+    eq(show(mkop(2, 'x+1', 'x-1').r), 'x² − 1'); eq(show(mkop(0, 'x+1', 'x-1').r), '2x'); eq(show(mkop(1, 'x+1', 'x-1').r), '2');
+    const d = mkop(3, 'x^3-2x+3', 'x-1'); eq(show(d.r), 'x² + x − 1'); eq(show(d.rem), '2');
+    eq(show(mkop(4, 'x^2-1', 'x^2+2x+1').r), 'x + 1');
+    eq(mkop(3, 'x+y', 'x').r, undefined, '多个字母不做带余除法');
+  });
+  t('造方程：左右各接一个式子，得到方程，能接解', () => {
+    const m = mk(), l = m.add('algebra', { text: 'x^2' }), r = m.add('num', { n: 4 }), eqm = m.add('eqmake', {}), sv = m.add('solve', {});
+    truthy(m.link(l, eqm, 'l', 'p').ok); truthy(m.link(r, eqm, 'r', 'v').ok, '数字也能当式子');
+    eq(show(out(m, eqm).eq), 'x² = 4'); truthy(m.link(eqm, sv, 'eq', 'eq').ok); eq(show(out(m, sv).set), 'x = −2 或 x = 2');
+    W.act(m.s, { t: 'set', id: eqm, k: 'rel', v: 2 }); eq(show(out(m, eqm).eq), 'x² > 4');
+  });
+}
+
 console.log('示例菜单（problems/examples-data.js，由 tools/gen-examples.js 生成）');
 {
   const EX = U.EXAMPLES || [];

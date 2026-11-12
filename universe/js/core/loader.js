@@ -53,6 +53,7 @@
     'numtheory': 'packs/numtheory.js',
     'optimize': 'packs/optimize.js',
     'piece': 'packs/piece.js',
+    'polytools': 'packs/polytools.js',
     'primeblocks': 'packs/primeblocks.js',
     'proof': 'packs/proof.js',
     'proofsort': 'packs/proofsort.js',

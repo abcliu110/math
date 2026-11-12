@@ -215,4 +215,24 @@ module.exports = [
       ['lin', 'ineq', 'f', 'f'], ['ineq', 'nl2', 'iv', 'set'],
     ],
   },
+  {
+    id: 'ex-poly-lab', grade: 8, domain: '数与运算', title: '综合 · 整式实验室：因式分解、整式运算、造方程',
+    hook: 'x² − 5x + 6 分解成 (x − 2)(x − 3)，分解结果直接当式子用：除以 x − 2 得到 x − 3，也能和 0 连成方程，解出 x = 2 或 3，画在数轴上。右边是整式运算：x²−1 与 x²+2x+1 的最大公因式 x + 1，x³ − 2x + 3 除以 x − 1 的商和余式。',
+    ents: [
+      ['p1', 'algebra', { text: 'x^2-5x+6' }], ['f1', 'factor', {}], ['mn', 'meter', { digits: 0, label: '因式个数' }],
+      ['p2', 'algebra', { text: 'x-2' }], ['dv', 'polyop', { op: 3 }],
+      ['zero', 'num', { n: 0 }], ['em', 'eqmake', { rel: 0 }], ['sv', 'solve', {}], ['nl', 'numline_iv', { lo: -1, hi: 5, probe: 2 }],
+      ['g1', 'algebra', { text: 'x^2-1' }], ['g2', 'algebra', { text: 'x^2+2x+1' }], ['gd', 'polyop', { op: 4 }],
+      ['a', 'algebra', { text: 'x^3-2x+3' }], ['b', 'algebra', { text: 'x-1' }], ['dv2', 'polyop', { op: 3 }],
+      ['fx', 'factor', {}], ['x3', 'algebra', { text: 'x^3-x' }],
+    ],
+    links: [
+      ['p1', 'f1', 'p', 'p'], ['f1', 'mn', 'v', 'n'],
+      ['f1', 'dv', 'a', 'f'], ['p2', 'dv', 'b', 'p'],
+      ['p1', 'em', 'l', 'p'], ['zero', 'em', 'r'], ['em', 'sv', 'eq', 'eq'], ['sv', 'nl', 'iv', 'set'],
+      ['g1', 'gd', 'a', 'p'], ['g2', 'gd', 'b', 'p'],
+      ['a', 'dv2', 'a', 'p'], ['b', 'dv2', 'b', 'p'],
+      ['x3', 'fx', 'p', 'p'],
+    ],
+  },
 ];
