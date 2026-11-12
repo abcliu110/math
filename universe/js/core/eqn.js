@@ -163,9 +163,52 @@
   });
 
   // ---- 解集：解方程、解不等式的结果，统一成一种值 ----
-  //  { v: 未知数的名字, items: [符号数…]（几个孤立的解） | iv: 区间 | all: true（所有数都是解） | none: true（无解） }
+  //  { v: 未知数的名字, items: [符号数…]（几个孤立的解） | iv: 区间 | segs: [段…]（几段，端点是符号数）| all: true（所有数都是解） | none: true（无解） }
+  //  段 = { lo, hi, loOpen, hiOpen }，lo / hi 是符号数，null 表示无穷端；孤立的点是 lo = hi 的闭段。
   //  能自动变成：num（只有一个有理数解时）、interval（区间、单个解、所有数）；区间也能变成解集，所以旧的“解集（区间）”口还能接进新器材。
+  //  并、交、补（U.Solset.union / intersect / complement）把各种写法统一看成“若干段”再算，结果再整理回最简单的写法。
   const isRat = (r) => r.b.n === 0n && r.p.n === 0n;
+  const cmpR = (a, b) => { if (R.eq(a, b)) return 0; const d = R.approx(a) - R.approx(b); return d < 0 ? -1 : d > 0 ? 1 : 0; };
+  const cmpRQ = (r, q) => (isRat(r) ? Q.cmp(r.a, q) : (R.approx(r) - Q.num(q) < 0 ? -1 : 1));   // 无理数不会等于有理数
+  const seg = (lo, hi, loOpen, hiOpen) => ({ lo: lo || null, hi: hi || null, loOpen: !!loOpen, hiOpen: !!hiOpen });
+  // 起点、终点的大小比较：null 是无穷；数相同时，闭的起点更靠前、闭的终点更靠后
+  const cmpStart = (a, b) => { if (!a.lo || !b.lo) return a.lo === b.lo ? 0 : (a.lo ? 1 : -1); return cmpR(a.lo, b.lo) || (a.loOpen === b.loOpen ? 0 : (a.loOpen ? 1 : -1)); };
+  const cmpEnd = (a, b) => { if (!a.hi || !b.hi) return a.hi === b.hi ? 0 : (a.hi ? -1 : 1); return cmpR(a.hi, b.hi) || (a.hiOpen === b.hiOpen ? 0 : (a.hiOpen ? -1 : 1)); };
+  const nonEmpty = (s) => { if (!s.lo || !s.hi) return true; const c = cmpR(s.lo, s.hi); return c < 0 || (c === 0 && !s.loOpen && !s.hiOpen); };
+  const touches = (a, b) => {   // 排好序后，b 能不能接在 a 后面合成一段（重叠或刚好相接且至少一边是闭的）
+    if (!a.hi || !b.lo) return true;
+    const c = cmpR(b.lo, a.hi); return c < 0 || (c === 0 && (!a.hiOpen || !b.loOpen));
+  };
+  const normSegs = (segs) => {
+    const xs = segs.filter(nonEmpty).sort(cmpStart), out = [];
+    for (const s of xs) {
+      const last = out[out.length - 1];
+      if (last && touches(last, s)) { if (cmpEnd(s, last) > 0) { last.hi = s.hi; last.hiOpen = s.hiOpen; } } else out.push(Object.assign({}, s));
+    }
+    return out;
+  };
+  const segsOf = (S) => {
+    if (S.none) return [];
+    if (S.all) return [seg(null, null, true, true)];
+    if (S.segs) return S.segs;
+    if (S.items) return S.items.map((r) => seg(r, r, false, false));
+    const I = S.iv; return [seg(I.lo ? R.from(I.lo) : null, I.hi ? R.from(I.hi) : null, I.loOpen, I.hiOpen)];
+  };
+  const segRat = (s) => (!s.lo || isRat(s.lo)) && (!s.hi || isRat(s.hi));
+  const fromSegs = (v, segs) => {   // 整理成最简单的写法
+    const xs = normSegs(segs);
+    if (!xs.length) return Solset.of(v, { none: true });
+    if (xs.length === 1 && !xs[0].lo && !xs[0].hi) return Solset.of(v, { all: true });
+    if (xs.every((s) => s.lo && s.hi && cmpR(s.lo, s.hi) === 0)) return Solset.of(v, { items: xs.map((s) => s.lo) });
+    if (xs.length === 1 && segRat(xs[0])) return Solset.of(v, { iv: Interval.make(xs[0].lo && xs[0].lo.a, xs[0].hi && xs[0].hi.a, xs[0].loOpen, xs[0].hiOpen) });
+    return Solset.of(v, { segs: xs });
+  };
+  const showSeg = (s, v) => {
+    if (s.lo && s.hi && cmpR(s.lo, s.hi) === 0) return v + ' = ' + R.show(s.lo);
+    if (s.lo && s.hi) return R.show(s.lo) + (s.loOpen ? ' < ' : ' ≤ ') + v + (s.hiOpen ? ' < ' : ' ≤ ') + R.show(s.hi);
+    if (s.lo) return v + (s.loOpen ? ' > ' : ' ≥ ') + R.show(s.lo);
+    return v + (s.hiOpen ? ' < ' : ' ≤ ') + R.show(s.hi);
+  };
   const Solset = {
     of(v, o) { return Object.assign({ v: v || 'x' }, o); },
     items(v, list) {   // 孤立解：按大小排好、去重
@@ -173,16 +216,18 @@
       for (const r of list.slice().sort((a, b) => R.approx(a) - R.approx(b))) if (!out.some((x) => R.eq(x, r))) out.push(r);
       return Solset.of(v, { items: out });
     },
+    seg, segsOf, fromSegs, cmpR,
     show(S) {
       const v = S.v || 'x';
       if (S.all) return v + ' 取任何数都行';
       if (S.none) return '无解';
       if (S.items) return S.items.map((r) => v + ' = ' + R.show(r)).join(' 或 ');
-      const I = S.iv;
-      if (I.lo && I.hi && Q.eq(I.lo, I.hi)) return v + ' = ' + Q.show(I.lo);
-      if (I.lo && I.hi) return Q.show(I.lo) + (I.loOpen ? ' < ' : ' ≤ ') + v + (I.hiOpen ? ' < ' : ' ≤ ') + Q.show(I.hi);
-      if (I.lo) return v + (I.loOpen ? ' > ' : ' ≥ ') + Q.show(I.lo);
-      if (I.hi) return v + (I.hiOpen ? ' < ' : ' ≤ ') + Q.show(I.hi);
+      if (S.segs) return S.segs.map((s) => showSeg(s, v)).join(' 或 ');
+      const I = S.iv, q = (x) => Q.show(x).replace('-', '−');   // 负号用真正的减号，和根号写法（−√2）一致
+      if (I.lo && I.hi && Q.eq(I.lo, I.hi)) return v + ' = ' + q(I.lo);
+      if (I.lo && I.hi) return q(I.lo) + (I.loOpen ? ' < ' : ' ≤ ') + v + (I.hiOpen ? ' < ' : ' ≤ ') + q(I.hi);
+      if (I.lo) return v + (I.loOpen ? ' > ' : ' ≥ ') + q(I.lo);
+      if (I.hi) return v + (I.hiOpen ? ' < ' : ' ≤ ') + q(I.hi);
       return v + ' 取任何数都行';
     },
     // 一个有理数在不在解集里（符号数的解只在它恰好是有理数时才比得出来）
@@ -190,6 +235,11 @@
       if (S.all) return true;
       if (S.none) return false;
       if (S.iv) return Interval.contains(S.iv, q);
+      if (S.segs) return S.segs.some((s) => {
+        if (s.lo) { const c = cmpRQ(s.lo, q); if (c > 0 || (c === 0 && s.loOpen)) return false; }
+        if (s.hi) { const c = cmpRQ(s.hi, q); if (c < 0 || (c === 0 && s.hiOpen)) return false; }
+        return true;
+      });
       return S.items.some((r) => isRat(r) && Q.eq(r.a, q));
     },
     // 只有一个有理数解时的那个数
@@ -203,6 +253,26 @@
       if (S.all) return Interval.make(null, null, true, true);
       const q = Solset.single(S); return q ? Interval.make(q, q, false, false) : null;
     },
+    // 交：两个解集同时成立（不等式组）
+    intersect(A, B) {
+      const out = [];
+      for (const a of segsOf(A)) for (const b of segsOf(B)) {
+        const lo = cmpStart(a, b) >= 0 ? a : b, hi = cmpEnd(a, b) <= 0 ? a : b;
+        out.push(seg(lo.lo, hi.hi, lo.loOpen, hi.hiOpen));
+      }
+      return fromSegs(A.v, out);
+    },
+    // 并：至少一个成立
+    union(A, B) { return fromSegs(A.v, segsOf(A).concat(segsOf(B))); },
+    // 补：A 之外的所有数
+    complement(A) {
+      const xs = normSegs(segsOf(A)), out = [];
+      if (!xs.length) return Solset.of(A.v, { all: true });
+      if (xs[0].lo) out.push(seg(null, xs[0].lo, true, !xs[0].loOpen));
+      for (let i = 0; i + 1 < xs.length; i++) out.push(seg(xs[i].hi, xs[i + 1].lo, !xs[i].hiOpen, !xs[i + 1].loOpen));
+      const last = xs[xs.length - 1]; if (last.hi) out.push(seg(last.hi, null, !last.hiOpen, true));
+      return fromSegs(A.v, out);
+    },
   };
   U.Solset = Solset;
   U.defineKind('solset', {
@@ -212,6 +282,67 @@
     to: { num: (S) => Solset.single(S), interval: (S) => Solset.toInterval(S) },
   });
   U.KINDS.interval.to = Object.assign({}, U.KINDS.interval.to || {}, { solset: (I) => Solset.of('x', { iv: I }) });
+
+  // ---- 一元多项式的实根（精确）与不等式的符号表 ----
+  // 先找有理根（有理根定理，逐个剥掉），剩下的一次、二次式再精确求根（根可能是 a + b√c）；
+  // 剩下三次以上又没有有理根的，暂时解不了。返回 { roots: [{ r: 符号数, m: 重数 }…] } 或 { why }
+  const ratDivisors = (n) => {
+    n = Number(n < 0n ? -n : n); if (!isFinite(n) || n > 1e12) return null;
+    const out = []; for (let d = 1; d * d <= n; d++) if (n % d === 0) { out.push(d); if (d * d !== n) out.push(n / d); }
+    return out;
+  };
+  const gcdBig = (a, b) => { a = a < 0n ? -a : a; b = b < 0n ? -b : b; while (b) { [a, b] = [b, a % b]; } return a; };
+  Eqn.realRoots = (d, v) => {
+    let a = [];   // 系数，下标是次数
+    for (const t of d.terms) { const k = t.m[v] || 0; a[k] = Q.add(a[k] || Q(0), t.c); }
+    for (let i = 0; i < a.length; i++) if (!a[i]) a[i] = Q(0);
+    const roots = [], addRoot = (r, m) => { const hit = roots.find((x) => R.eq(x.r, r)); if (hit) hit.m += m; else roots.push({ r, m }); };
+    let zeros = 0; while (a.length > 1 && a[0].n === 0n) { a.shift(); zeros++; }
+    if (zeros) addRoot(R.from(Q(0)), zeros);
+    // 化成整数系数
+    let den = 1n; for (const c of a) den = (den / gcdBig(den, c.d)) * c.d;
+    a = a.map((c) => Q.mul(c, { n: den, d: 1n }));
+    const evalAt = (r) => a.reduceRight((s, c) => Q.add(Q.mul(s, r), c), Q(0));
+    for (let guard = 0; guard < 80 && a.length > 3; guard++) {
+      const ds0 = ratDivisors(a[0].n), dsn = ratDivisors(a[a.length - 1].n);
+      if (!ds0 || !dsn) return { why: '系数太大，暂时解不了' };
+      let found = null;
+      outer: for (const p of ds0) for (const q of dsn) for (const s of [1, -1]) { const r = Q.div(Q(s * p), Q(q)); if (evalAt(r).n === 0n) { found = r; break outer; } }
+      if (!found) return { why: '没有有理根的三次以上方程暂时解不了（只能解能分解出一次、二次式的）' };
+      const n = a.length - 1, qd = new Array(n); let carry = Q(0);
+      for (let i = n; i >= 1; i--) { carry = Q.add(a[i], Q.mul(carry, found)); qd[i - 1] = carry; }
+      a = qd; addRoot(R.from(found), 1);
+    }
+    if (a.length === 3) {
+      const r = Eqn.quadratic(a[2], a[1], a[0]);
+      if (r.kind === 'roots') { for (const x of r.roots) addRoot(x, 1); }
+    } else if (a.length === 2) addRoot(R.from(Q.neg(Q.div(a[0], a[1]))), 1);
+    // 二次式重根（判别式 0）会被当成同一个根加两次：重数自然是 2，不用再处理
+    roots.sort((x, y) => R.approx(x.r) - R.approx(y.r));
+    return { roots, lead: d.terms.reduce((best, t) => ((t.m[v] || 0) >= (best.m[v] || 0) ? t : best), d.terms[0]).c };
+  };
+  // 符号表：根把数轴分成几段，最右边的符号和首项系数相同，每过一个奇数重数的根符号变一次
+  Eqn.solveByRoots = (e, v) => {
+    const d = Eqn.diff(e), rr = Eqn.realRoots(d, v);
+    if (rr.why) return { kind: 'error', why: rr.why };
+    const roots = rr.roots, rel = e.rel;
+    if (rel === '=') return { kind: 'ok', set: roots.length ? Solset.items(v, roots.map((x) => x.r)) : Solset.of(v, { none: true }), steps: [roots.length ? '求出所有根：' + roots.map((x) => R.show(x.r) + (x.m > 1 ? '（重根）' : '')).join('、') : '没有实数根'] };
+    const want = rel === '>' || rel === '≥' ? 1 : -1, closed = rel === '≥' || rel === '≤';
+    const out = [];
+    let sign = rr.lead.n > 0n ? 1 : -1;   // 最右边一段的符号
+    // 从右往左：右边的段先处理
+    const bounds = roots.slice().reverse();
+    let hi = null, hiOpen = true;
+    const steps = ['先求根：' + (roots.length ? roots.map((x) => R.show(x.r)).join('、') : '没有实数根'), '最右边那一段的符号和首项系数一样：' + (sign > 0 ? '正' : '负')];
+    for (const b of bounds) {
+      if (sign === want) out.push(seg(b.r, hi, !closed, hiOpen));
+      if (closed) out.push(seg(b.r, b.r, false, false));
+      hi = b.r; hiOpen = !closed; if (b.m % 2 === 1) sign = -sign;
+    }
+    if (sign === want) out.push(seg(null, hi, true, hiOpen));
+    steps.push('每过一个奇数重数的根，符号变一次；挑出符合“' + rel + ' 0”的段');
+    return { kind: 'ok', set: fromSegs(v, out), steps };
+  };
 
   // 解方程 / 解不等式：一元一次（含不等式）、一元二次方程。返回 { kind:'ok', set, steps } | { kind:'error', why }
   Eqn.solve = (e, v) => {
@@ -225,13 +356,16 @@
       if (s.kind === 'none') return { kind: 'ok', steps: s.steps, set: Solset.of(v, { none: true }) };
       return { kind: 'error', why: s.why };
     }
-    if (deg === 2) {
+    if (deg === 2 && e.rel === '=') {
       const q = Eqn.solveQuadratic(e, v);
       if (q.kind === 'roots') return { kind: 'ok', steps: q.steps, set: Solset.items(v, q.roots) };
       if (q.kind === 'none') return { kind: 'ok', steps: q.steps, set: Solset.of(v, { none: true }) };
       return { kind: 'error', why: q.why };
     }
-    return { kind: 'error', why: '三次以上的方程暂时解不了' };
+    // 二次不等式、三次以上：求出所有实根，再用符号表（只要根都能精确写出来）
+    const g = Eqn.solveByRoots(e, v);
+    if (g.kind !== 'ok') return g;
+    return { kind: 'ok', set: g.set, steps: g.steps.map((x) => ({ say: x, rule: 'eq.both-sides' })) };
   };
 
   // ---- 函数 curve：y = f(x)，f 是 x 的多项式。直线、抛物线、一般多项式函数都是它。 ----

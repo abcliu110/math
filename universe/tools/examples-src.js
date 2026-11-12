@@ -235,4 +235,22 @@ module.exports = [
       ['x3', 'fx', 'p', 'p'],
     ],
   },
+  {
+    id: 'ex-ineq-lab', grade: 9, domain: '关系', title: '综合 · 不等式实验室：不等式组、二次不等式、三次方程、解集的并交补',
+    hook: '解集现在可以是几段：不等式组 2x − 1 > 0 且 x − 4 < 0 用“解集运算”取交集，得到 1/2 < x < 4；二次不等式 x² − x − 6 > 0 解出两段 x < −2 或 x > 3，再取“甲之外”得到 −2 ≤ x ≤ 3；x² − 2 < 0 的端点是根号 ±√2；三次方程 x³ − 6x² + 11x − 6 = 0 找到三个根。全都画在解集数轴上。',
+    ents: [
+      ['e1', 'eqcard', { text: '2x - 1 > 0' }], ['s1', 'solve', {}], ['e2', 'eqcard', { text: 'x - 4 < 0' }], ['s2', 'solve', {}],
+      ['and', 'setop', { op: 0 }], ['nl1', 'numline_iv', { lo: -3, hi: 6, probe: 2 }],
+      ['e3', 'eqcard', { text: 'x^2 - x - 6 > 0' }], ['s3', 'solve', {}], ['nl2', 'numline_iv', { lo: -4, hi: 5, probe: 0 }],
+      ['out', 'setop', { op: 2 }], ['nl3', 'numline_iv', { lo: -4, hi: 5, probe: 0 }],
+      ['e4', 'eqcard', { text: 'x^2 - 2 < 0' }], ['s4', 'solve', {}], ['nl4', 'numline_iv', { lo: -3, hi: 3, probe: 1 }],
+      ['e5', 'eqcard', { text: 'x^3 - 6x^2 + 11x - 6 = 0' }], ['s5', 'solve', {}], ['nl5', 'numline_iv', { lo: -1, hi: 4, probe: 2 }],
+    ],
+    links: [
+      ['e1', 's1', 'eq', 'eq'], ['e2', 's2', 'eq', 'eq'], ['s1', 'and', 'a', 'set'], ['s2', 'and', 'b', 'set'], ['and', 'nl1', 'iv', 'set'],
+      ['e3', 's3', 'eq', 'eq'], ['s3', 'nl2', 'iv', 'set'], ['s3', 'out', 'a', 'set'], ['out', 'nl3', 'iv', 'set'],
+      ['e4', 's4', 'eq', 'eq'], ['s4', 'nl4', 'iv', 'set'],
+      ['e5', 's5', 'eq', 'eq'], ['s5', 'nl5', 'iv', 'set'],
+    ],
+  },
 ];

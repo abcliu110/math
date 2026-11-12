@@ -3149,13 +3149,13 @@ console.log('方程与不等式（packs/equation.js）：一种“方程”、�
   t('解：一次方程、不等式、二次方程（精确根）、恒等式、无解', () => {
     eq(solved('2x + 1 = 7').set, 'x = 3'); eq(solved('2x + 1 = 7').x, '3');
     eq(solved('3x - 5 >= x + 1').set, 'x ≥ 3'); eq(solved('2x + 1 > 7').set, 'x > 3');
-    eq(solved('-2x < 6').set, 'x > -3', '两边除以负数，不等号反向');
+    eq(solved('-2x < 6').set, 'x > −3', '两边除以负数，不等号反向');
     eq(solved('x^2 - 5x + 6 = 0').set, 'x = 2 或 x = 3'); eq(solved('x^2 - 2 = 0').set, 'x = −√2 或 x = √2');
     eq(solved('x^2 - 2x + 1 = 0').set, 'x = 1', '两个根相同只留一个'); eq(solved('x^2 = -1').set, '无解');
     eq(solved('x + 1 = x + 1').set, 'x 取任何数都行'); eq(solved('x + 1 = x + 2').set, '无解');
   });
   t('解：不会解的只提示、不报错、没有输出；字母名对不上时自动用方程里唯一的字母', () => {
-    const a = solved('x^3 = 1'); truthy(!a.set && a.sig.includes('三次'), a.sig);
+    const a = solved('x^3 = 2'); truthy(!a.set && a.sig.includes('三次'), a.sig);   // ∛2 不是有理数，暂时解不了
     const b = solved('x + y = 3'); truthy(!b.set && b.sig.includes('y'), b.sig);
     eq(solved('2t + 1 = 7').x, '3', '只有一个字母 t，自动用 t');
   });
@@ -3423,7 +3423,7 @@ console.log('函数（packs/curves.js）：函数是一种值，能和方程、�
     const g = m.add('fncard', { f: 'x - 1' }); m.link(g, z, 'g', 'f');
     eq(show(out(m, z).set), 'x = 1 或 x = 4', 'x² − 4x + 3 = x − 1');
     const nl = m.add('numline_iv', {}); truthy(m.link(z, nl, 'iv', 'set').ok);
-    const m2 = mk(), a = m2.add('fncard', { f: '2x + 1' }), z2 = m2.add('fnsolve', { rel: 2 }); m2.link(a, z2, 'f', 'f'); eq(show(out(m2, z2).set), 'x > -1/2');
+    const m2 = mk(), a = m2.add('fncard', { f: '2x + 1' }), z2 = m2.add('fnsolve', { rel: 2 }); m2.link(a, z2, 'f', 'f'); eq(show(out(m2, z2).set), 'x > −1/2');
   });
   t('函数图像：前两条的交点个数；试的 x 处的 y；没接东西不崩', () => {
     const m = mk(), a = m.add('fncard', { f: 'x^2 - 4x + 3' }), b = m.add('fncard', { f: 'x - 1' }), g = m.add('fngraph', { probe: 2 });
@@ -3478,6 +3478,49 @@ console.log('整式（packs/polytools.js）：因式分解、整式运算、造�
     truthy(m.link(l, eqm, 'l', 'p').ok); truthy(m.link(r, eqm, 'r', 'v').ok, '数字也能当式子');
     eq(show(out(m, eqm).eq), 'x² = 4'); truthy(m.link(eqm, sv, 'eq', 'eq').ok); eq(show(out(m, sv).set), 'x = −2 或 x = 2');
     W.act(m.s, { t: 'set', id: eqm, k: 'rel', v: 2 }); eq(show(out(m, eqm).eq), 'x² > 4');
+  });
+}
+
+console.log('解集的并交补与高次不等式（js/core/eqn.js、packs/equation.js）');
+{
+  const sol = (text0) => { const text = text0.replace('>=', '≥').replace('<=', '≤'); const r = U.Eqn.solve(U.Eqn.make ? (() => { const i = text.search(/[<>≤≥=]/); const rel = /[≤≥]/.test(text[i]) ? text[i] : text[i]; return U.Eqn.make(U.Poly.parse(text.slice(0, i)), U.Poly.parse(text.slice(i + 1)), rel); })() : null, 'x'); return r.kind === 'ok' ? U.Solset.show(r.set) : 'ERR ' + r.why; };
+  t('二次不等式：符号表给出两段、一段、全体、无解、一点', () => {
+    eq(sol('x^2-x-6>0'), 'x < −2 或 x > 3'); eq(sol('x^2-x-6≤0'), '−2 ≤ x ≤ 3'); eq(sol('x^2-x-6<0'), '−2 < x < 3');
+    eq(sol('x^2>=0'), 'x 取任何数都行'); eq(sol('x^2<0'), '无解'); eq(sol('(x-1)^2<=0'), 'x = 1'); eq(sol('(x-1)^2>0'), 'x < 1 或 x > 1');
+    eq(sol('-x^2+1>0'), '−1 < x < 1');
+  });
+  t('二次不等式：根是根号时端点也精确写出', () => {
+    eq(sol('x^2-2<0'), '−√2 < x < √2'); eq(sol('x^2-2>=0'), 'x ≤ −√2 或 x ≥ √2');
+  });
+  t('三次及以上：有有理根就能解（方程和不等式）；没有有理根只提示', () => {
+    eq(sol('x^3-6x^2+11x-6=0'), 'x = 1 或 x = 2 或 x = 3'); eq(sol('x^3=1'), 'x = 1');
+    eq(sol('x^3-x>=0'), '−1 ≤ x ≤ 0 或 x ≥ 1'); eq(sol('x^3-6x^2+11x-6<0'), 'x < 1 或 2 < x < 3');
+    eq(sol('(x-1)^2*(x+2)>0'.replace('*', '')), '-2 < x < 1 或 x > 1'.replace('-2', '−2'));
+    truthy(sol('x^3=2').startsWith('ERR'), '∛2 暂时不行');
+    eq(sol('x^4-5x^2+4=0'), 'x = −2 或 x = −1 或 x = 1 或 x = 2');
+  });
+  t('解集的交、并、补：不等式组、至少一个成立、之外', () => {
+    const S = U.Solset, E = U.Eqn, P = U.Poly;
+    const sv = (a, rel) => E.solve(E.make(P.parse(a), P.const(U.Q(0)), rel), 'x').set;
+    const A = sv('2x-1', '>'), B = sv('x-4', '<');   // x > 1/2，x < 4
+    eq(S.show(S.intersect(A, B)), '1/2 < x < 4'); eq(S.show(S.union(A, B)), 'x 取任何数都行');
+    const C = sv('x^2-x-6', '>');   // x < −2 或 x > 3
+    eq(S.show(S.intersect(C, sv('x', '>'))), 'x > 3'); eq(S.show(S.complement(C)), '−2 ≤ x ≤ 3');
+    eq(S.show(S.intersect(sv('x-1', '>'), sv('x-1', '<'))), '无解'); eq(S.show(S.union(sv('x-1', '>'), sv('x-1', '<'))), 'x < 1 或 x > 1');
+    eq(S.show(S.union(sv('x-1', '>'), sv('x-1', '='))), 'x ≥ 1', '边界点并进去变成闭端');
+    eq(S.show(S.complement(S.of('x', { none: true }))), 'x 取任何数都行');
+    truthy(S.contains(C, U.Q(4)) && !S.contains(C, U.Q(0)) && S.contains(sv('x^2-2', '<'), U.Q(1)), 'contains 对几段也对');
+  });
+  t('解集运算器材：不等式组 2x − 1 > 0 且 x − 4 < 0；甲减乙；没接东西不崩', () => {
+    const m = (() => { const s = W.blank(), add = (type, props) => { const r = W.act(s, { t: 'add', type, x: 0, y: 0, props }); if (!r.ok) throw new Error(r.why); return r.id; }; return { s, add }; })();
+    const e1 = m.add('eqcard', { text: '2x - 1 > 0' }), e2 = m.add('eqcard', { text: 'x - 4 < 0' }), s1 = m.add('solve', {}), s2 = m.add('solve', {}), op = m.add('setop', {});
+    const L = (a, b, tp, fp) => W.act(m.s, { t: 'link', from: a, to: b, toPort: tp, fromPort: fp });
+    L(e1, s1, 'eq', 'eq'); L(e2, s2, 'eq', 'eq'); truthy(L(s1, op, 'a', 'set').ok); truthy(L(s2, op, 'b', 'set').ok);
+    const o = () => W.evaluate(m.s)[op].out.set;
+    eq(U.showVal(o()), '1/2 < x < 4');
+    W.act(m.s, { t: 'set', id: op, k: 'op', v: 3 }); eq(U.showVal(o()), 'x ≥ 4', '甲减乙：x > 1/2 里去掉 x < 4');
+    W.act(m.s, { t: 'set', id: op, k: 'op', v: 2 }); eq(U.showVal(o()), 'x ≤ 1/2');
+    const m2 = W.blank(); const id = W.act(m2, { t: 'add', type: 'setop', x: 0, y: 0, props: {} }).id; eq(W.evaluate(m2)[id].out.set, undefined);
   });
 }
 

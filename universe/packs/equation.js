@@ -204,6 +204,34 @@
         badge: (c) => (c.out.x && c.out.y ? Q.show(c.out.x.data) + '，' + Q.show(c.out.y.data) : ''),
         draw: (c) => K.text(c.w / 2, c.h / 2 + 10, c.out.x && c.out.y ? 'x=' + Q.show(c.out.x.data) + '  y=' + Q.show(c.out.y.data) : '…', { size: 20, weight: 700 }),
       },
+
+      // ---------------- 解集运算：交（不等式组）、并、补、甲减乙 ----------------
+      setop: {
+        workspaceRole: 'none', handles: true, essence: ['E8', 'E4'],
+        label: '解集运算', prefix: '集', group: '关系', grades: [7, 9], alias: ['不等式组', '交集', '并集', '补集', '公共部分', '同时成立', '至少一个成立'],
+        props: {
+          op: { type: 'choice', label: '运算', default: 0, choices: ['交（同时成立）', '并（至少一个成立）', '甲之外', '甲减乙'] },
+          label: { type: 'text', label: '标签', default: '' },
+        },
+        lint: { minProps: 2, why: '解集运算只有“运算”和标签两个属性' },
+        inputs: { a: { kind: 'solset', label: '甲' }, b: { kind: 'solset', label: '乙' } },
+        outputs: { set: { dim: null, kind: 'solset', label: '结果' } },
+        icon: () => K.circle(24, 32, 14, { stroke: 'var(--ink)', w: 2 }) + K.circle(40, 32, 14, { stroke: 'var(--ink)', w: 2 }),
+        size: () => [230, 110],
+        compute: (c) => {
+          const a = K.first(c.inp.a), b = K.first(c.inp.b), S = U.Solset;
+          if (!a) { c.say('info', '接一个解集作甲'); return {}; }
+          const op = c.props.op;
+          if (op === 2) return { set: U.val('solset', S.complement(a.data)) };
+          if (!b) { c.say('info', '再接一个解集作乙'); return {}; }
+          const A = a.data, B = b.data;
+          const r = op === 0 ? S.intersect(A, B) : op === 1 ? S.union(A, B) : S.intersect(A, S.complement(B));
+          c.say('ok', S.show(r));
+          return { set: U.val('solset', r) };
+        },
+        badge: (c) => (c.out.set ? U.showVal(c.out.set) : ''),
+        draw: (c) => K.text(c.w / 2, c.h / 2 + 6, c.out.set ? U.showVal(c.out.set) : '—', { size: 16, weight: 700, fill: c.out.set ? 'var(--ink)' : 'var(--dim)' }),
+      },
     },
   });
 })(typeof globalThis !== 'undefined' ? globalThis : window);

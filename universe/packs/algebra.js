@@ -222,6 +222,15 @@
           if (!S) return s;
           if (S.none) return s + K.text(c.w / 2, y - 18, '无解', { size: 14, weight: 700, fill: 'var(--dim)' });
           if (S.items) return s + S.items.map((r) => dot(U.Real.approx(r), false)).join('');
+          if (S.segs) {   // 几段（端点可以是根号）：每段画一条粗线，端点按开闭画空心、实心点
+            for (const g of S.segs) {
+              const lo = g.lo ? U.Real.approx(g.lo) : null, hi = g.hi ? U.Real.approx(g.hi) : null;
+              s += K.line(lo === null ? x0 : sc(lo), y, hi === null ? x1 : sc(hi), y, { w: 6, stroke: 'var(--accent)' });
+              if (lo !== null) s += dot(lo, g.loOpen);
+              if (hi !== null) s += dot(hi, g.hiOpen);
+            }
+            return s;
+          }
           const iv = S.all ? I.make(null, null, true, true) : S.iv;
           const a = iv.lo ? sc(Q.num(iv.lo)) : x0, b = iv.hi ? sc(Q.num(iv.hi)) : x1;
           s += K.line(a, y, b, y, { w: 6, stroke: 'var(--accent)' });
