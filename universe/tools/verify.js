@@ -79,6 +79,8 @@ async function checkDist() {
   if (!runScript('tests/ui-select2.js', 'tests/ui-select2.js', pwEnv)) bail();       // V3 剩余：选中提示、Alt 点击选第二个、Tab 切换、优先级（线段 > 填充），真实鼠标和键盘
   if (!runScript('tests/ui-snap2.js', 'tests/ui-snap2.js', pwEnv)) bail();           // V4 剩余：拖动吸附到中点、交点、垂足（建构造器材、改接、一步撤销）、吸附开关、Alt 不吸附，真实鼠标
   if (!runScript('tests/ui-balance.js', 'tests/ui-balance.js', pwEnv)) bail();       // 天平与方程：真实鼠标拖砝码、拖盒子、两边一起做
+  if (!runScript('tests/ui-numline.js', 'tests/ui-numline.js', pwEnv)) bail();   // 数轴操作台：真实鼠标拖起点、拖落点、拖分数点、拖区间端点
+  if (!runScript('tests/ui-ratio.js', 'tests/ui-ratio.js', pwEnv)) bail();   // 分数条与比：真实鼠标拖涂色的边、点 ＋ 切份、拖双数轴上的点
   if (!runScript('tests/ui-areamodel.js', 'tests/ui-areamodel.js', pwEnv)) bail();   // 面积模型（样板操作台）和器材把手：真实鼠标拖边、切、改分数
   if (!runScript('tests/ui-shapes.js', 'tests/ui-shapes.js', pwEnv)) bail();         // 常见图形、顶点编辑、直接拖出辅助线（真实鼠标和键盘）；含画布横纵比例回归
   if (!runScript('tests/ui-export.js', 'tests/ui-export.js', pwEnv)) bail();         // 2.12/V10：导出图片（真实鼠标点菜单，台面和专注工作区各一次下载，.png、大小 > 0）

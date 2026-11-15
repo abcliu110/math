@@ -392,5 +392,34 @@
     },
   };
 
+  // 数轴：减法是往左走，可以走过 0
+  D.numlinebench = {
+    caps: ['数轴上，往右是加，往左是减', '2 − 5：从 2 出发', '往左跳 5 步，走过了 0', '落在 −3：2 − 5 = −3'],
+    draw(st) {
+      const X = (v) => 180 + v * 28; let s = Ln(20, 100, 340, 100, { w: 2 });
+      for (let v = -5; v <= 5; v++) s += Ln(X(v), 94, X(v), 106, { w: v === 0 ? 2.5 : 1.2 }) + T(X(v), 124, v < 0 ? '−' + (-v) : String(v), { w: v === 0 ? 700 : 400 });
+      if (st >= 1) s += Ci(X(2), 100, 6, B, { s: INK });
+      const n = st >= 2 ? 5 : 0;
+      for (let i = 0; i < n; i++) { const a = X(2 - i), b = X(1 - i); s += '<path d="M' + a + ' 92 Q' + (a + b) / 2 + ' 62 ' + b + ' 92" fill="none" stroke="' + P + '" stroke-width="2"/>'; }
+      if (st >= 3) s += Ci(X(-3), 100, 7, GR, { s: INK }) + T(180, 160, '2 − 5 = −3', { s: 17, w: 700, f: GR });
+      if (st === 0) s += Ar(200, 60, 290, 60, { s: GR }) + T(245, 50, '加', { f: GR, w: 700 }) + Ar(160, 60, 70, 60, { s: RD }) + T(115, 50, '减', { f: RD, w: 700 });
+      return s;
+    },
+  };
+
+  // 分数条：份数越多，每份越小；再切细，长度不变
+  D.ratiobench = {
+    caps: ['两条一样长，都是 1', '切成 2 份涂 1 份，切成 3 份涂 1 份', '上下一比：1/2 比 1/3 长', '把 1/2 的每份再切两半：2/4，一样长'],
+    draw(st) {
+      const x = 40, w = 280, bar = (y, d, n, col) => { let s = Rc(x, y, w, 30, '#fff', { s: INK }) + (n ? Rc(x, y, w * n / d, 30, col, { o: 0.6 }) : ''); for (let i = 1; i < d; i++) s += Ln(x + w * i / d, y, x + w * i / d, y + 30, { w: 1 }); return s + Rc(x, y, w, 30, 'none', { s: INK, sw: 1.6 }); };
+      let s = bar(40, st >= 3 ? 4 : st >= 1 ? 2 : 1, st >= 3 ? 2 : st >= 1 ? 1 : 0, A) + bar(100, st >= 1 ? 3 : 1, st >= 1 ? 1 : 0, B);
+      if (st >= 1) s += T(336, 61, st >= 3 ? '2/4' : '1/2', { a: 'start', w: 700 }) + T(336, 121, '1/3', { a: 'start', w: 700 });
+      if (st >= 2) s += Ln(x + w / 2, 34, x + w / 2, 136, { s: P, d: '4 3' }) + Ln(x + w / 3, 94, x + w / 3, 136, { s: P, d: '4 3' });
+      if (st === 2) s += T(180, 164, '1/2 > 1/3', { s: 17, w: 700, f: P });
+      if (st === 3) s += T(180, 164, '1/2 = 2/4', { s: 17, w: 700, f: GR });
+      return s;
+    },
+  };
+
   UI.Demo = D;
 })(typeof globalThis !== 'undefined' ? globalThis : window);
