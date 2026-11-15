@@ -39,7 +39,7 @@
       const hit = '<circle cx="' + g.x + '" cy="' + g.y + '" r="' + (r + L.GRIP.pad) + '" fill="transparent"/>';
       const mark = g.shape === 'bar-v' ? '<rect x="' + (g.x - 4) + '" y="' + (g.y - r - 5) + '" width="8" height="' + (2 * r + 10) + '" rx="4" fill="#fff" stroke="var(--blue)" stroke-width="2.5"/>'
         : g.shape === 'bar-h' ? '<rect x="' + (g.x - r - 5) + '" y="' + (g.y - 4) + '" width="' + (2 * r + 10) + '" height="8" rx="4" fill="#fff" stroke="var(--blue)" stroke-width="2.5"/>'
-        : '<circle cx="' + g.x + '" cy="' + g.y + '" r="' + r + '" fill="#fff" stroke="var(--blue)" stroke-width="2.5"/>';
+        : '<circle cx="' + g.x + '" cy="' + g.y + '" r="' + r + '" fill="' + (g.ghost ? 'transparent' : '#fff') + '" stroke="var(--blue)" stroke-width="' + (g.ghost ? 2 : 2.5) + '"' + (g.ghost ? ' stroke-dasharray="3 2"' : '') + '/>';
       return '<g class="grip" data-grip="' + SG.escA(g.id) + '" style="cursor:' + cur + '">' + tip + hit + mark + (g.text ? '<text x="' + g.x + '" y="' + (g.y + 4) + '" text-anchor="middle" font-size="11" font-weight="700" fill="var(--blue)" style="pointer-events:none">' + K.esc(g.text) + '</text>' : '') + '</g>';
     }).join('');
   }
@@ -53,7 +53,7 @@
     try { badge = SG.isWsDef(e.type) ? (SG.wsSteps(e).length ? SG.wsSteps(e).length + ' 步' : '') : d.badge ? d.badge(c) : ''; } catch (x) { badge = ''; }
     let h = '<div class="card' + (S.sel === e.id ? ' sel' : '') + '" data-id="' + e.id + '" style="left:' + g.x + 'px;top:' + g.y + 'px;width:' + g.w + 'px;height:' + g.h + 'px">';
     // 器材自己画交互、又有要填的属性（先猜、写例子）时，标题栏放一个入口，点一下打开属性面板（不用靠双击发现）
-    const fillable = d.compactPorts && Object.keys(d.props).some((k) => d.props[k].write && !d.props[k].hidden && !(D[e.id] && D[e.id].driven[k]));
+    const fillable = d.compactPorts && !d.grips && Object.keys(d.props).some((k) => d.props[k].write && !d.props[k].hidden && !(D[e.id] && D[e.id].driven[k]));
     const chip = fillable ? '<span class="gchip' + (c.masked ? ' ask' : '') + '" data-card-insp="' + e.id + '">' + (c.masked ? '✎ 先猜' : '✎ 填写') + '</span>' : '';
     // “怎么玩”：第一次出现时自动在卡片下方展开（3 步，不盖住器材），点“收起”；标题栏的“? 怎么玩”随时再开
     const HT = UI.Howto && UI.Howto[e.type];

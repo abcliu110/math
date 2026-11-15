@@ -207,6 +207,14 @@
       // 器材上的把手：按下开始拖（改的是器材声明里这个把手对应的属性；拖动中只是预览，松手记成一步）
       const gp = t.closest('[data-grip]');
       if (gp && card.contains(gp) && !SG.isWsDef(e.type)) { ev.preventDefault(); ev.stopPropagation(); S.sel = id; S.selLink = null; SG.gripDown(e, gp, ev); return; }
+      // 器材画的按钮一次改几个属性：data-pick-set 是 encodeURIComponent(JSON) 的 { 属性: 值 }；整串是一步
+      const ps = t.closest('[data-pick-set]');
+      if (ps && card.contains(ps)) {
+        let o = null; try { o = JSON.parse(decodeURIComponent(ps.dataset.pickSet)); } catch (x) { o = null; }
+        S.sel = id; S.selLink = null;
+        if (o && Object.keys(o).length) UI.Intent.run('params', { ops: Object.keys(o).map((k) => ({ id, k, v: o[k] })) });
+        UI.Panels.renderInsp(); return;
+      }
       const pk = t.closest('[data-pick-k]');
       if (pk && card.contains(pk)) { S.sel = id; S.selLink = null; UI.Intent.run('set', { id, k: pk.dataset.pickK, v: Number(pk.dataset.pickV) }); UI.Panels.renderInsp(); return; }
       if (SG.isWsDef(e.type)) {

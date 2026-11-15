@@ -18,6 +18,7 @@
     'arith': 'packs/arith.js',
     'arithbench': 'packs/arithbench.js',
     'asn': 'packs/asn.js',
+    'balancebench': 'packs/balancebench.js',
     'barmodel': 'packs/barmodel.js',
     'compass': 'packs/compass.js',
     'conjecture': 'packs/conjecture.js',

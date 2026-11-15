@@ -78,6 +78,7 @@ async function checkDist() {
   if (!runScript('tests/ui-snap.js', 'tests/ui-snap.js', pwEnv)) bail();             // V4：吸附到构造点（画线吸附到中点，背后建 gmid；拖动端点后跟着动）
   if (!runScript('tests/ui-select2.js', 'tests/ui-select2.js', pwEnv)) bail();       // V3 剩余：选中提示、Alt 点击选第二个、Tab 切换、优先级（线段 > 填充），真实鼠标和键盘
   if (!runScript('tests/ui-snap2.js', 'tests/ui-snap2.js', pwEnv)) bail();           // V4 剩余：拖动吸附到中点、交点、垂足（建构造器材、改接、一步撤销）、吸附开关、Alt 不吸附，真实鼠标
+  if (!runScript('tests/ui-balance.js', 'tests/ui-balance.js', pwEnv)) bail();       // 天平与方程：真实鼠标拖砝码、拖盒子、两边一起做
   if (!runScript('tests/ui-areamodel.js', 'tests/ui-areamodel.js', pwEnv)) bail();   // 面积模型（样板操作台）和器材把手：真实鼠标拖边、切、改分数
   if (!runScript('tests/ui-shapes.js', 'tests/ui-shapes.js', pwEnv)) bail();         // 常见图形、顶点编辑、直接拖出辅助线（真实鼠标和键盘）；含画布横纵比例回归
   if (!runScript('tests/ui-export.js', 'tests/ui-export.js', pwEnv)) bail();         // 2.12/V10：导出图片（真实鼠标点菜单，台面和专注工作区各一次下载，.png、大小 > 0）

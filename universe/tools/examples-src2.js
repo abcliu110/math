@@ -58,7 +58,7 @@ const BASE = [
       ['ab', 'arithbench', {}], m('mab', '竖式的结果'), ['cl', 'colbench', {}], m('mcl', '竖式（列）的答案'),
       ['bm', 'barmodel', {}], m('mbm', '线段图的答案'), ['wb1', 'exprbench', { label: '线段图的方程' }],
       ['po', 'pour', {}], m('mpo', '倒完以后的总量'), ['ar', 'array', { rows: 3, cols: 4 }], m('mar', '点阵一共几个点'),
-      ['fa', 'fracarea', {}], m('mfa', '分数面积的总格数'), ['am', 'areamodel', { vcuts: '10' }], m('mam', '面积模型的面积'), ['mc', 'modclock', {}], m('mmc', '同余钟的位置'),
+      ['fa', 'fracarea', {}], m('mfa', '分数面积的总格数'), ['am', 'areamodel', { vcuts: '10' }], m('mam', '面积模型的面积'), ['bb', 'balancebench', { lx: 1, lc: 0, rx: 0, rc: 4 }], m('mbb', '天平上盒子的重量'), ['mc', 'modclock', {}], m('mmc', '同余钟的位置'),
       ['pb', 'primeblocks', { a: 12, b: 18 }], m('mgcd', '最大公约数'), m('mlcm', '最小公倍数'),
       ['n7', 'num', { n: 7 }], ['nl', 'numline', {}], m('mnl', '数轴上的数'),
       ['nth', 'nth', {}], m('mnth', '第 n 项'), ['nw', 'newop', {}], m('mnw', '换一种运算（证据等级）'),
@@ -72,7 +72,7 @@ const BASE = [
     ],
     links: [
       ['ab', 'mab', 'v', 'result'], ['cl', 'mcl', 'v', 'ans'], ['bm', 'mbm', 'v', 'answer'], ['bm', 'wb1', 'e', 'model'],
-      ['po', 'mpo', 'v', 'total'], ['ar', 'mar', 'v', 'n'], ['fa', 'mfa', 'v', 'total'], ['am', 'mam', 'v', 'area'], ['mc', 'mmc', 'v', 'pos'],
+      ['po', 'mpo', 'v', 'total'], ['ar', 'mar', 'v', 'n'], ['fa', 'mfa', 'v', 'total'], ['am', 'mam', 'v', 'area'], ['bb', 'mbb', 'v', 'solved'], ['mc', 'mmc', 'v', 'pos'],
       ['pb', 'mgcd', 'v', 'gcd'], ['pb', 'mlcm', 'v', 'lcm'],
       ['n7', 'nl', 'v'], ['nl', 'mnl', 'v', 'n'], ['nth', 'mnth', 'v', 'v'], ['nw', 'mnw', 'v', 'lv'], ['cp', 'mcp', 'v', 'breakeven'],
       ['n12a', 'bal', 'L'], ['n12b', 'bal', 'R'], ['bal', 'mbd', 'v', 'diff'],
@@ -150,7 +150,7 @@ for (const sp of BASE) {
     out.push(...split(sp, [
       { id: 'ex-number-boards', title: '综合 · 数的工作台：竖式、线段图、倒水、点阵、同余钟、质因数、数轴、数列',
         hook: '竖式工作台、列式、线段图（它产生的方程交给式子工作台检查）、量杯倒水、点阵、分数面积、同余钟、质因数积木、数轴、数列、换一种运算。每个把自己的结果读到读数器上。',
-        roles: 'ab mab cl mcl bm mbm wb1 po mpo ar mar fa mfa am mam mc mmc pb mgcd mlcm n7 nl mnl nth mnth nw mnw' },
+        roles: 'ab mab cl mcl bm mbm wb1 po mpo ar mar fa mfa am mam bb mbb mc mmc pb mgcd mlcm n7 nl mnl nth mnth nw mnw' },
       { id: 'ex-relation-boards', title: '综合 · 关系的工作台：费用方案、天平、解方程、变量盒、代数砖、逼近、交点', domain: '关系',
         hook: '套餐费用的平衡点；两个数放上天平；解方程天平（它的方程交给式子工作台检查）；变量盒里有几个 x 使两边相等；代数砖；逼近器；两条直线的交点。',
         roles: 'cp mcp n12a n12b bal mbd es mes wb2 vr mvh tl mtl ap map l1 l2 cr mcx mcy dd' },
