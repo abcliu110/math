@@ -10,7 +10,7 @@
   const ms = (id, say, score, port, value, hints) => ({ id, say, score, when: { role: 'k', port, op: '=', value: String(value) }, hints });
 
   add({
-    id: 'bk-make-16', essence: ['E1', 'E5'], title: '摆出 16', grade: 1, rung: 1, points: ['1.5'],
+    id: 'bk-make-16', essence: ['E1', 'E5'], title: '摆出 16', grade: 1, rung: 1, points: ['1.7'],
     topics: ['11–20 各数的认识'], alias: ['数的组成', '十几', '数位'],
     hook: '从下面往栏里拖块，摆出 16。用几个十、几个一？',
     build: bk({ h: 0, t: 0, o: 0 }),
@@ -19,7 +19,7 @@
     why: '16 = 1 个十 + 6 个一。十位上的 1 表示一个十，不是一个一。',
   });
   add({
-    id: 'bk-make-34', essence: ['E1', 'E5'], title: '用最少的块摆出 34', grade: 1, rung: 2, points: ['1.7'],
+    id: 'bk-make-34', essence: ['E1', 'E5'], title: '用最少的块摆出 34', grade: 1, rung: 2, points: ['1.13'],
     topics: ['100 以内数的认识'], alias: ['数的组成', '数位', '几个十几个一'],
     hook: '摆出 34。可以摆 34 个小方块，但那样太多了。最少用几个块？',
     build: bk({ h: 0, t: 0, o: 0 }),
@@ -28,7 +28,7 @@
     why: '34 = 3 个十 + 4 个一，一共 7 个块。每一位都不超过 9 个时，用的块最少，这也正是这个数的写法。',
   });
   add({
-    id: 'bk-bundle', essence: ['E1', 'E5'], title: '2 个十和 14 个一是多少？', grade: 1, rung: 2, points: ['1.7'],
+    id: 'bk-bundle', essence: ['E1', 'E5'], title: '2 个十和 14 个一是多少？', grade: 1, rung: 2, points: ['1.13'],
     topics: ['100 以内数的认识', '满十进一'], alias: ['满十进一', '数位', '进位'],
     hook: '个位那一栏放了 14 个，红了：一个数位写不下 14。把个位的块往左拖到十位，十个捆成一根。',
     build: bk({ h: 0, t: 2, o: 14 }),
@@ -38,7 +38,7 @@
     why: '14 个一 = 1 个十 + 4 个一，所以 2 个十和 14 个一就是 3 个十和 4 个一：34。不能写成 214。',
   });
   add({
-    id: 'bk-27-15', essence: ['E1', 'E5'], title: '27 + 15：个位满十了', grade: 2, rung: 2, points: ['2.2'],
+    id: 'bk-27-15', essence: ['E1', 'E5'], title: '27 + 15：个位满十了', grade: 2, rung: 2, points: ['2.3'],
     topics: ['100 以内的进位加法'], alias: ['进位加法', '满十进一', '竖式'],
     hook: '27 和 15 的块倒在了一起：十位 3 个，个位 12 个。整理到每一位都不超过 9，就是答案。',
     build: bk({ mode: 1, a: 27, b: 15, h: 0, t: 3, o: 12 }),
@@ -47,7 +47,7 @@
     why: '7 + 5 = 12，个位写 2，向十位进 1；十位 2 + 1 + 1 = 4。竖式上那个小小的“1”，就是捆起来的这一根。',
   });
   add({
-    id: 'bk-38-46', essence: ['E1', 'E5'], title: '38 + 46', grade: 2, rung: 2, points: ['2.2'],
+    id: 'bk-38-46', essence: ['E1', 'E5'], title: '38 + 46', grade: 2, rung: 2, points: ['2.3'],
     topics: ['100 以内的进位加法'], alias: ['进位加法', '满十进一'],
     hook: '十位 7 个，个位 14 个。整理它。',
     build: bk({ mode: 1, a: 38, b: 46, h: 0, t: 7, o: 14 }),
@@ -57,7 +57,7 @@
     why: '38 + 46 = 84。十位不是 3 + 4 = 7，因为个位进了 1。',
   });
   add({
-    id: 'bk-156-87', essence: ['E1', 'E5'], title: '156 + 87：连着进两次', grade: 3, rung: 3, points: ['3.1'],
+    id: 'bk-156-87', essence: ['E1', 'E5'], title: '156 + 87：连着进两次', grade: 3, rung: 3, points: ['3.2'],
     topics: ['万以内的加法', '连续进位'], alias: ['连续进位', '三位数加法'],
     hook: '百位 1 个，十位 13 个，个位 13 个。两栏都红了。从哪一栏开始整理都可以吗？',
     build: bk({ mode: 1, a: 156, b: 87, h: 1, t: 13, o: 13 }),
@@ -66,7 +66,7 @@
     why: '156 + 87 = 243。先捆个位或先捆十位，结果一样；竖式规定从个位开始，是因为这样每一位只用写一次。',
   });
   add({
-    id: 'bk-break-ten', essence: ['E1', 'E5'], title: '52 − 7：个位不够减', grade: 2, rung: 3, points: ['2.2'],
+    id: 'bk-break-ten', essence: ['E1', 'E5'], title: '52 − 7：个位不够减', grade: 2, rung: 3, points: ['2.3'],
     topics: ['100 以内的退位减法'], alias: ['退位减法', '破十', '借位'],
     hook: '52 是 5 个十、2 个一。要拿走 7 个一，个位只有 2 个，不够。把一根长条往右拖到个位，拆成十个。',
     build: bk({ mode: 1, a: 52, b: 0, h: 0, t: 5, o: 2 }),
@@ -76,7 +76,7 @@
     why: '52 = 4 个十 + 12 个一。数没变，只是换了一种摆法，现在个位够拿走 7 个了：12 − 7 = 5，答案是 45。竖式里的“借 1 当 10”就是这一步。',
   });
   add({
-    id: 'bk-hundred', essence: ['E1', 'E5'], title: '1 个百是几个十？', grade: 2, rung: 2, points: ['2.5'],
+    id: 'bk-hundred', essence: ['E1', 'E5'], title: '1 个百是几个十？', grade: 2, rung: 2, points: ['2.12'],
     topics: ['1000 以内数的认识'], alias: ['数位', '百', '十进制'],
     hook: '百位有一块大的。把它往右拖到十位，看它变成几根。',
     build: bk({ mode: 1, a: 100, b: 0, h: 1, t: 0, o: 0 }),
@@ -85,7 +85,7 @@
     why: '1 个百 = 10 个十 = 100 个一。相邻两个数位之间，都是“十个换一个”。',
   });
   add({
-    id: 'bk-205', essence: ['E1', 'E5'], title: '摆出 205：中间的 0 是什么？', grade: 2, rung: 2, points: ['2.5'],
+    id: 'bk-205', essence: ['E1', 'E5'], title: '摆出 205：中间的 0 是什么？', grade: 2, rung: 2, points: ['2.12'],
     topics: ['1000 以内数的认识', '0 的占位'], alias: ['数位', '0 占位', '三位数'],
     hook: '摆出 205。十位那一栏放什么？',
     build: bk({ h: 0, t: 0, o: 0 }),
@@ -95,7 +95,7 @@
     why: '205 = 2 个百 + 0 个十 + 5 个一。十位的 0 不能省：省掉就成了 25。0 在这里是“占住这个位置”。',
   });
   add({
-    id: 'bk-other-way', essence: ['E1', 'E2'], title: '34 的另一种摆法', grade: 1, rung: 3, points: ['1.7'],
+    id: 'bk-other-way', essence: ['E1', 'E2'], title: '34 的另一种摆法', grade: 1, rung: 3, points: ['1.13'],
     topics: ['100 以内数的认识'], alias: ['数的组成', '拆', '数位'],
     hook: '现在是 3 个十、4 个一。只用“拆”，把它变成 2 个十和若干个一。数变了吗？',
     build: bk({ mode: 1, a: 34, b: 0, h: 0, t: 3, o: 4 }),

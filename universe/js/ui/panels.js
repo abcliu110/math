@@ -102,6 +102,13 @@
   }
   // 台面变了：分组的顺序变了才重画器材架（不每次都画）
   function shelfMaybe() { if (shelfGroups().join() !== lastGroups) renderShelf(); }
+  // 每种器材有多少道题的器材架上列了它（题库变了才重算）
+  let useCache = null, useN = -1;
+  function shelfUse() {
+    if (useCache && useN === U.problems.length) return useCache;
+    const u = {}; for (const p of U.problems) for (const id of p.shelf || []) u[id] = (u[id] || 0) + 1;
+    useCache = u; useN = U.problems.length; return u;
+  }
   function renderShelf() {
     const S = UI.S, q = ($('#q2') && $('#q2').value || '').trim();
     const allow = S.problem ? S.problem.shelf : null;
@@ -114,7 +121,9 @@
     const groups = shelfGroups();
     lastGroups = groups.join();
     const order = Object.keys(U.types);
-    const rank = (t) => [allow && !allow.includes(t.id) ? 1 : 0, (t.grades || [1])[0], order.indexOf(t.id)];
+    // 重要的在前：组里先按“有多少道题用到它”从多到少排（用得多的就是最常用的），再按年级、原来的顺序
+    const use = shelfUse();
+    const rank = (t) => [allow && !allow.includes(t.id) ? 1 : 0, -(use[t.id] || 0), (t.grades || [1])[0], order.indexOf(t.id)];
     const cmp = (a, b) => { const x = rank(a), y = rank(b); for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return x[i] - y[i]; return 0; };
     const listed = (t) => !t.hidden && U.onWorkbenchShelf(t, wb);
     const tile = (t) => {

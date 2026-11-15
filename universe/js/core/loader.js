@@ -35,7 +35,6 @@
     'deduce': 'packs/deduce.js',
     'digitbench': 'packs/digitbench.js',
     'dissect': 'packs/dissect.js',
-    'eqscale': 'packs/eqscale.js',
     'estimate': 'packs/estimate.js',
     'exprbench': 'packs/exprbench.js',
     'figure': 'packs/figure.js',

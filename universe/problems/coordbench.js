@@ -10,7 +10,7 @@
   const ms = (id, say, score, port, value, hints) => ({ id, say, score, when: { role: 'c', port, op: '=', value: String(value) }, hints });
 
   add({
-    id: 'cb-2x-plus-1', essence: ['E6', 'E2'], title: '画出 y = 2x + 1', grade: 8, rung: 2, points: ['8.9'],
+    id: 'cb-2x-plus-1', essence: ['E6', 'E2'], title: '画出 y = 2x + 1', grade: 8, rung: 2, points: ['8.15'],
     topics: ['一次函数的图像'], alias: ['一次函数', '斜率', '截距', '图像'],
     hook: '现在是 y = x。拖 y 轴上的点改截距，拖标着 k 的点改斜率，把它变成 y = 2x + 1。看右边的表怎么变。',
     build: cb({ kn: 1, kd: 1, b: 0 }),
@@ -19,7 +19,7 @@
     why: 'y = 2x + 1：x 每增加 1，y 增加 2（斜率）；x = 0 时 y = 1（截距）。图上的直线、表里的数、这个式子，说的是同一件事。',
   });
   add({
-    id: 'cb-shift-down', essence: ['E6', 'E5'], title: '把直线往下平移', grade: 8, rung: 2, points: ['8.9'],
+    id: 'cb-shift-down', essence: ['E6', 'E5'], title: '把直线往下平移', grade: 8, rung: 2, points: ['8.15'],
     topics: ['一次函数的图像', '平移'], alias: ['平移', '截距', '一次函数'],
     hook: '直线 y = 2x + 1。只动截距，让它经过 (0, −3)。斜率变了吗？',
     build: cb({ kn: 2, kd: 1, b: 1 }),
@@ -30,7 +30,7 @@
     why: 'y = 2x + 1 往下平移 4 格是 y = 2x − 3。两条线平行：斜率相同，截距不同。',
   });
   add({
-    id: 'cb-negative', essence: ['E6', 'E2'], title: '往右走，往下降：y = −x + 2', grade: 8, rung: 3, points: ['8.9'],
+    id: 'cb-negative', essence: ['E6', 'E2'], title: '往右走，往下降：y = −x + 2', grade: 8, rung: 3, points: ['8.15'],
     topics: ['一次函数的性质'], alias: ['斜率', '减函数', '一次函数'],
     hook: '斜率可以是负的。把直线变成 y = −x + 2：向右走 1 格，就往下 1 格。',
     build: cb({ kn: 1, kd: 1, b: 0 }),
@@ -39,7 +39,7 @@
     why: '斜率是负数时，x 越大 y 越小，直线从左上到右下。斜率是 0 时直线是平的。',
   });
   add({
-    id: 'cb-half', essence: ['E6', 'E3'], title: '斜率 1/2 的直线', grade: 8, rung: 3, points: ['8.9'],
+    id: 'cb-half', essence: ['E6', 'E3'], title: '斜率 1/2 的直线', grade: 8, rung: 3, points: ['8.15'],
     topics: ['一次函数的图像'], alias: ['斜率', '分数', '一次函数'],
     hook: '斜率 1/2 是“向右 2，向上 1”。先点分母的 ＋ 改成 2，再拖 k。做出 y = 1/2 x。',
     build: cb({ kn: 1, kd: 1, b: 0 }),
@@ -48,7 +48,7 @@
     why: '斜率 = 竖着走的 ÷ 横着走的。向右 2 向上 1，和向右 4 向上 2 是同一个斜率：1/2 = 2/4。',
   });
   add({
-    id: 'cb-two-points', essence: ['E6', 'E2'], title: '过 (1, 2) 和 (3, 6) 的直线', grade: 8, rung: 3, points: ['8.10'],
+    id: 'cb-two-points', essence: ['E6', 'E2'], title: '过 (1, 2) 和 (3, 6) 的直线', grade: 8, rung: 3, points: ['8.15'],
     topics: ['待定系数法', '两点确定一条直线'], alias: ['两点式', '斜率', '待定系数法'],
     hook: '把 A 拖到 (1, 2)，把 B 拖到 (3, 6)。直线的斜率和截距是多少？',
     build: cb({ mode: 1, ax: -2, ay: -1, bx: 2, by: 1 }),
@@ -57,7 +57,7 @@
     why: '从 A 到 B：x 增加 2，y 增加 4，斜率 4 ÷ 2 = 2。把 (1, 2) 代进 y = 2x + b 得 b = 0。两个点就确定了一条直线。',
   });
   add({
-    id: 'cb-intercepts', essence: ['E6', 'E2'], title: '过 (0, 4) 和 (4, 0) 的直线', grade: 8, rung: 3, points: ['8.10'],
+    id: 'cb-intercepts', essence: ['E6', 'E2'], title: '过 (0, 4) 和 (4, 0) 的直线', grade: 8, rung: 3, points: ['8.15'],
     topics: ['一次函数的图像'], alias: ['截距', '斜率', '两点'],
     hook: '把 A 拖到 y 轴上的 (0, 4)，B 拖到 x 轴上的 (4, 0)。',
     build: cb({ mode: 1, ax: -2, ay: -1, bx: 2, by: 1 }),
@@ -67,7 +67,7 @@
     why: 'y = −x + 4。它和两条坐标轴围成一个等腰直角三角形。和 y 轴的交点就是截距。',
   });
   add({
-    id: 'cb-zero', essence: ['E6', 'E4'], title: 'y = 2x − 4 什么时候等于 0？', grade: 8, rung: 3, points: ['8.11'],
+    id: 'cb-zero', essence: ['E6', 'E4'], title: 'y = 2x − 4 什么时候等于 0？', grade: 8, rung: 3, points: ['8.15'],
     topics: ['一次函数与一元一次方程'], alias: ['零点', '方程的解', '一次函数与方程'],
     hook: '直线 y = 2x − 4。拖 x 轴上的探针，找到 y = 0 的地方。这就是方程 2x − 4 = 0 的解。',
     build: cb({ kn: 2, kd: 1, b: -4, x: -1 }),
@@ -76,7 +76,7 @@
     why: '2x − 4 = 0 的解 x = 2，就是直线 y = 2x − 4 和 x 轴的交点。解方程和找图像的零点是同一件事。',
   });
   add({
-    id: 'cb-vertex', essence: ['E6', 'E5'], title: '把抛物线的顶点放到 (2, −1)', grade: 9, rung: 2, points: ['9.6'],
+    id: 'cb-vertex', essence: ['E6', 'E5'], title: '把抛物线的顶点放到 (2, −1)', grade: 9, rung: 2, points: ['9.3'],
     topics: ['二次函数的图像', '顶点式'], alias: ['二次函数', '抛物线', '顶点', '平移'],
     hook: '现在是 y = x²，顶点在原点。拖顶点到 (2, −1)，看式子怎么变。',
     build: cb({ mode: 2, a2: 2, h: 0, v: 0 }),
@@ -85,7 +85,7 @@
     why: 'y = (x − 2)² − 1。往右移 2，括号里是 x − 2（减号）；往下移 1，后面是 −1。形状没变，只是挪了位置。',
   });
   add({
-    id: 'cb-no-root', essence: ['E6', 'E4'], title: '让抛物线碰不到 x 轴', grade: 9, rung: 3, points: ['9.7'],
+    id: 'cb-no-root', essence: ['E6', 'E4'], title: '让抛物线碰不到 x 轴', grade: 9, rung: 3, points: ['9.4'],
     topics: ['二次函数与一元二次方程', '判别式'], alias: ['抛物线', '交点', '判别式', '无实根'],
     hook: '现在抛物线和 x 轴有 2 个交点。只拖顶点，让它一个交点都没有。再想：刚好 1 个交点是什么时候？',
     build: cb({ mode: 2, a2: 2, h: 1, v: -2 }),
@@ -95,7 +95,7 @@
     why: '开口向上时，顶点是最低点：顶点在 x 轴上方就没有交点，正好在 x 轴上有 1 个，在下方有 2 个。这就是判别式小于、等于、大于 0 的三种情况。',
   });
   add({
-    id: 'cb-flip', essence: ['E6', 'E5'], title: '开口向下：y = −(x + 1)² + 4', grade: 9, rung: 3, points: ['9.6'],
+    id: 'cb-flip', essence: ['E6', 'E5'], title: '开口向下：y = −(x + 1)² + 4', grade: 9, rung: 3, points: ['9.3'],
     topics: ['二次函数的图像', '顶点式'], alias: ['抛物线', '开口方向', '顶点式', '最大值'],
     hook: '把顶点拖到 (−1, 4)，再把标着 a 的把手拖到顶点下面 1 格，让开口朝下。',
     build: cb({ mode: 2, a2: 2, h: 0, v: 0 }),

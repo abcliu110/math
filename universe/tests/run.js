@@ -783,10 +783,10 @@ t('数字卡可以直接接进只收多项式的口；非法式子在代数式�
   const bad = W.add(sc, 'algebra', 0, 0, { text: '(x+1' }); const D = W.evaluate(sc);
   truthy(/括号/.test(D[bad].sig.map((x) => x.tx).join('|')), D[bad].sig.map((x) => x.tx).join('|'));
 });
-t('已有器材输出方程：变量盒输出左 = 右；解方程天平输出方程', () => {
+t('已有器材输出方程：变量盒输出左 = 右；天平与方程操作台输出方程', () => {
   const sc = W.blank(); const v = W.add(sc, 'variable', 0, 0, { left: '2x+1', right: 'x+3', lo: -2, hi: 2 });
   const D = W.evaluate(sc); eq(U.KINDS.eqn.show(D[v].out.eq.data), '2x + 1 = x + 3');
-  const sc2 = W.blank(); const b = W.add(sc2, 'eqscale', 0, 0, {});
+  const sc2 = W.blank(); const b = W.add(sc2, 'balancebench', 0, 0, {});
   const D2 = W.evaluate(sc2); truthy(D2[b].out.eq && D2[b].out.eq.kind === 'eqn', '天平应输出方程');
 });
 console.log('数据表与拟合（C）');
@@ -3637,7 +3637,7 @@ console.log('示例菜单（problems/examples-data.js，由 tools/gen-examples.j
 console.log('旧题搬到操作台');
 t('搬题：每个要搬的 id 都找到了题；搬过去的题器材架上只有操作台，开场台面上就有它', () => {
   eq(U.benchMigrateMissing, [], '找不到的 id');
-  truthy(U.benchMigrated.length >= 55, '至少搬了 55 道');
+  truthy(U.benchMigrated.length >= 59, '至少搬了 59 道');
   const BENCH = ['areamodel', 'balancebench', 'numlinebench', 'ratiobench', 'coordbench', 'blocksbench', 'termsbench'];
   for (const id of U.benchMigrated) {
     const p = U.problems.find((x) => x.id === id), s = p.build();

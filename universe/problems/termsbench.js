@@ -10,7 +10,7 @@
   const ms = (id, say, score, port, value, hints) => ({ id, say, score, when: { role: 't', port, op: '=', value: String(value) }, hints });
 
   add({
-    id: 'tb-3x-2x', essence: ['E4', 'E2'], title: '3x + 2x 等于多少？', grade: 7, rung: 2, points: ['7.4'],
+    id: 'tb-3x-2x', essence: ['E4', 'E2'], title: '3x + 2x 等于多少？', grade: 7, rung: 2, points: ['7.5'],
     topics: ['合并同类项'], alias: ['合并同类项', '同类项', '整式的加减'],
     hook: '3 个 x 和 2 个 x。把一块拖到另一块上，合成一块。',
     build: tb({ terms: '3x,2x' }),
@@ -20,7 +20,7 @@
     why: '3x + 2x = (3 + 2)x = 5x。3 个苹果加 2 个苹果是 5 个苹果：数的是个数，东西没变，所以是 5x，不是 5x²。',
   });
   add({
-    id: 'tb-mixed', essence: ['E4', 'E2'], title: '化简 3x + 2 + 2x + 5', grade: 7, rung: 2, points: ['7.4'],
+    id: 'tb-mixed', essence: ['E4', 'E2'], title: '化简 3x + 2 + 2x + 5', grade: 7, rung: 2, points: ['7.5'],
     topics: ['合并同类项'], alias: ['合并同类项', '化简'],
     hook: '四项里有两种：带 x 的，和不带 x 的。同一种的拖到一起。',
     build: tb({ terms: '3x,2,2x,5' }),
@@ -29,7 +29,7 @@
     why: '3x + 2 + 2x + 5 = 5x + 7。5x 和 7 不是同类项，不能再合并：5x + 7 不等于 12x。代入 x = 2 检查：两边都是 17。',
   });
   add({
-    id: 'tb-4x-minus-x', essence: ['E4', 'E2'], title: '4x − x 等于多少？', grade: 7, rung: 3, points: ['7.4'],
+    id: 'tb-4x-minus-x', essence: ['E4', 'E2'], title: '4x − x 等于多少？', grade: 7, rung: 3, points: ['7.5'],
     topics: ['合并同类项'], alias: ['合并同类项', '系数是 1'],
     hook: '−x 的系数是多少？把它拖到 4x 上看看。',
     build: tb({ terms: '4x,-x' }),
@@ -39,7 +39,7 @@
     why: '4x − x = 4x − 1x = 3x。x 前面没写数，系数是 1，不是 0。所以结果是 3x，不是 4。',
   });
   add({
-    id: 'tb-two-letters', essence: ['E4', 'E2'], title: '化简 2x + 3y + x − y', grade: 7, rung: 3, points: ['7.4'],
+    id: 'tb-two-letters', essence: ['E4', 'E2'], title: '化简 2x + 3y + x − y', grade: 7, rung: 3, points: ['7.5'],
     topics: ['合并同类项'], alias: ['合并同类项', '两个字母'],
     hook: '有 x 的项，也有 y 的项。x 和 y 是不同的东西，各合各的。',
     build: tb({ terms: '2x,3y,x,-y' }),
@@ -48,7 +48,7 @@
     why: '2x + 3y + x − y = 3x + 2y。x 的项和 y 的项不能合并：试试把 3x 拖到 2y 上，它会告诉你不行。',
   });
   add({
-    id: 'tb-square', essence: ['E4', 'E2'], title: 'x² 和 x 是同类项吗？', grade: 7, rung: 3, points: ['7.4'],
+    id: 'tb-square', essence: ['E4', 'E2'], title: 'x² 和 x 是同类项吗？', grade: 7, rung: 3, points: ['7.5'],
     topics: ['合并同类项', '同类项的概念'], alias: ['同类项', '次数'],
     hook: '化简 x² + 3x + 2x² − x。先试试把 3x 拖到 x² 上，看会发生什么。',
     build: tb({ terms: 'x2,3x,2x2,-x' }),
@@ -58,7 +58,7 @@
     why: '同类项要字母相同、字母的次数也相同。x² 是 x 乘 x，和 x 不是一种东西：面积和长度不能相加。',
   });
   add({
-    id: 'tb-refuse', essence: ['E4', 'E3'], title: '3x + 2 为什么不能再化简？', grade: 7, rung: 3, points: ['7.4'],
+    id: 'tb-refuse', essence: ['E4', 'E3'], title: '3x + 2 为什么不能再化简？', grade: 7, rung: 3, points: ['7.5'],
     topics: ['合并同类项'], alias: ['同类项', '常见错误'],
     hook: '有同学把 3x + 2 写成 5x。把 2 拖到 3x 上试一次，再看下面“代入 x = 2”的检验：3x + 2 是 8，5x 是 10。',
     build: tb({ terms: '3x,2' }),

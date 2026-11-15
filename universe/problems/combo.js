@@ -224,23 +224,20 @@
 
   // 12. 百分数与分数条：比、百分数、分数条、估算
   P.push({
-    id: 'combo-percent-bar', essence: ['E3', 'E9'], title: '3 是 4 的百分之几？用分数条画出来，再估一估', grade: 6, domain: '数与运算', points: ['6.12'],
-    topics: ['百分数', '分数的意义'], alias: ['综合', '百分数'], hook: '百分数器算出 3 是 4 的百分之几；分数条把这个比例画成格子；估算器检查你猜的答案离多远。',
-    shelf: ['num', 'percent', 'fracbar', 'estimate', 'meter'],
+    id: 'combo-percent-bar', essence: ['E3', 'E9'], title: '3 是 4 的百分之几？先估一估，再算出来', grade: 6, domain: '数与运算', points: ['6.12'],
+    topics: ['百分数', '分数的意义'], alias: ['综合', '百分数'], hook: '百分数器算出 3 是 4 的百分之几；估算器检查你猜的答案离多远。',
+    shelf: ['num', 'percent', 'estimate', 'meter'],
     build: mk({ ents: [
       E('num', 40, 60, 'a', { n: 3 }), E('num', 40, 140, 'b', { n: 4 }),
       E('percent', 220, 100, 'pc', { mode: 0, digits: 0, label: '百分之几' }),
       E('meter', 420, 60, 'mp', { digits: 0 }),
-      E('fracbar', 220, 240, 'fb', { parts: 4, whole: 1, shade: true }),
-      E('meter', 420, 240, 'mfb', { digits: 2 }),
       E('estimate', 220, 360, 'es', { mode: 0, guess: '75', lo: '70', hi: '80' }),
     ] }),
     milestones: [
       { id: 'pc', say: '百分数器算出 3 是 4 的 75%（读数器显示 75）', score: 8, when: (w) => w.some('meter', (e) => e.role === 'mp' && w.num(e, 'v') === 75), hints: ['百分数器的 a 是部分，b 是整体。', '百分数器的 r 输出接到读数器。'] },
-      { id: 'bar', say: '分数条的读数器显示 0.75', score: 6, when: (w) => w.some('meter', (e) => e.role === 'mfb' && w.num(e, 'v') !== null), hints: ['分数条的 v 输入接百分数器的 r。'] },
       { id: 'est', say: '估算器判断：75 在范围 70–80 里', score: 6, when: (w) => w.some('estimate', (e) => w.bool(e, 'inRange') === true), hints: ['估算器的 actual 接百分数器的 r。'] },
     ],
-    traps: [], why: '3 是 4 的 3/4，也就是 75%。分数条把 3/4 画成 4 格里涂 3 格。估算器用来检查猜测：75 在 70 到 80 的范围里。',
+    traps: [], why: '3 是 4 的 3/4，也就是 75%。估算器用来检查猜测：75 在 70 到 80 的范围里。',
     ref: ['ratio|0'],
   });
 

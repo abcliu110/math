@@ -10,7 +10,7 @@
   const ms = (id, say, score, port, value, hints) => ({ id, say, score, when: { role: 'm', port, op: '=', value: String(value) }, hints });
 
   add({
-    id: 'am-13x7', essence: ['E5', 'E2'], title: '13 × 7：切一刀就好算', grade: 3, rung: 2, points: ['3.3'],
+    id: 'am-13x7', essence: ['E5', 'E2'], title: '13 × 7：切一刀就好算', grade: 3, rung: 2, points: ['3.5'],
     topics: ['两位数乘一位数', '乘法分配律'], alias: ['乘法', '分配律', '口算', '两位数乘一位数'],
     hook: '这块长方形长 13、宽 7。直接数格子太慢。从左上角的 ✂ 往右拖出一刀，把它切成两块好算的，再把两块加起来。',
     build: am({ w: 13, h: 7 }),
@@ -23,7 +23,7 @@
     why: '13 × 7 = (10 + 3) × 7 = 10 × 7 + 3 × 7 = 70 + 21 = 91。把一条边拆开，面积就拆成两块的和，这就是乘法分配律。竖式乘法每一步也是在做这件事。',
   });
   add({
-    id: 'am-14x12', essence: ['E5', 'E2'], title: '14 × 12：切成四块', grade: 4, rung: 3, points: ['4.3'],
+    id: 'am-14x12', essence: ['E5', 'E2'], title: '14 × 12：切成四块', grade: 3, rung: 3, points: ['3.11'],
     topics: ['两位数乘两位数', '乘法分配律'], alias: ['两位数乘两位数', '竖式乘法', '分配律'],
     hook: '长 14、宽 12。两条边都不好算。竖着切一刀，横着也切一刀，让四块都好算。',
     build: am({ w: 14, h: 12 }), predict: null,
@@ -35,7 +35,7 @@
     why: '14 × 12 = (10 + 4) × (10 + 2) = 100 + 40 + 20 + 8 = 168。竖式里“先乘个位、再乘十位、最后相加”，加的就是这四块。',
   });
   add({
-    id: 'am-area24', essence: ['E5', 'E7'], title: '面积 24，周长最短', grade: 4, rung: 3, points: ['4.6'],
+    id: 'am-area24', essence: ['E5', 'E7'], title: '面积 24，周长最短', grade: 3, rung: 3, points: ['3.12', '3.6'],
     topics: ['长方形的面积', '长方形的周长'], alias: ['面积', '周长', '因数', '最值'],
     hook: '拖右边和下边，改长方形的长和宽。先做出一个面积是 24 的长方形；再换几种，找周长最短的那个。',
     build: am({ w: 6, h: 2 }),
@@ -49,7 +49,7 @@
     why: '面积相同的长方形里，长和宽越接近，周长越短；正方形最短。24 不是平方数，所以最接近的是 6 × 4。',
   });
   add({
-    id: 'am-square36', essence: ['E5', 'E3'], title: '做一个面积是 36 的正方形', grade: 4, rung: 2, points: ['4.6'],
+    id: 'am-square36', essence: ['E5', 'E3'], title: '做一个面积是 36 的正方形', grade: 3, rung: 2, points: ['3.12'],
     topics: ['正方形的面积', '平方数'], alias: ['正方形', '平方数', '面积'],
     hook: '拖两条边，做一个正方形，面积正好是 36。它的边长是多少？',
     build: am({ w: 9, h: 3 }), predict: null,
@@ -87,7 +87,7 @@
     why: '2/3 × 3/4 = 6/12 = 1/2。重叠的 6 格正好是整块的一半，所以能约分。约分没有改变大小，只是换了一种切法来数。',
   });
   add({
-    id: 'am-38', essence: ['E3', 'E2'], title: '涂出整块的 3/8', grade: 5, rung: 3, points: ['5.11'],
+    id: 'am-38', essence: ['E3', 'E2'], title: '涂出整块的 3/8', grade: 5, rung: 3, points: ['5.10'],
     topics: ['分数的意义', '等值分数'], alias: ['分数', '等值分数', '面积'],
     hook: '让紫色重叠的部分正好是整块的 3/8。切法不止一种：先做出一种，再想想还能怎么切。',
     build: am({ mode: 1, d1: 2, n1: 1, d2: 2, n2: 1 }), predict: null,
@@ -96,7 +96,7 @@
     why: '3/4 × 1/2、1/2 × 3/4、3/8 × 1/1 都是 3/8，还有 6/16 这样切得更细的。同一块面积可以用很多种切法得到。',
   });
   add({
-    id: 'am-x2x3', essence: ['E5', 'E4'], title: '(x + 2)(x + 3) 展开是什么？', grade: 8, rung: 3, points: ['8.4'],
+    id: 'am-x2x3', essence: ['E5', 'E4'], title: '(x + 2)(x + 3) 展开是什么？', grade: 8, rung: 3, points: ['8.5'],
     topics: ['多项式乘多项式'], alias: ['多项式乘法', '展开', '整式乘法'],
     hook: '长方形的两条边是 x + a 和 x + b。拖右边和下边，把它变成 (x + 2)(x + 3)，看四块分别是什么。',
     build: am({ mode: 2, a: 0, b: 0 }),
@@ -110,7 +110,7 @@
     why: '(x + 2)(x + 3) = x² + 3x + 2x + 6 = x² + 5x + 6。四块面积加起来就是整个长方形的面积。和 13 × 7 切开来算是同一件事。',
   });
   add({
-    id: 'am-factor', essence: ['E5', 'E4'], title: '把 x² + 7x + 12 拼回长方形', grade: 8, rung: 4, points: ['8.5'],
+    id: 'am-factor', essence: ['E5', 'E4'], title: '把 x² + 7x + 12 拼回长方形', grade: 8, rung: 4, points: ['8.7'],
     topics: ['因式分解', '十字相乘'], alias: ['因式分解', '十字相乘'],
     hook: '有 1 块 x²、7 条 x、12 个小方块。拖两条边，找一个正好用完它们的长方形。它的长和宽是什么？',
     build: am({ mode: 2, a: 1, b: 1 }), predict: null,
@@ -122,7 +122,7 @@
     why: 'x² + 7x + 12 = (x + 3)(x + 4)。因式分解就是把展开倒过来：找两个数，积是常数项，和是一次项的系数。2 和 6 的积也是 12，但和是 8，长条就多了一条。',
   });
   add({
-    id: 'am-perfect', essence: ['E5', 'E3'], title: '(x + 3)² 为什么不是 x² + 9？', grade: 8, rung: 4, points: ['8.4'],
+    id: 'am-perfect', essence: ['E5', 'E3'], title: '(x + 3)² 为什么不是 x² + 9？', grade: 8, rung: 4, points: ['8.6'],
     topics: ['完全平方公式'], alias: ['完全平方', '平方公式'],
     hook: '把长方形拖成一个边长是 x + 3 的正方形。除了 x² 和 9，还有什么？',
     build: am({ mode: 2, a: 0, b: 0 }),

@@ -52,7 +52,6 @@ module.exports = {
     const pc = h.role('pc');
     h.link(h.role('a'), pc, 'a'); h.link(h.role('b'), pc, 'b');
     h.link(pc, h.role('mp'), 'v', 'r');
-    h.link(pc, h.role('fb'), 'v', 'r'); h.link(h.role('fb'), h.role('mfb'), 'v', 'v');
     h.link(pc, h.role('es'), 'actual', 'r');
   },
   'combo-line-inverse-rotate'(h) {

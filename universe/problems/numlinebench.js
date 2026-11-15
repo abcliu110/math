@@ -10,7 +10,7 @@
   const ms = (id, say, score, port, value, hints) => ({ id, say, score, when: { role: 'n', port, op: '=', value: String(value) }, hints });
 
   add({
-    id: 'nl-3-plus-4', essence: ['E1', 'E2'], title: '3 + 4：在数轴上跳', grade: 1, rung: 1, points: ['1.3'],
+    id: 'nl-3-plus-4', essence: ['E1', 'E2'], title: '3 + 4：在数轴上跳', grade: 1, rung: 1, points: ['1.6'],
     topics: ['10 以内的加法'], alias: ['加法', '数轴', '接着数'],
     hook: '把起点拖到 3，再拖着“跳”字往右跳 4 步。落在几？',
     build: nl({ from: 0, to: 12, a: 0, s: 1, n: 0 }),
@@ -22,7 +22,7 @@
     why: '3 + 4 就是从 3 往右走 4 步，落在 7。加法在数轴上是“接着往右数”。',
   });
   add({
-    id: 'nl-13-minus-5', essence: ['E1', 'E2'], title: '13 − 5：往左跳', grade: 2, rung: 2, points: ['2.2'],
+    id: 'nl-13-minus-5', essence: ['E1', 'E2'], title: '13 − 5：往左跳', grade: 1, rung: 2, points: ['1.11'],
     topics: ['20 以内的退位减法'], alias: ['减法', '数轴', '退位'],
     hook: '减法是往左走。先点 − 把“每一步跳”改成 −1，再从 13 往左跳 5 步。',
     build: nl({ from: 0, to: 20, a: 13, s: 1, n: 0 }),
@@ -34,7 +34,7 @@
     why: '13 − 5 是从 13 往左走 5 步。走到 10 用了 3 步，再走 2 步到 8：这就是“破十”。',
   });
   add({
-    id: 'nl-4x3', essence: ['E2', 'E5'], title: '4 个 3 是多少？', grade: 2, rung: 2, points: ['2.4'],
+    id: 'nl-4x3', essence: ['E2', 'E5'], title: '4 个 3 是多少？', grade: 2, rung: 2, points: ['2.5'],
     topics: ['乘法的初步认识'], alias: ['乘法', '几个几', '连加'],
     hook: '把每一步改成跳 3，从 0 出发跳 4 步。',
     build: nl({ from: 0, to: 20, a: 0, s: 1, n: 0 }),
@@ -47,7 +47,7 @@
     why: '4 × 3 = 3 + 3 + 3 + 3 = 12。乘法是连续跳同样大的步子。把步长改成 4、跳 3 步，也落在 12。',
   });
   add({
-    id: 'nl-20-div-4', essence: ['E2', 'E5'], title: '20 里面有几个 4？', grade: 3, rung: 2, points: ['3.2'],
+    id: 'nl-20-div-4', essence: ['E2', 'E5'], title: '20 里面有几个 4？', grade: 2, rung: 2, points: ['2.8'],
     topics: ['除法的含义'], alias: ['除法', '包含除', '几个几'],
     hook: '每一步跳 4，从 0 出发，正好跳到 20 要几步？',
     build: nl({ from: 0, to: 24, a: 0, s: 4, n: 0 }),
@@ -65,7 +65,7 @@
     why: '3/4 是把 0 到 1 平均分成 4 份，从 0 数第 3 条线。它比 1/2 大，比 1 小。',
   });
   add({
-    id: 'nl-five-quarters', essence: ['E3', 'E1'], title: '5/4 比 1 大吗？', grade: 5, rung: 3, points: ['5.11'],
+    id: 'nl-five-quarters', essence: ['E3', 'E1'], title: '5/4 比 1 大吗？', grade: 5, rung: 3, points: ['5.10'],
     topics: ['假分数', '带分数'], alias: ['假分数', '带分数', '数轴'],
     hook: '把点拖到 5/4。看它在 1 的左边还是右边，上面还会写出它的另外两种写法。',
     build: nl({ mode: 1, from: 0, to: 4, d: 4, k: 1 }),
@@ -75,7 +75,7 @@
     why: '5/4 = 1 又 1/4 = 1.25，在 1 的右边。分子比分母大的分数比 1 大，叫假分数；它和带分数是同一个点。',
   });
   add({
-    id: 'nl-1p3', essence: ['E3', 'E1'], title: '1.3 在哪里？', grade: 4, rung: 2, points: ['4.9'],
+    id: 'nl-1p3', essence: ['E3', 'E1'], title: '1.3 在哪里？', grade: 3, rung: 2, points: ['3.14'],
     topics: ['小数的意义'], alias: ['小数', '十分之几', '数轴'],
     hook: '小数是十分之几。先把每一格切成 10 份，再把点拖到 1.3。',
     build: nl({ mode: 1, from: 0, to: 3, d: 4, k: 0 }),
@@ -84,7 +84,7 @@
     why: '1.3 = 13/10 = 1 又 3/10：过了 1，再走 3 个十分之一。小数是分母为 10、100……的分数的另一种写法。',
   });
   add({
-    id: 'nl-2-minus-5', essence: ['E1', 'E2'], title: '2 − 5 等于多少？', grade: 6, rung: 3, points: ['6.4'],
+    id: 'nl-2-minus-5', essence: ['E1', 'E2'], title: '2 − 5 等于多少？', grade: 7, rung: 3, points: ['7.2', '6.8'],
     topics: ['负数的认识', '有理数的减法'], alias: ['负数', '减法', '数轴'],
     hook: '以前说“2 − 5 不够减”。这条数轴 0 的左边还有数。从 2 往左跳 5 步，看落在哪里。',
     build: nl({ from: -8, to: 8, a: 2, s: -1, n: 0 }),
@@ -94,7 +94,7 @@
     why: '2 − 5 = −3。走了 2 步到 0，还差 3 步，就继续往左走到 −3。负数让减法总能做下去。',
   });
   add({
-    id: 'nl-neg3-plus-5', essence: ['E1', 'E2'], title: '−3 + 5', grade: 7, rung: 3, points: ['7.1'],
+    id: 'nl-neg3-plus-5', essence: ['E1', 'E2'], title: '−3 + 5', grade: 7, rung: 3, points: ['7.2'],
     topics: ['有理数的加法'], alias: ['有理数', '加法', '负数'],
     hook: '把起点拖到 −3，每一步 +1，跳 5 步。',
     build: nl({ from: -8, to: 8, a: 0, s: 1, n: 0 }),
@@ -103,7 +103,7 @@
     why: '−3 + 5 = 2。先用 3 步走回 0，还剩 2 步，落在 2。异号两数相加，就是“抵消”以后剩下的。',
   });
   add({
-    id: 'nl-ineq', essence: ['E1', 'E4'], title: '−2 < x ≤ 3 有几个整数解？', grade: 7, rung: 3, points: ['7.9'],
+    id: 'nl-ineq', essence: ['E1', 'E4'], title: '−2 < x ≤ 3 有几个整数解？', grade: 7, rung: 3, points: ['7.15'],
     topics: ['不等式的解集', '不等式组'], alias: ['不等式', '解集', '数轴'],
     hook: '拖两个端点，画出 −2 < x ≤ 3。注意左边是“不含”，右边是“含”：点端点下面的按钮切换。',
     build: nl({ mode: 2, from: -6, to: 6, lo: 0, hi: 1, lc: 1, hc: 1 }),

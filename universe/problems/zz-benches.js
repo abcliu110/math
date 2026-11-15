@@ -1,4 +1,4 @@
-/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，四批共 55 道）。
+/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，五批共 59 道）。
  * 这些题原来的做法是“放数字、接运算器、看读数”：学生在搭计算流程。这里按 id 把它们换成在操作台上直接动手：
  * 题目的编号、标题、年级、知识点、道理（why）都不变，换的是器材架、开场的台面、里程碑和提示。
  * 这个文件排在所有题目文件后面加载（文件名 zz 开头），找不到的 id 会记在 U.benchMigrateMissing 里（测试会查）。 */
@@ -200,6 +200,20 @@
       hook: '17 − 8 − 2。能不能先算 8 − 2？点后面那个减号试试。',
       milestones: [T('v', '等于 7', 6, 'value', 7, ['连减从左往右。', '17 − 8 = 9。', '9 − 2 = 7。'])], goal: ['v'],
       traps: [{ id: 'order', wrong: '连减不能先算后面的 8 − 2：17 − (8 − 2) = 11，多了。可以改成 17 − (8 + 2)。', when: { role: 't', port: 'wrong', op: '=', value: '1' } }] },
+    // ======== 第五批：旧数轴、旧分数条的题（这两种器材已删除）========
+    'g1-position-numline-trap': { shelf: ['numlinebench'], build: nl({ mode: 1, from: 0, to: 10, d: 1, k: 3 }),
+      hook: '点现在在 3。把它拖到 7。如果数轴只画到 5，7 就标不出来：数轴要画得够长。',
+      milestones: [N('seven', '点在 7', 6, 'value', 7, ['7 在 5 的右边。', '把点往右拖。', '过了 5 再走 2 格。'])], goal: ['seven'] },
+    'g3-direction-east-west-core': { shelf: ['numlinebench'], build: nl({ from: -8, to: 8, a: 0, s: 1, n: 0 }),
+      hook: '向东是往右，向西是往左。先向东走 5 米：把“跳”字往右拖 5 步；再把步长改成 −1，把起点拖到 5，向西走 3 步。最后在哪里？',
+      milestones: [N('east', '先向东走到 5', 2, 'value', 5, ['向东是往右。', '拖“跳”字往右 5 步。', '到 5。']), N('back', '再向西走 3 米：在出发点东边 2 米', 5, 'value', 2, ['向西是往左。', '起点拖到 5，步长点成 −1，跳 3 步。', '5、4、3、2。'])], goal: ['back'] },
+    'g3-direction-back-trap': { shelf: ['numlinebench'], build: nl({ from: -8, to: 8, a: -4, s: 1, n: 0 }),
+      hook: '已经向西走了 4 米，现在在 −4。再向东走 4 米：往右跳 4 步。离出发点（0）多远？',
+      milestones: [N('zero', '回到出发点：0', 6, 'value', 0, ['向东是往右。', '拖“跳”字往右 4 步。', '−3、−2、−1、0。'])], goal: ['zero'],
+      traps: [{ id: 'eight', wrong: '走了 4 + 4 = 8 米的路，但一去一回，离出发点是 0 米：路程和位置不是一回事。', when: { role: 'n', port: 'jumps', op: '=', value: '8' } }] },
+    'frac-compare': { shelf: ['ratiobench'], build: rb({ d1: 2, n1: 1, d2: 5, n2: 0 }),
+      hook: '甲是 1/2。把乙涂成 3/5，上下一比，谁长？再看“通分”那一行：都切成 10 份。',
+      milestones: [R('b', '乙是 3/5', 3, 'b', '3/5', ['拖乙条的把手。', '涂 3 份。', '3/5。']), R('cmp', '1/2 比 3/5 小', 4, 'cmp', -1, ['看两条虚线。', '5/10 和 6/10。', '1/2 < 3/5。'])], goal: ['cmp'] },
   };
   const missing = [], moved = [];
   for (const id of Object.keys(MOVES)) {

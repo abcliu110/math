@@ -43,6 +43,11 @@ module.exports = {
   'g7-quadrant-core': c({ ax: -2, ay: 3 }),
   'g7-symmetry-x-axis-trap': c({ bx: 3, by: 2 }),
   'g7-translate-down-trap': c({ ay: -1 }),
+  // 第五批
+  'g1-position-numline-trap': n({ k: 7 }),
+  'g3-direction-east-west-core'(h) { const e = h.role('n'); h.set(e, 'n', 5); h.set(e, 'n', 0); h.set(e, 'a', 5); h.set(e, 's', -1); h.set(e, 'n', 3); },
+  'g3-direction-back-trap': n({ n: 4 }),
+  'frac-compare': r({ n2: 3 }),
   // 第四批
   'g1-chain-add-core': t({ toks: '9' }), 'g1-chain-sub-trap': t({ toks: '4' }), 'g2-mixed-core': t({ toks: '14' }), 'g2-mixed-brackets-trap': t({ toks: '20' }),
   'g4-order-mul-core': t({ toks: '23' }), 'g4-order-left-trap': t({ toks: '10' }), 'g4-assoc-mul-core': t({ toks: '800' }), 'g4-assoc-sub-trap': t({ toks: '7' }),
