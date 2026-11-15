@@ -30,12 +30,25 @@
       return '<text ' + attrs + ' textLength="' + Math.floor(room) + '" lengthAdjust="spacingAndGlyphs">' + txt + '</text>';
     });
   }
+  // 器材上可以直接拖的把手（docs/instrument-design.md 5.1）：器材声明 grips(c) → [{ id, x, y, r?, cursor?, tip?, shape?, drag(c, p) → 要改的属性 }]，
+  // 坐标是卡片画布的像素。界面只按声明画把手、转发拖动，不认器材名；一次拖动是一步（见 stage-drag.js 的 grip）。
+  function gripsOf(d, c) { try { return d.grips ? d.grips(c) || [] : []; } catch (x) { return []; } }
+  function gripsSvg(d, c) {
+    return gripsOf(d, c).map((g) => {
+      const tip = g.tip ? '<title>' + K.esc(g.tip) + '</title>' : '', cur = g.cursor || 'grab', r = g.r || L.GRIP.r;
+      const hit = '<circle cx="' + g.x + '" cy="' + g.y + '" r="' + (r + L.GRIP.pad) + '" fill="transparent"/>';
+      const mark = g.shape === 'bar-v' ? '<rect x="' + (g.x - 4) + '" y="' + (g.y - r - 5) + '" width="8" height="' + (2 * r + 10) + '" rx="4" fill="#fff" stroke="var(--blue)" stroke-width="2.5"/>'
+        : g.shape === 'bar-h' ? '<rect x="' + (g.x - r - 5) + '" y="' + (g.y - 4) + '" width="' + (2 * r + 10) + '" height="8" rx="4" fill="#fff" stroke="var(--blue)" stroke-width="2.5"/>'
+        : '<circle cx="' + g.x + '" cy="' + g.y + '" r="' + r + '" fill="#fff" stroke="var(--blue)" stroke-width="2.5"/>';
+      return '<g class="grip" data-grip="' + SG.escA(g.id) + '" style="cursor:' + cur + '">' + tip + hit + mark + (g.text ? '<text x="' + g.x + '" y="' + (g.y + 4) + '" text-anchor="middle" font-size="11" font-weight="700" fill="var(--blue)" style="pointer-events:none">' + K.esc(g.text) + '</text>' : '') + '</g>';
+    }).join('');
+  }
   function cardHtml(e, D, S) {
     const d = SG.def(e), g = SG.geom(e), dd = D[e.id], cH = g.h - HD;
     const c = { ent: e, props: dd.props || e.props, d: dd, out: dd.out, state: e.state, w: g.w, h: cH, t: S.scene.clock.t, n: S.scene.clock.n, scene: S.scene };
     c.masked = !!(d.guess && !d.guess.answered(c.props));   // 先猜后看：还没填猜测，被 guess.ports 遮住的读数在界面上不显示（内核里值照常流动）
     let body = '', badge = '';
-    try { body = SG.isWsDef(e.type) ? SG.wsBody(e, g.w, cH) : fitBody(d.draw(c), g.w); } catch (x) { body = K.text(g.w / 2, cH / 2, '画不出来', { fill: 'var(--bad)' }); }
+    try { body = SG.isWsDef(e.type) ? SG.wsBody(e, g.w, cH) : fitBody(d.draw(c), g.w) + gripsSvg(d, c); } catch (x) { body = K.text(g.w / 2, cH / 2, '画不出来', { fill: 'var(--bad)' }); }
     // 工作区的标题步数只数学生做的步骤（和下面的步骤清单是同一批）
     try { badge = SG.isWsDef(e.type) ? (SG.wsSteps(e).length ? SG.wsSteps(e).length + ' 步' : '') : d.badge ? d.badge(c) : ''; } catch (x) { badge = ''; }
     let h = '<div class="card' + (S.sel === e.id ? ' sel' : '') + '" data-id="' + e.id + '" style="left:' + g.x + 'px;top:' + g.y + 'px;width:' + g.w + 'px;height:' + g.h + 'px">';

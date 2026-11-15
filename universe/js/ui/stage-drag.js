@@ -44,6 +44,42 @@
     SG.wsCyc = { wsid: wb.dataset.wsid, x: ev.clientX, y: ev.clientY, t: now, idx };
     return names[idx];
   }
+  // ---- 器材上的把手（grips）----
+  // 拖动时用的是按下那一刻的属性（p0）去问器材“拖到这里该是什么值”，所以换算不随预览漂移；预览直接改实体属性，松手先还原再提交
+  function gripCtx(e, props) {
+    const S = UI.S, g = SG.geom(e), dd = S.D[e.id] || {};
+    return { ent: e, props, d: dd, out: dd.out || {}, state: e.state, w: g.w, h: g.h - HD, scene: S.scene };
+  }
+  function gripDown(e, el, ev) {
+    const svg = el.closest('svg'); if (!svg) return;
+    SG.drag = { kind: 'grip', id: e.id, grip: el.dataset.grip, svg, p0: Object.assign({}, e.props), sx: ev.clientX, sy: ev.clientY, moved: false, patch: null };
+    SG.render();
+  }
+  function gripMove(ev) {
+    const S = UI.S, d = SG.drag, e = S.scene.entities[d.id]; if (!e) return;
+    if (!d.moved && Math.hypot(ev.clientX - d.sx, ev.clientY - d.sy) < L.DRAG_SLOP) return;
+    d.moved = true;
+    const def = SG.def(e), c0 = gripCtx(e, d.p0), gr = (def.grips(c0) || []).find((x) => x.id === d.grip); if (!gr || !gr.drag) return;
+    const svg = [...document.querySelectorAll('.card[data-id="' + d.id + '"] svg.bdy')][0] || d.svg, r = svg.getBoundingClientRect();
+    const p = UI.Space.screenToCanvas(ev, r, c0.w, c0.h);
+    let patch = null; try { patch = gr.drag(c0, p); } catch (x) { patch = null; }
+    if (!patch) return;
+    const clean = {};
+    for (const k of Object.keys(patch)) { const P = def.props[k]; if (!P) continue; const cv = U.coerceProp(P, patch[k]); if (cv.ok) clean[k] = cv.v; }
+    d.patch = clean;
+    for (const k of Object.keys(d.p0)) e.props[k] = d.p0[k];
+    Object.assign(e.props, clean);
+    S.D = W.evaluate(S.scene); SG.render();
+    if (gr.say) { let s = ''; try { s = gr.say(gripCtx(e, e.props)); } catch (x) { s = ''; } if (s) showTip(ev.clientX, ev.clientY, s, true); }
+  }
+  function gripUp(d) {
+    const S = UI.S, e = S.scene.entities[d.id]; showTip(0, 0, '');
+    if (!e) return SG.render();
+    for (const k of Object.keys(d.p0)) e.props[k] = d.p0[k];
+    const ops = d.patch ? Object.keys(d.patch).filter((k) => d.patch[k] !== d.p0[k]).map((k) => ({ id: d.id, k, v: d.patch[k] })) : [];
+    if (ops.length) UI.Intent.run('params', { ops }); else { S.D = W.evaluate(S.scene); SG.render(); }
+    UI.Panels.renderInsp();
+  }
   function onDown(ev) {
     const S = UI.S;
     if (ev.target.closest('.ctxmenu')) return;   // 长按菜单自己处理（V8）
@@ -168,6 +204,9 @@
       const hm = t.closest('[data-help-mode]'); if (hm) { const [m, i] = hm.dataset.helpMode.split(':'); S.help[i] = m; SG.render(); return; }
       const hp = t.closest('[data-help]'); if (hp) { S.help[hp.dataset.help] = !S.help[hp.dataset.help]; SG.render(); return; }   // “怎么玩”：开 / 关
       if (t.closest('[data-card-insp]')) { S.sel = id; S.selLink = null; S.inspOpen = true; UI.Panels.renderInsp(); SG.render(); return; }   // 标题栏的“先猜 / 填写”：直接打开属性面板
+      // 器材上的把手：按下开始拖（改的是器材声明里这个把手对应的属性；拖动中只是预览，松手记成一步）
+      const gp = t.closest('[data-grip]');
+      if (gp && card.contains(gp) && !SG.isWsDef(e.type)) { ev.preventDefault(); ev.stopPropagation(); S.sel = id; S.selLink = null; SG.gripDown(e, gp, ev); return; }
       const pk = t.closest('[data-pick-k]');
       if (pk && card.contains(pk)) { S.sel = id; S.selLink = null; UI.Intent.run('set', { id, k: pk.dataset.pickK, v: Number(pk.dataset.pickV) }); UI.Panels.renderInsp(); return; }
       if (SG.isWsDef(e.type)) {
@@ -220,6 +259,7 @@
     if (SG.drag.kind === 'mark' || SG.drag.kind === 'markbody') { SG.markMove(ev); return; }
     if (SG.drag.kind === 'piece') { SG.pieceMove(ev); return; }
     if (SG.drag.kind === 'shape') { SG.shapeMove(ev); return; }
+    if (SG.drag.kind === 'grip') { gripMove(ev); return; }
     if (SG.drag.kind === 'rz') {
       const dx = ev.clientX - SG.drag.sx, dy = ev.clientY - SG.drag.sy;
       if (!SG.drag.moved && Math.hypot(dx, dy) < 3) return;
@@ -275,6 +315,7 @@
       if (d.kind === 'mark' || d.kind === 'markbody') { SG.markUp(d); SG.render(); return; }
       if (d.kind === 'piece') { SG.pieceUp(d, ev); return; }
       if (d.kind === 'shape') { SG.shapeUp(d, ev); return; }
+      if (d.kind === 'grip') { gripUp(d); return; }
       if (d.kind === 'rz') {
         showTip(0, 0, '');
         if (d.moved) UI.Intent.run('resize', { id: d.id, w: d.w1, h: d.h1, before: d.before });
@@ -287,5 +328,5 @@
       }
     }
   }
-  Object.assign(SG, { startResize, tip, showTip, WS_DBL_PX, wsCycPick, onDown, onMove, onUp });
+  Object.assign(SG, { gripDown, startResize, tip, showTip, WS_DBL_PX, wsCycPick, onDown, onMove, onUp });
 })(window);

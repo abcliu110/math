@@ -14,6 +14,7 @@
     'angletrig': 'packs/angletrig.js',
     'applied': 'packs/applied.js',
     'approach': 'packs/approach.js',
+    'areamodel': 'packs/areamodel.js',
     'arith': 'packs/arith.js',
     'arithbench': 'packs/arithbench.js',
     'asn': 'packs/asn.js',

@@ -1,12 +1,12 @@
 # 知识点覆盖报告
 
-> 由 `node tools/coverage.js` 生成，日期 2026-11-12。数据来自 `js/core/curriculum.js` 与 `problems/*.js`。
+> 由 `node tools/coverage.js` 生成，日期 2026-11-15。数据来自 `js/core/curriculum.js` 与 `problems/*.js`。
 
 ## 总览
 
 - 知识点：142 个（设计目标 142）
 - 有题的知识点：141 个（99%）
-- 题目：431 道；没有对应知识点的题：1 道
+- 题目：442 道；没有对应知识点的题：1 道
 - 没有器材的本质：无
 - 没有题的本质：无
 
@@ -16,13 +16,13 @@
 |---|---|---|---|
 | 1 | 16 | 16（100%） | 35 |
 | 2 | 16 | 16（100%） | 39 |
-| 3 | 16 | 16（100%） | 49 |
-| 4 | 17 | 17（100%） | 52 |
-| 5 | 14 | 14（100%） | 78 |
-| 6 | 15 | 14（93%） | 47 |
+| 3 | 16 | 16（100%） | 50 |
+| 4 | 17 | 17（100%） | 55 |
+| 5 | 14 | 14（100%） | 79 |
+| 6 | 15 | 14（93%） | 49 |
 | 7 | 16 | 16（100%） | 57 |
-| 8 | 16 | 16（100%） | 59 |
-| 9 | 16 | 16（100%） | 40 |
+| 8 | 16 | 16（100%） | 62 |
+| 9 | 16 | 16（100%） | 41 |
 
 ## 按知识点
 
@@ -62,7 +62,7 @@
 | 2.14b | 2 | 推理 | 2 | 0 | 0 | 1 | deduce、nim |
 | 3.1 | 3 | 时、分、秒 | 1 | 1 | 0 | 1 | num |
 | 3.2 | 3 | 万以内加减法 | 1 | 1 | 0 | 1 | num |
-| 3.3 | 3 | 测量 | 1 | 1 | 0 | 1 | num |
+| 3.3 | 3 | 测量 | 2 | 1 | 0 | 1 | areamodel、num |
 | 3.4 | 3 | 倍的认识 | 3 | 1 | 0 | 1 | barmodel、num |
 | 3.5 | 3 | 多位数乘一位数 | 1 | 1 | 0 | 1 | num |
 | 3.6 | 3 | 长方形和正方形 | 2 | 1 | 0 | 1 | rect、num |
@@ -78,10 +78,10 @@
 | 3.15b | 3 | 搭配（二） | 2 | 1 | 0 | 1 | num、euler |
 | 4.1 | 4 | 大数的认识、近似数 | 5 | 0 | 0 | 1 | dice、num、coin |
 | 4.2 | 4 | 公顷和平方千米 | 1 | 1 | 0 | 1 | num |
-| 4.3 | 4 | 角的度量 | 1 | 0 | 0 | 1 | num |
+| 4.3 | 4 | 角的度量 | 2 | 0 | 0 | 1 | areamodel、num |
 | 4.4 | 4 | 三位数乘两位数 | 1 | 1 | 0 | 1 | num |
 | 4.5 | 4 | 平行四边形和梯形 | 3 | 1 | 0 | 1 | parallelogram、cubes |
-| 4.6 | 4 | 除数是两位数的除法 | 1 | 1 | 0 | 1 | num |
+| 4.6 | 4 | 除数是两位数的除法 | 3 | 1 | 0 | 1 | areamodel、num |
 | 4.7 | 4 | 条形统计图 | 1 | 1 | 0 | 1 | data、num |
 | 4.8 | 4 | 优化 | 1 | 1 | 0 | 1 | num |
 | 4.9 | 4 | 四则运算 | 10 | 1 | 0 | 1 | asn、tenframe、counter、meter、memory、num、op、dice、hist、findbug、road、turtle |
@@ -97,17 +97,17 @@
 | 5.2 | 5 | 位置 | 1 | 1 | 0 | 1 | — |
 | 5.3 | 5 | 小数除法 | 1 | 1 | 0 | 1 | num |
 | 5.4 | 5 | 可能性 | 7 | 1 | 0 | 3 | dice、num、divmod、meter、digits、numtheory、power、enumerator、array、ptree |
-| 5.5 | 5 | 简易方程 | 10 | 0 | 0 | 1 | variable、barmodel、eqscale、nim、linsolve、costplan、road |
+| 5.5 | 5 | 简易方程 | 10 | 0 | 0 | 1 | variable、barmodel、eqscale、nim、eqcard、costplan、road |
 | 5.6 | 5 | 多边形的面积 | 5 | 1 | 0 | 1 | num、parallelogram、gworkspace、gpt、gpoly、fquad |
 | 5.7 | 5 | 植树问题 | 1 | 1 | 0 | 1 | num |
 | 5.14 | 5 | 观察物体（三） | 2 | 1 | 0 | 1 | views、twoways |
 | 5.8 | 5 | 因数与倍数 | 25 | 0 | 0 | 2 | asn、frect、gpiece、garea、meter、fcirc、frtri、fisotri、fscalene、compare、figrel、ratio、fsquare、fpgram、frhomb、ftrap、fisotrap、frtrap、fkite、fquad4、xform、figmeasure、conjecture、hanoi、guessrule、modclock、num、primeblocks、counterex、scanner、proofsort、net |
 | 5.9 | 5 | 长方体和正方体 | 3 | 1 | 0 | 1 | pour、cuboid |
 | 5.10 | 5 | 分数的意义和性质 | 2 | 0 | 0 | 1 | num、primeblocks |
-| 5.11 | 5 | 分数的加法和减法 | 7 | 1 | 0 | 1 | num、approach、findbug、fracarea |
+| 5.11 | 5 | 分数的加法和减法 | 8 | 1 | 0 | 1 | num、approach、areamodel、findbug、fracarea |
 | 5.12 | 5 | 图形的运动（三） | 1 | 1 | 0 | 1 | — |
 | 5.13 | 5 | 折线统计图、找次品 | 1 | 0 | 0 | 1 | num |
-| 6.1 | 6 | 分数乘法 | 2 | 1 | 0 | 1 | num、fracarea |
+| 6.1 | 6 | 分数乘法 | 4 | 1 | 0 | 1 | areamodel、num、fracarea |
 | 6.3 | 6 | 位置与方向（二） | 1 | 1 | 0 | 1 | — |
 | 6.2 | 6 | 分数除法、倒数 | 3 | 1 | 0 | 1 | num、findbug、fracarea |
 | 6.4 | 6 | 比 | 3 | 0 | 0 | 1 | num、costplan |
@@ -127,8 +127,8 @@
 | 7.3 | 7 | 有理数的乘除法、乘方与科学记数法 | 3 | 1 | 0 | 1 | num、hanoi |
 | 7.4 | 7 | 整式 | 1 | 1 | 2 | 4 | algebra、induction |
 | 7.5 | 7 | 整式的加减 | 1 | 1 | 0 | 1 | algebra |
-| 7.6 | 7 | 解一元一次方程 | 10 | 0 | 0 | 1 | line、at、meter、inverse-prop、circle-line、pair-pos、rotate-about、eqscale、findbug、linsolve |
-| 7.7 | 7 | 实际问题与一元一次方程 | 1 | 1 | 0 | 1 | algebra |
+| 7.6 | 7 | 解一元一次方程 | 10 | 0 | 0 | 1 | line、at、meter、inverse-prop、circle-line、pair-pos、rotate-about、eqscale、findbug、eqcard |
+| 7.7 | 7 | 实际问题与一元一次方程 | 1 | 1 | 0 | 1 | — |
 | 7.8 | 7 | 几何图形与直线、射线、线段 | 1 | 1 | 0 | 1 | num |
 | 7.9 | 7 | 角 | 4 | 0 | 0 | 1 | curved、conjecture、polygon、fold |
 | 7.10 | 7 | 相交线 | 1 | 1 | 0 | 1 | num |
@@ -136,28 +136,28 @@
 | 7.12 | 7 | 实数 | 5 | 0 | 0 | 1 | compass、num、sqrt、round、turtle |
 | 7.13 | 7 | 平面直角坐标系 | 1 | 1 | 0 | 1 | num |
 | 7.14 | 7 | 二元一次方程组与消元 | 2 | 0 | 0 | 1 | line、num、cross |
-| 7.15 | 7 | 不等式与一元一次不等式组 | 2 | 0 | 0 | 1 | num、balance、ineq |
+| 7.15 | 7 | 不等式与一元一次不等式组 | 2 | 0 | 0 | 1 | num、balance、eqcard |
 | 7.16 | 7 | 统计调查与直方图 | 1 | 1 | 0 | 1 | — |
 | 8.1 | 8 | 三角形 | 1 | 0 | 0 | 1 | — |
 | 8.2 | 8 | 全等三角形的判定 | 2 | 1 | 0 | 1 | ftri、fold |
 | 8.3 | 8 | 轴对称 | 2 | 0 | 0 | 1 | fold |
-| 8.4 | 8 | 等腰三角形 | 2 | 1 | 0 | 1 | proofsort |
-| 8.5 | 8 | 幂的运算与整式的乘法 | 2 | 1 | 0 | 1 | num、tiles |
+| 8.4 | 8 | 等腰三角形 | 4 | 1 | 0 | 1 | areamodel、proofsort |
+| 8.5 | 8 | 幂的运算与整式的乘法 | 3 | 1 | 0 | 1 | areamodel、num、tiles |
 | 8.6 | 8 | 乘法公式 | 7 | 0 | 0 | 1 | variable、findbug、tiles |
 | 8.7 | 8 | 因式分解 | 2 | 0 | 0 | 1 | variable、pour |
 | 8.8 | 8 | 分式及其运算 | 1 | 1 | 0 | 1 | — |
 | 8.9 | 8 | 分式方程 | 2 | 0 | 0 | 1 | approach |
 | 8.10 | 8 | 二次根式 | 1 | 1 | 0 | 1 | num |
-| 8.11 | 8 | 勾股定理与逆定理 | 8 | 1 | 0 | 1 | algebra、eqdesk、system2、numline_iv、meter、exprbench、exprread、dissect、geoboard、tri、proofsort |
+| 8.11 | 8 | 勾股定理与逆定理 | 8 | 1 | 0 | 1 | eqcard、eqsys、meter、algebra、exprbench、exprread、dissect、geoboard、tri、proofsort |
 | 8.12 | 8 | 平行四边形 | 7 | 0 | 0 | 1 | compass、parallelogram、optimize、taxi |
 | 8.13 | 8 | 特殊的平行四边形 | 1 | 1 | 0 | 1 | — |
 | 8.14 | 8 | 函数与正比例函数 | 1 | 1 | 0 | 1 | — |
 | 8.15 | 8 | 一次函数 | 9 | 0 | 0 | 1 | line、fmachine、costplan、datatable、num、cross、databench |
 | 8.16 | 8 | 数据的分析 | 2 | 1 | 0 | 1 | data |
-| 9.1 | 9 | 解一元二次方程 | 2 | 0 | 0 | 1 | algebra、tiles |
+| 9.1 | 9 | 解一元二次方程 | 2 | 0 | 0 | 1 | tiles |
 | 9.2 | 9 | 一元二次方程的应用与根的判别式 | 2 | 1 | 0 | 1 | quad |
 | 9.3 | 9 | 二次函数的图象和性质 | 2 | 1 | 0 | 1 | quad |
-| 9.4 | 9 | 二次函数与方程及应用 | 3 | 0 | 0 | 1 | quad、fmachine、optimize |
+| 9.4 | 9 | 二次函数与方程及应用 | 4 | 0 | 0 | 1 | sweepx、num、op、sweeptab、meter、quad、fmachine、optimize |
 | 9.5 | 9 | 图形的旋转与中心对称 | 1 | 1 | 0 | 1 | — |
 | 9.6 | 9 | 圆的有关性质 | 1 | 1 | 0 | 1 | circle-angle |
 | 9.7 | 9 | 点、直线和圆的位置关系 | 1 | 1 | 0 | 1 | — |
@@ -175,17 +175,17 @@
 
 | 本质 | 题目数 | 器材数 |
 |---|---|---|
-| E1 | 44 | 26 |
-| E2 | 139 | 34 |
-| E3 | 132 | 48 |
-| E4 | 44 | 16 |
-| E5 | 114 | 52 |
-| E6 | 25 | 19 |
-| E7 | 30 | 12 |
-| E8 | 64 | 34 |
-| E9 | 75 | 14 |
-| E10 | 10 | 7 |
-| E11 | 11 | 7 |
+| E1 | 44 | 27 |
+| E2 | 142 | 37 |
+| E3 | 137 | 48 |
+| E4 | 47 | 29 |
+| E5 | 123 | 53 |
+| E6 | 25 | 25 |
+| E7 | 31 | 12 |
+| E8 | 65 | 48 |
+| E9 | 75 | 15 |
+| E10 | 10 | 9 |
+| E11 | 11 | 8 |
 | E12 | 22 | 11 |
 
 ## 没有题的知识点
