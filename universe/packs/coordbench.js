@@ -1,0 +1,171 @@
+/* 器材包 coordbench：坐标与函数操作台（docs/instrument-design.md 第 4 节）。一张坐标格，三种用法，全部在图上直接拖：
+ *   直线：  拖直线和 y 轴的交点改截距 b；拖直线上的另一个把手改斜率 k（它在 x = 分母 的地方，所以 1/2 这样的斜率也拖得出来）。
+ *           右边的表和式子跟着变：图、表、式三样是同一条直线。x 轴上还有一个探针，拖它看这个 x 对着的 y。
+ *   两点：  拖两个点，过它们的直线自动画出来；旁边画出“向右几、向上几”的台阶，斜率就是它们的比。
+ *   抛物线：拖顶点；拖顶点右边一格的把手改开口的大小和方向。写出顶点式和展开式，数出和 x 轴有几个交点。
+ * 坐标格是 −6 到 6，每格 24 像素，固定不变，所以把手一直跟着鼠标。
+ * 这一版的边界（如实写）：坐标只到 ±6；直线的斜率是分母不超过 4 的分数；抛物线的 a 是 1/2 的倍数；没有反比例和两条线求交点。 */
+(function (G) {
+  'use strict';
+  const U = G.U, Q = U.Q, K = U.kit;
+  const num = (n) => U.val('num', typeof n === 'number' ? Q(n) : n, { dim: null });
+  const MODES = ['直线', '两点', '抛物线'];
+  const W = 620, R = 6, CELL = 24, GX = 34, GY = 34, OX = GX + R * CELL, OY = GY + R * CELL, TX = GX + 2 * R * CELL + 30;
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  const X = (x) => OX + x * CELL, Y = (y) => OY - y * CELL, ix = (px) => (px - OX) / CELL, iy = (py) => (OY - py) / CELL;
+  const qs = (q) => Q.show(q).replace('-', '−'), sg = (n) => (n < 0 ? '−' + (-n) : String(n));
+
+  function model(p) {
+    if (p.mode === 1) {
+      const ax = clamp(p.ax, -R, R), ay = clamp(p.ay, -R, R), bx = clamp(p.bx, -R, R), by = clamp(p.by, -R, R);
+      const m = { mode: 1, ax, ay, bx, by, vertical: ax === bx, same: ax === bx && ay === by };
+      if (!m.vertical) { m.k = Q(by - ay, bx - ax); m.b = Q.sub(Q(ay), Q.mul(m.k, Q(ax))); }
+      return m;
+    }
+    if (p.mode === 2) {
+      const a2 = p.a2 === 0 ? 2 : clamp(p.a2, -6, 6), h = clamp(p.h, -R, R), v = clamp(p.v, -R, R), a = Q(a2, 2);
+      const t = -v * 2 / a2;   // (x − h)² = −v/a
+      return { mode: 2, a2, a, h, v, roots: t > 0 ? 2 : t === 0 ? 1 : 0, B: Q.mul(Q(-2 * h), a), C: Q.add(Q.mul(a, Q(h * h)), Q(v)) };
+    }
+    const kd = clamp(p.kd, 1, 4), kn = clamp(p.kn, -12, 12), b = clamp(p.b, -R, R), k = Q(kn, kd), x = clamp(p.x, -R, R);
+    return { mode: 0, kn, kd, k, b: Q(b), bi: b, x, y: Q.add(Q.mul(k, Q(x)), Q(b)), root: kn === 0 ? null : Q.div(Q(-b), k) };
+  }
+  // y = kx + b 写成式子
+  function lineEq(k, b) {
+    const kn = Q.num(k), bn = Q.num(b);
+    const kx = kn === 0 ? '' : kn === 1 ? 'x' : kn === -1 ? '−x' : qs(k) + 'x';
+    if (!kx) return 'y = ' + qs(b);
+    return 'y = ' + kx + (bn === 0 ? '' : bn > 0 ? ' + ' + qs(b) : ' − ' + qs(Q.abs(b)));
+  }
+  // 直线在坐标格里露出来的那一段
+  function clipLine(k, b) {
+    const pts = [], kn = Q.num(k), bn = Q.num(b), add = (x, y) => { if (x >= -R - 1e-9 && x <= R + 1e-9 && y >= -R - 1e-9 && y <= R + 1e-9) pts.push([x, y]); };
+    add(-R, -R * kn + bn); add(R, R * kn + bn);
+    if (kn !== 0) { add((-R - bn) / kn, -R); add((R - bn) / kn, R); }
+    if (pts.length < 2) return '';
+    pts.sort((u, v) => u[0] - v[0]);
+    const a = pts[0], z = pts[pts.length - 1];
+    return K.line(X(a[0]), Y(a[1]), X(z[0]), Y(z[1]), { w: 3, stroke: 'var(--blue)' });
+  }
+  function grid() {
+    let s = K.rect(GX, GY, 2 * R * CELL, 2 * R * CELL, { fill: '#fff', stroke: '#8a94a8', r: 0 });
+    for (let i = -R; i <= R; i++) {
+      s += K.line(X(i), GY, X(i), GY + 2 * R * CELL, { w: i === 0 ? 2 : 0.5, stroke: i === 0 ? 'var(--ink)' : '#b9c2d3' }) + K.line(GX, Y(i), GX + 2 * R * CELL, Y(i), { w: i === 0 ? 2 : 0.5, stroke: i === 0 ? 'var(--ink)' : '#b9c2d3' });
+      if (i !== 0 && i % 2 === 0) s += K.text(X(i), OY + 14, sg(i), { size: 10 }) + K.text(OX - 10, Y(i) + 4, sg(i), { size: 10 });
+    }
+    return s + K.text(GX + 2 * R * CELL + 10, OY + 4, 'x', { size: 12, weight: 700 }) + K.text(OX, GY - 8, 'y', { size: 12, weight: 700 });
+  }
+  const dot = (x, y, col) => K.circle(X(x), Y(y), 5, { fill: col || 'var(--blue)', stroke: '#fff', w: 1.5 });
+  const pickBtn = (x, y, tx, k, v, tip) => '<g data-pick-k="' + k + '" data-pick-v="' + v + '" style="cursor:pointer"><title>' + K.esc(tip) + '</title>' + K.rect(x, y, 24, 22, { fill: '#fff', stroke: '#8a94a8', r: 6 }) + K.text(x + 12, y + 16, tx, { size: 14, weight: 700 }) + '</g>';
+  const L = (i, t, o) => K.text(TX, GY + 16 + i * 22, t, Object.assign({ size: 14, anchor: 'start' }, o || {}));
+
+  function draw(c) {
+    const m = model(c.props); let s = grid();
+    if (m.mode === 0) {
+      s += clipLine(m.k, m.b);
+      const yv = Q.num(m.y);
+      if (Math.abs(yv) <= R) s += K.line(X(m.x), OY, X(m.x), Y(yv), { w: 1.4, dash: '4 3', stroke: 'var(--accent)' }) + K.line(OX, Y(yv), X(m.x), Y(yv), { w: 1.4, dash: '4 3', stroke: 'var(--accent)' }) + dot(m.x, yv, 'var(--accent)');
+      s += L(0, lineEq(m.k, m.b), { size: 19, weight: 700 });
+      s += L(1.4, '斜率 k = ' + qs(m.k) + '：向右 ' + m.kd + '，' + (m.kn >= 0 ? '向上 ' : '向下 ') + Math.abs(m.kn));
+      s += K.text(TX, GY + 16 + 2.6 * 22, '分母', { size: 12, anchor: 'start' }) + pickBtn(TX + 30, GY + 16 + 2.6 * 22 - 16, '−', 'kd', Math.max(1, m.kd - 1), '斜率的分母减 1') + K.text(TX + 70, GY + 16 + 2.6 * 22, String(m.kd), { size: 14, weight: 700 }) + pickBtn(TX + 84, GY + 16 + 2.6 * 22 - 16, '＋', 'kd', Math.min(4, m.kd + 1), '斜率的分母加 1（可以拖出 1/2、2/3 这样的斜率）');
+      s += L(3.8, '截距 b = ' + qs(m.b) + '：和 y 轴交在 (0, ' + qs(m.b) + ')');
+      s += L(5, m.root === null ? '和 x 轴平行，没有交点' : '和 x 轴交在 x = ' + qs(m.root));
+      s += L(6.2, c.masked ? 'x = ' + sg(m.x) + ' 时，y = ？' : 'x = ' + sg(m.x) + ' 时，y = ' + qs(m.y), { weight: 700, fill: 'var(--accent)' });
+      // 取值表
+      const ty = GY + 16 + 7.6 * 22;
+      s += K.text(TX, ty, 'x', { size: 13, anchor: 'start', weight: 700 }) + K.text(TX, ty + 22, 'y', { size: 13, anchor: 'start', weight: 700 });
+      for (let i = -2; i <= 2; i++) s += K.text(TX + 44 + (i + 2) * 36, ty, sg(i), { size: 13 }) + K.text(TX + 44 + (i + 2) * 36, ty + 22, c.masked ? '？' : qs(Q.add(Q.mul(m.k, Q(i)), m.b)), { size: 13 });
+    } else if (m.mode === 1) {
+      if (m.same) s += L(0, '两个点重合了，定不出直线', { fill: 'var(--bad)' });
+      else if (m.vertical) s += K.line(X(m.ax), GY, X(m.ax), GY + 2 * R * CELL, { w: 3, stroke: 'var(--blue)' }) + L(0, 'x = ' + sg(m.ax), { size: 19, weight: 700 }) + L(1.4, '竖直的线：向右走 0，没有斜率');
+      else {
+        s += clipLine(m.k, m.b);
+        // 台阶：从 A 向右 run，再向上 rise
+        s += K.line(X(m.ax), Y(m.ay), X(m.bx), Y(m.ay), { w: 2, dash: '5 3', stroke: 'var(--accent)' }) + K.line(X(m.bx), Y(m.ay), X(m.bx), Y(m.by), { w: 2, dash: '5 3', stroke: 'var(--accent)' });
+        const run = m.bx - m.ax, rise = m.by - m.ay;
+        s += L(0, lineEq(m.k, m.b), { size: 19, weight: 700 });
+        s += L(1.4, '从 A 到 B：横着走 ' + sg(run) + '，竖着走 ' + sg(rise));
+        s += L(2.6, '斜率 k = ' + sg(rise) + ' ÷ ' + (run < 0 ? '(' + sg(run) + ')' : run) + ' = ' + qs(m.k), { weight: 700 });
+        s += L(3.8, '截距 b = ' + qs(m.b));
+      }
+      s += K.text(X(m.ax) - 10, Y(m.ay) - 10, 'A', { size: 13, weight: 700 }) + K.text(X(m.bx) + 10, Y(m.by) - 10, 'B', { size: 13, weight: 700 });
+      s += L(6.2, 'A (' + sg(m.ax) + ', ' + sg(m.ay) + ')　B (' + sg(m.bx) + ', ' + sg(m.by) + ')');
+    } else {
+      const an = Q.num(m.a); let d = '';
+      for (let i = 0; i <= 96; i++) { const x = -R + i * (2 * R / 96), y = an * (x - m.h) * (x - m.h) + m.v; if (y < -R - 0.01 || y > R + 0.01) { d += ' '; continue; } d += (d && d[d.length - 1] !== ' ' ? 'L' : 'M') + X(x).toFixed(1) + ' ' + Y(y).toFixed(1); }
+      s += '<path d="' + d.trim().replace(/\s+/g, ' ') + '" fill="none" stroke="var(--blue)" stroke-width="3"/>';
+      s += K.line(X(m.h), GY, X(m.h), GY + 2 * R * CELL, { w: 1.2, dash: '5 4', stroke: 'var(--accent)' });
+      const hh = m.h === 0 ? 'x' : m.h > 0 ? '(x − ' + m.h + ')' : '(x + ' + (-m.h) + ')', aa = an === 1 ? '' : an === -1 ? '−' : qs(m.a);
+      s += L(0, 'y = ' + aa + hh + '²' + (m.v === 0 ? '' : m.v > 0 ? ' + ' + m.v : ' − ' + (-m.v)), { size: 18, weight: 700 });
+      const bn = Q.num(m.B), cn = Q.num(m.C);
+      s += L(1.4, '展开：y = ' + (an === 1 ? '' : an === -1 ? '−' : qs(m.a)) + 'x²' + (bn === 0 ? '' : (bn > 0 ? ' + ' : ' − ') + (Math.abs(bn) === 1 ? '' : qs(Q.abs(m.B))) + 'x') + (cn === 0 ? '' : (cn > 0 ? ' + ' : ' − ') + qs(Q.abs(m.C))));
+      s += L(2.6, '顶点 (' + sg(m.h) + ', ' + sg(m.v) + ')，对称轴 x = ' + sg(m.h));
+      s += L(3.8, '开口' + (an > 0 ? '向上，顶点最低' : '向下，顶点最高') + '；a = ' + qs(m.a));
+      s += L(5, c.masked ? '和 x 轴有几个交点？' : '和 x 轴有 ' + m.roots + ' 个交点', { weight: 700, fill: 'var(--accent)' });
+    }
+    return s;
+  }
+
+  function grips(c) {
+    const m = model(c.props), out = [], rx = (q) => clamp(Math.round(ix(q.x)), -R, R), ry = (q) => clamp(Math.round(iy(q.y)), -R, R);
+    if (m.mode === 0) {
+      out.push({ id: 'b', x: X(0), y: Y(m.bi), r: 8, cursor: 'ns-resize', tip: '上下拖：改截距（整条线平移）',
+        drag: (c0, q) => ({ b: ry(q) }), say: (c1) => lineEq(model(c1.props).k, model(c1.props).b) });
+      const sy = m.bi + m.kn;
+      out.push({ id: 'k', x: X(m.kd), y: Y(clamp(sy, -R - 1, R + 1)), r: 8, text: 'k', cursor: 'ns-resize', tip: '上下拖：改斜率（线绕着和 y 轴的交点转）',
+        drag: (c0, q) => { const m0 = model(c0.props); return { kn: clamp(Math.round(iy(q.y)) - m0.bi, -12, 12) }; }, say: (c1) => lineEq(model(c1.props).k, model(c1.props).b) });
+      out.push({ id: 'x', x: X(m.x), y: OY, r: 7, cursor: 'ew-resize', tip: '左右拖：看这个 x 对着的 y',
+        drag: (c0, q) => ({ x: rx(q) }), say: (c1) => { const m1 = model(c1.props); return 'x = ' + sg(m1.x) + '，y = ' + qs(m1.y); } });
+    } else if (m.mode === 1) {
+      out.push({ id: 'A', x: X(m.ax), y: Y(m.ay), r: 8, cursor: 'move', tip: '拖点 A', drag: (c0, q) => ({ ax: rx(q), ay: ry(q) }), say: (c1) => 'A (' + sg(c1.props.ax) + ', ' + sg(c1.props.ay) + ')' });
+      out.push({ id: 'B', x: X(m.bx), y: Y(m.by), r: 8, cursor: 'move', tip: '拖点 B', drag: (c0, q) => ({ bx: rx(q), by: ry(q) }), say: (c1) => 'B (' + sg(c1.props.bx) + ', ' + sg(c1.props.by) + ')' });
+    } else {
+      out.push({ id: 'v', x: X(m.h), y: Y(m.v), r: 8, cursor: 'move', tip: '拖顶点：整条抛物线平移', drag: (c0, q) => ({ h: rx(q), v: ry(q) }), say: (c1) => '顶点 (' + sg(c1.props.h) + ', ' + sg(c1.props.v) + ')' });
+      const ay = m.v + Q.num(m.a);
+      out.push({ id: 'a', x: X(m.h + 1), y: Y(clamp(ay, -R - 1, R + 1)), r: 8, text: 'a', cursor: 'ns-resize', tip: '上下拖：改开口的大小；拖到顶点下面，开口就朝下',
+        drag: (c0, q) => { const m0 = model(c0.props); let a2 = clamp(Math.round((iy(q.y) - m0.v) * 2), -6, 6); if (a2 === 0) a2 = m0.a2 > 0 ? 1 : -1; return { a2 }; },
+        say: (c1) => 'a = ' + qs(model(c1.props).a) });
+    }
+    return out;
+  }
+
+  const I = (lo, hi, d, label, o) => Object.assign({ type: 'int', label, default: d, min: lo, max: hi, write: true }, o || {});
+  U.registerPack({
+    id: 'coordbench', version: 1,
+    types: {
+      coordbench: {
+        workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E6', 'E2'],
+        label: '坐标与函数', prefix: '坐标', group: '函数', grades: [5, 9],
+        alias: ['坐标', '函数', '一次函数', '直线', '斜率', '截距', '正比例', '二次函数', '抛物线', '顶点', '图像'],
+        props: {
+          mode: { type: 'choice', label: '用来做什么', default: 0, choices: MODES, write: true },
+          kn: I(-12, 12, 1, '斜率的分子'), kd: I(1, 4, 1, '斜率的分母'), b: I(-R, R, 0, '截距'), x: I(-R, R, 1, '探针的 x'),
+          ax: I(-R, R, -2, 'A 的 x'), ay: I(-R, R, -1, 'A 的 y'), bx: I(-R, R, 2, 'B 的 x'), by: I(-R, R, 1, 'B 的 y'),
+          a2: I(-6, 6, 2, '抛物线的 a 的 2 倍'), h: I(-R, R, 0, '顶点的 x'), v: I(-R, R, 0, '顶点的 y'),
+        },
+        outputs: {
+          k: { dim: null, kind: 'num', label: '斜率（竖直线没有）' },
+          b: { dim: null, kind: 'num', label: '截距' },
+          y: { dim: null, kind: 'num', label: '探针处的 y' },
+          root: { dim: null, kind: 'num', label: '直线和 x 轴的交点（平行时没有）' },
+          a: { dim: null, kind: 'num', label: '抛物线的 a' },
+          h: { dim: null, kind: 'num', label: '顶点的 x' },
+          v: { dim: null, kind: 'num', label: '顶点的 y' },
+          roots: { dim: null, kind: 'num', label: '抛物线和 x 轴的交点个数' },
+        },
+        icon: () => K.line(8, 36, 56, 36, { w: 1.5 }) + K.line(16, 6, 16, 40, { w: 1.5 }) + K.line(10, 34, 54, 10, { w: 2.5, stroke: 'var(--blue)' }),
+        size: () => [W, 386],
+        grips,
+        compute: (c) => {
+          const m = model(c.props), z = num(0);
+          if (m.mode === 1) { const o = { y: z, a: z, h: z, v: z, roots: z }; if (!m.vertical) { o.k = num(m.k); o.b = num(m.b); if (Q.num(m.k) !== 0) o.root = num(Q.div(Q.neg ? Q.neg(m.b) : Q.sub(Q(0), m.b), m.k)); } return o; }
+          if (m.mode === 2) return { a: num(m.a), h: num(m.h), v: num(m.v), roots: num(m.roots), k: z, b: z, y: z };
+          const o = { k: num(m.k), b: num(m.b), y: num(m.y), a: z, h: z, v: z, roots: z }; if (m.root !== null) o.root = num(m.root); return o;
+        },
+        badge: () => '',
+        draw,
+      },
+    },
+  });
+  U.CoordBench = { model, lineEq, MODES };
+})(typeof globalThis !== 'undefined' ? globalThis : window);

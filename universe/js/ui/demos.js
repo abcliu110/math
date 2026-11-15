@@ -421,5 +421,36 @@
     },
   };
 
+  // 坐标与函数：b 管平移，k 管倾斜
+  D.coordbench = {
+    caps: ['y = x：每向右 1，向上 1', '改截距：整条线上下平移，斜率不变', '改斜率：线绕着截距那个点转', '式、表、图说的是同一条线'],
+    draw(st) {
+      const ox = 110, oy = 100, c = 16, X = (x) => ox + x * c, Y = (y) => oy - y * c; let s = '';
+      for (let i = -5; i <= 5; i++) s += Ln(X(i), Y(-5), X(i), Y(5), { w: i === 0 ? 1.8 : 0.4, s: i === 0 ? INK : DIM }) + Ln(X(-5), Y(i), X(5), Y(i), { w: i === 0 ? 1.8 : 0.4, s: i === 0 ? INK : DIM });
+      const k = st >= 2 ? 2 : 1, b = st >= 1 ? 1 : 0, x1 = Math.max(-5, (-5 - b) / k), x2 = Math.min(5, (5 - b) / k);
+      if (st >= 1) s += Ln(X(-5), Y(-5), X(5), Y(5), { s: DIM, d: '4 3' });
+      s += Ln(X(x1), Y(k * x1 + b), X(x2), Y(k * x2 + b), { s: B, w: 3 }) + Ci(X(0), Y(b), 5, A, { s: INK });
+      const eq = ['y = x', 'y = x + 1', 'y = 2x + 1', 'y = 2x + 1'][st];
+      s += T(270, 50, eq, { s: 17, w: 700, f: P });
+      if (st === 3) { s += T(230, 90, 'x', { w: 700 }) + T(230, 112, 'y', { w: 700 }); [0, 1, 2].forEach((x, i) => { s += T(260 + i * 28, 90, String(x)) + T(260 + i * 28, 112, String(2 * x + 1)); }); }
+      return s;
+    },
+  };
+
+  // 计数块：十个捆成一个
+  D.blocksbench = {
+    caps: ['十位 3 个，个位 12 个：27 + 15 的块倒在一起', '个位超过 9：一个数位写不下 12', '十个小方块捆成一根长条，放到十位', '4 个十、2 个一：42'],
+    draw(st) {
+      const t = st >= 2 ? 4 : 3, o = st >= 2 ? 2 : 12; let s = '';
+      s += Rc(60, 30, 110, 110, st === 1 ? '#fff' : '#fff', { s: INK, r: 6 }) + Rc(190, 30, 110, 110, st === 1 ? '#fde8e8' : '#fff', { s: st === 1 ? RD : INK, r: 6 });
+      s += T(115, 22, '十位', { w: 700 }) + T(245, 22, '个位', { w: 700, f: st === 1 ? RD : INK });
+      for (let i = 0; i < t; i++) s += Rc(70 + i * 16, 64, 11, 66, i === 3 ? P : GR, { s: INK, o: 0.8 });
+      for (let i = 0; i < o; i++) s += Rc(198 + (i % 6) * 16, 118 - Math.floor(i / 6) * 16, 12, 12, st === 1 && i < 10 ? P : B, { s: INK, o: 0.85 });
+      if (st === 1) s += Ar(196, 80, 150, 80, { s: P, w: 2.5 }) + T(172, 70, '捆', { f: P, w: 700 });
+      s += T(180, 166, st >= 2 ? '27 + 15 = 42' : '3 个十 + 12 个一', { s: 16, w: 700, f: st === 3 ? GR : INK });
+      return s;
+    },
+  };
+
   UI.Demo = D;
 })(typeof globalThis !== 'undefined' ? globalThis : window);
