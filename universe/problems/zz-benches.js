@@ -1,4 +1,4 @@
-/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，五批共 59 道）。
+/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，六批共 61 道）。
  * 这些题原来的做法是“放数字、接运算器、看读数”：学生在搭计算流程。这里按 id 把它们换成在操作台上直接动手：
  * 题目的编号、标题、年级、知识点、道理（why）都不变，换的是器材架、开场的台面、里程碑和提示。
  * 这个文件排在所有题目文件后面加载（文件名 zz 开头），找不到的 id 会记在 U.benchMigrateMissing 里（测试会查）。 */
@@ -7,8 +7,8 @@
   const U = G.U, W = U.World;
   const one = (type, role, props) => () => { const s = W.blank(); const id = W.add(s, type, 40, 50, props); s.entities[id].role = role; return s; };
   const ms = (role) => (id, say, score, port, value, hints) => ({ id, say, score, when: { role, port, op: '=', value: String(value) }, hints });
-  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t');
-  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props);
+  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s');
+  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props);
   const MOVES = {
     // ---- 数轴 ----
     'g1-split-merge-core': { shelf: ['numlinebench'], build: nl({ from: 0, to: 10, a: 0, s: 1, n: 0 }),
@@ -214,6 +214,13 @@
     'frac-compare': { shelf: ['ratiobench'], build: rb({ d1: 2, n1: 1, d2: 5, n2: 0 }),
       hook: '甲是 1/2。把乙涂成 3/5，上下一比，谁长？再看“通分”那一行：都切成 10 份。',
       milestones: [R('b', '乙是 3/5', 3, 'b', '3/5', ['拖乙条的把手。', '涂 3 份。', '3/5。']), R('cmp', '1/2 比 3/5 小', 4, 'cmp', -1, ['看两条虚线。', '5/10 和 6/10。', '1/2 < 3/5。'])], goal: ['cmp'] },
+    // ======== 第六批：鸡兔同笼，在“换一换”上做 ========
+    'g4-chicken-rabbit-core': { shelf: ['swapbench'], build: sw({ n: 35, k: 0, target: 94, la: 2, lb: 4 }),
+      hook: '35 个头，94 条腿。先假设全是鸡：70 条腿，差 24 条。每把一只鸡换成兔多 2 条：拖中间的把手，换到腿数正好。兔有几只？',
+      milestones: [S('hit', '腿数正好 94', 3, 'ok', 1, ['差 24 条。', '每换一只多 2 条。', '24 ÷ 2 = 12 只。']), S('rabbit', '兔有 12 只', 4, 'b', 12, ['数橙色的。', '12 只。', '拖把手到第 12 个后面。'])], goal: ['rabbit'] },
+    'g4-chicken-rabbit-trap': { shelf: ['swapbench'], build: sw({ n: 35, k: 0, target: 94, la: 2, lb: 4 }),
+      hook: '35 个头，94 条腿。这回问的是鸡有几只。换出来的 12 只是兔，别把它当成答案：鸡是剩下的。',
+      milestones: [S('hit', '腿数正好 94', 3, 'ok', 1, ['全是鸡差 24 条。', '每换一只多 2 条。', '换 12 只。']), S('chicken', '鸡有 23 只', 4, 'a', 23, ['35 个头里兔占了 12 个。', '35 − 12。', '23 只。'])], goal: ['chicken'] },
   };
   const missing = [], moved = [];
   for (const id of Object.keys(MOVES)) {

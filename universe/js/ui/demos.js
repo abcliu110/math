@@ -466,5 +466,34 @@
     },
   };
 
+  // 换一换：每换一只多 2 条腿
+  D.swapbench = {
+    caps: ['8 个头，假设全是鸡：16 条腿', '目标是 26 条，差 10 条', '把一只鸡换成兔：多 2 条', '差 10 条，换 5 只：兔 5 只、鸡 3 只'],
+    draw(st) {
+      const k = st >= 3 ? 5 : st === 2 ? 1 : 0; let s = '';
+      for (let i = 0; i < 8; i++) { const x = 44 + i * 36, b = i < k, legs = b ? 4 : 2; s += Ci(x, 56, 12, b ? A : B, { s: INK, o: 0.8 }); for (let j = 0; j < legs; j++) { const lx = x - (legs - 1) * 2.5 + j * 5; s += Ln(lx, 68, lx, 84, { w: 1.6 }); } }
+      const tot = 16 + 2 * k;
+      s += T(180, 118, '一共 ' + tot + ' 条腿' + (st >= 1 && tot < 26 ? '，还差 ' + (26 - tot) : tot === 26 ? '，正好' : ''), { s: 15, w: 700, f: tot === 26 ? GR : INK });
+      if (st === 2) s += T(44, 30, '+2', { f: P, w: 700 });
+      if (st === 3) s += T(180, 150, '10 ÷ 2 = 5', { s: 16, w: 700, f: P });
+      return s;
+    },
+  };
+
+  // 两架天平：相减，消掉一种盒子
+  D.systembench = {
+    caps: ['上面：x + y = 7', '下面：2x + y = 10，比上面多一个圆盒、3 个砝码', '从下面拿走上面的东西：剩 x = 3', '圆盒换成 3 个砝码：y = 4'],
+    draw(st) {
+      const row = (y, l, r, hi) => { let s = Ln(60, y, 300, y, { w: 3, s: hi ? P : INK }), x = 66; for (const t of l) { s += t === 'x' ? Ci(x + 9, y - 12, 9, A, { s: INK }) : Rc(x, y - 21, 18, 18, GR, { s: INK, o: 0.7 }); s += T(x + 9, y - 7, t, { s: 11, w: 700 }); x += 22; } s += T(180, y - 8, '=', { s: 16, w: 700 }); s += T(250, y - 7, r, { s: 16, w: 700 }); return s; };
+      let s = '';
+      s += st >= 3 ? row(60, ['y'], '4', true) : row(60, ['x', 'y'], '7', false);
+      if (st >= 1) s += st >= 2 ? row(120, ['x'], '3', true) : row(120, ['x', 'x', 'y'], '10', false);
+      if (st === 2) s += Ar(180, 70, 180, 96, { s: P, w: 2.5 }) + T(215, 90, '拿走', { f: P, w: 700 });
+      if (st === 3) s += Ar(180, 110, 180, 74, { s: P, w: 2.5 }) + T(215, 96, '代入', { f: P, w: 700 });
+      s += T(180, 164, ['x + y = 7', '2x + y = 10', '(2x + y) − (x + y) = 10 − 7', 'x = 3，y = 4'][st], { s: 14, w: 700, f: st === 3 ? GR : INK });
+      return s;
+    },
+  };
+
   UI.Demo = D;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

@@ -3637,8 +3637,8 @@ console.log('示例菜单（problems/examples-data.js，由 tools/gen-examples.j
 console.log('旧题搬到操作台');
 t('搬题：每个要搬的 id 都找到了题；搬过去的题器材架上只有操作台，开场台面上就有它', () => {
   eq(U.benchMigrateMissing, [], '找不到的 id');
-  truthy(U.benchMigrated.length >= 59, '至少搬了 59 道');
-  const BENCH = ['areamodel', 'balancebench', 'numlinebench', 'ratiobench', 'coordbench', 'blocksbench', 'termsbench'];
+  truthy(U.benchMigrated.length >= 61, '至少搬了 61 道');
+  const BENCH = ['areamodel', 'balancebench', 'numlinebench', 'ratiobench', 'coordbench', 'blocksbench', 'termsbench', 'swapbench', 'systembench'];
   for (const id of U.benchMigrated) {
     const p = U.problems.find((x) => x.id === id), s = p.build();
     truthy(p.shelf.length === 1 && BENCH.includes(p.shelf[0]), id + ' 的器材架');
@@ -3693,6 +3693,35 @@ t('运算顺序：按允许的顺序一路点到底，结果和直接算一样�
     while (cur.length > 1 && guard++ < 20) { const a = [...T.allowed(cur).ok]; truthy(a.length > 0, '总有一步可以算：' + cur.join(' ')); cur = T.applyOp(cur, a[rnd(a.length)]); }
     eq(Number(cur[0]), want, toks.join(' '));
   }
+});
+console.log('两架天平（方程组）');
+t('两架天平：消元、代入、拿走、平分的结果', () => {
+  const S = U.SystemBench, P = S.parse;
+  eq(S.dropOn([P('1,1,0,0,0,7'), P('2,1,0,0,0,10')], 0, 1).e, [1, 0, 0, 0, 0, 3], '(2x+y) − (x+y)：x = 3');
+  truthy(S.dropOn([P('1,1,0,0,0,8'), P('2,4,0,0,0,26')], 1, 0).why, '大的拖到小的上：拿不出来，给出原因');
+  eq(S.dropOn([P('1,0,0,0,0,3'), P('1,1,0,0,0,7')], 0, 1).e, [0, 1, 3, 0, 0, 7], '代入 x = 3：3 + y = 7');
+  eq(S.dropOn([P('1,0,0,0,1,2'), P('1,1,0,0,0,8')], 0, 1).e, [0, 2, 2, 0, 0, 8], '代入 x = y + 2：2y + 2 = 8');
+  eq(S.cancel(P('0,1,3,0,0,7')), [0, 1, 0, 0, 0, 4], '两边拿走 3 个砝码'); eq(S.cancel(P('1,0,0,0,0,3')), null, '没有一样的东西可拿');
+  eq(S.divisor(P('0,2,0,0,0,10')), 2); eq(S.divisor(P('2,1,0,0,0,8')), 0);
+  eq(S.known(P('0,0,5,0,1,0')), { v: 1, n: 5 }, '盒子在右边也认'); eq(S.eqStr(P('2,1,0,0,0,10')), '2x + y = 10');
+});
+t('两架天平：随机做几百步，每一步之后两架天平在真实重量下都还是平的', () => {
+  const S = U.SystemBench; let seed = 5; const rnd = (n) => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed % n; };
+  const bal = (e, x, y) => e[0] * x + e[1] * y + e[2] === e[3] * x + e[4] * y + e[5];
+  let done = 0;
+  for (let r = 0; r < 500; r++) {
+    const x = 1 + rnd(6), y = 1 + rnd(6), mk = () => { const a = 1 + rnd(3), b = rnd(3); return [a, b, 0, 0, 0, a * x + b * y]; };
+    let es = [mk(), mk()];
+    for (let k = 0; k < 5; k++) {
+      const i = rnd(2), op = rnd(4); let ne = null;
+      if (op === 0) { const d = S.dropOn(es, i, 1 - i); if (d.e) { es = es.slice(); es[1 - i] = d.e; ne = d.e; } }
+      else if (op === 1) { const d = S.scale(es[i], 2); if (S.fits(d)) { es = es.slice(); es[i] = d; ne = d; } }
+      else if (op === 2) { const d = S.divisor(es[i]); if (d) { es = es.slice(); es[i] = es[i].map((n) => n / d); ne = es[i]; } }
+      else { const d = S.cancel(es[i]); if (d) { es = es.slice(); es[i] = d; ne = d; } }
+      if (ne) { done++; truthy(bal(es[0], x, y) && bal(es[1], x, y), '第 ' + r + ' 组第 ' + k + ' 步后不平了：' + S.eqStr(es[0]) + '；' + S.eqStr(es[1]) + '（x=' + x + ', y=' + y + '）'); }
+    }
+  }
+  truthy(done >= 100, '实际做了 ' + done + ' 步');
 });
 console.log('\n' + pass + ' 通过，' + fail + ' 失败');
 process.exit(fail ? 1 : 0);

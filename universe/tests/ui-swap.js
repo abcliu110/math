@@ -1,0 +1,73 @@
+/* node tests/ui-swap.js —— 换一换（鸡兔同笼）：真实鼠标测试。
+ *  1. 8 个头 26 条腿：点一只鸡变成兔，腿数 16 → 18；再点同一个位置（现在是兔）变回鸡；撤销回到上一步；
+ *  2. 一只一只点到 5 只兔：腿数正好 26，里程碑完成；右边的表记下试过的每一种；
+ *  3. 换过头（6 只兔）：标出“多了 2”；
+ *  4. 35 个头 94 条腿：拖把手到第 12 个后面，一次换 12 只，腿数 94；把手可以跨行拖；
+ *  5. 全程没有打开属性面板。
+ * 需要 playwright（NODE_PATH 指向它的 node_modules）。 */
+'use strict';
+const { chromium } = require('playwright');
+const path = require('path');
+const url = 'file:///' + path.join(__dirname, '..', 'index.html').split(path.sep).join('/');
+let pass = 0, fail = 0;
+const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fail++; console.log('  FAIL ' + m); } };
+
+(async () => {
+  const b = await chromium.launch(), p = await b.newPage({ viewport: { width: 1440, height: 900 } });
+  const errs = []; p.on('pageerror', (e) => errs.push(e.message)); p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text()); });
+  await p.goto(url); await p.waitForTimeout(400);
+  const open = async (id) => {
+    await p.evaluate((id) => { UI.App.openProblem(id, 'practice'); }, id); await p.waitForTimeout(300);
+    await p.evaluate(() => {
+      document.querySelectorAll('button').forEach((x) => { if (/^(知道了|跳过|先不猜|开始)$/.test(x.textContent.trim())) x.click(); });
+      for (const k of Object.keys(UI.S.help || {})) UI.S.help[k] = false;
+      if (UI.S.run) UI.S.run.armed = true;
+      UI.Stage.render();
+    });
+    await p.waitForTimeout(200);
+  };
+  const props = () => p.evaluate(() => { const e = Object.values(UI.S.scene.entities).find((x) => x.type === 'swapbench'); return Object.assign({}, e.props); });
+  const out = (port) => p.evaluate((port) => { const e = Object.values(UI.S.scene.entities).find((x) => x.type === 'swapbench'), v = UI.S.D[e.id].out[port]; return v ? U.Q.show(v.data) : null; }, port);
+  const closeDlg = () => p.evaluate(() => { if (UI.Panels.closeDialog) UI.Panels.closeDialog(); });
+  // 点第 i 个头（从 0 数）
+  const clickHead = async (i) => { await closeDlg(); await p.locator('.card svg.bdy [data-pick-set]').nth(i).click(); await p.waitForTimeout(150); };
+  // 画布坐标在屏幕上的位置
+  const at = (x, y) => p.evaluate(([x, y]) => { const sv = document.querySelector('.card svg.bdy'), r = sv.getBoundingClientRect(), k = r.width / +sv.getAttribute('width'); return { x: r.x + x * k, y: r.y + y * k }; }, [x, y]);
+  const grip = () => p.evaluate(() => { const g = document.querySelector('.card svg.bdy [data-grip="k"]'), r = g.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
+  const done = (id) => p.evaluate((id) => !!(UI.S.run && UI.S.run.ms[id] && UI.S.run.ms[id].done), id);
+  const text = () => p.evaluate(() => document.querySelector('.card svg.bdy').textContent);
+
+  console.log('1. 点一只换一只');
+  await open('sw-8-26');
+  ok(await out('total') === '16' && (await text()).includes('还差 10'), '全是鸡：16 条腿，还差 10');
+  await clickHead(3);
+  ok((await props()).k === 1 && await out('total') === '18', '点一只鸡：变成兔，腿数 18');
+  await clickHead(0);
+  ok((await props()).k === 0 && await out('total') === '16', '点那只兔：变回鸡，腿数 16');
+  await p.keyboard.press('Control+z'); await p.waitForTimeout(200);
+  ok((await props()).k === 1, '撤销一次：回到 1 只兔（一次点击一步）');
+
+  console.log('2. 换到正好');
+  for (let i = 0; i < 4; i++) await clickHead(7);
+  ok((await props()).k === 5 && await out('ok') === '1', '再点 4 只鸡：5 只兔，腿数正好 26');
+  ok(await done('hit') && await done('five') && (await text()).includes('正好'), '两个里程碑完成，写着“正好”');
+  ok(Number(await out('tries')) >= 5, '右边的表记下了试过的每一种（' + await out('tries') + ' 种）');
+
+  console.log('3. 换过头');
+  await clickHead(7);
+  ok((await props()).k === 6 && (await text()).includes('多了 2'), '6 只兔：28 条腿，标出“多了 2”');
+
+  console.log('4. 拖把手');
+  await open('g4-chicken-rabbit-core');
+  ok(await out('total') === '70', '35 个头全是鸡：70 条腿');
+  const g = await grip(), to = await at(24 + 2 * 38, 78 + 1 * 46 + 22);   // 第 2 行、第 2 个后面：10 + 2 = 12
+  await closeDlg(); await p.mouse.move(g.x, g.y); await p.mouse.down(); await p.mouse.move((g.x + to.x) / 2, (g.y + to.y) / 2, { steps: 6 }); await p.mouse.move(to.x, to.y, { steps: 6 }); await p.mouse.up(); await p.waitForTimeout(250);
+  ok((await props()).k === 12 && await out('total') === '94', '把手拖到第 2 行第 2 个后面：一次换 12 只，腿数 94');
+  ok(await done('rabbit'), '里程碑完成：兔 12 只');
+  await p.keyboard.press('Control+z'); await p.waitForTimeout(200);
+  ok((await props()).k === 0, '撤销一次：回到全是鸡（一次拖动一步）');
+  ok(await p.evaluate(() => !UI.S.inspOpen), '全程没有打开属性面板');
+  ok(errs.length === 0, '控制台 0 报错' + (errs.length ? '：' + errs[0] : ''));
+  console.log('\n换一换测试：' + pass + ' 通过，' + fail + ' 失败');
+  await b.close(); process.exit(fail ? 1 : 0);
+})();

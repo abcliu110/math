@@ -78,6 +78,17 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   ok(await out('roots') === '0', '顶点拖到 x 轴上方：没有交点');
   await dragBy('a', 0, -2);
   ok(await out('a') === '-1' && (await text()).includes('开口向下'), '把 a 拖到顶点下面 1 格：a = −1，开口向下');
+  console.log('6. 两条直线');
+  await open('cb-two-lines');
+  ok(await p.locator('.card svg.bdy [data-grip]').count() === 4, '两条线各有截距、斜率两个把手');
+  await dragBy('b2', 0, 5);
+  ok((await props()).b2 === 5, '橙线的截距拖到 5');
+  await dragBy('k2', 0, 2);
+  ok((await props()).k2 === -1 && await out('ix') === '2' && await out('iy') === '3', '橙线的斜率拖成 −1：交点 (2, 3)');
+  ok((await text()).includes('交点 (2, 3)') && (await text()).includes('方程组的解') && await done('x') && await done('y'), '写出交点和“这就是方程组的解”，里程碑完成');
+  await open('cb-parallel');
+  await dragBy('k2', 0, -2);
+  ok((await props()).k2 === 1 && await out('meet') === '0' && (await text()).includes('平行') && await done('none'), '把橙线的斜率拖成和蓝线一样：平行，没有交点');
   ok(await p.evaluate(() => !UI.S.inspOpen), '全程没有打开属性面板');
   ok(errs.length === 0, '控制台 0 报错' + (errs.length ? '：' + errs[0] : ''));
   console.log('\n坐标与函数测试：' + pass + ' 通过，' + fail + ' 失败');

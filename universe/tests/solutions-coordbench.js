@@ -12,4 +12,7 @@ module.exports = {
   'cb-vertex'(h) { set(h, { h: 2, v: -1 }); },
   'cb-no-root'(h) { set(h, { v: 2 }); },
   'cb-flip'(h) { set(h, { h: -1, v: 4, a2: -2 }); },
+  'cb-two-lines'(h) { set(h, { b2: 5, k2: -1 }); },
+  'cb-parallel'(h) { set(h, { k2: 1 }); },
+  'cb-meet-22'(h) { set(h, { b2: 4 }); },
 };

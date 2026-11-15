@@ -2,6 +2,7 @@
  *   直线：  拖直线和 y 轴的交点改截距 b；拖直线上的另一个把手改斜率 k（它在 x = 分母 的地方，所以 1/2 这样的斜率也拖得出来）。
  *           右边的表和式子跟着变：图、表、式三样是同一条直线。x 轴上还有一个探针，拖它看这个 x 对着的 y。
  *   两点：  拖两个点，过它们的直线自动画出来；旁边画出“向右几、向上几”的台阶，斜率就是它们的比。
+ *   两条直线：两条线各有截距和斜率两个把手。交点自动标出来，它的坐标同时满足两个式子——就是方程组的解；两条线平行就没有解。
  *   抛物线：拖顶点；拖顶点右边一格的把手改开口的大小和方向。写出顶点式和展开式，数出和 x 轴有几个交点。
  * 坐标格是 −6 到 6，每格 24 像素，固定不变，所以把手一直跟着鼠标。
  * 这一版的边界（如实写）：坐标只到 ±6；直线的斜率是分母不超过 4 的分数；抛物线的 a 是 1/2 的倍数；没有反比例和两条线求交点。 */
@@ -9,7 +10,7 @@
   'use strict';
   const U = G.U, Q = U.Q, K = U.kit;
   const num = (n) => U.val('num', typeof n === 'number' ? Q(n) : n, { dim: null });
-  const MODES = ['直线', '两点', '抛物线'];
+  const MODES = ['直线', '两点', '抛物线', '两条直线'];
   const W = 620, R = 6, CELL = 24, GX = 34, GY = 34, OX = GX + R * CELL, OY = GY + R * CELL, TX = GX + 2 * R * CELL + 30;
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const X = (x) => OX + x * CELL, Y = (y) => OY - y * CELL, ix = (px) => (px - OX) / CELL, iy = (py) => (OY - py) / CELL;
@@ -27,6 +28,13 @@
       const t = -v * 2 / a2;   // (x − h)² = −v/a
       return { mode: 2, a2, a, h, v, roots: t > 0 ? 2 : t === 0 ? 1 : 0, B: Q.mul(Q(-2 * h), a), C: Q.add(Q.mul(a, Q(h * h)), Q(v)) };
     }
+    if (p.mode === 3) {
+      const kd = clamp(p.kd, 1, 4), kn = clamp(p.kn, -12, 12), b = clamp(p.b, -R, R), k = Q(kn, kd), k2i = clamp(p.k2, -6, 6), b2i = clamp(p.b2, -R, R);
+      const m = { mode: 3, kn, kd, k, b: Q(b), bi: b, k2: Q(k2i), k2i, b2: Q(b2i), b2i };
+      if (Q.eq(k, m.k2)) m.meet = b === b2i ? 2 : 0;
+      else { m.meet = 1; m.ix = Q.div(Q.sub(m.b2, m.b), Q.sub(k, m.k2)); m.iy = Q.add(Q.mul(k, m.ix), m.b); }
+      return m;
+    }
     const kd = clamp(p.kd, 1, 4), kn = clamp(p.kn, -12, 12), b = clamp(p.b, -R, R), k = Q(kn, kd), x = clamp(p.x, -R, R);
     return { mode: 0, kn, kd, k, b: Q(b), bi: b, x, y: Q.add(Q.mul(k, Q(x)), Q(b)), root: kn === 0 ? null : Q.div(Q(-b), k) };
   }
@@ -38,14 +46,14 @@
     return 'y = ' + kx + (bn === 0 ? '' : bn > 0 ? ' + ' + qs(b) : ' − ' + qs(Q.abs(b)));
   }
   // 直线在坐标格里露出来的那一段
-  function clipLine(k, b) {
+  function clipLine(k, b, col) {
     const pts = [], kn = Q.num(k), bn = Q.num(b), add = (x, y) => { if (x >= -R - 1e-9 && x <= R + 1e-9 && y >= -R - 1e-9 && y <= R + 1e-9) pts.push([x, y]); };
     add(-R, -R * kn + bn); add(R, R * kn + bn);
     if (kn !== 0) { add((-R - bn) / kn, -R); add((R - bn) / kn, R); }
     if (pts.length < 2) return '';
     pts.sort((u, v) => u[0] - v[0]);
     const a = pts[0], z = pts[pts.length - 1];
-    return K.line(X(a[0]), Y(a[1]), X(z[0]), Y(z[1]), { w: 3, stroke: 'var(--blue)' });
+    return K.line(X(a[0]), Y(a[1]), X(z[0]), Y(z[1]), { w: 3, stroke: col || 'var(--blue)' });
   }
   function grid() {
     let s = K.rect(GX, GY, 2 * R * CELL, 2 * R * CELL, { fill: '#fff', stroke: '#8a94a8', r: 0 });
@@ -75,6 +83,16 @@
       const ty = GY + 16 + 7.6 * 22;
       s += K.text(TX, ty, 'x', { size: 13, anchor: 'start', weight: 700 }) + K.text(TX, ty + 22, 'y', { size: 13, anchor: 'start', weight: 700 });
       for (let i = -2; i <= 2; i++) s += K.text(TX + 44 + (i + 2) * 36, ty, sg(i), { size: 13 }) + K.text(TX + 44 + (i + 2) * 36, ty + 22, c.masked ? '？' : qs(Q.add(Q.mul(m.k, Q(i)), m.b)), { size: 13 });
+    } else if (m.mode === 3) {
+      s += clipLine(m.k, m.b) + clipLine(m.k2, m.b2, '#d9772b');
+      s += L(0, lineEq(m.k, m.b), { size: 17, weight: 700, fill: 'var(--blue)' }) + L(1.2, lineEq(m.k2, m.b2), { size: 17, weight: 700, fill: '#a85410' });
+      if (m.meet === 1) {
+        const xn = Q.num(m.ix), yn = Q.num(m.iy);
+        if (Math.abs(xn) <= R && Math.abs(yn) <= R) s += K.line(X(xn), OY, X(xn), Y(yn), { w: 1.2, dash: '4 3', stroke: 'var(--accent)' }) + K.line(OX, Y(yn), X(xn), Y(yn), { w: 1.2, dash: '4 3', stroke: 'var(--accent)' }) + K.circle(X(xn), Y(yn), 6, { fill: 'var(--accent)', stroke: '#fff', w: 1.5 });
+        s += L(2.8, c.masked ? '交点在哪里？' : '交点 (' + qs(m.ix) + ', ' + qs(m.iy) + ')', { weight: 700, fill: 'var(--accent)' });
+        if (!c.masked) s += L(4, 'x = ' + qs(m.ix) + '，y = ' + qs(m.iy)) + L(5, '同时满足两个式子：') + L(6, '这就是方程组的解');
+      } else if (m.meet === 0) s += L(2.8, '两条线平行：没有交点', { weight: 700, fill: 'var(--bad)' }) + L(4, '斜率一样、截距不一样，') + L(5, '方程组没有解');
+      else s += L(2.8, '两条线重合：处处是交点', { weight: 700, fill: 'var(--bad)' }) + L(4, '方程组有无数个解');
     } else if (m.mode === 1) {
       if (m.same) s += L(0, '两个点重合了，定不出直线', { fill: 'var(--bad)' });
       else if (m.vertical) s += K.line(X(m.ax), GY, X(m.ax), GY + 2 * R * CELL, { w: 3, stroke: 'var(--blue)' }) + L(0, 'x = ' + sg(m.ax), { size: 19, weight: 700 }) + L(1.4, '竖直的线：向右走 0，没有斜率');
@@ -116,6 +134,12 @@
         drag: (c0, q) => { const m0 = model(c0.props); return { kn: clamp(Math.round(iy(q.y)) - m0.bi, -12, 12) }; }, say: (c1) => lineEq(model(c1.props).k, model(c1.props).b) });
       out.push({ id: 'x', x: X(m.x), y: OY, r: 7, cursor: 'ew-resize', tip: '左右拖：看这个 x 对着的 y',
         drag: (c0, q) => ({ x: rx(q) }), say: (c1) => { const m1 = model(c1.props); return 'x = ' + sg(m1.x) + '，y = ' + qs(m1.y); } });
+    } else if (m.mode === 3) {
+      const ey = (c0, q) => clamp(Math.round(iy(q.y)), -R, R);
+      out.push({ id: 'b', x: X(0), y: Y(m.bi), r: 8, cursor: 'ns-resize', tip: '上下拖：蓝线的截距', drag: (c0, q) => ({ b: ey(c0, q) }), say: (c1) => lineEq(model(c1.props).k, model(c1.props).b) });
+      out.push({ id: 'k', x: X(m.kd), y: Y(clamp(m.bi + m.kn, -R - 1, R + 1)), r: 8, text: 'k', cursor: 'ns-resize', tip: '上下拖：蓝线的斜率', drag: (c0, q) => ({ kn: clamp(Math.round(iy(q.y)) - model(c0.props).bi, -12, 12) }), say: (c1) => lineEq(model(c1.props).k, model(c1.props).b) });
+      out.push({ id: 'b2', x: X(0) - 0.01, y: Y(m.b2i), r: 8, ghost: true, cursor: 'ns-resize', tip: '上下拖：橙线的截距', drag: (c0, q) => ({ b2: ey(c0, q) }), say: (c1) => lineEq(model(c1.props).k2, model(c1.props).b2) });
+      out.push({ id: 'k2', x: X(-1), y: Y(clamp(m.b2i - m.k2i, -R - 1, R + 1)), r: 8, text: 'k', ghost: true, cursor: 'ns-resize', tip: '上下拖：橙线的斜率（这个把手在 x = −1 的地方）', drag: (c0, q) => ({ k2: clamp(model(c0.props).b2i - Math.round(iy(q.y)), -6, 6) }), say: (c1) => lineEq(model(c1.props).k2, model(c1.props).b2) });
     } else if (m.mode === 1) {
       out.push({ id: 'A', x: X(m.ax), y: Y(m.ay), r: 8, cursor: 'move', tip: '拖点 A', drag: (c0, q) => ({ ax: rx(q), ay: ry(q) }), say: (c1) => 'A (' + sg(c1.props.ax) + ', ' + sg(c1.props.ay) + ')' });
       out.push({ id: 'B', x: X(m.bx), y: Y(m.by), r: 8, cursor: 'move', tip: '拖点 B', drag: (c0, q) => ({ bx: rx(q), by: ry(q) }), say: (c1) => 'B (' + sg(c1.props.bx) + ', ' + sg(c1.props.by) + ')' });
@@ -141,6 +165,7 @@
           mode: { type: 'choice', label: '用来做什么', default: 0, choices: MODES, write: true },
           kn: I(-12, 12, 1, '斜率的分子'), kd: I(1, 4, 1, '斜率的分母'), b: I(-R, R, 0, '截距'), x: I(-R, R, 1, '探针的 x'),
           ax: I(-R, R, -2, 'A 的 x'), ay: I(-R, R, -1, 'A 的 y'), bx: I(-R, R, 2, 'B 的 x'), by: I(-R, R, 1, 'B 的 y'),
+          k2: I(-6, 6, -1, '第二条直线的斜率（两条直线）'), b2: I(-R, R, 4, '第二条直线的截距（两条直线）'),
           a2: I(-6, 6, 2, '抛物线的 a 的 2 倍'), h: I(-R, R, 0, '顶点的 x'), v: I(-R, R, 0, '顶点的 y'),
         },
         outputs: {
@@ -152,6 +177,8 @@
           h: { dim: null, kind: 'num', label: '顶点的 x' },
           v: { dim: null, kind: 'num', label: '顶点的 y' },
           roots: { dim: null, kind: 'num', label: '抛物线和 x 轴的交点个数' },
+          ix: { dim: null, kind: 'num', label: '两条直线交点的 x（有交点才有）' }, iy: { dim: null, kind: 'num', label: '两条直线交点的 y' },
+          meet: { dim: null, kind: 'num', label: '两条直线：1 相交，0 平行，2 重合' },
           px: { dim: null, kind: 'num', label: '点 A 的横坐标（两点）' }, py: { dim: null, kind: 'num', label: '点 A 的纵坐标（两点）' },
           qx: { dim: null, kind: 'num', label: '点 B 的横坐标（两点）' }, qy: { dim: null, kind: 'num', label: '点 B 的纵坐标（两点）' },
         },
@@ -160,6 +187,7 @@
         grips,
         compute: (c) => {
           const m = model(c.props), z = num(0);
+          if (m.mode === 3) { const o = { k: num(m.k), b: num(m.b), meet: num(m.meet), y: z, a: z, h: z, v: z, roots: z, px: z, py: z, qx: z, qy: z }; if (m.meet === 1) { o.ix = num(m.ix); o.iy = num(m.iy); } return o; }
           if (m.mode === 1) { const o = { y: z, a: z, h: z, v: z, roots: z, px: num(m.ax), py: num(m.ay), qx: num(m.bx), qy: num(m.by) }; if (!m.vertical) { o.k = num(m.k); o.b = num(m.b); if (Q.num(m.k) !== 0) o.root = num(Q.div(Q.neg ? Q.neg(m.b) : Q.sub(Q(0), m.b), m.k)); } return o; }
           if (m.mode === 2) return { a: num(m.a), h: num(m.h), v: num(m.v), roots: num(m.roots), k: z, b: z, y: z, px: z, py: z, qx: z, qy: z };
           const o = { k: num(m.k), b: num(m.b), y: num(m.y), a: z, h: z, v: z, roots: z, px: z, py: z, qx: z, qy: z }; if (m.root !== null) o.root = num(m.root); return o;
