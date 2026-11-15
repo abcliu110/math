@@ -78,6 +78,7 @@
     'sweep': 'packs/sweep.js',
     'symmetry': 'packs/symmetry.js',
     'tenframe': 'packs/tenframe.js',
+    'termsbench': 'packs/termsbench.js',
     'tiles': 'packs/tiles.js',
     'turtle': 'packs/turtle.js',
     'twoways': 'packs/twoways.js',

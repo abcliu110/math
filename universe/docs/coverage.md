@@ -6,7 +6,7 @@
 
 - 知识点：142 个（设计目标 142）
 - 有题的知识点：141 个（99%）
-- 题目：492 道；没有对应知识点的题：1 道
+- 题目：502 道；没有对应知识点的题：1 道
 - 没有器材的本质：无
 - 没有题的本质：无
 
@@ -17,10 +17,10 @@
 | 1 | 16 | 16（100%） | 40 |
 | 2 | 16 | 16（100%） | 46 |
 | 3 | 16 | 16（100%） | 55 |
-| 4 | 17 | 17（100%） | 56 |
+| 4 | 17 | 17（100%） | 60 |
 | 5 | 14 | 14（100%） | 89 |
 | 6 | 15 | 14（93%） | 55 |
-| 7 | 16 | 16（100%） | 63 |
+| 7 | 16 | 16（100%） | 69 |
 | 8 | 16 | 16（100%） | 69 |
 | 9 | 16 | 16（100%） | 44 |
 
@@ -33,7 +33,7 @@
 | 1.3 | 1 | 1–5的认识、分与合 | 2 | 1 | 0 | 1 | numlinebench |
 | 1.4 | 1 | 5以内加减法、0 | 1 | 1 | 0 | 1 | numlinebench、num |
 | 1.5 | 1 | 立体图形 | 2 | 1 | 0 | 1 | blocksbench、cuboid |
-| 1.6 | 1 | 6–10的认识、连加连减 | 1 | 1 | 0 | 1 | num |
+| 1.6 | 1 | 6–10的认识、连加连减 | 1 | 1 | 0 | 1 | termsbench |
 | 1.7 | 1 | 11–20的认识、10加几 | 4 | 1 | 0 | 1 | blocksbench、num |
 | 1.8 | 1 | 认识钟表 | 1 | 1 | 0 | 1 | clock |
 | 1.9 | 1 | 20以内进位加法、凑十法 | 1 | 1 | 0 | 1 | numlinebench |
@@ -55,7 +55,7 @@
 | 2.14a | 2 | 数据收集整理 | 1 | 1 | 0 | 1 | data |
 | 2.8 | 2 | 除法初步认识 | 1 | 1 | 0 | 1 | numlinebench |
 | 2.9 | 2 | 图形的运动 | 2 | 1 | 0 | 1 | fold、euler |
-| 2.10 | 2 | 混合运算 | 1 | 1 | 0 | 1 | num |
+| 2.10 | 2 | 混合运算 | 1 | 1 | 0 | 1 | termsbench |
 | 2.11 | 2 | 有余数的除法 | 3 | 0 | 0 | 1 | num、modclock |
 | 2.12 | 2 | 万以内数的认识、近似数 | 2 | 0 | 0 | 1 | num、sqrt、round |
 | 2.13 | 2 | 克和千克 | 1 | 1 | 0 | 1 | ratiobench |
@@ -84,9 +84,9 @@
 | 4.6 | 4 | 除数是两位数的除法 | 3 | 1 | 0 | 1 | areamodel、num |
 | 4.7 | 4 | 条形统计图 | 1 | 1 | 0 | 1 | data、ratiobench |
 | 4.8 | 4 | 优化 | 1 | 1 | 0 | 1 | num |
-| 4.9 | 4 | 四则运算 | 11 | 1 | 0 | 1 | asn、tenframe、counter、meter、memory、num、op、dice、hist、findbug、numlinebench、road、turtle |
+| 4.9 | 4 | 四则运算 | 14 | 1 | 0 | 1 | asn、tenframe、counter、meter、memory、num、op、dice、hist、termsbench、findbug、numlinebench、road、turtle |
 | 4.17 | 4 | 观察物体（二） | 1 | 1 | 0 | 1 | views |
-| 4.10 | 4 | 运算定律 | 1 | 1 | 0 | 1 | num |
+| 4.10 | 4 | 运算定律 | 2 | 1 | 0 | 1 | termsbench |
 | 4.11 | 4 | 小数的意义和性质 | 1 | 1 | 0 | 1 | num |
 | 4.12 | 4 | 三角形 | 6 | 0 | 0 | 1 | angles、curved、parallelogram、guessrule、tri |
 | 4.13 | 4 | 小数的加法和减法 | 2 | 1 | 0 | 1 | num |
@@ -125,7 +125,7 @@
 | 7.1 | 7 | 正数和负数、有理数与数轴 | 5 | 1 | 0 | 1 | approach、asn、numlinebench、num、proofsort |
 | 7.2 | 7 | 有理数的加减法 | 6 | 1 | 0 | 1 | algebra、subst、meter、numlinebench、findbug、arithbench、newop |
 | 7.3 | 7 | 有理数的乘除法、乘方与科学记数法 | 3 | 1 | 0 | 1 | num、hanoi |
-| 7.4 | 7 | 整式 | 1 | 1 | 2 | 4 | algebra、induction |
+| 7.4 | 7 | 整式 | 7 | 1 | 2 | 4 | algebra、induction、termsbench |
 | 7.5 | 7 | 整式的加减 | 5 | 1 | 0 | 1 | balancebench、algebra |
 | 7.6 | 7 | 解一元一次方程 | 10 | 0 | 0 | 1 | line、at、meter、inverse-prop、circle-line、pair-pos、rotate-about、eqscale、findbug、eqcard |
 | 7.7 | 7 | 实际问题与一元一次方程 | 1 | 1 | 0 | 1 | — |
@@ -176,9 +176,9 @@
 | 本质 | 题目数 | 器材数 |
 |---|---|---|
 | E1 | 63 | 29 |
-| E2 | 169 | 40 |
-| E3 | 148 | 49 |
-| E4 | 60 | 30 |
+| E2 | 178 | 41 |
+| E3 | 149 | 49 |
+| E4 | 70 | 31 |
 | E5 | 137 | 54 |
 | E6 | 40 | 27 |
 | E7 | 32 | 12 |

@@ -1,4 +1,4 @@
-/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，三批共 47 道）。
+/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，四批共 55 道）。
  * 这些题原来的做法是“放数字、接运算器、看读数”：学生在搭计算流程。这里按 id 把它们换成在操作台上直接动手：
  * 题目的编号、标题、年级、知识点、道理（why）都不变，换的是器材架、开场的台面、里程碑和提示。
  * 这个文件排在所有题目文件后面加载（文件名 zz 开头），找不到的 id 会记在 U.benchMigrateMissing 里（测试会查）。 */
@@ -7,8 +7,8 @@
   const U = G.U, W = U.World;
   const one = (type, role, props) => () => { const s = W.blank(); const id = W.add(s, type, 40, 50, props); s.entities[id].role = role; return s; };
   const ms = (role) => (id, say, score, port, value, hints) => ({ id, say, score, when: { role, port, op: '=', value: String(value) }, hints });
-  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c');
-  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props);
+  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t');
+  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props);
   const MOVES = {
     // ---- 数轴 ----
     'g1-split-merge-core': { shelf: ['numlinebench'], build: nl({ from: 0, to: 10, a: 0, s: 1, n: 0 }),
@@ -169,6 +169,37 @@
       hook: '条形图上 1 格代表 5 人。条形高 9 格：把点拖到 9。',
       milestones: [R('v', '9 格对着 45 人', 6, 'b', '45', ['1 格是 5 人，不是 1 人。', '9 个 5。', '拖到 9。'])], goal: ['v'],
       traps: [{ id: 'bad', wrong: '条形高 9 格不等于 9 人：先看一格代表几人。', when: { role: 'r', port: 'b', op: '=', value: '9' } }] },
+    // ======== 第四批：运算顺序，在代数式操作台上点运算符 ========
+    'g1-chain-add-core': { shelf: ['termsbench'], build: tb({ mode: 1, toks: '2,+,3,+,4' }),
+      hook: '2 加 3 再加 4。点一个加号先算那一步；连加先算哪两个都可以，试试两种顺序。',
+      milestones: [T('v', '一共 9 个', 6, 'value', 9, ['点第一个加号。', '2 + 3 = 5。', '5 + 4 = 9。'])], goal: ['v'] },
+    'g1-chain-sub-trap': { shelf: ['termsbench'], build: tb({ mode: 1, toks: '9,-,3,-,2' }),
+      hook: '9 减 3 再减 2。连减要从左往右：先点前面的减号。',
+      milestones: [T('v', '还剩 4 个', 6, 'value', 4, ['先算 9 − 3。', '6 − 2。', '4。'])], goal: ['v'],
+      traps: [{ id: 'order', wrong: '连减不能先算后面的 3 − 2：那样就少减了。从左往右算。', when: { role: 't', port: 'wrong', op: '=', value: '1' } }] },
+    'g2-mixed-core': { shelf: ['termsbench'], build: tb({ mode: 1, toks: '2,+,3,*,4' }),
+      hook: '2 加 3 乘 4。点一个运算符先算那一步：先算哪一个？',
+      milestones: [T('v', '结果是 14', 6, 'value', 14, ['有乘法。', '先点 ×：3 × 4 = 12。', '2 + 12 = 14。'])], goal: ['v'],
+      traps: [{ id: 'order', wrong: '有乘法时不能先算加法：先乘除，后加减。', when: { role: 't', port: 'wrong', op: '=', value: '1' } }] },
+    'g2-mixed-brackets-trap': { shelf: ['termsbench'], build: tb({ mode: 1, toks: '(,2,+,3,),*,4' }),
+      hook: '(2 + 3) × 4。有括号，先算哪一步？',
+      milestones: [T('v', '结果是 20', 6, 'value', 20, ['括号里的先算。', '2 + 3 = 5。', '5 × 4 = 20。'])], goal: ['v'],
+      traps: [{ id: 'order', wrong: '括号里的要先算：不能先算 3 × 4。', when: { role: 't', port: 'wrong', op: '=', value: '1' } }] },
+    'g4-order-mul-core': { shelf: ['termsbench'], build: tb({ mode: 1, toks: '3,+,4,*,5' }),
+      hook: '3 + 4 × 5。点一个运算符，先算那一步。',
+      milestones: [T('v', '等于 23', 6, 'value', 23, ['先乘除，后加减。', '4 × 5 = 20。', '3 + 20 = 23。'])], goal: ['v'],
+      traps: [{ id: 'order', wrong: '不能从左往右顺着算：3 + 4 不能先算，乘法优先。', when: { role: 't', port: 'wrong', op: '=', value: '1' } }] },
+    'g4-order-left-trap': { shelf: ['termsbench'], build: tb({ mode: 1, toks: '12,-,4,/,2' }),
+      hook: '12 − 4 ÷ 2。从左往右顺着算，还是先算除法？',
+      milestones: [T('v', '等于 10', 6, 'value', 10, ['有除法。', '4 ÷ 2 = 2。', '12 − 2 = 10。'])], goal: ['v'],
+      traps: [{ id: 'order', wrong: '不能先算 12 − 4：除法优先。', when: { role: 't', port: 'wrong', op: '=', value: '1' } }] },
+    'g4-assoc-mul-core': { shelf: ['termsbench'], build: tb({ mode: 1, toks: '25,*,4,*,8' }),
+      hook: '25 × 4 × 8。连乘先算哪两个都可以：哪一步最好算？点那个乘号。',
+      milestones: [T('v', '等于 800', 6, 'value', 800, ['25 × 4 是整百。', '先点第一个 ×：100。', '100 × 8 = 800。'])], goal: ['v'] },
+    'g4-assoc-sub-trap': { shelf: ['termsbench'], build: tb({ mode: 1, toks: '17,-,8,-,2' }),
+      hook: '17 − 8 − 2。能不能先算 8 − 2？点后面那个减号试试。',
+      milestones: [T('v', '等于 7', 6, 'value', 7, ['连减从左往右。', '17 − 8 = 9。', '9 − 2 = 7。'])], goal: ['v'],
+      traps: [{ id: 'order', wrong: '连减不能先算后面的 8 − 2：17 − (8 − 2) = 11，多了。可以改成 17 − (8 + 2)。', when: { role: 't', port: 'wrong', op: '=', value: '1' } }] },
   };
   const missing = [], moved = [];
   for (const id of Object.keys(MOVES)) {

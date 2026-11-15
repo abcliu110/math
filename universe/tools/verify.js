@@ -83,6 +83,7 @@ async function checkDist() {
   if (!runScript('tests/ui-ratio.js', 'tests/ui-ratio.js', pwEnv)) bail();   // 分数条与比：真实鼠标拖涂色的边、点 ＋ 切份、拖双数轴上的点
   if (!runScript('tests/ui-coord.js', 'tests/ui-coord.js', pwEnv)) bail();   // 坐标与函数：真实鼠标拖截距、斜率、探针、两点、顶点
   if (!runScript('tests/ui-blocks.js', 'tests/ui-blocks.js', pwEnv)) bail();   // 计数块与数位：真实鼠标拖块、十个捆成一个、一个拆成十个
+  if (!runScript('tests/ui-terms.js', 'tests/ui-terms.js', pwEnv)) bail();   // 代数式操作台：真实鼠标把同类项拖到一起、点运算符决定先算哪一步
   if (!runScript('tests/ui-areamodel.js', 'tests/ui-areamodel.js', pwEnv)) bail();   // 面积模型（样板操作台）和器材把手：真实鼠标拖边、切、改分数
   if (!runScript('tests/ui-shapes.js', 'tests/ui-shapes.js', pwEnv)) bail();         // 常见图形、顶点编辑、直接拖出辅助线（真实鼠标和键盘）；含画布横纵比例回归
   if (!runScript('tests/ui-export.js', 'tests/ui-export.js', pwEnv)) bail();         // 2.12/V10：导出图片（真实鼠标点菜单，台面和专注工作区各一次下载，.png、大小 > 0）

@@ -452,5 +452,19 @@
     },
   };
 
+  // 代数式：同类项才能合并
+  D.termsbench = {
+    caps: ['3x + 2 + 2x + 5：四项，两种', '颜色一样的是同类项：把 2x 拖到 3x 上', '两个常数也合并', '5x + 7：不是同类项，不能再合'],
+    draw(st) {
+      const terms = [[['3x', A], ['2', DIM], ['2x', A], ['5', DIM]], [['3x', A], ['2', DIM], ['2x', A], ['5', DIM]], [['5x', A], ['2', DIM], ['5', DIM]], [['5x', A], ['7', DIM]]][st];
+      const w = 52, g = 14, x0 = (360 - (terms.length * w + (terms.length - 1) * g)) / 2; let s = '';
+      terms.forEach((t, i) => { s += Rc(x0 + i * (w + g), 60, w, 38, t[1], { r: 7, o: 0.45, s: INK }) + T(x0 + i * (w + g) + w / 2, 85, t[0], { s: 17, w: 700 }) + (i < terms.length - 1 ? T(x0 + i * (w + g) + w + g / 2, 84, '+') : ''); });
+      if (st === 1) s += Ar(x0 + 2 * (w + g) + w / 2, 56, x0 + w / 2, 56, { s: P, w: 2.5 }) + T(180, 40, '拖过去', { f: P, w: 700 });
+      if (st === 3) s += T(180, 140, '5x + 7 ≠ 12x', { s: 16, w: 700, f: RD });
+      s += T(180, 168, '代入 x = 2：都是 17', { f: DIM });
+      return s;
+    },
+  };
+
   UI.Demo = D;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

@@ -3637,8 +3637,8 @@ console.log('示例菜单（problems/examples-data.js，由 tools/gen-examples.j
 console.log('旧题搬到操作台');
 t('搬题：每个要搬的 id 都找到了题；搬过去的题器材架上只有操作台，开场台面上就有它', () => {
   eq(U.benchMigrateMissing, [], '找不到的 id');
-  truthy(U.benchMigrated.length >= 47, '至少搬了 47 道');
-  const BENCH = ['areamodel', 'balancebench', 'numlinebench', 'ratiobench', 'coordbench', 'blocksbench'];
+  truthy(U.benchMigrated.length >= 55, '至少搬了 55 道');
+  const BENCH = ['areamodel', 'balancebench', 'numlinebench', 'ratiobench', 'coordbench', 'blocksbench', 'termsbench'];
   for (const id of U.benchMigrated) {
     const p = U.problems.find((x) => x.id === id), s = p.build();
     truthy(p.shelf.length === 1 && BENCH.includes(p.shelf[0]), id + ' 的器材架');
@@ -3649,7 +3649,50 @@ t('搬题：每个要搬的 id 都找到了题；搬过去的题器材架上只�
 t('操作台的题：只用四个管道件（数字、运算器、读数、比较）的题比搬之前少', () => {
   const basic = ['num', 'op', 'meter', 'compare'];
   const only = U.problems.filter((p) => (p.shelf || []).length && p.shelf.every((x) => basic.includes(x))).length;
-  truthy(only <= 63, '现在还有 ' + only + ' 道（搬之前 110 道）');
+  truthy(only <= 55, '现在还有 ' + only + ' 道（搬之前 110 道）');
+});
+console.log('代数式操作台');
+t('代数式：同类项才能合并；系数相加；合并到 0 这一项消失', () => {
+  const T = U.TermsBench, L = T.parseTerms('3x,2,2x,5,-x');
+  eq(L.map((x) => x.c + ':' + x.k), ['3:x', '2:', '2:x', '5:', '-1:x'], '解析');
+  eq(T.merge(L, 0, 1), null, '3x 和 2 不是同类项');
+  eq(T.exprShow(T.merge(L, 2, 0)), '5x + 2 + 5 − x', '2x 并到 3x 上');
+  eq(T.exprShow(T.merge(T.parseTerms('x,-x,4'), 0, 1)), '4', 'x − x 消掉');
+  eq(T.exprShow(T.merge(T.parseTerms('x,-x'), 0, 1)), '0', '全消掉剩 0');
+  eq(T.merge(T.parseTerms('x2,x'), 0, 1), null, 'x² 和 x 不是同类项');
+  eq(T.simplified(T.parseTerms('5x,7')), true); eq(T.simplified(T.parseTerms('5x,7,x')), false);
+});
+t('代数式：合并前后代入的值不变（随机 200 次）', () => {
+  const T = U.TermsBench, kinds = ['x', 'x2', 'y', 'xy', ''];
+  let seed = 7; const rnd = (n) => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed % n; };
+  const val = (list) => { const w = W.blank(), id = W.add(w, 'termsbench', 0, 0, { terms: list.map((t) => (t.k === '' ? t.c : (t.c === 1 ? '' : t.c === -1 ? '-' : t.c) + t.k)).join(',') }); return U.Q.num(W.evaluate(w)[id].out.value.data); };
+  for (let r = 0; r < 200; r++) {
+    const n = 2 + rnd(5), list = []; for (let j = 0; j < n; j++) list.push({ c: rnd(19) - 9 || 1, k: kinds[rnd(5)] });
+    const a = rnd(n), b = rnd(n), m = T.merge(list, a, b); if (!m) continue;
+    eq(val(m), val(list), '第 ' + r + ' 次');
+  }
+});
+t('运算顺序：先括号、再乘除、后加减；连加连乘可以任选，连减连除只能从左', () => {
+  const T = U.TermsBench, ok = (s) => [...T.allowed(T.parseToks(s)).ok].sort((a, b) => a - b), why = (s, i) => T.allowed(T.parseToks(s)).why[i];
+  eq(ok('2,+,3,*,4'), [3], '有乘法：只能先算乘'); eq(why('2,+,3,*,4', 1), '先算乘除，再算加减');
+  eq(ok('(,2,+,3,),*,4'), [2], '有括号：只能先算括号里'); eq(why('(,2,+,3,),*,4', 5), '先算括号里的');
+  eq(ok('30,-,10,-,5'), [1], '连减：只能从左'); eq(why('30,-,10,-,5', 3), '加减混在一起，从左往右算');
+  eq(ok('2,+,3,+,4'), [1, 3], '连加：都可以'); eq(ok('25,*,4,*,8'), [1, 3], '连乘：都可以');
+  eq(ok('12,/,4,*,2'), [1], '乘除混合：从左'); eq(ok('8,-,3,+,2'), [1], '加减混合：从左');
+  eq(ok('(,1,+,2,),*,(,3,+,4,)'), [2, 8], '两对括号：哪一对先算都行');
+  eq(T.applyOp(T.parseToks('(,2,+,3,),*,4'), 2), ['5', '*', '4'], '括号里算完，括号去掉');
+  eq(T.applyOp(T.parseToks('1,/,0'), 1), null, '除以 0 不算');
+  eq(T.applyOp(T.parseToks('7,/,2'), 1), ['7/2'], '除不尽：保留分数');
+});
+t('运算顺序：按允许的顺序一路点到底，结果和直接算一样（随机 200 个算式）', () => {
+  const T = U.TermsBench; let seed = 11; const rnd = (n) => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed % n; };
+  for (let r = 0; r < 200; r++) {
+    const n = 2 + rnd(4), toks = [String(1 + rnd(9))]; for (let j = 1; j < n; j++) toks.push(['+', '-', '*'][rnd(3)], String(1 + rnd(9)));
+    const want = Function('return ' + toks.join(' '))();
+    let cur = toks.slice(), guard = 0;
+    while (cur.length > 1 && guard++ < 20) { const a = [...T.allowed(cur).ok]; truthy(a.length > 0, '总有一步可以算：' + cur.join(' ')); cur = T.applyOp(cur, a[rnd(a.length)]); }
+    eq(Number(cur[0]), want, toks.join(' '));
+  }
 });
 console.log('\n' + pass + ' 通过，' + fail + ' 失败');
 process.exit(fail ? 1 : 0);
