@@ -3637,8 +3637,8 @@ console.log('示例菜单（problems/examples-data.js，由 tools/gen-examples.j
 console.log('旧题搬到操作台');
 t('搬题：每个要搬的 id 都找到了题；搬过去的题器材架上只有操作台，开场台面上就有它', () => {
   eq(U.benchMigrateMissing, [], '找不到的 id');
-  truthy(U.benchMigrated.length >= 61, '至少搬了 61 道');
-  const BENCH = ['areamodel', 'balancebench', 'numlinebench', 'ratiobench', 'coordbench', 'blocksbench', 'termsbench', 'swapbench', 'systembench'];
+  truthy(U.benchMigrated.length >= 63, '至少搬了 63 道');
+  const BENCH = ['areamodel', 'balancebench', 'numlinebench', 'ratiobench', 'coordbench', 'blocksbench', 'termsbench', 'swapbench', 'systembench', 'gapbench'];
   for (const id of U.benchMigrated) {
     const p = U.problems.find((x) => x.id === id), s = p.build();
     truthy(p.shelf.length === 1 && BENCH.includes(p.shelf[0]), id + ' 的器材架');

@@ -1,4 +1,4 @@
-/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，六批共 61 道）。
+/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，七批共 63 道）。
  * 这些题原来的做法是“放数字、接运算器、看读数”：学生在搭计算流程。这里按 id 把它们换成在操作台上直接动手：
  * 题目的编号、标题、年级、知识点、道理（why）都不变，换的是器材架、开场的台面、里程碑和提示。
  * 这个文件排在所有题目文件后面加载（文件名 zz 开头），找不到的 id 会记在 U.benchMigrateMissing 里（测试会查）。 */
@@ -7,8 +7,8 @@
   const U = G.U, W = U.World;
   const one = (type, role, props) => () => { const s = W.blank(); const id = W.add(s, type, 40, 50, props); s.entities[id].role = role; return s; };
   const ms = (role) => (id, say, score, port, value, hints) => ({ id, say, score, when: { role, port, op: '=', value: String(value) }, hints });
-  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s');
-  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props);
+  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s'), GP = ms('g');
+  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props);
   const MOVES = {
     // ---- 数轴 ----
     'g1-split-merge-core': { shelf: ['numlinebench'], build: nl({ from: 0, to: 10, a: 0, s: 1, n: 0 }),
@@ -221,6 +221,13 @@
     'g4-chicken-rabbit-trap': { shelf: ['swapbench'], build: sw({ n: 35, k: 0, target: 94, la: 2, lb: 4 }),
       hook: '35 个头，94 条腿。这回问的是鸡有几只。换出来的 12 只是兔，别把它当成答案：鸡是剩下的。',
       milestones: [S('hit', '腿数正好 94', 3, 'ok', 1, ['全是鸡差 24 条。', '每换一只多 2 条。', '换 12 只。']), S('chicken', '鸡有 23 只', 4, 'a', 23, ['35 个头里兔占了 12 个。', '35 − 12。', '23 只。'])], goal: ['chicken'] },
+    // ======== 第七批：植树问题，在“间隔与植树”上做 ========
+    'g5-tree-core': { shelf: ['gapbench'], build: gp({ len: 100, gap: 20, le: 1, re: 1 }),
+      hook: '路长 100 米，每隔 5 米种一棵，两端都种。把“隔”字拖到 5 米。100 ÷ 5 = 20 是间隔数，树有几棵？',
+      milestones: [GP('gaps', '20 个间隔', 3, 'gaps', 20, ['每隔 5 米。', '拖“隔”字到 5。', '100 ÷ 5 = 20。']), GP('trees', '21 棵树', 4, 'trees', 21, ['两端都种。', '比间隔多 1。', '20 + 1 = 21。'])], goal: ['trees'] },
+    'g5-tree-ring-trap': { shelf: ['gapbench'], build: gp({ len: 100, gap: 5, le: 1, re: 1 }),
+      hook: '环形花坛一周 100 米，每隔 5 米种一棵。现在是直路，两端都种是 21 棵。点“围成一圈”：头和尾接上了，是几棵？',
+      milestones: [GP('ring', '围成一圈', 2, 'ringed', 1, ['花坛是一圈。', '点“围成一圈”。', '头尾接上。']), GP('trees', '20 棵', 5, 'trees', 20, ['头和尾是同一棵。', '棵数等于间隔数。', '100 ÷ 5 = 20。'])], goal: ['trees'] },
   };
   const missing = [], moved = [];
   for (const id of Object.keys(MOVES)) {

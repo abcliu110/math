@@ -495,5 +495,17 @@
     },
   };
 
+  // 植树：数的是点还是段
+  D.gapbench = {
+    caps: ['20 米的路，每隔 5 米：20 ÷ 5 = 4 个间隔', '两头都种：5 棵，比间隔多 1', '只种一头：4 棵，和间隔一样多', '两头都不种：3 棵，比间隔少 1'],
+    draw(st) {
+      const X = (i) => 50 + i * 65; let s = Ln(X(0), 110, X(4), 110, { w: 5, s: '#7a4a12' });
+      for (let i = 0; i < 4; i++) s += Ln(X(i), 124, X(i + 1), 124, { w: 1 }) + T((X(i) + X(i + 1)) / 2, 140, '5', { f: DIM });
+      for (let i = 0; i <= 4; i++) { const on = st === 0 ? false : st === 1 ? true : st === 2 ? i < 4 : i > 0 && i < 4; s += Pg([[X(i), 76], [X(i) + 9, 94], [X(i) - 9, 94]], on ? GR : 'none', { s: on ? INK : DIM, o: on ? 0.8 : 1 }) + (on ? Ln(X(i), 94, X(i), 110, { w: 2 }) : ''); }
+      s += T(180, 40, ['4 个间隔', '4 + 1 = 5 棵', '4 棵', '4 − 1 = 3 棵'][st], { s: 17, w: 700, f: P });
+      return s;
+    },
+  };
+
   UI.Demo = D;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

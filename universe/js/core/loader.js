@@ -42,6 +42,7 @@
     'fmachine': 'packs/fmachine.js',
     'fracarea': 'packs/fracarea.js',
     'games': 'packs/games.js',
+    'gapbench': 'packs/gapbench.js',
     'geo': 'packs/geo.js',
     'geoboard': 'packs/geoboard.js',
     'geometry': 'packs/geometry.js',

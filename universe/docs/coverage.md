@@ -6,7 +6,7 @@
 
 - 知识点：142 个（设计目标 142）
 - 有题的知识点：141 个（99%）
-- 题目：517 道；没有对应知识点的题：1 道
+- 题目：523 道；没有对应知识点的题：1 道
 - 没有器材的本质：无
 - 没有题的本质：无
 
@@ -18,7 +18,7 @@
 | 2 | 16 | 16（100%） | 46 |
 | 3 | 16 | 16（100%） | 59 |
 | 4 | 17 | 17（100%） | 64 |
-| 5 | 14 | 14（100%） | 87 |
+| 5 | 14 | 14（100%） | 93 |
 | 6 | 15 | 14（93%） | 55 |
 | 7 | 16 | 16（100%） | 77 |
 | 8 | 16 | 16（100%） | 72 |
@@ -99,7 +99,7 @@
 | 5.4 | 5 | 可能性 | 7 | 1 | 0 | 3 | dice、num、divmod、meter、digits、numtheory、power、enumerator、array、ptree |
 | 5.5 | 5 | 简易方程 | 14 | 0 | 0 | 1 | variable、balancebench、barmodel、nim、eqcard、costplan、systembench、road |
 | 5.6 | 5 | 多边形的面积 | 5 | 1 | 0 | 1 | num、parallelogram、gworkspace、gpt、gpoly、fquad |
-| 5.7 | 5 | 植树问题 | 1 | 1 | 0 | 1 | num |
+| 5.7 | 5 | 植树问题 | 7 | 1 | 0 | 1 | gapbench |
 | 5.14 | 5 | 观察物体（三） | 2 | 1 | 0 | 1 | views、twoways |
 | 5.8 | 5 | 因数与倍数 | 25 | 0 | 0 | 2 | asn、frect、gpiece、garea、meter、fcirc、frtri、fisotri、fscalene、compare、figrel、ratio、fsquare、fpgram、frhomb、ftrap、fisotrap、frtrap、fkite、fquad4、xform、figmeasure、conjecture、hanoi、guessrule、modclock、num、primeblocks、counterex、scanner、proofsort、net |
 | 5.9 | 5 | 长方体和正方体 | 3 | 1 | 0 | 1 | pour、cuboid |
@@ -176,12 +176,12 @@
 | 本质 | 题目数 | 器材数 |
 |---|---|---|
 | E1 | 63 | 28 |
-| E2 | 179 | 41 |
+| E2 | 185 | 42 |
 | E3 | 149 | 47 |
 | E4 | 84 | 32 |
 | E5 | 137 | 54 |
 | E6 | 43 | 27 |
-| E7 | 47 | 14 |
+| E7 | 53 | 15 |
 | E8 | 65 | 48 |
 | E9 | 75 | 15 |
 | E10 | 10 | 9 |
