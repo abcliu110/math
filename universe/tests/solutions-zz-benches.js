@@ -1,7 +1,7 @@
 /* 搬到操作台上的旧题的参考解（problems/zz-benches.js）。文件名 zz 开头：排在各年级的参考解后面加载，盖掉原来“接运算器”的解法。 */
 'use strict';
 const S = (role) => (o) => (h) => { const e = h.role(role); for (const k of Object.keys(o)) h.set(e, k, o[k]); };
-const n = S('n'), k = S('k'), r = S('r');
+const n = S('n'), k = S('k'), r = S('r'), m = S('m'), c = S('c');
 module.exports = {
   'g1-split-merge-core': n({ a: 2, n: 3 }),
   'g1-split-minus-trap': n({ s: -1, n: 2 }),
@@ -21,4 +21,26 @@ module.exports = {
   'g5-fraction-equiv-core': r({ n2: 3 }),
   'g5-fraction-add-core': r({ n2: 2 }),
   'g6-ratio-cross-core': r({ t: 9 }),
+  // 第二批
+  'g1-position-compare-core': n({ hi: 4, lo: 2 }),
+  'g1-make-ten-trap'(h) { const e = h.role('n'); h.set(e, 'n', 1); h.set(e, 'n', 6); },
+  'g1-minus-break-trap'(h) { const e = h.role('n'); h.set(e, 'n', 3); h.set(e, 'n', 9); },
+  'g2-divide-order-trap': n({ s: 4, n: 3 }),
+  'g3-times-trap': n({ n: 4 }),
+  'g6-negative-order-core': n({ lo: -3, hi: -1 }),
+  'g6-negative-order-trap': n({ lo: -8, hi: -2 }),
+  'g7-rational-subneg-trap': n({ s: 1, n: 5 }),
+  'g3-subtract-zero-trap'(h) { const e = h.role('k'); h.set(e, 'h', 2); h.set(e, 't', 10); h.set(e, 't', 9); h.set(e, 'o', 10); },
+  'g3-fraction-add-core': r({ n2: 1 }),
+  'g3-fraction-denom-trap': r({ n2: 2 }),
+  'g5-fraction-add-trap': r({ n2: 1 }),
+  'g6-ratio-difference-trap': r({ t: 9 }),
+  'g2-combo-multiply-core': m({ w: 3, h: 2 }),
+  'g2-combo-add-trap': m({ w: 3, h: 2 }),
+  'g3-combo-add-trap': m({ w: 3, h: 2 }),
+  'g3-zero-place-trap': m({ w: 20 }),
+  'g6-frac-mul-core': m({ d1: 3, n1: 2, d2: 4, n2: 3 }),
+  'g7-quadrant-core': c({ ax: -2, ay: 3 }),
+  'g7-symmetry-x-axis-trap': c({ bx: 3, by: 2 }),
+  'g7-translate-down-trap': c({ ay: -1 }),
 };

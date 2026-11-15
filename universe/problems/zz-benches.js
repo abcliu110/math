@@ -1,4 +1,4 @@
-/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，第一批 18 道）。
+/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，两批共 39 道）。
  * 这些题原来的做法是“放数字、接运算器、看读数”：学生在搭计算流程。这里按 id 把它们换成在操作台上直接动手：
  * 题目的编号、标题、年级、知识点、道理（why）都不变，换的是器材架、开场的台面、里程碑和提示。
  * 这个文件排在所有题目文件后面加载（文件名 zz 开头），找不到的 id 会记在 U.benchMigrateMissing 里（测试会查）。 */
@@ -7,8 +7,8 @@
   const U = G.U, W = U.World;
   const one = (type, role, props) => () => { const s = W.blank(); const id = W.add(s, type, 40, 50, props); s.entities[id].role = role; return s; };
   const ms = (role) => (id, say, score, port, value, hints) => ({ id, say, score, when: { role, port, op: '=', value: String(value) }, hints });
-  const N = ms('n'), K = ms('k'), R = ms('r');
-  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props);
+  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c');
+  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props);
   const MOVES = {
     // ---- 数轴 ----
     'g1-split-merge-core': { shelf: ['numlinebench'], build: nl({ from: 0, to: 10, a: 0, s: 1, n: 0 }),
@@ -69,6 +69,80 @@
     'g6-ratio-cross-core': { shelf: ['ratiobench'], build: rb({ mode: 1, pa: 3, pb: 2, tmax: 12, tstep: 1, t: 0, ua: '后项', ub: '前项' }),
       hook: '2 : 3 = x : 9。上面是后项，下面是前项：3 对着 2。把上面的点拖到 9，下面对着的就是 x。',
       milestones: [R('x', '9 对着 6：x = 6', 6, 'b', 6, ['3 变成 9，乘了几？', '乘 3。', '2 × 3 = 6。'])], goal: ['x'] },
+    // ======== 第二批 ========
+    // ---- 数轴 ----
+    'g1-position-compare-core': { shelf: ['numlinebench'], build: nl({ mode: 2, from: 0, to: 10, lo: 0, hi: 1, lc: 1, hc: 1 }),
+      hook: '把左端点拖到 2，右端点拖到 4。4 在 2 的哪一边？数轴上越往右，数越大。',
+      milestones: [N('two', '一个端点在 2', 3, 'lo', 2, ['拖左端点。', '到 2。', '松手。']), N('four', '另一个在 4：4 在 2 的右边', 3, 'hi', 4, ['拖右端点。', '到 4。', '4 在右边，4 比 2 大。'])], goal: ['two', 'four'] },
+    'g1-make-ten-trap': { shelf: ['numlinebench'], build: nl({ from: 0, to: 20, a: 9, s: 1, n: 0 }),
+      hook: '9 加 6：把 6 拆成 1 和 5。先跳 1 步凑成 10，再跳 5 步。',
+      milestones: [N('ten', '先跳 1 步，凑成 10', 3, 'value', 10, ['9 差 1 到 10。', '拖“跳”字往右 1 步。', '到 10。']), N('fifteen', '再跳 5 步，落在 15', 4, 'value', 15, ['6 拆成 1 和 5，还剩 5 步。', '接着拖。', '15。'])], goal: ['ten', 'fifteen'] },
+    'g1-minus-break-trap': { shelf: ['numlinebench'], build: nl({ from: 0, to: 20, a: 13, s: -1, n: 0 }),
+      hook: '13 减 9：把 9 拆成 3 和 6。先往左跳 3 步到 10，再跳 6 步。',
+      milestones: [N('ten', '先减 3，到 10', 3, 'value', 10, ['13 到 10 是 3 步。', '拖“跳”字往左 3 步。', '到 10。']), N('four', '再减 6，落在 4', 4, 'value', 4, ['9 拆成 3 和 6，还剩 6 步。', '接着往左。', '4。'])], goal: ['ten', 'four'] },
+    'g2-divide-order-trap': { shelf: ['numlinebench'], build: nl({ from: 0, to: 15, a: 0, s: 1, n: 0 }),
+      hook: '一根 12 厘米的线，平均剪成 3 段。每一步是一段：调步长，让它正好 3 步跳到 12。',
+      milestones: [N('three', '正好 3 步', 2, 'jumps', 3, ['3 段就是 3 步。', '拖“跳”字，跳 3 步。', '数弧线。']), N('twelve', '3 步正好到 12：每段 4 厘米', 5, 'value', 12, ['现在 3 步到不了 12。', '点 ＋ 把步长调大。', '步长 4：4、8、12。'])], goal: ['twelve'] },
+    'g3-times-trap': { shelf: ['numlinebench'], build: nl({ from: 0, to: 15, a: 0, s: 3, n: 0 }),
+      hook: '12 个是 3 个的几倍？每一步跳 3，跳到 12，数一数跳了几步。',
+      milestones: [N('twelve', '跳到 12', 3, 'value', 12, ['每步 3。', '拖“跳”字到 12。', '3、6、9、12。']), N('four', '跳了 4 步：12 是 3 的 4 倍', 4, 'jumps', 4, ['数弧线。', '4 道。', '4 倍。'])], goal: ['twelve', 'four'],
+      traps: [{ id: 'minus', wrong: '“几倍”是问 12 里有几个 3，不是 12 − 3 = 9。', when: { role: 'n', port: 'value', op: '=', value: '9' } }] },
+    'g6-negative-order-core': { shelf: ['numlinebench'], build: nl({ mode: 2, from: -6, to: 6, lo: 0, hi: 1, lc: 1, hc: 1 }),
+      hook: '把两个端点拖到 −3 和 −1。哪个在左边？在左边的那个更小，也就是更冷。',
+      milestones: [N('lo', '左端在 −3', 3, 'lo', -3, ['−3 在 0 左边 3 格。', '拖左端点。', '到 −3。']), N('hi', '右端在 −1', 3, 'hi', -1, ['−1 在 0 左边 1 格。', '拖右端点。', '到 −1。'])], goal: ['lo', 'hi'] },
+    'g6-negative-order-trap': { shelf: ['numlinebench'], build: nl({ mode: 2, from: -10, to: 2, lo: 0, hi: 1, lc: 1, hc: 1 }),
+      hook: '把两个端点拖到 −8 和 −2。8 比 2 大，可是 −8 在 −2 的左边：哪个温度高？',
+      milestones: [N('lo', '左端在 −8', 3, 'lo', -8, ['−8 离 0 更远。', '拖左端点。', '到 −8。']), N('hi', '右端在 −2：−2 更高', 3, 'hi', -2, ['拖右端点。', '到 −2。', '右边的大：−2 > −8。'])], goal: ['lo', 'hi'] },
+    'g7-rational-subneg-trap': { shelf: ['numlinebench'], build: nl({ from: -8, to: 8, a: -3, s: -1, n: 0 }),
+      hook: '(−3) − (−5)。减去一个数是“往反方向走”：减 5 是往左，减 −5 就是往右。把步长改成 +1，从 −3 跳 5 步。',
+      milestones: [N('right', '步长是 +1（往右）', 2, 'step', 1, ['减去负数，方向反过来。', '点 ＋。', '−1 变成 +1。']), N('two', '落在 2', 5, 'value', 2, ['往右 5 步。', '拖“跳”字。', '−2、−1、0、1、2。'])], goal: ['two'],
+      traps: [{ id: 'neg8', wrong: '减去 −5 不是往左走 5：那样到了 −8。减负数等于加正数。', when: { role: 'n', port: 'value', op: '=', value: '-8' } }] },
+    // ---- 计数块与数位 ----
+    'g3-subtract-zero-trap': { shelf: ['blocksbench'], build: bk({ mode: 1, a: 300, b: 0, h: 3, t: 0, o: 0 }),
+      hook: '300 − 168，个位和十位都是 0，没法减。先把一个百往右拖拆成 10 个十，再把一个十往右拖拆成 10 个一。',
+      milestones: [K('t', '拆一个百：十位有块了', 3, 'hundreds', 2, ['百位的大方块可以换 10 个十。', '把它往右拖到十位。', '2 个百、10 个十。']), K('o', '再拆一个十：个位有 10 个', 4, 'ones', 10, ['十位的一根换 10 个一。', '把它往右拖到个位。', '2 个百、9 个十、10 个一。'])], goal: ['t', 'o'] },
+    // ---- 分数条与比 ----
+    'g3-fraction-add-core': { shelf: ['ratiobench'], build: rb({ d1: 5, n1: 2, d2: 5, n2: 0 }),
+      hook: '平均分成 5 份。甲取了 2 份，乙再取 1 份：把乙涂 1 份，看“合起来”是几分之几。',
+      milestones: [R('sum', '合起来是 3/5', 6, 'sum', '3/5', ['都是五分之几。', '拖乙条的把手，涂 1 份。', '2 份加 1 份是 3 份。'])], goal: ['sum'] },
+    'g3-fraction-denom-trap': { shelf: ['ratiobench'], build: rb({ d1: 4, n1: 1, d2: 4, n2: 0 }),
+      hook: '1/4 加 2/4。把乙涂成 2/4，看合起来是多少。分母变了吗？',
+      milestones: [R('sum', '合起来是 3/4', 6, 'sum', '3/4', ['每一份一样大，只数份数。', '乙涂 2 份。', '3/4，不是 3/8。'])], goal: ['sum'] },
+    'g5-fraction-add-trap': { shelf: ['ratiobench'], build: rb({ d1: 2, n1: 1, d2: 3, n2: 0 }),
+      hook: '1/2 + 1/3。把乙涂 1 份。两条的份不一样大，不能直接数：看下面“通分”那一行，都切成 6 份再加。',
+      milestones: [R('b', '乙是 1/3', 2, 'b', '1/3', ['拖乙条的把手。', '涂 1 份。', '1/3。']), R('sum', '合起来是 5/6', 4, 'sum', '5/6', ['通分：3/6 和 2/6。', '3 份加 2 份。', '5/6。'])], goal: ['sum'] },
+    // （'frac-add-unlike' 没搬：内核测试拿它当样例，测里程碑、陷阱和提示）
+    'g6-ratio-difference-trap': { shelf: ['ratiobench'], build: rb({ mode: 1, pa: 3, pb: 2, tmax: 12, tstep: 1, t: 3, ua: '后项', ub: '前项' }),
+      hook: '2 : 3 = x : 9。有同学说“3 比 2 多 1，所以 x 是 8”。把上面的点从 3 拖到 9，看下面对着几。',
+      milestones: [R('x', '9 对着 6：x = 6', 6, 'b', 6, ['3 到 9 是乘 3，不是加 6。', '下面也乘 3。', '2 × 3 = 6。'])], goal: ['x'] },
+    // ---- 面积模型 ----
+    'g2-combo-multiply-core': { shelf: ['areamodel'], build: am({ w: 1, h: 1 }),
+      hook: '2 件上衣，3 条裤子。每件上衣都能配每条裤子：把长方形拖成 3 列（裤子）、2 行（上衣），每个格子是一种搭配。',
+      milestones: [A('six', '2 行 3 列：6 种搭配', 6, 'area', 6, ['一行是一件上衣，一列是一条裤子。', '拖右边到 3，下边到 2。', '2 × 3 = 6。'])], goal: ['six'] },
+    'g2-combo-add-trap': { shelf: ['areamodel'], build: am({ w: 1, h: 1 }),
+      hook: '帽子 3 顶，围巾 2 条。每顶帽子都能配每条围巾：拖成 3 列、2 行，数格子。',
+      milestones: [A('six', '6 种搭配', 6, 'area', 6, ['每个格子是一顶帽子配一条围巾。', '3 列 2 行。', '3 × 2 = 6，不是 3 + 2。'])], goal: ['six'],
+      traps: [{ id: 'five', wrong: '搭配是“每一个配每一个”，要乘：3 + 2 = 5 是把帽子和围巾数在一起了。', when: { role: 'm', port: 'area', op: '=', value: '5' } }] },
+    'g3-combo-add-trap': { shelf: ['areamodel'], build: am({ w: 1, h: 1 }),
+      hook: '2 件上衣、3 条裤子。拖成 3 列、2 行，每个格子是一种搭配。',
+      milestones: [A('six', '6 种搭配', 6, 'area', 6, ['行是上衣，列是裤子。', '3 列 2 行。', '2 × 3 = 6。'])], goal: ['six'] },
+    'g3-zero-place-trap': { shelf: ['areamodel'], build: am({ w: 2, h: 4 }),
+      hook: '现在是 2 × 4 = 8。把长拖到 20，变成 20 × 4：面积变成原来的几倍？',
+      milestones: [A('eighty', '20 × 4 = 80', 6, 'area', 80, ['长从 2 变成 20，是 10 倍。', '拖右边到 20。', '8 的 10 倍是 80。'])], goal: ['eighty'] },
+    'g6-frac-mul-core': { shelf: ['areamodel'], build: am({ mode: 1, d1: 2, n1: 1, d2: 2, n2: 1 }),
+      hook: '2/3 乘 3/4：竖着切 3 份涂 2 份，横着切 4 份取 3 份。重叠的格子占整块的多少？',
+      milestones: [A('twelve', '整块切成 12 小格', 2, 'total', 12, ['竖着 3 份、横着 4 份。', '点 ＋ 改份数。', '3 × 4 = 12。']), A('half', '重叠 6 格：6/12 = 1/2', 5, 'area', '1/2', ['竖着涂 2 份，横着取 3 份。', '拖两个把手。', '2 × 3 = 6 格。'])], goal: ['half'] },
+    // ---- 坐标 ----
+    'g7-quadrant-core': { shelf: ['coordbench'], build: cb({ mode: 1, ax: 1, ay: 1, bx: 0, by: 0 }),
+      hook: '把点 A 拖到 (−2, 3)：先看横坐标 −2（往左 2），再看纵坐标 3（往上 3）。它在哪一块？',
+      milestones: [C('x', '横坐标是 −2', 3, 'px', -2, ['横坐标是负的：在 y 轴左边。', '拖 A 往左。', '到 x = −2。']), C('y', '纵坐标是 3：在第二象限', 3, 'py', 3, ['纵坐标是正的：在 x 轴上面。', '拖 A 往上。', '左上那一块是第二象限。'])], goal: ['x', 'y'] },
+    'g7-symmetry-x-axis-trap': { shelf: ['coordbench'], build: cb({ mode: 1, ax: 3, ay: -2, bx: 0, by: 0 }),
+      hook: '点 A 在 (3, −2)。把点 B 拖到 A 关于 x 轴对称的位置：沿着 x 轴对折，A 会落在哪里？',
+      milestones: [C('x', 'B 的横坐标是 3（没变）', 3, 'qx', 3, ['上下对折，左右不变。', '拖 B 到 x = 3。', '3。']), C('y', 'B 的纵坐标是 2', 4, 'qy', 2, ['A 在 x 轴下面 2 格。', 'B 在 x 轴上面 2 格。', '2。'])], goal: ['x', 'y'] },
+    'g7-translate-down-trap': { shelf: ['coordbench'], build: cb({ mode: 1, ax: 2, ay: 1, bx: -4, by: -4 }),
+      hook: '点 A 的纵坐标是 1。把它向下平移 2 格（只上下动），纵坐标变成几？',
+      milestones: [C('y', '纵坐标是 −1', 6, 'py', -1, ['向下，纵坐标变小。', '拖 A 往下 2 格。', '1 − 2 = −1。'])], goal: ['y'],
+      traps: [{ id: 'up', wrong: '向下平移是纵坐标减小：1 + 2 = 3 是往上移了。', when: { role: 'c', port: 'py', op: '=', value: '3' } }] },
   };
   const missing = [], moved = [];
   for (const id of Object.keys(MOVES)) {

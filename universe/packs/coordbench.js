@@ -152,15 +152,17 @@
           h: { dim: null, kind: 'num', label: '顶点的 x' },
           v: { dim: null, kind: 'num', label: '顶点的 y' },
           roots: { dim: null, kind: 'num', label: '抛物线和 x 轴的交点个数' },
+          px: { dim: null, kind: 'num', label: '点 A 的横坐标（两点）' }, py: { dim: null, kind: 'num', label: '点 A 的纵坐标（两点）' },
+          qx: { dim: null, kind: 'num', label: '点 B 的横坐标（两点）' }, qy: { dim: null, kind: 'num', label: '点 B 的纵坐标（两点）' },
         },
         icon: () => K.line(8, 36, 56, 36, { w: 1.5 }) + K.line(16, 6, 16, 40, { w: 1.5 }) + K.line(10, 34, 54, 10, { w: 2.5, stroke: 'var(--blue)' }),
         size: () => [W, 386],
         grips,
         compute: (c) => {
           const m = model(c.props), z = num(0);
-          if (m.mode === 1) { const o = { y: z, a: z, h: z, v: z, roots: z }; if (!m.vertical) { o.k = num(m.k); o.b = num(m.b); if (Q.num(m.k) !== 0) o.root = num(Q.div(Q.neg ? Q.neg(m.b) : Q.sub(Q(0), m.b), m.k)); } return o; }
-          if (m.mode === 2) return { a: num(m.a), h: num(m.h), v: num(m.v), roots: num(m.roots), k: z, b: z, y: z };
-          const o = { k: num(m.k), b: num(m.b), y: num(m.y), a: z, h: z, v: z, roots: z }; if (m.root !== null) o.root = num(m.root); return o;
+          if (m.mode === 1) { const o = { y: z, a: z, h: z, v: z, roots: z, px: num(m.ax), py: num(m.ay), qx: num(m.bx), qy: num(m.by) }; if (!m.vertical) { o.k = num(m.k); o.b = num(m.b); if (Q.num(m.k) !== 0) o.root = num(Q.div(Q.neg ? Q.neg(m.b) : Q.sub(Q(0), m.b), m.k)); } return o; }
+          if (m.mode === 2) return { a: num(m.a), h: num(m.h), v: num(m.v), roots: num(m.roots), k: z, b: z, y: z, px: z, py: z, qx: z, qy: z };
+          const o = { k: num(m.k), b: num(m.b), y: num(m.y), a: z, h: z, v: z, roots: z, px: z, py: z, qx: z, qy: z }; if (m.root !== null) o.root = num(m.root); return o;
         },
         badge: () => '',
         draw,
