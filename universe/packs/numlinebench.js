@@ -130,6 +130,7 @@
           lo: { dim: null, kind: 'num', label: '区间左端' },
           hi: { dim: null, kind: 'num', label: '区间右端' },
           ints: { dim: null, kind: 'num', label: '区间里有几个整数' },
+          len: { dim: null, kind: 'num', label: '区间的长度' },
           closed: { dim: null, kind: 'num', label: '含的端点个数（0、1、2）' },
         },
         icon: () => K.line(8, 26, 56, 26, { w: 2 }) + K.line(16, 21, 16, 31, {}) + K.line(32, 21, 32, 31, {}) + K.line(48, 21, 48, 31, {}) + K.circle(32, 26, 4, { fill: 'var(--blue)' }) + '<path d="M16 20 Q24 4 32 20" fill="none" stroke="var(--blue)" stroke-width="1.8"/>',
@@ -137,9 +138,9 @@
         grips,
         compute: (c) => {
           const m = model(c.props), z = num(0);
-          if (m.mode === 1) return { value: num(m.value), start: num(m.from), step: z, jumps: z, lo: z, hi: z, ints: z, closed: z };
-          if (m.mode === 2) return { value: z, start: z, step: z, jumps: z, lo: num(m.lo), hi: num(m.hi), ints: num(m.ints), closed: num(m.lc + m.hc) };
-          return { value: num(m.value), start: num(m.a), step: num(m.s), jumps: num(m.n), lo: z, hi: z, ints: z, closed: z };
+          if (m.mode === 1) return { value: num(m.value), start: num(m.from), step: z, jumps: z, lo: z, hi: z, ints: z, closed: z, len: z };
+          if (m.mode === 2) return { value: z, start: z, step: z, jumps: z, lo: num(m.lo), hi: num(m.hi), ints: num(m.ints), closed: num(m.lc + m.hc), len: num(m.len) };
+          return { value: num(m.value), start: num(m.a), step: num(m.s), jumps: num(m.n), lo: z, hi: z, ints: z, closed: z, len: z };
         },
         badge: (c) => { const m = model(c.props); return m.mode === 2 ? '' : c.masked ? '' : (m.mode === 1 ? forms(m.value)[0] : sgn(m.value)); },
         draw,

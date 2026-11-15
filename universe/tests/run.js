@@ -3634,5 +3634,22 @@ console.log('示例菜单（problems/examples-data.js，由 tools/gen-examples.j
   });
 }
 
+console.log('旧题搬到操作台');
+t('搬题：每个要搬的 id 都找到了题；搬过去的题器材架上只有操作台，开场台面上就有它', () => {
+  eq(U.benchMigrateMissing, [], '找不到的 id');
+  truthy(U.benchMigrated.length >= 18, '至少搬了 18 道');
+  const BENCH = ['areamodel', 'balancebench', 'numlinebench', 'ratiobench', 'coordbench', 'blocksbench'];
+  for (const id of U.benchMigrated) {
+    const p = U.problems.find((x) => x.id === id), s = p.build();
+    truthy(p.shelf.length === 1 && BENCH.includes(p.shelf[0]), id + ' 的器材架');
+    truthy(Object.values(s.entities).some((e) => e.type === p.shelf[0]), id + ' 的开场台面');
+    eq(U.problemLint(p).errors, [], id + ' 的结构');
+  }
+});
+t('操作台的题：只用四个管道件（数字、运算器、读数、比较）的题比搬之前少', () => {
+  const basic = ['num', 'op', 'meter', 'compare'];
+  const only = U.problems.filter((p) => (p.shelf || []).length && p.shelf.every((x) => basic.includes(x))).length;
+  truthy(only <= 92, '现在还有 ' + only + ' 道（搬之前 110 道）');
+});
 console.log('\n' + pass + ' 通过，' + fail + ' 失败');
 process.exit(fail ? 1 : 0);
