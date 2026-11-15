@@ -112,7 +112,7 @@
     id: 'numlinebench', version: 1,
     types: {
       numlinebench: {
-        workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E1', 'E2'],
+        workspaceRole: 'none', handles: true, compactPorts: true, bench: true, essence: ['E1', 'E2'],
         label: '数轴操作台', prefix: '数轴', group: '数与运算', grades: [1, 9],
         alias: ['数轴', '加法', '减法', '乘法', '跳步', '分数', '小数', '负数', '不等式', '区间', '解集'],
         props: {

@@ -88,7 +88,7 @@
     id: 'ratiobench', version: 1,
     types: {
       ratiobench: {
-        workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E3', 'E6'],
+        workspaceRole: 'none', handles: true, compactPorts: true, bench: true, essence: ['E3', 'E6'],
         label: '分数条与比', prefix: '分数条', group: '分数', grades: [3, 7],
         alias: ['分数', '比较分数', '等值分数', '通分', '比', '比例', '百分数', '正比例', '双数轴', '单价', '打折'],
         props: {

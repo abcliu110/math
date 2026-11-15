@@ -85,7 +85,8 @@
       h += '<i class="port in" data-id="' + e.id + '" data-port="' + k + '" title="' + K.esc(d.inputs[k].label) + '" style="left:0;top:' + (PORT_Y0 + i * PORT_DY) + 'px"></i>';
       h += '<span class="pl" style="left:' + L.PORT_LABEL_X + 'px;top:' + (PORT_Y0 + i * PORT_DY) + 'px">' + K.esc(U.shortLabel(d.inputs[k].label)) + '</span>';
     });
-    UI.outOrder(e.type, d).forEach((k, i) => {
+    const benchOnly = !!(d.bench && S.problem && (S.problem.shelf || []).length && S.problem.shelf.every((t) => U.types[t] && U.types[t].bench) && !S.scene.links.some((l) => l.from === e.id));
+    if (!benchOnly) UI.outOrder(e.type, d).forEach((k, i) => {
       h += '<i class="port out" data-id="' + e.id + '" data-port="' + k + '"' + ' title="' + K.esc(d.outputs[k].label) + '"' + ' style="left:' + g.w + 'px;top:' + (PORT_Y0 + i * PORT_DY) + 'px;background:' + U.kindColor(d.outputs[k].kind) + '"></i>';
       if (!SG.isWsDef(e.type) && !d.compactPorts) h += '<span class="pl" style="right:' + L.PORT_LABEL_X + 'px;top:' + (PORT_Y0 + i * PORT_DY) + 'px">' + K.esc(U.shortLabel(d.outputs[k].label)) + '</span>';   // 工作区的步数标在标题栏里，这里不再写（会和画布里的把手叠在一起）
     });

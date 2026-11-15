@@ -1,4 +1,4 @@
-/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，两批共 39 道）。
+/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，三批共 47 道）。
  * 这些题原来的做法是“放数字、接运算器、看读数”：学生在搭计算流程。这里按 id 把它们换成在操作台上直接动手：
  * 题目的编号、标题、年级、知识点、道理（why）都不变，换的是器材架、开场的台面、里程碑和提示。
  * 这个文件排在所有题目文件后面加载（文件名 zz 开头），找不到的 id 会记在 U.benchMigrateMissing 里（测试会查）。 */
@@ -143,6 +143,32 @@
       hook: '点 A 的纵坐标是 1。把它向下平移 2 格（只上下动），纵坐标变成几？',
       milestones: [C('y', '纵坐标是 −1', 6, 'py', -1, ['向下，纵坐标变小。', '拖 A 往下 2 格。', '1 − 2 = −1。'])], goal: ['y'],
       traps: [{ id: 'up', wrong: '向下平移是纵坐标减小：1 + 2 = 3 是往上移了。', when: { role: 'c', port: 'py', op: '=', value: '3' } }] },
+    // ======== 第三批：单位换算用双数轴（上面一个单位，下面另一个单位，对齐着走）========
+    'g2-kg-to-g-core': { shelf: ['ratiobench'], build: rb({ mode: 1, pa: 1, pb: 1000, tmax: 5, tstep: 1, t: 0, ua: '千克', ub: '克' }),
+      hook: '上面是千克，下面是克：1 千克对着 1000 克。把上面的点拖到 2，下面对着多少克？',
+      milestones: [R('v', '2 千克对着 2000 克', 6, 'b', '2000', ['1 千克是 1000 克。', '2 千克是 2 个 1000。', '把点拖到 2。'])], goal: ['v'] },
+    'g2-kg-trap': { shelf: ['ratiobench'], build: rb({ mode: 1, pa: 1, pb: 1000, tmax: 5, tstep: 1, t: 0, ua: '千克', ub: '克' }),
+      hook: '1 千克对着 1000 克。把点拖到 3。',
+      milestones: [R('v', '3 千克对着 3000 克', 6, 'b', '3000', ['1 千克是 1000 克，不是 100 克。', '3 个 1000。', '拖到 3。'])], goal: ['v'] },
+    'g2-hour-100-trap': { shelf: ['ratiobench'], build: rb({ mode: 1, pa: 1, pb: 60, tmax: 5, tstep: 1, t: 0, ua: '时', ub: '分' }),
+      hook: '上面是小时，下面是分钟：1 时对着 60 分。把点拖到 3。',
+      milestones: [R('v', '3 时对着 180 分', 6, 'b', '180', ['1 时是 60 分，不是 100 分。', '3 个 60。', '拖到 3。'])], goal: ['v'] },
+    'g3-time-hour-minute-core': { shelf: ['ratiobench'], build: rb({ mode: 1, pa: 1, pb: 60, tmax: 5, tstep: 1, t: 0, ua: '时', ub: '分' }),
+      hook: '1 时对着 60 分。把点拖到 2，下面对着多少分？',
+      milestones: [R('v', '2 时对着 120 分', 6, 'b', '120', ['1 时 60 分。', '2 个 60。', '拖到 2。'])], goal: ['v'] },
+    'g3-measure-m-to-cm-core': { shelf: ['ratiobench'], build: rb({ mode: 1, pa: 1, pb: 100, tmax: 5, tstep: 1, t: 0, ua: '米', ub: '厘米' }),
+      hook: '上面是米，下面是厘米：1 米对着 100 厘米。把点拖到 3。',
+      milestones: [R('v', '3 米对着 300 厘米', 6, 'b', '300', ['1 米是 100 厘米。', '3 个 100。', '拖到 3。'])], goal: ['v'] },
+    'g4-area-km2-core': { shelf: ['ratiobench'], build: rb({ mode: 1, pa: 1, pb: 100, tmax: 5, tstep: 1, t: 0, ua: '平方千米', ub: '公顷' }),
+      hook: '1 平方千米对着 100 公顷。把点拖到 3。',
+      milestones: [R('v', '3 平方千米对着 300 公顷', 6, 'b', '300', ['1 平方千米 = 100 公顷。', '3 个 100。', '拖到 3。'])], goal: ['v'] },
+    'g4-area-ha-trap': { shelf: ['ratiobench'], build: rb({ mode: 1, pa: 100, pb: 1, tmax: 10, tstep: 1, t: 0, ua: '公顷', ub: '平方千米' }),
+      hook: '这回从小单位换成大单位：100 公顷才对着 1 平方千米。把点拖到 2 公顷，下面对着多少？',
+      milestones: [R('v', '2 公顷对着 1/50 平方千米', 6, 'b', '1/50', ['100 公顷 = 1 平方千米。', '1 公顷是 1/100 平方千米。', '2 公顷是 2/100 = 1/50，也就是 0.02。'])], goal: ['v'] },
+    'g4-bar-scale-trap': { shelf: ['ratiobench'], build: rb({ mode: 1, pa: 1, pb: 5, tmax: 10, tstep: 1, t: 0, ua: '格', ub: '人' }),
+      hook: '条形图上 1 格代表 5 人。条形高 9 格：把点拖到 9。',
+      milestones: [R('v', '9 格对着 45 人', 6, 'b', '45', ['1 格是 5 人，不是 1 人。', '9 个 5。', '拖到 9。'])], goal: ['v'],
+      traps: [{ id: 'bad', wrong: '条形高 9 格不等于 9 人：先看一格代表几人。', when: { role: 'r', port: 'b', op: '=', value: '9' } }] },
   };
   const missing = [], moved = [];
   for (const id of Object.keys(MOVES)) {

@@ -127,8 +127,12 @@
       const rec = recentTypes().map((id) => U.types[id]).filter((t) => t && listed(t) && !(allow && !allow.includes(t.id) && R.shelfOnly));
       if (rec.length) h += '<div class="grp">最近用过</div><div class="tiles">' + rec.map(tile).join('') + '</div>';
     }
+    if (!q) {
+      const bs = Object.values(U.types).filter((t) => t.bench && listed(t)).sort(cmp), body = bs.map(tile).join('');
+      if (body) h += '<div class="grp">操作台（直接在图上动手）</div><div class="tiles">' + body + '</div>';
+    }
     for (const g of groups) {
-      const ts = Object.values(U.types).filter((t) => listed(t) && t.group === g && (!q || (t.label + t.alias.join('') + g).includes(q))).sort(cmp);
+      const ts = Object.values(U.types).filter((t) => listed(t) && t.group === g && !(t.bench && !q) && (!q || (t.label + t.alias.join('') + g).includes(q))).sort(cmp);
       const body = ts.map(tile).join('');
       if (!body) continue;
       h += '<div class="grp">' + esc(g) + '</div><div class="tiles">' + body + '</div>';

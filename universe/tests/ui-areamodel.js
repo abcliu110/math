@@ -84,6 +84,12 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   ok(await out('p1') === '7' && await out('p0') === '12', '展开是 x² + 7x + 12');
   ok(await done('c12') && await done('l7'), '两个里程碑都完成了');
   ok(await p.evaluate(() => !UI.S.inspOpen), '全程没有打开属性面板');
+  console.log('6. 操作台的题不画输出口；器材架最上面有“操作台”一组');
+  ok(await p.locator('.card .port.out').count() === 0, '操作台的题里：卡片右边没有一排输出口');
+  await p.evaluate(() => { UI.App.openFree(); UI.App.act({ t: 'clear' }); UI.App.act({ t: 'add', type: 'areamodel', x: 100, y: 80 }); UI.Stage.render(); UI.Panels.renderShelf(); }); await p.waitForTimeout(250);
+  ok(await p.locator('.card .port.out').count() >= 5, '自由探究里：输出口照常画（那里要接线）');
+  const grp = await p.evaluate(() => { const g = [...document.querySelectorAll('#shelfbody .grp')].find((x) => x.textContent.includes('操作台')); return g ? [...g.nextElementSibling.querySelectorAll('.tile')].map((t) => t.dataset.type) : []; });
+  ok(grp.length >= 6 && grp.includes('areamodel') && grp.includes('balancebench') && grp.includes('numlinebench'), '器材架有“操作台”一组：' + grp.length + ' 个');
   ok(errs.length === 0, '控制台 0 报错' + (errs.length ? '：' + errs[0] : ''));
   console.log('\n面积模型测试：' + pass + ' 通过，' + fail + ' 失败');
   await b.close(); process.exit(fail ? 1 : 0);

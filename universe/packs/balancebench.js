@@ -128,7 +128,7 @@
     id: 'balancebench', version: 1,
     types: {
       balancebench: {
-        workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E4', 'E2'],
+        workspaceRole: 'none', handles: true, compactPorts: true, bench: true, essence: ['E4', 'E2'],
         label: '天平与方程', prefix: '天平', group: '关系', grades: [3, 9],
         alias: ['方程', '等式', '等式的性质', '解方程', '未知数', '移项', '天平', '平衡'],
         props: {

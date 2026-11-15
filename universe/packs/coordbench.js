@@ -134,7 +134,7 @@
     id: 'coordbench', version: 1,
     types: {
       coordbench: {
-        workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E6', 'E2'],
+        workspaceRole: 'none', handles: true, compactPorts: true, bench: true, essence: ['E6', 'E2'],
         label: '坐标与函数', prefix: '坐标', group: '函数', grades: [5, 9],
         alias: ['坐标', '函数', '一次函数', '直线', '斜率', '截距', '正比例', '二次函数', '抛物线', '顶点', '图像'],
         props: {

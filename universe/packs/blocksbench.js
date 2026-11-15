@@ -87,7 +87,7 @@
     id: 'blocksbench', version: 1,
     types: {
       blocksbench: {
-        workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E1', 'E5'],
+        workspaceRole: 'none', handles: true, compactPorts: true, bench: true, essence: ['E1', 'E5'],
         label: '计数块与数位', prefix: '数位板', group: '数与运算', grades: [1, 4],
         alias: ['数位', '十进制', '进位', '退位', '计数块', '数的组成', '满十进一', '破十', '加法'],
         props: {

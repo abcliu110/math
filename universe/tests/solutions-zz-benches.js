@@ -43,4 +43,7 @@ module.exports = {
   'g7-quadrant-core': c({ ax: -2, ay: 3 }),
   'g7-symmetry-x-axis-trap': c({ bx: 3, by: 2 }),
   'g7-translate-down-trap': c({ ay: -1 }),
+  // 第三批
+  'g2-kg-to-g-core': r({ t: 2 }), 'g2-kg-trap': r({ t: 3 }), 'g2-hour-100-trap': r({ t: 3 }), 'g3-time-hour-minute-core': r({ t: 2 }),
+  'g3-measure-m-to-cm-core': r({ t: 3 }), 'g4-area-km2-core': r({ t: 3 }), 'g4-area-ha-trap': r({ t: 2 }), 'g4-bar-scale-trap': r({ t: 9 }),
 };

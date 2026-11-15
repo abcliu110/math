@@ -190,7 +190,7 @@
     id: 'areamodel', version: 1,
     types: {
       areamodel: {
-        workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E5', 'E2'],
+        workspaceRole: 'none', handles: true, compactPorts: true, bench: true, essence: ['E5', 'E2'],
         label: '面积模型', prefix: '面积模型', group: '数与运算', grades: [2, 9],
         alias: ['乘法', '分配律', '面积', '竖式乘法', '分数乘法', '多项式乘法', '因式分解', '完全平方', '点阵', '代数砖'],
         props: {
