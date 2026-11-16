@@ -650,5 +650,18 @@
     },
   };
 
+  // 连一连：一一对应
+  D.pairbench = {
+    caps: ['5 位客人，4 把椅子', '一个对一个连起来', '连到第 4 条，椅子没了', '剩下 1 位客人：客人多 1 个'],
+    draw(st) {
+      let s = ''; const X = (i) => 60 + i * 50, k = [0, 2, 4, 4][st];
+      for (let i = 0; i < k; i++) s += Ln(X(i), 52, X(i), 118, { w: 2, s: B });
+      for (let i = 0; i < 5; i++) s += Ci(X(i), 40, 12, st === 3 && i === 4 ? '#f7a8a8' : A, { s: INK });
+      for (let i = 0; i < 4; i++) s += Rc(X(i) - 12, 118, 24, 24, B, { s: INK });
+      s += T(300, 90, ['5 和 4', '连一连', '连了 4 条', '多 1 个'][st], { s: 15, w: 700, f: P });
+      return s;
+    },
+  };
+
   UI.Demo = D;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

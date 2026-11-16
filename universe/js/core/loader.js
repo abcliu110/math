@@ -59,6 +59,7 @@
     'numlinebench': 'packs/numlinebench.js',
     'numtheory': 'packs/numtheory.js',
     'optimize': 'packs/optimize.js',
+    'pairbench': 'packs/pairbench.js',
     'piece': 'packs/piece.js',
     'primeblocks': 'packs/primeblocks.js',
     'proof': 'packs/proof.js',

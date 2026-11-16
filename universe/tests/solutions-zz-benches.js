@@ -1,7 +1,7 @@
 /* 搬到操作台上的旧题的参考解（problems/zz-benches.js）。文件名 zz 开头：排在各年级的参考解后面加载，盖掉原来“接运算器”的解法。 */
 'use strict';
 const S = (role) => (o) => (h) => { const e = h.role(role); for (const k of Object.keys(o)) h.set(e, k, o[k]); };
-const n = S('n'), k = S('k'), r = S('r'), m = S('m'), c = S('c'), t = S('t'), s = S('s'), gp = S('g'), b = S('b'), d = S('d'), ch = S('h'), ck = S('k'), gq = S('q'), so = S('o'), cj = S('j'), fz = S('z');
+const n = S('n'), k = S('k'), r = S('r'), m = S('m'), c = S('c'), t = S('t'), s = S('s'), gp = S('g'), b = S('b'), d = S('d'), ch = S('h'), ck = S('k'), gq = S('q'), so = S('o'), cj = S('j'), fz = S('z'), pq = S('p');
 module.exports = {
   'g1-split-merge-core': n({ a: 2, n: 3 }),
   'g1-split-minus-trap': n({ s: -1, n: 2 }),
@@ -43,6 +43,11 @@ module.exports = {
   'g7-quadrant-core': c({ ax: -2, ay: 3 }),
   'g7-symmetry-x-axis-trap': c({ bx: 3, by: 2 }),
   'g7-translate-down-trap': c({ ay: -1 }),
+  // 第二十批
+  'match-pairs': pq({ pairs: '0-0,1-1,2-2,3-3,4-4' }), 'no-extra-seat': pq({ pairs: '0-0,1-1,2-2,3-3' }),
+  'one-to-one'(h) { const e = h.role('p'); h.set(e, 'pairs', '0-0,1-1'); h.set(e, 'nb', 3); h.set(e, 'pairs', '0-0,1-1,2-2'); },
+  'count-by-match': pq({ pairs: '0-1,0-2,0-3,1-2,1-3,2-3' }), 'counting-matching': pq({ pairs: '0-1,0-2,0-3,0-4,1-2,1-3,1-4,2-3,2-4,3-4' }),
+  'array-12'(h) { const e = h.role('m'); h.set(e, 'w', 4); h.set(e, 'h', 3); h.set(e, 'w', 6); h.set(e, 'h', 2); h.set(e, 'w', 12); h.set(e, 'h', 1); },
   // 第十九批
   'g5-chance-core': ch({ list: true }), 'g5-chance-trap': ch({ sumv: 13 }), 'g9-enum-prob-core': ch({ list: true }), 'g9-enum-prob-trap': ch({ list: true }), 'pf-three-dice': ch({ mode: 4, list: true }),
   // 第十八批

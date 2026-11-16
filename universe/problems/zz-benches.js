@@ -1,4 +1,4 @@
-/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，十九批共 141 道）。
+/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，二十批共 147 道）。
  * 这些题原来的做法是“放数字、接运算器、看读数”：学生在搭计算流程。这里按 id 把它们换成在操作台上直接动手：
  * 题目的编号、标题、年级、知识点、道理（why）都不变，换的是器材架、开场的台面、里程碑和提示。
  * 这个文件排在所有题目文件后面加载（文件名 zz 开头），找不到的 id 会记在 U.benchMigrateMissing 里（测试会查）。 */
@@ -7,9 +7,9 @@
   const U = G.U, W = U.World;
   const one = (type, role, props) => () => { const s = W.blank(); const id = W.add(s, type, 40, 50, props); s.entities[id].role = role; return s; };
   const ms = (role) => (id, say, score, port, value, hints) => ({ id, say, score, when: { role, port, op: '=', value: String(value) }, hints });
-  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s'), GP = ms('g'), B = ms('b'), D = ms('d'), K2 = ms('k'), Gq = ms('q'), So = ms('o'), Cj = ms('j'), Z = ms('z'), H2 = ms('h');
+  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s'), GP = ms('g'), B = ms('b'), D = ms('d'), K2 = ms('k'), Gq = ms('q'), So = ms('o'), Cj = ms('j'), Z = ms('z'), H2 = ms('h'), Pq = ms('p');
   const H = (id, say, score, when, hints) => ({ id, say, score, when, hints });   // 条件是一个范围（频率稳在某个区间）时用函数
-  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props), bb = (props) => one('balancebench', 'b', props), sb = (props) => one('statbench', 'd', props), ch = (props) => one('chancebench', 'h', props), ck = (props) => one('clockbench', 'k', props), gq = (props) => one('groupbench', 'q', props), sd = (props) => one('solidbench', 'o', props), cj = (props) => one('conjbench', 'j', props), fb2 = (props) => one('fitbench', 'z', props);
+  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props), bb = (props) => one('balancebench', 'b', props), sb = (props) => one('statbench', 'd', props), ch = (props) => one('chancebench', 'h', props), ck = (props) => one('clockbench', 'k', props), gq = (props) => one('groupbench', 'q', props), sd = (props) => one('solidbench', 'o', props), cj = (props) => one('conjbench', 'j', props), fb2 = (props) => one('fitbench', 'z', props), pb2 = (props) => one('pairbench', 'p', props);
   const MOVES = {
     // ---- 数轴 ----
     'g1-split-merge-core': { shelf: ['numlinebench'], build: nl({ from: 0, to: 10, a: 0, s: 1, n: 0 }),
@@ -489,6 +489,27 @@
     'pf-three-dice': { shelf: ['chancebench'], build: ch({ mode: 1, sumv: 10, list: true }),
       hook: '现在列的是两个骰子的 36 种情况。三个骰子一共有多少种？点“换成三个骰子”，列表跟着换：6 小块，每块是第一个骰子是几。数出和为 10 的有几种。',
       milestones: [H2('full', '三个骰子一共 216 种', 4, 'all', 216, ['点“换成三个骰子”。', '列表变成 6 小块。', '6 × 6 × 6 = 216。']), H2('count', '和为 10 的有 27 种', 5, 'ways', 27, ['和是 10。', '每一小块里数一数亮的。', '一共 27 种。'])], goal: ['full', 'count'] },
+    // ======== 第二十批：一一对应、握手在“连一连”上连线；排点阵在“面积模型”上拖边 ========
+    'match-pairs': { shelf: ['pairbench'], build: pb2({ mode: 0, na: 5, nb: 5, na_name: '学生', nb_name: '座位' }),
+      hook: '5 个学生，5 个座位。从一个学生拖到一个座位，连一条线。一个对一个连下去：有没有人没座位、有没有空座位？',
+      milestones: [Pq('match', '一个对一个连完：一样多', 8, 'eq', 1, ['从上面拖到下面。', '每个只能连一次。', '连 5 条，谁也不剩。'])], goal: ['match'] },
+    'no-extra-seat': { shelf: ['pairbench'], build: pb2({ mode: 0, na: 5, nb: 4, na_name: '客人', nb_name: '椅子' }),
+      hook: '5 位客人要坐 4 把椅子。一个对一个地连起来，看看会剩下什么。',
+      milestones: [Pq('left', '连不下去了：剩下 1 位客人', 8, 'leftA', 1, ['一个对一个连。', '连到第 4 条就没椅子了。', '红色的那位没座位。'])], goal: ['left'] },
+    'one-to-one': { shelf: ['pairbench'], build: pb2({ mode: 0, na: 3, nb: 2, na_name: '客人', nb_name: '椅子' }),
+      hook: '椅子先摆了 2 把，客人有 3 位。先连一连，看谁没座位；再点“椅子”旁边的 +，让每位客人都有一把。',
+      milestones: [Pq('short', '少 1 把椅子', 2, 'leftA', 1, ['一个对一个连。', '连两条就连不下去了。', '剩一位客人。']), Pq('eq', '椅子 3 把 = 客人 3 位：一人一把', 6, 'eq', 1, ['点“椅子”旁边的 +。', '再把最后一位连上。', '谁也不剩。'])], goal: ['eq'] },
+    'count-by-match': { shelf: ['pairbench'], build: pb2({ mode: 1, n: 4 }),
+      hook: '4 个人，每两个人握一次手。从一个人拖到另一个人，连一条线就是握一次。全握完一共几次？',
+      milestones: [Pq('all', '全握完：一共 6 次', 8, 'full', 1, ['甲和乙、丙、丁各握一次。', '乙再和丙、丁。', '3 + 2 + 1 = 6。'])], goal: ['all'] },
+    'counting-matching': { shelf: ['pairbench'], build: pb2({ mode: 1, n: 5 }),
+      hook: '5 个人，每人和其余 4 人各握一次手。先想：5 × 4 = 20 对吗？连一连，看一共握了几次，每个人旁边写着他握了几次。',
+      milestones: [Pq('all', '全握完：一共 10 次', 8, 'pairs', 10, ['每个人都握 4 次。', '可是一条线连着两个人。', '20 ÷ 2 = 10。'])], goal: ['all'] },
+    'array-12': { shelf: ['areamodel'], build: am({ w: 2, h: 2 }),
+      hook: '12 个点排成整齐的长方形队伍，每行一样多。拖长方形的边，让面积正好是 12：先排出一种，再找别的排法。',
+      milestones: [H('one', '排出 12：3 行 4 个（或 4 行 3 个）', 3, (w) => w.ofType('areamodel').some((e) => e.props.w * e.props.h === 12 && Math.min(e.props.w, e.props.h) === 3), ['3 × 4 = 12。', '拖右边和下边。', '3 和 4。']),
+        H('two', '再一种：2 行 6 个', 3, (w) => w.ofType('areamodel').some((e) => e.props.w * e.props.h === 12 && Math.min(e.props.w, e.props.h) === 2), ['2 × 6 = 12。', '拖成 2 和 6。', '一样是 12。']),
+        H('three', '第三种：1 行 12 个', 3, (w) => w.ofType('areamodel').some((e) => e.props.w * e.props.h === 12 && Math.min(e.props.w, e.props.h) === 1), ['排成一长条。', '1 × 12。', '拖成 1 和 12。'])], goal: ['one', 'two', 'three'] },
   };
   const missing = [], moved = [];
   for (const id of Object.keys(MOVES)) {

@@ -8,32 +8,6 @@
   U.registerPack({
     id: 'arith', version: 1,
     types: {
-      array: {
-        workspaceRole: 'none',
-        handles: true,
-        essence: ['E1', 'E2'],
-        label: '点阵', prefix: '阵', group: '数与运算', grades: [2, 4], alias: ['乘法', '排队', '行列'],
-        props: {
-          rows: { type: 'int', label: '几行', default: 3, min: 1, max: 12 },
-          cols: { type: 'int', label: '每行几个', default: 4, min: 1, max: 12 },
-          shape: { type: 'choice', label: '样子', default: 0, choices: ['圆点', '方块', '星星'] },
-        },
-        outputs: { n: { dim: null, kind: 'num', label: '一共' } },
-        icon: () => [0, 1, 2].map((r) => [0, 1, 2, 3].map((c) => K.circle(14 + c * 12, 12 + r * 10, 3.5, { fill: 'var(--accent)' })).join('')).join(''),
-        size: () => [220, 160],
-        compute: (c) => ({ n: num(Q(c.props.rows * c.props.cols), 'count') }),
-        badge: (c) => c.props.rows + ' × ' + c.props.cols + ' = ' + c.props.rows * c.props.cols,
-        draw: (c) => {
-          const R = c.props.rows, C = c.props.cols, k = Math.min((c.w - 24) / C, (c.h - 20) / R, 26), x0 = (c.w - k * C) / 2, y0 = (c.h - k * R) / 2;
-          let s = '';
-          for (let r = 0; r < R; r++) for (let q = 0; q < C; q++) {
-            const x = x0 + q * k + k / 2, y = y0 + r * k + k / 2, sz = k * 0.34;
-            s += c.props.shape === 1 ? K.rect(x - sz, y - sz, sz * 2, sz * 2, { fill: 'var(--accent)', r: 2 }) : c.props.shape === 2 ? K.text(x, y + sz * 0.8, '★', { size: sz * 2.6, fill: 'var(--accent)' }) : K.circle(x, y, sz, { fill: 'var(--accent)' });
-          }
-          return s;
-        },
-      },
-
       divmod: {
         workspaceRole: 'none',
         handles: true,

@@ -28,7 +28,7 @@
 
 | 知识点 | 年级 | 名称 | 核心 | 陷阱 | 延伸 | 最高证据 | 器材 |
 |---|---|---|---|---|---|---|---|
-| 1.1 | 1 | 数数、一一对应、比多少 | 3 | 0 | 0 | 1 | num、array |
+| 1.1 | 1 | 数数、一一对应、比多少 | 3 | 0 | 0 | 1 | pairbench |
 | 1.2 | 1 | 位置 | 1 | 1 | 0 | 1 | numlinebench |
 | 1.3 | 1 | 1–5的认识、分与合 | 1 | 1 | 0 | 1 | numlinebench |
 | 1.4 | 1 | 5以内加减法、0 | 1 | 1 | 0 | 1 | numlinebench、num |
@@ -48,7 +48,7 @@
 | 2.2 | 2 | 100以内加减法（二） | 2 | 1 | 0 | 1 | num、arithbench |
 | 2.3 | 2 | 进位加法、退位减法 | 6 | 1 | 0 | 1 | blocksbench、arithbench、colbench |
 | 2.4 | 2 | 角的初步认识、直角 | 2 | 1 | 0 | 1 | angles、protractor-read |
-| 2.5 | 2 | 乘法初步认识、口诀 | 3 | 1 | 0 | 1 | numlinebench、tapebench |
+| 2.5 | 2 | 乘法初步认识、口诀 | 3 | 1 | 0 | 1 | numlinebench、areamodel、tapebench |
 | 2.6 | 2 | 观察物体 | 1 | 1 | 0 | 1 | solidbench |
 | 2.7 | 2 | 认识时间 | 1 | 1 | 0 | 1 | clockbench、ratiobench |
 | 2.15 | 2 | 搭配（一） | 1 | 1 | 0 | 1 | areamodel |
@@ -96,12 +96,12 @@
 | 5.1 | 5 | 小数乘法 | 2 | 1 | 0 | 1 | num |
 | 5.2 | 5 | 位置 | 1 | 1 | 0 | 1 | — |
 | 5.3 | 5 | 小数除法 | 1 | 1 | 0 | 1 | num |
-| 5.4 | 5 | 可能性 | 6 | 1 | 0 | 3 | chancebench、num、meter、array、ptree |
+| 5.4 | 5 | 可能性 | 6 | 1 | 0 | 3 | chancebench、pairbench、ptree |
 | 5.5 | 5 | 简易方程 | 12 | 0 | 0 | 1 | variable、balancebench、nim、costplan、systembench |
 | 5.6 | 5 | 多边形的面积 | 5 | 1 | 0 | 1 | num、parallelogram、gworkspace、gpt、gpoly、fquad |
 | 5.7 | 5 | 植树问题 | 7 | 1 | 0 | 1 | gapbench |
 | 5.14 | 5 | 观察物体（三） | 2 | 1 | 0 | 1 | solidbench、twoways |
-| 5.8 | 5 | 因数与倍数 | 21 | 0 | 0 | 2 | asn、conjbench、hanoi、guessrule、modclock、num、groupbench、primeblocks、proofsort、net |
+| 5.8 | 5 | 因数与倍数 | 21 | 0 | 0 | 2 | asn、conjbench、hanoi、guessrule、areamodel、modclock、num、groupbench、primeblocks、proofsort、net |
 | 5.9 | 5 | 长方体和正方体 | 3 | 1 | 0 | 1 | pour、solidbench |
 | 5.10 | 5 | 分数的意义和性质 | 6 | 0 | 0 | 1 | areamodel、ratiobench、numlinebench、primeblocks |
 | 5.11 | 5 | 分数的加法和减法 | 8 | 1 | 0 | 1 | num、approach、ratiobench、findbug、fracarea |
@@ -176,12 +176,12 @@
 | 本质 | 题目数 | 器材数 |
 |---|---|---|
 | E1 | 61 | 26 |
-| E2 | 207 | 43 |
+| E2 | 207 | 42 |
 | E3 | 136 | 40 |
 | E4 | 101 | 24 |
 | E5 | 132 | 54 |
 | E6 | 40 | 17 |
-| E7 | 99 | 23 |
+| E7 | 99 | 24 |
 | E8 | 61 | 23 |
 | E9 | 68 | 15 |
 | E10 | 10 | 4 |
