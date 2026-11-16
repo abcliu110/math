@@ -3,7 +3,8 @@
  *  2. 视图先盖着（问号）；点“看一看”：从前面看是 1、2（不是 2、3）；
  *  3. 切到“拿走”再点：拿走一块；
  *  4. 从上面看：3 块的一叠也只算一个正方形；
- *  5. 全程没有打开属性面板。
+ *  5. 长方体：点“铺满一层”三次，长 5 宽 4 高 3，体积 60、表面积 94、棱长总和 48；点“长 +”底板多一列；
+ *  6. 全程没有打开属性面板。
  * 需要 playwright（NODE_PATH 指向它的 node_modules）。 */
 'use strict';
 const { chromium } = require('playwright');
@@ -62,6 +63,18 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   ok(await out('total') === '4' && await done('stack'), '搭好：一共 4 块');
   await btn('看一看', 2);
   ok(await out('seen') === '2' && await done('top') && (await text()).includes('从上面看：2 个正方形，可是一共有 4 块'), '从上面看：只有 2 个正方形，可是有 4 块');
+
+  console.log('5. 长方体：一层一层铺');
+  await open('g5-cuboid-vol-core');
+  await btn('铺满一层');
+  ok(await out('total') === '20' && await done('layer'), '点“铺满一层”：一层 20 块');
+  await btn('铺满一层'); await btn('铺满一层');
+  ok(await out('total') === '60' && await out('isbox') === '1' && await done('vol') && (await text()).includes('体积 5 × 4 × 3 = 60'), '铺 3 层：长 5、宽 4、高 3，体积 60');
+  ok(await out('surf') === '94' && (await text()).includes('棱长总和 4 × (5 + 4 + 3) = 48'), '表面积 94，棱长总和 48');
+  await btn('+', 0);
+  ok((await props()).cols === 6 && await out('isbox') === '0' && await out('total') === '60', '点“长 +”：底板多一列（空的），不再是长方体，块数不变');
+  await btn('铺满一层');
+  ok(await out('total') === '84', '再铺一层：新的一列也放上了');
   ok(await p.evaluate(() => !UI.S.inspOpen), '全程没有打开属性面板');
   ok(errs.length === 0, '控制台 0 报错' + (errs.length ? '：' + errs[0] : ''));
   console.log('\n积木与三视图测试：' + pass + ' 通过，' + fail + ' 失败');

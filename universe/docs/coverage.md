@@ -32,7 +32,7 @@
 | 1.2 | 1 | 位置 | 1 | 1 | 0 | 1 | numlinebench |
 | 1.3 | 1 | 1–5的认识、分与合 | 1 | 1 | 0 | 1 | numlinebench |
 | 1.4 | 1 | 5以内加减法、0 | 1 | 1 | 0 | 1 | numlinebench、num |
-| 1.5 | 1 | 立体图形 | 1 | 1 | 0 | 1 | cuboid |
+| 1.5 | 1 | 立体图形 | 1 | 1 | 0 | 1 | solidbench |
 | 1.6 | 1 | 6–10的认识、连加连减 | 2 | 1 | 0 | 1 | termsbench、numlinebench |
 | 1.7 | 1 | 11–20的认识、10加几 | 2 | 1 | 0 | 1 | blocksbench、num、groupbench |
 | 1.8 | 1 | 认识钟表 | 1 | 1 | 0 | 1 | clockbench |
@@ -72,7 +72,7 @@
 | 3.10 | 3 | 除数是一位数的除法 | 1 | 1 | 0 | 1 | num |
 | 3.15a | 3 | 复式统计表 | 2 | 2 | 0 | 1 | — |
 | 3.11 | 3 | 两位数乘两位数 | 9 | 1 | 0 | 1 | areamodel、num、mulbench、arithbench |
-| 3.12 | 3 | 面积 | 11 | 0 | 0 | 1 | areamodel、asn、curved、geoboard、circle、optimize、cuboid、turtle |
+| 3.12 | 3 | 面积 | 11 | 0 | 0 | 1 | areamodel、asn、curved、geoboard、circle、optimize、solidbench、turtle |
 | 3.13 | 3 | 年、月、日 | 1 | 1 | 0 | 1 | num |
 | 3.14 | 3 | 小数的初步认识 | 3 | 1 | 0 | 1 | num、numlinebench、twoways |
 | 3.15b | 3 | 搭配（二） | 2 | 1 | 0 | 1 | num、areamodel、euler |
@@ -102,7 +102,7 @@
 | 5.7 | 5 | 植树问题 | 7 | 1 | 0 | 1 | gapbench |
 | 5.14 | 5 | 观察物体（三） | 2 | 1 | 0 | 1 | solidbench、twoways |
 | 5.8 | 5 | 因数与倍数 | 21 | 0 | 0 | 2 | asn、conjecture、hanoi、guessrule、modclock、num、groupbench、primeblocks、counterex、scanner、proofsort、net |
-| 5.9 | 5 | 长方体和正方体 | 3 | 1 | 0 | 1 | pour、cuboid |
+| 5.9 | 5 | 长方体和正方体 | 3 | 1 | 0 | 1 | pour、solidbench |
 | 5.10 | 5 | 分数的意义和性质 | 6 | 0 | 0 | 1 | areamodel、ratiobench、numlinebench、primeblocks |
 | 5.11 | 5 | 分数的加法和减法 | 8 | 1 | 0 | 1 | num、approach、ratiobench、findbug、fracarea |
 | 5.12 | 5 | 图形的运动（三） | 1 | 1 | 0 | 1 | — |
@@ -176,8 +176,8 @@
 | 本质 | 题目数 | 器材数 |
 |---|---|---|
 | E1 | 61 | 27 |
-| E2 | 207 | 45 |
-| E3 | 136 | 44 |
+| E2 | 207 | 44 |
+| E3 | 136 | 43 |
 | E4 | 101 | 23 |
 | E5 | 132 | 54 |
 | E6 | 40 | 19 |

@@ -43,6 +43,12 @@ module.exports = {
   'g7-quadrant-core': c({ ax: -2, ay: 3 }),
   'g7-symmetry-x-axis-trap': c({ bx: 3, by: 2 }),
   'g7-translate-down-trap': c({ ay: -1 }),
+  // 第十六批
+  'g1-solid-edges-core': so({ h: '1,1,1;1,1,1' }),
+  'g1-solid-volume-trap'(h) { const e = h.role('o'); h.set(e, 'h', '6'); h.set(e, 'rows', 2); h.set(e, 'cols', 3); h.set(e, 'h', '1,1,1;1,1,1'); },
+  'g5-cuboid-vol-core'(h) { const e = h.role('o'); h.set(e, 'h', '1,1,1,1,1;1,1,1,1,1;1,1,1,1,1;1,1,1,1,1'); h.set(e, 'h', '3,3,3,3,3;3,3,3,3,3;3,3,3,3,3;3,3,3,3,3'); },
+  'g5-cuboid-same-vol-trap': so({ h: '4,4;4,4;4,4' }),
+  'cuboid-vol': so({ rows: 4, cols: 6, h: '3,3,3,3,3,3;3,3,3,3,3,3;3,3,3,3,3,3;3,3,3,3,3,3' }),
   // 第十五批
   'vw-front-core': so({ h: '1,2;1,1', sf: true }), 'vw-front-trap': so({ h: '3,1;1,1', sf: true }), 'vw-side-core': so({ h: '2,0;1,3', ss: true }), 'vw-side-trap': so({ h: '3,0;2,2', ss: true }),
   'vw-top-core': so({ h: '0,1;1,0', st: true }), 'vw-top-trap': so({ h: '0,1;3,0', st: true }), 'vw-total-core': so({ h: '2,2;2,2', st: true }), 'vw-total-trap': so({ st: true, ss: true }),

@@ -1,4 +1,4 @@
-/* 器材包 solid：正多边形、长方体、数据表。图形与量、数据整理。 */
+/* 器材包 solid：正多边形。（长方体、数据表已经删掉：长方体在“积木与三视图”操作台上搭，数据在“数据与统计图”上。） */
 (function (G) {
   'use strict';
   const U = G.U, Q = U.Q, K = U.kit;
@@ -32,33 +32,6 @@
           let s = '<polygon points="' + P.map((p) => p.map((x) => x.toFixed(1)).join(',')).join(' ') + '" fill="#f08a1c33" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/>';
           if (c.props.diag) for (let i = 0; i < n; i++) for (let j = i + 2; j < n; j++) if (!(i === 0 && j === n - 1)) s += K.line(P[i][0], P[i][1], P[j][0], P[j][1], { w: 1, stroke: 'var(--dim)' });
           return s + K.text(cx, cy + 6, +((n - 2) * 180 / n).toFixed(1) + '°', { size: 16, weight: 700, fill: 'var(--accent)' });
-        },
-      },
-
-      cuboid: {
-        workspaceRole: 'none',
-        handles: true,
-        essence: ['E2', 'E3'],
-        label: '长方体', prefix: '体', group: '图形', grades: [5, 6], alias: ['体积', '表面积', '正方体', '立方体'],
-        props: {
-          l: { type: 'num', label: '长', default: 4, min: 0.5, max: 30, step: 0.5 },
-          w: { type: 'num', label: '宽', default: 3, min: 0.5, max: 30, step: 0.5 },
-          h: { type: 'num', label: '高', default: 2, min: 0.5, max: 30, step: 0.5 },
-        },
-        outputs: { vol: { dim: null, kind: 'num', label: '体积' }, surf: { dim: null, kind: 'num', label: '表面积' }, edges: { dim: null, kind: 'num', label: '棱总长' } },
-        icon: () => '<path d="M10 18 H38 V38 H10 Z M38 18 L52 10 V30 L38 38 M10 18 L24 10 H52" fill="#f08a1c33" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/>',
-        size: () => [230, 170],
-        compute: (c) => {
-          const l = Q.fromNumber(c.props.l), w = Q.fromNumber(c.props.w), h = Q.fromNumber(c.props.h);
-          return { vol: num(Q.mul(Q.mul(l, w), h), 'volume'), surf: num(Q.mul(Q(2), Q.add(Q.add(Q.mul(l, w), Q.mul(l, h)), Q.mul(w, h))), 'area'), edges: num(Q.mul(Q(4), Q.add(Q.add(l, w), h)), 'length') };
-        },
-        badge: (c) => (c.out.vol ? '体积 ' + Q.showDec(c.out.vol.data, 2) : ''),
-        draw: (c) => {
-          const l = c.props.l, w = c.props.w, h = c.props.h, k = Math.min((c.w - 70) / (l + w * 0.5), (c.h - 50) / (h + w * 0.5)), dx = w * k * 0.5, dy = w * k * 0.35, x0 = 20, y0 = c.h - 26;
-          const A = [x0, y0], B = [x0 + l * k, y0], C = [x0 + l * k, y0 - h * k], D = [x0, y0 - h * k];
-          const sh = (p) => [p[0] + dx, p[1] - dy];
-          const f = (arr, fill) => '<polygon points="' + arr.map((p) => p.map((x) => x.toFixed(1)).join(',')).join(' ') + '" fill="' + fill + '" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/>';
-          return f([D, C, sh(C), sh(D)], '#f08a1c55') + f([B, sh(B), sh(C), C], '#f08a1c22') + f([A, B, C, D], '#f08a1c33') + K.text(x0 + l * k / 2, y0 + 16, l, { size: 12, weight: 700 }) + K.text(x0 + l * k + dx / 2 + 12, y0 - dy / 2 + 4, w, { size: 12, weight: 700, anchor: 'start' }) + K.text(x0 - 6, y0 - h * k / 2, h, { size: 12, weight: 700, anchor: 'end' });
         },
       },
 
