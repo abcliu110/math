@@ -34,8 +34,8 @@
 | 1.4 | 1 | 5以内加减法、0 | 1 | 1 | 0 | 1 | numlinebench、num |
 | 1.5 | 1 | 立体图形 | 1 | 1 | 0 | 1 | cuboid |
 | 1.6 | 1 | 6–10的认识、连加连减 | 2 | 1 | 0 | 1 | termsbench、numlinebench |
-| 1.7 | 1 | 11–20的认识、10加几 | 2 | 1 | 0 | 1 | blocksbench、num |
-| 1.8 | 1 | 认识钟表 | 1 | 1 | 0 | 1 | clock |
+| 1.7 | 1 | 11–20的认识、10加几 | 2 | 1 | 0 | 1 | blocksbench、num、groupbench |
+| 1.8 | 1 | 认识钟表 | 1 | 1 | 0 | 1 | clockbench |
 | 1.9 | 1 | 20以内进位加法、凑十法 | 1 | 1 | 0 | 1 | numlinebench |
 | 1.10 | 1 | 平面图形、七巧板 | 1 | 1 | 0 | 1 | areamodel、tri |
 | 1.11 | 1 | 20以内退位减法、破十法 | 2 | 1 | 0 | 1 | numlinebench |
@@ -50,17 +50,17 @@
 | 2.4 | 2 | 角的初步认识、直角 | 2 | 1 | 0 | 1 | angles、protractor-read |
 | 2.5 | 2 | 乘法初步认识、口诀 | 3 | 1 | 0 | 1 | numlinebench、tapebench |
 | 2.6 | 2 | 观察物体 | 1 | 1 | 0 | 1 | views |
-| 2.7 | 2 | 认识时间 | 1 | 1 | 0 | 1 | num、ratiobench |
+| 2.7 | 2 | 认识时间 | 1 | 1 | 0 | 1 | clockbench、ratiobench |
 | 2.15 | 2 | 搭配（一） | 1 | 1 | 0 | 1 | areamodel |
 | 2.14a | 2 | 数据收集整理 | 1 | 1 | 0 | 1 | statbench |
 | 2.8 | 2 | 除法初步认识 | 2 | 1 | 0 | 1 | numlinebench |
 | 2.9 | 2 | 图形的运动 | 2 | 1 | 0 | 1 | fold、euler |
 | 2.10 | 2 | 混合运算 | 1 | 1 | 0 | 1 | termsbench |
-| 2.11 | 2 | 有余数的除法 | 3 | 0 | 0 | 1 | num、modclock |
+| 2.11 | 2 | 有余数的除法 | 3 | 0 | 0 | 1 | groupbench、modclock |
 | 2.12 | 2 | 万以内数的认识、近似数 | 4 | 0 | 0 | 1 | blocksbench、num、sqrt、round |
 | 2.13 | 2 | 克和千克 | 1 | 1 | 0 | 1 | ratiobench |
 | 2.14b | 2 | 推理 | 2 | 0 | 0 | 1 | deduce、nim |
-| 3.1 | 3 | 时、分、秒 | 1 | 1 | 0 | 1 | ratiobench、num |
+| 3.1 | 3 | 时、分、秒 | 1 | 1 | 0 | 1 | ratiobench、clockbench |
 | 3.2 | 3 | 万以内加减法 | 2 | 1 | 0 | 1 | blocksbench |
 | 3.3 | 3 | 测量 | 1 | 1 | 0 | 1 | ratiobench、num |
 | 3.4 | 3 | 倍的认识 | 8 | 1 | 0 | 1 | num、numlinebench、tapebench |
@@ -101,7 +101,7 @@
 | 5.6 | 5 | 多边形的面积 | 5 | 1 | 0 | 1 | num、parallelogram、gworkspace、gpt、gpoly、fquad |
 | 5.7 | 5 | 植树问题 | 7 | 1 | 0 | 1 | gapbench |
 | 5.14 | 5 | 观察物体（三） | 2 | 1 | 0 | 1 | views、twoways |
-| 5.8 | 5 | 因数与倍数 | 21 | 0 | 0 | 2 | asn、conjecture、hanoi、guessrule、modclock、num、primeblocks、counterex、scanner、proofsort、net |
+| 5.8 | 5 | 因数与倍数 | 21 | 0 | 0 | 2 | asn、conjecture、hanoi、guessrule、modclock、num、groupbench、primeblocks、counterex、scanner、proofsort、net |
 | 5.9 | 5 | 长方体和正方体 | 3 | 1 | 0 | 1 | pour、cuboid |
 | 5.10 | 5 | 分数的意义和性质 | 6 | 0 | 0 | 1 | areamodel、ratiobench、numlinebench、primeblocks |
 | 5.11 | 5 | 分数的加法和减法 | 8 | 1 | 0 | 1 | num、approach、ratiobench、findbug、fracarea |
@@ -120,7 +120,7 @@
 | 6.10 | 6 | 百分数（二） | 2 | 1 | 0 | 1 | ratiobench |
 | 6.11 | 6 | 圆柱与圆锥 | 1 | 1 | 0 | 1 | circle、num |
 | 6.12 | 6 | 比例 | 9 | 1 | 0 | 1 | ratiobench、datatable、fmachine、euler、scale、shadow、taxi |
-| 6.13 | 6 | 鸽巢问题 | 1 | 1 | 0 | 1 | num |
+| 6.13 | 6 | 鸽巢问题 | 1 | 1 | 0 | 1 | groupbench |
 | 6.14 | 6 | 综合与实践 / 整理和复习 | 0 | 0 | 0 | — | — |
 | 7.1 | 7 | 正数和负数、有理数与数轴 | 4 | 1 | 0 | 1 | approach、asn、numlinebench、num、proofsort |
 | 7.2 | 7 | 有理数的加减法 | 7 | 1 | 0 | 1 | numlinebench、findbug、arithbench、newop |
@@ -176,12 +176,12 @@
 | 本质 | 题目数 | 器材数 |
 |---|---|---|
 | E1 | 61 | 27 |
-| E2 | 207 | 43 |
+| E2 | 207 | 45 |
 | E3 | 136 | 44 |
 | E4 | 101 | 23 |
 | E5 | 132 | 53 |
-| E6 | 40 | 18 |
-| E7 | 99 | 23 |
+| E6 | 40 | 19 |
+| E7 | 99 | 24 |
 | E8 | 61 | 26 |
 | E9 | 68 | 16 |
 | E10 | 10 | 3 |

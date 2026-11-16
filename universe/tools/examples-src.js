@@ -43,6 +43,10 @@ module.exports = [
       ['mstb','meter',{'digits':0,'label':'统计图：平均数'}],
       ['chb','chancebench',{'mode':1,'n':300,'seed':11,'target':5}],
       ['mchb','meter',{'digits':0,'label':'可能性：做了几次'}],
+      ['ckb','clockbench',{'t':150,'start':0,'timing':true}],
+      ['mckb','meter',{'digits':0,'label':'钟面：经过了几分'}],
+      ['gqb','groupbench',{'n':17,'g':5}],
+      ['mgqb','meter',{'digits':0,'label':'分一分：余数'}],
     ],
     links: [
       ['am','mam','v','area'],
@@ -63,6 +67,8 @@ module.exports = [
       ['fsb','mfsb','v','value'],
       ['stb','mstb','v','mean'],
       ['chb','mchb','v','n'],
+      ['ckb','mckb','v','elapsed'],
+      ['gqb','mgqb','v','r'],
     ],
   },
 ];

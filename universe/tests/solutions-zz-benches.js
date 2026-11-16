@@ -1,7 +1,7 @@
 /* 搬到操作台上的旧题的参考解（problems/zz-benches.js）。文件名 zz 开头：排在各年级的参考解后面加载，盖掉原来“接运算器”的解法。 */
 'use strict';
 const S = (role) => (o) => (h) => { const e = h.role(role); for (const k of Object.keys(o)) h.set(e, k, o[k]); };
-const n = S('n'), k = S('k'), r = S('r'), m = S('m'), c = S('c'), t = S('t'), s = S('s'), gp = S('g'), b = S('b'), d = S('d'), ch = S('h');
+const n = S('n'), k = S('k'), r = S('r'), m = S('m'), c = S('c'), t = S('t'), s = S('s'), gp = S('g'), b = S('b'), d = S('d'), ch = S('h'), ck = S('k'), gq = S('q');
 module.exports = {
   'g1-split-merge-core': n({ a: 2, n: 3 }),
   'g1-split-minus-trap': n({ s: -1, n: 2 }),
@@ -43,6 +43,11 @@ module.exports = {
   'g7-quadrant-core': c({ ax: -2, ay: 3 }),
   'g7-symmetry-x-axis-trap': c({ bx: 3, by: 2 }),
   'g7-translate-down-trap': c({ ay: -1 }),
+  // 第十四批
+  'g1-teen-tens-trap': gq({ g: 10 }), 'divmod-17-5': gq({ g: 5 }), 'g6-pigeon-core': gq({ dealt: 10 }), 'g6-pigeon-exact-trap': gq({ dealt: 12 }), 'prime-91': gq({ g: 7 }),
+  // 第十三批
+  'g1-clock-hour-core': ck({ t: 180 }), 'g1-clock-minute-trap'(h) { const e = h.role('k'); h.set(e, 'timing', true); h.set(e, 't', 60); },
+  'g2-hour-minute-core'(h) { const e = h.role('k'); h.set(e, 't', 120); h.set(e, 't', 150); }, 'g3-time-add-trap': ck({ t: 150 }),
   // 第十二批
   'two-dice'(h) { const e = h.role('h'); h.set(e, 'n', 300); h.set(e, 'showp', true); }, 'coin-fair'(h) { const e = h.role('h'); h.set(e, 'n', 10); h.set(e, 'n', 400); },
   'bag-red-ratio': ch({ n: 400, showp: true }), 'dice-mean': ch({ n: 300 }),

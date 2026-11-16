@@ -590,5 +590,29 @@
     },
   };
 
+  // 钟面：分针转一圈，时针走一大格
+  D.clockbench = {
+    caps: ['12 时整：两根针都指着 12', '分针走 3 大格：15 分，时针稍稍动了一点', '分针转一整圈：60 分，时针走到 1', '1 时 = 60 分'],
+    draw(st) {
+      const cx = 120, cy = 90, r = 70, m = [0, 15, 60, 60][st], P = (d, rr) => [cx + rr * Math.sin(d * Math.PI / 180), cy - rr * Math.cos(d * Math.PI / 180)];
+      let s = Ci(cx, cy, r, '#fffdf6', { s: INK, sw: 2 }); for (let i = 1; i <= 12; i++) { const q = P(i * 30, r - 14); s += T(q[0], q[1] + 4, String(i), { s: 11, w: 700 }); }
+      const M = P((m % 60) * 6, r * 0.8), H = P(m / 2, r * 0.5); s += Ln(cx, cy, H[0], H[1], { w: 5, s: '#2f4a73' }) + Ln(cx, cy, M[0], M[1], { w: 3, s: RD });
+      s += T(280, 90, ['12:00', '12:15', '1:00', '1 时 = 60 分'][st], { s: 16, w: 700, f: '#7a4fb3' });
+      return s;
+    },
+  };
+
+  // 分一分：17 ÷ 5
+  D.groupbench = {
+    caps: ['17 个苹果', '每 5 个圈一圈', '圈满 3 圈，还剩 2 个', '17 ÷ 5 = 3 …… 2'],
+    draw(st) {
+      let s = ''; const g = st === 0 ? 17 : 5;
+      for (let i = 0; i < 17; i++) { const gi = Math.floor(i / g), j = i % g, x = st === 0 ? 30 + i * 18 : 40 + j * 22, y = st === 0 ? 70 : 30 + gi * 30, rem = st >= 2 && gi === 3; s += Ci(x, y, 7, rem ? '#f7a8a8' : '#f5c26b', { s: INK }); }
+      if (st >= 1) for (let gi = 0; gi < 4; gi++) s += Rc(28, 20 + gi * 30, gi < 3 ? 112 : 46, 20, 'none', { s: gi < 3 ? B : RD, r: 10, d: gi < 3 ? '' : '4 3' });
+      s += T(270, 90, ['17 个', '每 5 个一圈', '3 圈，剩 2 个', '17 ÷ 5 = 3 …… 2'][st], { s: 15, w: 700, f: P });
+      return s;
+    },
+  };
+
   UI.Demo = D;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

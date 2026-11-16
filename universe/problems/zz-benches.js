@@ -1,4 +1,4 @@
-/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，十二批共 101 道）。
+/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，十四批共 110 道）。
  * 这些题原来的做法是“放数字、接运算器、看读数”：学生在搭计算流程。这里按 id 把它们换成在操作台上直接动手：
  * 题目的编号、标题、年级、知识点、道理（why）都不变，换的是器材架、开场的台面、里程碑和提示。
  * 这个文件排在所有题目文件后面加载（文件名 zz 开头），找不到的 id 会记在 U.benchMigrateMissing 里（测试会查）。 */
@@ -7,9 +7,9 @@
   const U = G.U, W = U.World;
   const one = (type, role, props) => () => { const s = W.blank(); const id = W.add(s, type, 40, 50, props); s.entities[id].role = role; return s; };
   const ms = (role) => (id, say, score, port, value, hints) => ({ id, say, score, when: { role, port, op: '=', value: String(value) }, hints });
-  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s'), GP = ms('g'), B = ms('b'), D = ms('d');
+  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s'), GP = ms('g'), B = ms('b'), D = ms('d'), K2 = ms('k'), Gq = ms('q');
   const H = (id, say, score, when, hints) => ({ id, say, score, when, hints });   // 条件是一个范围（频率稳在某个区间）时用函数
-  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props), bb = (props) => one('balancebench', 'b', props), sb = (props) => one('statbench', 'd', props), ch = (props) => one('chancebench', 'h', props);
+  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props), bb = (props) => one('balancebench', 'b', props), sb = (props) => one('statbench', 'd', props), ch = (props) => one('chancebench', 'h', props), ck = (props) => one('clockbench', 'k', props), gq = (props) => one('groupbench', 'q', props);
   const MOVES = {
     // ---- 数轴 ----
     'g1-split-merge-core': { shelf: ['numlinebench'], build: nl({ from: 0, to: 10, a: 0, s: 1, n: 0 }),
@@ -361,6 +361,36 @@
     'dice-mean': { shelf: ['chancebench'], build: ch({ mode: 1, seed: 11, target: 5 }),
       hook: '掷两个骰子，点数和平均是多少？做几次看一看下面的平均数；做到 300 次以上，它稳在哪里？',
       milestones: [H('near7', '做了 300 次，平均数在 6.8 到 7.2 之间', 8, (w) => w.some('chancebench', (e) => { const n = w.num(e, 'n'), v = w.num(e, 'mean'); return n >= 300 && v !== null && v >= 6.8 && v <= 7.2; }), ['点“做 100 次”。', '做到 300 次以上。', '每个骰子平均 3.5，两个是 7。'])], goal: ['near7'] },
+    // ======== 第十三批：认识钟表、时和分，在“钟面”上拨 ========
+    'g1-clock-hour-core': { shelf: ['clockbench'], build: ck({ t: 0 }),
+      hook: '现在是 12 时。拖蓝色的短针（时针），让它走 3 大格。现在是几时？分针去哪了？',
+      milestones: [K2('three', '时针走到 3：3 时', 6, 't', 180, ['短针是时针。', '拖短针，走 3 大格。', '指着 3：3 时整。'])], goal: ['three'] },
+    'g1-clock-minute-trap': { shelf: ['clockbench'], build: ck({ t: 0 }),
+      hook: '分针每走一大格是 5 分。先点“从这里开始计时”，再拖红色的长针（分针）转一整圈，回到 12。走了多少分钟？时针动了没有？',
+      milestones: [K2('start', '开始计时', 1, 'elapsed', 0, ['点“从这里开始计时”。', '记下 12 时整。', '再拨分针。']), K2('hour', '分针转一圈：60 分', 6, 'elapsed', 60, ['拖长针，一直往右转。', '转回 12。', '12 大格 × 5 分 = 60 分。'])], goal: ['hour'],
+      traps: [{ id: 'one-hour', wrong: '一大格是 5 分，不是 1 时：分针走一大格只过了 5 分钟。', when: { role: 'k', port: 'elapsed', op: '=', value: '5' } }] },
+    'g2-hour-minute-core': { shelf: ['clockbench'], build: ck({ t: 0, start: 0, timing: true }),
+      hook: '从 12 时整开始计时。拨到 2 时 30 分：分针要转几圈？一共经过了多少分钟？',
+      milestones: [K2('hours', '先拨到 2 时：120 分', 2, 'elapsed', 120, ['分针转一圈是 60 分。', '转两圈。', '2 × 60 = 120。']), K2('all', '2 时 30 分 = 150 分', 5, 'elapsed', 150, ['再转半圈。', '分针指着 6：30 分。', '120 + 30 = 150。'])], goal: ['all'] },
+    'g3-time-add-trap': { shelf: ['clockbench'], build: ck({ t: 0, start: 0, timing: true }),
+      hook: '2 时 30 分里有 2 时和 30 分。从 12 时整开始计时，把钟拨到 2 时 30 分，看一共经过多少分。时和分能直接相加吗？',
+      milestones: [K2('total', '2 时 30 分 = 150 分', 6, 'elapsed', 150, ['先拨两整圈。', '再拨半圈。', '60 + 60 + 30 = 150。'])], goal: ['total'] },
+    // ======== 第十四批：有余数的除法、抽屉原理、试除，在“分一分”上做 ========
+    'g1-teen-tens-trap': { shelf: ['groupbench'], build: gq({ mode: 0, n: 12, g: 1, gname: '圈' }),
+      hook: '12 里面有 1 个十和几个一？拖蓝色把手，改成“每 10 个一圈”。圈了几圈？还剩几个？',
+      milestones: [Gq('tens', '12 里有 1 个十', 3, 'q', 1, ['每 10 个圈一圈。', '把把手拖到 10。', '圈满 1 圈。']), Gq('ones', '剩 2 个一', 3, 'r', 2, ['圈外面的红色的。', '12 − 10。', '2 个。'])], goal: ['tens', 'ones'] },
+    'divmod-17-5': { shelf: ['groupbench'], build: gq({ mode: 0, n: 17, g: 1, unit: '个', gname: '盒' }),
+      hook: '17 个苹果，5 个装一盒。拖蓝色把手到 5：装满的盒子是商，剩下的是余数。',
+      milestones: [Gq('q3', '商是 3', 3, 'q', 3, ['每盒 5 个。', '把把手拖到 5。', '装满 3 盒。']), Gq('r2', '余数是 2', 4, 'r', 2, ['不够一盒的是红色的。', '17 − 15。', '余数 2，比 5 小。'])], goal: ['q3', 'r2'] },
+    'g6-pigeon-core': { shelf: ['groupbench'], build: gq({ mode: 1, n: 10, k: 3, dealt: 0, unit: '只', gname: '笼子' }),
+      hook: '10 只鸽子飞进 3 个笼子。最不利的情况：尽量平均地放。点“放一轮”一轮一轮放，放完以后，最挤的笼子有几只？',
+      milestones: [Gq('ans', '至少有 4 只在同一个笼子里', 8, 'max', 4, ['一轮一轮放，每个笼子一样多。', '放 3 轮以后还剩 1 只。', '它进哪个笼子，那个笼子就是 4 只。'])], goal: ['ans'] },
+    'g6-pigeon-exact-trap': { shelf: ['groupbench'], build: gq({ mode: 1, n: 12, k: 3, dealt: 0, unit: '只', gname: '笼子' }),
+      hook: '12 只鸽子飞进 3 个笼子，至少有几只在同一个笼子里？放完看看：还要不要再多加 1？',
+      milestones: [Gq('ans', '至少有 4 只在同一个笼子里', 8, 'max', 4, ['点“全放完”。', '每个笼子正好 4 只。', '正好分完，不用加 1。'])], goal: ['ans'] },
+    'prime-91': { shelf: ['groupbench'], build: gq({ mode: 0, n: 91, g: 2, gname: '组' }),
+      hook: '91 看起来像质数，但它真的是吗？拖蓝色把手试一试：每组几个，能正好分完、一个都不剩？',
+      milestones: [H('factor', '找到了：91 能正好分成每组 7 个（或 13 个）', 8, (w) => w.some('groupbench', (e) => w.num(e, 'exact') === 1 && w.num(e, 'g') > 1), ['2 不行，3 不行……', '一个一个往后试。', '试试 7。'])], goal: ['factor'] },
   };
   const missing = [], moved = [];
   for (const id of Object.keys(MOVES)) {
