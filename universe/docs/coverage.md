@@ -6,7 +6,7 @@
 
 - 知识点：142 个（设计目标 142）
 - 有题的知识点：141 个（99%）
-- 题目：560 道；没有对应知识点的题：1 道
+- 题目：544 道；没有对应知识点的题：1 道
 - 没有器材的本质：无
 - 没有题的本质：无
 
@@ -17,12 +17,12 @@
 | 1 | 16 | 16（100%） | 41 |
 | 2 | 16 | 16（100%） | 46 |
 | 3 | 16 | 16（100%） | 75 |
-| 4 | 17 | 17（100%） | 87 |
-| 5 | 14 | 14（100%） | 91 |
-| 6 | 15 | 14（93%） | 53 |
-| 7 | 16 | 16（100%） | 76 |
-| 8 | 16 | 16（100%） | 73 |
-| 9 | 16 | 16（100%） | 44 |
+| 4 | 17 | 17（100%） | 85 |
+| 5 | 14 | 14（100%） | 86 |
+| 6 | 15 | 14（93%） | 52 |
+| 7 | 16 | 16（100%） | 74 |
+| 8 | 16 | 16（100%） | 71 |
+| 9 | 16 | 16（100%） | 40 |
 
 ## 按知识点
 
@@ -84,7 +84,7 @@
 | 4.6 | 4 | 除数是两位数的除法 | 1 | 1 | 0 | 1 | num |
 | 4.7 | 4 | 条形统计图 | 1 | 1 | 0 | 1 | data、ratiobench |
 | 4.8 | 4 | 优化 | 1 | 1 | 0 | 1 | num |
-| 4.9 | 4 | 四则运算 | 12 | 1 | 0 | 1 | asn、tenframe、counter、meter、memory、num、op、dice、hist、termsbench、findbug、turtle |
+| 4.9 | 4 | 四则运算 | 10 | 1 | 0 | 1 | asn、termsbench、findbug、turtle |
 | 4.17 | 4 | 观察物体（二） | 1 | 1 | 0 | 1 | views |
 | 4.10 | 4 | 运算定律 | 9 | 1 | 0 | 1 | termsbench、fastbench |
 | 4.11 | 4 | 小数的意义和性质 | 1 | 1 | 0 | 1 | num |
@@ -96,12 +96,12 @@
 | 5.1 | 5 | 小数乘法 | 2 | 1 | 0 | 1 | num |
 | 5.2 | 5 | 位置 | 1 | 1 | 0 | 1 | — |
 | 5.3 | 5 | 小数除法 | 1 | 1 | 0 | 1 | num |
-| 5.4 | 5 | 可能性 | 7 | 1 | 0 | 3 | dice、num、divmod、meter、digits、numtheory、power、enumerator、array、ptree |
+| 5.4 | 5 | 可能性 | 6 | 1 | 0 | 3 | dice、enumerator、num、meter、array、ptree |
 | 5.5 | 5 | 简易方程 | 12 | 0 | 0 | 1 | variable、balancebench、nim、costplan、systembench |
 | 5.6 | 5 | 多边形的面积 | 5 | 1 | 0 | 1 | num、parallelogram、gworkspace、gpt、gpoly、fquad |
 | 5.7 | 5 | 植树问题 | 7 | 1 | 0 | 1 | gapbench |
 | 5.14 | 5 | 观察物体（三） | 2 | 1 | 0 | 1 | views、twoways |
-| 5.8 | 5 | 因数与倍数 | 25 | 0 | 0 | 2 | asn、frect、gpiece、garea、meter、fcirc、frtri、fisotri、fscalene、compare、figrel、ratio、fsquare、fpgram、frhomb、ftrap、fisotrap、frtrap、fkite、fquad4、xform、figmeasure、conjecture、hanoi、guessrule、modclock、num、primeblocks、counterex、scanner、proofsort、net |
+| 5.8 | 5 | 因数与倍数 | 21 | 0 | 0 | 2 | asn、conjecture、hanoi、guessrule、modclock、num、primeblocks、counterex、scanner、proofsort、net |
 | 5.9 | 5 | 长方体和正方体 | 3 | 1 | 0 | 1 | pour、cuboid |
 | 5.10 | 5 | 分数的意义和性质 | 6 | 0 | 0 | 1 | areamodel、ratiobench、numlinebench、primeblocks |
 | 5.11 | 5 | 分数的加法和减法 | 8 | 1 | 0 | 1 | num、approach、ratiobench、findbug、fracarea |
@@ -119,15 +119,15 @@
 | 6.9 | 6 | 负数运算——为什么负负得正 | 1 | 1 | 0 | 1 | num |
 | 6.10 | 6 | 百分数（二） | 2 | 1 | 0 | 1 | ratiobench |
 | 6.11 | 6 | 圆柱与圆锥 | 1 | 1 | 0 | 1 | circle、num |
-| 6.12 | 6 | 比例 | 10 | 1 | 0 | 1 | fracnum、ratop、ratread、meter、ratiobench、datatable、fmachine、euler、scale、shadow、taxi |
+| 6.12 | 6 | 比例 | 9 | 1 | 0 | 1 | ratiobench、datatable、fmachine、euler、scale、shadow、taxi |
 | 6.13 | 6 | 鸽巢问题 | 1 | 1 | 0 | 1 | num |
 | 6.14 | 6 | 综合与实践 / 整理和复习 | 0 | 0 | 0 | — | — |
 | 7.1 | 7 | 正数和负数、有理数与数轴 | 4 | 1 | 0 | 1 | approach、asn、numlinebench、num、proofsort |
-| 7.2 | 7 | 有理数的加减法 | 8 | 1 | 0 | 1 | algebra、subst、meter、numlinebench、findbug、arithbench、newop |
+| 7.2 | 7 | 有理数的加减法 | 7 | 1 | 0 | 1 | numlinebench、findbug、arithbench、newop |
 | 7.3 | 7 | 有理数的乘除法、乘方与科学记数法 | 3 | 1 | 0 | 1 | num、hanoi |
 | 7.4 | 7 | 整式 | 1 | 1 | 2 | 4 | algebra、induction |
 | 7.5 | 7 | 整式的加减 | 7 | 1 | 0 | 1 | algebra、termsbench |
-| 7.6 | 7 | 解一元一次方程 | 13 | 0 | 0 | 1 | balancebench、line、at、meter、inverse-prop、circle-line、pair-pos、rotate-about、findbug |
+| 7.6 | 7 | 解一元一次方程 | 12 | 0 | 0 | 1 | balancebench、findbug |
 | 7.7 | 7 | 实际问题与一元一次方程 | 1 | 1 | 0 | 1 | balancebench |
 | 7.8 | 7 | 几何图形与直线、射线、线段 | 1 | 1 | 0 | 1 | numlinebench、num |
 | 7.9 | 7 | 角 | 4 | 0 | 0 | 1 | curved、conjecture、polygon、fold |
@@ -148,7 +148,7 @@
 | 8.8 | 8 | 分式及其运算 | 1 | 1 | 0 | 1 | — |
 | 8.9 | 8 | 分式方程 | 2 | 0 | 0 | 1 | approach |
 | 8.10 | 8 | 二次根式 | 1 | 1 | 0 | 1 | num |
-| 8.11 | 8 | 勾股定理与逆定理 | 8 | 1 | 0 | 1 | eqcard、eqsys、meter、algebra、exprbench、exprread、dissect、geoboard、tri、proofsort |
+| 8.11 | 8 | 勾股定理与逆定理 | 6 | 1 | 0 | 1 | dissect、geoboard、tri、proofsort |
 | 8.12 | 8 | 平行四边形 | 7 | 0 | 0 | 1 | compass、parallelogram、optimize、taxi |
 | 8.13 | 8 | 特殊的平行四边形 | 1 | 1 | 0 | 1 | areamodel |
 | 8.14 | 8 | 函数与正比例函数 | 1 | 1 | 0 | 1 | coordbench |
@@ -157,7 +157,7 @@
 | 9.1 | 9 | 解一元二次方程 | 2 | 0 | 0 | 1 | tiles |
 | 9.2 | 9 | 一元二次方程的应用与根的判别式 | 2 | 1 | 0 | 1 | coordbench |
 | 9.3 | 9 | 二次函数的图象和性质 | 4 | 1 | 0 | 1 | coordbench |
-| 9.4 | 9 | 二次函数与方程及应用 | 5 | 0 | 0 | 1 | sweepx、num、op、sweeptab、meter、coordbench、fmachine、optimize |
+| 9.4 | 9 | 二次函数与方程及应用 | 4 | 0 | 0 | 1 | coordbench、fmachine、optimize |
 | 9.5 | 9 | 图形的旋转与中心对称 | 1 | 1 | 0 | 1 | — |
 | 9.6 | 9 | 圆的有关性质 | 1 | 1 | 0 | 1 | circle-angle |
 | 9.7 | 9 | 点、直线和圆的位置关系 | 1 | 1 | 0 | 1 | — |
@@ -165,7 +165,7 @@
 | 9.9 | 9 | 随机事件与概率 | 3 | 0 | 0 | 1 | bag、coin、ptree |
 | 9.10 | 9 | 列举法求概率与频率估计 | 1 | 1 | 0 | 1 | enumerator |
 | 9.11 | 9 | 反比例函数 | 1 | 1 | 0 | 1 | — |
-| 9.12 | 9 | 图形的相似与位似 | 7 | 1 | 0 | 1 | invariant、proofcheck、quad、quad-vertex、quad-xint、quad-yint、meter、datatable、column、fit、predict、line、scatter、data、stats、twoway、ftri、scale、spheretri |
+| 9.12 | 9 | 图形的相似与位似 | 4 | 1 | 0 | 1 | ftri、scale、spheretri |
 | 9.13 | 9 | 相似三角形 | 1 | 0 | 0 | 1 | ftri |
 | 9.14 | 9 | 锐角三角函数 | 1 | 1 | 0 | 1 | trig-table |
 | 9.15 | 9 | 解直角三角形及其应用 | 1 | 0 | 0 | 1 | angles |
@@ -175,18 +175,18 @@
 
 | 本质 | 题目数 | 器材数 |
 |---|---|---|
-| E1 | 63 | 27 |
-| E2 | 212 | 44 |
-| E3 | 143 | 45 |
-| E4 | 105 | 27 |
-| E5 | 136 | 54 |
-| E6 | 40 | 20 |
+| E1 | 61 | 27 |
+| E2 | 207 | 43 |
+| E3 | 136 | 44 |
+| E4 | 101 | 23 |
+| E5 | 132 | 53 |
+| E6 | 40 | 18 |
 | E7 | 99 | 21 |
-| E8 | 65 | 39 |
-| E9 | 74 | 14 |
-| E10 | 10 | 7 |
+| E8 | 61 | 26 |
+| E9 | 68 | 14 |
+| E10 | 10 | 3 |
 | E11 | 11 | 7 |
-| E12 | 13 | 9 |
+| E12 | 13 | 6 |
 
 ## 没有题的知识点
 

@@ -209,53 +209,7 @@
       },
 
       // ---------------- 直线 ----------------
-      line: {
-        workspaceRole: 'none',
-        handles: true,
-        essence: ['E8', 'E12'],
-        label: '直线', prefix: '线', group: '函数', grades: [7, 9], alias: ['一次函数', 'y=kx+b'],
-        props: {
-          k: { type: 'num', label: '斜率 k', default: 1, min: -100, max: 100, step: 0.5 },
-          b: { type: 'num', label: '截距 b', default: 0, min: -100, max: 100, step: 0.5 },
-          range: { type: 'int', label: '画多大', default: 5, min: 2, max: 20 },
-        },
-        outputs: { f: { dim: null, kind: 'fn', label: '直线' } },
-        icon: () => K.line(6, 38, 58, 6, { w: 3, stroke: 'var(--good)' }) + K.line(6, 22, 58, 22, { w: 1, stroke: 'var(--dim)' }),
-        size: () => [180, 150],
-        compute: (c) => ({ f: U.val('fn', { k: Q.fromNumber(c.props.k), b: Q.fromNumber(c.props.b) }) }),
-        badge: (c) => (c.out.f ? U.showVal(c.out.f) : ''),
-        draw: (c) => {
-          const k = c.props.k, b = c.props.b, R = Math.max(c.props.range, Math.abs(b) * 1.2, 1), W = c.w, H = c.h;
-          const px = (x) => W / 2 + (x / R) * (W / 2 - 8), py = (y) => H / 2 - (y / R) * (H / 2 - 8);
-          let s = K.line(8, H / 2, W - 8, H / 2, { w: 1, stroke: 'var(--dim)' }) + K.line(W / 2, 6, W / 2, H - 6, { w: 1, stroke: 'var(--dim)' });
-          const y0 = k * -R + b, y1 = k * R + b;
-          s += '<polyline points="' + px(-R) + ',' + py(y0) + ' ' + px(R) + ',' + py(y1) + '" fill="none" stroke="var(--good)" stroke-width="2.5" stroke-linecap="round"/>';
-          return '<g clip-path="url(#clip' + c.ent.id + ')"><clipPath id="clip' + c.ent.id + '"><rect x="0" y="0" width="' + W + '" height="' + H + '"/></clipPath>' + s + '</g>';
-        },
-      },
-
       // ---------------- 代入器 ----------------
-      at: {
-        workspaceRole: 'none',
-        handles: true,
-        essence: ['E8'],
-        label: '代入器', prefix: '代', group: '函数', grades: [7, 9], alias: ['求函数值'],
-        lint: { minProps: 1, why: '代入器只做一件事：把 x 代进直线求 y' },
-        props: { x: { type: 'num', label: 'x', default: 0, step: 1 } },
-        inputs: { f: { kind: 'fn', label: '直线' } },
-        outputs: { y: { dim: null, kind: 'num', label: 'y' } },
-        icon: () => K.text(32, 29, 'f(x)', { size: 17, weight: 700 }),
-        size: () => [150, 88],
-        compute: (c) => {
-          const f = K.first(c.inp.f);
-          if (!f) { c.say('info', '接一条直线'); return {}; }
-          const x = Q.fromNumber(c.props.x), y = Q.add(Q.mul(f.data.k, x), f.data.b);
-          c.say('ok', 'x = ' + Q.show(x) + ' 时 y = ' + Q.show(y));
-          return { y: num(y) };
-        },
-        badge: (c) => (c.out.y ? 'y=' + U.showVal(c.out.y) : ''),
-        draw: (c) => (c.out.y ? K.frac(c.w / 2, c.h / 2 - 2, c.out.y.data, 24) : K.text(c.w / 2, c.h / 2 + 8, '？', { size: 24, fill: 'var(--dim)' })),
-      },
     },
   });
 })(typeof globalThis !== 'undefined' ? globalThis : window);

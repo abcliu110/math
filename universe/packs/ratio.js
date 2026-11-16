@@ -41,37 +41,6 @@
       },
 
       // ---------------- 分式运算：两个分式做加、减、乘、除 ----------------
-      ratop: {
-        workspaceRole: 'none',
-        handles: true,
-        essence: ['E8', 'E2'],
-        label: '分式运算', prefix: '运', group: '数与运算', grades: [8, 9], alias: ['分式加减', '分式乘除', '通分'],
-        props: {
-          op: { type: 'choice', label: '运算', default: 0, choices: OPS.map((o) => o.sym) },
-          label: { type: 'text', label: '标签', default: '' },
-        },
-        lint: { minProps: 2, why: '分式运算只需要运算种类和标签' },
-        inputs: { a: { kind: 'ratio', label: '分式一' }, b: { kind: 'ratio', label: '分式二' } },
-        outputs: { r: { dim: null, kind: 'ratio', label: '结果' } },
-        icon: () => K.text(32, 30, 'a ? b', { size: 14, weight: 700 }),
-        size: () => [190, 100],
-        compute: (c) => {
-          const a = ratioOf(c, 'a'), b = ratioOf(c, 'b');
-          if (!a || !b) { c.say('info', '两边都接一个分式'); return {}; }
-          const op = OPS[c.props.op] || OPS[0];
-          try {
-            const raw = op.f(a, b), r = R.simplify(raw);
-            if (c.step) c.step('(' + R.show(a) + ') ' + op.sym + ' (' + R.show(b) + ')  =  ' + R.show(raw), null, op.rule);
-            const reduced = R.show(r) !== R.show(raw);
-            if (reduced && c.step) c.step('约分（分子分母同除以公因式）：' + R.show(r), null, 'frac.simplify');
-            c.say('ok', '结果 ' + R.show(r) + (reduced ? '（已约分）' : ''));
-            return { r: U.val('ratio', r) };
-          } catch (e) { c.say('reject', e.message); return {}; }
-        },
-        badge: (c) => (c.out.r ? R.show(c.out.r.data) : ''),
-        draw: (c) => K.text(c.w / 2, c.h / 2 + 6, OPS[c.props.op] ? OPS[c.props.op].sym : '', { size: 22, weight: 700 }),
-      },
-
       // ---------------- 分式读数：只接分式口，代入 x、y 读出值；分母是 0 的地方没有值 ----------------
       ratread: {
         workspaceRole: 'none',

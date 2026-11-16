@@ -101,63 +101,7 @@
       },
 
       // ---------------- 代数式读数：只接受代数式口，代入 x、y 两个字母后读出值（任务 B 遗留：有多个字母的代数式）----------------
-      exprread: {
-        workspaceRole: 'none',
-        handles: true,
-        essence: ['E8'],
-        label: '代数式读数', prefix: '读', group: '数与运算', grades: [7, 9], alias: ['代数式', '多个字母', '求值'],
-        props: {
-          x: { type: 'num', label: 'x 等于', default: 0, min: -99999, max: 99999, step: 1 },
-          y: { type: 'num', label: 'y 等于', default: 0, min: -99999, max: 99999, step: 1 },
-          label: { type: 'text', label: '标签', default: '' },
-        },
-        lint: { minProps: 2, why: '代数式读数只需要 x、y 两个代入值和标签' },
-        inputs: { e: { kind: 'expr', label: '代数式' } },
-        outputs: { v: { dim: null, kind: 'num', label: '值' } },
-        icon: () => K.text(32, 28, 'x,y', { size: 16, weight: 700 }),
-        size: () => [170, 100],
-        compute: (c) => {
-          const v = K.first(c.inp.e); if (!v || v.kind !== 'expr') { c.say('info', '接一个代数式'); return {}; }
-          const p = v.data, env = { x: Q.fromNumber(c.props.x), y: Q.fromNumber(c.props.y) };
-          const extra = P.vars(p).filter((k) => !(k in env));
-          if (extra.length) { c.say('reject', '式子里还有字母 ' + extra.join('、') + '，这台只代入 x、y'); return {}; }
-          const r = P.evalQ(p, env);
-          if (c.step) c.step(P.show(p) + '，代入 x = ' + c.props.x + '，y = ' + c.props.y + '，得 ' + Q.show(r), null, 'eq.both-sides');
-          c.say('ok', '值是 ' + Q.show(r));
-          return { v: U.val('num', r) };
-        },
-        badge: (c) => (c.out.v ? U.showVal(c.out.v) : ''),
-        draw: (c) => K.text(c.w / 2, c.h / 2 + 6, c.out.v ? Q.show(c.out.v.data) : '…', { size: 20, weight: 700 }),
-      },
-
       // ---------------- 代入器：把字母换成数，输出数（或真假）----------------
-      subst: {
-        workspaceRole: 'none',
-        handles: true,
-        essence: ['E8'],
-        label: '代入器', prefix: '代', group: '数与运算', grades: [6, 9], alias: ['代入', '求值'],
-        props: {
-          var: { type: 'text', label: '字母', default: 'x' },
-          value: { type: 'num', label: '代入的数', default: 0, min: -99999, max: 99999, step: 1 },
-          check: { type: 'bool', label: '判断是否为 0', default: false },
-        },
-        inputs: { p: { kind: 'poly', label: '式子' } },
-        outputs: { v: { dim: null, kind: 'num', label: '值' }, zero: { dim: null, kind: 'bool', label: '是 0 吗' } },
-        icon: () => K.text(32, 28, 'x=2', { size: 16, weight: 700 }),
-        size: () => [170, 100],
-        compute: (c) => {
-          const p = polyOf(c, 'p'); if (!p) { c.say('info', '接一个式子'); return {}; }
-          const env = {}; for (const v of P.vars(p)) env[v] = v === c.props.var ? Q.fromNumber(c.props.value) : null;
-          if (Object.values(env).some((x) => x === null)) { c.say('reject', '式子里还有别的字母，只代入「' + c.props.var + '」不够'); return {}; }
-          const r = P.evalQ(p, env);
-          if (c.step) c.step(P.show(p) + '，把 ' + c.props.var + ' = ' + Q.show(Q.fromNumber(c.props.value)) + ' 代入，得 ' + Q.show(r), null, 'eq.both-sides');
-          c.say('ok', '值是 ' + Q.show(r));
-          return { v: U.val('num', r), zero: U.val('bool', r.n === 0n) };
-        },
-        badge: (c) => (c.out.v ? U.showVal(c.out.v) : ''),
-        draw: (c) => K.text(c.w / 2, c.h / 2 + 6, c.out.v ? Q.show(c.out.v.data) : '…', { size: 20, weight: 700 }),
-      },
-
       // ---------------- 方程组台：两个方程 → 解 ----------------
       system2: {
         workspaceRole: 'none',

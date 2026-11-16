@@ -1,5 +1,5 @@
 /* node tests/ui-extend.js —— 任务 J（next-steps.md §10.7）的界面部分，真实页面。
- * (a) 抛物线的精确坐标在台面上显示：y = 2x² − 8x + 5 的顶点 (2, −3)，x² − 4x + 1 的交点 2 ± √3；改 a 以后显示跟着变（(4/3, −1/3)）；
+ * (a) （已删除：器材 quad-vertex、quad-xint 删了）原来测的是抛物线的精确坐标在台面上显示：y = 2x² − 8x + 5 的顶点 (2, −3)，x² − 4x + 1 的交点 2 ± √3；改 a 以后显示跟着变（(4/3, −1/3)）；
  * (b) 界面的求值走增量路径（台面缓存 S.evalCache）：改一台无关器材，其他器材的求值次数为 0（计数）；
  * (c) 工作区里 300 个对象，改一个点，增量求值的中位数 < 16 毫秒（真实页面里计时）；
  * (d) 文件清单：页面里加载的 packs 脚本和 U.PACK_FILES 一致；清单检查在不一致时报错；
@@ -20,20 +20,6 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text()); });
   await p.goto(url); await p.waitForTimeout(300);
   await p.evaluate(() => { UI.App.openFree(); UI.App.act({ t: 'clear' }); });
-
-  // (a) 抛物线的精确坐标
-  const vid = await p.evaluate(() => UI.App.act({ t: 'add', type: 'quad-vertex', x: 120, y: 120, props: { a: 2, b: -8, c: 5 } }).id);
-  const xid = await p.evaluate(() => UI.App.act({ t: 'add', type: 'quad-xint', x: 120, y: 300, props: { a: 1, b: -4, c: 1 } }).id);
-  await p.evaluate(() => { UI.Stage.fit(); UI.Stage.render(); });
-  const html = () => p.evaluate(() => document.body.innerHTML);
-  let h = await html();
-  ok(h.includes('顶点 (2, −3)'), '顶点 (2, −3) 显示在台面上（精确）');
-  ok(h.includes('2 + √3') && h.includes('2 − √3'), 'x 轴交点 2 + √3、2 − √3 显示在台面上（精确）');
-
-  // 改 a：显示跟着变（顶点 (4/3, −1/3)）
-  await p.evaluate((id) => UI.App.act({ t: 'set', id, k: 'a', v: 3 }), vid);
-  h = await html();
-  ok(h.includes('顶点 (4/3, −1/3)'), '改 a = 3 以后，顶点显示为 (4/3, −1/3)');
 
   // (b) 界面的求值走增量路径：先改一台无关的器材（只改台面，不刷新），再用台面缓存求值，计数
   const iso = await p.evaluate(() => UI.App.act({ t: 'add', type: 'num', x: 500, y: 500, props: { n: 1 } }).id);

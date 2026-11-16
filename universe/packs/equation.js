@@ -65,35 +65,6 @@
       },
 
       // ---------------- 变形：两边同时做同一件事 ----------------
-      eqstep: {
-        workspaceRole: 'none',
-        handles: true,
-        essence: ['E4'],
-        label: '变形', prefix: '变', group: '关系', grades: [6, 9], alias: ['移项', '两边同时', '等式的性质', '化简'],
-        props: {
-          op: { type: 'choice', label: '两边同时', default: 0, choices: OPS },
-          by: { type: 'text', label: '做多少（数或式子）', default: '1' },
-          name: { type: 'text', label: '名字', default: '' },
-        },
-        inputs: { eq: { kind: 'eqn', label: '方程' } },
-        outputs: { eq: { dim: null, kind: 'eqn', label: '新方程' } },
-        icon: () => K.text(32, 28, '+1 ⇒', { size: 16, weight: 700 }),
-        size: () => [230, 110],
-        compute: (c) => {
-          const e = eqnIn(c, 'eq');
-          if (!e) { c.say('info', '接一个方程'); return {}; }
-          let by; try { by = P.parse(String(c.props.by)); } catch (err) { c.say('reject', '「做多少」要写数或式子：' + err.message); return {}; }
-          const r = E.apply(e, { op: OPKEY[c.props.op], by });
-          if (r.error) { c.say('reject', r.error); return {}; }
-          if (c.step) c.step(r.say + '，得 ' + showEq(r.eqn), null, r.rule);
-          c.say('ok', r.say);
-          return { eq: U.val('eqn', r.eqn) };
-        },
-        badge: (c) => (c.out.eq ? showEq(c.out.eq.data) : ''),
-        draw: (c) => K.text(c.w / 2, 38, OPS[c.props.op] + ' ' + c.props.by, { size: 13, fill: 'var(--dim)' }) +
-          K.text(c.w / 2, c.h / 2 + 16, c.out.eq ? showEq(c.out.eq.data) : '…', { size: 18, weight: 700 }),
-      },
-
       // ---------------- 解：方程或不等式 → 解集 ----------------
       solve: {
         workspaceRole: 'none',
@@ -171,81 +142,7 @@
       },
 
       // ---------------- 方程组：两个方程 → x、y ----------------
-      eqsys: {
-        workspaceRole: 'none',
-        handles: true,
-        essence: ['E4', 'E8'],
-        label: '方程组', prefix: '组', group: '关系', grades: [7, 9], alias: ['二元一次', '消元', '联立', '方程组'],
-        props: {
-          x: { type: 'text', label: '第一个未知数', default: 'x' },
-          y: { type: 'text', label: '第二个未知数', default: 'y' },
-          z: { type: 'text', label: '第三个未知数（三个方程时用）', default: 'z' },
-          name: { type: 'text', label: '名字', default: '' },
-        },
-        inputs: { eqs: { kind: 'eqn', many: true, label: '方程' } },
-        outputs: {
-          x: { dim: null, kind: 'num', label: '第一个解' },
-          y: { dim: null, kind: 'num', label: '第二个解' },
-          z: { dim: null, kind: 'num', label: '第三个解' },
-        },
-        icon: () => K.text(32, 24, '{', { size: 28 }) + K.text(42, 32, 'x,y', { size: 12, weight: 700 }),
-        size: () => [230, 110],
-        compute: (c) => {
-          const es = (c.inp.eqs || []).filter((v) => v && v.kind === 'eqn').map((v) => v.data);
-          if (es.length < 2) { c.say('info', '接两个方程（三个未知数就接三个）'); return {}; }
-          if (es.length >= 3) {   // 三元一次方程组：高斯消元
-            const three = es.slice(0, 3), names = [].concat(...three.map((e) => P.vars(e.lhs).concat(P.vars(e.rhs)))).filter((k, i, a) => a.indexOf(k) === i).sort();
-            if (names.length !== 3) { c.say('info', '三个方程要正好三个未知数，现在是 ' + names.length + ' 个：' + names.join('、')); return {}; }
-            let vs = [String(c.props.x).trim() || 'x', String(c.props.y).trim() || 'y', String(c.props.z).trim() || 'z'];
-            if (!vs.every((v) => names.includes(v)) || new Set(vs).size !== 3) vs = names;   // 字母名对不上，就用方程里实际的三个字母
-            const r3 = E.solveLinearSystem(three, vs);
-            if (r3.kind === 'error') { c.say('info', r3.why); return {}; }
-            if (c.step) r3.steps.forEach((s) => c.step(s.say, null, s.rule));
-            if (r3.kind !== 'solution') { c.say('info', '没有唯一的解（有的方程是别的方程的组合，或者互相矛盾）'); return {}; }
-            c.say('ok', vs.map((v, i) => v + ' = ' + Q.show(r3.values[i])).join('，'));
-            return { x: U.val('num', r3.values[0]), y: U.val('num', r3.values[1]), z: U.val('num', r3.values[2]) };
-          }
-          const all = [].concat(...es.slice(0, 2).map((e) => P.vars(e.lhs).concat(P.vars(e.rhs)))).filter((k, i, a) => a.indexOf(k) === i).sort();
-          let x = String(c.props.x).trim() || 'x', y = String(c.props.y).trim() || 'y';
-          if (all.length === 2 && !(all.includes(x) && all.includes(y))) { x = all[0]; y = all[1]; }   // 字母名对不上，就用方程里实际的两个字母
-          const r = E.solveSystem2(es[0], es[1], x, y);
-          if (r.kind === 'error') { c.say('info', r.why); return {}; }
-          if (c.step) r.steps.forEach((s) => c.step(s.say, null, s.rule));
-          if (r.kind !== 'solution') { c.say('info', '没有唯一的解（两个方程重合，或者互相矛盾）'); return {}; }
-          c.say('ok', x + ' = ' + Q.show(r.x) + '，' + y + ' = ' + Q.show(r.y));
-          return { x: U.val('num', r.x), y: U.val('num', r.y) };
-        },
-        badge: (c) => (c.out.x && c.out.y ? Q.show(c.out.x.data) + '，' + Q.show(c.out.y.data) + (c.out.z ? '，' + Q.show(c.out.z.data) : '') : ''),
-        draw: (c) => K.text(c.w / 2, c.h / 2 + 10, c.out.x && c.out.y ? 'x=' + Q.show(c.out.x.data) + '  y=' + Q.show(c.out.y.data) + (c.out.z ? '  z=' + Q.show(c.out.z.data) : '') : '…', { size: 20, weight: 700 }),
-      },
-
       // ---------------- 解集运算：交（不等式组）、并、补、甲减乙 ----------------
-      setop: {
-        workspaceRole: 'none', handles: true, essence: ['E8', 'E4'],
-        label: '解集运算', prefix: '集', group: '关系', grades: [7, 9], alias: ['不等式组', '交集', '并集', '补集', '公共部分', '同时成立', '至少一个成立'],
-        props: {
-          op: { type: 'choice', label: '运算', default: 0, choices: ['交（同时成立）', '并（至少一个成立）', '甲之外', '甲减乙'] },
-          label: { type: 'text', label: '标签', default: '' },
-        },
-        lint: { minProps: 2, why: '解集运算只有“运算”和标签两个属性' },
-        inputs: { a: { kind: 'solset', label: '甲' }, b: { kind: 'solset', label: '乙' } },
-        outputs: { set: { dim: null, kind: 'solset', label: '结果' } },
-        icon: () => K.circle(24, 32, 14, { stroke: 'var(--ink)', w: 2 }) + K.circle(40, 32, 14, { stroke: 'var(--ink)', w: 2 }),
-        size: () => [230, 110],
-        compute: (c) => {
-          const a = K.first(c.inp.a), b = K.first(c.inp.b), S = U.Solset;
-          if (!a) { c.say('info', '接一个解集作甲'); return {}; }
-          const op = c.props.op;
-          if (op === 2) return { set: U.val('solset', S.complement(a.data)) };
-          if (!b) { c.say('info', '再接一个解集作乙'); return {}; }
-          const A = a.data, B = b.data;
-          const r = op === 0 ? S.intersect(A, B) : op === 1 ? S.union(A, B) : S.intersect(A, S.complement(B));
-          c.say('ok', S.show(r));
-          return { set: U.val('solset', r) };
-        },
-        badge: (c) => (c.out.set ? U.showVal(c.out.set) : ''),
-        draw: (c) => K.text(c.w / 2, c.h / 2 + 6, c.out.set ? U.showVal(c.out.set) : '—', { size: 16, weight: 700, fill: c.out.set ? 'var(--ink)' : 'var(--dim)' }),
-      },
     },
   });
 })(typeof globalThis !== 'undefined' ? globalThis : window);

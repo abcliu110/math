@@ -103,39 +103,6 @@
         },
       },
 
-      quad: {
-        workspaceRole: 'none',
-        handles: true,
-        essence: ['E10', 'E8'],
-        label: '抛物线', prefix: '抛', group: '函数', grades: [8, 9], alias: ['二次函数', '顶点', '判别式', 'y=ax²+bx+c'],
-        props: {
-          a: { type: 'num', label: 'a（x² 前）', default: 1, min: -10, max: 10, step: 1 },
-          b: { type: 'num', label: 'b（x 前）', default: 0, min: -20, max: 20, step: 1 },
-          c: { type: 'num', label: 'c（常数）', default: 0, min: -20, max: 20, step: 1 },
-        },
-        outputs: { vx: { dim: null, kind: 'num', label: '顶点 x' }, vy: { dim: null, kind: 'num', label: '顶点 y' }, roots: { dim: null, kind: 'num', label: '与 x 轴交点数' }, disc: { dim: null, kind: 'num', label: 'b²−4ac' } },
-        icon: () => '<path d="M10 10 Q32 56 54 10" fill="none" stroke="var(--good)" stroke-width="3"/>',
-        size: () => [230, 190],
-        compute: (c) => {
-          const a = Q.fromNumber(c.props.a), b = Q.fromNumber(c.props.b), cc = Q.fromNumber(c.props.c);
-          if (a.n === 0n) { c.say('reject', 'a 不能是 0：那样就不是抛物线，是直线了'); return {}; }
-          const vx = Q.neg(Q.div(b, Q.mul(Q(2), a))), vy = Q.add(Q.mul(a, Q.mul(vx, vx)), Q.add(Q.mul(b, vx), cc)), d = Q.sub(Q.mul(b, b), Q.mul(Q(4), Q.mul(a, cc)));
-          c.say('ok', '顶点 (' + Q.show(vx) + ', ' + Q.show(vy) + ')，' + (d.n > 0 ? '与 x 轴有 2 个交点' : d.n === 0n ? '刚好碰到 x 轴' : '够不着 x 轴'));
-          return { vx: num(vx), vy: num(vy), disc: num(d), roots: num(Q(d.n > 0 ? 2 : d.n === 0n ? 1 : 0)) };
-        },
-        badge: (c) => (c.out.vx ? '顶点(' + U.showVal(c.out.vx) + ',' + U.showVal(c.out.vy) + ')' : ''),
-        draw: (c) => {
-          const a = c.props.a, b = c.props.b, cc = c.props.c, R = 6, W = c.w, H = c.h, px = (x) => W / 2 + (x / R) * (W / 2 - 8), py = (y) => H / 2 - (y / (R * 1.4)) * (H / 2 - 8);
-          let s = K.line(8, H / 2, W - 8, H / 2, { w: 1, stroke: 'var(--dim)' }) + K.line(W / 2, 6, W / 2, H - 6, { w: 1, stroke: 'var(--dim)' });
-          if (a !== 0) {
-            const pts = []; for (let i = -60; i <= 60; i++) { const x = (i / 60) * R, y = a * x * x + b * x + cc; if (Math.abs(y) < R * 3) pts.push(px(x).toFixed(1) + ',' + py(y).toFixed(1)); }
-            s += '<polyline points="' + pts.join(' ') + '" fill="none" stroke="var(--good)" stroke-width="2.5"/>';
-            if (c.out.vx) s += K.circle(px(Q.num(c.out.vx.data)), py(Q.num(c.out.vy.data)), 5, { fill: 'var(--accent)', stroke: '#fff', w: 2 });
-          }
-          return '<g><clipPath id="q' + c.ent.id + '"><rect width="' + W + '" height="' + H + '"/></clipPath><g clip-path="url(#q' + c.ent.id + ')">' + s + '</g></g>';
-        },
-      },
-
       coin: {
         workspaceRole: 'none',
         handles: true,

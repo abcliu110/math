@@ -72,7 +72,6 @@
     'stats': 'packs/stats.js',
     'stats2': 'packs/stats2.js',
     'swapbench': 'packs/swapbench.js',
-    'sweep': 'packs/sweep.js',
     'symmetry': 'packs/symmetry.js',
     'systembench': 'packs/systembench.js',
     'tapebench': 'packs/tapebench.js',

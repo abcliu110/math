@@ -201,34 +201,6 @@
       },
 
       // ---------------- 不变量追踪器：一个变换前后某个量是否不变（单独不给等级）----------------
-      invariant: {
-        workspaceRole: 'none',
-        handles: true,
-        essence: ['E5'],
-        label: '不变量追踪器', prefix: '变', group: '关系', grades: [5, 9], alias: ['不变', '守恒', '变换'],
-        props: {
-          change: { type: 'int', label: '变换加上多少', default: 3, min: -20, max: 20 },
-          times: { type: 'int', label: '变换几次', default: 4, min: 0, max: 20 },
-          start: { type: 'num', label: '起点', default: 5, min: -50, max: 50, step: 1 },
-        },
-        outputs: {
-          lv: { dim: null, kind: 'num', label: '证据等级' }, refuted: { dim: null, kind: 'bool', label: '被推翻' },
-          kept: { dim: null, kind: 'bool', label: '每次都不变吗' }, end: { dim: null, kind: 'num', label: '最后的值' },
-        },
-        icon: () => K.line(10, 30, 54, 30, { w: 2 }) + K.line(44, 24, 54, 30, { w: 2 }) + K.text(32, 20, '不变', { size: 12 }),
-        size: () => [200, 110],
-        compute: (c) => {
-          let v = Q.fromNumber(c.props.start);
-          const sums = [v];
-          for (let i = 0; i < c.props.times; i++) { v = Q.add(v, Q.fromNumber(c.props.change)); sums.push(v); }
-          const kept = sums.every((s) => Q.eq(s, sums[0]));
-          return verdict(c, { lv: num(Q(0)), refuted: U.val('bool', false), kept: U.val('bool', kept), end: num(v),
-            text: kept ? '每次变换后这个量都不变' : '这个量变了：从 ' + Q.show(sums[0]) + ' 变到 ' + Q.show(v) + '，它不是不变量（不给证据等级）' });
-        },
-        badge: (c) => (c.out.kept ? (c.out.kept.data ? '不变' : '变了') : ''),
-        draw: (c) => K.text(c.w / 2, c.h / 2 + 4, '每次 +' + c.props.change, { size: 12 }),
-      },
-
       // ---------------- 证明脚手架：三步推理，每步引用台面上已验证的事实（输入口 a、b、c），全部填完 → ④ ----------------
       scaffold: {
         workspaceRole: 'none',

@@ -14,7 +14,6 @@ for (const f of files) load(f);
 load('problems/starter.js');
 for (const f of fs.readdirSync(path.join(root, 'problems')).sort()) if (f !== 'starter.js' && f.endsWith('.js') && f !== 'examples-data.js') load('problems/' + f);
 const U = ctx.U, W = U.World;
-const SOL = require(path.join(root, 'tests/solutions-combo.js'));
 
 const X0 = 50, Y0 = 50, GAP_X = 110, GAP_Y = 64, GAP_COMP = 90, WRAP_W = 1250;
 
@@ -112,7 +111,7 @@ const readings = (s, D) => Object.keys(s.entities).filter((id) => s.entities[id]
 });
 
 // 1. 综合示例（tools/examples-src.js）：大场景，很多器材配合着用
-for (const sp of require(path.join(root, 'tools/examples-src.js')).concat(require(path.join(root, 'tools/examples-src2.js')))) {
+for (const sp of require(path.join(root, 'tools/examples-src.js'))) {
   const s = W.blank(), ids = {};
   for (const [role, type, props] of sp.ents) {
     const r = W.act(s, { t: 'add', type, x: 0, y: 0, props: props || {} });
@@ -135,17 +134,6 @@ for (const sp of require(path.join(root, 'tools/examples-src.js')).concat(requir
   out.push({ id: sp.id, kind: '综合', title: sp.title, hook: sp.hook, grade: sp.grade, domain: sp.domain, scene: W.save(s) });
 }
 
-// 2. 小示例（combo-* 题）：几台器材配合；用参考解接线
-for (const p of U.problems.filter((x) => /^combo-/.test(x.id))) {
-  const s = p.build();
-  const fn = SOL[p.id];
-  if (!fn) throw new Error('缺参考解：' + p.id);
-  fn(harness(s));
-  layout(s);
-  const D = W.evaluate(s);
-  console.log(p.id.padEnd(28), readings(s, D).join('  '));
-  out.push({ id: p.id, kind: '小示例', title: p.title, hook: p.hook || '', grade: p.grade, domain: p.domain, scene: W.save(s) });
-}
 const NL = String.fromCharCode(10);
 const body = ['/* 由 tools/gen-examples.js 生成，不要手改。示例菜单用的已完成场景。 */',
   '(function (G) {',
