@@ -92,6 +92,7 @@ async function checkDist() {
   if (!runScript('tests/ui-venn.js', 'tests/ui-venn.js', pwEnv)) bail();   // 集合圈：真实鼠标把人拖进圈里、中间、圈外
   if (!runScript('tests/ui-travel.js', 'tests/ui-travel.js', pwEnv)) bail();   // 行程：真实鼠标拖时间条、拖速度箭头
   if (!runScript('tests/ui-mul.js', 'tests/ui-mul.js', pwEnv)) bail();   // 竖式乘法：真实鼠标点格子、点数字键
+  if (!runScript('tests/ui-fast.js', 'tests/ui-fast.js', pwEnv)) bail();   // 速算原理：真实鼠标拉长、切开、剪拼
   if (!runScript('tests/ui-areamodel.js', 'tests/ui-areamodel.js', pwEnv)) bail();   // 面积模型（样板操作台）和器材把手：真实鼠标拖边、切、改分数
   if (!runScript('tests/ui-shapes.js', 'tests/ui-shapes.js', pwEnv)) bail();         // 常见图形、顶点编辑、直接拖出辅助线（真实鼠标和键盘）；含画布横纵比例回归
   if (!runScript('tests/ui-export.js', 'tests/ui-export.js', pwEnv)) bail();         // 2.12/V10：导出图片（真实鼠标点菜单，台面和专注工作区各一次下载，.png、大小 > 0）

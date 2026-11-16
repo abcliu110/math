@@ -565,5 +565,18 @@
     },
   };
 
+  // 速算原理：19 × 21 拼成 20 × 20 缺一个角
+  D.fastbench = {
+    caps: ['19 × 21：一个 19 宽、21 高的长方形', '上面切下 19 × 1 的一条', '转个方向，接到右边', '拼成 20 × 20，缺一个 1 × 1 的角：400 − 1 = 399'],
+    draw(st) {
+      const x = 110, y = 20, w = 114, u = 12; let s = Rc(x, y + u, w, 120, '#cfe0f5', { s: INK });
+      if (st <= 1) s += Rc(x, y - (st ? 6 : 0), w, u, A, { s: INK });
+      if (st === 2) s += Rc(x + w + 30, y + 2 * u, u, w, A, { s: INK });
+      if (st === 3) s += Rc(x + w, y + 2 * u, u, w, A, { s: INK }) + Rc(x + w, y + u, u, u, 'none', { s: RD, d: '3 3' });
+      s += T(180, 172, ['19 × 21', '切下 19 × 1', '转个方向', '20 × 20 − 1 × 1 = 399'][st], { s: 15, w: 700, f: P });
+      return s;
+    },
+  };
+
   UI.Demo = D;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

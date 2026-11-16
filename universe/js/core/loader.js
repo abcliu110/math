@@ -37,6 +37,7 @@
     'dissect': 'packs/dissect.js',
     'estimate': 'packs/estimate.js',
     'exprbench': 'packs/exprbench.js',
+    'fastbench': 'packs/fastbench.js',
     'figure': 'packs/figure.js',
     'findbug': 'packs/findbug.js',
     'fmachine': 'packs/fmachine.js',
