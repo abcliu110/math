@@ -62,6 +62,7 @@
     const def = SG.def(e), c0 = gripCtx(e, d.p0), gr = (def.grips(c0) || []).find((x) => x.id === d.grip); if (!gr || !gr.drag) return;
     const svg = [...document.querySelectorAll('.card[data-id="' + d.id + '"] svg.bdy')][0] || d.svg, r = svg.getBoundingClientRect();
     const p = UI.Space.screenToCanvas(ev, r, c0.w, c0.h);
+    d.q = { x: p.x, y: p.y };   // 鼠标现在在卡片画布的哪里：器材画“正在拖”的样子时要用（见 stage-cards.js 的 c.drag）
     let patch = null; try { patch = gr.drag(c0, p); } catch (x) { patch = null; }
     if (!patch) return;
     const clean = {};

@@ -4,6 +4,9 @@
  *   - 把一架天平拖到另一架上：
  *       · 如果这一架已经是“一个盒子 = …”（盒子单独在一边），就是代入：把另一架里的这种盒子全换成和它一样重的东西；
  *       · 否则是消元：从另一架的两个盘里，各拿走这一架两个盘里的东西（它们一样重，所以拿走以后还是平的）。拿不出来就说明原因。
+ *   - 盘里的盒子、砝码可以一个一个拖走：拖走左盘的一个，右盘里同样的一个跟着走（两边同时减）。另一个盘里没有同样的东西就拿不了。
+ *   - 从下面的托盘往一架天平上拖：两个盘各加一个（两边同时加）。
+ *   - 拖的时候（还没松手）画面就画出这一下会带来什么：哪些东西被拿走、两边各拿走多少、为什么还是平的。
  *   - 每架天平旁边的按钮：翻倍、平分、两边各拿走同样的东西。
  * 旁边的式子跟着变。两个盒子的重量都知道了，就解出来了。
  * 这一版的边界（如实写）：只有正整数个盒子和砝码，没有负数；每个盘最多 6 个圆盒、6 个方盒、30 个砝码；每一步都保持平衡（做不了的事会被拦住，不会让天平歪）。 */
@@ -59,26 +62,70 @@
   const boxX = (x, y) => K.circle(x + 11, y + 11, 11, { fill: '#f5c26b', stroke: '#8a5a00', w: 1.6 }) + K.text(x + 11, y + 16, 'x', { size: 13, weight: 700, fill: '#5a3a00' });
   const boxY = (x, y) => K.rect(x, y, 22, 22, { fill: '#8fd19e', stroke: '#1f6a34', r: 3, w: 1.6 }) + K.text(x + 11, y + 16, 'y', { size: 13, weight: 700, fill: '#123f1e' });
   const wt = (x, y) => K.rect(x, y, 11, 11, { fill: '#9fb7d9', stroke: '#2f4a73', r: 2, w: 1 });
-  function pan(cx, y, nx, ny, nc) {
-    let s = K.rect(cx - PW / 2, y, PW, 6, { fill: 'var(--ink)', r: 3 }), x = cx - PW / 2 + 4;
-    for (let i = 0; i < nx; i++) { s += boxX(x, y - 24); x += 24; }
-    for (let i = 0; i < ny; i++) { s += boxY(x, y - 24); x += 24; }
+  // 盘里每样东西放在哪
+  function layout(cx, y, nx, ny, nc) {
+    const o = { xs: [], ys: [], cs: [] }; let x = cx - PW / 2 + 4;
+    for (let i = 0; i < nx; i++) { o.xs.push({ x, y: y - 24 }); x += 24; }
+    for (let i = 0; i < ny; i++) { o.ys.push({ x, y: y - 24 }); x += 24; }
     const cols = Math.max(1, Math.floor((cx + PW / 2 - 4 - x) / 12));
-    for (let i = 0; i < nc; i++) s += wt(x + (i % cols) * 12, y - 13 - Math.floor(i / cols) * 12);
-    return s;
+    for (let i = 0; i < nc; i++) o.cs.push({ x: x + (i % cols) * 12, y: y - 13 - Math.floor(i / cols) * 12 });
+    return o;
+  }
+  const things = (cx, y, nx, ny, nc) => { const l = layout(cx, y, nx, ny, nc); return l.xs.map((q) => boxX(q.x, q.y)).join('') + l.ys.map((q) => boxY(q.x, q.y)).join('') + l.cs.map((q) => wt(q.x, q.y)).join(''); };
+  const pan = (cx, y, nx, ny, nc) => K.rect(cx - PW / 2, y, PW, 6, { fill: 'var(--ink)', r: 3 }) + things(cx, y, nx, ny, nc);
+  const PANX = [BX - ARM, BX + ARM], PY = (i) => top(i) + 104, TRAY = top(2) + 18;
+  const KIND = ['x', 'y', 'c'], KNAME = ['圆盒', '方盒', '砝码'], KSYM = ['x', 'y', '1'];
+  const itemSvg = (j, x, y) => (j === 0 ? boxX(x - 11, y - 11) : j === 1 ? boxY(x - 11, y - 11) : wt(x - 5.5, y - 5.5));
+  const balAt = (q) => { for (const i of [0, 1]) if (q.y >= top(i) && q.y <= top(i) + BH - 12) return i; return -1; };
+  const panAt = (i, q) => { if (balAt(q) !== i || q.y > PY(i) + 18 || q.y < PY(i) - 62) return -1; for (const a of [0, 1]) if (Math.abs(q.x - PANX[a]) <= PW / 2 + 8) return a; return -1; };
+  const unit = (j) => { const u = [0, 0, 0, 0, 0, 0]; u[j] = 1; u[j + 3] = 1; return u; };
+
+  // 这一下拖动会做什么：返回 { patch: 要改的属性, fx: 画面上要表现的事 }
+  function plan(p0, gid, q) {
+    const es = [parse(p0.e0), parse(p0.e1)], ok = (i, e) => ({ ['e' + i]: ser(e), steps: p0.steps + 1, msg: '' }), no = (why) => ({ msg: why, refused: p0.refused + 1 });
+    if (gid[0] === 'b') {   // 整架天平拖到另一架上
+      const i = +gid[1], to = 1 - i, fx = { carry: i };
+      if (balAt(q) !== to) return { patch: { msg: '' }, fx };
+      const r = dropOn(es, i, to);
+      if (r.why) return { patch: no(r.why), fx: Object.assign(fx, { i: to, refuse: true }) };
+      const iso = isolated(es[i]), sub = !!(iso && (es[to][iso.v] || es[to][3 + iso.v]));
+      if (sub) return { patch: ok(to, r.e), fx: Object.assign(fx, { i: to, sub: iso, note: r.how }) };
+      const rem = es[to].map((n, k) => n - r.e[k]);
+      return { patch: ok(to, r.e), fx: Object.assign(fx, { i: to, rem, lab: [0, 3].map((a) => { const tx = sideStr(rem[a], rem[a + 1], rem[a + 2]); return '− ' + (tx.includes('+') ? '(' + tx + ')' : tx); }), note: '那一架说 ' + eqStr(es[i]) + '：两边拿走的一样重，所以还是平的' }) };
+    }
+    if (gid[0] === 't') {   // 从托盘往一架天平上拖：两边各加一个
+      const j = KIND.indexOf(gid[1]), i = balAt(q), fx = { item: j };
+      if (i < 0) return { patch: { msg: '' }, fx };
+      const e = es[i].map((n, k) => n + unit(j)[k]);
+      if (!fits(e)) return { patch: no('盘里放不下了'), fx: Object.assign(fx, { i, refuse: true }) };
+      return { patch: ok(i, e), fx: Object.assign(fx, { i, twin: true, lab: ['+ ' + KSYM[j], '+ ' + KSYM[j]], note: '两边同时加上 1 个' + KNAME[j] + '：还是平的' }) };
+    }
+    // 盘里的一样东西：拖出自己的盘，另一个盘里同样的一个跟着走
+    const i = +gid[1], a = gid[2] === 'L' ? 0 : 1, j = KIND.indexOf(gid[3]), fx = { item: j };
+    if (panAt(i, q) === a) return { patch: { msg: '' }, fx: null };
+    if (!es[i][(1 - a) * 3 + j]) return { patch: no('另一个盘里没有' + KNAME[j] + '：只拿这一边天平会歪，所以拿不了'), fx: Object.assign(fx, { i, refuse: true }) };
+    return { patch: ok(i, es[i].map((n, k) => n - unit(j)[k])), fx: Object.assign(fx, { i, twin: true, lab: ['− ' + KSYM[j], '− ' + KSYM[j]], note: '两边同时拿走 1 个' + KNAME[j] + '：还是平的' }) };
   }
   const setBtn = (x, y, w, label, patch, on, tip) => '<g' + (on ? ' data-pick-set="' + encodeURIComponent(JSON.stringify(patch)) + '" style="cursor:pointer"' : ' opacity="0.38"') + '><title>' + K.esc(tip) + '</title>' +
     K.rect(x, y, w, 24, { fill: '#fff', stroke: on ? 'var(--blue)' : '#8a94a8', r: 7, w: 1.5 }) + K.text(x + w / 2, y + 16, label, { size: 12, weight: 700 }) + '</g>';
 
   function draw(c) {
     const p = c.props, m = model(p); let s = '';
+    const dg = c.drag ? plan(c.drag.p0, c.drag.grip, c.drag) : null, fx = dg && dg.fx;
     m.es.forEach((e, i) => {
       const y0 = top(i), by = y0 + 34, py = y0 + 104, k = known(e), key = 'e' + i;
       const step = (ne) => ({ [key]: ser(ne), steps: p.steps + 1, msg: '' });
-      s += K.rect(8, y0, W - 16, BH - 12, { fill: 'none', stroke: '#c5ccda', r: 10, w: 1 });
+      const src = fx && fx.carry === i, hit = fx && fx.i === i;
+      s += K.rect(8, y0, W - 16, BH - 12, { fill: 'none', stroke: src ? 'var(--blue)' : hit && fx.refuse ? 'var(--bad)' : hit ? 'var(--good)' : '#c5ccda', r: 10, w: src || hit ? 2 : 1 });
       s += K.line(BX, by, BX, py + 26, { w: 4 }) + K.line(BX - 36, py + 28, BX + 36, py + 28, { w: 5 }) + K.line(BX - ARM, by, BX + ARM, by, { w: 5, stroke: 'var(--good)' });
       for (const cx of [BX - ARM, BX + ARM]) s += K.line(cx, by, cx - PW / 2 + 8, py, { w: 1 }) + K.line(cx, by, cx + PW / 2 - 8, py, { w: 1 });
       s += pan(BX - ARM, py, e[0], e[1], e[2]) + pan(BX + ARM, py, e[3], e[4], e[5]);
+      // 正在拖、而且这一架会变：被拿走的东西浮在盘的上方（虚的），盘下面写两边各拿走、各加上什么
+      if (hit && !fx.refuse) {
+        if (fx.rem) [0, 1].forEach((a) => { const r = fx.rem.slice(a * 3, a * 3 + 3); if (r[0] + r[1] + r[2]) s += '<g data-rem="' + a + '" opacity="0.5">' + things(PANX[a], py - 58, r[0], r[1], r[2]) + '</g>' + K.line(PANX[a] - PW / 2 + 4, py - 54, PANX[a] + PW / 2 - 4, py - 54, { w: 1, stroke: 'var(--blue)', dash: '3 3' }); });
+        if (fx.lab) [0, 1].forEach((a) => { s += K.text(PANX[a], py + 24, fx.lab[a], { size: 14, weight: 700, fill: 'var(--blue)' }); });
+        if (fx.sub) [0, 1].forEach((a) => { if (parse(c.drag.p0['e' + i])[a * 3 + fx.sub.v]) s += K.text(PANX[a], py + 24, (fx.sub.v ? 'y' : 'x') + ' → ' + sideStr(fx.sub.expr[0], fx.sub.expr[1], fx.sub.expr[2]), { size: 14, weight: 700, fill: 'var(--blue)' }); });
+      }
       const tx = BX + ARM + PW / 2 + 22;
       s += K.text(tx, y0 + 30, eqStr(e), { size: 18, weight: 700, anchor: 'start', fill: k ? 'var(--good)' : 'var(--ink)' });
       if (k) s += K.text(tx, y0 + 50, (k.v ? '一个方盒' : '一个圆盒') + ' = ' + k.n, { size: 12, anchor: 'start', fill: 'var(--good)', weight: 700 });
@@ -87,21 +134,38 @@
       s += setBtn(tx + 68, y0 + 62, 88, dv ? '平分成 ' + dv + ' 份' : '平分', dv ? step(e.map((n) => n / dv)) : {}, !!dv, '两个盘都平分成同样的份数，各留一份');
       s += setBtn(tx, y0 + 92, 156, '两边拿走一样的东西', cn ? step(cn) : {}, !!cn, '两个盘里都有的盒子或砝码，各拿走同样多');
     });
+    // 托盘：往一架天平上拖，两边各加一个
+    s += K.text(20, TRAY + 16, '往一架天平上拖：两个盘各加一个', { size: 12, anchor: 'start' }) + itemSvg(0, 236, TRAY + 12) + itemSvg(1, 276, TRAY + 12) + itemSvg(2, 312, TRAY + 12);
+    s += K.text(340, TRAY + 16, '盘里的东西拖出来：两个盘各拿走一个', { size: 12, anchor: 'start' });
+    // 正在拖的东西跟着鼠标；两边一起动的时候，另一边的那一个对称地跟着
+    if (dg && fx) {
+      if (fx.carry !== undefined) { const tx = eqStr(parse(c.drag.p0['e' + fx.carry])), w = tx.length * 9 + 24; s += '<g data-carry="1" opacity="0.92">' + K.rect(c.drag.x - w / 2, c.drag.y + 14, w, 26, { fill: '#fff', stroke: 'var(--blue)', r: 8, w: 1.6 }) + K.text(c.drag.x, c.drag.y + 32, tx, { size: 14, weight: 700, fill: 'var(--blue)' }) + '</g>'; }
+      else {
+        s += itemSvg(fx.item, c.drag.x, c.drag.y);
+        if (fx.twin) { const mx = 2 * BX - c.drag.x; s += '<g data-twin="1" opacity="0.75">' + itemSvg(fx.item, mx, c.drag.y) + '</g>' + K.line(c.drag.x, c.drag.y, mx, c.drag.y, { w: 1.5, stroke: 'var(--blue)', dash: '5 4' }); }
+      }
+    }
     if (p.msg) s += K.text(W / 2, top(2) + 2, p.msg, { size: 13, weight: 700, fill: 'var(--bad)' });
+    else if (fx && fx.note && !fx.refuse) s += K.text(W / 2, top(2) + 2, fx.note, { size: 13, weight: 700, fill: 'var(--blue)' });
     else if (m.x !== null && m.y !== null) s += K.text(W / 2, top(2) + 2, '解出来了：x = ' + m.x + '，y = ' + m.y, { size: 15, weight: 700, fill: 'var(--good)' });
-    else s += K.text(W / 2, top(2) + 2, '把一架天平拖到另一架上：拿走一样重的东西（消元），或者把盒子换掉（代入）', { size: 12 });
+    else s += K.text(W / 2, top(2) + 2, '把一架天平拖到另一架上：两边拿走一样重的东西（消元），或者把盒子换掉（代入）。盘里的东西也可以一个一个拖', { size: 12 });
     return s;
   }
 
   function grips(c) {
-    return [0, 1].map((i) => ({ id: 'b' + i, x: BX, y: top(i) + 34, r: 11, text: '拖', cursor: 'grab', tip: '把这一架拖到另一架上',
-      drag: (c0, q) => {
-        const to = 1 - i, y0 = top(to); if (q.y < y0 || q.y > y0 + BH - 12) return { msg: '' };
-        const es = [parse(c0.props.e0), parse(c0.props.e1)], r = dropOn(es, i, to);
-        if (r.why) return { msg: r.why, refused: c0.props.refused + 1 };
-        return { ['e' + to]: ser(r.e), steps: c0.props.steps + 1, msg: '' };
-      },
-      say: (c1) => c1.props.msg || eqStr(parse(c1.props['e' + (1 - i)])) }));
+    const es = [parse(c.props.e0), parse(c.props.e1)], out = [];
+    const mk = (id, x, y, r, o) => out.push(Object.assign({ id, x, y, r, cursor: 'grab',
+      drag: (c0, q) => plan(c0.props, id, q).patch,
+      say: (c1) => c1.props.msg || '' }, o));
+    [0, 1].forEach((i) => {
+      mk('b' + i, BX, top(i) + 34, 11, { text: '拖', tip: '把这一架拖到另一架上', say: (c1) => c1.props.msg || eqStr(parse(c1.props['e' + (1 - i)])) });
+      [0, 1].forEach((a) => {
+        const e = es[i], l = layout(PANX[a], PY(i), e[a * 3], e[a * 3 + 1], e[a * 3 + 2]), last = [l.xs[l.xs.length - 1], l.ys[l.ys.length - 1], l.cs[l.cs.length - 1]];
+        last.forEach((q, j) => { if (q) mk('i' + i + (a ? 'R' : 'L') + KIND[j], q.x + (j < 2 ? 11 : 5.5), q.y + (j < 2 ? 11 : 5.5), j < 2 ? 12 : 7, { ghost: true, tip: '拖出来：两个盘各拿走一个' + KNAME[j] }); });
+      });
+    });
+    [[0, 236], [1, 276], [2, 312]].forEach(([j, x]) => mk('t' + KIND[j], x, TRAY + 12, j < 2 ? 12 : 7, { ghost: true, tip: '拖到一架天平上：两个盘各加一个' + KNAME[j] }));
+    return out;
   }
 
   const I = (lo, hi, d, label, o) => Object.assign({ type: 'int', label, default: d, min: lo, max: hi, write: true }, o || {});
@@ -126,7 +190,7 @@
           steps: { dim: null, kind: 'num', label: '做了几步' }, refused: { dim: null, kind: 'num', label: '被拦住几次' },
         },
         icon: () => K.line(10, 12, 54, 12, { w: 2 }) + K.line(32, 12, 32, 20, { w: 2 }) + K.line(10, 30, 54, 30, { w: 2 }) + K.line(32, 30, 32, 38, { w: 2 }) + K.circle(16, 8, 4, { fill: '#f5c26b', stroke: 'var(--ink)', w: 1 }) + K.rect(44, 22, 8, 8, { fill: '#8fd19e', stroke: 'var(--ink)', w: 1, r: 1 }),
-        size: () => [W, 2 * BH + 60],
+        size: () => [W, 2 * BH + 112],
         grips,
         compute: (c) => { const m = model(c.props), o = { both: num(m.x !== null && m.y !== null ? 1 : 0), steps: num(c.props.steps), refused: num(c.props.refused) }; if (m.x !== null) o.x = num(m.x); if (m.y !== null) o.y = num(m.y); return o; },
         badge: () => '',
@@ -134,5 +198,5 @@
       },
     },
   });
-  U.SystemBench = { parse, ser, eqStr, isolated, known, subtract, substitute, scale, divisor, cancel, dropOn, model, fits };
+  U.SystemBench = { parse, ser, eqStr, isolated, known, subtract, substitute, scale, divisor, cancel, dropOn, model, fits, plan, layout };
 })(typeof globalThis !== 'undefined' ? globalThis : window);

@@ -3,7 +3,9 @@
  *  2. 再把下面（x = 3）拖到上面：圆盒换成 3 个砝码（代入）；点“两边拿走一样的东西”，y = 4；两个里程碑完成；
  *  3. 鸡兔同笼：直接把下面拖到上面拿不出来，被拦住并说明原因；先翻倍，再拖，再平分，得 y = 5；
  *  4. 代入一个式子：x = y + 2 拖到 x + y = 8 上，变成 2y + 2 = 8；
- *  5. 全程没有打开属性面板。
+ *  5. 拖的时候两边一起动：把一架拖到另一架上，没松手时画面上就画出两个盘各拿走什么；
+ *     盘里的砝码拖出来，另一个盘的砝码跟着走；另一个盘里没有同样的东西就拿不了；从托盘往天平上拖，两个盘各加一个；
+ *  6. 全程没有打开属性面板。
  * 需要 playwright（NODE_PATH 指向它的 node_modules）。 */
 'use strict';
 const { chromium } = require('playwright');
@@ -39,7 +41,7 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
 
   console.log('1. 消元');
   await open('sy-7-10');
-  ok(await p.locator('.card svg.bdy [data-grip]').count() === 2, '两架天平各有一个把手');
+  ok(await p.locator('.card svg.bdy [data-grip^="b"]').count() === 2, '两架天平各有一个把手');
   await dragOnto(0, 1);
   ok((await props()).e1 === '1,0,0,0,0,3' && await out('x') === '3', '把上面的拖到下面：下面变成 x = 3');
   ok(await done('x') && (await text()).includes('一个圆盒 = 3'), '里程碑完成，写着“一个圆盒 = 3”');
@@ -69,6 +71,40 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   await open('sy-subst');
   await dragOnto(0, 1);
   ok((await props()).e1 === '0,2,2,0,0,8', '把 x = y + 2 拖到 x + y = 8 上：变成 2y + 2 = 8');
+
+  console.log('5. 拖的时候两边一起动');
+  await open('sy-7-10');
+  {
+    const g = await grip('b0'), t = await grip('b1');
+    await closeDlg(); await p.mouse.move(g.x, g.y); await p.mouse.down(); await p.mouse.move((g.x + t.x) / 2 + 20, (g.y + t.y) / 2, { steps: 6 }); await p.mouse.move(t.x + 20, t.y + 30, { steps: 6 }); await p.waitForTimeout(120);
+    ok(await p.locator('.card svg.bdy [data-rem]').count() === 2 && await p.locator('.card svg.bdy [data-carry]').count() === 1, '拖到下面那架上（还没松手）：两个盘上方各画出要拿走的东西，式子跟着鼠标');
+    ok((await text()).includes('− (x + y)') && (await text()).includes('− 7') && (await text()).includes('两边拿走的一样重'), '盘下面写着左盘 − (x + y)、右盘 − 7，并说明“两边拿走的一样重”');
+    await p.mouse.up(); await p.waitForTimeout(250);
+    ok((await props()).e1 === '1,0,0,0,0,3', '松手：下面变成 x = 3');
+  }
+  await dragOnto(1, 0);
+  ok((await props()).e0 === '0,1,3,0,0,7', '代入以后上面是 y + 3 = 7');
+  {
+    const g = await grip('i0Lc');
+    await closeDlg(); await p.mouse.move(g.x, g.y); await p.mouse.down(); await p.mouse.move(g.x + 10, g.y - 40, { steps: 5 }); await p.mouse.move(g.x + 20, g.y - 75, { steps: 5 }); await p.waitForTimeout(120);
+    ok(await p.locator('.card svg.bdy [data-twin]').count() === 1 && (await text()).includes('两边同时拿走 1 个砝码'), '把左盘的一个砝码拖出来（还没松手）：右盘的一个砝码跟着走，写着“两边同时拿走 1 个砝码”');
+    await p.mouse.up(); await p.waitForTimeout(250);
+    ok((await props()).e0 === '0,1,2,0,0,6', '松手：两个盘各少一个砝码，y + 2 = 6');
+    await p.keyboard.press('Control+z'); await p.waitForTimeout(200);
+    ok((await props()).e0 === '0,1,3,0,0,7', '撤销一次：两边一起回来（一次拖动一步）');
+  }
+  {
+    const g = await grip('i0Ly'), r0 = (await props()).refused;
+    await closeDlg(); await p.mouse.move(g.x, g.y); await p.mouse.down(); await p.mouse.move(g.x + 10, g.y - 40, { steps: 5 }); await p.mouse.move(g.x + 20, g.y - 75, { steps: 5 }); await p.mouse.up(); await p.waitForTimeout(250);
+    ok((await props()).e0 === '0,1,3,0,0,7' && (await props()).refused === r0 + 1 && (await text()).includes('另一个盘里没有方盒'), '把左盘的方盒拖出来：右盘没有方盒，拿不了，并说明原因');
+  }
+  {
+    const g = await grip('tc'), t = await grip('b0');
+    await closeDlg(); await p.mouse.move(g.x, g.y); await p.mouse.down(); await p.mouse.move((g.x + t.x) / 2, (g.y + t.y) / 2, { steps: 6 }); await p.mouse.move(t.x + 20, t.y + 40, { steps: 6 }); await p.waitForTimeout(120);
+    ok((await text()).includes('两边同时加上 1 个砝码'), '从托盘把一个砝码拖到上面那架（还没松手）：写着“两边同时加上 1 个砝码”');
+    await p.mouse.up(); await p.waitForTimeout(250);
+    ok((await props()).e0 === '0,1,4,0,0,8', '松手：两个盘各多一个砝码，y + 4 = 8');
+  }
   ok(await p.evaluate(() => !UI.S.inspOpen), '全程没有打开属性面板');
   ok(errs.length === 0, '控制台 0 报错' + (errs.length ? '：' + errs[0] : ''));
   console.log('\n两架天平测试：' + pass + ' 通过，' + fail + ' 失败');

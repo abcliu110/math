@@ -60,12 +60,29 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   console.log('4. 拖把手');
   await open('g4-chicken-rabbit-core');
   ok(await out('total') === '70', '35 个头全是鸡：70 条腿');
-  const g = await grip(), to = await at(24 + 2 * 38, 78 + 1 * 46 + 22);   // 第 2 行、第 2 个后面：10 + 2 = 12
+  const g = await grip(), to = await at(24 + 2 * 38, 186 + 1 * 46 + 22);   // 第 2 行、第 2 个后面：10 + 2 = 12
   await closeDlg(); await p.mouse.move(g.x, g.y); await p.mouse.down(); await p.mouse.move((g.x + to.x) / 2, (g.y + to.y) / 2, { steps: 6 }); await p.mouse.move(to.x, to.y, { steps: 6 }); await p.mouse.up(); await p.waitForTimeout(250);
   ok((await props()).k === 12 && await out('total') === '94', '把手拖到第 2 行第 2 个后面：一次换 12 只，腿数 94');
   ok(await done('rabbit'), '里程碑完成：兔 12 只');
   await p.keyboard.press('Control+z'); await p.waitForTimeout(200);
   ok((await props()).k === 0, '撤销一次：回到全是鸡（一次拖动一步）');
+
+  console.log('5. 天平、差距条、每个都少算');
+  await open('sw-lift');
+  ok((await text()).includes('现在 16') && (await text()).includes('目标 26') && await p.locator('.card svg.bdy [data-gap="5"]').count() === 1, '天平左边写“现在 16”、右边“目标 26”；还差的 10 条切成 5 段');
+  {
+    const g = await grip(), to = await at(24 + 3 * 38, 186 + 22);
+    await closeDlg(); await p.mouse.move(g.x, g.y); await p.mouse.down(); await p.mouse.move((g.x + to.x) / 2, (g.y + to.y) / 2, { steps: 6 }); await p.mouse.move(to.x, to.y, { steps: 6 }); await p.waitForTimeout(120);
+    ok(await p.locator('.card svg.bdy [data-chg]').count() === 3 && (await text()).includes('这一下换了 3 个') && (await text()).includes('3 × 2'), '把手拖过 3 个（还没松手）：这 3 个头上各写着 +2，下面写“这一下换了 3 个……3 × 2”');
+    ok(await p.locator('.card svg.bdy [data-gap="2"]').count() === 1, '差距条跟着变：还剩 2 段');
+    await p.mouse.up(); await p.waitForTimeout(250);
+    ok((await props()).k === 3 && await p.locator('.card svg.bdy [data-chg]').count() === 0, '松手：3 只兔，头上的 +2 收起来');
+  }
+  await closeDlg(); await p.locator('.card svg.bdy [data-pick-set]', { hasText: '每个都少算' }).click(); await p.waitForTimeout(200);
+  ok((await props()).lift === true && (await text()).includes('现在 6') && (await text()).includes('目标 10') && (await text()).includes('两边同时减去 8 × 2 = 16'), '点“每个都少算 2”：天平变成 现在 6、目标 10，写着“两边同时减去 8 × 2 = 16”');
+  ok(await out('gap') === '4' && await done('lift') && await p.locator('.card svg.bdy [data-gap="2"]').count() === 1, '差的还是 4（2 段），歪的样子不变；里程碑完成');
+  await clickHead(7); await clickHead(7);
+  ok(await out('ok') === '1' && await done('hit') && (await text()).includes('两边一样重'), '再换 2 只：天平平了，兔 5 只');
   ok(await p.evaluate(() => !UI.S.inspOpen), '全程没有打开属性面板');
   ok(errs.length === 0, '控制台 0 报错' + (errs.length ? '：' + errs[0] : ''));
   console.log('\n换一换测试：' + pass + ' 通过，' + fail + ' 失败');

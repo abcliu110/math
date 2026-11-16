@@ -3,6 +3,7 @@
 const go = (h, states) => { const b = h.role('b'); for (const [lx, lc, rx, rc] of states) { h.set(b, 'lx', lx); h.set(b, 'rx', rx); h.set(b, 'lc', lc); h.set(b, 'rc', rc); } };
 module.exports = {
   'bb-x-plus-5'(h) { const b = h.role('b'); h.set(b, 'rc', 7); h.set(b, 'lc', 0); },
+  'bb-linked'(h) { go(h, [[1, 5, 0, 9], [1, 0, 0, 4]]); },
   'bb-2x-10'(h) { const b = h.role('b'); h.set(b, 'rc', 5); h.set(b, 'lx', 1); },
   'bb-2x-3-11'(h) { go(h, [[2, 0, 0, 8], [1, 0, 0, 4]]); },
   'bb-3x-12'(h) { go(h, [[1, 0, 0, 4]]); },

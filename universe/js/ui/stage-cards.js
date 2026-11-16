@@ -47,6 +47,9 @@
     const d = SG.def(e), g = SG.geom(e), dd = D[e.id], cH = g.h - HD;
     const c = { ent: e, props: dd.props || e.props, d: dd, out: dd.out, state: e.state, w: g.w, h: cH, t: S.scene.clock.t, n: S.scene.clock.n, scene: S.scene };
     c.masked = !!(d.guess && !d.guess.answered(c.props));   // 先猜后看：还没填猜测，被 guess.ports 遮住的读数在界面上不显示（内核里值照常流动）
+    // 正在拖这张卡片上的把手：告诉器材拖的是哪个把手、鼠标在哪、按下时的属性，器材可以画出“这一下会带来什么”（比如天平两边一起动）
+    const gd = SG.drag && SG.drag.kind === 'grip' && SG.drag.id === e.id && SG.drag.moved && SG.drag.q ? SG.drag : null;
+    c.drag = gd ? { grip: gd.grip, x: gd.q.x, y: gd.q.y, p0: gd.p0 } : null;
     let body = '', badge = '';
     try { body = SG.isWsDef(e.type) ? SG.wsBody(e, g.w, cH) : fitBody(d.draw(c), g.w) + gripsSvg(d, c); } catch (x) { body = K.text(g.w / 2, cH / 2, '画不出来', { fill: 'var(--bad)' }); }
     // 工作区的标题步数只数学生做的步骤（和下面的步骤清单是同一批）
