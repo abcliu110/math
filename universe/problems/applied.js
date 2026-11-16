@@ -36,21 +36,6 @@
   });
 
   P.push({
-    id: 'chicken-rabbit', essence: ['E12', 'E4'], title: '鸡兔同笼：35 个头，94 条腿，鸡和兔各几只？', grade: 8, domain: '函数', points: ['7.14', '8.15'], topics: ['二元一次方程组', '图像法', '直线交点'],
-    alias: ['鸡兔同笼', '方程组'], hook: '设鸡 x 只，兔 y 只：x + y = 35，2x + 4y = 94。每个方程都是一条直线，解就是两条线的交点。',
-    shelf: ['line', 'cross', 'meter'],
-    build: mk({ ents: [{ type: 'line', x: 60, y: 40, role: 'l1', props: { k: 1, b: 0 } }, { type: 'line', x: 60, y: 260, role: 'l2', props: { k: 1, b: 0 } }] }),
-    predict: { q: '先猜：兔有几只？', options: [{ v: 10, label: '10 只' }, { v: 12, label: '12 只' }, { v: 15, label: '15 只' }], reveal: () => ({ v: 12, label: '12 只（鸡 23 只）' }) },
-    milestones: [
-      { id: 'l1', say: '第一条线：y = −x + 35', score: 3, when: (w) => w.some('line', (e) => e.props.k === -1 && e.props.b === 35), hints: ['x + y = 35 → y = 35 − x。', '斜率 −1，截距 35。', 'k = −1，b = 35。'] },
-      { id: 'l2', say: '第二条线：y = −0.5x + 23.5', score: 3, when: (w) => w.some('line', (e) => e.props.k === -0.5 && e.props.b === 23.5), hints: ['2x + 4y = 94 → y = (94 − 2x) / 4。', '化简：y = 23.5 − 0.5x。', 'k = −0.5，b = 23.5。'] },
-      { id: 'cr', say: '两条线接进交点器，读出 (23, 12)', score: 4, glow: ['cross'], when: { type: 'cross', port: 'y', op: '=', value: '12' }, hints: ['两条线的交点就是解。', '「交点」器材，直线 1、直线 2 各接一条。', '看读数：x = 23，y = 12。'] },
-    ],
-    traps: [], why: '交点同时在两条线上，所以同时满足两个方程：鸡 23 只、兔 12 只，头 35、腿 46+48=94。',
-    ref: ['cross,line,line|2'],
-  });
-
-  P.push({
     id: 'bag-red-ratio', essence: ['E11'], title: '袋里 3 红 1 白，摸很多次，红球占多少？', grade: 7, domain: '统计与概率', points: ['9.9'], topics: ['频率与概率', '有放回摸球'],
     alias: ['摸球', '概率'], hook: '每次摸一个、看完放回。摸几百次后，红球的比例会稳定在哪里？',
     shelf: ['bag', 'hist', 'stats', 'meter'],

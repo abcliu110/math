@@ -6,7 +6,7 @@
 
 - 知识点：142 个（设计目标 142）
 - 有题的知识点：141 个（99%）
-- 题目：562 道；没有对应知识点的题：1 道
+- 题目：560 道；没有对应知识点的题：1 道
 - 没有器材的本质：无
 - 没有题的本质：无
 
@@ -20,8 +20,8 @@
 | 4 | 17 | 17（100%） | 87 |
 | 5 | 14 | 14（100%） | 91 |
 | 6 | 15 | 14（93%） | 53 |
-| 7 | 16 | 16（100%） | 78 |
-| 8 | 16 | 16（100%） | 75 |
+| 7 | 16 | 16（100%） | 76 |
+| 8 | 16 | 16（100%） | 73 |
 | 9 | 16 | 16（100%） | 44 |
 
 ## 按知识点
@@ -37,7 +37,7 @@
 | 1.7 | 1 | 11–20的认识、10加几 | 2 | 1 | 0 | 1 | blocksbench、num |
 | 1.8 | 1 | 认识钟表 | 1 | 1 | 0 | 1 | clock |
 | 1.9 | 1 | 20以内进位加法、凑十法 | 1 | 1 | 0 | 1 | numlinebench |
-| 1.10 | 1 | 平面图形、七巧板 | 1 | 1 | 0 | 1 | rect、tri |
+| 1.10 | 1 | 平面图形、七巧板 | 1 | 1 | 0 | 1 | areamodel、tri |
 | 1.11 | 1 | 20以内退位减法、破十法 | 2 | 1 | 0 | 1 | numlinebench |
 | 1.12 | 1 | 分类与整理 | 1 | 1 | 0 | 1 | num |
 | 1.13 | 1 | 100以内数的认识 | 4 | 0 | 0 | 1 | blocksbench、num |
@@ -65,14 +65,14 @@
 | 3.3 | 3 | 测量 | 1 | 1 | 0 | 1 | ratiobench、num |
 | 3.4 | 3 | 倍的认识 | 8 | 1 | 0 | 1 | num、numlinebench、tapebench |
 | 3.5 | 3 | 多位数乘一位数 | 2 | 1 | 0 | 1 | areamodel、num |
-| 3.6 | 3 | 长方形和正方形 | 3 | 1 | 0 | 1 | areamodel、rect、num |
+| 3.6 | 3 | 长方形和正方形 | 3 | 1 | 0 | 1 | areamodel |
 | 3.7 | 3 | 分数的初步认识 | 5 | 1 | 0 | 1 | ratiobench、fracarea、numlinebench |
 | 3.8 | 3 | 集合 | 7 | 1 | 0 | 1 | num、vennbench |
 | 3.9 | 3 | 位置与方向 | 1 | 1 | 0 | 1 | numlinebench |
 | 3.10 | 3 | 除数是一位数的除法 | 1 | 1 | 0 | 1 | num |
 | 3.15a | 3 | 复式统计表 | 2 | 2 | 0 | 1 | — |
 | 3.11 | 3 | 两位数乘两位数 | 9 | 1 | 0 | 1 | areamodel、num、mulbench、arithbench |
-| 3.12 | 3 | 面积 | 11 | 0 | 0 | 1 | areamodel、asn、curved、geoboard、circle、rect、optimize、cuboid、turtle |
+| 3.12 | 3 | 面积 | 11 | 0 | 0 | 1 | areamodel、asn、curved、geoboard、circle、optimize、cuboid、turtle |
 | 3.13 | 3 | 年、月、日 | 1 | 1 | 0 | 1 | num |
 | 3.14 | 3 | 小数的初步认识 | 3 | 1 | 0 | 1 | num、numlinebench、twoways |
 | 3.15b | 3 | 搭配（二） | 2 | 1 | 0 | 1 | num、areamodel、euler |
@@ -97,7 +97,7 @@
 | 5.2 | 5 | 位置 | 1 | 1 | 0 | 1 | — |
 | 5.3 | 5 | 小数除法 | 1 | 1 | 0 | 1 | num |
 | 5.4 | 5 | 可能性 | 7 | 1 | 0 | 3 | dice、num、divmod、meter、digits、numtheory、power、enumerator、array、ptree |
-| 5.5 | 5 | 简易方程 | 12 | 0 | 0 | 1 | variable、balancebench、nim、eqcard、costplan、systembench |
+| 5.5 | 5 | 简易方程 | 12 | 0 | 0 | 1 | variable、balancebench、nim、costplan、systembench |
 | 5.6 | 5 | 多边形的面积 | 5 | 1 | 0 | 1 | num、parallelogram、gworkspace、gpt、gpoly、fquad |
 | 5.7 | 5 | 植树问题 | 7 | 1 | 0 | 1 | gapbench |
 | 5.14 | 5 | 观察物体（三） | 2 | 1 | 0 | 1 | views、twoways |
@@ -127,15 +127,15 @@
 | 7.3 | 7 | 有理数的乘除法、乘方与科学记数法 | 3 | 1 | 0 | 1 | num、hanoi |
 | 7.4 | 7 | 整式 | 1 | 1 | 2 | 4 | algebra、induction |
 | 7.5 | 7 | 整式的加减 | 7 | 1 | 0 | 1 | algebra、termsbench |
-| 7.6 | 7 | 解一元一次方程 | 13 | 0 | 0 | 1 | balancebench、line、at、meter、inverse-prop、circle-line、pair-pos、rotate-about、findbug、eqcard |
-| 7.7 | 7 | 实际问题与一元一次方程 | 1 | 1 | 0 | 1 | — |
+| 7.6 | 7 | 解一元一次方程 | 13 | 0 | 0 | 1 | balancebench、line、at、meter、inverse-prop、circle-line、pair-pos、rotate-about、findbug |
+| 7.7 | 7 | 实际问题与一元一次方程 | 1 | 1 | 0 | 1 | balancebench |
 | 7.8 | 7 | 几何图形与直线、射线、线段 | 1 | 1 | 0 | 1 | numlinebench、num |
 | 7.9 | 7 | 角 | 4 | 0 | 0 | 1 | curved、conjecture、polygon、fold |
 | 7.10 | 7 | 相交线 | 1 | 1 | 0 | 1 | num |
 | 7.11 | 7 | 平行线与平移 | 1 | 1 | 0 | 1 | num、coordbench |
 | 7.12 | 7 | 实数 | 5 | 0 | 0 | 1 | compass、num、sqrt、round、turtle |
 | 7.13 | 7 | 平面直角坐标系 | 1 | 1 | 0 | 1 | coordbench |
-| 7.14 | 7 | 二元一次方程组与消元 | 11 | 0 | 0 | 1 | line、coordbench、num、cross、swapbench、systembench |
+| 7.14 | 7 | 二元一次方程组与消元 | 9 | 0 | 0 | 1 | coordbench、swapbench、systembench |
 | 7.15 | 7 | 不等式与一元一次不等式组 | 3 | 0 | 0 | 1 | num、balance、eqcard、numlinebench |
 | 7.16 | 7 | 统计调查与直方图 | 1 | 1 | 0 | 1 | — |
 | 8.1 | 8 | 三角形 | 1 | 0 | 0 | 1 | — |
@@ -150,14 +150,14 @@
 | 8.10 | 8 | 二次根式 | 1 | 1 | 0 | 1 | num |
 | 8.11 | 8 | 勾股定理与逆定理 | 8 | 1 | 0 | 1 | eqcard、eqsys、meter、algebra、exprbench、exprread、dissect、geoboard、tri、proofsort |
 | 8.12 | 8 | 平行四边形 | 7 | 0 | 0 | 1 | compass、parallelogram、optimize、taxi |
-| 8.13 | 8 | 特殊的平行四边形 | 1 | 1 | 0 | 1 | — |
-| 8.14 | 8 | 函数与正比例函数 | 1 | 1 | 0 | 1 | — |
-| 8.15 | 8 | 一次函数 | 19 | 0 | 0 | 1 | line、coordbench、fmachine、costplan、datatable、num、cross、databench |
+| 8.13 | 8 | 特殊的平行四边形 | 1 | 1 | 0 | 1 | areamodel |
+| 8.14 | 8 | 函数与正比例函数 | 1 | 1 | 0 | 1 | coordbench |
+| 8.15 | 8 | 一次函数 | 17 | 0 | 0 | 1 | coordbench、fmachine、costplan、datatable、databench |
 | 8.16 | 8 | 数据的分析 | 2 | 1 | 0 | 1 | data |
 | 9.1 | 9 | 解一元二次方程 | 2 | 0 | 0 | 1 | tiles |
-| 9.2 | 9 | 一元二次方程的应用与根的判别式 | 2 | 1 | 0 | 1 | quad |
-| 9.3 | 9 | 二次函数的图象和性质 | 4 | 1 | 0 | 1 | quad、coordbench |
-| 9.4 | 9 | 二次函数与方程及应用 | 5 | 0 | 0 | 1 | sweepx、num、op、sweeptab、meter、quad、coordbench、fmachine、optimize |
+| 9.2 | 9 | 一元二次方程的应用与根的判别式 | 2 | 1 | 0 | 1 | coordbench |
+| 9.3 | 9 | 二次函数的图象和性质 | 4 | 1 | 0 | 1 | coordbench |
+| 9.4 | 9 | 二次函数与方程及应用 | 5 | 0 | 0 | 1 | sweepx、num、op、sweeptab、meter、coordbench、fmachine、optimize |
 | 9.5 | 9 | 图形的旋转与中心对称 | 1 | 1 | 0 | 1 | — |
 | 9.6 | 9 | 圆的有关性质 | 1 | 1 | 0 | 1 | circle-angle |
 | 9.7 | 9 | 点、直线和圆的位置关系 | 1 | 1 | 0 | 1 | — |
@@ -178,7 +178,7 @@
 | E1 | 63 | 27 |
 | E2 | 212 | 44 |
 | E3 | 143 | 45 |
-| E4 | 107 | 27 |
+| E4 | 105 | 27 |
 | E5 | 136 | 54 |
 | E6 | 40 | 20 |
 | E7 | 99 | 21 |
@@ -186,7 +186,7 @@
 | E9 | 74 | 14 |
 | E10 | 10 | 7 |
 | E11 | 11 | 7 |
-| E12 | 15 | 9 |
+| E12 | 13 | 9 |
 
 ## 没有题的知识点
 

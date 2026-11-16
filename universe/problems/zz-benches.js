@@ -1,4 +1,4 @@
-/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，八批共 70 道）。
+/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，十批共 89 道）。
  * 这些题原来的做法是“放数字、接运算器、看读数”：学生在搭计算流程。这里按 id 把它们换成在操作台上直接动手：
  * 题目的编号、标题、年级、知识点、道理（why）都不变，换的是器材架、开场的台面、里程碑和提示。
  * 这个文件排在所有题目文件后面加载（文件名 zz 开头），找不到的 id 会记在 U.benchMigrateMissing 里（测试会查）。 */
@@ -7,8 +7,8 @@
   const U = G.U, W = U.World;
   const one = (type, role, props) => () => { const s = W.blank(); const id = W.add(s, type, 40, 50, props); s.entities[id].role = role; return s; };
   const ms = (role) => (id, say, score, port, value, hints) => ({ id, say, score, when: { role, port, op: '=', value: String(value) }, hints });
-  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s'), GP = ms('g');
-  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props);
+  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s'), GP = ms('g'), B = ms('b');
+  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props), bb = (props) => one('balancebench', 'b', props);
   const MOVES = {
     // ---- 数轴 ----
     'g1-split-merge-core': { shelf: ['numlinebench'], build: nl({ from: 0, to: 10, a: 0, s: 1, n: 0 }),
@@ -253,12 +253,78 @@
     'ratio-share-50': { shelf: ['ratiobench'], build: rb({ mode: 1, pa: 5, pb: 50, tmax: 5, tstep: 1, t: 5, ua: '份', ub: '个' }),
       hook: '50 个苹果按 3 : 2 分给甲乙。一共 3 + 2 = 5 份，5 份对着 50 个。把上面的点拖到 3：甲的 3 份是几个？',
       milestones: [R('a', '3 份对着 30 个', 8, 'b', 30, ['一共 5 份。', '一份 10 个。', '把点拖到 3：30 个。'])], goal: ['a'] },
+    // ======== 第九批：长方形的周长和面积，在面积模型上拖边 ========
+    'g1-rect-perimeter-core': { shelf: ['areamodel'], build: am({ w: 6, h: 4 }),
+      hook: '长 4、宽 2 的长方形。拖长方形的边，把它改成长 4、宽 2。数一数里面有几个小方格（面积），再沿着边走一圈有多长（周长）。',
+      milestones: [A('area', '面积是 8', 3, 'area', 8, ['长 4、宽 2。', '拖右边到 4，拖下边到 2。', '4 × 2 = 8 个小方格。']), A('perim', '周长是 12', 4, 'perim', 12, ['周长是绕一圈。', '4 + 2 + 4 + 2。', '12。'])], goal: ['perim'] },
+    'g3-rect-square-core': { shelf: ['areamodel'], build: am({ w: 5, h: 3 }),
+      hook: '边长 5 厘米的正方形，周长是多少？现在是长 5、宽 3 的长方形。把它拖成正方形。',
+      milestones: [A('square', '长和宽都是 5：正方形', 3, 'square', 1, ['正方形四条边一样长。', '把下边拖到 5。', '5 × 5。']), A('perim', '周长是 20 厘米', 4, 'perim', 20, ['四条边都是 5。', '5 × 4。', '20。'])], goal: ['perim'] },
+    'g3-rect-perimeter-trap': { shelf: ['areamodel'], build: am({ w: 6, h: 2 }),
+      hook: '长 6 厘米、宽 4 厘米的长方形，周长是多少？现在宽是 2。把宽拖到 4，再看周长：长 + 宽只走了半圈。',
+      milestones: [A('perim', '周长是 20 厘米', 6, 'perim', 20, ['把宽拖到 4。', '6 + 4 = 10 只是半圈。', '(6 + 4) × 2 = 20。'])], goal: ['perim'] },
+    'g8-square-area-core': { shelf: ['areamodel'], build: am({ w: 3, h: 5 }),
+      hook: '边长 5 的正方形，面积和周长各是多少？把长方形拖成边长 5 的正方形。',
+      milestones: [A('area', '面积是 25', 3, 'area', 25, ['边长 5。', '把右边拖到 5。', '5 × 5 = 25。']), A('perim', '周长是 20', 3, 'perim', 20, ['四条边都是 5。', '5 × 4。', '20。'])], goal: ['area', 'perim'] },
+    'rect-perimeter': { shelf: ['areamodel'], build: am({ w: 8, h: 2 }),
+      hook: '周长是 20 的长方形有很多种：现在是长 8、宽 2，面积 16。一条边拖短 1、另一条边拖长 1，周长不变。面积最大能到多少？',
+      milestones: [A('a24', '面积到 24（长 6、宽 4）', 3, 'area', 24, ['周长 20，长 + 宽 = 10。', '试试 6 和 4。', '6 × 4 = 24。']), A('a25', '面积到 25', 5, 'area', 25, ['长 + 宽还是 10。', '试试 5 和 5。', '正方形：5 × 5 = 25。'])], goal: ['a25'] },
+    'g8-rect-height-trap': { shelf: ['areamodel'], build: am({ w: 5, h: 1 }),
+      hook: '平行四边形底 5、高 3、斜边 2，面积是多少？把平行四边形剪拼成长方形：长是底 5，宽是高 3（不是斜边 2）。把长方形拖成这个样子。',
+      milestones: [A('area', '面积是 15', 6, 'area', 15, ['面积 = 底 × 高。', '高是 3，不是斜边 2。', '把宽拖到 3：5 × 3 = 15。'])], goal: ['area'],
+      traps: [{ id: 'slant', wrong: '用斜边 2 当高：5 × 2 = 10。斜边不是高，高是垂直的那条线段。', when: { role: 'm', port: 'area', op: '=', value: '10' } }] },
+    // ======== 第十批：直线、抛物线在“坐标与函数”上拖；简单方程在“天平与方程”上拖 ========
+    'g8-proportional-core': { shelf: ['coordbench'], build: cb({ mode: 0, kn: 1, kd: 1, b: 0, x: 1 }),
+      hook: '正比例函数 y = 2x。现在画的是 y = x。先把直线拖陡，变成 y = 2x；再把探针拖到 x = 3，读出 y。',
+      milestones: [C('k', '斜率是 2：y = 2x', 3, 'k', 2, ['x 每多 1，y 多 2。', '拖直线上的把手，让它更陡。', 'y = 2x。']), C('y', 'x = 3 时 y = 6', 4, 'y', 6, ['把探针拖到 x = 3。', '2 × 3。', '6。'])], goal: ['y'] },
+    'g8-proportional-intercept-trap': { title: 'y = 2x + 3，x = 1 时 y 是几？', shelf: ['coordbench'], build: cb({ mode: 0, kn: 2, kd: 1, b: 0, x: 1 }),
+      hook: 'y = 2x + 3。现在画的是 y = 2x，x = 1 时 y = 2。把整条直线往上拖 3：截距变成 3。这时 x = 1 对着的 y 是几？',
+      milestones: [C('b', '截距是 3', 3, 'b', 3, ['+3 是整条线往上抬 3。', '拖直线和 y 轴的交点。', '拖到 3。']), C('y', 'x = 1 时 y = 5', 4, 'y', 5, ['2 × 1 + 3。', '别忘了加 3。', '5。'])], goal: ['y'],
+      why: 'y = 2x + 3 在 x = 1 时是 2 × 1 + 3 = 5。+3 是截距：整条直线比 y = 2x 高 3，每一个 x 对着的 y 都多 3。' },
+    'line-through': { title: '直线 y = 2x + 1，x = 2 时 y 是多少？', shelf: ['coordbench'], build: cb({ mode: 0, kn: 1, kd: 1, b: 1, x: 0 }),
+      hook: '画出 y = 2x + 1：截距已经是 1，把斜率拖成 2。再把探针拖到 x = 2，读出 y。',
+      milestones: [C('k', '斜率是 2', 3, 'k', 2, ['x 每多 1，y 多 2。', '把直线拖陡。', 'y = 2x + 1。']), C('y', 'x = 2 时 y = 5', 4, 'y', 5, ['把探针拖到 2。', '2 × 2 + 1。', '5。'])], goal: ['y'],
+      why: 'y = 2x + 1 在 x = 2 时是 2 × 2 + 1 = 5，所以直线经过点 (2, 5)。' },
+    'model-rent': { title: '电话套餐：A 月租 2 元、每分钟 0.5 元；B 没有月租、每分钟 1 元。打几分钟两者一样？', shelf: ['coordbench'], build: cb({ mode: 3, kn: 1, kd: 2, b: 0, k2: 1, b2: 0 }),
+      hook: '横轴是分钟，纵轴是钱。A：每分钟 0.5 元，还有月租 2 元；B：每分钟 1 元，没有月租。现在 A 的月租还没加上：把 A 那条线往上拖 2。两条线在哪里相交？',
+      milestones: [C('x', '4 分钟时一样多', 5, 'ix', 4, ['A 是 y = 0.5x + 2，B 是 y = x。', '把 A 的截距拖到 2。', '交点的 x 是 4。']), C('y', '都是 4 元', 3, 'iy', 4, ['看交点的 y。', 'B：1 × 4。', '4 元。'])], goal: ['x', 'y'],
+      why: 'A：0.5x + 2，B：x。相等时 0.5x + 2 = x，x = 4。4 分钟以内 B 便宜，超过 4 分钟 A 便宜。两条直线的交点，就是“两种方案一样”的那一点。' },
+    'g9-discriminant-core': { shelf: ['coordbench'], build: cb({ mode: 2, a2: 2, h: 2, v: -3 }),
+      hook: 'y = x² − 4x + c，也就是 y = (x − 2)² + (c − 4)。上下拖顶点就是在改 c。现在图象和 x 轴有两个交点。c 取几时，刚好只有一个交点？',
+      milestones: [C('one', '只有一个交点：顶点在 x 轴上', 6, 'roots', 1, ['只有一个交点，就是顶点刚好碰到 x 轴。', '把顶点往上拖到 y = 0。', '这时 c − 4 = 0，c = 4。'])], goal: ['one'] },
+    'g9-discriminant-trap': { shelf: ['coordbench'], build: cb({ mode: 2, a2: 2, h: 2, v: 2 }),
+      hook: 'y = x² − 4x + c。现在图象在 x 轴上面，碰不到 x 轴。上下拖顶点改 c，让图象刚好碰到 x 轴。',
+      milestones: [C('one', '刚好碰到 x 轴', 6, 'roots', 1, ['现在一个交点也没有。', '把顶点往下拖到 y = 0。', 'c = 4，判别式 16 − 4c = 0。'])], goal: ['one'] },
+    'g9-vertex-down-core': { shelf: ['coordbench'], build: cb({ mode: 2, a2: -2, h: 0, v: 0 }),
+      hook: '抛物线 y = −x² + 2x + 3。现在画的是 y = −x²。拖顶点，让上面写的式子变成 −x² + 2x + 3。最高点的 y 是多少？',
+      milestones: [C('h', '顶点的 x 是 1', 3, 'h', 1, ['对称轴在 x = 1。', '把顶点往右拖 1。', '看式子里的 2x。']), C('v', '最高点的 y 是 4', 4, 'v', 4, ['再往上拖。', '式子的常数项变成 3。', '顶点 (1, 4)。'])], goal: ['v'] },
+    'g9-vertex-down-trap': { shelf: ['coordbench'], build: cb({ mode: 2, a2: 2, h: 1, v: 4 }),
+      hook: '抛物线 y = −x² + 2x + 3 的顶点在哪里？现在画的开口朝上，不对：a 是 −1。把开口拖成朝下，顶点还在 (1, 4)。',
+      milestones: [C('a', '开口朝下：a = −1', 6, 'a', -1, ['x² 前面是负号。', '拖抛物线上的把手，把开口翻下来。', 'a = −1。'])], goal: ['a'] },
+    'g9-min-value-core': { shelf: ['coordbench'], build: cb({ mode: 2, a2: 2, h: 0, v: 0 }),
+      hook: 'y = x² − 6x + 10 的最小值是多少？现在画的是 y = x²。拖顶点，让上面的式子变成 x² − 6x + 10。最低点的 y 就是最小值。',
+      milestones: [C('h', '顶点的 x 是 3', 3, 'h', 3, ['对称轴在 x = 3。', '把顶点往右拖 3。', '看式子里的 −6x。']), C('v', '最小值是 1', 4, 'v', 1, ['再往上拖 1。', '常数项变成 10。', '顶点 (3, 1)。'])], goal: ['v'] },
+    'quad-vertex': { shelf: ['coordbench'], build: cb({ mode: 2, a2: 2, h: 0, v: 2 }),
+      hook: 'y = x² − 4x + 3。拖顶点，让上面的式子变成 x² − 4x + 3。顶点在哪？和 x 轴交几点？',
+      milestones: [C('h', '顶点的 x 是 2', 3, 'h', 2, ['对称轴在 x = 2。', '把顶点往右拖 2。', '看式子里的 −4x。']), C('v', '顶点的 y 是 −1', 3, 'v', -1, ['再往下拖。', '常数项变成 3。', '顶点 (2, −1)。']), C('two', '和 x 轴有 2 个交点', 2, 'roots', 2, ['顶点在 x 轴下面，开口朝上。', '一定穿过 x 轴两次。', 'x = 1 和 x = 3。'])], goal: ['h', 'v', 'two'] },
+    'g7-equation-word-core': { title: '买 3 支笔共 24 元，每支多少钱？', shelf: ['balancebench'], build: bb({ lx: 3, lc: 0, rx: 0, rc: 24, x0: 8 }),
+      hook: '3 支一样的笔一共 24 元。左盘 3 个盒子（每个是一支笔的价钱），右盘 24 个砝码。一个盒子是多少？',
+      milestones: [B('solve', '一支笔 8 元', 8, 'solved', 8, ['3 个盒子对 24 个砝码。', '两边都平分成 3 份。', '24 ÷ 3 = 8。'])], goal: ['solve'],
+      why: '设每支 x 元：3x = 24。两边同时除以 3，x = 8。' },
+    'g7-equation-sign-trap': { shelf: ['balancebench'], build: bb({ lx: 2, lc: 5, rx: 0, rc: 17, x0: 6 }),
+      hook: '2x + 5 = 17。“移项要变号”是怎么回事？从左盘拖走 5 个砝码，看右盘少了几个：左边的 +5 没了，右边变成 17 − 5。',
+      milestones: [B('apart', '2x = 12', 4, 'stage', 1, ['让左盘只剩盒子。', '拖走左盘的 5 个砝码，右盘跟着少 5 个。', '17 − 5 = 12。']), B('solve', 'x = 6', 4, 'solved', 6, ['2 个盒子对 12 个砝码。', '两边都平分成 2 份。', '12 ÷ 2 = 6。'])], goal: ['apart', 'solve'] },
+    'linear-3x5': { shelf: ['balancebench'], build: bb({ lx: 3, lc: 5, rx: 0, rc: 20, x0: 5 }),
+      hook: '3x + 5 = 20。左盘 3 个盒子和 5 个砝码，右盘 20 个砝码。把一个盒子单独留在一边。',
+      milestones: [B('apart', '3x = 15', 4, 'stage', 1, ['先让左盘只剩盒子。', '两边各拿走 5 个砝码。', '20 − 5 = 15。']), B('solve', 'x = 5', 4, 'solved', 5, ['3 个盒子对 15 个砝码。', '两边都平分成 3 份。', '15 ÷ 3 = 5。'])], goal: ['apart', 'solve'] },
   };
   const missing = [], moved = [];
   for (const id of Object.keys(MOVES)) {
     const p = U.problems.find((x) => x.id === id);
     if (!p) { missing.push(id); continue; }
     const m = MOVES[id];
+    if (m.title) p.title = m.title;   // 少数题连数字一起换（原来的数在操作台上摆不下）
+    if (m.why) p.why = m.why;
     p.shelf = m.shelf; p.build = m.build; p.hook = m.hook; p.milestones = m.milestones; p.goal = m.goal; p.traps = m.traps || [];
     delete p.variant; delete p.params; delete p.explain;
     p.bench = m.shelf[0];   // 记一笔：这道题已经搬到哪个操作台

@@ -1,7 +1,7 @@
 /* 搬到操作台上的旧题的参考解（problems/zz-benches.js）。文件名 zz 开头：排在各年级的参考解后面加载，盖掉原来“接运算器”的解法。 */
 'use strict';
 const S = (role) => (o) => (h) => { const e = h.role(role); for (const k of Object.keys(o)) h.set(e, k, o[k]); };
-const n = S('n'), k = S('k'), r = S('r'), m = S('m'), c = S('c'), t = S('t'), s = S('s'), gp = S('g');
+const n = S('n'), k = S('k'), r = S('r'), m = S('m'), c = S('c'), t = S('t'), s = S('s'), gp = S('g'), b = S('b');
 module.exports = {
   'g1-split-merge-core': n({ a: 2, n: 3 }),
   'g1-split-minus-trap': n({ s: -1, n: 2 }),
@@ -43,6 +43,15 @@ module.exports = {
   'g7-quadrant-core': c({ ax: -2, ay: 3 }),
   'g7-symmetry-x-axis-trap': c({ bx: 3, by: 2 }),
   'g7-translate-down-trap': c({ ay: -1 }),
+  // 第十批
+  'g8-proportional-core': c({ kn: 2, x: 3 }), 'g8-proportional-intercept-trap': c({ b: 3 }), 'line-through': c({ kn: 2, x: 2 }), 'model-rent': c({ b: 2 }),
+  'g9-discriminant-core': c({ v: 0 }), 'g9-discriminant-trap': c({ v: 0 }), 'g9-vertex-down-core': c({ h: 1, v: 4 }), 'g9-vertex-down-trap': c({ a2: -2 }), 'g9-min-value-core': c({ h: 3, v: 1 }), 'quad-vertex': c({ h: 2, v: -1 }),
+  'g7-equation-word-core': b({ lx: 1, rc: 8 }),
+  'g7-equation-sign-trap'(h) { const e = h.role('b'); h.set(e, 'lc', 0); h.set(e, 'rc', 12); h.set(e, 'lx', 1); h.set(e, 'rc', 6); },
+  'linear-3x5'(h) { const e = h.role('b'); h.set(e, 'lc', 0); h.set(e, 'rc', 15); h.set(e, 'lx', 1); h.set(e, 'rc', 5); },
+  // 第九批
+  'g1-rect-perimeter-core': m({ w: 4, h: 2 }), 'g3-rect-square-core': m({ h: 5 }), 'g3-rect-perimeter-trap': m({ h: 4 }), 'g8-square-area-core': m({ w: 5 }),
+  'rect-perimeter'(h) { const e = h.role('m'); h.set(e, 'w', 6); h.set(e, 'h', 4); h.set(e, 'w', 5); h.set(e, 'h', 5); }, 'g8-rect-height-trap': m({ h: 3 }),
   // 第八批
   'discount-80': r({ t: 80 }), 'g6-percent-part-core': r({ t: 15 }), 'g6-percent-base-trap': r({ t: 60 }), 'g6-sector-angle-core': r({ t: 25 }), 'g6-sector-whole-trap': r({ t: 25 }),
   'g6-percent-rebound-trap': r({ t: 80 }), 'ratio-share-50': r({ t: 3 }),
