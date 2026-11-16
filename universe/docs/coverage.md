@@ -49,7 +49,7 @@
 | 2.3 | 2 | 进位加法、退位减法 | 6 | 1 | 0 | 1 | blocksbench、arithbench、colbench |
 | 2.4 | 2 | 角的初步认识、直角 | 2 | 1 | 0 | 1 | angles、protractor-read |
 | 2.5 | 2 | 乘法初步认识、口诀 | 3 | 1 | 0 | 1 | numlinebench、tapebench |
-| 2.6 | 2 | 观察物体 | 1 | 1 | 0 | 1 | views |
+| 2.6 | 2 | 观察物体 | 1 | 1 | 0 | 1 | solidbench |
 | 2.7 | 2 | 认识时间 | 1 | 1 | 0 | 1 | clockbench、ratiobench |
 | 2.15 | 2 | 搭配（一） | 1 | 1 | 0 | 1 | areamodel |
 | 2.14a | 2 | 数据收集整理 | 1 | 1 | 0 | 1 | statbench |
@@ -85,7 +85,7 @@
 | 4.7 | 4 | 条形统计图 | 1 | 1 | 0 | 1 | statbench、ratiobench |
 | 4.8 | 4 | 优化 | 1 | 1 | 0 | 1 | num |
 | 4.9 | 4 | 四则运算 | 10 | 1 | 0 | 1 | asn、termsbench、findbug、turtle |
-| 4.17 | 4 | 观察物体（二） | 1 | 1 | 0 | 1 | views |
+| 4.17 | 4 | 观察物体（二） | 1 | 1 | 0 | 1 | solidbench |
 | 4.10 | 4 | 运算定律 | 9 | 1 | 0 | 1 | termsbench、fastbench |
 | 4.11 | 4 | 小数的意义和性质 | 1 | 1 | 0 | 1 | num |
 | 4.12 | 4 | 三角形 | 6 | 0 | 0 | 1 | angles、curved、parallelogram、guessrule、tri |
@@ -100,7 +100,7 @@
 | 5.5 | 5 | 简易方程 | 12 | 0 | 0 | 1 | variable、balancebench、nim、costplan、systembench |
 | 5.6 | 5 | 多边形的面积 | 5 | 1 | 0 | 1 | num、parallelogram、gworkspace、gpt、gpoly、fquad |
 | 5.7 | 5 | 植树问题 | 7 | 1 | 0 | 1 | gapbench |
-| 5.14 | 5 | 观察物体（三） | 2 | 1 | 0 | 1 | views、twoways |
+| 5.14 | 5 | 观察物体（三） | 2 | 1 | 0 | 1 | solidbench、twoways |
 | 5.8 | 5 | 因数与倍数 | 21 | 0 | 0 | 2 | asn、conjecture、hanoi、guessrule、modclock、num、groupbench、primeblocks、counterex、scanner、proofsort、net |
 | 5.9 | 5 | 长方体和正方体 | 3 | 1 | 0 | 1 | pour、cuboid |
 | 5.10 | 5 | 分数的意义和性质 | 6 | 0 | 0 | 1 | areamodel、ratiobench、numlinebench、primeblocks |
@@ -169,7 +169,7 @@
 | 9.13 | 9 | 相似三角形 | 1 | 0 | 0 | 1 | ftri |
 | 9.14 | 9 | 锐角三角函数 | 1 | 1 | 0 | 1 | trig-table |
 | 9.15 | 9 | 解直角三角形及其应用 | 1 | 0 | 0 | 1 | angles |
-| 9.16 | 9 | 投影与视图 | 1 | 1 | 0 | 1 | views |
+| 9.16 | 9 | 投影与视图 | 1 | 1 | 0 | 1 | solidbench |
 
 ## 按本质（E1–E12）
 
@@ -179,7 +179,7 @@
 | E2 | 207 | 45 |
 | E3 | 136 | 44 |
 | E4 | 101 | 23 |
-| E5 | 132 | 53 |
+| E5 | 132 | 54 |
 | E6 | 40 | 19 |
 | E7 | 99 | 24 |
 | E8 | 61 | 26 |

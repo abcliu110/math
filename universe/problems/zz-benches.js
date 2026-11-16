@@ -1,4 +1,4 @@
-/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，十四批共 110 道）。
+/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，十五批共 118 道）。
  * 这些题原来的做法是“放数字、接运算器、看读数”：学生在搭计算流程。这里按 id 把它们换成在操作台上直接动手：
  * 题目的编号、标题、年级、知识点、道理（why）都不变，换的是器材架、开场的台面、里程碑和提示。
  * 这个文件排在所有题目文件后面加载（文件名 zz 开头），找不到的 id 会记在 U.benchMigrateMissing 里（测试会查）。 */
@@ -7,9 +7,9 @@
   const U = G.U, W = U.World;
   const one = (type, role, props) => () => { const s = W.blank(); const id = W.add(s, type, 40, 50, props); s.entities[id].role = role; return s; };
   const ms = (role) => (id, say, score, port, value, hints) => ({ id, say, score, when: { role, port, op: '=', value: String(value) }, hints });
-  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s'), GP = ms('g'), B = ms('b'), D = ms('d'), K2 = ms('k'), Gq = ms('q');
+  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s'), GP = ms('g'), B = ms('b'), D = ms('d'), K2 = ms('k'), Gq = ms('q'), So = ms('o');
   const H = (id, say, score, when, hints) => ({ id, say, score, when, hints });   // 条件是一个范围（频率稳在某个区间）时用函数
-  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props), bb = (props) => one('balancebench', 'b', props), sb = (props) => one('statbench', 'd', props), ch = (props) => one('chancebench', 'h', props), ck = (props) => one('clockbench', 'k', props), gq = (props) => one('groupbench', 'q', props);
+  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props), bb = (props) => one('balancebench', 'b', props), sb = (props) => one('statbench', 'd', props), ch = (props) => one('chancebench', 'h', props), ck = (props) => one('clockbench', 'k', props), gq = (props) => one('groupbench', 'q', props), sd = (props) => one('solidbench', 'o', props);
   const MOVES = {
     // ---- 数轴 ----
     'g1-split-merge-core': { shelf: ['numlinebench'], build: nl({ from: 0, to: 10, a: 0, s: 1, n: 0 }),
@@ -391,6 +391,31 @@
     'prime-91': { shelf: ['groupbench'], build: gq({ mode: 0, n: 91, g: 2, gname: '组' }),
       hook: '91 看起来像质数，但它真的是吗？拖蓝色把手试一试：每组几个，能正好分完、一个都不剩？',
       milestones: [H('factor', '找到了：91 能正好分成每组 7 个（或 13 个）', 8, (w) => w.some('groupbench', (e) => w.num(e, 'exact') === 1 && w.num(e, 'g') > 1), ['2 不行，3 不行……', '一个一个往后试。', '试试 7。'])], goal: ['factor'] },
+    // ======== 第十五批：三视图，在“积木与三视图”上搭 ========
+    'vw-front-core': { shelf: ['solidbench'], build: sd({}),
+      hook: '一堆积木排成两排：前排是 1 块、2 块，后排是 1 块、1 块。点底板的格子搭出来（底板最下面一排是前排）。先想：从前面看是什么样？再点“看一看”。',
+      milestones: [So('stack', '搭好了：前排 1、2，后排 1、1', 2, 'grid', 11211, ['底板最下面一排是前排。', '前排左边点 1 下，右边点 2 下。', '后排两格各点 1 下。']), So('front', '从前面看：1、2', 4, 'front', 112, ['每一列只看得见最高的。', '点“从前面看”下面的“看一看”。', '第一列最高 1，第二列最高 2。'])], goal: ['stack', 'front'] },
+    'vw-front-trap': { shelf: ['solidbench'], build: sd({}),
+      hook: '前排是 3 块、1 块，后排是 1 块、1 块。搭出来，再看从前面看到的第一列：是“叠了几块加起来”，还是“最高的那一叠”？',
+      milestones: [So('stack', '搭好了：前排 3、1，后排 1、1', 2, 'grid', 13111, ['底板最下面一排是前排。', '前排左边点 3 下。', '其余三格各点 1 下。']), So('front', '从前面看：3、1', 4, 'front', 131, ['第一列：前面 3、后面 1，看得见的是 3。', '点“看一看”。', '3、1，不是 4、2。'])], goal: ['stack', 'front'] },
+    'vw-side-core': { shelf: ['solidbench'], build: sd({}),
+      hook: '第一排（前排）是 2 块和 0 块，第二排是 1 块和 3 块。搭出来。从左面看，每一排只看得见最高的那一叠。',
+      milestones: [So('stack', '搭好了：前排 2、0，后排 1、3', 2, 'grid', 12013, ['底板最下面一排是前排。', '前排左边点 2 下。', '后排左边 1 下、右边 3 下。']), So('side', '从左面看：2、3', 4, 'side', 123, ['每一排看最高的。', '点“从左面看”下面的“看一看”。', '前排 2，后排 3。'])], goal: ['stack', 'side'] },
+    'vw-side-trap': { shelf: ['solidbench'], build: sd({}),
+      hook: '前排是 3 块和 0 块，后排是 2 块和 2 块。从左面看，是数“有几排”，还是看每一排的高？搭出来再打开看。',
+      milestones: [So('stack', '搭好了：前排 3、0，后排 2、2', 2, 'grid', 13022, ['底板最下面一排是前排。', '前排左边点 3 下。', '后排两格各点 2 下。']), So('side', '从左面看：3、2', 4, 'side', 132, ['每一排看最高的。', '点“看一看”。', '前排 3，后排 2。'])], goal: ['stack', 'side'] },
+    'vw-top-core': { shelf: ['solidbench'], build: sd({}),
+      hook: '两块积木：一块在后排左边，一块在前排右边。搭出来。从上面看，有积木的位置都是一个正方形。',
+      milestones: [So('stack', '搭好了', 2, 'grid', 10110, ['底板最下面一排是前排。', '前排右边点 1 下。', '后排左边点 1 下。']), So('top', '从上面看：两个正方形，斜着', 4, 'top', 10110, ['从上面看只看位置。', '点“从上面看”下面的“看一看”。', '左上一个，右下一个。'])], goal: ['stack', 'top'] },
+    'vw-top-trap': { shelf: ['solidbench'], build: sd({}),
+      hook: '后排左边一叠 3 块，前排右边 1 块。从上面看，3 块的那一叠要算几个正方形？',
+      milestones: [So('stack', '搭好了', 2, 'grid', 10130, ['底板最下面一排是前排。', '前排右边点 1 下。', '后排左边点 3 下。']), So('top', '从上面看：还是两个正方形', 4, 'seen', 2, ['从上面看，叠得再高也只看见最上面那一块。', '点“看一看”。', '两个正方形，可是有 4 块。'])], goal: ['stack', 'top'] },
+    'vw-total-core': { shelf: ['solidbench'], build: sd({}),
+      hook: '一个 2 行 2 列的组合，每个位置都叠了 2 块。从上面看只看得见 4 个正方形。搭出来：一共有几块？',
+      milestones: [So('stack', '搭好了：一共 8 块', 4, 'total', 8, ['每格点 2 下。', '4 个位置。', '4 × 2 = 8。']), So('top', '从上面看只有 4 个正方形', 2, 'seen', 4, ['点“从上面看”的“看一看”。', '看见几个正方形？', '4 个，可是有 8 块。'])], goal: ['stack', 'top'] },
+    'vw-total-trap': { shelf: ['solidbench'], build: sd({ h: '1,2;2,1' }),
+      hook: '这个 2 × 2 的组合已经搭好了。先打开“从上面看”：看见 4 个正方形。积木也是 4 块吗？数一数立体图。',
+      milestones: [So('top', '从上面看：4 个正方形', 2, 'seen', 4, ['点“从上面看”的“看一看”。', '4 个位置都有积木。', '4 个正方形。']), So('count', '可是一共有 6 块', 4, 'side', 122, ['看得见的面不等于块数。', '再打开“从左面看”，看看每排有多高。', '两排都高 2：有的位置叠了 2 块。'])], goal: ['top', 'count'] },
   };
   const missing = [], moved = [];
   for (const id of Object.keys(MOVES)) {

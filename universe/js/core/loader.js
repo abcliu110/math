@@ -70,6 +70,7 @@
     'workspace': 'packs/workspace.js',
     'shapes': 'packs/shapes.js',
     'solid': 'packs/solid.js',
+    'solidbench': 'packs/solidbench.js',
     'solidnet': 'packs/solidnet.js',
     'statbench': 'packs/statbench.js',
     'stats2': 'packs/stats2.js',
@@ -85,7 +86,6 @@
     'twoways': 'packs/twoways.js',
     'variable': 'packs/variable.js',
     'vennbench': 'packs/vennbench.js',
-    'views': 'packs/views.js',
     'whatif': 'packs/whatif.js',
   };
   // packs:end

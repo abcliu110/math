@@ -47,6 +47,8 @@ module.exports = [
       ['mckb','meter',{'digits':0,'label':'钟面：经过了几分'}],
       ['gqb','groupbench',{'n':17,'g':5}],
       ['mgqb','meter',{'digits':0,'label':'分一分：余数'}],
+      ['sdb','solidbench',{'h':'1,2;1,1'}],
+      ['msdb','meter',{'digits':0,'label':'积木：一共几块'}],
     ],
     links: [
       ['am','mam','v','area'],
@@ -69,6 +71,7 @@ module.exports = [
       ['chb','mchb','v','n'],
       ['ckb','mckb','v','elapsed'],
       ['gqb','mgqb','v','r'],
+      ['sdb','msdb','v','total'],
     ],
   },
 ];

@@ -97,6 +97,7 @@ async function checkDist() {
   if (!runScript('tests/ui-chance.js', 'tests/ui-chance.js', pwEnv)) bail();   // 可能性：真实鼠标做很多次、看频率、点理论上、拖转盘
   if (!runScript('tests/ui-clock.js', 'tests/ui-clock.js', pwEnv)) bail();   // 钟面：真实鼠标拖时针、拖分针转圈、计时
   if (!runScript('tests/ui-group.js', 'tests/ui-group.js', pwEnv)) bail();   // 分一分：真实鼠标拖每份几个、一轮一轮放进盒子
+  if (!runScript('tests/ui-solid.js', 'tests/ui-solid.js', pwEnv)) bail();   // 积木与三视图：真实鼠标点底板搭积木、打开三个视图
   if (!runScript('tests/ui-areamodel.js', 'tests/ui-areamodel.js', pwEnv)) bail();   // 面积模型（样板操作台）和器材把手：真实鼠标拖边、切、改分数
   if (!runScript('tests/ui-shapes.js', 'tests/ui-shapes.js', pwEnv)) bail();         // 常见图形、顶点编辑、直接拖出辅助线（真实鼠标和键盘）；含画布横纵比例回归
   if (!runScript('tests/ui-export.js', 'tests/ui-export.js', pwEnv)) bail();         // 2.12/V10：导出图片（真实鼠标点菜单，台面和专注工作区各一次下载，.png、大小 > 0）

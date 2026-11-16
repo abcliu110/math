@@ -614,5 +614,17 @@
     },
   };
 
+  // 积木与三视图：从前面看只看最高的
+  D.solidbench = {
+    caps: ['前排 1 块、2 块，后排 1 块、1 块', '从前面看：第一列只看得见 1 块', '第二列：前面 2 块挡住了后面 1 块', '从前面看是 1、2，不是 2、3'],
+    draw(st) {
+      const s0 = 26, X = (c, d) => 80 + c * s0 + d * 13, Y = (d, z) => 140 - d * 13 - z * s0, g = [[1, 2], [1, 1]]; let s = '';
+      for (let d = 1; d >= 0; d--) for (let z = 0; z < 2; z++) for (let c = 0; c < 2; c++) if (g[d][c] > z) s += Rc(X(c, d), Y(d, z) - s0, s0, s0, st >= 1 && d === 0 ? A : B, { s: INK });
+      if (st >= 1) { s += Rc(240, 140 - s0, s0, s0, '#cfdcf0', { s: INK }) + Rc(266, 140 - s0, s0, s0, '#cfdcf0', { s: INK }) + Rc(266, 140 - 2 * s0, s0, s0, '#cfdcf0', { s: INK }) + T(266, 160, '从前面看', { s: 11 }); }
+      s += T(180, 24, ['搭积木', '从前面看', '后面的被挡住', '1、2'][st], { s: 15, w: 700, f: P });
+      return s;
+    },
+  };
+
   UI.Demo = D;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

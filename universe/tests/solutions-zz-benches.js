@@ -1,7 +1,7 @@
 /* 搬到操作台上的旧题的参考解（problems/zz-benches.js）。文件名 zz 开头：排在各年级的参考解后面加载，盖掉原来“接运算器”的解法。 */
 'use strict';
 const S = (role) => (o) => (h) => { const e = h.role(role); for (const k of Object.keys(o)) h.set(e, k, o[k]); };
-const n = S('n'), k = S('k'), r = S('r'), m = S('m'), c = S('c'), t = S('t'), s = S('s'), gp = S('g'), b = S('b'), d = S('d'), ch = S('h'), ck = S('k'), gq = S('q');
+const n = S('n'), k = S('k'), r = S('r'), m = S('m'), c = S('c'), t = S('t'), s = S('s'), gp = S('g'), b = S('b'), d = S('d'), ch = S('h'), ck = S('k'), gq = S('q'), so = S('o');
 module.exports = {
   'g1-split-merge-core': n({ a: 2, n: 3 }),
   'g1-split-minus-trap': n({ s: -1, n: 2 }),
@@ -43,6 +43,9 @@ module.exports = {
   'g7-quadrant-core': c({ ax: -2, ay: 3 }),
   'g7-symmetry-x-axis-trap': c({ bx: 3, by: 2 }),
   'g7-translate-down-trap': c({ ay: -1 }),
+  // 第十五批
+  'vw-front-core': so({ h: '1,2;1,1', sf: true }), 'vw-front-trap': so({ h: '3,1;1,1', sf: true }), 'vw-side-core': so({ h: '2,0;1,3', ss: true }), 'vw-side-trap': so({ h: '3,0;2,2', ss: true }),
+  'vw-top-core': so({ h: '0,1;1,0', st: true }), 'vw-top-trap': so({ h: '0,1;3,0', st: true }), 'vw-total-core': so({ h: '2,2;2,2', st: true }), 'vw-total-trap': so({ st: true, ss: true }),
   // 第十四批
   'g1-teen-tens-trap': gq({ g: 10 }), 'divmod-17-5': gq({ g: 5 }), 'g6-pigeon-core': gq({ dealt: 10 }), 'g6-pigeon-exact-trap': gq({ dealt: 12 }), 'prime-91': gq({ g: 7 }),
   // 第十三批
