@@ -6,7 +6,7 @@
 
 - 知识点：142 个（设计目标 142）
 - 有题的知识点：141 个（99%）
-- 题目：567 道；没有对应知识点的题：1 道
+- 题目：562 道；没有对应知识点的题：1 道
 - 没有器材的本质：无
 - 没有题的本质：无
 
@@ -16,10 +16,10 @@
 |---|---|---|---|
 | 1 | 16 | 16（100%） | 41 |
 | 2 | 16 | 16（100%） | 46 |
-| 3 | 16 | 16（100%） | 76 |
-| 4 | 17 | 17（100%） | 86 |
-| 5 | 14 | 14（100%） | 94 |
-| 6 | 15 | 14（93%） | 55 |
+| 3 | 16 | 16（100%） | 75 |
+| 4 | 17 | 17（100%） | 87 |
+| 5 | 14 | 14（100%） | 91 |
+| 6 | 15 | 14（93%） | 53 |
 | 7 | 16 | 16（100%） | 78 |
 | 8 | 16 | 16（100%） | 75 |
 | 9 | 16 | 16（100%） | 44 |
@@ -48,7 +48,7 @@
 | 2.2 | 2 | 100以内加减法（二） | 2 | 1 | 0 | 1 | num、arithbench |
 | 2.3 | 2 | 进位加法、退位减法 | 6 | 1 | 0 | 1 | blocksbench、arithbench、colbench |
 | 2.4 | 2 | 角的初步认识、直角 | 2 | 1 | 0 | 1 | angles、protractor-read |
-| 2.5 | 2 | 乘法初步认识、口诀 | 3 | 1 | 0 | 1 | barmodel、numlinebench |
+| 2.5 | 2 | 乘法初步认识、口诀 | 3 | 1 | 0 | 1 | numlinebench、tapebench |
 | 2.6 | 2 | 观察物体 | 1 | 1 | 0 | 1 | views |
 | 2.7 | 2 | 认识时间 | 1 | 1 | 0 | 1 | num、ratiobench |
 | 2.15 | 2 | 搭配（一） | 1 | 1 | 0 | 1 | areamodel |
@@ -63,7 +63,7 @@
 | 3.1 | 3 | 时、分、秒 | 1 | 1 | 0 | 1 | ratiobench、num |
 | 3.2 | 3 | 万以内加减法 | 2 | 1 | 0 | 1 | blocksbench |
 | 3.3 | 3 | 测量 | 1 | 1 | 0 | 1 | ratiobench、num |
-| 3.4 | 3 | 倍的认识 | 9 | 1 | 0 | 1 | barmodel、num、numlinebench、tapebench |
+| 3.4 | 3 | 倍的认识 | 8 | 1 | 0 | 1 | num、numlinebench、tapebench |
 | 3.5 | 3 | 多位数乘一位数 | 2 | 1 | 0 | 1 | areamodel、num |
 | 3.6 | 3 | 长方形和正方形 | 3 | 1 | 0 | 1 | areamodel、rect、num |
 | 3.7 | 3 | 分数的初步认识 | 5 | 1 | 0 | 1 | ratiobench、fracarea、numlinebench |
@@ -79,12 +79,12 @@
 | 4.1 | 4 | 大数的认识、近似数 | 5 | 0 | 0 | 1 | dice、num、coin |
 | 4.2 | 4 | 公顷和平方千米 | 1 | 1 | 0 | 1 | ratiobench |
 | 4.3 | 4 | 角的度量 | 1 | 0 | 0 | 1 | num |
-| 4.4 | 4 | 三位数乘两位数 | 8 | 1 | 0 | 1 | num、mulbench、travelbench |
+| 4.4 | 4 | 三位数乘两位数 | 10 | 1 | 0 | 1 | num、mulbench、travelbench |
 | 4.5 | 4 | 平行四边形和梯形 | 3 | 1 | 0 | 1 | parallelogram、cubes |
 | 4.6 | 4 | 除数是两位数的除法 | 1 | 1 | 0 | 1 | num |
 | 4.7 | 4 | 条形统计图 | 1 | 1 | 0 | 1 | data、ratiobench |
 | 4.8 | 4 | 优化 | 1 | 1 | 0 | 1 | num |
-| 4.9 | 4 | 四则运算 | 13 | 1 | 0 | 1 | asn、tenframe、counter、meter、memory、num、op、dice、hist、termsbench、findbug、road、turtle |
+| 4.9 | 4 | 四则运算 | 12 | 1 | 0 | 1 | asn、tenframe、counter、meter、memory、num、op、dice、hist、termsbench、findbug、turtle |
 | 4.17 | 4 | 观察物体（二） | 1 | 1 | 0 | 1 | views |
 | 4.10 | 4 | 运算定律 | 9 | 1 | 0 | 1 | termsbench、fastbench |
 | 4.11 | 4 | 小数的意义和性质 | 1 | 1 | 0 | 1 | num |
@@ -97,7 +97,7 @@
 | 5.2 | 5 | 位置 | 1 | 1 | 0 | 1 | — |
 | 5.3 | 5 | 小数除法 | 1 | 1 | 0 | 1 | num |
 | 5.4 | 5 | 可能性 | 7 | 1 | 0 | 3 | dice、num、divmod、meter、digits、numtheory、power、enumerator、array、ptree |
-| 5.5 | 5 | 简易方程 | 15 | 0 | 0 | 1 | variable、balancebench、barmodel、nim、eqcard、costplan、systembench、road |
+| 5.5 | 5 | 简易方程 | 12 | 0 | 0 | 1 | variable、balancebench、nim、eqcard、costplan、systembench |
 | 5.6 | 5 | 多边形的面积 | 5 | 1 | 0 | 1 | num、parallelogram、gworkspace、gpt、gpoly、fquad |
 | 5.7 | 5 | 植树问题 | 7 | 1 | 0 | 1 | gapbench |
 | 5.14 | 5 | 观察物体（三） | 2 | 1 | 0 | 1 | views、twoways |
@@ -110,16 +110,16 @@
 | 6.1 | 6 | 分数乘法 | 4 | 1 | 0 | 1 | areamodel、num、fracarea |
 | 6.3 | 6 | 位置与方向（二） | 1 | 1 | 0 | 1 | — |
 | 6.2 | 6 | 分数除法、倒数 | 3 | 1 | 0 | 1 | num、findbug、fracarea |
-| 6.4 | 6 | 比 | 4 | 0 | 0 | 1 | num、costplan、ratiobench |
-| 6.5 | 6 | 圆 | 5 | 1 | 0 | 1 | approach、num、circle、dissect、road |
-| 6.6 | 6 | 百分数（一） | 2 | 1 | 0 | 1 | num、ratiobench |
-| 6.7a | 6 | 扇形统计图 | 1 | 1 | 0 | 1 | num |
+| 6.4 | 6 | 比 | 4 | 0 | 0 | 1 | ratiobench、costplan |
+| 6.5 | 6 | 圆 | 4 | 1 | 0 | 1 | approach、num、circle、dissect |
+| 6.6 | 6 | 百分数（一） | 2 | 1 | 0 | 1 | ratiobench |
+| 6.7a | 6 | 扇形统计图 | 1 | 1 | 0 | 1 | ratiobench |
 | 6.7b | 6 | 数与形 | 2 | 1 | 2 | 4 | nth、induction、scaffold |
 | 6.8 | 6 | 负数 | 2 | 1 | 0 | 1 | numlinebench |
 | 6.9 | 6 | 负数运算——为什么负负得正 | 1 | 1 | 0 | 1 | num |
-| 6.10 | 6 | 百分数（二） | 2 | 1 | 0 | 1 | num、ratiobench |
+| 6.10 | 6 | 百分数（二） | 2 | 1 | 0 | 1 | ratiobench |
 | 6.11 | 6 | 圆柱与圆锥 | 1 | 1 | 0 | 1 | circle、num |
-| 6.12 | 6 | 比例 | 11 | 1 | 0 | 1 | fracnum、ratop、ratread、meter、num、percent、estimate、ratiobench、datatable、fmachine、euler、scale、shadow、taxi |
+| 6.12 | 6 | 比例 | 10 | 1 | 0 | 1 | fracnum、ratop、ratread、meter、ratiobench、datatable、fmachine、euler、scale、shadow、taxi |
 | 6.13 | 6 | 鸽巢问题 | 1 | 1 | 0 | 1 | num |
 | 6.14 | 6 | 综合与实践 / 整理和复习 | 0 | 0 | 0 | — | — |
 | 7.1 | 7 | 正数和负数、有理数与数轴 | 4 | 1 | 0 | 1 | approach、asn、numlinebench、num、proofsort |
@@ -177,16 +177,16 @@
 |---|---|---|
 | E1 | 63 | 27 |
 | E2 | 212 | 44 |
-| E3 | 149 | 47 |
-| E4 | 103 | 27 |
-| E5 | 137 | 54 |
-| E6 | 43 | 21 |
-| E7 | 95 | 21 |
+| E3 | 143 | 45 |
+| E4 | 107 | 27 |
+| E5 | 136 | 54 |
+| E6 | 40 | 20 |
+| E7 | 99 | 21 |
 | E8 | 65 | 39 |
-| E9 | 75 | 14 |
+| E9 | 74 | 14 |
 | E10 | 10 | 7 |
 | E11 | 11 | 7 |
-| E12 | 22 | 11 |
+| E12 | 15 | 9 |
 
 ## 没有题的知识点
 

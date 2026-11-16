@@ -222,25 +222,6 @@
     traps: [], why: '17 = 5×3 + 2，商 3 余 2；2024 的数字和是 2+0+2+4 = 8；12 和 18 的最大公约数是 6；2³ = 8。几台器材各算一件事，读数器把它们放在一起。', ref: ['numtheory|0'],
   });
 
-  // 12. 百分数与分数条：比、百分数、分数条、估算
-  P.push({
-    id: 'combo-percent-bar', essence: ['E3', 'E9'], title: '3 是 4 的百分之几？先估一估，再算出来', grade: 6, domain: '数与运算', points: ['6.12'],
-    topics: ['百分数', '分数的意义'], alias: ['综合', '百分数'], hook: '百分数器算出 3 是 4 的百分之几；估算器检查你猜的答案离多远。',
-    shelf: ['num', 'percent', 'estimate', 'meter'],
-    build: mk({ ents: [
-      E('num', 40, 60, 'a', { n: 3 }), E('num', 40, 140, 'b', { n: 4 }),
-      E('percent', 220, 100, 'pc', { mode: 0, digits: 0, label: '百分之几' }),
-      E('meter', 420, 60, 'mp', { digits: 0 }),
-      E('estimate', 220, 360, 'es', { mode: 0, guess: '75', lo: '70', hi: '80' }),
-    ] }),
-    milestones: [
-      { id: 'pc', say: '百分数器算出 3 是 4 的 75%（读数器显示 75）', score: 8, when: (w) => w.some('meter', (e) => e.role === 'mp' && w.num(e, 'v') === 75), hints: ['百分数器的 a 是部分，b 是整体。', '百分数器的 r 输出接到读数器。'] },
-      { id: 'est', say: '估算器判断：75 在范围 70–80 里', score: 6, when: (w) => w.some('estimate', (e) => w.bool(e, 'inRange') === true), hints: ['估算器的 actual 接百分数器的 r。'] },
-    ],
-    traps: [], why: '3 是 4 的 3/4，也就是 75%。估算器用来检查猜测：75 在 70 到 80 的范围里。',
-    ref: ['ratio|0'],
-  });
-
   // 13. 直线、反比例、圆与符号点：直线 → 代入器 → 读数；反比例 → 读数；圆与直线；点的旋转
   P.push({
     id: 'combo-line-inverse-rotate', essence: ['E2', 'E5'], title: 'y = 2x + 1 在 x = 3 时是几？反比例 6/x 在 x = 2 时是几？点 (3,2) 绕原点转 90° 去哪里？', grade: 7, domain: '函数', points: ['7.6'],

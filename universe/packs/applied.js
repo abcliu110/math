@@ -7,34 +7,6 @@
   U.registerPack({
     id: 'applied', version: 1,
     types: {
-      percent: {
-        workspaceRole: 'none',
-        handles: true,
-        essence: ['E3'],
-        label: '百分数', prefix: '百', group: '数与运算', grades: [5, 6], alias: ['折扣', '打折', '增长率', '成数'],
-        props: {
-          mode: { type: 'choice', label: '求什么', default: 0, choices: ['甲是乙的百分之几', '乙的 甲% 是多少', '乙增加 甲%', '乙减少 甲%'] },
-          digits: { type: 'int', label: '保留小数', default: 1, min: 0, max: 4 },
-          label: { type: 'text', label: '标签', default: '' },
-        },
-        inputs: { a: { kind: 'num', label: '甲' }, b: { kind: 'num', label: '乙' } },
-        outputs: { r: { dim: null, kind: 'num', label: '结果' } },
-        icon: () => K.text(32, 29, '%', { size: 28, weight: 700, fill: 'var(--accent)' }),
-        size: () => [190, 104],
-        compute: (c) => {
-          const a = K.first(c.inp.a), b = K.first(c.inp.b);
-          if (!a || !b) { c.say('info', '接甲和乙两个数'); return {}; }
-          const m = c.props.mode, hund = Q(100);
-          if (m === 0) { if (b.data.n === 0n) { c.say('err', '乙不能是 0'); return {}; } return { r: num(Q.mul(Q.div(a.data, b.data), hund)) }; }
-          const p = Q.div(a.data, hund);
-          const r = m === 1 ? Q.mul(b.data, p) : m === 2 ? Q.mul(b.data, Q.add(Q(1), p)) : Q.mul(b.data, Q.sub(Q(1), p));
-          c.say('ok', ['', Q.show(b.data) + ' 的 ' + Q.show(a.data) + '% = ', Q.show(b.data) + ' 增加 ' + Q.show(a.data) + '% = ', Q.show(b.data) + ' 减少 ' + Q.show(a.data) + '% = '][m] + Q.showDec(r, 3));
-          return { r: num(r, b.dim) };
-        },
-        badge: (c) => c.props.label,
-        draw: (c) => (c.out.r ? K.text(c.w / 2, c.h / 2 + 8, Q.showDec(c.out.r.data, c.props.digits) + (c.props.mode === 0 ? '%' : ''), { size: 28, weight: 700 }) : K.text(c.w / 2, c.h / 2 + 8, '？', { size: 28, fill: 'var(--dim)' })) + K.text(c.w / 2, c.h - 8, U.types.percent.props.mode.choices[c.props.mode], { size: 11, fill: 'var(--dim)' }),
-      },
-
       ratio: {
         workspaceRole: 'none',
         handles: true,

@@ -34,7 +34,7 @@ module.exports = [
       ['n24', 'num', { n: 24 }], ['n36', 'num', { n: 36 }],
       ['nt', 'numtheory', { show: 0, limit: 100000 }], ['mg', 'meter', { digits: 0, label: '最大公约数' }], ['ml', 'meter', { digits: 0, label: '最小公倍数' }],
       ['rat', 'ratio', { total: 0, simplify: 1 }], ['mra', 'meter', { digits: 0, label: '比的前项' }], ['mrb', 'meter', { digits: 0, label: '比的后项' }],
-      ['pc', 'percent', { mode: 0, digits: 1 }], ['mpc', 'meter', { digits: 1, label: '24 是 36 的百分之几' }],
+     
       ['pw', 'power', { e: 2 }], ['sq', 'sqrt', {}], ['rd', 'round', { place: 0 }], ['mrd', 'meter', { digits: 0, label: '回到公约数' }],
       ['o1', 'op', { op: 2 }], ['mo1', 'meter', { digits: 0, label: '公约数 × 公倍数' }],
       ['o2', 'op', { op: 2 }], ['mo2', 'meter', { digits: 0, label: '24 × 36' }],
@@ -45,7 +45,7 @@ module.exports = [
     links: [
       ['n24', 'nt', 'a'], ['n36', 'nt', 'b'], ['nt', 'mg', 'v', 'gcd'], ['nt', 'ml', 'v', 'lcm'],
       ['n24', 'rat', 'a'], ['n36', 'rat', 'b'], ['rat', 'mra', 'v', 'ra'], ['rat', 'mrb', 'v', 'rb'],
-      ['n24', 'pc', 'a'], ['n36', 'pc', 'b'], ['pc', 'mpc', 'v', 'r'],
+     
       ['nt', 'pw', 'a', 'gcd'], ['pw', 'sq', 'v', 'r'], ['sq', 'rd', 'v', 'r'], ['rd', 'mrd', 'v', 'r'],
       ['nt', 'o1', 'a', 'gcd'], ['nt', 'o1', 'b', 'lcm'], ['o1', 'mo1', 'v', 'r'],
       ['n24', 'o2', 'a'], ['n36', 'o2', 'b'], ['o2', 'mo2', 'v', 'r'], ['o1', 'cmp', 'a', 'r'], ['o2', 'cmp', 'b', 'r'],
@@ -110,7 +110,7 @@ module.exports = [
     ents: [
       ['clk', 'clock', { every: 1, scale: 1, offset: 0 }], ['mclk', 'meter', { digits: 0, label: '第几拍' }],
       ['sq', 'seq', { first: 3, diff: 2 }], ['msqv', 'meter', { digits: 0, label: '数列当前项' }], ['msqs', 'meter', { digits: 0, label: '数列的和' }],
-      ['rd', 'road', { len: 1000, loop: 0, x1: 0, v1: 3, x2: 40, v2: 1 }], ['mgap', 'meter', { digits: 0, label: '两车相距' }],
+      ['rd', 'travelbench', { len: 90, t: 6 }], ['mgap', 'meter', { digits: 0, label: '两车相距' }],
       ['mem', 'memory', { init: 0, hold: 1, wrap: 0 }], ['one', 'num', { n: 1 }], ['op', 'op', { op: 0 }], ['mm', 'meter', { digits: 0, label: '记忆器' }],
       ['dc', 'dice', { sides: 6, every: 1, salt: 0 }], ['hs', 'hist', { lo: 1, hi: 6, mode: 0 }], ['st', 'stats', { want: 0, digits: 2, minN: 1 }], ['mmean', 'meter', { digits: 2, label: '骰子平均数' }], ['mhn', 'meter', { digits: 0, label: '掷了几次' }],
       ['cn', 'coin', { p: 0.5, every: 1, salt: 0 }], ['hc', 'hist', { lo: 0, hi: 1, mode: 0 }], ['mcn', 'meter', { digits: 0, label: '硬币抛了几次' }],

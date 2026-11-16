@@ -43,6 +43,9 @@ module.exports = {
   'g7-quadrant-core': c({ ax: -2, ay: 3 }),
   'g7-symmetry-x-axis-trap': c({ bx: 3, by: 2 }),
   'g7-translate-down-trap': c({ ay: -1 }),
+  // 第八批
+  'discount-80': r({ t: 80 }), 'g6-percent-part-core': r({ t: 15 }), 'g6-percent-base-trap': r({ t: 60 }), 'g6-sector-angle-core': r({ t: 25 }), 'g6-sector-whole-trap': r({ t: 25 }),
+  'g6-percent-rebound-trap': r({ t: 80 }), 'ratio-share-50': r({ t: 3 }),
   // 第七批
   'g5-tree-core': gp({ gap: 5 }), 'g5-tree-ring-trap': gp({ ring: 1 }),
   // 第六批

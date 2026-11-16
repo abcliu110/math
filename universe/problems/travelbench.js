@@ -69,5 +69,26 @@
     goal: ['meet'],
     why: '甲的位置是 7t，乙的位置是 120 − 5t。相遇就是位置一样：7t = 120 − 5t，t = 10。图上两条直线的交点、方程的解、相遇的时间，是同一件事。',
   });
+  // 下面两道原来在旧的“两辆车”器材上（编号不变）
+  add({
+    id: 'meet-100', essence: ['E4', 'E7'], title: '两地相距 100，甲每小时走 6，乙每小时走 4，面对面走', grade: 4, rung: 3,
+    topics: ['相遇问题', '速度时间路程'], alias: ['相遇', '相向而行', '行程'],
+    hook: '两地相距 100 千米。甲每小时 6 千米，乙每小时 4 千米，面对面走。拖时间条，看几小时碰上。',
+    build: tv({ len: 100, tmax: 12, pa: 0, va: 6, da: 0, pb: 100, vb: 4, db: 1, lock: true }),
+    predict: { q: '几小时相遇？', options: [{ v: '10', label: '10 小时' }, { v: '25', label: '25 小时' }, { v: '50', label: '50 小时' }], answer: '10' },
+    milestones: [ms('meet', '碰上了：相距 0', 8, 'gap', 0, ['每小时近 6 + 4 = 10。', '100 ÷ 10。', '拖时间条到 10。'])],
+    goal: ['meet'],
+    why: '面对面走，每小时一共近 6 + 4 = 10 千米。100 ÷ 10 = 10 小时相遇。',
+  });
+  add({
+    id: 'chase-30', essence: ['E4', 'E7'], title: '甲在后追乙：相距 30，甲每小时 7，乙每小时 4', grade: 5, rung: 4,
+    topics: ['追及问题', '速度时间路程'], alias: ['追及', '同向而行', '行程'],
+    hook: '两人都往右走。乙在前面 30 千米，每小时 4 千米；甲每小时 7 千米。拖时间条，看甲几小时追上。',
+    build: tv({ len: 100, tmax: 12, pa: 0, va: 7, da: 0, pb: 30, vb: 4, db: 0, lock: true }),
+    predict: { q: '每过 1 小时，甲离乙近多少？', options: [{ v: '3', label: '3 千米' }, { v: '7', label: '7 千米' }, { v: '11', label: '11 千米' }], answer: '3' },
+    milestones: [ms('catch', '追上了：相距 0', 8, 'gap', 0, ['每小时近 7 − 4 = 3。', '30 ÷ 3。', '拖时间条到 10。'])],
+    goal: ['catch'],
+    why: '同方向走，甲每小时只比乙多走 7 − 4 = 3 千米。30 ÷ 3 = 10 小时追上。',
+  });
   U.problems.push.apply(U.problems, P);
 })(typeof globalThis !== 'undefined' ? globalThis : window);

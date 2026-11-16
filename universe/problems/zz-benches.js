@@ -1,4 +1,4 @@
-/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，七批共 63 道）。
+/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，八批共 70 道）。
  * 这些题原来的做法是“放数字、接运算器、看读数”：学生在搭计算流程。这里按 id 把它们换成在操作台上直接动手：
  * 题目的编号、标题、年级、知识点、道理（why）都不变，换的是器材架、开场的台面、里程碑和提示。
  * 这个文件排在所有题目文件后面加载（文件名 zz 开头），找不到的 id 会记在 U.benchMigrateMissing 里（测试会查）。 */
@@ -228,6 +228,31 @@
     'g5-tree-ring-trap': { shelf: ['gapbench'], build: gp({ len: 100, gap: 5, le: 1, re: 1 }),
       hook: '环形花坛一周 100 米，每隔 5 米种一棵。现在是直路，两端都种是 21 棵。点“围成一圈”：头和尾接上了，是几棵？',
       milestones: [GP('ring', '围成一圈', 2, 'ringed', 1, ['花坛是一圈。', '点“围成一圈”。', '头尾接上。']), GP('trees', '20 棵', 5, 'trees', 20, ['头和尾是同一棵。', '棵数等于间隔数。', '100 ÷ 5 = 20。'])], goal: ['trees'] },
+    // ======== 第八批：百分数、按比分配，在双数轴上做 ========
+    'discount-80': { shelf: ['ratiobench'], build: rb({ mode: 1, pa: 100, pb: 80, tmax: 100, tstep: 10, t: 100, ua: '%', ub: '元' }),
+      hook: '原价 80 元的书打八折。上面是百分数，下面是钱：100% 对着 80 元。八折就是 80%：把上面的点拖到 80。',
+      milestones: [R('now', '80% 对着 64 元', 8, 'b', 64, ['八折是原价的 80%。', '把点拖到 80%。', '80 × 0.8 = 64。'])], goal: ['now'],
+      traps: [{ id: 'minus', wrong: '打八折不是减 8 元，也不是减 80：是原价的 80%。', when: { role: 'r', port: 'b', op: '=', value: '72' } }] },
+    'g6-percent-part-core': { shelf: ['ratiobench'], build: rb({ mode: 1, pa: 60, pb: 100, tmax: 60, tstep: 5, t: 60, ua: '人', ub: '%' }),
+      hook: '15 是 60 的百分之几？上面是人数，下面是百分数：60 人对着 100%。把上面的点拖到 15。',
+      milestones: [R('pct', '15 对着 25%', 8, 'b', 25, ['60 是整体，对着 100%。', '把点拖到 15。', '15 ÷ 60 = 25%。'])], goal: ['pct'] },
+    'g6-percent-base-trap': { shelf: ['ratiobench'], build: rb({ mode: 1, pa: 48, pb: 100, tmax: 60, tstep: 6, t: 48, ua: '人', ub: '%' }),
+      hook: '二班 60 人，一班 48 人。二班比一班多百分之几？“比一班”——一班是 100%：48 人对着 100%。把上面的点拖到 60，看二班是一班的百分之几。',
+      milestones: [R('pct', '60 人对着 125%：多 25%', 8, 'b', 125, ['和谁比，谁就是 100%。', '把点拖到 60。', '125% − 100% = 25%。'])], goal: ['pct'] },
+    'g6-sector-angle-core': { shelf: ['ratiobench'], build: rb({ mode: 1, pa: 100, pb: 360, tmax: 100, tstep: 5, t: 100, ua: '%', ub: '度' }),
+      hook: '扇形占整个圆的 25%，圆心角是多少度？整个圆 100% 对着 360 度。把上面的点拖到 25。',
+      milestones: [R('deg', '25% 对着 90 度', 8, 'b', 90, ['整个圆是 360 度。', '把点拖到 25%。', '360 × 25% = 90。'])], goal: ['deg'] },
+    'g6-sector-whole-trap': { shelf: ['ratiobench'], build: rb({ mode: 1, pa: 100, pb: 360, tmax: 100, tstep: 5, t: 0, ua: '%', ub: '度' }),
+      hook: '扇形占 25%，圆心角是多少度？这回点在 0。注意下面那条数轴：100% 对着的是 360 度，不是 100 度。',
+      milestones: [R('deg', '25% 对着 90 度', 8, 'b', 90, ['一整圈是 360 度。', '把点拖到 25%。', '90 度。'])], goal: ['deg'],
+      traps: [{ id: 'hundred', wrong: '25% 不是 25 度：整个圆是 360 度，不是 100 度。', when: { role: 'r', port: 'b', op: '=', value: '25' } }] },
+    'g6-percent-rebound-trap': { shelf: ['ratiobench'], build: rb({ mode: 1, pa: 100, pb: 120, tmax: 100, tstep: 10, t: 100, ua: '%', ub: '元' }),
+      hook: '原价 100 元，先涨价 20%，变成 120 元。再降价 20%：这回 100% 对着的是 120 元。把上面的点拖到 80，看现价。',
+      milestones: [R('now', '80% 对着 96 元', 8, 'b', 96, ['降价 20% 是剩下 80%。', '是 120 元的 80%。', '120 × 0.8 = 96。'])], goal: ['now'],
+      traps: [{ id: 'back', wrong: '不是回到 100 元：降的 20% 是 120 元的 20%（24 元），比涨的 20 元多。', when: { role: 'r', port: 'b', op: '=', value: '100' } }] },
+    'ratio-share-50': { shelf: ['ratiobench'], build: rb({ mode: 1, pa: 5, pb: 50, tmax: 5, tstep: 1, t: 5, ua: '份', ub: '个' }),
+      hook: '50 个苹果按 3 : 2 分给甲乙。一共 3 + 2 = 5 份，5 份对着 50 个。把上面的点拖到 3：甲的 3 份是几个？',
+      milestones: [R('a', '3 份对着 30 个', 8, 'b', 30, ['一共 5 份。', '一份 10 个。', '把点拖到 3：30 个。'])], goal: ['a'] },
   };
   const missing = [], moved = [];
   for (const id of Object.keys(MOVES)) {

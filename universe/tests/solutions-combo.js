@@ -48,12 +48,6 @@ module.exports = {
     h.link(h.role('x12'), nt, 'a'); h.link(h.role('x18'), nt, 'b'); h.link(nt, h.role('mg'), 'v', 'gcd');
     h.link(h.role('two'), pw, 'a'); h.link(pw, h.role('mp'), 'v', 'r');
   },
-  'combo-percent-bar'(h) {
-    const pc = h.role('pc');
-    h.link(h.role('a'), pc, 'a'); h.link(h.role('b'), pc, 'b');
-    h.link(pc, h.role('mp'), 'v', 'r');
-    h.link(pc, h.role('es'), 'actual', 'r');
-  },
   'combo-line-inverse-rotate'(h) {
     const at3 = h.role('at3');
     h.link(h.role('ln'), at3, 'f');

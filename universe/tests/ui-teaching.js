@@ -22,15 +22,7 @@ const prop = (p, id, k) => p.evaluate(([id, k]) => UI.S.scene.entities[id].props
   const add = async (type, x, y, props) => { const id = (await act(p, { t: 'add', type, x, y, props })).id; await p.waitForTimeout(150); return id; };
   const set = async (id, k, v) => { await act(p, { t: 'set', id, k, v }); await p.waitForTimeout(100); };
 
-  console.log('线段图');
-  const bm = await add('barmodel', 20, 20, { story: '小明有 8 个，小红比他多 5 个', gk: 2, gv: '8', tq: 1, truth: '1,1,0,5', gans: '' });
-  let t = await body(p, bm);
-  ok(t.includes('先猜'), '没猜之前：不显示按图算出的结果');
-  await set(bm, 'gans', '13'); t = await body(p, bm); ok(t.includes('按你的图：A = 8，B = 8'), '猜了以后：两条一样长 → B = 8');
-  await click(bm, 'eb', 1); await click(bm, 'eb', 2); await click(bm, 'eb', 3); await click(bm, 'eb', 4); await click(bm, 'eb', 5);
-  t = await body(p, bm); ok((await prop(p, bm, 'eb')) === 5 && t.includes('B = 13'), '点 + 五次：B 额外 +5，B = 13');
-  await click(bm, 'sb', 2); await click(bm, 'sb', 3); await click(bm, 'sb', 4); await click(bm, 'sb', 5); t = await body(p, bm); ok(t.includes('B = 45'), '把 B 画成 5 份：按你的图 B = 45（和题面对不上，自己发现）');
-
+  let t;
   console.log('分数面积');
   const fa = await add('fracarea', 420, 20, { a: '2/3', b: '4/5', op: 1, view: 0 });
   t = await body(p, fa); ok(!t.includes('重叠 8 格') && !t.includes('重叠 ') || t.includes('蓝：竖着涂'), '先猜之前：结果遮住'); await set(fa, 'gans', '1/2'); await set(fa, 'st', 5); t = await body(p, fa); ok(t.includes('2×4 = 8 格') && t.includes('15 格'), '乘：重叠 8 格，一共 15 格');
