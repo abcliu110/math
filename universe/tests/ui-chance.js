@@ -71,6 +71,16 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
     await closeDlg(); await p.mouse.move(g.x, g.y); await p.mouse.down(); await p.mouse.move(c.x + 30 * c.k, c.y + 30 * c.k, { steps: 5 }); await p.mouse.move(c.x, c.y + 46 * c.k, { steps: 5 }); await p.mouse.up(); await p.waitForTimeout(250);
   }
   ok((await props()).deg === 180 && (await props()).n === 0, '把分界线拖到最下面：红色 180°，次数清零');
+
+  console.log('5. 列出所有情况');
+  await open('g9-enum-prob-core');
+  await btn('列出所有情况');
+  ok(await out('ways') === 6 && await out('all') === 36 && Math.abs(await out('pways') - 1 / 6) < 1e-9 && await p.locator('.card svg.bdy [data-way]').count() === 6 && await done('count') && await done('prob'), '点“列出所有情况”：36 格里和为 7 的 6 格亮起来，6/36 = 1/6');
+  await btn('+');
+  ok((await props()).sumv === 8 && await out('ways') === 5, '点“和是”旁边的 +：和为 8 的有 5 种');
+  await open('pf-three-dice');
+  await btn('换成三个骰子');
+  ok((await props()).mode === 4 && await out('all') === 216 && await out('ways') === 27 && await done('full') && await done('count'), '换成三个骰子：列表跟着换，216 种里和为 10 的有 27 种');
   ok(await p.evaluate(() => !UI.S.inspOpen), '全程没有打开属性面板');
   ok(errs.length === 0, '控制台 0 报错' + (errs.length ? '：' + errs[0] : ''));
   console.log('\n可能性测试：' + pass + ' 通过，' + fail + ' 失败');

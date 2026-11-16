@@ -1,4 +1,4 @@
-/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，十六批共 123 道）。
+/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，十九批共 141 道）。
  * 这些题原来的做法是“放数字、接运算器、看读数”：学生在搭计算流程。这里按 id 把它们换成在操作台上直接动手：
  * 题目的编号、标题、年级、知识点、道理（why）都不变，换的是器材架、开场的台面、里程碑和提示。
  * 这个文件排在所有题目文件后面加载（文件名 zz 开头），找不到的 id 会记在 U.benchMigrateMissing 里（测试会查）。 */
@@ -7,9 +7,9 @@
   const U = G.U, W = U.World;
   const one = (type, role, props) => () => { const s = W.blank(); const id = W.add(s, type, 40, 50, props); s.entities[id].role = role; return s; };
   const ms = (role) => (id, say, score, port, value, hints) => ({ id, say, score, when: { role, port, op: '=', value: String(value) }, hints });
-  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s'), GP = ms('g'), B = ms('b'), D = ms('d'), K2 = ms('k'), Gq = ms('q'), So = ms('o');
+  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s'), GP = ms('g'), B = ms('b'), D = ms('d'), K2 = ms('k'), Gq = ms('q'), So = ms('o'), Cj = ms('j'), Z = ms('z'), H2 = ms('h');
   const H = (id, say, score, when, hints) => ({ id, say, score, when, hints });   // 条件是一个范围（频率稳在某个区间）时用函数
-  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props), bb = (props) => one('balancebench', 'b', props), sb = (props) => one('statbench', 'd', props), ch = (props) => one('chancebench', 'h', props), ck = (props) => one('clockbench', 'k', props), gq = (props) => one('groupbench', 'q', props), sd = (props) => one('solidbench', 'o', props);
+  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props), bb = (props) => one('balancebench', 'b', props), sb = (props) => one('statbench', 'd', props), ch = (props) => one('chancebench', 'h', props), ck = (props) => one('clockbench', 'k', props), gq = (props) => one('groupbench', 'q', props), sd = (props) => one('solidbench', 'o', props), cj = (props) => one('conjbench', 'j', props), fb2 = (props) => one('fitbench', 'z', props);
   const MOVES = {
     // ---- 数轴 ----
     'g1-split-merge-core': { shelf: ['numlinebench'], build: nl({ from: 0, to: 10, a: 0, s: 1, n: 0 }),
@@ -432,6 +432,63 @@
     'cuboid-vol': { shelf: ['solidbench'], build: sd({ rows: 2, cols: 2, h: '0,0;0,0' }),
       hook: '搭一个长 6、宽 4、高 3 的长方体：先用“长 +”“宽 +”把底板改成长 6、宽 4，再铺 3 层。读出体积和表面积。哪个是“占多大地方”，哪个是“包起来要多少纸”？',
       milestones: [H('set', '搭成长 6、宽 4、高 3', 3, (w) => w.some('solidbench', (e) => w.num(e, 'l') === 6 && w.num(e, 'w') === 4 && w.num(e, 'hgt') === 3), ['先改底板：长 6、宽 4。', '再铺满 3 层。', '每个位置都是 3 块。']), So('vol', '体积 72', 4, 'total', 72, ['长 × 宽 × 高。', '6 × 4 × 3。', '72。']), So('surf', '表面积 108', 3, 'surf', 108, ['6 个面：上下、前后、左右。', '2 × (24 + 18 + 12)。', '108。'])], goal: ['set', 'vol', 'surf'] },
+    // ======== 第十七批：猜公式、找反例，在“猜想与反例”上做 ========
+    'g6-odd-sum-core': { shelf: ['conjbench'], build: cj({ claim: 0, pick: -1, n: 1 }),
+      hook: '1 = 1，1 + 3 = 4，1 + 3 + 5 = 9，1 + 3 + 5 + 7 = 16。点一个你猜的公式，再一个一个试 n。右边的图是“为什么”。',
+      milestones: [Cj('ans', '公式对试过的每个 n 都成立（至少试 5 个）', 6, 'good', 1, ['1、4、9、16 是几乘几？', '点“n²”。', '点“下一个 n”，试到 5。'])], goal: ['ans'] },
+    'g6-odd-sum-trap': { shelf: ['conjbench'], build: cj({ claim: 0, pick: 0, n: 1 }),
+      hook: '有同学说：前 n 个奇数的和就是 2n − 1。n = 1 时对。再试 n = 2、3 呢？',
+      milestones: [Cj('bad', 'n = 2 就不对了：1 + 3 = 4，公式算出 3', 3, 'cex', 2, ['点“下一个 n”。', 'n = 2。', '4 和 3 不一样。']), Cj('ans', '换成对的公式，试过的都对', 4, 'good', 1, ['1、4、9……', '点“n²”。', '试到 5 个以上。'])], goal: ['bad', 'ans'] },
+    'odd-sum-law': { shelf: ['conjbench'], build: cj({ claim: 0, pick: 1, n: 1 }),
+      hook: '1，1 + 3，1 + 3 + 5……和是多少？现在选的是 2n，第一行就不对。换一个公式，试到 20 以上。试了很多都对只是证据；看右边的图，想想为什么。',
+      milestones: [H('try', '换一个公式试试', 2, (w) => w.some('conjbench', (e) => w.num(e, 'pick') !== 1), ['点上面另一个公式。', '看第一行对不对。', '1、4、9 是几乘几？']), H('good', '找到对的公式，试到 20 以上', 6, (w) => w.some('conjbench', (e) => w.num(e, 'good') === 1 && w.num(e, 'tested') >= 20), ['1、4、9、16……', '点“n²”。', '拖把手到 20 以上，或者点“一直试到 100”。'])], goal: ['good'] },
+    'polygon-law': { shelf: ['conjbench'], build: cj({ claim: 1, pick: 0, n: 3 }),
+      hook: '三角形 180°，四边形 360°，五边形 540°……现在选的是 180 × n，三角形就不对。换一个公式，看右边从一个顶点切出几个三角形。',
+      milestones: [H('try', '换一个公式试试', 2, (w) => w.some('conjbench', (e) => w.num(e, 'pick') !== 0), ['点上面另一个公式。', '三角形应该是 180。', '每多一条边多 180。']), Cj('good', '找到对的公式，试过的都对', 6, 'good', 1, ['每多一条边，多切出一个三角形。', 'n 边形切成 n − 2 个。', '点“180 × (n − 2)”。'])], goal: ['good'] },
+    'euler-prime': { shelf: ['conjbench'], build: cj({ claim: 3, n: 30, upto: 30 }),
+      hook: 'n = 1 时 43，n = 2 时 47，n = 3 时 53……都是质数。已经试到 30，全对！那它总是质数吗？接着往下试。',
+      milestones: [Cj('forty', '反例是 n = 40：1681 = 41 × 41', 7, 'cex', 40, ['点“下一个 n”，或者“一直试到 100”。', '试到 40。', '40 × 40 + 40 + 41 = 1681。']), Cj('judge', '判断：不一定', 3, 'verdict', 2, ['有一个反例。', '点“不一定”。', '一个反例就够了。'])], goal: ['forty'] },
+    'asn-n2n41': { shelf: ['conjbench'], build: cj({ claim: 3, n: 1 }),
+      hook: '“n × n + n + 41 总是质数。”n 取 1 是 43，取 2 是 47，取 3 是 53……都是质数。先下判断，再一直试下去，看你的判断对不对。',
+      milestones: [Cj('cex', '找到反例 n = 40', 6, 'cex', 40, ['试几个小的，再试大一点的。', '点“一直试到 100”。', '40 × 40 + 40 + 41 = 1681 = 41 × 41。']), Cj('judge', '判断：不一定', 4, 'verdict', 2, ['有一个 n 不成立。', '点“不一定”。', '“总是”被一个反例推翻。'])], goal: ['cex', 'judge'] },
+    'pf-2n1-prime': { shelf: ['conjbench'], build: cj({ claim: 4, n: 1 }),
+      hook: 'n = 1、2、3 时，2n + 1 是 3、5、7，都是质数。有人说：2n + 1 总是质数。一个一个试下去。',
+      milestones: [Cj('four', '第一个反例是 n = 4：9 = 3 × 3', 7, 'cex', 4, ['点“下一个 n”。', '试到 n = 4。', '2 × 4 + 1 = 9。'])], goal: ['four'] },
+    'pf-prime-odd': { shelf: ['conjbench'], build: cj({ claim: 5, n: 5, from: 2 }),
+      hook: '3、5、7、11、13……质数好像都是奇数。有人说：质数都是奇数。现在是从第 2 个质数看起的。从头试一遍：第 1 个质数是几？',
+      milestones: [Cj('two', '反例是 2：它是质数，又是偶数', 7, 'cexv', 2, ['从头试。', '点“一直试到 100”，或者把把手拖到 1。', '第 1 个质数是 2。'])], goal: ['two'] },
+    'pf-half-even': { shelf: ['conjbench'], build: cj({ claim: 6, n: 6, from: 2 }),
+      hook: '4 的一半是 2，8 的一半是 4，12 的一半是 6，都是偶数。有人说：偶数的一半也是偶数。一个一个试，别漏了最小的那个。',
+      milestones: [Cj('two', '反例是 2：2 的一半是 1', 7, 'cexv', 2, ['n = 3 是 6，6 的一半是 3。', '最小的偶数是 2。', '把把手拖到 1。'])], goal: ['two'] },
+    'pf-sum3-scan': { shelf: ['conjbench'], build: cj({ claim: 2, pick: 0, n: 1 }),
+      hook: '1 + 2 + 3 = 6，2 + 3 + 4 = 9，3 + 4 + 5 = 12，都是 3 的倍数。有人写了 n + (n + 1) + (n + 2) = 3n。现在 n = 1 就不对。改正这个式子，再从 1 一直试到 100。',
+      milestones: [Cj('wrong', '“3n”有例外：n = 1 时 6 ≠ 3', 2, 'cex', 1, ['看第一行。', '6 和 3。', '它是反例。']), H('ok', '改对式子，1 到 100 都没有例外', 6, (w) => w.some('conjbench', (e) => w.num(e, 'good') === 1 && w.num(e, 'tested') >= 100), ['n + n + n 是 3n，还多出 1 + 2。', '点“3n + 3”。', '点“一直试到 100”。'])], goal: ['ok'] },
+    // ======== 第十八批：数据建模，在“数据找规律”上拖一条直线 ========
+    'car-model-proportional': { shelf: ['fitbench'], build: fb2({ data: '1,60;2,120;3,180', xname: '时间（小时）', yname: '路程（千米）', xmax: 6, ymax: 360, xstep: 1, ystep: 30, ax: 0, ay: 0, bx: 2, by: 60, px: 0 }),
+      hook: '每隔 1 小时记一次车跑的路程。拖蓝色把手，让直线穿过所有的点；再拖红色探针到 5，预测第 5 小时跑了多远。',
+      milestones: [Z('fit', '直线穿过所有的点', 3, 'all', 1, ['一个把手留在 (0, 0)。', '另一个拖到 (1, 60)。', '每小时 60 千米。']), Z('function', '得到规律：y = 60x', 3, 'k', 60, ['每多 1 小时，多几千米？', '60。', 'y = 60x。']), Z('check', '预测第 5 小时跑了 300 千米', 4, 'py', 300, ['拖红色探针。', '拖到 5。', '60 × 5 = 300。'])], goal: ['check'] },
+    'taxi-model-linear': { shelf: ['fitbench'], build: fb2({ data: '1,8;2,11;3,14;4,17', xname: '路程（千米）', yname: '车费（元）', xmax: 12, ymax: 40, xstep: 1, ystep: 1, ax: 0, ay: 0, bx: 4, by: 8, px: 0 }),
+      hook: '坐出租车，跑 1、2、3、4 千米分别付 8、11、14、17 元。拖蓝色把手让直线穿过这四个点，看它和纵轴交在哪里；再预测跑 10 千米要付多少钱。',
+      milestones: [Z('fit', '直线穿过所有的点', 3, 'all', 1, ['把一个把手拖到 (1, 8)。', '另一个拖到 (4, 17)。', '四个点都变绿。']), Z('function', '得到规律：y = 3x + 5', 3, 'b', 5, ['每多 1 千米多 3 元。', '0 千米对着几元？', 'y = 3x + 5。']), Z('check', '跑 10 千米要付 35 元', 4, 'py', 35, ['拖红色探针。', '拖到 10。', '3 × 10 + 5 = 35。'])], goal: ['check'] },
+    'tank-model-linear-decrease': { shelf: ['fitbench'], build: fb2({ data: '0,100;2,90;4,80;6,70', xname: '时间（分钟）', yname: '剩余水量（升）', xmax: 20, ymax: 110, xstep: 1, ystep: 5, ax: 0, ay: 0, bx: 6, by: 30, px: 0 }),
+      hook: '水箱开始有 100 升水，0、2、4、6 分钟后分别剩 100、90、80、70 升。拖蓝色把手让直线穿过这些点；什么时候会只剩 50 升？拖红色探针找一找。',
+      milestones: [Z('fit', '直线穿过所有的点', 3, 'all', 1, ['一个把手拖到 (0, 100)。', '另一个拖到 (6, 70)。', '直线往下斜。']), Z('function', '得到规律：y = −5x + 100', 3, 'k', -5, ['每分钟少几升？', '2 分钟少 10 升。', '每分钟少 5 升。']), Z('check', '10 分钟后剩 50 升', 4, 'py', 50, ['拖红色探针。', '找 y 是 50 的地方。', '100 − 5 × 10 = 50。'])], goal: ['check'] },
+    // ======== 第十九批：列举骰子的所有情况，在“可能性”上点“列出所有情况” ========
+    'g5-chance-core': { shelf: ['chancebench'], build: ch({ mode: 1, sumv: 7 }),
+      hook: '两个骰子一共有几种可能的结果？其中点数和是 7 的有几种？点“列出所有情况”，数一数亮起来的格子。',
+      milestones: [H2('hit', '和为 7 的情况有 6 种', 6, 'ways', 6, ['点“列出所有情况”。', '和是 7 的格子亮起来。', '斜着一排，6 格。'])], goal: ['hit'] },
+    'g5-chance-trap': { shelf: ['chancebench'], build: ch({ mode: 1, sumv: 12, list: true }),
+      hook: '一个骰子最大是 6 点。现在亮的是和为 12 的格子：只有一格。和是 13 会出现吗？点“和是”旁边的 +。',
+      milestones: [H2('none', '和为 13 的情况有 0 种：不可能', 6, 'ways', 0, ['点 +，变成 13。', '有没有格子亮？', '最大只有 6 + 6 = 12。'])], goal: ['none'] },
+    'g9-enum-prob-core': { shelf: ['chancebench'], build: ch({ mode: 1, sumv: 7 }),
+      hook: '把两颗骰子的所有情况一一列出来，数出和为 7 的有几种，再除以总数。',
+      milestones: [H2('count', '和为 7 的情况有 6 种', 3, 'ways', 6, ['点“列出所有情况”。', '数亮起来的格子。', '6 种。']), H2('prob', '概率是 6/36 = 1/6', 4, 'pways', '1/6', ['一共 36 种。', '6 ÷ 36。', '1/6。'])], goal: ['count', 'prob'] },
+    'g9-enum-prob-trap': { shelf: ['chancebench'], build: ch({ mode: 1, sumv: 7 }),
+      hook: '点数和一共有 2 到 12 这 11 种。能直接拿 11 当分母吗？列出所有情况看一看：每个和占几格一样多吗？',
+      milestones: [H2('count', '和为 7 的情况有 6 种', 3, 'ways', 6, ['点“列出所有情况”。', '数亮起来的格子。', '6 种。']), H2('prob', '概率是 1/6，分母是 36', 4, 'pways', '1/6', ['36 格是等可能的。', '11 种和不是等可能的。', '6/36 = 1/6。'])], goal: ['count', 'prob'] },
+    'pf-three-dice': { shelf: ['chancebench'], build: ch({ mode: 1, sumv: 10, list: true }),
+      hook: '现在列的是两个骰子的 36 种情况。三个骰子一共有多少种？点“换成三个骰子”，列表跟着换：6 小块，每块是第一个骰子是几。数出和为 10 的有几种。',
+      milestones: [H2('full', '三个骰子一共 216 种', 4, 'all', 216, ['点“换成三个骰子”。', '列表变成 6 小块。', '6 × 6 × 6 = 216。']), H2('count', '和为 10 的有 27 种', 5, 'ways', 27, ['和是 10。', '每一小块里数一数亮的。', '一共 27 种。'])], goal: ['full', 'count'] },
   };
   const missing = [], moved = [];
   for (const id of Object.keys(MOVES)) {

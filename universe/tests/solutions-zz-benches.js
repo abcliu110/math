@@ -1,7 +1,7 @@
 /* 搬到操作台上的旧题的参考解（problems/zz-benches.js）。文件名 zz 开头：排在各年级的参考解后面加载，盖掉原来“接运算器”的解法。 */
 'use strict';
 const S = (role) => (o) => (h) => { const e = h.role(role); for (const k of Object.keys(o)) h.set(e, k, o[k]); };
-const n = S('n'), k = S('k'), r = S('r'), m = S('m'), c = S('c'), t = S('t'), s = S('s'), gp = S('g'), b = S('b'), d = S('d'), ch = S('h'), ck = S('k'), gq = S('q'), so = S('o');
+const n = S('n'), k = S('k'), r = S('r'), m = S('m'), c = S('c'), t = S('t'), s = S('s'), gp = S('g'), b = S('b'), d = S('d'), ch = S('h'), ck = S('k'), gq = S('q'), so = S('o'), cj = S('j'), fz = S('z');
 module.exports = {
   'g1-split-merge-core': n({ a: 2, n: 3 }),
   'g1-split-minus-trap': n({ s: -1, n: 2 }),
@@ -43,6 +43,15 @@ module.exports = {
   'g7-quadrant-core': c({ ax: -2, ay: 3 }),
   'g7-symmetry-x-axis-trap': c({ bx: 3, by: 2 }),
   'g7-translate-down-trap': c({ ay: -1 }),
+  // 第十九批
+  'g5-chance-core': ch({ list: true }), 'g5-chance-trap': ch({ sumv: 13 }), 'g9-enum-prob-core': ch({ list: true }), 'g9-enum-prob-trap': ch({ list: true }), 'pf-three-dice': ch({ mode: 4, list: true }),
+  // 第十八批
+  'car-model-proportional': fz({ bx: 1, by: 60, px: 5 }), 'taxi-model-linear': fz({ ax: 1, ay: 8, bx: 4, by: 17, px: 10 }), 'tank-model-linear-decrease': fz({ ax: 0, ay: 100, bx: 6, by: 70, px: 10 }),
+  // 第十七批
+  'g6-odd-sum-core': cj({ pick: 3, n: 5 }), 'g6-odd-sum-trap'(h) { const e = h.role('j'); h.set(e, 'n', 2); h.set(e, 'pick', 3); h.set(e, 'n', 5); },
+  'odd-sum-law': cj({ pick: 3, n: 20 }), 'polygon-law': cj({ pick: 2, n: 8 }), 'euler-prime'(h) { const e = h.role('j'); h.set(e, 'n', 40); h.set(e, 'verdict', 2); },
+  'asn-n2n41'(h) { const e = h.role('j'); h.set(e, 'n', 40); h.set(e, 'upto', 40); h.set(e, 'verdict', 2); }, 'pf-2n1-prime': cj({ n: 4 }), 'pf-prime-odd': cj({ n: 1 }), 'pf-half-even': cj({ n: 1 }),
+  'pf-sum3-scan'(h) { const e = h.role('j'); h.set(e, 'pick', 2); h.set(e, 'n', 100); h.set(e, 'upto', 100); },
   // 第十六批
   'g1-solid-edges-core': so({ h: '1,1,1;1,1,1' }),
   'g1-solid-volume-trap'(h) { const e = h.role('o'); h.set(e, 'h', '6'); h.set(e, 'rows', 2); h.set(e, 'cols', 3); h.set(e, 'h', '1,1,1;1,1,1'); },

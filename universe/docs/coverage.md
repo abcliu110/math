@@ -43,7 +43,7 @@
 | 1.13 | 1 | 100以内数的认识 | 4 | 0 | 0 | 1 | blocksbench、num |
 | 1.14 | 1 | 认识人民币 | 1 | 1 | 0 | 1 | num |
 | 1.15 | 1 | 100以内加减法（一） | 1 | 1 | 0 | 1 | blocksbench |
-| 1.16 | 1 | 找规律 | 5 | 0 | 0 | 1 | num、meter、conjecture、fmachine、guessrule、conjecture_board |
+| 1.16 | 1 | 找规律 | 5 | 0 | 0 | 1 | num、meter、conjbench、fmachine、guessrule、conjecture_board |
 | 2.1 | 2 | 长度单位、线段 | 1 | 1 | 0 | 1 | num |
 | 2.2 | 2 | 100以内加减法（二） | 2 | 1 | 0 | 1 | num、arithbench |
 | 2.3 | 2 | 进位加法、退位减法 | 6 | 1 | 0 | 1 | blocksbench、arithbench、colbench |
@@ -96,12 +96,12 @@
 | 5.1 | 5 | 小数乘法 | 2 | 1 | 0 | 1 | num |
 | 5.2 | 5 | 位置 | 1 | 1 | 0 | 1 | — |
 | 5.3 | 5 | 小数除法 | 1 | 1 | 0 | 1 | num |
-| 5.4 | 5 | 可能性 | 6 | 1 | 0 | 3 | chancebench、enumerator、num、meter、array、ptree |
+| 5.4 | 5 | 可能性 | 6 | 1 | 0 | 3 | chancebench、num、meter、array、ptree |
 | 5.5 | 5 | 简易方程 | 12 | 0 | 0 | 1 | variable、balancebench、nim、costplan、systembench |
 | 5.6 | 5 | 多边形的面积 | 5 | 1 | 0 | 1 | num、parallelogram、gworkspace、gpt、gpoly、fquad |
 | 5.7 | 5 | 植树问题 | 7 | 1 | 0 | 1 | gapbench |
 | 5.14 | 5 | 观察物体（三） | 2 | 1 | 0 | 1 | solidbench、twoways |
-| 5.8 | 5 | 因数与倍数 | 21 | 0 | 0 | 2 | asn、conjecture、hanoi、guessrule、modclock、num、groupbench、primeblocks、counterex、scanner、proofsort、net |
+| 5.8 | 5 | 因数与倍数 | 21 | 0 | 0 | 2 | asn、conjbench、hanoi、guessrule、modclock、num、groupbench、primeblocks、proofsort、net |
 | 5.9 | 5 | 长方体和正方体 | 3 | 1 | 0 | 1 | pour、solidbench |
 | 5.10 | 5 | 分数的意义和性质 | 6 | 0 | 0 | 1 | areamodel、ratiobench、numlinebench、primeblocks |
 | 5.11 | 5 | 分数的加法和减法 | 8 | 1 | 0 | 1 | num、approach、ratiobench、findbug、fracarea |
@@ -114,15 +114,15 @@
 | 6.5 | 6 | 圆 | 4 | 1 | 0 | 1 | approach、num、circle、dissect |
 | 6.6 | 6 | 百分数（一） | 2 | 1 | 0 | 1 | ratiobench |
 | 6.7a | 6 | 扇形统计图 | 1 | 1 | 0 | 1 | ratiobench |
-| 6.7b | 6 | 数与形 | 2 | 1 | 2 | 4 | nth、induction、scaffold |
+| 6.7b | 6 | 数与形 | 2 | 1 | 2 | 4 | conjbench、nth、induction、scaffold |
 | 6.8 | 6 | 负数 | 2 | 1 | 0 | 1 | numlinebench |
 | 6.9 | 6 | 负数运算——为什么负负得正 | 1 | 1 | 0 | 1 | num |
 | 6.10 | 6 | 百分数（二） | 2 | 1 | 0 | 1 | ratiobench |
 | 6.11 | 6 | 圆柱与圆锥 | 1 | 1 | 0 | 1 | circle、num |
-| 6.12 | 6 | 比例 | 9 | 1 | 0 | 1 | ratiobench、datatable、fmachine、euler、scale、shadow、taxi |
+| 6.12 | 6 | 比例 | 9 | 1 | 0 | 1 | ratiobench、fitbench、fmachine、euler、scale、shadow、taxi |
 | 6.13 | 6 | 鸽巢问题 | 1 | 1 | 0 | 1 | groupbench |
 | 6.14 | 6 | 综合与实践 / 整理和复习 | 0 | 0 | 0 | — | — |
-| 7.1 | 7 | 正数和负数、有理数与数轴 | 4 | 1 | 0 | 1 | approach、asn、numlinebench、num、proofsort |
+| 7.1 | 7 | 正数和负数、有理数与数轴 | 4 | 1 | 0 | 1 | approach、conjbench、numlinebench、num、proofsort |
 | 7.2 | 7 | 有理数的加减法 | 7 | 1 | 0 | 1 | numlinebench、findbug、arithbench、newop |
 | 7.3 | 7 | 有理数的乘除法、乘方与科学记数法 | 3 | 1 | 0 | 1 | num、hanoi |
 | 7.4 | 7 | 整式 | 1 | 1 | 2 | 4 | algebra、induction |
@@ -130,7 +130,7 @@
 | 7.6 | 7 | 解一元一次方程 | 12 | 0 | 0 | 1 | balancebench、findbug |
 | 7.7 | 7 | 实际问题与一元一次方程 | 1 | 1 | 0 | 1 | balancebench |
 | 7.8 | 7 | 几何图形与直线、射线、线段 | 1 | 1 | 0 | 1 | numlinebench、num |
-| 7.9 | 7 | 角 | 4 | 0 | 0 | 1 | curved、conjecture、polygon、fold |
+| 7.9 | 7 | 角 | 4 | 0 | 0 | 1 | curved、conjbench、polygon、fold |
 | 7.10 | 7 | 相交线 | 1 | 1 | 0 | 1 | num |
 | 7.11 | 7 | 平行线与平移 | 1 | 1 | 0 | 1 | num、coordbench |
 | 7.12 | 7 | 实数 | 5 | 0 | 0 | 1 | compass、num、sqrt、round、turtle |
@@ -152,7 +152,7 @@
 | 8.12 | 8 | 平行四边形 | 7 | 0 | 0 | 1 | compass、parallelogram、optimize、taxi |
 | 8.13 | 8 | 特殊的平行四边形 | 1 | 1 | 0 | 1 | areamodel |
 | 8.14 | 8 | 函数与正比例函数 | 1 | 1 | 0 | 1 | coordbench |
-| 8.15 | 8 | 一次函数 | 17 | 0 | 0 | 1 | coordbench、fmachine、costplan、datatable、databench |
+| 8.15 | 8 | 一次函数 | 17 | 0 | 0 | 1 | coordbench、fmachine、costplan、fitbench、databench |
 | 8.16 | 8 | 数据的分析 | 2 | 1 | 0 | 1 | statbench |
 | 9.1 | 9 | 解一元二次方程 | 2 | 0 | 0 | 1 | tiles |
 | 9.2 | 9 | 一元二次方程的应用与根的判别式 | 2 | 1 | 0 | 1 | coordbench |
@@ -163,7 +163,7 @@
 | 9.7 | 9 | 点、直线和圆的位置关系 | 1 | 1 | 0 | 1 | — |
 | 9.8 | 9 | 弧长和扇形面积 | 1 | 1 | 0 | 1 | circle |
 | 9.9 | 9 | 随机事件与概率 | 3 | 0 | 0 | 1 | chancebench、ptree |
-| 9.10 | 9 | 列举法求概率与频率估计 | 1 | 1 | 0 | 1 | enumerator |
+| 9.10 | 9 | 列举法求概率与频率估计 | 1 | 1 | 0 | 1 | chancebench |
 | 9.11 | 9 | 反比例函数 | 1 | 1 | 0 | 1 | — |
 | 9.12 | 9 | 图形的相似与位似 | 4 | 1 | 0 | 1 | ftri、scale、spheretri |
 | 9.13 | 9 | 相似三角形 | 1 | 0 | 0 | 1 | ftri |
@@ -175,16 +175,16 @@
 
 | 本质 | 题目数 | 器材数 |
 |---|---|---|
-| E1 | 61 | 27 |
-| E2 | 207 | 44 |
-| E3 | 136 | 43 |
-| E4 | 101 | 23 |
+| E1 | 61 | 26 |
+| E2 | 207 | 43 |
+| E3 | 136 | 40 |
+| E4 | 101 | 24 |
 | E5 | 132 | 54 |
-| E6 | 40 | 19 |
-| E7 | 99 | 24 |
-| E8 | 61 | 26 |
-| E9 | 68 | 16 |
-| E10 | 10 | 3 |
+| E6 | 40 | 17 |
+| E7 | 99 | 23 |
+| E8 | 61 | 23 |
+| E9 | 68 | 15 |
+| E10 | 10 | 4 |
 | E11 | 11 | 3 |
 | E12 | 13 | 6 |
 

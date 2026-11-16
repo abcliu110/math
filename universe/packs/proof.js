@@ -143,63 +143,7 @@
       },
 
       // ---------------- 反例构造器：在范围里找反例，找到就推翻并把它摆出来 ----------------
-      counterex: {
-        workspaceRole: 'none',
-        handles: true,
-        essence: ['E6', 'E8'],
-        label: '反例构造器', prefix: '反', group: '关系', grades: [5, 9], alias: ['反例', '推翻', '找例外'],
-        props: {
-          rule: { type: 'choice', label: '要推翻的规则', default: 2, choices: RULE_NAMES },
-          custom: { type: 'text', label: '自己写的规则', default: '2n+1 是质数', control: 'rule' },
-          from: { type: 'int', label: '从', default: 1, min: -50, max: 50 },
-          to: { type: 'int', label: '到', default: 50, min: 1, max: 1000 },
-        },
-        outputs: {
-          lv: { dim: null, kind: 'num', label: '证据等级' }, refuted: { dim: null, kind: 'bool', label: '被推翻' },
-          counter: { dim: null, kind: 'num', label: '反例' },
-        },
-        icon: () => K.text(32, 28, '✕', { size: 26, weight: 700, fill: 'var(--bad)' }),
-        size: () => [200, 110],
-        compute: (c) => {
-          let pred; try { pred = ruleOf(c); } catch (e) { c.say('reject', '规则写不对：' + e.message); return {}; }
-          let r; try { r = scan(c.props.from, c.props.to, pred); } catch (e) { c.say('reject', e.message); return {}; }
-          if (r.found) return verdict(c, { lv: num(Q(0)), refuted: U.val('bool', true), counter: num(Q(r.counter)), text: '反例找到了：' + (r.tuple || r.counter) + '，猜想被推翻' });
-          return verdict(c, { lv: num(Q(2)), refuted: U.val('bool', false), counter: num(Q(-1)), text: '在范围里没有找到反例，证据到 ②' });
-        },
-        badge: (c) => (c.out.refuted && c.out.refuted.data ? '推翻' : ''),
-        draw: (c) => K.text(c.w / 2, c.h / 2 + 4, sc(c), { size: 12 }),
-      },
-
       // ---------------- 系统枚举器：列出两个骰子的全部 36 种情况，检查和为某个数的有几种 ----------------
-      enumerator: {
-        workspaceRole: 'none',
-        handles: true,
-        essence: ['E1', 'E2'],
-        label: '系统枚举器', prefix: '枚', group: '统计与概率', grades: [5, 9], alias: ['列全', '全部情况', '枚举'],
-        props: {
-          set: { type: 'choice', label: '全部情况', default: 0, choices: SET_NAMES },
-          target: { type: 'int', label: '和是几', default: 7, min: 0, max: 18 },
-          expected: { type: 'int', label: '应有几种情况', default: 36, min: 1, max: 216 },
-          show: { type: 'bool', label: '列出每一种', default: false },
-        },
-        outputs: {
-          lv: { dim: null, kind: 'num', label: '证据等级' }, count: { dim: null, kind: 'num', label: '和为目标的情况数' },
-          total: { dim: null, kind: 'num', label: '全部情况数' },
-        },
-        icon: () => [[12, 14], [32, 14], [52, 14], [12, 30], [32, 30], [52, 30]].map(([x, y]) => K.circle(x, y, 3, { fill: 'var(--ink)' })).join(''),
-        size: () => [200, 110],
-        compute: (c) => {
-          const S = SETS[SET_NAMES[c.props.set]] || SETS[SET_NAMES[0]];
-          const hit = S.items.filter((x) => S.value(x) === c.props.target).length;
-          const complete = S.items.length === c.props.expected;
-          const lv = complete ? 3 : 1;
-          return verdict(c, { lv: num(Q(lv)), refuted: U.val('bool', false), count: num(Q(hit)), total: num(Q(S.items.length)),
-            text: '列出 ' + S.items.length + ' 种情况，' + '和为 ' + c.props.target + ' 的有 ' + hit + ' 种' + (complete ? '（列全了，证据到 ③）' : '（应有 ' + c.props.expected + ' 种，没列全）') });
-        },
-        badge: (c) => (c.out.count ? c.out.count.data.n + ' 种' : ''),
-        draw: (c) => K.text(c.w / 2, c.h / 2 + 4, '和为 ' + c.props.target + ' 的情况', { size: 12 }),
-      },
-
       // ---------------- 不变量追踪器：一个变换前后某个量是否不变（单独不给等级）----------------
       // ---------------- 证明脚手架：三步推理，每步引用台面上已验证的事实（输入口 a、b、c），全部填完 → ④ ----------------
       scaffold: {

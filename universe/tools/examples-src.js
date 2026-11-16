@@ -49,6 +49,10 @@ module.exports = [
       ['mgqb','meter',{'digits':0,'label':'分一分：余数'}],
       ['sdb','solidbench',{'h':'1,2;1,1'}],
       ['msdb','meter',{'digits':0,'label':'积木：一共几块'}],
+      ['cjb','conjbench',{'claim':3,'n':40}],
+      ['mcjb','meter',{'digits':0,'label':'猜想：第一个反例'}],
+      ['fzb','fitbench',{'ax':1,'ay':8,'bx':4,'by':17,'px':10}],
+      ['mfzb','meter',{'digits':0,'label':'找规律：预测'}],
     ],
     links: [
       ['am','mam','v','area'],
@@ -72,6 +76,8 @@ module.exports = [
       ['ckb','mckb','v','elapsed'],
       ['gqb','mgqb','v','r'],
       ['sdb','msdb','v','total'],
+      ['cjb','mcjb','v','cex'],
+      ['fzb','mfzb','v','py'],
     ],
   },
 ];

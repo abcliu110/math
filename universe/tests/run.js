@@ -793,34 +793,6 @@ t('数据表：文字录入、小数转精确有理数；数据不对时说明�
   truthy(/数不对/.test(String(thr(() => TT.parseRows('1,abc')))));
 });
 function thr(f) { try { f(); return ''; } catch (e) { return e.message; } }
-t('建模链：数据表 → 拟合器（正比例）→ 预测器，预测结果标明是预测', () => {
-  const sc = W.blank(); const d = W.add(sc, 'datatable', 0, 0, { data: '1,60;2,120;3,180', xname: '时间', yname: '路程' });
-  const f = W.add(sc, 'fit', 0, 0, { model: 0, xcol: 0, ycol: 1 }), pr = W.add(sc, 'predict', 0, 0, { x: 5, note: true });
-  W.act(sc, { t: 'link', from: d, fromPort: 't', to: f, toPort: 't' }); W.act(sc, { t: 'link', from: f, fromPort: 'f', to: pr, toPort: 'f' });
-  const D = W.evaluate(sc); eq(U.showVal(D[f].out.k), '60'); eq(U.showVal(D[pr].out.y), '300');
-  truthy(D[pr].sig.some((x) => /不是测量值/.test(x.tx)));
-  truthy(D[pr].trace.steps.some((x) => x.rule === 'model.predict'));
-});
-t('取列 → seq；取不存在的列时说明原因；散点图标出点的个数', () => {
-  const sc = W.blank(); const d = W.add(sc, 'datatable', 0, 0, { data: '1,2;3,4' }), c = W.add(sc, 'column', 0, 0, { col: 1 }), bad = W.add(sc, 'column', 0, 0, { col: 3 }), sp = W.add(sc, 'scatter', 0, 0, {});
-  W.act(sc, { t: 'link', from: d, fromPort: 't', to: c, toPort: 't' }); W.act(sc, { t: 'link', from: d, fromPort: 't', to: sp, toPort: 't' });
-  const refused = W.act(sc, { t: 'link', from: d, fromPort: 't', to: bad, toPort: 't' }); eq(refused.ok, false); truthy(/只有 2 列/.test(refused.why), refused.why);
-  const D = W.evaluate(sc); eq(D[c].out.s.data.map((q) => q.n), [2, 4]); eq(U.showVal(D[sp].out.n), '2');
-});
-t('散点图接上拟合器后叠加直线（画面多一条线）', () => {
-  const build = (withFit) => {
-    const sc = W.blank(); const d = W.add(sc, 'datatable', 0, 0, { data: '1,2;2,4;3,6.5' }), sp = W.add(sc, 'scatter', 0, 0, {});
-    W.act(sc, { t: 'link', from: d, fromPort: 't', to: sp, toPort: 't' });
-    if (withFit) {
-      const f = W.add(sc, 'fit', 0, 0, { model: 1 });
-      W.act(sc, { t: 'link', from: d, fromPort: 't', to: f, toPort: 't' });
-      W.act(sc, { t: 'link', from: f, fromPort: 'f', to: sp, toPort: 'line' });
-    }
-    const D = W.evaluate(sc);
-    return U.types.scatter.draw({ props: D[sp].props, d: D[sp], out: {}, w: 230, h: 120 });
-  };
-  eq((build(true).match(/<line/g) || []).length, (build(false).match(/<line/g) || []).length + 1, '接上拟合器应多画一条拟合直线');
-});
 console.log('多元整除与最大公因式（约分用）');
 t('精确整除：整除返回商，不整除返回 null', () => {
   const Pa = U.Poly.parse, P = U.Poly;
@@ -870,15 +842,6 @@ t('分式 ↔ 多项式：分母是常数才能化成多项式；多项式可以
   eq(U.KINDS.poly.show(U.convertVal(U.val('ratio', U.Ratio.make(U.Poly.parse('2x+4'), U.Poly.parse('2'))), 'poly').data), 'x + 2');
   eq(U.convertVal(U.val('ratio', U.Ratio.make(U.Poly.parse('1'), U.Poly.parse('x'))), 'poly'), null);
   eq(U.KINDS.ratio.show(U.convertVal(U.val('poly', U.Poly.parse('x+1')), 'ratio').data), 'x + 1');
-});
-t('表格式编辑：文字 ↔ 格子往返；空行丢掉；改完的文字能被数据表接受', () => {
-  const view = TT.gridView('1,60;2,120');
-  eq(view.length, 3); eq(view[2], ['', '']);
-  eq(TT.gridText([['1', '60'], ['', '']]), '1,60');
-  eq(TT.gridText([['1', '60'], ['2', '120'], ['3', '180']].filter((_, i) => i !== 1)), '1,60;3,180');
-  eq(TT.gridText([['1', ' 60 '], ['2', '120']]), '1,60;2,120');
-  const sc = W.blank(); const d = W.add(sc, 'datatable', 0, 0, { data: TT.gridText([['1', '2'], ['3', '4']]) });
-  eq(W.evaluate(sc)[d].out.t.data.rows.length, 2);
 });
 t('建模题模板 lint：三步都要有里程碑；拟合最高只到 ①', () => {
   const base = { id: 'mx', title: 't', milestones: [{ id: 'a', score: 1, when: { type: 'num', port: 'v', op: '=', value: '1' } }, { id: 'b', score: 1, when: { type: 'num', port: 'v', op: '=', value: '2' } }, { id: 'c', score: 1, when: { type: 'num', port: 'v', op: '=', value: '3' } }],
@@ -986,35 +949,12 @@ const lvOf = (o) => (o.lv ? Q.num(o.lv.data) : null);
 t('参数扫描器：规则在范围里没有例外 → ②；没有反例，不推翻', () => {
   const o = pr('scanner', { rule: 0, from: 1, to: 100 }); eq(lvOf(o), 2); eq(o.refuted.data, false); eq(o.checked.data.n, 100);
 });
-t('反例构造器：“质数都是奇数”在 1–50 里找到 2，结论被推翻', () => {
-  const o = pr('counterex', { rule: 3, from: 1, to: 50 }); eq(o.refuted.data, true); eq(o.counter.data.n, 2);
-});
-t('系统枚举器：两个骰子列全 36 种，和为 7 的有 6 种 → ③；应有数不对就只是 ①', () => {
-  const o = pr('enumerator', { target: 7, expected: 36 }); eq(lvOf(o), 3); eq(o.count.data.n, 6); eq(o.total.data.n, 36);
-  eq(lvOf(pr('enumerator', { target: 7, expected: 30 })), 1);
-});
 t('归纳阶梯：起点成立，每一级都能推下一级 → ④；起点没验证 → ①', () => {
   eq(lvOf(pr('induction', { rule: 0, upto: 20, base: true })), 4);
   eq(lvOf(pr('induction', { rule: 0, upto: 20, base: false })), 1);
 });
 t('猜想板：只记录，等级是 0 或 ①，不推翻', () => { const o = pr('conjecture_board', { ok: true }); eq(lvOf(o), 1); eq(o.refuted.data, false); });
-t('台面级证据：参数扫描得 ② 时整个台面的证据到 ②；有反例则推翻', () => {
-  const sc = W.blank(); W.add(sc, 'scanner', 0, 0, { rule: 0, from: 1, to: 20 }); const r = U.Evidence.fromScene(W.evaluate(sc));
-  eq(r.level, 2);
-  const sc2 = W.blank(); W.add(sc2, 'counterex', 0, 0, { rule: 3, from: 1, to: 20 }); eq(U.Evidence.fromScene(W.evaluate(sc2)).level, 'refuted');
-});
 console.log('证明器材扩充');
-t('新规则：2n+1 是质数在 1–20 里的反例是 4（2·4+1 = 9）；n²+2 的反例是 2（2²+2 = 6）', () => {
-  const sc = W.blank(); const e = W.add(sc, 'counterex', 0, 0, { rule: 5, from: 1, to: 20 }); const D = W.evaluate(sc);
-  eq(D[e].out.refuted.data, true); eq(D[e].out.counter.data.n, 4);
-  const e2 = W.add(sc, 'counterex', 0, 0, { rule: 8, from: 1, to: 20 }); eq(W.evaluate(sc)[e2].out.counter.data.n, 2);
-});
-t('系统枚举器：两枚硬币的 4 种情况，正面数为 1 的有 2 种 → ③；三个骰子和为 10 有 27 种', () => {
-  const sc = W.blank(); const e = W.add(sc, 'enumerator', 0, 0, { set: 1, target: 1, expected: 4 }); const D = W.evaluate(sc);
-  eq(D[e].out.count.data.n, 2); eq(D[e].out.total.data.n, 4); eq(D[e].out.lv.data.n, 3);
-  const sc2 = W.blank(); const e2 = W.add(sc2, 'enumerator', 0, 0, { set: 2, target: 10, expected: 216 });
-  eq(W.evaluate(sc2)[e2].out.count.data.n, 27);
-});
 t('归纳阶梯：三条求和式子的步骤都是恒等式；起点与每一级都成立 → ④', () => {
   for (const r of [0, 1, 2]) {
     const sc = W.blank(); const e = W.add(sc, 'induction', 0, 0, { rule: r, upto: 30, base: true }); const D = W.evaluate(sc);
@@ -1046,10 +986,6 @@ t('用户规则：比较两个式子，2^n > n 对 n ≥ 0 成立', () => {
 t('写错的规则给出说明', () => { truthy(/要写成/.test(String(thr(() => SQ.compileRule('随便写')))) ); truthy(/看不懂|多出/.test(String(thr(() => SQ.parse('2 & n'))))); });
 function thr(f) { try { f(); return ''; } catch (e) { return e.message; } }
 console.log('证明器材：自定义规则与指数式归纳');
-t('反例构造器：选“自己写的规则”，写 2n+1 是质数，在 1–20 里找到反例 4', () => {
-  const sc = W.blank(); const e = W.add(sc, 'counterex', 0, 0, { rule: 9, custom: '2n+1 是质数', from: 1, to: 20 });
-  const o = W.evaluate(sc)[e].out; eq(o.refuted.data, true); eq(o.counter.data.n, 4);
-});
 t('参数扫描器：写错的自定义规则会说明原因，不算证据', () => {
   const sc = W.blank(); const e = W.add(sc, 'scanner', 0, 0, { rule: 9, custom: '随便写', from: 1, to: 5 });
   const D = W.evaluate(sc); truthy(/规则写不对/.test(D[e].sig.map((x) => x.tx).join('|')));
@@ -1059,10 +995,6 @@ t('归纳阶梯：指数式 1+2+…+2^(n−1) = 2^n−1 的步骤是恒等式，
   eq(o.identity.data, true); eq(o.lv.data.n, 4);
 });
 console.log('规则：多变量、后算器材的安全');
-t('多变量规则：x+y 是偶数，在 1–4 里反例是 x=1, y=2', () => {
-  const sc = W.blank(); const e = W.add(sc, 'counterex', 0, 0, { rule: 9, custom: 'x+y 是偶数', from: 1, to: 4 });
-  const o = W.evaluate(sc)[e].out; eq(o.refuted.data, true); eq(o.counter.data.n, 2);
-});
 t('多变量规则：x^2 > y 不成立时找到的组被说明；组数太多时说明', () => {
   const sc = W.blank(); const e = W.add(sc, 'scanner', 0, 0, { rule: 9, custom: 'x^2 > y', from: 1, to: 3 });
   truthy(W.evaluate(sc)[e].out.refuted.data, '1^2 > 3 不成立');
@@ -3218,11 +3150,26 @@ console.log('示例菜单（problems/examples-data.js，由 tools/gen-examples.j
   });
 }
 
+t('参数扫描器写自己的规则：2n+1 是质数在 1–20 里的反例是 4；x+y 是偶数在 1–4 里反例是第 2 个；n×n+n+41 的反例是 40', () => {
+  const run = (custom, to) => { const sc = W.blank(); const e = W.add(sc, 'scanner', 0, 0, { rule: 9, custom, from: 1, to }); return W.evaluate(sc)[e].out; };
+  let o = run('2n+1 是质数', 20); eq(o.refuted.data, true); eq(U.showVal(o.counter), '4');
+  o = run('x+y 是偶数', 4); eq(o.refuted.data, true); eq(U.showVal(o.counter), '2');
+  o = run('n×n+n+41 是质数', 50); eq(U.showVal(o.counter), '40');
+});
+
+t('可能性：列出所有情况，两个骰子 36 种里和为 7 的有 6 种（1/6）、和为 13 的 0 种；三个骰子 216 种里和为 10 的有 27 种', () => {
+  const run = (props) => { const sc = W.blank(); const e = W.add(sc, 'chancebench', 0, 0, Object.assign({ list: true }, props)); return W.evaluate(sc)[e].out; };
+  let o = run({ mode: 1, sumv: 7 }); eq(U.showVal(o.all), '36'); eq(U.showVal(o.ways), '6'); eq(U.showVal(o.pways), '1/6');
+  o = run({ mode: 1, sumv: 13 }); eq(U.showVal(o.ways), '0');
+  o = run({ mode: 4, sumv: 10 }); eq(U.showVal(o.all), '216'); eq(U.showVal(o.ways), '27');
+  eq(run({ mode: 1, list: false }).ways, undefined, '没点开就没有');
+});
+
 console.log('旧题搬到操作台');
 t('搬题：每个要搬的 id 都找到了题；搬过去的题器材架上只有操作台，开场台面上就有它', () => {
   eq(U.benchMigrateMissing, [], '找不到的 id');
-  truthy(U.benchMigrated.length >= 123, '至少搬了 123 道');
-  const BENCH = ['areamodel', 'balancebench', 'numlinebench', 'ratiobench', 'coordbench', 'blocksbench', 'termsbench', 'swapbench', 'systembench', 'gapbench', 'meanbench', 'tapebench', 'vennbench', 'travelbench', 'mulbench', 'fastbench', 'statbench', 'chancebench', 'clockbench', 'groupbench', 'solidbench'];
+  truthy(U.benchMigrated.length >= 141, '至少搬了 141 道');
+  const BENCH = ['areamodel', 'balancebench', 'numlinebench', 'ratiobench', 'coordbench', 'blocksbench', 'termsbench', 'swapbench', 'systembench', 'gapbench', 'meanbench', 'tapebench', 'vennbench', 'travelbench', 'mulbench', 'fastbench', 'statbench', 'chancebench', 'clockbench', 'groupbench', 'solidbench', 'conjbench', 'fitbench'];
   for (const id of U.benchMigrated) {
     const p = U.problems.find((x) => x.id === id), s = p.build();
     truthy(p.shelf.length === 1 && BENCH.includes(p.shelf[0]), id + ' 的器材架');
