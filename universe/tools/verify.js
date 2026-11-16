@@ -87,6 +87,11 @@ async function checkDist() {
   if (!runScript('tests/ui-swap.js', 'tests/ui-swap.js', pwEnv)) bail();   // 换一换（鸡兔同笼）：真实鼠标点着换、拖把手一次换好几个
   if (!runScript('tests/ui-system.js', 'tests/ui-system.js', pwEnv)) bail();   // 两架天平（方程组）：真实鼠标把一架拖到另一架上（消元、代入），点翻倍、平分、拿走
   if (!runScript('tests/ui-gap.js', 'tests/ui-gap.js', pwEnv)) bail();   // 间隔与植树：真实鼠标拖间隔、拖路长、点两头的树、围成一圈
+  if (!runScript('tests/ui-mean.js', 'tests/ui-mean.js', pwEnv)) bail();   // 平均数：真实鼠标搬方块、加一堆、从托盘加一块
+  if (!runScript('tests/ui-tape.js', 'tests/ui-tape.js', pwEnv)) bail();   // 线段图：真实鼠标搭段数、拖一段的长
+  if (!runScript('tests/ui-venn.js', 'tests/ui-venn.js', pwEnv)) bail();   // 集合圈：真实鼠标把人拖进圈里、中间、圈外
+  if (!runScript('tests/ui-travel.js', 'tests/ui-travel.js', pwEnv)) bail();   // 行程：真实鼠标拖时间条、拖速度箭头
+  if (!runScript('tests/ui-mul.js', 'tests/ui-mul.js', pwEnv)) bail();   // 竖式乘法：真实鼠标点格子、点数字键
   if (!runScript('tests/ui-areamodel.js', 'tests/ui-areamodel.js', pwEnv)) bail();   // 面积模型（样板操作台）和器材把手：真实鼠标拖边、切、改分数
   if (!runScript('tests/ui-shapes.js', 'tests/ui-shapes.js', pwEnv)) bail();         // 常见图形、顶点编辑、直接拖出辅助线（真实鼠标和键盘）；含画布横纵比例回归
   if (!runScript('tests/ui-export.js', 'tests/ui-export.js', pwEnv)) bail();         // 2.12/V10：导出图片（真实鼠标点菜单，台面和专注工作区各一次下载，.png、大小 > 0）
