@@ -1,7 +1,7 @@
 /* 搬到操作台上的旧题的参考解（problems/zz-benches.js）。文件名 zz 开头：排在各年级的参考解后面加载，盖掉原来“接运算器”的解法。 */
 'use strict';
 const S = (role) => (o) => (h) => { const e = h.role(role); for (const k of Object.keys(o)) h.set(e, k, o[k]); };
-const n = S('n'), k = S('k'), r = S('r'), m = S('m'), c = S('c'), t = S('t'), s = S('s'), gp = S('g'), b = S('b');
+const n = S('n'), k = S('k'), r = S('r'), m = S('m'), c = S('c'), t = S('t'), s = S('s'), gp = S('g'), b = S('b'), d = S('d'), ch = S('h');
 module.exports = {
   'g1-split-merge-core': n({ a: 2, n: 3 }),
   'g1-split-minus-trap': n({ s: -1, n: 2 }),
@@ -43,6 +43,13 @@ module.exports = {
   'g7-quadrant-core': c({ ax: -2, ay: 3 }),
   'g7-symmetry-x-axis-trap': c({ bx: 3, by: 2 }),
   'g7-translate-down-trap': c({ ay: -1 }),
+  // 第十二批
+  'two-dice'(h) { const e = h.role('h'); h.set(e, 'n', 300); h.set(e, 'showp', true); }, 'coin-fair'(h) { const e = h.role('h'); h.set(e, 'n', 10); h.set(e, 'n', 400); },
+  'bag-red-ratio': ch({ n: 400, showp: true }), 'dice-mean': ch({ n: 300 }),
+  // 第十一批
+  'g2-data-mode-core': d({ smode: true }), 'g2-data-count-trap': d({ vals: '2, 3, 5, 5, 5', smode: true }), 'g4-bar-range-core': d({ srange: true }), 'g7-survey-mean-core': d({ smean: true }),
+  'g7-survey-median-trap': d({ vals: '1, 2, 2, 3, 100', smed: true }), 'g8-median-core': d({ vals: '2, 4, 4, 6, 9', smed: true }), 'g8-median-mode-trap': d({ vals: '1, 1, 2, 3, 4', smed: true }),
+  'mean-vs-median'(h) { const e = h.role('d'); h.set(e, 'smean', true); h.set(e, 'smed', true); h.set(e, 'vals', '3, 4, 4, 5, 4'); },
   // 第十批
   'g8-proportional-core': c({ kn: 2, x: 3 }), 'g8-proportional-intercept-trap': c({ b: 3 }), 'line-through': c({ kn: 2, x: 2 }), 'model-rent': c({ b: 2 }),
   'g9-discriminant-core': c({ v: 0 }), 'g9-discriminant-trap': c({ v: 0 }), 'g9-vertex-down-core': c({ h: 1, v: 4 }), 'g9-vertex-down-trap': c({ a2: -2 }), 'g9-min-value-core': c({ h: 3, v: 1 }), 'quad-vertex': c({ h: 2, v: -1 }),

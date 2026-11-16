@@ -1075,7 +1075,7 @@ t('后算器材：结论只能接后算器材；后算器材之间可以接；�
   const pc = W.add(sc, 'proofcheck', 0, 0, { want: 1 });
   eq(W.act(sc, { t: 'link', from: sf, fromPort: 'lv', to: pc, toPort: 'lv' }).ok, true, '后算 → 后算 可以接');
   eq(W.evaluate(sc)[pc].out.ok.data, true, '空脚手架的证据等级是 1，要求 1，够');
-  const coin = W.add(sc, 'coin', 0, 0, {}), pc2 = W.add(sc, 'proofcheck', 0, 0, { want: 1 });
+  const coin = W.add(sc, 'dice', 0, 0, {}), pc2 = W.add(sc, 'proofcheck', 0, 0, { want: 1 });
   const rc = W.act(sc, { t: 'link', from: coin, fromPort: 'v', to: pc2, toPort: 'lv' }); eq(rc.ok, false); truthy(/有记忆/.test(rc.why), rc.why);
   eq(U.lintType(U.types.scaffold).errors, []);
   eq(U.lintType(U.types.proofcheck).errors, [], '后算器材可以有输入口，只要不是有状态的');
@@ -3221,8 +3221,8 @@ console.log('示例菜单（problems/examples-data.js，由 tools/gen-examples.j
 console.log('旧题搬到操作台');
 t('搬题：每个要搬的 id 都找到了题；搬过去的题器材架上只有操作台，开场台面上就有它', () => {
   eq(U.benchMigrateMissing, [], '找不到的 id');
-  truthy(U.benchMigrated.length >= 89, '至少搬了 89 道');
-  const BENCH = ['areamodel', 'balancebench', 'numlinebench', 'ratiobench', 'coordbench', 'blocksbench', 'termsbench', 'swapbench', 'systembench', 'gapbench', 'meanbench', 'tapebench', 'vennbench', 'travelbench', 'mulbench', 'fastbench'];
+  truthy(U.benchMigrated.length >= 101, '至少搬了 101 道');
+  const BENCH = ['areamodel', 'balancebench', 'numlinebench', 'ratiobench', 'coordbench', 'blocksbench', 'termsbench', 'swapbench', 'systembench', 'gapbench', 'meanbench', 'tapebench', 'vennbench', 'travelbench', 'mulbench', 'fastbench', 'statbench', 'chancebench'];
   for (const id of U.benchMigrated) {
     const p = U.problems.find((x) => x.id === id), s = p.build();
     truthy(p.shelf.length === 1 && BENCH.includes(p.shelf[0]), id + ' 的器材架');

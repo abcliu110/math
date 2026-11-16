@@ -39,6 +39,10 @@ module.exports = [
       ['mclb','meter',{'digits':0,'label':'竖式：23 × 14 的得数'}],
       ['fsb','fastbench',{'kind':3,'a':19,'b':21,'stage':1}],
       ['mfsb','meter',{'digits':0,'label':'速算：19 × 21 的得数'}],
+      ['stb','statbench',{'vals':'3, 4, 4, 5, 40','smean':true}],
+      ['mstb','meter',{'digits':0,'label':'统计图：平均数'}],
+      ['chb','chancebench',{'mode':1,'n':300,'seed':11,'target':5}],
+      ['mchb','meter',{'digits':0,'label':'可能性：做了几次'}],
     ],
     links: [
       ['am','mam','v','area'],
@@ -57,6 +61,8 @@ module.exports = [
       ['tvb','mtvb','v','gap'],
       ['clb','mclb','v','product'],
       ['fsb','mfsb','v','value'],
+      ['stb','mstb','v','mean'],
+      ['chb','mchb','v','n'],
     ],
   },
 ];

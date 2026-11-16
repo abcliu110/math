@@ -1,4 +1,4 @@
-/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，十批共 89 道）。
+/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，十二批共 101 道）。
  * 这些题原来的做法是“放数字、接运算器、看读数”：学生在搭计算流程。这里按 id 把它们换成在操作台上直接动手：
  * 题目的编号、标题、年级、知识点、道理（why）都不变，换的是器材架、开场的台面、里程碑和提示。
  * 这个文件排在所有题目文件后面加载（文件名 zz 开头），找不到的 id 会记在 U.benchMigrateMissing 里（测试会查）。 */
@@ -7,8 +7,9 @@
   const U = G.U, W = U.World;
   const one = (type, role, props) => () => { const s = W.blank(); const id = W.add(s, type, 40, 50, props); s.entities[id].role = role; return s; };
   const ms = (role) => (id, say, score, port, value, hints) => ({ id, say, score, when: { role, port, op: '=', value: String(value) }, hints });
-  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s'), GP = ms('g'), B = ms('b');
-  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props), bb = (props) => one('balancebench', 'b', props);
+  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s'), GP = ms('g'), B = ms('b'), D = ms('d');
+  const H = (id, say, score, when, hints) => ({ id, say, score, when, hints });   // 条件是一个范围（频率稳在某个区间）时用函数
+  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props), bb = (props) => one('balancebench', 'b', props), sb = (props) => one('statbench', 'd', props), ch = (props) => one('chancebench', 'h', props);
   const MOVES = {
     // ---- 数轴 ----
     'g1-split-merge-core': { shelf: ['numlinebench'], build: nl({ from: 0, to: 10, a: 0, s: 1, n: 0 }),
@@ -317,6 +318,49 @@
     'linear-3x5': { shelf: ['balancebench'], build: bb({ lx: 3, lc: 5, rx: 0, rc: 20, x0: 5 }),
       hook: '3x + 5 = 20。左盘 3 个盒子和 5 个砝码，右盘 20 个砝码。把一个盒子单独留在一边。',
       milestones: [B('apart', '3x = 15', 4, 'stage', 1, ['先让左盘只剩盒子。', '两边各拿走 5 个砝码。', '20 − 5 = 15。']), B('solve', 'x = 5', 4, 'solved', 5, ['3 个盒子对 15 个砝码。', '两边都平分成 3 份。', '15 ÷ 3 = 5。'])], goal: ['apart', 'solve'] },
+    // ======== 第十一批：众数、中位数、平均数、极差，在“数据与统计图”上做 ========
+    'g2-data-mode-core': { shelf: ['statbench'], build: sb({ vals: '5, 5, 2, 5, 3' }),
+      hook: '5 个同学选的数字：5、5、2、5、3。一样高的柱子是同一个数。先自己数一数，再点“众数”看看：哪个数字选的人最多？',
+      milestones: [D('mode', '选得最多的是 5', 6, 'mode', 5, ['一样高的柱子是同一个数。', '5 有 3 根。', '点“众数”。'])], goal: ['mode'] },
+    'g2-data-count-trap': { shelf: ['statbench'], build: sb({ vals: '5, 5, 2, 5, 3' }),
+      hook: '问的是“出现了几次”，不是“哪个数”。先点“从小到大排队”，一样的数挨在一起，数一数最多的那个数有几根柱子。再点“众数”核对。',
+      milestones: [D('sort', '排好队了', 2, 'sorted', 1, ['点“从小到大排队”。', '一样的挨在一起。', '2、3、5、5、5。']), D('times', '出现次数最多的是 3 次', 5, 'modecount', 3, ['5 有几根？', '点“众数”。', '3 次。'])], goal: ['times'] },
+    'g4-bar-range-core': { shelf: ['statbench'], build: sb({ vals: '45, 52, 38, 60', names: '一班, 二班, 三班, 四班', unit: '人' }),
+      hook: '四个班的人数画成了条形统计图。最高的柱子比最矮的高多少？先估一估，再点“最多 − 最少”。',
+      milestones: [D('range', '最多比最少多 22 人', 6, 'range', 22, ['最多是四班 60 人。', '最少是三班 38 人。', '60 − 38 = 22。'])], goal: ['range'] },
+    'g7-survey-mean-core': { shelf: ['statbench'], build: sb({ vals: '150, 152, 154, 156, 158', unit: '厘米', vmax: 160 }),
+      hook: '5 个同学的身高：150、152、154、156、158 厘米。高的匀一点给矮的，摊平以后是多高？先想，再点“平均数”。',
+      milestones: [D('avg', '平均身高 154 厘米', 6, 'mean', 154, ['158 匀 4 给 150，156 匀 2 给 152。', '都变成 154。', '770 ÷ 5 = 154。'])], goal: ['avg'] },
+    'g7-survey-median-trap': { shelf: ['statbench'], build: sb({ vals: '3, 100, 2, 1, 2' }),
+      hook: '一组数 3、100、2、1、2。中位数是排好队以后正中间的那个数。先排队，再点“中位数”。100 这么大，会影响中位数吗？',
+      milestones: [D('sort', '排好队了', 2, 'sorted', 1, ['点“从小到大排队”。', '1、2、2、3、100。', '排好了。']), D('median', '中位数是 2', 5, 'median', 2, ['正中间是第 3 个。', '点“中位数”。', '2。'])], goal: ['median'],
+      traps: [{ id: 'mean', wrong: '那是平均数：被 100 拉高到 108 ÷ 5 = 21.6，不是中位数。', when: { role: 'd', port: 'mean', op: '=', value: '108/5' } }] },
+    'g8-median-core': { shelf: ['statbench'], build: sb({ vals: '6, 2, 9, 4, 4' }),
+      hook: '2、4、4、6、9 打乱了。中位数：把数从小到大排好，正中间的那个数。',
+      milestones: [D('sort', '排好队了', 2, 'sorted', 1, ['点“从小到大排队”。', '2、4、4、6、9。', '排好了。']), D('mid', '中位数是 4', 5, 'median', 4, ['5 个数，正中间是第 3 个。', '点“中位数”。', '4。'])], goal: ['mid'] },
+    'g8-median-mode-trap': { shelf: ['statbench'], build: sb({ vals: '2, 1, 4, 1, 3' }),
+      hook: '1 出现了两次，但中位数要看正中间，不是看次数最多的数。先排队，再点“中位数”。',
+      milestones: [D('sort', '排好队了', 2, 'sorted', 1, ['点“从小到大排队”。', '1、1、2、3、4。', '排好了。']), D('mid', '中位数是 2', 5, 'median', 2, ['正中间是第 3 个。', '点“中位数”。', '2。'])], goal: ['mid'],
+      traps: [{ id: 'mode', wrong: '1 是众数（出现次数最多），不是中位数。中位数看的是排好队以后的正中间。', when: { role: 'd', port: 'mode', op: '=', value: '1' } }] },
+    'mean-vs-median': { shelf: ['statbench'], build: sb({ vals: '3, 4, 4, 5, 40', unit: '千元', free: true, vmax: 45 }),
+      hook: '五个人的月收入：3、4、4、5、40（千元）。先点“平均数”，再排好队点“中位数”：哪个更能代表“一般水平”？然后把 40 那根柱子往下拖到 4，看平均线掉多少、中位数动不动。',
+      milestones: [D('mean', '平均数是 11.2', 3, 'mean', '56/5', ['点“平均数”。', '一共 56，5 个人。', '56 ÷ 5 = 11.2。']), D('med', '中位数是 4', 3, 'median', 4, ['已经排好队了。', '点“中位数”。', '第 3 个是 4。']), D('fix', '把 40 拖到 4：平均数掉到 4', 4, 'mean', 4, ['拖 40 那根柱子的顶端。', '往下拖到 4。', '20 ÷ 5 = 4。'])], goal: ['mean', 'med', 'fix'] },
+    // ======== 第十二批：抛硬币、掷骰子、摸球，在“可能性”上做很多次 ========
+    'two-dice': { shelf: ['chancebench'], build: ch({ mode: 1, seed: 11, target: 5 }),
+      hook: '掷两个骰子，把点数加起来。哪个和最容易出现？先猜。点“做 100 次”，看看谁最高；再做几百次，看看还是不是它。',
+      milestones: [H('many', '做了 300 次，最多的是 7', 6, (w) => w.some('chancebench', (e) => w.num(e, 'n') >= 300 && w.num(e, 'top') === 5), ['一次一次太慢。', '点“做 100 次”。', '做到 300 次以上。']),
+        H('why', '理论上 7 占 6/36', 3, (w) => w.some('chancebench', (e) => w.num(e, 'p') === 1 / 6), ['为什么是 7？', '点“理论上”。', '和是 7 有 6 种：1+6、2+5、3+4、4+3、5+2、6+1。'])], goal: ['many'] },
+    'coin-fair': { shelf: ['chancebench'], build: ch({ mode: 0, seed: 15 }),
+      hook: '抛硬币。先“做 10 次”，看正面占多少；再一直做到 400 次以上。右边的折线是正面的频率：次数少的时候和多的时候，它有什么不一样？',
+      milestones: [H('ten', '先做 10 次', 2, (w) => w.some('chancebench', (e) => w.num(e, 'n') >= 10), ['点“做 10 次”。', '看折线。', '晃得很厉害。']),
+        H('near', '做了 400 次，正面的频率在 0.45 到 0.55 之间', 6, (w) => w.some('chancebench', (e) => { const n = w.num(e, 'n'), f = w.num(e, 'freq'); return n >= 400 && f !== null && f >= 0.45 && f <= 0.55; }), ['点“做 100 次”，点 4 次。', '看折线最后稳在哪里。', '0.5 附近。'])], goal: ['near'] },
+    'bag-red-ratio': { shelf: ['chancebench'], build: ch({ mode: 2, red: 3, white: 1, seed: 15 }),
+      hook: '袋里 3 个红球、1 个白球，每次摸一个，看完放回。摸几百次以后，红球的频率会稳在哪里？做到 400 次以上，再点“理论上”对一对。',
+      milestones: [H('near', '摸了 400 次，红球的频率在 0.7 到 0.8 之间', 6, (w) => w.some('chancebench', (e) => { const n = w.num(e, 'n'), f = w.num(e, 'freq'); return n >= 400 && f !== null && f >= 0.7 && f <= 0.8; }), ['点“做 100 次”。', '做到 400 次以上。', '看频率稳在哪里。']),
+        H('p', '理论上红球占 3/4', 3, (w) => w.some('chancebench', (e) => w.num(e, 'p') === 0.75), ['4 个球里有 3 个红的。', '点“理论上”。', '3/4 = 0.75。'])], goal: ['near'] },
+    'dice-mean': { shelf: ['chancebench'], build: ch({ mode: 1, seed: 11, target: 5 }),
+      hook: '掷两个骰子，点数和平均是多少？做几次看一看下面的平均数；做到 300 次以上，它稳在哪里？',
+      milestones: [H('near7', '做了 300 次，平均数在 6.8 到 7.2 之间', 8, (w) => w.some('chancebench', (e) => { const n = w.num(e, 'n'), v = w.num(e, 'mean'); return n >= 300 && v !== null && v >= 6.8 && v <= 7.2; }), ['点“做 100 次”。', '做到 300 次以上。', '每个骰子平均 3.5，两个是 7。'])], goal: ['near7'] },
   };
   const missing = [], moved = [];
   for (const id of Object.keys(MOVES)) {

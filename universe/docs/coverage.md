@@ -52,7 +52,7 @@
 | 2.6 | 2 | 观察物体 | 1 | 1 | 0 | 1 | views |
 | 2.7 | 2 | 认识时间 | 1 | 1 | 0 | 1 | num、ratiobench |
 | 2.15 | 2 | 搭配（一） | 1 | 1 | 0 | 1 | areamodel |
-| 2.14a | 2 | 数据收集整理 | 1 | 1 | 0 | 1 | data |
+| 2.14a | 2 | 数据收集整理 | 1 | 1 | 0 | 1 | statbench |
 | 2.8 | 2 | 除法初步认识 | 2 | 1 | 0 | 1 | numlinebench |
 | 2.9 | 2 | 图形的运动 | 2 | 1 | 0 | 1 | fold、euler |
 | 2.10 | 2 | 混合运算 | 1 | 1 | 0 | 1 | termsbench |
@@ -76,13 +76,13 @@
 | 3.13 | 3 | 年、月、日 | 1 | 1 | 0 | 1 | num |
 | 3.14 | 3 | 小数的初步认识 | 3 | 1 | 0 | 1 | num、numlinebench、twoways |
 | 3.15b | 3 | 搭配（二） | 2 | 1 | 0 | 1 | num、areamodel、euler |
-| 4.1 | 4 | 大数的认识、近似数 | 5 | 0 | 0 | 1 | dice、num、coin |
+| 4.1 | 4 | 大数的认识、近似数 | 5 | 0 | 0 | 1 | chancebench、num |
 | 4.2 | 4 | 公顷和平方千米 | 1 | 1 | 0 | 1 | ratiobench |
 | 4.3 | 4 | 角的度量 | 1 | 0 | 0 | 1 | num |
 | 4.4 | 4 | 三位数乘两位数 | 10 | 1 | 0 | 1 | num、mulbench、travelbench |
 | 4.5 | 4 | 平行四边形和梯形 | 3 | 1 | 0 | 1 | parallelogram、cubes |
 | 4.6 | 4 | 除数是两位数的除法 | 1 | 1 | 0 | 1 | num |
-| 4.7 | 4 | 条形统计图 | 1 | 1 | 0 | 1 | data、ratiobench |
+| 4.7 | 4 | 条形统计图 | 1 | 1 | 0 | 1 | statbench、ratiobench |
 | 4.8 | 4 | 优化 | 1 | 1 | 0 | 1 | num |
 | 4.9 | 4 | 四则运算 | 10 | 1 | 0 | 1 | asn、termsbench、findbug、turtle |
 | 4.17 | 4 | 观察物体（二） | 1 | 1 | 0 | 1 | views |
@@ -91,12 +91,12 @@
 | 4.12 | 4 | 三角形 | 6 | 0 | 0 | 1 | angles、curved、parallelogram、guessrule、tri |
 | 4.13 | 4 | 小数的加法和减法 | 2 | 1 | 0 | 1 | num |
 | 4.14 | 4 | 图形的运动（二） | 1 | 0 | 0 | 1 | ftri |
-| 4.15 | 4 | 平均数 | 9 | 0 | 0 | 1 | hanoi、meanbench、dice、data |
+| 4.15 | 4 | 平均数 | 9 | 0 | 0 | 1 | hanoi、meanbench、chancebench、statbench |
 | 4.16 | 4 | 鸡兔同笼 | 11 | 1 | 0 | 1 | swapbench |
 | 5.1 | 5 | 小数乘法 | 2 | 1 | 0 | 1 | num |
 | 5.2 | 5 | 位置 | 1 | 1 | 0 | 1 | — |
 | 5.3 | 5 | 小数除法 | 1 | 1 | 0 | 1 | num |
-| 5.4 | 5 | 可能性 | 6 | 1 | 0 | 3 | dice、enumerator、num、meter、array、ptree |
+| 5.4 | 5 | 可能性 | 6 | 1 | 0 | 3 | chancebench、enumerator、num、meter、array、ptree |
 | 5.5 | 5 | 简易方程 | 12 | 0 | 0 | 1 | variable、balancebench、nim、costplan、systembench |
 | 5.6 | 5 | 多边形的面积 | 5 | 1 | 0 | 1 | num、parallelogram、gworkspace、gpt、gpoly、fquad |
 | 5.7 | 5 | 植树问题 | 7 | 1 | 0 | 1 | gapbench |
@@ -137,7 +137,7 @@
 | 7.13 | 7 | 平面直角坐标系 | 1 | 1 | 0 | 1 | coordbench |
 | 7.14 | 7 | 二元一次方程组与消元 | 9 | 0 | 0 | 1 | coordbench、swapbench、systembench |
 | 7.15 | 7 | 不等式与一元一次不等式组 | 3 | 0 | 0 | 1 | num、balance、eqcard、numlinebench |
-| 7.16 | 7 | 统计调查与直方图 | 1 | 1 | 0 | 1 | — |
+| 7.16 | 7 | 统计调查与直方图 | 1 | 1 | 0 | 1 | statbench |
 | 8.1 | 8 | 三角形 | 1 | 0 | 0 | 1 | — |
 | 8.2 | 8 | 全等三角形的判定 | 2 | 1 | 0 | 1 | ftri、fold |
 | 8.3 | 8 | 轴对称 | 2 | 0 | 0 | 1 | fold |
@@ -153,7 +153,7 @@
 | 8.13 | 8 | 特殊的平行四边形 | 1 | 1 | 0 | 1 | areamodel |
 | 8.14 | 8 | 函数与正比例函数 | 1 | 1 | 0 | 1 | coordbench |
 | 8.15 | 8 | 一次函数 | 17 | 0 | 0 | 1 | coordbench、fmachine、costplan、datatable、databench |
-| 8.16 | 8 | 数据的分析 | 2 | 1 | 0 | 1 | data |
+| 8.16 | 8 | 数据的分析 | 2 | 1 | 0 | 1 | statbench |
 | 9.1 | 9 | 解一元二次方程 | 2 | 0 | 0 | 1 | tiles |
 | 9.2 | 9 | 一元二次方程的应用与根的判别式 | 2 | 1 | 0 | 1 | coordbench |
 | 9.3 | 9 | 二次函数的图象和性质 | 4 | 1 | 0 | 1 | coordbench |
@@ -162,7 +162,7 @@
 | 9.6 | 9 | 圆的有关性质 | 1 | 1 | 0 | 1 | circle-angle |
 | 9.7 | 9 | 点、直线和圆的位置关系 | 1 | 1 | 0 | 1 | — |
 | 9.8 | 9 | 弧长和扇形面积 | 1 | 1 | 0 | 1 | circle |
-| 9.9 | 9 | 随机事件与概率 | 3 | 0 | 0 | 1 | bag、coin、ptree |
+| 9.9 | 9 | 随机事件与概率 | 3 | 0 | 0 | 1 | chancebench、ptree |
 | 9.10 | 9 | 列举法求概率与频率估计 | 1 | 1 | 0 | 1 | enumerator |
 | 9.11 | 9 | 反比例函数 | 1 | 1 | 0 | 1 | — |
 | 9.12 | 9 | 图形的相似与位似 | 4 | 1 | 0 | 1 | ftri、scale、spheretri |
@@ -181,11 +181,11 @@
 | E4 | 101 | 23 |
 | E5 | 132 | 53 |
 | E6 | 40 | 18 |
-| E7 | 99 | 21 |
+| E7 | 99 | 23 |
 | E8 | 61 | 26 |
-| E9 | 68 | 14 |
+| E9 | 68 | 16 |
 | E10 | 10 | 3 |
-| E11 | 11 | 7 |
+| E11 | 11 | 3 |
 | E12 | 13 | 6 |
 
 ## 没有题的知识点

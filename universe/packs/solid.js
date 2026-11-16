@@ -62,42 +62,6 @@
         },
       },
 
-      data: {
-        workspaceRole: 'none',
-        handles: true,
-        essence: ['E11'],
-        label: '数据表', prefix: '据', group: '统计与概率', grades: [3, 9], alias: ['平均数', '中位数', '众数', '极差', '一组数据'],
-        props: {
-          list: { type: 'text', label: '一组数（逗号隔开）', default: '3, 5, 5, 6, 9' },
-          lo: { type: 'int', label: '统计从', default: 0, min: -50, max: 50 },
-          hi: { type: 'int', label: '统计到', default: 20, min: -49, max: 100 },
-        },
-        outputs: { dist: { dim: null, kind: 'dist', label: '分布' }, n: { dim: null, kind: 'num', label: '个数' }, mean: { dim: null, kind: 'num', label: '平均数' }, median: { dim: null, kind: 'num', label: '中位数' } },
-        icon: () => [0, 1, 2].map((i) => K.line(10, 12 + i * 10, 54, 12 + i * 10, { w: 1.5, stroke: 'var(--dim)' })).join('') + K.text(32, 18, '3 5 9', { size: 12, weight: 700 }),
-        size: () => [250, 130],
-        compute: (c) => {
-          const xs = String(c.props.list).split(/[,，\s]+/).filter(Boolean).map(Number);
-          if (!xs.length || xs.some((x) => !Number.isFinite(x))) { c.say('reject', '「一组数」里只能写数字，用逗号隔开'); return {}; }
-          if (xs.length > 200) { c.say('reject', '最多 200 个数'); return {}; }
-          if (c.props.hi < c.props.lo) { c.say('reject', '“统计到”不能比“统计从”小'); return {}; }
-          const srt = xs.slice().sort((a, b) => a - b), n = srt.length, med = n % 2 ? Q.fromNumber(srt[(n - 1) / 2]) : Q.div(Q.add(Q.fromNumber(srt[n / 2 - 1]), Q.fromNumber(srt[n / 2])), Q(2));
-          const sum = xs.reduce((s, x) => Q.add(s, Q.fromNumber(x)), Q(0)), counts = new Array(c.props.hi - c.props.lo + 1).fill(0);
-          xs.forEach((x) => { if (Number.isInteger(x) && x >= c.props.lo && x <= c.props.hi) counts[x - c.props.lo]++; });
-          c.say('ok', n + ' 个数：平均 ' + Q.showDec(Q.div(sum, Q(n)), 3) + '，中位数 ' + Q.showDec(med, 3));
-          return { dist: U.val('dist', { lo: c.props.lo, counts }), n: num(Q(n)), mean: num(Q.div(sum, Q(n))), median: num(med) };
-        },
-        badge: (c) => (c.out.n ? c.out.n.data.n + ' 个数' : ''),
-        draw: (c) => {
-          const xs = String(c.props.list).split(/[,，\s]+/).filter(Boolean).map(Number).filter(Number.isFinite);
-          if (!xs.length) return K.text(c.w / 2, c.h / 2, '没有数据', { fill: 'var(--dim)' });
-          const mn = Math.min(...xs), mx = Math.max(...xs), W = c.w - 30, X = (x) => 15 + (mx === mn ? W / 2 : ((x - mn) / (mx - mn)) * W), y = c.h / 2 + 4;
-          let s = K.line(10, y, c.w - 10, y, { w: 1.5 }), seen = {};
-          xs.forEach((x) => { const k = (seen[x] = (seen[x] || 0) + 1); s += K.circle(X(x), y - 6 - (k - 1) * 11, 5, { fill: 'var(--accent)', stroke: '#fff', w: 1.5 }); });
-          [mn, mx].forEach((x) => { s += K.text(X(x), y + 16, x, { size: 11, fill: 'var(--dim)' }); });
-          if (c.out.mean) s += '<path d="M' + X(Q.num(c.out.mean.data)) + ',' + (y + 4) + ' l-5,9 h10z" fill="var(--good)"/>' + K.text(X(Q.num(c.out.mean.data)), y + 30, '平均 ' + Q.showDec(c.out.mean.data, 2), { size: 11, fill: 'var(--good)', weight: 700 });
-          return s;
-        },
-      },
     },
   });
 })(typeof globalThis !== 'undefined' ? globalThis : window);

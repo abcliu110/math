@@ -103,34 +103,6 @@
         },
       },
 
-      coin: {
-        workspaceRole: 'none',
-        handles: true,
-        essence: ['E11'],
-        label: '硬币', prefix: '币', group: '统计与概率', grades: [4, 9], alias: ['正反面', '概率', '随机'],
-        props: {
-          p: { type: 'num', label: '正面概率', default: 0.5, min: 0, max: 1, step: 0.05 },
-          every: { type: 'int', label: '几拍抛一次', default: 1, min: 1, max: 20 },
-          salt: { type: 'int', label: '种子偏移', default: 0, min: 0, max: 99 },
-        },
-        outputs: { v: { dim: null, kind: 'num', label: '正面=1' } },
-        icon: () => K.circle(32, 22, 15, { stroke: 'var(--ink)', w: 2.5, fill: '#f5c24233' }) + K.text(32, 29, '正', { size: 16, weight: 700 }),
-        size: () => [120, 100],
-        init: () => ({ v: -1, flips: 0, heads: 0 }),
-        read: (c) => (c.state.v < 0 ? {} : { v: num(Q(c.state.v)) }),
-        step: (c) => {
-          const s = c.state; if (c.n % c.props.every !== 0) return s;
-          const h = c.rand(c.props.salt) < c.props.p ? 1 : 0;
-          return { v: h, flips: s.flips + 1, heads: s.heads + h };
-        },
-        sig: (c, say) => say('info', c.state.flips ? '抛了 ' + c.state.flips + ' 次，正面 ' + c.state.heads + ' 次' : '还没抛：让时钟走起来'),
-        badge: (c) => (c.state.v < 0 ? '' : c.state.v ? '正面' : '反面'),
-        draw: (c) => {
-          const v = c.state.v, cx = c.w / 2, cy = c.h / 2;
-          return K.circle(cx, cy, Math.min(cx, cy) - 8, { stroke: 'var(--ink)', w: 3, fill: v < 0 ? 'var(--card2)' : v ? '#f5c242' : '#c7ccd6' }) + K.text(cx, cy + 10, v < 0 ? '?' : v ? '正' : '反', { size: 30, weight: 700 });
-        },
-      },
-
       seq: {
         workspaceRole: 'none',
         handles: true,
