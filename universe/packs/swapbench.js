@@ -8,6 +8,8 @@
  *   - 天平下面把“还差的”切成一段一段，每段就是“换一个补上的数”：差 10、每换一只补 2，就是 5 段。段数自己数，这就是假设法的那一步除法。
  *   - “每个都少算”按钮：每只都少算 2 条腿（天平两边同时减去 8 × 2）。鸡剩 0 条、兔剩 2 条，天平歪的样子不变——差的全是兔多出来的腿。
  *   - 拖把手的时候，被换掉的每一个头上写着 +2，一眼看出这一下一共变了多少。
+ *   - “写成两架天平”：同一道题换一种写法。上面一架是个数（x + y = 8），下面一架是总数（2x + 4y = 26），圆盒 x 是甲的个数、方盒 y 是乙的个数。
+ *     这时卡片上就是“两架天平”操作台（同一套画法和拖法），解出来以后点“回到换一换”，乙的个数带回来。数太大（每盘超过 30 个砝码或 6 个盒子）摆不下，按钮是灰的。
  *   - 右边的表记下试过的每一种：乙几个、甲几个、总数多少。表里相邻两行总是差同一个数——这就是假设法的依据。
  * 同一个台面可以换皮：大船小船、2 分球 3 分球、5 元 10 元、三轮车自行车。出题人改名字和每个的数就行。
  * 这一版的边界（如实写）：最多 40 个；两种东西；每个的数是正整数（没有“答错倒扣分”那种负数）。 */
@@ -39,7 +41,21 @@
     return '<g data-pick-set="' + encodeURIComponent(JSON.stringify(to(p, isB ? m.k - 1 : m.k + 1))) + '" style="cursor:pointer"><title>点一下：' + (isB ? '换回' + p.na : '换成' + p.nb) + '</title>' +
       '<rect x="' + c.x + '" y="' + c.y + '" width="' + CW + '" height="' + CH + '" fill="transparent"/>' + s + '</g>';
   }
+  // ---- 写成两架天平：同一道题的方程组写法，画法和拖法都借“两架天平”操作台的 ----
+  const SYS_TOP = 50;
+  const sysOk = (m) => { const S = U.SystemBench; return !!S && m.n <= S.CMAX && m.T <= S.CMAX && m.T >= 0 && m.la <= S.BMAX && m.lb <= S.BMAX; };
+  const sysCtx = (c) => Object.assign({}, c, { drag: c.drag ? Object.assign({}, c.drag, { y: c.drag.y - SYS_TOP }) : null });
+  function drawSys(c) {
+    const p = c.props, m = model(p), S = U.SystemBench, sm = S.model(p), u = p.unit || '';
+    const back = { view: 0, msg: '' }; if (sm.y !== null) Object.assign(back, to(p, sm.y));
+    let s = K.text(16, 20, '圆盒 x：' + p.na + '的个数　方盒 y：' + p.nb + '的个数', { size: 13, weight: 700, anchor: 'start' });
+    s += K.text(16, 40, '上面一架：一共 ' + m.n + ' 个。下面一架：一共 ' + m.T + ' ' + u + '（每个' + p.na + ' ' + m.la + '、每个' + p.nb + ' ' + m.lb + '）。把上面的拖到下面，就是“假设全是' + p.na + '”。', { size: 12, anchor: 'start' });
+    s += '<g data-pick-set="' + encodeURIComponent(JSON.stringify(back)) + '" style="cursor:pointer"><title>回到一个一个换的样子' + (sm.y !== null ? '，并把' + K.esc(p.nb) + '换成 ' + sm.y + ' 个' : '') + '</title>' +
+      K.rect(S.W - 176, 2, 160, 24, { fill: '#fff', stroke: 'var(--blue)', r: 8, w: 1.5 }) + K.text(S.W - 96, 18, sm.y !== null ? '回到换一换：' + p.nb + ' ' + sm.y + ' 个' : '回到换一换', { size: 12, weight: 700 }) + '</g>';
+    return s + '<g data-sys="1" transform="translate(0,' + SYS_TOP + ')">' + S.draw(sysCtx(c)) + '</g>';
+  }
   function draw(c) {
+    if (c.props.view === 1 && U.SystemBench) return drawSys(c);
     const p = c.props, m = model(p), u = p.unit || ''; let s = '';
     const over = m.step > 0 ? m.total > m.T : m.total < m.T;
     s += K.text(GX, 26, m.n + ' 个，' + p.nb + ' ' + m.k + ' 个、' + p.na + ' ' + (m.n - m.k) + ' 个', { size: 15, weight: 700, anchor: 'start' });
@@ -77,6 +93,10 @@
     // 每个都少算：天平两边同时减去同样多
     s += '<g data-pick-set="' + encodeURIComponent(JSON.stringify({ lift: !m.lift })) + '" style="cursor:pointer"><title>' + (m.lift ? '把少算的加回来：两边同时加上 ' + m.n * m.lo : '每个都少算 ' + m.lo + ' ' + K.esc(u) + '：天平两边同时减去 ' + m.n + ' × ' + m.lo) + '</title>' +
       K.rect(GX, by + 10, 250, 26, { fill: m.lift ? 'var(--blue)' : '#fff', stroke: 'var(--blue)', r: 8, w: 1.5 }) + K.text(GX + 125, by + 27, m.lift ? '把少算的加回来（两边同时加）' : '每个都少算 ' + m.lo + '（两边同时减 ' + m.n * m.lo + '）', { size: 12, weight: 700, fill: m.lift ? '#fff' : 'var(--ink)' }) + '</g>';
+    // 写成两架天平：同一道题的方程组写法
+    const can = sysOk(m), go = { view: 1, e0: '1,1,0,0,0,' + m.n, e1: m.la + ',' + m.lb + ',0,0,0,' + m.T, steps: 0, refused: 0, msg: '' };
+    s += '<g' + (can ? ' data-pick-set="' + encodeURIComponent(JSON.stringify(go)) + '" style="cursor:pointer"' : ' opacity="0.4"') + '><title>' + (can ? '同一道题写成两个式子：个数一架，总数一架' : '数太大，天平上摆不下（每个盘最多 30 个砝码、6 个盒子）') + '</title>' +
+      K.rect(GX + 262, by + 10, 140, 26, { fill: '#fff', stroke: can ? 'var(--blue)' : '#8a94a8', r: 8, w: 1.5 }) + K.text(GX + 332, by + 27, '写成两架天平', { size: 12, weight: 700 }) + '</g>';
     // 试过的
     const tx = GX + COLS * CW + 26;
     s += K.text(tx, 26, p.nb, { size: 12, weight: 700, anchor: 'start' }) + K.text(tx + 50, 26, p.na, { size: 12, weight: 700, anchor: 'start' }) + K.text(tx + 100, 26, '一共', { size: 12, weight: 700, anchor: 'start' });
@@ -88,6 +108,7 @@
     return s;
   }
   function grips(c) {
+    if (c.props.view === 1 && U.SystemBench) return U.SystemBench.grips(c).map((g) => Object.assign({}, g, { y: g.y + SYS_TOP, drag: (c0, q) => g.drag(c0, { x: q.x, y: q.y - SYS_TOP }) }));
     const m = model(c.props), at = cell(Math.min(m.k, m.n - 1)), x = m.k >= m.n ? at.x + CW : at.x, edge = m.k > 0 && m.k % COLS === 0 && m.k < m.n;
     const gx = edge ? cell(m.k - 1).x + CW : x, gy = (edge ? cell(m.k - 1).y : at.y) + CH / 2 - 2;
     return [{ id: 'k', x: gx, y: gy, shape: 'bar-v', cursor: 'ew-resize', tip: '拖我：把手左边的都是' + c.props.nb + '，右边的都是' + c.props.na,
@@ -111,18 +132,22 @@
           la: I(1, 99, 2, '每个甲是几'), lb: I(1, 99, 4, '每个乙是几'),
           na: T('鸡', '甲叫什么'), nb: T('兔', '乙叫什么'), unit: T('条腿', '数的是什么'),
           style: { type: 'choice', label: '画法', default: 0, choices: ['画腿', '写数'], write: true },
+          view: { type: 'choice', label: '写法', default: 0, choices: ['换一换', '两架天平'], write: true, hidden: true },
+          e0: T('1,1,0,0,0,8', '两架天平写法：上面一架（自动）', { hidden: true }), e1: T('2,4,0,0,0,26', '两架天平写法：下面一架（自动）', { hidden: true }),
+          steps: I(0, 99, 0, '两架天平写法：做了几步（自动）', { hidden: true }), refused: I(0, 99, 0, '两架天平写法：被拦住几次（自动）', { hidden: true }), msg: T('', '两架天平写法：提示（自动）', { hidden: true }),
           lift: { type: 'bool', label: '每个都少算（两边同时减去“个数 × 较小的数”）', default: false, write: true },
           tried: T('', '试过的（自动记录）', { hidden: true }),
         },
         outputs: {
           b: { dim: null, kind: 'num', label: '乙（兔）有几个' }, a: { dim: null, kind: 'num', label: '甲（鸡）有几个' },
-          total: { dim: null, kind: 'num', label: '现在的总数' }, gap: { dim: null, kind: 'num', label: '离目标还差多少（多了是负数）' }, lifted: { dim: null, kind: 'num', label: '每个都少算了：1 是，0 否' }, ok: { dim: null, kind: 'num', label: '正好凑到：1 是，0 否' },
+          total: { dim: null, kind: 'num', label: '现在的总数' }, gap: { dim: null, kind: 'num', label: '离目标还差多少（多了是负数）' }, lifted: { dim: null, kind: 'num', label: '每个都少算了：1 是，0 否' },
+          sys: { dim: null, kind: 'num', label: '写成两架天平了：1 是，0 否' }, sy: { dim: null, kind: 'num', label: '两架天平上解出来的乙的个数（解出来才有）' }, sx: { dim: null, kind: 'num', label: '两架天平上解出来的甲的个数（解出来才有）' }, ok: { dim: null, kind: 'num', label: '正好凑到：1 是，0 否' },
           tries: { dim: null, kind: 'num', label: '试了几种' },
         },
         icon: () => K.circle(20, 16, 9, { fill: '#9fb7d9', stroke: 'var(--ink)' }) + K.line(17, 25, 17, 36, {}) + K.line(23, 25, 23, 36, {}) + K.circle(44, 16, 9, { fill: '#f5a25d', stroke: 'var(--ink)' }) + K.line(38, 25, 38, 36, {}) + K.line(42, 25, 42, 36, {}) + K.line(46, 25, 46, 36, {}) + K.line(50, 25, 50, 36, {}),
-        size: (e) => [W, 296 + Math.ceil(clamp(((e && e.props && e.props.n) || 8), 1, NMAX) / COLS) * CH],
+        size: (e) => (e && e.props && e.props.view === 1 && U.SystemBench ? [U.SystemBench.W, U.SystemBench.H + SYS_TOP] : [W, 296 + Math.ceil(clamp(((e && e.props && e.props.n) || 8), 1, NMAX) / COLS) * CH]),
         grips,
-        compute: (c) => { const m = model(c.props); return { b: num(m.k), a: num(m.n - m.k), total: num(m.total), gap: num(m.diff), lifted: num(m.lift ? 1 : 0), ok: num(m.ok), tries: num(Math.max(1, m.tried.length)) }; },
+        compute: (c) => { const m = model(c.props), o = { b: num(m.k), a: num(m.n - m.k), total: num(m.total), gap: num(m.diff), lifted: num(m.lift ? 1 : 0), ok: num(m.ok), tries: num(Math.max(1, m.tried.length)) }; o.sys = num(c.props.view === 1 ? 1 : 0); if (c.props.view === 1 && U.SystemBench) { const sm = U.SystemBench.model(c.props); if (sm.x !== null) o.sx = num(sm.x); if (sm.y !== null) o.sy = num(sm.y); } return o; },
         badge: () => '',
         draw,
       },

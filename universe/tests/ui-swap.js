@@ -83,6 +83,27 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   ok(await out('gap') === '4' && await done('lift') && await p.locator('.card svg.bdy [data-gap="2"]').count() === 1, '差的还是 4（2 段），歪的样子不变；里程碑完成');
   await clickHead(7); await clickHead(7);
   ok(await out('ok') === '1' && await done('hit') && (await text()).includes('两边一样重'), '再换 2 只：天平平了，兔 5 只');
+
+  console.log('6. 写成两架天平');
+  await open('sw-as-system'); await p.waitForTimeout(900); await closeDlg();
+  const sbtn = async (text, nth) => { await closeDlg(); await p.locator('.card svg.bdy [data-pick-set]', { hasText: text }).nth(nth || 0).click(); await p.waitForTimeout(220); };
+  const sgrip = (id) => p.evaluate((id) => { const g = document.querySelector('.card svg.bdy [data-grip="' + id + '"]'), r = g.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; }, id);
+  const onto = async () => { await closeDlg(); const g = await sgrip('b0'), t = await sgrip('b1'); await p.mouse.move(g.x, g.y); await p.mouse.down(); await p.mouse.move((g.x + t.x) / 2 + 20, (g.y + t.y) / 2, { steps: 6 }); await p.mouse.move(t.x + 20, t.y + 30, { steps: 6 }); await p.waitForTimeout(100); const mid = await text(); await p.mouse.up(); await p.waitForTimeout(250); return mid; };
+  await sbtn('写成两架天平');
+  ok((await props()).view === 1 && (await props()).e0 === '1,1,0,0,0,8' && (await props()).e1 === '2,4,0,0,0,26' && await done('sys'), '点“写成两架天平”：上面 x + y = 8，下面 2x + 4y = 26');
+  ok((await text()).includes('x + y = 8') && (await text()).includes('2x + 4y = 26') && (await text()).includes('圆盒 x：鸡的个数') && await p.locator('.card svg.bdy [data-grip^="b"]').count() === 2, '卡片变成两架天平，写着“圆盒 x：鸡的个数”，两架各有把手');
+  const mid = await onto();
+  ok(mid.includes('− (x + y)') && mid.includes('− 8') && (await props()).e1 === '1,3,0,0,0,18', '把上面的拖到下面（没松手时写着 − (x + y) 和 − 8）：下面变成 x + 3y = 18');
+  await onto();
+  ok((await props()).e1 === '0,2,0,0,0,10', '再拖一次：下面剩 2y = 10');
+  await sbtn('平分成 2 份');
+  ok(await out('sy') === '5' && await done('y') && (await text()).includes('回到换一换：兔 5 个'), '平分成 2 份：y = 5；右上角的按钮写着“回到换一换：兔 5 个”');
+  await sbtn('回到换一换');
+  ok((await props()).view === 0 && (await props()).k === 5 && await out('ok') === '1' && await done('back') && (await text()).includes('两边一样重'), '点“回到换一换”：兔 5 只带回来了，天平平了');
+  await p.keyboard.press('Control+z'); await p.waitForTimeout(200);
+  ok((await props()).view === 1 && (await props()).k === 0, '撤销一次：回到两架天平（一次点击一步）');
+  await open('g4-chicken-rabbit-core');
+  ok(await p.locator('.card svg.bdy [data-pick-set]', { hasText: '写成两架天平' }).count() === 0 && (await text()).includes('写成两架天平'), '35 个头、94 条腿：数太大摆不下，按钮是灰的');
   ok(await p.evaluate(() => !UI.S.inspOpen), '全程没有打开属性面板');
   ok(errs.length === 0, '控制台 0 报错' + (errs.length ? '：' + errs[0] : ''));
   console.log('\n换一换测试：' + pass + ' 通过，' + fail + ' 失败');

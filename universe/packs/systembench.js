@@ -198,5 +198,5 @@
       },
     },
   });
-  U.SystemBench = { parse, ser, eqStr, isolated, known, subtract, substitute, scale, divisor, cancel, dropOn, model, fits, plan, layout };
+  U.SystemBench = { draw, grips, W, H: 2 * BH + 112, BMAX, CMAX, parse, ser, eqStr, isolated, known, subtract, substitute, scale, divisor, cancel, dropOn, model, fits, plan, layout };
 })(typeof globalThis !== 'undefined' ? globalThis : window);
