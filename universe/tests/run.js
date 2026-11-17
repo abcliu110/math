@@ -3126,7 +3126,7 @@ t('可能性：列出所有情况，两个骰子 36 种里和为 7 的有 6 种�
 console.log('随机出题（操作台）');
 t('随机出题：每个出题器、每个难度、25 个种子都出得了题，lint 通过，一开始没做到，套上参考做法就做到', () => {
   const bad = [];
-  for (const type of U.Quiz.types()) for (const lv of [1, 2, 3]) for (let seed = 1; seed <= 25; seed++) {
+  for (const type of U.Quiz.types()) for (const lv of (U.Quiz.hasRev(type) ? [1, 2, 3, 4] : [1, 2, 3])) for (let seed = 1; seed <= 25; seed++) {
     const p = U.Quiz.make(type, seed * 101, lv);
     if (!p) { bad.push(type + ' L' + lv + ' #' + seed + '：出不了题'); continue; }
     const errs = U.problemLint(p).errors; if (errs.length) { bad.push(p.id + '：' + errs[0]); continue; }
@@ -3142,6 +3142,24 @@ t('随机出题：同一个 id 出同一道题；U.problemById 认 quiz: 开头�
   truthy(a && b && a.title === b.title && a.hook === b.hook, '同一个 id 同一道题');
   truthy(U.problemById('quiz:nosuchbench:1:1') === null, '没有这个出题器：null');
   truthy(U.Quiz.types().length >= 42, '至少 42 个操作台能随机出题');
+  truthy(U.Quiz.types().filter(U.Quiz.hasRev).length >= 11, '至少 11 个操作台有倒推题');
+});
+t('三星挑战：做完 1 星，没看提示再 1 星，一次做对（没陷阱、没被拦、没撤销）再 1 星；没做完 0 星', () => {
+  const p = { milestones: [{ id: 'a' }, { id: 'b' }], goal: ['b'] }, run = (o) => Object.assign({ ms: { a: { done: true }, b: { done: true } }, hintLevel: {}, trapsHit: {}, errors: 0, undos: 0 }, o);
+  eq(U.Judge.stars(p, run({})).n, 3);
+  eq(U.Judge.stars(p, run({ hintLevel: { b: 1 } })).n, 2);
+  eq(U.Judge.stars(p, run({ undos: 1 })).why, ['撤销过 1 次']);
+  eq(U.Judge.stars(p, run({ trapsHit: { x: true }, hintLevel: { a: 2 } })).n, 1);
+  eq(U.Judge.stars(p, run({ ms: { a: { done: true }, b: { done: false } } })).n, 0);
+});
+t('闯关：每条关卡链的每一关都能打开；上一关有星下一关才解锁；倒推放在最后', () => {
+  const ts = U.Chain.types(); truthy(ts.length >= 40, '至少 40 条关卡链');
+  for (const type of ts) for (const x of U.Chain.of(type)) truthy(U.problemById(x.id), type + ' 的 ' + x.id + ' 打得开');
+  const L = U.Chain.of('areamodel'); eq(L[L.length - 1].kind, '倒推');
+  const best = (st) => (id) => st[id] || 0;
+  let s = U.Chain.status('areamodel', best({})); eq(s.levels.filter((x) => x.open).length, 1);
+  s = U.Chain.status('areamodel', best({ [L[0].id]: 1, [L[1].id]: 3 })); eq(s.levels.filter((x) => x.open).length, 3); eq(s.stars, 4);
+  eq(U.Chain.next(L[0].id).id, L[1].id); eq(U.Chain.next(L[L.length - 1].id), null);
 });
 console.log('旧题搬到操作台');
 t('搬题：每个要搬的 id 都找到了题；搬过去的题器材架上只有操作台，开场台面上就有它', () => {

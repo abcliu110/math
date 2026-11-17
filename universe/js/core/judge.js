@@ -255,7 +255,17 @@
         match,
         traps: Object.keys(run.trapsHit).map((id) => (problem.traps.find((t) => t.id === id) || {}).wrong).filter(Boolean),
         ops: run.ops, errors: run.errors, usedSec: Math.round((Date.now() - run.t0) / 1000), newWay: run.newWay,
+        stars: Judge.stars(problem, run),
       };
+    },
+    // 三星挑战：★ 做完了（目标都达到）；★ 没看提示；★ 一次做对（没踩陷阱、没有被拦下的操作、没撤销）
+    stars(problem, run) {
+      const goal = problem.goal && problem.goal.length ? problem.goal : problem.milestones.map((m) => m.id);
+      const done = goal.every((id) => run.ms[id] && run.ms[id].done);
+      const noHint = Object.values(run.hintLevel || {}).every((v) => !v);
+      const clean = !Object.keys(run.trapsHit || {}).length && !run.errors && !run.undos;
+      const why = []; if (!done) why.push('还没做完'); if (!noHint) why.push('看了提示'); if (!clean) why.push(Object.keys(run.trapsHit || {}).length ? '踩了陷阱' : run.undos ? '撤销过 ' + run.undos + ' 次' : '有操作被拦下');
+      return { n: done ? 1 + (noHint ? 1 : 0) + (clean ? 1 : 0) : 0, done, noHint, clean, why };
     },
   };
   U.Judge = Judge;

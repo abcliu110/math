@@ -202,7 +202,7 @@
   function afterMove() { saveFree(); UI.Panels.renderTop(); }
 
   function restore(str) { S.scene = loadKeepView(str); S.sel = null; S.selLink = null; rebaseSession(); refresh(); }
-  function undo() { if (!S.undo.length) return; S.redo.push(snap()); restore(S.undo.pop()); saveFree(); }
+  function undo() { if (!S.undo.length) return; if (S.run) S.run.undos = (S.run.undos || 0) + 1; S.redo.push(snap()); restore(S.undo.pop()); saveFree(); }
   function redo() { if (!S.redo.length) return; S.undo.push(snap()); restore(S.redo.pop()); saveFree(); }
 
   function saveFree() { if (S.mode === 'free' && !S.example) lsSet(FREE_KEY, W.save(S.scene)); }   // 打开示例时不覆盖学生自己的自由台面
@@ -475,7 +475,9 @@
       const t = e.target;
       const dl = t.closest('[data-del]');
       if (dl) { if (S.problem && S.problem.id === dl.dataset.del) openFree(); U.Author.remove(dl.dataset.del); UI.Panels.renderLeft(); return; }
+      const ch = t.closest('[data-chain]'); if (ch) { const c = ch.dataset.chain; S.chainOpen = c === '__list' ? (S.chainOpen == null ? '__list' : null) : (S.chainOpen === c ? '__list' : c); UI.Panels.renderLeft(); return; }
       const it = t.closest('.it');
+      if (it && it.classList.contains('lock')) { say('先拿到上一关的星星，这一关才解锁', 'warn', 2500); return; }
       if (it) { if (it.dataset.free) openFree(); else openProblem(it.dataset.pid, 'practice'); $('#left').classList.remove('open'); return; }
       const pr = t.closest('[data-pred]');
       if (pr && S.run) {
@@ -646,6 +648,7 @@
       if (t.id === 'dlg' || t.id === 'dlg-close') { pendingDel = null; pendingConfirm = null; UI.Panels.closeDialog(); }
       else if (t.id === 'dlg-back') { const miss = (S.run && S.problem) ? S.problem.milestones.find((m) => S.run.ms[m.id] && !S.run.ms[m.id].done) : null; UI.Panels.closeDialog(); if (miss) say('回到这一步：' + miss.say, 'info', 5000); }
       else if (t.id === 'dlg-again') { UI.Panels.closeDialog(); openProblem(S.problem.id, S.mode); }
+      else if (t.id === 'dlg-nextlvl' && S.problem) { const nx = U.Chain.next(S.problem.id); UI.Panels.closeDialog(); if (nx) { S.chainOpen = nx.type; openProblem(nx.id, 'practice'); say('第 ' + nx.n + ' / ' + nx.of + ' 关', 'good', 2500); } }
       else if (t.id === 'dlg-quiz' && S.problem && S.problem.quiz) { UI.Panels.closeDialog(); openQuiz(S.problem.quiz.type, S.problem.quiz.level); }
       else if (t.id === 'dlg-next') { UI.Panels.closeDialog(); const i = U.problems.findIndex((p) => p.id === S.problem.id); openProblem(U.problems[(i + 1) % U.problems.length].id, 'practice'); }
       else if (t.id === 'dlg-note') { lsSet(NOTE_KEY, $('#notes').value); UI.Panels.closeDialog(); say('笔记已保存', 'good', 1800); }

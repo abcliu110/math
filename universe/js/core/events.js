@@ -21,6 +21,8 @@
       const last = fin[fin.length - 1];
       return { practice: fin.filter((e) => e.mode === 'practice').length, exam: fin.filter((e) => e.type === 'submit').length, last: last ? last.data : null };
     },
+    // 某道题拿到过的最多星数（三星挑战）
+    bestStars(pid) { let b = 0; for (const e of E.log) if (e.pid === pid && e.type === 'finish' && e.data && e.data.stars) b = Math.max(b, e.data.stars.n || 0); return b; },
     clear() { E.log = []; E.save(); },
   };
   U.Events = E;

@@ -22,16 +22,35 @@
   }
   // 题目用的操作台有没有出题器（随机题记着自己的操作台）
   function quizTypeOf(p) { if (!p || !U.Quiz) return null; const t = p.quiz ? p.quiz.type : (p.shelf || [])[0]; return t && U.Quiz.has(t) ? t : null; }
+  // 三星挑战：★ 做完 ★ 没看提示 ★ 一次做对；没拿到的写出为什么
+  function starsHtml(st, mode) {
+    if (!st || mode === 'exam') return '';
+    const row = [0, 1, 2].map((i) => '<span class="' + (i < st.n ? 'on' : 'off') + '">★</span>').join('');
+    const tips = ['做完了', '没看提示', '一次做对'].map((t, i) => (i === 0 ? st.done : i === 1 ? st.noHint : st.clean) ? '✓ ' + t : '○ ' + t).join('　');
+    return '<div class="stars" data-stars="' + st.n + '">' + row + '</div><div class="startips">' + esc(tips) + (st.n > 0 && st.n < 3 ? '<br>' + esc('想拿满三星：' + st.why.join('、') + '，再来一次') : '') + '</div>';
+  }
+  const starChip = (pid) => { const b = U.Events.bestStars(pid); return b ? '<span class="chip stars-chip">' + '★'.repeat(b) + '</span>' : ''; };
   function labHtml() {
     const S = UI.S, q = (S.q1 || '').trim();
     let h = '<input class="search" id="q1" placeholder="搜索题目、知识点" value="' + esc(q) + '">';
     const rv = U.Review.summarize(U.Events.log, U.problems);
     if (rv.due.length && !q) h += '<div class="pcard due"><b>今天该复习 ' + rv.due.length + ' 道</b><div class="plist">' + rv.due.slice(0, 4).map((d) => '<div class="it" data-pid="' + d.pid + '" style="margin:6px 0 0"><span class="tt">' + esc(d.title) + '<br><small style="color:var(--orange)">' + esc(d.why) + '</small></span></div>').join('') + '</div></div>';
     h += '<div class="plist"><div class="grp">自由</div><div class="it' + (!S.problem ? ' cur' : '') + '" data-free="1"><span class="tt">自由探究（空台面，所有器材）</span></div>';
+    // 闯关：每个操作台一条关卡链，上一关有星才解锁下一关
+    if (U.Chain && !q) {
+      const all = U.Chain.types(), tot = all.reduce((s, t) => s + U.Chain.status(t, U.Events.bestStars).stars, 0), shown = S.chainOpen != null;
+      h += '<div class="grp">🪜 闯关（每个操作台一条，拿到星星解锁下一关）</div><div class="chains"><div class="it chain" data-chain="__list"><span class="tt">' + (shown ? '▾ 收起' : '▸ ' + all.length + ' 条关卡链，点开挑一条') + '</span><span class="chip stars-chip">★ ' + tot + '</span></div>';
+      if (shown) for (const type of all) {
+        const st = U.Chain.status(type, U.Events.bestStars), open = S.chainOpen === type;
+        h += '<div class="it chain' + (open ? ' cur' : '') + '" data-chain="' + type + '"><span class="tt">' + esc(U.types[type].label) + '</span><span class="chip stars-chip">★ ' + st.stars + ' / ' + st.max + '</span><span class="chip">' + st.passed + ' / ' + st.levels.length + ' 关</span></div>';
+        if (open) st.levels.forEach((x, i) => { h += x.open ? '<div class="it lvl" data-pid="' + esc(x.id) + '"><span class="tt">第 ' + (i + 1) + ' 关 · ' + esc(x.title) + '</span>' + (x.stars ? '<span class="chip stars-chip">' + '★'.repeat(x.stars) + '</span>' : '') + '</div>' : '<div class="it lvl lock"><span class="tt">🔒 第 ' + (i + 1) + ' 关</span></div>'; });
+      }
+      h += '</div>';
+    }
     if (U.Quiz && !q) {
       const lv = S.quizLevel || 1;
       h += '<div class="grp">🎲 随机练习（在操作台上做，数每次都不一样）</div><div class="quizbox"><div class="btnrow">' + U.Quiz.LEVELS.map((n, i) => '<button class="btn' + (lv === i + 1 ? ' pri' : '') + '" data-quiz-lv="' + (i + 1) + '">' + n + '</button>').join('') + '</div><div class="qchips">' +
-        U.Quiz.types().map((t) => '<button class="btn" data-quiz-type="' + t + '">' + esc(U.types[t].label) + '</button>').join('') + '</div></div>';
+        U.Quiz.types().filter((t) => lv < 4 || U.Quiz.hasRev(t)).map((t) => '<button class="btn" data-quiz-type="' + t + '">' + esc(U.types[t].label) + '</button>').join('') + '</div>' + (lv === 4 ? '<div class="qnote">倒推：给出结果，在操作台上找出条件</div>' : '') + '</div>';
     }
     const by = {};
     U.problems.filter((p) => !q || (p.title + p.domain + (p.points || []).join('') + (p.alias || []).join('')).includes(q)).forEach((p) => (by[p.domain] = by[p.domain] || []).push(p));
@@ -40,7 +59,7 @@
       h += '<div class="grp">' + esc(g) + '</div>';
       by[g].forEach((p) => {
         const hs = U.Events.history(p.id), done = hs.practice > 0 || hs.exam > 0;
-        h += '<div class="it' + (S.problem && S.problem.id === p.id ? ' cur' : '') + '" data-pid="' + p.id + '"><span class="tt">' + esc(p.title) + '</span>' + (p.grade ? '<span class="chip">' + p.grade + ' 年级</span>' : '') + (done ? '<span class="chip ok">已做</span>' : '') + (p.custom ? '<button class="tbtn" data-del="' + p.id + '" title="删除这道题" style="padding:2px 8px">✕</button>' : '') + '</div>';
+        h += '<div class="it' + (S.problem && S.problem.id === p.id ? ' cur' : '') + '" data-pid="' + p.id + '"><span class="tt">' + esc(p.title) + '</span>' + starChip(p.id) + (p.grade ? '<span class="chip">' + p.grade + ' 年级</span>' : '') + (done ? '<span class="chip ok">已做</span>' : '') + (p.custom ? '<button class="tbtn" data-del="' + p.id + '" title="删除这道题" style="padding:2px 8px">✕</button>' : '') + '</div>';
       });
     }
     return h + '</div>';
@@ -93,7 +112,7 @@
       h += '<div class="btnrow"><button class="btn" id="hintbtn">💡 来个提示</button><button class="btn" id="restart">重来</button></div>';
       // 随机出题：这道题的操作台有出题器，就能在同一个操作台上再出一道（数不一样）
       const qt = quizTypeOf(p);
-      if (qt) h += '<div class="btnrow quizrow"><span class="qlab">🎲 随机出一题：</span>' + U.Quiz.LEVELS.map((n, i) => '<button class="btn" data-quiz="' + (i + 1) + '" title="' + esc(U.types[qt].label) + '：' + n + '">' + n + '</button>').join('') + '</div>';
+      if (qt) h += '<div class="btnrow quizrow"><span class="qlab">🎲 随机出一题：</span>' + U.Quiz.LEVELS.map((n, i) => (i < 3 || U.Quiz.hasRev(qt) ? '<button class="btn' + (i === 3 ? ' rev' : '') + '" data-quiz="' + (i + 1) + '" title="' + esc(U.types[qt].label) + '：' + n + (i === 3 ? '（给结果，找条件）' : '') + '">' + n + '</button>' : '')).join('') + '</div>';
     }
     return h;
   }
@@ -514,7 +533,7 @@
       '<div class="btnrow"><button class="btn" id="dlg-close">关闭</button></div>';
   }
     function reportHtml(rep, p, mode) {
-    let h = '<h3>' + (mode === 'exam' ? '交卷结果：' : '做完了！　') + esc(p.title) + '</h3><div class="big">' + rep.score + ' / ' + rep.max + ' 分</div><div class="rep">';
+    let h = '<h3>' + (mode === 'exam' ? '交卷结果：' : '做完了！　') + esc(p.title) + '</h3><div class="big">' + rep.score + ' / ' + rep.max + ' 分</div>' + starsHtml(rep.stars, mode) + '<div class="rep">';
     rep.items.forEach((i) => { h += '<span class="' + (i.done ? 'ok' : 'no') + '">' + (i.done ? '✓ ' : '○ ') + esc(i.say) + (i.half ? '（用了完整提示，半分）' : '') + '</span><span>' + (i.done ? (i.half ? i.score / 2 : i.score) : 0) + ' / ' + i.score + '</span>'; });
     h += '</div>';
     if (rep.guess !== null || rep.actual !== null) h += '<div class="cmp"><div><small>你的猜想</small>' + esc(rep.guess || '没猜') + '</div><div><small>实际结果</small>' + esc(rep.actual || '—') + (rep.match === true ? ' 🎯' : '') + '</div></div>';
@@ -529,7 +548,7 @@
     if (next.length) h += '<p style="color:var(--txt3);margin:10px 0 4px">下一步练什么</p><div class="plist">' + next.map((n) => '<div class="it" data-pid="' + esc(n.pid) + '"><span class="tt">' + esc(n.title) + '</span></div>').join('') + '</div>';
     if (rep.newWay) h += '<div class="newway">✨ 你找到了一种参考解里没有的搭法！</div>';
     const back = missed.length && mode !== 'exam';
-    h += '<div class="whybox">' + esc(p.why) + '</div><div class="btnrow">' + (back ? '<button class="btn pri" id="dlg-back">回去做这一步</button><button class="btn" id="dlg-again">再做一遍</button>' : '<button class="btn pri" id="dlg-again">再做一遍</button>') + (p.quiz ? '<button class="btn pri" id="dlg-quiz">🎲 再来一题</button>' : '<button class="btn" id="dlg-next">下一题</button>') + '<button class="btn" id="dlg-inquiry">实验报告</button><button class="btn" id="dlg-close">继续玩</button></div>';
+    h += '<div class="whybox">' + esc(p.why) + '</div><div class="btnrow">' + (back ? '<button class="btn pri" id="dlg-back">回去做这一步</button><button class="btn" id="dlg-again">再做一遍</button>' : '<button class="btn pri" id="dlg-again">再做一遍</button>') + (U.Chain && U.Chain.next(p.id) && rep.stars && rep.stars.n > 0 ? '<button class="btn pri" id="dlg-nextlvl">下一关 ▶</button>' : '') + (p.quiz ? '<button class="btn' + (U.Chain && U.Chain.next(p.id) ? '' : ' pri') + '" id="dlg-quiz">🎲 再来一题</button>' : '<button class="btn" id="dlg-next">下一题</button>') + '<button class="btn" id="dlg-inquiry">实验报告</button><button class="btn" id="dlg-close">继续玩</button></div>';
     return h;
   }
 

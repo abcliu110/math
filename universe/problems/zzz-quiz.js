@@ -11,7 +11,7 @@
   const mkR = (seed) => { const r = U.Variants.rng(seed); const R = { r, int: (lo, hi) => lo + Math.floor(r() * (hi - lo + 1)), pick: (a) => a[Math.floor(r() * a.length)], bool: () => r() < 0.5 }; return R; };
   const qs = (n, d) => Q.show(Q(n, d || 1));
   const norm = (v) => { try { return Q.show(Q.parse(String(v))); } catch (e) { return String(v); } };
-  const LEVELS = ['容易', '中等', '难'];
+  const LEVELS = ['容易', '中等', '难', '倒推'];   // 第 4 档“倒推”：给结果，找条件（不是每个操作台都有）
   // 某个器材在题库里最常用的知识点、领域（给随机题当“归属”）
   function home(type) {
     const ps = U.problems.filter((p) => (p.shelf || [])[0] === type), cnt = {};
@@ -27,7 +27,8 @@
   function make(type, seed, level) {
     const g = GENS[type]; if (!g) return null;
     let q = null;
-    for (let i = 0; i < 30; i++) { const c = g.gen(mkR(seed + i * 7919), level); if (!reached(type, c.props, c.goals).some(Boolean)) { q = c; break; } }
+    const fn = level === 4 ? g.rev : g.gen; if (!fn) return null;
+    for (let i = 0; i < 30; i++) { const c = fn.call(g, mkR(seed + i * 7919), level); if (!reached(type, c.props, c.goals).some(Boolean)) { q = c; break; } }
     if (!q) return null;
     const h = home(type), t = U.types[type];
     const ms = q.goals.map(([port, value, say, hints], i) => ({ id: 'g' + i, say, score: Math.max(2, Math.round(8 / q.goals.length)), when: { role: 'q', port, op: '=', value: norm(value) }, hints: hints || ['看看台面上的说明。', '一步一步来。', '答案是 ' + value + '。'] }));
@@ -41,10 +42,11 @@
     LEVELS,
     add: (type, def) => { GENS[type] = def; },
     has: (type) => !!GENS[type] && !!U.types[type],
+    hasRev: (type) => !!GENS[type] && !!GENS[type].rev && !!U.types[type],
     types: () => Object.keys(GENS).filter((t) => U.types[t]),
     make, reached,
     id: (type, seed, level) => 'quiz:' + type + ':' + (seed >>> 0) + ':' + (level || 1),
-    fromId(id) { const m = /^quiz:([a-z0-9_-]+):(\d+):([123])$/.exec(String(id)); return m ? make(m[1], +m[2], +m[3]) : null; },
+    fromId(id) { const m = /^quiz:([a-z0-9_-]+):(\d+):([1234])$/.exec(String(id)); return m ? make(m[1], +m[2], +m[3]) : null; },
   };
   const base = U.problemById;
   U.problemById = (id) => (String(id).startsWith('quiz:') ? U.Quiz.fromId(id) : base(id));
@@ -351,4 +353,39 @@
     if (lv === 2) { for (;;) { const sx = R.int(0, 9), sy = R.int(0, 6), tx = R.int(0, 9), ty = R.int(0, 6), dx = tx - sx, dy = ty - sy; if (Math.abs(dx) + Math.abs(dy) < 4) continue; const path = (dx > 0 ? 'E' : 'W').repeat(Math.abs(dx)) + (dy > 0 ? 'S' : 'N').repeat(Math.abs(dy)); return { title: '从家走到学校，走最短的路', hook: '点 ↑ ↓ ← → 一格一格走（↑ 是北），不走回头路。', props: { mode: 1, sx, sy, tx, ty }, goals: [['shortest', 1, '最短 ' + path.length + ' 格']], sol: { path } }; } }
     for (;;) { const tdeg = R.int(1, 23) * 15, tdist = R.int(1, 4); if (tdeg % 90 === 0) continue; return { title: '找到 ' + U.DirBench.bearing(tdeg) + '，' + tdist * 100 + ' 米 的地方', hook: '拖射线一头：先转方向（15° 一格），再拉距离（一圈 100 米）。', props: { mode: 2, deg: 0, dist: 1, tdeg, tdist }, goals: [['hit', 1, U.DirBench.bearing(tdeg) + '，' + tdist * 100 + ' 米']], sol: { deg: tdeg, dist: tdist } }; }
   } });
+
+  // ===================== 倒推题：给结果，找条件 =====================
+  const addRev = (type, rev) => { if (GENS[type]) GENS[type].rev = rev; };
+  addRev('areamodel', function (R) { const w = R.int(3, 12), h = R.int(2, 8); return { title: '长方形面积是 ' + w * h + '，长是 ' + w + '，宽是几？', hook: '长已经是 ' + w + ' 了。拖下边改宽，让面积正好是 ' + w * h + '。', props: { mode: 0, w, h: 1, vcuts: '', hcuts: '' }, goals: [['area', w * h, '宽是 ' + h + '：' + w + ' × ' + h + ' = ' + w * h]], sol: { h } }; });
+  addRev('numlinebench', function (R) { const a = R.int(1, 10), n = R.int(2, 9); return { title: '从几出发，往右跳 ' + n + ' 步，落在 ' + (a + n) + '？', hook: '往右跳的步数已经定好了。拖起点，让最后落在 ' + (a + n) + '。', props: { mode: 0, from: 0, to: 20, a: 0, s: 1, n }, goals: [['value', a + n, '从 ' + a + ' 出发：' + a + ' + ' + n + ' = ' + (a + n)]], sol: { a } }; });
+  addRev('clockbench', function (R) { const h = R.int(2, 10), m = R.int(1, 11) * 5, d = R.pick([20, 30, 40, 45]), t = h * 60 + m - d; const fmt = (x) => Math.floor(x / 60) + ' 时' + (x % 60 ? ' ' + (x % 60) + ' 分' : '整'); return { title: '再过 ' + d + ' 分钟是 ' + fmt(h * 60 + m) + '，现在是几时几分？', hook: '把钟拨到“现在”：从 ' + fmt(h * 60 + m) + ' 往回拨 ' + d + ' 分钟。', props: { t: 0, start: 0, timing: false }, goals: [['t', t, '现在是 ' + fmt(t)]], sol: { t } }; });
+  addRev('seqbench', function (R) { const KD = [[4, 3, '火柴摆正方形', '根火柴'], [4, 2, '桌子拼起来坐人', '个人']], k = R.int(0, 1), [a, d, name, unit] = KD[k], n = R.int(6, 30), v = a + (n - 1) * d; return { title: name + '：第几个要 ' + v + ' ' + unit + '？', hook: '先摆几个找出规律，再改 n，让第 n 个正好是 ' + v + '。', props: { kind: k, k: 1, a: 0, d: 0, n: 1 }, goals: [['term', v, '第 ' + n + ' 个：' + a + ' + (' + n + ' − 1) × ' + d + ' = ' + v]], sol: { k: 3, a, d, n } }; });
+  addRev('rulerbench', function (R) { const L = R.int(11, 30) * 10, rest = R.int(2, L / 5 - 2) * 5; return { title: '一根 ' + L + ' 厘米的绳子，剪下几厘米，正好剩下 ' + rest + ' 厘米？', hook: '拖剪刀：剩下的要正好是 ' + rest + ' 厘米。', props: { mode: 1, L }, goals: [['rest', rest, '剪下 ' + (L - rest) + ' 厘米']], sol: { cut: L - rest } }; });
+  addRev('anglebench', function (R) { const a = R.int(3, 33) * 5; return { title: '∠2 是 ' + (180 - a) + '°，∠1 是几度？', hook: '一条直线上的两个角合起来是 180°。拖射线，让 ∠2 正好是 ' + (180 - a) + '°（点 ∠2 量一量）。', props: { mode: 1, a: a === 90 ? 60 : 90 }, goals: [['other', 180 - a, '∠1 = 180° − ' + (180 - a) + '° = ' + a + '°']], sol: { a, seen: '2' } }; });
+  addRev('areabench', function (R) { const b = R.int(3, 10), h = R.int(2, 6); return { title: '平行四边形面积 ' + b * h + '，底 ' + b + '，高是几？', hook: '拖顶边改高，再剪下来、移过去拼成长方形，面积要正好是 ' + b * h + '。', props: { shape: 0, b, h: 1, s: 1 }, goals: [['area', b * h, '高是 ' + h + '：' + b + ' × ' + h + ' = ' + b * h]], sol: { h, step: 2, seen: '1' } }; });
+  addRev('circlebench', function (R) { const r = R.int(2, 9); return { title: '圆的面积是 ' + (314 * r * r / 100) + '，半径是几？（π 取 3.14）', hook: '拖半径，让面积正好是 ' + (314 * r * r / 100) + '。', props: { mode: 0, r: 1 }, goals: [['area', qs(314 * r * r, 100), '半径是 ' + r]], sol: { r } }; });
+  addRev('gapbench', function (R) { const gap = R.pick([2, 4, 5, 10]), k = R.int(4, 12), len = gap * k; return { title: len + ' 米的路，两头都种，一共种了 ' + (k + 1) + ' 棵，每隔几米种一棵？', hook: '调“每隔几米”，让棵数正好是 ' + (k + 1) + '。', props: { len, gap: 1, le: 1, re: 1, ring: 0 }, goals: [['trees', k + 1, '每隔 ' + gap + ' 米：' + k + ' 段，' + (k + 1) + ' 棵']], sol: { gap } }; });
+  addRev('decbench', function (R) { const a = R.int(11, 99), sh = R.pick([1, 2]), sv = Math.round(a * Math.pow(10, sh)) / 100; return { title: (a / 100) + ' 变成 ' + sv + '，小数点向哪边移了几位？', hook: '点“小数点 →”“← 小数点”，让它正好变成 ' + sv + '。', props: { mode: 3, a: String(a / 100) }, goals: [['shifted', qs(a * Math.pow(10, sh), 100), '向右移 ' + sh + ' 位，扩大到 ' + Math.pow(10, sh) + ' 倍']], sol: { shift: sh } }; });
+  addRev('blocksbench', function (R) { const n = R.int(31, 89), d = R.pick([10, 20, 1, 2]); return { title: '比 ' + (n - d) + ' 多 ' + d + ' 的数是几？摆出来', hook: '用十条和一块摆出这个数。多 ' + d + ' 是多几个十，还是多几个一？', props: { mode: 0, h: 0, t: 0, o: 0 }, goals: [['value', n, '是 ' + n]], sol: { t: Math.floor(n / 10), o: n % 10 } }; });
+
+  // ===================== 关卡链：每个操作台一条闯关路线 =====================
+  // 先是这个操作台的题（按年级、难度排），再是随机题 容易 → 中等 → 难（种子固定，星星记得住），最后是倒推。
+  // 上一关拿到至少 1 颗星，下一关才解锁。
+  const CHAIN_SEED = 900001;
+  U.Chain = {
+    of(type) {
+      if (!U.types[type] || !U.types[type].bench) return [];
+      const own = U.problems.filter((p) => (p.shelf || [])[0] === type).sort((a, b) => (a.grade || 9) - (b.grade || 9) || (a.rung || 0) - (b.rung || 0)).slice(0, 6).map((p) => ({ id: p.id, title: p.title, kind: '题' }));
+      const qs = GENS[type] ? [1, 2, 3].map((lv) => ({ id: U.Quiz.id(type, CHAIN_SEED + lv, lv), title: '随机 · ' + LEVELS[lv - 1], kind: '随机' })) : [];
+      const rv = U.Quiz.hasRev(type) ? [{ id: U.Quiz.id(type, CHAIN_SEED + 4, 4), title: '倒推：给结果，找条件', kind: '倒推' }] : [];
+      return own.concat(qs, rv);
+    },
+    // 每一关的星数、是否解锁；整条的进度
+    status(type, best) {
+      const L = U.Chain.of(type), st = L.map((x) => best(x.id));
+      return { levels: L.map((x, i) => Object.assign({}, x, { stars: st[i], open: i === 0 || st[i - 1] > 0 })), stars: st.reduce((s, x) => s + x, 0), max: 3 * L.length, passed: st.filter((x) => x > 0).length };
+    },
+    types: () => Object.values(U.types).filter((t) => t.bench && !t.hidden && U.Chain.of(t.id).length >= 4).sort((a, b) => (a.grades[0] - b.grades[0]) || a.label.localeCompare(b.label)).map((t) => t.id),
+    next(pid) { for (const type of U.Chain.types()) { const L = U.Chain.of(type), i = L.findIndex((x) => x.id === pid); if (i >= 0) return i + 1 < L.length ? { type, id: L[i + 1].id, n: i + 2, of: L.length } : null; } return null; },
+  };
 })(typeof globalThis !== 'undefined' ? globalThis : window);

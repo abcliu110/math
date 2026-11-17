@@ -129,6 +129,7 @@ async function checkDist() {
   if (!runScript('tests/ui-sort.js', 'tests/ui-sort.js', pwEnv)) bail();   // 分类与整理：真实鼠标点卡片放框、放错说为什么、分完核对总数、换分法
   if (!runScript('tests/ui-combo.js', 'tests/ui-combo.js', pwEnv)) bail();   // 搭配：真实鼠标点格子列搭法、列全再配鞋、数字卡片 0 不在十位
   if (!runScript('tests/ui-dir.js', 'tests/ui-dir.js', pwEnv)) bail();   // 方向与路线：真实鼠标认方向（反过来问）、点箭头走路线、拖射线定方向角
+  if (!runScript('tests/ui-play.js', 'tests/ui-play.js', pwEnv)) bail();   // 三星挑战、倒推、闯关
   if (!runScript('tests/ui-areamodel.js', 'tests/ui-areamodel.js', pwEnv)) bail();   // 面积模型（样板操作台）和器材把手：真实鼠标拖边、切、改分数
   if (!runScript('tests/ui-shapes.js', 'tests/ui-shapes.js', pwEnv)) bail();         // 常见图形、顶点编辑、直接拖出辅助线（真实鼠标和键盘）；含画布横纵比例回归
   if (!runScript('tests/ui-export.js', 'tests/ui-export.js', pwEnv)) bail();         // 2.12/V10：导出图片（真实鼠标点菜单，台面和专注工作区各一次下载，.png、大小 > 0）
