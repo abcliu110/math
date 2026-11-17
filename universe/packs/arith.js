@@ -8,43 +8,6 @@
   U.registerPack({
     id: 'arith', version: 1,
     types: {
-      divmod: {
-        workspaceRole: 'none',
-        handles: true,
-        essence: ['E2', 'E6'],
-        label: '带余除法', prefix: '除', group: '数与运算', grades: [3, 5], alias: ['余数', '商', '分东西'],
-        props: {
-          mode: { type: 'choice', label: '负数怎么除', default: 0, choices: ['向下取整', '向零取整'] },
-          show: { type: 'choice', label: '写成', default: 0, choices: ['商…余', '等式'] },
-          label: { type: 'text', label: '标签', default: '' },
-        },
-        inputs: { a: { kind: 'num', label: '被除数' }, b: { kind: 'num', label: '除数' } },
-        outputs: { q: { dim: null, kind: 'num', label: '商' }, r: { dim: null, kind: 'num', label: '余数' } },
-        icon: () => K.text(32, 28, '÷', { size: 26, weight: 700 }) + K.text(50, 38, '…', { size: 14, fill: 'var(--accent)', weight: 700 }),
-        size: () => [170, 100],
-        compute: (c) => {
-          const a = K.first(c.inp.a), b = K.first(c.inp.b);
-          if (!a || !b) { c.say('info', '接被除数和除数'); return {}; }
-          const x = intOf(a), y = intOf(b);
-          if (x === null || y === null) { c.say('reject', '带余除法只对整数有意思（小数除下去没有余数）'); return {}; }
-          if (y === 0) { c.say('err', '除数不能是 0'); return {}; }
-          const q = c.props.mode === 0 ? Math.floor(x / y) : Math.trunc(x / y), r = x - q * y;
-          c.say('ok', x + ' = ' + y + ' × ' + q + ' + ' + r);
-          if (c.step) {
-            c.step('试商：' + x + ' ÷ ' + y + ' 大约是 ' + q, null, 'div.trial-quotient');
-            c.step('余数 = ' + x + ' − ' + y + ' × ' + q + ' = ' + r + '，要比除数小', null, 'div.remainder-lt-divisor');
-            c.because('q', '试商：先估一个商', 'div.trial-quotient'); c.because('r', '余数一定比除数小', 'div.remainder-lt-divisor');
-          }
-          return { q: num(Q(q)), r: num(Q(r)) };
-        },
-        badge: (c) => c.props.label,
-        draw: (c) => {
-          const q = c.out.q, r = c.out.r;
-          if (!q) return K.text(c.w / 2, c.h / 2 + 8, '？', { size: 26, fill: 'var(--dim)' });
-          return K.text(c.w / 2, c.h / 2 + 6, c.props.show === 0 ? q.data.n + ' … ' + r.data.n : '= ' + q.data.n + ' 余 ' + r.data.n, { size: 26, weight: 700 }) + K.text(c.w / 2, c.h - 6, '商 … 余数', { size: 11, fill: 'var(--dim)' });
-        },
-      },
-
       round: {
         workspaceRole: 'none',
         handles: true,

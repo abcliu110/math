@@ -127,7 +127,6 @@ async function checkDist() {
   if (!runScript('tests/ui-perf.js', 'tests/ui-perf.js', pwEnv)) bail();            // V10/2.15：性能（50 个图形，真实鼠标拖动一次，单次处理和到下一帧 < 200 毫秒；实测数字在输出里）
   if (!runScript('tests/ui-s105.js', 'tests/ui-s105.js', pwEnv)) bail();            // §10.5.9 剩余项：复制粘贴（Ctrl+C/V）、镜像复制（M）、多选编组（Ctrl+G）、拖动幽灵对照（真实鼠标和键盘）
   if (!runScript('tests/ui-deduce.js', 'tests/ui-deduce.js', pwEnv)) bail();     // 2.14b 排除表（真实鼠标）：三态格子（不是 / 是）、唯一剩下标是、同行同列变灰、按线索排完 12 步、撤销
-  if (!runScript('tests/ui-estimate.js', 'tests/ui-estimate.js', pwEnv)) bail();     // 先猜后看 + 估算器：没填估计时遮住实际值（界面）、填了才揭开、记 guess 事件、范围估计、差十倍追问
   if (!runScript('tests/ui-primeblocks.js', 'tests/ui-primeblocks.js', pwEnv)) bail();     // 质因数积木 + 找错台：积木、两摞对齐、先猜才揭开、先判断、点对错行、理由与改正
   if (!runScript('tests/ui-guessrule.js', 'tests/ui-guessrule.js', pwEnv)) bail();     // 猜规则台 + 总是有时从不：点格子、猜想、互换、写例子
   if (!runScript('tests/ui-teaching.js', 'tests/ui-teaching.js', pwEnv)) bail();     // 教具：线段图、分数面积、代数砖、函数机

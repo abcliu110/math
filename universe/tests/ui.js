@@ -236,7 +236,7 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   await p.evaluate(() => { const s = UI.App.act({ t: 'add', type: 'scanner', x: 420, y: 140, props: { rule: 0, from: 1, to: 30 } }).id; window.__sc = s; });
   await p.waitForTimeout(200);
   ok(await p.locator('.card[data-id="' + (await p.evaluate(() => window.__sc)) + '"] svg').count() >= 0 && await p.locator('.card').count() >= 5, '证明器材可以放上台面并画出来');
-  ok(await p.locator('.tile[data-type="scanner"]').count() === 1, '器材架上有参数扫描器');
+  ok(await p.locator('.tile[data-type="scanner"]').count() === 0, '参数扫描器已经由“猜想与反例”代替：器材架上没有它');
   console.log('学习数据界面');
   await p.evaluate(() => UI.Panels.closeDialog());
   await p.click('#menubtn'); await p.click('[data-m="parent"]'); await p.waitForTimeout(100);

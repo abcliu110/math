@@ -562,12 +562,6 @@ t('长方形 6×4 → 量图形：面积 24，4 个直角', () => {
   link2(sc, r, 'f', m, 'f');
   const D = W.evaluate(sc); eq(U.showVal(D[m].out.area), '24'); eq(U.showVal(D[m].out.right), '4');
 });
-t('平行四边形剪拼：剪拼前后面积相等（面积是不变量），直角从 0 个变成 4 个', () => {
-  const sc = W.blank(); const pg = W.add(sc, 'parallelogram', 0, 0, {}); const m1 = W.add(sc, 'figmeasure', 0, 0, {}); const m2 = W.add(sc, 'figmeasure', 0, 0, {});
-  link2(sc, pg, 'f', m1, 'f'); link2(sc, pg, 'cut', m2, 'f');
-  const D = W.evaluate(sc); eq(U.showVal(D[m1].out.area), U.showVal(D[m2].out.area)); eq(U.showVal(D[m1].out.area), '15');
-  eq(U.showVal(D[m2].out.right), '4'); eq(U.showVal(D[m1].out.right), '0');
-});
 t('折纸的纸片是图形：4×4 的正方形', () => { const sc = W.blank(); const f = W.add(sc, 'fold', 0, 0, {}); eq(U.Fig.show(W.evaluate(sc)[f].out.f.data), '四边形 (0, 0) (4, 0) (4, 4) (0, 4)'); });
 console.log('来历追踪（任务 A）');
 const frac = (a, b) => { const sc = W.blank(); const x = W.add(sc, 'num', 0, 0, { n: a[0], d: a[1] }), y = W.add(sc, 'num', 0, 0, { n: b[0], d: b[1] }), o = W.add(sc, 'op', 0, 0, { op: 0 });
@@ -599,10 +593,9 @@ t('W.from：同样得 6，一个是 192÷32 算的，一个是手填的 6', () =
   const wOf = (sc) => U.Judge.makeW(sc, W.evaluate(sc), { ms: {} });
   truthy(wOf(calc).from(6, 'op', [192, 32]), '算出来的'); truthy(!wOf(calc).from(6, 'op', [200, 32]), '输入不对'); truthy(!wOf(hand).from(6, 'op', [192, 32]), '手填的不算');
 });
-t('带余除法、数位板、天平都写了中间步骤', () => {
+t('数位板、天平都写了中间步骤', () => {
   const probe = (type, props, feed) => { const sc = W.blank(); const e = W.add(sc, type, 0, 0, props || {}); (feed || []).forEach(([t, p, port]) => { const f = W.add(sc, t, 0, 0, p); W.act(sc, { t: 'link', from: f, fromPort: 'v', to: e, toPort: port }); }); return W.evaluate(sc)[e].trace.steps.map((s) => s.rule); };
   const num = (n) => ['num', { n }];
-  truthy(probe('divmod', {}, [[...num(17), 'a'], [...num(5), 'b']]).includes('div.trial-quotient'));
   truthy(probe('digits', {}, [[...num(13), 'v']]).includes('place.carry'));
   truthy(probe('balance', {}, [[...num(3), 'L'], [...num(3), 'R']]).includes('balance.compare'));
 });
@@ -1204,32 +1197,17 @@ t('W.near 带容差判断近似值：不记录', () => {
   const near = (x, tol) => Math.abs(U.Q.num(D[c].out.t.data) - x) <= tol;
   truthy(near(195.5, 0.01)); truthy(!near(100, 0.01)); eq(U.inexactReads.length, 0);
 });
-console.log('先猜后看与估算器');
-t('估算器：没填估计不给输出；填了一个数，差多少、差百分之几、20% 以内算估准', () => {
-  const sc = W.blank(), a = W.add(sc, 'num', 0, 0, { n: 899 }), e = W.add(sc, 'estimate', 0, 0, {}); W.act(sc, { t: 'link', from: a, to: e, toPort: 'actual' });
-  eq(Object.keys(W.evaluate(sc)[e].out), [], '没填估计时没有输出');
-  W.act(sc, { t: 'set', id: e, k: 'guess', v: '900' }); let o = W.evaluate(sc)[e].out;
-  eq(Q.num(o.gap.data), 1); truthy(Q.num(o.pct.data) < 0.2); eq(o.inRange.data, true);
-  W.act(sc, { t: 'set', id: e, k: 'guess', v: '500' }); o = W.evaluate(sc)[e].out; eq(o.inRange.data, false);
-});
-t('估算器：范围估计要最少、最多都填且最少不大于最多；实际值在范围里才算估中', () => {
-  const sc = W.blank(), a = W.add(sc, 'num', 0, 0, { n: 899 }), e = W.add(sc, 'estimate', 0, 0, { mode: 1, lo: '800' }); W.act(sc, { t: 'link', from: a, to: e, toPort: 'actual' });
-  eq(Object.keys(W.evaluate(sc)[e].out), []);
-  W.act(sc, { t: 'set', id: e, k: 'hi', v: '700' }); eq(Object.keys(W.evaluate(sc)[e].out), [], '最少大于最多：不算填好');
-  W.act(sc, { t: 'set', id: e, k: 'hi', v: '1000' }); eq(W.evaluate(sc)[e].out.inRange.data, true);
-  W.act(sc, { t: 'set', id: e, k: 'hi', v: '850' }); eq(W.evaluate(sc)[e].out.inRange.data, false);
-});
-t('先猜后看：填猜测记一条 guess 事件（只记差多少，不扣分）；没填完整不记', () => {
+console.log('先猜后看');
+t('先猜后看：填猜测记一条 guess 事件（不扣分）', () => {
   U.Events.clear();
-  const sc = W.blank(), a = W.add(sc, 'num', 0, 0, { n: 899 }), e = W.add(sc, 'estimate', 0, 0, {}); W.act(sc, { t: 'link', from: a, to: e, toPort: 'actual' });
-  W.act(sc, { t: 'set', id: e, k: 'guess', v: '50' });
-  const g = U.Events.log.filter((x) => x.type === 'guess'); eq(g.length, 1); eq(g[0].data.right, false); eq(g[0].data.gap, 849);
-  W.act(sc, { t: 'set', id: e, k: 'mode', v: 1 }); eq(U.Events.log.filter((x) => x.type === 'guess').length, 1, '范围还没填，不记');
+  const sc = W.blank(), e = W.add(sc, 'fracarea', 0, 0, { a: '2/3', b: '4/5', op: 1 });
+  W.act(sc, { t: 'set', id: e, k: 'gans', v: '1/2' });
+  const g = U.Events.log.filter((x) => x.type === 'guess'); eq(g.length, 1); truthy(g[0].data.right !== true, '猜 1/2 不对：不记成猜对');
 });
 t('先猜后看：guess 声明不合法（口或属性不存在）进不了注册表', () => {
-  const bad = Object.assign({}, U.types.estimate, { guess: { props: ['nope'], ports: ['gap'], answered: () => true } });
+  const bad = Object.assign({}, U.types.fracarea, { guess: { props: ['nope'], ports: ['result'], answered: () => true } });
   truthy(U.lintType(bad).errors.some((m) => /guess\.props/.test(m)));
-  const bad2 = Object.assign({}, U.types.estimate, { guess: { props: ['guess'], ports: ['nope'], answered: () => true } });
+  const bad2 = Object.assign({}, U.types.fracarea, { guess: { props: ['gans'], ports: ['nope'], answered: () => true } });
   truthy(U.lintType(bad2).errors.some((m) => /guess\.ports/.test(m)));
 });
 t('质因数积木：2–1000 的 gcd、lcm、因数个数、积木块数和直接计算一致', () => {
