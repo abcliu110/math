@@ -65,6 +65,12 @@ module.exports = [
       ['mtyb','meter',{'digits':0,'label':'统计表：总数'}],
       ['vtb','vertbench',{'mode':2,'a':812,'b':4,'qd':'203'}],
       ['mvtb','meter',{'digits':0,'label':'竖式：812 ÷ 4 的商'}],
+      ['dcb','decbench',{'mode':0,'u':1,'t':2,'h':5}],
+      ['mdcb','meter',{'digits':0,'label':'小数：百分之一有几个'}],
+      ['tlb','tilebench',{'mode':0,'expr':'x^2+5x+6','wp':3,'hp':2}],
+      ['mtlb','meter',{'digits':0,'label':'代数砖：拼成了没有'}],
+      ['zpb','chipbench',{'mode':0,'op':0,'a':-2,'b':5,'pos':3,'neg':0,'step':1}],
+      ['mzpb','meter',{'digits':0,'label':'零对：台面上的数'}],
     ],
     links: [
       ['am','mam','v','area'],
@@ -96,6 +102,9 @@ module.exports = [
       ['gwb','mgwb','v','qy'],
       ['tyb','mtyb','v','total'],
       ['vtb','mvtb','v','q'],
+      ['dcb','mdcb','v','hcount'],
+      ['tlb','mtlb','v','done'],
+      ['zpb','mzpb','v','value'],
     ],
   },
 ];

@@ -1,4 +1,4 @@
-/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，二十六批共 191 道）。
+/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，二十九批共 211 道）。
  * 这些题原来的做法是“放数字、接运算器、看读数”：学生在搭计算流程。这里按 id 把它们换成在操作台上直接动手：
  * 题目的编号、标题、年级、知识点、道理（why）都不变，换的是器材架、开场的台面、里程碑和提示。
  * 这个文件排在所有题目文件后面加载（文件名 zz 开头），找不到的 id 会记在 U.benchMigrateMissing 里（测试会查）。 */
@@ -7,9 +7,9 @@
   const U = G.U, W = U.World;
   const one = (type, role, props) => () => { const s = W.blank(); const id = W.add(s, type, 40, 50, props); s.entities[id].role = role; return s; };
   const ms = (role) => (id, say, score, port, value, hints) => ({ id, say, score, when: { role, port, op: '=', value: String(value) }, hints });
-  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s'), GP = ms('g'), B = ms('b'), D = ms('d'), K2 = ms('k'), Gq = ms('q'), So = ms('o'), Cj = ms('j'), Z = ms('z'), H2 = ms('h'), Pq = ms('p'), Tr = ms('x'), Ci = ms('i'), Gw = ms('w'), Tw = ms('y'), Vt = ms('v'), Mb = ms('c2');
+  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s'), GP = ms('g'), B = ms('b'), D = ms('d'), K2 = ms('k'), Gq = ms('q'), So = ms('o'), Cj = ms('j'), Z = ms('z'), H2 = ms('h'), Pq = ms('p'), Tr = ms('x'), Ci = ms('i'), Gw = ms('w'), Tw = ms('y'), Vt = ms('v'), Mb = ms('c2'), Db = ms('d'), Tb = ms('tb'), Zp = ms('z');
   const H = (id, say, score, when, hints) => ({ id, say, score, when, hints });   // 条件是一个范围（频率稳在某个区间）时用函数
-  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props), bb = (props) => one('balancebench', 'b', props), sb = (props) => one('statbench', 'd', props), ch = (props) => one('chancebench', 'h', props), ck = (props) => one('clockbench', 'k', props), gq = (props) => one('groupbench', 'q', props), sd = (props) => one('solidbench', 'o', props), cj = (props) => one('conjbench', 'j', props), fb2 = (props) => one('fitbench', 'z', props), pb2 = (props) => one('pairbench', 'p', props), tb3 = (props) => one('tribench', 'x', props), ci = (props) => one('circlebench', 'i', props), gd = (props) => one('gridbench', 'w', props), tw = (props) => one('tablebench', 'y', props), vt = (props) => one('vertbench', 'v', props), mb = (props) => one('mulbench', 'c2', props);
+  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props), bb = (props) => one('balancebench', 'b', props), sb = (props) => one('statbench', 'd', props), ch = (props) => one('chancebench', 'h', props), ck = (props) => one('clockbench', 'k', props), gq = (props) => one('groupbench', 'q', props), sd = (props) => one('solidbench', 'o', props), cj = (props) => one('conjbench', 'j', props), fb2 = (props) => one('fitbench', 'z', props), pb2 = (props) => one('pairbench', 'p', props), tb3 = (props) => one('tribench', 'x', props), ci = (props) => one('circlebench', 'i', props), gd = (props) => one('gridbench', 'w', props), tw = (props) => one('tablebench', 'y', props), vt = (props) => one('vertbench', 'v', props), mb = (props) => one('mulbench', 'c2', props), db = (props) => one('decbench', 'd', props), tlb = (props) => one('tilebench', 'tb', props), zp = (props) => one('chipbench', 'z', props);
   const MOVES = {
     // ---- 数轴 ----
     'g1-split-merge-core': { shelf: ['numlinebench'], build: nl({ from: 0, to: 10, a: 0, s: 1, n: 0 }),
@@ -657,6 +657,76 @@
     'g4-mul-zero-trap': { shelf: ['mulbench'], build: mb({ a: 123, b: 40 }),
       hook: '123 × 40。40 只有“4 个十”这一部分：先算 123 × 4，末尾要注意什么？',
       milestones: [Mb('prod', '123 × 40 = 4920', 6, 'product', 4920, ['123 × 4 = 492。', '乘的是 4 个十。', '末尾添 0：4920。'])], goal: ['prod'] },
+    // ======== 第二十七批：小数，用一、十分之一、百分之一（元、角、分）摆出来 ========
+    'g3-decimal-jiao-core': { shelf: ['decbench'], build: db({ mode: 1, skin: 1, t: 3, b: '0.4' }),
+      hook: '台面上已经有 3 角。点“放进来”，再放 4 角。一共几角？是几元？',
+      milestones: [Db('sum', '3 角 + 4 角 = 0.7 元', 6, 'value', '7/10', ['点“放进来”。', '3 个角和 4 个角，一共 7 个角。', '1 角是 0.1 元，7 角是 0.7 元。'])], goal: ['sum'] },
+    'g3-decimal-trap': { shelf: ['decbench'], build: db({ mode: 0, skin: 1, t: 15 }),
+      hook: '台面上有 15 角。15 角是几元几角？10 角能换 1 元，换整齐了再读。',
+      milestones: [Db('yuan', '15 角 = 1 元 5 角 = 1.5 元', 6, 'value', '3/2', ['点“10 个角 → 1 个元”。', '换完是 1 元 5 角。', '5 角是 0.5 元：1.5 元。'])], goal: ['yuan'],
+      traps: [{ id: 'fifteen', wrong: '1 元 5 角不是 15 元：5 角不满 1 元，是 0.5 元。', when: { role: 'd', port: 'value', op: '=', value: '15' } }] },
+    'g4-decimal-equal-core': { shelf: ['decbench'], build: db({ mode: 0, t: 5 }),
+      hook: '台面上是 0.5：5 个十分之一。把它们都拆成百分之一，是几个百分之一？大小变了没有？',
+      milestones: [Db('h50', '5 个十分之一 = 50 个百分之一：0.5 = 0.50', 6, 'hcount', 50, ['点“1 个十分之一 → 10 个百分之一”。', '一共拆 5 次。', '50 个百分之一，还是那么多：0.50 = 0.5。'])], goal: ['h50'] },
+    'g4-decimal-shift-trap': { shelf: ['decbench'], build: db({ mode: 3, a: '0.25' }),
+      hook: '0.25 的小数点向右移动一位。点“小数点 →”，看看每个数字到了哪一位。',
+      milestones: [Db('x10', '0.25 → 2.5：扩大到 10 倍', 6, 'shifted', '5/2', ['点一次“小数点 →”。', '2 从十分位到了个位，5 从百分位到了十分位。', '2.5。'])], goal: ['x10'],
+      traps: [{ id: 'twentyfive', wrong: '移了两位才是 25：向右移一位只扩大到 10 倍。', when: { role: 'd', port: 'shifted', op: '=', value: '25' } }] },
+    'g4-decimal-add-core': { shelf: ['decbench'], build: db({ mode: 1, u: 3, t: 6, b: '0.45' }),
+      hook: '台面上是 3.6。把 0.45 放进来：十分之一和十分之一放一起，百分之一和百分之一放一起。满十的要换。',
+      milestones: [Db('sum', '3.6 + 0.45 = 4.05', 6, 'value', '81/20', ['点“放进来”。', '十分之一有 10 个了：换成 1 个一。', '4 个一、0 个十分之一、5 个百分之一：4.05。'])], goal: ['sum'],
+      traps: [{ id: 'notalign', wrong: '3.6 + 0.45 不是 4.1 或 0.81：十分之一只能和十分之一合在一起，这就是“小数点对齐”。', when: { role: 'd', port: 'value', op: '=', value: '41/10' } }] },
+    'g4-decimal-align-trap': { shelf: ['decbench'], build: db({ mode: 2, u: 2, t: 4, b: '0.08' }),
+      hook: '台面上是 2.4，要拿走 0.08（8 个百分之一）。可是一个百分之一都没有，怎么办？',
+      milestones: [Db('diff', '2.4 − 0.08 = 2.32', 6, 'value', '58/25', ['先点“1 个十分之一 → 10 个百分之一”。', '再点“拿走 0.08”。', '2 个一、3 个十分之一、2 个百分之一：2.32。'])], goal: ['diff'],
+      traps: [{ id: 'sixteen', wrong: '2.4 − 0.08 不是 1.6：0.08 是 8 个百分之一，不是 8 个十分之一。', when: { role: 'd', port: 'value', op: '=', value: '8/5' } }] },
+    'decimal-add': { shelf: ['decbench'], build: db({ mode: 1, t: 1, b: '0.2' }),
+      hook: '台面上是 0.1（1 个十分之一）。把 0.2 放进来，是几个十分之一？',
+      milestones: [Db('sum', '0.1 + 0.2 = 0.3：正好', 6, 'value', '3/10', ['点“放进来”。', '1 个十分之一和 2 个十分之一。', '3 个十分之一就是 0.3，一点不差。'])], goal: ['sum'] },
+    'g5-decimal-mul-core': { shelf: ['decbench'], build: db({ mode: 1, b: '0.6', k: 4 }),
+      hook: '一根绳子 0.6 米，取 4 根。把 0.6 放进来 4 次，满十的换一换，一共多少？',
+      milestones: [Db('prod', '0.6 × 4 = 2.4', 6, 'value', '12/5', ['点 4 次“放进来”。', '24 个十分之一：每 10 个换成 1 个一。', '2 个一、4 个十分之一：2.4。'])], goal: ['prod'],
+      traps: [{ id: 'twentyfour', wrong: '不是 24：是 24 个十分之一，也就是 2.4。', when: { role: 'd', port: 'value', op: '=', value: '24' } }] },
+    'g5-decimal-mul-trap': { shelf: ['decbench'], build: db({ mode: 4 }),
+      hook: '把百格图的宽调成 2（0.2），高调成 3（0.3）。重叠的是几个小格？一个小格是多少？',
+      milestones: [Db('prod', '0.2 × 0.3 = 0.06', 6, 'prod', '3/50', ['宽点“+”两次，高点“+”三次。', '重叠 2 × 3 = 6 个小格。', '一个小格是百分之一：0.06。'])], goal: ['prod'] },
+    'g5-decimal-div-core': { shelf: ['decbench'], build: db({ mode: 2, u: 3, t: 6, b: '0.9' }),
+      hook: '3.6 米布，每 0.9 米做一个口袋。一次一次拿走 0.9，十分之一不够了就拆一个一。正好拿完，拿了几次？',
+      milestones: [Db('q', '3.6 ÷ 0.9 = 4', 6, 'times', 4, ['十分之一只有 6 个，不够 9 个：先拆开一个一。', '拿一次，再拆、再拿……', '一共拿了 4 次，正好拿完。'])], goal: ['q'] },
+    'g5-decimal-div-trap': { shelf: ['decbench'], build: db({ mode: 2, u: 1, t: 2, b: '0.4' }),
+      hook: '1.2 里面有几个 0.4？有人用 1.2 ÷ 4 得 0.3，对吗？一次一次拿走 0.4 试试。',
+      milestones: [Db('q', '1.2 ÷ 0.4 = 3', 6, 'times', 3, ['先把 1 个一拆成 10 个十分之一：一共 12 个十分之一。', '每次拿 4 个十分之一。', '拿 3 次正好拿完：12 ÷ 4 = 3。'])], goal: ['q'] },
+    // ======== 第二十八批：旧的代数砖 → 代数砖台面（调长宽、一块一块铺、补小方块） ========
+    'tl-expand': { shelf: ['tilebench'], build: tlb({ mode: 1, wa: 1, wp: 1, ha: 1, hp: 4 }),
+      hook: '长 x + 1、宽 x + 4 的框已经画好了。一块一块往里铺：x² 几块？x 几条？小方块几个？',
+      milestones: [Tb('rect', '正好铺满了：1 块 x²、5 条 x、4 个 1', 8, 'done', 1, ['大方块是 x × x：长里一个 x、宽里一个 x。', '长条：长里的 x 乘宽里的 4，加上宽里的 x 乘长里的 1。', 'x² 1 块，x 5 条，1 有 4 个。'])], goal: ['rect'] },
+    'tl-factor': { shelf: ['tilebench'], build: tlb({ mode: 0, expr: 'x^2+5x+6' }),
+      hook: '手里有 1 块 x²、5 条 x、6 个 1。点长和宽的“1 +”“1 −”，让砖正好铺满框。长和宽就是它的因式。',
+      milestones: [Tb('done', '拼成了：(x + 2)(x + 3)', 8, 'done', 1, ['长和宽里的常数乘起来是 6（小方块），加起来是 5（长条）。', '2 × 3 = 6，2 + 3 = 5。', '长 x + 3，宽 x + 2。'])], goal: ['done'] },
+    'tl-complete': { shelf: ['tilebench'], build: tlb({ mode: 2, expr: 'x^2+6x' }),
+      hook: '1 块 x²、6 条 x。调边长 x + 几，让长条平分在大方块两边；角上缺的小方块要补几个，才能成一个大正方形？',
+      milestones: [Tb('square', '补 9 个小方块，拼成边长 x + 3 的正方形', 8, 'added', 9, ['边长调到 x + 3：每边 3 条 x。', '角上是 3 × 3 的空位。', '补 9 个：x² + 6x + 9 = (x + 3)²。'])], goal: ['square'] },
+    'tl-trap': { shelf: ['tilebench'], build: tlb({ mode: 0, expr: 'x^2+5x+5' }),
+      hook: '这回的砖是 1 块 x²、5 条 x、5 个 1。调长和宽试一试：能拼成长方形吗？试过了觉得不行，点“拼不成”。',
+      milestones: [Tb('judged', '判断对了：拼不成（整数拼法里找不到）', 8, 'judged', 1, ['长和宽的常数乘起来要是 5、加起来要是 5。', '1 × 5 的和是 6，不是 5。', '点“拼不成”。'])], goal: ['judged'] },
+    // ======== 第二十九批：负数的乘除、相反数 → 正负数（零对） ========
+    'g6-neg-times-core': { shelf: ['chipbench'], build: zp({ mode: 1, a: -3, b: -4, pos: 0, neg: 0 }),
+      hook: '(−3) × (−4)：拿走 3 组，每组 4 个 −1。台面上什么也没有，怎么拿？先放进零对（数不变），再拿。',
+      milestones: [Zp('res', '(−3) × (−4) = 12', 6, 'result', 12, ['点“放进 4 对零对”，再“拿走一组”。', '一共拿 3 组。', '剩下 12 个 +1：12。'])], goal: ['res'],
+      traps: [{ id: 'neg12', wrong: '不是 −12：拿走 −4，就像减去 −4，留下的是 +1。', when: { role: 'z', port: 'value', op: '=', value: '-12' } }] },
+    'g6-neg-times-trap': { shelf: ['chipbench'], build: zp({ mode: 1, a: -6, b: -5, pos: 0, neg: 0 }),
+      hook: '(−6) × (−5)：拿走 6 组，每组 5 个 −1。每次先放 5 对零对再拿，看剩下的是 +1 还是 −1。',
+      milestones: [Zp('res', '(−6) × (−5) = 30', 6, 'result', 30, ['放 5 对零对，拿走一组 5 个 −1。', '重复 6 次。', '剩 30 个 +1：30。'])], goal: ['res'],
+      traps: [{ id: 'neg30', wrong: '负负得正：拿走负的，留下的是正的。不是 −30。', when: { role: 'z', port: 'value', op: '=', value: '-30' } }] },
+    'g7-rational-mulneg-trap': { shelf: ['chipbench'], build: zp({ mode: 1, a: -4, b: -3, pos: 0, neg: 0 }),
+      hook: '(−4) × (−3)：拿走 4 组，每组 3 个 −1。先放零对，再拿。',
+      milestones: [Zp('res', '(−4) × (−3) = 12', 6, 'result', 12, ['放 3 对零对，拿走一组。', '重复 4 次。', '剩 12 个 +1。'])], goal: ['res'] },
+    'g7-rational-opposite-trap': { shelf: ['chipbench'], build: zp({ mode: 0, op: 2, a: -4, pos: 0, neg: 4 }),
+      hook: '台面上是 −4（4 个 −1）。“−(−4)”就是 −4 的相反数：点“全部翻过来”，看看是几。',
+      milestones: [Zp('res', '−(−4) = 4', 6, 'result', 4, ['点“全部翻过来”。', '每个 −1 都变成 +1。', '4 个 +1：4。'])], goal: ['res'] },
+    'g7-rational-divsign-core': { shelf: ['chipbench'], build: zp({ mode: 2, a: -12, k: 4, pos: 0, neg: 12 }),
+      hook: '台面上是 −12（12 个 −1）。平均分成 4 份：点“每份发一个”，发完了每份是几？',
+      milestones: [Zp('each', '−12 ÷ 4 = −3', 6, 'each', -3, ['点“每份发一个”。', '12 个片，每次发 4 个，发 3 次。', '每份 3 个 −1：−3。'])], goal: ['each'] },
   };
   const missing = [], moved = [];
   for (const id of Object.keys(MOVES)) {

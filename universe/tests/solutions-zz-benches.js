@@ -1,7 +1,7 @@
 /* 搬到操作台上的旧题的参考解（problems/zz-benches.js）。文件名 zz 开头：排在各年级的参考解后面加载，盖掉原来“接运算器”的解法。 */
 'use strict';
 const S = (role) => (o) => (h) => { const e = h.role(role); for (const k of Object.keys(o)) h.set(e, k, o[k]); };
-const n = S('n'), k = S('k'), r = S('r'), m = S('m'), c = S('c'), t = S('t'), s = S('s'), gp = S('g'), b = S('b'), d = S('d'), ch = S('h'), ck = S('k'), gq = S('q'), so = S('o'), cj = S('j'), fz = S('z'), pq = S('p'), tx = S('x'), ci = S('i'), gw = S('w'), ty = S('y'), vv = S('v'), mbs = S('c2');
+const n = S('n'), k = S('k'), r = S('r'), m = S('m'), c = S('c'), t = S('t'), s = S('s'), gp = S('g'), b = S('b'), d = S('d'), ch = S('h'), ck = S('k'), gq = S('q'), so = S('o'), cj = S('j'), fz = S('z'), pq = S('p'), tx = S('x'), ci = S('i'), gw = S('w'), ty = S('y'), vv = S('v'), mbs = S('c2'), dd = S('d'), tt = S('tb'), zz = S('z');
 module.exports = {
   'g1-split-merge-core': n({ a: 2, n: 3 }),
   'g1-split-minus-trap': n({ s: -1, n: 2 }),
@@ -43,6 +43,14 @@ module.exports = {
   'g7-quadrant-core': c({ ax: -2, ay: 3 }),
   'g7-symmetry-x-axis-trap': c({ bx: 3, by: 2 }),
   'g7-translate-down-trap': c({ ay: -1 }),
+  // 第二十九批
+  'g6-neg-times-core': zz({ pos: 12, neg: 0, step: 3 }), 'g6-neg-times-trap': zz({ pos: 30, neg: 0, step: 6 }), 'g7-rational-mulneg-trap': zz({ pos: 12, neg: 0, step: 4 }), 'g7-rational-opposite-trap': zz({ pos: 4, neg: 0, step: 1 }), 'g7-rational-divsign-core': zz({ neg: 0, dealt: 3 }),
+  // 第二十八批
+  'tl-expand': tt({ p2: 1, p1: 5, p0: 4 }), 'tl-factor': tt({ wp: 3, hp: 2 }), 'tl-complete': tt({ wp: 3, add: 9 }), 'tl-trap': tt({ claim: 1 }),
+  // 第二十七批
+  'g3-decimal-jiao-core': dd({ t: 7, step: 1 }), 'g3-decimal-trap': dd({ u: 1, t: 5 }), 'g4-decimal-equal-core': dd({ t: 0, h: 50 }), 'g4-decimal-shift-trap': dd({ shift: 1 }),
+  'g4-decimal-add-core': dd({ u: 4, t: 0, h: 5, step: 1 }), 'g4-decimal-align-trap': dd({ u: 2, t: 3, h: 2, step: 1 }), 'decimal-add': dd({ t: 3, step: 1 }), 'g5-decimal-mul-core': dd({ u: 2, t: 4, step: 4 }),
+  'g5-decimal-mul-trap': dd({ gw: 2, gh: 3 }), 'g5-decimal-div-core': dd({ u: 0, t: 0, step: 4 }), 'g5-decimal-div-trap': dd({ u: 0, t: 0, step: 3 }),
   // 第二十六批
   'g2-two-digit-add-core': vv({ res: '68' }), 'g3-divide-core': vv({ qd: '21' }), 'g3-divide-zero-trap': vv({ qd: '203' }), 'g4-div-2digit-core': vv({ qd: '20' }), 'g4-div-trial-trap': vv({ qd: '19' }),
   'g4-mul-3x2-core': mbs({ vals: '400,80,20,2000,400,100,500,2500,3000' }), 'g4-mul-zero-trap': mbs({ vals: '4000,800,120,4920' }),

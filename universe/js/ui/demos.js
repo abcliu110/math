@@ -41,29 +41,6 @@
       return s;
     },
   };
-  // 代数砖
-  D.tiles = {
-    caps: ['x²+5x+6：1 块大方块、5 根长条、6 个小方块', '拼成一个长方形', '长 = x+3，宽 = x+2', '所以 x²+5x+6 = (x+3)(x+2)'],
-    draw(st) {
-      const u = 20, X = 60, ox = 110, oy = 30; let s = '';
-      if (st === 0) {
-        s += Rc(30, 40, X, X, B, { r: 2 }) + T(60, 118, 'x²', { w: 700 });
-        for (let i = 0; i < 5; i++) s += Rc(120 + i * 24, 40, u, X, A, { r: 2 });
-        s += T(180, 118, '5 个 x', { w: 700 });
-        for (let i = 0; i < 6; i++) s += Rc(270 + (i % 3) * 24, 40 + Math.floor(i / 3) * 24, u, u, GR, { r: 2 });
-        s += T(294, 118, '6 个 1', { w: 700 });
-        return s;
-      }
-      s += Rc(ox, oy, X, X, B, { r: 0, s: '#fff', sw: 1.5 });
-      for (let i = 0; i < 3; i++) s += Rc(ox + X + i * u, oy, u, X, A, { s: '#fff', sw: 1.5 });
-      for (let j = 0; j < 2; j++) s += Rc(ox, oy + X + j * u, X, u, A, { s: '#fff', sw: 1.5 });
-      for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) s += Rc(ox + X + i * u, oy + X + j * u, u, u, GR, { s: '#fff', sw: 1.5 });
-      s += T(ox + X / 2, oy + X / 2 + 5, 'x²', { f: '#fff', w: 700, s: 15 });
-      if (st >= 2) s += Ln(ox, oy - 8, ox + X + 3 * u, oy - 8, { w: 2 }) + T(ox + (X + 3 * u) / 2, oy - 14, 'x + 3', { w: 700 }) + Ln(ox - 8, oy, ox - 8, oy + X + 2 * u, { w: 2 }) + T(ox - 14, oy + (X + 2 * u) / 2, 'x+2', { a: 'end', w: 700 });
-      if (st === 3) s += T(ox + 150, oy + 40, '长 × 宽', { a: 'start', w: 700, f: P }) + T(ox + 150, oy + 62, '= x²+5x+6', { a: 'start', w: 700, f: P });
-      return s;
-    },
-  };
   // 函数机
   D.fmachine = {
     caps: ['喂进一个数，机器吐出一个数', '多试几个：输入 +1，输出每次 +2', '规律：输出 = 2×输入 + 1', '用没试过的数验证：10 → 21'],
@@ -723,6 +700,44 @@
       if (st >= 2) s += Ci(X(1), 30, 9, A, { s: INK }) + T(X(1), 34, '1', { s: 11, w: 700 });
       if (st >= 3) s += T(X(1), 132, '8', { s: 20, w: 700, f: GR });
       s += T(290, 90, ['47 + 38', '15：写 5', '进 1', '85'][st], { s: 16, w: 700, f: P });
+      return s;
+    },
+  };
+
+  // 小数：满十换一
+  D.decbench = {
+    caps: ['3.6：3 个一、6 个十分之一', '放进 0.45：十分之一有 10 个了', '10 个十分之一换 1 个一', '4.05'],
+    draw(st) {
+      let s = ''; const u = st >= 2 ? 4 : 3, t = st === 0 ? 6 : st === 1 ? 10 : 0, h = st >= 1 ? 5 : 0;
+      for (let i = 0; i < u; i++) s += Rc(20 + i * 30, 40, 26, 26, '#9fb7d9', { s: INK });
+      for (let i = 0; i < t; i++) s += Rc(150 + i * 10, 40, 7, 26, '#f5c26b', { s: INK });
+      for (let i = 0; i < h; i++) s += Rc(260 + i * 10, 58, 7, 7, '#9fd5ad', { s: INK });
+      s += T(160, 110, ['3.6', '3 个一、10 个十分之一、5 个百分之一', '换：4 个一', '4.05'][st], { s: 15, w: 700, f: P });
+      return s;
+    },
+  };
+
+  // 代数砖：拼长方形
+  D.tilebench = {
+    caps: ['x² + 5x + 6：1 块大方块、5 条长条、6 个小方块', '长 x + 3：右边放 3 条', '宽 x + 2：下面放 2 条', '角上正好 6 个小方块：(x + 3)(x + 2)'],
+    draw(st) {
+      const X = 50, u = 12, x0 = 40, y0 = 20; let s = Rc(x0, y0, X, X, '#9fc3ea', { s: INK });
+      if (st >= 1) for (let i = 0; i < 3; i++) s += Rc(x0 + X + i * u, y0, u, X, '#f5c26b', { s: INK });
+      if (st >= 2) for (let i = 0; i < 2; i++) s += Rc(x0, y0 + X + i * u, X, u, '#f5c26b', { s: INK });
+      if (st >= 3) for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) s += Rc(x0 + X + i * u, y0 + X + j * u, u, u, '#9fd5ad', { s: INK });
+      s += T(240, 70, ['x² + 5x + 6', '长 x + 3', '宽 x + 2', '(x + 3)(x + 2)'][st], { s: 15, w: 700, f: P });
+      return s;
+    },
+  };
+
+  // 正负数：零对
+  D.chipbench = {
+    caps: ['台面上是 3 个 +1', '要拿走 5 个 +1：不够', '放进 2 对零对：还是 3', '拿走 5 个 +1：剩 −2'],
+    draw(st) {
+      const pos = st === 0 || st === 1 ? 3 : st === 2 ? 5 : 0, neg = st >= 2 ? 2 : 0; let s = '';
+      for (let i = 0; i < pos; i++) s += Ci(40 + i * 26, 40, 10, '#f5c542', { s: INK }) + T(40 + i * 26, 44, '+', { w: 700 });
+      for (let i = 0; i < neg; i++) s += Ci(40 + i * 26, 70, 10, '#7fb0e8', { s: INK }) + T(40 + i * 26, 74, '−', { w: 700 });
+      s += T(260, 60, ['3', '3 − 5 = ?', '3（零对是 0）', '−2'][st], { s: 16, w: 700, f: P });
       return s;
     },
   };

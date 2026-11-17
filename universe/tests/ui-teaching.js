@@ -31,11 +31,10 @@ const prop = (p, id, k) => p.evaluate(([id, k]) => UI.S.scene.entities[id].props
   await set(fa, 'op', 0); await set(fa, 'view', 1); await set(fa, 'a', '5/4'); t = await body(p, fa); ok(t.includes('第一个 5/4'), '数轴：5/4 超过 1');
 
   console.log('代数砖');
-  const tl = await add('tiles', 20, 420, { expr: 'x^2+5x+6', wa: 1, wp: 3, ha: 1, hp: 2 });
-  t = await body(p, tl); ok(t.includes('先猜'), '没猜之前：遮住拼没拼成');
-  await set(tl, 'gans', 1); t = await body(p, tl); ok(t.includes('拼不满') && t.includes('少'), '砖没取够：写出差几块');
-  await set(tl, 'n2', 1); await set(tl, 'n1x', 5); await set(tl, 'n1', 6); t = await body(p, tl); ok(t.includes('拼成了长方形'), '取对砖：拼成了');
-  await set(tl, 'x', 7); t = await body(p, tl); ok(t.includes('拼成了长方形'), '把 x 改成 7：拼法不变');
+  const tl = await add('tilebench', 20, 880, { mode: 0, expr: 'x^2+5x+6', wp: 1, hp: 1 });
+  t = await body(p, tl); ok(t.includes('缺 3 块') || t.includes('多 3 块'), '长宽没调对：写出缺几块、多几块');
+  await set(tl, 'wp', 3); await set(tl, 'hp', 2); t = await body(p, tl); ok(t.includes('拼成了') && t.includes('(x + 3)(x + 2)'), '长 x + 3、宽 x + 2：拼成了');
+  await set(tl, 'mode', 3); await set(tl, 'cut', 2); t = await body(p, tl); ok(t.includes('(a + b)(a − b)'), '平方差：剪拼成长方形');
 
   console.log('函数机');
   const fm = await add('fmachine', 420, 420, { secret: 1 });

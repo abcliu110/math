@@ -106,6 +106,9 @@ async function checkDist() {
   if (!runScript('tests/ui-grid.js', 'tests/ui-grid.js', pwEnv)) bail();   // 坐标与变换：真实鼠标拖点、旋转、平移、放大、比一比
   if (!runScript('tests/ui-table.js', 'tests/ui-table.js', pwEnv)) bail();   // 复式统计表：真实鼠标圈格子、交答案、两种合计
   if (!runScript('tests/ui-vert.js', 'tests/ui-vert.js', pwEnv)) bail();   // 竖式（加减与除法）：真实鼠标写数、点进位退位、试商
+  if (!runScript('tests/ui-dec.js', 'tests/ui-dec.js', pwEnv)) bail();   // 小数：真实鼠标放进来、换一换、拆开拿走、移小数点、百格乘法
+  if (!runScript('tests/ui-tiles.js', 'tests/ui-tiles.js', pwEnv)) bail();   // 代数砖：真实鼠标调长宽拼长方形、拼不成、一块一块展开、配方、平方差剪拼
+  if (!runScript('tests/ui-chips.js', 'tests/ui-chips.js', pwEnv)) bail();   // 正负数（零对）：真实鼠标放进拿走、放零对消零对、负负得正、翻过来、平均分
   if (!runScript('tests/ui-areamodel.js', 'tests/ui-areamodel.js', pwEnv)) bail();   // 面积模型（样板操作台）和器材把手：真实鼠标拖边、切、改分数
   if (!runScript('tests/ui-shapes.js', 'tests/ui-shapes.js', pwEnv)) bail();         // 常见图形、顶点编辑、直接拖出辅助线（真实鼠标和键盘）；含画布横纵比例回归
   if (!runScript('tests/ui-export.js', 'tests/ui-export.js', pwEnv)) bail();         // 2.12/V10：导出图片（真实鼠标点菜单，台面和专注工作区各一次下载，.png、大小 > 0）

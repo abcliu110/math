@@ -6,7 +6,7 @@
 
 - 知识点：142 个（设计目标 142）
 - 有题的知识点：141 个（99%）
-- 题目：548 道；没有对应知识点的题：1 道
+- 题目：553 道；没有对应知识点的题：1 道
 - 没有器材的本质：无
 - 没有题的本质：无
 
@@ -20,8 +20,8 @@
 | 4 | 17 | 17（100%） | 85 |
 | 5 | 14 | 14（100%） | 86 |
 | 6 | 15 | 14（93%） | 52 |
-| 7 | 16 | 16（100%） | 74 |
-| 8 | 16 | 16（100%） | 71 |
+| 7 | 16 | 16（100%） | 76 |
+| 8 | 16 | 16（100%） | 74 |
 | 9 | 16 | 16（100%） | 40 |
 
 ## 按知识点
@@ -74,7 +74,7 @@
 | 3.11 | 3 | 两位数乘两位数 | 9 | 1 | 0 | 1 | areamodel、num、mulbench、arithbench |
 | 3.12 | 3 | 面积 | 11 | 0 | 0 | 1 | areamodel、asn、curved、geoboard、circlebench、optimize、solidbench、turtle |
 | 3.13 | 3 | 年、月、日 | 1 | 1 | 0 | 1 | num |
-| 3.14 | 3 | 小数的初步认识 | 3 | 1 | 0 | 1 | num、numlinebench、twoways |
+| 3.14 | 3 | 小数的初步认识 | 3 | 1 | 0 | 1 | decbench、numlinebench、twoways |
 | 3.15b | 3 | 搭配（二） | 2 | 1 | 0 | 1 | num、areamodel、euler |
 | 4.1 | 4 | 大数的认识、近似数 | 5 | 0 | 0 | 1 | chancebench、num |
 | 4.2 | 4 | 公顷和平方千米 | 1 | 1 | 0 | 1 | ratiobench |
@@ -87,15 +87,15 @@
 | 4.9 | 4 | 四则运算 | 10 | 1 | 0 | 1 | asn、termsbench、findbug、turtle |
 | 4.17 | 4 | 观察物体（二） | 1 | 1 | 0 | 1 | solidbench |
 | 4.10 | 4 | 运算定律 | 9 | 1 | 0 | 1 | termsbench、fastbench |
-| 4.11 | 4 | 小数的意义和性质 | 1 | 1 | 0 | 1 | num |
+| 4.11 | 4 | 小数的意义和性质 | 1 | 1 | 0 | 1 | decbench |
 | 4.12 | 4 | 三角形 | 6 | 0 | 0 | 1 | tribench、curved、parallelogram、guessrule |
-| 4.13 | 4 | 小数的加法和减法 | 2 | 1 | 0 | 1 | num |
+| 4.13 | 4 | 小数的加法和减法 | 2 | 1 | 0 | 1 | decbench |
 | 4.14 | 4 | 图形的运动（二） | 1 | 0 | 0 | 1 | gridbench |
 | 4.15 | 4 | 平均数 | 9 | 0 | 0 | 1 | hanoi、meanbench、chancebench、statbench |
 | 4.16 | 4 | 鸡兔同笼 | 11 | 1 | 0 | 1 | swapbench |
-| 5.1 | 5 | 小数乘法 | 2 | 1 | 0 | 1 | num |
+| 5.1 | 5 | 小数乘法 | 2 | 1 | 0 | 1 | decbench、num |
 | 5.2 | 5 | 位置 | 1 | 1 | 0 | 1 | gridbench |
-| 5.3 | 5 | 小数除法 | 1 | 1 | 0 | 1 | num |
+| 5.3 | 5 | 小数除法 | 1 | 1 | 0 | 1 | decbench |
 | 5.4 | 5 | 可能性 | 6 | 1 | 0 | 3 | chancebench、pairbench、ptree |
 | 5.5 | 5 | 简易方程 | 12 | 0 | 0 | 1 | variable、balancebench、nim、costplan、systembench |
 | 5.6 | 5 | 多边形的面积 | 5 | 1 | 0 | 1 | num、parallelogram、gworkspace、gpt、gpoly、fquad |
@@ -116,15 +116,15 @@
 | 6.7a | 6 | 扇形统计图 | 1 | 1 | 0 | 1 | ratiobench |
 | 6.7b | 6 | 数与形 | 2 | 1 | 2 | 4 | conjbench、nth、induction、scaffold |
 | 6.8 | 6 | 负数 | 2 | 1 | 0 | 1 | numlinebench |
-| 6.9 | 6 | 负数运算——为什么负负得正 | 1 | 1 | 0 | 1 | num |
+| 6.9 | 6 | 负数运算——为什么负负得正 | 1 | 1 | 0 | 1 | chipbench |
 | 6.10 | 6 | 百分数（二） | 2 | 1 | 0 | 1 | ratiobench |
 | 6.11 | 6 | 圆柱与圆锥 | 1 | 1 | 0 | 1 | circlebench |
 | 6.12 | 6 | 比例 | 9 | 1 | 0 | 1 | ratiobench、fitbench、fmachine、euler、scale、shadow、taxi |
 | 6.13 | 6 | 鸽巢问题 | 1 | 1 | 0 | 1 | groupbench |
 | 6.14 | 6 | 综合与实践 / 整理和复习 | 0 | 0 | 0 | — | — |
-| 7.1 | 7 | 正数和负数、有理数与数轴 | 4 | 1 | 0 | 1 | approach、conjbench、numlinebench、num、proofsort |
+| 7.1 | 7 | 正数和负数、有理数与数轴 | 6 | 1 | 0 | 1 | approach、conjbench、chipbench、numlinebench、proofsort |
 | 7.2 | 7 | 有理数的加减法 | 7 | 1 | 0 | 1 | numlinebench、findbug、arithbench、newop |
-| 7.3 | 7 | 有理数的乘除法、乘方与科学记数法 | 3 | 1 | 0 | 1 | num、hanoi |
+| 7.3 | 7 | 有理数的乘除法、乘方与科学记数法 | 3 | 1 | 0 | 1 | chipbench、hanoi、num |
 | 7.4 | 7 | 整式 | 1 | 1 | 2 | 4 | algebra、induction |
 | 7.5 | 7 | 整式的加减 | 7 | 1 | 0 | 1 | algebra、termsbench |
 | 7.6 | 7 | 解一元一次方程 | 12 | 0 | 0 | 1 | balancebench、findbug |
@@ -142,8 +142,8 @@
 | 8.2 | 8 | 全等三角形的判定 | 2 | 1 | 0 | 1 | gridbench、fold |
 | 8.3 | 8 | 轴对称 | 2 | 0 | 0 | 1 | fold |
 | 8.4 | 8 | 等腰三角形 | 2 | 1 | 0 | 1 | tribench、proofsort |
-| 8.5 | 8 | 幂的运算与整式的乘法 | 3 | 1 | 0 | 1 | areamodel、num、tiles |
-| 8.6 | 8 | 乘法公式 | 11 | 0 | 0 | 1 | variable、areamodel、fastbench、findbug、tiles |
+| 8.5 | 8 | 幂的运算与整式的乘法 | 3 | 1 | 0 | 1 | areamodel、num、tilebench |
+| 8.6 | 8 | 乘法公式 | 14 | 0 | 0 | 1 | variable、areamodel、fastbench、findbug、tilebench |
 | 8.7 | 8 | 因式分解 | 3 | 0 | 0 | 1 | variable、areamodel、pour |
 | 8.8 | 8 | 分式及其运算 | 1 | 1 | 0 | 1 | — |
 | 8.9 | 8 | 分式方程 | 2 | 0 | 0 | 1 | approach |
@@ -154,7 +154,7 @@
 | 8.14 | 8 | 函数与正比例函数 | 1 | 1 | 0 | 1 | coordbench |
 | 8.15 | 8 | 一次函数 | 17 | 0 | 0 | 1 | coordbench、fmachine、costplan、fitbench、databench |
 | 8.16 | 8 | 数据的分析 | 2 | 1 | 0 | 1 | statbench |
-| 9.1 | 9 | 解一元二次方程 | 2 | 0 | 0 | 1 | tiles |
+| 9.1 | 9 | 解一元二次方程 | 2 | 0 | 0 | 1 | tilebench |
 | 9.2 | 9 | 一元二次方程的应用与根的判别式 | 2 | 1 | 0 | 1 | coordbench |
 | 9.3 | 9 | 二次函数的图象和性质 | 4 | 1 | 0 | 1 | coordbench |
 | 9.4 | 9 | 二次函数与方程及应用 | 4 | 0 | 0 | 1 | coordbench、fmachine、optimize |
@@ -176,13 +176,13 @@
 | 本质 | 题目数 | 器材数 |
 |---|---|---|
 | E1 | 61 | 25 |
-| E2 | 211 | 42 |
-| E3 | 136 | 38 |
+| E2 | 216 | 44 |
+| E3 | 138 | 40 |
 | E4 | 101 | 25 |
 | E5 | 132 | 50 |
 | E6 | 40 | 18 |
 | E7 | 103 | 25 |
-| E8 | 61 | 22 |
+| E8 | 64 | 22 |
 | E9 | 68 | 15 |
 | E10 | 10 | 4 |
 | E11 | 11 | 3 |
