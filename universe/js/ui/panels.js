@@ -141,11 +141,13 @@
       if (body) h += '<div class="grp">操作台（直接在图上动手）</div><div class="tiles">' + body + '</div>';
     }
     for (const g of groups) {
-      const ts = Object.values(U.types).filter((t) => listed(t) && t.group === g && !(t.bench && !q) && (!q || (t.label + t.alias.join('') + g).includes(q))).sort(cmp);
+      const ts = Object.values(U.types).filter((t) => listed(t) && t.group === g && !(t.bench && !q) && !(t.explore && !q) && (!q || (t.label + t.alias.join('') + g).includes(q))).sort(cmp);
       const body = ts.map(tile).join('');
       if (!body) continue;
       h += '<div class="grp">' + esc(g) + '</div><div class="tiles">' + body + '</div>';
     }
+    // 探究和游戏（器材声明 explore）：放在最后一组，不和每天要用的器材混在一起（2026-11）
+    if (!q) { const xs = Object.values(U.types).filter((t) => t.explore && !t.bench && listed(t)).sort(cmp), body = xs.map(tile).join(''); if (body) h += '<div class="grp">拓展：探究和游戏</div><div class="tiles">' + body + '</div>'; }
     $('#shelfbody').innerHTML = h || '<div class="empty">没有找到这个器材</div>';
   }
 

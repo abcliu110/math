@@ -1,7 +1,7 @@
 /* 搬到操作台上的旧题的参考解（problems/zz-benches.js）。文件名 zz 开头：排在各年级的参考解后面加载，盖掉原来“接运算器”的解法。 */
 'use strict';
 const S = (role) => (o) => (h) => { const e = h.role(role); for (const k of Object.keys(o)) h.set(e, k, o[k]); };
-const n = S('n'), k = S('k'), r = S('r'), m = S('m'), c = S('c'), t = S('t'), s = S('s'), gp = S('g'), b = S('b'), d = S('d'), ch = S('h'), ck = S('k'), gq = S('q'), so = S('o'), cj = S('j'), fz = S('z'), pq = S('p'), tx = S('x'), ci = S('i'), gw = S('w');
+const n = S('n'), k = S('k'), r = S('r'), m = S('m'), c = S('c'), t = S('t'), s = S('s'), gp = S('g'), b = S('b'), d = S('d'), ch = S('h'), ck = S('k'), gq = S('q'), so = S('o'), cj = S('j'), fz = S('z'), pq = S('p'), tx = S('x'), ci = S('i'), gw = S('w'), ty = S('y');
 module.exports = {
   'g1-split-merge-core': n({ a: 2, n: 3 }),
   'g1-split-minus-trap': n({ s: -1, n: 2 }),
@@ -43,6 +43,10 @@ module.exports = {
   'g7-quadrant-core': c({ ax: -2, ay: 3 }),
   'g7-symmetry-x-axis-trap': c({ bx: 3, by: 2 }),
   'g7-translate-down-trap': c({ ay: -1 }),
+  // 第二十五批
+  'g3-twoway-total-core': ty({ picked: '0,1,2,3', done: true }), 'g3-twoway-total-trap': ty({ picked: '0,1,2,3', done: true }), 'g3-twoway-zero-core': ty({ picked: '0,1,2,3,4,5', done: true }), 'g3-twoway-zero-trap': ty({ picked: '0,1,2,3,4,5', done: true }),
+  // 第二十四批
+  'g1-ten-plus-core': k({ o: 6 }),
   // 第二十三批
   'gap-pair-pos-core': gw({ px: 4, py: 3 }), 'g5-pair-pos-core': gw({ px: 4, py: 3 }), 'g5-pair-pos-trap': gw({ px: 3, py: 4 }),
   'gap-rotate-trap': gw({ rot: 90 }), 'g5-rotate-core': gw({ rot: 90 }), 'g5-rotate-trap': gw({ ox: 1, oy: 1, rot: 180 }), 'g9-rotate-core': gw({ rot: 180 }), 'g9-rotate-trap': gw({ rot: 90 }),

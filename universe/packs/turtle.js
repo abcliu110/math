@@ -88,6 +88,7 @@
   U.registerPack({
     id: 'turtle', version: 1, needs: [], types: {
       turtle: {
+        explore: true,   // 探究和游戏：器材架上放在最后的“拓展”组
         workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E6', 'E8', 'E5'], label: '海龟作图', prefix: '龟', group: '图形', grades: [3, 9], alias: ['海龟作图', '海龟', '编程', '重复', '外角和', '正多边形', '画图'],
         props: {
           prog: { hidden: true, type: 'text', label: '程序', default: '', write: false }, add: { hidden: true, type: 'int', label: '加一块积木（1 前进 2 左转 3 右转 4 重复 5 ] 6 撤销 7 清空）', default: 0, min: 0, max: 7 },

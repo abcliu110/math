@@ -1,4 +1,4 @@
-/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，二十三批共 179 道）。
+/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，二十五批共 184 道）。
  * 这些题原来的做法是“放数字、接运算器、看读数”：学生在搭计算流程。这里按 id 把它们换成在操作台上直接动手：
  * 题目的编号、标题、年级、知识点、道理（why）都不变，换的是器材架、开场的台面、里程碑和提示。
  * 这个文件排在所有题目文件后面加载（文件名 zz 开头），找不到的 id 会记在 U.benchMigrateMissing 里（测试会查）。 */
@@ -7,9 +7,9 @@
   const U = G.U, W = U.World;
   const one = (type, role, props) => () => { const s = W.blank(); const id = W.add(s, type, 40, 50, props); s.entities[id].role = role; return s; };
   const ms = (role) => (id, say, score, port, value, hints) => ({ id, say, score, when: { role, port, op: '=', value: String(value) }, hints });
-  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s'), GP = ms('g'), B = ms('b'), D = ms('d'), K2 = ms('k'), Gq = ms('q'), So = ms('o'), Cj = ms('j'), Z = ms('z'), H2 = ms('h'), Pq = ms('p'), Tr = ms('x'), Ci = ms('i'), Gw = ms('w');
+  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s'), GP = ms('g'), B = ms('b'), D = ms('d'), K2 = ms('k'), Gq = ms('q'), So = ms('o'), Cj = ms('j'), Z = ms('z'), H2 = ms('h'), Pq = ms('p'), Tr = ms('x'), Ci = ms('i'), Gw = ms('w'), Tw = ms('y');
   const H = (id, say, score, when, hints) => ({ id, say, score, when, hints });   // 条件是一个范围（频率稳在某个区间）时用函数
-  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props), bb = (props) => one('balancebench', 'b', props), sb = (props) => one('statbench', 'd', props), ch = (props) => one('chancebench', 'h', props), ck = (props) => one('clockbench', 'k', props), gq = (props) => one('groupbench', 'q', props), sd = (props) => one('solidbench', 'o', props), cj = (props) => one('conjbench', 'j', props), fb2 = (props) => one('fitbench', 'z', props), pb2 = (props) => one('pairbench', 'p', props), tb3 = (props) => one('tribench', 'x', props), ci = (props) => one('circlebench', 'i', props), gd = (props) => one('gridbench', 'w', props);
+  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props), bb = (props) => one('balancebench', 'b', props), sb = (props) => one('statbench', 'd', props), ch = (props) => one('chancebench', 'h', props), ck = (props) => one('clockbench', 'k', props), gq = (props) => one('groupbench', 'q', props), sd = (props) => one('solidbench', 'o', props), cj = (props) => one('conjbench', 'j', props), fb2 = (props) => one('fitbench', 'z', props), pb2 = (props) => one('pairbench', 'p', props), tb3 = (props) => one('tribench', 'x', props), ci = (props) => one('circlebench', 'i', props), gd = (props) => one('gridbench', 'w', props), tw = (props) => one('tablebench', 'y', props);
   const MOVES = {
     // ---- 数轴 ----
     'g1-split-merge-core': { shelf: ['numlinebench'], build: nl({ from: 0, to: 10, a: 0, s: 1, n: 0 }),
@@ -614,6 +614,26 @@
     'g9-similar-tri-core': { shelf: ['gridbench'], build: gd({ mode: 2, ax: -6, ay: 2, bx: -2, by: 2, cx: -6, cy: 5, tm: 3, qx1: -6, qy1: -6, qx2: 2, qy2: -6, qx3: -6, qy3: -2, cmp: true }),
       hook: '甲是 3、4、5 的三角形。乙的一条直角边是 8。拖乙的第三个顶点（左上那个），让乙和甲相似。相似比是几？',
       milestones: [Gw('sim', '两个三角形相似', 4, 'sim', 1, ['直角边要成同一个比例。', '8 ÷ 4 = 2。', '另一条直角边要 3 × 2 = 6。']), Gw('k', '相似比是 2', 4, 'k', 2, ['乙的边都是甲的 2 倍。', '把顶点拖到 (−6, 0)。', '相似比 2。'])], goal: ['sim', 'k'] },
+    // ======== 第二十四批：10 加几，在“计数块”上摆 ========
+    'g1-ten-plus-core': { shelf: ['blocksbench'], build: bk({ mode: 0, h: 0, t: 1, o: 0 }),
+      hook: '1 个十和 6 个一合起来是几？板子上已经有 1 根十。再放 6 个一，看看是几、有几位。',
+      milestones: [K('sum', '10 加 6 得 16', 6, 'value', 16, ['往个位放 6 个小方块。', '1 个十、6 个一。', '16。'])], goal: ['sum'] },
+    // ======== 第二十五批：复式统计表，一格一格圈着数 ========
+    'g3-twoway-total-core': { shelf: ['tablebench'], build: tw({ data: '3,2;1,4' }),
+      hook: '一张统计表记录了两组人数。一格一格点着圈起来数，数完点“我数完了”。再打开“每行合计”“每列合计”对一对。',
+      milestones: [Tw('total', '总数是 10', 6, 'answer', 10, ['四个格子都要圈。', '3 + 2 + 1 + 4。', '10。'])], goal: ['total'],
+      traps: [{ id: 'one-short', wrong: '漏加了一个格子，得到 9。每一格都要算进去。', when: { role: 'y', port: 'answer', op: '=', value: '9' } }] },
+    'g3-twoway-total-trap': { shelf: ['tablebench'], build: tw({ data: '3,2;1,4' }),
+      hook: '有人只数了三个格子就说一共 9。你一格一格圈着数，数完点“我数完了”。',
+      milestones: [Tw('total', '整张表的总数是 10', 6, 'answer', 10, ['每一格都圈上。', '圈了 4 / 4 格再交。', '10。'])], goal: ['total'],
+      traps: [{ id: 'one-short', wrong: '漏了一格，得到 9。', when: { role: 'y', port: 'answer', op: '=', value: '9' } }] },
+    'g3-twoway-zero-core': { shelf: ['tablebench'], build: tw({ data: '2,0,1;0,3,0' }),
+      hook: '一张统计表有三列。整张表的总数是多少？圈着数，再用每行合计、每列合计对一对。',
+      milestones: [Tw('total', '总数是 6', 6, 'answer', 6, ['六个格子都圈上（0 也圈）。', '2 + 0 + 1 + 0 + 3 + 0。', '6。'])], goal: ['total'] },
+    'g3-twoway-zero-trap': { shelf: ['tablebench'], build: tw({ data: '2,0,1;0,3,0' }),
+      hook: '有人算出总数是 5。这个结果对吗？一格一格圈着数，数完点“我数完了”。',
+      milestones: [Tw('total', '总数是 6，不是 5', 6, 'answer', 6, ['不是 0 的格子：2、1、3。', '2 + 1 + 3 = 6。', '少的那个人漏了 1。'])], goal: ['total'],
+      traps: [{ id: 'short-five', wrong: '少加了一个格子，得到 5。', when: { role: 'y', port: 'answer', op: '=', value: '5' } }] },
   };
   const missing = [], moved = [];
   for (const id of Object.keys(MOVES)) {

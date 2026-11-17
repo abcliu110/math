@@ -61,6 +61,8 @@ module.exports = [
       ['mcib','meter',{'digits':0,'label':'圆：扇形面积'}],
       ['gwb','gridbench',{'mode':1,'px':1,'py':0,'rot':90}],
       ['mgwb','meter',{'digits':0,'label':'坐标：转过去的 y'}],
+      ['tyb','tablebench',{'data':'3,2;1,4','rsum':true,'csum':true}],
+      ['mtyb','meter',{'digits':0,'label':'统计表：总数'}],
     ],
     links: [
       ['am','mam','v','area'],
@@ -90,6 +92,7 @@ module.exports = [
       ['trb','mtrb','v','perim'],
       ['cib','mcib','v','sector'],
       ['gwb','mgwb','v','qy'],
+      ['tyb','mtyb','v','total'],
     ],
   },
 ];

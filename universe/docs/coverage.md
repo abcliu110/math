@@ -34,7 +34,7 @@
 | 1.4 | 1 | 5以内加减法、0 | 1 | 1 | 0 | 1 | numlinebench、num |
 | 1.5 | 1 | 立体图形 | 1 | 1 | 0 | 1 | solidbench |
 | 1.6 | 1 | 6–10的认识、连加连减 | 2 | 1 | 0 | 1 | termsbench、numlinebench |
-| 1.7 | 1 | 11–20的认识、10加几 | 2 | 1 | 0 | 1 | blocksbench、num、groupbench |
+| 1.7 | 1 | 11–20的认识、10加几 | 2 | 1 | 0 | 1 | blocksbench、groupbench |
 | 1.8 | 1 | 认识钟表 | 1 | 1 | 0 | 1 | clockbench |
 | 1.9 | 1 | 20以内进位加法、凑十法 | 1 | 1 | 0 | 1 | numlinebench |
 | 1.10 | 1 | 平面图形、七巧板 | 1 | 1 | 0 | 1 | areamodel、tribench |
@@ -70,7 +70,7 @@
 | 3.8 | 3 | 集合 | 7 | 1 | 0 | 1 | num、vennbench |
 | 3.9 | 3 | 位置与方向 | 1 | 1 | 0 | 1 | numlinebench |
 | 3.10 | 3 | 除数是一位数的除法 | 1 | 1 | 0 | 1 | num |
-| 3.15a | 3 | 复式统计表 | 2 | 2 | 0 | 1 | — |
+| 3.15a | 3 | 复式统计表 | 2 | 2 | 0 | 1 | tablebench |
 | 3.11 | 3 | 两位数乘两位数 | 9 | 1 | 0 | 1 | areamodel、num、mulbench、arithbench |
 | 3.12 | 3 | 面积 | 11 | 0 | 0 | 1 | areamodel、asn、curved、geoboard、circlebench、optimize、solidbench、turtle |
 | 3.13 | 3 | 年、月、日 | 1 | 1 | 0 | 1 | num |
@@ -176,13 +176,13 @@
 | 本质 | 题目数 | 器材数 |
 |---|---|---|
 | E1 | 61 | 25 |
-| E2 | 207 | 40 |
+| E2 | 207 | 41 |
 | E3 | 136 | 38 |
 | E4 | 101 | 25 |
 | E5 | 132 | 50 |
 | E6 | 40 | 18 |
 | E7 | 99 | 24 |
-| E8 | 61 | 23 |
+| E8 | 61 | 22 |
 | E9 | 68 | 15 |
 | E10 | 10 | 4 |
 | E11 | 11 | 3 |

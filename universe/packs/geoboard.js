@@ -95,6 +95,7 @@
     id: 'geoboard', version: 1, needs: [],
     types: {
       geoboard: {
+        explore: true,   // 探究和游戏：器材架上放在最后的“拓展”组
         workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E9', 'E2'], label: '钉板', prefix: '钉', group: '图形', grades: [3, 8], alias: ['钉板', '格点', '皮克公式', '格点多边形', '数格点', '面积'],
         props: {
           verts: { hidden: true, type: 'text', label: '围的点', default: '', write: false }, closed: { hidden: true, type: 'int', label: '封口了吗', default: 0, min: 0, max: 1, write: false }, pt: { hidden: true, type: 'int', label: '点一个格点', default: 0, min: 0, max: 49 },

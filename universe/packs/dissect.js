@@ -56,6 +56,7 @@
     id: 'dissect', version: 1, needs: [],
     types: {
       dissect: {
+        explore: true,   // 探究和游戏：器材架上放在最后的“拓展”组
         workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E5', 'E7'], label: '剪拼', prefix: '拼', group: '图形', grades: [5, 8], alias: ['剪拼', '勾股定理', '弦图', '圆面积', '切拼', '割补'],
         props: {
           scene: { type: 'choice', label: '场景', default: 0, choices: ['勾股', '圆面积'] }, a: { type: 'int', label: '直角边 a', default: 3, min: 1, max: 12 }, b: { type: 'int', label: '直角边 b', default: 4, min: 1, max: 12 },

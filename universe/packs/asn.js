@@ -68,6 +68,7 @@
     id: 'asn', version: 1, needs: [],
     types: {
       asn: {
+        explore: true,   // 探究和游戏：器材架上放在最后的“拓展”组
         workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E9', 'E8'],
         label: '总是有时从不', prefix: '说', group: '关系', grades: [1, 9], alias: ['总是', '有时', '从不', '反例', '举例', '判断对错', '说法'],
         props: {

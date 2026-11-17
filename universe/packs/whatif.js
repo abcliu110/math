@@ -55,6 +55,7 @@
     return s + H.join('');
   }
   const sphereDef = {
+    explore: true,   // 探究和游戏：器材架上放在最后的“拓展”组
     workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E5', 'E9'], label: '球面三角形', prefix: '球', group: '图形', grades: [5, 9], alias: ['球面三角形', '大圆', '内角和', '球面几何', '改规则', '三个直角'],
     props: { pts: { hidden: true, type: 'text', label: '选的点', default: '', write: false }, pk: { hidden: true, type: 'int', label: '点球上的点', default: 0, min: 0, max: 11 }, clear: { hidden: true, type: 'int', label: '重选', default: 0, min: 0, max: 1 }, rot: { hidden: true, type: 'int', label: '球转了多少度', default: 45, min: 0, max: 359 }, gans: { type: 'text', label: '先猜内角和', default: '' } },
     onSet: sOnSet,
@@ -90,6 +91,7 @@
     return s + H.join('');
   }
   const taxiDef = {
+    explore: true,   // 探究和游戏：器材架上放在最后的“拓展”组
     workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E5', 'E9'], label: '出租车几何', prefix: '租', group: '图形', grades: [6, 9], alias: ['出租车几何', '曼哈顿距离', '格点', '圆', '垂直平分线', '改规则'],
     props: { mode: { type: 'choice', label: '标什么', default: 0, choices: ['到中心距离是 r', '到 A、B 距离相等'] }, r: { type: 'int', label: 'r（走几格）', default: 3, min: 1, max: 5 }, pair: { type: 'choice', label: '哪一对点', default: 0, choices: ['A(0,0) B(4,0)', 'A(0,0) B(2,2)'] }, marks: { hidden: true, type: 'text', label: '标的路口', default: '', write: false }, cell: { hidden: true, type: 'int', label: '点一个路口', default: 0, min: 0, max: 121 }, gans: { type: 'int', label: '先猜形状（1 圆形 2 斜放的正方形 3 一条线 4 一片区域）', default: 0, min: 0, max: 4 } },
     onSet: tOnSet,
@@ -153,6 +155,7 @@
     return s + H.join('');
   }
   const newopDef = {
+    explore: true,   // 探究和游戏：器材架上放在最后的“拓展”组
     workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E9', 'E5'], label: '换一种运算', prefix: '算', group: '数与运算', grades: [4, 9], alias: ['换一种运算', '交换律', '结合律', '单位元', '运算表', '改规则', '反例'],
     props: { op: { type: 'choice', label: '哪种运算', default: 0, choices: OPS.map((o) => o.name) }, qc: { hidden: true, type: 'int', label: '交换律（1 成立 2 不成立）', default: 0, min: 0, max: 2 }, qa: { hidden: true, type: 'int', label: '结合律（1 成立 2 不成立）', default: 0, min: 0, max: 2 }, qi: { hidden: true, type: 'int', label: '有单位元（1 有 2 没有）', default: 0, min: 0, max: 2 }, qv: { hidden: true, type: 'int', label: '每个数有逆元（1 是 2 否）', default: 0, min: 0, max: 2 }, ex: { type: 'text', label: '例子（a,b 或 a,b,c）', default: '' }, tried: { hidden: true, type: 'text', label: '试过的例子', default: '', write: false }, msg: { hidden: true, type: 'text', label: '提示', default: '', write: false } },
     onSet: nOnSet,

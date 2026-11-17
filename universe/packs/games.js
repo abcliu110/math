@@ -76,6 +76,7 @@
     return s + H.join('');
   }
   const nimDef = {
+    explore: true,   // 探究和游戏：器材架上放在最后的“拓展”组
     workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E6', 'E9', 'E5'], label: '取石子', prefix: '石', group: '关系', grades: [2, 9], alias: ['取石子', '博弈', '游戏', '必胜策略', '对弈'],
     props: {
       n: { type: 'int', label: '一共几颗（5–30）', default: 10, min: 5, max: 30 }, k: { type: 'int', label: '每次最多取几颗（2–5）', default: 2, min: 2, max: 5 },
@@ -142,6 +143,7 @@
     return s + H.join('');
   };
   const hanoiDef = {
+    explore: true,   // 探究和游戏：器材架上放在最后的“拓展”组
     workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E6', 'E9'], label: '汉诺塔', prefix: '塔', group: '关系', grades: [4, 9], alias: ['汉诺塔', '递推', '2的n次方', '找规律', '移盘子'],
     props: {
       n: { type: 'int', label: '几个盘（1–7）', default: 3, min: 1, max: 7 }, gmin: { type: 'int', label: '先猜：最少几步', default: 0, min: 0, max: 200 },
@@ -240,6 +242,7 @@
     return s + H.join('');
   };
   const eulerDef = {
+    explore: true,   // 探究和游戏：器材架上放在最后的“拓展”组
     workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E5', 'E9'], label: '一笔画', prefix: '笔', group: '关系', grades: [2, 9], alias: ['一笔画', '七桥问题', '奇点', '欧拉', '图论'],
     props: {
       graph: { type: 'choice', label: '图', default: 0, choices: GRAPHS.map((g) => g.name) }, mode: { type: 'choice', label: '做什么', default: 0, choices: ['画', '加边', '删边'] },

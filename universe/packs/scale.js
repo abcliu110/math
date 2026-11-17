@@ -49,6 +49,7 @@
     id: 'scale', version: 1, needs: [],
     types: {
       scale: {
+        explore: true,   // 探究和游戏：器材架上放在最后的“拓展”组
         workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E3', 'E12', 'E5'], label: '缩放对比', prefix: '缩', group: '图形', grades: [5, 9], alias: ['缩放', '放大', '相似', '面积比', '周长比', '体积比', 'k的平方'],
         props: { shape: { type: 'choice', label: '图形', default: 0, choices: SH.map((x) => x.name) }, k: { type: 'text', label: '放大几倍（可以是 1/2、3/2）', default: '1' }, gans: { type: 'text', label: '我猜面积是原来的几倍', default: '' } },
         guess: { props: ['gans'], ports: ['area', 'perim', 'vol', 'cells'], answered: (p) => ans(p.gans) !== null && String(p.gans).trim() !== '' },
@@ -60,6 +61,7 @@
         draw: sDraw,
       },
       shadow: {
+        explore: true,   // 探究和游戏：器材架上放在最后的“拓展”组
         workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E3', 'E12', 'E5'], label: '影子测高', prefix: '影', group: '图形', grades: [6, 9], alias: ['影子测高', '相似三角形', '比例', '测高', '影子'],
         props: { pole: { type: 'int', label: '杆高（米）', default: 2, min: 1, max: 10 }, tree: { type: 'int', label: '树高（米，出题人设）', default: 8, min: 1, max: 30 }, sun: { type: 'int', label: '太阳高度（0 最高）', default: 0, min: 0, max: 3 }, hgt: { type: 'text', label: '我猜树高', default: '' }, myans: { type: 'text', label: '我算出的树高', default: '' }, seen: { hidden: true, type: 'text', label: '看过的太阳', default: '', write: false } },
         onSet: (p, k, v) => (k === 'sun' ? { seen: String(p.seen || '').split('').includes(String(v)) ? p.seen : String(p.seen || '') + v } : null),

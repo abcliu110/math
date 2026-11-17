@@ -136,6 +136,7 @@
     id: 'guessrule', version: 1, needs: [],
     types: {
       guessrule: {
+        explore: true,   // 探究和游戏：器材架上放在最后的“拓展”组
         workspaceRole: 'none',
         handles: true, compactPorts: true,
         essence: ['E9', 'E8'],

@@ -700,5 +700,19 @@
     },
   };
 
+  // 复式统计表：两种合计
+  D.tablebench = {
+    caps: ['一张表：3、2 和 1、4', '每行合计：5 和 5', '每列合计：4 和 6', '5 + 5 = 4 + 6 = 10'],
+    draw(st) {
+      const X = 70, Y = 30, w = 50, h = 34, g = [[3, 2], [1, 4]]; let s = '';
+      for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++) s += Rc(X + j * w, Y + i * h, w, h, '#fff', { s: INK }) + T(X + j * w + w / 2, Y + i * h + 22, String(g[i][j]), { s: 15, w: 700 });
+      if (st === 1 || st === 3) for (let i = 0; i < 2; i++) s += Rc(X + 2 * w, Y + i * h, w, h, '#e3ecf8', { s: INK }) + T(X + 2 * w + w / 2, Y + i * h + 22, '5', { s: 15, w: 700, f: B });
+      if (st >= 2) for (let j = 0; j < 2; j++) s += Rc(X + j * w, Y + 2 * h, w, h, '#e3ecf8', { s: INK }) + T(X + j * w + w / 2, Y + 2 * h + 22, String(g[0][j] + g[1][j]), { s: 15, w: 700, f: B });
+      if (st === 3) s += Rc(X + 2 * w, Y + 2 * h, w, h, '#cfe8d6', { s: INK }) + T(X + 2 * w + w / 2, Y + 2 * h + 22, '10', { s: 15, w: 700, f: GR });
+      s += T(290, 90, ['3 2 / 1 4', '5、5', '4、6', '10'][st], { s: 16, w: 700, f: P });
+      return s;
+    },
+  };
+
   UI.Demo = D;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

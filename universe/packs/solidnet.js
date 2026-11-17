@@ -69,6 +69,7 @@
     return s + H;
   }
   const netDef = {
+    explore: true,   // 探究和游戏：器材架上放在最后的“拓展”组
     workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E5', 'E1'], label: '展开图', prefix: '展', group: '图形', grades: [1, 9], alias: ['展开图', '正方体', '六连方', '折叠', '相对面', '穷举'],
     props: { cells: { hidden: true, type: 'text', label: '格子', default: keyOf(HEX[0]), write: false }, idx: { hidden: true, type: 'int', label: '第几种（0 起）', default: 0, min: 0, max: 34 }, load: { hidden: true, type: 'int', label: '看第几种（1 起）', default: 0, min: 0, max: 35 }, cell: { hidden: true, type: 'int', label: '点一个格子', default: 0, min: 0, max: 36 }, mk: { hidden: true, type: 'int', label: '看相对面的格子', default: 0, min: 0, max: 6 }, say: { hidden: true, type: 'int', label: '我说（1 能 2 不能）', default: 0, min: 0, max: 2 }, ans: { hidden: true, type: 'text', label: '35 种的回答', default: '', write: false }, gans: { type: 'int', label: '先猜（1 能折 2 不能）', default: 0, min: 0, max: 2 } },
     onSet: nOnSet,
@@ -115,6 +116,7 @@
     return s + H;
   }
   const cubesDef = {
+    explore: true,   // 探究和游戏：器材架上放在最后的“拓展”组
     workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E5', 'E1'], label: '小方块搭建', prefix: '块', group: '图形', grades: [1, 6], alias: ['小方块', '三视图', '搭建', '观察物体', '表面积', '最少几块'],
     props: { h: { hidden: true, type: 'text', label: '每格几层', default: '0'.repeat(16), write: false }, put: { hidden: true, type: 'int', label: '改一格（格号×5+层数+1）', default: 0, min: 0, max: 80 }, tgt: { type: 'choice', label: '目标', default: 0, choices: TN }, gcnt: { type: 'int', label: '先猜：最少几块（0 = 还没猜）', default: 0, min: 0, max: 64 } },
     onSet: cOnSet,

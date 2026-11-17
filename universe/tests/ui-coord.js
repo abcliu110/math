@@ -18,6 +18,7 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   const errs = []; p.on('pageerror', (e) => errs.push(e.message)); p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text()); });
   await p.goto(url); await p.waitForTimeout(400);
   const open = async (id) => {
+    await p.waitForTimeout(700); await p.evaluate(() => { if (UI.Panels.closeDialog) UI.Panels.closeDialog(); });   // 上一题做完会弹出结束的对话框：先等它出来再关掉
     await p.evaluate((id) => { UI.App.openProblem(id, 'practice'); }, id); await p.waitForTimeout(300);
     await p.evaluate(() => {
       document.querySelectorAll('button').forEach((x) => { if (/^(知道了|跳过|先不猜|开始)$/.test(x.textContent.trim())) x.click(); });

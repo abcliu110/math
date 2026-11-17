@@ -60,6 +60,7 @@
     id: 'approach', version: 1, needs: [],
     types: {
       approach: {
+        explore: true,   // 探究和游戏：器材架上放在最后的“拓展”组
         workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E7'], label: '逼近器', prefix: '逼', group: '时间与变化', grades: [5, 9], alias: ['逼近', '极限', '割圆', '0.999', '取一半', '根号2', '二分'],
         props: {
           scene: { type: 'choice', label: '场景', default: 0, choices: SC }, step: { hidden: true, type: 'int', label: '走到第几步', default: 0, min: 0, max: 30 },

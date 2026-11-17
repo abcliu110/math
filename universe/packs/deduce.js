@@ -12,6 +12,7 @@
     id: 'deduce', version: 1,
     types: {
       deduce: {
+        explore: true,   // 探究和游戏：器材架上放在最后的“拓展”组
         workspaceRole: 'none',
         readsScene: true,   // 读台面上的步骤（scene.workbench），增量求值时每次都算
         handles: true,

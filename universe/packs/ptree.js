@@ -63,6 +63,7 @@
     id: 'ptree', version: 1, needs: [],
     types: {
       ptree: {
+        explore: true,   // 探究和游戏：器材架上放在最后的“拓展”组
         workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E11', 'E2', 'E1'], label: '树状图', prefix: '树', group: '统计与概率', grades: [5, 9], alias: ['树状图', '概率', '两步试验', '可能性', '放回', '不放回', '面积模型'],
         props: {
           exp: { type: 'choice', label: '试验', default: 0, choices: EXPS.map((e) => e.name) }, ev: { type: 'int', label: '事件（第几个，出题人设）', default: 0, min: 0, max: 2 }, view: { type: 'choice', label: '看', default: 2, choices: ['树', '面积', '都要'] },

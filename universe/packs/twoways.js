@@ -56,6 +56,7 @@
   U.registerPack({
     id: 'twoways', version: 1, needs: [], types: {
       twoways: {
+        explore: true,   // 探究和游戏：器材架上放在最后的“拓展”组
         workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E12', 'E3', 'E4'], label: '两种解法对照', prefix: '对', group: '关系', grades: [3, 7], alias: ['两种解法', '对应', '鸡兔同笼', '和倍问题', '线段图', '方程', '假设法'],
         props: { sc: { type: 'choice', label: '哪道题', default: 0, choices: SCN.map((x) => x.name) }, n: { type: 'int', label: '题里的数 n', default: 2, min: 1, max: 8 }, pairs: { hidden: true, type: 'text', label: '连的对应', default: '', write: false }, ls: { hidden: true, type: 'int', label: '选中的左边项（−1 没有）', default: -1, min: -1, max: 3, write: false }, lp: { hidden: true, type: 'int', label: '点左边一项', default: 0, min: 0, max: 4 }, rp: { hidden: true, type: 'int', label: '点右边一项', default: 0, min: 0, max: 4 }, disc: { hidden: true, type: 'int', label: '哪里一样（1 数一样 2 数不同 3 只有答案一样）', default: 0, min: 0, max: 3 } },
         onSet,

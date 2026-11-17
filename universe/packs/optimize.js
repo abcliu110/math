@@ -51,6 +51,7 @@
     id: 'optimize', version: 1, needs: [],
     types: {
       optimize: {
+        explore: true,   // 探究和游戏：器材架上放在最后的“拓展”组
         workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E5', 'E10', 'E12'], label: '最优化沙盘', prefix: '优', group: '图形', grades: [4, 9], alias: ['最优化', '最值', '围篱笆', '将军饮马', '最大面积', '最短路程', '周长一定'],
         props: {
           scene: { type: 'choice', label: '场景', default: 0, choices: SC }, x: { hidden: true, type: 'int', label: '这次试的参数', default: 0, min: 0, max: 9 }, tr: { hidden: true, type: 'text', label: '试过的参数', default: '', write: false },
