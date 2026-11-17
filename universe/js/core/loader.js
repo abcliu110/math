@@ -38,6 +38,7 @@
     'decbench': 'packs/decbench.js',
     'deduce': 'packs/deduce.js',
     'digitbench': 'packs/digitbench.js',
+    'dirbench': 'packs/dirbench.js',
     'dissect': 'packs/dissect.js',
     'equation': 'packs/equation.js',
     'estbench': 'packs/estbench.js',

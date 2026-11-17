@@ -107,6 +107,8 @@ module.exports = [
       ['msob','meter',{'digits':0,'label':'分类：一共几个'}],
       ['cmbb','combobench',{'mode':0,'a':3,'b':2,'cells':'0-0,0-1'}],
       ['mcmbb','meter',{'digits':0,'label':'搭配：列出了几种'}],
+      ['drb','dirbench',{'mode':1,'path':'EEEN'}],
+      ['mdrb','meter',{'digits':0,'label':'方向：走了几格'}],
     ],
     links: [
       ['am','mam','v','area'],
@@ -159,6 +161,7 @@ module.exports = [
       ['wtb','mwtb','v','left'],
       ['sob','msob','v','total'],
       ['cmbb','mcmbb','v','listed'],
+      ['drb','mdrb','v','steps'],
     ],
   },
 ];

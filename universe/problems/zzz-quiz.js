@@ -345,4 +345,10 @@
     const a = R.int(2, 4), b = R.int(2, 5), c = lv === 2 ? R.int(2, 3) : 0, cells = []; for (let i = 0; i < a; i++) for (let j = 0; j < b; j++) cells.push(i + '-' + j);
     return { title: a + ' 件上衣、' + b + ' 条裤子' + (c ? '、' + c + ' 双鞋' : '') + '，一共几种穿法？', hook: '点格子列出每一种：一行是一件上衣，一列是一条裤子。' + (c ? '列全了再配鞋。' : ''), props: { mode: 0, a, b, c }, goals: c ? [['all', a * b * c, a + ' × ' + b + ' × ' + c + ' = ' + a * b * c + ' 种']] : [['pairs', a * b, a + ' × ' + b + ' = ' + a * b + ' 种']], sol: c ? { cells: cells.join(','), shoes: true } : { cells: cells.join(',') } };
   } });
+  add('dirbench', { gen(R, lv) {
+    const D8 = ['北', '东北', '东', '东南', '南', '西南', '西', '西北'], PL = ['图书馆', '医院', '公园', '超市', '邮局', '车站', '电影院', '体育馆'];
+    if (lv === 1) { const t = R.int(0, 7), rev = R.bool(), want = rev ? (t + 4) % 8 : t; return { title: rev ? PL[t] + '在学校的' + D8[t] + '，学校在' + PL[t] + '的什么方向？' : PL[t] + '在学校的什么方向？', hook: '地图上方是北。点 8 个方向里的一个。', props: { mode: 0, target: t, rev }, goals: [['right', 1, '是' + D8[want]]], sol: { ans: want } }; }
+    if (lv === 2) { for (;;) { const sx = R.int(0, 9), sy = R.int(0, 6), tx = R.int(0, 9), ty = R.int(0, 6), dx = tx - sx, dy = ty - sy; if (Math.abs(dx) + Math.abs(dy) < 4) continue; const path = (dx > 0 ? 'E' : 'W').repeat(Math.abs(dx)) + (dy > 0 ? 'S' : 'N').repeat(Math.abs(dy)); return { title: '从家走到学校，走最短的路', hook: '点 ↑ ↓ ← → 一格一格走（↑ 是北），不走回头路。', props: { mode: 1, sx, sy, tx, ty }, goals: [['shortest', 1, '最短 ' + path.length + ' 格']], sol: { path } }; } }
+    for (;;) { const tdeg = R.int(1, 23) * 15, tdist = R.int(1, 4); if (tdeg % 90 === 0) continue; return { title: '找到 ' + U.DirBench.bearing(tdeg) + '，' + tdist * 100 + ' 米 的地方', hook: '拖射线一头：先转方向（15° 一格），再拉距离（一圈 100 米）。', props: { mode: 2, deg: 0, dist: 1, tdeg, tdist }, goals: [['hit', 1, U.DirBench.bearing(tdeg) + '，' + tdist * 100 + ' 米']], sol: { deg: tdeg, dist: tdist } }; }
+  } });
 })(typeof globalThis !== 'undefined' ? globalThis : window);
