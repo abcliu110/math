@@ -48,7 +48,7 @@
     'fitbench': 'packs/fitbench.js',
     'fmachine': 'packs/fmachine.js',
     'foldbench': 'packs/foldbench.js',
-    'fracarea': 'packs/fracarea.js',
+    'fracbench': 'packs/fracbench.js',
     'games': 'packs/games.js',
     'gapbench': 'packs/gapbench.js',
     'geo': 'packs/geo.js',

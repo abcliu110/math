@@ -23,13 +23,6 @@ const prop = (p, id, k) => p.evaluate(([id, k]) => UI.S.scene.entities[id].props
   const set = async (id, k, v) => { await act(p, { t: 'set', id, k, v }); await p.waitForTimeout(100); };
 
   let t;
-  console.log('分数面积');
-  const fa = await add('fracarea', 420, 20, { a: '2/3', b: '4/5', op: 1, view: 0 });
-  t = await body(p, fa); ok(!t.includes('重叠 8 格') && !t.includes('重叠 ') || t.includes('蓝：竖着涂'), '先猜之前：结果遮住'); await set(fa, 'gans', '1/2'); await set(fa, 'st', 5); t = await body(p, fa); ok(t.includes('2×4 = 8 格') && t.includes('15 格'), '乘：重叠 8 格，一共 15 格');
-  await set(fa, 'op', 2); await set(fa, 'st', 0); t = await body(p, fa); ok(t.includes('格子大小不一样'), '加：没通分，提示格子大小不一样');
-  await set(fa, 'a', '1/2'); await set(fa, 'b', '1/3'); await set(fa, 'st', 3); t = await body(p, fa); ok(t.includes('每格 1/6') && t.includes('5 格'), '再切 6 份：小格一样大，数出 5 格');
-  await set(fa, 'op', 0); await set(fa, 'view', 1); await set(fa, 'a', '5/4'); t = await body(p, fa); ok(t.includes('第一个 5/4'), '数轴：5/4 超过 1');
-
   console.log('代数砖');
   const tl = await add('tilebench', 20, 880, { mode: 0, expr: 'x^2+5x+6', wp: 1, hp: 1 });
   t = await body(p, tl); ok(t.includes('缺 3 块') || t.includes('多 3 块'), '长宽没调对：写出缺几块、多几块');

@@ -886,5 +886,17 @@
     },
   };
 
+  // 分数运算：通分
+  D.fracbench = {
+    caps: ['1/2 和 1/3：格子不一样大', '上面每格切 3 份：3/6', '下面每格切 2 份：2/6', '一样大了：3/6 + 2/6 = 5/6'],
+    draw(st) {
+      const w = 240, x0 = 30; let s = '';
+      const bar = (y, den, num, col) => { let t = ''; for (let i = 0; i < den; i++) t += Rc(x0 + i * w / den, y, w / den, 22, i < num ? col : '#fff', { s: INK }); return t; };
+      s += bar(30, st >= 1 ? 6 : 2, st >= 1 ? 3 : 1, '#9fc3ea') + bar(64, st >= 2 ? 6 : 3, st >= 2 ? 2 : 1, '#f5c26b');
+      s += T(380, 60, ['?', '3/6', '2/6', '5/6'][st], { s: 15, w: 700, f: P });
+      return s;
+    },
+  };
+
   UI.Demo = D;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

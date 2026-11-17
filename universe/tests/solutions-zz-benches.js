@@ -43,6 +43,18 @@ module.exports = {
   'g7-quadrant-core': c({ ax: -2, ay: 3 }),
   'g7-symmetry-x-axis-trap': c({ bx: 3, by: 2 }),
   'g7-translate-down-trap': c({ ay: -1 }),
+  // 第三十八批
+  'fa-add'(h) { const e = h.role('fr'); h.set(e, 'ka', 3); h.set(e, 'kc', 2); h.set(e, 'done', true); },
+  'g6-frac-div-core'(h) { h.set(h.role('fr'), 'times', 2); }, 'g6-frac-div-trap'(h) { h.set(h.role('fr'), 'times', 12); }, 'fa-div'(h) { h.set(h.role('fr'), 'times', 6); },
+  'fa-mul'(h) { h.set(h.role('am'), 'n2', 2); }, 'fa-numberline'(h) { h.set(h.role('n'), 'k', 3); },
+  // 第三十七批
+  'g1-zero-trap'(h) { const e = h.role('n'); h.set(e, 'a', 3); },
+  'g3-times-core'(h) { const e = h.role('t'); h.set(e, 'ka', 4); },
+  'g3-multi-digit-core': mbs({ vals: '600,120,15,735' }), 'g3-area-parts-core': mbs({ vals: '100,15,200,30,115,230,345' }), 'g3-two-digit-trap': mbs({ vals: '100,15,200,30,115,230,345' }),
+  'g3-set-core'(h) { const e = h.role('y'); h.set(e, 'where', '2'.repeat(4) + '1'.repeat(7) + '3'.repeat(4)); },
+  'g3-set-trap'(h) { const e = h.role('y'); h.set(e, 'where', '2'.repeat(5) + '1'.repeat(7) + '3'.repeat(4) + '0'.repeat(5)); },
+  'g3-year-days-core': scl({ open: '1,2,3,4,5,6,7,8,9,10,11,12' }), 'g3-year-feb-trap': scl({ open: '1,2,3,4,5,6,7,8,9,10,11,12' }),
+  'g5-polygon-tri-core': ar({ step: 2 }), 'g5-polygon-slant-trap': ar({ step: 2 }),
   // 第三十六批
   'pf-induct-odd': spf({ base: true, step: true, push: true }), 'pf-induct-gauss': spf({ base: true, step: true, push: true }), 'pf-induct-pow2': spf({ base: true, step: true, push: true }),
   'pf-scaffold-odd': spf({ r1: 0, r2: 1, r3: 2 }), 'pf-board-pattern': spf({ ci: 0, ct: 0, tried: true }),

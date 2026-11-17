@@ -123,6 +123,7 @@ async function checkDist() {
   if (!runScript('tests/ui-logic.js', 'tests/ui-logic.js', pwEnv)) bail();   // 推理台：真实鼠标点格子标 ✗ ✓、自动排除、划线索、发现矛盾
   if (!runScript('tests/ui-proof.js', 'tests/ui-proof.js', pwEnv)) bail();   // 证明台：真实鼠标看起点、看推一级、推倒多米诺，点依据写证明，拼猜想找反例
   if (!runScript('tests/ui-quiz.js', 'tests/ui-quiz.js', pwEnv)) bail();   // 随机出题：步骤栏三档、做完再来一题、实验库随机练习
+  if (!runScript('tests/ui-frac2.js', 'tests/ui-frac2.js', pwEnv)) bail();   // 分数运算：真实鼠标切格子通分、合起来、约分、量一量做除法、翻过来找倒数
   if (!runScript('tests/ui-areamodel.js', 'tests/ui-areamodel.js', pwEnv)) bail();   // 面积模型（样板操作台）和器材把手：真实鼠标拖边、切、改分数
   if (!runScript('tests/ui-shapes.js', 'tests/ui-shapes.js', pwEnv)) bail();         // 常见图形、顶点编辑、直接拖出辅助线（真实鼠标和键盘）；含画布横纵比例回归
   if (!runScript('tests/ui-export.js', 'tests/ui-export.js', pwEnv)) bail();         // 2.12/V10：导出图片（真实鼠标点菜单，台面和专注工作区各一次下载，.png、大小 > 0）

@@ -1200,14 +1200,14 @@ t('W.near 带容差判断近似值：不记录', () => {
 console.log('先猜后看');
 t('先猜后看：填猜测记一条 guess 事件（不扣分）', () => {
   U.Events.clear();
-  const sc = W.blank(), e = W.add(sc, 'fracarea', 0, 0, { a: '2/3', b: '4/5', op: 1 });
-  W.act(sc, { t: 'set', id: e, k: 'gans', v: '1/2' });
-  const g = U.Events.log.filter((x) => x.type === 'guess'); eq(g.length, 1); truthy(g[0].data.right !== true, '猜 1/2 不对：不记成猜对');
+  const sc = W.blank(), e = W.add(sc, 'primeblocks', 0, 0, { a: 36, b: 0, mode: 2 });
+  W.act(sc, { t: 'set', id: e, k: 'guess', v: '4' });
+  const g = U.Events.log.filter((x) => x.type === 'guess'); eq(g.length, 1); truthy(g[0].data.right === false, '36 有 9 个因数，猜 4 不对');
 });
 t('先猜后看：guess 声明不合法（口或属性不存在）进不了注册表', () => {
-  const bad = Object.assign({}, U.types.fracarea, { guess: { props: ['nope'], ports: ['result'], answered: () => true } });
+  const bad = Object.assign({}, U.types.primeblocks, { guess: { props: ['nope'], ports: ['count'], answered: () => true } });
   truthy(U.lintType(bad).errors.some((m) => /guess\.props/.test(m)));
-  const bad2 = Object.assign({}, U.types.fracarea, { guess: { props: ['gans'], ports: ['nope'], answered: () => true } });
+  const bad2 = Object.assign({}, U.types.primeblocks, { guess: { props: ['guess'], ports: ['nope'], answered: () => true } });
   truthy(U.lintType(bad2).errors.some((m) => /guess\.ports/.test(m)));
 });
 t('质因数积木：2–1000 的 gcd、lcm、因数个数、积木块数和直接计算一致', () => {
@@ -2928,12 +2928,12 @@ console.log('分步定型（bake，§10.5.6 第 5 步）：前面的步骤折成
     eq(cond({ steps: { used: 'alg.divide', allKept: true } })(U.Judge.makeW(sc, D, {})), true, '定型前用过两边同除');
     eq(cond({ steps: { used: 'alg.collect' } })(U.Judge.makeW(sc, D, {})), false, '没用过的规则仍然是假');
   });
-  t('数字卡连到文字属性：分数写成 1/3，不是乱码（分数面积的两个分数口）', () => {
+  t('数字卡连到文字属性：分数写成 1/3，不是乱码（估一估的两个数是文字属性）', () => {
     const s = W.blank(), n1 = W.act(s, { t: 'add', type: 'num', x: 0, y: 0, props: { n: 1, d: 3 } }).id, n2 = W.act(s, { t: 'add', type: 'num', x: 0, y: 0, props: { n: 3, d: 4 } }).id;
-    const f = W.act(s, { t: 'add', type: 'fracarea', x: 0, y: 0, props: { op: 1 } }).id;
-    truthy(W.act(s, { t: 'link', from: n1, fromPort: 'v', to: f, toPort: 'p.a' }).ok, '第一个分数口能连');
-    truthy(W.act(s, { t: 'link', from: n2, fromPort: 'v', to: f, toPort: 'p.b' }).ok, '第二个分数口能连');
-    const D = W.evaluate(s); eq(D[f].props.a, '1/3', '第一个分数收到 1/3'); eq(D[f].props.b, '3/4', '第二个分数收到 3/4'); eq(U.Q.show(D[f].out.result.data), '1/4', '1/3 × 3/4 = 1/4');
+    const f = W.act(s, { t: 'add', type: 'estbench', x: 0, y: 0, props: { op: 2 } }).id;
+    truthy(W.act(s, { t: 'link', from: n1, fromPort: 'v', to: f, toPort: 'p.a' }).ok, '第一个数的口能连');
+    truthy(W.act(s, { t: 'link', from: n2, fromPort: 'v', to: f, toPort: 'p.b' }).ok, '第二个数的口能连');
+    const D = W.evaluate(s); eq(D[f].props.a, '1/3', '第一个数收到 1/3'); eq(D[f].props.b, '3/4', '第二个数收到 3/4');
   });
   t('大一点的数：十进制和很大的整数精确读入，数字卡分子分母放宽', () => {
     eq(U.Q.show(U.Q.parse('12345678901234567890')), '12345678901234567890', '20 位整数不丢位');
@@ -3146,8 +3146,8 @@ t('随机出题：同一个 id 出同一道题；U.problemById 认 quiz: 开头�
 console.log('旧题搬到操作台');
 t('搬题：每个要搬的 id 都找到了题；搬过去的题器材架上只有操作台，开场台面上就有它', () => {
   eq(U.benchMigrateMissing, [], '找不到的 id');
-  truthy(U.benchMigrated.length >= 245, '至少搬了 245 道');
-  const BENCH = ['areamodel', 'balancebench', 'numlinebench', 'ratiobench', 'coordbench', 'blocksbench', 'termsbench', 'swapbench', 'systembench', 'gapbench', 'meanbench', 'tapebench', 'vennbench', 'travelbench', 'mulbench', 'fastbench', 'statbench', 'chancebench', 'clockbench', 'groupbench', 'solidbench', 'conjbench', 'fitbench', 'pairbench', 'tribench', 'circlebench', 'gridbench', 'tablebench', 'vertbench', 'decbench', 'tilebench', 'chipbench', 'makebench', 'estbench', 'areabench', 'factorbench', 'anglebench', 'rulerbench', 'moneybench', 'calbench', 'seqbench', 'jobbench', 'foldbench', 'logicbench', 'proofbench'];
+  truthy(U.benchMigrated.length >= 262, '至少搬了 262 道');
+  const BENCH = ['areamodel', 'balancebench', 'numlinebench', 'ratiobench', 'coordbench', 'blocksbench', 'termsbench', 'swapbench', 'systembench', 'gapbench', 'meanbench', 'tapebench', 'vennbench', 'travelbench', 'mulbench', 'fastbench', 'statbench', 'chancebench', 'clockbench', 'groupbench', 'solidbench', 'conjbench', 'fitbench', 'pairbench', 'tribench', 'circlebench', 'gridbench', 'tablebench', 'vertbench', 'decbench', 'tilebench', 'chipbench', 'makebench', 'estbench', 'areabench', 'factorbench', 'anglebench', 'rulerbench', 'moneybench', 'calbench', 'seqbench', 'jobbench', 'foldbench', 'logicbench', 'proofbench', 'fracbench'];
   for (const id of U.benchMigrated) {
     const p = U.problems.find((x) => x.id === id), s = p.build();
     truthy(p.shelf.length === 1 && BENCH.includes(p.shelf[0]), id + ' 的器材架');

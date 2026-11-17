@@ -1,4 +1,4 @@
-/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，三十六批共 245 道）。
+/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，三十八批共 262 道）。
  * 这些题原来的做法是“放数字、接运算器、看读数”：学生在搭计算流程。这里按 id 把它们换成在操作台上直接动手：
  * 题目的编号、标题、年级、知识点、道理（why）都不变，换的是器材架、开场的台面、里程碑和提示。
  * 这个文件排在所有题目文件后面加载（文件名 zz 开头），找不到的 id 会记在 U.benchMigrateMissing 里（测试会查）。 */
@@ -7,9 +7,9 @@
   const U = G.U, W = U.World;
   const one = (type, role, props) => () => { const s = W.blank(); const id = W.add(s, type, 40, 50, props); s.entities[id].role = role; return s; };
   const ms = (role) => (id, say, score, port, value, hints) => ({ id, say, score, when: { role, port, op: '=', value: String(value) }, hints });
-  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s'), GP = ms('g'), B = ms('b'), D = ms('d'), K2 = ms('k'), Gq = ms('q'), So = ms('o'), Cj = ms('j'), Z = ms('z'), H2 = ms('h'), Pq = ms('p'), Tr = ms('x'), Ci = ms('i'), Gw = ms('w'), Tw = ms('y'), Vt = ms('v'), Mb = ms('c2'), Db = ms('d'), Tb = ms('tb'), Zp = ms('z'), Mk = ms('k'), Es = ms('e'), Ar = ms('ar'), Fb = ms('f'), An = ms('an'), Rl = ms('rl'), Mo = ms('mo'), Cl = ms('cl'), Fd = ms('fd'), Lg = ms('lg'), Pf = ms('pf');
+  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s'), GP = ms('g'), B = ms('b'), D = ms('d'), K2 = ms('k'), Gq = ms('q'), So = ms('o'), Cj = ms('j'), Z = ms('z'), H2 = ms('h'), Pq = ms('p'), Tr = ms('x'), Ci = ms('i'), Gw = ms('w'), Tw = ms('y'), Vt = ms('v'), Mb = ms('c2'), Db = ms('d'), Tb = ms('tb'), Zp = ms('z'), Mk = ms('k'), Es = ms('e'), Ar = ms('ar'), Fb = ms('f'), An = ms('an'), Rl = ms('rl'), Mo = ms('mo'), Cl = ms('cl'), Fd = ms('fd'), Lg = ms('lg'), Pf = ms('pf'), Vn = ms('y'), Fr = ms('fr'), Am = ms('am');
   const H = (id, say, score, when, hints) => ({ id, say, score, when, hints });   // 条件是一个范围（频率稳在某个区间）时用函数
-  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props), bb = (props) => one('balancebench', 'b', props), sb = (props) => one('statbench', 'd', props), ch = (props) => one('chancebench', 'h', props), ck = (props) => one('clockbench', 'k', props), gq = (props) => one('groupbench', 'q', props), sd = (props) => one('solidbench', 'o', props), cj = (props) => one('conjbench', 'j', props), fb2 = (props) => one('fitbench', 'z', props), pb2 = (props) => one('pairbench', 'p', props), tb3 = (props) => one('tribench', 'x', props), ci = (props) => one('circlebench', 'i', props), gd = (props) => one('gridbench', 'w', props), tw = (props) => one('tablebench', 'y', props), vt = (props) => one('vertbench', 'v', props), mb = (props) => one('mulbench', 'c2', props), db = (props) => one('decbench', 'd', props), tlb = (props) => one('tilebench', 'tb', props), zp = (props) => one('chipbench', 'z', props), mk = (props) => one('makebench', 'k', props), es = (props) => one('estbench', 'e', props), ab = (props) => one('areabench', 'ar', props), fb = (props) => one('factorbench', 'f', props), an = (props) => one('anglebench', 'an', props), rl = (props) => one('rulerbench', 'rl', props), mo = (props) => one('moneybench', 'mo', props), cl = (props) => one('calbench', 'cl', props), fd = (props) => one('foldbench', 'fd', props), lgb = (props) => one('logicbench', 'lg', props), pf = (props) => one('proofbench', 'pf', props);
+  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props), bb = (props) => one('balancebench', 'b', props), sb = (props) => one('statbench', 'd', props), ch = (props) => one('chancebench', 'h', props), ck = (props) => one('clockbench', 'k', props), gq = (props) => one('groupbench', 'q', props), sd = (props) => one('solidbench', 'o', props), cj = (props) => one('conjbench', 'j', props), fb2 = (props) => one('fitbench', 'z', props), pb2 = (props) => one('pairbench', 'p', props), tb3 = (props) => one('tribench', 'x', props), ci = (props) => one('circlebench', 'i', props), gd = (props) => one('gridbench', 'w', props), tw = (props) => one('tablebench', 'y', props), vt = (props) => one('vertbench', 'v', props), mb = (props) => one('mulbench', 'c2', props), db = (props) => one('decbench', 'd', props), tlb = (props) => one('tilebench', 'tb', props), zp = (props) => one('chipbench', 'z', props), mk = (props) => one('makebench', 'k', props), es = (props) => one('estbench', 'e', props), ab = (props) => one('areabench', 'ar', props), fb = (props) => one('factorbench', 'f', props), an = (props) => one('anglebench', 'an', props), rl = (props) => one('rulerbench', 'rl', props), mo = (props) => one('moneybench', 'mo', props), cl = (props) => one('calbench', 'cl', props), fd = (props) => one('foldbench', 'fd', props), lgb = (props) => one('logicbench', 'lg', props), pf = (props) => one('proofbench', 'pf', props), tp = (props) => one('tapebench', 't', props), vn = (props) => one('vennbench', 'y', props), frb = (props) => one('fracbench', 'fr', props);
   const MOVES = {
     // ---- 数轴 ----
     'g1-split-merge-core': { shelf: ['numlinebench'], build: nl({ from: 0, to: 10, a: 0, s: 1, n: 0 }),
@@ -841,6 +841,65 @@
     'pf-board-pattern': { shelf: ['proofbench'], build: pf({ mode: 2 }),
       hook: '1，3，5，7……每个数都比前一个多 2。把发现拼成“如果……那么……”，在 1 到 30 里试例子。都对就记下来——它还只是猜想。',
       milestones: [Pf('write', '拼出一条猜想，试过例子都对（证据 ①）', 6, 'lv', 1, ['如果点“n 是奇数”。', '那么点“n + 2 是奇数”。', '点“在 1 到 30 里试例子”。'])], goal: ['write'] },
+    // ======== 第三十七批：还用数字卡、运算器的小学题 → 已有的操作台 ========
+    'g1-zero-trap': { shelf: ['numlinebench'], build: nl({ from: 0, to: 10, a: 0, s: -1, n: 0 }),
+      hook: '3 个苹果，一个也没拿走。把起点拖到 3，往左跳 0 步——也就是不跳。落在几？',
+      milestones: [N('three', '还剩 3 个', 6, 'value', 3, ['拖“起点”到 3。', '拿走 0 个：一步也不跳。', '还在 3。'])], goal: ['three'],
+      traps: [{ id: 'zero', wrong: '3 减 0 不是 0：0 表示没拿走，所以还是 3。', when: { role: 'n', port: 'value', op: '=', value: '0' } }] },
+    'g3-times-core': { shelf: ['tapebench'], build: tp({ ka: 1, kb: 1, u: 5, tk: 2, na: '文具盒', nb: '铅笔', unit: '元', lock: false }),
+      hook: '铅笔 5 元（一份）。文具盒的钱是铅笔的 4 倍：把文具盒的线段调成 4 份。',
+      milestones: [T('box', '文具盒 20 元', 6, 'a', 20, ['文具盒是 4 份。', '点文具盒那条的“+”，调到 4 份。', '4 × 5 = 20。'])], goal: ['box'] },
+    'g3-multi-digit-core': { shelf: ['mulbench'], build: mb({ a: 245, b: 3 }),
+      hook: '245 × 3：对着面积图，200、40、5 都要乘 3，再加起来。',
+      milestones: [Mb('prod', '245 × 3 = 735', 6, 'product', 735, ['200 × 3 = 600。', '40 × 3 = 120，5 × 3 = 15。', '600 + 120 + 15 = 735。'])], goal: ['prod'] },
+    'g3-area-parts-core': { shelf: ['mulbench'], build: mb({ a: 23, b: 15 }),
+      hook: '23 拆成 20 + 3，15 拆成 10 + 5。面积图分成四块：每块的积先算出来，再加起来。',
+      milestones: [Mb('total', '和是 345', 6, 'product', 345, ['四块：20 × 5、3 × 5、20 × 10、3 × 10。', '100 + 15 + 200 + 30。', '345。'])], goal: ['total'] },
+    'g3-two-digit-trap': { shelf: ['mulbench'], build: mb({ a: 23, b: 15 }),
+      hook: '第一行是 23 × 5；第二行是 23 × 10，不是 23 × 1。对着面积图看：下面那一大块有多大？',
+      milestones: [Mb('total', '23 × 15 = 345', 6, 'product', 345, ['第一行 23 × 5 = 115。', '第二行 23 × 10 = 230。', '115 + 230 = 345。'])], goal: ['total'],
+      traps: [{ id: 'shift', wrong: '写成 138：第二行的 23 没有乘 10，直接加上了 23。', when: { role: 'c2', port: 'product', op: '=', value: '138' } }] },
+    'g3-set-core': { shelf: ['vennbench'], title: '喜欢数学的 11 人，喜欢语文的 8 人，两门都喜欢 4 人，一共几人？', build: vn({ n: 15, na: '数学', nb: '语文', unit: '人' }),
+      hook: '喜欢数学 11 人，喜欢语文 8 人，两门都喜欢 4 人。先把 4 人放进中间重叠的地方，再放只喜欢一门的。一共几人？两门都喜欢的只数一次。',
+      milestones: [Vn('both', '两门都喜欢的 4 人放在重叠处', 3, 'both', 4, ['点人，放进两个圈重叠的地方。', '中间放 4 个。', '4 人。']), Vn('total', '一共 15 人', 5, 'union', 15, ['只喜欢数学的：11 − 4 = 7。', '只喜欢语文的：8 − 4 = 4。', '7 + 4 + 4 = 15。'])], goal: ['total'],
+      why: '两门都喜欢的 4 人既在数学圈里、又在语文圈里，只能数一次：11 + 8 − 4 = 15 人。' },
+    'g3-set-trap': { shelf: ['vennbench'], build: vn({ n: 21, na: '跑步', nb: '跳绳', unit: '人' }),
+      hook: '跑步 12 人，跳绳 9 人，两样都喜欢 5 人。台面上有 21 个人——是不是都要放进圈里？两样都喜欢的放中间。',
+      milestones: [Vn('both', '两样都喜欢的 5 人放在重叠处', 3, 'both', 5, ['中间放 5 个。', '只跑步 12 − 5 = 7。', '只跳绳 9 − 5 = 4。']), Vn('total', '一共 16 人', 5, 'union', 16, ['7 + 5 + 4。', '多出来的 5 个不该有。', '16 人。'])], goal: ['total'],
+      traps: [{ id: 'twice', wrong: '写成 21：12 + 9 把两样都喜欢的 5 人算了两次。', when: { role: 'y', port: 'union', op: '=', value: '21' } }] },
+    'g3-year-days-core': { shelf: ['calbench'], build: cl({ mode: 2, y: 2023 }),
+      hook: '点每个月看它有几天：大月、小月各几个？2 月几天？一年一共几天？',
+      milestones: [Cl('total', '一年 365 天', 6, 'year', 365, ['大月 7 个，每个 31 天。', '小月 4 个，每个 30 天；2 月 28 天。', '217 + 120 + 28 = 365。'])], goal: ['total'] },
+    'g3-year-feb-trap': { shelf: ['calbench'], build: cl({ mode: 2, y: 2023 }),
+      hook: '一年有 7 个大月、4 个小月和 2 月。2 月是小月吗？点开每个月看看，再算一年几天。',
+      milestones: [Cl('total', '一年 365 天：2 月只有 28 天', 6, 'year', 365, ['点开 2 月：28 天。', '2 月不是 30 天的小月。', '31 × 7 + 30 × 4 + 28 = 365。'])], goal: ['total'] },
+    'g5-polygon-tri-core': { shelf: ['areabench'], build: ab({ shape: 1, b: 6, h: 4, s: 2 }),
+      hook: '底 6、高 4 的三角形。再拿一个一样的，转过来拼成平行四边形：三角形是它的几分之几？',
+      milestones: [Ar('area', '面积是 12 平方厘米', 6, 'area', 12, ['点“再拿一个一样的”。', '点“转过来拼上”。', '6 × 4 ÷ 2 = 12。'])], goal: ['area'] },
+    'g5-polygon-slant-trap': { shelf: ['areabench'], title: '平行四边形底 5 厘米、高 3 厘米，斜边比高长：面积是多少？', build: ab({ shape: 0, b: 5, h: 3, s: 2 }),
+      hook: '斜着的那条边比高长。剪下来、移过去，拼成长方形：长方形的宽是斜边，还是高？',
+      milestones: [Ar('area', '面积是 15 平方厘米', 6, 'area', 15, ['点“沿高剪下来”。', '点“移到右边”。', '长 5、宽 3（高）：15。'])], goal: ['area'] },
+    // ======== 第三十八批：分数 → 分数运算台（通分、量一量）、面积模型（分数乘法）、数轴（分数的位置） ========
+    'fa-add': { shelf: ['fracbench'], build: frb({ mode: 0, op: 0, a: 1, b: 2, c: 1, d: 3 }),
+      hook: '1/2 和 1/3 切法不同，格子大小不一样，不能直接数。把两根条都切细，切到格子一样大，再合起来。',
+      milestones: [Fr('common', '都切成 1/6 一格', 4, 'common', 6, ['上面每格切 3 份：1/2 = 3/6。', '下面每格切 2 份：1/3 = 2/6。', '格子都是 1/6。']), Fr('sum', '1/2 + 1/3 = 5/6', 4, 'result', '5/6', ['点“合起来”。', '3 格加 2 格。', '5/6。'])], goal: ['common', 'sum'],
+      traps: [{ id: 'direct', wrong: '1/2 + 1/3 ≠ 2/5：分母不能直接相加，格子大小不一样。', when: { role: 'fr', port: 'result', op: '=', value: '2/5' } }] },
+    'g6-frac-div-core': { shelf: ['fracbench'], build: frb({ mode: 1, a: 3, b: 4, c: 1, d: 2 }),
+      hook: '3/4 ÷ 1/2 是在问：3/4 里面有几个 1/2？点“量一次”，一段一段放量尺。最后一段不够一整根，看它是量尺的几分之几。',
+      milestones: [Fr('ans', '结果是 3/2', 6, 'quot', '3/2', ['量一次：1 个 1/2。', '再量：只放得下半根。', '1 又 1/2 个：3/2。'])], goal: ['ans'] },
+    'g6-frac-div-trap': { shelf: ['fracbench'], build: frb({ mode: 1, a: 4, b: 1, c: 1, d: 3 }),
+      hook: '4 个苹果，每人 1/3 个，能分给几个人？用 1/3 的量尺去量 4。结果比 4 大还是小？',
+      milestones: [Fr('ans', '结果是 12', 6, 'quot', 12, ['每个苹果里有 3 个 1/3。', '一直点“量一次”。', '4 × 3 = 12。'])], goal: ['ans'],
+      traps: [{ id: 'mul', wrong: '4 × 1/3 = 4/3：把除号当成了乘号。除以一个小于 1 的数，结果反而变大。', when: { role: 'fr', port: 'quot', op: '=', value: '4/3' } }] },
+    'fa-div': { shelf: ['fracbench'], build: frb({ mode: 1, a: 3, b: 4, c: 1, d: 8 }),
+      hook: '3/4 ÷ 1/8 是在问：3/4 里面能量出几个 1/8？用 1/8 的量尺量一量。',
+      milestones: [Fr('six', '3/4 里有 6 个 1/8', 6, 'quot', 6, ['3/4 = 6/8。', '一直点“量一次”。', '6 次正好。'])], goal: ['six'] },
+    'fa-mul': { shelf: ['areamodel'], build: one('areamodel', 'am', { mode: 1, d1: 5, n1: 4, d2: 3, n2: 0 }),
+      hook: '竖着已经涂了 4/5。横着切成 3 份，拖着取 2 份：重叠的格子就是 2/3 × 4/5。积比 4/5 大还是小？',
+      milestones: [Am('eight', '重叠 8 格：2/3 × 4/5 = 8/15', 6, 'cells', 8, ['拖横着的边，取 2 份。', '重叠的是 2 × 4 = 8 格。', '一共 15 格：8/15，比 4/5 小。'])], goal: ['eight'] },
+    'fa-numberline': { shelf: ['numlinebench'], build: nl({ mode: 1, from: 0, to: 1, d: 4, k: 2 }),
+      hook: '0 到 1 平均分成 4 份，点现在在 2/4（也就是 1/2）。把它拖到 3/4：在 0 和 1 之间，更靠近 1。',
+      milestones: [N('three-q', '点在 3/4', 6, 'value', '3/4', ['每一小格是 1/4。', '往右再拖一格。', '3 个 1/4。'])], goal: ['three-q'] },
   };
   const missing = [], moved = [];
   for (const id of Object.keys(MOVES)) {

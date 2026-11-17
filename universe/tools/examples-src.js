@@ -97,6 +97,8 @@ module.exports = [
       ['mlgb','meter',{'digits':0,'label':'推理：标了几个 ✓'}],
       ['pfb','proofbench',{'mode':0,'rule':0,'base':true,'step':true,'push':true}],
       ['mpfb','meter',{'digits':0,'label':'证明台：证据等级'}],
+      ['frb','fracbench',{'mode':0,'op':0,'a':1,'b':2,'c':1,'d':3,'ka':3,'kc':2,'done':true}],
+      ['mfrb','meter',{'digits':0,'label':'分数运算：通分后的分母'}],
     ],
     links: [
       ['am','mam','v','area'],
@@ -144,6 +146,7 @@ module.exports = [
       ['fdb','mfdb','v','axes'],
       ['lgb','mlgb','v','yes'],
       ['pfb','mpfb','v','lv'],
+      ['frb','mfrb','v','common'],
     ],
   },
 ];

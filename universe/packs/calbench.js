@@ -9,15 +9,17 @@
   const num = (n) => U.val('num', Q(n), { dim: null });
   const W = 700;
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, Number.isFinite(+v) ? Math.round(+v) : lo));
-  const MODES = ['月历', '几天后是星期几'];
+  const MODES = ['月历', '几天后是星期几', '一年有几天'];
   const WK = ['日', '一', '二', '三', '四', '五', '六'];
   const leap = (y) => (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
   const dim = (y, mo) => [31, leap(y) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][mo - 1];
   const dow = (y, mo, d) => new Date(Date.UTC(y, mo - 1, d)).getUTCDay();
   function model(p) {
-    const mode = clamp(p.mode, 0, 1), y = clamp(p.y, 1900, 2100), mo = clamp(p.mo, 1, 12), nd = dim(y, mo), d1 = clamp(p.d1, 0, nd), d2 = clamp(p.d2, 0, nd);
+    const mode = clamp(p.mode, 0, 2), y = clamp(p.y, 1900, 2100), mo = clamp(p.mo, 1, 12), nd = dim(y, mo), d1 = clamp(p.d1, 0, nd), d2 = clamp(p.d2, 0, nd);
     const start = clamp(p.start, 0, 6), N = clamp(p.N, 1, 400), go = clamp(p.go, 0, 400);
-    return { mode, y, mo, nd, first: dow(y, mo, 1), d1, d2, leap: leap(y), start, N, go, day: (start + go) % 7 };
+    const open = [...new Set(String(p.open || '').split(',').filter((x) => x !== '').map(Number))].filter((m) => m >= 1 && m <= 12);
+    const months = Array.from({ length: 12 }, (_, i) => dim(y, i + 1)), seen = open.reduce((s, m) => s + months[m - 1], 0);
+    return { mode, y, mo, nd, first: dow(y, mo, 1), d1, d2, leap: leap(y), start, N, go, day: (start + go) % 7, open, months, seen, all: open.length === 12 };
   }
   const btn = (x, y, w, label, patch, enabled, tip) => '<g' + (enabled ? ' data-pick-set="' + encodeURIComponent(JSON.stringify(patch)) + '" style="cursor:pointer"' : ' data-off="1"') + '><title>' + K.esc(tip) + '</title>' +
     K.rect(x, y, w, 26, { fill: enabled ? '#fff' : '#f1f3f6', stroke: enabled ? 'var(--blue)' : '#b8c0cc', r: 7, w: 1.4 }) + K.text(x + w / 2, y + 17, label, { size: 12, weight: 700, fill: enabled ? 'var(--ink)' : '#5f6773' }) + '</g>';
@@ -40,6 +42,18 @@
       s += K.text(R0, 150, '1 号是星期' + WK[m.first], { size: 13, anchor: 'start' });
       if (m.d1 && m.d2) s += '<g data-days="1">' + K.text(R0, 200, '从 ' + lo + ' 日到 ' + hi + ' 日：', { size: 14, weight: 700, anchor: 'start' }) + K.text(R0, 226, '经过了 ' + hi + ' − ' + lo + ' = ' + (hi - lo) + ' 天', { size: 14, weight: 700, anchor: 'start', fill: 'var(--blue)' }) + K.text(R0, 252, '两头都算：一共 ' + (hi - lo + 1) + ' 天', { size: 14, weight: 700, anchor: 'start', fill: '#b03a2e' }) + '</g>';
       else s += K.text(R0, 200, m.d1 ? '再点一天：结束' : '点一天：开始', { size: 12, anchor: 'start', fill: '#5a6478' });
+    } else if (m.mode === 2) {
+      s += K.text(20, 28, m.y + ' 年一共有几天？点每个月，看它有几天', { size: 16, weight: 700, anchor: 'start' });
+      for (let i = 0; i < 12; i++) {
+        const mo = i + 1, on = m.open.includes(mo), x = 20 + (i % 4) * 100, y = 50 + Math.floor(i / 4) * 70, d = m.months[i], col = d === 31 ? '#d6ecff' : d === 30 ? '#fde2c4' : '#fbd5dc';
+        const body = K.rect(x, y, 92, 60, { fill: on ? col : '#fff', stroke: '#c5ccda', r: 8, w: 1.2 }) + K.text(x + 46, y + 24, mo + ' 月', { size: 14, weight: 700 }) + (on ? K.text(x + 46, y + 46, d + ' 天' + (d === 31 ? '（大月）' : d === 30 ? '（小月）' : ''), { size: 12, weight: 700 }) : K.text(x + 46, y + 46, '点一下', { size: 11, fill: '#5a6478' }));
+        s += on ? body : '<g data-pick-set="' + encodeURIComponent(JSON.stringify({ open: m.open.concat([mo]).join(',') })) + '" style="cursor:pointer"><title>' + mo + ' 月</title>' + body + '</g>';
+      }
+      const big = m.open.filter((x) => m.months[x - 1] === 31).length, small = m.open.filter((x) => m.months[x - 1] === 30).length, feb = m.open.includes(2);
+      s += K.text(430, 70, '大月（31 天）：' + big + ' 个', { size: 13, anchor: 'start' }) + K.text(430, 94, '小月（30 天）：' + small + ' 个', { size: 13, anchor: 'start' }) + K.text(430, 118, '2 月：' + (feb ? m.months[1] + ' 天' + (m.leap ? '（闰年）' : '（平年）') : '还没看'), { size: 13, anchor: 'start' });
+      s += K.text(430, 150, '已经加起来：' + m.seen + ' 天', { size: 13, weight: 700, anchor: 'start' });
+      if (m.all) s += '<g data-read="1">' + K.text(20, 300, '31 × 7 + 30 × 4 + ' + m.months[1] + ' = ' + m.seen + ' 天', { size: 16, weight: 700, anchor: 'start', fill: 'var(--blue)' }) + K.text(20, 324, m.y + ' 年是' + (m.leap ? '闰年：366 天' : '平年：365 天') + '。2 月不是小月，它比小月还少', { size: 13, anchor: 'start', fill: 'var(--blue)' }) + '</g>';
+      if (m.open.length) s += '<g data-pick-set="' + encodeURIComponent(JSON.stringify({ open: '' })) + '" style="cursor:pointer"><title>全部合上</title>' + K.rect(560, 340, 110, 26, { fill: '#fff', stroke: 'var(--blue)', r: 7, w: 1.4 }) + K.text(615, 358, '全部合上', { size: 12, weight: 700 }) + '</g>';
     } else {
       s += K.text(20, 28, '今天星期' + WK[m.start] + '，' + m.N + ' 天后是星期几？', { size: 16, weight: 700, anchor: 'start' });
       const X0 = 60, CW = 82, Y = 90;
@@ -63,11 +77,12 @@
         props: {
           mode: { type: 'choice', label: '做什么', default: 0, choices: MODES, write: true },
           y: I(1900, 2100, 2026, '年'), mo: I(1, 12, 11, '月'), d1: I(0, 31, 0, '点的第一天'), d2: I(0, 31, 0, '点的第二天'),
-          start: I(0, 6, 3, '今天星期几（0 是星期日）'), N: I(1, 400, 100, '几天后'), go: I(0, 400, 0, '已经过了几天'),
+          start: I(0, 6, 3, '今天星期几（0 是星期日）'), open: { type: 'text', label: '一年有几天：看过的月份', default: '', write: true }, N: I(1, 400, 100, '几天后'), go: I(0, 400, 0, '已经过了几天'),
         },
         outputs: {
           days: { dim: null, kind: 'num', label: '这个月有几天' }, between: { dim: null, kind: 'num', label: '经过了几天（点了两天才有）' }, inclusive: { dim: null, kind: 'num', label: '两头都算一共几天（点了两天才有）' },
           weekday: { dim: null, kind: 'num', label: '几天后是星期几（0 是星期日；数到了才有）' },
+          year: { dim: null, kind: 'num', label: '一年一共几天（12 个月都看了才有）' },
         },
         icon: () => K.rect(8, 10, 40, 34, { fill: '#fff', stroke: 'var(--ink)', r: 3, w: 1.2 }) + K.rect(8, 10, 40, 9, { fill: '#e87a6b', stroke: 'var(--ink)', r: 3, w: 1.2 }) + K.text(28, 38, '31', { size: 12, weight: 700 }),
         size: () => [W, 400],
@@ -75,7 +90,8 @@
         compute: (c) => {
           const m = model(c.props), o = {};
           if (m.mode === 0) { o.days = num(m.nd); if (m.d1 && m.d2) { const d = Math.abs(m.d2 - m.d1); o.between = num(d); o.inclusive = num(d + 1); } }
-          else if (m.go === m.N) o.weekday = num(m.day);
+          else if (m.mode === 1) { if (m.go === m.N) o.weekday = num(m.day); }
+          else if (m.all) o.year = num(m.seen);
           return o;
         },
         badge: () => '',
