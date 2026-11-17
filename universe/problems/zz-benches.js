@@ -1,4 +1,4 @@
-/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，二十五批共 184 道）。
+/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，二十六批共 191 道）。
  * 这些题原来的做法是“放数字、接运算器、看读数”：学生在搭计算流程。这里按 id 把它们换成在操作台上直接动手：
  * 题目的编号、标题、年级、知识点、道理（why）都不变，换的是器材架、开场的台面、里程碑和提示。
  * 这个文件排在所有题目文件后面加载（文件名 zz 开头），找不到的 id 会记在 U.benchMigrateMissing 里（测试会查）。 */
@@ -7,9 +7,9 @@
   const U = G.U, W = U.World;
   const one = (type, role, props) => () => { const s = W.blank(); const id = W.add(s, type, 40, 50, props); s.entities[id].role = role; return s; };
   const ms = (role) => (id, say, score, port, value, hints) => ({ id, say, score, when: { role, port, op: '=', value: String(value) }, hints });
-  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s'), GP = ms('g'), B = ms('b'), D = ms('d'), K2 = ms('k'), Gq = ms('q'), So = ms('o'), Cj = ms('j'), Z = ms('z'), H2 = ms('h'), Pq = ms('p'), Tr = ms('x'), Ci = ms('i'), Gw = ms('w'), Tw = ms('y');
+  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s'), GP = ms('g'), B = ms('b'), D = ms('d'), K2 = ms('k'), Gq = ms('q'), So = ms('o'), Cj = ms('j'), Z = ms('z'), H2 = ms('h'), Pq = ms('p'), Tr = ms('x'), Ci = ms('i'), Gw = ms('w'), Tw = ms('y'), Vt = ms('v'), Mb = ms('c2');
   const H = (id, say, score, when, hints) => ({ id, say, score, when, hints });   // 条件是一个范围（频率稳在某个区间）时用函数
-  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props), bb = (props) => one('balancebench', 'b', props), sb = (props) => one('statbench', 'd', props), ch = (props) => one('chancebench', 'h', props), ck = (props) => one('clockbench', 'k', props), gq = (props) => one('groupbench', 'q', props), sd = (props) => one('solidbench', 'o', props), cj = (props) => one('conjbench', 'j', props), fb2 = (props) => one('fitbench', 'z', props), pb2 = (props) => one('pairbench', 'p', props), tb3 = (props) => one('tribench', 'x', props), ci = (props) => one('circlebench', 'i', props), gd = (props) => one('gridbench', 'w', props), tw = (props) => one('tablebench', 'y', props);
+  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props), bb = (props) => one('balancebench', 'b', props), sb = (props) => one('statbench', 'd', props), ch = (props) => one('chancebench', 'h', props), ck = (props) => one('clockbench', 'k', props), gq = (props) => one('groupbench', 'q', props), sd = (props) => one('solidbench', 'o', props), cj = (props) => one('conjbench', 'j', props), fb2 = (props) => one('fitbench', 'z', props), pb2 = (props) => one('pairbench', 'p', props), tb3 = (props) => one('tribench', 'x', props), ci = (props) => one('circlebench', 'i', props), gd = (props) => one('gridbench', 'w', props), tw = (props) => one('tablebench', 'y', props), vt = (props) => one('vertbench', 'v', props), mb = (props) => one('mulbench', 'c2', props);
   const MOVES = {
     // ---- 数轴 ----
     'g1-split-merge-core': { shelf: ['numlinebench'], build: nl({ from: 0, to: 10, a: 0, s: 1, n: 0 }),
@@ -634,6 +634,29 @@
       hook: '有人算出总数是 5。这个结果对吗？一格一格圈着数，数完点“我数完了”。',
       milestones: [Tw('total', '总数是 6，不是 5', 6, 'answer', 6, ['不是 0 的格子：2、1、3。', '2 + 1 + 3 = 6。', '少的那个人漏了 1。'])], goal: ['total'],
       traps: [{ id: 'short-five', wrong: '少加了一个格子，得到 5。', when: { role: 'y', port: 'answer', op: '=', value: '5' } }] },
+    // ======== 第二十六批：笔算，在“竖式”上一位一位写 ========
+    'g2-two-digit-add-core': { shelf: ['vertbench'], build: vt({ mode: 0, a: 34, b: 52 }),
+      hook: '个位和个位相加，十位和十位相加。点数字键，从个位写起。',
+      milestones: [Vt('sum', '34 + 52 = 86', 6, 'result', 86, ['个位 4 + 2 = 6。', '十位 3 + 5 = 8。', '86。'])], goal: ['sum'] },
+    'g3-divide-core': { shelf: ['vertbench'], build: vt({ mode: 2, a: 84, b: 4 }),
+      hook: '84 个苹果平均分给 4 个小朋友。从十位起：8 个十里有几个 4？再看个位。',
+      milestones: [Vt('each', '84 ÷ 4 = 21', 6, 'q', 21, ['8 里有 2 个 4：商 2。', '再落下 4：4 里有 1 个 4。', '21。'])], goal: ['each'] },
+    'g3-divide-zero-trap': { shelf: ['vertbench'], build: vt({ mode: 2, a: 812, b: 4 }),
+      hook: '812 ÷ 4。一步一步试商：落下 1 以后，1 里面有几个 4？不够除的那一位要写 0。',
+      milestones: [Vt('q', '812 ÷ 4 = 203', 6, 'q', 203, ['8 里有 2 个 4。', '1 不够除：商写 0。', '12 里有 3 个 4。'])], goal: ['q'],
+      traps: [{ id: 'skip0', wrong: '漏掉中间的 0 就成了 23：1 不够除 4，那一位要写 0 占位。', when: { role: 'v', port: 'q', op: '=', value: '23' } }] },
+    'g4-div-2digit-core': { shelf: ['vertbench'], build: vt({ mode: 2, a: 480, b: 24 }),
+      hook: '480 个苹果，每 24 个装一箱。先看 48 里有几个 24，再看个位。',
+      milestones: [Vt('q', '商是 20', 6, 'q', 20, ['48 里有 2 个 24。', '落下 0：0 里有 0 个 24。', '20。'])], goal: ['q'] },
+    'g4-div-trial-trap': { shelf: ['vertbench'], build: vt({ mode: 2, a: 556, b: 28 }),
+      hook: '556 ÷ 28。先看 55 里有几个 28：试 2 看看，28 × 2 = 56 比 55 大。商该是几？',
+      milestones: [Vt('q', '商是 19，余数是 24', 6, 'q', 19, ['55 里只有 1 个 28。', '落下 6：276 里有 9 个 28。', '28 × 9 = 252，余 24。'])], goal: ['q'] },
+    'g4-mul-3x2-core': { shelf: ['mulbench'], build: mb({ a: 125, b: 24 }),
+      hook: '一箱饮料 125 瓶，24 箱一共多少瓶？对着面积图写竖式。',
+      milestones: [Mb('prod', '125 × 24 = 3000', 6, 'product', 3000, ['125 × 4 = 500。', '125 × 20 = 2500。', '500 + 2500 = 3000。'])], goal: ['prod'] },
+    'g4-mul-zero-trap': { shelf: ['mulbench'], build: mb({ a: 123, b: 40 }),
+      hook: '123 × 40。40 只有“4 个十”这一部分：先算 123 × 4，末尾要注意什么？',
+      milestones: [Mb('prod', '123 × 40 = 4920', 6, 'product', 4920, ['123 × 4 = 492。', '乘的是 4 个十。', '末尾添 0：4920。'])], goal: ['prod'] },
   };
   const missing = [], moved = [];
   for (const id of Object.keys(MOVES)) {

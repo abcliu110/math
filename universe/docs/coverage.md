@@ -6,7 +6,7 @@
 
 - 知识点：142 个（设计目标 142）
 - 有题的知识点：141 个（99%）
-- 题目：544 道；没有对应知识点的题：1 道
+- 题目：548 道；没有对应知识点的题：1 道
 - 没有器材的本质：无
 - 没有题的本质：无
 
@@ -15,7 +15,7 @@
 | 年级 | 知识点 | 有题 | 题目数 |
 |---|---|---|---|
 | 1 | 16 | 16（100%） | 41 |
-| 2 | 16 | 16（100%） | 46 |
+| 2 | 16 | 16（100%） | 50 |
 | 3 | 16 | 16（100%） | 75 |
 | 4 | 17 | 17（100%） | 85 |
 | 5 | 14 | 14（100%） | 86 |
@@ -45,7 +45,7 @@
 | 1.15 | 1 | 100以内加减法（一） | 1 | 1 | 0 | 1 | blocksbench |
 | 1.16 | 1 | 找规律 | 5 | 0 | 0 | 1 | num、meter、conjbench、fmachine、guessrule、conjecture_board |
 | 2.1 | 2 | 长度单位、线段 | 1 | 1 | 0 | 1 | num |
-| 2.2 | 2 | 100以内加减法（二） | 2 | 1 | 0 | 1 | num、arithbench |
+| 2.2 | 2 | 100以内加减法（二） | 6 | 1 | 0 | 1 | vertbench、num、arithbench |
 | 2.3 | 2 | 进位加法、退位减法 | 6 | 1 | 0 | 1 | blocksbench、arithbench、colbench |
 | 2.4 | 2 | 角的初步认识、直角 | 2 | 1 | 0 | 1 | tribench、protractor-read |
 | 2.5 | 2 | 乘法初步认识、口诀 | 3 | 1 | 0 | 1 | numlinebench、areamodel、tapebench |
@@ -69,7 +69,7 @@
 | 3.7 | 3 | 分数的初步认识 | 5 | 1 | 0 | 1 | ratiobench、fracarea、numlinebench |
 | 3.8 | 3 | 集合 | 7 | 1 | 0 | 1 | num、vennbench |
 | 3.9 | 3 | 位置与方向 | 1 | 1 | 0 | 1 | numlinebench |
-| 3.10 | 3 | 除数是一位数的除法 | 1 | 1 | 0 | 1 | num |
+| 3.10 | 3 | 除数是一位数的除法 | 1 | 1 | 0 | 1 | vertbench |
 | 3.15a | 3 | 复式统计表 | 2 | 2 | 0 | 1 | tablebench |
 | 3.11 | 3 | 两位数乘两位数 | 9 | 1 | 0 | 1 | areamodel、num、mulbench、arithbench |
 | 3.12 | 3 | 面积 | 11 | 0 | 0 | 1 | areamodel、asn、curved、geoboard、circlebench、optimize、solidbench、turtle |
@@ -79,9 +79,9 @@
 | 4.1 | 4 | 大数的认识、近似数 | 5 | 0 | 0 | 1 | chancebench、num |
 | 4.2 | 4 | 公顷和平方千米 | 1 | 1 | 0 | 1 | ratiobench |
 | 4.3 | 4 | 角的度量 | 1 | 0 | 0 | 1 | num |
-| 4.4 | 4 | 三位数乘两位数 | 10 | 1 | 0 | 1 | num、mulbench、travelbench |
+| 4.4 | 4 | 三位数乘两位数 | 10 | 1 | 0 | 1 | mulbench、travelbench |
 | 4.5 | 4 | 平行四边形和梯形 | 3 | 1 | 0 | 1 | parallelogram、cubes |
-| 4.6 | 4 | 除数是两位数的除法 | 1 | 1 | 0 | 1 | num |
+| 4.6 | 4 | 除数是两位数的除法 | 1 | 1 | 0 | 1 | vertbench |
 | 4.7 | 4 | 条形统计图 | 1 | 1 | 0 | 1 | statbench、ratiobench |
 | 4.8 | 4 | 优化 | 1 | 1 | 0 | 1 | num |
 | 4.9 | 4 | 四则运算 | 10 | 1 | 0 | 1 | asn、termsbench、findbug、turtle |
@@ -176,12 +176,12 @@
 | 本质 | 题目数 | 器材数 |
 |---|---|---|
 | E1 | 61 | 25 |
-| E2 | 207 | 41 |
+| E2 | 211 | 42 |
 | E3 | 136 | 38 |
 | E4 | 101 | 25 |
 | E5 | 132 | 50 |
 | E6 | 40 | 18 |
-| E7 | 99 | 24 |
+| E7 | 103 | 25 |
 | E8 | 61 | 22 |
 | E9 | 68 | 15 |
 | E10 | 10 | 4 |

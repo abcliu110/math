@@ -90,6 +90,7 @@
     'twoways': 'packs/twoways.js',
     'variable': 'packs/variable.js',
     'vennbench': 'packs/vennbench.js',
+    'vertbench': 'packs/vertbench.js',
     'whatif': 'packs/whatif.js',
   };
   // packs:end

@@ -63,6 +63,8 @@ module.exports = [
       ['mgwb','meter',{'digits':0,'label':'坐标：转过去的 y'}],
       ['tyb','tablebench',{'data':'3,2;1,4','rsum':true,'csum':true}],
       ['mtyb','meter',{'digits':0,'label':'统计表：总数'}],
+      ['vtb','vertbench',{'mode':2,'a':812,'b':4,'qd':'203'}],
+      ['mvtb','meter',{'digits':0,'label':'竖式：812 ÷ 4 的商'}],
     ],
     links: [
       ['am','mam','v','area'],
@@ -93,6 +95,7 @@ module.exports = [
       ['cib','mcib','v','sector'],
       ['gwb','mgwb','v','qy'],
       ['tyb','mtyb','v','total'],
+      ['vtb','mvtb','v','q'],
     ],
   },
 ];
