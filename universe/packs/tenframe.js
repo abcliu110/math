@@ -11,6 +11,7 @@
     types: {
       // ---------------- 筹码（可以放进十格阵的小东西）----------------
       counter: {
+        hidden: true, retired: true,   // 已经有“分类与整理”“凑十与拆数”代替：不上器材架、搜不到；只留给容器机制的内核测试当样板
         workspaceRole: 'none',
         handles: true,
         essence: ['E1', 'E2'],

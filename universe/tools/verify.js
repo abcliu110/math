@@ -124,6 +124,10 @@ async function checkDist() {
   if (!runScript('tests/ui-proof.js', 'tests/ui-proof.js', pwEnv)) bail();   // 证明台：真实鼠标看起点、看推一级、推倒多米诺，点依据写证明，拼猜想找反例
   if (!runScript('tests/ui-quiz.js', 'tests/ui-quiz.js', pwEnv)) bail();   // 随机出题：步骤栏三档、做完再来一题、实验库随机练习
   if (!runScript('tests/ui-frac2.js', 'tests/ui-frac2.js', pwEnv)) bail();   // 分数运算：真实鼠标切格子通分、合起来、约分、量一量做除法、翻过来找倒数
+  if (!runScript('tests/ui-opt.js', 'tests/ui-opt.js', pwEnv)) bail();   // 优化：真实鼠标排沏茶的顺序、看等待、烙饼一锅一锅选
+  if (!runScript('tests/ui-weigh.js', 'tests/ui-weigh.js', pwEnv)) bail();   // 找次品：真实鼠标放左右盘、两边要一样多、按最不利回答、分三份最少
+  if (!runScript('tests/ui-sort.js', 'tests/ui-sort.js', pwEnv)) bail();   // 分类与整理：真实鼠标点卡片放框、放错说为什么、分完核对总数、换分法
+  if (!runScript('tests/ui-combo.js', 'tests/ui-combo.js', pwEnv)) bail();   // 搭配：真实鼠标点格子列搭法、列全再配鞋、数字卡片 0 不在十位
   if (!runScript('tests/ui-areamodel.js', 'tests/ui-areamodel.js', pwEnv)) bail();   // 面积模型（样板操作台）和器材把手：真实鼠标拖边、切、改分数
   if (!runScript('tests/ui-shapes.js', 'tests/ui-shapes.js', pwEnv)) bail();         // 常见图形、顶点编辑、直接拖出辅助线（真实鼠标和键盘）；含画布横纵比例回归
   if (!runScript('tests/ui-export.js', 'tests/ui-export.js', pwEnv)) bail();         // 2.12/V10：导出图片（真实鼠标点菜单，台面和专注工作区各一次下载，.png、大小 > 0）

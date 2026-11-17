@@ -57,6 +57,8 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   await p.waitForTimeout(250);
   const tf = await p.evaluate(() => Object.values(UI.S.scene.entities).find((e) => e.type === 'tenframe').id);
   const tfCenter = async () => p.evaluate((id) => { const r = document.querySelector('.card[data-id="' + id + '"]').getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; }, tf);
+  // 十格阵、筹码已经不上器材架（有操作台代替），这里只借它们测“把架上的器材拖进容器”这个机制：测的时候临时放回架上
+  await p.evaluate(() => { U.types.counter.hidden = false; U.types.tenframe.hidden = false; UI.Panels.renderShelf(); }); await p.waitForTimeout(150);
   await G.dragTileTo(p, 'counter', await tfCenter());
   await G.assertInvariants(p, '拖筹码到十格阵');
   const cnt = await p.evaluate(() => Object.values(UI.S.scene.entities).filter((e) => e.type === 'counter' && e.parent).map((e) => ({ parent: e.parent, slot: e.slot })));
@@ -64,6 +66,7 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
 
   await G.dragTileTo(p, 'balance', await tfCenter());
   await G.assertInvariants(p, '拖天平到十格阵（它不接受）');
+  await p.evaluate(() => { U.types.counter.hidden = true; U.types.tenframe.hidden = true; UI.Panels.renderShelf(); });
   const over = await p.evaluate((id) => {
     const t = document.querySelector('.card[data-id="' + id + '"]').getBoundingClientRect();
     const hits = [...document.querySelectorAll('.card[data-id]')].filter((c) => {

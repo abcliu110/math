@@ -898,5 +898,54 @@
     },
   };
 
+  // 优化：沏茶
+  D.optbench = {
+    caps: ['洗水壶 1 分', '烧水 10 分：自己烧', '烧水时洗杯、拿茶叶', '水开泡茶：一共 12 分'],
+    draw(st) {
+      const x = (t) => 30 + t * 24; let s = Ln(30, 100, 330, 100, { w: 1 });
+      s += Rc(x(0), 30, 24, 22, '#cfe3fb', { s: INK });
+      if (st >= 1) s += Rc(x(1), 60, 240, 22, '#fde2c4', { s: INK });
+      if (st >= 2) s += Rc(x(1), 30, 48, 22, '#d6f0d6', { s: INK }) + Rc(x(3), 30, 24, 22, '#ead9f7', { s: INK });
+      if (st >= 3) s += Rc(x(11), 30, 24, 22, '#fbd5dc', { s: INK });
+      s += T(380, 60, ['1', '+10', '同时做', '12 分'][st], { s: 15, w: 700, f: P });
+      return s;
+    },
+  };
+
+  // 找次品
+  D.weighbench = {
+    caps: ['9 个，1 个轻', '3 个对 3 个', '平了：在没上秤的 3 个里', '1 个对 1 个：找到'],
+    draw(st) {
+      let s = Ln(200, 90, 200, 40, { w: 2 }) + Ln(120, 40, 280, 40, { w: 2 });
+      for (let i = 0; i < 9; i++) { const grey = st >= 2 && i < 6; s += Rc(20 + i * 38, 100, 32, 26, grey ? '#e3e7ef' : i < 3 && st === 1 ? '#9fc3ea' : i < 6 && st === 1 ? '#f5c26b' : '#fff', { s: INK }); }
+      s += T(380, 70, ['9 个', '3 : 3', '剩 3 个', '2 次'][st], { s: 15, w: 700, f: P });
+      return s;
+    },
+  };
+
+  // 分类与整理
+  D.sortbench = {
+    caps: ['红、蓝卡片混在一起', '按颜色分：两个框', '红 3 个、蓝 2 个', '3 + 2 = 5，和总数一样'],
+    draw(st) {
+      let s = ''; const cols = ['#e87a6b', '#6fa3e0', '#e87a6b', '#6fa3e0', '#e87a6b'];
+      if (st === 0) cols.forEach((c, i) => { s += Ci(40 + i * 40, 40, 12, c, { s: INK }); });
+      if (st >= 1) s += Rc(20, 20, 120, 70, '#f6f8fc', { s: INK }) + Rc(160, 20, 120, 70, '#f6f8fc', { s: INK });
+      if (st >= 2) { for (let i = 0; i < 3; i++) s += Ci(45 + i * 34, 60, 11, '#e87a6b', { s: INK }); for (let i = 0; i < 2; i++) s += Ci(185 + i * 34, 60, 11, '#6fa3e0', { s: INK }); }
+      s += T(360, 60, ['5 张', '两类', '3 和 2', '= 5'][st], { s: 15, w: 700, f: P });
+      return s;
+    },
+  };
+
+  // 搭配
+  D.combobench = {
+    caps: ['3 件上衣、2 条裤子', '上衣 1 配两条裤子', '一行一行点满', '3 × 2 = 6 种'],
+    draw(st) {
+      let s = ''; const on = st === 0 ? 0 : st === 1 ? 2 : 6;
+      for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) { const k = i * 2 + j; s += Rc(60 + j * 50, 20 + i * 30, 46, 26, k < on ? '#d6ecff' : '#fff', { s: INK }) + (k < on ? T(83 + j * 50, 38 + i * 30, '✓', { w: 700, f: B }) : ''); }
+      s += T(320, 60, ['?', '2 种', '6 格', '3 × 2 = 6'][st], { s: 15, w: 700, f: P });
+      return s;
+    },
+  };
+
   UI.Demo = D;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

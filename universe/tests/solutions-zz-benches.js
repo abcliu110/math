@@ -43,6 +43,13 @@ module.exports = {
   'g7-quadrant-core': c({ ax: -2, ay: 3 }),
   'g7-symmetry-x-axis-trap': c({ bx: 3, by: 2 }),
   'g7-translate-down-trap': c({ ay: -1 }),
+  // 第四十批
+  'g1-classify-count-core'(h) { h.set(h.role('so'), 'place', '02020'); },
+  'g1-classify-check-trap'(h) { h.set(h.role('so'), 'place', '000022'); },
+  'g3-combo-core'(h) { const e = h.role('cb'); const all = []; for (let i = 0; i < 3; i++) for (let j = 0; j < 4; j++) all.push(i + '-' + j); h.set(e, 'cells', all.join(',')); h.set(e, 'shoes', true); },
+  // 第三十九批
+  'g4-optimize-boil-core'(h) { h.set(h.role('op'), 'order', '0,1,2,3'); }, 'g4-optimize-sum-trap'(h) { h.set(h.role('op'), 'order', '0,1,2,3,4'); },
+  'g5-balance-core'(h) { h.set(h.role('wt'), 'hist', '111222000;000000120'); },
   // 第三十八批
   'fa-add'(h) { const e = h.role('fr'); h.set(e, 'ka', 3); h.set(e, 'kc', 2); h.set(e, 'done', true); },
   'g6-frac-div-core'(h) { h.set(h.role('fr'), 'times', 2); }, 'g6-frac-div-trap'(h) { h.set(h.role('fr'), 'times', 12); }, 'fa-div'(h) { h.set(h.role('fr'), 'times', 6); },

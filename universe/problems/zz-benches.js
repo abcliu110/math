@@ -1,4 +1,4 @@
-/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，三十八批共 262 道）。
+/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，四十批共 268 道）。
  * 这些题原来的做法是“放数字、接运算器、看读数”：学生在搭计算流程。这里按 id 把它们换成在操作台上直接动手：
  * 题目的编号、标题、年级、知识点、道理（why）都不变，换的是器材架、开场的台面、里程碑和提示。
  * 这个文件排在所有题目文件后面加载（文件名 zz 开头），找不到的 id 会记在 U.benchMigrateMissing 里（测试会查）。 */
@@ -7,9 +7,9 @@
   const U = G.U, W = U.World;
   const one = (type, role, props) => () => { const s = W.blank(); const id = W.add(s, type, 40, 50, props); s.entities[id].role = role; return s; };
   const ms = (role) => (id, say, score, port, value, hints) => ({ id, say, score, when: { role, port, op: '=', value: String(value) }, hints });
-  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s'), GP = ms('g'), B = ms('b'), D = ms('d'), K2 = ms('k'), Gq = ms('q'), So = ms('o'), Cj = ms('j'), Z = ms('z'), H2 = ms('h'), Pq = ms('p'), Tr = ms('x'), Ci = ms('i'), Gw = ms('w'), Tw = ms('y'), Vt = ms('v'), Mb = ms('c2'), Db = ms('d'), Tb = ms('tb'), Zp = ms('z'), Mk = ms('k'), Es = ms('e'), Ar = ms('ar'), Fb = ms('f'), An = ms('an'), Rl = ms('rl'), Mo = ms('mo'), Cl = ms('cl'), Fd = ms('fd'), Lg = ms('lg'), Pf = ms('pf'), Vn = ms('y'), Fr = ms('fr'), Am = ms('am');
+  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s'), GP = ms('g'), B = ms('b'), D = ms('d'), K2 = ms('k'), Gq = ms('q'), So = ms('o'), Cj = ms('j'), Z = ms('z'), H2 = ms('h'), Pq = ms('p'), Tr = ms('x'), Ci = ms('i'), Gw = ms('w'), Tw = ms('y'), Vt = ms('v'), Mb = ms('c2'), Db = ms('d'), Tb = ms('tb'), Zp = ms('z'), Mk = ms('k'), Es = ms('e'), Ar = ms('ar'), Fb = ms('f'), An = ms('an'), Rl = ms('rl'), Mo = ms('mo'), Cl = ms('cl'), Fd = ms('fd'), Lg = ms('lg'), Pf = ms('pf'), Vn = ms('y'), Fr = ms('fr'), Am = ms('am'), Op = ms('op'), Wt = ms('wt'), Sr = ms('so'), Cb = ms('cb');
   const H = (id, say, score, when, hints) => ({ id, say, score, when, hints });   // 条件是一个范围（频率稳在某个区间）时用函数
-  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props), bb = (props) => one('balancebench', 'b', props), sb = (props) => one('statbench', 'd', props), ch = (props) => one('chancebench', 'h', props), ck = (props) => one('clockbench', 'k', props), gq = (props) => one('groupbench', 'q', props), sd = (props) => one('solidbench', 'o', props), cj = (props) => one('conjbench', 'j', props), fb2 = (props) => one('fitbench', 'z', props), pb2 = (props) => one('pairbench', 'p', props), tb3 = (props) => one('tribench', 'x', props), ci = (props) => one('circlebench', 'i', props), gd = (props) => one('gridbench', 'w', props), tw = (props) => one('tablebench', 'y', props), vt = (props) => one('vertbench', 'v', props), mb = (props) => one('mulbench', 'c2', props), db = (props) => one('decbench', 'd', props), tlb = (props) => one('tilebench', 'tb', props), zp = (props) => one('chipbench', 'z', props), mk = (props) => one('makebench', 'k', props), es = (props) => one('estbench', 'e', props), ab = (props) => one('areabench', 'ar', props), fb = (props) => one('factorbench', 'f', props), an = (props) => one('anglebench', 'an', props), rl = (props) => one('rulerbench', 'rl', props), mo = (props) => one('moneybench', 'mo', props), cl = (props) => one('calbench', 'cl', props), fd = (props) => one('foldbench', 'fd', props), lgb = (props) => one('logicbench', 'lg', props), pf = (props) => one('proofbench', 'pf', props), tp = (props) => one('tapebench', 't', props), vn = (props) => one('vennbench', 'y', props), frb = (props) => one('fracbench', 'fr', props);
+  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props), bb = (props) => one('balancebench', 'b', props), sb = (props) => one('statbench', 'd', props), ch = (props) => one('chancebench', 'h', props), ck = (props) => one('clockbench', 'k', props), gq = (props) => one('groupbench', 'q', props), sd = (props) => one('solidbench', 'o', props), cj = (props) => one('conjbench', 'j', props), fb2 = (props) => one('fitbench', 'z', props), pb2 = (props) => one('pairbench', 'p', props), tb3 = (props) => one('tribench', 'x', props), ci = (props) => one('circlebench', 'i', props), gd = (props) => one('gridbench', 'w', props), tw = (props) => one('tablebench', 'y', props), vt = (props) => one('vertbench', 'v', props), mb = (props) => one('mulbench', 'c2', props), db = (props) => one('decbench', 'd', props), tlb = (props) => one('tilebench', 'tb', props), zp = (props) => one('chipbench', 'z', props), mk = (props) => one('makebench', 'k', props), es = (props) => one('estbench', 'e', props), ab = (props) => one('areabench', 'ar', props), fb = (props) => one('factorbench', 'f', props), an = (props) => one('anglebench', 'an', props), rl = (props) => one('rulerbench', 'rl', props), mo = (props) => one('moneybench', 'mo', props), cl = (props) => one('calbench', 'cl', props), fd = (props) => one('foldbench', 'fd', props), lgb = (props) => one('logicbench', 'lg', props), pf = (props) => one('proofbench', 'pf', props), tp = (props) => one('tapebench', 't', props), vn = (props) => one('vennbench', 'y', props), frb = (props) => one('fracbench', 'fr', props), opb = (props) => one('optbench', 'op', props), wtb = (props) => one('weighbench', 'wt', props), sob = (props) => one('sortbench', 'so', props), cbb = (props) => one('combobench', 'cb', props);
   const MOVES = {
     // ---- 数轴 ----
     'g1-split-merge-core': { shelf: ['numlinebench'], build: nl({ from: 0, to: 10, a: 0, s: 1, n: 0 }),
@@ -900,6 +900,27 @@
     'fa-numberline': { shelf: ['numlinebench'], build: nl({ mode: 1, from: 0, to: 1, d: 4, k: 2 }),
       hook: '0 到 1 平均分成 4 份，点现在在 2/4（也就是 1/2）。把它拖到 3/4：在 0 和 1 之间，更靠近 1。',
       milestones: [N('three-q', '点在 3/4', 6, 'value', '3/4', ['每一小格是 1/4。', '往右再拖一格。', '3 个 1/4。'])], goal: ['three-q'] },
+    // ======== 第三十九批：沏茶 → 优化（安排时间）；称一次 → 找次品 ========
+    'g4-optimize-boil-core': { shelf: ['optbench'], build: opb({ mode: 0, tasks: '烧水:15:自:;洗茶杯:1:人:;拿茶叶:1:人:;泡茶:1:人:0+1+2' }),
+      hook: '烧水要 15 分钟，开了火它自己烧，人就能去洗茶杯、拿茶叶。按顺序点下面的事：最少几分钟能喝上茶？',
+      milestones: [Op('best', '最少 16 分钟', 6, 'best', 1, ['先点“烧水”：开了火就不用守着。', '烧水的时候洗茶杯、拿茶叶。', '水开了泡茶：15 + 1 = 16。'])], goal: ['best'] },
+    'g4-optimize-sum-trap': { shelf: ['optbench'], title: '沏茶要做 5 件事，最少几分钟？', build: opb({ mode: 0, tasks: '洗水壶:1:人:;烧水:10:自:0;洗茶杯:2:人:;拿茶叶:1:人:;泡茶:1:人:1+2+3' }),
+      hook: '洗水壶 1 分钟，烧水 10 分钟（要先洗水壶），洗茶杯 2 分钟，拿茶叶 1 分钟，泡茶 1 分钟（水开了、杯子洗好、茶叶拿来才能泡）。哪些事可以同时做？',
+      milestones: [Op('best', '最少 12 分钟', 6, 'best', 1, ['先洗水壶，再烧水。', '烧水的 10 分钟里洗茶杯、拿茶叶。', '1 + 10 + 1 = 12。'])], goal: ['best'],
+      traps: [{ id: 'sum', wrong: '一件一件全加起来是 15 分钟：烧水的时候人是空的，洗茶杯、拿茶叶可以同时做。', when: { role: 'op', port: 'total', op: '=', value: '15' } }] },
+    'g5-balance-core': { shelf: ['weighbench'], title: '9 个零件里有 1 个轻一点，最少称几次一定能找出来？', build: wtb({ n: 9 }),
+      hook: '9 个零件，每个 10 克，其中 1 个轻 1 克。左右各放几个、称一下：哪边翘起来，轻的就在哪边；平了，就在没上秤的里面。',
+      milestones: [Wt('best', '称 2 次就保证找到', 6, 'best', 1, ['第 1 次：3 个对 3 个。', '剩下 3 个可疑：1 个对 1 个。', '9 → 3 → 1，2 次。'])], goal: ['best'] },
+    // ======== 第四十批：分类计数 → 分类与整理；搭配 → 搭配 ========
+    'g1-classify-count-core': { shelf: ['sortbench'], build: sob({ items: '00,20,01,21,02', crit: 0 }),
+      hook: '5 张卡片，有红有蓝。按颜色分：点一张卡片，再点它的颜色框。分完数一数，和总数 5 核对。',
+      milestones: [Sr('check', '红 3 个、蓝 2 个，一共 5 个：和总数一样', 6, 'check', 1, ['点一张卡片，再点颜色一样的框。', '红色 3 张，蓝色 2 张。', '3 + 2 = 5。'])], goal: ['check'] },
+    'g1-classify-check-trap': { shelf: ['sortbench'], build: sob({ items: '00,01,02,00,21,22', crit: 0 }),
+      hook: '一共 6 张卡片，4 红 2 蓝。每一张都要放进框里：漏了一张，总数就对不上。',
+      milestones: [Sr('check', '数出来的总数和 6 一样', 6, 'check', 1, ['每张都放进框里。', '红 4 张、蓝 2 张。', '4 + 2 = 6。'])], goal: ['check'] },
+    'g3-combo-core': { shelf: ['combobench'], build: cbb({ mode: 0, a: 3, b: 4, c: 2 }),
+      hook: '3 件上衣、4 条裤子、2 双鞋。先点格子列出上衣配裤子的每一种，不重不漏；列全了再配鞋。',
+      milestones: [Cb('pairs', '上衣配裤子：3 × 4 = 12 种', 4, 'pairs', 12, ['每件上衣一行，每条裤子一列。', '一行一行点满。', '12 个格子。']), Cb('all', '再配鞋：12 × 2 = 24 种', 4, 'all', 24, ['点“再配鞋”。', '每一种穿法都能配 2 双鞋。', '24 种。'])], goal: ['all'] },
   };
   const missing = [], moved = [];
   for (const id of Object.keys(MOVES)) {

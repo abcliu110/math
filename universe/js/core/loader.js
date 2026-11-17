@@ -26,6 +26,7 @@
     'chipbench': 'packs/chipbench.js',
     'circlebench': 'packs/circlebench.js',
     'clockbench': 'packs/clockbench.js',
+    'combobench': 'packs/combobench.js',
     'compass': 'packs/compass.js',
     'conjbench': 'packs/conjbench.js',
     'conserve': 'packs/conserve.js',
@@ -70,6 +71,7 @@
     'nth': 'packs/nth.js',
     'numlinebench': 'packs/numlinebench.js',
     'numtheory': 'packs/numtheory.js',
+    'optbench': 'packs/optbench.js',
     'optimize': 'packs/optimize.js',
     'pairbench': 'packs/pairbench.js',
     'piece': 'packs/piece.js',
@@ -88,6 +90,7 @@
     'solid': 'packs/solid.js',
     'solidbench': 'packs/solidbench.js',
     'solidnet': 'packs/solidnet.js',
+    'sortbench': 'packs/sortbench.js',
     'statbench': 'packs/statbench.js',
     'swapbench': 'packs/swapbench.js',
     'symmetry': 'packs/symmetry.js',
@@ -104,6 +107,7 @@
     'variable': 'packs/variable.js',
     'vennbench': 'packs/vennbench.js',
     'vertbench': 'packs/vertbench.js',
+    'weighbench': 'packs/weighbench.js',
     'whatif': 'packs/whatif.js',
   };
   // packs:end
