@@ -546,19 +546,6 @@ t('平行、垂直、点在线段上：精确判定', () => {
   truthy(Fg.parallel(s1, s2)); truthy(Fg.perpendicular(s1, s3)); truthy(Fg.onSegment({ x: Q(1), y: Q(1, 2) }, s1)); truthy(!Fg.onSegment({ x: Q(3), y: Q(3, 2) }, s1));
 });
 t('图形是一种值：注册合格，存档往返后相等', () => { eq(U.lintKind(U.KINDS.fig), []); truthy(U.KINDS.fig.eq(U.KINDS.fig.parse(U.KINDS.fig.serialize(R34)), R34)); });
-t('器材连线：三角形 → 旋转 90° → 和原图比，全等；量一量面积 6', () => {
-  const sc = W.blank(); const a = W.add(sc, 'ftri', 0, 0, {}); const x = W.add(sc, 'xform', 0, 0, { mode: 1 }); const r = W.add(sc, 'figrel', 0, 0, {}); const m = W.add(sc, 'figmeasure', 0, 0, {});
-  truthy(W.act(sc, { t: 'link', from: a, fromPort: 'f', to: x, toPort: 'f' }).ok);
-  truthy(W.act(sc, { t: 'link', from: a, fromPort: 'f', to: r, toPort: 'a' }).ok); truthy(W.act(sc, { t: 'link', from: x, fromPort: 'f', to: r, toPort: 'b' }).ok);
-  truthy(W.act(sc, { t: 'link', from: x, fromPort: 'f', to: m, toPort: 'f' }).ok);
-  const D = W.evaluate(sc); eq(D[r].out.cong.data, true); eq(U.showVal(D[m].out.area), '6'); eq(U.showVal(D[m].out.right), '1');
-});
-t('器材连线：放大 3/2 倍，相似比 3/2，不全等；面积可以接进运算器继续算', () => {
-  const sc = W.blank(); const a = W.add(sc, 'fquad', 0, 0, {}); const x = W.add(sc, 'xform', 0, 0, { mode: 5, k: 3, kd: 2 }); const r = W.add(sc, 'figrel', 0, 0, {});
-  W.act(sc, { t: 'link', from: a, fromPort: 'f', to: x, toPort: 'f' }); W.act(sc, { t: 'link', from: a, fromPort: 'f', to: r, toPort: 'a' }); W.act(sc, { t: 'link', from: x, fromPort: 'f', to: r, toPort: 'b' });
-  const o = W.add(sc, 'op', 0, 0, { op: 2 }); W.act(sc, { t: 'link', from: a, fromPort: 'area', to: o, toPort: 'a' }); W.act(sc, { t: 'link', from: a, fromPort: 'area', to: o, toPort: 'b' });
-  const D = W.evaluate(sc); eq(D[r].out.cong.data, false); eq(D[r].out.sim.data, true); eq(U.showVal(D[r].out.k), '3/2'); eq(U.showVal(D[o].out.r), '144');
-});
 t('图形不能接进只收数的口：连线被拒绝并说明原因', () => {
   const sc = W.blank(); const a = W.add(sc, 'ftri', 0, 0, {}); const o = W.add(sc, 'op', 0, 0, {});
   const r = W.act(sc, { t: 'link', from: a, fromPort: 'f', to: o, toPort: 'a' }); eq(r.ok, false); truthy(r.why.length > 0);
@@ -570,15 +557,15 @@ t('器材 id 不能重名：重名时保留原来的，并记录错误', () => {
 t('所有内置器材包加载时没有重名', () => eq(U.packErrors.filter((m) => /器材 id 重复/.test(m) && !/：num（/.test(m)), []));
 console.log('旧几何器材输出图形');
 const link2 = (sc, a, ap, b, bp) => truthy(W.act(sc, { t: 'link', from: a, fromPort: ap, to: b, toPort: bp }).ok, ap + '→' + bp);
-t('长方形 6×4 → 量图形：面积 24，4 个直角；旋转后与原图全等', () => {
-  const sc = W.blank(); const r = W.add(sc, 'rect', 0, 0, {}); const m = W.add(sc, 'figmeasure', 0, 0, {}); const x = W.add(sc, 'xform', 0, 0, { mode: 1 }); const q = W.add(sc, 'figrel', 0, 0, {});
-  link2(sc, r, 'f', m, 'f'); link2(sc, r, 'f', x, 'f'); link2(sc, r, 'f', q, 'a'); link2(sc, x, 'f', q, 'b');
-  const D = W.evaluate(sc); eq(U.showVal(D[m].out.area), '24'); eq(U.showVal(D[m].out.right), '4'); eq(D[q].out.cong.data, true);
+t('长方形 6×4 → 量图形：面积 24，4 个直角', () => {
+  const sc = W.blank(); const r = W.add(sc, 'rect', 0, 0, {}); const m = W.add(sc, 'figmeasure', 0, 0, {});
+  link2(sc, r, 'f', m, 'f');
+  const D = W.evaluate(sc); eq(U.showVal(D[m].out.area), '24'); eq(U.showVal(D[m].out.right), '4');
 });
-t('平行四边形剪拼：剪拼前后不全等，但面积相等（面积是不变量）', () => {
-  const sc = W.blank(); const pg = W.add(sc, 'parallelogram', 0, 0, {}); const m1 = W.add(sc, 'figmeasure', 0, 0, {}); const m2 = W.add(sc, 'figmeasure', 0, 0, {}); const q = W.add(sc, 'figrel', 0, 0, {});
-  link2(sc, pg, 'f', m1, 'f'); link2(sc, pg, 'cut', m2, 'f'); link2(sc, pg, 'f', q, 'a'); link2(sc, pg, 'cut', q, 'b');
-  const D = W.evaluate(sc); eq(U.showVal(D[m1].out.area), U.showVal(D[m2].out.area)); eq(U.showVal(D[m1].out.area), '15'); eq(D[q].out.cong.data, false);
+t('平行四边形剪拼：剪拼前后面积相等（面积是不变量），直角从 0 个变成 4 个', () => {
+  const sc = W.blank(); const pg = W.add(sc, 'parallelogram', 0, 0, {}); const m1 = W.add(sc, 'figmeasure', 0, 0, {}); const m2 = W.add(sc, 'figmeasure', 0, 0, {});
+  link2(sc, pg, 'f', m1, 'f'); link2(sc, pg, 'cut', m2, 'f');
+  const D = W.evaluate(sc); eq(U.showVal(D[m1].out.area), U.showVal(D[m2].out.area)); eq(U.showVal(D[m1].out.area), '15');
   eq(U.showVal(D[m2].out.right), '4'); eq(U.showVal(D[m1].out.right), '0');
 });
 t('折纸的纸片是图形：4×4 的正方形', () => { const sc = W.blank(); const f = W.add(sc, 'fold', 0, 0, {}); eq(U.Fig.show(W.evaluate(sc)[f].out.f.data), '四边形 (0, 0) (4, 0) (4, 4) (0, 4)'); });
@@ -3161,8 +3148,8 @@ t('可能性：列出所有情况，两个骰子 36 种里和为 7 的有 6 种�
 console.log('旧题搬到操作台');
 t('搬题：每个要搬的 id 都找到了题；搬过去的题器材架上只有操作台，开场台面上就有它', () => {
   eq(U.benchMigrateMissing, [], '找不到的 id');
-  truthy(U.benchMigrated.length >= 155, '至少搬了 155 道');
-  const BENCH = ['areamodel', 'balancebench', 'numlinebench', 'ratiobench', 'coordbench', 'blocksbench', 'termsbench', 'swapbench', 'systembench', 'gapbench', 'meanbench', 'tapebench', 'vennbench', 'travelbench', 'mulbench', 'fastbench', 'statbench', 'chancebench', 'clockbench', 'groupbench', 'solidbench', 'conjbench', 'fitbench', 'pairbench', 'tribench'];
+  truthy(U.benchMigrated.length >= 179, '至少搬了 179 道');
+  const BENCH = ['areamodel', 'balancebench', 'numlinebench', 'ratiobench', 'coordbench', 'blocksbench', 'termsbench', 'swapbench', 'systembench', 'gapbench', 'meanbench', 'tapebench', 'vennbench', 'travelbench', 'mulbench', 'fastbench', 'statbench', 'chancebench', 'clockbench', 'groupbench', 'solidbench', 'conjbench', 'fitbench', 'pairbench', 'tribench', 'circlebench', 'gridbench'];
   for (const id of U.benchMigrated) {
     const p = U.problems.find((x) => x.id === id), s = p.build();
     truthy(p.shelf.length === 1 && BENCH.includes(p.shelf[0]), id + ' 的器材架');

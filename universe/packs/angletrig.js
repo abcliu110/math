@@ -44,29 +44,6 @@
       },
 
       // ---------------- 圆周角：圆心角 → 圆周角（同弧所对的圆周角是圆心角的一半）----------------
-      'circle-angle': {
-        workspaceRole: 'none',
-        handles: true,
-        essence: ['E5'],
-        label: '圆周角', prefix: '周', group: '图形', grades: [9, 9], alias: ['圆心角', '圆周角', '同弧'],
-        props: {
-          center_angle: { type: 'int', label: '圆心角（度）', default: 60, min: 0, max: 360 },
-          label: { type: 'text', label: '标签', default: '' },
-        },
-        lint: { minProps: 2, why: '圆周角器材只有“圆心角”和标签两个属性' },
-        outputs: { inscribed: { dim: null, kind: 'num', label: '圆周角（度）' } },
-        icon: () => K.circle(32, 24, 16, { stroke: 'var(--ink)', w: 1.5 }) + K.line(32, 24, 22, 40, { w: 1.5 }) + K.line(32, 24, 46, 40, { w: 1.5 }),
-        size: () => [200, 120],
-        compute: (c) => {
-          const d = c.props.center_angle;
-          const half = Q.div(Q(d), Q(2));
-          c.say('ok', '圆周角是圆心角的一半：' + d + '° ÷ 2 = ' + Q.show(half) + '°');
-          return { inscribed: U.val('num', half) };
-        },
-        badge: (c) => (c.out && c.out.inscribed ? Q.show(c.out.inscribed.data) + '°' : ''),
-        draw: (c) => K.text(c.w / 2, c.h / 2 + 6, c.out && c.out.inscribed ? '圆周角 ' + Q.show(c.out.inscribed.data) + '°' : '…', { size: 16, weight: 700 }),
-      },
-
       // ---------------- 特殊角的三角函数：30° / 45° / 60° → sin、cos、tan（精确值）----------------
       'trig-table': {
         workspaceRole: 'none',

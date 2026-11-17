@@ -57,6 +57,10 @@ module.exports = [
       ['mpqb','meter',{'digits':0,'label':'连一连：握了几次'}],
       ['trb','tribench',{'a':3,'b':4,'c':5}],
       ['mtrb','meter',{'digits':0,'label':'三角形：周长'}],
+      ['cib','circlebench',{'mode':1,'r':6,'theta':90}],
+      ['mcib','meter',{'digits':0,'label':'圆：扇形面积'}],
+      ['gwb','gridbench',{'mode':1,'px':1,'py':0,'rot':90}],
+      ['mgwb','meter',{'digits':0,'label':'坐标：转过去的 y'}],
     ],
     links: [
       ['am','mam','v','area'],
@@ -84,6 +88,8 @@ module.exports = [
       ['fzb','mfzb','v','py'],
       ['pqb','mpqb','v','pairs'],
       ['trb','mtrb','v','perim'],
+      ['cib','mcib','v','sector'],
+      ['gwb','mgwb','v','qy'],
     ],
   },
 ];

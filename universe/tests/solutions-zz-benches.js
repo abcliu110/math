@@ -1,7 +1,7 @@
 /* 搬到操作台上的旧题的参考解（problems/zz-benches.js）。文件名 zz 开头：排在各年级的参考解后面加载，盖掉原来“接运算器”的解法。 */
 'use strict';
 const S = (role) => (o) => (h) => { const e = h.role(role); for (const k of Object.keys(o)) h.set(e, k, o[k]); };
-const n = S('n'), k = S('k'), r = S('r'), m = S('m'), c = S('c'), t = S('t'), s = S('s'), gp = S('g'), b = S('b'), d = S('d'), ch = S('h'), ck = S('k'), gq = S('q'), so = S('o'), cj = S('j'), fz = S('z'), pq = S('p'), tx = S('x');
+const n = S('n'), k = S('k'), r = S('r'), m = S('m'), c = S('c'), t = S('t'), s = S('s'), gp = S('g'), b = S('b'), d = S('d'), ch = S('h'), ck = S('k'), gq = S('q'), so = S('o'), cj = S('j'), fz = S('z'), pq = S('p'), tx = S('x'), ci = S('i'), gw = S('w');
 module.exports = {
   'g1-split-merge-core': n({ a: 2, n: 3 }),
   'g1-split-minus-trap': n({ s: -1, n: 2 }),
@@ -43,6 +43,16 @@ module.exports = {
   'g7-quadrant-core': c({ ax: -2, ay: 3 }),
   'g7-symmetry-x-axis-trap': c({ bx: 3, by: 2 }),
   'g7-translate-down-trap': c({ ay: -1 }),
+  // 第二十三批
+  'gap-pair-pos-core': gw({ px: 4, py: 3 }), 'g5-pair-pos-core': gw({ px: 4, py: 3 }), 'g5-pair-pos-trap': gw({ px: 3, py: 4 }),
+  'gap-rotate-trap': gw({ rot: 90 }), 'g5-rotate-core': gw({ rot: 90 }), 'g5-rotate-trap': gw({ ox: 1, oy: 1, rot: 180 }), 'g9-rotate-core': gw({ rot: 180 }), 'g9-rotate-trap': gw({ rot: 90 }),
+  'g4-translate-congruent-core'(h) { const e = h.role('w'); h.set(e, 'tm', 1); h.set(e, 'dx', 3); h.set(e, 'dy', 1); h.set(e, 'cmp', true); },
+  'g8-congruent-sss-core': gw({ cmp: true }), 'g8-similar-not-congruent-trap': gw({ cmp: true }), 'g9-similar-scale-core'(h) { const e = h.role('w'); h.set(e, 'tm', 2); h.set(e, 'k', 2); h.set(e, 'cmp', true); },
+  'g9-similar-scale-trap'(h) { const e = h.role('w'); h.set(e, 'tm', 2); h.set(e, 'k', 2); h.set(e, 'cmp', true); }, 'g9-similar-tri-core': gw({ qy3: 0 }),
+  // 第二十二批
+  'g6-circle-diameter-trap': ci({ r: 5 }), 'circle-r5': ci({ r: 5 }), 'g6-cylinder-volume-core': ci({ r: 2, h: 5 }), 'g6-cone-volume-trap': ci({ r: 3, h: 4 }),
+  'g9-sector-core'(h) { const e = h.role('i'); h.set(e, 'r', 6); h.set(e, 'theta', 90); }, 'g9-sector-trap'(h) { const e = h.role('i'); h.set(e, 'r', 6); h.set(e, 'theta', 90); },
+  'g9-circle-core': ci({ d: 5 }), 'g9-circle-trap': ci({ d: 3 }), 'mt-circle-angle-core': ci({ ca: 60 }), 'mt-circle-angle-trap': ci({ ca: 120 }),
   // 第二十一批
   'g1-triangle-sides-trap'(h) { const e = h.role('x'); h.set(e, 'c', 6); h.set(e, 'c', 5); }, 'g8-isosceles-perimeter-core': tx({ c: 6 }), 'g8-isosceles-base-trap': tx({ c: 4 }),
   'g8-pythagoras-core': tx({ c: 13 }), 'g8-pythagoras-trap': tx({ c: 10 }), 'triangle-348'(h) { const e = h.role('x'); h.set(e, 'c', 6); h.set(e, 'c', 5); },

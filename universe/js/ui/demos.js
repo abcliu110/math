@@ -675,5 +675,30 @@
     },
   };
 
+  // 圆：扇形占整圆的几分之几
+  D.circlebench = {
+    caps: ['半径 6 的圆：面积 3.14 × 6 × 6 = 113.04', '圆心角 90°：占整圆的 90 ÷ 360 = 1/4', '扇形面积 113.04 × 1/4 = 28.26', '弧长是周长的 1/4，不是面积'],
+    draw(st) {
+      const cx = 110, cy = 92, r = 70; let s = Ci(cx, cy, r, '#eef3fb', { s: INK, sw: 2 });
+      if (st >= 1) s += '<path d="M' + cx + ' ' + cy + ' L' + cx + ' ' + (cy - r) + ' A' + r + ' ' + r + ' 0 0 1 ' + (cx + r) + ' ' + cy + ' Z" fill="' + A + '" stroke="' + INK + '"/>';
+      s += Ln(cx, cy, cx + r, cy, { w: 2, s: RD });
+      s += T(270, 90, ['113.04', '1/4', '28.26', '弧长 9.42'][st], { s: 16, w: 700, f: P });
+      return s;
+    },
+  };
+
+  // 坐标与变换：绕原点转 90°
+  D.gridbench = {
+    caps: ['点 P 在 (1, 0)', '绕原点 O 逆时针转 90°', 'OP 和 OP′ 一样长，夹角 90°', 'P′ 在 (0, 1)'],
+    draw(st) {
+      const ox = 120, oy = 120, u = 50; let s = Ln(40, oy, 240, oy) + Ln(ox, 20, ox, 170);
+      s += Ci(ox, oy, 4, INK) + Ci(ox + u, oy, 6, A, { s: INK });
+      if (st >= 1) s += '<path d="M' + (ox + u) + ' ' + oy + ' A' + u + ' ' + u + ' 0 0 0 ' + ox + ' ' + (oy - u) + '" fill="none" stroke="' + B + '" stroke-width="2" stroke-dasharray="4 3"/>';
+      if (st >= 2) s += Ci(ox, oy - u, 6, B, { s: INK }) + Ln(ox, oy, ox + u, oy, { s: DIM }) + Ln(ox, oy, ox, oy - u, { s: DIM });
+      s += T(290, 90, ['(1, 0)', '逆时针 90°', '一样长', '(0, 1)'][st], { s: 16, w: 700, f: P });
+      return s;
+    },
+  };
+
   UI.Demo = D;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

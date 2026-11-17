@@ -79,41 +79,6 @@
       },
 
       // ---------------- 变换器 ----------------
-      xform: {
-        workspaceRole: 'none',
-        handles: true,
-        essence: ['E5'],
-        label: '图形变换', prefix: '变换', group: '图形', grades: [4, 9],
-        props: {
-          mode: { type: 'choice', label: '怎么变', default: 0, choices: ['平移', '旋转 90°', '旋转 180°', '关于 x 轴对称', '关于 y 轴对称', '以原点放大缩小'] },
-          dx: C(-10, 10, 2, '向右移'), dy: C(-10, 10, 1, '向上移'),
-          k: C(1, 5, 2, '放大倍数（分子）'), kd: C(1, 5, 1, '放大倍数（分母）'),
-        },
-        inputs: { f: { kind: 'fig', label: '图形' } },
-        outputs: { f: { dim: null, kind: 'fig', label: '变换后' } },
-        icon: () => '<path d="M8 34 L24 34 L8 18 Z" fill="none" stroke="var(--ink)" stroke-width="1.5"/><path d="M36 26 L52 26 L36 10 Z" fill="rgba(59,155,255,.2)" stroke="var(--ink)" stroke-width="1.5"/>',
-        size: () => [170, 170],
-        compute: (c) => {
-          const f = figOf(c, 'f'); if (!f) { c.say('info', '接一个图形进来'); return {}; }
-          const O = { x: Q(0), y: Q(0) }, p = c.props;
-          let g;
-          if (p.mode === 0) g = F.translate(f, Q(p.dx), Q(p.dy));
-          else if (p.mode === 1) g = F.rotate90(f, O, 1);
-          else if (p.mode === 2) g = F.rotate90(f, O, 2);
-          else if (p.mode === 3) g = F.reflect(f, O, { x: Q(1), y: Q(0) });
-          else if (p.mode === 4) g = F.reflect(f, O, { x: Q(0), y: Q(1) });
-          else g = F.scale(f, O, Q(p.k, p.kd));
-          return { f: fig(g) };
-        },
-        draw: (c) => {
-          const src = (c.d && c.d.inp && (c.d.inp.f || []).find((x) => x && x.kind === 'fig')) || null;
-          const g = c.out.f ? c.out.f.data : null, b = box(g || (src && src.data));
-          const bb = src ? box(src.data) : b, m = Math.max(b[2], bb[2]), bx = [-m, -m, m, m];
-          return '<g transform="translate(6,2)">' + (src ? F.svg(src.data, c.w - 12, c.h - 6, { box: bx, stroke: 'var(--dim, #999)', fill: 'none' }) : '') +
-            (g ? F.svg(g, c.w - 12, c.h - 6, { box: bx, grid: false }) : '') + '</g>';
-        },
-      },
-
       // ---------------- 量一量 ----------------
       figmeasure: {
         workspaceRole: 'none',
@@ -157,31 +122,6 @@
       },
 
       // ---------------- 图形关系 ----------------
-      figrel: {
-        workspaceRole: 'none',
-        handles: true,
-        essence: ['E5', 'E1'],
-        label: '图形关系', prefix: '关系', group: '图形', grades: [4, 9],
-        props: {
-          ask: { type: 'choice', label: '看什么', default: 0, choices: ['全等和相似', '只看全等', '只看相似'] },
-          showMap: { type: 'bool', label: '显示对应关系', default: true },
-          note: { type: 'text', label: '备注', default: '' },
-        },
-        inputs: { a: { kind: 'fig', label: '图形 甲' }, b: { kind: 'fig', label: '图形 乙' } },
-        outputs: { cong: { dim: null, kind: 'bool', label: '全等' }, sim: { dim: null, kind: 'bool', label: '相似' }, k: { dim: null, kind: 'num', label: '相似比（乙:甲）' } },
-        icon: () => K.text(32, 30, '≅', { size: 26, weight: 700 }),
-        size: () => [170, 120],
-        compute: (c) => {
-          const a = figOf(c, 'a'), b = figOf(c, 'b'); if (!a || !b) { c.say('info', '接两个图形进来'); return {}; }
-          const s = F.similar(a, b), cong = F.congruent(a, b);
-          const out = { cong: U.val('bool', cong), sim: U.val('bool', s.ok) };
-          if (s.ok) { const r = U.Real.sqrt(s.k2); out.k = r && r.b.n === 0n ? num(r.a) : num(Q.fromNumber(+Math.sqrt(Q.num(s.k2)).toFixed(6)), { exact: false }); }
-          c.say(cong ? 'ok' : s.ok ? 'info' : 'warn', cong ? '对应边都相等：全等' : s.ok ? '对应边成同一个比：相似但不全等' : '找不到一种对应关系让各边成比例：不相似');
-          return out;
-        },
-        draw: (c) => K.text(c.w / 2, c.h / 2 - 6, c.out.cong ? (c.out.cong.data ? '全等 ≅' : c.out.sim && c.out.sim.data ? '相似 ∼' : '不相似') : '—', { size: 16, weight: 700 }) +
-          (c.out.k ? K.text(c.w / 2, c.h / 2 + 16, '相似比 ' + U.showVal(c.out.k), { size: 12 }) : ''),
-      },
     },
   });
 })(typeof globalThis !== 'undefined' ? globalThis : window);

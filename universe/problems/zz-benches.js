@@ -1,4 +1,4 @@
-/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，二十一批共 155 道）。
+/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，二十三批共 179 道）。
  * 这些题原来的做法是“放数字、接运算器、看读数”：学生在搭计算流程。这里按 id 把它们换成在操作台上直接动手：
  * 题目的编号、标题、年级、知识点、道理（why）都不变，换的是器材架、开场的台面、里程碑和提示。
  * 这个文件排在所有题目文件后面加载（文件名 zz 开头），找不到的 id 会记在 U.benchMigrateMissing 里（测试会查）。 */
@@ -7,9 +7,9 @@
   const U = G.U, W = U.World;
   const one = (type, role, props) => () => { const s = W.blank(); const id = W.add(s, type, 40, 50, props); s.entities[id].role = role; return s; };
   const ms = (role) => (id, say, score, port, value, hints) => ({ id, say, score, when: { role, port, op: '=', value: String(value) }, hints });
-  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s'), GP = ms('g'), B = ms('b'), D = ms('d'), K2 = ms('k'), Gq = ms('q'), So = ms('o'), Cj = ms('j'), Z = ms('z'), H2 = ms('h'), Pq = ms('p'), Tr = ms('x');
+  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s'), GP = ms('g'), B = ms('b'), D = ms('d'), K2 = ms('k'), Gq = ms('q'), So = ms('o'), Cj = ms('j'), Z = ms('z'), H2 = ms('h'), Pq = ms('p'), Tr = ms('x'), Ci = ms('i'), Gw = ms('w');
   const H = (id, say, score, when, hints) => ({ id, say, score, when, hints });   // 条件是一个范围（频率稳在某个区间）时用函数
-  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props), bb = (props) => one('balancebench', 'b', props), sb = (props) => one('statbench', 'd', props), ch = (props) => one('chancebench', 'h', props), ck = (props) => one('clockbench', 'k', props), gq = (props) => one('groupbench', 'q', props), sd = (props) => one('solidbench', 'o', props), cj = (props) => one('conjbench', 'j', props), fb2 = (props) => one('fitbench', 'z', props), pb2 = (props) => one('pairbench', 'p', props), tb3 = (props) => one('tribench', 'x', props);
+  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props), bb = (props) => one('balancebench', 'b', props), sb = (props) => one('statbench', 'd', props), ch = (props) => one('chancebench', 'h', props), ck = (props) => one('clockbench', 'k', props), gq = (props) => one('groupbench', 'q', props), sd = (props) => one('solidbench', 'o', props), cj = (props) => one('conjbench', 'j', props), fb2 = (props) => one('fitbench', 'z', props), pb2 = (props) => one('pairbench', 'p', props), tb3 = (props) => one('tribench', 'x', props), ci = (props) => one('circlebench', 'i', props), gd = (props) => one('gridbench', 'w', props);
   const MOVES = {
     // ---- 数轴 ----
     'g1-split-merge-core': { shelf: ['numlinebench'], build: nl({ from: 0, to: 10, a: 0, s: 1, n: 0 }),
@@ -535,6 +535,85 @@
     'g2-right-angle-core': { shelf: ['tribench'], build: tb3({ mode: 1, A: 30, B: 45 }),
       hook: '三角形里一个角是 30°，另一个角是 45°。三个角加起来是 180°。拖角 B，让第三个角变成直角（90°）。',
       milestones: [Tr('right', '第三个角是 90°，就是直角', 8, 'C', 90, ['180 − 30 − 90 = 60。', '把角 B 拖到 60。', '角 C 变成 90°。'])], goal: ['right'] },
+    // ======== 第二十二批：圆，在“圆”操作台上拖 ========
+    'g6-circle-diameter-trap': { shelf: ['circlebench'], build: ci({ mode: 0, r: 3 }),
+      hook: '题目给的是直径 10 厘米。拖红色的半径：半径是直径的一半。拖到对的半径，再读面积。',
+      milestones: [Ci('area', '半径 5：面积 = 78.5', 6, 'area', '157/2', ['直径 10，半径是 5。', '拖到 5。', '3.14 × 5 × 5 = 78.5。'])], goal: ['area'],
+      traps: [{ id: 'diam', wrong: '把直径 10 当成了半径：面积变成 314。半径是直径的一半。', when: { role: 'i', port: 'area', op: '=', value: '314' } }] },
+    'circle-r5': { shelf: ['circlebench'], build: ci({ mode: 0, r: 2 }),
+      hook: '把半径拖到 5，读出面积和周长。看看面积为什么是 3.14 × 5 × 5。',
+      milestones: [Ci('a', '面积 = 78.5', 5, 'area', '157/2', ['拖红色的半径到 5。', '3.14 × 5 × 5。', '78.5。']), Ci('c', '周长 = 31.4', 3, 'c', '157/5', ['周长 = 2 × π × r。', '2 × 3.14 × 5。', '31.4。'])], goal: ['a', 'c'] },
+    'g6-cylinder-volume-core': { shelf: ['circlebench'], build: ci({ mode: 2, r: 1, h: 1, cone: false }),
+      hook: '圆柱的体积 = 底面积 × 高。拖底面半径到 2、高到 5，看体积。',
+      milestones: [Ci('ans', '体积是 62.8 立方厘米', 6, 'vol', '314/5', ['底面半径 2，高 5。', '底面积 3.14 × 2 × 2 = 12.56。', '12.56 × 5 = 62.8。'])], goal: ['ans'] },
+    'g6-cone-volume-trap': { shelf: ['circlebench'], build: ci({ mode: 2, r: 1, h: 1, cone: true }),
+      hook: '底面半径 3、高 4 的圆锥。拖好半径和高，再点“圆柱”比一比：圆锥是等底等高圆柱的几分之几？',
+      milestones: [Ci('ans', '圆锥体积是 37.68 立方厘米', 6, 'vol', '942/25', ['半径 3，高 4。', '圆柱是 113.04。', '113.04 ÷ 3 = 37.68。'])], goal: ['ans'] },
+    'g9-sector-core': { shelf: ['circlebench'], build: ci({ mode: 1, r: 3, theta: 360 }),
+      hook: '半径 6、圆心角 90° 的扇形。先把半径拖到 6，看整圆面积；再拖圆心角到 90°。',
+      milestones: [Ci('area', '整圆面积 113.04', 3, 'area', '2826/25', ['拖半径到 6。', '3.14 × 6 × 6。', '113.04。']), Ci('sector', '扇形面积 28.26', 5, 'sector', '1413/50', ['90 ÷ 360 = 1/4。', '113.04 × 1/4。', '28.26。'])], goal: ['sector'] },
+    'g9-sector-trap': { shelf: ['circlebench'], build: ci({ mode: 1, r: 3, theta: 360 }),
+      hook: '圆的周长和面积都能算出来。扇形面积要用哪一个？拖半径到 6、圆心角到 90°，看看右边的扇形面积和弧长哪个是哪个。',
+      milestones: [Ci('area', '整圆面积 113.04', 3, 'area', '2826/25', ['拖半径到 6。', '3.14 × 6 × 6。', '113.04。']), Ci('sector', '扇形面积 28.26（不是弧长 9.42）', 5, 'sector', '1413/50', ['面积要用面积乘。', '113.04 × 1/4。', '28.26。'])], goal: ['sector'] },
+    'g9-circle-core': { shelf: ['circlebench'], build: ci({ mode: 3, r: 3, d: 1 }),
+      hook: '半径 3 的圆，圆心到直线的距离是 5。拖蓝色的直线往下，让 d = 5。直线和圆是什么关系？',
+      milestones: [Ci('answer', 'd = 5 > r = 3：相离', 6, 'rel', 0, ['把直线往下拖。', '拖到 d = 5。', 'd 比 r 大，碰不到。'])], goal: ['answer'] },
+    'g9-circle-trap': { shelf: ['circlebench'], build: ci({ mode: 3, r: 3, d: 1 }),
+      hook: '半径 3，圆心到直线的距离也是 3。拖直线到 d = 3：是相切还是相交？',
+      milestones: [Ci('answer', 'd = r：相切', 6, 'rel', 1, ['拖到 d = 3。', 'd 和 r 一样。', '只碰到一个点。'])], goal: ['answer'],
+      traps: [{ id: 'far', wrong: '拖过头了：d 比 r 大是相离。', when: { role: 'i', port: 'rel', op: '=', value: '0' } }] },
+    'mt-circle-angle-core': { shelf: ['circlebench'], build: ci({ mode: 4, r: 6, ca: 100 }),
+      hook: '同一条弧所对的圆心角是 60°。拖弧的端点 B，让圆心角变成 60°。圆周角是多少度？',
+      milestones: [Ci('half', '圆周角是 30°', 6, 'ins', 30, ['拖 B 让圆心角变小。', '圆心角 60°。', '圆周角是一半：30°。'])], goal: ['half'] },
+    'mt-circle-angle-trap': { shelf: ['circlebench'], build: ci({ mode: 4, r: 6, ca: 60 }),
+      hook: '同一条弧所对的圆心角是 120°。有人说圆周角也是 120°。拖弧的端点，让圆心角是 120°，看看圆周角。',
+      milestones: [Ci('half', '圆周角是 60°，不是 120°', 6, 'ins', 60, ['拖 B 让圆心角变大。', '圆心角 120°。', '一半是 60°。'])], goal: ['half'] },
+    // ======== 第二十三批：数对、旋转、平移与位似、全等与相似，在“坐标与变换”上做 ========
+    'gap-pair-pos-core': { shelf: ['gridbench'], build: gd({ mode: 0, px: 1, py: 1 }),
+      hook: '用数对表示位置时，先写第几列，再写第几行。把点 P 拖到第 4 列第 3 行，看数对是几。',
+      milestones: [H('point', '得到点 (4, 3)', 6, (w) => w.some('gridbench', (e) => w.num(e, 'px') === 4 && w.num(e, 'py') === 3), ['列是左右，数到 4。', '行是上下，数到 3。', '数对 (4, 3)。'])], goal: ['point'] },
+    'g5-pair-pos-core': { shelf: ['gridbench'], build: gd({ mode: 0, px: 1, py: 1 }),
+      hook: '教室里的座位常用“第几列、第几行”来表示。把点 P 拖到第 4 列第 3 行。',
+      milestones: [H('point', '得到点 (4, 3)', 6, (w) => w.some('gridbench', (e) => w.num(e, 'px') === 4 && w.num(e, 'py') === 3), ['先数列：往右 4 格。', '再数行：往上 3 格。', '(4, 3)。'])], goal: ['point'] },
+    'g5-pair-pos-trap': { shelf: ['gridbench'], build: gd({ mode: 0, px: 1, py: 1 }),
+      hook: '第 3 列第 4 行和第 4 列第 3 行，是同一个点吗？把 P 拖到第 3 列第 4 行。',
+      milestones: [H('point', '得到点 (3, 4)', 6, (w) => w.some('gridbench', (e) => w.num(e, 'px') === 3 && w.num(e, 'py') === 4), ['列是左右：往右 3 格。', '行是上下：往上 4 格。', '(3, 4)。'])], goal: ['point'],
+      traps: [{ id: 'swap-rc', wrong: '把列和行颠倒了：这是 (4, 3)。先数列（左右），再数行（上下）。', when: (w) => w.some('gridbench', (e) => w.num(e, 'px') === 4 && w.num(e, 'py') === 3) }] },
+    'gap-rotate-trap': { shelf: ['gridbench'], build: gd({ mode: 1, px: 1, py: 0, ox: 0, oy: 0 }),
+      hook: '从 (1, 0) 出发，绕原点逆时针转 90°。点会停在原处吗？点“逆时针 90°”看看。',
+      milestones: [H('point', '旋转后得到 (0, 1)', 6, (w) => w.some('gridbench', (e) => w.num(e, 'qx') === 0 && w.num(e, 'qy') === 1), ['点“逆时针 90°”。', '从右边转到上面。', '(0, 1)。'])], goal: ['point'] },
+    'g5-rotate-core': { shelf: ['gridbench'], build: gd({ mode: 1, px: 1, py: 0, ox: 0, oy: 0 }),
+      hook: '一根小棒的一端在原点，另一端在 (1, 0)。绕原点逆时针转 90°，另一端会到哪里？',
+      milestones: [H('point', '旋转后得到 (0, 1)', 6, (w) => w.some('gridbench', (e) => w.num(e, 'qx') === 0 && w.num(e, 'qy') === 1), ['点“逆时针 90°”。', '小棒从横的变成竖的。', '(0, 1)。'])], goal: ['point'] },
+    'g5-rotate-trap': { shelf: ['gridbench'], build: gd({ mode: 1, px: 2, py: 1, ox: 0, oy: 0 }),
+      hook: '点 (2, 1) 绕 (1, 1) 转 180°。旋转的中心不一定是原点：先把中心 O 拖到 (1, 1)，再点“180°”。',
+      milestones: [H('point', '旋转后得到 (0, 1)', 6, (w) => w.some('gridbench', (e) => w.num(e, 'qx') === 0 && w.num(e, 'qy') === 1), ['把 O 拖到 (1, 1)。', '点“180°”。', 'P 在 O 右边 1 格，转过去在左边 1 格。'])], goal: ['point'],
+      traps: [{ id: 'wrong-center', wrong: '这是绕原点转的：中心是 (1, 1)，先把 O 拖过去。', when: (w) => w.some('gridbench', (e) => w.num(e, 'qx') === -2 && w.num(e, 'qy') === -1) }] },
+    'g9-rotate-core': { shelf: ['gridbench'], build: gd({ mode: 1, px: 3, py: 1, ox: 0, oy: 0 }),
+      hook: '关于原点中心对称，就是绕原点旋转 180°。(3, 1) 对称过去是哪一点？',
+      milestones: [H('point', '中心对称得到 (−3, −1)', 6, (w) => w.some('gridbench', (e) => w.num(e, 'qx') === -3 && w.num(e, 'qy') === -1), ['点“180°”。', '横坐标、纵坐标都变成相反数。', '(−3, −1)。'])], goal: ['point'] },
+    'g9-rotate-trap': { shelf: ['gridbench'], build: gd({ mode: 1, px: 1, py: 0, ox: 0, oy: 0 }),
+      hook: '旋转会改变点的位置吗？点 (1, 0) 绕原点逆时针转 90°，看 P′ 在哪。',
+      milestones: [H('point', '旋转 90° 后得到 (0, 1)', 6, (w) => w.some('gridbench', (e) => w.num(e, 'qx') === 0 && w.num(e, 'qy') === 1), ['点“逆时针 90°”。', 'P′ 不在原处。', '(0, 1)。'])], goal: ['point'] },
+    'g4-translate-congruent-core': { shelf: ['gridbench'], build: gd({ mode: 2, ax: 0, ay: 0, bx: 4, by: 0, cx: 0, cy: 3, tm: 0 }),
+      hook: '把三角形向右平移 3 格、向上平移 1 格。点“平移”，拖箭头尖到 (3, 1)；再点“比一比”：和原来一样吗？',
+      milestones: [H('move', '平移：右 3、上 1', 3, (w) => w.some('gridbench', (e) => e.props.tm === 1 && e.props.dx === 3 && e.props.dy === 1), ['点“平移”。', '拖蓝色箭头尖。', '到 (3, 1)。']), Gw('same', '平移后的图形和原来全等', 5, 'cong', 1, ['点“比一比”。', '三条边分别一样长。', '全等。'])], goal: ['same'] },
+    'g8-congruent-sss-core': { shelf: ['gridbench'], build: gd({ mode: 2, ax: 0, ay: 0, bx: 4, by: 0, cx: 0, cy: 3, tm: 3, qx1: -5, qy1: -5, qx2: -5, qy2: -1, qx3: -2, qy3: -5 }),
+      hook: '两个三角形的三条边分别对应相等，它们就全等。乙是转过来摆的。点“比一比”。',
+      milestones: [Gw('cong', '判断结果：全等', 6, 'cong', 1, ['点“比一比”。', '甲：3、4、5；乙：4、3、5。', '三边分别相等：全等。'])], goal: ['cong'] },
+    'g8-similar-not-congruent-trap': { shelf: ['gridbench'], build: gd({ mode: 2, ax: 0, ay: 0, bx: 4, by: 0, cx: 0, cy: 3, tm: 3, qx1: -6, qy1: -6, qx2: 2, qy2: -6, qx3: -6, qy3: 0 }),
+      hook: '乙三角形的每条边都是甲的 2 倍。它们的形状一样吗？大小一样吗？点“比一比”。',
+      milestones: [H('notcong', '相似但不全等：相似比 2', 6, (w) => w.some('gridbench', (e) => w.num(e, 'sim') === 1 && w.num(e, 'cong') === 0), ['点“比一比”。', '每条边都是 2 倍。', '形状一样，大小不一样。'])], goal: ['notcong'] },
+    'g9-similar-scale-core': { shelf: ['gridbench'], build: gd({ mode: 2, ax: 1, ay: 1, bx: 3, by: 1, cx: 1, cy: 2, tm: 0 }),
+      hook: '位似放大：每个点的坐标都乘同一个数。点“放大 2 倍”，再点“比一比”，看相似比。',
+      milestones: [Gw('scale', '相似比是 2', 6, 'k', 2, ['点“放大 2 倍”。', '点“比一比”。', '每条边都是 2 倍。'])], goal: ['scale'] },
+    'g9-similar-scale-trap': { shelf: ['gridbench'], build: gd({ mode: 2, ax: 1, ay: 1, bx: 3, by: 1, cx: 1, cy: 2, tm: 0 }),
+      hook: '“平移”和“放大”都能变出一个新三角形。哪一种才是位似放大？试一试，再比一比相似比。',
+      milestones: [Gw('scale', '相似比是 2', 6, 'k', 2, ['平移不改变大小。', '点“放大 2 倍”。', '再比一比。'])], goal: ['scale'],
+      traps: [{ id: 'shift', wrong: '相似比是 1：平移不改变大小，只是全等，不是位似放大。', when: { role: 'w', port: 'k', op: '=', value: '1' } }] },
+    'g9-similar-tri-core': { shelf: ['gridbench'], build: gd({ mode: 2, ax: -6, ay: 2, bx: -2, by: 2, cx: -6, cy: 5, tm: 3, qx1: -6, qy1: -6, qx2: 2, qy2: -6, qx3: -6, qy3: -2, cmp: true }),
+      hook: '甲是 3、4、5 的三角形。乙的一条直角边是 8。拖乙的第三个顶点（左上那个），让乙和甲相似。相似比是几？',
+      milestones: [Gw('sim', '两个三角形相似', 4, 'sim', 1, ['直角边要成同一个比例。', '8 ÷ 4 = 2。', '另一条直角边要 3 × 2 = 6。']), Gw('k', '相似比是 2', 4, 'k', 2, ['乙的边都是甲的 2 倍。', '把顶点拖到 (−6, 0)。', '相似比 2。'])], goal: ['sim', 'k'] },
   };
   const missing = [], moved = [];
   for (const id of Object.keys(MOVES)) {
