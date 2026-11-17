@@ -663,5 +663,17 @@
     },
   };
 
+  // 三角形：两根短的够不够
+  D.tribench = {
+    caps: ['3、4、8：两根短的接不上', '3 + 4 = 7 < 8，围不成', '把 8 换成 5：围成了', '3² + 4² = 5²：直角三角形'],
+    draw(st) {
+      let s = ''; const u = 20, bx = 60, by = 150;
+      if (st < 2) { s += Ln(bx, by, bx + 8 * u, by, { w: 4 }) + Ln(bx, by, bx + 3 * u * 0.9, by - 3 * u * 0.4, { w: 4, s: B }) + Ln(bx + 8 * u, by, bx + 8 * u - 4 * u * 0.9, by - 4 * u * 0.4, { w: 4, s: B }); }
+      else s += Pg([[bx, by], [bx + 5 * u, by], [bx + 5 * u * 0.36, by - 5 * u * 0.48]], '#eef3fb', { s: INK });
+      s += T(290, 90, ['3、4、8', '7 < 8', '3、4、5', '9 + 16 = 25'][st], { s: 15, w: 700, f: P });
+      return s;
+    },
+  };
+
   UI.Demo = D;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

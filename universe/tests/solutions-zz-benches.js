@@ -1,7 +1,7 @@
 /* 搬到操作台上的旧题的参考解（problems/zz-benches.js）。文件名 zz 开头：排在各年级的参考解后面加载，盖掉原来“接运算器”的解法。 */
 'use strict';
 const S = (role) => (o) => (h) => { const e = h.role(role); for (const k of Object.keys(o)) h.set(e, k, o[k]); };
-const n = S('n'), k = S('k'), r = S('r'), m = S('m'), c = S('c'), t = S('t'), s = S('s'), gp = S('g'), b = S('b'), d = S('d'), ch = S('h'), ck = S('k'), gq = S('q'), so = S('o'), cj = S('j'), fz = S('z'), pq = S('p');
+const n = S('n'), k = S('k'), r = S('r'), m = S('m'), c = S('c'), t = S('t'), s = S('s'), gp = S('g'), b = S('b'), d = S('d'), ch = S('h'), ck = S('k'), gq = S('q'), so = S('o'), cj = S('j'), fz = S('z'), pq = S('p'), tx = S('x');
 module.exports = {
   'g1-split-merge-core': n({ a: 2, n: 3 }),
   'g1-split-minus-trap': n({ s: -1, n: 2 }),
@@ -43,6 +43,10 @@ module.exports = {
   'g7-quadrant-core': c({ ax: -2, ay: 3 }),
   'g7-symmetry-x-axis-trap': c({ bx: 3, by: 2 }),
   'g7-translate-down-trap': c({ ay: -1 }),
+  // 第二十一批
+  'g1-triangle-sides-trap'(h) { const e = h.role('x'); h.set(e, 'c', 6); h.set(e, 'c', 5); }, 'g8-isosceles-perimeter-core': tx({ c: 6 }), 'g8-isosceles-base-trap': tx({ c: 4 }),
+  'g8-pythagoras-core': tx({ c: 13 }), 'g8-pythagoras-trap': tx({ c: 10 }), 'triangle-348'(h) { const e = h.role('x'); h.set(e, 'c', 6); h.set(e, 'c', 5); },
+  'triangle-right': tx({ B: 55 }), 'g2-right-angle-core': tx({ B: 60 }),
   // 第二十批
   'match-pairs': pq({ pairs: '0-0,1-1,2-2,3-3,4-4' }), 'no-extra-seat': pq({ pairs: '0-0,1-1,2-2,3-3' }),
   'one-to-one'(h) { const e = h.role('p'); h.set(e, 'pairs', '0-0,1-1'); h.set(e, 'nb', 3); h.set(e, 'pairs', '0-0,1-1,2-2'); },

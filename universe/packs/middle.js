@@ -34,51 +34,6 @@
         draw: (c) => K.text(c.w / 2, c.h / 2 - 2, c.props.a + 'x ' + (c.props.b < 0 ? '− ' : '+ ') + Math.abs(c.props.b) + ' = ' + c.props.c, { size: 20, weight: 700 }) + K.text(c.w / 2, c.h / 2 + 28, c.out.x ? 'x = ' + Q.show(c.out.x.data) : '没有唯一的 x', { size: 18, fill: 'var(--accent)', weight: 700 }),
       },
 
-      tri: {
-        workspaceRole: 'none',
-        handles: true,
-        essence: ['E2', 'E5'],
-        label: '三角形', prefix: '角', group: '图形', grades: [4, 9], alias: ['三边关系', '勾股', '周长', '面积'],
-        props: {
-          a: { type: 'num', label: '边 a', default: 3, min: 0.5, max: 50, step: 0.5 },
-          b: { type: 'num', label: '边 b', default: 4, min: 0.5, max: 50, step: 0.5 },
-          c: { type: 'num', label: '边 c', default: 5, min: 0.5, max: 50, step: 0.5 },
-        },
-        outputs: { f: { dim: null, kind: 'fig', label: '图形' }, ok: { dim: null, kind: 'bool', label: '围得起来' }, right: { dim: null, kind: 'bool', label: '是直角' }, perim: { dim: null, kind: 'num', label: '周长' }, area: { dim: null, kind: 'num', label: '面积' } },
-        icon: () => '<path d="M8 36 L50 36 L24 8 Z" fill="#f08a1c33" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/>',
-        size: () => [220, 170],
-        compute: (c) => {
-          const a = Q.fromNumber(c.props.a), b = Q.fromNumber(c.props.b), cc = Q.fromNumber(c.props.c);
-          const ok = Q.cmp(Q.add(a, b), cc) > 0 && Q.cmp(Q.add(a, cc), b) > 0 && Q.cmp(Q.add(b, cc), a) > 0;
-          const out = { ok: U.val('bool', ok), perim: num(Q.add(Q.add(a, b), cc), 'length') };
-          if (c.step) {
-            c.step('两边之和比第三边：' + Q.show(Q.add(a, b)) + ' 和 ' + Q.show(cc) + '，' + Q.show(Q.add(a, cc)) + ' 和 ' + Q.show(b) + '，' + Q.show(Q.add(b, cc)) + ' 和 ' + Q.show(a) + (ok ? '，都更大' : '，有一组不够大'), null, 'tri.inequality');
-            c.because('ok', '任意两边之和要大于第三边', 'tri.inequality');
-          }
-          if (!ok) { c.say('warn', '围不起来：任意两边之和必须大于第三边'); return out; }
-          const sq = [a, b, cc].map((x) => Q.mul(x, x)).sort(Q.cmp);
-          out.right = U.val('bool', Q.eq(Q.add(sq[0], sq[1]), sq[2]));
-          if (c.step) { c.step('两条短边的平方和：' + Q.show(sq[0]) + ' + ' + Q.show(sq[1]) + ' = ' + Q.show(Q.add(sq[0], sq[1])) + '，最长边的平方：' + Q.show(sq[2]), null, 'tri.pythagoras'); c.because('right', '平方和等于最长边的平方，就是直角', 'tri.pythagoras'); }
-          const s = Q.div(out.perim.data, Q(2)), A2 = Q.mul(Q.mul(s, Q.sub(s, a)), Q.mul(Q.sub(s, b), Q.sub(s, cc))), r = qsqrt(A2);
-          out.area = r ? num(r, 'area') : num(Q.fromNumber(Math.sqrt(Q.num(A2))), 'area', false);
-          const cx = Q.div(Q.sub(Q.add(Q.mul(b, b), Q.mul(cc, cc)), Q.mul(a, a)), Q.mul(Q(2), cc)), cy = qsqrt(Q.sub(Q.mul(b, b), Q.mul(cx, cx)));
-          if (cy) out.f = U.val('fig', U.Fig.polygon([[Q(0), Q(0)], [cc, Q(0)], [cx, cy]]));
-          else c.say('info', '第三个顶点的坐标不是有理数（要开方），这里不输出图形');
-          c.say(out.right.data ? 'ok' : 'info', out.right.data ? '直角三角形：' + sq.map((x) => Q.show(x)).join(' + ').replace(' + ', ' + ') + '（平方）' : '围得起来，但不是直角');
-          return out;
-        },
-        badge: (c) => (c.out.ok ? (c.out.ok.data ? (c.out.right && c.out.right.data ? '直角' : '能围') : '围不起来') : ''),
-        draw: (c) => {
-          const a = c.props.a, b = c.props.b, cc = c.props.c, ok = c.out.ok && c.out.ok.data;
-          const mx = Math.max(a, b, cc), k = Math.min((c.w - 40) / mx, (c.h - 40) / mx * 1.4);
-          if (!ok) return K.line(20, c.h - 20, 20 + cc * k, c.h - 20, { w: 4, stroke: 'var(--bad)' }) + K.line(20, c.h - 36, 20 + a * k, c.h - 36, { w: 4, stroke: 'var(--accent)' }) + K.line(20, c.h - 52, 20 + b * k, c.h - 52, { w: 4, stroke: 'var(--accent)' }) + K.text(c.w / 2, 24, '两边加起来够不着第三边', { size: 13, fill: 'var(--bad)' });
-          const x = (b * b + cc * cc - a * a) / (2 * cc), y = Math.sqrt(Math.max(0, b * b - x * x)), ox = (c.w - cc * k) / 2, oy = c.h - 24;
-          const P = [[ox, oy], [ox + cc * k, oy], [ox + x * k, oy - y * k]];
-          return '<path d="M' + P.map((p) => p.join(',')).join(' L') + ' Z" fill="#f08a1c33" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/>' +
-            K.text((P[1][0] + P[2][0]) / 2 + 12, (P[1][1] + P[2][1]) / 2, a, { size: 12, weight: 700 }) + K.text((P[0][0] + P[2][0]) / 2 - 12, (P[0][1] + P[2][1]) / 2, b, { size: 12, weight: 700 }) + K.text(ox + cc * k / 2, oy + 16, cc, { size: 12, weight: 700 });
-        },
-      },
-
       circle: {
         workspaceRole: 'none',
         handles: true,

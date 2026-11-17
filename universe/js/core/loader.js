@@ -83,6 +83,7 @@
     'termsbench': 'packs/termsbench.js',
     'tiles': 'packs/tiles.js',
     'travelbench': 'packs/travelbench.js',
+    'tribench': 'packs/tribench.js',
     'turtle': 'packs/turtle.js',
     'twoways': 'packs/twoways.js',
     'variable': 'packs/variable.js',

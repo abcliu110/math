@@ -1,4 +1,4 @@
-/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，二十批共 147 道）。
+/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，二十一批共 155 道）。
  * 这些题原来的做法是“放数字、接运算器、看读数”：学生在搭计算流程。这里按 id 把它们换成在操作台上直接动手：
  * 题目的编号、标题、年级、知识点、道理（why）都不变，换的是器材架、开场的台面、里程碑和提示。
  * 这个文件排在所有题目文件后面加载（文件名 zz 开头），找不到的 id 会记在 U.benchMigrateMissing 里（测试会查）。 */
@@ -7,9 +7,9 @@
   const U = G.U, W = U.World;
   const one = (type, role, props) => () => { const s = W.blank(); const id = W.add(s, type, 40, 50, props); s.entities[id].role = role; return s; };
   const ms = (role) => (id, say, score, port, value, hints) => ({ id, say, score, when: { role, port, op: '=', value: String(value) }, hints });
-  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s'), GP = ms('g'), B = ms('b'), D = ms('d'), K2 = ms('k'), Gq = ms('q'), So = ms('o'), Cj = ms('j'), Z = ms('z'), H2 = ms('h'), Pq = ms('p');
+  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s'), GP = ms('g'), B = ms('b'), D = ms('d'), K2 = ms('k'), Gq = ms('q'), So = ms('o'), Cj = ms('j'), Z = ms('z'), H2 = ms('h'), Pq = ms('p'), Tr = ms('x');
   const H = (id, say, score, when, hints) => ({ id, say, score, when, hints });   // 条件是一个范围（频率稳在某个区间）时用函数
-  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props), bb = (props) => one('balancebench', 'b', props), sb = (props) => one('statbench', 'd', props), ch = (props) => one('chancebench', 'h', props), ck = (props) => one('clockbench', 'k', props), gq = (props) => one('groupbench', 'q', props), sd = (props) => one('solidbench', 'o', props), cj = (props) => one('conjbench', 'j', props), fb2 = (props) => one('fitbench', 'z', props), pb2 = (props) => one('pairbench', 'p', props);
+  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props), bb = (props) => one('balancebench', 'b', props), sb = (props) => one('statbench', 'd', props), ch = (props) => one('chancebench', 'h', props), ck = (props) => one('clockbench', 'k', props), gq = (props) => one('groupbench', 'q', props), sd = (props) => one('solidbench', 'o', props), cj = (props) => one('conjbench', 'j', props), fb2 = (props) => one('fitbench', 'z', props), pb2 = (props) => one('pairbench', 'p', props), tb3 = (props) => one('tribench', 'x', props);
   const MOVES = {
     // ---- 数轴 ----
     'g1-split-merge-core': { shelf: ['numlinebench'], build: nl({ from: 0, to: 10, a: 0, s: 1, n: 0 }),
@@ -510,6 +510,31 @@
       milestones: [H('one', '排出 12：3 行 4 个（或 4 行 3 个）', 3, (w) => w.ofType('areamodel').some((e) => e.props.w * e.props.h === 12 && Math.min(e.props.w, e.props.h) === 3), ['3 × 4 = 12。', '拖右边和下边。', '3 和 4。']),
         H('two', '再一种：2 行 6 个', 3, (w) => w.ofType('areamodel').some((e) => e.props.w * e.props.h === 12 && Math.min(e.props.w, e.props.h) === 2), ['2 × 6 = 12。', '拖成 2 和 6。', '一样是 12。']),
         H('three', '第三种：1 行 12 个', 3, (w) => w.ofType('areamodel').some((e) => e.props.w * e.props.h === 12 && Math.min(e.props.w, e.props.h) === 1), ['排成一长条。', '1 × 12。', '拖成 1 和 12。'])], goal: ['one', 'two', 'three'] },
+    // ======== 第二十一批：三角形，在“三角形（小棒与角）”上拖 ========
+    'g1-triangle-sides-trap': { shelf: ['tribench'], build: tb3({ mode: 0, a: 3, b: 4, c: 8 }),
+      hook: '三根小棒 3、4、8：两根短的够不着。拖 8 那一根的右端，改成几就能围成？再让它变成直角三角形。',
+      milestones: [Tr('ok', '能围成三角形', 3, 'ok', 1, ['两根短的加起来要比长的长。', '3 + 4 = 7。', '第三根比 7 短。']), Tr('right', '是直角三角形', 4, 'right', 1, ['3² + 4² = 25。', '25 是几的平方？', '拖到 5。'])], goal: ['ok', 'right'] },
+    'g8-isosceles-perimeter-core': { shelf: ['tribench'], build: tb3({ mode: 0, a: 5, b: 5, c: 2 }),
+      hook: '等腰三角形两条腰都是 5。把第三根（底边）拖到 6，看周长是多少。',
+      milestones: [Tr('perim', '周长是 16', 6, 'perim', 16, ['底边拖到 6。', '5 + 5 + 6。', '16。'])], goal: ['perim'] },
+    'g8-isosceles-base-trap': { shelf: ['tribench'], build: tb3({ mode: 0, a: 5, b: 5, c: 11 }),
+      hook: '两条腰都是 5，底边现在是 11：围不成。底边改成 4，周长是多少？底边最长能到几？',
+      milestones: [Tr('perim', '底边 4：周长是 14', 6, 'perim', 14, ['底边要比 5 + 5 = 10 短。', '拖到 4。', '5 + 5 + 4 = 14。'])], goal: ['perim'] },
+    'g8-pythagoras-core': { shelf: ['tribench'], build: tb3({ mode: 0, a: 5, b: 12, c: 10 }),
+      hook: '三边满足 a² + b² = c²，就是直角三角形。现在第三根是 10。拖到 13，看看是不是直角三角形。',
+      milestones: [Tr('check', '5、12、13 是直角三角形', 6, 'right', 1, ['5² + 12² = 25 + 144。', '169 = 13²。', '拖到 13。'])], goal: ['check'] },
+    'g8-pythagoras-trap': { shelf: ['tribench'], build: tb3({ mode: 0, a: 6, b: 8, c: 14 }),
+      hook: '两条直角边是 6 和 8，斜边是几？有人说 6 + 8 = 14——看看 14 能不能围成。拖斜边，找到让它成为直角三角形的长度。',
+      milestones: [Tr('check', '斜边是 10：6、8、10 是直角三角形', 6, 'right', 1, ['6² + 8² = 100。', '100 = 10²。', '拖到 10。'])], goal: ['check'] },
+    'triangle-348': { shelf: ['tribench'], build: tb3({ mode: 0, a: 3, b: 4, c: 8 }),
+      hook: '三根小棒 3、4、8，怎么摆都围不成三角形。拖第三根，让它能围成，再让它变成直角三角形。',
+      milestones: [Tr('ok', '让三角形围得起来', 4, 'ok', 1, ['两边之和必须大于第三边。', '3 + 4 = 7，第三边要比 7 小。', '比如 6。']), Tr('right', '让它成为直角三角形', 6, 'right', 1, ['两个小边的平方和 = 最长边的平方。', '9 + 16 = 25。', '第三根是 5。'])], goal: ['ok', 'right'] },
+    'triangle-right': { shelf: ['tribench'], build: tb3({ mode: 1, A: 35, B: 60 }),
+      hook: '角 A 是 35°。拖角 B 的把手，让角 C 变成 90°。先猜 B 是多少。',
+      milestones: [Tr('c90', '角 C 变成 90°：B 是 55°', 8, 'C', 90, ['三个角加起来是 180°。', '180 − 35 − 90。', 'B = 55。'])], goal: ['c90'] },
+    'g2-right-angle-core': { shelf: ['tribench'], build: tb3({ mode: 1, A: 30, B: 45 }),
+      hook: '三角形里一个角是 30°，另一个角是 45°。三个角加起来是 180°。拖角 B，让第三个角变成直角（90°）。',
+      milestones: [Tr('right', '第三个角是 90°，就是直角', 8, 'C', 90, ['180 − 30 − 90 = 60。', '把角 B 拖到 60。', '角 C 变成 90°。'])], goal: ['right'] },
   };
   const missing = [], moved = [];
   for (const id of Object.keys(MOVES)) {

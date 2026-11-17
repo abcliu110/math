@@ -101,6 +101,7 @@ async function checkDist() {
   if (!runScript('tests/ui-conj.js', 'tests/ui-conj.js', pwEnv)) bail();   // 猜想与反例：真实鼠标点公式、一个一个试、一直试、拖到最小的那个
   if (!runScript('tests/ui-fit.js', 'tests/ui-fit.js', pwEnv)) bail();   // 数据找规律：真实鼠标拖直线穿过数据点、拖探针预测
   if (!runScript('tests/ui-pair.js', 'tests/ui-pair.js', pwEnv)) bail();   // 连一连：真实鼠标连线、擦线、加椅子、握手
+  if (!runScript('tests/ui-tri.js', 'tests/ui-tri.js', pwEnv)) bail();   // 三角形：真实鼠标拖小棒、拖角
   if (!runScript('tests/ui-areamodel.js', 'tests/ui-areamodel.js', pwEnv)) bail();   // 面积模型（样板操作台）和器材把手：真实鼠标拖边、切、改分数
   if (!runScript('tests/ui-shapes.js', 'tests/ui-shapes.js', pwEnv)) bail();         // 常见图形、顶点编辑、直接拖出辅助线（真实鼠标和键盘）；含画布横纵比例回归
   if (!runScript('tests/ui-export.js', 'tests/ui-export.js', pwEnv)) bail();         // 2.12/V10：导出图片（真实鼠标点菜单，台面和专注工作区各一次下载，.png、大小 > 0）

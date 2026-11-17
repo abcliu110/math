@@ -37,7 +37,7 @@
 | 1.7 | 1 | 11–20的认识、10加几 | 2 | 1 | 0 | 1 | blocksbench、num、groupbench |
 | 1.8 | 1 | 认识钟表 | 1 | 1 | 0 | 1 | clockbench |
 | 1.9 | 1 | 20以内进位加法、凑十法 | 1 | 1 | 0 | 1 | numlinebench |
-| 1.10 | 1 | 平面图形、七巧板 | 1 | 1 | 0 | 1 | areamodel、tri |
+| 1.10 | 1 | 平面图形、七巧板 | 1 | 1 | 0 | 1 | areamodel、tribench |
 | 1.11 | 1 | 20以内退位减法、破十法 | 2 | 1 | 0 | 1 | numlinebench |
 | 1.12 | 1 | 分类与整理 | 1 | 1 | 0 | 1 | num |
 | 1.13 | 1 | 100以内数的认识 | 4 | 0 | 0 | 1 | blocksbench、num |
@@ -47,7 +47,7 @@
 | 2.1 | 2 | 长度单位、线段 | 1 | 1 | 0 | 1 | num |
 | 2.2 | 2 | 100以内加减法（二） | 2 | 1 | 0 | 1 | num、arithbench |
 | 2.3 | 2 | 进位加法、退位减法 | 6 | 1 | 0 | 1 | blocksbench、arithbench、colbench |
-| 2.4 | 2 | 角的初步认识、直角 | 2 | 1 | 0 | 1 | angles、protractor-read |
+| 2.4 | 2 | 角的初步认识、直角 | 2 | 1 | 0 | 1 | tribench、protractor-read |
 | 2.5 | 2 | 乘法初步认识、口诀 | 3 | 1 | 0 | 1 | numlinebench、areamodel、tapebench |
 | 2.6 | 2 | 观察物体 | 1 | 1 | 0 | 1 | solidbench |
 | 2.7 | 2 | 认识时间 | 1 | 1 | 0 | 1 | clockbench、ratiobench |
@@ -88,7 +88,7 @@
 | 4.17 | 4 | 观察物体（二） | 1 | 1 | 0 | 1 | solidbench |
 | 4.10 | 4 | 运算定律 | 9 | 1 | 0 | 1 | termsbench、fastbench |
 | 4.11 | 4 | 小数的意义和性质 | 1 | 1 | 0 | 1 | num |
-| 4.12 | 4 | 三角形 | 6 | 0 | 0 | 1 | angles、curved、parallelogram、guessrule、tri |
+| 4.12 | 4 | 三角形 | 6 | 0 | 0 | 1 | tribench、curved、parallelogram、guessrule |
 | 4.13 | 4 | 小数的加法和减法 | 2 | 1 | 0 | 1 | num |
 | 4.14 | 4 | 图形的运动（二） | 1 | 0 | 0 | 1 | ftri |
 | 4.15 | 4 | 平均数 | 9 | 0 | 0 | 1 | hanoi、meanbench、chancebench、statbench |
@@ -141,14 +141,14 @@
 | 8.1 | 8 | 三角形 | 1 | 0 | 0 | 1 | — |
 | 8.2 | 8 | 全等三角形的判定 | 2 | 1 | 0 | 1 | ftri、fold |
 | 8.3 | 8 | 轴对称 | 2 | 0 | 0 | 1 | fold |
-| 8.4 | 8 | 等腰三角形 | 2 | 1 | 0 | 1 | proofsort |
+| 8.4 | 8 | 等腰三角形 | 2 | 1 | 0 | 1 | tribench、proofsort |
 | 8.5 | 8 | 幂的运算与整式的乘法 | 3 | 1 | 0 | 1 | areamodel、num、tiles |
 | 8.6 | 8 | 乘法公式 | 11 | 0 | 0 | 1 | variable、areamodel、fastbench、findbug、tiles |
 | 8.7 | 8 | 因式分解 | 3 | 0 | 0 | 1 | variable、areamodel、pour |
 | 8.8 | 8 | 分式及其运算 | 1 | 1 | 0 | 1 | — |
 | 8.9 | 8 | 分式方程 | 2 | 0 | 0 | 1 | approach |
 | 8.10 | 8 | 二次根式 | 1 | 1 | 0 | 1 | num |
-| 8.11 | 8 | 勾股定理与逆定理 | 6 | 1 | 0 | 1 | dissect、geoboard、tri、proofsort |
+| 8.11 | 8 | 勾股定理与逆定理 | 6 | 1 | 0 | 1 | tribench、dissect、geoboard、proofsort |
 | 8.12 | 8 | 平行四边形 | 7 | 0 | 0 | 1 | compass、parallelogram、optimize、taxi |
 | 8.13 | 8 | 特殊的平行四边形 | 1 | 1 | 0 | 1 | areamodel |
 | 8.14 | 8 | 函数与正比例函数 | 1 | 1 | 0 | 1 | coordbench |
@@ -168,7 +168,7 @@
 | 9.12 | 9 | 图形的相似与位似 | 4 | 1 | 0 | 1 | ftri、scale、spheretri |
 | 9.13 | 9 | 相似三角形 | 1 | 0 | 0 | 1 | ftri |
 | 9.14 | 9 | 锐角三角函数 | 1 | 1 | 0 | 1 | trig-table |
-| 9.15 | 9 | 解直角三角形及其应用 | 1 | 0 | 0 | 1 | angles |
+| 9.15 | 9 | 解直角三角形及其应用 | 1 | 0 | 0 | 1 | tribench |
 | 9.16 | 9 | 投影与视图 | 1 | 1 | 0 | 1 | solidbench |
 
 ## 按本质（E1–E12）
@@ -176,10 +176,10 @@
 | 本质 | 题目数 | 器材数 |
 |---|---|---|
 | E1 | 61 | 26 |
-| E2 | 207 | 42 |
+| E2 | 207 | 40 |
 | E3 | 136 | 40 |
-| E4 | 101 | 24 |
-| E5 | 132 | 54 |
+| E4 | 101 | 25 |
+| E5 | 132 | 53 |
 | E6 | 40 | 17 |
 | E7 | 99 | 24 |
 | E8 | 61 | 23 |

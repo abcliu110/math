@@ -581,11 +581,6 @@ t('平行四边形剪拼：剪拼前后不全等，但面积相等（面积是�
   const D = W.evaluate(sc); eq(U.showVal(D[m1].out.area), U.showVal(D[m2].out.area)); eq(U.showVal(D[m1].out.area), '15'); eq(D[q].out.cong.data, false);
   eq(U.showVal(D[m2].out.right), '4'); eq(U.showVal(D[m1].out.right), '0');
 });
-t('三边 3、4、5 的三角形输出图形，量得面积 6；三边 2、3、4 的顶点不是有理数，不输出图形并说明', () => {
-  const sc = W.blank(); const t1 = W.add(sc, 'tri', 0, 0, { a: 3, b: 4, c: 5 }); const m = W.add(sc, 'figmeasure', 0, 0, {}); link2(sc, t1, 'f', m, 'f');
-  const t2 = W.add(sc, 'tri', 0, 0, { a: 2, b: 3, c: 4 });
-  const D = W.evaluate(sc); eq(U.showVal(D[m].out.area), '6'); eq(D[t2].out.f, undefined); truthy(D[t2].sig.some((x) => /不是有理数/.test(x.tx)));
-});
 t('折纸的纸片是图形：4×4 的正方形', () => { const sc = W.blank(); const f = W.add(sc, 'fold', 0, 0, {}); eq(U.Fig.show(W.evaluate(sc)[f].out.f.data), '四边形 (0, 0) (4, 0) (4, 4) (0, 4)'); });
 console.log('来历追踪（任务 A）');
 const frac = (a, b) => { const sc = W.blank(); const x = W.add(sc, 'num', 0, 0, { n: a[0], d: a[1] }), y = W.add(sc, 'num', 0, 0, { n: b[0], d: b[1] }), o = W.add(sc, 'op', 0, 0, { op: 0 });
@@ -617,14 +612,12 @@ t('W.from：同样得 6，一个是 192÷32 算的，一个是手填的 6', () =
   const wOf = (sc) => U.Judge.makeW(sc, W.evaluate(sc), { ms: {} });
   truthy(wOf(calc).from(6, 'op', [192, 32]), '算出来的'); truthy(!wOf(calc).from(6, 'op', [200, 32]), '输入不对'); truthy(!wOf(hand).from(6, 'op', [192, 32]), '手填的不算');
 });
-t('带余除法、数位板、天平、三角形、量图形都写了中间步骤', () => {
-  const need = { div: 'div.trial-quotient', digits: 'place.carry', balance: 'balance.compare', tri: 'tri.inequality', figmeasure: 'fig.shoelace' };
+t('带余除法、数位板、天平都写了中间步骤', () => {
   const probe = (type, props, feed) => { const sc = W.blank(); const e = W.add(sc, type, 0, 0, props || {}); (feed || []).forEach(([t, p, port]) => { const f = W.add(sc, t, 0, 0, p); W.act(sc, { t: 'link', from: f, fromPort: 'v', to: e, toPort: port }); }); return W.evaluate(sc)[e].trace.steps.map((s) => s.rule); };
   const num = (n) => ['num', { n }];
-  truthy(probe('divmod', {}, [[...num(17), 'a'], [...num(5), 'b']]).includes(need.div));
-  truthy(probe('tri', { a: 3, b: 4, c: 5 }).includes('tri.pythagoras'));
-  truthy(probe('digits', {}, [[...num(13), 'v']]).includes(need.digits));
-  truthy(probe('balance', {}, [[...num(3), 'L'], [...num(3), 'R']]).includes(need.balance));
+  truthy(probe('divmod', {}, [[...num(17), 'a'], [...num(5), 'b']]).includes('div.trial-quotient'));
+  truthy(probe('digits', {}, [[...num(13), 'v']]).includes('place.carry'));
+  truthy(probe('balance', {}, [[...num(3), 'L'], [...num(3), 'R']]).includes('balance.compare'));
 });
 t('所有参考解跑完以后，没有器材用了没登记的规则', () => eq(U.ruleErrors, []));
 console.log('连线时的类型转换（B.1）');
@@ -3168,8 +3161,8 @@ t('可能性：列出所有情况，两个骰子 36 种里和为 7 的有 6 种�
 console.log('旧题搬到操作台');
 t('搬题：每个要搬的 id 都找到了题；搬过去的题器材架上只有操作台，开场台面上就有它', () => {
   eq(U.benchMigrateMissing, [], '找不到的 id');
-  truthy(U.benchMigrated.length >= 147, '至少搬了 147 道');
-  const BENCH = ['areamodel', 'balancebench', 'numlinebench', 'ratiobench', 'coordbench', 'blocksbench', 'termsbench', 'swapbench', 'systembench', 'gapbench', 'meanbench', 'tapebench', 'vennbench', 'travelbench', 'mulbench', 'fastbench', 'statbench', 'chancebench', 'clockbench', 'groupbench', 'solidbench', 'conjbench', 'fitbench', 'pairbench'];
+  truthy(U.benchMigrated.length >= 155, '至少搬了 155 道');
+  const BENCH = ['areamodel', 'balancebench', 'numlinebench', 'ratiobench', 'coordbench', 'blocksbench', 'termsbench', 'swapbench', 'systembench', 'gapbench', 'meanbench', 'tapebench', 'vennbench', 'travelbench', 'mulbench', 'fastbench', 'statbench', 'chancebench', 'clockbench', 'groupbench', 'solidbench', 'conjbench', 'fitbench', 'pairbench', 'tribench'];
   for (const id of U.benchMigrated) {
     const p = U.problems.find((x) => x.id === id), s = p.build();
     truthy(p.shelf.length === 1 && BENCH.includes(p.shelf[0]), id + ' 的器材架');

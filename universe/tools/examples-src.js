@@ -55,6 +55,8 @@ module.exports = [
       ['mfzb','meter',{'digits':0,'label':'找规律：预测'}],
       ['pqb','pairbench',{'mode':1,'n':4,'pairs':'0-1,0-2,0-3,1-2,1-3,2-3'}],
       ['mpqb','meter',{'digits':0,'label':'连一连：握了几次'}],
+      ['trb','tribench',{'a':3,'b':4,'c':5}],
+      ['mtrb','meter',{'digits':0,'label':'三角形：周长'}],
     ],
     links: [
       ['am','mam','v','area'],
@@ -81,6 +83,7 @@ module.exports = [
       ['cjb','mcjb','v','cex'],
       ['fzb','mfzb','v','py'],
       ['pqb','mpqb','v','pairs'],
+      ['trb','mtrb','v','perim'],
     ],
   },
 ];
