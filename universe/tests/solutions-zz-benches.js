@@ -1,7 +1,7 @@
 /* 搬到操作台上的旧题的参考解（problems/zz-benches.js）。文件名 zz 开头：排在各年级的参考解后面加载，盖掉原来“接运算器”的解法。 */
 'use strict';
 const S = (role) => (o) => (h) => { const e = h.role(role); for (const k of Object.keys(o)) h.set(e, k, o[k]); };
-const n = S('n'), k = S('k'), r = S('r'), m = S('m'), c = S('c'), t = S('t'), s = S('s'), gp = S('g'), b = S('b'), d = S('d'), ch = S('h'), ck = S('k'), gq = S('q'), so = S('o'), cj = S('j'), fz = S('z'), pq = S('p'), tx = S('x'), ci = S('i'), gw = S('w'), ty = S('y'), vv = S('v'), mbs = S('c2'), dd = S('d'), tt = S('tb'), zz = S('z');
+const n = S('n'), k = S('k'), r = S('r'), m = S('m'), c = S('c'), t = S('t'), s = S('s'), gp = S('g'), b = S('b'), d = S('d'), ch = S('h'), ck = S('k'), gq = S('q'), so = S('o'), cj = S('j'), fz = S('z'), pq = S('p'), tx = S('x'), ci = S('i'), gw = S('w'), ty = S('y'), vv = S('v'), mbs = S('c2'), dd = S('d'), tt = S('tb'), zz = S('z'), ee = S('e'), ar = S('ar'), ff = S('f');
 module.exports = {
   'g1-split-merge-core': n({ a: 2, n: 3 }),
   'g1-split-minus-trap': n({ s: -1, n: 2 }),
@@ -23,8 +23,8 @@ module.exports = {
   'g6-ratio-cross-core': r({ t: 9 }),
   // 第二批
   'g1-position-compare-core': n({ hi: 4, lo: 2 }),
-  'g1-make-ten-trap'(h) { const e = h.role('n'); h.set(e, 'n', 1); h.set(e, 'n', 6); },
-  'g1-minus-break-trap'(h) { const e = h.role('n'); h.set(e, 'n', 3); h.set(e, 'n', 9); },
+  'g1-make-ten-trap'(h) { const e = h.role('k'); h.set(e, 'moved', 1); },
+  'g1-minus-break-trap'(h) { const e = h.role('k'); h.set(e, 'cross', '10,11,12,0,1,2,3,4,5'); },
   'g2-divide-order-trap': n({ s: 4, n: 3 }),
   'g3-times-trap': n({ n: 4 }),
   'g6-negative-order-core': n({ lo: -3, hi: -1 }),
@@ -43,6 +43,12 @@ module.exports = {
   'g7-quadrant-core': c({ ax: -2, ay: 3 }),
   'g7-symmetry-x-axis-trap': c({ bx: 3, by: 2 }),
   'g7-translate-down-trap': c({ ay: -1 }),
+  // 第三十三批
+  'gcd-12-18': ff({ tried: '1,2,3,6', cm: '36' }), 'pb-gcd-24-36': ff({ tried: '1,2,3,4,6,12', cm: '72' }), 'pb-count-divisors': ff({ w: 6, found: '1,2,3,4,6' }),
+  // 第三十二批
+  'g4-parallelogram-core': ar({ h: 4, step: 2, seen: '2' }), 'g4-parallelogram-slant-trap': ar({ step: 2, seen: '2' }), 'para-area': ar({ b: 6, h: 4, step: 2, seen: '2' }), 'cut-invariant': ar({ step: 2, seen: '1,4', s: 4 }),
+  // 第三十一批
+  'g2-estimate-trap': ee({ pa: 2, pb: 2 }), 'est-29x31': ee({ pa: 2, pb: 1, reveal: true }), 'est-48x52': ee({ pa: 2, pb: 1, reveal: true }), 'est-circle': ee({ lo: 50, hi: 100, reveal: true }),
   // 第二十九批
   'g6-neg-times-core': zz({ pos: 12, neg: 0, step: 3 }), 'g6-neg-times-trap': zz({ pos: 30, neg: 0, step: 6 }), 'g7-rational-mulneg-trap': zz({ pos: 12, neg: 0, step: 4 }), 'g7-rational-opposite-trap': zz({ pos: 4, neg: 0, step: 1 }), 'g7-rational-divsign-core': zz({ neg: 0, dealt: 3 }),
   // 第二十八批

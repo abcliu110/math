@@ -6,7 +6,7 @@
 
 - 知识点：142 个（设计目标 142）
 - 有题的知识点：141 个（99%）
-- 题目：553 道；没有对应知识点的题：1 道
+- 题目：561 道；没有对应知识点的题：1 道
 - 没有器材的本质：无
 - 没有题的本质：无
 
@@ -14,11 +14,11 @@
 
 | 年级 | 知识点 | 有题 | 题目数 |
 |---|---|---|---|
-| 1 | 16 | 16（100%） | 41 |
+| 1 | 16 | 16（100%） | 44 |
 | 2 | 16 | 16（100%） | 50 |
-| 3 | 16 | 16（100%） | 75 |
+| 3 | 16 | 16（100%） | 76 |
 | 4 | 17 | 17（100%） | 85 |
-| 5 | 14 | 14（100%） | 86 |
+| 5 | 14 | 14（100%） | 90 |
 | 6 | 15 | 14（93%） | 52 |
 | 7 | 16 | 16（100%） | 76 |
 | 8 | 16 | 16（100%） | 74 |
@@ -29,23 +29,23 @@
 | 知识点 | 年级 | 名称 | 核心 | 陷阱 | 延伸 | 最高证据 | 器材 |
 |---|---|---|---|---|---|---|---|
 | 1.1 | 1 | 数数、一一对应、比多少 | 3 | 0 | 0 | 1 | pairbench |
-| 1.2 | 1 | 位置 | 1 | 1 | 0 | 1 | numlinebench |
+| 1.2 | 1 | 位置 | 2 | 1 | 0 | 1 | numlinebench、makebench |
 | 1.3 | 1 | 1–5的认识、分与合 | 1 | 1 | 0 | 1 | numlinebench |
 | 1.4 | 1 | 5以内加减法、0 | 1 | 1 | 0 | 1 | numlinebench、num |
 | 1.5 | 1 | 立体图形 | 1 | 1 | 0 | 1 | solidbench |
 | 1.6 | 1 | 6–10的认识、连加连减 | 2 | 1 | 0 | 1 | termsbench、numlinebench |
 | 1.7 | 1 | 11–20的认识、10加几 | 2 | 1 | 0 | 1 | blocksbench、groupbench |
 | 1.8 | 1 | 认识钟表 | 1 | 1 | 0 | 1 | clockbench |
-| 1.9 | 1 | 20以内进位加法、凑十法 | 1 | 1 | 0 | 1 | numlinebench |
+| 1.9 | 1 | 20以内进位加法、凑十法 | 3 | 1 | 0 | 1 | numlinebench、makebench |
 | 1.10 | 1 | 平面图形、七巧板 | 1 | 1 | 0 | 1 | areamodel、tribench |
-| 1.11 | 1 | 20以内退位减法、破十法 | 2 | 1 | 0 | 1 | numlinebench |
+| 1.11 | 1 | 20以内退位减法、破十法 | 2 | 1 | 0 | 1 | numlinebench、makebench |
 | 1.12 | 1 | 分类与整理 | 1 | 1 | 0 | 1 | num |
 | 1.13 | 1 | 100以内数的认识 | 4 | 0 | 0 | 1 | blocksbench、num |
 | 1.14 | 1 | 认识人民币 | 1 | 1 | 0 | 1 | num |
 | 1.15 | 1 | 100以内加减法（一） | 1 | 1 | 0 | 1 | blocksbench |
 | 1.16 | 1 | 找规律 | 5 | 0 | 0 | 1 | num、meter、conjbench、fmachine、guessrule、conjecture_board |
 | 2.1 | 2 | 长度单位、线段 | 1 | 1 | 0 | 1 | num |
-| 2.2 | 2 | 100以内加减法（二） | 6 | 1 | 0 | 1 | vertbench、num、arithbench |
+| 2.2 | 2 | 100以内加减法（二） | 6 | 1 | 0 | 1 | vertbench、estbench、arithbench |
 | 2.3 | 2 | 进位加法、退位减法 | 6 | 1 | 0 | 1 | blocksbench、arithbench、colbench |
 | 2.4 | 2 | 角的初步认识、直角 | 2 | 1 | 0 | 1 | tribench、protractor-read |
 | 2.5 | 2 | 乘法初步认识、口诀 | 3 | 1 | 0 | 1 | numlinebench、areamodel、tapebench |
@@ -71,7 +71,7 @@
 | 3.9 | 3 | 位置与方向 | 1 | 1 | 0 | 1 | numlinebench |
 | 3.10 | 3 | 除数是一位数的除法 | 1 | 1 | 0 | 1 | vertbench |
 | 3.15a | 3 | 复式统计表 | 2 | 2 | 0 | 1 | tablebench |
-| 3.11 | 3 | 两位数乘两位数 | 9 | 1 | 0 | 1 | areamodel、num、mulbench、arithbench |
+| 3.11 | 3 | 两位数乘两位数 | 10 | 1 | 0 | 1 | areamodel、num、estbench、mulbench、arithbench |
 | 3.12 | 3 | 面积 | 11 | 0 | 0 | 1 | areamodel、asn、curved、geoboard、circlebench、optimize、solidbench、turtle |
 | 3.13 | 3 | 年、月、日 | 1 | 1 | 0 | 1 | num |
 | 3.14 | 3 | 小数的初步认识 | 3 | 1 | 0 | 1 | decbench、numlinebench、twoways |
@@ -80,7 +80,7 @@
 | 4.2 | 4 | 公顷和平方千米 | 1 | 1 | 0 | 1 | ratiobench |
 | 4.3 | 4 | 角的度量 | 1 | 0 | 0 | 1 | num |
 | 4.4 | 4 | 三位数乘两位数 | 10 | 1 | 0 | 1 | mulbench、travelbench |
-| 4.5 | 4 | 平行四边形和梯形 | 3 | 1 | 0 | 1 | parallelogram、cubes |
+| 4.5 | 4 | 平行四边形和梯形 | 3 | 1 | 0 | 1 | areabench、cubes |
 | 4.6 | 4 | 除数是两位数的除法 | 1 | 1 | 0 | 1 | vertbench |
 | 4.7 | 4 | 条形统计图 | 1 | 1 | 0 | 1 | statbench、ratiobench |
 | 4.8 | 4 | 优化 | 1 | 1 | 0 | 1 | num |
@@ -88,20 +88,20 @@
 | 4.17 | 4 | 观察物体（二） | 1 | 1 | 0 | 1 | solidbench |
 | 4.10 | 4 | 运算定律 | 9 | 1 | 0 | 1 | termsbench、fastbench |
 | 4.11 | 4 | 小数的意义和性质 | 1 | 1 | 0 | 1 | decbench |
-| 4.12 | 4 | 三角形 | 6 | 0 | 0 | 1 | tribench、curved、parallelogram、guessrule |
+| 4.12 | 4 | 三角形 | 6 | 0 | 0 | 1 | tribench、curved、areabench、guessrule |
 | 4.13 | 4 | 小数的加法和减法 | 2 | 1 | 0 | 1 | decbench |
 | 4.14 | 4 | 图形的运动（二） | 1 | 0 | 0 | 1 | gridbench |
 | 4.15 | 4 | 平均数 | 9 | 0 | 0 | 1 | hanoi、meanbench、chancebench、statbench |
 | 4.16 | 4 | 鸡兔同笼 | 11 | 1 | 0 | 1 | swapbench |
-| 5.1 | 5 | 小数乘法 | 2 | 1 | 0 | 1 | decbench、num |
+| 5.1 | 5 | 小数乘法 | 2 | 1 | 0 | 1 | decbench、estbench |
 | 5.2 | 5 | 位置 | 1 | 1 | 0 | 1 | gridbench |
 | 5.3 | 5 | 小数除法 | 1 | 1 | 0 | 1 | decbench |
 | 5.4 | 5 | 可能性 | 6 | 1 | 0 | 3 | chancebench、pairbench、ptree |
 | 5.5 | 5 | 简易方程 | 12 | 0 | 0 | 1 | variable、balancebench、nim、costplan、systembench |
-| 5.6 | 5 | 多边形的面积 | 5 | 1 | 0 | 1 | num、parallelogram、gworkspace、gpt、gpoly、fquad |
+| 5.6 | 5 | 多边形的面积 | 7 | 1 | 0 | 1 | areabench、num、gworkspace、gpt、gpoly、fquad |
 | 5.7 | 5 | 植树问题 | 7 | 1 | 0 | 1 | gapbench |
 | 5.14 | 5 | 观察物体（三） | 2 | 1 | 0 | 1 | solidbench、twoways |
-| 5.8 | 5 | 因数与倍数 | 21 | 0 | 0 | 2 | asn、conjbench、hanoi、guessrule、areamodel、modclock、num、groupbench、primeblocks、proofsort、net |
+| 5.8 | 5 | 因数与倍数 | 23 | 0 | 0 | 2 | asn、conjbench、factorbench、hanoi、guessrule、areamodel、modclock、groupbench、primeblocks、proofsort、net |
 | 5.9 | 5 | 长方体和正方体 | 3 | 1 | 0 | 1 | pour、solidbench |
 | 5.10 | 5 | 分数的意义和性质 | 6 | 0 | 0 | 1 | areamodel、ratiobench、numlinebench、primeblocks |
 | 5.11 | 5 | 分数的加法和减法 | 8 | 1 | 0 | 1 | num、approach、ratiobench、findbug、fracarea |
@@ -111,7 +111,7 @@
 | 6.3 | 6 | 位置与方向（二） | 1 | 1 | 0 | 1 | gridbench |
 | 6.2 | 6 | 分数除法、倒数 | 3 | 1 | 0 | 1 | num、findbug、fracarea |
 | 6.4 | 6 | 比 | 4 | 0 | 0 | 1 | ratiobench、costplan |
-| 6.5 | 6 | 圆 | 4 | 1 | 0 | 1 | approach、circlebench、dissect、circle |
+| 6.5 | 6 | 圆 | 4 | 1 | 0 | 1 | approach、circlebench、dissect、estbench |
 | 6.6 | 6 | 百分数（一） | 2 | 1 | 0 | 1 | ratiobench |
 | 6.7a | 6 | 扇形统计图 | 1 | 1 | 0 | 1 | ratiobench |
 | 6.7b | 6 | 数与形 | 2 | 1 | 2 | 4 | conjbench、nth、induction、scaffold |
@@ -149,7 +149,7 @@
 | 8.9 | 8 | 分式方程 | 2 | 0 | 0 | 1 | approach |
 | 8.10 | 8 | 二次根式 | 1 | 1 | 0 | 1 | num |
 | 8.11 | 8 | 勾股定理与逆定理 | 6 | 1 | 0 | 1 | tribench、dissect、geoboard、proofsort |
-| 8.12 | 8 | 平行四边形 | 7 | 0 | 0 | 1 | compass、parallelogram、optimize、taxi |
+| 8.12 | 8 | 平行四边形 | 7 | 0 | 0 | 1 | compass、areabench、optimize、taxi |
 | 8.13 | 8 | 特殊的平行四边形 | 1 | 1 | 0 | 1 | areamodel |
 | 8.14 | 8 | 函数与正比例函数 | 1 | 1 | 0 | 1 | coordbench |
 | 8.15 | 8 | 一次函数 | 17 | 0 | 0 | 1 | coordbench、fmachine、costplan、fitbench、databench |
@@ -176,12 +176,12 @@
 | 本质 | 题目数 | 器材数 |
 |---|---|---|
 | E1 | 61 | 25 |
-| E2 | 216 | 44 |
-| E3 | 138 | 40 |
-| E4 | 101 | 25 |
-| E5 | 132 | 50 |
-| E6 | 40 | 18 |
-| E7 | 103 | 25 |
+| E2 | 222 | 46 |
+| E3 | 139 | 42 |
+| E4 | 103 | 26 |
+| E5 | 134 | 51 |
+| E6 | 43 | 19 |
+| E7 | 103 | 26 |
 | E8 | 64 | 22 |
 | E9 | 68 | 15 |
 | E10 | 10 | 4 |

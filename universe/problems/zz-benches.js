@@ -1,4 +1,4 @@
-/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，二十九批共 211 道）。
+/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，三十三批共 222 道）。
  * 这些题原来的做法是“放数字、接运算器、看读数”：学生在搭计算流程。这里按 id 把它们换成在操作台上直接动手：
  * 题目的编号、标题、年级、知识点、道理（why）都不变，换的是器材架、开场的台面、里程碑和提示。
  * 这个文件排在所有题目文件后面加载（文件名 zz 开头），找不到的 id 会记在 U.benchMigrateMissing 里（测试会查）。 */
@@ -7,9 +7,9 @@
   const U = G.U, W = U.World;
   const one = (type, role, props) => () => { const s = W.blank(); const id = W.add(s, type, 40, 50, props); s.entities[id].role = role; return s; };
   const ms = (role) => (id, say, score, port, value, hints) => ({ id, say, score, when: { role, port, op: '=', value: String(value) }, hints });
-  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s'), GP = ms('g'), B = ms('b'), D = ms('d'), K2 = ms('k'), Gq = ms('q'), So = ms('o'), Cj = ms('j'), Z = ms('z'), H2 = ms('h'), Pq = ms('p'), Tr = ms('x'), Ci = ms('i'), Gw = ms('w'), Tw = ms('y'), Vt = ms('v'), Mb = ms('c2'), Db = ms('d'), Tb = ms('tb'), Zp = ms('z');
+  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s'), GP = ms('g'), B = ms('b'), D = ms('d'), K2 = ms('k'), Gq = ms('q'), So = ms('o'), Cj = ms('j'), Z = ms('z'), H2 = ms('h'), Pq = ms('p'), Tr = ms('x'), Ci = ms('i'), Gw = ms('w'), Tw = ms('y'), Vt = ms('v'), Mb = ms('c2'), Db = ms('d'), Tb = ms('tb'), Zp = ms('z'), Mk = ms('k'), Es = ms('e'), Ar = ms('ar'), Fb = ms('f');
   const H = (id, say, score, when, hints) => ({ id, say, score, when, hints });   // 条件是一个范围（频率稳在某个区间）时用函数
-  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props), bb = (props) => one('balancebench', 'b', props), sb = (props) => one('statbench', 'd', props), ch = (props) => one('chancebench', 'h', props), ck = (props) => one('clockbench', 'k', props), gq = (props) => one('groupbench', 'q', props), sd = (props) => one('solidbench', 'o', props), cj = (props) => one('conjbench', 'j', props), fb2 = (props) => one('fitbench', 'z', props), pb2 = (props) => one('pairbench', 'p', props), tb3 = (props) => one('tribench', 'x', props), ci = (props) => one('circlebench', 'i', props), gd = (props) => one('gridbench', 'w', props), tw = (props) => one('tablebench', 'y', props), vt = (props) => one('vertbench', 'v', props), mb = (props) => one('mulbench', 'c2', props), db = (props) => one('decbench', 'd', props), tlb = (props) => one('tilebench', 'tb', props), zp = (props) => one('chipbench', 'z', props);
+  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props), bb = (props) => one('balancebench', 'b', props), sb = (props) => one('statbench', 'd', props), ch = (props) => one('chancebench', 'h', props), ck = (props) => one('clockbench', 'k', props), gq = (props) => one('groupbench', 'q', props), sd = (props) => one('solidbench', 'o', props), cj = (props) => one('conjbench', 'j', props), fb2 = (props) => one('fitbench', 'z', props), pb2 = (props) => one('pairbench', 'p', props), tb3 = (props) => one('tribench', 'x', props), ci = (props) => one('circlebench', 'i', props), gd = (props) => one('gridbench', 'w', props), tw = (props) => one('tablebench', 'y', props), vt = (props) => one('vertbench', 'v', props), mb = (props) => one('mulbench', 'c2', props), db = (props) => one('decbench', 'd', props), tlb = (props) => one('tilebench', 'tb', props), zp = (props) => one('chipbench', 'z', props), mk = (props) => one('makebench', 'k', props), es = (props) => one('estbench', 'e', props), ab = (props) => one('areabench', 'ar', props), fb = (props) => one('factorbench', 'f', props);
   const MOVES = {
     // ---- 数轴 ----
     'g1-split-merge-core': { shelf: ['numlinebench'], build: nl({ from: 0, to: 10, a: 0, s: 1, n: 0 }),
@@ -75,12 +75,12 @@
     'g1-position-compare-core': { shelf: ['numlinebench'], build: nl({ mode: 2, from: 0, to: 10, lo: 0, hi: 1, lc: 1, hc: 1 }),
       hook: '把左端点拖到 2，右端点拖到 4。4 在 2 的哪一边？数轴上越往右，数越大。',
       milestones: [N('two', '一个端点在 2', 3, 'lo', 2, ['拖左端点。', '到 2。', '松手。']), N('four', '另一个在 4：4 在 2 的右边', 3, 'hi', 4, ['拖右端点。', '到 4。', '4 在右边，4 比 2 大。'])], goal: ['two', 'four'] },
-    'g1-make-ten-trap': { shelf: ['numlinebench'], build: nl({ from: 0, to: 20, a: 9, s: 1, n: 0 }),
-      hook: '9 加 6：把 6 拆成 1 和 5。先跳 1 步凑成 10，再跳 5 步。',
-      milestones: [N('ten', '先跳 1 步，凑成 10', 3, 'value', 10, ['9 差 1 到 10。', '拖“跳”字往右 1 步。', '到 10。']), N('fifteen', '再跳 5 步，落在 15', 4, 'value', 15, ['6 拆成 1 和 5，还剩 5 步。', '接着拖。', '15。'])], goal: ['ten', 'fifteen'] },
-    'g1-minus-break-trap': { shelf: ['numlinebench'], build: nl({ from: 0, to: 20, a: 13, s: -1, n: 0 }),
-      hook: '13 减 9：把 9 拆成 3 和 6。先往左跳 3 步到 10，再跳 6 步。',
-      milestones: [N('ten', '先减 3，到 10', 3, 'value', 10, ['13 到 10 是 3 步。', '拖“跳”字往左 3 步。', '到 10。']), N('four', '再减 6，落在 4', 4, 'value', 4, ['9 拆成 3 和 6，还剩 6 步。', '接着往左。', '4。'])], goal: ['ten', 'four'] },
+    'g1-make-ten-trap': { shelf: ['makebench'], build: mk({ mode: 0, a: 9, b: 6 }),
+      hook: '9 加 6。左边 9 个，还空 1 格。点右边的蓝片挪过去凑满十：6 拆成了几和几？',
+      milestones: [Mk('ten', '挪过去 1 个，凑成 10', 3, 'moved', 1, ['9 差 1 到 10。', '点 1 个蓝片。', '6 拆成 1 和 5。']), Mk('fifteen', '10 + 5 = 15', 4, 'sum', 15, ['左边满了是 10。', '右边还剩 5 个。', '15。'])], goal: ['ten', 'fifteen'] },
+    'g1-minus-break-trap': { shelf: ['makebench'], build: mk({ mode: 1, a: 13, b: 9 }),
+      hook: '13 减 9：把 9 拆成 3 和 6。先划掉外面的 3 个（剩 10），再从框里划 6 个。',
+      milestones: [Mk('four', '平十法：13 − 3 = 10，10 − 6 = 4', 7, 'method', 2, ['先点外面的 3 个。', '再点框里的 6 个。', '还剩 4 个。'])], goal: ['four'] },
     'g2-divide-order-trap': { shelf: ['numlinebench'], build: nl({ from: 0, to: 15, a: 0, s: 1, n: 0 }),
       hook: '一根 12 厘米的线，平均剪成 3 段。每一步是一段：调步长，让它正好 3 步跳到 12。',
       milestones: [N('three', '正好 3 步', 2, 'jumps', 3, ['3 段就是 3 步。', '拖“跳”字，跳 3 步。', '数弧线。']), N('twelve', '3 步正好到 12：每段 4 厘米', 5, 'value', 12, ['现在 3 步到不了 12。', '点 ＋ 把步长调大。', '步长 4：4、8、12。'])], goal: ['twelve'] },
@@ -727,6 +727,44 @@
     'g7-rational-divsign-core': { shelf: ['chipbench'], build: zp({ mode: 2, a: -12, k: 4, pos: 0, neg: 12 }),
       hook: '台面上是 −12（12 个 −1）。平均分成 4 份：点“每份发一个”，发完了每份是几？',
       milestones: [Zp('each', '−12 ÷ 4 = −3', 6, 'each', -3, ['点“每份发一个”。', '12 个片，每次发 4 个，发 3 次。', '每份 3 个 −1：−3。'])], goal: ['each'] },
+    // ======== 第三十一批：估算 → 估一估（点离它近的那一端，再揭开看差多少） ========
+    'g2-estimate-trap': { shelf: ['estbench'], build: es({ mode: 0, op: 0, a: '47', b: '38', ua: '10', ub: '10' }),
+      hook: '估算 47 + 38：47 离 40 近还是离 50 近？38 呢？点离它近的那一端，看成整十数再加。',
+      milestones: [Es('est', '估算的结果是 90', 5, 'est', 90, ['47 离 50 只差 3。', '38 离 40 只差 2。', '50 + 40 = 90。'])], goal: ['est'],
+      traps: [{ id: 'down', wrong: '都往小里看（47 看成 40，38 看成 30）只得 70，比实际的 85 差得太多。', when: { role: 'e', port: 'est', op: '=', value: '70' } }] },
+    'est-29x31': { shelf: ['estbench'], build: es({ mode: 0, op: 2, a: '29', b: '31', ua: '10', ub: '10' }),
+      hook: '不要先算。29 接近几，31 接近几？都看成整十数估一估，再点“算一算”看差多少。',
+      milestones: [Es('est', '估计：30 × 30 = 900', 5, 'est', 900, ['29 离 30 只差 1。', '31 离 30 也只差 1。', '30 × 30 = 900。']), Es('exact', '准确是 899，只差 1', 2, 'exact', 899, ['点“算一算”。', '29 × 31 = 899。', '估计 900。'])], goal: ['est', 'exact'] },
+    'est-48x52': { shelf: ['estbench'], build: es({ mode: 0, op: 2, a: '4.8', b: '0.52', ua: '1', ub: '0.1' }),
+      hook: '4.8 接近哪个整数？0.52 接近 0.5 还是 0.6？先估，积比 4.8 大还是小？再算一算。',
+      milestones: [Es('est', '估计：5 × 0.5 = 2.5', 5, 'est', '5/2', ['4.8 离 5 只差 0.2。', '0.52 离 0.5 只差 0.02。', '5 × 0.5 = 2.5，比 4.8 小。']), Es('exact', '准确是 2.496', 2, 'exact', '312/125', ['点“算一算”。', '4.8 × 0.52 = 2.496。', '和 2.5 差不多。'])], goal: ['est', 'exact'] },
+    'est-circle': { shelf: ['estbench'], build: es({ mode: 1, r: 5, lo: 0, hi: 0 }),
+      hook: '半径 5 的圆，在外面的大正方形（面积 100）和里面斜放的小正方形（面积 50）之间。拖数轴上的两个圆点定一个范围，再“揭开”。',
+      milestones: [Es('inrange', '圆的面积 78.5 落在你估的范围里', 3, 'inrange', 1, ['圆比外面的正方形小：最多 100。', '圆比里面的正方形大：最少 50。', '把两个圆点拖到 50 和 100。']), Es('close', '估得准：范围的中点差不到 20%', 4, 'tight', 1, ['外面 100，里面 50。', '圆在它们中间。', '范围 50 到 100，中点 75。'])], goal: ['inrange', 'close'] },
+    // ======== 第三十二批：平行四边形的面积 → 面积公式推导（剪下来、移过去，拼成长方形） ========
+    'g4-parallelogram-core': { shelf: ['areabench'], build: ab({ shape: 0, b: 6, h: 2, s: 2 }),
+      hook: '现在的高是 2。往上拖顶边，把高拖到 4；再沿高剪下来、移到右边，拼成长方形，读面积。',
+      milestones: [Ar('area', '面积是 24 平方厘米', 5, 'area', 24, ['往上拖顶边中间的圆点，高拖到 4。', '点“沿高剪下来”“移到右边”。', '长方形长 6、宽 4：24。'])], goal: ['area'] },
+    'g4-parallelogram-slant-trap': { shelf: ['areabench'], build: ab({ shape: 0, b: 6, h: 4, s: 2 }),
+      hook: '底 6，斜度 2，高 4。面积要用哪两个数相乘？剪一剪、拼一拼，看拼成的长方形长和宽是几。',
+      milestones: [Ar('area', '面积是 24 平方厘米', 5, 'area', 24, ['点“沿高剪下来”。', '再点“移到右边”。', '长方形长 6（底）、宽 4（高）：24。'])], goal: ['area'],
+      traps: [{ id: 'slant', wrong: '把斜度 2 当成了高：6 × 2 = 12。拼成的长方形，宽是高 4，不是斜度。', when: { role: 'ar', port: 'area', op: '=', value: '12' } }] },
+    'para-area': { shelf: ['areabench'], build: ab({ shape: 0, b: 5, h: 3, s: 2 }),
+      hook: '拖角把底改成 6、高改成 4。再把左边的直角三角形沿高剪下来，平移到右边，看看拼成了什么形状。',
+      milestones: [H('set', '底 6、高 4', 3, (w) => w.some('areabench', (e) => e.props.b === 6 && e.props.h === 4), ['拖底边右端的圆点。', '拖顶边中间的圆点。', '底 6、高 4。']), Ar('area', '拼成长方形：面积 24', 4, 'area', 24, ['点“沿高剪下来”。', '点“移到右边”。', '长 6、宽 4：24。'])], goal: ['set', 'area'] },
+    'cut-invariant': { shelf: ['areabench'], build: ab({ shape: 0, b: 6, h: 4, s: 1 }),
+      hook: '底 6、高 4。先剪拼一次读面积；再“重来”，拖左上角把它推得更斜，再剪拼一次。面积变了吗？',
+      milestones: [Ar('first', '拼成长方形：面积 24', 3, 'area', 24, ['点“沿高剪下来”“移到右边”。', '长 6、宽 4。', '24。']), H('keep', '换一种斜度再拼，面积还是 24', 5, (w) => w.some('areabench', (e) => w.num(e, 'seen') >= 2 && w.num(e, 'area') === 24), ['点“重来”。', '拖左上角的圆点往右，推斜一点。', '再剪、再移：还是 6 × 4。'])], goal: ['first', 'keep'] },
+    // ======== 第三十三批：公因数、公倍数、因数个数 → 因数与倍数（试除、跳跳线、排长方形） ========
+    'gcd-12-18': { shelf: ['factorbench'], build: fb({ mode: 1, a: 12, b: 18 }),
+      hook: '“公因数”页：从 1 起一个一个点，看哪些能同时整除 12 和 18。再换到“公倍数”页，点两条跳跳线第一次落在一起的地方。',
+      milestones: [Fb('g6', '最大公因数 = 6', 4, 'gcd', 6, ['1、2、3、6 都能同时整除 12 和 18。', '4 只整除 12，5 都不行。', '最大的是 6。']), Fb('l36', '最小公倍数 = 36', 4, 'lcm', 36, ['点上面的“公倍数”标签。', '12、24 下面那条跳不到。', '36。'])], goal: ['g6', 'l36'] },
+    'pb-gcd-24-36': { shelf: ['factorbench'], build: fb({ mode: 1, a: 24, b: 36 }),
+      hook: '24 和 36：一个一个试，哪些能同时整除它们？最大的是几？再到“公倍数”页找最小的那个。',
+      milestones: [Fb('gcd', '最大公因数是 12', 4, 'gcd', 12, ['1、2、3、4、6、12 都能同时整除。', '8 只能整除 24。', '12。']), Fb('lcm', '最小公倍数是 72', 3, 'lcm', 72, ['换到“公倍数”页。', '24、48 下面跳不到。', '72。'])], goal: ['gcd', 'lcm'] },
+    'pb-count-divisors': { shelf: ['factorbench'], build: fb({ mode: 0, n: 36 }),
+      hook: '36 个小方块，每行放几个能正好排满？每排满一次找到一对因数。36 一共有几个因数？',
+      milestones: [Fb('count', '36 有 9 个因数', 6, 'count', 9, ['1 × 36、2 × 18、3 × 12、4 × 9。', '6 × 6：两个因数是同一个。', '1、2、3、4、6、9、12、18、36。'])], goal: ['count'] },
   };
   const missing = [], moved = [];
   for (const id of Object.keys(MOVES)) {
