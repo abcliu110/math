@@ -75,6 +75,7 @@
     'piece': 'packs/piece.js',
     'primeblocks': 'packs/primeblocks.js',
     'proof': 'packs/proof.js',
+    'proofbench': 'packs/proofbench.js',
     'proofsort': 'packs/proofsort.js',
     'ptree': 'packs/ptree.js',
     'ratio': 'packs/ratio.js',

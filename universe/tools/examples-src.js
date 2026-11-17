@@ -95,6 +95,8 @@ module.exports = [
       ['mfdb','meter',{'digits':0,'label':'折纸：找到几条对称轴'}],
       ['lgb','logicbench',{'people':'张,王,李','groups':'职业：老师,医生,司机','marks':'1,2,2'}],
       ['mlgb','meter',{'digits':0,'label':'推理：标了几个 ✓'}],
+      ['pfb','proofbench',{'mode':0,'rule':0,'base':true,'step':true,'push':true}],
+      ['mpfb','meter',{'digits':0,'label':'证明台：证据等级'}],
     ],
     links: [
       ['am','mam','v','area'],
@@ -141,6 +143,7 @@ module.exports = [
       ['jbb','mjbb','v','days'],
       ['fdb','mfdb','v','axes'],
       ['lgb','mlgb','v','yes'],
+      ['pfb','mpfb','v','lv'],
     ],
   },
 ];

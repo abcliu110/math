@@ -6,7 +6,7 @@
 
 - 知识点：142 个（设计目标 142）
 - 有题的知识点：141 个（99%）
-- 题目：575 道；没有对应知识点的题：1 道
+- 题目：578 道；没有对应知识点的题：1 道
 - 没有器材的本质：无
 - 没有题的本质：无
 
@@ -18,9 +18,9 @@
 | 2 | 16 | 16（100%） | 53 |
 | 3 | 16 | 16（100%） | 78 |
 | 4 | 17 | 17（100%） | 89 |
-| 5 | 14 | 14（100%） | 91 |
+| 5 | 14 | 14（100%） | 92 |
 | 6 | 15 | 14（93%） | 55 |
-| 7 | 16 | 16（100%） | 76 |
+| 7 | 16 | 16（100%） | 78 |
 | 8 | 16 | 16（100%） | 74 |
 | 9 | 16 | 16（100%） | 40 |
 
@@ -43,7 +43,7 @@
 | 1.13 | 1 | 100以内数的认识 | 4 | 0 | 0 | 1 | blocksbench、num |
 | 1.14 | 1 | 认识人民币 | 1 | 1 | 0 | 1 | moneybench |
 | 1.15 | 1 | 100以内加减法（一） | 1 | 1 | 0 | 1 | blocksbench |
-| 1.16 | 1 | 找规律 | 5 | 0 | 0 | 1 | num、meter、conjbench、fmachine、guessrule、conjecture_board |
+| 1.16 | 1 | 找规律 | 5 | 0 | 0 | 1 | num、meter、conjbench、fmachine、guessrule、proofbench |
 | 2.1 | 2 | 长度单位、线段 | 1 | 1 | 0 | 1 | rulerbench |
 | 2.2 | 2 | 100以内加减法（二） | 6 | 1 | 0 | 1 | vertbench、estbench、arithbench |
 | 2.3 | 2 | 进位加法、退位减法 | 6 | 1 | 0 | 1 | blocksbench、arithbench、colbench |
@@ -101,7 +101,7 @@
 | 5.6 | 5 | 多边形的面积 | 7 | 1 | 0 | 1 | areabench、num、gworkspace、gpt、gpoly、fquad |
 | 5.7 | 5 | 植树问题 | 7 | 1 | 0 | 1 | gapbench |
 | 5.14 | 5 | 观察物体（三） | 2 | 1 | 0 | 1 | solidbench、twoways |
-| 5.8 | 5 | 因数与倍数 | 23 | 0 | 0 | 2 | asn、conjbench、factorbench、hanoi、guessrule、areamodel、modclock、groupbench、primeblocks、proofsort、net |
+| 5.8 | 5 | 因数与倍数 | 23 | 0 | 1 | 2 | asn、conjbench、factorbench、hanoi、guessrule、areamodel、modclock、groupbench、primeblocks、proofbench、proofsort、net |
 | 5.9 | 5 | 长方体和正方体 | 3 | 1 | 0 | 1 | pour、solidbench |
 | 5.10 | 5 | 分数的意义和性质 | 6 | 0 | 0 | 1 | areamodel、ratiobench、numlinebench、primeblocks |
 | 5.11 | 5 | 分数的加法和减法 | 8 | 1 | 0 | 1 | num、approach、ratiobench、findbug、fracarea |
@@ -114,7 +114,7 @@
 | 6.5 | 6 | 圆 | 4 | 1 | 0 | 1 | approach、circlebench、dissect、estbench |
 | 6.6 | 6 | 百分数（一） | 2 | 1 | 0 | 1 | ratiobench |
 | 6.7a | 6 | 扇形统计图 | 1 | 1 | 0 | 1 | ratiobench |
-| 6.7b | 6 | 数与形 | 2 | 1 | 2 | 4 | conjbench、nth、induction、scaffold |
+| 6.7b | 6 | 数与形 | 2 | 1 | 2 | 4 | conjbench、nth、proofbench |
 | 6.8 | 6 | 负数 | 2 | 1 | 0 | 1 | numlinebench |
 | 6.9 | 6 | 负数运算——为什么负负得正 | 1 | 1 | 0 | 1 | chipbench |
 | 6.10 | 6 | 百分数（二） | 2 | 1 | 0 | 1 | ratiobench |
@@ -125,7 +125,7 @@
 | 7.1 | 7 | 正数和负数、有理数与数轴 | 6 | 1 | 0 | 1 | approach、conjbench、chipbench、numlinebench、proofsort |
 | 7.2 | 7 | 有理数的加减法 | 7 | 1 | 0 | 1 | numlinebench、findbug、arithbench、newop |
 | 7.3 | 7 | 有理数的乘除法、乘方与科学记数法 | 3 | 1 | 0 | 1 | chipbench、hanoi、num |
-| 7.4 | 7 | 整式 | 1 | 1 | 2 | 4 | algebra、induction |
+| 7.4 | 7 | 整式 | 1 | 1 | 4 | 4 | algebra、proofbench |
 | 7.5 | 7 | 整式的加减 | 7 | 1 | 0 | 1 | algebra、termsbench |
 | 7.6 | 7 | 解一元一次方程 | 12 | 0 | 0 | 1 | balancebench、findbug |
 | 7.7 | 7 | 实际问题与一元一次方程 | 1 | 1 | 0 | 1 | balancebench |
@@ -175,15 +175,15 @@
 
 | 本质 | 题目数 | 器材数 |
 |---|---|---|
-| E1 | 61 | 25 |
+| E1 | 62 | 25 |
 | E2 | 225 | 48 |
 | E3 | 144 | 43 |
 | E4 | 106 | 27 |
 | E5 | 138 | 53 |
-| E6 | 47 | 20 |
+| E6 | 49 | 21 |
 | E7 | 108 | 26 |
 | E8 | 66 | 23 |
-| E9 | 69 | 16 |
+| E9 | 72 | 17 |
 | E10 | 10 | 4 |
 | E11 | 11 | 3 |
 | E12 | 13 | 6 |

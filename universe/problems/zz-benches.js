@@ -1,4 +1,4 @@
-/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，三十五批共 240 道）。
+/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，三十六批共 245 道）。
  * 这些题原来的做法是“放数字、接运算器、看读数”：学生在搭计算流程。这里按 id 把它们换成在操作台上直接动手：
  * 题目的编号、标题、年级、知识点、道理（why）都不变，换的是器材架、开场的台面、里程碑和提示。
  * 这个文件排在所有题目文件后面加载（文件名 zz 开头），找不到的 id 会记在 U.benchMigrateMissing 里（测试会查）。 */
@@ -7,9 +7,9 @@
   const U = G.U, W = U.World;
   const one = (type, role, props) => () => { const s = W.blank(); const id = W.add(s, type, 40, 50, props); s.entities[id].role = role; return s; };
   const ms = (role) => (id, say, score, port, value, hints) => ({ id, say, score, when: { role, port, op: '=', value: String(value) }, hints });
-  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s'), GP = ms('g'), B = ms('b'), D = ms('d'), K2 = ms('k'), Gq = ms('q'), So = ms('o'), Cj = ms('j'), Z = ms('z'), H2 = ms('h'), Pq = ms('p'), Tr = ms('x'), Ci = ms('i'), Gw = ms('w'), Tw = ms('y'), Vt = ms('v'), Mb = ms('c2'), Db = ms('d'), Tb = ms('tb'), Zp = ms('z'), Mk = ms('k'), Es = ms('e'), Ar = ms('ar'), Fb = ms('f'), An = ms('an'), Rl = ms('rl'), Mo = ms('mo'), Cl = ms('cl'), Fd = ms('fd'), Lg = ms('lg');
+  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s'), GP = ms('g'), B = ms('b'), D = ms('d'), K2 = ms('k'), Gq = ms('q'), So = ms('o'), Cj = ms('j'), Z = ms('z'), H2 = ms('h'), Pq = ms('p'), Tr = ms('x'), Ci = ms('i'), Gw = ms('w'), Tw = ms('y'), Vt = ms('v'), Mb = ms('c2'), Db = ms('d'), Tb = ms('tb'), Zp = ms('z'), Mk = ms('k'), Es = ms('e'), Ar = ms('ar'), Fb = ms('f'), An = ms('an'), Rl = ms('rl'), Mo = ms('mo'), Cl = ms('cl'), Fd = ms('fd'), Lg = ms('lg'), Pf = ms('pf');
   const H = (id, say, score, when, hints) => ({ id, say, score, when, hints });   // 条件是一个范围（频率稳在某个区间）时用函数
-  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props), bb = (props) => one('balancebench', 'b', props), sb = (props) => one('statbench', 'd', props), ch = (props) => one('chancebench', 'h', props), ck = (props) => one('clockbench', 'k', props), gq = (props) => one('groupbench', 'q', props), sd = (props) => one('solidbench', 'o', props), cj = (props) => one('conjbench', 'j', props), fb2 = (props) => one('fitbench', 'z', props), pb2 = (props) => one('pairbench', 'p', props), tb3 = (props) => one('tribench', 'x', props), ci = (props) => one('circlebench', 'i', props), gd = (props) => one('gridbench', 'w', props), tw = (props) => one('tablebench', 'y', props), vt = (props) => one('vertbench', 'v', props), mb = (props) => one('mulbench', 'c2', props), db = (props) => one('decbench', 'd', props), tlb = (props) => one('tilebench', 'tb', props), zp = (props) => one('chipbench', 'z', props), mk = (props) => one('makebench', 'k', props), es = (props) => one('estbench', 'e', props), ab = (props) => one('areabench', 'ar', props), fb = (props) => one('factorbench', 'f', props), an = (props) => one('anglebench', 'an', props), rl = (props) => one('rulerbench', 'rl', props), mo = (props) => one('moneybench', 'mo', props), cl = (props) => one('calbench', 'cl', props), fd = (props) => one('foldbench', 'fd', props), lgb = (props) => one('logicbench', 'lg', props);
+  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props), bb = (props) => one('balancebench', 'b', props), sb = (props) => one('statbench', 'd', props), ch = (props) => one('chancebench', 'h', props), ck = (props) => one('clockbench', 'k', props), gq = (props) => one('groupbench', 'q', props), sd = (props) => one('solidbench', 'o', props), cj = (props) => one('conjbench', 'j', props), fb2 = (props) => one('fitbench', 'z', props), pb2 = (props) => one('pairbench', 'p', props), tb3 = (props) => one('tribench', 'x', props), ci = (props) => one('circlebench', 'i', props), gd = (props) => one('gridbench', 'w', props), tw = (props) => one('tablebench', 'y', props), vt = (props) => one('vertbench', 'v', props), mb = (props) => one('mulbench', 'c2', props), db = (props) => one('decbench', 'd', props), tlb = (props) => one('tilebench', 'tb', props), zp = (props) => one('chipbench', 'z', props), mk = (props) => one('makebench', 'k', props), es = (props) => one('estbench', 'e', props), ab = (props) => one('areabench', 'ar', props), fb = (props) => one('factorbench', 'f', props), an = (props) => one('anglebench', 'an', props), rl = (props) => one('rulerbench', 'rl', props), mo = (props) => one('moneybench', 'mo', props), cl = (props) => one('calbench', 'cl', props), fd = (props) => one('foldbench', 'fd', props), lgb = (props) => one('logicbench', 'lg', props), pf = (props) => one('proofbench', 'pf', props);
   const MOVES = {
     // ---- 数轴 ----
     'g1-split-merge-core': { shelf: ['numlinebench'], build: nl({ from: 0, to: 10, a: 0, s: 1, n: 0 }),
@@ -824,6 +824,23 @@
         H('red', '写出结论：小红穿红色', 3, (w) => w.some('logicbench', (e) => U.LogicBench.has(e.props, '小红', '红', 2)), ['线索 1。', '小红那一行、红那一列。', '点两下，标 ✓。']),
         H('cat', '写出结论：小明养猫', 3, (w) => w.some('logicbench', (e) => U.LogicBench.has(e.props, '小明', '猫', 2)), ['线索 2：养猫的人穿蓝色。', '小红穿红、小刚不穿蓝：只有小明穿蓝。', '小明的猫标 ✓。']),
         Lg('done', '每人的颜色和宠物都找出来了', 4, 'solved', 1, ['每人每组都要有一个 ✓。', '线索 4：小红不养狗，只剩兔。', '小明蓝、猫；小红红、兔；小刚绿、狗。'])], goal: ['excl', 'red', 'cat', 'done'] },
+    // ======== 第三十六批：归纳阶梯、证明脚手架、猜想板 → 证明台 ========
+    'pf-induct-odd': { shelf: ['proofbench'], build: pf({ mode: 0, rule: 0 }),
+      hook: '多米诺骨牌就是 n = 1、2、3……。证明要两件事：第 1 块倒（起点成立），任意一块倒了都会推倒下一块（推一级是恒等式）。两件都看过，再推倒第一块。',
+      milestones: [Pf('proved', '第一块倒，每一块推倒下一块：对所有 n 成立（证据 ④）', 8, 'lv', 4, ['点“看第 1 块（n = 1）”：1 = 1²。', '点“看任意一块推下一块”：两边化简一样。', '点“推倒第一块”。'])], goal: ['proved'] },
+    'pf-induct-gauss': { shelf: ['proofbench'], build: pf({ mode: 0, rule: 1 }),
+      hook: '多米诺骨牌就是 n = 1、2、3……。证明要两件事：第 1 块倒（起点成立），任意一块倒了都会推倒下一块（推一级是恒等式）。两件都看过，再推倒第一块。',
+      milestones: [Pf('proved', '第一块倒，每一块推倒下一块：对所有 n 成立（证据 ④）', 8, 'lv', 4, ['点“看第 1 块（n = 1）”：1 = 1 × 2 ÷ 2。', '点“看任意一块推下一块”：两边化简一样。', '点“推倒第一块”。'])], goal: ['proved'] },
+    'pf-induct-pow2': { shelf: ['proofbench'], build: pf({ mode: 0, rule: 3 }),
+      hook: '多米诺骨牌就是 n = 1、2、3……。证明要两件事：第 1 块倒（起点成立），任意一块倒了都会推倒下一块（推一级是恒等式）。两件都看过，再推倒第一块。',
+      milestones: [Pf('proved', '第一块倒，每一块推倒下一块：对所有 n 成立（证据 ④）', 8, 'lv', 4, ['点“看第 1 块（n = 1）”：1 = 2¹ − 1。', '点“看任意一块推下一块”：两边化简一样。', '点“推倒第一块”。'])], goal: ['proved'] },
+    'pf-scaffold-odd': { shelf: ['proofbench'], build: pf({ mode: 1, rule: 0, base: true, step: true }),
+      hook: '多米诺那边已经看过：第 1 块成立，推一级是恒等式。现在写证明：三步，每一步点一个依据。依据只能是台面上已经成立的事——“试了好多例子”不算。',
+      milestones: [H('two', '至少两步的依据成立', 3, (w) => w.some('proofbench', (e) => w.num(e, 'filled') >= 2), ['第 1 步：起点，依据是“第 1 块验证过了”。', '第 2 步：推一级，依据是“推一级是恒等式”。', '第 3 步的依据是“前两条合起来”。']),
+        Pf('proved', '三步的依据都成立，证明完成（证据 ④）', 6, 'lv', 4, ['三步都要有依据。', '第 3 步“所以对所有 n”：前两条合起来。', '“试了好多例子”不能当依据。'])], goal: ['proved'] },
+    'pf-board-pattern': { shelf: ['proofbench'], build: pf({ mode: 2 }),
+      hook: '1，3，5，7……每个数都比前一个多 2。把发现拼成“如果……那么……”，在 1 到 30 里试例子。都对就记下来——它还只是猜想。',
+      milestones: [Pf('write', '拼出一条猜想，试过例子都对（证据 ①）', 6, 'lv', 1, ['如果点“n 是奇数”。', '那么点“n + 2 是奇数”。', '点“在 1 到 30 里试例子”。'])], goal: ['write'] },
   };
   const missing = [], moved = [];
   for (const id of Object.keys(MOVES)) {

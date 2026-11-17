@@ -1,7 +1,7 @@
 /* 搬到操作台上的旧题的参考解（problems/zz-benches.js）。文件名 zz 开头：排在各年级的参考解后面加载，盖掉原来“接运算器”的解法。 */
 'use strict';
 const S = (role) => (o) => (h) => { const e = h.role(role); for (const k of Object.keys(o)) h.set(e, k, o[k]); };
-const n = S('n'), k = S('k'), r = S('r'), m = S('m'), c = S('c'), t = S('t'), s = S('s'), gp = S('g'), b = S('b'), d = S('d'), ch = S('h'), ck = S('k'), gq = S('q'), so = S('o'), cj = S('j'), fz = S('z'), pq = S('p'), tx = S('x'), ci = S('i'), gw = S('w'), ty = S('y'), vv = S('v'), mbs = S('c2'), dd = S('d'), tt = S('tb'), zz = S('z'), ee = S('e'), ar = S('ar'), ff = S('f'), san = S('an'), srl = S('rl'), smo = S('mo'), scl = S('cl'), sfd = S('fd'), slg = S('lg');
+const n = S('n'), k = S('k'), r = S('r'), m = S('m'), c = S('c'), t = S('t'), s = S('s'), gp = S('g'), b = S('b'), d = S('d'), ch = S('h'), ck = S('k'), gq = S('q'), so = S('o'), cj = S('j'), fz = S('z'), pq = S('p'), tx = S('x'), ci = S('i'), gw = S('w'), ty = S('y'), vv = S('v'), mbs = S('c2'), dd = S('d'), tt = S('tb'), zz = S('z'), ee = S('e'), ar = S('ar'), ff = S('f'), san = S('an'), srl = S('rl'), smo = S('mo'), scl = S('cl'), sfd = S('fd'), slg = S('lg'), spf = S('pf');
 module.exports = {
   'g1-split-merge-core': n({ a: 2, n: 3 }),
   'g1-split-minus-trap': n({ s: -1, n: 2 }),
@@ -43,6 +43,9 @@ module.exports = {
   'g7-quadrant-core': c({ ax: -2, ay: 3 }),
   'g7-symmetry-x-axis-trap': c({ bx: 3, by: 2 }),
   'g7-translate-down-trap': c({ ay: -1 }),
+  // 第三十六批
+  'pf-induct-odd': spf({ base: true, step: true, push: true }), 'pf-induct-gauss': spf({ base: true, step: true, push: true }), 'pf-induct-pow2': spf({ base: true, step: true, push: true }),
+  'pf-scaffold-odd': spf({ r1: 0, r2: 1, r3: 2 }), 'pf-board-pattern': spf({ ci: 0, ct: 0, tried: true }),
   // 第三十五批
   'g2-fold-symmetric-core': sfd({ folded: true }), 'g2-fold-offset-trap': sfd({ off: 0, folded: true }), 'fold-square-half': sfd({ angle: 90, folded: true }),
   'fold-diagonal'(h) { const e = h.role('fd'); h.set(e, 'folded', true); h.set(e, 'folded', false); h.set(e, 'angle', 45); h.set(e, 'folded', true); },

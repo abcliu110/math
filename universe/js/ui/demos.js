@@ -875,5 +875,16 @@
     },
   };
 
+  // 证明台：多米诺
+  D.proofbench = {
+    caps: ['第 1 块：n = 1 成立', '任意一块推倒下一块：恒等式', '推倒第一块', '全倒了：对所有 n 成立'],
+    draw(st) {
+      let s = '';
+      for (let i = 0; i < 8; i++) { const x = 30 + i * 30, down = st === 3 || (st === 2 && i < 3); s += down ? '<g transform="rotate(70 ' + (x + 6) + ' 100)">' + Rc(x, 50, 10, 50, '#9fc3ea', { s: INK }) + '</g>' : Rc(x, 50, 10, 50, i === 0 && st >= 0 ? '#d6ecff' : '#fff', { s: INK }); }
+      s += T(330, 70, ['起点 ✓', '推一级 ✓', '推！', '④ 证明'][st], { s: 15, w: 700, f: P });
+      return s;
+    },
+  };
+
   UI.Demo = D;
 })(typeof globalThis !== 'undefined' ? globalThis : window);
