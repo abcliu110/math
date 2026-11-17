@@ -9,7 +9,7 @@
   const ms = (id, say, score, port, value, hints) => ({ id, say, score, when: { role: 'sq', port, op: '=', value: String(value) }, hints });
 
   add({
-    id: 'sq-matches-10', essence: ['E6', 'E8'], title: '火柴摆 10 个正方形，要几根？', grade: 4, rung: 3, points: ['4.14'],
+    id: 'sq-matches-10', essence: ['E6', 'E8'], title: '火柴摆 10 个正方形，要几根？', grade: 4, rung: 3, points: ['1.16'],
     topics: ['找规律', '火柴棒'], alias: ['找规律', '火柴', '第 n 个'],
     hook: '1 个正方形 4 根火柴。再摆几个看看：每多一个正方形，多几根？找到规律，再算第 10 个。',
     build: sb({ kind: 0, k: 1, a: 0, d: 0, n: 10 }),
@@ -19,7 +19,7 @@
     why: '第一个正方形 4 根，后面每个和前一个共用一条边，只要再加 3 根。第 n 个是 4 + (n − 1) × 3 = 3n + 1，第 10 个是 31，不是 4 × 10 = 40。',
   });
   add({
-    id: 'sq-tables-n', essence: ['E6', 'E8'], title: 'n 张桌子拼成一排，能坐几人？', grade: 5, rung: 3, points: ['5.4'],
+    id: 'sq-tables-n', essence: ['E6', 'E8'], title: 'n 张桌子拼成一排，能坐几人？', grade: 5, rung: 3, points: ['5.5'],
     topics: ['找规律', '用字母表示数'], alias: ['找规律', '桌子拼起来', '用字母表示'],
     hook: '一张桌子坐 4 人。两张拼起来坐几人？三张呢？找到规律，算 25 张桌子能坐几人。',
     build: sb({ kind: 1, k: 1, a: 0, d: 0, n: 25 }),

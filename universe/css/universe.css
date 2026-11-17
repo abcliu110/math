@@ -633,3 +633,12 @@ body.rail-l #lrail:hover, body.rail-r #rrail:hover { background: #dbeafe; color:
 .it.ex { display: block; }
 .it.ex .chip { margin-left: 8px; }
 .ex-sub { color: var(--txt3); font-size: 12px; margin-top: 4px; font-weight: 400; }
+
+/* 随机出题（操作台）：左栏的“随机出一题”一行、实验库里的“随机练习” */
+.quizrow { align-items: center; flex-wrap: wrap; }
+.quizrow .qlab { font-size: 12px; color: var(--txt2); }
+.quizbox { padding: 4px 2px 8px; }
+.qchips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.qchips .btn { font-size: 12px; padding: 4px 8px; }
+.quizrow { gap: 6px; }
+.quizrow .btn { padding: 4px 10px; font-size: 12px; }

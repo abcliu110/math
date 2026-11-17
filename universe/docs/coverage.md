@@ -14,10 +14,10 @@
 
 | 年级 | 知识点 | 有题 | 题目数 |
 |---|---|---|---|
-| 1 | 16 | 16（100%） | 45 |
-| 2 | 16 | 16（100%） | 53 |
+| 1 | 16 | 16（100%） | 47 |
+| 2 | 16 | 16（100%） | 52 |
 | 3 | 16 | 16（100%） | 78 |
-| 4 | 17 | 17（100%） | 89 |
+| 4 | 17 | 17（100%） | 88 |
 | 5 | 14 | 14（100%） | 92 |
 | 6 | 15 | 14（93%） | 55 |
 | 7 | 16 | 16（100%） | 78 |
@@ -29,27 +29,27 @@
 | 知识点 | 年级 | 名称 | 核心 | 陷阱 | 延伸 | 最高证据 | 器材 |
 |---|---|---|---|---|---|---|---|
 | 1.1 | 1 | 数数、一一对应、比多少 | 3 | 0 | 0 | 1 | pairbench |
-| 1.2 | 1 | 位置 | 2 | 1 | 0 | 1 | numlinebench、makebench |
-| 1.3 | 1 | 1–5的认识、分与合 | 1 | 1 | 0 | 1 | numlinebench |
+| 1.2 | 1 | 位置 | 1 | 1 | 0 | 1 | numlinebench |
+| 1.3 | 1 | 1–5的认识、分与合 | 2 | 1 | 0 | 1 | numlinebench、makebench |
 | 1.4 | 1 | 5以内加减法、0 | 1 | 1 | 0 | 1 | numlinebench、num |
 | 1.5 | 1 | 立体图形 | 1 | 1 | 0 | 1 | solidbench |
 | 1.6 | 1 | 6–10的认识、连加连减 | 2 | 1 | 0 | 1 | termsbench、numlinebench |
 | 1.7 | 1 | 11–20的认识、10加几 | 2 | 1 | 0 | 1 | blocksbench、groupbench |
-| 1.8 | 1 | 认识钟表 | 2 | 1 | 0 | 1 | clockbench、moneybench |
+| 1.8 | 1 | 认识钟表 | 1 | 1 | 0 | 1 | clockbench |
 | 1.9 | 1 | 20以内进位加法、凑十法 | 3 | 1 | 0 | 1 | numlinebench、makebench |
 | 1.10 | 1 | 平面图形、七巧板 | 1 | 1 | 0 | 1 | areamodel、tribench |
 | 1.11 | 1 | 20以内退位减法、破十法 | 2 | 1 | 0 | 1 | numlinebench、makebench |
 | 1.12 | 1 | 分类与整理 | 1 | 1 | 0 | 1 | num |
 | 1.13 | 1 | 100以内数的认识 | 4 | 0 | 0 | 1 | blocksbench、num |
-| 1.14 | 1 | 认识人民币 | 1 | 1 | 0 | 1 | moneybench |
+| 1.14 | 1 | 认识人民币 | 3 | 1 | 0 | 1 | moneybench |
 | 1.15 | 1 | 100以内加减法（一） | 1 | 1 | 0 | 1 | blocksbench |
-| 1.16 | 1 | 找规律 | 5 | 0 | 0 | 1 | num、meter、conjbench、fmachine、guessrule、proofbench |
-| 2.1 | 2 | 长度单位、线段 | 1 | 1 | 0 | 1 | rulerbench |
+| 1.16 | 1 | 找规律 | 6 | 0 | 0 | 1 | num、meter、conjbench、fmachine、guessrule、proofbench、seqbench |
+| 2.1 | 2 | 长度单位、线段 | 2 | 1 | 0 | 1 | rulerbench |
 | 2.2 | 2 | 100以内加减法（二） | 6 | 1 | 0 | 1 | vertbench、estbench、arithbench |
 | 2.3 | 2 | 进位加法、退位减法 | 6 | 1 | 0 | 1 | blocksbench、arithbench、colbench |
 | 2.4 | 2 | 角的初步认识、直角 | 2 | 1 | 0 | 1 | tribench、anglebench |
-| 2.5 | 2 | 乘法初步认识、口诀 | 4 | 1 | 0 | 1 | numlinebench、areamodel、moneybench、tapebench |
-| 2.6 | 2 | 观察物体 | 2 | 1 | 0 | 1 | solidbench、rulerbench |
+| 2.5 | 2 | 乘法初步认识、口诀 | 3 | 1 | 0 | 1 | numlinebench、areamodel、tapebench |
+| 2.6 | 2 | 观察物体 | 1 | 1 | 0 | 1 | solidbench |
 | 2.7 | 2 | 认识时间 | 1 | 1 | 0 | 1 | clockbench、ratiobench |
 | 2.15 | 2 | 搭配（一） | 1 | 1 | 0 | 1 | areamodel |
 | 2.14a | 2 | 数据收集整理 | 1 | 1 | 0 | 1 | statbench |
@@ -61,7 +61,7 @@
 | 2.13 | 2 | 克和千克 | 1 | 1 | 0 | 1 | ratiobench |
 | 2.14b | 2 | 推理 | 3 | 0 | 0 | 1 | logicbench、nim |
 | 3.1 | 3 | 时、分、秒 | 1 | 1 | 0 | 1 | ratiobench、clockbench |
-| 3.2 | 3 | 万以内加减法 | 2 | 1 | 0 | 1 | blocksbench |
+| 3.2 | 3 | 万以内加减法 | 3 | 1 | 0 | 1 | blocksbench、estbench |
 | 3.3 | 3 | 测量 | 1 | 1 | 0 | 1 | ratiobench、rulerbench |
 | 3.4 | 3 | 倍的认识 | 8 | 1 | 0 | 1 | num、numlinebench、tapebench |
 | 3.5 | 3 | 多位数乘一位数 | 2 | 1 | 0 | 1 | areamodel、num |
@@ -71,18 +71,18 @@
 | 3.9 | 3 | 位置与方向 | 1 | 1 | 0 | 1 | numlinebench |
 | 3.10 | 3 | 除数是一位数的除法 | 1 | 1 | 0 | 1 | vertbench |
 | 3.15a | 3 | 复式统计表 | 2 | 2 | 0 | 1 | tablebench |
-| 3.11 | 3 | 两位数乘两位数 | 10 | 1 | 0 | 1 | areamodel、num、estbench、mulbench、arithbench |
-| 3.12 | 3 | 面积 | 13 | 0 | 0 | 1 | areamodel、asn、calbench、curved、geoboard、circlebench、optimize、solidbench、turtle |
-| 3.13 | 3 | 年、月、日 | 1 | 1 | 0 | 1 | num |
+| 3.11 | 3 | 两位数乘两位数 | 9 | 1 | 0 | 1 | areamodel、num、estbench、mulbench、arithbench |
+| 3.12 | 3 | 面积 | 11 | 0 | 0 | 1 | areamodel、asn、curved、geoboard、circlebench、optimize、solidbench、turtle |
+| 3.13 | 3 | 年、月、日 | 3 | 1 | 0 | 1 | calbench、num |
 | 3.14 | 3 | 小数的初步认识 | 3 | 1 | 0 | 1 | decbench、numlinebench、twoways |
 | 3.15b | 3 | 搭配（二） | 2 | 1 | 0 | 1 | num、areamodel、euler |
 | 4.1 | 4 | 大数的认识、近似数 | 5 | 0 | 0 | 1 | chancebench、num |
 | 4.2 | 4 | 公顷和平方千米 | 1 | 1 | 0 | 1 | ratiobench |
-| 4.3 | 4 | 角的度量 | 1 | 0 | 0 | 1 | anglebench |
+| 4.3 | 4 | 角的度量 | 2 | 0 | 0 | 1 | anglebench |
 | 4.4 | 4 | 三位数乘两位数 | 10 | 1 | 0 | 1 | mulbench、travelbench |
 | 4.5 | 4 | 平行四边形和梯形 | 3 | 1 | 0 | 1 | areabench、cubes |
-| 4.6 | 4 | 除数是两位数的除法 | 2 | 1 | 0 | 1 | anglebench、vertbench |
-| 4.7 | 4 | 条形统计图 | 3 | 1 | 0 | 1 | statbench、ratiobench、foldbench |
+| 4.6 | 4 | 除数是两位数的除法 | 1 | 1 | 0 | 1 | vertbench |
+| 4.7 | 4 | 条形统计图 | 1 | 1 | 0 | 1 | statbench、ratiobench |
 | 4.8 | 4 | 优化 | 1 | 1 | 0 | 1 | num |
 | 4.9 | 4 | 四则运算 | 10 | 1 | 0 | 1 | asn、termsbench、findbug、turtle |
 | 4.17 | 4 | 观察物体（二） | 1 | 1 | 0 | 1 | solidbench |
@@ -90,14 +90,14 @@
 | 4.11 | 4 | 小数的意义和性质 | 1 | 1 | 0 | 1 | decbench |
 | 4.12 | 4 | 三角形 | 6 | 0 | 0 | 1 | tribench、curved、areabench、guessrule |
 | 4.13 | 4 | 小数的加法和减法 | 2 | 1 | 0 | 1 | decbench |
-| 4.14 | 4 | 图形的运动（二） | 2 | 0 | 0 | 1 | gridbench、seqbench |
+| 4.14 | 4 | 图形的运动（二） | 3 | 0 | 0 | 1 | gridbench、foldbench |
 | 4.15 | 4 | 平均数 | 9 | 0 | 0 | 1 | hanoi、meanbench、chancebench、statbench |
 | 4.16 | 4 | 鸡兔同笼 | 11 | 1 | 0 | 1 | swapbench |
 | 5.1 | 5 | 小数乘法 | 2 | 1 | 0 | 1 | decbench、estbench |
 | 5.2 | 5 | 位置 | 1 | 1 | 0 | 1 | gridbench |
 | 5.3 | 5 | 小数除法 | 1 | 1 | 0 | 1 | decbench |
-| 5.4 | 5 | 可能性 | 7 | 1 | 0 | 3 | chancebench、pairbench、ptree、seqbench |
-| 5.5 | 5 | 简易方程 | 12 | 0 | 0 | 1 | variable、balancebench、nim、costplan、systembench |
+| 5.4 | 5 | 可能性 | 6 | 1 | 0 | 3 | chancebench、pairbench、ptree |
+| 5.5 | 5 | 简易方程 | 13 | 0 | 0 | 1 | variable、balancebench、nim、costplan、seqbench、systembench |
 | 5.6 | 5 | 多边形的面积 | 7 | 1 | 0 | 1 | areabench、num、gworkspace、gpt、gpoly、fquad |
 | 5.7 | 5 | 植树问题 | 7 | 1 | 0 | 1 | gapbench |
 | 5.14 | 5 | 观察物体（三） | 2 | 1 | 0 | 1 | solidbench、twoways |
@@ -108,8 +108,8 @@
 | 5.12 | 5 | 图形的运动（三） | 1 | 1 | 0 | 1 | gridbench |
 | 5.13 | 5 | 折线统计图、找次品 | 1 | 0 | 0 | 1 | num |
 | 6.1 | 6 | 分数乘法 | 4 | 1 | 0 | 1 | areamodel、num、fracarea |
-| 6.3 | 6 | 位置与方向（二） | 4 | 1 | 0 | 1 | gridbench、jobbench |
-| 6.2 | 6 | 分数除法、倒数 | 3 | 1 | 0 | 1 | num、findbug、fracarea |
+| 6.3 | 6 | 位置与方向（二） | 1 | 1 | 0 | 1 | gridbench |
+| 6.2 | 6 | 分数除法、倒数 | 6 | 1 | 0 | 1 | num、findbug、fracarea、jobbench |
 | 6.4 | 6 | 比 | 4 | 0 | 0 | 1 | ratiobench、costplan |
 | 6.5 | 6 | 圆 | 4 | 1 | 0 | 1 | approach、circlebench、dissect、estbench |
 | 6.6 | 6 | 百分数（一） | 2 | 1 | 0 | 1 | ratiobench |

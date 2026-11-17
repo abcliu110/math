@@ -9,7 +9,7 @@
   const ms = (id, say, score, port, value, hints) => ({ id, say, score, when: { role: 'cl', port, op: '=', value: String(value) }, hints });
 
   add({
-    id: 'cal-feb-2024', essence: ['E6'], title: '2024 年 2 月有几天？', grade: 3, rung: 2, points: ['3.12'],
+    id: 'cal-feb-2024', essence: ['E6'], title: '2024 年 2 月有几天？', grade: 3, rung: 2, points: ['3.13'],
     topics: ['闰年', '平年', '年月日'], alias: ['闰年', '二月', '几天'],
     hook: '日历现在是 2024 年 1 月。翻到 2 月看看有几天。2024 年是闰年还是平年？',
     build: cb({ mode: 0, y: 2024, mo: 1 }),
@@ -18,7 +18,7 @@
     why: '四年一闰：年份能被 4 整除（整百年要能被 400 整除）就是闰年，2 月有 29 天；平年 2 月 28 天。2024 ÷ 4 = 506，是闰年。',
   });
   add({
-    id: 'cal-may-days', essence: ['E6', 'E7'], title: '5 月 1 日到 5 月 31 日，一共几天？', grade: 3, rung: 3, points: ['3.12'],
+    id: 'cal-may-days', essence: ['E6', 'E7'], title: '5 月 1 日到 5 月 31 日，一共几天？', grade: 3, rung: 3, points: ['3.13'],
     topics: ['经过几天', '两头都算'], alias: ['经过几天', '一共几天', '植树问题'],
     hook: '点 5 月 1 日，再点 5 月 31 日。“经过了几天”和“一共几天”不一样：一共几天要把头尾两天都算上。',
     build: cb({ mode: 0, y: 2026, mo: 5 }),

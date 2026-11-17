@@ -9,7 +9,7 @@
   const ms = (id, say, score, port, value, hints) => ({ id, say, score, when: { role: 'rl', port, op: '=', value: String(value) }, hints });
 
   add({
-    id: 'ru-pencil', essence: ['E5', 'E7'], title: '铅笔没从 0 开始放，它有多长？', grade: 2, rung: 2, points: ['2.6'],
+    id: 'ru-pencil', essence: ['E5', 'E7'], title: '铅笔没从 0 开始放，它有多长？', grade: 2, rung: 2, points: ['2.1'],
     topics: ['量长度', '厘米'], alias: ['尺子', '量长度', '厘米', '从 0 开始'],
     hook: '铅笔头在 2 厘米，笔尖指着 8。它是 8 厘米长吗？拖铅笔让头对准 0，或者点“从这头数到那头”数一数。',
     build: rb({ mode: 0, len: 6, at: 2 }),

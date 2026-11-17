@@ -9,7 +9,7 @@
   const ms = (id, say, score, port, value, hints) => ({ id, say, score, when: { role: 'e', port, op: '=', value: String(value) }, hints });
 
   add({
-    id: 'es-503-198', essence: ['E3', 'E2'], title: '503 − 198 大约是多少？', grade: 3, rung: 2, points: ['3.11'],
+    id: 'es-503-198', essence: ['E3', 'E2'], title: '503 − 198 大约是多少？', grade: 3, rung: 2, points: ['3.2'],
     topics: ['估算', '整百数'], alias: ['估算', '大约', '整百数'],
     hook: '先不算。503 离 500 近还是离 600 近？198 呢？都看成整百数，估一估，再算一算看差多少。',
     build: eb({ mode: 0, op: 1, a: '503', b: '198', ua: '100', ub: '100' }),

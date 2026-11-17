@@ -226,6 +226,12 @@
     refresh(); UI.Panels.renderShelf();
     say(S.mode === 'exam' ? '考试：没有提示，搭好后点「交卷」' : '练习：跟着左边的步骤做，下一步要的器材会发光', '', 4200);
   }
+  // 随机出题：在这个操作台上现出一道（种子每次不一样）
+  function openQuiz(type, level) {
+    if (!U.Quiz || !U.Quiz.has(type)) return;
+    const seed = (Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0;
+    openProblem(U.Quiz.id(type, seed % 1000000000, level || 1), 'practice');
+  }
   // 题目给的图形的 id（§10.5.9 第 10 条）：题目 build 出来的器材，按题目缓存；自由探究里没有
   let givenCache = { pid: null, ids: new Set() };
   function givenIds() {
@@ -489,6 +495,9 @@
       }
       if (t.closest('#hintbtn') && S.run) { const h = J.nextHint(S.problem, S.run); if (h) { Ev.push('hint', { id: h.m.id, level: h.level }); say('提示 ' + h.level + '/3：' + h.text, '', 7000); UI.Panels.renderLeft(); } else say('已经全部完成啦', 'good'); return; }
       if (t.closest('#restart') && S.problem) openProblem(S.problem.id, S.mode);
+      const qb = t.closest('[data-quiz]'); if (qb && S.problem) { S.quizLevel = +qb.dataset.quiz; openQuiz(S.problem.quiz ? S.problem.quiz.type : S.problem.shelf[0], S.quizLevel); return; }
+      const ql = t.closest('[data-quiz-lv]'); if (ql) { S.quizLevel = +ql.dataset.quizLv; UI.Panels.renderLeft(); return; }
+      const qt = t.closest('[data-quiz-type]'); if (qt) { openQuiz(qt.dataset.quizType, S.quizLevel || 1); $('#left').classList.remove('open'); return; }
     });
     lb.addEventListener('keydown', (e) => { if (e.target.id === 'predin' && e.key === 'Enter') { const b = lb.querySelector('[data-pred="submit"]'); if (b) b.click(); } });
     lb.addEventListener('input', (e) => { if (e.target.id === 'q1') { S.q1 = e.target.value; UI.Panels.renderLeft(); const q = $('#q1'); q.focus(); q.setSelectionRange(q.value.length, q.value.length); } });
@@ -637,6 +646,7 @@
       if (t.id === 'dlg' || t.id === 'dlg-close') { pendingDel = null; pendingConfirm = null; UI.Panels.closeDialog(); }
       else if (t.id === 'dlg-back') { const miss = (S.run && S.problem) ? S.problem.milestones.find((m) => S.run.ms[m.id] && !S.run.ms[m.id].done) : null; UI.Panels.closeDialog(); if (miss) say('回到这一步：' + miss.say, 'info', 5000); }
       else if (t.id === 'dlg-again') { UI.Panels.closeDialog(); openProblem(S.problem.id, S.mode); }
+      else if (t.id === 'dlg-quiz' && S.problem && S.problem.quiz) { UI.Panels.closeDialog(); openQuiz(S.problem.quiz.type, S.problem.quiz.level); }
       else if (t.id === 'dlg-next') { UI.Panels.closeDialog(); const i = U.problems.findIndex((p) => p.id === S.problem.id); openProblem(U.problems[(i + 1) % U.problems.length].id, 'practice'); }
       else if (t.id === 'dlg-note') { lsSet(NOTE_KEY, $('#notes').value); UI.Panels.closeDialog(); say('笔记已保存', 'good', 1800); }
     });
@@ -685,6 +695,6 @@
     setInterval(saveSession, 2000); G.addEventListener('pagehide', saveSession);
     offerResume();
   }
-  UI.App = { tx, act, actMany, build, preview, snapshot, afterMove, removeEntity, askDelete, askDeps, askClear, clockAct, openProblem, openFree, openExample, setMode, say, undo, redo, stepOnce, refresh, persistView, givenIds };
+  UI.App = { tx, act, actMany, build, preview, snapshot, afterMove, removeEntity, askDelete, askDeps, askClear, clockAct, openProblem, openQuiz, openFree, openExample, setMode, say, undo, redo, stepOnce, refresh, persistView, givenIds };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })(window);

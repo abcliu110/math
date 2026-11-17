@@ -9,7 +9,7 @@
   const ms = (id, say, score, port, value, hints) => ({ id, say, score, when: { role: 'an', port, op: '=', value: String(value) }, hints });
 
   add({
-    id: 'an-inner-scale', essence: ['E5', 'E7'], title: '开口朝左的角：读内圈还是外圈？', grade: 4, rung: 3, points: ['4.6'],
+    id: 'an-inner-scale', essence: ['E5', 'E7'], title: '开口朝左的角：读内圈还是外圈？', grade: 4, rung: 3, points: ['4.3'],
     topics: ['量角', '量角器的内圈外圈'], alias: ['量角器', '内圈', '外圈', '量角'],
     hook: '这个角的一条边朝左。转量角器，让 0° 线压在一条边上；从压着的那边的 0 开始读。读出来是 40° 还是 140°？',
     build: ab({ mode: 0, a1: 40, a2: 180, prot: 100 }),

@@ -20,12 +20,19 @@
     document.querySelectorAll('#ltabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === S.tab));
     box.innerHTML = S.tab === 'lab' ? labHtml() : stepsHtml();
   }
+  // 题目用的操作台有没有出题器（随机题记着自己的操作台）
+  function quizTypeOf(p) { if (!p || !U.Quiz) return null; const t = p.quiz ? p.quiz.type : (p.shelf || [])[0]; return t && U.Quiz.has(t) ? t : null; }
   function labHtml() {
     const S = UI.S, q = (S.q1 || '').trim();
     let h = '<input class="search" id="q1" placeholder="搜索题目、知识点" value="' + esc(q) + '">';
     const rv = U.Review.summarize(U.Events.log, U.problems);
     if (rv.due.length && !q) h += '<div class="pcard due"><b>今天该复习 ' + rv.due.length + ' 道</b><div class="plist">' + rv.due.slice(0, 4).map((d) => '<div class="it" data-pid="' + d.pid + '" style="margin:6px 0 0"><span class="tt">' + esc(d.title) + '<br><small style="color:var(--orange)">' + esc(d.why) + '</small></span></div>').join('') + '</div></div>';
     h += '<div class="plist"><div class="grp">自由</div><div class="it' + (!S.problem ? ' cur' : '') + '" data-free="1"><span class="tt">自由探究（空台面，所有器材）</span></div>';
+    if (U.Quiz && !q) {
+      const lv = S.quizLevel || 1;
+      h += '<div class="grp">🎲 随机练习（在操作台上做，数每次都不一样）</div><div class="quizbox"><div class="btnrow">' + U.Quiz.LEVELS.map((n, i) => '<button class="btn' + (lv === i + 1 ? ' pri' : '') + '" data-quiz-lv="' + (i + 1) + '">' + n + '</button>').join('') + '</div><div class="qchips">' +
+        U.Quiz.types().map((t) => '<button class="btn" data-quiz-type="' + t + '">' + esc(U.types[t].label) + '</button>').join('') + '</div></div>';
+    }
     const by = {};
     U.problems.filter((p) => !q || (p.title + p.domain + (p.points || []).join('') + (p.alias || []).join('')).includes(q)).forEach((p) => (by[p.domain] = by[p.domain] || []).push(p));
     for (const g of U.GROUPS.concat(Object.keys(by).filter((k) => !U.GROUPS.includes(k)))) {
@@ -84,6 +91,9 @@
         h += '<div class="step' + (st.done ? ' done' : isCur ? ' cur' : '') + '"><span class="no">' + (st.done ? '✓' : i + 1) + '</span><span class="sy">' + esc(m.say) + (isCur && lv ? '<span class="hint">提示：' + esc((m.hints || [])[Math.min(lv, 3) - 1] || '') + '</span>' : '') + '</span><span class="sc">' + m.score + ' 分</span></div>';
       });
       h += '<div class="btnrow"><button class="btn" id="hintbtn">💡 来个提示</button><button class="btn" id="restart">重来</button></div>';
+      // 随机出题：这道题的操作台有出题器，就能在同一个操作台上再出一道（数不一样）
+      const qt = quizTypeOf(p);
+      if (qt) h += '<div class="btnrow quizrow"><span class="qlab">🎲 随机出一题：</span>' + U.Quiz.LEVELS.map((n, i) => '<button class="btn" data-quiz="' + (i + 1) + '" title="' + esc(U.types[qt].label) + '：' + n + '">' + n + '</button>').join('') + '</div>';
     }
     return h;
   }
@@ -519,7 +529,7 @@
     if (next.length) h += '<p style="color:var(--txt3);margin:10px 0 4px">下一步练什么</p><div class="plist">' + next.map((n) => '<div class="it" data-pid="' + esc(n.pid) + '"><span class="tt">' + esc(n.title) + '</span></div>').join('') + '</div>';
     if (rep.newWay) h += '<div class="newway">✨ 你找到了一种参考解里没有的搭法！</div>';
     const back = missed.length && mode !== 'exam';
-    h += '<div class="whybox">' + esc(p.why) + '</div><div class="btnrow">' + (back ? '<button class="btn pri" id="dlg-back">回去做这一步</button><button class="btn" id="dlg-again">再做一遍</button>' : '<button class="btn pri" id="dlg-again">再做一遍</button>') + '<button class="btn" id="dlg-next">下一题</button><button class="btn" id="dlg-inquiry">实验报告</button><button class="btn" id="dlg-close">继续玩</button></div>';
+    h += '<div class="whybox">' + esc(p.why) + '</div><div class="btnrow">' + (back ? '<button class="btn pri" id="dlg-back">回去做这一步</button><button class="btn" id="dlg-again">再做一遍</button>' : '<button class="btn pri" id="dlg-again">再做一遍</button>') + (p.quiz ? '<button class="btn pri" id="dlg-quiz">🎲 再来一题</button>' : '<button class="btn" id="dlg-next">下一题</button>') + '<button class="btn" id="dlg-inquiry">实验报告</button><button class="btn" id="dlg-close">继续玩</button></div>';
     return h;
   }
 
