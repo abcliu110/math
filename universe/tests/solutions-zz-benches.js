@@ -1,7 +1,7 @@
 /* 搬到操作台上的旧题的参考解（problems/zz-benches.js）。文件名 zz 开头：排在各年级的参考解后面加载，盖掉原来“接运算器”的解法。 */
 'use strict';
 const S = (role) => (o) => (h) => { const e = h.role(role); for (const k of Object.keys(o)) h.set(e, k, o[k]); };
-const n = S('n'), k = S('k'), r = S('r'), m = S('m'), c = S('c'), t = S('t'), s = S('s'), gp = S('g'), b = S('b'), d = S('d'), ch = S('h'), ck = S('k'), gq = S('q'), so = S('o'), cj = S('j'), fz = S('z'), pq = S('p'), tx = S('x'), ci = S('i'), gw = S('w'), ty = S('y'), vv = S('v'), mbs = S('c2'), dd = S('d'), tt = S('tb'), zz = S('z'), ee = S('e'), ar = S('ar'), ff = S('f');
+const n = S('n'), k = S('k'), r = S('r'), m = S('m'), c = S('c'), t = S('t'), s = S('s'), gp = S('g'), b = S('b'), d = S('d'), ch = S('h'), ck = S('k'), gq = S('q'), so = S('o'), cj = S('j'), fz = S('z'), pq = S('p'), tx = S('x'), ci = S('i'), gw = S('w'), ty = S('y'), vv = S('v'), mbs = S('c2'), dd = S('d'), tt = S('tb'), zz = S('z'), ee = S('e'), ar = S('ar'), ff = S('f'), san = S('an'), srl = S('rl'), smo = S('mo'), scl = S('cl');
 module.exports = {
   'g1-split-merge-core': n({ a: 2, n: 3 }),
   'g1-split-minus-trap': n({ s: -1, n: 2 }),
@@ -43,6 +43,10 @@ module.exports = {
   'g7-quadrant-core': c({ ax: -2, ay: 3 }),
   'g7-symmetry-x-axis-trap': c({ bx: 3, by: 2 }),
   'g7-translate-down-trap': c({ ay: -1 }),
+  // 第三十四批
+  'g4-angle-straight-core': san({ seen: '1,2' }), 'g7-adjacent-angle-core': san({ seen: '2' }), 'g7-vertical-angle-trap': san({ seen: '1,3' }), 'mt-right-angle-core': san({ prot: 30 }), 'mt-right-angle-trap': san({ prot: 10 }),
+  'g8-polygon-sum-core': san({ split: true }), 'hexagon-angle': san({ n: 6, split: true }), 'g2-length-cut-core': srl({ cut: 80 }), 'g2-length-direct-trap': srl({ cut: 80 }), 'g3-measure-m-cm-trap': srl({ cut: 105 }),
+  'g1-money-add-core': smo({ tray: '0,0,3,1,0,0,0' }), 'g1-money-jiao-trap': smo({ tray: '3,0,0,1,0,0,0' }), 'week-100': scl({ go: 100 }),
   // 第三十三批
   'gcd-12-18': ff({ tried: '1,2,3,6', cm: '36' }), 'pb-gcd-24-36': ff({ tried: '1,2,3,4,6,12', cm: '72' }), 'pb-count-divisors': ff({ w: 6, found: '1,2,3,4,6' }),
   // 第三十二批

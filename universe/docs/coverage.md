@@ -6,7 +6,7 @@
 
 - 知识点：142 个（设计目标 142）
 - 有题的知识点：141 个（99%）
-- 题目：561 道；没有对应知识点的题：1 道
+- 题目：572 道；没有对应知识点的题：1 道
 - 没有器材的本质：无
 - 没有题的本质：无
 
@@ -14,12 +14,12 @@
 
 | 年级 | 知识点 | 有题 | 题目数 |
 |---|---|---|---|
-| 1 | 16 | 16（100%） | 44 |
-| 2 | 16 | 16（100%） | 50 |
-| 3 | 16 | 16（100%） | 76 |
-| 4 | 17 | 17（100%） | 85 |
-| 5 | 14 | 14（100%） | 90 |
-| 6 | 15 | 14（93%） | 52 |
+| 1 | 16 | 16（100%） | 45 |
+| 2 | 16 | 16（100%） | 52 |
+| 3 | 16 | 16（100%） | 78 |
+| 4 | 17 | 17（100%） | 87 |
+| 5 | 14 | 14（100%） | 91 |
+| 6 | 15 | 14（93%） | 55 |
 | 7 | 16 | 16（100%） | 76 |
 | 8 | 16 | 16（100%） | 74 |
 | 9 | 16 | 16（100%） | 40 |
@@ -35,34 +35,34 @@
 | 1.5 | 1 | 立体图形 | 1 | 1 | 0 | 1 | solidbench |
 | 1.6 | 1 | 6–10的认识、连加连减 | 2 | 1 | 0 | 1 | termsbench、numlinebench |
 | 1.7 | 1 | 11–20的认识、10加几 | 2 | 1 | 0 | 1 | blocksbench、groupbench |
-| 1.8 | 1 | 认识钟表 | 1 | 1 | 0 | 1 | clockbench |
+| 1.8 | 1 | 认识钟表 | 2 | 1 | 0 | 1 | clockbench、moneybench |
 | 1.9 | 1 | 20以内进位加法、凑十法 | 3 | 1 | 0 | 1 | numlinebench、makebench |
 | 1.10 | 1 | 平面图形、七巧板 | 1 | 1 | 0 | 1 | areamodel、tribench |
 | 1.11 | 1 | 20以内退位减法、破十法 | 2 | 1 | 0 | 1 | numlinebench、makebench |
 | 1.12 | 1 | 分类与整理 | 1 | 1 | 0 | 1 | num |
 | 1.13 | 1 | 100以内数的认识 | 4 | 0 | 0 | 1 | blocksbench、num |
-| 1.14 | 1 | 认识人民币 | 1 | 1 | 0 | 1 | num |
+| 1.14 | 1 | 认识人民币 | 1 | 1 | 0 | 1 | moneybench |
 | 1.15 | 1 | 100以内加减法（一） | 1 | 1 | 0 | 1 | blocksbench |
 | 1.16 | 1 | 找规律 | 5 | 0 | 0 | 1 | num、meter、conjbench、fmachine、guessrule、conjecture_board |
-| 2.1 | 2 | 长度单位、线段 | 1 | 1 | 0 | 1 | num |
+| 2.1 | 2 | 长度单位、线段 | 1 | 1 | 0 | 1 | rulerbench |
 | 2.2 | 2 | 100以内加减法（二） | 6 | 1 | 0 | 1 | vertbench、estbench、arithbench |
 | 2.3 | 2 | 进位加法、退位减法 | 6 | 1 | 0 | 1 | blocksbench、arithbench、colbench |
-| 2.4 | 2 | 角的初步认识、直角 | 2 | 1 | 0 | 1 | tribench、protractor-read |
-| 2.5 | 2 | 乘法初步认识、口诀 | 3 | 1 | 0 | 1 | numlinebench、areamodel、tapebench |
-| 2.6 | 2 | 观察物体 | 1 | 1 | 0 | 1 | solidbench |
+| 2.4 | 2 | 角的初步认识、直角 | 2 | 1 | 0 | 1 | tribench、anglebench |
+| 2.5 | 2 | 乘法初步认识、口诀 | 4 | 1 | 0 | 1 | numlinebench、areamodel、moneybench、tapebench |
+| 2.6 | 2 | 观察物体 | 2 | 1 | 0 | 1 | solidbench、rulerbench |
 | 2.7 | 2 | 认识时间 | 1 | 1 | 0 | 1 | clockbench、ratiobench |
 | 2.15 | 2 | 搭配（一） | 1 | 1 | 0 | 1 | areamodel |
 | 2.14a | 2 | 数据收集整理 | 1 | 1 | 0 | 1 | statbench |
 | 2.8 | 2 | 除法初步认识 | 2 | 1 | 0 | 1 | numlinebench |
 | 2.9 | 2 | 图形的运动 | 2 | 1 | 0 | 1 | fold、euler |
 | 2.10 | 2 | 混合运算 | 1 | 1 | 0 | 1 | termsbench |
-| 2.11 | 2 | 有余数的除法 | 3 | 0 | 0 | 1 | groupbench、modclock |
+| 2.11 | 2 | 有余数的除法 | 3 | 0 | 0 | 1 | groupbench、calbench、modclock |
 | 2.12 | 2 | 万以内数的认识、近似数 | 4 | 0 | 0 | 1 | blocksbench、num、sqrt、round |
 | 2.13 | 2 | 克和千克 | 1 | 1 | 0 | 1 | ratiobench |
 | 2.14b | 2 | 推理 | 2 | 0 | 0 | 1 | deduce、nim |
 | 3.1 | 3 | 时、分、秒 | 1 | 1 | 0 | 1 | ratiobench、clockbench |
 | 3.2 | 3 | 万以内加减法 | 2 | 1 | 0 | 1 | blocksbench |
-| 3.3 | 3 | 测量 | 1 | 1 | 0 | 1 | ratiobench、num |
+| 3.3 | 3 | 测量 | 1 | 1 | 0 | 1 | ratiobench、rulerbench |
 | 3.4 | 3 | 倍的认识 | 8 | 1 | 0 | 1 | num、numlinebench、tapebench |
 | 3.5 | 3 | 多位数乘一位数 | 2 | 1 | 0 | 1 | areamodel、num |
 | 3.6 | 3 | 长方形和正方形 | 3 | 1 | 0 | 1 | areamodel |
@@ -72,16 +72,16 @@
 | 3.10 | 3 | 除数是一位数的除法 | 1 | 1 | 0 | 1 | vertbench |
 | 3.15a | 3 | 复式统计表 | 2 | 2 | 0 | 1 | tablebench |
 | 3.11 | 3 | 两位数乘两位数 | 10 | 1 | 0 | 1 | areamodel、num、estbench、mulbench、arithbench |
-| 3.12 | 3 | 面积 | 11 | 0 | 0 | 1 | areamodel、asn、curved、geoboard、circlebench、optimize、solidbench、turtle |
+| 3.12 | 3 | 面积 | 13 | 0 | 0 | 1 | areamodel、asn、calbench、curved、geoboard、circlebench、optimize、solidbench、turtle |
 | 3.13 | 3 | 年、月、日 | 1 | 1 | 0 | 1 | num |
 | 3.14 | 3 | 小数的初步认识 | 3 | 1 | 0 | 1 | decbench、numlinebench、twoways |
 | 3.15b | 3 | 搭配（二） | 2 | 1 | 0 | 1 | num、areamodel、euler |
 | 4.1 | 4 | 大数的认识、近似数 | 5 | 0 | 0 | 1 | chancebench、num |
 | 4.2 | 4 | 公顷和平方千米 | 1 | 1 | 0 | 1 | ratiobench |
-| 4.3 | 4 | 角的度量 | 1 | 0 | 0 | 1 | num |
+| 4.3 | 4 | 角的度量 | 1 | 0 | 0 | 1 | anglebench |
 | 4.4 | 4 | 三位数乘两位数 | 10 | 1 | 0 | 1 | mulbench、travelbench |
 | 4.5 | 4 | 平行四边形和梯形 | 3 | 1 | 0 | 1 | areabench、cubes |
-| 4.6 | 4 | 除数是两位数的除法 | 1 | 1 | 0 | 1 | vertbench |
+| 4.6 | 4 | 除数是两位数的除法 | 2 | 1 | 0 | 1 | anglebench、vertbench |
 | 4.7 | 4 | 条形统计图 | 1 | 1 | 0 | 1 | statbench、ratiobench |
 | 4.8 | 4 | 优化 | 1 | 1 | 0 | 1 | num |
 | 4.9 | 4 | 四则运算 | 10 | 1 | 0 | 1 | asn、termsbench、findbug、turtle |
@@ -90,13 +90,13 @@
 | 4.11 | 4 | 小数的意义和性质 | 1 | 1 | 0 | 1 | decbench |
 | 4.12 | 4 | 三角形 | 6 | 0 | 0 | 1 | tribench、curved、areabench、guessrule |
 | 4.13 | 4 | 小数的加法和减法 | 2 | 1 | 0 | 1 | decbench |
-| 4.14 | 4 | 图形的运动（二） | 1 | 0 | 0 | 1 | gridbench |
+| 4.14 | 4 | 图形的运动（二） | 2 | 0 | 0 | 1 | gridbench、seqbench |
 | 4.15 | 4 | 平均数 | 9 | 0 | 0 | 1 | hanoi、meanbench、chancebench、statbench |
 | 4.16 | 4 | 鸡兔同笼 | 11 | 1 | 0 | 1 | swapbench |
 | 5.1 | 5 | 小数乘法 | 2 | 1 | 0 | 1 | decbench、estbench |
 | 5.2 | 5 | 位置 | 1 | 1 | 0 | 1 | gridbench |
 | 5.3 | 5 | 小数除法 | 1 | 1 | 0 | 1 | decbench |
-| 5.4 | 5 | 可能性 | 6 | 1 | 0 | 3 | chancebench、pairbench、ptree |
+| 5.4 | 5 | 可能性 | 7 | 1 | 0 | 3 | chancebench、pairbench、ptree、seqbench |
 | 5.5 | 5 | 简易方程 | 12 | 0 | 0 | 1 | variable、balancebench、nim、costplan、systembench |
 | 5.6 | 5 | 多边形的面积 | 7 | 1 | 0 | 1 | areabench、num、gworkspace、gpt、gpoly、fquad |
 | 5.7 | 5 | 植树问题 | 7 | 1 | 0 | 1 | gapbench |
@@ -108,7 +108,7 @@
 | 5.12 | 5 | 图形的运动（三） | 1 | 1 | 0 | 1 | gridbench |
 | 5.13 | 5 | 折线统计图、找次品 | 1 | 0 | 0 | 1 | num |
 | 6.1 | 6 | 分数乘法 | 4 | 1 | 0 | 1 | areamodel、num、fracarea |
-| 6.3 | 6 | 位置与方向（二） | 1 | 1 | 0 | 1 | gridbench |
+| 6.3 | 6 | 位置与方向（二） | 4 | 1 | 0 | 1 | gridbench、jobbench |
 | 6.2 | 6 | 分数除法、倒数 | 3 | 1 | 0 | 1 | num、findbug、fracarea |
 | 6.4 | 6 | 比 | 4 | 0 | 0 | 1 | ratiobench、costplan |
 | 6.5 | 6 | 圆 | 4 | 1 | 0 | 1 | approach、circlebench、dissect、estbench |
@@ -130,15 +130,15 @@
 | 7.6 | 7 | 解一元一次方程 | 12 | 0 | 0 | 1 | balancebench、findbug |
 | 7.7 | 7 | 实际问题与一元一次方程 | 1 | 1 | 0 | 1 | balancebench |
 | 7.8 | 7 | 几何图形与直线、射线、线段 | 1 | 1 | 0 | 1 | numlinebench、num |
-| 7.9 | 7 | 角 | 4 | 0 | 0 | 1 | curved、conjbench、polygon、fold |
-| 7.10 | 7 | 相交线 | 1 | 1 | 0 | 1 | num |
+| 7.9 | 7 | 角 | 4 | 0 | 0 | 1 | curved、conjbench、anglebench、fold |
+| 7.10 | 7 | 相交线 | 1 | 1 | 0 | 1 | anglebench |
 | 7.11 | 7 | 平行线与平移 | 1 | 1 | 0 | 1 | num、coordbench |
 | 7.12 | 7 | 实数 | 5 | 0 | 0 | 1 | compass、num、sqrt、round、turtle |
 | 7.13 | 7 | 平面直角坐标系 | 1 | 1 | 0 | 1 | coordbench |
 | 7.14 | 7 | 二元一次方程组与消元 | 9 | 0 | 0 | 1 | coordbench、swapbench、systembench |
 | 7.15 | 7 | 不等式与一元一次不等式组 | 3 | 0 | 0 | 1 | num、balance、eqcard、numlinebench |
 | 7.16 | 7 | 统计调查与直方图 | 1 | 1 | 0 | 1 | statbench |
-| 8.1 | 8 | 三角形 | 1 | 0 | 0 | 1 | — |
+| 8.1 | 8 | 三角形 | 1 | 0 | 0 | 1 | anglebench |
 | 8.2 | 8 | 全等三角形的判定 | 2 | 1 | 0 | 1 | gridbench、fold |
 | 8.3 | 8 | 轴对称 | 2 | 0 | 0 | 1 | fold |
 | 8.4 | 8 | 等腰三角形 | 2 | 1 | 0 | 1 | tribench、proofsort |
@@ -176,13 +176,13 @@
 | 本质 | 题目数 | 器材数 |
 |---|---|---|
 | E1 | 61 | 25 |
-| E2 | 222 | 44 |
-| E3 | 139 | 41 |
-| E4 | 103 | 26 |
-| E5 | 134 | 50 |
-| E6 | 43 | 18 |
-| E7 | 103 | 25 |
-| E8 | 64 | 22 |
+| E2 | 224 | 47 |
+| E3 | 144 | 44 |
+| E4 | 106 | 27 |
+| E5 | 136 | 52 |
+| E6 | 47 | 20 |
+| E7 | 106 | 25 |
+| E8 | 66 | 23 |
 | E9 | 68 | 15 |
 | E10 | 10 | 4 |
 | E11 | 11 | 3 |

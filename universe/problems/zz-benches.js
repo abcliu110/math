@@ -1,4 +1,4 @@
-/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，三十三批共 222 道）。
+/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，三十四批共 235 道）。
  * 这些题原来的做法是“放数字、接运算器、看读数”：学生在搭计算流程。这里按 id 把它们换成在操作台上直接动手：
  * 题目的编号、标题、年级、知识点、道理（why）都不变，换的是器材架、开场的台面、里程碑和提示。
  * 这个文件排在所有题目文件后面加载（文件名 zz 开头），找不到的 id 会记在 U.benchMigrateMissing 里（测试会查）。 */
@@ -7,9 +7,9 @@
   const U = G.U, W = U.World;
   const one = (type, role, props) => () => { const s = W.blank(); const id = W.add(s, type, 40, 50, props); s.entities[id].role = role; return s; };
   const ms = (role) => (id, say, score, port, value, hints) => ({ id, say, score, when: { role, port, op: '=', value: String(value) }, hints });
-  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s'), GP = ms('g'), B = ms('b'), D = ms('d'), K2 = ms('k'), Gq = ms('q'), So = ms('o'), Cj = ms('j'), Z = ms('z'), H2 = ms('h'), Pq = ms('p'), Tr = ms('x'), Ci = ms('i'), Gw = ms('w'), Tw = ms('y'), Vt = ms('v'), Mb = ms('c2'), Db = ms('d'), Tb = ms('tb'), Zp = ms('z'), Mk = ms('k'), Es = ms('e'), Ar = ms('ar'), Fb = ms('f');
+  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s'), GP = ms('g'), B = ms('b'), D = ms('d'), K2 = ms('k'), Gq = ms('q'), So = ms('o'), Cj = ms('j'), Z = ms('z'), H2 = ms('h'), Pq = ms('p'), Tr = ms('x'), Ci = ms('i'), Gw = ms('w'), Tw = ms('y'), Vt = ms('v'), Mb = ms('c2'), Db = ms('d'), Tb = ms('tb'), Zp = ms('z'), Mk = ms('k'), Es = ms('e'), Ar = ms('ar'), Fb = ms('f'), An = ms('an'), Rl = ms('rl'), Mo = ms('mo'), Cl = ms('cl');
   const H = (id, say, score, when, hints) => ({ id, say, score, when, hints });   // 条件是一个范围（频率稳在某个区间）时用函数
-  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props), bb = (props) => one('balancebench', 'b', props), sb = (props) => one('statbench', 'd', props), ch = (props) => one('chancebench', 'h', props), ck = (props) => one('clockbench', 'k', props), gq = (props) => one('groupbench', 'q', props), sd = (props) => one('solidbench', 'o', props), cj = (props) => one('conjbench', 'j', props), fb2 = (props) => one('fitbench', 'z', props), pb2 = (props) => one('pairbench', 'p', props), tb3 = (props) => one('tribench', 'x', props), ci = (props) => one('circlebench', 'i', props), gd = (props) => one('gridbench', 'w', props), tw = (props) => one('tablebench', 'y', props), vt = (props) => one('vertbench', 'v', props), mb = (props) => one('mulbench', 'c2', props), db = (props) => one('decbench', 'd', props), tlb = (props) => one('tilebench', 'tb', props), zp = (props) => one('chipbench', 'z', props), mk = (props) => one('makebench', 'k', props), es = (props) => one('estbench', 'e', props), ab = (props) => one('areabench', 'ar', props), fb = (props) => one('factorbench', 'f', props);
+  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props), bb = (props) => one('balancebench', 'b', props), sb = (props) => one('statbench', 'd', props), ch = (props) => one('chancebench', 'h', props), ck = (props) => one('clockbench', 'k', props), gq = (props) => one('groupbench', 'q', props), sd = (props) => one('solidbench', 'o', props), cj = (props) => one('conjbench', 'j', props), fb2 = (props) => one('fitbench', 'z', props), pb2 = (props) => one('pairbench', 'p', props), tb3 = (props) => one('tribench', 'x', props), ci = (props) => one('circlebench', 'i', props), gd = (props) => one('gridbench', 'w', props), tw = (props) => one('tablebench', 'y', props), vt = (props) => one('vertbench', 'v', props), mb = (props) => one('mulbench', 'c2', props), db = (props) => one('decbench', 'd', props), tlb = (props) => one('tilebench', 'tb', props), zp = (props) => one('chipbench', 'z', props), mk = (props) => one('makebench', 'k', props), es = (props) => one('estbench', 'e', props), ab = (props) => one('areabench', 'ar', props), fb = (props) => one('factorbench', 'f', props), an = (props) => one('anglebench', 'an', props), rl = (props) => one('rulerbench', 'rl', props), mo = (props) => one('moneybench', 'mo', props), cl = (props) => one('calbench', 'cl', props);
   const MOVES = {
     // ---- 数轴 ----
     'g1-split-merge-core': { shelf: ['numlinebench'], build: nl({ from: 0, to: 10, a: 0, s: 1, n: 0 }),
@@ -765,6 +765,46 @@
     'pb-count-divisors': { shelf: ['factorbench'], build: fb({ mode: 0, n: 36 }),
       hook: '36 个小方块，每行放几个能正好排满？每排满一次找到一对因数。36 一共有几个因数？',
       milestones: [Fb('count', '36 有 9 个因数', 6, 'count', 9, ['1 × 36、2 × 18、3 × 12、4 × 9。', '6 × 6：两个因数是同一个。', '1、2、3、4、6、9、12、18、36。'])], goal: ['count'] },
+    // ======== 第三十四批：角 → 量角器与角；长度 → 尺子；钱 → 钱币；星期 → 日历 ========
+    'g4-angle-straight-core': { shelf: ['anglebench'], build: an({ mode: 1, a: 130 }),
+      hook: '直线上的射线把平角分成 ∠1 = 130° 和 ∠2。点两个角量一量：∠2 是几度？130° 和 50° 拼在一起是不是平角？',
+      milestones: [An('yes', '130° + 50° = 180°：是平角', 6, 'straight', 1, ['点 ∠1、∠2 量出来。', '∠2 是 50°。', '合起来 180°，是一条直线：平角。'])], goal: ['yes'] },
+    'g7-adjacent-angle-core': { shelf: ['anglebench'], build: an({ mode: 2, a: 70 }),
+      hook: '两条直线相交，∠1 是 70°。和它挨着的 ∠2 是几度？点 ∠2 量一量。',
+      milestones: [An('adj', '邻补角是 110°', 6, 'other', 110, ['∠1 和 ∠2 合起来是一条直线。', '180° − 70°。', '110°。'])], goal: ['adj'] },
+    'g7-vertical-angle-trap': { shelf: ['anglebench'], build: an({ mode: 2, a: 70 }),
+      hook: '两条直线相交成 4 个角，相对的一对叫对顶角。点 ∠1 和它对面的 ∠3 量一量：一样大，还是合起来 180°？再拖一条线换个角度试试。',
+      milestones: [An('equal', '对顶角相等：∠1 = ∠3', 6, 'vert', 1, ['∠1 的对面是 ∠3。', '点 ∠1 和 ∠3。', '都是 70°：相等。'])], goal: ['equal'] },
+    'mt-right-angle-core': { shelf: ['anglebench'], build: an({ mode: 0, a1: 30, a2: 120, prot: 75 }),
+      hook: '量角器是斜着放的。拖它边上的圆点转一转，让 0° 线压在角的一条边上，再读：这是直角吗？',
+      milestones: [An('right', '读出：这是直角（90°）', 6, 'kind', 1, ['转量角器，0° 线压到下面那条边上。', '从压着的那边的 0 开始读。', '90°：直角。'])], goal: ['right'] },
+    'mt-right-angle-trap': { shelf: ['anglebench'], build: an({ mode: 0, a1: 10, a2: 130, prot: 60 }),
+      hook: '这个角看起来有点大，有人说它是直角。转量角器对好一条边，量一量它到底是哪一种角。',
+      milestones: [An('obtuse', '读出：这是钝角（120°），不是直角', 6, 'kind', 2, ['0° 线压在一条边上。', '从那边的 0 读到另一条边。', '120°，比 90° 大：钝角。'])], goal: ['obtuse'] },
+    'g8-polygon-sum-core': { shelf: ['anglebench'], build: an({ mode: 3, n: 6 }),
+      hook: '六边形能切成几个三角形？点“从一个顶点连对角线”，每个三角形的内角和是 180°，一共是多少？',
+      milestones: [An('sum', '六边形的内角和是 720°', 6, 'sum', 720, ['点“从一个顶点连对角线”。', '切成 6 − 2 = 4 个三角形。', '4 × 180° = 720°。'])], goal: ['sum'] },
+    'hexagon-angle': { shelf: ['anglebench'], build: an({ mode: 3, n: 4 }),
+      hook: '点 + 把边数调成 6，再连对角线切成三角形。内角和是多少？正六边形每个角是多少？',
+      milestones: [H('six', '把边数调成 6', 2, (w) => w.some('anglebench', (e) => e.props.n === 6), ['点“+”。', '4 → 5 → 6。', '6 条边。']), An('sum', '内角和是 720°', 3, 'sum', 720, ['连对角线：4 个三角形。', '4 × 180°。', '720°。']), An('each', '每个内角 120°', 3, 'each', 120, ['正六边形 6 个角一样大。', '720° ÷ 6。', '120°。'])], goal: ['six', 'sum', 'each'] },
+    'g2-length-cut-core': { shelf: ['rulerbench'], build: rl({ mode: 1, L: 200 }),
+      hook: '绳子 2 米 = 200 厘米。拖剪刀剪下 80 厘米，还剩几厘米？',
+      milestones: [Rl('rest', '还剩 120 厘米', 6, 'rest', 120, ['1 米 = 100 厘米，2 米是 200 厘米。', '剪刀拖到 80。', '200 − 80 = 120。'])], goal: ['rest'] },
+    'g2-length-direct-trap': { shelf: ['rulerbench'], build: rl({ mode: 1, L: 200 }),
+      hook: '绳子长 2 米，剪掉 80 厘米。能直接 2 − 80 吗？把剪刀拖到 80 厘米，看剩下多少。',
+      milestones: [Rl('rest', '还剩 120 厘米 = 1 米 20 厘米', 6, 'rest', 120, ['米和厘米要先换成同一种单位。', '2 米 = 200 厘米。', '200 − 80 = 120。'])], goal: ['rest'] },
+    'g3-measure-m-cm-trap': { shelf: ['rulerbench'], build: rl({ mode: 1, L: 105 }),
+      hook: '这根绳子 1 米 5 厘米。拖剪刀一直剪到头，看看一共是多少厘米。是 15 厘米吗？',
+      milestones: [Rl('all', '1 米 5 厘米 = 105 厘米', 6, 'cut', 105, ['1 米是 100 厘米。', '再加 5 厘米。', '剪刀拖到头：105。'])], goal: ['all'] },
+    'g1-money-add-core': { shelf: ['moneybench'], build: mo({ mode: 0 }),
+      hook: '铅笔 5 元，橡皮 3 元。从钱包里点出要付的钱，放进盘子：一共多少元？',
+      milestones: [Mo('sum', '5 元 + 3 元 = 8 元', 6, 'total', 8, ['点一张 5 元。', '再点 3 张 1 元。', '盘子里 8 元。'])], goal: ['sum'] },
+    'g1-money-jiao-trap': { shelf: ['moneybench'], build: mo({ mode: 0 }),
+      hook: '一支笔 5 元 3 角。点出 5 元和 3 角放进盘子，看它写成小数是几元。',
+      milestones: [Mo('dec', '5 元 3 角 = 5.3 元', 6, 'total', '53/10', ['点一张 5 元。', '再点 3 个 1 角。', '1 角是 0.1 元：5.3 元。'])], goal: ['dec'] },
+    'week-100': { shelf: ['calbench'], build: cl({ mode: 1, start: 3, N: 100, go: 0 }),
+      hook: '今天星期三，100 天后是星期几？点“过 7 天”一次跳一个星期，星期几不变；跳不了了再一天一天过。',
+      milestones: [Cl('day', '100 天后是星期五', 6, 'weekday', 5, ['100 里有 14 个 7。', '14 个星期以后还是星期三。', '再过 2 天：星期五。'])], goal: ['day'] },
   };
   const missing = [], moved = [];
   for (const id of Object.keys(MOVES)) {

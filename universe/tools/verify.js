@@ -113,6 +113,12 @@ async function checkDist() {
   if (!runScript('tests/ui-est.js', 'tests/ui-est.js', pwEnv)) bail();   // 估一估：真实鼠标点近的一端、算一算看误差、拖把手夹范围
   if (!runScript('tests/ui-area2.js', 'tests/ui-area2.js', pwEnv)) bail();   // 面积公式推导：真实鼠标拖高和斜度、剪移拼平行四边形、三角形梯形两个拼一个
   if (!runScript('tests/ui-factor.js', 'tests/ui-factor.js', pwEnv)) bail();   // 因数与倍数：真实鼠标排方块找因数、判质数、试公因数、点公倍数
+  if (!runScript('tests/ui-angle.js', 'tests/ui-angle.js', pwEnv)) bail();   // 量角器与角：真实鼠标转量角器对边读数、读内圈、量邻补角对顶角、多边形连对角线
+  if (!runScript('tests/ui-ruler.js', 'tests/ui-ruler.js', pwEnv)) bail();   // 尺子：真实鼠标拖铅笔对 0、数格子、拖剪刀剪绳子（米和厘米）
+  if (!runScript('tests/ui-money.js', 'tests/ui-money.js', pwEnv)) bail();   // 钱币：真实鼠标点钱付钱、多付了拿回、1 元换 10 角、往上数找零
+  if (!runScript('tests/ui-cal.js', 'tests/ui-cal.js', pwEnv)) bail();   // 日历：真实鼠标翻月份看闰年、点两天数经过几天、一周一周跳算星期几
+  if (!runScript('tests/ui-seq.js', 'tests/ui-seq.js', pwEnv)) bail();   // 数列与规律：真实鼠标再摆一个、改规律对表、算第 n 个
+  if (!runScript('tests/ui-job.js', 'tests/ui-job.js', pwEnv)) bail();   // 工程问题：真实鼠标选谁来做、过一天涂格子、注水放水
   if (!runScript('tests/ui-areamodel.js', 'tests/ui-areamodel.js', pwEnv)) bail();   // 面积模型（样板操作台）和器材把手：真实鼠标拖边、切、改分数
   if (!runScript('tests/ui-shapes.js', 'tests/ui-shapes.js', pwEnv)) bail();         // 常见图形、顶点编辑、直接拖出辅助线（真实鼠标和键盘）；含画布横纵比例回归
   if (!runScript('tests/ui-export.js', 'tests/ui-export.js', pwEnv)) bail();         // 2.12/V10：导出图片（真实鼠标点菜单，台面和专注工作区各一次下载，.png、大小 > 0）
