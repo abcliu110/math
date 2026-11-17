@@ -1,4 +1,4 @@
-/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，三十四批共 235 道）。
+/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，三十五批共 240 道）。
  * 这些题原来的做法是“放数字、接运算器、看读数”：学生在搭计算流程。这里按 id 把它们换成在操作台上直接动手：
  * 题目的编号、标题、年级、知识点、道理（why）都不变，换的是器材架、开场的台面、里程碑和提示。
  * 这个文件排在所有题目文件后面加载（文件名 zz 开头），找不到的 id 会记在 U.benchMigrateMissing 里（测试会查）。 */
@@ -7,9 +7,9 @@
   const U = G.U, W = U.World;
   const one = (type, role, props) => () => { const s = W.blank(); const id = W.add(s, type, 40, 50, props); s.entities[id].role = role; return s; };
   const ms = (role) => (id, say, score, port, value, hints) => ({ id, say, score, when: { role, port, op: '=', value: String(value) }, hints });
-  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s'), GP = ms('g'), B = ms('b'), D = ms('d'), K2 = ms('k'), Gq = ms('q'), So = ms('o'), Cj = ms('j'), Z = ms('z'), H2 = ms('h'), Pq = ms('p'), Tr = ms('x'), Ci = ms('i'), Gw = ms('w'), Tw = ms('y'), Vt = ms('v'), Mb = ms('c2'), Db = ms('d'), Tb = ms('tb'), Zp = ms('z'), Mk = ms('k'), Es = ms('e'), Ar = ms('ar'), Fb = ms('f'), An = ms('an'), Rl = ms('rl'), Mo = ms('mo'), Cl = ms('cl');
+  const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s'), GP = ms('g'), B = ms('b'), D = ms('d'), K2 = ms('k'), Gq = ms('q'), So = ms('o'), Cj = ms('j'), Z = ms('z'), H2 = ms('h'), Pq = ms('p'), Tr = ms('x'), Ci = ms('i'), Gw = ms('w'), Tw = ms('y'), Vt = ms('v'), Mb = ms('c2'), Db = ms('d'), Tb = ms('tb'), Zp = ms('z'), Mk = ms('k'), Es = ms('e'), Ar = ms('ar'), Fb = ms('f'), An = ms('an'), Rl = ms('rl'), Mo = ms('mo'), Cl = ms('cl'), Fd = ms('fd'), Lg = ms('lg');
   const H = (id, say, score, when, hints) => ({ id, say, score, when, hints });   // 条件是一个范围（频率稳在某个区间）时用函数
-  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props), bb = (props) => one('balancebench', 'b', props), sb = (props) => one('statbench', 'd', props), ch = (props) => one('chancebench', 'h', props), ck = (props) => one('clockbench', 'k', props), gq = (props) => one('groupbench', 'q', props), sd = (props) => one('solidbench', 'o', props), cj = (props) => one('conjbench', 'j', props), fb2 = (props) => one('fitbench', 'z', props), pb2 = (props) => one('pairbench', 'p', props), tb3 = (props) => one('tribench', 'x', props), ci = (props) => one('circlebench', 'i', props), gd = (props) => one('gridbench', 'w', props), tw = (props) => one('tablebench', 'y', props), vt = (props) => one('vertbench', 'v', props), mb = (props) => one('mulbench', 'c2', props), db = (props) => one('decbench', 'd', props), tlb = (props) => one('tilebench', 'tb', props), zp = (props) => one('chipbench', 'z', props), mk = (props) => one('makebench', 'k', props), es = (props) => one('estbench', 'e', props), ab = (props) => one('areabench', 'ar', props), fb = (props) => one('factorbench', 'f', props), an = (props) => one('anglebench', 'an', props), rl = (props) => one('rulerbench', 'rl', props), mo = (props) => one('moneybench', 'mo', props), cl = (props) => one('calbench', 'cl', props);
+  const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props), bb = (props) => one('balancebench', 'b', props), sb = (props) => one('statbench', 'd', props), ch = (props) => one('chancebench', 'h', props), ck = (props) => one('clockbench', 'k', props), gq = (props) => one('groupbench', 'q', props), sd = (props) => one('solidbench', 'o', props), cj = (props) => one('conjbench', 'j', props), fb2 = (props) => one('fitbench', 'z', props), pb2 = (props) => one('pairbench', 'p', props), tb3 = (props) => one('tribench', 'x', props), ci = (props) => one('circlebench', 'i', props), gd = (props) => one('gridbench', 'w', props), tw = (props) => one('tablebench', 'y', props), vt = (props) => one('vertbench', 'v', props), mb = (props) => one('mulbench', 'c2', props), db = (props) => one('decbench', 'd', props), tlb = (props) => one('tilebench', 'tb', props), zp = (props) => one('chipbench', 'z', props), mk = (props) => one('makebench', 'k', props), es = (props) => one('estbench', 'e', props), ab = (props) => one('areabench', 'ar', props), fb = (props) => one('factorbench', 'f', props), an = (props) => one('anglebench', 'an', props), rl = (props) => one('rulerbench', 'rl', props), mo = (props) => one('moneybench', 'mo', props), cl = (props) => one('calbench', 'cl', props), fd = (props) => one('foldbench', 'fd', props), lgb = (props) => one('logicbench', 'lg', props);
   const MOVES = {
     // ---- 数轴 ----
     'g1-split-merge-core': { shelf: ['numlinebench'], build: nl({ from: 0, to: 10, a: 0, s: 1, n: 0 }),
@@ -805,6 +805,25 @@
     'week-100': { shelf: ['calbench'], build: cl({ mode: 1, start: 3, N: 100, go: 0 }),
       hook: '今天星期三，100 天后是星期几？点“过 7 天”一次跳一个星期，星期几不变；跳不了了再一天一天过。',
       milestones: [Cl('day', '100 天后是星期五', 6, 'weekday', 5, ['100 里有 14 个 7。', '14 个星期以后还是星期三。', '再过 2 天：星期五。'])], goal: ['day'] },
+    // ======== 第三十五批：折纸 → 折纸与对称；排除表 → 推理台 ========
+    'g2-fold-symmetric-core': { shelf: ['foldbench'], build: fd({ shape: 0, angle: 90, off: 0 }),
+      hook: '折痕已经竖着放在正方形中间。点“折一下”：左右两半能对齐吗？',
+      milestones: [Fd('same', '折一次后，两半完全重合', 6, 'same', 1, ['点“折一下”。', '折痕在正中间。', '左右两半一样大：重合。'])], goal: ['same'] },
+    'g2-fold-offset-trap': { shelf: ['foldbench'], build: fd({ shape: 0, angle: 90, off: 1 }),
+      hook: '折痕离中心偏了一格。先折一下看看；对不上的话，拖折痕中间的圆点把它挪回中间，再折。',
+      milestones: [Fd('same', '折痕回到中间，两半重合', 6, 'same', 1, ['点“打开”。', '拖折痕中间的圆点，挪到离中心 0 格。', '再点“折一下”。'])], goal: ['same'] },
+    'fold-square-half': { shelf: ['foldbench'], build: fd({ shape: 0, angle: 30, off: 0 }),
+      hook: '折痕斜着放在 30°。先折一下看看；再拖折痕一头的圆点转一转：转到哪里，两半才完全重合？',
+      milestones: [H('fold', '把纸折一次', 3, (w) => w.some('foldbench', (e) => !!e.props.folded), ['点“折一下”。', '看红色的地方：对不齐。', '点“打开”再转折痕。']), Fd('half', '两半完全重合', 7, 'same', 1, ['折痕要穿过中心。', '转到 0° 或 90°。', '再点“折一下”。'])], goal: ['fold', 'half'] },
+    'fold-diagonal': { shelf: ['foldbench'], build: fd({ shape: 0, angle: 30, off: 0 }),
+      hook: '正方形沿对角线折，两半也能重合吗？先在 30° 折一下，再把折痕转到对角线（45°）折一下。',
+      milestones: [H('wrong', '30° 折一次：对不齐', 3, (w) => w.some('foldbench', (e) => e.props.angle === 30 && w.num(e, 'same') === 0), ['点“折一下”。', '30° 不是对角线。', '红色的地方对不上。']), H('diag', '折痕 45°（对角线）：两半重合', 7, (w) => w.some('foldbench', (e) => e.props.angle === 45 && w.num(e, 'same') === 1), ['点“打开”。', '拖折痕一头的圆点转到 45°。', '再折一下。'])], goal: ['wrong', 'diag'] },
+    'deduce-who': { shelf: ['logicbench'], build: lgb({ people: '小明,小红,小刚', groups: '颜色：红,蓝,绿；宠物：猫,狗,兔', clues: '小红穿红色衣服|养猫的人穿蓝色衣服|小刚不穿蓝色衣服|小红不养狗', answer: '小明:蓝,猫;小红:红,兔;小刚:绿,狗' }),
+      hook: '小明、小红、小刚各穿一种颜色（红、蓝、绿），各养一只宠物（猫、狗、兔），每样都不一样。看右边的线索，在表里点 ✗ 和 ✓。',
+      milestones: [H('excl', '排除了一格：小刚不穿蓝色', 2, (w) => w.some('logicbench', (e) => U.LogicBench.has(e.props, '小刚', '蓝', 1)), ['线索 3：小刚不穿什么颜色？', '找小刚那一行、蓝那一列。', '点一下，标 ✗。']),
+        H('red', '写出结论：小红穿红色', 3, (w) => w.some('logicbench', (e) => U.LogicBench.has(e.props, '小红', '红', 2)), ['线索 1。', '小红那一行、红那一列。', '点两下，标 ✓。']),
+        H('cat', '写出结论：小明养猫', 3, (w) => w.some('logicbench', (e) => U.LogicBench.has(e.props, '小明', '猫', 2)), ['线索 2：养猫的人穿蓝色。', '小红穿红、小刚不穿蓝：只有小明穿蓝。', '小明的猫标 ✓。']),
+        Lg('done', '每人的颜色和宠物都找出来了', 4, 'solved', 1, ['每人每组都要有一个 ✓。', '线索 4：小红不养狗，只剩兔。', '小明蓝、猫；小红红、兔；小刚绿、狗。'])], goal: ['excl', 'red', 'cat', 'done'] },
   };
   const missing = [], moved = [];
   for (const id of Object.keys(MOVES)) {
@@ -814,7 +833,7 @@
     if (m.title) p.title = m.title;   // 少数题连数字一起换（原来的数在操作台上摆不下）
     if (m.why) p.why = m.why;
     p.shelf = m.shelf; p.build = m.build; p.hook = m.hook; p.milestones = m.milestones; p.goal = m.goal; p.traps = m.traps || [];
-    delete p.variant; delete p.params; delete p.explain;
+    delete p.variant; delete p.params; delete p.explain; delete p.workbench;   // 搬到操作台的题不再用旧的题目工作台（比如排除表）
     p.bench = m.shelf[0];   // 记一笔：这道题已经搬到哪个操作台
     moved.push(id);
   }

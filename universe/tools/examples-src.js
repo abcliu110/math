@@ -91,6 +91,10 @@ module.exports = [
       ['msqb','meter',{'digits':0,'label':'找规律：第 n 个'}],
       ['jbb','jobbench',{'mode':0,'a':6,'b':3,'t':2}],
       ['mjbb','meter',{'digits':0,'label':'工程：几天'}],
+      ['fdb','foldbench',{'shape':0,'angle':45,'off':0,'folded':true,'found':'45'}],
+      ['mfdb','meter',{'digits':0,'label':'折纸：找到几条对称轴'}],
+      ['lgb','logicbench',{'people':'张,王,李','groups':'职业：老师,医生,司机','marks':'1,2,2'}],
+      ['mlgb','meter',{'digits':0,'label':'推理：标了几个 ✓'}],
     ],
     links: [
       ['am','mam','v','area'],
@@ -135,6 +139,8 @@ module.exports = [
       ['calb','mcalb','v','days'],
       ['sqb','msqb','v','term'],
       ['jbb','mjbb','v','days'],
+      ['fdb','mfdb','v','axes'],
+      ['lgb','mlgb','v','yes'],
     ],
   },
 ];

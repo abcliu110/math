@@ -1,5 +1,5 @@
 /* node tools/verify.js —— 一条命令跑完全部检查，任一步失败就退出非零（不再往下跑）。
- * 顺序：tests/run.js → tools/check-types.js → tests/ui.js → tests/ui-probes.js（如果存在）→ tests/ui-layout.js → tests/ui-space.js → tests/ui-roles.js → tests/ui-deps.js → tests/ui-workbench.js → tests/ui-expr.js → tests/ui-stepgraph.js → tests/ui-steps.js → tests/ui-arith.js → tests/ui-digit.js → tests/ui-data.js → tests/ui-cross.js → tests/ui-cross2.js → tests/ui-extend.js → tests/ui-select.js → tests/ui-snap.js → tests/ui-shapes.js → tests/ui-export.js → tests/ui-labels.js → tests/ui-space-focus.js → tests/ui-touch-keys.js → tests/ui-feedback.js → tests/ui-readout.js → tests/ui-robust.js → tests/ui-random.js → tests/ui-theme.js → tests/ui-perf.js → tests/ui-s105.js → tests/ui-deduce.js → tests/ui-arith2.js → tests/ui-align10.js → tests/ui-constraint.js → tests/ui-bake.js → tests/ui-digit2.js → tests/ui-data2.js → tests/ui-snap3.js → tests/ui-visual.js → tests/ui-measure.js → tools/lint-ui.js → tools/contrast.js → tests/ui-young.js → tools/build-standalone.js → dist 文件加载检查。
+ * 顺序：tests/run.js → tools/check-types.js → tests/ui.js → tests/ui-probes.js（如果存在）→ tests/ui-layout.js → tests/ui-space.js → tests/ui-roles.js → tests/ui-deps.js → tests/ui-workbench.js → tests/ui-expr.js → tests/ui-stepgraph.js → tests/ui-steps.js → tests/ui-arith.js → tests/ui-digit.js → tests/ui-data.js → tests/ui-cross.js → tests/ui-cross2.js → tests/ui-extend.js → tests/ui-select.js → tests/ui-snap.js → tests/ui-shapes.js → tests/ui-export.js → tests/ui-labels.js → tests/ui-space-focus.js → tests/ui-touch-keys.js → tests/ui-feedback.js → tests/ui-readout.js → tests/ui-robust.js → tests/ui-random.js → tests/ui-theme.js → tests/ui-perf.js → tests/ui-s105.js → tests/ui-arith2.js → tests/ui-align10.js → tests/ui-constraint.js → tests/ui-bake.js → tests/ui-digit2.js → tests/ui-data2.js → tests/ui-snap3.js → tests/ui-visual.js → tests/ui-measure.js → tools/lint-ui.js → tools/contrast.js → tests/ui-young.js → tools/build-standalone.js → dist 文件加载检查。
  * 界面测试和 dist 检查需要环境变量 PW_NODE_PATH：playwright 所在的 node_modules 目录。
  * 用法：PW_NODE_PATH=<.../node_modules> node tools/verify.js */
 'use strict';
@@ -119,6 +119,8 @@ async function checkDist() {
   if (!runScript('tests/ui-cal.js', 'tests/ui-cal.js', pwEnv)) bail();   // 日历：真实鼠标翻月份看闰年、点两天数经过几天、一周一周跳算星期几
   if (!runScript('tests/ui-seq.js', 'tests/ui-seq.js', pwEnv)) bail();   // 数列与规律：真实鼠标再摆一个、改规律对表、算第 n 个
   if (!runScript('tests/ui-job.js', 'tests/ui-job.js', pwEnv)) bail();   // 工程问题：真实鼠标选谁来做、过一天涂格子、注水放水
+  if (!runScript('tests/ui-fold.js', 'tests/ui-fold.js', pwEnv)) bail();   // 折纸与对称：真实鼠标拖折痕挪回中心、转到对角线、找全对称轴、平行四边形没有对称轴
+  if (!runScript('tests/ui-logic.js', 'tests/ui-logic.js', pwEnv)) bail();   // 推理台：真实鼠标点格子标 ✗ ✓、自动排除、划线索、发现矛盾
   if (!runScript('tests/ui-areamodel.js', 'tests/ui-areamodel.js', pwEnv)) bail();   // 面积模型（样板操作台）和器材把手：真实鼠标拖边、切、改分数
   if (!runScript('tests/ui-shapes.js', 'tests/ui-shapes.js', pwEnv)) bail();         // 常见图形、顶点编辑、直接拖出辅助线（真实鼠标和键盘）；含画布横纵比例回归
   if (!runScript('tests/ui-export.js', 'tests/ui-export.js', pwEnv)) bail();         // 2.12/V10：导出图片（真实鼠标点菜单，台面和专注工作区各一次下载，.png、大小 > 0）
@@ -132,7 +134,6 @@ async function checkDist() {
   if (!runScript('tests/ui-theme.js', 'tests/ui-theme.js', pwEnv)) bail();          // V10/2.11/2.6b：深浅色令牌（两套对比度）、跟随系统、菜单切换并记住、存储不可用、线型（颜色不同线型不同）
   if (!runScript('tests/ui-perf.js', 'tests/ui-perf.js', pwEnv)) bail();            // V10/2.15：性能（50 个图形，真实鼠标拖动一次，单次处理和到下一帧 < 200 毫秒；实测数字在输出里）
   if (!runScript('tests/ui-s105.js', 'tests/ui-s105.js', pwEnv)) bail();            // §10.5.9 剩余项：复制粘贴（Ctrl+C/V）、镜像复制（M）、多选编组（Ctrl+G）、拖动幽灵对照（真实鼠标和键盘）
-  if (!runScript('tests/ui-deduce.js', 'tests/ui-deduce.js', pwEnv)) bail();     // 2.14b 排除表（真实鼠标）：三态格子（不是 / 是）、唯一剩下标是、同行同列变灰、按线索排完 12 步、撤销
   if (!runScript('tests/ui-primeblocks.js', 'tests/ui-primeblocks.js', pwEnv)) bail();     // 质因数积木 + 找错台：积木、两摞对齐、先猜才揭开、先判断、点对错行、理由与改正
   if (!runScript('tests/ui-guessrule.js', 'tests/ui-guessrule.js', pwEnv)) bail();     // 猜规则台 + 总是有时从不：点格子、猜想、互换、写例子
   if (!runScript('tests/ui-teaching.js', 'tests/ui-teaching.js', pwEnv)) bail();     // 教具：线段图、分数面积、代数砖、函数机

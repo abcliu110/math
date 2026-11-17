@@ -12,6 +12,7 @@
     id: 'deduce', version: 1,
     types: {
       deduce: {
+        hidden: true, retired: true,   // 已经有操作台代替：不上器材架、搜不到；只留给内核测试当样板
         explore: true,   // 探究和游戏：器材架上放在最后的“拓展”组
         workspaceRole: 'none',
         readsScene: true,   // 读台面上的步骤（scene.workbench），增量求值时每次都算

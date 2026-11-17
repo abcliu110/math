@@ -74,6 +74,7 @@
     id: 'symmetry', version: 1,
     types: {
       fold: {
+        hidden: true, retired: true,   // 已经有操作台代替：不上器材架、搜不到；只留给内核测试当样板
         explore: true,   // 探究和游戏：器材架上放在最后的“拓展”组
         workspaceRole: 'none',
         handles: true,

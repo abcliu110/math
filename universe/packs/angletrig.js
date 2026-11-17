@@ -16,33 +16,6 @@
     id: 'angletrig', version: 1,
     types: {
       // ---------------- 量角器：角的度数 → 读数与种类（锐角/直角/钝角/平角）----------------
-      'protractor-read': {
-        workspaceRole: 'none',
-        handles: true,
-        essence: ['E3'],
-        label: '量角器', prefix: '角', group: '图形', grades: [2, 6], alias: ['量角', '角的度数', '直角', '钝角', '锐角'],
-        props: {
-          angle: { type: 'int', label: '角的度数（0–180）', default: 90, min: 0, max: 180 },
-          label: { type: 'text', label: '标签', default: '' },
-        },
-        lint: { minProps: 2, why: '量角器只有“角的度数”和标签两个属性' },
-        outputs: {
-          deg: { dim: null, kind: 'num', label: '度数' },
-          kind: { dim: null, kind: 'num', label: '种类（0 锐角 1 直角 2 钝角 3 平角）' },
-        },
-        icon: () => K.circle(32, 36, 22, { stroke: 'var(--ink)', w: 1.5 }) + K.line(32, 36, 54, 36, { w: 2 }) + K.line(32, 36, 42, 16, { w: 2, stroke: 'var(--accent)' }),
-        size: () => [200, 120],
-        compute: (c) => {
-          const d = c.props.angle;
-          if (d === 0) { c.say('info', '0° 还不是角，把角的一边转开一点'); return { deg: U.val('num', Q(0)), kind: null }; }
-          const kind = d < 90 ? 0 : d === 90 ? 1 : d < 180 ? 2 : 3;
-          c.say('ok', d + '° 是' + KIND_NAMES[kind]);
-          return { deg: U.val('num', Q(d)), kind: U.val('num', Q(kind)) };
-        },
-        badge: (c) => (c.out && c.out.kind ? KIND_NAMES[c.out.kind.data.n] : ''),
-        draw: (c) => K.text(c.w / 2, c.h / 2 + 6, c.out && c.out.deg ? c.out.deg.data.n + '° ' + (c.out.kind ? KIND_NAMES[c.out.kind.data.n] : '') : '…', { size: 16, weight: 700 }),
-      },
-
       // ---------------- 圆周角：圆心角 → 圆周角（同弧所对的圆周角是圆心角的一半）----------------
       // ---------------- 特殊角的三角函数：30° / 45° / 60° → sin、cos、tan（精确值）----------------
       'trig-table': {

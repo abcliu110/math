@@ -1,7 +1,7 @@
 /* 搬到操作台上的旧题的参考解（problems/zz-benches.js）。文件名 zz 开头：排在各年级的参考解后面加载，盖掉原来“接运算器”的解法。 */
 'use strict';
 const S = (role) => (o) => (h) => { const e = h.role(role); for (const k of Object.keys(o)) h.set(e, k, o[k]); };
-const n = S('n'), k = S('k'), r = S('r'), m = S('m'), c = S('c'), t = S('t'), s = S('s'), gp = S('g'), b = S('b'), d = S('d'), ch = S('h'), ck = S('k'), gq = S('q'), so = S('o'), cj = S('j'), fz = S('z'), pq = S('p'), tx = S('x'), ci = S('i'), gw = S('w'), ty = S('y'), vv = S('v'), mbs = S('c2'), dd = S('d'), tt = S('tb'), zz = S('z'), ee = S('e'), ar = S('ar'), ff = S('f'), san = S('an'), srl = S('rl'), smo = S('mo'), scl = S('cl');
+const n = S('n'), k = S('k'), r = S('r'), m = S('m'), c = S('c'), t = S('t'), s = S('s'), gp = S('g'), b = S('b'), d = S('d'), ch = S('h'), ck = S('k'), gq = S('q'), so = S('o'), cj = S('j'), fz = S('z'), pq = S('p'), tx = S('x'), ci = S('i'), gw = S('w'), ty = S('y'), vv = S('v'), mbs = S('c2'), dd = S('d'), tt = S('tb'), zz = S('z'), ee = S('e'), ar = S('ar'), ff = S('f'), san = S('an'), srl = S('rl'), smo = S('mo'), scl = S('cl'), sfd = S('fd'), slg = S('lg');
 module.exports = {
   'g1-split-merge-core': n({ a: 2, n: 3 }),
   'g1-split-minus-trap': n({ s: -1, n: 2 }),
@@ -43,6 +43,10 @@ module.exports = {
   'g7-quadrant-core': c({ ax: -2, ay: 3 }),
   'g7-symmetry-x-axis-trap': c({ bx: 3, by: 2 }),
   'g7-translate-down-trap': c({ ay: -1 }),
+  // 第三十五批
+  'g2-fold-symmetric-core': sfd({ folded: true }), 'g2-fold-offset-trap': sfd({ off: 0, folded: true }), 'fold-square-half': sfd({ angle: 90, folded: true }),
+  'fold-diagonal'(h) { const e = h.role('fd'); h.set(e, 'folded', true); h.set(e, 'folded', false); h.set(e, 'angle', 45); h.set(e, 'folded', true); },
+  'deduce-who': slg({ marks: '0,0,1;0,1,2;0,2,1;0,3,2;0,4,1;0,5,1;1,0,2;1,1,1;1,2,1;1,3,1;1,4,1;1,5,2;2,0,1;2,1,1;2,2,2;2,3,1;2,4,2;2,5,1' }),
   // 第三十四批
   'g4-angle-straight-core': san({ seen: '1,2' }), 'g7-adjacent-angle-core': san({ seen: '2' }), 'g7-vertical-angle-trap': san({ seen: '1,3' }), 'mt-right-angle-core': san({ prot: 30 }), 'mt-right-angle-trap': san({ prot: 10 }),
   'g8-polygon-sum-core': san({ split: true }), 'hexagon-angle': san({ n: 6, split: true }), 'g2-length-cut-core': srl({ cut: 80 }), 'g2-length-direct-trap': srl({ cut: 80 }), 'g3-measure-m-cm-trap': srl({ cut: 105 }),

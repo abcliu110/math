@@ -893,12 +893,12 @@ t('排除表：步骤的文字写着人、值和做法', () => {
   eq(U.Deduce.stepText(U.Deduce.parse(DP), steps[0]), '小刚 蓝：不是');
   eq(U.Deduce.stepText(U.Deduce.parse(DP), steps[1]), '小刚 蓝：取消排除');
 });
-t('排除表：是一种工作台（deduce），器材在排除表里，题目 deduce-who 有知识点 2.14b 且 lint 通过', () => {
+t('排除表：是一种工作台（deduce）；题目 deduce-who 已经搬到推理台，有知识点 2.14b 且 lint 通过', () => {
   truthy(U.WORKBENCHES.includes('deduce'), 'WORKBENCHES 里要有 deduce');
   eq(U.types.deduce.wbUI, 'deduce'); truthy(U.WB_UIS.includes('deduce'));
   eq(U.types.deduce.workbenches, ['deduce']);
   const p = U.problems.find((x) => x.id === 'deduce-who');
-  truthy(p, '有题 deduce-who'); eq(p.workbench, 'deduce'); truthy(p.points.includes('2.14b'));
+  truthy(p, '有题 deduce-who'); eq(p.bench, 'logicbench', '已经搬到推理台'); eq(p.workbench, undefined); truthy(p.points.includes('2.14b'));
   eq(U.problemLint(p).errors, [], '题目 lint 没有错误');
 });
 // 遗留状态（next-steps.md §8）：孤立题（没有知识点的题）和没有题的知识点，只允许下面列出的例外。
@@ -3126,8 +3126,8 @@ t('可能性：列出所有情况，两个骰子 36 种里和为 7 的有 6 种�
 console.log('旧题搬到操作台');
 t('搬题：每个要搬的 id 都找到了题；搬过去的题器材架上只有操作台，开场台面上就有它', () => {
   eq(U.benchMigrateMissing, [], '找不到的 id');
-  truthy(U.benchMigrated.length >= 235, '至少搬了 235 道');
-  const BENCH = ['areamodel', 'balancebench', 'numlinebench', 'ratiobench', 'coordbench', 'blocksbench', 'termsbench', 'swapbench', 'systembench', 'gapbench', 'meanbench', 'tapebench', 'vennbench', 'travelbench', 'mulbench', 'fastbench', 'statbench', 'chancebench', 'clockbench', 'groupbench', 'solidbench', 'conjbench', 'fitbench', 'pairbench', 'tribench', 'circlebench', 'gridbench', 'tablebench', 'vertbench', 'decbench', 'tilebench', 'chipbench', 'makebench', 'estbench', 'areabench', 'factorbench', 'anglebench', 'rulerbench', 'moneybench', 'calbench', 'seqbench', 'jobbench'];
+  truthy(U.benchMigrated.length >= 240, '至少搬了 240 道');
+  const BENCH = ['areamodel', 'balancebench', 'numlinebench', 'ratiobench', 'coordbench', 'blocksbench', 'termsbench', 'swapbench', 'systembench', 'gapbench', 'meanbench', 'tapebench', 'vennbench', 'travelbench', 'mulbench', 'fastbench', 'statbench', 'chancebench', 'clockbench', 'groupbench', 'solidbench', 'conjbench', 'fitbench', 'pairbench', 'tribench', 'circlebench', 'gridbench', 'tablebench', 'vertbench', 'decbench', 'tilebench', 'chipbench', 'makebench', 'estbench', 'areabench', 'factorbench', 'anglebench', 'rulerbench', 'moneybench', 'calbench', 'seqbench', 'jobbench', 'foldbench', 'logicbench'];
   for (const id of U.benchMigrated) {
     const p = U.problems.find((x) => x.id === id), s = p.build();
     truthy(p.shelf.length === 1 && BENCH.includes(p.shelf[0]), id + ' 的器材架');
