@@ -74,7 +74,9 @@ const norm = (s) => String(s || '').replace(/\s+/g, ' ').trim();
   await p.waitForTimeout(250);
   // 器材从右边的器材架拖到台面外面（工作区右边）
   const area = await dropTile('garea', 1000, 260);
+  await p.evaluate(() => { U.types.exprbench.hidden = false; UI.Panels.renderShelf(); }); await p.waitForTimeout(100);   // 式子工作台已经下架，这里临时放回架上测拖放
   const x = await dropTile('exprbench', 1000, 520);
+  await p.evaluate(() => { U.types.exprbench.hidden = true; });
   const alg = await dropTile('algebra', 1000, 640);
   ok(!!area && !!x && !!alg, '拖出面积读数、式子工作台、代数式卡各一个');
   // 第一次进入几何工作区的引导挡住台面：点「知道了」关掉；代数式卡拖到台面下方空的地方，连线的口露在外面

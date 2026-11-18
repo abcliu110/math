@@ -1,4 +1,4 @@
-/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，四十批共 268 道）。
+/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，四十一批共 272 道）。
  * 这些题原来的做法是“放数字、接运算器、看读数”：学生在搭计算流程。这里按 id 把它们换成在操作台上直接动手：
  * 题目的编号、标题、年级、知识点、道理（why）都不变，换的是器材架、开场的台面、里程碑和提示。
  * 这个文件排在所有题目文件后面加载（文件名 zz 开头），找不到的 id 会记在 U.benchMigrateMissing 里（测试会查）。 */
@@ -10,6 +10,7 @@
   const N = ms('n'), K = ms('k'), R = ms('r'), A = ms('m'), C = ms('c'), T = ms('t'), S = ms('s'), GP = ms('g'), B = ms('b'), D = ms('d'), K2 = ms('k'), Gq = ms('q'), So = ms('o'), Cj = ms('j'), Z = ms('z'), H2 = ms('h'), Pq = ms('p'), Tr = ms('x'), Ci = ms('i'), Gw = ms('w'), Tw = ms('y'), Vt = ms('v'), Mb = ms('c2'), Db = ms('d'), Tb = ms('tb'), Zp = ms('z'), Mk = ms('k'), Es = ms('e'), Ar = ms('ar'), Fb = ms('f'), An = ms('an'), Rl = ms('rl'), Mo = ms('mo'), Cl = ms('cl'), Fd = ms('fd'), Lg = ms('lg'), Pf = ms('pf'), Vn = ms('y'), Fr = ms('fr'), Am = ms('am'), Op = ms('op'), Wt = ms('wt'), Sr = ms('so'), Cb = ms('cb');
   const H = (id, say, score, when, hints) => ({ id, say, score, when, hints });   // 条件是一个范围（频率稳在某个区间）时用函数
   const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props), bb = (props) => one('balancebench', 'b', props), sb = (props) => one('statbench', 'd', props), ch = (props) => one('chancebench', 'h', props), ck = (props) => one('clockbench', 'k', props), gq = (props) => one('groupbench', 'q', props), sd = (props) => one('solidbench', 'o', props), cj = (props) => one('conjbench', 'j', props), fb2 = (props) => one('fitbench', 'z', props), pb2 = (props) => one('pairbench', 'p', props), tb3 = (props) => one('tribench', 'x', props), ci = (props) => one('circlebench', 'i', props), gd = (props) => one('gridbench', 'w', props), tw = (props) => one('tablebench', 'y', props), vt = (props) => one('vertbench', 'v', props), mb = (props) => one('mulbench', 'c2', props), db = (props) => one('decbench', 'd', props), tlb = (props) => one('tilebench', 'tb', props), zp = (props) => one('chipbench', 'z', props), mk = (props) => one('makebench', 'k', props), es = (props) => one('estbench', 'e', props), ab = (props) => one('areabench', 'ar', props), fb = (props) => one('factorbench', 'f', props), an = (props) => one('anglebench', 'an', props), rl = (props) => one('rulerbench', 'rl', props), mo = (props) => one('moneybench', 'mo', props), cl = (props) => one('calbench', 'cl', props), fd = (props) => one('foldbench', 'fd', props), lgb = (props) => one('logicbench', 'lg', props), pf = (props) => one('proofbench', 'pf', props), tp = (props) => one('tapebench', 't', props), vn = (props) => one('vennbench', 'y', props), frb = (props) => one('fracbench', 'fr', props), opb = (props) => one('optbench', 'op', props), wtb = (props) => one('weighbench', 'wt', props), sob = (props) => one('sortbench', 'so', props), cbb = (props) => one('combobench', 'cb', props);
+  const pob = (props) => one('pourbench', 'pb', props), Pb = ms('pb');
   const MOVES = {
     // ---- 数轴 ----
     'g1-split-merge-core': { shelf: ['numlinebench'], build: nl({ from: 0, to: 10, a: 0, s: 1, n: 0 }),
@@ -921,12 +922,30 @@
     'g3-combo-core': { shelf: ['combobench'], build: cbb({ mode: 0, a: 3, b: 4, c: 2 }),
       hook: '3 件上衣、4 条裤子、2 双鞋。先点格子列出上衣配裤子的每一种，不重不漏；列全了再配鞋。',
       milestones: [Cb('pairs', '上衣配裤子：3 × 4 = 12 种', 4, 'pairs', 12, ['每件上衣一行，每条裤子一列。', '一行一行点满。', '12 个格子。']), Cb('all', '再配鞋：12 × 2 = 24 种', 4, 'all', 24, ['点“再配鞋”。', '每一种穿法都能配 2 双鞋。', '24 种。'])], goal: ['all'] },
+    // ======== 第四十一批：倒水 → 倒水台；天平凑数 → 天平与方程；竖式减法 → 竖式 ========
+    'pour-conserve': { shelf: ['pourbench'], build: pob({ A: 10, B: 6, a: 10, b: 0, tgt: 0 }),
+      hook: '甲杯装满 10 升，乙杯空着，乙杯最多装 6 升。点“甲倒进乙”，看两杯各剩多少，再看总量。',
+      milestones: [Pb('levels', '倒完：甲剩 4，乙是 6', 4, 'a', 4, ['点“甲倒进乙”。', '乙最多装 6，只能倒过去 6。', '甲剩 10 − 6 = 4。']), Pb('total', '总量还是 10', 4, 'kept', 1, ['看“总量”那一行。', '4 + 6 = ?', '和倒之前一样：10。'])],
+      goal: ['levels', 'total'] },
+    'pour-two-cups': { shelf: ['pourbench'], build: pob({ A: 5, B: 3, tgt: 4 }),
+      hook: '甲杯 5 升，乙杯 3 升，杯上没有刻度。只能装满、倒空、从一个倒进另一个。想办法让甲或乙里正好 4 升。',
+      milestones: [H('three', '乙杯正好 3 升，甲剩 2 升', 2, (w) => w.some('pourbench', (e) => w.num(e, 'a') === 2 && w.num(e, 'b') === 3), ['先把甲装满 5 升。', '甲倒进乙：乙只装得下 3。', '甲剩 2。']),
+        Pb('four', '甲或乙里正好 4 升', 6, 'hit', 1, ['把乙倒空，甲剩下的 2 升倒进乙。', '甲再装满 5 升，倒进乙：乙只能再收 1。', '甲剩 4。']),
+        Pb('few', '用最少的 6 步量出来', 2, 'fewest', 1, ['装满甲、甲倒进乙、倒空乙、甲倒进乙、装满甲、甲倒进乙。', '没用的步不要做。', '6 步。'])],
+      goal: ['four'] },
+    'balance-12': { shelf: ['balancebench'], build: bb({ lx: 0, lc: 12, rx: 0, rc: 0, x0: 4, sync: false }),
+      hook: '左盘有 12 个砝码，右盘空着。从下面的托盘往右盘拖砝码，让天平平衡。',
+      milestones: [B('bal', '右盘也是 12：天平平衡', 6, 'okn', 1, ['右盘要和左盘一样重。', '一个一个往右盘拖。', '拖够 12 个。'])], goal: ['bal'] },
+    'place-sub': { shelf: ['vertbench'], build: vt({ mode: 1, a: 62, b: 37 }),
+      hook: '62 减 37。个位 2 不够减 7：先点十位上面的小圆圈“退 1”，再一位一位写。',
+      milestones: [Vt('done', '62 − 37 = 25', 8, 'result', 25, ['2 不够减 7：点十位上面的小圆圈。', '个位 12 − 7 = 5。', '十位 5 − 3 = 2。'])], goal: ['done'] },
   };
-  const missing = [], moved = [];
+  const missing = [], moved = [], original = {};
   for (const id of Object.keys(MOVES)) {
     const p = U.problems.find((x) => x.id === id);
     if (!p) { missing.push(id); continue; }
     const m = MOVES[id];
+    original[id] = Object.assign({}, p);   // 搬之前的样子留一份（旧工作台的界面测试拿它当样板，不进题目列表）
     if (m.title) p.title = m.title;   // 少数题连数字一起换（原来的数在操作台上摆不下）
     if (m.why) p.why = m.why;
     p.shelf = m.shelf; p.build = m.build; p.hook = m.hook; p.milestones = m.milestones; p.goal = m.goal; p.traps = m.traps || [];
@@ -934,5 +953,5 @@
     p.bench = m.shelf[0];   // 记一笔：这道题已经搬到哪个操作台
     moved.push(id);
   }
-  U.benchMigrateMissing = missing; U.benchMigrated = moved;
+  U.benchMigrateMissing = missing; U.benchMigrated = moved; U.benchOriginal = original;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

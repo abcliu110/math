@@ -109,6 +109,8 @@ module.exports = [
       ['mcmbb','meter',{'digits':0,'label':'搭配：列出了几种'}],
       ['drb','dirbench',{'mode':1,'path':'EEEN'}],
       ['mdrb','meter',{'digits':0,'label':'方向：走了几格'}],
+      ['pob','pourbench',{'A':5,'B':3,'tgt':4,'hist':'fA,AB'}],
+      ['mpob','meter',{'digits':0,'label':'倒水：甲杯几升'}],
     ],
     links: [
       ['am','mam','v','area'],
@@ -162,6 +164,7 @@ module.exports = [
       ['sob','msob','v','total'],
       ['cmbb','mcmbb','v','listed'],
       ['drb','mdrb','v','steps'],
+      ['pob','mpob','v','a'],
     ],
   },
 ];

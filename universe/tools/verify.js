@@ -133,6 +133,7 @@ async function checkDist() {
   if (!runScript('tests/ui-play2.js', 'tests/ui-play2.js', pwEnv)) bail();   // 第二层新玩法：填缺数字、对对碰、最少张数、筛质数
   if (!runScript('tests/ui-play3.js', 'tests/ui-play3.js', pwEnv)) bail();   // 第二层新玩法第二批：篱笆围地、田忌赛马、分数比大小
   if (!runScript('tests/ui-play4.js', 'tests/ui-play4.js', pwEnv)) bail();   // 找错、可轻可重、推星期、最少跳几下
+  if (!runScript('tests/ui-pour.js', 'tests/ui-pour.js', pwEnv)) bail();   // 倒水：真实鼠标装满、倒、倒空，总量守恒，量出 4 升、最少几步
   if (!runScript('tests/ui-areamodel.js', 'tests/ui-areamodel.js', pwEnv)) bail();   // 面积模型（样板操作台）和器材把手：真实鼠标拖边、切、改分数
   if (!runScript('tests/ui-shapes.js', 'tests/ui-shapes.js', pwEnv)) bail();         // 常见图形、顶点编辑、直接拖出辅助线（真实鼠标和键盘）；含画布横纵比例回归
   if (!runScript('tests/ui-export.js', 'tests/ui-export.js', pwEnv)) bail();         // 2.12/V10：导出图片（真实鼠标点菜单，台面和专注工作区各一次下载，.png、大小 > 0）

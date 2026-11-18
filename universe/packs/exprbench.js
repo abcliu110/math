@@ -67,6 +67,7 @@
     id: 'exprbench', version: 1,
     types: {
       exprbench: {
+        hidden: true, retired: true,   // 已经有操作台代替：不上器材架、搜不到；只留给内核测试当样板
         workspaceRole: 'none',
         readsScene: true, // 读台面上的工作台步骤（scene.workbench），不全在连线上：增量求值时每次都算（任务 J）
         handles: true,

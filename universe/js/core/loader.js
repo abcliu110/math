@@ -76,6 +76,7 @@
     'optimize': 'packs/optimize.js',
     'pairbench': 'packs/pairbench.js',
     'piece': 'packs/piece.js',
+    'pourbench': 'packs/pourbench.js',
     'primeblocks': 'packs/primeblocks.js',
     'proof': 'packs/proof.js',
     'proofbench': 'packs/proofbench.js',

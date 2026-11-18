@@ -6,7 +6,7 @@
 
 - 知识点：142 个（设计目标 142）
 - 有题的知识点：141 个（99%）
-- 题目：601 道；没有对应知识点的题：1 道
+- 题目：603 道；没有对应知识点的题：1 道
 - 没有器材的本质：无
 - 没有题的本质：无
 
@@ -21,7 +21,7 @@
 | 5 | 14 | 14（100%） | 99 |
 | 6 | 15 | 14（93%） | 57 |
 | 7 | 16 | 16（100%） | 78 |
-| 8 | 16 | 16（100%） | 74 |
+| 8 | 16 | 16（100%） | 76 |
 | 9 | 16 | 16（100%） | 40 |
 
 ## 按知识点
@@ -46,7 +46,7 @@
 | 1.16 | 1 | 找规律 | 6 | 0 | 0 | 1 | num、meter、conjbench、fmachine、guessrule、proofbench、seqbench |
 | 2.1 | 2 | 长度单位、线段 | 2 | 1 | 0 | 1 | rulerbench |
 | 2.2 | 2 | 100以内加减法（二） | 9 | 1 | 0 | 1 | vertbench、estbench、arithbench |
-| 2.3 | 2 | 进位加法、退位减法 | 6 | 1 | 0 | 1 | blocksbench、arithbench、colbench |
+| 2.3 | 2 | 进位加法、退位减法 | 6 | 1 | 0 | 1 | blocksbench、arithbench、vertbench |
 | 2.4 | 2 | 角的初步认识、直角 | 2 | 1 | 0 | 1 | tribench、anglebench |
 | 2.5 | 2 | 乘法初步认识、口诀 | 3 | 1 | 0 | 1 | numlinebench、areamodel、tapebench |
 | 2.6 | 2 | 观察物体 | 1 | 1 | 0 | 1 | solidbench |
@@ -102,7 +102,7 @@
 | 5.7 | 5 | 植树问题 | 7 | 1 | 0 | 1 | gapbench |
 | 5.14 | 5 | 观察物体（三） | 2 | 1 | 0 | 1 | solidbench、twoways |
 | 5.8 | 5 | 因数与倍数 | 24 | 0 | 1 | 2 | asn、conjbench、factorbench、hanoi、guessrule、areamodel、modclock、groupbench、primeblocks、proofbench、proofsort、net |
-| 5.9 | 5 | 长方体和正方体 | 3 | 1 | 0 | 1 | pour、solidbench |
+| 5.9 | 5 | 长方体和正方体 | 3 | 1 | 0 | 1 | pourbench、solidbench |
 | 5.10 | 5 | 分数的意义和性质 | 7 | 0 | 0 | 1 | areamodel、ratiobench、fracbench、numlinebench、primeblocks |
 | 5.11 | 5 | 分数的加法和减法 | 10 | 1 | 0 | 1 | num、approach、ratiobench、findbug、fracbench |
 | 5.12 | 5 | 图形的运动（三） | 1 | 1 | 0 | 1 | gridbench |
@@ -136,7 +136,7 @@
 | 7.12 | 7 | 实数 | 5 | 0 | 0 | 1 | compass、num、sqrt、round、turtle |
 | 7.13 | 7 | 平面直角坐标系 | 1 | 1 | 0 | 1 | coordbench |
 | 7.14 | 7 | 二元一次方程组与消元 | 9 | 0 | 0 | 1 | coordbench、swapbench、systembench |
-| 7.15 | 7 | 不等式与一元一次不等式组 | 3 | 0 | 0 | 1 | num、balance、eqcard、numlinebench |
+| 7.15 | 7 | 不等式与一元一次不等式组 | 3 | 0 | 0 | 1 | balancebench、eqcard、numlinebench |
 | 7.16 | 7 | 统计调查与直方图 | 1 | 1 | 0 | 1 | statbench |
 | 8.1 | 8 | 三角形 | 1 | 0 | 0 | 1 | anglebench |
 | 8.2 | 8 | 全等三角形的判定 | 2 | 1 | 0 | 1 | gridbench、foldbench |
@@ -144,7 +144,7 @@
 | 8.4 | 8 | 等腰三角形 | 2 | 1 | 0 | 1 | tribench、proofsort |
 | 8.5 | 8 | 幂的运算与整式的乘法 | 3 | 1 | 0 | 1 | areamodel、num、tilebench |
 | 8.6 | 8 | 乘法公式 | 14 | 0 | 0 | 1 | variable、areamodel、fastbench、findbug、tilebench |
-| 8.7 | 8 | 因式分解 | 3 | 0 | 0 | 1 | variable、areamodel、pour |
+| 8.7 | 8 | 因式分解 | 5 | 0 | 0 | 1 | variable、areamodel、pourbench |
 | 8.8 | 8 | 分式及其运算 | 1 | 1 | 0 | 1 | — |
 | 8.9 | 8 | 分式方程 | 2 | 0 | 0 | 1 | approach |
 | 8.10 | 8 | 二次根式 | 1 | 1 | 0 | 1 | num |
@@ -176,10 +176,10 @@
 | 本质 | 题目数 | 器材数 |
 |---|---|---|
 | E1 | 64 | 27 |
-| E2 | 241 | 51 |
+| E2 | 243 | 52 |
 | E3 | 149 | 43 |
 | E4 | 108 | 28 |
-| E5 | 142 | 54 |
+| E5 | 144 | 55 |
 | E6 | 54 | 22 |
 | E7 | 118 | 28 |
 | E8 | 66 | 23 |

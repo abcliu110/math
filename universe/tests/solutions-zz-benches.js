@@ -170,4 +170,6 @@ module.exports = {
   // 第三批
   'g2-kg-to-g-core': r({ t: 2 }), 'g2-kg-trap': r({ t: 3 }), 'g2-hour-100-trap': r({ t: 3 }), 'g3-time-hour-minute-core': r({ t: 2 }),
   'g3-measure-m-to-cm-core': r({ t: 3 }), 'g4-area-km2-core': r({ t: 3 }), 'g4-area-ha-trap': r({ t: 2 }), 'g4-bar-scale-trap': r({ t: 9 }),
+  'pour-conserve'(h) { h.set(h.role('pb'), 'hist', 'AB'); }, 'pour-two-cups'(h) { h.set(h.role('pb'), 'hist', 'fA,AB,eB,AB,fA,AB'); },
+  'balance-12'(h) { h.set(h.role('b'), 'rc', 12); }, 'place-sub'(h) { const v = h.role('v'); h.set(v, 'marks', '1'); h.set(v, 'res', '52'); },
 };

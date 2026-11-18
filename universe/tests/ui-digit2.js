@@ -40,7 +40,7 @@ const norm = (s) => String(s || '').replace(/\s+/g, ' ').trim();
   const settle = async () => { await p.waitForTimeout(800); await p.evaluate(() => UI.Panels.closeDialog()); };
 
   console.log('(a) 每一列有自己的数字池，在列的正下方');
-  await p.evaluate(() => UI.App.openProblem('place-sub', 'practice')); await p.waitForTimeout(150);
+  await p.evaluate(() => { if (!U.problemById('place-sub-wb')) U.problems.push(Object.assign({}, U.benchOriginal['place-sub'], { id: 'place-sub-wb' })); U.types.colbench.hidden = false; UI.App.openProblem('place-sub-wb', 'practice'); });   // place-sub 已经搬到竖式操作台；旧的竖式工作台拿搬之前的样子当样板 await p.waitForTimeout(150);
   ok((await p.locator('#insp.open .dg').count()) === 1, '竖式工作台自动打开');
   for (const c of [0, 1, 2]) {
     const digits = await p.$$eval('#insp [data-dg-pool="' + c + '"] [data-dg-digit]', (els) => els.map((e) => e.dataset.dgDigit));

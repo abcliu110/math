@@ -10,6 +10,7 @@
     id: 'conserve', version: 1,
     types: {
       pour: {
+        hidden: true, retired: true,   // 已经有操作台代替：不上器材架、搜不到；只留给内核测试当样板
         workspaceRole: 'none',
         handles: true,
         essence: ['E5', 'E3'],

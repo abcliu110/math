@@ -356,7 +356,9 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
 
   console.log('式子工作台（方程卡 → 工作台，§10.5.3）');
   await p.evaluate(() => { UI.App.openFree(); UI.App.act({ t: 'clear' }); }); await p.waitForTimeout(100);
+  await p.evaluate(() => { U.types.exprbench.hidden = false; UI.Panels.renderShelf(); }); await p.waitForTimeout(100);   // 式子工作台已经下架，这里临时放回架上测拖放
   await drag('eqcard', 300, 240); await drag('exprbench', 640, 470);
+  await p.evaluate(() => { U.types.exprbench.hidden = true; });
   const wb = await p.evaluate(() => { const E = UI.S.scene.entities, f = (t) => Object.keys(E).find((k) => E[k].type === t); return { q: f('eqcard'), x: f('exprbench') }; });
   const setProp = async (id, sel, v) => {
     await p.dblclick('.card[data-id="' + id + '"] .hd'); await p.waitForTimeout(80);

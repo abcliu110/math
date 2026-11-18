@@ -42,8 +42,8 @@ const norm = (s) => String(s || '').replace(/\s+/g, ' ').trim();
   const settle = async () => { await p.waitForTimeout(800); await p.evaluate(() => UI.Panels.closeDialog()); };
 
   console.log('(a) 题目声明工作台：减法示例题打开就进入竖式工作台');
-  await p.evaluate(() => UI.App.openProblem('place-sub', 'practice')); await p.waitForTimeout(150);
-  ok(await p.evaluate(() => U.problemById('place-sub').workbench === 'place-value'), '题目 place-sub 的 workbench 是 place-value');
+  await p.evaluate(() => { if (!U.problemById('place-sub-wb')) U.problems.push(Object.assign({}, U.benchOriginal['place-sub'], { id: 'place-sub-wb' })); U.types.colbench.hidden = false; UI.App.openProblem('place-sub-wb', 'practice'); });   // place-sub 已经搬到竖式操作台；旧的竖式工作台拿搬之前的样子当样板 await p.waitForTimeout(150);
+  ok(await p.evaluate(() => U.problemById('place-sub-wb').workbench === 'place-value'), '题目 place-sub 的 workbench 是 place-value');
   ok((await p.locator('#insp.open .dg').count()) === 1, '竖式工作台自动打开（属性面板里是竖式）');
   ok(/62 − 37/.test(await text('#insp .dg-title')), '竖式写的是 62 − 37');
   const shelf = await p.$$eval('#shelfbody .tile', (els) => els.map((e) => e.dataset.type));

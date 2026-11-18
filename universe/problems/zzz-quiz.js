@@ -356,6 +356,15 @@
     return { title: n + ' 个零件里有 1 个轻一点，最少称几次一定能找出来？', hook: '天平按最不利的情况回答。把可疑的分成差不多的 3 份试试。', props: { n }, goals: [['best', 1, '称 ' + k + ' 次就保证找到']], sol: { hist: hist.join(';') } };
   } });
 
+  add('pourbench', { gen(R, lv) {
+    for (;;) {
+      const A = R.int(4, 11), B = R.int(2, A - 1), tg = R.int(1, A - 1), r = U.PourBench.fewest(A, B, 0, 0, tg);
+      if (r.n < 2 || (lv === 1 && r.n > 4) || (lv === 2 && (r.n < 5 || r.n > 6)) || (lv === 3 && r.n < 7)) continue;
+      const goals = [['hit', 1, '量出 ' + tg + ' 升']]; if (lv === 3) goals.push(['fewest', 1, '最少 ' + r.n + ' 步']);
+      return { title: '只用 ' + A + ' 升和 ' + B + ' 升的杯子，怎么量出 ' + tg + ' 升？', hook: '杯子没有刻度：只能装满、倒空、从一个倒进另一个。' + (lv === 3 ? '还要用最少的步数。' : ''), props: { A, B, tgt: tg }, goals, sol: { hist: r.path.join(',') } };
+    }
+  } });
+
   add('sortbench', { gen(R, lv) {
     const n = lv === 1 ? R.int(4, 6) : lv === 2 ? R.int(7, 10) : R.int(11, 14), crit = lv === 3 ? 1 : R.int(0, 1), colors = lv === 1 ? [0, 2] : [0, 1, 2];
     const items = Array.from({ length: n }, () => R.pick(colors) + '' + R.int(0, 2));
