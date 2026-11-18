@@ -35,5 +35,14 @@
     goal: ['all'],
     why: '7 个排成一排，中间有 6 条缝，每条缝是一种分法：1 和 6、2 和 5、3 和 4、4 和 3、5 和 2、6 和 1。一份多 1，另一份就少 1。',
   });
+  add({
+    id: 'mk-pairs', essence: ['E2'], title: '对对碰：哪两张加起来是 10？', grade: 1, rung: 2, points: ['1.9'],
+    topics: ['凑十', '10 的分与合'], alias: ['凑十', '对对碰', '好朋友数'],
+    hook: '点一张，再点一张：加起来是 10 就配成一对。把能配的都配完。',
+    build: mb({ mode: 3, cards: '3,7,9,1,6,5,5,2,8' }),
+    milestones: [ms('all', '配完了：3 和 7、9 和 1、5 和 5、2 和 8', 6, 'paired', 1, ['3 和几是 10？', '5 和 5 也是一对。', '6 找不到伙伴：剩下它。'])],
+    goal: ['all'],
+    why: '10 的好朋友：1 和 9、2 和 8、3 和 7、4 和 6、5 和 5。这里没有 4，所以 6 找不到伙伴。',
+  });
   U.problems.push.apply(U.problems, P);
 })(typeof globalThis !== 'undefined' ? globalThis : window);

@@ -10,7 +10,7 @@
   const num = (n) => U.val('num', Q(n), { dim: null });
   const W = 700;
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, Number.isFinite(+v) ? Math.round(+v) : lo));
-  const MODES = ['找因数', '公因数', '公倍数'];
+  const MODES = ['找因数', '公因数', '公倍数', '筛质数'];
   const list = (t) => [...new Set(String(t || '').split(/[,，\s]+/).filter((x) => x !== '').map(Number).filter(Number.isInteger))];
   const gcd = (a, b) => (b ? gcd(b, a % b) : a);
   const divisors = (n) => { const d = []; for (let i = 1; i <= n; i++) if (n % i === 0) d.push(i); return d; };
@@ -25,7 +25,40 @@
   }
   const btn = (x, y, w, label, patch, enabled, tip, active) => '<g' + (enabled ? ' data-pick-set="' + encodeURIComponent(JSON.stringify(patch)) + '" style="cursor:pointer"' : ' data-off="1"') + '><title>' + K.esc(tip) + '</title>' +
     K.rect(x, y, w, 24, { fill: active ? 'var(--blue)' : enabled ? '#fff' : '#f1f3f6', stroke: enabled || active ? 'var(--blue)' : '#b8c0cc', r: 7, w: 1.4 }) + K.text(x + w / 2, y + 16, label, { size: 12, weight: 700, fill: active ? '#fff' : enabled ? 'var(--ink)' : '#5f6773' }) + '</g>';
+
+  // ---------- 筛质数（mode 3）：1–N 的格子，点“划掉 k 的倍数”（k 自己留着），1 单独划掉；合数都划掉了，剩下的就是质数 ----------
+  function sieveModel(p) {
+    const N = +p.N === 50 ? 50 : 100, ks = [...new Set(String(p.sieved || '').split(',').filter((x) => x !== '').map(Number))].filter((k) => k >= 2 && k <= 10), one = !!p.one;
+    const crossed = new Set(); if (one) crossed.add(1); ks.forEach((k) => { for (let v = 2 * k; v <= N; v += k) crossed.add(v); });
+    const isP = (n) => { if (n < 2) return false; for (let d = 2; d * d <= n; d++) if (n % d === 0) return false; return true; };
+    const comps = []; for (let n = 2; n <= N; n++) if (!isP(n)) comps.push(n);
+    const done = one && comps.every((n) => crossed.has(n)), primes = []; for (let n = 2; n <= N; n++) if (isP(n)) primes.push(n);
+    const useless = ks.filter((k) => !isP(k));   // 合数的倍数早就被它的质因数划掉了
+    return { N, ks, one, crossed, done, primes, useless };
+  }
+  function drawSieve(c) {
+    const p = c.props, m = sieveModel(p); let s = '';
+    const cs = m.N === 100 ? 30 : 34, cols = 10, X0 = 20, Y0 = 50;
+    for (let n = 1; n <= m.N; n++) {
+      const i = n - 1, x = X0 + (i % cols) * cs, y = Y0 + Math.floor(i / cols) * cs, x2 = m.crossed.has(n), prime = m.done && !x2;
+      s += K.rect(x, y, cs - 2, cs - 2, { fill: prime ? '#d6ecff' : x2 ? '#f1f3f6' : '#fff', stroke: prime ? 'var(--blue)' : '#c5ccda', r: 3, w: prime ? 1.6 : 1 }) + K.text(x + (cs - 2) / 2, y + cs / 2 + 3, String(n), { size: 11, weight: prime ? 700 : 400, fill: x2 ? '#a0a8b8' : 'var(--ink)' });
+      if (x2) s += K.line(x + 4, y + cs - 6, x + cs - 6, y + 4, { stroke: '#a12a1f', w: 1.2 });
+    }
+    const RX = X0 + cols * cs + 24;
+    MODES.forEach((tt, i) => { s += btn(20 + i * 92, 8, 86, tt, { mode: i, msg: '' }, i !== 3, '换到“' + tt + '”', i === 3); });
+    s += '<g data-pick-set="' + encodeURIComponent(JSON.stringify({ one: !m.one })) + '" style="cursor:pointer"><title>划掉 1</title>' + K.rect(RX, 46, 150, 26, { fill: m.one ? 'var(--blue)' : '#fff', stroke: 'var(--blue)', r: 7, w: 1.4 }) + K.text(RX + 75, 63, '1 不是质数：划掉', { size: 12, weight: 700, fill: m.one ? '#fff' : 'var(--ink)' }) + '</g>';
+    for (let k = 2; k <= 10; k++) {
+      const on = m.ks.includes(k), x = RX + ((k - 2) % 3) * 82, y = 84 + Math.floor((k - 2) / 3) * 32;
+      s += '<g data-pick-set="' + encodeURIComponent(JSON.stringify({ sieved: (on ? m.ks.filter((z) => z !== k) : m.ks.concat([k])).join(',') })) + '" style="cursor:pointer"><title>划掉 ' + k + ' 的倍数</title>' + K.rect(x, y, 76, 26, { fill: on ? 'var(--blue)' : '#fff', stroke: 'var(--blue)', r: 7, w: 1.4 }) + K.text(x + 38, y + 17, k + ' 的倍数', { size: 12, weight: 700, fill: on ? '#fff' : 'var(--ink)' }) + '</g>';
+    }
+    if (m.useless.length) s += K.text(RX, 200, m.useless.join('、') + ' 的倍数早就划掉了：不用再划', { size: 12, anchor: 'start', fill: '#8a5a00' });
+    s += K.text(RX, 226, '已经划掉 ' + m.crossed.size + ' 个', { size: 13, anchor: 'start' });
+    if (m.done) s += '<g data-read="1">' + K.text(RX, 256, '剩下的都是质数：一共 ' + m.primes.length + ' 个', { size: 15, weight: 700, anchor: 'start', fill: 'var(--blue)' }) + K.text(RX, 280, '只要划到 7：' + (m.N === 100 ? '11 × 11 = 121 已经比 100 大' : '7 × 7 = 49，下一个 11 × 11 比 50 大'), { size: 12, anchor: 'start', fill: 'var(--blue)' }) + '</g>';
+    else s += K.text(RX, 256, '还有合数没划掉', { size: 12, anchor: 'start', fill: '#5a6478' });
+    return s;
+  }
   function draw(c) {
+    if (+c.props.mode === 3) return drawSieve(c);
     const p = c.props, m = model(p); let s = '';
     MODES.forEach((t, i) => { s += btn(20 + i * 92, 8, 86, t, { mode: i, msg: '' }, m.mode !== i, '换到“' + t + '”', m.mode === i); });
     if (m.mode === 0) {
@@ -85,15 +118,17 @@
           n: I(1, 100, 12, '找因数：几个小方块'), w: I(0, 100, 0, '找因数：每行几个'), found: { type: 'text', label: '找因数：排满过的每行个数', default: '', write: true },
           a: I(1, 40, 12, '第一个数'), b: I(1, 40, 18, '第二个数'), tried: { type: 'text', label: '公因数：试过的数', default: '', write: true }, cm: { type: 'text', label: '公倍数：点中的公倍数', default: '', write: true },
           msg: { type: 'text', label: '提示（自动）', default: '', write: true, hidden: true },
+          N: I(50, 100, 100, '筛质数：到几（50 或 100）'), sieved: { type: 'text', label: '筛质数：划了哪些数的倍数（自动）', default: '', write: true }, one: { type: 'bool', label: '筛质数：划掉了 1', default: false, write: true },
         },
         outputs: {
           found: { dim: null, kind: 'num', label: '找因数：找到几个' }, count: { dim: null, kind: 'num', label: '找因数：一共几个（找全了才有）' }, prime: { dim: null, kind: 'num', label: '质数 1，合数 0（找全了才有）' },
-          gcd: { dim: null, kind: 'num', label: '最大公因数（公因数找全了才有）' }, lcm: { dim: null, kind: 'num', label: '最小公倍数（点中了才有）' },
+          gcd: { dim: null, kind: 'num', label: '最大公因数（公因数找全了才有）' }, lcm: { dim: null, kind: 'num', label: '最小公倍数（点中了才有）' }, primes: { dim: null, kind: 'num', label: '筛质数：剩下几个质数（筛完才有）' }, crossed: { dim: null, kind: 'num', label: '筛质数：划掉了几个' },
         },
         icon: () => [0, 1, 2, 3, 4, 5].map((i) => K.rect(8 + (i % 3) * 13, 10 + Math.floor(i / 3) * 13, 11, 11, { fill: '#9fc3ea', stroke: 'var(--ink)', r: 1, w: 1 })).join('') + K.text(28, 50, '2 × 3', { size: 9, weight: 700 }),
         size: () => [W, 400],
         grips: () => [],
         compute: (c) => {
+          if (+c.props.mode === 3) { const q = sieveModel(c.props), o = { crossed: num(q.crossed.size) }; if (q.done) o.primes = num(q.primes.length); return o; }
           const m = model(c.props), o = { found: num(m.facs.length) };
           if (m.allF) { o.count = num(m.dn.length); if (m.n > 1) o.prime = num(m.dn.length === 2 ? 1 : 0); }
           if (m.allC) o.gcd = num(m.g);

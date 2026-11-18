@@ -12,7 +12,7 @@
   const W = 700, CW = 40, RX = 300, KY = 352;
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, Number.isFinite(+v) ? +v : lo));
   const dig = (n, j) => Math.floor(n / Math.pow(10, j)) % 10;
-  const OPS = ['加法', '减法', '除法'];
+  const OPS = ['加法', '减法', '除法', '填缺数字'];
   const set = (t) => new Set(String(t || '').split(',').filter(Boolean).map(Number));
   // ---- 加法、减法：从个位起一位一位 ----
   function addsub(p) {
@@ -59,7 +59,42 @@
   const MONO = 'ui-monospace, Consolas, monospace';
   const T = (x, y, s, o) => K.text(x, y, s, Object.assign({ size: 24, weight: 700, family: MONO }, o || {}));
 
+
+  // ---------- 填缺数字（mode 3）：fa、fb、fr 里用 ? 表示 □；fill 是按顺序填进去的数字 ----------
+  function fillModel(p) {
+    const op = p.fop === 1 ? 1 : 0, rows = [String(p.fa || '?3'), String(p.fb || '4?'), String(p.fr || '81')];
+    const holes = []; rows.forEach((r, i) => [...r].forEach((ch, j) => { if (ch === '?') holes.push([i, j]); }));
+    const fill = String(p.fill || '').replace(/[^0-9]/g, '').slice(0, holes.length), sel = Math.max(0, Math.min(holes.length - 1, Number.isFinite(+p.sel) ? +p.sel : 0));
+    const val = rows.map((r) => r.split('')), filled = fill.length === holes.length;
+    holes.forEach(([i, j], k) => { if (k < fill.length) val[i][j] = fill[k]; });
+    const nums = val.map((r) => (r.includes('?') ? null : +r.join(''))), lead0 = val.some((r) => r.length > 1 && r[0] === '0');
+    const ok = filled && !lead0 && nums[0] !== null && (op === 0 ? nums[0] + nums[1] === nums[2] : nums[0] - nums[1] === nums[2]);
+    return { op, rows, holes, fill, sel, val, nums, filled, ok, lead0 };
+  }
+  function drawFill(c) {
+    const p = c.props, m = fillModel(p), CW = 34, RX0 = 220; let s = '';
+    s += K.text(20, 28, '填出 □ 里的数字，让竖式成立', { size: 15, weight: 700, anchor: 'start' });
+    const width = Math.max(...m.rows.map((r) => r.length)), X = (j, len) => RX0 - (len - 1 - j) * CW;
+    m.val.forEach((r, i) => {
+      const y = 90 + i * 52 + (i === 2 ? 14 : 0);
+      r.forEach((ch, j) => {
+        const k = m.holes.findIndex(([hi, hj]) => hi === i && hj === j), x = X(j, r.length);
+        if (k < 0) s += T(x, y, ch);
+        else { const cur = k === m.sel && !m.ok; const body = K.rect(x - 15, y - 28, 30, 36, { fill: cur ? '#d6ecff' : '#fff', stroke: cur ? 'var(--blue)' : '#8a94a6', r: 4, w: cur ? 2.4 : 1.4 }) + (ch !== '?' ? T(x, y, ch, { fill: '#1d4fa3' }) : '');
+          s += '<g data-hole="' + k + '" data-pick-set="' + encodeURIComponent(JSON.stringify({ sel: k, msg: '' })) + '" style="cursor:pointer"><title>第 ' + (k + 1) + ' 个空</title>' + body + '</g>'; }
+      });
+    });
+    s += T(RX0 - width * CW - 4, 142, m.op === 0 ? '+' : '−') + K.line(RX0 - width * CW - 20, 156, RX0 + 20, 156, { w: 2 });
+    const RX = 330;
+    s += K.text(RX, 80, '点一个 □，再点数字键', { size: 13, anchor: 'start', fill: '#5a6478' });
+    s += K.text(RX, 106, '先从个位想：哪一位能确定？满十进一、不够减退一', { size: 12, anchor: 'start', fill: '#5a6478' });
+    if (m.filled) s += '<g data-read="1">' + K.text(RX, 150, m.ok ? '对了：' + m.nums[0] + (m.op === 0 ? ' + ' : ' − ') + m.nums[1] + ' = ' + m.nums[2] : m.lead0 ? '最高位不能是 0' : '不对：' + m.nums[0] + (m.op === 0 ? ' + ' : ' − ') + m.nums[1] + ' = ' + (m.op === 0 ? m.nums[0] + m.nums[1] : m.nums[0] - m.nums[1]) + '，不是 ' + m.nums[2], { size: 15, weight: 700, anchor: 'start', fill: m.ok ? 'var(--blue)' : 'var(--bad)' }) + '</g>';
+    for (let d = 0; d <= 9; d++) { const nf = m.fill.slice(0, m.sel) + d + m.fill.slice(m.sel + 1), fill2 = (m.sel < m.fill.length ? nf : (m.fill + d)).slice(0, m.holes.length); s += key(20 + d * 46, KY, String(d), { fill: fill2, sel: Math.min(m.holes.length - 1, m.sel + 1), msg: '' }, !m.ok && m.sel <= m.fill.length, d); }
+    s += '<g data-key="back" data-pick-set="' + encodeURIComponent(JSON.stringify({ fill: m.fill.slice(0, -1), sel: Math.max(0, m.fill.length - 1), msg: '' })) + '" style="cursor:pointer">' + K.rect(484, KY, 70, 34, { fill: '#fff', stroke: 'var(--blue)', r: 7, w: 1.5 }) + K.text(519, KY + 22, '退一步', { size: 13, weight: 700 }) + '</g>';
+    return s;
+  }
   function draw(c) {
+    if (+c.props.mode === 3) return drawFill(c);
     const p = c.props, m = model(p); let s = '';
     if (m.mode !== 2) {
       const X = (j) => 230 - j * CW, op = m.sub ? '−' : '+';
@@ -115,16 +150,17 @@
         props: {
           mode: { type: 'choice', label: '算什么', default: 0, choices: OPS, write: true },
           a: I(0, 9999, 47, '第一个数（被除数）'), b: I(1, 9999, 38, '第二个数（除数）'),
-          res: Tx('', '加减：已经写下的得数（从个位起）'), marks: Tx('', '加减：点了进位、退位的数位'), qd: Tx('', '除法：已经写下的商'), msg: Tx('', '提示（自动）'),
+          res: Tx('', '加减：已经写下的得数（从个位起）'), fa: Tx('?3', '填缺：第一行（? 是 □）'), fb: Tx('4?', '填缺：第二行'), fr: Tx('81', '填缺：得数那一行'), fop: I(0, 1, 0, '填缺：0 加、1 减', { hidden: true }), fill: Tx('', '填缺：填进去的数字（按顺序）'), sel: I(0, 9, 0, '填缺：选中第几个空', { hidden: true }), marks: Tx('', '加减：点了进位、退位的数位'), qd: Tx('', '除法：已经写下的商'), msg: Tx('', '提示（自动）'),
         },
         outputs: {
           done: { dim: null, kind: 'num', label: '算完了：1 是，0 否' }, result: { dim: null, kind: 'num', label: '得数（加减算完才有）' },
-          q: { dim: null, kind: 'num', label: '商（除法算完才有）' }, r: { dim: null, kind: 'num', label: '余数（除法算完才有）' }, written: { dim: null, kind: 'num', label: '已经写了几位' },
+          q: { dim: null, kind: 'num', label: '商（除法算完才有）' }, ok: { dim: null, kind: 'num', label: '填缺：全部填完，对 1、错 0（填完才有）' }, r: { dim: null, kind: 'num', label: '余数（除法算完才有）' }, written: { dim: null, kind: 'num', label: '已经写了几位' },
         },
         icon: () => K.text(46, 16, '47', { size: 12, weight: 700, anchor: 'end' }) + K.text(46, 30, '+38', { size: 12, weight: 700, anchor: 'end' }) + K.line(18, 34, 48, 34, { w: 1.5 }) + K.circle(26, 6, 3, { fill: '#f5a25d', stroke: 'var(--ink)', w: 1 }),
         size: () => [W, 420],
         grips: () => [],
         compute: (c) => {
+          if (+c.props.mode === 3) { const f = fillModel(c.props), o = { done: num(f.ok ? 1 : 0), written: num(f.fill.length) }; if (f.filled) o.ok = num(f.ok ? 1 : 0); return o; }
           const m = model(c.props), o = { done: num(m.done ? 1 : 0), written: num(m.mode === 2 ? m.q.length : m.res.length) };
           if (m.done) { if (m.mode === 2) { o.q = num(m.quotient); o.r = num(m.r); } else o.result = num(m.total); }
           return o;

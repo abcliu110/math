@@ -11,7 +11,7 @@
   const num = (n) => U.val('num', Q(n), { dim: null });
   const W = 700, CA = '#e87a6b', CB = '#6fa3e0', R0 = 18, D = 44;
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, Number.isFinite(+v) ? Math.round(+v) : lo));
-  const MODES = ['凑十加法', '破十减法', '分与合'];
+  const MODES = ['凑十加法', '破十减法', '分与合', '对对碰'];
   const list = (t) => String(t || '').split(/[,，\s]+/).filter((x) => x !== '').map(Number).filter(Number.isInteger);
   function model(p) {
     const mode = clamp(p.mode, 0, 2);
@@ -33,7 +33,37 @@
   const pick = (patch, tip, inner) => '<g data-pick-set="' + encodeURIComponent(JSON.stringify(patch)) + '" style="cursor:pointer"><title>' + K.esc(tip) + '</title>' + inner + '</g>';
   const disk = (x, y, f) => K.circle(x, y, R0, { fill: f, stroke: '#3a4a63', w: 1.4 });
   const cross = (x, y) => K.line(x - 13, y - 13, x + 13, y + 13, { stroke: 'var(--ink)', w: 3 }) + K.line(x - 13, y + 13, x + 13, y - 13, { stroke: 'var(--ink)', w: 3 });
+
+  // ---------- 对对碰（mode 3）：cards 是一排数，taken 是已经配掉的，pick 是选中的那一张 ----------
+  function pairModel(p) {
+    const cards = String(p.cards || '3,7,9,1,5,5,2').split(',').map(Number).filter((x) => x >= 0 && x <= 10).slice(0, 14);
+    const taken = new Set(String(p.taken || '').split(',').filter((x) => x !== '').map(Number).filter((i) => i < cards.length));
+    const pick = Number.isFinite(+p.pick) && +p.pick >= 0 && +p.pick < cards.length && !taken.has(+p.pick) ? +p.pick : -1;
+    const left = cards.map((v, i) => [v, i]).filter(([, i]) => !taken.has(i));
+    let more = false; for (let a = 0; a < left.length; a++) for (let b = a + 1; b < left.length; b++) if (left[a][0] + left[b][0] === 10) more = true;
+    return { cards, taken, pick, pairs: taken.size / 2, more };
+  }
+  function drawPair(c) {
+    const p = c.props, m = pairModel(p); let s = '';
+    s += K.text(20, 28, '对对碰：找出加起来是 10 的两张，配成一对', { size: 16, weight: 700, anchor: 'start' });
+    m.cards.forEach((v, i) => {
+      const x = 40 + (i % 7) * 88, y = 70 + Math.floor(i / 7) * 96, gone = m.taken.has(i), on = m.pick === i;
+      const body = K.rect(x, y, 70, 82, { fill: gone ? '#eef7ee' : on ? '#d6ecff' : '#fff', stroke: gone ? '#9fd5ad' : on ? 'var(--blue)' : '#8a94a6', r: 10, w: on ? 3 : 1.4 }) + K.text(x + 35, y + 52, String(v), { size: 30, weight: 700, fill: gone ? '#9fb8a6' : 'var(--ink)' });
+      if (gone) { s += body; return; }
+      let patch;
+      if (m.pick < 0 || m.pick === i) patch = { pick: m.pick === i ? -1 : i, msg: '' };
+      else if (m.cards[m.pick] + v === 10) patch = { taken: [...m.taken, m.pick, i].join(','), pick: -1, msg: '' };
+      else patch = { pick: -1, msg: m.cards[m.pick] + ' + ' + v + ' = ' + (m.cards[m.pick] + v) + '，不是 10' };
+      s += '<g data-pick-set="' + encodeURIComponent(JSON.stringify(patch)) + '" style="cursor:pointer"><title>卡片 ' + (i + 1) + '：' + v + '</title>' + body + '</g>';
+    });
+    s += K.text(40, 290, '配成了 ' + m.pairs + ' 对', { size: 14, weight: 700, anchor: 'start' });
+    if (p.msg) s += K.text(40, 316, p.msg, { size: 13, weight: 700, anchor: 'start', fill: 'var(--bad)' });
+    if (!m.more) s += '<g data-read="1">' + K.text(40, 344, '找完了：剩下的再也凑不成 10' + (m.pairs ? '（' + [...m.taken].sort((a, b) => a - b).map((i) => m.cards[i]).join('、') + '）' : ''), { size: 14, weight: 700, anchor: 'start', fill: 'var(--blue)' }) + '</g>';
+    s += '<g data-pick-set="' + encodeURIComponent(JSON.stringify({ taken: '', pick: -1, msg: '' })) + '" style="cursor:pointer"><title>重来</title>' + K.rect(560, 330, 110, 26, { fill: '#fff', stroke: 'var(--blue)', r: 7, w: 1.4 }) + K.text(615, 348, '重来', { size: 12, weight: 700 }) + '</g>';
+    return s;
+  }
   function draw(c) {
+    if (+c.props.mode === 3) return drawPair(c);
     const p = c.props, m = model(p); let s = '';
     if (m.mode === 0) {
       const LX = 40, RX = 340, Y = 70;
@@ -97,17 +127,18 @@
         props: {
           mode: { type: 'choice', label: '做什么', default: 0, choices: MODES, write: true },
           a: I(1, 19, 9, '第一个数'), b: I(1, 9, 6, '第二个数'), n: I(2, 10, 7, '分与合：几个'),
-          moved: I(0, 9, 0, '凑十：挪过去几个'), cross: { type: 'text', label: '破十：划掉了哪几个（编号）', default: '', write: true }, splits: { type: 'text', label: '分与合：找到的分法', default: '', write: true }, last: I(0, 9, 0, '分与合：刚点的缝（自动）', { hidden: true }),
+          moved: I(0, 9, 0, '凑十：挪过去几个'), cross: { type: 'text', label: '破十：划掉了哪几个（编号）', default: '', write: true }, splits: { type: 'text', label: '分与合：找到的分法', default: '', write: true }, cards: { type: 'text', label: '对对碰：一排数字卡片', default: '3,7,9,1,5,5,2', write: true }, taken: { type: 'text', label: '对对碰：配掉的卡片（自动）', default: '', write: true, hidden: true }, pick: { type: 'int', label: '对对碰：选中的卡片（自动）', default: -1, min: -1, max: 13, write: true, hidden: true }, msg: { type: 'text', label: '提示（自动）', default: '', write: true, hidden: true }, last: I(0, 9, 0, '分与合：刚点的缝（自动）', { hidden: true }),
         },
         outputs: {
           sum: { dim: null, kind: 'num', label: '凑成十以后的和（凑成了才有）' }, moved: { dim: null, kind: 'num', label: '挪过去几个' },
           diff: { dim: null, kind: 'num', label: '划够以后还剩几个（划够了才有）' }, method: { dim: null, kind: 'num', label: '用的方法：1 破十，2 平十，0 别的' },
-          found: { dim: null, kind: 'num', label: '分与合：找到几种' }, all: { dim: null, kind: 'num', label: '分与合：找全了 1（找全了才有）' },
+          found: { dim: null, kind: 'num', label: '分与合：找到几种' }, all: { dim: null, kind: 'num', label: '分与合：找全了 1（找全了才有）' }, pairs: { dim: null, kind: 'num', label: '对对碰：配成了几对' }, paired: { dim: null, kind: 'num', label: '对对碰：找完了 1（再也凑不成 10 才有）' },
         },
         icon: () => K.rect(6, 12, 40, 18, { fill: '#fffdf6', stroke: 'var(--ink)', r: 1, w: 1 }) + K.circle(12, 21, 3.5, { fill: CA }) + K.circle(20, 21, 3.5, { fill: CA }) + K.circle(28, 21, 3.5, { fill: CA }) + K.circle(36, 21, 3.5, { fill: CB }) + K.text(26, 44, '凑十', { size: 9, weight: 700 }),
         size: () => [W, 400],
         grips: () => [],
         compute: (c) => {
+          if (+c.props.mode === 3) { const q = pairModel(c.props), o = { pairs: U.val('num', Q(q.pairs), { dim: null }) }; if (!q.more) o.paired = U.val('num', Q(1), { dim: null }); return o; }
           const m = model(c.props), o = {};
           if (m.mode === 0) { o.moved = num(m.moved); if (m.made) o.sum = num(m.a + m.b); }
           else if (m.mode === 1) { if (m.done) { o.diff = num(m.left); o.method = num(m.method); } }

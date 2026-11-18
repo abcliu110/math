@@ -19,8 +19,10 @@
   const counts = (t) => { const c = String(t || '').split(',').map(Number); return DEN.map((_, i) => clamp(c[i] || 0, 0, 20)); };
   function model(p) {
     const mode = clamp(p.mode, 0, 1), price = clamp(p.price, 0, 1000), paid = clamp(p.paid, 0, 1000), tray = counts(p.tray), wallet = p.wallet === undefined || p.wallet === '' ? DEN.map(() => 20) : counts(p.wallet);
-    const total = tray.reduce((s, n, i) => s + n * DEN[i], 0);
-    return { mode, price, paid, tray, wallet, total };
+    const total = tray.reduce((s, n, i) => s + n * DEN[i], 0), pieces = tray.reduce((s, n) => s + n, 0);
+    // 最少张数：人民币的面额从大往小拿就是最少（1、5、10、50 角……这套面额贪心就是最优）
+    let rest = price, fewest = 0; for (let i = DEN.length - 1; i >= 0; i--) { fewest += Math.floor(rest / DEN[i]); rest %= DEN[i]; }
+    return { mode, price, paid, tray, wallet, total, pieces, fewest };
   }
   const btn = (x, y, w, label, patch, enabled, tip) => '<g' + (enabled ? ' data-pick-set="' + encodeURIComponent(JSON.stringify(patch)) + '" style="cursor:pointer"' : ' data-off="1"') + '><title>' + K.esc(tip) + '</title>' +
     K.rect(x, y, w, 26, { fill: enabled ? '#fff' : '#f1f3f6', stroke: enabled ? 'var(--blue)' : '#b8c0cc', r: 7, w: 1.4 }) + K.text(x + w / 2, y + 17, label, { size: 12, weight: 700, fill: enabled ? 'var(--ink)' : '#5f6773' }) + '</g>';
@@ -42,7 +44,7 @@
     DEN.forEach((d, i) => { for (let k = 0; k < m.tray[i]; k++) { const t = m.tray.slice(); t[i]--; s += '<g data-pick-set="' + encodeURIComponent(JSON.stringify({ tray: enc(t) })) + '" style="cursor:pointer"><title>拿回一张 ' + NAME[i] + '</title>' + piece(x, y, i) + '</g>'; x += 52; if (x > 630) { x = 36; y += 36; } } });
     if (m.mode === 0) {
       s += '<g data-read="1">' + K.text(20, 320, '盘子里一共：' + show(m.total) + ' = ' + dec(m.total), { size: 16, weight: 700, anchor: 'start', fill: 'var(--blue)' }) + '</g>';
-      if (m.price) s += K.text(20, 346, m.total === m.price ? '正好！' : m.total < m.price ? '还差 ' + show(m.price - m.total) : '多付了 ' + show(m.total - m.price), { size: 14, weight: 700, anchor: 'start', fill: m.total === m.price ? 'var(--blue)' : 'var(--bad)' });
+      if (m.price) s += K.text(20, 346, m.total === m.price ? '正好！用了 ' + m.pieces + ' 张' + (m.pieces === m.fewest ? '：最少就是 ' + m.fewest + ' 张' : '，最少只要 ' + m.fewest + ' 张（大面额先用）') : m.total < m.price ? '还差 ' + show(m.price - m.total) : '多付了 ' + show(m.total - m.price), { size: 14, weight: 700, anchor: 'start', fill: m.total === m.price ? 'var(--blue)' : 'var(--bad)' });
     } else {
       const at = m.price + m.total;
       s += '<g data-read="1">' + K.text(20, 320, '数到了 ' + dec(at) + (at === m.paid ? '：正好数到顾客付的 ' + dec(m.paid) : at < m.paid ? '，还没数到 ' + dec(m.paid) : '，数过头了'), { size: 15, weight: 700, anchor: 'start', fill: at === m.paid ? 'var(--blue)' : at < m.paid ? 'var(--ink)' : 'var(--bad)' }) + (at === m.paid ? K.text(20, 346, '找零 ' + show(m.total) + '：' + dec(m.paid) + ' − ' + dec(m.price) + ' = ' + dec(m.total), { size: 15, weight: 700, anchor: 'start', fill: 'var(--blue)' }) : '') + '</g>';
@@ -62,14 +64,14 @@
           tray: { type: 'text', label: '盘子里每种钱各几张（1 角、5 角、1 元、5 元、10 元、20 元、50 元）', default: '', write: true }, wallet: { type: 'text', label: '（备用）', default: '', write: true, hidden: true },
         },
         outputs: {
-          total: { dim: null, kind: 'num', label: '盘子里一共几元' }, exact: { dim: null, kind: 'num', label: '付钱：正好付够 1（正好才有）' }, change: { dim: null, kind: 'num', label: '找零：找几元（正好数到才有）' },
+          total: { dim: null, kind: 'num', label: '盘子里一共几元' }, exact: { dim: null, kind: 'num', label: '付钱：正好付够 1（正好才有）' }, fewest: { dim: null, kind: 'num', label: '付钱：正好而且张数最少 1' }, change: { dim: null, kind: 'num', label: '找零：找几元（正好数到才有）' },
         },
         icon: () => K.rect(6, 12, 30, 18, { fill: '#7fb0e8', stroke: 'var(--ink)', r: 2, w: 1 }) + K.circle(44, 30, 9, { fill: '#e7c46b', stroke: 'var(--ink)', w: 1 }) + K.text(21, 25, '10', { size: 9, weight: 700 }),
         size: () => [W, 400],
         grips: () => [],
         compute: (c) => {
           const m = model(c.props), o = { total: yuan(m.total) };
-          if (m.mode === 0 && m.price && m.total === m.price) o.exact = U.val('num', Q(1), { dim: null });
+          if (m.mode === 0 && m.price && m.total === m.price) { o.exact = U.val('num', Q(1), { dim: null }); if (m.pieces === m.fewest) o.fewest = U.val('num', Q(1), { dim: null }); }
           if (m.mode === 1 && m.price + m.total === m.paid && m.total > 0) o.change = yuan(m.total);
           return o;
         },

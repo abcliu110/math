@@ -26,5 +26,14 @@
     goal: ['change'],
     why: '20 − 13.5 = 6.5。往上数：13.5 → 14 → 15 → 20，数上去的是 0.5 + 1 + 5 = 6.5 元，就是找的零钱。',
   });
+  add({
+    id: 'mn-fewest', essence: ['E3', 'E2'], title: '8 元 7 角，最少用几张？', grade: 1, rung: 3, points: ['1.14'],
+    topics: ['人民币', '最少张数'], alias: ['付钱', '最少几张', '凑钱'],
+    hook: '正好付 8 元 7 角，张数要最少：先用大面额，大的用不了再用小的。',
+    build: mb({ mode: 0, price: 87 }),
+    milestones: [ms('few', '正好，而且最少：7 张', 8, 'fewest', 1, ['5 元 1 张，1 元 3 张：8 元。', '5 角 1 张，1 角 2 张：7 角。', '一共 7 张。'])],
+    goal: ['few'],
+    why: '先用大面额：5 元 1 张，剩 3 元用 3 张 1 元；7 角用 5 角 1 张、1 角 2 张。1 + 3 + 1 + 2 = 7 张。全用 1 元、1 角要 15 张。',
+  });
   U.problems.push.apply(U.problems, P);
 })(typeof globalThis !== 'undefined' ? globalThis : window);

@@ -66,6 +66,14 @@
   } });
 
   add('makebench', { gen(R, lv) {
+    if (lv === 1 && R.bool()) {
+      const k = R.int(2, 4), pairs = [], used = new Set(); while (pairs.length < k) { const a = R.int(1, 9); pairs.push([a, 10 - a]); }
+      const pool = [1, 2, 3, 4, 6, 7, 8, 9].filter((x) => !pairs.some(([a, b]) => a === x || b === x)), dec = []; for (const x of pool) { if (dec.length < 2 && !dec.some((y) => x + y === 10)) dec.push(x); }
+      const cards = [], taken = []; pairs.forEach(([a, b]) => { taken.push(cards.length, cards.length + 1); cards.push(a, b); }); dec.forEach((x) => cards.push(x));
+      const order = cards.map((_, i) => i); for (let i = order.length - 1; i > 0; i--) { const j = R.int(0, i); [order[i], order[j]] = [order[j], order[i]]; }
+      const inv = []; order.forEach((o, i) => { inv[o] = i; }); void used;
+      return { title: '对对碰：找出加起来是 10 的两张', hook: '点两张：加起来是 10 就配成一对。把能配的都配完。', props: { mode: 3, cards: order.map((o) => cards[o]).join(',') }, goals: [['paired', 1, '配完了：' + k + ' 对']], sol: { taken: taken.map((x) => inv[x]).join(',') } };
+    }
     if (lv === 1) { const n = R.int(4, 10); return { title: n + ' 可以分成几和几？', hook: '点两个圆片之间的缝，把它们分成两份。全部分法都找出来。', props: { mode: 2, n }, goals: [['all', 1, '找全了：' + n + ' 有 ' + (n - 1) + ' 种分法']], sol: { splits: Array.from({ length: n - 1 }, (_, i) => i + 1).join(',') } }; }
     if (lv === 2) { const a = R.int(5, 9), b = R.int(11 - a, 9); return { title: a + ' + ' + b + '：凑成十再加', hook: '点右边的蓝片挪进左边的空格，把左边凑满十。', props: { mode: 0, a, b }, goals: [['sum', a + b, a + ' + ' + b + ' = ' + (a + b)]], sol: { moved: 10 - a } }; }
     const a = R.int(11, 18), b = R.int(a - 9, 9); return { title: a + ' − ' + b + '：破十或平十', hook: '点圆片划掉它，一共划 ' + b + ' 个。可以都从十格框里划，也可以先划外面的。', props: { mode: 1, a, b }, goals: [['diff', a - b, a + ' − ' + b + ' = ' + (a - b)]], sol: { cross: Array.from({ length: b }, (_, i) => i).join(',') } };
@@ -96,7 +104,7 @@
   const greedy = (j) => { const t = DEN.map(() => 0); for (let i = DEN.length - 1; i >= 0; i--) { while (j >= DEN[i]) { t[i]++; j -= DEN[i]; } } return t.join(','); };
   const yj = (j) => { const y = Math.floor(j / 10), a = j % 10; return (y ? y + ' 元' : '') + (a ? (y ? ' ' : '') + a + ' 角' : '') || '0 元'; };
   add('moneybench', { gen(R, lv) {
-    if (lv === 1) { const p = R.int(3, 30) * 10; return { title: '正好付 ' + yj(p), hook: '从钱包里点钱放进盘子，正好付 ' + yj(p) + '。', props: { mode: 0, price: p }, goals: [['exact', 1, '正好付了 ' + yj(p)]], sol: { tray: greedy(p) } }; }
+    if (lv === 1) { const p = R.int(3, 30) * 10; return { title: '正好付 ' + yj(p) + '，张数最少', hook: '从钱包里点钱放进盘子：正好付 ' + yj(p) + '，用的张数越少越好（先用大面额）。', props: { mode: 0, price: p }, goals: [['fewest', 1, '正好，而且张数最少']], sol: { tray: greedy(p) } }; }
     if (lv === 2) { const p = R.int(12, 99) * 10 + R.int(1, 9); return { title: '正好付 ' + yj(p), hook: '几元几角：元和角都要点够。', props: { mode: 0, price: p }, goals: [['exact', 1, '正好付了 ' + yj(p) + '（' + (p / 10) + ' 元）']], sol: { tray: greedy(p) } }; }
     const paid = R.pick([100, 200, 500]), p = R.int(Math.floor(paid / 4), paid - 3) * 1 - (R.bool() ? 5 : 0), price = Math.max(11, p); return { title: yj(price) + ' 的东西，付 ' + yj(paid) + '，找多少？', hook: '从 ' + (price / 10) + ' 元往上数，点钱包里的钱“数上去”，数到 ' + (paid / 10) + ' 元。', props: { mode: 1, price, paid }, goals: [['change', qs(paid - price, 10), '找零 ' + yj(paid - price)]], sol: { tray: greedy(paid - price) } };
   } });
@@ -366,6 +374,22 @@
   addRev('circlebench', function (R) { const r = R.int(2, 9); return { title: '圆的面积是 ' + (314 * r * r / 100) + '，半径是几？（π 取 3.14）', hook: '拖半径，让面积正好是 ' + (314 * r * r / 100) + '。', props: { mode: 0, r: 1 }, goals: [['area', qs(314 * r * r, 100), '半径是 ' + r]], sol: { r } }; });
   addRev('gapbench', function (R) { const gap = R.pick([2, 4, 5, 10]), k = R.int(4, 12), len = gap * k; return { title: len + ' 米的路，两头都种，一共种了 ' + (k + 1) + ' 棵，每隔几米种一棵？', hook: '调“每隔几米”，让棵数正好是 ' + (k + 1) + '。', props: { len, gap: 1, le: 1, re: 1, ring: 0 }, goals: [['trees', k + 1, '每隔 ' + gap + ' 米：' + k + ' 段，' + (k + 1) + ' 棵']], sol: { gap } }; });
   addRev('decbench', function (R) { const a = R.int(11, 99), sh = R.pick([1, 2]), sv = Math.round(a * Math.pow(10, sh)) / 100; return { title: (a / 100) + ' 变成 ' + sv + '，小数点向哪边移了几位？', hook: '点“小数点 →”“← 小数点”，让它正好变成 ' + sv + '。', props: { mode: 3, a: String(a / 100) }, goals: [['shifted', qs(a * Math.pow(10, sh), 100), '向右移 ' + sh + ' 位，扩大到 ' + Math.pow(10, sh) + ' 倍']], sol: { shift: sh } }; });
+  addRev('vertbench', function (R) {
+    for (;;) {
+      const op = R.int(0, 1), a0 = R.int(21, 98), b0 = R.int(12, op ? a0 - 10 : 99 - a0), r0 = op ? a0 - b0 : a0 + b0;
+      if (r0 < 10 || b0 < 10) continue;
+      const rows = [String(a0), String(b0), String(r0)], cand = [];
+      rows.forEach((r, i) => [...r].forEach((_, j) => { if (i < 2) cand.push([i, j]); }));
+      const holes = []; while (holes.length < 2) { const h = R.pick(cand); if (!holes.some((x) => x[0] === h[0] && x[1] === h[1])) holes.push(h); }
+      const masked = rows.map((r, i) => [...r].map((ch, j) => (holes.some((h) => h[0] === i && h[1] === j) ? '?' : ch)).join(''));
+      // 只要唯一解
+      let n = 0; const hs = []; masked.forEach((r, i) => [...r].forEach((ch, j) => { if (ch === '?') hs.push([i, j]); }));
+      for (let x = 0; x < 100; x++) { const ds = [Math.floor(x / 10), x % 10], v = masked.map((r) => r.split('')); hs.forEach(([i, j], k) => { v[i][j] = String(ds[k]); }); if (v.some((r) => r.length > 1 && r[0] === '0')) continue; const nn = v.map((r) => +r.join('')); if (op ? nn[0] - nn[1] === nn[2] : nn[0] + nn[1] === nn[2]) n++; }
+      if (n !== 1) continue;
+      const fill = hs.map(([i, j]) => rows[i][j]).join('');
+      return { title: masked.map((x) => x.replace(/\?/g, '□')).slice(0, 2).join(op ? ' − ' : ' + ') + ' = ' + rows[2] + '：□ 里是几？', hook: '先从能确定的那一位想：个位、进位、退位。点 □，再点数字键。', props: { mode: 3, fa: masked[0], fb: masked[1], fr: masked[2], fop: op }, goals: [['ok', 1, rows[0] + (op ? ' − ' : ' + ') + rows[1] + ' = ' + rows[2]]], sol: { fill } };
+    }
+  });
   addRev('blocksbench', function (R) { const n = R.int(31, 89), d = R.pick([10, 20, 1, 2]); return { title: '比 ' + (n - d) + ' 多 ' + d + ' 的数是几？摆出来', hook: '用十条和一块摆出这个数。多 ' + d + ' 是多几个十，还是多几个一？', props: { mode: 0, h: 0, t: 0, o: 0 }, goals: [['value', n, '是 ' + n]], sol: { t: Math.floor(n / 10), o: n % 10 } }; });
 
   // ===================== 关卡链：每个操作台一条闯关路线 =====================

@@ -6,7 +6,7 @@
 
 - 知识点：142 个（设计目标 142）
 - 有题的知识点：141 个（99%）
-- 题目：589 道；没有对应知识点的题：1 道
+- 题目：594 道；没有对应知识点的题：1 道
 - 没有器材的本质：无
 - 没有题的本质：无
 
@@ -14,11 +14,11 @@
 
 | 年级 | 知识点 | 有题 | 题目数 |
 |---|---|---|---|
-| 1 | 16 | 16（100%） | 48 |
-| 2 | 16 | 16（100%） | 52 |
+| 1 | 16 | 16（100%） | 50 |
+| 2 | 16 | 16（100%） | 54 |
 | 3 | 16 | 16（100%） | 81 |
 | 4 | 17 | 17（100%） | 89 |
-| 5 | 14 | 14（100%） | 96 |
+| 5 | 14 | 14（100%） | 97 |
 | 6 | 15 | 14（93%） | 57 |
 | 7 | 16 | 16（100%） | 78 |
 | 8 | 16 | 16（100%） | 74 |
@@ -36,16 +36,16 @@
 | 1.6 | 1 | 6–10的认识、连加连减 | 2 | 1 | 0 | 1 | termsbench、numlinebench |
 | 1.7 | 1 | 11–20的认识、10加几 | 2 | 1 | 0 | 1 | blocksbench、groupbench |
 | 1.8 | 1 | 认识钟表 | 1 | 1 | 0 | 1 | clockbench |
-| 1.9 | 1 | 20以内进位加法、凑十法 | 3 | 1 | 0 | 1 | numlinebench、makebench |
+| 1.9 | 1 | 20以内进位加法、凑十法 | 4 | 1 | 0 | 1 | numlinebench、makebench |
 | 1.10 | 1 | 平面图形、七巧板 | 1 | 1 | 0 | 1 | areamodel、tribench |
 | 1.11 | 1 | 20以内退位减法、破十法 | 2 | 1 | 0 | 1 | numlinebench、makebench |
 | 1.12 | 1 | 分类与整理 | 2 | 1 | 0 | 1 | sortbench |
 | 1.13 | 1 | 100以内数的认识 | 4 | 0 | 0 | 1 | blocksbench、num |
-| 1.14 | 1 | 认识人民币 | 3 | 1 | 0 | 1 | moneybench |
+| 1.14 | 1 | 认识人民币 | 4 | 1 | 0 | 1 | moneybench |
 | 1.15 | 1 | 100以内加减法（一） | 1 | 1 | 0 | 1 | blocksbench |
 | 1.16 | 1 | 找规律 | 6 | 0 | 0 | 1 | num、meter、conjbench、fmachine、guessrule、proofbench、seqbench |
 | 2.1 | 2 | 长度单位、线段 | 2 | 1 | 0 | 1 | rulerbench |
-| 2.2 | 2 | 100以内加减法（二） | 6 | 1 | 0 | 1 | vertbench、estbench、arithbench |
+| 2.2 | 2 | 100以内加减法（二） | 8 | 1 | 0 | 1 | vertbench、estbench、arithbench |
 | 2.3 | 2 | 进位加法、退位减法 | 6 | 1 | 0 | 1 | blocksbench、arithbench、colbench |
 | 2.4 | 2 | 角的初步认识、直角 | 2 | 1 | 0 | 1 | tribench、anglebench |
 | 2.5 | 2 | 乘法初步认识、口诀 | 3 | 1 | 0 | 1 | numlinebench、areamodel、tapebench |
@@ -101,7 +101,7 @@
 | 5.6 | 5 | 多边形的面积 | 7 | 1 | 0 | 1 | areabench、gworkspace、gpt、gpoly、fquad |
 | 5.7 | 5 | 植树问题 | 7 | 1 | 0 | 1 | gapbench |
 | 5.14 | 5 | 观察物体（三） | 2 | 1 | 0 | 1 | solidbench、twoways |
-| 5.8 | 5 | 因数与倍数 | 23 | 0 | 1 | 2 | asn、conjbench、factorbench、hanoi、guessrule、areamodel、modclock、groupbench、primeblocks、proofbench、proofsort、net |
+| 5.8 | 5 | 因数与倍数 | 24 | 0 | 1 | 2 | asn、conjbench、factorbench、hanoi、guessrule、areamodel、modclock、groupbench、primeblocks、proofbench、proofsort、net |
 | 5.9 | 5 | 长方体和正方体 | 3 | 1 | 0 | 1 | pour、solidbench |
 | 5.10 | 5 | 分数的意义和性质 | 6 | 0 | 0 | 1 | areamodel、ratiobench、numlinebench、primeblocks |
 | 5.11 | 5 | 分数的加法和减法 | 10 | 1 | 0 | 1 | num、approach、ratiobench、findbug、fracbench |
@@ -176,12 +176,12 @@
 | 本质 | 题目数 | 器材数 |
 |---|---|---|
 | E1 | 64 | 27 |
-| E2 | 231 | 51 |
-| E3 | 147 | 43 |
+| E2 | 236 | 51 |
+| E3 | 148 | 43 |
 | E4 | 107 | 28 |
 | E5 | 141 | 54 |
-| E6 | 52 | 22 |
-| E7 | 111 | 28 |
+| E6 | 53 | 22 |
+| E7 | 113 | 28 |
 | E8 | 66 | 23 |
 | E9 | 72 | 17 |
 | E10 | 10 | 4 |
