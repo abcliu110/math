@@ -142,6 +142,7 @@
   } });
 
   add('areabench', { gen(R, lv) {
+    if (lv === 3 && R.bool()) { const P = R.pick([12, 16, 20, 24, 28]), w = P / 4; return { title: P + ' 米篱笆围长方形，怎样围面积最大？', hook: '拖右边改长，宽跟着变。长和宽越接近，面积越大吗？', props: { shape: 3, P, w: 1 }, goals: [['best', 1, '围成 ' + w + ' × ' + w + ' 的正方形：' + w * w + ' 平方米']], sol: { w } }; }
     const b = R.int(3, 10), h = R.int(2, 6);
     if (lv === 1) { const s = R.int(1, Math.min(b, 4)); return { title: '底 ' + b + '、高 ' + h + ' 的平行四边形，面积是多少？', hook: '沿高剪下来，移到右边，拼成长方形再读面积。', props: { shape: 0, b, h, s }, goals: [['area', b * h, '面积 = ' + b + ' × ' + h + ' = ' + b * h]], sol: { step: 2, seen: String(s) } }; }
     if (lv === 2) { const s = R.int(0, b); return { title: '底 ' + b + '、高 ' + h + ' 的三角形，面积是多少？', hook: '再拿一个一样的三角形，转过来拼成平行四边形。', props: { shape: 1, b, h, s }, goals: [['area', qs(b * h, 2), '面积 = ' + b + ' × ' + h + ' ÷ 2']], sol: { step: 2 } }; }
@@ -245,6 +246,7 @@
   // ===================== 出题器（第二批） =====================
   const lcm2 = (a, b) => a * b / gcd(a, b);
   add('fracbench', { gen(R, lv) {
+    if (lv === 1 && R.bool()) { for (;;) { const b = R.int(2, 9), d = R.int(2, 9), a = R.int(1, b - 1), c = R.int(1, d - 1); if (b === d || a * d === b * c) continue; const cmp = Q.cmp(Q(a, b), Q(c, d)); return { title: a + '/' + b + ' 和 ' + c + '/' + d + '，哪个大？', hook: '格子不一样大：切成一样大的格子再比。', props: { mode: 3, a, b, c, d }, goals: [['cmpok', 1, a + '/' + b + ' ' + (cmp > 0 ? '>' : '<') + ' ' + c + '/' + d]], sol: { ans: String(cmp) } }; } }
     if (lv === 3) { for (;;) { const b = R.int(1, 4), a = R.int(1, 3 * b), d = R.pick([2, 3, 4, 6, 8]), c = R.int(1, d - 1); if (a / b > 3 || gcd(c, d) !== 1) continue; const q = Q.div(Q(a, b), Q(c, d)), t = Math.ceil(Q.num(q) - 1e-9); if (t < 2 || t > 24) continue; return { title: (b === 1 ? a : a + '/' + b) + ' ÷ ' + c + '/' + d, hook: '里面有几个 ' + c + '/' + d + '？用量尺一段一段量。', props: { mode: 1, a, b, c, d }, goals: [['quot', Q.show(q), '商是 ' + Q.show(q)]], sol: { times: t } }; } }
     for (;;) {
       const b = R.int(2, 6), d = R.int(2, 6), a = R.int(1, b - 1), c = R.int(1, d - 1); if (b === d || gcd(a, b) !== 1 || gcd(c, d) !== 1) continue;
@@ -318,6 +320,10 @@
   } });
 
   add('optbench', { gen(R, lv) {
+    if (lv === 3 && R.bool()) {
+      const t3 = R.int(2, 4), t2 = t3 + R.int(2, 3), t1 = t2 + R.int(2, 3), m1 = t1 - 1, m2 = t2 - 1, m3 = t3 - 1;   // 你的每一匹都比对方同等的慢 1，但比对方低一等的快
+      return { title: '田忌赛马：你的马 ' + [m1, m2, m3].join('、') + '，对方 ' + [t1, t2, t3].join('、') + '，怎么派赢得多？', hook: '对方按 上、中、下 出场。点“派你的……”安排每一场。', props: { mode: 2, mine: [m1, m2, m3].join(','), theirs: [t1, t2, t3].join(',') }, goals: [['best', 1, '最多赢 2 场']], sol: { race: '2,0,1' } };
+    }
     if (lv === 3) {
       const n = R.int(3, 5), m = R.int(2, 5), pots = [];
       if (n % 2 === 0) for (let i = 0; i < n; i += 2) { pots.push([i, i + 1]); pots.push([i, i + 1]); }

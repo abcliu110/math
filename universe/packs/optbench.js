@@ -12,7 +12,7 @@
   const num = (n) => U.val('num', Q(n), { dim: null });
   const W = 700;
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, Number.isFinite(+v) ? Math.round(+v) : lo));
-  const MODES = ['安排时间', '烙饼'];
+  const MODES = ['安排时间', '烙饼', '田忌赛马'];
   // 任务：名:分钟:类型（人 / 自）:依赖（编号，用 + 分开）
   function parseTasks(t) {
     return String(t || '').split(';').filter(Boolean).slice(0, 6).map((s, i) => { const [name, min, kind, dep] = s.split(':'); return { i, name, min: Math.max(1, +min || 1), auto: kind === '自', dep: String(dep || '').split('+').filter((x) => x !== '').map(Number) }; });
@@ -34,7 +34,14 @@
     go([]); return b;
   }
   function model(p) {
-    const mode = clamp(p.mode, 0, 1);
+    const mode = clamp(p.mode, 0, 2);
+    if (mode === 2) {
+      const mine = String(p.mine || '7,5,3').split(',').map(Number).slice(0, 3), theirs = String(p.theirs || '8,6,4').split(',').map(Number).slice(0, 3);
+      const order = String(p.race || '').split(',').filter((x) => x !== '').map(Number).filter((i) => i >= 0 && i < 3);
+      const uniq = [...new Set(order)], wins = uniq.map((i, r) => (mine[i] > theirs[r] ? 1 : 0)).reduce((s, x) => s + x, 0);
+      let best = 0; const perm = (a, k) => { if (k === 3) { best = Math.max(best, a.reduce((s, i, r) => s + (mine[i] > theirs[r] ? 1 : 0), 0)); return; } for (let i = 0; i < 3; i++) if (!a.includes(i)) perm(a.concat([i]), k + 1); }; perm([], 0);
+      return { mode, mine, theirs, order: uniq, wins, best, all: uniq.length === 3 };
+    }
     if (mode === 0) {
       const tasks = parseTasks(p.tasks), order = [...new Set(String(p.order || '').split(',').filter((x) => x !== '').map(Number))].filter((i) => i < tasks.length);
       const sch = schedule(tasks, order) || { start: {}, end: {}, idle: 0, waits: [], total: 0 }, all = order.length === tasks.length && tasks.length > 0;
@@ -52,6 +59,22 @@
   const COL = ['#cfe3fb', '#fde2c4', '#d6f0d6', '#ead9f7', '#fbd5dc', '#fff3bf'];
   function draw(c) {
     const p = c.props, m = model(p); let s = '';
+    if (m.mode === 2) {
+      const NM = ['上等马', '中等马', '下等马'];
+      s += K.text(20, 26, '田忌赛马：对方的马按 上、中、下 出场，你怎么排才能赢得多？', { size: 15, weight: 700, anchor: 'start' });
+      for (let r = 0; r < 3; r++) {
+        const y = 70 + r * 70, i = m.order[r];
+        s += K.text(30, y + 24, '第 ' + (r + 1) + ' 场', { size: 13, weight: 700, anchor: 'start' });
+        s += K.rect(110, y, 160, 44, { fill: '#fde2c4', stroke: '#8a5a00', r: 8, w: 1.2 }) + K.text(190, y + 27, '对方 ' + NM[r] + '（' + m.theirs[r] + '）', { size: 12, weight: 700 });
+        if (i !== undefined) { const win = m.mine[i] > m.theirs[r]; s += K.rect(300, y, 160, 44, { fill: win ? '#d6f0d6' : '#fbd5dc', stroke: '#3a4a63', r: 8, w: 1.2 }) + K.text(380, y + 27, '你的 ' + NM[i] + '（' + m.mine[i] + '）', { size: 12, weight: 700 }) + K.text(480, y + 27, win ? '赢' : '输', { size: 14, weight: 700, anchor: 'start', fill: win ? '#1f6a34' : '#a12a1f' }); }
+        else s += K.rect(300, y, 160, 44, { fill: '#fff', stroke: '#c5ccda', r: 8, w: 1, dash: '4 3' }) + K.text(380, y + 27, '派哪匹？', { size: 12, fill: '#8a94a6' });
+      }
+      [0, 1, 2].forEach((i) => { s += btn(530, 70 + i * 40, 150, '派你的' + NM[i] + '（' + m.mine[i] + '）', { race: m.order.concat([i]).join(',') }, !m.order.includes(i) && m.order.length < 3, '派它跑下一场', m.order.includes(i)); });
+      s += btn(530, 200, 150, '重新排', { race: '' }, m.order.length > 0, '重新安排');
+      s += K.text(30, 300, '数字是马的速度，大的跑得快。你的每一匹都比对方同等的马慢。', { size: 12, anchor: 'start', fill: '#5a6478' });
+      if (m.all) s += '<g data-read="1">' + K.text(30, 332, '赢了 ' + m.wins + ' 场' + (m.wins === m.best ? '：这是最好的排法' + (m.wins >= 2 ? '，用下等马去对付对方的上等马' : '') : '，最多能赢 ' + m.best + ' 场'), { size: 15, weight: 700, anchor: 'start', fill: m.wins === m.best ? 'var(--blue)' : 'var(--bad)' }) + '</g>';
+      return s;
+    }
     if (m.mode === 0) {
       s += K.text(20, 26, '怎样安排最省时间？按顺序点下面的事', { size: 16, weight: 700, anchor: 'start' });
       const span = Math.max(m.sum, 10), X0 = 90, X1 = 680, x = (t) => X0 + (X1 - X0) * t / span;
@@ -96,9 +119,10 @@
           tasks: { type: 'text', label: '事情（名:分钟:人/自:要先做的编号；分号分开）', default: '洗水壶:1:人:;烧水:10:自:0;洗茶杯:2:人:;拿茶叶:1:人:;泡茶:1:人:1+2+3', write: true },
           order: { type: 'text', label: '排的顺序（自动）', default: '', write: true },
           n: I(1, 5, 3, '烙饼：几张'), m: I(1, 9, 3, '烙饼：每面几分钟'), pots: { type: 'text', label: '烙饼：每一锅放了哪几张（自动）', default: '', write: true }, pick: { type: 'text', label: '烙饼：这一锅选了哪几张（自动）', default: '', write: true },
+          mine: { type: 'text', label: '赛马：你的三匹马的速度（上、中、下）', default: '7,5,3', write: true }, theirs: { type: 'text', label: '赛马：对方的三匹马（上、中、下）', default: '8,6,4', write: true }, race: { type: 'text', label: '赛马：每一场派了哪匹（自动）', default: '', write: true },
         },
         outputs: {
-          total: { dim: null, kind: 'num', label: '一共几分钟（排完 / 烙完才有）' }, best: { dim: null, kind: 'num', label: '最省时间：1（做到了才有）' }, idle: { dim: null, kind: 'num', label: '人等了几分钟（排完才有）' },
+          total: { dim: null, kind: 'num', label: '一共几分钟（排完 / 烙完才有）' }, best: { dim: null, kind: 'num', label: '最省时间：1（做到了才有）' }, idle: { dim: null, kind: 'num', label: '人等了几分钟（排完才有）' }, wins: { dim: null, kind: 'num', label: '赛马：赢了几场' },
         },
         icon: () => K.rect(6, 12, 30, 10, { fill: '#cfe3fb', stroke: 'var(--ink)', r: 2, w: 1 }) + K.rect(20, 26, 30, 10, { fill: '#fde2c4', stroke: 'var(--ink)', r: 2, w: 1 }) + K.line(6, 42, 50, 42, { w: 1.4 }),
         size: () => [W, 400],
@@ -106,6 +130,7 @@
         compute: (c) => {
           const m = model(c.props), o = {};
           if (m.mode === 0 && m.all) { o.total = num(m.sch.total); o.idle = num(m.sch.idle); if (m.sch.total === m.best) o.best = num(1); }
+          if (m.mode === 2) { o.wins = num(m.wins); if (m.all && m.wins === m.best) o.best = num(1); if (m.all) o.total = num(m.wins); }
           if (m.mode === 1 && m.done) { o.total = num(m.time); if (m.pots.length === m.minPots) o.best = num(1); }
           return o;
         },

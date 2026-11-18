@@ -1,12 +1,12 @@
 # 知识点覆盖报告
 
-> 由 `node tools/coverage.js` 生成，日期 2026-11-17。数据来自 `js/core/curriculum.js` 与 `problems/*.js`。
+> 由 `node tools/coverage.js` 生成，日期 2026-11-18。数据来自 `js/core/curriculum.js` 与 `problems/*.js`。
 
 ## 总览
 
 - 知识点：142 个（设计目标 142）
 - 有题的知识点：141 个（99%）
-- 题目：594 道；没有对应知识点的题：1 道
+- 题目：597 道；没有对应知识点的题：1 道
 - 没有器材的本质：无
 - 没有题的本质：无
 
@@ -16,9 +16,9 @@
 |---|---|---|---|
 | 1 | 16 | 16（100%） | 50 |
 | 2 | 16 | 16（100%） | 54 |
-| 3 | 16 | 16（100%） | 81 |
-| 4 | 17 | 17（100%） | 89 |
-| 5 | 14 | 14（100%） | 97 |
+| 3 | 16 | 16（100%） | 82 |
+| 4 | 17 | 17（100%） | 90 |
+| 5 | 14 | 14（100%） | 98 |
 | 6 | 15 | 14（93%） | 57 |
 | 7 | 16 | 16（100%） | 78 |
 | 8 | 16 | 16（100%） | 74 |
@@ -72,7 +72,7 @@
 | 3.10 | 3 | 除数是一位数的除法 | 1 | 1 | 0 | 1 | vertbench |
 | 3.15a | 3 | 复式统计表 | 2 | 2 | 0 | 1 | tablebench |
 | 3.11 | 3 | 两位数乘两位数 | 9 | 1 | 0 | 1 | areamodel、mulbench、estbench、arithbench |
-| 3.12 | 3 | 面积 | 11 | 0 | 0 | 1 | areamodel、asn、curved、geoboard、circlebench、optimize、solidbench、turtle |
+| 3.12 | 3 | 面积 | 12 | 0 | 0 | 1 | areabench、areamodel、asn、curved、geoboard、circlebench、optimize、solidbench、turtle |
 | 3.13 | 3 | 年、月、日 | 3 | 1 | 0 | 1 | calbench |
 | 3.14 | 3 | 小数的初步认识 | 3 | 1 | 0 | 1 | decbench、numlinebench、twoways |
 | 3.15b | 3 | 搭配（二） | 3 | 1 | 0 | 1 | combobench、areamodel、euler |
@@ -83,7 +83,7 @@
 | 4.5 | 4 | 平行四边形和梯形 | 3 | 1 | 0 | 1 | areabench、cubes |
 | 4.6 | 4 | 除数是两位数的除法 | 1 | 1 | 0 | 1 | vertbench |
 | 4.7 | 4 | 条形统计图 | 1 | 1 | 0 | 1 | statbench、ratiobench |
-| 4.8 | 4 | 优化 | 2 | 1 | 0 | 1 | optbench |
+| 4.8 | 4 | 优化 | 3 | 1 | 0 | 1 | optbench |
 | 4.9 | 4 | 四则运算 | 10 | 1 | 0 | 1 | asn、termsbench、findbug、turtle |
 | 4.17 | 4 | 观察物体（二） | 1 | 1 | 0 | 1 | solidbench |
 | 4.10 | 4 | 运算定律 | 9 | 1 | 0 | 1 | termsbench、fastbench |
@@ -103,7 +103,7 @@
 | 5.14 | 5 | 观察物体（三） | 2 | 1 | 0 | 1 | solidbench、twoways |
 | 5.8 | 5 | 因数与倍数 | 24 | 0 | 1 | 2 | asn、conjbench、factorbench、hanoi、guessrule、areamodel、modclock、groupbench、primeblocks、proofbench、proofsort、net |
 | 5.9 | 5 | 长方体和正方体 | 3 | 1 | 0 | 1 | pour、solidbench |
-| 5.10 | 5 | 分数的意义和性质 | 6 | 0 | 0 | 1 | areamodel、ratiobench、numlinebench、primeblocks |
+| 5.10 | 5 | 分数的意义和性质 | 7 | 0 | 0 | 1 | areamodel、ratiobench、fracbench、numlinebench、primeblocks |
 | 5.11 | 5 | 分数的加法和减法 | 10 | 1 | 0 | 1 | num、approach、ratiobench、findbug、fracbench |
 | 5.12 | 5 | 图形的运动（三） | 1 | 1 | 0 | 1 | gridbench |
 | 5.13 | 5 | 折线统计图、找次品 | 3 | 0 | 0 | 1 | weighbench |
@@ -176,12 +176,12 @@
 | 本质 | 题目数 | 器材数 |
 |---|---|---|
 | E1 | 64 | 27 |
-| E2 | 236 | 51 |
-| E3 | 148 | 43 |
-| E4 | 107 | 28 |
-| E5 | 141 | 54 |
+| E2 | 237 | 51 |
+| E3 | 149 | 43 |
+| E4 | 108 | 28 |
+| E5 | 142 | 54 |
 | E6 | 53 | 22 |
-| E7 | 113 | 28 |
+| E7 | 115 | 28 |
 | E8 | 66 | 23 |
 | E9 | 72 | 17 |
 | E10 | 10 | 4 |

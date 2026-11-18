@@ -11,10 +11,10 @@
   const qv = (q) => U.val('num', q, { dim: null });
   const W = 700, X0 = 40, YB = 290, UN = 22;
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, Number.isFinite(+v) ? Math.round(+v) : lo));
-  const SHAPES = ['平行四边形', '三角形', '梯形'];
+  const SHAPES = ['平行四边形', '三角形', '梯形', '篱笆围地'];
   const X = (u) => X0 + u * UN, Y = (v) => YB - v * UN;
   function model(p) {
-    const shape = clamp(p.shape, 0, 2), b = clamp(p.b, 2, 12), h = clamp(p.h, 1, 8), t = clamp(p.t, 1, 10);
+    const shape = clamp(p.shape, 0, 3) === 3 ? 0 : clamp(p.shape, 0, 2), b = clamp(p.b, 2, 12), h = clamp(p.h, 1, 8), t = clamp(p.t, 1, 10);
     const s = shape === 0 ? clamp(p.s, 0, b) : shape === 1 ? clamp(p.s, 0, b) : clamp(p.s, 0, 6), step = clamp(p.step, 0, 2);
     const seen = [...new Set(String(p.seen || '').split(',').filter((x) => x !== '').map(Number))];
     const base = shape === 2 ? b + t : b, area = shape === 0 ? Q(b * h) : Q(base * h, 2);
@@ -25,6 +25,7 @@
     K.rect(x, y, w, 26, { fill: enabled ? '#fff' : '#f1f3f6', stroke: enabled ? 'var(--blue)' : '#b8c0cc', r: 7, w: 1.4 }) + K.text(x + w / 2, y + 17, label, { size: 12, weight: 700, fill: enabled ? 'var(--ink)' : '#5f6773' }) + '</g>';
   const CA = '#cfe3fb', CB = '#fde2c4';
   function grips(c) {
+    if (+c.props.shape === 3) { const f = fenceModel(c.props); return [{ id: 'w', x: X(f.w), y: Y(Math.min(f.h, 8) / 2), r: 10, cursor: 'ew-resize', tip: '拖：改长', drag: (c0, q) => ({ w: Math.max(1, Math.min(fenceModel(c0.props).P / 2 - 1, Math.round((q.x - X0) / UN))) }), say: (c1) => { const f1 = fenceModel(c1.props); return f1.w + ' × ' + f1.h + ' = ' + f1.area; } }]; }
     const m = model(c.props); if (m.step) return [];
     const u = (q) => (q.x - X0) / UN, v = (q) => (YB - q.y) / UN, out = [];
     out.push({ id: 'b', x: X(m.b), y: Y(0), r: 9, cursor: 'ew-resize', tip: '拖：改底', drag: (c0, q) => ({ b: clamp(u(q), 2, 12) }), say: (c1) => '底 ' + model(c1.props).b });
@@ -35,7 +36,32 @@
     if (m.shape === 2) out.push({ id: 't', x: X(m.s + m.t), y: Y(m.h), r: 9, cursor: 'ew-resize', tip: '拖：改上底', drag: (c0, q) => ({ t: clamp(u(q) - model(c0.props).s, 1, 10) }), say: (c1) => '上底 ' + model(c1.props).t });
     return out;
   }
+  // ---------- 篱笆围地（shape 3）：篱笆一共 P 米，围一个长方形；拖右边改长，宽自动是 P ÷ 2 − 长 ----------
+  function fenceModel(p) {
+    const P = Math.max(8, Math.min(28, Math.round(+p.P || 20) & ~1)), w = Math.max(1, Math.min(P / 2 - 1, Math.round(+p.w || 1))), h = P / 2 - w;
+    const tried = [...new Set(String(p.tried || '').split(',').filter((x) => x !== '').map(Number))].filter((x) => x >= 1 && x < P / 2).sort((a, b) => a - b);
+    let maxA = 0; for (let x = 1; x < P / 2; x++) maxA = Math.max(maxA, x * (P / 2 - x));
+    return { P, w, h, area: w * h, tried, maxA, best: w * h === maxA };
+  }
+  function drawFence(c) {
+    const m = fenceModel(c.props); let s = '';
+    s += K.text(20, 26, '篱笆一共 ' + m.P + ' 米，围成长方形：怎样围面积最大？', { size: 16, weight: 700, anchor: 'start' });
+    for (let i = 0; i <= 14; i++) s += K.line(X(i), Y(0), X(i), Y(8), { stroke: '#e3e7ef', w: 1 });
+    for (let j = 0; j <= 8; j++) s += K.line(X(0), Y(j), X(14), Y(j), { stroke: '#e3e7ef', w: 1 });
+    const hh = Math.min(m.h, 8);
+    s += K.rect(X(0), Y(hh), m.w * UN, hh * UN, { fill: m.best ? '#d6f0d6' : '#cfe3fb', stroke: '#8a5a00', r: 0, w: 3 });
+    s += K.text(X(m.w / 2), Y(0) + 18, '长 ' + m.w + ' 米', { size: 12, weight: 700 }) + K.text(X(m.w) + 18, Y(hh / 2) - 14, '宽 ' + m.h + ' 米', { size: 12, weight: 700, anchor: 'start' });
+    const R0 = 400;
+    s += K.text(R0, 70, '长 + 宽 = ' + m.P + ' ÷ 2 = ' + m.P / 2, { size: 13, anchor: 'start' }) + K.text(R0, 96, '面积 = ' + m.w + ' × ' + m.h + ' = ' + m.area + ' 平方米', { size: 15, weight: 700, anchor: 'start', fill: 'var(--blue)' });
+    s += '<g data-pick-set="' + encodeURIComponent(JSON.stringify({ tried: [...new Set(m.tried.concat([m.w]))].join(',') })) + '" style="cursor:pointer"><title>记下这一种</title>' + K.rect(R0, 112, 110, 26, { fill: '#fff', stroke: 'var(--blue)', r: 7, w: 1.4 }) + K.text(R0 + 55, 129, '记下这一种', { size: 12, weight: 700 }) + '</g>';
+    s += K.text(R0, 166, '记下的：', { size: 12, weight: 700, anchor: 'start' });
+    m.tried.forEach((x, i) => { s += K.text(R0 + (i % 2) * 140, 188 + Math.floor(i / 2) * 20, x + ' × ' + (m.P / 2 - x) + ' = ' + x * (m.P / 2 - x), { size: 12, anchor: 'start', fill: x * (m.P / 2 - x) === m.maxA ? 'var(--blue)' : 'var(--ink)' }); });
+    if (m.best) s += '<g data-read="1">' + K.text(20, 352, '面积最大：' + m.area + ' 平方米。' + (m.w === m.h ? '围成正方形面积最大' : '长和宽越接近，面积越大'), { size: 14, weight: 700, anchor: 'start', fill: 'var(--blue)' }) + '</g>';
+    else s += K.text(20, 352, '周长一样，面积不一定一样：拖右边的圆点换一种长', { size: 12, anchor: 'start', fill: '#5a6478' });
+    return s;
+  }
   function draw(c) {
+    if (+c.props.shape === 3) return drawFence(c);
     const p = c.props, m = model(p); let s = '';
     // 方格
     for (let i = 0; i <= 28; i++) s += K.line(X(i), Y(0), X(i), Y(8), { stroke: '#e3e7ef', w: 1 });
@@ -84,14 +110,16 @@
           shape: { type: 'choice', label: '什么图形', default: 0, choices: SHAPES, write: true },
           b: I(2, 12, 6, '底（梯形是下底）'), t: I(1, 10, 3, '梯形的上底'), h: I(1, 8, 4, '高'), s: I(0, 12, 2, '斜度（三角形是顶点的位置）'),
           step: I(0, 2, 0, '剪拼到第几步'), seen: { type: 'text', label: '平行四边形：拼成长方形时的斜度（自动记）', default: '', write: true },
+          P: I(8, 28, 20, '篱笆：一共几米'), w: I(1, 13, 1, '篱笆：长几米'), tried: { type: 'text', label: '篱笆：记下的长（自动）', default: '', write: true },
         },
         outputs: {
-          area: { dim: null, kind: 'num', label: '面积（拼好了才有）' }, base: { dim: null, kind: 'num', label: '拼成的图形的底（拼好了才有）' }, seen: { dim: null, kind: 'num', label: '平行四边形：拼过几种斜度' },
+          area: { dim: null, kind: 'num', label: '面积（拼好了才有）' }, base: { dim: null, kind: 'num', label: '拼成的图形的底（拼好了才有）' }, seen: { dim: null, kind: 'num', label: '平行四边形：拼过几种斜度' }, best: { dim: null, kind: 'num', label: '篱笆：围出了最大面积 1' },
         },
         icon: () => '<polygon points="8,36 34,36 46,14 20,14" fill="' + CA + '" stroke="#3a4a63" stroke-width="1.4"/>' + K.line(20, 14, 20, 36, { stroke: 'var(--bad)', w: 1.4, dash: '3 2' }),
         size: () => [W, 400],
         grips,
         compute: (c) => {
+          if (+c.props.shape === 3) { const f = fenceModel(c.props), o = { area: qv(Q(f.area)), seen: qv(Q(f.tried.length)) }; if (f.best) o.best = qv(Q(1)); return o; }
           const m = model(c.props), o = { seen: qv(Q(m.seen.length)) };
           if (m.step === 2) { o.area = qv(m.area); o.base = qv(Q(m.base)); }
           return o;

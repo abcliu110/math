@@ -26,5 +26,15 @@
     goal: ['area'],
     why: '两个一样的梯形，一正一倒，拼成平行四边形：底是上底 + 下底，高不变。梯形是一半：(上底 + 下底) × 高 ÷ 2。',
   });
+  add({
+    id: 'ar-fence-20', essence: ['E5', 'E7'], title: '20 米篱笆围长方形，怎样围面积最大？', grade: 3, rung: 4, points: ['3.12'],
+    topics: ['周长与面积', '最大面积'], alias: ['篱笆', '周长一定', '面积最大'],
+    hook: '篱笆一共 20 米，围成长方形。拖右边改长（宽跟着变）。周长一样，面积也一样吗？哪一种最大？',
+    build: ab({ shape: 3, P: 20, w: 1 }),
+    predict: { q: '周长都是 20 米的长方形，面积一样吗？', options: [{ v: 'same', label: '一样' }, { v: 'diff', label: '不一样' }], answer: 'diff' },
+    milestones: [ms('best', '面积最大：5 × 5 = 25 平方米', 8, 'best', 1, ['长 + 宽 = 10。', '1 × 9 = 9，2 × 8 = 16，3 × 7 = 21……', '长和宽都是 5：25。'])],
+    goal: ['best'],
+    why: '周长 20 米，长 + 宽 = 10。1 × 9 = 9，2 × 8 = 16，3 × 7 = 21，4 × 6 = 24，5 × 5 = 25。周长一样，面积不一样：长和宽越接近，面积越大，围成正方形最大。',
+  });
   U.problems.push.apply(U.problems, P);
 })(typeof globalThis !== 'undefined' ? globalThis : window);
