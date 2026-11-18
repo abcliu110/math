@@ -9,7 +9,7 @@
   'use strict';
   const U = G.U, Q = U.Q, K = U.kit;
   const num = (n) => U.val('num', typeof n === 'number' ? Q(n) : n, { dim: null });
-  const MODES = ['跳步', '找位置', '区间'];
+  const MODES = ['跳步', '找位置', '区间', '最少跳几下'];
   const W = 620, X0 = 36, X1 = W - 36, AY = 150, NMAX = 12;
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
@@ -52,7 +52,37 @@
   }
   const pickBtn = (x, y, w, tx, k, v, tip, on) => '<g data-pick-k="' + k + '" data-pick-v="' + v + '" style="cursor:pointer"><title>' + K.esc(tip) + '</title>' + K.rect(x, y, w, 22, { fill: on ? 'var(--blue)' : '#fff', stroke: on ? 'var(--blue)' : '#8a94a8', r: 6 }) + K.text(x + w / 2, y + 16, tx, { size: 13, weight: 700, fill: on ? '#fff' : 'var(--ink)' }) + '</g>';
 
+
+  // ---------- 最少跳几下（mode 3）：steps 是能跳的步长（可以有负的），jt 是目标；path 是跳过的步长编号 ----------
+  function jumpModel(p) {
+    const steps = String(p.steps || '3,5').split(',').map(Number).filter((x) => Number.isInteger(x) && x !== 0 && Math.abs(x) <= 10).slice(0, 4);
+    const from = Math.max(-10, Math.min(0, +p.from || 0)), to = Math.max(from + 10, Math.min(40, +p.to || 30)), jt = Math.max(from, Math.min(to, +p.jt || 23));
+    const path = String(p.path || '').split(',').filter((x) => x !== '').map(Number).filter((i) => i >= 0 && i < steps.length);
+    let pos = 0; const pts = [0]; for (const i of path) { pos += steps[i]; pts.push(pos); }
+    // 最少几次：在 [from, to] 里一层一层往外找（广度优先）
+    const dist = new Map([[0, 0]]); let q = [0];
+    while (q.length && !dist.has(jt)) { const nq = []; for (const v of q) for (const s of steps) { const w = v + s; if (w >= from && w <= to && !dist.has(w)) { dist.set(w, dist.get(v) + 1); nq.push(w); } } q = nq; }
+    const best = dist.has(jt) ? dist.get(jt) : -1, there = pos === jt && path.length > 0;
+    return { steps, from, to, jt, path, pts, pos, best, there, out: pos < from || pos > to };
+  }
+  function drawJump(c) {
+    const p = c.props, m = jumpModel(p); let s = '';
+    const X = (v) => X0 + (X1 - X0) * (v - m.from) / (m.to - m.from);
+    s += K.text(20, 26, '每次只能跳 ' + m.steps.map((x) => (x > 0 ? '+' : '−') + Math.abs(x)).join(' 或 ') + '：从 0 跳到 ' + m.jt + '，最少跳几下？', { size: 15, weight: 700, anchor: 'start' });
+    s += K.line(X0, AY, X1, AY, { w: 2 });
+    for (let v = m.from; v <= m.to; v++) s += K.line(X(v), AY - 5, X(v), AY + 5, { w: 1 }) + (v % 5 === 0 ? K.text(X(v), AY + 22, String(v), { size: 10, fill: '#5a6478' }) : '');
+    s += K.circle(X(m.jt), AY, 9, { fill: '#f5c26b', stroke: '#8a5a00', w: 1.6 }) + K.text(X(m.jt), AY - 16, '目标 ' + m.jt, { size: 11, weight: 700, fill: '#8a5a00' });
+    for (let k = 1; k < m.pts.length; k++) { const a = X(m.pts[k - 1]), b = X(m.pts[k]), h = 20 + Math.min(40, Math.abs(b - a) / 3); s += '<path d="M' + a + ' ' + AY + ' Q' + (a + b) / 2 + ' ' + (AY - h) + ' ' + b + ' ' + AY + '" fill="none" stroke="var(--blue)" stroke-width="2"/>'; }
+    s += K.circle(X(Math.max(m.from, Math.min(m.to, m.pos))), AY, 6, { fill: 'var(--blue)' });
+    m.steps.forEach((st, i) => { const x = 40 + i * 110; s += '<g data-pick-set="' + encodeURIComponent(JSON.stringify({ path: m.path.concat([i]).join(',') })) + '" style="cursor:pointer"><title>跳 ' + (st > 0 ? '+' : '−') + Math.abs(st) + '</title>' + K.rect(x, 184, 100, 30, { fill: '#fff', stroke: 'var(--blue)', r: 7, w: 1.4 }) + K.text(x + 50, 204, '跳 ' + (st > 0 ? '+' : '−') + Math.abs(st), { size: 13, weight: 700 }) + '</g>'; });
+    s += '<g data-pick-set="' + encodeURIComponent(JSON.stringify({ path: m.path.slice(0, -1).join(',') })) + '" style="cursor:pointer"><title>退一步</title>' + K.rect(480, 184, 70, 30, { fill: '#fff', stroke: 'var(--blue)', r: 7, w: 1.4 }) + K.text(515, 204, '退一步', { size: 12, weight: 700 }) + '</g>';
+    s += '<g data-pick-set="' + encodeURIComponent(JSON.stringify({ path: '' })) + '" style="cursor:pointer"><title>重跳</title>' + K.rect(556, 184, 56, 30, { fill: '#fff', stroke: 'var(--blue)', r: 7, w: 1.4 }) + K.text(584, 204, '重跳', { size: 12, weight: 700 }) + '</g>';
+    s += K.text(20, 234, '跳了 ' + m.path.length + ' 下，现在在 ' + m.pos + (m.out ? '（跳出数轴了）' : ''), { size: 13, anchor: 'start' });
+    if (m.there) s += '<g data-read="1">' + K.text(20, 256, '到了！跳了 ' + m.path.length + ' 下' + (m.path.length === m.best ? '：最少就是 ' + m.best + ' 下' : '：最少只要 ' + m.best + ' 下'), { size: 15, weight: 700, anchor: 'start', fill: m.path.length === m.best ? 'var(--blue)' : 'var(--bad)' }) + '</g>';
+    return s;
+  }
   function draw(c) {
+    if (+c.props.mode === 3) return drawJump(c);
     const p = c.props, m = model(p); let s = axis(m);
     if (m.mode === 0) {
       for (let i = 0; i < m.n; i++) {
@@ -87,6 +117,7 @@
   }
 
   function grips(c) {
+    if (+c.props.mode === 3) return [];   // 最少跳几下：用按钮跳，没有把手
     const m = model(c.props), out = [];
     if (m.mode === 0) {
       out.push({ id: 'a', x: m.X(m.a), y: AY, r: 7, cursor: 'ew-resize', tip: '左右拖：改起点',
@@ -120,6 +151,7 @@
           from: I(-20, 0, 0, '数轴从几开始'), to: I(4, 40, 20, '数轴到几'),
           a: I(-20, 40, 0, '起点'), s: I(-10, 10, 1, '每一步跳几（负数往左）'), n: I(0, NMAX, 0, '跳了几步'),
           d: I(1, 12, 4, '每一格切成几份'), k: I(0, 480, 0, '从左端数第几小格'),
+          steps: { type: 'text', label: '最少跳几下：能跳的步长（逗号分开）', default: '3,5', write: true }, jt: I(-10, 40, 23, '最少跳几下：目标'), path: { type: 'text', label: '最少跳几下：跳过的（自动）', default: '', write: true },
           lo: I(-20, 40, 1, '区间左端'), hi: I(-20, 40, 4, '区间右端'), lc: I(0, 1, 1, '左端含不含（1 含）'), hc: I(0, 1, 1, '右端含不含（1 含）'),
         },
         outputs: {
@@ -131,18 +163,19 @@
           hi: { dim: null, kind: 'num', label: '区间右端' },
           ints: { dim: null, kind: 'num', label: '区间里有几个整数' },
           len: { dim: null, kind: 'num', label: '区间的长度' },
-          closed: { dim: null, kind: 'num', label: '含的端点个数（0、1、2）' },
+          closed: { dim: null, kind: 'num', label: '含的端点个数（0、1、2）' }, arrived: { dim: null, kind: 'num', label: '最少跳几下：到了 1（到了才有）' }, fewest: { dim: null, kind: 'num', label: '最少跳几下：用的次数最少 1' },
         },
         icon: () => K.line(8, 26, 56, 26, { w: 2 }) + K.line(16, 21, 16, 31, {}) + K.line(32, 21, 32, 31, {}) + K.line(48, 21, 48, 31, {}) + K.circle(32, 26, 4, { fill: 'var(--blue)' }) + '<path d="M16 20 Q24 4 32 20" fill="none" stroke="var(--blue)" stroke-width="1.8"/>',
         size: () => [W, 290],
         grips,
         compute: (c) => {
+          if (+c.props.mode === 3) { const j = jumpModel(c.props), o = { jumps: num(j.path.length), value: num(j.pos) }; if (j.there) { o.arrived = num(1); if (j.path.length === j.best) o.fewest = num(1); } return o; }
           const m = model(c.props), z = num(0);
           if (m.mode === 1) return { value: num(m.value), start: num(m.from), step: z, jumps: z, lo: z, hi: z, ints: z, closed: z, len: z };
           if (m.mode === 2) return { value: z, start: z, step: z, jumps: z, lo: num(m.lo), hi: num(m.hi), ints: num(m.ints), closed: num(m.lc + m.hc), len: num(m.len) };
           return { value: num(m.value), start: num(m.a), step: num(m.s), jumps: num(m.n), lo: z, hi: z, ints: z, closed: z, len: z };
         },
-        badge: (c) => { const m = model(c.props); return m.mode === 2 ? '' : c.masked ? '' : (m.mode === 1 ? forms(m.value)[0] : sgn(m.value)); },
+        badge: (c) => { if (+c.props.mode === 3) return ''; const m = model(c.props); return m.mode === 2 ? '' : c.masked ? '' : (m.mode === 1 ? forms(m.value)[0] : sgn(m.value)); },
         draw,
       },
     },

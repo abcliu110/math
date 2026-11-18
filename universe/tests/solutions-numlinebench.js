@@ -12,4 +12,5 @@ module.exports = {
   'nl-2-minus-5'(h) { set(h, { n: 5 }); },
   'nl-neg3-plus-5'(h) { set(h, { a: -3, n: 5 }); },
   'nl-ineq'(h) { set(h, { lo: -2, hi: 3, lc: 0 }); },
+  'nl-jump-23'(h) { h.set(h.role('n'), 'path', '1,1,1,1,0'); }
 };

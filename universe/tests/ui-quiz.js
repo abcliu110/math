@@ -1,5 +1,5 @@
 /* node tests/ui-quiz.js —— 随机出题：真实鼠标测试。
- *  1. 竖式题的步骤栏有“🎲 随机出一题：容易 中等 难 倒推”；点“难”：出一道竖式除法（quiz:vertbench:…:3），台面上是新数；
+ *  1. 竖式题的步骤栏有“🎲 随机出一题：容易 中等 难 倒推 找错”；点“难”：出一道竖式除法（quiz:vertbench:…:3），台面上是新数；
  *  2. 点“容易”：出一道竖式加法；像学生一样点进位圆圈、点数字键写完：做完，弹窗里有“🎲 再来一题”；
  *  3. 点“再来一题”：又是一道新的竖式题（种子不同，难度不变）；
  *  4. 实验库里“随机练习”：点“难”，再点“估一估”：出一道估一估的乘法题；
@@ -15,7 +15,7 @@
   console.log('1. 步骤栏：随机出一题');
   await H.open('vt-47-38');
   await p.evaluate(() => { UI.S.tab = 'steps'; UI.Panels.renderLeft(); });
-  H.ok(await p.locator('#left .quizrow [data-quiz]').count() === 4, '步骤栏有“随机出一题”：容易、中等、难、倒推（竖式的倒推是填缺数字）');
+  H.ok(await p.locator('#left .quizrow [data-quiz]').count() === 5, '步骤栏有“随机出一题”：容易、中等、难、倒推、找错（竖式的倒推是填缺数字，找错是找小明写错的一位）');
   await clickLeft('.quizrow [data-quiz="3"]');
   const id3 = await pid();
   H.ok(/^quiz:vertbench:\d+:3$/.test(id3) && (await H.props()).mode === 2, '点“难”：出一道竖式除法 ' + id3);

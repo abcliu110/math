@@ -117,5 +117,14 @@
     goal: ['lo', 'hi', 'ints'],
     why: '−2 < x ≤ 3 的整数解是 −1、0、1、2、3，共 5 个。空心点表示不含（<），实心点表示含（≤）。',
   });
+  P.push(Object.assign({}, { domain: '数与运算', level: 'core', shelf: ['numlinebench'], traps: [], predict: null }, {
+    id: 'nl-jump-23', essence: ['E2', 'E7'], title: '每次只能跳 3 或 5，跳到 23 最少几下？', grade: 3, rung: 4, points: ['3.4'],
+    topics: ['最少几次', '倍数与和'], alias: ['跳跳', '最少', '凑数'],
+    hook: '从 0 出发，每次只能跳 +3 或 +5。跳到 23 最少要几下？多用大步试试。',
+    build: () => { const s = U.World.blank(); const id = U.World.add(s, 'numlinebench', 40, 50, { mode: 3, steps: '3,5', jt: 23, from: 0, to: 30 }); s.entities[id].role = 'n'; return s; },
+    milestones: [{ id: 'few', say: '最少 5 下：5 + 5 + 5 + 5 + 3', score: 8, when: { role: 'n', port: 'fewest', op: '=', value: '1' }, hints: ['多用 5 跳得快。', '5 跳 4 下是 20，还差 3。', '5、5、5、5、3：5 下。'] }],
+    goal: ['few'],
+    why: '想少跳就多用大步：4 个 5 是 20，再跳一个 3 正好 23，一共 5 下。全用 3 跳不到 23（23 不是 3 的倍数）。',
+  }));
   U.problems.push.apply(U.problems, P);
 })(typeof globalThis !== 'undefined' ? globalThis : window);

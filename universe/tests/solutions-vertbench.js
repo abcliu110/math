@@ -2,5 +2,6 @@
 'use strict';
 const set = (o) => (h) => { const v = h.role('v'); for (const k of Object.keys(o)) h.set(v, k, o[k]); };
 module.exports = {
-  'vt-47-38': set({ marks: '1', res: '58' }), 'vt-52-27': set({ marks: '1', res: '52' }), 'vt-300-125': set({ marks: '1,2', res: '571' }), 'vt-58-67': set({ marks: '1,2', res: '521' }), 'vt-fill-81': set({ fill: '38' }), 'vt-fill-sub': set({ fill: '34' })
+  'vt-47-38': set({ marks: '1', res: '58' }), 'vt-52-27': set({ marks: '1', res: '52' }), 'vt-300-125': set({ marks: '1,2', res: '571' }), 'vt-58-67': set({ marks: '1,2', res: '521' }), 'vt-fill-81': set({ fill: '38' }), 'vt-fill-sub': set({ fill: '34' }),
+  'vt-bug-47': set({ pickc: 1, fixd: '8' })
 };

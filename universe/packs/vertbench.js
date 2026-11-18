@@ -12,7 +12,7 @@
   const W = 700, CW = 40, RX = 300, KY = 352;
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, Number.isFinite(+v) ? +v : lo));
   const dig = (n, j) => Math.floor(n / Math.pow(10, j)) % 10;
-  const OPS = ['加法', '减法', '除法', '填缺数字'];
+  const OPS = ['加法', '减法', '除法', '填缺数字', '找错'];
   const set = (t) => new Set(String(t || '').split(',').filter(Boolean).map(Number));
   // ---- 加法、减法：从个位起一位一位 ----
   function addsub(p) {
@@ -93,7 +93,39 @@
     s += '<g data-key="back" data-pick-set="' + encodeURIComponent(JSON.stringify({ fill: m.fill.slice(0, -1), sel: Math.max(0, m.fill.length - 1), msg: '' })) + '" style="cursor:pointer">' + K.rect(484, KY, 70, 34, { fill: '#fff', stroke: 'var(--blue)', r: 7, w: 1.5 }) + K.text(519, KY + 22, '退一步', { size: 13, weight: 700 }) + '</g>';
     return s;
   }
+
+  // ---------- 找错（mode 4）：a、b、bop（0 加 1 减）是题；wrong 是小明写的得数；pickc 是学生点的那一位（从个位起 0、1、2）；fixd 是改成的数字 ----------
+  function bugModel(p) {
+    const op = p.bop === 1 ? 1 : 0, a = Math.max(0, +p.a || 0), b = Math.max(0, +p.b || 0), right = op ? a - b : a + b, wrong = String(p.wrong || '');
+    const rs = String(right), len = Math.max(rs.length, wrong.length), dig = (s, j) => (j < s.length ? s[s.length - 1 - j] : '');
+    const badCols = []; for (let j = 0; j < len; j++) if (dig(rs, j) !== dig(wrong, j)) badCols.push(j);
+    const pickc = Number.isFinite(+p.pickc) && p.pickc !== '' && p.pickc !== undefined ? +p.pickc : -1, found = badCols.length === 1 && pickc === badCols[0];
+    const fixd = p.fixd === '' || p.fixd === undefined ? null : +p.fixd, fixed = found && fixd !== null && String(fixd) === dig(rs, pickc);
+    return { op, a, b, right, wrong, rs, len, dig, badCols, pickc, found, fixd, fixed };
+  }
+  function drawBug(c) {
+    const p = c.props, m = bugModel(p), CW2 = 40, RX0 = 240; let s = '';
+    s += K.text(20, 28, '小明的竖式里有一位写错了：找出来，改对', { size: 15, weight: 700, anchor: 'start' });
+    const X = (j) => RX0 - j * CW2, A = String(m.a), B = String(m.b);
+    [...A].reverse().forEach((d, j) => { s += T(X(j), 90, d); });
+    [...B].reverse().forEach((d, j) => { s += T(X(j), 136, d); });
+    s += T(X(Math.max(A.length, B.length)), 136, m.op ? '−' : '+') + K.line(X(Math.max(A.length, B.length)) - 14, 150, X(0) + 18, 150, { w: 2 });
+    for (let j = 0; j < m.len; j++) {
+      const d = m.dig(m.wrong, j); if (d === '') continue;
+      const on = m.pickc === j, x = X(j), shown = on && m.fixd !== null ? String(m.fixd) : d;
+      const body = K.rect(x - 17, 160, 34, 40, { fill: on ? (m.found ? '#fde2c4' : '#fbd5dc') : '#fff', stroke: on ? 'var(--bad)' : '#c5ccda', r: 5, w: on ? 2 : 1 }) + T(x, 190, shown, { fill: on && m.fixd !== null ? '#1d4fa3' : 'var(--ink)' });
+      s += m.fixed ? body : '<g data-col="' + j + '" data-pick-set="' + encodeURIComponent(JSON.stringify({ pickc: j, fixd: '', msg: '' })) + '" style="cursor:pointer"><title>得数的第 ' + (j + 1) + ' 位（从个位数起）</title>' + body + '</g>';
+    }
+    const RX = 330;
+    s += K.text(RX, 80, '先点你觉得写错的那一位，再点数字键改', { size: 12, anchor: 'start', fill: '#5a6478' });
+    if (m.pickc >= 0 && !m.found) s += K.text(RX, 110, '这一位没错：' + ['个', '十', '百', '千'][m.pickc] + '位算一算看', { size: 13, weight: 700, anchor: 'start', fill: 'var(--bad)' });
+    if (m.found && !m.fixed) s += K.text(RX, 110, '找到了：' + ['个', '十', '百', '千'][m.pickc] + '位错了。该是几？', { size: 13, weight: 700, anchor: 'start', fill: '#8a5a00' });
+    if (m.fixed) s += '<g data-read="1">' + K.text(RX, 110, '改对了：' + m.a + (m.op ? ' − ' : ' + ') + m.b + ' = ' + m.right, { size: 15, weight: 700, anchor: 'start', fill: 'var(--blue)' }) + K.text(RX, 134, '小明错在' + ['个', '十', '百', '千'][m.pickc] + '位：' + (p.why || '再算一遍就知道了'), { size: 12, anchor: 'start', fill: 'var(--blue)' }) + '</g>';
+    for (let d = 0; d <= 9; d++) s += key(20 + d * 46, KY, String(d), { fixd: d, msg: '' }, m.found && !m.fixed, d);
+    return s;
+  }
   function draw(c) {
+    if (+c.props.mode === 4) return drawBug(c);
     if (+c.props.mode === 3) return drawFill(c);
     const p = c.props, m = model(p); let s = '';
     if (m.mode !== 2) {
@@ -150,16 +182,17 @@
         props: {
           mode: { type: 'choice', label: '算什么', default: 0, choices: OPS, write: true },
           a: I(0, 9999, 47, '第一个数（被除数）'), b: I(1, 9999, 38, '第二个数（除数）'),
-          res: Tx('', '加减：已经写下的得数（从个位起）'), fa: Tx('?3', '填缺：第一行（? 是 □）'), fb: Tx('4?', '填缺：第二行'), fr: Tx('81', '填缺：得数那一行'), fop: I(0, 1, 0, '填缺：0 加、1 减', { hidden: true }), fill: Tx('', '填缺：填进去的数字（按顺序）'), sel: I(0, 9, 0, '填缺：选中第几个空', { hidden: true }), marks: Tx('', '加减：点了进位、退位的数位'), qd: Tx('', '除法：已经写下的商'), msg: Tx('', '提示（自动）'),
+          res: Tx('', '加减：已经写下的得数（从个位起）'), fa: Tx('?3', '填缺：第一行（? 是 □）'), fb: Tx('4?', '填缺：第二行'), fr: Tx('81', '填缺：得数那一行'), fop: I(0, 1, 0, '填缺：0 加、1 减', { hidden: true }), fill: Tx('', '填缺：填进去的数字（按顺序）'), bop: I(0, 1, 0, '找错：0 加、1 减', { hidden: true }), wrong: Tx('', '找错：小明写的得数'), pickc: Tx('', '找错：点的那一位（自动）'), fixd: Tx('', '找错：改成的数字（自动）'), why: Tx('', '找错：小明错在哪（说明）'), sel: I(0, 9, 0, '填缺：选中第几个空', { hidden: true }), marks: Tx('', '加减：点了进位、退位的数位'), qd: Tx('', '除法：已经写下的商'), msg: Tx('', '提示（自动）'),
         },
         outputs: {
           done: { dim: null, kind: 'num', label: '算完了：1 是，0 否' }, result: { dim: null, kind: 'num', label: '得数（加减算完才有）' },
-          q: { dim: null, kind: 'num', label: '商（除法算完才有）' }, ok: { dim: null, kind: 'num', label: '填缺：全部填完，对 1、错 0（填完才有）' }, r: { dim: null, kind: 'num', label: '余数（除法算完才有）' }, written: { dim: null, kind: 'num', label: '已经写了几位' },
+          q: { dim: null, kind: 'num', label: '商（除法算完才有）' }, ok: { dim: null, kind: 'num', label: '填缺：全部填完，对 1、错 0（填完才有）' }, found: { dim: null, kind: 'num', label: '找错：点中了错的那一位 1、没点中 0（点了才有）' }, fixed: { dim: null, kind: 'num', label: '找错：改对了 1（改对才有）' }, r: { dim: null, kind: 'num', label: '余数（除法算完才有）' }, written: { dim: null, kind: 'num', label: '已经写了几位' },
         },
         icon: () => K.text(46, 16, '47', { size: 12, weight: 700, anchor: 'end' }) + K.text(46, 30, '+38', { size: 12, weight: 700, anchor: 'end' }) + K.line(18, 34, 48, 34, { w: 1.5 }) + K.circle(26, 6, 3, { fill: '#f5a25d', stroke: 'var(--ink)', w: 1 }),
         size: () => [W, 420],
         grips: () => [],
         compute: (c) => {
+          if (+c.props.mode === 4) { const g = bugModel(c.props), o = { done: num(g.fixed ? 1 : 0), written: num(0) }; if (g.pickc >= 0) o.found = num(g.found ? 1 : 0); if (g.fixed) o.fixed = num(1); return o; }
           if (+c.props.mode === 3) { const f = fillModel(c.props), o = { done: num(f.ok ? 1 : 0), written: num(f.fill.length) }; if (f.filled) o.ok = num(f.ok ? 1 : 0); return o; }
           const m = model(c.props), o = { done: num(m.done ? 1 : 0), written: num(m.mode === 2 ? m.q.length : m.res.length) };
           if (m.done) { if (m.mode === 2) { o.q = num(m.quotient); o.r = num(m.r); } else o.result = num(m.total); }

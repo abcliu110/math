@@ -3,4 +3,5 @@
 const set = (o) => (h) => { const v = h.role('cl'); for (const k of Object.keys(o)) h.set(v, k, o[k]); };
 module.exports = {
   'cal-feb-2024': set({ mo: 2 }), 'cal-may-days': set({ d1: 1, d2: 31 }),
+  'cal-xmas': set({ mo: 12, d1: 25 })
 };

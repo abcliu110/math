@@ -6,7 +6,7 @@
 
 - 知识点：142 个（设计目标 142）
 - 有题的知识点：141 个（99%）
-- 题目：597 道；没有对应知识点的题：1 道
+- 题目：601 道；没有对应知识点的题：1 道
 - 没有器材的本质：无
 - 没有题的本质：无
 
@@ -15,10 +15,10 @@
 | 年级 | 知识点 | 有题 | 题目数 |
 |---|---|---|---|
 | 1 | 16 | 16（100%） | 50 |
-| 2 | 16 | 16（100%） | 54 |
-| 3 | 16 | 16（100%） | 82 |
+| 2 | 16 | 16（100%） | 55 |
+| 3 | 16 | 16（100%） | 84 |
 | 4 | 17 | 17（100%） | 90 |
-| 5 | 14 | 14（100%） | 98 |
+| 5 | 14 | 14（100%） | 99 |
 | 6 | 15 | 14（93%） | 57 |
 | 7 | 16 | 16（100%） | 78 |
 | 8 | 16 | 16（100%） | 74 |
@@ -45,7 +45,7 @@
 | 1.15 | 1 | 100以内加减法（一） | 1 | 1 | 0 | 1 | blocksbench |
 | 1.16 | 1 | 找规律 | 6 | 0 | 0 | 1 | num、meter、conjbench、fmachine、guessrule、proofbench、seqbench |
 | 2.1 | 2 | 长度单位、线段 | 2 | 1 | 0 | 1 | rulerbench |
-| 2.2 | 2 | 100以内加减法（二） | 8 | 1 | 0 | 1 | vertbench、estbench、arithbench |
+| 2.2 | 2 | 100以内加减法（二） | 9 | 1 | 0 | 1 | vertbench、estbench、arithbench |
 | 2.3 | 2 | 进位加法、退位减法 | 6 | 1 | 0 | 1 | blocksbench、arithbench、colbench |
 | 2.4 | 2 | 角的初步认识、直角 | 2 | 1 | 0 | 1 | tribench、anglebench |
 | 2.5 | 2 | 乘法初步认识、口诀 | 3 | 1 | 0 | 1 | numlinebench、areamodel、tapebench |
@@ -63,7 +63,7 @@
 | 3.1 | 3 | 时、分、秒 | 1 | 1 | 0 | 1 | ratiobench、clockbench |
 | 3.2 | 3 | 万以内加减法 | 3 | 1 | 0 | 1 | blocksbench、estbench |
 | 3.3 | 3 | 测量 | 1 | 1 | 0 | 1 | ratiobench、rulerbench |
-| 3.4 | 3 | 倍的认识 | 8 | 1 | 0 | 1 | tapebench、numlinebench |
+| 3.4 | 3 | 倍的认识 | 9 | 1 | 0 | 1 | tapebench、numlinebench |
 | 3.5 | 3 | 多位数乘一位数 | 2 | 1 | 0 | 1 | areamodel、mulbench |
 | 3.6 | 3 | 长方形和正方形 | 3 | 1 | 0 | 1 | areamodel |
 | 3.7 | 3 | 分数的初步认识 | 5 | 1 | 0 | 1 | ratiobench、numlinebench |
@@ -73,7 +73,7 @@
 | 3.15a | 3 | 复式统计表 | 2 | 2 | 0 | 1 | tablebench |
 | 3.11 | 3 | 两位数乘两位数 | 9 | 1 | 0 | 1 | areamodel、mulbench、estbench、arithbench |
 | 3.12 | 3 | 面积 | 12 | 0 | 0 | 1 | areabench、areamodel、asn、curved、geoboard、circlebench、optimize、solidbench、turtle |
-| 3.13 | 3 | 年、月、日 | 3 | 1 | 0 | 1 | calbench |
+| 3.13 | 3 | 年、月、日 | 4 | 1 | 0 | 1 | calbench |
 | 3.14 | 3 | 小数的初步认识 | 3 | 1 | 0 | 1 | decbench、numlinebench、twoways |
 | 3.15b | 3 | 搭配（二） | 3 | 1 | 0 | 1 | combobench、areamodel、euler |
 | 4.1 | 4 | 大数的认识、近似数 | 5 | 0 | 0 | 1 | chancebench、num |
@@ -106,7 +106,7 @@
 | 5.10 | 5 | 分数的意义和性质 | 7 | 0 | 0 | 1 | areamodel、ratiobench、fracbench、numlinebench、primeblocks |
 | 5.11 | 5 | 分数的加法和减法 | 10 | 1 | 0 | 1 | num、approach、ratiobench、findbug、fracbench |
 | 5.12 | 5 | 图形的运动（三） | 1 | 1 | 0 | 1 | gridbench |
-| 5.13 | 5 | 折线统计图、找次品 | 3 | 0 | 0 | 1 | weighbench |
+| 5.13 | 5 | 折线统计图、找次品 | 4 | 0 | 0 | 1 | weighbench |
 | 6.1 | 6 | 分数乘法 | 4 | 1 | 0 | 1 | areamodel、num |
 | 6.3 | 6 | 位置与方向（二） | 2 | 1 | 0 | 1 | gridbench、dirbench |
 | 6.2 | 6 | 分数除法、倒数 | 7 | 1 | 0 | 1 | fracbench、findbug、jobbench |
@@ -176,12 +176,12 @@
 | 本质 | 题目数 | 器材数 |
 |---|---|---|
 | E1 | 64 | 27 |
-| E2 | 237 | 51 |
+| E2 | 241 | 51 |
 | E3 | 149 | 43 |
 | E4 | 108 | 28 |
 | E5 | 142 | 54 |
-| E6 | 53 | 22 |
-| E7 | 115 | 28 |
+| E6 | 54 | 22 |
+| E7 | 118 | 28 |
 | E8 | 66 | 23 |
 | E9 | 72 | 17 |
 | E10 | 10 | 4 |

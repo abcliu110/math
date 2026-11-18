@@ -41,7 +41,8 @@
       if (m.mo === 2) s += K.text(R0, 114, m.y % 100 === 0 ? '整百年：要能被 400 整除才是闰年' : '能被 4 整除的年份一般是闰年', { size: 12, anchor: 'start', fill: '#5a6478' });
       s += K.text(R0, 150, '1 号是星期' + WK[m.first], { size: 13, anchor: 'start' });
       if (m.d1 && m.d2) s += '<g data-days="1">' + K.text(R0, 200, '从 ' + lo + ' 日到 ' + hi + ' 日：', { size: 14, weight: 700, anchor: 'start' }) + K.text(R0, 226, '经过了 ' + hi + ' − ' + lo + ' = ' + (hi - lo) + ' 天', { size: 14, weight: 700, anchor: 'start', fill: 'var(--blue)' }) + K.text(R0, 252, '两头都算：一共 ' + (hi - lo + 1) + ' 天', { size: 14, weight: 700, anchor: 'start', fill: '#b03a2e' }) + '</g>';
-      else s += K.text(R0, 200, m.d1 ? '再点一天：结束' : '点一天：开始', { size: 12, anchor: 'start', fill: '#5a6478' });
+      else if (m.d1) s += '<g data-dow="1">' + K.text(R0, 200, m.y + ' 年 ' + m.mo + ' 月 ' + m.d1 + ' 日是星期' + WK[dow(m.y, m.mo, m.d1)], { size: 15, weight: 700, anchor: 'start', fill: 'var(--blue)' }) + '</g>' + K.text(R0, 224, '再点一天：算经过几天', { size: 12, anchor: 'start', fill: '#5a6478' });
+      else s += K.text(R0, 200, '点一天：看它是星期几', { size: 12, anchor: 'start', fill: '#5a6478' });
     } else if (m.mode === 2) {
       s += K.text(20, 28, m.y + ' 年一共有几天？点每个月，看它有几天', { size: 16, weight: 700, anchor: 'start' });
       for (let i = 0; i < 12; i++) {
@@ -81,7 +82,7 @@
         },
         outputs: {
           days: { dim: null, kind: 'num', label: '这个月有几天' }, between: { dim: null, kind: 'num', label: '经过了几天（点了两天才有）' }, inclusive: { dim: null, kind: 'num', label: '两头都算一共几天（点了两天才有）' },
-          weekday: { dim: null, kind: 'num', label: '几天后是星期几（0 是星期日；数到了才有）' },
+          weekday: { dim: null, kind: 'num', label: '几天后是星期几（0 是星期日；数到了才有）' }, dow: { dim: null, kind: 'num', label: '点的那一天是星期几（0 是星期日；点了一天才有）' },
           year: { dim: null, kind: 'num', label: '一年一共几天（12 个月都看了才有）' },
         },
         icon: () => K.rect(8, 10, 40, 34, { fill: '#fff', stroke: 'var(--ink)', r: 3, w: 1.2 }) + K.rect(8, 10, 40, 9, { fill: '#e87a6b', stroke: 'var(--ink)', r: 3, w: 1.2 }) + K.text(28, 38, '31', { size: 12, weight: 700 }),
@@ -89,7 +90,7 @@
         grips: () => [],
         compute: (c) => {
           const m = model(c.props), o = {};
-          if (m.mode === 0) { o.days = num(m.nd); if (m.d1 && m.d2) { const d = Math.abs(m.d2 - m.d1); o.between = num(d); o.inclusive = num(d + 1); } }
+          if (m.mode === 0) { o.days = num(m.nd); if (m.d1 && !m.d2) o.dow = num(dow(m.y, m.mo, m.d1)); if (m.d1 && m.d2) { const d = Math.abs(m.d2 - m.d1); o.between = num(d); o.inclusive = num(d + 1); } }
           else if (m.mode === 1) { if (m.go === m.N) o.weekday = num(m.day); }
           else if (m.all) o.year = num(m.seen);
           return o;

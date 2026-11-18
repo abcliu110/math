@@ -65,5 +65,14 @@
     goal: ['ok'],
     why: '个位 □ − 8 得 5，□ 比 8 小，要退位：13 − 8 = 5，□ = 3。十位退了 1：6 − □ = 2，□ = 4。',
   });
+  add({
+    id: 'vt-bug-47', essence: ['E2', 'E7'], title: '小明算 47 + 38 = 75，错在哪？', grade: 2, rung: 3, points: ['2.2'],
+    topics: ['找错', '进位加法'], alias: ['找错', '进位', '订正'],
+    hook: '小明的竖式里有一位写错了。一位一位重新算：个位对吗？十位呢？点写错的那一位，再改对。',
+    build: vb({ mode: 4, a: 47, b: 38, bop: 0, wrong: '75', why: '个位满十，进的 1 忘了加到十位上' }),
+    milestones: [ms('fixed', '十位错了，改成 8：47 + 38 = 85', 8, 'fixed', 1, ['个位 7 + 8 = 15，写 5，进 1。', '十位 4 + 3 再加进的 1。', '十位是 8。'])],
+    goal: ['fixed'],
+    why: '个位 7 + 8 = 15，写 5 进 1；十位 4 + 3 + 1 = 8。小明忘了加进上来的 1，十位写成了 7。检查竖式就是一位一位重新算，特别看进位。',
+  });
   U.problems.push.apply(U.problems, P);
 })(typeof globalThis !== 'undefined' ? globalThis : window);

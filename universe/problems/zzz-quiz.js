@@ -11,7 +11,7 @@
   const mkR = (seed) => { const r = U.Variants.rng(seed); const R = { r, int: (lo, hi) => lo + Math.floor(r() * (hi - lo + 1)), pick: (a) => a[Math.floor(r() * a.length)], bool: () => r() < 0.5 }; return R; };
   const qs = (n, d) => Q.show(Q(n, d || 1));
   const norm = (v) => { try { return Q.show(Q.parse(String(v))); } catch (e) { return String(v); } };
-  const LEVELS = ['容易', '中等', '难', '倒推'];   // 第 4 档“倒推”：给结果，找条件（不是每个操作台都有）
+  const LEVELS = ['容易', '中等', '难', '倒推', '找错'];   // 第 5 档“找错”：小明的做法里有一处错，找出来改对   // 第 4 档“倒推”：给结果，找条件（不是每个操作台都有）
   // 某个器材在题库里最常用的知识点、领域（给随机题当“归属”）
   function home(type) {
     const ps = U.problems.filter((p) => (p.shelf || [])[0] === type), cnt = {};
@@ -27,7 +27,7 @@
   function make(type, seed, level) {
     const g = GENS[type]; if (!g) return null;
     let q = null;
-    const fn = level === 4 ? g.rev : g.gen; if (!fn) return null;
+    const fn = level === 5 ? g.bug : level === 4 ? g.rev : g.gen; if (!fn) return null;
     for (let i = 0; i < 30; i++) { const c = fn.call(g, mkR(seed + i * 7919), level); if (!reached(type, c.props, c.goals).some(Boolean)) { q = c; break; } }
     if (!q) return null;
     const h = home(type), t = U.types[type];
@@ -43,10 +43,11 @@
     add: (type, def) => { GENS[type] = def; },
     has: (type) => !!GENS[type] && !!U.types[type],
     hasRev: (type) => !!GENS[type] && !!GENS[type].rev && !!U.types[type],
+    hasBug: (type) => !!GENS[type] && !!GENS[type].bug && !!U.types[type],
     types: () => Object.keys(GENS).filter((t) => U.types[t]),
     make, reached,
     id: (type, seed, level) => 'quiz:' + type + ':' + (seed >>> 0) + ':' + (level || 1),
-    fromId(id) { const m = /^quiz:([a-z0-9_-]+):(\d+):([1234])$/.exec(String(id)); return m ? make(m[1], +m[2], +m[3]) : null; },
+    fromId(id) { const m = /^quiz:([a-z0-9_-]+):(\d+):([12345])$/.exec(String(id)); return m ? make(m[1], +m[2], +m[3]) : null; },
   };
   const base = U.problemById;
   U.problemById = (id) => (String(id).startsWith('quiz:') ? U.Quiz.fromId(id) : base(id));
@@ -113,6 +114,7 @@
   add('calbench', { gen(R, lv) {
     const WK = ['日', '一', '二', '三', '四', '五', '六'];
     if (lv === 3) { const s = R.int(0, 6), N = R.int(15, 150); return { title: '今天星期' + WK[s] + '，' + N + ' 天后是星期几？', hook: '点“过 7 天”一次跳一个星期（星期几不变），跳不了再一天一天过。', props: { mode: 1, start: s, N, go: 0 }, goals: [['weekday', (s + N) % 7, N + ' 天后是星期' + WK[(s + N) % 7]]], sol: { go: N } }; }
+    if (lv === 2 && R.bool()) { const y = R.int(2024, 2030), mo = R.int(2, 12), d = R.int(1, DIM(y, mo)), w = new Date(Date.UTC(y, mo - 1, d)).getUTCDay(); return { title: y + ' 年 ' + mo + ' 月 ' + d + ' 日是星期几？', hook: '日历在 ' + y + ' 年 ' + (mo - 1) + ' 月。翻到 ' + mo + ' 月，点 ' + d + ' 日。', props: { mode: 0, y, mo: mo - 1 }, goals: [['dow', w, '是星期' + WK[w]]], sol: { mo, d1: d } }; }
     const y = R.int(2020, 2030), mo = R.int(1, 12), nd = DIM(y, mo), d1 = R.int(1, 10), d2 = R.int(d1 + 5, nd);
     if (lv === 1) return { title: mo + ' 月 ' + d1 + ' 日到 ' + d2 + ' 日，一共几天？', hook: '点开始那天，再点结束那天。“一共几天”要把头尾两天都算上。', props: { mode: 0, y, mo }, goals: [['inclusive', d2 - d1 + 1, '两头都算：一共 ' + (d2 - d1 + 1) + ' 天']], sol: { d1, d2 } };
     return { title: '从 ' + mo + ' 月 ' + d1 + ' 日到 ' + d2 + ' 日，经过了几天？', hook: '点两天：“经过了几天”是结束减开始，不加 1。', props: { mode: 0, y, mo }, goals: [['between', d2 - d1, '经过了 ' + (d2 - d1) + ' 天']], sol: { d1, d2 } };
@@ -182,6 +184,12 @@
   } });
 
   add('numlinebench', { gen(R, lv) {
+    if (lv === 3 && R.bool()) {
+      for (;;) { const a = R.int(2, 4), b = R.int(a + 1, 7), jt = R.int(12, 29), dist = new Map([[0, []]]); let q = [0];
+        while (q.length && !dist.has(jt)) { const nq = []; for (const v of q) [a, b].forEach((s, i) => { const w = v + s; if (w <= 30 && !dist.has(w)) { dist.set(w, dist.get(v).concat([i])); nq.push(w); } }); q = nq; }
+        if (!dist.has(jt) || dist.get(jt).length < 3) continue; const path = dist.get(jt);
+        return { title: '每次只能跳 ' + a + ' 或 ' + b + '，跳到 ' + jt + ' 最少几下？', hook: '从 0 出发。多用大步，最后看看差多少。', props: { mode: 3, steps: a + ',' + b, jt, from: 0, to: 30 }, goals: [['fewest', 1, '最少 ' + path.length + ' 下']], sol: { path: path.join(',') } }; }
+    }
     if (lv === 3) { const a = R.int(11, 19), b = R.int(a - 9, 9); return { title: a + ' − ' + b + '：往左跳', hook: '从 ' + a + ' 出发往左跳 ' + b + ' 步。', props: { mode: 0, from: 0, to: 20, a: 0, s: -1, n: 0 }, goals: [['value', a - b, a + ' − ' + b + ' = ' + (a - b)]], sol: { a, n: b } }; }
     const a = R.int(1, lv === 1 ? 5 : 9), b = R.int(1, lv === 1 ? 10 - a : 9); return { title: a + ' + ' + b + '：往右跳', hook: '先把起点拖到 ' + a + '，再往右跳 ' + b + ' 步。', props: { mode: 0, from: 0, to: 20, a: 0, s: 1, n: 0 }, goals: [['value', a + b, a + ' + ' + b + ' = ' + (a + b)]], sol: { a, n: b } };
   } });
@@ -396,6 +404,16 @@
       return { title: masked.map((x) => x.replace(/\?/g, '□')).slice(0, 2).join(op ? ' − ' : ' + ') + ' = ' + rows[2] + '：□ 里是几？', hook: '先从能确定的那一位想：个位、进位、退位。点 □，再点数字键。', props: { mode: 3, fa: masked[0], fb: masked[1], fr: masked[2], fop: op }, goals: [['ok', 1, rows[0] + (op ? ' − ' : ' + ') + rows[1] + ' = ' + rows[2]]], sol: { fill } };
     }
   });
+  // ===================== 找错题：小明的做法里有一处错 =====================
+  GENS.vertbench.bug = function (R) {
+    for (;;) {
+      const sub = R.bool();
+      if (!sub) { const a = R.int(15, 79), b = R.int(12, 99 - a); if ((a % 10) + (b % 10) < 10) continue; const right = a + b, wrong = right - 10, rs = String(right), ws = String(wrong); if (ws.length !== rs.length) continue; let diff = 0; for (let j = 0; j < rs.length; j++) if (rs[j] !== ws[j]) diff++; if (diff !== 1) continue;
+        return { title: '小明算 ' + a + ' + ' + b + ' = ' + wrong + '：哪一位错了？', hook: '看小明的竖式：一位一位重新算一遍，找出写错的那一位，改对。', props: { mode: 4, a, b, bop: 0, wrong: String(wrong), why: '个位满十，进的 1 忘了加到十位上' }, goals: [['fixed', 1, '十位错了：' + a + ' + ' + b + ' = ' + right]], sol: { pickc: 1, fixd: Math.floor(right / 10) % 10 } }; }
+      const a = R.int(31, 99), b = R.int(12, a - 10); if ((a % 10) >= (b % 10)) continue; const right = a - b, wrong = right + 10, rs = String(right), ws = String(wrong); if (ws.length !== rs.length) continue; let diff = 0; for (let j = 0; j < rs.length; j++) if (rs[j] !== ws[j]) diff++; if (diff !== 1) continue;
+      return { title: '小明算 ' + a + ' − ' + b + ' = ' + wrong + '：哪一位错了？', hook: '看小明的竖式：个位不够减向十位借了 1，十位呢？找出写错的那一位，改对。', props: { mode: 4, a, b, bop: 1, wrong: String(wrong), why: '个位向十位借了 1，十位忘了减 1' }, goals: [['fixed', 1, '十位错了：' + a + ' − ' + b + ' = ' + right]], sol: { pickc: 1, fixd: Math.floor(right / 10) % 10 } };
+    }
+  };
   addRev('blocksbench', function (R) { const n = R.int(31, 89), d = R.pick([10, 20, 1, 2]); return { title: '比 ' + (n - d) + ' 多 ' + d + ' 的数是几？摆出来', hook: '用十条和一块摆出这个数。多 ' + d + ' 是多几个十，还是多几个一？', props: { mode: 0, h: 0, t: 0, o: 0 }, goals: [['value', n, '是 ' + n]], sol: { t: Math.floor(n / 10), o: n % 10 } }; });
 
   // ===================== 关卡链：每个操作台一条闯关路线 =====================
@@ -408,7 +426,8 @@
       const own = U.problems.filter((p) => (p.shelf || [])[0] === type).sort((a, b) => (a.grade || 9) - (b.grade || 9) || (a.rung || 0) - (b.rung || 0)).slice(0, 6).map((p) => ({ id: p.id, title: p.title, kind: '题' }));
       const qs = GENS[type] ? [1, 2, 3].map((lv) => ({ id: U.Quiz.id(type, CHAIN_SEED + lv, lv), title: '随机 · ' + LEVELS[lv - 1], kind: '随机' })) : [];
       const rv = U.Quiz.hasRev(type) ? [{ id: U.Quiz.id(type, CHAIN_SEED + 4, 4), title: '倒推：给结果，找条件', kind: '倒推' }] : [];
-      return own.concat(qs, rv);
+      const bg = U.Quiz.hasBug(type) ? [{ id: U.Quiz.id(type, CHAIN_SEED + 5, 5), title: '找错：小明哪里错了', kind: '找错' }] : [];
+      return own.concat(qs, rv, bg);
     },
     // 每一关的星数、是否解锁；整条的进度
     status(type, best) {
