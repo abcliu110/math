@@ -53,7 +53,7 @@
         U.Quiz.types().filter((t) => lv < 4 || (lv === 4 ? U.Quiz.hasRev(t) : U.Quiz.hasBug(t))).map((t) => '<button class="btn" data-quiz-type="' + t + '">' + esc(U.types[t].label) + '</button>').join('') + '</div>' + (lv === 4 ? '<div class="qnote">倒推：给出结果，在操作台上找出条件</div>' : lv === 5 ? '<div class="qnote">找错：别人的做法里有一处错，找出来改对</div>' : '') + '</div>';
     }
     const by = {};
-    U.problems.filter((p) => !q || (p.title + p.domain + (p.points || []).join('') + (p.alias || []).join('')).includes(q)).forEach((p) => (by[p.domain] = by[p.domain] || []).push(p));
+    U.problems.filter((p) => !q || (p.title + p.domain + (p.points || []).join('') + (p.topics || []).join('') + (p.alias || []).join('')).includes(q)).forEach((p) => (by[p.domain] = by[p.domain] || []).push(p));
     for (const g of U.GROUPS.concat(Object.keys(by).filter((k) => !U.GROUPS.includes(k)))) {
       if (!by[g]) continue;
       h += '<div class="grp">' + esc(g) + '</div>';
