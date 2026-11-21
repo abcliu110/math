@@ -72,7 +72,7 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   ok(await out('total') === '60' && await out('isbox') === '1' && await done('vol') && (await text()).includes('体积 5 × 4 × 3 = 60'), '铺 3 层：长 5、宽 4、高 3，体积 60');
   ok(await out('surf') === '94' && (await text()).includes('棱长总和 4 × (5 + 4 + 3) = 48'), '表面积 94，棱长总和 48');
   await btn('+', 0);
-  ok((await props()).cols === 6 && await out('isbox') === '0' && await out('total') === '60', '点“长 +”：底板多一列（空的），不再是长方体，块数不变');
+  ok((await props()).cols === 6 && await out('isbox') === '1' && await out('l') === '5' && await out('total') === '60', '点“长 +”：底板多一列（空的），积木本身还是长 5 的长方体，块数不变');
   await btn('铺满一层');
   ok(await out('total') === '84', '再铺一层：新的一列也放上了');
   ok(await p.evaluate(() => !UI.S.inspOpen), '全程没有打开属性面板');

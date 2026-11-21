@@ -649,7 +649,8 @@ body.rail-l #lrail:hover, body.rail-r #rrail:hover { background: #dbeafe; color:
 .stars .off { color: #c9ced8; }
 .startips { text-align: center; font-size: 12px; color: var(--txt2); margin-bottom: 8px; }
 .stars-chip { color: #7a4a00; background: #fff4d6; }
-.quizrow .btn.rev { border-color: #b37400; color: #6e4500; }
+.quizrow .btn.rev { border-color: #d99a2b; color: #f2c46d; }   /* 深色（默认）：亮一点的琥珀色 */
+:root[data-theme="light"] .quizrow .btn.rev { border-color: #b37400; color: #6e4500; }
 .qnote { font-size: 12px; color: var(--txt3); margin-top: 6px; }
 
 /* 闯关 */
