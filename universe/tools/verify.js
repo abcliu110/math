@@ -129,6 +129,7 @@ async function checkDist() {
   if (!runScript('tests/ui-sort.js', 'tests/ui-sort.js', pwEnv)) bail();   // 分类与整理：真实鼠标点卡片放框、放错说为什么、分完核对总数、换分法
   if (!runScript('tests/ui-combo.js', 'tests/ui-combo.js', pwEnv)) bail();   // 搭配：真实鼠标点格子列搭法、列全再配鞋、数字卡片 0 不在十位
   if (!runScript('tests/ui-dir.js', 'tests/ui-dir.js', pwEnv)) bail();   // 方向与路线：真实鼠标认方向（反过来问）、点箭头走路线、拖射线定方向角
+  if (!runScript('tests/ui-methods.js', 'tests/ui-methods.js', pwEnv)) bail();   // 思想方法：按方法闯关、题目上标出用到的思想、下一关按方法链走
   if (!runScript('tests/ui-play.js', 'tests/ui-play.js', pwEnv)) bail();   // 三星挑战、倒推、闯关
   if (!runScript('tests/ui-play2.js', 'tests/ui-play2.js', pwEnv)) bail();   // 第二层新玩法：填缺数字、对对碰、最少张数、筛质数
   if (!runScript('tests/ui-play3.js', 'tests/ui-play3.js', pwEnv)) bail();   // 第二层新玩法第二批：篱笆围地、田忌赛马、分数比大小

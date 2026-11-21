@@ -3171,6 +3171,27 @@ t('随机出题：同一个 id 出同一道题；U.problemById 认 quiz: 开头�
   truthy(U.Quiz.types().filter(U.Quiz.hasRev).length >= 11, '至少 11 个操作台有倒推题');
   truthy(U.Quiz.hasBug('vertbench'), '竖式有找错题');
 });
+t('思想方法：标签从操作台、档位、题型、方法词来；每种方法一条链，链里每关打得开、来自至少 2 个操作台（大多数 3 个以上）；下一关按方法链走', () => {
+  const M = U.Methods; truthy(M && M.LIST.length >= 12, '至少 12 种思想方法');
+  for (const p of U.problems) for (const m of M.of(p)) truthy(M.get(m), p.id + ' 的方法 ' + m + ' 认得');
+  eq(M.of(U.Quiz.make('swapbench', 101, 2)).includes('assume'), true);                 // 换一换（鸡兔同笼）→ 假设
+  eq(M.of(U.Quiz.make('areamodel', 977, 7)).includes('enum'), true);                   // 找全 → 枚举
+  eq(M.of(U.Quiz.make('areamodel', 977, 9)).includes('pattern'), true);                // 推广 → 找规律
+  eq(M.of({ id: 'x', title: '先假设全是鸡', shelf: ['vertbench'] }), ['assume']);       // 题面写了“假设”
+  eq(M.of({ id: 'x', title: '34 × 12', hook: '对着面积图', shelf: ['vertbench'] }), []);  // 没写方法词、竖式台本身也没有方法：不乱标
+  const ms = M.chains(); let wide = 0; truthy(ms.length >= 12, '至少 12 条方法链：' + ms.join(','));
+  for (const m of ms) {
+    const L = U.Chain.of('m:' + m), types = new Set(L.map((x) => x.type));
+    truthy(L.length >= 4 && types.size >= 2, M.get(m).name + '：' + L.length + ' 关，' + types.size + ' 个操作台'); if (types.size >= 3) wide++;
+    for (const x of L) { const p = U.problemById(x.id); truthy(p && M.of(p).includes(m), M.get(m).name + ' 的 ' + x.id + ' 打得开，也标了这个方法'); }
+    eq(new Set(L.map((x) => x.id)).size, L.length);
+  }
+  truthy(wide >= 10, '至少 10 条方法链来自 3 个以上的操作台：' + wide);
+  const L = U.Chain.of('m:enum');
+  eq(U.Chain.next(L[0].id, 'm:enum').id, L[1].id);
+  eq(U.Chain.next(L[L.length - 1].id, 'm:enum'), null);
+  const s = U.Chain.status('m:enum', () => 0); eq(s.levels.filter((x) => x.open).length, 1);
+});
 t('三星挑战：做完 1 星，没看提示再 1 星，一次做对（没陷阱、没被拦、没撤销）再 1 星；没做完 0 星', () => {
   const p = { milestones: [{ id: 'a' }, { id: 'b' }], goal: ['b'] }, run = (o) => Object.assign({ ms: { a: { done: true }, b: { done: true } }, hintLevel: {}, trapsHit: {}, errors: 0, undos: 0 }, o);
   eq(U.Judge.stars(p, run({})).n, 3);

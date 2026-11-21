@@ -153,7 +153,7 @@
     return {
       id: 'quiz:' + type + ':' + seed + ':' + level, title: '🎲 ' + q.title, grade: h.grade, domain: h.domain, points: h.points, essence: t.essence || ['E2'], level: 'core', rung: level >= 6 ? 3 : level + 1,
       topics: ['随机练习'], alias: ['随机', '练习'], hook: q.hook, shelf: [type], build: () => build(type, q.props), milestones: ms, goal: ms.map((m) => m.id), traps: [], predict,
-      why: q.why || '做对了。换一题再试试：同一种题，数不一样，想法一样。', quiz: { type, seed, level, sol: q.sol, sols: q.sols, props: q.props, task: q.task },
+      why: q.why || '做对了。换一题再试试：同一种题，数不一样，想法一样。', quiz: { type, seed, level, sol: q.sol, sols: q.sols, props: q.props, task: q.task, fam: q.fam },
     };
   }
   U.Quiz = {
@@ -353,13 +353,13 @@
   } });
 
   add('swapbench', { gen(R, lv) {
-    if (R.int(0, 2) > 0) { const w = (fam, bench, o) => { const q = U.Word.make(R, fam, bench, o); return { title: q.title, hook: q.hook, props: q.props, goals: q.goals, sol: q.sol }; }; return w('swap', 'swapbench', { lv }); }
+    if (R.int(0, 2) > 0) { const w = (fam, bench, o) => { const q = U.Word.make(R, fam, bench, o); return { title: q.title, hook: q.hook, props: q.props, goals: q.goals, sol: q.sol, fam: q.struct && q.struct.family }; }; return w('swap', 'swapbench', { lv }); }
     const n = R.int(lv === 1 ? 5 : 10, lv === 1 ? 10 : lv === 2 ? 20 : 35), b = R.int(1, n - 1), target = 2 * (n - b) + 4 * b;
     return { title: '鸡兔同笼：' + n + ' 个头，' + target + ' 条腿，兔有几只？', hook: '先假设全是鸡，再一只一只把鸡换成兔：每换一只多 2 条腿。', props: { n, k: 0, target }, goals: [['b', b, '兔有 ' + b + ' 只']], sol: { k: b } };
   } });
 
   add('travelbench', { gen(R, lv) {
-    if (R.bool()) { const w = (fam, bench, o) => { const q = U.Word.make(R, fam, bench, o); return { title: q.title, hook: q.hook, props: q.props, goals: q.goals, sol: q.sol }; }; return w('meet', 'travelbench', { lv }); }
+    if (R.bool()) { const w = (fam, bench, o) => { const q = U.Word.make(R, fam, bench, o); return { title: q.title, hook: q.hook, props: q.props, goals: q.goals, sol: q.sol, fam: q.struct && q.struct.family }; }; return w('meet', 'travelbench', { lv }); }
     const t = R.int(2, 6), va = R.int(3, 12), vb = R.int(2, 9);
     if (lv === 3) { const v1 = Math.max(va, vb) + 1, v2 = Math.min(va, vb), gap0 = (v1 - v2) * t; return { title: '追及：乙先走了 ' + gap0 + ' 千米，甲每小时 ' + v1 + '，乙每小时 ' + v2 + '，几小时追上？', hook: '拖时间条，看两人之间的距离每小时少多少。', props: { len: gap0 + v2 * (t + 2), t: 0, tmax: t + 3, pa: 0, va: v1, da: 0, pb: gap0, vb: v2, db: 0, solo: false, lock: true }, goals: [['gap', 0, t + ' 小时追上']], sol: { t } }; }
     const len = (va + vb) * t; return { title: '相遇：相距 ' + len + ' 千米，甲每小时 ' + va + '，乙每小时 ' + vb + '，几小时相遇？', hook: '拖时间条，两人面对面走，每小时一共走多少？', props: { len, t: 0, tmax: t + 3, pa: 0, va, da: 0, pb: len, vb, db: 1, solo: false, lock: true }, goals: [['gap', 0, t + ' 小时相遇']], sol: { t } };
@@ -372,14 +372,14 @@
     ['大桶', '小桶', '升', '油', '两桶'], ['长绳', '短绳', '米', '', '两根绳'], ['小明', '小红', '元', '钱', '两人'], ['苹果', '梨', '千克', '', '两种水果'], ['上午', '下午', '个', '零件', '一天']];
   const hasOf = (n, c) => n + (c[3] ? '的' + c[3] : '');
   add('tapebench', { gen(R, lv) {
-    const w = (fam, bench, o) => { const q = U.Word.make(R, fam, bench, o); return { title: q.title, hook: q.hook, props: q.props, goals: q.goals, sol: q.sol }; };
+    const w = (fam, bench, o) => { const q = U.Word.make(R, fam, bench, o); return { title: q.title, hook: q.hook, props: q.props, goals: q.goals, sol: q.sol, fam: q.struct && q.struct.family }; };
     if (lv === 1 && R.bool()) { const u = R.int(3, 15), ka = R.int(2, 3); return { title: '乙有 ' + u + '，甲是乙的 ' + ka + ' 倍，甲有几？', hook: '把甲的线段调成 ' + ka + ' 段。', props: { ka: 1, kb: 1, u, tk: 2, lock: false }, goals: [['a', ka * u, '甲有 ' + ka * u]], sol: { ka } }; }
     return w(lv === 3 && R.int(0, 3) === 0 ? 'age' : 'pair', 'tapebench', { lv, noise: lv === 3 && R.bool() });
   } });
   function gcdQ(x, y) { return y ? gcdQ(y, x % y) : x; }
 
   add('balancebench', { gen(R, lv) {
-    if (lv >= 2 && R.bool()) { const w = (fam, bench, o) => { const q = U.Word.make(R, fam, bench, o); return { title: q.title, hook: q.hook, props: q.props, goals: q.goals, sol: q.sol }; }; return w('pair', 'balancebench', { lv, kinds: ['times', 'more'] }); }
+    if (lv >= 2 && R.bool()) { const w = (fam, bench, o) => { const q = U.Word.make(R, fam, bench, o); return { title: q.title, hook: q.hook, props: q.props, goals: q.goals, sol: q.sol, fam: q.struct && q.struct.family }; }; return w('pair', 'balancebench', { lv, kinds: ['times', 'more'] }); }
     const x = R.int(2, 12), a = lv === 1 ? 1 : R.int(2, 5), c = lv === 3 ? R.int(1, 9) : lv === 1 ? R.int(1, 9) : 0;
     const name = (a > 1 ? a : '') + 'x' + (c ? ' + ' + c : '') + ' = ' + (a * x + c);
     return { title: '解方程：' + name, hook: '天平两边同时拿走一样多、或者同时平分，一直保持平衡，直到一边只剩一个 x。', props: { lx: a, lc: c, rx: 0, rc: a * x + c, x0: x, sync: true, reveal: true }, goals: [['solved', x, 'x = ' + x]], sol: { lx: 1, lc: 0, rx: 0, rc: x } };
@@ -473,7 +473,7 @@
   } });
 
   add('ratiobench', { gen(R, lv) {
-    if (R.bool()) { const w = (fam, bench, o) => { const q = U.Word.make(R, fam, bench, o); return { title: q.title, hook: q.hook, props: q.props, goals: q.goals, sol: q.sol }; }; return w('rate', 'ratiobench', { lv }); }
+    if (R.bool()) { const w = (fam, bench, o) => { const q = U.Word.make(R, fam, bench, o); return { title: q.title, hook: q.hook, props: q.props, goals: q.goals, sol: q.sol, fam: q.struct && q.struct.family }; }; return w('rate', 'ratiobench', { lv }); }
     const S = [['1 个', '元', '个', '元'], ['1 小时', '千米', '时', '千米'], ['1 时', '分', '时', '分']], [one, , ua, ub] = lv === 3 ? S[2] : R.pick(S.slice(0, 2));
     const pb = lv === 3 ? 60 : R.int(2, 9) * (lv === 1 ? 1 : 5), t = R.int(2, lv === 1 ? 5 : 9);
     return { title: one + ' 是 ' + pb + ' ' + ub + '，' + t + ' ' + ua + '是多少' + ub + '？', hook: '双数轴：上面是' + ua + '，下面是' + ub + '。拖着走到 ' + t + ' ' + ua + '，看下面对着几。', props: { mode: 1, pa: 1, pb, tmax: Math.max(10, t), tstep: 1, t: 0, ua, ub }, goals: [['b', t * pb, t + ' ' + ua + '是 ' + t * pb + ' ' + ub]], sol: { t } };
@@ -578,13 +578,13 @@
     }
   } });
 
-  add('surplusbench', { gen(R, lv) { const w = (fam, bench, o) => { const q = U.Word.make(R, fam, bench, o); return { title: q.title, hook: q.hook, props: q.props, goals: q.goals, sol: q.sol }; }; return w('surplus', 'surplusbench', { lv }); } });
+  add('surplusbench', { gen(R, lv) { const w = (fam, bench, o) => { const q = U.Word.make(R, fam, bench, o); return { title: q.title, hook: q.hook, props: q.props, goals: q.goals, sol: q.sol, fam: q.struct && q.struct.family }; }; return w('surplus', 'surplusbench', { lv }); } });
 
   // 关系图：从数量关系引擎拿结构（和倍、和差、归一、鸡兔、盈亏、相遇），画成“量 + 关系”，带几张常见的错卡
   add('relbench', { gen(R, lv) {
     const fam = lv === 1 ? R.pick(['pair', 'rate', 'meet']) : lv === 2 ? R.pick(['pair', 'rate', 'swap', 'meet']) : R.pick(['pair', 'swap', 'surplus']);
     const q = U.Word.make(R, fam, 'relbench', { lv, kinds: fam === 'pair' ? (lv === 1 ? ['times'] : ['times', 'sumdiff']) : undefined });
-    return { title: q.title, hook: q.hook, props: q.props, goals: q.goals, sol: q.sol };
+    return { title: q.title, hook: q.hook, props: q.props, goals: q.goals, sol: q.sol, fam: q.struct && q.struct.family };
   } });
   // 状态图：倒水（随机杯子和目标）、汉诺塔、取石子（随机几颗、最多拿几颗）、过河
   add('statebench', { gen(R, lv) {

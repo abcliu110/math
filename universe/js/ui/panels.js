@@ -47,6 +47,20 @@
       }
       h += '</div>';
     }
+    // 按思想方法闯关：同一种想法，换不同的操作台、不同的题（U.Methods，链的 id 是 m:方法）
+    if (U.Methods && !q) {
+      const ms = U.Methods.chains(), shown = S.mchainOpen != null, tot = ms.reduce((s, m) => s + U.Chain.status('m:' + m, U.Events.bestStars).stars, 0);
+      h += '<div class="grp">🧠 按思想方法闯关（同一种想法，换不同的操作台）</div><div class="chains"><div class="it chain" data-mchain="__list"><span class="tt">' + (shown ? '▾ 收起' : '▸ ' + ms.length + ' 种思想方法，点开挑一种') + '</span><span class="chip stars-chip">★ ' + tot + '</span></div>';
+      if (shown) for (const mid of ms) {
+        const M = U.Methods.get(mid), key = 'm:' + mid, st = U.Chain.status(key, U.Events.bestStars), open = S.mchainOpen === key;
+        h += '<div class="it chain' + (open ? ' cur' : '') + '" data-mchain="' + key + '"><span class="tt">' + M.icon + ' ' + esc(M.name) + '<br><small>' + esc(M.say) + '</small></span><span class="chip stars-chip">★ ' + st.stars + ' / ' + st.max + '</span><span class="chip">' + st.passed + ' / ' + st.levels.length + ' 关</span></div>';
+        if (open) {
+          h += '<div class="it lvl mnote"><span class="tt"><small>' + esc(M.more) + '</small></span></div>';
+          st.levels.forEach((x, i) => { h += x.open ? '<div class="it lvl" data-pid="' + esc(x.id) + '"><span class="tt">第 ' + (i + 1) + ' 关 · ' + esc(x.title) + '</span>' + (x.stars ? '<span class="chip stars-chip">' + '★'.repeat(x.stars) + '</span>' : '') + '</div>' : '<div class="it lvl lock"><span class="tt">🔒 第 ' + (i + 1) + ' 关</span></div>'; });
+        }
+      }
+      h += '</div>';
+    }
     if (U.Quiz && !q) {
       const lv = S.quizLevel || 1;
       h += '<div class="grp">🎲 随机练习（在操作台上做，数每次都不一样）</div><div class="quizbox"><div class="btnrow">' + U.Quiz.LEVELS.map((n, i) => '<button class="btn' + (lv === i + 1 ? ' pri' : '') + '" data-quiz-lv="' + (i + 1) + '">' + n + '</button>').join('') + '</div><div class="qchips">' +
@@ -87,7 +101,7 @@
   function stepsHtml() {
     const S = UI.S, p = S.problem, run = S.run;
     if (!p) return '<div class="empty">现在是自由探究。<br>从右边拖器材到台面，想搭什么搭什么。<br><br>想做题，去「实验库」选一道。</div>';
-    let h = '<div class="pcard"><b>' + esc(p.title) + '</b>' + esc(p.hook) + '<div class="tags">' + (p.points || []).map((x) => '<span class="chip">' + esc(x) + '</span>').join('') + '</div></div>';
+    let h = '<div class="pcard"><b>' + esc(p.title) + '</b>' + esc(p.hook) + '<div class="tags">' + (p.points || []).map((x) => '<span class="chip">' + esc(x) + '</span>').join('') + (U.Methods ? U.Methods.of(p).map((m) => { const M = U.Methods.get(m); return '<span class="chip meth" title="' + esc(M.say) + '">💡 ' + esc(M.name) + '</span>'; }).join('') : '') + '</div></div>';
     if (p.predict && !run.pred_done) {
       h += '<div class="pred">' + predFormHtml(p.predict, run) + '</div>';
     } else if (p.predict && run.pred !== undefined) {
@@ -548,7 +562,7 @@
     if (next.length) h += '<p style="color:var(--txt3);margin:10px 0 4px">下一步练什么</p><div class="plist">' + next.map((n) => '<div class="it" data-pid="' + esc(n.pid) + '"><span class="tt">' + esc(n.title) + '</span></div>').join('') + '</div>';
     if (rep.newWay) h += '<div class="newway">✨ 你找到了一种参考解里没有的搭法！</div>';
     const back = missed.length && mode !== 'exam';
-    h += '<div class="whybox">' + esc(p.why) + '</div><div class="btnrow">' + (back ? '<button class="btn pri" id="dlg-back">回去做这一步</button><button class="btn" id="dlg-again">再做一遍</button>' : '<button class="btn pri" id="dlg-again">再做一遍</button>') + (U.Chain && U.Chain.next(p.id) && rep.stars && rep.stars.n > 0 ? '<button class="btn pri" id="dlg-nextlvl">下一关 ▶</button>' : '') + (p.quiz ? '<button class="btn' + (U.Chain && U.Chain.next(p.id) ? '' : ' pri') + '" id="dlg-quiz">🎲 再来一题</button>' : '<button class="btn" id="dlg-next">下一题</button>') + '<button class="btn" id="dlg-inquiry">实验报告</button><button class="btn" id="dlg-close">继续玩</button></div>';
+    h += '<div class="whybox">' + esc(p.why) + '</div><div class="btnrow">' + (back ? '<button class="btn pri" id="dlg-back">回去做这一步</button><button class="btn" id="dlg-again">再做一遍</button>' : '<button class="btn pri" id="dlg-again">再做一遍</button>') + (U.Chain && U.Chain.next(p.id, UI.S.mchainOpen) && rep.stars && rep.stars.n > 0 ? '<button class="btn pri" id="dlg-nextlvl">下一关 ▶</button>' : '') + (p.quiz ? '<button class="btn' + (U.Chain && U.Chain.next(p.id, UI.S.mchainOpen) ? '' : ' pri') + '" id="dlg-quiz">🎲 再来一题</button>' : '<button class="btn" id="dlg-next">下一题</button>') + '<button class="btn" id="dlg-inquiry">实验报告</button><button class="btn" id="dlg-close">继续玩</button></div>';
     return h;
   }
 

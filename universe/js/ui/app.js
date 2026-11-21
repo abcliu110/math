@@ -478,6 +478,7 @@
       const t = e.target;
       const dl = t.closest('[data-del]');
       if (dl) { if (S.problem && S.problem.id === dl.dataset.del) openFree(); U.Author.remove(dl.dataset.del); UI.Panels.renderLeft(); return; }
+      const mc = t.closest('[data-mchain]'); if (mc) { const c = mc.dataset.mchain; S.mchainOpen = c === '__list' ? (S.mchainOpen == null ? '__list' : null) : (S.mchainOpen === c ? '__list' : c); UI.Panels.renderLeft(); return; }
       const ch = t.closest('[data-chain]'); if (ch) { const c = ch.dataset.chain; S.chainOpen = c === '__list' ? (S.chainOpen == null ? '__list' : null) : (S.chainOpen === c ? '__list' : c); UI.Panels.renderLeft(); return; }
       const it = t.closest('.it');
       if (it && it.classList.contains('lock')) { say('先拿到上一关的星星，这一关才解锁', 'warn', 2500); return; }
@@ -651,7 +652,7 @@
       if (t.id === 'dlg' || t.id === 'dlg-close') { pendingDel = null; pendingConfirm = null; UI.Panels.closeDialog(); }
       else if (t.id === 'dlg-back') { const miss = (S.run && S.problem) ? S.problem.milestones.find((m) => S.run.ms[m.id] && !S.run.ms[m.id].done) : null; UI.Panels.closeDialog(); if (miss) say('回到这一步：' + miss.say, 'info', 5000); }
       else if (t.id === 'dlg-again') { UI.Panels.closeDialog(); openProblem(S.problem.id, S.mode); }
-      else if (t.id === 'dlg-nextlvl' && S.problem) { const nx = U.Chain.next(S.problem.id); UI.Panels.closeDialog(); if (nx) { S.chainOpen = nx.type; openProblem(nx.id, 'practice'); say('第 ' + nx.n + ' / ' + nx.of + ' 关', 'good', 2500); } }
+      else if (t.id === 'dlg-nextlvl' && S.problem) { const nx = U.Chain.next(S.problem.id, S.mchainOpen); UI.Panels.closeDialog(); if (nx) { if (String(nx.type).startsWith('m:')) S.mchainOpen = nx.type; else S.chainOpen = nx.type; openProblem(nx.id, 'practice'); say('第 ' + nx.n + ' / ' + nx.of + ' 关', 'good', 2500); } }
       else if (t.id === 'dlg-quiz' && S.problem && S.problem.quiz) { UI.Panels.closeDialog(); openQuiz(S.problem.quiz.type, S.problem.quiz.level); }
       else if (t.id === 'dlg-next') { UI.Panels.closeDialog(); const i = U.problems.findIndex((p) => p.id === S.problem.id); openProblem(U.problems[(i + 1) % U.problems.length].id, 'practice'); }
       else if (t.id === 'dlg-note') { lsSet(NOTE_KEY, $('#notes').value); UI.Panels.closeDialog(); say('笔记已保存', 'good', 1800); }
