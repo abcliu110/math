@@ -1,7 +1,7 @@
 /* node tests/ui-play.js —— 三星挑战、倒推、闯关：真实鼠标测试。
  *  1. 随机出一道竖式加法，像学生一样点完（没看提示、没出错）：弹窗三颗星；实验库这道题旁边记着 ★★★；
  *  2. 再出一道，先点“来个提示”再做完：两颗星，写着“看了提示”；再出一道，撤销一次再做完：两颗星，写着“撤销过 1 次”；
- *  3. 估一估没有倒推，步骤栏只有三档；面积模型有“倒推”第四档，点了出一道倒推题（给面积找宽）；
+ *  3. 估一估没有倒推，步骤栏是三档加“先猜”；面积模型有“倒推”第四档，点了出一道倒推题（给面积找宽）；
  *  4. 闯关：点“凑十与拆数”展开关卡，第 2 关锁着、点了说先拿星；第 1 关拿到星以后第 2 关解锁；做完第 2 关弹窗有“下一关 ▶”，点了到第 3 关；
  *  5. 没有报错。 */
 'use strict';
@@ -48,7 +48,7 @@
   console.log('3. 倒推');
   await openQ('estbench', 7, 1);
   await p.evaluate(() => { UI.Panels.closeDialog(); UI.S.tab = 'steps'; UI.Panels.renderLeft(); });
-  H.ok(await p.locator('#left .quizrow [data-quiz]').count() === 3, '估一估没有倒推：只有三档');
+  H.ok(await p.locator('#left .quizrow [data-quiz]').count() === 4 && await p.locator('#left .quizrow [data-quiz="4"]').count() === 0, '估一估没有倒推：三档加“先猜”');
   await openQ('areamodel', 5, 1);
   await p.evaluate(() => { UI.S.tab = 'steps'; UI.Panels.renderLeft(); });
   H.ok(await p.locator('#left .quizrow [data-quiz="4"]').count() === 1, '面积模型有“倒推”第四档');

@@ -32,7 +32,11 @@
     const at = (r, c) => (r >= 0 && r < R && c >= 0 && c < C ? g[r][c] : 0);
     let surf = 0;
     for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) { const h = g[r][c]; if (!h) continue; surf += 2; for (const [dr, dc] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) surf += Math.max(0, h - at(r + dr, c + dc)); }
-    const flat = g.flat(), box = flat[0] > 0 && flat.every((h) => h === flat[0]) ? { l: C, w: R, h: flat[0] } : null;
+    // 长方体：有块的格子正好占满一个长方形，而且一样高（不一定占满整块底板）
+    const flat = g.flat(), cells = []; g.forEach((row, i) => row.forEach((h, j) => { if (h > 0) cells.push([i, j, h]); }));
+    let box = null;
+    if (cells.length) { const r0 = Math.min(...cells.map((x) => x[0])), r1 = Math.max(...cells.map((x) => x[0])), c0 = Math.min(...cells.map((x) => x[1])), c1 = Math.max(...cells.map((x) => x[1])), h0 = cells[0][2];
+      if (cells.length === (r1 - r0 + 1) * (c1 - c0 + 1) && cells.every((x) => x[2] === h0)) box = { l: c1 - c0 + 1, w: r1 - r0 + 1, h: h0 }; }
     return { R, C, g, front, side, top, total, seen, surf, box, hmax: Math.max(...flat) };
   }
   // 斜二测：往后一排，往右上挪半格；模块边长 a 按大小缩放

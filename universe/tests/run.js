@@ -3126,7 +3126,7 @@ t('可能性：列出所有情况，两个骰子 36 种里和为 7 的有 6 种�
 console.log('随机出题（操作台）');
 t('随机出题：每个出题器、每个难度、25 个种子都出得了题，lint 通过，一开始没做到，套上参考做法就做到', () => {
   const bad = [];
-  for (const type of U.Quiz.types()) for (const lv of [1, 2, 3].concat(U.Quiz.hasRev(type) ? [4] : [], U.Quiz.hasBug(type) ? [5] : [])) for (let seed = 1; seed <= 25; seed++) {
+  for (const type of U.Quiz.types()) for (const lv of [1, 2, 3].concat(U.Quiz.hasRev(type) ? [4] : [], U.Quiz.hasBug(type) ? [5] : [], U.Quiz.hasGuess(type) ? [6] : [])) for (let seed = 1; seed <= 25; seed++) {
     const p = U.Quiz.make(type, seed * 101, lv);
     if (!p) { bad.push(type + ' L' + lv + ' #' + seed + '：出不了题'); continue; }
     const errs = U.problemLint(p).errors; if (errs.length) { bad.push(p.id + '：' + errs[0]); continue; }

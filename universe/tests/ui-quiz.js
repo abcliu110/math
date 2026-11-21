@@ -15,7 +15,7 @@
   console.log('1. 步骤栏：随机出一题');
   await H.open('vt-47-38');
   await p.evaluate(() => { UI.S.tab = 'steps'; UI.Panels.renderLeft(); });
-  H.ok(await p.locator('#left .quizrow [data-quiz]').count() === 5, '步骤栏有“随机出一题”：容易、中等、难、倒推、找错（竖式的倒推是填缺数字，找错是找小明写错的一位）');
+  H.ok(await p.locator('#left .quizrow [data-quiz]').count() === 6, '步骤栏有“随机出一题”：容易、中等、难、倒推、找错、先猜（竖式的倒推是填缺数字，找错是找小明写错的一位）');
   await clickLeft('.quizrow [data-quiz="3"]');
   const id3 = await pid();
   H.ok(/^quiz:vertbench:\d+:3$/.test(id3) && (await H.props()).mode === 2, '点“难”：出一道竖式除法 ' + id3);
@@ -46,5 +46,15 @@
   await clickLeft('[data-quiz-type="estbench"]');
   const est = await p.evaluate(() => UI.S.problem && UI.S.problem.quiz);
   H.ok(est && est.type === 'estbench' && est.level === 3 && est.props.op === 2, '实验库点“难”“估一估”：出一道估一估乘法');
+  console.log('5. 先猜：先写答案，再做出来验证');
+  await H.open('vt-47-38');
+  await p.evaluate(() => { UI.S.tab = 'steps'; UI.Panels.renderLeft(); });
+  await p.locator('#left .quizrow [data-quiz="6"]').first().click(); await p.waitForTimeout(300);
+  const g = await p.evaluate(() => ({ id: UI.S.problem.id, pr: UI.S.problem.predict, sol: UI.S.problem.quiz.sol }));
+  H.ok(/^quiz:vertbench:\d+:6$/.test(g.id) && g.pr && g.pr.form === 'number' && (await p.locator('#predin').count()) === 1, '点“先猜”：先要写下答案（输入框）');
+  await p.locator('#predin').fill(g.pr.answer); await p.locator('[data-pred="submit"]').click(); await p.waitForTimeout(200);
+  H.ok(await p.evaluate(() => UI.S.run.pred_done && String(UI.S.run.pred)) === g.pr.answer, '写下答案 ' + g.pr.answer + '，提交');
+  await p.evaluate((sol) => { const e = Object.values(UI.S.scene.entities).find((x) => x.type === 'vertbench'); for (const k of Object.keys(sol)) UI.App.act({ t: 'set', id: e.id, k, v: sol[k] }); }, g.sol); await p.waitForTimeout(300);
+  H.ok(await p.evaluate(() => UI.S.run.ms.g0 && UI.S.run.ms.g0.done), '在操作台上做出来：和猜的一样，完成');
   await H.end('随机出题');
 })();

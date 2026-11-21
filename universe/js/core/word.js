@@ -202,9 +202,27 @@
   function make(R, fam, bench, o) {
     for (let i = 0; i < 200; i++) {
       const s = FAM[fam](R, o || {}), a = ADAPT[bench] && ADAPT[bench](s, R);
-      if (a) return Object.assign({ title: s.title, struct: s }, a);
+      if (a) return Object.assign({ title: s.title, struct: s, answer: s.ans }, a);
     }
     throw new Error('word: ' + fam + ' 摆不到 ' + bench);
   }
-  U.Word = { make, FAM, ADAPT, PAIR, SWAP, SURPLUS, RATE };
+  // ---------- 算式配情境：a op b → 一句应用题（加：合并、增加、比多；减：剩余、比较、比少、求另一部分；乘：每份几个、单价、几倍；除：等分、包含，可以有余数）----------
+  const ITEM = [['苹果', '个'], ['铅笔', '支'], ['糖', '块'], ['本子', '本'], ['邮票', '张'], ['气球', '个'], ['画片', '张'], ['贴纸', '张']];
+  const WHO = ['小明', '小红', '小华', '小林', '哥哥', '妹妹', '小亮', '小芳'];
+  function story(R, op, a, b) {
+    if (!Number.isInteger(a) || !Number.isInteger(b)) {   // 小数：讲成钱、长度、重量
+      const [x, u] = R.pick([['元', '元'], ['米', '米'], ['千克', '千克']]);
+      if (op === '+') return R.pick(['买书用了 ' + a + ' ' + u + '，买笔用了 ' + b + ' ' + u + '，一共用了多少' + u + '？', '一根绳子剪下 ' + a + ' ' + u + '，还剩 ' + b + ' ' + u + '，原来长多少' + u + '？'].slice(0, x === '元' ? 1 : 2));
+      if (op === '−') return R.pick(['有 ' + a + ' ' + u + '，用去 ' + b + ' ' + u + '，还剩多少' + u + '？', '甲有 ' + a + ' ' + u + '，乙有 ' + b + ' ' + u + '，甲比乙多多少' + u + '？']);
+      if (op === '×') return '每份 ' + a + ' ' + u + '，' + b + ' 份一共多少' + u + '？';
+    }
+    const [it, q] = R.pick(ITEM), i = R.int(0, WHO.length - 1), p1 = WHO[i], p2 = WHO[(i + R.int(1, WHO.length - 1)) % WHO.length];
+    if (op === '+') return R.pick([p1 + '有 ' + a + ' ' + q + it + '，' + p2 + '有 ' + b + ' ' + q + '，两人一共有多少' + q + '？', p1 + '原来有 ' + a + ' ' + q + it + '，又买来 ' + b + ' ' + q + '，现在有多少' + q + '？', p1 + '有 ' + a + ' ' + q + it + '，' + p2 + '比' + p1 + '多 ' + b + ' ' + q + '，' + p2 + '有多少' + q + '？']);
+    if (op === '−') return R.pick([p1 + '有 ' + a + ' ' + q + it + '，送给别人 ' + b + ' ' + q + '，还剩多少' + q + '？', p1 + '有 ' + a + ' ' + q + it + '，' + p2 + '有 ' + b + ' ' + q + '，' + p1 + '比' + p2 + '多多少' + q + '？', p1 + '有 ' + a + ' ' + q + it + '，' + p2 + '比' + p1 + '少 ' + b + ' ' + q + '，' + p2 + '有多少' + q + '？', '一共有 ' + a + ' ' + q + it + '，其中红色的 ' + b + ' ' + q + '，其余的有多少' + q + '？']);
+    if (op === '×') return R.pick(['每盒装 ' + a + ' ' + q + it + '，' + b + ' 盒一共多少' + q + '？', '一' + q + it + ' ' + a + ' 元，买 ' + b + ' ' + q + '要多少元？', '每排坐 ' + a + ' 人，坐了 ' + b + ' 排，一共多少人？', p1 + '有 ' + a + ' ' + q + it + '，' + p2 + '的是' + p1 + '的 ' + b + ' 倍，' + p2 + '有多少' + q + '？']);
+    const r = a % b;
+    return r ? R.pick([a + ' ' + q + it + '，每 ' + b + ' ' + q + '装一袋，能装几袋？还剩几' + q + '？', a + ' ' + q + it + '平均分给 ' + b + ' 个小朋友，每人最多分几' + q + '？还剩几' + q + '？'])
+      : R.pick([a + ' ' + q + it + '平均分给 ' + b + ' 个小朋友，每人分几' + q + '？', a + ' ' + q + it + '，每 ' + b + ' ' + q + '装一袋，能装几袋？', '一根绳子长 ' + a + ' 米，每 ' + b + ' 米剪一段，能剪几段？']);
+  }
+  U.Word = { make, FAM, ADAPT, PAIR, SWAP, SURPLUS, RATE, story };
 })(typeof globalThis !== 'undefined' ? globalThis : window);

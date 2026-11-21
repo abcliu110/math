@@ -7,11 +7,11 @@
 (function (G) {
   'use strict';
   const U = G.U, W = U.World, Q = U.Q;
-  const GENS = {};
+  const GENS = {}, GUESS = {};   // GUESS：哪些操作台能出“先猜”（算一次记住）
   const mkR = (seed) => { const r = U.Variants.rng(seed); const R = { r, int: (lo, hi) => lo + Math.floor(r() * (hi - lo + 1)), pick: (a) => a[Math.floor(r() * a.length)], bool: () => r() < 0.5 }; return R; };
   const qs = (n, d) => Q.show(Q(n, d || 1));
   const norm = (v) => { try { return Q.show(Q.parse(String(v))); } catch (e) { return String(v); } };
-  const LEVELS = ['容易', '中等', '难', '倒推', '找错'];   // 第 5 档“找错”：小明的做法里有一处错，找出来改对   // 第 4 档“倒推”：给结果，找条件（不是每个操作台都有）
+  const LEVELS = ['容易', '中等', '难', '倒推', '找错', '先猜'];   // 第 6 档“先猜”：先估一估答案，再在操作台上做出来验证（每个出题器都有）   // 第 5 档“找错”：小明的做法里有一处错，找出来改对   // 第 4 档“倒推”：给结果，找条件（不是每个操作台都有）
   // 某个器材在题库里最常用的知识点、领域（给随机题当“归属”）
   function home(type) {
     const ps = U.problems.filter((p) => (p.shelf || [])[0] === type), cnt = {};
@@ -24,17 +24,32 @@
     const s = build(type, props), D = W.evaluate(s), e = Object.values(s.entities).find((x) => x.type === type), out = (D[e.id] || {}).out || {};
     return goals.map(([port, value]) => !!out[port] && norm(U.Q.show(out[port].data)) === norm(value));
   }
+  function answerOf(q) {
+    if ('answer' in q) return q.answer === null || q.answer === undefined ? null : q.answer;   // 出题器写了 answer: null，就是这道题不适合先猜
+    const g = q.goals[0]; if (!g || q.goals.length > 1) return null;   // 要做到好几件事的题（比如把点放到某处）不适合只猜一个数
+    if (!(String(g[1]) === '1' || String(g[1]) === '0')) return g[1];
+    const ns = String(g[2] || '').match(/−?\d+(\.\d+)?(\/\d+)?/g) || [];
+    return ns.length === 1 ? ns[0].replace('−', '-') : null;
+  }
+  // 用操作台自己算出输出（出题时拿来求答案：转过去在哪里、过了多久……不用另外写公式）
+  function sim(type, props) { const s = build(type, props), D = W.evaluate(s), e = Object.values(s.entities).find((x) => x.type === type), out = (D[e.id] || {}).out || {}, o = {}; for (const k of Object.keys(out)) o[k] = U.Q.show(out[k].data); return o; }
   function make(type, seed, level) {
     const g = GENS[type]; if (!g) return null;
     let q = null;
     const fn = level === 5 ? g.bug : level === 4 ? g.rev : g.gen; if (!fn) return null;
-    for (let i = 0; i < 30; i++) { const c = fn.call(g, mkR(seed + i * 7919), level); if (!reached(type, c.props, c.goals).some(Boolean)) { q = c; break; } }
+    const lv = level === 6 ? 2 : level;
+    for (let i = 0; i < 30; i++) { const c = fn.call(g, mkR(seed + i * 7919), lv); if (reached(type, c.props, c.goals).some(Boolean)) continue; if (level === 6 && answerOf(c) === null) continue; q = c; break; }
     if (!q) return null;
+    // 光秃秃的算式（“47 + 38 用竖式算”）一半配上情境：同一个算式，讲成合并、比较、几倍、平均分……
+    const R2 = mkR(seed * 31 + level), bare = /^(\d+(?:\.\d+)?) ([+−×÷]) (\d+(?:\.\d+)?)(.*)$/.exec(q.title);
+    if (bare && level <= 3 && R2.bool() && !(bare[2] === '−' && +bare[1] < +bare[3])) q = Object.assign({}, q, { title: U.Word.story(R2, bare[2], +bare[1], +bare[3]) + '（' + bare[1] + ' ' + bare[2] + ' ' + bare[3] + '）' });
+    let predict = null;
+    if (level === 6) { const ans = answerOf(q); predict = { form: 'number', q: '先想一想：答案是多少？写下你的答案，再在操作台上做出来验证。', answer: String(ans) }; }
     const h = home(type), t = U.types[type];
     const ms = q.goals.map(([port, value, say, hints], i) => ({ id: 'g' + i, say, score: Math.max(2, Math.round(8 / q.goals.length)), when: { role: 'q', port, op: '=', value: norm(value) }, hints: hints || ['看看台面上的说明。', '一步一步来。', '答案是 ' + value + '。'] }));
     return {
-      id: 'quiz:' + type + ':' + seed + ':' + level, title: '🎲 ' + q.title, grade: h.grade, domain: h.domain, points: h.points, essence: t.essence || ['E2'], level: 'core', rung: level + 1,
-      topics: ['随机练习'], alias: ['随机', '练习'], hook: q.hook, shelf: [type], build: () => build(type, q.props), milestones: ms, goal: ms.map((m) => m.id), traps: [], predict: null,
+      id: 'quiz:' + type + ':' + seed + ':' + level, title: '🎲 ' + q.title, grade: h.grade, domain: h.domain, points: h.points, essence: t.essence || ['E2'], level: 'core', rung: level === 6 ? 3 : level + 1,
+      topics: ['随机练习'], alias: ['随机', '练习'], hook: q.hook, shelf: [type], build: () => build(type, q.props), milestones: ms, goal: ms.map((m) => m.id), traps: [], predict,
       why: q.why || '做对了。换一题再试试：同一种题，数不一样，想法一样。', quiz: { type, seed, level, sol: q.sol, props: q.props },
     };
   }
@@ -45,9 +60,10 @@
     hasRev: (type) => !!GENS[type] && !!GENS[type].rev && !!U.types[type],
     hasBug: (type) => !!GENS[type] && !!GENS[type].bug && !!U.types[type],
     types: () => Object.keys(GENS).filter((t) => U.types[t]),
-    make, reached,
+    make, reached, answerOf, sim,
+    hasGuess: (type) => { if (!(type in GUESS)) GUESS[type] = !!GENS[type] && !!U.types[type] && !!make(type, 900001, 6); return GUESS[type]; },
     id: (type, seed, level) => 'quiz:' + type + ':' + (seed >>> 0) + ':' + (level || 1),
-    fromId(id) { const m = /^quiz:([a-z0-9_-]+):(\d+):([12345])$/.exec(String(id)); return m ? make(m[1], +m[2], +m[3]) : null; },
+    fromId(id) { const m = /^quiz:([a-z0-9_-]+):(\d+):([123456])$/.exec(String(id)); return m ? make(m[1], +m[2], +m[3]) : null; },
   };
   const base = U.problemById;
   U.problemById = (id) => (String(id).startsWith('quiz:') ? U.Quiz.fromId(id) : base(id));
@@ -127,6 +143,7 @@
   } });
 
   add('anglebench', { gen(R, lv) {
+    if (lv === 3 && R.bool()) { const n = R.pick([3, 4, 5, 6, 8, 9, 10, 12]); return { title: '正 ' + n + ' 边形每个内角是多少度？', hook: '先求内角和（切成几个三角形），再平均分给 ' + n + ' 个角。', props: { mode: 3, n }, goals: [['each', qs((n - 2) * 180, n), '每个角 ' + qs((n - 2) * 180, n) + '°']], sol: { split: true } }; }
     if (lv === 1) { const a1 = R.int(0, 10) * 5, ang = R.int(3, 33) * 5, a2 = a1 + ang, prot = (a1 + R.pick([20, 35, 50, 65])) % 360; return { title: '量一量这个角', hook: '拖量角器边上的圆点转它，0° 线压在角的一条边上才读得出。', props: { mode: 0, a1, a2, prot }, goals: [['deg', ang, '这个角是 ' + ang + '°']], sol: { prot: a1 } }; }
     if (lv === 2) { const a = R.int(3, 33) * 5; return { title: '∠1 是 ' + a + '°，∠2 是几度？', hook: '一条直线上的两个角合起来是一个平角。点 ∠2 量一量。', props: { mode: 1, a }, goals: [['other', 180 - a, '∠2 = 180° − ' + a + '° = ' + (180 - a) + '°']], sol: { seen: '2' } }; }
     const n = R.int(4, 10); return { title: n + ' 边形的内角和是多少？', hook: '从一个顶点连对角线，切成几个三角形？', props: { mode: 3, n }, goals: [['sum', (n - 2) * 180, (n - 2) + ' 个三角形：' + (n - 2) * 180 + '°']], sol: { split: true } };
@@ -154,16 +171,22 @@
   } });
 
   add('seqbench', { gen(R, lv) {
+    if (lv >= 2 && R.bool()) { const KD = [[4, 3, '火柴摆正方形', '根火柴', '个'], [4, 2, '桌子拼起来坐人', '个人', '张桌子'], [3, 2, '火柴摆三角形', '根火柴', '个']], kind = R.int(0, 2), [a, d, name, unit, w] = KD[kind], n = R.int(8, 40), N = a + (n - 1) * d;
+      return { title: name + '：' + (kind === 1 ? '一共坐 ' + N + ' 人' : '一共用了 ' + N + ' 根火柴') + '，是第几' + w + '？', hook: '先找规律：第 n 个是 ' + '“第 1 个 + (n − 1) × 每次多几”。再把 n 调到让它正好是 ' + N + '。', props: { kind, k: 1, a: 0, d: 0, n: 10 }, goals: [['term', N, '第 ' + n + ' 个']], sol: { k: 3, a, d, n }, answer: n }; }
     const KD = [[4, 3, '火柴摆正方形', '根火柴'], [4, 2, '桌子拼起来坐人', '个人'], [3, 2, '火柴摆三角形', '根火柴']], kind = lv === 1 ? R.int(0, 1) : R.int(0, 2), [a, d, name, unit] = KD[kind], n = lv === 1 ? R.int(5, 12) : lv === 2 ? R.int(15, 30) : R.int(40, 100);
     return { title: name + '：第 ' + n + ' 个要几' + unit + '？', hook: '先摆几个，找出“第 1 个是几、每次多几”，再算第 ' + n + ' 个。', props: { kind, k: 1, a: 0, d: 0, n }, goals: [['term', a + (n - 1) * d, '第 ' + n + ' 个：' + a + ' + (' + n + ' − 1) × ' + d + ' = ' + (a + (n - 1) * d)]], sol: { k: 3, a, d } };
   } });
 
   add('jobbench', { gen(R, lv) {
-    if (lv === 3) { const a = R.int(2, 8), b = R.int(a + 1, 12); return { title: '进水管 ' + a + ' 小时注满，出水管 ' + b + ' 小时放完，一起开几小时注满？', hook: '每小时净多几格？', props: { mode: 1, a, b }, goals: [['days', qs(a * b, b - a), '注满要 ' + qs(a * b, b - a) + ' 小时']], sol: { t: Math.ceil(a * b / (b - a)) } }; }
-    const a = R.int(2, lv === 1 ? 6 : 12), b = R.int(2, lv === 1 ? 6 : 15); return { title: '甲 ' + a + ' 天、乙 ' + b + ' 天，合作几天完成？', hook: '两人一起做，点“过一天”，看几天涂满。', props: { mode: 0, a, b }, goals: [['days', qs(a * b, a + b), '合作 ' + qs(a * b, a + b) + ' 天完成']], sol: { t: Math.ceil(a * b / (a + b)) } };
+    if (lv === 3 && R.bool()) { const a = R.int(2, 8), b = R.int(a + 1, 12); return { title: '进水管 ' + a + ' 小时注满，出水管 ' + b + ' 小时放完，一起开几小时注满？', hook: '每小时净多几格？', props: { mode: 1, a, b }, goals: [['days', qs(a * b, b - a), '注满要 ' + qs(a * b, b - a) + ' 小时']], sol: { t: Math.ceil(a * b / (b - a)) } }; }
+    const [job, A, B, u] = R.pick([['做一件工作', '甲', '乙', '天'], ['修一条路', '甲队', '乙队', '天'], ['做一批零件', '师傅', '徒弟', '天'], ['打一份稿件', '小王', '小李', '小时'], ['注满一池水', '甲管', '乙管', '小时'], ['读完一本书', '哥哥', '弟弟', '天']]);
+    for (;;) { const a = R.int(2, lv === 1 ? 6 : 12), b = R.int(2, lv === 1 ? 6 : 15); if (lv > 1 && (a * b) % (a + b) === 0 && R.bool()) continue;
+      return { title: job + '，' + A + '单独做要 ' + a + ' ' + u + '，' + B + '单独做要 ' + b + ' ' + u + '。两人合作几' + u + '完成？', hook: '把整件工作看成 1：' + A + '每' + u + '做 1/' + a + '，' + B + '每' + u + '做 1/' + b + '。点“过一' + u + '”，看几' + u + '涂满。', props: { mode: 0, a, b }, goals: [['days', qs(a * b, a + b), '合作 ' + qs(a * b, a + b) + ' ' + u + '完成']], sol: { t: Math.ceil(a * b / (a + b)) } }; }
   } });
 
   add('chipbench', { gen(R, lv) {
+    if (lv <= 2 && R.bool()) { const sp = (v) => (v >= 0 ? { pos: v, neg: 0 } : { pos: 0, neg: -v }), a = R.int(-6, 6), b = R.int(2, 9), up = R.bool(); if (!up && a - b > -10 && a >= 0 || up) {
+      const r = up ? a + b : a - b; return { title: R.pick(['早上气温 ' + a + '℃，' + (up ? '中午升高了 ' : '晚上下降了 ') + b + '℃，' + (up ? '中午' : '晚上') + '是多少℃？', '潜水员在 ' + a + ' 米处，' + (up ? '上浮 ' : '下潜 ') + b + ' 米，到了几米？']), hook: up ? '升高就是加：放进 ' + b + ' 个 +1，零对消掉。' : '下降就是减：拿走 ' + b + ' 个 +1，不够先放零对。', props: Object.assign({ mode: 0, op: up ? 0 : 1, a, b }, sp(a)), goals: [['result', r, (up ? a + ' + ' + b : a + ' − ' + b) + ' = ' + r]], sol: Object.assign({ step: 1 }, sp(r)) }; } }
     const sp = (v) => (v >= 0 ? { pos: v, neg: 0 } : { pos: 0, neg: -v });
     if (lv === 1) { const a = R.int(-6, -1), b = R.int(2, 9); return { title: '(' + a + ') + ' + b, hook: '放进来，再把零对一对一对消掉。', props: Object.assign({ mode: 0, op: 0, a, b }, sp(a)), goals: [['result', a + b, '(' + a + ') + ' + b + ' = ' + (a + b)]], sol: Object.assign({ step: 1 }, sp(a + b)) }; }
     if (lv === 2) { const a = R.int(1, 5), b = R.int(a + 1, 9); return { title: a + ' − ' + b, hook: '不够拿：先放进几对零对，再拿。', props: Object.assign({ mode: 0, op: 1, a, b }, sp(a)), goals: [['result', a - b, a + ' − ' + b + ' = ' + (a - b)]], sol: Object.assign({ step: 1 }, sp(a - b)) }; }
@@ -176,13 +199,20 @@
   } });
 
   add('blocksbench', { gen(R, lv) {
-    const n = lv === 1 ? R.int(11, 49) : lv === 2 ? R.int(51, 99) : R.int(101, 399), hh = Math.floor(n / 100), t = Math.floor(n / 10) % 10, o = n % 10;
-    return { title: '摆出 ' + n, hook: '用百板、十条、一块摆出 ' + n + '：' + (hh ? hh + ' 个百、' : '') + '几个十、几个一？', props: { mode: 0, h: 0, t: 0, o: 0 }, goals: [['value', n, '摆出了 ' + n]], sol: { h: hh, t, o } };
+    const n = lv === 1 ? R.int(11, 49) : lv === 2 ? R.int(51, 99) : R.int(101, 399), hh = Math.floor(n / 100), t = Math.floor(n / 10) % 10, o = n % 10, v = R.int(0, 3);
+    if (v === 0) return { title: '摆出 ' + n, hook: '用百板、十条、一块摆出 ' + n + '：' + (hh ? hh + ' 个百、' : '') + '几个十、几个一？', props: { mode: 0, h: 0, t: 0, o: 0 }, goals: [['value', n, '摆出了 ' + n]], sol: { h: hh, t, o } };
+    if (v === 1) return { title: (hh ? hh + ' 个百、' : '') + t + ' 个十和 ' + o + ' 个一合起来是多少？摆出来', hook: '照着摆：百板、十条、一块各几个。', props: { mode: 0, h: 0, t: 0, o: 0 }, goals: [['value', n, '是 ' + n]], sol: { h: hh, t, o } };
+    if (v === 2) { const [it, q, box, bq] = R.pick([['铅笔', '支', '捆', '捆'], ['鸡蛋', '个', '盒', '盒'], ['小棒', '根', '捆', '捆']]); return { title: '每 10 ' + q + it + '装一' + bq + (hh ? '，每 100 ' + q + '装一大箱' : '') + '：' + (hh ? hh + ' 大箱、' : '') + t + ' ' + box + '和 ' + o + ' ' + q + '，一共多少' + q + '？', hook: '一' + bq + '就是一个十，一大箱就是一个百。摆出来读一读。', props: { mode: 0, h: 0, t: 0, o: 0 }, goals: [['value', n, '一共 ' + n + ' ' + q]], sol: { h: hh, t, o } }; }
+    for (;;) { const a = R.int(12, lv === 3 ? 89 : 59), b = R.int(12, 99 - a); if ((a % 10) + (b % 10) < 10 || a + b > 99) continue; const tt = Math.floor(a / 10) + Math.floor(b / 10), oo = (a % 10) + (b % 10);
+      return { title: a + ' + ' + b + '：满十个一捆成一个十', hook: a + ' 和 ' + b + ' 的块倒在一起：十位 ' + tt + ' 根，个位 ' + oo + ' 块。个位超过 9，就把 10 块捆成一根十，往左拖。', props: { mode: 1, a, b, h: 0, t: tt, o: oo }, goals: [['standard', 1, a + ' + ' + b + ' = ' + (a + b)]], sol: { t: tt + 1, o: oo - 10 }, answer: a + b }; }
   } });
 
   add('clockbench', { gen(R, lv) {
-    const h = R.int(1, 11), m = lv === 1 ? 0 : lv === 2 ? R.pick([15, 30, 45]) : R.int(1, 11) * 5, t = h * 60 + m;
-    return { title: '把钟拨到 ' + h + ' 时' + (m ? ' ' + m + ' 分' : '整'), hook: '拖分针转，时针会跟着走。', props: { t: 0, start: 0, timing: false }, goals: [['t', t, h + ' 时' + (m ? ' ' + m + ' 分' : '整')]], sol: { t } };
+    const v = lv === 1 ? 0 : R.int(0, 2), h = R.int(1, 11), m = lv === 1 ? 0 : lv === 2 ? R.pick([0, 15, 30, 45]) : R.int(0, 11) * 5, t = h * 60 + m, say = (x) => Math.floor(x / 60) % 12 + ' 时' + (x % 60 ? ' ' + x % 60 + ' 分' : '整');
+    if (v === 0) return { title: '把钟拨到 ' + say(t), hook: '拖分针转，时针会跟着走。', props: { t: 0, start: 0, timing: false }, goals: [['t', t, say(t)]], sol: { t } };
+    const d = R.pick(lv === 2 ? [15, 30, 45, 60, 90] : [20, 35, 50, 75, 100, 125]);
+    if (v === 1) return { title: R.pick(['现在是 ' + say(t) + '，过 ' + d + ' 分钟是几时几分？', '电影 ' + say(t) + '开始，放了 ' + d + ' 分钟，几时几分结束？']), hook: '从现在往后拨分针：转一圈是 60 分。', props: { t, start: t, timing: true }, goals: [['t', t + d, say(t + d)]], sol: { t: t + d }, answer: null };
+    return { title: R.pick(['从 ' + say(t) + '到 ' + say(t + d) + '，经过了多少分钟？', '小明 ' + say(t) + '开始写作业，' + say(t + d) + '写完，写了多少分钟？']), hook: '钟面已经开始计时了：把分针拨到 ' + say(t + d) + '，看经过了多久。', props: { t, start: t, timing: true }, goals: [['elapsed', d, '经过 ' + d + ' 分钟']], sol: { t: t + d } };
   } });
 
   add('numlinebench', { gen(R, lv) {
@@ -198,10 +228,13 @@
 
   add('meanbench', { gen(R, lv) {
     const k = lv === 1 ? 3 : lv === 2 ? 4 : 5, m = R.int(3, 9); let v; for (;;) { v = Array.from({ length: k - 1 }, () => R.int(1, 2 * m)); const last = k * m - v.reduce((s, x) => s + x, 0); if (last >= 1 && last <= 15) { v.push(last); if (new Set(v).size > 1) break; } }
-    return { title: v.join('、') + '：移多补少，平均每堆几块？', hook: '把多的搬给少的，搬到一样高。', props: { vals: v.join(','), showline: lv === 1 }, goals: [['level', 1, '一样高了：平均每堆 ' + m + ' 块']], sol: { vals: Array(k).fill(m).join(',') } };
+    return { title: R.pick([v.join('、') + '：移多补少，平均每堆几块？', '小明 ' + k + ' 天看书的页数是 ' + v.join('、') + '，平均每天看几页？', k + ' 个小组种树，分别种了 ' + v.join('、') + ' 棵，平均每组种几棵？']), hook: '把多的搬给少的，搬到一样高。', props: { vals: v.join(','), showline: lv === 1 }, goals: [['level', 1, '一样高了：平均每堆 ' + m + ' 块']], sol: { vals: Array(k).fill(m).join(',') } };
   } });
 
   add('statbench', { gen(R, lv) {
+    if (lv >= 2 && R.bool()) { const n = 5 + lv, v = Array.from({ length: n }, () => R.int(1, 12)), s = v.reduce((a, b) => a + b, 0), names = R.pick(['跳绳', '投篮', '口算']);
+      if (R.bool()) { const srt = v.slice().sort((a, b) => a - b), med = n % 2 ? srt[(n - 1) / 2] : qs(srt[n / 2 - 1] + srt[n / 2], 2); return { title: n + ' 个同学' + names + '的成绩是 ' + v.join('、') + '，中位数是多少？', hook: '先点“从小到大排队”，再点“中位数”：正中间那一个（偶数个就是中间两个的平均）。', props: { vals: v.join(', ') }, goals: [['median', med, '中位数 ' + med]], sol: { vals: srt.join(', '), smed: true } }; }
+      return { title: n + ' 个同学' + names + '的成绩是 ' + v.join('、') + '，平均数是多少？', hook: '点“平均数”：把柱子摊平以后的高度 = 总数 ÷ 个数。', props: { vals: v.join(', ') }, goals: [['mean', qs(s, n), '平均 ' + s + ' ÷ ' + n + ' = ' + qs(s, n)]], sol: { smean: true } }; }
     const n = 5 + lv, v = Array.from({ length: n }, () => R.int(1, 9)); if (lv === 1) v[R.int(0, n - 1)] = v[0];
     const cnt = {}; v.forEach((x) => { cnt[x] = (cnt[x] || 0) + 1; }); const top = Math.max(...Object.values(cnt)), modes = Object.keys(cnt).filter((x) => cnt[x] === top);
     if (lv === 1 && modes.length === 1) return { title: v.join('、') + '：出现最多的数（众数）是几？', hook: '点“众数”，看哪一个数出现得最多。', props: { vals: v.join(', ') }, goals: [['mode', modes[0], '众数是 ' + modes[0]]], sol: { smode: true } };
@@ -259,8 +292,14 @@
   } });
 
   add('solidbench', { gen(R, lv) {
-    const rows = R.int(2, lv === 1 ? 3 : 4), cols = R.int(2, lv === 1 ? 3 : 5), hgt = R.int(1, lv === 3 ? 4 : 2), z = Array(rows).fill(Array(cols).fill(0).join(',')).join(';');
-    return { title: '搭一个长 ' + cols + '、宽 ' + rows + '、高 ' + hgt + ' 的长方体，用几个小方块？', hook: '在每一格上点着往上摞，摞成 ' + hgt + ' 层。', props: { rows, cols, h: z }, goals: [['total', rows * cols * hgt, '一共 ' + rows * cols * hgt + ' 个小方块']], sol: { h: Array(rows).fill(Array(cols).fill(hgt).join(',')).join(';') } };
+    const grid = (rows, cols, hgt) => Array(rows).fill(Array(cols).fill(hgt).join(',')).join(';');
+    if (lv >= 2 && R.bool()) {   // 开放题：用 N 块搭一个高 h 的长方体，底面怎么摆都行
+      for (;;) { const hgt = R.int(1, lv === 3 ? 3 : 2), base = R.pick([6, 8, 10, 12]), N = base * hgt, pairs = []; for (let r = 1; r <= 5; r++) if (base % r === 0 && base / r <= 6) pairs.push([r, base / r]); if (pairs.length < 2) continue;
+        const [rows, cols] = pairs[R.int(0, pairs.length - 1)]; return { title: '用 ' + N + ' 个小方块搭一个高 ' + hgt + ' 的长方体。底面可以怎么摆？', hook: '高是 ' + hgt + '：底面要摆几个？' + N + ' ÷ ' + hgt + ' = ?。底面可以摆成不同的长和宽，都对。', props: { rows: 5, cols: 6, h: grid(5, 6, 0) }, goals: [['total', N, '一共 ' + N + ' 块'], ['isbox', 1, '是长方体'], ['hgt', hgt, '高 ' + hgt]], sol: { h: Array.from({ length: 5 }, (_, i) => Array.from({ length: 6 }, (_, j) => (i < rows && j < cols ? hgt : 0)).join(',')).join(';') }, answer: base }; }
+    }
+    const rows = R.int(2, lv === 1 ? 3 : 4), cols = R.int(2, lv === 1 ? 3 : 5), hgt = R.int(1, lv === 3 ? 4 : 2), tot = rows * cols * hgt;
+    const title = R.pick(['搭一个长 ' + cols + '、宽 ' + rows + '、高 ' + hgt + ' 的长方体，用几个小方块？', '一个长方体纸盒长 ' + cols + ' 厘米、宽 ' + rows + ' 厘米、高 ' + hgt + ' 厘米，能装几个 1 立方厘米的小方块？', '每层摆 ' + rows + ' 排、每排 ' + cols + ' 个，摆 ' + hgt + ' 层，一共几个？']);
+    return { title, hook: '在每一格上点着往上摞，摞成 ' + hgt + ' 层。', props: { rows, cols, h: grid(rows, cols, 0) }, goals: [['total', tot, '一共 ' + tot + ' 个小方块']], sol: { h: grid(rows, cols, hgt) } };
   } });
   // ===================== 出题器（第二批） =====================
   const lcm2 = (a, b) => a * b / gcd(a, b);
@@ -276,16 +315,23 @@
   } });
 
   add('groupbench', { gen(R, lv) {
-    if (lv === 3) { const k = R.int(3, 6), n = k * R.int(2, 4) + R.int(1, k - 1), mx = Math.ceil(n / k); return { title: n + ' 只鸽子飞进 ' + k + ' 个笼子，至少有一个笼子里有几只？', hook: '最不利的情况：一个一个平均发下去，发完看最多的那个笼子。', props: { mode: 1, n, k, dealt: 0, unit: '只', gname: '笼子' }, goals: [['max', mx, '至少有一个笼子里有 ' + mx + ' 只']], sol: { dealt: n } }; }
-    const g = R.int(lv === 1 ? 2 : 4, lv === 1 ? 5 : 9), n = g * R.int(2, lv === 1 ? 4 : 7) + R.int(1, g - 1);
-    return { title: n + ' 个，每 ' + g + ' 个一份，能分几份？还剩几个？', hook: '把“每份几个”调成 ' + g + '，看分成几份、剩几个。', props: { mode: 0, n, g: 1, k: 3, dealt: 0, unit: '个', gname: '份' }, goals: [['q', Math.floor(n / g), n + ' ÷ ' + g + ' = ' + Math.floor(n / g) + ' …… ' + (n % g)]], sol: { g } };
+    if (lv === 3 && R.bool()) { const k = R.int(3, 6), n = k * R.int(2, 4) + R.int(1, k - 1), mx = Math.ceil(n / k); const [a, b] = R.pick([['只鸽子', '个笼子'], ['个苹果', '个抽屉'], ['名同学', '个小组'], ['本书', '个书架']]);
+      return { title: n + ' ' + a + '放进 ' + k + ' ' + b + '，至少有一' + b.slice(1) + '里不少于几' + a.slice(0, 1) + '？', hook: '最不利的情况：一个一个平均放下去，放完看最多的那个。', props: { mode: 1, n, k, dealt: 0 }, goals: [['max', mx, '至少 ' + mx]], sol: { dealt: n } }; }
+    const [it, q] = R.pick([['苹果', '个'], ['铅笔', '支'], ['糖', '块'], ['本子', '本']]);
+    if (R.bool()) {   // 平均分给几份（等分）
+      const k = R.int(2, lv === 1 ? 4 : 6), each = R.int(2, lv === 1 ? 5 : 9), n = k * each;
+      return { title: n + ' ' + q + it + '平均分给 ' + k + ' 个小朋友，每人分几' + q + '？', hook: '点“放一个”“放一轮”，一个一个轮流放进 ' + k + ' 个盒子，放完看每个盒子几个。', props: { mode: 1, n, k, dealt: 0, unit: q }, goals: [['max', each, '每人 ' + each + ' ' + q]], sol: { dealt: n } };
+    }
+    const g = R.int(lv === 1 ? 2 : 4, lv === 1 ? 5 : 9), n = g * R.int(2, lv === 1 ? 4 : 7) + R.int(1, g - 1), qq = Math.floor(n / g), r = n % g;
+    return { title: R.pick([n + ' 个，每 ' + g + ' 个一份，能分几份？还剩几个？', n + ' ' + q + it + '，每 ' + g + ' ' + q + '装一袋，能装几袋？还剩几' + q + '？', '有 ' + n + ' 人坐船，每条船坐 ' + g + ' 人，坐满几条船？还剩几人？']), hook: '把“每份几个”调成 ' + g + '，看分成几份、剩几个。', props: { mode: 0, n, g: 1, k: 3, dealt: 0, unit: '个', gname: '份' }, goals: [['q', qq, n + ' ÷ ' + g + ' = ' + qq + ' …… ' + r], ['r', r, '余 ' + r]], sol: { g } };
   } });
 
   add('gapbench', { gen(R, lv) {
     const gap = R.pick([2, 3, 4, 5, 10]), k = R.int(3, 12), len = gap * k, ends = lv === 1 ? [1, 1] : lv === 2 ? R.pick([[1, 0], [0, 0]]) : null;
     if (lv === 3) return { title: '一圈长 ' + len + ' 米的花坛，每隔 ' + gap + ' 米种一棵，种几棵？', hook: '围成一圈：头和尾是同一个地方。先把“每隔几米”调对，再把路围成一圈。', props: { len, gap: 1, le: 1, re: 1, ring: 0 }, goals: [['trees', k, '围成一圈：' + k + ' 棵（棵数 = 段数）']], sol: { gap, ring: 1 } };
     const t = k + ends[0] + ends[1] - 1, how = ends[0] && ends[1] ? '两头都种' : ends[0] ? '只种一头' : '两头都不种';
-    return { title: len + ' 米的路，每隔 ' + gap + ' 米种一棵，' + how + '，种几棵？', hook: '把“每隔几米”调成 ' + gap + '：先数段数，再看两头。', props: { len, gap: 1, le: ends[0], re: ends[1], ring: 0 }, goals: [['trees', t, how + '：' + t + ' 棵']], sol: { gap } };
+    const [road, thing, verb] = R.pick([['路', '树', '种'], ['街道', '路灯', '装'], ['跑道', '彩旗', '插'], ['走廊', '盆花', '摆']]);
+    return { title: len + ' 米的' + road + '，每隔 ' + gap + ' 米' + verb + '一' + (thing === '树' ? '棵' : thing === '路灯' ? '盏' : thing === '彩旗' ? '面' : '盆') + thing + '，' + how.replace('种', verb) + '，' + verb + '几' + (thing === '树' ? '棵' : thing === '路灯' ? '盏' : thing === '彩旗' ? '面' : '盆') + '？', hook: '把“每隔几米”调成 ' + gap + '：先数段数，再看两头。', props: { len, gap: 1, le: ends[0], re: ends[1], ring: 0 }, goals: [['trees', t, how + '：' + t + ' 棵']], sol: { gap } };
   } });
 
   add('vennbench', { gen(R, lv) {
@@ -298,13 +344,21 @@
   } });
 
   add('tablebench', { gen(R, lv) {
-    const r = 2, c = lv === 1 ? 2 : 3, d = Array.from({ length: r }, () => Array.from({ length: c }, () => R.int(lv === 3 ? 0 : 1, 9))), tot = d.flat().reduce((s, x) => s + x, 0);
-    return { title: '复式统计表：一共多少人？', hook: '每一格都要算进去，一格也不能漏：点格子把它们圈起来，再点“算一共”。', props: { data: d.map((row) => row.join(',')).join(';') }, goals: [['answer', tot, '一共 ' + tot]], sol: { picked: Array.from({ length: r * c }, (_, i) => i).join(','), done: true } };
+    const c = lv === 1 ? 2 : 3, RN = R.pick([['男生', '女生'], ['上午', '下午'], ['借出', '还回']]), CN = R.pick([['一年级', '二年级', '三年级'], ['故事书', '科技书', '漫画书'], ['一班', '二班', '三班']]).slice(0, c);
+    const d = Array.from({ length: 2 }, () => Array.from({ length: c }, () => R.int(lv === 3 ? 0 : 1, lv === 1 ? 9 : 30))), tot = d.flat().reduce((s, x) => s + x, 0);
+    const props = { data: d.map((row) => row.join(',')).join(';'), rnames: RN.join(','), cnames: CN.join(',') }, v = lv === 1 ? 0 : R.int(0, 2);
+    if (v === 1) { const r = R.int(0, 1), s = d[r].reduce((a, b) => a + b, 0); return { title: '复式统计表：' + RN[r] + '一共多少？', hook: '只圈' + RN[r] + '那一行的格子，再点“我数完了”。', props, goals: [['answer', s, RN[r] + '一共 ' + s]], sol: { picked: Array.from({ length: c }, (_, j) => r * c + j).join(','), done: true } }; }
+    if (v === 2) { const j = R.int(0, c - 1), s = d[0][j] + d[1][j]; return { title: '复式统计表：' + CN[j] + '一共多少？', hook: '只圈' + CN[j] + '那一列，再点“我数完了”。', props, goals: [['answer', s, CN[j] + '一共 ' + s]], sol: { picked: [j, c + j].join(','), done: true } }; }
+    return { title: '复式统计表：一共多少？', hook: '每一格都要算进去，一格也不能漏：点格子把它们圈起来，再点“我数完了”。', props, goals: [['answer', tot, '一共 ' + tot]], sol: { picked: Array.from({ length: 2 * c }, (_, i) => i).join(','), done: true } };
   } });
 
   add('pairbench', { gen(R, lv) {
+    const v = lv === 1 ? R.int(0, 1) : R.int(0, 2);
+    if (v === 2) { for (;;) { const na = R.int(4, 9), nb = R.int(4, 9); if (na === nb) continue; const [A, B] = R.pick([['学生', '座位'], ['小朋友', '苹果'], ['杯子', '盖子'], ['小兔', '萝卜']]), k = Math.min(na, nb), more = na > nb;
+      return { title: A + ' ' + na + ' 个，' + B + ' ' + nb + ' 个，一个对一个连起来：哪个多？多几个？', hook: '一个' + A + '连一个' + B + '，连到连不下去为止，看哪一排还剩。', props: { mode: 0, na, nb, na_name: A, nb_name: B }, goals: [[more ? 'leftA' : 'leftB', Math.abs(na - nb), (more ? A : B) + '多 ' + Math.abs(na - nb) + ' 个']], sol: { pairs: Array.from({ length: k }, (_, i) => i + '-' + i).join(',') } }; } }
     const n = R.int(lv === 1 ? 3 : 4, lv === 1 ? 4 : lv === 2 ? 5 : 6), all = []; for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) all.push(i + '-' + j);
-    return { title: n + ' 个人，每两人握一次手，一共握几次？', hook: '点两个人连一条线就是握一次手。每两个人都要连上，不能重复。', props: { mode: 1, n }, goals: [['full', 1, '一共 ' + n * (n - 1) / 2 + ' 次']], sol: { pairs: all.join(',') } };
+    const ctx = v === 0 ? ['人', n + ' 个人，每两人握一次手，一共握几次？'] : R.pick([['队', n + ' 支球队，每两队比赛一场，一共比赛几场？'], ['点', '平面上 ' + n + ' 个点，每两点连一条线段，一共连几条？'], ['人', n + ' 个好朋友，每两人合一张影，一共拍几张？']]);
+    return { title: ctx[1], hook: '点两个连一条线。每两个都要连上，不能重复，也不能漏。', props: { mode: 1, n, p_name: ctx[0] }, goals: [['full', 1, '一共 ' + n * (n - 1) / 2 + ' 次']], sol: { pairs: all.join(',') }, answer: n * (n - 1) / 2 };
   } });
 
   add('ratiobench', { gen(R, lv) {
@@ -315,6 +369,10 @@
   } });
 
   add('circlebench', { gen(R, lv) {
+    if (lv <= 2 && R.bool()) { const r = R.int(2, 9), v = R.int(0, 2);
+      if (v === 0) return { title: '直径 ' + 2 * r + ' 的圆，' + (lv === 1 ? '面积' : '周长') + '是多少？（π 取 3.14）', hook: '先算半径：半径是直径的一半。把半径拖到 ' + r + '。', props: { mode: 0, r: 1 }, goals: [[lv === 1 ? 'area' : 'c', lv === 1 ? qs(314 * r * r, 100) : qs(628 * r, 100), '半径 ' + r]], sol: { r } };
+      if (v === 1) return { title: '一个圆的周长是 ' + qs(628 * r, 100) + '，半径是多少？（π 取 3.14）', hook: '拖半径，看周长什么时候正好是 ' + qs(628 * r, 100) + '。周长 ÷ 3.14 ÷ 2 = 半径。', props: { mode: 0, r: 1 }, goals: [['c', qs(628 * r, 100), '半径 ' + r]], sol: { r }, answer: r };
+      return { title: '圆形花坛的半径是 ' + r + ' 米，' + (lv === 1 ? '占地多少平方米' : '绕它走一圈是多少米') + '？（π 取 3.14）', hook: '把半径拖到 ' + r + '。', props: { mode: 0, r: 1 }, goals: [[lv === 1 ? 'area' : 'c', lv === 1 ? qs(314 * r * r, 100) : qs(628 * r, 100), lv === 1 ? '面积' : '周长']], sol: { r } }; }
     const r = R.int(2, 9);
     if (lv === 3) { const h = R.int(2, 8); return { title: '底面半径 ' + r + '、高 ' + h + ' 的圆柱，体积是多少？（π 取 3.14）', hook: '把半径拖到 ' + r + '，高拖到 ' + h + '。体积 = 底面积 × 高。', props: { mode: 2, r: 1, h: 1, cone: false }, goals: [['vol', qs(314 * r * r * h, 100), '体积 = 3.14 × ' + r + ' × ' + r + ' × ' + h]], sol: { r, h } }; }
     if (lv === 2) return { title: '半径 ' + r + ' 的圆，周长是多少？（π 取 3.14）', hook: '把半径拖到 ' + r + '。周长 = 2 × 3.14 × 半径。', props: { mode: 0, r: 1 }, goals: [['c', qs(628 * r, 100), '周长 = 2 × 3.14 × ' + r]], sol: { r } };
@@ -322,7 +380,10 @@
   } });
 
   add('chancebench', { gen(R, lv) {
-    const s = lv === 1 ? R.int(5, 9) : lv === 2 ? R.pick([2, 3, 4, 10, 11, 12]) : R.int(6, 14), mode = lv === 3 ? 4 : 1;
+    const v = lv === 1 ? R.int(0, 1) : R.int(0, 3);
+    if (v === 1) { const red = R.int(1, 8), white = R.int(1, 8), tot = red + white; return { title: '袋子里有 ' + red + ' 个红球、' + white + ' 个白球，任意摸一个，摸到红球的可能性是多少？', hook: '点开“理论上”：红球占所有球的几分之几？', props: { mode: 2, red, white, target: 0, showp: false }, goals: [['p', qs(red, tot), '红球占 ' + red + '/' + tot]], sol: { showp: true }, answer: qs(red, tot) }; }
+    if (v === 3) { const deg = R.pick([45, 60, 90, 120, 180, 240, 270]); return { title: '转盘上红色部分占 ' + deg + '°，转一次停在红色的可能性是多少？', hook: '一圈是 360°：红色占一圈的几分之几？点开“理论上”。', props: { mode: 3, deg, target: 0, showp: false }, goals: [['p', qs(deg, 360), deg + '/360']], sol: { showp: true }, answer: qs(deg, 360) }; }
+    const three = v === 2 || lv === 3, s = three ? R.int(6, 14) : lv === 1 ? R.int(5, 9) : R.pick([2, 3, 4, 10, 11, 12]), mode = three ? 4 : 1;
     let w = 0; if (mode === 1) { for (let a = 1; a <= 6; a++) for (let b = 1; b <= 6; b++) if (a + b === s) w++; } else { for (let a = 1; a <= 6; a++) for (let b = 1; b <= 6; b++) for (let c = 1; c <= 6; c++) if (a + b + c === s) w++; }
     return { title: (mode === 1 ? '两' : '三') + '个骰子，点数和是 ' + s + ' 的有几种？', hook: '点“列出所有情况”，一种一种数。', props: { mode, sumv: s, list: false }, goals: [['ways', w, '和是 ' + s + ' 的有 ' + w + ' 种（一共 ' + (mode === 1 ? 36 : 216) + ' 种）']], sol: { list: true } };
   } });
@@ -335,8 +396,13 @@
   } });
 
   add('gridbench', { gen(R, lv) {
-    const x = R.int(2, 6), y = R.int(2, 6);   // 方格是 −6 到 6
-    return { title: '把点放到 (' + x + ', ' + y + ')', hook: '数对：先说第几列（横着数），再说第几行（竖着数）。拖点过去。', props: { mode: 0, px: 1, py: 1 }, goals: [['px', x, '第 ' + x + ' 列'], ['py', y, '第 ' + y + ' 行']], sol: { px: x, py: y } };
+    const v = lv === 1 ? R.int(0, 1) : R.int(0, 2);
+    if (v === 0) { const x = R.int(1, 6), y = R.int(1, 6); return { title: '把点放到 (' + x + ', ' + y + ')', hook: '数对：先说第几列（横着数），再说第几行（竖着数）。拖点过去。', props: { mode: 0, px: 0, py: 0 }, goals: [['px', x, '第 ' + x + ' 列'], ['py', y, '第 ' + y + ' 行']], sol: { px: x, py: y } }; }
+    if (v === 1) { for (;;) { const x = R.int(0, 4), y = R.int(0, 4), dx = R.int(-3, 4), dy = R.int(-3, 4); if (!dx && !dy || x + dx < 0 || y + dy < 0 || x + dx > 6 || y + dy > 6) continue; const say = (dx ? '向' + (dx > 0 ? '右' : '左') + '平移 ' + Math.abs(dx) + ' 格' : '') + (dx && dy ? '，再' : '') + (dy ? '向' + (dy > 0 ? '上' : '下') + '平移 ' + Math.abs(dy) + ' 格' : '');
+      return { title: '点 P 在 (' + x + ', ' + y + ')，' + say + '，到了哪里？', hook: '平移只改位置：向右列数加，向上行数加。拖点 P 过去。', props: { mode: 0, px: x, py: y }, goals: [['px', x + dx, '列 ' + (x + dx)], ['py', y + dy, '行 ' + (y + dy)]], sol: { px: x + dx, py: y + dy } }; } }
+    for (;;) { const px = R.int(-4, 4), py = R.int(-4, 4), ox = R.int(-2, 2), oy = R.int(-2, 2), rot = R.pick([90, 180, 270]); if (px === ox && py === oy) continue; const out = sim('gridbench', { mode: 1, px, py, ox, oy, rot });
+      const nm = rot === 90 ? '逆时针旋转 90°' : rot === 180 ? '旋转 180°' : '顺时针旋转 90°';
+      return { title: '点 P (' + px + ', ' + py + ') 绕点 O (' + ox + ', ' + oy + ') ' + nm + '，转到哪里？', hook: '转的时候 P 到 O 的距离不变，连线转过 ' + (rot === 180 ? 180 : 90) + '°。点按钮转一转，看看落在哪。', props: { mode: 1, px, py, ox, oy, rot: 0 }, goals: [['qx', out.qx, 'x = ' + out.qx], ['qy', out.qy, 'y = ' + out.qy]], sol: { rot }, answer: null }; }
   } });
 
   add('optbench', { gen(R, lv) {
@@ -365,7 +431,8 @@
       cand.slice(0, c).forEach((i) => { pan[i] = '1'; }); cand.slice(c, 2 * c).forEach((i) => { pan[i] = '2'; });
       hist.push(pan.join('')); cand = U.WeighBench.model({ n, hist: hist.join(';') }).cand;
     }
-    return { title: n + ' 个零件里有 1 个轻一点，最少称几次一定能找出来？', hook: '天平按最不利的情况回答。把可疑的分成差不多的 3 份试试。', props: { n }, goals: [['best', 1, '称 ' + k + ' 次就保证找到']], sol: { hist: hist.join(';') } };
+    const thing = R.pick([['个零件', '轻一点'], ['枚硬币', '是假的（轻一点）'], ['盒饼干', '少了几块（轻一点）'], ['瓶药', '少了几粒（轻一点）']]);
+    return { title: n + ' ' + thing[0] + '里有 1 ' + thing[0].slice(0, 1) + thing[1] + '，最少称几次一定能找出来？', hook: '天平按最不利的情况回答。把可疑的分成差不多的 3 份试试。', props: { n }, goals: [['best', 1, '称 ' + k + ' 次就保证找到']], sol: { hist: hist.join(';') } };
   } });
 
   add('ringbench', { gen(R, lv) {
@@ -431,7 +498,8 @@
       const A = R.int(4, 11), B = R.int(2, A - 1), tg = R.int(1, A - 1), r = U.PourBench.fewest(A, B, 0, 0, tg);
       if (r.n < 2 || (lv === 1 && r.n > 4) || (lv === 2 && (r.n < 5 || r.n > 6)) || (lv === 3 && r.n < 7)) continue;
       const goals = [['hit', 1, '量出 ' + tg + ' 升']]; if (lv === 3) goals.push(['fewest', 1, '最少 ' + r.n + ' 步']);
-      return { title: '只用 ' + A + ' 升和 ' + B + ' 升的杯子，怎么量出 ' + tg + ' 升？', hook: '杯子没有刻度：只能装满、倒空、从一个倒进另一个。' + (lv === 3 ? '还要用最少的步数。' : ''), props: { A, B, tgt: tg }, goals, sol: { hist: r.path.join(',') } };
+      const liq = R.pick(['水', '油', '牛奶', '果汁']);
+      return { title: R.pick(['只用 ' + A + ' 升和 ' + B + ' 升的杯子，怎么量出 ' + tg + ' 升' + liq + '？', '客人要买 ' + tg + ' 升' + liq + '，店里只有 ' + A + ' 升和 ' + B + ' 升的两个空桶，怎么量？']), hook: '杯子没有刻度：只能装满、倒空、从一个倒进另一个。' + (lv === 3 ? '还要用最少的步数。' : ''), props: { A, B, tgt: tg }, goals, sol: { hist: r.path.join(',') } };
     }
   } });
 
@@ -439,7 +507,7 @@
     const n = lv === 1 ? R.int(4, 6) : lv === 2 ? R.int(7, 10) : R.int(11, 14), crit = lv === 3 ? 1 : R.int(0, 1), colors = lv === 1 ? [0, 2] : [0, 1, 2];
     const items = Array.from({ length: n }, () => R.pick(colors) + '' + R.int(0, 2));
     const key = (x) => (crit === 0 ? x[0] : x[1]);
-    return { title: n + ' 张卡片，' + (crit === 0 ? '按颜色' : '按形状') + '分一分', hook: '点一张卡片，再点它该去的框。分完数一数，和总数核对。', props: { items: items.join(','), crit }, goals: [['check', 1, '分完了：一共 ' + n + ' 个，和总数一样']], sol: { place: items.map(key).join('') } };
+    return { title: R.pick([n + ' 张卡片，', '一堆积木（' + n + ' 块），', n + ' 张贴纸，']) + (crit === 0 ? '按颜色' : '按形状') + '分一分，每类几个？', hook: '点一张卡片，再点它该去的框。分完数一数，和总数核对。', props: { items: items.join(','), crit }, goals: [['check', 1, '分完了：一共 ' + n + ' 个，和总数一样']], sol: { place: items.map(key).join('') } };
   } });
 
   add('combobench', { gen(R, lv) {

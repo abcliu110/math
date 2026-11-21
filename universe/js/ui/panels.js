@@ -50,7 +50,7 @@
     if (U.Quiz && !q) {
       const lv = S.quizLevel || 1;
       h += '<div class="grp">🎲 随机练习（在操作台上做，数每次都不一样）</div><div class="quizbox"><div class="btnrow">' + U.Quiz.LEVELS.map((n, i) => '<button class="btn' + (lv === i + 1 ? ' pri' : '') + '" data-quiz-lv="' + (i + 1) + '">' + n + '</button>').join('') + '</div><div class="qchips">' +
-        U.Quiz.types().filter((t) => lv < 4 || (lv === 4 ? U.Quiz.hasRev(t) : U.Quiz.hasBug(t))).map((t) => '<button class="btn" data-quiz-type="' + t + '">' + esc(U.types[t].label) + '</button>').join('') + '</div>' + (lv === 4 ? '<div class="qnote">倒推：给出结果，在操作台上找出条件</div>' : lv === 5 ? '<div class="qnote">找错：别人的做法里有一处错，找出来改对</div>' : '') + '</div>';
+        U.Quiz.types().filter((t) => lv < 4 || (lv === 4 ? U.Quiz.hasRev(t) : lv === 5 ? U.Quiz.hasBug(t) : U.Quiz.hasGuess(t))).map((t) => '<button class="btn" data-quiz-type="' + t + '">' + esc(U.types[t].label) + '</button>').join('') + '</div>' + (lv === 4 ? '<div class="qnote">倒推：给出结果，在操作台上找出条件</div>' : lv === 5 ? '<div class="qnote">找错：别人的做法里有一处错，找出来改对</div>' : lv === 6 ? '<div class="qnote">先猜：先写下你想的答案，再在操作台上做出来验证</div>' : '') + '</div>';
     }
     const by = {};
     U.problems.filter((p) => !q || (p.title + p.domain + (p.points || []).join('') + (p.topics || []).join('') + (p.alias || []).join('')).includes(q)).forEach((p) => (by[p.domain] = by[p.domain] || []).push(p));
@@ -112,7 +112,7 @@
       h += '<div class="btnrow"><button class="btn" id="hintbtn">💡 来个提示</button><button class="btn" id="restart">重来</button></div>';
       // 随机出题：这道题的操作台有出题器，就能在同一个操作台上再出一道（数不一样）
       const qt = quizTypeOf(p);
-      if (qt) h += '<div class="btnrow quizrow"><span class="qlab">🎲 随机出一题：</span>' + U.Quiz.LEVELS.map((n, i) => (i < 3 || (i === 3 && U.Quiz.hasRev(qt)) || (i === 4 && U.Quiz.hasBug(qt)) ? '<button class="btn' + (i >= 3 ? ' rev' : '') + '" data-quiz="' + (i + 1) + '" title="' + esc(U.types[qt].label) + '：' + n + (i === 3 ? '（给结果，找条件）' : i === 4 ? '（找出别人做法里的错）' : '') + '">' + n + '</button>' : '')).join('') + '</div>';
+      if (qt) h += '<div class="btnrow quizrow"><span class="qlab">🎲 随机出一题：</span>' + U.Quiz.LEVELS.map((n, i) => (i < 3 || (i === 3 && U.Quiz.hasRev(qt)) || (i === 4 && U.Quiz.hasBug(qt)) || (i === 5 && U.Quiz.hasGuess(qt)) ? '<button class="btn' + (i >= 3 ? ' rev' : '') + '" data-quiz="' + (i + 1) + '" title="' + esc(U.types[qt].label) + '：' + n + (i === 3 ? '（给结果，找条件）' : i === 4 ? '（找出别人做法里的错）' : i === 5 ? '（先写答案，再做出来验证）' : '') + '">' + n + '</button>' : '')).join('') + '</div>';
     }
     return h;
   }
