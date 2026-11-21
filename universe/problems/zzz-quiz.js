@@ -7,11 +7,12 @@
 (function (G) {
   'use strict';
   const U = G.U, W = U.World, Q = U.Q;
-  const GENS = {}, GUESS = {};   // GUESS：哪些操作台能出“先猜”（算一次记住）
+  const GENS = {}, GUESS = {}, TASKS = {};   // GUESS：哪些操作台能出“先猜”（算一次记住）
   const mkR = (seed) => { const r = U.Variants.rng(seed); const R = { r, int: (lo, hi) => lo + Math.floor(r() * (hi - lo + 1)), pick: (a) => a[Math.floor(r() * a.length)], bool: () => r() < 0.5 }; return R; };
   const qs = (n, d) => Q.show(Q(n, d || 1));
   const norm = (v) => { try { return Q.show(Q.parse(String(v))); } catch (e) { return String(v); } };
-  const LEVELS = ['容易', '中等', '难', '倒推', '找错', '先猜'];   // 第 6 档“先猜”：先估一估答案，再在操作台上做出来验证（每个出题器都有）   // 第 5 档“找错”：小明的做法里有一处错，找出来改对   // 第 4 档“倒推”：给结果，找条件（不是每个操作台都有）
+  const LEVELS = ['容易', '中等', '难', '倒推', '找错', '先猜', '找全', '最多最少', '推广'];   // 7–9 是通用任务层：不用每个操作台单写，从普通题自动变出来（见下面的 derive）
+    // 第 6 档“先猜”：先估一估答案，再在操作台上做出来验证（每个出题器都有）   // 第 5 档“找错”：小明的做法里有一处错，找出来改对   // 第 4 档“倒推”：给结果，找条件（不是每个操作台都有）
   // 某个器材在题库里最常用的知识点、领域（给随机题当“归属”）
   function home(type) {
     const ps = U.problems.filter((p) => (p.shelf || [])[0] === type), cnt = {};
@@ -33,37 +34,147 @@
   }
   // 用操作台自己算出输出（出题时拿来求答案：转过去在哪里、过了多久……不用另外写公式）
   function sim(type, props) { const s = build(type, props), D = W.evaluate(s), e = Object.values(s.entities).find((x) => x.type === type), out = (D[e.id] || {}).out || {}, o = {}; for (const k of Object.keys(out)) o[k] = U.Q.show(out[k].data); return o; }
+  // ===================== 通用任务层：从一道普通题变出 倒推、找全、最多最少、推广 =====================
+  // 做法（不认操作台名字）：
+  //   1. 取普通题“做完以后”的台面 F（props + sol），用操作台自己的画法和把手找出孩子在台面上改得到的整数属性（data-pick-set、grips）。
+  //   2. 让这些属性一个一个（或两个一起）取遍附近的值，用操作台自己算输出（sim），得到“属性 → 输出”的表。
+  //   3. 按表出题：
+  //      倒推     只有一个值能让输出等于原来的结果：给结果，找这个条件（只挑普通题里“给定”的属性）
+  //      找全     有 2–8 个值（或 2–10 对值）都行：一个一个找出来，每找到一种得一个里程碑
+  //      最多最少 找全的那些做法里，另一个输出有大有小：哪一种让它最大 / 最小
+  //      推广     输出随属性有规律地变（一次或二次）：先做三个，写下规律猜一个远一点的，再调过去验证
+  //   出不来（台面上改不了数、没有好的规律）就不出，这个操作台在这一档没有按钮。
+  // 名字不好读、或者扫出来没有数学意义的属性（显示用的序号、计数器、编码），在 TSKIP 里跳过；TNAME 给属性、输出起孩子读得懂的名字。
+  const TSKIP = { estbench: '*', relbench: '*', statebench: '*', clockbench: '*', chancebench: '*', rulerbench: '*', seqbench: ['k'], solidbench: ['cols', 'rows'], ringbench: ['beats'], calbench: ['d1', 'd2'] };
+  const TNAME = { seqbench: { n: '第几个' }, numlinebench: { '>value': '落点' }, anglebench: { a: '∠1 的度数' } };
+  const TNOX = ['calbench'];   // 输出不能比大小（星期几）：不出“最多最少”
+  // 标签“一一对应：上面剩几个（连完才有）”→“上面剩几个”：去掉括号里的说明；有冒号时取冒号后面（后面是“1 是”这种开关说明就取前面）
+  const cleanLab = (s) => { const a = String(s || '').replace(/（[^）]*）|\([^)]*\)/g, '').trim(), i = a.lastIndexOf('：'); if (i < 0) return a; const r = a.slice(i + 1).trim(); return r && !/^\d/.test(r) ? r : a.slice(0, i).trim(); };
+  function reachable(type, props) {
+    const s = build(type, props), D = W.evaluate(s), e = Object.values(s.entities).find((x) => x.type === type), d = U.types[type], dd = D[e.id] || {}, keys = new Set();
+    const c = { ent: e, props: dd.props || e.props, d: dd, out: dd.out || {}, state: e.state, w: 600, h: 400, t: 0, n: 0, scene: s };
+    let svg = ''; try { svg = String(d.draw(c)); } catch (x) { svg = ''; }
+    // 按钮只给几个固定的值（比如“×2”“×3”）时，不是什么值都调得到：要有 +1 / −1 的按钮，或者一排按钮把整个范围都给全了，才算“能调到任意值”
+    const vals = {};
+    for (const m of svg.matchAll(/data-pick-set="([^"]+)"/g)) { try { const o = JSON.parse(decodeURIComponent(m[1])); for (const k of Object.keys(o)) (vals[k] = vals[k] || new Set()).add(+o[k]); } catch (x) { /* 不是 JSON */ } }
+    for (const k of Object.keys(vals)) { const P = d.props[k], v = +(c.props[k] !== undefined ? c.props[k] : P && P.default); if (P && (vals[k].has(v + 1) || vals[k].has(v - 1) || (P.max !== undefined && P.min !== undefined && vals[k].size >= P.max - P.min))) keys.add(k); }
+    let gs = []; try { gs = d.grips ? d.grips(c) || [] : []; } catch (x) { gs = []; }
+    for (const g of gs) for (const [dx, dy] of [[30, 0], [-30, 0], [0, 30], [0, -30]]) { try { const p = g.drag && g.drag(c, { x: g.x + dx, y: g.y + dy }); if (p) Object.keys(p).forEach((k) => keys.add(k)); } catch (x) { /* 拖不动 */ } }
+    const skip = TSKIP[type] || [];
+    return [...keys].filter((k) => d.props[k] && d.props[k].type === 'int' && !d.props[k].hidden && !skip.includes(k)).sort();
+  }
+  function derive(type, q0, level, R) {
+    if (TSKIP[type] === '*') return null;
+    const d = U.types[type], F = Object.assign({}, q0.props, q0.sol), solKeys = Object.keys(q0.sol || {});
+    const out = (patch) => { const o = sim(type, Object.assign({}, F, patch)), r = {}; for (const k of Object.keys(o)) if (/^−?-?\d+(\.\d+)?(\/\d+)?$/.test(o[k])) r[k] = norm(o[k]); return r; };
+    const o0 = out({}), keys = reachable(type, F); if (!keys.length) return null;
+    const nm = (k) => (TNAME[type] && TNAME[type][k]) || cleanLab(d.props[k].label);
+    const on = (p) => (TNAME[type] && TNAME[type]['>' + p]) || cleanLab(d.outputs[p].label);
+    const first = q0.goals.map((g) => g[0]);
+    const ports = [...new Set(first.concat(Object.keys(d.outputs)))].filter((p) => p in o0 && on(p) && !/1 是|0 否|：1/.test(d.outputs[p].label || ''));
+    const span = (k) => { const P = d.props[k], v = +F[k], lo = Math.max(P.min !== undefined ? P.min : v - 20, v - 30), hi = Math.min(P.max !== undefined ? P.max : v + 20, v + 30), a = []; for (let x = lo; x <= hi; x++) a.push(x); return a; };
+    // 输出是不是“有意义”：至少 3 种值、不只是 0/1、不是把这个属性原样抄出来
+    const good = (rows, p, k) => { const ys = rows.map((r) => r.o[p]), set = new Set(ys.filter((y) => y !== undefined)); return set.size >= 3 && ![...set].every((y) => y === '0' || y === '1') && !(k && rows.every((r) => r.o[p] === undefined || r.o[p] === norm(r.v))); };
+    const start = (patch) => Object.assign({}, F, patch);
+    const scan1 = {}; if (level === 4 || level === 9) for (const k of keys) scan1[k] = span(k).map((v) => ({ v, o: out({ [k]: v }) }));
+    const tries = R.pick([0, 1]) ? keys.slice().reverse() : keys.slice();
+    const hk = (k, v) => ['一个一个试：把“' + nm(k) + '”从小到大调。', '看操作台上的读数：' + nm(k) + '变了，结果跟着怎么变？', nm(k) + '是 ' + v + '。'];
+    if (level === 4) {
+      for (const k of tries) { if (solKeys.includes(k)) continue;
+        for (const p of ports) { const rows = scan1[k], V = o0[p]; if (!good(rows, p, k)) continue; const hit = rows.filter((r) => r.o[p] === V); if (hit.length !== 1 || hit[0].v !== +F[k]) continue;
+          const others = rows.filter((r) => r.o[p] !== undefined && r.o[p] !== V); if (!others.length) continue; const s0 = R.pick(others).v;
+          return { task: 'rev', title: '倒过来想：要让「' + on(p) + '」正好是 ' + V + '，「' + nm(k) + '」应该是几？', hook: '先随便调一个，看结果比 ' + V + ' 大还是小，再往回调。条件找到了，结果才对。', props: start({ [k]: s0 }), goals: [[p, V, nm(k) + '是 ' + F[k], hk(k, F[k]), { [k]: +F[k] }, null, nm(k) + '是几？']], sol: { [k]: +F[k] }, answer: +F[k], why: '倒着想：从结果出发，找出是哪个条件让它成立。' }; } }
+      return null;
+    }
+    if (level === 9) {
+      for (const k of tries) for (const p of ports) { const rows = scan1[k].filter((r) => r.o[p] !== undefined && /^-?\d+$/.test(r.o[p])); if (rows.length < 8 || !good(rows, p, k)) continue;
+        const xs = rows.map((r) => r.v), ys = rows.map((r) => +r.o[p]); if (!xs.every((x, i) => !i || x === xs[i - 1] + 1)) continue;
+        const d2 = []; for (let i = 2; i < ys.length; i++) d2.push(ys[i] - 2 * ys[i - 1] + ys[i - 2]); if (!d2.every((x) => x === d2[0])) continue;
+        const i0 = R.int(0, Math.max(0, Math.min(3, rows.length - 8))), smp = rows.slice(i0, i0 + 3), far = rows[rows.length - 1]; if (far.v - smp[2].v < 5) continue;
+        const rest = rows.filter((r) => !smp.includes(r) && r !== far && r.v !== far.v); if (!rest.length) continue; const s0 = R.pick(rest).v;
+        const g = smp.map((r) => [p, r.o[p], nm(k) + '是 ' + r.v + ' 时，' + on(p) + '是 ' + r.o[p], hk(k, r.v), { [k]: r.v }, null, nm(k) + '是 ' + r.v + ' 时，' + on(p) + '是几？']).concat([[p, far.o[p], nm(k) + '是 ' + far.v + ' 时，' + on(p) + '是 ' + far.o[p] + '（猜对了吗？）', ['先在上面写下你的猜想，再调过去看。', '前面三个，每次多几？', nm(k) + '调到 ' + far.v + '。'], { [k]: far.v }, null, nm(k) + '是 ' + far.v + ' 时，' + on(p) + '是几？（先写猜想，再调过去验证）']]);
+        const lin = d2[0] === 0, step = ys[1] - ys[0];
+        return { task: 'gen', title: '找规律：「' + nm(k) + '」是 ' + smp.map((r) => r.v).join('、') + ' 时，「' + on(p) + '」各是几？照这个规律，' + nm(k) + '是 ' + far.v + ' 时呢？', hook: '先在操作台上做出前三个，看每次' + (lin ? '变多少' : '多出来的又怎么变') + '。在上面写下你的猜想，再调到 ' + far.v + ' 验证。',
+          props: start({ [k]: s0 }), goals: g, sol: { [k]: far.v }, sols: g.map((x) => x[4]), predict: { form: 'number', q: '做完前三个、找到规律以后再写：' + nm(k) + '是 ' + far.v + ' 时，' + on(p) + '是几？', answer: far.o[p] },
+          why: lin ? '每次都' + (step >= 0 ? '多 ' + step : '少 ' + -step) + '：从第一个出发，加上“隔了几次 × 每次多几”。' + '这就是从几个例子推广到一般。' : '每次多出来的数也在有规律地变：先找“差”，再找“差的差”。这就是从几个例子推广到一般。' };
+      }
+      return null;
+    }
+    // 找全 / 最多最少：先试两个属性一起变，再试一个。说了“全部”就要真的全：只用取值范围有限（不超过 61 个）的属性，整个范围都扫
+    const full = (k) => { const P = d.props[k]; if (P.min === undefined || P.max === undefined || P.max - P.min > 60) return null; const a = []; for (let x = P.min; x <= P.max; x++) a.push(x); return a; };
+    const fk = keys.filter(full), sets = [];
+    for (let i = 0; i < fk.length; i++) for (let j = i + 1; j < fk.length; j++) { const A = full(fk[i]), B = full(fk[j]), rows = []; if (A.length * B.length > 900) continue; for (const a of A) for (const b of B) rows.push({ v: [a, b], o: out({ [fk[i]]: a, [fk[j]]: b }) }); sets.push({ ks: [fk[i], fk[j]], rows, max: 10 }); }
+    for (const k of fk) sets.push({ ks: [k], rows: full(k).map((v) => ({ v: [v], o: out({ [k]: v }) })), max: 8 });
+    if (R.bool()) sets.reverse();
+    for (const S of sets) for (const p of ports) {
+      const V = o0[p], ks = S.ks, hit = S.rows.filter((r) => r.o[p] === V); if (hit.length < 2 || hit.length > S.max || hit.length * 3 > S.rows.length) continue;
+      if (!good(S.rows, p, ks.length === 1 ? ks[0] : null) || ks.some((k, i) => S.rows.every((r) => r.o[p] === undefined || r.o[p] === norm(r.v[i])))) continue;
+      if (level === 8 && TNOX.includes(type)) continue;
+      const miss = S.rows.filter((r) => r.o[p] !== undefined && r.o[p] !== V); if (!miss.length) continue;
+      const pat = (r) => { const o = {}; ks.forEach((k, i) => { o[k] = r.v[i]; }); return o; }, say = (r) => ks.map((k, i) => nm(k) + ' ' + r.v[i]).join('，');
+      const names = ks.map((k) => '「' + nm(k) + '」').join('和'), s0 = pat(R.pick(miss));
+      if (level === 7) return { task: 'all', title: '要让「' + on(p) + '」是 ' + V + '，' + names + '可以是几？把所有的都找出来（一共 ' + hit.length + ' 种）', hook: '有顺序地找：' + nm(ks[0]) + '从小到大一个一个试' + (ks.length > 1 ? '，每试一个，再看' + nm(ks[1]) + '要是几' : '') + '。这样不重复、不遗漏。',
+        props: start(s0), goals: hit.map((r, i) => [p, V, say(r), ['按顺序试，别跳着找。', '已经找到的在下面打了勾，还差哪几种？', say(r) + '。'], pat(r), null, '第 ' + (i + 1) + ' 种：？']), sol: pat(hit[0]), sols: hit.map(pat), why: '有顺序地列举，才能找全：从小到大，一个不漏。' };
+      for (const p2 of ports) { if (p2 === p) continue; const ys = hit.map((r) => r.o[p2]); if (ys.some((y) => y === undefined) || ks.some((k, i) => hit.every((r) => r.o[p2] === norm(r.v[i])))) continue; /* 把属性原样抄出来的输出不算 */ const vs = ys.map((y) => Q.num(Q.parse(y))); if (new Set(vs).size < 3) continue;
+        const big = R.bool(), best = big ? Math.max(...vs) : Math.min(...vs), win = hit.filter((r, i) => vs[i] === best); if (win.length > 2) continue;
+        const bv = hit[vs.indexOf(best)].o[p2];
+        return { task: 'ext', title: '「' + on(p) + '」要是 ' + V + '，怎样让「' + on(p2) + '」' + (big ? '最大' : '最小') + '？最' + (big ? '大' : '小') + '是几？', hook: '先找出几种让' + on(p) + '是 ' + V + '的做法，比一比' + on(p2) + '。往哪边变，它会越来越' + (big ? '大' : '小') + '？',
+          props: start(s0), goals: [[p2, bv, on(p) + '是 ' + V + '，' + on(p2) + (big ? '最大' : '最小') + '是 ' + bv, ['先让' + on(p) + '是 ' + V + '，再比一比不同做法的' + on(p2) + '。', '往一头调到底（最极端的那种）。', say(win[0]) + '。'], null, [p, V], on(p) + '是 ' + V + '，' + on(p2) + (big ? '最大' : '最小') + '是几？']],
+          sol: pat(win[0]), answer: bv, why: '最大、最小常常在“最极端”的地方：把所有可能列出来比一比，就看清了。' };
+      }
+    }
+    return null;
+  }
+  // 没做到之前，步骤栏不显示答案：说法里的目标值（和先猜的答案）换成“？”；0、1 这种开关值不换（“赢了”“对了”本来就不是答案）
+  function hide(say, value, q) {
+    let ans = null; try { ans = answerOf(q); } catch (e) { ans = null; }
+    const vs = [value, ans].filter((v) => v !== undefined && v !== null && !/^[01]$/.test(norm(v))).map((v) => norm(v));
+    let s = String(say || ''), hit = false;
+    for (const v of vs) { const re = new RegExp('(^|[^0-9./])' + v.replace(/\./g, '\\.').replace(/^-/, '[-−]') + '(?![0-9./])', 'g'); s = s.replace(re, (m0, pre) => { hit = true; return pre + '？'; }); }
+    return hit ? s : undefined;
+  }
   function make(type, seed, level) {
     const g = GENS[type]; if (!g) return null;
     let q = null;
-    const fn = level === 5 ? g.bug : level === 4 ? g.rev : g.gen; if (!fn) return null;
-    const lv = level === 6 ? 2 : level;
-    for (let i = 0; i < 30; i++) { const c = fn.call(g, mkR(seed + i * 7919), lv); if (reached(type, c.props, c.goals).some(Boolean)) continue; if (level === 6 && answerOf(c) === null) continue; q = c; break; }
+    const task = level >= 7 || (level === 4 && !g.rev);
+    const fn = task ? g.gen : level === 5 ? g.bug : level === 4 ? g.rev : g.gen; if (!fn) return null;
+    const lv = level === 6 || task ? 2 : level;
+    for (let i = 0; i < (task ? 8 : 30); i++) { let c = fn.call(g, mkR(seed + i * 7919), lv); if (task) { c = derive(type, c, level, mkR(seed * 7 + i)); if (!c) continue; } else if (reached(type, c.props, c.goals).some(Boolean)) continue; if (level === 6 && answerOf(c) === null) continue; q = c; break; }
     if (!q) return null;
     // 光秃秃的算式（“47 + 38 用竖式算”）一半配上情境：同一个算式，讲成合并、比较、几倍、平均分……
     const R2 = mkR(seed * 31 + level), bare = /^(\d+(?:\.\d+)?) ([+−×÷]) (\d+(?:\.\d+)?)(.*)$/.exec(q.title);
     if (bare && level <= 3 && R2.bool() && !(bare[2] === '−' && +bare[1] < +bare[3])) q = Object.assign({}, q, { title: U.Word.story(R2, bare[2], +bare[1], +bare[3]) + '（' + bare[1] + ' ' + bare[2] + ' ' + bare[3] + '）' });
     let predict = null;
     if (level === 6) { const ans = answerOf(q); predict = { form: 'number', q: '先想一想：答案是多少？写下你的答案，再在操作台上做出来验证。', answer: String(ans) }; }
+    if (q.predict) predict = q.predict;
     const h = home(type), t = U.types[type];
-    const ms = q.goals.map(([port, value, say, hints], i) => ({ id: 'g' + i, say, score: Math.max(2, Math.round(8 / q.goals.length)), when: { role: 'q', port, op: '=', value: norm(value) }, hints: hints || ['看看台面上的说明。', '一步一步来。', '答案是 ' + value + '。'] }));
+    // 第 5 项 need：还要哪些属性正好是几（找全、推广）；第 6 项 also：[另一个输出口, 值] 也要同时做到（最多最少）
+    const ms = q.goals.map(([port, value, say, hints, need, also, ask], i) => { const w = { role: 'q', port, op: '=', value: norm(value) }, more = Object.keys(need || {}).map((key) => ({ prop: { role: 'q', key, value: need[key] } })).concat(also ? [{ role: 'q', port: also[0], op: '=', value: norm(also[1]) }] : []); return { id: 'g' + i, say, ask: ask || hide(say, value, q), score: Math.max(q.goals.length > 4 ? 1 : 2, Math.round(8 / q.goals.length)), when: more.length ? { all: [w].concat(more) } : w, hints: hints || ['看看台面上的说明。', '一步一步来。', '答案是 ' + value + '。'] }; });
     return {
-      id: 'quiz:' + type + ':' + seed + ':' + level, title: '🎲 ' + q.title, grade: h.grade, domain: h.domain, points: h.points, essence: t.essence || ['E2'], level: 'core', rung: level === 6 ? 3 : level + 1,
+      id: 'quiz:' + type + ':' + seed + ':' + level, title: '🎲 ' + q.title, grade: h.grade, domain: h.domain, points: h.points, essence: t.essence || ['E2'], level: 'core', rung: level >= 6 ? 3 : level + 1,
       topics: ['随机练习'], alias: ['随机', '练习'], hook: q.hook, shelf: [type], build: () => build(type, q.props), milestones: ms, goal: ms.map((m) => m.id), traps: [], predict,
-      why: q.why || '做对了。换一题再试试：同一种题，数不一样，想法一样。', quiz: { type, seed, level, sol: q.sol, props: q.props },
+      why: q.why || '做对了。换一题再试试：同一种题，数不一样，想法一样。', quiz: { type, seed, level, sol: q.sol, sols: q.sols, props: q.props, task: q.task },
     };
   }
   U.Quiz = {
     LEVELS,
     add: (type, def) => { GENS[type] = def; },
     has: (type) => !!GENS[type] && !!U.types[type],
-    hasRev: (type) => !!GENS[type] && !!GENS[type].rev && !!U.types[type],
+    hasRev: (type) => !!GENS[type] && !!U.types[type] && (!!GENS[type].rev || U.Quiz.hasTask(type, 4)),
+    // 通用任务层这一档（4 倒推、7 找全、8 最多最少、9 推广）出不出得来：用固定种子试一次，记住
+    hasTask: (type, lv) => { const k = type + ':' + lv; if (!(k in TASKS)) TASKS[k] = !!GENS[type] && !!U.types[type] && !!make(type, 900001, lv); return TASKS[k]; },
+    // 这一档是不是通用任务层自动变出来的（不是每个种子都出得来，界面上会换种子重试）
+    isTask: (type, lv) => lv >= 7 || (lv === 4 && !!GENS[type] && !GENS[type].rev),
+    // 这一档在这个操作台上有没有按钮
+    offers: (type, lv) => (lv <= 3 ? U.Quiz.has(type) : lv === 4 ? U.Quiz.hasRev(type) : lv === 5 ? U.Quiz.hasBug(type) : lv === 6 ? U.Quiz.hasGuess(type) : U.Quiz.hasTask(type, lv)),
+    // 一道随机题在某个台面上做到了哪些里程碑（按判分的同一套条件）
+    done(p, props) { const s = build(p.quiz.type, props), D = W.evaluate(s), Wd = U.Judge.makeW(s, D, {}); return p.milestones.map((m) => { try { return !!U.Judge.compile(m.when)(Wd); } catch (e) { return false; } }); },
     hasBug: (type) => !!GENS[type] && !!GENS[type].bug && !!U.types[type],
     types: () => Object.keys(GENS).filter((t) => U.types[t]),
     make, reached, answerOf, sim,
     hasGuess: (type) => { if (!(type in GUESS)) GUESS[type] = !!GENS[type] && !!U.types[type] && !!make(type, 900001, 6); return GUESS[type]; },
     id: (type, seed, level) => 'quiz:' + type + ':' + (seed >>> 0) + ':' + (level || 1),
-    fromId(id) { const m = /^quiz:([a-z0-9_-]+):(\d+):([123456])$/.exec(String(id)); return m ? make(m[1], +m[2], +m[3]) : null; },
+    fromId(id) { const m = /^quiz:([a-z0-9_-]+):(\d+):([1-9])$/.exec(String(id)); return m ? make(m[1], +m[2], +m[3]) : null; },
   };
   const base = U.problemById;
   U.problemById = (id) => (String(id).startsWith('quiz:') ? U.Quiz.fromId(id) : base(id));
@@ -572,9 +683,11 @@
       if (!U.types[type] || !U.types[type].bench) return [];
       const own = U.problems.filter((p) => (p.shelf || [])[0] === type).sort((a, b) => (a.grade || 9) - (b.grade || 9) || (a.rung || 0) - (b.rung || 0)).slice(0, 6).map((p) => ({ id: p.id, title: p.title, kind: '题' }));
       const qs = GENS[type] ? [1, 2, 3].map((lv) => ({ id: U.Quiz.id(type, CHAIN_SEED + lv, lv), title: '随机 · ' + LEVELS[lv - 1], kind: '随机' })) : [];
-      const rv = U.Quiz.hasRev(type) ? [{ id: U.Quiz.id(type, CHAIN_SEED + 4, 4), title: '倒推：给结果，找条件', kind: '倒推' }] : [];
+      // 通用任务层出的关卡用 CHAIN_SEED（hasTask 就是用它试出来的，保证打得开）
+      const tk = [[7, '找全：不止一种，全部找出来', '找全'], [9, '推广：做几个，找规律', '推广']].filter((x) => U.Quiz.hasTask(type, x[0])).map(([lv, title, kind]) => ({ id: U.Quiz.id(type, CHAIN_SEED, lv), title, kind }));
+      const rv = U.Quiz.hasRev(type) ? [{ id: U.Quiz.id(type, GENS[type].rev ? CHAIN_SEED + 4 : CHAIN_SEED, 4), title: '倒推：给结果，找条件', kind: '倒推' }] : [];
       const bg = U.Quiz.hasBug(type) ? [{ id: U.Quiz.id(type, CHAIN_SEED + 5, 5), title: '找错：小明哪里错了', kind: '找错' }] : [];
-      return own.concat(qs, rv, bg);
+      return own.concat(qs, tk, rv, bg);
     },
     // 每一关的星数、是否解锁；整条的进度
     status(type, best) {

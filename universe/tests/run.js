@@ -3126,16 +3126,42 @@ t('可能性：列出所有情况，两个骰子 36 种里和为 7 的有 6 种�
 console.log('随机出题（操作台）');
 t('随机出题：每个出题器、每个难度、25 个种子都出得了题，lint 通过，一开始没做到，套上参考做法就做到', () => {
   const bad = [];
-  for (const type of U.Quiz.types()) for (const lv of [1, 2, 3].concat(U.Quiz.hasRev(type) ? [4] : [], U.Quiz.hasBug(type) ? [5] : [], U.Quiz.hasGuess(type) ? [6] : [])) for (let seed = 1; seed <= 25; seed++) {
+  for (const type of U.Quiz.types()) for (const lv of [1, 2, 3, 4, 5, 6].filter((x) => U.Quiz.offers(type, x) && !U.Quiz.isTask(type, x))) for (let seed = 1; seed <= 25; seed++) {
     const p = U.Quiz.make(type, seed * 101, lv);
     if (!p) { bad.push(type + ' L' + lv + ' #' + seed + '：出不了题'); continue; }
     const errs = U.problemLint(p).errors; if (errs.length) { bad.push(p.id + '：' + errs[0]); continue; }
-    const goals = p.milestones.map((m) => [m.when.port, m.when.value]);
-    if (U.Quiz.reached(type, p.quiz.props, goals).some(Boolean)) bad.push(p.id + '：一开始就做到了');
-    const after = U.Quiz.reached(type, Object.assign({}, p.quiz.props, p.quiz.sol), goals);
-    if (!after.every(Boolean)) bad.push(p.id + '：套上参考做法还没做到 ' + goals.filter((g, i) => !after[i]).map((g) => g.join('=')).join(','));
+    if (U.Quiz.done(p, p.quiz.props).some(Boolean)) bad.push(p.id + '：一开始就做到了');
+    const after = U.Quiz.done(p, Object.assign({}, p.quiz.props, p.quiz.sol));
+    if (!after.every(Boolean)) bad.push(p.id + '：套上参考做法还没做到 ' + p.milestones.filter((m, i) => !after[i]).map((m) => m.say).join(','));
   }
   eq(bad.slice(0, 8), []);
+});
+// 通用任务层（倒推的自动版、找全、最多最少、推广）：从普通题变出来，不认操作台名字。
+// 每种做法（找全的每一种、推广的每一个例子）都单独判得到；开场一个也没做到；说“全部”就真的是全部（整个取值范围扫过）
+t('通用任务层：倒推、找全、最多最少、推广 出得来，开场没做到，每一种做法都判得到', () => {
+  const bad = [], cnt = {};
+  for (const type of U.Quiz.types()) for (const lv of [4, 7, 8, 9].filter((x) => U.Quiz.isTask(type, x) && U.Quiz.offers(type, x))) {
+    cnt[lv] = (cnt[lv] || 0) + 1; let made = 0;
+    for (let seed = 1; seed <= 10; seed++) {
+      const p = U.Quiz.make(type, seed * 101, lv); if (!p) continue; made++;
+      const errs = U.problemLint(p).errors; if (errs.length) { bad.push(p.id + '：' + errs[0]); continue; }
+      if (U.Quiz.done(p, p.quiz.props).some(Boolean)) bad.push(p.id + '：一开始就做到了');
+      if (p.quiz.sols) p.quiz.sols.forEach((x, i) => { if (!U.Quiz.done(p, Object.assign({}, p.quiz.props, x))[i]) bad.push(p.id + '：第 ' + (i + 1) + ' 种做法没判到'); });
+      else if (!U.Quiz.done(p, Object.assign({}, p.quiz.props, p.quiz.sol)).every(Boolean)) bad.push(p.id + '：参考做法没做到');
+      if (lv === 9 && !(p.predict && p.predict.form === 'number')) bad.push(p.id + '：推广要先写猜想');
+    }
+    if (made < 6) bad.push(type + ' L' + lv + '：10 个种子只出了 ' + made + ' 道');
+  }
+  eq(bad.slice(0, 8), []);
+  truthy((cnt[7] || 0) >= 5 && (cnt[8] || 0) >= 3 && (cnt[9] || 0) >= 8, '找全至少 5 个、最多最少至少 3 个、推广至少 8 个操作台：' + JSON.stringify(cnt));
+  // 找全：长和宽真的全部找出来了（长 1–20、宽 1–12 一个一个试，和出题的答案一样）
+  const p = [1, 2, 3, 4, 5, 6, 7, 8].map((s) => U.Quiz.make('areamodel', s * 977, 7)).find((x) => x && x.quiz.sols[0].w !== undefined && x.quiz.sols[0].h !== undefined);
+  truthy(p, '面积模型出得了“长和宽找全”');
+  const w0 = p.milestones[0].when.all[0], want = [];   // 题目要的那个输出（面积或周长……）等于几
+  for (let w = 1; w <= 20; w++) for (let h = 1; h <= 12; h++) if (U.Quiz.sim('areamodel', Object.assign({}, p.quiz.props, { w, h }))[w0.port] === w0.value) want.push(w + 'x' + h);
+  eq(p.quiz.sols.map((x) => x.w + 'x' + x.h).sort(), want.sort());
+  // 按钮只能 ×2 ×3 的属性（分数条的“又切成几份”）不能当“任意值”去找全
+  for (let s = 1; s <= 10; s++) { const q = U.Quiz.make('fracbench', s * 101, 7); truthy(!q || !q.quiz.sols.some((x) => x.ka === 7 || x.kc === 7), '分数条不会要孩子切成 7 份'); }
 });
 t('随机出题：同一个 id 出同一道题；U.problemById 认 quiz: 开头的 id；小学的操作台都有出题器', () => {
   const id = U.Quiz.id('vertbench', 12345, 2), a = U.problemById(id), b = U.problemById(id);

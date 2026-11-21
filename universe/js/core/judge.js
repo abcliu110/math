@@ -127,6 +127,8 @@
     if (c.data) return U.DataBench.judge(scene, c.data);
     // 排除表（2.14b）：写出了哪个结论（deduce: { yes: { person, value } }）、排除了哪一格（no）、全部排完了（solved）
     if (c.deduce) return U.Deduce.judge(scene, c.deduce);
+    // 某台器材的某个属性正好是某个值（prop: { role, key, value }）：找全、推广这类题要知道“是哪一种做法”到的目标
+    if (c.prop) { const e = W.byRole(c.prop.role), P = e && W.props(e); return P && String(P[c.prop.key]) === String(c.prop.value) ? { ok: true } : { ok: false, why: '“' + c.prop.key + '”还不是 ' + c.prop.value }; }
     if (c.steps) {
       const s = c.steps, st = scene.workbench;
       if (!st || !Array.isArray(st.steps)) return { ok: false, why: '没有式子工作台的步骤记录，无法判断有没有用“' + s.used + '”' };
@@ -136,7 +138,7 @@
     }
     return { ok: true };
   }
-  const isNewShape = (c) => !!c && typeof c === 'object' && (c.built !== undefined || c.form !== undefined || c.steps !== undefined || c.digits !== undefined || c.data !== undefined || c.deduce !== undefined);
+  const isNewShape = (c) => !!c && typeof c === 'object' && (c.built !== undefined || c.form !== undefined || c.steps !== undefined || c.digits !== undefined || c.data !== undefined || c.deduce !== undefined || c.prop !== undefined);
 
   const OPS = { '=': (c) => c === 0, '>': (c) => c > 0, '<': (c) => c < 0, '>=': (c) => c >= 0, '<=': (c) => c <= 0, '!=': (c) => c !== 0 };
   function cmpVal(v, op, want) {

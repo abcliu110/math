@@ -50,7 +50,7 @@
     if (U.Quiz && !q) {
       const lv = S.quizLevel || 1;
       h += '<div class="grp">🎲 随机练习（在操作台上做，数每次都不一样）</div><div class="quizbox"><div class="btnrow">' + U.Quiz.LEVELS.map((n, i) => '<button class="btn' + (lv === i + 1 ? ' pri' : '') + '" data-quiz-lv="' + (i + 1) + '">' + n + '</button>').join('') + '</div><div class="qchips">' +
-        U.Quiz.types().filter((t) => lv < 4 || (lv === 4 ? U.Quiz.hasRev(t) : lv === 5 ? U.Quiz.hasBug(t) : U.Quiz.hasGuess(t))).map((t) => '<button class="btn" data-quiz-type="' + t + '">' + esc(U.types[t].label) + '</button>').join('') + '</div>' + (lv === 4 ? '<div class="qnote">倒推：给出结果，在操作台上找出条件</div>' : lv === 5 ? '<div class="qnote">找错：别人的做法里有一处错，找出来改对</div>' : lv === 6 ? '<div class="qnote">先猜：先写下你想的答案，再在操作台上做出来验证</div>' : '') + '</div>';
+        U.Quiz.types().filter((t) => U.Quiz.offers(t, lv)).map((t) => '<button class="btn" data-quiz-type="' + t + '">' + esc(U.types[t].label) + '</button>').join('') + '</div>' + (lv === 4 ? '<div class="qnote">倒推：给出结果，在操作台上找出条件</div>' : lv === 5 ? '<div class="qnote">找错：别人的做法里有一处错，找出来改对</div>' : lv === 6 ? '<div class="qnote">先猜：先写下你想的答案，再在操作台上做出来验证</div>' : lv === 7 ? '<div class="qnote">找全：符合要求的不止一种，有顺序地一个一个找出来</div>' : lv === 8 ? '<div class="qnote">最多最少：几种做法里，哪一种让另一个量最大或最小</div>' : lv === 9 ? '<div class="qnote">推广：先做几个，找出规律，猜一个远一点的，再验证</div>' : '') + '</div>';
     }
     const by = {};
     U.problems.filter((p) => !q || (p.title + p.domain + (p.points || []).join('') + (p.topics || []).join('') + (p.alias || []).join('')).includes(q)).forEach((p) => (by[p.domain] = by[p.domain] || []).push(p));
@@ -107,12 +107,12 @@
       p.milestones.forEach((m, i) => {
         const st = run.ms[m.id], isCur = !st.done && cur; if (!st.done) cur = false;
         const lv = run.hintLevel[m.id] || 0;
-        h += '<div class="step' + (st.done ? ' done' : isCur ? ' cur' : '') + '"><span class="no">' + (st.done ? '✓' : i + 1) + '</span><span class="sy">' + esc(m.say) + (isCur && lv ? '<span class="hint">提示：' + esc((m.hints || [])[Math.min(lv, 3) - 1] || '') + '</span>' : '') + '</span><span class="sc">' + m.score + ' 分</span></div>';
+        h += '<div class="step' + (st.done ? ' done' : isCur ? ' cur' : '') + '"><span class="no">' + (st.done ? '✓' : i + 1) + '</span><span class="sy">' + esc(st.done || !m.ask ? m.say : m.ask) + (isCur && lv ? '<span class="hint">提示：' + esc((m.hints || [])[Math.min(lv, 3) - 1] || '') + '</span>' : '') + '</span><span class="sc">' + m.score + ' 分</span></div>';
       });
       h += '<div class="btnrow"><button class="btn" id="hintbtn">💡 来个提示</button><button class="btn" id="restart">重来</button></div>';
       // 随机出题：这道题的操作台有出题器，就能在同一个操作台上再出一道（数不一样）
       const qt = quizTypeOf(p);
-      if (qt) h += '<div class="btnrow quizrow"><span class="qlab">🎲 随机出一题：</span>' + U.Quiz.LEVELS.map((n, i) => (i < 3 || (i === 3 && U.Quiz.hasRev(qt)) || (i === 4 && U.Quiz.hasBug(qt)) || (i === 5 && U.Quiz.hasGuess(qt)) ? '<button class="btn' + (i >= 3 ? ' rev' : '') + '" data-quiz="' + (i + 1) + '" title="' + esc(U.types[qt].label) + '：' + n + (i === 3 ? '（给结果，找条件）' : i === 4 ? '（找出别人做法里的错）' : i === 5 ? '（先写答案，再做出来验证）' : '') + '">' + n + '</button>' : '')).join('') + '</div>';
+      if (qt) h += '<div class="btnrow quizrow"><span class="qlab">🎲 随机出一题：</span>' + U.Quiz.LEVELS.map((n, i) => (U.Quiz.offers(qt, i + 1) ? '<button class="btn' + (i >= 3 ? ' rev' : '') + '" data-quiz="' + (i + 1) + '" title="' + esc(U.types[qt].label) + '：' + n + (i === 3 ? '（给结果，找条件）' : i === 4 ? '（找出别人做法里的错）' : i === 5 ? '（先写答案，再做出来验证）' : i === 6 ? '（不止一种，全部找出来）' : i === 7 ? '（哪一种最大、最小）' : i === 8 ? '（做几个，找规律，再推广）' : '') + '">' + n + '</button>' : '')).join('') + '</div>';
     }
     return h;
   }

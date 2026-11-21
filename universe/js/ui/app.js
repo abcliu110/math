@@ -229,8 +229,11 @@
   // 随机出题：在这个操作台上现出一道（种子每次不一样）
   function openQuiz(type, level) {
     if (!U.Quiz || !U.Quiz.has(type)) return;
-    const seed = (Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0;
-    openProblem(U.Quiz.id(type, seed % 1000000000, level || 1), 'practice');
+    // 通用任务层（找全、推广……）不是每个种子都出得来：换几个种子再试，别让按钮点了没反应
+    for (let i = 0; i < 6; i++) {
+      const seed = (Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0, id = U.Quiz.id(type, seed % 1000000000, level || 1);
+      if (i === 5 || U.problemById(id)) { openProblem(id, 'practice'); return; }
+    }
   }
   // 题目给的图形的 id（§10.5.9 第 10 条）：题目 build 出来的器材，按题目缓存；自由探究里没有
   let givenCache = { pid: null, ids: new Set() };

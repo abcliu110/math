@@ -102,6 +102,7 @@
       steps: { fields: ['used', 'allKept'] },
       digits: { fields: ['solved'] },                       // 数位竖式写完了（D8）
       data: { fields: ['minRows', 'plotted', 'fitted'] },   // 数据图表台：录了几组、画了图、拟合了（D8）
+      prop: { fields: ['role', 'key', 'value'] },            // 某台器材的某个属性正好是某个值（通用任务层：找全、推广）
       deduce: { fields: ['yes', 'no', 'solved'] },           // 排除表（2.14b）：写出结论、排除了一格、排完了
     };
     const lintNew = (c, where) => {
