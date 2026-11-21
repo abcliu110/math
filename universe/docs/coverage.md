@@ -6,7 +6,7 @@
 
 - 知识点：142 个（设计目标 142）
 - 有题的知识点：141 个（99%）
-- 题目：611 道；没有对应知识点的题：1 道
+- 题目：618 道；没有对应知识点的题：1 道
 - 没有器材的本质：无
 - 没有题的本质：无
 
@@ -14,10 +14,10 @@
 
 | 年级 | 知识点 | 有题 | 题目数 |
 |---|---|---|---|
-| 1 | 16 | 16（100%） | 50 |
-| 2 | 16 | 16（100%） | 55 |
-| 3 | 16 | 16（100%） | 85 |
-| 4 | 17 | 17（100%） | 90 |
+| 1 | 16 | 16（100%） | 51 |
+| 2 | 16 | 16（100%） | 57 |
+| 3 | 16 | 16（100%） | 87 |
+| 4 | 17 | 17（100%） | 92 |
 | 5 | 14 | 14（100%） | 104 |
 | 6 | 15 | 14（93%） | 59 |
 | 7 | 16 | 16（100%） | 78 |
@@ -43,7 +43,7 @@
 | 1.13 | 1 | 100以内数的认识 | 4 | 0 | 0 | 1 | blocksbench、num |
 | 1.14 | 1 | 认识人民币 | 4 | 1 | 0 | 1 | moneybench |
 | 1.15 | 1 | 100以内加减法（一） | 1 | 1 | 0 | 1 | blocksbench |
-| 1.16 | 1 | 找规律 | 6 | 0 | 0 | 1 | num、meter、conjbench、fmachine、guessrule、proofbench、seqbench |
+| 1.16 | 1 | 找规律 | 7 | 0 | 0 | 1 | num、meter、conjbench、fmachine、guessrule、proofbench、seqbench、statebench |
 | 2.1 | 2 | 长度单位、线段 | 2 | 1 | 0 | 1 | rulerbench |
 | 2.2 | 2 | 100以内加减法（二） | 9 | 1 | 0 | 1 | vertbench、estbench、blocksbench |
 | 2.3 | 2 | 进位加法、退位减法 | 6 | 1 | 0 | 1 | blocksbench、vertbench |
@@ -59,12 +59,12 @@
 | 2.11 | 2 | 有余数的除法 | 3 | 0 | 0 | 1 | groupbench、calbench、ringbench |
 | 2.12 | 2 | 万以内数的认识、近似数 | 4 | 0 | 0 | 1 | blocksbench、num、sqrt、round |
 | 2.13 | 2 | 克和千克 | 1 | 1 | 0 | 1 | ratiobench |
-| 2.14b | 2 | 推理 | 3 | 0 | 0 | 1 | logicbench、nim |
+| 2.14b | 2 | 推理 | 5 | 0 | 0 | 1 | logicbench、nim、statebench |
 | 3.1 | 3 | 时、分、秒 | 1 | 1 | 0 | 1 | ratiobench、clockbench |
 | 3.2 | 3 | 万以内加减法 | 3 | 1 | 0 | 1 | blocksbench、estbench |
 | 3.3 | 3 | 测量 | 1 | 1 | 0 | 1 | ratiobench、rulerbench |
-| 3.4 | 3 | 倍的认识 | 10 | 1 | 0 | 1 | tapebench、numlinebench |
-| 3.5 | 3 | 多位数乘一位数 | 2 | 1 | 0 | 1 | areamodel、mulbench |
+| 3.4 | 3 | 倍的认识 | 11 | 1 | 0 | 1 | tapebench、numlinebench、relbench |
+| 3.5 | 3 | 多位数乘一位数 | 3 | 1 | 0 | 1 | areamodel、mulbench、relbench |
 | 3.6 | 3 | 长方形和正方形 | 3 | 1 | 0 | 1 | areamodel |
 | 3.7 | 3 | 分数的初步认识 | 5 | 1 | 0 | 1 | ratiobench、numlinebench |
 | 3.8 | 3 | 集合 | 7 | 1 | 0 | 1 | vennbench |
@@ -92,7 +92,7 @@
 | 4.13 | 4 | 小数的加法和减法 | 2 | 1 | 0 | 1 | decbench |
 | 4.14 | 4 | 图形的运动（二） | 3 | 0 | 0 | 1 | gridbench、foldbench |
 | 4.15 | 4 | 平均数 | 9 | 0 | 0 | 1 | hanoi、meanbench、chancebench、statbench |
-| 4.16 | 4 | 鸡兔同笼 | 11 | 1 | 0 | 1 | swapbench |
+| 4.16 | 4 | 鸡兔同笼 | 13 | 1 | 0 | 1 | swapbench、surplusbench |
 | 5.1 | 5 | 小数乘法 | 2 | 1 | 0 | 1 | decbench、estbench |
 | 5.2 | 5 | 位置 | 1 | 1 | 0 | 1 | gridbench |
 | 5.3 | 5 | 小数除法 | 1 | 1 | 0 | 1 | decbench |
@@ -176,12 +176,12 @@
 | 本质 | 题目数 | 器材数 |
 |---|---|---|
 | E1 | 64 | 27 |
-| E2 | 245 | 53 |
+| E2 | 247 | 54 |
 | E3 | 153 | 44 |
-| E4 | 110 | 28 |
+| E4 | 114 | 30 |
 | E5 | 145 | 55 |
-| E6 | 56 | 23 |
-| E7 | 123 | 29 |
+| E6 | 59 | 24 |
+| E7 | 128 | 31 |
 | E8 | 66 | 23 |
 | E9 | 72 | 17 |
 | E10 | 10 | 4 |

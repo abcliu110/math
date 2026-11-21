@@ -115,6 +115,12 @@ module.exports = [
       ['mrgb','meter',{'digits':0,'label':'跳格钟：走到几个格'}],
       ['ftb','featbench',{'cards':'2,4,7','tpl':'??','cond':1,'pick':'0,1'}],
       ['mftb','meter',{'digits':0,'label':'数的特征：拼出的数'}],
+      ['spb','surplusbench',{'a':5,'r1':3,'b':7,'r2':-5,'n':4}],
+      ['mspb','meter',{'digits':0,'label':'盈亏：东西一共几个'}],
+      ['relb','relbench',{'got':'4@4=3+6,5@5=2/4,1@1=5*6,0@0=1*3'}],
+      ['mrelb','meter',{'digits':0,'label':'关系图：要问的量'}],
+      ['sgb','statebench',{'puz':1,'path':'c2,c0'}],
+      ['msgb','meter',{'digits':0,'label':'状态图：见过几种局面'}],
     ],
     links: [
       ['am','mam','v','area'],
@@ -171,6 +177,9 @@ module.exports = [
       ['pob','mpob','v','a'],
       ['rgb','mrgb','v','reach'],
       ['ftb','mftb','v','n'],
+      ['spb','mspb','v','total'],
+      ['relb','mrelb','v','ans'],
+      ['sgb','msgb','v','seen'],
     ],
   },
 ];

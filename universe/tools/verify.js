@@ -136,6 +136,9 @@ async function checkDist() {
   if (!runScript('tests/ui-pour.js', 'tests/ui-pour.js', pwEnv)) bail();   // 倒水：真实鼠标装满、倒、倒空，总量守恒，量出 4 升、最少几步
   if (!runScript('tests/ui-ring.js', 'tests/ui-ring.js', pwEnv)) bail();   // 跳格钟：真实鼠标换步长、走一圈、走遍；乘法钟看个位的周期
   if (!runScript('tests/ui-feat.js', 'tests/ui-feat.js', pwEnv)) bail();   // 数的特征：真实鼠标拼数、看个位和数字和、找全；奇偶点子配对
+  if (!runScript('tests/ui-surplus.js', 'tests/ui-surplus.js', pwEnv)) bail();   // 盈亏问题：真实鼠标改人数，两种分法对上
+  if (!runScript('tests/ui-rel.js', 'tests/ui-rel.js', pwEnv)) bail();   // 关系图：真实鼠标连关系卡（错卡被拦）、分析法标“还缺”、一步一步算
+  if (!runScript('tests/ui-state.js', 'tests/ui-state.js', pwEnv)) bail();   // 状态图：真实鼠标过河（死路、最少 7 步）、汉诺塔最少、取石子往回标并赢电脑
   if (!runScript('tests/ui-areamodel.js', 'tests/ui-areamodel.js', pwEnv)) bail();   // 面积模型（样板操作台）和器材把手：真实鼠标拖边、切、改分数
   if (!runScript('tests/ui-shapes.js', 'tests/ui-shapes.js', pwEnv)) bail();         // 常见图形、顶点编辑、直接拖出辅助线（真实鼠标和键盘）；含画布横纵比例回归
   if (!runScript('tests/ui-export.js', 'tests/ui-export.js', pwEnv)) bail();         // 2.12/V10：导出图片（真实鼠标点菜单，台面和专注工作区各一次下载，.png、大小 > 0）
