@@ -3,14 +3,14 @@
  *     排不满，最后一行多出来的标红。全部找到以后写出 n 有几个因数、是质数还是合数。
  *   - 公因数：1 到较小的数，一个一个点着试：分别写出能不能整除 a、b，两个都能整除的是公因数；最大的那个是最大公因数。
  *   - 公倍数：两条跳跳线，一条每次跳 a，一条每次跳 b。点上面一条的落点：下面那条也落在这里，就是公倍数；最小的那个是最小公倍数。
- * 这一版的边界（如实写）：找因数的 n 不超过 100；公因数、公倍数的两个数不超过 40。分解质因数、约分在“质因数积木”里。 */
+ * 这一版的边界（如实写）：找因数的 n 不超过 100；公因数、公倍数的两个数不超过 40。“质因数积木”（mode 4）：拆数（÷ 质数拆到 1）、搭数（× 质数，看因数个数）、约分（分子分母成对拿掉共有的积木）。 */
 (function (G) {
   'use strict';
   const U = G.U, Q = U.Q, K = U.kit;
   const num = (n) => U.val('num', Q(n), { dim: null });
   const W = 700;
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, Number.isFinite(+v) ? Math.round(+v) : lo));
-  const MODES = ['找因数', '公因数', '公倍数', '筛质数'];
+  const MODES = ['找因数', '公因数', '公倍数', '筛质数', '质因数积木'];
   const list = (t) => [...new Set(String(t || '').split(/[,，\s]+/).filter((x) => x !== '').map(Number).filter(Number.isInteger))];
   const gcd = (a, b) => (b ? gcd(b, a % b) : a);
   const divisors = (n) => { const d = []; for (let i = 1; i <= n; i++) if (n % i === 0) d.push(i); return d; };
@@ -57,8 +57,71 @@
     else s += K.text(RX, 256, '还有合数没划掉', { size: 12, anchor: 'start', fill: '#5a6478' });
     return s;
   }
+
+  // ---------- 质因数积木（mode 4）：pd > 0 约分；pn = 1 搭数；否则拆数。pk 是做过的（拆下的 / 搭上的 / 约掉的质数） ----------
+  const PR = [2, 3, 5, 7, 11, 13];
+  const factor = (n) => { const r = []; let x = n; for (let d = 2; d * d <= x; d++) while (x % d === 0) { r.push(d); x /= d; } if (x > 1) r.push(x); return r; };
+  const ndivOf = (n) => { const c = {}; factor(n).forEach((q) => { c[q] = (c[q] || 0) + 1; }); return Object.values(c).reduce((a, e) => a * (e + 1), 1); };
+  function primeModel(p) {
+    const pn = clamp(p.pn, 1, 999), pd = clamp(p.pd, 0, 999), hist = String(p.pk || '').split(',').filter((x) => x !== '').map(Number).filter((q) => PR.includes(q));
+    if (pd > 0) {
+      const top = factor(pn), bot = factor(pd), used = [];
+      for (const q of hist) { const i = top.indexOf(q), j = bot.indexOf(q); if (i < 0 || j < 0) break; top.splice(i, 1); bot.splice(j, 1); used.push(q); }
+      const rn = top.reduce((a, b) => a * b, 1), rd = bot.reduce((a, b) => a * b, 1);
+      return { kind: 'frac', pn, pd, used, top, bot, rn, rd, simplest: gcd(rn, rd) === 1, g: gcd(pn, pd) };
+    }
+    if (pn === 1) {
+      const blocks = []; let v = 1; for (const q of hist) { if (v * q > 999) break; v *= q; blocks.push(q); }
+      return { kind: 'build', blocks, value: v, ndiv: ndivOf(v) };
+    }
+    const blocks = []; let rest = pn; for (const q of hist) { if (rest % q !== 0) break; rest /= q; blocks.push(q); }
+    return { kind: 'peel', pn, blocks, rest, done: rest === 1 };
+  }
+  const blk = (x, y, q, o) => K.rect(x, y, 40, 34, { fill: (o && o.off) ? '#eef1f6' : '#f5c26b', stroke: (o && o.off) ? '#c5ccda' : '#8a5a00', r: 5, w: 1.4 }) + K.text(x + 20, y + 22, String(q), { size: 15, weight: 700, fill: (o && o.off) ? '#8a93a3' : 'var(--ink)' }) + ((o && o.off) ? K.line(x + 4, y + 30, x + 36, y + 4, { stroke: 'var(--bad)', w: 2 }) : '');
+  const prod = (a) => (a.length ? a.join(' × ') : '1');
+  function drawPrime(c) {
+    const p = c.props, m = primeModel(p); let s = '';
+    const pick = (patch) => encodeURIComponent(JSON.stringify(patch));
+    const pk = (arr) => arr.join(',');
+    if (m.kind === 'peel') {
+      s += K.text(20, 28, '把 ' + m.pn + ' 拆成质数积木：一块一块拆，拆到 1 为止', { size: 16, weight: 700, anchor: 'start' });
+      m.blocks.forEach((q, i) => { s += blk(20 + i * 48, 56, q); });
+      s += K.text(20, 120, m.pn + ' = ' + (m.blocks.length ? prod(m.blocks) + (m.done ? '' : ' × ' + m.rest) : m.pn), { size: 18, weight: 700, anchor: 'start', fill: 'var(--blue)' });
+      if (!m.done) {
+        s += K.text(20, 160, '还剩 ' + m.rest + '：用哪个质数去除？', { size: 13, anchor: 'start' });
+        PR.forEach((q, i) => { const ok = m.rest % q === 0; s += btn(20 + i * 70, 172, 62, '÷ ' + q, ok ? { pk: pk(m.blocks.concat([q])), msg: '' } : { msg: m.rest + ' 不能被 ' + q + ' 整除：' + q + ' 不是它的因数' }, true, '除以 ' + q); });
+      } else s += '<g data-read="1">' + K.text(20, 160, '拆完了：' + m.pn + ' = ' + prod(m.blocks) + '，一共 ' + m.blocks.length + ' 块，每一块都是质数', { size: 15, weight: 700, anchor: 'start', fill: 'var(--blue)' }) + '</g>';
+      s += btn(20, 216, 80, '退一步', { pk: pk(m.blocks.slice(0, -1)), msg: '' }, m.blocks.length > 0, '退一步') + btn(110, 216, 80, '重来', { pk: '', msg: '' }, m.blocks.length > 0, '重来');
+    } else if (m.kind === 'build') {
+      s += K.text(20, 28, '用质数积木搭一个数：看它有几个因数', { size: 16, weight: 700, anchor: 'start' });
+      m.blocks.forEach((q, i) => { s += blk(20 + i * 48, 56, q); });
+      s += K.text(20, 120, prod(m.blocks) + ' = ' + m.value, { size: 18, weight: 700, anchor: 'start', fill: 'var(--blue)' });
+      const cnt = {}; m.blocks.forEach((q) => { cnt[q] = (cnt[q] || 0) + 1; }); const ks = Object.keys(cnt);
+      s += '<g data-read="1">' + K.text(20, 150, m.value + ' 有 ' + m.ndiv + ' 个因数' + (ks.length ? '：' + ks.map((q) => '(' + cnt[q] + ' + 1)').join(' × ') + ' = ' + m.ndiv : ''), { size: 14, weight: 700, anchor: 'start' }) + '</g>';
+      s += K.text(20, 172, '每种积木可以用 0 块到全部，选法相乘就是因数的个数', { size: 12, anchor: 'start', fill: '#5a6478' });
+      PR.forEach((q, i) => { s += btn(20 + i * 70, 186, 62, '× ' + q, { pk: pk(m.blocks.concat([q])), msg: '' }, m.value * q <= 999, '乘 ' + q); });
+      s += btn(20, 222, 80, '退一步', { pk: pk(m.blocks.slice(0, -1)), msg: '' }, m.blocks.length > 0, '退一步') + btn(110, 222, 80, '重来', { pk: '', msg: '' }, m.blocks.length > 0, '重来');
+    } else {
+      s += K.text(20, 28, '约分 ' + m.pn + '/' + m.pd + '：点分子里的一块积木，和分母里一样的一块成对拿掉', { size: 15, weight: 700, anchor: 'start' });
+      const draws = (arr, used, y, top) => { let x = 80, out = ''; const u = used.slice();
+        const all = arr.concat(used).sort((a, b) => a - b); const off = []; u.forEach((q) => off.push(q));
+        for (const q of all) { const i = off.indexOf(q), isOff = i >= 0; if (isOff) off.splice(i, 1);
+          const b = blk(x, y, q, { off: isOff });
+          out += !isOff && top ? '<g data-pick-set="' + pick(m.bot.includes(q) ? { pk: pk(m.used.concat([q])), msg: '' } : { msg: '分母里没有 ' + q + ' 了，约不掉' }) + '" style="cursor:pointer"><title>约掉 ' + q + '</title>' + b + '</g>' : b; x += 48; }
+        return out; };
+      s += K.text(20, 82, '分子', { size: 13, weight: 700, anchor: 'start' }) + draws(m.top, m.used, 58, true);
+      s += K.line(76, 104, 660, 104, { w: 2 });
+      s += K.text(20, 138, '分母', { size: 13, weight: 700, anchor: 'start' }) + draws(m.bot, m.used, 114, false);
+      s += K.text(20, 186, m.pn + '/' + m.pd + ' = ' + m.rn + '/' + m.rd + (m.used.length ? '（约掉了 ' + prod(m.used) + ' = ' + m.used.reduce((a, b) => a * b, 1) + '）' : ''), { size: 17, weight: 700, anchor: 'start', fill: 'var(--blue)' });
+      if (m.simplest && m.used.length) s += '<g data-read="1">' + K.text(20, 214, '没有共有的积木了：' + m.rn + '/' + m.rd + ' 是最简分数。约掉的正好是最大公因数 ' + m.g, { size: 14, weight: 700, anchor: 'start', fill: 'var(--blue)' }) + '</g>';
+      s += btn(20, 230, 80, '退一步', { pk: pk(m.used.slice(0, -1)), msg: '' }, m.used.length > 0, '退一步') + btn(110, 230, 80, '重来', { pk: '', msg: '' }, m.used.length > 0, '重来');
+    }
+    if (p.msg) s += K.text(20, 290, p.msg, { size: 13, weight: 700, anchor: 'start', fill: 'var(--bad)' });
+    return s;
+  }
   function draw(c) {
     if (+c.props.mode === 3) return drawSieve(c);
+    if (+c.props.mode === 4) return drawPrime(c);
     const p = c.props, m = model(p); let s = '';
     MODES.forEach((t, i) => { s += btn(20 + i * 92, 8, 86, t, { mode: i, msg: '' }, m.mode !== i, '换到“' + t + '”', m.mode === i); });
     if (m.mode === 0) {
@@ -119,15 +182,17 @@
           a: I(1, 40, 12, '第一个数'), b: I(1, 40, 18, '第二个数'), tried: { type: 'text', label: '公因数：试过的数', default: '', write: true }, cm: { type: 'text', label: '公倍数：点中的公倍数', default: '', write: true },
           msg: { type: 'text', label: '提示（自动）', default: '', write: true, hidden: true },
           N: I(50, 100, 100, '筛质数：到几（50 或 100）'), sieved: { type: 'text', label: '筛质数：划了哪些数的倍数（自动）', default: '', write: true }, one: { type: 'bool', label: '筛质数：划掉了 1', default: false, write: true },
+          pn: I(1, 999, 36, '质因数积木：要拆的数（1 是搭数；约分时是分子）'), pd: I(0, 999, 0, '质因数积木：约分的分母（0 不约分）'), pk: { type: 'text', label: '质因数积木：做过的（自动）', default: '', write: true },
         },
         outputs: {
           found: { dim: null, kind: 'num', label: '找因数：找到几个' }, count: { dim: null, kind: 'num', label: '找因数：一共几个（找全了才有）' }, prime: { dim: null, kind: 'num', label: '质数 1，合数 0（找全了才有）' },
-          gcd: { dim: null, kind: 'num', label: '最大公因数（公因数找全了才有）' }, lcm: { dim: null, kind: 'num', label: '最小公倍数（点中了才有）' }, primes: { dim: null, kind: 'num', label: '筛质数：剩下几个质数（筛完才有）' }, crossed: { dim: null, kind: 'num', label: '筛质数：划掉了几个' },
+          gcd: { dim: null, kind: 'num', label: '最大公因数（公因数找全了才有）' }, lcm: { dim: null, kind: 'num', label: '最小公倍数（点中了才有）' }, primes: { dim: null, kind: 'num', label: '筛质数：剩下几个质数（筛完才有）' }, rest: { dim: null, kind: 'num', label: '质因数积木：还剩几没拆' }, blocks: { dim: null, kind: 'num', label: '质因数积木：几块' }, split: { dim: null, kind: 'num', label: '质因数积木：拆完了 1（拆完才有）' }, value: { dim: null, kind: 'num', label: '质因数积木：搭出的数' }, ndiv: { dim: null, kind: 'num', label: '质因数积木：搭出的数有几个因数' }, rn: { dim: null, kind: 'num', label: '约分：现在的分子' }, rd: { dim: null, kind: 'num', label: '约分：现在的分母' }, simplest: { dim: null, kind: 'num', label: '约分：约成最简了 1（约过才有）' }, crossed: { dim: null, kind: 'num', label: '筛质数：划掉了几个' },
         },
         icon: () => [0, 1, 2, 3, 4, 5].map((i) => K.rect(8 + (i % 3) * 13, 10 + Math.floor(i / 3) * 13, 11, 11, { fill: '#9fc3ea', stroke: 'var(--ink)', r: 1, w: 1 })).join('') + K.text(28, 50, '2 × 3', { size: 9, weight: 700 }),
         size: () => [W, 400],
         grips: () => [],
         compute: (c) => {
+          if (+c.props.mode === 4) { const q = primeModel(c.props); if (q.kind === 'peel') { const o = { rest: num(q.rest), blocks: num(q.blocks.length) }; if (q.done) o.split = num(1); return o; } if (q.kind === 'build') return { value: num(q.value), ndiv: num(q.ndiv), blocks: num(q.blocks.length) }; const o = { rn: num(q.rn), rd: num(q.rd) }; if (q.simplest && q.used.length) o.simplest = num(1); return o; }
           if (+c.props.mode === 3) { const q = sieveModel(c.props), o = { crossed: num(q.crossed.size) }; if (q.done) o.primes = num(q.primes.length); return o; }
           const m = model(c.props), o = { found: num(m.facs.length) };
           if (m.allF) { o.count = num(m.dn.length); if (m.n > 1) o.prime = num(m.dn.length === 2 ? 1 : 0); }

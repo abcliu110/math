@@ -62,6 +62,11 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   ok(await rel() === '2 段 + 6 = 30', '下面写着 2 段 + 6 = 30');
   await dragTo(12);
   ok(await out('a') === '18' && await out('b') === '12' && await done('a'), '把一段拖到 12：甲 18、乙 12');
+  console.log('4. 几倍少几');
+  await open('tp-times-less');
+  ok(await rel() === '4 段 − 4 = 60', '下面写着 4 段 − 4 = 60（少的一截从最后一段剪掉）');
+  await dragTo(16);
+  ok(await out('a') === '44' && await out('b') === '16' && await done('b'), '把一段拖到 16：哥哥 44、弟弟 16');
   ok(await p.evaluate(() => !UI.S.inspOpen), '全程没有打开属性面板');
   ok(errs.length === 0, '控制台 0 报错' + (errs.length ? '：' + errs[0] : ''));
   console.log('\n线段图测试：' + pass + ' 通过，' + fail + ' 失败');

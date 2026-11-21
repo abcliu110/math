@@ -3165,8 +3165,8 @@ t('闯关：每条关卡链的每一关都能打开；上一关有星下一关�
 console.log('旧题搬到操作台');
 t('搬题：每个要搬的 id 都找到了题；搬过去的题器材架上只有操作台，开场台面上就有它', () => {
   eq(U.benchMigrateMissing, [], '找不到的 id');
-  truthy(U.benchMigrated.length >= 272, '至少搬了 272 道');
-  const BENCH = ['areamodel', 'pourbench', 'balancebench', 'numlinebench', 'ratiobench', 'coordbench', 'blocksbench', 'termsbench', 'swapbench', 'systembench', 'gapbench', 'meanbench', 'tapebench', 'vennbench', 'travelbench', 'mulbench', 'fastbench', 'statbench', 'chancebench', 'clockbench', 'groupbench', 'solidbench', 'conjbench', 'fitbench', 'pairbench', 'tribench', 'circlebench', 'gridbench', 'tablebench', 'vertbench', 'decbench', 'tilebench', 'chipbench', 'makebench', 'estbench', 'areabench', 'factorbench', 'anglebench', 'rulerbench', 'moneybench', 'calbench', 'seqbench', 'jobbench', 'foldbench', 'logicbench', 'proofbench', 'fracbench', 'optbench', 'weighbench', 'sortbench', 'combobench', 'dirbench'];
+  truthy(U.benchMigrated.length >= 283, '至少搬了 283 道');
+  const BENCH = ['areamodel', 'featbench', 'ringbench', 'pourbench', 'balancebench', 'numlinebench', 'ratiobench', 'coordbench', 'blocksbench', 'termsbench', 'swapbench', 'systembench', 'gapbench', 'meanbench', 'tapebench', 'vennbench', 'travelbench', 'mulbench', 'fastbench', 'statbench', 'chancebench', 'clockbench', 'groupbench', 'solidbench', 'conjbench', 'fitbench', 'pairbench', 'tribench', 'circlebench', 'gridbench', 'tablebench', 'vertbench', 'decbench', 'tilebench', 'chipbench', 'makebench', 'estbench', 'areabench', 'factorbench', 'anglebench', 'rulerbench', 'moneybench', 'calbench', 'seqbench', 'jobbench', 'foldbench', 'logicbench', 'proofbench', 'fracbench', 'optbench', 'weighbench', 'sortbench', 'combobench', 'dirbench'];
   for (const id of U.benchMigrated) {
     const p = U.problems.find((x) => x.id === id), s = p.build();
     truthy(p.shelf.length === 1 && BENCH.includes(p.shelf[0]), id + ' 的器材架');

@@ -111,6 +111,10 @@ module.exports = [
       ['mdrb','meter',{'digits':0,'label':'方向：走了几格'}],
       ['pob','pourbench',{'A':5,'B':3,'tgt':4,'hist':'fA,AB'}],
       ['mpob','meter',{'digits':0,'label':'倒水：甲杯几升'}],
+      ['rgb','ringbench',{'m':12,'k':4,'beats':3}],
+      ['mrgb','meter',{'digits':0,'label':'跳格钟：走到几个格'}],
+      ['ftb','featbench',{'cards':'2,4,7','tpl':'??','cond':1,'pick':'0,1'}],
+      ['mftb','meter',{'digits':0,'label':'数的特征：拼出的数'}],
     ],
     links: [
       ['am','mam','v','area'],
@@ -165,6 +169,8 @@ module.exports = [
       ['cmbb','mcmbb','v','listed'],
       ['drb','mdrb','v','steps'],
       ['pob','mpob','v','a'],
+      ['rgb','mrgb','v','reach'],
+      ['ftb','mftb','v','n'],
     ],
   },
 ];

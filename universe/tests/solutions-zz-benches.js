@@ -172,4 +172,10 @@ module.exports = {
   'g3-measure-m-to-cm-core': r({ t: 3 }), 'g4-area-km2-core': r({ t: 3 }), 'g4-area-ha-trap': r({ t: 2 }), 'g4-bar-scale-trap': r({ t: 9 }),
   'pour-conserve'(h) { h.set(h.role('pb'), 'hist', 'AB'); }, 'pour-two-cups'(h) { h.set(h.role('pb'), 'hist', 'fA,AB,eB,AB,fA,AB'); },
   'balance-12'(h) { h.set(h.role('b'), 'rc', 12); }, 'place-sub'(h) { const v = h.role('v'); h.set(v, 'marks', '1'); h.set(v, 'res', '52'); },
+  'arith-carry-47-38': vv({ marks: '1', res: '58' }), 'arith-round-47-38': k({ t: 8, o: 5 }), 'arith-mul-23-14': mbs({ vals: '80,12,200,30,92,230,322' }), 'arith-sub-negative': fz({ pos: 0, neg: 14, step: 1 }),
+  'pb-split-36': ff({ pk: '2,2,3,3' }), 'pb-reduce-24-36': ff({ pk: '2,2,3' }), 'pb-twelve-divisors': ff({ pk: '2,2,3,5' }),
+  'clock-gcd'(h) { const v = h.role('rg'); h.set(v, 'beats', 3); h.set(v, 'k', 6); h.set(v, 'beats', 2); h.set(v, 'k', 5); h.set(v, 'beats', 12); },
+  'coprime-all'(h) { const v = h.role('rg'); for (const [k, b] of [[3, 10], [7, 10], [9, 10], [5, 2]]) { h.set(v, 'k', k); h.set(v, 'beats', b); } },
+  'last-digit-cycle'(h) { const v = h.role('rg'); h.set(v, 'beats', 4); h.set(v, 'beats', 100); },
+  'nth-tenth'(h) { const v = h.role('sq'); h.set(v, 'k', 3); h.set(v, 'a', 3); h.set(v, 'd', 2); },
 };

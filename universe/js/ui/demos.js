@@ -973,5 +973,30 @@
     },
   };
 
+  // 跳格钟
+  D.ringbench = {
+    caps: ['12 格，步长 4', '0 → 4 → 8', '3 拍回到 0：只走到 3 格', '步长 5：走遍 12 格'],
+    draw(st) {
+      let s = Ci(140, 90, 60, 'none', { s: INK });
+      const vis = [[0], [0, 4, 8], [0, 4, 8], [0, 5, 10, 3, 8, 1, 6, 11, 4, 9, 2, 7]][st];
+      for (let i = 0; i < 12; i++) { const a = -Math.PI / 2 + i * Math.PI / 6; s += Ci(140 + 60 * Math.cos(a), 90 + 60 * Math.sin(a), 7, vis.includes(i) ? '#9fc3ea' : '#fff', { s: INK }); }
+      s += T(330, 80, ['步长 4', '0, 4, 8', '3 格', '12 格！'][st], { s: 15, w: 700, f: P });
+      return s;
+    },
+  };
+
+  // 数的特征
+  D.featbench = {
+    caps: ['卡片 2、4、7', '拼 24', '数字和 2 + 4 = 6', '是 3 的倍数 ✓'],
+    draw(st) {
+      let s = '';
+      [2, 4, 7].forEach((d, i) => { s += Rc(30 + i * 40, 110, 32, 40, '#fff', { s: '#8a5a00' }) + T(46 + i * 40, 137, String(d), { s: 18, w: 700 }); });
+      s += Rc(200, 40, 40, 50, '#fff4d6', { s: B }) + Rc(246, 40, 40, 50, '#fff4d6', { s: B });
+      if (st >= 1) s += T(220, 74, '2', { s: 24, w: 700 }) + T(266, 74, '4', { s: 24, w: 700 });
+      s += T(380, 70, ['', '24', '2 + 4 = 6', '3 的倍数 ✓'][st], { s: 15, w: 700, f: P });
+      return s;
+    },
+  };
+
   UI.Demo = D;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

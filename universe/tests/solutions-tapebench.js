@@ -5,4 +5,5 @@ module.exports = {
   'tp-times-3': set(['ka', 3], ['u', 6]), 'tp-sum-times': set(['u', 12]), 'tp-diff-times': set(['ka', 4], ['u', 8]),
   'tp-sum-diff': set(['u', 12]), 'tp-age': set(['ka', 4], ['u', 9]), 'tp-times-more': set(['ka', 2], ['u', 10]),
   'bm-more5': set(['u', 8]), 'bm-times3': set(['ka', 3], ['u', 4]),
+  'tp-times-less': set(['u', 16]), 'tp-ratio-3-5': set(['u', 4]),
 };

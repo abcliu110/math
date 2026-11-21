@@ -42,7 +42,7 @@ const norm = (s) => String(s || '').replace(/\s+/g, ' ').trim();
 
   console.log('算术工作台（竖式）：题目 workbench 为 arith，真实鼠标');
   // (a) 题目进入算术工作台：器材架只列它声明过的器材；台面上有竖式器材（47 + 38）
-  await p.evaluate(() => UI.App.openProblem('arith-carry-47-38', 'practice')); await p.waitForTimeout(200);
+  await p.evaluate(() => { if (!U.problemById('arith-carry-wb')) U.problems.push(Object.assign({}, U.benchOriginal['arith-carry-47-38'], { id: 'arith-carry-wb' })); U.types.arithbench.hidden = false; UI.App.openProblem('arith-carry-wb', 'practice'); });   // 这道题已经搬到竖式操作台；旧的竖式工作台拿搬之前的样子当样板 await p.waitForTimeout(200);
   const shelf = await p.locator('#shelfbody .tile').evaluateAll((els) => els.map((el) => el.dataset.type));
   ok(shelf.length === 1 && shelf[0] === 'arithbench', '器材架只列竖式工作台（' + shelf.join('、') + '）');
   const bid = await p.evaluate(() => Object.values(UI.S.scene.entities).find((e) => e.type === 'arithbench').id);

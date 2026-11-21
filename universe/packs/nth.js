@@ -6,6 +6,7 @@
     id: 'nth', version: 1, needs: ['time'],
     types: {
       nth: {
+        hidden: true, retired: true,   // 已经有操作台代替：不上器材架、搜不到；只留给内核测试当样板
         workspaceRole: 'none',
         handles: true,
         essence: ['E6', 'E8'],

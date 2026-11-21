@@ -135,6 +135,8 @@
   const gcd = (a, b) => (b ? gcd(b, a % b) : a);
   const divs = (n) => { const d = []; for (let i = 1; i <= n; i++) if (n % i === 0) d.push(i); return d; };
   add('factorbench', { gen(R, lv) {
+    if (lv === 1 && R.bool()) { const ps = []; let n = 1; while (ps.length < 4) { const q = R.pick([2, 2, 2, 3, 3, 5, 7]); if (n * q > 200) break; ps.push(q); n *= q; } ps.sort((x, y) => x - y); if (ps.length >= 3) return { title: '把 ' + n + ' 分解质因数', hook: '点“÷ 2”“÷ 3”……能除尽就拆下一块质数积木，拆到 1 为止。', props: { mode: 4, pn: n }, goals: [['split', 1, n + ' = ' + ps.join(' × ')]], sol: { pk: ps.join(',') } }; }
+    if (lv === 2 && R.bool()) { for (;;) { const g = R.pick([2, 3, 4, 6, 9, 10, 12]), a = R.int(1, 7), b = R.int(2, 9); if (a >= b || gcd(a, b) !== 1) continue; const fac = (x) => { const r = []; for (let d = 2; d * d <= x; d++) while (x % d === 0) { r.push(d); x /= d; } if (x > 1) r.push(x); return r; }; return { title: '约分 ' + a * g + '/' + b * g, hook: '分子分母都拆成质数积木，共有的成对拿掉。', props: { mode: 4, pn: a * g, pd: b * g }, goals: [['simplest', 1, '最简分数 ' + a + '/' + b]], sol: { pk: fac(g).join(',') } }; } }
     if (lv === 1) { const n = R.pick([12, 16, 18, 20, 24, 28, 30, 32, 36, 40, 42, 45, 48]); return { title: n + ' 有几个因数？', hook: n + ' 个小方块，每行放几个能正好排满？排满一次找到一对因数。', props: { mode: 0, n }, goals: [['count', divs(n).length, n + ' 有 ' + divs(n).length + ' 个因数']], sol: { w: 1, found: divs(n).filter((d) => d * d <= n).join(',') } }; }
     for (;;) {
       const a = R.int(6, 40), b = R.int(6, 40); if (a === b) continue; const g = gcd(a, b), l = a * b / g;
@@ -217,12 +219,43 @@
     const len = (va + vb) * t; return { title: '相遇：相距 ' + len + ' 千米，甲每小时 ' + va + '，乙每小时 ' + vb + '，几小时相遇？', hook: '拖时间条，两人面对面走，每小时一共走多少？', props: { len, t: 0, tmax: t + 3, pa: 0, va, da: 0, pb: len, vb, db: 1, solo: false, lock: true }, goals: [['gap', 0, t + ' 小时相遇']], sol: { t } };
   } });
 
+  // 和差倍分：不是固定的几道题，而是一个题型引擎。
+  //   关系：倍（A = k × B）、和差（A = B + d）、几倍多几 / 几倍少几（A = k × B ± c）、比（A : B = p : q）、年龄（差不变，几年后是几倍）；
+  //   已知：和或者差；问：大的、小的随机；谁是“几倍”的那个也随机；情境、说法从几种里挑。线段图上段数已经摆好，学生拖一段的长度对上已知。
+  const CTX = [['哥哥', '弟弟', '张', '邮票', '两人'], ['红花', '黄花', '朵', '', '两种花'], ['甲仓', '乙仓', '吨', '粮食', '两个仓'], ['故事书', '科技书', '本', '', '两种书'], ['男生', '女生', '人', '', '全班'],
+    ['大桶', '小桶', '升', '油', '两桶'], ['长绳', '短绳', '米', '', '两根绳'], ['小明', '小红', '元', '钱', '两人'], ['苹果', '梨', '千克', '', '两种水果'], ['上午', '下午', '个', '零件', '一天']];
+  const hasOf = (n, c) => n + (c[3] ? '的' + c[3] : '');
   add('tapebench', { gen(R, lv) {
-    const u = R.int(3, 15), ka = R.int(2, lv === 1 ? 3 : 6);
-    if (lv === 1) return { title: '乙有 ' + u + '，甲是乙的 ' + ka + ' 倍，甲有几？', hook: '把甲的线段调成 ' + ka + ' 份。', props: { ka: 1, kb: 1, u, tk: 2, lock: false }, goals: [['a', ka * u, '甲有 ' + ka * u]], sol: { ka } };
-    if (lv === 2) { const tv = (ka + 1) * u; return { title: '甲是乙的 ' + ka + ' 倍，两人一共 ' + tv + '，乙有几？', hook: '甲 ' + ka + ' 份、乙 1 份，一共几份？拖一份的长度。', props: { ka, kb: 1, u: 1, tk: 0, tv, lock: true }, goals: [['hit', 1, '对上了：一份是 ' + u + '，乙有 ' + u]], sol: { u } }; }
-    const tv = (ka - 1) * u; return { title: '甲是乙的 ' + ka + ' 倍，甲比乙多 ' + tv + '，乙有几？', hook: '甲比乙多几份？拖一份的长度。', props: { ka, kb: 1, u: 1, tk: 1, tv, lock: true }, goals: [['hit', 1, '对上了：乙有 ' + u]], sol: { u } };
+    if (lv === 1) {
+      const u = R.int(3, 15), ka = R.int(2, 3);
+      if (R.bool()) return { title: '乙有 ' + u + '，甲是乙的 ' + ka + ' 倍，甲有几？', hook: '把甲的线段调成 ' + ka + ' 段。', props: { ka: 1, kb: 1, u, tk: 2, lock: false }, goals: [['a', ka * u, '甲有 ' + ka * u]], sol: { ka } };
+    }
+    for (;;) {
+      const c = CTX[R.int(0, CTX.length - 1)], [na, nb, un] = c;
+      const fam = lv === 1 ? 'times' : lv === 2 ? R.pick(['times', 'times', 'sumdiff']) : R.pick(['more', 'more', 'ratio', 'ratio', 'age']);
+      const u = R.int(2, fam === 'ratio' ? 12 : 20);
+      let ka = 1, kb = 1, ea = 0, eb = 0, rel = '', ask, ans, tk = R.int(0, 1);
+      const bigA = R.bool();   // 谁大（谁是“几倍”）
+      if (fam === 'times') { const k = R.int(2, lv === 1 ? 4 : 6); if (bigA) ka = k; else kb = k; rel = R.bool() ? (bigA ? na : nb) + '是' + (bigA ? nb : na) + '的 ' + k + ' 倍' : (bigA ? nb : na) + '的 ' + k + ' 倍正好是' + (bigA ? na : nb); }
+      else if (fam === 'sumdiff') { const d = R.int(2, 30); if (bigA) ea = d; else eb = d; rel = R.bool() ? (bigA ? na : nb) + '比' + (bigA ? nb : na) + '多 ' + d + ' ' + un : (bigA ? nb : na) + '比' + (bigA ? na : nb) + '少 ' + d + ' ' + un; tk = 0; }
+      else if (fam === 'more') { const k = R.int(2, 5), cc = R.int(1, Math.min(12, u * (k - 1))) * (R.bool() ? 1 : -1); if (bigA) { ka = k; ea = cc; } else { kb = k; eb = cc; } rel = (bigA ? na : nb) + '比' + (bigA ? nb : na) + '的 ' + k + ' 倍' + (cc > 0 ? '多 ' + cc : '少 ' + (-cc)) + ' ' + un; }
+      else if (fam === 'ratio') { const p = R.int(1, 6), q = R.int(2, 7); if (p === q || gcdQ(p, q) !== 1) continue; ka = p; kb = q; rel = R.bool() ? na + '是' + nb + '的 ' + p + '/' + q : na + '和' + nb + '的比是 ' + p + ' : ' + q; }
+      else {   // 年龄：几年后父亲是儿子的 k 倍；线段图画的是几年后
+        const k = R.int(2, 4), n = R.int(1, 6), son = u - n; if (son < 3) continue;
+        const d = (k - 1) * u;
+        const title = '爸爸比儿子大 ' + d + ' 岁，' + n + ' 年后爸爸的年龄是儿子的 ' + k + ' 倍。儿子今年几岁？';
+        return { title, hook: '年龄差永远不变。线段图画的是 ' + n + ' 年后：爸爸 ' + k + ' 段、儿子 1 段，相差 ' + d + ' 岁。拖一段的长度，再减去 ' + n + '。', props: { ka: k, kb: 1, u: 1, tk: 1, tv: d, lock: true, na: '爸爸', nb: '儿子', unit: '岁' }, goals: [['hit', 1, n + ' 年后儿子 ' + u + ' 岁，今年 ' + son + ' 岁']], sol: { u } };
+      }
+      const A = ka * u + ea, B = kb * u + eb; if (A <= 0 || B <= 0 || A === B && tk === 1) continue;
+      const tv = tk === 0 ? A + B : Math.abs(A - B); if (u === 1 || (tk === 0 && ka + kb + ea + eb === tv) || (tk === 1 && Math.abs(ka - kb + ea - eb) === tv)) continue;
+      const fact = tk === 0 ? R.pick([na + '和' + nb + '一共 ' + tv + ' ' + un, c[4] + '一共有 ' + tv + ' ' + un]) : (A > B ? na + '比' + nb + '多 ' + tv + ' ' + un : nb + '比' + na + '多 ' + tv + ' ' + un);
+      const askA = R.bool(); ask = askA ? na : nb; ans = askA ? A : B;
+      const title = (R.bool() ? rel + '，' + fact : fact + '，' + rel) + '。' + hasOf(ask, c) + '有多少' + un + '？';
+      const hook = '线段图上的段数已经摆好（' + na + ' ' + ka + ' 段' + (ea ? (ea > 0 ? ' 多 ' + ea : ' 少 ' + (-ea)) : '') + '，' + nb + ' ' + kb + ' 段' + (eb ? (eb > 0 ? ' 多 ' + eb : ' 少 ' + (-eb)) : '') + '）。先看' + (tk === 0 ? '一共' : '相差') + '几段，再拖一段的长度。';
+      return { title, hook, props: { ka, kb, u: 1, ea, eb, tk, tv, lock: true, na, nb, unit: un }, goals: [['hit', 1, ask + ' ' + ans + ' ' + un]], sol: { u } };
+    }
   } });
+  function gcdQ(x, y) { return y ? gcdQ(y, x % y) : x; }
 
   add('balancebench', { gen(R, lv) {
     const x = R.int(2, 12), a = lv === 1 ? 1 : R.int(2, 5), c = lv === 3 ? R.int(1, 9) : lv === 1 ? R.int(1, 9) : 0;
@@ -354,6 +387,38 @@
       hist.push(pan.join('')); cand = U.WeighBench.model({ n, hist: hist.join(';') }).cand;
     }
     return { title: n + ' 个零件里有 1 个轻一点，最少称几次一定能找出来？', hook: '天平按最不利的情况回答。把可疑的分成差不多的 3 份试试。', props: { n }, goals: [['best', 1, '称 ' + k + ' 次就保证找到']], sol: { hist: hist.join(';') } };
+  } });
+
+  add('ringbench', { gen(R, lv) {
+    const g = (a, b) => (b ? g(b, a % b) : a);
+    if (lv === 1) { for (;;) { const m = R.int(6, 15), k = R.int(2, m - 1), r = m / g(k, m); if (r === m && R.bool()) continue; return { title: m + ' 格的钟，每拍走 ' + k + ' 格，能走到几个格？', hook: '点“走一圈”，看几拍回到 0。', props: { m, k }, goals: [['reach', r, '走到 ' + r + ' 个格']], sol: { beats: r } }; } }
+    for (;;) {
+      const m = lv === 2 ? 10 : R.int(7, 13), k = R.int(2, m - 1), n = R.int(20, 80); if (g(k, m) !== 1) continue;
+      let v = 1; for (let i = 0; i < n; i++) v = (v * k) % m;
+      return { title: lv === 2 ? k + ' 的 ' + n + ' 次方，个位是几？' : k + ' 的 ' + n + ' 次方除以 ' + m + '，余数是几？', hook: m + ' 格的乘法钟，从 1 出发每拍乘 ' + k + '。先走一圈看几拍一轮，再走到第 ' + n + ' 拍。', props: { m, op: 1, k, gb: n }, goals: [['atv', v, '第 ' + n + ' 拍停在 ' + v]], sol: { beats: n } };
+    }
+  } });
+
+  // 数的特征：卡片、要求、要几个都随机；拼不出来、太多就重出
+  add('featbench', { gen(R, lv) {
+    const C = U.FeatBench.CONDS;
+    for (;;) {
+      const fill = lv === 3 && R.bool(), len = fill ? R.int(3, 4) : lv === 1 ? 2 : 3;
+      let cards, tpl, reuse = false;
+      if (fill) { cards = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]; const h = R.int(0, len - 1); tpl = Array.from({ length: len }, (_, i) => (i === h ? '?' : String(i === 0 ? R.int(1, 9) : R.int(0, 9)))).join(''); reuse = true; }
+      else { const pool = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]; cards = []; const nc = len + R.int(0, lv === 1 ? 1 : 2); while (cards.length < nc) { const d = pool.splice(R.int(0, pool.length - 1), 1)[0]; cards.push(d); } tpl = '?'.repeat(len); }
+      const cond = lv === 1 ? R.pick([0, 2, 7, 8]) : R.int(0, C.length - 1), gk = fill ? 3 : lv === 1 ? R.pick([0, 1, 2]) : R.pick([1, 2, 3]);
+      const props = { cards: cards.join(','), tpl, reuse, cond, gk }, m = U.FeatBench.model(props);
+      if (!m.vs.length || m.vs.length < 2 || (gk === 3 && m.vs.length > 6)) continue;
+      const target = gk === 1 ? m.max : gk === 2 ? m.min : m.vs[R.int(0, m.vs.length - 1)];
+      const word = gk === 1 ? '最大的' : gk === 2 ? '最小的' : gk === 3 ? '所有' : '一个';
+      const title = fill ? tpl.replace('?', '□') + ' 是 ' + C[cond][0] + '，□ 里可以填几？' : '用 ' + cards.join('、') + ' 拼' + word + (len === 2 ? '两' : '三') + '位数，要是 ' + C[cond][0];
+      const hook = '2、5 看个位，3、9 看各位数字加起来。' + (gk === 3 ? '符合的点“记下这个”，找全为止。' : '');
+      if (gk === 3) return { title, hook, props, goals: [['all', 1, '找全了：' + m.vs.join('、')]], sol: { found: m.vs.join(',') } };
+      const ds = String(target).split('').map(Number), used = new Set(), pick = [];
+      ds.forEach((d) => { const i = cards.findIndex((c, j) => c === d && !used.has(j)); used.add(i); pick.push(i); });
+      return { title, hook, props, goals: [gk ? ['best', 1, word + '是 ' + target] : ['ok', 1, '比如 ' + target]], sol: { pick: pick.join(',') } };
+    }
   } });
 
   add('pourbench', { gen(R, lv) {

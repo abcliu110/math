@@ -6,7 +6,7 @@
  *   - 右上角写着目标（一共要多少，或者相差要多少）和现在是多少；对上了就标绿。
  *   - 下面“合起来看”把同样长的段排成一排：4 段 = 48，或者 2 段 + 6 = 30。这一行只摆出关系，不替你算。
  * 能做的题：和倍、差倍、和差、年龄问题、“几倍多几”。
- * 这一版的边界（如实写）：只有两条线段；每条最多 8 段；一段的长是 1 到 40 的整数；多出来的一截由出题人给，学生不能拖。 */
+ * 这一版的边界（如实写）：只有两条线段；每条最多 8 段；一段的长是 1 到 40 的整数；多出来的一截由出题人给，学生不能拖；“几倍少几”的少的那一截画成从最后一段里剪掉的虚线框。 */
 (function (G) {
   'use strict';
   const U = G.U, Q = U.Q, K = U.kit;
@@ -14,12 +14,12 @@
   const W = 700, X0 = 84, SPAN = 440, YA = 92, YB = 152, BH = 28, KMAX = 8, UMAX = 40;
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   function model(p) {
-    const ka = clamp(p.ka, 0, KMAX), kb = clamp(p.kb, 0, KMAX), u = clamp(p.u, 1, UMAX), ea = clamp(p.ea, 0, 60), eb = clamp(p.eb, 0, 60);
+    const ka = clamp(p.ka, 0, KMAX), kb = clamp(p.kb, 0, KMAX), u = clamp(p.u, 1, UMAX), ea = clamp(p.ea, -60, 60), eb = clamp(p.eb, -60, 60);
     const a = ka * u + ea, b = kb * u + eb, sum = a + b, diff = Math.abs(a - b), tk = p.tk, tv = p.tv;
     const cur = tk === 0 ? sum : tk === 1 ? diff : null, hit = cur !== null && cur === tv ? 1 : 0;
     return { ka, kb, u, ea, eb, a, b, sum, diff, tk, tv, cur, hit };
   }
-  const scaleOf = (m) => clamp(SPAN / Math.max(m.a, m.b, 1), 1.4, 14);
+  const scaleOf = (m) => clamp(SPAN / Math.max(m.ka * m.u + Math.max(m.ea, 0), m.kb * m.u + Math.max(m.eb, 0), m.a, m.b, 1), 1.4, 14);   // 少的一截是从整段里剪掉的，整段要画得下
   function plan(p0, gid, q) {
     const m0 = model(p0), sc = scaleOf(m0);
     if (gid === 'u') return { patch: { u: clamp(Math.round((q.x - X0) / sc), 1, UMAX) }, sc };
@@ -36,7 +36,8 @@
     const bar = (y, k, e, tot, name, key) => {
       let x = X0, h = K.text(X0 - 12, y + BH / 2 + 5, name, { size: 14, weight: 700, anchor: 'end' });
       for (let i = 0; i < k; i++) { h += seg(x, y, m.u * sc, c.masked ? '' : String(m.u), 'u'); x += m.u * sc; }
-      if (e) { h += seg(x, y, e * sc, String(e), 'x'); x += e * sc; }
+      if (e > 0) { h += seg(x, y, e * sc, String(e), 'x'); x += e * sc; }
+      if (e < 0) { const w = Math.min(-e * sc, x - X0); x -= w; h += '<rect x="' + x + '" y="' + (y - 3) + '" width="' + w + '" height="' + (BH + 6) + '" fill="#fde2e0" fill-opacity="0.85" stroke="var(--bad)" stroke-dasharray="4 3" stroke-width="1.4"/>' + (w >= 20 ? K.text(x + w / 2, y + BH / 2 + 5, '−' + (-e), { size: 12, weight: 700, fill: 'var(--bad)' }) : ''); }   // 少的那一截：从最后一段里剪掉
       if (!k && !e) h += K.text(X0 + 6, y + BH / 2 + 5, '（空）', { size: 12, anchor: 'start', fill: '#8a94a8' });
       h += K.text(X0 + SPAN + 16, y + BH / 2 + 5, c.masked ? '？' : tot + ' ' + un, { size: 14, weight: 700, anchor: 'start' });
       if (!p.lock) h += pm(W - 62, y + BH / 2, '−', { [key]: k - 1 }, k > 0, name + '：去掉一段') + pm(W - 34, y + BH / 2, '+', { [key]: k + 1 }, k < KMAX, name + '：加一段（和别的段一样长）');
@@ -47,7 +48,7 @@
     // 相差的那一截：两条线段右端之间
     if (m.a !== m.b) { const lo = Math.min(A.end, B.end), hi = Math.max(A.end, B.end), y = m.a > m.b ? YB : YA; s += K.line(lo, y + 4, lo, y + BH - 4, { w: 1, dash: '3 3' }) + '<rect x="' + lo + '" y="' + (y + 4) + '" width="' + (hi - lo) + '" height="' + (BH - 8) + '" fill="none" stroke="#8a94a8" stroke-dasharray="4 3"/>' + (hi - lo >= 34 && !c.masked ? K.text((lo + hi) / 2, y + BH / 2 + 4, '差 ' + m.diff, { size: 11, fill: '#5a6478' }) : ''); }
     // 目标和现在
-    s += K.text(20, 28, na + ' ' + (m.ka ? m.ka + ' 段' : '') + (m.ea ? (m.ka ? ' + ' : '') + m.ea : '') + (!m.ka && !m.ea ? '0' : '') + '，' + nb + ' ' + (m.kb ? m.kb + ' 段' : '') + (m.eb ? (m.kb ? ' + ' : '') + m.eb : '') + (!m.kb && !m.eb ? '0' : '') + '　每一段一样长', { size: 14, weight: 700, anchor: 'start' });
+    s += K.text(20, 28, na + ' ' + (m.ka ? m.ka + ' 段' : '') + (m.ea > 0 ? (m.ka ? ' + ' : '') + m.ea : m.ea < 0 ? ' − ' + (-m.ea) : '') + (!m.ka && !m.ea ? '0' : '') + '，' + nb + ' ' + (m.kb ? m.kb + ' 段' : '') + (m.eb > 0 ? (m.kb ? ' + ' : '') + m.eb : m.eb < 0 ? ' − ' + (-m.eb) : '') + (!m.kb && !m.eb ? '0' : '') + '　每一段一样长', { size: 14, weight: 700, anchor: 'start' });
     if (m.tk === 0 || m.tk === 1) {
       const nm = m.tk === 0 ? '一共' : '相差';
       s += K.text(20, 52, nm + '要 ' + m.tv + ' ' + un + '　现在' + nm + ' ' + (c.masked ? '？' : m.cur) + (m.hit ? '　对上了！' : ''), { size: 14, weight: 700, anchor: 'start', fill: m.hit ? 'var(--good)' : 'var(--ink)' });
@@ -84,7 +85,7 @@
         alias: ['线段图', '和倍', '差倍', '和差', '倍数', '年龄问题', '几倍多几', '画图'],
         props: {
           ka: I(0, KMAX, 3, '甲有几段'), kb: I(0, KMAX, 1, '乙有几段'), u: I(1, UMAX, 5, '一段有多长'),
-          ea: I(0, 60, 0, '甲多出来的一截'), eb: I(0, 60, 0, '乙多出来的一截'),
+          ea: I(-60, 60, 0, '甲多出来的一截（负数是少的一截）'), eb: I(-60, 60, 0, '乙多出来的一截（负数是少的一截）'),
           tk: { type: 'choice', label: '目标是什么', default: 0, choices: ['一共（和）', '相差（差）', '没有目标'], write: true }, tv: I(0, 999, 48, '目标是多少'),
           na: T('甲', '上面那条叫什么'), nb: T('乙', '下面那条叫什么'), unit: T('', '单位'),
           lock: { type: 'bool', label: '段数已经给好（不显示 + 和 −）', default: false, write: true },

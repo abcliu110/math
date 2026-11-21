@@ -1,4 +1,4 @@
-/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，四十一批共 272 道）。
+/* 把旧题搬到操作台上（docs/instrument-design.md 第 6 节，四十三批共 283 道）。
  * 这些题原来的做法是“放数字、接运算器、看读数”：学生在搭计算流程。这里按 id 把它们换成在操作台上直接动手：
  * 题目的编号、标题、年级、知识点、道理（why）都不变，换的是器材架、开场的台面、里程碑和提示。
  * 这个文件排在所有题目文件后面加载（文件名 zz 开头），找不到的 id 会记在 U.benchMigrateMissing 里（测试会查）。 */
@@ -11,6 +11,8 @@
   const H = (id, say, score, when, hints) => ({ id, say, score, when, hints });   // 条件是一个范围（频率稳在某个区间）时用函数
   const nl = (props) => one('numlinebench', 'n', props), bk = (props) => one('blocksbench', 'k', props), rb = (props) => one('ratiobench', 'r', props), am = (props) => one('areamodel', 'm', props), cb = (props) => one('coordbench', 'c', props), tb = (props) => one('termsbench', 't', props), sw = (props) => one('swapbench', 's', props), gp = (props) => one('gapbench', 'g', props), bb = (props) => one('balancebench', 'b', props), sb = (props) => one('statbench', 'd', props), ch = (props) => one('chancebench', 'h', props), ck = (props) => one('clockbench', 'k', props), gq = (props) => one('groupbench', 'q', props), sd = (props) => one('solidbench', 'o', props), cj = (props) => one('conjbench', 'j', props), fb2 = (props) => one('fitbench', 'z', props), pb2 = (props) => one('pairbench', 'p', props), tb3 = (props) => one('tribench', 'x', props), ci = (props) => one('circlebench', 'i', props), gd = (props) => one('gridbench', 'w', props), tw = (props) => one('tablebench', 'y', props), vt = (props) => one('vertbench', 'v', props), mb = (props) => one('mulbench', 'c2', props), db = (props) => one('decbench', 'd', props), tlb = (props) => one('tilebench', 'tb', props), zp = (props) => one('chipbench', 'z', props), mk = (props) => one('makebench', 'k', props), es = (props) => one('estbench', 'e', props), ab = (props) => one('areabench', 'ar', props), fb = (props) => one('factorbench', 'f', props), an = (props) => one('anglebench', 'an', props), rl = (props) => one('rulerbench', 'rl', props), mo = (props) => one('moneybench', 'mo', props), cl = (props) => one('calbench', 'cl', props), fd = (props) => one('foldbench', 'fd', props), lgb = (props) => one('logicbench', 'lg', props), pf = (props) => one('proofbench', 'pf', props), tp = (props) => one('tapebench', 't', props), vn = (props) => one('vennbench', 'y', props), frb = (props) => one('fracbench', 'fr', props), opb = (props) => one('optbench', 'op', props), wtb = (props) => one('weighbench', 'wt', props), sob = (props) => one('sortbench', 'so', props), cbb = (props) => one('combobench', 'cb', props);
   const pob = (props) => one('pourbench', 'pb', props), Pb = ms('pb');
+  const rgb = (props) => one('ringbench', 'rg', props), Rg = ms('rg'), sqb = (props) => one('seqbench', 'sq', props), Sq = ms('sq');
+  const ring = (fn) => (w) => w.some('ringbench', (e) => fn((port) => w.num(e, port)));
   const MOVES = {
     // ---- 数轴 ----
     'g1-split-merge-core': { shelf: ['numlinebench'], build: nl({ from: 0, to: 10, a: 0, s: 1, n: 0 }),
@@ -939,6 +941,53 @@
     'place-sub': { shelf: ['vertbench'], build: vt({ mode: 1, a: 62, b: 37 }),
       hook: '62 减 37。个位 2 不够减 7：先点十位上面的小圆圈“退 1”，再一位一位写。',
       milestones: [Vt('done', '62 − 37 = 25', 8, 'result', 25, ['2 不够减 7：点十位上面的小圆圈。', '个位 12 − 7 = 5。', '十位 5 − 3 = 2。'])], goal: ['done'] },
+    // ======== 第四十二批：竖式工作台 → 竖式、计数块、乘法竖式、零对；质因数积木 → 因数与倍数 ========
+    'arith-carry-47-38': { shelf: ['vertbench'], build: vt({ mode: 0, a: 47, b: 38 }),
+      hook: '47 + 38。从个位算起：7 + 8 满十了，个位写几？进上去的 1 记在十位上面。',
+      milestones: [Vt('sum', '47 + 38 = 85', 6, 'result', 85, ['个位 7 + 8 = 15：写 5，点十位上面的小圆圈进 1。', '十位 4 + 3 + 1 = 8。', '85。'])], goal: ['sum'] },
+    'arith-round-47-38': { shelf: ['blocksbench'], build: bk({ mode: 1, a: 47, b: 38, h: 0, t: 7, o: 15 }),
+      hook: '47 和 38 的块倒在一起：十位 7 根，个位 15 块。从 38 的 8 块里拿 3 块给 47，正好凑成 50：把 10 块一捆，捆成一根十。',
+      milestones: [K('std', '凑成整十：8 个十、5 个一，85', 6, 'standard', 1, ['个位 15 块，超过 9。', '7 + 3 = 10：凑满 10 块往左拖。', '50 + 35 = 85。'])], goal: ['std'] },
+    'arith-mul-23-14': { shelf: ['mulbench'], build: mb({ a: 23, b: 14 }),
+      hook: '23 × 14：把 14 拆成 10 和 4，面积图分成几块，一块一块算再加起来。竖式的每一行就是一块。',
+      milestones: [Mb('prod', '23 × 14 = 322', 6, 'product', 322, ['23 × 4 = 92。', '23 × 10 = 230。', '92 + 230 = 322。'])], goal: ['prod'] },
+    'arith-sub-negative': { shelf: ['chipbench'], title: '13 − 27 是多少？', build: zp({ mode: 0, op: 1, a: 13, b: 27, pos: 13, neg: 0 }),
+      hook: '台面上有 13 个 +1，要拿走 27 个 +1：不够拿。先放进零对（一个 +1 和一个 −1，合起来是 0，数不变），够了再拿。',
+      milestones: [Z('res', '13 − 27 = −14', 6, 'result', -14, ['还差 14 个 +1：放进 14 对零对。', '再拿走 27 个 +1。', '剩 14 个 −1：−14。'])], goal: ['res'],
+      why: '13 − 27：要拿走的比有的多，先放进 14 对零对，拿走 27 个 +1，剩下 14 个 −1，就是 −14。也就是 13 − 27 = −(27 − 13)：先算大数减小数，再在前面加负号。' },
+    'pb-split-36': { shelf: ['factorbench'], build: fb({ mode: 4, pn: 36 }),
+      hook: '把 36 拆成质数积木：点“÷ 2”“÷ 3”……用哪个质数能除尽就拆下一块，拆到 1 为止。',
+      milestones: [Fb('four', '36 = 2 × 2 × 3 × 3，4 块质数积木', 6, 'split', 1, ['36 是双数：先 ÷ 2。', '18 ÷ 2 = 9，9 ÷ 3 = 3。', '3 ÷ 3 = 1：2 × 2 × 3 × 3。'])], goal: ['four'] },
+    'pb-reduce-24-36': { shelf: ['factorbench'], build: fb({ mode: 4, pn: 24, pd: 36 }),
+      hook: '24 = 2 × 2 × 2 × 3，36 = 2 × 2 × 3 × 3。点分子里的积木：分母里也有一样的，就成对拿掉。拿到没有共有的为止。',
+      milestones: [Fb('num', '分子约成 2', 3, 'rn', 2, ['分子分母都有 2：点分子里的 2。', '还有一对 2。', '再拿掉一对 3。']), Fb('den', '分母约成 3：最简分数 2/3', 4, 'rd', 3, ['分母剩下的是 3。', '分子剩 2，分母剩 3。', '2/3。'])], goal: ['num', 'den'] },
+    'pb-twelve-divisors': { shelf: ['factorbench'], build: fb({ mode: 4, pn: 1 }),
+      hook: '点“× 2”“× 3”“× 5”……用质数积木搭一个数，下面写着它有几个因数。搭出一个有 12 个因数的数；最小的是几？',
+      milestones: [Fb('twelve', '搭出一个有 12 个因数的数', 3, 'ndiv', 12, ['因数个数 = 每种积木的块数加 1，再相乘。', '12 = 3 × 2 × 2：三种积木，块数 2、1、1。', '比如 2 × 2 × 3 × 5。']), Fb('min', '最小的是 60', 6, 'value', 60, ['多的块数给最小的质数。', '2 用 2 块，3 和 5 各 1 块。', '2 × 2 × 3 × 5 = 60。'])], goal: ['twelve', 'min'] },
+    // ======== 第四十三批：同余钟、数的性质 → 跳格钟；取第 n 项 → 数列与规律 ========
+    'clock-gcd': { shelf: ['ringbench'], build: rgb({ m: 12, k: 4 }),
+      hook: '12 格的钟，每拍走 4 格。点“走一圈”：几拍回到 0？走到几个格？再用 − + 换别的步长试试，哪些能走遍 12 个格？',
+      milestones: [H('k4', '步长 4：只走到 3 个格', 2, ring((v) => v('k') === 4 && v('reach') === 3), ['点“走一圈”。', '0、4、8、0。', '3 个格。']),
+        H('back3', '3 拍回到起点', 2, ring((v) => v('k') === 4 && v('period') === 3), ['数一数走了几拍。', '0 → 4 → 8 → 0。', '3 拍。']),
+        H('k6', '步长 6：只走到 2 个格', 2, ring((v) => v('k') === 6 && v('reach') === 2), ['点 + 把步长改成 6。', '再走一圈。', '0、6、0：2 个格。']),
+        H('all12', '找到一个步长（不是 1）能走遍 12 个格', 4, ring((v) => v('k') !== 1 && v('all') === 1), ['和 12 没有公因数（除了 1）的步长。', '试试 5、7、11。', '步长 5：走遍。'])],
+      goal: ['k4', 'k6', 'all12'] },
+    'coprime-all': { shelf: ['ringbench'], build: rgb({ m: 10, k: 1 }),
+      hook: '10 格的钟，步长从 1 到 9 都试试：每换一个步长点“走一圈”，右边的表会记下走到几个格。哪些步长能走遍？',
+      milestones: [H('k3', '步长 3：走遍 10 个格', 2, ring((v) => v('k') === 3 && v('all') === 1), ['步长改成 3，走一圈。', '0、3、6、9、2、5、8、1、4、7。', '10 个格都走到了。']),
+        H('k7', '步长 7：也能走遍', 2, ring((v) => v('k') === 7 && v('all') === 1), ['步长改成 7。', '走一圈。', '走遍。']),
+        H('k9', '步长 9：也能走遍', 2, ring((v) => v('k') === 9 && v('all') === 1), ['步长改成 9。', '9 就是往回走 1。', '走遍。']),
+        H('k5', '步长 5：只走 2 个格', 2, ring((v) => v('k') === 5 && v('reach') === 2), ['步长改成 5。', '0、5、0。', '2 个格。'])],
+      goal: ['k3', 'k7', 'k9', 'k5'] },
+    'last-digit-cycle': { shelf: ['ringbench'], build: rgb({ m: 10, op: 1, k: 3, gb: 100 }),
+      hook: '10 格的乘法钟：从 1 出发，每拍乘 3，只看个位。3、9、27、81……个位会重复吗？先“走一圈”，再走到第 100 拍。',
+      milestones: [Rg('cycle', '4 拍一轮：1、3、9、7', 3, 'period', 4, ['点“走一圈”。', '个位 3、9、7、1。', '4 拍回到 1。']), Rg('e100', '第 100 拍停在 1', 5, 'atv', 1, ['100 是 4 的倍数。', '走 25 轮正好回到 1。', '点“走 10 拍”走到 100。'])],
+      goal: ['cycle', 'e100'] },
+    'nth-tenth': { shelf: ['seqbench'], title: '火柴摆三角形：第 10 个要几根？', build: sqb({ kind: 2, k: 1, a: 0, d: 0, n: 10 }),
+      hook: '一个三角形 3 根，两个 5 根，三个 7 根……先多摆几个找规律，写成“第 1 个是几，以后每个多几”，再看第 10 个。',
+      milestones: [Sq('rule', '规律：第 1 个 3 根，每个多 2 根', 3, 'found', 1, ['点“再摆一个”。', '3、5、7：每次多 2。', '改 a 和 d：3 和 2。']), Sq('ten', '第 10 个：3 + 9 × 2 = 21 根', 5, 'term', 21, ['第 n 个是 3 + (n − 1) × 2。', '也就是 2 × n + 1。', '2 × 10 + 1 = 21。'])],
+      goal: ['rule', 'ten'],
+      why: '第 n 个三角形要 2n + 1 根：第 1 个 3 根，以后每多一个三角形多 2 根。第 10 个就是 3 + 9 × 2 = 21。第 n 项只由 n 决定，这就是通项公式。' },
   };
   const missing = [], moved = [], original = {};
   for (const id of Object.keys(MOVES)) {
