@@ -1,12 +1,12 @@
 # 知识点覆盖报告
 
-> 由 `node tools/coverage.js` 生成，日期 2026-11-21。数据来自 `js/core/curriculum.js` 与 `problems/*.js`。
+> 由 `node tools/coverage.js` 生成，日期 2026-11-22。数据来自 `js/core/curriculum.js` 与 `problems/*.js`。
 
 ## 总览
 
 - 知识点：142 个（设计目标 142）
 - 有题的知识点：141 个（99%）
-- 题目：625 道；没有对应知识点的题：1 道
+- 题目：635 道；没有对应知识点的题：1 道
 - 没有器材的本质：无
 - 没有题的本质：无
 
@@ -16,10 +16,10 @@
 |---|---|---|---|
 | 1 | 16 | 16（100%） | 55 |
 | 2 | 16 | 16（100%） | 57 |
-| 3 | 16 | 16（100%） | 87 |
+| 3 | 16 | 16（100%） | 92 |
 | 4 | 17 | 17（100%） | 96 |
 | 5 | 14 | 14（100%） | 107 |
-| 6 | 15 | 14（93%） | 59 |
+| 6 | 15 | 14（93%） | 64 |
 | 7 | 16 | 16（100%） | 78 |
 | 8 | 16 | 16（100%） | 76 |
 | 9 | 16 | 16（100%） | 40 |
@@ -75,7 +75,7 @@
 | 3.12 | 3 | 面积 | 12 | 0 | 0 | 1 | areabench、areamodel、asn、curved、geoboard、circlebench、optimize、solidbench、turtle |
 | 3.13 | 3 | 年、月、日 | 4 | 1 | 0 | 1 | calbench |
 | 3.14 | 3 | 小数的初步认识 | 3 | 1 | 0 | 1 | decbench、numlinebench、twoways |
-| 3.15b | 3 | 搭配（二） | 3 | 1 | 0 | 1 | combobench、areamodel、euler |
+| 3.15b | 3 | 搭配（二） | 8 | 1 | 0 | 1 | combobench、areamodel、euler、treebench |
 | 4.1 | 4 | 大数的认识、近似数 | 5 | 0 | 0 | 1 | chancebench、num |
 | 4.2 | 4 | 公顷和平方千米 | 1 | 1 | 0 | 1 | ratiobench |
 | 4.3 | 4 | 角的度量 | 2 | 0 | 0 | 1 | anglebench |
@@ -120,7 +120,7 @@
 | 6.10 | 6 | 百分数（二） | 2 | 1 | 0 | 1 | ratiobench |
 | 6.11 | 6 | 圆柱与圆锥 | 1 | 1 | 0 | 1 | circlebench |
 | 6.12 | 6 | 比例 | 9 | 1 | 0 | 1 | ratiobench、fitbench、fmachine、euler、scale、shadow、taxi |
-| 6.13 | 6 | 鸽巢问题 | 1 | 1 | 0 | 1 | groupbench |
+| 6.13 | 6 | 鸽巢问题 | 6 | 1 | 0 | 1 | groupbench、pigeonbench |
 | 6.14 | 6 | 综合与实践 / 整理和复习 | 0 | 0 | 0 | — | — |
 | 7.1 | 7 | 正数和负数、有理数与数轴 | 6 | 1 | 0 | 1 | approach、conjbench、chipbench、numlinebench、proofsort |
 | 7.2 | 7 | 有理数的加减法 | 7 | 1 | 0 | 1 | numlinebench、findbug、chipbench、newop |
@@ -175,13 +175,13 @@
 
 | 本质 | 题目数 | 器材数 |
 |---|---|---|
-| E1 | 64 | 27 |
-| E2 | 251 | 55 |
+| E1 | 69 | 28 |
+| E2 | 261 | 57 |
 | E3 | 153 | 44 |
 | E4 | 121 | 32 |
 | E5 | 145 | 55 |
 | E6 | 59 | 24 |
-| E7 | 131 | 32 |
+| E7 | 136 | 33 |
 | E8 | 66 | 23 |
 | E9 | 72 | 17 |
 | E10 | 10 | 4 |

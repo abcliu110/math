@@ -125,6 +125,10 @@ module.exports = [
       ['mgsb','meter',{'digits':0,'label':'高斯求和：和'}],
       ['grb','grassbench',{'mode':0,'r':5,'k1':10,'d1':20,'k2':15,'d2':10,'k3':25,'t3':5}],
       ['mgrb','meter',{'digits':0,'label':'牛吃草：每天长几份'}],
+      ['pgb','pigeonbench',{'c1':5,'c2':5,'c3':5,'want':0,'m':2,'x1':1,'x2':1,'x3':1}],
+      ['mpgb','meter',{'digits':0,'label':'摸球：保证要摸几个'}],
+      ['tre','treebench',{'mode':0,'m':3,'k':2,'open':3}],
+      ['mtre','meter',{'digits':0,'label':'枚举树：一共几种'}],
     ],
     links: [
       ['am','mam','v','area'],
@@ -186,6 +190,8 @@ module.exports = [
       ['sgb','msgb','v','seen'],
       ['gsb','mgsb','v','total'],
       ['grb','mgrb','v','r'],
+      ['pgb','mpgb','v','guar'],
+      ['tre','mtre','v','count'],
     ],
   },
 ];

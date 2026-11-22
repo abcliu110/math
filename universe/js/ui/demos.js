@@ -1060,5 +1060,34 @@
     },
   };
 
+  // 摸球保证（最不利原则）
+  D.pigeonbench = {
+    caps: ['红、黄、蓝球很多：保证 2 个同色？', '最倒霉：红一个', '黄一个、蓝一个：还没成对', '再摸一个一定成对：3 + 1 = 4'],
+    draw(st) {
+      let s = '';
+      const cs = ['#e05a4f', '#f2c14e', '#4f86d9'];
+      for (let i = 0; i < 3; i++) for (let k = 0; k < 4; k++) s += Ci(40 + k * 22, 40 + i * 30, 9, cs[i], { s: INK });
+      const n = st === 0 ? 0 : st === 1 ? 1 : 3;
+      for (let i = 0; i < n; i++) s += Ci(220 + i * 26, 70, 10, cs[i], { s: INK });
+      if (st >= 3) s += Ci(220 + 3 * 26, 70, 10, 'none', { s: P, d: '3 2', sw: 2 }) + T(220, 120, '3 + 1 = 4', { s: 15, w: 700, f: P, a: 'start' });
+      return s;
+    },
+  };
+
+  // 枚举树
+  D.treebench = {
+    caps: ['1、2、3 排两位数', '先定十位：1 打头的', '2 打头、3 打头的', '每枝 2 个，3 枝：6 个'],
+    draw(st) {
+      let s = '';
+      const L = [['12', '13'], ['21', '23'], ['31', '32']];
+      for (let i = 0; i < 3; i++) {
+        s += Ln(36, 90, 80, 50 + i * 40, { s: INK, w: 1 }) + Rc(80, 38 + i * 40, 30, 24, '#fff3d6', { s: INK, r: 5 }) + T(95, 55 + i * 40, String(i + 1), { s: 13, w: 700 });
+        if ((i === 0 && st >= 1) || st >= 2) L[i].forEach((t, j) => { s += Rc(130 + j * 44, 38 + i * 40, 38, 24, '#e3f4e6', { s: INK, r: 4 }) + T(149 + j * 44, 55 + i * 40, t, { s: 13, w: 700 }); });
+      }
+      if (st >= 3) s += T(240, 95, '2 × 3 = 6', { s: 15, w: 700, f: P, a: 'start' });
+      return s;
+    },
+  };
+
   UI.Demo = D;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

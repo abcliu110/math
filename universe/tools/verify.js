@@ -142,6 +142,8 @@ async function checkDist() {
   if (!runScript('tests/ui-state.js', 'tests/ui-state.js', pwEnv)) bail();   // 状态图：真实鼠标过河（死路、最少 7 步）、汉诺塔最少、取石子往回标并赢电脑
   if (!runScript('tests/ui-gauss.js', 'tests/ui-gauss.js', pwEnv)) bail();   // 高斯求和：真实鼠标倒过来写、对齐相加，摆出奇数串
   if (!runScript('tests/ui-grass.js', 'tests/ui-grass.js', pwEnv)) bail();   // 牛吃草：真实鼠标改每天长几份对上两次记录，再求天数；一天一天看
+  if (!runScript('tests/ui-pigeon.js', 'tests/ui-pigeon.js', pwEnv)) bail();   // 摸球保证：真实鼠标当最倒霉的人摸到卡住；每种都有要比几种摸法
+  if (!runScript('tests/ui-tree.js', 'tests/ui-tree.js', pwEnv)) bail();   // 枚举树：真实鼠标一枝一枝展开；0 打头剪枝、双数划掉、凑钱分类加
   if (!runScript('tests/ui-areamodel.js', 'tests/ui-areamodel.js', pwEnv)) bail();   // 面积模型（样板操作台）和器材把手：真实鼠标拖边、切、改分数
   if (!runScript('tests/ui-shapes.js', 'tests/ui-shapes.js', pwEnv)) bail();         // 常见图形、顶点编辑、直接拖出辅助线（真实鼠标和键盘）；含画布横纵比例回归
   if (!runScript('tests/ui-export.js', 'tests/ui-export.js', pwEnv)) bail();         // 2.12/V10：导出图片（真实鼠标点菜单，台面和专注工作区各一次下载，.png、大小 > 0）

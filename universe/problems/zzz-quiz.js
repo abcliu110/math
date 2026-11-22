@@ -45,8 +45,9 @@
   //      推广     输出随属性有规律地变（一次或二次）：先做三个，写下规律猜一个远一点的，再调过去验证
   //   出不来（台面上改不了数、没有好的规律）就不出，这个操作台在这一档没有按钮。
   // 名字不好读、或者扫出来没有数学意义的属性（显示用的序号、计数器、编码），在 TSKIP 里跳过；TNAME 给属性、输出起孩子读得懂的名字。
-  const TSKIP = { estbench: '*', relbench: '*', statebench: '*', clockbench: '*', chancebench: '*', rulerbench: '*', seqbench: ['k'], solidbench: ['cols', 'rows'], ringbench: ['beats'], calbench: ['d1', 'd2'] };
-  const TNAME = { seqbench: { n: '第几个' }, numlinebench: { '>value': '落点' }, anglebench: { a: '∠1 的度数' } };
+  const TSKIP = { estbench: '*', relbench: '*', statebench: '*', clockbench: '*', chancebench: '*', rulerbench: '*', seqbench: ['k'], solidbench: ['cols', 'rows'], ringbench: ['beats'], calbench: ['d1', 'd2'], pigeonbench: '*', treebench: ['open'] };
+  const TNAME = { treebench: { m: '卡片张数', amt: '要凑的钱数' }, seqbench: { n: '第几个' }, numlinebench: { '>value': '落点' }, anglebench: { a: '∠1 的度数' } };
+  const CONDT = ['', '其中双数', '其中单数'];
   const TNOX = ['calbench'];   // 输出不能比大小（星期几）：不出“最多最少”
   // 标签“一一对应：上面剩几个（连完才有）”→“上面剩几个”：去掉括号里的说明；有冒号时取冒号后面（后面是“1 是”这种开关说明就取前面）
   const cleanLab = (s) => { const a = String(s || '').replace(/（[^）]*）|\([^)]*\)/g, '').trim(), i = a.lastIndexOf('：'); if (i < 0) return a; const r = a.slice(i + 1).trim(); return r && !/^\d/.test(r) ? r : a.slice(0, i).trim(); };
@@ -629,6 +630,47 @@
       const unit = who === '抽水机' ? '台' : '头', title = who === '抽水机' ? '井里的水一边往外冒一边被抽：' + k1 + ' 台抽水机 ' + d1 + ' 小时抽干，' + k2 + ' 台 ' + d2 + ' 小时抽干。' + k3 + ' 台几小时抽干？' : '一片' + what + '地：' + k1 + ' ' + unit + who + ' ' + d1 + ' 天吃完，' + k2 + ' ' + unit + who + ' ' + d2 + ' 天吃完。' + k3 + ' ' + unit + who + '几天吃完？';
       return { title, hook: '先比两次：多的那几天多吃的，就是那几天新长的。改“每天长几份”，让两根长条里“原来的”一样长；再改第三行的天数。', props: { mode: 0, r: 0, k1, d1, k2, d2, k3, t3: 1 }, goals: [['r', r, '每天长 ' + r + ' 份'], ['t3', t3, k3 + ' ' + unit + ' ' + t3 + (who === '抽水机' ? ' 小时' : ' 天')]], sol: { r, t3 }, answer: t3 };
     }
+  } });
+
+  // 摸球保证（最不利原则）：容易 2 个同色；中等 m 个同色（有的颜色不够 m − 1 个是陷阱）或 m 个红的；难 每种颜色都有。参考做法是最倒霉的那一种摸法
+  add('pigeonbench', { gen(R, lv) {
+    const NM = ['红', '黄', '蓝', '绿'];
+    for (;;) {
+      const nc = R.int(lv === 1 ? 2 : 3, 4), c = [0, 1, 2, 3].map((i) => (i < nc ? R.int(lv === 1 ? 3 : 1, lv === 3 ? 9 : 8) : 0));
+      const [thing, unit, how, vb] = R.pick([['球', '个', '闭着眼睛摸', '摸'], ['袜子', '只', '黑着灯拿', '拿'], ['铅笔', '支', '闭着眼睛拿', '拿']]);
+      const has = c.slice(0, nc).map((v, i) => NM[i] + thing + ' ' + v + ' ' + unit).join('、');
+      const props = { c1: c[0], c2: c[1], c3: c[2], c4: c[3], x1: 0, x2: 0, x3: 0, x4: 0 };
+      if (lv === 1 || (lv === 2 && R.bool())) {
+        const m = lv === 1 ? 2 : R.int(3, 4); if (!c.some((v) => v >= m)) continue;
+        if (lv === 2 && !c.slice(0, nc).some((v) => v < m - 1)) continue;   // 中等要有一种颜色不够 m − 1 个
+        const x = c.map((v) => Math.min(v, m - 1)), ans = x.reduce((a, b) => a + b, 0) + 1;
+        return { title: '盒子里有' + has + '。' + how + '，至少' + vb + '几' + unit + '才能保证有 ' + m + ' ' + unit + '同色的？', hook: '你来当最倒霉的人：一' + unit + '一' + unit + '地' + vb + '，尽量不让它成功。' + vb + '到卡住，再加 1。', props: Object.assign(props, { want: 0, m }), goals: [['guar', ans, '至少 ' + ans + ' ' + unit]], sol: { x1: x[0], x2: x[1], x3: x[2], x4: x[3] }, answer: ans };
+      }
+      if (lv === 2) {
+        const m = R.int(2, Math.max(2, c[0])); if (c[0] < 2) continue;
+        const x = c.map((v, i) => (i ? v : m - 1)), ans = x.reduce((a, b) => a + b, 0) + 1;
+        return { title: '盒子里有' + has + '。' + how + '，至少' + vb + '几' + unit + '才能保证有 ' + m + ' ' + unit + '红的？', hook: '最倒霉的时候，先' + vb + '到的都是什么颜色？红的' + vb + '到几' + unit + '就卡住了？', props: Object.assign(props, { want: 2, m }), goals: [['guar', ans, '至少 ' + ans + ' ' + unit]], sol: { x1: x[0], x2: x[1], x3: x[2], x4: x[3] }, answer: ans };
+      }
+      if (c.slice(0, nc).some((v) => v < 1)) continue;
+      const lo = c.slice(0, nc).indexOf(Math.min(...c.slice(0, nc))), x = c.map((v, i) => (i === lo ? 0 : v)), ans = x.reduce((a, b) => a + b, 0) + 1;
+      if (c.slice(0, nc).filter((v) => v === c[lo]).length > 1 && R.bool()) continue;
+      return { title: '盒子里有' + has + '。' + how + '，至少' + vb + '几' + unit + '才能保证每种颜色都有？', hook: '最倒霉的人会把哪几种颜色先全' + vb + '完？试几种' + vb + '法，比一比卡住时哪种' + vb + '得最多。', props: Object.assign(props, { want: 1, m: 1 }), goals: [['guar', ans, '至少 ' + ans + ' ' + unit]], sol: { x1: x[0], x2: x[1], x3: x[2], x4: x[3] }, answer: ans };
+    }
+  } });
+  // 枚举树：容易 1…m 排两位数（不重复）；中等 带 0、可重复、或者三位数；难 只要双数 / 单数，或者凑钱。参考做法：全部展开
+  add('treebench', { gen(R, lv) {
+    const T = U.TreeBench.model, fin = { open: 6 };
+    const mk = (p) => { const props = Object.assign({ mode: 0, m: 3, zero: false, k: 2, rep: false, cond: 0, set: 0, amt: 10, open: 0 }, p), n = T(Object.assign({}, props, fin)).count; return { props, n }; };
+    if (lv === 3 && R.bool()) {
+      const set = R.int(0, 1), amt = set ? R.pick([15, 20, 25, 30]) : R.int(6, 15), { props, n } = mk({ mode: 1, set, amt });
+      const [b, mid] = set ? [10, 5] : [5, 2];
+      return { title: '用 1 元、' + mid + ' 元、' + b + ' 元的钱（每种都足够多）凑 ' + amt + ' 元，有几种凑法？', hook: '先定大的：' + b + ' 元用几张？每一枝再看 ' + mid + ' 元用几张，剩下的用 1 元。', props, goals: [['count', n, '一共 ' + n + ' 种']], sol: fin, answer: n };
+    }
+    const p = lv === 1 ? { m: R.int(3, 5) } : lv === 2 ? R.pick([{ m: R.int(3, 5), zero: true }, { m: R.int(2, 4), rep: true }, { m: R.int(3, 4), k: 3 }]) : Object.assign({ m: R.int(3, 5), cond: R.int(1, 2) }, R.pick([{}, { zero: true }, { rep: true }]));
+    const { props, n } = mk(p), cs = Array.from({ length: props.m }, (_, i) => (props.zero ? i : i + 1));
+    const title = '用 ' + cs.join('、') + ' 这 ' + props.m + ' 个数字排' + (props.k === 2 ? '两' : '三') + '位数' + (props.rep ? '（同一个数字可以重复用）' : '（每个数字只能用一次）') + '，' + (props.cond ? CONDT[props.cond] + '有几个？' : '能排几个？');
+    const hook = props.zero ? '0 能打头吗？先定最高位，一枝一枝展开。' : props.cond ? '先定十位，一枝一枝列出来；个位是几才是' + CONDT[props.cond].slice(2) + '？' : '先定最高位是几，一枝一枝展开：每一枝一样多吗？';
+    return { title, hook, props, goals: [['count', n, '一共 ' + n + ' 个']], sol: fin, answer: n };
   } });
 
   add('pourbench', { gen(R, lv) {
