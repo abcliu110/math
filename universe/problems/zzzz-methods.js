@@ -34,7 +34,7 @@
     balancebench: ['equation'], systembench: ['equation'], termsbench: ['transform'],
     statebench: ['enum', 'back'], pourbench: ['enum'], combobench: ['enum'], chancebench: ['enum'],
     seqbench: ['pattern'], ringbench: ['pattern'],
-    featbench: ['parity'], chipbench: ['invariant'],
+    featbench: ['parity'], chipbench: ['invariant'], gaussbench: ['transform', 'invariant'], grassbench: ['invariant', 'corr'],
     weighbench: ['extreme'], optbench: ['extreme'],
     meanbench: ['transform'], areabench: ['transform'], circlebench: ['transform'], areamodel: ['transform'], fracbench: ['transform'], mulbench: ['transform'],
     vennbench: ['classify'], sortbench: ['classify'],

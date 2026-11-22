@@ -6,7 +6,7 @@
 
 - 知识点：142 个（设计目标 142）
 - 有题的知识点：141 个（99%）
-- 题目：618 道；没有对应知识点的题：1 道
+- 题目：625 道；没有对应知识点的题：1 道
 - 没有器材的本质：无
 - 没有题的本质：无
 
@@ -14,11 +14,11 @@
 
 | 年级 | 知识点 | 有题 | 题目数 |
 |---|---|---|---|
-| 1 | 16 | 16（100%） | 51 |
+| 1 | 16 | 16（100%） | 55 |
 | 2 | 16 | 16（100%） | 57 |
 | 3 | 16 | 16（100%） | 87 |
-| 4 | 17 | 17（100%） | 92 |
-| 5 | 14 | 14（100%） | 104 |
+| 4 | 17 | 17（100%） | 96 |
+| 5 | 14 | 14（100%） | 107 |
 | 6 | 15 | 14（93%） | 59 |
 | 7 | 16 | 16（100%） | 78 |
 | 8 | 16 | 16（100%） | 76 |
@@ -43,7 +43,7 @@
 | 1.13 | 1 | 100以内数的认识 | 4 | 0 | 0 | 1 | blocksbench、num |
 | 1.14 | 1 | 认识人民币 | 4 | 1 | 0 | 1 | moneybench |
 | 1.15 | 1 | 100以内加减法（一） | 1 | 1 | 0 | 1 | blocksbench |
-| 1.16 | 1 | 找规律 | 7 | 0 | 0 | 1 | num、meter、conjbench、fmachine、guessrule、proofbench、seqbench、statebench |
+| 1.16 | 1 | 找规律 | 11 | 0 | 0 | 1 | num、meter、conjbench、fmachine、gaussbench、guessrule、proofbench、seqbench、statebench |
 | 2.1 | 2 | 长度单位、线段 | 2 | 1 | 0 | 1 | rulerbench |
 | 2.2 | 2 | 100以内加减法（二） | 9 | 1 | 0 | 1 | vertbench、estbench、blocksbench |
 | 2.3 | 2 | 进位加法、退位减法 | 6 | 1 | 0 | 1 | blocksbench、vertbench |
@@ -86,7 +86,7 @@
 | 4.8 | 4 | 优化 | 3 | 1 | 0 | 1 | optbench |
 | 4.9 | 4 | 四则运算 | 10 | 1 | 0 | 1 | asn、termsbench、findbug、turtle |
 | 4.17 | 4 | 观察物体（二） | 1 | 1 | 0 | 1 | solidbench |
-| 4.10 | 4 | 运算定律 | 9 | 1 | 0 | 1 | termsbench、fastbench |
+| 4.10 | 4 | 运算定律 | 13 | 1 | 0 | 1 | termsbench、fastbench、gaussbench |
 | 4.11 | 4 | 小数的意义和性质 | 1 | 1 | 0 | 1 | decbench |
 | 4.12 | 4 | 三角形 | 6 | 0 | 0 | 1 | tribench、curved、areabench、guessrule |
 | 4.13 | 4 | 小数的加法和减法 | 2 | 1 | 0 | 1 | decbench |
@@ -97,7 +97,7 @@
 | 5.2 | 5 | 位置 | 1 | 1 | 0 | 1 | gridbench |
 | 5.3 | 5 | 小数除法 | 1 | 1 | 0 | 1 | decbench |
 | 5.4 | 5 | 可能性 | 7 | 1 | 0 | 3 | chancebench、pairbench、ptree、ringbench |
-| 5.5 | 5 | 简易方程 | 13 | 0 | 0 | 1 | variable、balancebench、nim、costplan、seqbench、systembench |
+| 5.5 | 5 | 简易方程 | 16 | 0 | 0 | 1 | variable、balancebench、nim、grassbench、costplan、seqbench、systembench |
 | 5.6 | 5 | 多边形的面积 | 7 | 1 | 0 | 1 | areabench、gworkspace、gpt、gpoly、fquad |
 | 5.7 | 5 | 植树问题 | 7 | 1 | 0 | 1 | gapbench |
 | 5.14 | 5 | 观察物体（三） | 2 | 1 | 0 | 1 | solidbench、twoways |
@@ -176,12 +176,12 @@
 | 本质 | 题目数 | 器材数 |
 |---|---|---|
 | E1 | 64 | 27 |
-| E2 | 247 | 54 |
+| E2 | 251 | 55 |
 | E3 | 153 | 44 |
-| E4 | 114 | 30 |
+| E4 | 121 | 32 |
 | E5 | 145 | 55 |
 | E6 | 59 | 24 |
-| E7 | 128 | 31 |
+| E7 | 131 | 32 |
 | E8 | 66 | 23 |
 | E9 | 72 | 17 |
 | E10 | 10 | 4 |

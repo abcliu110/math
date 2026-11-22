@@ -1032,5 +1032,33 @@
     },
   };
 
+  // 高斯求和
+  D.gaussbench = {
+    caps: ['1 + 2 + 3 + 4 + 5', '倒过来写一行', '每一列都是 6', '6 × 5 ÷ 2 = 15'],
+    draw(st) {
+      let s = '';
+      for (let i = 0; i < 5; i++) {
+        s += Rc(40 + i * 44, 30, 38, 30, '#fff3d6', { s: INK }) + T(59 + i * 44, 50, String(i + 1), { s: 14, w: 700 });
+        if (st >= 1) s += Rc(40 + i * 44, 70, 38, 30, '#dcebfb', { s: INK }) + T(59 + i * 44, 90, String(5 - i), { s: 14, w: 700 });
+        if (st >= 2) s += Rc(40 + i * 44, 116, 38, 30, '#e3f4e6', { s: INK }) + T(59 + i * 44, 136, '6', { s: 14, w: 700, f: P });
+      }
+      if (st >= 3) s += T(290, 136, '6 × 5 ÷ 2 = 15', { s: 15, w: 700, f: P, a: 'start' });
+      return s;
+    },
+  };
+
+  // 牛吃草
+  D.grassbench = {
+    caps: ['10 头 20 天：吃了 200 份', '15 头 10 天：吃了 150 份', '多 10 天多吃 50 份：每天长 5', '原来的草都是 100 份'],
+    draw(st) {
+      let s = '';
+      const g = st >= 2 ? 100 : 60;
+      s += Rc(40, 40, g, 26, '#9bd08f', { s: INK }) + Rc(40 + g, 40, 200 - g, 26, '#d8f0c8', { s: INK }) + T(250, 58, '200', { s: 13, a: 'start' });
+      if (st >= 1) s += Rc(40, 90, g, 26, '#9bd08f', { s: INK }) + Rc(40 + g, 90, 150 - g, 26, '#d8f0c8', { s: INK }) + T(200, 108, '150', { s: 13, a: 'start' });
+      if (st >= 3) s += Ln(140, 34, 140, 122, { s: P, d: '4 3' }) + T(150, 150, '原来 100', { s: 14, w: 700, f: P, a: 'start' });
+      return s;
+    },
+  };
+
   UI.Demo = D;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

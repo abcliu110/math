@@ -143,7 +143,7 @@
     if (!q) return null;
     // 光秃秃的算式（“47 + 38 用竖式算”）一半配上情境：同一个算式，讲成合并、比较、几倍、平均分……
     const R2 = mkR(seed * 31 + level), bare = /^(\d+(?:\.\d+)?) ([+−×÷]) (\d+(?:\.\d+)?)(.*)$/.exec(q.title);
-    if (bare && level <= 3 && R2.bool() && !(bare[2] === '−' && +bare[1] < +bare[3])) q = Object.assign({}, q, { title: U.Word.story(R2, bare[2], +bare[1], +bare[3]) + '（' + bare[1] + ' ' + bare[2] + ' ' + bare[3] + '）' });
+    if (bare && level <= 3 && !/[+−×÷…]/.test(bare[4]) && R2.bool() && !(bare[2] === '−' && +bare[1] < +bare[3])) q = Object.assign({}, q, { title: U.Word.story(R2, bare[2], +bare[1], +bare[3]) + '（' + bare[1] + ' ' + bare[2] + ' ' + bare[3] + '）' });
     let predict = null;
     if (level === 6) { const ans = answerOf(q); predict = { form: 'number', q: '先想一想：答案是多少？写下你的答案，再在操作台上做出来验证。', answer: String(ans) }; }
     if (q.predict) predict = q.predict;
@@ -602,6 +602,33 @@
     }
     for (;;) { const A = R.int(4, 11), B = R.int(2, A - 1), tg = R.int(1, A - 1), props = { puz: 0, pa: A, pb: B, pt: tg }; if (tg === B) continue; const r = pathTo(props); if (r.best < (lv === 1 ? 2 : 4) || r.best < 0) continue;
       return { title: '只用 ' + A + ' 升和 ' + B + ' 升的杯子，最少几步量出 ' + tg + ' 升？', hook: '每一种两杯的水量是一个点。走到以后点“看全部”，找最短的路。', props, goals: [['fewest', 1, '最少 ' + r.best + ' 步']], sol: { path: r.ids.join(',') } }; }
+  } });
+
+  // 高斯求和：容易 1 + 2 + … + n；中等 奇数、偶数、隔几个的和（自己摆出这串数）；难 给头、尾、每次加几（先求个数）或者情境（座位、堆木头）
+  add('gaussbench', { gen(R, lv) {
+    const fin = { flip: true, pair: true };
+    if (lv === 1) { const n = R.pick([10, 20, 30, 40, 50, 60, 100]), t = n * (n + 1) / 2; return { title: '1 + 2 + 3 + … + ' + n + ' 等于多少？', hook: '倒过来写一行，上下对齐相加：每一列都一样大。', props: { a: 1, d: 1, n }, goals: [['total', t, '和是 ' + t]], sol: fin, answer: t }; }
+    for (;;) {
+      const a = lv === 2 ? R.pick([1, 2]) : R.int(2, 30), d = lv === 2 ? 2 : R.int(2, 6), n = lv === 2 ? R.int(8, 30) : R.int(8, 30), last = a + (n - 1) * d, t = (a + last) * n / 2;
+      if (lv === 2) return { title: Array.from({ length: 3 }, (_, i) => a + i * d).join(' + ') + ' + … + ' + last + ' 等于多少？', hook: '先摆出这串数：从 ' + a + ' 开始，每次加几？几个数时最后一个是 ' + last + '？再倒过来配对。', props: { a, d: 1, n: 2 }, goals: [['last', last, '摆对了：最后一个是 ' + last], ['total', t, '和是 ' + t]], sol: Object.assign({ d, n }, fin), answer: t };
+      if (R.bool()) return { title: a + ' + ' + (a + d) + ' + ' + (a + 2 * d) + ' + … + ' + last + '：一共几个数？和是多少？', hook: '从 ' + a + ' 到 ' + last + ' 加了几次 ' + d + '？数的个数比加的次数多 1。调好个数，再倒过来配对。', props: { a, d, n: 2 }, goals: [['n', n, '一共 ' + n + ' 个数'], ['total', t, '和是 ' + t]], sol: Object.assign({ n }, fin), answer: t };
+      const [thing, unit, how] = R.pick([['剧场座位', '个座位', '第一排 ' + a + ' 个，往后每排多 ' + d + ' 个，一共 ' + n + ' 排'], ['堆木头', '根', '最上面一层 ' + a + ' 根，往下每层多 ' + d + ' 根，一共 ' + n + ' 层'], ['存钱', '元', '第一天存 ' + a + ' 元，以后每天比前一天多存 ' + d + ' 元，存了 ' + n + ' 天']]);
+      return { title: thing + '：' + how + '。一共多少' + unit.replace(/^个/, '') + '？', hook: '把它摆成一串数：从几开始？每次加几？几个数？再倒过来配对。', props: { a: 1, d: 1, n: 2 }, goals: [['last', last, '最后一个是 ' + last], ['total', t, '一共 ' + t + ' ' + unit]], sol: Object.assign({ a, d, n }, fin), answer: t };
+    }
+  } });
+  // 牛吃草：容易 一天一天看（几头牛正好几天吃完）；中等、难 两次记录找长速，再问第三种牛数吃几天。先定答案（长速、原有草量），再配牛数和天数，保证都是整数
+  add('grassbench', { gen(R, lv) {
+    if (lv === 1) for (;;) { const r = R.int(1, 6), days = R.int(3, 10), net = R.int(3, 12), g = days * net; if (g > 600) continue; const k = net + r; return { title: '原来有 ' + g + ' 份草，每天长 ' + r + ' 份。几头牛正好 ' + days + ' 天吃完？', hook: '一头牛一天吃 1 份。改牛的头数，看每天的草量柱子：第 ' + days + ' 天正好吃完。', props: { mode: 1, g, r, k: 1 }, goals: [['exact', days, k + ' 头牛']], sol: { k }, answer: k }; }
+    const things = R.pick([['牛', '草'], ['羊', '草'], ['抽水机', '水']]);
+    for (;;) {
+      const r = R.int(lv === 2 ? 2 : 4, lv === 2 ? 8 : 15), d2 = R.int(4, 10), d1 = d2 + R.int(2, lv === 2 ? 10 : 8), L = d1 * d2 / gcd(d1, d2), g = L * R.int(1, 4);
+      if (g > 600) continue;
+      const k1 = g / d1 + r, k2 = g / d2 + r; if (k1 > 60 || k2 > 60 || k1 === k2) continue;
+      const ts = []; for (let t = 2; t <= 30; t++) if (g % t === 0 && g / t + r <= 60 && t !== d1 && t !== d2) ts.push(t); if (!ts.length) continue;
+      const t3 = R.pick(ts), k3 = g / t3 + r, [who, what] = things;
+      const unit = who === '抽水机' ? '台' : '头', title = who === '抽水机' ? '井里的水一边往外冒一边被抽：' + k1 + ' 台抽水机 ' + d1 + ' 小时抽干，' + k2 + ' 台 ' + d2 + ' 小时抽干。' + k3 + ' 台几小时抽干？' : '一片' + what + '地：' + k1 + ' ' + unit + who + ' ' + d1 + ' 天吃完，' + k2 + ' ' + unit + who + ' ' + d2 + ' 天吃完。' + k3 + ' ' + unit + who + '几天吃完？';
+      return { title, hook: '先比两次：多的那几天多吃的，就是那几天新长的。改“每天长几份”，让两根长条里“原来的”一样长；再改第三行的天数。', props: { mode: 0, r: 0, k1, d1, k2, d2, k3, t3: 1 }, goals: [['r', r, '每天长 ' + r + ' 份'], ['t3', t3, k3 + ' ' + unit + ' ' + t3 + (who === '抽水机' ? ' 小时' : ' 天')]], sol: { r, t3 }, answer: t3 };
+    }
   } });
 
   add('pourbench', { gen(R, lv) {

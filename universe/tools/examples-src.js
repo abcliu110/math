@@ -121,6 +121,10 @@ module.exports = [
       ['mrelb','meter',{'digits':0,'label':'关系图：要问的量'}],
       ['sgb','statebench',{'puz':1,'path':'c2,c0'}],
       ['msgb','meter',{'digits':0,'label':'状态图：见过几种局面'}],
+      ['gsb','gaussbench',{'a':1,'d':1,'n':100,'flip':true,'pair':true}],
+      ['mgsb','meter',{'digits':0,'label':'高斯求和：和'}],
+      ['grb','grassbench',{'mode':0,'r':5,'k1':10,'d1':20,'k2':15,'d2':10,'k3':25,'t3':5}],
+      ['mgrb','meter',{'digits':0,'label':'牛吃草：每天长几份'}],
     ],
     links: [
       ['am','mam','v','area'],
@@ -180,6 +184,8 @@ module.exports = [
       ['spb','mspb','v','total'],
       ['relb','mrelb','v','ans'],
       ['sgb','msgb','v','seen'],
+      ['gsb','mgsb','v','total'],
+      ['grb','mgrb','v','r'],
     ],
   },
 ];
