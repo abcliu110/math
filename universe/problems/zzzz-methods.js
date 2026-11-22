@@ -35,7 +35,7 @@
     statebench: ['enum', 'back'], pourbench: ['enum'], combobench: ['enum'], chancebench: ['enum'],
     seqbench: ['pattern'], ringbench: ['pattern'],
     featbench: ['parity'], chipbench: ['invariant'], gaussbench: ['transform', 'invariant'], grassbench: ['invariant', 'corr'],
-    pigeonbench: ['extreme', 'assume'], treebench: ['enum', 'classify'],
+    pigeonbench: ['extreme', 'assume'], treebench: ['enum', 'classify'], invbench: ['invariant', 'parity'],
     weighbench: ['extreme'], optbench: ['extreme'],
     meanbench: ['transform'], areabench: ['transform'], circlebench: ['transform'], areamodel: ['transform'], fracbench: ['transform'], mulbench: ['transform'],
     vennbench: ['classify'], sortbench: ['classify'],

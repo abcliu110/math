@@ -129,6 +129,8 @@ module.exports = [
       ['mpgb','meter',{'digits':0,'label':'摸球：保证要摸几个'}],
       ['tre','treebench',{'mode':0,'m':3,'k':2,'open':3}],
       ['mtre','meter',{'digits':0,'label':'枚举树：一共几种'}],
+      ['ivb','invbench',{'game':1,'n':6,'k':2,'hist':'000000|110000|111100|111111'}],
+      ['mivb','meter',{'digits':0,'label':'翻杯子：朝上几个'}],
     ],
     links: [
       ['am','mam','v','area'],
@@ -192,6 +194,7 @@ module.exports = [
       ['grb','mgrb','v','r'],
       ['pgb','mpgb','v','guar'],
       ['tre','mtre','v','count'],
+      ['ivb','mivb','v','up'],
     ],
   },
 ];

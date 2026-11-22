@@ -1089,5 +1089,19 @@
     },
   };
 
+  // 不变量放大镜
+  D.invbench = {
+    caps: ['1 2 3 4：擦两个，写上差', '和：10 → 8 → 6 → 2，一直在变', '和的单双：双 → 双 → 双', '不变量：最后剩的一定是双数'],
+    draw(st) {
+      let s = '';
+      const B = [[1, 2, 3, 4], [1, 3, 4], [2, 4], [2]][Math.min(st, 3)];
+      B.forEach((v, i) => { s += Rc(40 + i * 44, 30, 38, 30, '#fff3d6', { s: INK, r: 6 }) + T(59 + i * 44, 50, String(v), { s: 14, w: 700 }); });
+      const sums = ['10', '8', '6', '2'], par = ['双', '双', '双', '双'];
+      for (let i = 0; i <= Math.min(st, 3); i++) s += Rc(40 + i * 50, 80, 40, 24, st >= 2 ? '#eef6ff' : '#fde3dc', { s: INK, r: 4 }) + T(60 + i * 50, 97, st >= 2 ? par[i] : sums[i], { s: 13, w: 700 });
+      if (st >= 3) s += T(260, 97, '双数', { s: 15, w: 700, f: P, a: 'start' });
+      return s;
+    },
+  };
+
   UI.Demo = D;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

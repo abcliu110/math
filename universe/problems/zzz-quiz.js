@@ -45,7 +45,7 @@
   //      推广     输出随属性有规律地变（一次或二次）：先做三个，写下规律猜一个远一点的，再调过去验证
   //   出不来（台面上改不了数、没有好的规律）就不出，这个操作台在这一档没有按钮。
   // 名字不好读、或者扫出来没有数学意义的属性（显示用的序号、计数器、编码），在 TSKIP 里跳过；TNAME 给属性、输出起孩子读得懂的名字。
-  const TSKIP = { estbench: '*', relbench: '*', statebench: '*', clockbench: '*', chancebench: '*', rulerbench: '*', seqbench: ['k'], solidbench: ['cols', 'rows'], ringbench: ['beats'], calbench: ['d1', 'd2'], pigeonbench: '*', treebench: ['open'] };
+  const TSKIP = { estbench: '*', relbench: '*', statebench: '*', clockbench: '*', chancebench: '*', rulerbench: '*', seqbench: ['k'], solidbench: ['cols', 'rows'], ringbench: ['beats'], calbench: ['d1', 'd2'], pigeonbench: '*', treebench: ['open'], invbench: '*' };
   const TNAME = { treebench: { m: '卡片张数', amt: '要凑的钱数' }, seqbench: { n: '第几个' }, numlinebench: { '>value': '落点' }, anglebench: { a: '∠1 的度数' } };
   const CONDT = ['', '其中双数', '其中单数'];
   const TNOX = ['calbench'];   // 输出不能比大小（星期几）：不出“最多最少”
@@ -671,6 +671,24 @@
     const title = '用 ' + cs.join('、') + ' 这 ' + props.m + ' 个数字排' + (props.k === 2 ? '两' : '三') + '位数' + (props.rep ? '（同一个数字可以重复用）' : '（每个数字只能用一次）') + '，' + (props.cond ? CONDT[props.cond] + '有几个？' : '能排几个？');
     const hook = props.zero ? '0 能打头吗？先定最高位，一枝一枝展开。' : props.cond ? '先定十位，一枝一枝列出来；个位是几才是' + CONDT[props.cond].slice(2) + '？' : '先定最高位是几，一枝一枝展开：每一枝一样多吗？';
     return { title, hook, props, goals: [['count', n, '一共 ' + n + ' 个']], sol: fin, answer: n };
+  } });
+
+  // 不变量放大镜：容易 擦数写和（和不变，最后剩几）；中等 擦数写差 / 写和，问 1 到 N 最后剩单数还是双数；难 翻杯子（做不到的要找到理由，做得到的要翻出来）
+  add('invbench', { gen(R, lv) {
+    const I = U.InvBench, ask = '找到一直不变的那个量';
+    const play = (n, op) => { let a = Array.from({ length: n }, (_, i) => i + 1); const out = [a.join(',')]; while (a.length > 1) { const r = op ? Math.abs(a[0] - a[1]) : a[0] + a[1]; a = [r].concat(a.slice(2)); out.push(a.join(',')); } return out.join('|'); };
+    if (lv === 1) { const n = R.int(4, 8), sum = n * (n + 1) / 2; return { title: '黑板上写着 1 到 ' + n + '。每次擦掉两个数，写上它们的和。最后剩下的数是几？', hook: '先擦几次。用放大镜分别盯住“个数”和“和”：哪个一直不变？', props: { game: 0, op: 0, n, N: n }, goals: [['found', 1, '找到了：和不变', null, null, null, ask], ['last', sum, '最后剩 ' + sum]], sol: { lens: 2, hist: play(n, 0) }, answer: sum }; }
+    if (lv === 2) {
+      const op = R.int(0, 1), N = R.pick([10, 11, 20, 21, 50, 99, 100, 2025, 2026]), right = (N * (N + 1) / 2) % 2 ? 1 : 2, n = R.int(5, 7);
+      return { title: '黑板上写着 1 到 ' + N + '。每次擦掉两个数，写上它们的' + (op ? '差（大减小）' : '和') + '。最后剩下的数是单数还是双数？', hook: N > 10 ? N + ' 个数擦不过来：先在 1 到 ' + n + ' 上试，找到不变的量，再推过去。' : '先擦几次，找到不变的量。', props: { game: 0, op, n: N > 10 ? n : N, N }, goals: [['found', 1, op ? '找到了：和的单双不变' : '找到了：和不变（单双当然也不变）', null, null, null, ask], ['ans', right, '最后剩' + (right === 1 ? '单数' : '双数')]], sol: { lens: 3, hist: play(N > 10 ? n : N, op).split('|').slice(0, 3).join('|'), ans: right }, answer: null };
+    }
+    for (;;) {
+      const n = R.int(5, 11), k = R.int(2, 4); if (k >= n) continue;
+      const path = I.solveCups(n, k), title = n + ' 个杯子都杯口朝下，每次正好翻 ' + k + ' 个。能不能翻到全部朝上？';
+      if (!path) { const h = [I.start(1, n)]; for (let i = 0; i < 2; i++) { const s = h[h.length - 1].split(''); for (let j = 0; j < k; j++) s[(i + j) % n] = s[(i + j) % n] === '1' ? '0' : '1'; h.push(s.join('')); } return { title, hook: '先翻几次。用放大镜盯住朝上的个数：每次变几？单双呢？', props: { game: 1, n, k }, goals: [['found', 1, '找到了：朝上个数的单双不变', null, null, null, ask], ['ans', 2, '永远不能全部朝上']], sol: { lens: 3, hist: h.join('|'), ans: 2 }, answer: null }; }
+      if (path.length < 3 && R.bool()) continue;
+      return { title, hook: '先想想：朝上个数的单双能拦住吗？拦不住的话，就真的翻出来。', props: { game: 1, n, k }, goals: [['allup', 1, '全部朝上了']], sol: { hist: path.join('|') }, answer: null };
+    }
   } });
 
   add('pourbench', { gen(R, lv) {

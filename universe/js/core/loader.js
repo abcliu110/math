@@ -62,6 +62,7 @@
     'gridbench': 'packs/gridbench.js',
     'groupbench': 'packs/groupbench.js',
     'guessrule': 'packs/guessrule.js',
+    'invbench': 'packs/invbench.js',
     'jobbench': 'packs/jobbench.js',
     'logicbench': 'packs/logicbench.js',
     'makebench': 'packs/makebench.js',
