@@ -6,7 +6,7 @@
 
 - 知识点：142 个（设计目标 142）
 - 有题的知识点：141 个（99%）
-- 题目：640 道；没有对应知识点的题：1 道
+- 题目：648 道；没有对应知识点的题：1 道
 - 没有器材的本质：无
 - 没有题的本质：无
 
@@ -18,7 +18,7 @@
 | 2 | 16 | 16（100%） | 57 |
 | 3 | 16 | 16（100%） | 92 |
 | 4 | 17 | 17（100%） | 96 |
-| 5 | 14 | 14（100%） | 112 |
+| 5 | 14 | 14（100%） | 120 |
 | 6 | 15 | 14（93%） | 64 |
 | 7 | 16 | 16（100%） | 78 |
 | 8 | 16 | 16（100%） | 76 |
@@ -101,7 +101,7 @@
 | 5.6 | 5 | 多边形的面积 | 7 | 1 | 0 | 1 | areabench、gworkspace、gpt、gpoly、fquad |
 | 5.7 | 5 | 植树问题 | 7 | 1 | 0 | 1 | gapbench |
 | 5.14 | 5 | 观察物体（三） | 2 | 1 | 0 | 1 | solidbench、twoways |
-| 5.8 | 5 | 因数与倍数 | 33 | 0 | 1 | 2 | asn、conjbench、factorbench、featbench、hanoi、guessrule、invbench、areamodel、ringbench、groupbench、proofbench、proofsort、net |
+| 5.8 | 5 | 因数与倍数 | 41 | 0 | 1 | 2 | asn、conjbench、factorbench、featbench、hanoi、guessrule、invbench、areamodel、ringbench、groupbench、proofbench、proofsort、net |
 | 5.9 | 5 | 长方体和正方体 | 3 | 1 | 0 | 1 | pourbench、solidbench |
 | 5.10 | 5 | 分数的意义和性质 | 7 | 0 | 0 | 1 | areamodel、ratiobench、fracbench、numlinebench、factorbench |
 | 5.11 | 5 | 分数的加法和减法 | 10 | 1 | 0 | 1 | num、approach、ratiobench、findbug、fracbench |
@@ -176,12 +176,12 @@
 | 本质 | 题目数 | 器材数 |
 |---|---|---|
 | E1 | 69 | 28 |
-| E2 | 266 | 58 |
+| E2 | 274 | 58 |
 | E3 | 153 | 44 |
 | E4 | 121 | 32 |
 | E5 | 145 | 55 |
 | E6 | 59 | 24 |
-| E7 | 141 | 34 |
+| E7 | 149 | 34 |
 | E8 | 66 | 23 |
 | E9 | 72 | 17 |
 | E10 | 10 | 4 |
