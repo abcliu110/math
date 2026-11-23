@@ -7,8 +7,8 @@
  *     4. 题面里明明白白写出来的方法词：“假设”“倒过来”“规律”“奇数”“割补”……（WORDS，只认这些词，不猜）
  *   方法链：先是标了这个方法的操作台题（按年级、台阶排，轮流从不同的操作台取，不让一个台占满），
  *          再是随机题（同样轮流取，固定种子），上一关有星下一关才解锁（和操作台关卡链一样，接在 U.Chain 上，id 是 m:方法）。
- *   精选阶梯：题目写了 ladder: '方法' 的，这个方法的链就只用这些题（按 id 排，一级一级往上，每级一道三层的题），不再自动拼。
- *          现在只有“不变量”有阶梯（样板）；别的方法还是自动拼。 */
+ *   精选阶梯：题目写了 ladder: '方法' 的，这个方法的链先是这些题（按 id 排，一级一级往上，每级一道三层的题），后面接 3 道随机题当加练，不再自动拼操作台题。
+ *          现在“不变量”“枚举”有阶梯；别的方法还是自动拼。 */
 (function (G) {
   'use strict';
   const U = G.U;
@@ -92,14 +92,15 @@
     if (CACHE[mid]) return CACHE[mid];
     if (!BY[mid]) return [];
     const lad = U.problems.filter((p) => p.ladder === mid).sort((a, b) => a.id.localeCompare(b.id));
-    if (lad.length) { CACHE[mid] = lad.map((p) => ({ id: p.id, title: p.title.replace(/^第 d+ 级 · /, '').split('：')[0], kind: '阶梯', type: benchOf(p) })); return CACHE[mid]; }
+    const quiz = (n) => spread(quizPool().filter((x) => x.tags.includes(mid)).sort((a, b) => pri(a, mid) - pri(b, mid)), (x) => x.t, n)
+      .sort((a, b) => (a.lv <= 3 ? a.lv : 3.5) - (b.lv <= 3 ? b.lv : 3.5))
+      .map((x) => ({ id: x.id, title: '随机 · ' + U.types[x.t].label + ' · ' + U.Quiz.LEVELS[x.lv - 1], kind: '随机', type: x.t }));
+    // 精选阶梯在前，后面接几道同一方法的随机题当加练
+    if (lad.length) { CACHE[mid] = lad.map((p) => ({ id: p.id, title: p.title.replace(/^第 \d+ 级 · /, '').split('：')[0], kind: '阶梯', type: benchOf(p) })).concat(quiz(3).map((x) => Object.assign(x, { title: '加练 · ' + x.title.slice(5) }))); return CACHE[mid]; }
     const own = U.problems.filter((p) => benchOk(benchOf(p)) && of(p).includes(mid)).sort((a, b) => (a.grade || 9) - (b.grade || 9) || (a.rung || 0) - (b.rung || 0));
     const fixed = spread(own, benchOf, 6).sort((a, b) => (a.grade || 9) - (b.grade || 9) || (a.rung || 0) - (b.rung || 0)).map((p) => ({ id: p.id, title: p.title, kind: '题', type: benchOf(p) }));
     // 随机题：真的出一遍（固定种子），按出出来的题自己的标签挑（操作台本身的方法、档位、应用题引擎的题型：关系图出到鸡兔同笼型就是“假设”）
-    const quiz = spread(quizPool().filter((x) => x.tags.includes(mid)).sort((a, b) => pri(a, mid) - pri(b, mid)), (x) => x.t, 4)
-      .sort((a, b) => (a.lv <= 3 ? a.lv : 3.5) - (b.lv <= 3 ? b.lv : 3.5))
-      .map((x) => ({ id: x.id, title: '随机 · ' + U.types[x.t].label + ' · ' + U.Quiz.LEVELS[x.lv - 1], kind: '随机', type: x.t }));
-    CACHE[mid] = fixed.concat(quiz);
+    CACHE[mid] = fixed.concat(quiz(4));
     return CACHE[mid];
   }
   U.Methods = {

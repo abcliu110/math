@@ -50,7 +50,7 @@
   await H.byTitle('红和黄相遇'); for (let i = 0; i < 3; i++) await H.byTitle('红和蓝相遇');
   H.ok(await H.out('mono') === '1' && await H.done('c'), '换成 4、7、1：红黄相遇一次，红蓝相遇三次，全变成黄色');
   console.log('4. 方法链');
-  const L = await H.p.evaluate(() => U.Chain.of('m:invariant').map((x) => x.id).join(','));
-  H.ok(L === 'inv-L1,inv-L2,inv-L3,inv-L4,inv-L5,inv-L6,inv-L7,inv-L8', '“不变量”方法链就是八级阶梯');
+  const L = await H.p.evaluate(() => U.Chain.of('m:invariant').filter((x) => x.kind === '阶梯').map((x) => x.id).join(','));
+  H.ok(L === 'inv-L1,inv-L2,inv-L3,inv-L4,inv-L5,inv-L6,inv-L7,inv-L8', '“不变量”方法链前面是八级阶梯');
   await H.end('不变量阶梯');
 })();

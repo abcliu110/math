@@ -11,7 +11,7 @@
  * 这一版的边界（如实写）：卡片最多 5 张，位数 2–3（能重复用的三位数最多 4 张卡片）；凑钱最多 20 元（1、2、5）或 50 元（1、5、10）。 */
 (function (G) {
   'use strict';
-  const U = G.U, Q = U.Q, K = U.kit;
+  const U = G.U, Q = U.Q, K = U.kit, RS = K.research;
   const num = (n) => U.val('num', Q(n), { dim: null });
   const W = 700, OMAX = 6;
   const SETS = [[5, 2], [10, 5]];
@@ -54,8 +54,21 @@
     if (cur && !D.includes(+cur)) cur = '';
     const total = rows.reduce((a, r) => a + r.good.length, 0);
     const live = rows.filter((r) => !r.cut), per = live.map((r) => r.good.length), same = per.length > 0 && per.every((v) => v === per[0]);
-    return { mode, k, rep, zero, cond, m, set, B, M, amt, D, rows, got, open, all, cr, cur, bad, err: String(p.err || '').slice(0, 60), seen: got.length, count: all ? total : null, per, same };
+    // 研究本：每列完一种情况记一条“情况:几种”，换了情况也不丢
+    const key = mode === 0 ? 'c' + m + ',' + (zero ? 1 : 0) + ',' + k + ',' + (rep ? 1 : 0) + ',' + cond : 'm' + set + ',' + amt;
+    const book = String(p.book || '').split(';').filter((e) => /^(c\d,[01],[23],[01],[012]|m[01],\d+):\d+$/.test(e)).filter((e, i, a) => a.indexOf(e) === i).slice(-30);
+    const canAsk = book.length > 0, asks = RS.parseAsk(p.ask, p.pick, canAsk);
+    return { mode, k, rep, zero, cond, m, set, B, M, amt, D, rows, got, open, all, cr, cur, bad, err: String(p.err || '').slice(0, 60), seen: got.length, count: all ? total : null, total, per, same,
+      key, book, canAsk, asks, adj: !!p.adj };
   }
+  const addBook = (m) => { const e = m.key + ':' + m.total; return m.book.concat(m.book.includes(e) ? [] : [e]).join(';'); };
+  function bookSay(e) {
+    const [c, n] = e.split(':'), a = c.slice(1).split(',').map(Number);
+    if (c[0] === 'm') { const [B, M] = SETS[a[0]]; return '凑 ' + a[1] + ' 元（1、' + M + '、' + B + '）：' + n; }
+    const [m, z, k, r, cd] = a;
+    return (z ? '0' : '1') + '–' + (z ? m - 1 : m) + ' ' + (k === 2 ? '两' : '三') + '位' + (r ? '可重复' : '') + (cd ? '只要' + CONDS[cd] : '') + '：' + n;
+  }
+  const items = (m) => m.book.map((e) => ({ say: bookSay(e) }));
   // 参考做法：每一枝都按从小到大列全
   const solve = (p) => { const m = model(Object.assign({}, p, { got: '', open: 0 })); return { got: [].concat(...m.rows.map((r) => r.good)).join(','), open: m.rows.length, cur: '', err: '' }; };
   const btn = (x, y, w, label, patch, enabled, tip) => '<g' + (enabled ? ' data-pick-set="' + encodeURIComponent(JSON.stringify(patch)) + '" style="cursor:pointer"' : ' data-off="1"') + '><title>' + K.esc(tip) + '</title>' +
@@ -71,7 +84,9 @@
     m.rows.forEach((r, i) => { const n = i <= m.open && !r.cut ? r.mine.length + (i === m.open && m.cur ? 1 : 0) : 0; y += Math.max(1, Math.ceil(n / PER)) * RH + 6; });
     return y;
   }
-  const bottom = (m) => treeEnd(m) + (m.all ? 24 + 46 : 20 + 64) + 26;
+  // 按钮行下面：换情况（adj）一行、研究本、追问
+  const below = (m) => { const y0 = (m.adj && m.mode === 0 ? 36 : 0) + 40; return { y0, book: y0, ask: y0 + RS.bookH(items(m)), end: y0 + RS.bookH(items(m)) + RS.asksH(m.asks) }; };
+  const bottom = (m) => treeEnd(m) + (m.all ? 24 + 40 : 20 + 60) + below(m).end;
   const leafText = (m, t) => (m.mode === 0 ? [t] : (() => { const [i, j] = t.split('-').map(Number); return [m.M + '元×' + j, '1元×' + (m.amt - i * m.B - j * m.M)]; })());
   function draw(c) {
     const m = model(c.props); let s = '';
@@ -139,14 +154,16 @@
       }
       s += K.text(20, y + 46, msg, { size: 13, anchor: 'start', fill: col });
       const yb = y + 60;
-      const done = r.cut ? { err: '这一枝一个也排不出来？想想为什么，把它剪掉' } : mine.length === r.good.length ? Object.assign({}, base, { open: m.open + 1 }) : { err: '这一枝还没列全。按从小到大一个一个试，看看缺了谁。' };
+      // 列完最后一枝：记进研究本
+      const fin = () => Object.assign({}, base, { open: m.open + 1 }, m.open + 1 === m.rows.length ? { book: addBook(m) } : {});
+      const done = r.cut ? { err: '这一枝一个也排不出来？想想为什么，把它剪掉' } : mine.length === r.good.length ? fin() : { err: '这一枝还没列全。按从小到大一个一个试，看看缺了谁。' };
       let x = 20;
       s += btn(x, yb, 116, '这一枝列完了', done, true, '这一枝列完了'); x += 122;
-      if (m.mode === 0) { s += btn(x, yb, 96, '剪掉这一枝', r.cut ? Object.assign({}, base, { open: m.open + 1 }) : { err: r.label + ' 打头能排出数来，不能剪' }, true, '剪掉这一枝'); x += 102; }
+      if (m.mode === 0) { s += btn(x, yb, 96, '剪掉这一枝', r.cut ? fin() : { err: r.label + ' 打头能排出数来，不能剪' }, true, '剪掉这一枝'); x += 102; }
       const undo = m.cur ? { cur: m.cur.slice(0, -1), err: '' } : Object.assign({}, base, { got: H(m.got.filter((t) => t !== mine[mine.length - 1])) });
       s += btn(x, yb, 104, '擦掉最后一个', undo, !!m.cur || mine.length > 0, '擦掉最后一个'); x += 110;
       s += btn(x, yb, 80, '全部重来', { got: '', cur: '', open: 0, err: '' }, m.got.length > 0 || m.open > 0, '全部重来');
-      s += ctl(m, yb);
+      s += ctl(m, yb) + extra(m, yb);
     } else {
       y += 24;
       const v = m.per.length;
@@ -154,8 +171,22 @@
       s += K.text(20, y, how, { size: 13, anchor: 'start' });
       s += '<g data-read="1">' + K.text(20, y + 26, '一共 ' + m.count + ' 种', { size: 16, weight: 700, anchor: 'start', fill: 'var(--blue)' }) + '</g>';
       const yb = y + 40;
-      s += btn(20, yb, 80, '全部重来', { got: '', cur: '', open: 0, err: '' }, true, '全部重来') + ctl(m, yb);
+      s += btn(20, yb, 80, '全部重来', { got: '', cur: '', open: 0, err: '' }, true, '全部重来') + ctl(m, yb) + extra(m, yb);
     }
+    return s;
+  }
+  // 换情况（能不能重复、只要单数双数）、研究本、追问
+  function extra(m, yb) {
+    let s = '';
+    const reset = { got: '', cur: '', open: 0, err: '' }, B2 = below(m);
+    if (m.adj && m.mode === 0) {
+      const y = yb + 36;
+      s += btn(20, y, 150, '同一张能重复：' + (m.rep ? '能' : '不能'), Object.assign({ rep: !m.rep }, reset), true, m.rep ? '改成每张只能用一次' : '改成同一张可以重复用');
+      const nc = (m.cond + 1) % 3;
+      s += btn(176, y, 150, '只要：' + (m.cond ? CONDS[m.cond] : '都要'), Object.assign({ cond: nc }, reset), true, '改成只要' + (nc ? CONDS[nc] : '都要'));
+    }
+    s += RS.drawBook(yb + B2.book, items(m), '研究本（每列完一种情况记一条）');
+    s += RS.drawAsks(yb + B2.ask, m.asks, m.canAsk);
     return s;
   }
   // 卡片张数、凑几元：换了就从头列
@@ -166,7 +197,7 @@
       : K.text(500, yb + 17, '凑几元', { size: 12, weight: 700, anchor: 'start' }) + btn(548, yb, 26, '−', Object.assign({ amt: m.amt - 1 }, reset), m.amt > 3, '少 1 元') + K.text(594, yb + 17, String(m.amt), { size: 14, weight: 700 }) + btn(614, yb, 26, '+', Object.assign({ amt: m.amt + 1 }, reset), m.amt < (m.set ? 50 : 20), '多 1 元');
   };
   U.registerPack({
-    id: 'treebench', version: 2,
+    id: 'treebench', version: 3,
     types: {
       treebench: {
         workspaceRole: 'none', handles: true, compactPorts: true, bench: true, essence: ['E1', 'E2'],
@@ -185,15 +216,28 @@
           cur: { type: 'text', label: '排了一半的', default: '', write: true },
           open: { type: 'int', label: '列完了几枝', default: 0, min: 0, max: OMAX, write: true },
           err: { type: 'text', label: '提醒', default: '', write: true },
+          adj: { type: 'bool', label: '台面上能改“能不能重复”“只要单双”', default: false, write: true },
+          book: { type: 'text', label: '研究本', default: '', write: true },
+          ask: { type: 'text', label: '追问（题干|选项|*对的选项~…）', default: '', write: true },
+          pick: { type: 'text', label: '追问选了第几个', default: '', write: true },
         },
         outputs: {
           rows: { dim: null, kind: 'num', label: '第一层有几枝' }, seen: { dim: null, kind: 'num', label: '已经列出几种' },
-          count: { dim: null, kind: 'num', label: '一共几种（全部列完才有）' },
+          count: { dim: null, kind: 'num', label: '一共几种（全部列完才有）' }, open: { dim: null, kind: 'num', label: '列完了几枝' },
+          m: { dim: null, kind: 'num', label: '几张卡片' }, rep: { dim: null, kind: 'num', label: '能重复（1 是）' }, cond: { dim: null, kind: 'num', label: '只要（0 都要，1 双数，2 单数）' },
+          amt: { dim: null, kind: 'num', label: '凑几元' }, cases: { dim: null, kind: 'num', label: '研究本里有几种情况' },
+          q1: { dim: null, kind: 'num', label: '追问 1 选了第几个' }, q2: { dim: null, kind: 'num', label: '追问 2 选了第几个' },
         },
         icon: () => K.line(8, 28, 26, 14, { w: 1.2 }) + K.line(8, 28, 26, 28, { w: 1.2 }) + K.line(8, 28, 26, 42, { w: 1.2 }) + [14, 28, 42].map((y) => K.line(26, y, 44, y - 5, { w: 1 }) + K.line(26, y, 44, y + 5, { w: 1 })).join(''),
         size: (c) => [W, Math.max(380, bottom(model((c && c.props) || {})) + 40)],
         grips: () => [],
-        compute: (c) => { const m = model(c.props), o = { rows: num(m.rows.length), seen: num(m.seen) }; if (m.all) o.count = num(m.count); return o; },
+        compute: (c) => {
+          const m = model(c.props), o = { rows: num(m.rows.length), seen: num(m.seen), open: num(m.open), cases: num(m.book.length) };
+          if (m.mode === 0) { o.m = num(m.m); o.rep = num(m.rep ? 1 : 0); o.cond = num(m.cond); } else o.amt = num(m.amt);
+          if (m.all) o.count = num(m.count);
+          m.asks.forEach((a, i) => { if (a.pick) o['q' + (i + 1)] = num(a.pick); });
+          return o;
+        },
         badge: (c) => { const m = model(c.props); return m.all ? '一共 ' + m.count + ' 种' : ''; },
         draw,
       },

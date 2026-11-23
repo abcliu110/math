@@ -85,5 +85,53 @@
       return Q.show(q);
     },
   };
+  // 研究台共用的两块：研究本（做成的、证明做不到的，一条一条记下来）和追问（题目给的选择题，选了当场说对不对）。
+  //   研究本 items：[{ say, no }]，no 是“证明做不到”（画红）。追问 ask：'题干|选项|*对的选项~题干|…'，pick：'2,0'（每题选了第几个，0 没选）。
+  //   canAsk 为假时选项点不动（要先做一做）。所有画法返回 SVG 字符串；高度和画法用同一套算法。
+  const tw = (s) => [...String(s)].reduce((a, c) => a + (/[\x00-\xff]/.test(c) ? 7 : 12.5), 0);
+  const rbtn = (x, y, w, label, patch, enabled, tip, on) => '<g' + (enabled ? ' data-pick-set="' + encodeURIComponent(JSON.stringify(patch)) + '" style="cursor:pointer"' : ' data-off="1"') + '><title>' + esc(tip) + '</title>' +
+    kit.rect(x, y, w, 26, { fill: on ? '#dcebfb' : enabled ? '#fff' : '#f1f3f6', stroke: enabled || on ? 'var(--blue)' : '#b8c0cc', r: 7, w: on ? 2.2 : 1.4 }) + kit.text(x + w / 2, y + 17, label, { size: 12, weight: 700, fill: enabled || on ? 'var(--ink)' : '#5f6773' }) + '</g>';
+  const chipRows = (items) => { const rows = [[]]; let x = 0; items.forEach((it) => { const w = tw(it.say) + 18; if (x + w > 640 && rows[rows.length - 1].length) { rows.push([]); x = 0; } rows[rows.length - 1].push([it, x, w]); x += w + 6; }); return rows; };
+  const askRow = (a) => a.opts.reduce((s, o) => s + tw(o) + 30, 0) < 600;
+  kit.research = {
+    tw, btn: rbtn,
+    parseAsk(ask, pick, canAsk) {
+      const picks = String(pick || '').split(',').map((x) => Math.max(0, Math.min(9, Math.round(+x) || 0)));
+      return String(ask || '').split('~').filter(Boolean).slice(0, 2).map((s, i) => {
+        const a = s.split('|'), opts = a.slice(1).map((o) => o.replace(/^\*/, ''));
+        return { q: a[0], opts, right: a.slice(1).findIndex((o) => o[0] === '*') + 1, pick: canAsk ? Math.min(picks[i] || 0, opts.length) : 0 };
+      });
+    },
+    bookH: (items) => (items.length ? 24 + chipRows(items).length * 30 : 0),
+    drawBook(y, items, title) {
+      if (!items.length) return '';
+      let s = kit.text(20, y + 4, '📒 ' + (title || '研究本'), { size: 12, weight: 700, anchor: 'start' });
+      chipRows(items).forEach((row, r) => row.forEach(([it, x, w]) => {
+        const yy = y + 14 + r * 30;
+        s += kit.rect(20 + x, yy, w, 24, { fill: it.no ? '#fde3dc' : '#e3f4e6', stroke: it.no ? '#c0392b' : '#4c9a5b', r: 6, w: 1 }) + kit.text(20 + x + w / 2, yy + 16, it.say, { size: 12 });
+      }));
+      return s;
+    },
+    asksH: (asks) => asks.reduce((y, a) => y + 24 + (askRow(a) ? 32 : a.opts.length * 30) + 10, 0),
+    drawAsks(y, asks, canAsk) {
+      let s = '';
+      asks.forEach((a, qi) => {
+        const qx = 20 + tw('❓ ' + a.q) + 16;
+        s += kit.text(20, y + 16, '❓ ' + a.q, { size: 13, weight: 700, anchor: 'start' });
+        if (!canAsk) s += kit.text(qx, y + 16, '（先做一做，再回答）', { size: 12, anchor: 'start', fill: '#8a93a3' });
+        else if (a.pick) s += kit.text(qx, y + 16, a.pick === a.right ? '✓ 对' : '再想想', { size: 12, weight: 700, anchor: 'start', fill: a.pick === a.right ? '#2f7d3a' : '#c0392b' });
+        y += 24;
+        const row = askRow(a), pk = (o) => { const P = asks.map((b) => b.pick); P[qi] = o; return { pick: P.join(',') }; };
+        let x = 36;
+        a.opts.forEach((o, oi) => {
+          const w = row ? tw(o) + 24 : 560;
+          s += rbtn(x, y, w, o, pk(oi + 1), canAsk, o, a.pick === oi + 1);
+          if (row) x += w + 6; else y += 30;
+        });
+        y += (row ? 32 : 0) + 10;
+      });
+      return s;
+    },
+  };
   U.kit = kit;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

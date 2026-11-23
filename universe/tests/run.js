@@ -3183,7 +3183,8 @@ t('思想方法：标签从操作台、档位、题型、方法词来；每种�
   for (const m of ms) {
     const L = U.Chain.of('m:' + m), types = new Set(L.map((x) => x.type));
     // 精选阶梯：可以只用一个台，但至少 6 级，每级一道至少三层（三个里程碑）的题
-    if (L.every((x) => x.kind === '阶梯')) { truthy(L.length >= 6 && L.every((x) => (U.problemById(x.id).goal || []).length >= 3), M.get(m).name + '：阶梯至少 6 级、每级三层'); }
+    const lad = L.filter((x) => x.kind === '阶梯');
+    if (lad.length) { truthy(lad.length >= 6 && lad.every((x) => (U.problemById(x.id).goal || []).length >= 3) && L.slice(0, lad.length).every((x) => x.kind === '阶梯'), M.get(m).name + '：阶梯在前、至少 6 级、每级三层'); }
     else { truthy(L.length >= 4 && types.size >= 2, M.get(m).name + '：' + L.length + ' 关，' + types.size + ' 个操作台'); if (types.size >= 3) wide++; }
     for (const x of L) { const p = U.problemById(x.id); truthy(p && M.of(p).includes(m), M.get(m).name + ' 的 ' + x.id + ' 打得开，也标了这个方法'); }
     eq(new Set(L.map((x) => x.id)).size, L.length);

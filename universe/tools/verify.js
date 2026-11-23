@@ -146,6 +146,7 @@ async function checkDist() {
   if (!runScript('tests/ui-tree.js', 'tests/ui-tree.js', pwEnv)) bail();   // 枚举树：真实鼠标一枝一枝展开；0 打头剪枝、双数划掉、凑钱分类加
   if (!runScript('tests/ui-inv.js', 'tests/ui-inv.js', pwEnv)) bail();   // 不变量放大镜：真实鼠标擦数、换放大镜、找到不变量才能下结论；翻杯子做到 / 做不到
   if (!runScript('tests/ui-ladder.js', 'tests/ui-ladder.js', pwEnv)) bail();   // 不变量阶梯：真实鼠标走第 1、4、7 级，研究本、追问、换情况
+  if (!runScript('tests/ui-ladder-enum.js', 'tests/ui-ladder-enum.js', pwEnv)) bail();   // 枚举阶梯：真实鼠标走第 1、4 级，自己列全、换情况、研究本、追问
   if (!runScript('tests/ui-areamodel.js', 'tests/ui-areamodel.js', pwEnv)) bail();   // 面积模型（样板操作台）和器材把手：真实鼠标拖边、切、改分数
   if (!runScript('tests/ui-shapes.js', 'tests/ui-shapes.js', pwEnv)) bail();         // 常见图形、顶点编辑、直接拖出辅助线（真实鼠标和键盘）；含画布横纵比例回归
   if (!runScript('tests/ui-export.js', 'tests/ui-export.js', pwEnv)) bail();         // 2.12/V10：导出图片（真实鼠标点菜单，台面和专注工作区各一次下载，.png、大小 > 0）

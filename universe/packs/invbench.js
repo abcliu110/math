@@ -15,7 +15,7 @@
  * 这一版的边界（如实写）：黑板最多 10 个数，杯子最多 11 个、每次翻 1–5 个，变色龙每种最多 60 只；只有这三种游戏。 */
 (function (G) {
   'use strict';
-  const U = G.U, Q = U.Q, K = U.kit;
+  const U = G.U, Q = U.Q, K = U.kit, RS = K.research;
   const num = (n) => U.val('num', Q(n), { dim: null });
   const W = 700;
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, Number.isFinite(+v) ? Math.round(+v) : lo));
@@ -50,9 +50,6 @@
     }
     return null;
   }
-  function parseAsk(p) {
-    return String(p.ask || '').split('~').filter(Boolean).slice(0, 2).map((s) => { const a = s.split('|'); return { q: a[0], opts: a.slice(1).map((o) => o.replace(/^\*/, '')), right: a.slice(1).findIndex((o) => o[0] === '*') + 1 }; });
-  }
   function model(p) {
     const game = clamp(p.game, 0, 2), op = clamp(p.op, 0, 1), n = clamp(p.n, game === 1 ? 3 : 2, game === 1 ? 11 : 10), k = clamp(p.k, 1, Math.min(5, n)), N = clamp(p.N, n, 9999);
     const starts = parseStarts(p), si = clamp(p.si, 0, starts.length - 1), tri = starts[si];
@@ -83,9 +80,7 @@
     const plays = book.filter((e) => e.startsWith('0:' + op + ':' + start(0, n) + '|')).length;
     const cases = {}; book.forEach((e) => { if (game && e[0] === String(game)) cases[e.slice(0, e.lastIndexOf(':'))] = e.slice(-2); });
     const nCase = Object.keys(cases).length, nCan = Object.values(cases).filter((v) => v === 'ok').length;
-    const asks = parseAsk(p), picks = String(p.pick || '').split(',').map((x) => clamp(x, 0, 9));
-    const canAsk = found || book.length > 0;
-    asks.forEach((a, i) => { a.pick = canAsk ? Math.min(picks[i] || 0, a.opts.length) : 0; });
+    const canAsk = found || book.length > 0, asks = RS.parseAsk(p.ask, p.pick, canAsk);
     return { game, op, n, k, N, starts, si, tri, hist, cur, nums, sel, lens, view, name: lens ? lensName(game, lens, view) : '', vals, real, same, found, ans, up, mono, right,
       steps: hist.length - 1, last: game === 0 && nums.length === 1 ? nums[0] : null, allup: game === 1 && up === n,
       book, caseKey, plays, nCase, nCan, nCannot: nCase - nCan, asks, canAsk, adj: !!p.adj };
@@ -94,7 +89,7 @@
   const btn = (x, y, w, label, patch, enabled, tip, on) => '<g' + (enabled ? ' data-pick-set="' + encodeURIComponent(JSON.stringify(patch)) + '" style="cursor:pointer"' : ' data-off="1"') + '><title>' + K.esc(tip) + '</title>' +
     K.rect(x, y, w, 26, { fill: on ? '#dcebfb' : enabled ? '#fff' : '#f1f3f6', stroke: enabled || on ? 'var(--blue)' : '#b8c0cc', r: 7, w: on ? 2.2 : 1.4 }) + K.text(x + w / 2, y + 17, label, { size: 12, weight: 700, fill: enabled || on ? 'var(--ink)' : '#5f6773' }) + '</g>';
   const pick = (patch, tip, inner) => '<g data-pick-set="' + encodeURIComponent(JSON.stringify(patch)) + '" style="cursor:pointer"><title>' + K.esc(tip) + '</title>' + inner + '</g>';
-  const tw = (s) => [...String(s)].reduce((a, c) => a + (/[\x00-\xff]/.test(c) ? 7 : 12.5), 0);
+  const tw = RS.tw;
   // 研究本里的一条，写成孩子读得懂的话
   function bookSay(e) {
     const a = e.split(':');
@@ -102,13 +97,12 @@
     if (a[0] === '1') return a[1] + ' 个翻 ' + a[2] + '：' + (a[3] === 'ok' ? '能' : '不能');
     return a[1].replace(/,/g, '、') + '：' + (a[2] === 'ok' ? '能' : '不能');
   }
-  function chipRows(m) { const rows = [[]]; let x = 0; m.book.forEach((e) => { const w = tw(bookSay(e)) + 18; if (x + w > 640 && rows[rows.length - 1].length) { rows.push([]); x = 0; } rows[rows.length - 1].push([e, x, w]); x += w + 6; }); return rows; }
-  const askRow = (a) => a.opts.reduce((s, o) => s + tw(o) + 30, 0) < 600;
+  const items = (m) => m.book.map((e) => ({ say: bookSay(e), no: /:no$/.test(e) }));
   // 版面：上面的局面、放大镜两排、值和说明、结论、按钮行、研究本、追问。size 和 draw 用同一套
   function lay(m) {
     const L = { yl: 160, yv: 192, yt: 228, ya: 300, yb: 350 }; let y = L.yb + 40;
-    L.ybook = y; if (m.book.length) y += 24 + chipRows(m).length * 30;
-    L.yask = y; m.asks.forEach((a) => { y += 24 + (askRow(a) ? 32 : a.opts.length * 30) + 10; });
+    L.ybook = y; y += RS.bookH(items(m));
+    L.yask = y; y += RS.asksH(m.asks);
     L.end = y; return L;
   }
   function draw(c) {
@@ -216,30 +210,9 @@
       else if (m.game === 1) s += pm(270, '杯子', 'n', m.n, 3, 11, '少一个杯子', '多一个杯子', (v) => ({ k: Math.min(m.k, v, 5) })) + pm(440, '每次翻', 'k', m.k, 1, Math.min(5, m.n), '每次少翻一个', '每次多翻一个');
       else if (m.starts.length > 1) s += btn(300, yb, 170, '换一组（第 ' + (m.si + 1) + ' / ' + m.starts.length + ' 组）', Object.assign({ si: (m.si + 1) % m.starts.length }, reset), true, '换一组');
     }
-    // 研究本
-    if (m.book.length) {
-      s += K.text(20, L.ybook + 4, '📒 研究本（做成了的、证明做不到的，都记在这里）', { size: 12, weight: 700, anchor: 'start' });
-      chipRows(m).forEach((row, r) => row.forEach(([e, x, w]) => {
-        const no = /:no$/.test(e), y = L.ybook + 14 + r * 30;
-        s += K.rect(20 + x, y, w, 24, { fill: no ? '#fde3dc' : '#e3f4e6', stroke: no ? '#c0392b' : '#4c9a5b', r: 6, w: 1 }) + K.text(20 + x + w / 2, y + 16, bookSay(e), { size: 12 });
-      }));
-    }
-    // 追问
-    let y = L.yask;
-    m.asks.forEach((a, qi) => {
-      s += K.text(20, y + 16, '❓ ' + a.q, { size: 13, weight: 700, anchor: 'start' });
-      if (!m.canAsk) s += K.text(20 + tw('❓ ' + a.q) + 16, y + 16, '（先做一做，再回答）', { size: 12, anchor: 'start', fill: '#8a93a3' });
-      else if (a.pick) s += K.text(20 + tw('❓ ' + a.q) + 16, y + 16, a.pick === a.right ? '✓ 对' : '再想想', { size: 12, weight: 700, anchor: 'start', fill: a.pick === a.right ? '#2f7d3a' : '#c0392b' });
-      y += 24;
-      const row = askRow(a), pk = (o) => { const P = m.asks.map((b) => b.pick); P[qi] = o; return { pick: P.join(',') }; };
-      let x = 36;
-      a.opts.forEach((o, oi) => {
-        const w = row ? tw(o) + 24 : 560;
-        s += btn(x, y, w, o, pk(oi + 1), m.canAsk, o, a.pick === oi + 1);
-        if (row) x += w + 6; else y += 30;
-      });
-      y += (row ? 32 : 0) + 10;
-    });
+    // 研究本、追问
+    s += RS.drawBook(L.ybook, items(m), '研究本（做成了的、证明做不到的，都记在这里）');
+    s += RS.drawAsks(L.yask, m.asks, m.canAsk);
     return s;
   }
   U.registerPack({
