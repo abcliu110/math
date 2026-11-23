@@ -1,6 +1,6 @@
 /* node tests/ui-inv.js —— 不变量放大镜：真实鼠标测试。
  *  1. 擦数写和：盯住“个数”变了（标红，不算找到）；换成“和”：一直 21，找到了；擦到只剩 21；
- *  2. 1 到 100 写差：结论按钮先点不动；盯“和”会变，换“和的单双”找到；先点错的结论有提醒，再点对的；
+ *  2. 1 到 100 写差：结论按钮先点不动；盯“和”会变，看它除以 3 的余数也变，最大的数的单双不算，回到“和”看单双才找到；先点错的结论有提醒，再点对的；
  *  3. 7 个杯子每次翻 2 个：退一步能退；盯“朝上个数的单双”找到，下结论“不能”；
  *  4. 7 个杯子每次翻 3 个：真的翻出全部朝上；全程没有打开属性面板、没有报错。 */
 'use strict';
@@ -23,8 +23,12 @@
   await erase(1, 1, 2, 2); await erase(1, 1, 2, 3);
   await H.byTitle('放大镜看和');
   H.ok(await H.out('found') === '0' && (await H.text()).includes('不是不变量'), '盯住和：21 → 19 → 17，变了');
-  await H.byTitle('放大镜看和的单双');
-  H.ok(await H.out('found') === '1' && await H.done('f'), '盯住和的单双：一直是单，找到了');
+  await H.byTitle('看它除以 3 的余数');
+  H.ok(await H.out('found') === '0' && (await H.text()).includes('不是不变量'), '和除以 3 的余数：0 → 1 → 2，也变了');
+  await H.byTitle('放大镜看最大的数'); await H.byTitle('看它的单双');
+  H.ok(await H.out('found') === '0', '最大的数的单双：不是不变量');
+  await H.byTitle('放大镜看和');
+  H.ok(await H.out('found') === '1' && await H.done('f'), '和 × 单双：一直是单，找到了');
   await H.byTitle('1 到 100 最后剩单数');
   H.ok(await H.out('ans') === '1' && !(await H.done('a')) && (await H.text()).includes('再想想'), '先点“单数”：提醒再想想（1 到 100 的和是 5050）');
   await H.byTitle('1 到 100 最后剩双数');
@@ -36,7 +40,9 @@
   await H.byTitle('退一步');
   H.ok(await H.out('up') === '0' && await H.out('steps') === '0', '退一步：回到全部朝下');
   await flip(1, 2); await flip(1, 3);
-  await H.byTitle('放大镜看朝上个数的单双');
+  await H.byTitle('放大镜看朝上的个数');
+  H.ok(await H.out('found') === '0', '朝上的个数本身：0 → 2 → 2，变了');
+  await H.byTitle('看它的单双');
   H.ok(await H.out('found') === '1' && await H.done('f'), '朝上个数的单双：双、双、双，找到不变量');
   await H.byTitle('不能全部朝上');
   H.ok(await H.out('ans') === '2' && await H.done('a'), '下结论：永远不能全部朝上');

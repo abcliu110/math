@@ -45,7 +45,7 @@
   //      推广     输出随属性有规律地变（一次或二次）：先做三个，写下规律猜一个远一点的，再调过去验证
   //   出不来（台面上改不了数、没有好的规律）就不出，这个操作台在这一档没有按钮。
   // 名字不好读、或者扫出来没有数学意义的属性（显示用的序号、计数器、编码），在 TSKIP 里跳过；TNAME 给属性、输出起孩子读得懂的名字。
-  const TSKIP = { estbench: '*', relbench: '*', statebench: '*', clockbench: '*', chancebench: '*', rulerbench: '*', seqbench: ['k'], solidbench: ['cols', 'rows'], ringbench: ['beats'], calbench: ['d1', 'd2'], pigeonbench: '*', treebench: ['open'], invbench: '*' };
+  const TSKIP = { estbench: '*', relbench: '*', statebench: '*', clockbench: '*', chancebench: '*', rulerbench: '*', seqbench: ['k'], solidbench: ['cols', 'rows'], ringbench: ['beats'], calbench: ['d1', 'd2'], pigeonbench: '*', treebench: '*', invbench: '*' };
   const TNAME = { treebench: { m: '卡片张数', amt: '要凑的钱数' }, seqbench: { n: '第几个' }, numlinebench: { '>value': '落点' }, anglebench: { a: '∠1 的度数' } };
   const CONDT = ['', '其中双数', '其中单数'];
   const TNOX = ['calbench'];   // 输出不能比大小（星期几）：不出“最多最少”
@@ -644,48 +644,48 @@
         const m = lv === 1 ? 2 : R.int(3, 4); if (!c.some((v) => v >= m)) continue;
         if (lv === 2 && !c.slice(0, nc).some((v) => v < m - 1)) continue;   // 中等要有一种颜色不够 m − 1 个
         const x = c.map((v) => Math.min(v, m - 1)), ans = x.reduce((a, b) => a + b, 0) + 1;
-        return { title: '盒子里有' + has + '。' + how + '，至少' + vb + '几' + unit + '才能保证有 ' + m + ' ' + unit + '同色的？', hook: '你来当最倒霉的人：一' + unit + '一' + unit + '地' + vb + '，尽量不让它成功。' + vb + '到卡住，再加 1。', props: Object.assign(props, { want: 0, m }), goals: [['guar', ans, '至少 ' + ans + ' ' + unit]], sol: { x1: x[0], x2: x[1], x3: x[2], x4: x[3] }, answer: ans };
+        return { title: '盒子里有' + has + '。' + how + '，至少' + vb + '几' + unit + '才能保证有 ' + m + ' ' + unit + '同色的？', hook: '你来当最倒霉的人：一' + unit + '一' + unit + '地' + vb + '，尽量不让它成功。', props: Object.assign(props, { want: 0, m }), goals: [['guar', ans, '至少 ' + ans + ' ' + unit]], sol: { x1: x[0], x2: x[1], x3: x[2], x4: x[3], say: ans }, answer: ans };
       }
       if (lv === 2) {
         const m = R.int(2, Math.max(2, c[0])); if (c[0] < 2) continue;
         const x = c.map((v, i) => (i ? v : m - 1)), ans = x.reduce((a, b) => a + b, 0) + 1;
-        return { title: '盒子里有' + has + '。' + how + '，至少' + vb + '几' + unit + '才能保证有 ' + m + ' ' + unit + '红的？', hook: '最倒霉的时候，先' + vb + '到的都是什么颜色？红的' + vb + '到几' + unit + '就卡住了？', props: Object.assign(props, { want: 2, m }), goals: [['guar', ans, '至少 ' + ans + ' ' + unit]], sol: { x1: x[0], x2: x[1], x3: x[2], x4: x[3] }, answer: ans };
+        return { title: '盒子里有' + has + '。' + how + '，至少' + vb + '几' + unit + '才能保证有 ' + m + ' ' + unit + '红的？', hook: '最倒霉的时候，先' + vb + '到的都是什么颜色？红的' + vb + '到几' + unit + '就卡住了？', props: Object.assign(props, { want: 2, m }), goals: [['guar', ans, '至少 ' + ans + ' ' + unit]], sol: { x1: x[0], x2: x[1], x3: x[2], x4: x[3], say: ans }, answer: ans };
       }
       if (c.slice(0, nc).some((v) => v < 1)) continue;
       const lo = c.slice(0, nc).indexOf(Math.min(...c.slice(0, nc))), x = c.map((v, i) => (i === lo ? 0 : v)), ans = x.reduce((a, b) => a + b, 0) + 1;
       if (c.slice(0, nc).filter((v) => v === c[lo]).length > 1 && R.bool()) continue;
-      return { title: '盒子里有' + has + '。' + how + '，至少' + vb + '几' + unit + '才能保证每种颜色都有？', hook: '最倒霉的人会把哪几种颜色先全' + vb + '完？试几种' + vb + '法，比一比卡住时哪种' + vb + '得最多。', props: Object.assign(props, { want: 1, m: 1 }), goals: [['guar', ans, '至少 ' + ans + ' ' + unit]], sol: { x1: x[0], x2: x[1], x3: x[2], x4: x[3] }, answer: ans };
+      return { title: '盒子里有' + has + '。' + how + '，至少' + vb + '几' + unit + '才能保证每种颜色都有？', hook: '最倒霉的人会把哪几种颜色先全' + vb + '完？试几种' + vb + '法，比一比卡住时哪种' + vb + '得最多。', props: Object.assign(props, { want: 1, m: 1 }), goals: [['guar', ans, '至少 ' + ans + ' ' + unit]], sol: { x1: x[0], x2: x[1], x3: x[2], x4: x[3], say: ans }, answer: ans };
     }
   } });
-  // 枚举树：容易 1…m 排两位数（不重复）；中等 带 0、可重复、或者三位数；难 只要双数 / 单数，或者凑钱。参考做法：全部展开
+  // 枚举树：容易 1…m 排两位数（不重复）；中等 带 0、可重复、或者三位数；难 只要双数 / 单数，或者凑钱。参考做法：每一枝从小到大列全
   add('treebench', { gen(R, lv) {
-    const T = U.TreeBench.model, fin = { open: 6 };
-    const mk = (p) => { const props = Object.assign({ mode: 0, m: 3, zero: false, k: 2, rep: false, cond: 0, set: 0, amt: 10, open: 0 }, p), n = T(Object.assign({}, props, fin)).count; return { props, n }; };
+    const T = U.TreeBench.model, S = U.TreeBench.solve;
+    const mk = (p) => { const props = Object.assign({ mode: 0, m: 3, zero: false, k: 2, rep: false, cond: 0, set: 0, amt: 10, got: '', open: 0 }, p), fin = S(props), n = T(Object.assign({}, props, fin)).count; return { props, n, fin }; };
     if (lv === 3 && R.bool()) {
-      const set = R.int(0, 1), amt = set ? R.pick([15, 20, 25, 30]) : R.int(6, 15), { props, n } = mk({ mode: 1, set, amt });
+      const set = R.int(0, 1), amt = set ? R.pick([15, 20, 25, 30]) : R.int(6, 15), { props, n, fin } = mk({ mode: 1, set, amt });
       const [b, mid] = set ? [10, 5] : [5, 2];
       return { title: '用 1 元、' + mid + ' 元、' + b + ' 元的钱（每种都足够多）凑 ' + amt + ' 元，有几种凑法？', hook: '先定大的：' + b + ' 元用几张？每一枝再看 ' + mid + ' 元用几张，剩下的用 1 元。', props, goals: [['count', n, '一共 ' + n + ' 种']], sol: fin, answer: n };
     }
     const p = lv === 1 ? { m: R.int(3, 5) } : lv === 2 ? R.pick([{ m: R.int(3, 5), zero: true }, { m: R.int(2, 4), rep: true }, { m: R.int(3, 4), k: 3 }]) : Object.assign({ m: R.int(3, 5), cond: R.int(1, 2) }, R.pick([{}, { zero: true }, { rep: true }]));
-    const { props, n } = mk(p), cs = Array.from({ length: props.m }, (_, i) => (props.zero ? i : i + 1));
+    const { props, n, fin } = mk(p), cs = Array.from({ length: props.m }, (_, i) => (props.zero ? i : i + 1));
     const title = '用 ' + cs.join('、') + ' 这 ' + props.m + ' 个数字排' + (props.k === 2 ? '两' : '三') + '位数' + (props.rep ? '（同一个数字可以重复用）' : '（每个数字只能用一次）') + '，' + (props.cond ? CONDT[props.cond] + '有几个？' : '能排几个？');
-    const hook = props.zero ? '0 能打头吗？先定最高位，一枝一枝展开。' : props.cond ? '先定十位，一枝一枝列出来；个位是几才是' + CONDT[props.cond].slice(2) + '？' : '先定最高位是几，一枝一枝展开：每一枝一样多吗？';
+    const hook = props.zero ? '先定最高位，从 0 那一枝开始列。' : props.cond ? '先定十位，一枝一枝列出来。' : '先定最高位是几，一枝一枝列全：每一枝一样多吗？';
     return { title, hook, props, goals: [['count', n, '一共 ' + n + ' 个']], sol: fin, answer: n };
   } });
 
   // 不变量放大镜：容易 擦数写和（和不变，最后剩几）；中等 擦数写差 / 写和，问 1 到 N 最后剩单数还是双数；难 翻杯子（做不到的要找到理由，做得到的要翻出来）
   add('invbench', { gen(R, lv) {
-    const I = U.InvBench, ask = '找到一直不变的那个量';
+    const I = U.InvBench, ask = '找到一直不变的那个量（看哪个量，怎么看）';
     const play = (n, op) => { let a = Array.from({ length: n }, (_, i) => i + 1); const out = [a.join(',')]; while (a.length > 1) { const r = op ? Math.abs(a[0] - a[1]) : a[0] + a[1]; a = [r].concat(a.slice(2)); out.push(a.join(',')); } return out.join('|'); };
-    if (lv === 1) { const n = R.int(4, 8), sum = n * (n + 1) / 2; return { title: '黑板上写着 1 到 ' + n + '。每次擦掉两个数，写上它们的和。最后剩下的数是几？', hook: '先擦几次。用放大镜分别盯住“个数”和“和”：哪个一直不变？', props: { game: 0, op: 0, n, N: n }, goals: [['found', 1, '找到了：和不变', null, null, null, ask], ['last', sum, '最后剩 ' + sum]], sol: { lens: 2, hist: play(n, 0) }, answer: sum }; }
+    if (lv === 1) { const n = R.int(4, 8), sum = n * (n + 1) / 2; return { title: '黑板上写着 1 到 ' + n + '。每次擦掉两个数，写上它们的和。最后剩下的数是几？', hook: '先擦几次。黑板上什么东西不管怎么擦都不变？用放大镜去找。', props: { game: 0, op: 0, n, N: n }, goals: [['found', 1, '找到了：和不变', null, null, null, ask], ['last', sum, '最后剩 ' + sum]], sol: { lens: 2, hist: play(n, 0) }, answer: sum }; }
     if (lv === 2) {
       const op = R.int(0, 1), N = R.pick([10, 11, 20, 21, 50, 99, 100, 2025, 2026]), right = (N * (N + 1) / 2) % 2 ? 1 : 2, n = R.int(5, 7);
-      return { title: '黑板上写着 1 到 ' + N + '。每次擦掉两个数，写上它们的' + (op ? '差（大减小）' : '和') + '。最后剩下的数是单数还是双数？', hook: N > 10 ? N + ' 个数擦不过来：先在 1 到 ' + n + ' 上试，找到不变的量，再推过去。' : '先擦几次，找到不变的量。', props: { game: 0, op, n: N > 10 ? n : N, N }, goals: [['found', 1, op ? '找到了：和的单双不变' : '找到了：和不变（单双当然也不变）', null, null, null, ask], ['ans', right, '最后剩' + (right === 1 ? '单数' : '双数')]], sol: { lens: 3, hist: play(N > 10 ? n : N, op).split('|').slice(0, 3).join('|'), ans: right }, answer: null };
+      return { title: '黑板上写着 1 到 ' + N + '。每次擦掉两个数，写上它们的' + (op ? '差（大减小）' : '和') + '。最后剩下的数是单数还是双数？', hook: N > 10 ? N + ' 个数擦不过来：先在 1 到 ' + n + ' 上试，找到不变的量，再推过去。' : '先擦几次，找到不变的量。', props: { game: 0, op, n: N > 10 ? n : N, N }, goals: [['found', 1, op ? '找到了：和的单双不变' : '找到了：和不变（单双当然也不变）', null, null, null, ask], ['ans', right, '最后剩' + (right === 1 ? '单数' : '双数')]], sol: { lens: 2, view: 1, hist: play(N > 10 ? n : N, op).split('|').slice(0, 3).join('|'), ans: right }, answer: null };
     }
     for (;;) {
       const n = R.int(5, 11), k = R.int(2, 4); if (k >= n) continue;
       const path = I.solveCups(n, k), title = n + ' 个杯子都杯口朝下，每次正好翻 ' + k + ' 个。能不能翻到全部朝上？';
-      if (!path) { const h = [I.start(1, n)]; for (let i = 0; i < 2; i++) { const s = h[h.length - 1].split(''); for (let j = 0; j < k; j++) s[(i + j) % n] = s[(i + j) % n] === '1' ? '0' : '1'; h.push(s.join('')); } return { title, hook: '先翻几次。用放大镜盯住朝上的个数：每次变几？单双呢？', props: { game: 1, n, k }, goals: [['found', 1, '找到了：朝上个数的单双不变', null, null, null, ask], ['ans', 2, '永远不能全部朝上']], sol: { lens: 3, hist: h.join('|'), ans: 2 }, answer: null }; }
+      if (!path) { const h = [I.start(1, n)]; for (let i = 0; i < 2; i++) { const s = h[h.length - 1].split(''); for (let j = 0; j < k; j++) s[(i + j) % n] = s[(i + j) % n] === '1' ? '0' : '1'; h.push(s.join('')); } return { title, hook: '先翻几次。朝上的个数每次怎么变？有没有什么一直没变？', props: { game: 1, n, k }, goals: [['found', 1, '找到了：朝上个数的单双不变', null, null, null, ask], ['ans', 2, '永远不能全部朝上']], sol: { lens: 1, view: 1, hist: h.join('|'), ans: 2 }, answer: null }; }
       if (path.length < 3 && R.bool()) continue;
       return { title, hook: '先想想：朝上个数的单双能拦住吗？拦不住的话，就真的翻出来。', props: { game: 1, n, k }, goals: [['allup', 1, '全部朝上了']], sol: { hist: path.join('|') }, answer: null };
     }

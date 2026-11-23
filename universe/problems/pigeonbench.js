@@ -9,7 +9,7 @@
   const ms = (id, say, score, value, hints) => ({ id, say, score, when: { role: 'pg', port: 'guar', op: '=', value: String(value) }, hints });
   add({
     id: 'pg-socks', essence: ['E2', 'E7'], title: '抽屉里有红袜子、黄袜子、蓝袜子各 5 只。黑着灯摸，至少摸几只才能保证有一双同色的？', grade: 5, rung: 3, alias: ['摸袜子', '抽屉原理'],
-    hook: '你来当最倒霉的人：一只一只摸，尽量不让两只同色。摸到卡住（再摸哪只都成双），再加 1。',
+    hook: '“保证”是说运气再坏也能做到。你来当最倒霉的人：一只一只摸，尽量不让两只同色。',
     build: pg({ c1: 5, c2: 5, c3: 5, c4: 0, want: 0, m: 2 }),
     predict: { q: '先猜：要摸几只？', options: [{ v: 0, label: '2 只' }, { v: 1, label: '4 只' }, { v: 2, label: '6 只' }], answer: 1 },
     milestones: [ms('g', '至少摸 4 只', 8, 4, ['最倒霉：每种颜色先各摸到 1 只。', '红、黄、蓝各 1 只，3 只还没成双。', '再摸一只，不管什么颜色都成双：3 + 1 = 4。'])],
@@ -18,7 +18,7 @@
   });
   add({
     id: 'pg-three-same', essence: ['E2', 'E7'], title: '袋里红、黄、蓝、绿球各 6 个。至少摸几个，才能保证有 3 个同色的？', grade: 6, rung: 4, alias: ['摸球', '最不利原则'],
-    hook: '最倒霉的人每种颜色摸到几个就停？摸到卡住，再加 1。',
+    hook: '要 3 个同色。最倒霉的人会怎么摸，才能拖得最久？',
     build: pg({ c1: 6, c2: 6, c3: 6, c4: 6, want: 0, m: 3 }),
     milestones: [ms('g', '至少摸 9 个', 8, 9, ['要 3 个同色，最倒霉时每种颜色只摸到 2 个。', '4 种颜色各 2 个：8 个。', '再摸一个就有 3 个同色：9 个。'])],
     goal: ['g'],

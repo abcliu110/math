@@ -3,7 +3,8 @@
  *     题目可以问更大的 1 到 N：在小的上找到不变量，再推到 N（ans：1 最后是单数，2 最后是双数）。
  *   game 1 翻杯子：n 个杯子都杯口朝下，每次正好翻 k 个（点 k 个杯子，再点“翻”）。能不能全部朝上（allup）？
  *     k 是双数、n 是单数时永远做不到：朝上的个数每次变 0、±2、±4……，单双不变（ans 2：不能）。
- *   放大镜（lens）：擦数写数看 个数 / 和 / 和的单双；翻杯子看 朝上的个数 / 朝下的个数 / 朝上个数的单双。
+ *   放大镜分两步选：看哪个量（lens：擦数写数 个数 / 和 / 最大的数；翻杯子 朝上的个数 / 朝下的个数），
+ *     怎么看（view：它本身 / 它的单双 / 它除以 3 的余数）。按钮上不直接写“和的单双”，要孩子自己把两步配起来。
  *   下面一排画出每一步放大镜里的值：一直一样、而且这个量真的是不变量（至少做了 2 步）时才算“找到了”（found）。
  *   碰巧几步没变、但其实会变的量，只说“到现在还没变，再多做几步”，不算找到。答案按钮要先找到不变量才点得动。
  *   hist 记下每一步的局面（用 | 隔开），sel 记下点选了哪几个；可以退一步、重来。
@@ -14,7 +15,9 @@
   const num = (n) => U.val('num', Q(n), { dim: null });
   const W = 700;
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, Number.isFinite(+v) ? Math.round(+v) : lo));
-  const LENS = [['个数', '和', '和的单双'], ['朝上的个数', '朝下的个数', '朝上个数的单双']];
+  const LENS = [['个数', '和', '最大的数'], ['朝上的个数', '朝下的个数']];
+  const VIEWS = ['它本身', '它的单双', '它除以 3 的余数'], VSHORT = ['它本身', '它的单双', '除以 3 的余数'];
+  const lensName = (game, lens, view) => { const q = LENS[game][lens - 1]; return view === 1 ? q + '的单双' : view === 2 ? q + '除以 3 的余数' : q; };
   const par = (v) => (v % 2 ? '单' : '双');
   const start = (game, n) => (game === 0 ? Array.from({ length: n }, (_, i) => i + 1).join(',') : '0'.repeat(n));
   // 翻杯子：只看朝上的个数，宽度优先找全部朝上的最少步数，再还原出一串真实的局面（参考做法、判断能不能）
@@ -33,19 +36,21 @@
     let hist = String(p.hist || '').split('|').filter(ok); if (!hist.length || hist[0] !== start(game, n)) hist = [start(game, n)];
     const cur = hist[hist.length - 1], nums = game === 0 ? cur.split(',').map(Number) : cur.split('').map(Number);
     const sel = String(p.sel || '').split(',').filter((x) => x !== '').map(Number).filter((i, j, a) => i >= 0 && i < nums.length && a.indexOf(i) === j);
-    const lens = clamp(p.lens, 0, 3);
-    const val = (s) => {
-      if (game === 0) { const a = s.split(',').map(Number), sum = a.reduce((x, y) => x + y, 0); return lens === 1 ? a.length : lens === 2 ? sum : par(sum); }
-      const up = s.split('').filter((c) => c === '1').length; return lens === 1 ? up : lens === 2 ? n - up : par(up);
+    const lens = clamp(p.lens, 0, LENS[game].length), view = clamp(p.view, 0, 2);
+    const raw = (s) => {
+      if (game === 0) { const a = s.split(',').map(Number); return lens === 1 ? a.length : lens === 2 ? a.reduce((x, y) => x + y, 0) : Math.max(...a); }
+      const up = s.split('').filter((c) => c === '1').length; return lens === 1 ? up : n - up;
     };
+    const val = (s) => { const v = raw(s); return view === 1 ? par(v) : view === 2 ? v % 3 : v; };
     const vals = lens ? hist.map(val) : [];
-    const real = game === 0 ? (op === 0 ? [2, 3] : [3]) : (k % 2 === 0 ? [3] : []);   // 真的不变的量
+    // 真的不变的量：写和时“和”怎么看都不变；写差时只有和的单双不变；每次翻双数个杯子，朝上、朝下个数的单双都不变
+    const real = game === 0 ? (op === 0 ? lens === 2 : lens === 2 && view === 1) : (k % 2 === 0 && view === 1);
     const same = vals.length >= 3 && vals.every((v) => v === vals[0]);
-    const found = same && real.includes(lens);
+    const found = same && real;
     const ans = found ? clamp(p.ans, 0, 2) : 0;
     const up = game === 1 ? nums.filter((c) => c === 1).length : 0;
     const right = game === 0 ? ((N * (N + 1) / 2) % 2 ? 1 : 2) : (solveCups(n, k) ? 0 : 2);
-    return { game, op, n, k, N, hist, cur, nums, sel, lens, vals, real, same, found, ans, up, steps: hist.length - 1, last: game === 0 && nums.length === 1 ? nums[0] : null, allup: game === 1 && up === n, right };
+    return { game, op, n, k, N, hist, cur, nums, sel, lens, view, name: lens ? lensName(game, lens, view) : '', vals, real, same, found, ans, up, steps: hist.length - 1, last: game === 0 && nums.length === 1 ? nums[0] : null, allup: game === 1 && up === n, right };
   }
   const btn = (x, y, w, label, patch, enabled, tip, on) => '<g' + (enabled ? ' data-pick-set="' + encodeURIComponent(JSON.stringify(patch)) + '" style="cursor:pointer"' : ' data-off="1"') + '><title>' + K.esc(tip) + '</title>' +
     K.rect(x, y, w, 26, { fill: on ? '#dcebfb' : enabled ? '#fff' : '#f1f3f6', stroke: enabled || on ? 'var(--blue)' : '#b8c0cc', r: 7, w: on ? 2.2 : 1.4 }) + K.text(x + w / 2, y + 17, label, { size: 12, weight: 700, fill: enabled || on ? 'var(--ink)' : '#5f6773' }) + '</g>';
@@ -81,12 +86,14 @@
     // 放大镜
     const yl = 160, L = LENS[m.game];
     s += K.text(20, yl + 17, '🔍 盯住', { size: 13, weight: 700, anchor: 'start' });
-    L.forEach((nm, i) => { s += btn(84 + i * 132, yl, 126, nm, { lens: i + 1 }, true, '放大镜看' + nm, m.lens === i + 1); });
+    L.forEach((nm, i) => { s += btn(80 + i * 98, yl, 92, nm, { lens: i + 1 }, true, '放大镜看' + nm, m.lens === i + 1); });
+    s += K.text(386, yl + 17, '看', { size: 13, weight: 700, anchor: 'start' });
+    VIEWS.forEach((nm, i) => { s += btn(406 + i * 94, yl, 88, VSHORT[i], { view: i }, true, '看' + nm, m.view === i); });
     const yt = 196;
     if (!m.lens) s += K.text(20, yt + 18, '做几步，用放大镜盯住一个量：它每一步变不变？', { size: 13, anchor: 'start', fill: '#5f6773' });
     else {
       const show = m.vals.length > 10 ? m.vals.slice(-10) : m.vals, off = m.vals.length - show.length;
-      s += K.text(20, yt + 18, L[m.lens - 1], { size: 12, weight: 700, anchor: 'start' });
+      s += K.text(20, yt + 18, m.name.length > 7 ? m.name.slice(0, 7) + '…' : m.name, { size: 12, weight: 700, anchor: 'start' });
       show.forEach((v, i) => {
         const x = 120 + i * 56, chg = i + off > 0 && v !== m.vals[i + off - 1];
         if (i) s += K.text(x - 10, yt + 18, '→', { size: 12, fill: '#8a93a3' });
@@ -94,9 +101,9 @@
       });
       let msg, col = 'var(--ink)';
       if (m.vals.length < 3) msg = '再做' + (3 - m.vals.length) + ' 步看看它变不变。';
-      else if (m.found) { msg = '不管怎么做，' + L[m.lens - 1] + '都不变：这就是不变量。'; col = '#2f7d3a'; }
+      else if (m.found) { msg = '不管怎么做，' + m.name + '都不变：这就是不变量。'; col = '#2f7d3a'; }
       else if (m.same) msg = '到现在还没变——它真的永远不变吗？换几种做法再看看。';
-      else { msg = L[m.lens - 1] + '变了：它不是不变量。换一个量盯住。'; col = '#c0392b'; }
+      else { msg = m.name + '变了：它不是不变量。换一个量，或者换一种看法。'; col = '#c0392b'; }
       s += K.text(20, yt + 46, msg, { size: 13, anchor: 'start', fill: col });
     }
     // 结果和答案
@@ -118,7 +125,7 @@
     return s;
   }
   U.registerPack({
-    id: 'invbench', version: 1,
+    id: 'invbench', version: 2,
     types: {
       invbench: {
         workspaceRole: 'none', handles: true, compactPorts: true, bench: true, essence: ['E2', 'E7'],
@@ -131,6 +138,7 @@
           k: { type: 'int', label: '每次翻几个', default: 2, min: 1, max: 5, write: true },
           N: { type: 'int', label: '题目问到 1 到几', default: 6, min: 2, max: 9999, write: true },
           lens: { type: 'int', label: '放大镜看第几个量', default: 0, min: 0, max: 3, write: true },
+          view: { type: 'int', label: '怎么看（0 本身，1 单双，2 除以 3 的余数）', default: 0, min: 0, max: 2, write: true },
           hist: { type: 'text', label: '每一步的局面', default: '', write: true },
           sel: { type: 'text', label: '点选了哪几个', default: '', write: true },
           ans: { type: 'int', label: '下的结论', default: 0, min: 0, max: 2, write: true },
@@ -155,5 +163,5 @@
       },
     },
   });
-  U.InvBench = { model, solveCups, start };
+  U.InvBench = { model, solveCups, start, lensName };
 })(typeof globalThis !== 'undefined' ? globalThis : window);

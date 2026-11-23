@@ -1,4 +1,4 @@
-/* “枚举树”的题。先定第一位（先定大的），一枝一枝展开，不重不漏。判分只看器材的输出（全部展开才有 count）。 */
+/* “枚举树”的题。先定第一位（先定大的），孩子自己一枝一枝列，不重不漏。判分只看器材的输出（全部列完才有 count）。 */
 (function (G) {
   'use strict';
   const U = G.U, W = U.World;
@@ -9,7 +9,7 @@
   const ms = (id, say, score, value, hints) => ({ id, say, score, when: { role: 'tr', port: 'count', op: '=', value: String(value) }, hints });
   add({
     id: 'tr-123', essence: ['E1', 'E2'], title: '用 1、2、3 三张卡片，能排成几个不同的三位数？', grade: 3, rung: 2, alias: ['排三位数', '枚举树'],
-    hook: '先定百位是几：1 打头的有哪些？一枝一枝展开。',
+    hook: '先定百位是几：1 打头的有哪些？一个一个列出来，列全了再到下一枝。',
     build: tr({ mode: 0, m: 3, k: 3, zero: false, rep: false, cond: 0, open: 0 }),
     milestones: [ms('c', '一共 6 个', 8, 6, ['百位是 1：123、132。', '百位是 2、3 也各有 2 个。', '每一枝 2 个，3 枝：2 × 3 = 6。'])],
     goal: ['c'],
@@ -17,16 +17,16 @@
   });
   add({
     id: 'tr-0123', essence: ['E1', 'E2'], title: '用 0、1、2、3 四张卡片，能排成几个不同的两位数？', grade: 3, rung: 3, alias: ['有 0 的卡片', '枚举树'],
-    hook: '0 能放在十位上吗？0 那一枝会怎么样？',
+    hook: '从 0 打头的那一枝开始列。',
     build: tr({ mode: 0, m: 4, k: 2, zero: true, rep: false, cond: 0, open: 0 }),
     predict: { q: '先猜：4 张卡片，每张打头后面配 3 张，是 12 个吗？', options: [{ v: 0, label: '是 12 个' }, { v: 1, label: '比 12 个少' }, { v: 2, label: '比 12 个多' }], answer: 1 },
-    milestones: [ms('c', '一共 9 个', 8, 9, ['0 不能打头：0 那一枝整枝剪掉。', '十位是 1：10、12、13。', '1、2、3 打头各 3 个：3 × 3 = 9。'])],
+    milestones: [ms('c', '一共 9 个', 8, 9, ['0 能放在十位上吗？', '0 不能打头：0 那一枝整枝剪掉。十位是 1：10、12、13。', '1、2、3 打头各 3 个：3 × 3 = 9。'])],
     goal: ['c'],
     why: '十位不能是 0，只有 1、2、3 三种；十位定了，个位从剩下的 3 张里选（0 可以放在个位）。所以是 3 × 3 = 9 个，不是 4 × 3 = 12 个。',
   });
   add({
     id: 'tr-even', essence: ['E1', 'E2'], title: '用 1、2、3、4 四张卡片排两位数，其中双数有几个？', grade: 3, rung: 3, alias: ['双数', '枚举树'],
-    hook: '先全列出来，再把单数划掉。个位是几才是双数？',
+    hook: '十位是 1 的双数有哪些？一枝一枝列。',
     build: tr({ mode: 0, m: 4, k: 2, zero: false, rep: false, cond: 1, open: 0 }),
     milestones: [ms('c', '双数有 6 个', 8, 6, ['个位是 2 或 4 才是双数。', '十位是 1：12、14。十位是 2：24。', '2 + 1 + 2 + 1 = 6。'])],
     goal: ['c'],
@@ -34,7 +34,7 @@
   });
   add({
     id: 'tr-repeat', essence: ['E1', 'E2'], title: '用 1、2、3 排两位数，同一个数字可以重复用（比如 11）。能排几个？', grade: 3, rung: 3, alias: ['可以重复', '枚举树'],
-    hook: '能重复用，十位用过的数个位还能用。每一枝有几个？',
+    hook: '同一个数字可以用两次。十位是 1 的有哪些？',
     build: tr({ mode: 0, m: 3, k: 2, zero: false, rep: true, cond: 0, open: 0 }),
     milestones: [ms('c', '一共 9 个', 8, 9, ['十位是 1：11、12、13。', '每一枝 3 个。', '3 × 3 = 9。'])],
     goal: ['c'],

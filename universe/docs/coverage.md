@@ -1,6 +1,6 @@
 # 知识点覆盖报告
 
-> 由 `node tools/coverage.js` 生成，日期 2026-11-22。数据来自 `js/core/curriculum.js` 与 `problems/*.js`。
+> 由 `node tools/coverage.js` 生成，日期 2026-11-23。数据来自 `js/core/curriculum.js` 与 `problems/*.js`。
 
 ## 总览
 
