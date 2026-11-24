@@ -16,7 +16,11 @@
  *   换情况（adj，逗号隔开）：set 换一组（sets 里的几组“头数,甲,乙,总数|…”，si 第几组）、T 目标多 1 / 少 1。有 adj 就有“从头再来”和“凑不出来”两个按钮。
  *   from：从头再来时回到全是甲（0）还是全是乙（1）。题目可带追问（ask / pick）。
  *   甲的数可以是负数（答错倒扣分）；这时没有“每个都少算”，也不能写成两架天平。
- * 这一版的边界（如实写）：最多 40 个；两种东西。 */
+ *   记下来（graph = 1，docs/knob-graph-and-gallery.md 第一节）：研究本里个数和每个的数都一样的那几条，画成一张图：横着是总数，竖着是乙的个数；
+ *     凑出来的是实心点，说对“凑不出来”的画在下面一排的 ✕。不另外记数据：孩子做出一条，图上才多一个点。
+ *     图上有 3 个点以后，换到一个新目标时可以先猜：点竖线上的一格（或“凑不出来”那一格），再去换；凑到了或说对凑不出来，就算猜没猜对。
+ *     有 5 个点以后可以“全部试一遍”：每个总数都画上（浅色），看出是一条隔一个缺一个的直线。
+ * 这一版的边界（如实写）：最多 40 个；两种东西。图只有“总数 → 乙的个数”这一种（头数不变）。 */
 (function (G) {
   'use strict';
   const U = G.U, Q = U.Q, K = U.kit, RS = K.research;
@@ -35,8 +39,17 @@
     const canAsk = book.length > 0, asks = RS.parseAsk(p.ask, p.pick, canAsk);
     return { n, la, lb, k, T, total, diff: T - total, step: lb - la, tried, ok: total === T ? 1 : 0, lo, base, lift: !!p.lift && lo > 0, ans,
       key: n + ',' + la + ',' + lb + ',' + T, sets, si, adj: { any: af.length > 0, set: af.includes('set') && sets.length > 1, T: af.includes('T') }, from: p.from ? 1 : 0,
-      claim: !!p.claim, book, canAsk, asks };
+      claim: !!p.claim, book, canAsk, asks, graph: !!p.graph, guess: Number.isInteger(+p.guess) && +p.guess >= 0 ? +p.guess : -1, gok: clamp(+p.gok || 0, 0, 99), gtry: clamp(+p.gtry || 0, 0, 99), all: !!p.all,
+      pts: ptsOf(book, n + ',' + la + ',' + lb + ',') };
   }
+  // 研究本里同一个“个数、甲、乙”的几条：[{ T, k }]，k 是 null 就是凑不出来；同一个总数只留一个
+  const HOLE = 99;
+  function ptsOf(book, pre) {
+    const o = {}; for (const e of book) if (e.startsWith(pre)) { const [h, r] = e.split(':'), T = +h.split(',')[3]; o[T] = r === 'x' ? null : +r; }
+    return Object.keys(o).map(Number).sort((a, b) => a - b).map((T) => ({ T, k: o[T] }));
+  }
+  // 猜了的话，凑到（或说对凑不出来）时算一次：猜对没有
+  const scored = (m, got) => (m.graph && m.guess >= 0 ? { gtry: m.gtry + 1, gok: m.gok + (m.guess === got ? 1 : 0), guess: -1 } : {});
   const addBook = (m, e) => m.book.concat(m.book.includes(e) ? [] : [e]).join(';');
   // 从头：全是甲或全是乙，试过的清空
   const fresh = (m, n) => ({ k: m.from ? n : 0, tried: '', claim: false, lift: false });
@@ -45,7 +58,7 @@
     const m = model(p), kk = clamp(k, 0, m.n); if (kk === m.k) return {};
     const tr = m.tried.length ? m.tried.slice() : [m.k]; if (tr[tr.length - 1] !== kk) tr.push(kk);
     const o = { k: kk, tried: tr.slice(-12).join(','), claim: false };
-    if (kk * m.lb + (m.n - kk) * m.la === m.T) o.book = addBook(m, m.key + ':' + kk);
+    if (kk * m.lb + (m.n - kk) * m.la === m.T) Object.assign(o, { book: addBook(m, m.key + ':' + kk) }, scored(m, kk));
     return o;
   }
   const cell = (i) => ({ x: GX + (i % COLS) * CW, y: GY + Math.floor(i / COLS) * CH });
@@ -74,9 +87,42 @@
   const bookSay = (e, p) => { const [h, r] = e.split(':'), [n, la, lb, T] = h.split(','); return n + ' 个（' + p.na + ' ' + la + '、' + p.nb + ' ' + lb + '）一共 ' + T + '：' + (r === 'x' ? '凑不出来' : p.nb + ' ' + r + ' 个'); };
   const items = (m, p) => m.book.map((e) => ({ say: bookSay(e, p).replace(/-/g, '−'), no: e.endsWith(':x') }));
   const lay = (m, p) => {
-    const by = GY + Math.ceil(m.n / COLS) * CH + 18, yc = by + 48, yf = yc + (m.adj.any ? 34 : 0), yb = yf + (m.adj.any && m.claim ? 24 : 0) + (m.adj.any ? 14 : 0);
-    const ya = yb + RS.bookH(items(m, p)); return { by, yc, yf, yb, ya, end: ya + RS.asksH(m.asks) };
+    const by = GY + Math.ceil(m.n / COLS) * CH + 18, yc = by + 48, yf = yc + (m.adj.any ? 34 : 0), yg = yf + (m.adj.any && m.claim ? 24 : 0) + (m.adj.any ? 14 : 0), yb = yg + (m.graph ? GH : 0);
+    const ya = yb + RS.bookH(items(m, p)); return { by, yc, yf, yg, yb, ya, end: ya + RS.asksH(m.asks) };
   };
+  // ---- 记下来：研究本画成图 ----
+  const GH = 214;
+  function drawGraph(m, p, y0, masked) {
+    const u = p.unit || '', lo = m.n * Math.min(m.la, m.lb), hi = m.n * Math.max(m.la, m.lb);
+    const xa = Math.min(lo, m.T, ...m.pts.map((q) => q.T)), xb = Math.max(hi, m.T, ...m.pts.map((q) => q.T)), span = Math.max(1, xb - xa);
+    const X0 = GX + 44, X1 = GX + 572, Y0 = y0 + 42, Y1 = y0 + 160, YH = y0 + 186, xs = (X1 - X0) / span, ys = (Y1 - Y0) / m.n;
+    const X = (T) => X0 + (T - xa) * xs, Y = (k) => Y1 - k * ys;
+    let s = K.rect(GX - 6, y0, 600, GH - 12, { fill: '#fbfcfe', stroke: '#c9d3e3', r: 8, w: 1 });
+    s += K.text(GX + 4, y0 + 18, '📈 记下来：横着是一共多少' + u + '，竖着是' + p.nb + '几个（研究本里的每一条就是一个点）', { size: 12, weight: 700, anchor: 'start' });
+    // 格子和刻度
+    const tk = span <= 24 ? 1 : span <= 48 ? 2 : span <= 120 ? 5 : 10, kt = m.n <= 12 ? 1 : m.n <= 24 ? 2 : 5;
+    for (let T = Math.ceil(xa / tk) * tk; T <= xb; T += tk) s += K.line(X(T), Y0, X(T), Y1, { w: 0.6, stroke: '#e1e6ef' }) + K.text(X(T), Y1 + 13, String(T).replace('-', '−'), { size: 9, fill: '#5f6773' });
+    for (let k = 0; k <= m.n; k += kt) s += K.line(X0, Y(k), X1, Y(k), { w: 0.6, stroke: '#e1e6ef' }) + K.text(X0 - 8, Y(k) + 3, String(k), { size: 9, anchor: 'end', fill: '#5f6773' });
+    s += K.line(X0, Y1, X1, Y1, { w: 1.2 }) + K.line(X0, Y0, X0, Y1, { w: 1.2 });
+    s += K.text(X0 - 8, YH + 4, '凑不出', { size: 9, anchor: 'end', fill: '#c0392b' }) + K.line(X0, YH, X1, YH, { w: 0.6, stroke: '#f0c9c2' });
+    // 全部试一遍：每个总数都画上，浅色
+    if (m.all) for (let T = xa; T <= xb; T++) { const q = (T - m.n * m.la) / (m.lb - m.la), ok = Number.isInteger(q) && q >= 0 && q <= m.n; s += ok ? K.circle(X(T), Y(q), 3, { fill: '#c9d3e3', stroke: 'none' }) : K.text(X(T), YH + 4, '×', { size: 10, fill: '#e6b4ab' }); }
+    // 孩子做出来的点
+    for (const q of m.pts) s += q.k === null ? K.text(X(q.T), YH + 5, '✕', { size: 13, weight: 700, fill: '#c0392b' }) : K.circle(X(q.T), Y(q.k), 5, { fill: '#f5a25d', stroke: 'var(--ink)', w: 1.2 });
+    // 现在的目标：一条竖线；有 3 个点、这个总数还没做过，就可以先猜
+    const done = m.pts.some((q) => q.T === m.T), canGuess = m.pts.length >= 3 && !done && !m.ok && !masked;
+    if (m.T >= xa && m.T <= xb) s += K.line(X(m.T), Y0 - 4, X(m.T), YH + 6, { w: 1.4, stroke: 'var(--blue)', dash: '4 3' });
+    let say = m.pts.length < 3 ? '再做 ' + (3 - m.pts.length) + ' 个，就可以先猜再换（改目标，凑到了或说对凑不出来，图上就多一个点）' : done ? '这个总数图上已经有了：改一下目标' : m.guess >= 0 ? '你猜' + (m.guess === HOLE ? '凑不出来' : p.nb + ' ' + m.guess + ' 个') + '。去换换看！' : canGuess ? '先猜：一共 ' + m.T + ' 时，' + p.nb + '几个？点蓝线上的一格' : '';
+    if (canGuess) {
+      for (let k = 0; k <= m.n; k++) s += '<g data-pick-set="' + encodeURIComponent(JSON.stringify({ guess: k })) + '" style="cursor:pointer"><title>猜' + K.esc(p.nb) + ' ' + k + ' 个</title><rect x="' + (X(m.T) - 9) + '" y="' + (Y(k) - ys / 2) + '" width="18" height="' + ys + '" fill="transparent"/></g>';
+      s += '<g data-pick-set="' + encodeURIComponent(JSON.stringify({ guess: HOLE })) + '" style="cursor:pointer"><title>猜凑不出来</title><rect x="' + (X(m.T) - 9) + '" y="' + (YH - 9) + '" width="18" height="18" fill="transparent"/></g>';
+    }
+    if (m.guess >= 0 && !done) s += m.guess === HOLE ? K.circle(X(m.T), YH, 7, { fill: 'none', stroke: 'var(--blue)', w: 1.6, dash: '3 2' }) : K.circle(X(m.T), Y(m.guess), 6, { fill: 'none', stroke: 'var(--blue)', w: 1.8, dash: '3 2' });
+    if (m.gtry) say += (say ? '　' : '') + '猜了 ' + m.gtry + ' 次，猜对 ' + m.gok + ' 次';
+    s += K.text(GX + 4, y0 + 34, say, { size: 11, anchor: 'start', fill: 'var(--blue)', weight: 700 });
+    s += RS.btn(GX + 470, y0 + 4, 116, '全部试一遍', { all: !m.all }, m.pts.length >= 5 || m.all, m.pts.length >= 5 ? (m.all ? '收起全部' : '每个总数都画上') : '图上有 5 个点以后才能全部试一遍', m.all);
+    return s;
+  }
   function draw(c) {
     if (c.props.view === 1 && U.SystemBench) return drawSys(c);
     const p = c.props, m = model(p), u = p.unit || ''; let s = '';
@@ -126,14 +172,15 @@
       let x = GX;
       if (m.adj.set) { const nx = (m.si + 1) % m.sets.length, a = m.sets[nx]; s += RS.btn(x, L.yc, 170, '换一组（第 ' + (m.si + 1) + ' / ' + m.sets.length + ' 组）', Object.assign({ si: nx, n: a[0], la: a[1], lb: a[2], target: a[3] }, fresh(m, a[0])), true, '换一组'); x += 180; }
       if (m.adj.T) {
-        s += K.text(x, L.yc + 17, '目标', { size: 12, weight: 700, anchor: 'start' }) + RS.btn(x + 34, L.yc, 26, '−', Object.assign({ target: m.T - 1 }, fresh(m, m.n)), true, '目标少 1') + K.text(x + 84, L.yc + 17, sg(m.T), { size: 14, weight: 700 }) + RS.btn(x + 108, L.yc, 26, '+', Object.assign({ target: m.T + 1 }, fresh(m, m.n)), true, '目标多 1');
+        s += K.text(x, L.yc + 17, '目标', { size: 12, weight: 700, anchor: 'start' }) + RS.btn(x + 34, L.yc, 26, '−', Object.assign({ target: m.T - 1 }, fresh(m, m.n), { guess: -1 }), true, '目标少 1') + K.text(x + 84, L.yc + 17, sg(m.T), { size: 14, weight: 700 }) + RS.btn(x + 108, L.yc, 26, '+', Object.assign({ target: m.T + 1 }, fresh(m, m.n), { guess: -1 }), true, '目标多 1');
         x += 146;
       }
       s += RS.btn(x, L.yc, 90, '从头再来', fresh(m, m.n), m.tried.length > 0 || m.claim || m.k !== (m.from ? m.n : 0), m.from ? '从头再来：全部换回' + p.nb : '从头再来：全部换回' + p.na); x += 100;
-      const cl = { claim: true }; if (m.ans === null) cl.book = addBook(m, m.key + ':x');
+      const cl = { claim: true }; if (m.ans === null) Object.assign(cl, { book: addBook(m, m.key + ':x') }, scored(m, HOLE));
       s += RS.btn(x, L.yc, 120, '凑不出来', cl, !m.ok, '怎么换都凑不出 ' + sg(m.T), m.claim);
       if (m.claim) s += K.text(GX, L.yf + 16, m.ans === null ? '对：怎么换都凑不出 ' + sg(m.T) + '。记进研究本了。' : '其实凑得出来，再换换看。', { size: 13, weight: 700, anchor: 'start', fill: m.ans === null ? '#2f7d3a' : 'var(--bad)' });
     }
+    if (m.graph) s += drawGraph(m, p, L.yg, c.masked);
     s += RS.drawBook(L.yb, items(m, p), '研究本（凑对了、或说对凑不出来，就记一条）');
     s += RS.drawAsks(L.ya, m.asks, m.canAsk);
     // 试过的
@@ -179,6 +226,9 @@
           sets: T('', '能换的几组（头数,甲,乙,总数|…）'), si: I(0, 9, 0, '第几组'), adj: T('', '台面上能换什么（set,T）'),
           from: { type: 'choice', label: '从头再来回到', default: 0, choices: ['全是甲', '全是乙'], write: true },
           claim: { type: 'bool', label: '说了“凑不出来”', default: false, write: true },
+          graph: { type: 'bool', label: '记下来：研究本画成图（总数 → 乙的个数）', default: false, write: true },
+          guess: I(-1, 99, -1, '图上猜的乙的个数（-1 没猜，99 猜凑不出来）', { hidden: true }), gok: I(0, 99, 0, '猜对几次（自动）', { hidden: true }), gtry: I(0, 99, 0, '猜了几次（自动）', { hidden: true }),
+          all: { type: 'bool', label: '图上全部试一遍', default: false, write: true },
           book: T('', '研究本'), ask: T('', '追问（题干|选项|*对的选项~…）'), pick: T('', '追问选了第几个'),
         },
         outputs: {
@@ -187,12 +237,12 @@
           sys: { dim: null, kind: 'num', label: '写成两架天平了：1 是，0 否' }, sy: { dim: null, kind: 'num', label: '两架天平上解出来的乙的个数（解出来才有）' }, sx: { dim: null, kind: 'num', label: '两架天平上解出来的甲的个数（解出来才有）' }, ok: { dim: null, kind: 'num', label: '正好凑到：1 是，0 否' },
           tries: { dim: null, kind: 'num', label: '试了几种' },
           no: { dim: null, kind: 'num', label: '说对了凑不出来：1 是，0 否' }, si: { dim: null, kind: 'num', label: '第几组' },
-          cases: { dim: null, kind: 'num', label: '研究本里有几条' }, q1: { dim: null, kind: 'num', label: '追问 1 选了第几个' }, q2: { dim: null, kind: 'num', label: '追问 2 选了第几个' },
+          cases: { dim: null, kind: 'num', label: '研究本里有几条' }, pts: { dim: null, kind: 'num', label: '图上有几个点（这一组头数、甲、乙的）' }, gok: { dim: null, kind: 'num', label: '先猜再换，猜对几次' }, gtry: { dim: null, kind: 'num', label: '先猜再换，猜了几次' }, all: { dim: null, kind: 'num', label: '全部试一遍了：1 是，0 否' }, q1: { dim: null, kind: 'num', label: '追问 1 选了第几个' }, q2: { dim: null, kind: 'num', label: '追问 2 选了第几个' },
         },
         icon: () => K.circle(20, 16, 9, { fill: '#9fb7d9', stroke: 'var(--ink)' }) + K.line(17, 25, 17, 36, {}) + K.line(23, 25, 23, 36, {}) + K.circle(44, 16, 9, { fill: '#f5a25d', stroke: 'var(--ink)' }) + K.line(38, 25, 38, 36, {}) + K.line(42, 25, 42, 36, {}) + K.line(46, 25, 46, 36, {}) + K.line(50, 25, 50, 36, {}),
         size: (e) => (e && e.props && e.props.view === 1 && U.SystemBench ? [U.SystemBench.W, U.SystemBench.H + SYS_TOP] : [W, Math.max(296 + Math.ceil(clamp(((e && e.props && e.props.n) || 8), 1, NMAX) / COLS) * CH, (lay(model((e && e.props) || {}), (e && e.props) || {}).end + 50) || 0)]),
         grips,
-        compute: (c) => { const m = model(c.props), o = { b: num(m.k), a: num(m.n - m.k), total: num(m.total), gap: num(m.diff), lifted: num(m.lift ? 1 : 0), ok: num(m.ok), tries: num(Math.max(1, m.tried.length)), no: num(m.claim && m.ans === null ? 1 : 0), si: num(m.si + 1), cases: num(m.book.length) }; m.asks.forEach((a, i) => { if (a.pick) o['q' + (i + 1)] = num(a.pick); }); o.sys = num(c.props.view === 1 ? 1 : 0); if (c.props.view === 1 && U.SystemBench) { const sm = U.SystemBench.model(c.props); if (sm.x !== null) o.sx = num(sm.x); if (sm.y !== null) o.sy = num(sm.y); } return o; },
+        compute: (c) => { const m = model(c.props), o = { b: num(m.k), a: num(m.n - m.k), total: num(m.total), gap: num(m.diff), lifted: num(m.lift ? 1 : 0), ok: num(m.ok), tries: num(Math.max(1, m.tried.length)), no: num(m.claim && m.ans === null ? 1 : 0), si: num(m.si + 1), cases: num(m.book.length), pts: num(m.pts.length), gok: num(m.gok), gtry: num(m.gtry), all: num(m.all ? 1 : 0) }; m.asks.forEach((a, i) => { if (a.pick) o['q' + (i + 1)] = num(a.pick); }); o.sys = num(c.props.view === 1 ? 1 : 0); if (c.props.view === 1 && U.SystemBench) { const sm = U.SystemBench.model(c.props); if (sm.x !== null) o.sx = num(sm.x); if (sm.y !== null) o.sy = num(sm.y); } return o; },
         badge: () => '',
         draw,
       },

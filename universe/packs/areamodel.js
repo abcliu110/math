@@ -212,15 +212,17 @@
           total: { dim: null, kind: 'num', label: '总格数（分数乘法的分母）' },
           p1: { dim: null, kind: 'num', label: '展开后 x 的系数' },
           p0: { dim: null, kind: 'num', label: '展开后的常数' },
+          cv: { dim: null, kind: 'num', label: '竖着第一刀切在第几格（没切是 0）' },
+          ch: { dim: null, kind: 'num', label: '横着第一刀切在第几格（没切是 0）' },
         },
         icon: () => K.rect(10, 8, 30, 28, { fill: COL[0], stroke: 'var(--ink)', r: 0 }) + K.rect(40, 8, 14, 28, { fill: COL[1], stroke: 'var(--ink)', r: 0 }),
         size: () => [430, 400],
         grips,
         compute: (c) => {
           const m = model(c.props);
-          if (m.mode === 1) return { area: num(m.area), cells: num(m.cells), total: num(m.total), parts: num(m.total), friendly: num(0), perim: num(4), square: num(1), p1: num(0), p0: num(0) };
-          if (m.mode === 2) return { p1: num(m.p1), p0: num(m.p0), square: num(m.square), parts: num((m.a ? 2 : 1) * (m.b ? 2 : 1)), friendly: num(0), cells: num(0), total: num(0) };
-          return { area: num(m.area), parts: num(m.parts), friendly: num(m.friendly), perim: num(m.perim), square: num(m.square), cells: num(0), total: num(0), p1: num(0), p0: num(0) };
+          if (m.mode === 1) return { area: num(m.area), cells: num(m.cells), total: num(m.total), parts: num(m.total), friendly: num(0), perim: num(4), square: num(1), p1: num(0), p0: num(0), cv: num(0), ch: num(0) };
+          if (m.mode === 2) return { p1: num(m.p1), p0: num(m.p0), square: num(m.square), parts: num((m.a ? 2 : 1) * (m.b ? 2 : 1)), friendly: num(0), cells: num(0), total: num(0), cv: num(0), ch: num(0) };
+          return { area: num(m.area), parts: num(m.parts), friendly: num(m.friendly), perim: num(m.perim), square: num(m.square), cells: num(0), total: num(0), p1: num(0), p0: num(0), cv: num(m.vc[0] || 0), ch: num(m.hc[0] || 0) };
         },
         badge: (c) => { const m = model(c.props); return m.mode === 0 ? m.w + ' × ' + m.h + ' = ' + m.area : m.mode === 1 ? (c.masked ? '' : Q.show(m.area)) : ''; },
         draw: (c) => {

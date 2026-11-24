@@ -49,6 +49,27 @@
     // 思维主线：有精选阶梯的方法（每条八级，每级三层），一直摆在最上面，不用先点开
     const LAD = U.Methods && U.Chain && !q ? U.Methods.ladders() : [];
     if (LAD.length) h += '<div class="grp">⭐ 思维主线（每条八级，从这里开始）</div><div class="chains" data-main="1">' + LAD.map(mrow).join('') + '</div>';
+    // 解法图鉴：一页一道母题，每格一种做法（同一组数），两格都点亮了，中间的桥才能走
+    if (U.Gallery && !q) {
+      h += '<div class="grp">📖 解法图鉴（同一道题，找出不同的做法）</div><div class="chains" data-gallery="1">';
+      for (const pg of U.Gallery.pages()) {
+        const st = U.Gallery.status(pg.id, U.Events.bestStars), open = S.galOpen === pg.id;
+        h += '<div class="it chain' + (open ? ' cur' : '') + '" data-gal="' + esc(pg.id) + '"><span class="tt">' + pg.icon + ' ' + esc(pg.title) + '<br><small>' + esc(pg.q) + '</small></span><span class="chip">' + st.lit + ' / ' + st.ways.length + ' 种做法</span>' + (st.crossed ? '<span class="chip">桥 ' + st.crossed + '</span>' : '') + '</div>';
+        if (open) {
+          h += '<div class="it lvl mnote"><span class="tt"><small>' + esc(pg.more) + '</small></span></div>';
+          for (const w of st.ways) h += '<div class="it lvl' + (w.lit ? ' lit' : '') + '" data-pid="' + esc(w.pid) + '" data-way="' + esc(w.id) + '"><span class="tt">' + (w.lit ? '✅ ' : '⬜ ') + esc(w.name) + '</span>' + (w.stars ? '<span class="chip stars-chip">' + '★'.repeat(w.stars) + '</span>' : '') + '</div>';
+          for (const b of st.bridges) {
+            const nm = '🌉 桥：' + b.an + ' ↔ ' + b.bn;
+            h += b.open ? '<div class="it lvl" data-pid="' + esc(b.pid) + '" data-bridge="1"><span class="tt">' + esc(nm) + '</span>' + (b.stars ? '<span class="chip stars-chip">' + '★'.repeat(b.stars) + '</span>' : '') + '</div>'
+              : '<div class="it lvl lock" data-bridge="1" data-lockwhy="' + esc('先用“' + b.an + '”和“' + b.bn + '”各做对一次，这座桥才能走') + '"><span class="tt">🔒 ' + esc(nm) + '</span></div>';
+          }
+          for (const d of st.deeper) h += d.open ? '<div class="it lvl" data-pid="' + esc(d.pid) + '" data-deeper="1"><span class="tt">' + esc('📈 往深处走：' + d.name) + '</span>' + (d.stars ? '<span class="chip stars-chip">' + '★'.repeat(d.stars) + '</span>' : '') + '</div>'
+            : '<div class="it lvl lock" data-deeper="1" data-lockwhy="' + esc('先用任意一种做法做对一次，再往深处走') + '"><span class="tt">' + esc('🔒 📈 往深处走：' + d.name) + '</span></div>';
+          if (st.lit === st.ways.length) h += '<div class="it lvl mnote"><span class="tt"><small>' + esc('全部找到了：' + pg.ans + '。哪种做法换成 100 个头、316 条腿也最省事？') + '</small></span></div>';
+        }
+      }
+      h += '</div>';
+    }
     // 闯关：每个操作台一条关卡链，上一关有星才解锁下一关
     if (U.Chain && !q) {
       const all = U.Chain.types(), tot = all.reduce((s, t) => s + U.Chain.status(t, U.Events.bestStars).stars, 0), shown = S.chainOpen != null;

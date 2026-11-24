@@ -51,7 +51,7 @@ const norm = (s) => String(s || '').replace(/\s+/g, ' ').trim();
   const now = () => p.locator('#insp .wb-now').innerText().then((s) => norm(s.replace('现在：', ''))).catch(() => '');
 
   // (d) 没有步骤时：写着「还没有步骤」
-  await p.click('#insp [data-wb-graph]'); await p.waitForTimeout(120);
+  await p.click('#insp [data-wb-graph]'); await p.waitForTimeout(120); await p.waitForSelector('#dlg .box .sg-node', { timeout: 3000 }).catch(() => {});
   const empty = await graph();
   ok(empty.open && /还没有步骤/.test(await p.locator('#dlg .box').innerText()), '没有步骤时打开：写着「还没有步骤」');
   await closeDlg();
@@ -68,7 +68,7 @@ const norm = (s) => String(s || '').replace(/\s+/g, ' ').trim();
 
   // (a) 打开步骤图：3 个节点，依赖连线 1→2、2→3；不改历史
   const before = await steps();
-  await p.click('#insp [data-wb-graph]'); await p.waitForTimeout(120);
+  await p.click('#insp [data-wb-graph]'); await p.waitForTimeout(120); await p.waitForSelector('#dlg .box .sg-node', { timeout: 3000 }).catch(() => {});
   const g1 = await graph();
   ok(g1.open && g1.nodes.length === 3 && g1.nodes.map((n) => n.k).join() === '1,2,3', '步骤图：3 个节点（第 1、2、3 步）：' + g1.nodes.map((n) => n.text).join(' | ').slice(0, 160));
   ok(JSON.stringify(g1.edges) === JSON.stringify(['s1>s2', 's2>s3']), '依赖连线：第 1 步 → 第 2 步（合并用了移项留下的 −5），第 2 步 → 第 3 步（除法用了合并的结果）：' + g1.edges.join(' '));
@@ -87,7 +87,7 @@ const norm = (s) => String(s || '').replace(/\s+/g, ' ').trim();
   await p.click('#insp [data-wb-tool="collect"]'); await p.waitForTimeout(120);
   await p.click('#insp [data-wb-act="divide-coef"]'); await p.waitForTimeout(120);
   ok((await steps()) === 3, '再做两步回到 3 行（合并、两边同除）');
-  await p.click('#insp [data-wb-graph]'); await p.waitForTimeout(120);
+  await p.click('#insp [data-wb-graph]'); await p.waitForTimeout(120); await p.waitForSelector('#dlg .box .sg-node', { timeout: 3000 }).catch(() => {});
   await p.focus('#dlg .box .sg-node[data-sg-node="2"]');
   await p.keyboard.press('Enter'); await p.waitForTimeout(150);
   ok((await steps()) === 2 && /^3x = 15$/.test(await now()), '键盘 Enter 在第 2 个节点上：历史回到第 2 步（3x = 15）');
@@ -111,7 +111,7 @@ const norm = (s) => String(s || '').replace(/\s+/g, ' ').trim();
   const wsSteps = () => p.locator('.wsx-step').count();
 
   await p.evaluate(() => UI.App.openProblem('geo-median-area', 'practice')); await p.waitForTimeout(200);
-  await p.click('[data-ws-graph]'); await p.waitForTimeout(120);
+  await p.click('[data-ws-graph]'); await p.waitForTimeout(120); await p.waitForSelector('#dlg .box .sg-node', { timeout: 3000 }).catch(() => {});
   const gEmpty = await graph();
   ok(gEmpty.open && /还没有步骤/.test(await p.locator('#dlg .box').innerText()), '几何：还没有步骤时打开，写着「还没有步骤」');
   await closeDlg();
@@ -122,7 +122,7 @@ const norm = (s) => String(s || '').replace(/\s+/g, ' ').trim();
   ok((await wsSteps()) === 3, '中线题：取中点、连线、剪，步骤清单 3 行');
 
   const undoBefore = await p.evaluate(() => UI.S.undo.length);
-  await p.click('[data-ws-graph]'); await p.waitForTimeout(120);
+  await p.click('[data-ws-graph]'); await p.waitForTimeout(120); await p.waitForSelector('#dlg .box .sg-node', { timeout: 3000 }).catch(() => {});
   const g2 = await graph();
   ok(g2.open && g2.nodes.length === 3, '几何步骤图：3 个节点：' + g2.nodes.map((n) => n.text).join(' | ').slice(0, 200));
   ok(/剪/.test(g2.nodes[2].text), '最后一个节点是「剪」');

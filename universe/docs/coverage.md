@@ -1,12 +1,12 @@
 # 知识点覆盖报告
 
-> 由 `node tools/coverage.js` 生成，日期 2026-11-23。数据来自 `js/core/curriculum.js` 与 `problems/*.js`。
+> 由 `node tools/coverage.js` 生成，日期 2026-11-24。数据来自 `js/core/curriculum.js` 与 `problems/*.js`。
 
 ## 总览
 
 - 知识点：142 个（设计目标 142）
 - 有题的知识点：141 个（99%）
-- 题目：672 道；没有对应知识点的题：1 道
+- 题目：678 道；没有对应知识点的题：1 道
 - 没有器材的本质：无
 - 没有题的本质：无
 
@@ -17,8 +17,8 @@
 | 1 | 16 | 16（100%） | 55 |
 | 2 | 16 | 16（100%） | 57 |
 | 3 | 16 | 16（100%） | 100 |
-| 4 | 17 | 17（100%） | 104 |
-| 5 | 14 | 14（100%） | 120 |
+| 4 | 17 | 17（100%） | 108 |
+| 5 | 14 | 14（100%） | 122 |
 | 6 | 15 | 14（93%） | 72 |
 | 7 | 16 | 16（100%） | 78 |
 | 8 | 16 | 16（100%） | 76 |
@@ -92,12 +92,12 @@
 | 4.13 | 4 | 小数的加法和减法 | 2 | 1 | 0 | 1 | decbench |
 | 4.14 | 4 | 图形的运动（二） | 3 | 0 | 0 | 1 | gridbench、foldbench |
 | 4.15 | 4 | 平均数 | 9 | 0 | 0 | 1 | hanoi、meanbench、chancebench、statbench |
-| 4.16 | 4 | 鸡兔同笼 | 21 | 1 | 0 | 1 | swapbench、surplusbench |
+| 4.16 | 4 | 鸡兔同笼 | 25 | 1 | 0 | 1 | swapbench、surplusbench、num、areamodel |
 | 5.1 | 5 | 小数乘法 | 2 | 1 | 0 | 1 | decbench、estbench |
 | 5.2 | 5 | 位置 | 1 | 1 | 0 | 1 | gridbench |
 | 5.3 | 5 | 小数除法 | 1 | 1 | 0 | 1 | decbench |
 | 5.4 | 5 | 可能性 | 7 | 1 | 0 | 3 | chancebench、pairbench、ptree、ringbench |
-| 5.5 | 5 | 简易方程 | 16 | 0 | 0 | 1 | variable、balancebench、nim、grassbench、costplan、seqbench、systembench |
+| 5.5 | 5 | 简易方程 | 18 | 0 | 0 | 1 | variable、balancebench、nim、grassbench、costplan、seqbench、systembench |
 | 5.6 | 5 | 多边形的面积 | 7 | 1 | 0 | 1 | areabench、gworkspace、gpt、gpoly、fquad |
 | 5.7 | 5 | 植树问题 | 7 | 1 | 0 | 1 | gapbench |
 | 5.14 | 5 | 观察物体（三） | 2 | 1 | 0 | 1 | solidbench、twoways |
@@ -178,10 +178,10 @@
 | E1 | 77 | 28 |
 | E2 | 290 | 58 |
 | E3 | 153 | 44 |
-| E4 | 129 | 32 |
+| E4 | 135 | 32 |
 | E5 | 145 | 55 |
 | E6 | 59 | 24 |
-| E7 | 165 | 34 |
+| E7 | 171 | 34 |
 | E8 | 66 | 23 |
 | E9 | 72 | 17 |
 | E10 | 10 | 4 |

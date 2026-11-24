@@ -13,7 +13,7 @@
   'use strict';
   const U = G.U, Q = U.Q, K = U.kit;
   const num = (n) => U.val('num', Q(n), { dim: null });
-  const BMAX = 6, WMAX = 24;
+  const BMAX = 6, WMAX = 30;
   const W = 640, CX = 220, BEAM_Y = 54, ARM = 120, PAN_DROP = 96, PAN_W = 180, TRAY_Y = 268;
   const BOX = 30, WT = 17;
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));

@@ -149,6 +149,8 @@ async function checkDist() {
   if (!runScript('tests/ui-ladder-enum.js', 'tests/ui-ladder-enum.js', pwEnv)) bail();   // 枚举阶梯：真实鼠标走第 1、4 级，自己列全、换情况、研究本、追问
   if (!runScript('tests/ui-ladder-ext.js', 'tests/ui-ladder-ext.js', pwEnv)) bail();   // 极端阶梯：真实鼠标走第 1、5、7 级，换一袋、换问法、摸完、研究本只记最倒霉的
   if (!runScript('tests/ui-ladder-assume.js', 'tests/ui-ladder-assume.js', pwEnv)) bail();   // 假设阶梯：真实鼠标走第 1、2、5、6 级，换一组、拖一下换对、从头再来、凑不出来、倒扣分
+  if (!runScript('tests/ui-gallery.js', 'tests/ui-gallery.js', pwEnv)) bail();   // 解法图鉴：鸡兔同笼一页，七种做法、三座桥，面积图真实拖两刀点亮一格
+  if (!runScript('tests/ui-graph.js', 'tests/ui-graph.js', pwEnv)) bail();   // 记下来：换一换台的研究本画成图，先猜再换、凑不出来的 ✕、全部试一遍
   if (!runScript('tests/ui-areamodel.js', 'tests/ui-areamodel.js', pwEnv)) bail();   // 面积模型（样板操作台）和器材把手：真实鼠标拖边、切、改分数
   if (!runScript('tests/ui-shapes.js', 'tests/ui-shapes.js', pwEnv)) bail();         // 常见图形、顶点编辑、直接拖出辅助线（真实鼠标和键盘）；含画布横纵比例回归
   if (!runScript('tests/ui-export.js', 'tests/ui-export.js', pwEnv)) bail();         // 2.12/V10：导出图片（真实鼠标点菜单，台面和专注工作区各一次下载，.png、大小 > 0）
