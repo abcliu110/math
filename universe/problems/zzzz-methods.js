@@ -21,7 +21,7 @@
     { id: 'unit', name: '归一', icon: '1️⃣', say: '先求一份是多少，再求几份。', more: '3 本 12 元，一本几元？先求“一份”，什么都好算了。' },
     { id: 'pattern', name: '找规律', icon: '🔁', say: '从几个例子找出规律，推广到一般。', more: '做几个，看每次变多少；照这个规律，第 100 个也能算出来，再验证一下。' },
     { id: 'extreme', name: '极端', icon: '📐', say: '看最大、最小、最边上（最坏）的情况。', more: '把所有可能比一比，最大最小常常在最边上；“一定能”要想最倒霉的情况。' },
-    { id: 'invariant', name: '不变量（精选阶梯）', icon: '⚓', say: '变来变去，找那个不变的东西。八级，每级三层：做出来、换个数还行吗、为什么。', more: '年龄差不变，总数不变，零对放进去不改变数……抓住不变的，就有了等式。' },
+    { id: 'invariant', name: '不变量', icon: '⚓', say: '变来变去，找那个不变的东西。', more: '年龄差不变，总数不变，零对放进去不改变数……抓住不变的，就有了等式。' },
     { id: 'parity', name: '奇偶', icon: '⚖️', say: '看奇数、偶数，一下子判断行不行。', more: '奇 + 奇 = 偶，偶 + 偶 = 偶；个位看 2 和 5，数字和看 3 和 9。' },
     { id: 'transform', name: '转化', icon: '🔄', say: '变成已经会做的问题。', more: '割一块补过去变成长方形，移多补少变成一样多，拆成整十整百好算。' },
     { id: 'classify', name: '分类', icon: '🗂️', say: '按一个标准分一分，一类一类地想。', more: '分的标准要一样；分完不重复、不遗漏；重叠的部分单独算。' },
@@ -109,6 +109,8 @@
     of, chain,
     // 有方法链的方法（至少 4 关）
     chains: () => LIST.map((m) => m.id).filter((m) => chain(m).length >= 4),
+    // 思维主线：有精选阶梯的方法，按年级从低到高（实验库最上面单独列）
+    ladders: () => ['assume', 'enum', 'extreme', 'invariant'].concat(LIST.map((m) => m.id)).filter((m, i, a) => a.indexOf(m) === i && U.problems.some((p) => p.ladder === m)),
   };
   // 接到 U.Chain 上：id 是 'm:方法' 的就是方法链；“下一关”先在当前这条链里找
   const C = U.Chain, of0 = C.of, next0 = C.next;

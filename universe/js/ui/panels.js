@@ -36,6 +36,19 @@
     const rv = U.Review.summarize(U.Events.log, U.problems);
     if (rv.due.length && !q) h += '<div class="pcard due"><b>今天该复习 ' + rv.due.length + ' 道</b><div class="plist">' + rv.due.slice(0, 4).map((d) => '<div class="it" data-pid="' + d.pid + '" style="margin:6px 0 0"><span class="tt">' + esc(d.title) + '<br><small style="color:var(--orange)">' + esc(d.why) + '</small></span></div>').join('') + '</div></div>';
     h += '<div class="plist"><div class="grp">自由</div><div class="it' + (!S.problem ? ' cur' : '') + '" data-free="1"><span class="tt">自由探究（空台面，所有器材）</span></div>';
+    // 一条方法链的一行（点开是做法说明和各关）；阶梯题叫“第几级”，后面的加练叫“第几关”
+    const mrow = (mid) => {
+      const M = U.Methods.get(mid), key = 'm:' + mid, st = U.Chain.status(key, U.Events.bestStars), open = S.mchainOpen === key, lad = st.levels.filter((x) => x.kind === '阶梯');
+      let s = '<div class="it chain' + (open ? ' cur' : '') + '" data-mchain="' + key + '"><span class="tt">' + M.icon + ' ' + esc(M.name) + '<br><small>' + esc(M.say) + '</small></span><span class="chip stars-chip">★ ' + st.stars + ' / ' + st.max + '</span><span class="chip">' + (lad.length ? lad.filter((x) => x.stars > 0).length + ' / ' + lad.length + ' 级' : st.passed + ' / ' + st.levels.length + ' 关') + '</span></div>';
+      if (open) {
+        s += '<div class="it lvl mnote"><span class="tt"><small>' + esc(M.more) + '</small></span></div>';
+        st.levels.forEach((x, i) => { const nm = x.kind === '阶梯' ? '第 ' + (i + 1) + ' 级' : lad.length ? '加练 ' + (i + 1 - lad.length) : '第 ' + (i + 1) + ' 关'; s += x.open ? '<div class="it lvl" data-pid="' + esc(x.id) + '"><span class="tt">' + nm + ' · ' + esc(String(x.title).replace(/^加练 · /, '')) + '</span>' + (x.stars ? '<span class="chip stars-chip">' + '★'.repeat(x.stars) + '</span>' : '') + '</div>' : '<div class="it lvl lock"><span class="tt">🔒 ' + nm + '</span></div>'; });
+      }
+      return s;
+    };
+    // 思维主线：有精选阶梯的方法（每条八级，每级三层），一直摆在最上面，不用先点开
+    const LAD = U.Methods && U.Chain && !q ? U.Methods.ladders() : [];
+    if (LAD.length) h += '<div class="grp">⭐ 思维主线（每条八级，从这里开始）</div><div class="chains" data-main="1">' + LAD.map(mrow).join('') + '</div>';
     // 闯关：每个操作台一条关卡链，上一关有星才解锁下一关
     if (U.Chain && !q) {
       const all = U.Chain.types(), tot = all.reduce((s, t) => s + U.Chain.status(t, U.Events.bestStars).stars, 0), shown = S.chainOpen != null;
@@ -49,16 +62,9 @@
     }
     // 按思想方法闯关：同一种想法，换不同的操作台、不同的题（U.Methods，链的 id 是 m:方法）
     if (U.Methods && !q) {
-      const ms = U.Methods.chains(), shown = S.mchainOpen != null, tot = ms.reduce((s, m) => s + U.Chain.status('m:' + m, U.Events.bestStars).stars, 0);
-      h += '<div class="grp">🧠 按思想方法闯关（同一种想法，换不同的操作台）</div><div class="chains"><div class="it chain" data-mchain="__list"><span class="tt">' + (shown ? '▾ 收起' : '▸ ' + ms.length + ' 种思想方法，点开挑一种') + '</span><span class="chip stars-chip">★ ' + tot + '</span></div>';
-      if (shown) for (const mid of ms) {
-        const M = U.Methods.get(mid), key = 'm:' + mid, st = U.Chain.status(key, U.Events.bestStars), open = S.mchainOpen === key;
-        h += '<div class="it chain' + (open ? ' cur' : '') + '" data-mchain="' + key + '"><span class="tt">' + M.icon + ' ' + esc(M.name) + '<br><small>' + esc(M.say) + '</small></span><span class="chip stars-chip">★ ' + st.stars + ' / ' + st.max + '</span><span class="chip">' + st.passed + ' / ' + st.levels.length + ' 关</span></div>';
-        if (open) {
-          h += '<div class="it lvl mnote"><span class="tt"><small>' + esc(M.more) + '</small></span></div>';
-          st.levels.forEach((x, i) => { h += x.open ? '<div class="it lvl" data-pid="' + esc(x.id) + '"><span class="tt">第 ' + (i + 1) + ' 关 · ' + esc(x.title) + '</span>' + (x.stars ? '<span class="chip stars-chip">' + '★'.repeat(x.stars) + '</span>' : '') + '</div>' : '<div class="it lvl lock"><span class="tt">🔒 第 ' + (i + 1) + ' 关</span></div>'; });
-        }
-      }
+      const ms = U.Methods.chains().filter((m) => !LAD.includes(m)), shown = S.mchainOpen != null, tot = ms.reduce((s, m) => s + U.Chain.status('m:' + m, U.Events.bestStars).stars, 0);
+      h += '<div class="grp">🧠 按思想方法闯关（其它方法：同一种想法，换不同的操作台，题目自动挑）</div><div class="chains"><div class="it chain" data-mchain="__list"><span class="tt">' + (shown ? '▾ 收起' : '▸ ' + ms.length + ' 种思想方法，点开挑一种') + '</span><span class="chip stars-chip">★ ' + tot + '</span></div>';
+      if (shown) for (const mid of ms) h += mrow(mid);
       h += '</div>';
     }
     if (U.Quiz && !q) {
