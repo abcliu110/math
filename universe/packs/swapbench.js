@@ -12,38 +12,55 @@
  *     这时卡片上就是“两架天平”操作台（同一套画法和拖法），解出来以后点“回到换一换”，乙的个数带回来。数太大（每盘超过 30 个砝码或 6 个盒子）摆不下，按钮是灰的。
  *   - 右边的表记下试过的每一种：乙几个、甲几个、总数多少。表里相邻两行总是差同一个数——这就是假设法的依据。
  * 同一个台面可以换皮：大船小船、2 分球 3 分球、5 元 10 元、三轮车自行车。出题人改名字和每个的数就行。
- * 这一版的边界（如实写）：最多 40 个；两种东西；每个的数是正整数（没有“答错倒扣分”那种负数）。 */
+ *   研究本（book）：凑对了、或者正确地说出“凑不出来”，自动记一条（换了一组也不丢）。
+ *   换情况（adj，逗号隔开）：set 换一组（sets 里的几组“头数,甲,乙,总数|…”，si 第几组）、T 目标多 1 / 少 1。有 adj 就有“从头再来”和“凑不出来”两个按钮。
+ *   from：从头再来时回到全是甲（0）还是全是乙（1）。题目可带追问（ask / pick）。
+ *   甲的数可以是负数（答错倒扣分）；这时没有“每个都少算”，也不能写成两架天平。
+ * 这一版的边界（如实写）：最多 40 个；两种东西。 */
 (function (G) {
   'use strict';
-  const U = G.U, Q = U.Q, K = U.kit;
+  const U = G.U, Q = U.Q, K = U.kit, RS = K.research;
   const num = (n) => U.val('num', Q(n), { dim: null });
   const W = 640, GX = 24, GY = 186, PX = 205, PYV = 78, AR = 118, CW = 38, CH = 46, COLS = 10, NMAX = 40;
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   function model(p) {
-    const n = clamp(p.n, 1, NMAX), la = clamp(p.la, 1, 99), lb = clamp(p.lb, 1, 99), k = clamp(p.k, 0, n), T = p.target;
+    const n = clamp(p.n, 1, NMAX), la = clamp(p.la, -99, 99), lb = clamp(p.lb, -99, 99), k = clamp(p.k, 0, n), T = p.target;
     const total = k * lb + (n - k) * la, tried = String(p.tried || '').split(',').filter((s) => s !== '').map(Number).filter((x) => Number.isInteger(x) && x >= 0 && x <= n);
     const lo = Math.min(la, lb), base = p.lift ? n * lo : 0;   // “每个都少算”：两边同时减去 n × 较小的那个数
-    return { n, la, lb, k, T, total, diff: T - total, step: lb - la, tried, ok: total === T ? 1 : 0, lo, base, lift: !!p.lift };
+    // 真正的答案：(总数 − 头数 × 甲) ÷ (乙 − 甲)，要是整数、在 0 到头数之间；不然凑不出来（ans 是 null）
+    const q = lb !== la ? (T - n * la) / (lb - la) : NaN, ans = Number.isInteger(q) && q >= 0 && q <= n ? q : null;
+    const sets = String(p.sets || '').split('|').map((s) => s.split(',').map(Number)).filter((a) => a.length === 4 && a.every(Number.isInteger) && a[0] >= 1 && a[0] <= NMAX && a[1] !== a[2]);
+    const si = clamp(p.si, 0, Math.max(0, sets.length - 1)), af = String(p.adj || '').split(',').filter(Boolean);
+    const book = String(p.book || '').split(';').filter((e) => /^\d+,-?\d+,-?\d+,-?\d+:(\d+|x)$/.test(e)).filter((e, i, a) => a.indexOf(e) === i).slice(-30);
+    const canAsk = book.length > 0, asks = RS.parseAsk(p.ask, p.pick, canAsk);
+    return { n, la, lb, k, T, total, diff: T - total, step: lb - la, tried, ok: total === T ? 1 : 0, lo, base, lift: !!p.lift && lo > 0, ans,
+      key: n + ',' + la + ',' + lb + ',' + T, sets, si, adj: { any: af.length > 0, set: af.includes('set') && sets.length > 1, T: af.includes('T') }, from: p.from ? 1 : 0,
+      claim: !!p.claim, book, canAsk, asks };
   }
+  const addBook = (m, e) => m.book.concat(m.book.includes(e) ? [] : [e]).join(';');
+  // 从头：全是甲或全是乙，试过的清空
+  const fresh = (m, n) => ({ k: m.from ? n : 0, tried: '', claim: false, lift: false });
   // 换成 k 个乙，并把它记进“试过的”里
   function to(p, k) {
     const m = model(p), kk = clamp(k, 0, m.n); if (kk === m.k) return {};
     const tr = m.tried.length ? m.tried.slice() : [m.k]; if (tr[tr.length - 1] !== kk) tr.push(kk);
-    return { k: kk, tried: tr.slice(-12).join(',') };
+    const o = { k: kk, tried: tr.slice(-12).join(','), claim: false };
+    if (kk * m.lb + (m.n - kk) * m.la === m.T) o.book = addBook(m, m.key + ':' + kk);
+    return o;
   }
   const cell = (i) => ({ x: GX + (i % COLS) * CW, y: GY + Math.floor(i / COLS) * CH });
   // 一个头：圆圈里写名字的第一个字，下面画腿（不超过 8 条就画线，多了就写数）
   function one(i, isB, m, p) {
     const c = cell(i), cx = c.x + CW / 2, cy = c.y + 14, legs = (isB ? m.lb : m.la) - (m.lift ? m.lo : 0), col = isB ? '#f5a25d' : '#9fb7d9', nm = String((isB ? p.nb : p.na) || '').slice(0, 1);
     let s = K.circle(cx, cy, 12, { fill: col, stroke: 'var(--ink)', w: 1.4 }) + K.text(cx, cy + 5, nm, { size: 12, weight: 700 });
-    if (p.style === 0 && legs <= 8) for (let j = 0; j < legs; j++) { const lx = cx - (legs - 1) * 2.4 + j * 4.8; s += K.line(lx, cy + 12, lx, cy + 26, { w: 1.8 }); }
-    else s += K.text(cx, cy + 27, String(legs), { size: 12, weight: 700 });
+    if (p.style === 0 && legs >= 0 && legs <= 8) for (let j = 0; j < legs; j++) { const lx = cx - (legs - 1) * 2.4 + j * 4.8; s += K.line(lx, cy + 12, lx, cy + 26, { w: 1.8 }); }
+    else s += K.text(cx, cy + 27, String(legs).replace('-', '−'), { size: 12, weight: 700 });
     return '<g data-pick-set="' + encodeURIComponent(JSON.stringify(to(p, isB ? m.k - 1 : m.k + 1))) + '" style="cursor:pointer"><title>点一下：' + (isB ? '换回' + p.na : '换成' + p.nb) + '</title>' +
       '<rect x="' + c.x + '" y="' + c.y + '" width="' + CW + '" height="' + CH + '" fill="transparent"/>' + s + '</g>';
   }
   // ---- 写成两架天平：同一道题的方程组写法，画法和拖法都借“两架天平”操作台的 ----
   const SYS_TOP = 50;
-  const sysOk = (m) => { const S = U.SystemBench; return !!S && m.n <= S.CMAX && m.T <= S.CMAX && m.T >= 0 && m.la <= S.BMAX && m.lb <= S.BMAX; };
+  const sysOk = (m) => { const S = U.SystemBench; return !!S && m.la >= 1 && m.lb >= 1 && m.n <= S.CMAX && m.T <= S.CMAX && m.T >= 0 && m.la <= S.BMAX && m.lb <= S.BMAX; };
   const sysCtx = (c) => Object.assign({}, c, { drag: c.drag ? Object.assign({}, c.drag, { y: c.drag.y - SYS_TOP }) : null });
   function drawSys(c) {
     const p = c.props, m = model(p), S = U.SystemBench, sm = S.model(p), u = p.unit || '';
@@ -54,6 +71,12 @@
       K.rect(S.W - 176, 2, 160, 24, { fill: '#fff', stroke: 'var(--blue)', r: 8, w: 1.5 }) + K.text(S.W - 96, 18, sm.y !== null ? '回到换一换：' + p.nb + ' ' + sm.y + ' 个' : '回到换一换', { size: 12, weight: 700 }) + '</g>';
     return s + '<g data-sys="1" transform="translate(0,' + SYS_TOP + ')">' + S.draw(sysCtx(c)) + '</g>';
   }
+  const bookSay = (e, p) => { const [h, r] = e.split(':'), [n, la, lb, T] = h.split(','); return n + ' 个（' + p.na + ' ' + la + '、' + p.nb + ' ' + lb + '）一共 ' + T + '：' + (r === 'x' ? '凑不出来' : p.nb + ' ' + r + ' 个'); };
+  const items = (m, p) => m.book.map((e) => ({ say: bookSay(e, p).replace(/-/g, '−'), no: e.endsWith(':x') }));
+  const lay = (m, p) => {
+    const by = GY + Math.ceil(m.n / COLS) * CH + 18, yc = by + 48, yf = yc + (m.adj.any ? 34 : 0), yb = yf + (m.adj.any && m.claim ? 24 : 0) + (m.adj.any ? 14 : 0);
+    const ya = yb + RS.bookH(items(m, p)); return { by, yc, yf, yb, ya, end: ya + RS.asksH(m.asks) };
+  };
   function draw(c) {
     if (c.props.view === 1 && U.SystemBench) return drawSys(c);
     const p = c.props, m = model(p), u = p.unit || ''; let s = '';
@@ -90,13 +113,29 @@
     const rows = Math.ceil(m.n / COLS), by = GY + rows * CH + 18;
     if (chg) s += K.text(GX, by, '这一下换了 ' + Math.abs(chg) + ' 个：总数' + (chg * m.step >= 0 ? '多 ' : '少 ') + Math.abs(chg * m.step) + ' ' + u + '（' + Math.abs(chg) + ' × ' + Math.abs(m.step) + '）', { size: 12, anchor: 'start', weight: 700, fill: 'var(--blue)' });
     else s += K.text(GX, by, '把一个' + p.na + '换成' + p.nb + '：' + (m.step >= 0 ? '多 ' : '少 ') + Math.abs(m.step) + ' ' + u + '。点一个就换一个；拖中间的把手，一次换好几个。', { size: 12, anchor: 'start' });
-    // 每个都少算：天平两边同时减去同样多
-    s += '<g data-pick-set="' + encodeURIComponent(JSON.stringify({ lift: !m.lift })) + '" style="cursor:pointer"><title>' + (m.lift ? '把少算的加回来：两边同时加上 ' + m.n * m.lo : '每个都少算 ' + m.lo + ' ' + K.esc(u) + '：天平两边同时减去 ' + m.n + ' × ' + m.lo) + '</title>' +
+    // 每个都少算：天平两边同时减去同样多（甲是负数或 0 时没有）
+    if (m.lo > 0) s += '<g data-pick-set="' + encodeURIComponent(JSON.stringify({ lift: !m.lift })) + '" style="cursor:pointer"><title>' + (m.lift ? '把少算的加回来：两边同时加上 ' + m.n * m.lo : '每个都少算 ' + m.lo + ' ' + K.esc(u) + '：天平两边同时减去 ' + m.n + ' × ' + m.lo) + '</title>' +
       K.rect(GX, by + 10, 250, 26, { fill: m.lift ? 'var(--blue)' : '#fff', stroke: 'var(--blue)', r: 8, w: 1.5 }) + K.text(GX + 125, by + 27, m.lift ? '把少算的加回来（两边同时加）' : '每个都少算 ' + m.lo + '（两边同时减 ' + m.n * m.lo + '）', { size: 12, weight: 700, fill: m.lift ? '#fff' : 'var(--ink)' }) + '</g>';
     // 写成两架天平：同一道题的方程组写法
-    const can = sysOk(m), go = { view: 1, e0: '1,1,0,0,0,' + m.n, e1: m.la + ',' + m.lb + ',0,0,0,' + m.T, steps: 0, refused: 0, msg: '' };
+    const sx = m.lo > 0 ? GX + 262 : GX, can = sysOk(m), go = { view: 1, e0: '1,1,0,0,0,' + m.n, e1: m.la + ',' + m.lb + ',0,0,0,' + m.T, steps: 0, refused: 0, msg: '' };
     s += '<g' + (can ? ' data-pick-set="' + encodeURIComponent(JSON.stringify(go)) + '" style="cursor:pointer"' : ' opacity="0.4"') + '><title>' + (can ? '同一道题写成两个式子：个数一架，总数一架' : '数太大，天平上摆不下（每个盘最多 30 个砝码、6 个盒子）') + '</title>' +
-      K.rect(GX + 262, by + 10, 140, 26, { fill: '#fff', stroke: can ? 'var(--blue)' : '#8a94a8', r: 8, w: 1.5 }) + K.text(GX + 332, by + 27, '写成两架天平', { size: 12, weight: 700 }) + '</g>';
+      K.rect(sx, by + 10, 140, 26, { fill: '#fff', stroke: can ? 'var(--blue)' : '#8a94a8', r: 8, w: 1.5 }) + K.text(sx + 70, by + 27, '写成两架天平', { size: 12, weight: 700 }) + '</g>';
+    // 换情况、从头再来、凑不出来
+    const L = lay(m, p), sg = (v) => (v < 0 ? '−' + -v : String(v));
+    if (m.adj.any) {
+      let x = GX;
+      if (m.adj.set) { const nx = (m.si + 1) % m.sets.length, a = m.sets[nx]; s += RS.btn(x, L.yc, 170, '换一组（第 ' + (m.si + 1) + ' / ' + m.sets.length + ' 组）', Object.assign({ si: nx, n: a[0], la: a[1], lb: a[2], target: a[3] }, fresh(m, a[0])), true, '换一组'); x += 180; }
+      if (m.adj.T) {
+        s += K.text(x, L.yc + 17, '目标', { size: 12, weight: 700, anchor: 'start' }) + RS.btn(x + 34, L.yc, 26, '−', Object.assign({ target: m.T - 1 }, fresh(m, m.n)), true, '目标少 1') + K.text(x + 84, L.yc + 17, sg(m.T), { size: 14, weight: 700 }) + RS.btn(x + 108, L.yc, 26, '+', Object.assign({ target: m.T + 1 }, fresh(m, m.n)), true, '目标多 1');
+        x += 146;
+      }
+      s += RS.btn(x, L.yc, 90, '从头再来', fresh(m, m.n), m.tried.length > 0 || m.claim || m.k !== (m.from ? m.n : 0), m.from ? '从头再来：全部换回' + p.nb : '从头再来：全部换回' + p.na); x += 100;
+      const cl = { claim: true }; if (m.ans === null) cl.book = addBook(m, m.key + ':x');
+      s += RS.btn(x, L.yc, 120, '凑不出来', cl, !m.ok, '怎么换都凑不出 ' + sg(m.T), m.claim);
+      if (m.claim) s += K.text(GX, L.yf + 16, m.ans === null ? '对：怎么换都凑不出 ' + sg(m.T) + '。记进研究本了。' : '其实凑得出来，再换换看。', { size: 13, weight: 700, anchor: 'start', fill: m.ans === null ? '#2f7d3a' : 'var(--bad)' });
+    }
+    s += RS.drawBook(L.yb, items(m, p), '研究本（凑对了、或说对凑不出来，就记一条）');
+    s += RS.drawAsks(L.ya, m.asks, m.canAsk);
     // 试过的
     const tx = GX + COLS * CW + 26;
     s += K.text(tx, 26, p.nb, { size: 12, weight: 700, anchor: 'start' }) + K.text(tx + 50, 26, p.na, { size: 12, weight: 700, anchor: 'start' }) + K.text(tx + 100, 26, '一共', { size: 12, weight: 700, anchor: 'start' });
@@ -121,15 +160,15 @@
   const I = (lo, hi, d, label, o) => Object.assign({ type: 'int', label, default: d, min: lo, max: hi, write: true }, o || {});
   const T = (d, label, o) => Object.assign({ type: 'text', label, default: d, write: true }, o || {});
   U.registerPack({
-    id: 'swapbench', version: 1,
+    id: 'swapbench', version: 2,
     types: {
       swapbench: {
         workspaceRole: 'none', handles: true, compactPorts: true, bench: true, essence: ['E7', 'E4'],
         label: '换一换（鸡兔同笼）', prefix: '换一换', group: '关系', grades: [3, 7],
         alias: ['鸡兔同笼', '假设法', '列表法', '大船小船', '二元一次方程组', '替换'],
         props: {
-          n: I(1, NMAX, 8, '一共几个'), k: I(0, NMAX, 0, '现在有几个是乙'), target: I(0, 9999, 26, '总数要凑到'),
-          la: I(1, 99, 2, '每个甲是几'), lb: I(1, 99, 4, '每个乙是几'),
+          n: I(1, NMAX, 8, '一共几个'), k: I(0, NMAX, 0, '现在有几个是乙'), target: I(-9999, 9999, 26, '总数要凑到'),
+          la: I(-99, 99, 2, '每个甲是几'), lb: I(-99, 99, 4, '每个乙是几'),
           na: T('鸡', '甲叫什么'), nb: T('兔', '乙叫什么'), unit: T('条腿', '数的是什么'),
           style: { type: 'choice', label: '画法', default: 0, choices: ['画腿', '写数'], write: true },
           view: { type: 'choice', label: '写法', default: 0, choices: ['换一换', '两架天平'], write: true, hidden: true },
@@ -137,17 +176,23 @@
           steps: I(0, 99, 0, '两架天平写法：做了几步（自动）', { hidden: true }), refused: I(0, 99, 0, '两架天平写法：被拦住几次（自动）', { hidden: true }), msg: T('', '两架天平写法：提示（自动）', { hidden: true }),
           lift: { type: 'bool', label: '每个都少算（两边同时减去“个数 × 较小的数”）', default: false, write: true },
           tried: T('', '试过的（自动记录）', { hidden: true }),
+          sets: T('', '能换的几组（头数,甲,乙,总数|…）'), si: I(0, 9, 0, '第几组'), adj: T('', '台面上能换什么（set,T）'),
+          from: { type: 'choice', label: '从头再来回到', default: 0, choices: ['全是甲', '全是乙'], write: true },
+          claim: { type: 'bool', label: '说了“凑不出来”', default: false, write: true },
+          book: T('', '研究本'), ask: T('', '追问（题干|选项|*对的选项~…）'), pick: T('', '追问选了第几个'),
         },
         outputs: {
           b: { dim: null, kind: 'num', label: '乙（兔）有几个' }, a: { dim: null, kind: 'num', label: '甲（鸡）有几个' },
           total: { dim: null, kind: 'num', label: '现在的总数' }, gap: { dim: null, kind: 'num', label: '离目标还差多少（多了是负数）' }, lifted: { dim: null, kind: 'num', label: '每个都少算了：1 是，0 否' },
           sys: { dim: null, kind: 'num', label: '写成两架天平了：1 是，0 否' }, sy: { dim: null, kind: 'num', label: '两架天平上解出来的乙的个数（解出来才有）' }, sx: { dim: null, kind: 'num', label: '两架天平上解出来的甲的个数（解出来才有）' }, ok: { dim: null, kind: 'num', label: '正好凑到：1 是，0 否' },
           tries: { dim: null, kind: 'num', label: '试了几种' },
+          no: { dim: null, kind: 'num', label: '说对了凑不出来：1 是，0 否' }, si: { dim: null, kind: 'num', label: '第几组' },
+          cases: { dim: null, kind: 'num', label: '研究本里有几条' }, q1: { dim: null, kind: 'num', label: '追问 1 选了第几个' }, q2: { dim: null, kind: 'num', label: '追问 2 选了第几个' },
         },
         icon: () => K.circle(20, 16, 9, { fill: '#9fb7d9', stroke: 'var(--ink)' }) + K.line(17, 25, 17, 36, {}) + K.line(23, 25, 23, 36, {}) + K.circle(44, 16, 9, { fill: '#f5a25d', stroke: 'var(--ink)' }) + K.line(38, 25, 38, 36, {}) + K.line(42, 25, 42, 36, {}) + K.line(46, 25, 46, 36, {}) + K.line(50, 25, 50, 36, {}),
-        size: (e) => (e && e.props && e.props.view === 1 && U.SystemBench ? [U.SystemBench.W, U.SystemBench.H + SYS_TOP] : [W, 296 + Math.ceil(clamp(((e && e.props && e.props.n) || 8), 1, NMAX) / COLS) * CH]),
+        size: (e) => (e && e.props && e.props.view === 1 && U.SystemBench ? [U.SystemBench.W, U.SystemBench.H + SYS_TOP] : [W, Math.max(296 + Math.ceil(clamp(((e && e.props && e.props.n) || 8), 1, NMAX) / COLS) * CH, (lay(model((e && e.props) || {}), (e && e.props) || {}).end + 50) || 0)]),
         grips,
-        compute: (c) => { const m = model(c.props), o = { b: num(m.k), a: num(m.n - m.k), total: num(m.total), gap: num(m.diff), lifted: num(m.lift ? 1 : 0), ok: num(m.ok), tries: num(Math.max(1, m.tried.length)) }; o.sys = num(c.props.view === 1 ? 1 : 0); if (c.props.view === 1 && U.SystemBench) { const sm = U.SystemBench.model(c.props); if (sm.x !== null) o.sx = num(sm.x); if (sm.y !== null) o.sy = num(sm.y); } return o; },
+        compute: (c) => { const m = model(c.props), o = { b: num(m.k), a: num(m.n - m.k), total: num(m.total), gap: num(m.diff), lifted: num(m.lift ? 1 : 0), ok: num(m.ok), tries: num(Math.max(1, m.tried.length)), no: num(m.claim && m.ans === null ? 1 : 0), si: num(m.si + 1), cases: num(m.book.length) }; m.asks.forEach((a, i) => { if (a.pick) o['q' + (i + 1)] = num(a.pick); }); o.sys = num(c.props.view === 1 ? 1 : 0); if (c.props.view === 1 && U.SystemBench) { const sm = U.SystemBench.model(c.props); if (sm.x !== null) o.sx = num(sm.x); if (sm.y !== null) o.sy = num(sm.y); } return o; },
         badge: () => '',
         draw,
       },
