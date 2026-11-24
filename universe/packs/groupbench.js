@@ -2,16 +2,29 @@
  *   - 每份几个（包含除）：拖下面的把手改“每份几个”，圆片每这么多个圈一圈；圈不满的就是余数（标红）。
  *   - 平均分给几份（等分除）：点 + − 改有几个盒子；点“放一个”“放一轮”“全放完”，圆片一个一个轮流放进盒子。放完以后看最多的盒子有几个。
  * 上面的算式跟着变：17 ÷ 5 = 3 …… 2。余数永远比除数小。
- * 这一版的边界（如实写）：最多 100 个圆片；每份最多 20 个、最多 10 个盒子；三位数除以两位数那种大数，圆片画不下，还在用旧器材。 */
+ *   记下来（graph，只在“每份几个”里有；docs/knob-graph-and-gallery.md 第一节）：每份几个不动，台面上改总数（− +），点“记下来”，
+ *     图上多两个点：商（橙，一级一级的台阶）和余数（红，一格一格涨上去、到除数就掉回 0 的锯齿）。
+ *     图上有 3 个点以后，换到图上还没有的总数，圈和算式先藏起来：在蓝线上点一格猜余数，或者点“不猜，直接看”；猜了再记下来，算一次猜没猜对。
+ *     有 5 个点以后可以“全部试一遍”：从 1 到最大的总数，商和余数都画上（浅色）。换了每份几个，图上只留这个“每份几个”的点。
+ * 这一版的边界（如实写）：最多 100 个圆片；每份最多 20 个、最多 10 个盒子；三位数除以两位数那种大数，圆片画不下，还在用旧器材。
+ *   图只猜余数（商跟着余数一起揭开）。 */
 (function (G) {
   'use strict';
-  const U = G.U, Q = U.Q, K = U.kit;
+  const U = G.U, Q = U.Q, K = U.kit, RS = K.research;
   const num = (n) => U.val('num', Q(n), { dim: null });
   const W = 660, NMAX = 100, GMAX = 20, BMAX = 10, X0 = 30, Y0 = 92, D = 22, SX = 40, SX1 = 420, SY = 340;
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, Number.isFinite(+v) ? +v : lo));
   function model(p) {
     const n = clamp(p.n, 1, NMAX), mode = clamp(p.mode, 0, 1);
-    if (mode === 0) { const g = clamp(p.g, 1, Math.min(GMAX, n)); return { mode, n, g, q: Math.floor(n / g), r: n % g }; }
+    if (mode === 0) {
+      const g = clamp(p.g, 1, Math.min(GMAX, n)), graph = !!p.graph;
+      const rec = String(p.rec || '').split(';').map((e) => e.split(',').map(Number)).filter((a) => a.length === 2 && a.every(Number.isInteger) && a[0] >= 1 && a[0] <= NMAX && a[1] >= 1 && a[1] <= GMAX);
+      const pts = rec.filter((a) => a[1] === g).map((a) => a[0]).filter((x, i, a) => a.indexOf(x) === i).sort((a, b) => a - b);
+      const guess = Number.isInteger(+p.guess) && +p.guess >= 0 ? +p.guess : -1, has = pts.includes(n);
+      const hidden = graph && pts.length >= 3 && !has && guess < 0 && !p.peek;
+      const asks = RS.parseAsk(p.ask, p.pick, pts.length >= 3);
+      return { mode, n, g, q: Math.floor(n / g), r: n % g, graph, rec, pts, guess, has, hidden, peek: !!p.peek, gok: clamp(p.gok, 0, 99), gtry: clamp(p.gtry, 0, 99), all: !!p.all, asks };
+    }
     const k = clamp(p.k, 1, BMAX), dealt = clamp(p.dealt, 0, n), box = Array.from({ length: k }, (_, i) => Math.floor(dealt / k) + (i < dealt % k ? 1 : 0));
     return { mode, n, k, dealt, box, max: Math.max.apply(null, box), min: Math.min.apply(null, box), q: Math.floor(n / k), r: n % k };
   }
@@ -19,9 +32,42 @@
     K.rect(x, y, w, 26, { fill: enabled ? '#fff' : '#f1f3f6', stroke: enabled ? 'var(--blue)' : '#b8c0cc', r: 8, w: 1.5 }) + K.text(x + w / 2, y + 17, label, { size: 12, weight: 700, fill: enabled ? 'var(--ink)' : '#5f6773' }) + '</g>';
   const chip = (x, y, col) => K.circle(x, y, 8, { fill: col, stroke: 'var(--ink)', w: 1.1 });
 
+  // ---- 记下来：总数 → 商、余数 ----
+  const GY0 = SY + 40, GH = 236, HIDE = '？';
+  const gLay = (m) => { const yb = GY0 + 36, ya = yb + GH; return { yb, yg: yb + 34, ya, end: ya + RS.asksH(m.asks) }; };
+  const xEnd = (m) => Math.min(NMAX, Math.max(20, m.n, ...m.pts));
+  function drawGraph(m, p) {
+    const u = p.unit || '个', L = gLay(m), xb = xEnd(m), yb = Math.max(m.g - 1, Math.floor(xb / m.g), 1);
+    let s = K.text(20, L.yb + 17, '总数', { size: 12, weight: 700, anchor: 'start' }) + RS.btn(54, L.yb, 26, '−', { n: m.n - 1, guess: -1, peek: false }, m.n > 1, '总数少 1') +
+      K.text(104, L.yb + 17, String(m.n), { size: 14, weight: 700 }) + RS.btn(128, L.yb, 26, '+', { n: m.n + 1, guess: -1, peek: false }, m.n < NMAX, '总数多 1');
+    const rec = { rec: m.rec.map((a) => a.join(',')).concat([m.n + ',' + m.g]).join(';'), guess: -1 };
+    if (m.guess >= 0) Object.assign(rec, { gtry: m.gtry + 1, gok: m.gok + (m.guess === m.r ? 1 : 0) });
+    s += RS.btn(170, L.yb, 110, '记下来', rec, !m.hidden && !m.has, m.has ? '这个总数已经记过了' : m.hidden ? '先猜余数，或者点“不猜，直接看”' : '把这个总数记到图上');
+    if (m.hidden) s += RS.btn(290, L.yb, 120, '不猜，直接看', { peek: true }, true, '不猜，直接看');
+    const P = RS.plot({ fx: 14, fy: L.yg, fw: 620, fh: GH - 44, xa: 0, xb, ya: 0, yb, title: '📈 记下来：横着是一共几' + u + '，竖着是商（橙）和余数（红）；每份 ' + m.g + ' ' + u });
+    const { X, Y, ys } = P; s += P.s;
+    // 商的点往左挪一点、余数的往右挪一点：两个一样大时也都看得见
+    const dq = -3.5, dr = 3.5;
+    if (m.all) for (let x = 1; x <= xb; x++) s += K.circle(X(x) + dq, Y(Math.floor(x / m.g)), 2.8, { fill: '#efc08a', stroke: 'none' }) + K.rect(X(x) + dr - 2.5, Y(x % m.g) - 2.5, 5, 5, { fill: '#eda39a', r: 0 });
+    for (const x of m.pts) s += K.circle(X(x) + dq, Y(Math.floor(x / m.g)), 4.6, { fill: '#f5a25d', stroke: 'var(--ink)', w: 1.1 }) + K.rect(X(x) + dr - 4, Y(x % m.g) - 4, 8, 8, { fill: '#e0645a', stroke: 'var(--ink)', w: 1.1, r: 1 });
+    s += K.line(X(m.n), P.Y0 - 4, X(m.n), P.Y1 + 2, { w: 1.4, stroke: 'var(--blue)', dash: '4 3' });
+    if (m.hidden) for (let r = 0; r < m.g; r++) s += '<g data-pick-set="' + encodeURIComponent(JSON.stringify({ guess: r })) + '" style="cursor:pointer"><title>猜余数 ' + r + '</title><rect x="' + (X(m.n) - 9) + '" y="' + (Y(r) - ys / 2) + '" width="18" height="' + ys + '" fill="transparent"/></g>';
+    if (m.guess >= 0 && !m.has) s += K.rect(X(m.n) - 6, Y(m.guess) - 6, 12, 12, { fill: 'none', stroke: 'var(--blue)', w: 1.8, r: 2, dash: '3 2' });
+    let say = m.pts.length < 3 ? '再记 ' + (3 - m.pts.length) + ' 个，就要先猜再看（改总数，点“记下来”）' : m.has ? '这个总数图上已经有了：改一下总数' : m.hidden ? '先猜：一共 ' + m.n + ' ' + u + '，余数是几？点蓝线上的一格' : m.guess >= 0 ? '你猜余数 ' + m.guess + '，' + (m.guess === m.r ? '猜对了！' : '其实是 ' + m.r + '。') + '点“记下来”' : '';
+    if (m.gtry) say += (say ? '　' : '') + '猜了 ' + m.gtry + ' 次，猜对 ' + m.gok + ' 次';
+    s += K.text(24, L.yg + 34, say, { size: 11, anchor: 'start', fill: 'var(--blue)', weight: 700 });
+    s += RS.btn(504, L.yg + 4, 116, '全部试一遍', { all: !m.all }, m.pts.length >= 5 || m.all, m.pts.length >= 5 ? (m.all ? '收起全部' : '每个总数都画上') : '图上有 5 个点以后才能全部试一遍', m.all);
+    return s + RS.drawAsks(L.ya, m.asks, m.pts.length >= 3);
+  }
   function draw(c) {
     const p = c.props, m = model(p), u = p.unit || '个', gname = p.gname || (m.mode ? '盒' : '份'); let s = '';
-    if (m.mode === 0) {
+    if (m.mode === 0 && m.hidden) {
+      // 先猜：圈和算式藏起来，圆片一排 25 个摆着
+      s += K.text(20, 28, m.n + ' ' + u + '，每 ' + m.g + ' ' + u + '一' + gname, { size: 16, weight: 700, anchor: 'start' });
+      s += '<g data-eq="1">' + K.text(20, 54, m.n + ' ÷ ' + m.g + ' = ' + HIDE + ' …… ' + HIDE, { size: 18, weight: 700, anchor: 'start' }) + '</g>';
+      s += K.text(260, 54, '先猜余数，再看圈', { size: 13, anchor: 'start', fill: 'var(--blue)', weight: 700 });
+      for (let i = 0; i < m.n; i++) s += chip(X0 + (i % 25) * 22, Y0 + Math.floor(i / 25) * D, '#d9dee8');
+    } else if (m.mode === 0) {
       s += K.text(20, 28, m.n + ' ' + u + '，每 ' + m.g + ' ' + u + '一' + gname, { size: 16, weight: 700, anchor: 'start' });
       s += '<g data-eq="1">' + K.text(20, 54, m.n + ' ÷ ' + m.g + ' = ' + m.q + (m.r ? ' …… ' + m.r : ''), { size: 18, weight: 700, anchor: 'start', fill: m.r ? 'var(--ink)' : 'var(--good)' }) + '</g>';
       s += K.text(260, 54, m.q + ' ' + gname + (m.r ? '，还剩 ' + m.r + ' ' + u + '（不够一' + gname + '）' : '，正好分完'), { size: 13, anchor: 'start', fill: m.r ? 'var(--bad)' : 'var(--good)' });
@@ -36,6 +82,10 @@
       const sx = (g) => SX + (g - 1) * (SX1 - SX) / (GMAX - 1);
       s += K.line(SX, SY, SX1, SY, { w: 3, stroke: '#c5ccda' }) + K.text(SX, SY - 12, '每' + gname + '几' + u + '：拖蓝色把手', { size: 12, anchor: 'start', fill: '#5a6478' });
       for (const g of [1, 5, 10, 15, 20]) s += K.text(sx(g), SY + 18, String(g), { size: 10, fill: '#5a6478' });
+    }
+    if (m.mode === 0 && m.graph) s += drawGraph(m, p);
+    if (m.mode === 0) {
+      // 上面已经画完
     } else {
       s += K.text(20, 28, m.n + ' ' + u + '，平均放进 ' + m.k + ' 个' + (p.gname || '盒子'), { size: 16, weight: 700, anchor: 'start' });
       s += K.text(20, 54, '已经放了 ' + m.dealt + ' ' + u + '，还剩 ' + (m.n - m.dealt) + ' ' + u, { size: 13, anchor: 'start' });
@@ -56,10 +106,10 @@
     return s;
   }
   function grips(c) {
-    const m = model(c.props); if (m.mode !== 0) return [];
+    const m = model(c.props); if (m.mode !== 0 || m.hidden) return [];
     const sx = (g) => SX + (g - 1) * (SX1 - SX) / (GMAX - 1);
     return [{ id: 'g', x: sx(m.g), y: SY, r: 10, shape: 'bar-v', cursor: 'ew-resize', tip: '拖我：每份几个',
-      drag: (c0, q) => ({ g: clamp(Math.round((q.x - SX) / ((SX1 - SX) / (GMAX - 1))) + 1, 1, Math.min(GMAX, model(c0.props).n)) }),
+      drag: (c0, q) => ({ g: clamp(Math.round((q.x - SX) / ((SX1 - SX) / (GMAX - 1))) + 1, 1, Math.min(GMAX, model(c0.props).n)), guess: -1, peek: false }),
       say: (c1) => { const m1 = model(c1.props); return m1.n + ' ÷ ' + m1.g + ' = ' + m1.q + (m1.r ? ' …… ' + m1.r : ''); } }];
   }
   const I = (lo, hi, d, label, o) => Object.assign({ type: 'int', label, default: d, min: lo, max: hi, write: true }, o || {});
@@ -74,15 +124,23 @@
           mode: { type: 'choice', label: '怎么分', default: 0, choices: ['每份几个', '平均分给几份'], write: true },
           n: I(1, NMAX, 17, '一共几个'), g: I(1, GMAX, 5, '每份几个'), k: I(1, BMAX, 3, '分给几份（盒子）'), dealt: I(0, NMAX, 0, '已经放了几个（自动）', { hidden: true }),
           unit: { type: 'text', label: '东西的单位', default: '个', write: true }, gname: { type: 'text', label: '一份叫什么', default: '', write: true },
+          graph: { type: 'bool', label: '记下来：总数 → 商、余数的图（每份几个的分法）', default: false, write: true },
+          rec: { type: 'text', label: '图上记了哪些（总数,每份几个;…）', default: '', write: true, hidden: true },
+          guess: I(-1, 99, -1, '图上猜的余数（-1 没猜）', { hidden: true }), peek: { type: 'bool', label: '不猜，直接看', default: false, write: true, hidden: true },
+          gok: I(0, 99, 0, '猜对几次（自动）', { hidden: true }), gtry: I(0, 99, 0, '猜了几次（自动）', { hidden: true }),
+          all: { type: 'bool', label: '图上全部试一遍', default: false, write: true },
+          ask: { type: 'text', label: '追问（题干|选项|*对的选项~…）', default: '', write: true }, pick: { type: 'text', label: '追问选了第几个', default: '', write: true },
         },
         outputs: {
           q: { dim: null, kind: 'num', label: '商' }, r: { dim: null, kind: 'num', label: '余数' }, exact: { dim: null, kind: 'num', label: '正好分完：1 是，0 否' },
           g: { dim: null, kind: 'num', label: '每份几个（每份几个的分法）' }, max: { dim: null, kind: 'num', label: '最多的盒子有几个（放完了才有）' },
+          pts: { dim: null, kind: 'num', label: '图上有几个总数（这个每份几个的）' }, gok: { dim: null, kind: 'num', label: '先猜再看，猜对几次' }, gtry: { dim: null, kind: 'num', label: '先猜再看，猜了几次' }, all: { dim: null, kind: 'num', label: '全部试一遍了：1 是，0 否' },
+          q1: { dim: null, kind: 'num', label: '追问 1 选了第几个' }, q2: { dim: null, kind: 'num', label: '追问 2 选了第几个' },
         },
         icon: () => '<rect x="8" y="14" width="34" height="14" rx="7" fill="none" stroke="var(--blue)" stroke-width="1.5"/>' + K.circle(15, 21, 4, { fill: '#f5c26b', stroke: 'var(--ink)', w: 1 }) + K.circle(25, 21, 4, { fill: '#f5c26b', stroke: 'var(--ink)', w: 1 }) + K.circle(35, 21, 4, { fill: '#f5c26b', stroke: 'var(--ink)', w: 1 }) + K.circle(50, 21, 4, { fill: '#f7a8a8', stroke: 'var(--ink)', w: 1 }),
-        size: () => [W, 412],
+        size: (e) => { const m = model((e && e.props) || {}); return [W, m.mode === 0 && m.graph ? gLay(m).end + 30 : 412]; },
         grips,
-        compute: (c) => { const m = model(c.props), o = { q: num(m.q), r: num(m.r), exact: num(m.r === 0 ? 1 : 0) }; if (m.mode === 0) o.g = num(m.g); else if (m.dealt === m.n) o.max = num(m.max); return o; },
+        compute: (c) => { const m = model(c.props), o = { q: num(m.q), r: num(m.r), exact: num(m.r === 0 ? 1 : 0) }; if (m.mode === 0) { o.g = num(m.g); o.pts = num(m.pts.length); o.gok = num(m.gok); o.gtry = num(m.gtry); o.all = num(m.all ? 1 : 0); m.asks.forEach((a, i) => { if (a.pick) o['q' + (i + 1)] = num(a.pick); }); } else if (m.dealt === m.n) o.max = num(m.max); return o; },
         badge: () => '',
         draw,
       },

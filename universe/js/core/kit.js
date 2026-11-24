@@ -132,6 +132,21 @@
       });
       return s;
     },
+    // “记下来”的图（docs/knob-graph-and-gallery.md 第一节）：一个框、标题、格子、刻度和两条轴。
+    //   o：{ fx, fy, fw, fh 框的位置和大小, xa, xb 横轴范围, ya, yb 竖轴范围, title, bottom 框底下留多高（默认 42） }
+    //   返回 { s, X(x), Y(y), X0, X1, Y0, Y1, xs, ys }，各台自己在上面画点。
+    plot(o) {
+      const X0 = o.fx + 50, X1 = o.fx + o.fw - 22, Y0 = o.fy + 48, Y1 = o.fy + o.fh - (o.bottom === undefined ? 42 : o.bottom);
+      const xspan = Math.max(1, o.xb - o.xa), yspan = Math.max(1, o.yb - o.ya), xs = (X1 - X0) / xspan, ys = (Y1 - Y0) / yspan;
+      const X = (x) => X0 + (x - o.xa) * xs, Y = (y) => Y1 - (y - o.ya) * ys;
+      let s = kit.rect(o.fx, o.fy, o.fw, o.fh, { fill: '#fbfcfe', stroke: '#c9d3e3', r: 8, w: 1 });
+      s += kit.text(o.fx + 10, o.fy + 18, o.title || '', { size: 12, weight: 700, anchor: 'start' });
+      const tx = xspan <= 24 ? 1 : xspan <= 48 ? 2 : xspan <= 120 ? 5 : 10, ty = yspan <= 12 ? 1 : yspan <= 24 ? 2 : 5;
+      for (let x = Math.ceil(o.xa / tx) * tx; x <= o.xb; x += tx) s += kit.line(X(x), Y0, X(x), Y1, { w: 0.6, stroke: '#e1e6ef' }) + kit.text(X(x), Y1 + 13, String(x).replace('-', '−'), { size: 9, fill: '#5f6773' });
+      for (let y = Math.ceil(o.ya / ty) * ty; y <= o.yb; y += ty) s += kit.line(X0, Y(y), X1, Y(y), { w: 0.6, stroke: '#e1e6ef' }) + kit.text(X0 - 8, Y(y) + 3, String(y), { size: 9, anchor: 'end', fill: '#5f6773' });
+      s += kit.line(X0, Y1, X1, Y1, { w: 1.2 }) + kit.line(X0, Y0, X0, Y1, { w: 1.2 });
+      return { s, X, Y, X0, X1, Y0, Y1, xs, ys };
+    },
   };
   U.kit = kit;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

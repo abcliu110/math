@@ -94,16 +94,9 @@
   const GH = 214;
   function drawGraph(m, p, y0, masked) {
     const u = p.unit || '', lo = m.n * Math.min(m.la, m.lb), hi = m.n * Math.max(m.la, m.lb);
-    const xa = Math.min(lo, m.T, ...m.pts.map((q) => q.T)), xb = Math.max(hi, m.T, ...m.pts.map((q) => q.T)), span = Math.max(1, xb - xa);
-    const X0 = GX + 44, X1 = GX + 572, Y0 = y0 + 42, Y1 = y0 + 160, YH = y0 + 186, xs = (X1 - X0) / span, ys = (Y1 - Y0) / m.n;
-    const X = (T) => X0 + (T - xa) * xs, Y = (k) => Y1 - k * ys;
-    let s = K.rect(GX - 6, y0, 600, GH - 12, { fill: '#fbfcfe', stroke: '#c9d3e3', r: 8, w: 1 });
-    s += K.text(GX + 4, y0 + 18, '📈 记下来：横着是一共多少' + u + '，竖着是' + p.nb + '几个（研究本里的每一条就是一个点）', { size: 12, weight: 700, anchor: 'start' });
-    // 格子和刻度
-    const tk = span <= 24 ? 1 : span <= 48 ? 2 : span <= 120 ? 5 : 10, kt = m.n <= 12 ? 1 : m.n <= 24 ? 2 : 5;
-    for (let T = Math.ceil(xa / tk) * tk; T <= xb; T += tk) s += K.line(X(T), Y0, X(T), Y1, { w: 0.6, stroke: '#e1e6ef' }) + K.text(X(T), Y1 + 13, String(T).replace('-', '−'), { size: 9, fill: '#5f6773' });
-    for (let k = 0; k <= m.n; k += kt) s += K.line(X0, Y(k), X1, Y(k), { w: 0.6, stroke: '#e1e6ef' }) + K.text(X0 - 8, Y(k) + 3, String(k), { size: 9, anchor: 'end', fill: '#5f6773' });
-    s += K.line(X0, Y1, X1, Y1, { w: 1.2 }) + K.line(X0, Y0, X0, Y1, { w: 1.2 });
+    const xa = Math.min(lo, m.T, ...m.pts.map((q) => q.T)), xb = Math.max(hi, m.T, ...m.pts.map((q) => q.T));
+    const P = RS.plot({ fx: GX - 6, fy: y0, fw: 600, fh: GH - 12, xa, xb, ya: 0, yb: m.n, title: '📈 记下来：横着是一共多少' + u + '，竖着是' + p.nb + '几个（研究本里的每一条就是一个点）' });
+    const { X, Y, X0, X1, Y0, ys } = P, YH = y0 + 186; let s = P.s;
     s += K.text(X0 - 8, YH + 4, '凑不出', { size: 9, anchor: 'end', fill: '#c0392b' }) + K.line(X0, YH, X1, YH, { w: 0.6, stroke: '#f0c9c2' });
     // 全部试一遍：每个总数都画上，浅色
     if (m.all) for (let T = xa; T <= xb; T++) { const q = (T - m.n * m.la) / (m.lb - m.la), ok = Number.isInteger(q) && q >= 0 && q <= m.n; s += ok ? K.circle(X(T), Y(q), 3, { fill: '#c9d3e3', stroke: 'none' }) : K.text(X(T), YH + 4, '×', { size: 10, fill: '#e6b4ab' }); }

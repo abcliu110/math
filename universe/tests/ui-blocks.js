@@ -44,6 +44,8 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   ok(await p.locator('.card svg.bdy [data-grip]').count() === 3, '空板子：只有托盘里的三样可以拖');
   await dragTo('s1', await colMid(1));
   for (let i = 0; i < 7; i++) await dragTo('s2', await colMid(2));
+  // 放到第 6 个时已经是 16，目标达成：完成对话框 700 毫秒后才弹出来。等它弹出来再关掉，不然它会在下一次按下前盖住把手
+  await p.waitForSelector('#dlg.open', { timeout: 1500 }).catch(() => {}); await closeDlg();
   ok((await props()).t === 1 && (await props()).o === 7 && await out('value') === '17', '拖一根长条到十位、七个小方块到个位：17');
   await dragTo('c2', await outside());
   ok(await out('value') === '16' && await done('v'), '把一个小方块拖到板子外面：拿走，剩 16，里程碑完成');
