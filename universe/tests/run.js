@@ -3301,5 +3301,10 @@ t('两架天平：随机做几百步，每一步之后两架天平在真实重�
   }
   truthy(done >= 100, '实际做了 ' + done + ' 步');
 });
+t('篱笆围地：改一共几米，记下的长清空；改成一样的数、改别的属性都不清空', () => {
+  const on = U.types.areabench.onSet, p = { shape: 3, P: 20, w: 3, tried: '2,3,4', graph: true };
+  eq(on(p, 'P', 24), { tried: '', guess: -1, peek: false, all: false }, '20 改成 24：清空');
+  eq(on(p, 'P', 20), null, '还是 20：不清空'); eq(on(p, 'w', 5), null, '改长：不清空');
+});
 console.log('\n' + pass + ' 通过，' + fail + ' 失败');
 process.exit(fail ? 1 : 0);

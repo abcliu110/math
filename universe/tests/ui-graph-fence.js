@@ -46,7 +46,8 @@
   H.ok(await H.out('all') === '1' && await p.locator('.card svg.bdy circle[fill="#9cc3ee"]').count() === 9 && await H.done('all'), '全部试一遍：长 1 到 9 都画上浅色的点（里程碑）');
 
   console.log('5. 追问');
-  await p.locator('button', { hasText: /^适应$/ }).first().click(); await p.waitForTimeout(250);
+  const bottomOk = () => p.evaluate(() => { const c = document.querySelector('.card').getBoundingClientRect(), f = Array.from(document.querySelectorAll('.fab')).map((x) => x.getBoundingClientRect().top).filter((t) => t > innerHeight / 2); return c.bottom <= Math.min.apply(null, f.concat([innerHeight])); });
+  H.ok(await bottomOk(), '整张卡片在按钮栏上面，追问看得见（没点“适应”）');
   await H.press('一样长，围成正方形'); await H.press('一样大');
   H.ok((await Promise.all(['three', 'guess', 'all', 'q1', 'q2'].map(H.done))).every(Boolean), '两个追问答对，五个里程碑都完成');
   if (SP) await p.locator('.card').first().screenshot({ path: SP + '/gf-done.png' });

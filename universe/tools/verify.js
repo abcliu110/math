@@ -151,7 +151,9 @@ async function checkDist() {
   if (!runScript('tests/ui-ladder-assume.js', 'tests/ui-ladder-assume.js', pwEnv)) bail();   // 假设阶梯：真实鼠标走第 1、2、5、6 级，换一组、拖一下换对、从头再来、凑不出来、倒扣分
   if (!runScript('tests/ui-gallery.js', 'tests/ui-gallery.js', pwEnv)) bail();   // 解法图鉴：鸡兔同笼一页，七种做法、三座桥，面积图真实拖两刀点亮一格
   if (!runScript('tests/ui-graph.js', 'tests/ui-graph.js', pwEnv)) bail();   // 记下来：换一换台的研究本画成图，先猜再换、凑不出来的 ✕、全部试一遍
+  if (!runScript('tests/ui-gallery2.js', 'tests/ui-gallery2.js', pwEnv)) bail();   // 图鉴第二页：一个一个加、凑成 8、搬成一样高、只搬 6 块的加分
   if (!runScript('tests/ui-graph-fence.js', 'tests/ui-graph-fence.js', pwEnv)) bail();   // 记下来：篱笆围地，长 → 面积（拱），先猜面积再看
+  if (!runScript('tests/ui-graph-box.js', 'tests/ui-graph-box.js', pwEnv)) bail();   // 记下来：分一分台平均分，总数 → 最多的盒子（抽屉原理的台阶），先猜再放
   if (!runScript('tests/ui-graph-div.js', 'tests/ui-graph-div.js', pwEnv)) bail();   // 记下来：分一分台，总数 → 商（台阶）和余数（锯齿），先猜余数再看
   if (!runScript('tests/ui-areamodel.js', 'tests/ui-areamodel.js', pwEnv)) bail();   // 面积模型（样板操作台）和器材把手：真实鼠标拖边、切、改分数
   if (!runScript('tests/ui-shapes.js', 'tests/ui-shapes.js', pwEnv)) bail();         // 常见图形、顶点编辑、直接拖出辅助线（真实鼠标和键盘）；含画布横纵比例回归

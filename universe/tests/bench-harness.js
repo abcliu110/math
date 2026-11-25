@@ -10,6 +10,8 @@ module.exports = async (type) => {
   const errs = []; p.on('pageerror', (e) => errs.push(e.message)); p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text()); });
   await p.goto(url); await p.waitForTimeout(400);
   const closeDlg = () => p.evaluate(() => { if (UI.Panels.closeDialog) UI.Panels.closeDialog(); });
+  // 做完一个目标，“做完了！”对话框 700 毫秒后才弹出来，可能正好在关掉它和点下去之间弹出来盖住按钮：点不到就关掉再点一次
+  const click = async (loc) => { await closeDlg(); try { await loc.click({ timeout: 2500 }); } catch (e) { await closeDlg(); await loc.click(); } };
   const H = {
     p,
     ok: (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fail++; console.log('  FAIL ' + m); } },
@@ -26,8 +28,8 @@ module.exports = async (type) => {
     },
     out: (port) => p.evaluate(([type, port]) => { const e = Object.values(UI.S.scene.entities).find((x) => x.type === type), v = UI.S.D[e.id].out[port]; return v ? U.Q.show(v.data) : null; }, [type, port]),
     props: () => p.evaluate((type) => Object.assign({}, Object.values(UI.S.scene.entities).find((x) => x.type === type).props), type),
-    press: async (label, n) => { await closeDlg(); await p.locator('.card svg.bdy g[data-pick-set]').filter({ hasText: label }).nth(n || 0).click(); await p.waitForTimeout(140); },
-    byTitle: async (title, n) => { await closeDlg(); await p.locator('.card svg.bdy g[data-pick-set]').filter({ has: p.locator('title', { hasText: new RegExp('^' + title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$') }) }).nth(n || 0).click(); await p.waitForTimeout(140); },
+    press: async (label, n) => { await click(p.locator('.card svg.bdy g[data-pick-set]').filter({ hasText: label }).nth(n || 0)); await p.waitForTimeout(140); },
+    byTitle: async (title, n) => { await click(p.locator('.card svg.bdy g[data-pick-set]').filter({ has: p.locator('title', { hasText: new RegExp('^' + title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$') }) }).nth(n || 0)); await p.waitForTimeout(140); },
     read: (sel) => p.evaluate((sel) => { const g = document.querySelector('.card svg.bdy ' + (sel || '[data-read]')); return g ? g.textContent : ''; }, sel),
     text: () => p.evaluate(() => Array.from(document.querySelectorAll('.card svg.bdy text')).map((t) => t.textContent).join('|')),
     done: (id) => p.evaluate((id) => !!(UI.S.run && UI.S.run.ms[id] && UI.S.run.ms[id].done), id),

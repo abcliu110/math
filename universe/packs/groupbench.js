@@ -7,7 +7,10 @@
  *     图上有 3 个点以后，换到图上还没有的总数，圈和算式先藏起来：在蓝线上点一格猜余数，或者点“不猜，直接看”；猜了再记下来，算一次猜没猜对。
  *     有 5 个点以后可以“全部试一遍”：从 1 到最大的总数，商和余数都画上（浅色）。换了每份几个，图上只留这个“每份几个”的点。
  * 这一版的边界（如实写）：最多 100 个圆片；每份最多 20 个、最多 10 个盒子；三位数除以两位数那种大数，圆片画不下，还在用旧器材。
- *   图只猜余数（商跟着余数一起揭开）。 */
+ *   图只猜余数（商跟着余数一起揭开）。
+ *   记下来也在“平均分给几份”里（2026-11-25）：盒子数不动，改总数，全放完以后点“记下来”，图上多一个点：最多的盒子有几个。
+ *     点排成台阶，但和“每份几个”的商不一样：总数刚过 3 的倍数（3 个盒子时）就往上跳一级，这就是抽屉原理“至少有一个盒子放了 ⌈总数 ÷ 盒子数⌉ 个”。
+ *     图上有 3 个点以后，换到新的总数，放的按钮先锁住：先在蓝线上猜最多的盒子有几个，或者“不猜，直接看”。记录存在 rec1（总数,盒子数;…）。 */
 (function (G) {
   'use strict';
   const U = G.U, Q = U.Q, K = U.kit, RS = K.research;
@@ -26,7 +29,12 @@
       return { mode, n, g, q: Math.floor(n / g), r: n % g, graph, rec, pts, guess, has, hidden, peek: !!p.peek, gok: clamp(p.gok, 0, 99), gtry: clamp(p.gtry, 0, 99), all: !!p.all, asks };
     }
     const k = clamp(p.k, 1, BMAX), dealt = clamp(p.dealt, 0, n), box = Array.from({ length: k }, (_, i) => Math.floor(dealt / k) + (i < dealt % k ? 1 : 0));
-    return { mode, n, k, dealt, box, max: Math.max.apply(null, box), min: Math.min.apply(null, box), q: Math.floor(n / k), r: n % k };
+    const graph = !!p.graph, rec1 = String(p.rec1 || '').split(';').map((e) => e.split(',').map(Number)).filter((a) => a.length === 2 && a.every(Number.isInteger) && a[0] >= 1 && a[0] <= NMAX && a[1] >= 1 && a[1] <= BMAX);
+    const pts = rec1.filter((a) => a[1] === k).map((a) => a[0]).filter((x, i, a) => a.indexOf(x) === i).sort((a, b) => a - b);
+    const guess = Number.isInteger(+p.guess) && +p.guess >= 0 ? +p.guess : -1, has = pts.includes(n);
+    const hidden = graph && pts.length >= 3 && !has && guess < 0 && !p.peek && dealt === 0;
+    return { mode, n, k, dealt, box, max: Math.max.apply(null, box), min: Math.min.apply(null, box), top: Math.ceil(n / k), q: Math.floor(n / k), r: n % k,
+      graph, rec1, pts, guess, has, hidden, peek: !!p.peek, gok: clamp(p.gok, 0, 99), gtry: clamp(p.gtry, 0, 99), all: !!p.all, asks: RS.parseAsk(p.ask, p.pick, pts.length >= 3) };
   }
   const btn = (x, y, w, label, patch, enabled, tip) => '<g' + (enabled ? ' data-pick-set="' + encodeURIComponent(JSON.stringify(patch)) + '" style="cursor:pointer"' : ' data-off="1"') + '><title>' + K.esc(tip) + '</title>' +
     K.rect(x, y, w, 26, { fill: enabled ? '#fff' : '#f1f3f6', stroke: enabled ? 'var(--blue)' : '#b8c0cc', r: 8, w: 1.5 }) + K.text(x + w / 2, y + 17, label, { size: 12, weight: 700, fill: enabled ? 'var(--ink)' : '#5f6773' }) + '</g>';
@@ -54,6 +62,31 @@
     if (m.hidden) for (let r = 0; r < m.g; r++) s += '<g data-pick-set="' + encodeURIComponent(JSON.stringify({ guess: r })) + '" style="cursor:pointer"><title>猜余数 ' + r + '</title><rect x="' + (X(m.n) - 9) + '" y="' + (Y(r) - ys / 2) + '" width="18" height="' + ys + '" fill="transparent"/></g>';
     if (m.guess >= 0 && !m.has) s += K.rect(X(m.n) - 6, Y(m.guess) - 6, 12, 12, { fill: 'none', stroke: 'var(--blue)', w: 1.8, r: 2, dash: '3 2' });
     let say = m.pts.length < 3 ? '再记 ' + (3 - m.pts.length) + ' 个，就要先猜再看（改总数，点“记下来”）' : m.has ? '这个总数图上已经有了：改一下总数' : m.hidden ? '先猜：一共 ' + m.n + ' ' + u + '，余数是几？点蓝线上的一格' : m.guess >= 0 ? '你猜余数 ' + m.guess + '，' + (m.guess === m.r ? '猜对了！' : '其实是 ' + m.r + '。') + '点“记下来”' : '';
+    if (m.gtry) say += (say ? '　' : '') + '猜了 ' + m.gtry + ' 次，猜对 ' + m.gok + ' 次';
+    s += K.text(24, L.yg + 34, say, { size: 11, anchor: 'start', fill: 'var(--blue)', weight: 700 });
+    s += RS.btn(504, L.yg + 4, 116, '全部试一遍', { all: !m.all }, m.pts.length >= 5 || m.all, m.pts.length >= 5 ? (m.all ? '收起全部' : '每个总数都画上') : '图上有 5 个点以后才能全部试一遍', m.all);
+    return s + RS.drawAsks(L.ya, m.asks, m.pts.length >= 3);
+  }
+  // ---- 记下来（平均分给几份）：总数 → 最多的盒子有几个 ----
+  function drawGraph1(m, p) {
+    const u = p.unit || '个', L = gLay(m), xb = xEnd(m), yb = Math.max(1, Math.ceil(xb / m.k)), reset = { dealt: 0, guess: -1, peek: false };
+    let s = K.text(20, L.yb + 17, '总数', { size: 12, weight: 700, anchor: 'start' }) + RS.btn(54, L.yb, 26, '−', Object.assign({ n: m.n - 1 }, reset), m.n > 1, '总数少 1') +
+      K.text(104, L.yb + 17, String(m.n), { size: 14, weight: 700 }) + RS.btn(128, L.yb, 26, '+', Object.assign({ n: m.n + 1 }, reset), m.n < NMAX, '总数多 1');
+    const rec = { rec1: m.rec1.map((a) => a.join(',')).concat([m.n + ',' + m.k]).join(';'), guess: -1 };
+    if (m.guess >= 0) Object.assign(rec, { gtry: m.gtry + 1, gok: m.gok + (m.guess === m.top ? 1 : 0) });
+    const full = m.dealt === m.n;
+    s += RS.btn(170, L.yb, 110, '记下来', rec, full && !m.has, m.has ? '这个总数已经记过了' : !full ? '先全放完，才知道最多的盒子有几个' : '把这个总数记到图上');
+    if (m.hidden) s += RS.btn(290, L.yb, 120, '不猜，直接看', { peek: true }, true, '不猜，直接看');
+    const P = RS.plot({ fx: 14, fy: L.yg, fw: 620, fh: GH - 44, xa: 0, xb, ya: 0, yb, title: '📈 记下来：横着是一共几' + u + '，竖着是最多的盒子有几' + u + '；' + m.k + ' 个盒子' });
+    const { X, Y, ys } = P; s += P.s;
+    if (m.all) for (let x = 1; x <= xb; x++) s += K.circle(X(x), Y(Math.ceil(x / m.k)), 2.8, { fill: '#efc08a', stroke: 'none' });
+    for (const x of m.pts) s += K.circle(X(x), Y(Math.ceil(x / m.k)), 4.6, { fill: '#f5a25d', stroke: 'var(--ink)', w: 1.1 });
+    s += K.line(X(m.n), P.Y0 - 4, X(m.n), P.Y1 + 2, { w: 1.4, stroke: 'var(--blue)', dash: '4 3' });
+    if (m.hidden) for (let r = 0; r <= yb; r++) s += '<g data-pick-set="' + encodeURIComponent(JSON.stringify({ guess: r })) + '" style="cursor:pointer"><title>猜最多的盒子 ' + r + ' 个</title><rect x="' + (X(m.n) - 9) + '" y="' + (Y(r) - ys / 2) + '" width="18" height="' + ys + '" fill="transparent"/></g>';
+    if (m.guess >= 0 && !m.has) s += K.rect(X(m.n) - 6, Y(m.guess) - 6, 12, 12, { fill: 'none', stroke: 'var(--blue)', w: 1.8, r: 2, dash: '3 2' });
+    let say = m.pts.length < 3 ? '再记 ' + (3 - m.pts.length) + ' 个，就要先猜再放（改总数，全放完，点“记下来”）' : m.has ? '这个总数图上已经有了：改一下总数'
+      : m.hidden ? '先猜：' + m.n + ' ' + u + '放进 ' + m.k + ' 个盒子，最多的盒子有几' + u + '？点蓝线上的一格' : m.guess >= 0 && !full ? '你猜 ' + m.guess + ' ' + u + '：放完看看'
+      : m.guess >= 0 ? '你猜 ' + m.guess + '，' + (m.guess === m.top ? '猜对了！' : '其实是 ' + m.top + '。') + '点“记下来”' : '';
     if (m.gtry) say += (say ? '　' : '') + '猜了 ' + m.gtry + ' 次，猜对 ' + m.gok + ' 次';
     s += K.text(24, L.yg + 34, say, { size: 11, anchor: 'start', fill: 'var(--blue)', weight: 700 });
     s += RS.btn(504, L.yg + 4, 116, '全部试一遍', { all: !m.all }, m.pts.length >= 5 || m.all, m.pts.length >= 5 ? (m.all ? '收起全部' : '每个总数都画上') : '图上有 5 个点以后才能全部试一遍', m.all);
@@ -89,11 +122,12 @@
     } else {
       s += K.text(20, 28, m.n + ' ' + u + '，平均放进 ' + m.k + ' 个' + (p.gname || '盒子'), { size: 16, weight: 700, anchor: 'start' });
       s += K.text(20, 54, '已经放了 ' + m.dealt + ' ' + u + '，还剩 ' + (m.n - m.dealt) + ' ' + u, { size: 13, anchor: 'start' });
-      s += btn(20, 64, 72, '放一个', { dealt: m.dealt + 1 }, m.dealt < m.n, '把一个放进下一个盒子');
-      s += btn(98, 64, 72, '放一轮', { dealt: Math.min(m.n, m.dealt + m.k) }, m.dealt < m.n, '每个盒子各放一个');
-      s += btn(176, 64, 72, '全放完', { dealt: m.n }, m.dealt < m.n, '一直轮流放，直到放完');
+      const go = m.dealt < m.n && !m.hidden, lockTip = '先在下面的图上猜最多的盒子有几个，或者点“不猜，直接看”';
+      s += btn(20, 64, 72, '放一个', { dealt: m.dealt + 1 }, go, m.hidden ? lockTip : '把一个放进下一个盒子');
+      s += btn(98, 64, 72, '放一轮', { dealt: Math.min(m.n, m.dealt + m.k) }, go, m.hidden ? lockTip : '每个盒子各放一个');
+      s += btn(176, 64, 72, '全放完', { dealt: m.n }, go, m.hidden ? lockTip : '一直轮流放，直到放完');
       s += btn(254, 64, 60, '倒出来', { dealt: 0 }, m.dealt > 0, '重新放');
-      s += K.text(330, 82, '盒子：', { size: 12, anchor: 'start' }) + btn(372, 64, 28, '−', { k: m.k - 1, dealt: 0 }, m.k > 1, '少一个盒子') + btn(404, 64, 28, '+', { k: m.k + 1, dealt: 0 }, m.k < BMAX, '多一个盒子');
+      s += K.text(330, 82, '盒子：', { size: 12, anchor: 'start' }) + btn(372, 64, 28, '−', { k: m.k - 1, dealt: 0, guess: -1, peek: false }, m.k > 1, '少一个盒子') + btn(404, 64, 28, '+', { k: m.k + 1, dealt: 0, guess: -1, peek: false }, m.k < BMAX, '多一个盒子');
       const bw = Math.min(58, 600 / m.k - 6);
       m.box.forEach((cnt, i) => {
         const x = 20 + i * (bw + 6), hot = m.dealt === m.n && cnt === m.max && m.max > m.min;
@@ -102,6 +136,7 @@
         s += K.text(x + bw / 2, 328, String(cnt), { size: 13, weight: 700, fill: hot ? '#c0392b' : 'var(--ink)' });
       });
       if (m.dealt === m.n) s += '<g data-eq="1">' + K.text(20, 354, m.n + ' ÷ ' + m.k + ' = ' + m.q + (m.r ? ' …… ' + m.r + '：多出来的 ' + m.r + ' ' + u + '又放进了 ' + m.r + ' 个盒子，最多的盒子有 ' + m.max + ' ' + u : '：每个盒子正好 ' + m.q + ' ' + u), { size: 14, weight: 700, anchor: 'start', fill: m.r ? '#c0392b' : 'var(--good)' }) + '</g>';
+      if (m.graph) s += drawGraph1(m, p);
     }
     return s;
   }
@@ -124,8 +159,9 @@
           mode: { type: 'choice', label: '怎么分', default: 0, choices: ['每份几个', '平均分给几份'], write: true },
           n: I(1, NMAX, 17, '一共几个'), g: I(1, GMAX, 5, '每份几个'), k: I(1, BMAX, 3, '分给几份（盒子）'), dealt: I(0, NMAX, 0, '已经放了几个（自动）', { hidden: true }),
           unit: { type: 'text', label: '东西的单位', default: '个', write: true }, gname: { type: 'text', label: '一份叫什么', default: '', write: true },
-          graph: { type: 'bool', label: '记下来：总数 → 商、余数的图（每份几个的分法）', default: false, write: true },
+          graph: { type: 'bool', label: '记下来：每份几个是总数 → 商、余数的图；平均分是总数 → 最多的盒子的图', default: false, write: true },
           rec: { type: 'text', label: '图上记了哪些（总数,每份几个;…）', default: '', write: true, hidden: true },
+          rec1: { type: 'text', label: '平均分：图上记了哪些（总数,盒子数;…）', default: '', write: true, hidden: true },
           guess: I(-1, 99, -1, '图上猜的余数（-1 没猜）', { hidden: true }), peek: { type: 'bool', label: '不猜，直接看', default: false, write: true, hidden: true },
           gok: I(0, 99, 0, '猜对几次（自动）', { hidden: true }), gtry: I(0, 99, 0, '猜了几次（自动）', { hidden: true }),
           all: { type: 'bool', label: '图上全部试一遍', default: false, write: true },
@@ -134,13 +170,13 @@
         outputs: {
           q: { dim: null, kind: 'num', label: '商' }, r: { dim: null, kind: 'num', label: '余数' }, exact: { dim: null, kind: 'num', label: '正好分完：1 是，0 否' },
           g: { dim: null, kind: 'num', label: '每份几个（每份几个的分法）' }, max: { dim: null, kind: 'num', label: '最多的盒子有几个（放完了才有）' },
-          pts: { dim: null, kind: 'num', label: '图上有几个总数（这个每份几个的）' }, gok: { dim: null, kind: 'num', label: '先猜再看，猜对几次' }, gtry: { dim: null, kind: 'num', label: '先猜再看，猜了几次' }, all: { dim: null, kind: 'num', label: '全部试一遍了：1 是，0 否' },
+          pts: { dim: null, kind: 'num', label: '图上有几个总数（这个每份几个、这么多盒子的）' }, gok: { dim: null, kind: 'num', label: '先猜再看，猜对几次' }, gtry: { dim: null, kind: 'num', label: '先猜再看，猜了几次' }, all: { dim: null, kind: 'num', label: '全部试一遍了：1 是，0 否' },
           q1: { dim: null, kind: 'num', label: '追问 1 选了第几个' }, q2: { dim: null, kind: 'num', label: '追问 2 选了第几个' },
         },
         icon: () => '<rect x="8" y="14" width="34" height="14" rx="7" fill="none" stroke="var(--blue)" stroke-width="1.5"/>' + K.circle(15, 21, 4, { fill: '#f5c26b', stroke: 'var(--ink)', w: 1 }) + K.circle(25, 21, 4, { fill: '#f5c26b', stroke: 'var(--ink)', w: 1 }) + K.circle(35, 21, 4, { fill: '#f5c26b', stroke: 'var(--ink)', w: 1 }) + K.circle(50, 21, 4, { fill: '#f7a8a8', stroke: 'var(--ink)', w: 1 }),
-        size: (e) => { const m = model((e && e.props) || {}); return [W, m.mode === 0 && m.graph ? gLay(m).end + 30 : 412]; },
+        size: (e) => { const m = model((e && e.props) || {}); return [W, m.graph ? gLay(m).end + 30 : 412]; },
         grips,
-        compute: (c) => { const m = model(c.props), o = { q: num(m.q), r: num(m.r), exact: num(m.r === 0 ? 1 : 0) }; if (m.mode === 0) { o.g = num(m.g); o.pts = num(m.pts.length); o.gok = num(m.gok); o.gtry = num(m.gtry); o.all = num(m.all ? 1 : 0); m.asks.forEach((a, i) => { if (a.pick) o['q' + (i + 1)] = num(a.pick); }); } else if (m.dealt === m.n) o.max = num(m.max); return o; },
+        compute: (c) => { const m = model(c.props), o = { q: num(m.q), r: num(m.r), exact: num(m.r === 0 ? 1 : 0) }; if (m.mode === 0) { o.g = num(m.g); o.pts = num(m.pts.length); o.gok = num(m.gok); o.gtry = num(m.gtry); o.all = num(m.all ? 1 : 0); m.asks.forEach((a, i) => { if (a.pick) o['q' + (i + 1)] = num(a.pick); }); } else { if (m.dealt === m.n) o.max = num(m.max); if (m.graph) { o.pts = num(m.pts.length); o.gok = num(m.gok); o.gtry = num(m.gtry); o.all = num(m.all ? 1 : 0); m.asks.forEach((a, i) => { if (a.pick) o['q' + (i + 1)] = num(a.pick); }); } } return o; },
         badge: () => '',
         draw,
       },

@@ -286,7 +286,7 @@
       UI.State.setUi(S.scene.entities[SG.drag.id], 'view', { cx: SG.drag.v0.cx - UI.Space.pxToUnits(dx, SG.drag.sc.unit), cy: SG.drag.v0.cy + UI.Space.pxToUnits(dy, SG.drag.sc.unit), span: SG.drag.v0.span });
       SG.render(); return;
     }
-    if (SG.drag.kind === 'pan') { S.view = SG.clampPan(Object.assign({}, S.view, { x: SG.drag.vx + ev.clientX - SG.drag.sx, y: SG.drag.vy + ev.clientY - SG.drag.sy })); SG.render(); return; }
+    if (SG.drag.kind === 'pan') { S.viewAuto = false; S.view = SG.clampPan(Object.assign({}, S.view, { x: SG.drag.vx + ev.clientX - SG.drag.sx, y: SG.drag.vy + ev.clientY - SG.drag.sy })); SG.render(); return; }
     if (SG.drag.kind === 'move') {
       if (!SG.drag.moved && Math.hypot(ev.clientX - SG.drag.sx, ev.clientY - SG.drag.sy) < L.DRAG_SLOP) return;
       const w = UI.Space.screenToStage(ev);

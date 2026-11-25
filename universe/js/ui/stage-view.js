@@ -44,7 +44,22 @@
     const left = FS.x + (availW - Sp.scaleLen(x1 - x0, z)) / 2, t = top + (availH - Sp.scaleLen(y1 - y0, z)) / 2;
     S.view = Sp.viewAt(z, { x: x0, y: y0 }, { x: left, y: t });
   }
-  function fit() {
+  function fit() { fitView(); UI.S.viewAuto = true; }
+  // 卡片做着做着变高了（研究本多一条、图下面多一行），底边钻到下面的按钮栏后面：视图是适应出来的、之后没手动缩放平移过，就再适应一次。
+  // 只看“变高”，不看“挪位置”：孩子自己把卡片拖到下面，台面不跟着缩（不然手里正拖的东西会跳）。手动动过视图也不管。返回 true 表示视图变了
+  let lastH = {};
+  function keepFit() {
+    const S = UI.S, E = S.scene.entities, ids = Object.keys(E).filter((id) => !SG.inWs(E[id]));
+    const hs = {}; for (const id of ids) hs[id] = SG.geom(E[id]).h;
+    const grew = ids.some((id) => lastH[id] !== undefined && hs[id] > lastH[id]); lastH = hs;
+    if (!grew || !S.viewAuto || UI.State.focusedId()) return false;
+    if (ids.some((id) => SG.isWsDef(E[id].type))) return false;
+    const r = SG.stageEl.getBoundingClientRect(), limit = r.height - UI.Layout.bottomReserve(SG.stageEl, L.BAR.fabGap);
+    const low = Math.max.apply(null, ids.map((id) => { const g = SG.geom(E[id]); return UI.Space.stageToLocal(S.view, { x: g.x, y: g.y + g.h }).y; }));
+    if (low <= limit) return false;
+    const z0 = S.view.z; fit(); return S.view.z !== z0;
+  }
+  function fitView() {
     UI.Chrome.apply();   // 栏收成窄条或展开会改变台面的宽度，先摆好两侧栏，再量台面
     const S = UI.S, r = SG.stageEl.getBoundingClientRect();
     let ids = Object.keys(S.scene.entities).filter((id) => !SG.inWs(S.scene.entities[id]));
@@ -63,7 +78,7 @@
   function zoomAt(f, cx, cy) {
     const S = UI.S, r = SG.stageEl.getBoundingClientRect();
     const local = cx === undefined ? { x: r.width / 2, y: r.height / 2 } : UI.Space.stageLocal({ clientX: cx, clientY: cy });
-    S.view = UI.Space.zoomView(S.view, f, local, L.ZOOM); SG.render();
+    S.view = UI.Space.zoomView(S.view, f, local, L.ZOOM); S.viewAuto = false; SG.render();
   }
   // 平移夹紧：台面内容不能被推到顶部的标题栏（模式栏）下面。最高的顶层卡片的顶边不能比保留的顶部距离更靠上
   function clampPan(v) {
@@ -77,5 +92,5 @@
     if (minTop === null) return v;
     return Object.assign({}, v, { y: Math.max(v.y, T - UI.Space.scaleLen(minTop, v.z)) });
   }
-  Object.assign(SG, { wsZoomAt, wsFit, fit, zoomAt, clampPan });
+  Object.assign(SG, { wsZoomAt, wsFit, fit, keepFit, zoomAt, clampPan });
 })(window);

@@ -174,6 +174,7 @@
     const S = UI.S; if (!S) return;
     // 两侧栏跟着台面走（2026-11）：放上几何工作区、窗口不够宽时自动收起；收起或展开改变了台面宽度就重新适应
     if (UI.Chrome.apply() && SG.fit && !UI.State.focusedId()) SG.fit();
+    if (SG.keepFit) SG.keepFit();   // 卡片变高、底边钻到按钮栏后面：再适应一次（只在视图是适应出来的时候）
     SG.checkViews();
     const D = S.D, E = S.scene.entities;
     const lk = linksHtml(S);

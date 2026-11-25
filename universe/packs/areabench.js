@@ -164,6 +164,8 @@
         icon: () => '<polygon points="8,36 34,36 46,14 20,14" fill="' + CA + '" stroke="#3a4a63" stroke-width="1.4"/>' + K.line(20, 14, 20, 36, { stroke: 'var(--bad)', w: 1.4, dash: '3 2' }),
         size: (e) => { const p = (e && e.props) || {}; if (+p.shape === 3 && p.graph) return [W, fLay(fenceModel(p)).end + 30]; return [W, 400]; },
         grips,
+        // 篱笆换了总长，原来记下的长是另一圈篱笆的：清空图，重新记（猜的次数留着）
+        onSet: (p, k, v) => (k === 'P' && Math.round(+v) !== Math.round(+p.P) ? { tried: '', guess: -1, peek: false, all: false } : null),
         compute: (c) => {
           if (+c.props.shape === 3) { const f = fenceModel(c.props), o = { seen: qv(Q(f.tried.length)) }; if (!f.hidden) o.area = qv(Q(f.area)); if (f.best && !f.hidden) o.best = qv(Q(1));
             if (f.graph) { o.pts = qv(Q(f.tried.length)); o.gok = qv(Q(f.gok)); o.gtry = qv(Q(f.gtry)); o.all = qv(Q(f.all ? 1 : 0)); f.asks.forEach((a, i) => { if (a.pick) o['q' + (i + 1)] = qv(Q(a.pick)); }); }

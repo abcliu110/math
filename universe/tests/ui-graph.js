@@ -51,8 +51,9 @@
   H.ok(await H.done('all'), '里程碑：全部试一遍');
 
   console.log('5. 追问');
-  // 加了图，卡片变高：下面的追问会被播放条挡住，先点左下角的“适应”，整张卡片缩进来
-  await p.locator('button', { hasText: /^适应$/ }).first().click(); await p.waitForTimeout(250);
+  // 研究本记了好几条，卡片变高：不用点“适应”，台面自己缩进来，底下的追问不被按钮栏挡住
+  const bottomOk = () => p.evaluate(() => { const c = document.querySelector('.card').getBoundingClientRect(), f = Array.from(document.querySelectorAll('.fab')).map((x) => x.getBoundingClientRect().top).filter((t) => t > innerHeight / 2); return c.bottom <= Math.min.apply(null, f.concat([innerHeight])); });
+  H.ok(await bottomOk(), '研究本变长、卡片变高：台面自己缩进来，卡片底边在按钮栏上面（没点“适应”）');
   await H.press('1 只'); await H.press('每只都是双数条腿，加起来一定是双数');
   H.ok(await H.done('q1') && await H.done('q2'), '两个追问都答对');
   H.ok((await Promise.all(['three', 'hole', 'guess', 'all', 'q1', 'q2'].map(H.done))).every(Boolean), '六个里程碑都完成');

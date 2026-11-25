@@ -170,13 +170,21 @@
           cx2: { dim: null, kind: 'num', label: 'x² 的系数' }, c0: { dim: null, kind: 'num', label: '常数项' },
           refused: { dim: null, kind: 'num', label: '想合并不是同类项的，几次' },
           steps: { dim: null, kind: 'num', label: '算了几步' }, wrong: { dim: null, kind: 'num', label: '顺序不对被拦住几次' },
+          often: { dim: null, kind: 'num', label: '运算顺序：算式里出现最多的数' }, same: { dim: null, kind: 'num', label: '运算顺序：这个数出现了几次' },
         },
         icon: () => K.rect(6, 12, 22, 20, { fill: '#fde2c4', stroke: 'var(--ink)', r: 4 }) + K.text(17, 27, '3x', { size: 11, weight: 700 }) + K.text(33, 27, '+', { size: 12 }) + K.rect(38, 12, 22, 20, { fill: '#fde2c4', stroke: 'var(--ink)', r: 4 }) + K.text(49, 27, '2x', { size: 11, weight: 700 }),
         size: () => [W, 300],
         grips,
         compute: (c) => {
           const m = model(c.props), z = num(0);
-          if (m.mode === 1) { const o = { terms: z, simplified: z, cx: z, cy: z, cx2: z, c0: z, refused: z, steps: num(c.props.steps), wrong: num(c.props.wrong) }; if (m.value !== null) o.value = num(m.value); return o; }
+          if (m.mode === 1) {
+            const o = { terms: z, simplified: z, cx: z, cy: z, cx2: z, c0: z, refused: z, steps: num(c.props.steps), wrong: num(c.props.wrong) }; if (m.value !== null) o.value = num(m.value);
+            // 算式里出现最多的数和它出现了几次：比如凑成 8 以后 8 + 8 + 8 + 4，often = 8、same = 3
+            const cnt = new Map(); for (const t of m.toks) { const q = numOf(t); if (q !== null && !isOp(t) && t !== '(' && t !== ')') { const k = Q.show(q); cnt.set(k, (cnt.get(k) || 0) + 1); } }
+            let best = null; for (const [k, v] of cnt) if (!best || v > best[1]) best = [k, v];
+            if (best) { o.often = num(Q.parse(best[0])); o.same = num(best[1]); }
+            return o;
+          }
           return { value: num(m.value), terms: num(m.list.length), simplified: num(m.simplified), cx: num(coef(m.list, 'x')), cy: num(coef(m.list, 'y')), cx2: num(coef(m.list, 'x2')), c0: num(coef(m.list, '')), refused: num(c.props.refused), steps: z, wrong: z };
         },
         badge: () => '',
