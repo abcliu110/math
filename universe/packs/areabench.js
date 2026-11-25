@@ -7,7 +7,7 @@
  * 这一版的边界（如实写）：边长都是整格；平行四边形的斜度不超过底（剪下的三角形落在底边上）；圆的切拼在“剪拼”器材里。 */
 (function (G) {
   'use strict';
-  const U = G.U, Q = U.Q, K = U.kit;
+  const U = G.U, Q = U.Q, K = U.kit, RS = K.research;
   const qv = (q) => U.val('num', q, { dim: null });
   const W = 700, X0 = 40, YB = 290, UN = 22;
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, Number.isFinite(+v) ? Math.round(+v) : lo));
@@ -25,7 +25,7 @@
     K.rect(x, y, w, 26, { fill: enabled ? '#fff' : '#f1f3f6', stroke: enabled ? 'var(--blue)' : '#b8c0cc', r: 7, w: 1.4 }) + K.text(x + w / 2, y + 17, label, { size: 12, weight: 700, fill: enabled ? 'var(--ink)' : '#5f6773' }) + '</g>';
   const CA = '#cfe3fb', CB = '#fde2c4';
   function grips(c) {
-    if (+c.props.shape === 3) { const f = fenceModel(c.props); return [{ id: 'w', x: X(f.w), y: Y(Math.min(f.h, 8) / 2), r: 10, cursor: 'ew-resize', tip: '拖：改长', drag: (c0, q) => ({ w: Math.max(1, Math.min(fenceModel(c0.props).P / 2 - 1, Math.round((q.x - X0) / UN))) }), say: (c1) => { const f1 = fenceModel(c1.props); return f1.w + ' × ' + f1.h + ' = ' + f1.area; } }]; }
+    if (+c.props.shape === 3) { const f = fenceModel(c.props); return [{ id: 'w', x: X(f.w), y: Y(Math.min(f.h, 8) / 2), r: 10, cursor: 'ew-resize', tip: '拖：改长', drag: (c0, q) => ({ w: Math.max(1, Math.min(fenceModel(c0.props).P / 2 - 1, Math.round((q.x - X0) / UN))), guess: -1, peek: false }), say: (c1) => { const f1 = fenceModel(c1.props); return f1.w + ' × ' + f1.h + ' = ' + (f1.hidden ? '？' : f1.area); } }]; }
     const m = model(c.props); if (m.step) return [];
     const u = (q) => (q.x - X0) / UN, v = (q) => (YB - q.y) / UN, out = [];
     out.push({ id: 'b', x: X(m.b), y: Y(0), r: 9, cursor: 'ew-resize', tip: '拖：改底', drag: (c0, q) => ({ b: clamp(u(q), 2, 12) }), say: (c1) => '底 ' + model(c1.props).b });
@@ -41,7 +41,39 @@
     const P = Math.max(8, Math.min(28, Math.round(+p.P || 20) & ~1)), w = Math.max(1, Math.min(P / 2 - 1, Math.round(+p.w || 1))), h = P / 2 - w;
     const tried = [...new Set(String(p.tried || '').split(',').filter((x) => x !== '').map(Number))].filter((x) => x >= 1 && x < P / 2).sort((a, b) => a - b);
     let maxA = 0; for (let x = 1; x < P / 2; x++) maxA = Math.max(maxA, x * (P / 2 - x));
-    return { P, w, h, area: w * h, tried, maxA, best: w * h === maxA };
+    // 记下来（graph）：记满 3 个以后，换到没记过的长，面积先藏起来：先在蓝线上猜面积，或者“不猜，直接看”
+    const graph = !!p.graph, has = tried.includes(w), guess = Number.isInteger(+p.guess) && +p.guess >= 0 ? +p.guess : -1;
+    const hidden = graph && tried.length >= 3 && !has && guess < 0 && !p.peek;
+    const cnt = (v) => Math.max(0, Math.min(99, Math.round(+v) || 0));
+    const areas = [...new Set(Array.from({ length: P / 2 - 1 }, (_, i) => (i + 1) * (P / 2 - i - 1)))].sort((a, b) => a - b);
+    return { P, w, h, area: w * h, tried, maxA, best: w * h === maxA, graph, has, guess, hidden, peek: !!p.peek, gok: cnt(p.gok), gtry: cnt(p.gtry), all: !!p.all, areas, asks: RS.parseAsk(p.ask, p.pick, tried.length >= 3) };
+  }
+  const FY = 372, FGH = 250;
+  const fLay = (m) => { const yg = FY, ya = yg + FGH + 8; return { yg, ya, end: ya + RS.asksH(m.asks) }; };
+  function drawFenceGraph(m) {
+    const L = fLay(m), half = m.P / 2;
+    const P = RS.plot({ fx: 14, fy: L.yg, fw: 672, fh: FGH, xa: 0, xb: half, ya: 0, yb: Math.ceil(m.maxA / 5) * 5 + (m.maxA % 5 ? 0 : 5), bottom: 30, title: '📈 记下来：横着是长（米），竖着是面积（平方米）；篱笆一共 ' + m.P + ' 米' });
+    const { X, Y } = P; let s = P.s;
+    if (m.all) for (let x = 1; x < half; x++) s += K.circle(X(x), Y(x * (half - x)), 3, { fill: '#9cc3ee', stroke: 'none' });
+    for (const x of m.tried) s += K.circle(X(x), Y(x * (half - x)), 5, { fill: x * (half - x) === m.maxA ? '#5cb85c' : 'var(--blue)', stroke: 'var(--ink)', w: 1.1 });
+    s += K.line(X(m.w), P.Y0 - 4, X(m.w), P.Y1 + 2, { w: 1.4, stroke: 'var(--blue)', dash: '4 3' });
+    // 猜的格子：只放能围出来的那几种面积，一种一格
+    // 挨得太近的（比如 24 和 25）往旁边错开一格，高度不变；格子朝图中间错开，免得出界
+    if (m.hidden) {
+      const dir = m.w > half / 2 ? -1 : 1, last = [];
+      for (const a of m.areas) {
+        let k = 0; while (last[k] !== undefined && Math.abs(last[k] - Y(a)) < 16) k++; last[k] = Y(a);
+        const cx = X(m.w) + dir * k * 36;
+        if (k) s += K.line(X(m.w), Y(a), cx, Y(a), { w: 1, stroke: 'var(--blue)', dash: '2 2' });
+        s += '<g data-pick-set="' + encodeURIComponent(JSON.stringify({ guess: a })) + '" style="cursor:pointer"><title>猜面积 ' + a + '</title>' + K.rect(cx - 16, Y(a) - 7, 32, 14, { fill: '#fff', stroke: 'var(--blue)', w: 1, r: 3 }) + K.text(cx, Y(a) + 4, String(a), { size: 9.5, weight: 700, fill: 'var(--blue)' }) + '</g>';
+      }
+    }
+    if (m.guess >= 0 && !m.has) s += K.rect(X(m.w) - 7, Y(m.guess) - 7, 14, 14, { fill: 'none', stroke: 'var(--blue)', w: 1.8, r: 2, dash: '3 2' });
+    let say = m.tried.length < 3 ? '再记 ' + (3 - m.tried.length) + ' 个，就要先猜再看（拖长，点“记下来”）' : m.has ? '这个长图上已经有了：拖一下换个长' : m.hidden ? '先猜：长 ' + m.w + ' 米，面积是几？点蓝线上的一格' : m.guess >= 0 ? '你猜面积 ' + m.guess + '，' + (m.guess === m.area ? '猜对了！' : '其实是 ' + m.area + '。') + '点“记下来”' : '';
+    if (m.gtry) say += (say ? '　' : '') + '猜了 ' + m.gtry + ' 次，猜对 ' + m.gok + ' 次';
+    s += K.text(24, L.yg + 36, say, { size: 11, anchor: 'start', fill: 'var(--blue)', weight: 700 });
+    s += RS.btn(556, L.yg + 4, 116, '全部试一遍', { all: !m.all }, m.tried.length >= 5 || m.all, m.tried.length >= 5 ? (m.all ? '收起全部' : '每个长都画上') : '图上有 5 个点以后才能全部试一遍', m.all);
+    return s + RS.drawAsks(L.ya, m.asks, m.tried.length >= 3);
   }
   function drawFence(c) {
     const m = fenceModel(c.props); let s = '';
@@ -49,15 +81,22 @@
     for (let i = 0; i <= 14; i++) s += K.line(X(i), Y(0), X(i), Y(8), { stroke: '#e3e7ef', w: 1 });
     for (let j = 0; j <= 8; j++) s += K.line(X(0), Y(j), X(14), Y(j), { stroke: '#e3e7ef', w: 1 });
     const hh = Math.min(m.h, 8);
-    s += K.rect(X(0), Y(hh), m.w * UN, hh * UN, { fill: m.best ? '#d6f0d6' : '#cfe3fb', stroke: '#8a5a00', r: 0, w: 3 });
+    s += K.rect(X(0), Y(hh), m.w * UN, hh * UN, { fill: m.best && !m.hidden ? '#d6f0d6' : '#cfe3fb', stroke: '#8a5a00', r: 0, w: 3 });
     s += K.text(X(m.w / 2), Y(0) + 18, '长 ' + m.w + ' 米', { size: 12, weight: 700 }) + K.text(X(m.w) + 18, Y(hh / 2) - 14, '宽 ' + m.h + ' 米', { size: 12, weight: 700, anchor: 'start' });
     const R0 = 400;
-    s += K.text(R0, 70, '长 + 宽 = ' + m.P + ' ÷ 2 = ' + m.P / 2, { size: 13, anchor: 'start' }) + K.text(R0, 96, '面积 = ' + m.w + ' × ' + m.h + ' = ' + m.area + ' 平方米', { size: 15, weight: 700, anchor: 'start', fill: 'var(--blue)' });
-    s += '<g data-pick-set="' + encodeURIComponent(JSON.stringify({ tried: [...new Set(m.tried.concat([m.w]))].join(',') })) + '" style="cursor:pointer"><title>记下这一种</title>' + K.rect(R0, 112, 110, 26, { fill: '#fff', stroke: 'var(--blue)', r: 7, w: 1.4 }) + K.text(R0 + 55, 129, '记下这一种', { size: 12, weight: 700 }) + '</g>';
-    s += K.text(R0, 166, '记下的：', { size: 12, weight: 700, anchor: 'start' });
-    m.tried.forEach((x, i) => { s += K.text(R0 + (i % 2) * 140, 188 + Math.floor(i / 2) * 20, x + ' × ' + (m.P / 2 - x) + ' = ' + x * (m.P / 2 - x), { size: 12, anchor: 'start', fill: x * (m.P / 2 - x) === m.maxA ? 'var(--blue)' : 'var(--ink)' }); });
-    if (m.best) s += '<g data-read="1">' + K.text(20, 352, '面积最大：' + m.area + ' 平方米。' + (m.w === m.h ? '围成正方形面积最大' : '长和宽越接近，面积越大'), { size: 14, weight: 700, anchor: 'start', fill: 'var(--blue)' }) + '</g>';
+    s += K.text(R0, 70, '长 + 宽 = ' + m.P + ' ÷ 2 = ' + m.P / 2, { size: 13, anchor: 'start' }) + K.text(R0, 96, '面积 = ' + m.w + ' × ' + m.h + ' = ' + (m.hidden ? '？' : m.area + ' 平方米'), { size: 15, weight: 700, anchor: 'start', fill: 'var(--blue)' });
+    if (m.graph) {
+      const rec = { tried: [...new Set(m.tried.concat([m.w]))].join(','), guess: -1 };
+      if (m.guess >= 0) Object.assign(rec, { gtry: m.gtry + 1, gok: m.gok + (m.guess === m.area ? 1 : 0) });
+      s += RS.btn(R0, 112, 110, '记下来', rec, !m.hidden && !m.has, m.has ? '这个长已经记过了' : m.hidden ? '先猜面积，或者点“不猜，直接看”' : '把这个长记到图上');
+      if (m.hidden) s += RS.btn(R0 + 120, 112, 120, '不猜，直接看', { peek: true }, true, '不猜，直接看');
+    } else s += '<g data-pick-set="' + encodeURIComponent(JSON.stringify({ tried: [...new Set(m.tried.concat([m.w]))].join(',') })) + '" style="cursor:pointer"><title>记下这一种</title>' + K.rect(R0, 112, 110, 26, { fill: '#fff', stroke: 'var(--blue)', r: 7, w: 1.4 }) + K.text(R0 + 55, 129, '记下这一种', { size: 12, weight: 700 }) + '</g>';
+    // 开了图，记下的都在图上；不再列算式（列出 4 × 6 = 24，长 6 的面积就不用猜了）
+    if (!m.graph) s += K.text(R0, 166, '记下的：', { size: 12, weight: 700, anchor: 'start' });
+    if (!m.graph) m.tried.forEach((x, i) => { s += K.text(R0 + (i % 2) * 140, 188 + Math.floor(i / 2) * 20, x + ' × ' + (m.P / 2 - x) + ' = ' + x * (m.P / 2 - x), { size: 12, anchor: 'start', fill: x * (m.P / 2 - x) === m.maxA ? 'var(--blue)' : 'var(--ink)' }); });
+    if (m.best && !m.hidden) s += '<g data-read="1">' + K.text(20, 352, '面积最大：' + m.area + ' 平方米。' + (m.w === m.h ? '围成正方形面积最大' : '长和宽越接近，面积越大'), { size: 14, weight: 700, anchor: 'start', fill: 'var(--blue)' }) + '</g>';
     else s += K.text(20, 352, '周长一样，面积不一定一样：拖右边的圆点换一种长', { size: 12, anchor: 'start', fill: '#5a6478' });
+    if (m.graph) s += drawFenceGraph(m);
     return s;
   }
   function draw(c) {
@@ -98,7 +137,7 @@
     else s += K.text(20, 50, m.step === 0 ? '拖角改底、高' + (m.shape === 1 ? '、顶点' : '、斜度') + '；再剪一剪、拼一拼' : '还没拼好', { size: 12, anchor: 'start', fill: '#5a6478' });
     return s;
   }
-  const I = (lo, hi, d, label) => ({ type: 'int', label, default: d, min: lo, max: hi, write: true });
+  const I = (lo, hi, d, label, o) => Object.assign({ type: 'int', label, default: d, min: lo, max: hi, write: true }, o || {});
   U.registerPack({
     id: 'areabench', version: 1,
     types: {
@@ -111,15 +150,24 @@
           b: I(2, 12, 6, '底（梯形是下底）'), t: I(1, 10, 3, '梯形的上底'), h: I(1, 8, 4, '高'), s: I(0, 12, 2, '斜度（三角形是顶点的位置）'),
           step: I(0, 2, 0, '剪拼到第几步'), seen: { type: 'text', label: '平行四边形：拼成长方形时的斜度（自动记）', default: '', write: true },
           P: I(8, 28, 20, '篱笆：一共几米'), w: I(1, 13, 1, '篱笆：长几米'), tried: { type: 'text', label: '篱笆：记下的长（自动）', default: '', write: true },
+          graph: { type: 'bool', label: '篱笆：记下来，画成长 → 面积的图', default: false, write: true },
+          guess: I(-1, 99, -1, '篱笆图上猜的面积（-1 没猜）', { hidden: true }), peek: { type: 'bool', label: '不猜，直接看', default: false, write: true, hidden: true },
+          gok: I(0, 99, 0, '猜对几次（自动）', { hidden: true }), gtry: I(0, 99, 0, '猜了几次（自动）', { hidden: true }),
+          all: { type: 'bool', label: '全部试一遍', default: false, write: true, hidden: true },
+          ask: { type: 'text', label: '追问（题干|选项|*对的选项~…）', default: '', write: true }, pick: { type: 'text', label: '追问选了第几个', default: '', write: true },
         },
         outputs: {
           area: { dim: null, kind: 'num', label: '面积（拼好了才有）' }, base: { dim: null, kind: 'num', label: '拼成的图形的底（拼好了才有）' }, seen: { dim: null, kind: 'num', label: '平行四边形：拼过几种斜度' }, best: { dim: null, kind: 'num', label: '篱笆：围出了最大面积 1' },
+          pts: { dim: null, kind: 'num', label: '篱笆：图上记了几个长' }, gok: { dim: null, kind: 'num', label: '篱笆：先猜再看，猜对几次' }, gtry: { dim: null, kind: 'num', label: '篱笆：先猜再看，猜了几次' }, all: { dim: null, kind: 'num', label: '篱笆：全部试一遍了 1' },
+          q1: { dim: null, kind: 'num', label: '追问 1 选了第几个' }, q2: { dim: null, kind: 'num', label: '追问 2 选了第几个' },
         },
         icon: () => '<polygon points="8,36 34,36 46,14 20,14" fill="' + CA + '" stroke="#3a4a63" stroke-width="1.4"/>' + K.line(20, 14, 20, 36, { stroke: 'var(--bad)', w: 1.4, dash: '3 2' }),
-        size: () => [W, 400],
+        size: (e) => { const p = (e && e.props) || {}; if (+p.shape === 3 && p.graph) return [W, fLay(fenceModel(p)).end + 30]; return [W, 400]; },
         grips,
         compute: (c) => {
-          if (+c.props.shape === 3) { const f = fenceModel(c.props), o = { area: qv(Q(f.area)), seen: qv(Q(f.tried.length)) }; if (f.best) o.best = qv(Q(1)); return o; }
+          if (+c.props.shape === 3) { const f = fenceModel(c.props), o = { seen: qv(Q(f.tried.length)) }; if (!f.hidden) o.area = qv(Q(f.area)); if (f.best && !f.hidden) o.best = qv(Q(1));
+            if (f.graph) { o.pts = qv(Q(f.tried.length)); o.gok = qv(Q(f.gok)); o.gtry = qv(Q(f.gtry)); o.all = qv(Q(f.all ? 1 : 0)); f.asks.forEach((a, i) => { if (a.pick) o['q' + (i + 1)] = qv(Q(a.pick)); }); }
+            return o; }
           const m = model(c.props), o = { seen: qv(Q(m.seen.length)) };
           if (m.step === 2) { o.area = qv(m.area); o.base = qv(Q(m.base)); }
           return o;

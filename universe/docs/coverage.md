@@ -1,12 +1,12 @@
 # 知识点覆盖报告
 
-> 由 `node tools/coverage.js` 生成，日期 2026-11-24。数据来自 `js/core/curriculum.js` 与 `problems/*.js`。
+> 由 `node tools/coverage.js` 生成，日期 2026-11-25。数据来自 `js/core/curriculum.js` 与 `problems/*.js`。
 
 ## 总览
 
 - 知识点：142 个（设计目标 142）
 - 有题的知识点：141 个（99%）
-- 题目：679 道；没有对应知识点的题：1 道
+- 题目：680 道；没有对应知识点的题：1 道
 - 没有器材的本质：无
 - 没有题的本质：无
 
@@ -16,7 +16,7 @@
 |---|---|---|---|
 | 1 | 16 | 16（100%） | 55 |
 | 2 | 16 | 16（100%） | 58 |
-| 3 | 16 | 16（100%） | 100 |
+| 3 | 16 | 16（100%） | 101 |
 | 4 | 17 | 17（100%） | 108 |
 | 5 | 14 | 14（100%） | 122 |
 | 6 | 15 | 14（93%） | 72 |
@@ -72,7 +72,7 @@
 | 3.10 | 3 | 除数是一位数的除法 | 1 | 1 | 0 | 1 | vertbench |
 | 3.15a | 3 | 复式统计表 | 2 | 2 | 0 | 1 | tablebench |
 | 3.11 | 3 | 两位数乘两位数 | 9 | 1 | 0 | 1 | areamodel、mulbench、estbench |
-| 3.12 | 3 | 面积 | 12 | 0 | 0 | 1 | areabench、areamodel、asn、curved、geoboard、circlebench、optimize、solidbench、turtle |
+| 3.12 | 3 | 面积 | 13 | 0 | 0 | 1 | areabench、areamodel、asn、curved、geoboard、circlebench、optimize、solidbench、turtle |
 | 3.13 | 3 | 年、月、日 | 4 | 1 | 0 | 1 | calbench |
 | 3.14 | 3 | 小数的初步认识 | 3 | 1 | 0 | 1 | decbench、numlinebench、twoways |
 | 3.15b | 3 | 搭配（二） | 16 | 1 | 0 | 1 | combobench、areamodel、euler、treebench |
@@ -179,9 +179,9 @@
 | E2 | 291 | 58 |
 | E3 | 153 | 44 |
 | E4 | 135 | 32 |
-| E5 | 145 | 55 |
+| E5 | 146 | 55 |
 | E6 | 59 | 24 |
-| E7 | 172 | 34 |
+| E7 | 173 | 34 |
 | E8 | 66 | 23 |
 | E9 | 72 | 17 |
 | E10 | 10 | 4 |
