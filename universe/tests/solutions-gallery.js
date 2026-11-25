@@ -13,4 +13,11 @@ module.exports = {
   // 画成图：孩子在台面上一个一个做出来的，这里直接写成研究本、猜的次数和追问
   'gal-cr-graph'(h) { const s = h.role('s'); h.set(s, 'book', '8,2,4,20:2;8,2,4,22:3;8,2,4,24:4;8,2,4,26:5;8,2,4,21:x'); h.set(s, 'target', 21); h.set(s, 'claim', true); h.set(s, 'gtry', 1); h.set(s, 'gok', 1); h.set(s, 'all', true); h.set(s, 'pick', '1,1'); },
   'gal-br-area'(h) { h.set(h.role('m'), 'h', 2); },
+  // 第二页：1 + 2 + … + 7。运算顺序台直接写成算完的样子；高斯台倒过来、对齐；平均数台直接写成摊平的每堆 4 块
+  'gal-gs-add'(h) { h.set(h.role('t'), 'toks', '28'); },
+  'gal-gs-pair'(h) { h.set(h.role('t'), 'toks', '28'); },
+  'gal-gs-rev'(h) { const g = h.role('gs'); h.set(g, 'flip', true); h.set(g, 'pair', true); },
+  'gal-gs-mean'(h) { h.set(h.role('m'), 'vals', '4,4,4,4,4,4,4'); },
+  'gal-gs-br-rev'(h) { const g = h.role('gs'); h.set(g, 'flip', true); h.set(g, 'pair', true); },
+  'gal-gs-br-mean'(h) { h.set(h.role('m'), 'vals', '4,4,4,4,4,4,4'); },
 };

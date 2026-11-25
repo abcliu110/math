@@ -768,7 +768,7 @@
   U.Chain = {
     of(type) {
       if (!U.types[type] || !U.types[type].bench) return [];
-      const own = U.problems.filter((p) => (p.shelf || [])[0] === type).sort((a, b) => (a.grade || 9) - (b.grade || 9) || (a.rung || 0) - (b.rung || 0)).slice(0, 6).map((p) => ({ id: p.id, title: p.title, kind: '题' }));
+      const own = U.problems.filter((p) => (p.shelf || [])[0] === type && p.chain !== false).sort((a, b) => (a.grade || 9) - (b.grade || 9) || (a.rung || 0) - (b.rung || 0)).slice(0, 6).map((p) => ({ id: p.id, title: p.title, kind: '题' }));
       const qs = GENS[type] ? [1, 2, 3].map((lv) => ({ id: U.Quiz.id(type, CHAIN_SEED + lv, lv), title: '随机 · ' + LEVELS[lv - 1], kind: '随机' })) : [];
       // 通用任务层出的关卡用 CHAIN_SEED（hasTask 就是用它试出来的，保证打得开）
       const tk = [[7, '找全：不止一种，全部找出来', '找全'], [9, '推广：做几个，找规律', '推广']].filter((x) => U.Quiz.hasTask(type, x[0])).map(([lv, title, kind]) => ({ id: U.Quiz.id(type, CHAIN_SEED, lv), title, kind }));

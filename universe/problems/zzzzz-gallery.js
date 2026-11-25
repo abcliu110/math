@@ -1,7 +1,9 @@
 /* 解法图鉴（docs/knob-graph-and-gallery.md 第二节）：一页一道母题，每格一种做法，都用同一组数。
  * 一格对应一道题，那道题拿到星星就算点亮；两格都点亮了，中间的“桥”才能走（桥是一道把两种做法对起来的题）。
  * 第一页：鸡兔同笼，8 个头、26 条腿（兔 5 只、鸡 3 只）。选这组数是因为每台都放得下：两架天平每盘最多 30 个砝码。
- * 这一页里有四格用的是已有的题（换一换的假设、先假设全是兔、抬腿，两架天平），这里补三格（分步算式、方程、面积图）和两座桥。 */
+ * 这一页里有四格用的是已有的题（换一换的假设、先假设全是兔、抬腿，两架天平），这里补三格（分步算式、方程、面积图）和两座桥。
+ * 第二页：连加，1 + 2 + … + 7 = 28。选 7 是因为“移多补少”那台最多 8 堆，1 到 7 的平均正好是整数 4。四格：
+ * 一个一个加、换个顺序凑 8（都在代数式操作台的“运算顺序”）、倒过来再写一行（高斯求和）、搬成一样高（平均数），两座桥。 */
 (function (G) {
   'use strict';
   const U = G.U, W = U.World;
@@ -90,6 +92,62 @@
     why: '头数不变时，兔每多 1 只（鸡少 1 只），腿多 2 条：图上的点排成一条斜线，横着走 2 格往上走 1 格。每只都是双数条腿，所以单数的腿数一个也凑不出来，线上隔一个缺一个；腿比 16 少、比 32 多也凑不出来，线到那里就断了。',
   });
 
+  // ======== 第二页：1 + 2 + 3 + 4 + 5 + 6 + 7 ========
+  const gbase = { domain: '数与运算', level: 'core', traps: [], predict: null, grade: 4, rung: 6, points: ['4.10'], essence: ['E2', 'E4'], topics: ['连加', '高斯求和'], family: 'sum-1-7', chain: false };   // 从图鉴里走，不进闯关链（不挤掉各台原来的关）
+  const gadd = (o) => U.problems.push(Object.assign({}, gbase, o, { alias: ['连加', '高斯', '解法图鉴'].concat(o.alias || []) }));
+  const gs7 = () => { const s = W.blank(); const id = W.add(s, 'gaussbench', 40, 50, { a: 1, d: 1, n: 7 }); s.entities[id].role = 'gs'; return s; };
+  gadd({
+    id: 'gal-gs-add', way: 'add', title: '1 加到 7 · 一个一个加', grade: 3, shelf: ['termsbench'],
+    hook: '1 + 2 + 3 + 4 + 5 + 6 + 7 等于几？先老老实实一个一个加：点一个加号，就先算那一步。要点几次？',
+    build: one('termsbench', { mode: 1, toks: '1,+,2,+,3,+,4,+,5,+,6,+,7' }, 't'),
+    milestones: [{ id: 'sum', say: '加完了：28', score: 6, when: on('t', 'value', 28), hints: ['从左边开始：1 + 2 = 3。', '再加 3 得 6，再加 4 得 10……', '一共要点 6 次加号：28。'] }],
+    goal: ['sum'],
+    why: '1 + 2 = 3，+ 3 = 6，+ 4 = 10，+ 5 = 15，+ 6 = 21，+ 7 = 28。7 个数要加 6 次。要是加到 100，就得加 99 次：另外几种做法都是在想办法少加几次。',
+  });
+  gadd({
+    id: 'gal-gs-pair', way: 'pair', title: '1 加到 7 · 换个顺序，凑成 8', shelf: ['termsbench'],
+    hook: '还是 1 到 7，这回顺序换了：1 和 7 挨着，2 和 6 挨着，3 和 5 挨着，4 落单。先把挨着的两个加起来，看看都是几。',
+    build: one('termsbench', { mode: 1, toks: '1,+,7,+,2,+,6,+,3,+,5,+,4' }, 't'),
+    predict: { q: '换了顺序，加起来的和会变吗？', options: [{ v: 'same', label: '不变，还是那几个数' }, { v: 'diff', label: '会变' }], answer: 'same' },
+    milestones: [{ id: 'sum', say: '三个 8 再加 4：28', score: 6, when: on('t', 'value', 28), hints: ['先点 1 和 7 中间的加号。', '2 + 6、3 + 5 也先算：都是 8。', '8 + 8 + 8 + 4 = 28。'] }],
+    goal: ['sum'],
+    why: '加法换了顺序，和不变。1 + 7、2 + 6、3 + 5 都是 8：一头多 1，另一头少 1。三个 8 是 24，再加中间落单的 4，一共 28。',
+  });
+  gadd({
+    id: 'gal-gs-rev', way: 'rev', title: '1 加到 7 · 倒过来再写一行', shelf: ['gaussbench'],
+    hook: '1 到 7 写一行，再倒过来写一行（7 到 1），上下对齐。每一列加起来是几？一共几列？两行合起来，是要求的和的几倍？',
+    build: gs7,
+    milestones: [{ id: 'sum', say: '7 列 8，再除以 2：28', score: 6, when: on('gs', 'total', 28), hints: ['点“倒过来写一行”。', '再点“上下对齐相加”：每一列都是 8。', '7 个 8 是 56，同一串数写了两遍：56 ÷ 2 = 28。'] }],
+    goal: ['sum'],
+    why: '倒过来写一行，上下对齐，每一列都是 1 + 7 = 8，一共 7 列：56。两行是同一串数写了两遍，所以和是 56 ÷ 2 = 28。不管几个数，都只要乘一次、除一次。',
+  });
+  gadd({
+    id: 'gal-gs-mean', way: 'mean', title: '1 加到 7 · 搬成一样高', shelf: ['meanbench'],
+    hook: '7 堆方块，从 1 块到 7 块，像台阶。把高的搬给矮的，搬到每堆一样高：每堆几块？7 堆一共几块？',
+    build: one('meanbench', { vals: '1,2,3,4,5,6,7', askTotal: true }, 'm'),
+    milestones: [{ id: 'level', say: '每堆 4 块，7 堆：4 × 7 = 28', score: 6, when: on('m', 'level', 1), hints: ['7 那堆搬 3 块给 1 那堆。', '6 给 2 搬 2 块，5 给 3 搬 1 块。', '每堆都是 4 块：7 × 4 = 28。'] }],
+    goal: ['level'],
+    why: '搬来搬去总数不变。7 给 1 搬 3 块，6 给 2 搬 2 块，5 给 3 搬 1 块，每堆都是 4 块（正好是中间那个数）。7 堆 × 4 块 = 28。和 = 平均数 × 个数。',
+  });
+  gadd({
+    id: 'gal-gs-br-rev', way: null, bridge: true, title: '桥 · 凑成 8 和倒过来写：是一回事吗？', shelf: ['gaussbench'],
+    hook: '还是 1 到 7。先回答上面的问题。然后倒过来写一行，上下对齐相加：每一列是哪两个数？和“凑成 8”里的哪一对一样？落单的 4 到哪去了？',
+    build: gs7,
+    predict: { q: '凑成 8 的时候，4 落单了。倒过来写一行，4 下面是几？', options: [{ v: 'a', label: '还是 4：自己和自己凑成 8' }, { v: 'b', label: '没有数' }, { v: 'c', label: '是 7' }], answer: 'a' },
+    milestones: [{ id: 'sum', say: '每列都是 8，4 和 4 也是 8：7 个 8 的一半是 28', score: 6, when: on('gs', 'total', 28), hints: ['点“倒过来写一行”。', '中间那一列是 4 + 4。', '“凑成 8”每一对只算一次；倒过来写，每一对算了两次，所以要除以 2。'] }],
+    goal: ['sum'],
+    why: '凑成 8 是 1 和 7 一对、2 和 6 一对……倒过来写把每一对都写了两遍（上 1 下 7，上 7 下 1），落单的 4 也和自己凑成了 8。所以是 7 个 8 的一半，和 3 个 8 加 4 一样：28。',
+  });
+  gadd({
+    id: 'gal-gs-br-mean', way: null, bridge: true, title: '桥 · 倒过来写和搬成一样高：8 的一半是几？', shelf: ['meanbench'],
+    hook: '还是 1 到 7。先回答上面的问题。倒过来写的时候，每一列都是 8，是两个数加起来。那把 7 堆搬成一样高，每堆该是几块？搬一搬看。',
+    build: one('meanbench', { vals: '1,2,3,4,5,6,7', askTotal: true }, 'm'),
+    predict: { q: '倒过来写，每一列是 8（两个数）。搬成一样高，每堆几块？', options: [{ v: '4', label: '4 块：8 的一半' }, { v: '8', label: '8 块' }, { v: '7', label: '7 块' }], answer: '4' },
+    milestones: [{ id: 'level', say: '每堆 4 块：就是每一列 8 的一半', score: 6, when: on('m', 'level', 1), hints: ['高的给矮的：7 给 1，6 给 2，5 给 3。', '1 和 7 搬成 4 和 4：一对还是 8。', '每堆 4 块。'] }],
+    goal: ['level'],
+    why: '倒过来写，每一列是 首 + 末 = 8；搬成一样高，就是把每一对 8 平分成 4 和 4。所以 (首 + 末) ÷ 2 就是平均数，和 = 平均数 × 个数 = (首 + 末) × 个数 ÷ 2。两种做法是同一个公式。',
+  });
+
   // ---- 图鉴的页 ----
   const PAGES = [{
     id: 'chick-rabbit', icon: '🐔', title: '鸡兔同笼', q: '8 个头、26 条腿，兔几只？', ans: '兔 5 只，鸡 3 只',
@@ -109,6 +167,22 @@
     ],
     deeper: [{ pid: 'gal-cr-graph', name: '换个腿数会怎样：画成图' }],
     more: '同一道题、同一组数，换一种做法，答案还是兔 5 只。找到两种做法以后，走中间的桥，看它们哪一步对着哪一步。',
+    after: '哪种做法换成 100 个头、316 条腿也最省事？',
+  }, {
+    id: 'sum-1-7', icon: '➕', title: '连加', q: '1 + 2 + 3 + 4 + 5 + 6 + 7 = ?', ans: '28',
+    ways: [
+      { id: 'add', name: '一个一个加', pid: 'gal-gs-add' },
+      { id: 'pair', name: '换个顺序，凑成 8', pid: 'gal-gs-pair' },
+      { id: 'rev', name: '倒过来再写一行', pid: 'gal-gs-rev' },
+      { id: 'mean', name: '搬成一样高', pid: 'gal-gs-mean' },
+    ],
+    bridges: [
+      { a: 'pair', b: 'rev', pid: 'gal-gs-br-rev' },
+      { a: 'rev', b: 'mean', pid: 'gal-gs-br-mean' },
+    ],
+    deeper: [{ pid: 'gs-1-100', name: '换成 1 加到 100' }, { pid: 'gs-odd', name: '换成 1 + 3 + 5 + … + 19' }],
+    more: '同一串数，四种加法，答案都是 28。一个一个加最笨，但最先想到；另外三种都是在想办法少加几次。',
+    after: '加到 100，哪种做法最省事？一个一个加要加几次？',
   }];
   // 已有的题也标上它属于哪一页、哪一格
   for (const pg of PAGES) for (const w of pg.ways) { const p = U.problems.find((x) => x.id === w.pid); if (p) { p.family = pg.id; p.way = w.id; } }

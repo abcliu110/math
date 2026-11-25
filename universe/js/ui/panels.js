@@ -65,7 +65,7 @@
           }
           for (const d of st.deeper) h += d.open ? '<div class="it lvl" data-pid="' + esc(d.pid) + '" data-deeper="1"><span class="tt">' + esc('📈 往深处走：' + d.name) + '</span>' + (d.stars ? '<span class="chip stars-chip">' + '★'.repeat(d.stars) + '</span>' : '') + '</div>'
             : '<div class="it lvl lock" data-deeper="1" data-lockwhy="' + esc('先用任意一种做法做对一次，再往深处走') + '"><span class="tt">' + esc('🔒 📈 往深处走：' + d.name) + '</span></div>';
-          if (st.lit === st.ways.length) h += '<div class="it lvl mnote"><span class="tt"><small>' + esc('全部找到了：' + pg.ans + '。哪种做法换成 100 个头、316 条腿也最省事？') + '</small></span></div>';
+          if (st.lit === st.ways.length) h += '<div class="it lvl mnote"><span class="tt"><small>' + esc('全部找到了：' + pg.ans + '。' + (pg.after || '')) + '</small></span></div>';
         }
       }
       h += '</div>';

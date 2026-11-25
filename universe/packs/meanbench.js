@@ -48,7 +48,9 @@
     const p = c.props, m = model(p), u = p.unit || '块', mw = p.mw || '堆', names = String(p.names || '').split(/[,，]/).map((s) => s.trim()).filter(Boolean), line = p.showline !== false && p.showline !== 0;
     const dg = c.drag ? plan(c.drag.p0, c.drag.grip, c.drag) : null, fx = dg && dg.fx;
     let s = '', over = 0, under = 0;
-    s += K.text(20, 26, '一共 ' + m.total + ' ' + u + '，' + m.n + ' ' + mw, { size: 16, weight: 700, anchor: 'start' });
+    // askTotal：总数是要求的答案（比如 1 + 2 + … + 7），搬平以前写“？”，搬平以后写成 平均 × 堆数
+    const tot = !p.askTotal ? String(m.total) : m.level ? m.v[0] + ' × ' + m.n + ' = ' + m.total : '？';
+    s += K.text(20, 26, '一共 ' + tot + ' ' + u + '，' + m.n + ' ' + mw, { size: 16, weight: 700, anchor: 'start' });
     const msg = fx && fx.note ? fx.note : m.level ? m.total + ' ÷ ' + m.n + ' = ' + fmt(m) + '：每' + mw + '一样多，这就是平均数' : !Number.isInteger(m.meanN) ? '搬不成一样高：平均数不是整数，在两块之间' : line ? '把线上面多出来的，搬到线下面空着的地方' : '把高的搬给矮的，搬到一样高';
     s += K.text(20, 48, msg, { size: 13, weight: 700, anchor: 'start', fill: fx && fx.note ? 'var(--blue)' : m.level ? 'var(--good)' : 'var(--ink)' });
     s += K.line(X0 - 14, BASE, colX(m.n - 1) + BW + 14, BASE, { w: 3 });
@@ -92,6 +94,7 @@
           names: T('', '每一堆叫什么（用逗号隔开，可以不填）'), unit: T('块', '数的是什么'), mw: T('堆', '一“堆”叫什么'),
           showline: { type: 'bool', label: '显示平均线', default: true, write: true },
           free: { type: 'bool', label: '可以改数据（加一块、拿走一块、加一堆）', default: false, write: true },
+          askTotal: { type: 'bool', label: '总数先不告诉：搬平了才写出来（平均 × 堆数）', default: false, write: true },
           moves: { type: 'int', label: '搬了几次（自动记录）', default: 0, min: 0, max: 999, write: true, hidden: true },
         },
         outputs: {
@@ -102,7 +105,7 @@
         icon: () => K.rect(10, 22, 10, 16, { fill: '#9fb7d9', stroke: 'var(--ink)', w: 1 }) + K.rect(24, 10, 10, 28, { fill: '#9fb7d9', stroke: 'var(--ink)', w: 1 }) + K.rect(38, 16, 10, 22, { fill: '#9fb7d9', stroke: 'var(--ink)', w: 1 }) + K.line(6, 18, 56, 18, { w: 1.5, stroke: 'var(--good)', dash: '4 3' }),
         size: () => [W, 350],
         grips,
-        compute: (c) => { const m = model(c.props); return { mean: U.val('num', m.mean, { dim: null }), total: num(m.total), n: num(m.n), level: num(m.level), max: num(m.max), min: num(m.min), moves: num(c.props.moves || 0) }; },
+        compute: (c) => { const m = model(c.props); const o = { mean: U.val('num', m.mean, { dim: null }), total: num(m.total), n: num(m.n), level: num(m.level), max: num(m.max), min: num(m.min), moves: num(c.props.moves || 0) }; if (c.props.askTotal && !m.level) delete o.total; return o; },
         badge: () => '',
         draw,
       },
