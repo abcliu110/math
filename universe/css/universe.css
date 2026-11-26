@@ -160,6 +160,8 @@ input, select, textarea { font: inherit; color: inherit; }
 .card .hd .hq + .gchip { margin-left: 0; }
 .card .hd .gchip.sw { margin-left: auto; margin-right: 6px; background: #e9f7ee; color: #1f7a45; }
 .card .hd .gchip.sw + .hq { margin-left: 0; }
+.card .hd .gchip.pt { background: transparent; color: #4a5568; font-weight: 400; padding: 1px 4px; margin-right: 6px; }   /* 操作台模式的“显示口 / 藏起口”：不显眼 */
+.card .hd .gchip + .gchip.pt { margin-left: 0; }
 .card .howto { position: absolute; left: 0; top: calc(100% + 40px); width: 100%; min-width: 340px; box-sizing: border-box; z-index: 6; background: #fff; padding: 12px 18px; border-radius: 12px; border: 1px solid #c9d1e3; box-shadow: 0 8px 22px rgba(0,0,0,.22); font-size: 14px; line-height: 1.5; color: var(--ink); }
 .card .howto b { font-size: 15px; }
 .card .howto ol { margin: 6px 0 10px 18px; padding: 0; }

@@ -7,6 +7,7 @@
   const SG = UI.StageCtx;
   // 哪些属性口要画成药丸：被连线驱动的；正在拖线时再加上所有可写、没被驱动的
   function pillsOf(e, D) {
+    if (UI.benchMode() === e.id) return [];   // 操作台模式不画药丸
     const d = SG.def(e), driven = (D[e.id] && D[e.id].driven) || {};
     return UI.pillOrder(d, Object.keys(d.props).filter((k) => d.props[k].write && (driven[k] || SG.linking)));
   }
@@ -45,7 +46,8 @@
   }
   function cardHtml(e, D, S) {
     const d = SG.def(e), g = SG.geom(e), dd = D[e.id], cH = g.h - HD;
-    const c = { ent: e, props: dd.props || e.props, d: dd, out: dd.out, state: e.state, w: g.w, h: cH, t: S.scene.clock.t, n: S.scene.clock.n, scene: S.scene };
+    const bm = UI.benchMode() === e.id;   // 操作台模式：只画台面，不画连线用的口（stage-core.js 的 UI.benchMode）
+    const c = { ent: e, props: dd.props || e.props, d: dd, out: dd.out, state: e.state, w: g.w, h: cH, t: S.scene.clock.t, n: S.scene.clock.n, scene: S.scene, bench: bm ? SG.BENCH_OPT : undefined };
     c.masked = !!(d.guess && !d.guess.answered(c.props));   // 先猜后看：还没填猜测，被 guess.ports 遮住的读数在界面上不显示（内核里值照常流动）
     // 正在拖这张卡片上的把手：告诉器材拖的是哪个把手、鼠标在哪、按下时的属性，器材可以画出“这一下会带来什么”（比如天平两边一起动）
     const gd = SG.drag && SG.drag.kind === 'grip' && SG.drag.id === e.id && SG.drag.moved && SG.drag.q ? SG.drag : null;
@@ -66,7 +68,9 @@
     const swK = UI.Switch && UI.Switch[e.type], swD = swK && d.props[swK];
     const swCur = swD && swD.choices ? Math.max(0, Number((e.props || {})[swK]) || 0) : 0;
     const sw = swD && swD.choices && swD.choices.length > 1 ? '<span class="gchip sw" data-pick-k="' + swK + '" data-pick-v="' + ((swCur + 1) % swD.choices.length) + '" title="点一下换成下一种：' + K.esc(swD.label || '') + '">' + K.esc(String(swD.choices[Math.min(swCur, swD.choices.length - 1)]).slice(0, 8)) + ' ▸</span>' : '';
-    h += '<div class="hd" data-id="' + e.id + '"><span class="nm">' + K.esc(e.name) + '</span>' + sw + hchip + chip + '<span class="bd">' + K.esc(badge || '') + '</span></div>';
+    // “显示口 / 藏起口”：只在能进操作台模式的题里出现，不显眼（点了画出连线用的口，再点藏起来；会话状态 S.showPorts，换题也保留）
+    const pchip = UI.benchModeCan() === e.id ? '<span class="gchip pt" data-ports="1" title="高级：' + (bm ? '显示' : '藏起') + '连线用的口（操作台的题默认藏起）">' + (bm ? '显示口' : '藏起口') + '</span>' : '';
+    h += '<div class="hd" data-id="' + e.id + '"><span class="nm">' + K.esc(e.name) + '</span>' + sw + hchip + chip + pchip + '<span class="bd">' + K.esc(badge || '') + '</span></div>';
     const drawing = S.wsDraw && S.wsDraw.ws === e.id;   // 正在画线：指针变成十字（2.5）
     h += '<svg class="bdy' + (SG.isWsDef(e.type) ? ' wsbody' + (drawing ? ' drawing' : '') + '" data-wsid="' + e.id : '') + '" width="' + g.w + '" height="' + cH + '" viewBox="0 0 ' + g.w + ' ' + cH + '">' + body + '</svg>';
     if (HT && S.help[e.id]) {
@@ -84,13 +88,12 @@
         h += '<div class="howto"><div class="htabs">' + tabs + '</div>' + body2 + '<span class="hbtn" data-help="' + e.id + '">' + (mode === 'how' ? '知道了，收起' : '收起') + '</span></div>';
       }
     }
-    Object.keys(d.inputs).forEach((k, i) => {
+    if (!bm) Object.keys(d.inputs).forEach((k, i) => {
       h += '<i class="port in" data-id="' + e.id + '" data-port="' + k + '" title="' + K.esc(d.inputs[k].label) + '" style="left:0;top:' + (PORT_Y0 + i * PORT_DY) + 'px"></i>';
       h += '<span class="pl" style="left:' + L.PORT_LABEL_X + 'px;top:' + (PORT_Y0 + i * PORT_DY) + 'px">' + K.esc(U.shortLabel(d.inputs[k].label)) + '</span>';
     });
-    const benchOnly = !!(d.bench && S.problem && (S.problem.shelf || []).length && S.problem.shelf.every((t) => U.types[t] && U.types[t].bench) && !S.scene.links.some((l) => l.from === e.id));
     const recOff = !(U.Recorder && U.Recorder.on(e.props));   // 记录仪的输出口（排在最后）只在开了记录仪时画
-    if (!benchOnly) UI.outOrder(e.type, d).forEach((k, i) => {
+    if (!bm) UI.outOrder(e.type, d).forEach((k, i) => {
       if (d.outputs[k].rec && recOff) return;
       h += '<i class="port out" data-id="' + e.id + '" data-port="' + k + '"' + ' title="' + K.esc(d.outputs[k].label) + '"' + ' style="left:' + g.w + 'px;top:' + (PORT_Y0 + i * PORT_DY) + 'px;background:' + U.kindColor(d.outputs[k].kind) + '"></i>';
       if (!SG.isWsDef(e.type) && !d.compactPorts) h += '<span class="pl" style="right:' + L.PORT_LABEL_X + 'px;top:' + (PORT_Y0 + i * PORT_DY) + 'px">' + K.esc(U.shortLabel(d.outputs[k].label)) + '</span>';   // 工作区的步数标在标题栏里，这里不再写（会和画布里的把手叠在一起）

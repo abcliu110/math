@@ -3414,5 +3414,49 @@ console.log('通用记录仪（js/core/recorder.js）');
     set(s, id, 'P', 24); eq(out(s, id, 'pts'), '0', '篱笆改成 24 米：另一组'); set(s, id, 'P', 20); eq(out(s, id, 'pts'), '3', '改回 20 米：3 个点还在');
   });
 }
+console.log('操作台模式（U.benchOf / U.benchModeOf）');
+{
+  const P = U.problems.find((p) => p.id === 'gr-gauss-n'), prob = { problem: P, mode: 'practice' };
+  t('单台操作台的题 → 操作台模式，返回那台操作台；练习、考试都算', () => {
+    for (const id of ['gr-gauss-n', 'gr-fence-20', 'balance-12']) {
+      const p = U.problems.find((x) => x.id === id), s = p.build(), bid = U.benchOf(s);
+      truthy(bid && U.types[s.entities[bid].type].bench, id + ' 应有一台操作台');
+      eq(U.benchModeOf(s, { problem: p, mode: 'practice' }), bid, id + ' 练习');
+      eq(U.benchModeOf(s, { problem: p, mode: 'exam' }), bid, id + ' 考试');
+    }
+  });
+  t('所有台面上只有一台操作台、没有连线的题都进操作台模式', () => {
+    let n = 0;
+    for (const p of U.problems) { const s = p.build(), es = Object.values(s.entities).filter((e) => !e.parent); if (es.length === 1 && !s.links.length && U.types[es[0].type].bench) { n++; eq(U.benchModeOf(s, { problem: p, mode: 'practice' }), es[0].id, p.id); } }
+    truthy(n > 100, '应有一百多道操作台的题，实际 ' + n);
+  });
+  t('多台器材、有连线、不是操作台 → 不是操作台模式', () => {
+    const s = P.build(); const b = U.benchOf(s);
+    const two = JSON.parse(JSON.stringify(s)); W.add(two, 'num', 0, 0, { n: 3 });
+    eq(U.benchModeOf(two, prob), null, '再放一台器材');
+    const lk = W.blank(); const a = W.add(lk, 'num', 0, 0, { n: 3 }), c = W.add(lk, 'op', 0, 0, { op: 0 }); lk.links.push({ id: 'l1', from: a, fromPort: 'v', to: c, toPort: 'a' });
+    eq(U.benchModeOf(lk, prob), null, '两台器材有连线');
+    const one = JSON.parse(JSON.stringify(s)); one.links.push({ id: 'l9', from: b, fromPort: 'x', to: b, toPort: 'y' });
+    eq(U.benchModeOf(one, prob), null, '一台但有连线');
+    const nb = W.blank(); W.add(nb, 'num', 0, 0, { n: 3 });
+    eq(U.benchModeOf(nb, prob), null, '只有一台，但不是操作台');
+    eq(U.benchModeOf(W.blank(), prob), null, '空台面');
+  });
+  t('自由探究、没在做题、点了“显示口” → 不是操作台模式', () => {
+    const s = P.build();
+    eq(U.benchModeOf(s, { problem: P, mode: 'free' }), null, '自由探究');
+    eq(U.benchModeOf(s, { problem: null, mode: 'practice' }), null, '没在做题');
+    eq(U.benchModeOf(s, { problem: P, mode: 'practice', showPorts: true }), null, '显示口');
+    eq(U.benchModeOf(s), null, '不给参数');
+  });
+  t('操作台模式只是不画口：卡片按台面算（换一换 19 个口不再撑高卡片），输出照常算', () => {
+    const d = U.types.swapbench, e = { type: 'swapbench', props: U.defaultProps(d) }, a = d.size(e), b = d.size(e, { bench: true });
+    truthy(b[1] < a[1] && b[0] <= a[0], '换一换：操作台模式卡片更矮 ' + a + ' → ' + b);
+    const g = U.types.gaussbench, ge = { type: 'gaussbench', props: U.defaultProps(g) };
+    truthy(g.size(ge, { bench: true })[0] <= g.size(ge)[0], '高斯：不更宽');
+    const s = P.build(), id = U.benchOf(s), D = W.evaluate(s);
+    truthy(Object.keys(D[id].out).length > 0, '输出照常算（S.D[id].out 有值）');
+  });
+}
 console.log('\n' + pass + ' 通过，' + fail + ' 失败');
 process.exit(fail ? 1 : 0);

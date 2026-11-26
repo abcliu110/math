@@ -228,13 +228,13 @@
     };
     def.draw = function (c) {
       const st = state(def, B, c.props, true); if (!st) return B.draw(c);
-      const H0 = B.size(c.ent || { props: c.props })[1] - HD, W0 = Math.max(c.w || 0, B.size(c.ent || { props: c.props })[0], MINW);
+      const H0 = B.size(c.ent || { props: c.props }, c.bench)[1] - HD, W0 = Math.max(c.w || 0, B.size(c.ent || { props: c.props }, c.bench)[0], MINW);
       let s = B.draw(Object.assign({}, c, { rec: st, recHidden: st.hidden && hideSelf }));
-      if (st.hidden && !hideSelf) s += cover(Math.min(W0, B.size(c.ent || { props: c.props })[0]), H0, st);
+      if (st.hidden && !hideSelf) s += cover(Math.min(W0, B.size(c.ent || { props: c.props }, c.bench)[0]), H0, st);
       return s + K.line(14, H0 + 7, W0 - 14, H0 + 7, { w: 1, stroke: '#d5dce8' }) + panel(def, st, c.props, W0, H0 + 14);   // 一条细线隔开台面和记录仪
     };
-    def.size = function (e) {
-      const sz = B.size(e), p = (e && e.props) || {}, cfg = cfgOf(def, p.rcfg);
+    def.size = function (e, opt) {
+      const sz = B.size(e, opt), p = (e && e.props) || {}, cfg = cfgOf(def, p.rcfg);
       return cfg ? [Math.max(sz[0], MINW), sz[1] + panelH(cfg, p)] : sz;
     };
     if (B.grips) def.grips = function (c) { const st = state(def, B, c.props, false); if (st && st.hidden && !hideSelf) return []; return B.grips(st ? Object.assign({}, c, { rec: st, recHidden: st.hidden }) : c); };
