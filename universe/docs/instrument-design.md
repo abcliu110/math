@@ -655,3 +655,15 @@ views: { area: {...}, expr: {...}, table: {...} }
 - 一处细小的行为变化：旋转转到超出坐标范围时，画面停在上一个能用的角度；以前松手什么都不记（图形跳回去），现在记下画面上看到的那个角度。
 - **删死代码**：写了脚本按加载顺序比 id，题目没有同一个 id 定义两次的；zz-benches.js 是按 id 改字段（器材架、开场、里程碑、目标、陷阱）。被删器材（旧数轴、旧分数条）的 4 道题：`g1-position-numline-trap`（content-g1.js）、`g3-direction-east-west-core`、`g3-direction-back-trap`（content-g3.js）、`frac-compare`（more.js），删掉原文件里被盖掉的这些字段（编号、标题、年级、知识点、道理还在原处），frac-compare 的 ref（旧做法的器材指纹，含已删除的 fracbar）一起删，以后在分数条操作台上做这道题不会每次都被当成“新做法”；它们在 tests/solutions.js、solutions-g1.js、solutions-g3.js 里的旧参考解（用的是已删除的 numline、fracbar，按 id 被 solutions-zz-benches.js 盖掉）也删了。index.html 和 tools 里没有因此变空的东西。
 - 没做：其余 279 道搬到操作台的题，原文件里也留着被盖掉的旧字段（不少还写着已删除的器材），旧参考解也还在（共 272 条被 solutions-zz-benches.js 盖掉）；tests/ui-arith.js、ui-digit*.js 用 U.benchOriginal 拿其中两道搬之前的样子当旧工作台的样板，所以不能一刀切，要逐道看。
+
+
+### 2026-11-26 通用记录仪：任何操作台写一段配置就能开“记下来”
+
+- 设计见 docs/knob-graph-and-gallery.md 第三节。代码在新文件 `js/core/recorder.js`（index.html、tests/run.js 和 tools 里的加载清单都接在 kit.js 后面）。
+- 做法是包装器：接在 `U.define` 后面，每台 `bench: true`、用 `compute` 算、不撞名的操作台注册时自动加上 8 个藏着的属性（rc 开头）、6 个输出口（pts gok gtry all q1 q2，和手写的四台同名，声明 `rec: true`）、画法、尺寸、把手、标题栏读数和 onSet。题目在 build 里写 `U.Recorder.props({ knob, out, keep, range, guess, asks, … })`；没写就和以前一模一样。现在包上了 48 台，没包的 14 台都是撞名（`U.Recorder.why` 说原因）。
+- 先猜：通用的做法是整块台面盖上“先猜一猜”，只露出旋钮和图；猜那一下就判对错。操作台可以声明 `recHide: true`，自己藏（篱笆围地只把面积写成“？”）。
+- 界面只改三处：开了记录仪才画 rec 的输出口（`stage-cards.js`），rec 的口排在最后（`howto.js` 的 outOrder），算卡片最小高度时不数 rec 的口（`registry.js` 的 fitCard）。`kit.js`：追问可以写进别的属性名（rcpick），竖轴刻度跨度大时稀一点（60 以内不变）。
+- 新题（problems/graphs.js）：gr-gauss-n（高斯求和：个数 → 和，往上弯的线，4 年级）、gr-circle-c（圆：半径 → 周长，过 0 点的直线，6 年级）、gr-travel-gap（行程：时间 → 相距，V 字，4 年级）、gr-week-n（日历：过几天 → 星期几，锯齿，3 年级）。行程那道没有用“时间 → 路程”：那也是过 0 点的直线，和圆重了，换成相距，正好有一个 V。
+- 篱笆围地换成通用版（gr-fence-20），面积推导台删掉自己那一套；tests/ui-graph-fence.js 没改照样全过。换一换、分一分没换：换一换的点来自研究本，还有“凑不出来”的 ✕；分一分一张图两组点、平均分只锁按钮不盖台面，而且两种分法共用属性。硬换效果会变差，原因写在设计稿里。
+- 测试：tests/run.js 加 8 条（包了哪些、lint、配置检查、记点、先猜锁定、分格猜、全部试一遍和换一组、存档读回和重放、recHide）；新的真实鼠标测试 tests/ui-recorder.js 在高斯求和台上走完一遍（倒过来写、对齐相加才能记，先猜盖住台面点不到，换“第一个数”只显示这一组），已登记到 tools/verify.js。
+- 这一版的边界：一个旋钮、一个输出，横轴只记整数；范围写死在题目里；有状态的操作台不包。篱笆围地的 onSet 收到的是已经改好的属性，“改一共几米清空‘记下这一种’”这条其实一直没生效（以前就这样，这次没动）。

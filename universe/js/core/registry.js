@@ -62,7 +62,7 @@
   };
   U.CARD = Object.freeze({ PORT_Y0: 40, PORT_DY: 22, PAD_BOTTOM: 16, LABEL_X: 12, LABEL_CHAR: 12, LABEL_MAXCH: 8, BODY_MIN_W: 64 });
   U.fitCard = (def, sz) => {
-    const C = U.CARD, ins = Object.keys(def.inputs || {}), outs = Object.keys(def.outputs || {});
+    const C = U.CARD, ins = Object.keys(def.inputs || {}), outs = Object.keys(def.outputs || {}).filter((k) => !def.outputs[k].rec);   // 记录仪的输出口（rec）只在开了记录仪时画，不撑大卡片
     const chars = (o, ks) => Math.min(C.LABEL_MAXCH, Math.max(0, ...ks.map((k) => String(o[k].label || k).length)));
     const side = (o, ks) => (ks.length ? C.LABEL_X + chars(o, ks) * C.LABEL_CHAR : 0);
     const n = Math.max(ins.length, outs.length);
@@ -182,6 +182,7 @@
     if (def.numberSource !== undefined && typeof def.numberSource !== 'boolean') err('numberSource 要是 true / false');
     if (def.hidden !== undefined && typeof def.hidden !== 'boolean') err('hidden 要是 true / false（不列在器材架上）');
     // 先猜后看（docs/new-instruments.md 3.2）：guess = { props:[填猜测的属性], ports:[揭开前遮住的输出口], answered(props) → 填了没有 }。只遮界面，内核照常算
+    if (def.recHide !== undefined && typeof def.recHide !== 'boolean') err('recHide 要是 true / false（开了记录仪先猜时，台面自己藏答案，不盖“先猜一猜”）');
     if (def.onSet !== undefined && typeof def.onSet !== 'function') err('onSet 要是函数 (属性, 改的属性名, 新值) → 要一起改的别的属性');
     if (def.guess !== undefined) {
       const g = def.guess;

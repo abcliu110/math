@@ -113,7 +113,8 @@
       return s;
     },
     asksH: (asks) => asks.reduce((y, a) => y + 24 + (askRow(a) ? 32 : a.opts.length * 30) + 10, 0),
-    drawAsks(y, asks, canAsk) {
+    // key：选了第几个写进哪个属性（默认 pick；记录仪用 rcpick，免得和操作台自己的追问撞名）
+    drawAsks(y, asks, canAsk, key) {
       let s = '';
       asks.forEach((a, qi) => {
         const qx = 20 + tw('❓ ' + a.q) + 16;
@@ -121,7 +122,7 @@
         if (!canAsk) s += kit.text(qx, y + 16, '（先做一做，再回答）', { size: 12, anchor: 'start', fill: '#8a93a3' });
         else if (a.pick) s += kit.text(qx, y + 16, a.pick === a.right ? '✓ 对' : '再想想', { size: 12, weight: 700, anchor: 'start', fill: a.pick === a.right ? '#2f7d3a' : '#c0392b' });
         y += 24;
-        const row = askRow(a), pk = (o) => { const P = asks.map((b) => b.pick); P[qi] = o; return { pick: P.join(',') }; };
+        const row = askRow(a), pk = (o) => { const P = asks.map((b) => b.pick); P[qi] = o; return { [key || 'pick']: P.join(',') }; };
         let x = 36;
         a.opts.forEach((o, oi) => {
           const w = row ? tw(o) + 24 : 560;
@@ -132,6 +133,8 @@
       });
       return s;
     },
+    // 竖轴刻度的间隔：跨度大时刻度稀一点（60 以内和以前一样）
+    tick: (span) => (span <= 12 ? 1 : span <= 24 ? 2 : span <= 60 ? 5 : span <= 120 ? 10 : span <= 240 ? 20 : span <= 600 ? 50 : 100),
     // “记下来”的图（docs/knob-graph-and-gallery.md 第一节）：一个框、标题、格子、刻度和两条轴。
     //   o：{ fx, fy, fw, fh 框的位置和大小, xa, xb 横轴范围, ya, yb 竖轴范围, title, bottom 框底下留多高（默认 42） }
     //   返回 { s, X(x), Y(y), X0, X1, Y0, Y1, xs, ys }，各台自己在上面画点。
@@ -141,7 +144,7 @@
       const X = (x) => X0 + (x - o.xa) * xs, Y = (y) => Y1 - (y - o.ya) * ys;
       let s = kit.rect(o.fx, o.fy, o.fw, o.fh, { fill: '#fbfcfe', stroke: '#c9d3e3', r: 8, w: 1 });
       s += kit.text(o.fx + 10, o.fy + 18, o.title || '', { size: 12, weight: 700, anchor: 'start' });
-      const tx = xspan <= 24 ? 1 : xspan <= 48 ? 2 : xspan <= 120 ? 5 : 10, ty = yspan <= 12 ? 1 : yspan <= 24 ? 2 : 5;
+      const tx = xspan <= 24 ? 1 : xspan <= 48 ? 2 : xspan <= 120 ? 5 : xspan <= 240 ? 10 : 20, ty = kit.research.tick(yspan);
       for (let x = Math.ceil(o.xa / tx) * tx; x <= o.xb; x += tx) s += kit.line(X(x), Y0, X(x), Y1, { w: 0.6, stroke: '#e1e6ef' }) + kit.text(X(x), Y1 + 13, String(x).replace('-', '−'), { size: 9, fill: '#5f6773' });
       for (let y = Math.ceil(o.ya / ty) * ty; y <= o.yb; y += ty) s += kit.line(X0, Y(y), X1, Y(y), { w: 0.6, stroke: '#e1e6ef' }) + kit.text(X0 - 8, Y(y) + 3, String(y), { size: 9, anchor: 'end', fill: '#5f6773' });
       s += kit.line(X0, Y1, X1, Y1, { w: 1.2 }) + kit.line(X0, Y0, X0, Y1, { w: 1.2 });

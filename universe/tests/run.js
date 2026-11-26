@@ -3,7 +3,7 @@
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const root = path.join(__dirname, '..');
 const fsx = require('fs'), pk = (d) => fsx.readdirSync(path.join(root, d)).filter((f) => f.endsWith('.js')).sort().map((f) => d + '/' + f);
-const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/ratio.js', 'js/core/form.js', 'js/core/predict.js', 'js/core/eqn.js', 'js/core/seq.js', 'js/core/rulelib.js', 'js/core/game.js', 'js/core/prooflib.js', 'js/core/table.js', 'js/core/figure.js', 'js/core/geo.js', 'js/core/convert.js', 'js/core/registry.js', 'js/core/rules.js', 'js/core/rules-exec.js', 'js/core/workbench.js', 'js/core/digits.js', 'js/core/databench.js', 'js/core/deduce.js', 'js/core/geo-rules.js', 'js/core/world.js', 'js/core/measure.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/word.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/curriculum.js', 'js/core/coverage.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
+const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/ratio.js', 'js/core/form.js', 'js/core/predict.js', 'js/core/eqn.js', 'js/core/seq.js', 'js/core/rulelib.js', 'js/core/game.js', 'js/core/prooflib.js', 'js/core/table.js', 'js/core/figure.js', 'js/core/geo.js', 'js/core/convert.js', 'js/core/registry.js', 'js/core/rules.js', 'js/core/rules-exec.js', 'js/core/workbench.js', 'js/core/digits.js', 'js/core/databench.js', 'js/core/deduce.js', 'js/core/geo-rules.js', 'js/core/world.js', 'js/core/measure.js', 'js/core/kit.js', 'js/core/recorder.js', 'js/core/judge.js', 'js/core/word.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/curriculum.js', 'js/core/coverage.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
 const ctx = vm.createContext({ console, TextEncoder, TextDecoder, btoa, atob });
 ctx.globalThis = ctx;
 for (const f of files) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f });
@@ -2998,11 +2998,12 @@ console.log('方程与不等式（packs/equation.js）：一种“方程”、�
     const C = U.CARD;
     for (const [n, d] of Object.entries(U.types)) {
       if (d.workspaceRole !== 'none' || d.sizeFixed) continue;
-      const sz = d.size({ props: U.defaultProps(d) }), np = Math.max(Object.keys(d.inputs).length, Object.keys(d.outputs).length);
+      const outs = Object.fromEntries(Object.entries(d.outputs).filter(([, o]) => !o.rec));   // 记录仪的口只在开了记录仪时画（那时卡片高得多）
+      const sz = d.size({ props: U.defaultProps(d) }), np = Math.max(Object.keys(d.inputs).length, Object.keys(outs).length);
       if (np) truthy(sz[1] >= C.PORT_Y0 + (np - 1) * C.PORT_DY + C.PAD_BOTTOM, n + ' 卡片太矮：' + sz[1] + '，有 ' + np + ' 个口');
       const lab = (o) => Math.min(C.LABEL_MAXCH, Math.max(0, ...Object.values(o).map((p) => String(p.label).length)));
       const side = (o) => (Object.keys(o).length ? C.LABEL_X + lab(o) * C.LABEL_CHAR : 0);
-      if (np) truthy(sz[0] >= side(d.inputs) + (d.compactPorts ? 0 : side(d.outputs)) + C.BODY_MIN_W, n + ' 卡片太窄：' + sz[0]);
+      if (np) truthy(sz[0] >= side(d.inputs) + (d.compactPorts ? 0 : side(outs)) + C.BODY_MIN_W, n + ' 卡片太窄：' + sz[0]);
     }
   });
 }
@@ -3301,10 +3302,117 @@ t('两架天平：随机做几百步，每一步之后两架天平在真实重�
   }
   truthy(done >= 100, '实际做了 ' + done + ' 步');
 });
-t('篱笆围地：改一共几米，记下的长清空；改成一样的数、改别的属性都不清空', () => {
-  const on = U.types.areabench.onSet, p = { shape: 3, P: 20, w: 3, tried: '2,3,4', graph: true };
-  eq(on(p, 'P', 24), { tried: '', guess: -1, peek: false, all: false }, '20 改成 24：清空');
+t('篱笆围地：改一共几米，“记下这一种”的列表清空；改成一样的数、改别的属性都不清空', () => {
+  const on = U.types.areabench.onSet, p = { shape: 3, P: 20, w: 3, tried: '2,3,4' };
+  eq(on(p, 'P', 24), { tried: '' }, '20 改成 24：清空');
   eq(on(p, 'P', 20), null, '还是 20：不清空'); eq(on(p, 'w', 5), null, '改长：不清空');
 });
+console.log('通用记录仪（js/core/recorder.js）');
+{
+  const R = U.Recorder;
+  // 按画出来的按钮点：找 <title> 是 tip 的 data-pick-set，把里面的属性按顺序一个一个 set（和界面的 params 意图一样）
+  const drawOf = (s, id) => { const e = s.entities[id], D = W.evaluate(s); return U.types[e.type].draw({ ent: e, props: D[id].props || e.props, d: D[id], out: D[id].out, w: 700, h: 900, t: 0, n: 0, kids: () => [] }); };
+  const patchOf = (s, id, tip) => { for (const m of drawOf(s, id).matchAll(/<g data-pick-set="([^"]+)"[^>]*><title>([^<]*)<\/title>/g)) if (m[2] === tip) return JSON.parse(decodeURIComponent(m[1])); return null; };
+  const press = (s, id, tip, log) => { const o = patchOf(s, id, tip); if (!o) throw new Error('点不到：' + tip); for (const k of Object.keys(o)) { const r = W.act(s, { t: 'set', id, k, v: o[k] }); if (!r.ok) throw new Error(r.why); if (log) log.push([k, o[k]]); } };
+  const set = (s, id, k, v, log) => { const r = W.act(s, { t: 'set', id, k, v }); if (!r.ok) throw new Error(r.why); if (log) log.push([k, v]); };
+  const out = (s, id, p) => { const v = W.evaluate(s)[id].out[p]; return v ? Q.show(v.data) : null; };
+  const open = (pid) => { const s = U.problemById(pid).build(); return [s, Object.keys(s.entities)[0]]; };
+  // 高斯求和：倒过来写、对齐相加，再记下来
+  const doOne = (s, id, log) => { if (!s.entities[id].props.flip) set(s, id, 'flip', true, log); set(s, id, 'pair', true, log); press(s, id, '把这个个数记到图上', log); };
+  t('通用记录仪：能开的操作台都包上了；撞名的（换一换、分一分）不包；包上的过 lint，没开时和以前一样', () => {
+    for (const ty of ['gaussbench', 'circlebench', 'travelbench', 'calbench', 'areabench']) truthy(R.wrapped(ty), ty + ' 应包上');
+    for (const ty of ['swapbench', 'groupbench']) { truthy(!R.wrapped(ty), ty + ' 不应包上'); truthy(/撞名/.test(R.why(ty)), ty + ' 的原因'); }
+    for (const [ty, d] of Object.entries(U.types)) if (R.wrapped(ty)) {
+      eq(U.lintType(d).errors, [], ty + ' 的 lint');
+      for (const k of R.OUTS) truthy(d.outputs[k].rec && d.outputs[k].kind === 'num' && d.outputs[k].dim === null, ty + ' 的输出口 ' + k);
+      for (const k of R.PROPS) truthy(d.props[k].hidden && d.props[k].write, ty + ' 的属性 ' + k + ' 藏着、能写');
+      const s = W.blank(), id = W.add(s, ty, 0, 0), o = W.evaluate(s)[id].out;
+      truthy(R.OUTS.every((k) => !o[k]), ty + ' 没开记录仪：不出记录仪的输出');
+      truthy(!/data-rec-knob/.test(drawOf(s, id)), ty + ' 没开记录仪：不画“记下来”');
+    }
+  });
+  t('通用记录仪：配置不对的说清楚；新题的配置都合法；开了以后 compute 还是纯函数', () => {
+    eq(R.check('gaussbench', { knob: 'n', out: 'total', range: [2, 12] }), []);
+    truthy(/不认识的配置/.test(R.check('gaussbench', { knob: 'n', out: 'total', range: [2, 12], gues: 1 }).join()), '拼错的键');
+    truthy(/knob/.test(R.check('gaussbench', { knob: 'flip', out: 'total', range: [2, 12] }).join()), '旋钮要是整数属性');
+    truthy(/out/.test(R.check('gaussbench', { knob: 'n', out: 'nope', range: [2, 12] }).join()), '输出口要有');
+    truthy(/range/.test(R.check('gaussbench', { knob: 'n', out: 'total', range: [2, 200] }).join()), '范围超出旋钮');
+    truthy(/asks/.test(R.check('gaussbench', { knob: 'n', out: 'total', range: [2, 12], asks: ['题|a|b'] }).join()), '追问要有一个 *');
+    truthy(/开不了/.test(R.check('swapbench', { knob: 'target', out: 'b', range: [16, 32] }).join()), '撞名的台开不了');
+    const deepFreeze = (o) => { if (o && typeof o === 'object' && !Object.isFrozen(o)) { Object.freeze(o); for (const k of Object.keys(o)) deepFreeze(o[k]); } return o; };
+    for (const p of U.problems) {
+      const s = p.build();
+      for (const e of Object.values(s.entities)) if (e.props && e.props.rcfg) {
+        eq(R.check(e.type, JSON.parse(e.props.rcfg)), [], p.id + ' 的配置');
+        const ctx = deepFreeze({ ent: JSON.parse(JSON.stringify(e)), props: Object.assign({}, e.props), inp: {}, t: 0, n: 0, seed: 1 });
+        U.types[e.type].compute(Object.assign({}, ctx, { say() {}, kids: () => [] }));
+      }
+    }
+  });
+  t('通用记录仪：记点（要在台面上做出来才能记；同一个不能记两次）', () => {
+    const [s, id] = open('gr-gauss-n');
+    eq(patchOf(s, id, '把这个个数记到图上'), null, '没算出和：记下来点不了');
+    doOne(s, id);
+    eq(out(s, id, 'pts'), '1'); eq(s.entities[id].props.rclog, '4,10,1/1');
+    eq(patchOf(s, id, '把这个个数记到图上'), null, '记过了：点不了');
+    press(s, id, '个数多 1'); eq([s.entities[id].props.n, s.entities[id].props.pair], [5, false], '拧旋钮：台面复位（reset）');
+    doOne(s, id); press(s, id, '个数多 1'); doOne(s, id);
+    eq(out(s, id, 'pts'), '3'); eq(R.state('gaussbench', s.entities[id].props).group.map((a) => a.y), [10, 15, 21]);
+  });
+  t('通用记录仪：先猜锁定（盖住台面、不给读数、不能记）；猜了揭开，当场判对错；不猜直接看不算', () => {
+    const [s, id] = open('gr-gauss-n');
+    doOne(s, id); press(s, id, '个数多 1'); doOne(s, id); press(s, id, '个数多 1'); doOne(s, id); press(s, id, '个数多 1');
+    set(s, id, 'flip', true); set(s, id, 'pair', true);   // 台面上的和算好了，也读不到
+    const st = R.state('gaussbench', s.entities[id].props, true);
+    truthy(st.hidden && st.mode === 'values' && st.ans === 28, '个数 7：先猜');
+    eq(out(s, id, 'total'), null, '和这个口先不给'); eq(U.types.gaussbench.badge({ props: s.entities[id].props }), '', '标题栏也不写');
+    const svg = drawOf(s, id); truthy(/data-rec-cover/.test(svg) && /先猜一猜/.test(svg), '台面盖上了');
+    eq(patchOf(s, id, '把这个个数记到图上'), null, '先猜时记不了');
+    press(s, id, '猜和 28');
+    eq([out(s, id, 'gtry'), out(s, id, 'gok'), out(s, id, 'total')], ['1', '1', '28'], '猜和 28：猜对，揭开');
+    truthy(!/data-rec-cover/.test(drawOf(s, id)), '盖子揭开了');
+    press(s, id, '把这个个数记到图上'); press(s, id, '个数多 1');
+    press(s, id, '猜和 28'); eq([out(s, id, 'gtry'), out(s, id, 'gok')], ['2', '1'], '个数 8 猜 28：猜错（是 36）');
+    set(s, id, 'n', 9); truthy(R.state('gaussbench', s.entities[id].props).hidden, '换了个数：猜的清掉，又要先猜');
+    press(s, id, '不猜，直接看'); truthy(!R.state('gaussbench', s.entities[id].props).hidden, '不猜直接看：揭开'); eq(out(s, id, 'gtry'), '2', '不算猜');
+  });
+  t('通用记录仪：猜的格子太多时按间隔分格，落在最近的一格算对', () => {
+    const s = W.blank(), id = W.add(s, 'gaussbench', 0, 0, Object.assign({ a: 1, d: 1, n: 23, flip: true, pair: true, rclog: '20,210,1/1;21,231,1/1;22,253,1/1' }, R.props({ knob: 'n', out: 'total', keep: ['a', 'd'], range: [2, 30], names: ['个数', '和'], done: { flip: true, pair: true } })));
+    const st = R.state('gaussbench', s.entities[id].props, true);
+    truthy(st.hidden && st.mode === 'grid' && st.step === 50 && st.cells.length <= 16, '值有 29 种：按 50 一格（' + st.step + '）');
+    eq(st.ans, 276); eq(st.cells[st.ansIdx], 300, '276 落在 300 那一格');
+    press(s, id, '猜和 300'); eq([out(s, id, 'gtry'), out(s, id, 'gok')], ['1', '1'], '猜 300：算对');
+    truthy(/猜对了！（是 276，就在这一格）/.test(drawOf(s, id)), '说出真正的数');
+  });
+  t('通用记录仪：全部试一遍（5 个点以后才能点）；换 keep 里的属性只显示这一组的点，记录不丢', () => {
+    const [s, id] = open('gr-gauss-n');
+    for (let i = 0; i < 4; i++) { doOne(s, id); press(s, id, '个数多 1'); if (i >= 2) press(s, id, '不猜，直接看'); }
+    eq(patchOf(s, id, '每个个数都画上'), null, '4 个点：还不能全部试一遍');
+    doOne(s, id); press(s, id, '每个个数都画上');
+    eq(out(s, id, 'all'), '1'); eq((drawOf(s, id).match(/fill="#9cc3ee"/g) || []).length, 11, '个数 2 到 12 都画上');
+    set(s, id, 'a', 2); eq(out(s, id, 'pts'), '0', '第一个数改成 2：这一组没有点'); eq((drawOf(s, id).match(/data-rec-pt/g) || []).length, 0);
+    doOne(s, id); eq(out(s, id, 'pts'), '1', '这一组记一个'); eq(R.state('gaussbench', s.entities[id].props).log.length, 6, '两组一共 6 条');
+    set(s, id, 'a', 1); eq(out(s, id, 'pts'), '5', '改回 1：5 个点又回来了');
+  });
+  t('通用记录仪：存档读回、按同样的步骤重放，结果一样', () => {
+    const [s, id] = open('gr-travel-gap'), log = [];
+    press(s, id, '把这个时间记到图上', log); for (let k = 1; k <= 3; k++) { press(s, id, '时间多 1', log); if (k === 3) press(s, id, '猜相距 45', log); press(s, id, '把这个时间记到图上', log); }
+    press(s, id, '15 千米：两人的速度和', log);
+    const snap = (sc) => { const e = Object.values(sc.entities)[0], D = W.evaluate(sc)[e.id]; return U.JSON.stringify([e.props, D.out, drawOf(sc, e.id)]); };
+    eq([out(s, id, 'pts'), out(s, id, 'gok'), out(s, id, 'q1')], ['4', '1', '1']);
+    eq(snap(W.load(W.save(s))), snap(s), '存档读回');
+    const [s2, id2] = open('gr-travel-gap'); for (const [k, v] of log) set(s2, id2, k, v);
+    eq(snap(s2), snap(s), '重放');
+  });
+  t('通用记录仪：操作台自己藏（recHide）：篱笆围地先猜时不盖台面，面积写成“？”，把手还在', () => {
+    const [s, id] = open('gr-fence-20');
+    set(s, id, 'rclog', '2,16,20;3,21,20;4,24,20'); set(s, id, 'w', 6);
+    const svg = drawOf(s, id);
+    truthy(!/data-rec-cover/.test(svg) && /面积 = 6 × 4 = ？/.test(svg) && !/24 平方米/.test(svg), '不盖台面，面积写成“？”');
+    eq(out(s, id, 'area'), null, '面积这个口先不给');
+    const e = s.entities[id]; eq(U.types.areabench.grips({ ent: e, props: e.props }).length, 1, '拖长的把手还在');
+    set(s, id, 'P', 24); eq(out(s, id, 'pts'), '0', '篱笆改成 24 米：另一组'); set(s, id, 'P', 20); eq(out(s, id, 'pts'), '3', '改回 20 米：3 个点还在');
+  });
+}
 console.log('\n' + pass + ' 通过，' + fail + ' 失败');
 process.exit(fail ? 1 : 0);

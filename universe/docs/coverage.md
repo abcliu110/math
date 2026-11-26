@@ -1,12 +1,12 @@
 # 知识点覆盖报告
 
-> 由 `node tools/coverage.js` 生成，日期 2026-11-25。数据来自 `js/core/curriculum.js` 与 `problems/*.js`。
+> 由 `node tools/coverage.js` 生成，日期 2026-11-26。数据来自 `js/core/curriculum.js` 与 `problems/*.js`。
 
 ## 总览
 
 - 知识点：142 个（设计目标 142）
 - 有题的知识点：141 个（99%）
-- 题目：687 道；没有对应知识点的题：1 道
+- 题目：691 道；没有对应知识点的题：1 道
 - 没有器材的本质：无
 - 没有题的本质：无
 
@@ -14,12 +14,12 @@
 
 | 年级 | 知识点 | 有题 | 题目数 |
 |---|---|---|---|
-| 1 | 16 | 16（100%） | 55 |
+| 1 | 16 | 16（100%） | 56 |
 | 2 | 16 | 16（100%） | 58 |
-| 3 | 16 | 16（100%） | 101 |
-| 4 | 17 | 17（100%） | 114 |
+| 3 | 16 | 16（100%） | 102 |
+| 4 | 17 | 17（100%） | 116 |
 | 5 | 14 | 14（100%） | 122 |
-| 6 | 15 | 14（93%） | 73 |
+| 6 | 15 | 14（93%） | 74 |
 | 7 | 16 | 16（100%） | 78 |
 | 8 | 16 | 16（100%） | 76 |
 | 9 | 16 | 16（100%） | 40 |
@@ -43,7 +43,7 @@
 | 1.13 | 1 | 100以内数的认识 | 4 | 0 | 0 | 1 | blocksbench、num |
 | 1.14 | 1 | 认识人民币 | 4 | 1 | 0 | 1 | moneybench |
 | 1.15 | 1 | 100以内加减法（一） | 1 | 1 | 0 | 1 | blocksbench |
-| 1.16 | 1 | 找规律 | 11 | 0 | 0 | 1 | num、meter、conjbench、fmachine、gaussbench、guessrule、proofbench、seqbench、statebench |
+| 1.16 | 1 | 找规律 | 12 | 0 | 0 | 1 | num、meter、conjbench、fmachine、gaussbench、guessrule、proofbench、seqbench、statebench |
 | 2.1 | 2 | 长度单位、线段 | 2 | 1 | 0 | 1 | rulerbench |
 | 2.2 | 2 | 100以内加减法（二） | 9 | 1 | 0 | 1 | vertbench、estbench、blocksbench |
 | 2.3 | 2 | 进位加法、退位减法 | 6 | 1 | 0 | 1 | blocksbench、vertbench |
@@ -73,20 +73,20 @@
 | 3.15a | 3 | 复式统计表 | 2 | 2 | 0 | 1 | tablebench |
 | 3.11 | 3 | 两位数乘两位数 | 9 | 1 | 0 | 1 | areamodel、mulbench、estbench |
 | 3.12 | 3 | 面积 | 13 | 0 | 0 | 1 | areabench、areamodel、asn、curved、geoboard、circlebench、optimize、solidbench、turtle |
-| 3.13 | 3 | 年、月、日 | 4 | 1 | 0 | 1 | calbench |
+| 3.13 | 3 | 年、月、日 | 5 | 1 | 0 | 1 | calbench |
 | 3.14 | 3 | 小数的初步认识 | 3 | 1 | 0 | 1 | decbench、numlinebench、twoways |
 | 3.15b | 3 | 搭配（二） | 16 | 1 | 0 | 1 | combobench、areamodel、euler、treebench |
 | 4.1 | 4 | 大数的认识、近似数 | 5 | 0 | 0 | 1 | chancebench、num |
 | 4.2 | 4 | 公顷和平方千米 | 1 | 1 | 0 | 1 | ratiobench |
 | 4.3 | 4 | 角的度量 | 2 | 0 | 0 | 1 | anglebench |
-| 4.4 | 4 | 三位数乘两位数 | 10 | 1 | 0 | 1 | mulbench、travelbench |
+| 4.4 | 4 | 三位数乘两位数 | 11 | 1 | 0 | 1 | mulbench、travelbench |
 | 4.5 | 4 | 平行四边形和梯形 | 3 | 1 | 0 | 1 | areabench、cubes |
 | 4.6 | 4 | 除数是两位数的除法 | 1 | 1 | 0 | 1 | vertbench |
 | 4.7 | 4 | 条形统计图 | 1 | 1 | 0 | 1 | statbench、ratiobench |
 | 4.8 | 4 | 优化 | 3 | 1 | 0 | 1 | optbench |
 | 4.9 | 4 | 四则运算 | 10 | 1 | 0 | 1 | asn、termsbench、findbug、turtle |
 | 4.17 | 4 | 观察物体（二） | 1 | 1 | 0 | 1 | solidbench |
-| 4.10 | 4 | 运算定律 | 19 | 1 | 0 | 1 | termsbench、fastbench、gaussbench、meanbench |
+| 4.10 | 4 | 运算定律 | 20 | 1 | 0 | 1 | termsbench、fastbench、gaussbench、meanbench |
 | 4.11 | 4 | 小数的意义和性质 | 1 | 1 | 0 | 1 | decbench |
 | 4.12 | 4 | 三角形 | 6 | 0 | 0 | 1 | tribench、curved、areabench、guessrule |
 | 4.13 | 4 | 小数的加法和减法 | 2 | 1 | 0 | 1 | decbench |
@@ -111,7 +111,7 @@
 | 6.3 | 6 | 位置与方向（二） | 2 | 1 | 0 | 1 | gridbench、dirbench |
 | 6.2 | 6 | 分数除法、倒数 | 7 | 1 | 0 | 1 | fracbench、findbug、jobbench |
 | 6.4 | 6 | 比 | 5 | 0 | 0 | 1 | ratiobench、costplan、tapebench |
-| 6.5 | 6 | 圆 | 4 | 1 | 0 | 1 | approach、circlebench、dissect、estbench |
+| 6.5 | 6 | 圆 | 5 | 1 | 0 | 1 | approach、circlebench、dissect、estbench |
 | 6.6 | 6 | 百分数（一） | 2 | 1 | 0 | 1 | ratiobench |
 | 6.7a | 6 | 扇形统计图 | 1 | 1 | 0 | 1 | ratiobench |
 | 6.7b | 6 | 数与形 | 3 | 1 | 2 | 4 | conjbench、seqbench、proofbench、ringbench |
@@ -176,14 +176,14 @@
 | 本质 | 题目数 | 器材数 |
 |---|---|---|
 | E1 | 77 | 28 |
-| E2 | 298 | 58 |
-| E3 | 153 | 44 |
+| E2 | 299 | 58 |
+| E3 | 154 | 44 |
 | E4 | 141 | 32 |
 | E5 | 146 | 55 |
-| E6 | 59 | 24 |
+| E6 | 60 | 24 |
 | E7 | 174 | 34 |
-| E8 | 66 | 23 |
-| E9 | 72 | 17 |
+| E8 | 67 | 23 |
+| E9 | 76 | 17 |
 | E10 | 10 | 4 |
 | E11 | 11 | 3 |
 | E12 | 13 | 6 |

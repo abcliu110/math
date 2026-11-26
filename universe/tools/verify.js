@@ -155,6 +155,7 @@ async function checkDist() {
   if (!runScript('tests/ui-graph-fence.js', 'tests/ui-graph-fence.js', pwEnv)) bail();   // 记下来：篱笆围地，长 → 面积（拱），先猜面积再看
   if (!runScript('tests/ui-graph-box.js', 'tests/ui-graph-box.js', pwEnv)) bail();   // 记下来：分一分台平均分，总数 → 最多的盒子（抽屉原理的台阶），先猜再放
   if (!runScript('tests/ui-graph-div.js', 'tests/ui-graph-div.js', pwEnv)) bail();   // 记下来：分一分台，总数 → 商（台阶）和余数（锯齿），先猜余数再看
+  if (!runScript('tests/ui-recorder.js', 'tests/ui-recorder.js', pwEnv)) bail();   // 通用记录仪：高斯求和台（自己没有图）开了“记下来”，先猜盖住台面、全部试一遍、换一组只显示这一组
   if (!runScript('tests/ui-areamodel.js', 'tests/ui-areamodel.js', pwEnv)) bail();   // 面积模型（样板操作台）和器材把手：真实鼠标拖边、切、改分数
   if (!runScript('tests/ui-shapes.js', 'tests/ui-shapes.js', pwEnv)) bail();         // 常见图形、顶点编辑、直接拖出辅助线（真实鼠标和键盘）；含画布横纵比例回归
   if (!runScript('tests/ui-export.js', 'tests/ui-export.js', pwEnv)) bail();         // 2.12/V10：导出图片（真实鼠标点菜单，台面和专注工作区各一次下载，.png、大小 > 0）
