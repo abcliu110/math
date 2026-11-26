@@ -6,22 +6,11 @@
 
   P.push({
     id: 'frac-compare', essence: ['E3'], title: '1/2 和 3/5，谁大？', grade: 4, domain: '分数', points: ['6.4'], topics: ['异分母比大小', '分数条'],
-    alias: ['比大小'], hook: '两个分数，分母不一样，眼睛看不出来。用分数条把它们“量”出来，再让比较器下结论。',
-    shelf: ['num', 'fracbar', 'compare', 'op', 'meter'],
-    build: mk({ ents: [
-      { type: 'num', x: 60, y: 70, role: 'a', props: { n: 1, d: 2 } },
-      { type: 'num', x: 60, y: 250, role: 'b', props: { n: 3, d: 5 } },
-    ] }),
+    alias: ['比大小'],
+    // 器材架、开场、里程碑、提示和陷阱在 zz-benches.js（这道题已搬到分数条操作台；原来用的旧分数条已删除）
     predict: { q: '先猜：哪个大？', options: [{ v: 'a', label: '1/2 大' }, { v: 'b', label: '3/5 大' }, { v: 'eq', label: '一样大' }],
       reveal: () => ({ v: 'b', label: '3/5 大' }) },
-    milestones: [
-      { id: 'bars', say: '给两个分数各配一条分数条', score: 3, glow: ['fracbar'], when: (w) => w.ofType('fracbar').filter((e) => w.sources(e).length).length >= 2, hints: ['看得见，才比得出。', '用「分数条」，把分数接进去。', '数字 → 分数条，两个都要；把“平均分成几份”调成 10 更容易对齐。'] },
-      { id: 'cmp', say: '用比较器问：1/2 < 3/5 吗？', score: 3, glow: ['compare'], when: (w) => w.some('compare', (e) => w.sources(e).length >= 2), hints: ['光看图还不够，让器材给个结论。', '「比较」器材，设成 <。', '1/2 接甲口，3/5 接乙口，关系选 <。'] },
-      { id: 'yes', say: '比较器说“成立”', score: 4, when: { all: [{ type: 'compare', port: 'ok', op: '=', value: true }, { count: { type: 'compare', ge: 1 } }] }, hints: ['结论要“成立”。', '甲是小的那个。', '甲=1/2，乙=3/5，关系 <。'] },
-    ],
-    traps: [{ id: 'big-den', when: { type: 'compare', port: 'ok', op: '=', value: false }, wrong: '“分母 5 比 2 大，所以 3/5 小”？分母越大，每一份越小，但 3/5 有 3 份。再看看分数条。' }],
     why: '通分后 1/2=5/10，3/5=6/10，同样大的份，6 份比 5 份多。',
-    ref: ['compare,fracbar,fracbar,num,num|4'],
   });
 
   P.push({

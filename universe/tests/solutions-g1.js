@@ -3,7 +3,6 @@
 'use strict';
 module.exports = {
   'g1-position-compare-core'(h) { const c = h.add('compare', { op: 2 }); h.link(h.role('a'), c, 'a'); h.link(h.role('b'), c, 'b'); },
-  'g1-position-numline-trap'(h) { const nl = h.add('numline', { lo: 0, hi: 5, tick: 1 }); h.link(h.role('p3'), nl, 'v'); h.link(h.role('p7'), nl, 'v'); h.set(nl, 'hi', 10); },
   'g1-split-merge-core'(h) { const o = h.add('op'); h.link(h.role('x'), o, 'a'); h.link(h.role('y'), o, 'b'); },
   'g1-split-minus-trap'(h) { const o = h.add('op', { op: 1 }); h.link(h.role('all'), o, 'a'); h.link(h.role('part'), o, 'b'); },
   'g1-zero-subtract-core'(h) { const o = h.add('op', { op: 1 }); h.link(h.role('a'), o, 'a'); h.link(h.role('b'), o, 'b'); },

@@ -6,7 +6,6 @@ module.exports = {
   'balance-12'(h) { const a = h.add('num', { n: 5 }), b = h.add('num', { n: 7 }), o = h.add('op'); h.link(a, o, 'a'); h.link(b, o, 'b'); h.link(o, h.role('bal'), 'R'); },
   'two-dice'(h) { const o = h.add('op'), g = h.add('hist'); h.link(h.role('d1'), o, 'a'); h.link(h.role('d2'), o, 'b'); h.link(o, g, 'v'); h.run(120); },
   'counter-loop'(h) { const m = h.add('memory'), o = h.add('op'); h.link(m, o, 'a'); h.link(h.role('one'), o, 'b'); h.link(o, m, 'in'); h.run(12); },
-  'frac-compare'(h) { const f1 = h.add('fracbar'), f2 = h.add('fracbar'), c = h.add('compare', { op: 1 }); h.link(h.role('a'), f1); h.link(h.role('b'), f2); h.link(h.role('a'), c, 'a'); h.link(h.role('b'), c, 'b'); },
   'rect-perimeter'(h) { const r = h.role('r'); h.set(r, 'w', 6); h.set(r, 'h', 4); h.set(r, 'w', 5.5); h.set(r, 'h', 4.5); h.set(r, 'w', 5); h.set(r, 'h', 5); },
   'line-through'(h) { const l = h.add('line', { k: 2, b: 1 }), a = h.add('at', { x: 3 }); h.link(l, a, 'f'); },
   'dice-mean'(h) { const o = h.add('op'), g = h.add('hist'), s = h.add('stats'); h.link(h.role('d1'), o, 'a'); h.link(h.role('d2'), o, 'b'); h.link(o, g, 'v'); h.link(g, s, 'd', 'dist'); h.run(400); },

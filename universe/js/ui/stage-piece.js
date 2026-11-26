@@ -37,7 +37,7 @@
     const pv = S.D[pe.id] && S.D[pe.id].out.f ? S.D[pe.id].out.f.data : null;
     const align = pv && ws ? SG.buildAlign(ws, pv.pts, SG.edgesOf(pv), [], (v) => v.id === pe.id) : null;
     if (align) align.frac = true;   // 块的平移是有理数：目标是分数中点（边的中点）也能吸附
-    SG.drag = { kind: 'piece', id: pe.id, wsId: pe.parent, v0, unit: v0 ? UI.Space.canvasOf(r, v0.span).unit : UI.Space.figUnit(r, cw, +gh.dataset.s), dx0: pe.props.dx, dy0: pe.props.dy, q0x: Q.parse(pe.props.dx), q0y: Q.parse(pe.props.dy), sx: ev.clientX, sy: ev.clientY, dxq: Q(0), dyq: Q(0), out: false, moved: false, align, guides: [], ghost: pv ? [pv.pts.map((q) => ({ x: Q.num(q.x), y: Q.num(q.y) }))] : [] };
+    SG.drag = { kind: 'piece', id: pe.id, wsId: pe.parent, v0, unit: v0 ? UI.Space.canvasOf(r, v0.span).unit : UI.Space.figUnit(r, cw, +gh.dataset.s), pv: SG.Preview.begin([pe.id]), q0x: Q.parse(pe.props.dx), q0y: Q.parse(pe.props.dy), sx: ev.clientX, sy: ev.clientY, dxq: Q(0), dyq: Q(0), out: false, moved: false, align, guides: [], ghost: pv ? [pv.pts.map((q) => ({ x: Q.num(q.x), y: Q.num(q.y) }))] : [] };
     // 量完大小再重画：重画会换掉这个图形的 DOM，之后再量会得到 0
     if (pk) SG.render();
   }
@@ -72,7 +72,7 @@
     SG.showTip(0, 0, '');
     if (!e) return;
     if (!d.moved) { UI.Panels.renderInsp(); SG.render(); return; }
-    e.props.dx = d.dx0; e.props.dy = d.dy0;
+    SG.Preview.reset(d.pv);   // 公共的拖动预览：先还原到按下那一刻，再记成一步（块的平移、放到台面上都是块自己的动作）
     if (d.out) {
       const w = UI.Space.screenToStage(ev);
       UI.Intent.run('drop', { id: d.id, ev, piece: true, out: { x: w.x - L.PIECE_DROP.x, y: w.y - L.PIECE_DROP.y } });

@@ -44,6 +44,19 @@
     SG.wsCyc = { wsid: wb.dataset.wsid, x: ev.clientX, y: ev.clientY, t: now, idx };
     return names[idx];
   }
+  // ---- 公共的拖动预览（操作台的把手、几何工作区的图形拖动都用它）----
+  // 拖动中直接改实体的属性做预览；松手先全部还原，再把真正改了的属性记成一步（一次 params 意图，撤销一次回去）。
+  // begin 记下这些实体按下那一刻的属性；reset 回到那一刻（再套新的预览）；end 还原并返回改动 [{ id, k, v }]。
+  const Preview = {
+    begin(ids) { const E = UI.S.scene.entities, p0 = {}; for (const id of ids) if (E[id] && !p0[id]) p0[id] = Object.assign({}, E[id].props); return { p0 }; },
+    reset(pv) { const E = UI.S.scene.entities; for (const id of Object.keys(pv.p0)) { const e = E[id]; if (!e) continue; for (const k of Object.keys(e.props)) if (!(k in pv.p0[id])) delete e.props[k]; Object.assign(e.props, pv.p0[id]); } },
+    end(pv) {
+      const E = UI.S.scene.entities, ops = [];
+      for (const id of Object.keys(pv.p0)) { const e = E[id]; if (!e) continue; for (const k of Object.keys(e.props)) if (e.props[k] !== pv.p0[id][k]) ops.push({ id, k, v: e.props[k] }); }
+      Preview.reset(pv); return ops;
+    },
+    commit(ops) { if (ops.length) { UI.Intent.run('params', { ops }); return true; } UI.S.D = W.evaluate(UI.S.scene); return false; },
+  };
   // ---- 器材上的把手（grips）----
   // 拖动时用的是按下那一刻的属性（p0）去问器材“拖到这里该是什么值”，所以换算不随预览漂移；预览直接改实体属性，松手先还原再提交
   function gripCtx(e, props) {
@@ -52,7 +65,8 @@
   }
   function gripDown(e, el, ev) {
     const svg = el.closest('svg'); if (!svg) return;
-    SG.drag = { kind: 'grip', id: e.id, grip: el.dataset.grip, svg, p0: Object.assign({}, e.props), sx: ev.clientX, sy: ev.clientY, moved: false, patch: null };
+    const pv = Preview.begin([e.id]);
+    SG.drag = { kind: 'grip', id: e.id, grip: el.dataset.grip, svg, p0: pv.p0[e.id], pv, sx: ev.clientX, sy: ev.clientY, moved: false };
     SG.render();
   }
   function gripMove(ev) {
@@ -67,18 +81,14 @@
     if (!patch) return;
     const clean = {};
     for (const k of Object.keys(patch)) { const P = def.props[k]; if (!P) continue; const cv = U.coerceProp(P, patch[k]); if (cv.ok) clean[k] = cv.v; }
-    d.patch = clean;
-    for (const k of Object.keys(d.p0)) e.props[k] = d.p0[k];
-    Object.assign(e.props, clean);
+    Preview.reset(d.pv); Object.assign(e.props, clean);
     S.D = W.evaluate(S.scene); SG.render();
     if (gr.say) { let s = ''; try { s = gr.say(gripCtx(e, e.props)); } catch (x) { s = ''; } if (s) showTip(ev.clientX, ev.clientY, s, true); }
   }
   function gripUp(d) {
     const S = UI.S, e = S.scene.entities[d.id]; showTip(0, 0, '');
     if (!e) return SG.render();
-    for (const k of Object.keys(d.p0)) e.props[k] = d.p0[k];
-    const ops = d.patch ? Object.keys(d.patch).filter((k) => d.patch[k] !== d.p0[k]).map((k) => ({ id: d.id, k, v: d.patch[k] })) : [];
-    if (ops.length) UI.Intent.run('params', { ops }); else { S.D = W.evaluate(S.scene); SG.render(); }
+    if (!Preview.commit(Preview.end(d.pv))) SG.render();
     UI.Panels.renderInsp();
   }
   function onDown(ev) {
@@ -265,10 +275,7 @@
     }
     if (S.wsDraw && S.wsDraw.pend) SG.drawHover(ev);
     if (!SG.drag) return;
-    if (SG.drag.kind === 'mark' || SG.drag.kind === 'markbody') { SG.markMove(ev); return; }
-    if (SG.drag.kind === 'piece') { SG.pieceMove(ev); return; }
-    if (SG.drag.kind === 'shape') { SG.shapeMove(ev); return; }
-    if (SG.drag.kind === 'grip') { gripMove(ev); return; }
+    const hk = KINDS()[SG.drag.kind]; if (hk) { hk.move(ev); return; }
     if (SG.drag.kind === 'rz') {
       const dx = ev.clientX - SG.drag.sx, dy = ev.clientY - SG.drag.sy;
       if (!SG.drag.moved && Math.hypot(dx, dy) < 3) return;
@@ -321,10 +328,7 @@
       const d = SG.drag; SG.drag = null; SG.stageEl.classList.remove('panning');
       if (d.moved) SG.dblKey = null;   // 拖动过的不算点击：下一次按不能被当成双击
       document.querySelectorAll('.card.droptarget').forEach((c) => c.classList.remove('droptarget'));
-      if (d.kind === 'mark' || d.kind === 'markbody') { SG.markUp(d); SG.render(); return; }
-      if (d.kind === 'piece') { SG.pieceUp(d, ev); return; }
-      if (d.kind === 'shape') { SG.shapeUp(d, ev); return; }
-      if (d.kind === 'grip') { gripUp(d); return; }
+      const hk = KINDS()[d.kind]; if (hk) { hk.up(d, ev); return; }
       if (d.kind === 'rz') {
         showTip(0, 0, '');
         if (d.moved) UI.Intent.run('resize', { id: d.id, w: d.w1, h: d.h1, before: d.before });
@@ -337,5 +341,13 @@
       }
     }
   }
-  Object.assign(SG, { gripDown, startResize, tip, showTip, WS_DBL_PX, wsCycPick, onDown, onMove, onUp });
+  // 直接操作的拖动种类：按下时各自建 SG.drag（kind），移动和松手按这张表分派。操作台的把手（grip）和几何工作区的图形、块、尺子是同一条路
+  const KINDS = () => ({
+    grip: { move: gripMove, up: gripUp },
+    shape: { move: SG.shapeMove, up: SG.shapeUp },
+    piece: { move: SG.pieceMove, up: SG.pieceUp },
+    mark: { move: SG.markMove, up: (d) => { SG.markUp(d); SG.render(); } },
+    markbody: { move: SG.markMove, up: (d) => { SG.markUp(d); SG.render(); } },
+  });
+  Object.assign(SG, { Preview, gripDown, startResize, tip, showTip, WS_DBL_PX, wsCycPick, onDown, onMove, onUp });
 })(window);

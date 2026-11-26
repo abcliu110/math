@@ -31,15 +31,6 @@ module.exports = {
     const o1 = h.add('op', { op: 1 }); h.link(h.role('rope'), o1, 'a'); h.link(h.role('both'), o1, 'b');
     const o2 = h.add('op'); h.link(h.role('run'), o2, 'a'); h.link(o1, o2, 'b');
   },
-  'g3-direction-east-west-core'(h) {
-    const o = h.add('op', { op: 1 }); h.link(h.role('east'), o, 'a'); h.link(h.role('west'), o, 'b');
-    h.link(o, h.role('line'), 'v');
-  },
-  'g3-direction-back-trap'(h) {
-    const o1 = h.add('op', { op: 1 }); h.link(h.role('origin'), o1, 'a'); h.link(h.role('west'), o1, 'b');
-    const o2 = h.add('op'); h.link(o1, o2, 'a'); h.link(h.role('east'), o2, 'b');
-    h.link(o2, h.role('line'), 'v');
-  },
   'g3-divide-core'(h) { const o = h.add('op', { op: 3 }); h.link(h.role('apples'), o, 'a'); h.link(h.role('kids'), o, 'b'); },
   'g3-divide-zero-trap'(h) { const o = h.add('op', { op: 3 }); h.link(h.role('a'), o, 'a'); h.link(h.role('b'), o, 'b'); },
   'g3-area-parts-core'(h) {

@@ -153,7 +153,8 @@
     const sc = UI.Space.canvasOf(wb.getBoundingClientRect(), fr.vw.span);
     // 2026-11：画布能看到的范围（坐标）。平移时图形不能拖出这个范围（以前只限在 ±10，看得到的范围小得多，一拖就拖出窗口看不见了）
     const { hw, hh } = UI.Space.halfRange(fr.w, fr.h, fr.vw), vis = { x0: fr.vw.cx - hw, x1: fr.vw.cx + hw, y0: fr.vw.cy - hh, y1: fr.vw.cy + hh };
-    SG.drag = Object.assign({ kind: 'shape', mode, wsId, v: fr.vw, vis, sc, unit: sc.unit, sx: ev.clientX, sy: ev.clientY, start: UI.Space.screenToWorkspace(ev, fr.vw, sc), targets, moved: false, out: [], f: Q(1), k: 0, guides: [] }, extra || {});
+    const ex = extra || {};
+    SG.drag = Object.assign({ kind: 'shape', pv: SG.Preview.begin(targets.map((t) => t.id).concat(ex.id ? [ex.id] : [])), mode, wsId, v: fr.vw, vis, sc, unit: sc.unit, sx: ev.clientX, sy: ev.clientY, start: UI.Space.screenToWorkspace(ev, fr.vw, sc), targets, moved: false, f: Q(1), guides: [] }, ex);
   }
   // 按下一个把手：边（整条边平移）、角（放缩）、旋转把手
   function startHandle(hd, ev) {
@@ -278,8 +279,8 @@
     const mx = ev.clientX - d.sx, my = ev.clientY - d.sy;
     if (!d.moved && Math.hypot(mx, my) < L.DRAG_SLOP) return;
     d.moved = true;
-    const wp = UI.Space.screenToWorkspace(ev, d.v, d.sc), out = [];
-    const put = (id, k, v) => { E[id].props[k] = v; out.push({ id, k, v }); };
+    const wp = UI.Space.screenToWorkspace(ev, d.v, d.sc);
+    const put = (id, k, v) => { E[id].props[k] = v; };   // 预览：直接改属性，松手时 SG.Preview 还原并比出改动
     let tip = '';
     // 约束（§10.5.9 第 1 条）：放缩会改长，锁着的图形不能放缩；旋转要是约束连着外面的点，也不能转
     if (d.mode === 'sc' || d.mode === 'rot') {
@@ -399,12 +400,10 @@
         }
       } else {
         const k = Math.round((th - th0) / (Math.PI / 2));
-        d.k = k;
         E[d.id].props.turn = modT(d.t0 + k);
         tip = '转 ' + k * 90 + '°';
       }
     }
-    d.out = out;
     S.D = W.evaluate(S.scene);
     SG.wsRedraw(d.wsId);
     if (tip) SG.showTip(ev.clientX, ev.clientY, tip, true);
@@ -413,9 +412,7 @@
   function shapeUp(d) {
     const E = UI.S.scene.entities;
     SG.showTip(0, 0, '');
-    const orig = {};
-    for (const t of d.targets) { orig[t.id + '|' + t.kx] = t.x0; orig[t.id + '|' + t.ky] = t.y0; E[t.id].props[t.kx] = t.x0; E[t.id].props[t.ky] = t.y0; }
-    if (d.id && E[d.id]) { if (d.s0 !== undefined) E[d.id].props.scale = d.s0; if (d.t0 !== undefined) E[d.id].props.turn = d.t0; }
+    const changed = SG.Preview.end(d.pv);   // 公共的拖动预览：先全部还原，拿到真正改了的属性
     if (d.mode === 'prot' && E[d.id]) { if (d.a0) E[d.id][SG.APPROX] = d.a0; else delete E[d.id][SG.APPROX]; }
     if (!d.moved) return SG.render();
     // 拖动自由点吸附到构造点（V4）：一步（建构造器材、改接线、删掉这个点）
@@ -425,12 +422,10 @@
       if (d.A === d.A0) return SG.render();
       return UI.Intent.run('spin', { id: d.id, turn: modT(Math.floor(d.A / 90) - d.t0), approx: d.A % 90 });
     }
-    const last = {};
-    for (const o of d.out) last[o.id + '|' + o.k] = o;
-    const list = Object.values(last).filter((o) => o.v !== orig[o.id + '|' + o.k]).map((o) => ({ id: o.id, k: o.k, v: o.v }));
+    // 块的放缩不是改属性，是块的一个动作（放缩多少倍）；其余都是属性的改动
+    const list = changed.filter((o) => !(d.mode === 'pscale' && o.id === d.id && o.k === 'scale'));
     if (d.mode === 'pscale' && d.f && !Q.eq(d.f, Q(1))) list.push({ id: d.id, what: 'scale', value: Q.show(d.f) });
-    if (d.mode === 'lrot' && modT(d.t0 + d.k) !== d.t0) list.push({ id: d.id, k: 'turn', v: modT(d.t0 + d.k) });
-    if (list.length) UI.Intent.run('params', { ops: list }); else SG.render();
+    if (!SG.Preview.commit(list)) SG.render();
   }
   // 左右翻、上下翻（浮动工具条）：一次一步
   function figFlip(wsId, name, v) {

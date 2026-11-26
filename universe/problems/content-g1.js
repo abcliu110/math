@@ -24,18 +24,8 @@
   // 1.2 位置（陷阱）：数轴范围要包住所有的点
   U.problems.push({
     id: 'g1-position-numline-trap', title: '数轴 0 到 5，点 3 和点 7 都要标出来', grade: 1, domain: '图形', essence: ['E2'], points: ['1.2'], level: 'trap', rung: 1,
-    alias: ['数轴', '位置', '范围'], hook: '把 3 和 7 都放到数轴上。画出来的数轴够长吗？',
-    shelf: ['num', 'numline'],
-    build() { const s = W.blank(); R(s, W.add(s, 'num', 60, 60, { n: 3 }), 'p3'); R(s, W.add(s, 'num', 60, 200, { n: 7 }), 'p7'); return s; },
-    predict: null,
-    milestones: [
-      { id: 'line', say: '放一条数轴', score: 2, when: { count: { type: 'numline', ge: 1 } },
-        hints: ['要画一条数轴，用「数轴」器材。', '数轴接收“点”，每个点接到它的输入口。', '放一条数轴。'] },
-      { id: 'both', say: '数轴上能看到 2 个点', score: 4, when: { type: 'numline', port: 'n', op: '=', value: '2' },
-        hints: ['数轴只能显示范围内的点，看看范围有没有包住 7。', '把数轴的终点调大到能看到 7。', '终点改成 10，两个点都在范围内。'] },
-    ],
-    traps: [{ id: 'range', wrong: '7 画在数轴外面了：终点 5 太小，把数轴的终点调大才看得到 7。', when: { type: 'numline', port: 'n', op: '=', value: '1' } }],
-    goal: ['both'],
+    alias: ['数轴', '位置', '范围'],
+    // 器材架、开场、里程碑、提示和陷阱在 zz-benches.js（这道题已搬到数轴操作台；原来用的旧数轴已删除）
     why: '数轴的范围要包住所有要标的点。点 3 在 0–5 之间，点 7 超出了 5，所以数轴的终点要改到 10 以上。',
   });
 

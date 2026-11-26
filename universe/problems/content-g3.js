@@ -288,35 +288,16 @@
   // 3.9 位置与方向（核心）：只用数轴表示东西方向
   U.problems.push({
     id: 'g3-direction-east-west-core', title: '先向东走 5 米，再向西走 3 米，现在在哪里？', grade: 3, domain: '图形', essence: ['E2'], points: ['3.9'], level: 'core', rung: 1,
-    alias: ['位置', '方向', '东西', '数轴'], hook: '规定向东为正、向西为负，出发点是 0。先向东走 5 米，再向西走 3 米，现在在出发点的哪边，离多远？',
-    shelf: ['num', 'op', 'numline'],
-    build() { const s = W.blank(); R(s, W.add(s, 'num', 40, 60, { n: 5, unit: 2 }), 'east'); R(s, W.add(s, 'num', 40, 200, { n: 3, unit: 2 }), 'west'); R(s, W.add(s, 'numline', 300, 60, { lo: -10, hi: 10, tick: 1 }), 'line'); return s; },
-    predict: null,
-    milestones: [
-      { id: 'op', say: '放一台运算器', score: 2, when: { count: { type: 'op', ge: 1 } },
-        hints: ['向东走 5 米，再向西走 3 米，要用减法。', '「运算器」可以选减法。', '放一台运算器，运算选 −。'] },
-      { id: 'pos', say: '现在在出发点东边 2 米', score: 4, when: { type: 'op', port: 'r', op: '=', value: '2' },
-        hints: ['东边为正，西边为负。5 米减去 3 米。', '甲接向东的 5，乙接向西的 3，运算选 −。', '甲接 5 米，乙接 3 米，运算选 −；结果可以接到数轴上看位置。'] },
-    ],
-    traps: [], goal: ['pos'],
+    alias: ['位置', '方向', '东西', '数轴'],
+    // 器材架、开场、里程碑、提示和陷阱在 zz-benches.js（这道题已搬到数轴操作台；原来用的旧数轴已删除）
     why: '向东记作正，向西记作负：5 − 3 = 2，所以现在在出发点东边 2 米。数轴上 2 在 0 的右边，就是在东边。',
   });
 
   // 3.9 位置与方向（陷阱）：方向相反要抵消，不能把路程相加
   U.problems.push({
     id: 'g3-direction-back-trap', title: '先向西走 4 米，再向东走 4 米，现在离出发点多远？', grade: 3, domain: '图形', essence: ['E2'], points: ['3.9'], level: 'trap', rung: 1,
-    alias: ['位置', '方向', '往回走', '东西'], hook: '规定向东为正、向西为负，出发点是 0。先向西走 4 米，再向东走 4 米，现在在哪里？',
-    shelf: ['num', 'op', 'numline'],
-    build() { const s = W.blank(); R(s, W.add(s, 'num', 40, 60, { n: 0, unit: 2 }), 'origin'); R(s, W.add(s, 'num', 40, 200, { n: 4, unit: 2 }), 'west'); R(s, W.add(s, 'num', 40, 340, { n: 4, unit: 2 }), 'east'); R(s, W.add(s, 'numline', 300, 60, { lo: -10, hi: 10, tick: 1 }), 'line'); return s; },
-    predict: null,
-    milestones: [
-      { id: 'op', say: '放一台运算器', score: 2, when: { count: { type: 'op', ge: 1 } },
-        hints: ['向西为负：从 0 减去 4，到 −4。', '「运算器」可以选减法或加法。', '放一台运算器，运算选 −。'] },
-      { id: 'back', say: '回到出发点', score: 4, when: { type: 'op', port: 'r', op: '=', value: '0' },
-        hints: ['再向东走 4 米，就是加上 4。', '第二台运算器接第一台的结果，运算选 +。', '第一台：0 − 4 = −4；第二台：甲接 −4，乙接 4，运算选 +。'] },
-    ],
-    traps: [{ id: 'sum', wrong: '写成 8：把两段路 4 + 4 加起来，忘了向西是负的，方向相反要抵消。', when: { type: 'op', port: 'r', op: '=', value: '8' } }],
-    goal: ['back'],
+    alias: ['位置', '方向', '往回走', '东西'],
+    // 器材架、开场、里程碑、提示和陷阱在 zz-benches.js（这道题已搬到数轴操作台；原来用的旧数轴已删除）
     why: '向西记作负：0 − 4 = −4；再向东走 4 米：−4 + 4 = 0，回到出发点。方向相反的两段路会互相抵消，不能直接把长度加起来。',
   });
 
