@@ -40,6 +40,7 @@
     'digitbench': 'packs/digitbench.js',
     'dirbench': 'packs/dirbench.js',
     'dissect': 'packs/dissect.js',
+    'eqstepbench': 'packs/eqstepbench.js',
     'equation': 'packs/equation.js',
     'estbench': 'packs/estbench.js',
     'exprbench': 'packs/exprbench.js',

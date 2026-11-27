@@ -3,7 +3,7 @@
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const root = path.join(__dirname, '..');
 const fsx = require('fs'), pk = (d) => fsx.readdirSync(path.join(root, d)).filter((f) => f.endsWith('.js')).sort().map((f) => d + '/' + f);
-const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/ratio.js', 'js/core/form.js', 'js/core/predict.js', 'js/core/eqn.js', 'js/core/seq.js', 'js/core/rulelib.js', 'js/core/game.js', 'js/core/prooflib.js', 'js/core/table.js', 'js/core/figure.js', 'js/core/geo.js', 'js/core/convert.js', 'js/core/registry.js', 'js/core/rules.js', 'js/core/rules-exec.js', 'js/core/workbench.js', 'js/core/digits.js', 'js/core/databench.js', 'js/core/deduce.js', 'js/core/geo-rules.js', 'js/core/world.js', 'js/core/measure.js', 'js/core/kit.js', 'js/core/recorder.js', 'js/core/judge.js', 'js/core/word.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/curriculum.js', 'js/core/coverage.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
+const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/ratio.js', 'js/core/form.js', 'js/core/predict.js', 'js/core/eqn.js', 'js/core/seq.js', 'js/core/rulelib.js', 'js/core/game.js', 'js/core/prooflib.js', 'js/core/table.js', 'js/core/figure.js', 'js/core/geo.js', 'js/core/convert.js', 'js/core/registry.js', 'js/core/rules.js', 'js/core/rules-exec.js', 'js/core/workbench.js', 'js/core/digits.js', 'js/core/databench.js', 'js/core/deduce.js', 'js/core/geo-rules.js', 'js/core/world.js', 'js/core/forms.js', 'js/core/measure.js', 'js/core/kit.js', 'js/core/recorder.js', 'js/core/judge.js', 'js/core/word.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/curriculum.js', 'js/core/coverage.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
 const ctx = vm.createContext({ console, TextEncoder, TextDecoder, btoa, atob });
 ctx.globalThis = ctx;
 for (const f of files) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f });
@@ -1287,6 +1287,7 @@ for (const p of U.problems) {
       add(type, props) { const r = W.act(s, { t: 'add', type, x: 0, y: 0, props }); if (!r.ok) throw new Error(r.why); chk(); return r.id; },
       link(from, to, toPort, fromPort) { const r = W.act(s, { t: 'link', from, to, toPort, fromPort }); if (!r.ok) throw new Error('连线失败：' + r.why); chk(); },
       set(id, k, v) { const r = W.act(s, { t: 'set', id, k, v }); if (!r.ok) throw new Error(r.why); chk(); },
+      act(a) { const r = W.act(s, a); if (!r.ok) throw new Error(r.why); chk(); return r; },
       U, props(id) { return s.entities[id].props; },
       role(r) { const e = Object.values(s.entities).find((x) => x.role === r); if (!e) throw new Error('没有角色 ' + r); return e.id; },
       // 工作台的步骤（D8）：list 是 [[工具, 参数]…]，每一步用内核检查，全部保持不变量后整体写进台面（scene.workbench）
@@ -3456,6 +3457,71 @@ console.log('操作台模式（U.benchOf / U.benchModeOf）');
     truthy(g.size(ge, { bench: true })[0] <= g.size(ge)[0], '高斯：不更宽');
     const s = P.build(), id = U.benchOf(s), D = W.evaluate(s);
     truthy(Object.keys(D[id].out).length > 0, '输出照常算（S.D[id].out 有值）');
+  });
+}
+console.log('联动组：一个道理，几种样子（js/core/forms.js）');
+{
+  const F = U.Forms, LF = F.FORMS.lineq, S0 = { a: 2, b: 3, c: 0, d: 11, x0: 4 };
+  const mk = () => { const s = W.blank(), b = W.add(s, 'balancebench', 0, 0, {}), e = W.add(s, 'eqstepbench', 700, 0, {}); F.join(s, 'lineq', [b, e], S0); return { s, b, e }; };
+  const set = (s, id, o) => { for (const k of Object.keys(o)) { const r = W.act(s, { t: 'set', id, k, v: o[k] }); if (!r.ok) throw new Error(r.why); } return W.act(s, { t: 'settle' }); };
+  const abcd = (p, t) => (t === 'balancebench' ? [p.lx, p.lc, p.rx, p.rc] : [p.a, p.b, p.c, p.d]);
+  t('步子表：两边减数、减 x、除、只动一边、挪过去都认得出来；一次改两样不认', () => {
+    const d = (n) => LF.diff(S0, Object.assign({}, S0, n));
+    eq(LF.label(d({ b: 0, d: 8 })), '两边同时减 3'); eq(LF.rule(d({ b: 0, d: 8 })), 'eq.both-sides');
+    eq(LF.label(LF.diff({ a: 3, b: 2, c: 1, d: 10 }, { a: 2, b: 2, c: 0, d: 10 })), '两边同时减 x');
+    eq(LF.label(LF.diff({ a: 2, b: 0, c: 0, d: 8 }, { a: 1, b: 0, c: 0, d: 4 })), '两边同时除以 2');
+    eq(LF.label(d({ b: 0 })), '只在左边减 3'); eq(LF.rule(d({ b: 0 })), 'balance.lone');
+    eq(LF.label(d({ b: 2, d: 12 })), '把 1 从左边挪到右边'); eq(LF.rule(d({ b: 2, d: 12 })), 'balance.move');
+    truthy(d({ a: 1, b: 2, c: 0, d: 10 }).why, '盒子和砝码一起变：不认');
+    eq(d({}), null);
+  });
+  t('出题：join 把两台摆成同一个等式；不能摆的、已经在组里的、不认识的器材都报错', () => {
+    const { s, b, e } = mk();
+    eq(abcd(s.entities[b].props, 'balancebench'), [2, 3, 0, 11]); eq(abcd(s.entities[e].props, 'eqstepbench'), [2, 3, 0, 11]);
+    eq(s.entities[b].props.x0, 4); eq(s.entities[e].props.x0, 4); eq(s.groups.length, 1);
+    let bad = 0; try { F.join(s, 'lineq', [b, e], S0); } catch (x) { bad++; }
+    const s2 = W.blank(), b2 = W.add(s2, 'balancebench', 0, 0, {}), e2 = W.add(s2, 'eqstepbench', 0, 0, {}), m2 = W.add(s2, 'meter', 0, 0, {});
+    try { F.join(s2, 'lineq', [b2, e2], { a: 9, b: 0, c: 0, d: 36, x0: 4 }); } catch (x) { bad++; }
+    try { F.join(s2, 'lineq', [b2, m2], S0); } catch (x) { bad++; }
+    eq(bad, 3);
+  });
+  t('在天平上做一步，式子往下写一行；在式子上做一步，天平跟着动；都记进组的步子', () => {
+    const { s, b, e } = mk();
+    const r = set(s, b, { lc: 2, rc: 10 });
+    eq(abcd(s.entities[e].props, 'eqstepbench'), [2, 2, 0, 10]); eq(r.steps[0].label, '两边同时减 1'); eq(r.steps[0].by, b);
+    truthy(/两边同时减 1/.test(s.entities[e].props.rows), '式子写下了这一步：' + s.entities[e].props.rows);
+    set(s, e, U.EqStepBench.stepTo(s.entities[e].props, { b: 0, d: 8 }));
+    eq(abcd(s.entities[b].props, 'balancebench'), [2, 0, 0, 8]);
+    set(s, e, U.EqStepBench.stepTo(s.entities[e].props, { a: 1, b: 0, c: 0, d: 4 }));
+    const D = W.evaluate(s);
+    eq(Q.show(D[b].out.solved.data), '4'); eq(Q.show(D[e].out.solved.data), '4');
+    eq(s.groups[0].log.map((x) => x.label), ['两边同时减 1', '两边同时减 2', '两边同时除以 2']);
+    eq(s.groups[0].log.map((x) => x.rule), ['eq.both-sides', 'eq.both-sides', 'eq.both-sides']);
+  });
+  t('只动一边：两台一起不平（天平歪、式子写 ≠）；在另一边补上同一步，两台一起回来', () => {
+    const { s, b, e } = mk();
+    set(s, b, { sync: false }); set(s, b, { lc: 0 });
+    let D = W.evaluate(s); eq(Q.show(D[b].out.okn.data), '0'); eq(Q.show(D[e].out.okn.data), '0');
+    truthy(/只在左边减 3/.test(s.entities[e].props.rows));
+    set(s, e, U.EqStepBench.stepTo(s.entities[e].props, { d: 8 }));
+    D = W.evaluate(s); eq(Q.show(D[b].out.okn.data), '1'); eq(Q.show(D[e].out.okn.data), '1');
+    eq(s.groups[0].log.map((x) => x.rule), ['balance.lone', 'balance.lone']);
+  });
+  t('有一台画不出来就整步不做，说出原因；一次在两台上各改一样也不做', () => {
+    const { s, b, e } = mk();
+    W.act(s, { t: 'set', id: e, k: 'a', v: 8 });
+    const r = W.act(s, { t: 'settle' }); truthy(!r.ok && /天平/.test(r.why) && /画不出来/.test(r.why), r.why);
+    const { s: s2, b: b2, e: e2 } = mk();
+    W.act(s2, { t: 'set', id: b2, k: 'lc', v: 2 }); W.act(s2, { t: 'set', id: e2, k: 'd', v: 9 });
+    const r2 = W.act(s2, { t: 'settle' }); truthy(!r2.ok && /一次只在一块上/.test(r2.why), r2.why);
+    eq(W.act(W.blank(), { t: 'settle' }).ok, true, '没有组的台面：什么都不做');
+  });
+  t('存档读回组还在；删掉一台，组散掉；清空台面，组也清掉', () => {
+    const { s, b, e } = mk(); set(s, b, { lc: 2, rc: 10 });
+    const s2 = W.load(W.save(s)); eq(s2.groups[0].state, s.groups[0].state); eq(s2.groups[0].log.length, 1);
+    set(s2, e, U.EqStepBench.stepTo(s2.entities[e].props, { b: 0, d: 8 })); eq(abcd(s2.entities[b].props, 'balancebench'), [2, 0, 0, 8]);
+    W.act(s2, { t: 'del', id: b }); W.act(s2, { t: 'settle' }); eq(s2.groups, undefined);
+    W.act(s, { t: 'clear' }); eq(s.groups, undefined);
   });
 }
 console.log('\n' + pass + ' 通过，' + fail + ' 失败');

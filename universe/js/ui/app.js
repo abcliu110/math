@@ -126,7 +126,7 @@
     let last = { ok: true };
     const A = (a) => { const r = W.act(S.scene, a); if (!r.ok) throw { why: r.why }; rec.push(a); last = r; return r; };
     if (o.from !== undefined) S.scene = loadKeepView(before);
-    try { fn(A); } catch (x) {
+    try { fn(A); if (rec.length && S.scene.groups) A({ t: 'settle' }); } catch (x) {
       S.scene = loadKeepView(before);
       const why = (x && x.why) || '这一步做不了';
       if (S.sel && !S.scene.entities[S.sel]) S.sel = null;

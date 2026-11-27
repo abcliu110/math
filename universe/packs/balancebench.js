@@ -220,5 +220,11 @@
       },
     },
   });
+  // 联动组（docs/essence-forms.md）：天平是等式 a·x + b = c·x + d 的一种样子。左盘 lx 个盒子 lc 个砝码 = a、b；右盘 = c、d
+  if (U.Forms) U.Forms.adapt('lineq', 'balancebench', {
+    toState: (p) => ({ a: p.lx, b: p.lc, c: p.rx, d: p.rc }),
+    fromState: (s, p) => Object.assign({ x0: s.x0 }, to(p, { lx: s.a, lc: s.b, rx: s.c, rc: s.d })),
+    can: (s) => (s.a <= BMAX && s.c <= BMAX && s.b <= WMAX && s.d <= WMAX && s.x0 <= 20 ? null : '天平最多放 ' + BMAX + ' 个盒子、' + WMAX + ' 个砝码'),
+  });
   U.BalanceBench = { st, balanced, solvedOf, stageOf, eqText, to, parseLog, plan, opOf };
 })(typeof globalThis !== 'undefined' ? globalThis : window);
