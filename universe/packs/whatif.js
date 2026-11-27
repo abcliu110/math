@@ -14,10 +14,17 @@
   const apx = (x) => Q.fromNumber(+x.toFixed(6));
   const hit = (k, v, x, y, w, h) => '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="4" fill="transparent" data-pick-k="' + k + '" data-pick-v="' + v + '" style="cursor:pointer"/>';
   const btn = (x, y, w, h, tx, on) => K.rect(x, y, w, h, { fill: on ? 'var(--accent)' : 'var(--sel-bg)', r: 5 }) + K.text(x + w / 2, y + h * 0.72, tx, { size: 11, weight: 700, fill: on ? '#fff' : 'var(--ink)' });
+  // 全在卡片上操作（不用属性面板）：先猜、选 r、选哪一对点都是卡片上的按钮；data-pick-set 点一下改一组属性（整串一次撤销），off 画成灰的、点不了
+  const pset = (o) => encodeURIComponent(JSON.stringify(o));
+  const sbtn = (x, y, w, h, tx, o, on, off) => { const b = K.rect(x, y, w, h, { fill: on ? 'var(--accent)' : off ? 'var(--card)' : 'var(--sel-bg)', stroke: off ? 'var(--dim)' : 'none', w: 0.6, r: 5 }) + K.text(x + w / 2, y + h * 0.72, tx, { size: 11, weight: 700, fill: on ? '#fff' : off ? 'var(--dim)' : 'var(--ink)' }); return off ? b : '<g data-pick-set="' + pset(o) + '" style="cursor:pointer">' + b + '</g>'; };
+  const SG3 = [['<180', '比它小'], ['180', '一样'], ['>180', '比它大']];   // 球面三角形先猜内角和
+  const TSH = ['圆形', '斜放的正方形', '一条线', '一片区域'];   // 出租车先猜形状（gans 1~4）
   const ids = (s) => String(s || '').split(',').filter(Boolean).map(Number);
   const toggle = (S, i) => { const at = S.indexOf(i); if (at >= 0) S.splice(at, 1); else S.push(i); return S.sort((a, b) => a - b); };
 
   // ================= 球面三角形 =================
+  // 球面三角形、出租车几何全在卡片上做（2026-11-26）：先猜都是卡片上的按钮（球面：比 180° 小 / 一样 / 大；出租车：四种形状），
+  // 出租车的 r 用 − / + 调、哪一对点点按钮，“标什么”用标题栏的“换一种”；这些属性都藏起来，不出现“✎ 填写”。
   // 预设点（纬度，经度），度
   const SP = [['北极', 90, 0], ['赤道 0°', 0, 0], ['赤道 90°', 0, 90], ['赤道 180°', 0, 180], ['赤道 270°', 0, 270], ['北纬 45°·0°', 45, 0], ['北纬 45°·90°', 45, 90], ['北纬 45°·180°', 45, 180], ['南纬 45°·45°', -45, 45], ['南纬 45°·225°', -45, 225], ['南极', -90, 0]];
   const vec = (lat, lon) => { const a = lat * Math.PI / 180, b = lon * Math.PI / 180; return [Math.cos(a) * Math.cos(b), Math.cos(a) * Math.sin(b), Math.sin(a)]; };
@@ -50,19 +57,22 @@
     const x = 160; s += K.text(x, 20, '点球上的点，选 3 个', { size: 11.5, anchor: 'start', weight: 700 });
     if (J.degenerate) s += K.text(x, 44, '这三个点在同一个大圆上，围不成三角形', { size: 11, anchor: 'start', fill: 'var(--bad)' });
     else if (!J.ok) s += K.text(x, 44, '已选 ' + J.n + ' 个', { size: 11.5, anchor: 'start', fill: 'var(--dim)' });
-    else if (c.masked) s += K.text(x, 44, '先猜：三个角加起来是多少度？', { size: 12, anchor: 'start', weight: 700, fill: 'var(--accent)' });
+    else if (c.masked) s += K.text(x, 44, '先猜（点下面）：三个角加起来呢？', { size: 12, anchor: 'start', weight: 700, fill: 'var(--accent)' });
     else { J.angles.forEach((a, i) => { s += K.text(x, 44 + i * 18, '角 ' + (i + 1) + ' = ' + (J.exact ? a + '°' : '≈ ' + a.toFixed(2) + '°'), { size: 12, anchor: 'start' }); }); s += K.text(x, 106, '内角和 ' + (J.exact ? J.sum + '°' : '≈ ' + J.sum.toFixed(2) + '°'), { size: 13, anchor: 'start', weight: 700, fill: J.sum > 180 + 1e-9 ? 'var(--bad)' : 'var(--ink)' }); s += K.text(x, 126, '比 180° 多 ' + (J.exact ? J.excess : J.excess.toFixed(2)) + '°，占整个球面的 ' + (J.exact ? Q.show(Q(J.excess, 720)) : (J.frac * 100).toFixed(2) + '%'), { size: 11, anchor: 'start', fill: 'var(--dim)' }); }
+    // 先猜内角和：三个按钮（比 180° 小 / 一样 / 大），点一个就是猜了；量出来以后标出对错
+    s += K.text(x, 146, '先猜：内角和和 180° 比', { size: 11, anchor: 'start', weight: 700, fill: c.masked ? 'var(--accent)' : 'var(--ink)' });
+    SG3.forEach(([v, lab], i) => { const bx = x + i * 68, on = p.gans === v; s += sbtn(bx, 152, 62, 22, lab, { gans: v }, on); if (on && J.ok && !c.masked) { const right = v === '>180' ? J.sum > 180 + 1e-9 : v === '<180' ? J.sum < 180 - 1e-9 : Math.abs(J.sum - 180) < 1e-9; s += K.text(bx + 31, 188, right ? '✓ 猜对了' : '✗', { size: 10.5, weight: 700, fill: right ? 'var(--good)' : 'var(--bad)' }); } });
     return s + H.join('');
   }
   const sphereDef = {
     explore: true,   // 探究和游戏：器材架上放在最后的“拓展”组
     workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E5', 'E9'], label: '球面三角形', prefix: '球', group: '图形', grades: [5, 9], alias: ['球面三角形', '大圆', '内角和', '球面几何', '改规则', '三个直角'],
-    props: { pts: { hidden: true, type: 'text', label: '选的点', default: '', write: false }, pk: { hidden: true, type: 'int', label: '点球上的点', default: 0, min: 0, max: 11 }, clear: { hidden: true, type: 'int', label: '重选', default: 0, min: 0, max: 1 }, rot: { hidden: true, type: 'int', label: '球转了多少度', default: 45, min: 0, max: 359 }, gans: { type: 'text', label: '先猜内角和', default: '' } },
+    props: { pts: { hidden: true, type: 'text', label: '选的点', default: '', write: false }, pk: { hidden: true, type: 'int', label: '点球上的点', default: 0, min: 0, max: 11 }, clear: { hidden: true, type: 'int', label: '重选', default: 0, min: 0, max: 1 }, rot: { hidden: true, type: 'int', label: '球转了多少度', default: 45, min: 0, max: 359 }, gans: { hidden: true, type: 'text', label: '先猜内角和', default: '' } },
     onSet: sOnSet,
     guess: { props: ['gans'], ports: ['sum', 'excess', 'frac'], answered: (p) => String(p.gans).trim() !== '' },
     outputs: { sum: { dim: null, kind: 'num', label: '内角和（度）' }, excess: { dim: null, kind: 'num', label: '比 180° 多几度' }, frac: { dim: null, kind: 'num', label: '占球面的比例' }, valid: { dim: null, kind: 'num', label: '选好了三角形（1/0）' }, rights: { dim: null, kind: 'num', label: '直角的个数' } },
     icon: () => K.circle(32, 32, 24, { fill: 'none', stroke: 'var(--ink)', w: 1.5 }) + '<path d="M32 8 L32 40 L56 32 Z" fill="var(--accent)" fill-opacity="0.4" stroke="var(--accent)" stroke-width="2"/>',
-    size: () => [380, 200],
+    size: () => [380, 226],
     compute: (c) => { const J = sJudge(c.props); c.say(J.ok ? 'info' : 'info', J.ok ? '内角和 ' + (J.exact ? J.sum + '°' : '≈' + J.sum.toFixed(2) + '°') : '选 3 个点'); const ex = J.exact ? true : false; return { sum: J.ok ? num(J.exact ? Q(J.sum) : apx(J.sum), ex) : num(0), excess: J.ok ? num(J.exact ? Q(J.excess) : apx(J.excess), ex) : num(0), frac: J.ok ? num(J.exact ? Q(J.excess, 720) : apx(J.frac), ex) : num(0), valid: num(J.ok), rights: num(J.ok ? J.angles.filter((a) => a === 90).length : 0) }; },
     badge: (c) => (c.masked ? '？' : c.out.valid && Q.num(c.out.valid.data) ? U.showVal(c.out.sum) + '°' : ''),
     draw: sDraw,
@@ -85,20 +95,28 @@
     const mark = (pt, lab) => { const X = ox + (pt[0] + OFF) * g + g / 2 - 1, Y = oy + (N - 1 - (pt[1] + OFF)) * g + g / 2 - 1; return K.circle(X, Y, 8, { fill: 'var(--bad)' }) + K.text(X, Y + 4, lab, { size: 10, weight: 700, fill: '#fff' }); };
     if (p.mode === 0) s += mark([0, 0], '中'); else s += mark(PAIRS[p.pair][0], 'A') + mark(PAIRS[p.pair][1], 'B');
     const x = ox + N * g + 12; s += K.text(x, 20, p.mode === 0 ? '到中心走 ' + p.r + ' 格' : 'A、B 距离相等', { size: 11.5, anchor: 'start', weight: 700 }) + K.text(x, 38, '的所有路口：点格子标出来', { size: 11, anchor: 'start', fill: 'var(--dim)' });
-    s += K.text(x, 62, '标了 ' + J.S.length + ' 个', { size: 12, anchor: 'start', weight: 700 });
-    s += K.text(x, 84, c.masked ? '先猜：它们围成什么形状？' : J.ok ? '全对：共 ' + J.T.length + ' 个' + (p.mode === 0 ? '（4 × ' + p.r + '）' : '') : '对了 ' + J.right + ' 个，错了 ' + J.wrong + ' 个', { size: 11.5, anchor: 'start', weight: 700, fill: J.ok && !c.masked ? 'var(--good)' : 'var(--ink)' });
-    if (p.mode === 0 && J.ok && !c.masked) s += K.text(x, 104, '“圆”的周长 ÷ 直径 = ' + (8 * p.r) + ' ÷ ' + (2 * p.r) + ' = 4', { size: 11, anchor: 'start', fill: 'var(--dim)' });
+    // 走几格（r）：− / + 调；哪一对点：两个按钮（换了，标的路口清掉）
+    let y = 48;
+    if (p.mode === 0) { s += K.text(x, y + 16, 'r =', { size: 12, anchor: 'start', weight: 700 }) + sbtn(x + 26, y, 26, 22, '−', { r: p.r - 1 }, false, p.r <= 1) + K.text(x + 68, y + 16, String(p.r), { size: 14, weight: 700 }) + sbtn(x + 84, y, 26, 22, '+', { r: p.r + 1 }, false, p.r >= 5) + K.text(x + 116, y + 16, '格', { size: 11.5, anchor: 'start' }); y += 30; }
+    else { ['A(0,0) B(4,0)', 'A(0,0) B(2,2)'].forEach((lab, i) => { s += sbtn(x, y + i * 26, 136, 22, lab, { pair: i }, p.pair === i); }); y += 56; }
+    s += K.text(x, y + 14, '标了 ' + J.S.length + ' 个', { size: 12, anchor: 'start', weight: 700 });
+    s += K.text(x, y + 36, c.masked ? '先猜（下面选一个）' : J.ok ? '全对：共 ' + J.T.length + ' 个' + (p.mode === 0 ? '（4 × ' + p.r + '）' : '') : '对了 ' + J.right + ' 个，错了 ' + J.wrong + ' 个', { size: 11.5, anchor: 'start', weight: 700, fill: c.masked ? 'var(--accent)' : J.ok ? 'var(--good)' : 'var(--ink)' });
+    if (p.mode === 0 && J.ok && !c.masked) s += K.text(x, y + 56, '“圆”的周长 ÷ 直径 = ' + (8 * p.r) + ' ÷ ' + (2 * p.r) + ' = 4', { size: 11, anchor: 'start', fill: 'var(--dim)' });
+    // 先猜形状：四个按钮，点一个就是猜了；全部标对以后，猜的那个标出对错
+    const truth = p.mode === 0 ? 2 : p.pair === 0 ? 3 : 4;
+    s += K.text(x, 172, '先猜：它们围成', { size: 11, anchor: 'start', weight: 700, fill: c.masked ? 'var(--accent)' : 'var(--ink)' });
+    TSH.forEach((lab, i) => { const on = p.gans === i + 1; s += sbtn(x, 180 + i * 26, 128, 22, lab, { gans: i + 1 }, on); if (on && J.ok && !c.masked) s += K.text(x + 134, 180 + i * 26 + 16, truth === i + 1 ? '✓' : '✗', { size: 13, anchor: 'start', weight: 700, fill: truth === i + 1 ? 'var(--good)' : 'var(--bad)' }); });
     return s + H.join('');
   }
   const taxiDef = {
     explore: true,   // 探究和游戏：器材架上放在最后的“拓展”组
     workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E5', 'E9'], label: '出租车几何', prefix: '租', group: '图形', grades: [6, 9], alias: ['出租车几何', '曼哈顿距离', '格点', '圆', '垂直平分线', '改规则'],
-    props: { mode: { type: 'choice', label: '标什么', default: 0, choices: ['到中心距离是 r', '到 A、B 距离相等'] }, r: { type: 'int', label: 'r（走几格）', default: 3, min: 1, max: 5 }, pair: { type: 'choice', label: '哪一对点', default: 0, choices: ['A(0,0) B(4,0)', 'A(0,0) B(2,2)'] }, marks: { hidden: true, type: 'text', label: '标的路口', default: '', write: false }, cell: { hidden: true, type: 'int', label: '点一个路口', default: 0, min: 0, max: 121 }, gans: { type: 'int', label: '先猜形状（1 圆形 2 斜放的正方形 3 一条线 4 一片区域）', default: 0, min: 0, max: 4 } },
+    props: { mode: { hidden: true, type: 'choice', label: '标什么', default: 0, choices: ['到中心距离是 r', '到 A、B 距离相等'] }, r: { hidden: true, type: 'int', label: 'r（走几格）', default: 3, min: 1, max: 5 }, pair: { hidden: true, type: 'choice', label: '哪一对点', default: 0, choices: ['A(0,0) B(4,0)', 'A(0,0) B(2,2)'] }, marks: { hidden: true, type: 'text', label: '标的路口', default: '', write: false }, cell: { hidden: true, type: 'int', label: '点一个路口', default: 0, min: 0, max: 121 }, gans: { hidden: true, type: 'int', label: '先猜形状（1 圆形 2 斜放的正方形 3 一条线 4 一片区域）', default: 0, min: 0, max: 4 } },
     onSet: tOnSet,
     guess: { props: ['gans'], ports: ['ok', 'count', 'right'], answered: (p) => p.gans > 0 },
     outputs: { marked: { dim: null, kind: 'num', label: '标了几个' }, right: { dim: null, kind: 'num', label: '标对了几个' }, ok: { dim: null, kind: 'num', label: '全部标对（1/0）' }, count: { dim: null, kind: 'num', label: '应该有几个' }, lv: { dim: null, kind: 'num', label: '证据等级' } },
     icon: () => '<polygon points="32,10 54,32 32,54 10,32" fill="var(--accent)" fill-opacity="0.35" stroke="var(--accent)" stroke-width="2"/>',
-    size: () => [420, 295],
+    size: () => [420, 320],
     compute: (c) => { const J = tJudge(c.props); c.say(J.ok ? 'ok' : 'info', J.ok ? '全部标对' : '标了 ' + J.S.length + ' 个'); return { marked: num(J.S.length), right: num(J.right), ok: num(J.ok), count: num(J.T.length), lv: num(J.ok ? 3 : 0) }; },
     badge: (c) => (c.masked ? '？' : c.out.ok && Q.num(c.out.ok.data) ? '全对' : ''),
     draw: tDraw,

@@ -2,6 +2,7 @@
  *   四个场景：取一半（1/2 + 1/4 + … → 1，差恰好是 1/2ⁿ）；割圆（圆内接正多边形边数翻倍 → π，同时给外切多边形的上界，夹在中间，是近似值）；
  *   0.999…（多写一个 9，差是 1/10ⁿ）；逼近 √2（二分：区间端点都是精确的有理数，宽度是 1/2ⁿ）。
  *   先猜：一直做下去，会到吗？会超过吗？点“下一步”看图和数一起变；再说一个很小的数 ε，答“差距要走几步才比它小”（极限的定义，用游戏碰到）。
+ *   全部在卡片上做（2026-11-26）：先猜点三个按钮之一，ε 点一张小数卡片，步数用 − / + 调；场景用标题栏的“换一种”。这些属性都藏起来，不出现“✎ 填写”。
  * 和设计文档的差别（如实写）：没有接时钟自动走（点“下一步”）；“夹在中间找不到数”的追问没做，只显示上下界和差。 */
 (function (G) {
   'use strict';
@@ -10,6 +11,12 @@
   const num = (n, ex) => U.val('num', typeof n === 'number' ? Q(n) : n, ex === false ? { dim: null, exact: false } : { dim: null });
   const apx = (x) => Q.fromNumber(+x.toFixed(8));
   const two = (n) => Q(1, 2n ** BigInt(n)), ten = (n) => Q(1, 10n ** BigInt(n));
+  // 全在卡片上操作（不用属性面板）：先猜点三个按钮之一；ε 点一张小数卡片；“要走几步”用 − / + 调，旁边当场说够不够
+  const GS = ['会到目标', '永远差一点', '会超过'];
+  const EPS = [['1/10', '1/10'], ['1/100', '1/100'], ['1/1000', '1/1000'], ['1/1000000', '1/10⁶']];
+  const pset = (o) => encodeURIComponent(JSON.stringify(o));
+  // 卡片上的按钮：点一下改一组属性（data-pick-set，整串一次撤销）；off 画成灰的、点不了
+  const sbtn = (x, y, w, h, tx, o, on, off) => { const b = K.rect(x, y, w, h, { fill: on ? 'var(--accent)' : off ? 'var(--card)' : 'var(--sel-bg)', stroke: off ? 'var(--dim)' : 'none', w: 0.6, r: 6 }) + K.text(x + w / 2, y + h * 0.7, tx, { size: 11.5, weight: 700, fill: on ? '#fff' : off ? 'var(--dim)' : 'var(--ink)' }); return off ? b : '<g data-pick-set="' + pset(o) + '" style="cursor:pointer">' + b + '</g>'; };
   // 第 n 步的状态：{ lo, hi, exact, target }，lo ≤ 目标 ≤ hi；value 取 lo
   function at(scene, n) {
     if (scene === 0) return { lo: Q.sub(Q(1), two(n)), hi: Q(1), exact: true, target: 1, gap: two(n) };
@@ -46,14 +53,33 @@
     } else {
       s += K.text(10, y + 14, '区间 [' + Q.show(A.lo) + '，' + Q.show(A.hi) + ']', { size: 11.5, anchor: 'start' }); s += K.text(10, y + 32, '≈ [' + Q.num(A.lo).toFixed(6) + '，' + Q.num(A.hi).toFixed(6) + ']', { size: 11.5, anchor: 'start', fill: 'var(--dim)' }); y += 46;
     }
-    if (c.masked) s += K.text(10, y, '先猜：一直做下去，会到目标吗？会超过吗？', { size: 12, anchor: 'start', weight: 700, fill: 'var(--accent)' });
+    if (c.masked) s += K.text(10, y, '先猜（点下面的按钮）：一直做下去，会到目标吗？', { size: 12, anchor: 'start', weight: 700, fill: 'var(--accent)' });
     else s += K.text(10, y, '下界 ' + (A.exact ? Q.show(A.lo) : '≈ ' + Q.num(A.lo).toFixed(6)) + '　上界 ' + (A.exact ? Q.show(A.hi) : '≈ ' + Q.num(A.hi).toFixed(6)), { size: 11.5, anchor: 'start', weight: 700 });
     y += 18; s += K.text(10, y, '差距（上界 − 下界）' + (A.exact && Q.num(A.gap) > 1e-4 ? Q.show(A.gap) : '≈ ' + Q.num(A.gap).toExponential(2)), { size: 11.5, anchor: 'start', fill: 'var(--dim)' }); y += 20;
     s += K.rect(10, y, 90, 24, { fill: 'var(--accent)', r: 6 }) + K.text(55, y + 16, '下一步 ▶', { size: 12.5, weight: 700, fill: '#fff' });
     s += '<rect x="10" y="' + y + '" width="90" height="24" rx="6" fill="transparent" data-pick-k="step" data-pick-v="' + Math.min(30, p.step + 1) + '" style="cursor:pointer"/>';
     s += K.rect(110, y, 60, 24, { fill: 'var(--sel-bg)', r: 6 }) + K.text(140, y + 16, '重来', { size: 12, weight: 700 });
     s += '<rect x="110" y="' + y + '" width="60" height="24" rx="6" fill="transparent" data-pick-k="step" data-pick-v="0" style="cursor:pointer"/>';
-    if (J.eps) s += K.text(182, y + 16, '差距小于 ' + p.eps + ' 要走几步？', { size: 11, anchor: 'start', fill: 'var(--dim)' });
+    // 先猜：点一个按钮就是猜了；猜过以后旁边标出对错，还可以改
+    y += 32; s += K.text(10, y + 16, '先猜：', { size: 11.5, anchor: 'start', weight: 700, fill: c.masked ? 'var(--accent)' : 'var(--ink)' });
+    GS.forEach((g, i) => { s += sbtn(50 + i * 100, y, 94, 24, g, { gans: i + 1 }, p.gans === i + 1); });
+    if (p.gans) s += K.text(362, y + 17, J.guessed ? '✓' : '✗', { size: 14, weight: 700, fill: J.guessed ? 'var(--good)' : 'var(--bad)' });
+    // ε：点一张小数卡片（换了 ε，说过的步数清掉）
+    y += 32; s += K.text(10, y + 16, '小数 ε：', { size: 11.5, anchor: 'start', weight: 700 });
+    EPS.forEach(([v, lab], i) => { s += sbtn(62 + i * 62, y, 56, 24, lab, { eps: v, sfg: 0 }, p.eps === v); });
+    // 差距小于 ε 要走几步：− / + 调，旁边当场说这一步够不够、是不是最早够的那一步
+    y += 32;
+    if (!J.eps) s += K.text(10, y + 16, '点一个 ε，再说：差距要走几步才比它小？', { size: 11, anchor: 'start', fill: 'var(--dim)' });
+    else {
+      s += K.text(10, y + 16, '差距 < ε 要走', { size: 11.5, anchor: 'start', weight: 700 });
+      s += sbtn(98, y, 26, 24, '−', { sfg: p.sfg - 1 }, false, p.sfg <= 0) + K.text(141, y + 17, String(p.sfg), { size: 14, weight: 700 }) + sbtn(158, y, 26, 24, '+', { sfg: p.sfg + 1 }, false, p.sfg >= 60) + K.text(190, y + 16, '步', { size: 11.5, anchor: 'start', weight: 700 });
+      let msg = '点 + 说几步', col = 'var(--dim)';
+      if (p.sfg > 0) {
+        const okN = Q.cmp(at(p.scene, p.sfg).gap, J.eps) < 0, okP = Q.cmp(at(p.scene, p.sfg - 1).gap, J.eps) < 0;
+        if (okN && !okP) { msg = '✓ 第 ' + p.sfg + ' 步才够小，就是它'; col = 'var(--good)'; } else if (okN) { msg = '够小了，但更早就够了'; col = 'var(--ink)'; } else { msg = '第 ' + p.sfg + ' 步的差距还不够小'; col = 'var(--bad)'; }
+      }
+      s += K.text(210, y + 16, msg, { size: 11, anchor: 'start', weight: 700, fill: col });
+    }
     return s;
   }
   U.registerPack({
@@ -63,9 +89,9 @@
         explore: true,   // 探究和游戏：器材架上放在最后的“拓展”组
         workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E7'], label: '逼近器', prefix: '逼', group: '时间与变化', grades: [5, 9], alias: ['逼近', '极限', '割圆', '0.999', '取一半', '根号2', '二分'],
         props: {
-          scene: { type: 'choice', label: '场景', default: 0, choices: SC }, step: { hidden: true, type: 'int', label: '走到第几步', default: 0, min: 0, max: 30 },
-          gans: { type: 'int', label: '先猜：（1 会到目标 2 永远差一点 3 会超过）', default: 0, min: 0, max: 3 },
-          eps: { type: 'text', label: '一个很小的数 ε（如 1/1000）', default: '' }, sfg: { type: 'int', label: '我说：要走几步差距才小于 ε', default: 0, min: 0, max: 60 },
+          scene: { hidden: true, type: 'choice', label: '场景', default: 0, choices: SC }, step: { hidden: true, type: 'int', label: '走到第几步', default: 0, min: 0, max: 30 },
+          gans: { hidden: true, type: 'int', label: '先猜：（1 会到目标 2 永远差一点 3 会超过）', default: 0, min: 0, max: 3 },
+          eps: { hidden: true, type: 'text', label: '一个很小的数 ε（如 1/1000）', default: '' }, sfg: { hidden: true, type: 'int', label: '我说：要走几步差距才小于 ε', default: 0, min: 0, max: 60 },
         },
         guess: { props: ['gans'], ports: ['lower', 'upper', 'value'], answered },
         outputs: {
@@ -73,7 +99,7 @@
           gap: { dim: null, kind: 'num', label: '差距（上界 − 下界）' }, stepsFor: { dim: null, kind: 'num', label: '差距小于 ε 要几步' }, sfOk: { dim: null, kind: 'num', label: '步数说对了（1/0）' }, guessed: { dim: null, kind: 'num', label: '先猜对了（1/0）' },
         },
         icon: () => K.line(10, 50, 54, 14, { stroke: 'var(--accent)', w: 2.5 }) + K.line(10, 30, 54, 30, { stroke: 'var(--dim)', w: 1.5 }),
-        size: (c) => [380, c.props.scene === 1 ? 250 : 190],
+        size: (c) => [380, c.props.scene === 1 ? 376 : 280],
         compute: (c) => {
           const J = judge(c.props), A = J.A, ex = A.exact;
           c.say('info', c.props.step ? '第 ' + c.props.step + ' 步，差距 ' + (ex ? Q.show(A.gap) : '≈' + Q.num(A.gap).toExponential(2)) : '点“下一步”');
