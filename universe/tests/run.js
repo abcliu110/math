@@ -3757,6 +3757,67 @@ console.log('全部在器材上操作：几何一组（海龟作图、剪拼、�
       for (const k of Object.keys(d.props)) if (d.props[k].write && !d.props[k].hidden && !(ALLOW[ty] && ALLOW[ty][k])) bad.push(ty + '.' + k);
     }
     eq(bad, [], '还要打开属性面板填的');
+{
+  console.log('全在卡片上操作（ex 组：逼近器、最优化沙盘、缩放对比、影子测高、球面三角形、出租车几何）');
+  // 画一次卡片，收集上面的按钮：按钮上的字 → [属性补丁, …]（同样的字可能有几个，比如两个 “+”）
+  const picks = (s, id) => {
+    const e = s.entities[id], d = U.types[e.type], P = e.props, out = W.evaluate(s)[id].out;
+    const svg = d.draw({ props: P, w: d.size({ props: P })[0], h: 300, masked: !!(d.guess && !d.guess.answered(P)), out }), r = {};
+    svg.replace(/data-pick-set="([^"]+)"[^>]*>(.*?)<\/(g|rect)>/g, (m, o, inner) => { const lab = inner.replace(/<[^>]+>/g, ''); (r[lab] = r[lab] || []).push(JSON.parse(decodeURIComponent(o))); return m; });
+    return { r, svg };
+  };
+  const press = (s, id, lab, n) => { const b = picks(s, id).r[lab]; truthy(b && b[n || 0], '卡片上没有按钮“' + lab + '”：' + Object.keys(picks(s, id).r).join('、')); const o = b[n || 0]; for (const k of Object.keys(o)) { const r = W.act(s, { t: 'set', id, k, v: o[k] }); if (!r.ok) throw new Error(r.why); } return o; };
+  const outv = (s, id, k) => Q.show(W.evaluate(s)[id].out[k].data);
+  const noFill = (type) => { const d = U.types[type]; eq(Object.keys(d.props).filter((k) => d.props[k].write && !d.props[k].hidden), [], type + ' 还有要在属性面板里填的'); };
+  t('六台都没有要在属性面板里填的属性（不再出现“✎ 填写”）；影子测高的树高是出题人设的，藏着', () => { for (const ty of ['approach', 'optimize', 'scale', 'shadow', 'spheretri', 'taxi']) noFill(ty); truthy(U.types.shadow.props.tree.hidden); });
+  t('逼近器：点“永远差一点”就是猜了；点 ε 卡片清掉步数；+ / − 调步数，当场说够不够', () => {
+    const s = W.blank(), a = W.add(s, 'approach', 0, 0, { scene: 0 });
+    eq(press(s, a, '永远差一点'), { gans: 2 }); eq(outv(s, a, 'guessed'), '1'); truthy(picks(s, a).svg.includes('✓'));
+    press(s, a, '会超过'); eq(outv(s, a, 'guessed'), '0');
+    eq(press(s, a, '1/100'), { eps: '1/100', sfg: 0 });
+    for (let i = 0; i < 7; i++) press(s, a, '+');
+    eq(s.entities[a].props.sfg, 7); eq(outv(s, a, 'sfOk'), '1'); truthy(picks(s, a).svg.includes('就是它'), '第 7 步：1/128 < 1/100，就是它');
+    press(s, a, '−'); eq(outv(s, a, 'sfOk'), '0'); truthy(picks(s, a).svg.includes('还不够小'), '第 6 步：1/64 还不够小');
+    press(s, a, '1/1000'); eq(s.entities[a].props.sfg, 0, '换 ε：说过的步数清掉');
+    const s2 = W.blank(), b = W.add(s2, 'approach', 0, 0, { scene: 2, eps: '1/1000000' }); press(s2, b, '+'); truthy(picks(s2, b).svg.includes('还不够小'));
+  });
+  t('最优化沙盘：没猜时点数字是“我猜”，猜好以后点数字是试；将军饮马能猜 0', () => {
+    const s = W.blank(), o = W.add(s, 'optimize', 0, 0, { scene: 0 });
+    truthy(picks(s, o).r['我猜 5 最好'], '没猜：数字是“我猜”');
+    eq(press(s, o, '我猜 5 最好'), { gx: 5 }); eq(outv(s, o, 'guessed'), '1');
+    truthy(!picks(s, o).r['我猜 3 最好'] && picks(s, o).svg.includes('data-pick-k="x"'), '猜好以后：数字是试一试');
+    W.act(s, { t: 'set', id: o, k: 'x', v: 5 }); eq(outv(s, o, 'hit'), '1');
+    W.act(s, { t: 'set', id: o, k: 'scene', v: 2 }); eq(s.entities[o].props.gx, -1, '换场景：猜的清掉');
+    press(s, o, '我猜 0 最好'); eq(s.entities[o].props.gx, 0); truthy(U.types.optimize.guess.answered(s.entities[o].props), '猜 0 也算猜了');
+  });
+  t('缩放对比：点倍数卡片改 k；候选数里点一个就是猜了，标出对错', () => {
+    const s = W.blank(), c = W.add(s, 'scale', 0, 0, { shape: 0, k: '1' });
+    truthy(picks(s, c).svg.includes('先点一个放大倍数'), 'k = 1：先选倍数');
+    eq(press(s, c, '2'), { k: '2' }); eq(outv(s, c, 'area'), '4');
+    eq(press(s, c, '4'), { gans: '4' }); eq(outv(s, c, 'guessed'), '1'); truthy(picks(s, c).svg.includes('猜对了'));
+    press(s, c, '3/2'); truthy(picks(s, c).r['9/4'], '3/2 倍：候选里有 9/4'); eq(outv(s, c, 'area'), '9/4');
+  });
+  t('影子测高：杆高 − / +；树上的虚线 − / + 调到 8，先“我猜”，再“算好了”', () => {
+    const s = W.blank(), h = W.add(s, 'shadow', 0, 0, { pole: 2, tree: 8, sun: 0 });
+    eq(press(s, h, '+', 0), { pole: 3 }); press(s, h, '−', 0); eq(s.entities[h].props.pole, 2);
+    for (let i = 0; i < 3; i++) press(s, h, '+', 1);
+    eq(s.entities[h].props.hd, 8); eq(press(s, h, '我猜树高 8 米'), { hgt: '8' }); eq(outv(s, h, 'guessed'), '1');
+    truthy(picks(s, h).svg.includes('也一样：树高是几'), '猜过以后先给比例，不直接给答案');
+    eq(press(s, h, '算好了：树高 8 米'), { myans: '8' }); eq(outv(s, h, 'ok'), '1'); truthy(picks(s, h).svg.includes('算对了'));
+  });
+  t('球面三角形：先猜点“比它大”；选好三点后标出猜对了', () => {
+    const s = W.blank(), g = W.add(s, 'spheretri', 0, 0, {});
+    eq(press(s, g, '比它大'), { gans: '>180' }); for (const i of [1, 2, 3]) W.act(s, { t: 'set', id: g, k: 'pk', v: i });
+    eq(outv(s, g, 'sum'), '270'); truthy(picks(s, g).svg.includes('✓ 猜对了'));
+    press(s, g, '一样'); truthy(!picks(s, g).svg.includes('猜对了'));
+  });
+  t('出租车几何：r 用 − / + 调（标的清掉）；哪一对点点按钮；四种形状点一个就是猜了', () => {
+    const s = W.blank(), x = W.add(s, 'taxi', 0, 0, { mode: 0, r: 3 });
+    W.act(s, { t: 'set', id: x, k: 'cell', v: 1 }); eq(press(s, x, '+'), { r: 4 }); eq(s.entities[x].props.marks, '', '改 r：标的清掉');
+    eq(press(s, x, '斜放的正方形'), { gans: 2 });
+    W.act(s, { t: 'set', id: x, k: 'mode', v: 1 }); eq(press(s, x, 'A(0,0) B(2,2)'), { pair: 1 });
+    for (const i of U.WhatIf.tTruth(s.entities[x].props)) W.act(s, { t: 'set', id: x, k: 'cell', v: i + 1 });
+    press(s, x, '一片区域'); eq(outv(s, x, 'ok'), '1'); truthy(/一片区域.*✓/.test(picks(s, x).svg.replace(/<[^>]+>/g, '')), '全部标对：猜的形状打 ✓');
   });
 }
 console.log('\n' + pass + ' 通过，' + fail + ' 失败');

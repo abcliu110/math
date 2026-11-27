@@ -2,6 +2,8 @@
  *   scale（缩放对比）：一个图形，放大 k 倍的副本并排。先猜：周长、面积、体积各是原来的几倍？再看读数；k 可以是 1/2、3/2 这样的分数。
  *     周长比是 k，面积比是 k²，体积比是 k³；面积比用“小方格铺满”看：大图形里有 k² 个原来大小的格子（k 是整数时数得出来）。
  *   shadow（影子测高）：一根已知高度的杆和它的影子，一棵树和它的影子；改变太阳的高度，两个影子一起变；量得到杆高、杆影、树影，量不到树高——先猜，再列比例。
+ * 全部在卡片上做（2026-11-26）：缩放对比点倍数卡片、点候选数先猜，图形用标题栏的“换一种”；影子测高的杆高用 − / + 调，
+ *   树上有一条虚线（你说的树高），− / + 调高低，先点“我猜树高”，看了比例再点“算好了”；树高是出题人设的，藏起来。
  * 和设计文档的差别（如实写）：两个都是独立器材，不是几何工作区里的“放大副本”；缩放对比只有 3 种图形（长方形、正方形、立方体）；影子测高的太阳只取 4 个高度（影子长是有理数）。 */
 (function (G) {
   'use strict';
@@ -10,6 +12,11 @@
   const rq = (t) => { try { const q = Q.parse(String(t)); return q && Q.cmp(q, Q(0)) > 0 ? q : null; } catch (e) { return null; } };
   const SH = [{ name: '长方形 3 × 2', w: 3, h: 2, d: 0 }, { name: '正方形 2 × 2', w: 2, h: 2, d: 0 }, { name: '立方体 2 × 2 × 2', w: 2, h: 2, d: 2 }];
   const ans = (t) => { try { return Q.parse(String(t)); } catch (e) { return null; } };
+  // 全在卡片上操作（不用属性面板）：放大倍数点倍数卡片；先猜点候选数；影子测高的杆高、树高用 − / + 调
+  const KS = ['1/2', '1', '3/2', '2', '5/2', '3'];
+  const pset = (o) => encodeURIComponent(JSON.stringify(o));
+  // 卡片上的按钮：点一下改一组属性（data-pick-set，整串一次撤销）；off 画成灰的、点不了
+  const sbtn = (x, y, w, h, tx, o, on, off) => { const b = K.rect(x, y, w, h, { fill: on ? 'var(--accent)' : off ? 'var(--card)' : 'var(--sel-bg)', stroke: off ? 'var(--dim)' : 'none', w: 0.6, r: 6 }) + K.text(x + w / 2, y + h * 0.7, tx, { size: 11.5, weight: 700, fill: on ? '#fff' : off ? 'var(--dim)' : 'var(--ink)' }); return off ? b : '<g data-pick-set="' + pset(o) + '" style="cursor:pointer">' + b + '</g>'; };
   function sJudge(p) {
     const k = rq(p.k) || Q(1), sh = SH[p.shape], k2 = Q.mul(k, k), k3 = Q.mul(k2, k), g = ans(p.gans);
     return { k, sh, perim: k, area: k2, vol: sh.d ? k3 : null, guessed: g && Q.cmp(g, k2) === 0 ? 1 : 0, cells: Q.isInt(k) ? Number(k.n) ** 2 : 0 };
@@ -21,8 +28,18 @@
     const bw = Math.min(150, sh.w * u * kn), bh = Math.min(90, sh.h * u * kn), x1 = x0 + sh.w * u + 30;
     s += K.rect(x1, y0 + 90 - bh, bw, bh, { fill: '#5b9bd5', fillOpacity: 0.5, stroke: 'var(--ink)', r: 0 }) + K.text(x1 + bw / 2, y0 + 106, '放大 ' + p.k + ' 倍', { size: 10.5, fill: 'var(--dim)' });
     if (Q.isInt(J.k) && kn >= 1 && kn <= 5) for (let i = 0; i < kn * sh.w; i++) for (let j = 0; j < kn * sh.h; j++) s += K.rect(x1 + i * (bw / (kn * sh.w)), y0 + 90 - bh + j * (bh / (kn * sh.h)), bw / (kn * sh.w), bh / (kn * sh.h), { fill: 'none', stroke: 'var(--card)', w: 0.5, r: 0 });
-    let y = y0 + 130; s += K.text(10, y, sh.name + '，放大 ' + p.k + ' 倍', { size: 12, anchor: 'start', weight: 700 }); y += 20;
-    if (c.masked) s += K.text(10, y, '先猜：面积是原来的几倍？（填“我猜面积是几倍”）', { size: 12, anchor: 'start', weight: 700, fill: 'var(--accent)' });
+    s += K.text(10, 14, sh.name, { size: 12, anchor: 'start', weight: 700 });
+    // 放大几倍：一排倍数卡片，点一张，右边的副本当场变大变小
+    let y = y0 + 114; s += K.text(10, y + 16, '放大几倍：', { size: 11.5, anchor: 'start', weight: 700 });
+    KS.forEach((v, i) => { s += sbtn(76 + i * 48, y, 42, 24, v, { k: v }, Q.cmp(rq(v), J.k) === 0); });
+    // 先猜面积是几倍：几个候选数（k、2k、k²、k³），点一个就是猜了；猜过以后标出对错，换了倍数可以再猜
+    y += 32;
+    const ks = [J.k, Q.mul(J.k, Q(2)), J.area, Q.mul(J.area, J.k)].filter((q, i, a) => a.findIndex((r) => Q.cmp(r, q) === 0) === i).sort((a, b) => Q.cmp(a, b)), g = ans(p.gans);
+    s += K.text(10, y + 16, '猜面积几倍：', { size: 11.5, anchor: 'start', weight: 700, fill: c.masked ? 'var(--accent)' : 'var(--ink)' });
+    if (Q.cmp(J.k, Q(1)) === 0) s += K.text(88, y + 16, '先点一个放大倍数（不是 1）', { size: 11, anchor: 'start', fill: 'var(--dim)' });
+    else ks.forEach((q, i) => { const on = !!(g && Q.cmp(g, q) === 0); s += sbtn(88 + i * 58, y, 52, 24, Q.show(q), { gans: Q.show(q) }, on); if (on && !c.masked) s += K.text(88 + i * 58 + 26, y + 36, J.guessed ? '✓ 猜对了' : '✗', { size: 10, weight: 700, fill: J.guessed ? 'var(--good)' : 'var(--bad)' }); });
+    y += 56;
+    if (c.masked) s += K.text(10, y, '先猜：面积是原来的几倍？点上面一个数', { size: 12, anchor: 'start', weight: 700, fill: 'var(--accent)' });
     else { s += K.text(10, y, '周长 × ' + Q.show(J.perim) + '　面积 × ' + Q.show(J.area) + (sh.d ? '　体积 × ' + Q.show(J.vol) : ''), { size: 12.5, anchor: 'start', weight: 700 }); if (J.cells) s += K.text(10, y + 18, '用原来大小的小方格铺满：正好 ' + J.cells + ' 个', { size: 11, anchor: 'start', fill: 'var(--dim)' }); }
     return s;
   }
@@ -42,7 +59,22 @@
     s += K.text(x1, gy + 14, '杆 ' + p.pole + ' 米，影 ' + Q.show(J.ps) + ' 米', { size: 10.5, anchor: 'start' }) + K.text(tx - 10, gy + 14, '树影 ' + Q.show(J.ts) + ' 米', { size: 10.5, anchor: 'start' });
     s += K.text(10, 16, '太阳高度：点一下换', { size: 11, anchor: 'start', fill: 'var(--dim)' });
     SUN.forEach((q, i) => { const x = 110 + i * 56, on = p.sun === i; s += K.rect(x, 4, 50, 18, { fill: on ? 'var(--accent)' : 'var(--sel-bg)', r: 9 }) + K.text(x + 25, 17, ['高', '中高', '中低', '低'][i], { size: 11, weight: 700, fill: on ? '#fff' : 'var(--ink)' }); H.push('<rect x="' + x + '" y="4" width="50" height="18" fill="transparent" data-pick-k="sun" data-pick-v="' + i + '" style="cursor:pointer"/>'); });
-    s += K.text(10, gy + 36, c.masked ? '先猜：树有多高？（填“我猜树高”）' : '杆影 ÷ 树影 = ' + Q.show(Q.div(J.ps, J.ts)) + '　树高 = 杆高 × 树影 ÷ 杆影 = ' + Q.show(J.height) + ' 米', { size: 11.5, anchor: 'start', weight: 700, fill: c.masked ? 'var(--accent)' : 'var(--ink)' });
+    // 树上的虚线：你说的树高（− / + 调），对着树比一比
+    const hd = p.hd, hy = gy - hd * u * 0.55 * 2;
+    if (hy > 24) s += K.line(tx - 26, hy, tx + 26, hy, { stroke: 'var(--accent)', w: 2, dash: '4 3' }) + K.text(tx + 30, hy + 4, hd + ' 米？', { size: 10.5, anchor: 'start', weight: 700, fill: 'var(--accent)' });
+    // 杆高：− / + 调（杆和它的影子一起变）
+    let y = gy + 24; s += K.text(10, y + 16, '杆高', { size: 11.5, anchor: 'start', weight: 700 });
+    s += sbtn(42, y, 26, 24, '−', { pole: p.pole - 1 }, false, p.pole <= 1) + K.text(84, y + 17, String(p.pole), { size: 14, weight: 700 }) + sbtn(100, y, 26, 24, '+', { pole: p.pole + 1 }, false, p.pole >= 10) + K.text(132, y + 16, '米', { size: 11.5, anchor: 'start' });
+    // 树高：− / + 调树上的虚线，先“就猜这么高”，看了比例再“算好了”
+    s += K.text(170, y + 16, '树高', { size: 11.5, anchor: 'start', weight: 700, fill: 'var(--accent)' });
+    s += sbtn(202, y, 26, 24, '−', { hd: hd - 1 }, false, hd <= 1) + K.text(244, y + 17, String(hd), { size: 14, weight: 700, fill: 'var(--accent)' }) + sbtn(260, y, 26, 24, '+', { hd: hd + 1 }, false, hd >= 30) + K.text(292, y + 16, '米', { size: 11.5, anchor: 'start' });
+    y += 32;
+    s += c.masked ? sbtn(10, y, 150, 24, '我猜树高 ' + hd + ' 米', { hgt: String(hd) }, false) : sbtn(10, y, 150, 24, '算好了：树高 ' + hd + ' 米', { myans: String(hd) }, false);
+    const a = ans(p.myans);
+    if (!c.masked) s += K.text(170, y + 16, p.myans === '' || !a ? '先猜的是 ' + p.hgt + ' 米' : J.ok ? '✓ 算对了：树高 ' + p.myans + ' 米' : '✗ 不是 ' + p.myans + ' 米，再算算', { size: 11.5, anchor: 'start', weight: 700, fill: p.myans === '' || !a ? 'var(--dim)' : J.ok ? 'var(--good)' : 'var(--bad)' });
+    y += 46;
+    // 猜过以后先给比例（杆高 ÷ 杆影 = 树高 ÷ 树影），自己算；算对了才把算式写全
+    s += K.text(10, y, c.masked ? '先猜：树有多高？调虚线，再点“我猜”' : J.ok ? '杆影 ÷ 树影 = ' + Q.show(Q.div(J.ps, J.ts)) + '　树高 = 杆高 × 树影 ÷ 杆影 = ' + Q.show(J.height) + ' 米' : '杆高 ÷ 杆影 = ' + p.pole + ' ÷ ' + Q.show(J.ps) + '，树高 ÷ ' + Q.show(J.ts) + ' 也一样：树高是几？', { size: 11.5, anchor: 'start', weight: 700, fill: c.masked ? 'var(--accent)' : 'var(--ink)' });
     return s + H.join('');
   }
   U.registerPack({
@@ -51,11 +83,11 @@
       scale: {
         explore: true,   // 探究和游戏：器材架上放在最后的“拓展”组
         workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E3', 'E12', 'E5'], label: '缩放对比', prefix: '缩', group: '图形', grades: [5, 9], alias: ['缩放', '放大', '相似', '面积比', '周长比', '体积比', 'k的平方'],
-        props: { shape: { type: 'choice', label: '图形', default: 0, choices: SH.map((x) => x.name) }, k: { type: 'text', label: '放大几倍（可以是 1/2、3/2）', default: '1' }, gans: { type: 'text', label: '我猜面积是原来的几倍', default: '' } },
+        props: { shape: { hidden: true, type: 'choice', label: '图形', default: 0, choices: SH.map((x) => x.name) }, k: { hidden: true, type: 'text', label: '放大几倍（可以是 1/2、3/2）', default: '1' }, gans: { hidden: true, type: 'text', label: '我猜面积是原来的几倍', default: '' } },
         guess: { props: ['gans'], ports: ['area', 'perim', 'vol', 'cells'], answered: (p) => ans(p.gans) !== null && String(p.gans).trim() !== '' },
         outputs: { k: { dim: null, kind: 'num', label: '放大倍数 k' }, perim: { dim: null, kind: 'num', label: '周长是原来的几倍' }, area: { dim: null, kind: 'num', label: '面积是原来的几倍' }, vol: { dim: null, kind: 'num', label: '体积是原来的几倍' }, cells: { dim: null, kind: 'num', label: '铺满要几个原来大小的格子' }, guessed: { dim: null, kind: 'num', label: '先猜对了（1/0）' } },
         icon: () => K.rect(10, 30, 16, 16, { fill: '#f5a25d', r: 0 }) + K.rect(30, 14, 28, 28, { fill: '#5b9bd5', r: 0 }),
-        size: () => [380, 200],
+        size: () => [380, 280],
         compute: (c) => { const J = sJudge(c.props); c.say('info', '面积是原来的 ' + Q.show(J.area) + ' 倍'); const o = { k: num(J.k), perim: num(J.perim), area: num(J.area), cells: num(J.cells), guessed: num(J.guessed) }; if (J.vol) o.vol = num(J.vol); return o; },
         badge: (c) => (c.masked ? '？' : ''),
         draw: sDraw,
@@ -63,12 +95,12 @@
       shadow: {
         explore: true,   // 探究和游戏：器材架上放在最后的“拓展”组
         workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E3', 'E12', 'E5'], label: '影子测高', prefix: '影', group: '图形', grades: [6, 9], alias: ['影子测高', '相似三角形', '比例', '测高', '影子'],
-        props: { pole: { type: 'int', label: '杆高（米）', default: 2, min: 1, max: 10 }, tree: { type: 'int', label: '树高（米，出题人设）', default: 8, min: 1, max: 30 }, sun: { type: 'int', label: '太阳高度（0 最高）', default: 0, min: 0, max: 3 }, hgt: { type: 'text', label: '我猜树高', default: '' }, myans: { type: 'text', label: '我算出的树高', default: '' }, seen: { hidden: true, type: 'text', label: '看过的太阳', default: '', write: false } },
+        props: { pole: { hidden: true, type: 'int', label: '杆高（米）', default: 2, min: 1, max: 10 }, tree: { hidden: true, type: 'int', label: '树高（米，出题人设）', default: 8, min: 1, max: 30 }, sun: { hidden: true, type: 'int', label: '太阳高度（0 最高）', default: 0, min: 0, max: 3 }, hgt: { hidden: true, type: 'text', label: '我猜树高', default: '' }, myans: { hidden: true, type: 'text', label: '我算出的树高', default: '' }, hd: { hidden: true, type: 'int', label: '树上虚线的高度（米）', default: 5, min: 1, max: 30 }, seen: { hidden: true, type: 'text', label: '看过的太阳', default: '', write: false } },
         onSet: (p, k, v) => (k === 'sun' ? { seen: String(p.seen || '').split('').includes(String(v)) ? p.seen : String(p.seen || '') + v } : null),
         guess: { props: ['hgt'], ports: ['height', 'ratio'], answered: (p) => ans(p.hgt) !== null && String(p.hgt).trim() !== '' },
         outputs: { poleShadow: { dim: null, kind: 'num', label: '杆影（米）' }, treeShadow: { dim: null, kind: 'num', label: '树影（米）' }, ratio: { dim: null, kind: 'num', label: '树影 ÷ 杆影' }, height: { dim: null, kind: 'num', label: '树高（按比例算）' }, ok: { dim: null, kind: 'num', label: '我算的树高对了（1/0）' }, suns: { dim: null, kind: 'num', label: '看过几个太阳高度' }, guessed: { dim: null, kind: 'num', label: '先猜对了（1/0）' } },
         icon: () => K.line(16, 50, 16, 20, { w: 3 }) + K.line(40, 50, 40, 10, { stroke: 'var(--good)', w: 6 }) + K.line(10, 50, 58, 50, { stroke: 'var(--dim)', w: 2 }),
-        size: () => [380, 190],
+        size: () => [380, 280],
         compute: (c) => { const J = hJudge(c.props); c.say(J.ok ? 'ok' : 'info', '杆影 ' + Q.show(J.ps) + ' 米，树影 ' + Q.show(J.ts) + ' 米'); return { poleShadow: num(J.ps), treeShadow: num(J.ts), ratio: num(J.ratio), height: num(J.height), ok: num(J.ok), suns: num(String(c.props.seen || '').length || 1), guessed: num(J.guessed) }; },
         badge: (c) => (c.masked ? '？' : ''),
         draw: hDraw,

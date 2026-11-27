@@ -31,9 +31,7 @@ const prop = (p, id, k) => p.evaluate(([id, k]) => UI.S.scene.entities[id].props
   await set(s, 'gans', '270'); t = await body(p, s); ok(t.includes('内角和 270°') && t.includes('1/8'), '先猜以后：内角和 270°，占球面 1/8');
   await click(s, 'clear', 1); ok((await prop(p, s, 'pts')) === '', '重选：清空');
 
-  await p.locator('.card[data-id="' + s + '"] .gchip:not(.hq)').first().click(); await p.waitForTimeout(300);
-  ok(await p.evaluate(() => UI.S.inspOpen && document.querySelector('#insp').innerText.includes('先猜内角和') && !document.querySelector('#insp').innerText.includes('点球上的点')), '标题栏“先猜 / 填写”：打开属性面板，里面只有要填的，没有内部按钮');
-  await p.evaluate(() => { UI.S.inspOpen = false; UI.Panels.renderInsp(); });
+  ok(await p.locator('.card[data-id="' + s + '"] [data-card-insp]').count() === 0, '标题栏没有“✎ 先猜 / 填写”：先猜是卡片上的按钮（tests/ui-oncard-ex.js）');
 
   console.log('出租车几何');
   const x = await add('taxi', 420, 20, { mode: 0, r: 1 });

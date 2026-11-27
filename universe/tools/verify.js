@@ -181,6 +181,7 @@ async function checkDist() {
   if (!runScript('tests/ui-lab.js', 'tests/ui-lab.js', pwEnv)) bail();     // 改规则的世界 + 逼近器、最优化：球面三角形、出租车几何、换一种运算（真实鼠标）
   if (!runScript('tests/ui-lab2.js', 'tests/ui-lab2.js', pwEnv)) bail();     // 海龟作图、展开图、小方块、尺规作图、两种解法对照（真实鼠标）
   if (!runScript('tests/ui-oncard-geo.js', 'tests/ui-oncard-geo.js', pwEnv)) bail();     // 全部在器材上操作·几何一组：海龟作图、剪拼、钉板、证明排序、尺规作图、式子台，全程不开属性面板（真实鼠标）
+  if (!runScript('tests/ui-oncard-ex.js', 'tests/ui-oncard-ex.js', pwEnv)) bail();     // 全在卡片上操作（ex 组）：逼近器、最优化、缩放、影子、球面三角形、出租车几何，全程不开属性面板（真实鼠标）
   if (!runScript('tests/ui-snap3.js', 'tests/ui-snap3.js', pwEnv)) bail();       // V4 剩余：构造点（重心、圆心、三分之一点，真实鼠标拖动和画线）、块和卡片拖动吸附到中点（真实鼠标）
   if (!runScript('tests/ui-visual.js', 'tests/ui-visual.js', pwEnv)) bail();     // V10：填充纹理（斜线、点阵，属性面板）、点形状（按器材声明）、高对比度开关（菜单，两套主题 >= 4.5）
   if (!runScript('tests/ui-digit2.js', 'tests/ui-digit2.js', pwEnv)) bail();     // D8 遗留：竖式每一列的数字池（0–9，在列的正下方）、真实鼠标拖数字、拖退位和进位到格子上、拖错有提示不写入
