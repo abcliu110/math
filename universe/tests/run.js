@@ -3617,5 +3617,38 @@ console.log('联动组：一个道理，几种样子（js/core/forms.js）');
     eq(all4(s, o)[0], [3, 2, 1, 10], '天平没动');
   });
 }
+console.log('低年级帮手（试验台增强 6，js/ui/young-aid.js 的纯函数）');
+{
+  const yctx = vm.createContext({ console }); yctx.globalThis = yctx;
+  vm.runInContext(fs.readFileSync(path.join(root, 'js/ui/young-aid.js'), 'utf8'), yctx, { filename: 'js/ui/young-aid.js' });
+  const Y = yctx.UI.YoungAid;
+  const inside = (h, b) => h.x <= b.x + 1e-9 && h.y <= b.y + 1e-9 && h.x + h.w >= b.x + b.w - 1e-9 && h.y + h.h >= b.y + b.h - 1e-9;
+  const cross = (a, b) => a.x < b.x + b.w - 1e-9 && b.x < a.x + a.w - 1e-9 && a.y < b.y + b.h - 1e-9 && b.y < a.y + a.h - 1e-9;
+  t('只在 1、2 年级的题里生效', () => { eq([1, 2, 3, 5].map((g) => Y.isLow({ grade: g })), [true, true, false, false]); eq(Y.isLow(null), false); eq(Y.isLow({}), false); });
+  t('孤零零的小按钮放大到 44×44，居中，包住原来的', () => { const b = { x: 100, y: 100, w: 20, h: 10 }, h = Y.hitRects([b], 44)[0]; eq([h.x, h.y, h.w, h.h], [88, 83, 44, 44]); truthy(inside(h, b)); });
+  t('本来就够大的不变', () => { const b = { x: 0, y: 0, w: 60, h: 50 }; eq(Y.hitRects([b], 44)[0], b); });
+  t('靠着外框：放不下的一边挪到另一边', () => { const h = Y.hitRects([{ x: 2, y: 2, w: 20, h: 20 }], 44, { x: 0, y: 0, w: 300, h: 300 })[0]; eq([h.x, h.y, h.w, h.h], [0, 0, 44, 44]); });
+  t('两个挨着的按钮：各让一半空隙，放大后不互相盖住', () => {
+    const bs = [{ x: 0, y: 50, w: 30, h: 30 }, { x: 40, y: 50, w: 30, h: 30 }], hs = Y.hitRects(bs, 44, { x: -100, y: -100, w: 400, h: 400 });
+    truthy(!cross(hs[0], hs[1]), '不重叠'); truthy(!cross(hs[0], bs[1]) && !cross(hs[1], bs[0]), '不盖住对方'); eq(hs[0].w, 44); eq(hs[1].w, 44); eq(hs[0].x + hs[0].w, 35); eq(hs[1].x, 35);
+  });
+  t('挤在一起的格子放不满 44，但一定包住原来的、互不盖住', () => {
+    const bs = []; for (let i = 0; i < 4; i++) bs.push({ x: i * 34, y: 0, w: 32, h: 32 });
+    const hs = Y.hitRects(bs, 44, { x: -50, y: -50, w: 300, h: 300 });
+    hs.forEach((h, i) => { truthy(inside(h, bs[i]), '包住 ' + i); eq(h.h, 44); hs.forEach((o, j) => { if (j !== i) truthy(!cross(h, o), i + ' 和 ' + j + ' 不重叠'); }); });
+    eq(hs[1].w, 34, '中间的格子只能多 1 + 1');
+  });
+  t('本来就叠在一起的两个不放大（免得盖住对方）', () => { const hs = Y.hitRects([{ x: 0, y: 0, w: 20, h: 20 }, { x: 10, y: 10, w: 20, h: 20 }, { x: 200, y: 0, w: 20, h: 20 }], 44); eq(hs[0].w, 20); eq(hs[1].w, 20); eq(hs[2].w, 44); });
+  t('读出来之前把符号换成字、去掉图标', () => {
+    eq(Y.speakable('9 + 6 = ?'), '9 加 6 等于多少'); eq(Y.speakable('13 − 5 = 8'), '13 减 5 等于 8'); eq(Y.speakable('3 × 4 ÷ 2'), '3 乘 4 除以 2');
+    eq(Y.speakable('💡 提示：✓ 做完了'), '提示：对 做完了'); eq(Y.speakable('5 > 3'), '5 大于 3');
+  });
+  t('几句话接成一段：已经有标点的不再加句号', () => { eq(Y.joinSentences(['多少？', '点一下', '对了。', '']), '多少？点一下。对了。'); });
+  t('步骤的图标：做完 ⭐、正在做 👉、还没到 🎯', () => { eq(['done', 'cur', 'todo'].map(Y.stepIcon), ['⭐', '👉', '🎯']); });
+  t('挑中文语音：优先 zh-CN，没有中文就是 null', () => {
+    eq(Y.pickVoice([{ lang: 'en-US' }, { lang: 'zh-TW', name: 't' }, { lang: 'zh-CN', name: 'c' }]).name, 'c'); eq(Y.pickVoice([{ lang: 'zh-HK', name: 'h' }]).name, 'h');
+    eq(Y.pickVoice([{ lang: 'en-US' }]), null); eq(Y.pickVoice([]), null); eq(Y.pickVoice(undefined), null);
+  });
+}
 console.log('\n' + pass + ' 通过，' + fail + ' 失败');
 process.exit(fail ? 1 : 0);

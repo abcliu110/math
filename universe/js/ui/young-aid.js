@@ -24,15 +24,16 @@
   const stepIcon = (st) => (st === 'done' ? ICONS.done : st === 'cur' ? ICONS.cur : ICONS.todo);
   // 把一个个格子放大成至少 min×min 的点击区。boxes：[{x,y,w,h}]（同一个坐标系），bound：外框（可省）。
   // 每个格子先想往四边各放一半；和别的格子之间只用到空隙的一半（两边各让一半，放大后不会盖住对方），靠边一侧不够就挪到另一侧。
-  // 和自己重叠的格子不算邻居。返回同样顺序的 [{x,y,w,h}]，一定包住原来的格子。
+  // 和别的格子本来就叠在一起的不放大（放大了会盖住对方的中心，原来点得到的反而点不到）。返回同样顺序的 [{x,y,w,h}]，一定包住原来的格子。
   function hitRects(boxes, min, bound) {
     const ov = (a0, a1, b0, b1) => a0 < b1 && b0 < a1;
     return boxes.map((b, i) => {
+      if (boxes.some((o, j) => j !== i && ov(b.x, b.x + b.w, o.x, o.x + o.w) && ov(b.y, b.y + b.h, o.y, o.y + o.h))) return { x: b.x, y: b.y, w: b.w, h: b.h };
       const ex = Math.max(0, min - b.w), ey = Math.max(0, min - b.h);
       let L = bound ? b.x - bound.x : Infinity, R = bound ? bound.x + bound.w - b.x - b.w : Infinity;
       let T = bound ? b.y - bound.y : Infinity, B = bound ? bound.y + bound.h - b.y - b.h : Infinity;
       boxes.forEach((o, j) => {
-        if (j === i || (ov(b.x, b.x + b.w, o.x, o.x + o.w) && ov(b.y, b.y + b.h, o.y, o.y + o.h))) return;
+        if (j === i) return;
         if (ov(b.y - ey, b.y + b.h + ey, o.y, o.y + o.h)) {
           if (o.x + o.w <= b.x) L = Math.min(L, (b.x - o.x - o.w) / 2);
           if (o.x >= b.x + b.w) R = Math.min(R, (o.x - b.x - b.w) / 2);
@@ -63,10 +64,12 @@
     t = t.replace(/[（(]\s*[）)]/g, ' ').replace(/[ \t　]+/g, ' ');
     return t.trim();
   }
+  // 几句话接成一段：本来就以标点结尾的不再加句号
+  const joinSentences = (arr) => arr.map((x) => String(x).trim()).filter(Boolean).map((x) => (/[。！？!?；;：:，,…]$/.test(x) ? x : x + '。')).join('');
   // 挑一个中文语音；没有就是 null
   const pickVoice = (voices) => (voices || []).find((v) => /^zh[-_]?(CN|Hans)?/i.test(v.lang || '') && /CN|Hans/i.test(v.lang || '')) || (voices || []).find((v) => /^zh/i.test(v.lang || '')) || null;
 
-  UI.YoungAid = { MIN, ICONS, isLow, stepIcon, hitRects, speakable, pickVoice };
+  UI.YoungAid = { MIN, ICONS, isLow, stepIcon, hitRects, speakable, pickVoice, joinSentences };
   if (!G.document || !G.document.documentElement) return;
 
   // ---------- 读出来 ----------
@@ -87,10 +90,10 @@
   }
   const sayBtn = (kind, label) => '<button type="button" class="yg-say" data-yg-say="' + kind + '" title="' + label + '" aria-label="' + label + '">' + ICONS.say + '</button>';
   const ico = (c) => '<span class="yg-ico" aria-hidden="true">' + c + '</span>';
-  // 一段里要读的文字：去掉 🔊 按钮、图标和分数
+  // 一段里要读的文字：去掉 🔊 按钮、图标、步骤的序号和分数
   function plainText(el) {
     const c = el.cloneNode(true);
-    c.querySelectorAll('.yg-say,.yg-ico,.sc,.tags').forEach((x) => x.remove());
+    c.querySelectorAll('.yg-say,.yg-ico,.no,.sc,.tags').forEach((x) => x.remove());
     return c.textContent.replace(/\s+/g, ' ').trim();
   }
   // 操作台卡片上的说明句子：卡片画布里带汉字的文字，按画的顺序，去掉按钮上的字和重复的
@@ -106,7 +109,7 @@
   }
   function textFor(btn) {
     const k = btn.dataset.ygSay;
-    if (k === 'card') { const card = btn.closest('.card'); return card ? cardSentences(card).join('。') : ''; }
+    if (k === 'card') { const card = btn.closest('.card'); return card ? joinSentences(cardSentences(card)) : ''; }
     const box = btn.closest('.pcard,.step');
     return box ? plainText(box) : '';
   }
