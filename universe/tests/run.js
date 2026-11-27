@@ -3641,5 +3641,66 @@ console.log('联动组：一个道理，几种样子（js/core/forms.js）');
     eq(all4(s, o)[0], [3, 2, 1, 10], '天平没动');
   });
 }
+console.log('全部在器材上操作：几何一组（海龟作图、剪拼、钉板、证明排序、尺规作图、式子台）');
+{
+  // 画一张卡片，取出上面所有按钮的补丁（data-pick-set 的 JSON）
+  const patchesOf = (s, id, masked) => { const e = s.entities[id], D = W.evaluate(s); const svg = U.types[e.type].draw({ ent: e, props: D[id].props || e.props, d: D[id], out: D[id].out, w: U.types[e.type].size({ props: e.props })[0], h: 400, t: 0, n: 0, masked: !!masked, scene: s }); return Array.from(svg.matchAll(/data-pick-set="([^"]*)"/g)).map((m) => JSON.parse(decodeURIComponent(m[1]))); };
+  const has = (L, o) => L.some((x) => bigStr(x) === bigStr(o));
+  const apply = (s, id, o) => { for (const k of Object.keys(o)) W.act(s, { t: 'set', id, k, v: o[k] }); };
+  const outOf = (s, id, port) => Q.show(W.evaluate(s)[id].out[port].data);
+  t('海龟：先猜在卡片上点“会回到起点 / 回不到”；n、a、k、目标图、先猜都不进“✎ 填写”', () => {
+    const s = W.blank(), id = W.add(s, 'turtle', 0, 0, { tgt: 1 }), d = U.types.turtle;
+    for (const k of ['n', 'a', 'k', 'tgt', 'gans']) truthy(d.props[k].hidden, k + ' 应 hidden');
+    eq(patchesOf(s, id, true), [], '还没有程序：不问');
+    for (const v of [4, 1, 2, 5]) W.act(s, { t: 'set', id, k: 'add', v });
+    const L = patchesOf(s, id, true); truthy(has(L, { gans: 1 }) && has(L, { gans: 2 }), bigStr(L));
+    apply(s, id, { gans: 1 }); eq(outOf(s, id, 'closed'), '1'); eq(outOf(s, id, 'match'), '1');
+    eq(patchesOf(s, id, false), [], '猜过了：按钮收起');
+  });
+  t('剪拼：直角边 − / +、夹角三个按钮、先猜三个答案都在卡片上', () => {
+    const s = W.blank(), id = W.add(s, 'dissect', 0, 0, { scene: 0, a: 3, b: 4, angle: 2 }), d = U.types.dissect;
+    for (const k of ['scene', 'a', 'b', 'angle', 'r', 'n', 'gans']) truthy(d.props[k].hidden, k + ' 应 hidden');
+    const L = patchesOf(s, id, true);
+    for (const o of [{ a: 2 }, { a: 4 }, { b: 3 }, { b: 5 }, { angle: 0 }, { angle: 1 }, { angle: 2 }, { gans: 1 }, { gans: 2 }, { gans: 3 }]) truthy(has(L, o), bigStr(o) + ' 不在卡片上');
+    apply(s, id, { gans: 3 }); apply(s, id, { angle: 1 }); eq(outOf(s, id, 'c2'), '25'); eq(outOf(s, id, 'guessed'), '1');
+    const s2 = W.blank(), i2 = W.add(s2, 'dissect', 0, 0, { scene: 1, r: 1, n: 4 }), L2 = patchesOf(s2, i2, true);
+    truthy(has(L2, { r: 2 }) && !has(L2, { r: 0 }) && has(L2, { gans: 1 }), '圆：半径到 1 不能再减；先猜三个答案');
+  });
+  t('钉板：公式系数按 ½ 一格调，先猜面积先调草稿再点“猜好了”', () => {
+    const s = W.blank(), id = W.add(s, 'geoboard', 0, 0, {}), d = U.types.geoboard;
+    for (const k of ['fa', 'fb', 'fc', 'gans', 'gt']) truthy(d.props[k].hidden, k + ' 应 hidden');
+    let L = patchesOf(s, id, true);
+    for (const o of [{ fa: '1/2' }, { fa: '3/2' }, { fb: '1/2' }, { fc: '-1/2' }, { fc: '1/2' }, { gt: 1 }, { gt: 2 }, { gans: '0' }]) truthy(has(L, o), bigStr(o) + ' 不在卡片上');
+    truthy(!has(L, { gt: -1 }), '草稿不能小于 0');
+    apply(s, id, { gt: 12 }); L = patchesOf(s, id, true); truthy(has(L, { gans: '6' }), '草稿 12 → 猜 6');
+    apply(s, id, { fc: '5' }); truthy(!patchesOf(s, id, true).some((o) => 'fc' in o && o.fc === '11/2'), '系数到 5 不再加');
+    // 用卡片上的补丁凑出皮克公式：fb 1 → 1/2，fc 0 → −1/2 → −1
+    const s3 = W.blank(), g = W.add(s3, 'geoboard', 0, 0, {}), poly = (P) => { for (const [x, y] of P) W.act(s3, { t: 'set', id: g, k: 'pt', v: y * 7 + x + 1 }); W.act(s3, { t: 'set', id: g, k: 'pt', v: P[0][1] * 7 + P[0][0] + 1 }); };
+    for (const P of [[[0, 0], [2, 0], [2, 1], [0, 1]], [[0, 0], [3, 0], [0, 3]], [[0, 0], [4, 0], [3, 2], [1, 2]], [[0, 0], [3, 1], [1, 3]], [[0, 0], [2, 0], [2, 2], [0, 2]]]) { poly(P); W.act(s3, { t: 'set', id: g, k: 'rec', v: 1 }); }
+    for (const o of [{ fb: '1/2' }, { fc: '-1/2' }, { fc: '-1' }]) { truthy(has(patchesOf(s3, g, false), o), bigStr(o)); apply(s3, g, o); }
+    eq(outOf(s3, g, 'formula'), '1');
+  });
+  t('证明排序的证明编号、尺规作图的“作什么”、式子台的 a、b、c、d 是出题人设的：hidden', () => {
+    truthy(U.types.proofsort.props.pid.hidden); truthy(U.types.compass.props.task.hidden);
+    for (const k of ['a', 'b', 'c', 'd']) truthy(U.types.eqstepbench.props[k].hidden, 'eqstepbench.' + k);
+  });
+  t('总检查：题目里用到的器材，compactPorts 又没有把手的，不再有孩子要填的属性（write 且不 hidden）', () => {
+    // 永久例外：{ 器材: { 属性: 理由 } }。现在没有。
+    const ALLOW = {};
+    // 暂时例外：别的组正在改，合并时删掉
+    const TEMP = {
+      fmachine: '函数机一组在改', guessrule: '函数机一组在改', asn: '函数机一组在改', newop: '函数机一组在改', twoways: '函数机一组在改', ptree: '函数机一组在改',
+      approach: '探究一组在改', optimize: '探究一组在改', scale: '探究一组在改', shadow: '探究一组在改', spheretri: '探究一组在改', taxi: '探究一组在改',
+      hanoi: '游戏一组在改', nim: '游戏一组在改', euler: '游戏一组在改', net: '游戏一组在改', cubes: '游戏一组在改', primeblocks: '游戏一组在改',
+    };
+    const used = new Set(); for (const p of U.problems) { (p.shelf || []).forEach((x) => used.add(x)); Object.values(p.build().entities).forEach((e) => used.add(e.type)); }
+    const bad = [];
+    for (const ty of used) {
+      const d = U.types[ty]; if (!d || !d.compactPorts || d.grips || TEMP[ty]) continue;
+      for (const k of Object.keys(d.props)) if (d.props[k].write && !d.props[k].hidden && !(ALLOW[ty] && ALLOW[ty][k])) bad.push(ty + '.' + k);
+    }
+    eq(bad, [], '还要打开属性面板填的');
+  });
+}
 console.log('\n' + pass + ' 通过，' + fail + ' 失败');
 process.exit(fail ? 1 : 0);

@@ -70,7 +70,7 @@
         explore: true,   // 探究和游戏：器材架上放在最后的“拓展”组
         workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E9'], label: '证明排序', prefix: '证', group: '关系', grades: [5, 9], alias: ['证明排序', '证明', '推理', '步骤', '依据', '排序'],
         props: {
-          pid: { type: 'int', label: '证明编号（出题人设）', default: 0, min: 0, max: 20 }, order: { hidden: true, type: 'text', label: '已排的卡', default: '', write: false }, rs: { hidden: true, type: 'text', label: '各步的依据', default: '', write: false },
+          pid: { hidden: true, type: 'int', label: '证明编号（出题人设）', default: 0, min: 0, max: 20 }, order: { hidden: true, type: 'text', label: '已排的卡', default: '', write: false }, rs: { hidden: true, type: 'text', label: '各步的依据', default: '', write: false },
           add: { hidden: true, type: 'int', label: '放一张卡', default: 0, min: 0, max: 20 }, del: { hidden: true, type: 'int', label: '拿回一张卡', default: 0, min: 0, max: 20 }, rr: { hidden: true, type: 'int', label: '选依据', default: 0, min: 0, max: 99 },
         },
         onSet,
