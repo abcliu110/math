@@ -65,5 +65,65 @@
     why: '数轴上试 g：x + 5 和 12 落在同一点，就说明 g 是解。两边同时减 5，两个落点一起往左走 5，差不变，所以落在一起的还落在一起：x = 7。',
   });
 
+  // ---------- 四种样子一起做（道理地图 → 两边一样）：天平、式子、线段图、数轴连成一组 ----------
+  // 初始位置 2×2：上面天平、式子，下面线段图、数轴（右边一列对齐在 780）。台面适应以后的排版由界面层管。
+  // 追问挂在式子台上（ask / pick，和研究台同一套），做过一步才能答；right 是对的那一项是第几个。
+  const ASK_Q = '在天平上做的和在式子上做的，是同一件事吗？为什么？';
+  const ASK_OPTS = ['*是：都是两边做同样的事', '不是：砝码和数不一样', '是：答案一样就是同一件事'];
+  const askOf = (right) => { const o = ASK_OPTS.slice(1); o.splice(right - 1, 0, ASK_OPTS[0]); return ASK_Q + '|' + o.join('|'); };
+  const quad = (a, b, c, d, x0, right) => () => {
+    const s = W.blank(), bal = W.add(s, 'balancebench', 40, 40, {}), eq = W.add(s, 'eqstepbench', 780, 40, { ask: askOf(right) });
+    const tp = W.add(s, 'tapebench', 40, 520, {}), nl = W.add(s, 'numlinebench', 780, 560, {});
+    s.entities[bal].role = 'b'; s.entities[eq].role = 'e'; s.entities[tp].role = 't'; s.entities[nl].role = 'n';
+    U.Forms.join(s, 'lineq', [bal, eq, tp, nl], { a, b, c, d, x0 });
+    return s;
+  };
+  const why4 = { id: 'why', say: '说清楚了：天平上做的和式子上做的是同一件事', score: 3 };
+  const whyHints = ['想一想：天平两边各拿走 3 个砝码，式子上是哪一步？', '两边做同样的事：天平还平，式子还写 =。', '选“是：都是两边做同样的事”。'];
+  const base4 = { shelf: ['balancebench', 'eqstepbench', 'tapebench', 'numlinebench'], chain: false, grade: 5, points: ['5.5'], topics: ['等式的性质', '解简易方程'] };
+  const tilt4 = { id: 'tilt', wrong: '只动了一边：四块一起“不平”了（天平歪、式子写 ≠、线段对不齐、落点分开）。在另一边做同样的事，四块又一起回来。', when: { role: 'e', port: 'okn', op: '=', value: '0' } };
+  const add4 = (o) => add(Object.assign({}, base4, o));
+
+  add4({
+    id: 'ef4-2x3-11', essence: ['E4', 'E8'], title: '四种样子一起做： 2x + 3 = 11', rung: 3,
+    alias: ['两边一样', '四种样子', '天平', '式子', '线段图', '数轴'],
+    hook: '同一个等式 2x + 3 = 11 摆成四种样子：天平、式子、线段图、数轴。在哪一块上做一步，另外三块当场做同一步。四块各做一步试试，最后解出 x。',
+    build: quad(2, 3, 0, 11, 4, 1),
+    predict: { q: '在线段图上两条右端各剪掉 3，天平会怎样？', options: [{ v: 'a', label: '两盘各少 3 个砝码，还平' }, { v: 'b', label: '只有左盘少 3 个，歪了' }, { v: 'c', label: '天平不动' }], answer: 'a' },
+    milestones: [
+      ms('solve', '四块一起解出来了： x = 4', 5, 'e', 'solved', 4, ['先让 x 那一边只剩 x：两边同时减 3。', '再两边同时除以 2。', '在哪一块做都行：天平平分成 2 份、线段图平分成 2 份、式子点“两边 ÷ 2”。']),
+      Object.assign({}, why4, { when: { role: 'e', port: 'q1', op: '=', value: '1' }, hints: whyHints }),
+    ],
+    traps: [tilt4], goal: ['solve', 'why'],
+    why: '天平上两边各拿走 3 个砝码、式子上两边同时减 3、线段图两条各剪掉 3、数轴上两个落点一起往左 3，是同一件事：两边做同样的事，所以还一样。只动一边，四块一起不平。',
+  });
+  add4({
+    id: 'ef4-x5-12', essence: ['E4', 'E8'], title: '四种样子一起做： x + 5 = 12', rung: 2,
+    alias: ['两边一样', '四种样子', '天平', '式子', '线段图', '数轴'],
+    hook: 'x + 5 = 12 摆成四种样子。先在数轴上拖 g 试一试，再在任意一块上做一步：另外三块跟着做。',
+    build: quad(1, 5, 0, 12, 7, 2),
+    predict: { q: '式子上两边同时减 5，数轴上两个落点会怎样？', options: [{ v: 'a', label: '一起往左走 5，差不变' }, { v: 'b', label: '只有上面的往左走' }, { v: 'c', label: '不动' }], answer: 'a' },
+    milestones: [
+      ms('solve', '四块一起解出来了： x = 7', 5, 'e', 'solved', 7, ['要让左边只剩一个 x。', '两边同时减 5。', '天平两盘各拿走 5 个砝码，或者点式子里的 5，再点“两边都减 5”。']),
+      Object.assign({}, why4, { when: { role: 'e', port: 'q1', op: '=', value: '2' }, hints: whyHints }),
+    ],
+    traps: [tilt4], goal: ['solve', 'why'],
+    why: '四块做的都是“两边同时减 5”：天平两盘各拿走 5 个砝码，式子写 x = 7，线段图两条各剪掉 5，数轴两个落点一起往左 5，差不变。样子不一样，做的是同一件事。',
+  });
+  add4({
+    id: 'ef4-3x2-x10', essence: ['E4', 'E8'], title: '四种样子一起做： 3x + 2 = x + 10', grade: 6, rung: 3,
+    alias: ['两边一样', '四种样子', '两边都有 x', '天平', '式子', '线段图', '数轴'],
+    hook: '两边都有 x：3x + 2 = x + 10。四块各做一步：线段图剪掉一段 x、天平拿走砝码、数轴落点往左走、式子两边除以 2，看另外三块怎么跟着变。',
+    build: quad(3, 2, 1, 10, 4, 3),
+    predict: { q: '线段图上两条各剪掉一段 x，天平会怎样？', options: [{ v: 'a', label: '两盘各拿走一个盒子，还平' }, { v: 'b', label: '只有左盘少一个盒子，歪了' }, { v: 'c', label: '天平不动' }], answer: 'a' },
+    milestones: [
+      ms('onex', 'x 只在一边了： 2x + 2 = 10', 3, 'e', 'xsides', 1, ['两边都有 x：先让一边没有 x。', '两边同时减 x。', '线段图点“两条都剪掉一段 x”，或者天平两盘各拿走一个盒子。']),
+      ms('solve', '四块一起解出来了： x = 4', 5, 'e', 'solved', 4, ['再两边同时减 2。', '然后两边同时除以 2。', '式子上点“两边 ÷ 2”。']),
+      Object.assign({}, why4, { when: { role: 'e', port: 'q1', op: '=', value: '3' }, hints: whyHints }),
+    ],
+    traps: [tilt4], goal: ['onex', 'solve', 'why'],
+    why: '两边各去掉一个 x：天平两盘各拿走一个盒子，线段图两条各剪掉一段 x，数轴两边各少跳一下，式子写 2x + 2 = 10。四种样子，同一步。再两边同时减 2、除以 2，得 x = 4。',
+  });
+
   U.problems.push.apply(U.problems, P);
 })(typeof globalThis !== 'undefined' ? globalThis : window);

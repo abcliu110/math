@@ -19,6 +19,12 @@ console.log('本质');
 t('十二种本质齐全，前置都存在', () => { eq(U.ESSENCE_IDS.length, 12); for (const id of U.ESSENCE_IDS) for (const n of U.ESSENCES[id].needs) truthy(U.ESSENCES[n], id + ' 的前置 ' + n + ' 不存在'); });
 t('每道题都声明了合法的 essence', () => { for (const p of U.problems) eq(U.checkEssence(p.essence), [], p.id); });
 t('每种本质至少有一个器材', () => { for (const id of U.ESSENCE_IDS) truthy(Object.values(U.types).some((d) => d.essence.includes(id)), id + ' 没有器材'); });
+t('道理地图：12 个节点都有孩子看的名字和一句话，不写“本质”；箭头两头都是节点；只有“两边一样”能点进去', () => {
+  for (const id of U.ESSENCE_IDS) { const k = U.ESSENCE_KID[id]; truthy(k && k.name && k.one, id + ' 缺名字或一句话'); truthy(!/本质/.test(k.name + k.one), id + ' 写了“本质”'); }
+  eq(Object.keys(U.ESSENCE_KID).length, 12); eq(U.ESSENCE_ARROWS.length, 12);
+  for (const [a, b] of U.ESSENCE_ARROWS) truthy(U.ESSENCE_KID[a] && U.ESSENCE_KID[b], a + '→' + b);
+  eq(U.ESSENCE_IDS.filter((id) => U.ESSENCE_KID[id].open).join(), 'E4');
+});
 t('每种本质至少有一道题', () => { for (const id of U.ESSENCE_IDS) truthy(U.problems.some((p) => p.essence.includes(id)), id + ' 没有题'); });
 console.log('打包器材');
 t('打包：把 +3 封成一个器材，外面接 2 得到 5', () => {

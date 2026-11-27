@@ -99,9 +99,10 @@
 
   // ---------- 共用步骤栏 ----------
   const byName = (S, id) => { const e = S.scene.entities[id], d = e && U.types[e.type]; return d ? d.prefix || d.label : '另一台'; };
+  // 一屏放不下、要上下滚时（窗口窄），步骤栏浮在卡片上会挡住正在看的那张：收成一行，只写最近一步
   function stepBarHtml(S, g) {
-    const log = g.log || [], from = Math.max(0, log.length - GL.steps);
-    let h = '<div class="stepbar" data-stepbar="' + K.esc(g.id) + '" style="height:' + GL.barH + 'px"><div class="sbh">步骤：' + g.members.length + ' 台说的是同一个等式，在哪一台做一步，其他台跟着做同一步</div>';
+    const mini = !!(SG.groupLayout && !SG.groupLayout.fits), log = g.log || [], from = Math.max(0, log.length - (mini ? 1 : GL.steps));
+    let h = '<div class="stepbar' + (mini ? ' mini' : '') + '" data-stepbar="' + K.esc(g.id) + '"' + (mini ? '' : ' style="height:' + GL.barH + 'px"') + '><div class="sbh">步骤：' + g.members.length + ' 台说的是同一个等式，在哪一台做一步，其他台跟着做同一步</div>';
     if (!log.length) h += '<div class="sbr">还没做步子：在任意一台上做一步试试。</div>';
     for (let i = from; i < log.length; i++) {
       const s = log[i], bad = s.rule === 'balance.lone' || s.rule === 'balance.move';
