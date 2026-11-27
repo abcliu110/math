@@ -14,6 +14,8 @@
   const MAXSTEP = 4000;
   const hit = (k, v, x, y, w, h) => '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="4" fill="transparent" data-pick-k="' + k + '" data-pick-v="' + v + '" style="cursor:pointer"/>';
   const btn = (x, y, w, h, tx, on) => K.rect(x, y, w, h, { fill: on ? 'var(--accent)' : 'var(--sel-bg)', r: 5 }) + K.text(x + w / 2, y + h * 0.7, tx, { size: 10.5, weight: 700, fill: on ? '#fff' : 'var(--ink)' });
+  // 卡片上的一个按钮：点一下按 patch 改属性（一次撤销）；title 写清它做什么
+  const pbtn = (x, y, w, h, tx, patch, tip, on) => '<g data-pick-set="' + encodeURIComponent(JSON.stringify(patch)) + '" style="cursor:pointer"><title>' + K.esc(tip) + '</title>' + btn(x, y, w, h, tx, on) + '</g>';
   const toks = (s) => String(s || '').split(';').filter(Boolean).map((t) => ({ c: t[0], v: +t.slice(1) || 0 }));
   // 把 tokens 解析成树；括号没配好时 err
   function parse(T) {
@@ -79,10 +81,15 @@
     if (J.pts.length > 1) s += '<path d="' + J.pts.map((q, i) => (i ? 'L' : 'M') + (cx + q[0] * sc).toFixed(1) + ',' + (cy - q[1] * sc).toFixed(1)).join('') + '" fill="none" stroke="var(--accent)" stroke-width="2.2"/>';
     const e = J.pts[J.pts.length - 1]; s += K.circle(cx + e[0] * sc, cy - e[1] * sc, 4, { fill: 'var(--bad)' }) + K.circle(cx, cy, 2.5, { fill: 'var(--ink)' });
     const x = cx - 100;
-    s += K.text(x, 232, p.tgt > 0 ? '目标：' + TG[p.tgt] + (J.match ? '　画对了' : '') : '自己画', { size: 11, anchor: 'start', weight: 700, fill: J.match ? 'var(--good)' : 'var(--ink)' });
+    s += K.text(x, 232, p.tgt > 0 ? '目标：' + TG[p.tgt] + (J.match && !c.masked ? '　画对了' : '') : '自己画', { size: 11, anchor: 'start', weight: 700, fill: J.match && !c.masked ? 'var(--good)' : 'var(--ink)' });
     if (J.err) s += K.text(x, 248, J.err, { size: 10.5, anchor: 'start', fill: 'var(--bad)' });
-    else if (c.masked && J.len > 0) s += K.text(x, 248, '先猜：海龟画完能回到起点吗？', { size: 11, anchor: 'start', weight: 700, fill: 'var(--accent)' });
+    else if (c.masked && J.len > 0) {
+      // 先猜：读数盖着，点一个答案才揭开（不用打开属性面板）
+      s += K.text(x, 248, '先猜：海龟画完能回到起点吗？', { size: 11, anchor: 'start', weight: 700, fill: 'var(--accent)' });
+      s += pbtn(x, 256, 96, 22, '会回到起点', { gans: 1 }, '我猜：会回到起点') + pbtn(x + 104, 256, 96, 22, '回不到', { gans: 2 }, '我猜：回不到起点');
+    }
     else if (J.len > 0) s += K.text(x, 248, (J.closed ? '回到起点' : '没回到起点，缺口 ' + Math.hypot(e[0], e[1]).toFixed(1)) + '；共转 ' + J.turned + '°', { size: 11, anchor: 'start', fill: J.closed ? 'var(--good)' : 'var(--bad)' });
+    if (!J.err && !c.masked && J.len > 0 && p.gans > 0) s += K.text(x, 268, '你猜' + (p.gans === 1 ? '会' : '回不到') + '：' + ((p.gans === 1) === J.closed ? '猜对了' : '猜错了'), { size: 10.5, anchor: 'start', fill: (p.gans === 1) === J.closed ? 'var(--good)' : 'var(--dim)' });
     return s + H.join('');
   }
   U.registerPack({
@@ -92,8 +99,9 @@
         workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E6', 'E8', 'E5'], label: '海龟作图', prefix: '龟', group: '图形', grades: [3, 9], alias: ['海龟作图', '海龟', '编程', '重复', '外角和', '正多边形', '画图'],
         props: {
           prog: { hidden: true, type: 'text', label: '程序', default: '', write: false }, add: { hidden: true, type: 'int', label: '加一块积木（1 前进 2 左转 3 右转 4 重复 5 ] 6 撤销 7 清空）', default: 0, min: 0, max: 7 },
-          n: { type: 'int', label: '前进多远 n', default: 100, min: 10, max: 200 }, a: { type: 'int', label: '转多少度 a', default: 90, min: 1, max: 180 }, k: { type: 'int', label: '重复几次 k', default: 4, min: 1, max: 12 },
-          tgt: { type: 'choice', label: '目标图', default: 0, choices: TG }, gans: { type: 'int', label: '先猜：（1 会回到起点 2 不会）', default: 0, min: 0, max: 2 },
+          // n、a、k 在卡片上用 − / + 调，目标图 tgt 是出题人设的，先猜 gans 在卡片上点答案：都不进“✎ 填写”
+          n: { hidden: true, type: 'int', label: '前进多远 n', default: 100, min: 10, max: 200 }, a: { hidden: true, type: 'int', label: '转多少度 a', default: 90, min: 1, max: 180 }, k: { hidden: true, type: 'int', label: '重复几次 k', default: 4, min: 1, max: 12 },
+          tgt: { hidden: true, type: 'choice', label: '目标图（出题人设）', default: 0, choices: TG }, gans: { hidden: true, type: 'int', label: '先猜：（1 会回到起点 2 不会）', default: 0, min: 0, max: 2 },
         },
         onSet,
         guess: { props: ['gans'], ports: ['closed', 'turned', 'match'], answered: (p) => p.gans > 0 },

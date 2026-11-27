@@ -18,6 +18,20 @@
     const n = p.n, r = p.r, area = Math.PI * r * r, base = n * r * Math.sin(Math.PI / n), height = r * Math.cos(Math.PI / n), got = base * height;
     return { n, base, height, area, got, wobble: (area - got) / area, guessed: p.gans === 0 ? 0 : p.gans === 1 ? 1 : 0 };
   }
+  // 卡片上的按钮：点一下按 patch 改属性（一次撤销）；on 是选中的样子
+  const pbtn = (x, y, w, h, tx, patch, tip, on) => '<g data-pick-set="' + encodeURIComponent(JSON.stringify(patch)) + '" style="cursor:pointer"><title>' + K.esc(tip) + '</title>' + K.rect(x, y, w, h, { fill: on ? 'var(--accent)' : 'var(--sel-bg)', r: 5 }) + K.text(x + w / 2, y + h / 2 + 4, tx, { size: 11.5, weight: 700, fill: on ? '#fff' : 'var(--ink)' }) + '</g>';
+  // − 数 +：调一个整数属性（到边界的那一边不画按钮）
+  const step = (x, y, lab, k, v, lo, hi, tip) => K.text(x, y + 15, lab, { size: 12, anchor: 'start', weight: 700 }) + (v > lo ? pbtn(x + 14, y, 22, 22, '−', { [k]: v - 1 }, tip + '减 1') : '') + K.text(x + 50, y + 15, String(v), { size: 12.5, weight: 700 }) + (v < hi ? pbtn(x + 64, y, 22, 22, '+', { [k]: v + 1 }, tip + '加 1') : '');
+  // 先猜的答案（勾股：1 a²+b² 大 2 c² 大 3 一样大；圆：1 没变 2 变大 3 变小）和真实的答案
+  const GA = [['a² + b² 大', 'c² 大', '一样大'], ['没变', '变大了', '变小了']];
+  const truth = (p, J) => (p.scene === 0 ? (Q.cmp(J.gap, Q(0)) === 0 ? 3 : Q.cmp(J.gap, Q(0)) > 0 ? 2 : 1) : 1);
+  function guessRow(p, J, masked, y) {
+    if (masked) return GA[p.scene].map((tx, i) => pbtn(10 + i * 94, y, 88, 22, tx, { gans: i + 1 }, '我猜：' + tx)).join('');
+    if (!(p.gans > 0)) return '';
+    const ok = truth(p, J) === p.gans;
+    return K.text(10, y + 15, '你猜“' + GA[p.scene][p.gans - 1] + '”：' + (ok ? '猜对了' : '猜错了，是“' + GA[p.scene][truth(p, J) - 1] + '”'), { size: 11.5, anchor: 'start', weight: 700, fill: ok ? 'var(--good)' : 'var(--dim)' });
+  }
+  const sizeOf = (p) => { const m = Math.max(1, p.a + p.b); return p.scene === 0 ? [380, 172 + Math.round(m * Math.min(11, 120 / m))] : [380, 282]; };
   function draw(c) {
     const p = c.props, J = judge(p), W = c.w; let s = '';
     const hit = (x, y, w, h, k, v) => '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="5" fill="transparent" data-pick-k="' + k + '" data-pick-v="' + v + '" style="cursor:pointer"/>';
@@ -37,6 +51,10 @@
       s += K.text(10, y, '三角形：两直角边 ' + a + '、' + b + '，夹角 ' + ANG[p.angle] + '°', { size: 12, anchor: 'start', weight: 700 });
       s += K.text(10, y + 20, c.masked ? '先猜：a² + b² 和 c² 谁大？' : 'a² + b² = ' + (J.a2 + J.b2) + '，c² = ' + Q.show(J.c2) + (J.fits ? '：相等，弦图拼得满' : '：差 ' + Q.show(J.gap) + '，拼不满（只有直角才行）'), { size: 12, anchor: 'start', weight: 700, fill: c.masked ? 'var(--accent)' : J.fits ? 'var(--good)' : 'var(--bad)' });
       if (p.angle !== 1) { /* 钝角 / 锐角：弦图画的是直角的样子，在下面写明 */ s += K.text(10, y + 38, '（图画的是直角时的样子）', { size: 10.5, anchor: 'start', fill: 'var(--dim)' }); }
+      // 卡片上直接调：两条直角边 − / +，夹角点三个按钮之一；先猜点一个答案
+      s += step(10, y + 48, 'a', 'a', a, 1, 12, '直角边 a ') + step(102, y + 48, 'b', 'b', b, 1, 12, '直角边 b ');
+      ['60°', '90°', '120°'].forEach((tx, i) => { s += pbtn(196 + i * 60, y + 48, 56, 22, tx, { angle: i }, '两边的夹角改成 ' + tx, p.angle === i); });
+      s += guessRow(p, J, c.masked, y + 80);
     } else {
       const R = 52, cx = 70, cy = 74, n = Math.min(p.n, 128);
       s += K.circle(cx, cy, R, { fill: 'none', stroke: 'var(--ink)', w: 1.5 });
@@ -49,6 +67,8 @@
       s += K.text(10, y + 20, c.masked ? '先猜：拼出来的面积和圆比，变了没有？' : '拼出的面积 ≈ ' + J.got.toFixed(4) + '，圆面积 = ' + J.area.toFixed(4) + '，差 ' + (J.wobble * 100).toFixed(2) + '%', { size: 11.5, anchor: 'start', weight: 700, fill: c.masked ? 'var(--accent)' : 'var(--ink)' });
       const bt = (x, tx, v) => { s += K.rect(x, y + 32, 70, 22, { fill: 'var(--sel-bg)', r: 5 }) + K.text(x + 35, y + 47, tx, { size: 11.5, weight: 700 }); H += hit(x, y + 32, 70, 22, 'n', v); };
       bt(10, '少切一半', Math.max(4, p.n / 2)); bt(90, '多切一倍', Math.min(128, p.n * 2));
+      s += K.text(180, y + 47, '半径', { size: 10.5, anchor: 'end', fill: 'var(--dim)' }) + step(186, y + 32, 'r', 'r', p.r, 1, 20, '半径 ');
+      s += guessRow(p, J, c.masked, y + 62);
     }
     return s + H;
   }
@@ -59,9 +79,10 @@
         explore: true,   // 探究和游戏：器材架上放在最后的“拓展”组
         workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E5', 'E7'], label: '剪拼', prefix: '拼', group: '图形', grades: [5, 8], alias: ['剪拼', '勾股定理', '弦图', '圆面积', '切拼', '割补'],
         props: {
-          scene: { type: 'choice', label: '场景', default: 0, choices: ['勾股', '圆面积'] }, a: { type: 'int', label: '直角边 a', default: 3, min: 1, max: 12 }, b: { type: 'int', label: '直角边 b', default: 4, min: 1, max: 12 },
-          angle: { type: 'choice', label: '两边的夹角', default: 1, choices: ['60°', '90°（直角）', '120°（钝角）'] }, r: { type: 'int', label: '半径', default: 5, min: 1, max: 20 }, n: { type: 'int', label: '切成几个扇形（4–128）', default: 4, min: 4, max: 128 },
-          gans: { type: 'int', label: '先猜（勾股：1 a²+b²大 2 c²大 3 一样；圆：1 没变 2 变大 3 变小）', default: 0, min: 0, max: 3 },
+          // 场景用标题栏的“换一种”，a、b、夹角、半径、切几份、先猜都在卡片上点：不进“✎ 填写”
+          scene: { hidden: true, type: 'choice', label: '场景', default: 0, choices: ['勾股', '圆面积'] }, a: { hidden: true, type: 'int', label: '直角边 a', default: 3, min: 1, max: 12 }, b: { hidden: true, type: 'int', label: '直角边 b', default: 4, min: 1, max: 12 },
+          angle: { hidden: true, type: 'choice', label: '两边的夹角', default: 1, choices: ['60°', '90°（直角）', '120°（钝角）'] }, r: { hidden: true, type: 'int', label: '半径', default: 5, min: 1, max: 20 }, n: { hidden: true, type: 'int', label: '切成几个扇形（4–128）', default: 4, min: 4, max: 128 },
+          gans: { hidden: true, type: 'int', label: '先猜（勾股：1 a²+b²大 2 c²大 3 一样；圆：1 没变 2 变大 3 变小）', default: 0, min: 0, max: 3 },
         },
         guess: { props: ['gans'], ports: ['c2', 'gap', 'fits', 'area', 'got', 'wobble'], answered: (p) => p.gans > 0 },
         outputs: {
@@ -70,7 +91,7 @@
           guessed: { dim: null, kind: 'num', label: '先猜对了（1/0）' },
         },
         icon: () => '<polygon points="10,10 54,10 54,54" fill="var(--accent)" fill-opacity="0.5" stroke="var(--ink)" stroke-width="1.5"/>',
-        size: (c) => (c.props.scene === 0 ? [380, 60 + Math.max(1, c.props.a + c.props.b) * Math.min(11, 120 / (c.props.a + c.props.b)) + 60] : [380, 240]),
+        size: (c) => sizeOf(c.props),
         compute: (c) => {
           const J = judge(c.props); c.say('info', c.props.scene === 0 ? (J.fits ? 'a² + b² = c²' : 'a² + b² ≠ c²') : '切 ' + c.props.n + ' 份');
           if (c.props.scene === 0) return { a2: num(J.a2), b2: num(J.b2), c2: num(J.c2), gap: num(J.gap), fits: num(J.fits), guessed: num(J.guessed) };

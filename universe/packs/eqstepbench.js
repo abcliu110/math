@@ -96,7 +96,8 @@
         label: '式子台', prefix: '式子', group: '关系', grades: [4, 9],
         alias: ['式子', '方程', '解方程', '等式的性质', '一步一步', '两边同时'],
         props: {
-          a: I(0, NMAX, 2, '左边几个 x'), b: I(0, NMAX, 3, '左边的数'), c: I(0, NMAX, 0, '右边几个 x'), d: I(0, NMAX, 11, '右边的数'),
+          // a、b、c、d 是出题人设的（或联动组摆的），孩子在卡片上点项做步子，不在属性面板里填：hidden
+          a: I(0, NMAX, 2, '左边几个 x', { hidden: true }), b: I(0, NMAX, 3, '左边的数', { hidden: true }), c: I(0, NMAX, 0, '右边几个 x', { hidden: true }), d: I(0, NMAX, 11, '右边的数', { hidden: true }),
           x0: I(1, 20, 4, 'x 的真实值（出题人设）', { hidden: true }),
           sel: { type: 'text', label: '选中的项（自动）', default: '', write: true, hidden: true, view: true },   // view：只是界面上点中了哪一项，改它不进撤销（js/ui/app.js 的 tx）
           rows: { type: 'text', label: '每一行（自动记录）', default: '', write: true, hidden: true },

@@ -75,6 +75,19 @@
     if (k === 'clear') return { clear: 0, verts: '', closed: 0, msg: '' };
     return null;
   }
+  // 卡片上的按钮：点一下按 patch 改属性（一次撤销）
+  const pbtn = (x, y, w, h, tx, patch, tip) => '<g data-pick-set="' + encodeURIComponent(JSON.stringify(patch)) + '" style="cursor:pointer"><title>' + K.esc(tip) + '</title>' + K.rect(x, y, w, h, { fill: 'var(--sel-bg)', r: 5 }) + K.text(x + w / 2, y + h / 2 + 4, tx, { size: 11, weight: 700 }) + '</g>';
+  // 公式的系数：在卡片上按 ½ 一格调（−5 到 5），存成分数文字（'1/2'、'-1'）；原来的文字读不懂就从 0 起
+  const coefStep = (t, d) => { const v = rq(t) || Q(0), n = Q.add(v, Q(d, 2)); return Q.cmp(n, Q(-5)) < 0 || Q.cmp(n, Q(5)) > 0 ? null : Q.show(n); };
+  function coefCtl(x, y, k, t, tip) {
+    const dn = coefStep(t, -1), up = coefStep(t, 1);
+    return (dn !== null ? pbtn(x, y, 18, 20, '−', { [k]: dn }, tip + '减 ½') : '') + K.text(x + 36, y + 14, String(t).trim() || '0', { size: 11.5, weight: 700, fill: 'var(--accent)' }) + (up !== null ? pbtn(x + 54, y, 18, 20, '+', { [k]: up }, tip + '加 ½') : '');
+  }
+  // 先猜面积：先用 − / + 调草稿 gt（面积的 2 倍，½ 一格），点“猜好了”才写进 gans、揭开面积
+  function guessCtl(p, x, y) {
+    const gt = Math.max(0, Math.min(72, p.gt | 0)), b = (d, tx) => (gt + d >= 0 && gt + d <= 72 ? pbtn(x + (d === -2 ? 0 : d === -1 ? 26 : d === 1 ? 52 : 78), y + 6, 24, 18, tx, { gt: gt + d }, '猜的面积' + (d > 0 ? '加 ' : '减 ') + (Math.abs(d) === 1 ? '½' : '1')) : '');
+    return K.text(x, y, '先猜面积 = ' + Q.show(Q(gt, 2)), { size: 11.5, anchor: 'start', weight: 700, fill: 'var(--accent)' }) + b(-2, '−1') + b(-1, '−½') + b(1, '+½') + b(2, '+1') + pbtn(x + 106, y + 6, 46, 18, '猜好了', { gans: Q.show(Q(gt, 2)) }, '就猜这个面积');
+  }
   function draw(c) {
     const p = c.props, J = judge(p), W = c.w, H = []; let s = '', g = 28, ox = 18, oy = 10;
     const X = (x) => ox + x * g, Y = (y) => oy + (S - 1 - y) * g;
@@ -84,10 +97,14 @@
     const tx = ox + S * g - 4;
     s += K.text(tx, 24, J.sim ? 'B（边上）= ' + J.c.B : '点格点围多边形', { size: 12, anchor: 'start', weight: 700 }); if (J.sim) s += K.text(tx, 44, 'I（里面）= ' + J.c.I, { size: 12, anchor: 'start', weight: 700, fill: 'var(--good)' });
     if (J.sim) s += K.text(tx, 64, c.masked ? '面积：先猜' : '面积 = ' + J.c.A2 / 2, { size: 12, anchor: 'start', weight: 700 });
+    if (c.masked) s += guessCtl(p, tx, 176);
+    else if (String(p.gans).trim() !== '' && J.sim) { const g2 = rq(p.gans), ok = g2 && Q.cmp(g2, Q(J.c.A2, 2)) === 0; s += K.text(tx, 182, '你猜 ' + String(p.gans).trim() + (ok ? '：猜对了' : ''), { size: 11, anchor: 'start', fill: ok ? 'var(--good)' : 'var(--dim)' }); }
     if (p.msg) s += K.text(tx, 86, p.msg.slice(0, 12), { size: 10.5, anchor: 'start', fill: 'var(--bad)' });
     [['rec', '记进表', 102], ['clear', '重围', 150]].forEach(([k, tx2, yy]) => { s += K.rect(tx, yy - 14, 56, 20, { fill: 'var(--sel-bg)', r: 5 }) + K.text(tx + 28, yy, tx2, { size: 11, weight: 700 }); H.push('<rect x="' + tx + '" y="' + (yy - 14) + '" width="56" height="20" fill="transparent" data-pick-k="' + k + '" data-pick-v="1" style="cursor:pointer"/>'); });
     let y = oy + S * g + 12; s += K.text(10, y, '表（B，I，面积）：' + J.rows.slice(-6).map((r) => r.B + ',' + r.I + ',' + r.A2 / 2).join('　'), { size: 11, anchor: 'start' }); y += 17;
-    s += K.text(10, y, '试公式：面积 = ' + p.fa + ' × I + ' + p.fb + ' × B + ' + p.fc + '　（在右边 fa、fb、fc 里写）', { size: 11, anchor: 'start', fill: 'var(--dim)' }); y += 17;
+    // 试公式：三个系数都在卡片上按 ½ 一格调
+    s += K.text(10, y + 6, '面积 =', { size: 11.5, anchor: 'start', weight: 700 }) + coefCtl(52, y - 8, 'fa', p.fa, 'I 的系数') + K.text(128, y + 6, '× I +', { size: 11.5, anchor: 'start', weight: 700 }) + coefCtl(166, y - 8, 'fb', p.fb, 'B 的系数') + K.text(242, y + 6, '× B +', { size: 11.5, anchor: 'start', weight: 700 }) + coefCtl(280, y - 8, 'fc', p.fc, '常数');
+    y += 32;
     s += K.text(10, y, J.rows.length ? '表里 ' + J.rows.length + ' 行' + (J.rowsFit ? '：公式都对得上' : '') + (J.scan ? '　在 ' + TEST.length + ' 个多边形上也对' : '') : '', { size: 11.5, anchor: 'start', weight: 700, fill: J.formula ? 'var(--good)' : 'var(--dim)' });
     return s + H.join('');
   }
@@ -100,8 +117,9 @@
         props: {
           verts: { hidden: true, type: 'text', label: '围的点', default: '', write: false }, closed: { hidden: true, type: 'int', label: '封口了吗', default: 0, min: 0, max: 1, write: false }, pt: { hidden: true, type: 'int', label: '点一个格点', default: 0, min: 0, max: 49 },
           rec: { hidden: true, type: 'int', label: '记进表', default: 0, min: 0, max: 1 }, clear: { hidden: true, type: 'int', label: '重围', default: 0, min: 0, max: 1 }, rows: { hidden: true, type: 'text', label: '表', default: '', write: false }, msg: { hidden: true, type: 'text', label: '提示', default: '', write: false },
-          fa: { type: 'text', label: '公式：I 的系数', default: '1' }, fb: { type: 'text', label: '公式：B 的系数', default: '1' }, fc: { type: 'text', label: '公式：常数', default: '0' },
-          gans: { type: 'text', label: '先猜面积', default: '' },         },
+          // 公式的三个系数、先猜的面积都在卡片上点 − / + 调，不进“✎ 填写”；gt 是还没交的猜测（草稿）
+          fa: { hidden: true, type: 'text', label: '公式：I 的系数', default: '1' }, fb: { hidden: true, type: 'text', label: '公式：B 的系数', default: '1' }, fc: { hidden: true, type: 'text', label: '公式：常数', default: '0' },
+          gans: { hidden: true, type: 'text', label: '先猜面积', default: '' }, gt: { hidden: true, type: 'int', label: '先猜面积的草稿（面积的 2 倍）', default: 0, min: 0, max: 72 },         },
         onSet,
         guess: { props: ['gans'], ports: ['area'], answered: (p) => String(p.gans).trim() !== '' },
         outputs: {
@@ -109,7 +127,7 @@
           perim: { dim: null, kind: 'num', label: '周长（只有横竖边时）' }, isRect: { dim: null, kind: 'num', label: '是长方形（1/0）' }, rowsN: { dim: null, kind: 'num', label: '表里几行' }, formula: { dim: null, kind: 'num', label: '公式对了（1/0）' },
         },
         icon: () => K.circle(14, 14, 3, { fill: 'var(--dim)' }) + K.circle(32, 14, 3, { fill: 'var(--dim)' }) + K.circle(50, 14, 3, { fill: 'var(--dim)' }) + K.circle(14, 32, 3, { fill: 'var(--accent)' }) + K.circle(32, 32, 3, { fill: 'var(--accent)' }) + K.circle(14, 50, 3, { fill: 'var(--accent)' }),
-        size: () => [380, 290],
+        size: () => [380, 306],
         compute: (c) => { const J = judge(c.props); c.say(J.sim ? 'ok' : 'info', J.sim ? 'B = ' + J.c.B + '，I = ' + J.c.I : '点格点围多边形，点第一个点封口'); return { B: num(J.c ? J.c.B : 0), I: num(J.c ? J.c.I : 0), area: num(J.c ? Q(J.c.A2, 2) : Q(0)), valid: num(J.sim ? 1 : 0), perim: num(J.perim), isRect: num(J.rect ? 1 : 0), rowsN: num(J.rows.length), formula: num(J.formula) }; },
         badge: (c) => (c.masked ? '？' : c.out.valid && Q.num(c.out.valid.data) ? '面积 ' + U.showVal(c.out.area) : ''),
         draw,
