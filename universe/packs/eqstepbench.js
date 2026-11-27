@@ -4,13 +4,16 @@
  *   - 四个数有公因数时，有“两边 ÷ n”的按钮。
  *   - 只动一边，这一行写成 ≠，标红；再去另一边做同样的事，又写成 =。
  * 一个人用时就是“解方程”的格式；和天平（以后还有线段图、数轴）连成一组时，在哪一台做一步，这里就往下写一行（U.Forms 的 lineq）。
+ * 题目可带追问（ask / pick，和研究台同一套：U.kit.research）：写在最下面，做过一步才能答，选了第几个从 q1 输出。
  * 这一版的边界（如实写）：只有 0 和正整数（没有负数、没有括号、没有分数系数）；不能“两边同时加”（用不上：没有负数就不用移回来）。 */
 (function (G) {
   'use strict';
   const U = G.U, Q = U.Q, K = U.kit;
   const num = (n) => U.val('num', Q(n), { dim: null });
   const W = 560, CX = 220, Y0 = 60, DY = 30, SHOW = 6, NMAX = 60;
-  const LQ = () => U.Forms.LQ, FORM = () => U.Forms.FORMS.lineq;
+  const LQ = () => U.Forms.LQ, FORM = () => U.Forms.FORMS.lineq, RS = () => K.research;
+  const AY = 336;   // 追问从这里往下画（式子最多 6 行，下面的按钮和那句话到 318 为止）
+  const asksOf = (p) => RS().parseAsk(p.ask, p.pick, rowsOf(p).length > 1);
   const st = (p) => ({ a: p.a, b: p.b, c: p.c, d: p.d, x0: p.x0 });
   const key = (s) => [s.a, s.b, s.c, s.d].join(',');
   const parseRows = (t) => String(t || '').split(';').filter(Boolean).map((r) => { const [n, label] = r.split('|'), a = n.split(',').map(Number); return a.length === 4 && a.every((v) => Number.isInteger(v) && v >= 0) ? { a: a[0], b: a[1], c: a[2], d: a[3], label: label || '' } : null; }).filter(Boolean);
@@ -82,6 +85,8 @@
     const ny = dy + 52;
     if (!ok) h += K.text(16, ny, '两边不再相等：只动了一边。在另一边做同样的事，就又相等了。', { size: 13, anchor: 'start', weight: 700, fill: 'var(--bad)' });
     else if (sol !== null) h += K.text(16, ny, 'x = ' + sol + '，解出来了', { size: 14, anchor: 'start', weight: 700, fill: 'var(--good)' });
+    const asks = asksOf(p);
+    if (asks.length) h += RS().drawAsks(AY, asks, rowsOf(p).length > 1);
     return h;
   }
 
@@ -98,6 +103,8 @@
           x0: I(1, 20, 4, 'x 的真实值（出题人设）', { hidden: true }),
           sel: { type: 'text', label: '选中的项（自动）', default: '', write: true, hidden: true },
           rows: { type: 'text', label: '每一行（自动记录）', default: '', write: true, hidden: true },
+          ask: { type: 'text', label: '追问（题干|选项|*对的选项）', default: '', write: true, hidden: true },
+          pick: { type: 'text', label: '追问选了第几个', default: '', write: true, hidden: true },
         },
         outputs: {
           solved: { dim: null, kind: 'num', label: 'x 是多少（解出来以后才有）' },
@@ -106,15 +113,17 @@
           moves: { dim: null, kind: 'num', label: '写了几步' },
           xsides: { dim: null, kind: 'num', label: '几边有 x：2 两边都有，1 只在一边，0 没有' },
           eq: { dim: null, kind: 'eqn', label: '方程（左 = 右）' },
+          q1: { dim: null, kind: 'num', label: '追问选了第几个' },
         },
         icon: () => K.text(32, 22, '2x+3', { size: 13, weight: 700 }) + K.line(10, 28, 54, 28, { w: 1 }) + K.text(32, 44, '2x = 8', { size: 13, weight: 700, fill: 'var(--blue)' }),
-        size: () => [W, 380],
+        size: (e) => { const asks = e && e.props && e.props.ask ? RS().parseAsk(e.props.ask, '', false) : []; return [W, asks.length ? AY + RS().asksH(asks) + 8 : 380]; },
         compute: (c) => {
           const s = st(c.props), ok = LQ().balanced(s), sol = LQ().solved(s), X = U.Poly.variable('x'), C = (n) => U.Poly.const(Q(n));
           const apart = ok && ((s.b === 0 && s.c === 0 && s.a > 0) || (s.d === 0 && s.a === 0 && s.c > 0));
           const o = { stage: num(sol !== null ? 2 : apart ? 1 : 0), okn: num(ok ? 1 : 0), moves: num(rowsOf(c.props).length - 1), xsides: num((s.a > 0 ? 1 : 0) + (s.c > 0 ? 1 : 0)),
             eq: U.val('eqn', U.Eqn.make(U.Poly.add(U.Poly.mul(C(s.a), X), C(s.b)), U.Poly.add(U.Poly.mul(C(s.c), X), C(s.d)), '=')) };
           if (sol !== null) o.solved = num(sol);
+          asksOf(c.props).forEach((a, i) => { if (a.pick) o['q' + (i + 1)] = num(a.pick); });
           return o;
         },
         badge: (c) => { const s = st(c.props), sol = LQ().solved(s); return sol !== null ? 'x = ' + sol : LQ().balanced(s) ? '相等' : '不相等'; },

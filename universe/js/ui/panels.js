@@ -49,6 +49,8 @@
     // 思维主线：有精选阶梯的方法（每条八级，每级三层），一直摆在最上面，不用先点开
     const LAD = U.Methods && U.Chain && !q ? U.Methods.ladders() : [];
     if (LAD.length) h += '<div class="grp">⭐ 思维主线（每条八级，从这里开始）</div><div class="chains" data-main="1">' + LAD.map(mrow).join('') + '</div>';
+    // 道理地图：12 个道理怎么连在一起（js/ui/daoli.js），点开是一个宽对话框
+    if (UI.Daoli && !q) h += '<div class="grp">🗺️ 道理地图（12 个道理怎么连在一起）</div><div class="chains" data-daoli-box="1"><div class="it chain" data-daoli="map"><span class="tt">🗺️ 道理地图<br><small>先点“两边一样”：同一个等式的四种样子</small></span></div></div>';
     // 解法图鉴：一页一道母题，每格一种做法（同一组数），两格都点亮了，中间的桥才能走
     if (U.Gallery && !q) {
       h += '<div class="grp">📖 解法图鉴（同一道题，找出不同的做法）</div><div class="chains" data-gallery="1">';

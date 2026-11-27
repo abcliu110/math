@@ -478,6 +478,7 @@
       const t = e.target;
       const dl = t.closest('[data-del]');
       if (dl) { if (S.problem && S.problem.id === dl.dataset.del) openFree(); U.Author.remove(dl.dataset.del); UI.Panels.renderLeft(); return; }
+      if (t.closest('[data-daoli]')) { UI.Daoli.open(); return; }
       const gl = t.closest('[data-gal]'); if (gl) { S.galOpen = S.galOpen === gl.dataset.gal ? null : gl.dataset.gal; UI.Panels.renderLeft(); return; }
       const mc = t.closest('[data-mchain]'); if (mc) { const c = mc.dataset.mchain; S.mchainOpen = c === '__list' ? (S.mchainOpen == null ? '__list' : null) : (S.mchainOpen === c ? '__list' : c); UI.Panels.renderLeft(); return; }
       const ch = t.closest('[data-chain]'); if (ch) { const c = ch.dataset.chain; S.chainOpen = c === '__list' ? (S.chainOpen == null ? '__list' : null) : (S.chainOpen === c ? '__list' : c); UI.Panels.renderLeft(); return; }
