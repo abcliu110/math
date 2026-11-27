@@ -7,7 +7,7 @@
   const SG = UI.StageCtx;
   // 哪些属性口要画成药丸：被连线驱动的；正在拖线时再加上所有可写、没被驱动的
   function pillsOf(e, D) {
-    if (UI.benchMode() === e.id) return [];   // 操作台模式不画药丸
+    if (UI.isBench(e.id)) return [];   // 操作台模式不画药丸
     const d = SG.def(e), driven = (D[e.id] && D[e.id].driven) || {};
     return UI.pillOrder(d, Object.keys(d.props).filter((k) => d.props[k].write && (driven[k] || SG.linking)));
   }
@@ -46,12 +46,13 @@
   }
   function cardHtml(e, D, S) {
     const d = SG.def(e), g = SG.geom(e), dd = D[e.id], cH = g.h - HD;
-    const bm = UI.benchMode() === e.id;   // 操作台模式：只画台面，不画连线用的口（stage-core.js 的 UI.benchMode）
+    const bm = UI.isBench(e.id);   // 操作台模式：只画台面，不画连线用的口（stage-core.js 的 UI.benchMode）
     const c = { ent: e, props: dd.props || e.props, d: dd, out: dd.out, state: e.state, w: g.w, h: cH, t: S.scene.clock.t, n: S.scene.clock.n, scene: S.scene, bench: bm ? SG.BENCH_OPT : undefined };
     c.masked = !!(d.guess && !d.guess.answered(c.props));   // 先猜后看：还没填猜测，被 guess.ports 遮住的读数在界面上不显示（内核里值照常流动）
     // 正在拖这张卡片上的把手：告诉器材拖的是哪个把手、鼠标在哪、按下时的属性，器材可以画出“这一下会带来什么”（比如天平两边一起动）
     const gd = SG.drag && SG.drag.kind === 'grip' && SG.drag.id === e.id && SG.drag.moved && SG.drag.q ? SG.drag : null;
     c.drag = gd ? { grip: gd.grip, x: gd.q.x, y: gd.q.y, p0: gd.p0 } : null;
+    c.flash = gd ? null : SG.flashOf(e);   // 联动组里别的台刚做了一步：这一台把刚变的部分闪一下（见 flashOf）
     let body = '', badge = '';
     try { body = SG.isWsDef(e.type) ? SG.wsBody(e, g.w, cH) : fitBody(d.draw(c), g.w) + gripsSvg(d, c); } catch (x) { body = K.text(g.w / 2, cH / 2, '画不出来', { fill: 'var(--bad)' }); }
     // 工作区的标题步数只数学生做的步骤（和下面的步骤清单是同一批）
@@ -67,9 +68,11 @@
     // “换一种”：点一下切到下一种场景 / 模式（值在渲染时算好：当前 +1，到头回到第一个）
     const swK = UI.Switch && UI.Switch[e.type], swD = swK && d.props[swK];
     const swCur = swD && swD.choices ? Math.max(0, Number((e.props || {})[swK]) || 0) : 0;
-    const sw = swD && swD.choices && swD.choices.length > 1 ? '<span class="gchip sw" data-pick-k="' + swK + '" data-pick-v="' + ((swCur + 1) % swD.choices.length) + '" title="点一下换成下一种：' + K.esc(swD.label || '') + '">' + K.esc(String(swD.choices[Math.min(swCur, swD.choices.length - 1)]).slice(0, 8)) + ' ▸</span>' : '';
+    // 连在联动组里（js/core/forms.js）：这一台是同一个等式的一种样子，换成别的用法就不是了，所以“换一种”锁住，点了说为什么
+    const locked = !!(U.Forms && U.Forms.groupOf(S.scene, e.id));
+    const sw = swD && swD.choices && swD.choices.length > 1 ? locked ? '<span class="gchip sw off" data-sw-lock="' + e.id + '" title="连在联动组里：不能换用法">' + K.esc(String(swD.choices[Math.min(swCur, swD.choices.length - 1)]).slice(0, 8)) + ' 🔒</span>' : '<span class="gchip sw" data-pick-k="' + swK + '" data-pick-v="' + ((swCur + 1) % swD.choices.length) + '" title="点一下换成下一种：' + K.esc(swD.label || '') + '">' + K.esc(String(swD.choices[Math.min(swCur, swD.choices.length - 1)]).slice(0, 8)) + ' ▸</span>' : '';
     // “显示口 / 藏起口”：只在能进操作台模式的题里出现，不显眼（点了画出连线用的口，再点藏起来；会话状态 S.showPorts，换题也保留）
-    const pchip = UI.benchModeCan() === e.id ? '<span class="gchip pt" data-ports="1" title="高级：' + (bm ? '显示' : '藏起') + '连线用的口（操作台的题默认藏起）">' + (bm ? '显示口' : '藏起口') + '</span>' : '';
+    const pchip = UI.benchModeCan(e.id) ? '<span class="gchip pt" data-ports="1" title="高级：' + (bm ? '显示' : '藏起') + '连线用的口（操作台的题默认藏起）">' + (bm ? '显示口' : '藏起口') + '</span>' : '';
     h += '<div class="hd" data-id="' + e.id + '"><span class="nm">' + K.esc(e.name) + '</span>' + sw + hchip + chip + pchip + '<span class="bd">' + K.esc(badge || '') + '</span></div>';
     const drawing = S.wsDraw && S.wsDraw.ws === e.id;   // 正在画线：指针变成十字（2.5）
     h += '<svg class="bdy' + (SG.isWsDef(e.type) ? ' wsbody' + (drawing ? ' drawing' : '') + '" data-wsid="' + e.id : '') + '" width="' + g.w + '" height="' + cH + '" viewBox="0 0 ' + g.w + ' ' + cH + '">' + body + '</svg>';
@@ -109,7 +112,7 @@
     const sg = (dd.sig || []).slice().sort((a, b) => SG.SIGLV.indexOf(a.lv) - SG.SIGLV.indexOf(b.lv))[0];
     if (sg && S.showSig) h += '<div class="sig ' + sg.lv + '" style="left:' + g.x + 'px;top:' + (g.y + g.h + L.SIG_GAP) + 'px">' + K.esc(sg.tx) + '</div>';
     // 选中工具条
-    if (S.sel === e.id) {
+    if (S.sel === e.id && !(bm && UI.benchGroup())) {   // 联动组的卡片挨得近，选中工具条会压住旁边那台的标题栏：不画（这一页也不需要删、改属性）
       h += '<div class="tool" style="left:' + (g.x + g.w + L.TOOL_GAP) + 'px;top:' + g.y + 'px">' +
         '<button data-act="insp" title="属性" aria-label="属性">' + ico('gear') + '</button>' +
         (SG.def(e).stateful ? '<button data-act="resetstate" title="记忆归零" aria-label="记忆归零">' + ico('undo') + '</button>' : '') +
@@ -199,6 +202,7 @@
     SG.worldEl.style.transform = 'translate(' + S.view.x + 'px,' + S.view.y + 'px) scale(' + S.view.z + ')';
     UI.Layout.placePanels(SG.worldEl, SG.stageEl, S.view, (id) => { const e = S.scene.entities[id]; return e ? SG.geom(e) : null; });
     renderBars();
+    SG.renderStepBars();   // 联动组的共用步骤栏（stage-forms.js）
     const z = $('#zv'); if (z) z.textContent = Math.round(S.view.z * 100) + '%';
     if (SG.focusEl) {
       SG.focusEl.innerHTML = focusHtml(); SG.focusEl.style.display = UI.State.focusedId() ? '' : 'none';

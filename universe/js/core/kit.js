@@ -5,6 +5,9 @@
   const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const kit = {
     esc,
+    // 联动组里刚改的地方闪一下（界面给 draw 的 c.flash = { s0, s1, step, age }，见 js/ui/stage-forms.js）：把这一块包起来，
+    // CSS 动画（css/universe.css 的 .flash）1 秒左右淡出；age 是这一步过了多少毫秒，重画时用负的延迟接着上次的进度，不会重新闪。没有 fl 就什么都不画
+    flash: (fl, inner) => (fl && inner ? '<g class="flash" data-flash="1" style="animation-delay:-' + Math.round(fl.age || 0) + 'ms">' + inner + '</g>' : ''),
     // 文字。o: {size, anchor, fill, weight, family}
     text(x, y, s, o) {
       o = o || {};

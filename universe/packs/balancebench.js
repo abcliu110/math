@@ -107,6 +107,7 @@
     }
     const li = items(g.L, s.lx, s.lc), ri = items(g.R, s.rx, s.rc);
     for (const it of [li, ri]) { it.boxes.forEach((b) => { h += boxSvg(b.x, b.y, sol !== null && p.reveal, s.x0); }); it.weights.forEach((w) => { h += wtSvg(w.x, w.y); }); }
+    h += K.flash(c.flash, c.flash ? flashSvg(c.flash, g, s) : '');   // 联动组里别的台刚做了一步：少掉的砝码、盒子在原来的位置画虚线框，多出来的画亮框
     // 式子：和天平是同一件事
     // 正在拖：画出被拖的那一个；两边连着时，另一边的那一个跟着一起动，式子写成“两边同时 − 1”
     const dg = c.drag ? plan(c.drag.p0, c.drag.grip, c.drag) : null, fx = dg && dg.fx;
@@ -157,6 +158,22 @@
       h += K.text(W - 140, 52 + i * 22, eqText(rs), { size: 12, weight: i === Math.min(log.length, 8) - 1 ? 700 : 400, fill: good ? 'var(--ink)' : 'var(--bad)' }) +
         K.text(W - 82, 52 + i * 22, good ? '✓' : '✗', { size: 12, weight: 700, fill: good ? 'var(--good)' : 'var(--bad)' });
     });
+    return h;
+  }
+
+  // 闪一下（联动组，c.flash 见 js/ui/stage-forms.js）：fl.s0 是上一步的等式 a·x + b = c·x + d，s 是现在的天平
+  function flashSvg(fl, g, s) {
+    const o = fl.s0, sg = (v) => (v > 0 ? '+ ' : '− ') + Math.abs(v);
+    let h = '';
+    for (const [pan, x0, c0, x1, c1] of [[g.L, o.a, o.b, s.lx, s.lc], [g.R, o.c, o.d, s.rx, s.rc]]) {
+      const was = items(pan, Math.min(x0, BMAX), Math.min(c0, WMAX)), now = items(pan, x1, c1);
+      was.boxes.slice(x1).forEach((b) => { h += K.rect(b.x, b.y, BOX, BOX, { stroke: 'var(--blue)', r: 5, w: 2, dash: '4 3' }); });
+      was.weights.slice(c1).forEach((w) => { h += K.rect(w.x, w.y, WT, WT, { stroke: 'var(--blue)', r: 3, w: 1.6, dash: '3 2' }); });
+      now.boxes.slice(x0).forEach((b) => { h += K.rect(b.x - 2, b.y - 2, BOX + 4, BOX + 4, { stroke: 'var(--blue)', r: 6, w: 3 }); });
+      now.weights.slice(c0).forEach((w) => { h += K.rect(w.x - 2, w.y - 2, WT + 4, WT + 4, { stroke: 'var(--blue)', r: 4, w: 2.5 }); });
+      const d = [x1 - x0 ? (Math.abs(x1 - x0) === 1 ? sg(x1 - x0).slice(0, 2) : sg(x1 - x0)) + 'x' : '', c1 - c0 ? sg(c1 - c0) : ''].filter(Boolean).join(' ');
+      if (d) h += K.text(pan.x, pan.y + 26, d, { size: 15, weight: 700, fill: 'var(--blue)' });
+    }
     return h;
   }
 

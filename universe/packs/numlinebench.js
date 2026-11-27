@@ -148,6 +148,17 @@
     if (m.L !== m.R) { const by = AY2 + 34; h += K.line(xl, AY1, xl, by, { w: 1, dash: '3 3', stroke: 'var(--bad)' }) + K.line(xr, AY2, xr, by, { w: 1, dash: '3 3', stroke: 'var(--bad)' }) + '<g data-gap="1">' + K.line(xl, by, xr, by, { w: 2, stroke: 'var(--bad)' }) + K.text((xl + xr) / 2, by + 15, '差 ' + Math.abs(m.L - m.R), { size: 12, weight: 700, fill: 'var(--bad)' }) + '</g>'; }
     else h += K.line(xl, AY1, xl, AY2, { w: 2.5, stroke: 'var(--good)' });
     h += K.circle(xl, AY1, 7, { fill: 'var(--blue)', stroke: '#fff', w: 2 }) + K.circle(xr, AY2, 7, { fill: '#b86a00', stroke: '#fff', w: 2 });
+    // 联动组里别的台刚做了一步（c.flash，见 js/ui/stage-forms.js）：两个落点从原来的位置移过去，画一段弧和原来的落点
+    if (c.flash && !dg) {
+      const o = c.flash.s0, cx = (v) => clamp(m.X(v), X0 - 6, X1 + 14);
+      let f = '';
+      for (const [y, v0, v1] of [[AY1, o.a * m.g + o.b, m.L], [AY2, o.c * m.g + o.d, m.R]]) {
+        if (v0 === v1) continue;
+        const x0 = cx(v0), x1 = cx(v1), hg = Math.min(26, 8 + Math.abs(x1 - x0) / 4);
+        f += K.circle(x0, y, 7, { stroke: 'var(--blue)', w: 2 }) + '<path d="M' + x0 + ' ' + (y + 6) + ' Q' + (x0 + x1) / 2 + ' ' + (y + 6 + hg) + ' ' + x1 + ' ' + (y + 6) + '" fill="none" stroke="var(--blue)" stroke-width="2.5" stroke-dasharray="5 3"/>';
+      }
+      h += K.flash(c.flash, f);
+    }
     // 说一句
     let tx = say.tx, fill = say.good ? 'var(--good)' : 'var(--ink)';
     if (dg && dg.k) { tx = dg.both ? '两边都少跳 ' + dg.k + '：两个落点一起往左 ' + dg.k + '，差不变' : '只这一边少跳 ' + dg.k + '：另一个落点不动'; fill = dg.both ? 'var(--blue)' : 'var(--bad)'; }

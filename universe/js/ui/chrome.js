@@ -35,6 +35,8 @@
     const v = get(side);
     if (v === 'rail') return true;
     if (v === 'open') return false;
+    // 联动组的操作台模式（js/ui/stage-forms.js）：这一页用不上器材架，窗口窄于 GROUP.railBP 时右边自动收起，台面宽一些（左边有步骤和提示，不收）
+    if (side === 'right' && UI.benchGroup && UI.benchGroup() && G.innerWidth < L.GROUP.railBP) return true;
     // 平时：有几何工作区、窗口不够宽时自动收起：左边的实验库窄于 autoBP 就收；右边的器材架还要拖器材，窄于 autoBPRight 才收
     return hasWorkspace() && G.innerWidth < (side === 'left' ? L.RAIL.autoBP : L.RAIL.autoBPRight);
   }

@@ -34,6 +34,7 @@
     def.props = def.props || {};
     def.inputs = def.inputs || {};
     def.outputs = def.outputs || {};
+    // 属性声明里 view: true：只是界面上的视图状态（比如式子台点中了哪一项），界面改它不进撤销、不算一步（js/ui/app.js 的 tx）
     for (const k in def.props) {
       const P = def.props[k];
       P.k = k; P.write = P.write !== false; P.label = P.label || k;
@@ -74,14 +75,23 @@
   // 操作台模式（docs/instrument-design.md 末尾“操作台模式”）：题目的台面上只有一台操作台、没有连线时，界面不画连线用的口
   // （输出口、输入口、属性药丸、记录仪的口），卡片按台面算大小，台面适应时不给口留边。只是不画，内核照常算（S.D[id].out 不变）。
   //   scene 台面；o.problem 有没有在做题（自由探究不算）；o.mode 'free' 不算；o.showPorts 孩子或老师点了“显示口”就不算。
-  //   返回那台操作台的实体 id，不是操作台模式返回 null。
+  //   联动组（js/core/forms.js）也算：台面上顶层的器材全是操作台、全在同一个联动组里、没有连线时，这几台都不画口。
+  //   返回这几台操作台的实体 id 列表（单台题是一个 id 的列表），不是操作台模式返回 null。判断某一台用 U.inBench(列表, id)。
   U.benchOf = (scene) => {
     if (!scene || !scene.entities || (scene.links || []).length) return null;
-    let one = null;
-    for (const id in scene.entities) { const e = scene.entities[id]; if (e.parent) continue; if (one) return null; one = e; }   // 第二台就不是（界面每次量卡片都要问，所以早停）
-    const d = one && U.types[one.type];
-    return d && d.bench === true ? one.id : null;
+    const top = [];
+    for (const id in scene.entities) {
+      const e = scene.entities[id]; if (e.parent) continue;
+      if (top.length && !scene.groups) return null;   // 没有联动组时第二台就不是（界面每次量卡片都要问，所以早停）
+      const d = U.types[e.type]; if (!d || d.bench !== true) return null;
+      top.push(e.id);
+    }
+    if (top.length === 1) return top;
+    if (!top.length) return null;
+    const g = scene.groups.find((x) => x.members.includes(top[0]));
+    return g && top.every((id) => g.members.includes(id)) ? top : null;
   };
+  U.inBench = (ids, id) => !!ids && ids.indexOf(id) >= 0;
   U.benchModeOf = (scene, o) => {
     o = o || {};
     if (!o.problem || o.mode === 'free' || o.showPorts) return null;

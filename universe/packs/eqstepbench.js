@@ -12,7 +12,7 @@
   const num = (n) => U.val('num', Q(n), { dim: null });
   const W = 560, CX = 220, Y0 = 60, DY = 30, SHOW = 6, NMAX = 60;
   const LQ = () => U.Forms.LQ, FORM = () => U.Forms.FORMS.lineq, RS = () => K.research;
-  const AY = 336;   // 追问从这里往下画（式子最多 6 行，下面的按钮和那句话到 318 为止）
+  const askY = (p) => 186 + DY * (Math.min(SHOW, rowsOf(p).length) - 1);   // 追问从这里往下画：最下面那句话的下面（跟着写了几行往下移）
   const asksOf = (p) => RS().parseAsk(p.ask, p.pick, rowsOf(p).length > 1);
   const st = (p) => ({ a: p.a, b: p.b, c: p.c, d: p.d, x0: p.x0 });
   const key = (s) => [s.a, s.b, s.c, s.d].join(',');
@@ -48,6 +48,8 @@
     const p = c.props, s = st(p), rows = rowsOf(p), ok = LQ().balanced(s), sol = LQ().solved(s);
     let h = K.text(16, 26, '式子：一步一行往下写', { size: 12, anchor: 'start', fill: '#4a5568' });
     const shown = rows.slice(-SHOW), last = shown.length - 1;
+    // 联动组里别的台刚做了一步（c.flash，见 js/ui/stage-forms.js）：新写的这一行底下亮一下
+    h += K.flash(c.flash, last > 0 ? K.rect(10, Y0 + last * DY - 28, W - 20, 36, { fill: '#dcebfb', stroke: 'var(--blue)', r: 8, w: 2 }) : '');
     shown.forEach((r, i) => {
       const rs = Object.assign({ x0: s.x0 }, r), good = LQ().balanced(rs), y = Y0 + i * DY;
       if (r.label) h += K.text(W - 112, y - 2, r.label, { size: 11, fill: good ? 'var(--blue)' : 'var(--bad)', weight: 700 });
@@ -86,7 +88,7 @@
     if (!ok) h += K.text(16, ny, '两边不再相等：只动了一边。在另一边做同样的事，就又相等了。', { size: 13, anchor: 'start', weight: 700, fill: 'var(--bad)' });
     else if (sol !== null) h += K.text(16, ny, 'x = ' + sol + '，解出来了', { size: 14, anchor: 'start', weight: 700, fill: 'var(--good)' });
     const asks = asksOf(p);
-    if (asks.length) h += RS().drawAsks(AY, asks, rowsOf(p).length > 1);
+    if (asks.length) h += RS().drawAsks(askY(p), asks, rowsOf(p).length > 1);
     return h;
   }
 
@@ -101,7 +103,7 @@
         props: {
           a: I(0, NMAX, 2, '左边几个 x'), b: I(0, NMAX, 3, '左边的数'), c: I(0, NMAX, 0, '右边几个 x'), d: I(0, NMAX, 11, '右边的数'),
           x0: I(1, 20, 4, 'x 的真实值（出题人设）', { hidden: true }),
-          sel: { type: 'text', label: '选中的项（自动）', default: '', write: true, hidden: true },
+          sel: { type: 'text', label: '选中的项（自动）', default: '', write: true, hidden: true, view: true },   // view：只是界面上点中了哪一项，改它不进撤销（js/ui/app.js 的 tx）
           rows: { type: 'text', label: '每一行（自动记录）', default: '', write: true, hidden: true },
           ask: { type: 'text', label: '追问（题干|选项|*对的选项）', default: '', write: true, hidden: true },
           pick: { type: 'text', label: '追问选了第几个', default: '', write: true, hidden: true },
@@ -116,7 +118,7 @@
           q1: { dim: null, kind: 'num', label: '追问选了第几个' },
         },
         icon: () => K.text(32, 22, '2x+3', { size: 13, weight: 700 }) + K.line(10, 28, 54, 28, { w: 1 }) + K.text(32, 44, '2x = 8', { size: 13, weight: 700, fill: 'var(--blue)' }),
-        size: (e) => { const asks = e && e.props && e.props.ask ? RS().parseAsk(e.props.ask, '', false) : []; return [W, asks.length ? AY + RS().asksH(asks) + 8 : 380]; },
+        size: (e) => { const p = (e && e.props) || {}, asks = p.ask ? RS().parseAsk(p.ask, '', false) : []; return [W, asks.length ? askY(p) + RS().asksH(asks) + 8 : askY(p) + 24]; },   // 按写了几行定高（最多 SHOW 行）：开场只有一行时不留大片空白；有追问时接在下面
         compute: (c) => {
           const s = st(c.props), ok = LQ().balanced(s), sol = LQ().solved(s), X = U.Poly.variable('x'), C = (n) => U.Poly.const(Q(n));
           const apart = ok && ((s.b === 0 && s.c === 0 && s.a > 0) || (s.d === 0 && s.a === 0 && s.c > 0));
