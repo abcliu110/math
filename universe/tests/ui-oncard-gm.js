@@ -1,5 +1,5 @@
 /* node tests/ui-oncard-gm.js —— 游戏一组（汉诺塔、取石子、一笔画、展开图、小方块、质因数积木）全在卡片上操作：
- *   开题，用真实鼠标点卡片上的按钮、柱子、格子、积木做完题；全程不打开属性面板，卡片标题栏不出现“✎ 填写 / ✎ 先猜”。
+ *   开题（质因数积木已退役、题都搬到了因数操作台，在自由探究里放一台），用真实鼠标点卡片上的按钮、柱子、格子、积木做完题；全程不打开属性面板，卡片标题栏不出现“✎ 填写 / ✎ 先猜”。
  *   截图存到 scratchpad（SHOT_DIR 环境变量，没有就存 tests/shots），文件名带 gm- 前缀。 */
 'use strict';
 const path = require('path');
@@ -87,18 +87,24 @@ const path = require('path');
   for (let i = 0; i < 16; i++) for (let h = 1; h <= R.sol[i]; h++) await cl('put', i * 5 + h + 1);
   await shot('cubes'); H.ok(await H.done('min'), '点格子左半边加块：用最少的块数对上三视图');
 
-  console.log('质因数积木：点积木拿掉、积木盒添一块、先猜因数个数');
-  await H.open('pb-split-36'); H.ok(await noChip(), '标题栏没有“✎ 填写”');
-  await cl('a', 36); H.ok(await H.done('four'), '给 12 添一块 3：36 是 4 块');
-  await H.open('pb-gcd-24-36');
-  for (const v of [2, 4, 12, 36]) await cl('b', v);
-  await shot('primeblocks'); H.ok(await H.done('gcd') && await H.done('lcm'), '“加一摞 b”点 2、2、3、3：最大公因数 12、最小公倍数 72');
-  await H.open('pb-count-divisors');
-  for (let v = 1; v <= 9; v++) await cl('gd', v);
-  await cl('guess', 9); H.ok(await H.done('hit'), '+ 调到 9，点“看看”：猜对了 36 有 9 个因数');
-  await H.open('pb-twelve-divisors');
+  // 质因数积木已经退役（不上器材架），它的 5 道题都搬到了因数操作台（problems/zz-benches.js）：没有题可开，在自由探究里放一台做一遍
+  console.log('质因数积木（自由探究）：点积木拿掉、积木盒添一块、加一摞 b、先猜因数个数');
+  await closeDlg(); await p.evaluate(() => { UI.App.openFree(); UI.App.act({ t: 'clear' }); UI.App.act({ t: 'add', type: 'primeblocks', x: 40, y: 40, props: { a: 12 } }); for (const k of Object.keys(UI.S.help || {})) UI.S.help[k] = false; UI.Stage.render(); });
+  await p.waitForTimeout(200); H.ok(await noChip(), '标题栏没有“✎ 填写”');
+  const pbOut = (k) => p.evaluate((k) => { const e = Object.values(UI.S.scene.entities)[0], v = UI.S.D[e.id].out[k]; return v ? U.Q.num(v.data) : null; }, k);
+  await cl('a', 36); H.ok((await props()).a === 36 && (await pbOut('blocks')) === 4, '“a 添一块”点 3：12 → 36，4 块积木');
   await p.locator('.card svg.bdy [data-blk="a"][data-pick-v="12"]').first().click(); await p.waitForTimeout(80);
-  await cl('a', 60); H.ok(await H.done('min'), '点积木 3 拿掉（36 → 12），再添一块 5：60 有 12 个因数');
+  await cl('a', 60); H.ok((await props()).a === 60 && (await pbOut('count')) === 12, '点积木 3 拿掉（36 → 12），再添一块 5：60 有 12 个因数');
+  await p.locator('.card .hd [data-pick-k="mode"]').click(); await p.waitForTimeout(80);
+  for (const v of [2, 4, 12, 84]) await cl('b', v);
+  H.ok((await props()).b === 84 && (await pbOut('gcd')) === 12 && (await pbOut('lcm')) === 420, '标题栏换成“公因数”，“加一摞 b”点 2、2、3、7：最大公因数 12、最小公倍数 420');
+  await shot('primeblocks');
+  await p.locator('.card svg.bdy [data-blk="b"][data-pick-v="42"]').first().click(); await p.waitForTimeout(80);
+  H.ok((await props()).b === 42, '点 b 的一块 2：拿掉（84 → 42）');
+  await p.locator('.card .hd [data-pick-k="mode"]').click(); await p.waitForTimeout(80);
+  H.ok((await props()).mode === 2 && (await H.text()).includes('先猜：60 有几个因数'), '换成“搭因数”：先猜，因数还盖着');
+  for (let v = 1; v <= 12; v++) await cl('gd', v);
+  await cl('guess', 12); H.ok((await pbOut('gap')) === 0 && (await H.text()).includes('猜对了'), '+ 调到 12，点“看看”：猜对了，揭开 12 个因数');
   H.ok(await noChip(), '标题栏没有“✎ 填写”');
   await H.end('游戏一组（卡片上操作）');
 })();

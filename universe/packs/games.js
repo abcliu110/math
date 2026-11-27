@@ -82,7 +82,7 @@
       s += K.text(278, y + 16, '连赢 ' + p.streak + '（最厉害 ' + p.s2 + '）', { size: 10.5, anchor: 'start', fill: 'var(--dim)' });
     }
     y += 40;
-    s += K.text(10, y, '局面表：只剩 i 颗、轮到你取，你必胜（胜）还是必败（败）？点格子换标记', { size: 11, anchor: 'start', weight: 700 }); y += 8;
+    s += K.text(10, y, '局面表：只剩 i 颗、轮到你，必胜还是必败？点格子换标记', { size: 11, anchor: 'start', weight: 700 }); y += 8;
     const cw = Math.min(22, Math.floor((W - 20) / Math.min(p.n + 1, 16)));
     for (let i = 0; i <= p.n; i++) {
       const x = 10 + (i % 16) * cw, yy = y + Math.floor(i / 16) * (cw + 14), m = J.tbl[i], col = m === 'W' ? 'var(--good)' : m === 'L' ? 'var(--bad)' : 'var(--card)';
