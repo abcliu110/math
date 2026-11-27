@@ -3384,58 +3384,6 @@ t('两架天平：随机做几百步，每一步之后两架天平在真实重�
   }
   truthy(done >= 100, '实际做了 ' + done + ' 步');
 });
-t('两架天平：只动一边会歪，歪的天平不能拿去消元，歪着不算解出来；题目开场都是平的', () => {
-  const S = U.SystemBench, P = S.parse, p0 = { e0: '1,1,0,0,0,7', e1: '2,1,0,0,0,10', x0: 3, y0: 4, steps: 0, refused: 0, msg: '', sync: false };
-  eq(S.lean(P('1,1,0,0,0,7'), [3, 4]), 0); eq(S.lean(P('1,1,0,0,0,6'), [3, 4]), 1, '左盘重'); eq(S.lean(P('0,1,0,0,0,7'), [3, 4]), -1, '右盘重');
-  eq(S.lean(P('0,1,0,0,0,7'), null), 0, '没有真实重量（换一换台借用）：当它是平的');
-  // 只动一边：从上面左盘拖出圆盒（拖到盘外）→ 只拿走这一个，右盘不动，天平右盘重
-  const pl = S.plan(p0, 'i0Lx', { x: 100, y: 30 });
-  eq(pl.patch.e0, '0,1,0,0,0,7', '只拿走左盘的圆盒'); truthy(/歪了：右盘重/.test(pl.fx.note), pl.fx.note);
-  const pm = S.plan(p0, 'i0Lx', { x: 320, y: 14 + 104 - 10 });
-  eq(pm.patch.e0, '0,1,0,1,0,7', '拖到右盘：挪过去'); truthy(/挪到右盘/.test(pm.fx.note), pm.fx.note);
-  const pt = S.plan(p0, 'tc', { x: 100, y: 14 + 104 - 10 });
-  eq(pt.patch.e0, '1,1,1,0,0,7', '从托盘拖到上面的左盘：只加这一个砝码'); truthy(/歪了：左盘重/.test(pt.fx.note), pt.fx.note);
-  eq(S.plan(Object.assign({}, p0, { sync: true }), 'tc', { x: 100, y: 14 + 104 - 10 }).patch.e0, '1,1,1,0,0,8', '连着的时候：两个盘各加一个');
-  // 歪的天平拖到另一架上：拦住
-  const tilted = Object.assign({}, p0, { e0: '1,1,1,0,0,7' });
-  truthy(/歪的/.test(S.plan(tilted, 'b0', { x: 210, y: 14 + 172 + 60 }).patch.msg || ''), '歪的天平拿去消元：被拦住');
-  eq(S.dropOn([P('2,1,1,0,0,10'), P('1,1,0,0,0,7')], 1, 0, [1, 0]).e, [1, 0, 1, 0, 0, 3], '平的拖到歪的上：可以，还是歪的（x + 1 > 3）');
-  const m = S.model({ e0: '1,0,0,0,0,2', e1: '2,1,0,0,0,10', x0: 3, y0: 4 });
-  eq(m.x, null, 'x = 2 是歪的（真实是 3）：不算解出来'); eq(m.leans, [1, 0], '上面左盘重，下面平');
-  const svg = S.draw({ props: Object.assign({}, p0, { e0: '1,1,1,0,0,7' }), drag: null });
-  truthy(svg.includes('data-lean="1"') && /x \+ y \+ 1 (&gt;|>) 7/.test(svg) && svg.includes('歪了：左盘重'), '画出“>”和“歪了：左盘重”');
-  truthy(svg.includes('data-sync="0"'), '画出开关（现在是只动一边）');
-  truthy(!S.draw({ props: { e0: '1,1,0,0,0,7', e1: '2,1,0,0,0,10', steps: 0, refused: 0, msg: '' }, drag: null }).includes('data-sync'), '换一换台借用画法（没有 sync 属性）：不画开关');
-  for (const pr of U.problems.filter((x) => (x.shelf || []).includes('systembench'))) {
-    const sc = pr.build(), e = Object.values(sc.entities).find((x) => x.type === 'systembench'), pp = Object.assign({}, e.props);
-    for (const [k, d] of Object.entries(U.types.systembench.props)) if (pp[k] === undefined) pp[k] = d.default;
-    eq(S.model(pp).leans, [0, 0], pr.id + '：开场两架天平在真实重量下都是平的');
-  }
-});
-t('面积模型：小数乘法拆成整数和小数；整数乘法能到 30 × 20，卡片跟着变大', () => {
-  const M = U.AreaModel, T = U.types.areamodel;
-  eq(M.dec(23, 1), '2.3'); eq(M.dec(322, 2), '3.22'); eq(M.dec(12, 2), '0.12'); eq(M.dec(30, 1), '3'); eq(M.dec(5, 2), '0.05');
-  const a = M.model({ mode: 3, da: 23, db: 14, split: false });
-  eq([a.parts, a.cells, U.Q.show(a.area)], [1, 322, U.Q.show(U.Q(322, 100))]);
-  eq(M.lines(a)[0], '2.3 × 1.4 = 3.22');
-  const b = M.model({ mode: 3, da: 23, db: 14, split: true });
-  eq([b.ws, b.hs, b.parts], [[20, 3], [10, 4], 4]);
-  eq(M.lines(b), ['2.3 × 1.4 = (2 + 0.3) × (1 + 0.4)', '= 2×1 + 0.3×1 + 2×0.4 + 0.3×0.4', '= 2 + 0.3 + 0.8 + 0.12 = 3.22']);
-  eq(M.model({ mode: 3, da: 3, db: 4, split: true }).parts, 1, '0.3 × 0.4 没有整数部分：拆不出来，还是一块');
-  eq(M.model({ mode: 3, da: 20, db: 14, split: true }).ws, [20], '2 没有小数部分：长只有一段');
-  // 随机几组：拆开以后每块加起来等于整块
-  for (let da = 1; da <= 35; da += 2) for (let db = 1; db <= 24; db += 3) { const m = M.model({ mode: 3, da, db, split: true }); let s = 0; for (const x of m.ws) for (const y of m.hs) s += x * y; eq(s, da * db, da + '×' + db); }
-  const svg = T.draw({ props: { mode: 3, da: 23, db: 14, split: false, show: true }, masked: false });
-  truthy(svg.includes('data-dsplit="0"') && svg.includes('data-pick-set'), '画出“拆成整数和小数”的按钮');
-  truthy(T.draw({ props: { mode: 3, da: 3, db: 4, split: false, show: true } }).includes('opacity="0.38"'), '两条边都不到 1：按钮是灰的');
-  eq(T.size({ props: { mode: 0, w: 13, h: 7 } }).slice(0, 2).every((x, i) => x >= [430, 400][i]), true);
-  const big = T.size({ props: { mode: 0, w: 30, h: 20 } });
-  truthy(big[0] >= 46 + 30 * 17 + 40 && big[1] >= 44 + 20 * 17 + 34 + 60, '30 × 20 画得下：' + big);
-});
-t('篱笆围地：改一共几米，“记下这一种”的列表清空；改成一样的数、改别的属性都不清空', () => {
-  const on = U.types.areabench.onSet, p = { shape: 3, P: 20, w: 3, tried: '2,3,4' };
-  eq(on(p, 'P', 24), { tried: '' }, '20 改成 24：清空');
-  eq(on(p, 'P', 20), null, '还是 20：不清空'); eq(on(p, 'w', 5), null, '改长：不清空');
 t('篱笆围地：改一共几米，“记下这一种”的列表清空；改成一样的数、改别的属性都不清空（走真的 set：onSet 拿到的 props 已经是新值）', () => {
   const s = W.blank(), id = W.add(s, 'areabench', 0, 0, { shape: 3, P: 20, w: 3, tried: '2,3,4' }), p = s.entities[id].props;
   const set = (k, v) => { const r = W.act(s, { t: 'set', id, k, v }); truthy(r.ok, k + ' 改不了：' + r.why); };
@@ -3485,6 +3433,54 @@ t('凑成 8（gal-gs-pair）：要真的两两配对才算；直接把算式写�
   [s, id] = open(); op(s, id, 1); eq(s.entities[id].props.toks, '1,+,9,+,6,+,3,+,5,+,4'); eq(outs(s, id), ['1', '9', '5'], '7 和 2 配：一对，是 9 不是 8');
   // 里程碑条件：三对、都是 8、落单 1 个
   eq(JSON.stringify(ms.when).match(/pairsum|pairs|alone/g).sort(), ['alone', 'pairs', 'pairsum']);
+});
+t('两架天平：只动一边会歪，歪的天平不能拿去消元，歪着不算解出来；题目开场都是平的', () => {
+  const S = U.SystemBench, P = S.parse, p0 = { e0: '1,1,0,0,0,7', e1: '2,1,0,0,0,10', x0: 3, y0: 4, steps: 0, refused: 0, msg: '', sync: false };
+  eq(S.lean(P('1,1,0,0,0,7'), [3, 4]), 0); eq(S.lean(P('1,1,0,0,0,6'), [3, 4]), 1, '左盘重'); eq(S.lean(P('0,1,0,0,0,7'), [3, 4]), -1, '右盘重');
+  eq(S.lean(P('0,1,0,0,0,7'), null), 0, '没有真实重量（换一换台借用）：当它是平的');
+  // 只动一边：从上面左盘拖出圆盒（拖到盘外）→ 只拿走这一个，右盘不动，天平右盘重
+  const pl = S.plan(p0, 'i0Lx', { x: 100, y: 30 });
+  eq(pl.patch.e0, '0,1,0,0,0,7', '只拿走左盘的圆盒'); truthy(/歪了：右盘重/.test(pl.fx.note), pl.fx.note);
+  const pm = S.plan(p0, 'i0Lx', { x: 320, y: 14 + 104 - 10 });
+  eq(pm.patch.e0, '0,1,0,1,0,7', '拖到右盘：挪过去'); truthy(/挪到右盘/.test(pm.fx.note), pm.fx.note);
+  const pt = S.plan(p0, 'tc', { x: 100, y: 14 + 104 - 10 });
+  eq(pt.patch.e0, '1,1,1,0,0,7', '从托盘拖到上面的左盘：只加这一个砝码'); truthy(/歪了：左盘重/.test(pt.fx.note), pt.fx.note);
+  eq(S.plan(Object.assign({}, p0, { sync: true }), 'tc', { x: 100, y: 14 + 104 - 10 }).patch.e0, '1,1,1,0,0,8', '连着的时候：两个盘各加一个');
+  // 歪的天平拖到另一架上：拦住
+  const tilted = Object.assign({}, p0, { e0: '1,1,1,0,0,7' });
+  truthy(/歪的/.test(S.plan(tilted, 'b0', { x: 210, y: 14 + 172 + 60 }).patch.msg || ''), '歪的天平拿去消元：被拦住');
+  eq(S.dropOn([P('2,1,1,0,0,10'), P('1,1,0,0,0,7')], 1, 0, [1, 0]).e, [1, 0, 1, 0, 0, 3], '平的拖到歪的上：可以，还是歪的（x + 1 > 3）');
+  const m = S.model({ e0: '1,0,0,0,0,2', e1: '2,1,0,0,0,10', x0: 3, y0: 4 });
+  eq(m.x, null, 'x = 2 是歪的（真实是 3）：不算解出来'); eq(m.leans, [1, 0], '上面左盘重，下面平');
+  const svg = S.draw({ props: Object.assign({}, p0, { e0: '1,1,1,0,0,7' }), drag: null });
+  truthy(svg.includes('data-lean="1"') && /x \+ y \+ 1 (&gt;|>) 7/.test(svg) && svg.includes('歪了：左盘重'), '画出“>”和“歪了：左盘重”');
+  truthy(svg.includes('data-sync="0"'), '画出开关（现在是只动一边）');
+  truthy(!S.draw({ props: { e0: '1,1,0,0,0,7', e1: '2,1,0,0,0,10', steps: 0, refused: 0, msg: '' }, drag: null }).includes('data-sync'), '换一换台借用画法（没有 sync 属性）：不画开关');
+  for (const pr of U.problems.filter((x) => (x.shelf || []).includes('systembench'))) {
+    const sc = pr.build(), e = Object.values(sc.entities).find((x) => x.type === 'systembench'), pp = Object.assign({}, e.props);
+    for (const [k, d] of Object.entries(U.types.systembench.props)) if (pp[k] === undefined) pp[k] = d.default;
+    eq(S.model(pp).leans, [0, 0], pr.id + '：开场两架天平在真实重量下都是平的');
+  }
+});
+t('面积模型：小数乘法拆成整数和小数；整数乘法能到 30 × 20，卡片跟着变大', () => {
+  const M = U.AreaModel, T = U.types.areamodel;
+  eq(M.dec(23, 1), '2.3'); eq(M.dec(322, 2), '3.22'); eq(M.dec(12, 2), '0.12'); eq(M.dec(30, 1), '3'); eq(M.dec(5, 2), '0.05');
+  const a = M.model({ mode: 3, da: 23, db: 14, split: false });
+  eq([a.parts, a.cells, U.Q.show(a.area)], [1, 322, U.Q.show(U.Q(322, 100))]);
+  eq(M.lines(a)[0], '2.3 × 1.4 = 3.22');
+  const b = M.model({ mode: 3, da: 23, db: 14, split: true });
+  eq([b.ws, b.hs, b.parts], [[20, 3], [10, 4], 4]);
+  eq(M.lines(b), ['2.3 × 1.4 = (2 + 0.3) × (1 + 0.4)', '= 2×1 + 0.3×1 + 2×0.4 + 0.3×0.4', '= 2 + 0.3 + 0.8 + 0.12 = 3.22']);
+  eq(M.model({ mode: 3, da: 3, db: 4, split: true }).parts, 1, '0.3 × 0.4 没有整数部分：拆不出来，还是一块');
+  eq(M.model({ mode: 3, da: 20, db: 14, split: true }).ws, [20], '2 没有小数部分：长只有一段');
+  // 随机几组：拆开以后每块加起来等于整块
+  for (let da = 1; da <= 35; da += 2) for (let db = 1; db <= 24; db += 3) { const m = M.model({ mode: 3, da, db, split: true }); let s = 0; for (const x of m.ws) for (const y of m.hs) s += x * y; eq(s, da * db, da + '×' + db); }
+  const svg = T.draw({ props: { mode: 3, da: 23, db: 14, split: false, show: true }, masked: false });
+  truthy(svg.includes('data-dsplit="0"') && svg.includes('data-pick-set'), '画出“拆成整数和小数”的按钮');
+  truthy(T.draw({ props: { mode: 3, da: 3, db: 4, split: false, show: true } }).includes('opacity="0.38"'), '两条边都不到 1：按钮是灰的');
+  eq(T.size({ props: { mode: 0, w: 13, h: 7 } }).slice(0, 2).every((x, i) => x >= [430, 400][i]), true);
+  const big = T.size({ props: { mode: 0, w: 30, h: 20 } });
+  truthy(big[0] >= 46 + 30 * 17 + 40 && big[1] >= 44 + 20 * 17 + 34 + 60, '30 × 20 画得下：' + big);
 });
 console.log('通用记录仪（js/core/recorder.js）');
 {
@@ -3825,65 +3821,100 @@ console.log('联动组：一个道理，几种样子（js/core/forms.js）');
     eq(all4(s, o)[0], [3, 2, 1, 10], '天平没动');
   });
 }
-console.log('全部在器材上操作：几何一组（海龟作图、剪拼、钉板、证明排序、尺规作图、式子台）');
+console.log('低年级帮手（试验台增强 6，js/ui/young-aid.js 的纯函数）');
 {
-  // 画一张卡片，取出上面所有按钮的补丁（data-pick-set 的 JSON）
-  const patchesOf = (s, id, masked) => { const e = s.entities[id], D = W.evaluate(s); const svg = U.types[e.type].draw({ ent: e, props: D[id].props || e.props, d: D[id], out: D[id].out, w: U.types[e.type].size({ props: e.props })[0], h: 400, t: 0, n: 0, masked: !!masked, scene: s }); return Array.from(svg.matchAll(/data-pick-set="([^"]*)"/g)).map((m) => JSON.parse(decodeURIComponent(m[1]))); };
-  const has = (L, o) => L.some((x) => bigStr(x) === bigStr(o));
-  const apply = (s, id, o) => { for (const k of Object.keys(o)) W.act(s, { t: 'set', id, k, v: o[k] }); };
-  const outOf = (s, id, port) => Q.show(W.evaluate(s)[id].out[port].data);
-  t('海龟：先猜在卡片上点“会回到起点 / 回不到”；n、a、k、目标图、先猜都不进“✎ 填写”', () => {
-    const s = W.blank(), id = W.add(s, 'turtle', 0, 0, { tgt: 1 }), d = U.types.turtle;
-    for (const k of ['n', 'a', 'k', 'tgt', 'gans']) truthy(d.props[k].hidden, k + ' 应 hidden');
-    eq(patchesOf(s, id, true), [], '还没有程序：不问');
-    for (const v of [4, 1, 2, 5]) W.act(s, { t: 'set', id, k: 'add', v });
-    const L = patchesOf(s, id, true); truthy(has(L, { gans: 1 }) && has(L, { gans: 2 }), bigStr(L));
-    apply(s, id, { gans: 1 }); eq(outOf(s, id, 'closed'), '1'); eq(outOf(s, id, 'match'), '1');
-    eq(patchesOf(s, id, false), [], '猜过了：按钮收起');
+  const yctx = vm.createContext({ console }); yctx.globalThis = yctx;
+  vm.runInContext(fs.readFileSync(path.join(root, 'js/ui/young-aid.js'), 'utf8'), yctx, { filename: 'js/ui/young-aid.js' });
+  const Y = yctx.UI.YoungAid;
+  const inside = (h, b) => h.x <= b.x + 1e-9 && h.y <= b.y + 1e-9 && h.x + h.w >= b.x + b.w - 1e-9 && h.y + h.h >= b.y + b.h - 1e-9;
+  const cross = (a, b) => a.x < b.x + b.w - 1e-9 && b.x < a.x + a.w - 1e-9 && a.y < b.y + b.h - 1e-9 && b.y < a.y + a.h - 1e-9;
+  t('只在 1、2 年级的题里生效', () => { eq([1, 2, 3, 5].map((g) => Y.isLow({ grade: g })), [true, true, false, false]); eq(Y.isLow(null), false); eq(Y.isLow({}), false); });
+  t('孤零零的小按钮放大到 44×44，居中，包住原来的', () => { const b = { x: 100, y: 100, w: 20, h: 10 }, h = Y.hitRects([b], 44)[0]; eq([h.x, h.y, h.w, h.h], [88, 83, 44, 44]); truthy(inside(h, b)); });
+  t('本来就够大的不变', () => { const b = { x: 0, y: 0, w: 60, h: 50 }; eq(Y.hitRects([b], 44)[0], b); });
+  t('靠着外框：放不下的一边挪到另一边', () => { const h = Y.hitRects([{ x: 2, y: 2, w: 20, h: 20 }], 44, { x: 0, y: 0, w: 300, h: 300 })[0]; eq([h.x, h.y, h.w, h.h], [0, 0, 44, 44]); });
+  t('两个挨着的按钮：各让一半空隙，放大后不互相盖住', () => {
+    const bs = [{ x: 0, y: 50, w: 30, h: 30 }, { x: 40, y: 50, w: 30, h: 30 }], hs = Y.hitRects(bs, 44, { x: -100, y: -100, w: 400, h: 400 });
+    truthy(!cross(hs[0], hs[1]), '不重叠'); truthy(!cross(hs[0], bs[1]) && !cross(hs[1], bs[0]), '不盖住对方'); eq(hs[0].w, 44); eq(hs[1].w, 44); eq(hs[0].x + hs[0].w, 35); eq(hs[1].x, 35);
   });
-  t('剪拼：直角边 − / +、夹角三个按钮、先猜三个答案都在卡片上', () => {
-    const s = W.blank(), id = W.add(s, 'dissect', 0, 0, { scene: 0, a: 3, b: 4, angle: 2 }), d = U.types.dissect;
-    for (const k of ['scene', 'a', 'b', 'angle', 'r', 'n', 'gans']) truthy(d.props[k].hidden, k + ' 应 hidden');
-    const L = patchesOf(s, id, true);
-    for (const o of [{ a: 2 }, { a: 4 }, { b: 3 }, { b: 5 }, { angle: 0 }, { angle: 1 }, { angle: 2 }, { gans: 1 }, { gans: 2 }, { gans: 3 }]) truthy(has(L, o), bigStr(o) + ' 不在卡片上');
-    apply(s, id, { gans: 3 }); apply(s, id, { angle: 1 }); eq(outOf(s, id, 'c2'), '25'); eq(outOf(s, id, 'guessed'), '1');
-    const s2 = W.blank(), i2 = W.add(s2, 'dissect', 0, 0, { scene: 1, r: 1, n: 4 }), L2 = patchesOf(s2, i2, true);
-    truthy(has(L2, { r: 2 }) && !has(L2, { r: 0 }) && has(L2, { gans: 1 }), '圆：半径到 1 不能再减；先猜三个答案');
+  t('挤在一起的格子放不满 44，但一定包住原来的、互不盖住', () => {
+    const bs = []; for (let i = 0; i < 4; i++) bs.push({ x: i * 34, y: 0, w: 32, h: 32 });
+    const hs = Y.hitRects(bs, 44, { x: -50, y: -50, w: 300, h: 300 });
+    hs.forEach((h, i) => { truthy(inside(h, bs[i]), '包住 ' + i); eq(h.h, 44); hs.forEach((o, j) => { if (j !== i) truthy(!cross(h, o), i + ' 和 ' + j + ' 不重叠'); }); });
+    eq(hs[1].w, 34, '中间的格子只能多 1 + 1');
   });
-  t('钉板：公式系数按 ½ 一格调，先猜面积先调草稿再点“猜好了”', () => {
-    const s = W.blank(), id = W.add(s, 'geoboard', 0, 0, {}), d = U.types.geoboard;
-    for (const k of ['fa', 'fb', 'fc', 'gans', 'gt']) truthy(d.props[k].hidden, k + ' 应 hidden');
-    let L = patchesOf(s, id, true);
-    for (const o of [{ fa: '1/2' }, { fa: '3/2' }, { fb: '1/2' }, { fc: '-1/2' }, { fc: '1/2' }, { gt: 1 }, { gt: 2 }, { gans: '0' }]) truthy(has(L, o), bigStr(o) + ' 不在卡片上');
-    truthy(!has(L, { gt: -1 }), '草稿不能小于 0');
-    apply(s, id, { gt: 12 }); L = patchesOf(s, id, true); truthy(has(L, { gans: '6' }), '草稿 12 → 猜 6');
-    apply(s, id, { fc: '5' }); truthy(!patchesOf(s, id, true).some((o) => 'fc' in o && o.fc === '11/2'), '系数到 5 不再加');
-    // 用卡片上的补丁凑出皮克公式：fb 1 → 1/2，fc 0 → −1/2 → −1
-    const s3 = W.blank(), g = W.add(s3, 'geoboard', 0, 0, {}), poly = (P) => { for (const [x, y] of P) W.act(s3, { t: 'set', id: g, k: 'pt', v: y * 7 + x + 1 }); W.act(s3, { t: 'set', id: g, k: 'pt', v: P[0][1] * 7 + P[0][0] + 1 }); };
-    for (const P of [[[0, 0], [2, 0], [2, 1], [0, 1]], [[0, 0], [3, 0], [0, 3]], [[0, 0], [4, 0], [3, 2], [1, 2]], [[0, 0], [3, 1], [1, 3]], [[0, 0], [2, 0], [2, 2], [0, 2]]]) { poly(P); W.act(s3, { t: 'set', id: g, k: 'rec', v: 1 }); }
-    for (const o of [{ fb: '1/2' }, { fc: '-1/2' }, { fc: '-1' }]) { truthy(has(patchesOf(s3, g, false), o), bigStr(o)); apply(s3, g, o); }
-    eq(outOf(s3, g, 'formula'), '1');
+  t('本来就叠在一起的两个不放大（免得盖住对方）', () => { const hs = Y.hitRects([{ x: 0, y: 0, w: 20, h: 20 }, { x: 10, y: 10, w: 20, h: 20 }, { x: 200, y: 0, w: 20, h: 20 }], 44); eq(hs[0].w, 20); eq(hs[1].w, 20); eq(hs[2].w, 44); });
+  t('读出来之前把符号换成字、去掉图标', () => {
+    eq(Y.speakable('9 + 6 = ?'), '9 加 6 等于多少'); eq(Y.speakable('13 − 5 = 8'), '13 减 5 等于 8'); eq(Y.speakable('3 × 4 ÷ 2'), '3 乘 4 除以 2');
+    eq(Y.speakable('💡 提示：✓ 做完了'), '提示：对 做完了'); eq(Y.speakable('5 > 3'), '5 大于 3');
   });
-  t('证明排序的证明编号、尺规作图的“作什么”、式子台的 a、b、c、d 是出题人设的：hidden', () => {
-    truthy(U.types.proofsort.props.pid.hidden); truthy(U.types.compass.props.task.hidden);
-    for (const k of ['a', 'b', 'c', 'd']) truthy(U.types.eqstepbench.props[k].hidden, 'eqstepbench.' + k);
+  t('几句话接成一段：已经有标点的不再加句号', () => { eq(Y.joinSentences(['多少？', '点一下', '对了。', '']), '多少？点一下。对了。'); });
+  t('步骤的图标：做完 ⭐、正在做 👉、还没到 🎯', () => { eq(['done', 'cur', 'todo'].map(Y.stepIcon), ['⭐', '👉', '🎯']); });
+  t('挑中文语音：优先 zh-CN，没有中文就是 null', () => {
+    eq(Y.pickVoice([{ lang: 'en-US' }, { lang: 'zh-TW', name: 't' }, { lang: 'zh-CN', name: 'c' }]).name, 'c'); eq(Y.pickVoice([{ lang: 'zh-HK', name: 'h' }]).name, 'h');
+    eq(Y.pickVoice([{ lang: 'en-US' }]), null); eq(Y.pickVoice([]), null); eq(Y.pickVoice(undefined), null);
   });
-  t('总检查：题目里用到的器材，compactPorts 又没有把手的，不再有孩子要填的属性（write 且不 hidden）', () => {
-    // 永久例外：{ 器材: { 属性: 理由 } }。现在没有。
-    const ALLOW = {};
-    // 暂时例外：别的组正在改，合并时删掉
-    const TEMP = {
-      fmachine: '函数机一组在改', guessrule: '函数机一组在改', asn: '函数机一组在改', newop: '函数机一组在改', twoways: '函数机一组在改', ptree: '函数机一组在改',
-      approach: '探究一组在改', optimize: '探究一组在改', scale: '探究一组在改', shadow: '探究一组在改', spheretri: '探究一组在改', taxi: '探究一组在改',
-      hanoi: '游戏一组在改', nim: '游戏一组在改', euler: '游戏一组在改', net: '游戏一组在改', cubes: '游戏一组在改', primeblocks: '游戏一组在改',
-    };
-    const used = new Set(); for (const p of U.problems) { (p.shelf || []).forEach((x) => used.add(x)); Object.values(p.build().entities).forEach((e) => used.add(e.type)); }
-    const bad = [];
-    for (const ty of used) {
-      const d = U.types[ty]; if (!d || !d.compactPorts || d.grips || TEMP[ty]) continue;
-      for (const k of Object.keys(d.props)) if (d.props[k].write && !d.props[k].hidden && !(ALLOW[ty] && ALLOW[ty][k])) bad.push(ty + '.' + k);
+}
+console.log('自动先猜（每道操作台题都能先猜后看）');
+{
+  const benchP = U.problems.filter((p) => { if ((p.shelf || []).some((k) => U.types[k] && U.types[k].bench)) return true; try { return Object.values(p.build().entities).some((e) => U.types[e.type] && U.types[e.type].bench); } catch (e) { return false; } });
+  const autoP = benchP.filter((p) => !p.predict && U.Predict.auto(p));
+  const canon = (s) => { try { return Q.show(Q.parse(String(s).replace('−', '-'))); } catch (e) { return null; } };
+  const nums = (s) => (String(s || '').match(/[-−]?\d+(?:\.\d+)?(?:\/\d+)?/g) || []).map(canon);
+  t('每道操作台题都有先猜问题：题目自己写的，或者自动出的；出不了的要说清理由，而且不超过 70 道', () => {
+    const ex = [];
+    for (const p of benchP) { if (U.Predict.of(p)) continue; const why = U.Predict.exempt(p); truthy(why, p.id + ' 没有先猜，也没写理由'); ex.push(p.id); }
+    truthy(ex.length <= 70, '出不了先猜的有 ' + ex.length + ' 道：' + ex.join(' '));
+    truthy(autoP.length >= 340, '自动先猜只有 ' + autoP.length + ' 道');
+  });
+  t('题目自己写了 predict 的不覆盖（包括 problems/forms.js 的 ef- 题）', () => {
+    for (const p of benchP.filter((x) => x.predict)) { eq(U.Predict.auto(p), null, p.id); truthy(U.Predict.of(p) === p.predict, p.id); }
+    truthy(benchP.filter((p) => /^ef-/.test(p.id)).every((p) => U.Predict.of(p)), 'ef- 题都要能先猜');
+  });
+  t('自动先猜的答案和里程碑一致：是那个里程碑条件里的值，或者写在它的说法里', () => {
+    for (const p of autoP) {
+      const pr = U.Predict.auto(p), m = p.milestones.find((x) => x.id === pr.ms);
+      truthy(m, p.id + ' 的 ms 不是里程碑');
+      truthy(pr.options.some((o) => o.v === pr.answer), p.id + ' 答案不在选项里');
+      if (pr.word) {
+        if (pr.neg !== undefined) eq(/不能|不成立|没有|不是|不一样|不对|拼不成|找不到|做不到|永远不|不全等|不相等/.test(m.say), pr.neg, p.id + ' 能不能和里程碑的说法对不上');
+        else truthy(String(m.say).includes(pr.answer) || p.title.includes(pr.answer), p.id + ' 答案 ' + pr.answer + ' 不在里程碑说法或题目里');
+        continue;
+      }
+      // 答案一定写在那个里程碑的说法里（里程碑条件要“输出 = 这个数”的，或者判对不对、说法里写着做出来的数的）
+      truthy(nums(m.say).includes(pr.answer), p.id + ' 答案 ' + pr.answer + ' 不在里程碑说法「' + m.say + '」里');
+      truthy(pr.hidden && !nums(pr.hidden).includes(pr.answer), p.id + ' 先猜的问题里不应露出答案：' + pr.hidden);
     }
-    eq(bad, [], '还要打开属性面板填的');
+  });
+  t('干扰项不等于答案、互不相同；每个干扰项都写了是哪种错法', () => {
+    for (const p of autoP) {
+      const pr = U.Predict.auto(p), vs = pr.options.map((o) => o.v);
+      truthy(vs.length >= 2, p.id + ' 选项太少');
+      eq(new Set(vs).size, vs.length, p.id + ' 选项有重复');
+      eq(new Set(pr.options.map((o) => o.label)).size, vs.length, p.id + ' 选项的字有重复');
+      for (const v of vs) if (v !== pr.answer) truthy(pr.wrong[v], p.id + ' 干扰项 ' + v + ' 没写错法');
+      truthy(!pr.wrong[pr.answer], p.id + ' 答案被当成了干扰项');
+      if (!pr.word) eq(vs.length, 4, p.id + ' 数的先猜要 1 个答案 + 3 个干扰项');
+    }
+  });
+  t('干扰项按常见错法：27 + 15 有“忘了进位”的 32、“算成减法”的 12', () => {
+    const pr = U.Predict.auto(U.problemById('bk-27-15'));
+    eq(pr.answer, '42'); eq(pr.wrong['32'], '忘了进位'); eq(pr.wrong['12'], '把加法算成了减法');
+  });
+  t('先猜猜错不扣分，只记差多少：gap 和 guess 事件一样是 { right, gap }', () => {
+    const pr = U.Predict.auto(U.problemById('bk-27-15'));
+    eq(U.Predict.gap(pr, '42'), { right: true, gap: 0 }); eq(U.Predict.gap(pr, '32'), { right: false, gap: 10 });
+    const p = U.problemById('bk-27-15'), run = U.Judge.start(p, 'practice'); run.pred = '32';
+    const sc = p.build(), rep = U.Judge.report(p, run, sc, W.evaluate(sc));
+    eq(rep.guess, '32'); eq(rep.actual, '42'); eq(rep.match, false); eq(rep.score, 0, '猜错不扣分（也不加分）');
+    const run2 = U.Judge.start(p, 'practice'), rep2 = U.Judge.report(p, run2, sc, W.evaluate(sc));
+    eq(rep2.guess, null); eq(rep2.actual, null, '跳过先猜：报告里和没有先猜一样');
+  });
+  t('先猜时步骤里的答案换成“？”，做到以后才显示', () => {
+    const p = U.problemById('bk-27-15'), pr = U.Predict.of(p), m = p.milestones.find((x) => x.id === pr.ms);
+    eq(U.Predict.hideSay(pr, m), '整理好了：？');
+    eq(U.Predict.hideSay(pr, p.milestones.find((x) => x.id !== pr.ms) || null), null);
+  });
+}
 {
   console.log('全在卡片上操作（ex 组：逼近器、最优化沙盘、缩放对比、影子测高、球面三角形、出租车几何）');
   // 画一次卡片，收集上面的按钮：按钮上的字 → [属性补丁, …]（同样的字可能有几个，比如两个 “+”）
@@ -3945,96 +3976,62 @@ console.log('全部在器材上操作：几何一组（海龟作图、剪拼、�
     W.act(s, { t: 'set', id: x, k: 'mode', v: 1 }); eq(press(s, x, 'A(0,0) B(2,2)'), { pair: 1 });
     for (const i of U.WhatIf.tTruth(s.entities[x].props)) W.act(s, { t: 'set', id: x, k: 'cell', v: i + 1 });
     press(s, x, '一片区域'); eq(outv(s, x, 'ok'), '1'); truthy(/一片区域.*✓/.test(picks(s, x).svg.replace(/<[^>]+>/g, '')), '全部标对：猜的形状打 ✓');
-console.log('自动先猜（每道操作台题都能先猜后看）');
+  });
+}
+console.log('全部在器材上操作：几何一组（海龟作图、剪拼、钉板、证明排序、尺规作图、式子台）');
 {
-  const benchP = U.problems.filter((p) => { if ((p.shelf || []).some((k) => U.types[k] && U.types[k].bench)) return true; try { return Object.values(p.build().entities).some((e) => U.types[e.type] && U.types[e.type].bench); } catch (e) { return false; } });
-  const autoP = benchP.filter((p) => !p.predict && U.Predict.auto(p));
-  const canon = (s) => { try { return Q.show(Q.parse(String(s).replace('−', '-'))); } catch (e) { return null; } };
-  const nums = (s) => (String(s || '').match(/[-−]?\d+(?:\.\d+)?(?:\/\d+)?/g) || []).map(canon);
-  t('每道操作台题都有先猜问题：题目自己写的，或者自动出的；出不了的要说清理由，而且不超过 70 道', () => {
-    const ex = [];
-    for (const p of benchP) { if (U.Predict.of(p)) continue; const why = U.Predict.exempt(p); truthy(why, p.id + ' 没有先猜，也没写理由'); ex.push(p.id); }
-    truthy(ex.length <= 70, '出不了先猜的有 ' + ex.length + ' 道：' + ex.join(' '));
-    truthy(autoP.length >= 340, '自动先猜只有 ' + autoP.length + ' 道');
+  // 画一张卡片，取出上面所有按钮的补丁（data-pick-set 的 JSON）
+  const patchesOf = (s, id, masked) => { const e = s.entities[id], D = W.evaluate(s); const svg = U.types[e.type].draw({ ent: e, props: D[id].props || e.props, d: D[id], out: D[id].out, w: U.types[e.type].size({ props: e.props })[0], h: 400, t: 0, n: 0, masked: !!masked, scene: s }); return Array.from(svg.matchAll(/data-pick-set="([^"]*)"/g)).map((m) => JSON.parse(decodeURIComponent(m[1]))); };
+  const has = (L, o) => L.some((x) => bigStr(x) === bigStr(o));
+  const apply = (s, id, o) => { for (const k of Object.keys(o)) W.act(s, { t: 'set', id, k, v: o[k] }); };
+  const outOf = (s, id, port) => Q.show(W.evaluate(s)[id].out[port].data);
+  t('海龟：先猜在卡片上点“会回到起点 / 回不到”；n、a、k、目标图、先猜都不进“✎ 填写”', () => {
+    const s = W.blank(), id = W.add(s, 'turtle', 0, 0, { tgt: 1 }), d = U.types.turtle;
+    for (const k of ['n', 'a', 'k', 'tgt', 'gans']) truthy(d.props[k].hidden, k + ' 应 hidden');
+    eq(patchesOf(s, id, true), [], '还没有程序：不问');
+    for (const v of [4, 1, 2, 5]) W.act(s, { t: 'set', id, k: 'add', v });
+    const L = patchesOf(s, id, true); truthy(has(L, { gans: 1 }) && has(L, { gans: 2 }), bigStr(L));
+    apply(s, id, { gans: 1 }); eq(outOf(s, id, 'closed'), '1'); eq(outOf(s, id, 'match'), '1');
+    eq(patchesOf(s, id, false), [], '猜过了：按钮收起');
   });
-  t('题目自己写了 predict 的不覆盖（包括 problems/forms.js 的 ef- 题）', () => {
-    for (const p of benchP.filter((x) => x.predict)) { eq(U.Predict.auto(p), null, p.id); truthy(U.Predict.of(p) === p.predict, p.id); }
-    truthy(benchP.filter((p) => /^ef-/.test(p.id)).every((p) => U.Predict.of(p)), 'ef- 题都要能先猜');
+  t('剪拼：直角边 − / +、夹角三个按钮、先猜三个答案都在卡片上', () => {
+    const s = W.blank(), id = W.add(s, 'dissect', 0, 0, { scene: 0, a: 3, b: 4, angle: 2 }), d = U.types.dissect;
+    for (const k of ['scene', 'a', 'b', 'angle', 'r', 'n', 'gans']) truthy(d.props[k].hidden, k + ' 应 hidden');
+    const L = patchesOf(s, id, true);
+    for (const o of [{ a: 2 }, { a: 4 }, { b: 3 }, { b: 5 }, { angle: 0 }, { angle: 1 }, { angle: 2 }, { gans: 1 }, { gans: 2 }, { gans: 3 }]) truthy(has(L, o), bigStr(o) + ' 不在卡片上');
+    apply(s, id, { gans: 3 }); apply(s, id, { angle: 1 }); eq(outOf(s, id, 'c2'), '25'); eq(outOf(s, id, 'guessed'), '1');
+    const s2 = W.blank(), i2 = W.add(s2, 'dissect', 0, 0, { scene: 1, r: 1, n: 4 }), L2 = patchesOf(s2, i2, true);
+    truthy(has(L2, { r: 2 }) && !has(L2, { r: 0 }) && has(L2, { gans: 1 }), '圆：半径到 1 不能再减；先猜三个答案');
   });
-  t('自动先猜的答案和里程碑一致：是那个里程碑条件里的值，或者写在它的说法里', () => {
-    for (const p of autoP) {
-      const pr = U.Predict.auto(p), m = p.milestones.find((x) => x.id === pr.ms);
-      truthy(m, p.id + ' 的 ms 不是里程碑');
-      truthy(pr.options.some((o) => o.v === pr.answer), p.id + ' 答案不在选项里');
-      if (pr.word) {
-        if (pr.neg !== undefined) eq(/不能|不成立|没有|不是|不一样|不对|拼不成|找不到|做不到|永远不|不全等|不相等/.test(m.say), pr.neg, p.id + ' 能不能和里程碑的说法对不上');
-        else truthy(String(m.say).includes(pr.answer) || p.title.includes(pr.answer), p.id + ' 答案 ' + pr.answer + ' 不在里程碑说法或题目里');
-        continue;
-      }
-      // 答案一定写在那个里程碑的说法里（里程碑条件要“输出 = 这个数”的，或者判对不对、说法里写着做出来的数的）
-      truthy(nums(m.say).includes(pr.answer), p.id + ' 答案 ' + pr.answer + ' 不在里程碑说法「' + m.say + '」里');
-      truthy(pr.hidden && !nums(pr.hidden).includes(pr.answer), p.id + ' 先猜的问题里不应露出答案：' + pr.hidden);
+  t('钉板：公式系数按 ½ 一格调，先猜面积先调草稿再点“猜好了”', () => {
+    const s = W.blank(), id = W.add(s, 'geoboard', 0, 0, {}), d = U.types.geoboard;
+    for (const k of ['fa', 'fb', 'fc', 'gans', 'gt']) truthy(d.props[k].hidden, k + ' 应 hidden');
+    let L = patchesOf(s, id, true);
+    for (const o of [{ fa: '1/2' }, { fa: '3/2' }, { fb: '1/2' }, { fc: '-1/2' }, { fc: '1/2' }, { gt: 1 }, { gt: 2 }, { gans: '0' }]) truthy(has(L, o), bigStr(o) + ' 不在卡片上');
+    truthy(!has(L, { gt: -1 }), '草稿不能小于 0');
+    apply(s, id, { gt: 12 }); L = patchesOf(s, id, true); truthy(has(L, { gans: '6' }), '草稿 12 → 猜 6');
+    apply(s, id, { fc: '5' }); truthy(!patchesOf(s, id, true).some((o) => 'fc' in o && o.fc === '11/2'), '系数到 5 不再加');
+    // 用卡片上的补丁凑出皮克公式：fb 1 → 1/2，fc 0 → −1/2 → −1
+    const s3 = W.blank(), g = W.add(s3, 'geoboard', 0, 0, {}), poly = (P) => { for (const [x, y] of P) W.act(s3, { t: 'set', id: g, k: 'pt', v: y * 7 + x + 1 }); W.act(s3, { t: 'set', id: g, k: 'pt', v: P[0][1] * 7 + P[0][0] + 1 }); };
+    for (const P of [[[0, 0], [2, 0], [2, 1], [0, 1]], [[0, 0], [3, 0], [0, 3]], [[0, 0], [4, 0], [3, 2], [1, 2]], [[0, 0], [3, 1], [1, 3]], [[0, 0], [2, 0], [2, 2], [0, 2]]]) { poly(P); W.act(s3, { t: 'set', id: g, k: 'rec', v: 1 }); }
+    for (const o of [{ fb: '1/2' }, { fc: '-1/2' }, { fc: '-1' }]) { truthy(has(patchesOf(s3, g, false), o), bigStr(o)); apply(s3, g, o); }
+    eq(outOf(s3, g, 'formula'), '1');
+  });
+  t('证明排序的证明编号、尺规作图的“作什么”、式子台的 a、b、c、d 是出题人设的：hidden', () => {
+    truthy(U.types.proofsort.props.pid.hidden); truthy(U.types.compass.props.task.hidden);
+    for (const k of ['a', 'b', 'c', 'd']) truthy(U.types.eqstepbench.props[k].hidden, 'eqstepbench.' + k);
+  });
+  t('总检查：题目里用到的器材，compactPorts 又没有把手的，不再有孩子要填的属性（write 且不 hidden）', () => {
+    // 永久例外：{ 器材: { 属性: 理由 } }。现在没有。
+    const ALLOW = {};
+    const TEMP = {};   // 三组都合并了：没有暂时例外
+    const used = new Set(); for (const p of U.problems) { (p.shelf || []).forEach((x) => used.add(x)); Object.values(p.build().entities).forEach((e) => used.add(e.type)); }
+    const bad = [];
+    for (const ty of used) {
+      const d = U.types[ty]; if (!d || !d.compactPorts || d.grips || TEMP[ty]) continue;
+      for (const k of Object.keys(d.props)) if (d.props[k].write && !d.props[k].hidden && !(ALLOW[ty] && ALLOW[ty][k])) bad.push(ty + '.' + k);
     }
-  });
-  t('干扰项不等于答案、互不相同；每个干扰项都写了是哪种错法', () => {
-    for (const p of autoP) {
-      const pr = U.Predict.auto(p), vs = pr.options.map((o) => o.v);
-      truthy(vs.length >= 2, p.id + ' 选项太少');
-      eq(new Set(vs).size, vs.length, p.id + ' 选项有重复');
-      eq(new Set(pr.options.map((o) => o.label)).size, vs.length, p.id + ' 选项的字有重复');
-      for (const v of vs) if (v !== pr.answer) truthy(pr.wrong[v], p.id + ' 干扰项 ' + v + ' 没写错法');
-      truthy(!pr.wrong[pr.answer], p.id + ' 答案被当成了干扰项');
-      if (!pr.word) eq(vs.length, 4, p.id + ' 数的先猜要 1 个答案 + 3 个干扰项');
-    }
-  });
-  t('干扰项按常见错法：27 + 15 有“忘了进位”的 32、“算成减法”的 12', () => {
-    const pr = U.Predict.auto(U.problemById('bk-27-15'));
-    eq(pr.answer, '42'); eq(pr.wrong['32'], '忘了进位'); eq(pr.wrong['12'], '把加法算成了减法');
-  });
-  t('先猜猜错不扣分，只记差多少：gap 和 guess 事件一样是 { right, gap }', () => {
-    const pr = U.Predict.auto(U.problemById('bk-27-15'));
-    eq(U.Predict.gap(pr, '42'), { right: true, gap: 0 }); eq(U.Predict.gap(pr, '32'), { right: false, gap: 10 });
-    const p = U.problemById('bk-27-15'), run = U.Judge.start(p, 'practice'); run.pred = '32';
-    const sc = p.build(), rep = U.Judge.report(p, run, sc, W.evaluate(sc));
-    eq(rep.guess, '32'); eq(rep.actual, '42'); eq(rep.match, false); eq(rep.score, 0, '猜错不扣分（也不加分）');
-    const run2 = U.Judge.start(p, 'practice'), rep2 = U.Judge.report(p, run2, sc, W.evaluate(sc));
-    eq(rep2.guess, null); eq(rep2.actual, null, '跳过先猜：报告里和没有先猜一样');
-  });
-  t('先猜时步骤里的答案换成“？”，做到以后才显示', () => {
-    const p = U.problemById('bk-27-15'), pr = U.Predict.of(p), m = p.milestones.find((x) => x.id === pr.ms);
-    eq(U.Predict.hideSay(pr, m), '整理好了：？');
-    eq(U.Predict.hideSay(pr, p.milestones.find((x) => x.id !== pr.ms) || null), null);
-console.log('低年级帮手（试验台增强 6，js/ui/young-aid.js 的纯函数）');
-{
-  const yctx = vm.createContext({ console }); yctx.globalThis = yctx;
-  vm.runInContext(fs.readFileSync(path.join(root, 'js/ui/young-aid.js'), 'utf8'), yctx, { filename: 'js/ui/young-aid.js' });
-  const Y = yctx.UI.YoungAid;
-  const inside = (h, b) => h.x <= b.x + 1e-9 && h.y <= b.y + 1e-9 && h.x + h.w >= b.x + b.w - 1e-9 && h.y + h.h >= b.y + b.h - 1e-9;
-  const cross = (a, b) => a.x < b.x + b.w - 1e-9 && b.x < a.x + a.w - 1e-9 && a.y < b.y + b.h - 1e-9 && b.y < a.y + a.h - 1e-9;
-  t('只在 1、2 年级的题里生效', () => { eq([1, 2, 3, 5].map((g) => Y.isLow({ grade: g })), [true, true, false, false]); eq(Y.isLow(null), false); eq(Y.isLow({}), false); });
-  t('孤零零的小按钮放大到 44×44，居中，包住原来的', () => { const b = { x: 100, y: 100, w: 20, h: 10 }, h = Y.hitRects([b], 44)[0]; eq([h.x, h.y, h.w, h.h], [88, 83, 44, 44]); truthy(inside(h, b)); });
-  t('本来就够大的不变', () => { const b = { x: 0, y: 0, w: 60, h: 50 }; eq(Y.hitRects([b], 44)[0], b); });
-  t('靠着外框：放不下的一边挪到另一边', () => { const h = Y.hitRects([{ x: 2, y: 2, w: 20, h: 20 }], 44, { x: 0, y: 0, w: 300, h: 300 })[0]; eq([h.x, h.y, h.w, h.h], [0, 0, 44, 44]); });
-  t('两个挨着的按钮：各让一半空隙，放大后不互相盖住', () => {
-    const bs = [{ x: 0, y: 50, w: 30, h: 30 }, { x: 40, y: 50, w: 30, h: 30 }], hs = Y.hitRects(bs, 44, { x: -100, y: -100, w: 400, h: 400 });
-    truthy(!cross(hs[0], hs[1]), '不重叠'); truthy(!cross(hs[0], bs[1]) && !cross(hs[1], bs[0]), '不盖住对方'); eq(hs[0].w, 44); eq(hs[1].w, 44); eq(hs[0].x + hs[0].w, 35); eq(hs[1].x, 35);
-  });
-  t('挤在一起的格子放不满 44，但一定包住原来的、互不盖住', () => {
-    const bs = []; for (let i = 0; i < 4; i++) bs.push({ x: i * 34, y: 0, w: 32, h: 32 });
-    const hs = Y.hitRects(bs, 44, { x: -50, y: -50, w: 300, h: 300 });
-    hs.forEach((h, i) => { truthy(inside(h, bs[i]), '包住 ' + i); eq(h.h, 44); hs.forEach((o, j) => { if (j !== i) truthy(!cross(h, o), i + ' 和 ' + j + ' 不重叠'); }); });
-    eq(hs[1].w, 34, '中间的格子只能多 1 + 1');
-  });
-  t('本来就叠在一起的两个不放大（免得盖住对方）', () => { const hs = Y.hitRects([{ x: 0, y: 0, w: 20, h: 20 }, { x: 10, y: 10, w: 20, h: 20 }, { x: 200, y: 0, w: 20, h: 20 }], 44); eq(hs[0].w, 20); eq(hs[1].w, 20); eq(hs[2].w, 44); });
-  t('读出来之前把符号换成字、去掉图标', () => {
-    eq(Y.speakable('9 + 6 = ?'), '9 加 6 等于多少'); eq(Y.speakable('13 − 5 = 8'), '13 减 5 等于 8'); eq(Y.speakable('3 × 4 ÷ 2'), '3 乘 4 除以 2');
-    eq(Y.speakable('💡 提示：✓ 做完了'), '提示：对 做完了'); eq(Y.speakable('5 > 3'), '5 大于 3');
-  });
-  t('几句话接成一段：已经有标点的不再加句号', () => { eq(Y.joinSentences(['多少？', '点一下', '对了。', '']), '多少？点一下。对了。'); });
-  t('步骤的图标：做完 ⭐、正在做 👉、还没到 🎯', () => { eq(['done', 'cur', 'todo'].map(Y.stepIcon), ['⭐', '👉', '🎯']); });
-  t('挑中文语音：优先 zh-CN，没有中文就是 null', () => {
-    eq(Y.pickVoice([{ lang: 'en-US' }, { lang: 'zh-TW', name: 't' }, { lang: 'zh-CN', name: 'c' }]).name, 'c'); eq(Y.pickVoice([{ lang: 'zh-HK', name: 'h' }]).name, 'h');
-    eq(Y.pickVoice([{ lang: 'en-US' }]), null); eq(Y.pickVoice([]), null); eq(Y.pickVoice(undefined), null);
+    eq(bad, [], '还要打开属性面板填的');
   });
 }
 console.log('\n' + pass + ' 通过，' + fail + ' 失败');
