@@ -3301,6 +3301,34 @@ t('两架天平：随机做几百步，每一步之后两架天平在真实重�
   }
   truthy(done >= 100, '实际做了 ' + done + ' 步');
 });
+t('两架天平：只动一边会歪，歪的天平不能拿去消元，歪着不算解出来；题目开场都是平的', () => {
+  const S = U.SystemBench, P = S.parse, p0 = { e0: '1,1,0,0,0,7', e1: '2,1,0,0,0,10', x0: 3, y0: 4, steps: 0, refused: 0, msg: '', sync: false };
+  eq(S.lean(P('1,1,0,0,0,7'), [3, 4]), 0); eq(S.lean(P('1,1,0,0,0,6'), [3, 4]), 1, '左盘重'); eq(S.lean(P('0,1,0,0,0,7'), [3, 4]), -1, '右盘重');
+  eq(S.lean(P('0,1,0,0,0,7'), null), 0, '没有真实重量（换一换台借用）：当它是平的');
+  // 只动一边：从上面左盘拖出圆盒（拖到盘外）→ 只拿走这一个，右盘不动，天平右盘重
+  const pl = S.plan(p0, 'i0Lx', { x: 100, y: 30 });
+  eq(pl.patch.e0, '0,1,0,0,0,7', '只拿走左盘的圆盒'); truthy(/歪了：右盘重/.test(pl.fx.note), pl.fx.note);
+  const pm = S.plan(p0, 'i0Lx', { x: 320, y: 14 + 104 - 10 });
+  eq(pm.patch.e0, '0,1,0,1,0,7', '拖到右盘：挪过去'); truthy(/挪到右盘/.test(pm.fx.note), pm.fx.note);
+  const pt = S.plan(p0, 'tc', { x: 100, y: 14 + 104 - 10 });
+  eq(pt.patch.e0, '1,1,1,0,0,7', '从托盘拖到上面的左盘：只加这一个砝码'); truthy(/歪了：左盘重/.test(pt.fx.note), pt.fx.note);
+  eq(S.plan(Object.assign({}, p0, { sync: true }), 'tc', { x: 100, y: 14 + 104 - 10 }).patch.e0, '1,1,1,0,0,8', '连着的时候：两个盘各加一个');
+  // 歪的天平拖到另一架上：拦住
+  const tilted = Object.assign({}, p0, { e0: '1,1,1,0,0,7' });
+  truthy(/歪的/.test(S.plan(tilted, 'b0', { x: 210, y: 14 + 172 + 60 }).patch.msg || ''), '歪的天平拿去消元：被拦住');
+  eq(S.dropOn([P('2,1,1,0,0,10'), P('1,1,0,0,0,7')], 1, 0, [1, 0]).e, [1, 0, 1, 0, 0, 3], '平的拖到歪的上：可以，还是歪的（x + 1 > 3）');
+  const m = S.model({ e0: '1,0,0,0,0,2', e1: '2,1,0,0,0,10', x0: 3, y0: 4 });
+  eq(m.x, null, 'x = 2 是歪的（真实是 3）：不算解出来'); eq(m.leans, [1, 0], '上面左盘重，下面平');
+  const svg = S.draw({ props: Object.assign({}, p0, { e0: '1,1,1,0,0,7' }), drag: null });
+  truthy(svg.includes('data-lean="1"') && /x \+ y \+ 1 (&gt;|>) 7/.test(svg) && svg.includes('歪了：左盘重'), '画出“>”和“歪了：左盘重”');
+  truthy(svg.includes('data-sync="0"'), '画出开关（现在是只动一边）');
+  truthy(!S.draw({ props: { e0: '1,1,0,0,0,7', e1: '2,1,0,0,0,10', steps: 0, refused: 0, msg: '' }, drag: null }).includes('data-sync'), '换一换台借用画法（没有 sync 属性）：不画开关');
+  for (const pr of U.problems.filter((x) => (x.shelf || []).includes('systembench'))) {
+    const sc = pr.build(), e = Object.values(sc.entities).find((x) => x.type === 'systembench'), pp = Object.assign({}, e.props);
+    for (const [k, d] of Object.entries(U.types.systembench.props)) if (pp[k] === undefined) pp[k] = d.default;
+    eq(S.model(pp).leans, [0, 0], pr.id + '：开场两架天平在真实重量下都是平的');
+  }
+});
 t('篱笆围地：改一共几米，记下的长清空；改成一样的数、改别的属性都不清空', () => {
   const on = U.types.areabench.onSet, p = { shape: 3, P: 20, w: 3, tried: '2,3,4', graph: true };
   eq(on(p, 'P', 24), { tried: '', guess: -1, peek: false, all: false }, '20 改成 24：清空');
