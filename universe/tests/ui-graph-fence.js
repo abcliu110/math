@@ -3,7 +3,7 @@
  *  2. 拖到长 3、长 4，各记一次：3 个点；同一个长不能记两次；
  *  3. 拖到长 6：面积藏起来（6 × 4 = ？）；点“猜面积 24”，揭开，记下来：猜对 1 次；
  *     长 7 先点“不猜，直接看”，记下来不算猜；长 8 猜 16 对、长 9 猜 16 错：猜了 3 次，猜对 2 次；
- *  4. 全部试一遍：长 1 到 9 都画上浅色的点；
+ *  4. 全部试一遍：长 1 到 9 都画上浅色的点，按顺序连成一条拱线（只连这一组）；篱笆改成 24 米：横轴画到 11，拱线连 11 个点，改回 20 米；
  *  5. 回答两个追问，五个里程碑都完成；不开图的老题 ar-fence-20 没有图；没有报错。 */
 'use strict';
 (async () => {
@@ -11,7 +11,7 @@
   const p = H.p, SP = process.env.SHOT_DIR;
   const rec = () => H.byTitle('把这个长记到图上');
   const X = (u) => 40 + u * 22, Y = (v) => 290 - v * 22;
-  const toLen = async (n) => { const q = await H.props(), h = 10 - q.w; await H.drag([X(q.w), Y(Math.min(h, 8) / 2)], [X(n), Y(Math.min(h, 8) / 2)]); };
+  const toLen = async (n) => { const q = await H.props(), h = q.P / 2 - q.w; await H.drag([X(q.w), Y(Math.min(h, 8) / 2)], [X(n), Y(Math.min(h, 8) / 2)]); };
   const dots = () => p.locator('.card svg.bdy circle[r="5"]').count();
 
   console.log('1. 第一个点');
@@ -44,6 +44,17 @@
   console.log('4. 全部试一遍');
   await H.byTitle('每个长都画上');
   H.ok(await H.out('all') === '1' && await p.locator('.card svg.bdy circle[fill="#9cc3ee"]').count() === 9 && await H.done('all'), '全部试一遍：长 1 到 9 都画上浅色的点（里程碑）');
+  const lineN = () => p.evaluate(() => { const e = document.querySelector('.card svg.bdy path[data-rec-line]'); return e ? (e.getAttribute('d').match(/[ML]/g) || []).length : 0; });
+  H.ok(await lineN() === 9, '点按顺序连成一条拱线：9 个点一笔连下来');
+  if (SP) await p.locator('.card').first().screenshot({ path: SP + '/gf-line.png' });
+  const axis = () => p.evaluate(() => { const ts = Array.from(document.querySelectorAll('.card svg.bdy text')).filter((t) => t.getAttribute('font-size') === '9' && t.getAttribute('text-anchor') === 'middle').map((t) => +t.textContent); return Math.max.apply(null, ts); });
+  H.ok(await axis() === 9, '20 米：横轴画到 9');
+  const setP = (v) => p.evaluate((v) => { const e = Object.values(UI.S.scene.entities).find((x) => x.type === 'areabench'); UI.Intent.run('set', { id: e.id, k: 'P', v }); }, v).then(() => p.waitForTimeout(200));
+  await setP(24);
+  H.ok(await axis() === 11 && await lineN() === 11 && await H.out('pts') === '0', '篱笆改成 24 米：横轴画到 11，拱线连长 1 到 11，图上只有这一组（0 个记下的点）');
+  if (SP) await p.locator('.card').first().screenshot({ path: SP + '/gf-24.png' });
+  await toLen(11); H.ok((await H.props()).w === 11, '24 米时能拖到长 11'); await rec(); H.ok(await H.out('pts') === '1', '长 11 能记下来');
+  await setP(20); H.ok(await axis() === 9 && await H.out('pts') === '7', '改回 20 米：横轴回到 9，7 个点还在');
 
   console.log('5. 追问');
   const bottomOk = () => p.evaluate(() => { const c = document.querySelector('.card').getBoundingClientRect(), f = Array.from(document.querySelectorAll('.fab')).map((x) => x.getBoundingClientRect().top).filter((t) => t > innerHeight / 2); return c.bottom <= Math.min.apply(null, f.concat([innerHeight])); });

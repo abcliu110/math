@@ -1,7 +1,7 @@
 /* node tests/ui-gallery2.js —— 解法图鉴第二页（1 + 2 + … + 7）另外几格：真实鼠标。
  *  1. 一个一个加：每次点最左边的加号，点 6 次：28；
  *  2. 换个顺序凑成 8：点 1 和 7、2 和 6、3 和 5 中间的加号，算式变成 8 + 8 + 8 + 4（里程碑），再加完：28；
- *     只点最左边的加号一路加下去，也是 28，但“凑出三个 8”没有完成；
+ *     只点最左边的加号一路加下去，也是 28，但“凑出三个 8”没有完成；在属性里直接把算式改成 8 + 8 + 8 + 4 也不算（没有真的配对）；
  *  3. 搬成一样高：开头写“一共 ？ 块”；7 给 1 搬 3 块、6 给 2 搬 2 块、5 给 3 搬 1 块：每堆 4 块，写出 4 × 7 = 28；
  *  4. 桥“倒过来写 ↔ 搬成一样高”：只搬 6 块拿到加分；多搬两块（搬过去又搬回来）就拿不到；没有报错。 */
 'use strict';
@@ -27,12 +27,16 @@
   console.log('2. 换个顺序，凑成 8');
   await H.open('gal-gs-pair');
   await plus(0); await plus(1); await plus(2);
-  H.ok(/8\|\+\|8\|\+\|8\|\+\|4/.test(await H.text()) && await H.done('eights'), '点 1 和 7、2 和 6、3 和 5 中间：8 + 8 + 8 + 4（里程碑）');
+  H.ok(/8\|\+\|8\|\+\|8\|\+\|4/.test(await H.text()) && await H.done('eights') && await outOf('termsbench', 'pairs') === '3' && await outOf('termsbench', 'pairsum') === '8', '点 1 和 7、2 和 6、3 和 5 中间：8 + 8 + 8 + 4，三对都是 8（里程碑）');
   for (let k = 0; k < 3; k++) await plus(0);
   H.ok(await outOf('termsbench', 'value') === '28' && await H.done('sum'), '再加完：28');
   await H.open('gal-gs-pair');
   for (let k = 0; k < 6; k++) await plus(0);
   H.ok(await outOf('termsbench', 'value') === '28' && !(await H.done('eights')), '只点最左边一路加下去：也是 28，但“凑出三个 8”没有完成');
+
+  await H.open('gal-gs-pair');
+  await p.evaluate(() => { const e = Object.values(UI.S.scene.entities).find((x) => x.type === 'termsbench'); UI.Intent.run('set', { id: e.id, k: 'toks', v: '8,+,8,+,8,+,4' }); }); await p.waitForTimeout(200);
+  H.ok(/8\|\+\|8\|\+\|8\|\+\|4/.test(await H.text()) && !(await H.done('eights')) && await outOf('termsbench', 'pairs') === '0', '直接把算式改成 8 + 8 + 8 + 4：没有配对，不算');
 
   console.log('3. 搬成一样高');
   await H.open('gal-gs-mean');
