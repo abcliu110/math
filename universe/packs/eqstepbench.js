@@ -104,6 +104,7 @@
           stage: { dim: null, kind: 'num', label: '进度：0 还混着，1 x 和数分开了，2 解出来了' },
           okn: { dim: null, kind: 'num', label: '两边相等：1 是，0 否' },
           moves: { dim: null, kind: 'num', label: '写了几步' },
+          xsides: { dim: null, kind: 'num', label: '几边有 x：2 两边都有，1 只在一边，0 没有' },
           eq: { dim: null, kind: 'eqn', label: '方程（左 = 右）' },
         },
         icon: () => K.text(32, 22, '2x+3', { size: 13, weight: 700 }) + K.line(10, 28, 54, 28, { w: 1 }) + K.text(32, 44, '2x = 8', { size: 13, weight: 700, fill: 'var(--blue)' }),
@@ -111,7 +112,7 @@
         compute: (c) => {
           const s = st(c.props), ok = LQ().balanced(s), sol = LQ().solved(s), X = U.Poly.variable('x'), C = (n) => U.Poly.const(Q(n));
           const apart = ok && ((s.b === 0 && s.c === 0 && s.a > 0) || (s.d === 0 && s.a === 0 && s.c > 0));
-          const o = { stage: num(sol !== null ? 2 : apart ? 1 : 0), okn: num(ok ? 1 : 0), moves: num(rowsOf(c.props).length - 1),
+          const o = { stage: num(sol !== null ? 2 : apart ? 1 : 0), okn: num(ok ? 1 : 0), moves: num(rowsOf(c.props).length - 1), xsides: num((s.a > 0 ? 1 : 0) + (s.c > 0 ? 1 : 0)),
             eq: U.val('eqn', U.Eqn.make(U.Poly.add(U.Poly.mul(C(s.a), X), C(s.b)), U.Poly.add(U.Poly.mul(C(s.c), X), C(s.d)), '=')) };
           if (sol !== null) o.solved = num(sol);
           return o;

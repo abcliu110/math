@@ -3523,6 +3523,80 @@ console.log('联动组：一个道理，几种样子（js/core/forms.js）');
     W.act(s2, { t: 'del', id: b }); W.act(s2, { t: 'settle' }); eq(s2.groups, undefined);
     W.act(s, { t: 'clear' }); eq(s.groups, undefined);
   });
+  // ---- 第 2 批：线段图、数轴（两边各走）----
+  const S3 = { a: 3, b: 2, c: 1, d: 10, x0: 4 }, TB = U.TapeBench, NB = U.NumLineBench;
+  const abcd4 = (p, t) => (t === 'tapebench' ? [p.ka, p.ea, p.kb, p.eb] : t === 'numlinebench' ? [p.qa, p.qb, p.qc, p.qd] : abcd(p, t));
+  const mk4 = (st) => { const s = W.blank(), ids = ['balancebench', 'eqstepbench', 'tapebench', 'numlinebench'].map((t, i) => W.add(s, t, i * 760, 0, {})); F.join(s, 'lineq', ids, st || S3); return { s, b: ids[0], e: ids[1], tp: ids[2], n: ids[3] }; };
+  const all4 = (s, o) => [o.b, o.e, o.tp, o.n].map((id) => abcd4(s.entities[id].props, s.entities[id].type));
+  const gripOf = (s, id, gid) => U.types[s.entities[id].type].grips({ props: s.entities[id].props }).find((g) => g.id === gid);
+  const tapeUnit = (p) => TB.scaleOf(TB.model(p));
+  const okOf = (s, o) => { const D = W.evaluate(s), tm = TB.model(s.entities[o.tp].props); return [Q.show(D[o.b].out.okn.data), Q.show(D[o.e].out.okn.data), tm.a === tm.b ? '1' : '0']; };
+  t('线段图的适配器：上面 a 段 x + 一截 b，下面 c 段 x + 一截 d；一段 = x0；等式模式写左边右边、没有目标；画不了就说原因', () => {
+    const A = F.adapterOf('lineq', 'tapebench'), p = Object.assign(U.defaultProps(U.types.tapebench), A.fromState(S3, {}, null));
+    eq([p.ka, p.ea, p.kb, p.eb, p.u, p.eqm, p.tk, p.na, p.nb], [3, 2, 1, 10, 4, true, 2, '左边', '右边']);
+    eq(A.toState(p), { a: 3, b: 2, c: 1, d: 10 });
+    eq(A.can(S3), null); truthy(/8 段/.test(A.can({ a: 9, b: 0, c: 0, d: 36, x0: 4 })), '9 段画不了'); truthy(/60/.test(A.can({ a: 1, b: 61, c: 0, d: 65, x0: 4 })), '一截 61 画不了');
+    const svg = U.types.tapebench.draw({ props: p }); truthy(!/一共要|相差要/.test(svg) && />x</.test(svg) && !/>4</.test(svg), '段上写 x 不写数，没有目标那一行');
+    eq(U.types.tapebench.grips({ props: p }).map((g) => g.id), ['cb', 'cd'], '没有“一段多长”的把手，两条右端各一个');
+    const p0 = U.defaultProps(U.types.tapebench); eq(U.types.tapebench.grips({ props: p0 }).map((g) => g.id), ['u'], '不在组里：和原来一样');
+  });
+  t('数轴的适配器：用法换成“两边各走”，g 从 0 开始、不进状态；范围只由 a、b、c、d 定；画不了就说原因', () => {
+    const A = F.adapterOf('lineq', 'numlinebench'), p = Object.assign(U.defaultProps(U.types.numlinebench), A.fromState(S3, { g: 5 }, null));
+    eq([p.mode, p.qa, p.qb, p.qc, p.qd, p.g], [4, 3, 2, 1, 10, 0]);
+    eq(A.toState(Object.assign({}, p, { g: 9 })), { a: 3, b: 2, c: 1, d: 10 }, 'toState 不读 g');
+    eq(A.fromState(S3, p, { op: 'sub', what: 'c', k: 1 }).g, undefined, '做一步不动 g');
+    eq(NB.eqRange({ a: 1, b: 5, c: 0, d: 12 }), { G: 12, to: 24 }); eq(NB.eqRange({ a: 3, b: 2, c: 1, d: 10 }), { G: 10, to: 40 });
+    const r1 = NB.eqModel(Object.assign({}, p, { g: 0 })), r2 = NB.eqModel(Object.assign({}, p, { g: 10 })); eq([r1.to, r1.G], [r2.to, r2.G], '拖 g 数轴范围不变');
+    eq(A.can(S3), null); truthy(/10 下/.test(A.can({ a: 11, b: 0, c: 0, d: 0, x0: 1 }))); truthy(/太长/.test(A.can({ a: 10, b: 60, c: 9, d: 0, x0: 1 })), '数轴太长');
+  });
+  t('在线段图上做一步（拖右端剪掉 2、点“两条都剪掉一段 x”），天平、式子、数轴都跟着变', () => {
+    const o = mk4(), s = o.s, g = gripOf(s, o.tp, 'cb'), P = s.entities[o.tp].props;
+    const patch = g.drag({ props: P }, { x: g.x - 2 * tapeUnit(P), y: g.y }); eq(patch, { ea: 0, eb: 8 }, '两条一起剪开着：另一条也剪 2');
+    const r = set(s, o.tp, patch); eq(r.steps[0].label, '两边同时减 2'); eq(r.steps[0].by, o.tp);
+    eq(all4(s, o), [[3, 0, 1, 8], [3, 0, 1, 8], [3, 0, 1, 8], [3, 0, 1, 8]]);
+    set(s, o.tp, { ka: 2, kb: 0 });
+    eq(all4(s, o), [[2, 0, 0, 8], [2, 0, 0, 8], [2, 0, 0, 8], [2, 0, 0, 8]]); eq(s.groups[0].log[1].label, '两边同时减 x');
+    eq(okOf(s, o), ['1', '1', '1']);
+  });
+  t('在数轴上做一步（拖落点往左 2、两边都少跳一下 x、两边 ÷ 2），另外三台跟着变；两个落点一起走，差不变', () => {
+    const o = mk4(), s = o.s; set(s, o.n, { g: 3 });
+    const P = s.entities[o.n].props, d0 = NB.eqModel(P), g = gripOf(s, o.n, 'L');
+    const patch = g.drag({ props: P }, { x: g.x - 2 * d0.u, y: g.y }); eq(patch, { qb: 0, qd: 8 });
+    set(s, o.n, patch); const d1 = NB.eqModel(s.entities[o.n].props);
+    eq(d0.L - d0.R, d1.L - d1.R, '差不变'); eq([d1.L, d1.R], [d0.L - 2, d0.R - 2]);
+    eq(all4(s, o), [[3, 0, 1, 8], [3, 0, 1, 8], [3, 0, 1, 8], [3, 0, 1, 8]]);
+    set(s, o.n, { qa: 2, qc: 0 }); eq(all4(s, o)[0], [2, 0, 0, 8]); eq(s.groups[0].log[1].label, '两边同时减 x');
+    set(s, o.n, { qa: 1, qd: 4 }); eq(all4(s, o)[2], [1, 0, 0, 4]); eq(s.groups[0].log[2].label, '两边同时除以 2');
+    const D = W.evaluate(s); eq(Q.show(D[o.b].out.solved.data), '4'); eq(Q.show(D[o.e].out.solved.data), '4');
+  });
+  t('只动一边：线段图只剪一条、数轴只动一个落点，四台一起不平；改 g 不算一步', () => {
+    const o = mk4(), s = o.s; set(s, o.tp, { cut2: false });
+    const g = gripOf(s, o.tp, 'cb'), P = s.entities[o.tp].props, patch = g.drag({ props: P }, { x: g.x - 2 * tapeUnit(P), y: g.y });
+    eq(patch, { ea: 0 }); set(s, o.tp, patch);
+    eq(okOf(s, o), ['0', '0', '0']); eq(s.groups[0].log.map((x) => x.rule), ['balance.lone']);
+    set(s, o.n, { g: 4 }); eq(Q.show(W.evaluate(s)[o.n].out.meet.data), '0', 'g = 真实值时数轴两个落点也分开');
+    eq(s.groups[0].log.length, 1, '改 g 不记步子');
+    const o2 = mk4(), s2 = o2.s; set(s2, o2.n, { link: false, g: 4 });
+    eq(Q.show(W.evaluate(s2)[o2.n].out.meet.data), '1', 'g = 4：重合');
+    const g2 = gripOf(s2, o2.n, 'R'), P2 = s2.entities[o2.n].props, pt = g2.drag({ props: P2 }, { x: g2.x - 3 * NB.eqModel(P2).u, y: g2.y });
+    eq(pt, { qd: 7 }); set(s2, o2.n, pt);
+    eq(okOf(s2, o2), ['0', '0', '0']); eq(Q.show(W.evaluate(s2)[o2.n].out.meet.data), '0'); eq(s2.groups[0].log[0].label, '只在右边减 3');
+    const r = set(s2, o2.n, { g: 2 }); eq(r.steps, []); eq(s2.groups[0].log.length, 1);
+  });
+  t('数轴的 g：两边一模一样时 g 是几都重合；x 的个数一样、数不一样时 g 是几都差这么多', () => {
+    const base = Object.assign(U.defaultProps(U.types.numlinebench), { mode: 4 });
+    for (const g of [0, 3, 10]) {
+      const a = NB.eqSay(Object.assign({}, base, { qa: 2, qb: 3, qc: 2, qd: 3, g })), b = NB.eqSay(Object.assign({}, base, { qa: 2, qb: 3, qc: 2, qd: 7, g }));
+      truthy(a.meet && /一模一样/.test(a.tx), a.tx); truthy(!b.meet && /差这么多/.test(b.tx) && /4/.test(b.tx), b.tx);
+    }
+    const c = NB.eqSay(Object.assign({}, base, { qa: 1, qb: 5, qc: 0, qd: 12, g: 7 })); truthy(c.meet && /x = 7/.test(c.tx), c.tx);
+    const d = NB.eqSay(Object.assign({}, base, { qa: 1, qb: 5, qc: 0, qd: 12, g: 4 })); truthy(!d.meet && /差 3/.test(d.tx), d.tx);
+  });
+  t('有一台画不出来就整步不做：式子上改成 9x = 7x + …，线段图（最多 8 段）、天平都画不了', () => {
+    const o = mk4(), s = o.s; W.act(s, { t: 'set', id: o.e, k: 'a', v: 9 }); W.act(s, { t: 'set', id: o.e, k: 'c', v: 7 });
+    const r = W.act(s, { t: 'settle' }); truthy(!r.ok && /画不出来/.test(r.why), r.why);
+    eq(all4(s, o)[0], [3, 2, 1, 10], '天平没动');
+  });
 }
 console.log('\n' + pass + ' 通过，' + fail + ' 失败');
 process.exit(fail ? 1 : 0);
