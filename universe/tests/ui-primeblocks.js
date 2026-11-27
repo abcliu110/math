@@ -21,7 +21,7 @@ const set = (p, id, k, v) => act(p, { t: 'set', id, k, v });
   console.log('质因数积木');
   const pb = (await act(p, { t: 'add', type: 'primeblocks', x: 40, y: 40, props: { a: 60 } })).id; await p.waitForTimeout(150);
   let t = await body(p, pb);
-  ok(await p.evaluate((id) => document.querySelectorAll('.card[data-id="' + id + '"] svg.bdy rect').length, pb) === 4, '60 = 2×2×3×5：4 块积木');
+  ok(await p.evaluate((id) => document.querySelectorAll('.card[data-id="' + id + '"] svg.bdy [data-blk="a"]').length, pb) === 4, '60 = 2×2×3×5：4 块积木');
   ok((await bdg(p, pb)) === '4 块', '标题读数 4 块');
   await set(p, pb, 'b', 84); await set(p, pb, 'mode', 1); await p.waitForTimeout(150);
   t = await body(p, pb);

@@ -175,6 +175,7 @@ async function checkDist() {
   if (!runScript('tests/ui-guessrule.js', 'tests/ui-guessrule.js', pwEnv)) bail();     // 猜规则台 + 总是有时从不：点格子、猜想、互换、写例子
   if (!runScript('tests/ui-teaching.js', 'tests/ui-teaching.js', pwEnv)) bail();     // 教具：线段图、分数面积、代数砖、函数机
   if (!runScript('tests/ui-games.js', 'tests/ui-games.js', pwEnv)) bail();     // 游戏：取石子、汉诺塔、一笔画
+  if (!runScript('tests/ui-oncard-gm.js', 'tests/ui-oncard-gm.js', pwEnv)) bail();     // 卡片上操作（游戏一组）：汉诺塔、取石子、一笔画、展开图、小方块、质因数积木开题做完，全程不开属性面板
   if (!runScript('tests/ui-lab.js', 'tests/ui-lab.js', pwEnv)) bail();     // 改规则的世界 + 逼近器、最优化：球面三角形、出租车几何、换一种运算（真实鼠标）
   if (!runScript('tests/ui-lab2.js', 'tests/ui-lab2.js', pwEnv)) bail();     // 海龟作图、展开图、小方块、尺规作图、两种解法对照（真实鼠标）
   if (!runScript('tests/ui-snap3.js', 'tests/ui-snap3.js', pwEnv)) bail();       // V4 剩余：构造点（重心、圆心、三分之一点，真实鼠标拖动和画线）、块和卡片拖动吸附到中点（真实鼠标）
