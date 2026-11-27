@@ -44,6 +44,7 @@
     // 滚轮：指在工作区上就只缩放这个工作区（§10.5.8 A3）；指在别处缩放台面；专注浮层里的其他地方不动台面
     SG.stageEl.addEventListener('wheel', (ev) => {
       ev.preventDefault();
+      if (!ev.ctrlKey && !ev.metaKey && SG.scrollGroup(ev.deltaY)) return;   // 联动组一屏放不下（stage-forms.js 的“上下滚”）：滚轮上下滚台面
       const f = ev.deltaY < 0 ? 1.1 : 1 / 1.1, wb = ev.target.closest && ev.target.closest('.wsbody');
       if (wb) SG.wsZoomAt(wb, f, ev.clientX, ev.clientY);
       else if (!(ev.target.closest && ev.target.closest('#wsfocus'))) SG.zoomAt(f, ev.clientX, ev.clientY);

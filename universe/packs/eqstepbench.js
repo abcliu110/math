@@ -45,6 +45,8 @@
     const p = c.props, s = st(p), rows = rowsOf(p), ok = LQ().balanced(s), sol = LQ().solved(s);
     let h = K.text(16, 26, '式子：一步一行往下写', { size: 12, anchor: 'start', fill: '#4a5568' });
     const shown = rows.slice(-SHOW), last = shown.length - 1;
+    // 联动组里别的台刚做了一步（c.flash，见 js/ui/stage-forms.js）：新写的这一行底下亮一下
+    h += K.flash(c.flash, last > 0 ? K.rect(10, Y0 + last * DY - 28, W - 20, 36, { fill: '#dcebfb', stroke: 'var(--blue)', r: 8, w: 2 }) : '');
     shown.forEach((r, i) => {
       const rs = Object.assign({ x0: s.x0 }, r), good = LQ().balanced(rs), y = Y0 + i * DY;
       if (r.label) h += K.text(W - 112, y - 2, r.label, { size: 11, fill: good ? 'var(--blue)' : 'var(--bad)', weight: 700 });
@@ -96,7 +98,7 @@
         props: {
           a: I(0, NMAX, 2, '左边几个 x'), b: I(0, NMAX, 3, '左边的数'), c: I(0, NMAX, 0, '右边几个 x'), d: I(0, NMAX, 11, '右边的数'),
           x0: I(1, 20, 4, 'x 的真实值（出题人设）', { hidden: true }),
-          sel: { type: 'text', label: '选中的项（自动）', default: '', write: true, hidden: true },
+          sel: { type: 'text', label: '选中的项（自动）', default: '', write: true, hidden: true, view: true },   // view：只是界面上点中了哪一项，改它不进撤销（js/ui/app.js 的 tx）
           rows: { type: 'text', label: '每一行（自动记录）', default: '', write: true, hidden: true },
         },
         outputs: {
@@ -108,7 +110,7 @@
           eq: { dim: null, kind: 'eqn', label: '方程（左 = 右）' },
         },
         icon: () => K.text(32, 22, '2x+3', { size: 13, weight: 700 }) + K.line(10, 28, 54, 28, { w: 1 }) + K.text(32, 44, '2x = 8', { size: 13, weight: 700, fill: 'var(--blue)' }),
-        size: () => [W, 380],
+        size: (e) => [W, 210 + DY * (Math.min(SHOW, rowsOf((e && e.props) || {}).length) - 1)],   // 按写了几行定高（最多 SHOW 行）：开场只有一行时不留大片空白
         compute: (c) => {
           const s = st(c.props), ok = LQ().balanced(s), sol = LQ().solved(s), X = U.Poly.variable('x'), C = (n) => U.Poly.const(Q(n));
           const apart = ok && ((s.b === 0 && s.c === 0 && s.a > 0) || (s.d === 0 && s.a === 0 && s.c > 0));

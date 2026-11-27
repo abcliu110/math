@@ -81,6 +81,10 @@
     TOUCH: { min: 24, longMs: 500, slop: 10, recentMs: 1000 },
     // 键盘（V8，2.8）：方向键移动选中图形的步长（格）；按住 Shift 的大步
     KEY: { step: 1, big: 5 },
+    // 联动组的台面（js/ui/stage-forms.js）：卡片在屏幕上至少放到 minZ 倍（卡片上最小的字 11 像素，放到 0.75 倍约 8 像素、正文 13–14 像素约 10 像素，再小就读不清）；
+    // 排得下时最多放到 maxZ；卡片之间空 gap（世界单位），台面左右留 padX 屏幕像素；共用步骤栏高 barH、离按钮栏 barGap、写最近 steps 步；
+    // 刚改的地方闪 flashMs 毫秒；窗口窄于 railBP 时器材架自动收成窄条（这一页用不上器材架，台面宽一些）
+    GROUP: { minZ: 0.75, maxZ: 1, gap: 24, padX: 16, barH: 94, barGap: 6, steps: 3, flashMs: 1200, railBP: 1600 },
   });
   UI.LAYOUT = LAYOUT;
 

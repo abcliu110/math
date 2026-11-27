@@ -3496,18 +3496,18 @@ console.log('操作台模式（U.benchOf / U.benchModeOf）');
   t('单台操作台的题 → 操作台模式，返回那台操作台；练习、考试都算', () => {
     for (const id of ['gr-gauss-n', 'gr-fence-20', 'balance-12']) {
       const p = U.problems.find((x) => x.id === id), s = p.build(), bid = U.benchOf(s);
-      truthy(bid && U.types[s.entities[bid].type].bench, id + ' 应有一台操作台');
+      truthy(bid && bid.length === 1 && U.types[s.entities[bid[0]].type].bench, id + ' 应有一台操作台（返回一个 id 的列表）');
       eq(U.benchModeOf(s, { problem: p, mode: 'practice' }), bid, id + ' 练习');
       eq(U.benchModeOf(s, { problem: p, mode: 'exam' }), bid, id + ' 考试');
     }
   });
   t('所有台面上只有一台操作台、没有连线的题都进操作台模式', () => {
     let n = 0;
-    for (const p of U.problems) { const s = p.build(), es = Object.values(s.entities).filter((e) => !e.parent); if (es.length === 1 && !s.links.length && U.types[es[0].type].bench) { n++; eq(U.benchModeOf(s, { problem: p, mode: 'practice' }), es[0].id, p.id); } }
+    for (const p of U.problems) { const s = p.build(), es = Object.values(s.entities).filter((e) => !e.parent); if (es.length === 1 && !s.links.length && U.types[es[0].type].bench) { n++; eq(U.benchModeOf(s, { problem: p, mode: 'practice' }), [es[0].id], p.id); } }
     truthy(n > 100, '应有一百多道操作台的题，实际 ' + n);
   });
   t('多台器材、有连线、不是操作台 → 不是操作台模式', () => {
-    const s = P.build(); const b = U.benchOf(s);
+    const s = P.build(); const b = U.benchOf(s)[0];
     const two = JSON.parse(JSON.stringify(s)); W.add(two, 'num', 0, 0, { n: 3 });
     eq(U.benchModeOf(two, prob), null, '再放一台器材');
     const lk = W.blank(); const a = W.add(lk, 'num', 0, 0, { n: 3 }), c = W.add(lk, 'op', 0, 0, { op: 0 }); lk.links.push({ id: 'l1', from: a, fromPort: 'v', to: c, toPort: 'a' });
@@ -3517,6 +3517,25 @@ console.log('操作台模式（U.benchOf / U.benchModeOf）');
     const nb = W.blank(); W.add(nb, 'num', 0, 0, { n: 3 });
     eq(U.benchModeOf(nb, prob), null, '只有一台，但不是操作台');
     eq(U.benchModeOf(W.blank(), prob), null, '空台面');
+  });
+  t('联动组：顶层全是操作台、全在同一个组里、没有连线 → 这几台都是操作台模式（U.inBench 判断某一台）', () => {
+    const F = U.Forms, mk = (types) => { const s = W.blank(), ids = types.map((ty, i) => W.add(s, ty, i * 700, 0, {})); F.join(s, 'lineq', ids, { a: 2, b: 3, c: 0, d: 11, x0: 4 }); return { s, ids }; };
+    const two = mk(['balancebench', 'eqstepbench']), four = mk(['balancebench', 'eqstepbench', 'tapebench', 'numlinebench']);
+    eq(U.benchModeOf(two.s, prob), two.ids, '两台连成一组');
+    eq(U.benchModeOf(four.s, prob), four.ids, '四台连成一组');
+    truthy(four.ids.every((id) => U.inBench(U.benchOf(four.s), id)) && !U.inBench(U.benchOf(four.s), 'e99') && !U.inBench(null, four.ids[0]), 'U.inBench：组里每一台都是，别的不是，null 时都不是');
+    for (const id of ['ef-2x3-11', 'ef-3x2-x10', 'ef-x5-12']) { const p = U.problems.find((x) => x.id === id), s = p.build(); eq(U.benchModeOf(s, { problem: p, mode: 'practice' }), Object.keys(s.entities), id + '：两台都是操作台模式'); }
+    const extra = JSON.parse(JSON.stringify(two.s)); W.add(extra, 'eqstepbench', 0, 600, {});
+    eq(U.benchModeOf(extra, prob), null, '组外还有一台操作台');
+    const nb = JSON.parse(JSON.stringify(two.s)); W.add(nb, 'num', 0, 600, { n: 3 });
+    eq(U.benchModeOf(nb, prob), null, '组外还有一台不是操作台的器材');
+    const lk = JSON.parse(JSON.stringify(two.s)); lk.links.push({ id: 'l1', from: two.ids[0], fromPort: 'okn', to: two.ids[1], toPort: 'p.a' });
+    eq(U.benchModeOf(lk, prob), null, '组里有连线');
+    const s2 = W.blank(), a = W.add(s2, 'balancebench', 0, 0, {}), b = W.add(s2, 'eqstepbench', 700, 0, {}), c = W.add(s2, 'tapebench', 0, 500, {}), d = W.add(s2, 'eqstepbench', 700, 500, {});
+    F.join(s2, 'lineq', [a, b], { a: 2, b: 3, c: 0, d: 11, x0: 4 }); F.join(s2, 'lineq', [c, d], { a: 1, b: 5, c: 0, d: 12, x0: 7 });
+    eq(U.benchModeOf(s2, prob), null, '两个联动组：不是同一个组');
+    eq(U.benchModeOf(four.s, { problem: P, mode: 'practice', showPorts: true }), null, '联动组点了“显示口”');
+    eq(U.benchModeOf(four.s, { problem: P, mode: 'free' }), null, '联动组在自由探究里');
   });
   t('自由探究、没在做题、点了“显示口” → 不是操作台模式', () => {
     const s = P.build();
@@ -3530,7 +3549,7 @@ console.log('操作台模式（U.benchOf / U.benchModeOf）');
     truthy(b[1] < a[1] && b[0] <= a[0], '换一换：操作台模式卡片更矮 ' + a + ' → ' + b);
     const g = U.types.gaussbench, ge = { type: 'gaussbench', props: U.defaultProps(g) };
     truthy(g.size(ge, { bench: true })[0] <= g.size(ge)[0], '高斯：不更宽');
-    const s = P.build(), id = U.benchOf(s), D = W.evaluate(s);
+    const s = P.build(), id = U.benchOf(s)[0], D = W.evaluate(s);
     truthy(Object.keys(D[id].out).length > 0, '输出照常算（S.D[id].out 有值）');
   });
 }

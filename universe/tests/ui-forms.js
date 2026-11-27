@@ -5,7 +5,10 @@
  *     点“两条都剪掉一段 x” → 式子 2x + 2 = 10；关掉“两条一起剪”只剪一条 → 两条对不齐、式子写 ≠。
  *  3. ef-x5-12（数轴 + 式子）：拖 g 到 7 → 两个落点重合，式子不写新的一行（改 g 不算一步），里程碑完成；
  *     拖上面的落点往左 5 格 → 两个落点一起走，式子写 x = 7；撤销一次两台一起退回；关掉“两边一起动”只拖下面的落点 → 落点分开、式子写 ≠。
- *  4. 全程没有打开属性面板；控制台 0 报错。SHOT_DIR 有值时存截图。
+ *  4. 联动组的台面（第 3 批 A）：两台连成一组也是操作台模式（没有口、没有药丸，标题栏有“显示口”）；卡片自动排好，缩放不低于 0.75（UI.LAYOUT.GROUP.minZ，
+ *     1440×900 和 1024×768 都量）；共用步骤栏写“第 n 步：……（在哪一台上做的）”，只动一边的标红；做一步以后另一台有闪动的元素、做这一步的那台没有；
+ *     式子台点一项选中不进撤销（撤销一次就退回上一步）；数轴在组里“换一种”锁住，点了说为什么、用法不变。
+ *  5. 全程没有打开属性面板；控制台 0 报错。SHOT_DIR 有值时存截图。
  * 需要 playwright（NODE_PATH 指向它的 node_modules）。 */
 'use strict';
 const { chromium } = require('playwright');
@@ -53,25 +56,53 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   };
   const tapeSc = async () => p.evaluate((id) => U.TapeBench.scaleOf(U.TapeBench.model(UI.S.scene.entities[id].props)), await idOf('t'));
   const cardText = async (role) => p.evaluate((id) => document.querySelector('.card[data-id="' + id + '"] svg.bdy').textContent, await idOf(role));
+  // 联动组的台面：口的 DOM、卡片在屏幕上的缩放（svg 屏幕宽 / 画布宽）、步骤栏每一行、闪动的元素
+  const ports = () => p.evaluate(() => document.querySelectorAll('.card .port, .card .pl, .pill').length);
+  const scales = () => p.evaluate(() => [...document.querySelectorAll('.card svg.bdy')].map((sv) => sv.getBoundingClientRect().width / +sv.getAttribute('width')));
+  const minZ = () => p.evaluate(() => UI.LAYOUT.GROUP.minZ);
+  const barRows = () => p.evaluate(() => [...document.querySelectorAll('.stepbar .sbr')].map((x) => (x.classList.contains('lone') ? '!' : '') + x.textContent));
+  const flashIn = async (role) => p.evaluate((id) => document.querySelectorAll('.card[data-id="' + id + '"] [data-flash]').length, await idOf(role));
+  const undos = () => p.evaluate(() => UI.S.undo.length);
   const visible = async (role) => p.evaluate((id) => { const r = document.querySelector('.card[data-id="' + id + '"]').getBoundingClientRect(); return r.right <= innerWidth && r.bottom <= innerHeight + 400 && r.left >= 0; }, await idOf(role));
 
   console.log('1. 天平 + 式子：2x + 3 = 11');
   await open('ef-2x3-11');
   ok(await abcd('b') === '2,3,0,11' && await abcd('e') === '2,3,0,11', '开场两台都是 2x + 3 = 11');
   ok(await visible('b') && await visible('e'), '两台都在屏幕上');
+  ok(await ports() === 0 && (await p.evaluate(() => (UI.benchMode() || []).length)) === 2, '联动组也是操作台模式：两台都不画口和药丸');
+  ok(await p.evaluate(() => document.querySelectorAll('.card .hd [data-ports]').length) === 2, '两张卡片的标题栏都有“显示口”');
+  { const z = await scales(), mz = await minZ(); ok(z.length === 2 && z.every((v) => v >= mz - 1e-6), '1440×900：卡片缩放不低于 ' + mz + '（' + z.map((v) => v.toFixed(2)).join('、') + '）'); }
+  ok((await barRows()).length === 1 && /还没做步子/.test((await barRows())[0]), '共用步骤栏：还没做步子');
   await dragGrip('b', 'lw', 0, -200);
   ok(await abcd('b') === '2,2,0,10' && await abcd('e') === '2,2,0,10', '天平：拖走左盘一个砝码（两边一起动）→ 两盘各少 1，式子写 2x + 2 = 10');
   ok(/两边同时减 1/.test((await props('e')).rows), '式子旁边写着“两边同时减 1”');
+  ok(JSON.stringify(await barRows()) === JSON.stringify(['第 1 步：两边同时减 1（在天平上做的）']), '共用步骤栏写“第 1 步：两边同时减 1（在天平上做的）”');
+  ok(await flashIn('e') > 0 && await flashIn('b') === 0, '做完这一步：式子新的一行闪一下，天平（做这一步的那台）不闪');
   await undo();
   ok(await abcd('b') === '2,3,0,11' && await abcd('e') === '2,3,0,11' && !(await props('e')).rows, '撤销一次：两台一起退回 2x + 3 = 11');
+  ok(await flashIn('e') === 0 && (await barRows()).length === 1 && /还没做步子/.test((await barRows())[0]), '撤销以后不闪，步骤栏也退回去');
+  const u0 = await undos();
+  const pick3 = async () => click(p.locator('.card[data-id="' + (await idOf('e')) + '"] svg.bdy g[data-pick-set]').filter({ has: p.locator('title', { hasText: '点一下：对这一项做一步' }) }).filter({ has: p.locator('text', { hasText: /^3$/ }) }).first());
+  await pick3();
+  ok((await props('e')).sel === 'Lc' && await undos() === u0, '式子上点 3：选中了，但不进撤销');
+  await press('e', '两边都减 3');
+  ok(await abcd('b') === '2,0,0,8', '再点“两边都减 3”：做了一步');
+  await undo();
+  ok(await abcd('b') === '2,3,0,11' && await abcd('e') === '2,3,0,11' && await undos() === u0, '撤销一次就退回上一步（不是只取消选中）');
+  ok((await props('e')).sel === 'Lc', '退回的是做这一步之前的样子：3 还选着');
+  await pick3();
+  ok((await props('e')).sel === '' && await undos() === u0, '再点 3：取消选中，也不进撤销');
   await click(p.locator('.card[data-id="' + (await idOf('e')) + '"] svg.bdy g[data-pick-set]').filter({ has: p.locator('title', { hasText: '点一下：对这一项做一步' }) }).filter({ has: p.locator('text', { hasText: /^3$/ }) }).first());
   await press('e', '两边都减 3');
   ok(await abcd('e') === '2,0,0,8' && await abcd('b') === '2,0,0,8', '式子：点 3 再点“两边都减 3” → 天平两盘各少 3');
+  ok(await flashIn('b') > 0 && await flashIn('e') === 0, '在式子上做的：天平把少掉的砝码闪一下，式子不闪');
+  ok(/^第 1 步：两边同时减 3（在式子上做的）$/.test((await barRows()).slice(-1)[0]), '步骤栏写“在式子上做的”');
   ok(await done('apart'), '里程碑：盒子和砝码分开了');
   await press('b', '两边一起动：开');
   await dragGrip('b', 'rw', 0, -200);
   ok(await abcd('b') === '2,0,0,7' && await out('b', 'okn') === '0' && await out('e', 'okn') === '0', '关掉“两边一起动”，只拖走右盘一个砝码：天平歪、式子写 ≠（两台都不平）');
   ok((await cardText('e')).includes('≠'), '式子这一行写着 ≠');
+  ok(/^!第 2 步：只在右边减 1（在天平上做的）/.test((await barRows()).slice(-1)[0]), '步骤栏：只动一边的这一步标红（' + (await barRows()).slice(-1)[0] + '）');
   await shot('forms-b2-balance.png');
 
   console.log('2. 线段图 + 式子：3x + 2 = x + 10');
@@ -99,6 +130,9 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   console.log('3. 数轴 + 式子：x + 5 = 12');
   await open('ef-x5-12');
   ok(await abcd('n') === '1,5,0,12' && (await props('n')).g === 0 && await out('n', 'meet') === '0', '开场：数轴“两边各走”，g = 0，两个落点分开');
+  await click(p.locator('.card[data-id="' + (await idOf('n')) + '"] .hd [data-sw-lock]'));
+  ok((await props('n')).mode === 4 && /不能换成别的用法/.test(await p.evaluate(() => document.querySelector('#banner').textContent)), '数轴在组里：点“换一种”不换用法，说为什么');
+  ok(await p.evaluate((id) => !document.querySelector('.card[data-id="' + id + '"] .hd [data-pick-k]'), await idOf('n')), '数轴在组里：标题栏没有能换用法的按钮');
   const u = await p.evaluate((id) => U.NumLineBench.eqModel(UI.S.scene.entities[id].props).u, await idOf('n'));
   await dragGrip('n', 'g', 7 * u, 0);
   ok((await props('n')).g === 7 && await out('n', 'meet') === '1' && (await cardText('n')).includes('x = 7 时两边一样'), '拖 g 到 7：两个落点重合，写“x = 7 时两边一样”');
@@ -117,6 +151,14 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   ok((await cardText('n')).includes('差 2'), '数轴上两点之间标“差 2”');
   await shot('forms-b2-numline-lone.png');
 
+  console.log('4. 1024×768：三道题的卡片缩放都不低于下限');
+  await p.setViewportSize({ width: 1024, height: 768 }); await p.waitForTimeout(300);
+  for (const id of ['ef-2x3-11', 'ef-3x2-x10', 'ef-x5-12']) {
+    await open(id);
+    const z = await scales(), mz = await minZ();
+    ok(z.length === 2 && z.every((v) => v >= mz - 1e-6) && await ports() === 0, id + '：1024×768 卡片缩放 ' + z.map((v) => v.toFixed(2)).join('、') + ' ≥ ' + mz + '，没有口');
+    await shot('forms-b3-' + id + '-1024.png');
+  }
   ok(await p.evaluate(() => !UI.S.inspOpen), '全程没有打开属性面板');
   ok(errs.length === 0, '控制台 0 报错' + (errs.length ? '：' + errs[0] : ''));
   console.log('\n联动组（线段图、数轴）测试：' + pass + ' 通过，' + fail + ' 失败');

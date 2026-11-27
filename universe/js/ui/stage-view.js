@@ -49,6 +49,7 @@
   // 只看“变高”，不看“挪位置”：孩子自己把卡片拖到下面，台面不跟着缩（不然手里正拖的东西会跳）。手动动过视图也不管。返回 true 表示视图变了
   let lastH = {};
   function keepFit() {
+    if (UI.benchGroup()) return SG.keepGroup();   // 联动组：卡片尺寸变了就按 stage-forms.js 的规则再排一次
     const S = UI.S, E = S.scene.entities, ids = Object.keys(E).filter((id) => !SG.inWs(E[id]));
     const hs = {}; for (const id of ids) hs[id] = SG.geom(E[id]).h;
     const grew = ids.some((id) => lastH[id] !== undefined && hs[id] > lastH[id]); lastH = hs;
@@ -66,6 +67,8 @@
     let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
     if (!ids.length) { S.view = { x: r.width / 2 - L.EMPTY_VIEW.dx, y: r.height / 2 - L.EMPTY_VIEW.dy, z: 1 }; return; }
     if (ids.some((id) => SG.isWsDef(S.scene.entities[id].type))) { fitWs(ids); return; }
+    SG.groupScroll = null;
+    if (SG.fitGroup(UI.benchGroup() ? {} : null)) return;   // 联动组的操作台模式：卡片自动排版、定缩放（stage-forms.js）
     const bm = !!UI.benchMode(), padL = bm ? L.FIT.benchPad : L.FIT.padL, padR = bm ? L.FIT.benchPad : L.FIT.padR;   // 操作台模式：左边没有药丸、右边没有口，不留那么宽的边，台面放得更大
     ids.forEach((id) => {
       const e = S.scene.entities[id], g = SG.geom(e); x0 = Math.min(x0, g.x - padL); y0 = Math.min(y0, g.y); x1 = Math.max(x1, g.x + g.w + padR); y1 = Math.max(y1, g.y + g.h + L.FIT.padB);
@@ -87,7 +90,7 @@
   function zoomAt(f, cx, cy) {
     const S = UI.S, r = SG.stageEl.getBoundingClientRect();
     const local = cx === undefined ? { x: r.width / 2, y: r.height / 2 } : UI.Space.stageLocal({ clientX: cx, clientY: cy });
-    S.view = UI.Space.zoomView(S.view, f, local, L.ZOOM); S.viewAuto = false; SG.render();
+    S.view = UI.Space.zoomView(S.view, f, local, L.ZOOM); S.viewAuto = false; SG.groupScroll = null; SG.render();
   }
   // 平移夹紧：台面内容不能被推到顶部的标题栏（模式栏）下面。最高的顶层卡片的顶边不能比保留的顶部距离更靠上
   function clampPan(v) {

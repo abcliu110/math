@@ -85,7 +85,7 @@
     if (S.mode === 'free') S.freeScene = full();
     const r = U.Session.resume(sv);
     S.problem = p; S.mode = sv.mode; S.run = run; S.session = sv; S.scene = sc;
-    S.undo = []; S.redo = []; S.sel = null; S.selLink = null; S.inspOpen = false; S.tab = 'steps'; S.glow = [];
+    S.undo = []; S.redo = []; S.flash = null; S.sel = null; S.selLink = null; S.inspOpen = false; S.tab = 'steps'; S.glow = [];
     Ev.ctx = { pid: p.id, mode: S.mode }; Ev.push('resume', r.event.data);
     S.D = W.evaluate(S.scene); UI.Stage.fit(); S.glow = glowOf();
     refresh(); UI.Panels.renderShelf();
@@ -120,13 +120,19 @@
   // 成功：一个撤销项、一条事件（带 label）、一次存档、一次渲染。
   // o.from：拖动时先把台面退回拖动开始前的样子（拖动中的预览不进撤销），再整体提交。
   // o.after(r)：成功后、渲染之前调用（用来设置选中项）。返回：成功时最后一个动作的结果；失败时 { ok:false, why }。
+  // 联动组（js/core/forms.js）：手势做完以后内核 settle 一次；认出了一步，就记下这一步前后组的状态（S.flash），其他台渲染时把刚变的部分闪一下（js/ui/stage-forms.js）。
+  // 只改了“视图类”的属性（器材声明里 view: true 的，比如式子台点一项选中）：照常改、照常存档，但不进撤销、不算一步——撤销一次就退回上一步。
+  const viewOnly = (rec) => rec.some((a) => a.t === 'set') && rec.every((a) => a.t === 'settle' || (a.t === 'set' && isViewProp(a.id, a.k)));
+  const isViewProp = (id, k) => { const e = S.scene.entities[id], d = e && U.types[e.type]; return !!(d && d.props[k] && d.props[k].view === true); };
+  const groupStates = () => { const m = {}; for (const g of S.scene.groups || []) m[g.id] = Object.assign({}, g.state); return m; };
   function tx(label, fn, o) {
     o = o || {};
     const before = o.from !== undefined ? o.from : snap(), rec = [];
-    let last = { ok: true };
+    let last = { ok: true }, settled = null;
     const A = (a) => { const r = W.act(S.scene, a); if (!r.ok) throw { why: r.why }; rec.push(a); last = r; return r; };
     if (o.from !== undefined) S.scene = loadKeepView(before);
-    try { fn(A); if (rec.length && S.scene.groups) A({ t: 'settle' }); } catch (x) {
+    const g0 = S.scene.groups ? groupStates() : null;
+    try { fn(A); if (rec.length && S.scene.groups) settled = A({ t: 'settle' }); } catch (x) {
       S.scene = loadKeepView(before);
       const why = (x && x.why) || '这一步做不了';
       if (S.sel && !S.scene.entities[S.sel]) S.sel = null;
@@ -135,6 +141,9 @@
       return { ok: false, why };
     }
     if (!rec.length) { refresh(); return last; }
+    if (viewOnly(rec)) { saveFree(); refresh(); return last; }
+    const st = settled && settled.steps && settled.steps[settled.steps.length - 1], sg = st && (S.scene.groups || []).find((g) => g.id === st.group);
+    if (sg && g0 && g0[st.group]) S.flash = { gid: st.group, by: st.by, step: st.step, s0: g0[st.group], s1: Object.assign({}, sg.state), t0: Date.now() };
     pushUndo(before);
     for (const a of rec) recordSession(a);
     Ev.push('edit', { label: label || '', n: rec.length });
@@ -201,7 +210,7 @@
   function removeEntity(id) { return UI.Intent.run('delete', { id }); }
   function afterMove() { saveFree(); UI.Panels.renderTop(); }
 
-  function restore(str) { S.scene = loadKeepView(str); S.sel = null; S.selLink = null; rebaseSession(); refresh(); }
+  function restore(str) { S.scene = loadKeepView(str); S.flash = null; S.sel = null; S.selLink = null; rebaseSession(); refresh(); }
   function undo() { if (!S.undo.length) return; if (S.run) S.run.undos = (S.run.undos || 0) + 1; S.redo.push(snap()); restore(S.undo.pop()); saveFree(); }
   function redo() { if (!S.redo.length) return; S.undo.push(snap()); restore(S.redo.pop()); saveFree(); }
 
@@ -215,7 +224,7 @@
     S.example = null;
     S.problem = p; S.mode = mode || 'practice'; S.scene = p.build(); S.run = J.start(p, S.mode);
     S.session = U.Session.start(p, S.mode, S.scene);
-    S.undo = []; S.redo = []; S.sel = null; S.selLink = null; S.inspOpen = false; S.tab = 'steps'; S.glow = [];
+    S.undo = []; S.redo = []; S.flash = null; S.sel = null; S.selLink = null; S.inspOpen = false; S.tab = 'steps'; S.glow = [];
     S.wsSel = []; S.wsMsg = ''; S.wsDraw = null;
     // 工作台题（D8）：台面上有竖式或数据图表台，打开题目就进入它（属性面板自动打开）
     const bench = Object.values(S.scene.entities).find((x) => U.types[x.type] && U.types[x.type].wbUI);
@@ -248,7 +257,7 @@
     S.mode = 'free'; S.problem = null; S.run = null; S.session = null; Ev.ctx = {};
     let sc = null; try { sc = S.freeScene ? U.JSON.parse(S.freeScene) : U.JSON.parse(lsGet(FREE_KEY)); } catch (e) { sc = null; }
     try { S.scene = sc ? W.load(sc) : W.blank(); } catch (e) { S.scene = W.blank(); }
-    S.undo = []; S.redo = []; S.sel = null; S.selLink = null; S.glow = []; S.tab = 'lab'; S.wsDraw = null;
+    S.undo = []; S.redo = []; S.flash = null; S.sel = null; S.selLink = null; S.glow = []; S.tab = 'lab'; S.wsDraw = null;
     S.D = W.evaluate(S.scene); UI.Stage.fit(); refresh(); UI.Panels.renderShelf();
     say('自由探究：从右边拖器材到台面，拖蓝点连线，点 ▶ 让世界动起来', '', 4200);
   }
@@ -260,7 +269,7 @@
     if (S.mode === 'free' && !S.example) S.freeScene = full();
     S.example = ex.id; S.mode = 'free'; S.problem = null; S.run = null; S.session = null; Ev.ctx = {};
     try { S.scene = W.load(U.JSON.parse(ex.scene)); } catch (e) { S.scene = W.blank(); }
-    S.undo = []; S.redo = []; S.sel = null; S.selLink = null; S.glow = []; S.tab = 'lab'; S.wsDraw = null; S.wsSel = [];
+    S.undo = []; S.redo = []; S.flash = null; S.sel = null; S.selLink = null; S.glow = []; S.tab = 'lab'; S.wsDraw = null; S.wsSel = [];
     Object.keys(S.scene.entities).forEach((eid) => { S.help[eid] = false; });   // 示例里不弹“怎么玩”的说明卡，免得盖住布局
     if (UI.Guide && UI.Guide.suppress) UI.Guide.suppress();   // 也不弹几何工作区的新手引导
     S.D = W.evaluate(S.scene); UI.Stage.fit(); refresh(); UI.Panels.renderShelf();
@@ -693,7 +702,7 @@
       else if (e.key === 'Escape' && UI.State.focusedId()) UI.Stage.setFocus(null);
       else if (e.key === 'Escape') { S.sel = null; S.selLink = null; UI.Panels.renderInsp(); UI.Stage.render(); }
     });
-    G.addEventListener('resize', () => { const nar = G.innerWidth <= L.NARROW_BP; $('#shelfbtn').style.display = nar ? '' : 'none'; if (UI.Chrome.apply()) UI.Stage.fit(); UI.Stage.render(); });   // 窗口变了：栏收不收、面板重新摆（实测尺寸，不溢出）
+    G.addEventListener('resize', () => { const nar = G.innerWidth <= L.NARROW_BP; $('#shelfbtn').style.display = nar ? '' : 'none'; if (UI.Chrome.apply() || UI.benchGroup()) UI.Stage.fit(); UI.Stage.render(); });   // 窗口变了（联动组的卡片按窗口重新排，stage-forms.js）：栏收不收、面板重新摆（实测尺寸，不溢出）
     $('#shelfbtn').style.display = G.innerWidth <= L.NARROW_BP ? '' : 'none';
   }
 
