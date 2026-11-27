@@ -34,6 +34,7 @@
     def.props = def.props || {};
     def.inputs = def.inputs || {};
     def.outputs = def.outputs || {};
+    // 属性声明里 view: true：只是界面上的视图状态（比如式子台点中了哪一项），界面改它不进撤销、不算一步（js/ui/app.js 的 tx）
     for (const k in def.props) {
       const P = def.props[k];
       P.k = k; P.write = P.write !== false; P.label = P.label || k;
@@ -46,7 +47,7 @@
     // 卡片至少要容得下所有的口和口旁边的文字（只增不减）：以前只看 size()，口多的器材（比如 6 个输出的方程台）口会掉到卡片外面，标签压住正文
     if (typeof def.size === 'function' && def.workspaceRole === 'none' && !def.sizeFixed) {
       const base = def.size;
-      def.size = function () { return U.fitCard(def, base.apply(this, arguments)); };
+      def.size = function (e, opt) { return U.fitCard(def, base.apply(this, arguments), opt); };   // opt.bench：操作台模式，不留口的位置（见下面 U.benchModeOf）
     }
     U.types[id] = def;
     return def;
@@ -61,14 +62,40 @@
     return [...head].length >= 1 && [...head].length <= max ? head : chars.slice(0, max).join('');
   };
   U.CARD = Object.freeze({ PORT_Y0: 40, PORT_DY: 22, PAD_BOTTOM: 16, LABEL_X: 12, LABEL_CHAR: 12, LABEL_MAXCH: 8, BODY_MIN_W: 64 });
-  U.fitCard = (def, sz) => {
-    const C = U.CARD, ins = Object.keys(def.inputs || {}), outs = Object.keys(def.outputs || {});
+  U.fitCard = (def, sz, opt) => {
+    if (opt && opt.bench) return [Math.max(sz[0], U.CARD.BODY_MIN_W), sz[1]];   // 操作台模式不画口：卡片只按台面算
+    const C = U.CARD, ins = Object.keys(def.inputs || {}), outs = Object.keys(def.outputs || {}).filter((k) => !def.outputs[k].rec);   // 记录仪的输出口（rec）只在开了记录仪时画，不撑大卡片
     const chars = (o, ks) => Math.min(C.LABEL_MAXCH, Math.max(0, ...ks.map((k) => String(o[k].label || k).length)));
     const side = (o, ks) => (ks.length ? C.LABEL_X + chars(o, ks) * C.LABEL_CHAR : 0);
     const n = Math.max(ins.length, outs.length);
     const minH = n ? C.PORT_Y0 + (n - 1) * C.PORT_DY + C.PAD_BOTTOM : 0;
     const minW = side(def.inputs, ins) + (def.compactPorts ? 0 : side(def.outputs, outs)) + C.BODY_MIN_W;
     return [Math.max(sz[0], minW), Math.max(sz[1], minH)];
+  };
+  // 操作台模式（docs/instrument-design.md 末尾“操作台模式”）：题目的台面上只有一台操作台、没有连线时，界面不画连线用的口
+  // （输出口、输入口、属性药丸、记录仪的口），卡片按台面算大小，台面适应时不给口留边。只是不画，内核照常算（S.D[id].out 不变）。
+  //   scene 台面；o.problem 有没有在做题（自由探究不算）；o.mode 'free' 不算；o.showPorts 孩子或老师点了“显示口”就不算。
+  //   联动组（js/core/forms.js）也算：台面上顶层的器材全是操作台、全在同一个联动组里、没有连线时，这几台都不画口。
+  //   返回这几台操作台的实体 id 列表（单台题是一个 id 的列表），不是操作台模式返回 null。判断某一台用 U.inBench(列表, id)。
+  U.benchOf = (scene) => {
+    if (!scene || !scene.entities || (scene.links || []).length) return null;
+    const top = [];
+    for (const id in scene.entities) {
+      const e = scene.entities[id]; if (e.parent) continue;
+      if (top.length && !scene.groups) return null;   // 没有联动组时第二台就不是（界面每次量卡片都要问，所以早停）
+      const d = U.types[e.type]; if (!d || d.bench !== true) return null;
+      top.push(e.id);
+    }
+    if (top.length === 1) return top;
+    if (!top.length) return null;
+    const g = scene.groups.find((x) => x.members.includes(top[0]));
+    return g && top.every((id) => g.members.includes(id)) ? top : null;
+  };
+  U.inBench = (ids, id) => !!ids && ids.indexOf(id) >= 0;
+  U.benchModeOf = (scene, o) => {
+    o = o || {};
+    if (!o.problem || o.mode === 'free' || o.showPorts) return null;
+    return U.benchOf(scene);
   };
 
   U.defaultProps = (def, given) => {
@@ -182,6 +209,7 @@
     if (def.numberSource !== undefined && typeof def.numberSource !== 'boolean') err('numberSource 要是 true / false');
     if (def.hidden !== undefined && typeof def.hidden !== 'boolean') err('hidden 要是 true / false（不列在器材架上）');
     // 先猜后看（docs/new-instruments.md 3.2）：guess = { props:[填猜测的属性], ports:[揭开前遮住的输出口], answered(props) → 填了没有 }。只遮界面，内核照常算
+    if (def.recHide !== undefined && typeof def.recHide !== 'boolean') err('recHide 要是 true / false（开了记录仪先猜时，台面自己藏答案，不盖“先猜一猜”）');
     if (def.onSet !== undefined && typeof def.onSet !== 'function') err('onSet 要是函数 (属性, 改的属性名, 新值) → 要一起改的别的属性');
     if (def.guess !== undefined) {
       const g = def.guess;

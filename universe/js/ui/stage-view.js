@@ -49,6 +49,7 @@
   // 只看“变高”，不看“挪位置”：孩子自己把卡片拖到下面，台面不跟着缩（不然手里正拖的东西会跳）。手动动过视图也不管。返回 true 表示视图变了
   let lastH = {};
   function keepFit() {
+    if (UI.benchGroup()) return SG.keepGroup();   // 联动组：卡片尺寸变了就按 stage-forms.js 的规则再排一次
     const S = UI.S, E = S.scene.entities, ids = Object.keys(E).filter((id) => !SG.inWs(E[id]));
     const hs = {}; for (const id of ids) hs[id] = SG.geom(E[id]).h;
     const grew = ids.some((id) => lastH[id] !== undefined && hs[id] > lastH[id]); lastH = hs;
@@ -66,10 +67,21 @@
     let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
     if (!ids.length) { S.view = { x: r.width / 2 - L.EMPTY_VIEW.dx, y: r.height / 2 - L.EMPTY_VIEW.dy, z: 1 }; return; }
     if (ids.some((id) => SG.isWsDef(S.scene.entities[id].type))) { fitWs(ids); return; }
+    SG.groupScroll = null;
+    if (SG.fitGroup(UI.benchGroup() ? {} : null)) return;   // 联动组的操作台模式：卡片自动排版、定缩放（stage-forms.js）
+    const bm = !!UI.benchMode(), padL = bm ? L.FIT.benchPad : L.FIT.padL, padR = bm ? L.FIT.benchPad : L.FIT.padR;   // 操作台模式：左边没有药丸、右边没有口，不留那么宽的边，台面放得更大
     ids.forEach((id) => {
-      const e = S.scene.entities[id], g = SG.geom(e); x0 = Math.min(x0, g.x - L.FIT.padL); y0 = Math.min(y0, g.y); x1 = Math.max(x1, g.x + g.w + L.FIT.padR); y1 = Math.max(y1, g.y + g.h + L.FIT.padB);
+      const e = S.scene.entities[id], g = SG.geom(e); x0 = Math.min(x0, g.x - padL); y0 = Math.min(y0, g.y); x1 = Math.max(x1, g.x + g.w + padR); y1 = Math.max(y1, g.y + g.h + L.FIT.padB);
       if (SG.isWsDef(e.type)) { const pr = UI.Layout.panelRect(id, g); y1 = Math.max(y1, pr.y + pr.h); }   // 工作区底下的面板：实测（或估计）的高度
     });
+    if (bm) {
+      // 操作台模式：上面只躲开提示条，下面只躲开按钮栏（实测），台面尽量大；左右居中，上下在空出来的地方居中
+      const Sp = UI.Space, top = L.FIT_TOP_MIN + L.FIT_TOP_NUDGE, bottom = UI.Layout.bottomReserve(SG.stageEl, L.BAR.fabGap);
+      const availW = r.width - 2 * L.FIT_SCREEN.x, availH = r.height - top - bottom;
+      const z = Math.max(L.ZOOM.fitMin, Math.min(L.ZOOM.fitMax, Math.min(availW / (x1 - x0), availH / (y1 - y0))));
+      S.view = Sp.viewAt(z, { x: x0, y: y0 }, { x: (r.width - Sp.scaleLen(x1 - x0, z)) / 2, y: top + Math.max(0, (availH - Sp.scaleLen(y1 - y0, z)) / 2) });
+      return;
+    }
     const FS = L.FIT_SCREEN, z = Math.max(L.ZOOM.fitMin, Math.min(L.ZOOM.fitMax, Math.min((r.width - 2 * FS.x) / (x1 - x0), (r.height - 2 * FS.y) / (y1 - y0))));
     const Sp = UI.Space;
     S.view = Sp.viewAt(z, { x: x0, y: y0 }, { x: (r.width - Sp.scaleLen(x1 - x0, z)) / 2, y: Math.max(L.FIT_TOP_MIN, (r.height - Sp.scaleLen(y1 - y0, z)) / 2) + L.FIT_TOP_NUDGE });
@@ -78,7 +90,7 @@
   function zoomAt(f, cx, cy) {
     const S = UI.S, r = SG.stageEl.getBoundingClientRect();
     const local = cx === undefined ? { x: r.width / 2, y: r.height / 2 } : UI.Space.stageLocal({ clientX: cx, clientY: cy });
-    S.view = UI.Space.zoomView(S.view, f, local, L.ZOOM); S.viewAuto = false; SG.render();
+    S.view = UI.Space.zoomView(S.view, f, local, L.ZOOM); S.viewAuto = false; SG.groupScroll = null; SG.render();
   }
   // 平移夹紧：台面内容不能被推到顶部的标题栏（模式栏）下面。最高的顶层卡片的顶边不能比保留的顶部距离更靠上
   function clampPan(v) {

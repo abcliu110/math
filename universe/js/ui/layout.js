@@ -38,7 +38,7 @@
     AUTO_PAD: 2,                  // 2026-11：自动适应时四周至少再多留几格（图形四周有地方挪，不会一拖就到边；内容大时按比例，内容小时按格数）
     AUTO_MIN_SPAN: 8,             // 自动适应时横向至少看到几格
     EMPTY_VIEW: { dx: 200, dy: 120 },   // 台面没有图形时，原点离台面中心的偏移
-    FIT: { padL: 110, padR: 60, padT: 0, padB: 50, wsPad: 0 },  // 适应台面时，图形外面留的空（世界单位）；只有工作区时四周不留（wsPad）
+    FIT: { padL: 110, padR: 60, padT: 0, padB: 50, wsPad: 0, benchPad: 20 },  // 适应台面时，图形外面留的空（世界单位）；只有工作区时四周不留（wsPad）；操作台模式左右只留一点（benchPad，不给药丸和口留位置）
     FIT_SCREEN: { x: 40, y: 75 }, // 适应台面时，台面四周留的屏幕像素（左右各 x，上下各 y）
     FIT_TOP_MIN: 50, FIT_TOP_NUDGE: 20,  // 适应台面时，顶边的最小距离和微调
     ZOOM: { fitMin: 0.35, fitMax: 1.15, wsMax: 2.6, min: 0.3, max: 2.5 },  // 适应时的缩放范围（有工作区时可以放得更大，画布才占得下台面）；手动缩放的范围
@@ -81,6 +81,10 @@
     TOUCH: { min: 24, longMs: 500, slop: 10, recentMs: 1000 },
     // 键盘（V8，2.8）：方向键移动选中图形的步长（格）；按住 Shift 的大步
     KEY: { step: 1, big: 5 },
+    // 联动组的台面（js/ui/stage-forms.js）：卡片在屏幕上至少放到 minZ 倍（卡片上最小的字 11 像素，放到 0.75 倍约 8 像素、正文 13–14 像素约 10 像素，再小就读不清）；
+    // 排得下时最多放到 maxZ；卡片之间空 gap（世界单位），台面左右留 padX 屏幕像素；共用步骤栏高 barH、离按钮栏 barGap、写最近 steps 步；
+    // 刚改的地方闪 flashMs 毫秒；窗口窄于 railBP 时器材架自动收成窄条（这一页用不上器材架，台面宽一些）
+    GROUP: { minZ: 0.75, maxZ: 1, gap: 24, padX: 16, barH: 94, barGap: 6, steps: 3, flashMs: 1200, railBP: 1600 },
   });
   UI.LAYOUT = LAYOUT;
 
