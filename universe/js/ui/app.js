@@ -46,6 +46,9 @@
     const res = J.check(p, run, S.scene, S.D);
     if (S.mode === 'practice') {
       res.newly.forEach((m) => { Ev.push('milestone', { id: m.id, score: m.score, op: run.ops }); say('✓ ' + m.say + '　+' + m.score + ' 分', 'good', 2600); });
+      // 自动先猜：答案来自的那个里程碑做到了，揭晓：记一条 guess 事件（猜错不扣分，只记差多少）
+      const apr = U.Predict.of(p);
+      if (apr && apr.auto && run.pred !== undefined && !run.guessLogged && res.newly.some((m) => m.id === apr.ms)) { run.guessLogged = true; Ev.push('guess', Object.assign({ ent: 'predict' }, U.Predict.gap(apr, run.pred))); }
       res.traps.forEach((t) => { Ev.push('trap', { id: t.id }); say('⚠ ' + t.wrong, 'warn', 6000); });
       const g = glowOf();
       if (g.join() !== S.glow.join()) { S.glow = g; UI.Panels.renderShelf(); }
@@ -78,7 +81,7 @@
   function resumeSession() {
     const sv = loadSession(); if (!sv) return;
     const p = U.problemById(sv.pid), run = J.start(p, sv.mode);
-    if (!p.predict) run.pred_done = true;
+    if (!U.Predict.of(p)) run.pred_done = true;
     if (sv.pred && sv.pred.done) { run.pred_done = true; if (sv.pred.v !== undefined) run.pred = sv.pred.v; }
     let sc;
     try { sc = U.Session.replay(sv, (cur) => { J.check(p, run, cur, W.evaluate(cur)); }); } catch (e) { clearSession(); say('上次的台面读不出来，已重新开始', 'warn', 3000); return; }
@@ -229,7 +232,7 @@
     // 工作台题（D8）：台面上有竖式或数据图表台，打开题目就进入它（属性面板自动打开）
     const bench = Object.values(S.scene.entities).find((x) => U.types[x.type] && U.types[x.type].wbUI);
     if (bench) { S.sel = bench.id; S.inspOpen = true; }
-    if (!p.predict) S.run.pred_done = true;
+    if (!U.Predict.of(p)) S.run.pred_done = true;
     Ev.ctx = { pid: p.id, mode: S.mode }; Ev.push('start', {});
     S.D = W.evaluate(S.scene); UI.Stage.fit(); S.glow = glowOf();
     refresh(); UI.Panels.renderShelf();
@@ -495,7 +498,7 @@
       if (it) { if (it.dataset.free) openFree(); else openProblem(it.dataset.pid, 'practice'); $('#left').classList.remove('open'); return; }
       const pr = t.closest('[data-pred]');
       if (pr && S.run) {
-        const v = pr.dataset.pred, pd = S.problem.predict || {}, form = pd.form || 'pick';
+        const v = pr.dataset.pred, pd = U.Predict.of(S.problem) || {}, form = pd.form || 'pick';
         const commit = (val) => { S.run.pred_done = true; S.run.pred = val; Ev.push('predict', { v: val }); };
         if (v === 'skip') S.run.pred_done = true;
         else if (v === 'submit') {
