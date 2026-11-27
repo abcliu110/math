@@ -9,10 +9,11 @@
  *   onSet：拧了旋钮或换了 keep 里的属性，猜的清掉；拧旋钮时再把 reset 里的属性复位
  * rcfg 空着时，操作台和以前一模一样（输出口不画，卡片不变高，界面见 stage-cards.js 和 howto.js 的 outOrder）。
  * 配置（build 里写 U.Recorder.props({ … })）：
- *   knob 旋钮（整数属性）  out 读哪个输出口（数）  keep 这一组不动的属性  range [最小, 最大]（旋钮只在这里拧）
+ *   knob 旋钮（整数属性）  out 读哪个输出口（数）  keep 这一组不动的属性  range [最小, 最大]（旋钮只在这里拧；一头可以写成式子，只用 keep 里的属性，比如篱笆 [1, 'P / 2 - 1']：一共 24 米时是 1 到 11）
  *   guess 'values'（只放能出现的值，一格一个）| 数（格子间隔，落在最近的一格算对）| 省略（能出现的值不超过 12 个用 values，否则自动定间隔）
  *   asks ['题干|选项|*对的选项', …]（最多 2 个）  names [横轴叫什么, 竖轴叫什么]（可选，默认用属性和输出口的名字）
  *   done { 属性: 值 }（可选：全部试一遍、判猜按“做完的样子”算，'$' 是旋钮的值）  reset { 属性: 值 }（可选：拧旋钮时一起复位）  mark 'max'（可选：最高的点画成绿的）
+ *   line true（可选：全部试一遍以后，这一组的点按顺序连成线；直线、拱、V 字、往上弯的线开，锯齿、星期这种按格跳的不开）
  * 操作台可以声明 recHide: true：先猜时不盖台面，draw 和 grips 收到 c.recHidden，自己藏答案（篱笆围地只把面积写成“？”）。
  * 这一版的边界（如实写）：一个旋钮、一个输出；整数旋钮；有状态的操作台（step）不包；和记录仪撞名的操作台（换一换、分一分、跳格钟、带追问的研究台）不包。 */
 (function (G) {
@@ -33,7 +34,26 @@
   const OUTS = {
     pts: '图上有几个点（这一组的）', gok: '先猜再看，猜对几次', gtry: '先猜再看，猜了几次', all: '全部试一遍了：1 是，0 否', q1: '追问 1 选了第几个', q2: '追问 2 选了第几个',
   };
-  const CFG_KEYS = ['knob', 'out', 'keep', 'range', 'guess', 'asks', 'names', 'done', 'reset', 'mark'];
+  const CFG_KEYS = ['knob', 'out', 'keep', 'range', 'guess', 'asks', 'names', 'done', 'reset', 'mark', 'line'];
+  // range 一头的式子，比如 'P / 2 - 1'：数、属性名、+ - * /（也认 − × ÷）、括号。看不懂返回 null；
+  // 看得懂返回函数 f(属性) → 数（属性不是数时得 NaN），f.names 是用到的属性名
+  function expr(src) {
+    const tk = String(src).replace(/−/g, '-').replace(/×/g, '*').replace(/÷/g, '/').match(/\d+(?:\.\d+)?|[A-Za-z_]\w*|[-+*/()]|\S/g) || [];
+    let i = 0;
+    const names = [];
+    const atom = () => {
+      const t = tk[i++];
+      if (t === undefined) throw 0;
+      if (/^\d/.test(t)) { const v = +t; return () => v; }
+      if (/^[A-Za-z_]/.test(t)) { if (!names.includes(t)) names.push(t); return (p) => +p[t]; }
+      if (t === '-') { const a = atom(); return (p) => -a(p); }
+      if (t === '(') { const a = sum(); if (tk[i++] !== ')') throw 0; return a; }
+      throw 0;
+    };
+    const prod = () => { let a = atom(); while (tk[i] === '*' || tk[i] === '/') { const op = tk[i++], l = a, r = atom(); a = op === '*' ? (p) => l(p) * r(p) : (p) => l(p) / r(p); } return a; };
+    const sum = () => { let a = prod(); while (tk[i] === '+' || tk[i] === '-') { const op = tk[i++], l = a, r = prod(); a = op === '+' ? (p) => l(p) + r(p) : (p) => l(p) - r(p); } return a; };
+    try { const f = sum(); if (i !== tk.length || !tk.length) return null; const g = (p) => f(p || {}); g.names = names; return g; } catch (x) { return null; }
+  }
   const num = (n) => U.val('num', Q(n), { dim: null });
   const int = (v, d) => (Number.isInteger(+v) && String(v).trim() !== '' ? +v : d);
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
@@ -55,9 +75,17 @@
     const O = def.outputs[r.out];
     if (!O || O.rec || O.kind !== 'num') e('out 要是这台操作台的数的输出口：' + r.out);
     if (r.keep !== undefined && !(Array.isArray(r.keep) && r.keep.every((k) => def.props[k] && !isRc(k) && k !== r.knob))) e('keep 要是这台操作台别的属性的数组');
-    const g = r.range;
-    if (!(Array.isArray(g) && g.length === 2 && g.every(Number.isInteger) && g[0] < g[1] && g[1] - g[0] <= SPAN_MAX)) e('range 要是 [最小, 最大] 两个整数，最多跨 ' + SPAN_MAX);
+    const g = r.range, keepOk = Array.isArray(r.keep) ? r.keep : [];
+    if (Array.isArray(g) && g.length === 2 && g.some((v) => typeof v === 'string')) {
+      // 有一头是式子：式子只能用 keep 里的属性（这一组不动的），整数的那头仍要在旋钮的范围里
+      g.forEach((v, i) => {
+        if (typeof v === 'string') { const f = expr(v); if (!f) e('range 的式子看不懂：' + v + '（只认数、属性名和 + − × ÷ 括号）'); else if (!f.names.every((n) => keepOk.includes(n))) e('range 的式子只能用 keep 里的属性：' + v); }
+        else if (!Number.isInteger(v)) e('range 要是 [最小, 最大]：整数或式子');
+        else if (P && ((i === 0 && P.min !== undefined && v < P.min) || (i === 1 && P.max !== undefined && v > P.max))) e('range 超出了旋钮「' + P.label + '」的范围');
+      });
+    } else if (!(Array.isArray(g) && g.length === 2 && g.every(Number.isInteger) && g[0] < g[1] && g[1] - g[0] <= SPAN_MAX)) e('range 要是 [最小, 最大] 两个整数，最多跨 ' + SPAN_MAX);
     else if (P && ((P.min !== undefined && g[0] < P.min) || (P.max !== undefined && g[1] > P.max))) e('range 超出了旋钮「' + P.label + '」的范围');
+    if (r.line !== undefined && typeof r.line !== 'boolean') e('line 要是 true / false（全部试一遍以后把这一组的点连成线）');
     if (r.guess !== undefined && r.guess !== 'values' && !(typeof r.guess === 'number' && r.guess > 0)) e("guess 要是 'values' 或者正数（格子间隔）");
     if (r.asks !== undefined) {
       if (!Array.isArray(r.asks) || r.asks.length > 2) e('asks 最多 2 个');
@@ -84,8 +112,18 @@
   }
   function norm(def, r) {
     const nm = r.names || [];
-    return { knob: r.knob, out: r.out, keep: r.keep || [], lo: r.range[0], hi: r.range[1], guess: r.guess, asks: (r.asks || []).join('~'),
-      xn: nm[0] || clean(def.props[r.knob].label), yn: nm[1] || clean(def.outputs[r.out].label), done: r.done || {}, reset: r.reset || {}, mark: r.mark || '' };
+    const P = def.props[r.knob], end = (v) => (typeof v === 'string' ? expr(v) : () => v);
+    return { knob: r.knob, out: r.out, keep: r.keep || [], loF: end(r.range[0]), hiF: end(r.range[1]), kmin: P.min, kmax: P.max, guess: r.guess, asks: (r.asks || []).join('~'),
+      xn: nm[0] || clean(def.props[r.knob].label), yn: nm[1] || clean(def.outputs[r.out].label), done: r.done || {}, reset: r.reset || {}, mark: r.mark || '', line: r.line === true };
+  }
+  // 这一组的旋钮范围：式子按 keep 里的属性现在的值算（篱笆一共 24 米，长就是 1 到 11）；收进旋钮自己的范围，最多跨 SPAN_MAX
+  function rangeOf(cfg, p) {
+    let lo = Math.ceil(cfg.loF(p) - 1e-9), hi = Math.floor(cfg.hiF(p) + 1e-9);
+    if (!Number.isFinite(lo)) lo = cfg.kmin !== undefined ? cfg.kmin : 0;
+    if (cfg.kmin !== undefined) lo = Math.max(lo, cfg.kmin);
+    if (!Number.isFinite(hi)) hi = lo + 1;
+    if (cfg.kmax !== undefined) hi = Math.min(hi, cfg.kmax);
+    return [lo, Math.max(lo, Math.min(hi, lo + SPAN_MAX))];
   }
 
   // ---- 读数：用操作台自己的 compute 算（纯函数，给它一份新的 ctx） ----
@@ -121,14 +159,15 @@
     const cfg = cfgOf(def, p && p.rcfg); if (!cfg) return null;
     const x = +p[cfg.knob], sig = sigOf(cfg, p), log = parseLog(p.rclog);
     const group = log.filter((a) => a.sig === sig).sort((a, b) => a.x - b.x);
-    const has = group.some((a) => a.x === x), inRange = Number.isInteger(x) && x >= cfg.lo && x <= cfg.hi;   // 旋钮是小数（比如半径 2.5）时不记
+    const [lo, hi] = rangeOf(cfg, p);
+    const has = group.some((a) => a.x === x), inRange = Number.isInteger(x) && x >= lo && x <= hi;   // 旋钮是小数（比如半径 2.5）时不记
     const gi = int(p.rcg, -1), peek = !!p.rcpeek, gok = clamp(int(p.rcgok, 0), 0, 99), gtry = clamp(int(p.rcgtry, 0), 0, 99), all = !!p.rcall;
     const ans = inRange ? solve(B, def, cfg, p, x) : null;
     const hidden = group.length >= MIN_PTS && !has && gi < 0 && !peek && ans !== null;
     const canAsk = group.length >= MIN_PTS, asks = RS.parseAsk(cfg.asks, p.rcpick, canAsk);
-    const st = { cfg, x, sig, log, group, has, inRange, gi, peek, gok, gtry, all, ans, hidden, canAsk, asks };
+    const st = { cfg, x, sig, log, group, lo, hi, has, inRange, gi, peek, gok, gtry, all, ans, hidden, canAsk, asks };
     if (!full) return st;
-    const ys = {}; for (let v = cfg.lo; v <= cfg.hi; v++) ys[v] = solve(B, def, cfg, p, v);
+    const ys = {}; for (let v = st.lo; v <= st.hi; v++) ys[v] = solve(B, def, cfg, p, v);
     const vals = [...new Set(Object.values(ys).filter((v) => v !== null))].sort((a, b) => a - b);
     const all2 = vals.concat(group.map((a) => a.y));
     let ya = Math.min(0, ...all2), yb = Math.max(1, ...all2);
@@ -154,26 +193,28 @@
     // 旋钮：− 数 +（拧了，onSet 会清掉猜的，并复位 reset 里的属性）
     const lx = 20 + RS.tw(xn) + 10, step = (v) => ({ [c.knob]: v });
     s += '<g data-rec-knob="1">' + K.text(20, y0 + 17, xn, { size: 12, weight: 700, anchor: 'start' }) +
-      RS.btn(lx, y0, 26, '−', step(Math.min(Math.ceil(st.x) - 1, c.hi)), st.x > c.lo, xn + '少 1') + K.text(lx + 50, y0 + 17, fmt(st.x), { size: 14, weight: 700 }) +
-      RS.btn(lx + 74, y0, 26, '+', step(Math.max(Math.floor(st.x) + 1, c.lo)), st.x < c.hi, xn + '多 1') + '</g>';
+      RS.btn(lx, y0, 26, '−', step(Math.min(Math.ceil(st.x) - 1, st.hi)), st.x > st.lo, xn + '少 1') + K.text(lx + 50, y0 + 17, fmt(st.x), { size: 14, weight: 700 }) +
+      RS.btn(lx + 74, y0, 26, '+', step(Math.max(Math.floor(st.x) + 1, st.lo)), st.x < st.hi, xn + '多 1') + '</g>';
     const bx = lx + 116, can = !st.hidden && !st.has && st.inRange && st.live !== null;
     const rec = can ? { rclog: logStr(st.log.concat([{ x: st.x, y: st.live, sig: st.sig }])), rcg: -1 } : {};
-    const tip = st.has ? '这个' + xn + '已经记过了' : !st.inRange ? xn + '要是 ' + c.lo + ' 到 ' + c.hi + ' 的整数' : st.hidden ? '先猜' + yn + '，或者点“不猜，直接看”' : st.live === null ? '先在台面上做出来，才知道' + yn : '把这个' + xn + '记到图上';
+    const tip = st.has ? '这个' + xn + '已经记过了' : !st.inRange ? xn + '要是 ' + st.lo + ' 到 ' + st.hi + ' 的整数' : st.hidden ? '先猜' + yn + '，或者点“不猜，直接看”' : st.live === null ? '先在台面上做出来，才知道' + yn : '把这个' + xn + '记到图上';
     s += RS.btn(bx, y0, 110, '记下来', rec, can, tip);
     if (st.hidden) s += RS.btn(bx + 120, y0, 120, '不猜，直接看', { rcpeek: true }, true, '不猜，直接看');
     // 坐标图
-    const fy = y0 + ROW, fw = Math.min(W0, 720) - 28, xa = c.lo >= 1 ? c.lo - 1 : c.lo;
+    const fy = y0 + ROW, fw = Math.min(W0, 720) - 28, xa = st.lo >= 1 ? st.lo - 1 : st.lo;
     const keep = c.keep.map((k) => clean(def.props[k].label) + ' = ' + (typeof p[k] === 'number' ? fmt(p[k]) : String(p[k]))).join('，');
-    const P = RS.plot({ fx: 14, fy, fw, fh: GH, xa, xb: c.hi, ya: st.ya, yb: st.yb, bottom: 30, title: '📈 记下来：横着是' + xn + '，竖着是' + yn + (keep ? '（' + keep + '，不动）' : '') });
+    const P = RS.plot({ fx: 14, fy, fw, fh: GH, xa, xb: st.hi, ya: st.ya, yb: st.yb, bottom: 30, title: '📈 记下来：横着是' + xn + '，竖着是' + yn + (keep ? '（' + keep + '，不动）' : '') });
     const { X, Y, ys } = P; s += P.s;
-    if (st.all) for (let v = c.lo; v <= c.hi; v++) s += st.ys[v] === null ? K.text(X(v), P.Y1 + 4, '×', { size: 10, fill: '#e6b4ab' }) : K.circle(X(v), Y(st.ys[v]), 3, { fill: '#9cc3ee', stroke: 'none' });
+    // line：全部试一遍以后，这一组的点按横轴的顺序连成线（直线、拱、V 看得更清楚；算不出来的地方断开）。锯齿、星期这种按格跳的不连
+    if (st.all && c.line) { let d = '', pen = false; for (let v = st.lo; v <= st.hi; v++) { if (st.ys[v] === null) { pen = false; continue; } d += (pen ? 'L' : 'M') + X(v).toFixed(1) + ' ' + Y(st.ys[v]).toFixed(1); pen = true; } if (d) s += '<path data-rec-line="1" d="' + d + '" fill="none" stroke="#7aa9dc" stroke-width="1.6" stroke-linejoin="round"/>'; }
+    if (st.all) for (let v = st.lo; v <= st.hi; v++) s += st.ys[v] === null ? K.text(X(v), P.Y1 + 4, '×', { size: 10, fill: '#e6b4ab' }) : K.circle(X(v), Y(st.ys[v]), 3, { fill: '#9cc3ee', stroke: 'none' });
     const top = c.mark === 'max' && st.vals.length ? st.vals[st.vals.length - 1] : null;   // mark: 'max'：最高的点画成绿的（篱笆围地的最大面积）
     for (const a of st.group) s += '<g data-rec-pt="' + a.x + '">' + K.circle(X(a.x), Y(a.y), 5, { fill: top !== null && Math.abs(a.y - top) < 1e-6 ? '#5cb85c' : 'var(--blue)', stroke: 'var(--ink)', w: 1.1 }) + '</g>';
     if (st.inRange) s += K.line(X(st.x), P.Y0 - 4, X(st.x), P.Y1 + 2, { w: 1.4, stroke: 'var(--blue)', dash: '4 3' });
     // 猜的格子：values 是一格一个能出现的值（挨得太近的往旁边错开）；grid 是蓝线上一格一格
     const pick = (i) => ({ rcg: i, rcgtry: st.gtry + 1, rcgok: st.gok + (i === st.ansIdx ? 1 : 0) });
     if (st.hidden && st.mode === 'values') {
-      const dir = st.x > (c.lo + c.hi) / 2 ? -1 : 1, last = [];
+      const dir = st.x > (st.lo + st.hi) / 2 ? -1 : 1, last = [];
       st.cells.forEach((v, i) => {
         let k = 0; while (last[k] !== undefined && Math.abs(last[k] - Y(v)) < 16) k++; last[k] = Y(v);
         const w = Math.max(32, RS.tw(fmt(v)) + 10), cx = X(st.x) + dir * k * (w + 4);
@@ -191,7 +232,7 @@
       : st.hidden ? '先猜：' + xn + ' ' + fmt(st.x) + ' 时，' + yn + '是几？点蓝线上的一格'
       : gv !== null && st.live === null ? '你猜' + yn + ' ' + fmt(gv) + '：在台面上做出来看看'
       : gv !== null ? '你猜' + yn + ' ' + fmt(gv) + '，' + (right ? '猜对了！' + (near ? '（是 ' + fmt(st.live) + '，就在这一格）' : '') : '其实是 ' + fmt(st.live) + '。') + '点“记下来”'
-      : !st.inRange ? xn + '要是 ' + c.lo + ' 到 ' + c.hi + ' 的整数，才能记' : st.live === null ? '在台面上做出来，“记下来”才能点' : '';
+      : !st.inRange ? xn + '要是 ' + st.lo + ' 到 ' + st.hi + ' 的整数，才能记' : st.live === null ? '在台面上做出来，“记下来”才能点' : '';
     if (st.gtry) say += (say ? '　' : '') + '猜了 ' + st.gtry + ' 次，猜对 ' + st.gok + ' 次';
     s += K.text(24, fy + 36, say, { size: 11, anchor: 'start', fill: 'var(--blue)', weight: 700 });
     s += RS.btn(14 + fw - 130, fy + 4, 116, '全部试一遍', { rcall: !st.all }, n >= ALL_PTS || st.all, n >= ALL_PTS ? (st.all ? '收起全部' : '每个' + xn + '都画上') : '图上有 ' + ALL_PTS + ' 个点以后才能全部试一遍', st.all);
@@ -239,8 +280,8 @@
     };
     if (B.grips) def.grips = function (c) { const st = state(def, B, c.props, false); if (st && st.hidden && !hideSelf) return []; return B.grips(st ? Object.assign({}, c, { rec: st, recHidden: st.hidden }) : c); };
     if (B.badge) def.badge = function (c) { const st = state(def, B, c.props, false); return st && st.hidden ? '' : B.badge(c); };
-    def.onSet = function (p, k, v) {
-      const base = B.onSet ? B.onSet(p, k, v) : null, cfg = cfgOf(def, p && p.rcfg);
+    def.onSet = function (p, k, v, was) {
+      const base = B.onSet ? B.onSet(p, k, v, was) : null, cfg = cfgOf(def, p && p.rcfg);
       if (!cfg || (k !== cfg.knob && !cfg.keep.includes(k))) return base;
       return Object.assign({}, base || {}, k === cfg.knob ? cfg.reset : {}, { rcg: -1, rcpeek: false });
     };

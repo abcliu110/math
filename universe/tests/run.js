@@ -3436,6 +3436,55 @@ t('篱笆围地：改一共几米，“记下这一种”的列表清空；改�
   const on = U.types.areabench.onSet, p = { shape: 3, P: 20, w: 3, tried: '2,3,4' };
   eq(on(p, 'P', 24), { tried: '' }, '20 改成 24：清空');
   eq(on(p, 'P', 20), null, '还是 20：不清空'); eq(on(p, 'w', 5), null, '改长：不清空');
+t('篱笆围地：改一共几米，“记下这一种”的列表清空；改成一样的数、改别的属性都不清空（走真的 set：onSet 拿到的 props 已经是新值）', () => {
+  const s = W.blank(), id = W.add(s, 'areabench', 0, 0, { shape: 3, P: 20, w: 3, tried: '2,3,4' }), p = s.entities[id].props;
+  const set = (k, v) => { const r = W.act(s, { t: 'set', id, k, v }); truthy(r.ok, k + ' 改不了：' + r.why); };
+  set('w', 5); eq(p.tried, '2,3,4', '改长：不清空');
+  set('P', 20); eq(p.tried, '2,3,4', '还是 20：不清空');
+  set('P', 24); eq(p.tried, '', '20 改成 24：清空');
+  set('tried', '3'); set('P', 25); eq(p.tried, '3', '25 按 24 算（篱笆是双数米）：不清空');
+  // onSet 的第 4 个参数是改以前的值；props 里已经是新值
+  const on = U.types.areabench.onSet;
+  eq(on({ shape: 3, P: 24, tried: '2' }, 'P', 24, 20), { tried: '' }, '第 4 个参数：改以前是 20');
+  eq(on({ shape: 3, P: 24, tried: '2' }, 'P', 24, 24), null, '改以前也是 24：不清空');
+});
+t('分一分“每份几个”的图：先猜时商和余数都要猜，两个都点了才揭开；两个都对才算猜对', () => {
+  const s = U.problemById('gr-div-5').build(), id = Object.keys(s.entities)[0], e = s.entities[id];
+  const set = (k, v) => { const r = W.act(s, { t: 'set', id, k, v }); truthy(r.ok, k + '：' + r.why); };
+  const svg = () => U.types.groupbench.draw({ ent: e, props: e.props, w: 700, h: 900, t: 0, n: 0, kids: () => [] });
+  const press = (tip) => { const m = [...svg().matchAll(/<g data-pick-set="([^"]+)"[^>]*><title>([^<]*)<\/title>/g)].find((x) => x[2] === tip); truthy(m, '点不到：' + tip); const o = JSON.parse(decodeURIComponent(m[1])); for (const k of Object.keys(o)) set(k, o[k]); };
+  const M = () => U.GroupBench.model(e.props), out = (k) => { const v = W.evaluate(s)[id].out[k]; return v ? Q.show(v.data) : null; };
+  set('rec', '12,5;13,5;14,5'); set('n', 15);
+  truthy(M().hidden && /猜商 3/.test(svg()) && /猜余数 0/.test(svg()), '15：藏起来，商和余数都有格子可猜');
+  press('猜商 3'); truthy(M().hidden && /商猜了 3，再猜余数/.test(svg()), '只猜了商：还藏着，提示再猜余数');
+  press('猜余数 0'); truthy(!M().hidden && /都猜对了/.test(svg()), '两个都猜了：揭开，都猜对了');
+  press('把这个总数记到图上'); eq([out('gtry'), out('gok'), e.props.gq, e.props.guess], ['1', '1', -1, -1], '记下来：猜了 1 次、对 1 次，猜的清掉');
+  press('总数多 1'); press('猜余数 1'); truthy(M().hidden, '16 只猜余数：还藏着');
+  press('猜商 2'); truthy(/余数对了，商其实是 3/.test(svg()), '商猜错：说出商其实是 3');
+  press('把这个总数记到图上'); eq([out('gtry'), out('gok')], ['2', '1'], '一个错就不算猜对');
+  press('总数多 1'); press('猜商 3'); set('n', 18); eq(e.props.gq, 3, 'set n 本身不清（按钮会清）');
+  press('总数少 1'); eq([e.props.gq, e.props.guess], [-1, -1], '按钮改总数：两个猜的都清掉');
+});
+t('凑成 8（gal-gs-pair）：要真的两两配对才算；直接把算式写成 8 + 8 + 8 + 4、一路从左加都不算', () => {
+  const P = U.problemById('gal-gs-pair'), ms = P.milestones.find((x) => x.id === 'eights');
+  const open = () => { const s = P.build(), id = Object.keys(s.entities)[0]; return [s, id]; };
+  const draw = (s, id) => { const e = s.entities[id]; return U.types.termsbench.draw({ ent: e, props: e.props, w: 700, h: 900, t: 0, n: 0, kids: () => [] }); };
+  // 点第 k 个运算符（按画出来的顺序）
+  const op = (s, id, k) => { const m = [...draw(s, id).matchAll(/<g data-pick-set="([^"]+)"[^>]*><title>点一下：先算这一步<\/title>/g)][k]; const o = JSON.parse(decodeURIComponent(m[1])); for (const key of Object.keys(o)) { const r = W.act(s, { t: 'set', id, k: key, v: o[key] }); truthy(r.ok, r.why); } };
+  const outs = (s, id) => { const o = W.evaluate(s)[id].out; return ['pairs', 'pairsum', 'alone'].map((k) => (o[k] ? Q.show(o[k].data) : null)); };
+  let [s, id] = open();
+  eq(outs(s, id), ['0', null, '7'], '开头：7 个数都落单');
+  op(s, id, 0); op(s, id, 1); op(s, id, 2);
+  eq(s.entities[id].props.toks, '8,+,8,+,8,+,4'); eq(outs(s, id), ['3', '8', '1'], '1 和 7、2 和 6、3 和 5：三对，都是 8，4 落单');
+  eq(s.entities[id].props.grp, '0.1|2.3|4.5|6');
+  op(s, id, 0); eq(outs(s, id), ['1', '8', '1'], '再把前两个 8 加起来：这 4 个数成了一组，只剩一对');
+  [s, id] = open(); W.act(s, { t: 'set', id, k: 'toks', v: '8,+,8,+,8,+,4' });
+  eq(outs(s, id), ['0', null, '4'], '直接把算式写成 8 + 8 + 8 + 4：没有配对');
+  [s, id] = open(); op(s, id, 0); W.act(s, { t: 'set', id, k: 'toks', v: '8,+,8,+,8,+,4' });
+  eq(outs(s, id), [null, null, null], '点过一步再改算式：来历对不上，不算');
+  [s, id] = open(); op(s, id, 1); eq(s.entities[id].props.toks, '1,+,9,+,6,+,3,+,5,+,4'); eq(outs(s, id), ['1', '9', '5'], '7 和 2 配：一对，是 9 不是 8');
+  // 里程碑条件：三对、都是 8、落单 1 个
+  eq(JSON.stringify(ms.when).match(/pairsum|pairs|alone/g).sort(), ['alone', 'pairs', 'pairsum']);
 });
 console.log('通用记录仪（js/core/recorder.js）');
 {
@@ -3542,6 +3591,36 @@ console.log('通用记录仪（js/core/recorder.js）');
     eq(out(s, id, 'area'), null, '面积这个口先不给');
     const e = s.entities[id]; eq(U.types.areabench.grips({ ent: e, props: e.props }).length, 1, '拖长的把手还在');
     set(s, id, 'P', 24); eq(out(s, id, 'pts'), '0', '篱笆改成 24 米：另一组'); set(s, id, 'P', 20); eq(out(s, id, 'pts'), '3', '改回 20 米：3 个点还在');
+  });
+  t('通用记录仪：range 的一头可以是式子（只用 keep 里的属性）：篱笆 24 米时横轴是 1 到 11，28 米是 1 到 13', () => {
+    const [s, id] = open('gr-fence-20'), st = () => R.state('areabench', s.entities[id].props, true);
+    eq([st().lo, st().hi], [1, 9], '20 米：1 到 9');
+    set(s, id, 'P', 24); eq([st().lo, st().hi], [1, 11], '24 米：1 到 11'); eq(st().ys[11], 11, '长 11、宽 1：面积 11');
+    set(s, id, 'w', 11); truthy(st().inRange, '长 11 能记'); press(s, id, '把这个长记到图上'); eq(out(s, id, 'pts'), '1');
+    set(s, id, 'P', 28); eq([st().lo, st().hi], [1, 13], '28 米：1 到 13');
+    set(s, id, 'P', 8); eq([st().lo, st().hi], [1, 3], '8 米：1 到 3');
+    // 画出来的横轴刻度跟着走：24 米时有 11，没有 12
+    set(s, id, 'P', 24); const svg = drawOf(s, id); truthy(/>11<\/text>/.test(svg) && !/>12<\/text>/.test(svg.split('📈')[1] || ''), '横轴画到 11');
+    eq(R.check('areabench', { knob: 'w', out: 'area', keep: ['P'], range: [1, 'P / 2 - 1'] }), [], '式子合法');
+    truthy(/只能用 keep/.test(R.check('areabench', { knob: 'w', out: 'area', range: [1, 'P / 2 - 1'] }).join()), '式子用了 keep 以外的属性');
+    truthy(/看不懂/.test(R.check('areabench', { knob: 'w', out: 'area', keep: ['P'], range: [1, 'P / / 2'] }).join()), '看不懂的式子');
+    truthy(/超出/.test(R.check('areabench', { knob: 'w', out: 'area', keep: ['P'], range: [0, 'P'] }).join()), '整数那头仍要在旋钮范围里');
+  });
+  t('通用记录仪：line 开了，全部试一遍以后这一组的点按顺序连成线；没全部试、没开 line（星期的锯齿）都不连', () => {
+    const [s, id] = open('gr-fence-20');
+    set(s, id, 'rclog', '1,9,20;2,16,20;3,21,20;4,24,20;5,25,20;2,20,24'); set(s, id, 'w', 6); set(s, id, 'rcpeek', true);
+    truthy(!/data-rec-line/.test(drawOf(s, id)), '还没全部试一遍：不连');
+    press(s, id, '每个长都画上');
+    const m = /<path data-rec-line="1" d="([^"]+)"/.exec(drawOf(s, id));
+    truthy(m, '全部试一遍：连成线');
+    eq((m[1].match(/[ML]/g) || []).join(''), 'MLLLLLLLL', '长 1 到 9：一笔 9 个点');
+    set(s, id, 'P', 24); const m2 = /<path data-rec-line="1" d="([^"]+)"/.exec(drawOf(s, id));
+    eq((m2[1].match(/[ML]/g) || []).length, 11, '换成 24 米：只连这一组（长 1 到 11）');
+    for (const pid of ['gr-gauss-n', 'gr-circle-c', 'gr-travel-gap']) truthy(JSON.parse(U.problemById(pid).build().entities[Object.keys(U.problemById(pid).build().entities)[0]].props.rcfg).line === true, pid + ' 开了 line');
+    const [s2, id2] = open('gr-week-n');
+    truthy(!JSON.parse(s2.entities[id2].props.rcfg).line, '星期（锯齿）不开 line');
+    set(s2, id2, 'rcall', true); truthy(!/data-rec-line/.test(drawOf(s2, id2)), '星期全部试一遍也不连');
+    truthy(/line/.test(R.check('gaussbench', { knob: 'n', out: 'total', range: [2, 12], line: 1 }).join()), 'line 要是 true / false');
   });
 }
 console.log('操作台模式（U.benchOf / U.benchModeOf）');
