@@ -90,7 +90,8 @@ const path = require('path');
   // 质因数积木已经退役（不上器材架），它的 5 道题都搬到了因数操作台（problems/zz-benches.js）：没有题可开，在自由探究里放一台做一遍
   console.log('质因数积木（自由探究）：点积木拿掉、积木盒添一块、加一摞 b、先猜因数个数');
   await closeDlg(); await p.evaluate(() => { UI.App.openFree(); UI.App.act({ t: 'clear' }); UI.App.act({ t: 'add', type: 'primeblocks', x: 40, y: 40, props: { a: 12 } }); for (const k of Object.keys(UI.S.help || {})) UI.S.help[k] = false; UI.Stage.render(); });
-  await p.waitForTimeout(200); H.ok(await noChip(), '标题栏没有“✎ 填写”');
+  // 上一道题“做完了！”的对话框 700 毫秒后才弹出来，会盖住下面直接点积木的那几下：等它弹出来再关掉
+  await p.waitForTimeout(900); await closeDlg(); H.ok(await noChip(), '标题栏没有“✎ 填写”');
   const pbOut = (k) => p.evaluate((k) => { const e = Object.values(UI.S.scene.entities)[0], v = UI.S.D[e.id].out[k]; return v ? U.Q.num(v.data) : null; }, k);
   await cl('a', 36); H.ok((await props()).a === 36 && (await pbOut('blocks')) === 4, '“a 添一块”点 3：12 → 36，4 块积木');
   await p.locator('.card svg.bdy [data-blk="a"][data-pick-v="12"]').first().click(); await p.waitForTimeout(80);
