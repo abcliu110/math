@@ -37,7 +37,8 @@ const prop = (p, id, k) => p.evaluate(([id, k]) => UI.S.scene.entities[id].props
   ok(ev.right === false && ev.gap === 1, '记了 guess 事件：差 1，不扣分');
   await click(fm, 'hyp', 4); t = await body(p, fm); ok(t.includes('可你试过'), '点“+ 5”：和试过的对不上，指出来');
   const f2 = await add('fmachine', 820, 20, { view: 1, story: 0, k: 1, b: 0, y0: 0, y1: 1 });
-  await click(f2, 'k', 2); await click(f2, 'b', 1); t = await body(p, f2);
+  const fmTap = async (id, tag) => { await p.locator('.card[data-id="' + id + '"] [data-fm="' + tag + '"]').first().click(); await p.waitForTimeout(120); };   // 四联动的 − / + 是卡片上的按钮（2026-11-26）
+  await fmTap(f2, 'kp'); await fmTap(f2, 'bp'); t = await body(p, f2);
   ok((await prop(p, f2, 'y1')) === 3 && (await prop(p, f2, 'y0')) === 1 && t.includes('y = 2x + 1'), '四联动：点 k、b → 式子、表格跟着变');
   await set(f2, 'y1', 9); ok((await prop(p, f2, 'k')) === 8 && (await prop(p, f2, 'b')) === 1, '改表格 x = 1 的值：k 跟着变');
   ok(errs.length === 0, '没有页面错误：' + errs.slice(0, 2).join('|'));

@@ -127,7 +127,7 @@
     return { o, T, tk, commFound, assocFound, right, nr, all: nr === 4 ? 1 : 0, allBacked: nr === 4 && backed ? 1 : 0, truth };
   }
   const nOnSet = (p, k, v) => {
-    if (k === 'op') return { tried: '', qc: 0, qa: 0, qi: 0, qv: 0, msg: '' };
+    if (k === 'op') return { tried: '', abc: '', qc: 0, qa: 0, qi: 0, qv: 0, msg: '' };
     if (k === 'ex') {
       const o = OPS[p.op], t = String(v).replace(/[，\s]+/g, ',').split(',').filter((x) => x !== '').map(Number); if (!t.length) return { ex: '' };
       if ((t.length !== 2 && t.length !== 3) || t.some((x) => !o.els.includes(x))) return { ex: '', msg: '写两个数（检查交换律）或三个数（检查结合律），要在表里：' + o.els.join('、') };
@@ -139,30 +139,51 @@
     }
     return null;
   };
+  // 卡片上造例子（2026-11-26，不用属性面板）：点表里一格 = 试 a,b（交换律，对角线对面那格一起框出来）；
+  //   下面一排数点三个 = 试 a,b,c（结合律）。点的结果仍写进属性“例子”，判分不变。
+  const nset = (o, tag) => ' data-pick-set="' + encodeURIComponent(JSON.stringify(o)) + '"' + (tag ? ' data-nw="' + tag + '"' : '') + ' style="cursor:pointer"';
+  const nhit = (x, y, w, h, o, tag) => '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="3" fill="transparent"' + nset(o, tag) + '/>';
   function nDraw(c) {
     const p = c.props, J = nJudge(p), o = J.o, W = c.w, H = []; let s = '', cw = 26, x0 = 14, y0 = 28;
     s += K.text(10, 16, o.name + '：a ' + o.sym + ' b', { size: 12, anchor: 'start', weight: 700 });
+    const tried2 = {}; J.tk.forEach((t) => { if (t.length === 2) { const same = o.f(t[0], t[1]) === o.f(t[1], t[0]); tried2[t[0] + ',' + t[1]] = same; tried2[t[1] + ',' + t[0]] = same; } });
     s += K.rect(x0, y0, cw, cw, { fill: 'var(--sel-bg)', r: 0 }) + K.text(x0 + cw / 2, y0 + cw * 0.68, o.sym, { size: 11, weight: 700 });
-    o.els.forEach((a, i) => { s += K.rect(x0 + (i + 1) * cw, y0, cw, cw, { fill: 'var(--sel-bg)', r: 0 }) + K.text(x0 + (i + 1) * cw + cw / 2, y0 + cw * 0.68, String(a), { size: 11, weight: 700 }) + K.rect(x0, y0 + (i + 1) * cw, cw, cw, { fill: 'var(--sel-bg)', r: 0 }) + K.text(x0 + cw / 2, y0 + (i + 1) * cw + cw * 0.68, String(a), { size: 11, weight: 700 }); o.els.forEach((b, j) => { s += K.rect(x0 + (j + 1) * cw, y0 + (i + 1) * cw, cw, cw, { fill: 'var(--card)', stroke: 'var(--dim)', w: 0.6, r: 0 }) + K.text(x0 + (j + 1) * cw + cw / 2, y0 + (i + 1) * cw + cw * 0.68, String(o.f(a, b)), { size: 11 }); }); });
+    o.els.forEach((a, i) => {
+      s += K.rect(x0 + (i + 1) * cw, y0, cw, cw, { fill: 'var(--sel-bg)', r: 0 }) + K.text(x0 + (i + 1) * cw + cw / 2, y0 + cw * 0.68, String(a), { size: 11, weight: 700 }) + K.rect(x0, y0 + (i + 1) * cw, cw, cw, { fill: 'var(--sel-bg)', r: 0 }) + K.text(x0 + cw / 2, y0 + (i + 1) * cw + cw * 0.68, String(a), { size: 11, weight: 700 });
+      o.els.forEach((b, j) => {
+        const x = x0 + (j + 1) * cw, y = y0 + (i + 1) * cw, st = tried2[a + ',' + b];
+        s += K.rect(x, y, cw, cw, { fill: st === undefined ? 'var(--card)' : st ? '#e3f4e8' : '#fbe4e4', stroke: st === undefined ? 'var(--dim)' : st ? 'var(--good)' : 'var(--bad)', w: st === undefined ? 0.6 : 2, r: 0 }) + K.text(x + cw / 2, y + cw * 0.68, String(o.f(a, b)), { size: 11, weight: st === undefined ? 400 : 700 });
+        if (a !== b && st === undefined) H.push(nhit(x, y, cw, cw, { ex: a + ',' + b }, 'c' + a + '-' + b));
+      });
+    });
     const x1 = x0 + (o.els.length + 1) * cw + 20; s += K.text(x1, 40, '回答（点一下）：', { size: 11, anchor: 'start', weight: 700 });
     [['qc', '交换律成立吗'], ['qa', '结合律成立吗'], ['qi', '有“什么都不改变”的数吗'], ['qv', '每个数都有“抵消它”的数吗']].forEach(([k, lab], i) => {
       const y = 50 + i * 36, v = p[k]; s += K.text(x1, y + 4, lab, { size: 10.5, anchor: 'start' });
       [[1, '是'], [2, '否']].forEach(([val, tx], j) => { const x = x1 + j * 40, on = v === val; s += btn(x, y + 9, 36, 18, tx, on) + (c.masked ? '' : on ? K.text(x + 18, y + 38, J.right[i] === 1 ? '✓' : '✗', { size: 9, fill: J.right[i] === 1 ? 'var(--good)' : 'var(--bad)' }) : ''); H.push(hit(k, on ? 0 : val, x, y + 9, 36, 18)); });
     });
-    const y = y0 + (o.els.length + 1) * cw + 20; s += K.text(10, y, '造例子检验：在右边“例子”写 a,b（交换律）或 a,b,c（结合律）', { size: 10.5, anchor: 'start', fill: 'var(--dim)' });
-    if (p.msg) s += K.text(10, y + 18, p.msg.slice(0, 40), { size: 11, anchor: 'start', weight: 700, fill: p.msg.includes('反例') ? 'var(--bad)' : 'var(--ink)' });
-    s += K.text(10, y + 38, '试了 ' + J.tk.length + ' 个例子，找到反例 ' + (J.commFound + J.assocFound) + ' 个' + (J.all ? '　四条都答对了' : ''), { size: 11.5, anchor: 'start', weight: 700, fill: J.all ? 'var(--good)' : 'var(--ink)' });
+    let y = y0 + (o.els.length + 1) * cw + 18;
+    s += K.text(10, y, '交换律：点表里一格 a ' + o.sym + ' b，它和对角线对面那格 b ' + o.sym + ' a 一起框出来', { size: 10.5, anchor: 'start', fill: 'var(--dim)' });
+    // 结合律：点三个数
+    const abc = String(p.abc || '').split(',').filter((x) => x !== '').map(Number), nm = ['a', 'b', 'c'], slot = (i) => (abc[i] === undefined ? nm[i] : String(abc[i]));
+    const sy = o.sym; y += 18; s += K.text(10, y, '结合律：点三个数，看 (a' + sy + 'b)' + sy + 'c 和 a' + sy + '(b' + sy + 'c) 一样吗', { size: 10.5, anchor: 'start', fill: 'var(--dim)' });
+    o.els.forEach((a, i) => { const x = 10 + i * 30; s += btn(x, y + 6, 26, 20, String(a), false); H.push(nhit(x, y + 6, 26, 20, abc.length >= 2 ? { abc: '', ex: abc.concat([a]).join(',') } : { abc: abc.concat([a]).join(',') }, 't' + a)); });
+    const xs = 10 + o.els.length * 30 + 10;
+    s += K.text(xs, y + 21, '(' + slot(0) + ' ' + sy + ' ' + slot(1) + ') ' + sy + ' ' + slot(2), { size: 13, weight: 700, anchor: 'start', fill: abc.length ? 'var(--accent)' : 'var(--dim)' });
+    if (abc.length) { s += btn(W - 52, y + 6, 42, 20, '清空', false); H.push(nhit(W - 52, y + 6, 42, 20, { abc: '' }, 'clr')); }
+    y += 40;
+    if (p.msg) s += K.text(10, y, p.msg.slice(0, 40), { size: 11, anchor: 'start', weight: 700, fill: p.msg.includes('反例') ? 'var(--bad)' : 'var(--ink)' });
+    s += K.text(10, y + 20, '试了 ' + J.tk.length + ' 个例子，找到反例 ' + (J.commFound + J.assocFound) + ' 个' + (J.all ? '　四条都答对了' : ''), { size: 11.5, anchor: 'start', weight: 700, fill: J.all ? 'var(--good)' : 'var(--ink)' });
     return s + H.join('');
   }
   const newopDef = {
     explore: true,   // 探究和游戏：器材架上放在最后的“拓展”组
     workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E9', 'E5'], label: '换一种运算', prefix: '算', group: '数与运算', grades: [4, 9], alias: ['换一种运算', '交换律', '结合律', '单位元', '运算表', '改规则', '反例'],
-    props: { op: { type: 'choice', label: '哪种运算', default: 0, choices: OPS.map((o) => o.name) }, qc: { hidden: true, type: 'int', label: '交换律（1 成立 2 不成立）', default: 0, min: 0, max: 2 }, qa: { hidden: true, type: 'int', label: '结合律（1 成立 2 不成立）', default: 0, min: 0, max: 2 }, qi: { hidden: true, type: 'int', label: '有单位元（1 有 2 没有）', default: 0, min: 0, max: 2 }, qv: { hidden: true, type: 'int', label: '每个数有逆元（1 是 2 否）', default: 0, min: 0, max: 2 }, ex: { type: 'text', label: '例子（a,b 或 a,b,c）', default: '' }, tried: { hidden: true, type: 'text', label: '试过的例子', default: '', write: false }, msg: { hidden: true, type: 'text', label: '提示', default: '', write: false } },
+    props: { op: { hidden: true, type: 'choice', label: '哪种运算', default: 0, choices: OPS.map((o) => o.name) }, qc: { hidden: true, type: 'int', label: '交换律（1 成立 2 不成立）', default: 0, min: 0, max: 2 }, qa: { hidden: true, type: 'int', label: '结合律（1 成立 2 不成立）', default: 0, min: 0, max: 2 }, qi: { hidden: true, type: 'int', label: '有单位元（1 有 2 没有）', default: 0, min: 0, max: 2 }, qv: { hidden: true, type: 'int', label: '每个数有逆元（1 是 2 否）', default: 0, min: 0, max: 2 }, ex: { hidden: true, type: 'text', label: '例子（a,b 或 a,b,c）', default: '' }, abc: { hidden: true, type: 'text', label: '结合律：已点的数', default: '' }, tried: { hidden: true, type: 'text', label: '试过的例子', default: '', write: false }, msg: { hidden: true, type: 'text', label: '提示', default: '', write: false } },
     onSet: nOnSet,
     guess: { props: ['qc', 'qa', 'qi', 'qv'], ports: ['correct', 'all', 'allBacked'], answered: (p) => p.qc > 0 && p.qa > 0 && p.qi > 0 && p.qv > 0 },
     outputs: { correct: { dim: null, kind: 'num', label: '答对了几条' }, all: { dim: null, kind: 'num', label: '四条都对（1/0）' }, allBacked: { dim: null, kind: 'num', label: '四条都对而且说“不成立”的有反例（1/0）' }, tried: { dim: null, kind: 'num', label: '试了几个例子' }, found: { dim: null, kind: 'num', label: '找到几个反例' }, lv: { dim: null, kind: 'num', label: '证据等级' } },
     icon: () => K.text(32, 40, '★', { size: 30, weight: 700, fill: 'var(--accent)' }),
-    size: (c) => [380, 130 + (OPS[c.props.op].els.length + 1) * 26 + 40],
+    size: (c) => [380, 130 + (OPS[c.props.op].els.length + 1) * 26 + 64],
     compute: (c) => { const J = nJudge(c.props); c.say(J.all ? 'ok' : 'info', J.all ? '四条都答对了' : '造例子试试'); return { correct: num(J.nr), all: num(J.all), allBacked: num(J.allBacked), tried: num(J.tk.length), found: num(J.commFound + J.assocFound), lv: num(J.all ? 3 : 0) }; },
     badge: (c) => (c.masked ? '？' : c.out.correct ? c.out.correct.data.n + ' / 4' : ''),
     draw: nDraw,
