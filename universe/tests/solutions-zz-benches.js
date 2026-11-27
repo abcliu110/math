@@ -168,8 +168,8 @@ module.exports = {
   'g1-chain-add-core': t({ toks: '9' }), 'g1-chain-sub-trap': t({ toks: '4' }), 'g2-mixed-core': t({ toks: '14' }), 'g2-mixed-brackets-trap': t({ toks: '20' }),
   'g4-order-mul-core': t({ toks: '23' }), 'g4-order-left-trap': t({ toks: '10' }), 'g4-assoc-mul-core': t({ toks: '800' }), 'g4-assoc-sub-trap': t({ toks: '7' }),
   // 第三批
-  'g2-kg-to-g-core': r({ t: 2 }), 'g2-kg-trap': r({ t: 3 }), 'g2-hour-100-trap': r({ t: 3 }), 'g3-time-hour-minute-core': r({ t: 2 }),
-  'g3-measure-m-to-cm-core': r({ t: 3 }), 'g4-area-km2-core': r({ t: 3 }), 'g4-area-ha-trap': r({ t: 2 }), 'g4-bar-scale-trap': r({ t: 9 }),
+  'g2-kg-to-g-core': r({ t: 2 }), 'g2-kg-trap': r({ t: 3 }), 'g2-hour-100-trap': ck({ t: 180 }), 'g3-time-hour-minute-core'(h) { const e = h.role('k'); h.set(e, 't', 60); h.set(e, 't', 120); },
+  'g3-measure-m-to-cm-core': srl({ cut: 300 }), 'g4-area-km2-core': r({ t: 3 }), 'g4-area-ha-trap': r({ t: 2 }), 'g4-bar-scale-trap': r({ t: 9 }),
   'pour-conserve'(h) { h.set(h.role('pb'), 'hist', 'AB'); }, 'pour-two-cups'(h) { h.set(h.role('pb'), 'hist', 'fA,AB,eB,AB,fA,AB'); },
   'balance-12'(h) { h.set(h.role('b'), 'rc', 12); }, 'place-sub'(h) { const v = h.role('v'); h.set(v, 'marks', '1'); h.set(v, 'res', '52'); },
   'arith-carry-47-38': vv({ marks: '1', res: '58' }), 'arith-round-47-38': k({ t: 8, o: 5 }), 'arith-mul-23-14': mbs({ vals: '80,12,200,30,92,230,322' }), 'arith-sub-negative': fz({ pos: 0, neg: 14, step: 1 }),

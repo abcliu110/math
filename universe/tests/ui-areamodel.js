@@ -3,7 +3,9 @@
  *  2. 一次拖动是一步：撤销一次回到没切；拖已有的刀可以挪，拖到边上就去掉；
  *  3. 拖右边的把手改长：面积跟着变，把手跟着鼠标（落点就是鼠标所在的格线）；
  *  4. 分数乘法：点 ＋ 改分母，拖把手改分子，得到 1/6；
- *  5. 代数式：拖两条边到 x+3、x+4，得到 x² + 7x + 12。
+ *  5. 代数式：拖两条边到 x+3、x+4，得到 x² + 7x + 12；
+ *  7. 更大的长方形：拖到 26 × 16，卡片跟着变大，把手还跟着鼠标；
+ *  8. 小数乘法：拖宽到 1.4，点“拆成整数和小数”，2.3 × 1.4 = 2 + 0.3 + 0.8 + 0.12 = 3.22；撤销一次合回去。
  * 需要 playwright（NODE_PATH 指向它的 node_modules）。 */
 'use strict';
 const { chromium } = require('playwright');
@@ -90,6 +92,31 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   ok(await p.locator('.card .port.out').count() >= 5, '自由探究里：输出口照常画（那里要接线）');
   const grp = await p.evaluate(() => { const g = [...document.querySelectorAll('#shelfbody .grp')].find((x) => x.textContent.includes('操作台')); return g ? [...g.nextElementSibling.querySelectorAll('.tile')].map((t) => t.dataset.type) : []; });
   ok(grp.length >= 6 && grp.includes('areamodel') && grp.includes('balancebench') && grp.includes('numlinebench'), '器材架有“操作台”一组：' + grp.length + ' 个');
+
+  console.log('7. 更大的长方形：拖到 26 × 16，卡片跟着变大，把手还跟着鼠标');
+  await open('am-13x7');
+  c = await px(17); g = await grip('w');
+  await dragTo(g, { x: g.x + 13 * c, y: g.y });
+  const gw = await grip('w');
+  ok((await props()).w === 26 && Math.abs(gw.x - (g.x + 13 * c)) < 3, '右边往右拖 13 格：长 26，把手停在鼠标松开的地方（差 ' + Math.abs(gw.x - (g.x + 13 * c)).toFixed(1) + ' 像素）');
+  g = await grip('h'); await dragTo(g, { x: g.x, y: g.y + 9 * c });
+  ok((await props()).h === 16 && await out('area') === '416', '下边往下拖 9 格：宽 16，面积 416');
+  ok(await p.evaluate(() => { const sv = document.querySelector('.card svg.bdy'); return +sv.getAttribute('width') >= 46 + 26 * 17 + 40 && +sv.getAttribute('height') >= 44 + 16 * 17 + 34 + 40; }), '卡片变大了，长方形和算式都画得下');
+
+  console.log('8. 小数乘法：2.3 × 1.4 拆成整数和小数');
+  await open('am-dec-23x14');
+  c = await px(10); g = await grip('db');
+  await dragTo(g, { x: g.x, y: g.y + 4 * c });
+  ok((await props()).db === 14 && await out('cells') === '322', '下边往下拖 4 个细格：宽 1.4，一共 322 个小格');
+  ok(await p.evaluate(() => document.querySelector('.card svg.bdy').textContent.includes('2.3 × 1.4 = 3.22')), '算式写着 2.3 × 1.4 = 3.22');
+  await p.evaluate(() => { if (UI.Panels.closeDialog) UI.Panels.closeDialog(); });
+  await p.locator('.card svg.bdy [data-dsplit="0"]').click(); await p.waitForTimeout(200);
+  ok((await props()).split === true && await out('parts') === '4', '点“✂ 拆成整数和小数”：切成 4 块');
+  ok(await p.evaluate(() => document.querySelector('.card svg.bdy').textContent.includes('= 2 + 0.3 + 0.8 + 0.12 = 3.22')), '算式写出 2 + 0.3 + 0.8 + 0.12 = 3.22');
+  ok(await done('size') && await done('four'), '两个里程碑都完成了');
+  await p.keyboard.press('Control+z'); await p.waitForTimeout(200);
+  ok((await props()).split === false, '撤销一次：合回去');
+  ok(await p.evaluate(() => !UI.S.inspOpen), '全程没有打开属性面板');
   ok(errs.length === 0, '控制台 0 报错' + (errs.length ? '：' + errs[0] : ''));
   console.log('\n面积模型测试：' + pass + ' 通过，' + fail + ' 失败');
   await b.close(); process.exit(fail ? 1 : 0);
