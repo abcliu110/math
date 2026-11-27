@@ -79,7 +79,7 @@
   H.ok(/找出来/.test(fq.title) && fq.n === fq.sols.length, '题目说“把所有的都找出来”，一种做法一个里程碑：' + fq.title);
   await p.evaluate(() => { UI.S.tab = 'steps'; UI.Panels.renderLeft(); });
   const steps0 = await p.evaluate(() => [...document.querySelectorAll('#left .step .sy')].map((x) => x.textContent));
-  H.ok(steps0.length === fq.sols.length && steps0.every((x, i) => x.startsWith('第 ' + (i + 1) + ' 种：？')), '步骤栏没做到之前不露答案：' + steps0.slice(0, 2).join(' / '));
+  H.ok(steps0.length === fq.sols.length && steps0.every((x, i) => x.replace(/^[^\p{L}]+/u, '').startsWith('第 ' + (i + 1) + ' 种：？')), '步骤栏没做到之前不露答案：' + steps0.slice(0, 2).join(' / '));
   for (let i = 0; i < fq.sols.length; i++) {
     await setWH(fq.sols[i].w, fq.sols[i].h);
     const pr = await amProps(), got = await p.evaluate(() => Object.values(UI.S.run.ms).filter((x) => x.done).length);
