@@ -3,6 +3,7 @@
  *   先猜某个事件的概率，再点出属于这个事件的路径，把它们的概率加起来；所有路径加起来必须是 1（不是 1 系统标红）。
  *   面积模型（放回 / 独立时）：单位正方形，横边按第一步分、竖边按第二步分，每个小长方形的面积是一条路径的概率。
  *   事件由出题人设；路径全部列出就是穷举（③）。
+ *   全部在卡片上操作（2026-11-26）：先猜是一排候选概率（点一个），“看树 / 面积 / 都要”是分段按钮，试验在标题栏的“换一种”里换。
  * 和设计文档的差别（如实写）：试验是固定的 3 个（不能自己画树）；没有接“真做 400 次”的实验对照；不放回时面积模型画不成长方形，只给树。 */
 (function (G) {
   'use strict';
@@ -32,6 +33,8 @@
     if (k === 'tg') { if (!(v > 0)) return { tg: 0 }; const i = v - 1, S = sel(p), at = S.indexOf(i); if (at >= 0) S.splice(at, 1); else S.push(i); S.sort((x, y) => x - y); return { tg: 0, sel: S.join(',') }; }
     return null;
   }
+  const GUESS = ['0', '1/9', '2/9', '1/4', '1/3', '4/9', '1/2', '5/9', '2/3', '3/4', '7/9', '8/9', '1'];
+  const pick = (x, y, w, h, o, tag) => '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="4" fill="transparent" data-pick-set="' + encodeURIComponent(JSON.stringify(o)) + '" data-pt="' + tag + '" style="cursor:pointer"/>';
   function draw(c) {
     const p = c.props, J = judge(p), W = c.w, H = []; let s = '';
     s += K.text(10, 16, J.E.name + '　事件：' + J.ev[0], { size: 12, anchor: 'start', weight: 700 });
@@ -56,7 +59,14 @@
       s += K.text(bx + S / 2, by + S + 14, '面积 = 概率', { size: 10.5, fill: 'var(--dim)' });
     }
     s += K.text(10, y, '所有路径加起来 = ' + Q.show(J.tot) + (Q.cmp(J.tot, Q(1)) === 0 ? ' ✓' : '　✗ 不是 1，哪里错了？'), { size: 11.5, anchor: 'start', weight: 700, fill: Q.cmp(J.tot, Q(1)) === 0 ? 'var(--good)' : 'var(--bad)' }); y += 18;
-    s += K.text(10, y, c.masked ? '先猜：“' + J.ev[0] + '”的概率是多少？（填“我猜概率”）' : '点出属于事件的路径：选中 ' + J.S.length + ' 条，概率 = ' + Q.show(J.pr) + (J.eventOk ? '　✓ 选对了' : ''), { size: 11.5, anchor: 'start', weight: 700, fill: J.eventOk && !c.masked ? 'var(--good)' : 'var(--ink)' });
+    s += K.text(10, y, c.masked ? '先猜：“' + J.ev[0] + '”的概率是多少？在下面一排里点一个' : '点出属于事件的路径：选中 ' + J.S.length + ' 条，概率 = ' + Q.show(J.pr) + (J.eventOk ? '　✓ 选对了' : ''), { size: 11.5, anchor: 'start', weight: 700, fill: J.eventOk && !c.masked ? 'var(--good)' : 'var(--ink)' });
+    // 先猜：一排候选概率，点一个（2026-11-26，不用属性面板）
+    y += 10; const g = String(p.gans || '').trim(), cwd = Math.floor((W - 56) / GUESS.length);
+    s += K.text(10, y + 15, '我猜', { size: 11, anchor: 'start', weight: 700, fill: c.masked ? 'var(--accent)' : 'var(--dim)' });
+    GUESS.forEach((t, i) => { const x = 46 + i * cwd, on = t === g; s += K.rect(x, y, cwd - 2, 22, { fill: on ? 'var(--accent)' : c.masked ? '#fff' : 'var(--sel-bg)', stroke: c.masked ? 'var(--accent)' : 'none', w: 1, r: 5 }) + K.text(x + cwd / 2 - 1, y + 15, t, { size: 10, weight: 700, fill: on ? '#fff' : 'var(--ink)' }); H.push(pick(x, y, cwd - 2, 22, { gans: t }, 'g' + i)); });
+    y += 30; s += K.text(10, y + 14, '看', { size: 11, anchor: 'start', fill: 'var(--dim)' });
+    ['树', '面积', '都要'].forEach((t, i) => { const x = 46 + i * 64, on = p.view === i; s += K.rect(x, y, 60, 20, { fill: on ? 'var(--accent)' : 'var(--sel-bg)', r: 10 }) + K.text(x + 30, y + 14, t, { size: 11, weight: 700, fill: on ? '#fff' : 'var(--ink)' }); H.push(pick(x, y, 60, 20, { view: i }, 'v' + i)); });
+    if (!c.masked && g) s += K.text(W - 10, y + 14, '你猜 ' + g + (J.guessed ? '：对了 ✓' : ''), { size: 11, anchor: 'end', weight: 700, fill: J.guessed ? 'var(--good)' : 'var(--dim)' });
     return s + H.join('');
   }
   U.registerPack({
@@ -66,14 +76,14 @@
         explore: true,   // 探究和游戏：器材架上放在最后的“拓展”组
         workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E11', 'E2', 'E1'], label: '树状图', prefix: '树', group: '统计与概率', grades: [5, 9], alias: ['树状图', '概率', '两步试验', '可能性', '放回', '不放回', '面积模型'],
         props: {
-          exp: { type: 'choice', label: '试验', default: 0, choices: EXPS.map((e) => e.name) }, ev: { type: 'int', label: '事件（第几个，出题人设）', default: 0, min: 0, max: 2 }, view: { type: 'choice', label: '看', default: 2, choices: ['树', '面积', '都要'] },
-          sel: { hidden: true, type: 'text', label: '选中的路径', default: '', write: false }, tg: { hidden: true, type: 'int', label: '点一条路径', default: 0, min: 0, max: 8 }, gans: { type: 'text', label: '我猜概率（如 1/2）', default: '' },
+          exp: { hidden: true, type: 'choice', label: '试验', default: 0, choices: EXPS.map((e) => e.name) }, ev: { hidden: true, type: 'int', label: '事件（第几个，出题人设）', default: 0, min: 0, max: 2 }, view: { hidden: true, type: 'choice', label: '看', default: 2, choices: ['树', '面积', '都要'] },
+          sel: { hidden: true, type: 'text', label: '选中的路径', default: '', write: false }, tg: { hidden: true, type: 'int', label: '点一条路径', default: 0, min: 0, max: 8 }, gans: { hidden: true, type: 'text', label: '我猜概率（如 1/2）', default: '' },
         },
         onSet,
         guess: { props: ['gans'], ports: ['p'], answered: (p) => ans(p.gans) !== null && String(p.gans).trim() !== '' },
         outputs: { p: { dim: null, kind: 'num', label: '选中的路径的概率' }, total: { dim: null, kind: 'num', label: '所有路径的概率之和（应为 1）' }, paths: { dim: null, kind: 'num', label: '路径数' }, eventOk: { dim: null, kind: 'num', label: '选对了事件的全部路径（1/0）' }, truth: { dim: null, kind: 'num', label: '事件的概率（答案）' }, guessed: { dim: null, kind: 'num', label: '先猜对了（1/0）' } },
         icon: () => K.line(10, 32, 32, 16, {}) + K.line(10, 32, 32, 48, {}) + K.line(32, 16, 54, 8, {}) + K.line(32, 16, 54, 24, {}) + K.line(32, 48, 54, 40, {}) + K.line(32, 48, 54, 56, {}),
-        size: (c) => [380, 40 + expOf(c.props).s1.length * 78 + 56],
+        size: (c) => [380, 40 + expOf(c.props).s1.length * 78 + 56 + 70],
         compute: (c) => { const J = judge(c.props); c.say(J.eventOk ? 'ok' : 'info', '总概率 ' + Q.show(J.tot)); return { p: num(J.pr), total: num(J.tot), paths: num(J.paths.length), eventOk: num(J.eventOk), truth: num(J.truthP), guessed: num(J.guessed) }; },
         badge: (c) => (c.masked ? '？' : c.out.p ? U.showVal(c.out.p) : ''),
         draw,

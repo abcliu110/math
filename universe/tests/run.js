@@ -2732,6 +2732,63 @@ t('猜规则台：互换，系统每次问能把候选分成两半的例子，�
   eq(Q.num(W.evaluate(sc)[e].out.sysSolved.data), 1); truthy(n <= 12, '半分法用不了几个例子：' + n);
 });
 
+console.log('全部在卡片上操作（函数机一组）');
+// 卡片上的按钮：从器材画出来的 SVG 里按标记找 data-pick-set，像界面一样按顺序一项一项设（一步）
+const cardPick = (sc, id, attr, tag) => {
+  const e = sc.entities[id], d = U.types[e.type], sz = d.size ? d.size({ props: e.props }) : [380, 300];
+  const svg = d.draw({ props: e.props, w: sz[0], h: sz[1], masked: !!(d.guess && !d.guess.answered(e.props)) });
+  const pos = svg.indexOf(' ' + attr + '="' + tag + '"'), st = svg.lastIndexOf('<', pos), m = pos < 0 ? null : /data-pick-set="([^"]+)"/.exec(svg.slice(st, pos));
+  if (!m) throw new Error('卡片上找不到按钮 ' + attr + '=' + tag);
+  const o = JSON.parse(decodeURIComponent(m[1])); for (const k of Object.keys(o)) { const r = W.act(sc, { t: 'set', id, k, v: o[k] }); if (r && r.ok === false) throw new Error('设 ' + k + ' 失败：' + r.why); }
+  return o;
+};
+const noFill = (type) => { const d = U.types[type]; return !Object.keys(d.props).some((k) => d.props[k].write && !d.props[k].hidden); };
+t('六台器材没有要在属性面板里填的属性（标题栏不再出现“✎ 填写”）', () => {
+  for (const n of ['fmachine', 'guessrule', 'asn', 'newop', 'twoways', 'ptree']) truthy(noFill(n), n + ' 还有没藏起来的可写属性');
+});
+t('函数机：点数字卡片喂数、− / + 调猜的数、点“看看”揭开并记进表', () => {
+  const sc = W.blank(), id = W.add(sc, 'fmachine', 0, 0, { secret: 0 }), p = () => sc.entities[id].props, out = (k) => Q.num(W.evaluate(sc)[id].out[k].data);
+  eq(cardPick(sc, id, 'data-fm', 'n4'), { ex: '4', gv: 4 }, '点 4：喂 4，猜的数从 4 起');
+  cardPick(sc, id, 'data-fm', 'p10'); cardPick(sc, id, 'data-fm', 'm1'); cardPick(sc, id, 'data-fm', 'm1'); eq(p().gv, 12, '4 + 10 − 1 − 1 = 12');
+  cardPick(sc, id, 'data-fm', 'look'); eq(p().tried, '4:12:12', '看看：4 进去 12 出来，猜对'); eq(p().ex, '', '入口清空');
+  let threw = false; try { cardPick(sc, id, 'data-fm', 'look'); } catch (x) { threw = true; } truthy(threw, '没喂数时“看看”点不动');
+  for (const x of [1, 2]) { cardPick(sc, id, 'data-fm', 'n' + x); for (let i = 0; i < 2 * x; i++) cardPick(sc, id, 'data-fm', 'p1'); cardPick(sc, id, 'data-fm', 'look'); }
+  eq(out('streak'), 3); W.act(sc, { t: 'set', id, k: 'hyp', v: 1 }); eq(out('solved'), 1, '连续猜对 3 次，点“× 3”通关');
+  const svg = U.types.fmachine.draw({ props: p(), w: 380, h: 340 }); truthy(svg.indexOf('>1<') < svg.indexOf('>2<') && svg.includes('2 → 6'), '喂过的数自动排成表、写出上一个');
+});
+t('函数机四联动：情境分段按钮、k / b 的 − +、表格两格的 − +、图上两个把手', () => {
+  const sc = W.blank(), id = W.add(sc, 'fmachine', 0, 0, { view: 1, story: 0, k: 1, b: 0, y0: 0, y1: 1 }), p = () => sc.entities[id].props;
+  cardPick(sc, id, 'data-fm', 'story2'); eq(p().story, 2);
+  cardPick(sc, id, 'data-fm', 'kp'); cardPick(sc, id, 'data-fm', 'bp'); eq([p().k, p().b, p().y0, p().y1], [2, 1, 1, 3], 'k、b 各加 1，表格跟着变');
+  cardPick(sc, id, 'data-fm', 'y1p'); eq([p().k, p().b], [3, 1], '表格 x = 1 那格加 1：k 变成 3');
+  const gs = U.types.fmachine.grips({ props: p(), w: 380, h: 330 }); eq(gs.map((g) => g.id), ['b', 'k1']);
+  const c0 = { props: p(), w: 380, h: 330 }, Y = (v) => gs[0].y + (1 - v) * (gs[0].y - gs[1].y) / (4 - 1);   // b 点在 y = 1，k1 点在 y = 4
+  eq(gs[0].drag(c0, { x: 0, y: Y(5) }), { b: 5, y0: 5, y1: 8 }, '把 x = 0 的点拖到 5：b = 5');
+  eq(gs[1].drag(c0, { x: 0, y: Y(7) }), { k: 6, y0: 1, y1: 7 }, '把 x = 1 的点拖到 7：k = 6');
+  eq(U.types.fmachine.grips({ props: Object.assign({}, p(), { view: 0 }), w: 380, h: 340 }), [], '机器那一面没有把手');
+});
+t('总是有时从不：例子都摆在卡片上，点一下就试；一对数排成方格表，太多时先点第 1 个再点第 2 个', () => {
+  const ci = (cid) => U.RuleLib.claims().findIndex((c) => c.id === cid);
+  let sc = W.blank(), id = W.add(sc, 'asn', 0, 0, { claim: ci('c.n2n41') });
+  cardPick(sc, id, 'data-asn', '40'); eq(sc.entities[id].props.tested, '40'); eq(Q.num(W.evaluate(sc)[id].out.counter.data), 1, '点 40：反例');
+  sc = W.blank(); id = W.add(sc, 'asn', 0, 0, { claim: ci('c.mul-bigger') }); cardPick(sc, id, 'data-asn', '3,0'); eq(sc.entities[id].props.tested, '3,0', '方格表里点 (3, 0)');
+  sc = W.blank(); id = W.add(sc, 'asn', 0, 0, { claim: ci('c.mul-gt1-bigger') }); cardPick(sc, id, 'data-asn', 'a:1/2'); eq(sc.entities[id].props.pa, '1/2');
+  cardPick(sc, id, 'data-asn', '1/2,3/2'); eq(sc.entities[id].props.tested, '1/2,3/2', '先点 1/2，再点 3/2');
+});
+t('换一种运算：点表里一格试交换律，点三个数试结合律', () => {
+  const sc = W.blank(), id = W.add(sc, 'newop', 0, 0, { op: 4 }), p = () => sc.entities[id].props;
+  cardPick(sc, id, 'data-nw', 'c1-2'); eq(p().tried, '1,2'); truthy(p().msg.includes('反例'));
+  cardPick(sc, id, 'data-nw', 't0'); cardPick(sc, id, 'data-nw', 't1'); eq(p().abc, '0,1'); cardPick(sc, id, 'data-nw', 't2');
+  eq([p().abc, p().tried], ['', '1,2;0,1,2'], '点满三个数就试一次结合律');
+  cardPick(sc, id, 'data-nw', 't3'); cardPick(sc, id, 'data-nw', 'clr'); eq(p().abc, '', '清空');
+});
+t('树状图：在卡片上点一个概率先猜，点“树 / 面积 / 都要”换看法', () => {
+  const sc = W.blank(), id = W.add(sc, 'ptree', 0, 0, { exp: 0, ev: 1 }), p = () => sc.entities[id].props;
+  truthy(U.types.ptree.draw({ props: p(), w: 380, h: 322, masked: true }).includes('在下面一排里点一个'), '没猜时提示在卡片上点');
+  cardPick(sc, id, 'data-pt', 'g6'); eq(p().gans, '1/2'); cardPick(sc, id, 'data-pt', 'v1'); eq(p().view, 1);
+  W.act(sc, { t: 'set', id, k: 'tg', v: 2 }); W.act(sc, { t: 'set', id, k: 'tg', v: 3 }); eq(Q.num(W.evaluate(sc)[id].out.guessed.data), 1);
+});
+
 console.log('对手与游戏');
 t('取石子：穷举的必胜判断和 n mod (k+1) 一致；最好的走法留下 (k+1) 的倍数；“取到最后的输”的表也对', () => {
   for (let k = 2; k <= 5; k++) { const tr = U.Games.nimTruth(30, k, false); for (let n = 0; n <= 30; n++) eq(tr[n], n % (k + 1) === 0 ? 'L' : 'W', 'k=' + k + ' n=' + n); }

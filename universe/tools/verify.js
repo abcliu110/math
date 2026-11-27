@@ -173,6 +173,7 @@ async function checkDist() {
   if (!runScript('tests/ui-s105.js', 'tests/ui-s105.js', pwEnv)) bail();            // §10.5.9 剩余项：复制粘贴（Ctrl+C/V）、镜像复制（M）、多选编组（Ctrl+G）、拖动幽灵对照（真实鼠标和键盘）
   if (!runScript('tests/ui-primeblocks.js', 'tests/ui-primeblocks.js', pwEnv)) bail();     // 质因数积木 + 找错台：积木、两摞对齐、先猜才揭开、先判断、点对错行、理由与改正
   if (!runScript('tests/ui-guessrule.js', 'tests/ui-guessrule.js', pwEnv)) bail();     // 猜规则台 + 总是有时从不：点格子、猜想、互换、写例子
+  if (!runScript('tests/ui-oncard-fm.js', 'tests/ui-oncard-fm.js', pwEnv)) bail();     // 全部在卡片上操作（函数机一组）：函数机、猜规则台、总是有时从不、换一种运算、两种解法对照、树状图，不开属性面板做完题
   if (!runScript('tests/ui-teaching.js', 'tests/ui-teaching.js', pwEnv)) bail();     // 教具：线段图、分数面积、代数砖、函数机
   if (!runScript('tests/ui-games.js', 'tests/ui-games.js', pwEnv)) bail();     // 游戏：取石子、汉诺塔、一笔画
   if (!runScript('tests/ui-lab.js', 'tests/ui-lab.js', pwEnv)) bail();     // 改规则的世界 + 逼近器、最优化：球面三角形、出租车几何、换一种运算（真实鼠标）

@@ -142,8 +142,8 @@
         essence: ['E9', 'E8'],
         label: '猜规则台', prefix: '规', group: '关系', grades: [1, 9], alias: ['猜规则', '找规律', '猜想', '算不算', '例子', '规则'],
         props: {
-          secret: { type: 'int', label: '规则编号（出题人设）', default: 0, min: 0, max: N - 1 },
-          mode: { type: 'choice', label: '谁来猜', default: 0, choices: ['我来猜', '我出题'] },
+          secret: { hidden: true, type: 'int', label: '规则编号（出题人设）', default: 0, min: 0, max: N - 1 },
+          mode: { hidden: true, type: 'choice', label: '谁来猜', default: 0, choices: ['我来猜', '我出题'] },
           tried: { hidden: true, type: 'text', label: '例子记录', default: '', write: false },
           ex: { hidden: true, type: 'int', label: '选中的例子', default: 0, min: 0, max: 60 },
           gs: { hidden: true, type: 'int', label: '我猜（1 算 2 不算）', default: 0, min: 0, max: 2 },
