@@ -118,7 +118,7 @@
           q1: { dim: null, kind: 'num', label: '追问选了第几个' },
         },
         icon: () => K.text(32, 22, '2x+3', { size: 13, weight: 700 }) + K.line(10, 28, 54, 28, { w: 1 }) + K.text(32, 44, '2x = 8', { size: 13, weight: 700, fill: 'var(--blue)' }),
-        size: (e) => { const p = (e && e.props) || {}, asks = p.ask ? RS().parseAsk(p.ask, '', false) : []; return [W, asks.length ? askY(p) + RS().asksH(asks) + 8 : askY(p) + 24]; },   // 按写了几行定高（最多 SHOW 行）：开场只有一行时不留大片空白；有追问时接在下面
+        size: (e) => { const p = (e && e.props) || {}, asks = p.ask ? RS().parseAsk(p.ask, '', false) : []; return [W, asks.length ? askY(p) + RS().asksH(asks) + 36 : askY(p) + 24]; },   // 按写了几行定高（最多 SHOW 行）：开场只有一行时不留大片空白；有追问时接在下面（+ 36：卡片标题栏 28 + 底下留 8）
         compute: (c) => {
           const s = st(c.props), ok = LQ().balanced(s), sol = LQ().solved(s), X = U.Poly.variable('x'), C = (n) => U.Poly.const(Q(n));
           const apart = ok && ((s.b === 0 && s.c === 0 && s.a > 0) || (s.d === 0 && s.a === 0 && s.c > 0));

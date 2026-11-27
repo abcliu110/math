@@ -224,6 +224,9 @@
     S.example = null;
     S.problem = p; S.mode = mode || 'practice'; S.scene = p.build(); S.run = J.start(p, S.mode);
     S.session = U.Session.start(p, S.mode, S.scene);
+    // 联动组的题：“怎么玩”不自动展开（说明卡在卡片下方，会盖住自动排好的下面一排卡片；标题栏的“? 怎么玩”照样能开）。
+    // 也顺手清掉上一道题同名器材 id 留下的开着的说明卡
+    if (S.scene.groups) Object.keys(S.scene.entities).forEach((eid) => { S.help[eid] = false; });
     S.undo = []; S.redo = []; S.flash = null; S.sel = null; S.selLink = null; S.inspOpen = false; S.tab = 'steps'; S.glow = [];
     S.wsSel = []; S.wsMsg = ''; S.wsDraw = null;
     // 工作台题（D8）：台面上有竖式或数据图表台，打开题目就进入它（属性面板自动打开）
