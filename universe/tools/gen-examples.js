@@ -97,6 +97,7 @@ function harness(s) {
     add(type, props) { const r = W.act(s, { t: 'add', type, x: 0, y: 0, props }); if (!r.ok) throw new Error(r.why); return r.id; },
     link(from, to, toPort, fromPort) { const r = W.act(s, { t: 'link', from, to, toPort, fromPort }); if (!r.ok) throw new Error('连线失败：' + r.why); },
     set(id, k, v) { const r = W.act(s, { t: 'set', id, k, v }); if (!r.ok) throw new Error(r.why); },
+    act(a) { const r = W.act(s, a); if (!r.ok) throw new Error(r.why); return r; },
     U, props(id) { return s.entities[id].props; },
     role(r) { const e = Object.values(s.entities).find((x) => x.role === r); if (!e) throw new Error('没有角色 ' + r); return e.id; },
     run(n) { for (let i = 0; i < n; i++) W.tick(s); },

@@ -43,6 +43,8 @@
   // 平衡与等价
   R('balance.compare', { label: '两边比一比：差多少，哪边重', essence: ['E4'], grade: [1, 9] });
   R('eq.both-sides', { label: '两边同时做同一件事，等式不变', essence: ['E4'], grade: [5, 9] });
+  R('balance.lone', { label: '只动一边：两边不再一样，要在另一边补上同样的事', essence: ['E4'], grade: [3, 9] });
+  R('balance.move', { label: '从一边挪到另一边：一边少了，另一边多了，不再一样', essence: ['E4'], grade: [3, 9] });
   // 图形
   R('fig.shoelace', { label: '鞋带公式：用坐标求多边形面积', essence: ['E2', 'E5'], grade: [6, 9] });
   R('tri.inequality', { label: '三角形任意两边之和大于第三边', essence: ['E2'], grade: [4, 7] });

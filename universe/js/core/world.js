@@ -570,7 +570,9 @@
         const e = E[a.id]; if (!e) return fail('找不到器材'); const def = defOf(e);
         if (!def.stateful) return fail('这个器材没有记忆'); e.state = def.init(e.props); return ok();
       }
-      case 'clear': scene.entities = {}; scene.links = []; scene.nid = 1; scene.seq = {}; delete scene.workbench; delete scene.marks; delete scene.notes; rewind(scene); return ok();
+      case 'clear': scene.entities = {}; scene.links = []; scene.nid = 1; scene.seq = {}; delete scene.workbench; delete scene.marks; delete scene.notes; delete scene.groups; rewind(scene); return ok();
+      // 联动组（js/core/forms.js）：一个手势做完以后，把变了的那台的这一步同步到组里的其他台；做不了就说原因（事务回滚整个手势）
+      case 'settle': { if (!U.Forms) return ok(); const r = U.Forms.settle(scene); return r.ok ? ok({ steps: r.steps }) : fail(r.why); }
       case 'tidy': tidy(scene); return ok();
       case 'clock': {
         const ck = scene.clock;

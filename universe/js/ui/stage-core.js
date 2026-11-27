@@ -7,8 +7,18 @@
   const SG = UI.StageCtx = { stageEl: null, worldEl: null, focusEl: null, drag: null, linking: null, lastClick: { id: null, t: 0 }, dblKey: null, dblT: 0, wsPress: null, wsCyc: null, msgTimer: 0 };   // 台面各模块共用的可变状态，用 SG.xxx 读写
 
   const def = (e) => U.types[e.type];
+  // 操作台模式（js/core/registry.js 的 U.benchModeOf）：在做题、台面上只有一台操作台（或者几台操作台连成一个联动组）、没有连线、没点“显示口”时，
+  // 返回这几台操作台的 id 列表，否则 null。这时卡片不画连线用的口（输入口、输出口、属性药丸、记录仪的口），台面适应时也不给口留边。只是不画：UI.S.D 里的输出照常算。
+  // UI.isBench(id)：这一台现在是不是操作台模式。benchModeCan(id)：不管“显示口”开没开，这一台能不能进操作台模式（决定标题栏上有没有“显示口”的开关）
+  // UI.benchGroup()：操作台模式而且是一个联动组（两台以上）时，返回那个组，否则 null（排版、步骤栏用，见 stage-forms.js 的 fitGroup）
+  const BENCH_OPT = Object.freeze({ bench: true });
+  UI.benchMode = () => { const S = UI.S; return S ? U.benchModeOf(S.scene, { problem: S.problem, mode: S.mode, showPorts: S.showPorts }) : null; };
+  UI.isBench = (id) => U.inBench(UI.benchMode(), id);
+  UI.benchModeCan = (id) => { const S = UI.S; return !!S && U.inBench(U.benchModeOf(S.scene, { problem: S.problem, mode: S.mode }), id); };
+  UI.benchGroup = () => { const S = UI.S, ids = S ? U.benchModeOf(S.scene, { problem: S.problem, mode: S.mode }) : null; return ids && ids.length > 1 && U.Forms ? U.Forms.groupOf(S.scene, ids[0]) : null; };
   // 大小：实体上的 e.w、e.h（拖柄改的）优先，没有才用器材的 size()（§10.5.8 A1）
-  const geom = (e) => { const sz = def(e).size(e); return { x: e.x, y: e.y, w: e.w > 0 ? e.w : sz[0], h: e.h > 0 ? e.h : sz[1] }; };
+  // 操作台模式（UI.benchMode）：那台操作台按台面算大小，不给口留位置
+  const geom = (e) => { const sz = def(e).size(e, UI.isBench && UI.isBench(e.id) ? BENCH_OPT : undefined); return { x: e.x, y: e.y, w: e.w > 0 ? e.w : sz[0], h: e.h > 0 ? e.h : sz[1] }; };
   // 同一个东西 400 毫秒内按两次：返回 true，并忘掉这一次，免得第三下又算一次
   function dbl(key) { const now = Date.now(); if (SG.dblKey === key && now - SG.dblT < 400) { SG.dblKey = null; return true; } SG.dblKey = key; SG.dblT = now; return false; }
   const SIGLV = ['err', 'reject', 'warn', 'ok', 'info'];
@@ -44,5 +54,5 @@
   const pickOf = (v) => v.name || '#' + v.key;
   // 找回选中的对象：'#' 开头的按键找（实体 id 和口），其余按稳定名字找。返回和 U.Names.resolve 一样的形状
   const resolvePick = (name) => { if (name[0] !== '#') return U.Names.resolve(UI.S.scene, name); const [id, port] = name.slice(1).split('.'); const e = UI.S.scene.entities[id]; if (!e) return 'missing: ' + name; const node = (UI.S.D || {})[id]; return { name, id, port, ent: e, value: (node && node.out[port]) || null }; };
-  Object.assign(SG, { def, geom, dbl, SIGLV, defOf, roleOf, WS_COL, LINE_DASH, colIdx, escA, numOf, isWsDef, wsCfg, inWs, wsKids, wsNames, pickOf, resolvePick });
+  Object.assign(SG, { def, BENCH_OPT, geom, dbl, SIGLV, defOf, roleOf, WS_COL, LINE_DASH, colIdx, escA, numOf, isWsDef, wsCfg, inWs, wsKids, wsNames, pickOf, resolvePick });
 })(window);

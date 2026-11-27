@@ -11,6 +11,8 @@ module.exports = [
       ['mam','meter',{'digits':0,'label':'面积模型的面积'}],
       ['bb','balancebench',{'lx':1,'lc':0,'rx':0,'rc':4}],
       ['mbb','meter',{'digits':0,'label':'天平上盒子的重量'}],
+      ['eqsb','eqstepbench',{'a':1,'b':0,'c':0,'d':4,'x0':4}],
+      ['meqsb','meter',{'digits':0,'label':'式子台：x 是多少'}],
       ['nlb','numlinebench',{'a':3,'s':2,'n':4}],
       ['mnlb','meter',{'digits':0,'label':'数轴上跳到哪'}],
       ['rbb','ratiobench',{'n1':1,'n2':2}],
@@ -135,6 +137,7 @@ module.exports = [
     links: [
       ['am','mam','v','area'],
       ['bb','mbb','v','solved'],
+      ['eqsb','meqsb','v','solved'],
       ['nlb','mnlb','v','value'],
       ['rbb','mrbb','v','sum'],
       ['cbb','mcbb','v','y'],

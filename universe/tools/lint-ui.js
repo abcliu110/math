@@ -22,7 +22,7 @@
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const root = path.join(__dirname, '..');
 // 台面按职责拆成了 stage-*.js（D4），stage.js 只是对外入口；拆出来的每个文件都要查
-const STAGE_FILES = ['js/ui/stage.js', 'js/ui/stage-touch.js', 'js/ui/stage-keys.js','js/ui/stage-core.js', 'js/ui/stage-labels.js', 'js/ui/stage-workspace.js', 'js/ui/stage-canvas.js', 'js/ui/stage-readout.js', 'js/ui/stage-measure.js','js/ui/stage-panel.js', 'js/ui/stage-cards.js', 'js/ui/stage-view.js', 'js/ui/stage-piece.js', 'js/ui/stage-shape.js', 'js/ui/stage-align.js', 'js/ui/stage-draw.js', 'js/ui/stage-drag.js', 'js/ui/stage-drop.js', 'js/ui/stage-init.js'];
+const STAGE_FILES = ['js/ui/stage.js', 'js/ui/stage-touch.js', 'js/ui/stage-keys.js','js/ui/stage-core.js', 'js/ui/stage-labels.js', 'js/ui/stage-workspace.js', 'js/ui/stage-canvas.js', 'js/ui/stage-readout.js', 'js/ui/stage-measure.js','js/ui/stage-panel.js', 'js/ui/stage-cards.js', 'js/ui/stage-view.js', 'js/ui/stage-forms.js', 'js/ui/stage-piece.js', 'js/ui/stage-shape.js', 'js/ui/stage-align.js', 'js/ui/stage-draw.js', 'js/ui/stage-drag.js', 'js/ui/stage-drop.js', 'js/ui/stage-init.js'];
 const FILES = [...STAGE_FILES, 'js/ui/panels.js', 'js/ui/app.js'];   // intent.js 本身不在检查范围内
 // 修改类动作：和 js/core/world.js 的 act 分支一致
 const MUTATING = ['add', 'clear', 'clock', 'copy', 'del', 'link', 'mark', 'move', 'note', 'piece', 'put', 'rename', 'reset', 'resetstate', 'resize', 'set', 'take', 'tidy', 'tool', 'unlink', 'wsdrop'];
@@ -130,7 +130,7 @@ for (const rel of STATE_FILES) {
 }
 
 // U7：界面代码里的器材判断（见文件头）。器材 id 从 js/core 和 packs 载入后的 U.types 取（文件顺序和 tools/check-types.js 相同）
-const EQUIP_FILES = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/ratio.js', 'js/core/form.js', 'js/core/eqn.js', 'js/core/seq.js', 'js/core/rulelib.js', 'js/core/game.js', 'js/core/prooflib.js', 'js/core/table.js', 'js/core/figure.js', 'js/core/geo.js', 'js/core/convert.js', 'js/core/rules.js', 'js/core/rules-exec.js', 'js/core/workbench.js', 'js/core/digits.js', 'js/core/databench.js', 'js/core/geo-rules.js', 'js/core/registry.js', 'js/core/world.js', 'js/core/kit.js', 'js/core/judge.js', 'js/core/word.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/variants.js', 'js/core/curriculum.js', 'js/core/coverage.js']
+const EQUIP_FILES = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/ratio.js', 'js/core/form.js', 'js/core/eqn.js', 'js/core/seq.js', 'js/core/rulelib.js', 'js/core/game.js', 'js/core/prooflib.js', 'js/core/table.js', 'js/core/figure.js', 'js/core/geo.js', 'js/core/convert.js', 'js/core/rules.js', 'js/core/rules-exec.js', 'js/core/workbench.js', 'js/core/digits.js', 'js/core/databench.js', 'js/core/geo-rules.js', 'js/core/registry.js', 'js/core/world.js', 'js/core/forms.js', 'js/core/kit.js', 'js/core/recorder.js', 'js/core/judge.js', 'js/core/word.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/variants.js', 'js/core/curriculum.js', 'js/core/coverage.js']
   .concat(fs.readdirSync(path.join(root, 'packs')).filter((f) => f.endsWith('.js')).sort().map((f) => 'packs/' + f));
 const ctx7 = vm.createContext({ console }); ctx7.globalThis = ctx7;
 for (const f of EQUIP_FILES) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx7, { filename: f });
