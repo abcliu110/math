@@ -156,6 +156,7 @@ async function checkDist() {
   if (!runScript('tests/ui-graph-box.js', 'tests/ui-graph-box.js', pwEnv)) bail();   // 记下来：分一分台平均分，总数 → 最多的盒子（抽屉原理的台阶），先猜再放
   if (!runScript('tests/ui-graph-div.js', 'tests/ui-graph-div.js', pwEnv)) bail();   // 记下来：分一分台，总数 → 商（台阶）和余数（锯齿），先猜余数再看
   if (!runScript('tests/ui-recorder.js', 'tests/ui-recorder.js', pwEnv)) bail();   // 通用记录仪：高斯求和台（自己没有图）开了“记下来”，先猜盖住台面、全部试一遍、换一组只显示这一组
+  if (!runScript('tests/ui-guessall.js', 'tests/ui-guessall.js', pwEnv)) bail();   // 自动先猜：4 道原来没有先猜的操作台题，真实鼠标猜对、猜错、跳过、先猜等揭晓；ef- 题自己写的不被盖掉
   if (!runScript('tests/ui-forms.js', 'tests/ui-forms.js', pwEnv)) bail();   // 联动组第 2 批：三道 ef- 题，真实鼠标在天平、式子、线段图、数轴上各做一步，另一台跟着变、撤销一起退、只动一边都不平
   if (!runScript('tests/ui-daoli.js', 'tests/ui-daoli.js', pwEnv)) bail();   // 道理地图 → 两边一样：四种样子：四块题，四块上各做一步另外三块跟着变、只动一边四块都不平、撤销一起退、解出来、答追问
   if (!runScript('tests/ui-benchmode.js', 'tests/ui-benchmode.js', pwEnv)) bail();   // 操作台模式：单台操作台的题不画口（含记录仪的口）、卡片按台面算、“显示口”真实鼠标切回、多台和自由探究照旧

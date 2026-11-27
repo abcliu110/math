@@ -241,7 +241,8 @@
 
     report(problem, run, scene, D) {
       const sc = Judge.score(problem, run), W = makeW(scene, D, run);
-      const pr = problem.predict, isPick = !pr || (pr.form || 'pick') === 'pick';
+      // 自动先猜（操作台题没写 predict 时自动出的）：孩子猜了才写进报告；跳过了就和没有先猜一样
+      const pr = problem.predict || (run.pred !== undefined && U.Predict.auto ? U.Predict.auto(problem) : null), isPick = !pr || (pr.form || 'pick') === 'pick';
       let actual = null;
       if (pr) {
         try { actual = typeof pr.reveal === 'function' ? pr.reveal(W) : { v: pr.answer, label: String(pr.answer) }; } catch (e) { actual = null; }

@@ -131,16 +131,27 @@
     const S = UI.S, p = S.problem, run = S.run;
     if (!p) return '<div class="empty">现在是自由探究。<br>从右边拖器材到台面，想搭什么搭什么。<br><br>想做题，去「实验库」选一道。</div>';
     let h = '<div class="pcard"><b>' + esc(p.title) + '</b>' + esc(p.hook) + '<div class="tags">' + (p.points || []).map((x) => '<span class="chip">' + esc(x) + '</span>').join('') + (U.Methods ? U.Methods.of(p).map((m) => { const M = U.Methods.get(m); return '<span class="chip meth" title="' + esc(M.say) + '">💡 ' + esc(M.name) + '</span>'; }).join('') : '') + '</div></div>';
-    if (p.predict && !run.pred_done) {
-      h += '<div class="pred">' + predFormHtml(p.predict, run) + '</div>';
-    } else if (p.predict && run.pred !== undefined) {
-      const form = p.predict.form || 'pick';
+    const pr = U.Predict.of(p);   // 题目自己写的先猜；没写、又是操作台题，就是自动出的先猜（js/core/predict.js）
+    if (pr && !run.pred_done) {
+      h += '<div class="pred"' + (pr.auto ? ' data-autopred="ask"' : '') + '>' + predFormHtml(pr, run) + '</div>';
+    } else if (pr && pr.auto && run.pred !== undefined) {
+      // 自动先猜：答案来自的那个里程碑做到了才揭晓；猜错不扣分，只说差多少、可能错在哪
+      const g = pr.options.find((o) => String(o.v) === String(run.pred)), a = pr.options.find((o) => String(o.v) === String(pr.answer));
+      const st = run.ms[pr.ms], k = p.milestones.findIndex((m) => m.id === pr.ms) + 1;
+      if (!st || !st.done) h += '<div class="pcard" data-autopred="wait" style="background:var(--panel2)">你的猜想：<b style="display:inline">' + esc(g ? g.label : '—') + '</b>（做到第 ' + k + ' 步就揭晓）</div>';
+      else {
+        const r = U.Predict.gap(pr, run.pred), why = !r.right && pr.wrong ? pr.wrong[String(run.pred)] : null;
+        h += '<div class="pcard" data-autopred="' + (r.right ? 'right' : 'wrong') + '" style="background:var(--panel2)">你猜 <b style="display:inline">' + esc(g ? g.label : '—') + '</b>，做出来是 <b style="display:inline">' + esc(a ? a.label : pr.answer) + '</b>　' +
+          (r.right ? '✓ 猜对了' : '没猜中' + (r.gap !== null ? '：差 ' + esc(String(r.gap)) : '') + '（猜错不扣分）' + (why ? '<br>想一想：是不是' + esc(why) + '？' : '')) + '</div>';
+      }
+    } else if (pr && run.pred !== undefined) {
+      const form = pr.form || 'pick';
       if (form === 'pick') {
-        const g = p.predict.options.find((o) => String(o.v) === String(run.pred));
+        const g = pr.options.find((o) => String(o.v) === String(run.pred));
         h += '<div class="pcard" style="background:var(--panel2)">你的猜想：<b style="display:inline">' + esc(g ? g.label : '—') + '</b>（做完后会和结果并排对比）</div>';
       } else {
-        const r = U.Predict.check(p.predict, run.pred);
-        h += '<div class="pcard" style="background:var(--panel2)">你的猜想：<b style="display:inline">' + esc(predShown(p.predict, run.pred)) + '</b>　' + (r.ok ? '✓ 对了' : '✗ 不对') + '<br>' + esc(r.why) + '</div>';
+        const r = U.Predict.check(pr, run.pred);
+        h += '<div class="pcard" style="background:var(--panel2)">你的猜想：<b style="display:inline">' + esc(predShown(pr, run.pred)) + '</b>　' + (r.ok ? '✓ 对了' : '✗ 不对') + '<br>' + esc(r.why) + '</div>';
       }
     }
     if (S.mode === 'exam') {
@@ -150,7 +161,7 @@
       p.milestones.forEach((m, i) => {
         const st = run.ms[m.id], isCur = !st.done && cur; if (!st.done) cur = false;
         const lv = run.hintLevel[m.id] || 0;
-        h += '<div class="step' + (st.done ? ' done' : isCur ? ' cur' : '') + '"><span class="no">' + (st.done ? '✓' : i + 1) + '</span><span class="sy">' + esc(st.done || !m.ask ? m.say : m.ask) + (isCur && lv ? '<span class="hint">提示：' + esc((m.hints || [])[Math.min(lv, 3) - 1] || '') + '</span>' : '') + '</span><span class="sc">' + m.score + ' 分</span></div>';
+        h += '<div class="step' + (st.done ? ' done' : isCur ? ' cur' : '') + '"><span class="no">' + (st.done ? '✓' : i + 1) + '</span><span class="sy">' + esc(st.done || !m.ask ? (!st.done && !(run.pred_done && run.pred === undefined) && U.Predict.hideSay(pr, m)) || m.say : m.ask) + (isCur && lv ? '<span class="hint">提示：' + esc((m.hints || [])[Math.min(lv, 3) - 1] || '') + '</span>' : '') + '</span><span class="sc">' + m.score + ' 分</span></div>';
       });
       h += '<div class="btnrow"><button class="btn" id="hintbtn">💡 来个提示</button><button class="btn" id="restart">重来</button></div>';
       // 随机出题：这道题的操作台有出题器，就能在同一个操作台上再出一道（数不一样）

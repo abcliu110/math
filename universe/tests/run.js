@@ -3945,6 +3945,65 @@ console.log('全部在器材上操作：几何一组（海龟作图、剪拼、�
     W.act(s, { t: 'set', id: x, k: 'mode', v: 1 }); eq(press(s, x, 'A(0,0) B(2,2)'), { pair: 1 });
     for (const i of U.WhatIf.tTruth(s.entities[x].props)) W.act(s, { t: 'set', id: x, k: 'cell', v: i + 1 });
     press(s, x, '一片区域'); eq(outv(s, x, 'ok'), '1'); truthy(/一片区域.*✓/.test(picks(s, x).svg.replace(/<[^>]+>/g, '')), '全部标对：猜的形状打 ✓');
+console.log('自动先猜（每道操作台题都能先猜后看）');
+{
+  const benchP = U.problems.filter((p) => { if ((p.shelf || []).some((k) => U.types[k] && U.types[k].bench)) return true; try { return Object.values(p.build().entities).some((e) => U.types[e.type] && U.types[e.type].bench); } catch (e) { return false; } });
+  const autoP = benchP.filter((p) => !p.predict && U.Predict.auto(p));
+  const canon = (s) => { try { return Q.show(Q.parse(String(s).replace('−', '-'))); } catch (e) { return null; } };
+  const nums = (s) => (String(s || '').match(/[-−]?\d+(?:\.\d+)?(?:\/\d+)?/g) || []).map(canon);
+  t('每道操作台题都有先猜问题：题目自己写的，或者自动出的；出不了的要说清理由，而且不超过 70 道', () => {
+    const ex = [];
+    for (const p of benchP) { if (U.Predict.of(p)) continue; const why = U.Predict.exempt(p); truthy(why, p.id + ' 没有先猜，也没写理由'); ex.push(p.id); }
+    truthy(ex.length <= 70, '出不了先猜的有 ' + ex.length + ' 道：' + ex.join(' '));
+    truthy(autoP.length >= 340, '自动先猜只有 ' + autoP.length + ' 道');
+  });
+  t('题目自己写了 predict 的不覆盖（包括 problems/forms.js 的 ef- 题）', () => {
+    for (const p of benchP.filter((x) => x.predict)) { eq(U.Predict.auto(p), null, p.id); truthy(U.Predict.of(p) === p.predict, p.id); }
+    truthy(benchP.filter((p) => /^ef-/.test(p.id)).every((p) => U.Predict.of(p)), 'ef- 题都要能先猜');
+  });
+  t('自动先猜的答案和里程碑一致：是那个里程碑条件里的值，或者写在它的说法里', () => {
+    for (const p of autoP) {
+      const pr = U.Predict.auto(p), m = p.milestones.find((x) => x.id === pr.ms);
+      truthy(m, p.id + ' 的 ms 不是里程碑');
+      truthy(pr.options.some((o) => o.v === pr.answer), p.id + ' 答案不在选项里');
+      if (pr.word) {
+        if (pr.neg !== undefined) eq(/不能|不成立|没有|不是|不一样|不对|拼不成|找不到|做不到|永远不|不全等|不相等/.test(m.say), pr.neg, p.id + ' 能不能和里程碑的说法对不上');
+        else truthy(String(m.say).includes(pr.answer) || p.title.includes(pr.answer), p.id + ' 答案 ' + pr.answer + ' 不在里程碑说法或题目里');
+        continue;
+      }
+      // 答案一定写在那个里程碑的说法里（里程碑条件要“输出 = 这个数”的，或者判对不对、说法里写着做出来的数的）
+      truthy(nums(m.say).includes(pr.answer), p.id + ' 答案 ' + pr.answer + ' 不在里程碑说法「' + m.say + '」里');
+      truthy(pr.hidden && !nums(pr.hidden).includes(pr.answer), p.id + ' 先猜的问题里不应露出答案：' + pr.hidden);
+    }
+  });
+  t('干扰项不等于答案、互不相同；每个干扰项都写了是哪种错法', () => {
+    for (const p of autoP) {
+      const pr = U.Predict.auto(p), vs = pr.options.map((o) => o.v);
+      truthy(vs.length >= 2, p.id + ' 选项太少');
+      eq(new Set(vs).size, vs.length, p.id + ' 选项有重复');
+      eq(new Set(pr.options.map((o) => o.label)).size, vs.length, p.id + ' 选项的字有重复');
+      for (const v of vs) if (v !== pr.answer) truthy(pr.wrong[v], p.id + ' 干扰项 ' + v + ' 没写错法');
+      truthy(!pr.wrong[pr.answer], p.id + ' 答案被当成了干扰项');
+      if (!pr.word) eq(vs.length, 4, p.id + ' 数的先猜要 1 个答案 + 3 个干扰项');
+    }
+  });
+  t('干扰项按常见错法：27 + 15 有“忘了进位”的 32、“算成减法”的 12', () => {
+    const pr = U.Predict.auto(U.problemById('bk-27-15'));
+    eq(pr.answer, '42'); eq(pr.wrong['32'], '忘了进位'); eq(pr.wrong['12'], '把加法算成了减法');
+  });
+  t('先猜猜错不扣分，只记差多少：gap 和 guess 事件一样是 { right, gap }', () => {
+    const pr = U.Predict.auto(U.problemById('bk-27-15'));
+    eq(U.Predict.gap(pr, '42'), { right: true, gap: 0 }); eq(U.Predict.gap(pr, '32'), { right: false, gap: 10 });
+    const p = U.problemById('bk-27-15'), run = U.Judge.start(p, 'practice'); run.pred = '32';
+    const sc = p.build(), rep = U.Judge.report(p, run, sc, W.evaluate(sc));
+    eq(rep.guess, '32'); eq(rep.actual, '42'); eq(rep.match, false); eq(rep.score, 0, '猜错不扣分（也不加分）');
+    const run2 = U.Judge.start(p, 'practice'), rep2 = U.Judge.report(p, run2, sc, W.evaluate(sc));
+    eq(rep2.guess, null); eq(rep2.actual, null, '跳过先猜：报告里和没有先猜一样');
+  });
+  t('先猜时步骤里的答案换成“？”，做到以后才显示', () => {
+    const p = U.problemById('bk-27-15'), pr = U.Predict.of(p), m = p.milestones.find((x) => x.id === pr.ms);
+    eq(U.Predict.hideSay(pr, m), '整理好了：？');
+    eq(U.Predict.hideSay(pr, p.milestones.find((x) => x.id !== pr.ms) || null), null);
   });
 }
 console.log('\n' + pass + ' 通过，' + fail + ' 失败');
