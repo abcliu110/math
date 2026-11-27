@@ -2766,6 +2766,24 @@ t('一笔画：possible 和“奇点 0 或 2 个且连通”一致，并且和�
   const sc = W.blank(), e = W.add(sc, 'euler', 0, 0, { graph: 2, mode: 1 }), set = (k, v) => W.act(sc, { t: 'set', id: e, k, v });
   set('go', 2); set('go', 3); eq(Q.num(W.evaluate(sc)[e].out.possible.data), 1); eq(Q.num(W.evaluate(sc)[e].out.odd.data), 2);
 });
+t('卡片上操作（游戏一组）：属性全藏起来，不出“✎ 填写”；卡片上的按钮改出来的属性对', () => {
+  for (const ty of ['nim', 'hanoi', 'euler', 'net', 'cubes', 'primeblocks']) { const d = U.types[ty]; eq(Object.keys(d.props).filter((k) => d.props[k].write && !d.props[k].hidden), [], ty + ' 没有给孩子填的属性'); }
+  // 汉诺塔：换盘数重新摆、先猜重来、表留着；搬完“记进表里”把步数写进那一格
+  let sc = W.blank(), e = W.add(sc, 'hanoi', 0, 0, { n: 2 }); const set = (k, v) => W.act(sc, { t: 'set', id: e, k, v }), P = () => sc.entities[e].props;
+  set('gd', 3); set('gmin', 3); set('t1', 1); set('mv', 1); set('mv', 2); set('mv', 1); set('mv', 3); set('mv', 2); set('mv', 3);
+  eq(P().moves, 3); set('rec', 1); eq([P().t2, P().rec], [3, 0]);
+  set('n', 3); eq([P().pegs, P().moves, P().gmin, P().gd, P().t1, P().t2], ['321;;', 0, 0, 0, 1, 3]);
+  set('rec', 1); eq(P().t3, 0, '没搬完不能记');
+  // 展开图：第一次点“能 / 不能”就是先猜，记 guess 事件；自己拼的图形只记先猜，不记进 35 种的回答
+  U.Events.clear(); sc = W.blank(); const n = W.add(sc, 'net', 0, 0, {}); W.act(sc, { t: 'set', id: n, k: 'say', v: 2 });
+  eq([sc.entities[n].props.gans, sc.entities[n].props.ans[0]], [2, '2']); eq(U.Events.log.filter((x) => x.type === 'guess').length, 1);
+  W.act(sc, { t: 'set', id: n, k: 'say', v: 1 }); eq(sc.entities[n].props.gans, 2, '先猜只记第一次');
+  const n2 = W.add(sc, 'net', 0, 0, { cells: '' }); for (const v of [2, 7, 8, 9, 10, 14]) W.act(sc, { t: 'set', id: n2, k: 'cell', v });
+  W.act(sc, { t: 'set', id: n2, k: 'say', v: 1 }); eq([sc.entities[n2].props.gans, sc.entities[n2].props.ans], [1, '']);
+  // 小方块：换目标清空底板，先猜重来
+  const cu = W.add(sc, 'cubes', 0, 0, { tgt: 0 }); W.act(sc, { t: 'set', id: cu, k: 'gcnt', v: 4 }); W.act(sc, { t: 'set', id: cu, k: 'put', v: 3 }); W.act(sc, { t: 'set', id: cu, k: 'tgt', v: 1 });
+  eq([sc.entities[cu].props.h, sc.entities[cu].props.gcnt], ['0'.repeat(16), 0]);
+});
 
 console.log('证明排序');
 t('证明库：每条证明合格（需要的步骤都存在、没有环、每步都被用到、依据在选项里、有干扰卡）', () => { const errs = []; for (const p of U.ProofLib.all()) errs.push(...U.ProofLib.lint(p)); eq(errs, []); truthy(U.ProofLib.all().length >= 4); });

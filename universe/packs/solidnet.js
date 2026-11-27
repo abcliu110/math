@@ -52,7 +52,14 @@
   function nOnSet(p, k, v) {
     if (k === 'load') { if (!(v > 0)) return { load: 0 }; return { load: 0, idx: v - 1, cells: keyOf(HEX[(v - 1) % 35]), mk: 0 }; }
     if (k === 'cell') { if (!(v > 0)) return { cell: 0 }; const x = (v - 1) % NG, y = Math.floor((v - 1) / NG), c = cellsOf(p.cells), at = c.findIndex((q) => q[0] === x && q[1] === y); if (at >= 0) c.splice(at, 1); else if (c.length < 6) c.push([x, y]); return { cell: 0, cells: keyOf(c.sort((a, b) => a[1] - b[1] || a[0] - b[0])), mk: 0 }; }
-    if (k === 'say') { if (!(v > 0)) return { say: 0 }; const a = String(p.ans || '').padEnd(35, '0').split(''); a[p.idx % 35] = String(v); return { say: 0, ans: a.join('') }; }
+    if (k === 'say') {
+      // 点“能 / 不能”：记下这一种的回答；还没先猜的话，这一下就是先猜（猜了才揭开），记一条 guess 事件
+      if (!(v > 0)) return { say: 0 };
+      const cells = cellsOf(p.cells), mine = keyOf(cells) === keyOf(HEX[p.idx % 35]), o = { say: 0 };
+      if (mine) { const a = String(p.ans || '').padEnd(35, '0').split(''); a[p.idx % 35] = String(v); o.ans = a.join(''); }
+      if (!(p.gans > 0)) { const fd = cells.length === 6 && connected(cells) && fold(cells).foldable; o.gans = v; o.$guess = { right: (v === 1) === !!fd }; }
+      return o;
+    }
     return null;
   }
   function nDraw(c) {
@@ -61,7 +68,7 @@
     const x1 = ox + NG * g + 14; s += K.text(x1, 20, '第 ' + ((p.idx % 35) + 1) + ' / 35 种', { size: 12, anchor: 'start', weight: 700 });
     [['◀', ((p.idx + 34) % 35) + 1], ['▶', ((p.idx + 1) % 35) + 1]].forEach(([tx, v], i) => { s += btn(x1 + i * 40, 28, 36, 20, tx, false); H += hit('load', v, x1 + i * 40, 28, 36, 20); });
     if (!J.valid) s += K.text(x1, 70, '要 6 个连着的格子（现在 ' + J.cells.length + ' 个）', { size: 10.5, anchor: 'start', fill: 'var(--dim)' });
-    else if (c.masked) s += K.text(x1, 70, '先猜：能折成正方体吗？', { size: 11.5, anchor: 'start', weight: 700, fill: 'var(--accent)' });
+    else if (c.masked) s += K.text(x1, 70, '先猜：能折成正方体吗？', { size: 11.5, anchor: 'start', weight: 700, fill: 'var(--accent)' }) + K.text(x1, 88, '点下面的“能”或“不能”', { size: 10.5, anchor: 'start', fill: 'var(--dim)' });
     else { s += K.text(x1, 70, J.foldable ? '能折成正方体' : '不能：有 ' + J.overlap + ' 个面叠在一起（红色）', { size: 11.5, anchor: 'start', weight: 700, fill: J.foldable ? 'var(--good)' : 'var(--bad)' }); if (J.foldable) s += K.text(x1, 88, J.mk ? '蓝色的相对面是绿色的那个' : '点一个格子，看它的相对面', { size: 10.5, anchor: 'start', fill: 'var(--dim)' }); }
     s += K.text(x1, 112, '你说“能 / 不能”：', { size: 10.5, anchor: 'start' }); const cur = Number(String(p.ans || '').padEnd(35, '0')[p.idx % 35]);
     [[1, '能'], [2, '不能']].forEach(([v, tx], i) => { s += btn(x1 + i * 44, 118, 40, 20, tx, cur === v); H += hit('say', v, x1 + i * 44, 118, 40, 20); });
@@ -71,7 +78,7 @@
   const netDef = {
     explore: true,   // 探究和游戏：器材架上放在最后的“拓展”组
     workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E5', 'E1'], label: '展开图', prefix: '展', group: '图形', grades: [1, 9], alias: ['展开图', '正方体', '六连方', '折叠', '相对面', '穷举'],
-    props: { cells: { hidden: true, type: 'text', label: '格子', default: keyOf(HEX[0]), write: false }, idx: { hidden: true, type: 'int', label: '第几种（0 起）', default: 0, min: 0, max: 34 }, load: { hidden: true, type: 'int', label: '看第几种（1 起）', default: 0, min: 0, max: 35 }, cell: { hidden: true, type: 'int', label: '点一个格子', default: 0, min: 0, max: 36 }, mk: { hidden: true, type: 'int', label: '看相对面的格子', default: 0, min: 0, max: 6 }, say: { hidden: true, type: 'int', label: '我说（1 能 2 不能）', default: 0, min: 0, max: 2 }, ans: { hidden: true, type: 'text', label: '35 种的回答', default: '', write: false }, gans: { type: 'int', label: '先猜（1 能折 2 不能）', default: 0, min: 0, max: 2 } },
+    props: { cells: { hidden: true, type: 'text', label: '格子', default: keyOf(HEX[0]), write: false }, idx: { hidden: true, type: 'int', label: '第几种（0 起）', default: 0, min: 0, max: 34 }, load: { hidden: true, type: 'int', label: '看第几种（1 起）', default: 0, min: 0, max: 35 }, cell: { hidden: true, type: 'int', label: '点一个格子', default: 0, min: 0, max: 36 }, mk: { hidden: true, type: 'int', label: '看相对面的格子', default: 0, min: 0, max: 6 }, say: { hidden: true, type: 'int', label: '我说（1 能 2 不能）', default: 0, min: 0, max: 2 }, ans: { hidden: true, type: 'text', label: '35 种的回答', default: '', write: false }, gans: { hidden: true, type: 'int', label: '先猜（1 能折 2 不能）', default: 0, min: 0, max: 2 } },
     onSet: nOnSet,
     guess: { props: ['gans'], ports: ['foldable', 'overlap'], answered: (p) => p.gans > 0 },
     outputs: { foldable: { dim: null, kind: 'num', label: '能折成正方体（1/0）' }, overlap: { dim: null, kind: 'num', label: '叠在一起的面数' }, valid: { dim: null, kind: 'num', label: '是 6 个连着的格子（1/0）' }, judged: { dim: null, kind: 'num', label: '判了几种' }, right: { dim: null, kind: 'num', label: '判对了几种' }, all: { dim: null, kind: 'num', label: '35 种全判对（1/0）' }, lv: { dim: null, kind: 'num', label: '证据等级' } },
@@ -103,11 +110,22 @@
     const h = hs(p.h), V = views(h), T = views(hs(TGT[p.tgt])), vol = h.reduce((a, b) => a + b, 0), match = eqA(V.front, T.front) && eqA(V.left, T.left) && eqA(V.top, T.top) ? 1 : 0, R = range(p.tgt);
     return { h, V, T, vol, surface: surface(h), match, isMin: match && vol === R[0] ? 1 : 0, isMax: match && vol === R[1] ? 1 : 0, min: R[0], max: R[1] };
   }
-  function cOnSet(p, k, v) { if (k === 'put') { if (!(v > 0)) return { put: 0 }; const i = Math.floor((v - 1) / 5), nh = (v - 1) % 5, h = hs(p.h); h[i] = nh; return { put: 0, h: h.join('') }; } if (k === 'tgt') return { h: '0'.repeat(16) }; return null; }
+  function cOnSet(p, k, v) { if (k === 'put') { if (!(v > 0)) return { put: 0 }; const i = Math.floor((v - 1) / 5), nh = (v - 1) % 5, h = hs(p.h); h[i] = nh; return { put: 0, h: h.join('') }; } if (k === 'tgt') return { h: '0'.repeat(16), gcnt: 0, gd: 0 }; return null; }   // 换目标：底板清空，先猜重新来
   function cDraw(c) {
     const p = c.props, J = cJudge(p), g = 30, ox = 10, oy = 10; let s = '', H = '';
     for (let y = 0; y < NC; y++) for (let x = 0; x < NC; x++) { const i = y * NC + x, h = J.h[i], X = ox + x * g, Y = oy + y * g; s += K.rect(X, Y, g - 3, g - 3, { fill: h ? 'var(--sel-bg)' : 'var(--card)', stroke: 'var(--dim)', w: 0.7, r: 4 }) + K.text(X + (g - 3) / 2, Y + g * 0.62, h ? String(h) : '', { size: 14, weight: 700 }); H += hit('put', i * 5 + Math.min(4, h + 1) + 1, X, Y, (g - 3) / 2, g - 3) + hit('put', i * 5 + Math.max(0, h - 1) + 1, X + (g - 3) / 2, Y, (g - 3) / 2, g - 3); }
     s += K.text(ox, oy + NC * g + 12, '左半格 +1，右半格 −1', { size: 10, anchor: 'start', fill: 'var(--dim)' });
+    // 先猜：最少要几块？底板下面 − / + 调一个数，点“看看”才揭开块数和最少、最多
+    const gy = oy + NC * g + 34;
+    if (c.masked) {
+      const v = p.gd || 0;
+      s += K.text(ox, gy, '先猜：最少要几块？', { size: 11.5, anchor: 'start', weight: 700, fill: 'var(--accent)' });
+      s += btn(ox, gy + 8, 20, 20, '−', false) + K.text(ox + 40, gy + 23, String(v), { size: 13, weight: 700 }) + btn(ox + 60, gy + 8, 20, 20, '+', false) + btn(ox + 86, gy + 8, 34, 20, '看看', v > 0);
+      if (v > 0) H += hit('gd', v - 1, ox, gy + 8, 20, 20); if (v < 64) H += hit('gd', v + 1, ox + 60, gy + 8, 20, 20); if (v > 0) H += hit('gcnt', v, ox + 86, gy + 8, 34, 20);
+    } else {
+      const d = p.gcnt - J.min;
+      s += K.text(ox, gy, '你猜最少 ' + p.gcnt + ' 块', { size: 11.5, anchor: 'start', weight: 700 }) + K.text(ox, gy + 18, d === 0 ? '猜对了！' : '最少是 ' + J.min + ' 块，差 ' + Math.abs(d), { size: 11.5, anchor: 'start', weight: 700, fill: d === 0 ? 'var(--good)' : 'var(--bad)' });
+    }
     const small = (X0, Y0, lab, arr, vertical, top) => { s += K.text(X0, Y0 - 3, lab, { size: 10, anchor: 'start', weight: 700 }); for (let i = 0; i < 4; i++) { for (let k = 0; k < 4; k++) { const on = top ? arr[k * 4 + i] : (arr[i] > k); const hh = 12, yy = top ? Y0 + k * hh : Y0 + (3 - k) * hh; if (top || true) s += K.rect(X0 + i * hh, yy, hh - 1, hh - 1, { fill: on ? 'var(--accent)' : 'var(--card)', stroke: 'var(--dim)', w: 0.4, r: 1 }); } } };
     const x2 = ox + NC * g + 20; small(x2, 24, '前视图', J.V.front, false, false); small(x2 + 66, 24, '左视图', J.V.left, false, false); small(x2 + 132, 24, '俯视图', J.V.top, false, true);
     small(x2, 100, '目标·前', J.T.front, false, false); small(x2 + 66, 100, '目标·左', J.T.left, false, false); small(x2 + 132, 100, '目标·俯', J.T.top, false, true);
@@ -118,7 +136,7 @@
   const cubesDef = {
     explore: true,   // 探究和游戏：器材架上放在最后的“拓展”组
     workspaceRole: 'none', handles: true, compactPorts: true, essence: ['E5', 'E1'], label: '小方块搭建', prefix: '块', group: '图形', grades: [1, 6], alias: ['小方块', '三视图', '搭建', '观察物体', '表面积', '最少几块'],
-    props: { h: { hidden: true, type: 'text', label: '每格几层', default: '0'.repeat(16), write: false }, put: { hidden: true, type: 'int', label: '改一格（格号×5+层数+1）', default: 0, min: 0, max: 80 }, tgt: { type: 'choice', label: '目标', default: 0, choices: TN }, gcnt: { type: 'int', label: '先猜：最少几块（0 = 还没猜）', default: 0, min: 0, max: 64 } },
+    props: { h: { hidden: true, type: 'text', label: '每格几层', default: '0'.repeat(16), write: false }, put: { hidden: true, type: 'int', label: '改一格（格号×5+层数+1）', default: 0, min: 0, max: 80 }, tgt: { hidden: true, type: 'choice', label: '目标', default: 0, choices: TN }, gcnt: { hidden: true, type: 'int', label: '先猜：最少几块（0 = 还没猜）', default: 0, min: 0, max: 64 }, gd: { hidden: true, type: 'int', label: '正在调的猜测', default: 0, min: 0, max: 64 } },
     onSet: cOnSet,
     guess: { props: ['gcnt'], ports: ['volume', 'surface', 'isMin', 'isMax'], answered: (p) => p.gcnt > 0 },
     outputs: { volume: { dim: null, kind: 'num', label: '一共几块' }, surface: { dim: null, kind: 'num', label: '表面积（含底面，单位：一个面）' }, match: { dim: null, kind: 'num', label: '三视图都对上（1/0）' }, isMin: { dim: null, kind: 'num', label: '对上了而且是最少的块数（1/0）' }, isMax: { dim: null, kind: 'num', label: '对上了而且是最多的块数（1/0）' }, min: { dim: null, kind: 'num', label: '这三个视图最少要几块' }, max: { dim: null, kind: 'num', label: '这三个视图最多能有几块' }, guessed: { dim: null, kind: 'num', label: '先猜对了最少块数（1/0）' } },
