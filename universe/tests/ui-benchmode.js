@@ -18,7 +18,7 @@
   const bottomOk = () => p.evaluate(() => { const c = document.querySelector('.card').getBoundingClientRect(), f = Array.from(document.querySelectorAll('.fab')).map((x) => x.getBoundingClientRect().top).filter((t) => t > innerHeight / 2); return c.bottom <= Math.min.apply(null, f.concat([innerHeight])); });
   const bm = () => p.evaluate(() => UI.benchMode());
   const zp = () => p.evaluate(() => { const b = document.querySelector('.card .hd [data-ports]'); return b && b.offsetParent !== null ? b.textContent : null; });
-  const outsOk = () => p.evaluate(() => { const id = UI.benchModeCan(); const o = id && UI.S.D[id].out; return !!o && Object.keys(o).length > 0 && Object.values(o).some((v) => v && v.kind); });
+  const outsOk = () => p.evaluate(() => { const id = (UI.benchMode() || [])[0]; const o = id && UI.S.D[id].out; return !!o && Object.keys(o).length > 0 && Object.values(o).some((v) => v && v.kind); });
   const props = () => p.evaluate(() => JSON.stringify(Object.values(UI.S.scene.entities)[0].props));
 
   const CASES = [
@@ -31,7 +31,7 @@
     console.log(C.name + '（' + C.id + '）');
     await H.open(C.id);
     const bid = await bm();
-    H.ok(!!bid && bid === Object.keys(await p.evaluate(() => UI.S.scene.entities))[0], '进了操作台模式（UI.benchMode() 是那台操作台）');
+    H.ok(!!bid && bid.length === 1 && bid[0] === Object.keys(await p.evaluate(() => UI.S.scene.entities))[0], '进了操作台模式（UI.benchMode() 是只有那台操作台的列表）');
     H.ok(await portDom() === 0, '没有口、口旁边的字、药丸的 DOM');
     H.ok(await zp() === '显示口', '卡片标题栏上有不显眼的“显示口”');
     H.ok(await outsOk(), '输出照常算（UI.S.D[id].out 读得到）');

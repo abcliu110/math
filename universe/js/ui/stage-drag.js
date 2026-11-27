@@ -214,6 +214,7 @@
       const dm = t.closest('[data-demo]'); if (dm) { const [i, v, n] = dm.dataset.demo.split(':'); S.demo[i] = Math.max(0, Math.min(+v, +n - 1)); SG.render(); return; }
       const hm = t.closest('[data-help-mode]'); if (hm) { const [m, i] = hm.dataset.helpMode.split(':'); S.help[i] = m; SG.render(); return; }
       const hp = t.closest('[data-help]'); if (hp) { S.help[hp.dataset.help] = !S.help[hp.dataset.help]; SG.render(); return; }   // “怎么玩”：开 / 关
+      if (t.closest('[data-sw-lock]')) { UI.App.say(e.name + '连在联动组里，是同一个等式的一种样子：不能换成别的用法', 'warn', 3200); return; }   // 联动组里“换一种”锁住（stage-cards.js）
       if (t.closest('[data-ports]')) { S.showPorts = !S.showPorts; SG.fit(); SG.render(); return; }   // 操作台模式的“显示口 / 藏起口”：口出来或藏起，卡片和留边都变了，重新适应
       if (t.closest('[data-card-insp]')) { S.sel = id; S.selLink = null; S.inspOpen = true; UI.Panels.renderInsp(); SG.render(); return; }   // 标题栏的“先猜 / 填写”：直接打开属性面板
       // 器材上的把手：按下开始拖（改的是器材声明里这个把手对应的属性；拖动中只是预览，松手记成一步）

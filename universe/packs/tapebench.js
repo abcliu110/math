@@ -68,6 +68,16 @@
     };
     const A = bar(YA, m.ka, m.ea, m0 ? m0.ka : 0, m0 ? m0.ea : 0, na), B = bar(YB, m.kb, m.eb, m0 ? m0.kb : 0, m0 ? m0.eb : 0, nb);
     s += A.h + B.h;
+    // 联动组里别的台刚做了一步（c.flash，见 js/ui/stage-forms.js）：剪掉的那一截画虚线框，接上的那一截画亮框
+    if (c.flash && !m0) {
+      const o = c.flash.s0, end0 = (k, e) => Math.min(W - 6, X0 + (k * m.u + Math.max(0, e)) * sc);
+      let f = '';
+      for (const [y, x1, x0] of [[YA, A.end, end0(o.a, o.b)], [YB, B.end, end0(o.c, o.d)]]) {
+        if (x0 > x1 + 0.5) f += K.rect(x1, y - 3, x0 - x1, BH + 6, { stroke: 'var(--blue)', r: 2, w: 1.8, dash: '4 3' }) + K.text((x1 + x0) / 2, y - 7, '剪掉', { size: 11, weight: 700, fill: 'var(--blue)' });
+        else if (x1 > x0 + 0.5) f += K.rect(x0, y - 3, x1 - x0, BH + 6, { stroke: 'var(--blue)', r: 2, w: 3 });
+      }
+      s += K.flash(c.flash, f);
+    }
     // 对不齐：差的那一截。两边 x 的段数一样时差多少看得出来；不一样时差多少要用到 x 的真实值，不写数（不泄露答案）
     if (!ok) { const lo = Math.min(A.end, B.end), hi = Math.max(A.end, B.end), y = m.a > m.b ? YB : YA; s += '<g data-gap="1">' + '<rect x="' + lo + '" y="' + (y + 4) + '" width="' + (hi - lo) + '" height="' + (BH - 8) + '" fill="#fde2e0" fill-opacity="0.6" stroke="var(--bad)" stroke-dasharray="4 3"/>' + K.text(hi - lo >= 34 ? (lo + hi) / 2 : hi + 4, y + BH / 2 + 4, m.ka === m.kb ? '差 ' + m.diff : '差一截', { size: 11, weight: 700, fill: 'var(--bad)', anchor: hi - lo >= 34 ? 'middle' : 'start' }) + '</g>'; }
     s += K.text(20, 28, na + '：' + sideTx(m.ka, m.ea) + '　' + nb + '：' + sideTx(m.kb, m.eb) + '　每一段 x 一样长', { size: 14, weight: 700, anchor: 'start' });

@@ -23,6 +23,7 @@
     // viewAuto：台面视图是“适应”出来的、之后没有手动缩放平移过（卡片变高钻到按钮栏后面时自动再适应，见 stage-view.js keepFit）
     view: 'session', viewAuto: 'session', mode: 'session', problem: 'session', run: 'session', session: 'session', freeScene: 'session', example: 'session',
     tab: 'session', quizLevel: 'session', chainOpen: 'session', mchainOpen: 'session', galOpen: 'session', inspOpen: 'session', glow: 'session', showSig: 'session', q1: 'session', wbDraft: 'session', help: 'session', demo: 'session', helpSeen: 'session', helpAuto: 'session',
+    flash: 'session',   // 联动组里刚做的一步：其他台把刚变的部分闪一下（js/ui/stage-forms.js 的 flashOf；不进存档、不进撤销）
     showPorts: 'session',   // 操作台模式下点了“显示口”：画出连线用的口（js/ui/stage-core.js 的 UI.benchMode）
     sel: 'session', selLink: 'session', undo: 'session', redo: 'session',
     wsSel: 'session', wsArgs: 'session', wsMsg: 'session', wsMsgKind: 'session', wsBoardUntil: 'session', wsDraw: 'session', wsArm: 'session', wsClip: 'session', wsFit: 'session', wsLayerOpen: 'session', snapOn: 'session',
