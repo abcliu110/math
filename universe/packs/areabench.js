@@ -122,8 +122,9 @@
         size: () => [W, 400],
         recHide: true,   // 开了通用记录仪先猜时，不盖台面：篱笆围地自己把面积写成“？”
         grips,
-        // 篱笆换了总长，“记下这一种”的列表是另一圈篱笆的：清空（开了记录仪时，图上只显示这一圈的点，记录不丢）
-        onSet: (p, k, v) => (k === 'P' && Math.round(+v) !== Math.round(+p.P) ? { tried: '' } : null),
+        // 篱笆换了总长，“记下这一种”的列表是另一圈篱笆的：清空（开了记录仪时，图上只显示这一圈的点，记录不丢）。
+        //   p 里的 P 已经是新值了，要和改以前的值 was 比（2026-11-26 以前比的是 p.P，永远一样，一直没清空过）
+        onSet: (p, k, v, was) => (k === 'P' && fenceModel({ P: v }).P !== fenceModel({ P: was }).P ? { tried: '' } : null),
         compute: (c) => {
           if (+c.props.shape === 3) { const f = fenceModel(c.props), o = { seen: qv(Q(f.tried.length)), area: qv(Q(f.area)) }; if (f.best) o.best = qv(Q(1)); return o; }
           const m = model(c.props), o = { seen: qv(Q(m.seen.length)) };

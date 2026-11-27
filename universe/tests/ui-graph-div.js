@@ -1,7 +1,7 @@
 /* node tests/ui-graph-div.js —— 分一分台的“记下来”：真实鼠标。
  *  1. 打开“画成图：每 5 个一份”：12 ÷ 5 = 2 …… 2；点“记下来”：图上一个橙点（商）、一个红点（余数）；
  *  2. 总数 + ，记下来，再 + ，记下来：3 个点；同一个总数不能记两次；
- *  3. 再 + 到 15：圈和算式藏起来（12 ÷ 5 = ？ …… ？），把手也没了；点“猜余数 0”，揭开 15 ÷ 5 = 3，记下来：猜对 1 次；
+ *  3. 再 + 到 15：圈和算式藏起来（12 ÷ 5 = ？ …… ？），把手也没了；先点“猜商 3”：还藏着，再点“猜余数 0”，揭开 15 ÷ 5 = 3，记下来：猜对 1 次；
  *     16 先点“不猜，直接看”，记下来不算猜；17 猜对、18 猜错：猜了 3 次，猜对 2 次；
  *  4. 全部试一遍：1 到 20 都画上浅色；拖把手改成每份 4 个：图上只留每份 4 个的点（0 个）；
  *  5. 改回 5，回答两个追问，五个里程碑都完成；不开图的老题没有图；没有报错。 */
@@ -26,15 +26,19 @@
   console.log('3. 先猜再看');
   await plus();
   H.ok(/15 ÷ 5 = ？ …… ？/.test(await eq()) && await p.locator('.card svg.bdy [data-grip]').count() === 0, '15：圈和算式藏起来了，把手也收起来');
+  H.ok(await p.locator('.card svg.bdy g[data-pick-set] title', { hasText: '猜商' }).count() >= 3 && await p.locator('.card svg.bdy g[data-pick-set] title', { hasText: '猜余数' }).count() === 5, '商和余数都有格子可猜（余数 0 到 4）');
+  if (SP) await p.locator('.card').first().screenshot({ path: SP + '/gd-hidden.png' });
+  await H.byTitle('猜商 3');
+  H.ok(/15 ÷ 5 = ？ …… ？/.test(await eq()) && /商猜了 3，再猜余数/.test(await H.text()), '只猜了商：还藏着，提示再猜余数');
   await H.byTitle('猜余数 0');
-  H.ok(/15 ÷ 5 = 3/.test(await eq()) && /你猜余数 0，猜对了/.test(await H.text()), '猜余数 0：揭开 15 ÷ 5 = 3，猜对了');
+  H.ok(/15 ÷ 5 = 3/.test(await eq()) && /你猜商 3、余数 0，都猜对了/.test(await H.text()), '再猜余数 0：揭开 15 ÷ 5 = 3，都猜对了');
   if (SP) await p.locator('.card').first().screenshot({ path: SP + '/gd-guess.png' });
   await rec();
   H.ok(await H.out('gtry') === '1' && await H.out('gok') === '1', '记下来：猜了 1 次，猜对 1 次');
   await plus(); await H.byTitle('不猜，直接看'); await rec();
   H.ok(await H.out('gtry') === '1' && await H.out('pts') === '5', '16 不猜直接看，记下来不算猜：还是猜了 1 次；5 个点');
-  await plus(); await H.byTitle('猜余数 2'); H.ok(/猜对了/.test(await H.text()), '17 猜余数 2：猜对'); await rec();
-  await plus(); await H.byTitle('猜余数 4'); H.ok(/其实是 3/.test(await H.text()), '18 猜余数 4：其实是 3'); await rec();
+  await plus(); await H.byTitle('猜商 3'); await H.byTitle('猜余数 2'); H.ok(/都猜对了/.test(await H.text()), '17 猜商 3、余数 2：都对'); await rec();
+  await plus(); await H.byTitle('猜余数 4'); await H.byTitle('猜商 3'); H.ok(/商对了，余数其实是 3/.test(await H.text()), '18 猜商 3、余数 4：商对，余数其实是 3（不算猜对）'); await rec();
   H.ok(await H.out('gtry') === '3' && await H.out('gok') === '2' && await H.done('guess'), '猜了 3 次，猜对 2 次（里程碑）');
 
   console.log('4. 全部试一遍、换每份几个');

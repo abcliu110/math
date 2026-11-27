@@ -471,10 +471,11 @@
         if (!r.ok) return fail(r.why);
         const prev = e.props[a.k], prevState = e.state ? clone(e.state) : undefined, prevProps = Object.assign({}, e.props);
         e.props[a.k] = r.v;
-        // onSet(props, k, v) → 要一起改的别的属性（比如“提交例子”把一条记录追加进日志、清空待提交的例子）。纯函数；$guess = { right, gap } 记一条 guess 事件
+        // onSet(props, k, v, prev) → 要一起改的别的属性（比如“提交例子”把一条记录追加进日志、清空待提交的例子）。纯函数；$guess = { right, gap } 记一条 guess 事件
+        //   props 里的 k 已经是新值 v 了；要和改以前比，看第 4 个参数 prev（改以前的值）
         let guessEv = null;
         if (def.onSet) {
-          const patch = def.onSet(e.props, a.k, r.v);
+          const patch = def.onSet(e.props, a.k, r.v, prev);
           if (patch) { for (const pk of Object.keys(patch)) { if (pk === '$guess') guessEv = patch[pk]; else if (def.props[pk]) e.props[pk] = patch[pk]; } }
         }
         if (def.reinit && def.reinit.includes(a.k)) e.state = def.init(e.props);

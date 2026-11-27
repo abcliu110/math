@@ -4,10 +4,10 @@
  * 上面的算式跟着变：17 ÷ 5 = 3 …… 2。余数永远比除数小。
  *   记下来（graph，只在“每份几个”里有；docs/knob-graph-and-gallery.md 第一节）：每份几个不动，台面上改总数（− +），点“记下来”，
  *     图上多两个点：商（橙，一级一级的台阶）和余数（红，一格一格涨上去、到除数就掉回 0 的锯齿）。
- *     图上有 3 个点以后，换到图上还没有的总数，圈和算式先藏起来：在蓝线上点一格猜余数，或者点“不猜，直接看”；猜了再记下来，算一次猜没猜对。
+ *     图上有 3 个点以后，换到图上还没有的总数，圈和算式先藏起来：在蓝线旁边点一格猜商、一格猜余数，或者点“不猜，直接看”；猜了再记下来，算一次猜没猜对。
  *     有 5 个点以后可以“全部试一遍”：从 1 到最大的总数，商和余数都画上（浅色）。换了每份几个，图上只留这个“每份几个”的点。
  * 这一版的边界（如实写）：最多 100 个圆片；每份最多 20 个、最多 10 个盒子；三位数除以两位数那种大数，圆片画不下，还在用旧器材。
- *   图只猜余数（商跟着余数一起揭开）。
+ *   先猜时商和余数都要猜（2026-11-26 起；以前只猜余数，商跟着一起揭开）：蓝线左边一列橙圈猜商，右边一列红方块猜余数，两个都点了才揭开；两个都对才算猜对一次。
  *   记下来也在“平均分给几份”里（2026-11-25）：盒子数不动，改总数，全放完以后点“记下来”，图上多一个点：最多的盒子有几个。
  *     点排成台阶，但和“每份几个”的商不一样：总数刚过 3 的倍数（3 个盒子时）就往上跳一级，这就是抽屉原理“至少有一个盒子放了 ⌈总数 ÷ 盒子数⌉ 个”。
  *     图上有 3 个点以后，换到新的总数，放的按钮先锁住：先在蓝线上猜最多的盒子有几个，或者“不猜，直接看”。记录存在 rec1（总数,盒子数;…）。 */
@@ -23,10 +23,10 @@
       const g = clamp(p.g, 1, Math.min(GMAX, n)), graph = !!p.graph;
       const rec = String(p.rec || '').split(';').map((e) => e.split(',').map(Number)).filter((a) => a.length === 2 && a.every(Number.isInteger) && a[0] >= 1 && a[0] <= NMAX && a[1] >= 1 && a[1] <= GMAX);
       const pts = rec.filter((a) => a[1] === g).map((a) => a[0]).filter((x, i, a) => a.indexOf(x) === i).sort((a, b) => a - b);
-      const guess = Number.isInteger(+p.guess) && +p.guess >= 0 ? +p.guess : -1, has = pts.includes(n);
-      const hidden = graph && pts.length >= 3 && !has && guess < 0 && !p.peek;
+      const guess = Number.isInteger(+p.guess) && +p.guess >= 0 ? +p.guess : -1, gq = Number.isInteger(+p.gq) && +p.gq >= 0 ? +p.gq : -1, has = pts.includes(n);
+      const hidden = graph && pts.length >= 3 && !has && (guess < 0 || gq < 0) && !p.peek;   // 商和余数都猜了才揭开
       const asks = RS.parseAsk(p.ask, p.pick, pts.length >= 3);
-      return { mode, n, g, q: Math.floor(n / g), r: n % g, graph, rec, pts, guess, has, hidden, peek: !!p.peek, gok: clamp(p.gok, 0, 99), gtry: clamp(p.gtry, 0, 99), all: !!p.all, asks };
+      return { mode, n, g, q: Math.floor(n / g), r: n % g, graph, rec, pts, guess, gq, has, hidden, peek: !!p.peek, gok: clamp(p.gok, 0, 99), gtry: clamp(p.gtry, 0, 99), all: !!p.all, asks };
     }
     const k = clamp(p.k, 1, BMAX), dealt = clamp(p.dealt, 0, n), box = Array.from({ length: k }, (_, i) => Math.floor(dealt / k) + (i < dealt % k ? 1 : 0));
     const graph = !!p.graph, rec1 = String(p.rec1 || '').split(';').map((e) => e.split(',').map(Number)).filter((a) => a.length === 2 && a.every(Number.isInteger) && a[0] >= 1 && a[0] <= NMAX && a[1] >= 1 && a[1] <= BMAX);
@@ -46,11 +46,13 @@
   const xEnd = (m) => Math.min(NMAX, Math.max(20, m.n, ...m.pts));
   function drawGraph(m, p) {
     const u = p.unit || '个', L = gLay(m), xb = xEnd(m), yb = Math.max(m.g - 1, Math.floor(xb / m.g), 1);
-    let s = K.text(20, L.yb + 17, '总数', { size: 12, weight: 700, anchor: 'start' }) + RS.btn(54, L.yb, 26, '−', { n: m.n - 1, guess: -1, peek: false }, m.n > 1, '总数少 1') +
-      K.text(104, L.yb + 17, String(m.n), { size: 14, weight: 700 }) + RS.btn(128, L.yb, 26, '+', { n: m.n + 1, guess: -1, peek: false }, m.n < NMAX, '总数多 1');
-    const rec = { rec: m.rec.map((a) => a.join(',')).concat([m.n + ',' + m.g]).join(';'), guess: -1 };
-    if (m.guess >= 0) Object.assign(rec, { gtry: m.gtry + 1, gok: m.gok + (m.guess === m.r ? 1 : 0) });
-    s += RS.btn(170, L.yb, 110, '记下来', rec, !m.hidden && !m.has, m.has ? '这个总数已经记过了' : m.hidden ? '先猜余数，或者点“不猜，直接看”' : '把这个总数记到图上');
+    let s = K.text(20, L.yb + 17, '总数', { size: 12, weight: 700, anchor: 'start' }) + RS.btn(54, L.yb, 26, '−', { n: m.n - 1, guess: -1, gq: -1, peek: false }, m.n > 1, '总数少 1') +
+      K.text(104, L.yb + 17, String(m.n), { size: 14, weight: 700 }) + RS.btn(128, L.yb, 26, '+', { n: m.n + 1, guess: -1, gq: -1, peek: false }, m.n < NMAX, '总数多 1');
+    // 商和余数都猜了才算猜了一次；两个都对才算猜对
+    const both = m.guess >= 0 && m.gq >= 0, qok = m.gq === m.q, rok = m.guess === m.r;
+    const rec = { rec: m.rec.map((a) => a.join(',')).concat([m.n + ',' + m.g]).join(';'), guess: -1, gq: -1 };
+    if (both) Object.assign(rec, { gtry: m.gtry + 1, gok: m.gok + (qok && rok ? 1 : 0) });
+    s += RS.btn(170, L.yb, 110, '记下来', rec, !m.hidden && !m.has, m.has ? '这个总数已经记过了' : m.hidden ? '先猜商和余数，或者点“不猜，直接看”' : '把这个总数记到图上');
     if (m.hidden) s += RS.btn(290, L.yb, 120, '不猜，直接看', { peek: true }, true, '不猜，直接看');
     const P = RS.plot({ fx: 14, fy: L.yg, fw: 620, fh: GH - 44, xa: 0, xb, ya: 0, yb, title: '📈 记下来：横着是一共几' + u + '，竖着是商（橙）和余数（红）；每份 ' + m.g + ' ' + u });
     const { X, Y, ys } = P; s += P.s;
@@ -59,9 +61,19 @@
     if (m.all) for (let x = 1; x <= xb; x++) s += K.circle(X(x) + dq, Y(Math.floor(x / m.g)), 2.8, { fill: '#efc08a', stroke: 'none' }) + K.rect(X(x) + dr - 2.5, Y(x % m.g) - 2.5, 5, 5, { fill: '#eda39a', r: 0 });
     for (const x of m.pts) s += K.circle(X(x) + dq, Y(Math.floor(x / m.g)), 4.6, { fill: '#f5a25d', stroke: 'var(--ink)', w: 1.1 }) + K.rect(X(x) + dr - 4, Y(x % m.g) - 4, 8, 8, { fill: '#e0645a', stroke: 'var(--ink)', w: 1.1, r: 1 });
     s += K.line(X(m.n), P.Y0 - 4, X(m.n), P.Y1 + 2, { w: 1.4, stroke: 'var(--blue)', dash: '4 3' });
-    if (m.hidden) for (let r = 0; r < m.g; r++) s += '<g data-pick-set="' + encodeURIComponent(JSON.stringify({ guess: r })) + '" style="cursor:pointer"><title>猜余数 ' + r + '</title><rect x="' + (X(m.n) - 9) + '" y="' + (Y(r) - ys / 2) + '" width="18" height="' + ys + '" fill="transparent"/></g>';
-    if (m.guess >= 0 && !m.has) s += K.rect(X(m.n) - 6, Y(m.guess) - 6, 12, 12, { fill: 'none', stroke: 'var(--blue)', w: 1.8, r: 2, dash: '3 2' });
-    let say = m.pts.length < 3 ? '再记 ' + (3 - m.pts.length) + ' 个，就要先猜再看（改总数，点“记下来”）' : m.has ? '这个总数图上已经有了：改一下总数' : m.hidden ? '先猜：一共 ' + m.n + ' ' + u + '，余数是几？点蓝线上的一格' : m.guess >= 0 ? '你猜余数 ' + m.guess + '，' + (m.guess === m.r ? '猜对了！' : '其实是 ' + m.r + '。') + '点“记下来”' : '';
+    // 先猜：蓝线左边一列橙圈猜商（台阶），右边一列红方块猜余数（锯齿）；两个都点了才揭开
+    const qx = X(m.n) + dq * 2.6, rx = X(m.n) + dr * 2.6, hh = Math.max(8, ys);
+    if (m.hidden) {
+      for (let v = 0; v <= yb; v++) s += '<g data-pick-set="' + encodeURIComponent(JSON.stringify({ gq: v })) + '" style="cursor:pointer"><title>猜商 ' + v + '</title><rect x="' + (qx - 9) + '" y="' + (Y(v) - hh / 2) + '" width="18" height="' + hh + '" fill="transparent"/>' + K.circle(qx, Y(v), 2.4, { fill: '#fff', stroke: '#f5a25d', w: 1.2 }) + '</g>';
+      for (let v = 0; v < m.g; v++) s += '<g data-pick-set="' + encodeURIComponent(JSON.stringify({ guess: v })) + '" style="cursor:pointer"><title>猜余数 ' + v + '</title><rect x="' + (rx - 9) + '" y="' + (Y(v) - hh / 2) + '" width="18" height="' + hh + '" fill="transparent"/>' + K.rect(rx - 2.2, Y(v) - 2.2, 4.4, 4.4, { fill: '#fff', stroke: '#e0645a', w: 1.2, r: 0 }) + '</g>';
+      s += K.text(qx - 4, P.Y0 - 8, '商', { size: 10, weight: 700, anchor: 'end', fill: '#c46a1a' }) + K.text(rx + 4, P.Y0 - 8, '余数', { size: 10, weight: 700, anchor: 'start', fill: '#c0392b' });
+    }
+    if (m.gq >= 0 && !m.has) s += '<g data-gq="' + m.gq + '">' + K.circle(qx, Y(m.gq), 6.5, { fill: 'none', stroke: 'var(--blue)', w: 1.8 }) + '</g>';
+    if (m.guess >= 0 && !m.has) s += '<g data-gr="' + m.guess + '">' + K.rect(rx - 6, Y(m.guess) - 6, 12, 12, { fill: 'none', stroke: 'var(--blue)', w: 1.8, r: 2, dash: '3 2' }) + '</g>';
+    const told = both ? '你猜商 ' + m.gq + '、余数 ' + m.guess + '，' + (qok && rok ? '都猜对了！' : qok ? '商对了，余数其实是 ' + m.r + '。' : rok ? '余数对了，商其实是 ' + m.q + '。' : '其实商是 ' + m.q + '、余数是 ' + m.r + '。') + '点“记下来”' : '';
+    let say = m.pts.length < 3 ? '再记 ' + (3 - m.pts.length) + ' 个，就要先猜再看（改总数，点“记下来”）' : m.has ? '这个总数图上已经有了：改一下总数'
+      : m.hidden && m.gq >= 0 ? '商猜了 ' + m.gq + '，再猜余数：点蓝线右边的红方块' : m.hidden && m.guess >= 0 ? '余数猜了 ' + m.guess + '，再猜商：点蓝线左边的橙圈'
+      : m.hidden ? '先猜：一共 ' + m.n + ' ' + u + '，商和余数各是几？蓝线左边的橙圈猜商，右边的红方块猜余数' : told;
     if (m.gtry) say += (say ? '　' : '') + '猜了 ' + m.gtry + ' 次，猜对 ' + m.gok + ' 次';
     s += K.text(24, L.yg + 34, say, { size: 11, anchor: 'start', fill: 'var(--blue)', weight: 700 });
     s += RS.btn(504, L.yg + 4, 116, '全部试一遍', { all: !m.all }, m.pts.length >= 5 || m.all, m.pts.length >= 5 ? (m.all ? '收起全部' : '每个总数都画上') : '图上有 5 个点以后才能全部试一遍', m.all);
@@ -98,7 +110,7 @@
       // 先猜：圈和算式藏起来，圆片一排 25 个摆着
       s += K.text(20, 28, m.n + ' ' + u + '，每 ' + m.g + ' ' + u + '一' + gname, { size: 16, weight: 700, anchor: 'start' });
       s += '<g data-eq="1">' + K.text(20, 54, m.n + ' ÷ ' + m.g + ' = ' + HIDE + ' …… ' + HIDE, { size: 18, weight: 700, anchor: 'start' }) + '</g>';
-      s += K.text(260, 54, '先猜余数，再看圈', { size: 13, anchor: 'start', fill: 'var(--blue)', weight: 700 });
+      s += K.text(260, 54, '先猜商和余数，再看圈', { size: 13, anchor: 'start', fill: 'var(--blue)', weight: 700 });
       for (let i = 0; i < m.n; i++) s += chip(X0 + (i % 25) * 22, Y0 + Math.floor(i / 25) * D, '#d9dee8');
     } else if (m.mode === 0) {
       s += K.text(20, 28, m.n + ' ' + u + '，每 ' + m.g + ' ' + u + '一' + gname, { size: 16, weight: 700, anchor: 'start' });
@@ -144,7 +156,7 @@
     const m = model(c.props); if (m.mode !== 0 || m.hidden) return [];
     const sx = (g) => SX + (g - 1) * (SX1 - SX) / (GMAX - 1);
     return [{ id: 'g', x: sx(m.g), y: SY, r: 10, shape: 'bar-v', cursor: 'ew-resize', tip: '拖我：每份几个',
-      drag: (c0, q) => ({ g: clamp(Math.round((q.x - SX) / ((SX1 - SX) / (GMAX - 1))) + 1, 1, Math.min(GMAX, model(c0.props).n)), guess: -1, peek: false }),
+      drag: (c0, q) => ({ g: clamp(Math.round((q.x - SX) / ((SX1 - SX) / (GMAX - 1))) + 1, 1, Math.min(GMAX, model(c0.props).n)), guess: -1, gq: -1, peek: false }),
       say: (c1) => { const m1 = model(c1.props); return m1.n + ' ÷ ' + m1.g + ' = ' + m1.q + (m1.r ? ' …… ' + m1.r : ''); } }];
   }
   const I = (lo, hi, d, label, o) => Object.assign({ type: 'int', label, default: d, min: lo, max: hi, write: true }, o || {});
@@ -162,7 +174,7 @@
           graph: { type: 'bool', label: '记下来：每份几个是总数 → 商、余数的图；平均分是总数 → 最多的盒子的图', default: false, write: true },
           rec: { type: 'text', label: '图上记了哪些（总数,每份几个;…）', default: '', write: true, hidden: true },
           rec1: { type: 'text', label: '平均分：图上记了哪些（总数,盒子数;…）', default: '', write: true, hidden: true },
-          guess: I(-1, 99, -1, '图上猜的余数（-1 没猜）', { hidden: true }), peek: { type: 'bool', label: '不猜，直接看', default: false, write: true, hidden: true },
+          guess: I(-1, 99, -1, '图上猜的余数（-1 没猜）', { hidden: true }), gq: I(-1, 99, -1, '每份几个：图上猜的商（-1 没猜）', { hidden: true }), peek: { type: 'bool', label: '不猜，直接看', default: false, write: true, hidden: true },
           gok: I(0, 99, 0, '猜对几次（自动）', { hidden: true }), gtry: I(0, 99, 0, '猜了几次（自动）', { hidden: true }),
           all: { type: 'bool', label: '图上全部试一遍', default: false, write: true },
           ask: { type: 'text', label: '追问（题干|选项|*对的选项~…）', default: '', write: true }, pick: { type: 'text', label: '追问选了第几个', default: '', write: true },

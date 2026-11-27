@@ -4,6 +4,7 @@
  *   运算顺序：  一串数和运算符。点哪个运算符，就先算哪一步。顺序不对（比如有乘法却先点加号）会被拦住并说明原因；
  *               顺序对了，这一步算出来，下面多一行“= …”。连加、连乘可以从任何一处先算（结合律），连减、连除只能从左往右。
  * 式子的写法：合并同类项用 "3x,2,2x,5,-x"（x2 表示 x²），运算顺序用 "2,+,3,*,4"（括号写成 ( 和 )）。
+ * 运算顺序还记着每个数是开头哪几个数加成的（start、grp），输出 pairs / pairsum / alone：“凑成 8”查的是真的两两配对，每个数只用一次。
  * 这一版的边界（如实写）：项只有 x、x²、y、xy 和常数，系数是整数；没有去括号、提公因式和移项；运算顺序没有乘方。
  * 和旧器材的关系：“式子工作台”（exprbench）是按规则一步步变形的台面，先保留；这一台管的是“同类项”和“先算哪一步”这两件事本身。 */
 (function (G) {
@@ -82,6 +83,26 @@
   const tokShow = (t) => (isOp(t) ? OPS[t] : t === '(' || t === ')' ? t : (String(t).startsWith('-') ? '(−' + String(t).slice(1) + ')' : String(t)));
   const toksShow = (toks) => toks.map(tokShow).join(' ');
 
+  // 配对（2026-11-26）：记下每个数是开头哪几个数加成的，才能查“凑成 8”是不是真的两两配对（每个数只用一次）。
+  //   start 开头的算式（第一次点运算符时记下；空着就是现在的算式），grp 每个数来自开头第几个数：'0.1|2.3|4'。
+  //   对不上（比如在属性里直接把算式改成 8 + 8 + 8 + 4）就是 null：不算配对。
+  const numIdx = (toks) => toks.map((t, i) => (!isOp(t) && t !== '(' && t !== ')' && numOf(t) !== null ? i : -1)).filter((i) => i >= 0);
+  function groupsOf(p, toks) {
+    const st = parseToks(p.start || p.toks), sv = numIdx(st).map((i) => numOf(st[i])), cur = numIdx(toks);
+    const gs = p.grp ? String(p.grp).split('|').map((g) => g.split('.').map(Number)) : sv.map((_, i) => [i]);
+    if (gs.length !== cur.length) return null;
+    const flat = [].concat(...gs).sort((a, b) => a - b);
+    if (flat.length !== sv.length || flat.some((v, i) => v !== i)) return null;
+    for (let k = 0; k < gs.length; k++) { const sum = gs[k].reduce((a, j) => Q.add(a, sv[j]), Q(0)); if (Q.show(sum) !== Q.show(numOf(toks[cur[k]]))) return null; }
+    return gs;
+  }
+  // 点第 i 个运算符以后的 grp：左右两个数的来历并在一起
+  function mergeGrp(p, toks, i) {
+    const gs = groupsOf(p, toks); if (!gs) return 'x';
+    const k = numIdx(toks).indexOf(i - 1); if (k < 0 || k + 1 >= gs.length) return 'x';
+    const out = gs.slice(0, k).concat([gs[k].concat(gs[k + 1])], gs.slice(k + 2));
+    return out.map((g) => g.join('.')).join('|');
+  }
   function model(p) {
     if (p.mode === 1) {
       const toks = parseToks(p.toks), single = toks.length === 1 ? numOf(toks[0]) : null;
@@ -113,7 +134,7 @@
         const x = x0 + i * cw + cw / 2;
         if (isOp(t)) {
           let patch;
-          if (al.ok.has(i)) { const nt = applyOp(m.toks, i); patch = nt ? { toks: nt.join(','), hist: m.hist.concat([toksShow(m.toks)]).slice(-8).join('|'), steps: p.steps + 1, msg: '' } : { msg: '不能除以 0', wrong: p.wrong + 1 }; }
+          if (al.ok.has(i)) { const nt = applyOp(m.toks, i); patch = nt ? { start: p.start || m.toks.join(','), grp: mergeGrp(p, m.toks, i), toks: nt.join(','), hist: m.hist.concat([toksShow(m.toks)]).slice(-8).join('|'), steps: p.steps + 1, msg: '' } : { msg: '不能除以 0', wrong: p.wrong + 1 }; }
           else patch = { msg: al.why[i] || '这一步现在还不能算', wrong: p.wrong + 1 };
           s += '<g data-pick-set="' + encodeURIComponent(JSON.stringify(patch)) + '" style="cursor:pointer"><title>点一下：先算这一步</title>' + K.circle(x, y - 7, 17, { fill: '#fff', stroke: 'var(--blue)', w: 2.2 }) + K.text(x, y, OPS[t], { size: 22, weight: 700, fill: 'var(--blue)' }) + '</g>';
         } else s += K.text(x, y + 1, tokShow(t), { size: 24, weight: 700 });
@@ -158,6 +179,7 @@
           orig: T('', '合并同类项：原式（出题人设；空着就用开场的式子）', { hidden: true }),
           toks: T('2,+,3,*,4', '运算顺序：现在的算式（数和运算符用逗号分开）'),
           hist: T('', '运算顺序：前面几步（自动记录）', { hidden: true }),
+          start: T('', '运算顺序：开头的算式（第一次算时自动记下）', { hidden: true }), grp: T('', '运算顺序：每个数是开头第几个数加成的（自动）', { hidden: true }),
           steps: I(0, 99, 0, '算了几步（自动记录）', { hidden: true }), wrong: I(0, 99, 0, '被拦住几次（自动记录）', { hidden: true }),
           refused: I(0, 99, 0, '合并不了几次（自动记录）', { hidden: true }),
           msg: T('', '提示（自动）', { hidden: true }),
@@ -170,6 +192,8 @@
           cx2: { dim: null, kind: 'num', label: 'x² 的系数' }, c0: { dim: null, kind: 'num', label: '常数项' },
           refused: { dim: null, kind: 'num', label: '想合并不是同类项的，几次' },
           steps: { dim: null, kind: 'num', label: '算了几步' }, wrong: { dim: null, kind: 'num', label: '顺序不对被拦住几次' },
+          pairs: { dim: null, kind: 'num', label: '运算顺序：两个开头的数配成的对有几对（每个数只用一次）' }, pairsum: { dim: null, kind: 'num', label: '运算顺序：每一对加起来都是几（都一样才有）' },
+          alone: { dim: null, kind: 'num', label: '运算顺序：落单的数（没和别的配）有几个' },
           often: { dim: null, kind: 'num', label: '运算顺序：算式里出现最多的数' }, same: { dim: null, kind: 'num', label: '运算顺序：这个数出现了几次' },
         },
         icon: () => K.rect(6, 12, 22, 20, { fill: '#fde2c4', stroke: 'var(--ink)', r: 4 }) + K.text(17, 27, '3x', { size: 11, weight: 700 }) + K.text(33, 27, '+', { size: 12 }) + K.rect(38, 12, 22, 20, { fill: '#fde2c4', stroke: 'var(--ink)', r: 4 }) + K.text(49, 27, '2x', { size: 11, weight: 700 }),
@@ -183,6 +207,12 @@
             const cnt = new Map(); for (const t of m.toks) { const q = numOf(t); if (q !== null && !isOp(t) && t !== '(' && t !== ')') { const k = Q.show(q); cnt.set(k, (cnt.get(k) || 0) + 1); } }
             let best = null; for (const [k, v] of cnt) if (!best || v > best[1]) best = [k, v];
             if (best) { o.often = num(Q.parse(best[0])); o.same = num(best[1]); }
+            const gs = groupsOf(c.props, m.toks);
+            if (gs) {
+              const st = parseToks(c.props.start || c.props.toks), sv = numIdx(st).map((i) => numOf(st[i])), prs = gs.filter((g) => g.length === 2).map((g) => Q.show(Q.add(sv[g[0]], sv[g[1]])));
+              o.pairs = num(prs.length); o.alone = num(gs.filter((g) => g.length === 1).length);
+              if (prs.length && prs.every((x) => x === prs[0])) o.pairsum = num(Q.parse(prs[0]));
+            }
             return o;
           }
           return { value: num(m.value), terms: num(m.list.length), simplified: num(m.simplified), cx: num(coef(m.list, 'x')), cy: num(coef(m.list, 'y')), cx2: num(coef(m.list, 'x2')), c0: num(coef(m.list, '')), refused: num(c.props.refused), steps: z, wrong: z };
@@ -192,5 +222,5 @@
       },
     },
   });
-  U.TermsBench = { parseTerms, merge, exprShow, simplified, parseToks, allowed, applyOp, toksShow, model, MODES };
+  U.TermsBench = { groupsOf, parseTerms, merge, exprShow, simplified, parseToks, allowed, applyOp, toksShow, model, MODES };
 })(typeof globalThis !== 'undefined' ? globalThis : window);

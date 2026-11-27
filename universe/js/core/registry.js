@@ -200,7 +200,7 @@
     if (def.hidden !== undefined && typeof def.hidden !== 'boolean') err('hidden 要是 true / false（不列在器材架上）');
     // 先猜后看（docs/new-instruments.md 3.2）：guess = { props:[填猜测的属性], ports:[揭开前遮住的输出口], answered(props) → 填了没有 }。只遮界面，内核照常算
     if (def.recHide !== undefined && typeof def.recHide !== 'boolean') err('recHide 要是 true / false（开了记录仪先猜时，台面自己藏答案，不盖“先猜一猜”）');
-    if (def.onSet !== undefined && typeof def.onSet !== 'function') err('onSet 要是函数 (属性, 改的属性名, 新值) → 要一起改的别的属性');
+    if (def.onSet !== undefined && typeof def.onSet !== 'function') err('onSet 要是函数 (属性, 改的属性名, 新值, 改以前的值) → 要一起改的别的属性');
     if (def.guess !== undefined) {
       const g = def.guess;
       if (!g || typeof g !== 'object' || typeof g.answered !== 'function') err('guess 要写 { props, ports, answered(props) }');

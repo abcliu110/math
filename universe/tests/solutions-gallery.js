@@ -15,7 +15,8 @@ module.exports = {
   'gal-br-area'(h) { h.set(h.role('m'), 'h', 2); },
   // 第二页：1 + 2 + … + 7。运算顺序台直接写成算完的样子；高斯台倒过来、对齐；平均数台直接写成摊平的每堆 4 块
   'gal-gs-add'(h) { h.set(h.role('t'), 'toks', '28'); },
-  'gal-gs-pair'(h) { const t = h.role('t'); h.set(t, 'toks', '8,+,8,+,8,+,4'); h.set(t, 'toks', '28'); },
+  // 凑成 8 要真的配对：按点 1 和 7、2 和 6、3 和 5 中间的加号写 start、grp，再写算式（直接写 8 + 8 + 8 + 4 不算）
+  'gal-gs-pair'(h) { const t = h.role('t'); h.set(t, 'start', '1,+,7,+,2,+,6,+,3,+,5,+,4'); h.set(t, 'grp', '0.1|2.3|4.5|6'); h.set(t, 'toks', '8,+,8,+,8,+,4'); h.set(t, 'grp', '0.1.2.3.4.5.6'); h.set(t, 'toks', '28'); },
   'gal-gs-rev'(h) { const g = h.role('gs'); h.set(g, 'flip', true); h.set(g, 'pair', true); },
   'gal-gs-mean'(h) { h.set(h.role('m'), 'vals', '4,4,4,4,4,4,4'); },
   'gal-gs-br-rev'(h) { const g = h.role('gs'); h.set(g, 'flip', true); h.set(g, 'pair', true); },

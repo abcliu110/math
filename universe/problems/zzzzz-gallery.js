@@ -110,7 +110,8 @@
     build: one('termsbench', { mode: 1, toks: '1,+,7,+,2,+,6,+,3,+,5,+,4' }, 't'),
     predict: { q: '换了顺序，加起来的和会变吗？', options: [{ v: 'same', label: '不变，还是那几个数' }, { v: 'diff', label: '会变' }], answer: 'same' },
     milestones: [
-      { id: 'eights', say: '凑出三个 8：8 + 8 + 8 + 4', score: 3, when: { all: [on('t', 'often', 8), on('t', 'same', 3)] }, hints: ['先点 1 和 7 中间的加号。', '再点 2 和 6 中间的、3 和 5 中间的。', '算式变成 8 + 8 + 8 + 4。'] },
+      // 2026-11-26 起查真的配对：三对，每对是开头的两个数、加起来都是 8，每个数只用一次（以前只看算式里有三个 8）
+      { id: 'eights', say: '凑出三个 8：1 和 7、2 和 6、3 和 5 配成对，4 落单', score: 3, when: { all: [on('t', 'pairs', 3), on('t', 'pairsum', 8), on('t', 'alone', 1)] }, hints: ['先点 1 和 7 中间的加号。', '再点 2 和 6 中间的、3 和 5 中间的。', '每一对都是两个数加成 8，算式变成 8 + 8 + 8 + 4。'] },
       { id: 'sum', say: '三个 8 再加 4：28', score: 3, when: on('t', 'value', 28), hints: ['8 + 8 + 8 = 24。', '再加落单的 4。', '28。'] },
     ],
     goal: ['eights', 'sum'],
