@@ -673,3 +673,17 @@ body.rail-l #lrail:hover, body.rail-r #rrail:hover { background: #dbeafe; color:
 .chains .it.chain { cursor: pointer; }
 .chains .it.lvl { margin-left: 14px; font-size: 13px; }
 .chains .it.lock { color: var(--txt3); cursor: default; }
+
+/* 低年级帮手（试验台增强 6，js/ui/young-aid.js 在 1、2 年级的题里写 data-lowgrade="on"）：左栏的字和按钮变大、🔊 读出来、图标；颜色只用已有的变量。 */
+html[data-lowgrade="on"] #leftbody .pcard { font-size: 16px; }
+html[data-lowgrade="on"] #leftbody .pcard b { font-size: 18px; }
+html[data-lowgrade="on"] #leftbody .step { font-size: 16px; align-items: center; }
+html[data-lowgrade="on"] #leftbody .step .hint { font-size: 15px; }
+html[data-lowgrade="on"] #leftbody .step .no { width: 28px; height: 28px; font-size: 14px; }
+html[data-lowgrade="on"] #leftbody .btn { font-size: 16px; min-height: 44px; min-width: 44px; }
+.yg-ico { margin-right: 4px; }
+.yg-say { flex: none; min-width: 44px; min-height: 44px; padding: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); color: var(--txt); font-size: 20px; line-height: 1; cursor: pointer; }
+.yg-say:hover, .yg-say:focus-visible { border-color: var(--blue); }
+.pcard > .yg-say { float: right; margin: 0 0 4px 8px; }
+.card .hd .yg-say { position: relative; min-width: 32px; min-height: 24px; margin-left: 6px; font-size: 15px; border-radius: 8px; background: var(--card2); color: var(--ink); border-color: var(--card2); }
+.card .hd .yg-say::after { content: ""; position: absolute; left: -6px; right: -6px; top: -16px; bottom: -4px; }
