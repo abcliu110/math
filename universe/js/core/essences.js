@@ -22,6 +22,24 @@
   U.ESSENCES = {};
   LIST.forEach((e) => { U.ESSENCES[e.id] = Object.freeze(e); });
   U.ESSENCE_IDS = LIST.map((e) => e.id);
+  /* 道理地图（docs/essence-forms.md 第六节）：孩子看到的名字和一句话，只在这一张表里写（界面上不出现“本质”两个字）。
+   * 位置和箭头按 docs/essences.md 第三节那张图：col 列、row 行；row 3 是“横跨所有”的两条（E9、E12），不画箭头。
+   * 箭头 [甲, 乙] 读作“乙常以甲为基础”。open：第一版能点进去的那一页（只有“两边一样”）。 */
+  U.ESSENCE_KID = {
+    E1: { name: '配成对', one: '一个对一个，不多不少', col: 0, row: 0 },
+    E3: { name: '用尺子量', one: '换一把尺子，数变了，东西没变', col: 1, row: 0 },
+    E8: { name: '字母是任意数', one: 'x 可以是随便哪一个数', col: 2, row: 0 },
+    E2: { name: '拆开再拼', one: '大的拆成小的，小的拼回大的', col: 0, row: 1 },
+    E4: { name: '两边一样', one: '两边做同样的事，还是一样；只动一边就歪了', col: 1, row: 1, open: 'balance4' },
+    E5: { name: '变中不变', one: '动来动去，总有一样东西不变', col: 2, row: 1 },
+    E10: { name: '看起来一样', one: '折一折、转一转，还和原来一样', col: 3, row: 1 },
+    E6: { name: '一步接一步', one: '知道起点和怎么走一步，就知道整条路', col: 1, row: 2 },
+    E7: { name: '越来越近', one: '到不了，却能想多近就多近', col: 2, row: 2 },
+    E11: { name: '碰运气也有规律', one: '一次猜不准，次数多了有规律', col: 3, row: 2 },
+    E9: { name: '凭什么一定', one: '试了很多次都对还不够，要说出为什么一定对', col: 0, row: 3, span: 2 },
+    E12: { name: '变成数学题', one: '把生活里的事变成能算的东西，再回去看对不对', col: 2, row: 3, span: 2 },
+  };
+  U.ESSENCE_ARROWS = [['E1', 'E3'], ['E3', 'E8'], ['E1', 'E2'], ['E3', 'E4'], ['E8', 'E5'], ['E2', 'E4'], ['E4', 'E5'], ['E5', 'E10'], ['E4', 'E6'], ['E5', 'E7'], ['E6', 'E7'], ['E7', 'E11']];
   /* 检查一个 essence 声明是否合法，返回错误信息数组 */
   U.checkEssence = function (arr) {
     const errs = [];
