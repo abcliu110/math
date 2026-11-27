@@ -6,7 +6,7 @@
 
 - 知识点：142 个（设计目标 142）
 - 有题的知识点：141 个（99%）
-- 题目：694 道；没有对应知识点的题：1 道
+- 题目：695 道；没有对应知识点的题：1 道
 - 没有器材的本质：无
 - 没有题的本质：无
 
@@ -18,7 +18,7 @@
 | 2 | 16 | 16（100%） | 58 |
 | 3 | 16 | 16（100%） | 102 |
 | 4 | 17 | 17（100%） | 116 |
-| 5 | 14 | 14（100%） | 125 |
+| 5 | 14 | 14（100%） | 126 |
 | 6 | 15 | 14（93%） | 74 |
 | 7 | 16 | 16（100%） | 78 |
 | 8 | 16 | 16（100%） | 76 |
@@ -50,7 +50,7 @@
 | 2.4 | 2 | 角的初步认识、直角 | 2 | 1 | 0 | 1 | tribench、anglebench |
 | 2.5 | 2 | 乘法初步认识、口诀 | 3 | 1 | 0 | 1 | numlinebench、areamodel、tapebench |
 | 2.6 | 2 | 观察物体 | 1 | 1 | 0 | 1 | solidbench |
-| 2.7 | 2 | 认识时间 | 1 | 1 | 0 | 1 | clockbench、ratiobench |
+| 2.7 | 2 | 认识时间 | 1 | 1 | 0 | 1 | clockbench |
 | 2.15 | 2 | 搭配（一） | 1 | 1 | 0 | 1 | areamodel |
 | 2.14a | 2 | 数据收集整理 | 1 | 1 | 0 | 1 | statbench |
 | 2.8 | 2 | 除法初步认识 | 2 | 1 | 0 | 1 | numlinebench |
@@ -60,9 +60,9 @@
 | 2.12 | 2 | 万以内数的认识、近似数 | 4 | 0 | 0 | 1 | blocksbench、num、sqrt、round |
 | 2.13 | 2 | 克和千克 | 1 | 1 | 0 | 1 | ratiobench |
 | 2.14b | 2 | 推理 | 5 | 0 | 0 | 1 | logicbench、nim、statebench |
-| 3.1 | 3 | 时、分、秒 | 1 | 1 | 0 | 1 | ratiobench、clockbench |
+| 3.1 | 3 | 时、分、秒 | 1 | 1 | 0 | 1 | clockbench |
 | 3.2 | 3 | 万以内加减法 | 3 | 1 | 0 | 1 | blocksbench、estbench |
-| 3.3 | 3 | 测量 | 1 | 1 | 0 | 1 | ratiobench、rulerbench |
+| 3.3 | 3 | 测量 | 1 | 1 | 0 | 1 | rulerbench |
 | 3.4 | 3 | 倍的认识 | 11 | 1 | 0 | 1 | tapebench、numlinebench、relbench |
 | 3.5 | 3 | 多位数乘一位数 | 3 | 1 | 0 | 1 | areamodel、mulbench、relbench |
 | 3.6 | 3 | 长方形和正方形 | 3 | 1 | 0 | 1 | areamodel |
@@ -93,7 +93,7 @@
 | 4.14 | 4 | 图形的运动（二） | 3 | 0 | 0 | 1 | gridbench、foldbench |
 | 4.15 | 4 | 平均数 | 9 | 0 | 0 | 1 | hanoi、meanbench、chancebench、statbench |
 | 4.16 | 4 | 鸡兔同笼 | 25 | 1 | 0 | 1 | swapbench、surplusbench、num、areamodel |
-| 5.1 | 5 | 小数乘法 | 2 | 1 | 0 | 1 | decbench、estbench |
+| 5.1 | 5 | 小数乘法 | 3 | 1 | 0 | 1 | areamodel、decbench、estbench |
 | 5.2 | 5 | 位置 | 1 | 1 | 0 | 1 | gridbench |
 | 5.3 | 5 | 小数除法 | 1 | 1 | 0 | 1 | decbench |
 | 5.4 | 5 | 可能性 | 7 | 1 | 0 | 3 | chancebench、pairbench、ptree、ringbench |
@@ -176,10 +176,10 @@
 | 本质 | 题目数 | 器材数 |
 |---|---|---|
 | E1 | 77 | 28 |
-| E2 | 299 | 58 |
+| E2 | 300 | 58 |
 | E3 | 154 | 44 |
 | E4 | 144 | 33 |
-| E5 | 146 | 55 |
+| E5 | 147 | 55 |
 | E6 | 60 | 24 |
 | E7 | 174 | 34 |
 | E8 | 70 | 24 |

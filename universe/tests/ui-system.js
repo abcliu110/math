@@ -5,7 +5,8 @@
  *  4. 代入一个式子：x = y + 2 拖到 x + y = 8 上，变成 2y + 2 = 8；
  *  5. 拖的时候两边一起动：把一架拖到另一架上，没松手时画面上就画出两个盘各拿走什么；
  *     盘里的砝码拖出来，另一个盘的砝码跟着走；另一个盘里没有同样的东西就拿不了；从托盘往天平上拖，两个盘各加一个；
- *  6. 全程没有打开属性面板。
+ *  6. 只动一边：点开关，拖出一个盒子只拿走它，天平歪向右边（横梁斜、式子写 <、写“歪了”）；歪的天平拿去消元被拦住；从托盘放回去又平了；
+ *  7. 全程没有打开属性面板。
  * 需要 playwright（NODE_PATH 指向它的 node_modules）。 */
 'use strict';
 const { chromium } = require('playwright');
@@ -105,6 +106,31 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
     await p.mouse.up(); await p.waitForTimeout(250);
     ok((await props()).e0 === '0,1,4,0,0,8', '松手：两个盘各多一个砝码，y + 4 = 8');
   }
+  console.log('6. 只动一边：天平会歪');
+  await open('sy-7-10');
+  ok(await p.locator('.card svg.bdy [data-sync="1"]').count() === 1, '下面有开关“两个盘连着”');
+  await closeDlg(); await p.locator('.card svg.bdy [data-sync="1"] [data-pick-set]').click(); await p.waitForTimeout(200);
+  ok((await props()).sync === false && await p.locator('.card svg.bdy [data-sync="0"]').count() === 1, '点开关：改成只动一边');
+  {
+    const g = await grip('i0Lx');
+    await closeDlg(); await p.mouse.move(g.x, g.y); await p.mouse.down(); await p.mouse.move(g.x + 10, g.y - 40, { steps: 5 }); await p.mouse.move(g.x + 20, g.y - 75, { steps: 5 }); await p.waitForTimeout(120);
+    ok(await p.locator('.card svg.bdy [data-twin]').count() === 0 && (await text()).includes('只从左盘拿走 1 个圆盒'), '把左盘的圆盒拖出来（还没松手）：右盘不跟着，写着“只从左盘拿走 1 个圆盒”');
+    await p.mouse.up(); await p.waitForTimeout(250);
+  }
+  ok((await props()).e0 === '0,1,0,0,0,7' && await p.locator('.card svg.bdy [data-lean="-1"]').count() === 1 && await p.locator('.card svg.bdy [data-beam="-1"]').count() === 1, '松手：只拿走一个，上面的天平歪向右边（横梁斜了）');
+  ok((await text()).includes('y < 7') && (await text()).includes('歪了：右盘重'), '式子写成 y < 7，旁边写“歪了：右盘重”');
+  {
+    const r0 = (await props()).refused;
+    await dragOnto(0, 1);
+    ok((await props()).e1 === '2,1,0,0,0,10' && (await props()).refused === r0 + 1 && (await text()).includes('这架天平是歪的'), '把歪的天平拖到下面：被拦住并说明');
+  }
+  {
+    // 屏幕上一个画布单位多长：两架天平的把手相距 172
+    const g = await grip('tx'), t = await grip('b0'), t1 = await grip('b1'), k = (t1.y - t.y) / 172, lx = t.x - 110 * k, ly = t.y + 60 * k;
+    await closeDlg(); await p.mouse.move(g.x, g.y); await p.mouse.down(); await p.mouse.move((g.x + lx) / 2, (g.y + ly) / 2, { steps: 6 }); await p.mouse.move(lx, ly, { steps: 6 }); await p.mouse.up(); await p.waitForTimeout(250);
+    ok((await props()).e0 === '1,1,0,0,0,7' && await p.locator('.card svg.bdy [data-lean]').count() === 0, '从托盘拖一个圆盒放回左盘：只加这一个，天平又平了');
+  }
+  ok(await out('x') === null && await done('x') === false, '歪过又摆平：没有乱算出圆盒的重量');
   ok(await p.evaluate(() => !UI.S.inspOpen), '全程没有打开属性面板');
   ok(errs.length === 0, '控制台 0 报错' + (errs.length ? '：' + errs[0] : ''));
   console.log('\n两架天平测试：' + pass + ' 通过，' + fail + ' 失败');

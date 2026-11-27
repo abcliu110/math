@@ -11,4 +11,5 @@ module.exports = {
   'am-x2x3'(h) { const m = h.role('m'); h.set(m, 'a', 2); h.set(m, 'b', 3); },
   'am-factor'(h) { const m = h.role('m'); h.set(m, 'a', 3); h.set(m, 'b', 4); },
   'am-perfect'(h) { const m = h.role('m'); h.set(m, 'a', 3); h.set(m, 'b', 3); },
+  'am-dec-23x14'(h) { const m = h.role('m'); h.set(m, 'db', 14); h.set(m, 'split', true); },
 };

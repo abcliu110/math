@@ -4,15 +4,23 @@
  *            下面的算式跟着变：13 × 7 = (10 + 3) × 7 = 70 + 21 = 91。这就是分配律，也是竖式乘法在做的事。
  *   分数乘法：整块是 1。竖着切 d1 份、涂 n1 份；横着切 d2 份、取 n2 份。重叠的格子就是积。拖涂色的边改分子，点 − ＋ 改分母。
  *   代数式：  边长是 x + a 和 x + b。拖边改 a、b，四块分别是 x²、ax、bx、ab，合起来就是展开式；反过来读就是因式分解。
+ *   小数乘法（2026-11-26 加）：边长是一位小数（2.3 和 1.4），每个 1 画成大格，每个 0.1 画成细格。拖右边、下边改长和宽（一次 0.1）；
+ *            点“✂ 拆成整数和小数”，两条边都在整数处切开：(2 + 0.3) × (1 + 0.4) = 2×1 + 0.3×1 + 2×0.4 + 0.3×0.4 = 2 + 0.3 + 0.8 + 0.12。
+ *            最小的一块是 0.1 × 0.1 = 0.01 的小格，所以 0.3 × 0.4 是 12 个小格 = 0.12。
  * 三种用法是同一件事：长方形的面积 = 长 × 宽，把边拆开，面积就拆成几块的和。
+ * 这一版的边界（如实写）：整数乘法长最多 30、宽最多 20（大了卡片跟着变大）；小数乘法只有一位小数，长最多 3.5、宽最多 2.4；
+ *   小数乘法只在整数处切一刀，不能随便切。
  * 把手（grips）用的是公共机制：器材声明把手在哪、拖到某处该把哪个属性改成什么；界面只负责画和转发（见 js/ui/stage-cards.js、stage-drag.js）。
  * 尺寸固定按格算（每格 CELL 像素），所以拖动时把手一直跟着鼠标。 */
 (function (G) {
   'use strict';
   const U = G.U, Q = U.Q, K = U.kit;
   const num = (n) => U.val('num', typeof n === 'number' ? Q(n) : n, { dim: null });
-  const MODES = ['整数乘法', '分数乘法', '代数式'];
-  const X0 = 46, Y0 = 44, CELL = 17, WMAX = 20, HMAX = 12, UNIT = 204, XLEN = 110, AMAX = 9;
+  const MODES = ['整数乘法', '分数乘法', '代数式', '小数乘法'];
+  const X0 = 46, Y0 = 44, CELL = 17, WMAX = 30, HMAX = 20, UNIT = 204, XLEN = 110, AMAX = 9;
+  const TEN = 10, DAMAX = 35, DBMAX = 24;   // 小数乘法：0.1 画成 10 像素，1 画成 100 像素
+  // 几个 0.1（或 0.01）写成小数：dec(23, 1) = '2.3'，dec(322, 2) = '3.22'
+  const dec = (n, k) => { const d = Math.pow(10, k), sgn = n < 0 ? '-' : ''; n = Math.abs(n); const i = Math.floor(n / d), r = n % d; return sgn + (r ? i + '.' + String(r).padStart(k, '0').replace(/0+$/, '') : String(i)); };
   const COL = ['#cfe3fb', '#fde2c4', '#d6f0d6', '#ead9f7', '#fbd5dc', '#fff3bf'];
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
@@ -32,6 +40,12 @@
     if (p.mode === 1) {
       const d1 = clamp(p.d1, 1, 12), d2 = clamp(p.d2, 1, 12), n1 = clamp(p.n1, 0, d1), n2 = clamp(p.n2, 0, d2);
       return { mode: 1, d1, d2, n1, n2, cells: n1 * n2, total: d1 * d2, area: Q(n1 * n2, d1 * d2) };
+    }
+    if (p.mode === 3) {
+      const da = clamp(p.da, 1, DAMAX), db = clamp(p.db, 1, DBMAX), split = p.split === true || p.split === 1;
+      const parts = (n) => (split ? [Math.floor(n / 10) * 10, n % 10].filter((x) => x > 0) : [n]);
+      const ws = parts(da), hs = parts(db);
+      return { mode: 3, da, db, split, ws, hs, parts: ws.length * hs.length, cells: da * db, area: Q(da * db, 100) };
     }
     if (p.mode === 2) {
       const a = clamp(p.a, 0, AMAX), b = clamp(p.b, 0, AMAX);
@@ -59,6 +73,13 @@
     }
     if (m.mode === 1) return [m.n1 + '/' + m.d1 + ' × ' + m.n2 + '/' + m.d2 + ' = ' + m.cells + '/' + m.total + (Q.show(m.area) !== m.cells + '/' + m.total ? ' = ' + Q.show(m.area) : ''),
       '整块切成 ' + m.d1 + ' × ' + m.d2 + ' = ' + m.total + ' 小格，两种颜色重叠的有 ' + m.n1 + ' × ' + m.n2 + ' = ' + m.cells + ' 格'];
+    if (m.mode === 3) {
+      const A = dec(m.da, 1), B = dec(m.db, 1), R = dec(m.cells, 2), side = (s) => (s.length > 1 ? '(' + s.map((x) => dec(x, 1)).join(' + ') + ')' : dec(s[0], 1));
+      if (m.parts === 1) return [A + ' × ' + B + ' = ' + R, '小格 0.1 × 0.1 = 0.01，有 ' + m.da + ' × ' + m.db + ' = ' + m.cells + ' 个'];
+      const terms = [], vals = [];
+      for (const hh of m.hs) for (const ww of m.ws) { terms.push(dec(ww, 1) + '×' + dec(hh, 1)); vals.push(dec(ww * hh, 2)); }
+      return [A + ' × ' + B + ' = ' + side(m.ws) + ' × ' + side(m.hs), '= ' + terms.join(' + '), '= ' + vals.join(' + ') + ' = ' + R];
+    }
     const t = (k, s) => (k === 0 ? '' : (k === 1 && s ? '' : k) + s);
     const sideA = 'x' + (m.a ? ' + ' + m.a : ''), sideB = 'x' + (m.b ? ' + ' + m.b : '');
     const exp = ['x²', t(m.a, 'x'), t(m.b, 'x'), m.p0 ? String(m.p0) : ''].filter(Boolean).join(' + ');
@@ -121,6 +142,37 @@
     s += T(bx + 44, Y0 + 160, c.masked ? '？' : m.cells + '/' + m.total, { size: 18, weight: 700, fill: '#4c2a85' });
     return s;
   }
+  function drawDec(c, m) {
+    let s = '', y = 0, k = 0;
+    for (const hh of m.hs) {
+      let x = 0;
+      for (const ww of m.ws) {
+        const px = X0 + x * TEN, py = Y0 + y * TEN, pw = ww * TEN, ph = hh * TEN;
+        s += rect(px, py, pw, ph, COL[k % COL.length], { op: 0.85 });
+        if (m.parts > 1) {
+          if (pw >= 56 && ph >= 34) s += T(px + pw / 2, py + ph / 2 - 2, dec(ww, 1) + '×' + dec(hh, 1), { size: 12 }) + T(px + pw / 2, py + ph / 2 + 13, '= ' + dec(ww * hh, 2), { size: 13, weight: 700 });
+          else if (pw >= 30 && ph >= 16) s += T(px + pw / 2, py + ph / 2 + 5, dec(ww * hh, 2), { size: 11, weight: 700 });
+        }
+        x += ww; k++;
+      }
+      y += hh;
+    }
+    // 细线是 0.1，粗线是 1
+    for (let i = 1; i < m.da; i++) s += K.line(X0 + i * TEN, Y0, X0 + i * TEN, Y0 + m.db * TEN, { stroke: '#8a94a8', w: i % 10 ? 0.3 : 1.4 });
+    for (let j = 1; j < m.db; j++) s += K.line(X0, Y0 + j * TEN, X0 + m.da * TEN, Y0 + j * TEN, { stroke: '#8a94a8', w: j % 10 ? 0.3 : 1.4 });
+    if (m.split) {
+      if (m.ws.length > 1) s += K.line(X0 + m.ws[0] * TEN, Y0 - 4, X0 + m.ws[0] * TEN, Y0 + m.db * TEN, { stroke: 'var(--blue)', w: 2.5 });
+      if (m.hs.length > 1) s += K.line(X0 - 4, Y0 + m.hs[0] * TEN, X0 + m.da * TEN, Y0 + m.hs[0] * TEN, { stroke: 'var(--blue)', w: 2.5 });
+    }
+    s += rect(X0, Y0, m.da * TEN, m.db * TEN, 'none', { sw: 2 });
+    let x = 0; for (const ww of m.ws) { s += T(X0 + (x + ww / 2) * TEN, Y0 + m.db * TEN + 16, dec(ww, 1), { size: 13, weight: 700 }); x += ww; }
+    let yy = 0; for (const hh of m.hs) { s += T(X0 + m.da * TEN + 24, Y0 + (yy + hh / 2) * TEN + 5, dec(hh, 1), { size: 13, weight: 700 }); yy += hh; }
+    // 拆开 / 合起来的按钮
+    const can = m.split || m.da >= 10 || m.db >= 10, lab = m.split ? '合起来' : '✂ 拆成整数和小数';
+    s += '<g data-dsplit="' + (m.split ? 1 : 0) + '"' + (can ? ' data-pick-set="' + encodeURIComponent(JSON.stringify({ split: !m.split })) + '" style="cursor:pointer"' : ' opacity="0.38"') + '><title>' + K.esc(m.split ? '两条边合回去' : can ? '两条边都在整数处切开：整数部分和小数部分分开乘' : '两条边都不到 1，没有整数部分可拆') + '</title>' +
+      K.rect(X0 + 20, Y0 - 36, 150, 24, { fill: '#fff', stroke: can ? 'var(--blue)' : '#8a94a8', r: 7, w: 1.5 }) + T(X0 + 95, Y0 - 19, lab, { size: 12, weight: 700 }) + '</g>';
+    return s;
+  }
   function drawAlg(c, m) {
     const aw = m.a * CELL, bh = m.b * CELL;
     let s = rect(X0, Y0, XLEN, XLEN, COL[0]) + T(X0 + XLEN / 2, Y0 + XLEN / 2 + 6, 'x²', { size: 17, weight: 700 });
@@ -146,7 +198,7 @@
     return s;
   }
   // 画布里图形下面那几行算式从哪里开始
-  const textTop = (m) => (m.mode === 0 ? Y0 + HMAX * CELL + 34 : m.mode === 1 ? Y0 + UNIT + 40 : Y0 + XLEN + AMAX * CELL + 30);
+  const textTop = (m) => (m.mode === 0 ? Y0 + Math.max(12, m.h) * CELL + 34 : m.mode === 1 ? Y0 + UNIT + 40 : m.mode === 3 ? Y0 + DBMAX * TEN + 34 : Y0 + XLEN + AMAX * CELL + 30);
 
   // 把手：每个把手说明自己在哪、拖到 p（画布像素）时该把哪些属性改成什么
   function grips(c) {
@@ -171,6 +223,11 @@
       m.hc.forEach((v, i) => out.push({ id: 'hc' + i, x: X0 - 18, y: Y0 + v * CELL, r: 7, cursor: 'row-resize', tip: '拖着挪这一刀；拖到边上就去掉',
         drag: (c0, q) => { const m0 = model(c0.props), rest = m0.hc.filter((_, j) => j !== i), y = toY(q); return { hcuts: txt(cuts(rest.concat(y > 0 && y < m0.h ? [y] : []).join(','), m0.h)) }; },
         say: (c1) => '横着切在 ' + (cuts(c1.props.hcuts, HMAX + 1).join('、') || '（去掉了）') }));
+    } else if (m.mode === 3) {
+      out.push({ id: 'da', x: X0 + m.da * TEN, y: Y0 + m.db * TEN / 2, shape: 'bar-v', cursor: 'ew-resize', tip: '左右拖：改长（一次 0.1）',
+        drag: (c0, q) => ({ da: clamp(Math.round((q.x - X0) / TEN), 1, DAMAX) }), say: (c1) => '长 ' + dec(clamp(c1.props.da, 1, DAMAX), 1) });
+      out.push({ id: 'db', x: X0 + m.da * TEN / 2, y: Y0 + m.db * TEN, shape: 'bar-h', cursor: 'ns-resize', tip: '上下拖：改宽（一次 0.1）',
+        drag: (c0, q) => ({ db: clamp(Math.round((q.y - Y0) / TEN), 1, DBMAX) }), say: (c1) => '宽 ' + dec(clamp(c1.props.db, 1, DBMAX), 1) });
     } else if (m.mode === 1) {
       out.push({ id: 'n1', x: X0 + m.n1 * UNIT / m.d1, y: Y0 + UNIT + 12, shape: 'bar-v', cursor: 'ew-resize', tip: '左右拖：竖着涂几份',
         drag: (c0, q) => { const d = model(c0.props).d1; return { n1: clamp(Math.round((q.x - X0) / UNIT * d), 0, d) }; }, say: (c1) => '涂 ' + c1.props.n1 + '/' + c1.props.d1 });
@@ -200,6 +257,8 @@
           hcuts: { type: 'text', label: '横着切在（用逗号分开）', default: '', write: true },
           d1: I(1, 12, 2, '竖着切几份'), n1: I(0, 12, 1, '竖着涂几份'), d2: I(1, 12, 3, '横着切几份'), n2: I(0, 12, 1, '横着取几份'),
           a: I(0, AMAX, 2, '一条边是 x + 几'), b: I(0, AMAX, 3, '另一条边是 x + 几'),
+          da: I(1, DAMAX, 23, '小数乘法：长是几个 0.1（23 就是 2.3）'), db: I(1, DBMAX, 14, '小数乘法：宽是几个 0.1（14 就是 1.4）'),
+          split: { type: 'bool', label: '小数乘法：在整数处拆开', default: false, write: true },
           show: { type: 'bool', label: '显示算式', default: true, write: true },
         },
         outputs: {
@@ -216,23 +275,25 @@
           ch: { dim: null, kind: 'num', label: '横着第一刀切在第几格（没切是 0）' },
         },
         icon: () => K.rect(10, 8, 30, 28, { fill: COL[0], stroke: 'var(--ink)', r: 0 }) + K.rect(40, 8, 14, 28, { fill: COL[1], stroke: 'var(--ink)', r: 0 }),
-        size: () => [430, 400],
+        // 整数乘法的长方形大了，卡片跟着变大（原点在左上角，所以拖的时候把手还是跟着鼠标）
+        size: (e) => { const p = (e && e.props) || {}; if (+p.mode === 3) return [460, 420]; if (+p.mode !== 0 && p.mode !== undefined) return [430, 400]; const w = clamp(+p.w || 13, 1, WMAX), h = clamp(+p.h || 7, 1, HMAX); return [Math.max(430, X0 + w * CELL + 50), Math.max(400, Y0 + Math.max(12, h) * CELL + 34 + 3 * 20 + 30)]; },
         grips,
         compute: (c) => {
           const m = model(c.props);
           if (m.mode === 1) return { area: num(m.area), cells: num(m.cells), total: num(m.total), parts: num(m.total), friendly: num(0), perim: num(4), square: num(1), p1: num(0), p0: num(0), cv: num(0), ch: num(0) };
+          if (m.mode === 3) return { area: num(m.area), parts: num(m.parts), cells: num(m.cells), total: num(100), friendly: num(0), perim: num(Q(2 * (m.da + m.db), 10)), square: num(m.da === m.db ? 1 : 0), p1: num(0), p0: num(0), cv: num(m.split && m.ws.length > 1 ? m.ws[0] / 10 : 0), ch: num(m.split && m.hs.length > 1 ? m.hs[0] / 10 : 0) };
           if (m.mode === 2) return { p1: num(m.p1), p0: num(m.p0), square: num(m.square), parts: num((m.a ? 2 : 1) * (m.b ? 2 : 1)), friendly: num(0), cells: num(0), total: num(0), cv: num(0), ch: num(0) };
           return { area: num(m.area), parts: num(m.parts), friendly: num(m.friendly), perim: num(m.perim), square: num(m.square), cells: num(0), total: num(0), p1: num(0), p0: num(0), cv: num(m.vc[0] || 0), ch: num(m.hc[0] || 0) };
         },
-        badge: (c) => { const m = model(c.props); return m.mode === 0 ? m.w + ' × ' + m.h + ' = ' + m.area : m.mode === 1 ? (c.masked ? '' : Q.show(m.area)) : ''; },
+        badge: (c) => { const m = model(c.props); if (m.mode === 3) return dec(m.da, 1) + ' × ' + dec(m.db, 1) + (c.masked ? '' : ' = ' + dec(m.cells, 2)); return m.mode === 0 ? m.w + ' × ' + m.h + ' = ' + m.area : m.mode === 1 ? (c.masked ? '' : Q.show(m.area)) : ''; },
         draw: (c) => {
           const m = model(c.props);
-          let s = m.mode === 0 ? drawInt(c, m) : m.mode === 1 ? drawFrac(c, m) : drawAlg(c, m);
+          let s = m.mode === 0 ? drawInt(c, m) : m.mode === 1 ? drawFrac(c, m) : m.mode === 3 ? drawDec(c, m) : drawAlg(c, m);
           if (c.props.show) { const ls = lines(m), y0 = textTop(m); ls.forEach((t, i) => { s += K.text(X0 - 20, y0 + i * 20, t, { size: 14, weight: i === 0 ? 700 : 400, anchor: 'start', fill: 'var(--ink)' }); }); }
           return s;
         },
       },
     },
   });
-  U.AreaModel = { model, cuts, lines, MODES };
+  U.AreaModel = { model, cuts, lines, MODES, dec, WMAX, HMAX };
 })(typeof globalThis !== 'undefined' ? globalThis : window);

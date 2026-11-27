@@ -3156,11 +3156,11 @@ t('通用任务层：倒推、找全、最多最少、推广 出得来，开场�
   }
   eq(bad.slice(0, 8), []);
   truthy((cnt[7] || 0) >= 5 && (cnt[8] || 0) >= 3 && (cnt[9] || 0) >= 8, '找全至少 5 个、最多最少至少 3 个、推广至少 8 个操作台：' + JSON.stringify(cnt));
-  // 找全：长和宽真的全部找出来了（长 1–20、宽 1–12 一个一个试，和出题的答案一样）
+  // 找全：长和宽真的全部找出来了（长 1–30、宽 1–20 一个一个试，和出题的答案一样）
   const p = [1, 2, 3, 4, 5, 6, 7, 8].map((s) => U.Quiz.make('areamodel', s * 977, 7)).find((x) => x && x.quiz.sols[0].w !== undefined && x.quiz.sols[0].h !== undefined);
   truthy(p, '面积模型出得了“长和宽找全”');
   const w0 = p.milestones[0].when.all[0], want = [];   // 题目要的那个输出（面积或周长……）等于几
-  for (let w = 1; w <= 20; w++) for (let h = 1; h <= 12; h++) if (U.Quiz.sim('areamodel', Object.assign({}, p.quiz.props, { w, h }))[w0.port] === w0.value) want.push(w + 'x' + h);
+  for (let w = 1; w <= U.AreaModel.WMAX; w++) for (let h = 1; h <= U.AreaModel.HMAX; h++) if (U.Quiz.sim('areamodel', Object.assign({}, p.quiz.props, { w, h }))[w0.port] === w0.value) want.push(w + 'x' + h);
   eq(p.quiz.sols.map((x) => x.w + 'x' + x.h).sort(), want.sort());
   // 按钮只能 ×2 ×3 的属性（分数条的“又切成几份”）不能当“任意值”去找全
   for (let s = 1; s <= 10; s++) { const q = U.Quiz.make('fracbench', s * 101, 7); truthy(!q || !q.quiz.sols.some((x) => x.ka === 7 || x.kc === 7), '分数条不会要孩子切成 7 份'); }
@@ -3330,6 +3330,26 @@ t('两架天平：只动一边会歪，歪的天平不能拿去消元，歪着�
     for (const [k, d] of Object.entries(U.types.systembench.props)) if (pp[k] === undefined) pp[k] = d.default;
     eq(S.model(pp).leans, [0, 0], pr.id + '：开场两架天平在真实重量下都是平的');
   }
+});
+t('面积模型：小数乘法拆成整数和小数；整数乘法能到 30 × 20，卡片跟着变大', () => {
+  const M = U.AreaModel, T = U.types.areamodel;
+  eq(M.dec(23, 1), '2.3'); eq(M.dec(322, 2), '3.22'); eq(M.dec(12, 2), '0.12'); eq(M.dec(30, 1), '3'); eq(M.dec(5, 2), '0.05');
+  const a = M.model({ mode: 3, da: 23, db: 14, split: false });
+  eq([a.parts, a.cells, U.Q.show(a.area)], [1, 322, U.Q.show(U.Q(322, 100))]);
+  eq(M.lines(a)[0], '2.3 × 1.4 = 3.22');
+  const b = M.model({ mode: 3, da: 23, db: 14, split: true });
+  eq([b.ws, b.hs, b.parts], [[20, 3], [10, 4], 4]);
+  eq(M.lines(b), ['2.3 × 1.4 = (2 + 0.3) × (1 + 0.4)', '= 2×1 + 0.3×1 + 2×0.4 + 0.3×0.4', '= 2 + 0.3 + 0.8 + 0.12 = 3.22']);
+  eq(M.model({ mode: 3, da: 3, db: 4, split: true }).parts, 1, '0.3 × 0.4 没有整数部分：拆不出来，还是一块');
+  eq(M.model({ mode: 3, da: 20, db: 14, split: true }).ws, [20], '2 没有小数部分：长只有一段');
+  // 随机几组：拆开以后每块加起来等于整块
+  for (let da = 1; da <= 35; da += 2) for (let db = 1; db <= 24; db += 3) { const m = M.model({ mode: 3, da, db, split: true }); let s = 0; for (const x of m.ws) for (const y of m.hs) s += x * y; eq(s, da * db, da + '×' + db); }
+  const svg = T.draw({ props: { mode: 3, da: 23, db: 14, split: false, show: true }, masked: false });
+  truthy(svg.includes('data-dsplit="0"') && svg.includes('data-pick-set'), '画出“拆成整数和小数”的按钮');
+  truthy(T.draw({ props: { mode: 3, da: 3, db: 4, split: false, show: true } }).includes('opacity="0.38"'), '两条边都不到 1：按钮是灰的');
+  eq(T.size({ props: { mode: 0, w: 13, h: 7 } }).slice(0, 2).every((x, i) => x >= [430, 400][i]), true);
+  const big = T.size({ props: { mode: 0, w: 30, h: 20 } });
+  truthy(big[0] >= 46 + 30 * 17 + 40 && big[1] >= 44 + 20 * 17 + 34 + 60, '30 × 20 画得下：' + big);
 });
 t('篱笆围地：改一共几米，“记下这一种”的列表清空；改成一样的数、改别的属性都不清空', () => {
   const on = U.types.areabench.onSet, p = { shape: 3, P: 20, w: 3, tried: '2,3,4' };
