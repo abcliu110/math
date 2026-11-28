@@ -3,21 +3,24 @@
  *     相反数：点“全部翻过来”。零对上下对齐画在一起，点“消掉一对”收走；没有零对了才读得出结果。
  *   - 乘法：a × b 是“放进（a 是正数）或拿走（a 是负数）|a| 组，每组 b”。(−3) × (−4)：拿走 3 组 4 个 −1——台面上本来什么也没有，得先放零对。
  *   - 除法：点“每份发一个”，把片平均发到几份里；发完了，每份是多少就是商。
- * 这一版的边界（如实写）：只有整数；每种片最多 40 个。 */
+ * 这一版的边界（如实写）：只有整数；每种片最多 999 个，两个数在 −99 到 99 之间，除法最多分 6 份。
+ * 大数（2026-11-28，docs/instrument-design.md 增强 7 第二轮；以前两个数 ±20、每种片 40 个）：
+ *   一种片多于 40 个就像计数块那样画：10 个一条、100 个一块；零对一列一列画（上面 +、下面 −，虚线框框住），先画零对再画多出来的；
+ *   多了“放进 10 对”“消掉 10 对”“每份发 10 个”的按钮；除法每份多于 16 个时，盒子里十个一条。 */
 (function (G) {
   'use strict';
   const U = G.U, Q = U.Q, K = U.kit;
   const num = (n) => U.val('num', Q(n), { dim: null });
-  const W = 700, MAX = 40, CP = '#f5c542', CN = '#7fb0e8';
+  const W = 700, MAX = 999, NMAX = 99, OLD = 40, CP = '#f5c542', CN = '#7fb0e8';   // OLD：每种片不超过这么多还一个一个画（和以前一样）
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, Number.isFinite(+v) ? Math.round(+v) : lo));
   const MODES = ['加减与相反数', '乘法', '除法'], OPS = ['+', '−', '相反数'];
   const fm = (n) => (n < 0 ? '−' + (-n) : String(n));
   const sg = (n) => (n < 0 ? '(−' + (-n) + ')' : String(n));
   function model(p) {
-    const mode = clamp(p.mode, 0, 2), op = clamp(p.op, 0, 2), pos = clamp(p.pos, 0, MAX), neg = clamp(p.neg, 0, MAX), a = clamp(p.a, -20, 20), b = clamp(p.b, -20, 20), k = clamp(p.k, 1, 6), step = clamp(p.step, 0, 40);
-    const dealt = clamp(p.dealt, 0, 40), value = pos - neg, pairs = Math.min(pos, neg);
+    const mode = clamp(p.mode, 0, 2), op = clamp(p.op, 0, 2), pos = clamp(p.pos, 0, MAX), neg = clamp(p.neg, 0, MAX), a = clamp(p.a, -NMAX, NMAX), b = clamp(p.b, -NMAX, NMAX), k = clamp(p.k, 1, 6), step = clamp(p.step, 0, NMAX);
+    const dealt = clamp(p.dealt, 0, NMAX), value = pos - neg, pairs = Math.min(pos, neg);
     const each = Math.sign(a) * dealt;
-    return { mode, op, pos, neg, a, b, k, step, dealt, value, pairs, each, need: mode === 1 ? Math.abs(a) : 1 };
+    return { mode, op, pos, neg, a, b, k, step, dealt, value, pairs, each, need: mode === 1 ? Math.abs(a) : 1, big: Math.max(pos, neg) > OLD };
   }
   const btn = (x, y, w, label, patch, enabled, tip) => '<g' + (enabled ? ' data-pick-set="' + encodeURIComponent(JSON.stringify(patch)) + '" style="cursor:pointer"' : ' data-off="1"') + '><title>' + K.esc(tip) + '</title>' +
     K.rect(x, y, w, 24, { fill: enabled ? '#fff' : '#f1f3f6', stroke: enabled ? 'var(--blue)' : '#b8c0cc', r: 7, w: 1.4 }) + K.text(x + w / 2, y + 16, label, { size: 12, weight: 700, fill: enabled ? 'var(--ink)' : '#5f6773' }) + '</g>';
@@ -33,6 +36,28 @@
     }
     return s;
   }
+  // 大数：按计数块画。一列一列：零对的列上面 +、下面 −（虚线框框住），多出来的只有一种；每列是一块（100）、一条（10）或一个（1）
+  const CW = { H: 46, T: 16, U: 22 }, RH = 40, BAND = 100;
+  const rod = (x, y, plus) => { let s = K.rect(x - 6, y, 12, RH, { fill: plus ? CP : CN, stroke: '#3a4a63', r: 3, w: 1.1 }); for (let j = 1; j < 10; j++) s += K.line(x - 6, y + j * RH / 10, x + 6, y + j * RH / 10, { stroke: '#3a4a63', w: 0.4 }); return '<g data-rod="' + (plus ? 1 : -1) + '">' + s + K.text(x, y + RH / 2 + 4, plus ? '+' : '−', { size: 11, weight: 700 }) + '</g>'; };
+  const block = (x, y, plus) => { let s = K.rect(x - 20, y, 40, 40, { fill: plus ? CP : CN, stroke: '#3a4a63', r: 3, w: 1.2 }); for (let j = 1; j < 10; j++) s += K.line(x - 20, y + j * 4, x + 20, y + j * 4, { stroke: '#3a4a63', w: 0.3 }) + K.line(x - 20 + j * 4, y, x - 20 + j * 4, y + 40, { stroke: '#3a4a63', w: 0.3 }); return '<g data-block="' + (plus ? 1 : -1) + '">' + s + K.rect(x - 15, y + 13, 30, 14, { fill: '#ffffffd0', r: 3 }) + K.text(x, y + 24, (plus ? '+' : '−') + '100', { size: 10, weight: 700 }) + '</g>'; };
+  const digits = (n) => [['H', Math.floor(n / 100)], ['T', Math.floor(n / 10) % 10], ['U', n % 10]];
+  function bigPile(m, x0, y0, width) {
+    const cols = [];
+    for (const [t, c] of digits(m.pairs)) for (let i = 0; i < c; i++) cols.push({ t, top: true, bot: true });
+    const rest = Math.abs(m.pos - m.neg), plus = m.pos > m.neg;
+    for (const [t, c] of digits(rest)) for (let i = 0; i < c; i++) cols.push({ t, top: plus, bot: !plus });
+    let s = '', x = x0, y = y0;
+    const item = (t, cx, yy, pl) => (t === 'H' ? block(cx, yy, pl) : t === 'T' ? rod(cx, yy, pl) : chip(cx, yy + RH / 2, pl));
+    for (const c of cols) {
+      const w = CW[c.t]; if (x + w > x0 + width) { x = x0; y += BAND; }
+      const cx = x + w / 2;
+      if (c.top && c.bot) s += K.rect(x + 1, y - 3, w - 2, 2 * RH + 12, { fill: 'none', stroke: '#8a94a6', r: 6, w: 1, dash: '3 2' });
+      if (c.top) s += item(c.t, cx, y, true);
+      if (c.bot) s += item(c.t, cx, y + RH + 6, false);
+      x += w;
+    }
+    return '<g data-bigpile="' + m.pairs + ',' + rest + '">' + s + '</g>';
+  }
   const opWord = (m) => (m.op === 0 ? '放进 ' : '拿走 ') + Math.abs(m.b) + ' 个 ' + (m.b < 0 ? '−1' : '+1');
   function draw(c) {
     const p = c.props, m = model(p); let s = '';
@@ -41,10 +66,15 @@
     if (m.mode === 0) s += K.text(W - 20, 24, m.op === 2 ? '−' + sg(m.a) + ' = ?' : sg(m.a) + ' ' + OPS[m.op] + ' ' + sg(m.b) + ' = ?', { size: 15, weight: 700, anchor: 'end', fill: 'var(--blue)' });
     if (m.mode === 1) s += K.text(W - 20, 24, sg(m.a) + ' × ' + sg(m.b) + '：' + (m.a < 0 ? '拿走 ' : '放进 ') + Math.abs(m.a) + ' 组，每组 ' + sg(m.b), { size: 14, weight: 700, anchor: 'end', fill: 'var(--blue)' });
     if (m.mode === 2) s += K.text(W - 20, 24, sg(m.a) + ' ÷ ' + m.k + '：平均分成 ' + m.k + ' 份', { size: 14, weight: 700, anchor: 'end', fill: 'var(--blue)' });
-    s += pile(m, 34, 60);
+    if (m.big) s += bigPile(m, 20, 50, m.mode === 2 ? 410 : 670) + K.big.unitNote(m.mode === 2 ? 430 : W - 20, 44, '片多了：10 个一条、100 个一块', 'end');
+    else s += pile(m, 34, 60);
     const P = (o) => Object.assign({ pos: m.pos, neg: m.neg, msg: '' }, o), y = 300;
     s += btn(20, y, 120, '放进一对 +1 −1', P({ pos: m.pos + 1, neg: m.neg + 1 }), m.pos < MAX && m.neg < MAX && m.mode !== 2, '一对零对是 0：放进去，数不变');
     s += btn(146, y, 100, '消掉一对', P({ pos: m.pos - 1, neg: m.neg - 1 }), m.pairs > 0, '一对零对是 0：收走，数不变');
+    // 大数：一次 10 对
+    const big = m.big || Math.max(Math.abs(m.a), Math.abs(m.b)) > 20;
+    if (big && m.mode === 0) s += btn(430, y, 110, '放进 10 对', P({ pos: m.pos + 10, neg: m.neg + 10 }), m.pos + 10 <= MAX && m.neg + 10 <= MAX, '10 对零对是 0：放进去，数不变');
+    if (big && m.mode !== 2) s += btn(m.mode === 0 ? 546 : 584, y, m.mode === 0 ? 110 : 100, '消掉 10 对', P({ pos: m.pos - 10, neg: m.neg - 10 }), m.pairs >= 10, '10 对零对是 0：收走，数不变');
     if (m.mode === 0) {
       const n = Math.abs(m.b), plus = m.b > 0, done = m.step >= 1;
       if (m.op === 0) s += btn(260, y, 160, opWord(m), P(plus ? { pos: m.pos + n, step: 1 } : { neg: m.neg + n, step: 1 }), !done && (plus ? m.pos + n : m.neg + n) <= MAX, '把第二个数放进来');
@@ -62,10 +92,16 @@
     } else {
       const plus = m.a > 0, left = plus ? m.pos : m.neg;
       s += btn(260, y, 160, '每份发一个', P(plus ? { pos: m.pos - m.k, dealt: m.dealt + 1 } : { neg: m.neg - m.k, dealt: m.dealt + 1 }), left >= m.k, '给每一份各发一个');
+      if (m.big || Math.abs(m.a) > 20) s += btn(426, y, 120, '每份发 10 个', P(plus ? { pos: m.pos - 10 * m.k, dealt: m.dealt + 10 } : { neg: m.neg - 10 * m.k, dealt: m.dealt + 10 }), left >= 10 * m.k, '给每一份各发 10 个');
       for (let g = 0; g < m.k; g++) {
         const gx = 440 + (g % 3) * 84, gy = 60 + Math.floor(g / 3) * 110;
         s += K.rect(gx, gy, 78, 100, { fill: '#f6f8fc', stroke: '#c5ccda', r: 8, w: 1 }) + K.text(gx + 39, gy + 96, '第 ' + (g + 1) + ' 份：' + fm(m.each), { size: 11, weight: 700 });
-        for (let i = 0; i < m.dealt; i++) s += K.circle(gx + 12 + (i % 4) * 18, gy + 14 + Math.floor(i / 4) * 18, 7, { fill: plus ? CP : CN, stroke: '#3a4a63', w: 1 });
+        if (m.dealt <= 16) for (let i = 0; i < m.dealt; i++) s += K.circle(gx + 12 + (i % 4) * 18, gy + 14 + Math.floor(i / 4) * 18, 7, { fill: plus ? CP : CN, stroke: '#3a4a63', w: 1 });
+        else {   // 每份多了：十个一条（横着），剩下的一个一个
+          const tn = Math.floor(m.dealt / 10), un = m.dealt % 10;
+          for (let i = 0; i < tn; i++) s += K.rect(gx + 9, gy + 6 + i * 7, 60, 5, { fill: plus ? CP : CN, stroke: '#3a4a63', r: 1.5, w: 0.8 });
+          for (let i = 0; i < un; i++) s += K.circle(gx + 12 + i * 7, gy + 76, 3, { fill: plus ? CP : CN, stroke: '#3a4a63', w: 0.8 });
+        }
       }
     }
     const res = m.mode === 2 ? null : (m.step >= m.need && tidy ? m.value : null);
@@ -85,8 +121,9 @@
         props: {
           mode: { type: 'choice', label: '做什么', default: 0, choices: MODES, write: true },
           op: { type: 'choice', label: '加减与相反数：算什么', default: 0, choices: OPS, write: true },
-          a: I(-20, 20, -3, '第一个数（乘法：几组；除法：被除数）'), b: I(-20, 20, 5, '第二个数（乘法：每组是几）'), k: I(1, 6, 4, '除法：分成几份'),
-          pos: I(0, MAX, 0, '+1 有几个'), neg: I(0, MAX, 3, '−1 有几个'), step: I(0, 40, 0, '做了几步（自动）', { hidden: true }), dealt: I(0, 40, 0, '每份发了几个（自动）', { hidden: true }),
+          // qmin、qmax：随机出题“找全、倒推”只试到以前的上限（problems/zzz-quiz.js 的 derive），原来的题不变
+          a: I(-NMAX, NMAX, -3, '第一个数（乘法：几组；除法：被除数）', { qmin: -20, qmax: 20 }), b: I(-NMAX, NMAX, 5, '第二个数（乘法：每组是几）', { qmin: -20, qmax: 20 }), k: I(1, 6, 4, '除法：分成几份'),
+          pos: I(0, MAX, 0, '+1 有几个', { qmax: OLD }), neg: I(0, MAX, 3, '−1 有几个', { qmax: OLD }), step: I(0, NMAX, 0, '做了几步（自动）', { hidden: true }), dealt: I(0, NMAX, 0, '每份发了几个（自动）', { hidden: true }),
           msg: { type: 'text', label: '提示（自动）', default: '', write: true, hidden: true },
         },
         outputs: {
@@ -94,7 +131,7 @@
           result: { dim: null, kind: 'num', label: '算完、零对消掉以后的结果（有了才有）' }, each: { dim: null, kind: 'num', label: '除法：发完以后每份是几（发完才有）' },
         },
         icon: () => K.circle(16, 16, 8, { fill: CP, stroke: 'var(--ink)', w: 1 }) + K.text(16, 20, '+', { size: 11, weight: 700 }) + K.circle(16, 36, 8, { fill: CN, stroke: 'var(--ink)', w: 1 }) + K.text(16, 40, '−', { size: 11, weight: 700 }) + K.circle(38, 26, 8, { fill: CN, stroke: 'var(--ink)', w: 1 }) + K.text(38, 30, '−', { size: 11, weight: 700 }),
-        size: () => [W, 400],
+        size: () => [W, 412],   // 412：最下面一行结果（y = 374）不被卡片底边切掉
         grips: () => [],
         compute: (c) => {
           const m = model(c.props), o = { value: num(m.value), pairs: num(m.pairs) };
@@ -107,5 +144,5 @@
       },
     },
   });
-  U.ChipBench = { model };
+  U.ChipBench = { model, MAX, NMAX };
 })(typeof globalThis !== 'undefined' ? globalThis : window);

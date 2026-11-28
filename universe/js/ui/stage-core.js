@@ -18,7 +18,12 @@
   UI.benchGroup = () => { const S = UI.S, ids = S ? U.benchModeOf(S.scene, { problem: S.problem, mode: S.mode }) : null; return ids && ids.length > 1 && U.Forms ? U.Forms.groupOf(S.scene, ids[0]) : null; };
   // 大小：实体上的 e.w、e.h（拖柄改的）优先，没有才用器材的 size()（§10.5.8 A1）
   // 操作台模式（UI.benchMode）：那台操作台按台面算大小，不给口留位置
-  const geom = (e) => { const sz = def(e).size(e, UI.isBench && UI.isBench(e.id) ? BENCH_OPT : undefined); return { x: e.x, y: e.y, w: e.w > 0 ? e.w : sz[0], h: e.h > 0 ? e.h : sz[1] }; };
+  // 正在拖这张卡片上的把手（stage-drag.js 的 grip）：opt.drag = { p0 按下那一刻的属性, grip }，器材可以按按下时的比例尺算大小（面积模型拖动时冻结比例尺，把手跟着鼠标）
+  const geom = (e) => {
+    const bo = UI.isBench && UI.isBench(e.id) ? BENCH_OPT : undefined, gd = SG.drag && SG.drag.kind === 'grip' && SG.drag.id === e.id && SG.drag.moved ? SG.drag : null;
+    const sz = def(e).size(e, gd ? Object.assign({}, bo, { drag: { p0: gd.p0, grip: gd.grip } }) : bo);
+    return { x: e.x, y: e.y, w: e.w > 0 ? e.w : sz[0], h: e.h > 0 ? e.h : sz[1] };
+  };
   // 同一个东西 400 毫秒内按两次：返回 true，并忘掉这一次，免得第三下又算一次
   function dbl(key) { const now = Date.now(); if (SG.dblKey === key && now - SG.dblT < 400) { SG.dblKey = null; return true; } SG.dblKey = key; SG.dblT = now; return false; }
   const SIGLV = ['err', 'reject', 'warn', 'ok', 'info'];

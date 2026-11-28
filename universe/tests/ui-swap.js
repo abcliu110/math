@@ -103,7 +103,10 @@ const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fai
   await p.keyboard.press('Control+z'); await p.waitForTimeout(200);
   ok((await props()).view === 1 && (await props()).k === 0, '撤销一次：回到两架天平（一次点击一步）');
   await open('g4-chicken-rabbit-core');
-  ok(await p.locator('.card svg.bdy [data-pick-set]', { hasText: '写成两架天平' }).count() === 0 && (await text()).includes('写成两架天平'), '35 个头、94 条腿：数太大摆不下，按钮是灰的');
+  // 2026-11-28 起两架天平每盘 999 个砝码（增强 7 第二轮；以前 30 个，这里按钮是灰的）：35 个头、94 条腿也摆得下
+  ok(await p.locator('.card svg.bdy [data-pick-set]', { hasText: '写成两架天平' }).count() === 1, '35 个头、94 条腿：两架天平放大了，按钮能点');
+  await sbtn('写成两架天平');
+  ok((await props()).view === 1 && await p.locator('.card svg.bdy [data-ten]').count() > 0, '写成两架天平：砝码 10 个一条画');
   ok(await p.evaluate(() => !UI.S.inspOpen), '全程没有打开属性面板');
   ok(errs.length === 0, '控制台 0 报错' + (errs.length ? '：' + errs[0] : ''));
   console.log('\n换一换测试：' + pass + ' 通过，' + fail + ' 失败');

@@ -10,7 +10,7 @@
   'use strict';
   const U = G.U, Q = U.Q, K = U.kit;
   const num = (n) => U.val('num', Q(n), { dim: null });
-  const W = 560, CX = 220, Y0 = 60, DY = 30, SHOW = 6, NMAX = 60;
+  const W = 560, CX = 220, Y0 = 60, DY = 30, SHOW = 6, NMAX = 999, XMAX = 200;   // 2026-11-28 起数到 999（以前 60）、x 到 200：天平放大了，联动组里不再卡在式子台
   const LQ = () => U.Forms.LQ, FORM = () => U.Forms.FORMS.lineq, RS = () => K.research;
   const askY = (p) => 186 + DY * (Math.min(SHOW, rowsOf(p).length) - 1);   // 追问从这里往下画：最下面那句话的下面（跟着写了几行往下移）
   const asksOf = (p) => RS().parseAsk(p.ask, p.pick, rowsOf(p).length > 1);
@@ -103,7 +103,7 @@
         props: {
           // a、b、c、d 是出题人设的（或联动组摆的），孩子在卡片上点项做步子，不在属性面板里填：hidden
           a: I(0, NMAX, 2, '左边几个 x', { hidden: true }), b: I(0, NMAX, 3, '左边的数', { hidden: true }), c: I(0, NMAX, 0, '右边几个 x', { hidden: true }), d: I(0, NMAX, 11, '右边的数', { hidden: true }),
-          x0: I(1, 20, 4, 'x 的真实值（出题人设）', { hidden: true }),
+          x0: I(1, XMAX, 4, 'x 的真实值（出题人设）', { hidden: true }),
           sel: { type: 'text', label: '选中的项（自动）', default: '', write: true, hidden: true, view: true },   // view：只是界面上点中了哪一项，改它不进撤销（js/ui/app.js 的 tx）
           rows: { type: 'text', label: '每一行（自动记录）', default: '', write: true, hidden: true },
           ask: { type: 'text', label: '追问（题干|选项|*对的选项）', default: '', write: true, hidden: true },
@@ -137,7 +137,7 @@
   U.Forms.adapt('lineq', 'eqstepbench', {
     toState: (p) => ({ a: p.a, b: p.b, c: p.c, d: p.d }),
     fromState: (s, p, step) => (step ? { a: s.a, b: s.b, c: s.c, d: s.d, x0: s.x0, rows: append(p, s, FORM().label(step)), sel: '' } : { a: s.a, b: s.b, c: s.c, d: s.d, x0: s.x0, rows: '', sel: '' }),
-    can: (s) => ([s.a, s.b, s.c, s.d].every((v) => v <= NMAX) ? null : '式子台里的数最多到 ' + NMAX),
+    can: (s) => ([s.a, s.b, s.c, s.d].every((v) => v <= NMAX) && !(s.x0 > XMAX) ? null : '式子台里的数最多到 ' + NMAX),
   });
   U.EqStepBench = { st, rowsOf, append, stepTo, terms };
 })(typeof globalThis !== 'undefined' ? globalThis : window);

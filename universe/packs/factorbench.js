@@ -3,19 +3,21 @@
  *     排不满，最后一行多出来的标红。全部找到以后写出 n 有几个因数、是质数还是合数。
  *   - 公因数：1 到较小的数，一个一个点着试：分别写出能不能整除 a、b，两个都能整除的是公因数；最大的那个是最大公因数。
  *   - 公倍数：两条跳跳线，一条每次跳 a，一条每次跳 b。点上面一条的落点：下面那条也落在这里，就是公倍数；最小的那个是最小公倍数。
- * 这一版的边界（如实写）：找因数的 n 不超过 100；公因数、公倍数的两个数不超过 40。“质因数积木”（mode 4）：拆数（÷ 质数拆到 1）、搭数（× 质数，看因数个数）、约分（分子分母成对拿掉共有的积木）。 */
+ * 大数（2026-11-28，docs/instrument-design.md 增强 7 第二轮）：找因数的 n 放到 500（以前 100），120、144、360 这类因数多的数也能排；
+ *   排出来太长、太宽就折叠：行太多画头 18 行、“⋮”、尾 5 行，每行太多画头 30 个、“…”、尾 9 个，下面写“一共几行、每行几个”；找到的因数多了分几行写。
+ * 这一版的边界（如实写）：找因数的 n 不超过 500；公因数、公倍数的两个数不超过 40。“质因数积木”（mode 4）：拆数（÷ 质数拆到 1）、搭数（× 质数，看因数个数）、约分（分子分母成对拿掉共有的积木）。 */
 (function (G) {
   'use strict';
   const U = G.U, Q = U.Q, K = U.kit;
   const num = (n) => U.val('num', Q(n), { dim: null });
-  const W = 700;
+  const W = 700, NMAX = 500;
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, Number.isFinite(+v) ? Math.round(+v) : lo));
   const MODES = ['找因数', '公因数', '公倍数', '筛质数', '质因数积木'];
   const list = (t) => [...new Set(String(t || '').split(/[,，\s]+/).filter((x) => x !== '').map(Number).filter(Number.isInteger))];
   const gcd = (a, b) => (b ? gcd(b, a % b) : a);
   const divisors = (n) => { const d = []; for (let i = 1; i <= n; i++) if (n % i === 0) d.push(i); return d; };
   function model(p) {
-    const mode = clamp(p.mode, 0, 2), n = clamp(p.n, 1, 100), w = clamp(p.w, 0, n), a = clamp(p.a, 1, 40), b = clamp(p.b, 1, 40);
+    const mode = clamp(p.mode, 0, 2), n = clamp(p.n, 1, NMAX), w = clamp(p.w, 0, n), a = clamp(p.a, 1, 40), b = clamp(p.b, 1, 40);
     const ws = list(p.found).filter((x) => x >= 1 && x <= n && n % x === 0), fset = new Set(); ws.forEach((x) => { fset.add(x); fset.add(n / x); });
     const facs = [...fset].sort((x, y) => x - y), dn = divisors(n), allF = facs.length === dn.length;
     const g = gcd(a, b), l = a * b / g, lo = Math.min(a, b), tried = list(p.tried).filter((x) => x >= 1 && x <= lo).sort((x, y) => x - y);
@@ -125,19 +127,35 @@
     const p = c.props, m = model(p); let s = '';
     MODES.forEach((t, i) => { s += btn(20 + i * 92, 8, 86, t, { mode: i, msg: '' }, m.mode !== i, '换到“' + t + '”', m.mode === i); });
     if (m.mode === 0) {
-      s += K.text(310, 26, m.n + ' 个小方块，每行放几个能正好排满？', { size: 14, weight: 700, anchor: 'start' });
+      s += K.text(430, 90, m.n + ' 个小方块，每行放几个能正好排满？', { size: 13, weight: 700, anchor: 'start' });   // 写在右边一栏上头（以前在标签页那一行，和后两个标签叠在一起）
       const set = (w) => ({ w, found: (m.n % w === 0 ? [...new Set(m.ws.concat([w]))] : m.ws).join(',') });
       for (let k = 1; k <= Math.min(12, m.n); k++) s += btn(20 + (k - 1) * 40, 44, 36, String(k), set(k), true, '每行 ' + k + ' 个', m.w === k);
       s += btn(500, 44, 40, '−', set(Math.max(1, m.w - 1)), m.w > 1, '每行少放 1 个') + K.text(565, 61, '每行 ' + (m.w || '?'), { size: 12, weight: 700 }) + btn(592, 44, 40, '+', set(Math.min(m.n, m.w + 1)), m.w < m.n, '每行多放 1 个');
       if (m.w) {
-        const rows = Math.ceil(m.n / m.w), cs = Math.max(2, Math.min(16, 200 / rows, 380 / m.w)), full = m.n % m.w === 0, x0 = 30, y0 = 86;
-        for (let i = 0; i < m.n; i++) { const r = Math.floor(i / m.w), col = i % m.w, extra = !full && r === rows - 1; s += K.rect(x0 + col * cs, y0 + r * cs, cs - (cs > 4 ? 1 : 0), cs - (cs > 4 ? 1 : 0), { fill: extra ? '#f4a6a0' : '#9fc3ea', stroke: cs > 4 ? '#3a4a63' : 'none', r: 1, w: 0.8 }); }
+        // 行太多、每行太多就折叠（K.big.fold）：格子不小于 8 像素，数得清；“⋮”“…”是省略的那些
+        const rows = Math.ceil(m.n / m.w), full = m.n % m.w === 0, x0 = 30, y0 = 86, RF = K.big.fold(rows, 24, 18, 5), CF = K.big.fold(m.w, 40, 30, 9);
+        const vr = RF.idx.length, vc = CF.idx.length, cs = Math.max(2, Math.min(16, 200 / vr, 380 / vc));
+        RF.idx.forEach((r, ri) => {
+          const yy = y0 + ri * cs;
+          if (r === null) { s += K.text(x0 + Math.min(vc, 8) * cs / 2, yy + cs * 0.8, '⋮', { size: Math.min(16, cs + 6), weight: 700, fill: '#3a4a63' }); return; }
+          CF.idx.forEach((col, ci) => {
+            if (col === null) { if (Math.min(m.w, m.n - r * m.w) > CF.idx[ci - 1] + 1) s += K.text(x0 + ci * cs + cs / 2, yy + cs * 0.8, '…', { size: Math.min(14, cs + 4), weight: 700, fill: '#3a4a63' }); return; }
+            const i = r * m.w + col; if (i >= m.n) return;
+            const extra = !full && r === rows - 1;
+            s += K.rect(x0 + ci * cs, yy, cs - (cs > 4 ? 1 : 0), cs - (cs > 4 ? 1 : 0), { fill: extra ? '#f4a6a0' : '#9fc3ea', stroke: cs > 4 ? '#3a4a63' : 'none', r: 1, w: 0.8 });
+          });
+        });
+        if (RF.omitted || CF.omitted) s += '<g data-fold="' + RF.omitted + ',' + CF.omitted + '">' + K.text(x0, y0 + vr * cs + 18, '一共 ' + rows + ' 行，每行 ' + m.w + ' 个' + (RF.omitted ? '；中间 ' + RF.omitted + ' 行没画' : '') + (CF.omitted ? '；每行中间 ' + CF.omitted + ' 个没画' : ''), { size: 12, anchor: 'start', fill: '#5a6478', weight: 700 }) + '</g>';
         s += K.text(430, 110, full ? '正好排满：' + m.w + ' × ' + m.n / m.w + ' = ' + m.n : '排不满：最后一行只有 ' + (m.n % m.w) + ' 个', { size: 14, weight: 700, anchor: 'start', fill: full ? 'var(--blue)' : 'var(--bad)' });
         s += K.text(430, 132, full ? m.w + ' 和 ' + m.n / m.w + ' 都是 ' + m.n + ' 的因数' : m.w + ' 不是 ' + m.n + ' 的因数', { size: 12, anchor: 'start', fill: full ? 'var(--blue)' : 'var(--bad)' });
       }
-      s += K.text(430, 176, '找到的因数（' + m.facs.length + ' 个）：', { size: 13, weight: 700, anchor: 'start' }) + K.text(430, 198, m.facs.join('、') || '还没有', { size: 13, anchor: 'start' });
-      if (m.allF) s += '<g data-read="1">' + K.text(430, 236, '找全了：' + m.n + ' 有 ' + m.dn.length + ' 个因数', { size: 14, weight: 700, anchor: 'start', fill: 'var(--blue)' }) + K.text(430, 258, m.n === 1 ? '1 既不是质数也不是合数' : m.dn.length === 2 ? '只有 1 和它自己：质数' : '除了 1 和它自己还有别的：合数', { size: 13, weight: 700, anchor: 'start', fill: 'var(--blue)' }) + '</g>';
-      else if (m.facs.length) s += K.text(430, 236, '因数是一对一对的：试到哪里就可以停？', { size: 12, anchor: 'start', fill: '#5a6478' });
+      // 找到的因数多了（360 有 24 个）分几行写，一行 8 个
+      const fl = []; for (let i = 0; i < m.facs.length; i += 8) fl.push(m.facs.slice(i, i + 8).join('、') + (i + 8 < m.facs.length ? '、' : ''));
+      s += K.text(430, 176, '找到的因数（' + m.facs.length + ' 个）：', { size: 13, weight: 700, anchor: 'start' });
+      (fl.length ? fl : ['还没有']).forEach((t, i) => { s += K.text(430, 198 + i * 18, t, { size: 13, anchor: 'start' }); });
+      const fy = Math.max(0, fl.length - 1) * 18;
+      if (m.allF) s += '<g data-read="1">' + K.text(430, 236 + fy, '找全了：' + m.n + ' 有 ' + m.dn.length + ' 个因数', { size: 14, weight: 700, anchor: 'start', fill: 'var(--blue)' }) + K.text(430, 258 + fy, m.n === 1 ? '1 既不是质数也不是合数' : m.dn.length === 2 ? '只有 1 和它自己：质数' : '除了 1 和它自己还有别的：合数', { size: 13, weight: 700, anchor: 'start', fill: 'var(--blue)' }) + '</g>';
+      else if (m.facs.length) s += K.text(430, 236 + fy, '因数是一对一对的：试到哪里就可以停？', { size: 12, anchor: 'start', fill: '#5a6478' });
     } else if (m.mode === 1) {
       s += K.text(310, 26, m.a + ' 和 ' + m.b + ' 的公因数：一个一个试', { size: 14, weight: 700, anchor: 'start' });
       const tried = new Set(m.tried);
@@ -178,7 +196,8 @@
         alias: ['因数', '倍数', '质数', '合数', '公因数', '最大公因数', '公倍数', '最小公倍数', '找因数', '拼长方形'],
         props: {
           mode: { type: 'choice', label: '做什么', default: 0, choices: MODES, write: true },
-          n: I(1, 100, 12, '找因数：几个小方块'), w: I(0, 100, 0, '找因数：每行几个'), found: { type: 'text', label: '找因数：排满过的每行个数', default: '', write: true },
+          // qmax：随机出题只试到以前的 100（problems/zzz-quiz.js 的 derive）
+          n: I(1, NMAX, 12, '找因数：几个小方块', { qmax: 100 }), w: I(0, NMAX, 0, '找因数：每行几个', { qmax: 100 }), found: { type: 'text', label: '找因数：排满过的每行个数', default: '', write: true },
           a: I(1, 40, 12, '第一个数'), b: I(1, 40, 18, '第二个数'), tried: { type: 'text', label: '公因数：试过的数', default: '', write: true }, cm: { type: 'text', label: '公倍数：点中的公倍数', default: '', write: true },
           msg: { type: 'text', label: '提示（自动）', default: '', write: true, hidden: true },
           N: I(50, 100, 100, '筛质数：到几（50 或 100）'), sieved: { type: 'text', label: '筛质数：划了哪些数的倍数（自动）', default: '', write: true }, one: { type: 'bool', label: '筛质数：划掉了 1', default: false, write: true },

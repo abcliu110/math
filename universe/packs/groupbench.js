@@ -175,7 +175,8 @@
       }
       // 把手：每份几个
       const sm = SMAX(m.n), sx = (g) => SX + (g - 1) * (SX1 - SX) / (sm - 1);
-      s += K.line(SX, SY, SX1, SY, { w: 3, stroke: '#c5ccda' }) + K.text(SX, SY - 12, '每' + gname + '几' + u + '：拖蓝色把手', { size: 12, anchor: 'start', fill: '#5a6478' });
+      // 说明写在滑条右头外面（2026-11-28：以前写在左上角，把手拖到 20 附近时把字盖住）
+      s += K.line(SX, SY, SX1, SY, { w: 3, stroke: '#c5ccda' }) + '<g data-slider-tip="1">' + K.text(SX1 + 24, SY + 4, '每' + gname + '几' + u + '：拖蓝色把手', { size: 12, anchor: 'start', fill: '#5a6478' }) + '</g>';
       for (const g of sm === 20 ? [1, 5, 10, 15, 20] : [1, 20, 40, 60, 80, 99]) s += K.text(sx(g), SY + 18, String(g), { size: 10, fill: '#5a6478' });
     }
     if (m.mode === 0 && m.graph) s += drawGraph(m, p);
