@@ -8,7 +8,9 @@
  *            点“✂ 拆成整数和小数”，两条边都在整数处切开：(2 + 0.3) × (1 + 0.4) = 2×1 + 0.3×1 + 2×0.4 + 0.3×0.4 = 2 + 0.3 + 0.8 + 0.12。
  *            最小的一块是 0.1 × 0.1 = 0.01 的小格，所以 0.3 × 0.4 是 12 个小格 = 0.12。
  * 三种用法是同一件事：长方形的面积 = 长 × 宽，把边拆开，面积就拆成几块的和。
- * 这一版的边界（如实写）：整数乘法长最多 30、宽最多 20（大了卡片跟着变大）；小数乘法只有一位小数，长最多 3.5、宽最多 2.4；
+ * 这一版的边界（如实写）：整数乘法长、宽最多 99（2026-11-27 起；以前 30、20）：长 30、宽 20 以内每格 17 像素，卡片跟着变大；再大就每格画小，
+ *   长方形最多占 510 × 340 像素，格子小于 6 像素时细线不画、只画每 10 一条，图上说一句；切刀拖动时按 1、2、5 取整（一步至少 14 像素，刀的把手不挤在一起）。
+ *   拖长、宽时按下那一刻的格子大小换算，拖过了 30 × 20 图跟着缩，把手会落在鼠标后面，松手以后按新的大小画。小数乘法只有一位小数，长最多 3.5、宽最多 2.4；
  *   小数乘法只在整数处切一刀，不能随便切。
  * 把手（grips）用的是公共机制：器材声明把手在哪、拖到某处该把哪个属性改成什么；界面只负责画和转发（见 js/ui/stage-cards.js、stage-drag.js）。
  * 尺寸固定按格算（每格 CELL 像素），所以拖动时把手一直跟着鼠标。 */
@@ -17,7 +19,14 @@
   const U = G.U, Q = U.Q, K = U.kit;
   const num = (n) => U.val('num', typeof n === 'number' ? Q(n) : n, { dim: null });
   const MODES = ['整数乘法', '分数乘法', '代数式', '小数乘法'];
-  const X0 = 46, Y0 = 44, CELL = 17, WMAX = 30, HMAX = 20, UNIT = 204, XLEN = 110, AMAX = 9;
+  const X0 = 46, Y0 = 44, CELL = 17, WMAX = 99, HMAX = 99, UNIT = 204, XLEN = 110, AMAX = 9;
+  // 整数乘法的长方形最多占 BOXW × BOXH 像素（长 30、宽 20 时每格还是 CELL）；再大就每格画小（cellOf），最小也有 BOXH / 99 ≈ 3.4 像素
+  const BASE = CELL, BOXW = 30 * CELL, BOXH = 20 * CELL, FINE = 6;
+  const cellOf = (m) => Math.min(CELL, BOXW / m.w, BOXH / m.h);
+  // 正在拖：按下那一刻的格子大小和现在的格子大小取小的（拖大了图跟着缩，拖小了不放大，松手再按新的大小画）
+  const cellNow = (c, m) => (c && c.drag && c.drag.p0 && +c.drag.p0.mode === 0 ? Math.min(cellOf(model(c.drag.p0)), cellOf(m)) : cellOf(m));
+  // 切刀拖动时取整的步长：一步至少 14 像素（格子小了只能切在 2、5、10 的倍数上，刀和刀的把手不会挤在一起）
+  const cutGrain = (cell) => K.big.grain(cell, K.big.MIN_HIT);
   const TEN = 10, DAMAX = 35, DBMAX = 24;   // 小数乘法：0.1 画成 10 像素，1 画成 100 像素
   // 几个 0.1（或 0.01）写成小数：dec(23, 1) = '2.3'，dec(322, 2) = '3.22'
   const dec = (n, k) => { const d = Math.pow(10, k), sgn = n < 0 ? '-' : ''; n = Math.abs(n); const i = Math.floor(n / d), r = n % d; return sgn + (r ? i + '.' + String(r).padStart(k, '0').replace(/0+$/, '') : String(i)); };
@@ -91,10 +100,8 @@
   const T = (x, y, s, o) => K.text(x, y, s, Object.assign({ size: 12, fill: 'var(--ink)' }, o || {}));
   const pickBtn = (x, y, tx, k, v, tip) => '<g data-pick-k="' + k + '" data-pick-v="' + v + '" style="cursor:pointer"><title>' + K.esc(tip) + '</title>' + K.rect(x, y, 22, 20, { fill: '#fff', stroke: '#8a94a8', r: 5 }) + T(x + 11, y + 15, tx, { size: 14, weight: 700 }) + '</g>';
 
-  function drawInt(c, m) {
+  function drawInt(c, m, CELL) {
     let s = '';
-    // 格线（淡），再画每一块
-    for (let i = 1; i < m.w; i++) s += K.line(X0 + i * CELL, Y0, X0 + i * CELL, Y0 + m.h * CELL, { stroke: '#c5ccda', w: 0.6 });
     let y = 0, k = 0, blocks = '';
     for (const hh of m.hs) {
       let x = 0;
@@ -109,10 +116,12 @@
       }
       y += hh;
     }
+    // 格线：格子够大（≥ FINE 像素）每 1 一条；太密就只画每 10 一条，图上写“一个方块 = 10 × 10”。边长过了 20，每 10 一条画粗一点，好数
     let grid = '';
-    for (let j = 1; j < m.h; j++) grid += K.line(X0, Y0 + j * CELL, X0 + m.w * CELL, Y0 + j * CELL, { stroke: '#8a94a8', w: 0.35 });
-    for (let i = 1; i < m.w; i++) grid += K.line(X0 + i * CELL, Y0, X0 + i * CELL, Y0 + m.h * CELL, { stroke: '#8a94a8', w: 0.35 });
-    s = blocks + grid;
+    const fine = CELL >= FINE, tens = fine && Math.max(m.w, m.h) > 20;
+    for (let j = 1; j < m.h; j++) if (fine || j % 10 === 0) grid += K.line(X0, Y0 + j * CELL, X0 + m.w * CELL, Y0 + j * CELL, { stroke: '#8a94a8', w: j % 10 === 0 && (tens || !fine) ? 1 : 0.35 });
+    for (let i = 1; i < m.w; i++) if (fine || i % 10 === 0) grid += K.line(X0 + i * CELL, Y0, X0 + i * CELL, Y0 + m.h * CELL, { stroke: '#8a94a8', w: i % 10 === 0 && (tens || !fine) ? 1 : 0.35 });
+    s = blocks + grid + K.rect(X0, Y0, m.w * CELL, m.h * CELL, { stroke: 'var(--ink)', r: 0, w: 1.2 });
     for (const v of m.vc) s += K.line(X0 + v * CELL, Y0 - 4, X0 + v * CELL, Y0 + m.h * CELL, { stroke: 'var(--blue)', w: 2.5 });
     for (const v of m.hc) s += K.line(X0 - 4, Y0 + v * CELL, X0 + m.w * CELL, Y0 + v * CELL, { stroke: 'var(--blue)', w: 2.5 });
     // 边上的长度：每一段写一个数
@@ -198,30 +207,33 @@
     return s;
   }
   // 画布里图形下面那几行算式从哪里开始
-  const textTop = (m) => (m.mode === 0 ? Y0 + Math.max(12, m.h) * CELL + 34 : m.mode === 1 ? Y0 + UNIT + 40 : m.mode === 3 ? Y0 + DBMAX * TEN + 34 : Y0 + XLEN + AMAX * CELL + 30);
+  const textTop = (m) => (m.mode === 0 ? Y0 + Math.max(12 * CELL, m.h * cellOf(m)) + 34 : m.mode === 1 ? Y0 + UNIT + 40 : m.mode === 3 ? Y0 + DBMAX * TEN + 34 : Y0 + XLEN + AMAX * CELL + 30);
 
   // 把手：每个把手说明自己在哪、拖到 p（画布像素）时该把哪些属性改成什么
   function grips(c) {
     const p = c.props, m = model(p), out = [];
     if (m.mode === 0) {
-      const toX = (q) => Math.round((q.x - X0) / CELL), toY = (q) => Math.round((q.y - Y0) / CELL);
+      // 拖动的换算用按下那一刻（c0）的格子大小；切刀按 cutGrain 取整
+      const cl0 = (c0) => cellOf(model(c0.props)), toX = (q, c0) => Math.round((q.x - X0) / cl0(c0)), toY = (q, c0) => Math.round((q.y - Y0) / cl0(c0));
+      const cutX = (q, c0) => K.big.snap((q.x - X0) / cl0(c0), cutGrain(cl0(c0))), cutY = (q, c0) => K.big.snap((q.y - Y0) / cl0(c0), cutGrain(cl0(c0)));
+      const CELL = cellNow(c, m);
       const txt = (list) => list.join(',');
       out.push({ id: 'w', x: X0 + m.w * CELL, y: Y0 + m.h * CELL / 2, shape: 'bar-v', cursor: 'ew-resize', tip: '左右拖：改长',
-        drag: (c0, q) => { const w = clamp(toX(q), 1, WMAX); return { w, vcuts: txt(cuts(c0.props.vcuts, w)) }; }, say: (c1) => '长 ' + c1.props.w });
+        drag: (c0, q) => { const w = clamp(toX(q, c0), 1, WMAX); return { w, vcuts: txt(cuts(c0.props.vcuts, w)) }; }, say: (c1) => '长 ' + c1.props.w });
       out.push({ id: 'h', x: X0 + m.w * CELL / 2, y: Y0 + m.h * CELL, shape: 'bar-h', cursor: 'ns-resize', tip: '上下拖：改宽',
-        drag: (c0, q) => { const h = clamp(toY(q), 1, HMAX); return { h, hcuts: txt(cuts(c0.props.hcuts, h)) }; }, say: (c1) => '宽 ' + c1.props.h });
+        drag: (c0, q) => { const h = clamp(toY(q, c0), 1, HMAX); return { h, hcuts: txt(cuts(c0.props.hcuts, h)) }; }, say: (c1) => '宽 ' + c1.props.h });
       // 新切一刀：从角上的 ✂ 拖出来；已有的刀：拖着挪，拖到边上就是去掉
       out.push({ id: 'vnew', x: X0, y: Y0 - 18, r: 9, text: '✂', cursor: 'col-resize', tip: '往右拖：竖着切一刀',
-        drag: (c0, q) => { const x = toX(q), w = model(c0.props).w; return x > 0 && x < w ? { vcuts: txt(cuts(c0.props.vcuts + ',' + x, w)) } : { vcuts: txt(cuts(c0.props.vcuts, w)) }; },
+        drag: (c0, q) => { const x = cutX(q, c0), w = model(c0.props).w; return x > 0 && x < w ? { vcuts: txt(cuts(c0.props.vcuts + ',' + x, w)) } : { vcuts: txt(cuts(c0.props.vcuts, w)) }; },
         say: (c1) => '竖着切在 ' + (cuts(c1.props.vcuts, WMAX + 1).join('、') || '（还没切）') });
       m.vc.forEach((v, i) => out.push({ id: 'v' + i, x: X0 + v * CELL, y: Y0 - 18, r: 7, cursor: 'col-resize', tip: '拖着挪这一刀；拖到边上就去掉',
-        drag: (c0, q) => { const m0 = model(c0.props), rest = m0.vc.filter((_, j) => j !== i), x = toX(q); return { vcuts: txt(cuts(rest.concat(x > 0 && x < m0.w ? [x] : []).join(','), m0.w)) }; },
+        drag: (c0, q) => { const m0 = model(c0.props), rest = m0.vc.filter((_, j) => j !== i), x = cutX(q, c0); return { vcuts: txt(cuts(rest.concat(x > 0 && x < m0.w ? [x] : []).join(','), m0.w)) }; },
         say: (c1) => '竖着切在 ' + (cuts(c1.props.vcuts, WMAX + 1).join('、') || '（去掉了）') }));
       out.push({ id: 'hnew', x: X0 - 18, y: Y0, r: 9, text: '✂', cursor: 'row-resize', tip: '往下拖：横着切一刀',
-        drag: (c0, q) => { const y = toY(q), h = model(c0.props).h; return y > 0 && y < h ? { hcuts: txt(cuts(c0.props.hcuts + ',' + y, h)) } : { hcuts: txt(cuts(c0.props.hcuts, h)) }; },
+        drag: (c0, q) => { const y = cutY(q, c0), h = model(c0.props).h; return y > 0 && y < h ? { hcuts: txt(cuts(c0.props.hcuts + ',' + y, h)) } : { hcuts: txt(cuts(c0.props.hcuts, h)) }; },
         say: (c1) => '横着切在 ' + (cuts(c1.props.hcuts, HMAX + 1).join('、') || '（还没切）') });
       m.hc.forEach((v, i) => out.push({ id: 'hc' + i, x: X0 - 18, y: Y0 + v * CELL, r: 7, cursor: 'row-resize', tip: '拖着挪这一刀；拖到边上就去掉',
-        drag: (c0, q) => { const m0 = model(c0.props), rest = m0.hc.filter((_, j) => j !== i), y = toY(q); return { hcuts: txt(cuts(rest.concat(y > 0 && y < m0.h ? [y] : []).join(','), m0.h)) }; },
+        drag: (c0, q) => { const m0 = model(c0.props), rest = m0.hc.filter((_, j) => j !== i), y = cutY(q, c0); return { hcuts: txt(cuts(rest.concat(y > 0 && y < m0.h ? [y] : []).join(','), m0.h)) }; },
         say: (c1) => '横着切在 ' + (cuts(c1.props.hcuts, HMAX + 1).join('、') || '（去掉了）') }));
     } else if (m.mode === 3) {
       out.push({ id: 'da', x: X0 + m.da * TEN, y: Y0 + m.db * TEN / 2, shape: 'bar-v', cursor: 'ew-resize', tip: '左右拖：改长（一次 0.1）',
@@ -252,7 +264,7 @@
         alias: ['乘法', '分配律', '面积', '竖式乘法', '分数乘法', '多项式乘法', '因式分解', '完全平方', '点阵', '代数砖'],
         props: {
           mode: { type: 'choice', label: '用来做什么', default: 0, choices: MODES, write: true },
-          w: I(1, WMAX, 13, '长'), h: I(1, HMAX, 7, '宽'),
+          w: Object.assign(I(1, WMAX, 13, '长'), { qmax: 30 }), h: Object.assign(I(1, HMAX, 7, '宽'), { qmax: 20 }),   // qmax：随机出题“找全”时一个一个试到几（problems/zzz-quiz.js 的 derive）
           vcuts: { type: 'text', label: '竖着切在（用逗号分开）', default: '', write: true },
           hcuts: { type: 'text', label: '横着切在（用逗号分开）', default: '', write: true },
           d1: I(1, 12, 2, '竖着切几份'), n1: I(0, 12, 1, '竖着涂几份'), d2: I(1, 12, 3, '横着切几份'), n2: I(0, 12, 1, '横着取几份'),
@@ -276,7 +288,7 @@
         },
         icon: () => K.rect(10, 8, 30, 28, { fill: COL[0], stroke: 'var(--ink)', r: 0 }) + K.rect(40, 8, 14, 28, { fill: COL[1], stroke: 'var(--ink)', r: 0 }),
         // 整数乘法的长方形大了，卡片跟着变大（原点在左上角，所以拖的时候把手还是跟着鼠标）
-        size: (e) => { const p = (e && e.props) || {}; if (+p.mode === 3) return [460, 420]; if (+p.mode !== 0 && p.mode !== undefined) return [430, 400]; const w = clamp(+p.w || 13, 1, WMAX), h = clamp(+p.h || 7, 1, HMAX); return [Math.max(430, X0 + w * CELL + 50), Math.max(400, Y0 + Math.max(12, h) * CELL + 34 + 3 * 20 + 30)]; },
+        size: (e) => { const p = (e && e.props) || {}; if (+p.mode === 3) return [460, 420]; if (+p.mode !== 0 && p.mode !== undefined) return [430, 400]; const m = { w: clamp(+p.w || 13, 1, WMAX), h: clamp(+p.h || 7, 1, HMAX) }, cl = cellOf(m); return [Math.max(cl < BASE ? 500 : 430, X0 + m.w * cl + 50), Math.max(400, Y0 + Math.max(12 * CELL, m.h * cl) + 34 + 3 * 20 + 30 + (cl < BASE ? 20 : 0))]; },
         grips,
         compute: (c) => {
           const m = model(c.props);
@@ -288,8 +300,11 @@
         badge: (c) => { const m = model(c.props); if (m.mode === 3) return dec(m.da, 1) + ' × ' + dec(m.db, 1) + (c.masked ? '' : ' = ' + dec(m.cells, 2)); return m.mode === 0 ? m.w + ' × ' + m.h + ' = ' + m.area : m.mode === 1 ? (c.masked ? '' : Q.show(m.area)) : ''; },
         draw: (c) => {
           const m = model(c.props);
-          let s = m.mode === 0 ? drawInt(c, m) : m.mode === 1 ? drawFrac(c, m) : m.mode === 3 ? drawDec(c, m) : drawAlg(c, m);
+          const cl = m.mode === 0 ? cellNow(c, m) : CELL;
+          let s = m.mode === 0 ? drawInt(c, m, cl) : m.mode === 1 ? drawFrac(c, m) : m.mode === 3 ? drawDec(c, m) : drawAlg(c, m);
           if (c.props.show) { const ls = lines(m), y0 = textTop(m); ls.forEach((t, i) => { s += K.text(X0 - 20, y0 + i * 20, t, { size: 14, weight: i === 0 ? 700 : 400, anchor: 'start', fill: 'var(--ink)' }); }); }
+          // 数大了格子画小了：在算式下面说一句一格是多少（cellOf 用现在的数，拖的时候不出现、不跳）
+          if (m.mode === 0 && cellOf(m) < BASE) s += K.big.unitNote(X0 - 20, textTop(m) + 3 * 20 + 2, cellOf(m) >= FINE ? '数大了，格子画小了：一小格还是 1 × 1；粗线每 10 一条' : '格子太小，细线不画了：每个方块是 10 × 10 = 100 小格', 'start');
           return s;
         },
       },

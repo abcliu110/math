@@ -73,7 +73,7 @@
     const on = (p) => (TNAME[type] && TNAME[type]['>' + p]) || cleanLab(d.outputs[p].label);
     const first = q0.goals.map((g) => g[0]);
     const ports = [...new Set(first.concat(Object.keys(d.outputs)))].filter((p) => p in o0 && on(p) && !/1 是|0 否|：1/.test(d.outputs[p].label || ''));
-    const span = (k) => { const P = d.props[k], v = +F[k], lo = Math.max(P.min !== undefined ? P.min : v - 20, v - 30), hi = Math.min(P.max !== undefined ? P.max : v + 20, v + 30), a = []; for (let x = lo; x <= hi; x++) a.push(x); return a; };
+    const span = (k) => { const P = d.props[k], v = +F[k], lo = Math.max(P.qmin !== undefined ? Math.min(P.qmin, v) : P.min !== undefined ? P.min : v - 20, v - 30), hi = Math.min(P.qmax !== undefined ? Math.max(P.qmax, v) : P.max !== undefined ? P.max : v + 20, v + 30), a = []; for (let x = lo; x <= hi; x++) a.push(x); return a; };
     // 输出是不是“有意义”：至少 3 种值、不只是 0/1、不是把这个属性原样抄出来
     const good = (rows, p, k) => { const ys = rows.map((r) => r.o[p]), set = new Set(ys.filter((y) => y !== undefined)); return set.size >= 3 && ![...set].every((y) => y === '0' || y === '1') && !(k && rows.every((r) => r.o[p] === undefined || r.o[p] === norm(r.v))); };
     const start = (patch) => Object.assign({}, F, patch);
@@ -102,7 +102,8 @@
       return null;
     }
     // 找全 / 最多最少：先试两个属性一起变，再试一个。说了“全部”就要真的全：只用取值范围有限（不超过 61 个）的属性，整个范围都扫
-    const full = (k) => { const P = d.props[k]; if (P.min === undefined || P.max === undefined || P.max - P.min > 60) return null; const a = []; for (let x = P.min; x <= P.max; x++) a.push(x); return a; };
+    // 属性写了 qmax（台能画很大的数，但出题只试到 qmax，比如面积模型的长 1–30），就只扫到 qmax
+    const full = (k) => { const P = d.props[k], lo = P.qmin !== undefined ? P.qmin : P.min, hi = P.qmax !== undefined ? P.qmax : P.max; if (lo === undefined || hi === undefined || hi - lo > 60) return null; const a = []; for (let x = lo; x <= hi; x++) a.push(x); return a; };
     const fk = keys.filter(full), sets = [];
     for (let i = 0; i < fk.length; i++) for (let j = i + 1; j < fk.length; j++) { const A = full(fk[i]), B = full(fk[j]), rows = []; if (A.length * B.length > 900) continue; for (const a of A) for (const b of B) rows.push({ v: [a, b], o: out({ [fk[i]]: a, [fk[j]]: b }) }); sets.push({ ks: [fk[i], fk[j]], rows, max: 10 }); }
     for (const k of fk) sets.push({ ks: [k], rows: full(k).map((v) => ({ v: [v], o: out({ [k]: v }) })), max: 8 });
@@ -362,6 +363,8 @@
   add('travelbench', { gen(R, lv) {
     if (R.bool()) { const w = (fam, bench, o) => { const q = U.Word.make(R, fam, bench, o); return { title: q.title, hook: q.hook, props: q.props, goals: q.goals, sol: q.sol, fam: q.struct && q.struct.family }; }; return w('meet', 'travelbench', { lv }); }
     const t = R.int(2, 6), va = R.int(3, 12), vb = R.int(2, 9);
+    // 大数（2026-11-27，路能画到 5000）：汽车的速度，路几百千米
+    if (lv === 3 && R.bool()) { const ca = R.int(8, 18) * 5, cb = R.int(6, 16) * 5, len = (ca + cb) * t; return { title: '两辆汽车从相距 ' + len + ' 千米的两地同时相对开出，一辆每小时 ' + ca + ' 千米，另一辆每小时 ' + cb + ' 千米，几小时相遇？', hook: '路很长，图按比例缩小画。拖时间条：每小时两车一共近多少千米？', props: { len, t: 0, tmax: t + 3, pa: 0, va: ca, da: 0, pb: len, vb: cb, db: 1, solo: false, lock: true, na: '客车', nb: '货车' }, goals: [['gap', 0, t + ' 小时相遇']], sol: { t } }; }
     if (lv === 3) { const v1 = Math.max(va, vb) + 1, v2 = Math.min(va, vb), gap0 = (v1 - v2) * t; return { title: '追及：乙先走了 ' + gap0 + ' 千米，甲每小时 ' + v1 + '，乙每小时 ' + v2 + '，几小时追上？', hook: '拖时间条，看两人之间的距离每小时少多少。', props: { len: gap0 + v2 * (t + 2), t: 0, tmax: t + 3, pa: 0, va: v1, da: 0, pb: gap0, vb: v2, db: 0, solo: false, lock: true }, goals: [['gap', 0, t + ' 小时追上']], sol: { t } }; }
     const len = (va + vb) * t; return { title: '相遇：相距 ' + len + ' 千米，甲每小时 ' + va + '，乙每小时 ' + vb + '，几小时相遇？', hook: '拖时间条，两人面对面走，每小时一共走多少？', props: { len, t: 0, tmax: t + 3, pa: 0, va, da: 0, pb: len, vb, db: 1, solo: false, lock: true }, goals: [['gap', 0, t + ' 小时相遇']], sol: { t } };
   } });
@@ -375,6 +378,8 @@
   add('tapebench', { gen(R, lv) {
     const w = (fam, bench, o) => { const q = U.Word.make(R, fam, bench, o); return { title: q.title, hook: q.hook, props: q.props, goals: q.goals, sol: q.sol, fam: q.struct && q.struct.family }; };
     if (lv === 1 && R.bool()) { const u = R.int(3, 15), ka = R.int(2, 3); return { title: '乙有 ' + u + '，甲是乙的 ' + ka + ' 倍，甲有几？', hook: '把甲的线段调成 ' + ka + ' 段。', props: { ka: 1, kb: 1, u, tk: 2, lock: false }, goals: [['a', ka * u, '甲有 ' + ka * u]], sol: { ka } }; }
+    // 大数（2026-11-27，线段图按真实比例缩小画）：几百几千吨
+    if (lv === 3 && R.int(0, 3) === 1) { const k = R.int(2, 5), u = R.int(6, 60) * 5, tv = (k + 1) * u; return { title: '甲仓的粮食是乙仓的 ' + k + ' 倍，两仓一共 ' + tv + ' 吨，乙仓有多少吨？', hook: '数很大，线段图按比例缩小画。先拖一段的长度到差不多，再点 ±1、±10 微调。', props: { ka: k, kb: 1, u: 1, tk: 0, tv, lock: true, na: '甲仓', nb: '乙仓', unit: '吨' }, goals: [['hit', 1, '乙仓 ' + u + ' 吨']], sol: { u } }; }
     return w(lv === 3 && R.int(0, 3) === 0 ? 'age' : 'pair', 'tapebench', { lv, noise: lv === 3 && R.bool() });
   } });
   function gcdQ(x, y) { return y ? gcdQ(y, x % y) : x; }
@@ -434,6 +439,8 @@
       const k = R.int(2, lv === 1 ? 4 : 6), each = R.int(2, lv === 1 ? 5 : 9), n = k * each;
       return { title: n + ' ' + q + it + '平均分给 ' + k + ' 个小朋友，每人分几' + q + '？', hook: '点“放一个”“放一轮”，一个一个轮流放进 ' + k + ' 个盒子，放完看每个盒子几个。', props: { mode: 1, n, k, dealt: 0, unit: q }, goals: [['max', each, '每人 ' + each + ' ' + q]], sol: { dealt: n } };
     }
+    // 三位数除以两位数（2026-11-27，台能画到 999 个、每份 99 个：份多了折叠着画）
+    if (lv === 3 && R.bool()) { const g = R.int(12, 35), n = g * R.int(8, Math.min(28, Math.floor(960 / g))) + R.int(1, g - 1), qq = Math.floor(n / g), r = n % g; return { title: n + ' 个，每 ' + g + ' 个装一箱，能装几箱？还剩几个？', hook: '把“每份几个”拖到 ' + g + '。份多了，中间的画成“……”，数一数一共几份。', props: { mode: 0, n, g: 1, k: 3, dealt: 0, unit: '个', gname: '箱' }, goals: [['q', qq, n + ' ÷ ' + g + ' = ' + qq + ' …… ' + r], ['r', r, '余 ' + r]], sol: { g } }; }
     const g = R.int(lv === 1 ? 2 : 4, lv === 1 ? 5 : 9), n = g * R.int(2, lv === 1 ? 4 : 7) + R.int(1, g - 1), qq = Math.floor(n / g), r = n % g;
     return { title: R.pick([n + ' 个，每 ' + g + ' 个一份，能分几份？还剩几个？', n + ' ' + q + it + '，每 ' + g + ' ' + q + '装一袋，能装几袋？还剩几' + q + '？', '有 ' + n + ' 人坐船，每条船坐 ' + g + ' 人，坐满几条船？还剩几人？']), hook: '把“每份几个”调成 ' + g + '，看分成几份、剩几个。', props: { mode: 0, n, g: 1, k: 3, dealt: 0, unit: '个', gname: '份' }, goals: [['q', qq, n + ' ÷ ' + g + ' = ' + qq + ' …… ' + r], ['r', r, '余 ' + r]], sol: { g } };
   } });
@@ -501,6 +508,8 @@
   } });
 
   add('areamodel', { gen(R, lv) {
+    // 两位数乘两位数（2026-11-27，台能画到 99 × 99）：横竖各切一刀，拆成四块好算的
+    if (lv === 3 && R.bool()) { const w = R.int(2, 4) * 10 + R.int(1, 9), h = 10 + R.int(1, 9), tw = Math.floor(w / 10) * 10; return { title: w + ' × ' + h + '：横竖各切一刀，拆成好算的四块', hook: '从左上角的两个 ✂ 各拖出一刀：长 ' + w + ' 切成 ' + tw + ' 和 ' + (w - tw) + '，宽 ' + h + ' 切成 10 和 ' + (h - 10) + '。', props: { mode: 0, w, h, vcuts: '', hcuts: '' }, goals: [['friendly', 1, w + ' × ' + h + ' = ' + tw + '×10 + ' + (w - tw) + '×10 + ' + tw + '×' + (h - 10) + ' + ' + (w - tw) + '×' + (h - 10) + ' = ' + w * h]], sol: { vcuts: String(tw), hcuts: '10' } }; }
     if (lv === 3) { const w = R.int(11, 19), h = R.int(3, 9); return { title: w + ' × ' + h + '：切一刀，拆成好算的两块', hook: '从左上角的 ✂ 拖出一刀，把长 ' + w + ' 切成 10 和 ' + (w - 10) + '。', props: { mode: 0, w, h, vcuts: '', hcuts: '' }, goals: [['friendly', 1, w + ' × ' + h + ' = 10 × ' + h + ' + ' + (w - 10) + ' × ' + h + ' = ' + w * h]], sol: { vcuts: '10' } }; }
     const w = R.int(3, 12), h = R.int(2, 8);
     if (lv === 2) return { title: '长 ' + w + '、宽 ' + h + ' 的长方形，周长是多少？', hook: '拖右边、下边，把长方形拖成长 ' + w + '、宽 ' + h + '。', props: { mode: 0, w, h: h === 1 ? 2 : 1, vcuts: '', hcuts: '' }, goals: [['perim', 2 * (w + h), '周长 = (' + w + ' + ' + h + ') × 2 = ' + 2 * (w + h)]], sol: { h } };

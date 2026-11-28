@@ -8,19 +8,24 @@
  *           拖一个落点往左 k 格 = 两边都减 k（“两边一起动”开着时另一个落点同时动，差不变）；按钮：两边 ÷ n、两边都少跳一下 x。
  *           g 是这台自己的（不进联动组的状态，改 g 不算做一步）；g 从 0 拖到 G，G 和数轴长度只由 a、b、c、d 定（见 eqRange），拖 g 时不变。
  * 尺寸按数轴的范围（from…to）固定，拖动时不变，所以把手一直跟着鼠标。
- * 这一版的边界（如实写）：数轴范围是整数，最长 40 格；找位置的分母最多 12；没有放大镜（不能一层层放大看更细的刻度）。 */
+ * 这一版的边界（如实写）：数轴范围是整数，最长 1000（2026-11-27 起；以前 40）：超过 40 一小格按 1、2、5、10、20、50……取，图上写“一小格 = 50”，
+ *   拖起点、端点按一步至少 4 像素取整；步长最大 100（到了 10 以上一次加减 10）；“两边各走”再跳的数最多 999，数轴长了刻度换单位，
+ *   试的数 g 那一条短得拖不动时单独放大画（不再画到下面的竖虚线）。找位置的分母最多 12，数轴长了细分的刻度不画；没有放大镜（不能一层层放大看更细的刻度）。 */
 (function (G) {
   'use strict';
   const U = G.U, Q = U.Q, K = U.kit;
   const num = (n) => U.val('num', typeof n === 'number' ? Q(n) : n, { dim: null });
   const MODES = ['跳步', '找位置', '区间', '最少跳几下', '两边各走'];
-  const W = 620, X0 = 36, X1 = W - 36, AY = 150, NMAX = 12;
+  const W = 620, X0 = 36, X1 = W - 36, AY = 150, NMAX = 12, SMAX = 100;
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
+  // 数轴最长 SPANMAX（2026-11-27 起，以前 40）：长了换单位，一小格是 1、2、5、10、20、50……（mt），图上写“一小格 = 50”
+  const SPANMAX = 1000;
   function model(p) {
-    const from = clamp(p.from, -20, 0), to = clamp(p.to, from + 4, from + 40), u = (X1 - X0) / (to - from);
+    const from = clamp(p.from, -SPANMAX, 0), to = clamp(p.to, from + 4, from + SPANMAX), u = (X1 - X0) / (to - from);
     const X = (v) => X0 + (v - from) * u, inv = (x) => from + (x - X0) / u;
-    const m = { mode: p.mode, from, to, u, X, inv };
+    const mt = to - from <= 40 ? 1 : K.big.nice((to - from) / 40), grain = mt > 1 ? K.big.grain(u, K.big.GRAIN_PX) : 1;   // grain：拖起点、端点时取整的步长
+    const m = { mode: p.mode, from, to, u, X, inv, mt, grain };
     if (p.mode === 1) {
       m.d = clamp(p.d, 1, 12); m.k = clamp(p.k, 0, (to - from) * m.d); m.value = Q.add(Q(from), Q(m.k, m.d));
     } else if (p.mode === 2) {
@@ -28,7 +33,7 @@
       m.ints = m.lo === m.hi ? (m.lc && m.hc ? 1 : 0) : m.hi - m.lo - 1 + m.lc + m.hc;   // 两端之间的整数，加上算在里面的端点
       m.len = m.hi - m.lo;
     } else {
-      m.a = clamp(p.a, from, to); m.s = p.s === 0 ? 1 : clamp(p.s, -10, 10);
+      m.a = clamp(p.a, from, to); m.s = p.s === 0 ? 1 : clamp(p.s, -SMAX, SMAX);
       const room = m.s > 0 ? Math.floor((to - m.a) / m.s) : Math.floor((m.a - from) / -m.s);
       m.n = clamp(p.n, 0, Math.min(NMAX, room)); m.value = m.a + m.n * m.s;
     }
@@ -44,14 +49,17 @@
     return out;
   }
 
+  // 写数的间隔：40 格以内和以前一样；更长时取 mt 的 1、2、5、10 倍里最小的、两个数之间至少 30 像素的
+  const labEvery = (m) => { const span = m.to - m.from; if (span <= 40) return span <= 20 ? 1 : span <= 30 ? 2 : 5; for (const k of [1, 2, 5, 10, 20]) if (k * m.mt * m.u >= 30) return k * m.mt; return 20 * m.mt; };
   function axis(m) {
-    const span = m.to - m.from, every = span <= 20 ? 1 : span <= 30 ? 2 : 5;
+    const every = labEvery(m);
     let s = K.line(X0 - 14, AY, X1 + 14, AY, { w: 2.5 }) + '<path d="M' + (X1 + 20) + ' ' + AY + ' l-9 -5 v10 z" fill="var(--ink)"/>';
-    for (let v = m.from; v <= m.to; v++) {
+    for (let v = Math.ceil(m.from / m.mt) * m.mt; v <= m.to; v += m.mt) {
       const big = v % every === 0 || v === 0;
       s += K.line(m.X(v), AY - (big ? 8 : 5), m.X(v), AY + (big ? 8 : 5), { w: v === 0 ? 2.5 : 1.4 });
       if (big) s += K.text(m.X(v), AY + 26, sgn(v), { size: 13, weight: v === 0 ? 700 : 400 });
     }
+    if (m.mt > 1) s += K.big.unitNote(W - 12, 18, '数轴长了：一小格 = ' + m.mt);
     return s;
   }
   const pickBtn = (x, y, w, tx, k, v, tip, on) => '<g data-pick-k="' + k + '" data-pick-v="' + v + '" style="cursor:pointer"><title>' + K.esc(tip) + '</title>' + K.rect(x, y, w, 22, { fill: on ? 'var(--blue)' : '#fff', stroke: on ? 'var(--blue)' : '#8a94a8', r: 6 }) + K.text(x + w / 2, y + 16, tx, { size: 13, weight: 700, fill: on ? '#fff' : 'var(--ink)' }) + '</g>';
@@ -89,7 +97,14 @@
   // g 的范围 0…G、数轴 0…to 只由 a、b、c、d 定（不用藏着的 x0，不随 g 变）：
   //   a ≠ c 时解是 (d − b) / (a − c)，不会超过 max(b, d) / |a − c|，所以 G 取这个上界，至少 10、最多 20（题目的解都在 20 以内）；a = c 时 G = 10。
   //   数轴要放得下 g = G 时两个落点：to = max(a, c) × G + max(b, d)，至少 10。刻度：to ≤ 60 每 1 一格，再长每 5 一格；数字每 1、2、5、10 写一个。
-  const EQ_TO = 200;
+  //   2026-11-27：再跳的数最多 999（以前 60），数轴最长 EQ_TO；长了刻度换单位（见 eqTicks），g 那一条短了单独放大画（见 eqModel 的 gs）。
+  const EQ_TO = 1200, BMAX = 999, GMIN = 160;
+  // 刻度：数轴到 200 以内和以前一样；再长按 nice 取一小格，写数的间隔至少 40 像素
+  function eqTicks(m) {
+    if (m.to <= 200) return { tick: m.to <= 60 ? 1 : 5, lab: m.to <= 12 ? 1 : m.to <= 30 ? 2 : m.to <= 60 ? 5 : 10 };
+    const tick = K.big.nice(m.to / 40); let lab = tick * 10; for (const k of [2, 5, 10]) if (tick * k * m.u >= 40) { lab = tick * k; break; }
+    return { tick, lab };
+  }
   const lq = (p) => ({ a: p.qa, b: p.qb, c: p.qc, d: p.qd });
   function eqRange(s) {
     const G = s.a === s.c ? 10 : Math.min(20, Math.max(10, Math.ceil(Math.max(s.b, s.d) / Math.abs(s.a - s.c))));
@@ -101,7 +116,9 @@
   // r：定范围用的属性（拖落点时用按下那一刻的，数轴不跟着缩）
   function eqModel(p, r) {
     const s = lq(p), R0 = eqRange(lq(r || p)), u = (X1 - X0) / R0.to, g = clamp(Math.round(+p.g || 0), 0, R0.G);
-    return { s, G: R0.G, to: R0.to, u, X: (v) => X0 + v * u, inv: (x) => (x - X0) / u, g, L: s.a * g + s.b, R: s.c * g + s.d };
+    // 试的数 g 的那一条：和下面数轴同一个比例；再跳的数大了（数轴很长），g 那一条短得拖不动（不到 GMIN 像素），就单独放大画（gs 是 g 那一条的比例）
+    const gs = R0.to <= 200 || R0.G * u >= GMIN ? u : GMIN / R0.G;   // 到 200 以内和以前一样
+    return { s, G: R0.G, to: R0.to, u, X: (v) => X0 + v * u, inv: (x) => (x - X0) / u, gs, gX: (v) => X0 + v * gs, ginv: (x) => (x - X0) / gs, gBig: gs !== u, g, L: s.a * g + s.b, R: s.c * g + s.d };
   }
   // 说一句：重合、差多少；a = c 时 g 是几都一样（两边一模一样，或者永远差 |b − d|）
   function eqSay(p) {
@@ -124,12 +141,12 @@
   function drawEq(c) {
     const p = c.props, m = eqModel(p, c.drag ? c.drag.p0 : p), s = m.s, both = linked(p), say = eqSay(p);
     const dg = c.drag && (c.drag.grip === 'L' || c.drag.grip === 'R') ? eqDrag(c.drag.p0, c.drag.grip, c.drag) : null;
-    const tick = m.to <= 60 ? 1 : 5, lab = m.to <= 12 ? 1 : m.to <= 30 ? 2 : m.to <= 60 ? 5 : 10;
+    const { tick, lab } = eqTicks(m);
     const xs = (k) => (k === 1 ? 'x' : k + 'x'), side = (k, e) => [k ? xs(k) : '', e || !k ? String(e) : ''].filter(Boolean).join(' + ');
     let h = K.text(20, 24, '两边各走：' + side(s.a, s.b) + ' 和 ' + side(s.c, s.d) + '，每一下 x 跳 g 那么远', { size: 14, weight: 700, anchor: 'start' });
     // 试的数 g：和下面两条数轴用同一个比例
-    h += K.line(m.X(0), GY, m.X(m.G), GY, { w: 4, stroke: '#c9d2df' }) + K.text(m.X(m.G) + 8, GY + 4, '试的数 g：0 到 ' + m.G, { size: 11, anchor: 'start', fill: '#4a5568' });
-    h += K.text(m.X(m.g), GY - 14, 'g = ' + m.g, { size: 12, weight: 700, fill: 'var(--blue)' }) + K.line(m.X(m.g), GY + 10, m.X(m.g), AY2, { w: 1, dash: '2 4', stroke: '#8a94a8' });
+    h += K.line(m.gX(0), GY, m.gX(m.G), GY, { w: 4, stroke: '#c9d2df' }) + K.text(m.gX(m.G) + 8, GY + 4, '试的数 g：0 到 ' + m.G + (m.gBig ? '（这一条放大画）' : ''), { size: 11, anchor: 'start', fill: '#4a5568' });
+    h += K.text(m.gX(m.g), GY - 14, 'g = ' + m.g, { size: 12, weight: 700, fill: 'var(--blue)' }) + (m.gBig ? '' : K.line(m.X(m.g), GY + 10, m.X(m.g), AY2, { w: 1, dash: '2 4', stroke: '#8a94a8' }));
     const axis = (y, name) => {
       let a = K.text(14, y + 5, name, { size: 13, weight: 700 }) + K.line(X0 - 6, y, X1 + 14, y, { w: 2 }) + '<path d="M' + (X1 + 20) + ' ' + y + ' l-9 -5 v10 z" fill="var(--ink)"/>';
       for (let v = 0; v <= m.to; v += tick) { const big = v % lab === 0; a += K.line(m.X(v), y - (big ? 6 : 4), m.X(v), y + (big ? 6 : 4), { w: v === 0 ? 2.2 : 1.1 }); if (big) a += K.text(m.X(v), y + 19, String(v), { size: 11, fill: '#4a5568' }); }
@@ -143,6 +160,7 @@
       return a;
     };
     h += axis(AY1, '左') + path(AY1, s.a, s.b, 'var(--blue)') + axis(AY2, '右') + path(AY2, s.c, s.d, '#b86a00');
+    if (m.to > 200) h += K.big.unitNote(W - 12, 42, '数轴长了：一小格 = ' + tick);
     // 两个落点；不重合时两点之间标差
     const xl = m.X(m.L), xr = m.X(m.R);
     if (m.L !== m.R) { const by = AY2 + 34; h += K.line(xl, AY1, xl, by, { w: 1, dash: '3 3', stroke: 'var(--bad)' }) + K.line(xr, AY2, xr, by, { w: 1, dash: '3 3', stroke: 'var(--bad)' }) + '<g data-gap="1">' + K.line(xl, by, xr, by, { w: 2, stroke: 'var(--bad)' }) + K.text((xl + xr) / 2, by + 15, '差 ' + Math.abs(m.L - m.R), { size: 12, weight: 700, fill: 'var(--bad)' }) + '</g>'; }
@@ -174,8 +192,8 @@
   }
   function gripsEq(c) {
     const p = c.props, m = eqModel(p), out = [];
-    out.push({ id: 'g', x: m.X(m.g), y: GY, r: 9, text: 'g', cursor: 'ew-resize', tip: '左右拖：试一个数 g',
-      drag: (c0, q) => { const m0 = eqModel(c0.props); return { g: clamp(Math.round(m0.inv(q.x)), 0, m0.G) }; }, say: (c1) => { const m1 = eqModel(c1.props); return 'g = ' + m1.g + '：左边落在 ' + m1.L + '，右边落在 ' + m1.R; } });
+    out.push({ id: 'g', x: m.gX(m.g), y: GY, r: 9, text: 'g', cursor: 'ew-resize', tip: '左右拖：试一个数 g',
+      drag: (c0, q) => { const m0 = eqModel(c0.props); return { g: clamp(Math.round(m0.ginv(q.x)), 0, m0.G) }; }, say: (c1) => { const m1 = eqModel(c1.props); return 'g = ' + m1.g + '：左边落在 ' + m1.L + '，右边落在 ' + m1.R; } });
     const say = (c1) => { const m1 = eqModel(c1.props); return '左边落在 ' + m1.L + '，右边落在 ' + m1.R; }, tip = linked(p) ? '往左拖：两边一起少跳' : '往左拖：只这一边少跳';
     if (p.qb > 0) out.push({ id: 'L', x: m.X(m.L), y: AY1, r: 10, ghost: true, cursor: 'ew-resize', tip, drag: (c0, q) => eqDrag(c0.props, 'L', q).patch, say });
     if (p.qd > 0) out.push({ id: 'R', x: m.X(m.R), y: AY2, r: 10, ghost: true, cursor: 'ew-resize', tip, drag: (c0, q) => eqDrag(c0.props, 'R', q).patch, say });
@@ -196,11 +214,13 @@
       const step = Math.abs(m.s), op = m.s > 0 ? ' + ' : ' − ';
       const eq = m.n === 0 ? sgn(m.a) + '（还没跳）' : m.n === 1 ? sgn(m.a) + op + step + ' = ' + sgn(m.value) : step === 1 ? sgn(m.a) + op + m.n + ' = ' + sgn(m.value) : sgn(m.a) + op + step + ' × ' + m.n + ' = ' + sgn(m.value);
       s += K.text(W / 2, 46, eq, { size: 20, weight: 700 });
-      s += K.text(X0 + 30, 232, '每一步跳', { size: 12 }) + pickBtn(X0 + 62, 216, 24, '−', 's', m.s - 1 === 0 ? -1 : Math.max(-10, m.s - 1), '步长减 1（减到负数就是往左跳）') +
-        K.text(X0 + 106, 232, sgn(m.s), { size: 15, weight: 700 }) + pickBtn(X0 + 126, 216, 24, '＋', 's', m.s + 1 === 0 ? 1 : Math.min(10, m.s + 1), '步长加 1') +
+      // 步长到了 10 以上，一次加减 10（2026-11-27 起步长最大 100）
+      const sDn = m.s > 10 ? m.s - 10 : m.s - 1 === 0 ? -1 : m.s <= -10 ? Math.max(-SMAX, m.s - 10) : m.s - 1, sUp = m.s < -10 ? m.s + 10 : m.s + 1 === 0 ? 1 : m.s >= 10 ? Math.min(SMAX, m.s + 10) : m.s + 1;
+      s += K.text(X0 + 30, 232, '每一步跳', { size: 12 }) + pickBtn(X0 + 62, 216, 24, '−', 's', sDn, '步长减 ' + Math.abs(sDn - m.s) + '（减到负数就是往左跳）') +
+        K.text(X0 + 106, 232, sgn(m.s), { size: 15, weight: 700 }) + pickBtn(X0 + 126, 216, 24, '＋', 's', sUp, '步长加 ' + Math.abs(sUp - m.s)) +
         K.text(X0 + 300, 232, '跳了 ' + m.n + ' 步，落在 ' + sgn(m.value), { size: 13, weight: 700 });
     } else if (m.mode === 1) {
-      if (m.d > 1) for (let i = 0; i <= (m.to - m.from) * m.d; i++) if (i % m.d) s += K.line(m.X(m.from + i / m.d), AY - 4, m.X(m.from + i / m.d), AY + 4, { w: 0.9, stroke: 'var(--blue)' });
+      if (m.d > 1 && m.u / m.d >= 3) for (let i = 0; i <= (m.to - m.from) * m.d; i++) if (i % m.d) s += K.line(m.X(m.from + i / m.d), AY - 4, m.X(m.from + i / m.d), AY + 4, { w: 0.9, stroke: 'var(--blue)' });
       const f = forms(m.value);
       s += K.text(W / 2, 46, c.masked ? '？' : f.join('  =  '), { size: 20, weight: 700 });
       s += K.text(X0 + 44, 232, '每一格切成', { size: 12 }) + pickBtn(X0 + 82, 216, 24, '−', 'd', Math.max(1, m.d - 1), '少切一份') + K.text(X0 + 124, 232, m.d + ' 份', { size: 15, weight: 700 }) + pickBtn(X0 + 150, 216, 24, '＋', 'd', Math.min(12, m.d + 1), '多切一份');
@@ -224,7 +244,7 @@
     const m = model(c.props), out = [];
     if (m.mode === 0) {
       out.push({ id: 'a', x: m.X(m.a), y: AY, r: 7, cursor: 'ew-resize', tip: '左右拖：改起点',
-        drag: (c0, q) => { const m0 = model(c0.props); return { a: clamp(Math.round(m0.inv(q.x)), m0.from, m0.to) }; }, say: (c1) => '起点 ' + sgn(model(c1.props).a) });
+        drag: (c0, q) => { const m0 = model(c0.props); return { a: clamp(K.big.snap(m0.inv(q.x), m0.grain), m0.from, m0.to) }; }, say: (c1) => '起点 ' + sgn(model(c1.props).a) });
       out.push({ id: 'end', x: m.X(m.value), y: AY - 30, r: 9, text: '跳', cursor: 'ew-resize', tip: '拖我：多跳几步或少跳几步',
         drag: (c0, q) => { const m0 = model(c0.props); return { n: clamp(Math.round((m0.inv(q.x) - m0.a) / m0.s), 0, NMAX) }; },
         say: (c1) => { const m1 = model(c1.props); return '跳 ' + m1.n + ' 步，到 ' + sgn(m1.value); } });
@@ -234,9 +254,9 @@
         say: (c1) => forms(model(c1.props).value)[0] });
     } else {
       out.push({ id: 'lo', x: m.X(m.lo), y: AY, r: 10, ghost: true, cursor: 'ew-resize', tip: '左右拖：左端点',
-        drag: (c0, q) => { const m0 = model(c0.props); return { lo: clamp(Math.round(m0.inv(q.x)), m0.from, m0.hi) }; }, say: (c1) => '左端 ' + sgn(model(c1.props).lo) });
+        drag: (c0, q) => { const m0 = model(c0.props); return { lo: clamp(K.big.snap(m0.inv(q.x), m0.grain), m0.from, m0.hi) }; }, say: (c1) => '左端 ' + sgn(model(c1.props).lo) });
       out.push({ id: 'hi', x: m.X(m.hi), y: AY, r: 10, ghost: true, cursor: 'ew-resize', tip: '左右拖：右端点',
-        drag: (c0, q) => { const m0 = model(c0.props); return { hi: clamp(Math.round(m0.inv(q.x)), m0.lo, m0.to) }; }, say: (c1) => '右端 ' + sgn(model(c1.props).hi) });
+        drag: (c0, q) => { const m0 = model(c0.props); return { hi: clamp(K.big.snap(m0.inv(q.x), m0.grain), m0.lo, m0.to) }; }, say: (c1) => '右端 ' + sgn(model(c1.props).hi) });
     }
     return out;
   }
@@ -251,13 +271,13 @@
         alias: ['数轴', '加法', '减法', '乘法', '跳步', '分数', '小数', '负数', '不等式', '区间', '解集'],
         props: {
           mode: { type: 'choice', label: '用来做什么', default: 0, choices: MODES, write: true },
-          from: I(-20, 0, 0, '数轴从几开始'), to: I(4, 40, 20, '数轴到几'),
-          a: I(-20, 40, 0, '起点'), s: I(-10, 10, 1, '每一步跳几（负数往左）'), n: I(0, NMAX, 0, '跳了几步'),
+          from: I(-SPANMAX, 0, 0, '数轴从几开始', { qmin: -20 }), to: I(4, SPANMAX, 20, '数轴到几', { qmax: 40 }),   // qmin、qmax：随机出题只试这么大（problems/zzz-quiz.js 的 derive）
+          a: I(-SPANMAX, SPANMAX, 0, '起点', { qmin: -20, qmax: 40 }), s: I(-SMAX, SMAX, 1, '每一步跳几（负数往左）', { qmin: -10, qmax: 10 }), n: I(0, NMAX, 0, '跳了几步'),
           d: I(1, 12, 4, '每一格切成几份'), k: I(0, 480, 0, '从左端数第几小格'),
           steps: { type: 'text', label: '最少跳几下：能跳的步长（逗号分开）', default: '3,5', write: true }, jt: I(-10, 40, 23, '最少跳几下：目标'), path: { type: 'text', label: '最少跳几下：跳过的（自动）', default: '', write: true },
-          qa: I(0, 10, 2, '两边各走：左边几个 x'), qb: I(0, 60, 3, '两边各走：左边再跳几'), qc: I(0, 10, 0, '两边各走：右边几个 x'), qd: I(0, 60, 11, '两边各走：右边再跳几'),
+          qa: I(0, 10, 2, '两边各走：左边几个 x'), qb: I(0, BMAX, 3, '两边各走：左边再跳几', { qmax: 60 }), qc: I(0, 10, 0, '两边各走：右边几个 x'), qd: I(0, BMAX, 11, '两边各走：右边再跳几', { qmax: 60 }),
           g: I(0, 20, 0, '两边各走：试的数 g'), link: { type: 'bool', label: '两边各走：两边一起动', default: true, write: true, hidden: true },
-          lo: I(-20, 40, 1, '区间左端'), hi: I(-20, 40, 4, '区间右端'), lc: I(0, 1, 1, '左端含不含（1 含）'), hc: I(0, 1, 1, '右端含不含（1 含）'),
+          lo: I(-SPANMAX, SPANMAX, 1, '区间左端', { qmin: -20, qmax: 40 }), hi: I(-SPANMAX, SPANMAX, 4, '区间右端', { qmin: -20, qmax: 40 }), lc: I(0, 1, 1, '左端含不含（1 含）'), hc: I(0, 1, 1, '右端含不含（1 含）'),
         },
         outputs: {
           value: { dim: null, kind: 'num', label: '落点 / 点的位置' },
@@ -291,7 +311,7 @@
   if (U.Forms) U.Forms.adapt('lineq', 'numlinebench', {
     toState: (p) => lq(p),
     fromState: (s, p, step) => Object.assign({ mode: 4, qa: s.a, qb: s.b, qc: s.c, qd: s.d }, step ? {} : { g: 0 }),
-    can: (s) => (s.a > 10 || s.c > 10 ? '数轴上每边最多跳 10 下 x' : s.b > 60 || s.d > 60 ? '数轴上再跳最多跳 60' : eqRange(s).to > EQ_TO ? '数轴太长了（最多到 ' + EQ_TO + '）' : null),
+    can: (s) => (s.a > 10 || s.c > 10 ? '数轴上每边最多跳 10 下 x' : s.b > BMAX || s.d > BMAX ? '数轴上再跳最多跳 ' + BMAX : eqRange(s).to > EQ_TO ? '数轴太长了（最多到 ' + EQ_TO + '）' : null),
   });
   U.NumLineBench = { model, forms, MODES, eqModel, eqRange, eqSay, eqDrag };
 })(typeof globalThis !== 'undefined' ? globalThis : window);

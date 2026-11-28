@@ -66,7 +66,8 @@
   const amProps = () => p.evaluate(() => Object.assign({}, Object.values(UI.S.scene.entities).find((x) => x.type === 'areamodel').props));
   const setWH = async (w, h) => {
     for (const [k, v] of [['w', w], ['h', h]]) {
-      const pr = await amProps(), gw = await gripAt('w'), gh = await gripAt('h'), cell = 2 * (gw.x - gh.x) / pr.w, g = k === 'w' ? gw : gh, d = (v - pr[k]) * cell;
+      const pr = await amProps(), gw = await gripAt('w'), gh = await gripAt('h'), cell = await p.evaluate((pr) => { const sv = document.querySelector('.card svg.bdy'), k = sv.getBoundingClientRect().width / +sv.getAttribute('width'); return k * Math.min(17, 510 / pr.w, 340 / pr.h); }, pr),   // 一格多少屏幕像素（2026-11-27：以前用两个把手的距离估，w 小时估大了，靠长最多 30 截住；现在长能到 99）
+      g = k === 'w' ? gw : gh, d = (v - pr[k]) * cell;
       if (!d) continue;
       await p.evaluate(() => { if (UI.Panels.closeDialog) UI.Panels.closeDialog(); });
       await p.mouse.move(g.x, g.y); await p.mouse.down(); await p.mouse.move(g.x + (k === 'w' ? d / 2 : 0), g.y + (k === 'h' ? d / 2 : 0), { steps: 4 }); await p.mouse.move(g.x + (k === 'w' ? d : 0), g.y + (k === 'h' ? d : 0), { steps: 4 }); await p.mouse.up(); await p.waitForTimeout(160);

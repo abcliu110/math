@@ -154,5 +154,42 @@
       return { s, X, Y, X0, X1, Y0, Y1, xs, ys };
     },
   };
+  // 大数也画得下（试验台增强 7，2026-11-27，docs/instrument-design.md 的“台的尺寸和比例”）：各台共用的三种办法
+  //   自动缩放：格子 / 单位长度跟着数变小，但可点的东西不小于 MIN_HIT 像素，拖动时按 grain 取整（每一步至少 GRAIN_PX 像素，好拖）；
+  //   换单位：  刻度按 nice 取 1、2、5、10、20、50……一格，图上写“一格 = 10”（unitNote）；
+  //   折叠：    中间重复的画成“……”，写出省略了几个（fold 给出要画哪几个，null 是省略号那一格）。
+  //   CARD_MAX：操作台卡片最大多宽、多高（数再大，卡片也不超过它；tests/run.js 逐台检查）。
+  const LADDER = [1, 2, 5];
+  const nice = (x) => { if (!(x > 0)) return 1; let p = 1; while (p * 10 <= x) p *= 10; while (p > x) p /= 10; for (;;) { for (const k of LADDER) if (k * p >= x - 1e-9) return k * p; p *= 10; } };
+  kit.big = {
+    MIN_HIT: 14, GRAIN_PX: 4, CARD_MAX: [960, 760],
+    nice,
+    // 拖动时取整的步长：1、2、5、10……里最小的、一步至少 px 像素的（unit 是 1 在图上多少像素）
+    grain: (unit, px) => (unit > 0 ? Math.max(1, nice((px || 4) / unit)) : 1),
+    snap: (v, g) => Math.round(v / g) * g,
+    // 一共 n 个，最多画 max 个：前 head 个、“……”、后 tail 个。返回下标数组，null 是省略号；omitted 是省略了几个
+    fold: (n, max, head, tail) => {
+      if (n <= max) return { idx: Array.from({ length: n }, (_, i) => i), omitted: 0 };
+      const h = head === undefined ? Math.ceil((max - 1) / 2) : head, t = tail === undefined ? max - 1 - h : tail, idx = [];
+      for (let i = 0; i < h; i++) idx.push(i);
+      idx.push(null);
+      for (let i = n - t; i < n; i++) idx.push(i);
+      return { idx, omitted: n - h - t };
+    },
+    // 按真实比例分一段长度：vals 各占 total 的多少，太短的保留 min（从长的里面匀出来）。返回每段的像素长度，加起来是 total（都放不下 min 时每段 min）
+    prop: (vals, total, min) => {
+      const n = vals.length, out = new Array(n).fill(0), fixed = new Array(n).fill(false);
+      if (n * min >= total) return out.fill(min);
+      for (let pass = 0; pass < n; pass++) {
+        const room = total - fixed.reduce((s, f) => s + (f ? min : 0), 0), sum = vals.reduce((s, v, i) => s + (fixed[i] ? 0 : Math.max(0, v)), 0);
+        let again = false;
+        vals.forEach((v, i) => { if (fixed[i]) { out[i] = min; return; } out[i] = sum > 0 ? room * Math.max(0, v) / sum : room / n; if (out[i] < min) { fixed[i] = true; again = true; } });
+        if (!again) break;
+      }
+      return out.map((w, i) => (fixed[i] ? min : w));
+    },
+    // 图上写“一格 = 10”这类说明（右对齐在 x 处）
+    unitNote: (x, y, text, anchor) => '<g data-unit-note="1">' + kit.text(x, y, text, { size: 11, weight: 700, anchor: anchor || 'end', fill: '#7a4fb3' }) + '</g>',
+  };
   U.kit = kit;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

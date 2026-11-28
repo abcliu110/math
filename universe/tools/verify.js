@@ -200,6 +200,7 @@ async function checkDist() {
   if (!runScript('tools/contrast.js', 'tools/contrast.js', pwEnv)) bail();          // V1：界面文字对比度 >= 4.5:1（light/dark 两种主题，playwright 实测）
   if (!runScript('tests/ui-young.js', 'tests/ui-young.js', pwEnv)) bail();   // §11 低年级模式（真实鼠标）：菜单开关、字号和按钮变大、记住、工作区工具行只留声明的几个、存储不可用
   if (!runScript('tests/ui-young2.js', 'tests/ui-young2.js', pwEnv)) bail();   // 试验台增强 6 低年级帮手（真实鼠标）：1、2 年级操作台的点击范围 ≥ 44、点放大的一圈能用、🔊 读题目/步骤/操作台（打桩语音）、没语音不出按钮、5 年级不变
+  if (!runScript('tests/ui-bigsize.js', 'tests/ui-bigsize.js', pwEnv)) bail();   // 试验台增强 7 台的尺寸和比例（真实鼠标）：大数开题（线段图 1000 多吨、两位数乘两位数、三位数除以两位数、几百千米相遇、长数轴），拖把手做完；卡片不超过上限
   if (fs.existsSync(path.join(root, 'tests', 'ui-probes.js'))) {
     if (!runScript('tests/ui-probes.js', 'tests/ui-probes.js', pwEnv)) bail();
   }

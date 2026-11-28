@@ -3241,7 +3241,7 @@ t('通用任务层：倒推、找全、最多最少、推广 出得来，开场�
   const p = [1, 2, 3, 4, 5, 6, 7, 8].map((s) => U.Quiz.make('areamodel', s * 977, 7)).find((x) => x && x.quiz.sols[0].w !== undefined && x.quiz.sols[0].h !== undefined);
   truthy(p, '面积模型出得了“长和宽找全”');
   const w0 = p.milestones[0].when.all[0], want = [];   // 题目要的那个输出（面积或周长……）等于几
-  for (let w = 1; w <= U.AreaModel.WMAX; w++) for (let h = 1; h <= U.AreaModel.HMAX; h++) if (U.Quiz.sim('areamodel', Object.assign({}, p.quiz.props, { w, h }))[w0.port] === w0.value) want.push(w + 'x' + h);
+  for (let w = 1; w <= U.types.areamodel.props.w.qmax; w++) for (let h = 1; h <= U.types.areamodel.props.h.qmax; h++) if (U.Quiz.sim('areamodel', Object.assign({}, p.quiz.props, { w, h }))[w0.port] === w0.value) want.push(w + 'x' + h);
   eq(p.quiz.sols.map((x) => x.w + 'x' + x.h).sort(), want.sort());
   // 按钮只能 ×2 ×3 的属性（分数条的“又切成几份”）不能当“任意值”去找全
   for (let s = 1; s <= 10; s++) { const q = U.Quiz.make('fracbench', s * 101, 7); truthy(!q || !q.quiz.sols.some((x) => x.ka === 7 || x.kc === 7), '分数条不会要孩子切成 7 份'); }
@@ -3758,7 +3758,9 @@ console.log('联动组：一个道理，几种样子（js/core/forms.js）');
     const A = F.adapterOf('lineq', 'tapebench'), p = Object.assign(U.defaultProps(U.types.tapebench), A.fromState(S3, {}, null));
     eq([p.ka, p.ea, p.kb, p.eb, p.u, p.eqm, p.tk, p.na, p.nb], [3, 2, 1, 10, 4, true, 2, '左边', '右边']);
     eq(A.toState(p), { a: 3, b: 2, c: 1, d: 10 });
-    eq(A.can(S3), null); truthy(/8 段/.test(A.can({ a: 9, b: 0, c: 0, d: 36, x0: 4 })), '9 段画不了'); truthy(/60/.test(A.can({ a: 1, b: 61, c: 0, d: 65, x0: 4 })), '一截 61 画不了');
+    // 2026-11-27 起按比例缩小画：9 段、一截 61 都画得了；13 段、一截 10000 才画不了
+    eq(A.can(S3), null); eq(A.can({ a: 9, b: 0, c: 0, d: 36, x0: 4 }), null, '9 段画得了'); eq(A.can({ a: 1, b: 61, c: 0, d: 65, x0: 4 }), null, '一截 61 画得了');
+    truthy(/12 段/.test(A.can({ a: 13, b: 0, c: 0, d: 52, x0: 4 })), '13 段画不了'); truthy(/9999/.test(A.can({ a: 1, b: 10000, c: 0, d: 10004, x0: 4 })), '一截 10000 画不了');
     const svg = U.types.tapebench.draw({ props: p }); truthy(!/一共要|相差要/.test(svg) && />x</.test(svg) && !/>4</.test(svg), '段上写 x 不写数，没有目标那一行');
     eq(U.types.tapebench.grips({ props: p }).map((g) => g.id), ['cb', 'cd'], '没有“一段多长”的把手，两条右端各一个');
     const p0 = U.defaultProps(U.types.tapebench); eq(U.types.tapebench.grips({ props: p0 }).map((g) => g.id), ['u'], '不在组里：和原来一样');
@@ -3770,7 +3772,8 @@ console.log('联动组：一个道理，几种样子（js/core/forms.js）');
     eq(A.fromState(S3, p, { op: 'sub', what: 'c', k: 1 }).g, undefined, '做一步不动 g');
     eq(NB.eqRange({ a: 1, b: 5, c: 0, d: 12 }), { G: 12, to: 24 }); eq(NB.eqRange({ a: 3, b: 2, c: 1, d: 10 }), { G: 10, to: 40 });
     const r1 = NB.eqModel(Object.assign({}, p, { g: 0 })), r2 = NB.eqModel(Object.assign({}, p, { g: 10 })); eq([r1.to, r1.G], [r2.to, r2.G], '拖 g 数轴范围不变');
-    eq(A.can(S3), null); truthy(/10 下/.test(A.can({ a: 11, b: 0, c: 0, d: 0, x0: 1 }))); truthy(/太长/.test(A.can({ a: 10, b: 60, c: 9, d: 0, x0: 1 })), '数轴太长');
+    eq(A.can(S3), null); truthy(/10 下/.test(A.can({ a: 11, b: 0, c: 0, d: 0, x0: 1 }))); eq(A.can({ a: 10, b: 60, c: 9, d: 0, x0: 1 }), null, '数轴到 260：2026-11-27 起画得了（刻度换单位）'); truthy(/999/.test(A.can({ a: 1, b: 1000, c: 0, d: 1004, x0: 4 })), '再跳 1000 画不了');
+    const pb = Object.assign({}, p, { qa: 1, qb: 900, qc: 0, qd: 905 }), mb = NB.eqModel(pb); truthy(mb.gBig && mb.G * mb.gs >= 150, 'g 那一条短了就放大画：' + mb.G * mb.gs);
   });
   t('在线段图上做一步（拖右端剪掉 2、点“两条都剪掉一段 x”），天平、式子、数轴都跟着变', () => {
     const o = mk4(), s = o.s, g = gripOf(s, o.tp, 'cb'), P = s.entities[o.tp].props;
@@ -4032,6 +4035,81 @@ console.log('全部在器材上操作：几何一组（海龟作图、剪拼、�
       for (const k of Object.keys(d.props)) if (d.props[k].write && !d.props[k].hidden && !(ALLOW[ty] && ALLOW[ty][k])) bad.push(ty + '.' + k);
     }
     eq(bad, [], '还要打开属性面板填的');
+  });
+}
+console.log('台的尺寸和比例（试验台增强 7）');
+{
+  const B = U.kit.big, [CW, CH] = B.CARD_MAX;
+  // 画一张卡片：返回 { svg, w, h, grips, s }；坐标都在画布里（左右上下各让 24 像素：把手、说明可以压一点边）
+  const drawOf = (type, patch) => {
+    const d = U.types[type], s = W.blank(), id = W.add(s, type, 0, 0, patch), e = s.entities[id], D = W.evaluate(s), sz = d.size(e);
+    const c = { ent: e, props: D[id].props || e.props, d: D[id], out: D[id].out, state: e.state, w: sz[0], h: sz[1] - 28, t: 0, n: 0, scene: s, kids: () => [] };
+    return { svg: d.draw(c), w: sz[0], h: sz[1], grips: d.grips ? d.grips(c) || [] : [], c };
+  };
+  const inside = (r, m) => { const bad = []; for (const x of r.svg.matchAll(/\s(x|cx|x1|x2)="(-?[\d.]+)"/g)) if (+x[2] < -24 || +x[2] > r.w + 24) bad.push(x[1] + '=' + x[2]); for (const y of r.svg.matchAll(/\s(y|cy|y1|y2)="(-?[\d.]+)"/g)) if (+y[2] < -24 || +y[2] > r.h + 24) bad.push(y[1] + '=' + y[2]); eq(bad.slice(0, 4), [], m + '：画到卡片外面了'); };
+  const gripsOk = (r, m) => {
+    for (const g of r.grips) { truthy((g.r || 9) >= 7, m + ' 把手 ' + g.id + ' 太小'); truthy(g.x >= -12 && g.x <= r.w + 12 && g.y >= -12 && g.y <= r.h + 12, m + ' 把手 ' + g.id + ' 在卡片外：' + g.x + ',' + g.y); }
+    for (let i = 0; i < r.grips.length; i++) for (let j = i + 1; j < r.grips.length; j++) { const a = r.grips[i], b = r.grips[j]; truthy(Math.hypot(a.x - b.x, a.y - b.y) >= B.MIN_HIT, m + ' 把手 ' + a.id + ' 和 ' + b.id + ' 叠在一起'); }
+  };
+  const btnsOk = (r, m) => { for (const g of r.svg.matchAll(/<g data-pick-set="[^"]*"[^>]*>(?:<title>[^<]*<\/title>)?<rect x="[^"]*" y="[^"]*" width="([\d.]+)" height="([\d.]+)"/g)) truthy(+g[1] >= B.MIN_HIT && +g[2] >= B.MIN_HIT, m + ' 按钮太小：' + g[1] + '×' + g[2]); };
+  const BIG = {
+    areamodel: [{ w: 99, h: 99 }, { w: 47, h: 23, vcuts: '40', hcuts: '20' }, { w: 99, h: 3, vcuts: '90' }, { w: 2, h: 99, hcuts: '90' }, { w: 30, h: 20, vcuts: '10,20', hcuts: '10' }],
+    tapebench: [{ ka: 12, kb: 1, u: 9999, ea: 9999, eb: -9999, tk: 0, tv: 99999 }, { ka: 3, kb: 1, u: 1, tk: 0, tv: 1800, lock: true }, { ka: 1, kb: 12, u: 2, ea: 9000, eb: 0, tk: 1, tv: 50 }, { ka: 12, kb: 12, u: 1, ea: 9999, eb: 9999, eqm: true, tk: 2 }],
+    numlinebench: [{ mode: 0, from: -1000, to: 0, a: -500, s: -100, n: 5 }, { mode: 0, from: 0, to: 1000, a: 230, s: 100, n: 7 }, { mode: 1, from: -1000, to: 0, d: 12, k: 6000 }, { mode: 2, from: -300, to: 700, lo: -250, hi: 640 }, { mode: 4, qa: 1, qb: 999, qc: 0, qd: 990, g: 7 }, { mode: 4, qa: 10, qb: 999, qc: 9, qd: 0, g: 20 }],
+    travelbench: [{ len: 5000, pa: 0, va: 60, pb: 5000, vb: 1000, db: 1, t: 30, tmax: 60 }, { len: 3000, pa: 100, va: 3, pb: 2900, vb: 2, db: 1, tmax: 24, t: 5 }, { len: 1000, va: 1000, vb: 0, solo: true, tmax: 60, t: 60 }],
+    groupbench: [{ mode: 0, n: 999, g: 1 }, { mode: 0, n: 999, g: 37 }, { mode: 0, n: 999, g: 99 }, { mode: 0, n: 345, g: 12, graph: true }, { mode: 1, n: 999, k: 1, dealt: 999 }, { mode: 1, n: 999, k: 10, dealt: 999 }, { mode: 1, n: 777, k: 3, dealt: 500 }],
+    mulbench: [{ a: 999, b: 99 }, { a: 205, b: 11 }, { a: 2, b: 2 }],
+  };
+  t('大数：放开上限的台，数取到最大也画得出来、不画到卡片外面；卡片不超过 CARD_MAX', () => {
+    for (const [type, cases] of Object.entries(BIG)) for (const pc of cases) {
+      const m = type + ' ' + JSON.stringify(pc), r = drawOf(type, pc);
+      truthy(typeof r.svg === 'string' && r.svg.length > 100 && !/NaN|undefined|Infinity/.test(r.svg), m + '：画出来有 NaN/undefined');
+      truthy(r.w <= CW && r.h <= CH, m + '：卡片 ' + r.w + '×' + r.h + ' 超过 ' + CW + '×' + CH);
+      inside(r, m);
+    }
+  });
+  t('大数：把手不小于 14 像素、彼此不叠在一起（低年级放大点击区时也分得开），能点的按钮不小于 14 像素', () => {
+    for (const [type, cases] of Object.entries(BIG)) for (const pc of cases) { const m = type + ' ' + JSON.stringify(pc), r = drawOf(type, pc); gripsOk(r, m); btnsOk(r, m); }
+    // 低年级帮手的放大算法（js/ui/young-aid.js 的 hitRects）：大数的面积模型，切刀把手各自放大后互不覆盖
+    const r = drawOf('areamodel', { w: 47, h: 23, vcuts: '20,40', hcuts: '10,20' }), bx = r.grips.map((g) => ({ x: g.x - 9, y: g.y - 9, w: 18, h: 18 }));
+    const yc = vm.createContext({ console }); yc.globalThis = yc; vm.runInContext(fs.readFileSync(path.join(root, 'js/ui/young-aid.js'), 'utf8'), yc, { filename: 'js/ui/young-aid.js' });
+    { const hr = yc.UI.YoungAid.hitRects(bx, 44); truthy(hr.length === bx.length && bx.length >= 6, '切刀把手 ' + bx.length + ' 个'); for (let i = 0; i < hr.length; i++) for (let j = i + 1; j < hr.length; j++) { const a = hr[i], b = hr[j]; truthy(!(a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h) || bx[i].x === bx[j].x && bx[i].y === bx[j].y, '放大后叠在一起：' + i + ',' + j); } }
+  });
+  t('每个操作台：所有整数属性都取最大（或最小）也画得出来，卡片不超过 CARD_MAX', () => {
+    const bad = [];
+    for (const [type, d] of Object.entries(U.types)) {
+      if (!d.bench) continue;
+      for (const end of ['max', 'min']) {
+        const pc = {}; for (const [k, P] of Object.entries(d.props)) if ((P.type === 'int' || P.type === 'num') && P[end] !== undefined && !P.hidden) pc[k] = P[end];
+        try { const r = drawOf(type, pc); if (typeof r.svg !== 'string') bad.push(type + ' ' + end + '：draw 不是字符串'); if (r.w > CW || r.h > CH) bad.push(type + ' ' + end + '：' + r.w + '×' + r.h); } catch (e) { bad.push(type + ' ' + end + '：' + e.message); }
+      }
+    }
+    eq(bad, []);
+  });
+  t('大数：线段图按真实比例画（长短和数成比例），太短的段留最小宽度；有目标时比例尺放得下对上目标的线段', () => {
+    const TB = U.TapeBench, m = TB.model({ ka: 3, kb: 1, u: 250, ea: 0, eb: 0, tk: 2, tv: 0 }), sc = TB.scaleOf(m);
+    truthy(Math.abs(3 * 250 * sc - 440) < 1, '最长的一条正好占满：' + 3 * 250 * sc);
+    const m2 = TB.model({ ka: 3, kb: 1, u: 1, ea: 0, eb: 0, tk: 0, tv: 1800, lock: true }), sc2 = TB.scaleOf(m2); truthy(3 * 450 * sc2 <= 440, '对上目标时（一段 450）也画得下');
+    const g = U.types.tapebench.grips({ props: Object.assign(U.defaultProps(U.types.tapebench), { ka: 3, kb: 1, u: 1, tk: 0, tv: 1800, lock: true }) })[0], P = Object.assign(U.defaultProps(U.types.tapebench), { ka: 3, kb: 1, u: 1, tk: 0, tv: 1800, lock: true });
+    const u1 = g.drag({ props: P }, { x: 84 + 450 * sc2, y: g.y }).u; truthy(Math.abs(u1 - 450) <= 10 && u1 % 10 === 0, '拖到 450 附近：按 10 取整 ' + u1);
+    const svg = drawOf('tapebench', P).svg; truthy(/data-pick-set="[^"]*%22u%22%3A2%7D/.test(svg) && /%22u%22%3A11%7D/.test(svg), "有 +1、+10 微调按钮");
+    eq(U.kit.big.prop([20, 3], 300, 76).map(Math.round), [224, 76]); eq(U.kit.big.prop([200, 5], 300, 76).map(Math.round), [224, 76]); eq(U.kit.big.prop([10, 10], 300, 76), [150, 150]);
+  });
+  t('大数：数轴长了换单位（一小格 = 50）、写出来；拖起点按 10 取整；面积模型格子画小、切刀按 2 的倍数；分一分份多了折叠', () => {
+    const r = drawOf('numlinebench', { mode: 0, from: 0, to: 1000, a: 0, s: 100, n: 0 }); truthy(/一小格 = 50/.test(r.svg), '写着一小格 = 50');
+    const g = r.grips.find((x) => x.id === 'a'), a = g.drag(r.c, { x: 36 + 233 * 548 / 1000, y: g.y }).a; eq(a, 230, '拖起点：按 10 取整');
+    const ra = drawOf('areamodel', { w: 47, h: 23 }), sc = ra.grips.find((x) => x.id === 'vnew'), cut = sc.drag(ra.c, { x: 46 + 21.3 * Math.min(17, 510 / 47), y: sc.y }).vcuts; eq(cut, '22', '切刀按 2 取整');
+    truthy(/格子画小了/.test(ra.svg), '说明格子画小了');
+    const rg = drawOf('groupbench', { mode: 0, n: 999, g: 38 }); truthy(/中间还有 19 份/.test(rg.svg) && (rg.svg.match(/data-group=/g) || []).length === 8, '999 ÷ 38 = 26 …… 11：画头 5 份、尾 2 份、不满的 1 份，中间 19 份折叠：' + (rg.svg.match(/data-group=/g) || []).length);
+    const rb = drawOf('groupbench', { mode: 1, n: 999, k: 1, dealt: 999 }); truthy(/data-tens="99"/.test(rb.svg), '盒子里 999 个：一百一块、十个一条');
+    const rt = drawOf('travelbench', { len: 3000, pa: 100, va: 3, pb: 2900, vb: 2, db: 1 }); truthy(/速度箭头放大 \d+ 倍画/.test(rt.svg), '路长了速度箭头放大画');
+  });
+  t('大数：联动组以前因为画不下拒绝的，现在放开（线段图 9 段、一截 61；数轴再跳 500）', () => {
+    const F = U.Forms, s = W.blank(), ids = ['balancebench', 'eqstepbench', 'tapebench', 'numlinebench'].map((ty, i) => W.add(s, ty, i * 760, 0, {}));
+    const st = { a: 2, b: 500, c: 0, d: 510, x0: 5 };
+    const ok = ['tapebench', 'numlinebench'].every((ty) => F.adapterOf('lineq', ty).can(st) === null); truthy(ok, '线段图、数轴都画得了 2x + 500 = 510');
+    truthy(F.join(s, 'lineq', [ids[2], ids[3]], st), '线段图、数轴连成一组');
+    const r = drawOf('tapebench', s.entities[ids[2]].props); inside(r, '组里的线段图');
   });
 }
 console.log('\n' + pass + ' 通过，' + fail + ' 失败');

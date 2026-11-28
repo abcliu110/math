@@ -6,37 +6,46 @@
  *   - 上面一直写着：各走了多少（速度 × 时间）、两人相距多少、每过 1 小时近了（或远了）多少。
  *   - 右下角同时画“位置—时间”图：两条直线，交点就是相遇；竖线是现在的时间。
  * 能做的题：速度 × 时间 = 路程、相遇、追及、背向而行、反过来求速度。
- * 这一版的边界（如实写）：只有两个人、一条直路；速度不变；时间、速度、位置都是整数；走到路的尽头就停下。 */
+ * 这一版的边界（如实写）：只有两个人、一条直路；速度不变；时间、速度、位置都是整数；走到路的尽头就停下。
+ * 大数（2026-11-27）：路最长 5000、速度最大 1000、时间条最多到 60。路长了刻度按 10、20、50、100……一格；速度箭头按真实比例短得点不着时放大几倍画，
+ *   图上写“速度箭头放大 10 倍画”；拖出发点、箭头尖时一步至少 4 像素（数大了按 10、50……取整）。时间还是整数（半小时那样的分数时间没做）。 */
 (function (G) {
   'use strict';
   const U = G.U, Q = U.Q, K = U.kit;
   const num = (n) => U.val('num', Q(n), { dim: null });
-  const W = 690, X0 = 50, X1 = 640, RY = 126, TW = 290, TY = 240, VMAX = 30, LMAX = 400;
+  const W = 690, X0 = 50, X1 = 640, RY = 126, TW = 290, TY = 240, VMAX = 1000, LMAX = 5000, TMAX = 60, ARROW = 30;
   const GB = { x: 400, y: 212, w: 240, h: 120 };
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   function model(p) {
-    const L = clamp(p.len, 10, LMAX), tmax = clamp(p.tmax, 1, 24), t = clamp(p.t, 0, tmax), solo = p.solo === true || p.solo === 1;
+    const L = clamp(p.len, 10, LMAX), tmax = clamp(p.tmax, 1, TMAX), t = clamp(p.t, 0, tmax), solo = p.solo === true || p.solo === 1;
     const A = { p: clamp(p.pa, 0, L), v: clamp(p.va, 0, VMAX), d: p.da === 1 ? -1 : 1 }, B = { p: clamp(p.pb, 0, L), v: clamp(p.vb, 0, VMAX), d: p.db === 1 ? -1 : 1 };
     const at = (m, tt) => clamp(m.p + m.d * m.v * tt, 0, L);
     A.x = at(A, t); B.x = at(B, t);
     const gap = solo ? 0 : Math.abs(A.x - B.x), gap1 = solo ? 0 : Math.abs(at(A, t + 1) - at(B, t + 1)), gapStart = Math.abs(A.p - B.p), gapOne = Math.abs(at(A, 1) - at(B, 1));
-    return { L, tmax, t, solo, A, B, at, gap, rate: gapOne - gapStart, sa: A.v * t, sb: B.v * t, sc: (X1 - X0) / L, gap1 };
+    // 大数（2026-11-27）：路长了，速度箭头按真实比例会短得点不着（不到 ARROW 像素），就放大 af 倍画（af 取 2、5、10……），图上写“箭头放大 10 倍画”；
+    //   拖出发点、箭头尖时按 gp、gv 取整（一步至少 4 像素）
+    const sc = (X1 - X0) / L, top = Math.max(A.v, solo ? 0 : B.v, 1), af = top * sc >= ARROW ? 1 : K.big.nice(ARROW / (top * sc));
+    return { L, tmax, t, solo, A, B, at, gap, rate: gapOne - gapStart, sa: A.v * t, sb: B.v * t, sc, gap1, af, gp: sc >= 1 ? 1 : K.big.grain(sc, 4), gv: sc * af >= 1 ? 1 : K.big.grain(sc * af, 4) };
   }
   function plan(p0, gid, q) {
     const m = model(p0), px = (v) => X0 + v * m.sc, o = {};
     if (gid === 't') o.t = clamp(Math.round((q.x - X0) / (TW / m.tmax)), 0, m.tmax);
-    else if (gid === 'sa' || gid === 'sb') o[gid === 'sa' ? 'pa' : 'pb'] = clamp(Math.round((q.x - X0) / m.sc), 0, m.L);
+    else if (gid === 'sa' || gid === 'sb') o[gid === 'sa' ? 'pa' : 'pb'] = clamp(K.big.snap((q.x - X0) / m.sc, m.gp), 0, m.L);
     else if (gid === 'va' || gid === 'vb') {
-      const M = gid === 'va' ? m.A : m.B, dx = (q.x - px(M.p)) / m.sc, k = gid === 'va' ? 'a' : 'b';
-      o['v' + k] = clamp(Math.round(Math.abs(dx)), 1, VMAX); if (Math.abs(dx) >= 0.5) o['d' + k] = dx < 0 ? 1 : 0;
+      const M = gid === 'va' ? m.A : m.B, dx = (q.x - px(M.p)) / (m.sc * m.af), k = gid === 'va' ? 'a' : 'b';
+      o['v' + k] = clamp(K.big.snap(Math.abs(dx), m.gv) || 1, 1, VMAX); if (Math.abs(dx) >= 0.5) o['d' + k] = dx < 0 ? 1 : 0;
     }
     return { patch: o };
   }
   const COL = ['#d9782f', '#3b7cc4'];
+  // 箭头放大几倍：拖的时候用按下那一刻的（箭头尖一直跟着鼠标）
+  const afOf = (c, m) => (c && c.drag && c.drag.p0 ? model(c.drag.p0).af : m.af);
+  // 时间条上每几个写一个数（12 以内每个都写）
+  const tLab = (n) => (n <= 24 ? 2 : n <= 36 ? 3 : 5);
   const arrow = (x1, y, x2, col) => { const d = x2 >= x1 ? 1 : -1; return K.line(x1, y, x2, y, { w: 2.5, stroke: col }) + '<path d="M' + x2 + ' ' + y + ' l' + (-8 * d) + ' -5 v10 z" fill="' + col + '"/>'; };
 
   function draw(c) {
-    const p = c.props, m = model(p), na = p.na || '甲', nb = p.nb || '乙', du = p.du || '千米', tu = p.tu || '小时', px = (v) => X0 + v * m.sc, lock = p.lock === true || p.lock === 1;
+    const p = c.props, m = model(p), na = p.na || '甲', nb = p.nb || '乙', du = p.du || '千米', tu = p.tu || '小时', px = (v) => X0 + v * m.sc, lock = p.lock === true || p.lock === 1, af = afOf(c, m);
     let s = '';
     s += K.text(20, 26, na + '走了 ' + m.A.v + ' × ' + m.t + ' = ' + m.sa + ' ' + du + (m.solo ? '' : '　' + nb + '走了 ' + m.B.v + ' × ' + m.t + ' = ' + m.sb + ' ' + du), { size: 14, weight: 700, anchor: 'start' });
     if (!m.solo) {
@@ -45,19 +54,20 @@
     } else s += K.text(20, 48, '速度 × 时间 = 路程', { size: 13, anchor: 'start' });
     // 路
     s += K.line(X0, RY, X1, RY, { w: 4 }) + K.text(X0, RY + 64, '0', { size: 11 }) + K.text(X1, RY + 64, String(m.L), { size: 11 });
-    const step = m.L <= 60 ? 10 : m.L <= 150 ? 20 : 50; for (let v = step; v < m.L; v += step) s += K.line(px(v), RY - 3, px(v), RY + 3, { w: 1 }) + K.text(px(v), RY + 64, String(v), { size: 10, fill: '#5a6478' });
+    const step = m.L <= 60 ? 10 : m.L <= 150 ? 20 : m.L <= 400 ? 50 : K.big.nice(m.L / 8); for (let v = step; v < m.L; v += step) s += K.line(px(v), RY - 3, px(v), RY + 3, { w: 1 }) + K.text(px(v), RY + 64, String(v), { size: 10, fill: '#5a6478' });
     [[m.A, na, -1, 0], [m.B, nb, 1, 1]].forEach(([M, name, side, i]) => {
       if (i === 1 && m.solo) return;
       const col = COL[i], y = RY + side * 14, ya = RY + side * 36;
       s += K.line(px(M.p), RY + side * 6, px(M.x), RY + side * 6, { w: 5, stroke: col });
       s += K.circle(px(M.p), y, 5, { fill: '#fff', stroke: col, w: 2 });
       s += K.circle(px(M.x), y, 11, { fill: col, stroke: 'var(--ink)', w: 1.3 }) + K.text(px(M.x), y + 4, name.slice(0, 1), { size: 12, weight: 700, fill: '#fff' });
-      const tip = px(M.p) + M.d * Math.max(M.v, 0.001) * m.sc;
+      const tip = px(M.p) + M.d * Math.max(M.v, 0.001) * m.sc * af;
       s += arrow(px(M.p), ya, tip, col) + K.text((px(M.p) + tip) / 2, ya + (side < 0 ? -7 : 16), '每' + tu + ' ' + M.v, { size: 11, weight: 700, fill: col });
     });
+    if (af > 1) s += K.big.unitNote(X1, RY - 52, '速度箭头放大 ' + af + ' 倍画');
     // 时间条
     s += K.text(X0, TY - 16, '时间：' + m.t + ' ' + tu, { size: 14, weight: 700, anchor: 'start' }) + K.line(X0, TY, X0 + TW, TY, { w: 3 });
-    for (let k = 0; k <= m.tmax; k++) { const x = X0 + k * TW / m.tmax; s += K.line(x, TY - 4, x, TY + 4, { w: 1 }) + (m.tmax <= 12 || k % 2 === 0 ? K.text(x, TY + 18, String(k), { size: 10 }) : ''); }
+    for (let k = 0; k <= m.tmax; k++) { const x = X0 + k * TW / m.tmax; s += K.line(x, TY - 4, x, TY + 4, { w: 1 }) + (m.tmax <= 12 || k % tLab(m.tmax) === 0 ? K.text(x, TY + 18, String(k), { size: 10 }) : ''); }
     s += K.text(X0, TY + 44, '拖时间条让时间往前走。' + (lock ? '' : '拖箭头尖改速度，拖小圆圈改出发点。'), { size: 12, anchor: 'start' });
     // 位置—时间图
     const gx = (k) => GB.x + k * GB.w / m.tmax, gy = (v) => GB.y + GB.h - v * GB.h / m.L;
@@ -71,12 +81,12 @@
     return s;
   }
   function grips(c) {
-    const p = c.props, m = model(p), px = (v) => X0 + v * m.sc, lock = p.lock === true || p.lock === 1, out = [];
+    const p = c.props, m = model(p), px = (v) => X0 + v * m.sc, lock = p.lock === true || p.lock === 1, out = [], af = afOf(c, m);
     const mk = (id, x, y, o) => out.push(Object.assign({ id, x, y, drag: (c0, q) => plan(c0.props, id, q).patch }, o));
     mk('t', X0 + m.t * TW / m.tmax, TY, { shape: 'bar-v', cursor: 'ew-resize', tip: '拖我：时间往前走', say: (c1) => { const m1 = model(c1.props); return '时间 ' + m1.t + (m1.solo ? '：走了 ' + m1.sa : '：相距 ' + m1.gap); } });
     if (!lock) [[m.A, 'a', -1], [m.B, 'b', 1]].forEach(([M, k, side]) => {
       if (k === 'b' && m.solo) return;
-      mk('v' + k, px(M.p) + M.d * M.v * m.sc, RY + side * 36, { r: 8, cursor: 'ew-resize', tip: '拖我：箭头多长，一小时就走多远', say: (c1) => '每小时 ' + c1.props['v' + k] });
+      mk('v' + k, px(M.p) + M.d * M.v * m.sc * af, RY + side * 36, { r: 8, cursor: 'ew-resize', tip: '拖我：箭头多长，一小时就走多远', say: (c1) => '每小时 ' + c1.props['v' + k] });
       mk('s' + k, px(M.p), RY + side * 14, { r: 7, ghost: true, cursor: 'ew-resize', tip: '拖我：改出发点', say: (c1) => '从 ' + c1.props['p' + k] + ' 出发' });
     });
     return out;
@@ -92,9 +102,9 @@
         label: '行程（相遇与追及）', prefix: '行程', group: '时间与变化', grades: [3, 8],
         alias: ['行程', '相遇', '追及', '速度', '路程', '时间', '相向', '背向', '同向'],
         props: {
-          len: I(10, LMAX, 90, '路有多长'), t: I(0, 24, 0, '现在的时间'), tmax: I(1, 24, 10, '时间条最多到几'),
-          pa: I(0, LMAX, 0, '甲从哪里出发'), va: I(0, VMAX, 10, '甲的速度'), da: DIR('甲往哪边走', 0),
-          pb: I(0, LMAX, 90, '乙从哪里出发'), vb: I(0, VMAX, 5, '乙的速度'), db: DIR('乙往哪边走', 1),
+          len: I(10, LMAX, 90, '路有多长', { qmax: 400 }), t: I(0, TMAX, 0, '现在的时间', { qmax: 24 }), tmax: I(1, TMAX, 10, '时间条最多到几', { qmax: 24 }),
+          pa: I(0, LMAX, 0, '甲从哪里出发', { qmax: 400 }), va: I(0, VMAX, 10, '甲的速度', { qmax: 30 }), da: DIR('甲往哪边走', 0),
+          pb: I(0, LMAX, 90, '乙从哪里出发', { qmax: 400 }), vb: I(0, VMAX, 5, '乙的速度', { qmax: 30 }), db: DIR('乙往哪边走', 1),
           na: T('甲', '甲叫什么'), nb: T('乙', '乙叫什么'), du: T('千米', '路程的单位'), tu: T('小时', '时间的单位'),
           solo: { type: 'bool', label: '只有甲一个人', default: false, write: true },
           lock: { type: 'bool', label: '速度和出发点已经给好（只能拖时间）', default: false, write: true },

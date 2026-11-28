@@ -6,7 +6,8 @@
  *   - 点竖式的一行，面积图里对应的那一条亮起来：这一行就是这几块加起来。点面积图的一块，下面写出它是哪两个数相乘。
  *   - 一行填对以后，下面写出这一行是怎么一位一位乘出来的（哪里进位）。
  * 这一版的边界（如实写）：只做乘法；上面的数最多三位，下面的数最多两位；填数是从左往右写整个数，不是一位一位从个位写起；
- *   面积图的大小只是示意，不按真实比例。加减法和除法的竖式还没有做。 */
+ *   面积图按真实比例画（2026-11-27 起；以前只是示意）：20 和 3 的两块宽是 20 : 3；太窄放不下填数的格子就留最小宽度，所以 200 和 5 那样差很多的不完全成比例。
+ *   加减法和除法的竖式在 vertbench。 */
 (function (G) {
   'use strict';
   const U = G.U, Q = U.Q, K = U.kit;
@@ -62,7 +63,8 @@
     if (rowsI.length) { s += K.line(RX - 140, y, RX, y, { w: 2 }); y += 8; }
     s += boxSvg(m, sumI, RX - 140, y, 140, 34, 22, true) + K.text(RX - 148, y + 23, rowsI.length ? '加起来' : m.a + ' × ' + m.b, { size: 11, anchor: 'end', fill: '#5a6478' });
     // ---- 右边：面积图 ----
-    const cw = m.pa.map((x, k) => (m.pa.length === 1 ? 240 : k === m.pa.length - 1 ? 84 : (300 - 84) / (m.pa.length - 1))), rh = m.pb.map((yv, r) => (m.pb.length === 1 ? 120 : r === 0 ? 72 : 112));
+    // 按真实比例（2026-11-27）：每一块的宽、高和那一部分的数成比例；太窄放不下填数的格子，就留最小宽度（76、60 像素），数写在边上
+    const cw = m.pa.length === 1 ? [240] : K.big.prop(m.pa, 300, 76), rh = m.pb.length === 1 ? [120] : K.big.prop(m.pb, 184, 60);
     const xs = []; let x = AX; cw.forEach((w) => { xs.push(x); x += w; });
     // 面积图里上面一条是十位那部分，下面一条是个位那部分（和 14 = 10 + 4 的写法顺序一样）
     const order = m.pb.map((_, r) => r).reverse(), ys = {}; let yy = AY; order.forEach((r) => { ys[r] = yy; yy += rh[r]; });
