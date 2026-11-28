@@ -3,7 +3,9 @@
  *     反过来问也可以：A 在 B 的东北，B 就在 A 的西南（方向相反）。答对、答错都说明。
  *   - 走路线：从起点出发，点 ↑ ↓ ← → 一步走一格（↑ 是向北）。走过的路画出来，下面自动写成“向东走 3 格，再向北走 2 格”。走到终点就到了。
  *   - 方向角：从中心出发，拖射线一头转（15° 一格，从正北或正南量起），拖距离。读成“北偏东 30°，300 米”。和目标重合就找到了。
- * 这一版的边界（如实写）：认方向只有 8 个方向；走路线在 10 × 7 的格子里；方向角每格 100 米、最多 400 米。 */
+ * 这一版的边界（如实写）：认方向只有 8 个方向；走路线在 10 × 7 的格子里；方向角一共 4 圈、15° 一格。
+ * 大数（2026-11-28，试验台增强 7 第二轮）：方向角右边点“每圈 = 100 / 200 / 500 / 1000 米”换单位（属性 ru），最远 4 千米（“北偏东 45°，1500 米”）；
+ *   拖射线还是一圈一圈落（距离 = 第几圈 × 每圈），所以把手不会变小。走路线的格子不放大：它是一步一格地数，格子多了只是多点几下（理由见 docs/instrument-design.md）。 */
 (function (G) {
   'use strict';
   const U = G.U, Q = U.Q, K = U.kit;
@@ -13,6 +15,8 @@
   const MODES = ['认方向', '走路线', '方向角'];
   const DIRS = ['北', '东北', '东', '东南', '南', '西南', '西', '西北'];   // 编号 0–7，顺时针
   const DV = [[0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1]];
+  const RUS = [100, 200, 500, 1000], ruOf = (p) => RUS[clamp(p.ru, 0, 3)];
+  const meters = (v) => (v >= 1000 && v % 1000 === 0 ? v / 1000 + ' 千米' : v + ' 米');
   const PLACES = ['图书馆', '医院', '公园', '超市', '邮局', '车站', '电影院', '体育馆'];
   // 方向角的说法：角度从正北顺时针 0–359
   function bearing(deg) {
@@ -31,7 +35,7 @@
       return { mode, sx, sy, tx, ty, path, pts, x, y, words, arrived: x === tx && y === ty && path.length > 0, steps: path.length, best: Math.abs(tx - sx) + Math.abs(ty - sy) };
     }
     const deg = ((clamp(p.deg, -360, 720) % 360) + 360) % 360, dist = clamp(p.dist, 0, 4), tdeg = ((clamp(p.tdeg, 0, 359) % 360) + 360) % 360, tdist = clamp(p.tdist, 1, 4);
-    return { mode, deg, dist, tdeg, tdist, hit: deg === tdeg && dist === tdist };
+    return { mode, deg, dist, tdeg, tdist, ru: ruOf(p), hit: deg === tdeg && dist === tdist };
   }
   const btn = (x, y, w, label, patch, enabled, tip, active) => '<g' + (enabled ? ' data-pick-set="' + encodeURIComponent(JSON.stringify(patch)) + '" style="cursor:pointer"' : ' data-off="1"') + '><title>' + K.esc(tip) + '</title>' +
     K.rect(x, y, w, 26, { fill: active ? 'var(--blue)' : enabled ? '#fff' : '#f1f3f6', stroke: enabled || active ? 'var(--blue)' : '#b8c0cc', r: 7, w: 1.4 }) + K.text(x + w / 2, y + 17, label, { size: 12, weight: 700, fill: active ? '#fff' : enabled ? 'var(--ink)' : '#5f6773' }) + '</g>';
@@ -40,7 +44,7 @@
   function grips(c) {
     const m = model(c.props); if (m.mode !== 2) return [];
     const a = m.deg * Math.PI / 180, ex = C3.x + Math.sin(a) * Math.max(1, m.dist) * R3, ey = C3.y - Math.cos(a) * Math.max(1, m.dist) * R3;
-    return [{ id: 'ray', x: ex, y: ey, r: 11, cursor: 'grab', tip: '拖：转方向、改距离', drag: (c0, q) => { const dx = q.x - C3.x, dy = C3.y - q.y; let d = Math.round(Math.atan2(dx, dy) * 180 / Math.PI / 15) * 15; d = ((d % 360) + 360) % 360; return { deg: d, dist: Math.max(1, Math.min(4, Math.round(Math.hypot(dx, dy) / R3))) }; }, say: (c1) => { const m1 = model(c1.props); return bearing(m1.deg) + '，' + m1.dist * 100 + ' 米'; } }];
+    return [{ id: 'ray', x: ex, y: ey, r: 11, cursor: 'grab', tip: '拖：转方向、改距离', drag: (c0, q) => { const dx = q.x - C3.x, dy = C3.y - q.y; let d = Math.round(Math.atan2(dx, dy) * 180 / Math.PI / 15) * 15; d = ((d % 360) + 360) % 360; return { deg: d, dist: Math.max(1, Math.min(4, Math.round(Math.hypot(dx, dy) / R3))) }; }, say: (c1) => { const m1 = model(c1.props); return bearing(m1.deg) + '，' + meters(m1.dist * m1.ru); } }];
   }
   function draw(c) {
     const p = c.props, m = model(p); let s = '';
@@ -71,13 +75,15 @@
       if (m.arrived) s += '<g data-read="1">' + K.text(40, 356, '到学校了：走了 ' + m.steps + ' 格' + (m.steps === m.best ? '，是最短的路' : '，最短只要 ' + m.best + ' 格'), { size: 14, weight: 700, anchor: 'start', fill: m.steps === m.best ? 'var(--blue)' : 'var(--bad)' }) + '</g>';
     } else {
       s += compass(40, 80);
-      for (let k = 1; k <= 4; k++) s += K.circle(C3.x, C3.y, k * R3, { fill: 'none', stroke: '#e3e7ef', w: 1 }) + K.text(C3.x + 4, C3.y - k * R3 + 12, k * 100 + ' 米', { size: 9, fill: '#8a94a6', anchor: 'start' });
+      for (let k = 1; k <= 4; k++) s += K.circle(C3.x, C3.y, k * R3, { fill: 'none', stroke: '#e3e7ef', w: 1 }) + K.text(C3.x + 4, C3.y - k * R3 + 12, meters(k * m.ru), { size: 9, fill: '#8a94a6', anchor: 'start' });
       s += K.line(C3.x, C3.y - 4 * R3 - 10, C3.x, C3.y + 4 * R3 + 10, { stroke: '#c5ccda', w: 1, dash: '4 3' }) + K.line(C3.x - 4 * R3 - 10, C3.y, C3.x + 4 * R3 + 10, C3.y, { stroke: '#c5ccda', w: 1, dash: '4 3' });
       const ta = m.tdeg * Math.PI / 180; s += K.circle(C3.x + Math.sin(ta) * m.tdist * R3, C3.y - Math.cos(ta) * m.tdist * R3, 9, { fill: '#f5c26b', stroke: '#8a5a00', w: 1.4 });
       const a = m.deg * Math.PI / 180, d = Math.max(1, m.dist); s += K.line(C3.x, C3.y, C3.x + Math.sin(a) * d * R3, C3.y - Math.cos(a) * d * R3, { stroke: 'var(--blue)', w: 3 });
       s += K.circle(C3.x, C3.y, 5, { fill: 'var(--ink)' }) + K.text(C3.x - 8, C3.y + 18, '观测点', { size: 10, anchor: 'end' });
-      s += K.text(460, 80, '目标在：' + bearing(m.tdeg) + '，' + m.tdist * 100 + ' 米', { size: 14, weight: 700, anchor: 'start' });
-      s += K.text(460, 116, '你画的：' + bearing(m.deg) + '，' + Math.max(1, m.dist) * 100 + ' 米', { size: 14, weight: 700, anchor: 'start', fill: 'var(--blue)' });
+      s += K.text(460, 80, '目标在：' + bearing(m.tdeg) + '，' + meters(m.tdist * m.ru), { size: 14, weight: 700, anchor: 'start' });
+      s += K.text(460, 116, '你画的：' + bearing(m.deg) + '，' + meters(Math.max(1, m.dist) * m.ru), { size: 14, weight: 700, anchor: 'start', fill: 'var(--blue)' });
+      // 每圈多少米（换单位）
+      s += K.text(460, 228, '每圈多少米（换单位）', { size: 12, weight: 700, anchor: 'start' }) + RUS.map((v, i) => btn(460 + i * 54, 236, 50, String(v), { ru: i }, true, '每一圈是 ' + v + ' 米', m.ru === v)).join('');
       s += K.text(460, 144, '先看偏北还是偏南，再看偏东还是偏西', { size: 12, anchor: 'start', fill: '#5a6478' });
       if (m.hit) s += '<g data-read="1">' + K.text(460, 190, '找到了！方向和距离都对上', { size: 15, weight: 700, anchor: 'start', fill: 'var(--blue)' }) + '</g>';
     }
@@ -95,6 +101,7 @@
           mode: { type: 'choice', label: '做什么', default: 0, choices: MODES, write: true },
           target: I(0, 7, 1, '认方向：那个地方在学校的哪个方向（0 北，顺时针）'), rev: { type: 'bool', label: '认方向：反过来问', default: false, write: true }, ans: I(-1, 7, -1, '认方向：选的方向'),
           sx: I(0, 9, 1, '走路线：家在第几列'), sy: I(0, 6, 5, '走路线：家在第几行'), tx: I(0, 9, 7, '走路线：学校在第几列'), ty: I(0, 6, 1, '走路线：学校在第几行'), path: { type: 'text', label: '走路线：走过的路（自动）', default: '', write: true },
+          ru: { type: 'choice', label: '方向角：每圈多少米', default: 0, choices: RUS.map((v) => v + ' 米'), write: true },
           deg: I(-360, 720, 0, '方向角：射线的方向（从正北顺时针）'), dist: I(0, 4, 1, '方向角：距离（百米）'), tdeg: I(0, 359, 30, '方向角：目标的方向'), tdist: I(1, 4, 3, '方向角：目标的距离（百米）'),
         },
         outputs: {
@@ -116,5 +123,5 @@
       },
     },
   });
-  U.DirBench = { model, bearing, DIRS };
+  U.DirBench = { model, bearing, DIRS, RUS, meters };
 })(typeof globalThis !== 'undefined' ? globalThis : window);

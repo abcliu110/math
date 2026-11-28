@@ -4,19 +4,27 @@
  *   - 圆柱和圆锥：拖底面半径和高；点“圆柱 / 圆锥”切换。圆锥是等底等高圆柱的三分之一。
  *   - 直线与圆：拖直线上下移动，看圆心到直线的距离 d 和半径 r 比：d > r 相离，d = r 相切，d < r 相交。
  *   - 圆周角：拖弧的端点改圆心角，圆周角一直是它的一半。
- * 这一版的边界（如实写）：半径、高、距离是 1 到 10 的整数（圆是 0.5 也行）；π 只取 3.14；圆周角的顶点固定在优弧的正中间。 */
+ * 这一版的边界（如实写）：半径、高、距离是 1 到 50 的整数（圆是 0.5 也行）；π 只取 3.14；圆周角的顶点固定在优弧的正中间。
+ * 大数（2026-11-28，试验台增强 7 第二轮）：以前半径、高、距离最大 10。现在到 50（圆形花坛半径 20 米、水池直径 50 米、圆柱高 40 厘米这类题）。
+ *   图按“最大的那个数”分三档缩放：10 以内 1 = 17 像素（和以前一样），20 以内 1 = 8.5 像素，再大 1 = 3.4 像素，图上写“数大了，图缩小画”。
+ *   拖的时候用按下那一刻的比例（把手一直跟着鼠标），松手后才换档；1 = 3.4 像素时一步 2（一步至少 4 像素），10 以内半径还是 0.5 一步。 */
 (function (G) {
   'use strict';
   const U = G.U, Q = U.Q, K = U.kit;
   const qv = (q) => U.val('num', q, { dim: null }), num = (n) => qv(Q(n));
-  const W = 700, CX = 220, CY = 222, UN = 17, PI = Q(314, 100);
+  const W = 700, CX = 220, CY = 222, PI = Q(314, 100), RMAX = 50;
+  // 按最大的那个数分档：10 以内 1 = 17 像素，20 以内 8.5，再大 3.4（170 像素放得下这一档的最大数）
+  const rangeOf = (v) => (v <= 10 ? 10 : v <= 20 ? 20 : 50);
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, Number.isFinite(+v) ? +v : lo));
   const MODES = ['圆', '扇形', '圆柱和圆锥', '直线与圆', '圆周角'];
   function model(p) {
-    const mode = clamp(p.mode, 0, 4), r2 = clamp(Math.round(p.r * 2), 1, 20), r = Q(r2, 2), th = clamp(Math.round(p.theta / 10) * 10, 10, 360), h = clamp(p.h, 1, 10), d = clamp(p.d, 0, 10), ca = clamp(Math.round(p.ca / 10) * 10, 20, 340);
+    const mode = clamp(p.mode, 0, 4), r2 = clamp(Math.round(p.r * 2), 1, 2 * RMAX), r = Q(r2, 2), th = clamp(Math.round(p.theta / 10) * 10, 10, 360), h = clamp(Math.round(p.h), 1, RMAX), d = clamp(Math.round(p.d), 0, RMAX), ca = clamp(Math.round(p.ca / 10) * 10, 20, 340);
     const area = Q.mul(PI, Q.mul(r, r)), c = Q.mul(Q(2), Q.mul(PI, r)), frac = Q(th, 360), cone = p.cone === true || p.cone === 1;
     const vcyl = Q.mul(area, Q(h)), vol = cone ? Q.div(vcyl, Q(3)) : vcyl, rn = r2 / 2, rel = d > rn ? 0 : d === rn ? 1 : 2;
-    return { mode, r, rn, th, h, d, ca, area, c, frac, sector: Q.mul(area, frac), arc: Q.mul(c, frac), cone, vcyl, vol, rel, ins: ca / 2 };
+    const big = mode === 2 ? Math.max(rn, h) : mode === 3 ? Math.max(rn, d) : rn, rg = rangeOf(big), UN = 170 / rg;
+    // 拖动一步：10 以内的圆、扇形半径 0.5 一步；其余整数；一步不到 4 像素就按 2、5……取整
+    const st = (half) => (half && UN * 0.5 >= 4 ? 0.5 : K.big.grain(UN, 4));
+    return { mode, r, rn, th, h, d, ca, area, c, frac, sector: Q.mul(area, frac), arc: Q.mul(c, frac), cone, vcyl, vol, rel, ins: ca / 2, rg, UN, st };
   }
   const f2 = (q) => { const v = Q.num(q); return Number.isInteger(v) ? String(v) : String(Math.round(v * 100) / 100); };
   const btn = (x, y, w, label, patch, active, tip) => '<g data-pick-set="' + encodeURIComponent(JSON.stringify(patch)) + '" style="cursor:pointer"><title>' + K.esc(tip) + '</title>' +
@@ -24,8 +32,11 @@
   const pol = (deg, R) => ({ x: CX + R * Math.sin(deg * Math.PI / 180), y: CY - R * Math.cos(deg * Math.PI / 180) });
   const RT = ['相离', '相切', '相交'];
 
+  // 拖的时候用按下那一刻的比例（把手一直跟着鼠标），松手后再换档
+  const unOf = (c, m) => (c && c.drag && c.drag.p0 ? model(c.drag.p0).UN : m.UN);
   function draw(c) {
-    const p = c.props, m = model(p), R = m.rn * UN, TX = 440; let s = '', lines = [];
+    const p = c.props, m = model(p), UN = unOf(c, m), R = m.rn * UN, TX = 440; let s = '', lines = [];
+    if (UN < 17) s += K.big.unitNote(TX - 16, 26, '数大了，图缩小画');
     s += K.text(20, 26, MODES[m.mode] + '：半径 ' + f2(m.r), { size: 16, weight: 700, anchor: 'start' });
     if (m.mode === 0 || m.mode === 1) {
       s += K.circle(CX, CY, R, { fill: m.mode === 1 ? '#f6f8fc' : '#eef3fb', stroke: 'var(--ink)', w: 2 });
@@ -63,13 +74,14 @@
     return s;
   }
   function grips(c) {
-    const m = model(c.props), R = m.rn * UN, out = [];
+    const m = model(c.props), UN = unOf(c, m), R = m.rn * UN, out = [];
     const say = (c1) => 'r = ' + f2(model(c1.props).r);
-    // 半径的把手：圆和扇形可以是半格（0.5），直线与圆用整数
-    if (m.mode === 0 || m.mode === 1 || m.mode === 3) out.push({ id: 'r', x: CX + R, y: CY, r: 9, cursor: 'ew-resize', tip: '拖我：改半径', drag: (c0, q) => { const x = Math.abs(q.x - CX) / UN; return { r: model(c0.props).mode === 3 ? clamp(Math.round(x), 1, 10) : clamp(Math.round(x * 2) / 2, 0.5, 10) }; }, say });
+    const snap = (v, g) => Math.round(v / g) * g;
+    // 半径的把手：圆和扇形可以是半格（0.5），直线与圆用整数；数大了按 m0.st 取整
+    if (m.mode === 0 || m.mode === 1 || m.mode === 3) out.push({ id: 'r', x: CX + R, y: CY, r: 9, cursor: 'ew-resize', tip: '拖我：改半径', drag: (c0, q) => { const m0 = model(c0.props), x = Math.abs(q.x - CX) / m0.UN, g = m0.st(m0.mode !== 3); return { r: clamp(snap(x, g), g < 1 ? 0.5 : 1, RMAX) }; }, say });
     if (m.mode === 1) { const a = pol(m.th, R); out.push({ id: 'th', x: a.x, y: a.y, r: 9, cursor: 'grab', tip: '拖我：改圆心角', drag: (c0, q) => { let d = Math.atan2(q.x - CX, -(q.y - CY)) * 180 / Math.PI; if (d <= 0) d += 360; return { theta: clamp(Math.round(d / 10) * 10, 10, 360) }; }, say: (c1) => model(c1.props).th + '°' }); }
-    if (m.mode === 2) { const by = CY + 110; out.push({ id: 'r', x: CX + R, y: by, r: 9, cursor: 'ew-resize', tip: '拖我：改底面半径', drag: (c0, q) => ({ r: clamp(Math.round(Math.abs(q.x - CX) / UN), 1, 10) }), say }, { id: 'h', x: CX, y: by - m.h * UN, r: 9, cursor: 'ns-resize', tip: '拖我：改高', drag: (c0, q) => ({ h: clamp(Math.round((by - q.y) / UN), 1, 10) }), say: (c1) => 'h = ' + model(c1.props).h }); }
-    if (m.mode === 3) out.push({ id: 'd', x: CX + 180, y: CY + m.d * UN, r: 9, shape: 'bar-h', cursor: 'ns-resize', tip: '拖我：直线上下移动', drag: (c0, q) => ({ d: clamp(Math.round((q.y - CY) / UN), 0, 10) }), say: (c1) => { const m1 = model(c1.props); return 'd = ' + m1.d + '：' + RT[m1.rel]; } });
+    if (m.mode === 2) { const by = CY + 110; out.push({ id: 'r', x: CX + R, y: by, r: 9, cursor: 'ew-resize', tip: '拖我：改底面半径', drag: (c0, q) => { const m0 = model(c0.props), g = m0.st(false); return { r: clamp(snap(Math.abs(q.x - CX) / m0.UN, g), 1, RMAX) }; }, say }, { id: 'h', x: CX, y: by - m.h * UN, r: 9, cursor: 'ns-resize', tip: '拖我：改高', drag: (c0, q) => { const m0 = model(c0.props), g = m0.st(false); return { h: clamp(snap((by - q.y) / m0.UN, g), 1, RMAX) }; }, say: (c1) => 'h = ' + model(c1.props).h }); }
+    if (m.mode === 3) out.push({ id: 'd', x: CX + 200, y: CY + m.d * UN, r: 9, shape: 'bar-h', cursor: 'ns-resize', tip: '拖我：直线上下移动', drag: (c0, q) => { const m0 = model(c0.props), g = m0.st(false); return { d: clamp(snap((q.y - CY) / m0.UN, g), 0, RMAX) }; }, say: (c1) => { const m1 = model(c1.props); return 'd = ' + m1.d + '：' + RT[m1.rel]; } });
     if (m.mode === 4) { const b = pol(180 + m.ca / 2, R); out.push({ id: 'ca', x: b.x, y: b.y, r: 9, cursor: 'grab', tip: '拖我：改圆心角', drag: (c0, q) => { let d = Math.atan2(q.x - CX, -(q.y - CY)) * 180 / Math.PI; if (d < 0) d += 360; return { ca: clamp(Math.round(Math.abs(d - 180) * 2 / 10) * 10, 20, 340) }; }, say: (c1) => { const m1 = model(c1.props); return '圆心角 ' + m1.ca + '°，圆周角 ' + m1.ins + '°'; } }); }
     return out;
   }
@@ -83,9 +95,9 @@
         alias: ['圆', '半径', '直径', '周长', '面积', '扇形', '弧长', '圆柱', '圆锥', '体积', '直线与圆', '相切', '圆周角', '圆心角'],
         props: {
           mode: { type: 'choice', label: '看什么', default: 0, choices: MODES, write: true },
-          r: { type: 'num', label: '半径', default: 3, min: 0.5, max: 10, step: 0.5, write: true },
-          theta: I(10, 360, 90, '扇形：圆心角（度）'), h: I(1, 10, 3, '圆柱圆锥：高'), cone: { type: 'bool', label: '是圆锥', default: false, write: true },
-          d: I(0, 10, 1, '直线与圆：圆心到直线的距离'), ca: I(20, 340, 100, '圆周角：圆心角（度）'),
+          r: { type: 'num', label: '半径', default: 3, min: 0.5, max: RMAX, step: 0.5, write: true, qmax: 10 },
+          theta: I(10, 360, 90, '扇形：圆心角（度）'), h: I(1, RMAX, 3, '圆柱圆锥：高', { qmax: 10 }), cone: { type: 'bool', label: '是圆锥', default: false, write: true },
+          d: I(0, RMAX, 1, '直线与圆：圆心到直线的距离', { qmax: 10 }), ca: I(20, 340, 100, '圆周角：圆心角（度）'),
         },
         outputs: {
           area: { dim: null, kind: 'num', label: '圆的面积（π 取 3.14）' }, c: { dim: null, kind: 'num', label: '周长' }, sector: { dim: null, kind: 'num', label: '扇形面积' }, arc: { dim: null, kind: 'num', label: '弧长' },
@@ -100,5 +112,5 @@
       },
     },
   });
-  U.CircleBench = { model };
+  U.CircleBench = { model, rangeOf, RMAX };
 })(typeof globalThis !== 'undefined' ? globalThis : window);

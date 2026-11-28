@@ -4217,5 +4217,107 @@ console.log('过程看得见（试验台增强 4：回放、操作台上的来�
     for (const ty of Object.keys(P.TALK)) truthy(said[ty], ty + ' 在题库里一句都没说');
   });
 }
+console.log('台的尺寸和比例（增强 7 第二轮 c：积木、坐标、方向、工程、尺子、圆、三角形）');
+{
+  const B = U.kit.big, [CW, CH] = B.CARD_MAX;
+  const drawOf = (type, patch, drag) => {
+    const d = U.types[type], s = W.blank(), id = W.add(s, type, 0, 0, patch), e = s.entities[id], D = W.evaluate(s), sz = d.size(e);
+    const c = { ent: e, props: D[id].props || e.props, d: D[id], out: D[id].out, state: e.state, w: sz[0], h: sz[1] - 28, t: 0, n: 0, scene: s, kids: () => [], drag };
+    return { svg: d.draw(c), w: sz[0], h: sz[1], grips: d.grips ? d.grips(c) || [] : [], c, out: D[id].out };
+  };
+  const outv = (r, k) => (r.out[k] ? U.Q.show(r.out[k].data) : null);
+  const grip = (r, id) => r.grips.find((g) => g.id === id);
+  const full = (n, h) => Array.from({ length: n }, () => Array(n).fill(h).join(',')).join(';');
+  const BIG = {
+    solidbench: [{ rows: 10, cols: 10, h: full(10, 10), sf: true, ss: true, st: true }, { rows: 10, cols: 1, h: Array(10).fill('10').join(';') }, { rows: 1, cols: 10, h: Array(10).fill(10).join(',') }, { rows: 7, cols: 9, h: '' }, { rows: 6, cols: 6, h: full(6, 6), sf: true }],
+    coordbench: [{ mode: 0, gu: 3, kn: 12, kd: 1, b: 60, x: -60 }, { mode: 1, gu: 3, ax: -60, ay: -60, bx: 60, by: 60 }, { mode: 3, gu: 2, kn: -12, kd: 4, b: -30, k2: 6, b2: 30 }, { mode: 2, gu: 3, a2: -6, h: 6, v: -6 }, { mode: 0, gu: 1, kn: 3, kd: 2, b: -12, x: 12 }],
+    gridbench: [{ mode: 0, gu: 3, px: 60, py: -60 }, { mode: 1, gu: 2, px: 25, py: 10, ox: 0, oy: 0, rot: 90 }, { mode: 2, gu: 1, ax: -12, ay: -12, bx: 12, by: 0, cx: 0, cy: 12, tm: 1, dx: 12, dy: -12, cmp: true }, { mode: 2, gu: 3, ax: 0, ay: 0, bx: 40, by: 0, cx: 0, cy: 30, tm: 3, qx1: 60, qy1: 60, qx2: -60, qy2: 60, qx3: 0, qy3: -60 }],
+    dirbench: [{ mode: 2, ru: 3, deg: 135, dist: 4, tdeg: 225, tdist: 4 }, { mode: 2, ru: 1, deg: 45, dist: 3, tdeg: 45, tdist: 3 }],
+    jobbench: [{ mode: 0, a: 30, b: 60, t: 20 }, { mode: 0, a: 59, b: 60, t: 30 }, { mode: 1, a: 40, b: 60, t: 120 }, { mode: 1, a: 59, b: 60, t: 600 }, { mode: 0, a: 60, b: 60, useB: false, t: 60 }],
+    rulerbench: [{ mode: 0, rl: 30, len: 30, at: 0, counted: true }, { mode: 0, rl: 30, len: 1, at: 29, counted: true }, { mode: 0, rl: 20, len: 13, at: 4 }, { mode: 1, L: 1000, cut: 1000 }, { mode: 1, L: 990, cut: 5 }],
+    circlebench: [{ mode: 0, r: 50 }, { mode: 1, r: 20, theta: 300 }, { mode: 2, r: 50, h: 50, cone: true }, { mode: 2, r: 1, h: 50 }, { mode: 3, r: 1, d: 50 }, { mode: 3, r: 50, d: 0 }, { mode: 4, r: 50, ca: 340 }],
+    tribench: [{ mode: 0, a: 50, b: 50, c: 50 }, { mode: 0, a: 1, b: 2, c: 50 }, { mode: 0, a: 7, b: 24, c: 25 }, { mode: 0, a: 20, b: 21, c: 29 }],
+  };
+  const inside = (r, m) => { const bad = []; for (const x of r.svg.matchAll(/\s(x|cx|x1|x2)="(-?[\d.]+)"/g)) if (+x[2] < -24 || +x[2] > r.w + 24) bad.push(x[1] + '=' + x[2]); for (const y of r.svg.matchAll(/\s(y|cy|y1|y2)="(-?[\d.]+)"/g)) if (+y[2] < -24 || +y[2] > r.h + 24) bad.push(y[1] + '=' + y[2]); eq(bad.slice(0, 4), [], m + '：画到卡片外面了'); };
+  t('大数（第二轮 c）：积木、坐标、方向、工程、尺子、圆、三角形取到最大也画得出来、不画到卡片外面；卡片不超过 CARD_MAX；把手不叠、按钮不小于 14 像素', () => {
+    for (const [type, cases] of Object.entries(BIG)) for (const pc of cases) {
+      const m = type + ' ' + JSON.stringify(pc).slice(0, 80), r = drawOf(type, pc);
+      truthy(typeof r.svg === 'string' && r.svg.length > 100 && !/NaN|undefined|Infinity/.test(r.svg), m + '：画出来有 NaN/undefined');
+      truthy(r.w <= CW && r.h <= CH, m + '：卡片 ' + r.w + '×' + r.h + ' 超过 ' + CW + '×' + CH);
+      inside(r, m);
+      for (let i = 0; i < r.grips.length; i++) for (let j = i + 1; j < r.grips.length; j++) { const a = r.grips[i], b = r.grips[j]; truthy(Math.hypot(a.x - b.x, a.y - b.y) >= B.MIN_HIT, m + ' 把手 ' + a.id + ' 和 ' + b.id + ' 叠在一起'); }
+      for (const g of r.svg.matchAll(/<g data-pick-(?:set|k)="[^"]*"[^>]*>(?:<title>[^<]*<\/title>)?<rect x="[^"]*" y="[^"]*" width="([\d.]+)" height="([\d.]+)"/g)) truthy(+g[1] >= B.MIN_HIT && +g[2] >= B.MIN_HIT, m + ' 按钮太小：' + g[1] + '×' + g[2]);
+    }
+  });
+  t('积木：底板 10 × 10、每格 10 块；格子画出来 14 像素（好点）；10 × 10 × 10 = 1000、表面积 600；被挡住的方块不画；一位数字写不下的读数不给', () => {
+    const SB = U.SolidBench; eq([SB.cellOf(2, 2), SB.cellOf(5, 3), SB.cellOf(6, 6), SB.cellOf(7, 2), SB.cellOf(10, 10)], [26, 20, 20, 16, 16]);
+    const r = drawOf('solidbench', { rows: 10, cols: 10, h: full(10, 10), sf: true, ss: true, st: true });
+    eq([outv(r, 'total'), outv(r, 'surf'), outv(r, 'l'), outv(r, 'w'), outv(r, 'hgt'), outv(r, 'edges')], ['1000', '600', '10', '10', '10', '120']);
+    eq([outv(r, 'front'), outv(r, 'side'), outv(r, 'grid'), outv(r, 'seen')], [null, null, null, '100'], '有一叠 10 块：从前面看、从左面看、摆法不给；从上面看几个正方形照给');
+    const cells = [...r.svg.matchAll(/<g data-cell="[^"]*"[^>]*><title>[^<]*<\/title><rect x="[^"]*" y="[^"]*" width="([\d.]+)" height="([\d.]+)"/g)];
+    eq(cells.length, 100); truthy(cells.every((g) => +g[1] >= B.MIN_HIT && +g[2] >= B.MIN_HIT), '底板格子不小于 14 像素');
+    const cubes = (r.svg.match(/<polygon/g) || []).length / 3; truthy(cubes >= 271 && cubes <= 300, '10 × 10 × 10：只画看得见的 ' + cubes + ' 块（不是 1000 块）');
+    // 摆一个“前排 1、2，后排 1、1”：一块都不挡，5 块全画（tests/ui-solid.js 数立体图的块数）
+    eq((drawOf('solidbench', { h: '1,2;1,1' }).svg.match(/<polygon/g) || []).length / 3, 5);
+    const r9 = drawOf('solidbench', { rows: 2, cols: 2, h: '9,9;9,9', sf: true }); eq(outv(r9, 'front'), '199', '一叠 9 块：一位数字写得下，照给');
+    // 点格子放一块到第 10 块；第 10 块放上去以后这一格不能再点
+    const r1 = drawOf('solidbench', { rows: 1, cols: 1, h: '9' }); truthy(/data-cell="0-0" data-pick-set/.test(r1.svg), '9 块还能放');
+    const r2 = drawOf('solidbench', { rows: 1, cols: 1, h: '10' }); truthy(!/data-cell="0-0" data-pick-set/.test(r2.svg), '10 块不能再放');
+    // “长 +”加到 10 列：卡片不变宽；排多了往下长
+    eq([SB.heightOf({ rows: 6, cols: 6 }), SB.heightOf({ rows: 10, cols: 3 })], [444, 500]);
+  });
+  t('坐标与函数、坐标与变换：点“一格 = 5”换单位，能画到 ±30；拖点、拖截距都落在 5 的倍数上；斜率还是“向右 1、向上 k”', () => {
+    const r = drawOf('coordbench', { mode: 0, gu: 2, kn: 2, kd: 1, b: 0, x: 0 });
+    truthy(/一格 = 5：能画到 ±30/.test(r.svg) && />30</.test(r.svg) && />−30</.test(r.svg), '坐标格写着 ±30、一格 = 5');
+    const gb = grip(r, 'b'), OY = 34 + 6 * 24; eq(gb.drag(r.c, { x: gb.x, y: OY - 4.3 * 24 }), { b: 20 }, '拖截距到 4.3 格附近：落在 20（5 的倍数）');
+    const gk = grip(r, 'k'); eq([gk.x, gk.y], [34 + 6 * 24 + 24, OY - 2 * 24], '斜率的把手在 x = 5、y = 10（向右 1 格、向上 2 格）');
+    eq(gk.drag(r.c, { x: gk.x, y: OY - 3 * 24 }), { kn: 3 }, '拖斜率把手上一格：斜率 3');
+    const rp = drawOf('coordbench', { mode: 1, gu: 3, ax: 0, ay: 0, bx: 10, by: 10 }), gA = grip(rp, 'A'); eq(gA.drag(rp.c, { x: 34 + 6 * 24 - 2.2 * 24, y: OY - 5.4 * 24 }), { ax: -20, ay: 50 }, '一格 = 10：拖点 A 落在格点 (−20, 50)');
+    const r2 = drawOf('coordbench', { mode: 0, gu: 3, kn: 2, kd: 1, b: 20, x: 10 }); eq([outv(r2, 'y'), outv(r2, 'root')], ['40', '-10'], 'y = 2x + 20：x = 10 时 y = 40，和 x 轴交在 −10');
+    truthy(/data-gu="3"/.test(r2.svg), '坐标格下面有“一格 = 10”的按钮');
+    const r1 = drawOf('coordbench', { mode: 1, ax: -2, ay: -1, bx: 3, by: 4 }), p5 = JSON.parse(decodeURIComponent(r1.svg.match(/data-pick-set="([^"]+)" data-gu="2"/)[1]));
+    eq([p5.gu, p5.ax, p5.ay, p5.bx, p5.by], [2, -10, -5, 15, 20], '点“一格 = 5”：图不动，坐标跟着变成 5 倍');
+    const ra = drawOf('coordbench', { mode: 2, gu: 3, a2: 2, h: 1, v: -1 }); truthy(/抛物线：一格 = 1/.test(ra.svg) && !/data-gu=/.test(ra.svg), '抛物线只用一格 = 1');
+    const rg = drawOf('gridbench', { mode: 0, gu: 1, px: 0, py: 0 }), gP = grip(rg, 'P'); eq(gP.drag(rg.c, { x: 190 + 3.3 * 25, y: 200 - 1.2 * 25 }), { px: 6, py: 2 }, '方格纸一格 = 2：拖点 P 落在 (6, 2)');
+    const rt = drawOf('gridbench', { mode: 2, gu: 1, ax: 0, ay: 0, bx: 6, by: 0, cx: 0, cy: 4, tm: 2, k: 2, cmp: true }); eq([outv(rt, 'sim'), outv(rt, 'k')], ['1', '2'], '一格 = 2：放大 2 倍的三角形（到 12）也画得下，相似比 2');
+  });
+  t('方向角：点“每圈 500 米”换单位，读成“北偏东 45°，1500 米”；工程：30 天、60 天合作 20 天，“过 10 天”不跳过做完那一天；小格太细每几格画一条线', () => {
+    const r = drawOf('dirbench', { mode: 2, ru: 2, deg: 45, dist: 3, tdeg: 45, tdist: 3 }); truthy(/北偏东 45°，1500 米/.test(r.svg) && /2 千米/.test(r.svg), '每圈 500 米：1500 米、第 4 圈写 2 千米'); eq(outv(r, 'hit'), '1');
+    eq(grip(r, 'ray').say({ props: Object.assign({}, r.c.props, { deg: 45, dist: 4 }) }), '北偏东 45°，2 千米');
+    const j = drawOf('jobbench', { mode: 0, a: 30, b: 60, t: 0 }); truthy(/过 10 天/.test(j.svg), '要 20 天：有“过 10 天”');
+    const ten = [...j.svg.matchAll(/data-pick-set="([^"]+)"/g)].map((x) => JSON.parse(decodeURIComponent(x[1]))).filter((o) => o.t === 10); eq(ten.length, 1);
+    const j2 = drawOf('jobbench', { mode: 0, a: 30, b: 60, t: 15 }), p2 = [...j2.svg.matchAll(/data-pick-set="([^"]+)"/g)].map((x) => JSON.parse(decodeURIComponent(x[1]))).find((o) => o.t > 15 && o.t !== 16); eq(p2, { t: 20 }, '过了 15 天再点“过 10 天”：停在第 20 天（做完）');
+    const j3 = drawOf('jobbench', { mode: 0, a: 30, b: 60, t: 20 }); eq(outv(j3, 'days'), '20');
+    truthy(!/过 10 天/.test(drawOf('jobbench', { mode: 0, a: 6, b: 3 }).svg), '6 天、3 天：和以前一样没有“过 10 天”');
+    const j4 = drawOf('jobbench', { mode: 0, a: 59, b: 60, t: 30 }); truthy(/每 \d+ 小格画一条线/.test(j4.svg), '3540 小格：每几格画一条线');
+    const days = (j4.svg.match(/第 \d+ 天/g) || []).length; truthy(days >= 5 && days <= 22, '“第几天”隔几天写一个：' + days);
+    const j5 = drawOf('jobbench', { mode: 1, a: 40, b: 60, t: 120 }); eq(outv(j5, 'days'), '120', '注水 40 小时、放水 60 小时：120 小时注满');
+  });
+  t('尺子 30 厘米：一厘米 20 像素、拖铅笔还是一厘米一落；绳子 10 米：剪刀 10 厘米一格；圆半径 20、三角形小棒 50：图缩小画，拖的时候比例不变', () => {
+    const RB = U.RulerBench; eq([RB.cmOf(15), RB.cmOf(30)], [38, 20]);
+    const r = drawOf('rulerbench', { mode: 0, rl: 30, len: 23, at: 4 }), g = grip(r, 'pen'); eq(g.drag(r.c, { x: 50 + (0.3 + 23 / 2) * 20, y: g.y }).at, 0, '拖铅笔对准 0');
+    truthy(/>30</.test(r.svg) && !/>31</.test(r.svg), '尺子画到 30');
+    const r15 = drawOf('rulerbench', { mode: 0, len: 6, at: 2 }); eq(grip(r15, 'pen').x, 50 + 5 * 38, '默认尺子 15 厘米：和以前一样 38 像素一厘米');
+    const rc = drawOf('rulerbench', { mode: 1, L: 850, cut: 0 }), gc = grip(rc, 'cut'); eq(gc.drag(rc.c, { x: 40 + 620 * 323 / 850, y: gc.y }).cut, 320, '绳子 8 米 50：剪刀按 10 厘米取整');
+    eq(grip(drawOf('rulerbench', { mode: 1, L: 300, cut: 0 }), 'cut').drag({ props: { mode: 1, L: 300 } }, { x: 40 + 620 * 127 / 300, y: 0 }).cut, 125, '3 米以内：还是 5 厘米一格');
+    const c0 = drawOf('circlebench', { mode: 0, r: 10 }), gr = grip(c0, 'r'); eq(gr.x, 220 + 170, '半径 10：一格 17 像素（和以前一样）');
+    eq(gr.drag(c0.c, { x: 220 + 12 * 17, y: 222 }).r, 12, '从 10 往外拖到 12（按下那一刻的比例）');
+    const c1 = drawOf('circlebench', { mode: 0, r: 20 }); eq(grip(c1, 'r').x, 220 + 170, '半径 20：一格 8.5 像素'); truthy(/数大了，图缩小画/.test(c1.svg)); eq(outv(c1, 'area'), '1256');
+    const cd = drawOf('circlebench', { mode: 0, r: 12 }, { p0: { mode: 0, r: 10 } }); eq(grip(cd, 'r').x, 220 + 12 * 17, '拖动中：还用按下那一刻（半径 10）的比例，把手跟着鼠标');
+    const c2 = drawOf('circlebench', { mode: 2, r: 15, h: 40 }), gh = grip(c2, 'h'); eq(gh.drag(c2.c, { x: 220, y: 332 - 33.3 * 3.4 }).h, 34, '1 = 3.4 像素：高按 2 取整'); eq(outv(c2, 'vol'), '28260');
+    const t0 = drawOf('tribench', { mode: 0, a: 7, b: 24, c: 25 }); eq([outv(t0, 'ok'), outv(t0, 'right'), outv(t0, 'perim')], ['1', '1', '56'], '7、24、25 是直角三角形'); truthy(Math.abs(grip(t0, 'c').x - (60 + 25 * 320 / 30)) < 1e-6, '25 在 30 那一档：一格 10.7 像素');
+    const t1 = drawOf('tribench', { mode: 0, a: 3, b: 4, c: 20 }), gc2 = grip(t1, 'c'); eq(gc2.x, 60 + 20 * 16, '20 以内：一格 16 像素（和以前一样）'); eq(gc2.drag(t1.c, { x: 640, y: gc2.y }).c, 36, '往右拖过刻度尺的头：最多到卡片边（36）'); truthy(/小棒长了，缩小画/.test(drawOf('tribench', { mode: 0, a: 3, b: 4, c: 36 }).svg));
+  });
+  t('放开上限后随机出题不变：积木、坐标、方向、工程、尺子、圆、三角形出的题还是以前的范围（属性写了 qmax）', () => {
+    const OLD = { coordbench: { b: 6, x: 6, ax: 6, ay: 6, bx: 6, by: 6, b2: 6 }, gridbench: { px: 6, py: 6, ox: 6, oy: 6, ax: 6, ay: 6, bx: 6, by: 6, cx: 6, cy: 6, dx: 12, dy: 12 }, jobbench: { a: 20, b: 20, t: 200 }, rulerbench: { len: 15, at: 14, L: 300, cut: 300, rl: 15 }, circlebench: { r: 10, h: 10, d: 10 }, tribench: { a: 20, b: 20, c: 20 }, solidbench: { rows: 6, cols: 6 } };
+    const bad = [];
+    for (const [type, lim] of Object.entries(OLD)) {
+      for (const [k, v] of Object.entries(lim)) { const P = U.types[type].props[k]; if (P.qmax !== undefined && P.qmax !== v) bad.push(type + '.' + k + ' qmax ' + P.qmax); }
+      for (const lv of [1, 2, 3, 4, 7, 8, 9]) for (let s = 1; s <= 6; s++) { let q = null; try { q = U.Quiz.make(type, s * 131, lv); } catch (e) { bad.push(type + ' ' + lv + ' ' + e.message); } if (!q) continue;
+        const all = [q.quiz.props].concat(q.quiz.sols || [q.quiz.sol || {}]); for (const o of all) for (const [k, v] of Object.entries(lim)) if (o && typeof o[k] === 'number' && Math.abs(o[k]) > v) bad.push(type + ' 第 ' + lv + ' 档：' + k + ' = ' + o[k]); }
+    }
+    eq(bad, []);
+  });
+}
 console.log('\n' + pass + ' 通过，' + fail + ' 失败');
 process.exit(fail ? 1 : 0);

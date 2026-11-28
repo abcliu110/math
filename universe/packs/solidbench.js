@@ -5,13 +5,16 @@
  *   - 左上是立体图，跟着底板变；大了会自动缩小。
  *   - 右边三个小窗：从前面看、从左面看、从上面看。先自己想，再点“看一看”打开。
  *   - 下面写着一共几块（体积）、露在外面的面有几个（表面积，底面也算）；每个位置一样高时，就是一个长方体，写出长、宽、高和棱长总和。
- * 这一版的边界（如实写）：底板最大 6 排 × 6 列，每格最多叠 6 块（所以 1 × 1 × 24 那样的长条搭不出来）；
- *   没有“照着三视图搭、求最少和最多”的搜索（那是“小方块搭建”器材）；没有展开图。 */
+ * 这一版的边界（如实写）：底板最大 10 排 × 10 列，每格最多叠 10 块（10 × 10 × 10 = 1000 个小正方体就是 1 立方分米；1 × 1 × 24 那样的长条还是搭不出来）；
+ *   没有“照着三视图搭、求最少和最多”的搜索（那是“小方块搭建”器材）；没有展开图。
+ * 大数（2026-11-28，试验台增强 7 第二轮）：以前底板 6 × 6、高 6。现在底板 7 列（排）以上每格 16 像素（画出来 14 像素，还是好点），
+ *   立体图每块跟着缩小（前、上、右三面都挨着别的方块的整块被挡住，不画），三个小窗按“最多几列、几排、几层”缩小每格。
+ *   有一叠到了 10 块时，“摆法、从前面看、从左面看”这几个一格一位数字的读数不给（10 写不进一位），体积、表面积、长方体照常。 */
 (function (G) {
   'use strict';
   const U = G.U, Q = U.Q, K = U.kit;
   const num = (n) => U.val('num', Q(n), { dim: null });
-  const W = 700, NMAX = 6, HMAX = 6, IX = 40, IY = 236, BX = 30, BY = 290, VX = [372, 480, 588], VY = 72;
+  const W = 700, NMAX = 10, HMAX = 10, IX = 40, IY = 236, BX = 30, BY = 290, VX = [372, 480, 588], VY = 72;
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, Number.isFinite(+v) ? +v : lo));
   const on = (v) => v === true || v === 1;
   // "1,2;1,1" → [[1,2],[1,1]]（第一行是前排）。缺的格子当 0
@@ -22,6 +25,11 @@
   }
   const ser = (g) => g.map((r) => r.join(',')).join(';');
   const code = (a) => Number('1' + a.join(''));   // 视图写成一个数：开头的 1 只是占位（免得 0 开头丢掉），后面一位是一个高度
+  const oneDigit = (a) => a.every((h) => h <= 9);   // 有一叠到了 10 块，一位数字写不下：这类读数不给
+  // 底板每格多大（画出来少 2 像素）：4 以内 26、6 以内 20、再大 16（画出来 14，不小于 U.kit.big.MIN_HIT）
+  const cellOf = (R, C) => (R > 6 || C > 6 ? 16 : R > 4 || C > 4 ? 20 : 26);
+  // 卡片高：底板排多了往下长（6 排以内和以前一样 444）
+  const heightOf = (p) => { const R = clamp(p.rows, 1, NMAX), C = clamp(p.cols, 1, NMAX); return R > 6 ? BY + R * cellOf(R, C) + 50 : 444; };   // 卡片头 28 像素也算在里面；6 排以内和以前一样
   function model(p) {
     const R = clamp(p.rows, 1, NMAX), C = clamp(p.cols, 1, NMAX), g = parse(p.h, R, C);
     const front = Array.from({ length: C }, (_, c) => Math.max(...g.map((r) => r[c])));
@@ -58,23 +66,26 @@
   const resize = (m, R, C) => ser(parse(ser(m.g), R, C));
 
   function draw(c) {
-    const p = c.props, m = model(p), take = on(p.take), a = sizeA(m), BC = m.R > 4 || m.C > 4 ? 20 : 26, VC = 14; let s = '';
-    for (let r = m.R - 1; r >= 0; r--) for (let z = 0; z < HMAX; z++) for (let cc = 0; cc < m.C; cc++) if (m.g[r][cc] > z) s += cube(a, cc, r, z);
+    const p = c.props, m = model(p), take = on(p.take), a = sizeA(m), BC = cellOf(m.R, m.C), VC = Math.min(14, 88 / Math.max(m.C, m.R, m.hmax, 1)); let s = '';
+    // 前面、上面、右边都挨着别的方块：这一块整个被挡住，不画（10 × 10 × 10 时少画七百多块）
+    const at = (r, cc) => (r >= 0 && r < m.R && cc >= 0 && cc < m.C ? m.g[r][cc] : 0);
+    for (let r = m.R - 1; r >= 0; r--) for (let z = 0; z < HMAX; z++) for (let cc = 0; cc < m.C; cc++) if (m.g[r][cc] > z && !(at(r - 1, cc) > z && m.g[r][cc] > z + 1 && at(r, cc + 1) > z)) s += cube(a, cc, r, z);
     // 底板
     s += K.text(BX, BY - 8, '底板（从上往下看）：点格子' + (take ? '拿走一块' : '放一块'), { size: 12, anchor: 'start', fill: '#5a6478' });
     for (let r = 0; r < m.R; r++) for (let cc = 0; cc < m.C; cc++) {
       const g2 = m.g.map((row) => row.slice()), h = m.g[r][cc]; g2[r][cc] = clamp(h + (take ? -1 : 1), 0, HMAX);
       const x = BX + cc * BC, y = BY + (m.R - 1 - r) * BC, can = take ? h > 0 : h < HMAX;
       s += '<g data-cell="' + r + '-' + cc + '"' + (can ? ' data-pick-set="' + encodeURIComponent(JSON.stringify({ h: ser(g2) })) + '" style="cursor:pointer"' : '') + '><title>第 ' + (r + 1) + ' 排（从前往后）第 ' + (cc + 1) + ' 列：' + h + ' 块</title>' +
-        K.rect(x, y, BC - 2, BC - 2, { fill: h ? '#cfdcf0' : '#fff', stroke: 'var(--ink)', r: 3, w: 1.2 }) + (h ? K.text(x + BC / 2 - 1, y + BC / 2 + 4, String(h), { size: 11, weight: 700 }) : '') + '</g>';
+        K.rect(x, y, BC - 2, BC - 2, { fill: h ? '#cfdcf0' : '#fff', stroke: 'var(--ink)', r: 3, w: 1.2 }) + (h ? K.text(x + BC / 2 - 1, y + BC / 2 + (BC < 20 ? 3 : 4), String(h), { size: BC < 20 ? 9.5 : 11, weight: 700 }) : '') + '</g>';
     }
     s += K.text(BX + m.C * BC / 2, BY + m.R * BC + 12, '前', { size: 11, weight: 700, fill: '#5a6478' });
     const bx2 = BX + Math.max(m.C * BC, 104) + 14, full = ser(m.g.map((row) => row.map((h) => Math.min(HMAX, h + 1))));
     s += btn(bx2, BY, 50, '放', { take: false }, !take, true, '点格子是放一块') + btn(bx2 + 56, BY, 56, '拿走', { take: true }, take, true, '点格子是拿走一块');
     s += btn(bx2, BY + 30, 106, '铺满一层', { h: full }, false, m.g.some((row) => row.some((h) => h < HMAX)), '整块底板上每格各放一块');
-    s += btn(bx2 + 112, BY + 30, 70, '全拿走', { h: ser(m.g.map((row) => row.map(() => 0))) }, false, m.total > 0, '把积木都拿走');
-    s += K.text(bx2, BY + 76, '长', { size: 12, anchor: 'start' }) + btn(bx2 + 16, BY + 60, 26, '−', { cols: m.C - 1, h: resize(m, m.R, m.C - 1) }, false, m.C > 1, '底板少一列') + btn(bx2 + 46, BY + 60, 26, '+', { cols: m.C + 1, h: resize(m, m.R, m.C + 1) }, false, m.C < NMAX, '底板多一列');
-    s += K.text(bx2 + 86, BY + 76, '宽', { size: 12, anchor: 'start' }) + btn(bx2 + 102, BY + 60, 26, '−', { rows: m.R - 1, h: resize(m, m.R - 1, m.C) }, false, m.R > 1, '底板少一排') + btn(bx2 + 132, BY + 60, 26, '+', { rows: m.R + 1, h: resize(m, m.R + 1, m.C) }, false, m.R < NMAX, '底板多一排');
+    const wide = bx2 + 182 > VX[0] - 6, yl = wide ? BY + 90 : BY + 60;   // 底板宽了：“全拿走”挪到下一行（免得盖住右边的字），长、宽的 − + 再往下
+    s += btn(wide ? bx2 : bx2 + 112, wide ? BY + 60 : BY + 30, 70, '全拿走', { h: ser(m.g.map((row) => row.map(() => 0))) }, false, m.total > 0, '把积木都拿走');
+    s += K.text(bx2, yl + 16, '长', { size: 12, anchor: 'start' }) + btn(bx2 + 16, yl, 26, '−', { cols: m.C - 1, h: resize(m, m.R, m.C - 1) }, false, m.C > 1, '底板少一列') + btn(bx2 + 46, yl, 26, '+', { cols: m.C + 1, h: resize(m, m.R, m.C + 1) }, false, m.C < NMAX, '底板多一列');
+    s += K.text(bx2 + 86, yl + 16, '宽', { size: 12, anchor: 'start' }) + btn(bx2 + 102, yl, 26, '−', { rows: m.R - 1, h: resize(m, m.R - 1, m.C) }, false, m.R > 1, '底板少一排') + btn(bx2 + 132, yl, 26, '+', { rows: m.R + 1, h: resize(m, m.R + 1, m.C) }, false, m.R < NMAX, '底板多一排');
     // 三个视图
     let fb = ''; m.front.forEach((h, i) => { for (let z = 0; z < h; z++) fb += K.rect(VX[0] + i * VC, VY + 96 - (z + 1) * VC, VC, VC, { fill: '#cfdcf0', stroke: 'var(--ink)', r: 0, w: 1 }); });
     let sb = ''; m.side.forEach((h, i) => { for (let z = 0; z < h; z++) sb += K.rect(VX[1] + i * VC, VY + 96 - (z + 1) * VC, VC, VC, { fill: '#cfdcf0', stroke: 'var(--ink)', r: 0, w: 1 }); });
@@ -83,8 +94,9 @@
     s += viewSvg(VX[1], '从左面看', on(p.ss), 'ss', sb + K.line(VX[1] - 2, VY + 96, VX[1] + 88, VY + 96, { w: 1.4 }), '每一排只看得见最高的那一叠（左边是前排）');
     s += viewSvg(VX[2], '从上面看', on(p.st), 'st', tb, '有积木的位置各是一个正方形');
     const lines = [];
-    if (on(p.sf)) lines.push('从前面看：' + m.front.join('、') + '（每列最高的）');
-    if (on(p.ss)) lines.push('从左面看：' + m.side.join('、') + '（每排最高的）');
+    // 列、排多了（7 个以上）不写括号里的说明，免得写出卡片
+    if (on(p.sf)) lines.push('从前面看：' + m.front.join('、') + (m.C <= 6 ? '（每列最高的）' : ''));
+    if (on(p.ss)) lines.push('从左面看：' + m.side.join('、') + (m.R <= 6 ? '（每排最高的）' : ''));
     if (on(p.st)) lines.push('从上面看：' + m.seen + ' 个正方形，可是一共有 ' + m.total + ' 块');
     lines.forEach((t, i) => { s += K.text(VX[0], 190 + i * 20, t, { size: 12, weight: 700, anchor: 'start', fill: 'var(--blue)' }); });
     // 一共几块、表面积、长方体
@@ -107,7 +119,7 @@
         label: '积木与三视图', prefix: '积木', group: '图形', grades: [1, 9],
         alias: ['观察物体', '三视图', '从前面看', '从侧面看', '从上面看', '积木', '小正方体', '组合体', '长方体', '正方体', '体积', '表面积', '棱长'],
         props: {
-          rows: I(1, NMAX, 2, '底板有几排'), cols: I(1, NMAX, 2, '底板有几列'),
+          rows: I(1, NMAX, 2, '底板有几排', { qmax: 6 }), cols: I(1, NMAX, 2, '底板有几列', { qmax: 6 }),
           h: { type: 'text', label: '每个位置叠几块（每排一行，行之间用分号；第一行是前排）', default: '0,0;0,0', write: true },
           take: B('点格子是拿走'), sf: B('打开“从前面看”'), ss: B('打开“从左面看”'), st: B('打开“从上面看”'),
         },
@@ -120,12 +132,13 @@
           edges: { dim: null, kind: 'num', label: '棱长总和（是长方体才有）' },
         },
         icon: () => K.rect(14, 22, 14, 14, { fill: '#9fb7d9', stroke: 'var(--ink)', w: 1 }) + K.rect(28, 22, 14, 14, { fill: '#9fb7d9', stroke: 'var(--ink)', w: 1 }) + K.rect(28, 8, 14, 14, { fill: '#9fb7d9', stroke: 'var(--ink)', w: 1 }) + K.rect(46, 22, 8, 14, { fill: '#cfdcf0', stroke: 'var(--ink)', w: 1 }),
-        size: () => [W, 444],
+        size: (e) => [W, heightOf((e && e.props) || {})],
         grips: () => [],
         compute: (c) => {
-          const p = c.props, m = model(p), o = { total: num(m.total), surf: num(m.surf), grid: num(code(m.g.flat())), isbox: num(m.box ? 1 : 0) };
-          if (on(p.sf)) o.front = num(code(m.front));
-          if (on(p.ss)) o.side = num(code(m.side));
+          const p = c.props, m = model(p), d1 = oneDigit(m.g.flat()), o = { total: num(m.total), surf: num(m.surf), isbox: num(m.box ? 1 : 0) };
+          if (d1) o.grid = num(code(m.g.flat()));
+          if (on(p.sf) && d1) o.front = num(code(m.front));
+          if (on(p.ss) && d1) o.side = num(code(m.side));
           if (on(p.st)) { o.top = num(code(m.top.flat())); o.seen = num(m.seen); }
           if (m.box) { o.l = num(m.box.l); o.w = num(m.box.w); o.hgt = num(m.box.h); o.edges = num(4 * (m.box.l + m.box.w + m.box.h)); }
           return o;
@@ -135,5 +148,5 @@
       },
     },
   });
-  U.SolidBench = { model, parse, ser, code };
+  U.SolidBench = { model, parse, ser, code, cellOf, heightOf, NMAX, HMAX };
 })(typeof globalThis !== 'undefined' ? globalThis : window);
