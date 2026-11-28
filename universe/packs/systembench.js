@@ -14,13 +14,20 @@
  *   歪的天平不能拿去消元或代入（它没说两边一样重），会被拦住并说明；往歪的天平上做两边一样的事（消元、翻倍、平分、两边拿走）可以，歪的方向不变。
  *   歪着的天平上“一个盒子 = 几”不算解出来。
  * 这一版的边界（如实写）：只有正整数个盒子和砝码，画不出负数：盒子的重量、砝码的个数都不能是负的，所以解是负数的方程组摆不出来；
- *   系数是负数的方程要先移项写成两边都是加号（x − y = 1 摆成 x = y + 1）。每个盘最多 6 个圆盒、6 个方盒、30 个砝码。
+ *   系数是负数的方程要先移项写成两边都是加号（x − y = 1 摆成 x = y + 1）。每个盘最多 12 个圆盒、12 个方盒、999 个砝码，盒子重量到 200。
+ * 大数（2026-11-28，docs/instrument-design.md 增强 7 第二轮；以前每盘 6 个圆盒、6 个方盒、30 个砝码）：鸡兔同笼 35 头 94 足、100 头这样的数也摆得下。
+ *   一架天平的砝码多于 30 个：像计数块那样画（100 一块、10 一条、1 一个），拖一条是两个盘各拿走 10，托盘里多一条“10”；
+ *   一个盘里盒子一共多于 6 个：多于 2 个的那种只画一个，旁边写“×几”。
  *   歪只说歪向哪边，不说差多少（差多少要用到藏着的重量）。 */
 (function (G) {
   'use strict';
   const U = G.U, Q = U.Q, K = U.kit;
   const num = (n) => U.val('num', Q(n), { dim: null });
-  const W = 680, BH = 172, BX = 210, ARM = 110, PW = 170, BMAX = 6, CMAX = 30;
+  const W = 680, BH = 172, BX = 210, ARM = 110, PW = 170, BMAX = 12, CMAX = 999, XMAX = 200, OLDC = 30;   // OLDC：砝码不超过这么多还一个一个画（和以前一样）
+  // 把手 / 托盘 id 里的字母 → [第几种（0 圆盒、1 方盒、2 砝码）, 一次几个]
+  const KJ = { x: [0, 1], y: [1, 1], c: [2, 1], t: [2, 10], h: [2, 100] };
+  const HS = 11, TW = 4, TH = 14, OS = 7;   // 大数时：一百一块 HS × HS，十个一条 TW × TH，一个 OS × OS
+  const bigOf = (e) => Math.max(e[2], e[5]) > OLDC;
   const top = (i) => 14 + i * BH;
   const parse = (t) => { const a = String(t || '').split(/[,，]/).map((s) => Number(s.trim())); return a.length === 6 && a.every((n) => Number.isInteger(n) && n >= 0) ? a : [0, 0, 0, 0, 0, 0]; };   // [左x, 左y, 左砝码, 右x, 右y, 右砝码]
   const ser = (e) => e.join(',');
@@ -54,7 +61,8 @@
     return r;
   }
   const scale = (e, k) => e.map((n) => n * k);
-  const divisor = (e) => { for (let k = 6; k >= 2; k--) if (e.every((n) => n % k === 0) && e.some((n) => n > 0)) return k; return 0; };
+  // 平分成几份：先找 6 以内最大的（和以前一样），没有再找 7 到 BMAX 的
+  const divisor = (e) => { if (!e.some((n) => n > 0)) return 0; for (let k = 6; k >= 2; k--) if (e.every((n) => n % k === 0)) return k; for (let k = BMAX; k > 6; k--) if (e.every((n) => n % k === 0)) return k; return 0; };
   // 两边都有的东西，一次全拿走
   function cancel(e) { const r = e.slice(); let any = false; for (const j of [0, 1, 2]) { const m = Math.min(r[j], r[j + 3]); if (m) { r[j] -= m; r[j + 3] -= m; any = true; } } return any ? r : null; }
   // 把一架天平（from）拖到另一架（to）上：返回 { e: 新的 to, how } 或 { why }
@@ -76,24 +84,51 @@
   const boxX = (x, y) => K.circle(x + 11, y + 11, 11, { fill: '#f5c26b', stroke: '#8a5a00', w: 1.6 }) + K.text(x + 11, y + 16, 'x', { size: 13, weight: 700, fill: '#5a3a00' });
   const boxY = (x, y) => K.rect(x, y, 22, 22, { fill: '#8fd19e', stroke: '#1f6a34', r: 3, w: 1.6 }) + K.text(x + 11, y + 16, 'y', { size: 13, weight: 700, fill: '#123f1e' });
   const wt = (x, y) => K.rect(x, y, 11, 11, { fill: '#9fb7d9', stroke: '#2f4a73', r: 2, w: 1 });
+  const one = (x, y) => K.rect(x, y, OS, OS, { fill: '#9fb7d9', stroke: '#2f4a73', r: 1.5, w: 0.9 });
+  const ten = (x, y) => { let s = K.rect(x, y, TW, TH, { fill: '#9fb7d9', stroke: '#2f4a73', r: 1, w: 0.9 }); for (let j = 2; j < 10; j += 2) s += K.line(x, y + j * TH / 10, x + TW, y + j * TH / 10, { stroke: '#2f4a73', w: 0.4 }); return '<g data-ten="1">' + s + '</g>'; };
+  const hund = (x, y) => { let s = K.rect(x, y, HS, HS, { fill: '#9fb7d9', stroke: '#2f4a73', r: 1, w: 1 }); for (let j = 2; j < 10; j += 2) s += K.line(x, y + j * HS / 10, x + HS, y + j * HS / 10, { stroke: '#2f4a73', w: 0.3 }) + K.line(x + j * HS / 10, y, x + j * HS / 10, y + HS, { stroke: '#2f4a73', w: 0.3 }); return '<g data-hund="1">' + s + '</g>'; };
   // 盘里每样东西放在哪
-  function layout(cx, y, nx, ny, nc) {
-    const o = { xs: [], ys: [], cs: [] }; let x = cx - PW / 2 + 4;
-    for (let i = 0; i < nx; i++) { o.xs.push({ x, y: y - 24 }); x += 24; }
-    for (let i = 0; i < ny; i++) { o.ys.push({ x, y: y - 24 }); x += 24; }
-    const cols = Math.max(1, Math.floor((cx + PW / 2 - 4 - x) / 12));
-    for (let i = 0; i < nc; i++) o.cs.push({ x: x + (i % cols) * 12, y: y - 13 - Math.floor(i / cols) * 12 });
+  //   盒子一共多于 6 个：多于 2 个的那种只画一个，旁边写“×几”（fx / fy 是写字的位置）
+  //   big：砝码像计数块那样画，从下往上 100 一块（hs）、10 一条（ts）、1 一个（cs，小一点）
+  function layout(cx, y, nx, ny, nc, big) {
+    const o = { xs: [], ys: [], cs: [], ts: [], hs: [], fx: null, fy: null, big: !!big }; let x = cx - PW / 2 + 4;
+    const fold = nx + ny > 6;
+    if (fold && nx > 2) { o.xs.push({ x, y: y - 24 }); o.fx = { x: x + 24, y: y - 8, n: nx }; x += 48; } else for (let i = 0; i < nx; i++) { o.xs.push({ x, y: y - 24 }); x += 24; }
+    if (fold && ny > 2) { o.ys.push({ x, y: y - 24 }); o.fy = { x: x + 24, y: y - 8, n: ny }; x += 48; } else for (let i = 0; i < ny; i++) { o.ys.push({ x, y: y - 24 }); x += 24; }
+    const A = cx + PW / 2 - 4 - x;
+    if (!big) {
+      const cols = Math.max(1, Math.floor(A / 12));
+      for (let i = 0; i < nc; i++) o.cs.push({ x: x + (i % cols) * 12, y: y - 13 - Math.floor(i / cols) * 12 });
+      return o;
+    }
+    const h = Math.floor(nc / 100), t = Math.floor(nc / 10) % 10, u = nc % 10;
+    let yy = y - 2;
+    const hc = Math.max(1, Math.floor((A + 1) / (HS + 1)));
+    for (let i = 0; i < h; i++) o.hs.push({ x: x + (i % hc) * (HS + 1), y: yy - HS - Math.floor(i / hc) * (HS + 1) });
+    if (h) yy -= Math.ceil(h / hc) * (HS + 1) + 3;
+    const tc = Math.max(1, Math.floor((A + 1) / (TW + 1)));
+    for (let i = 0; i < t; i++) o.ts.push({ x: x + (i % tc) * (TW + 1), y: yy - TH - Math.floor(i / tc) * (TH + 1) });
+    if (t) yy -= Math.ceil(t / tc) * (TH + 1) + 3;
+    const uc = Math.max(1, Math.floor((A + 1) / (OS + 1)));
+    for (let i = 0; i < u; i++) o.cs.push({ x: x + (i % uc) * (OS + 1), y: yy - OS - Math.floor(i / uc) * (OS + 1) });
     return o;
   }
-  const things = (cx, y, nx, ny, nc) => { const l = layout(cx, y, nx, ny, nc); return l.xs.map((q) => boxX(q.x, q.y)).join('') + l.ys.map((q) => boxY(q.x, q.y)).join('') + l.cs.map((q) => wt(q.x, q.y)).join(''); };
-  const pan = (cx, y, nx, ny, nc) => K.rect(cx - PW / 2, y, PW, 6, { fill: 'var(--ink)', r: 3 }) + things(cx, y, nx, ny, nc);
-  const PANX = [BX - ARM, BX + ARM], PY = (i) => top(i) + 104, TRAY = top(2) + 18;
+  const things = (cx, y, nx, ny, nc, big) => {
+    const l = layout(cx, y, nx, ny, nc, big);
+    let s = l.xs.map((q) => boxX(q.x, q.y)).join('') + l.ys.map((q) => boxY(q.x, q.y)).join('');
+    for (const f of [l.fx, l.fy]) if (f) s += '<g data-box-fold="' + f.n + '">' + K.text(f.x + 11, f.y, '×' + f.n, { size: 12, weight: 700, fill: '#5a3a00' }) + '</g>';
+    return s + l.hs.map((q) => hund(q.x, q.y)).join('') + l.ts.map((q) => ten(q.x, q.y)).join('') + l.cs.map((q) => (big ? one(q.x, q.y) : wt(q.x, q.y))).join('');
+  };
+  const pan = (cx, y, nx, ny, nc, big) => K.rect(cx - PW / 2, y, PW, 6, { fill: 'var(--ink)', r: 3 }) + things(cx, y, nx, ny, nc, big);
+  const PANX = [BX - ARM, BX + ARM], PY = (i) => top(i) + 104, TRAY = top(2) + 18, TEN_X = 336;   // TEN_X：大数时托盘里“10”那一条
   const panY = (i, a, t) => PY(i) + (a ? -t : t) * TILT;   // 第 i 架的左盘（a = 0）或右盘（a = 1）；t 是歪的方向
   const KIND = ['x', 'y', 'c'], KNAME = ['圆盒', '方盒', '砝码'], KSYM = ['x', 'y', '1'];
-  const itemSvg = (j, x, y) => (j === 0 ? boxX(x - 11, y - 11) : j === 1 ? boxY(x - 11, y - 11) : wt(x - 5.5, y - 5.5));
+  const itemSvg = (j, x, y, amt) => (j === 0 ? boxX(x - 11, y - 11) : j === 1 ? boxY(x - 11, y - 11) : amt === 100 ? hund(x - HS / 2, y - HS / 2) : amt === 10 ? ten(x - TW / 2, y - TH / 2) : wt(x - 5.5, y - 5.5));
+  const amtName = (j, amt) => (amt > 1 ? amt + ' 个' + KNAME[j] : '1 个' + KNAME[j]);
+  const amtSym = (j, amt) => (amt > 1 ? String(amt) : KSYM[j]);
   const balAt = (q) => { for (const i of [0, 1]) if (q.y >= top(i) && q.y <= top(i) + BH - 12) return i; return -1; };
   const panAt = (i, q) => { if (balAt(q) !== i || q.y > PY(i) + 18 || q.y < PY(i) - 62) return -1; for (const a of [0, 1]) if (Math.abs(q.x - PANX[a]) <= PW / 2 + 8) return a; return -1; };
-  const unit = (j) => { const u = [0, 0, 0, 0, 0, 0]; u[j] = 1; u[j + 3] = 1; return u; };
+  const unit = (j, amt) => { const u = [0, 0, 0, 0, 0, 0]; u[j] = amt || 1; u[j + 3] = amt || 1; return u; };
 
   // 这一下拖动会做什么：返回 { patch: 要改的属性, fx: 画面上要表现的事 }
   function plan(p0, gid, q) {
@@ -111,31 +146,31 @@
       const rem = es[to].map((n, k) => n - r.e[k]);
       return { patch: ok(to, r.e), fx: Object.assign(fx, { i: to, rem, lab: [0, 3].map((a) => { const tx = sideStr(rem[a], rem[a + 1], rem[a + 2]); return '− ' + (tx.includes('+') ? '(' + tx + ')' : tx); }), note: '那一架说 ' + eqStr(es[i]) + '：两边拿走的一样重，所以还是平的' }) };
     }
-    if (gid[0] === 't') {   // 从托盘往一架天平上拖：两边各加一个
-      const j = KIND.indexOf(gid[1]), i = balAt(q), fx = { item: j };
+    if (gid[0] === 't') {   // 从托盘往一架天平上拖：两边各加一个（“10”那一条是各加 10 个砝码）
+      const [j, amt] = KJ[gid[1]], i = balAt(q), fx = { item: j, amt };
       if (i < 0) return { patch: { msg: '' }, fx };
       if (lone) {   // 只加到放下的那个盘
         const a = panAt(i, q);
         if (a < 0) return { patch: { msg: '' }, fx };
-        const e = es[i].slice(); e[a * 3 + j]++;
+        const e = es[i].slice(); e[a * 3 + j] += amt;
         if (!fits(e)) return { patch: no('盘里放不下了'), fx: Object.assign(fx, { i, refuse: true }) };
-        return { patch: ok(i, e), fx: Object.assign(fx, { i, lab: a ? ['', '+ ' + KSYM[j]] : ['+ ' + KSYM[j], ''], note: '只往' + SIDE[a] + '加了 1 个' + KNAME[j] + '：' + after(i, e) }) };
+        return { patch: ok(i, e), fx: Object.assign(fx, { i, lab: a ? ['', '+ ' + amtSym(j, amt)] : ['+ ' + amtSym(j, amt), ''], note: '只往' + SIDE[a] + '加了 ' + amtName(j, amt) + '：' + after(i, e) }) };
       }
-      const e = es[i].map((n, k) => n + unit(j)[k]);
+      const e = es[i].map((n, k) => n + unit(j, amt)[k]);
       if (!fits(e)) return { patch: no('盘里放不下了'), fx: Object.assign(fx, { i, refuse: true }) };
-      return { patch: ok(i, e), fx: Object.assign(fx, { i, twin: true, lab: ['+ ' + KSYM[j], '+ ' + KSYM[j]], note: '两边同时加上 1 个' + KNAME[j] + '：还是平的' }) };
+      return { patch: ok(i, e), fx: Object.assign(fx, { i, twin: true, lab: ['+ ' + amtSym(j, amt), '+ ' + amtSym(j, amt)], note: '两边同时加上 ' + amtName(j, amt) + '：还是平的' }) };
     }
-    // 盘里的一样东西：拖出自己的盘，另一个盘里同样的一个跟着走
-    const i = +gid[1], a = gid[2] === 'L' ? 0 : 1, j = KIND.indexOf(gid[3]), fx = { item: j };
+    // 盘里的一样东西：拖出自己的盘，另一个盘里同样的一个跟着走（一条 10 个、一块 100 个砝码也一样）
+    const i = +gid[1], a = gid[2] === 'L' ? 0 : 1, [j, amt] = KJ[gid[3]], fx = { item: j, amt };
     if (panAt(i, q) === a) return { patch: { msg: '' }, fx: null };
     if (lone) {   // 只动这一个：拖到另一个盘是挪过去，拖到别处是拿走
-      const e = es[i].slice(), move = panAt(i, q) === 1 - a; e[a * 3 + j]--; if (move) e[(1 - a) * 3 + j]++;
+      const e = es[i].slice(), move = panAt(i, q) === 1 - a; e[a * 3 + j] -= amt; if (move) e[(1 - a) * 3 + j] += amt;
       if (!fits(e)) return { patch: no('盘里放不下了'), fx: Object.assign(fx, { i, refuse: true }) };
-      const lab = ['', '']; lab[a] = '− ' + KSYM[j]; if (move) lab[1 - a] = '+ ' + KSYM[j];
-      return { patch: ok(i, e), fx: Object.assign(fx, { i, lab, note: (move ? '把 1 个' + KNAME[j] + '从' + SIDE[a] + '挪到' + SIDE[1 - a] : '只从' + SIDE[a] + '拿走 1 个' + KNAME[j]) + '：' + after(i, e) }) };
+      const lab = ['', '']; lab[a] = '− ' + amtSym(j, amt); if (move) lab[1 - a] = '+ ' + amtSym(j, amt);
+      return { patch: ok(i, e), fx: Object.assign(fx, { i, lab, note: (move ? '把 ' + amtName(j, amt) + '从' + SIDE[a] + '挪到' + SIDE[1 - a] : '只从' + SIDE[a] + '拿走 ' + amtName(j, amt)) + '：' + after(i, e) }) };
     }
-    if (!es[i][(1 - a) * 3 + j]) return { patch: no('另一个盘里没有' + KNAME[j] + '：只拿这一边天平会歪，所以拿不了' + (p0.sync !== undefined ? '（想看它歪，点下面的开关改成只动一边）' : '')), fx: Object.assign(fx, { i, refuse: true }) };
-    return { patch: ok(i, es[i].map((n, k) => n - unit(j)[k])), fx: Object.assign(fx, { i, twin: true, lab: ['− ' + KSYM[j], '− ' + KSYM[j]], note: '两边同时拿走 1 个' + KNAME[j] + '：还是平的' }) };
+    if (es[i][(1 - a) * 3 + j] < amt) return { patch: no((amt > 1 ? '另一个盘里不到 ' + amt + ' 个' + KNAME[j] : '另一个盘里没有' + KNAME[j]) + '：只拿这一边天平会歪，所以拿不了' + (p0.sync !== undefined ? '（想看它歪，点下面的开关改成只动一边）' : '')), fx: Object.assign(fx, { i, refuse: true }) };
+    return { patch: ok(i, es[i].map((n, k) => n - unit(j, amt)[k])), fx: Object.assign(fx, { i, twin: true, lab: ['− ' + amtSym(j, amt), '− ' + amtSym(j, amt)], note: '两边同时拿走 ' + amtName(j, amt) + '：还是平的' }) };
   }
   const setBtn = (x, y, w, label, patch, on, tip) => '<g' + (on ? ' data-pick-set="' + encodeURIComponent(JSON.stringify(patch)) + '" style="cursor:pointer"' : ' opacity="0.38"') + '><title>' + K.esc(tip) + '</title>' +
     K.rect(x, y, w, 24, { fill: '#fff', stroke: on ? 'var(--blue)' : '#8a94a8', r: 7, w: 1.5 }) + K.text(x + w / 2, y + 16, label, { size: 12, weight: 700 }) + '</g>';
@@ -150,10 +185,12 @@
       s += K.rect(8, y0, W - 16, BH - 12, { fill: 'none', stroke: src ? 'var(--blue)' : hit && fx.refuse ? 'var(--bad)' : hit ? 'var(--good)' : '#c5ccda', r: 10, w: src || hit ? 2 : 1 });
       s += K.line(BX, by, BX, py + 26, { w: 4 }) + K.line(BX - 36, py + 28, BX + 36, py + 28, { w: 5 }) + '<g data-beam="' + t + '">' + K.line(BX - ARM, by + t * TILT, BX + ARM, by - t * TILT, { w: 5, stroke: t ? 'var(--bad)' : 'var(--good)' }) + '</g>';
       [0, 1].forEach((a) => { const cx = PANX[a], hy = by + (a ? -t : t) * TILT; s += K.line(cx, hy, cx - PW / 2 + 8, pys[a], { w: 1 }) + K.line(cx, hy, cx + PW / 2 - 8, pys[a], { w: 1 }); });
-      s += pan(BX - ARM, pys[0], e[0], e[1], e[2]) + pan(BX + ARM, pys[1], e[3], e[4], e[5]);
+      const big = bigOf(e);
+      s += pan(BX - ARM, pys[0], e[0], e[1], e[2], big) + pan(BX + ARM, pys[1], e[3], e[4], e[5], big);
+      if (big) s += K.big.unitNote(20, y0 + 16, '砝码多了：100 一块、10 一条', 'start');
       // 正在拖、而且这一架会变：被拿走的东西浮在盘的上方（虚的），盘下面写两边各拿走、各加上什么
       if (hit && !fx.refuse) {
-        if (fx.rem) [0, 1].forEach((a) => { const r = fx.rem.slice(a * 3, a * 3 + 3); if (r[0] + r[1] + r[2]) s += '<g data-rem="' + a + '" opacity="0.5">' + things(PANX[a], pys[a] - 58, r[0], r[1], r[2]) + '</g>' + K.line(PANX[a] - PW / 2 + 4, pys[a] - 54, PANX[a] + PW / 2 - 4, pys[a] - 54, { w: 1, stroke: 'var(--blue)', dash: '3 3' }); });
+        if (fx.rem) [0, 1].forEach((a) => { const r = fx.rem.slice(a * 3, a * 3 + 3); if (r[0] + r[1] + r[2]) s += '<g data-rem="' + a + '" opacity="0.5">' + things(PANX[a], pys[a] - 58, r[0], r[1], r[2], r[2] > OLDC) + '</g>' + K.line(PANX[a] - PW / 2 + 4, pys[a] - 54, PANX[a] + PW / 2 - 4, pys[a] - 54, { w: 1, stroke: 'var(--blue)', dash: '3 3' }); });
         if (fx.lab) [0, 1].forEach((a) => { if (fx.lab[a]) s += K.text(PANX[a], pys[a] + 24, fx.lab[a], { size: 14, weight: 700, fill: 'var(--blue)' }); });
         if (fx.sub) [0, 1].forEach((a) => { if (parse(c.drag.p0['e' + i])[a * 3 + fx.sub.v]) s += K.text(PANX[a], pys[a] + 24, (fx.sub.v ? 'y' : 'x') + ' → ' + sideStr(fx.sub.expr[0], fx.sub.expr[1], fx.sub.expr[2]), { size: 14, weight: 700, fill: 'var(--blue)' }); });
       }
@@ -168,16 +205,18 @@
     });
     // 托盘：往一架天平上拖，两边各加一个
     const sy = synced(p);
+    const bigT = m.es.some(bigOf);
     s += K.text(20, TRAY + 16, sy ? '往一架天平上拖：两个盘各加一个' : '拖到一个盘里：只加这一个', { size: 12, anchor: 'start' }) + itemSvg(0, 236, TRAY + 12) + itemSvg(1, 276, TRAY + 12) + itemSvg(2, 312, TRAY + 12);
-    s += K.text(340, TRAY + 16, sy ? '盘里的东西拖出来：两个盘各拿走一个' : '盘里的东西拖出来：只拿走这一个；拖到另一个盘：挪过去', { size: 12, anchor: 'start' });
+    if (bigT) s += itemSvg(2, TEN_X, TRAY + 12, 10);
+    s += K.text(bigT ? 356 : 340, TRAY + 16, sy ? '盘里的东西拖出来：两个盘各拿走一个' : '盘里的东西拖出来：只拿走这一个；拖到另一个盘：挪过去', { size: 12, anchor: 'start' });
     // 开关：两个盘连着 / 只动一边（“换一换”台借用这台的画法时没有这个属性，不画）
     if (p.sync !== undefined) s += '<g data-sync="' + (sy ? 1 : 0) + '">' + setBtn(20, TRAY + 32, 300, sy ? '两个盘连着（点一下：改成只动一边）' : '只动一边，天平会歪（点一下：连起来）', { sync: !sy, msg: '' }, true, sy ? '现在拖一个，另一个盘里同样的东西跟着走。点一下改成只动一边：天平会歪。' : '现在只动一边：天平会歪。点一下把两个盘连起来。') + '</g>';
     // 正在拖的东西跟着鼠标；两边一起动的时候，另一边的那一个对称地跟着
     if (dg && fx) {
       if (fx.carry !== undefined) { const tx = eqStr(parse(c.drag.p0['e' + fx.carry])), w = tx.length * 9 + 24; s += '<g data-carry="1" opacity="0.92">' + K.rect(c.drag.x - w / 2, c.drag.y + 14, w, 26, { fill: '#fff', stroke: 'var(--blue)', r: 8, w: 1.6 }) + K.text(c.drag.x, c.drag.y + 32, tx, { size: 14, weight: 700, fill: 'var(--blue)' }) + '</g>'; }
       else {
-        s += itemSvg(fx.item, c.drag.x, c.drag.y);
-        if (fx.twin) { const mx = 2 * BX - c.drag.x; s += '<g data-twin="1" opacity="0.75">' + itemSvg(fx.item, mx, c.drag.y) + '</g>' + K.line(c.drag.x, c.drag.y, mx, c.drag.y, { w: 1.5, stroke: 'var(--blue)', dash: '5 4' }); }
+        s += itemSvg(fx.item, c.drag.x, c.drag.y, fx.amt);
+        if (fx.twin) { const mx = 2 * BX - c.drag.x; s += '<g data-twin="1" opacity="0.75">' + itemSvg(fx.item, mx, c.drag.y, fx.amt) + '</g>' + K.line(c.drag.x, c.drag.y, mx, c.drag.y, { w: 1.5, stroke: 'var(--blue)', dash: '5 4' }); }
       }
     }
     if (p.msg) s += K.text(W / 2, top(2) + 2, p.msg, { size: 13, weight: 700, fill: 'var(--bad)' });
@@ -188,18 +227,23 @@
   }
 
   function grips(c) {
-    const es = [parse(c.props.e0), parse(c.props.e1)], out = [], w = weightsOf(c.props), sy = synced(c.props);
+    const es = [parse(c.props.e0), parse(c.props.e1)], out = [], w = weightsOf(c.props), sy = synced(c.props), bigT = es.some(bigOf);
     const mk = (id, x, y, r, o) => out.push(Object.assign({ id, x, y, r, cursor: 'grab',
       drag: (c0, q) => plan(c0.props, id, q).patch,
       say: (c1) => c1.props.msg || '' }, o));
     [0, 1].forEach((i) => {
       mk('b' + i, BX, top(i) + 34, 11, { text: '拖', tip: '把这一架拖到另一架上', say: (c1) => c1.props.msg || eqStr(parse(c1.props['e' + (1 - i)])) });
       [0, 1].forEach((a) => {
-        const e = es[i], l = layout(PANX[a], panY(i, a, lean(e, w)), e[a * 3], e[a * 3 + 1], e[a * 3 + 2]), last = [l.xs[l.xs.length - 1], l.ys[l.ys.length - 1], l.cs[l.cs.length - 1]];
-        last.forEach((q, j) => { if (q) mk('i' + i + (a ? 'R' : 'L') + KIND[j], q.x + (j < 2 ? 11 : 5.5), q.y + (j < 2 ? 11 : 5.5), j < 2 ? 12 : 7, { ghost: true, tip: sy ? '拖出来：两个盘各拿走一个' + KNAME[j] : '拖出来：只拿走这个' + KNAME[j] + '；拖到另一个盘：挪过去' }); });
+        const e = es[i], big = bigOf(e), l = layout(PANX[a], panY(i, a, lean(e, w)), e[a * 3], e[a * 3 + 1], e[a * 3 + 2], big), last = [l.xs[l.xs.length - 1], l.ys[l.ys.length - 1], l.cs[l.cs.length - 1]];
+        const id = (k) => 'i' + i + (a ? 'R' : 'L') + k;
+        last.forEach((q, j) => { if (q) { const hw = j < 2 ? 11 : big ? OS / 2 : 5.5; mk(id(KIND[j]), q.x + hw, q.y + hw, j < 2 ? 12 : 7, { ghost: true, tip: sy ? '拖出来：两个盘各拿走一个' + KNAME[j] : '拖出来：只拿走这个' + KNAME[j] + '；拖到另一个盘：挪过去' }); } });
+        const lt = l.ts[l.ts.length - 1], lh = l.hs[l.hs.length - 1];
+        if (lt) mk(id('t'), lt.x + TW / 2, lt.y + TH / 2, 7, { ghost: true, tip: sy ? '拖出来：两个盘各拿走 10 个砝码' : '拖出来：只拿走这 10 个砝码；拖到另一个盘：挪过去' });
+        if (lh) mk(id('h'), lh.x + HS / 2, lh.y + HS / 2, 7, { ghost: true, tip: sy ? '拖出来：两个盘各拿走 100 个砝码' : '拖出来：只拿走这 100 个砝码；拖到另一个盘：挪过去' });
       });
     });
     [[0, 236], [1, 276], [2, 312]].forEach(([j, x]) => mk('t' + KIND[j], x, TRAY + 12, j < 2 ? 12 : 7, { ghost: true, tip: sy ? '拖到一架天平上：两个盘各加一个' + KNAME[j] : '拖到一个盘里：只加这一个' + KNAME[j] }));
+    if (bigT) mk('tt', TEN_X, TRAY + 12, 7, { ghost: true, tip: sy ? '拖到一架天平上：两个盘各加 10 个砝码' : '拖到一个盘里：只加这 10 个砝码' });
     return out;
   }
 
@@ -215,7 +259,7 @@
         props: {
           e0: T('1,1,0,0,0,7', '上面的天平：左盘的圆盒、方盒、砝码，右盘的圆盒、方盒、砝码（六个数）'),
           e1: T('2,1,0,0,0,10', '下面的天平：同样六个数'),
-          x0: I(0, 30, 3, '圆盒的真实重量（出题人设）', { hidden: true }), y0: I(0, 30, 4, '方盒的真实重量（出题人设）', { hidden: true }),
+          x0: I(0, XMAX, 3, '圆盒的真实重量（出题人设）', { hidden: true }), y0: I(0, XMAX, 4, '方盒的真实重量（出题人设）', { hidden: true }),
           steps: I(0, 99, 0, '做了几步（自动记录）', { hidden: true }), refused: I(0, 99, 0, '被拦住几次（自动记录）', { hidden: true }),
           msg: T('', '提示（自动）', { hidden: true }),
           sync: { type: 'bool', label: '两个盘连着（拖一个，另一个盘里同样的东西跟着走）；关掉就只动一边，天平会歪', default: true, write: true },
@@ -235,5 +279,5 @@
       },
     },
   });
-  U.SystemBench = { draw, grips, W, H: 2 * BH + 112, BMAX, CMAX, parse, ser, eqStr, isolated, known, subtract, substitute, scale, divisor, cancel, dropOn, model, fits, plan, layout, lean, weightsOf, synced, panY };
+  U.SystemBench = { draw, grips, W, H: 2 * BH + 112, BMAX, CMAX, XMAX, bigOf, parse, ser, eqStr, isolated, known, subtract, substitute, scale, divisor, cancel, dropOn, model, fits, plan, layout, lean, weightsOf, synced, panY };
 })(typeof globalThis !== 'undefined' ? globalThis : window);

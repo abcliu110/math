@@ -1,12 +1,12 @@
 # 知识点覆盖报告
 
-> 由 `node tools/coverage.js` 生成，日期 2026-11-27。数据来自 `js/core/curriculum.js` 与 `problems/*.js`。
+> 由 `node tools/coverage.js` 生成，日期 2026-11-28。数据来自 `js/core/curriculum.js` 与 `problems/*.js`。
 
 ## 总览
 
 - 知识点：142 个（设计目标 142）
 - 有题的知识点：141 个（99%）
-- 题目：698 道；没有对应知识点的题：1 道
+- 题目：701 道；没有对应知识点的题：1 道
 - 没有器材的本质：无
 - 没有题的本质：无
 
@@ -18,9 +18,9 @@
 | 2 | 16 | 16（100%） | 58 |
 | 3 | 16 | 16（100%） | 102 |
 | 4 | 17 | 17（100%） | 116 |
-| 5 | 14 | 14（100%） | 129 |
+| 5 | 14 | 14（100%） | 131 |
 | 6 | 15 | 14（93%） | 74 |
-| 7 | 16 | 16（100%） | 78 |
+| 7 | 16 | 16（100%） | 79 |
 | 8 | 16 | 16（100%） | 76 |
 | 9 | 16 | 16（100%） | 40 |
 
@@ -97,11 +97,11 @@
 | 5.2 | 5 | 位置 | 1 | 1 | 0 | 1 | gridbench |
 | 5.3 | 5 | 小数除法 | 1 | 1 | 0 | 1 | decbench |
 | 5.4 | 5 | 可能性 | 7 | 1 | 0 | 3 | chancebench、pairbench、ptree、ringbench |
-| 5.5 | 5 | 简易方程 | 24 | 0 | 0 | 1 | variable、balancebench、eqstepbench、tapebench、numlinebench、nim、grassbench、costplan、seqbench、systembench |
+| 5.5 | 5 | 简易方程 | 25 | 0 | 0 | 1 | variable、balancebench、eqstepbench、tapebench、numlinebench、nim、grassbench、costplan、seqbench、systembench |
 | 5.6 | 5 | 多边形的面积 | 7 | 1 | 0 | 1 | areabench、gworkspace、gpt、gpoly、fquad |
 | 5.7 | 5 | 植树问题 | 7 | 1 | 0 | 1 | gapbench |
 | 5.14 | 5 | 观察物体（三） | 2 | 1 | 0 | 1 | solidbench、twoways |
-| 5.8 | 5 | 因数与倍数 | 41 | 0 | 1 | 2 | asn、conjbench、factorbench、featbench、hanoi、guessrule、invbench、areamodel、ringbench、groupbench、proofbench、proofsort、net |
+| 5.8 | 5 | 因数与倍数 | 42 | 0 | 1 | 2 | asn、conjbench、factorbench、featbench、hanoi、guessrule、invbench、areamodel、ringbench、groupbench、proofbench、proofsort、net |
 | 5.9 | 5 | 长方体和正方体 | 3 | 1 | 0 | 1 | pourbench、solidbench |
 | 5.10 | 5 | 分数的意义和性质 | 7 | 0 | 0 | 1 | areamodel、ratiobench、fracbench、numlinebench、factorbench |
 | 5.11 | 5 | 分数的加法和减法 | 10 | 1 | 0 | 1 | num、approach、ratiobench、findbug、fracbench |
@@ -122,7 +122,7 @@
 | 6.12 | 6 | 比例 | 9 | 1 | 0 | 1 | ratiobench、fitbench、fmachine、euler、scale、shadow、taxi |
 | 6.13 | 6 | 鸽巢问题 | 15 | 1 | 0 | 1 | groupbench、pigeonbench |
 | 6.14 | 6 | 综合与实践 / 整理和复习 | 0 | 0 | 0 | — | — |
-| 7.1 | 7 | 正数和负数、有理数与数轴 | 6 | 1 | 0 | 1 | approach、conjbench、chipbench、numlinebench、proofsort |
+| 7.1 | 7 | 正数和负数、有理数与数轴 | 7 | 1 | 0 | 1 | approach、conjbench、chipbench、numlinebench、proofsort |
 | 7.2 | 7 | 有理数的加减法 | 7 | 1 | 0 | 1 | numlinebench、findbug、chipbench、newop |
 | 7.3 | 7 | 有理数的乘除法、乘方与科学记数法 | 3 | 1 | 0 | 1 | chipbench、hanoi、num |
 | 7.4 | 7 | 整式 | 1 | 1 | 4 | 4 | algebra、proofbench |
@@ -176,11 +176,11 @@
 | 本质 | 题目数 | 器材数 |
 |---|---|---|
 | E1 | 77 | 28 |
-| E2 | 300 | 58 |
-| E3 | 154 | 44 |
-| E4 | 147 | 33 |
+| E2 | 303 | 58 |
+| E3 | 155 | 44 |
+| E4 | 148 | 33 |
 | E5 | 147 | 55 |
-| E6 | 60 | 24 |
+| E6 | 61 | 24 |
 | E7 | 174 | 34 |
 | E8 | 73 | 24 |
 | E9 | 76 | 17 |

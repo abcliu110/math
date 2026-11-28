@@ -204,6 +204,7 @@ async function checkDist() {
   if (!runScript('tests/ui-bigsize.js', 'tests/ui-bigsize.js', pwEnv)) bail();   // 试验台增强 7 台的尺寸和比例（真实鼠标）：大数开题（线段图 1000 多吨、两位数乘两位数、三位数除以两位数、几百千米相遇、长数轴），拖把手做完；卡片不超过上限
   if (!runScript('tests/ui-bigsize-c.js', 'tests/ui-bigsize-c.js', pwEnv)) bail();   // 试验台增强 7 第二轮 c（真实鼠标）：积木 10 × 10 × 10、坐标一格 = 10、方向角每圈 500 米、工程 30 和 60 天、30 厘米尺子、圆半径 20、小棒 7、24、25
   if (!runScript('tests/ui-bigsize-b.js', 'tests/ui-bigsize-b.js', pwEnv)) bail();   // 补旧上限的台（真实鼠标）：换一换 35 头 94 足、100 头、500 只（十个一组、十个一条、±10）、盈亏 40 人、集合圈 45 人（10 个一起）、握手 20 人、摸球 13 张一种、面积推导底 40、篱笆 100 米
+  if (!runScript('tests/ui-bigsize-a.js', 'tests/ui-bigsize-a.js', pwEnv)) bail();   // 增强 7 第二轮 补旧上限的台（真实鼠标）：天平 3x + 45 = 165 拖“10”、两架天平鸡兔同笼 35 头 94 足、零对 35 − 62 放 10 对、因数 360、分一分说明不被把手盖住、面积模型拖动时把手跟着鼠标
   if (fs.existsSync(path.join(root, 'tests', 'ui-probes.js'))) {
     if (!runScript('tests/ui-probes.js', 'tests/ui-probes.js', pwEnv)) bail();
   }

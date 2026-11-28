@@ -23,8 +23,10 @@
   // 整数乘法的长方形最多占 BOXW × BOXH 像素（长 30、宽 20 时每格还是 CELL）；再大就每格画小（cellOf），最小也有 BOXH / 99 ≈ 3.4 像素
   const BASE = CELL, BOXW = 30 * CELL, BOXH = 20 * CELL, FINE = 6;
   const cellOf = (m) => Math.min(CELL, BOXW / m.w, BOXH / m.h);
-  // 正在拖：按下那一刻的格子大小和现在的格子大小取小的（拖大了图跟着缩，拖小了不放大，松手再按新的大小画）
-  const cellNow = (c, m) => (c && c.drag && c.drag.p0 && +c.drag.p0.mode === 0 ? Math.min(cellOf(model(c.drag.p0)), cellOf(m)) : cellOf(m));
+  // 正在拖：比例尺冻结在按下那一刻的格子大小（2026-11-28 起；以前拖大了图跟着缩，把手落在鼠标后面）。卡片也按冻结的格子算大小（size 的 opt.drag），
+  //   把手一直在鼠标下面；松手再按新的大小画（数大了格子变小，卡片缩回 CARD_MAX 以内）
+  const cellNow = (c, m) => (c && c.drag && c.drag.p0 && +c.drag.p0.mode === 0 ? cellOf(model(c.drag.p0)) : cellOf(m));
+  const dragCell = (opt) => (opt && opt.drag && opt.drag.p0 && +opt.drag.p0.mode === 0 ? cellOf({ w: clamp(+opt.drag.p0.w || 13, 1, WMAX), h: clamp(+opt.drag.p0.h || 7, 1, HMAX) }) : null);
   // 切刀拖动时取整的步长：一步至少 14 像素（格子小了只能切在 2、5、10 的倍数上，刀和刀的把手不会挤在一起）
   const cutGrain = (cell) => K.big.grain(cell, K.big.MIN_HIT);
   const TEN = 10, DAMAX = 35, DBMAX = 24;   // 小数乘法：0.1 画成 10 像素，1 画成 100 像素
@@ -207,7 +209,7 @@
     return s;
   }
   // 画布里图形下面那几行算式从哪里开始
-  const textTop = (m) => (m.mode === 0 ? Y0 + Math.max(12 * CELL, m.h * cellOf(m)) + 34 : m.mode === 1 ? Y0 + UNIT + 40 : m.mode === 3 ? Y0 + DBMAX * TEN + 34 : Y0 + XLEN + AMAX * CELL + 30);
+  const textTop = (m, cl) => (m.mode === 0 ? Y0 + Math.max(12 * CELL, m.h * (cl || cellOf(m))) + 34 : m.mode === 1 ? Y0 + UNIT + 40 : m.mode === 3 ? Y0 + DBMAX * TEN + 34 : Y0 + XLEN + AMAX * CELL + 30);
 
   // 把手：每个把手说明自己在哪、拖到 p（画布像素）时该把哪些属性改成什么
   function grips(c) {
@@ -288,7 +290,8 @@
         },
         icon: () => K.rect(10, 8, 30, 28, { fill: COL[0], stroke: 'var(--ink)', r: 0 }) + K.rect(40, 8, 14, 28, { fill: COL[1], stroke: 'var(--ink)', r: 0 }),
         // 整数乘法的长方形大了，卡片跟着变大（原点在左上角，所以拖的时候把手还是跟着鼠标）
-        size: (e) => { const p = (e && e.props) || {}; if (+p.mode === 3) return [460, 420]; if (+p.mode !== 0 && p.mode !== undefined) return [430, 400]; const m = { w: clamp(+p.w || 13, 1, WMAX), h: clamp(+p.h || 7, 1, HMAX) }, cl = cellOf(m); return [Math.max(cl < BASE ? 500 : 430, X0 + m.w * cl + 50), Math.max(400, Y0 + Math.max(12 * CELL, m.h * cl) + 34 + 3 * 20 + 30 + (cl < BASE ? 20 : 0))]; },
+        // opt.drag（js/ui/stage-core.js 的 geom：正在拖这张卡片的把手）：按按下那一刻的格子大小算，卡片跟着鼠标长
+        size: (e, opt) => { const p = (e && e.props) || {}; if (+p.mode === 3) return [460, 420]; if (+p.mode !== 0 && p.mode !== undefined) return [430, 400]; const m = { w: clamp(+p.w || 13, 1, WMAX), h: clamp(+p.h || 7, 1, HMAX) }, cl = dragCell(opt) || cellOf(m); return [Math.max(cl < BASE ? 500 : 430, X0 + m.w * cl + 50), Math.max(400, Y0 + Math.max(12 * CELL, m.h * cl) + 34 + 3 * 20 + 30 + (cl < BASE ? 20 : 0))]; },
         grips,
         compute: (c) => {
           const m = model(c.props);
@@ -302,9 +305,9 @@
           const m = model(c.props);
           const cl = m.mode === 0 ? cellNow(c, m) : CELL;
           let s = m.mode === 0 ? drawInt(c, m, cl) : m.mode === 1 ? drawFrac(c, m) : m.mode === 3 ? drawDec(c, m) : drawAlg(c, m);
-          if (c.props.show) { const ls = lines(m), y0 = textTop(m); ls.forEach((t, i) => { s += K.text(X0 - 20, y0 + i * 20, t, { size: 14, weight: i === 0 ? 700 : 400, anchor: 'start', fill: 'var(--ink)' }); }); }
-          // 数大了格子画小了：在算式下面说一句一格是多少（cellOf 用现在的数，拖的时候不出现、不跳）
-          if (m.mode === 0 && cellOf(m) < BASE) s += K.big.unitNote(X0 - 20, textTop(m) + 3 * 20 + 2, cellOf(m) >= FINE ? '数大了，格子画小了：一小格还是 1 × 1；粗线每 10 一条' : '格子太小，细线不画了：每个方块是 10 × 10 = 100 小格', 'start');
+          if (c.props.show) { const ls = lines(m), y0 = textTop(m, m.mode === 0 ? cl : 0); ls.forEach((t, i) => { s += K.text(X0 - 20, y0 + i * 20, t, { size: 14, weight: i === 0 ? 700 : 400, anchor: 'start', fill: 'var(--ink)' }); }); }
+          // 数大了格子画小了：在算式下面说一句一格是多少（按画出来的格子大小：拖的时候比例尺冻结，这句也不变）
+          if (m.mode === 0 && cl < BASE) s += K.big.unitNote(X0 - 20, textTop(m, cl) + 3 * 20 + 2, cl >= FINE ? '数大了，格子画小了：一小格还是 1 × 1；粗线每 10 一条' : '格子太小，细线不画了：每个方块是 10 × 10 = 100 小格', 'start');
           return s;
         },
       },

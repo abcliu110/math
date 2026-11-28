@@ -3704,7 +3704,7 @@ console.log('联动组：一个道理，几种样子（js/core/forms.js）');
     eq(s.entities[b].props.x0, 4); eq(s.entities[e].props.x0, 4); eq(s.groups.length, 1);
     let bad = 0; try { F.join(s, 'lineq', [b, e], S0); } catch (x) { bad++; }
     const s2 = W.blank(), b2 = W.add(s2, 'balancebench', 0, 0, {}), e2 = W.add(s2, 'eqstepbench', 0, 0, {}), m2 = W.add(s2, 'meter', 0, 0, {});
-    try { F.join(s2, 'lineq', [b2, e2], { a: 9, b: 0, c: 0, d: 36, x0: 4 }); } catch (x) { bad++; }
+    try { F.join(s2, 'lineq', [b2, e2], { a: 21, b: 0, c: 0, d: 84, x0: 4 }); } catch (x) { bad++; }   // 2026-11-28 起天平每盘 20 个盒子（以前 6 个，这里用的是 9）
     try { F.join(s2, 'lineq', [b2, m2], S0); } catch (x) { bad++; }
     eq(bad, 3);
   });
@@ -3732,7 +3732,7 @@ console.log('联动组：一个道理，几种样子（js/core/forms.js）');
   });
   t('有一台画不出来就整步不做，说出原因；一次在两台上各改一样也不做', () => {
     const { s, b, e } = mk();
-    W.act(s, { t: 'set', id: e, k: 'a', v: 8 });
+    W.act(s, { t: 'set', id: e, k: 'a', v: 21 });   // 天平每盘最多 20 个盒子（2026-11-28 以前是 6，这里用的是 8）
     const r = W.act(s, { t: 'settle' }); truthy(!r.ok && /天平/.test(r.why) && /画不出来/.test(r.why), r.why);
     const { s: s2, b: b2, e: e2 } = mk();
     W.act(s2, { t: 'set', id: b2, k: 'lc', v: 2 }); W.act(s2, { t: 'set', id: e2, k: 'd', v: 9 });
@@ -3818,8 +3818,8 @@ console.log('联动组：一个道理，几种样子（js/core/forms.js）');
     const c = NB.eqSay(Object.assign({}, base, { qa: 1, qb: 5, qc: 0, qd: 12, g: 7 })); truthy(c.meet && /x = 7/.test(c.tx), c.tx);
     const d = NB.eqSay(Object.assign({}, base, { qa: 1, qb: 5, qc: 0, qd: 12, g: 4 })); truthy(!d.meet && /差 3/.test(d.tx), d.tx);
   });
-  t('有一台画不出来就整步不做：式子上改成 9x = 7x + …，线段图（最多 8 段）、天平都画不了', () => {
-    const o = mk4(), s = o.s; W.act(s, { t: 'set', id: o.e, k: 'a', v: 9 }); W.act(s, { t: 'set', id: o.e, k: 'c', v: 7 });
+  t('有一台画不出来就整步不做：式子上改成 22x = 20x + …，线段图（最多 12 段）、天平（每盘 20 个盒子）、数轴都画不了', () => {
+    const o = mk4(), s = o.s; W.act(s, { t: 'set', id: o.e, k: 'a', v: 22 }); W.act(s, { t: 'set', id: o.e, k: 'c', v: 20 });
     const r = W.act(s, { t: 'settle' }); truthy(!r.ok && /画不出来/.test(r.why), r.why);
     eq(all4(s, o)[0], [3, 2, 1, 10], '天平没动');
   });
@@ -4433,6 +4433,95 @@ console.log('补旧上限的台（2026-11-28：换一换、盈亏、集合圈、
     eq([P('swapbench', 'n').max, P('surplusbench', 'n').max, P('vennbench', 'n').max, P('pairbench', 'na').max, P('pairbench', 'n').max, P('pigeonbench', 'c1').max, P('areabench', 'b').max, P('areabench', 'P').max], [999, 99, 50, 30, 20, 30, 40, 100]);
     eq([P('combobench', 'a').max, P('combobench', 'b').max, P('combobench', 'c').max], [5, 5, 4], '搭配是“一个一个列出来”，5 × 5 够用，不放开');
     for (const ty of ['swapbench', 'surplusbench', 'vennbench', 'pairbench', 'areabench']) for (let s = 1; s <= 6; s++) for (let lv = 1; lv <= 3; lv++) { const q = U.Quiz.make(ty, s, lv); truthy(q && q.quiz, ty + ' 出得了题'); }
+  });
+}
+console.log('补旧上限的台（试验台增强 7 第二轮：天平、两架天平、零对、因数；分一分的说明、面积模型拖动冻结比例尺）');
+{
+  const B = U.kit.big, [CW, CH] = B.CARD_MAX;
+  // 画一张卡片（同上面增强 7 那一组的 drawOf；drag 给了就是“正在拖”）
+  const card = (type, patch, drag) => {
+    const d = U.types[type], s = W.blank(), id = W.add(s, type, 0, 0, patch), e = s.entities[id], D = W.evaluate(s), sz = d.size(e, drag ? { drag } : undefined);
+    const c = { ent: e, props: D[id].props || e.props, d: D[id], out: D[id].out, state: e.state, w: sz[0], h: sz[1] - 28, t: 0, n: 0, scene: s, kids: () => [], drag: drag || null };
+    return { svg: d.draw(c), w: sz[0], h: sz[1], grips: d.grips ? d.grips(c) || [] : [], c, s, id };
+  };
+  const apart = (r, m) => { for (let i = 0; i < r.grips.length; i++) for (let j = i + 1; j < r.grips.length; j++) { const a = r.grips[i], b = r.grips[j]; truthy(Math.hypot(a.x - b.x, a.y - b.y) >= B.MIN_HIT, m + '：把手 ' + a.id + ' 和 ' + b.id + ' 叠在一起'); } for (const g of r.grips) truthy(g.r >= 7, m + '：把手 ' + g.id + ' 太小'); };
+  const fine = (r, m) => { truthy(!/NaN|undefined|Infinity/.test(r.svg), m + '：画出 NaN'); truthy(r.w <= CW && r.h <= CH, m + '：卡片 ' + r.w + '×' + r.h); };
+  t('天平：每盘 20 个盒子、999 个砝码、盒子重 200；砝码多于 30 个按 100 一块、10 一条画，盒子多于 6 个折叠', () => {
+    const BB = U.BalanceBench; eq([BB.BMAX, BB.WMAX, BB.XMAX], [20, 999, 200]);
+    const r = card('balancebench', { lx: 3, lc: 345, rx: 0, rc: 465, x0: 40 });
+    eq([(r.svg.match(/data-hund=/g) || []).length, (r.svg.match(/data-ten=/g) || []).length], [3 + 4, 4 + 6 + 1], '左 3 块 4 条，右 4 块 6 条，托盘 1 条');
+    truthy(/100 一块、10 一条/.test(r.svg), '写着 100 一块、10 一条'); fine(r, '345 个砝码'); apart(r, '345 个砝码');
+    eq(r.grips.map((g) => g.id).sort(), ['lb', 'lh', 'lt', 'lw', 'rh', 'rt', 'rw', 'sb', 'st', 'sw'], '一块、一条、一个各有把手，托盘多一条 10');
+    const small = card('balancebench', { lx: 2, lc: 30, rx: 0, rc: 30, x0: 0 }); truthy(!/data-ten=|data-hund=/.test(small.svg), '30 个以内还一个一个画（和以前一样）');
+    for (const pc of [{ lx: 20, lc: 999, rx: 20, rc: 999, x0: 0 }, { lx: 12, lc: 31, rx: 7, rc: 100, x0: 0 }, { lx: 0, lc: 999, rx: 1, rc: 0, x0: 999 }]) { const q = card('balancebench', pc); fine(q, JSON.stringify(pc)); apart(q, JSON.stringify(pc)); }
+    const f = card('balancebench', { lx: 12, lc: 0, rx: 0, rc: 48, x0: 4 }); truthy(/data-box-fold="12"/.test(f.svg) && /12 个盒子/.test(f.svg), '12 个盒子折叠，写一共几个');
+  });
+  t('天平：拖一条 10（两边各拿走 10）、托盘里的 10 往盘里拖（两边各加 10）；另一边不够 10 个就只拿这一边；挪过去放不下就不挪', () => {
+    const BB = U.BalanceBench, p0 = Object.assign(U.defaultProps(U.types.balancebench), { lx: 3, lc: 45, rx: 0, rc: 165, x0: 40, steps: '' });
+    const out = { x: 600, y: 380 }, R = BB.items({ x: 340, y: 150 }, 0, 165, true);
+    eq(BB.plan(p0, 'lt', out).n, { lc: 35, rc: 155 }, '两边各拿走 10'); eq(BB.plan(p0, 'rh', out).n, { rc: 65 }, '左盘不够 100：只拿右盘');
+    eq(BB.plan(Object.assign({}, p0, { sync: false }), 'lt', out).n, { lc: 35 }, '只动一边');
+    eq(BB.plan(p0, 'st', { x: 340, y: 120 }).n, { rc: 175, lc: 55 }, '托盘的 10 拖进盘：两边各加 10');
+    eq(BB.plan(Object.assign({}, p0, { lc: 995 }), 'rh', { x: 100, y: 120 }).n, {}, '挪过去放不下（超过 999）就不挪');
+    eq([R.hunds.length, R.tens.length, R.weights.length], [1, 6, 5]);
+    const r = card('balancebench', { lx: 3, lc: 45, rx: 0, rc: 165, x0: 40 }); truthy(/两边各拿走 10 个砝码/.test(r.svg), '有“两边各拿走 10 个砝码”');
+    eq(BB.splitOf({ lx: 8, lc: 0, rx: 0, rc: 16 }), 4, '6 以内能平分的照旧（8x = 16 还是先 ÷ 4）'); eq(BB.splitOf({ lx: 7, lc: 0, rx: 0, rc: 140 }), 7, '6 以内不行再找 7 到 20'); eq(BB.opOf({ lx: 12, lc: 0, rx: 0, rc: 240 }, { lx: 1, lc: 0, rx: 0, rc: 20 }), '两边÷12');
+  });
+  t('两架天平：每盘 12 个圆盒、12 个方盒、999 个砝码；鸡兔同笼 35 头 94 足摆得下；砝码多了一条 10 一条 10 拿', () => {
+    const S = U.SystemBench; eq([S.BMAX, S.CMAX, S.XMAX], [12, 999, 200]);
+    truthy(S.fits(S.parse('12,12,999,0,0,0')) && !S.fits(S.parse('13,0,0,0,0,0')), 'fits 用新的上限');
+    const p0 = { e0: '1,1,0,0,0,35', e1: '2,4,0,0,0,94', x0: 23, y0: 12, steps: 0, refused: 0, msg: '', sync: true };
+    const r = card('systembench', p0); fine(r, '35 头 94 足'); apart(r, '35 头 94 足'); truthy(/data-ten=/.test(r.svg) && /100 一块、10 一条/.test(r.svg), '按 10 一条画');
+    const g = r.grips.find((x) => x.id === 'i1Rt'); truthy(g, '下面那架右盘有一条 10 的把手');
+    const s1 = S.plan(Object.assign({}, p0, { e1: '2,4,10,0,0,104' }), 'i1Rt', { x: 600, y: 380 }); eq(s1.patch.e1, '2,4,0,0,0,94', '两个盘各拿走 10');
+    const s2 = S.plan(p0, 'i1Rt', { x: 600, y: 380 }); truthy(s2.patch.msg && /不到 10 个砝码/.test(s2.patch.msg), '另一个盘不到 10 个：拿不了，说原因：' + s2.patch.msg);
+    eq(S.plan(p0, 'tt', { x: 210, y: 14 + 172 + 90 }).patch.e1, '2,4,10,0,0,104', '托盘的 10 拖到下面那架：两个盘各加 10');
+    eq(S.dropOn([S.parse('1,1,0,0,0,35'), S.parse('2,4,0,0,0,94')], 0, 1).e, [1, 3, 0, 0, 0, 59], '消元：(2x + 4y) − (x + y) = 94 − 35');
+    const dbl = S.scale(S.parse('1,1,0,0,0,35'), 2); truthy(S.fits(dbl), '翻倍 2x + 2y = 70 放得下');
+    const mx = card('systembench', { e0: '12,12,999,0,0,0', e1: '0,0,0,12,12,999', x0: 0, y0: 0, sync: true }); fine(mx, '最大'); apart(mx, '最大'); truthy(/data-box-fold="12"/.test(mx.svg), '盒子多了写 ×12');
+  });
+  t('联动组：天平放大以后，“两边一样”能做 3x + 45 = 165；式子台的数到 999（以前 60）、x 到 200', () => {
+    const F = U.Forms, st = { a: 3, b: 45, c: 0, d: 165, x0: 40 };
+    eq(F.adapterOf('lineq', 'balancebench').can(st), null); eq(F.adapterOf('lineq', 'eqstepbench').can(st), null);
+    eq(F.adapterOf('lineq', 'eqstepbench').can({ a: 1, b: 999, c: 0, d: 999, x0: 0 }), null, '式子台到 999');
+    truthy(/20 个盒子/.test(F.adapterOf('lineq', 'balancebench').can({ a: 21, b: 0, c: 0, d: 21, x0: 1 })), '21 个盒子天平画不了');
+    const s = W.blank(), b = W.add(s, 'balancebench', 0, 0, {}), e = W.add(s, 'eqstepbench', 700, 0, {}); F.join(s, 'lineq', [b, e], st);
+    Object.assign(s.entities[b].props, U.BalanceBench.to(s.entities[b].props, { lc: 35, rc: 155 })); const r = W.act(s, { t: 'settle' });
+    truthy(r.ok, r.why); eq([s.entities[e].props.a, s.entities[e].props.b, s.entities[e].props.d], [3, 35, 155], '式子跟着两边减 10');
+  });
+  t('零对：两个数 ±99、每种片 999 个；多于 40 个 10 个一条、100 个一块，零对一列一列框起来；有放进 / 消掉 10 对、每份发 10 个', () => {
+    const C = U.ChipBench; eq([C.MAX, C.NMAX], [999, 99]); eq([C.model({ a: -99, b: 99 }).a, C.model({ a: -150 }).a], [-99, -99]);
+    const r = card('chipbench', { mode: 0, op: 1, a: 35, b: 62, pos: 62, neg: 27 }); fine(r, '62 个 +1、27 个 −1');
+    truthy(/data-bigpile="27,35"/.test(r.svg), '27 对零对、多出 35 个'); eq((r.svg.match(/data-rod="1"/g) || []).length, 2 + 3, '+ 的条：零对里 2 条，多出来 3 条'); eq((r.svg.match(/data-rod="-1"/g) || []).length, 2);
+    truthy(/%22pos%22%3A72%2C%22neg%22%3A37/.test(r.svg) && /%22pos%22%3A52%2C%22neg%22%3A17/.test(r.svg), '放进 10 对、消掉 10 对');
+    const small = card('chipbench', { mode: 0, op: 0, a: -20, b: 20, pos: 40, neg: 40 }); truthy(!/data-bigpile/.test(small.svg), '40 个以内还一个一个画');
+    const dv = card('chipbench', { mode: 2, a: -96, k: 4, pos: 0, neg: 96, dealt: 0 }); truthy(/每份发 10 个/.test(dv.svg) && /%22neg%22%3A56%2C%22msg%22%3A%22%22%2C%22dealt%22%3A10/.test(dv.svg), '每份发 10 个：−96 里拿走 40');
+    for (const pc of [{ mode: 0, pos: 999, neg: 0 }, { mode: 0, pos: 999, neg: 999 }, { mode: 0, pos: 998, neg: 499 }, { mode: 1, a: -99, b: -99, pos: 999, neg: 999, step: 99 }, { mode: 2, a: 99, k: 1, pos: 0, neg: 0, dealt: 99 }]) { const q = card('chipbench', pc); fine(q, JSON.stringify(pc)); const i0 = q.svg.indexOf('data-bigpile'), pile = i0 < 0 ? '' : q.svg.slice(i0, q.svg.indexOf('data-unit-note', i0)); for (const y of pile.matchAll(/\s(?:y|cy)="(-?[\d.]+)"/g)) truthy(+y[1] <= 250, JSON.stringify(pc) + '：片画到按钮那一行了 y = ' + y[1]); }
+  });
+  t('因数：n 到 500；360 排成 8 × 45 折叠着画（⋮），找到的 24 个因数分三行写；排太宽也折叠（…）', () => {
+    const FB = U.FactorBench; eq(FB.model({ mode: 0, n: 360 }).n, 360); eq(FB.model({ mode: 0, n: 600 }).n, 500);
+    const r = card('factorbench', { mode: 0, n: 360, w: 8, found: '1,2,3,4,5,6,8,9,10,12,15,18' }); fine(r, '360');
+    truthy(/data-fold="22,0"/.test(r.svg) && /一共 45 行，每行 8 个/.test(r.svg), '45 行折叠成头 18 行、尾 5 行'); truthy(/找全了：360 有 24 个因数/.test(r.svg), '找全了');
+    eq((r.svg.match(/>[\d、]+<\/text>/g) || []).filter((x) => /、/.test(x)).length, 3, '24 个因数写三行');
+    const w = card('factorbench', { mode: 0, n: 360, w: 180 }); truthy(/data-fold="0,141"/.test(w.svg) && /每行中间 141 个没画/.test(w.svg), '每行 180 个：头 30 个、尾 9 个');
+    for (const pc of [{ n: 500, w: 1 }, { n: 499, w: 499 }, { n: 500, w: 7 }, { n: 100, w: 1 }]) { const q = card('factorbench', Object.assign({ mode: 0 }, pc)); fine(q, JSON.stringify(pc)); const rects = (q.svg.match(/<rect /g) || []).length; truthy(rects < 1200, '画的格子不多：' + rects); }
+  });
+  t('分一分：“每盒几个：拖蓝色把手”写在滑条右头外面，把手拖到哪里都盖不住它', () => {
+    for (const n of [17, 345]) for (const g of [1, 5, 10, 20, 50, 99]) {
+      const r = card('groupbench', { mode: 0, n, g }), m = /<g data-slider-tip="1"><text x="([\d.]+)" y="([\d.]+)"/.exec(r.svg), gp = r.grips.find((x) => x.id === 'g');
+      truthy(m && gp, '有说明和把手'); if (!gp) continue;
+      truthy(+m[1] - (gp.x + gp.r + 6) >= 0, n + ' 个、每份 ' + g + '：把手右边 ' + (gp.x + gp.r) + '，说明从 ' + m[1] + ' 开始');
+    }
+  });
+  t('面积模型：拖长、宽超过 30 × 20 时比例尺冻结在按下那一刻（把手跟着鼠标），卡片跟着长；松手按新大小画回 CARD_MAX 以内', () => {
+    const p0 = Object.assign(U.defaultProps(U.types.areamodel), { mode: 0, w: 28, h: 12 }), drag = { p0, grip: 'w' }, d = U.types.areamodel;
+    const g = card('areamodel', p0).grips.find((x) => x.id === 'w'), mouse = { x: 46 + 50 * 17, y: g.y };
+    const patch = g.drag({ props: p0 }, mouse); eq(patch.w, 50, '鼠标拖到 50 格的地方');
+    const now = card('areamodel', Object.assign({}, p0, patch), drag), gw = now.grips.find((x) => x.id === 'w');
+    eq(gw.x, mouse.x, '拖着的时候把手就在鼠标下面'); truthy(now.w >= 46 + 50 * 17, '卡片按冻结的格子长：' + now.w);
+    const after = card('areamodel', Object.assign({}, p0, patch)); truthy(after.w <= CW && after.h <= CH && after.grips.find((x) => x.id === 'w').x < mouse.x, '松手按新大小画：' + after.w);
+    eq(d.size({ props: Object.assign({}, p0, patch) }, { drag })[0], now.w, 'size 读 opt.drag');
+    const hd = Object.assign({}, p0, { h: 30 }), hg = card('areamodel', hd, { p0, grip: 'h' }).grips.find((x) => x.id === 'h'); eq(hg.y, 44 + 30 * 17, '拖宽也一样');
   });
 }
 console.log('\n' + pass + ' 通过，' + fail + ' 失败');
