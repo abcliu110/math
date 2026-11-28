@@ -26,6 +26,7 @@
     flash: 'session',   // 联动组里刚做的一步：其他台把刚变的部分闪一下（js/ui/stage-forms.js 的 flashOf；不进存档、不进撤销）
     showPorts: 'session',   // 操作台模式下点了“显示口”：画出连线用的口（js/ui/stage-core.js 的 UI.benchMode）
     sel: 'session', selLink: 'session', undo: 'session', redo: 'session',
+    replay: 'session',   // 回放中（js/ui/replay.js）：{ real, frames, i, … }；台面暂时换成某一帧，只看不改，退出时换回 real
     wsSel: 'session', wsArgs: 'session', wsMsg: 'session', wsMsgKind: 'session', wsBoardUntil: 'session', wsDraw: 'session', wsArm: 'session', wsClip: 'session', wsFit: 'session', wsLayerOpen: 'session', snapOn: 'session',
     D: 'derived', wsSig: 'derived', evalCache: 'derived',
   };

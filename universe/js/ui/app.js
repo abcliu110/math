@@ -41,7 +41,7 @@
   }
 
   function judgeNow() {
-    if (!S.problem || !S.run) return;
+    if (!S.problem || !S.run || S.replay) return;   // 回放中只看不改：不判分、不弹“做完了”（js/ui/replay.js）
     const p = S.problem, run = S.run;
     const res = J.check(p, run, S.scene, S.D);
     if (S.mode === 'practice') {
@@ -80,6 +80,7 @@
   }
   function resumeSession() {
     const sv = loadSession(); if (!sv) return;
+    dropReplay();
     const p = U.problemById(sv.pid), run = J.start(p, sv.mode);
     if (!U.Predict.of(p)) run.pred_done = true;
     if (sv.pred && sv.pred.done) { run.pred_done = true; if (sv.pred.v !== undefined) run.pred = sv.pred.v; }
@@ -130,6 +131,7 @@
   const groupStates = () => { const m = {}; for (const g of S.scene.groups || []) m[g.id] = Object.assign({}, g.state); return m; };
   function tx(label, fn, o) {
     o = o || {};
+    if (S.replay) { say('正在回放：只能看，不能改。点「✕ 退出回放」回到现在的台面', 'warn', 2600); return { ok: false, why: '正在回放' }; }   // 回放只看不改（js/ui/replay.js）
     const before = o.from !== undefined ? o.from : snap(), rec = [];
     let last = { ok: true }, settled = null;
     const A = (a) => { const r = W.act(S.scene, a); if (!r.ok) throw { why: r.why }; rec.push(a); last = r; return r; };
@@ -213,15 +215,19 @@
   function removeEntity(id) { return UI.Intent.run('delete', { id }); }
   function afterMove() { saveFree(); UI.Panels.renderTop(); }
 
+  // 回放（js/ui/replay.js）：一帧一份台面快照，就是撤销栈里的那些，再加上现在的台面。换题、载入时先放下回放
+  const frames = () => S.undo.concat([snap()]);
+  function dropReplay() { if (S.replay && UI.Replay) UI.Replay.drop(); }
   function restore(str) { S.scene = loadKeepView(str); S.flash = null; S.sel = null; S.selLink = null; rebaseSession(); refresh(); }
-  function undo() { if (!S.undo.length) return; if (S.run) S.run.undos = (S.run.undos || 0) + 1; S.redo.push(snap()); restore(S.undo.pop()); saveFree(); }
-  function redo() { if (!S.redo.length) return; S.undo.push(snap()); restore(S.redo.pop()); saveFree(); }
+  function undo() { if (!S.undo.length || S.replay) return; if (S.run) S.run.undos = (S.run.undos || 0) + 1; S.redo.push(snap()); restore(S.undo.pop()); saveFree(); }
+  function redo() { if (!S.redo.length || S.replay) return; S.undo.push(snap()); restore(S.redo.pop()); saveFree(); }
 
   function saveFree() { if (S.mode === 'free' && !S.example) lsSet(FREE_KEY, W.save(S.scene)); }   // 打开示例时不覆盖学生自己的自由台面
 
   // ---------- 开题 / 切模式 ----------
   function openProblem(id, mode) {
     const p = U.problemById(id); if (!p) return;
+    dropReplay();
     UI.Panels.closeDialog();
     if (S.mode === 'free' && !S.example) S.freeScene = full();
     S.example = null;
@@ -259,6 +265,7 @@
     return givenCache.ids;
   }
   function openFree() {
+    dropReplay();
     S.example = null;
     S.mode = 'free'; S.problem = null; S.run = null; S.session = null; Ev.ctx = {};
     let sc = null; try { sc = S.freeScene ? U.JSON.parse(S.freeScene) : U.JSON.parse(lsGet(FREE_KEY)); } catch (e) { sc = null; }
@@ -271,6 +278,7 @@
   // 示例按自由模式显示（可以直接改），但不存进学生的自由台面：打开前先把学生自己的自由台面留好。
   function openExample(id) {
     const ex = (U.EXAMPLES || []).find((e) => e.id === id); if (!ex) return;
+    dropReplay();
     UI.Panels.closeDialog();
     if (S.mode === 'free' && !S.example) S.freeScene = full();
     S.example = ex.id; S.mode = 'free'; S.problem = null; S.run = null; S.session = null; Ev.ctx = {};
@@ -443,7 +451,7 @@
   function download(name, text) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'application/json' })); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); }
   function loadFile() {
     const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json,application/json';
-    inp.onchange = () => { const f = inp.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { try { pushUndo(); S.scene = W.load(r.result); S.sel = null; rebaseSession(); refresh(); UI.Stage.fit(); UI.Stage.render(); say('台面已载入', 'good'); } catch (e) { say('这个文件不是数学小宇宙的台面：' + e.message, 'bad', 4000); } }; r.readAsText(f); };
+    inp.onchange = () => { const f = inp.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { try { dropReplay(); pushUndo(); S.scene = W.load(r.result); S.sel = null; rebaseSession(); refresh(); UI.Stage.fit(); UI.Stage.render(); say('台面已载入', 'good'); } catch (e) { say('这个文件不是数学小宇宙的台面：' + e.message, 'bad', 4000); } }; r.readAsText(f); };
     inp.click();
   }
 
@@ -516,7 +524,11 @@
         else commit(pd.options[+v].v);
         UI.Panels.renderLeft(); return;
       }
-      if (t.closest('#hintbtn') && S.run) { const h = J.nextHint(S.problem, S.run); if (h) { Ev.push('hint', { id: h.m.id, level: h.level }); say('提示 ' + h.level + '/3：' + h.text, '', 7000); UI.Panels.renderLeft(); } else say('已经全部完成啦', 'good'); return; }
+      if (t.closest('#hintbtn') && S.run) {
+        // 看台面说话（js/core/process.js 的 hintNow）：台面变了、有新的话，先说这一句；说过了再点，才是原来的三层提示。不算“看了提示”的分
+        const m = U.Process.curMilestone(S.problem, S.run), now = m && !S.replay ? U.Process.hintNow(S.problem, S.run, S.scene, S.D) : null;
+        if (now && (S.run.nowSaid || {})[m.id] !== now) { (S.run.nowSaid = S.run.nowSaid || {})[m.id] = now; S.run.nowOn = m.id; Ev.push('hint', { id: m.id, level: 0, now: true }); say('👀 看台面：' + now, '', 7000); UI.Panels.renderLeft(); return; }
+        const h = J.nextHint(S.problem, S.run); if (h) { Ev.push('hint', { id: h.m.id, level: h.level }); say('提示 ' + h.level + '/3：' + h.text, '', 7000); UI.Panels.renderLeft(); } else say('已经全部完成啦', 'good'); return; }
       if (t.closest('#restart') && S.problem) openProblem(S.problem.id, S.mode);
       const qb = t.closest('[data-quiz]'); if (qb && S.problem) { S.quizLevel = +qb.dataset.quiz; openQuiz(S.problem.quiz ? S.problem.quiz.type : S.problem.shelf[0], S.quizLevel); return; }
       const ql = t.closest('[data-quiz-lv]'); if (ql) { S.quizLevel = +ql.dataset.quizLv; UI.Panels.renderLeft(); return; }
@@ -719,6 +731,6 @@
     setInterval(saveSession, 2000); G.addEventListener('pagehide', saveSession);
     offerResume();
   }
-  UI.App = { tx, act, actMany, build, preview, snapshot, afterMove, removeEntity, askDelete, askDeps, askClear, clockAct, openProblem, openQuiz, openFree, openExample, setMode, say, undo, redo, stepOnce, refresh, persistView, givenIds };
+  UI.App = { tx, act, actMany, build, preview, snapshot, frames, loadKeepView, afterMove, removeEntity, askDelete, askDeps, askClear, clockAct, openProblem, openQuiz, openFree, openExample, setMode, say, undo, redo, stepOnce, refresh, persistView, givenIds };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })(window);

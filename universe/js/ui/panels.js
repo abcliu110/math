@@ -127,6 +127,13 @@
     if (pr.form === 'more-less') return U.Predict.CMP[v] || '—';
     return String(v);
   }
+  // 步骤栏“📍 台面上现在”（试验台增强 4）：操作台模式下，里程碑看的那几个读数，点“怎么来的？”打开来历（js/ui/replay.js 的 whyDialog）
+  function nowBoxHtml(p) {
+    const S = UI.S; let rows = [];
+    try { rows = U.Process.readings(p, S.scene, S.D); } catch (e) { rows = []; }
+    if (!rows.length) return '';
+    return '<div class="nowbox" data-nowbox="1"><div class="nowhd">📍 台面上' + (S.replay ? '（回放中）' : '现在') + '</div>' + rows.map((r) => '<div class="nowrow"><span class="nm">' + esc(r.name) + '</span><b>' + esc(U.briefVal(r.value)) + '</b><button class="nowwhy" data-bwhy="' + esc(r.id + '|' + r.port) + '" title="这个数是怎么来的">怎么来的？</button></div>').join('') + '</div>';
+  }
   function stepsHtml() {
     const S = UI.S, p = S.problem, run = S.run;
     if (!p) return '<div class="empty">现在是自由探究。<br>从右边拖器材到台面，想搭什么搭什么。<br><br>想做题，去「实验库」选一道。</div>';
@@ -158,12 +165,16 @@
       h += '<div class="pcard" style="background:var(--panel2)">考试模式：没有提示，没有步骤清单。搭好以后点右上角「交卷」。</div>';
     } else {
       let cur = true;
+      // 看台面说话（js/core/process.js）：点过“来个提示”以后，这一步下面一直跟着台面说（回放中不说）
+      const nowSay = run.nowOn && !S.replay ? U.Process.hintNow(p, run, S.scene, S.D) : null;
       p.milestones.forEach((m, i) => {
         const st = run.ms[m.id], isCur = !st.done && cur; if (!st.done) cur = false;
         const lv = run.hintLevel[m.id] || 0;
-        h += '<div class="step' + (st.done ? ' done' : isCur ? ' cur' : '') + '"><span class="no">' + (st.done ? '✓' : i + 1) + '</span><span class="sy">' + esc(st.done || !m.ask ? (!st.done && !(run.pred_done && run.pred === undefined) && U.Predict.hideSay(pr, m)) || m.say : m.ask) + (isCur && lv ? '<span class="hint">提示：' + esc((m.hints || [])[Math.min(lv, 3) - 1] || '') + '</span>' : '') + '</span><span class="sc">' + m.score + ' 分</span></div>';
+        h += '<div class="step' + (st.done ? ' done' : isCur ? ' cur' : '') + '"><span class="no">' + (st.done ? '✓' : i + 1) + '</span><span class="sy">' + esc(st.done || !m.ask ? (!st.done && !(run.pred_done && run.pred === undefined) && U.Predict.hideSay(pr, m)) || m.say : m.ask) + (isCur && lv ? '<span class="hint">提示：' + esc((m.hints || [])[Math.min(lv, 3) - 1] || '') + '</span>' : '') + (isCur && run.nowOn === m.id && nowSay ? '<span class="hint now" data-hintnow="1">👀 看台面：' + esc(nowSay) + '</span>' : '') + '</span><span class="sc">' + m.score + ' 分</span></div>';
       });
+      h += nowBoxHtml(p);
       h += '<div class="btnrow"><button class="btn" id="hintbtn">💡 来个提示</button><button class="btn" id="restart">重来</button></div>';
+      h += '<div class="btnrow"><button class="btn rpbtn' + (S.replay ? ' on' : '') + '" id="replaybtn" title="把我刚才做的每一步，从头放一遍（只看不改）">' + (S.replay ? '✕ 退出回放' : '🎬 看看我是怎么做的') + (S.undo.length && !S.replay ? '（' + S.undo.length + ' 步）' : '') + '</button></div>';
       // 随机出题：这道题的操作台有出题器，就能在同一个操作台上再出一道（数不一样）
       const qt = quizTypeOf(p);
       if (qt) h += '<div class="btnrow quizrow"><span class="qlab">🎲 随机出一题：</span>' + U.Quiz.LEVELS.map((n, i) => (U.Quiz.offers(qt, i + 1) ? '<button class="btn' + (i >= 3 ? ' rev' : '') + '" data-quiz="' + (i + 1) + '" title="' + esc(U.types[qt].label) + '：' + n + (i === 3 ? '（给结果，找条件）' : i === 4 ? '（找出别人做法里的错）' : i === 5 ? '（先写答案，再做出来验证）' : i === 6 ? '（不止一种，全部找出来）' : i === 7 ? '（哪一种最大、最小）' : i === 8 ? '（做几个，找规律，再推广）' : '') + '">' + n + '</button>' : '')).join('') + '</div>';
@@ -602,7 +613,7 @@
     if (next.length) h += '<p style="color:var(--txt3);margin:10px 0 4px">下一步练什么</p><div class="plist">' + next.map((n) => '<div class="it" data-pid="' + esc(n.pid) + '"><span class="tt">' + esc(n.title) + '</span></div>').join('') + '</div>';
     if (rep.newWay) h += '<div class="newway">✨ 你找到了一种参考解里没有的搭法！</div>';
     const back = missed.length && mode !== 'exam';
-    h += '<div class="whybox">' + esc(p.why) + '</div><div class="btnrow">' + (back ? '<button class="btn pri" id="dlg-back">回去做这一步</button><button class="btn" id="dlg-again">再做一遍</button>' : '<button class="btn pri" id="dlg-again">再做一遍</button>') + (U.Chain && U.Chain.next(p.id, UI.S.mchainOpen) && rep.stars && rep.stars.n > 0 ? '<button class="btn pri" id="dlg-nextlvl">下一关 ▶</button>' : '') + (p.quiz ? '<button class="btn' + (U.Chain && U.Chain.next(p.id, UI.S.mchainOpen) ? '' : ' pri') + '" id="dlg-quiz">🎲 再来一题</button>' : '<button class="btn" id="dlg-next">下一题</button>') + '<button class="btn" id="dlg-inquiry">实验报告</button><button class="btn" id="dlg-close">继续玩</button></div>';
+    h += '<div class="whybox">' + esc(p.why) + '</div>' + (UI.S.undo.length ? '<div class="btnrow"><button class="btn rpbtn" id="dlg-replay">🎬 看看我是怎么做的（' + UI.S.undo.length + ' 步）</button></div>' : '') + '<div class="btnrow">' + (back ? '<button class="btn pri" id="dlg-back">回去做这一步</button><button class="btn" id="dlg-again">再做一遍</button>' : '<button class="btn pri" id="dlg-again">再做一遍</button>') + (U.Chain && U.Chain.next(p.id, UI.S.mchainOpen) && rep.stars && rep.stars.n > 0 ? '<button class="btn pri" id="dlg-nextlvl">下一关 ▶</button>' : '') + (p.quiz ? '<button class="btn' + (U.Chain && U.Chain.next(p.id, UI.S.mchainOpen) ? '' : ' pri') + '" id="dlg-quiz">🎲 再来一题</button>' : '<button class="btn" id="dlg-next">下一题</button>') + '<button class="btn" id="dlg-inquiry">实验报告</button><button class="btn" id="dlg-close">继续玩</button></div>';
     return h;
   }
 
