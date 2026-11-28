@@ -3,7 +3,7 @@
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const root = path.join(__dirname, '..');
 const fsx = require('fs'), pk = (d) => fsx.readdirSync(path.join(root, d)).filter((f) => f.endsWith('.js')).sort().map((f) => d + '/' + f);
-const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/ratio.js', 'js/core/form.js', 'js/core/predict.js', 'js/core/eqn.js', 'js/core/seq.js', 'js/core/rulelib.js', 'js/core/game.js', 'js/core/prooflib.js', 'js/core/table.js', 'js/core/figure.js', 'js/core/geo.js', 'js/core/convert.js', 'js/core/registry.js', 'js/core/rules.js', 'js/core/rules-exec.js', 'js/core/workbench.js', 'js/core/digits.js', 'js/core/databench.js', 'js/core/deduce.js', 'js/core/geo-rules.js', 'js/core/world.js', 'js/core/forms.js', 'js/core/measure.js', 'js/core/kit.js', 'js/core/recorder.js', 'js/core/judge.js', 'js/core/word.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/curriculum.js', 'js/core/coverage.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
+const files = ['js/core/rational.js', 'js/core/essences.js', 'js/core/kinds.js', 'js/core/kinds-more.js', 'js/core/poly.js', 'js/core/ratio.js', 'js/core/form.js', 'js/core/predict.js', 'js/core/eqn.js', 'js/core/seq.js', 'js/core/rulelib.js', 'js/core/game.js', 'js/core/prooflib.js', 'js/core/table.js', 'js/core/figure.js', 'js/core/geo.js', 'js/core/convert.js', 'js/core/registry.js', 'js/core/rules.js', 'js/core/rules-exec.js', 'js/core/workbench.js', 'js/core/digits.js', 'js/core/databench.js', 'js/core/deduce.js', 'js/core/geo-rules.js', 'js/core/world.js', 'js/core/forms.js', 'js/core/measure.js', 'js/core/kit.js', 'js/core/recorder.js', 'js/core/judge.js', 'js/core/word.js', 'js/core/events.js', 'js/core/evidence.js', 'js/core/problem.js', 'js/core/inquiry.js', 'js/core/variants.js', 'js/core/curriculum.js', 'js/core/coverage.js', 'js/core/loader.js', 'js/core/learning.js', 'js/core/session.js', 'js/core/share.js', 'js/core/review.js', 'js/core/author.js', 'js/core/macro.js', 'js/core/process.js'].concat(pk('packs')).concat(['problems/starter.js'], pk('problems').filter((f) => !/starter/.test(f)));
 const ctx = vm.createContext({ console, TextEncoder, TextDecoder, btoa, atob });
 ctx.globalThis = ctx;
 for (const f of files) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f });
@@ -4110,6 +4110,111 @@ console.log('台的尺寸和比例（试验台增强 7）');
     const ok = ['tapebench', 'numlinebench'].every((ty) => F.adapterOf('lineq', ty).can(st) === null); truthy(ok, '线段图、数轴都画得了 2x + 500 = 510');
     truthy(F.join(s, 'lineq', [ids[2], ids[3]], st), '线段图、数轴连成一组');
     const r = drawOf('tapebench', s.entities[ids[2]].props); inside(r, '组里的线段图');
+  });
+}
+console.log('过程看得见（试验台增强 4：回放、操作台上的来历、看台面说话）');
+{
+  const P = U.Process, js = (sc) => U.JSON.stringify(sc);
+  // 开一道题：台面、求值、练习的 run（跳过先猜）
+  const openP = (id, guessed) => { const p = U.problemById(id), sc = p.build(), run = U.Judge.start(p, 'practice'); run.pred_done = guessed !== false; return { p, sc, run, D: () => W.evaluate(sc), id: Object.keys(sc.entities)[0] }; };
+  const setP = (sc, id, o) => { for (const k of Object.keys(o)) truthy(W.act(sc, { t: 'set', id, k, v: o[k] }).ok, 'set ' + k); };
+  const BAD = /undefined|NaN|null|\[object/;
+  t('回放的一句话：换一换点成兔，说清楚哪几个读数从几变成几', () => {
+    const o = openP('sw-8-26'), a = js(o.sc); setP(o.sc, o.id, U.SwapBench.to(o.sc.entities[o.id].props, 1));
+    const s = P.stepSay(a, js(o.sc));
+    truthy(/乙（兔）有几个 0 → 1/.test(s) && /现在的总数 16 → 18/.test(s), s);
+  });
+  t('回放的一句话：天平写成式子的变化；联动组用组 log 的 label，说跟着做的台', () => {
+    const o = openP('bb-x-plus-5'), a = js(o.sc); setP(o.sc, o.id, U.BalanceBench.to(o.sc.entities[o.id].props, { lc: 4, rc: 11 }));
+    eq(P.stepSay(a, js(o.sc)), 'x + 5 = 12　→　x + 4 = 11');
+    const g = openP('ef-2x3-11'), b0 = js(g.sc), bb = Object.values(g.sc.entities).find((e) => e.type === 'balancebench');
+    bb.props.lc -= 1; bb.props.rc -= 1; truthy(W.act(g.sc, { t: 'settle' }).ok, 'settle');
+    eq(P.stepSay(b0, js(g.sc)), '在「' + bb.name + '」上两边同时减 1，「' + Object.values(g.sc.entities).find((e) => e.type === 'eqstepbench').name + '」跟着做了同一步');
+  });
+  t('回放的一句话：拿出、拿走、连线、挪位置', () => {
+    const sc = W.blank(), a = js(sc), n = W.act(sc, { t: 'add', type: 'num', x: 0, y: 0 }).id, b = js(sc);
+    truthy(/^拿出了「/.test(P.stepSay(a, b)), P.stepSay(a, b));
+    W.act(sc, { t: 'move', id: n, x: 50, y: 60 }); truthy(/^挪了挪「/.test(P.stepSay(b, js(sc))), P.stepSay(b, js(sc)));
+    const c = js(sc); W.act(sc, { t: 'del', id: n }); truthy(/^拿走了「/.test(P.stepSay(c, js(sc))));
+  });
+  t('来历：换一换的总数，按孩子的话一步步算；一步一步变过来的（从回放的帧里算）', () => {
+    const o = openP('sw-8-26'), f = [js(o.sc)];
+    for (let k = 1; k <= 3; k++) { setP(o.sc, o.id, U.SwapBench.to(o.sc.entities[o.id].props, k)); f.push(js(o.sc)); }
+    const r = P.why(o.sc, o.D(), o.id, 'total', f);
+    eq(r.head, '「现在的总数」现在是 22。');
+    eq(r.calc, ['3 个兔，每个 4 条腿：3 × 4 = 12', '5 个鸡，每个 2 条腿：5 × 2 = 10', '合起来：12 + 10 = 22 条腿']);
+    eq(r.hist, ['开场是 16', '第 1 步变成 18', '第 2 步变成 20', '第 3 步变成 22']);
+  });
+  t('来历：联动组的台说清和谁连着、每一步在哪台上做、什么道理（规则的 label）', () => {
+    const g = openP('ef-2x3-11'), bb = Object.values(g.sc.entities).find((e) => e.type === 'balancebench');
+    bb.props.lc -= 3; bb.props.rc -= 3; W.act(g.sc, { t: 'settle' });
+    const r = P.why(g.sc, g.D(), bb.id, 'eq', []);
+    truthy(/连在一起/.test(r.group[0]) && r.group[1] === '第 1 步：在「' + bb.name + '」上两边同时减 3（' + U.RULES['eq.both-sides'].label + '）', r.group.join('|'));
+  });
+  t('来历：有追踪（c.step / c.because）的器材用追踪——2/5 + 1/3 说得出通分', () => {
+    const { sc, o } = frac([2, 5], [1, 3]); const r = P.why(sc, W.evaluate(sc), o, 'r', []);
+    truthy(r.calc.some((x) => /通分/.test(x)) && r.calc.some((x) => /给出 2\/5/.test(x)), r.calc.join('|'));
+  });
+  t('台面上现在：列里程碑看的读数（开关类不列），每个都说得出来历、没有空话', () => {
+    const o = openP('sw-8-26'), R = P.readings(o.p, o.sc, o.D());
+    eq(R.map((x) => x.port), ['b', 'a', 'total']);
+    eq(P.readings(U.problemById('g2-kg-to-g-core'), U.problemById('g2-kg-to-g-core').build(), W.evaluate(U.problemById('g2-kg-to-g-core').build())).map((x) => x.name), ['下面对着的数']);
+  });
+  t('看台面说话：换一换差 2 条腿，问是不是有一个兔当成了鸡；凑到了就不说', () => {
+    const o = openP('sw-8-26'); setP(o.sc, o.id, U.SwapBench.to(o.sc.entities[o.id].props, 4));
+    eq(P.hintNow(o.p, o.run, o.sc, o.D()), '现在腿比要的少 2 条。每把一个鸡换成兔，腿多 2 条：是不是有 1 个兔被当成了鸡？');
+    setP(o.sc, o.id, U.SwapBench.to(o.sc.entities[o.id].props, 6));
+    eq(P.hintNow(o.p, o.run, o.sc, o.D()), '现在腿比要的多 2 条。每把一个鸡换成兔，腿多 2 条：是不是有 1 个鸡被当成了兔？');
+    setP(o.sc, o.id, U.SwapBench.to(o.sc.entities[o.id].props, 5));
+    eq(P.hintNow(o.p, o.run, o.sc, o.D()), null);
+  });
+  t('看台面说话：天平、计数块、数轴、分数条、面积模型、代数式各说具体的话', () => {
+    const h = (id) => { const o = openP(id); return P.hintNow(o.p, o.run, o.sc, o.D()); };
+    eq(h('bb-x-plus-5'), '左盘除了盒子还有 5 个砝码：两边各拿走 5 个砝码，盒子就单独在一边了。');
+    eq(h('bb-both-sides'), '两边都有盒子：两边各拿走一个盒子，天平还是平的。');
+    eq(h('bb-2x-10'), '盒子已经单独在一边了，一共 2 个：把两边都平分成 2 份，只留一份。');
+    eq(h('bk-27-15'), '个位有 12 块，超过 9 了：拿 10 块捆成一个，放到左边的十位。');
+    eq(h('bk-make-34'), '现在摆的是 0，比要的少 34：再放 3 根长条和 4 个小方块。');
+    eq(h('nl-20-div-4'), '从 0 跳了 0 步，落在 0，要落在 20：还要再跳 5 步。');
+    eq(h('rb-apples'), '上面的点现在在 0 个，下面对着 0 元。上面的点要拖到 5 个，下面才对着 20 元。');
+    eq(h('am-area24'), '现在 6 × 2 = 12，要 24：还差 12。拖右边或下边，改长或宽。');
+    eq(h('g2-mixed-core'), '算式还没算完：还有 2 个运算符。现在可以先算 3 × 4。');
+    eq(h('tb-3x-2x'), 'x 的项还有 2 块（3x、2x）：把一块拖到另一块上合起来。');
+    // 天平只动了一边：歪了，说哪边重
+    const o = openP('bb-x-plus-5'); setP(o.sc, o.id, { lc: 4 });
+    truthy(/^天平歪了：右盘重/.test(P.hintNow(o.p, o.run, o.sc, o.D())), P.hintNow(o.p, o.run, o.sc, o.D()));
+  });
+  t('看台面说话·自动：有目标数、说法里写着这个数，就说还差 / 多了多少；小数用小数说', () => {
+    const o = openP('g7-quadrant-core'); eq(P.hintNow(o.p, o.run, o.sc, o.D()), '「点 A 的横坐标」现在是 1，要 −2：多了 3。');
+    const d = openP('g4-decimal-add-core'); truthy(/要 4\.05：/.test(P.hintNow(d.p, d.run, d.sc, d.D())), P.hintNow(d.p, d.run, d.sc, d.D()));
+  });
+  t('看台面说话·不说空话错话：先猜藏着答案时不说目标、开关和编号不说、说法里没写这个数不说', () => {
+    // 先猜藏着答案（还没猜）：自动的那句不说
+    const c = openP('cal-feb-2024', false); truthy(U.Predict.of(c.p) && U.Predict.of(c.p).auto, '这道题有自动先猜'); eq(P.hintNow(c.p, c.run, c.sc, c.D()), null);
+    c.run.pred_done = true; truthy(/要 29/.test(P.hintNow(c.p, c.run, c.sc, c.D()) || ''), '先不猜以后照常说');
+    // 开关类读数（1 是 0 否、1/0、0 相离 1 相切）不说
+    for (const l of ['正好凑到：1 是，0 否', '全部朝上了（1 是）', '作对了（1/0）', '直线与圆：0 相离，1 相切，2 相交', '追问 1 选了第几个']) truthy(P.FLAG.test(l), l);
+    for (const l of ['落点 / 点的位置', '现在的总数', '盒子的重量（解出来以后才有）']) truthy(!P.FLAG.test(l), l);
+    // 编号类目标（看图摆法 10000 → 11211）：说法里没有这个数，不说
+    const v = openP('vw-front-core'); eq(P.hintNow(v.p, v.run, v.sc, v.D()), null);
+  });
+  t('看台面说话：题目、器材可以自己登记 hintNow，优先用', () => {
+    const o = openP('sw-8-26'), m = o.p.milestones[0];
+    m.hintNow = (Wv) => '题目说：现在 ' + Wv.num(Wv.byRole('s'), 'total') + ' 条腿'; eq(P.hintNow(o.p, o.run, o.sc, o.D()), '题目说：现在 16 条腿'); delete m.hintNow;
+    const d = U.types.swapbench; d.hintNow = (props) => '器材说：k = ' + props.k; eq(P.hintNow(o.p, o.run, o.sc, o.D()), '器材说：k = 0'); delete d.hintNow;
+    eq(P.hintNow(o.p, o.run, o.sc, o.D()), '现在腿比要的少 10 条。每把一个鸡换成兔，腿多 2 条：是不是有 5 个兔被当成了鸡？');
+  });
+  t('每道操作台题开场：看台面的话、台面上现在、来历都没有 undefined / NaN / null；登记了话的 7 台都说得出话', () => {
+    const said = {};
+    for (const p of U.problems) {
+      let sc; try { sc = p.build(); } catch (e) { continue; }
+      const bench = U.benchOf(sc); if (!bench) continue;
+      const D = W.evaluate(sc), run = U.Judge.start(p, 'practice'); run.pred_done = true;
+      const h = P.hintNow(p, run, sc, D); truthy(h === null || (typeof h === 'string' && !BAD.test(h)), p.id + '：' + h);
+      if (h) said[sc.entities[bench[0]].type] = 1;
+      for (const r of P.readings(p, sc, D)) { const txt = P.whyText(P.why(sc, D, r.id, r.port, [js(sc)])); truthy(!BAD.test(txt), p.id + ' ' + r.port + '：' + txt); }
+    }
+    for (const ty of Object.keys(P.TALK)) truthy(said[ty], ty + ' 在题库里一句都没说');
   });
 }
 console.log('\n' + pass + ' 通过，' + fail + ' 失败');

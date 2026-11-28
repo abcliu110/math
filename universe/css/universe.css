@@ -687,3 +687,29 @@ html[data-lowgrade="on"] #leftbody .btn { font-size: 16px; min-height: 44px; min
 .pcard > .yg-say { float: right; margin: 0 0 4px 8px; }
 .card .hd .yg-say { position: relative; min-width: 32px; min-height: 24px; margin-left: 6px; font-size: 15px; border-radius: 8px; background: var(--card2); color: var(--ink); border-color: var(--card2); }
 .card .hd .yg-say::after { content: ""; position: absolute; left: -6px; right: -6px; top: -16px; bottom: -4px; }
+/* 试验台增强 4：回放条、台面上现在、看台面说话、来历（js/ui/replay.js、panels.js） */
+#replaybar { display: none; left: 50%; transform: translateX(-50%); bottom: 12px; flex-direction: column; gap: 4px; padding: 6px 10px; width: min(760px, calc(100% - 24px)); box-sizing: border-box; border: 2px solid var(--orange); z-index: 22; }
+body.replaying #replaybar { display: flex; }
+body.replaying #clockbar, body.replaying #zoom, body.replaying #fabr { display: none; }
+#replaybar .rp-row { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+#replaybar .rp-tag { font-weight: 700; color: var(--orange); padding: 0 6px; }
+#replaybar input[type=range] { flex: 1 1 160px; min-width: 120px; accent-color: var(--orange); }
+#replaybar .rp-n { color: var(--txt2); min-width: 76px; text-align: center; font-variant-numeric: tabular-nums; }
+#replaybar .rp-say { font-size: 16px; line-height: 1.5; padding: 2px 6px 4px; color: var(--txt); }
+#replaybar button:disabled { opacity: .4; }
+#replayshield { display: none; position: absolute; inset: 0; z-index: 19; cursor: not-allowed; }
+body.replaying #replayshield { display: block; }
+body.replaying #stage { outline: 3px solid var(--orange); outline-offset: -3px; }
+.btn.rpbtn { border-color: var(--orange); color: var(--orange); font-weight: 700; flex: 1; }
+.btn.rpbtn.on { background: var(--orange); color: var(--panel); }   /* 浅色主题橙色深、面板白；深色主题橙色浅、面板深：两套都看得清 */
+.step .hint.now { color: var(--blue); font-size: 13px; }
+.nowbox { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; margin: 10px 0 0; background: var(--panel2); }
+.nowbox .nowhd { font-size: 12px; color: var(--txt2); margin-bottom: 4px; }
+.nowbox .nowrow { display: flex; align-items: center; gap: 8px; padding: 3px 0; }
+.nowbox .nowrow .nm { flex: 1; color: var(--txt2); }
+.nowbox .nowrow b { font-size: 16px; font-variant-numeric: tabular-nums; }
+.nowbox .nowwhy { border: 1px solid var(--blue); color: var(--blue); background: var(--panel); border-radius: 8px; padding: 3px 8px; font-size: 12px; cursor: pointer; min-height: 28px; }
+.bwhy-head { font-size: 16px; font-weight: 700; }
+.bwhy-sec { margin: 8px 0; }
+.bwhy-sec ul { margin: 4px 0 0 18px; padding: 0; line-height: 1.7; }
+html[data-lowgrade="on"] #leftbody .step .hint.now { font-size: 15px; }

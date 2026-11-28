@@ -195,3 +195,14 @@ U.registerPack({ id:'mypack', types:{ foo:{
   - 有状态器材的输出不能接到后算器材（它的结论在后面才更新，后算器材读不到这一轮的结果）；
   - 后算器材之间的连线按拓扑序计算（`order` 包含全部无状态器材，后算器材整体排在普通器材之后）。
   注册 lint 只要求后算器材本身不能是有状态的；它可以有输入口。示例：`scaffold`（证明脚手架）→ `proofcheck`（证据检查）。
+
+## 过程：回放的一句话、来历、看台面说话（js/core/process.js，试验台增强 4）
+
+都是纯函数：不改台面、不记事件。界面在 js/ui/replay.js（回放条、来历对话框）、panels.js（步骤栏）、app.js（提示按钮）。
+
+- `U.Process.stepSay(a, b)`：两帧台面（字符串或台面对象）之间的这一步，一句人话。联动组新记的一步用 log 的 label（“在「天平1」上两边同时减 1，「式子1」跟着做了同一步”）；拿出、拿走、连线、挪位置各有说法；改了属性的器材先问器材（`def.stepSay(p0, p1)` 或下面的 `TALK[type].step`），再说哪几个读数从几变成几（最多 3 个，开关类读数不说）。
+- `U.Process.why(scene, D, id, port, frames)` → `{ name, value, head, calc, group, hist }`：这个读数是怎么来的。`calc` 先用器材声明的 `def.why(c, port)`，再用 `TALK[type].why`，都没有就用来历追踪（`W.explain`，c.step / c.because 写的）；`group` 是联动组的 log（每一步在哪一台、什么道理，道理取 `U.RULES[rule].label`）；`hist` 是在 `frames`（回放的帧）里这个数是怎么变过来的。`U.Process.whyText(r)` 拼成几行字。
+- `U.Process.readings(problem, scene, D)`：操作台模式下步骤栏“台面上现在”列的读数：里程碑条件里看的输出口（开关类不列），加上器材登记了来历的口，最多 4 个。
+- `U.Process.hintNow(problem, run, scene, D)` → 一句话或 null。顺序：里程碑的 `m.hintNow(W)` / 题目的 `problem.hintNow(W, m)` → 器材声明的 `def.hintNow(props, out, problem, ctx)` → `U.Process.TALK[type].hint(ctx)` → 自动“「名字」现在是几，要几：还差 / 多了几”。ctx 有 `props、out、num(port)、problem、m、hidden、target、fmt`；`target` 是当前这一步第一个没满足的数的目标 `{ id, port, op, want, wantN, cur }`。
+  自动的那句只在：目标口不是开关类（`U.Process.FLAG`：1 是 0 否、1/0、0 相离 1 相切、第几、几次……）、这一步的说法里写着这个数、先猜没有藏着这一步的答案时才说；说法里写成小数的就用小数说。
+- `U.Process.TALK`：登记了话的 7 台操作台（swapbench、balancebench、blocksbench、numlinebench、ratiobench、areamodel、termsbench），每台可有 `ports(props)`、`name(port, props)`、`step(p0, p1)`、`why(c, port)`、`hint(c)`。器材包自己在声明里写 `why` / `hintNow` / `stepSay` 的，优先用声明的。
