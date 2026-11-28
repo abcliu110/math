@@ -4217,5 +4217,121 @@ console.log('过程看得见（试验台增强 4：回放、操作台上的来�
     for (const ty of Object.keys(P.TALK)) truthy(said[ty], ty + ' 在题库里一句都没说');
   });
 }
+console.log('补旧上限的台（2026-11-28：换一换、盈亏、集合圈、连一连、摸球、面积推导）');
+{
+  const B = U.kit.big, [CW, CH] = B.CARD_MAX;
+  const drawOf = (type, patch, drag) => {
+    const d = U.types[type], s = W.blank(), id = W.add(s, type, 0, 0, patch), e = s.entities[id], D = W.evaluate(s), sz = d.size(e);
+    const c = { ent: e, props: D[id].props || e.props, d: D[id], out: D[id].out, state: e.state, w: sz[0], h: sz[1] - 28, t: 0, n: 0, scene: s, kids: () => [], drag };
+    const o = {}; for (const k of Object.keys(D[id].out || {})) o[k] = U.Q.show(D[id].out[k].data);
+    return { svg: d.draw(c), w: sz[0], h: sz[1], grips: d.grips ? d.grips(c) || [] : [], c, out: o, props: e.props };
+  };
+  const picks = (svg) => [...svg.matchAll(/data-pick-set="([^"]+)"[^>]*>(?:<title>([^<]*)<\/title>)?/g)].map((m) => ({ p: JSON.parse(decodeURIComponent(m[1])), title: m[2] || '' }));
+  const BIG2 = {
+    swapbench: [{ n: 35, target: 94, k: 12 }, { n: 100, target: 280, k: 30 }, { n: 100, k: 100, target: 400, graph: true, book: '100,2,4,300:50;100,2,4,320:60' }, { n: 500, la: 3, lb: -12, target: 1425, k: 37 }, { n: 999, k: 437, target: 3000, lift: true }, { n: 999, k: 0, target: 99999, la: -99, lb: 99, graph: true }],
+    surplusbench: [{ a: 3, b: 5, r1: 30, r2: -50, n: 40 }, { a: 45, b: 40, r1: -15, r2: 20, n: 7 }, { a: 99, b: 1, r1: 999, r2: -999, n: 99 }, { a: 5, b: 7, r1: 3, r2: -5, n: 13 }],
+    vennbench: [{ n: 50 }, { n: 45, where: '111111111111111112222222222333333333344444000' }, { n: 50, where: '2'.repeat(24) + '1'.repeat(26) }, { n: 21, where: '4'.repeat(21) }],
+    pairbench: [{ mode: 0, na: 30, nb: 27, pairs: '0-0,1-1,29-26' }, { mode: 0, na: 11, nb: 30 }, { mode: 1, n: 20, pairs: '0-1,0-2,18-19' }, { mode: 1, n: 9 }],
+    pigeonbench: [{ c1: 13, c2: 13, c3: 13, c4: 13, m: 4, x1: 3, x2: 3, x3: 3, x4: 13 }, { c1: 30, c2: 30, c3: 30, c4: 30, m: 30, x1: 29, x2: 29, x3: 29, x4: 29 }, { c1: 30, c2: 1, want: 1, x1: 30 }],
+    areabench: [{ shape: 0, b: 30, h: 20, s: 10 }, { shape: 0, b: 40, h: 24, s: 40, step: 2 }, { shape: 1, b: 40, h: 24, s: 40, step: 1 }, { shape: 2, b: 40, t: 30, s: 10, h: 24, step: 2 }, { shape: 2, b: 40, t: 1, s: 0, h: 1 }, { shape: 0, b: 2, h: 24 }, { shape: 3, P: 100, w: 49, tried: Array.from({ length: 49 }, (_, i) => i + 1).join(',') }, { shape: 3, P: 30, w: 1 }],
+  };
+  t('补旧上限：放大的台取到大数画得出来、不画到卡片外面、卡片不超过 CARD_MAX；把手不叠、按钮不小于 14 像素', () => {
+    for (const [type, cases] of Object.entries(BIG2)) for (const pc of cases) {
+      const m = type + ' ' + JSON.stringify(pc).slice(0, 80), r = drawOf(type, pc);
+      truthy(typeof r.svg === 'string' && r.svg.length > 100 && !/NaN|undefined|Infinity/.test(r.svg), m + '：画出来有 NaN/undefined');
+      truthy(r.w <= CW && r.h <= CH, m + '：卡片 ' + r.w + '×' + r.h);
+      const bad = []; for (const x of r.svg.matchAll(/\s(x|cx|x1|x2)="(-?[\d.]+)"/g)) if (+x[2] < -24 || +x[2] > r.w + 24) bad.push(x[1] + '=' + x[2]); for (const y of r.svg.matchAll(/\s(y|cy|y1|y2)="(-?[\d.]+)"/g)) if (+y[2] < -24 || +y[2] > r.h + 24) bad.push(y[1] + '=' + y[2]);
+      eq(bad.slice(0, 4), [], m + '：画到卡片外面了');
+      for (const g of r.grips) truthy((g.r || 9) >= 7 && g.x >= -12 && g.x <= r.w + 12 && g.y >= -12 && g.y <= r.h + 12, m + ' 把手 ' + g.id);
+      for (let i = 0; i < r.grips.length; i++) for (let j = i + 1; j < r.grips.length; j++) truthy(Math.hypot(r.grips[i].x - r.grips[j].x, r.grips[i].y - r.grips[j].y) >= B.MIN_HIT, m + ' 把手 ' + r.grips[i].id + ' 和 ' + r.grips[j].id + ' 叠在一起');
+      for (const g of r.svg.matchAll(/<g data-pick-set="[^"]*"[^>]*>(?:<title>[^<]*<\/title>)?<rect x="[^"]*" y="[^"]*" width="([\d.]+)" height="([\d.]+)"/g)) truthy(+g[1] >= B.MIN_HIT && +g[2] >= B.MIN_HIT, m + ' 按钮太小：' + g[1] + '×' + g[2]);
+    }
+  });
+  t('换一换：35 头 94 足（40 以内和以前一样画）；100 头十个一组、点一个换一个、拖把手跨过中间的空、±10 微调', () => {
+    const SW = U.SwapBench;
+    let r = drawOf('swapbench', { n: 35, target: 94 }); eq(r.out.gap, '24');
+    const g = r.grips[0]; eq(SW.to(r.props, 12).k, 12); eq(g.drag(r.c, { x: 24 + 2 * 38, y: 186 + 46 + 10 }).k, 12, '第二排第 3 个');
+    truthy(!/−10/.test(r.svg), '40 以内没有 ±10');
+    r = drawOf('swapbench', { n: 100, target: 280 });
+    truthy(/十个一组/.test(r.svg), '写着十个一组'); eq((r.svg.match(/点一下：换成兔/g) || []).length, 100, '100 个头都点得着');
+    const gg = r.grips[0], k = gg.drag(r.c, { x: 24 + 10 * 19 + 6 + 3 * 19, y: 186 + 30 + 12 }).k; eq(k, 33, '第二排、过了中间的空再 3 个：33');
+    const pk = picks(r.svg), p10 = pk.find((x) => x.title === '一次把 10 个鸡换成兔'); truthy(p10 && p10.p.k === 10, '+10 一次换 10 只');
+    r = drawOf('swapbench', { n: 100, target: 280, k: 40 }); eq(r.out.gap, '0', '换 40 只：280 条腿');
+  });
+  t('换一换：几百个十个一条，点一条换到那里、拖把手按 5 取整；“还差的”段多了折叠；图的跨度太大说一句', () => {
+    let r = drawOf('swapbench', { n: 500, la: 3, lb: -12, target: 1425 });
+    truthy(/十个一条/.test(r.svg), '写着十个一条'); eq((r.svg.match(/data-strip=/g) || []).length, 50, '500 个画成 50 条');
+    const st = picks(r.svg).find((x) => /第 31–40 个/.test(x.title)); truthy(st && st.p.k === 40, '点第 4 条：换到 40');
+    const g = r.grips[0], k = g.drag(r.c, { x: 24 + 1.7 * 19, y: 186 + 36 + 10 }).k; eq(k % 5, 0, '按 5 取整：' + k); truthy(k >= 215 && k <= 220, '第二排第 1.7 条附近：' + k);
+    r = drawOf('swapbench', { n: 500, la: 3, lb: -12, target: 1425, k: 5 }); eq(r.out.ok, '1', '碎 5 只：1425 元');
+    r = drawOf('swapbench', { n: 100, target: 400 }); truthy(/data-fold="90"/.test(r.svg) && /data-gap="100"/.test(r.svg), '还差 200（100 段）：画 10 段，中间 90 段折叠');
+    r = drawOf('swapbench', { n: 999, la: -99, lb: 99, target: 0, graph: true }); truthy(/跨度太大/.test(r.svg) && r.svg.length < 300000, '图的跨度太大不画');
+    r = drawOf('swapbench', { n: 8, target: 26, k: 0 }); truthy(!/data-fold/.test(r.svg) && /data-gap="5"/.test(r.svg), '小数和以前一样');
+  });
+  t('盈亏：40 人折叠成头 8 人、“……中间 29 人”、尾 3 人；±10；每人多于 12 个写数；对上了读得出总数', () => {
+    let r = drawOf('surplusbench', { a: 3, b: 5, r1: 30, r2: -50, n: 40 });
+    truthy(/data-fold="29"/.test(r.svg) && /中间 29 人/.test(r.svg), '中间 29 人'); eq(r.out.total, '150');
+    const pk = picks(r.svg); truthy(pk.find((x) => x.title === '一次多 10 人').p.n === 50 && pk.find((x) => x.title === '一次少 10 人').p.n === 30 && pk.find((x) => x.title === '多一人').p.n === 41, '±10、±1');
+    r = drawOf('surplusbench', { a: 45, b: 40, r1: -15, r2: 20, n: 7 }); truthy(/data-per="45"/.test(r.svg) && r.out.total === '300', '每辆 45 人写数，7 辆 300 人');
+    r = drawOf('surplusbench', { n: 12 }); truthy(!/data-fold/.test(r.svg), '12 人以内不折叠');
+  });
+  t('集合圈：50 个画小一点，区域装得下；“10 个一起”一次放进 10 个，不够 10 个放剩下的；20 个以内位置和以前一样', () => {
+    const V = U.VennBench, S = V.SLOTS_BIG;
+    truthy(S[0].length >= 50 && S[1].length >= 40 && S[3].length >= 40 && S[2].length >= 20 && S[4].length >= 50, '容量：' + S.map((a) => a.length).join(','));
+    for (let r = 1; r <= 4; r++) for (const q of S[r]) eq(V.regionAt(q), r, '格子在区域里');
+    const p = { n: 45, where: '1'.repeat(38) }, a = V.plan(p, 'ten', { x: 292, y: 196 });
+    eq(a.patch.where, '1'.repeat(38) + '2222222', '托盘只剩 7 个：一起放进中间');
+    const r = drawOf('vennbench', { n: 45 }), ten = r.grips.find((g) => g.id === 'ten'); truthy(ten && /10 个一起/.test(r.svg), '有一叠 10 个一起');
+    eq(ten.drag(r.c, { x: 150, y: 196 }).where, '1'.repeat(10) + '0'.repeat(35));
+    eq(V.places(V.model({ n: 12, where: '1' })).slice(0, 1), [V.SLOTS[1][0]], '20 个以内用原来的位置');
+    truthy(!drawOf('vennbench', { n: 20 }).grips.some((g) => g.id === 'ten'), '20 个以内没有那一叠');
+  });
+  t('连一连：每排 30 个排得下、拖得着；握手 20 人“让 1 号和后面的都握”一下连 19 条，全握完 190', () => {
+    let r = drawOf('pairbench', { mode: 0, na: 30, nb: 30 });
+    const g = r.grips.find((x) => x.id === 'a29'), last = r.grips.find((x) => x.id === 'a28'); truthy(g.x <= 660 - 8 && g.x - last.x >= 14, '最后一个在卡片里、和前一个隔开');
+    eq(g.drag(r.c, { x: g.x, y: 250 }).pairs, '29-29', '拖到下面最后一个');
+    r = drawOf('pairbench', { mode: 1, n: 20 }); let props = Object.assign({}, r.props);
+    for (let i = 0; i < 19; i++) { const b = picks(drawOf('pairbench', props).svg).find((x) => x.title.includes('号和后面还没握过的')); truthy(b, '第 ' + (i + 1) + ' 次有按钮'); Object.assign(props, b.p); }
+    r = drawOf('pairbench', props); eq(r.out.pairs, '190'); eq(r.out.full, '1'); truthy(/19 \+ 18 \+ 17 \+ … \+ 1 = 190/.test(r.svg), '写成 19 + 18 + 17 + … + 1');
+    truthy(!/和后面的都握/.test(drawOf('pairbench', { mode: 1, n: 8 }).svg), '8 人以内没有这个按钮');
+  });
+  t('摸球：一种 13 个（一副扑克一种花色）也放得下：袋里折叠、读数照样对；颜色还是 4 种', () => {
+    const PB = U.PigeonBench, m = PB.model({ c1: 13, c2: 13, c3: 13, c4: 13, want: 0, m: 4 }); eq(m.best, 13, '4 种花色各 13 张，保证 4 张同花色：3 × 4 + 1');
+    const r = drawOf('pigeonbench', { c1: 13, c2: 13, c3: 13, c4: 13, m: 4, x1: 3, x2: 3, x3: 3, x4: 3 }); truthy((r.svg.match(/data-fold="3"/g) || []).length === 4, '每种袋里中间 3 个折叠');
+    eq(PB.model({ c1: 30 }).c[0], 30); eq(U.types.pigeonbench.props.c1.max, 30); truthy(!U.types.pigeonbench.props.c5, '只有 4 种颜色');
+  });
+  t('面积推导：以前的范围一格还是 22 像素；大了换 11、7；拖的时候按按下那一刻的格子算、最多到卡片边上；篱笆长了按 2 取整、±1 微调', () => {
+    let r = drawOf('areabench', { shape: 0, b: 12, h: 8, s: 12 }); eq(r.grips.find((g) => g.id === 'b').x, 40 + 12 * 22, '24 格宽：一格 22');
+    truthy(!/格子画小了/.test(r.svg), '没写格子画小了');
+    r = drawOf('areabench', { shape: 2, b: 12, t: 10, s: 6, h: 8 }); eq(r.grips.find((g) => g.id === 'b').x, 40 + 12 * 22, '梯形 28 格宽：一格 22');
+    r = drawOf('areabench', { shape: 0, b: 12, h: 8, s: 4 }); const gb = r.grips.find((g) => g.id === 'b');
+    eq(gb.drag(r.c, { x: 700, y: 290 }).b, 25, '拖到卡片边上：底 25（29 格）');
+    r = drawOf('areabench', { shape: 0, b: 25, h: 8, s: 4 }); truthy(/格子画小了/.test(r.svg) && r.grips.find((g) => g.id === 'b').x === 40 + 25 * 11, '松手后一格 11 像素');
+    eq(r.grips.find((g) => g.id === 'b').drag(r.c, { x: 700, y: 290 }).b, 40, '再拖：底到 40');
+    eq(r.grips.find((g) => g.id === 'h').drag(r.c, { x: 100, y: 0 }).h, 20, '高最多拖到卡片边上（230 ÷ 11）');
+    // 拖的时候（c.drag.p0 是按下那一刻）图按原来的格子画
+    const dr = drawOf('areabench', { shape: 0, b: 29, h: 8, s: 0 }, { p0: { shape: 0, b: 12, h: 8, s: 0 }, grip: 'b', x: 0, y: 0 }); truthy(dr.grips.find((g) => g.id === 'b').x === 40 + 29 * 22, '拖的时候一格还是 22');
+    r = drawOf('areabench', { shape: 2, b: 40, t: 30, s: 10, h: 24, step: 2 }); eq(r.out.area, '840'); eq(r.out.base, '70');
+    r = drawOf('areabench', { shape: 3, P: 100, w: 9 }); eq(r.out.area, '369'); const gw = r.grips[0], w = gw.drag(r.c, { x: 40 + 15.2 * 176 / 49, y: 200 }).w; eq(w, 16, '按 2 取整：' + w);
+    const pk = picks(r.svg); truthy(pk.find((x) => x.title === '长多 1 米').p.w === 10 && pk.find((x) => x.title === '长少 1 米').p.w === 8, '±1 微调');
+    r = drawOf('areabench', { shape: 3, P: 20, w: 3 }); eq(r.grips[0].drag(r.c, { x: 40 + 7 * 22, y: 200 }).w, 7, '28 米以内一格 22、按 1');
+  });
+  t('补旧上限：低年级放大点击区（young-aid 的 hitRects）以后，连一连 30 个、握手 20 人、集合圈 50 个的把手互不覆盖；握手的圆彼此不叠', () => {
+    const yc = vm.createContext({ console }); yc.globalThis = yc; vm.runInContext(fs.readFileSync(path.join(root, 'js/ui/young-aid.js'), 'utf8'), yc, { filename: 'js/ui/young-aid.js' });
+    for (const [ty, pc] of [['pairbench', { mode: 0, na: 30, nb: 30 }], ['pairbench', { mode: 1, n: 20 }], ['vennbench', { n: 50 }]]) {
+      const r = drawOf(ty, pc), bx = r.grips.map((g) => ({ x: g.x - g.r, y: g.y - g.r, w: 2 * g.r, h: 2 * g.r })), hr = yc.UI.YoungAid.hitRects(bx, 44);
+      for (let i = 0; i < r.grips.length; i++) for (let j = i + 1; j < r.grips.length; j++) truthy(Math.hypot(r.grips[i].x - r.grips[j].x, r.grips[i].y - r.grips[j].y) >= r.grips[i].r + r.grips[j].r, ty + ' 圆叠在一起：' + r.grips[i].id + ',' + r.grips[j].id);
+      for (let i = 0; i < hr.length; i++) for (let j = i + 1; j < hr.length; j++) { const a = hr[i], b = hr[j], o = bx[i], q = bx[j]; if (o.x < q.x + q.w && q.x < o.x + o.w && o.y < q.y + q.h && q.y < o.y + o.h) continue;   // 外接方框本来就挨着的（圆不叠）不放大，不算   // 只差 0.01 像素的算挨着（小数误差）
+        truthy(!(a.x < b.x + b.w - 0.01 && b.x < a.x + a.w - 0.01 && a.y < b.y + b.h - 0.01 && b.y < a.y + a.h - 0.01), ty + ' 放大后叠在一起：' + r.grips[i].id + ',' + r.grips[j].id); }
+    }
+  });
+  t('补旧上限：随机出题只试到原来的范围（qmax / qmin），原来的题不变；搭配还是 5 件', () => {
+    const P = (ty, k) => U.types[ty].props[k];
+    eq([P('swapbench', 'n').qmax, P('swapbench', 'target').qmax, P('surplusbench', 'n').qmax, P('surplusbench', 'r2').qmin, P('vennbench', 'n').qmax, P('pairbench', 'na').qmax, P('pairbench', 'n').qmax, P('areabench', 'b').qmax, P('areabench', 'h').qmax, P('areabench', 'P').qmax], [40, 9999, 12, -30, 20, 10, 8, 12, 8, 28]);
+    eq([P('swapbench', 'n').max, P('surplusbench', 'n').max, P('vennbench', 'n').max, P('pairbench', 'na').max, P('pairbench', 'n').max, P('pigeonbench', 'c1').max, P('areabench', 'b').max, P('areabench', 'P').max], [999, 99, 50, 30, 20, 30, 40, 100]);
+    eq([P('combobench', 'a').max, P('combobench', 'b').max, P('combobench', 'c').max], [5, 5, 4], '搭配是“一个一个列出来”，5 × 5 够用，不放开');
+    for (const ty of ['swapbench', 'surplusbench', 'vennbench', 'pairbench', 'areabench']) for (let s = 1; s <= 6; s++) for (let lv = 1; lv <= 3; lv++) { const q = U.Quiz.make(ty, s, lv); truthy(q && q.quiz, ty + ' 出得了题'); }
+  });
+}
 console.log('\n' + pass + ' 通过，' + fail + ' 失败');
 process.exit(fail ? 1 : 0);

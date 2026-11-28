@@ -9,12 +9,15 @@
  *   研究本（book）：找到最倒霉的摸法、说对“保证要摸几个”（等于真正的答案 best）时，自动记一条，换了袋子也不丢。
  *   换情况（adj，用逗号隔开的开关）：bag 换一袋（bags 里的几袋，si 第几袋）、m 改要几个、want 换问法。题目可带追问（ask / pick）。
  *   “摸完”一下把这种颜色全摸出来，大袋子不用点很多次。
- * 这一版的边界（如实写）：最多 4 种颜色，每种最多 12 个；只有这三种问法。 */
+ * 大数（2026-11-28，docs/instrument-design.md 的“补旧上限的台”）：每种最多 30 个（以前 12 个，连一副扑克一种花色 13 张都放不下）。
+ *   一种 12 个以内和以前一样一个一个画；再多袋里折叠：头 8 个、“…”、尾 2 个（左边写着还剩几个）；摸出来的多于 12 个画 9 个、“…”、再写数。
+ *   颜色还是最多 4 种：最不利原则要比的是“每种颜色最倒霉摸几个”，4 种已经够比；种数多了按钮一排排不下，也不是这个台要练的。
+ * 这一版的边界（如实写）：最多 4 种颜色；只有这三种问法。 */
 (function (G) {
   'use strict';
   const U = G.U, Q = U.Q, K = U.kit, RS = K.research;
   const num = (n) => U.val('num', Q(n), { dim: null });
-  const W = 700, CMAX = 12;
+  const W = 700, CMAX = 30, SMALL = 12;
   const COL = [['红', '#e05a4f'], ['黄', '#f2c14e'], ['蓝', '#4f86d9'], ['绿', '#5bb26a']];
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, Number.isFinite(+v) ? Math.round(+v) : lo));
   function model(p) {
@@ -57,12 +60,16 @@
     m.live.forEach((i) => {
       const [nm, col] = COL[i], left = m.c[i] - m.x[i];
       s += K.text(20, y + 18, nm + ' ' + left, { size: 12, anchor: 'start' });
-      for (let k = 0; k < m.c[i]; k++) s += ball(70 + k * 20, y + 13, col, k >= left);
+      // 一种多于 12 个：袋里折叠（头 8 个、“…”、尾 2 个）；摸走的是后面的，留虚线空位
+      const F = K.big.fold(m.c[i], m.c[i] > SMALL ? 11 : m.c[i], 8, 2);
+      F.idx.forEach((k, j) => { s += k === null ? '<g data-fold="' + F.omitted + '">' + K.text(70 + j * 20, y + 18, '…', { size: 14, weight: 700, fill: '#5a6478' }) + '</g>' : ball(70 + j * 20, y + 13, col, k >= left); });
       s += btn(300, y, 62, '摸一个', { ['x' + (i + 1)]: m.x[i] + 1, say: 0 }, left > 0, '摸一个' + nm + '的');
       s += btn(366, y, 48, '放回', { ['x' + (i + 1)]: m.x[i] - 1, say: 0 }, m.x[i] > 0, '放回一个' + nm + '的');
       s += btn(418, y, 48, '摸完', { ['x' + (i + 1)]: m.c[i], say: 0 }, left > 0, '把' + nm + '的全摸出来');
-      for (let k = 0; k < m.x[i]; k++) s += ball(478 + k * 18, y + 13, col, false);
-      if (m.x[i]) s += K.text(478 + m.x[i] * 18 + 4, y + 18, String(m.x[i]), { size: 12, weight: 700, anchor: 'start' });
+      const shown = m.x[i] > SMALL ? 9 : m.x[i];
+      for (let k = 0; k < shown; k++) s += ball(478 + k * 18, y + 13, col, false);
+      if (shown < m.x[i]) s += '<g data-fold="' + (m.x[i] - shown) + '">' + K.text(478 + shown * 18 + 2, y + 18, '…', { size: 14, weight: 700, anchor: 'start', fill: '#5a6478' }) + '</g>';
+      if (m.x[i]) s += K.text(478 + (shown < m.x[i] ? shown + 1 : shown) * 18 + 4, y + 18, String(m.x[i]), { size: 12, weight: 700, anchor: 'start' });
       y += 40;
     });
     y += 6;
@@ -110,7 +117,7 @@
   P.want = { type: 'choice', label: '要保证什么', default: 0, choices: ['几个同色', '每种颜色都有', '几个红的'], write: true };
   P.m = { type: 'int', label: '要几个', default: 2, min: 1, max: CMAX, write: true };
   [1, 2, 3, 4].forEach((i) => { P['x' + i] = { type: 'int', label: '摸出的' + COL[i - 1][0] + '球', default: 0, min: 0, max: CMAX, write: true }; });
-  P.say = { type: 'int', label: '卡住时说保证要摸几个', default: 0, min: 0, max: 50, write: true };
+  P.say = { type: 'int', label: '卡住时说保证要摸几个', default: 0, min: 0, max: 4 * CMAX + 1, write: true };
   P.bags = { type: 'text', label: '能换的几袋（红,黄,蓝,绿|…）', default: '', write: true };
   P.si = { type: 'int', label: '第几袋', default: 0, min: 0, max: 9, write: true };
   P.adj = { type: 'text', label: '台面上能换什么（bag,m,want）', default: '', write: true };

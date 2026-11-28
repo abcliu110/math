@@ -20,13 +20,23 @@
  *     凑出来的是实心点，说对“凑不出来”的画在下面一排的 ✕。不另外记数据：孩子做出一条，图上才多一个点。
  *     图上有 3 个点以后，换到一个新目标时可以先猜：点竖线上的一格（或“凑不出来”那一格），再去换；凑到了或说对凑不出来，就算猜没猜对。
  *     有 5 个点以后可以“全部试一遍”：每个总数都画上（浅色），看出是一条隔一个缺一个的直线。
- * 这一版的边界（如实写）：最多 40 个；两种东西。图只有“总数 → 乙的个数”这一种（头数不变）。 */
+ * 大数（2026-11-28，docs/instrument-design.md 的“补旧上限的台”）：头数放到 999、目标 ±99999（35 头 94 足、100 头、运 500 只玻璃瓶打碎倒扣这类题）。
+ *   40 个以内和以前一样一个一个大大地画；41–100 个画小一点（一排 20 个，十个一组中间空一点），每个还是点一下换一个；
+ *   再多就十个一条（一排 20 条），点一条“换到这里”，把手拖着按 5 取整。多于 40 个时卡片上有“−10 −1 +1 +10”，一次换 10 个或 1 个。
+ *   “还差的”段数多了中间折成“……”；头数多于 40 不在图上先猜，图的横轴跨度超过 1200 不画图（写一句）。
+ * 这一版的边界（如实写）：两种东西。图只有“总数 → 乙的个数”这一种（头数不变）。 */
 (function (G) {
   'use strict';
   const U = G.U, Q = U.Q, K = U.kit, RS = K.research;
   const num = (n) => U.val('num', Q(n), { dim: null });
-  const W = 640, GX = 24, GY = 186, PX = 205, PYV = 78, AR = 118, CW = 38, CH = 46, COLS = 10, NMAX = 40;
+  const W = 640, GX = 24, GY = 186, PX = 205, PYV = 78, AR = 118, CW = 38, CH = 46, COLS = 10, NMAX = 999, TMAX = 99999;
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  // 怎么摆（大数）：40 个以内一排 10 个大大地画（和以前一样）；41–100 个一排 20 个画小一点，十个一组中间空 6 像素；
+  //   再多十个一条（per = 10：一个格子是一条 10 个），一排 20 条。cells 是格子数，cellAt 是第 i 个格子的左上角
+  const TIER2 = 40, TIER3 = 100;
+  const grid = (n) => (n <= TIER2 ? { t: 1, per: 1, cols: COLS, cw: CW, ch: CH, gap: 0, cells: n } : n <= TIER3 ? { t: 2, per: 1, cols: 20, cw: 19, ch: 30, gap: 6, cells: n } : { t: 3, per: 10, cols: 20, cw: 19, ch: 36, gap: 6, cells: Math.ceil(n / 10) });
+  const rowsOf = (g) => Math.ceil(g.cells / g.cols), gridW = (g) => g.cols * g.cw + g.gap;
+  const cellAt = (g, i) => { const c = i % g.cols; return { x: GX + c * g.cw + (c >= g.cols / 2 ? g.gap : 0), y: GY + Math.floor(i / g.cols) * g.ch }; };
   function model(p) {
     const n = clamp(p.n, 1, NMAX), la = clamp(p.la, -99, 99), lb = clamp(p.lb, -99, 99), k = clamp(p.k, 0, n), T = p.target;
     const total = k * lb + (n - k) * la, tried = String(p.tried || '').split(',').filter((s) => s !== '').map(Number).filter((x) => Number.isInteger(x) && x >= 0 && x <= n);
@@ -62,6 +72,21 @@
     return o;
   }
   const cell = (i) => ({ x: GX + (i % COLS) * CW, y: GY + Math.floor(i / COLS) * CH });
+  // 41–100 个：小一点的头（圆圈半径 8），腿写成数；还是点一下换一个
+  function small(i, isB, m, p, g) {
+    const c = cellAt(g, i), cx = c.x + g.cw / 2, cy = c.y + 10, legs = (isB ? m.lb : m.la) - (m.lift ? m.lo : 0), col = isB ? '#f5a25d' : '#9fb7d9', nm = String((isB ? p.nb : p.na) || '').slice(0, 1);
+    const s = K.circle(cx, cy, 8, { fill: col, stroke: 'var(--ink)', w: 1 }) + K.text(cx, cy + 3.5, nm, { size: 9, weight: 700 }) + K.text(cx, c.y + 27, String(legs).replace('-', '−'), { size: 9, fill: '#3a4a63' });
+    return '<g data-pick-set="' + encodeURIComponent(JSON.stringify(to(p, isB ? m.k - 1 : m.k + 1))) + '" style="cursor:pointer"><title>点一下：' + (isB ? '换回' + p.na : '换成' + p.nb) + '</title>' +
+      '<rect x="' + c.x + '" y="' + c.y + '" width="' + g.cw + '" height="' + g.ch + '" fill="transparent"/>' + s + '</g>';
+  }
+  // 100 个以上：十个一条。一条里 10 小格，上面的是乙、下面的是甲；点一条“换到这里”
+  function strip(i, m, p, g) {
+    const c = cellAt(g, i), a = i * 10, b = Math.min(m.n, a + 10), allA = a >= m.k, kk = allA ? b : a;
+    let s = K.rect(c.x + 2, c.y + 2, g.cw - 4, g.ch - 4, { fill: '#fff', stroke: '#8a94a8', r: 3, w: 0.8 });
+    for (let j = a; j < b; j++) s += K.rect(c.x + 4, c.y + 4 + (j - a) * 2.9, g.cw - 8, 2.2, { fill: j < m.k ? '#f5a25d' : '#9fb7d9', stroke: 'none', r: 1 });
+    return '<g data-strip="' + i + '" data-pick-set="' + encodeURIComponent(JSON.stringify(to(p, kk))) + '" style="cursor:pointer"><title>第 ' + (a + 1) + '–' + b + ' 个。点一下：' + (allA ? '换到这一条为止（' + K.esc(p.nb) + ' ' + kk + ' 个）' : '从这一条起换回' + K.esc(p.na) + '（' + K.esc(p.nb) + ' ' + kk + ' 个）') + '</title>' +
+      '<rect x="' + c.x + '" y="' + c.y + '" width="' + g.cw + '" height="' + g.ch + '" fill="transparent"/>' + s + '</g>';
+  }
   // 一个头：圆圈里写名字的第一个字，下面画腿（不超过 8 条就画线，多了就写数）
   function one(i, isB, m, p) {
     const c = cell(i), cx = c.x + CW / 2, cy = c.y + 14, legs = (isB ? m.lb : m.la) - (m.lift ? m.lo : 0), col = isB ? '#f5a25d' : '#9fb7d9', nm = String((isB ? p.nb : p.na) || '').slice(0, 1);
@@ -87,14 +112,17 @@
   const bookSay = (e, p) => { const [h, r] = e.split(':'), [n, la, lb, T] = h.split(','); return n + ' 个（' + p.na + ' ' + la + '、' + p.nb + ' ' + lb + '）一共 ' + T + '：' + (r === 'x' ? '凑不出来' : p.nb + ' ' + r + ' 个'); };
   const items = (m, p) => m.book.map((e) => ({ say: bookSay(e, p).replace(/-/g, '−'), no: e.endsWith(':x') }));
   const lay = (m, p) => {
-    const by = GY + Math.ceil(m.n / COLS) * CH + 18, yc = by + 48, yf = yc + (m.adj.any ? 34 : 0), yg = yf + (m.adj.any && m.claim ? 24 : 0) + (m.adj.any ? 14 : 0), yb = yg + (m.graph ? GH : 0);
+    const g = grid(m.n), by = GY + rowsOf(g) * g.ch + 18, yc = by + 48, yf = yc + (m.adj.any ? 34 : 0), yg = yf + (m.adj.any && m.claim ? 24 : 0) + (m.adj.any ? 14 : 0), yb = yg + (m.graph ? GH : 0);
     const ya = yb + RS.bookH(items(m, p)); return { by, yc, yf, yg, yb, ya, end: ya + RS.asksH(m.asks) };
   };
   // ---- 记下来：研究本画成图 ----
-  const GH = 214;
+  const GH = 214, GSPAN = 1200;
   function drawGraph(m, p, y0, masked) {
     const u = p.unit || '', lo = m.n * Math.min(m.la, m.lb), hi = m.n * Math.max(m.la, m.lb);
     const xa = Math.min(lo, m.T, ...m.pts.map((q) => q.T)), xb = Math.max(hi, m.T, ...m.pts.map((q) => q.T));
+    // 大数：横轴跨度太大（一格一格的刻度画不下），不画图，说一句
+    if (xb - xa > GSPAN) return K.rect(GX - 6, y0, 600, GH - 12, { fill: '#fbfcfe', stroke: '#c9d3e3', r: 8, w: 1 }) + K.text(GX + 4, y0 + 24, '📈 记下来：总数从 ' + xa + ' 到 ' + xb + '，跨度太大，图上画不下', { size: 12, weight: 700, anchor: 'start' }) +
+      K.text(GX + 4, y0 + 46, '研究本照样记。把每个的数改小一点（或个数少一点），就能画成图。', { size: 11, anchor: 'start', fill: '#5a6478' });
     const P = RS.plot({ fx: GX - 6, fy: y0, fw: 600, fh: GH - 12, xa, xb, ya: 0, yb: m.n, title: '📈 记下来：横着是一共多少' + u + '，竖着是' + p.nb + '几个（研究本里的每一条就是一个点）' });
     const { X, Y, X0, X1, Y0, ys } = P, YH = y0 + 186; let s = P.s;
     s += K.text(X0 - 8, YH + 4, '凑不出', { size: 9, anchor: 'end', fill: '#c0392b' }) + K.line(X0, YH, X1, YH, { w: 0.6, stroke: '#f0c9c2' });
@@ -103,7 +131,7 @@
     // 孩子做出来的点
     for (const q of m.pts) s += q.k === null ? K.text(X(q.T), YH + 5, '✕', { size: 13, weight: 700, fill: '#c0392b' }) : K.circle(X(q.T), Y(q.k), 5, { fill: '#f5a25d', stroke: 'var(--ink)', w: 1.2 });
     // 现在的目标：一条竖线；有 3 个点、这个总数还没做过，就可以先猜
-    const done = m.pts.some((q) => q.T === m.T), canGuess = m.pts.length >= 3 && !done && !m.ok && !masked;
+    const done = m.pts.some((q) => q.T === m.T), canGuess = m.pts.length >= 3 && !done && !m.ok && !masked && m.n <= TIER2;   // 头数多了，竖线上一格太矮点不着：不先猜
     if (m.T >= xa && m.T <= xb) s += K.line(X(m.T), Y0 - 4, X(m.T), YH + 6, { w: 1.4, stroke: 'var(--blue)', dash: '4 3' });
     let say = m.pts.length < 3 ? '再做 ' + (3 - m.pts.length) + ' 个，就可以先猜再换（改目标，凑到了或说对凑不出来，图上就多一个点）' : done ? '这个总数图上已经有了：改一下目标' : m.guess >= 0 ? '你猜' + (m.guess === HOLE ? '凑不出来' : p.nb + ' ' + m.guess + ' 个') + '。去换换看！' : canGuess ? '先猜：一共 ' + m.T + ' 时，' + p.nb + '几个？点蓝线上的一格' : '';
     if (canGuess) {
@@ -120,7 +148,8 @@
     if (c.props.view === 1 && U.SystemBench) return drawSys(c);
     const p = c.props, m = model(p), u = p.unit || ''; let s = '';
     const over = m.step > 0 ? m.total > m.T : m.total < m.T;
-    s += K.text(GX, 26, m.n + ' 个，' + p.nb + ' ' + m.k + ' 个、' + p.na + ' ' + (m.n - m.k) + ' 个', { size: 15, weight: 700, anchor: 'start' });
+    const g = grid(m.n);
+    s += K.text(GX, 26, m.n + ' 个，' + p.nb + ' ' + m.k + ' 个、' + p.na + ' ' + (m.n - m.k) + ' 个' + (g.t === 2 ? '（十个一组）' : g.t === 3 ? '（十个一条）' : ''), { size: 15, weight: 700, anchor: 'start' });
     s += K.text(GX, 50, (c.masked ? '一共 ？' : '一共 ' + m.total + ' ' + u) + '　目标 ' + m.T + ' ' + u + (m.ok ? '　正好！' : c.masked ? '' : over ? '　多了 ' + Math.abs(m.diff) : '　还差 ' + Math.abs(m.diff)), { size: 15, weight: 700, anchor: 'start', fill: m.ok ? 'var(--good)' : over && !c.masked ? 'var(--bad)' : 'var(--ink)' });
     // 天平：左盘是现在的总数，右盘是目标。差得越多歪得越厉害；正好就平了
     const Lw = m.total - m.base, Rw = m.T - m.base, d = c.masked ? 0 : Lw - Rw, ang = (d / (Math.abs(d) + Math.max(4, Math.abs(Rw) * 0.2))) * 9 * Math.PI / 180;
@@ -134,24 +163,35 @@
     // 还差的，切成一段一段：每段是“换一个”补上的数
     const gy = GY - 30;
     if (!c.masked && m.step !== 0) {
-      const ad = Math.abs(m.diff), st = Math.abs(m.step), q = Math.floor(ad / st), r = ad % st, cnt = q + (r ? 1 : 0), x0 = GX + 62;
+      const ad = Math.abs(m.diff), st = Math.abs(m.step), q = Math.floor(ad / st), r = ad % st, x0 = GX + 62;
       if (m.ok) s += K.text(GX, gy + 13, '两边一样重：正好', { size: 12, weight: 700, anchor: 'start', fill: 'var(--good)' });
       else {
-        const sw = Math.min(30, (COLS * CW - 62) / Math.max(cnt, 1)), col = over ? 'var(--bad)' : 'var(--blue)';
+        // 段数多了（大数，多于 40 段；40 段以内和以前一样一段一段画）：头 8 段、“…中间 几 段…”、尾 2 段
+        const F = K.big.fold(q, q > TIER2 ? 11 : q, 8, 2), EW = F.omitted ? 64 : 0, segs = F.idx.length - (F.omitted ? 1 : 0) + (r ? 1 : 0);
+        const sw = Math.min(30, (COLS * CW - 62 - EW) / Math.max(segs, 1)), col = over ? 'var(--bad)' : 'var(--blue)';
         s += K.text(GX, gy + 13, (over ? '多了 ' : '还差 ') + ad, { size: 12, weight: 700, anchor: 'start', fill: over ? 'var(--bad)' : 'var(--ink)' });
-        let g = '';
-        for (let i = 0; i < q; i++) g += K.rect(x0 + i * sw + 1, gy, sw - 2, 18, { fill: over ? '#fbe3e3' : '#e3ecf8', stroke: col, r: 3, w: 1.2 }) + (sw >= 20 ? K.text(x0 + i * sw + sw / 2, gy + 13, String(st), { size: 10, weight: 700 }) : '');
-        if (r) g += K.rect(x0 + q * sw + 1, gy, Math.max(8, (sw - 2) * r / st), 18, { fill: '#fbe3e3', stroke: 'var(--bad)', r: 3, w: 1.2 });
-        s += '<g data-gap="' + q + '"><title>每一段是换一个' + (over ? '少掉' : '补上') + '的 ' + st + ' ' + K.esc(u) + (r ? '；最后剩下的 ' + r + ' 不够一段' : '') + '</title>' + g + '</g>';
+        let gs = '', x = x0;
+        for (const ix of F.idx) {
+          if (ix === null) { gs += '<g data-fold="' + F.omitted + '">' + K.text(x + EW / 2, gy + 13, '…中间 ' + F.omitted + ' 段…', { size: 10, weight: 700, fill: col }) + '</g>'; x += EW; continue; }
+          gs += K.rect(x + 1, gy, sw - 2, 18, { fill: over ? '#fbe3e3' : '#e3ecf8', stroke: col, r: 3, w: 1.2 }) + (sw >= 20 ? K.text(x + sw / 2, gy + 13, String(st), { size: 10, weight: 700 }) : ''); x += sw;
+        }
+        if (r) gs += K.rect(x + 1, gy, Math.max(8, (sw - 2) * r / st), 18, { fill: '#fbe3e3', stroke: 'var(--bad)', r: 3, w: 1.2 });
+        s += '<g data-gap="' + q + '"><title>每一段是换一个' + (over ? '少掉' : '补上') + '的 ' + st + ' ' + K.esc(u) + (F.omitted ? '；一共 ' + q + ' 段，中间 ' + F.omitted + ' 段没画' : '') + (r ? '；最后剩下的 ' + r + ' 不够一段' : '') + '</title>' + gs + '</g>';
       }
     }
     // 正在拖把手：被换掉的每一个头上写着变了多少
     const k0 = c.drag ? clamp(c.drag.p0.k, 0, m.n) : m.k, chg = m.k - k0;
-    for (let i = 0; i < m.n; i++) s += one(i, i < m.k, m, p);
-    for (let i = Math.min(k0, m.k); i < Math.max(k0, m.k); i++) { const q = cell(i), v = chg > 0 ? m.step : -m.step; s += '<g data-chg="1">' + K.rect(q.x + 5, q.y - 9, CW - 10, 13, { fill: '#fff', stroke: 'var(--blue)', r: 4, w: 1 }) + K.text(q.x + CW / 2, q.y + 1, (v >= 0 ? '+' : '−') + Math.abs(v), { size: 10, weight: 700, fill: 'var(--blue)' }) + '</g>'; }
-    const rows = Math.ceil(m.n / COLS), by = GY + rows * CH + 18;
+    if (g.t === 1) {
+      for (let i = 0; i < m.n; i++) s += one(i, i < m.k, m, p);
+      for (let i = Math.min(k0, m.k); i < Math.max(k0, m.k); i++) { const q = cell(i), v = chg > 0 ? m.step : -m.step; s += '<g data-chg="1">' + K.rect(q.x + 5, q.y - 9, CW - 10, 13, { fill: '#fff', stroke: 'var(--blue)', r: 4, w: 1 }) + K.text(q.x + CW / 2, q.y + 1, (v >= 0 ? '+' : '−') + Math.abs(v), { size: 10, weight: 700, fill: 'var(--blue)' }) + '</g>'; }
+    } else if (g.t === 2) {
+      for (let i = 0; i < m.n; i++) s += small(i, i < m.k, m, p, g);
+      // 正在拖：被换掉的那几个框起来（每个变多少写在下面那一行）
+      for (let i = Math.min(k0, m.k); i < Math.max(k0, m.k); i++) { const q = cellAt(g, i); s += '<g data-chg="1">' + K.rect(q.x + 1, q.y, g.cw - 2, g.ch - 2, { fill: 'none', stroke: 'var(--blue)', r: 4, w: 1.6 }) + '</g>'; }
+    } else for (let i = 0; i < g.cells; i++) s += strip(i, m, p, g);
+    const by = GY + rowsOf(g) * g.ch + 18;
     if (chg) s += K.text(GX, by, '这一下换了 ' + Math.abs(chg) + ' 个：总数' + (chg * m.step >= 0 ? '多 ' : '少 ') + Math.abs(chg * m.step) + ' ' + u + '（' + Math.abs(chg) + ' × ' + Math.abs(m.step) + '）', { size: 12, anchor: 'start', weight: 700, fill: 'var(--blue)' });
-    else s += K.text(GX, by, '把一个' + p.na + '换成' + p.nb + '：' + (m.step >= 0 ? '多 ' : '少 ') + Math.abs(m.step) + ' ' + u + '。点一个就换一个；拖中间的把手，一次换好几个。', { size: 12, anchor: 'start' });
+    else s += K.text(GX, by, '把一个' + p.na + '换成' + p.nb + '：' + (m.step >= 0 ? '多 ' : '少 ') + Math.abs(m.step) + ' ' + u + (g.t === 3 ? '。点一条换到那里；拖把手，一次换好几个。' : '。点一个就换一个；拖中间的把手，一次换好几个。'), { size: 12, anchor: 'start' });
     // 每个都少算：天平两边同时减去同样多（甲是负数或 0 时没有）
     if (m.lo > 0) s += '<g data-pick-set="' + encodeURIComponent(JSON.stringify({ lift: !m.lift })) + '" style="cursor:pointer"><title>' + (m.lift ? '把少算的加回来：两边同时加上 ' + m.n * m.lo : '每个都少算 ' + m.lo + ' ' + K.esc(u) + '：天平两边同时减去 ' + m.n + ' × ' + m.lo) + '</title>' +
       K.rect(GX, by + 10, 250, 26, { fill: m.lift ? 'var(--blue)' : '#fff', stroke: 'var(--blue)', r: 8, w: 1.5 }) + K.text(GX + 125, by + 27, m.lift ? '把少算的加回来（两边同时加）' : '每个都少算 ' + m.lo + '（两边同时减 ' + m.n * m.lo + '）', { size: 12, weight: 700, fill: m.lift ? '#fff' : 'var(--ink)' }) + '</g>';
@@ -159,6 +199,15 @@
     const sx = m.lo > 0 ? GX + 262 : GX, can = sysOk(m), go = { view: 1, e0: '1,1,0,0,0,' + m.n, e1: m.la + ',' + m.lb + ',0,0,0,' + m.T, steps: 0, refused: 0, msg: '' };
     s += '<g' + (can ? ' data-pick-set="' + encodeURIComponent(JSON.stringify(go)) + '" style="cursor:pointer"' : ' opacity="0.4"') + '><title>' + (can ? '同一道题写成两个式子：个数一架，总数一架' : '数太大，天平上摆不下（每个盘最多 30 个砝码、6 个盒子）') + '</title>' +
       K.rect(sx, by + 10, 140, 26, { fill: '#fff', stroke: can ? 'var(--blue)' : '#8a94a8', r: 8, w: 1.5 }) + K.text(sx + 70, by + 27, '写成两架天平', { size: 12, weight: 700 }) + '</g>';
+    // 多于 40 个：一次换 10 个、换 1 个（微调）
+    if (g.t > 1) {
+      const bx = sx + 180, nb = String(p.nb || '').slice(0, 2);
+      s += K.text(bx - 4, by + 27, nb + '：', { size: 12, weight: 700, anchor: 'end' });
+      [[-10, '−10'], [-1, '−1'], [1, '+1'], [10, '+10']].forEach(([d, lab], i) => {
+        const kk = clamp(m.k + d, 0, m.n);
+        s += RS.btn(bx + i * 40, by + 10, 36, lab, to(p, kk), kk !== m.k, d > 0 ? '一次把 ' + Math.abs(d) + ' 个' + p.na + '换成' + p.nb : '一次把 ' + Math.abs(d) + ' 个' + p.nb + '换回' + p.na);
+      });
+    }
     // 换情况、从头再来、凑不出来
     const L = lay(m, p), sg = (v) => (v < 0 ? '−' + -v : String(v));
     if (m.adj.any) {
@@ -186,14 +235,26 @@
     });
     return s;
   }
+  // 把手在哪：第 k 个的左边（一排的头上换到上一排的末尾）；十个一条时按 k 在那一条里的几分之几往右挪
+  function gripAt(m, g) {
+    const ci = Math.floor(m.k / g.per), fr = (m.k % g.per) / g.per;
+    let x, y;
+    if (m.k >= m.n) { const at = cellAt(g, g.cells - 1); x = at.x + g.cw; y = at.y; }
+    else if (fr === 0 && ci > 0 && ci % g.cols === 0) { const at = cellAt(g, ci - 1); x = at.x + g.cw; y = at.y; }
+    else { const at = cellAt(g, ci); x = at.x + fr * g.cw; y = at.y; }
+    // 小格子（41 个以上）：把手放在这一排的上边沿，不盖住旁边格子的中间（点一个、点一条的地方）
+    return { gx: x, gy: g.t === 1 ? y + g.ch / 2 - 2 : y - 1 };
+  }
   function grips(c) {
     if (c.props.view === 1 && U.SystemBench) return U.SystemBench.grips(c).map((g) => Object.assign({}, g, { y: g.y + SYS_TOP, drag: (c0, q) => g.drag(c0, { x: q.x, y: q.y - SYS_TOP }) }));
-    const m = model(c.props), at = cell(Math.min(m.k, m.n - 1)), x = m.k >= m.n ? at.x + CW : at.x, edge = m.k > 0 && m.k % COLS === 0 && m.k < m.n;
-    const gx = edge ? cell(m.k - 1).x + CW : x, gy = (edge ? cell(m.k - 1).y : at.y) + CH / 2 - 2;
-    return [{ id: 'k', x: gx, y: gy, shape: 'bar-v', cursor: 'ew-resize', tip: '拖我：把手左边的都是' + c.props.nb + '，右边的都是' + c.props.na,
+    const m = model(c.props), g = grid(m.n), { gx, gy } = gripAt(m, g);
+    return [{ id: 'k', x: gx, y: gy, shape: 'bar-v', cursor: 'ew-resize', tip: g.t === 3 ? '拖我：上面一条一条里，橙色的是' + c.props.nb + '、蓝色的是' + c.props.na + '（按 5 个一拖）' : '拖我：把手左边的都是' + c.props.nb + '，右边的都是' + c.props.na,
       drag: (c0, q) => {
-        const m0 = model(c0.props), row = clamp(Math.floor((q.y - GY) / CH), 0, Math.ceil(m0.n / COLS) - 1), col = clamp(Math.round((q.x - GX) / CW), 0, COLS);
-        return to(c0.props, clamp(row * COLS + col, 0, m0.n));
+        const m0 = model(c0.props), g0 = grid(m0.n), row = clamp(Math.floor((q.y - GY + (g0.t === 1 ? 0 : 8)) / g0.ch), 0, rowsOf(g0) - 1);   // 小格子的把手在上边沿：往上 8 像素也算这一排
+        // 一排里第几格（十个一组中间空的那一点要扣掉）；十个一条时一格是 10 个，按 grain（5）取整
+        const xr = q.x - GX, half = (g0.cols / 2) * g0.cw, u = clamp((xr > half + g0.gap / 2 ? xr - g0.gap : Math.min(xr, half)) / g0.cw, 0, g0.cols);
+        const k = g0.per === 1 ? row * g0.cols + Math.round(u) : K.big.snap((row * g0.cols + u) * g0.per, K.big.grain(g0.cw / g0.per, K.big.GRAIN_PX));
+        return to(c0.props, clamp(k, 0, m0.n));
       },
       say: (c1) => { const m1 = model(c1.props); return c1.props.nb + ' ' + m1.k + '，' + c1.props.na + ' ' + (m1.n - m1.k) + '：' + m1.total; } }];
   }
@@ -207,7 +268,7 @@
         label: '换一换（鸡兔同笼）', prefix: '换一换', group: '关系', grades: [3, 7],
         alias: ['鸡兔同笼', '假设法', '列表法', '大船小船', '二元一次方程组', '替换'],
         props: {
-          n: I(1, NMAX, 8, '一共几个'), k: I(0, NMAX, 0, '现在有几个是乙'), target: I(-9999, 9999, 26, '总数要凑到'),
+          n: I(1, NMAX, 8, '一共几个', { qmax: TIER2 }), k: I(0, NMAX, 0, '现在有几个是乙', { qmax: TIER2 }), target: I(-TMAX, TMAX, 26, '总数要凑到', { qmin: -9999, qmax: 9999 }),
           la: I(-99, 99, 2, '每个甲是几'), lb: I(-99, 99, 4, '每个乙是几'),
           na: T('鸡', '甲叫什么'), nb: T('兔', '乙叫什么'), unit: T('条腿', '数的是什么'),
           style: { type: 'choice', label: '画法', default: 0, choices: ['画腿', '写数'], write: true },
@@ -233,7 +294,7 @@
           cases: { dim: null, kind: 'num', label: '研究本里有几条' }, pts: { dim: null, kind: 'num', label: '图上有几个点（这一组头数、甲、乙的）' }, gok: { dim: null, kind: 'num', label: '先猜再换，猜对几次' }, gtry: { dim: null, kind: 'num', label: '先猜再换，猜了几次' }, all: { dim: null, kind: 'num', label: '全部试一遍了：1 是，0 否' }, q1: { dim: null, kind: 'num', label: '追问 1 选了第几个' }, q2: { dim: null, kind: 'num', label: '追问 2 选了第几个' },
         },
         icon: () => K.circle(20, 16, 9, { fill: '#9fb7d9', stroke: 'var(--ink)' }) + K.line(17, 25, 17, 36, {}) + K.line(23, 25, 23, 36, {}) + K.circle(44, 16, 9, { fill: '#f5a25d', stroke: 'var(--ink)' }) + K.line(38, 25, 38, 36, {}) + K.line(42, 25, 42, 36, {}) + K.line(46, 25, 46, 36, {}) + K.line(50, 25, 50, 36, {}),
-        size: (e) => (e && e.props && e.props.view === 1 && U.SystemBench ? [U.SystemBench.W, U.SystemBench.H + SYS_TOP] : [W, Math.max(296 + Math.ceil(clamp(((e && e.props && e.props.n) || 8), 1, NMAX) / COLS) * CH, (lay(model((e && e.props) || {}), (e && e.props) || {}).end + 50) || 0)]),
+        size: (e) => (e && e.props && e.props.view === 1 && U.SystemBench ? [U.SystemBench.W, U.SystemBench.H + SYS_TOP] : [W, Math.max(296 + ((g) => rowsOf(g) * g.ch)(grid(clamp(((e && e.props && e.props.n) || 8), 1, NMAX))), (lay(model((e && e.props) || {}), (e && e.props) || {}).end + 50) || 0)]),
         grips,
         compute: (c) => { const m = model(c.props), o = { b: num(m.k), a: num(m.n - m.k), total: num(m.total), gap: num(m.diff), lifted: num(m.lift ? 1 : 0), ok: num(m.ok), tries: num(Math.max(1, m.tried.length)), no: num(m.claim && m.ans === null ? 1 : 0), si: num(m.si + 1), cases: num(m.book.length), pts: num(m.pts.length), gok: num(m.gok), gtry: num(m.gtry), all: num(m.all ? 1 : 0) }; m.asks.forEach((a, i) => { if (a.pick) o['q' + (i + 1)] = num(a.pick); }); o.sys = num(c.props.view === 1 ? 1 : 0); if (c.props.view === 1 && U.SystemBench) { const sm = U.SystemBench.model(c.props); if (sm.x !== null) o.sx = num(sm.x); if (sm.y !== null) o.sy = num(sm.y); } return o; },
         badge: () => '',
